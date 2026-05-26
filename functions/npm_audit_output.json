@@ -1,0 +1,417 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@google-cloud/firestore": {
+      "name": "@google-cloud/firestore",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "google-gax"
+      ],
+      "effects": [
+        "firebase-admin"
+      ],
+      "range": "7.5.0-pre.0 || 7.6.0 - 7.11.6",
+      "nodes": [
+        "node_modules/@google-cloud/firestore"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "13.10.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@google-cloud/storage": {
+      "name": "@google-cloud/storage",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "retry-request",
+        "teeny-request",
+        "uuid"
+      ],
+      "effects": [
+        "firebase-admin"
+      ],
+      "range": "2.2.0 - 2.5.0 || >=5.19.0",
+      "nodes": [
+        "node_modules/@google-cloud/storage"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "13.10.0",
+        "isSemVerMajor": true
+      }
+    },
+    "body-parser": {
+      "name": "body-parser",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "qs"
+      ],
+      "effects": [],
+      "range": "1.20.3 - 1.20.4 || 2.0.0-beta.1 - 2.0.2",
+      "nodes": [
+        "node_modules/body-parser"
+      ],
+      "fixAvailable": true
+    },
+    "express": {
+      "name": "express",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "qs"
+      ],
+      "effects": [],
+      "range": "4.21.0 - 4.22.1 || 5.0.0-alpha.1 - 5.0.1",
+      "nodes": [
+        "node_modules/express"
+      ],
+      "fixAvailable": true
+    },
+    "firebase-admin": {
+      "name": "firebase-admin",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "@google-cloud/firestore",
+        "@google-cloud/storage",
+        "uuid"
+      ],
+      "effects": [],
+      "range": ">=10.2.0",
+      "nodes": [
+        "node_modules/firebase-admin"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "13.10.0",
+        "isSemVerMajor": true
+      }
+    },
+    "franc-min": {
+      "name": "franc-min",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "trigram-utils"
+      ],
+      "effects": [],
+      "range": "3.1.1 - 5.0.0",
+      "nodes": [
+        "node_modules/franc-min"
+      ],
+      "fixAvailable": {
+        "name": "franc-min",
+        "version": "6.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "gaxios": {
+      "name": "gaxios",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "uuid"
+      ],
+      "effects": [],
+      "range": "6.4.0 - 6.7.1",
+      "nodes": [
+        "node_modules/gaxios"
+      ],
+      "fixAvailable": true
+    },
+    "google-gax": {
+      "name": "google-gax",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "retry-request",
+        "uuid"
+      ],
+      "effects": [
+        "@google-cloud/firestore"
+      ],
+      "range": "4.0.5-experimental - 4.6.1",
+      "nodes": [
+        "node_modules/google-gax"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "13.10.0",
+        "isSemVerMajor": true
+      }
+    },
+    "nodemailer": {
+      "name": "nodemailer",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1115470,
+          "name": "nodemailer",
+          "dependency": "nodemailer",
+          "title": "Nodemailer has SMTP command injection due to unsanitized `envelope.size` parameter",
+          "url": "https://github.com/advisories/GHSA-c7w3-x93f-qmm8",
+          "severity": "low",
+          "cwe": [
+            "CWE-93"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<8.0.4"
+        },
+        {
+          "source": 1116270,
+          "name": "nodemailer",
+          "dependency": "nodemailer",
+          "title": "Nodemailer Vulnerable to SMTP Command Injection via CRLF in Transport name Option (EHLO/HELO) ",
+          "url": "https://github.com/advisories/GHSA-vvjj-xcjg-gr5g",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-93"
+          ],
+          "cvss": {
+            "score": 4.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:N/I:H/A:N"
+          },
+          "range": "<=8.0.4"
+        }
+      ],
+      "effects": [],
+      "range": "<=8.0.4",
+      "nodes": [
+        "node_modules/nodemailer"
+      ],
+      "fixAvailable": {
+        "name": "nodemailer",
+        "version": "8.0.8",
+        "isSemVerMajor": true
+      }
+    },
+    "protobufjs": {
+      "name": "protobufjs",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1119378,
+          "name": "protobufjs",
+          "dependency": "protobufjs",
+          "title": "protobufjs: Denial of Service via unbounded recursive JSON descriptor expansion",
+          "url": "https://github.com/advisories/GHSA-jggg-4jg4-v7c6",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-674"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": "<=7.5.7"
+        }
+      ],
+      "effects": [],
+      "range": "<=7.5.7",
+      "nodes": [
+        "node_modules/protobufjs"
+      ],
+      "fixAvailable": true
+    },
+    "qs": {
+      "name": "qs",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1119502,
+          "name": "qs",
+          "dependency": "qs",
+          "title": "qs has a remotely triggerable DoS: qs.stringify crashes with TypeError on null/undefined entries in comma-format arrays when encodeValuesOnly is set",
+          "url": "https://github.com/advisories/GHSA-q8mj-m7cp-5q26",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-476"
+          ],
+          "cvss": {
+            "score": 5.3,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+          },
+          "range": ">=6.11.1 <=6.15.1"
+        }
+      ],
+      "effects": [
+        "body-parser",
+        "express"
+      ],
+      "range": "6.11.1 - 6.15.1",
+      "nodes": [
+        "node_modules/qs"
+      ],
+      "fixAvailable": true
+    },
+    "retry-request": {
+      "name": "retry-request",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "teeny-request"
+      ],
+      "effects": [
+        "@google-cloud/storage",
+        "google-gax"
+      ],
+      "range": "7.0.0 - 7.0.2",
+      "nodes": [
+        "node_modules/retry-request"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "13.10.0",
+        "isSemVerMajor": true
+      }
+    },
+    "teeny-request": {
+      "name": "teeny-request",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "uuid"
+      ],
+      "effects": [
+        "@google-cloud/storage",
+        "retry-request"
+      ],
+      "range": "3.9.1 - 9.0.0",
+      "nodes": [
+        "node_modules/teeny-request"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "13.10.0",
+        "isSemVerMajor": true
+      }
+    },
+    "trigram-utils": {
+      "name": "trigram-utils",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "trim"
+      ],
+      "effects": [
+        "franc-min"
+      ],
+      "range": "1.0.0 - 1.0.3",
+      "nodes": [
+        "node_modules/trigram-utils"
+      ],
+      "fixAvailable": {
+        "name": "franc-min",
+        "version": "6.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "trim": {
+      "name": "trim",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1089867,
+          "name": "trim",
+          "dependency": "trim",
+          "title": "Regular Expression Denial of Service in trim",
+          "url": "https://github.com/advisories/GHSA-w5p7-h5w8-2hfq",
+          "severity": "high",
+          "cwe": [
+            "CWE-400"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+          },
+          "range": "<0.0.3"
+        }
+      ],
+      "effects": [
+        "trigram-utils"
+      ],
+      "range": "<0.0.3",
+      "nodes": [
+        "node_modules/trim"
+      ],
+      "fixAvailable": {
+        "name": "franc-min",
+        "version": "6.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    "uuid": {
+      "name": "uuid",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1119441,
+          "name": "uuid",
+          "dependency": "uuid",
+          "title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+          "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-787",
+            "CWE-1285"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+          },
+          "range": "<11.1.1"
+        }
+      ],
+      "effects": [
+        "@google-cloud/storage",
+        "firebase-admin",
+        "gaxios",
+        "google-gax",
+        "teeny-request"
+      ],
+      "range": "<11.1.1",
+      "nodes": [
+        "node_modules/@google-cloud/storage/node_modules/uuid",
+        "node_modules/gaxios/node_modules/uuid",
+        "node_modules/google-gax/node_modules/uuid",
+        "node_modules/teeny-request/node_modules/uuid",
+        "node_modules/uuid"
+      ],
+      "fixAvailable": {
+        "name": "firebase-admin",
+        "version": "13.10.0",
+        "isSemVerMajor": true
+      }
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 13,
+      "high": 3,
+      "critical": 0,
+      "total": 16
+    },
+    "dependencies": {
+      "prod": 368,
+      "dev": 248,
+      "optional": 47,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 661
+    }
+  }
+}

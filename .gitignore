@@ -81,7 +81,8 @@ env/prod-service-account.json
 # Local test data exported from production for emulator testing
 test-data/
 
-# Pentest reports — confidential, contain unpatched vulnerability details
+# Pentest reports & remediation plans — confidential, contain unpatched vulnerability details
 docs/security/PENTEST_REPORT.md
+docs/security/REMEDIATION_PLAN.md
 docs/security/Freedi_Penetration_Test_Report_*.docx
 docs/security/Freedi_Penetration_Test_Report_*.pdf
