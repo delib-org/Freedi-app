@@ -32,6 +32,11 @@ import {
 import { parse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
+import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
+import {
+	createManagedCollectionListener,
+	generateListenerKey,
+} from '@/controllers/utils/firestoreListenerHelpers';
 
 // Helper to check if an error is IndexedDB-related
 function isIndexedDBError(error: unknown): boolean {
@@ -148,8 +153,15 @@ export function listenToStatementSubscriptions(
 			limit(numberOfStatements),
 		);
 
-		return onSnapshot(
+		const listenerKey = generateListenerKey(
+			'subscriptions-main',
+			'user',
+			`${userId}-${numberOfStatements}`,
+		);
+
+		return createManagedCollectionListener(
 			q,
+			listenerKey,
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					try {
@@ -194,6 +206,7 @@ export function listenToStatementSubscriptions(
 					});
 				}
 			},
+			'query',
 		);
 	} catch (error) {
 		logError(error, {
@@ -375,7 +388,7 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			subscriptionsRef,
 			and(
 				where('userId', '==', userId),
-				where('statementType', '!=', 'document'),
+				where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
 				or(
 					where('role', '==', Role.admin),
 					where('role', '==', Role.creator),
@@ -386,8 +399,11 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			limit(40),
 		);
 
-		return onSnapshot(
+		const listenerKey = generateListenerKey('subscriptions-updates', 'user', userId);
+
+		return createManagedCollectionListener(
 			q,
+			listenerKey,
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					const data = change.doc.data();
@@ -425,6 +441,7 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 					});
 				}
 			},
+			'query',
 		);
 	} catch (error) {
 		logError(error, { operation: 'subscriptions.getSubscriptions.unknown' });
