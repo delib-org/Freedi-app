@@ -11,20 +11,24 @@ export interface SynthesisSettings {
 	enabled: boolean;
 	minEvaluators: number;
 	minConsensus: number;
+	/** Cosine ≥ this → near-duplicate. Synth band. */
 	attachThreshold: number;
+	/** Cosine in [clusterThreshold, attachThreshold) → topic-cluster band. */
+	clusterThreshold: number;
+	/** Cosine in [reviewLowerBound, clusterThreshold) → admin review band. */
 	reviewLowerBound: number;
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	enabled: false,
-	// `minEvaluators: 1` → trigger fires on the very first option creation.
-	// Bump it in the admin panel for questions that should wait for some
-	// evaluation signal before being considered for clustering.
-	minEvaluators: 1,
+	// `minEvaluators: 0` → trigger fires on every option creation with no
+	// evaluation gate. Admins raise the bar per question in the panel.
+	minEvaluators: 0,
 	minConsensus: 0.0,
-	// 0.85 auto-attach / 0.70 review band — see functions/src/synthesis/pipeline/types.ts
+	// Three-band geometry — see functions/src/synthesis/pipeline/types.ts.
 	attachThreshold: 0.85,
-	reviewLowerBound: 0.7,
+	clusterThreshold: 0.6,
+	reviewLowerBound: 0.5,
 };
 
 export type SynthesisQueueStatus =

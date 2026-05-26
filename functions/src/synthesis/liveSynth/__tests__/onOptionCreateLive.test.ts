@@ -32,8 +32,10 @@ jest.mock('../../../services/vector-search-service', () => ({
 }));
 
 const mockGenerateSynthesizedProposal = jest.fn();
+const mockGenerateTopicLabel = jest.fn();
 jest.mock('../../../services/integration-ai-service', () => ({
 	generateSynthesizedProposal: (...args: unknown[]) => mockGenerateSynthesizedProposal(...args),
+	generateTopicLabel: (...args: unknown[]) => mockGenerateTopicLabel(...args),
 }));
 
 const mockEnqueueClusterRecompute = jest.fn();
@@ -64,6 +66,7 @@ beforeEach(() => {
 	mockGenerateEmbedding.mockReset();
 	mockFindSimilarByEmbedding.mockReset();
 	mockGenerateSynthesizedProposal.mockReset();
+	mockGenerateTopicLabel.mockReset();
 	mockEnqueueClusterRecompute.mockReset();
 	mockRecordLiveSynthEvent.mockReset();
 	process.env.SYNTHESIS_LIVE_SYNTH_ENABLED = 'true';
@@ -239,11 +242,11 @@ describe('liveSynthOnOptionCreate', () => {
 		);
 	});
 
-	it('queues for review when top hit is in the gray band [reviewLowerBound, attachThreshold) — no LLM call', async () => {
+	it('queues for review when top hit is in the gray band [reviewLowerBound, clusterThreshold) — no LLM call', async () => {
 		const fs = setupFirestoreMockForGet();
 		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
-		// Cosine 0.78 sits between the default reviewLowerBound (0.70) and
-		// attachThreshold (0.85), so it routes to admin review without an LLM call.
+		// Cosine 0.55 sits between the default reviewLowerBound (0.5) and
+		// clusterThreshold (0.6), so it routes to admin review without any LLM call.
 		mockFindSimilarByEmbedding.mockResolvedValue([
 			{
 				statement: {
@@ -252,7 +255,7 @@ describe('liveSynthOnOptionCreate', () => {
 					integratedOptions: [],
 					parentId: 'q1',
 				},
-				similarity: 0.78,
+				similarity: 0.55,
 			},
 		]);
 
@@ -278,8 +281,11 @@ describe('liveSynthOnOptionCreate', () => {
 		expect(mockRecordLiveSynthEvent).not.toHaveBeenCalled();
 	});
 
-	it('does NOT spawn when LLM proposes cannotSynthesize=true (queues for review instead)', async () => {
-		const fs = setupFirestoreMockForGet({
+	it('falls back to topic-cluster spawn when synth LLM proposes cannotSynthesize=true', async () => {
+		// New behavior: when generateSynthesizedProposal refuses (directional
+		// conflict, etc.), the pipeline retries the spawn in cluster mode
+		// (generateTopicLabel) instead of queuing for review.
+		setupFirestoreMockForGet({
 			exists: true,
 			data: {
 				statementId: 'q1',
@@ -306,16 +312,24 @@ describe('liveSynthOnOptionCreate', () => {
 			cannotSynthesize: true,
 			reason: 'opposing directions',
 		});
+		mockGenerateTopicLabel.mockResolvedValue({
+			title: 'Park Plans',
+			description: 'Approaches to using the downtown parking lot.',
+		});
 
 		await liveSynthOnOptionCreate(makeOption());
 
-		// LLM was called (we did try) — but no cluster was written.
 		expect(mockGenerateSynthesizedProposal).toHaveBeenCalledTimes(1);
-		expect(fs.reviewAdd).toHaveBeenCalledTimes(1);
-		const reviewAudit = mockRecordLiveSynthEvent.mock.calls.find(
-			(c) => c[0]?.action === 'review-queued',
+		expect(mockGenerateTopicLabel).toHaveBeenCalledTimes(1);
+		const spawnAudit = mockRecordLiveSynthEvent.mock.calls.find(
+			(c) => c[0]?.action === 'spawn' && c[0]?.newState?.mode === 'cluster',
 		);
-		expect(reviewAudit).toBeDefined();
+		expect(spawnAudit).toBeDefined();
+		expect(mockEnqueueClusterRecompute).toHaveBeenCalledWith(
+			expect.any(String),
+			'pipeline:onCreate:spawn',
+			'user1',
+		);
 	});
 
 	it('Ship 3b.5: gates OFF when parent is non-MC and has no override', async () => {

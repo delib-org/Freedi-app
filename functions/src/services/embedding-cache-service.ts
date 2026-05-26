@@ -35,7 +35,18 @@ interface EmbeddingWithStatement {
  * Firestore's native vector search capabilities.
  */
 class EmbeddingCacheService {
-	private db = getFirestore();
+	// Lazy Firestore handle. Resolved on first use rather than at construction
+	// so that importing this module (which constructs the exported singleton
+	// at the bottom of the file) doesn't call getFirestore() before
+	// admin.initializeApp() has run. Without this, transitively importing
+	// the singleton from any bootstrap-path module crashes the function
+	// loader with "The default Firebase app does not exist."
+	private _db: FirebaseFirestore.Firestore | null = null;
+	private get db(): FirebaseFirestore.Firestore {
+		if (!this._db) this._db = getFirestore();
+
+		return this._db;
+	}
 	private statementsCollection = 'statements';
 
 	/**

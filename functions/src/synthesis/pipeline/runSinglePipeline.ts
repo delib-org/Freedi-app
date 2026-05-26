@@ -7,6 +7,8 @@ import { ensureEmbedding } from './embedding';
 import {
 	attachOptionToCluster,
 	isCluster,
+	isSynth,
+	isTopicCluster,
 	queueForReview,
 	spawnClusterFromPair,
 } from './clusterOps';
@@ -18,15 +20,36 @@ import {
  * scheduled queue worker, "Synthesize now," and "Selective synthesis." One
  * decision tree, one place to change behavior.
  *
- * Decision tree (after embedding + vector search):
- *   - top cosine ≥ attachThreshold AND target is a cluster → ATTACH (0 LLM)
- *   - top cosine ≥ attachThreshold AND target is a plain option → SPAWN (1 LLM)
- *   - top cosine in [reviewLowerBound, attachThreshold) → REVIEW (0 LLM)
- *   - no neighbors above reviewLowerBound → SEED-SINGLETON (0 LLM, no cluster)
+ * Cosine is a candidacy gate; the LLM is the synth-vs-cluster judge. This
+ * makes the spawn decision robust to embedding-model drift (e.g. OpenAI
+ * text-embedding-3-small puts real-world paraphrases at ~0.78, well below
+ * any threshold a human would set for "near-duplicate").
  *
- * Single-option singletons are NOT written as clusters — we leave the option
- * as-is until it has a peer to merge with. A "cluster" of one is the empty
- * default state.
+ *   Pass 1 — SYNTH ATTACH: any existing synth at cosine ≥ attachThreshold
+ *     → attach (0 LLM). Strict cosine is still appropriate here because the
+ *     synth's regenerated title concentrates the merged proposal — true
+ *     paraphrases of the synth land at or above 0.85.
+ *
+ *   Pass 2 — TOPIC-CLUSTER ATTACH: any existing topic cluster at cosine
+ *     ≥ clusterThreshold → attach (0 LLM). Lenient: topic clusters group
+ *     distinct-but-related ideas under a theme label.
+ *
+ *   Pass 3 — SPAWN (LLM-judged): top *plain option* at cosine ≥
+ *     clusterThreshold → call generateSynthesizedProposal:
+ *       · success (proposal generated) → SPAWN SYNTH (1 LLM total)
+ *       · cannotSynthesize             → fall back to generateTopicLabel
+ *                                        → SPAWN TOPIC CLUSTER (2 LLM total)
+ *     The cluster-fallback path bypasses the spawn-debounce window because
+ *     the synth attempt already consumed it. We look at the top plain
+ *     option (not candidates[0]) so a synth ranking #1 below its attach
+ *     threshold doesn't shadow a stronger plain-option duplicate behind it.
+ *
+ *   Pass 4 — REVIEW: top candidate at cosine ≥ reviewLowerBound but no
+ *     plain option above clusterThreshold → queue pair for admin review
+ *     (0 LLM).
+ *
+ *   Pass 5 — SINGLETON: no candidates above reviewLowerBound → leave
+ *     option as-is. Single-option singletons are NOT written as clusters.
  *
  * Caller-controlled `forceProcess` skips the engagement-threshold check.
  * Admin-initiated selective synthesis is the only legitimate user of that
@@ -136,14 +159,21 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	}
 
 	const top = candidates[0];
+	const topPlainOption = candidates.find((c) => !isCluster(c.statement));
 	const triggerSource = `pipeline:${input.source}`;
+	const bypassDebounce = input.source === 'synthesizeNow' || input.source === 'selective';
 
-	// Branch 1 — auto-attach to existing cluster.
-	if (top.similarity >= settings.attachThreshold && isCluster(top.statement)) {
+	// =====================================================================
+	// PASS 1 — SYNTH ATTACH (strict): any existing synth at ≥ attachThreshold
+	// =====================================================================
+	const synthMatch = candidates.find(
+		(c) => c.similarity >= settings.attachThreshold && isSynth(c.statement),
+	);
+	if (synthMatch) {
 		const result = await attachOptionToCluster({
-			cluster: top.statement,
+			cluster: synthMatch.statement,
 			option,
-			similarity: top.similarity,
+			similarity: synthMatch.similarity,
 			triggerSource,
 		});
 		if (!result.attached) {
@@ -152,57 +182,99 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 
 		return {
 			action: 'attached',
-			reason: `cosine=${top.similarity.toFixed(3)} ≥ ${settings.attachThreshold}`,
-			clusterId: top.statement.statementId,
+			reason: `synth attach cosine=${synthMatch.similarity.toFixed(3)} ≥ ${settings.attachThreshold}`,
+			clusterId: synthMatch.statement.statementId,
 			llmCalled: false,
 			durationMs: Date.now() - startedAt,
 		};
 	}
 
-	// Branch 2 — spawn cluster from top pair.
-	if (top.similarity >= settings.attachThreshold) {
-		const spawn = await spawnClusterFromPair({
+	// =====================================================================
+	// PASS 2 — TOPIC-CLUSTER ATTACH: any existing topic cluster at
+	// ≥ clusterThreshold
+	// =====================================================================
+	const topicMatch = candidates.find(
+		(c) => c.similarity >= settings.clusterThreshold && isTopicCluster(c.statement),
+	);
+	if (topicMatch) {
+		const result = await attachOptionToCluster({
+			cluster: topicMatch.statement,
 			option,
-			sibling: top.statement,
-			similarity: top.similarity,
+			similarity: topicMatch.similarity,
+			triggerSource,
+		});
+		if (!result.attached) {
+			return skipped('attach-already-member-or-failed', startedAt);
+		}
+
+		return {
+			action: 'attached',
+			reason: `topic-cluster attach cosine=${topicMatch.similarity.toFixed(3)} ≥ ${settings.clusterThreshold}`,
+			clusterId: topicMatch.statement.statementId,
+			llmCalled: false,
+			durationMs: Date.now() - startedAt,
+		};
+	}
+
+	// =====================================================================
+	// PASS 3 — SPAWN (LLM-judged): top plain option at ≥ clusterThreshold
+	// =====================================================================
+	// Try synth first (generateSynthesizedProposal). If the LLM says
+	// cannotSynthesize, fall back to topic cluster (generateTopicLabel) —
+	// with bypassDebounce because the synth attempt already consumed the
+	// per-parent spawn-debounce window.
+	if (topPlainOption && topPlainOption.similarity >= settings.clusterThreshold) {
+		const synthAttempt = await spawnClusterFromPair({
+			option,
+			sibling: topPlainOption.statement,
+			similarity: topPlainOption.similarity,
 			parentStatement: parent,
 			triggerSource,
-			bypassDebounce: input.source === 'synthesizeNow' || input.source === 'selective',
+			bypassDebounce,
+			mode: 'synth',
 		});
-		if (spawn.spawned) {
+		if (synthAttempt.spawned) {
 			return {
 				action: 'spawned',
-				reason: `spawn at cosine=${top.similarity.toFixed(3)}`,
-				clusterId: spawn.clusterId,
+				reason: `spawn synth at cosine=${topPlainOption.similarity.toFixed(3)}`,
+				clusterId: synthAttempt.clusterId,
 				llmCalled: true,
 				durationMs: Date.now() - startedAt,
 			};
 		}
-		if (spawn.cannotSynthesize) {
-			// LLM refused → fall through to review queue
-			await queueForReview({
+		if (synthAttempt.cannotSynthesize) {
+			const clusterFallback = await spawnClusterFromPair({
 				option,
-				sibling: top.statement,
-				similarity: top.similarity,
-				reason: 'LLM refused synthesis',
+				sibling: topPlainOption.statement,
+				similarity: topPlainOption.similarity,
+				parentStatement: parent,
 				triggerSource,
+				bypassDebounce: true,
+				mode: 'cluster',
 			});
+			if (clusterFallback.spawned) {
+				return {
+					action: 'spawned',
+					reason: `spawn cluster (LLM refused synth) at cosine=${topPlainOption.similarity.toFixed(3)}`,
+					clusterId: clusterFallback.clusterId,
+					llmCalled: true,
+					durationMs: Date.now() - startedAt,
+				};
+			}
 
-			return {
-				action: 'review-queued',
-				reason: 'LLM refused synthesis',
-				llmCalled: true,
-				durationMs: Date.now() - startedAt,
-			};
+			return skipped('cluster-fallback-failed', startedAt);
 		}
-		if (spawn.debounced) {
+		if (synthAttempt.debounced) {
 			return skipped('spawn-debounced', startedAt);
 		}
 
 		return skipped('spawn-failed', startedAt);
 	}
 
-	// Branch 3 — gray band, queue for admin review.
+	// =====================================================================
+	// PASS 4 — REVIEW: top candidate ≥ reviewLowerBound
+	// (guaranteed by vector-search filter — anything in `candidates` is above)
+	// =====================================================================
 	await queueForReview({
 		option,
 		sibling: top.statement,

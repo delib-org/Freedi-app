@@ -7,6 +7,12 @@ import {
 	recomputeClusterEvaluation,
 } from '../../condensation/aggregation';
 import { updateUserDemographicEvaluation } from '../../fn_polarizationIndex';
+import {
+	generateSynthesizedProposal,
+	mapStatementToWithEvaluation,
+} from '../../services/integration-ai-service';
+import { embeddingCache } from '../../services/embedding-cache-service';
+import { embeddingService } from '../../services/embedding-service';
 
 /**
  * Live-synth cluster recompute pipeline.
@@ -148,6 +154,126 @@ interface RecomputeResult {
 	updated: boolean;
 	evaluatorCount: number;
 	consensus: number;
+	titleRegenerated?: boolean;
+}
+
+/**
+ * Synth-only: regenerate the AI-authored title/description to reflect the
+ * current member set, then re-embed the cluster so future vector searches
+ * use the fresh text. Topic clusters don't refresh — their label is
+ * intentionally stable.
+ *
+ * Idempotent: short-circuits when `lastTitleRegeneratedMembers` already
+ * equals the current member count. Fail-open: if the LLM refuses or the
+ * call throws, we keep the existing title and continue (logged, not
+ * thrown). The next member arrival will re-attempt the regen.
+ */
+async function maybeRegenerateSynthTitle(cluster: Statement, clusterId: string): Promise<boolean> {
+	const flags = cluster as Statement & {
+		lastTitleRegeneratedMembers?: number;
+	};
+	if (cluster.derivedByPipeline !== 'synthesis') {
+		// Topic clusters don't refresh their label.
+		return false;
+	}
+	const members = cluster.integratedOptions ?? [];
+	if (members.length < 2) return false;
+	if (flags.lastTitleRegeneratedMembers === members.length) return false;
+
+	// Fetch member option docs in one round-trip via getAll.
+	const memberRefs = members.map((id) =>
+		db().collection(Collections.statements).doc(id),
+	);
+	const memberSnaps = await db().getAll(...memberRefs);
+	const memberStatements = memberSnaps
+		.filter((s) => s.exists)
+		.map((s) => s.data() as Statement);
+	if (memberStatements.length < 2) return false;
+
+	// Use the parent question as context, matching the spawn-path prompt.
+	const parentSnap = await db()
+		.collection(Collections.statements)
+		.doc(cluster.parentId)
+		.get();
+	const questionContext = parentSnap.exists
+		? (parentSnap.data() as Statement).statement || cluster.parentId
+		: cluster.parentId;
+
+	let proposal: Awaited<ReturnType<typeof generateSynthesizedProposal>>;
+	try {
+		proposal = await generateSynthesizedProposal(
+			memberStatements.map(mapStatementToWithEvaluation),
+			questionContext,
+		);
+	} catch (error) {
+		logger.warn('recomputeSynthCluster: title regen LLM failed; keeping current title', {
+			clusterId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return false;
+	}
+
+	if (proposal.cannotSynthesize === true) {
+		// LLM judges the current member set can no longer synthesize. Keep
+		// the existing title (it's the best we have). Log so an admin can
+		// review whether the cluster has drifted off-topic.
+		logger.info('recomputeSynthCluster: cannotSynthesize on regen; preserving title', {
+			clusterId,
+			memberCount: memberStatements.length,
+			reason: proposal.reason,
+		});
+
+		return false;
+	}
+
+	const now = Date.now();
+	try {
+		await db().collection(Collections.statements).doc(clusterId).update({
+			statement: proposal.title,
+			description: proposal.description ?? '',
+			lastTitleRegeneratedMembers: memberStatements.length,
+			lastTitleRegeneratedAt: now,
+			lastUpdate: now,
+		});
+	} catch (error) {
+		logger.warn('recomputeSynthCluster: title-update write failed', {
+			clusterId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return false;
+	}
+
+	// Re-embed the synth so future neighbor queries use the fresh title.
+	// Without this, the cluster keeps matching by its founding-pair
+	// embedding even though its display text has moved on.
+	try {
+		const newEmbedding = await embeddingService.generateEmbedding(
+			proposal.title,
+			cluster.parentId,
+		);
+		await embeddingCache.saveEmbedding(
+			clusterId,
+			newEmbedding.embedding,
+			cluster.parentId,
+			proposal.title,
+		);
+	} catch (error) {
+		logger.warn('recomputeSynthCluster: re-embed after title regen failed', {
+			clusterId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+		// Non-fatal — title is written; embedding will lag until next regen.
+	}
+
+	logger.info('recomputeSynthCluster: title regenerated', {
+		clusterId,
+		memberCount: memberStatements.length,
+		titlePreview: proposal.title.substring(0, 80),
+	});
+
+	return true;
 }
 
 /**
@@ -244,11 +370,17 @@ export async function recomputeSynthCluster(clusterId: string): Promise<Recomput
 		}
 	}
 
+	// 3. Synth-only: regenerate the AI-authored title to reflect the current
+	//    member set, then re-embed. Topic clusters skip this entirely (see
+	//    maybeRegenerateSynthTitle). Idempotent + fail-open.
+	const titleRegenerated = await maybeRegenerateSynthTitle(cluster, clusterId);
+
 	return {
 		clusterId,
 		updated: aggregateEvaluation !== null,
 		evaluatorCount,
 		consensus: aggregateEvaluation?.agreement ?? 0,
+		titleRegenerated,
 	};
 }
 

@@ -144,6 +144,9 @@ export async function performIntegration(
 	};
 	if (derivedByPipeline) {
 		newStatement.derivedByPipeline = derivedByPipeline;
+		if (derivedByPipeline === 'synthesis') {
+			(newStatement as Statement & Record<string, unknown>).isSynthesis = true;
+		}
 	}
 
 	await db.collection(Collections.statements).doc(newStatementId).set(newStatement);

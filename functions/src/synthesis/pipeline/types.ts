@@ -13,26 +13,35 @@ export interface SynthesisSettings {
 	minEvaluators: number;
 	/** Minimum consensus score (0..1) an option needs before it's considered for synthesis. */
 	minConsensus: number;
-	/** Cosine ≥ this → auto-attach without an LLM call. */
+	/** Cosine ≥ this → near-duplicate. Auto-attach to existing synth, else spawn new synth (1 LLM). */
 	attachThreshold: number;
-	/** Cosine in [reviewLowerBound, attachThreshold) → send to admin review (no LLM call). */
+	/**
+	 * Cosine ≥ this AND < attachThreshold → same topic but distinct ideas.
+	 * Auto-attach to existing topic cluster, else spawn new cluster.
+	 * Bands order: reviewLowerBound < clusterThreshold < attachThreshold.
+	 */
+	clusterThreshold: number;
+	/** Cosine in [reviewLowerBound, clusterThreshold) → send to admin review (no LLM call). */
 	reviewLowerBound: number;
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	enabled: false,
-	// `minEvaluators: 1` means "run as soon as the option exists" — the
-	// pipeline fires on the very first option creation. Raise this in the
-	// admin panel for questions where you'd rather wait until an option
-	// has gathered some evaluations before considering it for clustering.
-	minEvaluators: 1,
+	// `minEvaluators: 0` means "run the moment the option exists" — the
+	// pipeline fires on every option create with no evaluation gate. Admins
+	// can raise this in the SynthesisPanel for questions where synthesis
+	// should wait for some evaluation signal first.
+	minEvaluators: 0,
 	minConsensus: 0.0,
-	// 0.85 auto-attach / 0.70 review band: tuned so paraphrases (cosine ≈ 0.85+)
-	// fall into the auto-attach lane while clearly different ideas (cosine < 0.70)
-	// are left as singletons. Pairs in the [0.70, 0.85) band go to admin review.
+	// Three-band geometry:
+	//   - cosine ≥ 0.85 → near-duplicates → synth (one unified proposal)
+	//   - 0.60 ≤ cosine < 0.85 → same topic / different ideas → cluster
+	//   - 0.50 ≤ cosine < 0.60 → uncertain → admin review
+	//   - cosine < 0.50 → singleton
 	// Admins can override per question via the synthesis settings UI.
 	attachThreshold: 0.85,
-	reviewLowerBound: 0.7,
+	clusterThreshold: 0.6,
+	reviewLowerBound: 0.5,
 };
 
 /**
@@ -60,8 +69,8 @@ export function validateSynthesisSettings(
 	const errors: string[] = [];
 
 	if (settings.minEvaluators !== undefined) {
-		if (!Number.isFinite(settings.minEvaluators) || settings.minEvaluators < 1) {
-			errors.push('minEvaluators must be a finite integer ≥ 1');
+		if (!Number.isFinite(settings.minEvaluators) || settings.minEvaluators < 0) {
+			errors.push('minEvaluators must be a finite integer ≥ 0');
 		}
 	}
 	if (settings.minConsensus !== undefined) {
@@ -82,18 +91,43 @@ export function validateSynthesisSettings(
 			errors.push('attachThreshold must be in (0, 1]');
 		}
 	}
+	if (settings.clusterThreshold !== undefined) {
+		if (
+			!Number.isFinite(settings.clusterThreshold) ||
+			settings.clusterThreshold <= 0 ||
+			settings.clusterThreshold > 1
+		) {
+			errors.push('clusterThreshold must be in (0, 1]');
+		}
+	}
 	if (settings.reviewLowerBound !== undefined) {
 		if (
 			!Number.isFinite(settings.reviewLowerBound) ||
-			settings.reviewLowerBound < 0.5 ||
+			settings.reviewLowerBound < 0 ||
 			settings.reviewLowerBound >= 1
 		) {
-			errors.push('reviewLowerBound must be in [0.5, 1)');
+			errors.push('reviewLowerBound must be in [0, 1)');
 		}
+	}
+	// Three-band invariant: reviewLowerBound < clusterThreshold < attachThreshold.
+	if (
+		settings.reviewLowerBound !== undefined &&
+		settings.clusterThreshold !== undefined &&
+		settings.reviewLowerBound >= settings.clusterThreshold
+	) {
+		errors.push('reviewLowerBound must be strictly less than clusterThreshold');
+	}
+	if (
+		settings.clusterThreshold !== undefined &&
+		settings.attachThreshold !== undefined &&
+		settings.clusterThreshold >= settings.attachThreshold
+	) {
+		errors.push('clusterThreshold must be strictly less than attachThreshold');
 	}
 	if (
 		settings.reviewLowerBound !== undefined &&
 		settings.attachThreshold !== undefined &&
+		settings.clusterThreshold === undefined &&
 		settings.reviewLowerBound >= settings.attachThreshold
 	) {
 		errors.push('reviewLowerBound must be strictly less than attachThreshold');
