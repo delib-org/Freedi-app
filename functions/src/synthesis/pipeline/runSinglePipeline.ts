@@ -25,24 +25,32 @@ import {
  * text-embedding-3-small puts real-world paraphrases at ~0.78, well below
  * any threshold a human would set for "near-duplicate").
  *
- *   Pass 1 — SYNTH ATTACH: any existing synth at cosine ≥ attachThreshold
- *     → attach (0 LLM). Strict cosine is still appropriate here because the
- *     synth's regenerated title concentrates the merged proposal — true
- *     paraphrases of the synth land at or above 0.85.
+ * Each cluster in candidates gets a "best evidence" score = max(direct
+ * cluster cosine, max member cosine for members also in candidates).
+ * Transitive evidence via a member fixes synth-title drift: an LLM-merged
+ * title is abstracted/shortened and often loses cosine to a long-form
+ * paraphrase, but the original member's text is still close. Without the
+ * transitive bump, the pipeline would keep spawning duplicate synths that
+ * share members with existing ones.
  *
- *   Pass 2 — TOPIC-CLUSTER ATTACH: any existing topic cluster at cosine
+ *   Pass 1 — SYNTH ATTACH: any synth with best evidence ≥ attachThreshold
+ *     → attach (0 LLM).
+ *
+ *   Pass 2 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
  *     ≥ clusterThreshold → attach (0 LLM). Lenient: topic clusters group
  *     distinct-but-related ideas under a theme label.
  *
- *   Pass 3 — SPAWN (LLM-judged): top *plain option* at cosine ≥
- *     clusterThreshold → call generateSynthesizedProposal:
+ *   Pass 3 — SPAWN (LLM-judged): top *plain option that is NOT already a
+ *     member of a candidate cluster*, at cosine ≥ clusterThreshold → call
+ *     generateSynthesizedProposal:
  *       · success (proposal generated) → SPAWN SYNTH (1 LLM total)
  *       · cannotSynthesize             → fall back to generateTopicLabel
  *                                        → SPAWN TOPIC CLUSTER (2 LLM total)
  *     The cluster-fallback path bypasses the spawn-debounce window because
- *     the synth attempt already consumed it. We look at the top plain
- *     option (not candidates[0]) so a synth ranking #1 below its attach
- *     threshold doesn't shadow a stronger plain-option duplicate behind it.
+ *     the synth attempt already consumed it. We skip options that already
+ *     belong to a cluster — they should have been picked up by Pass 1/2
+ *     via transitive evidence; if they weren't, spawning from them would
+ *     just create a duplicate synth.
  *
  *   Pass 4 — REVIEW: top candidate at cosine ≥ reviewLowerBound but no
  *     plain option above clusterThreshold → queue pair for admin review
@@ -159,21 +167,83 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	}
 
 	const top = candidates[0];
-	const topPlainOption = candidates.find((c) => !isCluster(c.statement));
 	const triggerSource = `pipeline:${input.source}`;
 	const bypassDebounce = input.source === 'synthesizeNow' || input.source === 'selective';
 
 	// =====================================================================
-	// PASS 1 — SYNTH ATTACH (strict): any existing synth at ≥ attachThreshold
+	// Best-evidence index per candidate cluster
 	// =====================================================================
-	const synthMatch = candidates.find(
-		(c) => c.similarity >= settings.attachThreshold && isSynth(c.statement),
-	);
+	// A cluster's "best evidence" against the new option is the MAX of:
+	//   (a) its own direct cosine (cluster title vs new option), and
+	//   (b) the highest cosine of any of its members that also appears in
+	//       the candidates list (member-via transitive evidence).
+	//
+	// This is what fixes the duplicate-synth fragmentation we see in
+	// production: synth titles abstract and shorten the merged proposal,
+	// so their direct cosine to a new paraphrase often drops well below
+	// the cosine of the original member texts. Without this index, a
+	// new paraphrase at cosine 0.76 to an existing synth's member would
+	// be picked as a spawn sibling — creating a 2nd synth that shares
+	// the member with the 1st. With the index, the synth gets the
+	// member's cosine as evidence, attach passes fire, no fragmentation.
+	interface ClusterEvidence {
+		cluster: Statement;
+		bestSimilarity: number;
+		viaMember: boolean;
+	}
+	const clusterEvidence = new Map<string, ClusterEvidence>();
+	for (const c of candidates) {
+		if (isCluster(c.statement)) {
+			clusterEvidence.set(c.statement.statementId, {
+				cluster: c.statement,
+				bestSimilarity: c.similarity,
+				viaMember: false,
+			});
+		}
+	}
+	// Set of every option that is already a member of some cluster in
+	// candidates — used both for transitive evidence (here) and to
+	// exclude these options from spawn candidacy (below).
+	const memberOptionIds = new Set<string>();
+	for (const c of candidates) {
+		if (isCluster(c.statement)) {
+			for (const m of c.statement.integratedOptions ?? []) {
+				memberOptionIds.add(m);
+			}
+		}
+	}
+	for (const c of candidates) {
+		if (isCluster(c.statement)) continue;
+		if (!memberOptionIds.has(c.statement.statementId)) continue;
+		// This plain option is in some cluster; promote its cosine into
+		// the evidence score for every cluster (in candidates) that
+		// contains it.
+		for (const cand of candidates) {
+			if (!isCluster(cand.statement)) continue;
+			const members = cand.statement.integratedOptions ?? [];
+			if (!members.includes(c.statement.statementId)) continue;
+			const existing = clusterEvidence.get(cand.statement.statementId);
+			if (!existing || c.similarity > existing.bestSimilarity) {
+				clusterEvidence.set(cand.statement.statementId, {
+					cluster: cand.statement,
+					bestSimilarity: c.similarity,
+					viaMember: true,
+				});
+			}
+		}
+	}
+
+	// =====================================================================
+	// PASS 1 — SYNTH ATTACH: any synth with best evidence ≥ attachThreshold
+	// =====================================================================
+	const synthMatch = Array.from(clusterEvidence.values())
+		.filter((x) => isSynth(x.cluster) && x.bestSimilarity >= settings.attachThreshold)
+		.sort((a, b) => b.bestSimilarity - a.bestSimilarity)[0];
 	if (synthMatch) {
 		const result = await attachOptionToCluster({
-			cluster: synthMatch.statement,
+			cluster: synthMatch.cluster,
 			option,
-			similarity: synthMatch.similarity,
+			similarity: synthMatch.bestSimilarity,
 			triggerSource,
 		});
 		if (!result.attached) {
@@ -182,25 +252,27 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 
 		return {
 			action: 'attached',
-			reason: `synth attach cosine=${synthMatch.similarity.toFixed(3)} ≥ ${settings.attachThreshold}`,
-			clusterId: synthMatch.statement.statementId,
+			reason: `synth attach cosine=${synthMatch.bestSimilarity.toFixed(3)} ≥ ${settings.attachThreshold}${synthMatch.viaMember ? ' (via member)' : ''}`,
+			clusterId: synthMatch.cluster.statementId,
 			llmCalled: false,
 			durationMs: Date.now() - startedAt,
 		};
 	}
 
 	// =====================================================================
-	// PASS 2 — TOPIC-CLUSTER ATTACH: any existing topic cluster at
+	// PASS 2 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
 	// ≥ clusterThreshold
 	// =====================================================================
-	const topicMatch = candidates.find(
-		(c) => c.similarity >= settings.clusterThreshold && isTopicCluster(c.statement),
-	);
+	const topicMatch = Array.from(clusterEvidence.values())
+		.filter(
+			(x) => isTopicCluster(x.cluster) && x.bestSimilarity >= settings.clusterThreshold,
+		)
+		.sort((a, b) => b.bestSimilarity - a.bestSimilarity)[0];
 	if (topicMatch) {
 		const result = await attachOptionToCluster({
-			cluster: topicMatch.statement,
+			cluster: topicMatch.cluster,
 			option,
-			similarity: topicMatch.similarity,
+			similarity: topicMatch.bestSimilarity,
 			triggerSource,
 		});
 		if (!result.attached) {
@@ -209,12 +281,19 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 
 		return {
 			action: 'attached',
-			reason: `topic-cluster attach cosine=${topicMatch.similarity.toFixed(3)} ≥ ${settings.clusterThreshold}`,
-			clusterId: topicMatch.statement.statementId,
+			reason: `topic-cluster attach cosine=${topicMatch.bestSimilarity.toFixed(3)} ≥ ${settings.clusterThreshold}${topicMatch.viaMember ? ' (via member)' : ''}`,
+			clusterId: topicMatch.cluster.statementId,
 			llmCalled: false,
 			durationMs: Date.now() - startedAt,
 		};
 	}
+
+	// Top plain option for spawn — must NOT already be a member of any
+	// cluster in candidates, or we'd create a duplicate synth sharing
+	// members with an existing one.
+	const topPlainOption = candidates.find(
+		(c) => !isCluster(c.statement) && !memberOptionIds.has(c.statement.statementId),
+	);
 
 	// =====================================================================
 	// PASS 3 — SPAWN (LLM-judged): top plain option at ≥ clusterThreshold

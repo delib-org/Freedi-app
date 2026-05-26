@@ -371,6 +371,85 @@ describe('runSinglePipeline', () => {
 		expect(spawnMock).not.toHaveBeenCalled();
 	});
 
+	it('attaches transitively when a candidate plain option is a member of an existing synth (cosine via member)', async () => {
+		// Regression for the duplicate-synth bug seen on -x06X-Ew36qS:
+		// Synth title cosine to a new paraphrase often drops well below 0.85
+		// (LLM-merged titles abstract the proposal), but the original member
+		// option's cosine to the new paraphrase stays high. Without
+		// transitive evidence, the new paraphrase would spawn yet another
+		// synth sharing the member with the existing one.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'member-paraphrase',
+					integratedOptions: [],
+				} as unknown as Statement,
+				similarity: 0.86,
+			},
+			{
+				statement: {
+					statementId: 'existing-synth',
+					integratedOptions: ['member-paraphrase', 'founding-paraphrase'],
+					derivedByPipeline: 'synthesis',
+				} as unknown as Statement,
+				similarity: 0.65,
+			},
+		]);
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+		expect(result.action).toBe('attached');
+		expect(result.clusterId).toBe('existing-synth');
+		expect(result.reason).toContain('via member');
+		expect(attachMock).toHaveBeenCalledWith(
+			expect.objectContaining({
+				cluster: expect.objectContaining({ statementId: 'existing-synth' }),
+			}),
+		);
+		expect(spawnMock).not.toHaveBeenCalled();
+	});
+
+	it('does NOT spawn from a plain option already in a candidate cluster', async () => {
+		// Even if no attach pass fires (e.g. all best-evidence below attach
+		// threshold), we must not spawn a new synth using a sibling that's
+		// already part of an existing cluster — that would just create a
+		// duplicate cluster sharing the member.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				// Sub-attachThreshold plain option, but it's a member of the synth below.
+				statement: { statementId: 'shared-member', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.74,
+			},
+			{
+				statement: {
+					statementId: 'existing-synth-low-cosine',
+					integratedOptions: ['shared-member', 'other-member'],
+					derivedByPipeline: 'synthesis',
+				} as unknown as Statement,
+				similarity: 0.5,
+			},
+		]);
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+		// No attach (synth best-evidence = 0.74 via shared-member, still
+		// below default attachThreshold 0.85). No spawn either, because
+		// shared-member is excluded from spawn candidacy.
+		expect(result.action).toBe('review-queued');
+		expect(spawnMock).not.toHaveBeenCalled();
+		expect(attachMock).not.toHaveBeenCalled();
+	});
+
 	it('does NOT attach a sub-attachThreshold match to a synth, and spawns from plain option behind it', async () => {
 		// Regression: a partly-resembled option at cosine 0.7 must not be
 		// absorbed into the existing synth (synth attach requires
