@@ -12,10 +12,9 @@ You will receive an open-ended QUESTION and a sample of RESPONSES. Propose a tax
 Constraints:
 - Return between 1 and 8 categories. Prefer fewer broader categories over many narrow ones.
 - If the responses are mostly paraphrases of the same idea (homogeneous corpus), return a SINGLE category that captures that shared idea. Do not invent distinctions that aren't in the data.
-- Each category must hold at least 2 responses from the sample. If the data only supports 1 category, return 1.
+- A response that doesn't fit any broader theme is an OUTLIER. Give it its own narrow category that describes only that response. NEVER lump unrelated outliers together — "dogs in the park" and "parking traffic study" do not belong in the same category even if both are minority opinions.
 - Each "name" must be unique across the returned categories. If two ideas would have the same display name, merge them into one category.
-- Categories must be specific enough to be useful (avoid catch-all "Other") and broad enough that each holds multiple responses.
-- Category display names must be in the dominant language of the responses. If responses are mixed, use English.
+- Category display names must be in the dominant language of the responses. If responses are mixed, use English. Never mix two languages within a single category name.
 - The "key" field must be short snake_case English (e.g. "shared_infrastructure"), stable across reruns.
 - Each category needs a one-line description.
 

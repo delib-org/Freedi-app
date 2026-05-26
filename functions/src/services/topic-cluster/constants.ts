@@ -41,7 +41,7 @@ export const TOPIC_FRAMING_ORDER = 50;
 export const FIRESTORE_BATCH_SIZE = 500;
 
 // Cache (Step 2 + 3)
-export const PROMPT_VERSION_TAXONOMY = 'taxonomy-v2';
+export const PROMPT_VERSION_TAXONOMY = 'taxonomy-v3';
 export const PROMPT_VERSION_NORMALIZE = 'normalize-v1';
 export const PROMPT_VERSION_NAME = 'name-v1';
 
