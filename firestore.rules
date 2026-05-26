@@ -547,6 +547,17 @@ service cloud.firestore {
       allow delete: if request.auth.uid != null; // Only authenticated users can delete
     }
 
+    // Per-(cluster, user) provenance docs. Written server-side by
+    // functions/src/condensation/aggregation.ts. Read by the Join app to
+    // show evaluator-count breakdowns per cluster
+    // (apps/join/src/lib/store.ts subscribeClusterLinks).
+    // Trust level mirrors `evaluations` above — anonymous join sessions are
+    // authenticated via signInAnonymously().
+    match /clusterEvaluationLinks/{linkId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Typing status for real-time collaboration indicators
     match /typingStatus/{typingId} {
       allow read: if request.auth != null;

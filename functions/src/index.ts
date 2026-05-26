@@ -985,7 +985,6 @@ export const refreshUserStats = onSchedule(
 		timeZone: 'UTC',
 		...functionConfig,
 		timeoutSeconds: 300,
-		secrets: ['GEMINI_API_KEY'],
 	},
 	async () => {
 		await performUserStatsRefresh();
@@ -1107,7 +1106,6 @@ void hybridClusteringSweep; // keep import alive for future re-enable; no runtim
 exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering, {
 	memory: '1GiB',
 	timeoutSeconds: 540,
-	secrets: ['GEMINI_API_KEY'],
 });
 
 // HTTP endpoint for the new topic-cluster pipeline (admin-triggered, on-demand).
