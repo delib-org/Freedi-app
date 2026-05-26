@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
 	Collections,
 	getRandomUID,
@@ -7,10 +6,10 @@ import {
 	StatementSnapShot,
 	StatementType,
 } from '@freedi/shared-types';
-import { Response, Request, onInit, logger } from 'firebase-functions/v1';
+import { Response, Request, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';
-import { GEMINI_MODEL } from './config/gemini';
+import { GEMINI_MODEL, getGenAI, type CompatGenAI } from './config/gemini';
 import { logError } from './utils/errorHandling';
 
 interface SimpleDescendants {
@@ -22,19 +21,13 @@ interface Group {
 	statements: SimpleDescendants[];
 }
 
-let genAI: GoogleGenerativeAI;
+let genAI: CompatGenAI | null = null;
 
-onInit(() => {
-	try {
-		if (!process.env.GEMINI_API_KEY) {
-			throw new Error('Missing GEMINI_API_KEY environment variable');
-		}
+function ensureGenAI(): CompatGenAI {
+	if (!genAI) genAI = getGenAI();
 
-		genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-	} catch (error) {
-		logError(error, { operation: 'clusters.initGenAI' });
-	}
-});
+	return genAI;
+}
 
 export async function getCluster(req: Request, res: Response) {
 	try {
@@ -76,7 +69,7 @@ export async function getCluster(req: Request, res: Response) {
 			statementId: descendant.statementId,
 		}));
 
-		const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+		const model = ensureGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 
 		const prompt = `
         Hi Gemini! I need your help to cluster some statements based on their relevance to a main topic.

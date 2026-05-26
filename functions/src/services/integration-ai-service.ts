@@ -1,11 +1,10 @@
-import {
-	GenerativeModel,
-	GoogleGenerativeAI,
-	HarmCategory,
-	HarmBlockThreshold,
-} from '@google/generative-ai';
+import { HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
 import { logger } from 'firebase-functions';
-import { GEMINI_MODEL } from '../config/gemini';
+import {
+	GEMINI_MODEL,
+	getGenAI,
+	type CompatGenerativeModel,
+} from '../config/gemini';
 import { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { getParagraphsText } from '../helpers';
 
@@ -69,25 +68,12 @@ export type SynthesisGenerationResult = SynthesizedProposalResult | CannotSynthe
 /**
  * A cached singleton instance of the GenerativeModel.
  */
-let _integrationModel: GenerativeModel | null = null;
-
-/**
- * Get the GoogleGenerativeAI instance
- */
-function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GEMINI_API_KEY;
-
-	if (!apiKey) {
-		throw new Error('Missing GEMINI_API_KEY environment variable');
-	}
-
-	return new GoogleGenerativeAI(apiKey);
-}
+let _integrationModel: CompatGenerativeModel | null = null;
 
 /**
  * Initializes and retrieves the Generative AI model for integration tasks.
  */
-async function getIntegrationModel(): Promise<GenerativeModel> {
+async function getIntegrationModel(): Promise<CompatGenerativeModel> {
 	if (_integrationModel) {
 		return _integrationModel;
 	}

@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
 	Collections,
 	getRandomUID,
@@ -10,7 +9,7 @@ import { Framing, FramingRequest, FramingSnapshot, ClusterSnapshot } from '@free
 import { Response, Request, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';
-import { GEMINI_MODEL } from './config/gemini';
+import { GEMINI_MODEL, getGenAI as getCompatGenAI, type CompatGenAI } from './config/gemini';
 
 // New collection names (not yet in delib-npm)
 const FRAMING_COLLECTIONS = {
@@ -47,14 +46,11 @@ interface AIFraming {
 	}[];
 }
 
-let genAI: GoogleGenerativeAI | undefined;
+let genAI: CompatGenAI | undefined;
 
-function getGenAI(): GoogleGenerativeAI {
+function getGenAI(): CompatGenAI {
 	if (genAI) return genAI;
-	if (!process.env.GEMINI_API_KEY) {
-		throw new Error('Missing GEMINI_API_KEY environment variable');
-	}
-	genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+	genAI = getCompatGenAI();
 
 	return genAI;
 }

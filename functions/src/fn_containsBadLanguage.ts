@@ -1,13 +1,5 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GEMINI_MODEL } from './config/gemini';
+import { GEMINI_MODEL, getGenAI } from './config/gemini';
 import { logError } from './utils/errorHandling';
-
-function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) throw new Error('Missing GEMINI_API_KEY');
-
-	return new GoogleGenerativeAI(apiKey);
-}
 
 export async function containsBadLanguage(text: string): Promise<boolean> {
 	try {
