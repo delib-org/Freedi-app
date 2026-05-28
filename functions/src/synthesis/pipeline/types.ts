@@ -33,14 +33,20 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	// should wait for some evaluation signal first.
 	minEvaluators: 0,
 	minConsensus: 0.0,
-	// Three-band geometry:
+	// Three-band geometry, tuned for text-embedding-3-small with proper
+	// "Question: <parent text>\nAnswer: <option>" context (see embedding.ts
+	// for the matching context contract):
 	//   - cosine ≥ 0.85 → near-duplicates → synth (one unified proposal)
-	//   - 0.60 ≤ cosine < 0.85 → same topic / different ideas → cluster
-	//   - 0.50 ≤ cosine < 0.60 → uncertain → admin review
+	//   - 0.65 ≤ cosine < 0.85 → same topic / different ideas → cluster
+	//   - 0.50 ≤ cosine < 0.65 → uncertain → admin review
 	//   - cosine < 0.50 → singleton
-	// Admins can override per question via the synthesis settings UI.
+	// With matched-context embeddings, within-synth paraphrases land at
+	// 0.86–0.95, cross-synth same-topic at 0.70–0.83, and cross-topic at
+	// 0.50–0.72. Cosine bands overlap somewhat between cross-synth and the
+	// review band, which the LLM spawn-judge resolves by deciding synth vs
+	// topic-cluster at spawn time.
 	attachThreshold: 0.85,
-	clusterThreshold: 0.6,
+	clusterThreshold: 0.65,
 	reviewLowerBound: 0.5,
 };
 

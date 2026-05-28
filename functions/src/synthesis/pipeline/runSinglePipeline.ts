@@ -148,7 +148,7 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 		if (cons < settings.minConsensus) return skipped('below-min-consensus', startedAt);
 	}
 
-	const embedding = await ensureEmbedding(option);
+	const embedding = await ensureEmbedding(option, parent.statement);
 	if (!embedding) return skipped('no-embedding', startedAt);
 
 	const neighbors = await vectorSearchService.findSimilarByEmbedding(embedding, option.parentId, {
