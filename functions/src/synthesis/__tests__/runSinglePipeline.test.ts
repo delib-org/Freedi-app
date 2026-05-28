@@ -324,10 +324,13 @@ describe('runSinglePipeline', () => {
 	it('skips when both synth and cluster fallback fail', async () => {
 		const option = makeOption();
 		const parent = makeParent();
+		// Cosine 0.80 is in the synth-attempt band (≥ synthLowerBound 0.78
+		// and < attachThreshold 0.85), which is where the LLM is invited to
+		// merge and the cluster fallback applies when it refuses.
 		findSimilarMock.mockResolvedValue([
 			{
 				statement: { statementId: 'sibling-3', integratedOptions: [] } as unknown as Statement,
-				similarity: 0.7,
+				similarity: 0.8,
 			},
 		]);
 		spawnMock
@@ -451,11 +454,12 @@ describe('runSinglePipeline', () => {
 	});
 
 	it('does NOT attach a sub-attachThreshold match to a synth, and spawns from plain option behind it', async () => {
-		// Regression: a partly-resembled option at cosine 0.7 must not be
+		// Regression: a partly-resembled option at cosine 0.71 must not be
 		// absorbed into the existing synth (synth attach requires
-		// attachThreshold 0.85). Under the new LLM-judged spawn, the pipeline
-		// hits the plain option behind the synth and asks the LLM whether to
-		// synth or cluster.
+		// attachThreshold 0.85). With the band router, cosines in
+		// [clusterThreshold, synthLowerBound) route directly to a topic-cluster
+		// spawn — skipping the wasted synth attempt that the synth-judge
+		// prompt would not refuse for non-conflicting distinct ideas.
 		const option = makeOption();
 		const parent = makeParent();
 		findSimilarMock.mockResolvedValue([
@@ -472,11 +476,7 @@ describe('runSinglePipeline', () => {
 				similarity: 0.7,
 			},
 		]);
-		// Simulate LLM refusal so we land on a topic-cluster fallback —
-		// matches the "partly-resembled, different proposal" intent.
-		spawnMock
-			.mockResolvedValueOnce({ spawned: false, cannotSynthesize: true })
-			.mockResolvedValueOnce({ spawned: true, clusterId: 'new-topic-cluster' });
+		spawnMock.mockResolvedValueOnce({ spawned: true, clusterId: 'new-topic-cluster' });
 		const result = await runSinglePipeline({
 			optionId: option.statementId,
 			source: 'onCreate',
@@ -486,16 +486,12 @@ describe('runSinglePipeline', () => {
 		expect(result.action).toBe('spawned');
 		expect(result.clusterId).toBe('new-topic-cluster');
 		expect(attachMock).not.toHaveBeenCalled();
-		expect(spawnMock).toHaveBeenNthCalledWith(
-			1,
+		expect(spawnMock).toHaveBeenCalledTimes(1);
+		expect(spawnMock).toHaveBeenCalledWith(
 			expect.objectContaining({
-				mode: 'synth',
+				mode: 'cluster',
 				sibling: expect.objectContaining({ statementId: 'sibling-plain' }),
 			}),
-		);
-		expect(spawnMock).toHaveBeenNthCalledWith(
-			2,
-			expect.objectContaining({ mode: 'cluster', bypassDebounce: true }),
 		);
 	});
 

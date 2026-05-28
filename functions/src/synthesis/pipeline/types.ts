@@ -16,11 +16,28 @@ export interface SynthesisSettings {
 	/** Cosine ≥ this → near-duplicate. Auto-attach to existing synth, else spawn new synth (1 LLM). */
 	attachThreshold: number;
 	/**
-	 * Cosine ≥ this AND < attachThreshold → same topic but distinct ideas.
-	 * Auto-attach to existing topic cluster, else spawn new cluster.
-	 * Bands order: reviewLowerBound < clusterThreshold < attachThreshold.
+	 * Cosine ≥ this AND < synthLowerBound → distinct ideas worth bundling under
+	 * a theme label. Spawn topic-cluster directly via `generateTopicLabel`
+	 * (cheap LLM, no synthesis attempt).
+	 * Bands order: reviewLowerBound < clusterThreshold ≤ synthLowerBound ≤ attachThreshold.
 	 */
 	clusterThreshold: number;
+	/**
+	 * Cosine ≥ this AND < attachThreshold → may be near-duplicates worth
+	 * synthesizing. Spawn attempts `generateSynthesizedProposal` (the
+	 * full unified-proposal prompt). If the LLM returns `cannotSynthesize`
+	 * we fall back to `generateTopicLabel` for a topic-cluster.
+	 *
+	 * Why a separate lower bound rather than always trying the synth
+	 * prompt down to `clusterThreshold`: the synth-judge LLM prompt is
+	 * scoped to refuse on *directional conflict* only — it happily
+	 * synthesizes any two pro-aligned ideas that share vocabulary. For
+	 * cosine bands clearly below near-duplicate territory, that produces
+	 * over-merged proposals that erase distinct ideas. Routing those
+	 * directly to topic-cluster (a short theme label) preserves the
+	 * structural distinction the user submitted and saves an LLM call.
+	 */
+	synthLowerBound: number;
 	/** Cosine in [reviewLowerBound, clusterThreshold) → send to admin review (no LLM call). */
 	reviewLowerBound: number;
 }
@@ -46,6 +63,7 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	// review band, which the LLM spawn-judge resolves by deciding synth vs
 	// topic-cluster at spawn time.
 	attachThreshold: 0.85,
+	synthLowerBound: 0.78,
 	clusterThreshold: 0.65,
 	reviewLowerBound: 0.5,
 };
@@ -97,6 +115,15 @@ export function validateSynthesisSettings(
 			errors.push('attachThreshold must be in (0, 1]');
 		}
 	}
+	if (settings.synthLowerBound !== undefined) {
+		if (
+			!Number.isFinite(settings.synthLowerBound) ||
+			settings.synthLowerBound <= 0 ||
+			settings.synthLowerBound > 1
+		) {
+			errors.push('synthLowerBound must be in (0, 1]');
+		}
+	}
 	if (settings.clusterThreshold !== undefined) {
 		if (
 			!Number.isFinite(settings.clusterThreshold) ||
@@ -137,6 +164,20 @@ export function validateSynthesisSettings(
 		settings.reviewLowerBound >= settings.attachThreshold
 	) {
 		errors.push('reviewLowerBound must be strictly less than attachThreshold');
+	}
+	if (
+		settings.synthLowerBound !== undefined &&
+		settings.attachThreshold !== undefined &&
+		settings.synthLowerBound > settings.attachThreshold
+	) {
+		errors.push('synthLowerBound must be ≤ attachThreshold');
+	}
+	if (
+		settings.clusterThreshold !== undefined &&
+		settings.synthLowerBound !== undefined &&
+		settings.clusterThreshold > settings.synthLowerBound
+	) {
+		errors.push('clusterThreshold must be ≤ synthLowerBound');
 	}
 
 	return { valid: errors.length === 0, errors };

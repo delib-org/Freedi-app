@@ -114,6 +114,7 @@ describe('synthesis settings', () => {
 				minEvaluators: 5,
 				minConsensus: 0.3,
 				attachThreshold: 0.97,
+				synthLowerBound: DEFAULT_SYNTHESIS_SETTINGS.synthLowerBound,
 				clusterThreshold: 0.75,
 				reviewLowerBound: 0.6,
 			});

@@ -45,6 +45,26 @@ export async function ensureEmbedding(
 			parentText ?? '',
 		);
 
+		// Persist so subsequent callers (including the upstream
+		// `generateEmbeddingForStatement` task that might still be running)
+		// find it cached instead of issuing another OpenAI call. saveEmbedding
+		// is idempotent at the doc-update level — last write wins, but the
+		// vector is deterministic for a given (text, context) pair so any
+		// late-arriving write produces an equivalent vector.
+		try {
+			await embeddingCache.saveEmbedding(
+				statement.statementId,
+				result.embedding,
+				parentText ?? '',
+				statement.statement,
+			);
+		} catch (saveError) {
+			logger.warn('synthesis.pipeline.ensureEmbedding: cache save failed (non-fatal)', {
+				statementId: statement.statementId,
+				error: saveError instanceof Error ? saveError.message : String(saveError),
+			});
+		}
+
 		return result.embedding;
 	} catch (error) {
 		logger.warn('synthesis.pipeline.ensureEmbedding: generation failed', {
