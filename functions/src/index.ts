@@ -1000,6 +1000,7 @@ export const refreshUserStats = onSchedule(
 export { synthesisJobStart, synthesisJobCancel } from './synthesis/asyncJob/fn_synthesisJobStart';
 export { fn_synthesisHeartbeatSweep } from './synthesis/asyncJob/fn_synthesisHeartbeatSweep';
 export { fn_synthesisBulkFlush } from './synthesis/scheduled/fn_synthesisBulkFlush';
+export { fn_synthesisReJudge } from './synthesis/scheduled/fn_synthesisReJudge';
 
 import { dispatchSynthesisJobWrite } from './synthesis/asyncJob/fn_synthesisJobDispatch';
 
