@@ -50,22 +50,26 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	// should wait for some evaluation signal first.
 	minEvaluators: 0,
 	minConsensus: 0.0,
-	// Three-band geometry, tuned for text-embedding-3-small with proper
+	// Four-band geometry, tuned for text-embedding-3-small with proper
 	// "Question: <parent text>\nAnswer: <option>" context (see embedding.ts
 	// for the matching context contract):
-	//   - cosine ≥ 0.85 → near-duplicates → synth (one unified proposal)
-	//   - 0.65 ≤ cosine < 0.85 → same topic / different ideas → cluster
-	//   - 0.50 ≤ cosine < 0.65 → uncertain → admin review
-	//   - cosine < 0.50 → singleton
+	//   - cosine ≥ 0.85 (attachThreshold)   → near-duplicates → synth attach
+	//   - 0.78 (synthLowerBound) ≤ cosine < 0.85 → spawn synth (LLM tries
+	//     unified proposal; on cannotSynthesize falls back to topic-cluster)
+	//   - 0.60 (clusterThreshold) ≤ cosine < 0.78 → spawn topic-cluster
+	//     directly via generateTopicLabel — skip the wasted synth attempt
+	//   - 0.45 (reviewLowerBound) ≤ cosine < 0.60 → admin review queue
+	//   - cosine < 0.45 → singleton
 	// With matched-context embeddings, within-synth paraphrases land at
-	// 0.86–0.95, cross-synth same-topic at 0.70–0.83, and cross-topic at
-	// 0.50–0.72. Cosine bands overlap somewhat between cross-synth and the
-	// review band, which the LLM spawn-judge resolves by deciding synth vs
-	// topic-cluster at spawn time.
+	// 0.86–0.95, cross-synth same-topic at 0.65–0.84, and cross-topic at
+	// 0.30–0.65. Cluster band lowered from 0.65 to 0.60 so that
+	// genuinely-same-topic but action-distinct pairs (e.g. "exercise" +
+	// "eat well" — both health, cosine ~0.60-0.65) form a topic-cluster
+	// instead of staying as separate top-level synths.
 	attachThreshold: 0.85,
 	synthLowerBound: 0.78,
-	clusterThreshold: 0.65,
-	reviewLowerBound: 0.5,
+	clusterThreshold: 0.6,
+	reviewLowerBound: 0.45,
 };
 
 /**
