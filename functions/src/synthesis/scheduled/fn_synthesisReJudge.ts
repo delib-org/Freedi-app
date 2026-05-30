@@ -5,7 +5,23 @@ import { Collections, functionConfig, type Statement } from '@freedi/shared-type
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
-import { DEFAULT_SYNTHESIS_SETTINGS } from '../pipeline/types';
+
+/**
+ * Merge gate for reJudge.
+ *
+ * Set BELOW DEFAULT_SYNTHESIS_SETTINGS.attachThreshold (0.85) because the
+ * live pipeline's attach gate is per-pair (one cosine value), while reJudge
+ * uses top-2 cross-member-pair average (two pairs must agree). The two-pair
+ * confirmation provides natural robustness, so we can be more permissive on
+ * the single-number cutoff without admitting outlier-driven merges.
+ *
+ * Calibrated against the synth benchmark: friends-time and
+ * community-clubs paraphrases in run #6 split into 5+4 synths with
+ * cross-member top-2 average in the 0.80-0.84 range. 0.82 captures those
+ * true duplicates while leaving cross-topic pairs (typical top-2-avg ≤0.75)
+ * untouched.
+ */
+const REJUDGE_MERGE_THRESHOLD = 0.82;
 
 /**
  * Cross-synth reJudge sweep — merges duplicate synths the live pipeline
@@ -209,7 +225,7 @@ async function processParent(parentId: string, synthDocs: Statement[]): Promise<
 	}
 	if (!embeddings || typeof embeddings.get !== 'function') return { merges: 0 };
 
-	const threshold = DEFAULT_SYNTHESIS_SETTINGS.attachThreshold;
+	const threshold = REJUDGE_MERGE_THRESHOLD;
 	let merges = 0;
 	// Loop: find best merge pair, perform it, repeat. Each merge shrinks the
 	// synth list; recompute pairs each iteration so freshly-merged recipients
