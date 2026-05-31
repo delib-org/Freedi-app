@@ -3,9 +3,6 @@ import { useNavigate, useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { Role, Screen, Statement } from '@freedi/shared-types';
 
-// Constants
-import { LANGUAGES } from '@/constants/Languages';
-
 // Hooks
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -56,8 +53,6 @@ const StatementTopNav: FC<Props> = ({
 
 	const isAdmin = role === Role.admin || user?.uid === statement?.creatorId;
 
-	const currentLabel = LANGUAGES.find((lang) => lang.code === currentLanguage)?.label;
-
 	function handleNavigation(path: string | Screen) {
 		if (!statement?.statementId) return;
 		if (Object.values(Screen).includes(path as Screen)) {
@@ -94,7 +89,7 @@ const StatementTopNav: FC<Props> = ({
 						setIsMenuOpen={setIsHeaderMenuOpen}
 						headerStyle={headerStyle}
 						isAdmin={isAdmin}
-						currentLabel={currentLabel}
+						currentLanguage={currentLanguage}
 						t={t}
 						onShare={handleShare}
 						onLogout={handleLogout}

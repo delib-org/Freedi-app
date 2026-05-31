@@ -301,6 +301,30 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 
 	await enqueueClusterRecompute(clusterId, `${triggerSource}:spawn`, option.creatorId);
 
+	// Mark this parent for the periodic bulk-flush sweep. The live pipeline
+	// handles attaches and the first few spawns reactively; the scheduled
+	// `fn_synthesisBulkFlush` re-truths cluster structure with UMAP+DBSCAN
+	// over the full parent corpus once activity settles (~30s quiet window),
+	// which catches members that live-synth left fragmented.
+	try {
+		await db()
+			.collection('_synthBulkRequests')
+			.doc(option.parentId)
+			.set(
+				{
+					parentId: option.parentId,
+					lastSpawnAt: Date.now(),
+					lastSpawnClusterId: clusterId,
+				},
+				{ merge: true },
+			);
+	} catch (error) {
+		logger.warn('synthesis.pipeline.spawn: bulk-request marker write failed (non-fatal)', {
+			parentId: option.parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
 	return { spawned: true, clusterId };
 }
 

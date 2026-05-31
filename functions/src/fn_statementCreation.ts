@@ -502,6 +502,20 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 			return;
 		}
 
+		// If a concurrent path (the live-synth onCreate trigger) already
+		// produced and saved the embedding for this statement, skip the
+		// OpenAI call. The cache lives on the statement doc itself, so a
+		// single point-read is enough to detect.
+		const existing = await embeddingCache.getBatchEmbeddings([statement.statementId]);
+		const cached = existing.get(statement.statementId);
+		if (cached && cached.length > 0) {
+			logger.info(
+				`Skipping embedding for statement ${statement.statementId} - already cached by another path`,
+			);
+
+			return;
+		}
+
 		const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
 
 		if (!parentDoc.exists) {

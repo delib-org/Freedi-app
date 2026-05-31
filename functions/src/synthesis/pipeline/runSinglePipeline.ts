@@ -4,6 +4,8 @@ import { Collections, StatementType, type Statement } from '@freedi/shared-types
 import { vectorSearchService } from '../../services/vector-search-service';
 import { loadSynthesisSettingsFromStatement } from './loadSynthesisSettings';
 import { ensureEmbedding } from './embedding';
+import { expandClusterEvidenceViaFullMembers } from './candidateExpansion';
+import { routeByCosine } from './bandRouter';
 import {
 	attachOptionToCluster,
 	isCluster,
@@ -72,6 +74,15 @@ export interface PipelineInput {
 	option?: Statement;
 	parent?: Statement;
 	forceProcess?: boolean;
+	/**
+	 * Caller-supplied embedding for the option. When present, the pipeline
+	 * uses it directly instead of polling the cache + falling back to inline
+	 * generation in `ensureEmbedding`. Live-synth triggers pre-compute the
+	 * embedding with the correct parent-text context so the pipeline never
+	 * pays the 5s cache-wait + redundant OpenAI call observed when this
+	 * field is omitted.
+	 */
+	precomputedEmbedding?: number[];
 }
 
 export type PipelineAction =
@@ -148,7 +159,10 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 		if (cons < settings.minConsensus) return skipped('below-min-consensus', startedAt);
 	}
 
-	const embedding = await ensureEmbedding(option);
+	const embedding =
+		input.precomputedEmbedding && input.precomputedEmbedding.length > 0
+			? input.precomputedEmbedding
+			: await ensureEmbedding(option, parent.statement);
 	if (!embedding) return skipped('no-embedding', startedAt);
 
 	const neighbors = await vectorSearchService.findSimilarByEmbedding(embedding, option.parentId, {
@@ -234,6 +248,27 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	}
 
 	// =====================================================================
+	// Stage B — full-member evidence expansion
+	// =====================================================================
+	// Stage A only surfaces the top-N (N=10) vector neighbors. When a cluster
+	// has many members and only a few land in the neighborhood (or none, if
+	// they were crowded out by other near-duplicates), the in-candidates
+	// transitive evidence above can fail to lift the cluster above the
+	// attach gate. Stage B fetches every member's stored embedding and
+	// promotes bestSimilarity using the average of top-2 member cosines.
+	// See candidateExpansion.ts for the rationale on top-2-average.
+	const stageBStarted = Date.now();
+	const stageB = await expandClusterEvidenceViaFullMembers(clusterEvidence, embedding);
+	if (stageB.promotions > 0) {
+		logger.debug('synthesis.pipeline.stageB.promotions', {
+			optionId: option.statementId,
+			clusterCount: clusterEvidence.size,
+			promoted: stageB.promotions,
+			durationMs: Date.now() - stageBStarted,
+		});
+	}
+
+	// =====================================================================
 	// PASS 1 — SYNTH ATTACH: any synth with best evidence ≥ attachThreshold
 	// =====================================================================
 	const synthMatch = Array.from(clusterEvidence.values())
@@ -296,13 +331,44 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	);
 
 	// =====================================================================
-	// PASS 3 — SPAWN (LLM-judged): top plain option at ≥ clusterThreshold
+	// PASS 3 — SPAWN (band-routed): top plain option ≥ clusterThreshold
 	// =====================================================================
-	// Try synth first (generateSynthesizedProposal). If the LLM says
-	// cannotSynthesize, fall back to topic cluster (generateTopicLabel) —
-	// with bypassDebounce because the synth attempt already consumed the
-	// per-parent spawn-debounce window.
+	// Route by cosine band (see bandRouter.ts):
+	//   - cosine ≥ synthLowerBound → try synth (LLM unified proposal);
+	//     on cannotSynthesize fall back to topic-cluster.
+	//   - clusterThreshold ≤ cosine < synthLowerBound → spawn topic-cluster
+	//     directly (cheap generateTopicLabel; skip the wasted synth attempt
+	//     since the prompt won't refuse on non-conflicting distinct ideas).
 	if (topPlainOption && topPlainOption.similarity >= settings.clusterThreshold) {
+		const route = routeByCosine(topPlainOption.similarity, settings);
+
+		if (route === 'spawn-topic-cluster') {
+			const clusterAttempt = await spawnClusterFromPair({
+				option,
+				sibling: topPlainOption.statement,
+				similarity: topPlainOption.similarity,
+				parentStatement: parent,
+				triggerSource,
+				bypassDebounce,
+				mode: 'cluster',
+			});
+			if (clusterAttempt.spawned) {
+				return {
+					action: 'spawned',
+					reason: `spawn topic-cluster at cosine=${topPlainOption.similarity.toFixed(3)} (sub-synth band)`,
+					clusterId: clusterAttempt.clusterId,
+					llmCalled: true,
+					durationMs: Date.now() - startedAt,
+				};
+			}
+			if (clusterAttempt.debounced) {
+				return skipped('spawn-debounced', startedAt);
+			}
+
+			return skipped('spawn-failed', startedAt);
+		}
+
+		// route === 'spawn-synth' — try synth first, fall back to cluster.
 		const synthAttempt = await spawnClusterFromPair({
 			option,
 			sibling: topPlainOption.statement,
