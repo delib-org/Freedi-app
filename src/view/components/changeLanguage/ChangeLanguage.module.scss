@@ -1,181 +1,115 @@
-.background {
-	background-color: var(--statementBackground);
-	width: 40em;
-	padding: 2rem;
-	display: flex;
-	border-radius: 0.5rem;
-	flex-direction: column;
-	min-height: 700px;
-	min-width: 300px;
+.popover {
 	position: absolute;
-	z-index: 1002;
-
-	@media (max-width: 1360px) {
-		top: 100px;
-	}
-
-	@media (max-width: 768px) {
-		width: 105svw;
-		height: 100svh;
-		top: -15px;
-		left: -10px;
-		padding: 1.2rem;
-		border-radius: 0;
-
-		.XBtn {
-			display: none;
-		}
-	}
-
-	.closeBtn {
-		border-bottom: 1px solid black;
-		margin: 0 auto;
-		position: relative;
-		top: 4%;
-		padding: 1em;
-		color: white;
-		background-color: #5f88e5;
-		border: none;
-		flex: 0.05;
-
-
-		box-shadow:
-			0px 2px 4px 0px rgba(38, 56, 84, 0.22),
-			0px 9px 6px 0px rgba(38, 56, 84, 0.11),
-			0px 16px 7px 0px rgba(38, 56, 84, 0.03);
-
-		@media (max-width: 768px) {
-			flex: 0.12;
-		}
-	}
-
-	.languageOption {
-		padding: 1em;
-	}
-}
-
-.overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	z-index: 20;
-	animation: coloring 0.5s forwards ease-in-out;
-
-	@media (max-width: 768px) {
-		display: none;
-	}
-}
-
-.language {
-	border-radius: 3rem;
-	color: var(--text-blue);
-	height: var(--height-of-interaction-component);
-	text-align: center;
-	font-size: 1rem;
-	margin: 0 auto;
-}
-
-.languageOption {
-	display: flex;
-	border-top: 1px solid #e0e0e0;
-	padding: 1em;
-	border-radius: 4px;
-	cursor: pointer;
-	transition: 0.2s ease;
-	width: 100%;
-	font-size: 1.125rem;
-	gap: 1px;
-	order: 0;
-	font-weight: normal;
-}
-
-.language option:nth-child(even) {
-	background-color: white;
-}
-
-.reverse {
-	transform: scaleX(-1);
-}
-
-.optionsWrapper {
+	top: calc(100% + 0.5rem);
+	z-index: 1100;
+	min-width: 12.5rem;
+	max-width: 16rem;
+	padding: 0.375rem;
+	background-color: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: 0.75rem;
+	box-shadow:
+		0px 8px 16px rgba(38, 56, 84, 0.12),
+		0px 16px 32px rgba(38, 56, 84, 0.08);
 	display: flex;
 	flex-direction: column;
-	width: 60%;
-	margin: 0 auto;
+	gap: 2px;
+	animation: popoverAppear 0.15s ease-out;
 
-	@media (max-width: 768px) {
-		width: 100%;
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
 	}
 }
 
-.languageOption:hover {
-	background-color: var(--toggle-background);
+.alignEnd {
+	inset-inline-end: 0;
 }
 
-.languageOption.selected {
-	background-color: #fff;
-	color: var(--text-disabled);
-	border-top: none;
-	order: -1;
-	cursor: default;
+.alignCenter {
+	left: 50%;
+	transform: translateX(-50%);
 }
 
-.backArrow {
-	color: blue;
+.option {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	border: none;
+	border-radius: 0.5rem;
+	background: transparent;
+	color: var(--text-body);
+	font-family: 'Open Sans', sans-serif;
+	font-size: 0.9375rem;
+	font-weight: 500;
+	text-align: start;
 	cursor: pointer;
-	margin-bottom: 20px;
-	padding: 0;
+	transition: background-color 0.12s ease;
 
-	@media (min-width: 768px) {
-		display: none;
+	&:hover {
+		background-color: var(--toggle-background, rgba(95, 136, 229, 0.08));
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: -2px;
 	}
 }
 
-
+.selected {
+	background-color: rgba(95, 136, 229, 0.1);
+	color: var(--btn-primary);
+	font-weight: 600;
+}
 
 .flag {
-	font-size: 1.2em;
-	margin-right: 0.5em;
-	margin-left: 0.5em;
+	width: 1.25rem;
+	height: 1.25rem;
+	flex-shrink: 0;
+	border-radius: 2px;
+	overflow: hidden;
 }
 
-.XBtn {
-	color: var(--text-blue);
-	font-size: 1.4em;
-	text-align: right;
-	margin: 0.5em;
+.label {
+	flex: 1;
+}
 
-	:global(svg) {
-		cursor: pointer;
+.check {
+	color: var(--btn-primary);
+	font-weight: 700;
+	margin-inline-start: 0.5rem;
+}
+
+@keyframes popoverAppear {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
 	}
 }
 
-.title {
-	color: var(--text-title);
-	font-size: 1.25rem;
-	font-weight: medium;
-	text-align: start;
-	margin: 0 20% 0.5em 20%;
-	padding-bottom: 1em;
-
-	@media (max-width: 768px) {
-		margin: 0;
+.alignCenter {
+	&[class] {
+		// Override transform animation interaction with translateX
+		@media (prefers-reduced-motion: no-preference) {
+			animation: popoverAppearCentered 0.15s ease-out;
+		}
 	}
 }
 
-.wrapper {
-	display: flex;
-	margin: 0 auto;
-}
-
-@keyframes coloring {
-	75% {
-		background-color: transparent;
+@keyframes popoverAppearCentered {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -4px);
 	}
 
-	100% {
-		background-color: rgba(1, 17, 55, 0.4);
+	to {
+		opacity: 1;
+		transform: translate(-50%, 0);
 	}
 }
