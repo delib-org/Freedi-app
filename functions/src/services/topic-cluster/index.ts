@@ -8,7 +8,7 @@ import { embedCanonicalSentences } from './embed';
 import { clusterCategory } from './cluster';
 import { nameClusters } from './name';
 import { reattachPools } from './pools';
-import { upsertTopicClusterFraming, type WriterInput } from './writer';
+import { upsertTopicClusters, type WriterInput } from './writer';
 import type {
 	ClusterGroup,
 	ClusterableItem,
@@ -128,7 +128,7 @@ export async function runTopicClusterPipeline(
 		poolAttachments,
 		dryRun: opts.dryRun ?? false,
 	};
-	const writeResult = await upsertTopicClusterFraming(writerInput);
+	const writeResult = await upsertTopicClusters(writerInput);
 
 	const summary: RunSummary = {
 		parentId: parent.statementId,
@@ -145,7 +145,6 @@ export async function runTopicClusterPipeline(
 			uncategorized: writeResult.uncategorized,
 			syntheticOptionsCreated: writeResult.syntheticOptionsCreated,
 		},
-		framingId: writeResult.framingId,
 		durationMs: Date.now() - startedAt,
 	};
 
@@ -176,7 +175,6 @@ function makeEmptySummary(
 			uncategorized: 0,
 			syntheticOptionsCreated: 0,
 		},
-		framingId: null,
 		durationMs: Date.now() - startedAt,
 	};
 }

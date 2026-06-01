@@ -74,19 +74,6 @@ import {
 	unsubscribeEmail,
 } from './fn_emailNotifications';
 import { getCluster, recoverLastSnapshot } from './fn_clusters';
-import {
-	generateMultipleFramings,
-	requestCustomFraming,
-	getFramingsForStatement,
-	getFramingClusters,
-	deleteFraming,
-} from './fn_multiFramingClusters';
-import {
-	getClusterAggregations,
-	recalculateClusterAggregation,
-	getFramingAggregationSummary,
-	onEvaluationChangeInvalidateCache,
-} from './fn_clusterAggregation';
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
 import { deleteResearchLogs } from './fn_deleteResearchLogs';
@@ -127,10 +114,7 @@ import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/da
 import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
-// Hybrid Text + Rating Clustering
-import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClustering';
 import { triggerTopicClusterPipeline } from './fn_topicClustering';
-import { triggerSummarizeFramingClusters } from './fn_summarizeClusters';
 import { fn_syncParagraphChildrenToDescription } from './fn_syncParagraphChildrenToDescription';
 
 // Strategic export (AI-ready report)
@@ -804,19 +788,6 @@ exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
 exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
 exports.regenerateSynthesisProposal = regenerateSynthesisProposal;
 
-// Multi-Framing Clustering
-exports.generateMultipleFramings = wrapHttpFunction(generateMultipleFramings);
-exports.requestCustomFraming = wrapHttpFunction(requestCustomFraming);
-exports.getFramingsForStatement = wrapHttpFunction(getFramingsForStatement);
-exports.getFramingClusters = wrapHttpFunction(getFramingClusters);
-exports.deleteFraming = wrapHttpFunction(deleteFraming);
-
-// Cluster Aggregation
-exports.getClusterAggregations = wrapHttpFunction(getClusterAggregations);
-exports.recalculateClusterAggregation = wrapHttpFunction(recalculateClusterAggregation);
-exports.getFramingAggregationSummary = wrapHttpFunction(getFramingAggregationSummary);
-exports.onEvaluationChangeInvalidateCache = onEvaluationChangeInvalidateCache;
-
 // Embedding Operations (for vector-based similarity search)
 exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
 exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
@@ -1080,36 +1051,6 @@ exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res:
 	res.json(result);
 });
 
-// --------------------------
-// HYBRID TEXT + RATING CLUSTERING
-// --------------------------
-
-// Scheduled function disabled — clustering is now admin-triggered via the
-// topic-cluster pipeline (fn_topicClustering.ts). The hybrid k-means sweep
-// is preserved as legacy code so existing hybrid-auto framings stay readable;
-// to re-enable, restore the export below.
-// export const hybridClusteringSweepScheduled = onSchedule(
-// 	{
-// 		schedule: '*/15 * * * *',
-// 		timeZone: 'UTC',
-// 		...functionConfig,
-// 		memory: '1GiB',
-// 		timeoutSeconds: 300,
-// 		secrets: ['GEMINI_API_KEY'],
-// 	},
-// 	async () => {
-// 		await hybridClusteringSweep();
-// 	},
-// );
-void hybridClusteringSweep; // keep import alive for future re-enable; no runtime effect
-
-// HTTP endpoint for manually triggering hybrid clustering on a specific question (admin auth required)
-// Same memory profile as the disabled scheduled sweep — k-means on 1536-d hybrid vectors.
-exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering, {
-	memory: '1GiB',
-	timeoutSeconds: 540,
-});
-
 // HTTP endpoint for the new topic-cluster pipeline (admin-triggered, on-demand).
 // Replaces the scheduled sweep above. See functions/src/services/topic-cluster/.
 // Pipeline loads many statements + 1536-d embeddings + UMAP/DBSCAN + Anthropic SDK
@@ -1117,13 +1058,6 @@ exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering,
 exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterPipeline, {
 	memory: '1GiB',
 	timeoutSeconds: 540,
-});
-
-// HTTP endpoint that asks an LLM to summarize each cluster of a Framing from
-// its above-threshold members; writes the result to cluster.brief.
-exports.triggerSummarizeFramingClusters = wrapAdminHttpFunction(triggerSummarizeFramingClusters, {
-	memory: '512MiB',
-	timeoutSeconds: 300,
 });
 
 // AI-ready strategic-report export. May trigger the topic-cluster pipeline as a

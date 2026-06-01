@@ -497,30 +497,6 @@ export type {
   DemographicQuestionSummary,
 } from "./models/strategicExport/strategicExportModel";
 
-// Framing models
-export type {
-  Framing,
-  ClusterAggregatedEvaluation,
-  FramingRequest,
-  ClusterSnapshot,
-  FramingSnapshot,
-  FramingCreatorType,
-  FramingRequestStatus,
-} from "./models/framing/framingModel";
-
-export {
-  FramingSchema,
-  ClusterAggregatedEvaluationSchema,
-  FramingRequestSchema,
-  ClusterSnapshotSchema,
-  FramingSnapshotSchema,
-  FramingCreatorTypeSchema,
-  FramingRequestStatusSchema,
-  CLUSTER_AGGREGATION_CACHE,
-  getClusterAggregationId,
-  isClusterAggregationValid,
-} from "./models/framing/framingModel";
-
 // Topic-Grouped Results Export
 export type {
   AgreementShape,

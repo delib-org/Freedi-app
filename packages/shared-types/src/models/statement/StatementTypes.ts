@@ -9,7 +9,6 @@ import {
 	any,
 	enum_,
 	picklist,
-	record,
 	InferOutput,
 	pipe,
 	transform,
@@ -163,8 +162,6 @@ export const StatementSchema = object({
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
 	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
-	framingId: optional(string()), // on cluster Statements (isCluster=true): the Framing this cluster belongs to
-	framingClusters: optional(record(string(), nullable(string()))), // on options: map framingId → clusterId (string, or null when cleared)
 	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
 	condensationStatus: optional(object({ // set on parent questions when the grouping pipeline runs
 		lastRunAt: optional(number()),

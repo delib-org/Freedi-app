@@ -8,11 +8,14 @@ import {
 	Statement,
 	StatementType,
 	UserDemographicQuestion,
-	type Framing,
 } from '@freedi/shared-types';
 
-const FRAMINGS = 'framings';
-const TOPIC_CLUSTER_CREATOR = 'topic-cluster' as const;
+/** A topic-cluster grouping derived directly from sibling cluster Statements. */
+export interface TopicClusterGrouping {
+	clusterId: string;
+	clusterName: string;
+	optionIds: string[];
+}
 
 /** Fetch the question Statement and verify it is StatementType.question. */
 export async function loadQuestion(questionStatementId: string): Promise<Statement> {
@@ -49,22 +52,31 @@ export async function loadDirectChildren(questionStatementId: string): Promise<S
 }
 
 /**
- * Load the active topic-cluster Framing for this question, if any.
- * Returns null when the pipeline has not yet been run.
+ * Load the topic-cluster groupings for this question directly from sibling
+ * cluster Statements (parentId === questionId && isCluster === true).
+ * Membership comes from each cluster's `integratedOptions`; the cluster's
+ * `statement` is used as the group name. Returns an empty array when the
+ * pipeline has not yet produced any clusters.
  */
-export async function loadTopicClusterFraming(
+export async function loadTopicClusterGroupings(
 	questionStatementId: string,
-): Promise<Framing | null> {
+): Promise<TopicClusterGrouping[]> {
 	const db = getFirestore();
 	const snap = await db
-		.collection(FRAMINGS)
-		.where('parentStatementId', '==', questionStatementId)
-		.where('createdBy', '==', TOPIC_CLUSTER_CREATOR)
-		.limit(1)
+		.collection(Collections.statements)
+		.where('parentId', '==', questionStatementId)
+		.where('isCluster', '==', true)
 		.get();
-	if (snap.empty) return null;
 
-	return snap.docs[0].data() as Framing;
+	return snap.docs.map((d) => {
+		const cluster = d.data() as Statement;
+
+		return {
+			clusterId: cluster.statementId,
+			clusterName: cluster.statement,
+			optionIds: cluster.integratedOptions ?? [],
+		};
+	});
 }
 
 /**
