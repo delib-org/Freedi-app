@@ -3,13 +3,14 @@ import { useLocation, useParams } from 'react-router';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { StatementContext } from '../../StatementCont';
 import styles from './Chat.module.scss';
-import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
+import TreeOptionNode from '../treeView/components/TreeOptionNode/TreeOptionNode';
+import TreeMessageNode from '../treeView/components/TreeMessageNode/TreeMessageNode';
 import ChatInput from './components/input/ChatInput';
 import NewMessages from './components/newMessages/NewMessages';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import Description from '../evaluations/components/description/Description';
-import { Statement } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useNotificationActions } from '@/controllers/hooks/useNotificationActions';
@@ -165,22 +166,28 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		setReplyToStatement(null);
 	}, []);
 
-	// Render each chat message card — used by Virtuoso
+	// Render each statement using the tree card components (shared with the tree view) — used by Virtuoso
 	const renderItem = useCallback(
 		(index: number) => {
 			const statementSub = subStatements[index];
+			const isOption = statementSub.statementType === StatementType.option;
 
-			return (
-				<ChatMessageCard
-					parentStatement={statement}
+			return isOption ? (
+				<TreeOptionNode
 					statement={statementSub}
-					previousStatement={subStatements[index - 1]}
-					sideChat={sideChat}
+					parentStatement={statement}
+					onReply={setReplyToStatement}
+				/>
+			) : (
+				<TreeMessageNode
+					statement={statementSub}
+					parentStatement={statement}
+					hasChildren={false}
 					onReply={setReplyToStatement}
 				/>
 			);
 		},
-		[subStatements, statement, sideChat],
+		[subStatements, statement],
 	);
 
 	// Header component for description and loading indicator
