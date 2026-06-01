@@ -157,7 +157,7 @@ function ViewByActiveTab({
 		return <CompoundQuestion />;
 	}
 
-	const isTreeView = statement?.statementSettings?.enableTreeView !== false;
+	const isTreeView = statement?.statementSettings?.enableTreeView === true;
 
 	switch (activeView) {
 		case 'chat':

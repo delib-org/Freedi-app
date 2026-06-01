@@ -72,7 +72,7 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 				badge="recommended"
 			/>
 			<ToggleSwitch
-				isChecked={settings.enableTreeView !== false}
+				isChecked={settings.enableTreeView === true}
 				onChange={(checked) => handleSettingChange('enableTreeView', checked)}
 				label={t('Tree View Discussion')}
 				description={t('Show threaded tree discussion instead of flat chat')}
