@@ -83,6 +83,14 @@
     margin-inline-start: auto;
     cursor: pointer;
     user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    // Keep the label on one line on narrow viewports too — wrap the whole
+    // control to a new row rather than breaking the text into three lines.
+    @media (max-width: 640px) {
+      margin-inline-start: 0;
+    }
   }
 
   &__override-input {

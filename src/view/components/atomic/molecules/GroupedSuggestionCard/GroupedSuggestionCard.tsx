@@ -5,7 +5,6 @@ import { Statement } from '@freedi/shared-types';
 import {
 	Layers,
 	ChevronDown,
-	ChevronRight,
 	Users,
 	ExternalLink,
 	Info,
@@ -76,12 +75,8 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	const [mobileMetaOpen, setMobileMetaOpen] = useState(false);
 	const [isReversing, setIsReversing] = useState(false);
 	const [isRegenerating, setIsRegenerating] = useState(false);
-	// Synthesis-only: collapse the source list under a "Built from N ideas"
-	// toggle so the proposal text is the dominant element of the card.
-	const [sourcesOpen, setSourcesOpen] = useState(false);
 	const disclosureId = useId();
 	const regionId = `${disclosureId}-originals`;
-	const sourcesRegionId = `${disclosureId}-sources`;
 	// Authorize against the parent deliberation: a creator/admin of the
 	// parent (or any ancestor in the trust chain) can reverse / regenerate.
 	const { isAdmin } = useAuthorization(cluster.parentId);
@@ -104,10 +99,10 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	const isSemantic = effectivePipeline === 'semantic';
 	const isCustom = effectivePipeline === 'custom';
 
-	// Synthesis clusters keep an always-visible source list — users have to
-	// see at all times which originals were merged. Other clusters keep the
-	// compact 2-line preview; their drawer is the discovery affordance.
-	const previewSliceLimit = isSynthesis ? count : PREVIEW_LIMIT;
+	// Both synthesis and cluster cards now use a single disclosure (the footer
+	// drawer) for provenance. The compact 2-line preview is only shown for
+	// non-synthesis clusters; synthesis cards keep the proposal text dominant.
+	const previewSliceLimit = PREVIEW_LIMIT;
 
 	// Read source originals from Redux only — no network. Originals live in
 	// the parent's options collection and are already loaded by the parent
@@ -303,12 +298,6 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 				<div className="grouped-suggestion__header">
 					<div className="grouped-suggestion__title-wrap">
 						{pipelineBadge}
-						{isSynthesis && (
-							<p className="grouped-suggestion__proposal-kicker">
-								<Sparkles size={12} aria-hidden />
-								<span>{t('AI-Synthesized Proposal')}</span>
-							</p>
-						)}
 						<h3
 							className={clsx('card__title', isSynthesis && 'grouped-suggestion__proposal-title')}
 						>
@@ -327,30 +316,14 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 					</div>
 				</div>
 
-				{/* Synthesis: proposal-first layout.
-				    - Title and description above are the dominant element.
-				    - Source list goes BEHIND a "Built from N source ideas →"
-				      toggle. Provenance is one click away, never absent.
-				    - Admin actions (Regenerate, Reverse) live in a row beside
-				      the sources toggle.
-				    Non-synthesis clusters fall through to the compact preview
-				    block below. */}
-				{isSynthesis && previewMembers.length > 0 && (
+				{/* Synthesis: proposal-first layout. The title + description above
+				    are the dominant element; the single source of provenance is
+				    the footer drawer ("N source ideas"). Here we surface only the
+				    primary CTA — read the full AI-authored proposal. Admin actions
+				    (Regenerate, Reverse) live inside the expanded drawer, in the
+				    context of the sources they act on. */}
+				{isSynthesis && (
 					<div className="grouped-suggestion__proposal-actions">
-						<button
-							type="button"
-							className="grouped-suggestion__sources-toggle"
-							aria-expanded={sourcesOpen}
-							aria-controls={sourcesRegionId}
-							onClick={() => setSourcesOpen((v) => !v)}
-						>
-							{sourcesOpen ? (
-								<ChevronDown size={14} aria-hidden />
-							) : (
-								<ChevronRight size={14} aria-hidden />
-							)}
-							<span>{t('Built from {count} source ideas').replace('{count}', String(count))}</span>
-						</button>
 						<Link
 							to={`/statement/${cluster.statementId}`}
 							className="grouped-suggestion__proposal-read"
@@ -358,76 +331,6 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 							<ExternalLink size={14} aria-hidden />
 							<span>{t('Read full proposal')}</span>
 						</Link>
-						{isAdmin && (
-							<>
-								<button
-									type="button"
-									className="grouped-suggestion__proposal-admin-btn"
-									onClick={handleRegenerateProposal}
-									disabled={isRegenerating}
-									title={t('Regenerate proposal (admin)')}
-									aria-label={t('Regenerate proposal (admin)')}
-								>
-									<RefreshCw size={12} aria-hidden />
-									<span>{isRegenerating ? t('Regenerating…') : t('Regenerate proposal')}</span>
-								</button>
-								<button
-									type="button"
-									className="grouped-suggestion__proposal-admin-btn grouped-suggestion__proposal-admin-btn--danger"
-									onClick={handleReverseSynthesis}
-									disabled={isReversing}
-									title={t('Reverse synthesis (admin)')}
-									aria-label={t('Reverse synthesis (admin)')}
-								>
-									<Undo2 size={12} aria-hidden />
-									<span>{isReversing ? t('Reversing…') : t('Reverse synthesis')}</span>
-								</button>
-							</>
-						)}
-					</div>
-				)}
-
-				{isSynthesis && previewMembers.length > 0 && sourcesOpen && (
-					<div
-						id={sourcesRegionId}
-						className="grouped-suggestion__sources"
-						role="region"
-						aria-label={originalsRegionAriaLabel}
-					>
-						<ul className="grouped-suggestion__sources-list">
-							{previewMembers.map((m) => {
-								const sourceConsensus = typeof m.consensus === 'number' ? m.consensus : undefined;
-								const sourceEvaluators = m.evaluation?.numberOfEvaluators ?? 0;
-
-								return (
-									<li key={m.statementId} className="grouped-suggestion__sources-item">
-										<Link
-											to={`/statement/${m.statementId}`}
-											className="grouped-suggestion__sources-link"
-											title={m.statement}
-										>
-											<span className="grouped-suggestion__sources-title">{m.statement}</span>
-											{sourceConsensus !== undefined && sourceEvaluators > 0 && (
-												<span
-													className="grouped-suggestion__sources-chip"
-													aria-label={t('Consensus before merge: {value}').replace(
-														'{value}',
-														sourceConsensus.toFixed(2),
-													)}
-												>
-													{sourceConsensus.toFixed(2)}
-												</span>
-											)}
-										</Link>
-									</li>
-								);
-							})}
-						</ul>
-						{previewRemainder > 0 && (
-							<span className="grouped-suggestion__sources-more">
-								{t('…and {count} more (loading)').replace('{count}', String(previewRemainder))}
-							</span>
-						)}
 					</div>
 				)}
 
@@ -531,6 +434,32 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 						aria-live="polite"
 						aria-label={originalsRegionAriaLabel}
 					>
+						{isSynthesis && isAdmin && (
+							<div className="grouped-suggestion__proposal-actions grouped-suggestion__proposal-actions--admin">
+								<button
+									type="button"
+									className="grouped-suggestion__proposal-admin-btn"
+									onClick={handleRegenerateProposal}
+									disabled={isRegenerating}
+									title={t('Regenerate proposal (admin)')}
+									aria-label={t('Regenerate proposal (admin)')}
+								>
+									<RefreshCw size={12} aria-hidden />
+									<span>{isRegenerating ? t('Regenerating…') : t('Regenerate proposal')}</span>
+								</button>
+								<button
+									type="button"
+									className="grouped-suggestion__proposal-admin-btn grouped-suggestion__proposal-admin-btn--danger"
+									onClick={handleReverseSynthesis}
+									disabled={isReversing}
+									title={t('Reverse synthesis (admin)')}
+									aria-label={t('Reverse synthesis (admin)')}
+								>
+									<Undo2 size={12} aria-hidden />
+									<span>{isReversing ? t('Reversing…') : t('Reverse synthesis')}</span>
+								</button>
+							</div>
+						)}
 						{isLoading && <p className="grouped-suggestion__original-note">{t('Loading…')}</p>}
 						{!isLoading && members.length === 0 && (
 							<p className="grouped-suggestion__original-note">{t('No originals found.')}</p>

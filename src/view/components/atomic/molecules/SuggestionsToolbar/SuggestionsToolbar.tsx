@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Info, ChevronDown, Layers } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useActiveFraming } from '@/controllers/hooks/useActiveFraming';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { useFramingMeta } from '@/controllers/hooks/useFramingMeta';
 import { FramingMode } from '@/redux/framings/framingsSlice';
 import { FramingChip } from '@/view/components/atomic/molecules/FramingChip';
@@ -10,14 +11,11 @@ import {
 	FramingSheet,
 	type FramingSheetOption,
 } from '@/view/components/atomic/molecules/FramingSheet';
-import type { CondensationSurfaceVisibility } from '@freedi/shared-types';
 
 export interface SuggestionsToolbarProps {
 	parentId: string | undefined;
-	/** Current per-surface visibility mode resolved by the grouped-view selector. */
-	visibilityMode: CondensationSurfaceVisibility;
-	/** When the active framing yields any clusters, shows the contextual hint and
-	 *  enables the per-user override toggle if the surface is `clusters-only`. */
+	/** When any clusters are present, shows the contextual hint and enables the
+	 *  per-user "show originals inside groups" override toggle. */
 	hasActiveClusters: boolean;
 	/** Per-user override state — show originals inline even in clusters-only mode. */
 	showOriginalsOverride: boolean;
@@ -41,7 +39,6 @@ interface ChipDescriptor {
 
 const SuggestionsToolbar: React.FC<SuggestionsToolbarProps> = ({
 	parentId,
-	visibilityMode,
 	hasActiveClusters,
 	showOriginalsOverride,
 	onShowOriginalsOverrideChange,
@@ -51,6 +48,9 @@ const SuggestionsToolbar: React.FC<SuggestionsToolbarProps> = ({
 	const { mode, setMode, setCustomFraming, availableModes, customFramings, framingId } =
 		useActiveFraming(parentId);
 	const framingMeta = useFramingMeta(parentId);
+	// Only admins can act on the "run it from settings first" hint, so unavailable
+	// cluster modes are dead UI for participants — hide them unless admin.
+	const { isAdmin } = useAuthorization(parentId);
 	const [sheetOpen, setSheetOpen] = useState(false);
 
 	const findMeta = (id: string) => framingMeta.find((m) => m.framingId === id);
@@ -70,39 +70,44 @@ const SuggestionsToolbar: React.FC<SuggestionsToolbarProps> = ({
 			},
 		];
 
-		// Semantic chip — always shown so the option is discoverable; disabled
-		// when no hybrid-auto framing exists yet.
+		// Semantic chip — shown when a hybrid-auto framing exists, or to admins
+		// (who can create one from settings). Hidden from participants when
+		// unavailable so the toolbar isn't cluttered with dead, un-actionable UI.
 		const semanticAvailable = availableModes.includes(FramingMode.semantic);
-		list.push({
-			id: 'semantic',
-			label: t('Semantic'),
-			pipeline: 'semantic',
-			description: semanticAvailable
-				? t('Auto-grouped by similarity (k-means on embeddings)')
-				: t('No clustering of this type available — run it from settings first'),
-			count: semanticMeta?.clusterCount,
-			disabled: !semanticAvailable,
-			stale: semanticMeta?.isStale ?? false,
-			loading: semanticMeta?.isComputing ?? false,
-			active: mode === FramingMode.semantic,
-			onSelect: () => setMode(FramingMode.semantic),
-		});
+		if (semanticAvailable || isAdmin) {
+			list.push({
+				id: 'semantic',
+				label: t('Semantic'),
+				pipeline: 'semantic',
+				description: semanticAvailable
+					? t('Auto-grouped by similarity (k-means on embeddings)')
+					: t('No clustering of this type available — run it from settings first'),
+				count: semanticMeta?.clusterCount,
+				disabled: !semanticAvailable,
+				stale: semanticMeta?.isStale ?? false,
+				loading: semanticMeta?.isComputing ?? false,
+				active: mode === FramingMode.semantic,
+				onSelect: () => setMode(FramingMode.semantic),
+			});
+		}
 
 		const topicAvailable = availableModes.includes(FramingMode.topic);
-		list.push({
-			id: 'topic',
-			label: t('Topic'),
-			pipeline: 'topic',
-			description: topicAvailable
-				? t('Themes from deliberation (LLM-derived)')
-				: t('No clustering of this type available — run it from settings first'),
-			count: topicMeta?.clusterCount,
-			disabled: !topicAvailable,
-			stale: topicMeta?.isStale ?? false,
-			loading: topicMeta?.isComputing ?? false,
-			active: mode === FramingMode.topic,
-			onSelect: () => setMode(FramingMode.topic),
-		});
+		if (topicAvailable || isAdmin) {
+			list.push({
+				id: 'topic',
+				label: t('Topic'),
+				pipeline: 'topic',
+				description: topicAvailable
+					? t('Themes from deliberation (LLM-derived)')
+					: t('No clustering of this type available — run it from settings first'),
+				count: topicMeta?.clusterCount,
+				disabled: !topicAvailable,
+				stale: topicMeta?.isStale ?? false,
+				loading: topicMeta?.isComputing ?? false,
+				active: mode === FramingMode.topic,
+				onSelect: () => setMode(FramingMode.topic),
+			});
+		}
 
 		// Custom framings — one chip per active admin/AI custom framing.
 		for (const cf of customFramings) {
@@ -134,6 +139,7 @@ const SuggestionsToolbar: React.FC<SuggestionsToolbarProps> = ({
 		topicMeta,
 		framingId,
 		framingMeta,
+		isAdmin,
 	]);
 
 	const activeChip = chips.find((c) => c.active);
@@ -159,15 +165,18 @@ const SuggestionsToolbar: React.FC<SuggestionsToolbarProps> = ({
 
 	if (!parentId) return null;
 
-	const showOverride =
-		hasActiveClusters && visibilityMode === 'clusters-only' && mode !== FramingMode.regular;
+	// Originals represented by a cluster are now hidden from the flat list in
+	// BOTH visibility modes (see SuggestionCards `originalsHiddenByGroup`), so
+	// the "show originals inside groups" escape hatch must be available whenever
+	// clusters are present — not just in clusters-only mode.
+	const showOverride = hasActiveClusters;
 
 	const showHint = hasActiveClusters && mode !== FramingMode.regular;
 
 	return (
 		<div className={['suggestions-toolbar', className].filter(Boolean).join(' ')}>
 			<div className="suggestions-toolbar__row" role="group" aria-label={t('View grouping')}>
-				<span className="suggestions-toolbar__label">{t('View')}</span>
+				<span className="suggestions-toolbar__label">{t('Group by')}</span>
 				<div className="suggestions-toolbar__chips">
 					{chips.map((c) => (
 						<FramingChip

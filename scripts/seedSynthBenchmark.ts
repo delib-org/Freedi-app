@@ -187,6 +187,11 @@ async function ensureQuestion(): Promise<void> {
 		hide: false,
 		randomSeed: Math.random(),
 		evaluation: createBlankEvaluation(),
+		// Public access so the seeded question resolves authorization and renders
+		// in the normal UI without a manual Firestore patch. useAuthorization stays
+		// in a permanent loading state when neither the statement nor its top parent
+		// carry membership.access (see src/controllers/hooks/useAuthorization.ts).
+		membership: { access: 'public' },
 		statementSettings: {
 			enableAddVotingOption: true,
 			enableAddEvaluationOption: true,

@@ -163,16 +163,16 @@ const SuggestionCards: FC<Props> = ({
 	// - For non-admins: they can see their own hidden cards only
 	// - Cluster statements (grouped suggestions) are rendered separately below
 	//   and excluded from this "originals" list.
-	// - In "clusters-only" mode: originals that are inside a group are hidden,
-	//   unless the per-user override is enabled.
+	// - An original that's already represented by a rendered cluster (synthesis
+	//   or framing) is hidden from the flat list so the same idea never appears
+	//   twice — once inside its cluster and once standalone. This applies in BOTH
+	//   visibility modes; the per-user "show originals inside groups" override
+	//   brings them back inline (with a "Part of …" back-reference on each card).
 	const originalsHiddenByGroup = useMemo(() => {
-		if (groupedView.mode !== 'clusters-only') return new Set<string>();
 		if (showOriginalsOverride) return new Set<string>();
-		const inGroup = new Set<string>();
-		Object.values(groupedView.groupMembers).forEach((ids) => ids.forEach((id) => inGroup.add(id)));
 
-		return inGroup;
-	}, [groupedView, showOriginalsOverride]);
+		return groupedView.groupedMemberIds;
+	}, [groupedView.groupedMemberIds, showOriginalsOverride]);
 
 	const visibleStatements = useMemo(
 		() =>
@@ -221,6 +221,20 @@ const SuggestionCards: FC<Props> = ({
 		() => sortedStatements.map((s) => s.statementId).join(','),
 		[sortedStatements],
 	);
+
+	// Lookup cluster statement by id, to resolve a flat-list original's
+	// "Part of: …" back-reference when the "show originals inside groups"
+	// override surfaces an already-grouped idea.
+	const clusterById = useMemo(() => {
+		const map = new Map<string, Statement>();
+		groupedView.groupedSuggestions.forEach((c) => map.set(c.statementId, c));
+
+		return map;
+	}, [groupedView.groupedSuggestions]);
+	const resolveMemberClusters = (statementId: string): Statement[] =>
+		(groupedView.membershipMap[statementId] ?? [])
+			.map((clusterId) => clusterById.get(clusterId))
+			.filter((c): c is Statement => Boolean(c));
 
 	useEffect(() => {
 		if (!statement && statementId)
@@ -298,7 +312,6 @@ const SuggestionCards: FC<Props> = ({
 		<>
 			<SuggestionsToolbar
 				parentId={statement?.statementId}
-				visibilityMode={groupedView.mode}
 				hasActiveClusters={hasSynthesized || hasRegularClusters}
 				showOriginalsOverride={showOriginalsOverride}
 				onShowOriginalsOverrideChange={setShowOriginalsOverride}
@@ -307,7 +320,7 @@ const SuggestionCards: FC<Props> = ({
 			{hasSynthesized && (
 				<>
 					<SectionDivider
-						label={t('Synthesized proposals')}
+						label={t('AI proposals')}
 						count={synthesizedClusters.length}
 						icon={<Sparkles size={14} aria-hidden />}
 						variant="synthesis"
@@ -360,7 +373,7 @@ const SuggestionCards: FC<Props> = ({
 
 			{(hasSynthesized || hasRegularClusters) && hasOriginals && (
 				<SectionDivider
-					label={t('Other suggestions')}
+					label={t('Open ideas')}
 					count={sortedStatements.length}
 					icon={regularDividerIcon}
 					variant={regularDividerVariant}
@@ -374,7 +387,11 @@ const SuggestionCards: FC<Props> = ({
 				{sortedStatements.map((statementSub: Statement) => (
 					<Flipped key={statementSub.statementId} flipId={statementSub.statementId}>
 						<div className={styles['card-wrapper']}>
-							<SuggestionCard parentStatement={statement} statement={statementSub} />
+							<SuggestionCard
+								parentStatement={statement}
+								statement={statementSub}
+								memberOfClusters={resolveMemberClusters(statementSub.statementId)}
+							/>
 						</div>
 					</Flipped>
 				))}

@@ -19,6 +19,10 @@ export interface GroupedView {
 	/** Reverse map: originalId → clusterId(s) that represent it. Used for the
 	 *  inline badge on an original card. */
 	membershipMap: Record<string, string[]>;
+	/** Flat set of every originalId represented by a rendered cluster (synthesis
+	 *  or framing). Consumers hide these from the flat list to avoid showing the
+	 *  same idea twice (once inside its cluster, once standalone). */
+	groupedMemberIds: Set<string>;
 	/** Active visibility mode for this surface. */
 	mode: CondensationSurfaceVisibility;
 	/** Whether the parent enabled drill-down in clusters-only mode. */
@@ -93,15 +97,14 @@ export function createGroupedViewSelector(selectStatements: StateSelector<Statem
 			const originals = siblings.filter((s) => s.isCluster !== true);
 
 			const { groupMembers, membershipMap } = buildMaps(clusters);
+			const groupedMemberIds = new Set(Object.keys(membershipMap));
 
 			const groupedSuggestions = [...clusters].sort(sortByConsensus);
 
 			let visibleOriginals: Statement[];
 			if (mode === 'clusters-only') {
 				// Hide originals that are already represented by a cluster.
-				visibleOriginals = originals.filter(
-					(o) => !membershipMap[o.statementId] || membershipMap[o.statementId].length === 0,
-				);
+				visibleOriginals = originals.filter((o) => !groupedMemberIds.has(o.statementId));
 			} else {
 				visibleOriginals = [...originals];
 			}
@@ -112,6 +115,7 @@ export function createGroupedViewSelector(selectStatements: StateSelector<Statem
 				visibleOriginals,
 				groupMembers,
 				membershipMap,
+				groupedMemberIds,
 				mode,
 				allowDrillToOriginals,
 			};
