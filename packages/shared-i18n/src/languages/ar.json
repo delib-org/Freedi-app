@@ -1,4 +1,12 @@
 {
+  "Raw": "خام",
+  "Synth": "تأليف",
+  "View layers": "طبقات العرض",
+  "Set as default": "تعيين كافتراضي",
+  "Reset": "إعادة تعيين",
+  "At least one layer must stay on": "يجب أن تبقى طبقة واحدة على الأقل مفعّلة",
+  "Reset to the default view": "إعادة التعيين إلى العرض الافتراضي",
+  "Save this view as the default for everyone": "حفظ هذا العرض كافتراضي للجميع",
   "No similarity grouping available yet": "لا يوجد تجميع حسب التشابه بعد",
   "No topic grouping available yet": "لا يوجد تجميع حسب الموضوع بعد",
   "AI proposals": "مقترحات الذكاء الاصطناعي",

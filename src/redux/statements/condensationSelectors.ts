@@ -62,19 +62,16 @@ function buildMaps(clusters: Statement[]): {
  * setting: either shows both clusters and originals, or only clusters plus
  * ungrouped originals.
  *
- * When `framingId` is supplied, only clusters belonging to that framing are
- * surfaced — this is how the framing switcher swaps between alternative
- * clusterings (hybrid-auto vs topic-cluster vs admin custom) of the same
- * option pool. When `framingId` is omitted (the legacy behaviour) all clusters
- * regardless of framing are shown — used for synthesized clusters that don't
- * carry a framingId.
+ * All clusters (synthesis + topic-cluster) are surfaced; clusters are
+ * identified purely by `isCluster === true` and membership by
+ * `integratedOptions`.
  *
  * Originals are never hidden from the database — visibility is a display
  * filter only. Evaluations on originals still aggregate into their cluster
- * via server-side `fn_clusterAggregation`.
+ * via server-side cluster aggregation.
  */
 export function createGroupedViewSelector(selectStatements: StateSelector<Statement[]>) {
-	return (parentId: string | undefined, surface: CondensationSurface, framingId?: string | null) =>
+	return (parentId: string | undefined, surface: CondensationSurface) =>
 		createSelector([selectStatements], (statements): GroupedView => {
 			const parent = statements.find((s) => s.statementId === parentId);
 			const condensation = parent?.statementSettings?.condensation;
@@ -86,14 +83,7 @@ export function createGroupedViewSelector(selectStatements: StateSelector<Statem
 				(s) => s.parentId === parentId && isOptionLike(s) && !s.hide,
 			);
 
-			let clusters = siblings.filter((s) => s.isCluster === true);
-			if (framingId) {
-				// Restrict to clusters in the active framing. Synthesized clusters
-				// (no framingId) are intentionally excluded when a framing is
-				// selected — they live in a different conceptual layer (paraphrase
-				// merge) and would otherwise leak into every framing view.
-				clusters = clusters.filter((c) => c.framingId === framingId);
-			}
+			const clusters = siblings.filter((s) => s.isCluster === true);
 			const originals = siblings.filter((s) => s.isCluster !== true);
 
 			const { groupMembers, membershipMap } = buildMaps(clusters);
@@ -140,4 +130,179 @@ export function createMembershipForOriginalSelector(selectStatements: StateSelec
 					(s.integratedOptions ?? []).includes(originalId),
 			);
 		});
+}
+
+// ============================================================================
+// VIEW LAYERS — the three-toggle model (Raw / Synth / Cluster)
+//
+// Data is flat: synthesis clusters and topic clusters are siblings, each
+// `integratedOptions` pointing straight at raw option ids. We DERIVE a
+// synth→topic nesting (assign each synth to the topic it shares the most raw
+// members with) so the Cluster view can show synth proposals nested inside a
+// topic card. The toggle-independent derivation lives in the selector
+// (memoized); `composeViewLayers` applies the three booleans and is a pure,
+// fully unit-tested function.
+// ============================================================================
+
+export interface ViewLayersToggleState {
+	raw: boolean;
+	synth: boolean;
+	cluster: boolean;
+}
+
+export interface ViewLayersData {
+	/** Synthesis clusters under the parent, sorted by consensus desc. */
+	synthClusters: Statement[];
+	/** Non-synthesis ("topic") clusters, sorted by consensus desc. */
+	topicClusters: Statement[];
+	/** Raw (non-cluster) originals, sorted by consensus desc. */
+	rawOriginals: Statement[];
+	/** Lookup for any sibling (cluster or raw) by id. */
+	byId: Record<string, Statement>;
+	/** synthClusterId → topicClusterId it shares the most raw members with,
+	 *  or null when it shares none (renders top-level). */
+	synthToTopic: Record<string, string | null>;
+}
+
+function overlapCount(ids: string[], set: Set<string>): number {
+	let n = 0;
+	for (const id of ids) if (set.has(id)) n++;
+
+	return n;
+}
+
+/**
+ * Toggle-independent derivation for the view-layer model. Splits siblings into
+ * synth/topic/raw and computes the synth→topic assignment. Memoized so toggling
+ * Raw/Synth/Cluster never recomputes this.
+ */
+export function createViewLayersDataSelector(selectStatements: StateSelector<Statement[]>) {
+	return (parentId: string | undefined) =>
+		createSelector([selectStatements], (statements): ViewLayersData => {
+			const siblings = statements.filter(
+				(s) => s.parentId === parentId && isOptionLike(s) && !s.hide,
+			);
+			const synthClusters = siblings
+				.filter((s) => s.isCluster === true && s.derivedByPipeline === 'synthesis')
+				.sort(sortByConsensus);
+			const topicClusters = siblings
+				.filter((s) => s.isCluster === true && s.derivedByPipeline !== 'synthesis')
+				.sort(sortByConsensus);
+			const rawOriginals = siblings.filter((s) => s.isCluster !== true).sort(sortByConsensus);
+
+			const byId: Record<string, Statement> = {};
+			for (const s of siblings) byId[s.statementId] = s;
+
+			// Assign each synth to the topic it shares the most raw members with.
+			// topicClusters is sorted by consensus desc, so ties resolve to the
+			// higher-consensus topic (first match). Zero overlap → null (top-level).
+			const topicMemberSets = topicClusters.map(
+				(t) => [t.statementId, new Set(t.integratedOptions ?? [])] as const,
+			);
+			const synthToTopic: Record<string, string | null> = {};
+			for (const synth of synthClusters) {
+				const members = synth.integratedOptions ?? [];
+				let bestId: string | null = null;
+				let bestOverlap = 0;
+				for (const [topicId, memberSet] of topicMemberSets) {
+					const n = overlapCount(members, memberSet);
+					if (n > bestOverlap) {
+						bestOverlap = n;
+						bestId = topicId;
+					}
+				}
+				synthToTopic[synth.statementId] = bestId;
+			}
+
+			return { synthClusters, topicClusters, rawOriginals, byId, synthToTopic };
+		});
+}
+
+export interface NestedSynth {
+	synth: Statement;
+	/** Resolved raw member statements of this synth. */
+	rawMembers: Statement[];
+}
+
+export interface TopicCard {
+	cluster: Statement;
+	/** Synth proposals nested under this topic (empty when Synth toggle off). */
+	nestedSynths: NestedSynth[];
+	/** Raw members of the topic not already shown under a nested synth. */
+	directRaw: Statement[];
+}
+
+export interface ViewLayersPlan {
+	/** Synth cards rendered at the top level (no topic parent). */
+	topLevelSynths: Statement[];
+	/** Topic-cluster cards with their nested synths + direct raw. */
+	topicCards: TopicCard[];
+	/** Raw ideas shown flat (not nested under any shown layer). */
+	flatRaw: Statement[];
+}
+
+/**
+ * Pure: turn derived data + the three toggles into a render plan. Encapsulates
+ * all dedup so a raw idea never appears twice and a synth shown nested is not
+ * also a top-level card.
+ */
+export function composeViewLayers(
+	data: ViewLayersData,
+	toggles: ViewLayersToggleState,
+): ViewLayersPlan {
+	const { synthClusters, topicClusters, rawOriginals, byId, synthToTopic } = data;
+	const resolveRaw = (ids: string[]): Statement[] =>
+		ids.map((id) => byId[id]).filter((s): s is Statement => Boolean(s) && s.isCluster !== true);
+
+	const topLevelSynths: Statement[] = [];
+	const topicCards: TopicCard[] = [];
+	const coveredRawIds = new Set<string>(); // raw ids nested under a shown layer
+
+	if (toggles.cluster) {
+		for (const cluster of topicClusters) {
+			const assignedSynths = toggles.synth
+				? synthClusters.filter((s) => synthToTopic[s.statementId] === cluster.statementId)
+				: [];
+			const synthCoveredRaw = new Set<string>();
+			const nestedSynths: NestedSynth[] = assignedSynths.map((synth) => {
+				const rawMembers = resolveRaw(synth.integratedOptions ?? []);
+				rawMembers.forEach((m) => synthCoveredRaw.add(m.statementId));
+
+				return { synth, rawMembers };
+			});
+
+			const allTopicRaw = resolveRaw(cluster.integratedOptions ?? []);
+			const directRaw = allTopicRaw.filter(
+				(m) => !synthCoveredRaw.has(m.statementId) && !coveredRawIds.has(m.statementId),
+			);
+
+			topicCards.push({ cluster, nestedSynths, directRaw });
+
+			allTopicRaw.forEach((m) => coveredRawIds.add(m.statementId));
+			synthCoveredRaw.forEach((id) => coveredRawIds.add(id));
+		}
+
+		// Synths with no topic overlap render at the top level (when Synth on).
+		if (toggles.synth) {
+			for (const synth of synthClusters) {
+				if (synthToTopic[synth.statementId] === null) {
+					topLevelSynths.push(synth);
+					resolveRaw(synth.integratedOptions ?? []).forEach((m) =>
+						coveredRawIds.add(m.statementId),
+					);
+				}
+			}
+		}
+	} else if (toggles.synth) {
+		// No clustering: every synth renders top-level; its raw members live in the
+		// synth's own drawer (and are therefore covered / not shown flat).
+		for (const synth of synthClusters) {
+			topLevelSynths.push(synth);
+			resolveRaw(synth.integratedOptions ?? []).forEach((m) => coveredRawIds.add(m.statementId));
+		}
+	}
+
+	const flatRaw = toggles.raw ? rawOriginals.filter((r) => !coveredRawIds.has(r.statementId)) : [];
+
+	return { topLevelSynths, topicCards, flatRaw };
 }

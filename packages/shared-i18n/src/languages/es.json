@@ -1,4 +1,12 @@
 {
+  "Raw": "Crudas",
+  "Synth": "Síntesis",
+  "View layers": "Capas de vista",
+  "Set as default": "Establecer como predeterminado",
+  "Reset": "Restablecer",
+  "At least one layer must stay on": "Al menos una capa debe permanecer activa",
+  "Reset to the default view": "Restablecer a la vista predeterminada",
+  "Save this view as the default for everyone": "Guardar esta vista como predeterminada para todos",
   "No similarity grouping available yet": "Aún no hay agrupación por similitud",
   "No topic grouping available yet": "Aún no hay agrupación por tema",
   "AI proposals": "Propuestas de IA",

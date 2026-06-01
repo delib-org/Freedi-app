@@ -503,6 +503,14 @@
     transform: rotate(180deg);
   }
 
+  // Nested synth proposal cards inside a topic-cluster card (3-level view).
+  &__nested {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
   // ============================================================================
   // ORIGINALS LIST — thread-rail connector
   // ============================================================================

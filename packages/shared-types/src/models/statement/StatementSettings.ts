@@ -120,6 +120,18 @@ export const CondensationVisibilitySchema = object({
 });
 export type CondensationVisibility = InferOutput<typeof CondensationVisibilitySchema>;
 
+/**
+ * The three independent "View layers" toggles on the Solutions tab. Composing
+ * them yields the named states (All / Raw only / Synth+Raw / Clusters / Synth
+ * only). Stored as the admin default; per-user overrides live in localStorage.
+ */
+export const ViewLayersSchema = object({
+	raw: boolean(), // show raw participant ideas
+	synth: boolean(), // show AI-synthesized proposals
+	cluster: boolean(), // group into topic-cluster cards (synth + raw nested)
+});
+export type ViewLayers = InferOutput<typeof ViewLayersSchema>;
+
 export const CondensationConfigSchema = object({
 	enabled: boolean(),
 	level: CondensationLevelSchema, // maps to similarity threshold via CONDENSATION_THRESHOLDS
@@ -128,6 +140,10 @@ export const CondensationConfigSchema = object({
 	minGroupSize: number(), // minimum members required to form a cluster (default 2)
 	visibility: CondensationVisibilitySchema, // per-surface display mode
 	allowDrillToOriginals: boolean(), // when visibility is clusters-only, can voters drill to see originals
+	// Admin-set default for the Solutions "View layers" toggles (Raw / Synth /
+	// Cluster). Each user can override locally (localStorage); this is the
+	// fallback everyone lands on. Optional → falls back to all-on ("All").
+	viewLayers: optional(ViewLayersSchema),
 	// Eligibility filters: only options that meet BOTH thresholds are considered
 	// for automatic clustering. Creator overrides (drag-drop) bypass these.
 	// Undefined or 0 disables the filter.

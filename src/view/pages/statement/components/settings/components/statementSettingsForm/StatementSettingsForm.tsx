@@ -254,10 +254,6 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							<EmailNotifications statement={statement} />
 						</SettingsSection>
 
-						{/* Clustering & Framings is now embedded inside the AI & Automation block
-						   (rendered by EnhancedAdvancedSettings → AISettings → ClusteringAdmin)
-						   so all AI-driven controls live under one collapsible section. */}
-
 						{/* Content Moderation Log Section — admins/creators only (Firestore rules deny others) */}
 						{isAdminOrCreator && (
 							<SettingsSection

@@ -12,8 +12,6 @@ import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import { useTreeFilter } from './TreeFilterContext';
 import { TreeFilterMode } from './TreeFilterMode';
-import { useActiveFraming } from '@/controllers/hooks/useActiveFraming';
-import FramingSwitcher from '@/view/components/framingSwitcher/FramingSwitcher';
 import { useNewSolutionsBuffer, MAX_DISPLAY_COUNT } from './hooks/useNewSolutionsBuffer';
 import NewSolutionsPill from './components/NewSolutionsPill/NewSolutionsPill';
 import TreeNode from './components/TreeNode/TreeNode';
@@ -52,12 +50,6 @@ const TreeView: FC<TreeViewProps> = ({
 	const tParam = searchParams.get('t');
 	const randomSeed = tParam ? Number(tParam) : undefined;
 
-	// Active framing (Regular / Semantic / Topic) — only meaningful when this
-	// tree is showing options under a question.
-	const { framingId: activeFramingId, availableModes } = useActiveFraming(statementId);
-	const showFramingSwitcher =
-		!!showSortNav && !!statement && statement.statementType === StatementType.question;
-
 	const treeOptions: TreeDataOptions = {
 		typeFilter,
 		sortType: showSortNav ? (sort as SortType) || SortType.accepted : undefined,
@@ -66,7 +58,6 @@ const TreeView: FC<TreeViewProps> = ({
 		userId: user?.uid,
 		bookmarkedIds,
 		randomSeed,
-		activeFramingId,
 	};
 
 	const { childrenMap, rootChildren: allRootChildren } = useTreeData(
@@ -221,11 +212,6 @@ const TreeView: FC<TreeViewProps> = ({
 					<PruningBanner question={statement} />
 					<OrphanedBanner question={statement} />
 				</>
-			)}
-			{showFramingSwitcher && availableModes.length > 1 && (
-				<div className={styles['tree-view__framing']}>
-					<FramingSwitcher parentId={statementId} />
-				</div>
 			)}
 			<div className={styles['tree-view__list']}>
 				{pendingCount > 0 && showSortNav && (

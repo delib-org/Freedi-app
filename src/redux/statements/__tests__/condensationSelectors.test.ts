@@ -22,6 +22,9 @@ jest.mock('@freedi/shared-types', () => ({
 import {
 	createGroupedViewSelector,
 	createMembershipForOriginalSelector,
+	createViewLayersDataSelector,
+	composeViewLayers,
+	type ViewLayersToggleState,
 } from '../condensationSelectors';
 
 enum StatementType {
@@ -40,7 +43,6 @@ interface MockStatement {
 	consensus?: number;
 	hide?: boolean;
 	isCluster?: boolean;
-	framingId?: string | null;
 	derivedByPipeline?: string;
 	integratedOptions?: string[];
 	statementSettings?: {
@@ -153,33 +155,6 @@ describe('createGroupedViewSelector', () => {
 		expect(view.visibleOriginals.map((s) => s.statementId)).toEqual(['s2']);
 	});
 
-	it('restricts clusters to the active framing, leaving other members ungrouped', () => {
-		const statements = [
-			option('s1'),
-			option('s2'),
-			option('c1', {
-				isCluster: true,
-				framingId: 'fA',
-				derivedByPipeline: 'topic-cluster',
-				integratedOptions: ['s1'],
-			}),
-			option('c2', {
-				isCluster: true,
-				framingId: 'fB',
-				derivedByPipeline: 'topic-cluster',
-				integratedOptions: ['s2'],
-			}),
-		];
-		const view = createGroupedViewSelector(selectStatements)(PARENT_ID, 'main', 'fA')(
-			buildState(statements),
-		);
-
-		// Only the framing-A cluster surfaces; s1 is its member, s2 is not grouped.
-		expect(view.groupedSuggestions.map((s) => s.statementId)).toEqual(['c1']);
-		expect(view.groupedMemberIds.has('s1')).toBe(true);
-		expect(view.groupedMemberIds.has('s2')).toBe(false);
-	});
-
 	it('excludes hidden siblings entirely', () => {
 		const statements = [
 			option('s1'),
@@ -223,5 +198,151 @@ describe('createMembershipForOriginalSelector', () => {
 		expect(createMembershipForOriginalSelector(selectStatements)('s1', undefined)(state)).toEqual(
 			[],
 		);
+	});
+});
+
+// ============================================================================
+// View layers (Raw / Synth / Cluster)
+// ============================================================================
+
+// Scenario: 2 topics, 2 synths, 8 raw ideas.
+//   T1 (consensus 5) ⊇ {r1,r2,r3,r4}
+//   T2 (consensus 3) ⊇ {r5,r6}
+//   S1 (consensus 4) ⊇ {r1,r2}  → overlaps T1 (2) > T2 (0) → assigned T1
+//   S2 (consensus 2) ⊇ {r9}     → overlaps nothing → top-level
+//   r7 is loose (in no cluster)
+function viewLayersScenario() {
+	return buildState([
+		option('r1'),
+		option('r2'),
+		option('r3'),
+		option('r4'),
+		option('r5'),
+		option('r6'),
+		option('r7'),
+		option('r9'),
+		option('T1', {
+			isCluster: true,
+			derivedByPipeline: 'topic-cluster',
+			consensus: 5,
+			integratedOptions: ['r1', 'r2', 'r3', 'r4'],
+		}),
+		option('T2', {
+			isCluster: true,
+			derivedByPipeline: 'topic-cluster',
+			consensus: 3,
+			integratedOptions: ['r5', 'r6'],
+		}),
+		option('S1', {
+			isCluster: true,
+			derivedByPipeline: 'synthesis',
+			consensus: 4,
+			integratedOptions: ['r1', 'r2'],
+		}),
+		option('S2', {
+			isCluster: true,
+			derivedByPipeline: 'synthesis',
+			consensus: 2,
+			integratedOptions: ['r9'],
+		}),
+	]);
+}
+
+const ALL: ViewLayersToggleState = { raw: true, synth: true, cluster: true };
+const ids = (arr: { statementId: string }[]) => arr.map((s) => s.statementId).sort();
+
+describe('createViewLayersDataSelector', () => {
+	it('splits siblings and assigns synths to their max-overlap topic', () => {
+		const data = createViewLayersDataSelector(selectStatements)(PARENT_ID)(viewLayersScenario());
+
+		expect(ids(data.synthClusters)).toEqual(['S1', 'S2']);
+		expect(ids(data.topicClusters)).toEqual(['T1', 'T2']);
+		expect(data.rawOriginals).toHaveLength(8);
+		expect(data.synthToTopic['S1']).toBe('T1'); // max overlap
+		expect(data.synthToTopic['S2']).toBe(null); // zero overlap → top-level
+	});
+
+	it('breaks assignment ties toward the higher-consensus topic', () => {
+		const state = buildState([
+			option('a'),
+			option('b'),
+			option('TA', {
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				consensus: 9,
+				integratedOptions: ['a'],
+			}),
+			option('TB', {
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				consensus: 1,
+				integratedOptions: ['a'],
+			}),
+			option('SX', {
+				isCluster: true,
+				derivedByPipeline: 'synthesis',
+				integratedOptions: ['a'], // overlap 1 with BOTH → tie
+			}),
+		]);
+		const data = createViewLayersDataSelector(selectStatements)(PARENT_ID)(state);
+		expect(data.synthToTopic['SX']).toBe('TA'); // higher consensus wins
+	});
+});
+
+describe('composeViewLayers', () => {
+	const data = () =>
+		createViewLayersDataSelector(selectStatements)(PARENT_ID)(viewLayersScenario());
+
+	it('All: topics nest assigned synths + direct raw; zero-overlap synth top-level; only loose raw flat', () => {
+		const plan = composeViewLayers(data(), ALL);
+
+		expect(ids(plan.topLevelSynths)).toEqual(['S2']);
+		const t1 = plan.topicCards.find((c) => c.cluster.statementId === 'T1')!;
+		expect(ids(t1.nestedSynths.map((n) => n.synth))).toEqual(['S1']);
+		expect(ids(t1.nestedSynths[0].rawMembers)).toEqual(['r1', 'r2']);
+		expect(ids(t1.directRaw)).toEqual(['r3', 'r4']); // r1,r2 nested under S1
+		const t2 = plan.topicCards.find((c) => c.cluster.statementId === 'T2')!;
+		expect(t2.nestedSynths).toHaveLength(0);
+		expect(ids(t2.directRaw)).toEqual(['r5', 'r6']);
+		expect(ids(plan.flatRaw)).toEqual(['r7']); // everything else covered
+	});
+
+	it('Raw only: every raw flat, no clusters/synths', () => {
+		const plan = composeViewLayers(data(), { raw: true, synth: false, cluster: false });
+		expect(plan.topLevelSynths).toHaveLength(0);
+		expect(plan.topicCards).toHaveLength(0);
+		expect(ids(plan.flatRaw)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r9']);
+	});
+
+	it('Synth + Raw: synths top-level, raw minus synth-covered flat', () => {
+		const plan = composeViewLayers(data(), { raw: true, synth: true, cluster: false });
+		expect(ids(plan.topLevelSynths)).toEqual(['S1', 'S2']);
+		expect(plan.topicCards).toHaveLength(0);
+		// covered = S1{r1,r2} + S2{r9}; flat = the rest
+		expect(ids(plan.flatRaw)).toEqual(['r3', 'r4', 'r5', 'r6', 'r7']);
+	});
+
+	it('Clusters (raw off): topic cards with nesting, no flat raw', () => {
+		const plan = composeViewLayers(data(), { raw: false, synth: true, cluster: true });
+		expect(ids(plan.topLevelSynths)).toEqual(['S2']);
+		expect(plan.topicCards).toHaveLength(2);
+		expect(plan.flatRaw).toHaveLength(0);
+	});
+
+	it('Synth only: just synth cards', () => {
+		const plan = composeViewLayers(data(), { raw: false, synth: true, cluster: false });
+		expect(ids(plan.topLevelSynths)).toEqual(['S1', 'S2']);
+		expect(plan.topicCards).toHaveLength(0);
+		expect(plan.flatRaw).toHaveLength(0);
+	});
+
+	it('Cluster on, Synth off: topic nests ALL its raw (no synth cards)', () => {
+		const plan = composeViewLayers(data(), { raw: true, synth: false, cluster: true });
+		const t1 = plan.topicCards.find((c) => c.cluster.statementId === 'T1')!;
+		expect(t1.nestedSynths).toHaveLength(0);
+		expect(ids(t1.directRaw)).toEqual(['r1', 'r2', 'r3', 'r4']); // synth hidden → all raw direct
+		// r9 was only under S2 (hidden) and in no topic → flat
+		expect(plan.flatRaw.map((r) => r.statementId)).toContain('r9');
+		expect(plan.flatRaw.map((r) => r.statementId)).toContain('r7');
 	});
 });

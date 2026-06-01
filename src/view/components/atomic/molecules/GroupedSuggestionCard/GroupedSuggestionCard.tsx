@@ -54,6 +54,18 @@ export interface GroupedSuggestionCardProps {
 	 * admin/ai-custom → 'custom') so the card surfaces the correct accent.
 	 */
 	pipeline?: GroupedSuggestionPipeline;
+	/**
+	 * When provided, the expanded drawer renders THESE member statements instead
+	 * of fetching from Firestore. The view-layer model passes a topic cluster's
+	 * "direct raw" (members not covered by a nested synth) so the 3-level dedup
+	 * stays driven by the selector and can't drift from a separate fetch.
+	 */
+	explicitMembers?: Statement[];
+	/**
+	 * Extra content rendered at the top of the expanded drawer — used to nest
+	 * synth-proposal cards inside a topic-cluster card (3-level view).
+	 */
+	nestedSlot?: React.ReactNode;
 	className?: string;
 }
 
@@ -68,6 +80,8 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	evaluationSlot,
 	onDrillToOriginals,
 	pipeline: pipelineOverride,
+	explicitMembers,
+	nestedSlot,
 	className,
 }) => {
 	const { t } = useTranslation();
@@ -119,12 +133,15 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	);
 	const previewRemainder = Math.max(0, count - previewMembers.length);
 
-	// Full member list — only fetched from Firestore when the drawer opens.
-	const shouldFetch = mode === 'both' && expanded;
-	const { members, isLoading } = useGroupMembers(
+	// Full member list. When the parent supplies `explicitMembers` (view-layer
+	// model) we render those directly; otherwise fetch from Firestore on open.
+	const shouldFetch = mode === 'both' && expanded && !explicitMembers;
+	const { members: fetchedMembers, isLoading: isFetching } = useGroupMembers(
 		shouldFetch ? cluster.statementId : undefined,
 		shouldFetch,
 	);
+	const members = explicitMembers ?? fetchedMembers;
+	const isLoading = explicitMembers ? false : isFetching;
 
 	const numberOfEvaluators = evaluation?.numberOfEvaluators ?? 0;
 	const isAwaiting = numberOfEvaluators === 0;
@@ -460,8 +477,9 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 								</button>
 							</div>
 						)}
+						{nestedSlot && <div className="grouped-suggestion__nested">{nestedSlot}</div>}
 						{isLoading && <p className="grouped-suggestion__original-note">{t('Loading…')}</p>}
-						{!isLoading && members.length === 0 && (
+						{!isLoading && members.length === 0 && !nestedSlot && (
 							<p className="grouped-suggestion__original-note">{t('No originals found.')}</p>
 						)}
 						{members.map((original) => (

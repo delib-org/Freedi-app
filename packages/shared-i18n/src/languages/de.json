@@ -1,4 +1,12 @@
 {
+  "Raw": "Roh",
+  "Synth": "Synth",
+  "View layers": "Ansichtsebenen",
+  "Set as default": "Als Standard festlegen",
+  "Reset": "Zurücksetzen",
+  "At least one layer must stay on": "Mindestens eine Ebene muss aktiv bleiben",
+  "Reset to the default view": "Auf Standardansicht zurücksetzen",
+  "Save this view as the default for everyone": "Diese Ansicht als Standard für alle speichern",
   "No similarity grouping available yet": "Noch keine Ähnlichkeitsgruppierung verfügbar",
   "No topic grouping available yet": "Noch keine Themengruppierung verfügbar",
   "AI proposals": "KI-Vorschläge",
