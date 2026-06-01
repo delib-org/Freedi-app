@@ -193,14 +193,25 @@ export function createViewLayersDataSelector(selectStatements: StateSelector<Sta
 			const byId: Record<string, Statement> = {};
 			for (const s of siblings) byId[s.statementId] = s;
 
-			// Assign each synth to the topic it shares the most raw members with.
+			// Assign each synth to a topic. Two signals, in priority order:
+			//   1. Direct link — a topic whose `integratedOptions` includes the
+			//      synth's id (the explicit 3-level encoding: topic → synth → raw).
+			//   2. Member overlap — the topic the synth shares the most raw members
+			//      with (heuristic for flat data with no explicit link).
 			// topicClusters is sorted by consensus desc, so ties resolve to the
-			// higher-consensus topic (first match). Zero overlap → null (top-level).
+			// higher-consensus topic (first match). No signal → null (top-level).
 			const topicMemberSets = topicClusters.map(
 				(t) => [t.statementId, new Set(t.integratedOptions ?? [])] as const,
 			);
 			const synthToTopic: Record<string, string | null> = {};
 			for (const synth of synthClusters) {
+				const directTopic = topicClusters.find((t) =>
+					(t.integratedOptions ?? []).includes(synth.statementId),
+				);
+				if (directTopic) {
+					synthToTopic[synth.statementId] = directTopic.statementId;
+					continue;
+				}
 				const members = synth.integratedOptions ?? [];
 				let bestId: string | null = null;
 				let bestOverlap = 0;

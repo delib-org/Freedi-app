@@ -262,6 +262,27 @@ describe('createViewLayersDataSelector', () => {
 		expect(data.synthToTopic['S2']).toBe(null); // zero overlap → top-level
 	});
 
+	it('prefers a direct topic→synth link over member overlap', () => {
+		const state = buildState([
+			option('x'),
+			option('y'),
+			// Topic integrates the synth ID directly (3-level encoding), and shares
+			// NO raw members with it — the direct link must still win.
+			option('TD', {
+				isCluster: true,
+				derivedByPipeline: 'topic-cluster',
+				integratedOptions: ['x', 'SD'],
+			}),
+			option('SD', {
+				isCluster: true,
+				derivedByPipeline: 'synthesis',
+				integratedOptions: ['y'], // no overlap with TD's raw {x}
+			}),
+		]);
+		const data = createViewLayersDataSelector(selectStatements)(PARENT_ID)(state);
+		expect(data.synthToTopic['SD']).toBe('TD');
+	});
+
 	it('breaks assignment ties toward the higher-consensus topic', () => {
 		const state = buildState([
 			option('a'),
