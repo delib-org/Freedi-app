@@ -70,44 +70,44 @@ const SuggestionsToolbar: React.FC<SuggestionsToolbarProps> = ({
 			},
 		];
 
-		// Semantic chip — shown when a hybrid-auto framing exists, or to admins
-		// (who can create one from settings). Hidden from participants when
-		// unavailable so the toolbar isn't cluttered with dead, un-actionable UI.
+		// Semantic chip — always shown so the grouping option stays discoverable;
+		// disabled (with an explanatory tooltip) until a hybrid-auto framing
+		// exists. Admins get an actionable hint pointing at settings.
 		const semanticAvailable = availableModes.includes(FramingMode.semantic);
-		if (semanticAvailable || isAdmin) {
-			list.push({
-				id: 'semantic',
-				label: t('Semantic'),
-				pipeline: 'semantic',
-				description: semanticAvailable
-					? t('Auto-grouped by similarity (k-means on embeddings)')
-					: t('No clustering of this type available — run it from settings first'),
-				count: semanticMeta?.clusterCount,
-				disabled: !semanticAvailable,
-				stale: semanticMeta?.isStale ?? false,
-				loading: semanticMeta?.isComputing ?? false,
-				active: mode === FramingMode.semantic,
-				onSelect: () => setMode(FramingMode.semantic),
-			});
-		}
+		list.push({
+			id: 'semantic',
+			label: t('Semantic'),
+			pipeline: 'semantic',
+			description: semanticAvailable
+				? t('Auto-grouped by similarity (k-means on embeddings)')
+				: isAdmin
+					? t('No clustering of this type available — run it from settings first')
+					: t('No similarity grouping available yet'),
+			count: semanticMeta?.clusterCount,
+			disabled: !semanticAvailable,
+			stale: semanticMeta?.isStale ?? false,
+			loading: semanticMeta?.isComputing ?? false,
+			active: mode === FramingMode.semantic,
+			onSelect: () => setMode(FramingMode.semantic),
+		});
 
 		const topicAvailable = availableModes.includes(FramingMode.topic);
-		if (topicAvailable || isAdmin) {
-			list.push({
-				id: 'topic',
-				label: t('Topic'),
-				pipeline: 'topic',
-				description: topicAvailable
-					? t('Themes from deliberation (LLM-derived)')
-					: t('No clustering of this type available — run it from settings first'),
-				count: topicMeta?.clusterCount,
-				disabled: !topicAvailable,
-				stale: topicMeta?.isStale ?? false,
-				loading: topicMeta?.isComputing ?? false,
-				active: mode === FramingMode.topic,
-				onSelect: () => setMode(FramingMode.topic),
-			});
-		}
+		list.push({
+			id: 'topic',
+			label: t('Topic'),
+			pipeline: 'topic',
+			description: topicAvailable
+				? t('Themes from deliberation (LLM-derived)')
+				: isAdmin
+					? t('No clustering of this type available — run it from settings first')
+					: t('No topic grouping available yet'),
+			count: topicMeta?.clusterCount,
+			disabled: !topicAvailable,
+			stale: topicMeta?.isStale ?? false,
+			loading: topicMeta?.isComputing ?? false,
+			active: mode === FramingMode.topic,
+			onSelect: () => setMode(FramingMode.topic),
+		});
 
 		// Custom framings — one chip per active admin/AI custom framing.
 		for (const cf of customFramings) {
