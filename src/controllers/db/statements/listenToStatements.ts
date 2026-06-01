@@ -38,6 +38,12 @@ import {
 } from '@/controllers/utils/firestoreListenerHelpers';
 import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
 
+// Tracks subscription docs whose schema-validation failure we've already
+// logged this session, so a malformed doc on a hot listener doesn't spam the
+// console every time the snapshot re-fires. Cleared automatically when the
+// page reloads.
+const loggedSubscriptionFallbacks = new Set<string>();
+
 // Helpers
 export const listenToStatementSubscription = (
 	statementId: string,
@@ -68,10 +74,55 @@ export const listenToStatementSubscription = (
 
 						return;
 					}
-					const statementSubscription = parse(
-						StatementSubscriptionSchema,
-						convertTimestampsToMillis(statementSubscriptionDB.data()),
-					) as StatementSubscription;
+					const rawData = convertTimestampsToMillis(
+						statementSubscriptionDB.data(),
+					) as Record<string, unknown>;
+
+					const parseResult = safeParse(StatementSubscriptionSchema, rawData);
+					let statementSubscription: StatementSubscription;
+
+					if (parseResult.success) {
+						statementSubscription = parseResult.output as StatementSubscription;
+					} else {
+						// Partial/malformed subscription doc — salvage what we can so the
+						// page can still render the user's role rather than dropping the
+						// update entirely. The separate statement listener will fill any
+						// gaps in the embedded statement copy. Log once per docId so a
+						// hot listener doesn't spam the console.
+						if (!loggedSubscriptionFallbacks.has(docId)) {
+							loggedSubscriptionFallbacks.add(docId);
+							const missingFields = parseResult.issues
+								.map((i) => i.path?.map((p) => String((p as { key?: unknown }).key)).join('.'))
+								.filter(Boolean)
+								.join(', ');
+							console.warn(
+								`[listenToStatementSubscription] subscription ${docId} missing/invalid fields (${missingFields}); using fallback so UI keeps rendering.`,
+							);
+						}
+
+						statementSubscription = {
+							statementsSubscribeId: docId,
+							statementId,
+							userId: creator.uid,
+							user: creator,
+							role: (rawData.role as Role) ?? Role.unsubscribed,
+							lastUpdate: (rawData.lastUpdate as number) ?? Date.now(),
+							createdAt: (rawData.createdAt as number) ?? Date.now(),
+							statement:
+								(rawData.statement as StatementSubscription['statement']) ?? {
+									statementId,
+									statement: '',
+									statementType: StatementType.question,
+									creatorId: creator.uid,
+									creator,
+									parentId: 'top',
+									consensus: 0,
+								},
+							parentId: rawData.parentId as string | undefined,
+							statementType: rawData.statementType as StatementType | undefined,
+							topParentId: rawData.topParentId as string | undefined,
+						} as StatementSubscription;
+					}
 
 					const { role } = statementSubscription;
 

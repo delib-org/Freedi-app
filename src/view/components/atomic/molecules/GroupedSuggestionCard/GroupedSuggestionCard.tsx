@@ -14,6 +14,7 @@ import {
 	Undo2,
 	RefreshCw,
 } from 'lucide-react';
+import { shallowEqual } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import type { RootState } from '@/redux/store';
@@ -113,11 +114,13 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	// listener, so this resolves synchronously in the common case. Anything
 	// not yet cached gets quietly omitted; the drawer fetches the rest on
 	// demand.
-	const previewMembers = useAppSelector((state: RootState) =>
-		integratedOptions
-			.slice(0, previewSliceLimit)
-			.map((id) => state.statements.statements.find((s) => s.statementId === id))
-			.filter((s): s is Statement => Boolean(s)),
+	const previewMembers = useAppSelector(
+		(state: RootState) =>
+			integratedOptions
+				.slice(0, previewSliceLimit)
+				.map((id) => state.statements.statements.find((s) => s.statementId === id))
+				.filter((s): s is Statement => Boolean(s)),
+		shallowEqual,
 	);
 	const previewRemainder = Math.max(0, count - previewMembers.length);
 
