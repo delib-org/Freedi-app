@@ -36,7 +36,6 @@ const getArg = (k: string, d?: string) => {
 const EXECUTE = args.includes('--execute');
 const HIDE_MEMBERS = args.includes('--hide-members');
 const EPS = Number(getArg('eps', '1.0'));
-const TOPICS_EPS = Number(getArg('topics-eps', '1.8'));
 const TOPIC_THRESHOLD = Number(getArg('topic-threshold', '0.45'));
 const GROUND_TRUTH = getArg('ground-truth');
 if (!questionId) {
@@ -67,9 +66,11 @@ interface RawOpt {
 	embedding: number[];
 }
 
-async function main(): Promise<void> {
+async function main(questionId: string): Promise<void> {
 	const { bulkClusterByEmbedding } = await import('../src/synthesis/bulkCluster');
-	const { generateSynthesizedProposal, generateTopicLabel } = await import('../src/services/integration-ai-service');
+	const { generateSynthesizedProposal, generateTopicLabel } = await import(
+		'../src/services/integration-ai-service'
+	);
 	const { getRandomUID } = await import('@freedi/shared-types');
 	const db = getFirestore();
 
@@ -77,12 +78,18 @@ async function main(): Promise<void> {
 	const textToLabel = new Map<string, string>();
 	if (GROUND_TRUTH) {
 		const bm = JSON.parse(readFileSync(GROUND_TRUTH, 'utf-8'));
-		for (const t of bm.topics) for (const s of t.synths) for (const p of s.paraphrases) {
-			textToLabel.set(p.trim(), `${t.name}/${s.name}`);
-		}
+		for (const t of bm.topics)
+			for (const s of t.synths)
+				for (const p of s.paraphrases) {
+					textToLabel.set(p.trim(), `${t.name}/${s.name}`);
+				}
 	}
 
-	const snap = await db.collection('statements').where('parentId', '==', questionId).where('statementType', '==', 'option').get();
+	const snap = await db
+		.collection('statements')
+		.where('parentId', '==', questionId)
+		.where('statementType', '==', 'option')
+		.get();
 	const raw: RawOpt[] = [];
 	const existingDerived: string[] = [];
 	for (const d of snap.docs) {
@@ -95,7 +102,9 @@ async function main(): Promise<void> {
 		const e = extractEmbedding(x.embedding);
 		if (e) raw.push({ id: x.statementId, text: x.statement ?? '', embedding: e });
 	}
-	console.info(`Raw options with embeddings: ${raw.length} | existing derived clusters: ${existingDerived.length}`);
+	console.info(
+		`Raw options with embeddings: ${raw.length} | existing derived clusters: ${existingDerived.length}`,
+	);
 	if (raw.length < 4) {
 		console.error('Not enough embedded raw options.');
 
@@ -103,9 +112,14 @@ async function main(): Promise<void> {
 	}
 
 	// ---- fine clustering → synth-level groups ----
-	const fine = bulkClusterByEmbedding(raw.map((r) => ({ id: r.id, embedding: r.embedding })), { dbscanEps: EPS, seed: 42 });
+	const fine = bulkClusterByEmbedding(
+		raw.map((r) => ({ id: r.id, embedding: r.embedding })),
+		{ dbscanEps: EPS, seed: 42 },
+	);
 	const byId = new Map(raw.map((r) => [r.id, r]));
-	console.info(`\n[fine eps=${EPS}] clusters=${fine.clusters.length} noise=${fine.noiseIds.length} (minPts=${fine.stats.dbscanMinSamples})`);
+	console.info(
+		`\n[fine eps=${EPS}] clusters=${fine.clusters.length} noise=${fine.noiseIds.length} (minPts=${fine.stats.dbscanMinSamples})`,
+	);
 	fine.clusters.forEach((c, i) => {
 		const dist: Record<string, number> = {};
 		c.memberIds.forEach((id) => {
@@ -115,7 +129,9 @@ async function main(): Promise<void> {
 		console.info(`  cluster ${i}: ${c.memberIds.length} members | purity: ${JSON.stringify(dist)}`);
 	});
 	if (fine.noiseIds.length) {
-		console.info(`  NOISE (${fine.noiseIds.length}): ${fine.noiseIds.map((id) => textToLabel.get((byId.get(id)?.text ?? '').trim()) ?? '?').join(', ')}`);
+		console.info(
+			`  NOISE (${fine.noiseIds.length}): ${fine.noiseIds.map((id) => textToLabel.get((byId.get(id)?.text ?? '').trim()) ?? '?').join(', ')}`,
+		);
 	}
 
 	// ---- topic-level grouping: agglomerate the fine-cluster CENTROIDS ----
@@ -124,14 +140,26 @@ async function main(): Promise<void> {
 	// same-theme synths (friends+clubs, exercise+eating) into topics without
 	// the UMAP-geometry problem that prevents coarse DBSCAN from merging them.
 	const cosine = (a: number[], b: number[]) => {
-		let d = 0, na = 0, nb = 0;
-		for (let i = 0; i < a.length; i++) { d += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+		let d = 0,
+			na = 0,
+			nb = 0;
+		for (let i = 0; i < a.length; i++) {
+			d += a[i] * b[i];
+			na += a[i] * a[i];
+			nb += b[i] * b[i];
+		}
 
 		return na && nb ? d / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
 	};
 	const fineClusters = fine.clusters.filter((c) => c.memberIds.length >= 2);
-	interface TGroup { centroids: number[][]; clusterIdxs: number[] }
-	let groups: TGroup[] = fineClusters.map((c, i) => ({ centroids: [c.centroid], clusterIdxs: [i] }));
+	interface TGroup {
+		centroids: number[][];
+		clusterIdxs: number[];
+	}
+	let groups: TGroup[] = fineClusters.map((c, i) => ({
+		centroids: [c.centroid],
+		clusterIdxs: [i],
+	}));
 	const groupSim = (g1: TGroup, g2: TGroup) => {
 		let best = -1;
 		for (const a of g1.centroids) for (const b of g2.centroids) best = Math.max(best, cosine(a, b));
@@ -139,23 +167,38 @@ async function main(): Promise<void> {
 		return best;
 	};
 	while (groups.length > 2) {
-		let bi = -1, bj = -1, bs = -Infinity;
-		for (let i = 0; i < groups.length; i++) for (let j = i + 1; j < groups.length; j++) {
-			const s = groupSim(groups[i], groups[j]);
-			if (s > bs) { bs = s; bi = i; bj = j; }
-		}
+		let bi = -1,
+			bj = -1,
+			bs = -Infinity;
+		for (let i = 0; i < groups.length; i++)
+			for (let j = i + 1; j < groups.length; j++) {
+				const s = groupSim(groups[i], groups[j]);
+				if (s > bs) {
+					bs = s;
+					bi = i;
+					bj = j;
+				}
+			}
 		if (bs < TOPIC_THRESHOLD) break;
-		groups[bi] = { centroids: [...groups[bi].centroids, ...groups[bj].centroids], clusterIdxs: [...groups[bi].clusterIdxs, ...groups[bj].clusterIdxs] };
+		groups[bi] = {
+			centroids: [...groups[bi].centroids, ...groups[bj].centroids],
+			clusterIdxs: [...groups[bi].clusterIdxs, ...groups[bj].clusterIdxs],
+		};
 		groups.splice(bj, 1);
 	}
 	const labelOfFine = (idx: number) => {
 		const dist: Record<string, number> = {};
-		fineClusters[idx].memberIds.forEach((id) => { const l = textToLabel.get((byId.get(id)?.text ?? '').trim()) ?? '?'; dist[l] = (dist[l] ?? 0) + 1; });
+		fineClusters[idx].memberIds.forEach((id) => {
+			const l = textToLabel.get((byId.get(id)?.text ?? '').trim()) ?? '?';
+			dist[l] = (dist[l] ?? 0) + 1;
+		});
 
 		return Object.keys(dist)[0];
 	};
 	console.info(`\n[topic grouping] threshold=${TOPIC_THRESHOLD} → ${groups.length} topics:`);
-	groups.forEach((g, i) => console.info(`  topic ${i}: synths = ${g.clusterIdxs.map(labelOfFine).join(', ')}`));
+	groups.forEach((g, i) =>
+		console.info(`  topic ${i}: synths = ${g.clusterIdxs.map(labelOfFine).join(', ')}`),
+	);
 
 	if (!EXECUTE) {
 		console.info('\n(preview only — pass --execute to write cluster docs)');
@@ -174,7 +217,8 @@ async function main(): Promise<void> {
 	for (const id of existingDerived) {
 		await db.collection('statements').doc(id).delete();
 	}
-	if (existingDerived.length) console.info(`\nDeleted ${existingDerived.length} pre-existing derived clusters.`);
+	if (existingDerived.length)
+		console.info(`\nDeleted ${existingDerived.length} pre-existing derived clusters.`);
 
 	// Build synth/topic-cluster docs from fine clusters.
 	const memberToClusterId = new Map<string, string>(); // raw option → synth cluster id
@@ -188,11 +232,21 @@ async function main(): Promise<void> {
 		let derivedByPipeline: 'synthesis' | 'topic-cluster' = 'synthesis';
 		try {
 			const proposal = await generateSynthesizedProposal(
-				members.map((m) => ({ statementId: m.id, statement: m.text, paragraphsText: '', numberOfEvaluators: 0, consensus: 0, sumEvaluations: 0 })),
+				members.map((m) => ({
+					statementId: m.id,
+					statement: m.text,
+					paragraphsText: '',
+					numberOfEvaluators: 0,
+					consensus: 0,
+					sumEvaluations: 0,
+				})),
 				qContext,
 			);
 			if (proposal.cannotSynthesize === true) {
-				const label = await generateTopicLabel(members.map((m) => ({ statementId: m.id, statement: m.text })) as never, qContext);
+				const label = await generateTopicLabel(
+					members.map((m) => ({ statementId: m.id, statement: m.text })) as never,
+					qContext,
+				);
 				title = label.title;
 				description = label.description;
 				derivedByPipeline = 'topic-cluster';
@@ -200,40 +254,58 @@ async function main(): Promise<void> {
 				title = proposal.title;
 				description = proposal.description ?? '';
 			}
-		} catch (e) {
+		} catch {
 			title = members[0].text.slice(0, 60);
 			description = '';
 		}
 		const clusterId = getRandomUID();
 		const now = Date.now();
-		await db.collection('statements').doc(clusterId).set({
-			statementId: clusterId,
-			statement: title,
-			description,
-			statementType: 'option',
-			parentId: questionId,
-			topParentId: question?.topParentId ?? questionId,
-			parents: [questionId],
-			creatorId,
-			creator,
-			createdAt: now,
-			lastUpdate: now,
-			consensus: 0,
-			integratedOptions: members.map((m) => m.id),
-			isCluster: true,
-			isSynthesis: derivedByPipeline === 'synthesis',
-			derivedByPipeline,
-			liveSynthOrigin: 'bulkRebuild',
-			hide: false,
-			evaluation: { sumEvaluations: 0, numberOfEvaluators: 0, sumPro: 0, sumCon: 0, numberOfProEvaluators: 0, numberOfConEvaluators: 0, sumSquaredEvaluations: 0, averageEvaluation: 0, agreement: 0, evaluationRandomNumber: Math.random(), viewed: 0 },
-			randomSeed: Math.random(),
-		});
+		await db
+			.collection('statements')
+			.doc(clusterId)
+			.set({
+				statementId: clusterId,
+				statement: title,
+				description,
+				statementType: 'option',
+				parentId: questionId,
+				topParentId: question?.topParentId ?? questionId,
+				parents: [questionId],
+				creatorId,
+				creator,
+				createdAt: now,
+				lastUpdate: now,
+				consensus: 0,
+				integratedOptions: members.map((m) => m.id),
+				isCluster: true,
+				isSynthesis: derivedByPipeline === 'synthesis',
+				derivedByPipeline,
+				liveSynthOrigin: 'bulkRebuild',
+				hide: false,
+				evaluation: {
+					sumEvaluations: 0,
+					numberOfEvaluators: 0,
+					sumPro: 0,
+					sumCon: 0,
+					numberOfProEvaluators: 0,
+					numberOfConEvaluators: 0,
+					sumSquaredEvaluations: 0,
+					averageEvaluation: 0,
+					agreement: 0,
+					evaluationRandomNumber: Math.random(),
+					viewed: 0,
+				},
+				randomSeed: Math.random(),
+			});
 		synthClusterIds.push(clusterId);
 		fineIdxToClusterId.set(ci, clusterId);
 		members.forEach((m) => memberToClusterId.set(m.id, clusterId));
 		if (HIDE_MEMBERS) {
 			for (const m of members) {
-				await db.collection('statements').doc(m.id).update({ hide: true, integratedInto: clusterId, lastUpdate: Date.now() });
+				await db
+					.collection('statements')
+					.doc(m.id)
+					.update({ hide: true, integratedInto: clusterId, lastUpdate: Date.now() });
 			}
 		}
 		console.info(`+ [${derivedByPipeline}] (${members.length}) ${title.slice(0, 55)}`);
@@ -243,7 +315,9 @@ async function main(): Promise<void> {
 	// synths in each group (3-level: topic → synths → raw options).
 	let topicsCreated = 0;
 	for (const g of groups) {
-		const synthIds = g.clusterIdxs.map((idx) => fineIdxToClusterId.get(idx)).filter((x): x is string => !!x);
+		const synthIds = g.clusterIdxs
+			.map((idx) => fineIdxToClusterId.get(idx))
+			.filter((x): x is string => !!x);
 		if (synthIds.length < 2) continue; // a topic grouping <2 synths adds nothing
 		// Topic label from a sample member text of each synth in the group.
 		const sampleTexts = g.clusterIdxs.flatMap((idx) => {
@@ -254,7 +328,10 @@ async function main(): Promise<void> {
 		let title = 'Topic';
 		let description = '';
 		try {
-			const label = await generateTopicLabel(sampleTexts.map((t, i) => ({ statementId: `s${i}`, statement: t })) as never, qContext);
+			const label = await generateTopicLabel(
+				sampleTexts.map((t, i) => ({ statementId: `s${i}`, statement: t })) as never,
+				qContext,
+			);
 			title = label.title;
 			description = label.description;
 		} catch {
@@ -262,36 +339,53 @@ async function main(): Promise<void> {
 		}
 		const topicId = getRandomUID();
 		const now = Date.now();
-		await db.collection('statements').doc(topicId).set({
-			statementId: topicId,
-			statement: title,
-			description,
-			statementType: 'option',
-			parentId: questionId,
-			topParentId: question?.topParentId ?? questionId,
-			parents: [questionId],
-			creatorId,
-			creator,
-			createdAt: now,
-			lastUpdate: now,
-			consensus: 0,
-			integratedOptions: synthIds, // 3-level: topic → synths
-			isCluster: true,
-			isSynthesis: false,
-			derivedByPipeline: 'topic-cluster',
-			liveSynthOrigin: 'bulkRebuild',
-			hide: false,
-			evaluation: { sumEvaluations: 0, numberOfEvaluators: 0, sumPro: 0, sumCon: 0, numberOfProEvaluators: 0, numberOfConEvaluators: 0, sumSquaredEvaluations: 0, averageEvaluation: 0, agreement: 0, evaluationRandomNumber: Math.random(), viewed: 0 },
-			randomSeed: Math.random(),
-		});
+		await db
+			.collection('statements')
+			.doc(topicId)
+			.set({
+				statementId: topicId,
+				statement: title,
+				description,
+				statementType: 'option',
+				parentId: questionId,
+				topParentId: question?.topParentId ?? questionId,
+				parents: [questionId],
+				creatorId,
+				creator,
+				createdAt: now,
+				lastUpdate: now,
+				consensus: 0,
+				integratedOptions: synthIds, // 3-level: topic → synths
+				isCluster: true,
+				isSynthesis: false,
+				derivedByPipeline: 'topic-cluster',
+				liveSynthOrigin: 'bulkRebuild',
+				hide: false,
+				evaluation: {
+					sumEvaluations: 0,
+					numberOfEvaluators: 0,
+					sumPro: 0,
+					sumCon: 0,
+					numberOfProEvaluators: 0,
+					numberOfConEvaluators: 0,
+					sumSquaredEvaluations: 0,
+					averageEvaluation: 0,
+					agreement: 0,
+					evaluationRandomNumber: Math.random(),
+					viewed: 0,
+				},
+				randomSeed: Math.random(),
+			});
 		topicsCreated++;
 		console.info(`+ [topic-cluster] links ${synthIds.length} synths :: ${title.slice(0, 50)}`);
 	}
 
-	console.info(`\nDONE. synths/clusters=${synthClusterIds.length}, topic-clusters=${topicsCreated}`);
+	console.info(
+		`\nDONE. synths/clusters=${synthClusterIds.length}, topic-clusters=${topicsCreated}`,
+	);
 }
 
-main()
+main(questionId)
 	.then(() => process.exit(0))
 	.catch((e) => {
 		console.error('bulk rebuild failed:', e);

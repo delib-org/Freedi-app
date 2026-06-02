@@ -45,8 +45,10 @@ jest.mock('../liveSynth/auditLog', () => ({
 }));
 
 const enqueueRecomputeMock = jest.fn();
+const findClustersContainingMemberMock = jest.fn();
 jest.mock('../liveSynth/clusterRecompute', () => ({
 	enqueueClusterRecompute: enqueueRecomputeMock,
+	findClustersContainingMember: findClustersContainingMemberMock,
 }));
 
 const ensureEmbeddingMock = jest.fn();
@@ -117,9 +119,62 @@ beforeEach(() => {
 	ensureEmbeddingMock.mockResolvedValue(Array(1536).fill(0.1));
 	debounceCheckMock.mockResolvedValue(true);
 	attachMock.mockResolvedValue({ attached: true, previousMemberCount: 1, newMemberCount: 2 });
+	// Default: the option is not yet a member of any cluster.
+	findClustersContainingMemberMock.mockResolvedValue([]);
 });
 
 describe('runSinglePipeline', () => {
+	describe('cluster-membership idempotence', () => {
+		it('skips when the option is already a member of a live cluster (no double-claim)', async () => {
+			const option = makeOption();
+			findClustersContainingMemberMock.mockResolvedValue([
+				{
+					statementId: 'cluster-A',
+					integratedOptions: ['opt-1'],
+					hide: false,
+				} as unknown as Statement,
+			]);
+
+			const result = await runSinglePipeline({
+				option,
+				optionId: 'opt-1',
+				source: 'synthesizeNow',
+			});
+
+			expect(result.action).toBe('skipped');
+			expect(result.reason).toContain('already-member-of-cluster:cluster-A');
+			// Must not run the attach/spawn passes for an already-owned option.
+			expect(findSimilarMock).not.toHaveBeenCalled();
+			expect(attachMock).not.toHaveBeenCalled();
+			expect(spawnMock).not.toHaveBeenCalled();
+		});
+
+		it('proceeds when the option is only owned by a hidden (reverse-integrated) cluster', async () => {
+			const option = makeOption();
+			const parent = makeParent();
+			findClustersContainingMemberMock.mockResolvedValue([
+				{
+					statementId: 'cluster-dead',
+					integratedOptions: ['opt-1'],
+					hide: true,
+				} as unknown as Statement,
+			]);
+			findSimilarMock.mockResolvedValue([]);
+
+			const result = await runSinglePipeline({
+				option,
+				parent,
+				optionId: 'opt-1',
+				source: 'synthesizeNow',
+				forceProcess: true,
+			});
+
+			// Not blocked by the dead cluster; falls through to normal processing.
+			expect(result.reason).not.toContain('already-member-of-cluster');
+			expect(findSimilarMock).toHaveBeenCalled();
+		});
+	});
+
 	it('skips when synthesis disabled on parent', async () => {
 		const option = makeOption();
 		const parent = makeParent({
