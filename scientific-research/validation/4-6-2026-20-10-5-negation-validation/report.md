@@ -89,6 +89,51 @@ verifier, and it works. The overall `score.mjs` FAIL is purely recall
 (3 of 20 negation-side members dropped), not a stance error — consistent with
 the medoid-anchored recall limit documented in the loose-corpus run.
 
+## 5b. Re-run on the quorum-tolerant judge (commit `1ee58ecd5`)
+
+The 3-member recall loss above was traced to `refineComponent`'s **strict
+complete-linkage** rule: a genuine member shed to dissent could not re-join its
+clique because one stray "different" pair-verdict violated unanimity, even though
+within-group cosine was 0.91–0.95. Commit `1ee58ecd5` relaxes the join rule to
+**quorum-tolerant linkage** — a candidate joins if it is "same" with a quorum
+(`ceil(0.75·cliqueSize)`, capped at one absolute dissent) of the current members
+— which rescues single-noisy-verdict drops while keeping a genuinely-opposite
+member (different against the *whole* opposing group) out, so anti-chaining is
+preserved. Zero added LLM cost: the quorum check reads only internal pair
+verdicts already fetched.
+
+Re-running the **same input vectors** (seeded directly from this run's
+`statements.json` + `embeddings.json` via
+[`functions/scripts/seedNegationFromArtifacts.ts`](../../../functions/scripts/seedNegationFromArtifacts.ts),
+no embedding API needed) through the production two-tier judge, **3× for
+stability**, gives an identical result every run:
+
+| Metric | original (7/11) | quorum-tolerant re-run | Pass |
+|---|---|---|---|
+| Synth count | 4 | **4** | ✅ |
+| `make-peace` / `raise-taxes` | 5 / 5 | 5 / 5 | ✅ |
+| `no-peace` / `no-raise-taxes` | 3 / 4 | **5 / 5** | ✅ |
+| Options assigned | 17 | **20** | ✅ |
+| Cross-stance contamination | 0 | **0** | ✅ |
+| Topic-clusters | 2 | **2** | ✅ |
+
+`twoTierJudge` stats per run: `llmCalls=30`, `refinedFromDissent=2`, `dropped=0`.
+This takes the negation run from **7/11 (PASS-property, recall-failed)** to a
+full pass: all four stance-synths recovered at size 5, opposites still never
+merged. The medoid-anchored recall tax that this run exposed is the bug the
+quorum fix closes.
+
+Reproduce (emulator on `:8081`, ADC for Vertex):
+```bash
+cd functions
+FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test \
+  npx tsx scripts/seedNegationFromArtifacts.ts
+FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test \
+  npx tsx scripts/bulkRebuild.ts NegationTest0001 --eps=0.8 --two-tier \
+    --max-llm-calls=2000 --auto-reject-band=0.60 --auto-accept-band=0.94 \
+    --ground-truth=../scripts/seedSynthBenchmark.negation.json
+```
+
 ## 6. Notes & reproduction
 
 - ε=0.8 used (not the 0.45 of the other runs) because the small, semantically

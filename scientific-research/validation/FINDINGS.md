@@ -79,8 +79,20 @@ re-derived from shipped embeddings by `verifyFromEmbeddings.ts` (Level 2).
 | reference (40-20-10) | 10/10 | **PASS** — 4 pure synths, 2 correct topics, 0 overlap |
 | loose (60-20-5) | 9/19 | **FAIL (partial)** — `eat-vegetables`/`portion-control` correctly split (the judge's core job), but 6/12 synths fragmented, 47/60 assigned |
 | tight (60-20-5) | 17/19 | **PASS (synth)** — **12/12 pure synths, 60/60 assigned, 0 overlap, 0 LLM calls**; 2 fails are the diagnostic topic grouping |
-| negation (20-10-5) | 7/11 | **PASS (property)** — **4 stance-pure synths, opposites not merged, 0 cross-stance contamination, 2 correct topics**; 4 fails are recall (3/20 dropped) |
+| negation (20-10-5) | 7/11 → **11/11**† | **PASS (property)** — **4 stance-pure synths, opposites not merged, 0 cross-stance contamination, 2 correct topics**; the 4 original fails were recall (3/20 dropped), **fixed by the quorum-tolerant judge** (see †) |
 | singleton (41-20-4) | 18/18 | **PASS** — 10/10 pure synths, 2 correct topics, **off-topic statement left unclustered** |
+
+†**Negation recall fix (commit `1ee58ecd5`).** The 4 original fails were all
+recall: `refineComponent`'s strict complete-linkage shed genuine members (within
+-group cosine 0.91–0.95) to dissent over a single stray "different" pair-verdict.
+Relaxing the join rule to **quorum-tolerant linkage** (same with `ceil(0.75·size)`
+members, capped at one absolute dissent) rescues those single-noisy-verdict drops
+while keeping genuine opposites out (a member "different" against the whole opposing
+group never reaches quorum), at zero added LLM cost. Re-running the **same input
+vectors** through the production two-tier judge, **3× identically**, recovers all
+four stance-synths at size 5 → **20/20 assigned, 0 dropped, 0 contamination**
+(7/11 → 11/11). Opposites still never merge. Details and reproduction in the
+[negation report §5b](./4-6-2026-20-10-5-negation-validation/report.md).
 
 Headline contrasts:
 
@@ -141,7 +153,11 @@ paths inherit the fixes (`VerifiedCluster.memberIds`, `bulkClusterByEmbedding`).
   these runs did not exercise. **This is the main open item.**
 - **Medoid-anchored recall.** Even with realistic cosine, members judged only
   against a single medoid can be dropped to dissent (e.g. the negation run shed
-  3/20). Anchoring judgement to multiple references is a candidate improvement.
+  3/20). **Mitigated** for this corpus by quorum-tolerant complete-linkage
+  (commit `1ee58ecd5`): members shed by a single noisy verdict now re-join their
+  clique, recovering the negation run to 20/20 (§3†). The deeper cause —
+  judging against a single medoid rather than multiple references — remains a
+  candidate improvement for cases where a member is shed by *several* verdicts.
 - **Determinism scope.** Cluster *membership* (UMAP seed 42, DBSCAN ε) is
   deterministic and re-derivable offline from the shipped embeddings. The
   `twoTierJudge` split, synth/topic *titles*, and which gray-band members are
