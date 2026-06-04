@@ -174,9 +174,9 @@ a *contrast*, but: (a) seed via `seedSynthBenchmark.ts` (synthesis ON, ~10 min),
 ```
 scientific-research/
   PREPARING-VALIDATION-REPORTS.md   ← this file
-  scripts/                          ← as-run seed script + corpus snapshots (README.md)
-    cleanRawSeed.ts                 ← the seed script
-    seedSynthBenchmark.data.json    ← the corpus (source of the sentences + ground truth)
+  scripts/                          ← seed script + corpus, as symlinks (README.md)
+    cleanRawSeed.ts                 → ../../functions/scripts/cleanRawSeed.ts
+    seedSynthBenchmark.data.json    → ../../scripts/seedSynthBenchmark.data.json
   validation/
     README.md                       ← protocol + run index (update it)
     score.mjs                       ← shared scorer (no deps)
@@ -184,10 +184,10 @@ scientific-research/
       statements.json  embeddings.json  results.json  report.md
 ```
 
-The runnable, canonical scripts live in the repo (`functions/scripts/`,
-`scripts/`); `scientific-research/scripts/` holds frozen copies of the seed
-script + corpus so the record is self-contained. Keep them in sync when the
-seed method changes, or re-snapshot per run.
+The canonical scripts live in the repo (`functions/scripts/`, `scripts/`);
+`scientific-research/scripts/` surfaces the seed script + corpus as **symlinks**
+to them (single source of truth, no duplication, no drift). Exact per-run content
+is pinned by the commit in each run's `report.md`.
 
 ## 10. Commit
 

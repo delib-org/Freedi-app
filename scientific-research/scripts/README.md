@@ -1,9 +1,18 @@
-# Seed script & corpus (as-run snapshots)
+# Seed script & corpus
 
-The scripts and data that **produced the validation runs**, kept here so the
-record is self-contained. These are frozen snapshots; the canonical, runnable
-copies live in the repo (paths below) and are what a reproduction should run, at
-the commit recorded in each run's `report.md` → *Provenance*.
+The seed script and corpus that **produced the validation runs**, surfaced here
+so the record is self-contained. To avoid duplication, these are **relative
+symlinks** to the single canonical source in the repo — they cannot drift:
+
+```
+cleanRawSeed.ts              -> ../../functions/scripts/cleanRawSeed.ts
+seedSynthBenchmark.data.json -> ../../scripts/seedSynthBenchmark.data.json
+```
+
+The exact content for a given run is pinned by the commit recorded in that run's
+`report.md` → *Provenance*. (Symlinks check out as links on macOS/Linux; on
+Windows, enable `git config core.symlinks true` or read the canonical paths
+above.)
 
 ## Files
 
