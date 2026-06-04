@@ -55,3 +55,4 @@ grouping, disjoint assignment). Canonical runnable copies live in the repo
 | Test | Path under test | Result |
 |---|---|---|
 | `1-6-2026-40-20-10-validation` | bulk UMAP→DBSCAN | PASS — 4 pure synths, 2 correct topics, 0 overlap |
+| `4-6-2026-60-20-5-validation` | production: UMAP→DBSCAN + twoTierJudge | FAIL (partial) — 12 synths, near-duplicate pair correctly split (the judge's core job ✅), but 6/12 fragmented + members lost on a low-cosine synthetic corpus (9/19 checks). Surfaced & fixed 2 production bugs (DBSCAN dedupe; autoRejectBand). |

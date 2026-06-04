@@ -1,0 +1,372 @@
+{
+  "test": "4-6-2026-60-20-5-validation",
+  "question": {
+    "id": "ZnPBtoZBJMKv",
+    "text": "How can we all be healthy"
+  },
+  "groundTruthStructure": "3 topics x 4 synths x 5 paraphrases = 60 options",
+  "runDate": "2026-06-04T04:57:37.384Z",
+  "statementCount": 60,
+  "statements": [
+    {
+      "id": "0MciaJtDQdVLjXrDA4VP",
+      "text": "Do strength exercises like squats and push-ups regularly.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "0sdDm1se26v5P1w8cGW3",
+      "text": "Keep yourself well hydrated by sipping water regularly.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "stay-hydrated"
+    },
+    {
+      "id": "1LLzLrGKogfu9VsVvIwi",
+      "text": "Track your blood pressure and weight at home regularly.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "self-monitoring"
+    },
+    {
+      "id": "1yaAlhPFLYt5nFVuqWhJ",
+      "text": "Load up on colorful plant foods throughout the day.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "eat-vegetables"
+    },
+    {
+      "id": "3n7lqP5UKmeiTxDlWRwn",
+      "text": "Train with dumbbells and resistance bands to grow stronger.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "6pYBnufS1jKi4njqp56g",
+      "text": "Fill your plate with plenty of fresh vegetables and fruit.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "eat-vegetables"
+    },
+    {
+      "id": "ACdqhCvGqAibzIAhnyI6",
+      "text": "Do aerobic exercise like running or cycling on a daily basis.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "AZpN0Q7sL9Lcn5rvUZyC",
+      "text": "Practice yoga or stretching routines to improve flexibility.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "Aciqu2T64V46AOTGTsKk",
+      "text": "Control calorie intake by limiting portion sizes.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "portion-control"
+    },
+    {
+      "id": "C8XOeATMi9u5Rw0X5JxK",
+      "text": "See your dentist twice a year to care for your teeth.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "dental-checkups"
+    },
+    {
+      "id": "Dlm0kpjbbcV75CJckDYi",
+      "text": "Make sure you take in enough fluids daily.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "stay-hydrated"
+    },
+    {
+      "id": "ELchJuPSPD6SEhwCKckg",
+      "text": "Get vaccinated against preventable diseases.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "vaccinations"
+    },
+    {
+      "id": "GLhmKgNgFqkd0WjAlzmV",
+      "text": "Drink plenty of water throughout the day.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "stay-hydrated"
+    },
+    {
+      "id": "GloC8SenUxgkXkx8rfKh",
+      "text": "See your GP annually to assess your overall health.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "annual-physical"
+    },
+    {
+      "id": "He8BEMSBpbbTL6WW7OYa",
+      "text": "Protect yourself by getting the appropriate vaccines.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "vaccinations"
+    },
+    {
+      "id": "I0gyxu0QyKq5y372tSW0",
+      "text": "Get around using your own two feet or a bike rather than a vehicle.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "IRMBitjyK0yIbDBHOz8B",
+      "text": "Eat smaller amounts to manage how much you consume.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "portion-control"
+    },
+    {
+      "id": "IiyhobgTLSuiyFlRRaRO",
+      "text": "Incorporate resistance workouts to strengthen your body.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "Ir5e7Urqx6RV8Bl6C9r0",
+      "text": "Steer clear of processed foods loaded with sugar.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "limit-sugar"
+    },
+    {
+      "id": "Is5nTA7bXelqPBKgX0qi",
+      "text": "Minimize how much sweet stuff you eat each day.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "limit-sugar"
+    },
+    {
+      "id": "Iz5ZAO9s6dgwHr822Jxz",
+      "text": "Get your teeth checked and cleaned by a dental professional.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "dental-checkups"
+    },
+    {
+      "id": "JGjlmb4uYO0HPUqpeIJW",
+      "text": "Keep meal portions moderate and balanced.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "portion-control"
+    },
+    {
+      "id": "JcLQtK1b6hqAdakX8rHE",
+      "text": "Make vegetables and fruits the centerpiece of your diet.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "eat-vegetables"
+    },
+    {
+      "id": "Mrj84On1e9fL971DBsCA",
+      "text": "Eat more greens and produce at every meal.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "eat-vegetables"
+    },
+    {
+      "id": "N7nu5wzBRUKgKO04CBKX",
+      "text": "Build a habit of regular cardiovascular workouts to stay fit.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "OR6q8ca1AdnLriYo94C5",
+      "text": "Build muscular power through consistent weightlifting sessions.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "OiJNw7MIrs3TvuapPIQ3",
+      "text": "Improve your range of motion through gentle daily flexibility work.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "OnurlHOD3ZzxylzYRz4r",
+      "text": "Skip the car and travel actively by walking or cycling.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "RNZRvoLmeJYjOu6K2XEl",
+      "text": "Choose to commute on foot or by bicycle to add movement to your day.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "SBPNzn9dhT6rLbL5rgOD",
+      "text": "Raise your pulse routinely through activities like brisk biking and runs.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "TwvAfjZ93lUZaJuos7Ux",
+      "text": "Schedule a yearly physical exam with your physician.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "annual-physical"
+    },
+    {
+      "id": "UmLMtPE7pD1sPMigYehm",
+      "text": "Get an annual health review from your general practitioner.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "annual-physical"
+    },
+    {
+      "id": "WC4Djvj362lo0snuSLoq",
+      "text": "Keep your heart strong by doing daily endurance training.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "X3quov0jIM2ZW2eu5LON",
+      "text": "Walk or bike to work instead of driving whenever you can.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "YzNzow23c9ZtZ3f3Uw8S",
+      "text": "Increase how many veggies and fruits you consume daily.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "eat-vegetables"
+    },
+    {
+      "id": "Z9uvcE67rO97aytctlLR",
+      "text": "Visit your doctor every year for a complete checkup.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "annual-physical"
+    },
+    {
+      "id": "ZxxbYwVYEpCP8vFm4ywX",
+      "text": "Get your heart pumping every day with cardio such as jogging or swimming.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "a9Pye2UsQfK0Z7cPDYLH",
+      "text": "Avoid candy, soda, and desserts to lower your sugar intake.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "limit-sugar"
+    },
+    {
+      "id": "az2aParQhT2uKfCoB7ms",
+      "text": "Lift weights several times a week to build muscle.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "fyOCA69aVdleokjM2n8C",
+      "text": "Stretch your muscles daily to stay limber and mobile.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "hni7d4FmfVSwioLKGZhc",
+      "text": "Keep up routine dental appointments to maintain oral health.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "dental-checkups"
+    },
+    {
+      "id": "i9G8QIpfgSILOGxgLDtY",
+      "text": "Keep your vaccines current to protect against illness.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "vaccinations"
+    },
+    {
+      "id": "nVRlr1sTL11tqi9KueBA",
+      "text": "Keep an eye on vital signs like blood pressure yourself.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "self-monitoring"
+    },
+    {
+      "id": "nbQHixTeshokxZ1cyF7Y",
+      "text": "Watch your serving sizes to avoid overeating.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "portion-control"
+    },
+    {
+      "id": "nbtsfeTcO1EEEvOkljA1",
+      "text": "Book a routine medical examination once a year.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "annual-physical"
+    },
+    {
+      "id": "ntPPrpENKqMYEVLLt023",
+      "text": "Check measurements such as weight and pulse at home.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "self-monitoring"
+    },
+    {
+      "id": "pkY4zM3KwYMR8VzNlE0f",
+      "text": "Loosen up your joints with regular mobility exercises.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "psEoxflUSAje4QSnG5nD",
+      "text": "Be mindful of how much food you put on your plate.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "portion-control"
+    },
+    {
+      "id": "q8AFyQDKKPY7YumFzCEv",
+      "text": "Carry a water bottle and refill it often to stay hydrated.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "stay-hydrated"
+    },
+    {
+      "id": "qTHxFXkpRBbedl2bBsAV",
+      "text": "Schedule regular dental visits to prevent cavities and gum disease.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "dental-checkups"
+    },
+    {
+      "id": "rbgJvjD5Am5zSSVGwNCp",
+      "text": "Cut back on sugary snacks and sweetened drinks.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "limit-sugar"
+    },
+    {
+      "id": "t3pNRtGQ5lLyVydOBJjS",
+      "text": "Receive recommended immunizations on schedule.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "vaccinations"
+    },
+    {
+      "id": "tO9r98pgCZcTJhg6dgtA",
+      "text": "Turn your daily commute into exercise by biking or walking there.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "umn9A5XrDi4cYw7PSCvQ",
+      "text": "Keep your body supple by stretching before and after activity.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "uudyIae6YhfqliWDrvwy",
+      "text": "Visit the dentist regularly for cleanings and exams.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "dental-checkups"
+    },
+    {
+      "id": "vtrkbVUEteuFqoQE4M5Y",
+      "text": "Stay up to date on your immunizations and shots.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "vaccinations"
+    },
+    {
+      "id": "wS2jtklhe7JaopmUR1fJ",
+      "text": "Monitor your own health metrics between doctor visits.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "self-monitoring"
+    },
+    {
+      "id": "wxg6CJzXG8xflS5ONGZr",
+      "text": "Replenish your body's fluids by drinking water all day long.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "stay-hydrated"
+    },
+    {
+      "id": "xUP7UuXvsorJaGiGx3JE",
+      "text": "Watch your personal health numbers using home devices.",
+      "groundTruthTopic": "preventive-healthcare",
+      "groundTruthSynth": "self-monitoring"
+    },
+    {
+      "id": "zWzRzwdAy6MQcTpti4Q0",
+      "text": "Reduce the amount of added sugar in your diet.",
+      "groundTruthTopic": "nutrition",
+      "groundTruthSynth": "limit-sugar"
+    }
+  ]
+}
