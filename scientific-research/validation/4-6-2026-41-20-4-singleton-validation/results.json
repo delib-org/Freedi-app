@@ -22,67 +22,9 @@
     "count": 10,
     "items": [
       {
-        "id": "3aDyIBZfUWAI",
-        "title": "Integrate Daily Stretching Routines to Enhance Physical Flexibility",
-        "description": "This proposal advocates for the consistent practice of daily stretching routines to significantly improve physical flexibility. By dedicating a short period each day to targeted stretching exercises, individuals can enhance their range of motion, reduce muscle stiffness, and contribute to overall physical well-being. This simple yet effective habit can lead to tangible improvements in daily comfort and mobility.",
-        "llmTag": "synthesis",
-        "memberCount": 4,
-        "members": [
-          {
-            "id": "7mSauxbSdsnr2DFgqvu1",
-            "text": "Do daily stretching exercises to improve flexibility.",
-            "groundTruthSynth": "flexibility-stretching"
-          },
-          {
-            "id": "Jwg61oiV8216j9590Ca5",
-            "text": "Do daily stretching exercises to boost flexibility.",
-            "groundTruthSynth": "flexibility-stretching"
-          },
-          {
-            "id": "r2TZrLNN4Kb7SSCcX9jW",
-            "text": "Do daily stretching routines to improve flexibility.",
-            "groundTruthSynth": "flexibility-stretching"
-          },
-          {
-            "id": "uTyePgGyB0jj8JS0dRze",
-            "text": "Do daily stretching exercises to increase flexibility.",
-            "groundTruthSynth": "flexibility-stretching"
-          }
-        ]
-      },
-      {
-        "id": "H8aqOD26Wak0",
-        "title": "Establish Consistent Investment Habits for Long-Term Retirement Security",
-        "description": "This proposal advocates for the adoption of a disciplined approach to personal finance by consistently investing funds specifically for retirement. By establishing regular investment habits, individuals can leverage the power of compounding to build substantial wealth over time, ensuring financial stability and peace of mind in their later years. This strategy is crucial for securing a comfortable future.",
-        "llmTag": "synthesis",
-        "memberCount": 4,
-        "members": [
-          {
-            "id": "olu8ITKwOKLdGje60Nre",
-            "text": "Invest regularly for your retirement.",
-            "groundTruthSynth": "invest-retirement"
-          },
-          {
-            "id": "98UaHlHuOq4Xyt83VnPR",
-            "text": "Invest consistently for your retirement.",
-            "groundTruthSynth": "invest-retirement"
-          },
-          {
-            "id": "ThiVUbx5XaqWdBsOd5xA",
-            "text": "Invest regularly for your retirement years.",
-            "groundTruthSynth": "invest-retirement"
-          },
-          {
-            "id": "dNOv9QVsNAeZsvEuLIyP",
-            "text": "Invest regularly to save for retirement.",
-            "groundTruthSynth": "invest-retirement"
-          }
-        ]
-      },
-      {
-        "id": "LOrXepg6B6re",
-        "title": "Facilitate Community Engagement in Local Sports Teams for Active Lifestyles",
-        "description": "This initiative aims to improve daily lives by actively encouraging and supporting community members to join local sports teams. By making it easier to participate in organized sports, we can foster physical activity, social connection, and overall well-being. This proposal outlines steps to connect individuals with existing teams and address potential barriers to participation.",
+        "id": "-xUZ9ijP0YiH",
+        "title": "Promote and Facilitate Community Participation in Local Sports Teams for Improved Well-being",
+        "description": "This initiative aims to enhance the daily lives of community members by actively encouraging and supporting their participation in local sports teams. By fostering engagement in organized physical activities, we can collectively improve fitness levels, promote social connections, and contribute to a more active and vibrant community. This proposal outlines steps to make joining sports teams more accessible and appealing to all residents.",
         "llmTag": "synthesis",
         "memberCount": 4,
         "members": [
@@ -109,67 +51,9 @@
         ]
       },
       {
-        "id": "MGD-QRHAfrqc",
-        "title": "Adopt Monthly Budgeting to Track Spending and Enhance Financial Control",
-        "description": "This proposal advocates for the consistent practice of tracking a monthly budget to gain better control over personal finances. By diligently monitoring income and expenditures, individuals can identify spending patterns, make informed financial decisions, and work towards achieving their monetary goals. This fundamental habit is crucial for enhancing overall financial stability and reducing stress related to money.",
-        "llmTag": "synthesis",
-        "memberCount": 4,
-        "members": [
-          {
-            "id": "B2vEiTTgT7DP6MMgMuPt",
-            "text": "Track a monthly budget to manage your spending.",
-            "groundTruthSynth": "budget-monthly"
-          },
-          {
-            "id": "gkCRv4GGeCb3sIfTymSp",
-            "text": "Track a monthly budget to manage how you spend.",
-            "groundTruthSynth": "budget-monthly"
-          },
-          {
-            "id": "tgv5GcIcWGXawmhNV5Rc",
-            "text": "Track a monthly budget to control your spending.",
-            "groundTruthSynth": "budget-monthly"
-          },
-          {
-            "id": "5ENe0sR6Od3ixyLg4q8y",
-            "text": "Keep a monthly budget to manage your spending.",
-            "groundTruthSynth": "budget-monthly"
-          }
-        ]
-      },
-      {
-        "id": "PmkkYI3TYbB0",
-        "title": "Implement Regular Review to Cancel Unused Subscriptions and Save Money",
-        "description": "This proposal outlines a proactive strategy for individuals to improve their financial well-being by systematically identifying and canceling recurring subscriptions they no longer utilize or require. By adopting a routine review process, individuals can eliminate unnecessary expenses, thereby increasing their disposable income and fostering better personal financial management. This simple action directly contributes to a more efficient allocation of personal resources.",
-        "llmTag": "synthesis",
-        "memberCount": 4,
-        "members": [
-          {
-            "id": "lA2Qq5pH08T7JXogxkEa",
-            "text": "Cancel subscriptions you no longer use to save money.",
-            "groundTruthSynth": "cut-subscriptions"
-          },
-          {
-            "id": "30yvH5PLJzKVIxQu67Xl",
-            "text": "Cancel subscriptions you do not use to save money.",
-            "groundTruthSynth": "cut-subscriptions"
-          },
-          {
-            "id": "lku3KK0JU7gYqBZrWICL",
-            "text": "Cancel unused subscriptions to save money.",
-            "groundTruthSynth": "cut-subscriptions"
-          },
-          {
-            "id": "yRypNzcVAR7hNsS4Py78",
-            "text": "Cancel subscriptions you no longer need to save money.",
-            "groundTruthSynth": "cut-subscriptions"
-          }
-        ]
-      },
-      {
-        "id": "VRct5jK85F2F",
-        "title": "Implement Regular Strength Training with Weights to Enhance Physical Well-being",
-        "description": "To significantly improve daily lives, individuals should consistently engage in strength training using weights. This practice is crucial for building and maintaining muscle mass, which contributes to increased physical strength, improved metabolic health, and enhanced overall functional capacity. Regular adherence to a structured weight training regimen will lead to tangible improvements in energy levels and body composition.",
+        "id": "CtZ6ua1uacUJ",
+        "title": "Implement Regular Strength Training with Weights for Muscle Development",
+        "description": "This proposal advocates for the consistent practice of strength training using weights. Engaging in regular resistance exercises is crucial for building and maintaining muscle mass, which contributes significantly to overall physical health, improved metabolism, and enhanced daily functional capacity. This foundational activity supports a more robust and energetic lifestyle, directly improving daily well-being.",
         "llmTag": "synthesis",
         "memberCount": 4,
         "members": [
@@ -196,38 +80,9 @@
         ]
       },
       {
-        "id": "cXyk5ChqczEc",
-        "title": "Build and Maintain Personal Emergency Funds for Financial Resilience",
-        "description": "This proposal advocates for the proactive establishment of personal emergency funds to mitigate the impact of unforeseen financial challenges. By consistently setting aside savings, individuals can create a crucial safety net that covers unexpected expenses like medical emergencies, job loss, or major repairs, thereby significantly reducing stress and improving overall daily financial stability and well-being.",
-        "llmTag": "synthesis",
-        "memberCount": 4,
-        "members": [
-          {
-            "id": "XDcqGw7yCxTal57HOSlc",
-            "text": "Build an emergency fund for unexpected expenses.",
-            "groundTruthSynth": "emergency-fund"
-          },
-          {
-            "id": "HGzoaYRK5K2u50fNv1Y3",
-            "text": "Build an emergency fund for unexpected costs.",
-            "groundTruthSynth": "emergency-fund"
-          },
-          {
-            "id": "dIfFPcnOHlIB8rLQcuGR",
-            "text": "Save an emergency fund for unexpected expenses.",
-            "groundTruthSynth": "emergency-fund"
-          },
-          {
-            "id": "rXqZzCH4HvuSFvWXUf1k",
-            "text": "Build up an emergency fund for unexpected expenses.",
-            "groundTruthSynth": "emergency-fund"
-          }
-        ]
-      },
-      {
-        "id": "fXfHa7oIEBnN",
-        "title": "Facilitate Active Commuting: Encourage Walking and Cycling to Work",
-        "description": "This proposal aims to improve daily lives by promoting active commuting. By encouraging individuals to walk or cycle to work instead of driving, we can foster healthier lifestyles, reduce traffic congestion, and decrease environmental impact. This shift will contribute to personal well-being and community sustainability.",
+        "id": "MXedvUdKt10V",
+        "title": "Promote Walking and Cycling for Daily Work Commutes to Enhance Well-being",
+        "description": "This proposal outlines a comprehensive strategy to encourage individuals to adopt walking or cycling as their primary mode of transportation for daily work commutes. By actively shifting away from driving, community members can achieve significant improvements in physical health, mental well-being, and environmental impact. This initiative aims to foster a healthier, more active lifestyle across the community, simultaneously reducing traffic congestion and carbon emissions for a more sustainable future.",
         "llmTag": "synthesis",
         "memberCount": 4,
         "members": [
@@ -254,9 +109,9 @@
         ]
       },
       {
-        "id": "ikTIcwndQWaF",
-        "title": "Rapidly Eliminate Personal Debt to Improve Daily Life and Financial Health",
-        "description": "This proposal advocates for individuals to prioritize and accelerate the repayment of personal debts. By systematically reducing outstanding liabilities, individuals can significantly enhance their financial stability, reduce stress, and free up resources for other life improvements. This proactive approach to debt management is a direct path to a more secure and improved daily existence.",
+        "id": "ZLMIDsKuAUKG",
+        "title": "Rapidly Eliminate Personal Debt to Improve Daily Financial Stability",
+        "description": "This proposal advocates for the swift and strategic elimination of personal debt as a primary means to improve daily financial stability and overall quality of life. By focusing on accelerated debt repayment, individuals can reduce financial stress, free up disposable income, and build a stronger foundation for future economic security. This action is crucial for fostering a sense of control and peace in daily living.",
         "llmTag": "synthesis",
         "memberCount": 4,
         "members": [
@@ -283,9 +138,125 @@
         ]
       },
       {
-        "id": "kivdNWqsHUJp",
-        "title": "Initiate Daily Cardio Exercise Programs for Community Well-being",
-        "description": "This proposal advocates for the widespread adoption of daily cardio exercise, such as running or cycling, to significantly improve the overall health and daily lives of community members. By integrating consistent physical activity into daily routines, individuals can experience enhanced physical fitness, mental clarity, and reduced stress. This initiative aims to foster a healthier, more active community through accessible and engaging cardio opportunities.",
+        "id": "bw5rXVwBp7ep",
+        "title": "Integrate Daily Stretching Routines to Enhance Personal Flexibility and Well-being",
+        "description": "To significantly enhance the physical well-being and daily comfort of individuals, we propose the integration of daily stretching routines. This initiative aims to systematically improve flexibility, reduce muscle stiffness, and promote better posture, directly contributing to a more active and comfortable lifestyle. By making stretching a regular habit, participants can experience tangible improvements in their physical capabilities and overall quality of life.",
+        "llmTag": "synthesis",
+        "memberCount": 4,
+        "members": [
+          {
+            "id": "7mSauxbSdsnr2DFgqvu1",
+            "text": "Do daily stretching exercises to improve flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "Jwg61oiV8216j9590Ca5",
+            "text": "Do daily stretching exercises to boost flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "r2TZrLNN4Kb7SSCcX9jW",
+            "text": "Do daily stretching routines to improve flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "uTyePgGyB0jj8JS0dRze",
+            "text": "Do daily stretching exercises to increase flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          }
+        ]
+      },
+      {
+        "id": "cbhTBPIB3JKn",
+        "title": "Regularly Review and Cancel Unused Subscriptions to Save Money",
+        "description": "This proposal outlines a straightforward strategy for improving personal financial well-being by actively managing recurring expenses. Individuals are encouraged to routinely identify and cancel subscription services that are no longer utilized or provide insufficient value. Implementing this proactive habit will lead to significant savings, enhance financial literacy, and free up funds for other priorities, directly contributing to a better daily life.",
+        "llmTag": "synthesis",
+        "memberCount": 4,
+        "members": [
+          {
+            "id": "lA2Qq5pH08T7JXogxkEa",
+            "text": "Cancel subscriptions you no longer use to save money.",
+            "groundTruthSynth": "cut-subscriptions"
+          },
+          {
+            "id": "30yvH5PLJzKVIxQu67Xl",
+            "text": "Cancel subscriptions you do not use to save money.",
+            "groundTruthSynth": "cut-subscriptions"
+          },
+          {
+            "id": "lku3KK0JU7gYqBZrWICL",
+            "text": "Cancel unused subscriptions to save money.",
+            "groundTruthSynth": "cut-subscriptions"
+          },
+          {
+            "id": "yRypNzcVAR7hNsS4Py78",
+            "text": "Cancel subscriptions you no longer need to save money.",
+            "groundTruthSynth": "cut-subscriptions"
+          }
+        ]
+      },
+      {
+        "id": "hV8-RIfcFbjl",
+        "title": "Implement Regular Investment for Secure Retirement Planning",
+        "description": "This proposal advocates for the consistent and disciplined practice of investing funds specifically for one's retirement. By establishing a regular investment habit, individuals can build substantial financial security over time, ensuring a comfortable and worry-free future during their non-working years. This approach emphasizes long-term planning and financial prudence as a cornerstone of improved daily life and personal well-being.",
+        "llmTag": "synthesis",
+        "memberCount": 4,
+        "members": [
+          {
+            "id": "olu8ITKwOKLdGje60Nre",
+            "text": "Invest regularly for your retirement.",
+            "groundTruthSynth": "invest-retirement"
+          },
+          {
+            "id": "98UaHlHuOq4Xyt83VnPR",
+            "text": "Invest consistently for your retirement.",
+            "groundTruthSynth": "invest-retirement"
+          },
+          {
+            "id": "ThiVUbx5XaqWdBsOd5xA",
+            "text": "Invest regularly for your retirement years.",
+            "groundTruthSynth": "invest-retirement"
+          },
+          {
+            "id": "dNOv9QVsNAeZsvEuLIyP",
+            "text": "Invest regularly to save for retirement.",
+            "groundTruthSynth": "invest-retirement"
+          }
+        ]
+      },
+      {
+        "id": "isVEOe--hreu",
+        "title": "Establish and Maintain a Monthly Budget for Improved Financial Well-being",
+        "description": "This proposal advocates for the consistent practice of monthly budgeting to gain better oversight and control over personal finances. By actively tracking income and expenses, individuals can identify spending patterns, make informed financial decisions, and work towards achieving their financial goals. This fundamental practice is key to reducing financial stress and improving overall daily life by fostering financial stability.",
+        "llmTag": "synthesis",
+        "memberCount": 4,
+        "members": [
+          {
+            "id": "B2vEiTTgT7DP6MMgMuPt",
+            "text": "Track a monthly budget to manage your spending.",
+            "groundTruthSynth": "budget-monthly"
+          },
+          {
+            "id": "gkCRv4GGeCb3sIfTymSp",
+            "text": "Track a monthly budget to manage how you spend.",
+            "groundTruthSynth": "budget-monthly"
+          },
+          {
+            "id": "tgv5GcIcWGXawmhNV5Rc",
+            "text": "Track a monthly budget to control your spending.",
+            "groundTruthSynth": "budget-monthly"
+          },
+          {
+            "id": "5ENe0sR6Od3ixyLg4q8y",
+            "text": "Keep a monthly budget to manage your spending.",
+            "groundTruthSynth": "budget-monthly"
+          }
+        ]
+      },
+      {
+        "id": "rFz0U2wTgXAv",
+        "title": "Promote Daily Cardiovascular Exercise for Enhanced Well-being and Daily Life",
+        "description": "This proposal advocates for the consistent integration of daily cardiovascular exercise, such as running or cycling, into routines to significantly improve overall well-being. Engaging in these activities regularly will boost physical health, mental clarity, and energy levels, leading to a more fulfilling and productive daily life. This initiative aims to make daily cardio accessible and encouraged for everyone.",
         "llmTag": "synthesis",
         "memberCount": 4,
         "members": [
@@ -310,6 +281,35 @@
             "groundTruthSynth": "daily-cardio"
           }
         ]
+      },
+      {
+        "id": "vxy4sWCAXUk2",
+        "title": "Establish and Maintain an Emergency Fund for Unexpected Expenses",
+        "description": "To enhance personal financial resilience, individuals should prioritize establishing and consistently maintaining a dedicated emergency fund. This vital financial buffer will provide crucial support and peace of mind when facing unforeseen expenses or sudden financial challenges. Proactive saving for emergencies is a fundamental step towards improving daily financial stability.",
+        "llmTag": "synthesis",
+        "memberCount": 4,
+        "members": [
+          {
+            "id": "XDcqGw7yCxTal57HOSlc",
+            "text": "Build an emergency fund for unexpected expenses.",
+            "groundTruthSynth": "emergency-fund"
+          },
+          {
+            "id": "HGzoaYRK5K2u50fNv1Y3",
+            "text": "Build an emergency fund for unexpected costs.",
+            "groundTruthSynth": "emergency-fund"
+          },
+          {
+            "id": "dIfFPcnOHlIB8rLQcuGR",
+            "text": "Save an emergency fund for unexpected expenses.",
+            "groundTruthSynth": "emergency-fund"
+          },
+          {
+            "id": "rXqZzCH4HvuSFvWXUf1k",
+            "text": "Build up an emergency fund for unexpected expenses.",
+            "groundTruthSynth": "emergency-fund"
+          }
+        ]
       }
     ]
   },
@@ -317,43 +317,43 @@
     "count": 2,
     "items": [
       {
-        "id": "Vsl4mhEvggxC",
-        "title": "Smart Money Management",
-        "description": "Practical advice for managing finances, saving, and building wealth.",
+        "id": "Cij0DNYa1N65",
+        "title": "Daily Physical Activity",
+        "description": "Ideas for integrating physical activity and exercise into everyday life.",
         "llmTag": "topic-cluster",
         "memberSynthIds": [
-          "PmkkYI3TYbB0",
-          "MGD-QRHAfrqc",
-          "H8aqOD26Wak0",
-          "cXyk5ChqczEc",
-          "ikTIcwndQWaF"
+          "CtZ6ua1uacUJ",
+          "rFz0U2wTgXAv",
+          "MXedvUdKt10V",
+          "-xUZ9ijP0YiH",
+          "bw5rXVwBp7ep"
         ],
         "memberSynthTitles": [
-          "Implement Regular Review to Cancel Unused Subscriptions and Save Money",
-          "Adopt Monthly Budgeting to Track Spending and Enhance Financial Control",
-          "Establish Consistent Investment Habits for Long-Term Retirement Security",
-          "Build and Maintain Personal Emergency Funds for Financial Resilience",
-          "Rapidly Eliminate Personal Debt to Improve Daily Life and Financial Health"
+          "Implement Regular Strength Training with Weights for Muscle Development",
+          "Promote Daily Cardiovascular Exercise for Enhanced Well-being and Daily Life",
+          "Promote Walking and Cycling for Daily Work Commutes to Enhance Well-being",
+          "Promote and Facilitate Community Participation in Local Sports Teams for Improved Well-being",
+          "Integrate Daily Stretching Routines to Enhance Personal Flexibility and Well-being"
         ]
       },
       {
-        "id": "k5vt4mXzB7IP",
-        "title": "Daily Physical Activity",
-        "description": "Ways to integrate regular physical activity into everyday life.",
+        "id": "MFtEKI0wTYdD",
+        "title": "Personal Financial Management",
+        "description": "Practical strategies for improving individual financial health and security.",
         "llmTag": "topic-cluster",
         "memberSynthIds": [
-          "VRct5jK85F2F",
-          "kivdNWqsHUJp",
-          "fXfHa7oIEBnN",
-          "LOrXepg6B6re",
-          "3aDyIBZfUWAI"
+          "cbhTBPIB3JKn",
+          "isVEOe--hreu",
+          "hV8-RIfcFbjl",
+          "vxy4sWCAXUk2",
+          "ZLMIDsKuAUKG"
         ],
         "memberSynthTitles": [
-          "Implement Regular Strength Training with Weights to Enhance Physical Well-being",
-          "Initiate Daily Cardio Exercise Programs for Community Well-being",
-          "Facilitate Active Commuting: Encourage Walking and Cycling to Work",
-          "Facilitate Community Engagement in Local Sports Teams for Active Lifestyles",
-          "Integrate Daily Stretching Routines to Enhance Physical Flexibility"
+          "Regularly Review and Cancel Unused Subscriptions to Save Money",
+          "Establish and Maintain a Monthly Budget for Improved Financial Well-being",
+          "Implement Regular Investment for Secure Retirement Planning",
+          "Establish and Maintain an Emergency Fund for Unexpected Expenses",
+          "Rapidly Eliminate Personal Debt to Improve Daily Financial Stability"
         ]
       }
     ]
