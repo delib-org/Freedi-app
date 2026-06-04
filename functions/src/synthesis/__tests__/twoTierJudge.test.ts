@@ -209,6 +209,50 @@ describe('twoTierJudge', () => {
 		expect(result.verifiedClusters[0].memberIds.sort()).toEqual(['medoid', 'p1', 'p2']);
 	});
 
+	it('excludes a single auto-rejected outlier from an otherwise >=80%-agreeing cluster', async () => {
+		// Regression (precision): 1 medoid + 4 members. Four auto-accept (cosine
+		// 0.99); one is an off-topic outlier (cosine 0.5 < 0.60 reject band).
+		// agreed = 4/5 = 0.80 >= keepThreshold. The OLD keep branch kept the FULL
+		// cluster, absorbing the outlier. The synth must now contain only the 4
+		// agreed members; the outlier is left unclustered (telemetry only).
+		const a1 = memberWithCosineToBase('a1', 'a1', 0.99, 1);
+		const a2 = memberWithCosineToBase('a2', 'a2', 0.98, 2);
+		const a3 = memberWithCosineToBase('a3', 'a3', 0.97, 3);
+		const outlier = memberWithCosineToBase('outlier', 'off-topic', 0.5, 4);
+		const members = new Map<string, ClusterMember>([
+			[baseMedoid.id, baseMedoid],
+			[a1.id, a1],
+			[a2.id, a2],
+			[a3.id, a3],
+			[outlier.id, outlier],
+		]);
+
+		const result = await twoTierJudge(
+			[
+				{
+					clusterId: 'c1',
+					memberIds: [baseMedoid.id, a1.id, a2.id, a3.id, outlier.id],
+				},
+			],
+			members,
+		);
+
+		// No LLM needed (all extremes), outlier auto-rejected.
+		expect(mockJudgeCached).not.toHaveBeenCalled();
+		expect(result.stats.autoAcceptCount).toBe(3);
+		expect(result.stats.autoRejectCount).toBe(1);
+
+		// Cluster kept (>=80% agree) but the outlier is NOT in the synth.
+		expect(result.verifiedClusters).toHaveLength(1);
+		const synth = result.verifiedClusters[0];
+		expect(synth.memberIds).not.toContain('outlier');
+		expect(synth.memberIds.sort()).toEqual(['a1', 'a2', 'a3', 'medoid']);
+		// Outlier surfaced as dissent telemetry, not refined into a new cluster
+		// (a lone member can't form a clique).
+		expect(synth.dissentMemberIds).toEqual(['outlier']);
+		expect(result.refinedFromDissent).toHaveLength(0);
+	});
+
 	it('drops a cluster when fewer than splitFloor (50%) members agree', async () => {
 		// 1 medoid + 3 members. Auto-rejected (cosine 0.4) → 0% agreement
 		// 0/3 = 0 < 0.5 floor → cluster dropped.
