@@ -5,6 +5,11 @@ a **known ground-truth structure**. Each run records the input statements, the
 produced grouping (synths and topic-clusters), and a short report scoring the
 output against the ground truth.
 
+> **Start here:** [`FINDINGS.md`](./FINDINGS.md) — the scientific summary across
+> all runs (objective, results, the three production bugs found & fixed,
+> conclusions, threats to validity). The per-run `report.md` files have the
+> details.
+
 ## Layout
 
 Each test lives in its own dated folder:
