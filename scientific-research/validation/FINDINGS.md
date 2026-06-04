@@ -7,7 +7,7 @@
 |---|---|
 | System | Freedi synthesis pipeline — production bulk path (`bulkClusterByEmbedding` + `twoTierJudge`) |
 | Branch | `fix-default-mono-discussion` |
-| Span | base `8e1d10e29` → `e2c106567` (6 commits: 2 code fixes, 4 validation runs) |
+| Span | base `8e1d10e29` → `ef32bf68b` (8 commits: 3 code fixes, 5 validation runs) |
 | Embedding model | OpenAI `text-embedding-3-small` (1536-d), context `Question: {q}\nAnswer: {t}` |
 | Equivalence judge / titles | Gemini (Vertex AI) — non-deterministic |
 | Environment | Node 22.17.1 · umap-js 1.4.0 · cloud-firestore-emulator v1.19.8 · macOS (Darwin 24.6.0) |
@@ -24,12 +24,15 @@ into the correct topics. Running these in dev surfaced **three real production
 bugs**, all now fixed with regression tests. After the fixes, the mechanism
 recovers ground-truth **synth** structure exactly on realistically-worded
 corpora, correctly separates negated opposites, and leaves lone outliers
-unclustered. The dominant residual failure mode is **corpus-realism**: when
-synthetic paraphrases are written with maximal lexical variation (unrealistically
-low within-synth cosine), the medoid-anchored judge fragments synths. Topic-level
-grouping via the diagnostic single-linkage path is recovered only for
-clearly-distinct topics, not closely-related sub-topics; it is not a production
-code path.
+unclustered. A fourth refinement — **quorum-tolerant complete-linkage** (commit
+`1ee58ecd5`) — closed the negation run's recall failure: members shed to dissent
+over a single noisy pair-verdict now re-join their clique, recovering that run
+from 7/11 to **20/20** with opposites still never merged. The dominant residual
+failure mode is **corpus-realism**: when synthetic paraphrases are written with
+maximal lexical variation (unrealistically low within-synth cosine), the
+medoid-anchored judge fragments synths. Topic-level grouping via the diagnostic
+single-linkage path is recovered only for clearly-distinct topics, not
+closely-related sub-topics; it is not a production code path.
 
 ---
 
