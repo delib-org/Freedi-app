@@ -22,8 +22,18 @@ import { pairKey, refineComponent } from './completeLinkage';
  *     2. For each non-medoid member m, compute cosine(m, medoid).
  *     3. Apply the verification band:
  *          cosine ≥ AUTO_ACCEPT_BAND (0.94)  →  treat as equivalent without LLM
- *          cosine <  AUTO_REJECT_BAND (0.82) →  treat as dissent without LLM
+ *          cosine <  AUTO_REJECT_BAND (0.60) →  treat as dissent without LLM
  *          cosine in gray band               →  call LLM judge member↔medoid
+ *
+ *        The reject band is deliberately LOW (a "clearly unrelated" floor, not a
+ *        "not near-identical" one). Same-idea and different-idea cosines overlap
+ *        for context-aware embeddings — genuine paraphrases of one proposal can
+ *        sit as low as ~0.73 cosine to the medoid, well below where distinct
+ *        ideas top out. A high reject band (the original 0.82) silently demoted
+ *        valid members to dissent before the LLM ever saw them, collapsing
+ *        cluster agreement and dropping/fragmenting good synths. The LLM is the
+ *        semantic arbiter for the whole overlap zone; cosine only short-circuits
+ *        the unambiguous extremes. Cost stays bounded by the run-level cap.
  *     4. Tally:
  *          ≥80% agree  →  keep the entire cluster as-is
  *          50–80%      →  keep the agreed subset; send dissenters through
@@ -73,7 +83,11 @@ export interface TwoTierJudgeOptions {
 	autoAcceptBand?: number;
 	/**
 	 * Auto-reject lower band: cosine to medoid below this is treated as
-	 * dissent without LLM. Default 0.82.
+	 * dissent without LLM. Default 0.60 — a "clearly unrelated" floor. Kept
+	 * low on purpose: same-idea and different-idea cosines overlap, so a
+	 * higher band drops valid paraphrases before the LLM judges them (see the
+	 * module doc). Raise it only for a corpus whose within-synth cosine is
+	 * known to sit well above it.
 	 */
 	autoRejectBand?: number;
 	/**
@@ -119,7 +133,10 @@ export interface TwoTierJudgeResult {
 }
 
 const DEFAULT_AUTO_ACCEPT_BAND = 0.94;
-const DEFAULT_AUTO_REJECT_BAND = 0.82;
+// Low "clearly unrelated" floor, not a "not near-identical" cutoff. See the
+// module doc and `autoRejectBand` option: same-idea / different-idea cosines
+// overlap, so a higher band silently drops valid paraphrases before the LLM.
+const DEFAULT_AUTO_REJECT_BAND = 0.6;
 const DEFAULT_KEEP_THRESHOLD = 0.8;
 const DEFAULT_SPLIT_FLOOR = 0.5;
 const DEFAULT_MAX_LLM_CALLS = 2000;

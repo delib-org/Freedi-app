@@ -8,6 +8,14 @@
  * --execute — writes the cluster docs. Optionally links synths under 2 coarse
  * topic-clusters for 3-level nesting.
  *
+ * --two-tier (PRODUCTION-FAITHFUL): after clustering, run the exact production
+ * Phase-4 judge `twoTierJudge` (medoid cosine bands + LLM semantic-equivalence,
+ * with complete-linkage `refineComponent` on dissent) to refine the raw cosine
+ * clusters into verified synth groups — the same call `synthesizeIdeasExecute`
+ * makes. Use this to validate the real mechanism in dev: cosine-only clustering
+ * over-merges near-duplicate synths; the judge splits them. Without this flag
+ * the script is cosine-only (diagnostic; over-merges by construction).
+ *
  * PREVIEW (default): clusters + prints purity vs ground-truth + proposed
  * titles. No writes.
  * EXECUTE (--execute): deletes existing derived clusters, then creates the
@@ -15,8 +23,14 @@
  *
  * USAGE (from functions/):
  *   FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test \
- *     npx tsx scripts/bulkRebuild.ts <questionId> [--eps=1.0] [--topics-eps=1.8] \
+ *     npx tsx scripts/bulkRebuild.ts <questionId> [--eps=1.0] [--topic-threshold=0.45] \
+ *       [--two-tier] [--max-llm-calls=N] [--auto-reject-band=0.82] [--auto-accept-band=0.94] \
  *       [--execute] [--hide-members] [--ground-truth=../scripts/seedSynthBenchmark.data.json]
+ *
+ * The judge knobs only apply with --two-tier. `--max-llm-calls` lifts the
+ * production cost cap (`min(2000, ⌈N×0.2⌉)`) that starves a small corpus; the
+ * band overrides probe the cosine gate (members below the reject band are
+ * dropped without an LLM call — too aggressive for low within-synth cosine).
  */
 import { readFileSync } from 'node:fs';
 import { initializeApp, getApps } from 'firebase-admin/app';
@@ -35,9 +49,22 @@ const getArg = (k: string, d?: string) => {
 };
 const EXECUTE = args.includes('--execute');
 const HIDE_MEMBERS = args.includes('--hide-members');
+const TWO_TIER = args.includes('--two-tier');
 const EPS = Number(getArg('eps', '1.0'));
 const TOPIC_THRESHOLD = Number(getArg('topic-threshold', '0.45'));
 const GROUND_TRUTH = getArg('ground-truth');
+// Override the two-tier judge's LLM-call budget. Production scales it with the
+// working-set size (`min(2000, ⌈N×0.2⌉)`), which starves a small validation
+// corpus (N=60 ⇒ 12 calls). Pass a generous value to validate the mechanism
+// itself rather than the cost cap. Empty ⇒ the production formula.
+const MAX_LLM_CALLS = getArg('max-llm-calls');
+// Override the two-tier judge cosine bands (production defaults: accept 0.94,
+// reject 0.82). Members with cosine-to-medoid below the reject band are
+// discarded WITHOUT an LLM call; on a corpus whose within-synth cosine is low
+// this silently drops valid members, so exposing the bands lets validation
+// probe whether the gate (not the LLM) is the failure.
+const AUTO_ACCEPT_BAND = getArg('auto-accept-band');
+const AUTO_REJECT_BAND = getArg('auto-reject-band');
 if (!questionId) {
 	console.error('Usage: npx tsx scripts/bulkRebuild.ts <questionId> [--eps=N] [--execute] ...');
 	process.exit(1);
@@ -151,7 +178,50 @@ async function main(questionId: string): Promise<void> {
 
 		return na && nb ? d / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
 	};
-	const fineClusters = fine.clusters.filter((c) => c.memberIds.length >= 2);
+	let fineClusters = fine.clusters.filter((c) => c.memberIds.length >= 2);
+
+	// --two-tier: refine the raw cosine clusters with the PRODUCTION Phase-4
+	// judge (the same `twoTierJudge` call `synthesizeIdeasExecute` makes), so
+	// dev validates the real mechanism. Cosine-only clustering over-merges
+	// near-duplicate synths; the medoid + LLM-equivalence judge (with
+	// complete-linkage refinement of dissent) splits them back apart.
+	if (TWO_TIER) {
+		const { twoTierJudge } = await import('../src/synthesis/twoTierJudge');
+		const { meanVector } = await import('../src/synthesis/bulkCluster');
+		const members = new Map(
+			raw.map((r) => [r.id, { id: r.id, text: r.text, embedding: r.embedding }]),
+		);
+		const candidates = fineClusters.map((c, i) => ({
+			clusterId: `bulk-${i}`,
+			memberIds: c.memberIds,
+		}));
+		const judge = await twoTierJudge(candidates, members, {
+			maxLlmCalls: MAX_LLM_CALLS
+				? Number(MAX_LLM_CALLS)
+				: Math.min(2000, Math.ceil(raw.length * 0.2)),
+			...(AUTO_ACCEPT_BAND ? { autoAcceptBand: Number(AUTO_ACCEPT_BAND) } : {}),
+			...(AUTO_REJECT_BAND ? { autoRejectBand: Number(AUTO_REJECT_BAND) } : {}),
+		});
+		const verified = [...judge.verifiedClusters, ...judge.refinedFromDissent];
+		fineClusters = verified.map((v) => ({
+			memberIds: v.memberIds,
+			centroid: meanVector(v.memberIds.map((id) => byId.get(id)!.embedding)),
+		}));
+		console.info(
+			`\n[two-tier judge] ${candidates.length} candidate clusters → ${fineClusters.length} verified synths ` +
+				`(llmCalls=${judge.stats.llmCallsMade}${judge.stats.llmCallsCapped ? ' CAPPED' : ''}, ` +
+				`dropped=${judge.droppedClusters.length}, refinedFromDissent=${judge.refinedFromDissent.length})`,
+		);
+		fineClusters.forEach((c, i) => {
+			const dist: Record<string, number> = {};
+			c.memberIds.forEach((id) => {
+				const lbl = textToLabel.get((byId.get(id)?.text ?? '').trim()) ?? '?';
+				dist[lbl] = (dist[lbl] ?? 0) + 1;
+			});
+			console.info(`  synth ${i}: ${c.memberIds.length} members | purity: ${JSON.stringify(dist)}`);
+		});
+	}
+
 	interface TGroup {
 		centroids: number[][];
 		clusterIdxs: number[];
