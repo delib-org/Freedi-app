@@ -1,0 +1,59 @@
+{
+	"questionId": "NegationTest0001",
+	"questionText": "What should our country do",
+	"design": "2 subjects × 2 opposing stances × 5 paraphrases = 20 (archetype E). Each stance-pair is semantically near (same subject) but OPPOSITE via negation; they must NOT be merged. Requires the LLM verifier (--two-tier); pure cosine merges them.",
+	"topics": [
+		{
+			"name": "peace",
+			"synths": [
+				{
+					"name": "make-peace",
+					"paraphrases": [
+						"We want to make peace with our neighbors.",
+						"We want to make peace with neighboring countries.",
+						"We want to establish peace with our neighbors.",
+						"We want to make peace with the neighboring nations.",
+						"We hope to make peace with our neighbors."
+					]
+				},
+				{
+					"name": "no-peace",
+					"role": "opposite",
+					"paraphrases": [
+						"We do not want to make peace with our neighbors.",
+						"We do not want to make peace with neighboring countries.",
+						"We refuse to make peace with our neighbors.",
+						"We do not want to establish peace with our neighbors.",
+						"We are against making peace with our neighbors."
+					]
+				}
+			]
+		},
+		{
+			"name": "taxes",
+			"synths": [
+				{
+					"name": "raise-taxes",
+					"paraphrases": [
+						"We should raise taxes to fund public services.",
+						"We should increase taxes to fund public services.",
+						"We should raise taxes to pay for public services.",
+						"We should raise taxes to support public services.",
+						"We ought to raise taxes to fund public services."
+					]
+				},
+				{
+					"name": "no-raise-taxes",
+					"role": "opposite",
+					"paraphrases": [
+						"We should not raise taxes to fund public services.",
+						"We should not increase taxes to fund public services.",
+						"We should avoid raising taxes to fund public services.",
+						"We oppose raising taxes to fund public services.",
+						"We should not raise taxes for public services."
+					]
+				}
+			]
+		}
+	]
+}

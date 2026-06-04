@@ -1,0 +1,142 @@
+{
+  "test": "4-6-2026-20-10-5-negation-validation",
+  "question": {
+    "id": "NegationTest0001",
+    "text": "What should our country do"
+  },
+  "groundTruthStructure": "2 subjects x 2 opposing stances x 5 paraphrases = 20 options (archetype E: opposites must not merge)",
+  "runDate": "2026-06-04T07:25:31.086Z",
+  "statementCount": 20,
+  "statements": [
+    {
+      "id": "1w680Ear6D3sx6OKKOpr",
+      "text": "We should not raise taxes for public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "no-raise-taxes",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "6YARl3jXhEwlcfPyXFmJ",
+      "text": "We should raise taxes to pay for public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "raise-taxes"
+    },
+    {
+      "id": "9U3rdVuwvUsNcnH3kfkS",
+      "text": "We refuse to make peace with our neighbors.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "no-peace",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "EIzi8jB67fvsuq226LD4",
+      "text": "We do not want to make peace with our neighbors.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "no-peace",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "G4P3LpRADbcZIbJ4XJnb",
+      "text": "We should avoid raising taxes to fund public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "no-raise-taxes",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "GvOTRDCaBpuL3DAQtW0p",
+      "text": "We want to make peace with the neighboring nations.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "make-peace"
+    },
+    {
+      "id": "Hagixe7WAj1oQEEhVLUZ",
+      "text": "We want to make peace with neighboring countries.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "make-peace"
+    },
+    {
+      "id": "OqoofYcKRn9770srh5L3",
+      "text": "We hope to make peace with our neighbors.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "make-peace"
+    },
+    {
+      "id": "Ou6nl0349tDGL0nG1JgC",
+      "text": "We want to make peace with our neighbors.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "make-peace"
+    },
+    {
+      "id": "SAnnYXbdQ2foLvXiJGCu",
+      "text": "We do not want to make peace with neighboring countries.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "no-peace",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "bPGEAS6frW5tttCUWN9E",
+      "text": "We should raise taxes to fund public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "raise-taxes"
+    },
+    {
+      "id": "eLY6Q8Dg9WDIX90Q974f",
+      "text": "We are against making peace with our neighbors.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "no-peace",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "g6P4uAVLEfxbhwcoYd0P",
+      "text": "We should not raise taxes to fund public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "no-raise-taxes",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "oHNtZXAyEtLBdaSQzXMS",
+      "text": "We should increase taxes to fund public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "raise-taxes"
+    },
+    {
+      "id": "pGc6YDEpyG4qSl3rjKBB",
+      "text": "We want to establish peace with our neighbors.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "make-peace"
+    },
+    {
+      "id": "rUNEVVMFQagIjZ1iaihw",
+      "text": "We ought to raise taxes to fund public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "raise-taxes"
+    },
+    {
+      "id": "rz6LyI2ESh5dQajR76xU",
+      "text": "We should not increase taxes to fund public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "no-raise-taxes",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "uMh5PTppHQd73SaMtJMg",
+      "text": "We do not want to establish peace with our neighbors.",
+      "groundTruthTopic": "peace",
+      "groundTruthSynth": "no-peace",
+      "expectedRole": "opposite"
+    },
+    {
+      "id": "uSZqaPt6K6sMZDAgtMdr",
+      "text": "We should raise taxes to support public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "raise-taxes"
+    },
+    {
+      "id": "z98KKQmK2qCCr8wJwwJD",
+      "text": "We oppose raising taxes to fund public services.",
+      "groundTruthTopic": "taxes",
+      "groundTruthSynth": "no-raise-taxes",
+      "expectedRole": "opposite"
+    }
+  ]
+}
