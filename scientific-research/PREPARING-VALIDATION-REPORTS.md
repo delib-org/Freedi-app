@@ -174,12 +174,20 @@ a *contrast*, but: (a) seed via `seedSynthBenchmark.ts` (synthesis ON, ~10 min),
 ```
 scientific-research/
   PREPARING-VALIDATION-REPORTS.md   ← this file
+  scripts/                          ← as-run seed script + corpus snapshots (README.md)
+    cleanRawSeed.ts                 ← the seed script
+    seedSynthBenchmark.data.json    ← the corpus (source of the sentences + ground truth)
   validation/
     README.md                       ← protocol + run index (update it)
     score.mjs                       ← shared scorer (no deps)
     <D-M-YYYY>-<N>-<perTopic>-<perSynth>-validation/
       statements.json  embeddings.json  results.json  report.md
 ```
+
+The runnable, canonical scripts live in the repo (`functions/scripts/`,
+`scripts/`); `scientific-research/scripts/` holds frozen copies of the seed
+script + corpus so the record is self-contained. Keep them in sync when the
+seed method changes, or re-snapshot per run.
 
 ## 10. Commit
 

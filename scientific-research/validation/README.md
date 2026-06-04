@@ -40,12 +40,15 @@ Example: `1-6-2026-40-20-10-validation` = run on 2026-06-01 over 40 options,
 Part of the Freedi project — **GPL-3.0** (`LICENSE.md` at the repo root). The
 validation artifacts and scripts here are released under the same license.
 
-## Ground-truth corpus
+## Seed script & corpus
 
-The canonical benchmark is `scripts/seedSynthBenchmark.data.json`:
-`2 topics × 2 synths × 10 paraphrases = 40 options`. It is the smallest corpus
-that exercises every grouping decision (synth merge, topic grouping, disjoint
-assignment).
+The seed script and the source corpus that produce these runs are snapshotted in
+[`../scripts/`](../scripts/) (see its `README.md`): `cleanRawSeed.ts` (the seed
+script) and `seedSynthBenchmark.data.json` (the 40 LLM-authored sentences +
+ground-truth labels — `2 topics × 2 synths × 10 paraphrases`). It is the
+smallest corpus that exercises every grouping decision (synth merge, topic
+grouping, disjoint assignment). Canonical runnable copies live in the repo
+(`functions/scripts/`, `scripts/`).
 
 ## Runs
 
