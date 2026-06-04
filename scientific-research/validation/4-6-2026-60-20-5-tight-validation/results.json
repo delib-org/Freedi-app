@@ -1,0 +1,484 @@
+{
+  "test": "4-6-2026-60-20-5-tight-validation",
+  "description": "Production bulk path: bulkClusterByEmbedding (border-dedupe fix) + twoTierJudge (medoid bands + LLM equivalence + complete-linkage). Synths/topic-clusters classified by member type.",
+  "parameters": {
+    "embeddingModel": "text-embedding-3-small",
+    "embeddingDimensions": 1536,
+    "clustering": "UMAP->DBSCAN (bulkClusterByEmbedding) + twoTierJudge (production Phase 4)",
+    "umapComponents": 5,
+    "umapSeed": 42,
+    "umapMinItems": 10,
+    "dbscanEps": 0.45,
+    "dbscanMinSamples": 3,
+    "nearestCentroidThreshold": 0.6,
+    "twoTierJudge": true,
+    "autoAcceptBand": 0.94,
+    "autoRejectBand": 0.6,
+    "maxLlmCalls": 2000,
+    "topicGrouping": "single-linkage agglomeration of synth centroids (diagnostic, not production)",
+    "topicThreshold": 0.45,
+    "llmTitles": "Gemini — non-deterministic"
+  },
+  "synths": {
+    "count": 12,
+    "items": [
+      {
+        "id": "2P4jC6cpramk",
+        "title": "Adopt Smaller Food Portions to Effectively Manage Dietary Intake",
+        "description": "This proposal advocates for the adoption of smaller food portions as a primary strategy to control and manage overall dietary intake. By consciously reducing the quantity of food consumed at each meal, individuals can better regulate calorie consumption, contributing to improved health outcomes and weight management. This simple yet effective change empowers individuals to take direct control over their eating habits.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "49HVVyQGLZFXkal3UzeU",
+            "text": "Eat smaller portions to limit how much you eat.",
+            "groundTruthSynth": "portion-control"
+          },
+          {
+            "id": "CkF89VUeFMj78pSgoccc",
+            "text": "Eat smaller portions to control how much food you eat.",
+            "groundTruthSynth": "portion-control"
+          },
+          {
+            "id": "PIBGPpjc1Bb9ziIwEl1D",
+            "text": "Eat smaller food portions to control how much you eat.",
+            "groundTruthSynth": "portion-control"
+          },
+          {
+            "id": "Yi9ratKdIRBjfCDm3ZlZ",
+            "text": "Eat smaller portions to control how much you eat.",
+            "groundTruthSynth": "portion-control"
+          },
+          {
+            "id": "bLgPOF4e2pc20UHe72Xc",
+            "text": "Eat smaller portions to manage how much you eat.",
+            "groundTruthSynth": "portion-control"
+          }
+        ]
+      },
+      {
+        "id": "FmmMaXlGKnqO",
+        "title": "Encourage Active Commuting: Walk or Cycle to Work Instead of Driving",
+        "description": "This proposal advocates for a community-wide shift towards active transportation for daily commutes. By choosing to walk or cycle to work instead of driving, individuals can significantly improve their personal health and contribute to a healthier, more sustainable community environment. This initiative aims to reduce reliance on vehicles for short-to-medium distance travel.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "4Skv1dJr67qGu8wUuetQ",
+            "text": "Walk or bike to work rather than driving.",
+            "groundTruthSynth": "active-commuting"
+          },
+          {
+            "id": "7HSdRIqSs2a09LdQFJIu",
+            "text": "Walk or bike to work instead of taking the car.",
+            "groundTruthSynth": "active-commuting"
+          },
+          {
+            "id": "HMLd4F2D29xNyv04xNa9",
+            "text": "Walk or cycle to work instead of driving.",
+            "groundTruthSynth": "active-commuting"
+          },
+          {
+            "id": "VvQVukMmqXCVDLF2lUME",
+            "text": "Walk or bike to work instead of driving.",
+            "groundTruthSynth": "active-commuting"
+          },
+          {
+            "id": "g3lAn0W62fOrnW2eJKEv",
+            "text": "Walk or bike to your job instead of driving.",
+            "groundTruthSynth": "active-commuting"
+          }
+        ]
+      },
+      {
+        "id": "GARhymyn22Kf",
+        "title": "Implement Daily Stretching Routines to Enhance Community Flexibility",
+        "description": "This proposal outlines a plan to encourage daily stretching routines across the community. By promoting regular flexibility exercises, we aim to improve physical well-being, reduce injury risk, and foster a more active and healthy population. This initiative will provide accessible resources and guidance for all community members to integrate stretching into their daily lives.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "aQ0KbVIRtjxUawI1EEz1",
+            "text": "Do daily stretching routines to improve flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "fNoXj0EelATI68dIv0ec",
+            "text": "Do daily stretching exercises to improve flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "mDFbbS3zOCkY84YGQrCe",
+            "text": "Do daily stretching exercises to increase flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "s0GqaPCFtULArWz9DFdL",
+            "text": "Do daily stretching exercises to improve your flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "kAfBUqbsdGE7omgd3ZGG",
+            "text": "Do daily stretching exercises to boost flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          }
+        ]
+      },
+      {
+        "id": "K0rdfkuqgfbQ",
+        "title": "Promote Daily Consumption of Fresh Vegetables and Fruits for Community Health",
+        "description": "To enhance community health and well-being, we propose a comprehensive initiative to encourage all residents to significantly increase their daily intake of fresh vegetables and fruits. This program will provide accessible resources and education, making healthy eating a simple and achievable goal for everyone, thereby fostering a healthier lifestyle across the community.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "CvVi9o2zl7Ik7Bp8WC18",
+            "text": "Eat more vegetables and fruit each day.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "Ye7mwlJwtVrrt7H6U4vk",
+            "text": "Eat more vegetables and fruits every day.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "w28KERIeISm7QMfRl3Eq",
+            "text": "Eat plenty of vegetables and fruit every day.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "wfzvLb671DWjVdcJphDm",
+            "text": "Eat more vegetables and fruit every day.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "LoI3THzcDPUJLaSxaVow",
+            "text": "Eat more fresh vegetables and fruit every day.",
+            "groundTruthSynth": "eat-vegetables"
+          }
+        ]
+      },
+      {
+        "id": "O9uzZHuxhw95",
+        "title": "Establish a Community-Wide Initiative for Annual Medical Check-ups",
+        "description": "This initiative aims to improve overall community health by encouraging every individual to undergo an annual medical check-up with their doctor. Regular preventative care is crucial for early detection of potential health issues, allowing for timely intervention and better long-term health outcomes. By making annual check-ups a standard practice, we can foster a healthier and more resilient community.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "5ko6FmebGRpjj92AjSK3",
+            "text": "See your doctor every year for a checkup.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "PYvdF995l8UaWNzgfivK",
+            "text": "See your doctor every year for a health checkup.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "d7XrnNNPv875sF8yomGj",
+            "text": "Visit your doctor every year for a checkup.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "fDbymgXpfoNu0I37HsSI",
+            "text": "See your doctor annually for a checkup.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "jgt40seX2bbrm9SBepAS",
+            "text": "See your doctor each year for a checkup.",
+            "groundTruthSynth": "annual-physical"
+          }
+        ]
+      },
+      {
+        "id": "R5n8uzK6OKdK",
+        "title": "Reduce Sugar and Sugary Drink Consumption for Improved Community Health",
+        "description": "This proposal outlines a comprehensive strategy to significantly decrease the community's intake of added sugars and sugary beverages. By focusing on education, promoting healthier alternatives, and fostering supportive environments, we aim to cultivate better dietary habits. This initiative will contribute directly to enhanced public health outcomes and a more vibrant, healthier community.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "BIQDa7QjD5KuHBTbiFif",
+            "text": "Cut back on added sugar and sugary drinks.",
+            "groundTruthSynth": "limit-sugar"
+          },
+          {
+            "id": "LnXGTWUgO628Mpkkt1HB",
+            "text": "Reduce sugar and sugary drinks in your diet.",
+            "groundTruthSynth": "limit-sugar"
+          },
+          {
+            "id": "YmIG3zUT5is0su5qLEEM",
+            "text": "Cut down on sugar and sugary drinks.",
+            "groundTruthSynth": "limit-sugar"
+          },
+          {
+            "id": "eDwDKBXmB1Y5UNBmyfDl",
+            "text": "Cut back on sugar and sugary beverages.",
+            "groundTruthSynth": "limit-sugar"
+          },
+          {
+            "id": "tzBu03lYJqWcgGbVIev0",
+            "text": "Cut back on sugar and sugary drinks.",
+            "groundTruthSynth": "limit-sugar"
+          }
+        ]
+      },
+      {
+        "id": "fRaKKALc9vjH",
+        "title": "Promote Daily Cardio Exercise Through Running and Cycling",
+        "description": "This proposal outlines a plan to encourage all community members to engage in daily cardiovascular exercise, specifically running, jogging, or cycling. Regular participation in these activities is crucial for improving overall physical health, boosting mental well-being, and fostering a healthier community. By integrating daily cardio into routines, we can collectively enhance our vitality and reduce health risks.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "7gxRp94jTCCrUr9hh5tu",
+            "text": "Do daily cardio workouts such as running or cycling.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "96eJ8yyg3QP90lRbHsar",
+            "text": "Do daily cardio exercise such as jogging or cycling.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "TcmzqI4TkCeVBvH1ipHB",
+            "text": "Do daily cardio exercise such as running and cycling.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "fIL1f4j24G1Y7HqAD63X",
+            "text": "Do daily cardio exercise like running or cycling.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "RzLyUKUiOdSO7UXp4dug",
+            "text": "Do daily cardio exercise such as running or cycling.",
+            "groundTruthSynth": "daily-cardio"
+          }
+        ]
+      },
+      {
+        "id": "fbWm-Cf1FKcs",
+        "title": "Promote Regular Dental Check-ups and Cleanings to Enhance Community Oral Health",
+        "description": "This proposal advocates for consistent, routine dental check-ups and professional cleanings as a fundamental component of overall community health. By ensuring regular access to preventive oral care, we can significantly reduce the incidence of dental diseases, improve systemic health outcomes, and foster a healthier population. This initiative aims to integrate proactive dental hygiene into public health practices.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "DsyBYDXdUaz03D2xdtMJ",
+            "text": "Visit the dentist regularly for dental checkups.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "KEAu642HxD8xgtxGx2jj",
+            "text": "Visit the dentist regularly for checkups and cleanings.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "P4YNWZFy8luwJ2FtTx1T",
+            "text": "Visit the dentist regularly for checkups.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "rDScbzkMCsHRGFgVJeMt",
+            "text": "Visit the dentist regularly for routine checkups.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "y2UQJJRLF2fY1wutgjno",
+            "text": "See the dentist regularly for checkups.",
+            "groundTruthSynth": "dental-checkups"
+          }
+        ]
+      },
+      {
+        "id": "hKEMm2htTmP1",
+        "title": "Promote Consistent Daily Intake of Fresh Water for Health",
+        "description": "This proposal outlines a strategy to encourage consistent daily hydration across the community. By emphasizing the importance of drinking plenty of fresh water throughout the day, we can significantly improve overall health and well-being. This initiative will focus on making fresh water accessible and promoting regular intake as a fundamental health practice for all residents.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "6PGHNw9KlBvY8u7nU7kA",
+            "text": "Drink plenty of water daily.",
+            "groundTruthSynth": "stay-hydrated"
+          },
+          {
+            "id": "8RKbu5W3XL3DpX1IyMQG",
+            "text": "Drink plenty of fresh water every day.",
+            "groundTruthSynth": "stay-hydrated"
+          },
+          {
+            "id": "9CyMqnfOOPK5qgTRC0A8",
+            "text": "Drink plenty of water every day.",
+            "groundTruthSynth": "stay-hydrated"
+          },
+          {
+            "id": "MGyDDQxkwUNHxHLYxqa4",
+            "text": "Drink plenty of water throughout the day.",
+            "groundTruthSynth": "stay-hydrated"
+          },
+          {
+            "id": "vB2vrrUR10OyQVp21j9F",
+            "text": "Drink plenty of water each day.",
+            "groundTruthSynth": "stay-hydrated"
+          }
+        ]
+      },
+      {
+        "id": "ipOaN93VL5gi",
+        "title": "Implement Regular Strength Training for Enhanced Community Health",
+        "description": "This initiative proposes the widespread adoption of regular strength training using weights throughout the community. Consistent engagement in resistance exercises is vital for building and maintaining muscle mass, which underpins overall physical health, improves metabolic function, and reduces the risk of injury. This fundamental activity will empower individuals to achieve greater physical resilience and contribute to a healthier, more active community.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "EgUz9xPJgR07F0dDDRBO",
+            "text": "Do regular strength training with weights to build muscle.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "LXBLnUgnANx5mubKwfQX",
+            "text": "Do regular weight training with weights to build muscle.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "s5eKoNv3voqRIW3YWwAF",
+            "text": "Do regular strength training with weights for building muscle.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "tgaN0QznXXf6XixARv5C",
+            "text": "Do regular strength training using weights to build muscle.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "uWdfSS6E1yaX33DsmJXj",
+            "text": "Do regular strength training with weights to gain muscle.",
+            "groundTruthSynth": "strength-training"
+          }
+        ]
+      },
+      {
+        "id": "jbMLt7MLMIIz",
+        "title": "Keep All Vaccinations Current to Enhance Community Well-being",
+        "description": "This proposal outlines a strategy to enhance community health by ensuring all residents maintain their vaccinations. By promoting regular immunization updates, we can collectively reduce the spread of preventable diseases, safeguard vulnerable populations, and foster a healthier environment for everyone. This proactive approach is crucial for sustained public well-being.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "3jPDr3DHry2NsQeONzS2",
+            "text": "Keep your vaccines current and up to date.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "dl3sYY6odqKyOuSCiy78",
+            "text": "Keep your shots and vaccines up to date.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "mwf5D3AGyvKV2C5U3sUi",
+            "text": "Keep all your vaccines up to date.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "ol4YRG2YP9lr6OWMcwcZ",
+            "text": "Keep your vaccines up to date.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "sRt9DDQB2qI9fCsna3o0",
+            "text": "Keep your vaccinations up to date.",
+            "groundTruthSynth": "vaccinations"
+          }
+        ]
+      },
+      {
+        "id": "rj2pkbphv0qZ",
+        "title": "Establish Regular At-Home Blood Pressure Monitoring for Community Health",
+        "description": "This proposal advocates for individuals to regularly check their blood pressure in their own homes. Consistent monitoring empowers individuals to track their health trends, identify potential issues early, and share valuable data with healthcare providers. This proactive approach is crucial for maintaining cardiovascular health and preventing complications.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "44hIFj0W3uZaF7Lo52O5",
+            "text": "Check your blood pressure at home often.",
+            "groundTruthSynth": "self-monitoring"
+          },
+          {
+            "id": "PpNUWjY6bCjTT7RlWOl6",
+            "text": "Check your blood pressure at home regularly.",
+            "groundTruthSynth": "self-monitoring"
+          },
+          {
+            "id": "RG4hAipKskFNtbPms2D9",
+            "text": "Check your own blood pressure at home regularly.",
+            "groundTruthSynth": "self-monitoring"
+          },
+          {
+            "id": "tEeALK8q30Q5JQ0lnzrm",
+            "text": "Monitor your blood pressure at home regularly.",
+            "groundTruthSynth": "self-monitoring"
+          },
+          {
+            "id": "pCXhq3vdyyajDvknseXC",
+            "text": "Regularly check your blood pressure at home.",
+            "groundTruthSynth": "self-monitoring"
+          }
+        ]
+      }
+    ]
+  },
+  "topicClusters": {
+    "count": 2,
+    "items": [
+      {
+        "id": "cxi61PEG5FvW",
+        "title": "Preventative Health Measures",
+        "description": "This topic covers individual actions and regular check-ups to maintain health and prevent illness.",
+        "llmTag": "topic-cluster",
+        "memberSynthIds": [
+          "jbMLt7MLMIIz",
+          "O9uzZHuxhw95",
+          "fbWm-Cf1FKcs",
+          "rj2pkbphv0qZ"
+        ],
+        "memberSynthTitles": [
+          "Keep All Vaccinations Current to Enhance Community Well-being",
+          "Establish a Community-Wide Initiative for Annual Medical Check-ups",
+          "Promote Regular Dental Check-ups and Cleanings to Enhance Community Oral Health",
+          "Establish Regular At-Home Blood Pressure Monitoring for Community Health"
+        ]
+      },
+      {
+        "id": "irUAjzZjGSCo",
+        "title": "Healthy Living Practices",
+        "description": "Practical daily actions for better personal health and well-being.",
+        "llmTag": "topic-cluster",
+        "memberSynthIds": [
+          "2P4jC6cpramk",
+          "FmmMaXlGKnqO",
+          "fRaKKALc9vjH",
+          "ipOaN93VL5gi",
+          "hKEMm2htTmP1",
+          "K0rdfkuqgfbQ",
+          "R5n8uzK6OKdK",
+          "GARhymyn22Kf"
+        ],
+        "memberSynthTitles": [
+          "Adopt Smaller Food Portions to Effectively Manage Dietary Intake",
+          "Encourage Active Commuting: Walk or Cycle to Work Instead of Driving",
+          "Promote Daily Cardio Exercise Through Running and Cycling",
+          "Implement Regular Strength Training for Enhanced Community Health",
+          "Promote Consistent Daily Intake of Fresh Water for Health",
+          "Promote Daily Consumption of Fresh Vegetables and Fruits for Community Health",
+          "Reduce Sugar and Sugary Drink Consumption for Improved Community Health",
+          "Implement Daily Stretching Routines to Enhance Community Flexibility"
+        ]
+      }
+    ]
+  }
+}

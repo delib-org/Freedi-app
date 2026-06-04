@@ -56,3 +56,4 @@ grouping, disjoint assignment). Canonical runnable copies live in the repo
 |---|---|---|
 | `1-6-2026-40-20-10-validation` | bulk UMAP→DBSCAN | PASS — 4 pure synths, 2 correct topics, 0 overlap |
 | `4-6-2026-60-20-5-validation` | production: UMAP→DBSCAN + twoTierJudge | FAIL (partial) — 12 synths, near-duplicate pair correctly split (the judge's core job ✅), but 6/12 fragmented + members lost on a low-cosine synthetic corpus (9/19 checks). Surfaced & fixed 2 production bugs (DBSCAN dedupe; autoRejectBand). |
+| `4-6-2026-60-20-5-tight-validation` | production: UMAP→DBSCAN + twoTierJudge | Synth mechanism PASS — all 12 synths pure & exact, 0 overlap, 60/60 assigned, 0 LLM calls, on a realistic-tight corpus (17/19; the 2 fails are the diagnostic topic grouping). Controlled companion proving the loose run's fragmentation was a corpus-realism artifact. |
