@@ -43,8 +43,12 @@ and falsify** from the repo alone.
 ## 2. Pick the corpus and question
 
 - **Ground-truth corpus:** `scripts/seedSynthBenchmark.data.json`
-  (`2 topics × 2 synths × 10 paraphrases = 40 options`). To make a new corpus,
-  keep the same shape and record the labels — scoring needs known ground truth.
+  (`2 topics × 2 synths × 10 paraphrases = 40 options`). To design a *different*
+  structure (other counts, singletons, opposites, noise, uneven sizes), follow
+  **`DESIGNING-TEST-CORPORA.md`** — it defines the spec format, the
+  request→corpus recipe, the archetype catalog (and which pipeline path each
+  needs), and the scoring conventions. `cleanRawSeed.ts` and `score.mjs` are
+  shape-agnostic, so any structure there is runnable and scorable.
 - **Question:** create a fresh question in the app (note its id + text), or reuse
   an empty one. One validation = one question.
 
