@@ -1,0 +1,76 @@
+{
+  "questionId": "gGw-hn4lnEoQ",
+  "questionText": "How we can all be happy?",
+  "topics": [
+    {
+      "name": "physical-health",
+      "synths": [
+        {
+          "name": "regular-exercise",
+          "paraphrases": [
+            "Exercise regularly to stay physically active and feel happier.",
+            "Make regular physical exercise a daily habit for wellbeing.",
+            "Engage in regular workouts to boost your mood and energy.",
+            "Stay physically active through consistent exercise routines.",
+            "Build daily exercise into your life for better mental health.",
+            "Do regular cardio, strength, or movement training to feel good.",
+            "Commit to consistent physical exercise to improve happiness.",
+            "Maintain an active lifestyle with regular workouts and movement.",
+            "Practice regular physical activity to support your wellbeing.",
+            "Engage in daily exercise like running, cycling, or strength training."
+          ]
+        },
+        {
+          "name": "healthy-eating",
+          "paraphrases": [
+            "Eat a nutritious diet rich in fruits, vegetables, and whole foods.",
+            "Maintain healthy eating habits with balanced, whole-food meals.",
+            "Follow a balanced diet of fresh produce and unprocessed foods.",
+            "Build healthy nutrition habits with plenty of vegetables and fruits.",
+            "Eat nutritious whole foods regularly to support your body.",
+            "Adopt a wholesome diet rich in plant-based foods and whole grains.",
+            "Prioritize nutritious meals with fresh produce and lean proteins.",
+            "Maintain good nutrition through a diet of unprocessed whole foods.",
+            "Eat well by choosing whole, nutritious, minimally processed foods.",
+            "Follow a healthy eating pattern emphasizing vegetables and whole grains."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "social-connection",
+      "synths": [
+        {
+          "name": "friends-time",
+          "paraphrases": [
+            "Spend quality time with close friends regularly to feel happier.",
+            "Make time for friends in your weekly schedule for connection.",
+            "Stay close to your friends through regular get-togethers and meetups.",
+            "Cultivate friendships by spending time with friends often.",
+            "Maintain strong friendships through regular shared activities.",
+            "Make seeing friends a priority in your weekly routine.",
+            "Invest in friendships by spending quality time with close companions.",
+            "Nurture friendships through frequent visits and shared meals.",
+            "Connect with friends regularly through dinners, walks, or activities.",
+            "Stay socially connected by meeting friends often."
+          ]
+        },
+        {
+          "name": "community-clubs",
+          "paraphrases": [
+            "Join local community clubs and groups to expand your social circle.",
+            "Become a member of community organizations to meet new people.",
+            "Participate in clubs and societies based on your interests.",
+            "Join groups like book clubs, sports teams, or hobby communities.",
+            "Get involved with community groups to build new friendships.",
+            "Sign up for local clubs that share your interests and hobbies.",
+            "Become active in community organizations and interest groups.",
+            "Engage with local clubs and societies to broaden your network.",
+            "Participate in regular group activities through community clubs.",
+            "Join hobby groups or interest clubs to meet like-minded people."
+          ]
+        }
+      ]
+    }
+  ]
+}
