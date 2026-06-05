@@ -20,6 +20,7 @@ import SuggestionCard from './suggestionCard/SuggestionCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
+import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import styles from './SuggestionCards.module.scss';
 import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
 import { SectionDivider } from '@/view/components/atomic/molecules/SectionDivider';
@@ -110,6 +111,9 @@ const SuggestionCards: FC = () => {
 		creator?.uid === parentSubscription?.statement?.creatorId ||
 		parentSubscription?.role === Role.admin;
 	const { showHiddenCards } = useShowHiddenCards();
+	// Lazy-load older options as the user scrolls the list (the page subscription
+	// only loads the newest window; this pages in the rest on demand).
+	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadOptions(statementId);
 
 	// View-layer derivation (toggle-independent, memoized): split synth / topic /
 	// raw and assign each synth to its max-overlap topic.
@@ -290,6 +294,14 @@ const SuggestionCards: FC = () => {
 					</Flipped>
 				))}
 			</Flipper>
+			{hasRaw && hasMore && (
+				<div ref={sentinelRef} className={styles['lazyLoadSentinel']} aria-hidden="true" />
+			)}
+			{isLoadingMore && (
+				<div className={styles['lazyLoadStatus']} role="status">
+					{t('Loading more…')}
+				</div>
+			)}
 			{isSubmitMode && (
 				<div className={styles.submitButtonContainer}>
 					<button onClick={handleSubmit} className={styles.submitButton}>
