@@ -288,6 +288,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		isCluster: true,
 		isSynthesis: isSynthMode,
 		derivedByPipeline: isSynthMode ? 'synthesis' : 'topic-cluster',
+		synthesisMechanism: 'live-spawn',
 		liveSynthOrigin: 'spawn',
 		hide: false,
 		// Synth-only: track how many members were in the set when the

@@ -15,22 +15,33 @@
   `runClusteringPhase`, `fn_synthesizeIdeas.ts` (sync callable),
   `fn_synthesisBulkFlush.ts` (scheduled sweep). Threshold via
   `SYNTHESIS_CANDIDATE_THRESHOLD` (default 0.92), logged per run.
-- **Pillar 2 (partial) — idempotent clean-rebuild.** `src/synthesis/derivedDocs.ts`
+- **Pillar 2 — idempotent clean-rebuild.** `src/synthesis/derivedDocs.ts`
   (`isDerived` inclusive classifier + `dissolveQuestionSynthesis`, reusing
   `reverseIntegration` for proper clusters and restoring orphans). Wired into the
-  async loading phase so every async bulk run cleans before rebuilding.
-- **Pillar 2 (partial) — dedup.** `spawnClusterFromPair` skips when a visible
-  cluster already contains either member (fixes the duplicate-synth bug).
+  async loading phase AND the synchronous execute callable, so **both** bulk
+  paths clean before rebuilding.
+- **Pillar 2 — dedup.** `spawnClusterFromPair` skips when a visible cluster
+  already contains either member (fixes the duplicate-synth bug).
+- **Pillar 2 — run tagging.** Added `synthesisRunId` + `synthesisMechanism`
+  (`'bulk' | 'live-spawn' | 'live-attach'`) to the `Statement` schema
+  (`packages/shared-types`). Stamped at the write sites: `performIntegration`
+  (bulk runs, via a per-run id) and `spawnClusterFromPair` (`live-spawn`).
 
-**Pending:**
-- `synthesisRunId`/`synthesisMechanism` tagging (needs the shared-types/delib-npm
-  change + rebuild) and non-optional `derivedByPipeline`.
-- Wire `dissolveQuestionSynthesis` into the synchronous execute path
-  (`fn_synthesizeIdeas` execute) — only the async job self-cleans today.
-- Shadow mode (`_bulkSynthProposals/{runId}`).
-- Hard-enforce the no-orphan invariant at the hide write site (currently upheld
-  by `performIntegration` co-setting hide+`integratedInto` and by dissolve
-  restoring orphans).
+**Satisfied by existing mechanisms (no new code needed):**
+- **Shadow mode** — the async job computes proposals into `ready-for-review`
+  without applying them, and `synthesizeIdeasPreview` returns groups without
+  writing; both are no-write previews on real data. The snapshot sandbox
+  (`dumpQuestionFromProd` → `seedQuestionSnapshot` → `synthTestFromSnapshot`)
+  covers offline audit. A dedicated `_bulkSynthProposals/` collection would be
+  redundant.
+- **No-orphan invariant** — upheld by construction: `performIntegration` always
+  co-sets `hide`+`integratedInto`, `dissolveQuestionSynthesis` always restores
+  members, and nothing hard-deletes (reverse = soft-delete + restore).
+
+**Pending (optional hardening):**
+- Tighten `derivedByPipeline` to non-optional (risk: existing untagged docs).
+- Tag the async `runProposingPhase` apply step with the job id as `synthesisRunId`
+  (currently bulk clusters are tagged via `performIntegration`).
 
 ---
 
