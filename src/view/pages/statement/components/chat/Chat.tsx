@@ -43,6 +43,13 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	const hasMoreRef = useRef(true);
 	const isLoadingRef = useRef(false);
 	const oldestCreatedAtRef = useRef<number | null>(null);
+	// Gates loadMore. Virtuoso fires a false-positive `startReached` during the
+	// initial mount/scroll-to-bottom (it's pinned to the last item via
+	// initialTopMostItemIndex), which would eagerly pull the whole history at
+	// once. We "arm" loadMore shortly after the initial load so that early
+	// false-positive is ignored; genuine scroll-to-top afterwards paginates
+	// normally. Worst case (very slow load) it degrades to the prior behavior.
+	const loadMoreArmedRef = useRef(false);
 
 	hasMoreRef.current = hasMore;
 	isLoadingRef.current = isLoadingMore;
@@ -70,13 +77,20 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		return () => clearTimeout(timer);
 	}, [statementId, markStatementAsRead, getStatementUnreadCount]);
 
-	// Reset lazy loading state when navigating to a different statement
+	// Reset lazy loading state when navigating to a different statement, and arm
+	// loadMore only after the initial render/scroll has settled (see ref comment).
 	useEffect(() => {
 		setHasMore(true);
 		setIsLoadingMore(false);
 		initialCheckDoneRef.current = false;
 		oldestCreatedAtRef.current = null;
 		firstTimeRef.current = true;
+		loadMoreArmedRef.current = false;
+		const armTimer = setTimeout(() => {
+			loadMoreArmedRef.current = true;
+		}, 1200);
+
+		return () => clearTimeout(armTimer);
 	}, [statementId]);
 
 	// Check if all messages are already loaded (fewer than initial limit)
@@ -91,6 +105,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 	// Fetch older messages when user scrolls to top — called by Virtuoso's startReached
 	const loadMore = useCallback(async () => {
+		if (!loadMoreArmedRef.current) return;
 		if (!statementId || isLoadingRef.current || !hasMoreRef.current) return;
 		if (oldestCreatedAtRef.current === null) return;
 
