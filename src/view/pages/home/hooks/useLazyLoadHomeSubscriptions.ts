@@ -14,6 +14,25 @@ export type HomeTab = 'topics' | 'discussions';
 const DISCUSSION_ROLES: ReadonlySet<Role> = new Set([Role.admin, Role.creator, Role.member]);
 
 /**
+ * Nearest scrollable ancestor of `node`, used as the IntersectionObserver root.
+ * The home list scrolls inside `.home-page__main` (overflow-y: auto), not the
+ * document — with `root: null` the observer can fail to fire for an inner
+ * scroller. Anchoring the root to the real scroll container makes it reliable.
+ */
+function getScrollableAncestor(node: HTMLElement | null): HTMLElement | null {
+	let el = node?.parentElement ?? null;
+	while (el) {
+		const { overflowY } = getComputedStyle(el);
+		if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+			return el;
+		}
+		el = el.parentElement;
+	}
+
+	return null;
+}
+
+/**
  * True when a subscription belongs to the given home tab — kept in sync with the
  * listener/cursor queries so the pagination cursor is computed over exactly the
  * docs each query returns.
@@ -121,7 +140,7 @@ export function useLazyLoadHomeSubscriptions(tab: HomeTab): {
 				(entries) => {
 					if (entries.some((e) => e.isIntersecting)) void loadMore();
 				},
-				{ rootMargin: '400px' },
+				{ root: getScrollableAncestor(node), rootMargin: '400px' },
 			);
 			observerRef.current.observe(node);
 		},
