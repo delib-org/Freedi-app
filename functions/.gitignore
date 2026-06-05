@@ -13,3 +13,5 @@ coverage/
 # Environment variables
 .env
 .secret.local
+# Local prod-data snapshots for synthesis testing (contain real user data — never commit)
+scripts/snapshots/
