@@ -234,17 +234,16 @@ export const listenToSubStatements = (
 		// because Firestore inequality + orderBy on a different field forces
 		// an index scan with poor selectivity (Query Insights flagged a 6.56
 		// scan ratio). The allowlist is derived from the StatementType enum.
-		// Exclude hidden docs server-side. Without this, hidden docs (e.g.
-		// synthesis clusters that were dissolved/archived) still occupy the
-		// `limit` window when they sort newest by createdAt, starving the list
-		// of visible options. Relies on every option carrying an explicit
-		// `hide` boolean — see the backfill migration (scripts/backfillHideField.ts)
-		// and createStatementObject (`hide: params.hide ?? false`). Requires the
-		// composite index [parentId, hide, statementType, createdAt].
+		// NOTE: do NOT add a server-side `where('hide','==',false)` here.
+		// `createStatement` does not set a `hide` field, so new statements have
+		// `hide === undefined`; a `hide == false` equality filter would exclude
+		// them entirely (Firestore equality skips field-missing docs) and they'd
+		// never appear. Hidden docs are filtered downstream by the card
+		// selector (which treats undefined as visible); lazy-loading handles the
+		// limit window so hidden docs don't starve the list.
 		let q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
-			where('hide', '==', false),
 			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
 			orderBy('createdAt', descAsc),
 		);
