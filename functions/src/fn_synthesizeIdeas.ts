@@ -20,7 +20,7 @@ import {
 // See `synthesis/featureFlags.ts` for the env-var gate. Existing pipeline
 // behavior is preserved when flags are OFF.
 import { bayesianFilterOptions } from './synthesis/scoring';
-import { bulkClusterByEmbedding } from './synthesis/bulkCluster';
+import { buildCandidateClusters } from './synthesis/candidateClusters';
 import { twoTierJudge, type ClusterMember } from './synthesis/twoTierJudge';
 import { synthesisFlags, shouldUseBulkSynthesisPath } from './synthesis/featureFlags';
 
@@ -373,10 +373,13 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 				};
 			}
 
-			const { clusters: bulkClusters } = bulkClusterByEmbedding(items);
-			const candidateClusters = bulkClusters
-				.filter((c) => c.memberIds.length >= 2)
-				.map((c, i) => ({ clusterId: `bulk-${i}`, memberIds: c.memberIds }));
+			// Candidate clusters by ANN cosine edges + connected components (the
+			// live path's geometry), NOT UMAP→DBSCAN. Preserves singletons —
+			// distinct ideas are left standalone instead of forced into buckets.
+			const { clusters: candidateClusters } = await buildCandidateClusters(
+				items.map((it) => it.id),
+				{ parentId: parentStatementId, threshold },
+			);
 
 			const members = new Map<string, ClusterMember>();
 			for (const item of items) {
