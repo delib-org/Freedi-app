@@ -33,19 +33,24 @@ export function useLazyLoadOptions(statementId: string | undefined): {
 	const hasMoreRef = useRef(true);
 	const observerRef = useRef<IntersectionObserver | null>(null);
 
-	// Oldest loaded createdAt + loaded count for this parent, from the store.
-	const { oldestCreatedAt, loadedCount } = useSelector((state: RootState) => {
+	// Oldest loaded createdAt + loaded count for this parent. Two separate
+	// selectors returning PRIMITIVES (not a new object) so useSelector's default
+	// reference equality holds and we don't trigger "selector returned a
+	// different result" / unnecessary rerenders.
+	const oldestCreatedAt = useSelector((state: RootState) => {
 		let min = Infinity;
-		let count = 0;
 		for (const s of state.statements.statements) {
-			if (s.parentId === statementId) {
-				count++;
-				if (typeof s.createdAt === 'number' && s.createdAt < min) min = s.createdAt;
+			if (s.parentId === statementId && typeof s.createdAt === 'number' && s.createdAt < min) {
+				min = s.createdAt;
 			}
 		}
 
-		return { oldestCreatedAt: min === Infinity ? null : min, loadedCount: count };
+		return min === Infinity ? null : min;
 	});
+	const loadedCount = useSelector(
+		(state: RootState) =>
+			state.statements.statements.filter((s) => s.parentId === statementId).length,
+	);
 	const oldestRef = useRef<number | null>(oldestCreatedAt);
 	oldestRef.current = oldestCreatedAt;
 
