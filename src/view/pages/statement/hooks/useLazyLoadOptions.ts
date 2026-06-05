@@ -47,28 +47,20 @@ export function useLazyLoadOptions(statementId: string | undefined): {
 
 		return min === Infinity ? null : min;
 	});
-	const loadedCount = useSelector(
-		(state: RootState) =>
-			state.statements.statements.filter((s) => s.parentId === statementId).length,
-	);
 	const oldestRef = useRef<number | null>(oldestCreatedAt);
 	oldestRef.current = oldestCreatedAt;
 
 	// Reset paging state when navigating to a different statement.
+	// We do NOT pre-decide `hasMore` from the loaded count: that was sticky
+	// (a transient sub-window count set it false and it never recovered). Let
+	// `fetchOlderSubStatements`'s own `hasMore` result drive it — at worst one
+	// cheap extra query when there is nothing older.
 	useEffect(() => {
 		setHasMore(true);
 		hasMoreRef.current = true;
 		setIsLoadingMore(false);
 		isLoadingRef.current = false;
 	}, [statementId]);
-
-	// If fewer than a full window are loaded, everything is already here.
-	useEffect(() => {
-		if (loadedCount > 0 && loadedCount < CHAT.INITIAL_MESSAGES_LIMIT) {
-			setHasMore(false);
-			hasMoreRef.current = false;
-		}
-	}, [loadedCount]);
 
 	const loadMore = useCallback(async () => {
 		if (!statementId || isLoadingRef.current || !hasMoreRef.current) return;
@@ -108,8 +100,11 @@ export function useLazyLoadOptions(statementId: string | undefined): {
 		},
 		[loadMore],
 	);
-
-	useEffect(() => () => observerRef.current?.disconnect(), []);
+	// NOTE: cleanup is handled by the callback ref itself — React invokes it with
+	// `null` on unmount (and with the new node on replace), and we disconnect there.
+	// A separate `useEffect(() => () => disconnect())` is redundant AND breaks under
+	// StrictMode: its cleanup runs during the dev double-invoke and disconnects the
+	// just-attached observer, after which the ref isn't re-invoked — so it never fires.
 
 	return { sentinelRef, isLoadingMore, hasMore };
 }
