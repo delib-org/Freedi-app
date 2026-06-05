@@ -1,22 +1,16 @@
 // Helpers
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router';
 import IconButton from '../../components/iconButton/IconButton';
-import Menu from '../../components/menu/Menu';
-import MenuOption from '../../components/menu/MenuOption';
 import InvitationModal from './main/invitationModal/InvitationModal';
-import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import InstallIcon from '@/assets/icons/installIcon.svg?react';
-import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { logOut } from '@/controllers/db/authenticationUtils';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import LanguagePill from '@/view/components/atomic/atoms/LanguagePill/LanguagePill';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import WaitingList from '@/view/components/approveMembers/WaitingList';
 import { usePWAInstallPrompt } from '@/controllers/hooks/usePWAInstallPrompt';
 import { logError } from '@/utils/errorHandling';
-import ProfileAvatar from '@/view/components/atomic/atoms/ProfileAvatar/ProfileAvatar';
+import ProfileMenu from '@/view/components/profileMenu/ProfileMenu';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { userLevelSelector } from '@/redux/engagement/engagementSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -25,7 +19,6 @@ const LANGUAGE_HINT_KEY = 'seenLanguageHint';
 const LANGUAGE_HINT_TIMEOUT_MS = 5000;
 
 export default function HomeHeader() {
-	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
 	const [showInvitationModal, setShowInvitationModal] = useState(false);
 	const [showLanguagePopover, setShowLanguagePopover] = useState(false);
 	const [showLanguageHint, setShowLanguageHint] = useState(false);
@@ -75,7 +68,6 @@ export default function HomeHeader() {
 	function handleOpenInvitation() {
 		try {
 			setShowInvitationModal(true);
-			setIsHomeMenuOpen(false);
 		} catch (error) {
 			logError(error, { operation: 'home.HomeHeader.handleOpenInvitation' });
 		}
@@ -93,13 +85,14 @@ export default function HomeHeader() {
 				</a>
 				<WaitingList />
 				<div className="homePage__header__wrapper__icons">
-					<Link to="/my/engagement" aria-label={t('engagement.myImpact')}>
-						<ProfileAvatar
-							photoURL={creator?.photoURL}
-							displayName={creator?.displayName}
-							level={level}
-						/>
-					</Link>
+					<ProfileMenu
+						photoURL={creator?.photoURL}
+						displayName={creator?.displayName}
+						level={level}
+						onJoinWithPin={handleOpenInvitation}
+					/>
+
+					<NotificationBtn />
 
 					<span className="language-pill-anchor">
 						<LanguagePill
@@ -121,35 +114,11 @@ export default function HomeHeader() {
 						)}
 					</span>
 
-					<Menu
-						isMenuOpen={isHomeMenuOpen}
-						setIsOpen={setIsHomeMenuOpen}
-						iconColor="white"
-						footer={
-							<MenuOption
-								className="footer"
-								icon={<DisconnectIcon style={{ color: 'white' }} />}
-								label={t('Disconnect')}
-								onOptionClick={logOut}
-								children={''}
-							/>
-						}
-					>
-						<MenuOption
-							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
-							label={t('Join with PIN number')}
-							onOptionClick={handleOpenInvitation}
-							children={''}
-						/>
-					</Menu>
-
 					{showInstallIcon && (
 						<IconButton onClick={handleOpenInstallPrompt}>
 							<InstallIcon />
 						</IconButton>
 					)}
-
-					<NotificationBtn />
 				</div>
 			</div>
 
