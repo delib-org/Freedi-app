@@ -59,6 +59,7 @@ export const StatementSchema = object({
 	description: optional(string()), // auto-generated preview from child paragraph sub-statements (~200 chars)
 	brief: optional(string()), // admin-authored context/brief for the statement
 	isTitleQuestion: optional(boolean()), // if true, responses detected as questions are suggested as options instead
+	/** @deprecated Legacy embedded rich-body. Canonical body = child Statements with statementType === paragraph (see createParagraphChildStatement + @freedi/shared-utils). Kept for backward-compatible reads; new code must not write it. */
 	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
 	reasoning: optional(string()), // explanation/reasoning for the statement (used in suggestions)
 	statementId: string(), // the id of the statement

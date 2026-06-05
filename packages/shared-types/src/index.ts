@@ -196,11 +196,13 @@ export { StageSelectionType } from "./models/stage/stageTypes";
 
 // Paragraph models
 export type {
-  Paragraph
+  Paragraph,
+  ListType
 } from "./models/paragraph/paragraphModel";
 
 export {
   ParagraphSchema,
+  ListTypeSchema,
   ParagraphType
 } from "./models/paragraph/paragraphModel";
 
@@ -315,10 +317,13 @@ export {
   createBasicStatement,
   createStatementObject,
   createParagraphStatement,
+  createParagraphChildStatement,
+  statementToParagraph,
+  paragraphToFactoryParams,
   createSuggestionStatement,
   defaultStatementSettings
 } from "./models/statement/StatementUtils";
-export type { CreateStatementParams } from "./models/statement/StatementUtils";
+export type { CreateStatementParams, CreateParagraphChildParams } from "./models/statement/StatementUtils";
 
 // User models
 export type {

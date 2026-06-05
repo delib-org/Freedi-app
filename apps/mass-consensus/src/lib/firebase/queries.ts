@@ -1,4 +1,5 @@
-import { Statement, StatementType, Evaluation, Collections } from '@freedi/shared-types';
+import { Statement, StatementType, Evaluation, Collections, statementToParagraph } from '@freedi/shared-types';
+import type { Paragraph } from '@freedi/shared-types';
 import { getFirestoreAdmin } from './admin';
 import { logger } from '@/lib/utils/logger';
 import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
@@ -25,6 +26,42 @@ function sanitizeStatement(statement: Statement): Statement {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { embedding, ...rest } = statement as Statement & { embedding?: unknown };
   return rest as Statement;
+}
+
+/**
+ * Resolve the rich-body paragraphs of a statement, preferring the canonical
+ * model (child Statements with `statementType === paragraph`) and falling back
+ * to the deprecated embedded `statement.paragraphs[]` for un-migrated docs.
+ *
+ * @param statement - The host statement (question/solution)
+ * @returns Ordered `Paragraph[]` (empty if the statement has no body)
+ */
+export async function getParagraphsForStatement(
+  statement: Statement
+): Promise<Paragraph[]> {
+  try {
+    const db = getFirestoreAdmin();
+    const snap = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', statement.statementId)
+      .where('statementType', '==', StatementType.paragraph)
+      .get();
+
+    const children = snap.docs
+      .map((d) => d.data() as Statement)
+      .filter((p) => p.hide !== true);
+
+    if (children.length > 0) {
+      return children
+        .map(statementToParagraph)
+        .sort((a, b) => a.order - b.order);
+    }
+  } catch (error) {
+    logQueryError('getParagraphsForStatement', error, { statementId: statement.statementId });
+  }
+
+  // Legacy fallback: deprecated embedded array.
+  return statement.paragraphs ?? [];
 }
 
 /**
@@ -57,8 +94,13 @@ export async function getQuestionFromFirebase(
     throw new Error('Statement is not a question');
   }
 
+  // Hydrate the canonical rich body (paragraph child statements) onto the
+  // returned object so downstream readers — which consume `question.paragraphs`
+  // — work whether the body is stored as children (new) or embedded (legacy).
+  const paragraphs = await getParagraphsForStatement(statement);
+
   logger.info('[getQuestionFromFirebase] Success:', statement.statement?.substring(0, 50));
-  return sanitizeStatement(statement);
+  return sanitizeStatement({ ...statement, paragraphs });
 }
 
 /**

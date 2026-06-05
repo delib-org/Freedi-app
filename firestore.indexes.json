@@ -4,6 +4,24 @@
       "collectionGroup": "statements",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "parentId", "order": "ASCENDING" },
+        { "fieldPath": "statementType", "order": "ASCENDING" },
+        { "fieldPath": "order", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "topParentId", "order": "ASCENDING" },
+        { "fieldPath": "statementType", "order": "ASCENDING" },
+        { "fieldPath": "order", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
         {
           "fieldPath": "hide",
           "order": "ASCENDING"

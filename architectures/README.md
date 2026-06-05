@@ -11,6 +11,7 @@ This folder contains comprehensive architecture documentation for all components
 | [MC_APP_ARCHITECTURE.md](./MC_APP_ARCHITECTURE.md) | Mass Consensus - crowdsourced evaluation |
 | [SIGN_APP_ARCHITECTURE.md](./SIGN_APP_ARCHITECTURE.md) | Sign - document signing & deliberation |
 | [CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md](./CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md) | Clustering & synthesis pipelines, shared data model, admin UI |
+| [PARAGRAPH_MODEL_ARCHITECTURE.md](./PARAGRAPH_MODEL_ARCHITECTURE.md) | Canonical paragraph (rich-body) model & shared CRUD across all apps |
 
 > Historical clustering & synthesis documents (UNIFIED, EMBEDDINGS, FRAMING_CLUSTER_AGGREGATION, papers, scaling investigation) now live in [`../docs/clusters and synthesis/`](../docs/clusters%20and%20synthesis/).
 

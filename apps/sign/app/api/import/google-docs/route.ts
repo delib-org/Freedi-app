@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { Collections, createParagraphStatement, Statement, SourceApp } from '@freedi/shared-types';
+import { Collections, createParagraphChildStatement, paragraphToFactoryParams, Statement, SourceApp } from '@freedi/shared-types';
 import { getFirebaseAdmin, uploadImageFromUrl } from '@/lib/firebase/admin';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { fetchGoogleDoc, getServiceAccountEmail } from '@/lib/google-docs/client';
@@ -281,14 +281,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       const chunk = paragraphs.slice(i, i + BATCH_SIZE);
 
       for (const paragraph of chunk) {
-        const paragraphStatement = createParagraphStatement(
-          paragraph,
-          statementId,
-          creator
+        // Canonical paragraph child statement (statementType === paragraph),
+        // preserving the imported paragraphId and rich metadata. `isOfficial`
+        // writes the legacy `doc` mirrors for transition-era queries.
+        const paragraphStatement = createParagraphChildStatement(
+          paragraphToFactoryParams(
+            paragraph,
+            { statementId, topParentId: statementId },
+            creator,
+            { isOfficial: true, sourceApp: SourceApp.SIGN },
+          ),
         );
 
         if (paragraphStatement) {
-          paragraphStatement.sourceApp = SourceApp.SIGN;
+          paragraphStatement.consensus = 1.0;
           batch.set(
             db.collection(Collections.statements).doc(paragraphStatement.statementId),
             paragraphStatement
