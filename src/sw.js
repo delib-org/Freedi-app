@@ -83,25 +83,12 @@ registerRoute(
 	})
 );
 
-// Firebase/Firestore requests - network first with short cache
-registerRoute(
-	({ url }) =>
-		url.hostname.includes('firestore.googleapis.com') ||
-		url.hostname.includes('firebase'),
-	new NetworkFirst({
-		cacheName: 'firebase-cache',
-		networkTimeoutSeconds: 10,
-		plugins: [
-			new CacheableResponsePlugin({
-				statuses: [0, 200],
-			}),
-			new ExpirationPlugin({
-				maxEntries: 10,
-				maxAgeSeconds: 60 * 5, // 5 minutes
-			}),
-		],
-	})
-);
+// NOTE: We deliberately do NOT register a route for Firestore/Firebase requests.
+// Firestore's real-time Listen channel (firestore.googleapis.com/.../Listen/channel)
+// is a long-lived streaming endpoint. Intercepting it with a Workbox strategy
+// (e.g. NetworkFirst) breaks the stream and throws "A ServiceWorker intercepted
+// the request and encountered an unexpected error". The Firestore SDK manages its
+// own connections — leave its traffic untouched so it goes straight to the network.
 
 // Handle service worker lifecycle events
 self.addEventListener('install', (event) => {
