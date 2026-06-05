@@ -5,11 +5,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "parentId",
+          "fieldPath": "hide",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "hide",
+          "fieldPath": "parentId",
           "order": "ASCENDING"
         },
         {
@@ -27,11 +27,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "parentId",
+          "fieldPath": "hide",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "hide",
+          "fieldPath": "parentId",
           "order": "ASCENDING"
         },
         {
