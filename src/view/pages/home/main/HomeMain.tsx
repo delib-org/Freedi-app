@@ -10,6 +10,7 @@ import {
 	topSubscriptionsSelector,
 } from '@/redux/statements/statementsSlice';
 import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
+import { useLazyLoadHomeSubscriptions } from '../hooks/useLazyLoadHomeSubscriptions';
 
 // Custom components
 import Footer from '@/view/components/footer/Footer';
@@ -56,6 +57,10 @@ const HomeMain = () => {
 	);
 
 	const latestDecisions = allStatementsSubscriptions;
+
+	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadHomeSubscriptions(
+		subPage === 'topics' ? 'topics' : 'discussions',
+	);
 
 	useEffect(() => {
 		if (topSubscriptions.length > 0 || latestDecisions.length > 0) {
@@ -150,12 +155,24 @@ const HomeMain = () => {
 						);
 					}
 
-					return itemsToRender.map((sub) =>
-						subPage === 'topics' ? (
-							<MainCard key={sub.statementId} subscription={sub} />
-						) : (
-							<MainQuestionCard key={sub.statementId} simpleStatement={sub.statement} />
-						),
+					return (
+						<>
+							{itemsToRender.map((sub) =>
+								subPage === 'topics' ? (
+									<MainCard key={sub.statementId} subscription={sub} />
+								) : (
+									<MainQuestionCard key={sub.statementId} simpleStatement={sub.statement} />
+								),
+							)}
+							{hasMore && (
+								<div ref={sentinelRef} className={styles.lazyLoadSentinel} aria-hidden="true" />
+							)}
+							{isLoadingMore && (
+								<div className={styles.lazyLoadStatus} role="status">
+									{t('Loading more…')}
+								</div>
+							)}
+						</>
 					);
 				})()}
 			</div>

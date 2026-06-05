@@ -4,10 +4,12 @@ import {
 	or,
 	and,
 	getDoc,
+	getDocs,
 	limit,
 	onSnapshot,
 	orderBy,
 	query,
+	startAfter,
 	where,
 	Unsubscribe,
 } from 'firebase/firestore';
@@ -33,6 +35,7 @@ import { parse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
+import { HOME } from '@/constants/common';
 import {
 	createManagedCollectionListener,
 	generateListenerKey,
@@ -218,6 +221,125 @@ export function listenToStatementSubscriptions(
 	}
 }
 
+/**
+ * One-time cursor fetch for OLDER top-level subscriptions (Topics tab), used by
+ * the home screen's infinite scroll. Mirrors listenToStatementSubscriptions'
+ * query but pages by lastUpdate via startAfter. Dispatches results into Redux
+ * (idempotent upsert) and reports whether more pages exist.
+ */
+export async function fetchOlderTopSubscriptions(
+	userId: string,
+	oldestLastUpdate: number,
+	batchSize = HOME.LOAD_MORE_BATCH_SIZE,
+): Promise<{ hasMore: boolean }> {
+	try {
+		const dispatch = store.dispatch;
+		const statementsSubscribeRef = collection(FireStore, Collections.statementsSubscribe);
+		const q = query(
+			statementsSubscribeRef,
+			and(
+				where('userId', '==', userId),
+				or(where('parentId', '==', 'top'), where('statement.parentId', '==', 'top')),
+			),
+			orderBy('lastUpdate', 'desc'),
+			startAfter(oldestLastUpdate),
+			limit(batchSize + 1),
+		);
+
+		const snapshot = await getDocs(q);
+		const hasMore = snapshot.size > batchSize;
+		const docs = hasMore ? snapshot.docs.slice(0, batchSize) : snapshot.docs;
+
+		docs.forEach((docSnap) => {
+			try {
+				const subscription = parse(
+					StatementSubscriptionSchema,
+					convertTimestampsToMillis(docSnap.data()),
+				) as StatementSubscription;
+				dispatch(setStatementSubscription(subscription));
+			} catch (error) {
+				logError(error, {
+					operation: 'subscriptions.getSubscriptions.fetchOlderTopSubscriptions',
+					metadata: { message: 'Failed to parse older top subscription' },
+				});
+			}
+		});
+
+		return { hasMore };
+	} catch (error) {
+		const err = error as { code?: string };
+		if (err?.code !== 'permission-denied') {
+			logError(error, {
+				operation: 'subscriptions.getSubscriptions.fetchOlderTopSubscriptions',
+			});
+		}
+
+		return { hasMore: false };
+	}
+}
+
+/**
+ * One-time cursor fetch for OLDER discussion subscriptions (Discussions tab),
+ * used by the home screen's infinite scroll. Mirrors
+ * getNewStatementsFromSubscriptions' query but pages by lastUpdate via
+ * startAfter. Dispatches results into Redux and reports whether more exist.
+ */
+export async function fetchOlderDiscussionSubscriptions(
+	userId: string,
+	oldestLastUpdate: number,
+	batchSize = HOME.LOAD_MORE_BATCH_SIZE,
+): Promise<{ hasMore: boolean }> {
+	try {
+		const dispatch = store.dispatch;
+		const subscriptionsRef = collection(FireStore, Collections.statementsSubscribe);
+		const q = query(
+			subscriptionsRef,
+			and(
+				where('userId', '==', userId),
+				where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
+				or(
+					where('role', '==', Role.admin),
+					where('role', '==', Role.creator),
+					where('role', '==', Role.member),
+				),
+			),
+			orderBy('lastUpdate', 'desc'),
+			startAfter(oldestLastUpdate),
+			limit(batchSize + 1),
+		);
+
+		const snapshot = await getDocs(q);
+		const hasMore = snapshot.size > batchSize;
+		const docs = hasMore ? snapshot.docs.slice(0, batchSize) : snapshot.docs;
+
+		docs.forEach((docSnap) => {
+			try {
+				const subscription = parse(
+					StatementSubscriptionSchema,
+					convertTimestampsToMillis(docSnap.data()),
+				) as StatementSubscription;
+				dispatch(setStatementSubscription(subscription));
+			} catch (error) {
+				logError(error, {
+					operation: 'subscriptions.getSubscriptions.fetchOlderDiscussionSubscriptions',
+					metadata: { message: 'Failed to parse older discussion subscription' },
+				});
+			}
+		});
+
+		return { hasMore };
+	} catch (error) {
+		const err = error as { code?: string };
+		if (err?.code !== 'permission-denied') {
+			logError(error, {
+				operation: 'subscriptions.getSubscriptions.fetchOlderDiscussionSubscriptions',
+			});
+		}
+
+		return { hasMore: false };
+	}
+}
+
 export async function getIsSubscribed(
 	statementId: string | undefined,
 	userId: string,
@@ -379,7 +501,10 @@ export async function getTopParentSubscription(
 	}
 }
 
-export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
+export function getNewStatementsFromSubscriptions(
+	userId: string,
+	numberOfStatements = HOME.INITIAL_SUBSCRIPTIONS_LIMIT,
+): Unsubscribe {
 	try {
 		const dispatch = store.dispatch;
 		//get the latest created statements
@@ -396,7 +521,7 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 				),
 			),
 			orderBy('lastUpdate', 'desc'),
-			limit(40),
+			limit(numberOfStatements),
 		);
 
 		const listenerKey = generateListenerKey('subscriptions-updates', 'user', userId);

@@ -14,6 +14,7 @@ import {
 } from '@/controllers/db/subscriptions/getSubscriptions';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { listenToInAppNotifications } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { HOME } from '@/constants/common';
 import {
 	listenToUserEngagement,
 	listenToRecentCredits,
@@ -61,8 +62,8 @@ export default function Home() {
 			try {
 				if (!user) return;
 
-				// Set up first listener
-				unsubscribe = listenToStatementSubscriptions(user.uid, 100);
+				// Set up first listener (initial page; older pages load on scroll)
+				unsubscribe = listenToStatementSubscriptions(user.uid, HOME.INITIAL_SUBSCRIPTIONS_LIMIT);
 
 				// Brief pause between listeners for iOS Safari IndexedDB compatibility
 				await new Promise((resolve) => setTimeout(resolve, 100));
