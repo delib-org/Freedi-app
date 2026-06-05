@@ -26,6 +26,10 @@ export class ListenerManager {
 	private static instance: ListenerManager;
 	private listeners = new Map<string, ListenerInfo>();
 	private pendingListeners = new Set<string>();
+	// Tracks how many live subscribers are waiting on a listener whose async
+	// setup is still in flight. Lets removeListener() cancel a teardown that
+	// arrives before setup completes, instead of leaking an orphaned listener.
+	private pendingRefCounts = new Map<string, number>();
 	private totalDocumentsFetched = 0;
 	private totalUpdates = 0;
 	private debugMode = false;
@@ -75,13 +79,17 @@ export class ListenerManager {
 			return false; // Listener already exists, no need to set up
 		}
 
-		// Check if being set up by another caller
+		// Being set up by another caller — track this extra subscriber so a
+		// teardown during setup stays balanced (and the listener isn't orphaned).
 		if (this.pendingListeners.has(key)) {
+			this.pendingRefCounts.set(key, (this.pendingRefCounts.get(key) ?? 0) + 1);
+
 			return false; // Already being set up, skip
 		}
 
 		// Mark as pending immediately to prevent race conditions
 		this.pendingListeners.add(key);
+		this.pendingRefCounts.set(key, 1);
 
 		return true; // Caller should proceed with setup
 	}
@@ -125,20 +133,38 @@ export class ListenerManager {
 			// Setup the listener with document counting
 			const unsubscribe = await setupFn(onDocumentCount);
 
+			// Reconcile the ref count accumulated while setup was in flight.
+			// If every subscriber unsubscribed before setup finished, the count
+			// is <= 0: tear down immediately instead of leaking an orphan that
+			// would shadow future registerListenerIntent() calls.
+			const pendingRefCount = this.pendingRefCounts.get(key) ?? 1;
+			this.pendingRefCounts.delete(key);
+			this.pendingListeners.delete(key);
+
+			if (pendingRefCount <= 0) {
+				try {
+					unsubscribe();
+				} catch (cleanupError) {
+					logError(cleanupError, {
+						operation: 'controllerUtils.ListenerManager.cancelPendingSetup',
+						metadata: { message: `Error tearing down cancelled listener '${key}':` },
+					});
+				}
+
+				return false;
+			}
+
 			// Track recreation count
 			const currentCount = this.listenerRecreationCount.get(key) || 0;
 			this.listenerRecreationCount.set(key, currentCount + 1);
 
-			// Store the listener info with initial ref count of 1
+			// Store the listener info with the reconciled ref count
 			this.listeners.set(key, {
 				unsubscribe,
 				stats,
 				type: options?.type,
-				refCount: 1,
+				refCount: pendingRefCount,
 			});
-
-			// Remove from pending
-			this.pendingListeners.delete(key);
 
 			// Silent success - no console output
 
@@ -149,6 +175,7 @@ export class ListenerManager {
 				metadata: { message: `Error setting up listener '${key}':` },
 			});
 			this.pendingListeners.delete(key);
+			this.pendingRefCounts.delete(key);
 
 			return false;
 		}
@@ -186,6 +213,14 @@ export class ListenerManager {
 			}
 
 			return true; // Successfully decremented ref count
+		}
+
+		// Listener is still being set up (async). Decrement the pending ref count
+		// so addListener() can tear it down on completion instead of orphaning it.
+		if (this.pendingRefCounts.has(key)) {
+			this.pendingRefCounts.set(key, (this.pendingRefCounts.get(key) ?? 0) - 1);
+
+			return true;
 		}
 
 		return false;

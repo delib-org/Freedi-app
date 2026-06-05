@@ -31,6 +31,7 @@ export async function updateBranchPreference(
 				frequency,
 				lastNotifiedAt: Date.now(),
 			},
+			lastUpdate: Date.now(),
 		});
 	} catch (error) {
 		logError(error, {
@@ -62,6 +63,7 @@ export async function updateSubscriptionFrequency(
 
 		await updateDoc(subscriptionRef, {
 			notificationFrequency: frequency,
+			lastUpdate: Date.now(),
 		});
 	} catch (error) {
 		logError(error, {
