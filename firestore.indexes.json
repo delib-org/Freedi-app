@@ -1,6 +1,50 @@
 {
   "indexes": [
     {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "hide",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "hide",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "statementType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "adminInvitations",
       "queryScope": "COLLECTION",
       "fields": [
