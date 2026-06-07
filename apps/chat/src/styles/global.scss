@@ -1,0 +1,57 @@
+@use 'tokens';
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: var(--font);
+	color: var(--text-body);
+	background: var(--bg-page);
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+h1,
+h2,
+h3 {
+	line-height: 1.25;
+	margin: 0 0 var(--space-sm);
+}
+
+.page {
+	max-width: var(--max-width);
+	margin: 0 auto;
+	padding: var(--space-lg) var(--space-md) var(--space-xl);
+}
+
+.muted {
+	color: var(--text-muted);
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

@@ -1,0 +1,61 @@
+// Design tokens for the dialectical chat app. Strengthen = green, Critique =
+// pink/magenta (per architecture.md §1.1). Light + dark via prefers-color-scheme.
+:root {
+	// Surfaces
+	--bg-page: #f7f8fa;
+	--bg-card: #ffffff;
+	--bg-muted: #eef1f5;
+	--border: #d9dee6;
+	--border-strong: #b9c2cf;
+
+	// Text
+	--text-body: #1f2733;
+	--text-muted: #5b6675;
+	--text-inverse: #ffffff;
+
+	// Brand / actions
+	--accent: #5f88e5;
+	--accent-dark: #3f68c4;
+
+	// Dialectic polarity
+	--strengthen: #2faa6a;
+	--strengthen-soft: rgba(47, 170, 106, 0.12);
+	--critique: #d6418a;
+	--critique-soft: rgba(214, 65, 138, 0.12);
+
+	// Corroboration bar
+	--c-low: #d6418a;
+	--c-mid: #e6a817;
+	--c-high: #2faa6a;
+
+	// Spacing (8-pt grid)
+	--space-xs: 4px;
+	--space-sm: 8px;
+	--space-md: 16px;
+	--space-lg: 24px;
+	--space-xl: 32px;
+
+	// Radii
+	--radius-sm: 8px;
+	--radius-md: 14px;
+	--radius-pill: 9999px;
+
+	--shadow-card: 0 1px 3px rgba(20, 30, 50, 0.08);
+	--max-width: 820px;
+	--font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg-page: #11161e;
+		--bg-card: #1a212c;
+		--bg-muted: #232c3a;
+		--border: #2e3947;
+		--border-strong: #3d4a5c;
+		--text-body: #e7ecf3;
+		--text-muted: #9aa6b6;
+		--accent: #7a9bf0;
+		--accent-dark: #5f88e5;
+		--shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+	}
+}

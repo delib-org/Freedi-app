@@ -18,6 +18,15 @@ import { Collections, functionConfig } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
 
 // Import function modules
+import { onChatStatementCreated } from './chat/fn_onChatStatementCreated';
+import { onChatEvaluationCreated } from './chat/fn_onChatEvaluationCreated';
+import { ssrChat } from './chat/ssrChat';
+import { rescoreStatement } from './chat/fn_rescoreStatement';
+import { redeemInvite, updateMembership } from './chat/fn_invite';
+import {
+	generateDialecticalRevision,
+	acceptDialecticalRevision,
+} from './chat/fn_dialecticalRevision';
 import {
 	deleteEvaluation,
 	newEvaluation,
@@ -548,6 +557,28 @@ exports.onStatementCreated = createFirestoreFunction(
 	onStatementCreated,
 	'onStatementCreated',
 );
+
+// ============================================
+// Dialectical Chat app (apps/chat)
+// ============================================
+exports.onChatStatementCreated = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	onChatStatementCreated,
+	'onChatStatementCreated',
+);
+exports.onChatEvaluationCreated = createFirestoreFunction(
+	`/${Collections.evaluations}/{evaluationId}`,
+	onDocumentCreated,
+	onChatEvaluationCreated,
+	'onChatEvaluationCreated',
+);
+exports.ssrChat = ssrChat;
+exports.rescoreStatement = rescoreStatement;
+exports.redeemInvite = redeemInvite;
+exports.updateMembership = updateMembership;
+exports.generateDialecticalRevision = generateDialecticalRevision;
+exports.acceptDialecticalRevision = acceptDialecticalRevision;
 
 // ============================================
 // DEPRECATED: Individual statement creation functions

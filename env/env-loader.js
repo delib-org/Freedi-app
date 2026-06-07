@@ -163,6 +163,24 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
     },
     extra: ''
   },
+  chat: {
+    path: path.join(ROOT_DIR, 'apps', 'chat'),
+    filename: '.env.local',
+    // SSR app: VITE_-prefixed vars reach the client realtime chunk; the
+    // unprefixed FIREBASE_* vars are read server-side by firebase-admin during
+    // SSR (in production on Cloud Functions, admin auto-detects credentials).
+    mapping: {
+      'FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
+      'FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
+      'FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',
+      'FIREBASE_STORAGE_BUCKET': 'VITE_FIREBASE_STORAGE_BUCKET',
+      'FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      'FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
+      'FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      'FIREBASE_PROJECT_ID|FIREBASE_PROJECT_ID': 'FIREBASE_PROJECT_ID',
+    },
+    extra: ''
+  },
   admin: {
     path: path.join(ROOT_DIR, 'apps', 'admin'),
     filename: '.env.local',

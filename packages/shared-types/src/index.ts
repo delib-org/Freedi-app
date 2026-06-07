@@ -13,7 +13,11 @@ export {
   Screen,
   SortType,
   QuestionStep,
-  ThemeStyle
+  ThemeStyle,
+  DialogicType,
+  EvidenceRelation,
+  EvidenceStatus,
+  Visibility
 } from "./models/TypeEnums";
 export { isMember, maxKeyInObject, getRandomUID } from "./models/TypeUtils";
 export { functionConfig } from "./models/ConfigFunctions";

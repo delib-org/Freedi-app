@@ -13,7 +13,15 @@ import {
 	pipe,
 	transform,
 } from 'valibot';
-import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
+import {
+	DeliberativeElement,
+	DocumentType,
+	StatementType,
+	DialogicType,
+	EvidenceRelation,
+	EvidenceStatus,
+	Visibility,
+} from '../TypeEnums';
 import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
@@ -278,6 +286,27 @@ export const StatementSchema = object({
 		statement: string(), // text preview of the replied-to message
 		creatorDisplayName: string(), // display name of the original author
 	})),
+	// ===== Dialectical Chat app (apps/chat) =====
+	// All optional + denormalized for SSR/UI. Authoritative verdict history lives
+	// in the `evidenceVerdicts/{statementId}/{scorerVersion}` subcollection.
+	dialecticType: optional(enum_(DialogicType)), // polarity of an evidence node; 'standard' on chatter
+	dialecticSnapshot: optional(boolean()), // archived revision snapshot; tree-builder skips
+	isRoot: optional(boolean()), // true on a conversation root (enables the discovery query)
+	visibility: optional(enum_(Visibility)), // root-authoritative; denormalized to every node
+	memberIds: optional(array(string())), // private only — uids allowed to read the subtree
+	// active evidence verdict (option/evidence nodes):
+	relation: optional(enum_(EvidenceRelation)),
+	evidenceClass: optional(string()),
+	effectiveWeight: optional(number()), // [0,1] applied in noisy-OR
+	evidenceConfidence: optional(number()), // [0,1]
+	evidenceStatus: optional(enum_(EvidenceStatus)), // drives the "evaluating…" chip
+	activeScorerVersion: optional(string()),
+	corroborationScore: optional(number()), // [0,1] C — option/evidence only
+	// question aggregates (question nodes only):
+	optionCount: optional(number()),
+	leadingOptionId: optional(string()),
+	convergenceIndex: optional(number()), // [0,1]
+	lastActivityAt: optional(number()),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
