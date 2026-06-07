@@ -390,10 +390,32 @@ async function verifyAuthToken(req: Request, res: Response): Promise<string | nu
 }
 
 /**
- * Creates a wrapper for admin/maintenance HTTP functions with authentication.
- * Requires a valid Firebase ID token in the Authorization header.
- * @param {Function} handler - The function handler to wrap (receives uid as third argument)
- * @returns {Function} - Wrapped function with auth and error handling
+ * Checks whether a uid belongs to a system admin.
+ * Mirrors isSystemAdmin() in firestore.rules and the check in
+ * fn_deleteResearchLogs — the system-admin flag lives on usersV2/{uid}.
+ * Fails closed (returns false) on any lookup error.
+ */
+async function isSystemAdmin(uid: string): Promise<boolean> {
+	try {
+		const userDoc = await db.collection(Collections.users).doc(uid).get();
+
+		return userDoc.exists && userDoc.data()?.systemAdmin === true;
+	} catch (error) {
+		logError(error, { operation: 'httpFunction.isSystemAdmin', metadata: { uid } });
+
+		return false;
+	}
+}
+
+/**
+ * Creates a wrapper for admin/maintenance HTTP functions.
+ * Requires a valid Firebase ID token in the Authorization header AND that the
+ * authenticated user is a system admin (usersV2/{uid}.systemAdmin === true).
+ * Authentication alone is NOT sufficient — these endpoints run database-wide
+ * maintenance/migration jobs and must never be reachable by ordinary
+ * (including anonymous) users.
+ * @param {Function} handler - The function handler to wrap
+ * @returns {Function} - Wrapped function with auth, authorization and error handling
  */
 const wrapAdminHttpFunction = (
 	handler: (req: Request, res: Response) => Promise<void>,
@@ -412,6 +434,14 @@ const wrapAdminHttpFunction = (
 		async (req, res) => {
 			const uid = await verifyAuthToken(req, res);
 			if (!uid) return;
+
+			// Authentication is not enough — require system-admin authorization.
+			if (!(await isSystemAdmin(uid))) {
+				console.info(`[${getTimestamp()}] Denied admin HTTP function for non-admin uid: ${uid}`);
+				res.status(403).json({ ok: false, error: 'Forbidden: system admin required' });
+
+				return;
+			}
 
 			const startTime = Date.now();
 			const startTimestamp = getTimestamp();
@@ -919,15 +949,16 @@ exports.seedCreditRules = wrapAdminHttpFunction(async (req: Request, res: Respon
 	res.json({ seeded, message: `Seeded ${seeded} new credit rules` });
 });
 
-// HTTP endpoint for tracking daily login (called by client on app open)
-exports.trackDailyLogin = wrapAdminHttpFunction(async (req: Request, res: Response) => {
-	const { userId, sourceApp } = req.body;
-	if (!userId) {
-		res.status(400).json({ error: 'userId is required' });
+// HTTP endpoint for tracking daily login (called by client on app open).
+// This is a per-user endpoint, NOT an admin one: it only requires a valid
+// Firebase ID token and always tracks the *authenticated* user (the token uid),
+// never a userId supplied in the request body.
+exports.trackDailyLogin = wrapHttpFunction(async (req: Request, res: Response) => {
+	const uid = await verifyAuthToken(req, res);
+	if (!uid) return;
 
-		return;
-	}
-	await trackDailyLogin(userId, sourceApp || 'main');
+	const { sourceApp } = req.body ?? {};
+	await trackDailyLogin(uid, sourceApp || 'main');
 	res.json({ success: true });
 });
 
