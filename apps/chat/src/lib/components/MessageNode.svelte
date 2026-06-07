@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { slide, fade } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { fade } from 'svelte/transition';
+	import { slideFade } from '$lib/transitions';
 	import Self from './MessageNode.svelte';
 	import { StatementType, DialogicType } from '@freedi/shared-types';
 	import type { TreeNode } from '$lib/stores/messages';
@@ -33,10 +33,17 @@
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
 
 	const sorted = $derived(sortChildren(node.children));
+	const hasChildren = $derived(node.children.length > 0 && !isQuestion);
 	const truncate = $derived(node.depth >= maxDepth && node.children.length > 0);
 
 	let open = $state(true);
 	let showReply = $state(false);
+
+	// Derived flags so each transition element is the DIRECT child of its own
+	// `{#if}` — otherwise `transition:…|local` is suppressed when an ancestor
+	// block toggles (and the collapse/expand would snap instead of animate).
+	const showChildren = $derived(open && hasChildren && !truncate);
+	const showContinue = $derived(open && hasChildren && truncate);
 </script>
 
 <article class="node">
@@ -121,24 +128,24 @@
 	</div>
 
 	{#if showReply && scored && !truncate}
-		<div class="node__reply" transition:slide|local={{ duration: 220, easing: cubicOut }}>
+		<div class="node__reply" transition:slideFade|local={{ duration: 240 }}>
 			<Composer parentId={s.statementId} parentType={s.statementType} {signedIn} />
 		</div>
 	{/if}
 
-	{#if open && node.children.length > 0 && !isQuestion}
-		{#if truncate}
-			<a class="node__continue" href={`/q/${s.statementId}`}>
-				Continue thread ({node.children.length}
-				{node.children.length === 1 ? 'reply' : 'replies'}) →
-			</a>
-		{:else}
-			<div class="node__children" transition:slide|local={{ duration: 300, easing: cubicOut }}>
-				{#each sorted as child (child.statement.statementId)}
-					<Self node={child} {signedIn} {currentUid} {myEvaluations} {maxDepth} />
-				{/each}
-			</div>
-		{/if}
+	{#if showContinue}
+		<a class="node__continue" href={`/q/${s.statementId}`}>
+			Continue thread ({node.children.length}
+			{node.children.length === 1 ? 'reply' : 'replies'}) →
+		</a>
+	{/if}
+
+	{#if showChildren}
+		<div class="node__children" transition:slideFade|local={{ duration: 320 }}>
+			{#each sorted as child (child.statement.statementId)}
+				<Self node={child} {signedIn} {currentUid} {myEvaluations} {maxDepth} />
+			{/each}
+		</div>
 	{/if}
 </article>
 
@@ -175,7 +182,6 @@
 		}
 
 		&__main {
-			@include slide-up;
 			min-width: 0;
 		}
 
@@ -308,7 +314,6 @@
 
 		&__reply {
 			margin: var(--space-sm) 0 0;
-			@include fade-in;
 		}
 
 		&__children {

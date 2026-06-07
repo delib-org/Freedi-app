@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { slideFade } from '$lib/transitions';
 
 	// AI thread summary + revision (architecture.md §2). Lazily calls the
 	// `generateDialecticalRevision` / `acceptDialecticalRevision` callables.
@@ -71,7 +70,7 @@
 			<div
 				class="ai__panel"
 				data-digital-source="TrainedAlgorithmicMediaDigitalSource"
-				transition:slide|local={{ duration: 250, easing: cubicOut }}
+				transition:slideFade|local={{ duration: 260 }}
 			>
 				{#if error}
 					<p class="ai__error">{error}</p>
