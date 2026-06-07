@@ -30,30 +30,35 @@
 <style lang="scss">
 	.eval {
 		display: inline-flex;
-		gap: var(--space-xs);
+		gap: 2px;
 		margin: 0;
+		padding: 2px;
+		background: var(--eval-bg);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-pill);
+
 		&__btn {
-			border: 1px solid var(--border);
-			background: var(--bg-card);
+			border: 1px solid transparent;
+			background: transparent;
 			color: var(--text-muted);
-			border-radius: var(--radius-sm);
-			width: 30px;
-			height: 30px;
+			border-radius: var(--radius-pill);
+			width: 26px;
+			height: 26px;
 			cursor: pointer;
-			font-size: 0.8rem;
+			font-size: 0.7rem;
 			line-height: 1;
+			transition: all 0.15s var(--ease-spring);
 
 			&:hover {
-				border-color: var(--border-strong);
+				background: var(--eval-btn);
+				transform: scale(1.12);
 			}
 			&--up.active {
 				color: var(--strengthen);
-				border-color: var(--strengthen);
 				background: var(--strengthen-soft);
 			}
 			&--down.active {
 				color: var(--critique);
-				border-color: var(--critique);
 				background: var(--critique-soft);
 			}
 		}

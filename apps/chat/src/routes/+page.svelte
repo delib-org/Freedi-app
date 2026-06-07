@@ -45,22 +45,31 @@
 </main>
 
 <style lang="scss">
+	@use '../styles/mixins' as *;
+
 	.hero {
 		margin-bottom: var(--space-xl);
+		@include slide-up;
+
 		h1 {
-			font-size: 2rem;
+			font-size: 2.4rem;
+			@include text-gradient;
+		}
+		p {
+			font-size: 1.05rem;
 		}
 		&__cta {
+			@include pill-button;
 			display: inline-block;
 			margin-top: var(--space-md);
-			background: var(--accent);
-			color: var(--text-inverse);
-			border-radius: var(--radius-pill);
+			background: var(--accent-gradient);
+			color: #fff;
 			padding: var(--space-sm) var(--space-lg);
-			font-weight: 600;
+			box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+
 			&:hover {
 				text-decoration: none;
-				background: var(--accent-dark);
+				box-shadow: 0 6px 22px rgba(99, 102, 241, 0.5);
 			}
 		}
 	}
@@ -72,14 +81,17 @@
 		gap: var(--space-md);
 	}
 	.card {
-		background: var(--bg-card);
-		border: 1px solid var(--border);
+		@include glass;
 		border-radius: var(--radius-md);
-		padding: var(--space-md);
-		box-shadow: var(--shadow-card);
+		padding: var(--space-lg);
+		transition: transform 0.2s var(--ease-spring), border-color 0.2s;
 
+		&:hover {
+			transform: translateY(-2px);
+			border-color: rgba(99, 102, 241, 0.4);
+		}
 		&__title {
-			font-size: 1.15rem;
+			font-size: 1.2rem;
 			margin: 0 0 var(--space-xs);
 			color: var(--text-body);
 		}
@@ -87,7 +99,7 @@
 			display: flex;
 			gap: var(--space-xs);
 			font-size: 0.85rem;
-			margin-bottom: var(--space-sm);
+			margin-bottom: var(--space-md);
 		}
 	}
 	.empty {

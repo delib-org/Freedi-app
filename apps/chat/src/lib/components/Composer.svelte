@@ -67,11 +67,12 @@
 {/if}
 
 <style lang="scss">
+	@use '../../styles/mixins' as *;
+
 	.composer {
+		@include glass;
 		display: grid;
 		gap: var(--space-sm);
-		background: var(--bg-card);
-		border: 1px solid var(--border);
 		border-radius: var(--radius-md);
 		padding: var(--space-md);
 
@@ -83,60 +84,79 @@
 		textarea {
 			width: 100%;
 			resize: vertical;
-			border: 1px solid var(--border);
-			border-radius: var(--radius-sm);
-			padding: var(--space-sm);
+			border: 1px solid var(--glass-border);
+			border-radius: var(--radius-md);
+			padding: var(--space-sm) var(--space-md);
 			font: inherit;
+			font-size: 0.95rem;
 			color: var(--text-body);
-			background: var(--bg-page);
+			background: var(--eval-bg);
+			outline: none;
+			transition: border-color 0.2s, background 0.2s;
+
+			&:focus {
+				border-color: rgba(99, 102, 241, 0.5);
+				background: var(--bubble-other);
+			}
+			&::placeholder {
+				color: var(--text-muted);
+			}
 		}
 		&__actions {
 			display: flex;
 			align-items: center;
 			justify-content: flex-end;
-			gap: var(--space-sm);
+			gap: var(--space-md);
 		}
 		&__hint {
 			font-size: 0.8rem;
+			margin-right: auto;
 		}
 		&__submit {
-			background: var(--accent);
-			color: var(--text-inverse);
-			border: none;
-			border-radius: var(--radius-pill);
+			@include pill-button;
+			background: var(--accent-gradient);
+			color: #fff;
 			padding: var(--space-sm) var(--space-lg);
-			font-weight: 600;
-			cursor: pointer;
+			box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+
 			&:hover {
-				background: var(--accent-dark);
+				box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
 			}
 		}
 	}
 	.pill {
-		font-size: 0.78rem;
-		padding: 4px 12px;
-		border-radius: var(--radius-pill);
-		border: 1px solid var(--border);
+		font-size: 0.75rem;
+		padding: 5px 14px;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--glass-border);
+		background: var(--eval-bg);
+		color: var(--text-muted);
 		cursor: pointer;
 		user-select: none;
+		transition: all 0.2s;
 		input {
 			position: absolute;
 			opacity: 0;
 			width: 0;
 			height: 0;
 		}
+		&:hover {
+			color: var(--text-body);
+			background: var(--eval-btn);
+		}
 		&.active {
 			border-color: var(--accent);
-			background: var(--bg-muted);
+			background: var(--eval-btn);
+			color: var(--text-body);
 			font-weight: 600;
 		}
 		&--strengthen.active {
-			border-color: var(--strengthen);
+			border-color: var(--strengthen-border);
 			color: var(--strengthen);
 			background: var(--strengthen-soft);
 		}
 		&--critique.active {
-			border-color: var(--critique);
+			border-color: var(--critique-border);
 			color: var(--critique);
 			background: var(--critique-soft);
 		}

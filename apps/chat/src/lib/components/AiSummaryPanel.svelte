@@ -87,46 +87,61 @@
 {/if}
 
 <style lang="scss">
+	@use '../../styles/mixins' as *;
+
 	.ai {
 		margin-top: var(--space-sm);
 		&__trigger {
-			background: none;
-			border: 1px solid var(--border);
-			border-radius: var(--radius-pill);
-			padding: 2px 12px;
-			font-size: 0.78rem;
-			cursor: pointer;
+			@include pill-button;
+			background: var(--eval-bg);
+			border: 1px solid var(--glass-border);
+			padding: 4px 14px;
+			font-size: 0.75rem;
 			color: var(--accent);
+
+			&:hover {
+				border-color: var(--accent);
+			}
 		}
 		&__panel {
+			@include glass;
+			@include fade-in;
 			margin-top: var(--space-sm);
-			background: var(--bg-muted);
-			border: 1px solid var(--border);
+			border: 1px solid var(--accent);
 			border-radius: var(--radius-md);
 			padding: var(--space-md);
+			box-shadow: 0 4px 18px rgba(99, 102, 241, 0.15);
 		}
 		&__h {
 			margin: var(--space-sm) 0 var(--space-xs);
-			font-size: 0.8rem;
+			font-size: 0.65rem;
+			font-weight: 700;
 			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: var(--text-muted);
+			letter-spacing: 0.05em;
+			color: var(--accent);
+
+			&:first-child {
+				margin-top: 0;
+			}
 		}
 		&__suggestion {
-			background: rgba(230, 168, 23, 0.12);
-			border-left: 3px solid var(--c-mid);
-			padding: var(--space-sm);
+			background: var(--amber-soft);
+			border-left: 3px solid var(--amber-dark);
+			padding: var(--space-sm) var(--space-md);
 			border-radius: var(--radius-sm);
+			font-style: italic;
 		}
 		&__accept {
+			@include pill-button;
 			margin-top: var(--space-sm);
-			background: var(--strengthen);
-			color: var(--text-inverse);
-			border: none;
-			border-radius: var(--radius-pill);
+			background: var(--amber-dark);
+			color: #fff;
 			padding: var(--space-xs) var(--space-lg);
-			font-weight: 600;
-			cursor: pointer;
+			font-size: 0.78rem;
+
+			&:hover {
+				background: var(--amber);
+			}
 		}
 		&__error {
 			color: var(--critique);

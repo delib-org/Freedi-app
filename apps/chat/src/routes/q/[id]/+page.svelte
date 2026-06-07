@@ -101,27 +101,41 @@
 </main>
 
 <style lang="scss">
+	@use '../../../styles/mixins' as *;
+
 	.breadcrumb {
 		font-size: 0.85rem;
 		margin-bottom: var(--space-md);
 	}
 	.q {
+		@include glass;
+		@include slide-up;
 		margin-bottom: var(--space-lg);
+		padding: var(--space-lg);
+		border-radius: var(--radius-md);
+
 		&__title {
-			font-size: 1.6rem;
+			font-size: 1.7rem;
+			margin-bottom: var(--space-sm);
 		}
 		&__meta {
 			display: flex;
 			gap: var(--space-xs);
 			font-size: 0.85rem;
-			margin-bottom: var(--space-sm);
+			margin-bottom: var(--space-md);
 		}
 	}
 	.thread {
 		margin-bottom: var(--space-xl);
 	}
-	.add__heading {
-		font-size: 1rem;
-		margin-bottom: var(--space-sm);
+	.add {
+		@include glass;
+		padding: var(--space-lg);
+		border-radius: var(--radius-md);
+
+		&__heading {
+			font-size: 1rem;
+			margin-bottom: var(--space-md);
+		}
 	}
 </style>
