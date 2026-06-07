@@ -47,17 +47,26 @@ export async function firestore(): Promise<Firestore> {
 	if (!dbPromise) {
 		dbPromise = (async () => {
 			const app = await getApp();
-			const { getFirestore, connectFirestoreEmulator } = await import('firebase/firestore');
-			const db = getFirestore(app);
+			const { getFirestore, initializeFirestore, connectFirestoreEmulator } = await import(
+				'firebase/firestore'
+			);
+
 			if (isLocalhost()) {
+				// Use 127.0.0.1 (not 'localhost'): browsers often resolve 'localhost'
+				// to IPv6 ::1, but the emulator listens on IPv4, so the listener never
+				// connects. Long polling additionally avoids the emulator's flaky
+				// WebChannel bidi stream.
+				const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 				try {
-					connectFirestoreEmulator(db, 'localhost', 8081);
+					connectFirestoreEmulator(db, '127.0.0.1', 8081);
 				} catch {
 					/* already connected */
 				}
+
+				return db;
 			}
 
-			return db;
+			return getFirestore(app);
 		})();
 	}
 
@@ -73,7 +82,7 @@ export async function auth(): Promise<Auth> {
 			const a = getAuth(app);
 			if (isLocalhost()) {
 				try {
-					connectAuthEmulator(a, 'http://localhost:9099', { disableWarnings: true });
+					connectAuthEmulator(a, 'http://127.0.0.1:9099', { disableWarnings: true });
 				} catch {
 					/* already connected */
 				}
