@@ -96,6 +96,30 @@ export function assertCanRead(root: Statement, user: { uid: string } | null): vo
 	if (!members.includes(user.uid)) throw error(403, 'You are not a member of this conversation');
 }
 
+/**
+ * The signed-in user's own evaluations for a set of statements, keyed by
+ * statementId → value. evaluationId = `uid--statementId` (one multi-get).
+ */
+export async function getMyEvaluations(
+	uid: string,
+	statementIds: string[],
+): Promise<Record<string, number>> {
+	if (statementIds.length === 0) return {};
+	const refs = statementIds.map((id) =>
+		adminDb.collection(Collections.evaluations).doc(`${uid}--${id}`),
+	);
+	const snaps = await adminDb.getAll(...refs);
+	const out: Record<string, number> = {};
+	for (const snap of snaps) {
+		if (snap.exists) {
+			const v = snap.data()?.evaluation;
+			if (typeof v === 'number') out[snap.data()?.statementId as string] = v;
+		}
+	}
+
+	return out;
+}
+
 /** Discovery query: latest public roots (§6 screen 1). */
 export async function loadDiscovery(limit = 30): Promise<Statement[]> {
 	const snap = await adminDb

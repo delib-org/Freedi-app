@@ -86,7 +86,12 @@
 
 	<section class="thread" aria-label="Answers and evidence">
 		{#each sortedTree as node (node.statement.statementId)}
-			<MessageNode {node} signedIn={data.signedIn} currentUid={data.currentUid} />
+			<MessageNode
+				{node}
+				signedIn={data.signedIn}
+				currentUid={data.currentUid}
+				myEvaluations={data.myEvaluations}
+			/>
 		{/each}
 	</section>
 

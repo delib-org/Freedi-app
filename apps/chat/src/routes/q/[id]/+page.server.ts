@@ -7,8 +7,8 @@
  */
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { Visibility } from '@freedi/shared-types';
-import { loadConversation } from '$lib/server/conversation';
+import { Visibility, StatementType } from '@freedi/shared-types';
+import { loadConversation, getMyEvaluations } from '$lib/server/conversation';
 import { sendMessage, evaluate } from '$lib/server/writeActions';
 import type { ComposerChoice } from '$lib/chat/node';
 
@@ -17,10 +17,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const visibility = root.visibility ?? Visibility.public;
 
+	// The signed-in user's own votes, so the face rater can highlight them.
+	let myEvaluations: Record<string, number> = {};
+	if (locals.user) {
+		const scoredIds = statements
+			.filter(
+				(s) =>
+					s.statementType === StatementType.option || s.statementType === StatementType.evidence,
+			)
+			.map((s) => s.statementId);
+		myEvaluations = await getMyEvaluations(locals.user.uid, scoredIds);
+	}
+
 	return {
 		root,
 		statements,
 		visibility,
+		myEvaluations,
 		indexable: visibility === Visibility.public,
 		signedIn: Boolean(locals.user),
 		currentUid: locals.user?.uid ?? null,

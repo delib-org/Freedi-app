@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { slide } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
+
 	// AI thread summary + revision (architecture.md §2). Lazily calls the
 	// `generateDialecticalRevision` / `acceptDialecticalRevision` callables.
 	// AI-authored text is marked for SEO `digitalSourceType`.
@@ -65,7 +68,11 @@
 		</button>
 
 		{#if open}
-			<div class="ai__panel" data-digital-source="TrainedAlgorithmicMediaDigitalSource">
+			<div
+				class="ai__panel"
+				data-digital-source="TrainedAlgorithmicMediaDigitalSource"
+				transition:slide|local={{ duration: 250, easing: cubicOut }}
+			>
 				{#if error}
 					<p class="ai__error">{error}</p>
 				{:else if busy && !suggestion}
@@ -105,7 +112,6 @@
 		}
 		&__panel {
 			@include glass;
-			@include fade-in;
 			margin-top: var(--space-sm);
 			border: 1px solid var(--accent);
 			border-radius: var(--radius-md);

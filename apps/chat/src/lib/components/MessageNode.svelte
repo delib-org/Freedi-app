@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition';
+	import { slide, fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import Self from './MessageNode.svelte';
 	import { StatementType, DialogicType } from '@freedi/shared-types';
 	import type { TreeNode } from '$lib/stores/messages';
@@ -14,9 +15,15 @@
 		node,
 		signedIn = false,
 		currentUid = null,
+		myEvaluations = {},
 		maxDepth = 4,
-	}: { node: TreeNode; signedIn?: boolean; currentUid?: string | null; maxDepth?: number } =
-		$props();
+	}: {
+		node: TreeNode;
+		signedIn?: boolean;
+		currentUid?: string | null;
+		myEvaluations?: Record<string, number>;
+		maxDepth?: number;
+	} = $props();
 
 	const s = $derived(node.statement);
 	const isQuestion = $derived(s.statementType === StatementType.question);
@@ -39,6 +46,7 @@
 				class="node__thread"
 				aria-label={open ? 'Collapse thread' : 'Expand thread'}
 				onclick={() => (open = !open)}
+				transition:fade|local={{ duration: 150 }}
 			></button>
 		{/if}
 
@@ -75,7 +83,10 @@
 				<div class="node__meta">
 					<div class="node__meta-left">
 						{#if scored}
-							<EvaluationBar statementId={s.statementId} />
+							<EvaluationBar
+								statementId={s.statementId}
+								myEvaluation={myEvaluations[s.statementId] ?? null}
+							/>
 						{/if}
 					</div>
 					<div class="node__actions">
@@ -110,7 +121,7 @@
 	</div>
 
 	{#if showReply && scored && !truncate}
-		<div class="node__reply">
+		<div class="node__reply" transition:slide|local={{ duration: 220, easing: cubicOut }}>
 			<Composer parentId={s.statementId} parentType={s.statementType} {signedIn} />
 		</div>
 	{/if}
@@ -122,9 +133,9 @@
 				{node.children.length === 1 ? 'reply' : 'replies'}) →
 			</a>
 		{:else}
-			<div class="node__children" transition:slide|local={{ duration: 250 }}>
+			<div class="node__children" transition:slide|local={{ duration: 300, easing: cubicOut }}>
 				{#each sorted as child (child.statement.statementId)}
-					<Self node={child} {signedIn} {currentUid} {maxDepth} />
+					<Self node={child} {signedIn} {currentUid} {myEvaluations} {maxDepth} />
 				{/each}
 			</div>
 		{/if}
