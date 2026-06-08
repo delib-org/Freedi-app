@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { cubicOut } from 'svelte/easing';
 	import { slideFade } from '$lib/transitions';
 	import Self from './MessageNode.svelte';
 	import { StatementType, DialogicType } from '@freedi/shared-types';
-	import type { TreeNode } from '$lib/stores/messages';
+	import type { SortMode, TreeNode } from '$lib/stores/messages';
 	import { sortChildren } from '$lib/stores/messages';
 	import { evalStatsOf } from '$lib/chat/node';
 	import EvidenceBadge from './EvidenceBadge.svelte';
@@ -22,6 +24,7 @@
 		maxDepth = 4,
 		collapseVersion = 0,
 		collapseTarget = true,
+		sortMode = 'agreement',
 	}: {
 		node: TreeNode;
 		signedIn?: boolean;
@@ -30,6 +33,7 @@
 		maxDepth?: number;
 		collapseVersion?: number;
 		collapseTarget?: boolean;
+		sortMode?: SortMode;
 	} = $props();
 
 	const s = $derived(node.statement);
@@ -42,7 +46,7 @@
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
 	const evalStats = $derived(evalStatsOf(s));
 
-	const sorted = $derived(sortChildren(node.children));
+	const sorted = $derived(sortChildren(node.children, sortMode));
 	const hasChildren = $derived(node.children.length > 0 && !isQuestion);
 	const truncate = $derived(node.depth >= maxDepth && node.children.length > 0);
 
@@ -237,15 +241,18 @@
 	{#if showChildren}
 		<div class="node__children" transition:slideFade|local={{ duration: 320 }}>
 			{#each sorted as child (child.statement.statementId)}
-				<Self
-					node={child}
-					{signedIn}
-					{currentUid}
-					{myEvaluations}
-					{maxDepth}
-					{collapseVersion}
-					{collapseTarget}
-				/>
+				<div class="node__child" animate:flip={{ duration: 350, easing: cubicOut }}>
+					<Self
+						node={child}
+						{signedIn}
+						{currentUid}
+						{myEvaluations}
+						{maxDepth}
+						{collapseVersion}
+						{collapseTarget}
+						{sortMode}
+					/>
+				</div>
 			{/each}
 		</div>
 	{/if}

@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { flip } from 'svelte/animate';
+	import { cubicOut } from 'svelte/easing';
 	import { StatementType } from '@freedi/shared-types';
 	import type { Statement } from '@freedi/shared-types';
 	import type { PageData } from './$types';
-	import { buildTree, sortChildren, type TreeNode } from '$lib/stores/messages';
+	import { buildTree, sortChildren, type SortMode, type TreeNode } from '$lib/stores/messages';
 	import { buildQaPage, serializeJsonLd } from '$lib/seo/structuredData';
 	import MessageNode from '$lib/components/MessageNode.svelte';
+	import SortMenu from '$lib/components/SortMenu.svelte';
 	import Composer from '$lib/components/Composer.svelte';
 	import ConvergenceMeter from '$lib/components/ConvergenceMeter.svelte';
 	import { subscribeToConversation } from '$lib/realtime';
@@ -19,7 +22,11 @@
 
 	const root = $derived(data.root);
 	const tree = $derived(buildTree(statements, root.statementId));
-	const sortedTree = $derived(sortChildren(tree));
+
+	// Active sort mode, shared with every MessageNode so nested levels sort alike.
+	let sortMode = $state<SortMode>('agreement');
+	const sortedTree = $derived(sortChildren(tree, sortMode));
+	const canSort = $derived(sortedTree.length > 1);
 	const options = $derived(
 		statements.filter(
 			(s) => s.parentId === root.statementId && s.statementType === StatementType.option,
@@ -127,8 +134,11 @@
 		</header>
 
 		<section class="conversation__thread" aria-label="Answers and evidence">
-			{#if hasThreads || hasQuestions}
+			{#if hasThreads || hasQuestions || canSort}
 				<div class="conversation__tools">
+					{#if canSort && !questionsOnly}
+						<SortMenu mode={sortMode} onChange={(m) => (sortMode = m)} />
+					{/if}
 					{#if hasQuestions}
 						<button
 							class="conversation__tool conversation__tool--toggle"
@@ -190,14 +200,17 @@
 				</p>
 			{/if}
 			{#each displayTree as node (node.statement.statementId)}
-				<MessageNode
-					{node}
-					signedIn={data.signedIn}
-					currentUid={data.currentUid}
-					myEvaluations={data.myEvaluations}
-					{collapseVersion}
-					{collapseTarget}
-				/>
+				<div class="conversation__item" animate:flip={{ duration: 350, easing: cubicOut }}>
+					<MessageNode
+						{node}
+						signedIn={data.signedIn}
+						currentUid={data.currentUid}
+						myEvaluations={data.myEvaluations}
+						{collapseVersion}
+						{collapseTarget}
+						{sortMode}
+					/>
+				</div>
 			{/each}
 		</section>
 

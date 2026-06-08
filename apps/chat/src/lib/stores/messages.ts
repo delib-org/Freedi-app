@@ -40,15 +40,53 @@ export function buildTree(statements: Statement[], rootId: string): TreeNode[] {
 	return build(rootId, 0);
 }
 
-/** Convenience: sort a node's children — options by C desc, others by createdAt asc. */
-export function sortChildren(nodes: TreeNode[]): TreeNode[] {
-	return [...nodes].sort((a, b) => {
-		const ca = a.statement.corroborationScore;
-		const cb = b.statement.corroborationScore;
-		if (typeof ca === 'number' && typeof cb === 'number' && ca !== cb) {
-			return cb - ca;
-		}
+/** Sort modes offered by the conversation toolbar (mirrors the main app's `SortType`). */
+export type SortMode = 'agreement' | 'newest' | 'discussed';
 
-		return (a.statement.createdAt ?? 0) - (b.statement.createdAt ?? 0);
-	});
+export interface SortOption {
+	id: SortMode;
+	label: string;
+}
+
+/** Order here is the fan-out order in the sort menu. `agreement` is the default. */
+export const SORT_OPTIONS: SortOption[] = [
+	{ id: 'agreement', label: 'Agreement' },
+	{ id: 'newest', label: 'New' },
+	{ id: 'discussed', label: 'Discussed' },
+];
+
+/** Raw evaluation count is denormalized onto the statement, not in the shared schema. */
+function evalCountOf(node: TreeNode): number {
+	const x = node.statement as Statement & { evaluationCount?: number };
+
+	return typeof x.evaluationCount === 'number' ? x.evaluationCount : 0;
+}
+
+const byCreatedAtAsc = (a: TreeNode, b: TreeNode): number =>
+	(a.statement.createdAt ?? 0) - (b.statement.createdAt ?? 0);
+
+/**
+ * Sort a node's children by the chosen mode. `agreement` (the default) keeps the
+ * original behaviour: corroboration desc, then oldest-first as a stable tiebreak.
+ */
+export function sortChildren(nodes: TreeNode[], mode: SortMode = 'agreement'): TreeNode[] {
+	const arr = [...nodes];
+
+	switch (mode) {
+		case 'newest':
+			return arr.sort((a, b) => (b.statement.createdAt ?? 0) - (a.statement.createdAt ?? 0));
+		case 'discussed':
+			return arr.sort((a, b) => evalCountOf(b) - evalCountOf(a) || byCreatedAtAsc(a, b));
+		case 'agreement':
+		default:
+			return arr.sort((a, b) => {
+				const ca = a.statement.corroborationScore;
+				const cb = b.statement.corroborationScore;
+				if (typeof ca === 'number' && typeof cb === 'number' && ca !== cb) {
+					return cb - ca;
+				}
+
+				return byCreatedAtAsc(a, b);
+			});
+	}
 }
