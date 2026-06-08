@@ -8,6 +8,7 @@
 	import CorroborationBar from './CorroborationBar.svelte';
 	import EvidenceBadge from './EvidenceBadge.svelte';
 	import EvaluationBar from './EvaluationBar.svelte';
+	import CorrectnessRating from './CorrectnessRating.svelte';
 	import Composer from './Composer.svelte';
 	import AiSummaryPanel from './AiSummaryPanel.svelte';
 	import { generateSummary, acceptRevision, type SummaryResult } from '$lib/aiSummary';
@@ -138,7 +139,12 @@
 
 				<div class="node__meta">
 					<div class="node__meta-left">
-						{#if scored}
+						{#if isEvidence}
+							<CorrectnessRating
+								statementId={s.statementId}
+								value={myEvaluations[s.statementId] ?? null}
+							/>
+						{:else if isOption}
 							<EvaluationBar
 								statementId={s.statementId}
 								myEvaluation={myEvaluations[s.statementId] ?? null}
