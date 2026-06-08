@@ -16,7 +16,7 @@ import {
 	getRandomUID,
 } from '@freedi/shared-types';
 import type { Statement, User } from '@freedi/shared-types';
-import { assertAllowedEdge, assertNoCycle } from '@freedi/evidence';
+import { assertAllowedEdge } from '@freedi/evidence';
 import { adminDb } from './firebaseAdmin';
 import { toNodeKind, resolveKind, composerChoicesFor, type ComposerChoice } from '$lib/chat/node';
 import { getStatement } from './conversation';
@@ -109,9 +109,9 @@ export async function sendMessage(user: SessionUser, input: SendMessageInput): P
 
 	const { statementType, dialecticType } = resolveKind(kind);
 
-	// Validate the containment edge + cycle guard (§1.1).
+	// Validate the containment edge (§1.1). No cycle check is needed: the child
+	// is brand-new with a fresh id, so it can't already be an ancestor.
 	assertAllowedEdge(toNodeKind(parent.statementType), toNodeKind(statementType));
-	assertNoCycle(parentId, [...(parent.parents ?? []), parentId]);
 
 	const base = createStatementObject({
 		statement: text.trim(),

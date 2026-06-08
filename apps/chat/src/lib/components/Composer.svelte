@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { StatementType } from '@freedi/shared-types';
 	import { composerChoicesFor, type ComposerChoice } from '$lib/chat/node';
 
@@ -34,7 +35,20 @@
 </script>
 
 {#if choices.length}
-	<form method="POST" action="?/sendMessage" class="composer">
+	<form
+		method="POST"
+		action="?/sendMessage"
+		class="composer"
+		use:enhance={() => {
+			return async ({ result, update }) => {
+				if (result.type === 'success') {
+					await update(); // resets the textarea + invalidates so the new node shows
+				} else {
+					await update({ reset: false });
+				}
+			};
+		}}
+	>
 		<input type="hidden" name="parentId" value={parentId} />
 		<div class="composer__pills" role="radiogroup" aria-label="Reply type">
 			{#each choices as c (c)}
