@@ -3,7 +3,7 @@
 	import { StatementType } from '@freedi/shared-types';
 	import type { Statement } from '@freedi/shared-types';
 	import type { PageData } from './$types';
-	import { buildTree, sortChildren } from '$lib/stores/messages';
+	import { buildTree, sortChildren, type TreeNode } from '$lib/stores/messages';
 	import { buildQaPage, serializeJsonLd } from '$lib/seo/structuredData';
 	import MessageNode from '$lib/components/MessageNode.svelte';
 	import Composer from '$lib/components/Composer.svelte';
@@ -43,6 +43,26 @@
 		collapseTarget = open;
 		collapseVersion += 1;
 	}
+
+	// Questions-only filter: when on, flatten the tree to just its question nodes
+	// (sub-questions at any depth) so the thread reads as a navigable outline.
+	let questionsOnly = $state(false);
+
+	function collectQuestions(nodes: TreeNode[]): TreeNode[] {
+		const out: TreeNode[] = [];
+		for (const n of nodes) {
+			if (n.statement.statementType === StatementType.question) {
+				out.push({ ...n, depth: 0, children: [] });
+			}
+			out.push(...collectQuestions(n.children));
+		}
+
+		return out;
+	}
+
+	const questionNodes = $derived(collectQuestions(sortedTree));
+	const hasQuestions = $derived(questionNodes.length > 0);
+	const displayTree = $derived(questionsOnly ? questionNodes : sortedTree);
 
 	const jsonLd = $derived(
 		data.indexable
@@ -99,16 +119,69 @@
 		</header>
 
 		<section class="conversation__thread" aria-label="Answers and evidence">
-			{#if hasThreads}
+			{#if hasThreads || hasQuestions}
 				<div class="conversation__tools">
-					<button class="conversation__tool" onclick={() => setAll(true)}>Expand all</button>
-					<button class="conversation__tool" onclick={() => setAll(false)}>Collapse all</button>
+					{#if hasQuestions}
+						<button
+							class="conversation__tool conversation__tool--toggle"
+							class:active={questionsOnly}
+							aria-pressed={questionsOnly}
+							title={questionsOnly ? 'Show everything' : 'Show only questions'}
+							onclick={() => (questionsOnly = !questionsOnly)}
+						>
+							<svg viewBox="0 0 24 24" aria-hidden="true" class="conversation__icon">
+								<path
+									d="M9.1 9a3 3 0 1 1 4.5 2.6c-.9.5-1.6 1.1-1.6 2.4"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+								/>
+								<circle cx="12" cy="18" r="1.1" fill="currentColor" />
+							</svg>
+							Questions
+						</button>
+					{/if}
+					{#if hasThreads && !questionsOnly}
+						<button class="conversation__tool" onclick={() => setAll(true)}>
+							<svg viewBox="0 0 24 24" aria-hidden="true" class="conversation__icon">
+								<path
+									d="M7 10l5 5 5-5"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+							Expand all
+						</button>
+						<button class="conversation__tool" onclick={() => setAll(false)}>
+							<svg viewBox="0 0 24 24" aria-hidden="true" class="conversation__icon">
+								<path
+									d="M7 14l5-5 5 5"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+							Collapse all
+						</button>
+					{/if}
 				</div>
 			{/if}
-			{#if sortedTree.length === 0}
-				<p class="conversation__empty muted">No answers yet — propose the first option below.</p>
+			{#if displayTree.length === 0}
+				<p class="conversation__empty muted">
+					{#if questionsOnly}
+						No sub-questions yet.
+					{:else}
+						No answers yet — propose the first option below.
+					{/if}
+				</p>
 			{/if}
-			{#each sortedTree as node (node.statement.statementId)}
+			{#each displayTree as node (node.statement.statementId)}
 				<MessageNode
 					{node}
 					signedIn={data.signedIn}
@@ -171,12 +244,17 @@
 
 		&__tools {
 			display: flex;
+			flex-wrap: wrap;
 			justify-content: flex-end;
-			gap: var(--space-sm);
+			gap: var(--space-xs);
+			margin-bottom: var(--space-sm);
 		}
 		&__tool {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.3rem;
 			background: none;
-			border: none;
+			border: 1px solid transparent;
 			color: var(--text-muted);
 			font: inherit;
 			font-size: 0.72rem;
@@ -184,11 +262,24 @@
 			cursor: pointer;
 			padding: var(--space-xs) var(--space-sm);
 			border-radius: var(--radius-sm);
+			transition: color 0.15s, background 0.15s, border-color 0.15s;
 
 			&:hover {
 				color: var(--accent);
 				background: var(--eval-bg);
 			}
+
+			// The Questions filter is a toggle — show its pressed state clearly.
+			&--toggle.active {
+				color: var(--accent);
+				background: var(--eval-bg);
+				border-color: var(--accent);
+			}
+		}
+		&__icon {
+			width: 0.95rem;
+			height: 0.95rem;
+			flex-shrink: 0;
 		}
 		&__empty {
 			padding: var(--space-lg) 0;
