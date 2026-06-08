@@ -14,6 +14,18 @@ import { adminDb } from './firebaseAdmin';
 
 const STATEMENTS = Collections.statements;
 
+/** Don't let an unreachable/hung Firestore hang SSR — bound every admin read. */
+const READ_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+	return Promise.race([
+		promise,
+		new Promise<T>((_, reject) =>
+			setTimeout(() => reject(new Error(`Firestore read timed out: ${label}`)), READ_TIMEOUT_MS),
+		),
+	]);
+}
+
 export interface ConversationLoad {
 	root: Statement;
 	statements: Statement[];
@@ -53,7 +65,7 @@ function toStatement(data: unknown): Statement {
 
 /** Fetch a single statement by id (or null). */
 export async function getStatement(id: string): Promise<Statement | null> {
-	const snap = await adminDb.collection(STATEMENTS).doc(id).get();
+	const snap = await withTimeout(adminDb.collection(STATEMENTS).doc(id).get(), `get ${id}`);
 
 	return snap.exists ? toStatement(snap.data()) : null;
 }
@@ -72,10 +84,10 @@ export async function loadConversation(
 	assertCanRead(root, user);
 
 	// All descendants share topParentId === root.statementId.
-	const snap = await adminDb
-		.collection(STATEMENTS)
-		.where('topParentId', '==', root.statementId)
-		.get();
+	const snap = await withTimeout(
+		adminDb.collection(STATEMENTS).where('topParentId', '==', root.statementId).get(),
+		'conversation subtree',
+	);
 
 	const statements = snap.docs.map((d) => toStatement(d.data()));
 	// Ensure the root itself is present in the flat list.
@@ -108,7 +120,7 @@ export async function getMyEvaluations(
 	const refs = statementIds.map((id) =>
 		adminDb.collection(Collections.evaluations).doc(`${uid}--${id}`),
 	);
-	const snaps = await adminDb.getAll(...refs);
+	const snaps = await withTimeout(adminDb.getAll(...refs), 'my evaluations');
 	const out: Record<string, number> = {};
 	for (const snap of snaps) {
 		if (snap.exists) {
@@ -122,13 +134,16 @@ export async function getMyEvaluations(
 
 /** Discovery query: latest public roots (§6 screen 1). */
 export async function loadDiscovery(limit = 30): Promise<Statement[]> {
-	const snap = await adminDb
-		.collection(STATEMENTS)
-		.where('isRoot', '==', true)
-		.where('visibility', '==', Visibility.public)
-		.orderBy('lastActivityAt', 'desc')
-		.limit(limit)
-		.get();
+	const snap = await withTimeout(
+		adminDb
+			.collection(STATEMENTS)
+			.where('isRoot', '==', true)
+			.where('visibility', '==', Visibility.public)
+			.orderBy('lastActivityAt', 'desc')
+			.limit(limit)
+			.get(),
+		'discovery',
+	);
 
 	return snap.docs.map((d) => toStatement(d.data()));
 }

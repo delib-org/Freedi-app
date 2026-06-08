@@ -26,7 +26,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					s.statementType === StatementType.option || s.statementType === StatementType.evidence,
 			)
 			.map((s) => s.statementId);
-		myEvaluations = await getMyEvaluations(locals.user.uid, scoredIds);
+		try {
+			myEvaluations = await getMyEvaluations(locals.user.uid, scoredIds);
+		} catch (e) {
+			console.error('[chat] my-evaluations load failed:', e instanceof Error ? e.message : e);
+		}
 	}
 
 	return {

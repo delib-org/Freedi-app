@@ -42,6 +42,8 @@
 	--thread-line: rgba(255, 255, 255, 0.1);
 	--eval-bg: rgba(0, 0, 0, 0.3);
 	--eval-btn: rgba(255, 255, 255, 0.06);
+	--inset: rgba(0, 0, 0, 0.15);
+	--header-tint: rgba(255, 255, 255, 0.02);
 
 	// Dialectic polarity
 	--strengthen: #4ade80;
@@ -80,42 +82,50 @@
 	--ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+// Light theme: applied automatically when the OS prefers light AND the user
+// hasn't picked a theme, OR explicitly via the header's ☀️/🌙 toggle
+// (`data-theme="light"`). `data-theme="dark"` forces dark (the :root default).
+@mixin light-theme {
+	--bg-color: #f8fafc;
+	--bg-gradient: radial-gradient(circle at top center, #ffffff 0%, #f1f5f9 100%);
+	--bg-page: #f1f5f9;
+	--bg-card: rgba(255, 255, 255, 0.75);
+	--bg-muted: rgba(0, 0, 0, 0.04);
+	--glass-bg: rgba(255, 255, 255, 0.7);
+	--glass-border: rgba(0, 0, 0, 0.07);
+	--glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	--border: rgba(0, 0, 0, 0.08);
+	--border-strong: rgba(0, 0, 0, 0.16);
+	--text-body: #1e293b;
+	--text-primary: #1e293b;
+	--text-muted: #64748b;
+	--text-secondary: #64748b;
+	--bubble-me: #eef2ff;
+	--bubble-other: #ffffff;
+	--system-msg: rgba(0, 0, 0, 0.05);
+	--thread-line: rgba(0, 0, 0, 0.1);
+	--eval-bg: rgba(0, 0, 0, 0.04);
+	--eval-btn: rgba(0, 0, 0, 0.04);
+	--inset: rgba(0, 0, 0, 0.03);
+	--header-tint: rgba(0, 0, 0, 0.015);
+	--strengthen: #166534;
+	--strengthen-soft: #dcfce7;
+	--strengthen-border: #86efac;
+	--critique: #9d174d;
+	--critique-soft: #fce7f3;
+	--critique-border: #f9a8d4;
+	--c-low: #db2777;
+	--c-mid: #d97706;
+	--c-high: #16a34a;
+}
+
+:root[data-theme='light'] {
+	@include light-theme;
+}
+
 @media (prefers-color-scheme: light) {
-	:root {
-		--bg-color: #f8fafc;
-		--bg-gradient: radial-gradient(circle at top center, #ffffff 0%, #f1f5f9 100%);
-		--bg-page: #f1f5f9;
-		--bg-card: rgba(255, 255, 255, 0.75);
-		--bg-muted: rgba(0, 0, 0, 0.04);
-
-		--glass-bg: rgba(255, 255, 255, 0.7);
-		--glass-border: rgba(0, 0, 0, 0.07);
-		--glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-
-		--border: rgba(0, 0, 0, 0.08);
-		--border-strong: rgba(0, 0, 0, 0.16);
-
-		--text-body: #1e293b;
-		--text-primary: #1e293b;
-		--text-muted: #64748b;
-		--text-secondary: #64748b;
-
-		--bubble-me: #eef2ff;
-		--bubble-other: #ffffff;
-		--system-msg: rgba(0, 0, 0, 0.05);
-		--thread-line: rgba(0, 0, 0, 0.1);
-		--eval-bg: rgba(0, 0, 0, 0.04);
-		--eval-btn: rgba(0, 0, 0, 0.04);
-
-		--strengthen: #166534;
-		--strengthen-soft: #dcfce7;
-		--strengthen-border: #86efac;
-		--critique: #9d174d;
-		--critique-soft: #fce7f3;
-		--critique-border: #f9a8d4;
-
-		--c-low: #db2777;
-		--c-mid: #d97706;
-		--c-high: #16a34a;
+	:root:not([data-theme]) {
+		@include light-theme;
 	}
 }
+

@@ -19,6 +19,7 @@
 	let summary = $state('');
 	let suggestion = $state('');
 	let count = $state(0);
+	let cached = $state(false);
 
 	async function callFn<TReq, TRes>(name: string, data: TReq): Promise<TRes> {
 		const [fns, { httpsCallable }] = await Promise.all([
@@ -36,11 +37,17 @@
 		try {
 			const res = await callFn<
 				{ statementId: string },
-				{ summary: string; improvementSuggestion: string; descendantCount: number }
+				{
+					summary: string;
+					improvementSuggestion: string;
+					descendantCount: number;
+					cached?: boolean;
+				}
 			>('generateDialecticalRevision', { statementId });
 			summary = res.summary;
 			suggestion = res.improvementSuggestion;
 			count = res.descendantCount ?? 0;
+			cached = res.cached ?? false;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to generate';
 		} finally {
@@ -82,7 +89,7 @@
 					<p class="muted">Reading the whole thread…</p>
 				{:else}
 					<h4 class="ai__h">
-						Thread summary{#if count > 0}<span class="ai__count"> · {count} sub-statement{count === 1 ? '' : 's'}</span>{/if}
+						Thread summary{#if count > 0}<span class="ai__count"> · {count} sub-statement{count === 1 ? '' : 's'}</span>{/if}{#if cached}<span class="ai__cached"> · ✓ up to date</span>{/if}
 					</h4>
 					<p class="ai__summary">{summary}</p>
 					<h4 class="ai__h">Suggested revision</h4>
@@ -138,6 +145,12 @@
 		&__count {
 			color: var(--text-muted);
 			font-weight: 500;
+			text-transform: none;
+			letter-spacing: 0;
+		}
+		&__cached {
+			color: var(--strengthen);
+			font-weight: 600;
 			text-transform: none;
 			letter-spacing: 0;
 		}

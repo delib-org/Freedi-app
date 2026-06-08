@@ -75,34 +75,40 @@
 		<a href="/">← All questions</a>
 	</nav>
 
-	<header class="q">
-		<h1 class="q__title">{root.statement}</h1>
-		<div class="q__meta muted">
-			<span>{options.length} option{options.length === 1 ? '' : 's'}</span>
-			<span>· by {root.creator?.displayName ?? 'Anonymous'}</span>
-		</div>
-		<ConvergenceMeter value={root.convergenceIndex ?? 0} />
-	</header>
+	<div class="conversation">
+		<header class="conversation__header">
+			<h1 class="conversation__title">{root.statement}</h1>
+			<div class="conversation__meta muted">
+				<span>{options.length} option{options.length === 1 ? '' : 's'}</span>
+				<span>· {commentCount} comment{commentCount === 1 ? '' : 's'}</span>
+				<span>· by {root.creator?.displayName ?? 'Anonymous'}</span>
+			</div>
+			<ConvergenceMeter value={root.convergenceIndex ?? 0} />
+		</header>
 
-	<section class="thread" aria-label="Answers and evidence">
-		{#each sortedTree as node (node.statement.statementId)}
-			<MessageNode
-				{node}
+		<section class="conversation__thread" aria-label="Answers and evidence">
+			{#if sortedTree.length === 0}
+				<p class="conversation__empty muted">No answers yet — propose the first option below.</p>
+			{/if}
+			{#each sortedTree as node (node.statement.statementId)}
+				<MessageNode
+					{node}
+					signedIn={data.signedIn}
+					currentUid={data.currentUid}
+					myEvaluations={data.myEvaluations}
+				/>
+			{/each}
+		</section>
+
+		<section class="conversation__footer" aria-label="Add to this question">
+			<h2 class="conversation__add-heading">Add to this question</h2>
+			<Composer
+				parentId={root.statementId}
+				parentType={StatementType.question}
 				signedIn={data.signedIn}
-				currentUid={data.currentUid}
-				myEvaluations={data.myEvaluations}
 			/>
-		{/each}
-	</section>
-
-	<section class="add" aria-label="Add to this question">
-		<h2 class="add__heading">Add to this question</h2>
-		<Composer
-			parentId={root.statementId}
-			parentType={StatementType.question}
-			signedIn={data.signedIn}
-		/>
-	</section>
+		</section>
+	</div>
 </main>
 
 <style lang="scss">
@@ -112,35 +118,50 @@
 		font-size: 0.85rem;
 		margin-bottom: var(--space-md);
 	}
-	.q {
+
+	// One cohesive floating "conversation window" (reference chat-container):
+	// glass panel, a header, a slightly inset thread area, and a footer composer.
+	.conversation {
 		@include glass;
 		@include slide-up;
-		margin-bottom: var(--space-lg);
-		padding: var(--space-lg);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
+		overflow: hidden;
 
+		&__header {
+			padding: var(--space-lg);
+			border-bottom: 1px solid var(--glass-border);
+			background: var(--header-tint);
+		}
 		&__title {
-			font-size: 1.7rem;
+			font-size: 1.6rem;
 			margin-bottom: var(--space-sm);
 		}
 		&__meta {
 			display: flex;
+			flex-wrap: wrap;
 			gap: var(--space-xs);
 			font-size: 0.85rem;
 			margin-bottom: var(--space-md);
 		}
-	}
-	.thread {
-		margin-bottom: var(--space-xl);
-	}
-	.add {
-		@include glass;
-		padding: var(--space-lg);
-		border-radius: var(--radius-md);
 
-		&__heading {
-			font-size: 1rem;
+		&__thread {
+			padding: var(--space-md) var(--space-lg) var(--space-lg);
+			background: var(--inset);
+		}
+		&__empty {
+			padding: var(--space-lg) 0;
+			text-align: center;
+		}
+
+		&__footer {
+			padding: var(--space-lg);
+			border-top: 1px solid var(--glass-border);
+			background: var(--header-tint);
+		}
+		&__add-heading {
+			font-size: 0.95rem;
 			margin-bottom: var(--space-md);
+			color: var(--text-muted);
 		}
 	}
 </style>

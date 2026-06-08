@@ -31,10 +31,28 @@ interface RevisionDoc {
 	generatedAt: number;
 	digitalSourceType: 'TrainedAlgorithmicMediaDigitalSource';
 	descendantCount: number;
+	/** Fingerprint of the subtree when this summary was generated (cache key). */
+	subtreeFingerprint: string;
 }
 
 /** Max sub-statements fed to the model (keeps the prompt within token limits). */
 const MAX_DESCENDANTS = 200;
+
+/**
+ * A stable fingerprint of the subtree: count + a hash of every live descendant's
+ * `id:lastUpdate`. Adding, removing, editing, or re-scoring a sub-statement all
+ * bump `lastUpdate` (or change the set), so any real change flips the hash —
+ * letting us skip regeneration when nothing below changed.
+ */
+function subtreeFingerprint(descendants: Statement[]): string {
+	const live = descendants.filter((s) => !s.dialecticSnapshot);
+	const parts = live.map((s) => `${s.statementId}:${s.lastUpdate ?? 0}`).sort();
+	const str = parts.join('|');
+	let h = 5381;
+	for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
+
+	return `${live.length}-${h.toString(36)}`;
+}
 
 /**
  * Build an indented digest of the ENTIRE subtree under `rootId` — every
@@ -103,6 +121,15 @@ export const generateDialecticalRevision = onCall<{ statementId: string }>(
 			.where('parents', 'array-contains', statementId)
 			.get();
 		const descendants = descSnap.docs.map((d) => d.data() as Statement);
+
+		// Skip regeneration if nothing below this claim changed since last time.
+		const fingerprint = subtreeFingerprint(descendants);
+		const existingSnap = await db.collection(REVISIONS).doc(statementId).get();
+		const existing = existingSnap.data() as RevisionDoc | undefined;
+		if (existing && existing.summary && existing.subtreeFingerprint === fingerprint) {
+			return { ...existing, cached: true };
+		}
+
 		const { digest, count } = buildSubtreeDigest(statement, descendants);
 
 		const prompt = `You are an analyst summarising a structured dialectical debate.
@@ -144,10 +171,11 @@ Return:
 			generatedAt: Date.now(),
 			digitalSourceType: 'TrainedAlgorithmicMediaDigitalSource',
 			descendantCount: count,
+			subtreeFingerprint: fingerprint,
 		};
 		await db.collection(REVISIONS).doc(statementId).set(doc);
 
-		return doc;
+		return { ...doc, cached: false };
 	},
 );
 

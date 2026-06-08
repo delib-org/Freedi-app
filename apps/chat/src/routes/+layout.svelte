@@ -9,8 +9,25 @@
 	let { children, data } = $props();
 
 	let signingOut = $state(false);
+	let theme = $state<'dark' | 'light'>('dark');
 
-	onMount(() => initLang());
+	function applyTheme(t: 'dark' | 'light') {
+		theme = t;
+		document.documentElement.setAttribute('data-theme', t);
+		localStorage.setItem('chat.theme', t);
+	}
+
+	function toggleTheme() {
+		applyTheme(theme === 'dark' ? 'light' : 'dark');
+	}
+
+	onMount(() => {
+		initLang();
+		const stored = localStorage.getItem('chat.theme') as 'dark' | 'light' | null;
+		const initial =
+			stored ?? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+		applyTheme(initial);
+	});
 
 	const signInHref = $derived(`/signin?redirectTo=${encodeURIComponent(page.url.pathname)}`);
 
@@ -35,6 +52,12 @@
 
 		<nav class="topbar__nav">
 			<a class="topbar__link" href="/new">Start a question</a>
+			<button
+				class="topbar__theme"
+				onclick={toggleTheme}
+				title="Toggle light / dark"
+				aria-label="Toggle light or dark theme"
+			>{theme === 'dark' ? '☀️' : '🌙'}</button>
 			{#if data.user}
 				<a class="topbar__user" href={`/u/${data.user.uid}`} title="Your profile">
 					{#if data.user.photoURL}
@@ -137,6 +160,23 @@
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;
+		}
+
+		&__theme {
+			width: 34px;
+			height: 34px;
+			border-radius: var(--radius-pill);
+			border: 1px solid var(--glass-border);
+			background: var(--eval-btn);
+			cursor: pointer;
+			font-size: 0.95rem;
+			line-height: 1;
+			transition: transform 0.15s var(--ease-spring), border-color 0.2s;
+
+			&:hover {
+				transform: scale(1.1);
+				border-color: var(--accent);
+			}
 		}
 
 		&__btn {
