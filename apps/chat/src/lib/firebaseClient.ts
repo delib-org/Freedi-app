@@ -32,8 +32,9 @@ let dbPromise: Promise<Firestore> | null = null;
 let authPromise: Promise<Auth> | null = null;
 let functionsPromise: Promise<Functions> | null = null;
 
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
 const isLocalhost = (): boolean =>
-	typeof window !== 'undefined' && window.location.hostname === 'localhost';
+	typeof window !== 'undefined' && LOCAL_HOSTS.has(window.location.hostname);
 
 async function getApp(): Promise<FirebaseApp> {
 	if (!appPromise) {
@@ -116,6 +117,12 @@ export async function functionsClient(): Promise<Functions> {
 	if (!functionsPromise) {
 		functionsPromise = (async () => {
 			const app = await getApp();
+			// Initialize Auth first AND wait for the persisted user to restore, so
+			// the callable attaches the user's ID token (otherwise it calls
+			// anonymously → 401 even when the session cookie says we're signed in).
+			const a = await auth();
+			await a.authStateReady();
+
 			const { getFunctions, connectFunctionsEmulator } = await import('firebase/functions');
 			const fns = getFunctions(app, FUNCTIONS_REGION);
 			if (isLocalhost()) {
@@ -131,4 +138,23 @@ export async function functionsClient(): Promise<Functions> {
 	}
 
 	return functionsPromise;
+}
+
+/** Whether the client Firebase Auth SDK currently has a signed-in user. */
+export async function currentUser(): Promise<{ uid: string } | null> {
+	const a = await auth();
+	await a.authStateReady();
+
+	return a.currentUser ? { uid: a.currentUser.uid } : null;
+}
+
+/** Sign out of both the client Auth SDK and the server session cookie. */
+export async function signOutEverywhere(): Promise<void> {
+	const a = await auth();
+	await a.signOut().catch(() => {
+		/* ignore */
+	});
+	await fetch('/api/session', { method: 'DELETE' }).catch(() => {
+		/* ignore */
+	});
 }
