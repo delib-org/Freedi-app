@@ -53,6 +53,18 @@
 	--critique-soft: rgba(219, 39, 119, 0.15);
 	--critique-border: rgba(219, 39, 119, 0.55);
 
+	// Statement-type identity (mirrors main app: option = wheat, question = blue,
+	// selected option = green)
+	--option: #f5deb3;
+	--option-soft: rgba(245, 222, 179, 0.12);
+	--option-border: rgba(245, 222, 179, 0.45);
+	--question: #38bdf8;
+	--question-soft: rgba(56, 189, 248, 0.1);
+	--question-border: rgba(56, 189, 248, 0.45);
+	--selected: #57c6b2;
+	--selected-soft: rgba(87, 198, 178, 0.15);
+	--selected-border: rgba(87, 198, 178, 0.5);
+
 	// Amber (AI revision)
 	--amber: #f59e0b;
 	--amber-dark: #d97706;
@@ -114,6 +126,15 @@
 	--critique: #9d174d;
 	--critique-soft: #fce7f3;
 	--critique-border: #f9a8d4;
+	--option: #a8824a;
+	--option-soft: rgba(168, 130, 74, 0.1);
+	--option-border: rgba(168, 130, 74, 0.4);
+	--question: #0284c7;
+	--question-soft: rgba(2, 132, 199, 0.08);
+	--question-border: rgba(2, 132, 199, 0.4);
+	--selected: #2f9e8c;
+	--selected-soft: rgba(47, 158, 140, 0.12);
+	--selected-border: rgba(47, 158, 140, 0.45);
 	--c-low: #db2777;
 	--c-mid: #d97706;
 	--c-high: #16a34a;

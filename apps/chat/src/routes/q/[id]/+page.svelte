@@ -32,6 +32,18 @@
 		).length,
 	);
 
+	// Collapse/expand all: broadcast a versioned signal down the tree. Bumping
+	// `collapseVersion` makes every MessageNode adopt `collapseTarget` once, while
+	// still allowing per-node toggling afterwards.
+	let collapseVersion = $state(0);
+	let collapseTarget = $state(true);
+	const hasThreads = $derived(sortedTree.some((n) => n.children.length > 0));
+
+	function setAll(open: boolean) {
+		collapseTarget = open;
+		collapseVersion += 1;
+	}
+
 	const jsonLd = $derived(
 		data.indexable
 			? serializeJsonLd(
@@ -87,6 +99,12 @@
 		</header>
 
 		<section class="conversation__thread" aria-label="Answers and evidence">
+			{#if hasThreads}
+				<div class="conversation__tools">
+					<button class="conversation__tool" onclick={() => setAll(true)}>Expand all</button>
+					<button class="conversation__tool" onclick={() => setAll(false)}>Collapse all</button>
+				</div>
+			{/if}
 			{#if sortedTree.length === 0}
 				<p class="conversation__empty muted">No answers yet — propose the first option below.</p>
 			{/if}
@@ -96,6 +114,8 @@
 					signedIn={data.signedIn}
 					currentUid={data.currentUid}
 					myEvaluations={data.myEvaluations}
+					{collapseVersion}
+					{collapseTarget}
 				/>
 			{/each}
 		</section>
@@ -147,6 +167,28 @@
 		&__thread {
 			padding: var(--space-md) var(--space-lg) var(--space-lg);
 			background: var(--inset);
+		}
+
+		&__tools {
+			display: flex;
+			justify-content: flex-end;
+			gap: var(--space-sm);
+		}
+		&__tool {
+			background: none;
+			border: none;
+			color: var(--text-muted);
+			font: inherit;
+			font-size: 0.72rem;
+			font-weight: 600;
+			cursor: pointer;
+			padding: var(--space-xs) var(--space-sm);
+			border-radius: var(--radius-sm);
+
+			&:hover {
+				color: var(--accent);
+				background: var(--eval-bg);
+			}
 		}
 		&__empty {
 			padding: var(--space-lg) 0;

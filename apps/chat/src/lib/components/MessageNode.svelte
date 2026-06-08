@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { slideFade } from '$lib/transitions';
 	import Self from './MessageNode.svelte';
@@ -19,18 +20,24 @@
 		currentUid = null,
 		myEvaluations = {},
 		maxDepth = 4,
+		collapseVersion = 0,
+		collapseTarget = true,
 	}: {
 		node: TreeNode;
 		signedIn?: boolean;
 		currentUid?: string | null;
 		myEvaluations?: Record<string, number>;
 		maxDepth?: number;
+		collapseVersion?: number;
+		collapseTarget?: boolean;
 	} = $props();
 
 	const s = $derived(node.statement);
 	const isQuestion = $derived(s.statementType === StatementType.question);
 	const isEvidence = $derived(s.statementType === StatementType.evidence);
 	const isOption = $derived(s.statementType === StatementType.option);
+	// A chosen option — mirrors the main app's green "selected" treatment.
+	const isSelected = $derived(isOption && (s.selected === true || s.isChosen === true));
 	const scored = $derived(isOption || isEvidence);
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
 	const evalStats = $derived(evalStatsOf(s));
@@ -41,6 +48,17 @@
 
 	let open = $state(true);
 	let showReply = $state(false);
+
+	// Collapse/expand all: adopt the page-level target whenever its version bumps.
+	// Tracking only the version (not the target) keeps per-node toggling free
+	// between broadcasts.
+	let lastCollapseVersion = untrack(() => collapseVersion);
+	$effect(() => {
+		if (collapseVersion !== lastCollapseVersion) {
+			lastCollapseVersion = collapseVersion;
+			open = collapseTarget;
+		}
+	});
 
 	// AI summary lives next to Collapse — on scored claims that have replies.
 	const canSummarize = $derived(scored && signedIn && node.children.length > 0);
@@ -115,8 +133,12 @@
 					<span class="node__tag node__tag--strengthen">🛡 Strengthen</span>
 				{:else if isEvidence && polarity === DialogicType.critique}
 					<span class="node__tag node__tag--critique">⚡ Critique</span>
+				{:else if isSelected}
+					<span class="node__tag node__tag--selected">✓ Selected</span>
 				{:else if isOption}
-					<span class="node__tag node__tag--option">Option</span>
+					<span class="node__tag node__tag--option">💡 Option</span>
+				{:else if isQuestion}
+					<span class="node__tag node__tag--question">❓ Question</span>
 				{/if}
 			</div>
 
@@ -124,7 +146,9 @@
 				class="node__bubble"
 				class:node__bubble--strengthen={isEvidence && polarity === DialogicType.strengthen}
 				class:node__bubble--critique={isEvidence && polarity === DialogicType.critique}
-				class:node__bubble--option={isOption}
+				class:node__bubble--option={isOption && !isSelected}
+				class:node__bubble--selected={isSelected}
+				class:node__bubble--question={isQuestion}
 			>
 				{#if isEvidence}
 					<div class="node__evidence-head">
@@ -213,7 +237,15 @@
 	{#if showChildren}
 		<div class="node__children" transition:slideFade|local={{ duration: 320 }}>
 			{#each sorted as child (child.statement.statementId)}
-				<Self node={child} {signedIn} {currentUid} {myEvaluations} {maxDepth} />
+				<Self
+					node={child}
+					{signedIn}
+					{currentUid}
+					{myEvaluations}
+					{maxDepth}
+					{collapseVersion}
+					{collapseTarget}
+				/>
 			{/each}
 		</div>
 	{/if}
@@ -289,9 +321,19 @@
 				border-color: var(--critique-border);
 			}
 			&--option {
-				color: var(--accent-2);
-				background: rgba(139, 92, 246, 0.12);
-				border-color: rgba(139, 92, 246, 0.4);
+				color: var(--option);
+				background: var(--option-soft);
+				border-color: var(--option-border);
+			}
+			&--selected {
+				color: var(--selected);
+				background: var(--selected-soft);
+				border-color: var(--selected-border);
+			}
+			&--question {
+				color: var(--question);
+				background: var(--question-soft);
+				border-color: var(--question-border);
 			}
 		}
 
@@ -307,7 +349,20 @@
 
 			&--option {
 				border-radius: var(--radius-md);
-				border: 1px solid rgba(139, 92, 246, 0.3);
+				border: 1px solid var(--option-border);
+				border-inline-start: 3px solid var(--option);
+			}
+			&--selected {
+				border-radius: var(--radius-md);
+				border: 1px solid var(--selected-border);
+				border-inline-start: 3px solid var(--selected);
+				background: var(--selected-soft);
+			}
+			&--question {
+				border-radius: var(--radius-md);
+				border: 1px solid var(--question-border);
+				border-inline-start: 3px solid var(--question);
+				background: var(--question-soft);
 			}
 			&--strengthen {
 				border: 2px solid var(--strengthen-border);
@@ -381,8 +436,18 @@
 		&__subq {
 			display: inline-block;
 			margin-top: var(--space-sm);
+			padding: var(--space-xs) var(--space-md);
+			border-radius: var(--radius-pill);
+			background: var(--question-soft);
+			border: 1px solid var(--question-border);
+			color: var(--question);
 			font-size: 0.85rem;
 			font-weight: 600;
+
+			&:hover {
+				border-color: var(--question);
+				text-decoration: none;
+			}
 		}
 
 		&__reply {
