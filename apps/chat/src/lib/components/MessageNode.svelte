@@ -135,7 +135,7 @@
 
 				<p class="node__text">{s.statement}</p>
 
-				{#if scored}
+				{#if isOption}
 					<CorroborationBar value={s.corroborationScore} />
 				{/if}
 
@@ -145,7 +145,7 @@
 							<CorrectnessRating
 								statementId={s.statementId}
 								value={myEvaluations[s.statementId] ?? null}
-								average={evalStats.average}
+								corroboration={s.corroborationScore ?? null}
 								count={evalStats.count}
 							/>
 						{:else if isOption}

@@ -9,12 +9,13 @@
 	let {
 		statementId,
 		value = null,
-		average = null,
+		corroboration = null,
 		count = 0,
 	}: {
 		statementId: string;
 		value?: number | null;
-		average?: number | null;
+		/** Corroboration level C ∈ [0,1] (the evidence-weighted score), shown collapsed. */
+		corroboration?: number | null;
 		count?: number;
 	} = $props();
 
@@ -40,11 +41,10 @@
 	const band = $derived(BANDS.find((b) => v >= b.min) ?? BANDS[BANDS.length - 1]);
 	const tone = $derived(v >= 0.18 ? 'pos' : v <= -0.18 ? 'neg' : 'mid');
 
-	const avgTone = $derived(
-		average === null ? 'mid' : average >= 0.18 ? 'pos' : average <= -0.18 ? 'neg' : 'mid',
-	);
-	const avgText = $derived(
-		average === null ? '' : average > 0 ? `+${average.toFixed(2)}` : average.toFixed(2),
+	// Collapsed indicator = corroboration level C (NOT the raw consensus/average).
+	const crPct = $derived(corroboration === null ? null : Math.round(corroboration * 100));
+	const crTone = $derived(
+		crPct === null ? 'mid' : crPct >= 60 ? 'pos' : crPct >= 35 ? 'mid' : 'neg',
 	);
 
 	const round = (x: number) => Math.round(Math.max(-1, Math.min(1, x)) * 100) / 100;
@@ -119,12 +119,12 @@
 			type="button"
 			class="cr__summary"
 			onclick={() => (expanded = true)}
-			title="Rate how correct this is"
+			title="Corroboration level — click to rate how correct this is"
 		>
 			<span class="cr__scale">⚖️</span>
-			{#if count > 0 && average !== null}
-				<span class="cr__avg cr__avg--{avgTone}">{avgText}</span>
-				<span class="cr__count">· {count}</span>
+			{#if crPct !== null}
+				<span class="cr__avg cr__avg--{crTone}">Cr {crPct}%</span>
+				{#if count > 0}<span class="cr__count">· {count}</span>{/if}
 			{:else}
 				<span class="cr__none">Rate correctness</span>
 			{/if}
@@ -200,13 +200,13 @@
 		font-variant-numeric: tabular-nums;
 
 		&--pos {
-			color: var(--strengthen);
-		}
-		&--neg {
-			color: var(--critique);
+			color: var(--c-high);
 		}
 		&--mid {
-			color: var(--text-muted);
+			color: var(--c-mid);
+		}
+		&--neg {
+			color: var(--c-low);
 		}
 	}
 	.cr__count {
