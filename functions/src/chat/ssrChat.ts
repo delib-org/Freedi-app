@@ -15,9 +15,40 @@ import { functionConfig } from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
 import fs from 'fs';
 import path from 'path';
+import { Readable } from 'stream';
+import type { IncomingMessage } from 'http';
 import { pathToFileURL } from 'url';
 
 type NodeHandler = (req: unknown, res: unknown) => void;
+
+/**
+ * Firebase's functions framework parses and *drains* the request body before
+ * our handler runs, so the SvelteKit (adapter-node) handler would read an empty
+ * stream and `request.json()` would come back empty (e.g. POST /api/session
+ * 400 "Missing idToken"). The framework keeps the original bytes on
+ * `req.rawBody`; rebuild a fresh readable from them and graft on the request
+ * metadata adapter-node needs, so POST/PUT bodies are readable again. Requests
+ * without a body (GET, etc.) are passed through untouched.
+ */
+function withReplayableBody(req: IncomingMessage): IncomingMessage {
+	const rawBody = (req as IncomingMessage & { rawBody?: Buffer }).rawBody;
+	if (!rawBody || rawBody.length === 0) return req;
+
+	const stream = new Readable({ read() {} });
+	stream.push(rawBody);
+	stream.push(null);
+
+	const replay = stream as unknown as IncomingMessage;
+	replay.headers = req.headers;
+	replay.method = req.method;
+	replay.url = req.url;
+	replay.httpVersion = req.httpVersion;
+	replay.httpVersionMajor = req.httpVersionMajor;
+	replay.httpVersionMinor = req.httpVersionMinor;
+	(replay as unknown as { socket: unknown }).socket = req.socket;
+
+	return replay;
+}
 let cachedHandler: NodeHandler | null = null;
 
 // Candidate locations for the copied adapter-node bundle. Depending on how the
@@ -78,7 +109,7 @@ export const ssrChat = onRequest(
 	async (req, res) => {
 		try {
 			const handler = await getHandler();
-			handler(req, res);
+			handler(withReplayableBody(req as unknown as IncomingMessage), res);
 		} catch (error) {
 			logger.error('[ssrChat] handler failed', {
 				error: error instanceof Error ? error.message : String(error),
