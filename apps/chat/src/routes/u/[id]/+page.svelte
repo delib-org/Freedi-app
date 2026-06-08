@@ -66,6 +66,6 @@
 		margin-top: var(--space-lg);
 	}
 	ul {
-		padding-left: var(--space-lg);
+		padding-inline-start: var(--space-lg);
 	}
 </style>

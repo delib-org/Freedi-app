@@ -307,7 +307,7 @@
 
 		&__thread {
 			position: absolute;
-			left: -1.5rem;
+			inset-inline-start: -1.5rem;
 			top: 2.2rem;
 			bottom: -0.5rem;
 			width: 2px;
@@ -383,7 +383,7 @@
 			background: var(--bubble-other);
 			padding: var(--space-md);
 			border-radius: var(--radius-md);
-			border-bottom-left-radius: 4px;
+			border-end-start-radius: 4px;
 			display: flex;
 			flex-direction: column;
 			gap: var(--space-sm);
@@ -451,7 +451,7 @@
 			display: flex;
 			flex-wrap: wrap;
 			gap: var(--space-sm);
-			margin-left: auto;
+			margin-inline-start: auto;
 			opacity: 0.7;
 			transition: opacity 0.2s;
 		}
@@ -500,13 +500,14 @@
 		}
 
 		&__children {
-			margin-left: 1.5rem;
-			padding-left: var(--space-md);
+			margin-inline-start: 1.5rem;
+			padding-inline-start: var(--space-md);
 		}
 
 		&__continue {
 			display: inline-block;
-			margin: var(--space-sm) 0 0 1.5rem;
+			margin: var(--space-sm) 0 0;
+			margin-inline-start: 1.5rem;
 			padding: var(--space-sm) var(--space-md);
 			background: var(--eval-bg);
 			border: 1px solid var(--glass-border);
@@ -528,7 +529,7 @@
 		}
 		&__focus-btn {
 			width: 100%;
-			text-align: left;
+			text-align: start;
 			padding: var(--space-sm) var(--space-md);
 			background: var(--eval-bg);
 			border: 1px solid var(--glass-border);
@@ -549,11 +550,11 @@
 
 	@media (max-width: 480px) {
 		.node__children {
-			margin-left: 0.9rem;
-			padding-left: var(--space-sm);
+			margin-inline-start: 0.9rem;
+			padding-inline-start: var(--space-sm);
 		}
 		.node__thread {
-			left: -0.9rem;
+			inset-inline-start: -0.9rem;
 		}
 		.node__bubble {
 			padding: var(--space-sm) var(--space-md);

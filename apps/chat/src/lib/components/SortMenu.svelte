@@ -180,7 +180,7 @@
 	// Opaque glass so it reads cleanly even where it overlaps neighbouring tools.
 	.sort__panel {
 		position: absolute;
-		right: 0;
+		inset-inline-end: 0;
 		bottom: calc(100% + 0.4rem);
 		display: flex;
 		align-items: stretch;

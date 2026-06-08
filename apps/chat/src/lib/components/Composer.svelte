@@ -125,7 +125,7 @@
 		}
 		&__hint {
 			font-size: 0.8rem;
-			margin-right: auto;
+			margin-inline-end: auto;
 		}
 		&__submit {
 			@include pill-button;

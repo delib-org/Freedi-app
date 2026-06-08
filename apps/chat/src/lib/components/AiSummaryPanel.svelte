@@ -140,7 +140,7 @@
 			background: var(--amber-soft);
 			padding: var(--space-sm) var(--space-md);
 			border-radius: var(--radius-sm);
-			border-left: 3px solid var(--amber-dark);
+			border-inline-start: 3px solid var(--amber-dark);
 		}
 
 		&__accept {
