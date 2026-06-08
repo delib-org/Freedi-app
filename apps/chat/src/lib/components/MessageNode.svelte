@@ -6,7 +6,6 @@
 	import type { TreeNode } from '$lib/stores/messages';
 	import { sortChildren } from '$lib/stores/messages';
 	import { evalStatsOf } from '$lib/chat/node';
-	import CorroborationBar from './CorroborationBar.svelte';
 	import EvidenceBadge from './EvidenceBadge.svelte';
 	import EvaluationBar from './EvaluationBar.svelte';
 	import CorrectnessRating from './CorrectnessRating.svelte';
@@ -135,10 +134,6 @@
 
 				<p class="node__text">{s.statement}</p>
 
-				{#if isOption}
-					<CorroborationBar value={s.corroborationScore} />
-				{/if}
-
 				<div class="node__meta">
 					<div class="node__meta-left">
 						{#if isEvidence}
@@ -149,9 +144,13 @@
 								count={evalStats.count}
 							/>
 						{:else if isOption}
+							<!-- Collapsed: consensus · # evaluators · average vote -->
 							<EvaluationBar
 								statementId={s.statementId}
 								myEvaluation={myEvaluations[s.statementId] ?? null}
+								consensus={s.corroborationScore ?? null}
+								count={evalStats.count}
+								average={evalStats.average}
 							/>
 						{/if}
 					</div>

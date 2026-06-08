@@ -4,13 +4,25 @@
 	import { backOut } from 'svelte/easing';
 
 	// 5-emoji face rater (port of the reference EvaluationBar). Collapsed shows the
-	// current vote (or a "Rate" affordance); clicking expands to the faces. Each
-	// face is a real submit button posting to the `evaluate` action, so it works
-	// without JS; `use:enhance` keeps it smooth + re-highlights after voting.
+	// option's 3 aggregate stats — consensus, # evaluators, average vote; clicking
+	// expands to the faces. Each face is a real submit button posting to the
+	// `evaluate` action, so it works without JS; `use:enhance` re-highlights after.
 	let {
 		statementId,
 		myEvaluation = null,
-	}: { statementId: string; myEvaluation?: number | null } = $props();
+		consensus = null,
+		count = 0,
+		average = null,
+	}: {
+		statementId: string;
+		myEvaluation?: number | null;
+		/** Consensus / corroboration level C ∈ [0,1]. */
+		consensus?: number | null;
+		/** Number of evaluators. */
+		count?: number;
+		/** Average vote ∈ [-1,1]. */
+		average?: number | null;
+	} = $props();
 
 	const FACES = [
 		{ v: -1, e: '😡', label: 'Strongly disagree' },
@@ -21,7 +33,17 @@
 	];
 
 	let expanded = $state(false);
-	const current = $derived(FACES.find((f) => f.v === myEvaluation) ?? null);
+
+	const consensusPct = $derived(consensus === null ? null : Math.round(consensus * 100));
+	const consensusTone = $derived(
+		consensusPct === null ? 'mid' : consensusPct >= 60 ? 'pos' : consensusPct >= 35 ? 'mid' : 'neg',
+	);
+	const avgText = $derived(
+		average === null ? null : average > 0 ? `+${average.toFixed(2)}` : average.toFixed(2),
+	);
+	const avgTone = $derived(
+		average === null ? 'mid' : average >= 0.18 ? 'pos' : average <= -0.18 ? 'neg' : 'mid',
+	);
 </script>
 
 <form
@@ -55,15 +77,26 @@
 	{:else}
 		<button
 			type="button"
-			class="eval__trigger"
-			class:voted={current}
+			class="eval__summary"
 			onclick={() => (expanded = true)}
-			title="Rate this"
+			title="Vote — shows consensus · evaluators · average vote"
 		>
-			{#if current}
-				<span class="eval__current">{current.e}</span>
+			{#if consensusPct !== null}
+				<span class="eval__metric eval__metric--{consensusTone}">
+					<span class="eval__k">consensus</span>{consensusPct}%
+				</span>
+			{/if}
+			{#if count > 0}
+				<span class="eval__metric">
+					<span class="eval__k">voters</span>{count}
+				</span>
+				{#if avgText !== null}
+					<span class="eval__metric eval__metric--{avgTone}">
+						<span class="eval__k">avg</span>{avgText}
+					</span>
+				{/if}
 			{:else}
-				<span class="eval__star">☆</span><span class="eval__label">Rate</span>
+				<span class="eval__metric eval__metric--rate"><span class="eval__star">☆</span>Vote</span>
 			{/if}
 		</button>
 	{/if}
@@ -76,39 +109,55 @@
 		margin: 0;
 		min-height: 30px;
 
-		&__trigger {
+		&__summary {
 			display: inline-flex;
 			align-items: center;
-			gap: var(--space-xs);
+			gap: var(--space-sm);
 			cursor: pointer;
 			background: var(--eval-bg);
 			border: 1px solid var(--glass-border);
 			border-radius: var(--radius-pill);
-			padding: 3px 10px;
-			color: var(--text-muted);
+			padding: 3px 12px;
 			font: inherit;
-			font-size: 0.7rem;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			transition: all 0.2s;
+			transition: border-color 0.2s;
 
 			&:hover {
-				background: var(--eval-btn);
 				border-color: var(--accent);
-				color: var(--accent);
 			}
-			&.voted {
-				padding: 2px 8px;
+		}
+		&__metric {
+			display: inline-flex;
+			align-items: baseline;
+			gap: 4px;
+			font-size: 0.74rem;
+			font-weight: 700;
+			font-variant-numeric: tabular-nums;
+			color: var(--text-body);
+
+			&--pos {
+				color: var(--c-high);
 			}
+			&--mid {
+				color: var(--c-mid);
+			}
+			&--neg {
+				color: var(--c-low);
+			}
+			&--rate {
+				color: var(--text-muted);
+				font-weight: 600;
+			}
+		}
+		&__k {
+			font-size: 0.6rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var(--text-muted);
 		}
 		&__star {
 			color: var(--amber);
 			font-size: 0.85rem;
-		}
-		&__current {
-			font-size: 1rem;
-			filter: grayscale(0);
 		}
 
 		&__faces {
