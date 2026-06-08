@@ -8,7 +8,6 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { Request, Response } from 'firebase-functions/v1';
 // The Firebase Admin SDK
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
@@ -16,6 +15,9 @@ import { Collections, functionConfig } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+
+// HTTP auth/authorization helpers (extracted for unit testing)
+import { verifyAuthToken, requireSystemAdmin } from './utils/httpAuth';
 
 // Import function modules
 import {
@@ -367,33 +369,14 @@ const wrapMemoryIntensiveHttpFunction = (
 };
 
 /**
- * Verifies Firebase ID token from Authorization header.
- * Returns the authenticated user's UID, or sends 401 and returns null.
- */
-async function verifyAuthToken(req: Request, res: Response): Promise<string | null> {
-	const authHeader = req.headers.authorization;
-	if (!authHeader?.startsWith('Bearer ')) {
-		res.status(401).send({ error: 'Missing or invalid Authorization header' });
-
-		return null;
-	}
-	try {
-		const token = authHeader.split('Bearer ')[1];
-		const decoded = await getAuth().verifyIdToken(token);
-
-		return decoded.uid;
-	} catch {
-		res.status(401).send({ error: 'Invalid or expired token' });
-
-		return null;
-	}
-}
-
-/**
- * Creates a wrapper for admin/maintenance HTTP functions with authentication.
- * Requires a valid Firebase ID token in the Authorization header.
- * @param {Function} handler - The function handler to wrap (receives uid as third argument)
- * @returns {Function} - Wrapped function with auth and error handling
+ * Creates a wrapper for admin/maintenance HTTP functions.
+ * Requires a valid Firebase ID token in the Authorization header AND that the
+ * authenticated user is a system admin (usersV2/{uid}.systemAdmin === true).
+ * Authentication alone is NOT sufficient — these endpoints run database-wide
+ * maintenance/migration jobs and must never be reachable by ordinary
+ * (including anonymous) users.
+ * @param {Function} handler - The function handler to wrap
+ * @returns {Function} - Wrapped function with auth, authorization and error handling
  */
 const wrapAdminHttpFunction = (
 	handler: (req: Request, res: Response) => Promise<void>,
@@ -410,7 +393,8 @@ const wrapAdminHttpFunction = (
 			...overrides,
 		},
 		async (req, res) => {
-			const uid = await verifyAuthToken(req, res);
+			// Authentication is not enough — require system-admin authorization.
+			const uid = await requireSystemAdmin(req, res);
 			if (!uid) return;
 
 			const startTime = Date.now();
@@ -919,15 +903,16 @@ exports.seedCreditRules = wrapAdminHttpFunction(async (req: Request, res: Respon
 	res.json({ seeded, message: `Seeded ${seeded} new credit rules` });
 });
 
-// HTTP endpoint for tracking daily login (called by client on app open)
-exports.trackDailyLogin = wrapAdminHttpFunction(async (req: Request, res: Response) => {
-	const { userId, sourceApp } = req.body;
-	if (!userId) {
-		res.status(400).json({ error: 'userId is required' });
+// HTTP endpoint for tracking daily login (called by client on app open).
+// This is a per-user endpoint, NOT an admin one: it only requires a valid
+// Firebase ID token and always tracks the *authenticated* user (the token uid),
+// never a userId supplied in the request body.
+exports.trackDailyLogin = wrapHttpFunction(async (req: Request, res: Response) => {
+	const uid = await verifyAuthToken(req, res);
+	if (!uid) return;
 
-		return;
-	}
-	await trackDailyLogin(userId, sourceApp || 'main');
+	const { sourceApp } = req.body ?? {};
+	await trackDailyLogin(uid, sourceApp || 'main');
 	res.json({ success: true });
 });
 
