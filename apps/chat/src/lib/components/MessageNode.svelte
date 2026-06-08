@@ -10,6 +10,7 @@
 	import EvaluationBar from './EvaluationBar.svelte';
 	import Composer from './Composer.svelte';
 	import AiSummaryPanel from './AiSummaryPanel.svelte';
+	import { generateSummary, acceptRevision, type SummaryResult } from '$lib/aiSummary';
 
 	let {
 		node,
@@ -38,10 +39,54 @@
 
 	let open = $state(true);
 	let showReply = $state(false);
-	let aiOpen = $state(false);
 
 	// AI summary lives next to Collapse — on scored claims that have replies.
 	const canSummarize = $derived(scored && signedIn && node.children.length > 0);
+
+	// Fetch state lives here so the WAIT shows on the button and the summary box
+	// only mounts once loaded — one smooth open instead of a two-step jump.
+	let aiOpen = $state(false);
+	let aiBusy = $state(false);
+	let aiAccepting = $state(false);
+	let aiError = $state('');
+	let aiData = $state<SummaryResult | null>(null);
+
+	async function toggleAi() {
+		if (aiOpen) {
+			aiOpen = false;
+
+			return;
+		}
+		if (aiData || aiError) {
+			aiOpen = true; // already loaded — just reveal
+
+			return;
+		}
+		aiBusy = true;
+		aiError = '';
+		try {
+			aiData = await generateSummary(s.statementId);
+			aiOpen = true; // open only once content is ready
+		} catch (e) {
+			aiError = e instanceof Error ? e.message : 'Failed to generate';
+			aiOpen = true;
+		} finally {
+			aiBusy = false;
+		}
+	}
+
+	async function acceptAi() {
+		aiAccepting = true;
+		try {
+			await acceptRevision(s.statementId);
+			aiOpen = false;
+			aiData = null; // claim text changed — drop the stale summary
+		} catch (e) {
+			aiError = e instanceof Error ? e.message : 'Failed to accept';
+		} finally {
+			aiAccepting = false;
+		}
+	}
 
 	// Derived flags so each transition element is the DIRECT child of its own
 	// `{#if}` — otherwise `transition:…|local` is suppressed when an ancestor
@@ -114,21 +159,24 @@
 						{#if canSummarize}
 							<button
 								class="node__action node__action--ai"
-								class:active={aiOpen}
-								onclick={() => (aiOpen = !aiOpen)}
+								class:active={aiOpen || aiBusy}
+								onclick={toggleAi}
+								disabled={aiBusy}
 							>
-								✨ {aiOpen ? 'Hide Summary' : 'AI Summary'}
+								✨ {aiBusy ? 'Summarizing…' : aiOpen ? 'Hide Summary' : 'AI Summary'}
 							</button>
 						{/if}
 					</div>
 				</div>
 			</div>
 
-			{#if aiOpen && canSummarize}
+			{#if aiOpen}
 				<AiSummaryPanel
-					statementId={s.statementId}
+					data={aiData}
+					error={aiError}
 					canAccept={Boolean(currentUid) && s.creatorId === currentUid}
-					onClose={() => (aiOpen = false)}
+					accepting={aiAccepting}
+					onAccept={acceptAi}
 				/>
 			{/if}
 

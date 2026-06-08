@@ -1,77 +1,24 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { slideFade } from '$lib/transitions';
-	import { functionsClient } from '$lib/firebaseClient';
+	import type { SummaryResult } from '$lib/aiSummary';
 
-	// The AI summary box (reference `.summary-node`) — a ✨ callout with an "AI
-	// Thread Summary" section and an amber "Suggested Revision" section. Rendered
-	// INSIDE the message content (after the bubble); the toggle button lives in
-	// the bubble's action row (MessageNode). Loads on mount via the REAL
-	// generateDialecticalRevision callable (whole-subtree summary + caching).
+	// Presentational only — the AI summary box (reference `.summary-node`): a ✨
+	// callout with an "AI Thread Summary" section and an amber "Suggested
+	// Revision" section. Mounted by MessageNode ONLY once the summary is loaded,
+	// so it opens in one smooth slide. The fetch/wait lives on the action button.
 	let {
-		statementId,
+		data,
+		error = '',
 		canAccept = false,
-		onClose,
-	}: { statementId: string; canAccept?: boolean; onClose?: () => void } = $props();
-
-	let busy = $state(false);
-	let loaded = $state(false);
-	let error = $state('');
-	let summary = $state('');
-	let suggestion = $state('');
-	let count = $state(0);
-	let cached = $state(false);
-
-	async function callFn<TReq, TRes>(name: string, data: TReq): Promise<TRes> {
-		const [fns, { httpsCallable }] = await Promise.all([
-			functionsClient(),
-			import('firebase/functions'),
-		]);
-
-		return (await httpsCallable<TReq, TRes>(fns, name)(data)).data;
-	}
-
-	async function load() {
-		busy = true;
-		error = '';
-		try {
-			const res = await callFn<
-				{ statementId: string },
-				{
-					summary: string;
-					improvementSuggestion: string;
-					descendantCount: number;
-					cached?: boolean;
-				}
-			>('generateDialecticalRevision', { statementId });
-			summary = res.summary;
-			suggestion = res.improvementSuggestion;
-			count = res.descendantCount ?? 0;
-			cached = res.cached ?? false;
-			loaded = true;
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to generate';
-		} finally {
-			busy = false;
-		}
-	}
-
-	async function accept() {
-		busy = true;
-		error = '';
-		try {
-			await callFn<{ statementId: string }, { accepted: boolean }>('acceptDialecticalRevision', {
-				statementId,
-			});
-			onClose?.();
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to accept';
-		} finally {
-			busy = false;
-		}
-	}
-
-	onMount(load);
+		accepting = false,
+		onAccept,
+	}: {
+		data: SummaryResult | null;
+		error?: string;
+		canAccept?: boolean;
+		accepting?: boolean;
+		onAccept?: () => void;
+	} = $props();
 </script>
 
 <div
@@ -83,25 +30,23 @@
 	<div class="summary__content">
 		{#if error}
 			<p class="summary__error">{error}</p>
-		{:else if busy && !loaded}
-			<p class="summary__loading">Reading the whole thread…</p>
-		{:else}
+		{:else if data}
 			<div class="summary__section">
 				<span class="summary__label">
-					AI Thread Summary{#if count > 0}<span class="summary__meta">
-							· {count} sub-statement{count === 1 ? '' : 's'}</span
-						>{/if}{#if cached}<span class="summary__cached"> · ✓ up to date</span>{/if}
+					AI Thread Summary{#if data.descendantCount > 0}<span class="summary__meta">
+							· {data.descendantCount} sub-statement{data.descendantCount === 1 ? '' : 's'}</span
+						>{/if}{#if data.cached}<span class="summary__cached"> · ✓ up to date</span>{/if}
 				</span>
-				<p>{summary}</p>
+				<p>{data.summary}</p>
 			</div>
 
-			{#if suggestion}
+			{#if data.improvementSuggestion}
 				<div class="summary__section summary__section--suggestion">
 					<span class="summary__label summary__label--amber">💡 Suggested Revision</span>
-					<p class="summary__suggestion">"{suggestion}"</p>
+					<p class="summary__suggestion">"{data.improvementSuggestion}"</p>
 					{#if canAccept}
-						<button class="summary__accept" onclick={accept} disabled={busy}>
-							{busy ? 'Applying…' : 'Accept Revision'}
+						<button class="summary__accept" onclick={() => onAccept?.()} disabled={accepting}>
+							{accepting ? 'Applying…' : 'Accept Revision'}
 						</button>
 					{/if}
 				</div>
@@ -208,11 +153,6 @@
 			}
 		}
 
-		&__loading {
-			color: var(--text-muted);
-			font-size: 0.82rem;
-			margin: 0;
-		}
 		&__error {
 			color: var(--critique);
 			font-size: 0.82rem;
