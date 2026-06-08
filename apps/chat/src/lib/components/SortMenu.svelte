@@ -9,6 +9,7 @@
 	 * buttons — so the open state is a right-anchored floating panel instead.
 	 */
 	import { SORT_OPTIONS, type SortMode } from '$lib/stores/messages';
+	import { t } from '$lib/i18n';
 
 	let {
 		mode,
@@ -85,7 +86,7 @@
 {/snippet}
 
 <div class="sort" class:sort--open={open} bind:this={el}>
-	<div class="sort__panel" role="menu" aria-hidden={!open} aria-label="Sort answers">
+	<div class="sort__panel" role="menu" aria-hidden={!open} aria-label={$t('Sort answers')}>
 		{#each SORT_OPTIONS as opt, i (opt.id)}
 			<button
 				class="sort__item"
@@ -97,7 +98,7 @@
 				onclick={() => pick(opt.id)}
 			>
 				<span class="sort__bubble">{@render icon(opt.id)}</span>
-				<span class="sort__label">{opt.label}</span>
+				<span class="sort__label">{$t(opt.label)}</span>
 			</button>
 		{/each}
 	</div>
@@ -106,8 +107,8 @@
 		class="sort__toggle"
 		aria-haspopup="menu"
 		aria-expanded={open}
-		title={open ? 'Close sort' : 'Sort answers'}
-		aria-label={open ? 'Close sort' : 'Sort answers'}
+		title={open ? $t('Close sort') : $t('Sort answers')}
+		aria-label={open ? $t('Close sort') : $t('Sort answers')}
 		onclick={toggle}
 	>
 		{#if open}

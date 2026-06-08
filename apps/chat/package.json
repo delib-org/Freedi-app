@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@freedi/evidence": "file:../../packages/evidence",
+    "@freedi/shared-i18n": "file:../../packages/shared-i18n",
     "@freedi/shared-types": "file:../../packages/shared-types",
     "firebase": "^11.0.2",
     "firebase-admin": "^13.6.0"

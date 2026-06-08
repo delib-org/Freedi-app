@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { t, tp } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -13,32 +14,39 @@
 </script>
 
 <svelte:head>
-	<title>{data.displayName} — Dialectical Chat</title>
+	<title>{data.displayName} — {$t('Dialectical Chat')}</title>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html `<script type="application/ld+json">${jsonLd}<\/script>`}
 </svelte:head>
 
 <main class="page">
-	<nav class="breadcrumb"><a href="/">← All questions</a></nav>
+	<nav class="breadcrumb"><a href="/">← {$t('All questions')}</a></nav>
 	<h1>{data.displayName}</h1>
 
 	<section>
-		<h2>Questions</h2>
+		<h2>{$t('Questions')}</h2>
 		{#if data.questions.length === 0}
-			<p class="muted">No public questions.</p>
+			<p class="muted">{$t('No public questions.')}</p>
 		{:else}
 			<ul>
 				{#each data.questions as q (q.id)}
-					<li><a href={`/q/${q.id}`}>{q.title}</a> <span class="muted">· {q.optionCount} options</span></li>
+					<li>
+						<a href={`/q/${q.id}`}>{q.title}</a>
+						<span class="muted"
+							>· {$tp(q.optionCount === 1 ? '{{count}} option' : '{{count}} options', {
+								count: q.optionCount,
+							})}</span
+						>
+					</li>
 				{/each}
 			</ul>
 		{/if}
 	</section>
 
 	<section>
-		<h2>Proposed options</h2>
+		<h2>{$t('Proposed options')}</h2>
 		{#if data.options.length === 0}
-			<p class="muted">No public options.</p>
+			<p class="muted">{$t('No public options.')}</p>
 		{:else}
 			<ul>
 				{#each data.options as o (o.id)}

@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { fly, scale } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
+	import { t } from '$lib/i18n';
 
 	// 5-emoji face rater (port of the reference EvaluationBar). Collapsed shows the
 	// option's 3 aggregate stats — consensus, # evaluators, average vote; clicking
@@ -68,8 +69,8 @@
 					class:active={myEvaluation === f.v}
 					name="value"
 					value={f.v}
-					title={f.label}
-					aria-label={f.label}
+					title={$t(f.label)}
+					aria-label={$t(f.label)}
 					in:fly={{ x: -8, duration: 180, delay: i * 25 }}
 				>{f.e}</button>
 			{/each}
@@ -79,24 +80,24 @@
 			type="button"
 			class="eval__summary"
 			onclick={() => (expanded = true)}
-			title="Vote — shows consensus · evaluators · average vote"
+			title={$t('Vote — shows consensus · evaluators · average vote')}
 		>
 			{#if consensusPct !== null}
 				<span class="eval__metric eval__metric--{consensusTone}">
-					<span class="eval__k">consensus</span>{consensusPct}%
+					<span class="eval__k">{$t('consensus')}</span>{consensusPct}%
 				</span>
 			{/if}
 			{#if count > 0}
 				<span class="eval__metric">
-					<span class="eval__k">voters</span>{count}
+					<span class="eval__k">{$t('voters')}</span>{count}
 				</span>
 				{#if avgText !== null}
 					<span class="eval__metric eval__metric--{avgTone}">
-						<span class="eval__k">avg</span>{avgText}
+						<span class="eval__k">{$t('avg')}</span>{avgText}
 					</span>
 				{/if}
 			{:else}
-				<span class="eval__metric eval__metric--rate"><span class="eval__star">☆</span>Vote</span>
+				<span class="eval__metric eval__metric--rate"><span class="eval__star">☆</span>{$t('Vote')}</span>
 			{/if}
 		</button>
 	{/if}

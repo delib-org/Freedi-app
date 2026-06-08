@@ -12,6 +12,7 @@
 	import Composer from '$lib/components/Composer.svelte';
 	import ConvergenceMeter from '$lib/components/ConvergenceMeter.svelte';
 	import { subscribeToConversation } from '$lib/realtime';
+	import { t, tp } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 
@@ -69,7 +70,49 @@
 
 	const questionNodes = $derived(collectQuestions(sortedTree));
 	const hasQuestions = $derived(questionNodes.length > 0);
-	const displayTree = $derived(questionsOnly ? questionNodes : sortedTree);
+
+	// Mobile "focus mode" (ported from the reference impl): on phones we only nest
+	// ~3 levels inline; deeper threads collapse to a "Continue thread →" button
+	// that drills into that node as a fresh root. `focusStack` lets Back step out
+	// one level at a time. On desktop this stays inactive (full nesting).
+	let isMobile = $state(false);
+	let focusStack = $state<string[]>([]);
+	const focusedId = $derived(focusStack[focusStack.length - 1] ?? null);
+
+	function findNode(nodes: TreeNode[], id: string): TreeNode | null {
+		for (const n of nodes) {
+			if (n.statement.statementId === id) return n;
+			const found = findNode(n.children, id);
+			if (found) return found;
+		}
+
+		return null;
+	}
+
+	// Re-root a focused subtree at depth 0 so it again earns a fresh 3 levels.
+	function reroot(node: TreeNode, depth = 0): TreeNode {
+		return { ...node, depth, children: node.children.map((c) => reroot(c, depth + 1)) };
+	}
+
+	const focusedNode = $derived.by(() => {
+		if (!focusedId) return null;
+		const found = findNode(sortedTree, focusedId);
+
+		return found ? reroot(found) : null;
+	});
+
+	function focusOn(id: string) {
+		focusStack = [...focusStack, id];
+		if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+	}
+
+	function focusBack() {
+		focusStack = focusStack.slice(0, -1);
+	}
+
+	const displayTree = $derived(
+		focusedNode ? [focusedNode] : questionsOnly ? questionNodes : sortedTree,
+	);
 
 	const jsonLd = $derived(
 		data.indexable
@@ -85,6 +128,12 @@
 	);
 
 	onMount(() => {
+		// Track phone-width so deep threads switch to in-page focus mode.
+		const mq = window.matchMedia('(max-width: 600px)');
+		const applyMobile = () => (isMobile = mq.matches);
+		applyMobile();
+		mq.addEventListener('change', applyMobile);
+
 		// Lazy realtime: patches `statements` on added/modified/removed.
 		const unsub = subscribeToConversation(
 			root.statementId,
@@ -93,12 +142,15 @@
 			() => statements,
 		);
 
-		return unsub;
+		return () => {
+			mq.removeEventListener('change', applyMobile);
+			unsub();
+		};
 	});
 </script>
 
 <svelte:head>
-	<title>{root.statement} — Dialectical Chat</title>
+	<title>{root.statement} — {$t('Dialectical Chat')}</title>
 	<meta name="description" content={root.statement.slice(0, 160)} />
 	{#if !data.indexable}
 		<meta name="robots" content="noindex" />
@@ -118,7 +170,7 @@
 					: data.parent.statement}
 			</a>
 		{:else}
-			<a href="/">← All questions</a>
+			<a href="/">← {$t('All questions')}</a>
 		{/if}
 	</nav>
 
@@ -126,25 +178,48 @@
 		<header class="conversation__header">
 			<h1 class="conversation__title">{root.statement}</h1>
 			<div class="conversation__meta muted">
-				<span>{options.length} option{options.length === 1 ? '' : 's'}</span>
-				<span>· {commentCount} comment{commentCount === 1 ? '' : 's'}</span>
-				<span>· by {root.creator?.displayName ?? 'Anonymous'}</span>
+				<span
+					>{$tp(options.length === 1 ? '{{count}} option' : '{{count}} options', {
+						count: options.length,
+					})}</span
+				>
+				<span
+					>· {$tp(commentCount === 1 ? '{{count}} comment' : '{{count}} comments', {
+						count: commentCount,
+					})}</span
+				>
+				<span>· {$tp('by {{name}}', { name: root.creator?.displayName ?? $t('Anonymous') })}</span>
 			</div>
 			<ConvergenceMeter value={root.convergenceIndex ?? 0} />
 		</header>
 
-		<section class="conversation__thread" aria-label="Answers and evidence">
-			{#if hasThreads || hasQuestions || canSort}
+		<section class="conversation__thread" aria-label={$t('Answers and evidence')}>
+			{#if focusedNode}
+				<div class="conversation__focus">
+					<button class="conversation__back" onclick={focusBack}>
+						<svg viewBox="0 0 24 24" aria-hidden="true">
+							<path
+								d="M19 12H5M12 19l-7-7 7-7"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
+						{$t('Back')}
+					</button>
+					<span class="conversation__focus-label">{$t('Focused thread')}</span>
+				</div>
+			{:else if hasThreads || hasQuestions || canSort}
 				<div class="conversation__tools">
-					{#if canSort && !questionsOnly}
-						<SortMenu mode={sortMode} onChange={(m) => (sortMode = m)} />
-					{/if}
 					{#if hasQuestions}
 						<button
 							class="conversation__tool conversation__tool--toggle"
 							class:active={questionsOnly}
 							aria-pressed={questionsOnly}
-							title={questionsOnly ? 'Show everything' : 'Show only questions'}
+							aria-label={questionsOnly ? $t('Show everything') : $t('Show only questions')}
+							title={questionsOnly ? $t('Show everything') : $t('Show only questions')}
 							onclick={() => (questionsOnly = !questionsOnly)}
 						>
 							<svg viewBox="0 0 24 24" aria-hidden="true" class="conversation__icon">
@@ -157,11 +232,11 @@
 								/>
 								<circle cx="12" cy="18" r="1.1" fill="currentColor" />
 							</svg>
-							Questions
+							<span class="conversation__tool-label">{$t('Questions')}</span>
 						</button>
 					{/if}
 					{#if hasThreads && !questionsOnly}
-						<button class="conversation__tool" onclick={() => setAll(true)}>
+						<button class="conversation__tool" aria-label={$t('Expand all threads')} title={$t('Expand all')} onclick={() => setAll(true)}>
 							<svg viewBox="0 0 24 24" aria-hidden="true" class="conversation__icon">
 								<path
 									d="M7 10l5 5 5-5"
@@ -172,9 +247,9 @@
 									stroke-linejoin="round"
 								/>
 							</svg>
-							Expand all
+							<span class="conversation__tool-label">{$t('Expand all')}</span>
 						</button>
-						<button class="conversation__tool" onclick={() => setAll(false)}>
+						<button class="conversation__tool" aria-label={$t('Collapse all threads')} title={$t('Collapse all')} onclick={() => setAll(false)}>
 							<svg viewBox="0 0 24 24" aria-hidden="true" class="conversation__icon">
 								<path
 									d="M7 14l5-5 5 5"
@@ -185,17 +260,20 @@
 									stroke-linejoin="round"
 								/>
 							</svg>
-							Collapse all
+							<span class="conversation__tool-label">{$t('Collapse all')}</span>
 						</button>
+					{/if}
+					{#if canSort && !questionsOnly}
+						<SortMenu mode={sortMode} onChange={(m) => (sortMode = m)} />
 					{/if}
 				</div>
 			{/if}
 			{#if displayTree.length === 0}
 				<p class="conversation__empty muted">
 					{#if questionsOnly}
-						No sub-questions yet.
+						{$t('No sub-questions yet.')}
 					{:else}
-						No answers yet — propose the first option below.
+						{$t('No answers yet — propose the first option below.')}
 					{/if}
 				</p>
 			{/if}
@@ -209,13 +287,15 @@
 						{collapseVersion}
 						{collapseTarget}
 						{sortMode}
+						{isMobile}
+						onFocus={focusOn}
 					/>
 				</div>
 			{/each}
 		</section>
 
-		<section class="conversation__footer" aria-label="Add to this question">
-			<h2 class="conversation__add-heading">Add to this question</h2>
+		<section class="conversation__footer" aria-label={$t('Add to this question')}>
+			<h2 class="conversation__add-heading">{$t('Add to this question')}</h2>
 			<Composer
 				parentId={root.statementId}
 				parentType={StatementType.question}
@@ -263,9 +343,59 @@
 			background: var(--inset);
 		}
 
+		// Focus-mode header (mobile deep-thread drill-in): a Back button + label,
+		// sticky to the top of the thread so it stays reachable while scrolling.
+		&__focus {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: var(--space-md);
+			margin: calc(var(--space-sm) * -1) calc(var(--space-md) * -1) var(--space-md);
+			padding: var(--space-sm) var(--space-md);
+			background: var(--inset);
+			backdrop-filter: blur(var(--glass-blur));
+			border-bottom: 1px solid var(--glass-border);
+		}
+		&__back {
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-xs);
+			background: var(--eval-bg);
+			border: 1px solid var(--glass-border);
+			border-radius: var(--radius-pill);
+			color: var(--text-body);
+			font: inherit;
+			font-size: 0.82rem;
+			font-weight: 600;
+			padding: var(--space-xs) var(--space-md);
+			cursor: pointer;
+			transition: border-color 0.15s, background 0.15s;
+
+			&:hover {
+				border-color: var(--accent);
+				color: var(--accent);
+			}
+
+			svg {
+				width: 1rem;
+				height: 1rem;
+			}
+		}
+		&__focus-label {
+			font-size: 0.68rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			color: var(--accent);
+		}
+
 		&__tools {
 			display: flex;
 			flex-wrap: wrap;
+			align-items: center;
 			justify-content: flex-end;
 			gap: var(--space-xs);
 			margin-bottom: var(--space-sm);
@@ -316,6 +446,53 @@
 			font-size: 0.95rem;
 			margin-bottom: var(--space-md);
 			color: var(--text-muted);
+		}
+	}
+
+	// On phones, reclaim horizontal room and collapse the toolbar to a single row
+	// of compact icon buttons (labels become tooltip/aria-only). The sort control
+	// is rendered last so its left-fanning menu stays inside the card.
+	@media (max-width: 480px) {
+		.conversation {
+			&__header,
+			&__thread,
+			&__footer {
+				padding: var(--space-md);
+			}
+			&__thread {
+				padding-top: var(--space-sm);
+			}
+			&__title {
+				font-size: 1.3rem;
+			}
+			&__tools {
+				gap: var(--space-sm);
+			}
+			&__tool {
+				width: 2rem;
+				height: 2rem;
+				padding: 0;
+				justify-content: center;
+				gap: 0;
+				background: var(--eval-bg);
+				border-color: var(--glass-border);
+				border-radius: var(--radius-pill);
+			}
+			&__icon {
+				width: 1.05rem;
+				height: 1.05rem;
+			}
+		}
+		.conversation__tool-label {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border: 0;
 		}
 	}
 </style>

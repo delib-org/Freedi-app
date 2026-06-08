@@ -11,8 +11,11 @@ export default defineConfig({
 		},
 	},
 	// firebase-admin is server-only; never let it leak into the client bundle.
+	// `@freedi/shared-i18n` ships raw TS (+ JSON) from `src/`, so Vite must
+	// transform it for SSR rather than externalize it as a runtime `import`.
 	ssr: {
 		external: ['firebase-admin'],
+		noExternal: ['@freedi/shared-i18n'],
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],

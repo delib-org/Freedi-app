@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import ConvergenceMeter from '$lib/components/ConvergenceMeter.svelte';
-	import { t } from '$lib/i18n';
+	import { t, tp } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
 <svelte:head>
-	<title>Dialectical Chat — evidence-weighted debate</title>
+	<title>{$t('Dialectical Chat — evidence-weighted debate')}</title>
 	<meta
 		name="description"
 		content="Turn debate into evidence-weighted reasoning. Browse open questions, propose answers, strengthen or critique with evidence."
@@ -16,14 +16,14 @@
 
 <main class="page">
 	<header class="hero">
-		<h1>{$t('app.title')}</h1>
-		<p class="muted">{$t('app.tagline')}</p>
-		<a class="hero__cta" href="/new">Start a question</a>
+		<h1>{$t('Dialectical Chat')}</h1>
+		<p class="muted">{$t('Turn debate into evidence-weighted reasoning.')}</p>
+		<a class="hero__cta" href="/new">{$t('Start a question')}</a>
 	</header>
 
-	<section aria-label="Open questions">
+	<section aria-label={$t('Open questions')}>
 		{#if data.roots.length === 0}
-			<p class="empty muted">{$t('discovery.noQuestions')}</p>
+			<p class="empty muted">{$t('No public questions yet.')}</p>
 		{:else}
 			<ul class="cards">
 				{#each data.roots as q (q.statementId)}
@@ -32,9 +32,13 @@
 							<h2 class="card__title">{q.statement}</h2>
 						</a>
 						<div class="card__meta muted">
-							<span>{q.optionCount} option{q.optionCount === 1 ? '' : 's'}</span>
+							<span
+								>{$tp(q.optionCount === 1 ? '{{count}} option' : '{{count}} options', {
+									count: q.optionCount,
+								})}</span
+							>
 							<span>·</span>
-							<span>by {q.creatorName}</span>
+							<span>{$tp('by {{name}}', { name: q.creatorName })}</span>
 						</div>
 						<ConvergenceMeter value={q.convergenceIndex} />
 					</li>

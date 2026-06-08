@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { t } from '$lib/i18n';
 
 	// Bipolar epistemic-stance control for evidence (critique/corroborate):
 	// "I think it's incorrect" ←─ unsure ─→ "I think it's correct".
@@ -119,14 +120,14 @@
 			type="button"
 			class="cr__summary"
 			onclick={() => (expanded = true)}
-			title="Corroboration level — click to rate how correct this is"
+			title={$t('Corroboration level — click to rate how correct this is')}
 		>
 			<span class="cr__scale">⚖️</span>
 			{#if crPct !== null}
 				<span class="cr__avg cr__avg--{crTone}">Cr {crPct}%</span>
 				{#if count > 0}<span class="cr__count">· {count}</span>{/if}
 			{:else}
-				<span class="cr__none">Rate correctness</span>
+				<span class="cr__none">{$t('Rate correctness')}</span>
 			{/if}
 		</button>
 	{:else}
@@ -134,8 +135,8 @@
 			type="button"
 			class="cr__collapse"
 			onclick={() => (expanded = false)}
-			title="Collapse"
-			aria-label="Collapse rating"
+			title={$t('Collapse')}
+			aria-label={$t('Collapse rating')}
 		>⚖️</button>
 
 		<!-- Decorative click/drag hit-area; the focusable thumb (role=slider) below
@@ -149,18 +150,18 @@
 				class:idle={!engaged}
 				class:dragging
 				role="slider"
-				aria-label="How correct is this statement?"
+				aria-label={$t('How correct is this statement?')}
 				aria-valuemin={-1}
 				aria-valuemax={1}
 				aria-valuenow={v}
-				aria-valuetext={engaged ? band.label : 'Not rated'}
+				aria-valuetext={engaged ? $t(band.label) : $t('Not rated')}
 				onkeydown={onKey}
 				style={`left:${pct}%`}
 			></button>
 		</div>
 
 		<span class="cr__label cr__label--{tone}" class:idle={!engaged}>
-			{engaged ? band.label : 'How correct is this?'}
+			{engaged ? $t(band.label) : $t('How correct is this?')}
 		</span>
 	{/if}
 </form>

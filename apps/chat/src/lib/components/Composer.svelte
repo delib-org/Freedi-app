@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { StatementType } from '@freedi/shared-types';
 	import { composerChoicesFor, type ComposerChoice } from '$lib/chat/node';
+	import { t } from '$lib/i18n';
 
 	// Context-aware composer (§4.1 / §6). Reads the parent's type to offer the
 	// right choices; posts to the `sendMessage` form action.
@@ -50,7 +51,7 @@
 		}}
 	>
 		<input type="hidden" name="parentId" value={parentId} />
-		<div class="composer__pills" role="radiogroup" aria-label="Reply type">
+		<div class="composer__pills" role="radiogroup" aria-label={$t('Reply type')}>
 			{#each choices as c (c)}
 				<label class="pill pill--{c}" class:active={choice === c}>
 					<input
@@ -60,7 +61,7 @@
 						checked={choice === c}
 						onchange={() => (choice = c)}
 					/>
-					{labels[c]}
+					{$t(labels[c])}
 				</label>
 			{/each}
 		</div>
@@ -68,14 +69,14 @@
 			name="text"
 			rows="2"
 			required
-			placeholder={placeholders[choice]}
-			aria-label={labels[choice]}
+			placeholder={$t(placeholders[choice])}
+			aria-label={$t(labels[choice])}
 		></textarea>
 		<div class="composer__actions">
 			{#if !signedIn}
-				<span class="muted composer__hint">You'll be asked to sign in to post.</span>
+				<span class="muted composer__hint">{$t("You'll be asked to sign in to post.")}</span>
 			{/if}
-			<button type="submit" class="composer__submit">Post</button>
+			<button type="submit" class="composer__submit">{$t('Post')}</button>
 		</div>
 	</form>
 {/if}

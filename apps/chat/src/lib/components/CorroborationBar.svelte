@@ -1,5 +1,7 @@
 <script lang="ts">
 	// The C bar for an option/evidence node. C ∈ [0,1]; color shifts low→high.
+	import { tp } from '$lib/i18n';
+
 	let { value }: { value?: number } = $props();
 
 	const has = $derived(typeof value === 'number');
@@ -8,7 +10,7 @@
 </script>
 
 {#if has}
-	<div class="cbar" title={`Corroboration ${pct}%`}>
+	<div class="cbar" title={$tp('Corroboration {{pct}}%', { pct })}>
 		<div class="cbar__track">
 			<div class="cbar__fill" style={`width:${pct}%;background:${color}`}></div>
 		</div>

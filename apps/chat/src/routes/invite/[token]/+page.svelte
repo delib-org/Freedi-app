@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { get } from 'svelte/store';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { auth, functionsClient } from '$lib/firebaseClient';
+	import { t } from '$lib/i18n';
 
 	// Private invite redeem (§2). Lazy Google sign-in → mint session cookie →
 	// call the `redeemInvite` callable → land in the private conversation.
@@ -32,7 +34,7 @@
 
 			await goto(`/q/${res.data.topParentId}`, { invalidateAll: true });
 		} catch (e) {
-			errorMsg = e instanceof Error ? e.message : 'Could not redeem invite';
+			errorMsg = e instanceof Error ? e.message : get(t)('Could not redeem invite');
 		} finally {
 			busy = false;
 		}
@@ -40,15 +42,15 @@
 </script>
 
 <svelte:head>
-	<title>Join private conversation — Dialectical Chat</title>
+	<title>{$t('Join private conversation — Dialectical Chat')}</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <main class="page invite">
-	<h1>You've been invited</h1>
-	<p class="muted">Sign in with Google to join this private conversation.</p>
+	<h1>{$t("You've been invited")}</h1>
+	<p class="muted">{$t('Sign in with Google to join this private conversation.')}</p>
 	<button class="invite__btn" onclick={redeem} disabled={busy}>
-		{busy ? 'Joining…' : 'Accept invite'}
+		{busy ? $t('Joining…') : $t('Accept invite')}
 	</button>
 	{#if errorMsg}<p class="invite__error">{errorMsg}</p>{/if}
 </main>

@@ -3,7 +3,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import '../styles/global.scss';
-	import { initLang } from '$lib/i18n';
+	import { initLang, lang, setLanguage, t, LANGS, LANGUAGE_NAMES } from '$lib/i18n';
 	import { signOutEverywhere } from '$lib/firebaseClient';
 
 	let { children, data } = $props();
@@ -22,7 +22,7 @@
 	}
 
 	onMount(() => {
-		initLang();
+		initLang(data.lang);
 		const stored = localStorage.getItem('chat.theme') as 'dark' | 'light' | null;
 		const initial =
 			stored ?? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
@@ -47,31 +47,42 @@
 	<div class="topbar__inner">
 		<a class="topbar__brand" href="/">
 			<span class="topbar__logo">◆</span>
-			<span class="topbar__name">Dialectical Chat</span>
+			<span class="topbar__name">{$t('Dialectical Chat')}</span>
 		</a>
 
 		<nav class="topbar__nav">
-			<a class="topbar__link" href="/new">Start a question</a>
+			<a class="topbar__link" href="/new">{$t('Start a question')}</a>
+			<select
+				class="topbar__lang"
+				value={$lang}
+				onchange={(e) => setLanguage((e.currentTarget as HTMLSelectElement).value)}
+				title={$t('Language')}
+				aria-label={$t('Language')}
+			>
+				{#each LANGS as code (code)}
+					<option value={code}>{LANGUAGE_NAMES[code]}</option>
+				{/each}
+			</select>
 			<button
 				class="topbar__theme"
 				onclick={toggleTheme}
-				title="Toggle light / dark"
-				aria-label="Toggle light or dark theme"
+				title={$t('Toggle light / dark')}
+				aria-label={$t('Toggle light or dark theme')}
 			>{theme === 'dark' ? '☀️' : '🌙'}</button>
 			{#if data.user}
-				<a class="topbar__user" href={`/u/${data.user.uid}`} title="Your profile">
+				<a class="topbar__user" href={`/u/${data.user.uid}`} title={$t('Your profile')}>
 					{#if data.user.photoURL}
 						<img class="topbar__avatar" src={data.user.photoURL} alt="" />
 					{/if}
 					<span class="topbar__username"
-						>{data.user.displayName ?? data.user.email ?? 'You'}</span
+						>{data.user.displayName ?? data.user.email ?? $t('You')}</span
 					>
 				</a>
 				<button class="topbar__btn" onclick={signOut} disabled={signingOut}>
-					{signingOut ? '…' : 'Sign out'}
+					{signingOut ? '…' : $t('Sign out')}
 				</button>
 			{:else}
-				<a class="topbar__btn topbar__btn--primary" href={signInHref}>Sign in</a>
+				<a class="topbar__btn topbar__btn--primary" href={signInHref}>{$t('Sign in')}</a>
 			{/if}
 		</nav>
 	</div>
@@ -162,6 +173,23 @@
 			white-space: nowrap;
 		}
 
+		&__lang {
+			height: 34px;
+			border-radius: var(--radius-pill);
+			border: 1px solid var(--glass-border);
+			background: var(--eval-btn);
+			color: var(--text-body);
+			cursor: pointer;
+			font: inherit;
+			font-size: 0.82rem;
+			padding: 0 var(--space-sm);
+			transition: border-color 0.2s;
+
+			&:hover {
+				border-color: var(--accent);
+			}
+		}
+
 		&__theme {
 			width: 34px;
 			height: 34px;
@@ -204,6 +232,16 @@
 		}
 		.topbar__username {
 			display: none;
+		}
+		.topbar__inner {
+			gap: var(--space-sm);
+		}
+		.topbar__name {
+			white-space: nowrap;
+			font-size: 0.95rem;
+		}
+		.topbar__btn {
+			white-space: nowrap;
 		}
 	}
 </style>

@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { get } from 'svelte/store';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { auth } from '$lib/firebaseClient';
+	import { t } from '$lib/i18n';
 
 	// Lazy Google sign-in (§6.4). Never gates reading; draft-preserving — returns
 	// to the page the user was on (and the parent they were replying to).
@@ -24,11 +26,11 @@
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ idToken }),
 			});
-			if (!res.ok) throw new Error('Session creation failed');
+			if (!res.ok) throw new Error(get(t)('Session creation failed'));
 
 			await goto(redirectTo, { invalidateAll: true });
 		} catch (e) {
-			errorMsg = e instanceof Error ? e.message : 'Sign-in failed';
+			errorMsg = e instanceof Error ? e.message : get(t)('Sign-in failed');
 		} finally {
 			busy = false;
 		}
@@ -36,20 +38,20 @@
 </script>
 
 <svelte:head>
-	<title>Sign in — Dialectical Chat</title>
+	<title>{$t('Sign in — Dialectical Chat')}</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <main class="page signin">
-	<h1>Sign in</h1>
-	<p class="muted">Reading is always open. Sign in to post answers, evidence, and votes.</p>
+	<h1>{$t('Sign in')}</h1>
+	<p class="muted">{$t('Reading is always open. Sign in to post answers, evidence, and votes.')}</p>
 	<button class="signin__btn" onclick={signIn} disabled={busy}>
-		{busy ? 'Signing in…' : 'Continue with Google'}
+		{busy ? $t('Signing in…') : $t('Continue with Google')}
 	</button>
 	{#if errorMsg}
 		<p class="signin__error">{errorMsg}</p>
 	{/if}
-	<a class="muted signin__skip" href={redirectTo}>Back without signing in</a>
+	<a class="muted signin__skip" href={redirectTo}>{$t('Back without signing in')}</a>
 </main>
 
 <style lang="scss">

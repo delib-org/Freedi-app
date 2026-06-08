@@ -2,6 +2,7 @@
 	import { EvidenceStatus, DialogicType } from '@freedi/shared-types';
 	import type { Statement } from '@freedi/shared-types';
 	import { createTaxonomy } from '@freedi/evidence';
+	import { t } from '$lib/i18n';
 
 	let { statement }: { statement: Statement } = $props();
 
@@ -19,10 +20,10 @@
 
 <div class="badge badge--{polarity}">
 	<span class="badge__polarity">
-		{#if polarity === DialogicType.strengthen}Strengthen{:else if polarity === DialogicType.critique}Critique{:else}Standard{/if}
+		{#if polarity === DialogicType.strengthen}{$t('Strengthen')}{:else if polarity === DialogicType.critique}{$t('Critique')}{:else}{$t('Standard')}{/if}
 	</span>
 	{#if evaluating}
-		<span class="badge__chip">evaluating…</span>
+		<span class="badge__chip">{$t('evaluating…')}</span>
 	{:else if classLabel}
 		<span class="badge__class">{classLabel}{#if weightPct !== null} · w {weightPct}%{/if}</span>
 	{/if}

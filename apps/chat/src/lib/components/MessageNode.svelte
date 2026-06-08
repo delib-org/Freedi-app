@@ -15,6 +15,7 @@
 	import Composer from './Composer.svelte';
 	import AiSummaryPanel from './AiSummaryPanel.svelte';
 	import { generateSummary, acceptRevision, type SummaryResult } from '$lib/aiSummary';
+	import { t, tp } from '$lib/i18n';
 
 	let {
 		node,
@@ -25,6 +26,8 @@
 		collapseVersion = 0,
 		collapseTarget = true,
 		sortMode = 'agreement',
+		isMobile = false,
+		onFocus,
 	}: {
 		node: TreeNode;
 		signedIn?: boolean;
@@ -34,6 +37,8 @@
 		collapseVersion?: number;
 		collapseTarget?: boolean;
 		sortMode?: SortMode;
+		isMobile?: boolean;
+		onFocus?: (id: string) => void;
 	} = $props();
 
 	const s = $derived(node.statement);
@@ -115,8 +120,13 @@
 	// Derived flags so each transition element is the DIRECT child of its own
 	// `{#if}` — otherwise `transition:…|local` is suppressed when an ancestor
 	// block toggles (and the collapse/expand would snap instead of animate).
-	const showChildren = $derived(open && hasChildren && !truncate);
-	const showContinue = $derived(open && hasChildren && truncate);
+	// On mobile, threads only nest ~3 levels (depth 0,1,2); a node at depth ≥ 2
+	// hides its children behind a "Continue thread →" button that drills into it
+	// as a focused root. Desktop keeps full nesting up to `maxDepth`.
+	const mobileFocus = $derived(isMobile && node.depth >= 2 && hasChildren);
+	const showChildren = $derived(open && hasChildren && !truncate && !mobileFocus);
+	const showContinue = $derived(open && hasChildren && truncate && !mobileFocus);
+	const showFocus = $derived(open && mobileFocus);
 </script>
 
 <article class="node">
@@ -124,7 +134,7 @@
 		{#if node.children.length > 0 && open && !truncate}
 			<button
 				class="node__thread"
-				aria-label={open ? 'Collapse thread' : 'Expand thread'}
+				aria-label={open ? $t('Collapse thread') : $t('Expand thread')}
 				onclick={() => (open = !open)}
 				transition:fade|local={{ duration: 150 }}
 			></button>
@@ -132,17 +142,17 @@
 
 		<div class="node__main">
 			<div class="node__sender">
-				<span class="node__author">{s.creator?.displayName ?? 'Anonymous'}</span>
+				<span class="node__author">{s.creator?.displayName ?? $t('Anonymous')}</span>
 				{#if isEvidence && polarity === DialogicType.strengthen}
-					<span class="node__tag node__tag--strengthen">🛡 Strengthen</span>
+					<span class="node__tag node__tag--strengthen">🛡 {$t('Strengthen')}</span>
 				{:else if isEvidence && polarity === DialogicType.critique}
-					<span class="node__tag node__tag--critique">⚡ Critique</span>
+					<span class="node__tag node__tag--critique">⚡ {$t('Critique')}</span>
 				{:else if isSelected}
-					<span class="node__tag node__tag--selected">✓ Selected</span>
+					<span class="node__tag node__tag--selected">✓ {$t('Selected')}</span>
 				{:else if isOption}
-					<span class="node__tag node__tag--option">💡 Option</span>
+					<span class="node__tag node__tag--option">💡 {$t('Option')}</span>
 				{:else if isQuestion}
-					<span class="node__tag node__tag--question">❓ Question</span>
+					<span class="node__tag node__tag--question">❓ {$t('Question')}</span>
 				{/if}
 			</div>
 
@@ -185,12 +195,14 @@
 					<div class="node__actions">
 						{#if scored && !truncate}
 							<button class="node__action" onclick={() => (showReply = !showReply)}>
-								{showReply ? 'Cancel' : 'Reply'}
+								{showReply ? $t('Cancel') : $t('Reply')}
 							</button>
 						{/if}
 						{#if node.children.length > 0}
 							<button class="node__action" onclick={() => (open = !open)}>
-								{open ? 'Collapse' : `Expand (${node.children.length})`}
+								{open
+									? $t('Collapse')
+									: $tp('Expand ({{count}})', { count: node.children.length })}
 							</button>
 						{/if}
 						{#if canSummarize}
@@ -200,7 +212,7 @@
 								onclick={toggleAi}
 								disabled={aiBusy}
 							>
-								✨ {aiBusy ? 'Summarizing…' : aiOpen ? 'Hide Summary' : 'AI Summary'}
+								✨ {aiBusy ? $t('Summarizing…') : aiOpen ? $t('Hide Summary') : $t('AI Summary')}
 							</button>
 						{/if}
 					</div>
@@ -219,7 +231,10 @@
 
 			{#if isQuestion}
 				<a class="node__subq" href={`/q/${s.statementId}`}>
-					Open sub-question · {s.optionCount ?? 0} option{(s.optionCount ?? 0) === 1 ? '' : 's'} →
+					{$t('Open sub-question')} · {$tp(
+						(s.optionCount ?? 0) === 1 ? '{{count}} option' : '{{count}} options',
+						{ count: s.optionCount ?? 0 },
+					)} →
 				</a>
 			{/if}
 		</div>
@@ -231,10 +246,27 @@
 		</div>
 	{/if}
 
+	{#if showFocus}
+		<div class="node__focus-wrap" transition:slideFade|local={{ duration: 240 }}>
+			<button class="node__focus-btn" onclick={() => onFocus?.(s.statementId)}>
+				{$tp(
+					node.children.length === 1
+						? 'Continue thread ({{count}} reply)'
+						: 'Continue thread ({{count}} replies)',
+					{ count: node.children.length },
+				)} →
+			</button>
+		</div>
+	{/if}
+
 	{#if showContinue}
 		<a class="node__continue" href={`/q/${s.statementId}`}>
-			Continue thread ({node.children.length}
-			{node.children.length === 1 ? 'reply' : 'replies'}) →
+			{$tp(
+				node.children.length === 1
+					? 'Continue thread ({{count}} reply)'
+					: 'Continue thread ({{count}} replies)',
+				{ count: node.children.length },
+			)} →
 		</a>
 	{/if}
 
@@ -251,6 +283,8 @@
 						{collapseVersion}
 						{collapseTarget}
 						{sortMode}
+						{isMobile}
+						{onFocus}
 					/>
 				</div>
 			{/each}
@@ -400,20 +434,24 @@
 
 		&__meta {
 			display: flex;
+			flex-wrap: wrap;
 			justify-content: space-between;
 			align-items: center;
-			gap: var(--space-md);
+			gap: var(--space-sm) var(--space-md);
 		}
 
 		&__meta-left {
 			display: flex;
 			align-items: center;
 			gap: var(--space-sm);
+			min-width: 0;
 		}
 
 		&__actions {
 			display: flex;
+			flex-wrap: wrap;
 			gap: var(--space-sm);
+			margin-left: auto;
 			opacity: 0.7;
 			transition: opacity 0.2s;
 		}
@@ -482,15 +520,60 @@
 				text-decoration: none;
 			}
 		}
+
+		// Mobile deep-thread drill-in: a full-width tappable card (ported look from
+		// the reference's `.continue-thread-btn`).
+		&__focus-wrap {
+			margin-top: var(--space-sm);
+		}
+		&__focus-btn {
+			width: 100%;
+			text-align: left;
+			padding: var(--space-sm) var(--space-md);
+			background: var(--eval-bg);
+			border: 1px solid var(--glass-border);
+			border-radius: var(--radius-md);
+			color: var(--accent);
+			font: inherit;
+			font-size: 0.84rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: border-color 0.15s, background 0.15s;
+
+			&:hover {
+				border-color: var(--accent);
+				background: var(--eval-btn);
+			}
+		}
 	}
 
 	@media (max-width: 480px) {
 		.node__children {
-			margin-left: 0.75rem;
+			margin-left: 0.9rem;
 			padding-left: var(--space-sm);
 		}
 		.node__thread {
-			left: -0.75rem;
+			left: -0.9rem;
+		}
+		.node__bubble {
+			padding: var(--space-sm) var(--space-md);
+		}
+		// The eval pill is the widest element; let actions wrap under it and sit
+		// flush right so "Reply" never clips off the screen edge.
+		.node__actions {
+			width: 100%;
+			justify-content: flex-end;
+		}
+		.node__action {
+			// Comfortable touch target (≈44px tall hit area via padding).
+			padding: var(--space-xs) 2px;
+		}
+	}
+
+	// Touch devices have no hover, so reveal the action row by default.
+	@media (hover: none) {
+		.node__actions {
+			opacity: 1;
 		}
 	}
 </style>

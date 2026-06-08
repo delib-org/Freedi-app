@@ -8,5 +8,6 @@ export const load: LayoutServerLoad = ({ locals, url }) => {
 	return {
 		user: locals.user,
 		pathname: url.pathname,
+		lang: locals.lang,
 	};
 };

@@ -1,39 +1,40 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
+	import { t } from '$lib/i18n';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 </script>
 
 <svelte:head>
-	<title>Start a question — Dialectical Chat</title>
+	<title>{$t('Start a question — Dialectical Chat')}</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
 <main class="page new">
-	<nav class="breadcrumb"><a href="/">← All questions</a></nav>
-	<h1>Start a question</h1>
-	<p class="muted">Ask something people can answer with options, then debate with evidence.</p>
+	<nav class="breadcrumb"><a href="/">← {$t('All questions')}</a></nav>
+	<h1>{$t('Start a question')}</h1>
+	<p class="muted">{$t('Ask something people can answer with options, then debate with evidence.')}</p>
 
 	<form method="POST" class="new__form">
 		<textarea
 			name="text"
 			rows="3"
 			required
-			placeholder="e.g. Should our city ban cars from the old town?"
-			aria-label="Question"
+			placeholder={$t('e.g. Should our city ban cars from the old town?')}
+			aria-label={$t('Question')}
 		></textarea>
 
 		<fieldset class="new__visibility">
-			<legend>Visibility</legend>
-			<label><input type="radio" name="visibility" value="public" checked /> Public — listed & crawlable</label>
-			<label><input type="radio" name="visibility" value="unlisted" /> Unlisted — by link only</label>
-			<label><input type="radio" name="visibility" value="private" /> Private — members only</label>
+			<legend>{$t('Visibility')}</legend>
+			<label><input type="radio" name="visibility" value="public" checked /> {$t('Public — listed & crawlable')}</label>
+			<label><input type="radio" name="visibility" value="unlisted" /> {$t('Unlisted — by link only')}</label>
+			<label><input type="radio" name="visibility" value="private" /> {$t('Private — members only')}</label>
 		</fieldset>
 
 		{#if form?.error}<p class="new__error">{form.error}</p>{/if}
-		{#if !data.signedIn}<p class="muted">You'll be asked to sign in to create it.</p>{/if}
+		{#if !data.signedIn}<p class="muted">{$t("You'll be asked to sign in to create it.")}</p>{/if}
 
-		<button type="submit" class="new__submit">Create question</button>
+		<button type="submit" class="new__submit">{$t('Create question')}</button>
 	</form>
 </main>
 

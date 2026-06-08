@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { slideFade } from '$lib/transitions';
 	import type { SummaryResult } from '$lib/aiSummary';
+	import { t, tp } from '$lib/i18n';
 
 	// Presentational only — the AI summary box (reference `.summary-node`): a ✨
 	// callout with an "AI Thread Summary" section and an amber "Suggested
@@ -33,20 +34,25 @@
 		{:else if data}
 			<div class="summary__section">
 				<span class="summary__label">
-					AI Thread Summary{#if data.descendantCount > 0}<span class="summary__meta">
-							· {data.descendantCount} sub-statement{data.descendantCount === 1 ? '' : 's'}</span
-						>{/if}{#if data.cached}<span class="summary__cached"> · ✓ up to date</span>{/if}
+					{$t('AI Thread Summary')}{#if data.descendantCount > 0}<span class="summary__meta">
+							· {$tp(
+								data.descendantCount === 1
+									? '{{count}} sub-statement'
+									: '{{count}} sub-statements',
+								{ count: data.descendantCount },
+							)}</span
+						>{/if}{#if data.cached}<span class="summary__cached"> · ✓ {$t('up to date')}</span>{/if}
 				</span>
 				<p>{data.summary}</p>
 			</div>
 
 			{#if data.improvementSuggestion}
 				<div class="summary__section summary__section--suggestion">
-					<span class="summary__label summary__label--amber">💡 Suggested Revision</span>
+					<span class="summary__label summary__label--amber">💡 {$t('Suggested Revision')}</span>
 					<p class="summary__suggestion">"{data.improvementSuggestion}"</p>
 					{#if canAccept}
 						<button class="summary__accept" onclick={() => onAccept?.()} disabled={accepting}>
-							{accepting ? 'Applying…' : 'Accept Revision'}
+							{accepting ? $t('Applying…') : $t('Accept Revision')}
 						</button>
 					{/if}
 				</div>

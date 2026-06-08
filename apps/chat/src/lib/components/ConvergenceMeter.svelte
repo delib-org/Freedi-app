@@ -1,19 +1,19 @@
 <script lang="ts">
 	// Visualizes a question's convergenceIndex ∈ [0,1] (§1.5) — how clearly a
 	// leading answer has separated from the field.
+	import { t, tp } from '$lib/i18n';
+
 	let { value = 0 }: { value?: number } = $props();
 
 	const pct = $derived(Math.round(Math.max(0, Math.min(1, value)) * 100));
-	const label = $derived(
-		pct >= 66 ? 'Converging' : pct >= 33 ? 'Forming' : 'Open',
-	);
+	const labelKey = $derived(pct >= 66 ? 'Converging' : pct >= 33 ? 'Forming' : 'Open');
 </script>
 
-<div class="conv" title={`Convergence ${pct}%`}>
+<div class="conv" title={$tp('Convergence {{pct}}%', { pct })}>
 	<div class="conv__track">
 		<div class="conv__fill" style={`width:${pct}%`}></div>
 	</div>
-	<span class="conv__label muted">{label} · {pct}%</span>
+	<span class="conv__label muted">{$t(labelKey)} · {pct}%</span>
 </div>
 
 <style lang="scss">

@@ -4,6 +4,8 @@ declare global {
 		interface Locals {
 			/** Verified session user (from the session cookie), or null if anonymous. */
 			user: SessionUser | null;
+			/** Language code resolved per-request (cookie → Accept-Language → en). */
+			lang: string;
 		}
 		interface PageData {}
 		interface Error {}
