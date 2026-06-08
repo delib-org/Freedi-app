@@ -8,7 +8,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { Visibility, StatementType } from '@freedi/shared-types';
-import { loadConversation, getMyEvaluations } from '$lib/server/conversation';
+import { loadConversation, getMyEvaluations, getStatement } from '$lib/server/conversation';
 import { sendMessage, evaluate } from '$lib/server/writeActions';
 import type { ComposerChoice } from '$lib/chat/node';
 
@@ -16,6 +16,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const { root, statements } = await loadConversation(params.id, locals.user);
 
 	const visibility = root.visibility ?? Visibility.public;
+
+	// When the current question is itself a sub-question (its parent isn't the
+	// synthetic "top" root), expose the parent so the breadcrumb can link back to
+	// the question above instead of jumping all the way to "All questions".
+	let parent: { statementId: string; statement: string } | null = null;
+	if (root.parentId && root.parentId !== 'top') {
+		try {
+			const parentStatement = await getStatement(root.parentId);
+			if (parentStatement) {
+				parent = {
+					statementId: parentStatement.statementId,
+					statement: parentStatement.statement,
+				};
+			}
+		} catch (e) {
+			console.error('[chat] parent load failed:', e instanceof Error ? e.message : e);
+		}
+	}
 
 	// The signed-in user's own votes, so the face rater can highlight them.
 	let myEvaluations: Record<string, number> = {};
@@ -35,6 +53,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		root,
+		parent,
 		statements,
 		visibility,
 		myEvaluations,

@@ -104,7 +104,15 @@
 
 <main class="page">
 	<nav class="breadcrumb">
-		<a href="/">← All questions</a>
+		{#if data.parent}
+			<a href={`/q/${data.parent.statementId}`} title={data.parent.statement}>
+				← {data.parent.statement.length > 48
+					? `${data.parent.statement.slice(0, 48)}…`
+					: data.parent.statement}
+			</a>
+		{:else}
+			<a href="/">← All questions</a>
+		{/if}
 	</nav>
 
 	<div class="conversation">
