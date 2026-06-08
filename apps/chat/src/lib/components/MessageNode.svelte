@@ -5,6 +5,7 @@
 	import { StatementType, DialogicType } from '@freedi/shared-types';
 	import type { TreeNode } from '$lib/stores/messages';
 	import { sortChildren } from '$lib/stores/messages';
+	import { evalStatsOf } from '$lib/chat/node';
 	import CorroborationBar from './CorroborationBar.svelte';
 	import EvidenceBadge from './EvidenceBadge.svelte';
 	import EvaluationBar from './EvaluationBar.svelte';
@@ -33,6 +34,7 @@
 	const isOption = $derived(s.statementType === StatementType.option);
 	const scored = $derived(isOption || isEvidence);
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
+	const evalStats = $derived(evalStatsOf(s));
 
 	const sorted = $derived(sortChildren(node.children));
 	const hasChildren = $derived(node.children.length > 0 && !isQuestion);
@@ -143,6 +145,8 @@
 							<CorrectnessRating
 								statementId={s.statementId}
 								value={myEvaluations[s.statementId] ?? null}
+								average={evalStats.average}
+								count={evalStats.count}
 							/>
 						{:else if isOption}
 							<EvaluationBar

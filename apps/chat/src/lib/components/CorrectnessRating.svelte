@@ -1,27 +1,35 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 
-	// Bipolar epistemic-stance slider for evidence (critique/corroborate):
+	// Bipolar epistemic-stance control for evidence (critique/corroborate):
 	// "I think it's incorrect" ←─ unsure ─→ "I think it's correct".
-	// Emits a continuous value in [-1, 1] to the `evaluate` form action (which the
-	// corroboration scorer reads via (e+1)/2). Submits on release / keypress, so
-	// dragging doesn't spam writes. Restyled from the user's React prototype.
+	// Two states: collapsed shows ⚖️ + the average rating so far; pressing it
+	// reveals the slider. Emits a continuous value in [-1,1] to the `evaluate`
+	// form action (the corroboration scorer reads it via (e+1)/2).
 	let {
 		statementId,
 		value = null,
-	}: { statementId: string; value?: number | null } = $props();
+		average = null,
+		count = 0,
+	}: {
+		statementId: string;
+		value?: number | null;
+		average?: number | null;
+		count?: number;
+	} = $props();
 
 	const BANDS = [
 		{ min: 0.62, label: "Confident it's correct" },
-		{ min: 0.18, label: "Likely correct" },
+		{ min: 0.18, label: 'Likely correct' },
 		{ min: -0.18, label: 'Unsure' },
 		{ min: -0.62, label: 'Likely incorrect' },
 		{ min: -1.01, label: "Confident it's incorrect" },
 	];
 
-	let trackEl: HTMLDivElement;
+	let trackEl = $state<HTMLDivElement>();
 	let formEl: HTMLFormElement;
 	let hiddenEl: HTMLInputElement;
+	let expanded = $state(false);
 	let dragging = $state(false);
 	let draft = $state<number | null>(null); // live value while dragging (uncommitted)
 
@@ -32,9 +40,17 @@
 	const band = $derived(BANDS.find((b) => v >= b.min) ?? BANDS[BANDS.length - 1]);
 	const tone = $derived(v >= 0.18 ? 'pos' : v <= -0.18 ? 'neg' : 'mid');
 
+	const avgTone = $derived(
+		average === null ? 'mid' : average >= 0.18 ? 'pos' : average <= -0.18 ? 'neg' : 'mid',
+	);
+	const avgText = $derived(
+		average === null ? '' : average > 0 ? `+${average.toFixed(2)}` : average.toFixed(2),
+	);
+
 	const round = (x: number) => Math.round(Math.max(-1, Math.min(1, x)) * 100) / 100;
 
 	function valueFromX(clientX: number): number {
+		if (!trackEl) return v;
 		const r = trackEl.getBoundingClientRect();
 
 		return round(((clientX - r.left) / r.width) * 2 - 1);
@@ -48,7 +64,7 @@
 	function onPointerDown(e: PointerEvent) {
 		e.preventDefault();
 		dragging = true;
-		trackEl.setPointerCapture?.(e.pointerId);
+		trackEl?.setPointerCapture?.(e.pointerId);
 		draft = valueFromX(e.clientX);
 	}
 
@@ -98,35 +114,55 @@
 	<input type="hidden" name="statementId" value={statementId} />
 	<input type="hidden" name="value" bind:this={hiddenEl} />
 
-	<!-- Decorative click/drag hit-area; the focusable thumb (role=slider) below
-	     carries the semantics + keyboard control. -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		class="cr__track"
-		class:idle={!engaged}
-		bind:this={trackEl}
-		onpointerdown={onPointerDown}
-	>
-		<span class="cr__center"></span>
+	{#if !expanded}
 		<button
 			type="button"
-			class="cr__thumb cr__thumb--{tone}"
-			class:idle={!engaged}
-			class:dragging
-			role="slider"
-			aria-label="How correct is this statement?"
-			aria-valuemin={-1}
-			aria-valuemax={1}
-			aria-valuenow={v}
-			aria-valuetext={engaged ? band.label : 'Not rated'}
-			onkeydown={onKey}
-			style={`left:${pct}%`}
-		></button>
-	</div>
+			class="cr__summary"
+			onclick={() => (expanded = true)}
+			title="Rate how correct this is"
+		>
+			<span class="cr__scale">⚖️</span>
+			{#if count > 0 && average !== null}
+				<span class="cr__avg cr__avg--{avgTone}">{avgText}</span>
+				<span class="cr__count">· {count}</span>
+			{:else}
+				<span class="cr__none">Rate correctness</span>
+			{/if}
+		</button>
+	{:else}
+		<button
+			type="button"
+			class="cr__collapse"
+			onclick={() => (expanded = false)}
+			title="Collapse"
+			aria-label="Collapse rating"
+		>⚖️</button>
 
-	<span class="cr__label cr__label--{tone}" class:idle={!engaged}>
-		{engaged ? band.label : 'How correct is this?'}
-	</span>
+		<!-- Decorative click/drag hit-area; the focusable thumb (role=slider) below
+		     carries the semantics + keyboard control. -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="cr__track" class:idle={!engaged} bind:this={trackEl} onpointerdown={onPointerDown}>
+			<span class="cr__center"></span>
+			<button
+				type="button"
+				class="cr__thumb cr__thumb--{tone}"
+				class:idle={!engaged}
+				class:dragging
+				role="slider"
+				aria-label="How correct is this statement?"
+				aria-valuemin={-1}
+				aria-valuemax={1}
+				aria-valuenow={v}
+				aria-valuetext={engaged ? band.label : 'Not rated'}
+				onkeydown={onKey}
+				style={`left:${pct}%`}
+			></button>
+		</div>
+
+		<span class="cr__label cr__label--{tone}" class:idle={!engaged}>
+			{engaged ? band.label : 'How correct is this?'}
+		</span>
+	{/if}
 </form>
 
 <style lang="scss">
@@ -135,6 +171,69 @@
 		align-items: center;
 		gap: var(--space-sm);
 		margin: 0;
+	}
+
+	// ---- collapsed state ----
+	.cr__summary {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		background: var(--eval-bg);
+		border: 1px solid var(--glass-border);
+		border-radius: var(--radius-pill);
+		padding: 3px 10px 3px 8px;
+		font: inherit;
+		cursor: pointer;
+		transition: border-color 0.2s;
+
+		&:hover {
+			border-color: var(--accent);
+		}
+	}
+	.cr__scale {
+		font-size: 0.95rem;
+		line-height: 1;
+	}
+	.cr__avg {
+		font-size: 0.74rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+
+		&--pos {
+			color: var(--strengthen);
+		}
+		&--neg {
+			color: var(--critique);
+		}
+		&--mid {
+			color: var(--text-muted);
+		}
+	}
+	.cr__count {
+		font-size: 0.68rem;
+		color: var(--text-muted);
+	}
+	.cr__none {
+		font-size: 0.7rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: var(--text-muted);
+	}
+
+	// ---- expanded state ----
+	.cr__collapse {
+		background: none;
+		border: none;
+		padding: 0;
+		font-size: 0.95rem;
+		line-height: 1;
+		cursor: pointer;
+		opacity: 0.85;
+
+		&:hover {
+			opacity: 1;
+		}
 	}
 
 	.cr__track {

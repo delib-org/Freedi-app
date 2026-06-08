@@ -115,10 +115,23 @@ async function buildScorable(rootId: string): Promise<ScorableStatement | null> 
 async function recomputeScored(statement: Statement): Promise<number> {
 	const scorable = await buildScorable(statement.statementId);
 	const c = scorable ? scoreNode(scorable, DEFAULT_CORROBORATION_CONFIG) : 0;
+
+	// Denormalize the node's own raw evaluation average (in [-1,1]) + count, for
+	// the collapsed "⚖️ average so far" display. `scorable.sum` is the sum of
+	// votes mapped to [0,1]; convert the mean back to [-1,1].
+	const count = scorable?.N ?? 0;
+	const evaluationAverage = count > 0 ? 2 * ((scorable?.sum ?? 0) / count) - 1 : 0;
+
 	await getFirestore()
 		.collection(Collections.statements)
 		.doc(statement.statementId)
-		.update({ corroborationScore: c, lastActivityAt: Date.now(), lastUpdate: Date.now() });
+		.update({
+			corroborationScore: c,
+			evaluationAverage,
+			evaluationCount: count,
+			lastActivityAt: Date.now(),
+			lastUpdate: Date.now(),
+		});
 
 	return c;
 }

@@ -24,6 +24,23 @@ export function isScored(type: StatementType): boolean {
 	return type === StatementType.option || type === StatementType.evidence;
 }
 
+/** Denormalized raw evaluation aggregate (written by the recompute) — not in the
+ *  shared schema, so read via a narrow cast. */
+export interface EvalStats {
+	average: number | null;
+	count: number;
+}
+
+export function evalStatsOf(statement: Statement): EvalStats {
+	const x = statement as Statement & { evaluationAverage?: number; evaluationCount?: number };
+	const count = typeof x.evaluationCount === 'number' ? x.evaluationCount : 0;
+
+	return {
+		average: count > 0 && typeof x.evaluationAverage === 'number' ? x.evaluationAverage : null,
+		count,
+	};
+}
+
 export function polarityOf(statement: Statement): DialecticPolarity {
 	return (statement.dialecticType as DialecticPolarity) ?? 'standard';
 }
