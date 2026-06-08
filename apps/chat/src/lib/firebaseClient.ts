@@ -12,6 +12,10 @@
 import type { FirebaseApp } from 'firebase/app';
 import type { Firestore } from 'firebase/firestore';
 import type { Auth } from 'firebase/auth';
+import type { Functions } from 'firebase/functions';
+
+/** Cloud Functions region for callables (matches functionConfig.region). */
+export const FUNCTIONS_REGION = 'me-west1';
 
 const firebaseConfig = {
 	apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -26,6 +30,7 @@ const firebaseConfig = {
 let appPromise: Promise<FirebaseApp> | null = null;
 let dbPromise: Promise<Firestore> | null = null;
 let authPromise: Promise<Auth> | null = null;
+let functionsPromise: Promise<Functions> | null = null;
 
 const isLocalhost = (): boolean =>
 	typeof window !== 'undefined' && window.location.hostname === 'localhost';
@@ -100,4 +105,30 @@ export async function firestoreAuthed(): Promise<{ db: Firestore; auth: Auth }> 
 	const [db, a] = await Promise.all([firestore(), auth()]);
 
 	return { db, auth: a };
+}
+
+/**
+ * Cloud Functions client for callables (AI summary/revision, invite redeem).
+ * On localhost it targets the functions emulator (127.0.0.1:5001) so the real
+ * functions run locally; in production it hits me-west1.
+ */
+export async function functionsClient(): Promise<Functions> {
+	if (!functionsPromise) {
+		functionsPromise = (async () => {
+			const app = await getApp();
+			const { getFunctions, connectFunctionsEmulator } = await import('firebase/functions');
+			const fns = getFunctions(app, FUNCTIONS_REGION);
+			if (isLocalhost()) {
+				try {
+					connectFunctionsEmulator(fns, '127.0.0.1', 5001);
+				} catch {
+					/* already connected */
+				}
+			}
+
+			return fns;
+		})();
+	}
+
+	return functionsPromise;
 }

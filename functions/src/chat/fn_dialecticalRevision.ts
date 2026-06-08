@@ -30,6 +30,59 @@ interface RevisionDoc {
 	improvementSuggestion: string;
 	generatedAt: number;
 	digitalSourceType: 'TrainedAlgorithmicMediaDigitalSource';
+	descendantCount: number;
+}
+
+/** Max sub-statements fed to the model (keeps the prompt within token limits). */
+const MAX_DESCENDANTS = 200;
+
+/**
+ * Build an indented digest of the ENTIRE subtree under `rootId` — every
+ * sub-statement (options, strengthen/critique evidence, chatter, sub-questions),
+ * recursively — labelled by kind/polarity and corroboration so the model can
+ * summarise the whole debate, not just the direct evidence.
+ */
+function buildSubtreeDigest(root: Statement, descendants: Statement[]): { digest: string; count: number } {
+	const byParent = new Map<string, Statement[]>();
+	for (const s of descendants) {
+		if (s.dialecticSnapshot) continue; // skip archived revision snapshots
+		const list = byParent.get(s.parentId);
+		if (list) list.push(s);
+		else byParent.set(s.parentId, [s]);
+	}
+
+	const lines: string[] = [];
+	let count = 0;
+
+	const label = (s: Statement): string => {
+		if (s.statementType === StatementType.option) return 'OPTION';
+		if (s.statementType === StatementType.question) return 'SUB-QUESTION';
+		if (s.statementType === StatementType.evidence) {
+			const c =
+				typeof s.corroborationScore === 'number'
+					? ` C=${Math.round(s.corroborationScore * 100)}%`
+					: '';
+
+			return `${s.dialecticType === 'critique' ? 'CRITIQUE' : 'STRENGTHEN'}${c}`;
+		}
+
+		return 'COMMENT';
+	};
+
+	const walk = (parentId: string, depth: number): void => {
+		if (count >= MAX_DESCENDANTS) return;
+		const kids = byParent.get(parentId) ?? [];
+		for (const kid of kids) {
+			if (count >= MAX_DESCENDANTS) return;
+			count++;
+			lines.push(`${'  '.repeat(depth)}- [${label(kid)}] ${kid.statement}`);
+			walk(kid.statementId, depth + 1);
+		}
+	};
+
+	walk(root.statementId, 0);
+
+	return { digest: lines.join('\n') || '(no replies yet)', count };
 }
 
 export const generateDialecticalRevision = onCall<{ statementId: string }>(
@@ -44,30 +97,29 @@ export const generateDialecticalRevision = onCall<{ statementId: string }>(
 		const statement = snap.data() as Statement | undefined;
 		if (!statement) throw new HttpsError('not-found', 'Statement not found');
 
-		const childrenSnap = await db
+		// Gather the FULL subtree: every descendant carries this id in `parents`.
+		const descSnap = await db
 			.collection(Collections.statements)
-			.where('parentId', '==', statementId)
-			.where('statementType', '==', StatementType.evidence)
+			.where('parents', 'array-contains', statementId)
 			.get();
-		const evidence = childrenSnap.docs.map((d) => d.data() as Statement);
-		const critiques = evidence.filter((e) => e.dialecticType === 'critique');
-		const strengthens = evidence.filter((e) => e.dialecticType === 'strengthen');
+		const descendants = descSnap.docs.map((d) => d.data() as Statement);
+		const { digest, count } = buildSubtreeDigest(statement, descendants);
 
-		const prompt = `You are improving a claim in a structured debate. Respond with STRICT JSON.
+		const prompt = `You are an analyst summarising a structured dialectical debate.
+Below a CLAIM is its full thread of sub-statements (options, strengthening
+evidence, critiques, comments, sub-questions), indented by depth. Read the WHOLE
+thread, then respond with STRICT JSON.
 
 CLAIM:
 """${statement.statement}"""
 
-STRENGTHENING EVIDENCE:
-${strengthens.map((s, i) => `${i + 1}. ${s.statement}`).join('\n') || '(none)'}
-
-CRITIQUES:
-${critiques.map((c, i) => `${i + 1}. ${c.statement}`).join('\n') || '(none)'}
+FULL THREAD (${count} sub-statements):
+${digest}
 
 Return:
 {
-  "summary": "2-3 sentence neutral summary of the debate",
-  "improvementSuggestion": "a rewritten claim that keeps the valid strengths and addresses the critiques"
+  "summary": "3-4 sentence neutral summary of the entire debate below this claim — what strengthens it, what the strongest critiques are, and where it currently stands",
+  "improvementSuggestion": "a rewritten version of the CLAIM that keeps the valid strengths and addresses the strongest critiques raised anywhere in the thread"
 }`;
 
 		const result = await getGeminiModel().generateContent({
@@ -91,6 +143,7 @@ Return:
 			improvementSuggestion,
 			generatedAt: Date.now(),
 			digitalSourceType: 'TrainedAlgorithmicMediaDigitalSource',
+			descendantCount: count,
 		};
 		await db.collection(REVISIONS).doc(statementId).set(doc);
 

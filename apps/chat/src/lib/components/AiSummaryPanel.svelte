@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { slideFade } from '$lib/transitions';
+	import { functionsClient } from '$lib/firebaseClient';
 
-	// AI thread summary + revision (architecture.md §2). Lazily calls the
-	// `generateDialecticalRevision` / `acceptDialecticalRevision` callables.
-	// AI-authored text is marked for SEO `digitalSourceType`.
+	// AI thread summary + revision (architecture.md §2). Calls the REAL
+	// `generateDialecticalRevision` callable, which reads the whole subtree of
+	// sub-statements and returns a thread summary + a revised claim. On localhost
+	// this runs against the functions emulator. AI-authored text is marked for
+	// SEO `digitalSourceType`.
 	let {
 		statementId,
 		signedIn = false,
@@ -15,13 +18,13 @@
 	let error = $state('');
 	let summary = $state('');
 	let suggestion = $state('');
+	let count = $state(0);
 
 	async function callFn<TReq, TRes>(name: string, data: TReq): Promise<TRes> {
-		const [{ getApp }, { getFunctions, httpsCallable }] = await Promise.all([
-			import('firebase/app'),
+		const [fns, { httpsCallable }] = await Promise.all([
+			functionsClient(),
 			import('firebase/functions'),
 		]);
-		const fns = getFunctions(getApp(), 'me-west1');
 
 		return (await httpsCallable<TReq, TRes>(fns, name)(data)).data;
 	}
@@ -31,12 +34,13 @@
 		busy = true;
 		error = '';
 		try {
-			const res = await callFn<{ statementId: string }, { summary: string; improvementSuggestion: string }>(
-				'generateDialecticalRevision',
-				{ statementId },
-			);
+			const res = await callFn<
+				{ statementId: string },
+				{ summary: string; improvementSuggestion: string; descendantCount: number }
+			>('generateDialecticalRevision', { statementId });
 			summary = res.summary;
 			suggestion = res.improvementSuggestion;
+			count = res.descendantCount ?? 0;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to generate';
 		} finally {
@@ -75,9 +79,11 @@
 				{#if error}
 					<p class="ai__error">{error}</p>
 				{:else if busy && !suggestion}
-					<p class="muted">Reading the debate…</p>
+					<p class="muted">Reading the whole thread…</p>
 				{:else}
-					<h4 class="ai__h">Thread summary</h4>
+					<h4 class="ai__h">
+						Thread summary{#if count > 0}<span class="ai__count"> · {count} sub-statement{count === 1 ? '' : 's'}</span>{/if}
+					</h4>
 					<p class="ai__summary">{summary}</p>
 					<h4 class="ai__h">Suggested revision</h4>
 					<p class="ai__suggestion">{suggestion}</p>
@@ -128,6 +134,12 @@
 			&:first-child {
 				margin-top: 0;
 			}
+		}
+		&__count {
+			color: var(--text-muted);
+			font-weight: 500;
+			text-transform: none;
+			letter-spacing: 0;
 		}
 		&__suggestion {
 			background: var(--amber-soft);

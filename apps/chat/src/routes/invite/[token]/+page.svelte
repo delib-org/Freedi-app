@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { auth } from '$lib/firebaseClient';
+	import { auth, functionsClient } from '$lib/firebaseClient';
 
 	// Private invite redeem (§2). Lazy Google sign-in → mint session cookie →
 	// call the `redeemInvite` callable → land in the private conversation.
@@ -23,9 +23,10 @@
 				body: JSON.stringify({ idToken }),
 			});
 
-			const { getFunctions, httpsCallable } = await import('firebase/functions');
-			const { app: getApp } = await import('firebase/app').then((m) => ({ app: m.getApp }));
-			const fns = getFunctions(getApp(), 'me-west1');
+			const [fns, { httpsCallable }] = await Promise.all([
+				functionsClient(),
+				import('firebase/functions'),
+			]);
 			const call = httpsCallable<{ token: string }, { topParentId: string }>(fns, 'redeemInvite');
 			const res = await call({ token });
 
