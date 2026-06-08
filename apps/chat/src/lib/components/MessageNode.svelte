@@ -38,6 +38,10 @@
 
 	let open = $state(true);
 	let showReply = $state(false);
+	let aiOpen = $state(false);
+
+	// AI summary lives next to Collapse — on scored claims that have replies.
+	const canSummarize = $derived(scored && signedIn && node.children.length > 0);
 
 	// Derived flags so each transition element is the DIRECT child of its own
 	// `{#if}` — otherwise `transition:…|local` is suppressed when an ancestor
@@ -107,15 +111,24 @@
 								{open ? 'Collapse' : `Expand (${node.children.length})`}
 							</button>
 						{/if}
+						{#if canSummarize}
+							<button
+								class="node__action node__action--ai"
+								class:active={aiOpen}
+								onclick={() => (aiOpen = !aiOpen)}
+							>
+								✨ {aiOpen ? 'Hide Summary' : 'AI Summary'}
+							</button>
+						{/if}
 					</div>
 				</div>
 			</div>
 
-			{#if isOption}
+			{#if aiOpen && canSummarize}
 				<AiSummaryPanel
 					statementId={s.statementId}
-					{signedIn}
 					canAccept={Boolean(currentUid) && s.creatorId === currentUid}
+					onClose={() => (aiOpen = false)}
 				/>
 			{/if}
 
@@ -301,6 +314,9 @@
 			padding: 0;
 
 			&:hover {
+				color: var(--accent);
+			}
+			&--ai.active {
 				color: var(--accent);
 			}
 		}
