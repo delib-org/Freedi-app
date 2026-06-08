@@ -8,7 +8,6 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { Request, Response } from 'firebase-functions/v1';
 // The Firebase Admin SDK
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
@@ -16,6 +15,9 @@ import { Collections, functionConfig } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+
+// HTTP auth/authorization helpers (extracted for unit testing)
+import { verifyAuthToken, requireSystemAdmin } from './utils/httpAuth';
 
 // Import function modules
 import {
@@ -367,47 +369,6 @@ const wrapMemoryIntensiveHttpFunction = (
 };
 
 /**
- * Verifies Firebase ID token from Authorization header.
- * Returns the authenticated user's UID, or sends 401 and returns null.
- */
-async function verifyAuthToken(req: Request, res: Response): Promise<string | null> {
-	const authHeader = req.headers.authorization;
-	if (!authHeader?.startsWith('Bearer ')) {
-		res.status(401).send({ error: 'Missing or invalid Authorization header' });
-
-		return null;
-	}
-	try {
-		const token = authHeader.split('Bearer ')[1];
-		const decoded = await getAuth().verifyIdToken(token);
-
-		return decoded.uid;
-	} catch {
-		res.status(401).send({ error: 'Invalid or expired token' });
-
-		return null;
-	}
-}
-
-/**
- * Checks whether a uid belongs to a system admin.
- * Mirrors isSystemAdmin() in firestore.rules and the check in
- * fn_deleteResearchLogs — the system-admin flag lives on usersV2/{uid}.
- * Fails closed (returns false) on any lookup error.
- */
-async function isSystemAdmin(uid: string): Promise<boolean> {
-	try {
-		const userDoc = await db.collection(Collections.users).doc(uid).get();
-
-		return userDoc.exists && userDoc.data()?.systemAdmin === true;
-	} catch (error) {
-		logError(error, { operation: 'httpFunction.isSystemAdmin', metadata: { uid } });
-
-		return false;
-	}
-}
-
-/**
  * Creates a wrapper for admin/maintenance HTTP functions.
  * Requires a valid Firebase ID token in the Authorization header AND that the
  * authenticated user is a system admin (usersV2/{uid}.systemAdmin === true).
@@ -432,16 +393,9 @@ const wrapAdminHttpFunction = (
 			...overrides,
 		},
 		async (req, res) => {
-			const uid = await verifyAuthToken(req, res);
-			if (!uid) return;
-
 			// Authentication is not enough — require system-admin authorization.
-			if (!(await isSystemAdmin(uid))) {
-				console.info(`[${getTimestamp()}] Denied admin HTTP function for non-admin uid: ${uid}`);
-				res.status(403).json({ ok: false, error: 'Forbidden: system admin required' });
-
-				return;
-			}
+			const uid = await requireSystemAdmin(req, res);
+			if (!uid) return;
 
 			const startTime = Date.now();
 			const startTimestamp = getTimestamp();
