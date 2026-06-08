@@ -3,25 +3,71 @@
  * `onRequest` Cloud Function (me-west1). The `chat` hosting target rewrites
  * `**` → `ssrChat`; static assets are served from `apps/chat/build/client`.
  *
- * Deploy step: `apps/chat` is built with `npm run build:chat`, and its
- * `build/handler.js` + `build/server` are copied into `functions/chat-build/`
- * before deploy (the SvelteKit server bundle must travel inside the function
- * package). The handler is imported lazily via a runtime-computed path so this
- * file — and `tsc` — compile even before the artifact is copied in.
+ * Deploy step (`npm run deploy:chat`): `apps/chat` is built, then
+ * `apps/chat/scripts/copy-ssr-to-functions.cjs` copies the adapter-node server
+ * bundle (`handler.js` + `server` + `env.js` + `shims.js`) into
+ * `functions/chat-build/` so it travels inside the function package. The handler
+ * is imported lazily via a runtime-computed path so this file — and `tsc` —
+ * compile even before the artifact is copied in.
  */
 import { onRequest } from 'firebase-functions/v2/https';
 import { functionConfig } from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
+import fs from 'fs';
+import path from 'path';
+import { pathToFileURL } from 'url';
 
 type NodeHandler = (req: unknown, res: unknown) => void;
 let cachedHandler: NodeHandler | null = null;
 
+// Candidate locations for the copied adapter-node bundle. Depending on how the
+// functions source is packaged, `chat-build/` may land at the package root
+// (cwd / `/workspace`) or under the compiled tree — probe both, plus an upward
+// walk from this file, and use whichever exists.
+function resolveHandlerFile(): string | null {
+	const candidates = [
+		path.join(process.cwd(), 'chat-build', 'handler.js'),
+		path.join(__dirname, '..', '..', 'chat-build', 'handler.js'),
+		path.join(__dirname, '..', '..', '..', '..', 'chat-build', 'handler.js'),
+	];
+	for (const c of candidates) {
+		if (fs.existsSync(c)) return c;
+	}
+	// Upward walk: from __dirname, look for `chat-build/handler.js` at each parent.
+	let dir = __dirname;
+	for (let i = 0; i < 8; i++) {
+		const guess = path.join(dir, 'chat-build', 'handler.js');
+		if (fs.existsSync(guess)) return guess;
+		const parent = path.dirname(dir);
+		if (parent === dir) break;
+		dir = parent;
+	}
+
+	return null;
+}
+
 async function getHandler(): Promise<NodeHandler> {
 	if (cachedHandler) return cachedHandler;
-	// Runtime-computed specifier: keeps tsc from resolving the (deploy-time-only)
-	// artifact at compile time.
-	const handlerPath = '../../chat-build/handler.js';
-	const mod = (await import(handlerPath)) as { handler: NodeHandler };
+	const handlerFile = resolveHandlerFile();
+	if (!handlerFile) {
+		let cwdListing: string[] = [];
+		try {
+			cwdListing = fs.readdirSync(process.cwd());
+		} catch {
+			// ignore
+		}
+		throw new Error(
+			`chat-build/handler.js not found. cwd=${process.cwd()} __dirname=${__dirname} cwdEntries=[${cwdListing.join(', ')}]`,
+		);
+	}
+	// `handler.js` is an ES module, but this function compiles to CommonJS — a
+	// plain `await import()` is downlevelled by tsc to `require()`, which cannot
+	// load ESM (ERR_REQUIRE_ESM) nor a `file://` URL. Build a *real* dynamic
+	// `import()` via `Function` so it survives compilation and loads ESM natively.
+	const importEsm = new Function('p', 'return import(p)') as (
+		p: string,
+	) => Promise<{ handler: NodeHandler }>;
+	const mod = await importEsm(pathToFileURL(handlerFile).href);
 	cachedHandler = mod.handler;
 
 	return cachedHandler;
