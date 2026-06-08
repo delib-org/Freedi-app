@@ -322,9 +322,56 @@ r1 set (`MessageNode` recursive, `MessageList`, `EvaluationBar`, `AiSummaryPanel
 
 ---
 
+## Implementation status — built & verified
+
+Phases 1–7 are implemented end-to-end (SvelteKit `apps/chat` + `@freedi/evidence` package + chat Cloud Functions), plus the UX/feature work below. Everything below is verified against the local Firebase emulators (Playwright-driven). Commits land on the `chat-app` branch.
+
+### Evaluation UX — the rating controls (per node type)
+Both controls are **two-state** (a compact closed indicator that expands on click) and post a **continuous** value to the existing `evaluate` action (works without JS; `use:enhance` smooths it). The corroboration scorer reads votes via `(e+1)/2`.
+
+- **Option** → `EvaluationBar` (5-emoji face rater 😡😕😐🙂😍 → `-1/-0.5/0/0.5/1`).
+  - **Closed indicator shows three aggregate values:** `consensus C%` (corroboration level, colored by level) · `# evaluators` · `avg vote` (raw mean, colored by sign). No votes yet → `consensus C% · ☆ Vote`.
+- **Evidence (strengthen/critique)** → `CorrectnessRating` — a **bipolar epistemic slider** "I think it's incorrect ← unsure → I think it's correct", continuous `[-1,1]`, pointer-drag + keyboard (arrows/Home/End/0). Ported/restyled from the user's React prototype to the dark-glass theme (gradient `--critique → muted → --strengthen`).
+  - **Closed indicator shows the corroboration level** `⚖️ Cr C%` (NOT raw consensus), colored by level, with the rater count; click expands to the slider.
+- The standalone `CorroborationBar` is **removed from message nodes** — the corroboration level now lives in each node's closed rating indicator. (`ConvergenceMeter` still used on discovery cards + question header.)
+- **Denormalized aggregates:** `recomputeAncestors` now also writes each scored node's raw `evaluationAverage` (`[-1,1]`) + `evaluationCount` alongside `corroborationScore`; the closed indicators read these (via a narrow cast in `evalStatsOf()`; no shared-schema change). Realtime delivers updates live after a vote.
+
+### AI thread summary + revision (real Gemini, whole subtree)
+- `generateDialecticalRevision` reads the **entire subtree** (every descendant via `parents array-contains`), builds an indented, type/polarity/C-labelled digest of **all sub-statements** (capped 200), and asks Gemini for a thread summary + a revised claim addressing the strongest critiques. Returns `descendantCount`.
+- **Change-detection cache:** a `subtreeFingerprint` (count + hash of every live descendant's `id:lastUpdate`) is stored on the revision doc. A repeat request with an unchanged subtree returns the **cached** summary (`cached:true`) without calling Gemini; any add/remove/edit/re-score flips the hash → regenerate. UI shows "✓ up to date" when cached.
+- **UI = the reference `.summary-node` callout** (✨ icon column + "AI Thread Summary" + amber "Suggested Revision" with Accept). The **"✨ AI Summary / Hide Summary" toggle lives in the message action row next to Reply/Collapse**; the box opens **inside the message content** (after the bubble). Loads/opens in **one smooth step** (the wait shows on the button; the box only mounts once loaded — no two-step jump). Cached re-opens are instant.
+
+### Look & feel (adapted from `/Documents/chat-tests`)
+- **Dark-first glassmorphism** design system (`styles/tokens.scss`, `_mixins.scss`): Outfit type, indigo→purple accent gradient, green/magenta dialectic pills with glow, glass panels, custom scrollbar.
+- **Manual dark/light theme toggle** (☀️/🌙) in the header, persisted to `localStorage` (`data-theme`), on top of `prefers-color-scheme` default.
+- **Conversation card chrome** on `/q/[id]` — one floating glass panel: header → darker inset thread area → footer composer (reference `chat-container`).
+- **Recursive message UI** with chat bubbles + tails, **solid-green Strengthen / dashed-pink Critique** evidence bubbles, clickable vertical thread lines, evidence badges, depth-2 truncation → focus link.
+- **Auth header** (sticky): brand, "Start a question", and either **Sign in** or the signed-in user (avatar + name → profile) + **Sign out** (clears client Auth SDK *and* server session cookie). `+layout.server.ts` exposes `locals.user`.
+
+### Animations
+- Custom `slideFade` transition (`lib/transitions.ts`, height+opacity, cubicOut) for collapse/expand of thread children, the reply composer, and the AI panel. Fixed two bugs: (a) `transition:…|local` suppressed by ancestor `{#if}` nesting (hoisted to derived flags); (b) competing per-node CSS entrance animation removed. Reduced-motion handled globally.
+
+### Infra / fixes landed this session
+- **Realtime against the emulator:** client Firestore uses `experimentalForceLongPolling` + connects on `127.0.0.1` (not `localhost`, which resolves to IPv6); `isLocalhost()` matches `localhost`/`127.0.0.1`/`::1`. Fixes the "could not reach backend / offline" listener failure.
+- **Callable auth:** `functionsClient()` initializes Auth and awaits `authStateReady()` so callables attach the ID token (fixes AI-summary 401); targets the **functions emulator (127.0.0.1:5001)** on localhost, me-west1 in prod. `currentUser()` / `signOutEverywhere()` helpers.
+- **`sendMessage` 400 fix:** removed a broken cycle guard (`assertNoCycle(parentId, [...parents, parentId])` always tripped); a new child has a fresh id so no cycle is possible. Composer now `use:enhance` (posts in place, clears the box, clean URL).
+- **SSR robustness:** every admin read in `conversation.ts` is bounded by an 8 s timeout so an unreachable/hung Firestore renders gracefully instead of hanging the server. Non-POJO Firestore values (Timestamps → millis, `embedding` VectorValue dropped) are serialized for SvelteKit.
+- **Root creation UI:** `/new` route + `createRootQuestion()` (a `question` with `isRoot`, chosen visibility); "Start a question" CTA.
+
+### Seeds
+- `npm run seed:chat` (one sample conversation) and `npm run seed:chat:large` (a **public ~20-message** debate: 4 ranked options, strengthen/critique evidence incl. nested, comments, a sub-question) — `apps/chat/scripts/seed{,20}.cjs`. Both require `FIRESTORE_EMULATOR_HOST`.
+
+### Deviations from the spec (decided in implementation)
+- **`firestore.rules` statements read left unchanged** (`allow read;`, world-readable) — it's shared by 4 other production apps; tightening it would break them. Private-tier enforcement is **server-side** via the SSR `memberIds` gate (the open-problem path). Discovery/profile composite indexes were added.
+- **`evaluationAverage`/`evaluationCount` are not in the shared valibot schema** — written by functions (admin, schemaless), read in the app via a narrow cast. Avoids a shared-types rebuild/repack for two display-only fields.
+- **`apps/flow` is Vite+Mithril, not SvelteKit**, and the repo had no SSR-via-function precedent — the SvelteKit scaffold + `ssrChat` onRequest wrapper are net-new (the `ssrChat` handler is loaded at runtime from `functions/chat-build/`, copied at deploy).
+
+---
+
 ## Critical files
 **Modify:** `shared-types` `TypeEnums.ts` (+`DialogicType`,`EvidenceRelation`,`EvidenceStatus`,`Visibility`,`StatementType.evidence`,`SourceApp.chat`), `StatementTypes.ts` (fields §1a); root `package.json`; `firebase.json` (+`chat` target); `firestore.rules` + indexes; `functions/src/index.ts`; extend the `onCreateEvaluation` recompute path; `packages/shared-i18n/src/languages/*.json`.
 **Create:** `packages/evidence/**` (`types.ts`, `registry.ts`, `taxonomy.*`, `independence/embeddingCluster.ts`, `convergence.ts`, `corroboration.ts`, `containment.ts`, tests, `eval/`); the `apps/chat/` SvelteKit tree (`svelte.config.js`, `vite.config.ts`, `routes/+page.server.ts`, `routes/q/[id]/{+page.svelte,+page.server.ts}`, `routes/u/[id]/+page.svelte`, `routes/invite/[token]/`, `routes/api/session/+server.ts`, `hooks.server.ts`, `lib/server/{firebaseAdmin,conversation}.ts`, `lib/{firebaseClient,realtime,containment}.ts`, `lib/stores/messages.ts`, `lib/seo/structuredData.ts`, `sitemap` route, components, `styles/tokens.scss`); `functions/src/evidence/scorerV1.ts`, `fn_onChatStatementCreated.ts`, `fn_rescoreStatement.ts`, `fn_redeemInvite.ts`, `fn_updateMembership.ts`, `fn_generateDialecticalRevision.ts`, `fn_acceptDialecticalRevision.ts`; `ssrChat` wrapper.
+**Also created (implementation):** `apps/chat/src/lib/components/{MessageNode,Composer,EvaluationBar,CorrectnessRating,AiSummaryPanel,EvidenceBadge,CorroborationBar,ConvergenceMeter}.svelte`; `lib/{transitions,aiSummary,i18n,firebaseClient,realtime,containment}.ts`; `lib/chat/node.ts`; `lib/server/{firebaseAdmin,conversation,writeActions}.ts`; `routes/{+layout.svelte,+layout.server.ts,new,signin,invite/[token],api/session,sitemap.xml}`; `styles/{tokens,mixins,global}.scss`. Functions chat dir: `functions/src/chat/{recomputeAncestors,scorerV1,fn_onChatStatementCreated,fn_onChatEvaluationCreated,fn_rescoreStatement,fn_invite,fn_dialecticalRevision,ssrChat}.ts`. Seeds: `apps/chat/scripts/seed{,20}.cjs` (+ root `seed:chat` / `seed:chat:large` scripts).
 **Reuse:** `createStatementObject()`; evaluation + `onCreateEvaluation`; Gemini service; `twoTierJudge` embeddings; `fn_summarizeDiscussion.ts` (onCall template); `statementEvaluationUpdater.ts` (transaction/recompute template); `apps/flow` (Vite/scss/firebase template); `@freedi/shared-i18n`.
 
 ---
@@ -346,4 +393,5 @@ r1 set (`MessageNode` recursive, `MessageList`, `EvaluationBar`, `AiSummaryPanel
 
 ## Revision history & reconciliations
 - **r1** SvelteKit + SSR + lazy realtime + reused FreeDi backend. **r2** `EvidenceScorer` + `corroboration.ts` integration, taxonomy, async pipeline, auditability. **r3** tree model, three-tier visibility, discovery/SEO, retention. **This doc** consolidates all three into one executable spec.
+- **r4 (build session)** — Phases 1–7 implemented + UX/feature layer (see **Implementation status**): two-state rating controls (option = consensus · #evaluators · avg vote; evidence = bipolar correctness slider with closed `Cr` indicator), whole-subtree **cached** AI summary rendered in the reference `.summary-node` callout placed in the message action row (single smooth open), reference glassmorphism + dark/light theme toggle + conversation-card chrome + auth header, `slideFade` collapse/expand, emulator realtime + callable-auth + `sendMessage` fixes, and seed scripts.
 - **Reconciliations applied in consolidation** (from the review): (1) unified `statementType` model — chatter = `StatementType.statement` (label "Standard"), `evidence` is a first-class type, composer sets the type, `sendMessage` no longer hardcodes `statement`; dropped legacy `group`. (2) Question aggregates now produced by the unified `recomputeAncestors` pass (§4.4). (3) `convergenceIndex` defined as a pluggable `ConvergenceMetric` with a v1 leader-gap proxy (§1.5). (4) Discovery query made executable via a stored `isRoot` flag + composite index. (5) Private realtime auth reconciled — public/unlisted listeners need no auth SDK; private listeners reuse the persisted client sign-in (or a custom token), first paint still Firebase-free (§2). (6) Removed `group`; `containment.ts` is Create-only; composer/world-readable text corrected in place.
