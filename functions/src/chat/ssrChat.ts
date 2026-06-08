@@ -91,6 +91,15 @@ async function getHandler(): Promise<NodeHandler> {
 			`chat-build/handler.js not found. cwd=${process.cwd()} __dirname=${__dirname} cwdEntries=[${cwdListing.join(', ')}]`,
 		);
 	}
+	// adapter-node derives the request origin from the (internal) host/protocol,
+	// but behind Firebase Hosting → Cloud Function the function sees plain `http`
+	// and the proxy host, so SvelteKit's CSRF check rejects form POSTs as
+	// cross-site (e.g. POST /new 403). Pin `ORIGIN` to the public canonical URL
+	// before the handler module reads it at init. Overridable via env for custom
+	// domains. (Wins on the web.app domain; other mirrors fall back to it.)
+	if (!process.env.ORIGIN) {
+		process.env.ORIGIN = 'https://wizcol-chat.web.app';
+	}
 	// `handler.js` is an ES module, but this function compiles to CommonJS — a
 	// plain `await import()` is downlevelled by tsc to `require()`, which cannot
 	// load ESM (ERR_REQUIRE_ESM) nor a `file://` URL. Build a *real* dynamic
