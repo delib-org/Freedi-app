@@ -32,6 +32,7 @@
     "dev:chat": "npm run env:dev && cd apps/chat && FIRESTORE_EMULATOR_HOST=localhost:8081 FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npm run dev",
     "build:chat": "npm run env:dev && cd apps/chat && npm run build",
     "seed:chat": "cd apps/chat && FIRESTORE_EMULATOR_HOST=localhost:8081 node scripts/seed.cjs",
+    "seed:chat:large": "cd apps/chat && FIRESTORE_EMULATOR_HOST=localhost:8081 node scripts/seed20.cjs",
     "dev:admin": "npm run env:dev && cd apps/admin && npm run dev",
     "dev:join": "npm run env:dev && cd apps/join && npm run dev",
     "test": "jest",
