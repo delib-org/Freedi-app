@@ -21,6 +21,23 @@
 		applyTheme(theme === 'dark' ? 'light' : 'dark');
 	}
 
+	async function onLanguageChange(next: string) {
+		setLanguage(next);
+		// Remember the choice on the user's account (cross-device). The cookie /
+		// localStorage copy that setLanguage() wrote already covers SSR, so this
+		// is best-effort and non-blocking.
+		if (!data.user) return;
+		try {
+			await fetch('/api/user/language', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ lang: next }),
+			});
+		} catch {
+			// Ignore — the local copy still persists the choice for this device.
+		}
+	}
+
 	onMount(() => {
 		initLang(data.lang);
 		const stored = localStorage.getItem('chat.theme') as 'dark' | 'light' | null;
@@ -55,7 +72,7 @@
 			<select
 				class="topbar__lang"
 				value={$lang}
-				onchange={(e) => setLanguage((e.currentTarget as HTMLSelectElement).value)}
+				onchange={(e) => onLanguageChange((e.currentTarget as HTMLSelectElement).value)}
 				title={$t('Language')}
 				aria-label={$t('Language')}
 			>

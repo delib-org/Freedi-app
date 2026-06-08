@@ -12,7 +12,8 @@ import {
 	isValidLanguage,
 	LanguagesEnum,
 } from '@freedi/shared-i18n';
-import { adminAuth } from '$lib/server/firebaseAdmin';
+import { Collections } from '@freedi/shared-types';
+import { adminAuth, adminDb } from '$lib/server/firebaseAdmin';
 
 const SESSION_COOKIE = '__session';
 
@@ -40,6 +41,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.user = null;
 	event.locals.lang = detectServerLanguage(event);
 
+	// A `freedi-lang` cookie reflects an explicit choice on *this* device and
+	// wins; only fall back to the DB-saved language when there's no such cookie.
+	const langCookie = event.cookies.get(COOKIE_KEY);
+	const hasCookieLang = !!(langCookie && isValidLanguage(langCookie));
+
 	const cookie = event.cookies.get(SESSION_COOKIE);
 	if (cookie) {
 		try {
@@ -50,6 +56,22 @@ export const handle: Handle = async ({ event, resolve }) => {
 				email: decoded.email ?? null,
 				photoURL: (decoded.picture as string) ?? null,
 			};
+
+			// Restore the language the user saved (possibly on another device).
+			if (!hasCookieLang) {
+				try {
+					const snap = await adminDb
+						.collection(Collections.users)
+						.doc(decoded.uid)
+						.get();
+					const saved = snap.data()?.defaultLanguage;
+					if (typeof saved === 'string' && isValidLanguage(saved)) {
+						event.locals.lang = saved;
+					}
+				} catch {
+					// DB read failed — keep the cookie/Accept-Language choice.
+				}
+			}
 		} catch {
 			// Expired/invalid cookie — clear it and continue as anonymous.
 			event.cookies.delete(SESSION_COOKIE, { path: '/' });
