@@ -11,6 +11,7 @@
 	import SortMenu from '$lib/components/SortMenu.svelte';
 	import Composer from '$lib/components/Composer.svelte';
 	import ConvergenceMeter from '$lib/components/ConvergenceMeter.svelte';
+	import FollowQuestion from '$lib/components/FollowQuestion.svelte';
 	import { subscribeToConversation } from '$lib/realtime';
 	import { t, tp } from '$lib/i18n';
 
@@ -191,6 +192,11 @@
 				<span>· {$tp('by {{name}}', { name: root.creator?.displayName ?? $t('Anonymous') })}</span>
 			</div>
 			<ConvergenceMeter value={root.convergenceIndex ?? 0} />
+			{#if data.signedIn}
+				<div class="conversation__follow">
+					<FollowQuestion statementId={root.statementId} />
+				</div>
+			{/if}
 		</header>
 
 		<section class="conversation__thread" aria-label={$t('Answers and evidence')}>
@@ -336,6 +342,9 @@
 			gap: var(--space-xs);
 			font-size: 0.85rem;
 			margin-bottom: var(--space-md);
+		}
+		&__follow {
+			margin-top: var(--space-sm);
 		}
 
 		&__thread {

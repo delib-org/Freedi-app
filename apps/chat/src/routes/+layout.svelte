@@ -3,8 +3,10 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import '../styles/global.scss';
-	import { initLang, lang, setLanguage, t, LANGS, LANGUAGE_NAMES } from '$lib/i18n';
+	import { initLang, lang, setLanguage, t } from '$lib/i18n';
 	import { signOutEverywhere } from '$lib/firebaseClient';
+	import NotificationToggle from '$lib/components/NotificationToggle.svelte';
+	import LanguageMenu from '$lib/components/LanguageMenu.svelte';
 
 	let { children, data } = $props();
 
@@ -69,17 +71,7 @@
 
 		<nav class="topbar__nav">
 			<a class="topbar__link" href="/new">{$t('Start a question')}</a>
-			<select
-				class="topbar__lang"
-				value={$lang}
-				onchange={(e) => onLanguageChange((e.currentTarget as HTMLSelectElement).value)}
-				title={$t('Language')}
-				aria-label={$t('Language')}
-			>
-				{#each LANGS as code (code)}
-					<option value={code}>{LANGUAGE_NAMES[code]}</option>
-				{/each}
-			</select>
+			<LanguageMenu current={$lang} onChange={onLanguageChange} />
 			<button
 				class="topbar__theme"
 				onclick={toggleTheme}
@@ -87,6 +79,7 @@
 				aria-label={$t('Toggle light or dark theme')}
 			>{theme === 'dark' ? '☀️' : '🌙'}</button>
 			{#if data.user}
+				<NotificationToggle />
 				<a class="topbar__user" href={`/u/${data.user.uid}`} title={$t('Your profile')}>
 					{#if data.user.photoURL}
 						<img class="topbar__avatar" src={data.user.photoURL} alt="" />
@@ -95,8 +88,32 @@
 						>{data.user.displayName ?? data.user.email ?? $t('You')}</span
 					>
 				</a>
-				<button class="topbar__btn" onclick={signOut} disabled={signingOut}>
-					{signingOut ? '…' : $t('Sign out')}
+				<button
+					class="topbar__btn topbar__btn--icon"
+					onclick={signOut}
+					disabled={signingOut}
+					title={$t('Sign out')}
+					aria-label={$t('Sign out')}
+				>
+					{#if signingOut}
+						<span class="topbar__btn-text">…</span>
+					{:else}
+						<svg
+							class="topbar__btn-icon"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+							<polyline points="16 17 21 12 16 7" />
+							<line x1="21" y1="12" x2="9" y2="12" />
+						</svg>
+						<span class="topbar__btn-text">{$t('Sign out')}</span>
+					{/if}
 				</button>
 			{:else}
 				<a class="topbar__btn topbar__btn--primary" href={signInHref}>{$t('Sign in')}</a>
@@ -151,7 +168,7 @@
 		&__nav {
 			display: flex;
 			align-items: center;
-			gap: var(--space-md);
+			gap: var(--space-sm);
 		}
 		&__link {
 			font-size: 0.85rem;
@@ -190,23 +207,6 @@
 			white-space: nowrap;
 		}
 
-		&__lang {
-			height: 34px;
-			border-radius: var(--radius-pill);
-			border: 1px solid var(--glass-border);
-			background: var(--eval-btn);
-			color: var(--text-body);
-			cursor: pointer;
-			font: inherit;
-			font-size: 0.82rem;
-			padding: 0 var(--space-sm);
-			transition: border-color 0.2s;
-
-			&:hover {
-				border-color: var(--accent);
-			}
-		}
-
 		&__theme {
 			width: 34px;
 			height: 34px;
@@ -241,6 +241,11 @@
 				border: none;
 			}
 		}
+		&__btn-icon {
+			display: none; // Desktop shows the text label; icon is mobile-only.
+			width: 1.15rem;
+			height: 1.15rem;
+		}
 	}
 
 	@media (max-width: 480px) {
@@ -259,6 +264,21 @@
 		}
 		.topbar__btn {
 			white-space: nowrap;
+		}
+		// Collapse the sign-out button to an icon-only square on mobile.
+		.topbar__btn--icon {
+			padding: 6px;
+			width: 34px;
+			height: 34px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.topbar__btn--icon .topbar__btn-text {
+			display: none;
+		}
+		.topbar__btn--icon .topbar__btn-icon {
+			display: block;
 		}
 	}
 </style>

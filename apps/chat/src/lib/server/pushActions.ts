@@ -1,0 +1,182 @@
+/**
+ * Server-side web-push persistence (admin SDK). The browser is the only place
+ * an FCM token can be minted, so the client sends it here and these helpers do
+ * the privileged writes — consistent with the rest of chat, where all writes go
+ * through the admin SDK rather than the client (see `writeActions.ts`). Using
+ * admin also means per-question follows work for private questions, which the
+ * client security rules would block.
+ *
+ * Data model (shared with the main app + the `fn_notifications` function):
+ *  - `pushNotifications/{token}`            — token → user, for token bookkeeping.
+ *  - `statementsSubscribe/{uid}--{stId}`    — the function delivers a push to
+ *    every such doc with `getPushNotification === true`, to each token in its
+ *    `tokens[]` array.
+ */
+import { FieldValue } from 'firebase-admin/firestore';
+import {
+	Collections,
+	Role,
+	getStatementSubscriptionId,
+	type Statement,
+	type SimpleStatement,
+} from '@freedi/shared-types';
+import { adminDb } from './firebaseAdmin';
+import { getStatement } from './conversation';
+import type { SessionUser } from './writeActions';
+
+/** Firestore caps a single batch at 500 writes. */
+const BATCH_SIZE = 500;
+
+/** A SessionUser is enough to identify the subscriber on the subscription doc. */
+function toUser(user: SessionUser) {
+	return {
+		uid: user.uid,
+		displayName: user.displayName ?? user.email ?? 'User',
+		email: user.email ?? null,
+		photoURL: user.photoURL ?? null,
+	};
+}
+
+/** Denormalized snapshot of the question stored on the subscription. */
+function toSimpleStatement(statement: Statement): SimpleStatement {
+	return {
+		statementId: statement.statementId,
+		statement: statement.statement,
+		description: statement.description ?? '',
+		statementType: statement.statementType,
+		creatorId: statement.creatorId,
+		creator: statement.creator,
+		parentId: statement.parentId,
+		consensus: statement.consensus ?? 0,
+		lastUpdate: statement.lastUpdate,
+		createdAt: statement.createdAt,
+	};
+}
+
+/** Store/refresh the token → user mapping in `pushNotifications/{token}`. */
+export async function storeToken(user: SessionUser, token: string): Promise<void> {
+	await adminDb.collection(Collections.pushNotifications).doc(token).set(
+		{
+			token,
+			userId: user.uid,
+			lastUpdate: Date.now(),
+			lastRefresh: Date.now(),
+			platform: 'web',
+		},
+		{ merge: true },
+	);
+}
+
+/**
+ * Fan the token out to every push-enabled subscription the user already has, so
+ * the existing function delivers to this device. Mirrors the main app's
+ * `syncTokenWithSubscriptions`.
+ */
+export async function syncTokenWithSubscriptions(
+	user: SessionUser,
+	token: string,
+): Promise<number> {
+	const snapshot = await adminDb
+		.collection(Collections.statementsSubscribe)
+		.where('userId', '==', user.uid)
+		.where('getPushNotification', '==', true)
+		.get();
+
+	let batch = adminDb.batch();
+	let count = 0;
+	const commits: Promise<unknown>[] = [];
+
+	for (const docSnap of snapshot.docs) {
+		batch.update(docSnap.ref, {
+			tokens: FieldValue.arrayUnion(token),
+			lastTokenUpdate: Date.now(),
+		});
+		count++;
+		if (count % BATCH_SIZE === 0) {
+			commits.push(batch.commit());
+			batch = adminDb.batch();
+		}
+	}
+	if (count % BATCH_SIZE !== 0) commits.push(batch.commit());
+
+	await Promise.all(commits);
+
+	return count;
+}
+
+/** Token registration: store the token and sync it to existing subscriptions. */
+export async function registerToken(user: SessionUser, token: string): Promise<number> {
+	await storeToken(user, token);
+
+	return syncTokenWithSubscriptions(user, token);
+}
+
+/**
+ * Follow a question for push: upsert the user's subscription with
+ * `getPushNotification: true` and the device token. Idempotent.
+ */
+export async function followQuestion(
+	user: SessionUser,
+	statementId: string,
+	token: string,
+): Promise<void> {
+	const statement = await getStatement(statementId);
+	if (!statement) throw new Error('Question not found');
+
+	const subId = getStatementSubscriptionId(statementId, toUser(user));
+	if (!subId) throw new Error('Could not derive subscription id');
+
+	await storeToken(user, token);
+
+	await adminDb
+		.collection(Collections.statementsSubscribe)
+		.doc(subId)
+		.set(
+			{
+				statementsSubscribeId: subId,
+				statementId,
+				userId: user.uid,
+				role: Role.member,
+				user: toUser(user),
+				statement: toSimpleStatement(statement),
+				parentId: statement.parentId,
+				topParentId: statement.topParentId || statement.parentId,
+				statementType: statement.statementType,
+				getPushNotification: true,
+				getInAppNotification: true,
+				tokens: FieldValue.arrayUnion(token),
+				lastUpdate: Date.now(),
+				createdAt: statement.createdAt ?? Date.now(),
+				lastTokenUpdate: Date.now(),
+			},
+			{ merge: true },
+		);
+}
+
+/** Stop push for a question. Leaves the subscription doc; just flips the flag. */
+export async function unfollowQuestion(
+	user: SessionUser,
+	statementId: string,
+	token?: string,
+): Promise<void> {
+	const subId = getStatementSubscriptionId(statementId, toUser(user));
+	if (!subId) throw new Error('Could not derive subscription id');
+
+	const update: Record<string, unknown> = {
+		getPushNotification: false,
+		lastUpdate: Date.now(),
+	};
+	if (token) update.tokens = FieldValue.arrayRemove(token);
+
+	await adminDb.collection(Collections.statementsSubscribe).doc(subId).set(update, { merge: true });
+}
+
+/** Whether the user currently follows the question for push. */
+export async function getFollowStatus(user: SessionUser, statementId: string): Promise<boolean> {
+	const subId = getStatementSubscriptionId(statementId, toUser(user));
+	if (!subId) return false;
+
+	const doc = await adminDb.collection(Collections.statementsSubscribe).doc(subId).get();
+
+	return doc.exists && doc.data()?.getPushNotification === true;
+}
