@@ -1,16 +1,16 @@
-import { FC, ReactNode, useEffect, useState, useMemo } from 'react';
+import { FC, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
+import { setDoc } from 'firebase/firestore';
 
-import { Statement, SortType, SelectionFunction, Role, StatementType } from '@freedi/shared-types';
-import { Layers, Sparkles, Tags } from 'lucide-react';
+import { Statement, SortType, Role, StatementType } from '@freedi/shared-types';
+import { Layers, Sparkles, Lightbulb } from 'lucide-react';
 import { sortByConsensus } from '@/redux/utils/selectorFactories';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
 	setStatement,
-	statementOptionsSelector,
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
@@ -19,24 +19,19 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
-import { useActiveFraming } from '@/controllers/hooks/useActiveFraming';
-import { useShowOriginalsOverride } from '@/controllers/hooks/useShowOriginalsOverride';
+import { useViewLayers } from '@/controllers/hooks/useViewLayers';
+import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import styles from './SuggestionCards.module.scss';
-import {
-	GroupedSuggestionCard,
-	type GroupedSuggestionPipeline,
-} from '@/view/components/atomic/molecules/GroupedSuggestionCard';
-import { SuggestionsToolbar } from '@/view/components/atomic/molecules/SuggestionsToolbar';
+import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
 import { SectionDivider } from '@/view/components/atomic/molecules/SectionDivider';
-import { createGroupedViewSelector } from '@/redux/statements/condensationSelectors';
-import { FramingMode } from '@/redux/framings/framingsSlice';
+import { ViewLayersToggle } from '@/view/components/atomic/molecules/ViewLayersToggle';
+import {
+	createViewLayersDataSelector,
+	composeViewLayers,
+} from '@/redux/statements/condensationSelectors';
 import type { RootState } from '@/redux/store';
-
-interface Props {
-	propSort?: SortType | string;
-	selectionFunction?: SelectionFunction;
-	subStatements?: Statement[];
-}
+import { createStatementRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 // Helper function to sort statements
 function sortStatements(
@@ -95,155 +90,88 @@ function sortStatements(
 	}
 }
 
-const SuggestionCards: FC<Props> = ({
-	propSort,
-	selectionFunction,
-	subStatements: propSubStatements,
-}) => {
+const SuggestionCards: FC = () => {
 	const params = useParams();
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 
-	// Memoize statementId to prevent unnecessary effect re-runs
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
 	const statement = useSelector(statementSelector(statementId));
 	const defaultSort = statement?.statementSettings?.defaultSortType || SortType.newest;
-	const sort = propSort || params.sort || defaultSort;
+	const sort = params.sort || defaultSort;
 
 	const dispatch = useDispatch();
 	const isQuestion = statement?.statementType === StatementType.question;
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
-
 	const [randomSeed, setRandomSeed] = useState(Date.now());
 
-	const statementsFromStore = useSelector(statementOptionsSelector(statement?.statementId));
-
-	// Active framing — drives which clustering layer's clusters surface in the
-	// grouped view. `regular` mode → no framingId → no framing-restricted
-	// clusters (only legacy unframed clusters surface). The toolbar lets the
-	// user switch between framings.
-	const { framingId, mode: framingMode, framings } = useActiveFraming(statement?.statementId);
-
-	// Grouped view — filters the list per-surface based on admin settings.
-	// Returns grouped clusters + the subset of originals that should remain
-	// visible (all of them in "both" mode; only ungrouped originals in
-	// "clusters-only" mode). Falls back to "both" when condensation is off.
-	// Use 'join' surface when joining is enabled, 'main' surface otherwise.
-	const condensationSurface = statement?.statementSettings?.joiningEnabled ? 'join' : 'main';
-	const selectGroupedView = useMemo(
-		() =>
-			createGroupedViewSelector((state: RootState) => state.statements.statements)(
-				statement?.statementId,
-				condensationSurface,
-				framingId,
-			),
-		[statement?.statementId, condensationSurface, framingId],
-	);
-	const groupedView = useSelector(selectGroupedView);
-
-	// Per-user override: show originals inline even when the admin's surface
-	// mode is `clusters-only`. Stored in localStorage per parentId.
-	const { showOriginals: showOriginalsOverride, setShowOriginals: setShowOriginalsOverride } =
-		useShowOriginalsOverride(statement?.statementId);
-
-	// Check if user is admin
 	const isAdmin =
 		creator?.uid === parentSubscription?.statement?.creatorId ||
 		parentSubscription?.role === Role.admin;
-
-	// Admin preference for showing/hiding hidden cards
 	const { showHiddenCards } = useShowHiddenCards();
+	// Lazy-load older options as the user scrolls the list (the page subscription
+	// only loads the newest window; this pages in the rest on demand).
+	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadOptions(statementId);
 
-	// Memoize filtered statements to prevent unnecessary recalculations
-	// Logic:
-	// - Non-hidden cards are always visible
-	// - For admins: hidden cards visibility is controlled by the showHiddenCards toggle
-	// - For non-admins: they can see their own hidden cards only
-	// - Cluster statements (grouped suggestions) are rendered separately below
-	//   and excluded from this "originals" list.
-	// - In "clusters-only" mode: originals that are inside a group are hidden,
-	//   unless the per-user override is enabled.
-	const originalsHiddenByGroup = useMemo(() => {
-		if (groupedView.mode !== 'clusters-only') return new Set<string>();
-		if (showOriginalsOverride) return new Set<string>();
-		const inGroup = new Set<string>();
-		Object.values(groupedView.groupMembers).forEach((ids) => ids.forEach((id) => inGroup.add(id)));
-
-		return inGroup;
-	}, [groupedView, showOriginalsOverride]);
-
-	const visibleStatements = useMemo(
+	// View-layer derivation (toggle-independent, memoized): split synth / topic /
+	// raw and assign each synth to its max-overlap topic.
+	const selectViewData = useMemo(
 		() =>
-			statementsFromStore.filter((st) => {
-				if (st.isCluster === true) return false; // handled by GroupedSuggestionCard block
-				if (originalsHiddenByGroup.has(st.statementId)) return false;
+			createViewLayersDataSelector((state: RootState) => state.statements.statements)(
+				statement?.statementId,
+			),
+		[statement?.statementId],
+	);
+	const viewData = useSelector(selectViewData);
 
-				// Non-hidden cards are always visible
-				if (st.hide !== true) return true;
-
-				// For admins: hidden cards visibility depends entirely on the toggle
-				if (isAdmin) {
-					return showHiddenCards;
-				}
-
-				// For non-admins: they can see their own hidden cards
-				if (st.creatorId === creator?.uid) return true;
-
-				// Otherwise, hidden cards are not visible
-				return false;
-			}),
-		[statementsFromStore, creator?.uid, isAdmin, showHiddenCards, originalsHiddenByGroup],
+	// Three-toggle state — admin sets the default, each user overrides locally.
+	const adminDefault = statement?.statementSettings?.condensation?.viewLayers;
+	const { layers, setLayers, hasUserOverride, resetToDefault } = useViewLayers(
+		statement?.statementId,
+		adminDefault,
 	);
 
-	// Memoize subStatements to prevent unnecessary recalculations
-	const filteredStatements = useMemo(
-		() =>
-			propSubStatements ||
-			(selectionFunction
-				? visibleStatements.filter(
-						(sub: Statement) => sub.evaluation.selectionFunction === selectionFunction,
-					)
-				: visibleStatements),
-		[propSubStatements, selectionFunction, visibleStatements],
-	);
+	const plan = useMemo(() => composeViewLayers(viewData, layers), [viewData, layers]);
 
-	// Sort statements - memoized to prevent unnecessary re-sorts
-	const sortedStatements = useMemo(
-		() => sortStatements(filteredStatements, sort, randomSeed, statement),
-		[filteredStatements, sort, randomSeed, statement],
-	);
+	// Hidden-card visibility rules applied to the flat raw list: non-hidden are
+	// always shown; admins see hidden when the toggle is on; users see their own.
+	const visibleFlatRaw = useMemo(() => {
+		const canSee = (st: Statement): boolean => {
+			if (st.hide !== true) return true;
+			if (isAdmin) return showHiddenCards;
 
-	// Create a flip key based on the order of statements
-	// This triggers FLIP animation when order changes
+			return st.creatorId === creator?.uid;
+		};
+
+		return sortStatements(plan.flatRaw.filter(canSee), sort, randomSeed, statement);
+	}, [plan.flatRaw, isAdmin, showHiddenCards, creator?.uid, sort, randomSeed, statement]);
+
 	const flipKey = useMemo(
-		() => sortedStatements.map((s) => s.statementId).join(','),
-		[sortedStatements],
+		() => visibleFlatRaw.map((s) => s.statementId).join(','),
+		[visibleFlatRaw],
 	);
 
 	useEffect(() => {
 		if (!statement && statementId)
-			getStatementFromDB(statementId).then((statement: Statement) =>
-				dispatch(setStatement(statement)),
-			);
+			getStatementFromDB(statementId).then((s: Statement) => dispatch(setStatement(s)));
 	}, [statement, statementId, dispatch]);
 
 	useEffect(() => {
-		// Generate new random seed when switching to random sort
 		if (sort === SortType.random) {
-			// Use timestamp from URL query parameter if available (for re-randomization)
 			const searchParams = new URLSearchParams(location.search);
 			const timestamp = searchParams.get('t');
 			setRandomSeed(timestamp ? parseInt(timestamp, 10) : Date.now());
 		}
 	}, [sort, location.search]);
 
-	if ((!sortedStatements || sortedStatements.length === 0) && isQuestion) {
-		return null;
-	}
+	const hasSynth = plan.topLevelSynths.length > 0;
+	const hasTopics = plan.topicCards.length > 0;
+	const hasRaw = visibleFlatRaw.length > 0;
 
 	if (!statement) return null;
+	if (isQuestion && !hasSynth && !hasTopics && !hasRaw) return null;
 
 	const isSubmitMode = statement.statementSettings?.isSubmitMode;
 
@@ -251,78 +179,53 @@ const SuggestionCards: FC<Props> = ({
 		navigate(`/statement/${statementId}/thank-you`);
 	};
 
-	// Split clusters by pipeline. Synthesized proposals (paraphrase-merge,
-	// AI-authored body) are conceptually different from clusters (groupings
-	// of distinct ideas) — they get their own labeled section above the
-	// regular clusters so the user can tell at a glance which is which.
-	const synthesizedClusters = groupedView.groupedSuggestions.filter(
-		(c) => c.derivedByPipeline === 'synthesis',
-	);
-	const regularClusters = groupedView.groupedSuggestions.filter(
-		(c) => c.derivedByPipeline !== 'synthesis',
-	);
-	const hasSynthesized = synthesizedClusters.length > 0;
-	const hasRegularClusters = regularClusters.length > 0;
-	const hasOriginals = sortedStatements.length > 0;
-
-	// Pipeline tint per cluster — explicit lookup so semantic (hybrid-auto)
-	// and custom (admin/ai-created) framings get correct accents. Synthesized
-	// clusters carry their own derivedByPipeline so the card detects them
-	// even without this hint.
-	const resolvePipeline = (cluster: Statement): GroupedSuggestionPipeline => {
-		if (cluster.derivedByPipeline === 'synthesis') return 'synthesis';
-		if (cluster.derivedByPipeline === 'topic-cluster') return 'topic';
-		if (!cluster.framingId) return 'unknown';
-		const f = framings.find((fr) => fr.framingId === cluster.framingId);
-		if (!f) return 'unknown';
-		if (f.createdBy === 'hybrid-auto') return 'semantic';
-		if (f.createdBy === 'topic-cluster') return 'topic';
-
-		return 'custom';
+	// Admin: persist the current toggles as the statement default everyone lands
+	// on. Deep-merge so other condensation/settings fields are preserved.
+	const handleSetDefault = () => {
+		setDoc(
+			createStatementRef(statement.statementId),
+			{ statementSettings: { condensation: { viewLayers: layers } } },
+			{ merge: true },
+		).catch((error) =>
+			logError(error, {
+				operation: 'SuggestionCards.setDefaultViewLayers',
+				statementId: statement.statementId,
+			}),
+		);
 	};
 
-	// Section divider between the regular-clusters block and the originals
-	// block (when both are present). Tinted to match the active framing so
-	// the boundary reads visually as "↑ clusters / ↓ everything else".
-	let regularDividerVariant: 'default' | 'topic' | 'semantic' = 'default';
-	let regularDividerIcon: ReactNode = <Layers size={14} aria-hidden />;
-	if (framingMode === FramingMode.semantic) {
-		regularDividerVariant = 'semantic';
-		regularDividerIcon = <Layers size={14} aria-hidden />;
-	} else if (framingMode === FramingMode.topic) {
-		regularDividerVariant = 'topic';
-		regularDividerIcon = <Tags size={14} aria-hidden />;
-	}
+	const renderRaw = (original: Statement) => (
+		<SuggestionCard parentStatement={statement} statement={original} />
+	);
 
 	return (
 		<>
-			<SuggestionsToolbar
-				parentId={statement?.statementId}
-				visibilityMode={groupedView.mode}
-				hasActiveClusters={hasSynthesized || hasRegularClusters}
-				showOriginalsOverride={showOriginalsOverride}
-				onShowOriginalsOverrideChange={setShowOriginalsOverride}
+			<ViewLayersToggle
+				layers={layers}
+				onChange={setLayers}
+				isAdmin={isAdmin}
+				onSetDefault={handleSetDefault}
+				hasUserOverride={hasUserOverride}
+				onReset={resetToDefault}
 			/>
 
-			{hasSynthesized && (
+			{hasSynth && (
 				<>
 					<SectionDivider
-						label={t('Synthesized proposals')}
-						count={synthesizedClusters.length}
+						label={t('AI proposals')}
+						count={plan.topLevelSynths.length}
 						icon={<Sparkles size={14} aria-hidden />}
 						variant="synthesis"
 					/>
 					<div className={styles['suggestions-wrapper']}>
-						{synthesizedClusters.map((cluster) => (
-							<div key={cluster.statementId} className={styles['card-wrapper']}>
+						{plan.topLevelSynths.map((synth) => (
+							<div key={synth.statementId} className={styles['card-wrapper']}>
 								<GroupedSuggestionCard
-									cluster={cluster}
-									mode={groupedView.mode}
-									allowDrillToOriginals={groupedView.allowDrillToOriginals}
+									cluster={synth}
+									mode="both"
+									allowDrillToOriginals
 									pipeline="synthesis"
-									renderOriginal={(original) => (
-										<SuggestionCard parentStatement={statement} statement={original} />
-									)}
+									renderOriginal={renderRaw}
 								/>
 							</div>
 						))}
@@ -330,27 +233,39 @@ const SuggestionCards: FC<Props> = ({
 				</>
 			)}
 
-			{hasRegularClusters && (
+			{hasTopics && (
 				<>
-					{hasSynthesized && (
-						<SectionDivider
-							label={t('Clusters')}
-							count={regularClusters.length}
-							icon={<Layers size={14} aria-hidden />}
-							variant={regularDividerVariant}
-						/>
-					)}
+					<SectionDivider
+						label={t('Clusters')}
+						count={plan.topicCards.length}
+						icon={<Layers size={14} aria-hidden />}
+						variant="topic"
+					/>
 					<div className={styles['suggestions-wrapper']}>
-						{regularClusters.map((cluster) => (
+						{plan.topicCards.map(({ cluster, nestedSynths, directRaw }) => (
 							<div key={cluster.statementId} className={styles['card-wrapper']}>
 								<GroupedSuggestionCard
 									cluster={cluster}
-									mode={groupedView.mode}
-									allowDrillToOriginals={groupedView.allowDrillToOriginals}
-									pipeline={resolvePipeline(cluster)}
-									renderOriginal={(original) => (
-										<SuggestionCard parentStatement={statement} statement={original} />
-									)}
+									mode="both"
+									allowDrillToOriginals
+									pipeline="topic"
+									explicitMembers={directRaw}
+									nestedSlot={
+										nestedSynths.length > 0
+											? nestedSynths.map(({ synth, rawMembers }) => (
+													<GroupedSuggestionCard
+														key={synth.statementId}
+														cluster={synth}
+														mode="both"
+														allowDrillToOriginals
+														pipeline="synthesis"
+														explicitMembers={rawMembers}
+														renderOriginal={renderRaw}
+													/>
+												))
+											: undefined
+									}
+									renderOriginal={renderRaw}
 								/>
 							</div>
 						))}
@@ -358,12 +273,12 @@ const SuggestionCards: FC<Props> = ({
 				</>
 			)}
 
-			{(hasSynthesized || hasRegularClusters) && hasOriginals && (
+			{(hasSynth || hasTopics) && hasRaw && (
 				<SectionDivider
-					label={t('Other suggestions')}
-					count={sortedStatements.length}
-					icon={regularDividerIcon}
-					variant={regularDividerVariant}
+					label={t('Open ideas')}
+					count={visibleFlatRaw.length}
+					icon={<Lightbulb size={14} aria-hidden />}
+					variant="default"
 				/>
 			)}
 			<Flipper
@@ -371,7 +286,7 @@ const SuggestionCards: FC<Props> = ({
 				spring={{ stiffness: 300, damping: 30 }}
 				className={styles['suggestions-wrapper']}
 			>
-				{sortedStatements.map((statementSub: Statement) => (
+				{visibleFlatRaw.map((statementSub: Statement) => (
 					<Flipped key={statementSub.statementId} flipId={statementSub.statementId}>
 						<div className={styles['card-wrapper']}>
 							<SuggestionCard parentStatement={statement} statement={statementSub} />
@@ -379,6 +294,14 @@ const SuggestionCards: FC<Props> = ({
 					</Flipped>
 				))}
 			</Flipper>
+			{hasRaw && hasMore && (
+				<div ref={sentinelRef} className={styles['lazyLoadSentinel']} aria-hidden="true" />
+			)}
+			{isLoadingMore && (
+				<div className={styles['lazyLoadStatus']} role="status">
+					{t('Loading more…')}
+				</div>
+			)}
 			{isSubmitMode && (
 				<div className={styles.submitButtonContainer}>
 					<button onClick={handleSubmit} className={styles.submitButton}>

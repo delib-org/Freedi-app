@@ -1,7 +1,10 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement, StatementType, getRandomUID } from '@freedi/shared-types';
-import { generateSynthesizedProposal, generateTopicLabel } from '../../services/integration-ai-service';
+import {
+	generateSynthesizedProposal,
+	generateTopicLabel,
+} from '../../services/integration-ai-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { checkAndUpdateSpawnDebounce, markSpawnedNow } from './debounce';
@@ -145,6 +148,26 @@ interface SpawnResult {
 }
 
 /**
+ * Whether a visible cluster under the same parent already contains either
+ * member of the pair. Uses single-field `array-contains` queries (auto-indexed)
+ * and filters parent + visibility in memory, so no composite index is needed.
+ */
+async function pairAlreadyClustered(option: Statement, sibling: Statement): Promise<boolean> {
+	for (const memberId of [sibling.statementId, option.statementId]) {
+		const snap = await db()
+			.collection(Collections.statements)
+			.where('integratedOptions', 'array-contains', memberId)
+			.get();
+		const hit = snap.docs
+			.map((d) => d.data() as Statement)
+			.some((c) => c.isCluster === true && c.hide !== true && c.parentId === option.parentId);
+		if (hit) return true;
+	}
+
+	return false;
+}
+
+/**
  * Generate a merged proposal (or topic label) from `option + sibling` and
  * write a new cluster statement. For synth mode this emits one Gemini call
  * (`generateSynthesizedProposal`); if the LLM refuses (`cannotSynthesize`),
@@ -174,6 +197,21 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 
 			return { spawned: false, debounced: true };
 		}
+	}
+
+	// Dedup guard: if a visible cluster already contains either member, a
+	// concurrent spawn or a prior run already covered this pair — don't create a
+	// duplicate synth (the failure that produced duplicate synths in production).
+	// Single-field `array-contains` query (auto-indexed); parent filtered in memory.
+	if (await pairAlreadyClustered(option, sibling)) {
+		logger.info('synthesis.pipeline.spawn: deduped — member already in a visible cluster', {
+			parentId: option.parentId,
+			optionId: option.statementId,
+			siblingId: sibling.statementId,
+			mode,
+		});
+
+		return { spawned: false };
 	}
 
 	const questionContext = parentStatement.statement || parentStatement.statementId;
@@ -250,6 +288,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		isCluster: true,
 		isSynthesis: isSynthMode,
 		derivedByPipeline: isSynthMode ? 'synthesis' : 'topic-cluster',
+		synthesisMechanism: 'live-spawn',
 		liveSynthOrigin: 'spawn',
 		hide: false,
 		// Synth-only: track how many members were in the set when the
@@ -307,17 +346,14 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 	// over the full parent corpus once activity settles (~30s quiet window),
 	// which catches members that live-synth left fragmented.
 	try {
-		await db()
-			.collection('_synthBulkRequests')
-			.doc(option.parentId)
-			.set(
-				{
-					parentId: option.parentId,
-					lastSpawnAt: Date.now(),
-					lastSpawnClusterId: clusterId,
-				},
-				{ merge: true },
-			);
+		await db().collection('_synthBulkRequests').doc(option.parentId).set(
+			{
+				parentId: option.parentId,
+				lastSpawnAt: Date.now(),
+				lastSpawnClusterId: clusterId,
+			},
+			{ merge: true },
+		);
 	} catch (error) {
 		logger.warn('synthesis.pipeline.spawn: bulk-request marker write failed (non-fatal)', {
 			parentId: option.parentId,

@@ -48,7 +48,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve as resolvePath } from 'node:path';
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
 	console.error(
@@ -187,6 +187,11 @@ async function ensureQuestion(): Promise<void> {
 		hide: false,
 		randomSeed: Math.random(),
 		evaluation: createBlankEvaluation(),
+		// Public access so the seeded question resolves authorization and renders
+		// in the normal UI without a manual Firestore patch. useAuthorization stays
+		// in a permanent loading state when neither the statement nor its top parent
+		// carry membership.access (see src/controllers/hooks/useAuthorization.ts).
+		membership: { access: 'public' },
 		statementSettings: {
 			enableAddVotingOption: true,
 			enableAddEvaluationOption: true,
@@ -348,6 +353,70 @@ async function tallyResults(): Promise<PipelineResult> {
 	return { topicClusters, synths, visibleSourceOptions, hiddenSourceOptions, clusterDetails };
 }
 
+/**
+ * Link each synthesized proposal to its topic cluster by adding the synth's
+ * statementId into the topic's `integratedOptions`. The app reads this as the
+ * explicit 3-level encoding (topic → synth → raw) and nests the synth card
+ * inside the topic card under the "Cluster" view layer.
+ *
+ * The pipeline assigns disjoint raw options to synths vs topic clusters, so we
+ * match by the benchmark's own topic labels (tracked per option at seed time)
+ * rather than by member overlap.
+ */
+async function linkSynthsToTopics(options: CreatedOption[]): Promise<void> {
+	const optionTopic = new Map(options.map((o) => [o.statementId, o.topicName]));
+	const snap = await db.collection('statements').where('parentId', '==', QUESTION_ID).get();
+
+	const topicClusters: Array<{ id: string; io: string[] }> = [];
+	const synthClusters: Array<{ id: string; io: string[] }> = [];
+	for (const doc of snap.docs) {
+		const d = doc.data();
+		const io = Array.isArray(d.integratedOptions) ? (d.integratedOptions as string[]) : [];
+		if (d.derivedByPipeline === 'topic-cluster') topicClusters.push({ id: d.statementId, io });
+		else if (d.derivedByPipeline === 'synthesis') synthClusters.push({ id: d.statementId, io });
+	}
+
+	const dominantTopic = (io: string[]): string | undefined => {
+		const counts: Record<string, number> = {};
+		for (const id of io) {
+			const tn = optionTopic.get(id);
+			if (tn) counts[tn] = (counts[tn] ?? 0) + 1;
+		}
+		let best: string | undefined;
+		let bestN = 0;
+		for (const [tn, n] of Object.entries(counts)) {
+			if (n > bestN) {
+				bestN = n;
+				best = tn;
+			}
+		}
+
+		return best;
+	};
+
+	const topicByName = new Map<string, { id: string; io: string[] }>();
+	for (const tc of topicClusters) {
+		const tn = dominantTopic(tc.io);
+		if (tn && !topicByName.has(tn)) topicByName.set(tn, tc);
+	}
+
+	let linked = 0;
+	for (const synth of synthClusters) {
+		const tn = dominantTopic(synth.io);
+		if (!tn) continue;
+		const topic = topicByName.get(tn);
+		if (!topic || topic.io.includes(synth.id)) continue;
+		await db
+			.collection('statements')
+			.doc(topic.id)
+			.update({ integratedOptions: FieldValue.arrayUnion(synth.id) });
+		topic.io.push(synth.id);
+		linked++;
+	}
+
+	console.info(`\n🔗 Linked ${linked} synth proposals under their topic clusters (3-level nesting).`);
+}
+
 function printSummary(result: PipelineResult): void {
 	console.info('\n========== BENCHMARK RESULT ==========');
 	console.info(`Topic clusters : ${result.topicClusters}   (expected: 2)`);
@@ -372,6 +441,8 @@ function printSummary(result: PipelineResult): void {
 	console.info(`\n✓ Wrote ${options.length} options in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 	console.info(`Waiting ${FINAL_WAIT_MS / 1000}s for the pipeline to settle…`);
 	await sleep(FINAL_WAIT_MS);
+
+	await linkSynthsToTopics(options);
 
 	const result = await tallyResults();
 	printSummary(result);

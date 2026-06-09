@@ -13,7 +13,7 @@
  */
 
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Statement } from '@freedi/shared-types';
+import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { logError, DatabaseError, ValidationError } from '@/lib/utils/errorHandling';
 
 /**
@@ -44,23 +44,14 @@ export async function finalizeSuggestion(
     let resolvedSuggestionId = suggestionId;
 
     if (!resolvedSuggestionId) {
-      // We need the officialParagraph's statementType for the query,
-      // so read it here as well (will be re-read inside the transaction)
-      const officialParagraphSnap = await db
-        .collection(Collections.statements)
-        .doc(officialParagraphId)
-        .get();
-
-      if (!officialParagraphSnap.exists) {
-        throw new ValidationError('Official paragraph not found', { officialParagraphId });
-      }
-
-      const officialParagraph = officialParagraphSnap.data() as Statement;
-
+      // Suggestions are always `option` children of the paragraph — regardless
+      // of whether the official paragraph itself is the canonical `paragraph`
+      // type or a legacy `option`. Querying by the official's own statementType
+      // would return zero suggestions once the paragraph is migrated.
       const suggestionsSnap = await db
         .collection(Collections.statements)
         .where('parentId', '==', officialParagraphId)
-        .where('statementType', '==', officialParagraph.statementType)
+        .where('statementType', '==', StatementType.option)
         .orderBy('consensus', 'desc')
         .limit(1)
         .get();

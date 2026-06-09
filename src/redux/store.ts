@@ -14,7 +14,6 @@ import { pwaSlice } from './pwa/pwaSlice';
 import { roomAssignmentSlice } from './roomAssignment/roomAssignmentSlice';
 import { engagementSlice } from './engagement/engagementSlice';
 import { clusterEvaluationLinksSlice } from './clusterEvaluationLinks/clusterEvaluationLinksSlice';
-import { framingsSlice } from './framings/framingsSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -33,7 +32,6 @@ export const store = configureStore({
 		roomAssignment: roomAssignmentSlice.reducer,
 		engagement: engagementSlice.reducer,
 		clusterEvaluationLinks: clusterEvaluationLinksSlice.reducer,
-		framings: framingsSlice.reducer,
 	},
 });
 

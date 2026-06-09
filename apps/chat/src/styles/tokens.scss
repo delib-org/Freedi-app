@@ -1,0 +1,152 @@
+// Design tokens for the dialectical chat app.
+// Look & feel adapted from the reference impl (/Documents/chat-tests):
+// dark-first glassmorphism, Outfit type, indigo→purple accent gradient,
+// green (strengthen) / magenta (critique) dialectic pills with soft glow.
+// Dark is the default; OS light preference maps to the reference light theme.
+
+:root {
+	// Surfaces
+	--bg-color: #0b0f19;
+	--bg-gradient: linear-gradient(135deg, #0b0f19 0%, #1a1525 100%);
+	--bg-page: #0b0f19;
+	--bg-card: rgba(255, 255, 255, 0.04);
+	--bg-muted: rgba(255, 255, 255, 0.06);
+
+	// Glass
+	--glass-bg: rgba(255, 255, 255, 0.03);
+	--glass-border: rgba(255, 255, 255, 0.08);
+	--glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+	--glass-blur: 12px;
+
+	// Borders
+	--border: rgba(255, 255, 255, 0.08);
+	--border-strong: rgba(255, 255, 255, 0.16);
+
+	// Text
+	--text-body: #f8fafc;
+	--text-primary: #f8fafc;
+	--text-muted: #94a3b8;
+	--text-secondary: #94a3b8;
+	--text-inverse: #ffffff;
+
+	// Brand / accent
+	--accent: #6366f1;
+	--accent-dark: #4f46e5;
+	--accent-2: #8b5cf6;
+	--accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+
+	// Chat bubbles
+	--bubble-me: rgba(99, 102, 241, 0.15);
+	--bubble-other: rgba(255, 255, 255, 0.05);
+	--system-msg: rgba(255, 255, 255, 0.05);
+	--thread-line: rgba(255, 255, 255, 0.1);
+	--eval-bg: rgba(0, 0, 0, 0.3);
+	--eval-btn: rgba(255, 255, 255, 0.06);
+	--inset: rgba(0, 0, 0, 0.15);
+	--header-tint: rgba(255, 255, 255, 0.02);
+
+	// Dialectic polarity
+	--strengthen: #4ade80;
+	--strengthen-soft: rgba(34, 197, 94, 0.15);
+	--strengthen-border: rgba(34, 197, 94, 0.55);
+	--critique: #f472b6;
+	--critique-soft: rgba(219, 39, 119, 0.15);
+	--critique-border: rgba(219, 39, 119, 0.55);
+
+	// Statement-type identity (mirrors main app: option = wheat, question = blue,
+	// selected option = green)
+	--option: #f5deb3;
+	--option-soft: rgba(245, 222, 179, 0.12);
+	--option-border: rgba(245, 222, 179, 0.45);
+	--question: #38bdf8;
+	--question-soft: rgba(56, 189, 248, 0.1);
+	--question-border: rgba(56, 189, 248, 0.45);
+	--selected: #57c6b2;
+	--selected-soft: rgba(87, 198, 178, 0.15);
+	--selected-border: rgba(87, 198, 178, 0.5);
+
+	// Amber (AI revision)
+	--amber: #f59e0b;
+	--amber-dark: #d97706;
+	--amber-soft: rgba(245, 158, 11, 0.12);
+
+	// Corroboration bar
+	--c-low: #f472b6;
+	--c-mid: #f59e0b;
+	--c-high: #4ade80;
+
+	// Spacing (8-pt grid)
+	--space-xs: 4px;
+	--space-sm: 8px;
+	--space-md: 16px;
+	--space-lg: 24px;
+	--space-xl: 32px;
+
+	// Radii
+	--radius-sm: 8px;
+	--radius-md: 16px;
+	--radius-lg: 24px;
+	--radius-pill: 9999px;
+
+	--shadow-card: var(--glass-shadow);
+	--max-width: 880px;
+	--font: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	--ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// Light theme: applied automatically when the OS prefers light AND the user
+// hasn't picked a theme, OR explicitly via the header's ☀️/🌙 toggle
+// (`data-theme="light"`). `data-theme="dark"` forces dark (the :root default).
+@mixin light-theme {
+	--bg-color: #f8fafc;
+	--bg-gradient: radial-gradient(circle at top center, #ffffff 0%, #f1f5f9 100%);
+	--bg-page: #f1f5f9;
+	--bg-card: rgba(255, 255, 255, 0.75);
+	--bg-muted: rgba(0, 0, 0, 0.04);
+	--glass-bg: rgba(255, 255, 255, 0.7);
+	--glass-border: rgba(0, 0, 0, 0.07);
+	--glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	--border: rgba(0, 0, 0, 0.08);
+	--border-strong: rgba(0, 0, 0, 0.16);
+	--text-body: #1e293b;
+	--text-primary: #1e293b;
+	--text-muted: #64748b;
+	--text-secondary: #64748b;
+	--bubble-me: #eef2ff;
+	--bubble-other: #ffffff;
+	--system-msg: rgba(0, 0, 0, 0.05);
+	--thread-line: rgba(0, 0, 0, 0.1);
+	--eval-bg: rgba(0, 0, 0, 0.04);
+	--eval-btn: rgba(0, 0, 0, 0.04);
+	--inset: rgba(0, 0, 0, 0.03);
+	--header-tint: rgba(0, 0, 0, 0.015);
+	--strengthen: #166534;
+	--strengthen-soft: #dcfce7;
+	--strengthen-border: #86efac;
+	--critique: #9d174d;
+	--critique-soft: #fce7f3;
+	--critique-border: #f9a8d4;
+	--option: #a8824a;
+	--option-soft: rgba(168, 130, 74, 0.1);
+	--option-border: rgba(168, 130, 74, 0.4);
+	--question: #0284c7;
+	--question-soft: rgba(2, 132, 199, 0.08);
+	--question-border: rgba(2, 132, 199, 0.4);
+	--selected: #2f9e8c;
+	--selected-soft: rgba(47, 158, 140, 0.12);
+	--selected-border: rgba(47, 158, 140, 0.45);
+	--c-low: #db2777;
+	--c-mid: #d97706;
+	--c-high: #16a34a;
+}
+
+:root[data-theme='light'] {
+	@include light-theme;
+}
+
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme]) {
+		@include light-theme;
+	}
+}
+

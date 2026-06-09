@@ -1,0 +1,114 @@
+@use 'tokens';
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: var(--font);
+	color: var(--text-body);
+	background: var(--bg-color);
+	background-image: var(--bg-gradient);
+	background-attachment: fixed;
+	min-height: 100dvh;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+	transition: color 0.2s;
+
+	&:hover {
+		color: var(--accent-2);
+	}
+}
+
+h1,
+h2,
+h3 {
+	line-height: 1.2;
+	margin: 0 0 var(--space-sm);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+.page {
+	max-width: var(--max-width);
+	margin: 0 auto;
+	padding: var(--space-xl) var(--space-md) calc(var(--space-xl) * 2);
+}
+
+.muted {
+	color: var(--text-muted);
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+// Global keyframes (referenced by component mixins).
+@keyframes chat-slide-up {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes chat-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+// Custom scrollbar (matches the reference's slim translucent thumb).
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: var(--border-strong);
+	border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--accent);
+}

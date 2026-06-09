@@ -131,6 +131,54 @@ function meanVector(vectors: number[][]): number[] {
 }
 
 /**
+ * Force a disjoint partition over the raw DBSCAN clusters.
+ *
+ * `density-clustering`'s DBSCAN can place a *border* point — one reachable from
+ * more than one dense region — into multiple clusters, and its `_mergeArrays`
+ * can even list a point twice inside a single cluster. Both inflate membership
+ * and break the pipeline's "every option lands in exactly one synth" invariant
+ * (observed: 60 inputs → 66 memberships at ε = 0.30). It does not trigger at the
+ * production default ε = 1.0 (neighbourhoods are coarse enough that border
+ * points are not shared), so it is latent — but it is a real correctness bug, so
+ * we dedupe unconditionally: every point is kept in exactly one cluster, the one
+ * whose provisional centroid it is most cosine-similar to (consistent with the
+ * noise-reassignment rule below). Deterministic given the seed; core points,
+ * which are only ever claimed by their own cluster, are unaffected.
+ */
+function partitionDisjoint(rawClusters: number[][], points: number[][]): number[][] {
+	// Provisional centroids from each cluster's unique membership.
+	const centroids = rawClusters.map((idxs) => meanVector([...new Set(idxs)].map((i) => points[i])));
+	// Which clusters claim each point (Map insertion order keeps this deterministic).
+	const claims = new Map<number, number[]>();
+	rawClusters.forEach((idxs, clusterId) => {
+		for (const i of new Set(idxs)) {
+			const list = claims.get(i);
+			if (list) list.push(clusterId);
+			else claims.set(i, [clusterId]);
+		}
+	});
+
+	const out: number[][] = rawClusters.map(() => []);
+	for (const [i, clusterIds] of claims) {
+		let chosen = clusterIds[0];
+		if (clusterIds.length > 1) {
+			let bestSim = -Infinity;
+			for (const clusterId of clusterIds) {
+				const sim = cosineSimilarity(points[i], centroids[clusterId]);
+				if (sim > bestSim) {
+					bestSim = sim;
+					chosen = clusterId;
+				}
+			}
+		}
+		out[chosen].push(i);
+	}
+
+	// A cluster can be emptied if all its (shared) points went elsewhere; drop it.
+	return out.filter((idxs) => idxs.length > 0);
+}
+
+/**
  * Cluster a flat set of pre-embedded items in one pass. See module doc.
  */
 export function bulkClusterByEmbedding(
@@ -207,8 +255,11 @@ export function bulkClusterByEmbedding(
 
 	// 3. Build cluster groups, computing centroids on the ORIGINAL embedding
 	//    space (not UMAP-projected) — downstream cosine math expects the same
-	//    space the embeddings were generated in.
-	const clusters: ClusterResult[] = rawClusters.map((indices) => {
+	//    space the embeddings were generated in. `partitionDisjoint` first
+	//    collapses any DBSCAN border-point double-claims so the partition is
+	//    disjoint (see its doc).
+	const disjointClusters = partitionDisjoint(rawClusters, points);
+	const clusters: ClusterResult[] = disjointClusters.map((indices) => {
 		const memberIds = indices.map((i) => items[i].id);
 		const memberVecs = indices.map((i) => points[i]);
 
@@ -216,8 +267,15 @@ export function bulkClusterByEmbedding(
 	});
 
 	// 4. Reassign noise to nearest centroid if cosine >= threshold.
+	//    `density-clustering` leaves a point in `dbscan.noise` even when a later
+	//    expansion assigns it to a cluster, so the raw noise list overlaps real
+	//    members; re-adding those here is what inflated membership past N. Dedupe
+	//    the noise indices and drop any already assigned to a cluster, so each
+	//    point is reassigned at most once and never duplicated.
+	const assignedIndices = new Set<number>(disjointClusters.flat());
+	const trueNoiseIndices = [...new Set(noiseIndices)].filter((idx) => !assignedIndices.has(idx));
 	const noiseIds: string[] = [];
-	for (const noiseIdx of noiseIndices) {
+	for (const noiseIdx of trueNoiseIndices) {
 		const point = points[noiseIdx];
 		let bestSim = -Infinity;
 		let bestCluster: ClusterResult | null = null;
@@ -264,5 +322,6 @@ export function bulkClusterByEmbedding(
 }
 
 // Exported for testing and reuse by twoTierJudge (medoid selection needs
-// the same cosine math).
-export { cosineSimilarity, meanVector };
+// the same cosine math). `partitionDisjoint` is exported for the regression
+// test that pins the border-point dedupe invariant.
+export { cosineSimilarity, meanVector, partitionDisjoint };

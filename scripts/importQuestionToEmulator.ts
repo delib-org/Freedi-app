@@ -144,7 +144,6 @@ interface ExportPayload {
 	statements: Array<Record<string, unknown>>;
 	evaluations: Array<Record<string, unknown>>;
 	subscriptions: Array<Record<string, unknown>>;
-	clusterAggregations: Array<Record<string, unknown>>;
 	clusterEvaluationLinks: Array<Record<string, unknown>>;
 }
 
@@ -342,19 +341,8 @@ interface ExportPayload {
 			await commitInBatches(subDocs, 'subscriptions');
 		}
 
-		// 4. Cluster aggregations + evaluation links
+		// 4. Cluster evaluation links
 		if (!skipClusters) {
-			if (payload.clusterAggregations?.length) {
-				const aggDocs = payload.clusterAggregations.map((a) => {
-					const id = a.id as string;
-					const data = { ...a };
-					delete data.id;
-
-					return { ref: db.collection('clusterAggregations').doc(id), data };
-				});
-				console.info('Writing cluster aggregations…');
-				await commitInBatches(aggDocs, 'aggregations');
-			}
 			if (payload.clusterEvaluationLinks?.length) {
 				const linkDocs = payload.clusterEvaluationLinks.map((l) => {
 					let data = { ...l };

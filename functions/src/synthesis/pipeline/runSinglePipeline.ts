@@ -2,6 +2,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, StatementType, type Statement } from '@freedi/shared-types';
 import { vectorSearchService } from '../../services/vector-search-service';
+import { findClustersContainingMember } from '../liveSynth/clusterRecompute';
 import { loadSynthesisSettingsFromStatement } from './loadSynthesisSettings';
 import { ensureEmbedding } from './embedding';
 import { expandClusterEvidenceViaFullMembers } from './candidateExpansion';
@@ -135,7 +136,26 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	if (!option) return skipped('option-not-found', startedAt);
 	if (!isOption(option)) return skipped('not-an-option', startedAt);
 	if (!option.parentId || option.parentId === 'top') return skipped('no-parent', startedAt);
+	// `integratedOptions` is populated on CLUSTER statements; this guards against
+	// running the pipeline on a cluster (or a legacy option that carries the
+	// array directly).
 	if ((option.integratedOptions ?? []).length > 0) return skipped('already-clustered', startedAt);
+
+	// Authoritative membership pre-check (fixes the cross-cluster double-claim).
+	// A member option does NOT carry `integratedOptions` — membership lives on
+	// the CLUSTER's `integratedOptions` array — so the guard above never catches
+	// an option that is already attached to a cluster. Without this query,
+	// re-processing an already-clustered option (re-evaluation triggers, a
+	// "Synthesize" re-run, or a queue replay) re-enters the attach passes and
+	// adds the option to a SECOND cluster, because `attachOptionToCluster` only
+	// checks membership in its own target. Query the clusters that actually list
+	// this option and skip if any live (non-hidden) cluster already owns it, so
+	// the pipeline is idempotent with respect to cluster membership.
+	const owningClusters = await findClustersContainingMember(option.statementId);
+	const liveOwner = owningClusters.find((c) => c.hide !== true);
+	if (liveOwner) {
+		return skipped(`already-member-of-cluster:${liveOwner.statementId}`, startedAt);
+	}
 
 	const parent = input.parent ?? (await loadStatement(option.parentId));
 	if (!parent) return skipped('parent-not-found', startedAt);

@@ -1,4 +1,6 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router';
+import { Sparkles } from 'lucide-react';
 import { logError } from '@/utils/errorHandling';
 
 // Third Party
@@ -36,9 +38,14 @@ import RoomBadge from '@/view/components/roomBadge/RoomBadge';
 interface Props {
 	statement: Statement | undefined;
 	parentStatement?: Statement | undefined;
+	/** Clusters (AI proposals / groups) that already represent this idea. When
+	 *  present, the card shows a "Part of …" back-reference so a deduplicated
+	 *  original surfaced via the "show originals" override still reads as
+	 *  belonging to its proposal rather than as a loose duplicate. */
+	memberOfClusters?: Statement[];
 }
 
-const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
+const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfClusters }) => {
 	// Hooks
 	if (!parentStatement)
 		logError(new Error('parentStatement is not defined'), {
@@ -324,6 +331,23 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 						>
 							{isExpanded ? t('Show less') : t('Show more')}
 						</button>
+						{memberOfClusters && memberOfClusters.length > 0 && (
+							<div className={styles.memberRefs}>
+								{memberOfClusters.map((cluster) => (
+									<Link
+										key={cluster.statementId}
+										to={`/statement/${cluster.statementId}`}
+										className={styles.memberRef}
+										title={t('Part of: {title}').replace('{title}', cluster.statement)}
+									>
+										<Sparkles size={12} aria-hidden />
+										<span className={styles.memberRefText}>
+											{t('Part of: {title}').replace('{title}', cluster.statement)}
+										</span>
+									</Link>
+								))}
+							</div>
+						)}
 						<div className={styles.buttonContainer}>
 							{/* Show Add Image button if no image and user is admin of parent statement */}
 							{!image && isAdmin && (

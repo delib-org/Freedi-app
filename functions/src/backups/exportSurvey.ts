@@ -181,7 +181,6 @@ export async function exportSurveyToGcs(
 	);
 
 	// ----- step 4: cluster artifacts -----
-	const clusterAggregations: Doc[] = [];
 	const clusterEvaluationLinks: Doc[] = [];
 	const clusterIds = statements
 		.filter((s) => s.isCluster === true)
@@ -195,14 +194,6 @@ export async function exportSurveyToGcs(
 				.get();
 			snap.forEach((doc) => clusterEvaluationLinks.push({ ...doc.data(), id: doc.id }));
 		}
-		const aggSnap = await db.collection('clusterAggregations').get();
-		const clusterIdSet = new Set(clusterIds);
-		aggSnap.forEach((doc) => {
-			const id = doc.id;
-			const sep = id.indexOf('--');
-			const cid = sep === -1 ? id : id.slice(0, sep);
-			if (clusterIdSet.has(cid)) clusterAggregations.push({ ...doc.data(), id });
-		});
 	}
 
 	// ----- step 5: survey-bound collections -----
@@ -320,19 +311,6 @@ export async function exportSurveyToGcs(
 	);
 	const evidencePosts = await fetchByFieldIn('evidencePosts', 'parentId', descendantIds, 'id');
 	const evidenceVotes = await fetchByFieldIn('evidenceVotes', 'parentId', descendantIds, 'id');
-	const framings = await fetchByFieldIn('framings', 'topParentId', descendantIds, 'id');
-	const framingRequests = await fetchByFieldIn(
-		'framingRequests',
-		'topParentId',
-		descendantIds,
-		'id',
-	);
-	const framingSnapshots = await fetchByFieldIn(
-		'framingSnapshots',
-		'topParentId',
-		descendantIds,
-		'id',
-	);
 
 	const statementHistory = await fetchSubcollection(descendantIds, 'statementHistory');
 	const joinFormSubmissions = await fetchSubcollection([questionId], 'joinFormSubmissions');
@@ -356,7 +334,6 @@ export async function exportSurveyToGcs(
 		statements: statements.length,
 		evaluations: evaluations.length,
 		subscriptions: subscriptions.length,
-		clusterAggregations: clusterAggregations.length,
 		clusterEvaluationLinks: clusterEvaluationLinks.length,
 		votes: votes.length,
 		agrees: agrees.length,
@@ -382,9 +359,6 @@ export async function exportSurveyToGcs(
 		statementsPasswords: statementsPasswords.length,
 		evidencePosts: evidencePosts.length,
 		evidenceVotes: evidenceVotes.length,
-		framings: framings.length,
-		framingRequests: framingRequests.length,
-		framingSnapshots: framingSnapshots.length,
 		statementHistory: statementHistory.length,
 		joinFormSubmissions: joinFormSubmissions.length,
 		mcSurvey: mcSurvey ? 1 : 0,
@@ -403,14 +377,12 @@ export async function exportSurveyToGcs(
 			statementCount: statements.length,
 			evaluationCount: evaluations.length,
 			subscriptionCount: subscriptions.length,
-			clusterAggregationCount: clusterAggregations.length,
 			clusterEvaluationLinkCount: clusterEvaluationLinks.length,
 		},
 		question,
 		statements,
 		evaluations,
 		subscriptions,
-		clusterAggregations,
 		clusterEvaluationLinks,
 		votes,
 		agrees,
@@ -436,9 +408,6 @@ export async function exportSurveyToGcs(
 		statementsPasswords,
 		evidencePosts,
 		evidenceVotes,
-		framings,
-		framingRequests,
-		framingSnapshots,
 		statementHistory,
 		joinFormSubmissions,
 		mcSurvey,

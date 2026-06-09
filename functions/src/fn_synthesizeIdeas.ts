@@ -11,6 +11,7 @@ import { judgeSemanticEquivalenceCached } from './services/verdict-cache-service
 import { UnionFind } from './utils/unionFind';
 import { refineComponent, pairKey } from './synthesis/completeLinkage';
 import { performIntegration } from './integrate/performIntegration';
+import { dissolveQuestionSynthesis } from './synthesis/derivedDocs';
 import { recomputeClusterEvaluation } from './condensation/aggregation';
 import {
 	generateSynthesizedProposal,
@@ -20,7 +21,7 @@ import {
 // See `synthesis/featureFlags.ts` for the env-var gate. Existing pipeline
 // behavior is preserved when flags are OFF.
 import { bayesianFilterOptions } from './synthesis/scoring';
-import { bulkClusterByEmbedding } from './synthesis/bulkCluster';
+import { buildCandidateClusters } from './synthesis/candidateClusters';
 import { twoTierJudge, type ClusterMember } from './synthesis/twoTierJudge';
 import { synthesisFlags, shouldUseBulkSynthesisPath } from './synthesis/featureFlags';
 
@@ -373,10 +374,13 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 				};
 			}
 
-			const { clusters: bulkClusters } = bulkClusterByEmbedding(items);
-			const candidateClusters = bulkClusters
-				.filter((c) => c.memberIds.length >= 2)
-				.map((c, i) => ({ clusterId: `bulk-${i}`, memberIds: c.memberIds }));
+			// Candidate clusters by ANN cosine edges + connected components (the
+			// live path's geometry), NOT UMAP→DBSCAN. Preserves singletons —
+			// distinct ideas are left standalone instead of forced into buckets.
+			const { clusters: candidateClusters } = await buildCandidateClusters(
+				items.map((it) => it.id),
+				{ parentId: parentStatementId, threshold },
+			);
 
 			const members = new Map<string, ClusterMember>();
 			for (const item of items) {
@@ -808,7 +812,21 @@ export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
 
 		await assertAdmin(parentStatementId, userId);
 
+		// Clean-then-rebuild: dissolve any prior synthesis output (restoring its
+		// members) before applying the confirmed groups, so re-running execute is
+		// idempotent and never stacks duplicate synths on top of old ones.
+		const dissolved = await dissolveQuestionSynthesis(parentStatementId, {
+			reversedByUserId: userId,
+		});
+		logger.info('synthesizeIdeasExecute.dissolvedPriorSynthesis', {
+			parentStatementId,
+			...dissolved,
+		});
+
 		const db = getFirestore();
+		// One id per execute run — stamped on every cluster it creates so a later
+		// run (or cleanup) can identify/remove exactly this run's output.
+		const synthesisRunId = db.collection('_').doc().id;
 		const adminDoc = await db.collection('usersV2').doc(userId).get();
 		const adminData = adminDoc.exists ? adminDoc.data() : null;
 		const creatorDisplayName = adminData?.displayName || 'Admin';
@@ -845,6 +863,8 @@ export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
 							creatorDisplayName,
 							creatorDefaultLanguage,
 							derivedByPipeline: 'synthesis',
+							synthesisRunId,
+							synthesisMechanism: 'bulk',
 							paragraphs: Array.isArray(group.paragraphs) ? group.paragraphs : undefined,
 						});
 						createdStatementIds.push(result.newStatementId);

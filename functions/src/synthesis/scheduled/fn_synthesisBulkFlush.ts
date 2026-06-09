@@ -2,7 +2,8 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, functionConfig, type Statement } from '@freedi/shared-types';
-import { bulkClusterByEmbedding, type ClusterableInput } from '../bulkCluster';
+import { type ClusterableInput } from '../bulkCluster';
+import { buildCandidateClusters } from '../candidateClusters';
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { attachOptionToCluster, isCluster } from '../pipeline/clusterOps';
 
@@ -13,9 +14,9 @@ import { attachOptionToCluster, isCluster } from '../pipeline/clusterOps';
  * reactively, but at burst arrival rates it leaves residual fragmentation —
  * same-theme paraphrases that arrived while a spawn-debounce was active and
  * ended up as singletons or duplicate 2-member synths. This sweep re-truths
- * cluster structure with the in-memory UMAP+DBSCAN path (the same primitive
- * the admin `synthesizeIdeasPreview` callable uses) on a 2-minute cadence,
- * scoped to parents that have had recent spawn activity.
+ * cluster structure with the cosine-edge + connected-components path (the same
+ * primitive the admin `synthesizeIdeasPreview` callable uses) on a 2-minute
+ * cadence, scoped to parents that have had recent spawn activity.
  *
  * Design constraints (per the hybrid design):
  *   - Live pipeline keeps owning the latency-sensitive attach hot path.
@@ -25,7 +26,7 @@ import { attachOptionToCluster, isCluster } from '../pipeline/clusterOps';
  *   - Quiet-period gate: skip parents with activity in the last 30s so we
  *     don't fight a burst that's still in progress.
  *   - First pass is attach-only: for each detected dense cluster from
- *     UMAP+DBSCAN, find the existing synth that shares the most members
+ *     the cosine-edge components, find the existing synth that shares the most members
  *     with the dense cluster and attach the orphan members. Spawn-from-bulk
  *     and synth-to-synth merging are intentionally deferred to a later
  *     iteration (the reJudge sweep) — attach alone closes the dominant
@@ -99,7 +100,12 @@ async function processParent(parentId: string): Promise<{
 		}
 	}
 
-	const bulk = bulkClusterByEmbedding(clusterables);
+	// Detect dense groups by ANN cosine edges + connected components (the live
+	// path's geometry), NOT UMAP→DBSCAN — avoids false dense blobs.
+	const bulk = await buildCandidateClusters(
+		clusterables.map((c) => c.id),
+		{ parentId },
+	);
 	let attaches = 0;
 
 	for (const dense of bulk.clusters) {
@@ -173,10 +179,7 @@ export const fn_synthesisBulkFlush = onSchedule(
 	async () => {
 		const startedAt = Date.now();
 		try {
-			const requests = await db()
-				.collection('_synthBulkRequests')
-				.limit(BULK_LIMIT)
-				.get();
+			const requests = await db().collection('_synthBulkRequests').limit(BULK_LIMIT).get();
 			if (requests.empty) return;
 
 			let processed = 0;

@@ -1,0 +1,289 @@
+{
+  "test": "1-6-2026-40-20-10-validation",
+  "description": "Pipeline output for the seeded corpus, divided into synths and topic-clusters.",
+  "parameters": {
+    "embeddingModel": "text-embedding-3-small",
+    "embeddingDimensions": 1536,
+    "embeddingContextFormat": "Question: ${questionText}\\nAnswer: ${optionText}",
+    "clustering": "in-memory UMAP -> DBSCAN (bulkClusterByEmbedding)",
+    "umapComponents": 5,
+    "umapSeed": 42,
+    "umapMinItems": 10,
+    "dbscanEps": 0.8,
+    "dbscanMinSamples": 3,
+    "nearestCentroidThreshold": 0.6,
+    "topicGrouping": "single-linkage agglomeration of synth centroids",
+    "topicThreshold": 0.45,
+    "llmTitles": "Gemini (generateSynthesizedProposal / generateTopicLabel) — non-deterministic; titles vary per run, membership does not"
+  },
+  "synths": {
+    "description": "Synths = sets of paraphrases merged into one proposal (idea-level dedup).",
+    "count": 4,
+    "items": [
+      {
+        "id": "68AO4sB1jNzH",
+        "title": "Cultivate Social Connections Through Active Participation in Community Groups",
+        "description": "To enhance overall happiness and well-being, individuals should actively engage with local community groups, clubs, and societies. By joining interest-based organizations, people can build new friendships, expand their social networks, and meet like-minded individuals, fostering a stronger sense of belonging and mutual support. This initiative encourages regular participation in shared activities to deepen these connections and improve community cohesion.",
+        "memberCount": 10,
+        "members": [
+          {
+            "id": "3LW887mKzIY7puiuTu8n",
+            "text": "Get involved with community groups to build new friendships.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "EZRgOTtMA0sAw99c9S4V",
+            "text": "Become active in community organizations and interest groups.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "GtWpB5yC7NCkaK36xmLO",
+            "text": "Join groups like book clubs, sports teams, or hobby communities.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "NWEdKsUDgsvNlhJGJ29j",
+            "text": "Engage with local clubs and societies to broaden your network.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "WNECeDld92FZJG6cLEtM",
+            "text": "Participate in clubs and societies based on your interests.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "i4xJdUTYgsgmnnt7PepR",
+            "text": "Participate in regular group activities through community clubs.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "rQzwY0khL4taIv4v3v2o",
+            "text": "Become a member of community organizations to meet new people.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "ruEXDLex0ygIeSNGJ5sG",
+            "text": "Join local community clubs and groups to expand your social circle.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "B9bbMdUW5ELYTktDbVCM",
+            "text": "Sign up for local clubs that share your interests and hobbies.",
+            "groundTruthSynth": "community-clubs"
+          },
+          {
+            "id": "p67dbOmJC2z04arEKnhf",
+            "text": "Join hobby groups or interest clubs to meet like-minded people.",
+            "groundTruthSynth": "community-clubs"
+          }
+        ]
+      },
+      {
+        "id": "9qblM42X11RW",
+        "title": "Establish Consistent Physical Activity Routines to Boost Mental Health and Overall Happiness",
+        "description": "This proposal outlines a strategy to integrate regular physical exercise into daily life across the community. By promoting consistent physical activity, we aim to significantly enhance individual and collective mental health, elevate mood, increase energy levels, and foster a greater sense of overall wellbeing and happiness. This initiative recognizes physical movement as a fundamental component of a fulfilling life.",
+        "memberCount": 10,
+        "members": [
+          {
+            "id": "1uakmMVvHoZQ3SZCFzWC",
+            "text": "Make regular physical exercise a daily habit for wellbeing.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "GV38pJKoxm4j90R29SFm",
+            "text": "Stay physically active through consistent exercise routines.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "Mddaa2ZMcVT0AQbkZ3pp",
+            "text": "Build daily exercise into your life for better mental health.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "NoXqHuOQQLqsrPG2tRgc",
+            "text": "Maintain an active lifestyle with regular workouts and movement.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "TI1Uoo702NUkcNJtE18B",
+            "text": "Exercise regularly to stay physically active and feel happier.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "VPxYq7PD8WaesgJw4HTD",
+            "text": "Engage in regular workouts to boost your mood and energy.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "YWfl36p06KxPjOVXawWg",
+            "text": "Do regular cardio, strength, or movement training to feel good.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "aBfXbI9F9f5j2ofzHfAp",
+            "text": "Commit to consistent physical exercise to improve happiness.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "p6PgHdTa18g76ov8sR5u",
+            "text": "Practice regular physical activity to support your wellbeing.",
+            "groundTruthSynth": "regular-exercise"
+          },
+          {
+            "id": "shyy3Q4sRl204LJkSQij",
+            "text": "Engage in daily exercise like running, cycling, or strength training.",
+            "groundTruthSynth": "regular-exercise"
+          }
+        ]
+      },
+      {
+        "id": "YV1dOKX6IarN",
+        "title": "Cultivate Strong Friendships Through Consistent Social Engagement",
+        "description": "This proposal advocates for making consistent social engagement with friends a deliberate priority. By regularly dedicating time to shared activities, meals, or quality interactions, individuals can cultivate and maintain strong friendships. This sustained connection is essential for fostering a sense of belonging, mutual support, and overall personal happiness.",
+        "memberCount": 10,
+        "members": [
+          {
+            "id": "040WSvLMhrEmSbR8M4TL",
+            "text": "Invest in friendships by spending quality time with close companions.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "1nZcgSkMl1sLR4vSy8VG",
+            "text": "Connect with friends regularly through dinners, walks, or activities.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "9nIypYvyxclLk9o5uMt9",
+            "text": "Cultivate friendships by spending time with friends often.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "FATuMWbMvyenQJN5FoeD",
+            "text": "Make time for friends in your weekly schedule for connection.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "IwR8WHDAeQGBcQ5a8kr0",
+            "text": "Make seeing friends a priority in your weekly routine.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "POaQRzMPynSQithqXSOf",
+            "text": "Maintain strong friendships through regular shared activities.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "VyEo2sfy54V2sUxHwaJ2",
+            "text": "Spend quality time with close friends regularly to feel happier.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "mT8MX9oB6QMSar8Gfgvj",
+            "text": "Stay close to your friends through regular get-togethers and meetups.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "ts5alSrO52z0IMRP9S6h",
+            "text": "Stay socially connected by meeting friends often.",
+            "groundTruthSynth": "friends-time"
+          },
+          {
+            "id": "yPIYSBCaQDg8HN5aw5mW",
+            "text": "Nurture friendships through frequent visits and shared meals.",
+            "groundTruthSynth": "friends-time"
+          }
+        ]
+      },
+      {
+        "id": "x6Q48dVwmFju",
+        "title": "Cultivate Healthy Eating Habits with Whole, Plant-Rich, and Minimally Processed Foods",
+        "description": "This proposal advocates for the widespread adoption of nutritious eating patterns centered on whole, unprocessed foods. By prioritizing fresh produce, whole grains, and lean proteins, individuals can establish balanced dietary habits essential for physical well-being and overall happiness. This foundational approach to nutrition supports sustained health and vitality.",
+        "memberCount": 10,
+        "members": [
+          {
+            "id": "7hLZ8mTxcpWSfdH90ifo",
+            "text": "Build healthy nutrition habits with plenty of vegetables and fruits.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "DGFTSNOr4881XYeZo9OT",
+            "text": "Eat nutritious whole foods regularly to support your body.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "GEkdsdxrwVg3SegE9Bv6",
+            "text": "Maintain healthy eating habits with balanced, whole-food meals.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "K0zTgYm7tke6mi9Ru02m",
+            "text": "Follow a healthy eating pattern emphasizing vegetables and whole grains.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "MPrXagRW9fhdJY7Ob4AV",
+            "text": "Eat a nutritious diet rich in fruits, vegetables, and whole foods.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "TxB5XEuf1vS6ZNh88byH",
+            "text": "Adopt a wholesome diet rich in plant-based foods and whole grains.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "mUHEAIPjAh1GAajbzfqs",
+            "text": "Maintain good nutrition through a diet of unprocessed whole foods.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "qxgHAwdfmuMlCypqJBN2",
+            "text": "Prioritize nutritious meals with fresh produce and lean proteins.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "sNAE39iQoyK7eiBVPiHI",
+            "text": "Follow a balanced diet of fresh produce and unprocessed foods.",
+            "groundTruthSynth": "healthy-eating"
+          },
+          {
+            "id": "x48ZusM1pfFYoQ3wMTXO",
+            "text": "Eat well by choosing whole, nutritious, minimally processed foods.",
+            "groundTruthSynth": "healthy-eating"
+          }
+        ]
+      }
+    ]
+  },
+  "topicClusters": {
+    "description": "Topic-clusters = themes grouping distinct-but-related synths (3-level nesting: topic -> synth -> raw).",
+    "count": 2,
+    "items": [
+      {
+        "id": "k3bPdsGkGBDe",
+        "title": "Foundations of personal well-being",
+        "description": "Strategies for personal health and overall well-being.",
+        "memberSynthIds": [
+          "9qblM42X11RW",
+          "x6Q48dVwmFju"
+        ],
+        "memberSynthTitles": [
+          "Establish Consistent Physical Activity Routines to Boost Mental Health and Overall Happiness",
+          "Cultivate Healthy Eating Habits with Whole, Plant-Rich, and Minimally Processed Foods"
+        ]
+      },
+      {
+        "id": "pKYtMFRH9Vzj",
+        "title": "Meaningful Social Connections",
+        "description": "This topic explores ways to build and strengthen social relationships for happiness.",
+        "memberSynthIds": [
+          "YV1dOKX6IarN",
+          "68AO4sB1jNzH"
+        ],
+        "memberSynthTitles": [
+          "Cultivate Strong Friendships Through Consistent Social Engagement",
+          "Cultivate Social Connections Through Active Participation in Community Groups"
+        ]
+      }
+    ]
+  }
+}

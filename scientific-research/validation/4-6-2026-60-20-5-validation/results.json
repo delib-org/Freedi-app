@@ -1,0 +1,420 @@
+{
+  "test": "4-6-2026-60-20-5-validation",
+  "description": "Pipeline output, PRODUCTION bulk path: bulkClusterByEmbedding (UMAP->DBSCAN, border-dedupe fix) + twoTierJudge (medoid cosine bands + LLM equivalence + complete-linkage refineComponent). Synths/topic-clusters classified by member type (raw-option members => synth; synth members => topic-cluster).",
+  "parameters": {
+    "embeddingModel": "text-embedding-3-small",
+    "embeddingDimensions": 1536,
+    "clustering": "UMAP->DBSCAN (bulkClusterByEmbedding) + twoTierJudge (production Phase 4)",
+    "umapComponents": 5,
+    "umapSeed": 42,
+    "umapMinItems": 10,
+    "dbscanEps": 0.45,
+    "dbscanMinSamples": 3,
+    "nearestCentroidThreshold": 0.6,
+    "twoTierJudge": true,
+    "autoAcceptBand": 0.94,
+    "autoRejectBand": 0.6,
+    "maxLlmCalls": 2000,
+    "topicGrouping": "single-linkage agglomeration of synth centroids (diagnostic, not production)",
+    "topicThreshold": 0.45,
+    "llmTitles": "Gemini — non-deterministic",
+    "equivalenceJudge": "semantic-equivalence-service — LLM, non-deterministic"
+  },
+  "synths": {
+    "count": 12,
+    "items": [
+      {
+        "id": "5SAoZkKc8IxL",
+        "title": "Establish Daily Cardiovascular Exercise Routines for Optimal Community Health",
+        "description": "To foster a healthier community, we propose the widespread adoption of daily cardiovascular exercise. This initiative encourages all residents to engage in activities that elevate their heart rate, such as running, cycling, swimming, or brisk walking, to build endurance and strengthen their hearts. Consistent aerobic activity is crucial for maintaining physical fitness and overall well-being.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "ACdqhCvGqAibzIAhnyI6",
+            "text": "Do aerobic exercise like running or cycling on a daily basis.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "N7nu5wzBRUKgKO04CBKX",
+            "text": "Build a habit of regular cardiovascular workouts to stay fit.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "SBPNzn9dhT6rLbL5rgOD",
+            "text": "Raise your pulse routinely through activities like brisk biking and runs.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "WC4Djvj362lo0snuSLoq",
+            "text": "Keep your heart strong by doing daily endurance training.",
+            "groundTruthSynth": "daily-cardio"
+          },
+          {
+            "id": "ZxxbYwVYEpCP8vFm4ywX",
+            "text": "Get your heart pumping every day with cardio such as jogging or swimming.",
+            "groundTruthSynth": "daily-cardio"
+          }
+        ]
+      },
+      {
+        "id": "DUsBMwsebXn9",
+        "title": "Center Meals Around Abundant Fruits and Vegetables for Optimal Health",
+        "description": "This proposal advocates for a community-wide initiative to significantly increase the daily intake of fruits and vegetables. By making colorful plant foods the primary component of every meal, individuals can enhance their overall health and well-being. This shift in dietary habits is a fundamental step towards fostering a healthier community.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "6pYBnufS1jKi4njqp56g",
+            "text": "Fill your plate with plenty of fresh vegetables and fruit.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "1yaAlhPFLYt5nFVuqWhJ",
+            "text": "Load up on colorful plant foods throughout the day.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "JcLQtK1b6hqAdakX8rHE",
+            "text": "Make vegetables and fruits the centerpiece of your diet.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "Mrj84On1e9fL971DBsCA",
+            "text": "Eat more greens and produce at every meal.",
+            "groundTruthSynth": "eat-vegetables"
+          },
+          {
+            "id": "YzNzow23c9ZtZ3f3Uw8S",
+            "text": "Increase how many veggies and fruits you consume daily.",
+            "groundTruthSynth": "eat-vegetables"
+          }
+        ]
+      },
+      {
+        "id": "EZTVBXjS3uxo",
+        "title": "Maintain Consistent Hydration Through Daily Water Intake",
+        "description": "Implement a proactive approach to daily hydration by regularly consuming water throughout the day. This fundamental practice is crucial for supporting overall health, enhancing bodily functions, and improving general well-being. By making consistent water intake a daily habit, individuals can ensure optimal physical and cognitive performance.",
+        "llmTag": "synthesis",
+        "memberCount": 3,
+        "members": [
+          {
+            "id": "GLhmKgNgFqkd0WjAlzmV",
+            "text": "Drink plenty of water throughout the day.",
+            "groundTruthSynth": "stay-hydrated"
+          },
+          {
+            "id": "0sdDm1se26v5P1w8cGW3",
+            "text": "Keep yourself well hydrated by sipping water regularly.",
+            "groundTruthSynth": "stay-hydrated"
+          },
+          {
+            "id": "wxg6CJzXG8xflS5ONGZr",
+            "text": "Replenish your body's fluids by drinking water all day long.",
+            "groundTruthSynth": "stay-hydrated"
+          }
+        ]
+      },
+      {
+        "id": "KRzRtYFRBFvE",
+        "title": "Prioritize Timely Vaccination to Prevent Disease and Enhance Community Well-being",
+        "description": "This proposal advocates for a community-wide initiative to ensure all residents receive and maintain recommended immunizations. By staying up-to-date on vaccines, individuals can protect themselves and contribute to collective immunity, significantly reducing the spread of preventable diseases. This proactive approach is crucial for fostering a healthier and more resilient community.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "ELchJuPSPD6SEhwCKckg",
+            "text": "Get vaccinated against preventable diseases.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "He8BEMSBpbbTL6WW7OYa",
+            "text": "Protect yourself by getting the appropriate vaccines.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "i9G8QIpfgSILOGxgLDtY",
+            "text": "Keep your vaccines current to protect against illness.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "t3pNRtGQ5lLyVydOBJjS",
+            "text": "Receive recommended immunizations on schedule.",
+            "groundTruthSynth": "vaccinations"
+          },
+          {
+            "id": "vtrkbVUEteuFqoQE4M5Y",
+            "text": "Stay up to date on your immunizations and shots.",
+            "groundTruthSynth": "vaccinations"
+          }
+        ]
+      },
+      {
+        "id": "MiDKx0SXQlAe",
+        "title": "Schedule Annual Medical Check-ups with Your Primary Care Physician",
+        "description": "To foster a healthier community, every individual should schedule and attend an annual medical check-up with their primary care physician. These yearly examinations are crucial for assessing overall health, identifying potential issues early, and receiving personalized health guidance, contributing significantly to long-term well-being and preventive care.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "GloC8SenUxgkXkx8rfKh",
+            "text": "See your GP annually to assess your overall health.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "UmLMtPE7pD1sPMigYehm",
+            "text": "Get an annual health review from your general practitioner.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "nbtsfeTcO1EEEvOkljA1",
+            "text": "Book a routine medical examination once a year.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "TwvAfjZ93lUZaJuos7Ux",
+            "text": "Schedule a yearly physical exam with your physician.",
+            "groundTruthSynth": "annual-physical"
+          },
+          {
+            "id": "Z9uvcE67rO97aytctlLR",
+            "text": "Visit your doctor every year for a complete checkup.",
+            "groundTruthSynth": "annual-physical"
+          }
+        ]
+      },
+      {
+        "id": "QpVAivaYZ6mV",
+        "title": "Facilitate Active Commuting to Work by Walking or Biking for Better Health",
+        "description": "This proposal advocates for integrating physical activity into daily routines by encouraging community members to walk or bike for their commutes, particularly to work. By promoting a shift from motorized transport to active modes, individuals can significantly improve personal health, reduce sedentary time, and foster a more active and vibrant community. This initiative outlines practical steps to make active commuting a viable and attractive option for all residents.",
+        "llmTag": "synthesis",
+        "memberCount": 3,
+        "members": [
+          {
+            "id": "tO9r98pgCZcTJhg6dgtA",
+            "text": "Turn your daily commute into exercise by biking or walking there.",
+            "groundTruthSynth": "active-commuting"
+          },
+          {
+            "id": "RNZRvoLmeJYjOu6K2XEl",
+            "text": "Choose to commute on foot or by bicycle to add movement to your day.",
+            "groundTruthSynth": "active-commuting"
+          },
+          {
+            "id": "X3quov0jIM2ZW2eu5LON",
+            "text": "Walk or bike to work instead of driving whenever you can.",
+            "groundTruthSynth": "active-commuting"
+          }
+        ]
+      },
+      {
+        "id": "SCfKeRhoaPjP",
+        "title": "Establish Daily Flexibility Practices to Boost Mobility and Overall Well-being",
+        "description": "To enhance overall physical health and well-being, we propose establishing daily routines focused on flexibility and stretching. Regular engagement in gentle flexibility work, including practices like yoga or simple stretching, will significantly improve muscle limberness, joint mobility, and range of motion, contributing to a healthier and more active lifestyle for everyone.",
+        "llmTag": "synthesis",
+        "memberCount": 3,
+        "members": [
+          {
+            "id": "fyOCA69aVdleokjM2n8C",
+            "text": "Stretch your muscles daily to stay limber and mobile.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "AZpN0Q7sL9Lcn5rvUZyC",
+            "text": "Practice yoga or stretching routines to improve flexibility.",
+            "groundTruthSynth": "flexibility-stretching"
+          },
+          {
+            "id": "OiJNw7MIrs3TvuapPIQ3",
+            "text": "Improve your range of motion through gentle daily flexibility work.",
+            "groundTruthSynth": "flexibility-stretching"
+          }
+        ]
+      },
+      {
+        "id": "ZSOtOp0tRo5D",
+        "title": "Implement Diverse Resistance Training for Enhanced Muscular Strength and Overall Health",
+        "description": "To foster a healthier community, individuals should regularly incorporate diverse forms of resistance training into their routines. This includes bodyweight exercises, using dumbbells and resistance bands, and consistent weightlifting sessions. Engaging in these activities several times a week will effectively build muscle, increase muscular power, and strengthen the body, contributing significantly to overall well-being.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "0MciaJtDQdVLjXrDA4VP",
+            "text": "Do strength exercises like squats and push-ups regularly.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "3n7lqP5UKmeiTxDlWRwn",
+            "text": "Train with dumbbells and resistance bands to grow stronger.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "IiyhobgTLSuiyFlRRaRO",
+            "text": "Incorporate resistance workouts to strengthen your body.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "OR6q8ca1AdnLriYo94C5",
+            "text": "Build muscular power through consistent weightlifting sessions.",
+            "groundTruthSynth": "strength-training"
+          },
+          {
+            "id": "az2aParQhT2uKfCoB7ms",
+            "text": "Lift weights several times a week to build muscle.",
+            "groundTruthSynth": "strength-training"
+          }
+        ]
+      },
+      {
+        "id": "co8zyesDYow8",
+        "title": "Empower Individuals to Regularly Monitor Key Health Metrics at Home",
+        "description": "This proposal advocates for individuals to take an active role in their health by regularly tracking personal health metrics. Utilizing accessible home devices, citizens can monitor vital signs like blood pressure and weight, identifying trends and potential issues proactively. This self-monitoring between professional medical visits fosters greater health awareness and enables timely intervention.",
+        "llmTag": "synthesis",
+        "memberCount": 3,
+        "members": [
+          {
+            "id": "1LLzLrGKogfu9VsVvIwi",
+            "text": "Track your blood pressure and weight at home regularly.",
+            "groundTruthSynth": "self-monitoring"
+          },
+          {
+            "id": "wS2jtklhe7JaopmUR1fJ",
+            "text": "Monitor your own health metrics between doctor visits.",
+            "groundTruthSynth": "self-monitoring"
+          },
+          {
+            "id": "xUP7UuXvsorJaGiGx3JE",
+            "text": "Watch your personal health numbers using home devices.",
+            "groundTruthSynth": "self-monitoring"
+          }
+        ]
+      },
+      {
+        "id": "l-UY-lIgivF3",
+        "title": "Promote Regular Dental Visits for Comprehensive Oral Health and Disease Prevention",
+        "description": "This proposal outlines a strategy to encourage and facilitate regular dental check-ups and cleanings among community members. Consistent dental care is crucial for preventing common oral health issues such as cavities and gum disease, ultimately contributing to overall well-being. By ensuring routine professional examinations, individuals can maintain optimal oral hygiene and address potential problems early.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "C8XOeATMi9u5Rw0X5JxK",
+            "text": "See your dentist twice a year to care for your teeth.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "Iz5ZAO9s6dgwHr822Jxz",
+            "text": "Get your teeth checked and cleaned by a dental professional.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "hni7d4FmfVSwioLKGZhc",
+            "text": "Keep up routine dental appointments to maintain oral health.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "qTHxFXkpRBbedl2bBsAV",
+            "text": "Schedule regular dental visits to prevent cavities and gum disease.",
+            "groundTruthSynth": "dental-checkups"
+          },
+          {
+            "id": "uudyIae6YhfqliWDrvwy",
+            "text": "Visit the dentist regularly for cleanings and exams.",
+            "groundTruthSynth": "dental-checkups"
+          }
+        ]
+      },
+      {
+        "id": "pCG2XfugJwok",
+        "title": "Promote Active Transportation: Encourage Walking and Cycling for Daily Travel",
+        "description": "This proposal aims to enhance community health and well-being by actively encouraging residents to choose walking and cycling for their daily travel needs. By shifting away from vehicle dependence, individuals can integrate physical activity into their routines, reduce environmental impact, and foster a more vibrant, connected community. This initiative will focus on creating supportive environments and promoting behavioral change.",
+        "llmTag": "synthesis",
+        "memberCount": 2,
+        "members": [
+          {
+            "id": "I0gyxu0QyKq5y372tSW0",
+            "text": "Get around using your own two feet or a bike rather than a vehicle.",
+            "groundTruthSynth": "active-commuting"
+          },
+          {
+            "id": "OnurlHOD3ZzxylzYRz4r",
+            "text": "Skip the car and travel actively by walking or cycling.",
+            "groundTruthSynth": "active-commuting"
+          }
+        ]
+      },
+      {
+        "id": "yIg9kOvKdq2d",
+        "title": "Adopt Portion Control Practices to Manage Food Intake Effectively",
+        "description": "This proposal advocates for the widespread adoption of portion control as a fundamental strategy for managing food consumption and promoting overall health. By consciously limiting serving sizes, individuals can effectively regulate calorie intake, prevent overeating, and cultivate healthier eating habits. This approach empowers community members to make informed dietary choices, contributing to improved well-being and a reduced risk of diet-related health issues.",
+        "llmTag": "synthesis",
+        "memberCount": 3,
+        "members": [
+          {
+            "id": "nbQHixTeshokxZ1cyF7Y",
+            "text": "Watch your serving sizes to avoid overeating.",
+            "groundTruthSynth": "portion-control"
+          },
+          {
+            "id": "IRMBitjyK0yIbDBHOz8B",
+            "text": "Eat smaller amounts to manage how much you consume.",
+            "groundTruthSynth": "portion-control"
+          },
+          {
+            "id": "Aciqu2T64V46AOTGTsKk",
+            "text": "Control calorie intake by limiting portion sizes.",
+            "groundTruthSynth": "portion-control"
+          }
+        ]
+      }
+    ]
+  },
+  "topicClusters": {
+    "count": 2,
+    "items": [
+      {
+        "id": "tdipU1k6ttG9",
+        "title": "Preventative Health Care",
+        "description": "Emphasizes proactive steps for individual health maintenance and disease prevention.",
+        "llmTag": "topic-cluster",
+        "memberSynthIds": [
+          "co8zyesDYow8",
+          "l-UY-lIgivF3",
+          "MiDKx0SXQlAe",
+          "KRzRtYFRBFvE"
+        ],
+        "memberSynthTitles": [
+          "Empower Individuals to Regularly Monitor Key Health Metrics at Home",
+          "Promote Regular Dental Visits for Comprehensive Oral Health and Disease Prevention",
+          "Schedule Annual Medical Check-ups with Your Primary Care Physician",
+          "Prioritize Timely Vaccination to Prevent Disease and Enhance Community Well-being"
+        ]
+      },
+      {
+        "id": "zZ1kz1nPokra",
+        "title": "Healthy Habits and Active Living",
+        "description": "Embracing daily routines for physical well-being through activity and healthy choices.",
+        "llmTag": "topic-cluster",
+        "memberSynthIds": [
+          "ZSOtOp0tRo5D",
+          "5SAoZkKc8IxL",
+          "QpVAivaYZ6mV",
+          "pCG2XfugJwok",
+          "SCfKeRhoaPjP",
+          "EZTVBXjS3uxo",
+          "DUsBMwsebXn9",
+          "yIg9kOvKdq2d"
+        ],
+        "memberSynthTitles": [
+          "Implement Diverse Resistance Training for Enhanced Muscular Strength and Overall Health",
+          "Establish Daily Cardiovascular Exercise Routines for Optimal Community Health",
+          "Facilitate Active Commuting to Work by Walking or Biking for Better Health",
+          "Promote Active Transportation: Encourage Walking and Cycling for Daily Travel",
+          "Establish Daily Flexibility Practices to Boost Mobility and Overall Well-being",
+          "Maintain Consistent Hydration Through Daily Water Intake",
+          "Center Meals Around Abundant Fruits and Vegetables for Optimal Health",
+          "Adopt Portion Control Practices to Manage Food Intake Effectively"
+        ]
+      }
+    ]
+  }
+}

@@ -5,7 +5,7 @@
 
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
-import { Collections, createParagraphStatement, ParagraphType, Paragraph, SourceApp } from '@freedi/shared-types';
+import { Collections, createParagraphChildStatement, ParagraphType, SourceApp } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface CreateParagraphParams {
@@ -34,30 +34,32 @@ export async function createParagraphStatementToDB(params: CreateParagraphParams
   try {
     const firestore = getFirebaseFirestore();
 
-    // First, create a Paragraph object
-    const paragraph: Paragraph = {
-      paragraphId: `paragraph_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      type: params.type,
+    // Create a canonical paragraph child statement (statementType === paragraph).
+    // `isOfficial: true` also writes the `doc.isOfficialParagraph`/`doc.order`/
+    // `doc.paragraphType` mirrors so legacy Sign queries keep working during the
+    // option→paragraph transition. The stable id is preserved for comment/
+    // approval/evaluation linkage.
+    const paragraphStatement = createParagraphChildStatement({
       content: params.content,
+      host: { statementId: params.documentId, topParentId: params.documentId },
+      creator: params.creator,
+      creatorId: params.creator.uid,
       order: params.order,
-      // Image-specific fields (only included if provided)
+      blockType: params.type,
+      statementId: `paragraph_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      isOfficial: true,
+      sourceApp: SourceApp.SIGN,
       ...(params.imageUrl && { imageUrl: params.imageUrl }),
       ...(params.imageAlt && { imageAlt: params.imageAlt }),
       ...(params.imageCaption && { imageCaption: params.imageCaption }),
-    };
-
-    // Create the paragraph statement object
-    const paragraphStatement = createParagraphStatement(
-      paragraph,
-      params.documentId,
-      params.creator
-    );
+    });
 
     if (!paragraphStatement) {
       throw new Error('Failed to create paragraph statement');
     }
 
-    paragraphStatement.sourceApp = SourceApp.SIGN;
+    // Official paragraphs start at full consensus (matches prior behavior).
+    paragraphStatement.consensus = 1.0;
 
     // Write to Firestore
     const statementRef = doc(firestore, Collections.statements, paragraphStatement.statementId);
@@ -97,6 +99,8 @@ export async function updateParagraphStatementToDB({
 
     await updateDoc(statementRef, {
       statement: content,
+      // Canonical top-level field + legacy `doc` mirror (transition).
+      blockType: type,
       'doc.paragraphType': type,
       lastUpdate: Date.now(),
     });
@@ -243,7 +247,8 @@ export async function reorderParagraphsToDB(
 
       for (const { paragraphId, order } of chunk) {
         const ref = doc(firestore, Collections.statements, paragraphId);
-        batch.update(ref, { 'doc.order': order, lastUpdate: now });
+        // Canonical top-level `order` + legacy `doc.order` mirror (transition).
+        batch.update(ref, { order, 'doc.order': order, lastUpdate: now });
       }
 
       await batch.commit();

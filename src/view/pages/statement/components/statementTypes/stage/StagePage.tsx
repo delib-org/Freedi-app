@@ -71,12 +71,16 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
 	const isClustering = statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
+	// Suppress the "Stage: …" heading when this stage IS the top-level question
+	// — the page header already shows that title, so the heading would just
+	// duplicate it. Real sub-stages (distinct topParentId) keep their heading.
+	const isRootStage = statement?.statementId === statement?.topParentId;
 
 	return (
 		<>
 			{hasSubStatements ? (
 				<div className={`${styles['stage-page']} wrapper`}>
-					{!isClustering && showStageTitle && (
+					{!isClustering && showStageTitle && !isRootStage && (
 						<h2>
 							{t('Stage')}
 							{statement?.statement && stageName}

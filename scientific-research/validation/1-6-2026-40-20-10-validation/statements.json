@@ -1,0 +1,255 @@
+{
+  "test": "1-6-2026-40-20-10-validation",
+  "question": {
+    "id": "wsL0lxBeI1MW",
+    "text": "How can we all be happy (2)?",
+    "settings": {
+      "enabled": false
+    }
+  },
+  "groundTruthStructure": "2 topics x 2 synths x 10 paraphrases = 40 options",
+  "runDate": "2026-06-01T11:43:38.439Z",
+  "statementCount": 40,
+  "statements": [
+    {
+      "id": "040WSvLMhrEmSbR8M4TL",
+      "text": "Invest in friendships by spending quality time with close companions.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "1nZcgSkMl1sLR4vSy8VG",
+      "text": "Connect with friends regularly through dinners, walks, or activities.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "1uakmMVvHoZQ3SZCFzWC",
+      "text": "Make regular physical exercise a daily habit for wellbeing.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "3LW887mKzIY7puiuTu8n",
+      "text": "Get involved with community groups to build new friendships.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "7hLZ8mTxcpWSfdH90ifo",
+      "text": "Build healthy nutrition habits with plenty of vegetables and fruits.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "9nIypYvyxclLk9o5uMt9",
+      "text": "Cultivate friendships by spending time with friends often.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "B9bbMdUW5ELYTktDbVCM",
+      "text": "Sign up for local clubs that share your interests and hobbies.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "DGFTSNOr4881XYeZo9OT",
+      "text": "Eat nutritious whole foods regularly to support your body.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "EZRgOTtMA0sAw99c9S4V",
+      "text": "Become active in community organizations and interest groups.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "FATuMWbMvyenQJN5FoeD",
+      "text": "Make time for friends in your weekly schedule for connection.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "GEkdsdxrwVg3SegE9Bv6",
+      "text": "Maintain healthy eating habits with balanced, whole-food meals.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "GV38pJKoxm4j90R29SFm",
+      "text": "Stay physically active through consistent exercise routines.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "GtWpB5yC7NCkaK36xmLO",
+      "text": "Join groups like book clubs, sports teams, or hobby communities.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "IwR8WHDAeQGBcQ5a8kr0",
+      "text": "Make seeing friends a priority in your weekly routine.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "K0zTgYm7tke6mi9Ru02m",
+      "text": "Follow a healthy eating pattern emphasizing vegetables and whole grains.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "MPrXagRW9fhdJY7Ob4AV",
+      "text": "Eat a nutritious diet rich in fruits, vegetables, and whole foods.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "Mddaa2ZMcVT0AQbkZ3pp",
+      "text": "Build daily exercise into your life for better mental health.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "NWEdKsUDgsvNlhJGJ29j",
+      "text": "Engage with local clubs and societies to broaden your network.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "NoXqHuOQQLqsrPG2tRgc",
+      "text": "Maintain an active lifestyle with regular workouts and movement.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "POaQRzMPynSQithqXSOf",
+      "text": "Maintain strong friendships through regular shared activities.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "TI1Uoo702NUkcNJtE18B",
+      "text": "Exercise regularly to stay physically active and feel happier.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "TxB5XEuf1vS6ZNh88byH",
+      "text": "Adopt a wholesome diet rich in plant-based foods and whole grains.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "VPxYq7PD8WaesgJw4HTD",
+      "text": "Engage in regular workouts to boost your mood and energy.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "VyEo2sfy54V2sUxHwaJ2",
+      "text": "Spend quality time with close friends regularly to feel happier.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "WNECeDld92FZJG6cLEtM",
+      "text": "Participate in clubs and societies based on your interests.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "YWfl36p06KxPjOVXawWg",
+      "text": "Do regular cardio, strength, or movement training to feel good.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "aBfXbI9F9f5j2ofzHfAp",
+      "text": "Commit to consistent physical exercise to improve happiness.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "i4xJdUTYgsgmnnt7PepR",
+      "text": "Participate in regular group activities through community clubs.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "mT8MX9oB6QMSar8Gfgvj",
+      "text": "Stay close to your friends through regular get-togethers and meetups.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "mUHEAIPjAh1GAajbzfqs",
+      "text": "Maintain good nutrition through a diet of unprocessed whole foods.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "p67dbOmJC2z04arEKnhf",
+      "text": "Join hobby groups or interest clubs to meet like-minded people.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "p6PgHdTa18g76ov8sR5u",
+      "text": "Practice regular physical activity to support your wellbeing.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "qxgHAwdfmuMlCypqJBN2",
+      "text": "Prioritize nutritious meals with fresh produce and lean proteins.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "rQzwY0khL4taIv4v3v2o",
+      "text": "Become a member of community organizations to meet new people.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "ruEXDLex0ygIeSNGJ5sG",
+      "text": "Join local community clubs and groups to expand your social circle.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "community-clubs"
+    },
+    {
+      "id": "sNAE39iQoyK7eiBVPiHI",
+      "text": "Follow a balanced diet of fresh produce and unprocessed foods.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "shyy3Q4sRl204LJkSQij",
+      "text": "Engage in daily exercise like running, cycling, or strength training.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "regular-exercise"
+    },
+    {
+      "id": "ts5alSrO52z0IMRP9S6h",
+      "text": "Stay socially connected by meeting friends often.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    },
+    {
+      "id": "x48ZusM1pfFYoQ3wMTXO",
+      "text": "Eat well by choosing whole, nutritious, minimally processed foods.",
+      "groundTruthTopic": "physical-health",
+      "groundTruthSynth": "healthy-eating"
+    },
+    {
+      "id": "yPIYSBCaQDg8HN5aw5mW",
+      "text": "Nurture friendships through frequent visits and shared meals.",
+      "groundTruthTopic": "social-connection",
+      "groundTruthSynth": "friends-time"
+    }
+  ]
+}

@@ -7,7 +7,12 @@ jest.mock('firebase-functions', () => ({
 	},
 }));
 
-import { bulkClusterByEmbedding, cosineSimilarity, meanVector } from '../bulkCluster';
+import {
+	bulkClusterByEmbedding,
+	cosineSimilarity,
+	meanVector,
+	partitionDisjoint,
+} from '../bulkCluster';
 import type { ClusterableInput } from '../bulkCluster';
 
 /**
@@ -66,6 +71,89 @@ describe('meanVector', () => {
 	});
 });
 
+describe('partitionDisjoint', () => {
+	// Two unit-direction groups: A points ~(1,0), B points ~(0,1).
+	const A = [
+		[1, 0],
+		[1, 0],
+		[0.95, 0.05],
+	];
+	const B = [
+		[0, 1],
+		[0, 1],
+		[0.05, 0.95],
+	];
+
+	it('leaves an already-disjoint partition unchanged', () => {
+		const points = [...A, ...B];
+		const out = partitionDisjoint(
+			[
+				[0, 1, 2],
+				[3, 4, 5],
+			],
+			points,
+		);
+		expect(out).toEqual([
+			[0, 1, 2],
+			[3, 4, 5],
+		]);
+	});
+
+	it('assigns a border point claimed by two clusters to the nearer centroid', () => {
+		// index 6 is a border point closer to group A's direction than B's.
+		const points = [...A, ...B, [0.8, 0.2]];
+		const out = partitionDisjoint(
+			[
+				[0, 1, 2, 6],
+				[3, 4, 5, 6],
+			],
+			points,
+		);
+		const all = out.flat();
+		expect(all).toHaveLength(7); // 7 points, none duplicated
+		expect(new Set(all).size).toBe(7);
+		expect(out[0]).toContain(6); // went to A (nearer centroid)
+		expect(out[1]).not.toContain(6);
+	});
+
+	it('collapses a point listed twice within one cluster', () => {
+		const points = [...A, ...B];
+		const out = partitionDisjoint(
+			[
+				[0, 1, 2, 2], // index 2 duplicated inside the cluster
+				[3, 4, 5],
+			],
+			points,
+		);
+		expect(out[0]).toEqual([0, 1, 2]);
+		expect(out.flat()).toHaveLength(6);
+	});
+
+	it('drops a cluster left empty after every point is reassigned elsewhere', () => {
+		// Two tight groups plus a third "spread" cluster [0,4] whose members are
+		// each more similar to a tight neighbour's centroid, so it empties out.
+		const points = [
+			[1, 0],
+			[1, 0],
+			[1, 0], // group A: indices 0,1,2
+			[0, 1],
+			[0, 1],
+			[0, 1], // group B: indices 3,4,5
+		];
+		const out = partitionDisjoint(
+			[
+				[0, 1, 2],
+				[3, 4, 5],
+				[0, 4], // spread cluster: 0 prefers A, 4 prefers B
+			],
+			points,
+		);
+		expect(out).toHaveLength(2);
+		expect(out[0]).toEqual([0, 1, 2]);
+		expect(out[1]).toEqual([3, 4, 5]);
+	});
+});
+
 describe('bulkClusterByEmbedding', () => {
 	it('returns empty result for empty input', () => {
 		const { clusters, noiseIds, stats } = bulkClusterByEmbedding([]);
@@ -117,6 +205,9 @@ describe('bulkClusterByEmbedding', () => {
 		const allMembers = clusters.flatMap((c) => c.memberIds);
 		const totalAssigned = allMembers.length;
 		expect(totalAssigned + stats.noiseCount).toBe(24);
+		// Disjointness invariant: no option may appear in more than one cluster
+		// (regression guard for the DBSCAN border-point / noise-overlap dedupe).
+		expect(new Set(allMembers).size).toBe(totalAssigned);
 		// Each cluster should be predominantly one group (lo_ or hi_).
 		for (const cluster of clusters) {
 			const loCount = cluster.memberIds.filter((id) => id.startsWith('lo_')).length;

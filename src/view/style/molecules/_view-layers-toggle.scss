@@ -1,0 +1,144 @@
+// ViewLayersToggle — three independent layer toggles (Raw / Synth / Cluster)
+// above the Solutions list. Replaces the old framing switcher. Sticky strip,
+// SCSS-first BEM, design tokens only.
+
+@use '../mixins' as *;
+
+.view-layers-toggle {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: var(--card-default, #fff);
+  border: 1px solid var(--border-light, rgba(0, 0, 0, 0.08));
+  border-radius: 0.85rem;
+
+  &__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary, #777);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-inline-end: 0.25rem;
+  }
+
+  &__chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.03));
+    border-radius: 999px;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-secondary, #777);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+
+    &:hover {
+      color: var(--text-body, #333);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+
+    // Active = the layer is shown. Solid primary fill for clear on/off reading.
+    &--active {
+      background: var(--btn-primary);
+      color: var(--btn-primary-text, #fff);
+
+      &:hover {
+        color: var(--btn-primary-text, #fff);
+        filter: brightness(1.05);
+      }
+    }
+
+    &[aria-disabled='true'] {
+      cursor: default;
+      opacity: 0.9;
+    }
+  }
+
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-inline-start: auto;
+    flex-shrink: 0;
+
+    @media (max-width: 640px) {
+      margin-inline-start: 0;
+    }
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--text-secondary, #777) 35%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-secondary, #777);
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--btn-primary);
+      border-color: var(--btn-primary);
+      background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+
+    &--primary {
+      color: var(--btn-primary);
+      border-color: color-mix(in srgb, var(--btn-primary) 45%, transparent);
+    }
+  }
+
+  // High contrast: solid borders instead of alpha tints.
+  @media (prefers-contrast: more) {
+    &__chip--active {
+      outline: 2px solid var(--btn-primary-text, #fff);
+      outline-offset: -3px;
+    }
+
+    &__chips {
+      background: var(--card-default, #fff);
+      border: 1px solid var(--text-body, #333);
+    }
+  }
+}

@@ -12,7 +12,10 @@ export async function approveMembership(waitingMember: WaitingMember, accept: bo
 			Collections.statementsSubscribe,
 			waitingMember.statementsSubscribeId,
 		);
-		await updateDoc(waitingMembersRef, { role: accept ? Role.member : Role.banned }); // Update the role to 'member' or whatever is appropriate
+		await updateDoc(waitingMembersRef, {
+			role: accept ? Role.member : Role.banned, // Update the role to 'member' or whatever is appropriate
+			lastUpdate: Date.now(),
+		});
 
 		// PHASE 3 FIX: Simplified deletion since we now use subscriptionId as document key
 		// Remove the waiting member from the waiting list

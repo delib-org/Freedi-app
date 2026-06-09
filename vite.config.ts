@@ -46,18 +46,9 @@ export default defineConfig(({ mode }) => {
 								},
 							}
 						},
-						{
-							urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
-							handler: 'NetworkFirst',
-							options: {
-								cacheName: 'firebase-cache',
-								expiration: {
-									maxEntries: 10,
-									maxAgeSeconds: 60 * 5, // 5 minutes
-								},
-								networkTimeoutSeconds: 10
-							}
-						},
+						// Do NOT add a Firestore route here. The Firestore real-time Listen
+						// channel is a streaming endpoint that breaks when intercepted by a
+						// Workbox caching strategy. Let the Firestore SDK own its traffic.
 						{
 							urlPattern: /\.(?:js|css)$/,
 							handler: 'StaleWhileRevalidate',

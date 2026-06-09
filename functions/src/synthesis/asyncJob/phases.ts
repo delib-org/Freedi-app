@@ -5,7 +5,8 @@ import { embeddingCache } from '../../services/embedding-cache-service';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
 import type { StatementWithEvaluation } from '../../services/integration-ai-service';
 import { bayesianFilterOptions } from '../scoring';
-import { bulkClusterByEmbedding } from '../bulkCluster';
+import { buildCandidateClusters, resolveCandidateThreshold } from '../candidateClusters';
+import { dissolveQuestionSynthesis } from '../derivedDocs';
 import { twoTierJudge, type ClusterMember } from '../twoTierJudge';
 import { synthesisFlags } from '../featureFlags';
 import {
@@ -113,6 +114,13 @@ export async function runLoadingPhase(jobId: string): Promise<void> {
 			return;
 		}
 
+		// Clean-then-rebuild: dissolve any prior synthesis output (including
+		// legacy/untagged docs) and restore its members BEFORE loading the
+		// working set, so re-running is idempotent and never accumulates.
+		await heartbeat(jobId, 'Clearing prior synthesis (clean rebuild)');
+		const dissolved = await dissolveQuestionSynthesis(job.questionId);
+		logger.info('asyncJob.loading.dissolvedPriorSynthesis', { jobId, ...dissolved });
+
 		await heartbeat(jobId, 'Loading eligible options');
 		const raw = await loadEligibleOptionsForJob(job.questionId, job.filters);
 
@@ -187,9 +195,10 @@ export async function runLoadingPhase(jobId: string): Promise<void> {
 }
 
 /**
- * PHASE 2 — bulk in-memory UMAP+DBSCAN clustering. Reads `workingSetIds`,
- * fetches embeddings, calls `bulkClusterByEmbedding`, writes
- * `clusterAssignments` (only clusters with ≥2 members).
+ * PHASE 2 — candidate clustering by ANN cosine edges + connected components
+ * (`buildCandidateClusters`). Reads `workingSetIds`, fetches embeddings, forms
+ * near-duplicate components, writes `clusterAssignments` (components ≥2 members;
+ * options with no high-cosine neighbour are left standalone, as intended).
  */
 export async function runClusteringPhase(jobId: string): Promise<void> {
 	if (!(await claimPhase(jobId, 'clustering'))) return;
@@ -233,18 +242,24 @@ export async function runClusteringPhase(jobId: string): Promise<void> {
 			return;
 		}
 
-		await heartbeat(jobId, `Clustering ${items.length} options`);
-		const { clusters, stats } = bulkClusterByEmbedding(items);
-		const assignments: JobClusterAssignment[] = clusters
-			.filter((c) => c.memberIds.length >= 2)
-			.map((c, i) => ({ clusterId: `cluster-${i}`, memberIds: c.memberIds }));
+		const threshold = resolveCandidateThreshold();
+		await heartbeat(jobId, `Clustering ${items.length} options (cosine ≥ ${threshold})`);
+		const { clusters, singletonCount, edgeCount } = await buildCandidateClusters(
+			items.map((it) => it.id),
+			{ parentId: job.questionId, threshold },
+		);
+		const assignments: JobClusterAssignment[] = clusters.map((c, i) => ({
+			clusterId: `cluster-${i}`,
+			memberIds: c.memberIds,
+		}));
 
 		logger.info('asyncJob.clustering.complete', {
 			jobId,
 			itemCount: items.length,
 			clusterCount: assignments.length,
-			noiseCount: stats.noiseCount,
-			durationMs: stats.durationMs,
+			singletonCount,
+			edgeCount,
+			threshold,
 		});
 
 		await transitionToNext(jobId, {

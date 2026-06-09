@@ -1,0 +1,119 @@
+{
+	"questionId": "SingletonTest0003",
+	"questionText": "How can we improve our daily lives",
+	"design": "2 topics × 5 synths × 4 paraphrases = 40, + 1 OFF-TOPIC noise statement (must stay unclustered) = 41 (archetype F). Tight wording.",
+	"topics": [
+		{
+			"name": "physical-fitness",
+			"synths": [
+				{
+					"name": "daily-cardio",
+					"paraphrases": [
+						"Do daily cardio exercise such as running or cycling.",
+						"Do daily cardio exercise such as running and cycling.",
+						"Do daily cardio exercise like running or cycling.",
+						"Do daily cardio workouts such as running or cycling."
+					]
+				},
+				{
+					"name": "strength-training",
+					"paraphrases": [
+						"Do regular strength training with weights to build muscle.",
+						"Do regular strength training using weights to build muscle.",
+						"Do regular weight training with weights to build muscle.",
+						"Do regular strength training with weights to gain muscle."
+					]
+				},
+				{
+					"name": "flexibility-stretching",
+					"paraphrases": [
+						"Do daily stretching exercises to improve flexibility.",
+						"Do daily stretching exercises to increase flexibility.",
+						"Do daily stretching routines to improve flexibility.",
+						"Do daily stretching exercises to boost flexibility."
+					]
+				},
+				{
+					"name": "active-commuting",
+					"paraphrases": [
+						"Walk or bike to work instead of driving.",
+						"Walk or cycle to work instead of driving.",
+						"Walk or bike to work rather than driving.",
+						"Walk or bike to work instead of taking the car."
+					]
+				},
+				{
+					"name": "team-sports",
+					"paraphrases": [
+						"Join a local sports team to stay active.",
+						"Join a local sports team to keep active.",
+						"Join a community sports team to stay active.",
+						"Join a local sports team to stay fit and active."
+					]
+				}
+			]
+		},
+		{
+			"name": "personal-finance",
+			"synths": [
+				{
+					"name": "budget-monthly",
+					"paraphrases": [
+						"Track a monthly budget to manage your spending.",
+						"Keep a monthly budget to manage your spending.",
+						"Track a monthly budget to control your spending.",
+						"Track a monthly budget to manage how you spend."
+					]
+				},
+				{
+					"name": "emergency-fund",
+					"paraphrases": [
+						"Build an emergency fund for unexpected expenses.",
+						"Build an emergency fund for unexpected costs.",
+						"Save an emergency fund for unexpected expenses.",
+						"Build up an emergency fund for unexpected expenses."
+					]
+				},
+				{
+					"name": "pay-off-debt",
+					"paraphrases": [
+						"Pay off your debt as quickly as you can.",
+						"Pay down your debt as quickly as you can.",
+						"Pay off your debts as quickly as possible.",
+						"Pay off your debt as fast as you can."
+					]
+				},
+				{
+					"name": "invest-retirement",
+					"paraphrases": [
+						"Invest regularly for your retirement.",
+						"Invest consistently for your retirement.",
+						"Invest regularly to save for retirement.",
+						"Invest regularly for your retirement years."
+					]
+				},
+				{
+					"name": "cut-subscriptions",
+					"paraphrases": [
+						"Cancel subscriptions you no longer use to save money.",
+						"Cancel unused subscriptions to save money.",
+						"Cancel subscriptions you do not use to save money.",
+						"Cancel subscriptions you no longer need to save money."
+					]
+				}
+			]
+		},
+		{
+			"name": "_singleton",
+			"synths": [
+				{
+					"name": "off-topic-noise",
+					"role": "noise",
+					"paraphrases": [
+						"Photosynthesis is the process by which plants convert sunlight into chemical energy."
+					]
+				}
+			]
+		}
+	]
+}
