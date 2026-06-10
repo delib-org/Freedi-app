@@ -278,6 +278,12 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // Per-user global notification settings (master mute, channels, quiet hours,
+    // digest cadence). The doc id IS the uid, so a user only touches their own.
+    match /notificationSettings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /askedToBeNotified/{askedToBeNotifiedId=**} {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;

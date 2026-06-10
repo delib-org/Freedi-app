@@ -14,6 +14,7 @@ import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
 import { Collections, NotificationChannel } from '@freedi/shared-types';
 import type { NotificationQueueItem } from '@freedi/shared-types';
+import { sendNotificationEmail } from '../../notifications/notificationEmail';
 
 const getDb = () => getFirestore();
 
@@ -185,13 +186,13 @@ async function writeInAppNotification(item: NotificationQueueItem): Promise<void
 }
 
 /**
- * Send email notification.
- * For Phase 2, engagement emails are logged but not sent.
- * Full email template integration comes in Phase 3 (digest emails).
+ * Send email notification via the shared notification email sender.
+ * Looks up the recipient's email, then sends a branded HTML email with an
+ * absolute deep link. Degrades gracefully when email is unconfigured.
  */
 async function sendEmailNotification(item: NotificationQueueItem): Promise<void> {
 	// Check if user has an email on file
-	const userDoc = await getDb().collection('usersV2').doc(item.userId).get();
+	const userDoc = await getDb().collection(Collections.users).doc(item.userId).get();
 
 	if (!userDoc.exists) {
 		logger.info(`No user doc for ${item.userId}, skipping email`);
@@ -200,7 +201,7 @@ async function sendEmailNotification(item: NotificationQueueItem): Promise<void>
 	}
 
 	const userData = userDoc.data();
-	const email = userData?.email;
+	const email = userData?.email as string | undefined;
 
 	if (!email) {
 		logger.info(`No email for user ${item.userId}, skipping email`);
@@ -208,11 +209,19 @@ async function sendEmailNotification(item: NotificationQueueItem): Promise<void>
 		return;
 	}
 
-	// For now, log that email would be sent.
-	// Full email template integration comes in Phase 3 (digest emails).
-	logger.info(`Email notification queued for ${item.userId}`, {
-		email,
-		title: item.title,
-		triggerType: item.triggerType,
+	const sent = await sendNotificationEmail({
+		to: email,
+		recipientName: userData?.displayName as string | undefined,
+		subject: item.title,
+		bodyText: item.body,
+		targetPath: item.targetPath,
+		sourceApp: item.sourceApp,
 	});
+
+	if (!sent) {
+		logger.info(`Email not sent for ${item.userId} (transporter unavailable)`, {
+			title: item.title,
+			triggerType: item.triggerType,
+		});
+	}
 }

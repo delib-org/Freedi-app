@@ -5,8 +5,10 @@
 	import '../styles/global.scss';
 	import { initLang, lang, setLanguage, t } from '$lib/i18n';
 	import { signOutEverywhere } from '$lib/firebaseClient';
-	import NotificationToggle from '$lib/components/NotificationToggle.svelte';
+	import NotificationBell from '$lib/components/notifications/NotificationBell.svelte';
+	import ToastOverlay from '$lib/components/notifications/ToastOverlay.svelte';
 	import LanguageMenu from '$lib/components/LanguageMenu.svelte';
+	import { initInstallCapture } from '$lib/installPrompt';
 
 	let { children, data } = $props();
 
@@ -46,6 +48,10 @@
 		const initial =
 			stored ?? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
 		applyTheme(initial);
+
+		// Capture the Android/desktop install prompt so we can offer it at an
+		// intent moment (iOS has no programmatic prompt — handled separately).
+		return initInstallCapture();
 	});
 
 	const signInHref = $derived(`/signin?redirectTo=${encodeURIComponent(page.url.pathname)}`);
@@ -79,7 +85,7 @@
 				aria-label={$t('Toggle light or dark theme')}
 			>{theme === 'dark' ? '☀️' : '🌙'}</button>
 			{#if data.user}
-				<NotificationToggle />
+				<NotificationBell uid={data.user.uid} />
 				<a class="topbar__user" href={`/u/${data.user.uid}`} title={$t('Your profile')}>
 					{#if data.user.photoURL}
 						<img class="topbar__avatar" src={data.user.photoURL} alt="" />
@@ -123,6 +129,10 @@
 </header>
 
 {@render children()}
+
+{#if data.user}
+	<ToastOverlay />
+{/if}
 
 <style lang="scss">
 	@use '../styles/mixins' as *;
