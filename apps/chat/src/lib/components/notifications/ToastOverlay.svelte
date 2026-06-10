@@ -71,6 +71,8 @@
 
 		&__item {
 			@include glass;
+			// Opaque base so page content doesn't bleed through the toast.
+			background: linear-gradient(0deg, var(--glass-bg), var(--glass-bg)), var(--bg-color);
 			pointer-events: auto;
 			display: flex;
 			align-items: stretch;

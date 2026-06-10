@@ -165,8 +165,8 @@
 			padding: var(--space-xs);
 			border-radius: var(--radius-md);
 			border: 1px solid var(--glass-border);
-			background: var(--bg-card);
-			backdrop-filter: blur(var(--glass-blur));
+			// Opaque base so page content doesn't bleed through the menu.
+			background: linear-gradient(0deg, var(--glass-bg), var(--glass-bg)), var(--bg-color);
 			box-shadow: var(--glass-shadow);
 		}
 		&__menu-title {

@@ -46,9 +46,9 @@
 			width: min(400px, calc(100% - 32px));
 			padding: var(--space-lg);
 			border-radius: var(--radius-lg);
-			background: var(--bg-card);
+			// Opaque base so the page doesn't bleed through the dialog.
+			background: linear-gradient(0deg, var(--glass-bg), var(--glass-bg)), var(--bg-color);
 			border: 1px solid var(--glass-border);
-			backdrop-filter: blur(var(--glass-blur));
 			box-shadow: var(--glass-shadow);
 			text-align: center;
 			animation: primer-in 0.2s var(--ease-spring);

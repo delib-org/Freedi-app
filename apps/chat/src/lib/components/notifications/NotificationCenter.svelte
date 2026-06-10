@@ -149,6 +149,9 @@
 
 	.ncenter {
 		@include glass;
+		// `glass` alone is ~3% opaque and bleeds page content through. As an
+		// overlay panel it needs a solid base; keep the subtle glass tint on top.
+		background: linear-gradient(0deg, var(--glass-bg), var(--glass-bg)), var(--bg-color);
 		display: flex;
 		flex-direction: column;
 		width: min(360px, calc(100vw - 24px));
