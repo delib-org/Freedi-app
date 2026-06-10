@@ -10,4 +10,6 @@ export enum NotificationTriggerType {
 	BADGE_EARNED = 'badge_earned',
 	STREAK_REMINDER = 'streak_reminder',
 	WELCOME_BACK = 'welcome_back',
+	EVIDENCE_ADDED = 'evidence_added',
+	MENTION = 'mention',
 }

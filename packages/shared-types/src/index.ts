@@ -168,6 +168,19 @@ export {
 // Notification models
 export type { NotificationType, ReadContext, NotificationReadStatusType } from "./models/notification/Notification";
 export { NotificationSchema, NotificationReadStatusSchema } from "./models/notification/Notification";
+export type {
+  NotificationSettings,
+  QuietHours,
+  ChannelSwitches,
+  PerAppNotificationSettings,
+} from "./models/notification/NotificationSettings";
+export {
+  NotificationSettingsSchema,
+  QuietHoursSchema,
+  ChannelSwitchesSchema,
+  PerAppNotificationSettingsSchema,
+  createDefaultNotificationSettings,
+} from "./models/notification/NotificationSettings";
 
 // Question models
 export type { QuestionSettings } from "./models/question/QuestionType";

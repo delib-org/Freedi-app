@@ -44,6 +44,7 @@ export enum Collections {
     inAppNotifications = 'inAppNotifications',
     pushNotifications = 'pushNotifications',
     emailNotifications = 'emailNotifications',
+    notificationSettings = 'notificationSettings',
     askedToBeNotified = 'askedToBeNotified',
     polarizationIndex = 'polarizationIndex',
     userDemographicEvaluations = 'userDemographicEvaluations',

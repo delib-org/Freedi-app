@@ -30,11 +30,14 @@ const FCM_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
 export type PushSupport = { supported: true } | { supported: false; reason: string };
 
 /** iOS only allows web push from an installed (home-screen) PWA on 16.4+. */
-function isIOS(): boolean {
+export function isIOS(): boolean {
+	if (typeof navigator === 'undefined') return false;
+
 	return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
-function isStandalone(): boolean {
+export function isStandalone(): boolean {
+	if (typeof window === 'undefined') return false;
 	const displayMode = window.matchMedia('(display-mode: standalone)').matches;
 	const iosStandalone =
 		'standalone' in window.navigator &&
@@ -204,6 +207,45 @@ export async function unfollowQuestion(statementId: string): Promise<FollowResul
 	if (!result.ok) return { ok: false, reason: result.reason };
 
 	return { ok: true, following: false };
+}
+
+export type SubscriptionState = 'unsubscribed' | 'instant' | 'daily' | 'weekly' | 'muted';
+
+/**
+ * Set the notification frequency for a question (per-discussion override). Used
+ * by the BranchBell. `instant` also opts the device into push if a token can be
+ * minted; `unsubscribed`/`muted` stop delivery without deleting the follow.
+ */
+export async function setQuestionFrequency(
+	statementId: string,
+	state: SubscriptionState,
+): Promise<{ ok: true; state: SubscriptionState } | { ok: false; reason: string }> {
+	// For instant we want push too; mint a token (best-effort, user gesture).
+	let token: string | undefined;
+	if (state === 'instant') {
+		const tokenResult = await ensurePushToken();
+		if (tokenResult.ok) token = tokenResult.token;
+	}
+
+	const result = await postPush({ action: 'setFrequency', statementId, state, token });
+	if (!result.ok) return { ok: false, reason: result.reason };
+
+	return { ok: true, state };
+}
+
+/** Read the current per-question subscription state (server-side truth). */
+export async function getSubscriptionState(statementId: string): Promise<SubscriptionState> {
+	try {
+		const res = await fetch(
+			`/api/push?statementId=${encodeURIComponent(statementId)}&detail=state`,
+		);
+		if (!res.ok) return 'unsubscribed';
+		const data = (await res.json()) as { state?: SubscriptionState };
+
+		return data.state ?? 'unsubscribed';
+	} catch {
+		return 'unsubscribed';
+	}
 }
 
 /** Read whether the user currently follows a question (server-side truth). */

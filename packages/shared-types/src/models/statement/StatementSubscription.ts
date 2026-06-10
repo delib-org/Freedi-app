@@ -46,6 +46,7 @@ export const StatementSubscriptionSchema = object({
 	// Engagement system extensions (backwards-compatible)
 	notificationFrequency: optional(enum_(NotificationFrequency)), // Default frequency for this discussion
 	branchPreferences: optional(record(string(), BranchPreferenceSchema)), // Per-branch overrides keyed by branchStatementId
+	mutedUntil: optional(number()), // Snooze this single discussion until epoch-ms; undefined/past = not muted
 
 	// Join app — marks this subscription so the corresponding top-level
 	// statement appears on the join app's Main page list. `openedInJoin` is

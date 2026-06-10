@@ -7,6 +7,7 @@ import SendIcon from '@/view/components/icons/SendIcon';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EnhancedEvaluation from '../../../evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluation';
+import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 
 interface Props {
 	statement: Statement;
@@ -98,7 +99,7 @@ const ChatInput: FC<Props> = ({
 				<div className={styles.replyIndicator}>
 					<div className={styles.replyIndicatorContent}>
 						<span className={styles.replyIndicatorAuthor}>
-							{t('Replying to')} {replyToStatement.creator?.displayName ?? ''}
+							{t('Replying to')} {getCreatorDisplayName(replyToStatement)}
 						</span>
 						<span className={styles.replyIndicatorText}>
 							{replyToStatement.statement.slice(0, 80)}

@@ -15,6 +15,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import {
 	Collections,
+	NotificationFrequency,
 	Role,
 	getStatementSubscriptionId,
 	type Statement,
@@ -179,4 +180,97 @@ export async function getFollowStatus(user: SessionUser, statementId: string): P
 	const doc = await adminDb.collection(Collections.statementsSubscribe).doc(subId).get();
 
 	return doc.exists && doc.data()?.getPushNotification === true;
+}
+
+export type SubscriptionState = 'unsubscribed' | 'instant' | 'daily' | 'weekly' | 'muted';
+
+const STATE_TO_FREQUENCY: Record<
+	Exclude<SubscriptionState, 'unsubscribed'>,
+	NotificationFrequency
+> = {
+	instant: NotificationFrequency.INSTANT,
+	daily: NotificationFrequency.DAILY,
+	weekly: NotificationFrequency.WEEKLY,
+	muted: NotificationFrequency.NONE,
+};
+
+/**
+ * Set the per-question notification frequency (BranchBell). `unsubscribed`
+ * stops following (both channels off); `muted` keeps the follow but silences it
+ * (frequency NONE); instant/daily/weekly set in-app on and the cadence, with
+ * `instant` also enabling push for the passed device token.
+ */
+export async function setQuestionFrequency(
+	user: SessionUser,
+	statementId: string,
+	state: SubscriptionState,
+	token?: string,
+): Promise<void> {
+	const subId = getStatementSubscriptionId(statementId, toUser(user));
+	if (!subId) throw new Error('Could not derive subscription id');
+	const ref = adminDb.collection(Collections.statementsSubscribe).doc(subId);
+
+	if (state === 'unsubscribed') {
+		await ref.set(
+			{ getInAppNotification: false, getPushNotification: false, lastUpdate: Date.now() },
+			{ merge: true },
+		);
+
+		return;
+	}
+
+	// Ensure the subscription doc exists with the question snapshot (first follow).
+	const statement = await getStatement(statementId);
+	if (!statement) throw new Error('Question not found');
+
+	if (token) await storeToken(user, token);
+
+	const wantsPush = state === 'instant' && !!token;
+	const update: Record<string, unknown> = {
+		statementsSubscribeId: subId,
+		statementId,
+		userId: user.uid,
+		role: Role.member,
+		user: toUser(user),
+		statement: toSimpleStatement(statement),
+		parentId: statement.parentId,
+		topParentId: statement.topParentId || statement.parentId,
+		statementType: statement.statementType,
+		getInAppNotification: true,
+		notificationFrequency: STATE_TO_FREQUENCY[state],
+		lastUpdate: Date.now(),
+		createdAt: statement.createdAt ?? Date.now(),
+	};
+	if (wantsPush) {
+		update.getPushNotification = true;
+		update.tokens = FieldValue.arrayUnion(token);
+		update.lastTokenUpdate = Date.now();
+	}
+
+	await ref.set(update, { merge: true });
+}
+
+/** Current per-question subscription state for the BranchBell. */
+export async function getSubscriptionState(
+	user: SessionUser,
+	statementId: string,
+): Promise<SubscriptionState> {
+	const subId = getStatementSubscriptionId(statementId, toUser(user));
+	if (!subId) return 'unsubscribed';
+
+	const doc = await adminDb.collection(Collections.statementsSubscribe).doc(subId).get();
+	if (!doc.exists) return 'unsubscribed';
+	const data = doc.data();
+	if (!data || data.getInAppNotification !== true) return 'unsubscribed';
+
+	switch (data.notificationFrequency as NotificationFrequency | undefined) {
+		case NotificationFrequency.NONE:
+			return 'muted';
+		case NotificationFrequency.DAILY:
+			return 'daily';
+		case NotificationFrequency.WEEKLY:
+			return 'weekly';
+		default:
+			return 'instant';
+	}
 }

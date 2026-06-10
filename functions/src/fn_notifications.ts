@@ -88,9 +88,22 @@ async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubs
 	const userIds = [...new Set(subscribers.map((s) => s.userId))];
 	const quietHoursMap = new Map<string, QuietHoursConfig | null>();
 
-	// Batch fetch quiet hours for all users (using tokens)
+	// Quiet hours now live per-user on `notificationSettings/{uid}` (user-wide).
+	// During migration we fall back to the legacy per-device value on
+	// `pushNotifications/{token}.quietHours` when the settings doc has none.
 	const fetchPromises = userIds.map(async (userId) => {
 		try {
+			const settingsSnap = await db.collection(Collections.notificationSettings).doc(userId).get();
+			const settingsQuietHours = settingsSnap.exists
+				? (settingsSnap.data()?.quietHours as QuietHoursConfig | undefined)
+				: undefined;
+			if (settingsQuietHours) {
+				quietHoursMap.set(userId, settingsQuietHours);
+
+				return;
+			}
+
+			// Fallback: legacy per-token quiet hours.
 			const tokensSnapshot = await db
 				.collection(Collections.pushNotifications)
 				.where('userId', '==', userId)
