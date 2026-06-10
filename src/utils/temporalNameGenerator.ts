@@ -87,24 +87,49 @@ export function clearUsedNames(): void {
 }
 
 /**
+ * Hashes a userId into a non-negative 32-bit integer.
+ * Deterministic: the same userId always produces the same hash.
+ */
+function hashUserId(userId: string): number {
+	let hash = 0;
+	for (let i = 0; i < userId.length; i++) {
+		hash = (hash << 5) - hash + userId.charCodeAt(i);
+		hash |= 0; // Convert to 32-bit integer
+	}
+
+	return Math.abs(hash);
+}
+
+/**
  * Generates a deterministic pseudo-name from a userId.
  * Same userId always produces the same name.
  * @param userId - The user's unique identifier
  * @returns A pseudo-name like "Clear Thought 423"
  */
 export function getPseudoName(userId: string): string {
-	let hash = 0;
-	for (let i = 0; i < userId.length; i++) {
-		hash = (hash << 5) - hash + userId.charCodeAt(i);
-		hash |= 0; // Convert to 32-bit integer
-	}
-	hash = Math.abs(hash);
+	const hash = hashUserId(userId);
 
 	const adjIdx = hash % adjectives.length;
 	const nounIdx = Math.floor(hash / adjectives.length) % nouns.length;
 	const number = (hash % 999) + 1;
 
 	return `${adjectives[adjIdx]} ${nouns[nounIdx]} ${number}`;
+}
+
+/**
+ * Generates a deterministic two-word anonymous display name from a userId.
+ * Same userId always produces the same name (e.g., "Wise Explorer").
+ * Used to anonymize every user in the main app, regardless of login method.
+ * @param userId - The user's unique identifier
+ * @returns A two-word pseudonym like "Wise Explorer"
+ */
+export function getAnonymousName(userId: string): string {
+	const hash = hashUserId(userId);
+
+	const adjIdx = hash % adjectives.length;
+	const nounIdx = Math.floor(hash / adjectives.length) % nouns.length;
+
+	return `${adjectives[adjIdx]} ${nouns[nounIdx]}`;
 }
 
 // Clear used names on page refresh to reset the pool

@@ -17,6 +17,7 @@ import ChatMessageMenu from '@/view/pages/statement/components/chat/components/c
 import TypeSuggestionBanner from '@/view/pages/statement/components/chat/components/chatMessageCard/TypeSuggestionBanner';
 import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
+import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import styles from './TreeMessageNode.module.scss';
 
 interface TreeMessageNodeProps {
@@ -213,9 +214,11 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 				<div className={styles['tree-message-node__header']}>
 					{!isQuestion && (
 						<>
-							<span className={styles['tree-message-node__author']}>
-								{statement.creator?.displayName ?? ''}
-							</span>
+							{getCreatorDisplayName(statement) && (
+								<span className={styles['tree-message-node__author']}>
+									{getCreatorDisplayName(statement)}
+								</span>
+							)}
 							<span className={styles['tree-message-node__time']}>{timeString}</span>
 						</>
 					)}

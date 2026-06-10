@@ -14,7 +14,7 @@ import {
 	AuthCredential,
 } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
-import { generateTemporalName } from '@/utils/temporalNameGenerator';
+import { getAnonymousName } from '@/utils/temporalNameGenerator';
 import { setUserToDB } from '@/controllers/db/user/setUser';
 import { convertFirebaseUserToCreator } from '@/utils/userUtils';
 import { logError } from '@/utils/errorHandling';
@@ -96,8 +96,9 @@ async function createAnonymousUser(): Promise<User> {
 	try {
 		const user = await signInAnonymouslyWithRetry();
 
-		// Generate and assign temporal name
-		const temporalName = generateTemporalName();
+		// Assign a stable two-word pseudonym derived from the uid so it matches
+		// what convertFirebaseUserToCreator() shows everywhere in the app.
+		const temporalName = getAnonymousName(user.uid);
 
 		// Update the user's display name
 		await updateProfile(user, {
