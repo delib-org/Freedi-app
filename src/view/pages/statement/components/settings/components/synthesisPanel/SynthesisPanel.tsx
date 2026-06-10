@@ -37,6 +37,7 @@ type EligibilityMetric = 'evaluators' | 'consensus';
 interface FieldErrors {
 	threshold?: string;
 	attachThreshold?: string;
+	clusterThreshold?: string;
 	reviewLowerBound?: string;
 }
 
@@ -65,6 +66,10 @@ function readInitialSettings(statement: Statement): SynthesisSettings {
 			typeof raw.attachThreshold === 'number'
 				? raw.attachThreshold
 				: DEFAULT_SYNTHESIS_SETTINGS.attachThreshold,
+		clusterThreshold:
+			typeof raw.clusterThreshold === 'number'
+				? raw.clusterThreshold
+				: DEFAULT_SYNTHESIS_SETTINGS.clusterThreshold,
 		reviewLowerBound:
 			typeof raw.reviewLowerBound === 'number'
 				? raw.reviewLowerBound
@@ -84,8 +89,8 @@ function validateSettings(settings: SynthesisSettings, metric: EligibilityMetric
 	const errors: FieldErrors = {};
 
 	if (metric === 'evaluators') {
-		if (!Number.isFinite(settings.minEvaluators) || settings.minEvaluators < 1) {
-			errors.threshold = 'min 1';
+		if (!Number.isFinite(settings.minEvaluators) || settings.minEvaluators < 0) {
+			errors.threshold = 'min 0';
 		}
 	} else if (
 		!Number.isFinite(settings.minConsensus) ||
@@ -103,18 +108,33 @@ function validateSettings(settings: SynthesisSettings, metric: EligibilityMetric
 		errors.attachThreshold = 'range (0, 1]';
 	}
 	if (
-		!Number.isFinite(settings.reviewLowerBound) ||
-		settings.reviewLowerBound < 0.5 ||
-		settings.reviewLowerBound >= 1
+		!Number.isFinite(settings.clusterThreshold) ||
+		settings.clusterThreshold <= 0 ||
+		settings.clusterThreshold > 1
 	) {
-		errors.reviewLowerBound = 'range [0.5, 1)';
+		errors.clusterThreshold = 'range (0, 1]';
 	}
 	if (
-		!errors.attachThreshold &&
-		!errors.reviewLowerBound &&
-		settings.reviewLowerBound >= settings.attachThreshold
+		!Number.isFinite(settings.reviewLowerBound) ||
+		settings.reviewLowerBound < 0 ||
+		settings.reviewLowerBound >= 1
 	) {
-		errors.reviewLowerBound = '< auto-attach threshold';
+		errors.reviewLowerBound = 'range [0, 1)';
+	}
+	// Three-band invariant: review < cluster < attach.
+	if (
+		!errors.clusterThreshold &&
+		!errors.attachThreshold &&
+		settings.clusterThreshold >= settings.attachThreshold
+	) {
+		errors.clusterThreshold = '< synth threshold';
+	}
+	if (
+		!errors.reviewLowerBound &&
+		!errors.clusterThreshold &&
+		settings.reviewLowerBound >= settings.clusterThreshold
+	) {
+		errors.reviewLowerBound = '< cluster threshold';
 	}
 
 	return errors;
@@ -171,9 +191,12 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 				...prev,
 				minConsensus: 0,
 				minEvaluators:
-					prev.minEvaluators >= 1 ? prev.minEvaluators : DEFAULT_SYNTHESIS_SETTINGS.minEvaluators,
+					prev.minEvaluators >= 0 ? prev.minEvaluators : DEFAULT_SYNTHESIS_SETTINGS.minEvaluators,
 			}));
 		} else {
+			// Switching to consensus mode floors evaluators at 1 — the AND-gate
+			// in the backend treats minEvaluators=0 the same as "no gate", so
+			// we need a positive bound when consensus is the active metric.
 			setSettings((prev) => ({
 				...prev,
 				minEvaluators: 1,
@@ -283,7 +306,9 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 			? t('Options will only be synthesized after this many people evaluate them.')
 			: t('Options will only be synthesized once their consensus score reaches this value.');
 	const thresholdStep = metric === 'evaluators' ? 1 : 0.05;
-	const thresholdMin = metric === 'evaluators' ? 1 : 0;
+	// 0 evaluators = "run immediately on every option create". The input
+	// accepts 0 explicitly so admins can disable the engagement gate.
+	const thresholdMin = metric === 'evaluators' ? 0 : 0;
 	const thresholdMax = metric === 'evaluators' ? undefined : 1;
 
 	return (
@@ -404,7 +429,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							</p>
 							<div className={styles.fieldRow}>
 								<label htmlFor="synthesis-attach" className={styles.fieldRow__label}>
-									{t('Auto-attach if cosine ≥')}
+									{t('Synth (near-duplicate) if cosine ≥')}
 								</label>
 								<input
 									id="synthesis-attach"
@@ -425,6 +450,28 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 								)}
 							</div>
 							<div className={styles.fieldRow}>
+								<label htmlFor="synthesis-cluster" className={styles.fieldRow__label}>
+									{t('Topic cluster if cosine ≥')}
+								</label>
+								<input
+									id="synthesis-cluster"
+									type="number"
+									className={styles.fieldRow__input}
+									min={0}
+									max={1}
+									step={0.01}
+									value={settings.clusterThreshold}
+									aria-invalid={!!errors.clusterThreshold}
+									disabled={panelDisabled}
+									onChange={(e) => updateField('clusterThreshold', Number(e.target.value))}
+								/>
+								{errors.clusterThreshold && (
+									<p className={styles.fieldRow__error} role="alert">
+										{errors.clusterThreshold}
+									</p>
+								)}
+							</div>
+							<div className={styles.fieldRow}>
 								<label htmlFor="synthesis-review" className={styles.fieldRow__label}>
 									{t('Send for review if cosine ≥')}
 								</label>
@@ -432,7 +479,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 									id="synthesis-review"
 									type="number"
 									className={styles.fieldRow__input}
-									min={0.5}
+									min={0}
 									max={0.99}
 									step={0.01}
 									value={settings.reviewLowerBound}

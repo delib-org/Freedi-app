@@ -36,6 +36,13 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
+
+// Tracks subscription docs whose schema-validation failure we've already
+// logged this session, so a malformed doc on a hot listener doesn't spam the
+// console every time the snapshot re-fires. Cleared automatically when the
+// page reloads.
+const loggedSubscriptionFallbacks = new Set<string>();
 
 // Helpers
 export const listenToStatementSubscription = (
@@ -67,10 +74,55 @@ export const listenToStatementSubscription = (
 
 						return;
 					}
-					const statementSubscription = parse(
-						StatementSubscriptionSchema,
-						convertTimestampsToMillis(statementSubscriptionDB.data()),
-					) as StatementSubscription;
+					const rawData = convertTimestampsToMillis(
+						statementSubscriptionDB.data(),
+					) as Record<string, unknown>;
+
+					const parseResult = safeParse(StatementSubscriptionSchema, rawData);
+					let statementSubscription: StatementSubscription;
+
+					if (parseResult.success) {
+						statementSubscription = parseResult.output as StatementSubscription;
+					} else {
+						// Partial/malformed subscription doc — salvage what we can so the
+						// page can still render the user's role rather than dropping the
+						// update entirely. The separate statement listener will fill any
+						// gaps in the embedded statement copy. Log once per docId so a
+						// hot listener doesn't spam the console.
+						if (!loggedSubscriptionFallbacks.has(docId)) {
+							loggedSubscriptionFallbacks.add(docId);
+							const missingFields = parseResult.issues
+								.map((i) => i.path?.map((p) => String((p as { key?: unknown }).key)).join('.'))
+								.filter(Boolean)
+								.join(', ');
+							console.warn(
+								`[listenToStatementSubscription] subscription ${docId} missing/invalid fields (${missingFields}); using fallback so UI keeps rendering.`,
+							);
+						}
+
+						statementSubscription = {
+							statementsSubscribeId: docId,
+							statementId,
+							userId: creator.uid,
+							user: creator,
+							role: (rawData.role as Role) ?? Role.unsubscribed,
+							lastUpdate: (rawData.lastUpdate as number) ?? Date.now(),
+							createdAt: (rawData.createdAt as number) ?? Date.now(),
+							statement:
+								(rawData.statement as StatementSubscription['statement']) ?? {
+									statementId,
+									statement: '',
+									statementType: StatementType.question,
+									creatorId: creator.uid,
+									creator,
+									parentId: 'top',
+									consensus: 0,
+								},
+							parentId: rawData.parentId as string | undefined,
+							statementType: rawData.statementType as StatementType | undefined,
+							topParentId: rawData.topParentId as string | undefined,
+						} as StatementSubscription;
+					}
 
 					const { role } = statementSubscription;
 
@@ -177,11 +229,22 @@ export const listenToSubStatements = (
 		// This should be enough for most use cases while dramatically improving load time
 		const descAsc = topBottom === 'top' ? 'desc' : 'asc';
 
-		// Build the base query
+		// Build the base query.
+		// Using `in` against an explicit allowlist (instead of `!= document`)
+		// because Firestore inequality + orderBy on a different field forces
+		// an index scan with poor selectivity (Query Insights flagged a 6.56
+		// scan ratio). The allowlist is derived from the StatementType enum.
+		// NOTE: do NOT add a server-side `where('hide','==',false)` here.
+		// `createStatement` does not set a `hide` field, so new statements have
+		// `hide === undefined`; a `hide == false` equality filter would exclude
+		// them entirely (Firestore equality skips field-missing docs) and they'd
+		// never appear. Hidden docs are filtered downstream by the card
+		// selector (which treats undefined as visible); lazy-loading handles the
+		// limit window so hidden docs don't starve the list.
 		let q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
-			where('statementType', '!=', StatementType.document),
+			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
 			orderBy('createdAt', descAsc),
 		);
 
@@ -317,7 +380,7 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 		const q = query(
 			membersRef,
 			where('statementId', '==', statementId),
-			where('statementType', '!=', StatementType.document),
+			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
 			orderBy('createdAt', 'desc'),
 			limit(10), // Load only last 10 members initially, more can be loaded on demand
 		);

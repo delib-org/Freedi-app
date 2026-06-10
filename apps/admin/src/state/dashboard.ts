@@ -82,11 +82,12 @@ const state: DashboardState = {
 };
 
 const DAYS = 30;
-const MAX_CHART_DOCS = 5000;
+const MAX_CHART_DOCS = 1000;
 let unsubs: Unsubscribe[] = [];
 
 function getRange(): { startMs: number; endMs: number } {
 	const endMs = Date.now();
+
 	return { startMs: endMs - DAYS * 86_400_000, endMs };
 }
 
@@ -102,9 +103,7 @@ function processStatements(docs: Record<string, unknown>[]): void {
 	state.statementsPerDay = bucketize(allTs, startMs, endMs);
 
 	// Top statements per day
-	const topTs = inRange
-		.filter((d) => d.parentId === 'top')
-		.map((d) => toMillis(d.createdAt));
+	const topTs = inRange.filter((d) => d.parentId === 'top').map((d) => toMillis(d.createdAt));
 	state.topStatementsPerDay = bucketize(topTs, startMs, endMs);
 
 	// By type
@@ -132,9 +131,7 @@ function processStatements(docs: Record<string, unknown>[]): void {
 	}));
 
 	// Recent + type breakdown (from first 10)
-	const recent = inRange
-		.sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
-		.slice(0, 10);
+	const recent = inRange.sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt)).slice(0, 10);
 	state.recentStatements = recent as unknown as Statement[];
 
 	const breakdown = new Map<string, number>();
@@ -148,50 +145,74 @@ function processStatements(docs: Record<string, unknown>[]): void {
 }
 
 function subscribeRealTime(): void {
+	// Compute the time window once per subscription cycle so each listener
+	// runs as an indexed range scan (where >= startMs) rather than tailing
+	// the whole collection. Query Insights flagged unfiltered /statements
+	// reads at avg 3.8s latency; the where + smaller limit collapses both.
+	const { startMs } = getRange();
+
 	// Real-time: statements
 	unsubs.push(
-		listenToRecent(Collections.statements, 'createdAt', MAX_CHART_DOCS, (snap) => {
-			const docs = snap.docs.map((d) => d.data() as Record<string, unknown>);
-			processStatements(docs);
-			state.loading = false;
-			m.redraw();
-		})
+		listenToRecent(
+			Collections.statements,
+			'createdAt',
+			MAX_CHART_DOCS,
+			(snap) => {
+				const docs = snap.docs.map((d) => d.data() as Record<string, unknown>);
+				processStatements(docs);
+				state.loading = false;
+				m.redraw();
+			},
+			startMs,
+		),
 	);
 
 	// Real-time: evaluations
 	unsubs.push(
-		listenToRecent(Collections.evaluations, 'updatedAt', MAX_CHART_DOCS, (snap) => {
-			const { startMs, endMs } = getRange();
-			const ts = snap.docs
-				.map((d) => toMillis(d.data().updatedAt))
-				.filter((t) => t >= startMs);
-			state.evaluationsPerDay = bucketize(ts, startMs, endMs);
-			m.redraw();
-		})
+		listenToRecent(
+			Collections.evaluations,
+			'updatedAt',
+			MAX_CHART_DOCS,
+			(snap) => {
+				const { startMs: rangeStart, endMs } = getRange();
+				const ts = snap.docs.map((d) => toMillis(d.data().updatedAt));
+				state.evaluationsPerDay = bucketize(ts, rangeStart, endMs);
+				m.redraw();
+			},
+			startMs,
+		),
 	);
 
 	// Real-time: votes
 	unsubs.push(
-		listenToRecent(Collections.votes, 'createdAt', MAX_CHART_DOCS, (snap) => {
-			const { startMs, endMs } = getRange();
-			const ts = snap.docs
-				.map((d) => toMillis(d.data().createdAt))
-				.filter((t) => t >= startMs);
-			state.votesPerDay = bucketize(ts, startMs, endMs);
-			m.redraw();
-		})
+		listenToRecent(
+			Collections.votes,
+			'createdAt',
+			MAX_CHART_DOCS,
+			(snap) => {
+				const { startMs: rangeStart, endMs } = getRange();
+				const ts = snap.docs.map((d) => toMillis(d.data().createdAt));
+				state.votesPerDay = bucketize(ts, rangeStart, endMs);
+				m.redraw();
+			},
+			startMs,
+		),
 	);
 
 	// Real-time: subscriptions (proxy for new users)
 	unsubs.push(
-		listenToRecent(Collections.statementsSubscribe, 'createdAt', MAX_CHART_DOCS, (snap) => {
-			const { startMs, endMs } = getRange();
-			const ts = snap.docs
-				.map((d) => toMillis(d.data().createdAt))
-				.filter((t) => t >= startMs);
-			state.newUsersPerDay = bucketize(ts, startMs, endMs);
-			m.redraw();
-		})
+		listenToRecent(
+			Collections.statementsSubscribe,
+			'createdAt',
+			MAX_CHART_DOCS,
+			(snap) => {
+				const { startMs: rangeStart, endMs } = getRange();
+				const ts = snap.docs.map((d) => toMillis(d.data().createdAt));
+				state.newUsersPerDay = bucketize(ts, rangeStart, endMs);
+				m.redraw();
+			},
+			startMs,
+		),
 	);
 }
 
@@ -201,7 +222,7 @@ async function loadAggregatedStats(): Promise<void> {
 
 	try {
 		const isMonthly = state.periodMode === 'monthly';
-		const periodType = isMonthly ? 'month' as const : 'year' as const;
+		const periodType = isMonthly ? ('month' as const) : ('year' as const);
 		const periodKeys = isMonthly ? generateMonthKeys(12) : generateYearKeys(5);
 
 		const [stmtStats, evalStats, voteStats, subStats, userStats] = await Promise.all([

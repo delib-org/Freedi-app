@@ -14,7 +14,7 @@ import {
 	AuthCredential,
 } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
-import { generateTemporalName } from '@/utils/temporalNameGenerator';
+import { getAnonymousName } from '@/utils/temporalNameGenerator';
 import { setUserToDB } from '@/controllers/db/user/setUser';
 import { convertFirebaseUserToCreator } from '@/utils/userUtils';
 import { logError } from '@/utils/errorHandling';
@@ -96,8 +96,9 @@ async function createAnonymousUser(): Promise<User> {
 	try {
 		const user = await signInAnonymouslyWithRetry();
 
-		// Generate and assign temporal name
-		const temporalName = generateTemporalName();
+		// Assign a stable two-word pseudonym derived from the uid so it matches
+		// what convertFirebaseUserToCreator() shows everywhere in the app.
+		const temporalName = getAnonymousName(user.uid);
 
 		// Update the user's display name
 		await updateProfile(user, {
@@ -126,35 +127,59 @@ async function createAnonymousUser(): Promise<User> {
 }
 
 /**
+ * Single-flight guard: when several callers (e.g. React StrictMode mounting
+ * an effect twice, or multiple hooks) invoke auto-auth before the first
+ * sign-in resolves, they must share ONE in-flight promise. Otherwise each
+ * call runs signInAnonymously() and creates a separate anonymous user; the
+ * later sign-in flips auth.currentUser, so the earlier setUserToDB() write
+ * runs against the wrong token and fails the usersV2 rule (PERMISSION_DENIED),
+ * leaving the Firestore auth token inconsistent and statement reads empty.
+ */
+let inFlightAutoAuth: Promise<void> | null = null;
+
+/**
  * Main function to handle public authentication
  * Called when accessing a public statement without authentication
  * @returns Promise that resolves when authentication is complete
  */
 export async function handlePublicAutoAuth(): Promise<void> {
+	// Coalesce concurrent callers onto a single sign-in attempt.
+	if (inFlightAutoAuth) {
+		return inFlightAutoAuth;
+	}
+
+	inFlightAutoAuth = (async () => {
+		try {
+			// Check if already authenticated
+			if (auth.currentUser) {
+				console.info('User already authenticated, skipping auto-auth');
+
+				return;
+			}
+
+			// Try silent Google sign-in first
+			const googleSignInSuccess = await trySilentGoogleSignIn();
+
+			if (googleSignInSuccess) {
+				return; // Successfully signed in with Google
+			}
+
+			// Fall back to anonymous authentication
+			await createAnonymousUser();
+		} catch (error) {
+			logError(error, {
+				operation: 'auth.publicAuthHandler.handlePublicAutoAuth',
+				metadata: { message: 'Public auto-authentication failed:' },
+			});
+			// Don't throw - let the user see the content even if auth fails
+			// The useAuthorization hook will handle the lack of authentication
+		}
+	})();
+
 	try {
-		// Check if already authenticated
-		if (auth.currentUser) {
-			console.info('User already authenticated, skipping auto-auth');
-
-			return;
-		}
-
-		// Try silent Google sign-in first
-		const googleSignInSuccess = await trySilentGoogleSignIn();
-
-		if (googleSignInSuccess) {
-			return; // Successfully signed in with Google
-		}
-
-		// Fall back to anonymous authentication
-		await createAnonymousUser();
-	} catch (error) {
-		logError(error, {
-			operation: 'auth.publicAuthHandler.handlePublicAutoAuth',
-			metadata: { message: 'Public auto-authentication failed:' },
-		});
-		// Don't throw - let the user see the content even if auth fails
-		// The useAuthorization hook will handle the lack of authentication
+		await inFlightAutoAuth;
+	} finally {
+		inFlightAutoAuth = null;
 	}
 }
 

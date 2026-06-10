@@ -17,7 +17,7 @@ import {
 	getUserGroupAnswers,
 } from '../userDemographic/getUserDemographic';
 import { getStatementFromDB } from '../statements/getStatement';
-import { createSubscriptionRef, createTimestamps } from '@/utils/firebaseUtils';
+import { createSubscriptionRef, createTimestamps, updateTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 
 interface SetSubscriptionProps {
@@ -189,7 +189,9 @@ export async function setRoleToDB(statement: Statement, role: Role, user: User):
 		if (!statementSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
 		const statementSubscriptionRef = createSubscriptionRef(statementSubscriptionId);
 
-		return setDoc(statementSubscriptionRef, { role }, { merge: true });
+		// Always include lastUpdate so the doc remains visible to the home
+		// listeners' orderBy('lastUpdate') query (Firestore drops docs missing it).
+		return setDoc(statementSubscriptionRef, { role, ...updateTimestamp() }, { merge: true });
 	} catch (error) {
 		logError(error, { operation: 'subscriptions.setSubscriptions.setRoleToDB' });
 	}
@@ -228,6 +230,7 @@ export async function updateMemberRole(
 		await updateDoc(statementSubscriptionRef, {
 			role: newRole,
 			statementId: statementId, // Include statementId to satisfy Firebase rules
+			...updateTimestamp(),
 		});
 	} catch (error) {
 		logError(error, {
@@ -331,6 +334,7 @@ export async function updateNotificationPreferences(
 			await updateDoc(statementSubscriptionRef, {
 				...preferences,
 				statementId: statementId, // Include statementId to satisfy Firebase rules
+				...updateTimestamp(),
 			});
 		}
 		// If document doesn't exist, don't create it - user should be subscribed first

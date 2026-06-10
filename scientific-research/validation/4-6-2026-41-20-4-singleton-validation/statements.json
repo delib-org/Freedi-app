@@ -1,0 +1,259 @@
+{
+  "test": "4-6-2026-41-20-4-singleton-validation",
+  "question": {
+    "id": "SingletonTest0003",
+    "text": "How can we improve our daily lives"
+  },
+  "groundTruthStructure": "2 topics x 5 synths x 4 paraphrases = 40, + 1 off-topic statement (should stay unclustered) = 41 (archetype C/F)",
+  "runDate": "2026-06-04T07:38:32.952Z",
+  "statementCount": 41,
+  "statements": [
+    {
+      "id": "0o6nfJYRUGSM4BqcU39w",
+      "text": "Do regular strength training with weights to gain muscle.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "30yvH5PLJzKVIxQu67Xl",
+      "text": "Cancel subscriptions you do not use to save money.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "cut-subscriptions"
+    },
+    {
+      "id": "5ENe0sR6Od3ixyLg4q8y",
+      "text": "Keep a monthly budget to manage your spending.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "budget-monthly"
+    },
+    {
+      "id": "7D9Q7e9GrRTPGYV7g5PS",
+      "text": "Walk or cycle to work instead of driving.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "7mSauxbSdsnr2DFgqvu1",
+      "text": "Do daily stretching exercises to improve flexibility.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "8SG1Iit0zamaocLif3rj",
+      "text": "Do daily cardio exercise such as running and cycling.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "98UaHlHuOq4Xyt83VnPR",
+      "text": "Invest consistently for your retirement.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "invest-retirement"
+    },
+    {
+      "id": "B2vEiTTgT7DP6MMgMuPt",
+      "text": "Track a monthly budget to manage your spending.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "budget-monthly"
+    },
+    {
+      "id": "C0AvNpPqgYPZKpNrNpir",
+      "text": "Do daily cardio exercise such as running or cycling.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "DFxNyeSYdgF4OSecup2A",
+      "text": "Walk or bike to work instead of driving.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "FVIRP72MUVRK0HDRpnnN",
+      "text": "Do regular weight training with weights to build muscle.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "HGzoaYRK5K2u50fNv1Y3",
+      "text": "Build an emergency fund for unexpected costs.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "emergency-fund"
+    },
+    {
+      "id": "Jwg61oiV8216j9590Ca5",
+      "text": "Do daily stretching exercises to boost flexibility.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "KdUOzp6yd9ip1v9Wwsbd",
+      "text": "Pay down your debt as quickly as you can.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "pay-off-debt"
+    },
+    {
+      "id": "Kx738wl9YBPSlymlHzug",
+      "text": "Pay off your debt as fast as you can.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "pay-off-debt"
+    },
+    {
+      "id": "Mv1p3GivktT4fT0R9O34",
+      "text": "Do regular strength training using weights to build muscle.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "OscJ5MReDyzkn87daD9O",
+      "text": "Join a local sports team to keep active.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "team-sports"
+    },
+    {
+      "id": "ThiVUbx5XaqWdBsOd5xA",
+      "text": "Invest regularly for your retirement years.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "invest-retirement"
+    },
+    {
+      "id": "X0nIehU0DN52k3zgA3Qi",
+      "text": "Do daily cardio exercise like running or cycling.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    },
+    {
+      "id": "XDcqGw7yCxTal57HOSlc",
+      "text": "Build an emergency fund for unexpected expenses.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "emergency-fund"
+    },
+    {
+      "id": "Xx8XdQWgRUdYASF0pZvV",
+      "text": "Pay off your debts as quickly as possible.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "pay-off-debt"
+    },
+    {
+      "id": "c3QhQeQSsOARSOFoXgLk",
+      "text": "Join a local sports team to stay active.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "team-sports"
+    },
+    {
+      "id": "dIfFPcnOHlIB8rLQcuGR",
+      "text": "Save an emergency fund for unexpected expenses.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "emergency-fund"
+    },
+    {
+      "id": "dNOv9QVsNAeZsvEuLIyP",
+      "text": "Invest regularly to save for retirement.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "invest-retirement"
+    },
+    {
+      "id": "fczrLirZSL1SeWjoOrH9",
+      "text": "Join a local sports team to stay fit and active.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "team-sports"
+    },
+    {
+      "id": "gkCRv4GGeCb3sIfTymSp",
+      "text": "Track a monthly budget to manage how you spend.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "budget-monthly"
+    },
+    {
+      "id": "jWgylMuNnmn4oWtO2ER6",
+      "text": "Photosynthesis is the process by which plants convert sunlight into chemical energy.",
+      "groundTruthTopic": "_singleton",
+      "groundTruthSynth": "off-topic-noise",
+      "expectedRole": "noise"
+    },
+    {
+      "id": "lA2Qq5pH08T7JXogxkEa",
+      "text": "Cancel subscriptions you no longer use to save money.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "cut-subscriptions"
+    },
+    {
+      "id": "lku3KK0JU7gYqBZrWICL",
+      "text": "Cancel unused subscriptions to save money.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "cut-subscriptions"
+    },
+    {
+      "id": "mwObCRLSBZ3SDfPoSuSe",
+      "text": "Do regular strength training with weights to build muscle.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "strength-training"
+    },
+    {
+      "id": "olu8ITKwOKLdGje60Nre",
+      "text": "Invest regularly for your retirement.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "invest-retirement"
+    },
+    {
+      "id": "r2TZrLNN4Kb7SSCcX9jW",
+      "text": "Do daily stretching routines to improve flexibility.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "rNLRfU8kb03dX8KYuwV6",
+      "text": "Walk or bike to work instead of taking the car.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "rXqZzCH4HvuSFvWXUf1k",
+      "text": "Build up an emergency fund for unexpected expenses.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "emergency-fund"
+    },
+    {
+      "id": "s2vu7B1awuKxHCsw09Gf",
+      "text": "Pay off your debt as quickly as you can.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "pay-off-debt"
+    },
+    {
+      "id": "tgv5GcIcWGXawmhNV5Rc",
+      "text": "Track a monthly budget to control your spending.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "budget-monthly"
+    },
+    {
+      "id": "uQqtvF5xeWA0ixXlznst",
+      "text": "Join a community sports team to stay active.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "team-sports"
+    },
+    {
+      "id": "uTyePgGyB0jj8JS0dRze",
+      "text": "Do daily stretching exercises to increase flexibility.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "flexibility-stretching"
+    },
+    {
+      "id": "vg4LsKSrEa4nuHUnRFmH",
+      "text": "Walk or bike to work rather than driving.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "active-commuting"
+    },
+    {
+      "id": "yRypNzcVAR7hNsS4Py78",
+      "text": "Cancel subscriptions you no longer need to save money.",
+      "groundTruthTopic": "personal-finance",
+      "groundTruthSynth": "cut-subscriptions"
+    },
+    {
+      "id": "yU0xVqha6hS4Xc7rGscg",
+      "text": "Do daily cardio workouts such as running or cycling.",
+      "groundTruthTopic": "physical-fitness",
+      "groundTruthSynth": "daily-cardio"
+    }
+  ]
+}

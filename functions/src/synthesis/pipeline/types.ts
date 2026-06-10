@@ -13,21 +13,63 @@ export interface SynthesisSettings {
 	minEvaluators: number;
 	/** Minimum consensus score (0..1) an option needs before it's considered for synthesis. */
 	minConsensus: number;
-	/** Cosine ≥ this → auto-attach without an LLM call. */
+	/** Cosine ≥ this → near-duplicate. Auto-attach to existing synth, else spawn new synth (1 LLM). */
 	attachThreshold: number;
-	/** Cosine in [reviewLowerBound, attachThreshold) → send to admin review (no LLM call). */
+	/**
+	 * Cosine ≥ this AND < synthLowerBound → distinct ideas worth bundling under
+	 * a theme label. Spawn topic-cluster directly via `generateTopicLabel`
+	 * (cheap LLM, no synthesis attempt).
+	 * Bands order: reviewLowerBound < clusterThreshold ≤ synthLowerBound ≤ attachThreshold.
+	 */
+	clusterThreshold: number;
+	/**
+	 * Cosine ≥ this AND < attachThreshold → may be near-duplicates worth
+	 * synthesizing. Spawn attempts `generateSynthesizedProposal` (the
+	 * full unified-proposal prompt). If the LLM returns `cannotSynthesize`
+	 * we fall back to `generateTopicLabel` for a topic-cluster.
+	 *
+	 * Why a separate lower bound rather than always trying the synth
+	 * prompt down to `clusterThreshold`: the synth-judge LLM prompt is
+	 * scoped to refuse on *directional conflict* only — it happily
+	 * synthesizes any two pro-aligned ideas that share vocabulary. For
+	 * cosine bands clearly below near-duplicate territory, that produces
+	 * over-merged proposals that erase distinct ideas. Routing those
+	 * directly to topic-cluster (a short theme label) preserves the
+	 * structural distinction the user submitted and saves an LLM call.
+	 */
+	synthLowerBound: number;
+	/** Cosine in [reviewLowerBound, clusterThreshold) → send to admin review (no LLM call). */
 	reviewLowerBound: number;
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	enabled: false,
-	minEvaluators: 3,
+	// `minEvaluators: 0` means "run the moment the option exists" — the
+	// pipeline fires on every option create with no evaluation gate. Admins
+	// can raise this in the SynthesisPanel for questions where synthesis
+	// should wait for some evaluation signal first.
+	minEvaluators: 0,
 	minConsensus: 0.0,
-	// Matches the legacy ATTACH_THRESHOLD in onOptionCreateLive.ts — the value
-	// the live-synth path has used in production. Admins can override per
-	// question via the synthesis settings UI.
-	attachThreshold: 0.92,
-	reviewLowerBound: 0.85,
+	// Four-band geometry, tuned for text-embedding-3-small with proper
+	// "Question: <parent text>\nAnswer: <option>" context (see embedding.ts
+	// for the matching context contract):
+	//   - cosine ≥ 0.85 (attachThreshold)   → near-duplicates → synth attach
+	//   - 0.78 (synthLowerBound) ≤ cosine < 0.85 → spawn synth (LLM tries
+	//     unified proposal; on cannotSynthesize falls back to topic-cluster)
+	//   - 0.60 (clusterThreshold) ≤ cosine < 0.78 → spawn topic-cluster
+	//     directly via generateTopicLabel — skip the wasted synth attempt
+	//   - 0.45 (reviewLowerBound) ≤ cosine < 0.60 → admin review queue
+	//   - cosine < 0.45 → singleton
+	// With matched-context embeddings, within-synth paraphrases land at
+	// 0.86–0.95, cross-synth same-topic at 0.65–0.84, and cross-topic at
+	// 0.30–0.65. Cluster band lowered from 0.65 to 0.60 so that
+	// genuinely-same-topic but action-distinct pairs (e.g. "exercise" +
+	// "eat well" — both health, cosine ~0.60-0.65) form a topic-cluster
+	// instead of staying as separate top-level synths.
+	attachThreshold: 0.85,
+	synthLowerBound: 0.78,
+	clusterThreshold: 0.6,
+	reviewLowerBound: 0.45,
 };
 
 /**
@@ -55,8 +97,8 @@ export function validateSynthesisSettings(
 	const errors: string[] = [];
 
 	if (settings.minEvaluators !== undefined) {
-		if (!Number.isFinite(settings.minEvaluators) || settings.minEvaluators < 1) {
-			errors.push('minEvaluators must be a finite integer ≥ 1');
+		if (!Number.isFinite(settings.minEvaluators) || settings.minEvaluators < 0) {
+			errors.push('minEvaluators must be a finite integer ≥ 0');
 		}
 	}
 	if (settings.minConsensus !== undefined) {
@@ -77,21 +119,69 @@ export function validateSynthesisSettings(
 			errors.push('attachThreshold must be in (0, 1]');
 		}
 	}
+	if (settings.synthLowerBound !== undefined) {
+		if (
+			!Number.isFinite(settings.synthLowerBound) ||
+			settings.synthLowerBound <= 0 ||
+			settings.synthLowerBound > 1
+		) {
+			errors.push('synthLowerBound must be in (0, 1]');
+		}
+	}
+	if (settings.clusterThreshold !== undefined) {
+		if (
+			!Number.isFinite(settings.clusterThreshold) ||
+			settings.clusterThreshold <= 0 ||
+			settings.clusterThreshold > 1
+		) {
+			errors.push('clusterThreshold must be in (0, 1]');
+		}
+	}
 	if (settings.reviewLowerBound !== undefined) {
 		if (
 			!Number.isFinite(settings.reviewLowerBound) ||
-			settings.reviewLowerBound < 0.5 ||
+			settings.reviewLowerBound < 0 ||
 			settings.reviewLowerBound >= 1
 		) {
-			errors.push('reviewLowerBound must be in [0.5, 1)');
+			errors.push('reviewLowerBound must be in [0, 1)');
 		}
+	}
+	// Three-band invariant: reviewLowerBound < clusterThreshold < attachThreshold.
+	if (
+		settings.reviewLowerBound !== undefined &&
+		settings.clusterThreshold !== undefined &&
+		settings.reviewLowerBound >= settings.clusterThreshold
+	) {
+		errors.push('reviewLowerBound must be strictly less than clusterThreshold');
+	}
+	if (
+		settings.clusterThreshold !== undefined &&
+		settings.attachThreshold !== undefined &&
+		settings.clusterThreshold >= settings.attachThreshold
+	) {
+		errors.push('clusterThreshold must be strictly less than attachThreshold');
 	}
 	if (
 		settings.reviewLowerBound !== undefined &&
 		settings.attachThreshold !== undefined &&
+		settings.clusterThreshold === undefined &&
 		settings.reviewLowerBound >= settings.attachThreshold
 	) {
 		errors.push('reviewLowerBound must be strictly less than attachThreshold');
+	}
+	if (
+		settings.synthLowerBound !== undefined &&
+		settings.attachThreshold !== undefined &&
+		settings.synthLowerBound > settings.attachThreshold
+	) {
+		errors.push('synthLowerBound must be ≤ attachThreshold');
+	}
+	if (
+		settings.clusterThreshold !== undefined &&
+		settings.synthLowerBound !== undefined &&
+		settings.clusterThreshold > settings.synthLowerBound
+	) {
+		errors.push('clusterThreshold must be ≤ synthLowerBound');
 	}
 
 	return { valid: errors.length === 0, errors };

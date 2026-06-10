@@ -6,6 +6,59 @@ export enum StatementType {
 	group = 'group',
 	comment = 'comment',
 	paragraph = 'paragraph',
+	/**
+	 * Pipeline-produced synthesis option. A regular `option` semantically,
+	 * but tagged distinctly so the UI/queries can identify and treat it
+	 * separately (e.g. show a "Synthesis" badge, exclude from re-clustering).
+	 * Always carries `isCluster: true` and `derivedByPipeline: 'synthesis'`
+	 * in the document body — the type field is the fast tag.
+	 */
+	synthesis = 'synthesis',
+	/**
+	 * Dialectical evidence node (chat app). A strengthen/critique reply about its
+	 * parent option/evidence. Carries a corroboration score `C` and is AI-scored
+	 * by the EvidenceScorer. Its `dialecticType` (strengthen|critique) sets the
+	 * sign of its contribution to the parent's score.
+	 */
+	evidence = 'evidence',
+}
+
+/**
+ * Polarity of a dialectical node (chat app). `standard` = neutral chatter (no
+ * score); `strengthen`/`critique` set the sign of an evidence node's
+ * contribution to its parent's corroboration score.
+ */
+export enum DialogicType {
+	standard = 'standard',
+	strengthen = 'strengthen',
+	critique = 'critique',
+}
+
+/**
+ * The AI scorer's classified relation of an evidence reply to its parent.
+ * Drives the edge sign: corroborate → +, falsify → −, neutral → no effect.
+ */
+export enum EvidenceRelation {
+	corroborate = 'corroborate',
+	falsify = 'falsify',
+	neutral = 'neutral',
+}
+
+/** Lifecycle of an evidence node's AI verdict — drives the "evaluating…" chip. */
+export enum EvidenceStatus {
+	pending = 'pending',
+	scored = 'scored',
+	fallback = 'fallback',
+}
+
+/**
+ * Visibility tier of a conversation root (chat app). Authoritative on the root
+ * only; denormalized onto every descendant node for security rules + SSR.
+ */
+export enum Visibility {
+	public = 'public',
+	unlisted = 'unlisted',
+	private = 'private',
 }
 
 

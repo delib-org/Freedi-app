@@ -4,6 +4,7 @@ import styles from './CommentCard.module.scss';
 import { Statement } from '@freedi/shared-types';
 import { FC } from 'react';
 import { useSuggestionComment } from '../SuggestionCommentMV';
+import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 
 export const enum ClassNameType {
 	CommentCard = 'commentCard',
@@ -28,7 +29,7 @@ const CommentCard: FC<Props> = ({
 			<ProfileImage statement={statement} />
 			<div className={styles[className]}>
 				<div className={styles.creatorInfo}>
-					<span className={styles.creatorName}>{statement.creator?.displayName ?? ''}</span>
+					<span className={styles.creatorName}>{getCreatorDisplayName(statement)}</span>
 					<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
 				</div>
 				<div className={styles.commentText} style={{ userSelect: 'text' }}>

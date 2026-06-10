@@ -1,0 +1,36 @@
+{
+  "name": "@freedi/chat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "env:dev": "cd ../.. && node env/env-loader.js dev",
+    "dev": "vite dev --port 3005",
+    "build": "vite build",
+    "preview": "node build/index.js",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "lint": "eslint .",
+    "check-all": "npm run check && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@freedi/evidence": "file:../../packages/evidence",
+    "@freedi/shared-i18n": "file:../../packages/shared-i18n",
+    "@freedi/shared-types": "file:../../packages/shared-types",
+    "firebase": "^11.0.2",
+    "firebase-admin": "^13.6.0"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^5.2.12",
+    "@sveltejs/kit": "^2.20.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "sass": "^1.94.2",
+    "svelte": "^5.19.0",
+    "svelte-check": "^4.1.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vitest": "^4.0.18"
+  }
+}

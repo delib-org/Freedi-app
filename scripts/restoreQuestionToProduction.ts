@@ -242,7 +242,6 @@ const COLLECTIONS: CollectionSpec[] = [
 		compositeIdFallback: (d) =>
 			d.userId && d.statementId ? `${d.userId}--${d.statementId}` : undefined,
 	},
-	{ name: 'clusterAggregations', idField: 'id' },
 	{ name: 'clusterEvaluationLinks', idField: 'id' },
 	{ name: 'votes', idField: 'id' },
 	{ name: 'agrees', idField: 'agreeId' },
@@ -278,9 +277,6 @@ const COLLECTIONS: CollectionSpec[] = [
 	{ name: 'statementsPasswords', idField: 'statementId' },
 	{ name: 'evidencePosts', idField: 'id' },
 	{ name: 'evidenceVotes', idField: 'id' },
-	{ name: 'framings', idField: 'id' },
-	{ name: 'framingRequests', idField: 'id' },
-	{ name: 'framingSnapshots', idField: 'id' },
 ];
 
 function resolveDocId(data: Record<string, unknown>, spec: CollectionSpec): string | null {

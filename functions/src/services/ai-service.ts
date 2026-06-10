@@ -1,12 +1,11 @@
-import {
-	GenerativeModel,
-	GoogleGenerativeAI,
-	HarmCategory,
-	HarmBlockThreshold,
-} from '@google/generative-ai';
+import { HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
 import { logger } from 'firebase-functions';
 import 'dotenv/config';
-import { GEMINI_MODEL } from '../config/gemini';
+import {
+	GEMINI_MODEL,
+	getGenAI,
+	type CompatGenerativeModel,
+} from '../config/gemini';
 import { notifyAIError } from './error-notification-service';
 
 interface APIError {
@@ -19,25 +18,12 @@ interface APIError {
 /**
  * A cached singleton instance of the GenerativeModel.
  */
-let _generativeModel: GenerativeModel | null = null;
-
-/**
- * Get the GoogleGenerativeAI instance
- */
-function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GEMINI_API_KEY;
-
-	if (!apiKey) {
-		throw new Error('Missing GEMINI_API_KEY environment variable');
-	}
-
-	return new GoogleGenerativeAI(apiKey);
-}
+let _generativeModel: CompatGenerativeModel | null = null;
 
 /**
  * Initializes and retrieves the Generative AI model.
  */
-async function getGenerativeAIModel(): Promise<GenerativeModel> {
+async function getGenerativeAIModel(): Promise<CompatGenerativeModel> {
 	if (_generativeModel) {
 		return _generativeModel;
 	}

@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import { FC, useRef, useState } from 'react';
 import { Statement, Screen } from '@freedi/shared-types';
 
 // Icons
@@ -6,7 +6,6 @@ import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
 import FollowMe from '@/assets/icons/follow.svg?react';
 import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
-import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
 import TriangleIcon from '@/assets/icons/triangle.svg?react';
 import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
@@ -14,8 +13,8 @@ import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 // Components
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
-import Modal from '@/view/components/modal/Modal';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import LanguagePill from '@/view/components/atomic/atoms/LanguagePill/LanguagePill';
 
 // Styles
 import styles from './HeaderMenu.module.scss';
@@ -26,7 +25,7 @@ interface HeaderMenuProps {
 	setIsMenuOpen: (value: boolean) => void;
 	headerStyle: { color: string; backgroundColor: string };
 	isAdmin: boolean;
-	currentLabel: string | undefined;
+	currentLanguage: string;
 	t: (key: string) => string;
 	onShare: () => void;
 	onLogout: () => void;
@@ -43,7 +42,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	setIsMenuOpen,
 	headerStyle,
 	isAdmin,
-	currentLabel,
+	currentLanguage,
 	t,
 	onShare,
 	onLogout,
@@ -53,7 +52,8 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onNavigateToScreen,
 	isFollowMeActive,
 }) => {
-	const [showLanguageModal, setShowLanguageModal] = useState(false);
+	const [showLanguagePopover, setShowLanguagePopover] = useState(false);
+	const languagePillRef = useRef<HTMLButtonElement>(null);
 
 	const menuIconStyle = {
 		color: headerStyle.backgroundColor,
@@ -118,17 +118,6 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 					/>
 				)}
 
-				{!isAdmin && (
-					<MenuOption
-						label={currentLabel}
-						icon={<LanguagesIcon style={menuIconStyle} />}
-						onOptionClick={() => {
-							setIsMenuOpen(false);
-							setShowLanguageModal(true);
-						}}
-					/>
-				)}
-
 				{isAdmin && (
 					<>
 						<MenuOption
@@ -140,14 +129,6 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 							label={t('Invite with PIN number')}
 							icon={<InvitationIcon style={menuIconStyle} />}
 							onOptionClick={onInvitePanel}
-						/>
-						<MenuOption
-							label={currentLabel}
-							icon={<LanguagesIcon style={menuIconStyle} />}
-							onOptionClick={() => {
-								setIsMenuOpen(false);
-								setShowLanguageModal(true);
-							}}
 						/>
 						<MenuOption
 							label={t('Research Dashboard')}
@@ -163,18 +144,21 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 				)}
 			</Menu>
 
-			{showLanguageModal && (
-				<Modal>
+			<span className="language-pill-anchor">
+				<LanguagePill
+					ref={languagePillRef}
+					currentLanguage={currentLanguage}
+					isOpen={showLanguagePopover}
+					onClick={() => setShowLanguagePopover((prev) => !prev)}
+				/>
+				{showLanguagePopover && (
 					<ChangeLanguage
-						sameDirMenu={true}
-						background
-						setShowModal={() => {
-							setShowLanguageModal(false);
-							setIsMenuOpen(false);
-						}}
+						onClose={() => setShowLanguagePopover(false)}
+						returnFocusRef={languagePillRef}
+						align="end"
 					/>
-				</Modal>
-			)}
+				)}
+			</span>
 		</div>
 	);
 };

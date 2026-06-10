@@ -1,5 +1,7 @@
 import { object, string, optional, nullable, number, boolean, InferOutput, enum_ } from 'valibot';
 import { QuestionType, StatementType } from '../TypeEnums';
+import { NotificationTriggerType } from '../engagement/NotificationTriggerType';
+import { SourceApp } from '../engagement/SourceApp';
 
 export const NotificationSchema = object({
 	userId: string(),
@@ -17,7 +19,16 @@ export const NotificationSchema = object({
 	notificationId: string(),
 	readAt: optional(number()),
 	viewedInList: optional(boolean()),
-	viewedInContext: optional(boolean())
+	viewedInContext: optional(boolean()),
+
+	// Cross-app notification metadata (backwards-compatible). The engagement
+	// channel router already writes these onto inAppNotifications docs; making
+	// them schema-valid removes the drift and lets a shared in-app center
+	// label by origin and deep-link without per-app URL logic.
+	triggerType: optional(enum_(NotificationTriggerType)),
+	sourceApp: optional(enum_(SourceApp)),
+	title: optional(string()),
+	targetPath: optional(string()) // e.g. chat '/q/{id}', main app '/statement/{id}'
 });
 
 export type NotificationType = InferOutput<typeof NotificationSchema>;

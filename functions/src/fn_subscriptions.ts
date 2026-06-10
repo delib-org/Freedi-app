@@ -460,6 +460,7 @@ export async function validateRoleChange(
 				// Revert the role change
 				await db.collection(Collections.statementsSubscribe).doc(after.id).update({
 					role: beforeData.role, // Restore original role
+					lastUpdate: Date.now(),
 				});
 
 				logger.info(`Reverted banned role for protected user ${userId} back to ${beforeData.role}`);

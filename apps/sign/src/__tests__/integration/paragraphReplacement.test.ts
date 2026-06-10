@@ -133,10 +133,15 @@ describe('Paragraph Replacement Integration', () => {
         return (callback as (t: typeof mockTransaction) => Promise<unknown>)(mockTransaction);
       });
 
-      // Mock getting official paragraph
+      // Mock getting official paragraph (1st transactional read)
       mockTransaction.get.mockResolvedValueOnce({
         exists: true,
         data: () => mockOfficialParagraph,
+      });
+      // Mock getting the suggestion to finalize (2nd transactional read)
+      mockTransaction.get.mockResolvedValueOnce({
+        exists: true,
+        data: () => mockSuggestion,
       });
 
       // Mock document references

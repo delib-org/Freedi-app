@@ -25,6 +25,7 @@ export type LiveSynthAction =
 	| 'spawn' // new cluster statement created from two similar options
 	| 'unlink' // option removed from a cluster (edit invalidation)
 	| 'dissolve' // cluster deleted (member count dropped to <2)
+	| 'merge' // two synths combined into one via reJudge sweep (donor hidden)
 	| 'review-queued'; // gray-band match logged to admin review, no action taken
 
 export interface AuditEntry {

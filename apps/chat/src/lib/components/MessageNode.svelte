@@ -1,0 +1,580 @@
+<script lang="ts">
+	import { untrack } from 'svelte';
+	import { fade } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { cubicOut } from 'svelte/easing';
+	import { slideFade } from '$lib/transitions';
+	import Self from './MessageNode.svelte';
+	import { StatementType, DialogicType } from '@freedi/shared-types';
+	import type { SortMode, TreeNode } from '$lib/stores/messages';
+	import { sortChildren } from '$lib/stores/messages';
+	import { evalStatsOf } from '$lib/chat/node';
+	import EvidenceBadge from './EvidenceBadge.svelte';
+	import EvaluationBar from './EvaluationBar.svelte';
+	import CorrectnessRating from './CorrectnessRating.svelte';
+	import Composer from './Composer.svelte';
+	import AiSummaryPanel from './AiSummaryPanel.svelte';
+	import { generateSummary, acceptRevision, type SummaryResult } from '$lib/aiSummary';
+	import { t, tp } from '$lib/i18n';
+
+	let {
+		node,
+		signedIn = false,
+		currentUid = null,
+		myEvaluations = {},
+		maxDepth = 4,
+		collapseVersion = 0,
+		collapseTarget = true,
+		sortMode = 'agreement',
+		isMobile = false,
+		onFocus,
+	}: {
+		node: TreeNode;
+		signedIn?: boolean;
+		currentUid?: string | null;
+		myEvaluations?: Record<string, number>;
+		maxDepth?: number;
+		collapseVersion?: number;
+		collapseTarget?: boolean;
+		sortMode?: SortMode;
+		isMobile?: boolean;
+		onFocus?: (id: string) => void;
+	} = $props();
+
+	const s = $derived(node.statement);
+	const isQuestion = $derived(s.statementType === StatementType.question);
+	const isEvidence = $derived(s.statementType === StatementType.evidence);
+	const isOption = $derived(s.statementType === StatementType.option);
+	// A chosen option — mirrors the main app's green "selected" treatment.
+	const isSelected = $derived(isOption && (s.selected === true || s.isChosen === true));
+	const scored = $derived(isOption || isEvidence);
+	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
+	const evalStats = $derived(evalStatsOf(s));
+
+	const sorted = $derived(sortChildren(node.children, sortMode));
+	const hasChildren = $derived(node.children.length > 0 && !isQuestion);
+	const truncate = $derived(node.depth >= maxDepth && node.children.length > 0);
+
+	let open = $state(true);
+	let showReply = $state(false);
+
+	// Collapse/expand all: adopt the page-level target whenever its version bumps.
+	// Tracking only the version (not the target) keeps per-node toggling free
+	// between broadcasts.
+	let lastCollapseVersion = untrack(() => collapseVersion);
+	$effect(() => {
+		if (collapseVersion !== lastCollapseVersion) {
+			lastCollapseVersion = collapseVersion;
+			open = collapseTarget;
+		}
+	});
+
+	// AI summary lives next to Collapse — on scored claims that have replies.
+	const canSummarize = $derived(scored && signedIn && node.children.length > 0);
+
+	// Fetch state lives here so the WAIT shows on the button and the summary box
+	// only mounts once loaded — one smooth open instead of a two-step jump.
+	let aiOpen = $state(false);
+	let aiBusy = $state(false);
+	let aiAccepting = $state(false);
+	let aiError = $state('');
+	let aiData = $state<SummaryResult | null>(null);
+
+	async function toggleAi() {
+		if (aiOpen) {
+			aiOpen = false;
+
+			return;
+		}
+		if (aiData || aiError) {
+			aiOpen = true; // already loaded — just reveal
+
+			return;
+		}
+		aiBusy = true;
+		aiError = '';
+		try {
+			aiData = await generateSummary(s.statementId);
+			aiOpen = true; // open only once content is ready
+		} catch (e) {
+			aiError = e instanceof Error ? e.message : 'Failed to generate';
+			aiOpen = true;
+		} finally {
+			aiBusy = false;
+		}
+	}
+
+	async function acceptAi() {
+		aiAccepting = true;
+		try {
+			await acceptRevision(s.statementId);
+			aiOpen = false;
+			aiData = null; // claim text changed — drop the stale summary
+		} catch (e) {
+			aiError = e instanceof Error ? e.message : 'Failed to accept';
+		} finally {
+			aiAccepting = false;
+		}
+	}
+
+	// Derived flags so each transition element is the DIRECT child of its own
+	// `{#if}` — otherwise `transition:…|local` is suppressed when an ancestor
+	// block toggles (and the collapse/expand would snap instead of animate).
+	// On mobile, threads only nest ~3 levels (depth 0,1,2); a node at depth ≥ 2
+	// hides its children behind a "Continue thread →" button that drills into it
+	// as a focused root. Desktop keeps full nesting up to `maxDepth`.
+	const mobileFocus = $derived(isMobile && node.depth >= 2 && hasChildren);
+	const showChildren = $derived(open && hasChildren && !truncate && !mobileFocus);
+	const showContinue = $derived(open && hasChildren && truncate && !mobileFocus);
+	const showFocus = $derived(open && mobileFocus);
+</script>
+
+<article class="node">
+	<div class="node__row">
+		{#if node.children.length > 0 && open && !truncate}
+			<button
+				class="node__thread"
+				aria-label={open ? $t('Collapse thread') : $t('Expand thread')}
+				onclick={() => (open = !open)}
+				transition:fade|local={{ duration: 150 }}
+			></button>
+		{/if}
+
+		<div class="node__main">
+			<div class="node__sender">
+				<span class="node__author">{s.creator?.displayName ?? $t('Anonymous')}</span>
+				{#if isEvidence && polarity === DialogicType.strengthen}
+					<span class="node__tag node__tag--strengthen">🛡 {$t('Strengthen')}</span>
+				{:else if isEvidence && polarity === DialogicType.critique}
+					<span class="node__tag node__tag--critique">⚡ {$t('Critique')}</span>
+				{:else if isSelected}
+					<span class="node__tag node__tag--selected">✓ {$t('Selected')}</span>
+				{:else if isOption}
+					<span class="node__tag node__tag--option">💡 {$t('Option')}</span>
+				{:else if isQuestion}
+					<span class="node__tag node__tag--question">❓ {$t('Question')}</span>
+				{/if}
+			</div>
+
+			<div
+				class="node__bubble"
+				class:node__bubble--strengthen={isEvidence && polarity === DialogicType.strengthen}
+				class:node__bubble--critique={isEvidence && polarity === DialogicType.critique}
+				class:node__bubble--option={isOption && !isSelected}
+				class:node__bubble--selected={isSelected}
+				class:node__bubble--question={isQuestion}
+			>
+				{#if isEvidence}
+					<div class="node__evidence-head">
+						<EvidenceBadge statement={s} />
+					</div>
+				{/if}
+
+				<p class="node__text">{s.statement}</p>
+
+				<div class="node__meta">
+					<div class="node__meta-left">
+						{#if isEvidence}
+							<CorrectnessRating
+								statementId={s.statementId}
+								value={myEvaluations[s.statementId] ?? null}
+								corroboration={s.corroborationScore ?? null}
+								count={evalStats.count}
+							/>
+						{:else if isOption}
+							<!-- Collapsed: consensus · # evaluators · average vote -->
+							<EvaluationBar
+								statementId={s.statementId}
+								myEvaluation={myEvaluations[s.statementId] ?? null}
+								consensus={s.corroborationScore ?? null}
+								count={evalStats.count}
+								average={evalStats.average}
+							/>
+						{/if}
+					</div>
+					<div class="node__actions">
+						{#if scored && !truncate}
+							<button class="node__action" onclick={() => (showReply = !showReply)}>
+								{showReply ? $t('Cancel') : $t('Reply')}
+							</button>
+						{/if}
+						{#if node.children.length > 0}
+							<button class="node__action" onclick={() => (open = !open)}>
+								{open
+									? $t('Collapse')
+									: $tp('Expand ({{count}})', { count: node.children.length })}
+							</button>
+						{/if}
+						{#if canSummarize}
+							<button
+								class="node__action node__action--ai"
+								class:active={aiOpen || aiBusy}
+								onclick={toggleAi}
+								disabled={aiBusy}
+							>
+								✨ {aiBusy ? $t('Summarizing…') : aiOpen ? $t('Hide Summary') : $t('AI Summary')}
+							</button>
+						{/if}
+					</div>
+				</div>
+			</div>
+
+			{#if aiOpen}
+				<AiSummaryPanel
+					data={aiData}
+					error={aiError}
+					canAccept={Boolean(currentUid) && s.creatorId === currentUid}
+					accepting={aiAccepting}
+					onAccept={acceptAi}
+				/>
+			{/if}
+
+			{#if isQuestion}
+				<a class="node__subq" href={`/q/${s.statementId}`}>
+					{$t('Open sub-question')} · {$tp(
+						(s.optionCount ?? 0) === 1 ? '{{count}} option' : '{{count}} options',
+						{ count: s.optionCount ?? 0 },
+					)} →
+				</a>
+			{/if}
+		</div>
+	</div>
+
+	{#if showReply && scored && !truncate}
+		<div class="node__reply" transition:slideFade|local={{ duration: 240 }}>
+			<Composer parentId={s.statementId} parentType={s.statementType} {signedIn} />
+		</div>
+	{/if}
+
+	{#if showFocus}
+		<div class="node__focus-wrap" transition:slideFade|local={{ duration: 240 }}>
+			<button class="node__focus-btn" onclick={() => onFocus?.(s.statementId)}>
+				{$tp(
+					node.children.length === 1
+						? 'Continue thread ({{count}} reply)'
+						: 'Continue thread ({{count}} replies)',
+					{ count: node.children.length },
+				)} →
+			</button>
+		</div>
+	{/if}
+
+	{#if showContinue}
+		<a class="node__continue" href={`/q/${s.statementId}`}>
+			{$tp(
+				node.children.length === 1
+					? 'Continue thread ({{count}} reply)'
+					: 'Continue thread ({{count}} replies)',
+				{ count: node.children.length },
+			)} →
+		</a>
+	{/if}
+
+	{#if showChildren}
+		<div class="node__children" transition:slideFade|local={{ duration: 320 }}>
+			{#each sorted as child (child.statement.statementId)}
+				<div class="node__child" animate:flip={{ duration: 350, easing: cubicOut }}>
+					<Self
+						node={child}
+						{signedIn}
+						{currentUid}
+						{myEvaluations}
+						{maxDepth}
+						{collapseVersion}
+						{collapseTarget}
+						{sortMode}
+						{isMobile}
+						{onFocus}
+					/>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</article>
+
+<style lang="scss">
+	@use '../../styles/mixins' as *;
+
+	.node {
+		position: relative;
+		margin-top: var(--space-md);
+
+		&__row {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+		}
+
+		&__thread {
+			position: absolute;
+			inset-inline-start: -1.5rem;
+			top: 2.2rem;
+			bottom: -0.5rem;
+			width: 2px;
+			padding: 0;
+			border: none;
+			background: var(--thread-line);
+			border-radius: var(--radius-pill);
+			cursor: pointer;
+			transition: background 0.2s, width 0.2s;
+
+			&:hover {
+				background: var(--accent);
+				width: 4px;
+			}
+		}
+
+		&__main {
+			min-width: 0;
+		}
+
+		&__sender {
+			display: flex;
+			align-items: center;
+			gap: var(--space-sm);
+			margin: 0 0 var(--space-xs) var(--space-sm);
+			font-size: 0.75rem;
+			font-weight: 500;
+			color: var(--text-muted);
+		}
+
+		&__author {
+			font-weight: 600;
+		}
+
+		&__tag {
+			font-size: 0.62rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			padding: 2px 8px;
+			border-radius: var(--radius-sm);
+			border: 1px solid var(--border);
+
+			&--strengthen {
+				color: var(--strengthen);
+				background: var(--strengthen-soft);
+				border-color: var(--strengthen-border);
+			}
+			&--critique {
+				color: var(--critique);
+				background: var(--critique-soft);
+				border-color: var(--critique-border);
+			}
+			&--option {
+				color: var(--option);
+				background: var(--option-soft);
+				border-color: var(--option-border);
+			}
+			&--selected {
+				color: var(--selected);
+				background: var(--selected-soft);
+				border-color: var(--selected-border);
+			}
+			&--question {
+				color: var(--question);
+				background: var(--question-soft);
+				border-color: var(--question-border);
+			}
+		}
+
+		&__bubble {
+			@include glass;
+			background: var(--bubble-other);
+			padding: var(--space-md);
+			border-radius: var(--radius-md);
+			border-end-start-radius: 4px;
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-sm);
+
+			&--option {
+				border-radius: var(--radius-md);
+				border: 1px solid var(--option-border);
+				border-inline-start: 3px solid var(--option);
+			}
+			&--selected {
+				border-radius: var(--radius-md);
+				border: 1px solid var(--selected-border);
+				border-inline-start: 3px solid var(--selected);
+				background: var(--selected-soft);
+			}
+			&--question {
+				border-radius: var(--radius-md);
+				border: 1px solid var(--question-border);
+				border-inline-start: 3px solid var(--question);
+				background: var(--question-soft);
+			}
+			&--strengthen {
+				border: 2px solid var(--strengthen-border);
+				border-radius: var(--radius-lg);
+				background: var(--strengthen-soft);
+				box-shadow: 0 4px 18px var(--strengthen-soft);
+			}
+			&--critique {
+				border: 2px dashed var(--critique-border);
+				border-radius: var(--radius-lg);
+				background: var(--critique-soft);
+				box-shadow: 0 4px 18px var(--critique-soft);
+			}
+		}
+
+		&__evidence-head {
+			padding-bottom: var(--space-xs);
+			border-bottom: 1px solid var(--glass-border);
+		}
+
+		&__text {
+			margin: 0;
+			font-size: 0.95rem;
+			line-height: 1.45;
+			word-break: break-word;
+			color: var(--text-body);
+		}
+
+		&__meta {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			align-items: center;
+			gap: var(--space-sm) var(--space-md);
+		}
+
+		&__meta-left {
+			display: flex;
+			align-items: center;
+			gap: var(--space-sm);
+			min-width: 0;
+		}
+
+		&__actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: var(--space-sm);
+			margin-inline-start: auto;
+			opacity: 0.7;
+			transition: opacity 0.2s;
+		}
+
+		&__bubble:hover &__actions {
+			opacity: 1;
+		}
+
+		&__action {
+			background: none;
+			border: none;
+			color: var(--text-muted);
+			font: inherit;
+			font-size: 0.72rem;
+			font-weight: 600;
+			cursor: pointer;
+			padding: 0;
+
+			&:hover {
+				color: var(--accent);
+			}
+			&--ai.active {
+				color: var(--accent);
+			}
+		}
+
+		&__subq {
+			display: inline-block;
+			margin-top: var(--space-sm);
+			padding: var(--space-xs) var(--space-md);
+			border-radius: var(--radius-pill);
+			background: var(--question-soft);
+			border: 1px solid var(--question-border);
+			color: var(--question);
+			font-size: 0.85rem;
+			font-weight: 600;
+
+			&:hover {
+				border-color: var(--question);
+				text-decoration: none;
+			}
+		}
+
+		&__reply {
+			margin: var(--space-sm) 0 0;
+		}
+
+		&__children {
+			margin-inline-start: 1.5rem;
+			padding-inline-start: var(--space-md);
+		}
+
+		&__continue {
+			display: inline-block;
+			margin: var(--space-sm) 0 0;
+			margin-inline-start: 1.5rem;
+			padding: var(--space-sm) var(--space-md);
+			background: var(--eval-bg);
+			border: 1px solid var(--glass-border);
+			border-radius: var(--radius-md);
+			color: var(--accent);
+			font-size: 0.82rem;
+			font-weight: 600;
+
+			&:hover {
+				border-color: var(--accent);
+				text-decoration: none;
+			}
+		}
+
+		// Mobile deep-thread drill-in: a full-width tappable card (ported look from
+		// the reference's `.continue-thread-btn`).
+		&__focus-wrap {
+			margin-top: var(--space-sm);
+		}
+		&__focus-btn {
+			width: 100%;
+			text-align: start;
+			padding: var(--space-sm) var(--space-md);
+			background: var(--eval-bg);
+			border: 1px solid var(--glass-border);
+			border-radius: var(--radius-md);
+			color: var(--accent);
+			font: inherit;
+			font-size: 0.84rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: border-color 0.15s, background 0.15s;
+
+			&:hover {
+				border-color: var(--accent);
+				background: var(--eval-btn);
+			}
+		}
+	}
+
+	@media (max-width: 480px) {
+		.node__children {
+			margin-inline-start: 0.9rem;
+			padding-inline-start: var(--space-sm);
+		}
+		.node__thread {
+			inset-inline-start: -0.9rem;
+		}
+		.node__bubble {
+			padding: var(--space-sm) var(--space-md);
+		}
+		// The eval pill is the widest element; let actions wrap under it and sit
+		// flush right so "Reply" never clips off the screen edge.
+		.node__actions {
+			width: 100%;
+			justify-content: flex-end;
+		}
+		.node__action {
+			// Comfortable touch target (≈44px tall hit area via padding).
+			padding: var(--space-xs) 2px;
+		}
+	}
+
+	// Touch devices have no hover, so reveal the action row by default.
+	@media (hover: none) {
+		.node__actions {
+			opacity: 1;
+		}
+	}
+</style>

@@ -1,7 +1,7 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 
-const SPAWN_DEBOUNCE_MS = 60_000;
+const SPAWN_DEBOUNCE_MS = 15_000;
 const DEBOUNCE_COLLECTION = '_liveSynthDebounce';
 
 interface DebounceState {

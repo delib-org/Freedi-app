@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Statement, StatementType, Collections, createStatementObject, SourceApp } from '@freedi/shared-types';
+import type { User } from '@freedi/shared-types';
+import { replaceAllParagraphChildren } from '@freedi/shared-utils';
 import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { makeMcParagraphDeps } from '@/lib/firebase/paragraphStore';
 import { AddQuestionRequest } from '@/types/survey';
-import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
@@ -66,22 +68,25 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Generate new statement ID
     const statementId = `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-    // Create the question statement using shared utility
+    const creator: User = {
+      uid: userId,
+      displayName: 'Survey Admin',
+      email: '',
+      photoURL: '',
+      isAnonymous: false,
+    };
+
+    // Create the question statement using shared utility. The rich body is
+    // written as canonical paragraph child statements below (not the deprecated
+    // embedded `paragraphs[]` array).
     const newQuestion = createStatementObject({
       statementId,
       statement: body.newQuestion.title.trim(),
-      paragraphs: textToParagraphs(body.newQuestion.description?.trim() || ''),
       statementType: StatementType.question,
       parentId: 'top',
       topParentId: statementId, // Top-level question is its own topParent
       creatorId: userId,
-      creator: {
-        uid: userId,
-        displayName: 'Survey Admin',
-        email: '',
-        photoURL: '',
-        isAnonymous: false,
-      },
+      creator,
       sourceApp: SourceApp.MASS_CONSENSUS,
     });
 
@@ -94,6 +99,23 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Save the question to Firestore
     await db.collection(Collections.statements).doc(statementId).set(newQuestion);
+
+    // Write the description as canonical paragraph child statements (one per
+    // non-empty line). The `description` preview is then kept in sync by the
+    // `fn_syncParagraphChildrenToDescription` Firestore trigger.
+    const bodyLines = (body.newQuestion.description?.trim() || '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map((content) => ({ content }));
+
+    if (bodyLines.length > 0) {
+      await replaceAllParagraphChildren(makeMcParagraphDeps(creator), {
+        host: { statementId, topParentId: statementId },
+        lines: bodyLines,
+        existing: [],
+      });
+    }
 
     // Add to survey
     const updatedSurvey = await addQuestionToSurvey(surveyId, statementId);

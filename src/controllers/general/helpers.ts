@@ -132,6 +132,14 @@ export const TYPE_RESTRICTIONS: Record<
 	[StatementType.document]: {},
 	[StatementType.comment]: {},
 	[StatementType.paragraph]: {},
+	[StatementType.evidence]: {},
+	// Synthesis options are pipeline-produced: terminal nodes from the
+	// user's perspective. Disallow the same children as a regular option
+	// to prevent re-clustering / nesting under a synthesis result.
+	[StatementType.synthesis]: {
+		disallowedChildren: [StatementType.option, StatementType.synthesis],
+		reason: 'Synthesis options cannot contain other options',
+	},
 };
 
 export function isStatementTypeAllowedAsChildren(

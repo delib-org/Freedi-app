@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v1';
-import type { DocumentReference } from 'firebase-admin/firestore';
+import type { DocumentReference, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { db } from './index';
 import {
 	Collections,
@@ -120,25 +120,46 @@ export async function bulkRecalculateForParent(
 		return result;
 	}
 
-	// 2. All evaluations under this parent (single query). The `parentId`
-	// field on Evaluation makes this the right bulk anchor.
-	const evalsSnapshot = await db
-		.collection(Collections.evaluations)
-		.where('parentId', '==', parentId)
-		.get();
-
-	// 3. Group evaluations by the statement they target (in memory — O(n)).
+	// 2. All evaluations under this parent, paginated by `evaluatorId` to
+	//    stream the result set instead of buffering the whole collection
+	//    in one Firestore get (which Query Insights flagged at ~3.6s avg
+	//    latency for large parents). The composite index
+	//    (parentId ASC, evaluatorId ASC) already exists in firestore.indexes.json.
+	//    Both per-option buckets and the parent-level unique-evaluator set are
+	//    collected in one streaming pass so step 6 needs no second query.
+	const EVAL_PAGE_SIZE = 500;
 	const evalsByStatementId = new Map<string, Evaluation[]>();
-	evalsSnapshot.forEach((doc) => {
-		const evaluation = doc.data() as Evaluation;
-		if (!evaluation.statementId) return;
-		const bucket = evalsByStatementId.get(evaluation.statementId);
-		if (bucket) bucket.push(evaluation);
-		else evalsByStatementId.set(evaluation.statementId, [evaluation]);
-	});
+	const uniqueEvaluators = new Set<string>();
+	let totalEvaluations = 0;
+	let evalCursor: QueryDocumentSnapshot | null = null;
+
+	for (;;) {
+		let pageQuery = db
+			.collection(Collections.evaluations)
+			.where('parentId', '==', parentId)
+			.orderBy('evaluatorId')
+			.limit(EVAL_PAGE_SIZE);
+		if (evalCursor) pageQuery = pageQuery.startAfter(evalCursor);
+		const page = await pageQuery.get();
+		if (page.empty) break;
+
+		page.forEach((doc) => {
+			const evaluation = doc.data() as Evaluation;
+			const uid = evaluation.evaluator?.uid ?? evaluation.evaluatorId;
+			if (uid) uniqueEvaluators.add(uid);
+			if (!evaluation.statementId) return;
+			const bucket = evalsByStatementId.get(evaluation.statementId);
+			if (bucket) bucket.push(evaluation);
+			else evalsByStatementId.set(evaluation.statementId, [evaluation]);
+		});
+		totalEvaluations += page.size;
+
+		if (page.size < EVAL_PAGE_SIZE) break;
+		evalCursor = page.docs[page.docs.length - 1];
+	}
 
 	logger.info(
-		`${modeLabel}Bulk recalc for ${parentId}: ${optionsSnapshot.size} options, ${evalsSnapshot.size} raw evaluations`,
+		`${modeLabel}Bulk recalc for ${parentId}: ${optionsSnapshot.size} options, ${totalEvaluations} raw evaluations`,
 	);
 
 	// 4. Plan updates per option into a write set (batched at commit time).
@@ -191,12 +212,7 @@ export async function bulkRecalculateForParent(
 	}
 
 	// 6. Update parent totals using the same in-memory data (no extra query).
-	const uniqueEvaluators = new Set<string>();
-	evalsSnapshot.forEach((d) => {
-		const e = d.data() as Evaluation;
-		const uid = e.evaluator?.uid ?? e.evaluatorId;
-		if (uid) uniqueEvaluators.add(uid);
-	});
+	//    `uniqueEvaluators` was accumulated during the streaming pagination above.
 	const totalUniqueEvaluators = uniqueEvaluators.size;
 
 	if (!dryRun) {

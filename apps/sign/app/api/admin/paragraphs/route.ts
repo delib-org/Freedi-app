@@ -3,7 +3,7 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import {
   Collections,
-  createParagraphStatement,
+  createParagraphChildStatement,
   Paragraph,
   ParagraphType,
   SourceApp,
@@ -65,26 +65,25 @@ export async function POST(request: NextRequest) {
       isAnonymous: false,
     };
 
-    // Create paragraph object
-    const paragraph: Paragraph = {
-      paragraphId: `para_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    // Create the canonical paragraph child statement (statementType === paragraph).
+    // `isOfficial` writes the legacy `doc` mirrors so transition-era queries work.
+    const paragraphStatement = createParagraphChildStatement({
       content,
-      type: type || ParagraphType.paragraph,
+      host: { statementId: documentId, topParentId: documentId },
+      creator,
+      creatorId: userId,
       order: newOrder,
-    };
-
-    // Create the paragraph as a Statement object
-    const paragraphStatement = createParagraphStatement(
-      paragraph,
-      documentId,
-      creator
-    );
+      blockType: type || ParagraphType.paragraph,
+      statementId: `para_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      isOfficial: true,
+      sourceApp: SourceApp.SIGN,
+    });
 
     if (!paragraphStatement) {
       return NextResponse.json({ error: 'Failed to create paragraph statement' }, { status: 500 });
     }
 
-    paragraphStatement.sourceApp = SourceApp.SIGN;
+    paragraphStatement.consensus = 1.0;
 
     // Save to Firestore
     await db.collection(Collections.statements).doc(paragraphStatement.statementId).set(paragraphStatement);

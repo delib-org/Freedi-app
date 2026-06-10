@@ -202,10 +202,13 @@ export async function getParagraphsByParent(parentId: string): Promise<Statement
   try {
     const db = getFirestoreAdmin();
 
+    // Dual-read: official paragraphs are the canonical `paragraph` type, but
+    // un-migrated documents still store them as legacy `option`s. Both are direct
+    // children of the document (suggestions live under paragraphs, not here).
     const snapshot = await db
       .collection(Collections.statements)
       .where('parentId', '==', parentId)
-      .where('statementType', '==', StatementType.option)
+      .where('statementType', 'in', [StatementType.option, StatementType.paragraph])
       .orderBy('createdAt', 'asc')
       .limit(QUERY_LIMITS.PARAGRAPHS)
       .get();
@@ -230,17 +233,23 @@ export async function getAllParagraphsForDocument(documentId: string): Promise<S
   try {
     const db = getFirestoreAdmin();
 
-    // Get all statements where topParentId matches and they are options
+    // Dual-read: include both canonical `paragraph` and legacy `option`
+    // official paragraphs, then keep only true officials (paragraph type, or
+    // option flagged isOfficialParagraph) — excludes suggestions.
     const snapshot = await db
       .collection(Collections.statements)
       .where('topParentId', '==', documentId)
-      .where('statementType', '==', StatementType.option)
+      .where('statementType', 'in', [StatementType.option, StatementType.paragraph])
       .orderBy('createdAt', 'asc')
       .get();
 
     const paragraphs = snapshot.docs
       .map((doc) => doc.data() as Statement)
-      .filter((s) => !s.hide);
+      .filter(
+        (s) =>
+          !s.hide &&
+          (s.statementType === StatementType.paragraph || s.doc?.isOfficialParagraph === true),
+      );
 
     console.info(`[Sign Queries] Found ${paragraphs.length} total paragraphs for document: ${documentId}`);
 

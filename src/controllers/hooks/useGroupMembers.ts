@@ -32,15 +32,26 @@ export function useGroupMembers(clusterId: string | undefined, enabled: boolean)
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
-	const cluster = useAppSelector((state: RootState) =>
-		state.statements.statements.find((s) => s.statementId === clusterId),
+	// Select the raw statements array (stable reference between store updates).
+	// Deriving members inside the selector would return a fresh array on every
+	// render, which destabilises `missingIds` and drives the effect below into
+	// an infinite setState loop. Derive with useMemo against the stable array.
+	const allStatements = useAppSelector(
+		(state: RootState) => state.statements.statements,
+	);
+
+	const cluster = useMemo(
+		() => allStatements.find((s) => s.statementId === clusterId),
+		[allStatements, clusterId],
 	);
 	const integratedOptions = useMemo(() => cluster?.integratedOptions ?? [], [cluster]);
 
-	const storeMembers = useAppSelector((state: RootState) =>
-		integratedOptions
-			.map((id) => state.statements.statements.find((s) => s.statementId === id))
-			.filter((s): s is Statement => Boolean(s)),
+	const storeMembers = useMemo(
+		() =>
+			integratedOptions
+				.map((id) => allStatements.find((s) => s.statementId === id))
+				.filter((s): s is Statement => Boolean(s)),
+		[integratedOptions, allStatements],
 	);
 
 	const missingIds = useMemo(() => {
@@ -51,7 +62,8 @@ export function useGroupMembers(clusterId: string | undefined, enabled: boolean)
 
 	useEffect(() => {
 		if (!enabled || !clusterId || missingIds.length === 0) {
-			setFetchedMembers([]);
+			// Avoid allocating a fresh array (and an extra render) when already empty.
+			setFetchedMembers((prev) => (prev.length === 0 ? prev : []));
 
 			return;
 		}

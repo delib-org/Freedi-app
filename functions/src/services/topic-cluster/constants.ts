@@ -7,8 +7,12 @@ export const NOISE_POOL_MIN_COUNT = 50;
 
 // Taxonomy step (Step 2)
 export const TAXONOMY_SAMPLE_MAX = 80;
-export const TAXONOMY_MIN_CATEGORIES = 8;
-export const TAXONOMY_MAX_CATEGORIES = 20;
+// Calibrated for the real-world range we see: small homogeneous corpora
+// (1-2 broad topics), medium diverse questions (3-5), large diverse
+// questions (up to 8). Anything beyond 8 fragments the UI and rarely
+// reflects genuine semantic structure.
+export const TAXONOMY_MIN_CATEGORIES = 1;
+export const TAXONOMY_MAX_CATEGORIES = 8;
 
 // Normalization step (Step 3)
 export const NORMALIZE_BATCH_SIZE = 8;
@@ -37,7 +41,7 @@ export const TOPIC_FRAMING_ORDER = 50;
 export const FIRESTORE_BATCH_SIZE = 500;
 
 // Cache (Step 2 + 3)
-export const PROMPT_VERSION_TAXONOMY = 'taxonomy-v1';
+export const PROMPT_VERSION_TAXONOMY = 'taxonomy-v3';
 export const PROMPT_VERSION_NORMALIZE = 'normalize-v1';
 export const PROMPT_VERSION_NAME = 'name-v1';
 

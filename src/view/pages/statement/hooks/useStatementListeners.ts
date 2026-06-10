@@ -53,7 +53,7 @@ export const useStatementListeners = ({
 	// Subscribe to statement from Redux to get topParentId reactively
 	const statement = useSelector(statementSelector(statementId));
 	const topParentId = statement?.topParentId;
-	const enableTreeView = statement?.statementSettings?.enableTreeView !== false;
+	const enableTreeView = statement?.statementSettings?.enableTreeView === true;
 
 	// Reset listener stats when navigating to a different statement
 	useEffect(() => {

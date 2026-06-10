@@ -4,7 +4,7 @@
 	"scripts": {
 		"clean": "rm -rf node_modules package-lock.json && git rm -r --cache . && git reset && npm install && npm run build",
 		"lint": "eslint --ext .js,.ts . --ignore-pattern 'lib/' --ignore-pattern 'coverage/'",
-		"prebuild": "rm -f freedi-shared-types-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && rm -rf node_modules/@freedi package-lock.json && npm install",
+		"prebuild": "rm -f freedi-shared-types-*.tgz freedi-evidence-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && (cd ../packages/evidence && npm run build && npm pack && mv freedi-evidence-*.tgz ../../functions/) && rm -rf node_modules/@freedi package-lock.json && npm install",
 		"build": "tsc",
 		"dev": "tsc --watch",
 		"serve": "npm run build && firebase emulators:start --only functions",
@@ -20,9 +20,10 @@
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
+		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
 		"@freedi/shared-types": "file:freedi-shared-types-1.0.2.tgz",
-		"@google/generative-ai": "^0.15.0",
-		"@sendgrid/mail": "^8.1.5",
+		"@google-cloud/vertexai": "^1.12.0",
+		"@sendgrid/mail": "^8.1.6",
 		"@types/nodemailer": "^7.0.1",
 		"density-clustering": "^1.3.0",
 		"dotenv": "^16.4.5",
@@ -47,13 +48,16 @@
 		"ts-jest": "^29.4.2"
 	},
 	"bundledDependencies": [
-		"@freedi/shared-types"
+		"@freedi/shared-types",
+		"@freedi/evidence"
 	],
 	"private": true,
 	"overrides": {
-		"axios": "1.14.0"
+		"axios": "^1.16.1",
+		"fast-xml-parser": "^5.8.0"
 	},
 	"bundleDependencies": [
-		"@freedi/shared-types"
+		"@freedi/shared-types",
+		"@freedi/evidence"
 	]
 }

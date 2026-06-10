@@ -22,12 +22,26 @@ import { pairKey, refineComponent } from './completeLinkage';
  *     2. For each non-medoid member m, compute cosine(m, medoid).
  *     3. Apply the verification band:
  *          cosine ≥ AUTO_ACCEPT_BAND (0.94)  →  treat as equivalent without LLM
- *          cosine <  AUTO_REJECT_BAND (0.82) →  treat as dissent without LLM
+ *          cosine <  AUTO_REJECT_BAND (0.60) →  treat as dissent without LLM
  *          cosine in gray band               →  call LLM judge member↔medoid
- *     4. Tally:
- *          ≥80% agree  →  keep the entire cluster as-is
+ *
+ *        The reject band is deliberately LOW (a "clearly unrelated" floor, not a
+ *        "not near-identical" one). Same-idea and different-idea cosines overlap
+ *        for context-aware embeddings — genuine paraphrases of one proposal can
+ *        sit as low as ~0.73 cosine to the medoid, well below where distinct
+ *        ideas top out. A high reject band (the original 0.82) silently demoted
+ *        valid members to dissent before the LLM ever saw them, collapsing
+ *        cluster agreement and dropping/fragmenting good synths. The LLM is the
+ *        semantic arbiter for the whole overlap zone; cosine only short-circuits
+ *        the unambiguous extremes. Cost stays bounded by the run-level cap.
+ *     4. Tally (the synth always contains ONLY the agreed subset — medoid +
+ *        auto-accepted + LLM-agreed; auto-rejected / dissenting members are
+ *        never kept in the synth, regardless of how coherent the rest is):
+ *          ≥80% agree  →  keep the agreed subset; dissenters are outlier noise
+ *                          (telemetry only, left unclustered)
  *          50–80%      →  keep the agreed subset; send dissenters through
  *                          existing `refineComponent` to recover any sub-clique
+ *                          (e.g. a pro/anti negation split)
  *          <50%        →  drop the cluster (cosine alone wasn't enough signal)
  *
  * Plus a hard run-level cap on LLM calls. When exceeded, remaining clusters
@@ -73,7 +87,11 @@ export interface TwoTierJudgeOptions {
 	autoAcceptBand?: number;
 	/**
 	 * Auto-reject lower band: cosine to medoid below this is treated as
-	 * dissent without LLM. Default 0.82.
+	 * dissent without LLM. Default 0.60 — a "clearly unrelated" floor. Kept
+	 * low on purpose: same-idea and different-idea cosines overlap, so a
+	 * higher band drops valid paraphrases before the LLM judges them (see the
+	 * module doc). Raise it only for a corpus whose within-synth cosine is
+	 * known to sit well above it.
 	 */
 	autoRejectBand?: number;
 	/**
@@ -119,7 +137,10 @@ export interface TwoTierJudgeResult {
 }
 
 const DEFAULT_AUTO_ACCEPT_BAND = 0.94;
-const DEFAULT_AUTO_REJECT_BAND = 0.82;
+// Low "clearly unrelated" floor, not a "not near-identical" cutoff. See the
+// module doc and `autoRejectBand` option: same-idea / different-idea cosines
+// overlap, so a higher band silently drops valid paraphrases before the LLM.
+const DEFAULT_AUTO_REJECT_BAND = 0.6;
 const DEFAULT_KEEP_THRESHOLD = 0.8;
 const DEFAULT_SPLIT_FLOOR = 0.5;
 const DEFAULT_MAX_LLM_CALLS = 2000;
@@ -338,20 +359,16 @@ export async function twoTierJudge(
 		const total = pc.memberIds.length;
 		const agreeFrac = agreedMemberIds.length / total;
 
-		if (agreeFrac >= keepThreshold) {
-			// Keep the whole cluster — even members the medoid-judge rejected
-			// are kept because the cluster as a whole passes. The dissent set is
-			// recorded for telemetry only.
-			verifiedClusters.push({
-				clusterId: pc.clusterId,
-				memberIds: pc.memberIds,
-				medoidId: pc.medoidId,
-				verifiedBy,
-				agreedMemberIds,
-				dissentMemberIds,
-			});
-		} else if (agreeFrac >= splitFloor) {
-			// Keep the agreed subset as the primary cluster.
+		if (agreeFrac >= splitFloor) {
+			// Keep the AGREED subset only — never the members the cosine band
+			// auto-rejected or the LLM judged "different". This holds for BOTH
+			// the high-agreement tier (≥keepThreshold) and the borderline tier
+			// (splitFloor ≤ frac < keepThreshold): the synth must contain only
+			// members equivalent to the medoid. Previously the high-agreement
+			// branch kept the FULL `memberIds`, which absorbed off-topic
+			// outliers into otherwise-coherent synths (precision bug). When
+			// every member agrees (the tight-corpus case) agreedMemberIds ===
+			// memberIds, so genuinely coherent clusters are unchanged.
 			verifiedClusters.push({
 				clusterId: pc.clusterId,
 				memberIds: agreedMemberIds,
@@ -361,10 +378,14 @@ export async function twoTierJudge(
 				dissentMemberIds,
 			});
 
-			// Send the dissenters through complete-linkage refinement to see if
-			// any sub-clique survives. Dissenters might form their own coherent
-			// group even though they don't agree with the medoid.
-			if (dissentMemberIds.length >= 2) {
+			// In the borderline tier the dissenters are sent through
+			// complete-linkage refinement to see if a coherent opposing
+			// sub-clique survives (e.g. a pro/anti negation split). In the
+			// high-agreement tier the few dissenters are treated as outlier
+			// noise — recorded as telemetry, not re-clustered. Either way they
+			// are excluded from this synth.
+			const refineDissent = agreeFrac < keepThreshold;
+			if (refineDissent && dissentMemberIds.length >= 2) {
 				try {
 					const refined = await refineComponent(
 						{

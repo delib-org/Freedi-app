@@ -1,4 +1,5 @@
-import { Statement, StatementType, Evaluation, Collections } from '@freedi/shared-types';
+import { Statement, StatementType, Evaluation, Collections, statementToParagraph } from '@freedi/shared-types';
+import type { Paragraph } from '@freedi/shared-types';
 import { getFirestoreAdmin } from './admin';
 import { logger } from '@/lib/utils/logger';
 import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
@@ -25,6 +26,42 @@ function sanitizeStatement(statement: Statement): Statement {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { embedding, ...rest } = statement as Statement & { embedding?: unknown };
   return rest as Statement;
+}
+
+/**
+ * Resolve the rich-body paragraphs of a statement, preferring the canonical
+ * model (child Statements with `statementType === paragraph`) and falling back
+ * to the deprecated embedded `statement.paragraphs[]` for un-migrated docs.
+ *
+ * @param statement - The host statement (question/solution)
+ * @returns Ordered `Paragraph[]` (empty if the statement has no body)
+ */
+export async function getParagraphsForStatement(
+  statement: Statement
+): Promise<Paragraph[]> {
+  try {
+    const db = getFirestoreAdmin();
+    const snap = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', statement.statementId)
+      .where('statementType', '==', StatementType.paragraph)
+      .get();
+
+    const children = snap.docs
+      .map((d) => d.data() as Statement)
+      .filter((p) => p.hide !== true);
+
+    if (children.length > 0) {
+      return children
+        .map(statementToParagraph)
+        .sort((a, b) => a.order - b.order);
+    }
+  } catch (error) {
+    logQueryError('getParagraphsForStatement', error, { statementId: statement.statementId });
+  }
+
+  // Legacy fallback: deprecated embedded array.
+  return statement.paragraphs ?? [];
 }
 
 /**
@@ -57,8 +94,13 @@ export async function getQuestionFromFirebase(
     throw new Error('Statement is not a question');
   }
 
+  // Hydrate the canonical rich body (paragraph child statements) onto the
+  // returned object so downstream readers — which consume `question.paragraphs`
+  // — work whether the body is stored as children (new) or embedded (legacy).
+  const paragraphs = await getParagraphsForStatement(statement);
+
   logger.info('[getQuestionFromFirebase] Success:', statement.statement?.substring(0, 50));
-  return sanitizeStatement(statement);
+  return sanitizeStatement({ ...statement, paragraphs });
 }
 
 /**
@@ -79,7 +121,7 @@ export async function getRandomOptions(
     stratified?: boolean;
   } = {}
 ): Promise<Statement[]> {
-  const { size = 6, userId, excludeIds = [], stratified = true } = options;
+  const { size = 6, userId, excludeIds = [] } = options;
   const db = getFirestoreAdmin();
 
   logger.info('[getRandomOptions] Fetching options for question:', questionId);
@@ -155,80 +197,7 @@ export async function getRandomOptions(
 
   logger.info('[getRandomOptions] Final result:', options_results.length, 'options (requested', size, ')');
 
-  // Diversify by cluster if stratified mode and hybrid framing exists
-  if (stratified && options_results.length >= size) {
-    try {
-      const framingSnapshot = await db
-        .collection('framings')
-        .where('parentStatementId', '==', questionId)
-        .where('createdBy', '==', 'hybrid-auto')
-        .where('isActive', '==', true)
-        .limit(1)
-        .get();
-
-      if (!framingSnapshot.empty) {
-        const framingId = (framingSnapshot.docs[0].data().framingId) as string;
-        const diversified = diversifyByCluster(options_results, framingId, size);
-        logger.info('[getRandomOptions] Diversified by cluster:', diversified.length, 'options');
-
-        return diversified;
-      }
-    } catch (error) {
-      // Non-critical: fall through to standard return
-      logger.warn('[getRandomOptions] Cluster diversification failed, using standard random:', error);
-    }
-  }
-
   return options_results.slice(0, size);
-}
-
-/**
- * Diversify a list of options by selecting at most 1 per cluster.
- * Ensures the returned batch represents as many clusters as possible.
- */
-function diversifyByCluster(
-  options: Statement[],
-  framingId: string,
-  size: number,
-): Statement[] {
-  const clusterPicks = new Map<string, Statement>();
-  const unclustered: Statement[] = [];
-
-  for (const opt of options) {
-    const framingClusters = (opt as Statement & { framingClusters?: Record<string, string> }).framingClusters;
-    const clusterId = framingClusters?.[framingId];
-
-    if (clusterId) {
-      if (!clusterPicks.has(clusterId)) {
-        clusterPicks.set(clusterId, opt);
-      }
-    } else {
-      unclustered.push(opt);
-    }
-  }
-
-  // Take one per cluster first
-  const result = Array.from(clusterPicks.values());
-
-  // Fill remaining slots from unclustered or duplicate clusters
-  if (result.length < size) {
-    const selectedIds = new Set(result.map((r) => r.statementId));
-    const remaining = [...unclustered, ...options]
-      .filter((o) => !selectedIds.has(o.statementId));
-
-    for (const opt of remaining) {
-      if (result.length >= size) break;
-      result.push(opt);
-    }
-  }
-
-  // Shuffle for random presentation
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-
-  return result.slice(0, size);
 }
 
 /**
@@ -254,7 +223,6 @@ export async function getAdaptiveBatch(
   } = {}
 ): Promise<BatchResult> {
   const { size = 6, config } = options;
-  const FRAMINGS_COLLECTION = 'framings';
   const db = getFirestoreAdmin();
   const sampler = new ProposalSampler(config);
 
@@ -316,36 +284,8 @@ export async function getAdaptiveBatch(
       logger.info('[getAdaptiveBatch] No userId provided (SSR) - using Thompson Sampling without user history');
     }
 
-    // 3. Check for hybrid-auto framing (cluster-aware stratified sampling)
-    let selected: Statement[];
-
-    const framingSnapshot = await db
-      .collection(FRAMINGS_COLLECTION)
-      .where('parentStatementId', '==', questionId)
-      .where('createdBy', '==', 'hybrid-auto')
-      .where('isActive', '==', true)
-      .limit(1)
-      .get();
-
-    if (!framingSnapshot.empty) {
-      // Use cluster-aware stratified sampling
-      const framing = framingSnapshot.docs[0].data();
-      const framingId = framing.framingId as string;
-      const batchIndex = Math.floor(evaluatedIds.size / size);
-
-      logger.info('[getAdaptiveBatch] Using stratified cluster sampling:', {
-        framingId,
-        batchIndex,
-        clusterCount: (framing.clusterIds as string[])?.length ?? 0,
-      });
-
-      selected = sampler.selectStratifiedByCluster(
-        proposals, evaluatedIds, size, framingId, batchIndex
-      );
-    } else {
-      // Fallback: standard Thompson Sampling (no hybrid framing available)
-      selected = sampler.selectForUser(proposals, evaluatedIds, size);
-    }
+    // 3. Standard Thompson Sampling selection.
+    const selected = sampler.selectForUser(proposals, evaluatedIds, size);
 
     // 4. Calculate statistics
     const stats = sampler.calculateStats(proposals, evaluatedIds, selected.length);

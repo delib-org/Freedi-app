@@ -37,29 +37,45 @@ interface ParticipationStats {
 }
 
 /**
- * Distinct users who explicitly rated at least one solution. Reads
- * `evaluator.uid` so the auto +1 that MC writes when someone submits their
- * own solution (which only sets `evaluatorId`) is excluded — those people
- * are counted as solution adders, not evaluators.
+ * Single-pass extraction of both evaluator identity sets from the
+ * `evaluations` collection. Replaces the two separate queries previously
+ * issued by `getEvaluatorUserIds` (selecting `evaluator`) and
+ * `getAllParticipantUserIds` (selecting `evaluatorId`) — Query Insights
+ * showed both running at 35K executions/month against the same docs.
+ *
+ * - `explicitEvaluatorIds` (from `evaluator.uid`): users who explicitly
+ *   rated a solution. Excludes the auto +1 MC writes when someone submits
+ *   their own solution (which only sets `evaluatorId`, not `evaluator`).
+ *   Those users are counted as solution adders, not evaluators.
+ * - `allEvaluatorIds` (from `evaluatorId`): every user who has any
+ *   evaluation row for the parent — including the auto +1 from
+ *   submitting a solution. Used by the "all participants" tally.
  */
-async function getEvaluatorUserIds(parentStatementIds: string[]): Promise<Set<string>> {
+async function getEvaluationIdentitySets(
+  parentStatementIds: string[],
+): Promise<{ explicitEvaluatorIds: Set<string>; allEvaluatorIds: Set<string> }> {
   const db = getFirestoreAdmin();
-  const evaluatorIds = new Set<string>();
+  const explicitEvaluatorIds = new Set<string>();
+  const allEvaluatorIds = new Set<string>();
 
   for (const parentId of parentStatementIds) {
     const snapshot = await db
       .collection(Collections.evaluations)
       .where('parentId', '==', parentId)
-      .select('evaluator')
+      .select('evaluator', 'evaluatorId')
       .get();
 
     snapshot.forEach((doc) => {
-      const uid = doc.data().evaluator?.uid;
-      if (uid) evaluatorIds.add(uid);
+      const data = doc.data();
+      const explicitUid = data.evaluator?.uid;
+      if (explicitUid) explicitEvaluatorIds.add(explicitUid);
+
+      const anyUid = data.evaluatorId;
+      if (anyUid) allEvaluatorIds.add(anyUid);
     });
   }
 
-  return evaluatorIds;
+  return { explicitEvaluatorIds, allEvaluatorIds };
 }
 
 /**
@@ -95,43 +111,22 @@ async function getSolutionStats(
 }
 
 /**
- * Distinct users who took any action on the survey — any evaluation (even the
- * auto +1 from submitting a solution) or any option. Uses `evaluatorId` on the
- * evaluation doc (set on every evaluation, including MC auto +1s) unioned with
- * option creators. This is the "entered" count.
+ * Distinct users who took any action on the survey: union of evaluation
+ * authors (`evaluatorId`, including the MC auto +1 from submitting a
+ * solution) and option creators. Both inputs are already collected by
+ * `getEvaluationIdentitySets` and `getSolutionStats` — this is a pure
+ * in-memory union, no extra Firestore reads.
  *
- * SurveyProgress docs are not used: they are only written when a user clicks
- * "Next", which misses anyone who evaluated or submitted without navigating.
+ * SurveyProgress docs are not used: they are only written when a user
+ * clicks "Next", which misses anyone who evaluated or submitted without
+ * navigating.
  */
-async function getAllParticipantUserIds(parentStatementIds: string[]): Promise<Set<string>> {
-  const db = getFirestoreAdmin();
-  const ids = new Set<string>();
-
-  for (const parentId of parentStatementIds) {
-    const evalSnap = await db
-      .collection(Collections.evaluations)
-      .where('parentId', '==', parentId)
-      .select('evaluatorId')
-      .get();
-
-    evalSnap.forEach((doc) => {
-      const id = doc.data().evaluatorId;
-      if (id) ids.add(id);
-    });
-
-    const optSnap = await db
-      .collection(Collections.statements)
-      .where('parentId', '==', parentId)
-      .where('statementType', '==', StatementType.option)
-      .select('creatorId')
-      .get();
-
-    optSnap.forEach((doc) => {
-      const id = doc.data().creatorId;
-      if (id) ids.add(id);
-    });
-  }
-
+function unionParticipantIds(
+  allEvaluatorIds: Set<string>,
+  optionCreatorIds: Set<string>,
+): Set<string> {
+  const ids = new Set<string>(allEvaluatorIds);
+  for (const id of optionCreatorIds) ids.add(id);
   return ids;
 }
 
@@ -260,12 +255,13 @@ export async function GET(
     // Only count demographics from users who actually evaluated
     const questionStatementIds = questions.map((q) => q.statementId);
 
-    const [evaluatorIds, solutionStats, allParticipantIds] = await Promise.all([
-      getEvaluatorUserIds(questionStatementIds),
+    const [identitySets, solutionStats] = await Promise.all([
+      getEvaluationIdentitySets(questionStatementIds),
       getSolutionStats(questionStatementIds),
-      getAllParticipantUserIds(questionStatementIds),
     ]);
+    const { explicitEvaluatorIds: evaluatorIds, allEvaluatorIds } = identitySets;
     const { adderIds: solutionAdderIds, totalSolutions } = solutionStats;
+    const allParticipantIds = unionParticipantIds(allEvaluatorIds, solutionAdderIds);
 
     const evaluatorAnswers = demographicAnswers.filter((a) => {
       const uid = (a as UserDemographicQuestion & { userId?: string }).userId;

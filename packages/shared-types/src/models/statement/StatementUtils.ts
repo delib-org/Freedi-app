@@ -5,7 +5,7 @@ import { StageSelectionType } from '../stage/stageTypes';
 import { parse, safeParse } from 'valibot';
 import { User } from '../user/User';
 import { Role } from '../user/UserSettings';
-import { Paragraph } from '../paragraph/paragraphModel';
+import { Paragraph, ParagraphType, ListType } from '../paragraph/paragraphModel';
 import { StatementSettings } from './StatementSettings';
 import { SourceApp } from '../engagement/SourceApp';
 
@@ -27,7 +27,13 @@ export const defaultStatementSettings: StatementSettings = {
 export interface CreateStatementParams {
 	/** The title/text of the statement */
 	statement: string;
-	/** Rich text paragraphs (optional) */
+	/**
+	 * @deprecated The embedded paragraphs array is the legacy rich-body model.
+	 * The canonical body is a set of child Statements with
+	 * `statementType === paragraph` (see `createParagraphChildStatement` and the
+	 * shared CRUD layer in `@freedi/shared-utils`). New code must not populate
+	 * this field; it is retained only for backward-compatible reads.
+	 */
 	paragraphs?: Paragraph[];
 	/** Type of statement: option, question, group, etc. */
 	statementType: StatementType;
@@ -202,6 +208,12 @@ export function createBasicStatement({
  * Creates an official "standing" paragraph statement for Sign app
  * This represents the current official text at a specific document position
  *
+ * @deprecated Produces the legacy Sign shape (`statementType === option` +
+ * `doc.isOfficialParagraph`). Use {@link createParagraphChildStatement} for the
+ * canonical model (`statementType === paragraph`). Sign migrates its call sites
+ * in the paragraph-unification work; kept temporarily so existing callers
+ * compile until then.
+ *
  * @param paragraph - The paragraph data to convert to a statement
  * @param documentId - The parent document ID
  * @param creator - The user creating this paragraph (typically document creator or system)
@@ -290,4 +302,158 @@ export function createSuggestionStatement(
 		consensus: 0, // Suggestions start with zero consensus
 		...(reasoning && { reasoning }), // Include reasoning if provided
 	});
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Canonical paragraph model (statementType === paragraph)
+//
+// A statement's rich body is a set of CHILD statements, each with
+// `statementType === paragraph`, ordered by `order`. This is the single model
+// shared by all apps (Main, Sign, MC, Join). The embedded `Statement.paragraphs`
+// array is the deprecated legacy model.
+//
+// Use `createParagraphChildStatement` to create a paragraph child, and the
+// `statementToParagraph` / `paragraphToFactoryParams` mappers to convert
+// between the `Paragraph` DTO and paragraph child statements.
+// ──────────────────────────────────────────────────────────────────────────
+
+/** Parameters for {@link createParagraphChildStatement}. */
+export interface CreateParagraphChildParams {
+	/** The paragraph text (empty for image-only paragraphs). */
+	content: string;
+	/** The host statement whose body this paragraph belongs to. */
+	host: Pick<Statement, 'statementId' | 'topParentId'>;
+	/** Full creator object. */
+	creator: User;
+	/** Creator id; defaults to `creator.uid`. */
+	creatorId?: string;
+	/** Position among sibling paragraphs (0-based). */
+	order: number;
+	/** Visual block type; defaults to `ParagraphType.paragraph`. */
+	blockType?: ParagraphType;
+	/** List style for list-item blocks. */
+	listType?: ListType;
+	/** Image fields (for `ParagraphType.image`). */
+	imageUrl?: string;
+	imageAlt?: string;
+	imageCaption?: string;
+	/** Origin statement id when this paragraph was derived/merged. */
+	sourceStatementId?: string;
+	/** Stable id to assign (Sign relies on stable paragraph ids). Auto if omitted. */
+	statementId?: string;
+	/** Which app created this paragraph. */
+	sourceApp?: SourceApp;
+	/**
+	 * Transition flag (Sign): also write `doc.isOfficialParagraph`/`doc.isDoc`
+	 * so legacy dual-read queries keep working until the data migration completes.
+	 */
+	isOfficial?: boolean;
+}
+
+/**
+ * Creates a canonical paragraph child statement (`statementType === paragraph`).
+ * Replaces both the main app's inline `createStatementObject + {blockType, order}`
+ * and the deprecated Sign-specific {@link createParagraphStatement}.
+ *
+ * Top-level `order`/`blockType` are the canonical fields; rich metadata
+ * (list/image, and — when `isOfficial` — `order`/`paragraphType` mirrors) is
+ * written into `doc` only when present, so plain text paragraphs stay minimal.
+ *
+ * @returns A valid paragraph Statement, or undefined if validation fails.
+ */
+export function createParagraphChildStatement(
+	params: CreateParagraphChildParams
+): Statement | undefined {
+	const blockType = params.blockType ?? ParagraphType.paragraph;
+
+	const base = createStatementObject({
+		statement: params.content,
+		statementType: StatementType.paragraph,
+		parentId: params.host.statementId,
+		topParentId: params.host.topParentId || params.host.statementId,
+		creatorId: params.creatorId ?? params.creator.uid,
+		creator: params.creator,
+		...(params.statementId && { statementId: params.statementId }),
+		...(params.sourceApp && { sourceApp: params.sourceApp }),
+	});
+	if (!base) return undefined;
+
+	base.order = params.order;
+	base.blockType = blockType;
+	if (params.sourceStatementId) base.derivedFromStatementId = params.sourceStatementId;
+
+	// Only attach `doc` when there is metadata to store, so plain text paragraphs
+	// (Main/Join/MC) keep the same minimal shape they have today.
+	const hasMeta =
+		params.isOfficial === true ||
+		params.listType !== undefined ||
+		params.imageUrl !== undefined ||
+		params.imageAlt !== undefined ||
+		params.imageCaption !== undefined;
+
+	if (hasMeta) {
+		base.doc = {
+			order: params.order,
+			paragraphType: blockType,
+			...(params.isOfficial && { isOfficialParagraph: true, isDoc: true }),
+			...(params.listType !== undefined && { listType: params.listType }),
+			...(params.imageUrl !== undefined && { imageUrl: params.imageUrl }),
+			...(params.imageAlt !== undefined && { imageAlt: params.imageAlt }),
+			...(params.imageCaption !== undefined && { imageCaption: params.imageCaption }),
+		};
+	}
+
+	return base;
+}
+
+/**
+ * Maps a paragraph child statement to the `Paragraph` DTO, tolerating legacy
+ * fields (`blockType ?? doc.paragraphType`, `order ?? doc.order ?? createdAt`).
+ */
+export function statementToParagraph(statement: Statement): Paragraph {
+	const doc = statement.doc;
+
+	return {
+		paragraphId: statement.statementId,
+		type: statement.blockType ?? doc?.paragraphType ?? ParagraphType.paragraph,
+		content: statement.statement,
+		order: statement.order ?? doc?.order ?? statement.createdAt ?? 0,
+		...(doc?.listType !== undefined && { listType: doc.listType }),
+		...(statement.derivedFromStatementId !== undefined && {
+			sourceStatementId: statement.derivedFromStatementId,
+		}),
+		...(doc?.imageUrl !== undefined && { imageUrl: doc.imageUrl }),
+		...(doc?.imageAlt !== undefined && { imageAlt: doc.imageAlt }),
+		...(doc?.imageCaption !== undefined && { imageCaption: doc.imageCaption }),
+	};
+}
+
+/**
+ * Maps a `Paragraph` DTO to {@link CreateParagraphChildParams}, so callers can
+ * convert a DTO into a canonical paragraph child statement via
+ * {@link createParagraphChildStatement}.
+ */
+export function paragraphToFactoryParams(
+	paragraph: Paragraph,
+	host: Pick<Statement, 'statementId' | 'topParentId'>,
+	creator: User,
+	opts?: { isOfficial?: boolean; sourceApp?: SourceApp }
+): CreateParagraphChildParams {
+	return {
+		content: paragraph.content,
+		host,
+		creator,
+		order: paragraph.order,
+		blockType: paragraph.type,
+		statementId: paragraph.paragraphId,
+		...(paragraph.listType !== undefined && { listType: paragraph.listType }),
+		...(paragraph.imageUrl !== undefined && { imageUrl: paragraph.imageUrl }),
+		...(paragraph.imageAlt !== undefined && { imageAlt: paragraph.imageAlt }),
+		...(paragraph.imageCaption !== undefined && { imageCaption: paragraph.imageCaption }),
+		...(paragraph.sourceStatementId !== undefined && {
+			sourceStatementId: paragraph.sourceStatementId,
+		}),
+		...(opts?.isOfficial && { isOfficial: true }),
+		...(opts?.sourceApp && { sourceApp: opts.sourceApp }),
+	};
 }

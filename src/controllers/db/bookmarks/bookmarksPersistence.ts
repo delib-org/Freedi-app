@@ -11,6 +11,19 @@ function bookmarkDocId(userId: string, topParentId: string): string {
 	return `bookmarks--${userId}--${topParentId}`;
 }
 
+// permission-denied fires for every in-flight read when Firebase revokes the
+// auth token (sign-out, expired refresh). Not actionable — suppress to keep
+// Sentry signal clean.
+function isExpectedAuthTransitionError(error: unknown): boolean {
+	const firebaseError = error as { code?: string };
+	const message = error instanceof Error ? error.message : String(error);
+
+	return (
+		firebaseError.code === 'permission-denied' ||
+		message.includes('Missing or insufficient permissions')
+	);
+}
+
 /**
  * Persist a single bookmark toggle to Firestore.
  * Reads the current bookmark doc, merges the change, writes back.
@@ -45,6 +58,7 @@ export async function persistBookmarkToggle(
 			lastUpdate: getCurrentTimestamp(),
 		});
 	} catch (error) {
+		if (isExpectedAuthTransitionError(error)) return;
 		logError(error, {
 			operation: 'bookmarks.persistBookmarkToggle',
 			userId,
@@ -81,6 +95,7 @@ export async function loadBookmarksForRoom(userId: string, topParentId: string):
 			store.dispatch(setBookmarks(bookmarkEntries));
 		}
 	} catch (error) {
+		if (isExpectedAuthTransitionError(error)) return;
 		logError(error, {
 			operation: 'bookmarks.loadBookmarksForRoom',
 			userId,

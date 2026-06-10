@@ -147,6 +147,16 @@ export const CHAT = {
 } as const;
 
 /**
+ * Home screen constants
+ */
+export const HOME = {
+	/** Subscriptions loaded by the home listeners on first paint */
+	INITIAL_SUBSCRIPTIONS_LIMIT: 30,
+	/** Older subscriptions fetched per scroll-to-bottom batch */
+	LOAD_MORE_BATCH_SIZE: 30,
+} as const;
+
+/**
  * Redux state management constants
  */
 export const REDUX = {

@@ -103,6 +103,5 @@ export interface RunSummary {
 		uncategorized: number;
 		syntheticOptionsCreated: number;
 	};
-	framingId: string | null;
 	durationMs: number;
 }

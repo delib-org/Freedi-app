@@ -34,15 +34,37 @@ export async function liveSynthOnOptionEvaluationChange(
 	before: unknown,
 	after: unknown,
 ): Promise<void> {
-	if (!synthesisFlags.liveSynth) return;
+	if (!synthesisFlags.liveSynth) {
+		logger.info('liveSynth.skip: flag disabled');
+		return;
+	}
 
 	const beforeStatement = before as Statement | undefined;
 	const afterStatement = after as Statement | undefined;
-	if (!isOption(afterStatement)) return;
-	if (!afterStatement.parentId || afterStatement.parentId === 'top') return;
+	if (!isOption(afterStatement)) {
+		const raw = after as { statementId?: string; statementType?: string } | undefined;
+		logger.info('liveSynth.skip: not an option', {
+			statementId: raw?.statementId,
+			statementType: raw?.statementType,
+		});
+		return;
+	}
+	if (!afterStatement.parentId || afterStatement.parentId === 'top') {
+		logger.info('liveSynth.skip: top-level or missing parentId', {
+			statementId: afterStatement.statementId,
+			parentId: afterStatement.parentId,
+		});
+		return;
+	}
 
 	// Skip if already clustered — threshold crossings don't reassign.
-	if ((afterStatement.integratedOptions ?? []).length > 0) return;
+	if ((afterStatement.integratedOptions ?? []).length > 0) {
+		logger.info('liveSynth.skip: already clustered', {
+			statementId: afterStatement.statementId,
+			integratedOptionsCount: afterStatement.integratedOptions?.length,
+		});
+		return;
+	}
 
 	const beforeEvals = beforeStatement?.evaluation?.numberOfEvaluators ?? 0;
 	const afterEvals = afterStatement.evaluation?.numberOfEvaluators ?? 0;
@@ -51,16 +73,50 @@ export async function liveSynthOnOptionEvaluationChange(
 
 	// Cheap precheck: skip if the evaluation aggregate didn't move meaningfully.
 	if (afterEvals === beforeEvals && Math.abs(afterCons - beforeCons) < NUMERIC_TOLERANCE) {
+		logger.info('liveSynth.skip: no meaningful evaluation change', {
+			statementId: afterStatement.statementId,
+			beforeEvals,
+			afterEvals,
+			beforeCons,
+			afterCons,
+		});
 		return;
 	}
 
 	const settings = await loadSynthesisSettings(afterStatement.parentId);
-	if (!settings.enabled) return;
+	if (!settings.enabled) {
+		logger.info('liveSynth.skip: settings.enabled is false', {
+			statementId: afterStatement.statementId,
+			parentId: afterStatement.parentId,
+		});
+		return;
+	}
 
 	const wasBelow = beforeEvals < settings.minEvaluators || beforeCons < settings.minConsensus;
 	const nowAbove = afterEvals >= settings.minEvaluators && afterCons >= settings.minConsensus;
 
-	if (!(wasBelow && nowAbove)) return;
+	if (!(wasBelow && nowAbove)) {
+		logger.info('liveSynth.skip: threshold not crossed', {
+			statementId: afterStatement.statementId,
+			beforeEvals,
+			afterEvals,
+			beforeCons,
+			afterCons,
+			minEvaluators: settings.minEvaluators,
+			minConsensus: settings.minConsensus,
+			wasBelow,
+			nowAbove,
+		});
+		return;
+	}
+
+	logger.info('liveSynth.run: threshold crossed, invoking pipeline', {
+		statementId: afterStatement.statementId,
+		beforeEvals,
+		afterEvals,
+		beforeCons,
+		afterCons,
+	});
 
 	try {
 		const result = await runSinglePipeline({

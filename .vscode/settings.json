@@ -1,13 +1,20 @@
 {
 	"cSpell.words": [
+		"clusterings",
 		"delib",
 		"firestore",
+		"Freedi",
 		"Hebbian",
+		"mathrm",
 		"Millis",
 		"popperian",
+		"talyaron",
 		"valibot",
 		"wizcol",
+		"worktree",
+		"worktrees",
 		"Yaron"
 	],
-	"compile-hero.disable-compile-files-on-did-save-code": true
+	"compile-hero.disable-compile-files-on-did-save-code": true,
+	"python.terminal.useEnvFile": false
 }

@@ -75,6 +75,14 @@ function mergeWithDefaults(
 			typeof partial.attachThreshold === 'number' && Number.isFinite(partial.attachThreshold)
 				? partial.attachThreshold
 				: defaults.attachThreshold,
+		synthLowerBound:
+			typeof partial.synthLowerBound === 'number' && Number.isFinite(partial.synthLowerBound)
+				? partial.synthLowerBound
+				: defaults.synthLowerBound,
+		clusterThreshold:
+			typeof partial.clusterThreshold === 'number' && Number.isFinite(partial.clusterThreshold)
+				? partial.clusterThreshold
+				: defaults.clusterThreshold,
 		reviewLowerBound:
 			typeof partial.reviewLowerBound === 'number' && Number.isFinite(partial.reviewLowerBound)
 				? partial.reviewLowerBound

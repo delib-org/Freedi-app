@@ -1,0 +1,142 @@
+{
+	"questionId": "ZnPBtoZBJMKv",
+	"questionText": "How can we all be healthy",
+	"design": "3 topics × 4 synths × 5 paraphrases = 60 (archetype A: clean recovery)",
+	"topics": [
+		{
+			"name": "physical-fitness",
+			"synths": [
+				{
+					"name": "daily-cardio",
+					"paraphrases": [
+						"Do aerobic exercise like running or cycling on a daily basis.",
+						"Get your heart pumping every day with cardio such as jogging or swimming.",
+						"Build a habit of regular cardiovascular workouts to stay fit.",
+						"Raise your pulse routinely through activities like brisk biking and runs.",
+						"Keep your heart strong by doing daily endurance training."
+					]
+				},
+				{
+					"name": "strength-training",
+					"paraphrases": [
+						"Lift weights several times a week to build muscle.",
+						"Incorporate resistance workouts to strengthen your body.",
+						"Do strength exercises like squats and push-ups regularly.",
+						"Train with dumbbells and resistance bands to grow stronger.",
+						"Build muscular power through consistent weightlifting sessions."
+					]
+				},
+				{
+					"name": "flexibility-stretching",
+					"paraphrases": [
+						"Stretch your muscles daily to stay limber and mobile.",
+						"Practice yoga or stretching routines to improve flexibility.",
+						"Loosen up your joints with regular mobility exercises.",
+						"Keep your body supple by stretching before and after activity.",
+						"Improve your range of motion through gentle daily flexibility work."
+					]
+				},
+				{
+					"name": "active-commuting",
+					"paraphrases": [
+						"Walk or bike to work instead of driving whenever you can.",
+						"Choose to commute on foot or by bicycle to add movement to your day.",
+						"Skip the car and travel actively by walking or cycling.",
+						"Turn your daily commute into exercise by biking or walking there.",
+						"Get around using your own two feet or a bike rather than a vehicle."
+					]
+				}
+			]
+		},
+		{
+			"name": "nutrition",
+			"synths": [
+				{
+					"name": "eat-vegetables",
+					"paraphrases": [
+						"Fill your plate with plenty of fresh vegetables and fruit.",
+						"Eat more greens and produce at every meal.",
+						"Make vegetables and fruits the centerpiece of your diet.",
+						"Load up on colorful plant foods throughout the day.",
+						"Increase how many veggies and fruits you consume daily."
+					]
+				},
+				{
+					"name": "limit-sugar",
+					"paraphrases": [
+						"Cut back on sugary snacks and sweetened drinks.",
+						"Reduce the amount of added sugar in your diet.",
+						"Avoid candy, soda, and desserts to lower your sugar intake.",
+						"Steer clear of processed foods loaded with sugar.",
+						"Minimize how much sweet stuff you eat each day."
+					]
+				},
+				{
+					"name": "stay-hydrated",
+					"paraphrases": [
+						"Drink plenty of water throughout the day.",
+						"Keep yourself well hydrated by sipping water regularly.",
+						"Make sure you take in enough fluids daily.",
+						"Carry a water bottle and refill it often to stay hydrated.",
+						"Replenish your body's fluids by drinking water all day long."
+					]
+				},
+				{
+					"name": "portion-control",
+					"paraphrases": [
+						"Watch your serving sizes to avoid overeating.",
+						"Keep meal portions moderate and balanced.",
+						"Eat smaller amounts to manage how much you consume.",
+						"Be mindful of how much food you put on your plate.",
+						"Control calorie intake by limiting portion sizes."
+					]
+				}
+			]
+		},
+		{
+			"name": "preventive-healthcare",
+			"synths": [
+				{
+					"name": "annual-physical",
+					"paraphrases": [
+						"Visit your doctor every year for a complete checkup.",
+						"Schedule a yearly physical exam with your physician.",
+						"Get an annual health review from your general practitioner.",
+						"Book a routine medical examination once a year.",
+						"See your GP annually to assess your overall health."
+					]
+				},
+				{
+					"name": "vaccinations",
+					"paraphrases": [
+						"Stay up to date on your immunizations and shots.",
+						"Get vaccinated against preventable diseases.",
+						"Keep your vaccines current to protect against illness.",
+						"Receive recommended immunizations on schedule.",
+						"Protect yourself by getting the appropriate vaccines."
+					]
+				},
+				{
+					"name": "dental-checkups",
+					"paraphrases": [
+						"Visit the dentist regularly for cleanings and exams.",
+						"See your dentist twice a year to care for your teeth.",
+						"Keep up routine dental appointments to maintain oral health.",
+						"Get your teeth checked and cleaned by a dental professional.",
+						"Schedule regular dental visits to prevent cavities and gum disease."
+					]
+				},
+				{
+					"name": "self-monitoring",
+					"paraphrases": [
+						"Track your blood pressure and weight at home regularly.",
+						"Keep an eye on vital signs like blood pressure yourself.",
+						"Monitor your own health metrics between doctor visits.",
+						"Check measurements such as weight and pulse at home.",
+						"Watch your personal health numbers using home devices."
+					]
+				}
+			]
+		}
+	]
+}

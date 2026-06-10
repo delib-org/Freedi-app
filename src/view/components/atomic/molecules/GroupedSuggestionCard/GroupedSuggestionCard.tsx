@@ -5,7 +5,6 @@ import { Statement } from '@freedi/shared-types';
 import {
 	Layers,
 	ChevronDown,
-	ChevronRight,
 	Users,
 	ExternalLink,
 	Info,
@@ -14,6 +13,7 @@ import {
 	Undo2,
 	RefreshCw,
 } from 'lucide-react';
+import { shallowEqual } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import type { RootState } from '@/redux/store';
@@ -54,6 +54,18 @@ export interface GroupedSuggestionCardProps {
 	 * admin/ai-custom → 'custom') so the card surfaces the correct accent.
 	 */
 	pipeline?: GroupedSuggestionPipeline;
+	/**
+	 * When provided, the expanded drawer renders THESE member statements instead
+	 * of fetching from Firestore. The view-layer model passes a topic cluster's
+	 * "direct raw" (members not covered by a nested synth) so the 3-level dedup
+	 * stays driven by the selector and can't drift from a separate fetch.
+	 */
+	explicitMembers?: Statement[];
+	/**
+	 * Extra content rendered at the top of the expanded drawer — used to nest
+	 * synth-proposal cards inside a topic-cluster card (3-level view).
+	 */
+	nestedSlot?: React.ReactNode;
 	className?: string;
 }
 
@@ -68,6 +80,8 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	evaluationSlot,
 	onDrillToOriginals,
 	pipeline: pipelineOverride,
+	explicitMembers,
+	nestedSlot,
 	className,
 }) => {
 	const { t } = useTranslation();
@@ -75,12 +89,8 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	const [mobileMetaOpen, setMobileMetaOpen] = useState(false);
 	const [isReversing, setIsReversing] = useState(false);
 	const [isRegenerating, setIsRegenerating] = useState(false);
-	// Synthesis-only: collapse the source list under a "Built from N ideas"
-	// toggle so the proposal text is the dominant element of the card.
-	const [sourcesOpen, setSourcesOpen] = useState(false);
 	const disclosureId = useId();
 	const regionId = `${disclosureId}-originals`;
-	const sourcesRegionId = `${disclosureId}-sources`;
 	// Authorize against the parent deliberation: a creator/admin of the
 	// parent (or any ancestor in the trust chain) can reverse / regenerate.
 	const { isAdmin } = useAuthorization(cluster.parentId);
@@ -103,30 +113,35 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	const isSemantic = effectivePipeline === 'semantic';
 	const isCustom = effectivePipeline === 'custom';
 
-	// Synthesis clusters keep an always-visible source list — users have to
-	// see at all times which originals were merged. Other clusters keep the
-	// compact 2-line preview; their drawer is the discovery affordance.
-	const previewSliceLimit = isSynthesis ? count : PREVIEW_LIMIT;
+	// Both synthesis and cluster cards now use a single disclosure (the footer
+	// drawer) for provenance. The compact 2-line preview is only shown for
+	// non-synthesis clusters; synthesis cards keep the proposal text dominant.
+	const previewSliceLimit = PREVIEW_LIMIT;
 
 	// Read source originals from Redux only — no network. Originals live in
 	// the parent's options collection and are already loaded by the parent
 	// listener, so this resolves synchronously in the common case. Anything
 	// not yet cached gets quietly omitted; the drawer fetches the rest on
 	// demand.
-	const previewMembers = useAppSelector((state: RootState) =>
-		integratedOptions
-			.slice(0, previewSliceLimit)
-			.map((id) => state.statements.statements.find((s) => s.statementId === id))
-			.filter((s): s is Statement => Boolean(s)),
+	const previewMembers = useAppSelector(
+		(state: RootState) =>
+			integratedOptions
+				.slice(0, previewSliceLimit)
+				.map((id) => state.statements.statements.find((s) => s.statementId === id))
+				.filter((s): s is Statement => Boolean(s)),
+		shallowEqual,
 	);
 	const previewRemainder = Math.max(0, count - previewMembers.length);
 
-	// Full member list — only fetched from Firestore when the drawer opens.
-	const shouldFetch = mode === 'both' && expanded;
-	const { members, isLoading } = useGroupMembers(
+	// Full member list. When the parent supplies `explicitMembers` (view-layer
+	// model) we render those directly; otherwise fetch from Firestore on open.
+	const shouldFetch = mode === 'both' && expanded && !explicitMembers;
+	const { members: fetchedMembers, isLoading: isFetching } = useGroupMembers(
 		shouldFetch ? cluster.statementId : undefined,
 		shouldFetch,
 	);
+	const members = explicitMembers ?? fetchedMembers;
+	const isLoading = explicitMembers ? false : isFetching;
 
 	const numberOfEvaluators = evaluation?.numberOfEvaluators ?? 0;
 	const isAwaiting = numberOfEvaluators === 0;
@@ -300,12 +315,6 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 				<div className="grouped-suggestion__header">
 					<div className="grouped-suggestion__title-wrap">
 						{pipelineBadge}
-						{isSynthesis && (
-							<p className="grouped-suggestion__proposal-kicker">
-								<Sparkles size={12} aria-hidden />
-								<span>{t('AI-Synthesized Proposal')}</span>
-							</p>
-						)}
 						<h3
 							className={clsx('card__title', isSynthesis && 'grouped-suggestion__proposal-title')}
 						>
@@ -324,30 +333,14 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 					</div>
 				</div>
 
-				{/* Synthesis: proposal-first layout.
-				    - Title and description above are the dominant element.
-				    - Source list goes BEHIND a "Built from N source ideas →"
-				      toggle. Provenance is one click away, never absent.
-				    - Admin actions (Regenerate, Reverse) live in a row beside
-				      the sources toggle.
-				    Non-synthesis clusters fall through to the compact preview
-				    block below. */}
-				{isSynthesis && previewMembers.length > 0 && (
+				{/* Synthesis: proposal-first layout. The title + description above
+				    are the dominant element; the single source of provenance is
+				    the footer drawer ("N source ideas"). Here we surface only the
+				    primary CTA — read the full AI-authored proposal. Admin actions
+				    (Regenerate, Reverse) live inside the expanded drawer, in the
+				    context of the sources they act on. */}
+				{isSynthesis && (
 					<div className="grouped-suggestion__proposal-actions">
-						<button
-							type="button"
-							className="grouped-suggestion__sources-toggle"
-							aria-expanded={sourcesOpen}
-							aria-controls={sourcesRegionId}
-							onClick={() => setSourcesOpen((v) => !v)}
-						>
-							{sourcesOpen ? (
-								<ChevronDown size={14} aria-hidden />
-							) : (
-								<ChevronRight size={14} aria-hidden />
-							)}
-							<span>{t('Built from {count} source ideas').replace('{count}', String(count))}</span>
-						</button>
 						<Link
 							to={`/statement/${cluster.statementId}`}
 							className="grouped-suggestion__proposal-read"
@@ -355,76 +348,6 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 							<ExternalLink size={14} aria-hidden />
 							<span>{t('Read full proposal')}</span>
 						</Link>
-						{isAdmin && (
-							<>
-								<button
-									type="button"
-									className="grouped-suggestion__proposal-admin-btn"
-									onClick={handleRegenerateProposal}
-									disabled={isRegenerating}
-									title={t('Regenerate proposal (admin)')}
-									aria-label={t('Regenerate proposal (admin)')}
-								>
-									<RefreshCw size={12} aria-hidden />
-									<span>{isRegenerating ? t('Regenerating…') : t('Regenerate proposal')}</span>
-								</button>
-								<button
-									type="button"
-									className="grouped-suggestion__proposal-admin-btn grouped-suggestion__proposal-admin-btn--danger"
-									onClick={handleReverseSynthesis}
-									disabled={isReversing}
-									title={t('Reverse synthesis (admin)')}
-									aria-label={t('Reverse synthesis (admin)')}
-								>
-									<Undo2 size={12} aria-hidden />
-									<span>{isReversing ? t('Reversing…') : t('Reverse synthesis')}</span>
-								</button>
-							</>
-						)}
-					</div>
-				)}
-
-				{isSynthesis && previewMembers.length > 0 && sourcesOpen && (
-					<div
-						id={sourcesRegionId}
-						className="grouped-suggestion__sources"
-						role="region"
-						aria-label={originalsRegionAriaLabel}
-					>
-						<ul className="grouped-suggestion__sources-list">
-							{previewMembers.map((m) => {
-								const sourceConsensus = typeof m.consensus === 'number' ? m.consensus : undefined;
-								const sourceEvaluators = m.evaluation?.numberOfEvaluators ?? 0;
-
-								return (
-									<li key={m.statementId} className="grouped-suggestion__sources-item">
-										<Link
-											to={`/statement/${m.statementId}`}
-											className="grouped-suggestion__sources-link"
-											title={m.statement}
-										>
-											<span className="grouped-suggestion__sources-title">{m.statement}</span>
-											{sourceConsensus !== undefined && sourceEvaluators > 0 && (
-												<span
-													className="grouped-suggestion__sources-chip"
-													aria-label={t('Consensus before merge: {value}').replace(
-														'{value}',
-														sourceConsensus.toFixed(2),
-													)}
-												>
-													{sourceConsensus.toFixed(2)}
-												</span>
-											)}
-										</Link>
-									</li>
-								);
-							})}
-						</ul>
-						{previewRemainder > 0 && (
-							<span className="grouped-suggestion__sources-more">
-								{t('…and {count} more (loading)').replace('{count}', String(previewRemainder))}
-							</span>
-						)}
 					</div>
 				)}
 
@@ -528,8 +451,35 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 						aria-live="polite"
 						aria-label={originalsRegionAriaLabel}
 					>
+						{isSynthesis && isAdmin && (
+							<div className="grouped-suggestion__proposal-actions grouped-suggestion__proposal-actions--admin">
+								<button
+									type="button"
+									className="grouped-suggestion__proposal-admin-btn"
+									onClick={handleRegenerateProposal}
+									disabled={isRegenerating}
+									title={t('Regenerate proposal (admin)')}
+									aria-label={t('Regenerate proposal (admin)')}
+								>
+									<RefreshCw size={12} aria-hidden />
+									<span>{isRegenerating ? t('Regenerating…') : t('Regenerate proposal')}</span>
+								</button>
+								<button
+									type="button"
+									className="grouped-suggestion__proposal-admin-btn grouped-suggestion__proposal-admin-btn--danger"
+									onClick={handleReverseSynthesis}
+									disabled={isReversing}
+									title={t('Reverse synthesis (admin)')}
+									aria-label={t('Reverse synthesis (admin)')}
+								>
+									<Undo2 size={12} aria-hidden />
+									<span>{isReversing ? t('Reversing…') : t('Reverse synthesis')}</span>
+								</button>
+							</div>
+						)}
+						{nestedSlot && <div className="grouped-suggestion__nested">{nestedSlot}</div>}
 						{isLoading && <p className="grouped-suggestion__original-note">{t('Loading…')}</p>}
-						{!isLoading && members.length === 0 && (
+						{!isLoading && members.length === 0 && !nestedSlot && (
 							<p className="grouped-suggestion__original-note">{t('No originals found.')}</p>
 						)}
 						{members.map((original) => (

@@ -30,6 +30,10 @@ export interface PerformIntegrationInput {
 	creatorDefaultLanguage: string;
 	/** When set, written to the new Statement's `derivedByPipeline` field. */
 	derivedByPipeline?: 'synthesis' | 'topic-cluster';
+	/** Run provenance: id of the run that created this cluster (surgical cleanup). */
+	synthesisRunId?: string;
+	/** Which synthesis path created this cluster. */
+	synthesisMechanism?: 'bulk' | 'live-spawn' | 'live-attach';
 	/**
 	 * Optional rich body. When provided (e.g. by the synthesis pipeline),
 	 * each entry becomes a paragraph child Statement under the new cluster
@@ -60,6 +64,8 @@ export async function performIntegration(
 		creatorDisplayName,
 		creatorDefaultLanguage,
 		derivedByPipeline,
+		synthesisRunId,
+		synthesisMechanism,
 		paragraphs,
 	} = input;
 
@@ -144,7 +150,12 @@ export async function performIntegration(
 	};
 	if (derivedByPipeline) {
 		newStatement.derivedByPipeline = derivedByPipeline;
+		if (derivedByPipeline === 'synthesis') {
+			(newStatement as Statement & Record<string, unknown>).isSynthesis = true;
+		}
 	}
+	if (synthesisRunId) newStatement.synthesisRunId = synthesisRunId;
+	if (synthesisMechanism) newStatement.synthesisMechanism = synthesisMechanism;
 
 	await db.collection(Collections.statements).doc(newStatementId).set(newStatement);
 	logger.info(`performIntegration: created statement ${newStatementId}`, {

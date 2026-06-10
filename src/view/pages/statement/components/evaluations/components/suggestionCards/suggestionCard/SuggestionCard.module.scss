@@ -315,7 +315,7 @@
 
   .main {
     width: 100%;
-    padding: 1rem 1rem 1rem 0rem;
+    padding: 0.75rem 0.75rem 0.75rem 0rem;
     box-sizing: border-box;
 
     // Mobile: compact padding
@@ -350,8 +350,8 @@
         // Container for the clamped text
         .textContent {
           display: -webkit-box;
-          -webkit-line-clamp: 6;
-          line-clamp: 6;
+          -webkit-line-clamp: 4;
+          line-clamp: 4;
           -webkit-box-orient: vertical;
           overflow: hidden;
           line-height: 1.4;
@@ -456,6 +456,53 @@
         &.hasOverflow .showMore {
           display: block;
         }
+
+        // "Part of …" back-reference chips — link a deduplicated original back
+        // to the AI proposal(s) / cluster(s) that already represent it.
+        .memberRefs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.35rem;
+          margin-top: 0.4rem;
+        }
+
+        .memberRef {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.25rem;
+          max-width: 100%;
+          padding: 0.1rem 0.5rem;
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--btn-primary) 10%, transparent);
+          border: 1px solid color-mix(in srgb, var(--btn-primary) 28%, transparent);
+          color: var(--btn-primary);
+          font-size: 0.72rem;
+          font-weight: 600;
+          text-decoration: none;
+          transition: background-color 120ms ease;
+
+          &:hover,
+          &:focus-visible {
+            background: color-mix(in srgb, var(--btn-primary) 18%, transparent);
+            outline: none;
+          }
+
+          &:focus-visible {
+            outline: 2px solid var(--btn-primary);
+            outline-offset: 1px;
+          }
+
+          @media (prefers-contrast: more) {
+            background: var(--card-default, #fff);
+            border-color: var(--btn-primary);
+          }
+        }
+
+        .memberRefText {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
       }
 
       // Menu container - sits next to .text
@@ -471,10 +518,9 @@
       flex-direction: row;
       justify-content: space-around;
       align-items: center;
-      margin-top: 1rem;
-      padding-top: 1rem;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
       gap: 1rem;
-      border-top: 1px solid var(--shadow);
       // Block ALL pointer events by default to prevent accidental navigation
       pointer-events: none;
 

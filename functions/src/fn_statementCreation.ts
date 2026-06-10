@@ -12,16 +12,14 @@ import {
 	StatementSubscriptionSchema,
 	createSubscription,
 	getStatementSubscriptionId,
-	NotificationType,
 	SimpleStatement,
 	statementToSimpleStatement,
 	getRandomUID,
 } from '@freedi/shared-types';
 import { db } from './index';
-import { getDefaultQuestionType } from './model/questionTypeDefaults';
 import { embeddingService } from './services/embedding-service';
 import { embeddingCache } from './services/embedding-cache-service';
-import { FcmSubscriber, processFcmNotificationsImproved } from './fn_notifications';
+import { notifyStatementSubscribers } from './notifications/notifyStatementSubscribers';
 import { trackStatementCreation } from './engagement/credits/trackEngagement';
 import { onStatementCreatedStats } from './fn_adminStats';
 import { generateDescriptionFromChildren } from './helpers';
@@ -356,20 +354,8 @@ async function addStatementToMassConsensus(statement: Statement): Promise<void> 
  */
 async function createNotificationsForStatement(statement: Statement): Promise<void> {
 	try {
-		// Get parent statement and subscribers
-		const [parentStatementDB, subscribersDB, pushSubscribersDB] = await Promise.all([
-			db.doc(`${Collections.statements}/${statement.parentId}`).get(),
-			db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', statement.parentId)
-				.where('getInAppNotification', '==', true)
-				.get(),
-			db
-				.collection(Collections.statementsSubscribe)
-				.where('statementId', '==', statement.parentId)
-				.where('getPushNotification', '==', true)
-				.get(),
-		]);
+		// Get parent statement.
+		const parentStatementDB = await db.doc(`${Collections.statements}/${statement.parentId}`).get();
 
 		// Check if parent exists (for non-top statements)
 		if (!parentStatementDB.exists) {
@@ -384,10 +370,6 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 			parentData.topParentId = parentData.parentId || statement.parentId;
 		}
 		const parentStatement = parse(StatementSchema, parentData);
-		const subscribers = subscribersDB.docs.map((doc) => doc.data() as StatementSubscription);
-		const pushSubscribers = pushSubscribersDB.docs.map(
-			(doc) => doc.data() as StatementSubscription,
-		);
 
 		// Update last message in parent
 		await db.doc(`${Collections.statements}/${statement.parentId}`).update({
@@ -398,79 +380,9 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 			},
 		});
 
-		// Create notifications for subscribers
-		// Use deterministic IDs to prevent duplicates if the function fires more than once
-		// (Firebase Functions have at-least-once delivery guarantee)
-		if (subscribers.length > 0) {
-			const batch = db.batch();
-			const seenUserIds = new Set<string>();
-
-			subscribers.forEach((subscriber: StatementSubscription) => {
-				// Skip duplicate subscribers (same user with multiple subscription docs)
-				if (seenUserIds.has(subscriber.user.uid)) return;
-				seenUserIds.add(subscriber.user.uid);
-
-				// Deterministic ID: ensures idempotency if function retries
-				const notificationId = `${subscriber.user.uid}_${statement.statementId}`;
-				const notificationRef = db.collection(Collections.inAppNotifications).doc(notificationId);
-				const questionType = statement.questionSettings?.questionType ?? getDefaultQuestionType();
-
-				// `creatorImage` is schema-optional (`optional(nullable(string()))`),
-				// but Firestore rejects literal `undefined`. The synthesis pipeline
-				// constructs creator objects without `photoURL` (only displayName/uid/
-				// defaultLanguage), so we must omit the key when undefined rather
-				// than write it as undefined. Coerce null-ish to null for an explicit
-				// "no image" signal that the schema accepts.
-				const creatorImage = statement.creator.photoURL ?? null;
-				const newNotification: NotificationType = {
-					userId: subscriber.user.uid,
-					parentId: statement.parentId,
-					parentStatement: parentStatement.statement,
-					statementType: statement.statementType,
-					questionType: questionType,
-					text: statement.statement,
-					creatorId: statement.creator.uid,
-					creatorName: statement.creator.displayName,
-					creatorImage,
-					createdAt: statement.createdAt,
-					read: false,
-					notificationId: notificationId,
-					statementId: statement.statementId,
-					viewedInList: false,
-					viewedInContext: false,
-				};
-
-				batch.set(notificationRef, newNotification);
-			});
-
-			await batch.commit();
-		}
-
-		if (pushSubscribers.length > 0) {
-			const fcmSubscribers: FcmSubscriber[] = [];
-
-			pushSubscribers.forEach((subscriber) => {
-				if (subscriber.tokens && subscriber.tokens.length > 0) {
-					subscriber.tokens.forEach((token) => {
-						fcmSubscribers.push({
-							userId: subscriber.userId,
-							token: token,
-							documentId: `${subscriber.userId}_${statement.parentId}`,
-						});
-					});
-				}
-			});
-
-			const sendResult = await processFcmNotificationsImproved(fcmSubscribers, statement);
-
-			logger.info('Push notifications processed', {
-				statementId: statement.statementId,
-				parentId: statement.parentId,
-				successful: sendResult.successful,
-				failed: sendResult.failed,
-				invalidTokens: sendResult.invalidTokens.length,
-			});
-		}
+		// Fan out to subscribers via the shared, settings-aware path (in-app +
+		// push). Behaviour is unchanged for users without a settings doc.
+		await notifyStatementSubscribers(statement, parentStatement);
 	} catch (error) {
 		logger.error('Error in createNotificationsForStatement:', error);
 		throw error;
@@ -498,6 +410,20 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		const parentId = statement.parentId;
 		if (!parentId || parentId === 'top') {
 			logger.info(`Skipping embedding for statement ${statement.statementId} - no parent context`);
+
+			return;
+		}
+
+		// If a concurrent path (the live-synth onCreate trigger) already
+		// produced and saved the embedding for this statement, skip the
+		// OpenAI call. The cache lives on the statement doc itself, so a
+		// single point-read is enough to detect.
+		const existing = await embeddingCache.getBatchEmbeddings([statement.statementId]);
+		const cached = existing.get(statement.statementId);
+		if (cached && cached.length > 0) {
+			logger.info(
+				`Skipping embedding for statement ${statement.statementId} - already cached by another path`,
+			);
 
 			return;
 		}

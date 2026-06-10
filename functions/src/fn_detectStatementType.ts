@@ -6,15 +6,9 @@ import { logError } from './utils/errorHandling';
 
 // Lazy import to avoid circular dependency with ai-service model init
 async function getAIModel() {
-	const { GoogleGenerativeAI } = await import('@google/generative-ai');
-	const { GEMINI_MODEL } = await import('./config/gemini');
+	const { GEMINI_MODEL, getGenAI } = await import('./config/gemini');
 
-	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) throw new Error('Missing GEMINI_API_KEY');
-
-	const genAI = new GoogleGenerativeAI(apiKey);
-
-	return genAI.getGenerativeModel({
+	return getGenAI().getGenerativeModel({
 		model: GEMINI_MODEL,
 		generationConfig: {
 			responseMimeType: 'application/json',

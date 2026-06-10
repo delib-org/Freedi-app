@@ -8,7 +8,6 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { Request, Response } from 'firebase-functions/v1';
 // The Firebase Admin SDK
 import { initializeApp, getApps } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
@@ -17,7 +16,19 @@ import { Collections, functionConfig } from '@freedi/shared-types';
 // Structured error handling
 import { logError } from './utils/errorHandling';
 
+// HTTP auth/authorization helpers (extracted for unit testing)
+import { verifyAuthToken, requireSystemAdmin } from './utils/httpAuth';
+
 // Import function modules
+import { onChatStatementCreated } from './chat/fn_onChatStatementCreated';
+import { onChatEvaluationCreated } from './chat/fn_onChatEvaluationCreated';
+import { ssrChat } from './chat/ssrChat';
+import { rescoreStatement } from './chat/fn_rescoreStatement';
+import { redeemInvite, updateMembership } from './chat/fn_invite';
+import {
+	generateDialecticalRevision,
+	acceptDialecticalRevision,
+} from './chat/fn_dialecticalRevision';
 import {
 	deleteEvaluation,
 	newEvaluation,
@@ -74,19 +85,6 @@ import {
 	unsubscribeEmail,
 } from './fn_emailNotifications';
 import { getCluster, recoverLastSnapshot } from './fn_clusters';
-import {
-	generateMultipleFramings,
-	requestCustomFraming,
-	getFramingsForStatement,
-	getFramingClusters,
-	deleteFraming,
-} from './fn_multiFramingClusters';
-import {
-	getClusterAggregations,
-	recalculateClusterAggregation,
-	getFramingAggregationSummary,
-	onEvaluationChangeInvalidateCache,
-} from './fn_clusterAggregation';
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
 import { deleteResearchLogs } from './fn_deleteResearchLogs';
@@ -127,10 +125,7 @@ import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/da
 import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
-// Hybrid Text + Rating Clustering
-import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClustering';
 import { triggerTopicClusterPipeline } from './fn_topicClustering';
-import { triggerSummarizeFramingClusters } from './fn_summarizeClusters';
 import { fn_syncParagraphChildrenToDescription } from './fn_syncParagraphChildrenToDescription';
 
 // Strategic export (AI-ready report)
@@ -367,33 +362,14 @@ const wrapMemoryIntensiveHttpFunction = (
 };
 
 /**
- * Verifies Firebase ID token from Authorization header.
- * Returns the authenticated user's UID, or sends 401 and returns null.
- */
-async function verifyAuthToken(req: Request, res: Response): Promise<string | null> {
-	const authHeader = req.headers.authorization;
-	if (!authHeader?.startsWith('Bearer ')) {
-		res.status(401).send({ error: 'Missing or invalid Authorization header' });
-
-		return null;
-	}
-	try {
-		const token = authHeader.split('Bearer ')[1];
-		const decoded = await getAuth().verifyIdToken(token);
-
-		return decoded.uid;
-	} catch {
-		res.status(401).send({ error: 'Invalid or expired token' });
-
-		return null;
-	}
-}
-
-/**
- * Creates a wrapper for admin/maintenance HTTP functions with authentication.
- * Requires a valid Firebase ID token in the Authorization header.
- * @param {Function} handler - The function handler to wrap (receives uid as third argument)
- * @returns {Function} - Wrapped function with auth and error handling
+ * Creates a wrapper for admin/maintenance HTTP functions.
+ * Requires a valid Firebase ID token in the Authorization header AND that the
+ * authenticated user is a system admin (usersV2/{uid}.systemAdmin === true).
+ * Authentication alone is NOT sufficient — these endpoints run database-wide
+ * maintenance/migration jobs and must never be reachable by ordinary
+ * (including anonymous) users.
+ * @param {Function} handler - The function handler to wrap
+ * @returns {Function} - Wrapped function with auth, authorization and error handling
  */
 const wrapAdminHttpFunction = (
 	handler: (req: Request, res: Response) => Promise<void>,
@@ -410,7 +386,8 @@ const wrapAdminHttpFunction = (
 			...overrides,
 		},
 		async (req, res) => {
-			const uid = await verifyAuthToken(req, res);
+			// Authentication is not enough — require system-admin authorization.
+			const uid = await requireSystemAdmin(req, res);
 			if (!uid) return;
 
 			const startTime = Date.now();
@@ -564,6 +541,28 @@ exports.onStatementCreated = createFirestoreFunction(
 	onStatementCreated,
 	'onStatementCreated',
 );
+
+// ============================================
+// Dialectical Chat app (apps/chat)
+// ============================================
+exports.onChatStatementCreated = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	onChatStatementCreated,
+	'onChatStatementCreated',
+);
+exports.onChatEvaluationCreated = createFirestoreFunction(
+	`/${Collections.evaluations}/{evaluationId}`,
+	onDocumentCreated,
+	onChatEvaluationCreated,
+	'onChatEvaluationCreated',
+);
+exports.ssrChat = ssrChat;
+exports.rescoreStatement = rescoreStatement;
+exports.redeemInvite = redeemInvite;
+exports.updateMembership = updateMembership;
+exports.generateDialecticalRevision = generateDialecticalRevision;
+exports.acceptDialecticalRevision = acceptDialecticalRevision;
 
 // ============================================
 // DEPRECATED: Individual statement creation functions
@@ -804,19 +803,6 @@ exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
 exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
 exports.regenerateSynthesisProposal = regenerateSynthesisProposal;
 
-// Multi-Framing Clustering
-exports.generateMultipleFramings = wrapHttpFunction(generateMultipleFramings);
-exports.requestCustomFraming = wrapHttpFunction(requestCustomFraming);
-exports.getFramingsForStatement = wrapHttpFunction(getFramingsForStatement);
-exports.getFramingClusters = wrapHttpFunction(getFramingClusters);
-exports.deleteFraming = wrapHttpFunction(deleteFraming);
-
-// Cluster Aggregation
-exports.getClusterAggregations = wrapHttpFunction(getClusterAggregations);
-exports.recalculateClusterAggregation = wrapHttpFunction(recalculateClusterAggregation);
-exports.getFramingAggregationSummary = wrapHttpFunction(getFramingAggregationSummary);
-exports.onEvaluationChangeInvalidateCache = onEvaluationChangeInvalidateCache;
-
 // Embedding Operations (for vector-based similarity search)
 exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
 exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
@@ -919,15 +905,16 @@ exports.seedCreditRules = wrapAdminHttpFunction(async (req: Request, res: Respon
 	res.json({ seeded, message: `Seeded ${seeded} new credit rules` });
 });
 
-// HTTP endpoint for tracking daily login (called by client on app open)
-exports.trackDailyLogin = wrapAdminHttpFunction(async (req: Request, res: Response) => {
-	const { userId, sourceApp } = req.body;
-	if (!userId) {
-		res.status(400).json({ error: 'userId is required' });
+// HTTP endpoint for tracking daily login (called by client on app open).
+// This is a per-user endpoint, NOT an admin one: it only requires a valid
+// Firebase ID token and always tracks the *authenticated* user (the token uid),
+// never a userId supplied in the request body.
+exports.trackDailyLogin = wrapHttpFunction(async (req: Request, res: Response) => {
+	const uid = await verifyAuthToken(req, res);
+	if (!uid) return;
 
-		return;
-	}
-	await trackDailyLogin(userId, sourceApp || 'main');
+	const { sourceApp } = req.body ?? {};
+	await trackDailyLogin(uid, sourceApp || 'main');
 	res.json({ success: true });
 });
 
@@ -985,7 +972,6 @@ export const refreshUserStats = onSchedule(
 		timeZone: 'UTC',
 		...functionConfig,
 		timeoutSeconds: 300,
-		secrets: ['GEMINI_API_KEY'],
 	},
 	async () => {
 		await performUserStatsRefresh();
@@ -1000,6 +986,8 @@ export const refreshUserStats = onSchedule(
 // clients pick which entry point to call.
 export { synthesisJobStart, synthesisJobCancel } from './synthesis/asyncJob/fn_synthesisJobStart';
 export { fn_synthesisHeartbeatSweep } from './synthesis/asyncJob/fn_synthesisHeartbeatSweep';
+export { fn_synthesisBulkFlush } from './synthesis/scheduled/fn_synthesisBulkFlush';
+export { fn_synthesisReJudge } from './synthesis/scheduled/fn_synthesisReJudge';
 
 import { dispatchSynthesisJobWrite } from './synthesis/asyncJob/fn_synthesisJobDispatch';
 
@@ -1079,37 +1067,6 @@ exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res:
 	res.json(result);
 });
 
-// --------------------------
-// HYBRID TEXT + RATING CLUSTERING
-// --------------------------
-
-// Scheduled function disabled — clustering is now admin-triggered via the
-// topic-cluster pipeline (fn_topicClustering.ts). The hybrid k-means sweep
-// is preserved as legacy code so existing hybrid-auto framings stay readable;
-// to re-enable, restore the export below.
-// export const hybridClusteringSweepScheduled = onSchedule(
-// 	{
-// 		schedule: '*/15 * * * *',
-// 		timeZone: 'UTC',
-// 		...functionConfig,
-// 		memory: '1GiB',
-// 		timeoutSeconds: 300,
-// 		secrets: ['GEMINI_API_KEY'],
-// 	},
-// 	async () => {
-// 		await hybridClusteringSweep();
-// 	},
-// );
-void hybridClusteringSweep; // keep import alive for future re-enable; no runtime effect
-
-// HTTP endpoint for manually triggering hybrid clustering on a specific question (admin auth required)
-// Same memory profile as the disabled scheduled sweep — k-means on 1536-d hybrid vectors.
-exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering, {
-	memory: '1GiB',
-	timeoutSeconds: 540,
-	secrets: ['GEMINI_API_KEY'],
-});
-
 // HTTP endpoint for the new topic-cluster pipeline (admin-triggered, on-demand).
 // Replaces the scheduled sweep above. See functions/src/services/topic-cluster/.
 // Pipeline loads many statements + 1536-d embeddings + UMAP/DBSCAN + Anthropic SDK
@@ -1117,13 +1074,6 @@ exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering,
 exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterPipeline, {
 	memory: '1GiB',
 	timeoutSeconds: 540,
-});
-
-// HTTP endpoint that asks an LLM to summarize each cluster of a Framing from
-// its above-threshold members; writes the result to cluster.brief.
-exports.triggerSummarizeFramingClusters = wrapAdminHttpFunction(triggerSummarizeFramingClusters, {
-	memory: '512MiB',
-	timeoutSeconds: 300,
 });
 
 // AI-ready strategic-report export. May trigger the topic-cluster pipeline as a

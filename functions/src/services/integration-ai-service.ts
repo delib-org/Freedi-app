@@ -1,11 +1,10 @@
-import {
-	GenerativeModel,
-	GoogleGenerativeAI,
-	HarmCategory,
-	HarmBlockThreshold,
-} from '@google/generative-ai';
+import { HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
 import { logger } from 'firebase-functions';
-import { GEMINI_MODEL } from '../config/gemini';
+import {
+	GEMINI_MODEL,
+	getGenAI,
+	type CompatGenerativeModel,
+} from '../config/gemini';
 import { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { getParagraphsText } from '../helpers';
 
@@ -69,25 +68,12 @@ export type SynthesisGenerationResult = SynthesizedProposalResult | CannotSynthe
 /**
  * A cached singleton instance of the GenerativeModel.
  */
-let _integrationModel: GenerativeModel | null = null;
-
-/**
- * Get the GoogleGenerativeAI instance
- */
-function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GEMINI_API_KEY;
-
-	if (!apiKey) {
-		throw new Error('Missing GEMINI_API_KEY environment variable');
-	}
-
-	return new GoogleGenerativeAI(apiKey);
-}
+let _integrationModel: CompatGenerativeModel | null = null;
 
 /**
  * Initializes and retrieves the Generative AI model for integration tasks.
  */
-async function getIntegrationModel(): Promise<GenerativeModel> {
+async function getIntegrationModel(): Promise<CompatGenerativeModel> {
 	if (_integrationModel) {
 		return _integrationModel;
 	}
@@ -470,15 +456,26 @@ ${sourceLines.join('\n\n')}
 
 YOUR TASK — TWO STAGES:
 
-STAGE 1: DIRECTIONAL COHERENCE CHECK
-Before writing anything, scan the proposals. If the inputs pull in fundamentally OPPOSITE solution directions on the same lever — e.g. "raise X" vs "lower X", "expand Y" vs "abolish Y", "centralize Z" vs "decentralize Z" — they cannot honestly synthesize into one proposal. Return:
+STAGE 1: COHERENCE CHECK — refuse in EITHER of these cases:
+
+(a) DIRECTIONAL CONFLICT — inputs pull in fundamentally OPPOSITE directions on the same lever: "raise X" vs "lower X", "expand Y" vs "abolish Y", "centralize Z" vs "decentralize Z".
+
+(b) DISTINCT ACTIONS WITHIN THE SAME THEME — inputs propose DIFFERENT specific interventions that happen to address related problems, even when they don't directly conflict. Examples:
+   - "exercise regularly" + "eat nutritious food" (both improve health, but they are distinct independent interventions)
+   - "expand bus service" + "build dedicated bike lanes" (both improve transit, but they are distinct infrastructure choices)
+   - "spend time with family" + "join community clubs" (both about social connection, but different specific actions)
+   - "raise teacher salaries" + "modernize school buildings" (both improve education, but they are distinct levers)
+
+Acceptance test before proceeding to STAGE 2: the inputs must be TRUE PARAPHRASES of the SAME specific action — same lever, same direction, same intervention, just different wordings. If a supporter could reasonably agree with one and reject the other on its specifics, the inputs are distinct ideas worth being separate proposals — refuse and let them be grouped under a topic theme instead.
+
+When refusing, return:
 {
   "cannotSynthesize": true,
-  "reason": "<one short sentence describing the directional conflict>",
+  "reason": "<one short sentence describing directional conflict OR distinct actions sharing a theme>",
   "splitProposal": [["statementId of group A members"], ["statementId of group B members"], …]
 }
 
-Be conservative — only refuse when the disagreement is a directional split, not just different emphasis or different specifics.
+Bias: when in doubt, refuse. The downstream pipeline will group refused inputs under a topic label, which preserves the distinction. Merging genuinely distinct ideas erases what made each one specific.
 
 STAGE 2: WRITE THE SYNTHESIZED PROPOSAL (only if Stage 1 passes)
 Write a NEW actionable proposal. Don't summarize what people said — propose what should be DONE. Verb-led title, executive summary, multi-section plan.
@@ -555,6 +552,103 @@ Return JSON:
 
 		return synthesisFallback(statements);
 	}
+}
+
+/**
+ * Result of generating a short topic-cluster label from a pair (or more) of
+ * related-but-distinct ideas. Used by the pipeline's "topic cluster" spawn
+ * path — not for synth merging.
+ */
+export interface TopicLabelResult {
+	title: string;
+	description: string;
+}
+
+/**
+ * Produce a short topic-style label that names what a set of related ideas
+ * share, without merging them into one proposal. Cheap by design — short
+ * prompt, short output. Falls back to a truncation of the first input if
+ * the LLM call or parse fails.
+ */
+export async function generateTopicLabel(
+	inputs: Statement[],
+	questionContext: string,
+): Promise<TopicLabelResult> {
+	if (inputs.length === 0) {
+		throw new Error('No inputs provided for topic label');
+	}
+
+	const sample = inputs[0].statement;
+	const isHebrew = /[֐-׿]/.test(sample);
+	const isArabic = /[؀-ۿ]/.test(sample);
+	const languageInstruction = isHebrew
+		? 'Write the label in Hebrew.'
+		: isArabic
+			? 'Write the label in Arabic.'
+			: 'Write the label in the same language as the input ideas.';
+
+	const ideaLines = inputs
+		.slice(0, 6)
+		.map((s, i) => `${i + 1}. ${s.statement}`)
+		.join('\n');
+
+	const prompt = `You are naming a topic that groups related but distinct community ideas.
+
+QUESTION: "${questionContext}"
+
+RELATED IDEAS (different specifics, same general topic):
+${ideaLines}
+
+TASK: Produce a SHORT topic label (3–6 words) describing what these ideas have in common at the topic level — not a merged proposal. Examples of good labels: "Public transit improvements", "Park & green space", "Bike lane expansion". Avoid verb-led action phrasing; this is a category, not a plan.
+
+Also give a one-sentence description (≤ 20 words) describing the topic.
+
+${languageInstruction}
+
+Return JSON:
+{
+  "title": "3–6 word topic label",
+  "description": "One-sentence topic description (≤ 20 words)"
+}`;
+
+	try {
+		const model = await getIntegrationModel();
+		const result = await model.generateContent(prompt);
+		let responseText = result.response.text();
+		responseText = responseText
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
+
+		const parsed = JSON.parse(responseText);
+		const title =
+			typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title.trim() : '';
+		const description = typeof parsed.description === 'string' ? parsed.description.trim() : '';
+
+		if (!title) {
+			return topicLabelFallback(inputs);
+		}
+
+		return { title, description };
+	} catch (error) {
+		logger.warn('generateTopicLabel: error, using fallback', {
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return topicLabelFallback(inputs);
+	}
+}
+
+function topicLabelFallback(inputs: Statement[]): TopicLabelResult {
+	const primary = inputs[0].statement;
+	const isHebrew = /[֐-׿]/.test(primary);
+	const prefix = isHebrew ? 'נושא: ' : 'Topic: ';
+	const trimmed = primary.length > 50 ? primary.substring(0, 47) + '…' : primary;
+
+	return {
+		title: `${prefix}${trimmed}`,
+		description: '',
+	};
 }
 
 function synthesisFallback(statements: StatementWithEvaluation[]): SynthesizedProposalResult {

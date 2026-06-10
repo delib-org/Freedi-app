@@ -278,6 +278,12 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // Per-user global notification settings (master mute, channels, quiet hours,
+    // digest cadence). The doc id IS the uid, so a user only touches their own.
+    match /notificationSettings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
     match /askedToBeNotified/{askedToBeNotifiedId=**} {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
@@ -545,6 +551,17 @@ service cloud.firestore {
                     && request.resource.data.evaluation is number
                     && request.resource.data.updatedAt is number;
       allow delete: if request.auth.uid != null; // Only authenticated users can delete
+    }
+
+    // Per-(cluster, user) provenance docs. Written server-side by
+    // functions/src/condensation/aggregation.ts. Read by the Join app to
+    // show evaluator-count breakdowns per cluster
+    // (apps/join/src/lib/store.ts subscribeClusterLinks).
+    // Trust level mirrors `evaluations` above — anonymous join sessions are
+    // authenticated via signInAnonymously().
+    match /clusterEvaluationLinks/{linkId} {
+      allow read: if request.auth != null;
+      allow write: if false;
     }
 
     // Typing status for real-time collaboration indicators

@@ -13,3 +13,8 @@ coverage/
 # Environment variables
 .env
 .secret.local
+# Local prod-data snapshots for synthesis testing (contain real user data — never commit)
+scripts/snapshots/
+
+# SvelteKit chat SSR bundle (generated at deploy time by apps/chat/scripts/copy-ssr-to-functions.cjs)
+chat-build/

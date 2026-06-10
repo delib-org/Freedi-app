@@ -15,10 +15,16 @@ describe('synthesis settings', () => {
 			expect(result.errors).toEqual([]);
 		});
 
-		it('rejects minEvaluators below 1', () => {
+		it('accepts minEvaluators = 0 (run on every option, no engagement gate)', () => {
 			const result = validateSynthesisSettings({ minEvaluators: 0 });
+			expect(result.valid).toBe(true);
+			expect(result.errors).toEqual([]);
+		});
+
+		it('rejects negative minEvaluators', () => {
+			const result = validateSynthesisSettings({ minEvaluators: -1 });
 			expect(result.valid).toBe(false);
-			expect(result.errors).toContain('minEvaluators must be a finite integer ≥ 1');
+			expect(result.errors).toContain('minEvaluators must be a finite integer ≥ 0');
 		});
 
 		it('rejects out-of-range consensus', () => {
@@ -27,13 +33,40 @@ describe('synthesis settings', () => {
 			expect(result.errors[0]).toMatch(/minConsensus/);
 		});
 
-		it('rejects reviewLowerBound >= attachThreshold', () => {
+		it('rejects reviewLowerBound >= attachThreshold (legacy partial, no cluster set)', () => {
 			const result = validateSynthesisSettings({
 				reviewLowerBound: 0.95,
 				attachThreshold: 0.9,
 			});
 			expect(result.valid).toBe(false);
 			expect(result.errors.join(' ')).toMatch(/strictly less/);
+		});
+
+		it('rejects clusterThreshold >= attachThreshold', () => {
+			const result = validateSynthesisSettings({
+				clusterThreshold: 0.9,
+				attachThreshold: 0.85,
+			});
+			expect(result.valid).toBe(false);
+			expect(result.errors.join(' ')).toMatch(/clusterThreshold must be strictly less than attachThreshold/);
+		});
+
+		it('rejects reviewLowerBound >= clusterThreshold', () => {
+			const result = validateSynthesisSettings({
+				reviewLowerBound: 0.65,
+				clusterThreshold: 0.6,
+			});
+			expect(result.valid).toBe(false);
+			expect(result.errors.join(' ')).toMatch(/reviewLowerBound must be strictly less than clusterThreshold/);
+		});
+
+		it('accepts the three-band default (review < cluster < attach)', () => {
+			const result = validateSynthesisSettings({
+				reviewLowerBound: 0.5,
+				clusterThreshold: 0.6,
+				attachThreshold: 0.85,
+			});
+			expect(result.valid).toBe(true);
 		});
 
 		it('reports multiple errors at once', () => {
@@ -70,7 +103,8 @@ describe('synthesis settings', () => {
 						minEvaluators: 5,
 						minConsensus: 0.3,
 						attachThreshold: 0.97,
-						reviewLowerBound: 0.88,
+						clusterThreshold: 0.75,
+						reviewLowerBound: 0.6,
 					},
 				},
 			} as AnyStatement;
@@ -80,8 +114,23 @@ describe('synthesis settings', () => {
 				minEvaluators: 5,
 				minConsensus: 0.3,
 				attachThreshold: 0.97,
-				reviewLowerBound: 0.88,
+				synthLowerBound: DEFAULT_SYNTHESIS_SETTINGS.synthLowerBound,
+				clusterThreshold: 0.75,
+				reviewLowerBound: 0.6,
 			});
+		});
+
+		it('fills in clusterThreshold default when omitted from partial block', () => {
+			const stmt = {
+				statementSettings: {
+					synthesis: {
+						enabled: true,
+						attachThreshold: 0.9,
+					},
+				},
+			} as AnyStatement;
+			const result = loadSynthesisSettingsFromStatement(stmt as never);
+			expect(result.clusterThreshold).toBe(DEFAULT_SYNTHESIS_SETTINGS.clusterThreshold);
 		});
 
 		it('legacy liveSynthEnabled=true overrides default for non-MC questions', () => {

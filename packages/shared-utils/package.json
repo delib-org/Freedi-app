@@ -8,6 +8,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@freedi/shared-types": "*"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "jest",
