@@ -7,6 +7,7 @@
 <script lang="ts">
 	import { t } from '$lib/i18n';
 	import { snoozeInstall } from '$lib/installPrompt';
+	import { portal } from '$lib/actions/portal';
 
 	let { onClose }: { onClose: () => void } = $props();
 
@@ -19,7 +20,7 @@
 	}
 </script>
 
-<div class="sheet" role="dialog" aria-modal="true" aria-label={$t('Install the app')}>
+<div class="sheet" use:portal role="dialog" aria-modal="true" aria-label={$t('Install the app')}>
 	<button class="sheet__backdrop" aria-label={$t('Close')} onclick={dismiss}></button>
 	<div class="sheet__panel">
 		<h2 class="sheet__title">{$t('Get notified — add Freedi to your Home Screen')}</h2>

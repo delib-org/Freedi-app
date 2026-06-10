@@ -6,11 +6,12 @@
 -->
 <script lang="ts">
 	import { t } from '$lib/i18n';
+	import { portal } from '$lib/actions/portal';
 
 	let { onAllow, onDismiss }: { onAllow: () => void; onDismiss: () => void } = $props();
 </script>
 
-<div class="primer" role="dialog" aria-modal="true" aria-label={$t('Turn on notifications')}>
+<div class="primer" use:portal role="dialog" aria-modal="true" aria-label={$t('Turn on notifications')}>
 	<button class="primer__backdrop" aria-label={$t('Close')} onclick={onDismiss}></button>
 	<div class="primer__panel">
 		<span class="primer__icon" aria-hidden="true">🔔</span>
