@@ -8,8 +8,9 @@ import {
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
-import { Collections, StatementType, UserDemographicQuestion } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, UserDemographicQuestion } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { isDerivedStatement } from '@/lib/utils/derivedStatements';
 
 interface DemographicOptionCount {
   option: string;
@@ -100,12 +101,20 @@ async function getSolutionStats(
       .collection(Collections.statements)
       .where('parentId', '==', parentId)
       .where('statementType', '==', StatementType.option)
-      .select('creatorId', 'isSynthesis', 'isCluster')
+      .select(
+        'creatorId',
+        'isCluster',
+        'derivedByPipeline',
+        'integratedOptions',
+        'synthesisRunId',
+        'synthesisMechanism',
+        'statementType'
+      )
       .get();
 
     snapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.isSynthesis === true || data.isCluster === true) return;
+      if (isDerivedStatement(data as Statement)) return;
 
       totalSolutions++;
       if (data.creatorId) {

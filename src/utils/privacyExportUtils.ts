@@ -290,7 +290,31 @@ function buildDemographicBreakdowns(
 }
 
 /**
- * Build participation funnel summary: entered → suggested → evaluated
+ * Pipeline-derived option detection (cluster/synthesis spawns are stored with
+ * statementType: option). Mirrors `isDerivedStatement` in the MC app so all
+ * participation surfaces count the same set of genuine submissions.
+ */
+function isDerivedOption(statement: Statement): boolean {
+	return (
+		statement.isCluster === true ||
+		!!statement.derivedByPipeline ||
+		(Array.isArray(statement.integratedOptions) && statement.integratedOptions.length > 0) ||
+		!!statement.synthesisRunId ||
+		!!statement.synthesisMechanism ||
+		statement.statementType === StatementType.synthesis
+	);
+}
+
+/**
+ * Build participation funnel summary: entered → suggested → evaluated.
+ *
+ * Definitions are aligned with the MC stats API and survey admin panel:
+ * - suggested: distinct creators of genuine options (pipeline-derived
+ *   cluster/synthesis docs excluded).
+ * - evaluated: distinct users who actively rated (evaluation rows with an
+ *   `evaluator` object; rows with only `evaluatorId` are the auto +1
+ *   self-vote on submission).
+ * - totalParticipants: union of suggesters and anyone with an evaluation row.
  */
 export function buildParticipationSummary(
 	parentStatement: Statement,
@@ -298,10 +322,16 @@ export function buildParticipationSummary(
 	evaluations: Evaluation[],
 ): ParticipationSummary {
 	const suggesters = new Set(
-		options.map((o) => o.creatorId || o.creator?.uid).filter((id): id is string => !!id),
+		options
+			.filter((o) => !isDerivedOption(o))
+			.map((o) => o.creatorId || o.creator?.uid)
+			.filter((id): id is string => !!id),
 	);
-	const evaluators = new Set(evaluations.map((e) => e.evaluatorId).filter(Boolean));
-	const totalParticipants = new Set([...suggesters, ...evaluators]).size;
+	const evaluators = new Set(
+		evaluations.map((e) => e.evaluator?.uid).filter((id): id is string => !!id),
+	);
+	const allEvaluators = new Set(evaluations.map((e) => e.evaluatorId).filter(Boolean));
+	const totalParticipants = new Set([...suggesters, ...allEvaluators]).size;
 
 	// View tracking only exists for questions visited after it was introduced;
 	// when absent, report null rather than a misleading zero.

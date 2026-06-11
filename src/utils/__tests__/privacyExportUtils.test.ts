@@ -12,22 +12,38 @@ function makeStatement(overrides: Partial<Statement>): Statement {
 	} as Statement;
 }
 
-function makeOption(statementId: string, creatorId: string): Statement {
-	return makeStatement({ statementId, creatorId, parentId: 'q1' });
+function makeOption(
+	statementId: string,
+	creatorId: string,
+	extra: Partial<Statement> = {},
+): Statement {
+	return makeStatement({ statementId, creatorId, parentId: 'q1', ...extra });
 }
 
+/** Explicit rating: carries an evaluator object, like real swipe/main-app ratings */
 function makeEvaluation(statementId: string, evaluatorId: string, value = 1): Evaluation {
 	return {
 		parentId: 'q1',
 		statementId,
 		evaluatorId,
+		evaluator: { uid: evaluatorId, displayName: evaluatorId },
 		evaluation: value,
+	} as Evaluation;
+}
+
+/** Auto +1 self-vote written on solution submit: evaluatorId only, no evaluator object */
+function makeAutoSelfVote(statementId: string, evaluatorId: string): Evaluation {
+	return {
+		parentId: 'q1',
+		statementId,
+		evaluatorId,
+		evaluation: 1,
 	} as Evaluation;
 }
 
 describe('privacyExportUtils', () => {
 	describe('buildParticipationSummary', () => {
-		it('counts distinct suggesters and evaluators', () => {
+		it('counts distinct suggesters and explicit evaluators', () => {
 			const parent = makeStatement({});
 			const options = [
 				makeOption('o1', 'userA'),
@@ -45,6 +61,35 @@ describe('privacyExportUtils', () => {
 			expect(result.suggestedCount).toBe(2); // userA, userB
 			expect(result.evaluatedCount).toBe(2); // userB, userC
 			expect(result.totalParticipants).toBe(3); // userA, userB, userC
+		});
+
+		it('does not count auto +1 self-votes as evaluating, but counts them as participating', () => {
+			const parent = makeStatement({});
+			const options = [makeOption('o1', 'userA')];
+			const evaluations = [
+				makeAutoSelfVote('o1', 'userA'),
+				makeEvaluation('o1', 'userB'),
+				// userC only has an auto +1 row (e.g. their own solution was later hidden)
+				makeAutoSelfVote('o2', 'userC'),
+			];
+
+			const result = buildParticipationSummary(parent, options, evaluations);
+
+			expect(result.evaluatedCount).toBe(1); // only userB actively rated
+			expect(result.totalParticipants).toBe(3); // userA, userB, userC
+		});
+
+		it('excludes pipeline-derived options from suggesters', () => {
+			const parent = makeStatement({});
+			const options = [
+				makeOption('o1', 'userA'),
+				makeOption('cluster1', 'userB', { isCluster: true }),
+				makeOption('synth1', 'botUser', { derivedByPipeline: 'synthesis' } as Partial<Statement>),
+			];
+
+			const result = buildParticipationSummary(parent, options, []);
+
+			expect(result.suggestedCount).toBe(1); // only userA's genuine option
 		});
 
 		it('returns null enteredCount when view tracking is unavailable', () => {

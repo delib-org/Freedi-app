@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections } from '@freedi/shared-types';
+import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
+import { isDerivedStatement } from '@/lib/utils/derivedStatements';
 import { FieldPath, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
 const EVAL_PAGE_SIZE = 500;
@@ -10,6 +11,16 @@ const SOLUTION_PAGE_SIZE = 500;
 /**
  * GET /api/statements/[id]/stats
  * Get statistics for a statement (participant count, etc.)
+ *
+ * Definitions (aligned with the survey admin results panel):
+ * - evaluatorCount: users who ACTIVELY rated a solution (evaluation rows with
+ *   an `evaluator` object). Rows with only `evaluatorId` are the automatic
+ *   +1 self-vote written when submitting one's own solution.
+ * - creatorCount / totalSolutions: genuine user submissions only — option
+ *   statements that are not pipeline-derived (cluster/synthesis spawns).
+ * - participantCount: union of anyone who acted (any evaluation row or any
+ *   genuine submission).
+ * - enteredCount: unique statementViews entrants, never below participantCount.
  *
  * Both collection reads are paginated via `startAfter` cursors so the
  * endpoint streams large parents instead of loading every evaluation/
@@ -24,9 +35,10 @@ export async function GET(
     const { id: statementId } = await params;
     const db = getFirestoreAdmin();
 
-    // Count unique evaluators by paginating with .select('evaluatorId').
+    // Unique evaluators, paginated with .select('evaluatorId', 'evaluator').
     // The composite index (parentId ASC, evaluatorId ASC) already exists.
-    const uniqueEvaluators = new Set<string>();
+    const explicitEvaluators = new Set<string>();
+    const allEvaluators = new Set<string>();
     let totalEvaluations = 0;
     let evalCursor: QueryDocumentSnapshot | null = null;
     for (;;) {
@@ -34,15 +46,16 @@ export async function GET(
         .collection(Collections.evaluations)
         .where('parentId', '==', statementId)
         .orderBy('evaluatorId')
-        .select('evaluatorId')
+        .select('evaluatorId', 'evaluator')
         .limit(EVAL_PAGE_SIZE);
       if (evalCursor) pageQuery = pageQuery.startAfter(evalCursor);
       const page = await pageQuery.get();
       if (page.empty) break;
 
       page.docs.forEach((doc) => {
-        const id = doc.data().evaluatorId;
-        if (id) uniqueEvaluators.add(id);
+        const data = doc.data();
+        if (data.evaluatorId) allEvaluators.add(data.evaluatorId);
+        if (data.evaluator?.uid) explicitEvaluators.add(data.evaluator.uid);
       });
       totalEvaluations += page.size;
 
@@ -50,9 +63,10 @@ export async function GET(
       evalCursor = page.docs[page.docs.length - 1];
     }
 
-    // Count unique solution creators by paginating with .select('creatorId').
+    // Genuine solutions: option children minus pipeline-derived docs
+    // (cluster/synthesis spawns are stored with statementType: option too).
     // OrderBy document ID so the page cursor works without requiring a new
-    // composite index on (parentId, creatorId).
+    // composite index.
     const uniqueCreators = new Set<string>();
     let totalSolutions = 0;
     let solCursor: QueryDocumentSnapshot | null = null;
@@ -60,25 +74,37 @@ export async function GET(
       let pageQuery = db
         .collection(Collections.statements)
         .where('parentId', '==', statementId)
+        .where('statementType', '==', StatementType.option)
         .orderBy(FieldPath.documentId())
-        .select('creatorId')
+        .select(
+          'creatorId',
+          'isCluster',
+          'derivedByPipeline',
+          'integratedOptions',
+          'synthesisRunId',
+          'synthesisMechanism',
+          'statementType'
+        )
         .limit(SOLUTION_PAGE_SIZE);
       if (solCursor) pageQuery = pageQuery.startAfter(solCursor);
       const page = await pageQuery.get();
       if (page.empty) break;
 
       page.docs.forEach((doc) => {
-        const id = doc.data().creatorId;
-        if (id) uniqueCreators.add(id);
+        const data = doc.data();
+        if (isDerivedStatement(data as Statement)) return;
+
+        totalSolutions++;
+        if (data.creatorId) uniqueCreators.add(data.creatorId);
       });
-      totalSolutions += page.size;
 
       if (page.size < SOLUTION_PAGE_SIZE) break;
       solCursor = page.docs[page.docs.length - 1];
     }
 
-    // Total unique participants = evaluators + creators (union)
-    const allParticipants = new Set([...uniqueEvaluators, ...uniqueCreators]);
+    // Total unique participants = anyone with an evaluation row (including
+    // the auto +1 from submitting) + genuine solution creators (union)
+    const allParticipants = new Set([...allEvaluators, ...uniqueCreators]);
 
     // Unique entrants: statementViews docs are one-per-user-per-question
     // (`${userId}--${statementId}`), so an aggregate count == unique users
@@ -99,7 +125,7 @@ export async function GET(
 
     return NextResponse.json({
       participantCount: allParticipants.size,
-      evaluatorCount: uniqueEvaluators.size,
+      evaluatorCount: explicitEvaluators.size,
       creatorCount: uniqueCreators.size,
       enteredCount,
       totalEvaluations,

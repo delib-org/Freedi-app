@@ -26,12 +26,33 @@ export interface ParticipationStats {
 }
 
 /**
+ * Pipeline-derived option detection (cluster/synthesis spawns are stored with
+ * statementType: option). Mirrors `isDerivedStatement` in the MC app so all
+ * participation surfaces count the same set of genuine submissions.
+ */
+function isDerivedOption(statement: Statement): boolean {
+	return (
+		statement.isCluster === true ||
+		!!statement.derivedByPipeline ||
+		(Array.isArray(statement.integratedOptions) && statement.integratedOptions.length > 0) ||
+		!!statement.synthesisRunId ||
+		!!statement.synthesisMechanism ||
+		statement.statementType === StatementType.synthesis
+	);
+}
+
+/**
  * Participation funnel for a question: entered → suggested → evaluated.
  *
- * - suggested: distinct creators of the option sub-statements (from Redux).
- * - evaluated: distinct evaluatorIds in the evaluations collection (one fetch).
- * - entered: count of statementViews docs (one per user per question); also
- *   records the current user's own entry, fire-and-forget.
+ * Definitions are aligned with the MC stats API and survey admin panel:
+ * - suggested: distinct creators of genuine option sub-statements (from
+ *   Redux, excluding pipeline-derived cluster/synthesis docs).
+ * - evaluated: distinct users who ACTIVELY rated a solution (evaluation rows
+ *   with an `evaluator` object; rows with only `evaluatorId` are the auto +1
+ *   self-vote on submission).
+ * - entered: count of statementViews docs (one per user per question), never
+ *   below the union of known participants; also records the current user's
+ *   own entry, fire-and-forget.
  */
 export function useParticipationStats(
 	statement: Statement | undefined,
@@ -39,18 +60,21 @@ export function useParticipationStats(
 ): ParticipationStats {
 	const creator = useSelector(creatorSelector);
 	const [evaluated, setEvaluated] = useState(0);
+	const [allEvaluatorIds, setAllEvaluatorIds] = useState<Set<string>>(new Set());
 	const [viewsCount, setViewsCount] = useState(0);
 
 	const statementId = statement?.statementId;
 	const isQuestion = statement?.statementType === StatementType.question;
 
-	const suggested = useMemo(() => {
-		const suggesters = new Set(
-			options.map((o) => o.creatorId || o.creator?.uid).filter((id): id is string => !!id),
+	const suggesterIds = useMemo(() => {
+		return new Set(
+			options
+				.filter((o) => !isDerivedOption(o))
+				.map((o) => o.creatorId || o.creator?.uid)
+				.filter((id): id is string => !!id),
 		);
-
-		return suggesters.size;
 	}, [options]);
+	const suggested = suggesterIds.size;
 
 	// Record that the current user entered this question (idempotent doc id)
 	useEffect(() => {
@@ -88,10 +112,15 @@ export function useParticipationStats(
 		getDocs(evaluationsQuery)
 			.then((snapshot) => {
 				if (cancelled) return;
-				const evaluators = new Set(
-					snapshot.docs.map((d) => (d.data() as Evaluation).evaluatorId).filter(Boolean),
-				);
-				setEvaluated(evaluators.size);
+				const explicitEvaluators = new Set<string>();
+				const allEvaluators = new Set<string>();
+				snapshot.docs.forEach((d) => {
+					const evaluation = d.data() as Evaluation;
+					if (evaluation.evaluatorId) allEvaluators.add(evaluation.evaluatorId);
+					if (evaluation.evaluator?.uid) explicitEvaluators.add(evaluation.evaluator.uid);
+				});
+				setEvaluated(explicitEvaluators.size);
+				setAllEvaluatorIds(allEvaluators);
 			})
 			.catch((error) => {
 				logError(error, {
@@ -122,8 +151,16 @@ export function useParticipationStats(
 	}, [statementId, isQuestion]);
 
 	// View tracking started mid-project: never report fewer entrants than
-	// the people we know participated.
-	const entered = Math.max(viewsCount, suggested > evaluated ? suggested : evaluated);
+	// the union of people we know participated (any evaluation row, including
+	// the auto +1 self-vote, or a genuine submission).
+	const participants = useMemo(() => {
+		const union = new Set(allEvaluatorIds);
+		suggesterIds.forEach((id) => union.add(id));
+
+		return union.size;
+	}, [allEvaluatorIds, suggesterIds]);
+
+	const entered = Math.max(viewsCount, participants);
 
 	return { entered: viewsCount > 0 ? entered : 0, suggested, evaluated };
 }
