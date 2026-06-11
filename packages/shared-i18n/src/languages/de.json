@@ -2668,5 +2668,10 @@
   "Could not redeem invite": "Einladung konnte nicht eingelöst werden",
   "Proposed options": "Vorgeschlagene Optionen",
   "No public options.": "Keine öffentlichen Optionen.",
-  "No public questions.": "Keine öffentlichen Fragen."
+  "No public questions.": "Keine öffentlichen Fragen.",
+  "Showing": "Angezeigt",
+  "statements": "Aussagen",
+  "Load all": "Alle laden",
+  "Loading all statements": "Alle Aussagen werden geladen",
+  "All statements loaded": "Alle Aussagen geladen"
 }

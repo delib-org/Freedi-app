@@ -2668,5 +2668,10 @@
   "Could not redeem invite": "No se pudo canjear la invitación",
   "Proposed options": "Opciones propuestas",
   "No public options.": "No hay opciones públicas.",
-  "No public questions.": "No hay preguntas públicas."
+  "No public questions.": "No hay preguntas públicas.",
+  "Showing": "Mostrando",
+  "statements": "declaraciones",
+  "Load all": "Cargar todo",
+  "Loading all statements": "Cargando todas las declaraciones",
+  "All statements loaded": "Todas las declaraciones cargadas"
 }

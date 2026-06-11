@@ -2668,5 +2668,10 @@
   "Could not redeem invite": "Kon uitnodiging niet inwisselen",
   "Proposed options": "Voorgestelde opties",
   "No public options.": "Geen openbare opties.",
-  "No public questions.": "Geen openbare vragen."
+  "No public questions.": "Geen openbare vragen.",
+  "Showing": "Toont",
+  "statements": "stellingen",
+  "Load all": "Alles laden",
+  "Loading all statements": "Alle stellingen worden geladen",
+  "All statements loaded": "Alle stellingen geladen"
 }

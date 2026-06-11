@@ -3419,5 +3419,10 @@
   "Could not redeem invite": "לא ניתן היה לממש את ההזמנה",
   "Proposed options": "אפשרויות מוצעות",
   "No public options.": "אין אפשרויות ציבוריות.",
-  "No public questions.": "אין שאלות ציבוריות."
+  "No public questions.": "אין שאלות ציבוריות.",
+  "Showing": "מציג",
+  "statements": "היגדים",
+  "Load all": "טען הכל",
+  "Loading all statements": "טוען את כל ההיגדים",
+  "All statements loaded": "כל ההיגדים נטענו"
 }

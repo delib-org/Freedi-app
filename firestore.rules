@@ -294,6 +294,13 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // Deletion tombstones — written only by Cloud Functions (admin SDK).
+    // Clients read them to sync hard deletes into bulk-loaded scopes.
+    match /statementDeletions/{statementId=**} {
+      allow read: if request.auth.uid != null;
+      allow write: if false;
+    }
+
     match /importance/{importanceId=**} {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;

@@ -6,6 +6,7 @@ import { statementOptionsSelector, statementSelector } from '@/redux/statements/
 import { Statement } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
 
 const Triangle: FC = () => {
 	const { t } = useTranslation();
@@ -43,6 +44,7 @@ const Triangle: FC = () => {
 
 	return (
 		<>
+			<LoadAllBanner rootId={statementId} mode="direct" />
 			<div className={styles.triangle}></div>
 			<div className={`${styles.triangle} ${styles['triangle--invisible']}`}>
 				{subStatements.map((subStatement: Statement) => {

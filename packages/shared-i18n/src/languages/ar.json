@@ -2791,5 +2791,10 @@
   "Could not redeem invite": "تعذّر استرداد الدعوة",
   "Proposed options": "الخيارات المقترحة",
   "No public options.": "لا توجد خيارات عامة.",
-  "No public questions.": "لا توجد أسئلة عامة."
+  "No public questions.": "لا توجد أسئلة عامة.",
+  "Showing": "عرض",
+  "statements": "عبارات",
+  "Load all": "تحميل الكل",
+  "Loading all statements": "جارٍ تحميل جميع العبارات",
+  "All statements loaded": "تم تحميل جميع العبارات"
 }

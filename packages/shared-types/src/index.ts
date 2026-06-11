@@ -410,6 +410,14 @@ export {
   OnlineSchema
 } from "./models/statement/online";
 
+export type {
+  StatementDeletion
+} from "./models/statement/StatementDeletion";
+
+export {
+  StatementDeletionSchema
+} from "./models/statement/StatementDeletion";
+
 
 export type {
   Questionnaire,

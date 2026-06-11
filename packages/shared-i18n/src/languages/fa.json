@@ -3191,5 +3191,10 @@
   "Could not redeem invite": "بازخرید دعوت ممکن نشد",
   "Proposed options": "گزینه‌های پیشنهادی",
   "No public options.": "هیچ گزینهٔ عمومی وجود ندارد.",
-  "No public questions.": "هیچ پرسش عمومی وجود ندارد."
+  "No public questions.": "هیچ پرسش عمومی وجود ندارد.",
+  "Showing": "نمایش",
+  "statements": "گزاره‌ها",
+  "Load all": "بارگیری همه",
+  "Loading all statements": "در حال بارگیری همه گزاره‌ها",
+  "All statements loaded": "همه گزاره‌ها بارگیری شدند"
 }

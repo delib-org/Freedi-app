@@ -3407,5 +3407,10 @@
   "Could not redeem invite": "Could not redeem invite",
   "Proposed options": "Proposed options",
   "No public options.": "No public options.",
-  "No public questions.": "No public questions."
+  "No public questions.": "No public questions.",
+  "Showing": "Showing",
+  "statements": "statements",
+  "Load all": "Load all",
+  "Loading all statements": "Loading all statements",
+  "All statements loaded": "All statements loaded"
 }

@@ -1,5 +1,6 @@
 export enum Collections {
     statements = 'statements',
+    statementDeletions = 'statementDeletions', // tombstones for deleted statements (delta-listener delete sync)
     statementSnapShots = 'statementSnapshots',
     statementHistory = 'statementHistory', // subcollection on statements/{id}/statementHistory
     termsOfUseAcceptance = 'termsOfUseAcceptance',
