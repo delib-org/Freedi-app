@@ -147,11 +147,39 @@ export const CHAT = {
 } as const;
 
 /**
+ * Home screen constants
+ */
+export const HOME = {
+	/** Subscriptions loaded by the home listeners on first paint */
+	INITIAL_SUBSCRIPTIONS_LIMIT: 30,
+	/** Older subscriptions fetched per scroll-to-bottom batch */
+	LOAD_MORE_BATCH_SIZE: 30,
+} as const;
+
+/**
  * Redux state management constants
  */
 export const REDUX = {
-	/** Maximum statements to keep in Redux store before pruning */
+	/**
+	 * Maximum statements to keep in Redux store before pruning.
+	 * Pruning is tree-granular and never evicts trees holding a fully
+	 * bulk-loaded scope (see pruneStatements in statementsSlice).
+	 */
 	MAX_STATEMENTS: 500,
+} as const;
+
+/**
+ * Bulk "Load all statements" constants (getBulkStatements endpoint + delta listeners)
+ */
+export const BULK_LOAD = {
+	/** Statements fetched per HTTP page */
+	PAGE_SIZE: 500,
+	/** Watermark safety overlap — delta listeners rewind this far to absorb cache/clock gaps */
+	DELTA_OVERLAP_MS: 5000,
+	/** Minimum interval between count() aggregation refreshes */
+	COUNT_REFRESH_MS: 60000,
+	/** How long the "All statements loaded" confirmation stays visible */
+	DONE_BANNER_HIDE_MS: 4000,
 } as const;
 
 /**

@@ -1,5 +1,6 @@
 export enum Collections {
     statements = 'statements',
+    statementDeletions = 'statementDeletions', // tombstones for deleted statements (delta-listener delete sync)
     statementSnapShots = 'statementSnapshots',
     statementHistory = 'statementHistory', // subcollection on statements/{id}/statementHistory
     termsOfUseAcceptance = 'termsOfUseAcceptance',
@@ -44,6 +45,7 @@ export enum Collections {
     inAppNotifications = 'inAppNotifications',
     pushNotifications = 'pushNotifications',
     emailNotifications = 'emailNotifications',
+    notificationSettings = 'notificationSettings',
     askedToBeNotified = 'askedToBeNotified',
     polarizationIndex = 'polarizationIndex',
     userDemographicEvaluations = 'userDemographicEvaluations',
@@ -63,11 +65,7 @@ export enum Collections {
     documentCollaborators = 'documentCollaborators',
     joinDelegateInvitations = 'joinDelegateInvitations',
     joinDelegates = 'joinDelegates',
-    framings = 'framings',
-    framingRequests = 'framingRequests',
-    clusterAggregations = 'clusterAggregations',
     clusterEvaluationLinks = 'clusterEvaluationLinks',
-    framingSnapshots = 'framingSnapshots',
     suggestions = 'suggestions',
     documentVersions = 'documentVersions',
     versionChanges = 'versionChanges',

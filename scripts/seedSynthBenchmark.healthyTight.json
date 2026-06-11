@@ -1,0 +1,142 @@
+{
+	"questionId": "HealthyTight0001",
+	"questionText": "How can we all be healthy",
+	"design": "3 topics × 4 synths × 5 paraphrases = 60 (TIGHT: high within-synth lexical overlap so cosine clears the 0.94 auto-accept band; realistic restatements, synths kept distinct)",
+	"topics": [
+		{
+			"name": "physical-fitness",
+			"synths": [
+				{
+					"name": "daily-cardio",
+					"paraphrases": [
+						"Do daily cardio exercise such as running or cycling.",
+						"Do daily cardio exercise such as running and cycling.",
+						"Do daily cardio exercise like running or cycling.",
+						"Do daily cardio workouts such as running or cycling.",
+						"Do daily cardio exercise such as jogging or cycling."
+					]
+				},
+				{
+					"name": "strength-training",
+					"paraphrases": [
+						"Do regular strength training with weights to build muscle.",
+						"Do regular strength training using weights to build muscle.",
+						"Do regular strength training with weights to gain muscle.",
+						"Do regular weight training with weights to build muscle.",
+						"Do regular strength training with weights for building muscle."
+					]
+				},
+				{
+					"name": "flexibility-stretching",
+					"paraphrases": [
+						"Do daily stretching exercises to improve flexibility.",
+						"Do daily stretching exercises to increase flexibility.",
+						"Do daily stretching routines to improve flexibility.",
+						"Do daily stretching exercises to improve your flexibility.",
+						"Do daily stretching exercises to boost flexibility."
+					]
+				},
+				{
+					"name": "active-commuting",
+					"paraphrases": [
+						"Walk or bike to work instead of driving.",
+						"Walk or cycle to work instead of driving.",
+						"Walk or bike to work rather than driving.",
+						"Walk or bike to work instead of taking the car.",
+						"Walk or bike to your job instead of driving."
+					]
+				}
+			]
+		},
+		{
+			"name": "nutrition",
+			"synths": [
+				{
+					"name": "eat-vegetables",
+					"paraphrases": [
+						"Eat more vegetables and fruit every day.",
+						"Eat more vegetables and fruits every day.",
+						"Eat more vegetables and fruit each day.",
+						"Eat plenty of vegetables and fruit every day.",
+						"Eat more fresh vegetables and fruit every day."
+					]
+				},
+				{
+					"name": "limit-sugar",
+					"paraphrases": [
+						"Cut back on sugar and sugary drinks.",
+						"Cut back on sugar and sugary beverages.",
+						"Cut down on sugar and sugary drinks.",
+						"Cut back on added sugar and sugary drinks.",
+						"Reduce sugar and sugary drinks in your diet."
+					]
+				},
+				{
+					"name": "stay-hydrated",
+					"paraphrases": [
+						"Drink plenty of water every day.",
+						"Drink plenty of water each day.",
+						"Drink plenty of water throughout the day.",
+						"Drink plenty of fresh water every day.",
+						"Drink plenty of water daily."
+					]
+				},
+				{
+					"name": "portion-control",
+					"paraphrases": [
+						"Eat smaller portions to control how much you eat.",
+						"Eat smaller portions to limit how much you eat.",
+						"Eat smaller portions to manage how much you eat.",
+						"Eat smaller food portions to control how much you eat.",
+						"Eat smaller portions to control how much food you eat."
+					]
+				}
+			]
+		},
+		{
+			"name": "preventive-healthcare",
+			"synths": [
+				{
+					"name": "annual-physical",
+					"paraphrases": [
+						"See your doctor every year for a checkup.",
+						"See your doctor each year for a checkup.",
+						"See your doctor every year for a health checkup.",
+						"Visit your doctor every year for a checkup.",
+						"See your doctor annually for a checkup."
+					]
+				},
+				{
+					"name": "vaccinations",
+					"paraphrases": [
+						"Keep your vaccines up to date.",
+						"Keep your vaccinations up to date.",
+						"Keep your vaccines current and up to date.",
+						"Keep all your vaccines up to date.",
+						"Keep your shots and vaccines up to date."
+					]
+				},
+				{
+					"name": "dental-checkups",
+					"paraphrases": [
+						"Visit the dentist regularly for checkups.",
+						"Visit the dentist regularly for checkups and cleanings.",
+						"See the dentist regularly for checkups.",
+						"Visit the dentist regularly for dental checkups.",
+						"Visit the dentist regularly for routine checkups."
+					]
+				},
+				{
+					"name": "self-monitoring",
+					"paraphrases": [
+						"Check your blood pressure at home regularly.",
+						"Check your blood pressure at home often.",
+						"Monitor your blood pressure at home regularly.",
+						"Check your own blood pressure at home regularly.",
+						"Regularly check your blood pressure at home."
+					]
+				}
+			]
+		}
+	]
+}

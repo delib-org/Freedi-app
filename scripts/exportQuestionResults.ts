@@ -25,7 +25,6 @@
  *   --out <path>              Output file path (default: stdout)
  *   --consensus-floor <n>     Standalone consensus floor, default 0.35
  *   --min-evaluators <n>      Minimum evaluators per standalone, default 2
- *   --framing-id <id>         Override which topic framing to group by
  *   --include-filtered-ids    Include the full filtered-out IDs list (off by default)
  *   --pretty                  Pretty-print JSON output (default: true)
  */
@@ -162,7 +161,6 @@ const questionIdArg = getArg("--question-id");
 const outPath = getArg("--out");
 const consensusFloor = Number(getArg("--consensus-floor") ?? "0.35");
 const minEvaluators = Number(getArg("--min-evaluators") ?? "2");
-const framingIdOverride = getArg("--framing-id");
 const includeFilteredIds = hasFlag("--include-filtered-ids");
 const pretty = !hasFlag("--no-pretty");
 
@@ -213,10 +211,7 @@ interface SourceStatement {
   paragraphs?: Array<{ content?: string; order?: number }>;
   hide?: boolean;
   isCluster?: boolean;
-  isFraming?: boolean;
   derivedByPipeline?: string;
-  framingClusters?: Record<string, string>;
-  framingId?: string;
   integratedOptions?: string[];
   consensus?: number;
   numberOfMembers?: number;
@@ -226,21 +221,11 @@ interface SourceStatement {
   creatorId?: string;
 }
 
-interface SourceClusterAggregation {
-  id?: string;
-  clusterId: string;
-  framingId: string;
-  parentStatementId: string;
-  uniqueEvaluatorCount?: number;
-  averageClusterConsensus?: number;
-}
-
 interface LoadedData {
   meta: ResultsExportMeta;
   question: SourceStatement;
   statements: SourceStatement[];
   evaluations: SourceEvaluation[];
-  clusterAggregations: SourceClusterAggregation[];
 }
 
 // ----------------------------------------------------------------------
@@ -253,7 +238,6 @@ function loadFromLocalJson(path: string): LoadedData {
     question: SourceStatement;
     statements: SourceStatement[];
     evaluations: SourceEvaluation[];
-    clusterAggregations?: SourceClusterAggregation[];
   };
 
   if (!raw.question || !raw.statements || !raw.evaluations) {
@@ -272,7 +256,6 @@ function loadFromLocalJson(path: string): LoadedData {
     question: raw.question,
     statements: raw.statements,
     evaluations: raw.evaluations,
-    clusterAggregations: raw.clusterAggregations ?? [],
   };
 }
 
@@ -313,16 +296,6 @@ async function loadFromFirestore(questionId: string): Promise<LoadedData> {
     });
   }
 
-  // Cluster aggregations — full scan, filter by parentStatementId == questionId
-  const clusterAggregations: SourceClusterAggregation[] = [];
-  const aggSnap = await db.collection("clusterAggregations").get();
-  aggSnap.forEach((doc) => {
-    const data = doc.data() as Record<string, unknown>;
-    if (data.parentStatementId === questionId) {
-      clusterAggregations.push({ ...data, id: doc.id } as SourceClusterAggregation);
-    }
-  });
-
   return {
     meta: {
       schemaVersion: RESULTS_EXPORT_SCHEMA_VERSION,
@@ -332,7 +305,6 @@ async function loadFromFirestore(questionId: string): Promise<LoadedData> {
     question,
     statements,
     evaluations,
-    clusterAggregations,
   };
 }
 
@@ -495,8 +467,7 @@ function buildHistogram(values: number[]): AgreementHistogram {
 // ----------------------------------------------------------------------
 
 interface TopicResolution {
-  framingId: string;
-  /** topicId (cluster id) → list of option ids assigned to it (highest-weight only). */
+  /** topicId (cluster id) → list of option ids assigned to it. */
   optionsByTopic: Map<string, string[]>;
   /** option id → all topic ids it was assigned to. */
   topicsByOption: Map<string, string[]>;
@@ -506,63 +477,41 @@ interface TopicResolution {
   unassigned: string[];
 }
 
-function pickFramingId(
-  data: LoadedData,
-  options: SourceStatement[],
-  override: string | undefined,
-): string | undefined {
-  if (override) return override;
-  const counts = new Map<string, number>();
-  for (const opt of options) {
-    if (!opt.framingClusters) continue;
-    for (const fid of Object.keys(opt.framingClusters)) {
-      counts.set(fid, (counts.get(fid) ?? 0) + 1);
-    }
-  }
-  if (counts.size === 0) return undefined;
-  // Most-used framing wins (proxy for "the active topic taxonomy").
-  let best: string | undefined;
-  let bestCount = -1;
-  for (const [fid, c] of counts) {
-    if (c > bestCount) {
-      best = fid;
-      bestCount = c;
-    }
-  }
-  return best;
-}
-
+/**
+ * Build the topic grouping directly from the cluster Statements
+ * (isCluster === true). Each cluster's `integratedOptions` lists the raw
+ * option ids that belong to it; the cluster IS the topic.
+ */
 function resolveTopics(
   options: SourceStatement[],
-  framingId: string,
-  indexes: Indexes,
+  clusters: SourceStatement[],
 ): TopicResolution {
   const optionsByTopic = new Map<string, string[]>();
   const topicsByOption = new Map<string, string[]>();
   const clusterByTopic = new Map<string, SourceStatement>();
-  const unassigned: string[] = [];
 
-  for (const opt of options) {
-    const map = opt.framingClusters;
-    if (!map) {
-      unassigned.push(opt.statementId);
-      continue;
-    }
-    const clusterId = map[framingId];
-    if (!clusterId) {
-      unassigned.push(opt.statementId);
-      continue;
-    }
-    if (!optionsByTopic.has(clusterId)) optionsByTopic.set(clusterId, []);
-    optionsByTopic.get(clusterId)!.push(opt.statementId);
-    topicsByOption.set(opt.statementId, [clusterId]);
-    if (!clusterByTopic.has(clusterId)) {
-      const cluster = indexes.statementsById.get(clusterId);
-      if (cluster) clusterByTopic.set(clusterId, cluster);
+  const visibleOptionIds = new Set(options.map((o) => o.statementId));
+
+  for (const cluster of clusters) {
+    const memberIds = (cluster.integratedOptions ?? []).filter((id) =>
+      visibleOptionIds.has(id),
+    );
+    if (memberIds.length === 0) continue;
+    clusterByTopic.set(cluster.statementId, cluster);
+    optionsByTopic.set(cluster.statementId, memberIds);
+    for (const id of memberIds) {
+      const existing = topicsByOption.get(id) ?? [];
+      existing.push(cluster.statementId);
+      topicsByOption.set(id, existing);
     }
   }
 
-  return { framingId, optionsByTopic, topicsByOption, clusterByTopic, unassigned };
+  const assigned = new Set(topicsByOption.keys());
+  const unassigned = options
+    .map((o) => o.statementId)
+    .filter((id) => !assigned.has(id));
+
+  return { optionsByTopic, topicsByOption, clusterByTopic, unassigned };
 }
 
 // ----------------------------------------------------------------------
@@ -730,17 +679,16 @@ async function buildExport(): Promise<ResultsExport> {
     (s) => s.statementType === "option" && s.hide === true,
   ).length;
 
-  // 2. Resolve framing + per-option topic assignment.
-  const framingId = pickFramingId(data, visibleOptions, framingIdOverride);
-  const topicResolution: TopicResolution = framingId
-    ? resolveTopics(visibleOptions, framingId, indexes)
-    : {
-        framingId: "",
-        optionsByTopic: new Map(),
-        topicsByOption: new Map(),
-        clusterByTopic: new Map(),
-        unassigned: visibleOptions.map((o) => o.statementId),
-      };
+  // 2. Resolve per-option topic assignment from the cluster Statements.
+  const topicResolution: TopicResolution =
+    clustersUnderQuestion.length > 0
+      ? resolveTopics(visibleOptions, clustersUnderQuestion)
+      : {
+          optionsByTopic: new Map(),
+          topicsByOption: new Map(),
+          clusterByTopic: new Map(),
+          unassigned: visibleOptions.map((o) => o.statementId),
+        };
 
   // 3. Build per-topic blocks.
   const topics: TopicBlock[] = [];
@@ -752,7 +700,7 @@ async function buildExport(): Promise<ResultsExport> {
   for (const [topicId, memberIds] of topicResolution.optionsByTopic) {
     const cluster = topicResolution.clusterByTopic.get(topicId);
 
-    // All clusters under topic-cluster framing become synthesized solutions in v1.
+    // All topic clusters become synthesized solutions in v1.
     const synthesized: SynthesizedSolutionEntry[] = cluster
       ? [buildSynthesizedEntry(cluster, indexes)]
       : [];

@@ -12,12 +12,14 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import {
 	Collections,
+	NotificationFrequency,
 	NotificationQueueStatus,
 	NotificationTriggerType,
 } from '@freedi/shared-types';
 import type {
 	DigestContent,
 	DigestItem,
+	NotificationSettings,
 	UserEngagement,
 	NotificationQueueItem,
 } from '@freedi/shared-types';
@@ -131,27 +133,44 @@ async function buildDigestForPeriod(
  */
 export async function getDailyDigestUsers(targetHour: number): Promise<string[]> {
 	try {
-		const snapshot = await getDb()
+		const eligibleUsers = new Set<string>();
+
+		// (a) Engagement-enrolled digest users.
+		const engagementSnap = await getDb()
 			.collection(Collections.userEngagement)
 			.where('digestPreferences.dailyDigest', '==', true)
 			.limit(500)
 			.get();
 
-		const eligibleUsers: string[] = [];
-
-		for (const doc of snapshot.docs) {
+		for (const doc of engagementSnap.docs) {
 			const engagement = doc.data() as UserEngagement;
 			const timezone = engagement.digestPreferences?.timezone || 'UTC';
 			const preferredHour = engagement.digestPreferences?.preferredHour ?? 9; // default 9am
-
-			// Check if it's the right hour in the user's timezone
 			const userHour = getHourInTimezone(timezone);
 			if (userHour === preferredHour || userHour === targetHour) {
-				eligibleUsers.push(doc.id);
+				eligibleUsers.add(doc.id);
 			}
 		}
 
-		return eligibleUsers;
+		// (b) Notification-settings users who chose a DAILY default frequency
+		// (e.g. chat followers) — deliver at their digestHourLocal in their tz.
+		const settingsSnap = await getDb()
+			.collection(Collections.notificationSettings)
+			.where('defaultFrequency', '==', NotificationFrequency.DAILY)
+			.limit(500)
+			.get();
+
+		for (const doc of settingsSnap.docs) {
+			const settings = doc.data() as NotificationSettings;
+			const timezone = settings.quietHours?.timezone || 'UTC';
+			const preferredHour = settings.digestHourLocal ?? 9;
+			const userHour = getHourInTimezone(timezone);
+			if (userHour === preferredHour || userHour === targetHour) {
+				eligibleUsers.add(doc.id);
+			}
+		}
+
+		return [...eligibleUsers];
 	} catch (error) {
 		logger.error('Error getting daily digest users', { error });
 
@@ -164,25 +183,36 @@ export async function getDailyDigestUsers(targetHour: number): Promise<string[]>
  */
 export async function getWeeklyDigestUsers(): Promise<string[]> {
 	try {
-		const snapshot = await getDb()
+		const today = new Date().getDay(); // 0=Sunday, 6=Saturday
+		const eligibleUsers = new Set<string>();
+
+		// (a) Engagement-enrolled weekly digest users.
+		const engagementSnap = await getDb()
 			.collection(Collections.userEngagement)
 			.where('digestPreferences.weeklyDigest', '==', true)
 			.limit(500)
 			.get();
 
-		const today = new Date().getDay(); // 0=Sunday, 6=Saturday
-		const eligibleUsers: string[] = [];
-
-		for (const doc of snapshot.docs) {
+		for (const doc of engagementSnap.docs) {
 			const engagement = doc.data() as UserEngagement;
 			const preferredDay = engagement.digestPreferences?.preferredDay ?? 1; // default Monday
-
-			if (today === preferredDay) {
-				eligibleUsers.push(doc.id);
-			}
+			if (today === preferredDay) eligibleUsers.add(doc.id);
 		}
 
-		return eligibleUsers;
+		// (b) Notification-settings users who chose a WEEKLY default frequency.
+		const settingsSnap = await getDb()
+			.collection(Collections.notificationSettings)
+			.where('defaultFrequency', '==', NotificationFrequency.WEEKLY)
+			.limit(500)
+			.get();
+
+		for (const doc of settingsSnap.docs) {
+			const settings = doc.data() as NotificationSettings;
+			const preferredDay = settings.weeklyDigestDay ?? 1; // default Monday
+			if (today === preferredDay) eligibleUsers.add(doc.id);
+		}
+
+		return [...eligibleUsers];
 	} catch (error) {
 		logger.error('Error getting weekly digest users', { error });
 

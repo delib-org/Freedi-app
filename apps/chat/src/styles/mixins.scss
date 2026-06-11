@@ -1,0 +1,38 @@
+// Reusable SCSS patterns. Import in a component with:
+//   @use '../../styles/mixins' as *;
+// (depth depends on the component's folder). Keyframes referenced here are
+// declared globally in global.scss.
+
+@mixin glass {
+	background: var(--glass-bg);
+	backdrop-filter: blur(var(--glass-blur));
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow);
+}
+
+// Pure-declaration mixins (no nested rules) so they can be placed anywhere in a
+// block without Sass `mixed-decls` warnings. Reduced-motion is handled globally
+// in global.scss.
+@mixin slide-up {
+	animation: chat-slide-up 0.4s var(--ease-spring) both;
+}
+
+@mixin fade-in {
+	animation: chat-fade-in 0.3s ease-out both;
+}
+
+@mixin text-gradient {
+	background: var(--accent-gradient);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+@mixin pill-button {
+	border: none;
+	border-radius: var(--radius-pill);
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.2s, transform 0.15s var(--ease-spring), box-shadow 0.2s;
+}

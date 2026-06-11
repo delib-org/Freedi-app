@@ -35,3 +35,22 @@ export type { ErrorReporterFn, InfoReporterFn, LogContext } from './logger';
 
 // Shared constants
 export { CACHE, ERROR_MESSAGES, FIREBASE, RETRY, TIME, VALIDATION } from './constants';
+
+// Paragraph CRUD (canonical child-statement model — SDK-agnostic)
+export type { ParagraphBatch, ParagraphStore, ParagraphDeps } from './paragraphs';
+export {
+	sortParagraphChildren,
+	addParagraphChild,
+	updateParagraphChild,
+	deleteParagraphChild,
+	moveParagraphChild,
+	reorderParagraphChildren,
+	replaceAllParagraphChildren,
+	getParagraphChildren,
+	listenParagraphChildren,
+} from './paragraphs';
+export type {
+	AddParagraphChildArgs,
+	UpdateParagraphChildArgs,
+	ReplaceParagraphLine,
+} from './paragraphs';

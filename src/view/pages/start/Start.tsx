@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import MoreLeft from '../../../assets/icons/moreLeft.svg?react';
 import MoreRight from '../../../assets/icons/moreRight.svg?react';
 import GoogleLoginButton from '../../components/buttons/GoogleLoginButton';
@@ -11,12 +11,15 @@ import { Navigate } from 'react-router';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import LogoStart from '../../../assets/icons/LogoStart.svg?react';
 import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
+import LanguagePill from '@/view/components/atomic/atoms/LanguagePill/LanguagePill';
 import { AppVersion } from '@/main';
 
 const Start = () => {
 	const [shouldShowNameModal, setShouldShowNameModal] = useState(false);
-	const { t, rowDirection } = useTranslation();
+	const [showLanguagePopover, setShowLanguagePopover] = useState(false);
+	const { t, rowDirection, currentLanguage } = useTranslation();
 	const { isAuthenticated, initialRoute } = useAuthentication();
+	const languagePillRef = useRef<HTMLButtonElement>(null);
 
 	const navigateTo = initialRoute ?? '/home';
 
@@ -36,7 +39,22 @@ const Start = () => {
 			</div>
 			<div className={styles.version}>v: {AppVersion}</div>
 			<div className={styles.interactionComponents}>
-				<ChangeLanguage />
+				<span className="language-pill-anchor">
+					<LanguagePill
+						ref={languagePillRef}
+						currentLanguage={currentLanguage}
+						isOpen={showLanguagePopover}
+						size="large"
+						onClick={() => setShowLanguagePopover((prev) => !prev)}
+					/>
+					{showLanguagePopover && (
+						<ChangeLanguage
+							onClose={() => setShowLanguagePopover(false)}
+							returnFocusRef={languagePillRef}
+							align="center"
+						/>
+					)}
+				</span>
 
 				<button
 					style={{ flexDirection: rowDirection }}

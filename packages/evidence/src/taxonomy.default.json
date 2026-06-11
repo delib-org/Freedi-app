@@ -1,0 +1,13 @@
+{
+  "version": "tax-2026-06-07",
+  "classes": {
+    "anecdote": { "baseStrength": 0.1, "label": "Personal testimony / anecdote" },
+    "case-series": { "baseStrength": 0.25, "label": "Multiple informal reports" },
+    "expert-opinion": { "baseStrength": 0.4, "label": "Expert opinion" },
+    "observational": { "baseStrength": 0.55, "label": "Observational study / survey" },
+    "experiment": { "baseStrength": 0.75, "label": "Controlled experiment / RCT" },
+    "systematic-review": { "baseStrength": 0.9, "label": "Systematic review / meta-analysis" },
+    "formal-argument": { "baseStrength": 0.95, "label": "Formal / deductive argument (domain-dependent)" }
+  },
+  "fallbackByPill": { "strengthen": 0.2, "critique": 0.2 }
+}

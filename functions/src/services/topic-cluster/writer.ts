@@ -1,26 +1,13 @@
 import { logger } from 'firebase-functions';
 import { Collections, getRandomUID, StatementType } from '@freedi/shared-types';
-import type { Framing, FramingSnapshot, ClusterSnapshot, Statement } from '@freedi/shared-types';
+import type { Statement } from '@freedi/shared-types';
 import {
 	computeClusterEvaluationFromRawEvals,
 	fetchEvaluationsForIds,
 } from '../../condensation/aggregation';
-
-// FramingCreatorType is exported as a type from shared-types' index.ts; import the
-// schema value instead (it's a picklist whose options match the const values).
-const FRAMING_CREATOR_TOPIC_CLUSTER = 'topic-cluster' as const;
 import { getFirestore, WriteBatch } from 'firebase-admin/firestore';
-import {
-	FIRESTORE_BATCH_SIZE,
-	PIPELINE_ID,
-	TOPIC_FRAMING_DESCRIPTION,
-	TOPIC_FRAMING_DISPLAY_NAME,
-	TOPIC_FRAMING_ORDER,
-} from './constants';
+import { FIRESTORE_BATCH_SIZE, PIPELINE_ID } from './constants';
 import type { ClusterGroup, ClusterableItem, NormalizedResponse, RawResponse } from './types';
-
-const FRAMINGS = 'framings';
-const FRAMING_SNAPSHOTS = 'framingSnapshots';
 
 interface PoolAttachment {
 	statementId: string;
@@ -38,7 +25,6 @@ export interface WriterInput {
 }
 
 export interface WriterOutput {
-	framingId: string | null;
 	clustersCreated: number;
 	syntheticOptionsCreated: number;
 	assignedToCluster: number;
@@ -59,70 +45,25 @@ async function commitInBatches(ops: Array<(batch: WriteBatch) => void>): Promise
 }
 
 /**
- * Step 1 of the idempotency contract: find the existing topic-cluster Framing
- * for this parent and tear it down (cluster Statements, framingClusters refs,
- * prior synthetics).
+ * Idempotency: delete the prior run's artifacts before writing the new ones.
+ * Both the cluster Statements and the synthetic options created by this pipeline
+ * are tagged `derivedByPipeline === PIPELINE_ID`, so a single query finds them.
+ * Membership lives in each cluster's `integratedOptions`, so original options
+ * need no per-cluster field to clear.
  */
-async function teardownPrior(
-	parentId: string,
-): Promise<{ existingFramingId: string | null; existingFraming: Framing | null }> {
+async function teardownPrior(parentId: string): Promise<boolean> {
 	const db = getFirestore();
-
-	// 1. Find existing topic-cluster framing.
-	const existing = await db
-		.collection(FRAMINGS)
-		.where('parentStatementId', '==', parentId)
-		.where('createdBy', '==', FRAMING_CREATOR_TOPIC_CLUSTER)
-		.limit(1)
-		.get();
-
-	let existingFramingId: string | null = null;
-	let existingFraming: Framing | null = null;
-
-	if (!existing.empty) {
-		existingFramingId = existing.docs[0].id;
-		existingFraming = existing.docs[0].data() as Framing;
-	}
-
-	// 2. Delete prior cluster Statements.
-	const ops: Array<(b: WriteBatch) => void> = [];
-	if (existingFraming) {
-		for (const oldClusterId of existingFraming.clusterIds) {
-			ops.push((b) => b.delete(db.collection(Collections.statements).doc(oldClusterId)));
-		}
-	}
-
-	// 3. Clear framingClusters[oldFramingId] from every option under the parent.
-	if (existingFramingId) {
-		const optionsWithOldFraming = await db
-			.collection(Collections.statements)
-			.where('parentId', '==', parentId)
-			.get();
-		for (const doc of optionsWithOldFraming.docs) {
-			const data = doc.data();
-			if (data.framingClusters?.[existingFramingId]) {
-				ops.push((b) =>
-					b.update(doc.ref, {
-						[`framingClusters.${existingFramingId}`]: null,
-					}),
-				);
-			}
-		}
-	}
-
-	// 4. Delete prior synthetic options created by THIS pipeline.
-	const priorSynthetics = await db
+	const prior = await db
 		.collection(Collections.statements)
 		.where('parentId', '==', parentId)
 		.where('derivedByPipeline', '==', PIPELINE_ID)
 		.get();
-	for (const doc of priorSynthetics.docs) {
-		ops.push((b) => b.delete(doc.ref));
-	}
 
+	const ops: Array<(b: WriteBatch) => void> = [];
+	for (const doc of prior.docs) ops.push((b) => b.delete(doc.ref));
 	await commitInBatches(ops);
 
-	return { existingFramingId, existingFraming };
+	return !prior.empty;
 }
 
 /**
@@ -155,11 +96,12 @@ function buildSyntheticOption(
 }
 
 /**
- * Build a cluster Statement (isCluster=true) for a group.
+ * Build a cluster Statement (isCluster=true) for a group. Identified by
+ * `derivedByPipeline === 'topic-cluster'`; membership is carried by
+ * `integratedOptions` (set by the caller).
  */
 function buildClusterStatement(
 	parent: Statement,
-	framingId: string,
 	displayName: string,
 ): { id: string; data: Record<string, unknown> } {
 	const id = getRandomUID();
@@ -180,7 +122,7 @@ function buildClusterStatement(
 			creatorId: parent.creatorId,
 			consensus: 0,
 			randomSeed: Math.random(),
-			framingId,
+			derivedByPipeline: PIPELINE_ID,
 		},
 	};
 }
@@ -192,26 +134,17 @@ function buildClusterStatement(
  * mapped to the FIRST action's cluster, and additional synthetic options are
  * created (one per extra action) and mapped to their respective clusters.
  */
-export async function upsertTopicClusterFraming(input: WriterInput): Promise<WriterOutput> {
+export async function upsertTopicClusters(input: WriterInput): Promise<WriterOutput> {
 	const { parent, allResponses, normalized, items, groups, poolAttachments, dryRun } = input;
 	const db = getFirestore();
 	const parentId = parent.statementId;
 
 	// Build per-statement action plan (the response → cluster mapping).
-	// For each NormalizedResponse, identify each action's groupId.
-	const actionToGroup = new Map<string, string>(); // key `${statementId}_${actionIndex}` → groupId
-	for (const item of items) {
-		const groupForItem = groups.find((g) => g.memberIndices.includes(items.indexOf(item)));
-		if (groupForItem) {
-			actionToGroup.set(`${item.sourceStatementId}_${item.actionIndex}`, groupForItem.groupId);
-		}
-	}
-
-	// Above is O(n*m) over items; for large n we precompute index→group instead.
 	const itemIndexToGroup = new Map<number, string>();
 	for (const g of groups) {
 		for (const idx of g.memberIndices) itemIndexToGroup.set(idx, g.groupId);
 	}
+	const actionToGroup = new Map<string, string>(); // key `${statementId}_${actionIndex}` → groupId
 	for (let i = 0; i < items.length; i++) {
 		const groupId = itemIndexToGroup.get(i);
 		if (groupId) {
@@ -224,33 +157,22 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 	let uncategorized = 0;
 	let syntheticOptionsCreated = 0;
 
-	// Get existing state (we still inspect even on dry-run for accurate summary).
-	const teardown = dryRun
-		? { existingFramingId: null, existingFraming: null }
-		: await teardownPrior(parentId);
-
-	const framingId = teardown.existingFramingId ?? getRandomUID();
+	const hadPrior = dryRun ? false : await teardownPrior(parentId);
 
 	// Build cluster Statements (one per non-empty group, including uncategorized if any).
 	const groupIdToClusterDocId = new Map<string, string>();
 	const clusterCreates: Array<{ id: string; data: Record<string, unknown> }> = [];
-	const clusterSnapshots: ClusterSnapshot[] = [];
 
 	for (const group of groups) {
 		if (group.memberIndices.length === 0) continue;
 		const displayName = group.displayName ?? 'Cluster';
-		const built = buildClusterStatement(parent, framingId, displayName);
+		const built = buildClusterStatement(parent, displayName);
 		clusterCreates.push(built);
 		groupIdToClusterDocId.set(group.groupId, built.id);
-		clusterSnapshots.push({
-			clusterId: built.id,
-			clusterName: displayName,
-			optionIds: [], // populated below
-		});
 	}
 
 	// Walk normalized responses and decide:
-	// - actionIndex 0 → write framingClusters[framingId] = clusterDocId on the ORIGINAL.
+	// - actionIndex 0 → the ORIGINAL is a cluster member.
 	// - actionIndex > 0 → create a synthetic option mapped to its cluster.
 	const responseLookup = new Map<string, RawResponse>();
 	for (const r of allResponses) responseLookup.set(r.statementId, r);
@@ -275,7 +197,7 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 				continue;
 			}
 			if (ai === 0) {
-				// Map original Statement.
+				// Original Statement is a member.
 				optionUpdates.push({ id: norm.statementId, clusterDocId });
 				assignedToCluster++;
 			} else {
@@ -290,13 +212,6 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 				syntheticOptionsCreated++;
 				assignedToCluster++;
 			}
-			// Track in snapshot.
-			const snap = clusterSnapshots.find((s) => s.clusterId === clusterDocId);
-			if (snap) {
-				snap.optionIds.push(
-					ai === 0 ? norm.statementId : syntheticCreates[syntheticCreates.length - 1].id,
-				);
-			}
 		}
 	}
 
@@ -307,12 +222,10 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 		if (!clusterDocId) continue;
 		optionUpdates.push({ id: attachment.statementId, clusterDocId });
 		assignedToCluster++;
-		const snap = clusterSnapshots.find((s) => s.clusterId === clusterDocId);
-		if (snap) snap.optionIds.push(attachment.statementId);
 	}
 
 	// Bucket every option (original + synthetic) by the cluster it's mapped to.
-	// `integratedOptions` is the source for the "Group · N" badge in the UI.
+	// `integratedOptions` is the source of truth for cluster membership in the UI.
 	// Originals contribute to the evaluation rollup; synthetics are listed for
 	// completeness but contribute zero evaluations (they're newborn).
 	const allMembersByCluster = new Map<string, string[]>();
@@ -331,15 +244,13 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 		allMembersByCluster.set(s.clusterDocId, all);
 	}
 
-	// Set integratedOptions on each cluster's data so the UI count is correct
-	// even on dry-run summaries. This is cheap (no Firestore reads).
+	// Set integratedOptions on each cluster's data so the UI count is correct.
 	for (const c of clusterCreates) {
 		c.data.integratedOptions = allMembersByCluster.get(c.id) ?? [];
 	}
 
 	// Aggregate evaluations from member original Statements onto each cluster.
 	// Only originals contribute (synthetics have zero evals at this point).
-	// Skipped on dryRun to avoid Firestore reads we won't use.
 	if (!dryRun && clusterCreates.length > 0) {
 		await Promise.all(
 			Array.from(originalMembersByCluster.entries()).map(async ([clusterDocId, memberIds]) => {
@@ -373,7 +284,6 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 		});
 
 		return {
-			framingId: null,
 			clustersCreated: clusterCreates.length,
 			syntheticOptionsCreated,
 			assignedToCluster,
@@ -382,62 +292,26 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 	}
 
 	// ---- Live writes ----
+	// Cluster Statements + synthetic options. Original options need no update —
+	// their membership is captured by each cluster's `integratedOptions`.
 	const ops: Array<(b: WriteBatch) => void> = [];
 	for (const c of clusterCreates) {
 		ops.push((b) => b.set(db.collection(Collections.statements).doc(c.id), c.data));
 	}
 	for (const s of syntheticCreates) {
-		const dataWithFraming = {
-			...s.data,
-			framingClusters: { [framingId]: s.clusterDocId },
-		};
-		ops.push((b) => b.set(db.collection(Collections.statements).doc(s.id), dataWithFraming));
-	}
-	for (const u of optionUpdates) {
-		ops.push((b) =>
-			b.update(db.collection(Collections.statements).doc(u.id), {
-				[`framingClusters.${framingId}`]: u.clusterDocId,
-				lastUpdate: Date.now(),
-			}),
-		);
+		ops.push((b) => b.set(db.collection(Collections.statements).doc(s.id), s.data));
 	}
 	await commitInBatches(ops);
 
-	// Upsert framing doc.
-	const isUpdate = teardown.existingFraming !== null;
-	const framing: Framing = {
-		framingId,
-		parentStatementId: parentId,
-		name: TOPIC_FRAMING_DISPLAY_NAME,
-		description: TOPIC_FRAMING_DESCRIPTION,
-		createdAt: isUpdate ? teardown.existingFraming!.createdAt : Date.now(),
-		createdBy: FRAMING_CREATOR_TOPIC_CLUSTER,
-		isActive: true,
-		clusterIds: clusterCreates.map((c) => c.id),
-		order: isUpdate ? teardown.existingFraming!.order : TOPIC_FRAMING_ORDER,
-	};
-	await db.collection(FRAMINGS).doc(framingId).set(framing);
-
-	// Save snapshot.
-	const snapshot: FramingSnapshot = {
-		snapshotId: getRandomUID(),
-		framingId,
-		parentStatementId: parentId,
-		clusters: clusterSnapshots,
-		createdAt: Date.now(),
-	};
-	await db.collection(FRAMING_SNAPSHOTS).doc(snapshot.snapshotId).set(snapshot);
-
-	logger.info(`${isUpdate ? 'Updated' : 'Created'} topic-cluster framing ${framingId}`, {
+	logger.info(`${hadPrior ? 'Updated' : 'Created'} topic clusters for ${parentId}`, {
 		parentId,
-		clusterCount: framing.clusterIds.length,
+		clusterCount: clusterCreates.length,
 		syntheticOptionsCreated,
 		assignedToCluster,
 		uncategorized,
 	});
 
 	return {
-		framingId,
 		clustersCreated: clusterCreates.length,
 		syntheticOptionsCreated,
 		assignedToCluster,

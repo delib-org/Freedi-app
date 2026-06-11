@@ -254,6 +254,7 @@ describe('statementsSlice', () => {
 					statementMembership: [mockSubscription],
 					screen: StatementScreen.options,
 					bookmarkedIds: {},
+					fullyLoadedScopes: {},
 				};
 
 				const newState = statementsSlice.reducer(populatedState, resetStatements());

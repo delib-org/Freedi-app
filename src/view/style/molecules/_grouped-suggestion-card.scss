@@ -141,7 +141,7 @@
 
     // Hide the cluster corner count ribbon — it implies "stack of items"
     // which is the wrong metaphor for synthesis. The source count lives
-    // inside the card via the "Built from N source ideas" disclosure.
+    // inside the card via the footer drawer ("N source ideas").
     .grouped-suggestion__count-ribbon {
       display: none !important;
     }
@@ -243,24 +243,10 @@
   // ============================================================================
   // PROPOSAL-FIRST LAYOUT (synthesis only)
   // Synthesis cards read as AI-authored proposals: prominent title, visible
-  // multi-line description, action row, and a collapsed "Built from N ideas"
-  // toggle. Provenance is one click away, not the dominant element.
+  // multi-line description, and a single "Read full proposal" CTA. Provenance
+  // lives behind the one footer drawer ("N source ideas"); admin actions live
+  // inside that drawer, in context of the sources they act on.
   // ============================================================================
-  &__proposal-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    margin: 0 0 0.25rem;
-    padding: 0.1rem 0;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    // Match the regular-option treatment: use the secondary text color
-    // so the kicker reads as a subtle label rather than a colored accent.
-    color: var(--text-secondary, #777);
-  }
-
   &__proposal-title {
     font-size: 1.15rem;
     line-height: 1.35;
@@ -284,36 +270,13 @@
     align-items: center;
     gap: 0.5rem;
     margin: 0.5rem 0 0.25rem;
-  }
 
-  &__sources-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.65rem;
-    background: transparent;
-    color: var(--text-secondary, #666);
-    border: 1px dashed color-mix(in srgb, var(--text-secondary, #666) 35%, transparent);
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-      background-color 120ms ease,
-      color 120ms ease,
-      border-color 120ms ease;
-
-    &:hover,
-    &:focus-visible {
-      background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
-      color: var(--btn-primary);
-      border-color: var(--btn-primary);
-      outline: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--btn-primary);
-      outline-offset: 1px;
+    // Admin action row inside the expanded drawer — separated from the source
+    // list with a hairline so the destructive actions read as a distinct group.
+    &--admin {
+      margin: 0 0 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed var(--border-light);
     }
   }
 
@@ -383,157 +346,6 @@
       cursor: progress;
       opacity: 0.55;
     }
-  }
-
-  // ============================================================================
-  // SOURCE LIST (synthesis only) — always visible, clickable, with consensus
-  // chip per source. The user sees provenance without having to expand the
-  // drawer; the drawer remains for the full member view with eval UI.
-  // ============================================================================
-  &__sources {
-    margin: 0.4rem 0 0.85rem;
-    padding: 0.55rem 0.75rem;
-    background: color-mix(in srgb, var(--btn-primary) 5%, transparent);
-    border: 1px dashed color-mix(in srgb, var(--btn-primary) 30%, transparent);
-    border-radius: 6px;
-  }
-
-  &__sources-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 0.4rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--btn-primary);
-    letter-spacing: 0.01em;
-  }
-
-  &__sources-header-text {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    min-width: 0;
-  }
-
-  &__sources-reverse {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.18rem 0.5rem;
-    background: transparent;
-    color: var(--text-secondary, #777);
-    border: 1px solid color-mix(in srgb, var(--text-secondary, #777) 35%, transparent);
-    border-radius: 999px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-      background-color 120ms ease,
-      color 120ms ease,
-      border-color 120ms ease;
-
-    &:hover:not(:disabled),
-    &:focus-visible:not(:disabled) {
-      background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
-      color: var(--btn-primary);
-      border-color: var(--btn-primary);
-      outline: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--btn-primary);
-      outline-offset: 1px;
-    }
-
-    &:disabled {
-      cursor: progress;
-      opacity: 0.6;
-    }
-
-    @media (prefers-contrast: more) {
-      border-color: var(--text-body, #333);
-      color: var(--text-body, #333);
-
-      &:hover:not(:disabled),
-      &:focus-visible:not(:disabled) {
-        background: var(--card-default, #fff);
-        border-color: var(--btn-primary);
-        color: var(--btn-primary);
-      }
-    }
-  }
-
-  &__sources-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  &__sources-item {
-    display: block;
-    margin: 0;
-  }
-
-  &__sources-link {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.3rem 0.45rem;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    color: var(--text-body);
-    text-decoration: none;
-    transition: background-color 120ms ease;
-
-    &::before {
-      content: '›';
-      flex-shrink: 0;
-      color: var(--btn-primary);
-      font-weight: 700;
-    }
-
-    &:hover,
-    &:focus-visible {
-      background: color-mix(in srgb, var(--btn-primary) 10%, transparent);
-      outline: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--btn-primary);
-      outline-offset: 1px;
-    }
-  }
-
-  &__sources-title {
-    flex: 1;
-    min-width: 0;
-    @include truncate;
-  }
-
-  &__sources-chip {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    padding: 0.1rem 0.4rem;
-    background: color-mix(in srgb, var(--btn-primary) 15%, transparent);
-    color: var(--btn-primary);
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__sources-more {
-    display: block;
-    margin-top: 0.35rem;
-    font-size: 0.72rem;
-    color: var(--text-secondary, #777);
-    font-style: italic;
   }
 
   // ============================================================================
@@ -689,6 +501,14 @@
 
   &--expanded &__drawer-chevron {
     transform: rotate(180deg);
+  }
+
+  // Nested synth proposal cards inside a topic-cluster card (3-level view).
+  &__nested {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   // ============================================================================
@@ -871,16 +691,6 @@
         border-color: var(--text-body);
         color: var(--text-body);
       }
-    }
-
-    &__sources {
-      background: var(--card-default, #fff);
-      border: 2px solid var(--btn-primary);
-    }
-
-    &__sources-chip {
-      background: var(--card-default, #fff);
-      border: 1px solid var(--btn-primary);
     }
   }
 

@@ -20,6 +20,10 @@ export const APP_DEEP_LINKS: Record<SourceApp, Record<string, string>> = {
 	[SourceApp.FLOW]: {
 		step: '/flow/{flowId}/step/{stepId}',
 	},
+	[SourceApp.CHAT]: {
+		question: '/q/{statementId}',
+		profile: '/u/{userId}',
+	},
 };
 
 /**

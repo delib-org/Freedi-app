@@ -101,10 +101,18 @@ const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({
 		};
 	}, [links]);
 
-	// Load original titles from statements slice as a default.
-	const defaultGetTitle = useAppSelector((state: RootState) => {
-		return (id: string) => state.statements.statements.find((s) => s.statementId === id)?.statement;
-	});
+	// Select the raw statements slice (referentially stable across renders
+	// unless the list actually changes); build the per-id title lookup in a
+	// memo so we don't return a fresh function from the selector on every
+	// dispatch.
+	const allStatements = useAppSelector(
+		(state: RootState) => state.statements.statements,
+	);
+	const defaultGetTitle = useMemo(
+		() => (id: string) =>
+			allStatements.find((s) => s.statementId === id)?.statement,
+		[allStatements],
+	);
 	const resolveTitle = getOriginalTitle ?? defaultGetTitle;
 
 	if (stats.numberOfEvaluators === 0) {

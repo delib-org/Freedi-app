@@ -13,7 +13,11 @@ export {
   Screen,
   SortType,
   QuestionStep,
-  ThemeStyle
+  ThemeStyle,
+  DialogicType,
+  EvidenceRelation,
+  EvidenceStatus,
+  Visibility
 } from "./models/TypeEnums";
 export { isMember, maxKeyInObject, getRandomUID } from "./models/TypeUtils";
 export { functionConfig } from "./models/ConfigFunctions";
@@ -164,6 +168,19 @@ export {
 // Notification models
 export type { NotificationType, ReadContext, NotificationReadStatusType } from "./models/notification/Notification";
 export { NotificationSchema, NotificationReadStatusSchema } from "./models/notification/Notification";
+export type {
+  NotificationSettings,
+  QuietHours,
+  ChannelSwitches,
+  PerAppNotificationSettings,
+} from "./models/notification/NotificationSettings";
+export {
+  NotificationSettingsSchema,
+  QuietHoursSchema,
+  ChannelSwitchesSchema,
+  PerAppNotificationSettingsSchema,
+  createDefaultNotificationSettings,
+} from "./models/notification/NotificationSettings";
 
 // Question models
 export type { QuestionSettings } from "./models/question/QuestionType";
@@ -196,11 +213,13 @@ export { StageSelectionType } from "./models/stage/stageTypes";
 
 // Paragraph models
 export type {
-  Paragraph
+  Paragraph,
+  ListType
 } from "./models/paragraph/paragraphModel";
 
 export {
   ParagraphSchema,
+  ListTypeSchema,
   ParagraphType
 } from "./models/paragraph/paragraphModel";
 
@@ -228,6 +247,7 @@ export type {
   CondensationLevel,
   CondensationSurfaceVisibility,
   CondensationVisibility,
+  ViewLayers,
   QuestionStatus
 } from "./models/statement/StatementSettings";
 
@@ -245,6 +265,7 @@ export {
   CondensationLevelSchema,
   CondensationSurfaceVisibilitySchema,
   CondensationVisibilitySchema,
+  ViewLayersSchema,
   QuestionStatusSchema
 } from "./models/statement/StatementSettings";
 
@@ -313,10 +334,13 @@ export {
   createBasicStatement,
   createStatementObject,
   createParagraphStatement,
+  createParagraphChildStatement,
+  statementToParagraph,
+  paragraphToFactoryParams,
   createSuggestionStatement,
   defaultStatementSettings
 } from "./models/statement/StatementUtils";
-export type { CreateStatementParams } from "./models/statement/StatementUtils";
+export type { CreateStatementParams, CreateParagraphChildParams } from "./models/statement/StatementUtils";
 
 // User models
 export type {
@@ -385,6 +409,14 @@ export type {
 export {
   OnlineSchema
 } from "./models/statement/online";
+
+export type {
+  StatementDeletion
+} from "./models/statement/StatementDeletion";
+
+export {
+  StatementDeletionSchema
+} from "./models/statement/StatementDeletion";
 
 
 export type {
@@ -494,30 +526,6 @@ export type {
   DemographicAnswerCount,
   DemographicQuestionSummary,
 } from "./models/strategicExport/strategicExportModel";
-
-// Framing models
-export type {
-  Framing,
-  ClusterAggregatedEvaluation,
-  FramingRequest,
-  ClusterSnapshot,
-  FramingSnapshot,
-  FramingCreatorType,
-  FramingRequestStatus,
-} from "./models/framing/framingModel";
-
-export {
-  FramingSchema,
-  ClusterAggregatedEvaluationSchema,
-  FramingRequestSchema,
-  ClusterSnapshotSchema,
-  FramingSnapshotSchema,
-  FramingCreatorTypeSchema,
-  FramingRequestStatusSchema,
-  CLUSTER_AGGREGATION_CACHE,
-  getClusterAggregationId,
-  isClusterAggregationValid,
-} from "./models/framing/framingModel";
 
 // Topic-Grouped Results Export
 export type {

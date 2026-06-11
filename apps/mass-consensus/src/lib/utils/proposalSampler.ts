@@ -13,6 +13,7 @@ import {
   isStable,
   getProposalStats,
 } from './sampling';
+import { selectDiverseBatch } from './diverseBatch';
 import { logger } from './logger';
 
 /**
@@ -41,6 +42,16 @@ export interface BatchStats {
   stableCount: number;
   /** Number of proposals remaining after this batch */
   remainingCount: number;
+}
+
+/**
+ * Cluster-diversity options for batch selection
+ */
+export interface DiversityOptions {
+  /** Maps a proposal to its cluster key (cluster id or own id for singletons) */
+  clusterKeyOf: (statement: Statement) => string;
+  /** Cluster keys the user already encountered — served last (rotation) */
+  seenClusters?: ReadonlySet<string>;
 }
 
 /**
@@ -158,12 +169,16 @@ export class ProposalSampler {
    * @param proposals - All available proposals (not hidden)
    * @param evaluatedIds - Set of proposal IDs the user has already evaluated
    * @param count - Number of proposals to select
+   * @param diversity - Optional cluster-diversity config; when provided the
+   *   batch is spread across clusters (round-robin, unseen clusters first)
+   *   instead of taking the plain top-N by priority
    * @returns Selected proposals sorted by priority
    */
   selectForUser(
     proposals: Statement[],
     evaluatedIds: Set<string>,
-    count: number
+    count: number,
+    diversity?: DiversityOptions
   ): Statement[] {
     // Filter out already-evaluated and stable proposals
     const available = proposals.filter((p) => {
@@ -201,145 +216,22 @@ export class ProposalSampler {
     // Score and sort available proposals
     const scored = this.scoreProposals(available);
 
-    // Select top N by priority
-    const selected = scored.slice(0, count).map((s) => s.proposal);
+    // Select top N by priority — spread across clusters when diversity is on
+    const selected = diversity
+      ? selectDiverseBatch(
+          scored,
+          count,
+          (s) => diversity.clusterKeyOf(s.proposal),
+          diversity.seenClusters
+        ).map((s) => s.proposal)
+      : scored.slice(0, count).map((s) => s.proposal);
 
     logger.info('[ProposalSampler] Selected proposals:', {
       selectedCount: selected.length,
+      diverse: Boolean(diversity),
+      clusterKeys: diversity ? selected.map((s) => diversity.clusterKeyOf(s)) : undefined,
       topPriority: scored[0]?.priority.toFixed(3),
       bottomPriority: scored[Math.min(count - 1, scored.length - 1)]?.priority.toFixed(3),
-    });
-
-    return selected;
-  }
-
-  /**
-   * Select a batch of proposals using cluster-aware stratified sampling.
-   *
-   * Picks 1 option from each cluster (rotating which clusters are sampled
-   * when there are more clusters than batch slots). Within each cluster,
-   * uses Thompson sampling priority to pick the most informative option.
-   *
-   * @param proposals - All available proposals (not hidden)
-   * @param evaluatedIds - Set of proposal IDs the user has already evaluated
-   * @param count - Number of proposals to select
-   * @param framingId - The hybrid-auto framing ID for cluster lookup
-   * @param batchIndex - User's batch index for cluster rotation
-   * @returns Selected proposals, one per cluster
-   */
-  selectStratifiedByCluster(
-    proposals: Statement[],
-    evaluatedIds: Set<string>,
-    count: number,
-    framingId: string,
-    batchIndex: number,
-  ): Statement[] {
-    // Filter out already-evaluated and stable proposals (same as selectForUser)
-    const available = proposals.filter((p) => {
-      if (evaluatedIds.has(p.statementId)) return false;
-      if ((p as Statement & { isStable?: boolean }).isStable) return false;
-      if (isStable(p, this.config)) return false;
-      return true;
-    });
-
-    if (available.length === 0) {
-      logger.info('[ProposalSampler] Stratified: no available proposals');
-      return [];
-    }
-
-    // Group available proposals by cluster
-    const clusterMap = new Map<string, Statement[]>();
-    const unclustered: Statement[] = [];
-
-    for (const p of available) {
-      const framingClusters = (p as Statement & { framingClusters?: Record<string, string> }).framingClusters;
-      const clusterId = framingClusters?.[framingId];
-
-      if (clusterId) {
-        if (!clusterMap.has(clusterId)) {
-          clusterMap.set(clusterId, []);
-        }
-        clusterMap.get(clusterId)!.push(p);
-      } else {
-        unclustered.push(p);
-      }
-    }
-
-    // Treat unclustered as its own group if non-empty
-    if (unclustered.length > 0) {
-      clusterMap.set('__unclustered__', unclustered);
-    }
-
-    // Sort cluster IDs for deterministic rotation
-    const clusterIds = Array.from(clusterMap.keys()).sort();
-    const totalClusters = clusterIds.length;
-
-    if (totalClusters === 0) {
-      logger.info('[ProposalSampler] Stratified: no clusters found, falling back to standard selection');
-      return this.selectForUser(proposals, evaluatedIds, count);
-    }
-
-    // Determine which clusters to sample this batch (rotate)
-    const offset = (batchIndex * count) % totalClusters;
-    const selectedClusters: string[] = [];
-    for (let i = 0; i < Math.min(count, totalClusters); i++) {
-      selectedClusters.push(clusterIds[(offset + i) % totalClusters]);
-    }
-
-    // Pick the highest-priority option from each selected cluster
-    const selected: Statement[] = [];
-    const percentileRanks = this.calculatePercentileRanks(available);
-
-    for (const clusterId of selectedClusters) {
-      const members = clusterMap.get(clusterId);
-      if (!members || members.length === 0) continue;
-
-      // Score members by Thompson priority and pick the best
-      let bestProposal: Statement | null = null;
-      let bestPriority = -Infinity;
-
-      for (const p of members) {
-        const rank = percentileRanks.get(p.statementId);
-        const priority = calculateAdjustedPriority(p, this.config, rank);
-        if (priority > bestPriority) {
-          bestPriority = priority;
-          bestProposal = p;
-        }
-      }
-
-      if (bestProposal) {
-        selected.push(bestProposal);
-      }
-    }
-
-    // If we still need more (fewer clusters than count), fill from remaining
-    if (selected.length < count) {
-      const selectedIds = new Set(selected.map((s) => s.statementId));
-      const remaining = available
-        .filter((p) => !selectedIds.has(p.statementId))
-        .map((p) => ({
-          proposal: p,
-          priority: calculateAdjustedPriority(p, this.config, percentileRanks.get(p.statementId)),
-        }))
-        .sort((a, b) => b.priority - a.priority)
-        .slice(0, count - selected.length)
-        .map((s) => s.proposal);
-
-      selected.push(...remaining);
-    }
-
-    // Shuffle for random presentation order
-    for (let i = selected.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [selected[i], selected[j]] = [selected[j], selected[i]];
-    }
-
-    logger.info('[ProposalSampler] Stratified selection:', {
-      totalClusters,
-      sampledClusters: selectedClusters.length,
-      batchIndex,
-      offset,
-      selectedCount: selected.length,
     });
 
     return selected;

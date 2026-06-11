@@ -19,6 +19,7 @@ import EditableStatement from '@/view/components/edit/EditableStatement';
 import styles from './ChatMessageCard.module.scss';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { StatementType, Statement } from '@freedi/shared-types';
+import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import ChatMessageMenu from './ChatMessageMenu';
 import TypeSuggestionBanner from './TypeSuggestionBanner';
@@ -138,10 +139,10 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 			id={statement.statementId}
 			className={`${styles.chatMessageCard}  ${isAlignedLeft ? styles.alignedLeft : ''} ${styles[dir] || ''}`}
 		>
-			{!isPreviousFromSameAuthor && (
+			{!isPreviousFromSameAuthor && getCreatorDisplayName(statement) && (
 				<div className={styles.user}>
 					<UserAvatar user={statement.creator} />
-					<span>{statement.creator?.displayName ?? ''}</span>
+					<span>{getCreatorDisplayName(statement)}</span>
 				</div>
 			)}
 

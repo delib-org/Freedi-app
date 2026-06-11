@@ -19,12 +19,31 @@ export interface SurveyStatsResult {
   responseCount: number;
   completionCount: number;
   completionRate: number;
+  /** Unique users who entered the survey, including those who never advanced in the flow */
+  enteredCount?: number;
   /** Test response count (only returned if test data exists) */
   testResponseCount?: number;
   /** Test completion count (only returned if test data exists) */
   testCompletionCount?: number;
   /** Per-question evaluation funnel (only returned when questionIds provided) */
   questionFunnel?: QuestionFunnelItem[];
+}
+
+/**
+ * Entry tracking (markSurveyEntered) creates progress docs for users who
+ * merely landed on the survey. Those must not count as "responses": a
+ * response means the user advanced somewhere in the flow.
+ */
+function hasFlowEngagement(data: FirebaseFirestore.DocumentData): boolean {
+  return (
+    data.isCompleted === true ||
+    (Array.isArray(data.completedQuestionIds) && data.completedQuestionIds.length > 0) ||
+    (Array.isArray(data.completedDemographicPageIds) &&
+      data.completedDemographicPageIds.length > 0) ||
+    (typeof data.currentQuestionIndex === 'number' && data.currentQuestionIndex > 0) ||
+    (typeof data.currentFlowIndex === 'number' && data.currentFlowIndex > 0) ||
+    data.hasViewedOpeningSlide === true
+  );
 }
 
 /**
@@ -63,7 +82,9 @@ export async function getBatchSurveyStats(
 
       if (!includeTestData && isTest) continue;
 
-      results[sid].responseCount++;
+      if (hasFlowEngagement(data)) {
+        results[sid].responseCount++;
+      }
       if (data.isCompleted === true) {
         results[sid].completionCount++;
       }
@@ -106,14 +127,16 @@ export async function getSurveyStats(
   const liveDocs = allDocs.filter((doc) => doc.data().isTestData !== true);
   const testDocs = allDocs.filter((doc) => doc.data().isTestData === true);
 
-  // Calculate live data stats
-  const liveResponseCount = liveDocs.length;
+  // Calculate live data stats (entry-only docs count as entered, not responded)
+  const liveEnteredCount = liveDocs.length;
+  const liveResponseCount = liveDocs.filter((doc) => hasFlowEngagement(doc.data())).length;
   const liveCompletionCount = liveDocs.filter(
     (doc) => doc.data().isCompleted === true
   ).length;
 
   // Calculate test data stats
-  const testResponseCount = testDocs.length;
+  const testEnteredCount = testDocs.length;
+  const testResponseCount = testDocs.filter((doc) => hasFlowEngagement(doc.data())).length;
   const testCompletionCount = testDocs.filter(
     (doc) => doc.data().isCompleted === true
   ).length;
@@ -126,11 +149,15 @@ export async function getSurveyStats(
     ? liveCompletionCount + testCompletionCount
     : liveCompletionCount;
   const completionRate = responseCount > 0 ? (completionCount / responseCount) * 100 : 0;
+  const enteredCount = includeTestData
+    ? liveEnteredCount + testEnteredCount
+    : liveEnteredCount;
 
   const result: SurveyStatsResult = {
     responseCount,
     completionCount,
     completionRate: Math.round(completionRate),
+    enteredCount,
   };
 
   // Include test data counts if there are any

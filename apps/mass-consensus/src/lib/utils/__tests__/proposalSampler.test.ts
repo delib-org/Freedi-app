@@ -224,6 +224,63 @@ describe('ProposalSampler', () => {
 
       expect(selected).toHaveLength(0);
     });
+
+    describe('with cluster diversity', () => {
+      // Map proposals to clusters: p1/p2 → A, p3/p4 → B, p5 → singleton
+      const clusterMap: Record<string, string> = {
+        p1: 'cluster-A',
+        p2: 'cluster-A',
+        p3: 'cluster-B',
+        p4: 'cluster-B',
+      };
+      const clusterKeyOf = (s: Statement): string =>
+        clusterMap[s.statementId] ?? s.statementId;
+
+      const makeProposals = (): Statement[] => [
+        createMockStatement('p1', { sumEvaluations: 0, numberOfEvaluators: 5 }),
+        createMockStatement('p2', { sumEvaluations: 0, numberOfEvaluators: 5 }),
+        createMockStatement('p3', { sumEvaluations: 0, numberOfEvaluators: 5 }),
+        createMockStatement('p4', { sumEvaluations: 0, numberOfEvaluators: 5 }),
+        createMockStatement('p5', { sumEvaluations: 0, numberOfEvaluators: 5 }),
+      ];
+
+      it('should never pick two same-cluster proposals while another cluster has candidates', () => {
+        const sampler = createSampler();
+
+        const selected = sampler.selectForUser(makeProposals(), new Set(), 3, {
+          clusterKeyOf,
+        });
+
+        expect(selected).toHaveLength(3);
+        const keys = selected.map(clusterKeyOf);
+        expect(new Set(keys).size).toBe(3);
+      });
+
+      it('should serve unseen clusters before seen ones', () => {
+        const sampler = createSampler();
+
+        const selected = sampler.selectForUser(makeProposals(), new Set(), 2, {
+          clusterKeyOf,
+          seenClusters: new Set(['cluster-A', 'cluster-B']),
+        });
+
+        // p5 is the only unseen cluster — it must be served first
+        expect(selected[0].statementId).toBe('p5');
+      });
+
+      it('should keep working without the diversity param (legacy call shape)', () => {
+        const sampler = createSampler();
+        const proposals = makeProposals();
+
+        // Thompson Sampling scoring is stochastic, so compare membership only
+        const plain = sampler.selectForUser(proposals, new Set(), 5);
+
+        expect(plain).toHaveLength(5);
+        expect(new Set(plain.map((s) => s.statementId))).toEqual(
+          new Set(['p1', 'p2', 'p3', 'p4', 'p5'])
+        );
+      });
+    });
   });
 
   describe('checkStability', () => {

@@ -60,6 +60,7 @@ export {
   upsertSurveyProgress,
   getAllSurveyProgress,
   markOpeningSlideViewed,
+  markSurveyEntered,
 } from './surveyProgress';
 
 // Demographic questions

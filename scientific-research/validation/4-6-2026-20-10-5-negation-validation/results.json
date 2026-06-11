@@ -1,0 +1,180 @@
+{
+  "test": "4-6-2026-20-10-5-negation-validation",
+  "description": "Production bulk path: bulkClusterByEmbedding (border-dedupe fix) + twoTierJudge (medoid bands + LLM equivalence + complete-linkage). Synths/topic-clusters classified by member type.",
+  "parameters": {
+    "embeddingModel": "text-embedding-3-small",
+    "embeddingDimensions": 1536,
+    "clustering": "UMAP->DBSCAN (bulkClusterByEmbedding) + twoTierJudge (production Phase 4)",
+    "umapComponents": 5,
+    "umapSeed": 42,
+    "dbscanEps": 0.8,
+    "dbscanMinSamples": 3,
+    "nearestCentroidThreshold": 0.6,
+    "twoTierJudge": true,
+    "autoAcceptBand": 0.94,
+    "autoRejectBand": 0.6,
+    "maxLlmCalls": 2000,
+    "topicGrouping": "single-linkage agglomeration of synth centroids (diagnostic, not production)",
+    "topicThreshold": 0.45,
+    "llmTitles": "Gemini — non-deterministic"
+  },
+  "synths": {
+    "count": 4,
+    "items": [
+      {
+        "id": "4qFGSMBtgF7A",
+        "title": "Initiate Comprehensive Diplomatic Efforts to Establish Peace with Neighboring Nations",
+        "description": "This proposal advocates for a proactive and sustained national strategy to foster peaceful relations with all neighboring countries. By prioritizing diplomacy, mutual understanding, and cooperative initiatives, our nation can transition from periods of tension to an era of stable coexistence and shared prosperity, ensuring long-term regional security for all citizens.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "Ou6nl0349tDGL0nG1JgC",
+            "text": "We want to make peace with our neighbors.",
+            "groundTruthSynth": "make-peace"
+          },
+          {
+            "id": "pGc6YDEpyG4qSl3rjKBB",
+            "text": "We want to establish peace with our neighbors.",
+            "groundTruthSynth": "make-peace"
+          },
+          {
+            "id": "Hagixe7WAj1oQEEhVLUZ",
+            "text": "We want to make peace with neighboring countries.",
+            "groundTruthSynth": "make-peace"
+          },
+          {
+            "id": "OqoofYcKRn9770srh5L3",
+            "text": "We hope to make peace with our neighbors.",
+            "groundTruthSynth": "make-peace"
+          },
+          {
+            "id": "GvOTRDCaBpuL3DAQtW0p",
+            "text": "We want to make peace with the neighboring nations.",
+            "groundTruthSynth": "make-peace"
+          }
+        ]
+      },
+      {
+        "id": "9t4IGU1TSoGH",
+        "title": "Prevent Tax Increases for Public Service Funding",
+        "description": "This proposal commits to a policy of no new tax increases specifically designated for funding public services. It aims to alleviate financial pressure on citizens and businesses by ensuring that public services are sustained and improved through efficient management of existing revenues and exploration of alternative, non-tax-based funding strategies, rather than through additional taxation.",
+        "llmTag": "synthesis",
+        "memberCount": 4,
+        "members": [
+          {
+            "id": "1w680Ear6D3sx6OKKOpr",
+            "text": "We should not raise taxes for public services.",
+            "groundTruthSynth": "no-raise-taxes"
+          },
+          {
+            "id": "g6P4uAVLEfxbhwcoYd0P",
+            "text": "We should not raise taxes to fund public services.",
+            "groundTruthSynth": "no-raise-taxes"
+          },
+          {
+            "id": "rz6LyI2ESh5dQajR76xU",
+            "text": "We should not increase taxes to fund public services.",
+            "groundTruthSynth": "no-raise-taxes"
+          },
+          {
+            "id": "z98KKQmK2qCCr8wJwwJD",
+            "text": "We oppose raising taxes to fund public services.",
+            "groundTruthSynth": "no-raise-taxes"
+          }
+        ]
+      },
+      {
+        "id": "acZyQJlDsPwJ",
+        "title": "Raise Taxes to Fund and Sustain Essential Public Services",
+        "description": "This proposal advocates for a strategic increase in national taxation to ensure stable and sufficient funding for essential public services. By adjusting tax policies, the government can secure the necessary resources to maintain and improve critical infrastructure, social programs, and community support systems that benefit all citizens. This initiative aims to strengthen the foundational services vital for national well-being and progress.",
+        "llmTag": "synthesis",
+        "memberCount": 5,
+        "members": [
+          {
+            "id": "bPGEAS6frW5tttCUWN9E",
+            "text": "We should raise taxes to fund public services.",
+            "groundTruthSynth": "raise-taxes"
+          },
+          {
+            "id": "uSZqaPt6K6sMZDAgtMdr",
+            "text": "We should raise taxes to support public services.",
+            "groundTruthSynth": "raise-taxes"
+          },
+          {
+            "id": "oHNtZXAyEtLBdaSQzXMS",
+            "text": "We should increase taxes to fund public services.",
+            "groundTruthSynth": "raise-taxes"
+          },
+          {
+            "id": "6YARl3jXhEwlcfPyXFmJ",
+            "text": "We should raise taxes to pay for public services.",
+            "groundTruthSynth": "raise-taxes"
+          },
+          {
+            "id": "rUNEVVMFQagIjZ1iaihw",
+            "text": "We ought to raise taxes to fund public services.",
+            "groundTruthSynth": "raise-taxes"
+          }
+        ]
+      },
+      {
+        "id": "uex0Gwfi6Bda",
+        "title": "Reject All Initiatives for Peace with Neighboring Countries",
+        "description": "This proposal outlines a national directive to actively oppose and refrain from any diplomatic or political efforts aimed at establishing peace with neighboring nations. It consolidates the community's unified stance against reconciliation, advocating for the indefinite continuation of current non-peaceful relations. The objective is to ensure national policy consistently reflects the collective will to avoid peaceful coexistence.",
+        "llmTag": "synthesis",
+        "memberCount": 3,
+        "members": [
+          {
+            "id": "EIzi8jB67fvsuq226LD4",
+            "text": "We do not want to make peace with our neighbors.",
+            "groundTruthSynth": "no-peace"
+          },
+          {
+            "id": "uMh5PTppHQd73SaMtJMg",
+            "text": "We do not want to establish peace with our neighbors.",
+            "groundTruthSynth": "no-peace"
+          },
+          {
+            "id": "SAnnYXbdQ2foLvXiJGCu",
+            "text": "We do not want to make peace with neighboring countries.",
+            "groundTruthSynth": "no-peace"
+          }
+        ]
+      }
+    ]
+  },
+  "topicClusters": {
+    "count": 2,
+    "items": [
+      {
+        "id": "GgSun5czRgvB",
+        "title": "Public Services Funding",
+        "description": "This topic covers how public services are funded, particularly through taxation.",
+        "llmTag": "topic-cluster",
+        "memberSynthIds": [
+          "acZyQJlDsPwJ",
+          "9t4IGU1TSoGH"
+        ],
+        "memberSynthTitles": [
+          "Raise Taxes to Fund and Sustain Essential Public Services",
+          "Prevent Tax Increases for Public Service Funding"
+        ]
+      },
+      {
+        "id": "QtGpb-giMxCW",
+        "title": "Peace and Conflict with Neighbors",
+        "description": "Discussions regarding the pursuit of peaceful or adversarial relations with neighboring countries.",
+        "llmTag": "topic-cluster",
+        "memberSynthIds": [
+          "4qFGSMBtgF7A",
+          "uex0Gwfi6Bda"
+        ],
+        "memberSynthTitles": [
+          "Initiate Comprehensive Diplomatic Efforts to Establish Peace with Neighboring Nations",
+          "Reject All Initiatives for Peace with Neighboring Countries"
+        ]
+      }
+    ]
+  }
+}

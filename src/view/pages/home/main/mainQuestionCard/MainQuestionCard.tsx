@@ -13,6 +13,7 @@ import { SimpleStatement, Statement } from '@freedi/shared-types';
 import { getTime } from '@/controllers/general/helpers';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { logError } from '@/utils/errorHandling';
+import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
 
 interface Props {
 	simpleStatement: SimpleStatement;
@@ -110,7 +111,9 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 						.slice(0, 3)
 						.map((sub) => (
 							<div key={sub.statementId} className={styles.lastMessage}>
-								<span className={styles.creator}>{sub.creator?.displayName ?? ''}:</span>{' '}
+								{getCreatorDisplayName(sub) && (
+									<span className={styles.creator}>{getCreatorDisplayName(sub)}:</span>
+								)}{' '}
 								{sub.statement}
 								{sub.createdAt && (
 									<span className={styles.messageTime}>{getTime(sub.createdAt)}</span>

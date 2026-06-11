@@ -27,6 +27,7 @@ import {
 import {
 	PrivacyPreservingExportData,
 	PrivacyExportMetadata,
+	ParticipationSummary,
 	DemographicResponseStats,
 	OptionEvaluationSummary,
 	OptionWithDemographics,
@@ -289,6 +290,66 @@ function buildDemographicBreakdowns(
 }
 
 /**
+ * Pipeline-derived option detection (cluster/synthesis spawns are stored with
+ * statementType: option). Mirrors `isDerivedStatement` in the MC app so all
+ * participation surfaces count the same set of genuine submissions.
+ */
+function isDerivedOption(statement: Statement): boolean {
+	return (
+		statement.isCluster === true ||
+		!!statement.derivedByPipeline ||
+		(Array.isArray(statement.integratedOptions) && statement.integratedOptions.length > 0) ||
+		!!statement.synthesisRunId ||
+		!!statement.synthesisMechanism ||
+		statement.statementType === StatementType.synthesis
+	);
+}
+
+/**
+ * Build participation funnel summary: entered → suggested → evaluated.
+ *
+ * Definitions are aligned with the MC stats API and survey admin panel:
+ * - suggested: distinct creators of genuine options (pipeline-derived
+ *   cluster/synthesis docs excluded).
+ * - evaluated: distinct users who actively rated (evaluation rows with an
+ *   `evaluator` object; rows with only `evaluatorId` are the auto +1
+ *   self-vote on submission).
+ * - totalParticipants: union of suggesters and anyone with an evaluation row.
+ */
+export function buildParticipationSummary(
+	parentStatement: Statement,
+	options: Statement[],
+	evaluations: Evaluation[],
+): ParticipationSummary {
+	const suggesters = new Set(
+		options
+			.filter((o) => !isDerivedOption(o))
+			.map((o) => o.creatorId || o.creator?.uid)
+			.filter((id): id is string => !!id),
+	);
+	const evaluators = new Set(
+		evaluations.map((e) => e.evaluator?.uid).filter((id): id is string => !!id),
+	);
+	const allEvaluators = new Set(evaluations.map((e) => e.evaluatorId).filter(Boolean));
+	const totalParticipants = new Set([...suggesters, ...allEvaluators]).size;
+
+	// View tracking only exists for questions visited after it was introduced;
+	// when absent, report null rather than a misleading zero.
+	const recordedViews = parentStatement.viewed?.individualViews;
+	const enteredCount =
+		typeof recordedViews === 'number' && recordedViews > 0
+			? Math.max(recordedViews, totalParticipants)
+			: null;
+
+	return {
+		enteredCount,
+		suggestedCount: suggesters.size,
+		evaluatedCount: evaluators.size,
+		totalParticipants,
+	};
+}
+
+/**
  * Build anonymized evaluations (individual evaluations without user identity)
  */
 function buildAnonymizedEvaluations(
@@ -339,8 +400,11 @@ export async function createPrivacyPreservingExport(
 		// Build anonymized evaluations
 		const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, options);
 
+		// Participation funnel: entered → suggested → evaluated
+		const participation = buildParticipationSummary(parentStatement, options, evaluations);
+
 		// Count unique evaluators and respondents
-		const uniqueEvaluators = new Set(evaluations.map((e) => e.evaluatorId)).size;
+		const uniqueEvaluators = participation.evaluatedCount;
 		const uniqueRespondents = new Set(answers.map((a) => a.userId)).size;
 
 		const metadata: PrivacyExportMetadata = {
@@ -361,6 +425,7 @@ export async function createPrivacyPreservingExport(
 				statementText: parentStatement.statement,
 				description: parentStatement.paragraphs?.[0]?.content,
 			},
+			participation,
 			demographicQuestions: questions
 				.filter(
 					(q) =>
@@ -433,6 +498,19 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	if (data.parentStatement.description) {
 		lines.push(`# Description: ${data.parentStatement.description}`);
 	}
+	lines.push('');
+
+	// Section: Participation Funnel
+	lines.push('# === PARTICIPATION SUMMARY ===');
+	lines.push('Entered,Suggested,Evaluated,Total Participants');
+	lines.push(
+		[
+			data.participation.enteredCount ?? 'N/A',
+			data.participation.suggestedCount,
+			data.participation.evaluatedCount,
+			data.participation.totalParticipants,
+		].join(','),
+	);
 	lines.push('');
 
 	// Section 2: Option Evaluation Summary

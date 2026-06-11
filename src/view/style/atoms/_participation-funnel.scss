@@ -1,0 +1,34 @@
+// Participation Funnel Atom
+// Quiet one-line participation summary: "18 entered · 13 suggested · 9 evaluated"
+// Tertiary information — must never compete with the page title.
+
+.participation-funnel {
+	display: flex;
+	flex-wrap: wrap;
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-body);
+	font-variant-numeric: tabular-nums;
+	animation: participation-funnel-fade-in 150ms ease-in;
+
+	&__segment + &__segment::before {
+		content: '·';
+		margin-inline: 0.5em;
+	}
+}
+
+@keyframes participation-funnel-fade-in {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.participation-funnel {
+		animation: none;
+	}
+}

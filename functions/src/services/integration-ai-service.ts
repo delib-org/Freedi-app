@@ -456,15 +456,26 @@ ${sourceLines.join('\n\n')}
 
 YOUR TASK — TWO STAGES:
 
-STAGE 1: DIRECTIONAL COHERENCE CHECK
-Before writing anything, scan the proposals. If the inputs pull in fundamentally OPPOSITE solution directions on the same lever — e.g. "raise X" vs "lower X", "expand Y" vs "abolish Y", "centralize Z" vs "decentralize Z" — they cannot honestly synthesize into one proposal. Return:
+STAGE 1: COHERENCE CHECK — refuse in EITHER of these cases:
+
+(a) DIRECTIONAL CONFLICT — inputs pull in fundamentally OPPOSITE directions on the same lever: "raise X" vs "lower X", "expand Y" vs "abolish Y", "centralize Z" vs "decentralize Z".
+
+(b) DISTINCT ACTIONS WITHIN THE SAME THEME — inputs propose DIFFERENT specific interventions that happen to address related problems, even when they don't directly conflict. Examples:
+   - "exercise regularly" + "eat nutritious food" (both improve health, but they are distinct independent interventions)
+   - "expand bus service" + "build dedicated bike lanes" (both improve transit, but they are distinct infrastructure choices)
+   - "spend time with family" + "join community clubs" (both about social connection, but different specific actions)
+   - "raise teacher salaries" + "modernize school buildings" (both improve education, but they are distinct levers)
+
+Acceptance test before proceeding to STAGE 2: the inputs must be TRUE PARAPHRASES of the SAME specific action — same lever, same direction, same intervention, just different wordings. If a supporter could reasonably agree with one and reject the other on its specifics, the inputs are distinct ideas worth being separate proposals — refuse and let them be grouped under a topic theme instead.
+
+When refusing, return:
 {
   "cannotSynthesize": true,
-  "reason": "<one short sentence describing the directional conflict>",
+  "reason": "<one short sentence describing directional conflict OR distinct actions sharing a theme>",
   "splitProposal": [["statementId of group A members"], ["statementId of group B members"], …]
 }
 
-Be conservative — only refuse when the disagreement is a directional split, not just different emphasis or different specifics.
+Bias: when in doubt, refuse. The downstream pipeline will group refused inputs under a topic label, which preserves the distinction. Merging genuinely distinct ideas erases what made each one specific.
 
 STAGE 2: WRITE THE SYNTHESIZED PROPOSAL (only if Stage 1 passes)
 Write a NEW actionable proposal. Don't summarize what people said — propose what should be DONE. Verb-led title, executive summary, multi-section plan.

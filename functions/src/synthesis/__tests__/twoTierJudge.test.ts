@@ -21,8 +21,8 @@ import type {
 /**
  * twoTierJudge cuts LLM verification cost by:
  *   - auto-accepting cosine ≥ 0.94 (no LLM)
- *   - auto-rejecting cosine < 0.82 (no LLM)
- *   - LLM only on the gray band [0.82, 0.94)
+ *   - auto-rejecting cosine < 0.60 (no LLM)
+ *   - LLM only on the gray band [0.60, 0.94)
  *   - judging member↔medoid (linear) instead of all-pairs (quadratic)
  *
  * These tests pin those branches without making real LLM calls.
@@ -122,7 +122,7 @@ describe('twoTierJudge', () => {
 		expect(result.verifiedClusters[0].memberIds.sort()).toEqual(['m1', 'm2', 'medoid']);
 	});
 
-	it('auto-rejects members with cosine < 0.82 without calling LLM', async () => {
+	it('auto-rejects members with cosine < 0.60 without calling LLM', async () => {
 		// All four members are far from medoid → cluster fails the keepThreshold.
 		const far1 = memberWithCosineToBase('f1', 'f1', 0.5, 1);
 		const far2 = memberWithCosineToBase('f2', 'f2', 0.4, 2);
@@ -145,7 +145,7 @@ describe('twoTierJudge', () => {
 		expect(result.droppedClusters).toHaveLength(1);
 	});
 
-	it('routes gray-band [0.82, 0.94) members through the LLM judge', async () => {
+	it('routes gray-band [0.60, 0.94) members through the LLM judge', async () => {
 		const gray1 = memberWithCosineToBase('g1', 'g1', 0.88, 1);
 		const gray2 = memberWithCosineToBase('g2', 'g2', 0.85, 2);
 		const members = new Map<string, ClusterMember>([
@@ -173,6 +173,84 @@ describe('twoTierJudge', () => {
 		expect(result.stats.grayBandCount).toBe(2);
 		expect(result.stats.llmCallsMade).toBe(2);
 		expect(result.verifiedClusters).toHaveLength(1);
+	});
+
+	it('routes a 0.73-cosine member (formerly auto-rejected at 0.82) to the LLM, not dissent', async () => {
+		// Regression: same-idea paraphrases can sit ~0.73 cosine to the medoid —
+		// inside the OLD reject band (0.82) but above the corrected floor (0.60).
+		// They must now be LLM-judged, not silently demoted to dissent.
+		const para1 = memberWithCosineToBase('p1', 'p1', 0.73, 1);
+		const para2 = memberWithCosineToBase('p2', 'p2', 0.75, 2);
+		const members = new Map<string, ClusterMember>([
+			[baseMedoid.id, baseMedoid],
+			[para1.id, para1],
+			[para2.id, para2],
+		]);
+
+		mockJudgeCached.mockImplementation(async (pairs: EquivalencePair[]) => {
+			return pairs.map((p) => ({
+				pairId: p.pairId,
+				verdict: 'same',
+				reason: 'mocked',
+			})) as EquivalenceResult[];
+		});
+
+		const result = await twoTierJudge(
+			[{ clusterId: 'c1', memberIds: [baseMedoid.id, para1.id, para2.id] }],
+			members,
+		);
+
+		// Both members reached the LLM (gray band) rather than being auto-rejected.
+		expect(result.stats.autoRejectCount).toBe(0);
+		expect(result.stats.grayBandCount).toBe(2);
+		expect(mockJudgeCached).toHaveBeenCalledTimes(1);
+		// LLM said "same" → cluster kept intact, all three members.
+		expect(result.verifiedClusters).toHaveLength(1);
+		expect(result.verifiedClusters[0].memberIds.sort()).toEqual(['medoid', 'p1', 'p2']);
+	});
+
+	it('excludes a single auto-rejected outlier from an otherwise >=80%-agreeing cluster', async () => {
+		// Regression (precision): 1 medoid + 4 members. Four auto-accept (cosine
+		// 0.99); one is an off-topic outlier (cosine 0.5 < 0.60 reject band).
+		// agreed = 4/5 = 0.80 >= keepThreshold. The OLD keep branch kept the FULL
+		// cluster, absorbing the outlier. The synth must now contain only the 4
+		// agreed members; the outlier is left unclustered (telemetry only).
+		const a1 = memberWithCosineToBase('a1', 'a1', 0.99, 1);
+		const a2 = memberWithCosineToBase('a2', 'a2', 0.98, 2);
+		const a3 = memberWithCosineToBase('a3', 'a3', 0.97, 3);
+		const outlier = memberWithCosineToBase('outlier', 'off-topic', 0.5, 4);
+		const members = new Map<string, ClusterMember>([
+			[baseMedoid.id, baseMedoid],
+			[a1.id, a1],
+			[a2.id, a2],
+			[a3.id, a3],
+			[outlier.id, outlier],
+		]);
+
+		const result = await twoTierJudge(
+			[
+				{
+					clusterId: 'c1',
+					memberIds: [baseMedoid.id, a1.id, a2.id, a3.id, outlier.id],
+				},
+			],
+			members,
+		);
+
+		// No LLM needed (all extremes), outlier auto-rejected.
+		expect(mockJudgeCached).not.toHaveBeenCalled();
+		expect(result.stats.autoAcceptCount).toBe(3);
+		expect(result.stats.autoRejectCount).toBe(1);
+
+		// Cluster kept (>=80% agree) but the outlier is NOT in the synth.
+		expect(result.verifiedClusters).toHaveLength(1);
+		const synth = result.verifiedClusters[0];
+		expect(synth.memberIds).not.toContain('outlier');
+		expect(synth.memberIds.sort()).toEqual(['a1', 'a2', 'a3', 'medoid']);
+		// Outlier surfaced as dissent telemetry, not refined into a new cluster
+		// (a lone member can't form a clique).
+		expect(synth.dissentMemberIds).toEqual(['outlier']);
+		expect(result.refinedFromDissent).toHaveLength(0);
 	});
 
 	it('drops a cluster when fewer than splitFloor (50%) members agree', async () => {

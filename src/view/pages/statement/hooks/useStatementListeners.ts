@@ -9,6 +9,8 @@ import {
 	listenToTreeDescendants,
 } from '@/controllers/db/statements/listenToStatements';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
+import { listenToStatementDeltas } from '@/controllers/db/statements/bulkLoadStatements';
+import { Screen } from '@freedi/shared-types';
 import {
 	listenToInAppNotifications,
 	clearInAppNotifications,
@@ -21,7 +23,7 @@ import {
 	listenToGroupDemographicQuestions,
 	listenToGroupDemographicAnswers,
 } from '@/controllers/db/userDemographic/getUserDemographic';
-import { statementSelector } from '@/redux/statements/statementsSlice';
+import { statementSelector, fullyLoadedScopeSelector } from '@/redux/statements/statementsSlice';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { logError } from '@/utils/errorHandling';
 import { loadBookmarksForRoom } from '@/controllers/db/bookmarks/bookmarksPersistence';
@@ -53,7 +55,11 @@ export const useStatementListeners = ({
 	// Subscribe to statement from Redux to get topParentId reactively
 	const statement = useSelector(statementSelector(statementId));
 	const topParentId = statement?.topParentId;
-	const enableTreeView = statement?.statementSettings?.enableTreeView !== false;
+	const enableTreeView = statement?.statementSettings?.enableTreeView === true;
+
+	// When the user bulk-loaded this scope ("Load all"), swap the capped
+	// listener for narrow delta listeners that start at the load watermark
+	const fullyLoadedScope = useSelector(fullyLoadedScopeSelector(statementId));
 
 	// Reset listener stats when navigating to a different statement
 	useEffect(() => {
@@ -106,8 +112,23 @@ export const useStatementListeners = ({
 
 			// Conditional listeners based on screen
 			if (currentScreen === 'mind-map') {
-				// Use consolidated listener to avoid dual listener overhead
-				unsubscribersRef.current.push(listenToMindMapData(statementId));
+				if (fullyLoadedScope?.mode === 'descendants') {
+					// Scope fully bulk-loaded: stream only changes after the watermark
+					unsubscribersRef.current.push(
+						listenToStatementDeltas(statementId, 'descendants', fullyLoadedScope.watermark),
+					);
+				} else {
+					// Use consolidated listener to avoid dual listener overhead
+					unsubscribersRef.current.push(listenToMindMapData(statementId));
+				}
+			} else if (
+				(currentScreen === Screen.agreementMap || currentScreen === Screen.polarizationIndex) &&
+				fullyLoadedScope?.mode === 'direct'
+			) {
+				// All direct children bulk-loaded: stream only changes after the watermark
+				unsubscribersRef.current.push(
+					listenToStatementDeltas(statementId, 'direct', fullyLoadedScope.watermark),
+				);
 			} else if (enableTreeView) {
 				// Tree view: load direct children (reliable via parentId) with no limit
 				unsubscribersRef.current.push(listenToSubStatements(statementId, 'top'));
@@ -148,6 +169,7 @@ export const useStatementListeners = ({
 		screen,
 		enableTreeView,
 		topParentId,
+		fullyLoadedScope,
 		setIsStatementNotFound,
 		setError,
 	]);

@@ -9,12 +9,19 @@ import {
 	any,
 	enum_,
 	picklist,
-	record,
 	InferOutput,
 	pipe,
 	transform,
 } from 'valibot';
-import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
+import {
+	DeliberativeElement,
+	DocumentType,
+	StatementType,
+	DialogicType,
+	EvidenceRelation,
+	EvidenceStatus,
+	Visibility,
+} from '../TypeEnums';
 import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
@@ -60,6 +67,7 @@ export const StatementSchema = object({
 	description: optional(string()), // auto-generated preview from child paragraph sub-statements (~200 chars)
 	brief: optional(string()), // admin-authored context/brief for the statement
 	isTitleQuestion: optional(boolean()), // if true, responses detected as questions are suggested as options instead
+	/** @deprecated Legacy embedded rich-body. Canonical body = child Statements with statementType === paragraph (see createParagraphChildStatement + @freedi/shared-utils). Kept for backward-compatible reads; new code must not write it. */
 	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
 	reasoning: optional(string()), // explanation/reasoning for the statement (used in suggestions)
 	statementId: string(), // the id of the statement
@@ -161,10 +169,11 @@ export const StatementSchema = object({
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
+	integratedInto: optional(string()), // cluster statement ID this original was merged into (set with hide:true by performIntegration; cleared on reverse)
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
 	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
-	framingId: optional(string()), // on cluster Statements (isCluster=true): the Framing this cluster belongs to
-	framingClusters: optional(record(string(), nullable(string()))), // on options: map framingId → clusterId (string, or null when cleared)
+	synthesisRunId: optional(string()), // id of the run that produced this derived option — enables surgical per-run cleanup & provenance
+	synthesisMechanism: optional(picklist(['bulk', 'live-spawn', 'live-attach'])), // which synthesis path created this derived option
 	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
 	condensationStatus: optional(object({ // set on parent questions when the grouping pipeline runs
 		lastRunAt: optional(number()),
@@ -278,6 +287,27 @@ export const StatementSchema = object({
 		statement: string(), // text preview of the replied-to message
 		creatorDisplayName: string(), // display name of the original author
 	})),
+	// ===== Dialectical Chat app (apps/chat) =====
+	// All optional + denormalized for SSR/UI. Authoritative verdict history lives
+	// in the `evidenceVerdicts/{statementId}/{scorerVersion}` subcollection.
+	dialecticType: optional(enum_(DialogicType)), // polarity of an evidence node; 'standard' on chatter
+	dialecticSnapshot: optional(boolean()), // archived revision snapshot; tree-builder skips
+	isRoot: optional(boolean()), // true on a conversation root (enables the discovery query)
+	visibility: optional(enum_(Visibility)), // root-authoritative; denormalized to every node
+	memberIds: optional(array(string())), // private only — uids allowed to read the subtree
+	// active evidence verdict (option/evidence nodes):
+	relation: optional(enum_(EvidenceRelation)),
+	evidenceClass: optional(string()),
+	effectiveWeight: optional(number()), // [0,1] applied in noisy-OR
+	evidenceConfidence: optional(number()), // [0,1]
+	evidenceStatus: optional(enum_(EvidenceStatus)), // drives the "evaluating…" chip
+	activeScorerVersion: optional(string()),
+	corroborationScore: optional(number()), // [0,1] C — option/evidence only
+	// question aggregates (question nodes only):
+	optionCount: optional(number()),
+	leadingOptionId: optional(string()),
+	convergenceIndex: optional(number()), // [0,1]
+	lastActivityAt: optional(number()),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

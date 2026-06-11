@@ -265,14 +265,12 @@ interface ExportPayload {
 		statementCount: number;
 		evaluationCount: number;
 		subscriptionCount: number;
-		clusterAggregationCount: number;
 		clusterEvaluationLinkCount: number;
 	};
 	question: Doc | null;
 	statements: Doc[];
 	evaluations: Doc[];
 	subscriptions: Doc[];
-	clusterAggregations: Doc[];
 	clusterEvaluationLinks: Doc[];
 	// New in v2:
 	votes: Doc[];
@@ -299,9 +297,6 @@ interface ExportPayload {
 	statementsPasswords: Doc[];
 	evidencePosts: Doc[];
 	evidenceVotes: Doc[];
-	framings: Doc[];
-	framingRequests: Doc[];
-	framingSnapshots: Doc[];
 	// Subcollections:
 	statementHistory: SubcollectionEntry[];
 	joinFormSubmissions: SubcollectionEntry[];
@@ -378,8 +373,7 @@ async function exportQuestion(): Promise<ExportPayload> {
 		console.info(`  → ${evaluations.length} evaluations`);
 	}
 
-	// 5. Cluster artifacts (kept identical to v1 for back-compat)
-	const clusterAggregations: Doc[] = [];
+	// 5. Cluster artifacts (clusterEvaluationLinks — used by synthesis)
 	const clusterEvaluationLinks: Doc[] = [];
 	console.info('Fetching cluster artifacts…');
 	const clusterIds = statements
@@ -396,20 +390,8 @@ async function exportQuestion(): Promise<ExportPayload> {
 				clusterEvaluationLinks.push({ ...doc.data(), id: doc.id });
 			});
 		}
-		const aggSnap = await db.collection('clusterAggregations').get();
-		const clusterIdSet = new Set(clusterIds);
-		aggSnap.forEach((doc) => {
-			const id = doc.id;
-			const sep = id.indexOf('--');
-			const cid = sep === -1 ? id : id.slice(0, sep);
-			if (clusterIdSet.has(cid)) {
-				clusterAggregations.push({ ...doc.data(), id });
-			}
-		});
 	}
-	console.info(
-		`  → ${clusterAggregations.length} cluster aggregations, ${clusterEvaluationLinks.length} evaluation links`,
-	);
+	console.info(`  → ${clusterEvaluationLinks.length} evaluation links`);
 
 	// 6. New collections (v2)
 	console.info('Fetching survey collections…');
@@ -538,19 +520,6 @@ async function exportQuestion(): Promise<ExportPayload> {
 	const statementsPasswords = await fetchDocsByIds('statementsPasswords', descendantIds, 'statementId');
 	const evidencePosts = await fetchByFieldIn('evidencePosts', 'parentId', descendantIds, 'id');
 	const evidenceVotes = await fetchByFieldIn('evidenceVotes', 'parentId', descendantIds, 'id');
-	const framings = await fetchByFieldIn('framings', 'topParentId', descendantIds, 'id');
-	const framingRequests = await fetchByFieldIn(
-		'framingRequests',
-		'topParentId',
-		descendantIds,
-		'id',
-	);
-	const framingSnapshots = await fetchByFieldIn(
-		'framingSnapshots',
-		'topParentId',
-		descendantIds,
-		'id',
-	);
 
 	// 7. Subcollections — iterate over each statement
 	console.info('Fetching subcollections…');
@@ -564,7 +533,6 @@ async function exportQuestion(): Promise<ExportPayload> {
 		statements: statements.length,
 		evaluations: evaluations.length,
 		subscriptions: subscriptions.length,
-		clusterAggregations: clusterAggregations.length,
 		clusterEvaluationLinks: clusterEvaluationLinks.length,
 		votes: votes.length,
 		agrees: agrees.length,
@@ -590,9 +558,6 @@ async function exportQuestion(): Promise<ExportPayload> {
 		statementsPasswords: statementsPasswords.length,
 		evidencePosts: evidencePosts.length,
 		evidenceVotes: evidenceVotes.length,
-		framings: framings.length,
-		framingRequests: framingRequests.length,
-		framingSnapshots: framingSnapshots.length,
 		statementHistory: statementHistory.length,
 		joinFormSubmissions: joinFormSubmissions.length,
 	};
@@ -608,14 +573,12 @@ async function exportQuestion(): Promise<ExportPayload> {
 			statementCount: statements.length,
 			evaluationCount: evaluations.length,
 			subscriptionCount: subscriptions.length,
-			clusterAggregationCount: clusterAggregations.length,
 			clusterEvaluationLinkCount: clusterEvaluationLinks.length,
 		},
 		question,
 		statements,
 		evaluations,
 		subscriptions,
-		clusterAggregations,
 		clusterEvaluationLinks,
 		votes,
 		agrees,
@@ -641,9 +604,6 @@ async function exportQuestion(): Promise<ExportPayload> {
 		statementsPasswords,
 		evidencePosts,
 		evidenceVotes,
-		framings,
-		framingRequests,
-		framingSnapshots,
 		statementHistory,
 		joinFormSubmissions,
 	};

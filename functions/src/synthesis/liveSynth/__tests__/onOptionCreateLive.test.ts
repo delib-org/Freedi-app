@@ -132,15 +132,30 @@ function setupFirestoreMockForGet(
 		// debounce / cluster docs reuse the same generic doc handle
 		return { ...debounceDoc, update: clusterUpdate, set: clusterSet };
 	});
+	// Dedup guard (`pairAlreadyClustered`) issues `.where(...).get()` on the
+	// statements collection. Default to an empty snapshot so no pre-existing
+	// cluster is found and spawn proceeds; tests needing a hit override this.
+	const dedupGet = jest.fn().mockResolvedValue({ docs: [] });
+	const whereMock = jest.fn(() => ({ get: dedupGet }));
 	const collMock = jest.fn((name: string) => {
 		if (name === '_liveSynthDebounce') return { doc: docMock };
 		if (name === '_liveSynthCandidates') return { add: reviewAdd };
 
-		return { doc: docMock };
+		return { doc: docMock, where: whereMock };
 	});
 	mockGetFirestore.mockReturnValue({ collection: collMock });
 
-	return { debounceDoc, parentDoc, reviewAdd, clusterUpdate, clusterSet, collMock, docMock };
+	return {
+		debounceDoc,
+		parentDoc,
+		reviewAdd,
+		clusterUpdate,
+		clusterSet,
+		collMock,
+		docMock,
+		dedupGet,
+		whereMock,
+	};
 }
 
 describe('liveSynthOnOptionCreate', () => {
@@ -240,6 +255,44 @@ describe('liveSynthOnOptionCreate', () => {
 			'pipeline:onCreate:spawn',
 			'user1',
 		);
+	});
+
+	it('does NOT spawn a duplicate when the sibling is already in a visible cluster (dedup)', async () => {
+		const fs = setupFirestoreMockForGet();
+		// The dedup guard finds an existing visible cluster containing the sibling.
+		fs.dedupGet.mockResolvedValue({
+			docs: [
+				{
+					data: () => ({
+						statementId: 'existing-cluster',
+						isCluster: true,
+						hide: false,
+						parentId: 'q1',
+						integratedOptions: ['sibling-opt', 'someone-else'],
+					}),
+				},
+			],
+		});
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
+		mockFindSimilarByEmbedding.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'sibling-opt',
+					statement: 'sibling option text',
+					integratedOptions: [], // looks like a plain option to the caller
+					statementType: 'option',
+					parentId: 'q1',
+				},
+				similarity: 0.93,
+			},
+		]);
+
+		await liveSynthOnOptionCreate(makeOption());
+
+		// No proposal generated and no spawn — the pair was already covered.
+		expect(mockGenerateSynthesizedProposal).not.toHaveBeenCalled();
+		const spawnAudit = mockRecordLiveSynthEvent.mock.calls.find((c) => c[0]?.action === 'spawn');
+		expect(spawnAudit).toBeUndefined();
 	});
 
 	it('queues for review when top hit is in the gray band [reviewLowerBound, clusterThreshold) — no LLM call', async () => {

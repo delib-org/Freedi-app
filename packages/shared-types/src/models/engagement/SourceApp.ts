@@ -3,4 +3,5 @@ export enum SourceApp {
 	SIGN = 'sign',
 	MASS_CONSENSUS = 'mass-consensus',
 	FLOW = 'flow',
+	CHAT = 'chat',
 }

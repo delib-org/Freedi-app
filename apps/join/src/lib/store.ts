@@ -30,6 +30,7 @@ import {
 	SortType,
 	ThemeStyle,
 	createStatementObject,
+	createParagraphChildStatement,
 	CutoffBy,
 	getJoinDelegateId,
 } from '@freedi/shared-types';
@@ -276,12 +277,16 @@ export async function loadOptionParagraphs(optionId: string): Promise<void> {
 			where('statementType', '==', StatementType.paragraph),
 		);
 		const snap = await getDocs(q);
-		// Order by `createdAt` so paragraphs render in the order the author
-		// wrote them — `sendMessage` staggers child createdAt by index for
-		// exactly this reason.
+		// Sort by the canonical `order` field, falling back to `doc.order` then
+		// `createdAt` for legacy paragraphs (mirrors the shared
+		// `sortParagraphChildren` used by the other apps). `createStatementObject`
+		// → `createParagraphChildStatement` writes `order`; older paragraphs only
+		// carry the staggered `createdAt`.
+		const orderKey = (p: Statement): number =>
+			p.order ?? p.doc?.order ?? p.createdAt ?? 0;
 		const paras = snap.docs
 			.map((d) => d.data() as Statement)
-			.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+			.sort((a, b) => orderKey(a) - orderKey(b));
 		optionParagraphsCache.set(optionId, paras);
 		m.redraw();
 	} catch (err) {
@@ -531,17 +536,16 @@ export async function updateSuggestion(optionId: string, text: string): Promise<
 		if (creator) {
 			const topParentId = option.topParentId || optionId;
 			for (let i = 0; i < bodyLines.length; i++) {
-				const child = createStatementObject({
-					statement: bodyLines[i],
-					statementType: StatementType.paragraph,
-					parentId: optionId,
-					topParentId,
-					creatorId: creator.uid,
+				const child = createParagraphChildStatement({
+					content: bodyLines[i],
+					host: { statementId: optionId, topParentId },
 					creator,
+					creatorId: creator.uid,
+					order: i,
 				});
 				if (!child) continue;
-				// Stagger createdAt by index so paragraphs render in author order
-				// regardless of write fan-out timing — same trick `sendMessage` uses.
+				// Stagger createdAt by index as well, so legacy readers that still
+				// sort by createdAt keep author order; `order` is the canonical key.
 				batch.set(doc(db, Collections.statements, child.statementId), {
 					...child,
 					createdAt: now + i + 1,
@@ -1587,17 +1591,16 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 	});
 
 	for (let i = 0; i < bodyLines.length; i++) {
-		const child = createStatementObject({
-			statement: bodyLines[i],
-			statementType: StatementType.paragraph,
-			parentId: parentStatement.statementId,
-			topParentId,
-			creatorId: creator.uid,
+		const child = createParagraphChildStatement({
+			content: bodyLines[i],
+			host: { statementId: parentStatement.statementId, topParentId },
 			creator,
+			creatorId: creator.uid,
+			order: i,
 		});
 		if (!child) continue;
-		// Preserve order: stagger createdAt by index so paragraphs render in
-		// the order the user wrote them, regardless of write fan-out timing.
+		// Canonical order is the `order` field; also stagger createdAt by index so
+		// legacy readers that still sort by createdAt keep author order.
 		batch.set(doc(db, Collections.statements, child.statementId), {
 			...child,
 			createdAt: parentStatement.createdAt + i + 1,

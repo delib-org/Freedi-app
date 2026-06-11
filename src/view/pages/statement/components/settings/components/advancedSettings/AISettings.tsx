@@ -6,23 +6,13 @@ import {
 	StatementSettings,
 	StatementType,
 } from '@freedi/shared-types';
-import {
-	Search,
-	Target,
-	Database,
-	Scissors,
-	Zap,
-	PenLine,
-	GitMerge,
-	LayoutGrid,
-} from 'lucide-react';
+import { Search, Target, Database, Scissors, Zap, PenLine, GitMerge } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
 import GroupingSettings from './GroupingSettings';
-import { ClusteringAdmin } from '../ClusteringAdmin';
 
 interface AISettingsProps {
 	statement: Statement;
@@ -185,17 +175,6 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 							/>
 						</>
 					)}
-				</Subsection>
-			)}
-
-			{/* 4. Thematic clustering — admin diagnostics for theme-based grouping (admin only) */}
-			{isQuestion && isAdminOrCreator && (
-				<Subsection
-					icon={LayoutGrid}
-					title={t('Thematic clustering (advanced)')}
-					description={t('Groups ideas by theme rather than duplication. Output drives framings.')}
-				>
-					<ClusteringAdmin statement={statement} />
 				</Subsection>
 			)}
 		</div>

@@ -18,7 +18,7 @@ import {
 	loadDemographicQuestions,
 	loadDirectChildren,
 	loadQuestion,
-	loadTopicClusterFraming,
+	loadTopicClusterGroupings,
 } from './loader';
 import { aggregateEvaluationsForMembers } from './aggregator';
 import { buildDemographicBreakdown, buildDemographicQuestionSummaries } from './demographicSlicer';
@@ -58,19 +58,19 @@ export async function buildStrategicExport(opts: BuildOptions): Promise<Strategi
 	const question = await loadQuestion(questionStatementId);
 
 	// 2. Trigger topic-cluster pipeline if missing or forced.
-	let framing = await loadTopicClusterFraming(questionStatementId);
+	let groupings = await loadTopicClusterGroupings(questionStatementId);
 	let clusteringTriggered = false;
-	if (!framing || forceClustering) {
+	if (groupings.length === 0 || forceClustering) {
 		logger.info('strategicExport: triggering topic-cluster pipeline', {
 			questionStatementId,
-			reason: forceClustering ? 'forceClustering=true' : 'no existing framing',
+			reason: forceClustering ? 'forceClustering=true' : 'no existing clusters',
 		});
 		await runTopicClusterPipeline(questionStatementId, {
 			rebuildCache: forceClustering,
 			rebuildTaxonomy: forceClustering,
 		});
 		clusteringTriggered = true;
-		framing = await loadTopicClusterFraming(questionStatementId);
+		groupings = await loadTopicClusterGroupings(questionStatementId);
 	}
 
 	// 3. Load all direct children (clusters + leftover options).
@@ -81,7 +81,7 @@ export async function buildStrategicExport(opts: BuildOptions): Promise<Strategi
 
 	// 4. Build a list of "aggregate candidates":
 	//    - Each cluster Statement (isCluster === true) is one aggregate, members from integratedOptions.
-	//    - Any leftover option not assigned to any framingCluster is its own singleton aggregate.
+	//    - Any leftover option not assigned to any cluster is its own singleton aggregate.
 	type Candidate = {
 		aggregateId: string;
 		representativeText: string;
@@ -93,7 +93,6 @@ export async function buildStrategicExport(opts: BuildOptions): Promise<Strategi
 	const childById = new Map<string, Statement>();
 	for (const c of children) childById.set(c.statementId, c);
 
-	const framingId = framing?.framingId;
 	const optionsCoveredByCluster = new Set<string>();
 
 	for (const c of children) {
@@ -118,11 +117,6 @@ export async function buildStrategicExport(opts: BuildOptions): Promise<Strategi
 		if (c.isCluster === true) continue;
 		if (c.statementType !== 'option') continue;
 		if (optionsCoveredByCluster.has(c.statementId)) continue;
-		const inFraming = framingId ? Boolean(c.framingClusters?.[framingId]) : false;
-		// If the option IS assigned via framingClusters but not in any cluster's
-		// integratedOptions (rare race), still treat it as a singleton candidate
-		// so we don't drop it.
-		void inFraming;
 		candidates.push({
 			aggregateId: c.statementId,
 			representativeText: c.statement,

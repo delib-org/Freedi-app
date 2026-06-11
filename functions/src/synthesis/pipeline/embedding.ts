@@ -12,8 +12,22 @@ const EMBEDDING_FETCH_TIMEOUT_MS = 5_000;
  *
  * Lifted from the original liveSynth implementation so all entry points can
  * share the same embedding-resolution behavior.
+ *
+ * IMPORTANT — context must be the parent's TEXT, not its ID. All stored
+ * embeddings on existing statements are produced by `generateEmbeddingForStatement`
+ * (in fn_statementCreation.ts) using `parent.statement` as context. The
+ * embedding service concatenates context into the prompt as
+ * `"Question: <context>\nAnswer: <text>"`, so passing a Firestore doc id puts
+ * the inline-fallback vector in a different subspace from the stored vectors
+ * — observed effect: every cross-cosine collapses to ~0.65 even for true
+ * paraphrases, and Pass 1 attach can never fire. The pipeline supplies the
+ * parent statement via `parentText`; older callers that don't may end up with
+ * a contextless embedding (still acceptable, just less precise).
  */
-export async function ensureEmbedding(statement: Statement): Promise<number[] | null> {
+export async function ensureEmbedding(
+	statement: Statement,
+	parentText?: string,
+): Promise<number[] | null> {
 	const startedAt = Date.now();
 	while (Date.now() - startedAt < EMBEDDING_FETCH_TIMEOUT_MS) {
 		const map = await embeddingCache.getBatchEmbeddings([statement.statementId]);
@@ -23,12 +37,33 @@ export async function ensureEmbedding(statement: Statement): Promise<number[] | 
 	}
 	logger.info('synthesis.pipeline.ensureEmbedding: not in cache, generating directly', {
 		statementId: statement.statementId,
+		hasParentText: Boolean(parentText),
 	});
 	try {
 		const result = await embeddingService.generateEmbedding(
 			statement.statement,
-			statement.parentId,
+			parentText ?? '',
 		);
+
+		// Persist so subsequent callers (including the upstream
+		// `generateEmbeddingForStatement` task that might still be running)
+		// find it cached instead of issuing another OpenAI call. saveEmbedding
+		// is idempotent at the doc-update level — last write wins, but the
+		// vector is deterministic for a given (text, context) pair so any
+		// late-arriving write produces an equivalent vector.
+		try {
+			await embeddingCache.saveEmbedding(
+				statement.statementId,
+				result.embedding,
+				parentText ?? '',
+				statement.statement,
+			);
+		} catch (saveError) {
+			logger.warn('synthesis.pipeline.ensureEmbedding: cache save failed (non-fatal)', {
+				statementId: statement.statementId,
+				error: saveError instanceof Error ? saveError.message : String(saveError),
+			});
+		}
 
 		return result.embedding;
 	} catch (error) {

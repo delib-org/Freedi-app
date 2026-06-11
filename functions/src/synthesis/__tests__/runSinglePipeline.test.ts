@@ -45,8 +45,10 @@ jest.mock('../liveSynth/auditLog', () => ({
 }));
 
 const enqueueRecomputeMock = jest.fn();
+const findClustersContainingMemberMock = jest.fn();
 jest.mock('../liveSynth/clusterRecompute', () => ({
 	enqueueClusterRecompute: enqueueRecomputeMock,
+	findClustersContainingMember: findClustersContainingMemberMock,
 }));
 
 const ensureEmbeddingMock = jest.fn();
@@ -117,9 +119,62 @@ beforeEach(() => {
 	ensureEmbeddingMock.mockResolvedValue(Array(1536).fill(0.1));
 	debounceCheckMock.mockResolvedValue(true);
 	attachMock.mockResolvedValue({ attached: true, previousMemberCount: 1, newMemberCount: 2 });
+	// Default: the option is not yet a member of any cluster.
+	findClustersContainingMemberMock.mockResolvedValue([]);
 });
 
 describe('runSinglePipeline', () => {
+	describe('cluster-membership idempotence', () => {
+		it('skips when the option is already a member of a live cluster (no double-claim)', async () => {
+			const option = makeOption();
+			findClustersContainingMemberMock.mockResolvedValue([
+				{
+					statementId: 'cluster-A',
+					integratedOptions: ['opt-1'],
+					hide: false,
+				} as unknown as Statement,
+			]);
+
+			const result = await runSinglePipeline({
+				option,
+				optionId: 'opt-1',
+				source: 'synthesizeNow',
+			});
+
+			expect(result.action).toBe('skipped');
+			expect(result.reason).toContain('already-member-of-cluster:cluster-A');
+			// Must not run the attach/spawn passes for an already-owned option.
+			expect(findSimilarMock).not.toHaveBeenCalled();
+			expect(attachMock).not.toHaveBeenCalled();
+			expect(spawnMock).not.toHaveBeenCalled();
+		});
+
+		it('proceeds when the option is only owned by a hidden (reverse-integrated) cluster', async () => {
+			const option = makeOption();
+			const parent = makeParent();
+			findClustersContainingMemberMock.mockResolvedValue([
+				{
+					statementId: 'cluster-dead',
+					integratedOptions: ['opt-1'],
+					hide: true,
+				} as unknown as Statement,
+			]);
+			findSimilarMock.mockResolvedValue([]);
+
+			const result = await runSinglePipeline({
+				option,
+				parent,
+				optionId: 'opt-1',
+				source: 'synthesizeNow',
+				forceProcess: true,
+			});
+
+			// Not blocked by the dead cluster; falls through to normal processing.
+			expect(result.reason).not.toContain('already-member-of-cluster');
+			expect(findSimilarMock).toHaveBeenCalled();
+		});
+	});
+
 	it('skips when synthesis disabled on parent', async () => {
 		const option = makeOption();
 		const parent = makeParent({
@@ -324,10 +379,13 @@ describe('runSinglePipeline', () => {
 	it('skips when both synth and cluster fallback fail', async () => {
 		const option = makeOption();
 		const parent = makeParent();
+		// Cosine 0.80 is in the synth-attempt band (≥ synthLowerBound 0.78
+		// and < attachThreshold 0.85), which is where the LLM is invited to
+		// merge and the cluster fallback applies when it refuses.
 		findSimilarMock.mockResolvedValue([
 			{
 				statement: { statementId: 'sibling-3', integratedOptions: [] } as unknown as Statement,
-				similarity: 0.7,
+				similarity: 0.8,
 			},
 		]);
 		spawnMock
@@ -451,11 +509,12 @@ describe('runSinglePipeline', () => {
 	});
 
 	it('does NOT attach a sub-attachThreshold match to a synth, and spawns from plain option behind it', async () => {
-		// Regression: a partly-resembled option at cosine 0.7 must not be
+		// Regression: a partly-resembled option at cosine 0.71 must not be
 		// absorbed into the existing synth (synth attach requires
-		// attachThreshold 0.85). Under the new LLM-judged spawn, the pipeline
-		// hits the plain option behind the synth and asks the LLM whether to
-		// synth or cluster.
+		// attachThreshold 0.85). With the band router, cosines in
+		// [clusterThreshold, synthLowerBound) route directly to a topic-cluster
+		// spawn — skipping the wasted synth attempt that the synth-judge
+		// prompt would not refuse for non-conflicting distinct ideas.
 		const option = makeOption();
 		const parent = makeParent();
 		findSimilarMock.mockResolvedValue([
@@ -472,11 +531,7 @@ describe('runSinglePipeline', () => {
 				similarity: 0.7,
 			},
 		]);
-		// Simulate LLM refusal so we land on a topic-cluster fallback —
-		// matches the "partly-resembled, different proposal" intent.
-		spawnMock
-			.mockResolvedValueOnce({ spawned: false, cannotSynthesize: true })
-			.mockResolvedValueOnce({ spawned: true, clusterId: 'new-topic-cluster' });
+		spawnMock.mockResolvedValueOnce({ spawned: true, clusterId: 'new-topic-cluster' });
 		const result = await runSinglePipeline({
 			optionId: option.statementId,
 			source: 'onCreate',
@@ -486,16 +541,12 @@ describe('runSinglePipeline', () => {
 		expect(result.action).toBe('spawned');
 		expect(result.clusterId).toBe('new-topic-cluster');
 		expect(attachMock).not.toHaveBeenCalled();
-		expect(spawnMock).toHaveBeenNthCalledWith(
-			1,
+		expect(spawnMock).toHaveBeenCalledTimes(1);
+		expect(spawnMock).toHaveBeenCalledWith(
 			expect.objectContaining({
-				mode: 'synth',
+				mode: 'cluster',
 				sibling: expect.objectContaining({ statementId: 'sibling-plain' }),
 			}),
-		);
-		expect(spawnMock).toHaveBeenNthCalledWith(
-			2,
-			expect.objectContaining({ mode: 'cluster', bypassDebounce: true }),
 		);
 	});
 
