@@ -109,6 +109,47 @@ export async function upsertSurveyProgress(
 }
 
 /**
+ * Record that a user entered the survey (landed on any survey page).
+ * Idempotent: creates the progress doc with `enteredAt` if missing, or
+ * stamps `enteredAt` on an existing doc that predates entry tracking.
+ * Never touches flow-progress fields, so it cannot corrupt real progress.
+ */
+export async function markSurveyEntered(
+  surveyId: string,
+  userId: string,
+  isTestData: boolean
+): Promise<void> {
+  const db = getFirestoreAdmin();
+  const progressId = generateProgressId(surveyId, userId);
+  const docRef = db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId);
+  const now = Date.now();
+
+  await db.runTransaction(async (transaction) => {
+    const doc = await transaction.get(docRef);
+
+    if (!doc.exists) {
+      const newProgress: Record<string, unknown> = {
+        progressId,
+        surveyId,
+        userId,
+        currentQuestionIndex: 0,
+        completedQuestionIds: [],
+        startedAt: now,
+        enteredAt: now,
+        lastUpdated: now,
+        isCompleted: false,
+      };
+      if (isTestData) {
+        newProgress.isTestData = true;
+      }
+      transaction.set(docRef, newProgress);
+    } else if (doc.data()?.enteredAt === undefined) {
+      transaction.set(docRef, { enteredAt: now }, { merge: true });
+    }
+  });
+}
+
+/**
  * Get all survey progress records for a survey (admin use)
  */
 export async function getAllSurveyProgress(

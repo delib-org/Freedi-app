@@ -12,6 +12,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { pingSurveyEntry } from '@/lib/utils/surveyEntryPing';
 
 export interface SwipeInterfaceWrapperProps {
   question: Statement;
@@ -47,7 +48,11 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
     }).catch(() => {
       // Non-blocking: view tracking must never disturb the flow
     });
-  }, [isLoading, user?.uid, question.statementId]);
+
+    if (surveyId) {
+      pingSurveyEntry(surveyId, viewerId);
+    }
+  }, [isLoading, user?.uid, question.statementId, surveyId]);
 
   // Use shared anonymous user utility for consistent ID across modes
 

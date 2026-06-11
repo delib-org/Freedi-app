@@ -4,6 +4,7 @@ import {
   getSurveyWithQuestions,
   getSurveyDemographicQuestions,
   getAllSurveyDemographicAnswers,
+  getAllSurveyProgress,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
@@ -82,6 +83,10 @@ async function getEvaluationIdentitySets(
  * Walk all option statements under the given parents and return both the set
  * of distinct creator IDs (for "solution adders") and the total option count
  * (for "solutions submitted"). Collected in one scan to avoid a second query.
+ *
+ * AI synthesis/cluster statements (live-synth spawns) are stored as
+ * statementType=option too — they are system artifacts, not submissions,
+ * so they are excluded from both tallies.
  */
 async function getSolutionStats(
   parentStatementIds: string[]
@@ -95,14 +100,16 @@ async function getSolutionStats(
       .collection(Collections.statements)
       .where('parentId', '==', parentId)
       .where('statementType', '==', StatementType.option)
-      .select('creatorId')
+      .select('creatorId', 'isSynthesis', 'isCluster')
       .get();
 
-    totalSolutions += snapshot.size;
     snapshot.forEach((doc) => {
-      const creatorId = doc.data().creatorId;
-      if (creatorId) {
-        adderIds.add(creatorId);
+      const data = doc.data();
+      if (data.isSynthesis === true || data.isCluster === true) return;
+
+      totalSolutions++;
+      if (data.creatorId) {
+        adderIds.add(data.creatorId);
       }
     });
   }
@@ -255,9 +262,10 @@ export async function GET(
     // Only count demographics from users who actually evaluated
     const questionStatementIds = questions.map((q) => q.statementId);
 
-    const [identitySets, solutionStats] = await Promise.all([
+    const [identitySets, solutionStats, surveyProgressDocs] = await Promise.all([
       getEvaluationIdentitySets(questionStatementIds),
       getSolutionStats(questionStatementIds),
+      getAllSurveyProgress(surveyId),
     ]);
     const { explicitEvaluatorIds: evaluatorIds, allEvaluatorIds } = identitySets;
     const { adderIds: solutionAdderIds, totalSolutions } = solutionStats;
@@ -281,19 +289,26 @@ export async function GET(
     // Only evaluators (users who actually rated options)
     const evaluatorDemographics = aggregateDemographicAnswers(demographicQuestions, evaluatorAnswers);
 
-    // Fold demographic answerers into the Entered count — users who answered
-    // the demographic form but dropped off before evaluating or submitting
-    // still entered the survey and should be counted.
+    // Entered = everyone we know reached the survey:
+    // - took any action on a question (allParticipantIds)
+    // - answered the demographic form
+    // - has a surveyProgress doc (created on landing by /enter entry
+    //   tracking, or by clicking through the flow)
     const enteredIds = new Set<string>(allParticipantIds);
     for (const answer of demographicAnswers) {
       const uid = (answer as UserDemographicQuestion & { userId?: string }).userId;
       if (uid) enteredIds.add(uid);
     }
+    for (const progress of surveyProgressDocs) {
+      if (progress.isTestData === true) continue;
+      if (progress.userId) enteredIds.add(progress.userId);
+    }
 
     // "Engaged" = took any action on the question (evaluated, auto +1 from
     // submitting a solution, or added a solution). allParticipantIds already
-    // represents that set. "Not engaged" = entered the survey (answered
-    // demographics) but never touched the question.
+    // represents that set. "Not engaged" (bounced) = entered the survey but
+    // never touched a question. Only countable from entry-tracking deploy
+    // onward — earlier visitors who bounced left no trace.
     const notEngagedCount = Math.max(
       0,
       enteredIds.size - allParticipantIds.size
