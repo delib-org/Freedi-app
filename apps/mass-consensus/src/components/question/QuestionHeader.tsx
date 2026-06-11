@@ -5,6 +5,7 @@ import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import InlineMarkdown from '../shared/InlineMarkdown';
+import ParticipationFunnel from './ParticipationFunnel';
 import styles from './QuestionHeader.module.css';
 
 interface QuestionHeaderProps {
@@ -46,6 +47,7 @@ export default function QuestionHeader({ question }: QuestionHeaderProps) {
           {t('Created')} {formattedDate}
         </span>
       </div>
+      <ParticipationFunnel statementId={question.statementId} />
     </header>
   );
 }

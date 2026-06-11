@@ -15,7 +15,9 @@ import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers'
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
 import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/SegmentedControl';
+import ParticipationFunnel from '@/view/components/atomic/atoms/ParticipationFunnel/ParticipationFunnel';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
+import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
 import DeadlineBanner from '../deadlineBanner/DeadlineBanner';
 import TreeFilterChips from '../treeView/components/TreeFilterChips/TreeFilterChips';
 import { useTreeFilterOptional } from '../treeView/TreeFilterContext';
@@ -96,6 +98,9 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const allSubs = useSelector(subsSelect);
 	const options = useSelector(optionsSelect);
 	const questions = useSelector(questionsSelect);
+
+	const isQuestion = statement?.statementType === StatementType.question;
+	const participation = useParticipationStats(statement, options);
 
 	const segments = useMemo(() => {
 		const allSegments = [
@@ -220,6 +225,13 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 									</button>
 									{!headerCollapsed && (
 										<div className={styles.headerCollapsible}>
+											{isQuestion && (
+												<ParticipationFunnel
+													entered={participation.entered}
+													suggested={participation.suggested}
+													evaluated={participation.evaluated}
+												/>
+											)}
 											<DeadlineBanner statement={statement} role={role} />
 											{showSegmentedControl && (
 												<div className={styles.segmentedControlWrapper}>
@@ -239,6 +251,13 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 										<StatementDescription
 											brief={statement.brief}
 											callToAction={t('Share your thoughts below')}
+										/>
+									)}
+									{isQuestion && (
+										<ParticipationFunnel
+											entered={participation.entered}
+											suggested={participation.suggested}
+											evaluated={participation.evaluated}
 										/>
 									)}
 									<DeadlineBanner statement={statement} role={role} />

@@ -5,6 +5,12 @@ import { logger } from '@/lib/utils/logger';
 import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
 import { SamplingConfig } from '@/lib/utils/sampling';
 import { isServableOriginal } from '@/lib/utils/derivedStatements';
+import {
+  buildClusterMembershipMap,
+  getClusterKey,
+  deriveSeenClusters,
+  selectDiverseBatch,
+} from '@/lib/utils/diverseBatch';
 import { CommentData } from '@/types/api';
 
 /**
@@ -27,6 +33,43 @@ function sanitizeStatement(statement: Statement): Statement {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { embedding, ...rest } = statement as Statement & { embedding?: unknown };
   return rest as Statement;
+}
+
+/**
+ * Fisher-Yates shuffle (returns a new array). The randomSeed-range queries
+ * return docs ordered by seed ascending, which is not uniformly random —
+ * shuffling removes that ordering bias before diverse selection.
+ */
+function shuffle<T>(items: readonly T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
+ * Fetch the live cluster docs of a question and build a memberId -> clusterId
+ * map. Cluster docs are written with `statementType: option` + `isCluster:
+ * true`, so the randomSeed-range queries never return them — this dedicated
+ * equality query fills the gap for the random serving path.
+ */
+async function getClusterMembership(questionId: string): Promise<Map<string, string>> {
+  try {
+    const db = getFirestoreAdmin();
+    const snapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', questionId)
+      .where('isCluster', '==', true)
+      .get();
+
+    return buildClusterMembershipMap(snapshot.docs.map((doc) => doc.data() as Statement));
+  } catch (error) {
+    // Diversity is best-effort — serving must not fail because of it.
+    logQueryError('getClusterMembership', error, { questionId });
+    return new Map();
+  }
 }
 
 /**
@@ -127,18 +170,25 @@ export async function getRandomOptions(
 
   logger.info('[getRandomOptions] Fetching options for question:', questionId);
 
-  // Get user's evaluation history if userId provided
-  let evaluatedIds: string[] = [];
-  if (userId) {
-    const evaluationsSnapshot = await db
-      .collection(Collections.evaluations)
-      .where('parentId', '==', questionId)
-      .where('evaluatorId', '==', userId)
-      .get();
+  // Cluster membership (for diverse selection) and the user's evaluation
+  // history are independent — fetch them in parallel.
+  const [membership, evaluatedIds] = await Promise.all([
+    getClusterMembership(questionId),
+    (async (): Promise<string[]> => {
+      if (!userId) return [];
+      const evaluationsSnapshot = await db
+        .collection(Collections.evaluations)
+        .where('parentId', '==', questionId)
+        .where('evaluatorId', '==', userId)
+        .get();
 
-    evaluatedIds = evaluationsSnapshot.docs.map(
-      (doc) => (doc.data() as Evaluation).statementId
-    );
+      return evaluationsSnapshot.docs.map(
+        (doc) => (doc.data() as Evaluation).statementId
+      );
+    })(),
+  ]);
+
+  if (userId) {
     logger.info('[getRandomOptions] User has evaluated:', evaluatedIds.length, 'options');
   }
 
@@ -150,9 +200,10 @@ export async function getRandomOptions(
   // Use random seed for sampling - ensures fair distribution at scale
   const randomSeed = Math.random();
 
-  // Fetch more documents than needed to account for filtering
-  // We need to over-fetch because we filter AFTER the query
-  const fetchMultiplier = Math.max(3, Math.ceil(allExcludedIds.length / size) + 1);
+  // Fetch more documents than needed: we filter AFTER the query, and diverse
+  // selection needs a pool spanning several clusters, not just `size` docs.
+  const poolTarget = size * 3;
+  const fetchMultiplier = Math.max(4, Math.ceil(allExcludedIds.length / size) + 1);
   const fetchSize = size * fetchMultiplier;
 
   // Query 1: Get options with randomSeed >= random value
@@ -172,9 +223,9 @@ export async function getRandomOptions(
 
   logger.info('[getRandomOptions] After filtering (derived/hide/excluded):', options_results.length, 'options');
 
-  // If not enough, fetch from other side
-  if (options_results.length < size) {
-    const remainingNeeded = size - options_results.length;
+  // If the pool is too thin for cluster variety, fetch from the other side
+  if (options_results.length < poolTarget) {
+    const remainingNeeded = poolTarget - options_results.length;
     const moreFetchSize = remainingNeeded * fetchMultiplier;
 
     const moreQuery = db
@@ -196,9 +247,20 @@ export async function getRandomOptions(
     options_results = [...options_results, ...moreOptions];
   }
 
-  logger.info('[getRandomOptions] Final result:', options_results.length, 'options (requested', size, ')');
+  // Shuffle the pool (caller owns randomness; selection is deterministic),
+  // then spread the batch across clusters — unseen clusters first so
+  // consecutive batches rotate through the question's topics.
+  const seenClusters = deriveSeenClusters(excludedSet, membership);
+  const selected = selectDiverseBatch(
+    shuffle(options_results),
+    size,
+    (s) => getClusterKey(s, membership),
+    seenClusters
+  );
 
-  return options_results.slice(0, size);
+  logger.info('[getRandomOptions] Final result:', selected.length, 'options (requested', size, '), clusters:', selected.map((s) => getClusterKey(s, membership)));
+
+  return selected;
 }
 
 /**
@@ -241,13 +303,19 @@ export async function getAdaptiveBatch(
       .where('statementType', '==', StatementType.option)
       .get();
 
-    const proposals = allOptionsSnapshot.docs
-      .map((doc) => sanitizeStatement(doc.data() as Statement))
-      .filter(isServableOriginal);
+    const allStatements = allOptionsSnapshot.docs.map((doc) =>
+      sanitizeStatement(doc.data() as Statement)
+    );
+    const proposals = allStatements.filter(isServableOriginal);
+
+    // Cluster docs share statementType: option, so they are already in this
+    // snapshot — membership for diverse selection costs zero extra reads.
+    const membership = buildClusterMembershipMap(allStatements);
 
     logger.info('[getAdaptiveBatch] Fetched proposals:', {
       total: allOptionsSnapshot.size,
       afterServableFilter: proposals.length,
+      clusteredMembers: membership.size,
     });
 
     if (proposals.length === 0) {
@@ -285,8 +353,12 @@ export async function getAdaptiveBatch(
       logger.info('[getAdaptiveBatch] No userId provided (SSR) - using Thompson Sampling without user history');
     }
 
-    // 3. Standard Thompson Sampling selection.
-    const selected = sampler.selectForUser(proposals, evaluatedIds, size);
+    // 3. Thompson Sampling selection, spread across clusters (round-robin,
+    //    rotating to clusters the user hasn't evaluated yet).
+    const selected = sampler.selectForUser(proposals, evaluatedIds, size, {
+      clusterKeyOf: (s) => getClusterKey(s, membership),
+      seenClusters: deriveSeenClusters(evaluatedIds, membership),
+    });
 
     // 4. Calculate statistics
     const stats = sampler.calculateStats(proposals, evaluatedIds, selected.length);

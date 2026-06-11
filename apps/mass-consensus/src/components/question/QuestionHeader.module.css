@@ -35,6 +35,36 @@
   gap: var(--spacing-xs);
 }
 
+.participation {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: var(--spacing-xs);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  animation: participationFadeIn 150ms ease-in;
+}
+
+.participationSegment + .participationSegment::before {
+  content: '·';
+  margin-inline: var(--spacing-xs);
+}
+
+@keyframes participationFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .participation {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     margin-bottom: var(--spacing-sm);
@@ -54,6 +84,10 @@
   .meta {
     flex-direction: row;
     gap: var(--spacing-sm);
+    font-size: 0.75rem;
+  }
+
+  .participation {
     font-size: 0.75rem;
   }
 }

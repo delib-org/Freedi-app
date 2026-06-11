@@ -80,10 +80,28 @@ export async function GET(
     // Total unique participants = evaluators + creators (union)
     const allParticipants = new Set([...uniqueEvaluators, ...uniqueCreators]);
 
+    // Unique entrants: statementViews docs are one-per-user-per-question
+    // (`${userId}--${statementId}`), so an aggregate count == unique users
+    // who entered. View tracking started mid-project, so never report
+    // fewer entrants than known participants.
+    let enteredCount = 0;
+    try {
+      const viewsCount = await db
+        .collection(Collections.statementViews)
+        .where('statementId', '==', statementId)
+        .count()
+        .get();
+      enteredCount = viewsCount.data().count;
+    } catch (error) {
+      logError(error, { operation: 'api.stats.viewsCount' });
+    }
+    enteredCount = Math.max(enteredCount, allParticipants.size);
+
     return NextResponse.json({
       participantCount: allParticipants.size,
       evaluatorCount: uniqueEvaluators.size,
       creatorCount: uniqueCreators.size,
+      enteredCount,
       totalEvaluations,
       totalSolutions,
     });
