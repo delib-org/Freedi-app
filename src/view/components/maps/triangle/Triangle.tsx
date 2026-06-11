@@ -27,7 +27,7 @@ const Triangle: FC = () => {
 	// Return early if statement is not found
 	if (!statement || !statementId) {
 		return (
-			<div className={styles.triangle}>
+			<div className={styles.triangleScreen}>
 				<div className={styles.triangle__loading}>{t('Loading statement data...')}</div>
 			</div>
 		);
@@ -43,28 +43,30 @@ const Triangle: FC = () => {
 	});
 
 	return (
-		<>
+		<div className={styles.triangleScreen}>
 			<LoadAllBanner rootId={statementId} mode="direct" />
-			<div className={styles.triangle}></div>
-			<div className={`${styles.triangle} ${styles['triangle--invisible']}`}>
-				{subStatements.map((subStatement: Statement) => {
-					return (
-						<Dot
-							key={subStatement.statementId}
-							subStatement={subStatement}
-							maxEvaluators={maxEvaluators}
-						/>
-					);
-				})}
-				<span className={styles.xAxis}>{t('Agreements')}</span>
-				<span className={styles.yAxis}>{t('Objections')}</span>
-				<span className={styles.conflicts}>{t('Conflicts')}</span>
-				<span className={styles.abstention}>{t('Abstention')}</span>
-				<span className={styles.totalEvaluators}>
-					{t('Total evaluators')}: {statement?.totalEvaluators ?? 0}
-				</span>
+			<div className={styles.triangleCanvas}>
+				<div className={styles.triangle}></div>
+				<div className={`${styles.triangle} ${styles['triangle--invisible']}`}>
+					{subStatements.map((subStatement: Statement) => {
+						return (
+							<Dot
+								key={subStatement.statementId}
+								subStatement={subStatement}
+								maxEvaluators={maxEvaluators}
+							/>
+						);
+					})}
+					<span className={styles.xAxis}>{t('Agreements')}</span>
+					<span className={styles.yAxis}>{t('Objections')}</span>
+					<span className={styles.conflicts}>{t('Conflicts')}</span>
+					<span className={styles.abstention}>{t('Abstention')}</span>
+					<span className={styles.totalEvaluators}>
+						{t('Total evaluators')}: {statement?.totalEvaluators ?? 0}
+					</span>
+				</div>
 			</div>
-		</>
+		</div>
 	);
 };
 
