@@ -4,6 +4,7 @@ import { getFirestoreAdmin } from './admin';
 import { logger } from '@/lib/utils/logger';
 import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
 import { SamplingConfig } from '@/lib/utils/sampling';
+import { isServableOriginal } from '@/lib/utils/derivedStatements';
 import { CommentData } from '@/types/api';
 
 /**
@@ -167,9 +168,9 @@ export async function getRandomOptions(
 
   let options_results = snapshot.docs
     .map((doc) => sanitizeStatement(doc.data() as Statement))
-    .filter((opt) => !opt.hide && !excludedSet.has(opt.statementId));
+    .filter((opt) => isServableOriginal(opt) && !excludedSet.has(opt.statementId));
 
-  logger.info('[getRandomOptions] After filtering (hide/excluded):', options_results.length, 'options');
+  logger.info('[getRandomOptions] After filtering (derived/hide/excluded):', options_results.length, 'options');
 
   // If not enough, fetch from other side
   if (options_results.length < size) {
@@ -188,7 +189,7 @@ export async function getRandomOptions(
 
     const moreOptions = moreSnapshot.docs
       .map((doc) => sanitizeStatement(doc.data() as Statement))
-      .filter((opt) => !opt.hide && !excludedSet.has(opt.statementId));
+      .filter((opt) => isServableOriginal(opt) && !excludedSet.has(opt.statementId));
 
     logger.info('[getRandomOptions] Additional options after filtering:', moreOptions.length);
 
@@ -242,11 +243,11 @@ export async function getAdaptiveBatch(
 
     const proposals = allOptionsSnapshot.docs
       .map((doc) => sanitizeStatement(doc.data() as Statement))
-      .filter((p) => !p.hide);
+      .filter(isServableOriginal);
 
     logger.info('[getAdaptiveBatch] Fetched proposals:', {
       total: allOptionsSnapshot.size,
-      afterHideFilter: proposals.length,
+      afterServableFilter: proposals.length,
     });
 
     if (proposals.length === 0) {
