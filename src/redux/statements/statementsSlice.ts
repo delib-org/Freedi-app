@@ -23,6 +23,17 @@ export enum StatementScreen {
 	options = 'options',
 }
 
+export type BulkLoadMode = 'direct' | 'descendants';
+
+/** A scope (rootId + mode) whose statements were fully bulk-loaded. */
+export interface FullyLoadedScope {
+	mode: BulkLoadMode;
+	/** Max lastUpdate seen during the bulk load — delta listeners start here. */
+	watermark: number;
+	/** Top of the tree containing rootId — protected from store pruning. */
+	treeTopId: string;
+}
+
 // Define a type for the slice state
 interface StatementsState {
 	statements: Statement[];
@@ -31,6 +42,7 @@ interface StatementsState {
 	statementMembership: StatementSubscription[];
 	screen: StatementScreen;
 	bookmarkedIds: Record<string, boolean>;
+	fullyLoadedScopes: Record<string, FullyLoadedScope>;
 }
 
 interface StatementOrder {
@@ -51,13 +63,14 @@ const initialState: StatementsState = {
 	statementMembership: [],
 	screen: StatementScreen.chat,
 	bookmarkedIds: {},
+	fullyLoadedScopes: {},
 };
 
 /**
  * Prune oldest statements when state exceeds MAX_STATEMENTS cap.
  * Keeps statements belonging to the most recently updated topParentIds.
  */
-function pruneStatements(statements: Statement[]): Statement[] {
+function pruneStatements(statements: Statement[], protectedTopIds?: Set<string>): Statement[] {
 	if (statements.length <= REDUX.MAX_STATEMENTS) return statements;
 
 	// Find the most recent topParentIds by their latest lastUpdate
@@ -75,8 +88,9 @@ function pruneStatements(statements: Statement[]): Statement[] {
 		.sort((a, b) => b[1] - a[1])
 		.map(([id]) => id);
 
-	// Keep adding entire trees until we hit the cap
-	const keepSet = new Set<string>();
+	// Keep adding entire trees until we hit the cap.
+	// Trees holding a fully bulk-loaded scope are never evicted.
+	const keepSet = new Set<string>(protectedTopIds);
 	for (const topId of sortedTopParents) {
 		if (keepSet.size >= REDUX.MAX_STATEMENTS) break;
 		keepSet.add(topId);
@@ -87,6 +101,11 @@ function pruneStatements(statements: Statement[]): Statement[] {
 
 		return keepSet.has(topId);
 	});
+}
+
+/** Tree tops that must survive pruning (they hold fully bulk-loaded scopes). */
+function protectedTreeTopIds(state: StatementsState): Set<string> {
+	return new Set(Object.values(state.fullyLoadedScopes).map((scope) => scope.treeTopId));
 }
 
 export const statementsSlice = createSlice({
@@ -111,7 +130,7 @@ export const statementsSlice = createSlice({
 				}
 
 				// Prune if over cap
-				state.statements = pruneStatements(state.statements);
+				state.statements = pruneStatements(state.statements, protectedTreeTopIds(state));
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatement',
@@ -168,13 +187,34 @@ export const statementsSlice = createSlice({
 				});
 
 				// Prune if over cap
-				state.statements = pruneStatements(state.statements);
+				state.statements = pruneStatements(state.statements, protectedTreeTopIds(state));
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatements',
 					metadata: { count: action.payload.length },
 				});
 			}
+		},
+		setScopeFullyLoaded: (
+			state,
+			action: PayloadAction<{ rootId: string; mode: BulkLoadMode; watermark: number }>,
+		) => {
+			try {
+				const { rootId, mode, watermark } = action.payload;
+				// Derive the containing tree's top so pruning never evicts it
+				const rootStatement = state.statements.find((s) => s.statementId === rootId);
+				const treeTopId = rootStatement?.topParentId || rootStatement?.parentId || rootId;
+
+				state.fullyLoadedScopes[rootId] = { mode, watermark, treeTopId };
+			} catch (error) {
+				logError(error, {
+					operation: 'statementsSlice.setScopeFullyLoaded',
+					statementId: action.payload.rootId,
+				});
+			}
+		},
+		clearScopeFullyLoaded: (state, action: PayloadAction<string>) => {
+			delete state.fullyLoadedScopes[action.payload];
 		},
 		deleteStatement: (state, action: PayloadAction<string>) => {
 			try {
@@ -366,6 +406,7 @@ export const statementsSlice = createSlice({
 			state.statementMembership = [];
 			state.screen = StatementScreen.chat;
 			state.bookmarkedIds = {};
+			state.fullyLoadedScopes = {};
 		},
 		setCurrentMultiStepOptions: (state, action: PayloadAction<Statement[]>) => {
 			try {
@@ -434,6 +475,8 @@ export const {
 	updateStoreResultsSettings,
 	setBookmark,
 	setBookmarks,
+	setScopeFullyLoaded,
+	clearScopeFullyLoaded,
 } = statementsSlice.actions;
 
 // statements
@@ -441,6 +484,12 @@ export const totalMessageBoxesSelector = (state: { statements: StatementsState }
 	state.statements.statements.length;
 
 export const screenSelector = (state: { statements: StatementsState }) => state.statements.screen;
+
+/** Scope (rootId + mode) that was fully bulk-loaded, or undefined. */
+export const fullyLoadedScopeSelector =
+	(rootId: string | undefined) =>
+	(state: { statements: StatementsState }): FullyLoadedScope | undefined =>
+		rootId ? state.statements.fullyLoadedScopes[rootId] : undefined;
 
 export const statementSelectorById =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) => {

@@ -117,6 +117,20 @@ export interface OptionWithDemographics {
 }
 
 /**
+ * Participation funnel summary for the question
+ */
+export interface ParticipationSummary {
+	/** Unique users who entered/viewed the question (null when view tracking is unavailable) */
+	enteredCount: number | null;
+	/** Unique users who suggested at least one option */
+	suggestedCount: number;
+	/** Unique users who evaluated at least one option */
+	evaluatedCount: number;
+	/** Unique users who suggested or evaluated (union) */
+	totalParticipants: number;
+}
+
+/**
  * Parent statement info for export
  */
 export interface ExportParentStatement {
@@ -147,6 +161,8 @@ export interface PrivacyPreservingExportData {
 	metadata: PrivacyExportMetadata;
 	/** Summary of the parent statement */
 	parentStatement: ExportParentStatement;
+	/** Participation funnel: entered → suggested → evaluated */
+	participation: ParticipationSummary;
 	/** Demographic questions used */
 	demographicQuestions: ExportDemographicQuestion[];
 	/** How many users answered each demographic question */

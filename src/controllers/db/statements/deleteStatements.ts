@@ -53,7 +53,11 @@ export async function deleteStatementFromDB(
 			children.docs.map(async (child) => {
 				try {
 					const childRef = createStatementRef(child.id);
-					await updateDoc(childRef, { parentId: statement.parentId });
+					// Bump lastUpdate so delta listeners on the new parent pick up the move
+					await updateDoc(childRef, {
+						parentId: statement.parentId,
+						lastUpdate: Date.now(),
+					});
 				} catch (updateError) {
 					logError(updateError, {
 						operation: 'statements.deleteStatements.reparentChild',

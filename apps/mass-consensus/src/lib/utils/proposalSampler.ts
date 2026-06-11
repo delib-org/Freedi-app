@@ -13,6 +13,7 @@ import {
   isStable,
   getProposalStats,
 } from './sampling';
+import { selectDiverseBatch } from './diverseBatch';
 import { logger } from './logger';
 
 /**
@@ -41,6 +42,16 @@ export interface BatchStats {
   stableCount: number;
   /** Number of proposals remaining after this batch */
   remainingCount: number;
+}
+
+/**
+ * Cluster-diversity options for batch selection
+ */
+export interface DiversityOptions {
+  /** Maps a proposal to its cluster key (cluster id or own id for singletons) */
+  clusterKeyOf: (statement: Statement) => string;
+  /** Cluster keys the user already encountered — served last (rotation) */
+  seenClusters?: ReadonlySet<string>;
 }
 
 /**
@@ -158,12 +169,16 @@ export class ProposalSampler {
    * @param proposals - All available proposals (not hidden)
    * @param evaluatedIds - Set of proposal IDs the user has already evaluated
    * @param count - Number of proposals to select
+   * @param diversity - Optional cluster-diversity config; when provided the
+   *   batch is spread across clusters (round-robin, unseen clusters first)
+   *   instead of taking the plain top-N by priority
    * @returns Selected proposals sorted by priority
    */
   selectForUser(
     proposals: Statement[],
     evaluatedIds: Set<string>,
-    count: number
+    count: number,
+    diversity?: DiversityOptions
   ): Statement[] {
     // Filter out already-evaluated and stable proposals
     const available = proposals.filter((p) => {
@@ -201,11 +216,20 @@ export class ProposalSampler {
     // Score and sort available proposals
     const scored = this.scoreProposals(available);
 
-    // Select top N by priority
-    const selected = scored.slice(0, count).map((s) => s.proposal);
+    // Select top N by priority — spread across clusters when diversity is on
+    const selected = diversity
+      ? selectDiverseBatch(
+          scored,
+          count,
+          (s) => diversity.clusterKeyOf(s.proposal),
+          diversity.seenClusters
+        ).map((s) => s.proposal)
+      : scored.slice(0, count).map((s) => s.proposal);
 
     logger.info('[ProposalSampler] Selected proposals:', {
       selectedCount: selected.length,
+      diverse: Boolean(diversity),
+      clusterKeys: diversity ? selected.map((s) => diversity.clusterKeyOf(s)) : undefined,
       topPriority: scored[0]?.priority.toFixed(3),
       bottomPriority: scored[Math.min(count - 1, scored.length - 1)]?.priority.toFixed(3),
     });

@@ -85,6 +85,7 @@ import {
 	unsubscribeEmail,
 } from './fn_emailNotifications';
 import { getCluster, recoverLastSnapshot } from './fn_clusters';
+import { getBulkStatements, writeStatementDeletionTombstone } from './fn_bulkStatements';
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
 import { deleteResearchLogs } from './fn_deleteResearchLogs';
@@ -491,6 +492,9 @@ exports.getEmailSubscriberCount = wrapHttpFunction(getEmailSubscriberCount);
 exports.unsubscribeEmail = wrapHttpFunction(unsubscribeEmail);
 exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
+// Bulk fetch for "Load all" (mind-map / agreement-map / collaboration-index).
+// Authenticated via Firebase ID token inside the handler (verifyAuthToken).
+exports.getBulkStatements = wrapHttpFunction(getBulkStatements);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
 exports.deleteResearchLogs = deleteResearchLogs;
@@ -613,6 +617,15 @@ exports.onStatementDeletion = createFirestoreFunction(
 	onDocumentDeleted,
 	onStatementDeletionDeleteSubscriptions,
 	`onStatementDeletionDeleteSubscriptions`,
+);
+
+// Tombstone for delta listeners: clients that bulk-loaded a scope only see
+// docs whose lastUpdate changed, so hard deletes must be broadcast separately.
+exports.onStatementDeletionTombstone = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentDeleted,
+	writeStatementDeletionTombstone,
+	'writeStatementDeletionTombstone',
 );
 
 // Subscription functions

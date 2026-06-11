@@ -1,7 +1,7 @@
 ---
 name: qa-code-auditor
 description: Use this agent when you need to evaluate code quality, test coverage, architectural decisions, and adherence to best practices. This agent should be invoked after implementing new features, refactoring existing code, or when you want a comprehensive quality assessment of recently written code. Examples: <example>Context: The user has just implemented a new authentication module. user: 'I've finished implementing the user authentication system' assistant: 'Let me use the qa-code-auditor agent to review the quality and test coverage of your authentication implementation' <commentary>Since new code has been written, use the qa-code-auditor to evaluate its quality, modularity, and testing.</commentary></example> <example>Context: The user has refactored a complex data processing pipeline. user: 'I've refactored the data processing functions to be more modular' assistant: 'I'll invoke the qa-code-auditor agent to assess the refactoring quality and ensure best practices were followed' <commentary>After refactoring, use the qa-code-auditor to verify improved modularity and code quality.</commentary></example>
-model: sonnet
+model: fable
 color: red
 ---
 

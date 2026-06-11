@@ -17,6 +17,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logError } from '@/utils/errorHandling';
 import BreakdownPanel from './BreakdownPanel';
 import HexClusterPanel from './HexClusterPanel';
+import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
 
 const HIT_THRESHOLD_PX = 40;
 const MOBILE_BREAKPOINT = 768;
@@ -658,6 +659,8 @@ const PolarizationIndexComp = () => {
 				<h2 className={styles.header__title}>{t('Collaboration Index')}</h2>
 				<p className={styles.header__subtitle}>{t('How people feel about each topic')}</p>
 			</div>
+
+			{statementId && <LoadAllBanner rootId={statementId} mode="direct" />}
 
 			{/* Toolbar — view mode toggle + zoom reset */}
 			<div className={styles.toolbar}>

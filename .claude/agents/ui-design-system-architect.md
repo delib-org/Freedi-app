@@ -1,7 +1,7 @@
 ---
 name: ui-design-system-architect
 description: Use this agent when you need to design user interfaces that follow established design system principles. This includes planning UI components in markdown files, creating consistent visual elements, ensuring design system compliance, and architecting reusable UI patterns. The agent excels at translating design requirements into structured documentation before implementation and maintaining design consistency across components.\n\nExamples:\n- <example>\n  Context: User needs to design a new feature's UI components following the project's design system.\n  user: "I need to create a user profile section with avatar, stats, and action buttons"\n  assistant: "I'll use the ui-design-system-architect agent to plan this UI component following our design system"\n  <commentary>\n  Since the user needs UI design that follows design system principles, use the ui-design-system-architect agent to plan and document the component structure.\n  </commentary>\n</example>\n- <example>\n  Context: User wants to document UI patterns before implementation.\n  user: "Let's design the card components for the dashboard"\n  assistant: "I'm going to use the Task tool to launch the ui-design-system-architect agent to plan these card components with our design system in mind"\n  <commentary>\n  The user is requesting UI design work, so the ui-design-system-architect agent should handle the planning and documentation.\n  </commentary>\n</example>
-model: sonnet
+model: fable
 color: yellow
 ---
 

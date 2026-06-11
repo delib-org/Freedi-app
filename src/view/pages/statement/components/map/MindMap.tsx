@@ -12,6 +12,7 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import Modal from '@/view/components/modal/Modal';
+import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
 import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
@@ -160,6 +161,7 @@ const MindMap: FC = () => {
 	return (
 		<>
 			<style>{spinnerStyle}</style>
+			{statementId && <LoadAllBanner rootId={statementId} mode="descendants" />}
 			<div className={styles.filterToggle}>
 				<span className={styles.filterLabel}>
 					{showOnlySelected ? t('Selected only') : t('All')}

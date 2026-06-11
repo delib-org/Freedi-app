@@ -296,6 +296,8 @@ export const SurveyProgressSchema = object({
   completedDemographicPageIds: optional(array(string())),
   /** Timestamp when user started the survey */
   startedAt: number(),
+  /** Timestamp when user first landed on the survey (entry tracking; may exist with no flow progress) */
+  enteredAt: optional(number()),
   /** Timestamp of last update */
   lastUpdated: number(),
   /** True when user has completed all questions */

@@ -757,33 +757,33 @@
   "emulators": {
     "auth": {
       "port": 9099,
-      "host": "0.0.0.0"
+      "host": "localhost"
     },
     "functions": {
       "port": 5001,
-      "host": "0.0.0.0"
+      "host": "localhost"
     },
     "firestore": {
       "port": 8081,
-      "host": "0.0.0.0"
+      "host": "localhost"
     },
     "database": {
       "port": 9000,
-      "host": "0.0.0.0"
+      "host": "localhost"
     },
     "storage": {
       "port": 9199,
-      "host": "0.0.0.0"
+      "host": "localhost"
     },
     "ui": {
       "enabled": true,
       "port": 5002,
-      "host": "0.0.0.0"
+      "host": "localhost"
     },
     "singleProjectMode": true,
     "hosting": {
       "port": 5003,
-      "host": "0.0.0.0"
+      "host": "localhost"
     }
   },
   "storage": {

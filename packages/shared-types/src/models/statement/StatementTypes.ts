@@ -169,6 +169,7 @@ export const StatementSchema = object({
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
+	integratedInto: optional(string()), // cluster statement ID this original was merged into (set with hide:true by performIntegration; cleared on reverse)
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
 	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
 	synthesisRunId: optional(string()), // id of the run that produced this derived option — enables surgical per-run cleanup & provenance

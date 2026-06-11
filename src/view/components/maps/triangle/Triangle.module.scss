@@ -1,42 +1,44 @@
+// Agreement map screen: banner in normal flow on top, chart contained below.
+// The chart positions itself against .triangleCanvas (not the viewport), with
+// gutters reserved for the axis labels that hang outside the triangle box.
+.triangleScreen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding-top: 0.5rem;
+}
+
+.triangleCanvas {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 56rem;
+  min-height: 20rem;
+  margin-inline: auto;
+  // Coordinate plot: agreement grows to the right, objections grow upward.
+  // Must not mirror under RTL page direction.
+  direction: ltr;
+
+  @media (max-width: 690px) {
+    min-height: 16rem;
+  }
+}
+
 .triangle {
   position: absolute;
-  top: 20vh;
-  left: 35vw;
-  width: 35vw;
-  height: 70vh;
+  // Gutters: top fits .totalEvaluators (-2.5rem), left fits the rotated
+  // .yAxis (-3.7rem), bottom fits .xAxis/.abstention (-2rem).
+  inset: 3rem 1.5rem 2.75rem 4.5rem;
   border: 2px solid var(--map-question);
   clip-path: polygon(0 0, 0 100%, 100% 100%);
 
-  @media (max-width: 1700px) {
-    top: 20vh;
-    left: 35vw;
-    width: 45vw;
-    height: 70vh;
-  }
-
-  @media (max-width: 1080px) {
-    top: 20vh;
-    left: 30vw;
-    width: 65vw;
-    height: 70vh;
-  }
-
   @media (max-width: 690px) {
-    top: 30vh;
-    left: 11vw;
-    width: 82vw;
-    height: 50vh;
-  }
-
-  @media (max-height: 600px) {
-    top: 37vh;
-    left: 35vw;
-    max-width: 25vw;
-    height: 48vh;
+    inset: 2.75rem 1rem 2.5rem 4.25rem;
   }
 
   &--invisible {
-    position: absolute;
     background-color: transparent;
     border: none;
     clip-path: none;

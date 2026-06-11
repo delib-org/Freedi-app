@@ -1,7 +1,7 @@
 ---
 name: "design-system-architect"
 description: "Use this agent when the user needs to create, define, or document a comprehensive design system, brand guidelines, component libraries, design tokens, or UI/UX specifications. This includes creating color palettes, typography scales, spacing systems, component specifications, and design documentation.\\n\\nExamples:\\n\\n- User: \"I need a design system for my new SaaS product\"\\n  Assistant: \"I'll use the Design System Architect agent to create a comprehensive design system for your SaaS product.\"\\n  [Launches design-system-architect agent]\\n\\n- User: \"Create a component library spec for our mobile app\"\\n  Assistant: \"Let me launch the Design System Architect agent to define your component library with proper specifications.\"\\n  [Launches design-system-architect agent]\\n\\n- User: \"I need design tokens and color palette for our rebrand\"\\n  Assistant: \"I'll use the Design System Architect agent to create your design tokens and color system.\"\\n  [Launches design-system-architect agent]\\n\\n- User: \"Document our UI patterns following Apple HIG principles\"\\n  Assistant: \"Let me use the Design System Architect agent to create HIG-aligned documentation for your UI patterns.\"\\n  [Launches design-system-architect agent]"
-model: opus
+model: fable
 color: blue
 memory: user
 ---

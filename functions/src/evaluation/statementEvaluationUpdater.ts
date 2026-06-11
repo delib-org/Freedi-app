@@ -301,6 +301,9 @@ async function updateStatementInTransaction(
 			'evaluation.viewed': evaluation.viewed,
 			proSum: FieldValue.increment(proConDiff.proDiff),
 			conSum: FieldValue.increment(proConDiff.conDiff),
+			// Delta listeners (lastUpdate > watermark) must see evaluation changes.
+			// Safe: fn_statement_updates strips lastUpdate before change detection.
+			lastUpdate: Date.now(),
 		});
 	});
 }
