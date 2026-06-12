@@ -17,19 +17,18 @@ $addOptionSize: 60px;
   align-items: center;
   bottom: 0px;
   z-index: 10;
-  padding: 30px 20px;
+  padding: 16px 20px;
   background: linear-gradient(
     180deg,
-    rgba(252, 252, 252, 0) 0%,
-    rgba(255, 255, 255, 0.8688) 37%,
-    rgba(255, 255, 255, 1) 100%
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 1) 70%
   );
   height: 100%;
 }
 
 .statementBottomNavShow {
   @extend .statementBottomNav;
-  animation: showSortMenu 750ms linear 0s 1 forwards normal;
+  animation: showSortMenu var(--motion-base) var(--motion-ease) both;
 }
 
 .statementBottomNavLtr {
@@ -78,12 +77,9 @@ $addOptionSize: 60px;
   gap: 0.5rem;
   padding: 0;
 
-  transition:
-    width 220ms ease,
-    min-width 220ms ease,
-    height 220ms ease,
-    padding 220ms ease,
-    border-radius 220ms ease;
+  // Press feedback only. The pill geometry swaps instantly — animating
+  // width/border-radius forced a layout reflow on every frame on mobile.
+  transition: transform var(--motion-fast) var(--motion-ease);
 
   svg {
     width: var(--nav-icon-svg);
@@ -105,78 +101,27 @@ $addOptionSize: 60px;
   }
 }
 
+// The label materializing reads as "expansion" perceptually, at zero
+// reflow cost (the icon stays anchored, geometry is already final).
 .addOptionButtonLabel {
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--text-headline);
   white-space: nowrap;
   line-height: 1;
+  animation: labelIn var(--motion-base) var(--motion-ease) both;
 
   @media screen and (max-width: 700px) {
     font-size: 0.85rem;
   }
 }
 
-.addOptionButtonIntroLTR {
-  animation: pill-grow-ltr 420ms ease-out 1 both;
-}
-.addOptionButtonIntroRTL {
-  animation: pill-grow-rtl 420ms ease-out 1 both;
-}
-.addOptionButtonShrinking {
-  animation: pill-shrink-to-round 360ms ease-in 1 both;
-}
-
-@keyframes pill-grow-ltr {
-  0% {
-    min-width: $addOptionSize;
-    height: $addOptionSize;
-    padding-inline: 0;
-    border-radius: $addOptionSize;
-    transform-origin: left center;
+@keyframes labelIn {
+  from {
+    opacity: 0;
   }
-  100% {
-    min-width: 180px;
-    height: 48px;
-    padding-inline: 1rem;
-    border-radius: 24px;
-  }
-}
-@keyframes pill-grow-rtl {
-  0% {
-    min-width: $addOptionSize;
-    height: $addOptionSize;
-    padding-inline: 0;
-    border-radius: $addOptionSize;
-    transform-origin: right center;
-  }
-  100% {
-    min-width: 180px;
-    height: 48px;
-    padding-inline: 1rem;
-    border-radius: 24px;
-  }
-}
-@keyframes pill-shrink-to-round {
-  0% {
-    min-width: 180px;
-    height: 48px;
-    padding-inline: 1rem;
-    border-radius: 24px;
-  }
-  100% {
-    min-width: $addOptionSize; /* 60px */
-    height: $addOptionSize; /* 60px */
-    padding-inline: 0;
-    border-radius: $addOptionSize;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .addOptionButtonIntroLTR,
-  .addOptionButtonIntroRTL,
-  .addOptionButtonShrinking {
-    animation: none !important;
+  to {
+    opacity: 1;
   }
 }
 
@@ -193,9 +138,8 @@ $addOptionSize: 60px;
     position: absolute;
     left: 0;
     transition:
-      left 600ms ease,
-      transform 1200ms ease,
-      opacity 350ms ease;
+      left 200ms var(--motion-ease),
+      opacity var(--motion-base) var(--motion-ease);
 
     &.active {
       .openNavIcon {
@@ -209,9 +153,6 @@ $addOptionSize: 60px;
         @media screen and (max-width: 700px) {
           left: var(--sort-gap-mobile);
         }
-        .openNavIcon {
-          transform: rotate(360deg);
-        }
         .buttonName {
           opacity: 1;
           display: block;
@@ -223,9 +164,6 @@ $addOptionSize: 60px;
         left: calc(var(--sort-gap) * 2);
         @media screen and (max-width: 700px) {
           left: calc(var(--sort-gap-mobile) * 2);
-        }
-        .openNavIcon {
-          transform: rotate(360deg);
         }
         .buttonName {
           opacity: 1;
@@ -239,9 +177,6 @@ $addOptionSize: 60px;
         @media screen and (max-width: 700px) {
           left: calc(var(--sort-gap-mobile) * 3);
         }
-        .openNavIcon {
-          transform: rotate(360deg);
-        }
         .buttonName {
           opacity: 1;
           display: block;
@@ -253,9 +188,6 @@ $addOptionSize: 60px;
         left: calc(var(--sort-gap) * 4);
         @media screen and (max-width: 700px) {
           left: calc(var(--sort-gap-mobile) * 4);
-        }
-        .openNavIcon {
-          transform: rotate(360deg);
         }
         .buttonName {
           opacity: 1;
@@ -281,13 +213,12 @@ $addOptionSize: 60px;
   align-items: center;
   justify-content: center;
   background-color: var(--white);
-  box-shadow: 2px 2px 5px var(--shadow);
+  box-shadow: var(--elevation-2);
   border-radius: 50%;
   cursor: pointer;
   transition:
-    width 200ms ease,
-    height 200ms ease,
-    transform 1s ease;
+    width 200ms var(--motion-ease),
+    height 200ms var(--motion-ease);
 
   svg {
     width: var(--nav-icon-svg);
@@ -303,7 +234,7 @@ $addOptionSize: 60px;
   justify-content: center;
   background-color: var(--question);
   color: white;
-  box-shadow: 2px 2px 5px var(--shadow);
+  box-shadow: var(--elevation-2);
   border-radius: 50%;
   cursor: pointer;
   transition:
@@ -343,10 +274,9 @@ $addOptionSize: 60px;
 .visibilityToggle {
   // Base visibility toggle button styles
   transition:
-    width 200ms ease,
-    height 200ms ease,
-    transform 1s ease,
-    background-color 200ms ease;
+    width 200ms var(--motion-ease),
+    height 200ms var(--motion-ease),
+    background-color 200ms var(--motion-ease);
 
   svg {
     width: var(--nav-icon-svg);
@@ -391,8 +321,8 @@ $addOptionSize: 60px;
   justify-content: center;
   cursor: pointer;
   border: none;
-  box-shadow: 2px 2px 5px var(--shadow);
-  animation: subFabPopIn 200ms ease both;
+  box-shadow: var(--elevation-2);
+  animation: subFabPopIn var(--motion-base) var(--motion-ease) both;
 
   svg {
     width: 22px;

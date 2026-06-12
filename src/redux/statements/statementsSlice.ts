@@ -565,9 +565,18 @@ export const statementsSubscriptionsSelector = createSelector(
 	},
 );
 
+// Memoized map for O(1) statement lookups — recomputed once per statements
+// change instead of an O(n) .find per subscriber per dispatch. Returns the
+// same store object references as .find did, so useSelector equality is
+// unchanged.
+const selectStatementsMap = createSelector(
+	[(state: { statements: StatementsState }) => state.statements.statements],
+	(statements) => new Map(statements.map((s) => [s.statementId, s])),
+);
+
 export const statementSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
-		state.statements.statements.find((statement) => statement.statementId === statementId);
+		statementId ? selectStatementsMap(state).get(statementId) : undefined;
 
 export const topSubscriptionsSelector = createSelector(
 	[

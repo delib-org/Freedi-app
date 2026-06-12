@@ -7,6 +7,7 @@ import { ConditionalModals } from './ConditionalModals';
 import useSlideAndSubStatement from '@/controllers/hooks/useSlideAndSubStatement';
 import FollowMeToast from './followMeToast/FollowMeToast';
 import { TreeFilterProvider } from './treeView/TreeFilterContext';
+import styles from './StatementContent.module.scss';
 
 interface StatementContentProps {
 	statement: Statement | null;
@@ -59,28 +60,23 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 				role={role}
 			/>
 
-			{/* Apply blur and disable interaction when mandatory survey is showing */}
+			{/* Scrim + disabled interaction when mandatory survey is showing */}
 			<TreeFilterProvider>
-				<div
-					style={{
-						filter: isSurveyMandatory ? 'blur(3px)' : 'none',
-						pointerEvents: isSurveyMandatory ? 'none' : 'auto',
-						opacity: isSurveyMandatory ? 0.5 : 1,
-						transition: 'all 0.3s ease',
-						display: 'flex',
-						flexDirection: 'column',
-						height: '100%',
-						overflow: 'hidden',
-					}}
-				>
-					<StatementHeader
-						topParentStatement={topParentStatement}
-						onActiveViewChange={handleActiveViewChange}
-					/>
+				<div className={styles.contentRoot}>
+					<div
+						className={`${styles.content} ${isSurveyMandatory ? styles['content--locked'] : ''}`}
+						aria-hidden={isSurveyMandatory || undefined}
+					>
+						<StatementHeader
+							topParentStatement={topParentStatement}
+							onActiveViewChange={handleActiveViewChange}
+						/>
 
-					<MapProvider>
-						<Switch activeView={activeView} />
-					</MapProvider>
+						<MapProvider>
+							<Switch activeView={activeView} />
+						</MapProvider>
+					</div>
+					{isSurveyMandatory && <div className={styles.content__scrim} aria-hidden="true" />}
 				</div>
 			</TreeFilterProvider>
 		</div>

@@ -187,10 +187,12 @@
       transform: scale(1.01);
     }
 
-    // Fired for ~600ms after a drop is accepted. Quick burst of green glow +
-    // subtle bump + member count pop so the admin can't miss the state change.
+    // Fired for ~600ms after a drop is accepted. Static green tint for the
+    // class lifetime + a transform-only bump — animating box-shadow and
+    // background repainted the card every frame on mobile.
     &--flash {
-      animation: curation-drop-flash 600ms ease-out;
+      background: rgba(45, 134, 89, 0.18);
+      animation: curation-drop-bump var(--motion-base) var(--motion-ease);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -204,20 +206,14 @@
     }
   }
 
-  @keyframes curation-drop-flash {
+  @keyframes curation-drop-bump {
     0% {
-      background: rgba(45, 134, 89, 0.35);
-      box-shadow: 0 0 0 6px rgba(45, 134, 89, 0.35);
       transform: scale(1);
     }
     40% {
-      background: rgba(45, 134, 89, 0.18);
-      box-shadow: 0 0 0 4px rgba(45, 134, 89, 0.20);
-      transform: scale(1.03);
+      transform: scale(1.02);
     }
     100% {
-      background: var(--card-default, #fff);
-      box-shadow: none;
       transform: scale(1);
     }
   }

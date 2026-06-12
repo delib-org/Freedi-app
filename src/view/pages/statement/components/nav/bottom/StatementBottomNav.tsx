@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useRef, useState } from 'react';
+import { FC, useContext, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { logError } from '@/utils/errorHandling';
 
@@ -92,18 +92,6 @@ const StatementBottomNav: FC<Props> = () => {
 	const { showHiddenCards, toggleShowHiddenCards } = useShowHiddenCards();
 
 	const isLearningFace = timesRemainToLearnAddOption > 0;
-	const isRTL = dir === 'rtl';
-
-	// Animations
-	const introPlayedRef = useRef(false);
-	const showIntro = isLearningFace && !introPlayedRef.current;
-	const prevIsLearningFace = useRef(isLearningFace);
-	const justFinishedLearning = prevIsLearningFace.current && !isLearningFace;
-
-	useEffect(() => {
-		if (isLearningFace) introPlayedRef.current = true;
-		prevIsLearningFace.current = isLearningFace;
-	}, [isLearningFace]);
 
 	const statementColor = useStatementColor({ statement });
 
@@ -308,13 +296,7 @@ const StatementBottomNav: FC<Props> = () => {
 								</>
 							)}
 							<button
-								className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${
-									showIntro
-										? isRTL
-											? styles.addOptionButtonIntroRTL
-											: styles.addOptionButtonIntroLTR
-										: ''
-								} ${justFinishedLearning ? styles.addOptionButtonShrinking : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
+								className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
 								aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
 								style={statementColor}
 								onClick={

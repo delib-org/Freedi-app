@@ -88,7 +88,9 @@
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+				transition:
+					transform var(--motion-fast) var(--motion-ease),
+					opacity var(--motion-fast) var(--motion-ease);
 				border-radius: 50%;
 				cursor: pointer;
 				user-select: none;
@@ -118,8 +120,10 @@
 					}
 				}
 
+				// Static "in flight" state — the tap already happened; a
+				// strobing pulse on every pending evaluation hurt mobile FPS.
 				&.pending {
-					animation: pulse 0.6s ease-in-out infinite;
+					opacity: 0.55;
 				}
 
 				&:disabled {
@@ -242,16 +246,6 @@
 
 .active {
 	transform: scale(1.1);
-}
-
-@keyframes pulse {
-	0%,
-	100% {
-		opacity: 0.8;
-	}
-	50% {
-		opacity: 0.5;
-	}
 }
 
 @media screen and (max-width: 500px) {

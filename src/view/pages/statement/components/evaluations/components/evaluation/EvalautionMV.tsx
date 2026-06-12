@@ -8,14 +8,12 @@ export function useEvaluation(statement: Statement | undefined) {
 	const parentStatement = useSelector(statementSelector(statement?.parentId));
 
 	useEffect(() => {
-		const unsubscribe = parentStatement
-			? () => {
-					return;
-				}
-			: listenToStatement(statement.parentId);
+		if (parentStatement || !statement?.parentId) return;
+
+		const unsubscribe = listenToStatement(statement.parentId);
 
 		return () => unsubscribe();
-	}, [parentStatement?.statementId]);
+	}, [parentStatement?.statementId, statement?.parentId]);
 
 	return { parentStatement };
 }
