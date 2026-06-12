@@ -58,6 +58,8 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
 	const [edit, setEdit] = useState(false);
 	const [headerCollapsed, setHeaderCollapsed] = useState(true);
+	// Mobile: the title is clamped to 2 lines; tapping it reveals the full text
+	const [titleExpanded, setTitleExpanded] = useState(false);
 
 	useEffect(() => {
 		if (tabFromUrl && tabFromUrl !== activeView) {
@@ -204,9 +206,13 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 									)}
 								</button>
 							) : (
-								<div className={styles.header}>
+								<button
+									className={`${styles.header} ${titleExpanded ? styles.headerExpanded : ''}`}
+									onClick={() => setTitleExpanded((prev) => !prev)}
+									aria-expanded={titleExpanded}
+								>
 									<h1>{renderInlineMarkdown(statement?.statement)}</h1>
-								</div>
+								</button>
 							)}
 
 							{isCompound ? (
@@ -285,11 +291,12 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 					</div>
 				</div>
 
-				{/* Mini header: just the title */}
+				{/* Mini header: compact title bar shown while minimized; tapping it
+				    restores the full header (click handled by useHeaderHideOnScroll) */}
 				{statement?.statement && (
-					<div className="page__header__mini">
+					<button type="button" className="page__header__mini" aria-label={t('Show header')}>
 						<span className="page__header__mini__title">{statement.statement}</span>
-					</div>
+					</button>
 				)}
 			</div>
 

@@ -11,6 +11,20 @@
 	font-variant-numeric: tabular-nums;
 	animation: participation-funnel-fade-in 150ms ease-in;
 
+	// Mobile: guaranteed single line (horizontal scroll handles long
+	// translations) — the wrapped second row was stealing header space
+	@media (max-width: 600px) {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		font-size: 0.75rem;
+		line-height: 1.5;
+		scrollbar-width: none;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+	}
+
 	&__segment + &__segment::before {
 		content: '·';
 		margin-inline: 0.5em;

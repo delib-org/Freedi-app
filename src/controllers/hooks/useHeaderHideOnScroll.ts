@@ -5,14 +5,20 @@ const SCROLL_THRESHOLD = 15;
 const MIN_SCROLL_TOP = 60;
 const COOLDOWN_MS = 350;
 const HIDDEN_CLASS = 'page__header--minimized';
-// Minimum scrollable distance (scrollHeight - clientHeight) required before hiding.
-const MIN_SCROLLABLE_DISTANCE = 250;
+// Minimum scrollable distance (scrollHeight - clientHeight) required before
+// hiding. Collapsing frees real viewport height, which shrinks the remaining
+// scrollable distance — keep this high enough that the user can always
+// scroll back up to restore the header.
+const MIN_SCROLLABLE_DISTANCE = 360;
 
 /**
- * Detects scroll direction on mobile and toggles a CSS class on the .page ancestor.
- * Uses transform (GPU-accelerated) instead of margin to avoid layout reflow and flickering.
+ * Detects scroll direction on mobile and toggles `page__header--minimized` on
+ * the header: the full header is swapped for a slim mini title bar in a single
+ * layout pass (the freed space goes to the content). Tapping the mini bar
+ * restores the full header.
  * Includes a cooldown to prevent rapid toggling from momentum scroll events.
- * Only activates after a real scroll gesture (touchmove) to ignore programmatic scrolls and taps.
+ * Arms only after a real user gesture (touchmove or wheel) so programmatic
+ * scrolls — Virtuoso pinning, scrollIntoView — never trigger it.
  */
 export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>): void {
 	const lastScrollTop = useRef(0);
@@ -49,9 +55,19 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 			isTouching = false;
 		};
 
+		// Mouse/trackpad scrolling arms the hook too — touch-only arming meant
+		// the behavior never activated in desktop browsers at mobile widths.
+		const handleWheel = () => {
+			if (!isReady.current) {
+				lastScrollTop.current = scrollElement.scrollTop;
+				isReady.current = true;
+			}
+		};
+
 		scrollElement.addEventListener('touchstart', handleTouchStart, { passive: true });
 		scrollElement.addEventListener('touchmove', handleTouchMove, { passive: true });
 		scrollElement.addEventListener('touchend', handleTouchEnd, { passive: true });
+		scrollElement.addEventListener('wheel', handleWheel, { passive: true });
 
 		const showHeader = () => {
 			if (!isHidden.current) return;
@@ -114,12 +130,18 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 		scrollElement.addEventListener('scroll', handleScroll, { passive: true });
 		mediaQuery.addEventListener('change', handleMediaChange);
 
+		// Tapping the mini bar restores the full header
+		const miniBar = page.querySelector('.page__header__mini');
+		miniBar?.addEventListener('click', showHeader);
+
 		return () => {
 			isReady.current = false;
 			scrollElement.removeEventListener('touchstart', handleTouchStart);
 			scrollElement.removeEventListener('touchmove', handleTouchMove);
 			scrollElement.removeEventListener('touchend', handleTouchEnd);
+			scrollElement.removeEventListener('wheel', handleWheel);
 			scrollElement.removeEventListener('scroll', handleScroll);
+			miniBar?.removeEventListener('click', showHeader);
 			mediaQuery.removeEventListener('change', handleMediaChange);
 			showHeader();
 		};

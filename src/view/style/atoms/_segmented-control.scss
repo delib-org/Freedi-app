@@ -49,6 +49,22 @@
     opacity: 0.8;
   }
 
+  // Mobile: never wrap — long labels + counts scroll horizontally instead.
+  // Segment height stays at the 44px WCAG touch floor.
+  @media (max-width: 600px) {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .segmented-control__segment {
+      padding: 0.5rem 0.625rem;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .segmented-control__segment {
       transition: none;

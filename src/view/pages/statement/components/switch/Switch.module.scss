@@ -44,9 +44,26 @@
 			line-height: 1.2rem;
 		}
 
+		// Mobile: smaller type, hard cap at 2 lines (tap to expand) — long
+		// titles were eating the content area
 		@media screen and (max-width: 600px) {
-			padding: 0px 20px;
+			margin: 0.25rem 0;
+			padding: 0 0.75rem;
+			font-size: 1.25rem;
+			line-height: 1.35;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
 		}
+	}
+}
+
+// Expanded state (tap on the clamped title) — show the full text
+.headerExpanded h1 {
+	@media screen and (max-width: 600px) {
+		-webkit-line-clamp: unset;
+		max-height: none;
 	}
 }
 
@@ -101,7 +118,7 @@
 	padding: 0.5rem 1rem;
 
 	@media screen and (max-width: 600px) {
-		padding: 0.5rem 0.75rem;
+		padding: 0.25rem 0.75rem;
 	}
 }
 
