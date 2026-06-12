@@ -11,6 +11,9 @@ import {
 } from 'valibot';
 import { ParagraphSchema } from '../paragraph/paragraphModel';
 import { ParagraphReasoningPathSchema } from './coherenceModel';
+import { ChangeDecision, ChangeSourceType } from './versionEnums';
+
+export { ChangeDecision, ChangeSourceType } from './versionEnums';
 
 // ============================================================================
 // ENUMS
@@ -26,16 +29,6 @@ export enum VersionStatus {
 }
 
 /**
- * Admin decision on a proposed change
- */
-export enum ChangeDecision {
-	pending = 'pending', // Not yet reviewed
-	approved = 'approved', // Accepted as-is
-	rejected = 'rejected', // Not included in version
-	modified = 'modified', // Accepted with edits
-}
-
-/**
  * Type of change made to a paragraph
  */
 export enum ChangeType {
@@ -43,15 +36,6 @@ export enum ChangeType {
 	added = 'added', // New paragraph added
 	removed = 'removed', // Paragraph was removed
 	unchanged = 'unchanged', // No change needed
-}
-
-/**
- * Source type for a change
- */
-export enum ChangeSourceType {
-	suggestion = 'suggestion', // From a user suggestion
-	comment = 'comment', // From a user comment
-	rejectionReason = 'rejectionReason', // From document-level rejection feedback
 }
 
 /**

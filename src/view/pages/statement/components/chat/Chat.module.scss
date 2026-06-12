@@ -8,6 +8,15 @@
 	margin: 0 auto;
 }
 
+// Full-page scroll mode (main view): the chat grows to its content and
+// `.page__main` is the single scroller (Virtuoso customScrollParent), so
+// the description/paragraphs scroll together with the messages.
+.chatContainerPage {
+	flex: none;
+	min-height: 0;
+	width: 100%;
+}
+
 .chat {
 	position: relative;
 	display: flex;
@@ -18,6 +27,11 @@
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
+}
+
+.chatPage {
+	flex: none;
+	overflow: visible;
 }
 
 .sideChat {
@@ -55,6 +69,10 @@
 // drops on mobile during active chat.
 .messageWrapper {
 	animation: messageIn var(--motion-base) var(--motion-ease) both;
+	// New block formatting context: child margins stay inside this box so
+	// Virtuoso measures item heights correctly (escaped margins desync the
+	// list height from the scroller and content slides under the input).
+	display: flow-root;
 }
 
 @keyframes messageIn {
@@ -83,6 +101,8 @@
 	width: 100%;
 	display: flex;
 	justify-content: center;
+	// Opaque backdrop — messages scroll behind the pinned input.
+	background: var(--statementBackground);
 }
 
 .sideChatInputWrapper {

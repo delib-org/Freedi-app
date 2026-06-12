@@ -90,7 +90,12 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	}, []);
 
 	function barPosition(width: number, avg: number): number {
-		const normalizedPosition = ((avg + 1) / 2) * ((width - indicatorWidth) / width) * width;
+		// Guard: not measured yet, or too narrow to position meaningfully.
+		if (width <= indicatorWidth) return 0;
+		// Clamp to the expected score range — out-of-range aggregates would
+		// otherwise push the indicator far outside the card (x-overflow).
+		const clamped = Math.max(-1, Math.min(1, avg));
+		const normalizedPosition = ((clamped + 1) / 2) * (width - indicatorWidth);
 
 		if (dir === 'ltr') {
 			return width - indicatorWidth - normalizedPosition;
@@ -101,7 +106,8 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 	function barColor(avg: number): string {
 		const colors = enhancedEvaluationsThumbs.map((thumb) => thumb.colorSelected);
-		const index = Math.round((1 - (avg + 1) / 2) * (colors.length - 1));
+		const clamped = Math.max(-1, Math.min(1, avg));
+		const index = Math.round((1 - (clamped + 1) / 2) * (colors.length - 1));
 
 		return colors[index] || colors[0];
 	}

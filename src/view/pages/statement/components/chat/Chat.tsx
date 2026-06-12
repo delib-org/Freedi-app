@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, useRef, useContext, useCallback } from 'react';
+import { FC, useEffect, useState, useRef, useContext, useCallback, useMemo } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { StatementContext } from '../../StatementCont';
@@ -27,10 +27,28 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	const virtuosoRef = useRef<VirtuosoHandle>(null);
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);
-	const subStatements = useAppSelector(statementSubsSelector(statementId));
+	// Memoize per statementId — calling the selector factory inline creates a
+	// new selector (and a new array) on every render/dispatch.
+	const selectSubs = useMemo(() => statementSubsSelector(statementId), [statementId]);
+	const subStatements = useAppSelector(selectSubs);
 	const { user } = useAuthentication();
 	const location = useLocation();
 	const firstTimeRef = useRef(true);
+
+	// Full-page scroll: in the main view the page (`.page__main`) is the single
+	// scroller — Virtuoso attaches to it via customScrollParent so the
+	// description, paragraphs, and messages all scroll together. The side-chat
+	// panel keeps its own internal scroller.
+	const [pageScroller, setPageScroller] = useState<HTMLElement | null>(null);
+	const containerRefCallback = useCallback(
+		(node: HTMLDivElement | null) => {
+			if (node && !sideChat) {
+				setPageScroller(node.closest('.page__main') as HTMLElement | null);
+			}
+		},
+		[sideChat],
+	);
+	const usePageScroll = !sideChat && pageScroller !== null;
 
 	const [numberOfNewMessages, setNumberOfNewMessages] = useState<number>(0);
 	const [hasMore, setHasMore] = useState(true);
@@ -127,12 +145,16 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 
 	const scrollToBottom = useCallback(() => {
 		if (location.hash) return;
-		virtuosoRef.current?.scrollToIndex({
-			index: 'LAST',
-			behavior: firstTimeRef.current ? 'auto' : 'smooth',
-		});
+		const behavior = firstTimeRef.current ? 'auto' : 'smooth';
+		if (usePageScroll && pageScroller) {
+			// Scroll the page to its true end (past the footer spacer), so the
+			// last message sits fully above the sticky input.
+			pageScroller.scrollTo({ top: pageScroller.scrollHeight, behavior });
+		} else {
+			virtuosoRef.current?.scrollToIndex({ index: 'LAST', behavior });
+		}
 		firstTimeRef.current = false;
-	}, [location.hash]);
+	}, [location.hash, usePageScroll, pageScroller]);
 
 	// Handle hash navigation
 	useEffect(() => {
@@ -146,17 +168,36 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		}
 	}, [subStatements, location.hash]);
 
-	// Initial scroll to bottom
+	// Initial scroll to bottom. In page-scroll mode the list height settles
+	// over a few frames after mount (Virtuoso measures items against the
+	// page scroller), so re-pin to the true end a few times until stable —
+	// a single scroll lands short and the sticky input covers the last
+	// message.
 	useEffect(() => {
 		if (!firstTimeRef.current) return;
 		if (isLoadingMoreRef.current) return;
 		if (subStatements.length === 0) return;
+		if (location.hash) {
+			firstTimeRef.current = false;
 
-		if (!location.hash) {
-			scrollToBottom();
+			return;
 		}
+
 		firstTimeRef.current = false;
-	}, [subStatements, location.hash, scrollToBottom]);
+
+		if (!usePageScroll || !pageScroller) {
+			scrollToBottom();
+
+			return;
+		}
+
+		const pinToEnd = () =>
+			pageScroller.scrollTo({ top: pageScroller.scrollHeight, behavior: 'auto' });
+		pinToEnd();
+		const timers = [50, 150, 350, 700].map((ms) => setTimeout(pinToEnd, ms));
+
+		return () => timers.forEach(clearTimeout);
+	}, [subStatements, location.hash, scrollToBottom, usePageScroll, pageScroller]);
 
 	// Handle new messages from other users
 	useEffect(() => {
@@ -181,25 +222,33 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		setReplyToStatement(null);
 	}, []);
 
-	// Render each statement using the tree card components (shared with the tree view) — used by Virtuoso
+	// Render each statement using the tree card components (shared with the tree view) — used by Virtuoso.
+	// The wrapper establishes a new block formatting context (flow-root) so the
+	// nodes' own margins are included in Virtuoso's item measurement — escaped
+	// margins made the list taller than Virtuoso's estimate and the overflow
+	// slid under the sticky input.
 	const renderItem = useCallback(
 		(index: number) => {
 			const statementSub = subStatements[index];
 			const isOption = statementSub.statementType === StatementType.option;
 
-			return isOption ? (
-				<TreeOptionNode
-					statement={statementSub}
-					parentStatement={statement}
-					onReply={setReplyToStatement}
-				/>
-			) : (
-				<TreeMessageNode
-					statement={statementSub}
-					parentStatement={statement}
-					hasChildren={false}
-					onReply={setReplyToStatement}
-				/>
+			return (
+				<div className={styles.messageWrapper}>
+					{isOption ? (
+						<TreeOptionNode
+							statement={statementSub}
+							parentStatement={statement}
+							onReply={setReplyToStatement}
+						/>
+					) : (
+						<TreeMessageNode
+							statement={statementSub}
+							parentStatement={statement}
+							hasChildren={false}
+							onReply={setReplyToStatement}
+						/>
+					)}
+				</div>
 			);
 		},
 		[subStatements, statement],
@@ -225,19 +274,31 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	);
 
 	return (
-		<div className={styles.chatContainer}>
-			<div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`}>
-				<Virtuoso
-					ref={virtuosoRef}
-					totalCount={subStatements.length}
-					itemContent={renderItem}
-					startReached={loadMore}
-					followOutput="smooth"
-					initialTopMostItemIndex={subStatements.length > 0 ? subStatements.length - 1 : 0}
-					components={{ Header }}
-					style={{ height: '100%' }}
-					increaseViewportBy={200}
-				/>
+		<div
+			ref={containerRefCallback}
+			className={`${styles.chatContainer} ${usePageScroll ? styles.chatContainerPage : ''}`}
+		>
+			<div
+				className={`${styles.chat} ${sideChat ? styles.sideChat : ''} ${usePageScroll ? styles.chatPage : ''}`}
+			>
+				{(sideChat || usePageScroll) && (
+					<Virtuoso
+						// Remount when messages first arrive so initialTopMostItemIndex
+						// (pin to newest) is applied against a measured list — mounting
+						// with an empty list left the page scrolled to the top.
+						key={`chat-${statementId ?? ''}-${subStatements.length > 0 ? 'ready' : 'empty'}`}
+						ref={virtuosoRef}
+						totalCount={subStatements.length}
+						itemContent={renderItem}
+						startReached={loadMore}
+						followOutput="smooth"
+						initialTopMostItemIndex={subStatements.length > 0 ? subStatements.length - 1 : 0}
+						components={{ Header }}
+						customScrollParent={usePageScroll ? (pageScroller ?? undefined) : undefined}
+						style={sideChat ? { height: '100%' } : undefined}
+						increaseViewportBy={200}
+					/>
+				)}
 
 				{!sideChat && (
 					<NewMessages

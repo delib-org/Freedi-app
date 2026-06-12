@@ -70,6 +70,9 @@
 			height: 0.3rem;
 			position: relative;
 			border-radius: 3px;
+			// The indicator is absolutely positioned from a measured width —
+			// clip so stale/extreme positions can never widen the card.
+			overflow: hidden;
 
 			&__indicator {
 				height: 100%;
