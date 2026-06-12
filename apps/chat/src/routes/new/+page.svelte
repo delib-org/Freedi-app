@@ -3,6 +3,12 @@
 	import { t } from '$lib/i18n';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	let textareaEl: HTMLTextAreaElement | undefined = $state();
+
+	$effect(() => {
+		textareaEl?.focus();
+	});
 </script>
 
 <svelte:head>
@@ -17,6 +23,7 @@
 
 	<form method="POST" class="new__form">
 		<textarea
+			bind:this={textareaEl}
 			name="text"
 			rows="3"
 			required
