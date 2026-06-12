@@ -9,6 +9,7 @@
 	import type { SortMode, TreeNode } from '$lib/stores/messages';
 	import { sortChildren } from '$lib/stores/messages';
 	import { evalStatsOf } from '$lib/chat/node';
+	import { parseMessageSegments } from '$lib/chat/links';
 	import EvidenceBadge from './EvidenceBadge.svelte';
 	import EvaluationBar from './EvaluationBar.svelte';
 	import CorrectnessRating from './CorrectnessRating.svelte';
@@ -50,6 +51,7 @@
 	const scored = $derived(isOption || isEvidence);
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
 	const evalStats = $derived(evalStatsOf(s));
+	const textSegments = $derived(parseMessageSegments(s.statement));
 
 	const sorted = $derived(sortChildren(node.children, sortMode));
 	const hasChildren = $derived(node.children.length > 0 && !isQuestion);
@@ -170,7 +172,17 @@
 					</div>
 				{/if}
 
-				<p class="node__text">{s.statement}</p>
+				<p class="node__text">
+					{#each textSegments as segment, i (i)}
+						{#if segment.type === 'link'}
+							<a class="node__link" href={segment.url} target="_blank" rel="noopener noreferrer">
+								{segment.label}
+							</a>
+						{:else}
+							{segment.text}
+						{/if}
+					{/each}
+				</p>
 
 				<div class="node__meta">
 					<div class="node__meta-left">
@@ -430,6 +442,16 @@
 			line-height: 1.45;
 			word-break: break-word;
 			color: var(--text-body);
+		}
+
+		&__link {
+			color: var(--accent);
+			text-decoration: underline;
+			word-break: break-all;
+
+			&:hover {
+				text-decoration: none;
+			}
 		}
 
 		&__meta {

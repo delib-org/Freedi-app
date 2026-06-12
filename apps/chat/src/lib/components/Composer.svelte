@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { StatementType } from '@freedi/shared-types';
 	import { composerChoicesFor, type ComposerChoice } from '$lib/chat/node';
+	import { formatLabeledLink, pastedUrl } from '$lib/chat/links';
 	import { t } from '$lib/i18n';
 
 	// Context-aware composer (§4.1 / §6). Reads the parent's type to offer the
@@ -33,6 +34,62 @@
 		strengthen: 'Add evidence that strengthens this claim…',
 		critique: 'Point out a flaw or counter-argument…',
 	};
+
+	// Paste-a-link flow: when the clipboard is exactly one URL we hold it and
+	// ask for a display word ("Google" → [Google](https://google.com)). Skipping
+	// (or confirming with no word) inserts the bare URL — it still renders as a
+	// clickable link, just without a friendly label.
+	let textarea = $state<HTMLTextAreaElement>();
+	let pendingUrl = $state<string | null>(null);
+	let linkLabel = $state('');
+
+	function onPaste(event: ClipboardEvent) {
+		const url = pastedUrl(event.clipboardData?.getData('text/plain') ?? '');
+		if (!url) return; // prose (even with URLs inside) pastes normally
+		event.preventDefault();
+		pendingUrl = url;
+		linkLabel = '';
+	}
+
+	function insertAtCursor(snippet: string) {
+		const el = textarea;
+		if (!el) return;
+		const start = el.selectionStart ?? el.value.length;
+		const end = el.selectionEnd ?? start;
+		el.value = el.value.slice(0, start) + snippet + el.value.slice(end);
+		const caret = start + snippet.length;
+		el.setSelectionRange(caret, caret);
+		el.focus();
+	}
+
+	function confirmLink() {
+		if (!pendingUrl) return;
+		const label = linkLabel.trim();
+		insertAtCursor(label ? formatLabeledLink(label, pendingUrl) : pendingUrl);
+		pendingUrl = null;
+		linkLabel = '';
+	}
+
+	function skipLink() {
+		if (!pendingUrl) return;
+		insertAtCursor(pendingUrl);
+		pendingUrl = null;
+		linkLabel = '';
+	}
+
+	function onLabelKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			confirmLink();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			skipLink();
+		}
+	}
+
+	function focusOnMount(el: HTMLInputElement) {
+		el.focus();
+	}
 </script>
 
 {#if choices.length}
@@ -71,7 +128,31 @@
 			required
 			placeholder={$t(placeholders[choice])}
 			aria-label={$t(labels[choice])}
+			bind:this={textarea}
+			onpaste={onPaste}
 		></textarea>
+		{#if pendingUrl}
+			<div class="composer__link-prompt" role="group" aria-label={$t('Add a word for the link')}>
+				<span class="composer__link-url" dir="ltr">{pendingUrl}</span>
+				<div class="composer__link-controls">
+					<input
+						type="text"
+						class="composer__link-input"
+						placeholder={$t('Add a word for the link')}
+						aria-label={$t('Add a word for the link')}
+						bind:value={linkLabel}
+						onkeydown={onLabelKeydown}
+						use:focusOnMount
+					/>
+					<button type="button" class="composer__link-add" onclick={confirmLink}>
+						{$t('Add link')}
+					</button>
+					<button type="button" class="composer__link-skip" onclick={skipLink}>
+						{$t('Skip')}
+					</button>
+				</div>
+			</div>
+		{/if}
 		<div class="composer__actions">
 			{#if !signedIn}
 				<span class="muted composer__hint">{$t("You'll be asked to sign in to post.")}</span>
@@ -115,6 +196,66 @@
 			}
 			&::placeholder {
 				color: var(--text-muted);
+			}
+		}
+		&__link-prompt {
+			display: grid;
+			gap: var(--space-xs);
+			padding: var(--space-sm) var(--space-md);
+			border: 1px solid var(--glass-border);
+			border-radius: var(--radius-md);
+			background: var(--eval-bg);
+		}
+		&__link-url {
+			font-size: 0.75rem;
+			color: var(--text-muted);
+			word-break: break-all;
+		}
+		&__link-controls {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: var(--space-sm);
+		}
+		&__link-input {
+			flex: 1;
+			min-width: 10rem;
+			border: 1px solid var(--glass-border);
+			border-radius: var(--radius-md);
+			padding: var(--space-xs) var(--space-sm);
+			font: inherit;
+			font-size: 0.85rem;
+			color: var(--text-body);
+			background: var(--bubble-other);
+			outline: none;
+			transition: border-color 0.2s;
+
+			&:focus {
+				border-color: rgba(99, 102, 241, 0.5);
+			}
+			&::placeholder {
+				color: var(--text-muted);
+			}
+		}
+		&__link-add {
+			@include pill-button;
+			background: var(--accent-gradient);
+			color: #fff;
+			font-size: 0.78rem;
+			padding: var(--space-xs) var(--space-md);
+		}
+		&__link-skip {
+			background: none;
+			border: none;
+			color: var(--text-muted);
+			font: inherit;
+			font-size: 0.78rem;
+			font-weight: 600;
+			cursor: pointer;
+			padding: var(--space-xs);
+
+			&:hover {
+				color: var(--text-body);
 			}
 		}
 		&__actions {
