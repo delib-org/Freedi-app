@@ -8,6 +8,15 @@
 	margin: 0 auto;
 }
 
+// Full-page scroll mode (main view): the chat grows to its content and
+// `.page__main` is the single scroller (Virtuoso customScrollParent), so
+// the description/paragraphs scroll together with the messages.
+.chatContainerPage {
+	flex: none;
+	min-height: 0;
+	width: 100%;
+}
+
 .chat {
 	position: relative;
 	display: flex;
@@ -18,6 +27,11 @@
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
+}
+
+.chatPage {
+	flex: none;
+	overflow: visible;
 }
 
 .sideChat {
@@ -49,55 +63,29 @@
 	}
 }
 
+// A short opacity fade is the entire message entrance — the scroll
+// position change already provides the "new message" motion. The old
+// per-message translate/scale pop with overshoot easing caused frame
+// drops on mobile during active chat.
 .messageWrapper {
-	animation: fadeSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-	opacity: 0;
-	transform: translateY(15px);
-	will-change: transform, opacity;
-
-	&:last-child {
-		animation: newMessagePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-	}
+	animation: messageIn var(--motion-base) var(--motion-ease) both;
+	// New block formatting context: child margins stay inside this box so
+	// Virtuoso measures item heights correctly (escaped margins desync the
+	// list height from the scroller and content slides under the input).
+	display: flow-root;
 }
 
-@keyframes fadeSlideIn {
-	0% {
+@keyframes messageIn {
+	from {
 		opacity: 0;
-		transform: translateY(15px);
 	}
-	100% {
+	to {
 		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-@keyframes newMessagePop {
-	0% {
-		opacity: 0;
-		transform: translateY(30px) scale(0.9);
-	}
-	50% {
-		transform: translateY(-5px) scale(1.02);
-	}
-	100% {
-		opacity: 1;
-		transform: translateY(0) scale(1);
 	}
 }
 
 .fadeInUp {
-	animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-	0% {
-		opacity: 0;
-		transform: translateY(20px);
-	}
-	100% {
-		opacity: 1;
-		transform: translateY(0);
-	}
+	animation: messageIn var(--motion-base) var(--motion-ease);
 }
 
 .wrapper {
@@ -113,6 +101,8 @@
 	width: 100%;
 	display: flex;
 	justify-content: center;
+	// Opaque backdrop — messages scroll behind the pinned input.
+	background: var(--statementBackground);
 }
 
 .sideChatInputWrapper {

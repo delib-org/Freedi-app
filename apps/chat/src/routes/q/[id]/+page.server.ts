@@ -60,6 +60,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		indexable: visibility === Visibility.public,
 		signedIn: Boolean(locals.user),
 		currentUid: locals.user?.uid ?? null,
+		// Name + photo for the FB-style composer avatar.
+		currentUser: locals.user
+			? { displayName: locals.user.displayName, photoURL: locals.user.photoURL }
+			: null,
 	};
 };
 

@@ -4,11 +4,28 @@
 	gap: 8px;
 	padding: 6px var(--padding, 16px);
 
+	@media (max-width: 600px) {
+		padding: 4px 0.75rem;
+	}
+
 	&__group {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		flex-wrap: wrap;
+
+		// Mobile: single scrollable row — wrapping to two rows ate header space
+		@media (max-width: 600px) {
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			min-width: 0;
+			scrollbar-width: none;
+			-webkit-overflow-scrolling: touch;
+
+			&::-webkit-scrollbar {
+				display: none;
+			}
+		}
 	}
 
 	&__chip {
@@ -24,6 +41,14 @@
 		cursor: pointer;
 		white-space: nowrap;
 		transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+		// Extend the tap zone to ~44px without growing the visual row
+		position: relative;
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: -8px 0;
+		}
 
 		&:hover {
 			background: var(--card-default, #f5f5f5);
@@ -57,6 +82,10 @@
 		background: none;
 		color: var(--text-secondary, #999);
 		cursor: pointer;
+		// 44px tap target without growing the row height
+		min-width: 44px;
+		min-height: 44px;
+		margin-block: -8px;
 
 		&:hover {
 			background: var(--card-default, #f5f5f5);

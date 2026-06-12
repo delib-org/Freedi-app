@@ -13,8 +13,11 @@
     stroke: yellow;
     user-select: none;
     cursor: pointer;
-    transition: all 0.3s;
+    transition:
+        transform var(--motion-base) var(--motion-ease),
+        opacity var(--motion-base) var(--motion-ease);
     z-index: 1000;
+    animation: followMeIn var(--motion-base) var(--motion-ease) both;
 
     &--user {
         top: 0;
@@ -26,26 +29,22 @@
         align-items: center;
     }
 
+    // Urgency is conveyed by the red fill + ring; the old infinite
+    // box-shadow pulse repainted every frame on mobile.
     &--power {
         background-color: var(--disagree);
-        animation: power-pulse 1.5s ease-in-out infinite;
-        box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
-
-        @media (prefers-reduced-motion: reduce) {
-            animation: none;
-            box-shadow: 0 0 8px rgba(255, 0, 0, 0.3);
-        }
+        outline: 2px solid var(--white);
+        outline-offset: 2px;
     }
 }
 
-@keyframes power-pulse {
-    0%,
-    100% {
-        opacity: 1;
-        box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+// Opacity-only entrance so the fill state never fights the
+// positioning transforms above.
+@keyframes followMeIn {
+    from {
+        opacity: 0;
     }
-    50% {
-        opacity: 0.85;
-        box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+    to {
+        opacity: 1;
     }
 }

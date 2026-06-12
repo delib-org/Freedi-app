@@ -19,6 +19,7 @@
     "@freedi/evidence": "file:../../packages/evidence",
     "@freedi/shared-i18n": "file:../../packages/shared-i18n",
     "@freedi/shared-types": "file:../../packages/shared-types",
+    "@sentry/sveltekit": "^10.57.0",
     "firebase": "^11.0.2",
     "firebase-admin": "^13.6.0"
   },

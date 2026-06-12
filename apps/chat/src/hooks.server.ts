@@ -4,7 +4,9 @@
  * Firebase. The cookie is a Firebase **session cookie** minted by
  * `routes/api/session/+server.ts` from a client ID token.
  */
+import * as Sentry from '@sentry/sveltekit';
 import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 import {
 	COOKIE_KEY,
 	DEFAULT_LANGUAGE,
@@ -14,6 +16,16 @@ import {
 } from '@freedi/shared-i18n';
 import { Collections } from '@freedi/shared-types';
 import { adminAuth, adminDb } from '$lib/server/firebaseAdmin';
+import { sentryEnabled, setSentryUser, sharedIgnoreErrors, sharedSentryOptions } from '$lib/sentry';
+
+// Server-side Sentry: captures errors thrown in loaders/actions/endpoints
+// while SSR runs inside the `ssrChat` Cloud Function. Production-only.
+if (sentryEnabled) {
+	Sentry.init({
+		...sharedSentryOptions,
+		ignoreErrors: sharedIgnoreErrors,
+	});
+}
 
 const SESSION_COOKIE = '__session';
 
@@ -37,7 +49,7 @@ function detectServerLanguage(event: Parameters<Handle>[0]['event']): string {
 	return DEFAULT_LANGUAGE;
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
+const handleSession: Handle = async ({ event, resolve }) => {
 	event.locals.user = null;
 	event.locals.lang = detectServerLanguage(event);
 
@@ -60,10 +72,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			// Restore the language the user saved (possibly on another device).
 			if (!hasCookieLang) {
 				try {
-					const snap = await adminDb
-						.collection(Collections.users)
-						.doc(decoded.uid)
-						.get();
+					const snap = await adminDb.collection(Collections.users).doc(decoded.uid).get();
 					const saved = snap.data()?.defaultLanguage;
 					if (typeof saved === 'string' && isValidLanguage(saved)) {
 						event.locals.lang = saved;
@@ -78,6 +87,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
+	// Pseudonymous user id only (never email/name) — `sentryHandle` isolates
+	// scope per request, so this cannot leak across concurrent requests.
+	setSentryUser(event.locals.user?.uid ?? null);
+
 	const lang = event.locals.lang;
 	const dir = getDirection(lang as LanguagesEnum);
 
@@ -85,3 +98,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		transformPageChunk: ({ html }) => html.replace('%lang%', lang).replace('%dir%', dir),
 	});
 };
+
+// `sentryHandle` must run first so it wraps the whole request lifecycle.
+export const handle: Handle = sequence(Sentry.sentryHandle(), handleSession);
+
+export const handleError = Sentry.handleErrorWithSentry();

@@ -25,24 +25,9 @@
   line-height: 1.5;
 }
 
+// Static arrow — the pointing geometry is the affordance; the old
+// infinite bounce was motion without information.
 .arrow {
   color: var(--accent);
-  animation: bounceDown 1.5s ease-in-out infinite;
   margin-top: 0.5rem;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-@keyframes bounceDown {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateY(8px);
-    opacity: 1;
-  }
 }

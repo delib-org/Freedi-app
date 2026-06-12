@@ -179,6 +179,12 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
       'FIREBASE_VAPID_KEY': 'VITE_FIREBASE_VAPID_KEY',
       'FIREBASE_PROJECT_ID|FIREBASE_PROJECT_ID': 'FIREBASE_PROJECT_ID',
+      // Sentry (shares the main app's project; tagged with `app: 'chat'` at
+      // runtime). VITE_-prefixed so Vite inlines it into both the client and
+      // the adapter-node server bundle at build time.
+      'SENTRY_DSN': 'VITE_SENTRY_DSN',
+      'ENVIRONMENT': 'VITE_ENVIRONMENT',
+      'APP_VERSION': 'VITE_APP_VERSION',
     },
     extra: ''
   },

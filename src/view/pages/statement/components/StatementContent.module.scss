@@ -1,0 +1,31 @@
+.contentRoot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  &--locked {
+    pointer-events: none;
+  }
+}
+
+// Opaque-ish scrim instead of `filter: blur()` on the live subtree —
+// the blur forced the compositor to re-rasterize the whole statement
+// screen and blocked scrolling on mobile while the survey was open.
+.content__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background-color: var(--white);
+  opacity: 0.65;
+  pointer-events: auto;
+}

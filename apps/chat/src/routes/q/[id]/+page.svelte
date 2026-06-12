@@ -289,6 +289,7 @@
 						{node}
 						signedIn={data.signedIn}
 						currentUid={data.currentUid}
+						currentUser={data.currentUser}
 						myEvaluations={data.myEvaluations}
 						{collapseVersion}
 						{collapseTarget}
@@ -301,11 +302,12 @@
 		</section>
 
 		<section class="conversation__footer" aria-label={$t('Add to this question')}>
-			<h2 class="conversation__add-heading">{$t('Add to this question')}</h2>
 			<Composer
 				parentId={root.statementId}
 				parentType={StatementType.question}
 				signedIn={data.signedIn}
+				userName={data.currentUser?.displayName ?? null}
+				userPhotoURL={data.currentUser?.photoURL ?? null}
 			/>
 		</section>
 	</div>
@@ -325,7 +327,10 @@
 		@include glass;
 		@include slide-up;
 		border-radius: var(--radius-lg);
-		overflow: hidden;
+		// `clip` (not `hidden`) so the sticky footer below still sticks —
+		// overflow:hidden would turn the card into the sticky containing
+		// scrollport and pin the footer to the card instead of the viewport.
+		overflow: clip;
 
 		&__header {
 			padding: var(--space-lg);
@@ -446,15 +451,15 @@
 			text-align: center;
 		}
 
+		// FB-style: the comment box stays pinned to the viewport bottom while
+		// long threads scroll behind it (sticky within the conversation card).
 		&__footer {
-			padding: var(--space-lg);
+			position: sticky;
+			bottom: 0;
+			z-index: 6;
+			padding: var(--space-md) var(--space-lg);
 			border-top: 1px solid var(--glass-border);
-			background: var(--header-tint);
-		}
-		&__add-heading {
-			font-size: 0.95rem;
-			margin-bottom: var(--space-md);
-			color: var(--text-muted);
+			background: var(--bg-card);
 		}
 	}
 

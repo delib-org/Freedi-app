@@ -4,6 +4,7 @@
  * zero client Firebase on subsequent first paints. DELETE clears it.
  */
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import { adminAuth } from '$lib/server/firebaseAdmin';
 
 const SESSION_COOKIE = '__session';
@@ -20,7 +21,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		cookies.set(SESSION_COOKIE, sessionCookie, {
 			path: '/',
 			httpOnly: true,
-			secure: true,
+			// Safari drops Secure cookies on http://localhost, so relax in dev.
+			secure: !dev,
 			sameSite: 'lax',
 			maxAge: FIVE_DAYS_MS / 1000,
 		});

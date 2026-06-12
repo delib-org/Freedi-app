@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, useMemo } from 'react';
+import { FC, useCallback, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
@@ -148,9 +148,15 @@ const SuggestionCards: FC = () => {
 		return sortStatements(plan.flatRaw.filter(canSee), sort, randomSeed, statement);
 	}, [plan.flatRaw, isAdmin, showHiddenCards, creator?.uid, sort, randomSeed, statement]);
 
+	// FLIP animates only on intentional changes (user re-sorts, toggles
+	// layers, cards added/removed) — NOT on every live evaluation update.
+	// Keying on the full id order caused react-flip-toolkit to read
+	// getBoundingClientRect on every card whenever consensus reordered the
+	// list, which froze the screen on mobile during active deliberation.
 	const flipKey = useMemo(
-		() => visibleFlatRaw.map((s) => s.statementId).join(','),
-		[visibleFlatRaw],
+		() =>
+			`${sort}-${randomSeed}-${layers.raw}-${layers.synth}-${layers.cluster}-${visibleFlatRaw.length}`,
+		[sort, randomSeed, layers, visibleFlatRaw.length],
 	);
 
 	useEffect(() => {
@@ -170,18 +176,14 @@ const SuggestionCards: FC = () => {
 	const hasTopics = plan.topicCards.length > 0;
 	const hasRaw = visibleFlatRaw.length > 0;
 
-	if (!statement) return null;
-	if (isQuestion && !hasSynth && !hasTopics && !hasRaw) return null;
-
-	const isSubmitMode = statement.statementSettings?.isSubmitMode;
-
-	const handleSubmit = () => {
+	const handleSubmit = useCallback(() => {
 		navigate(`/statement/${statementId}/thank-you`);
-	};
+	}, [navigate, statementId]);
 
 	// Admin: persist the current toggles as the statement default everyone lands
 	// on. Deep-merge so other condensation/settings fields are preserved.
-	const handleSetDefault = () => {
+	const handleSetDefault = useCallback(() => {
+		if (!statement) return;
 		setDoc(
 			createStatementRef(statement.statementId),
 			{ statementSettings: { condensation: { viewLayers: layers } } },
@@ -192,11 +194,21 @@ const SuggestionCards: FC = () => {
 				statementId: statement.statementId,
 			}),
 		);
-	};
+	}, [statement, layers]);
 
-	const renderRaw = (original: Statement) => (
-		<SuggestionCard parentStatement={statement} statement={original} />
+	// Stable reference so memoized GroupedSuggestionCard children don't
+	// re-render on every parent render.
+	const renderRaw = useCallback(
+		(original: Statement) => (
+			<SuggestionCard parentStatement={statement ?? undefined} statement={original} />
+		),
+		[statement],
 	);
+
+	if (!statement) return null;
+	if (isQuestion && !hasSynth && !hasTopics && !hasRaw) return null;
+
+	const isSubmitMode = statement.statementSettings?.isSubmitMode;
 
 	return (
 		<>

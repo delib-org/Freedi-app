@@ -12,18 +12,10 @@
 		z-index: 999;
 		position: relative;
 
-		&__full {
-			@media screen and (max-width: 600px) {
-				transition: opacity 0.25s ease;
-			}
-		}
-
 		&__mini {
 			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			height: 2.5rem;
+			inset: 0 0 auto 0;
+			height: 2.75rem; // 44px — valid touch target
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -31,9 +23,13 @@
 			color: var(--question-text, #fff);
 			opacity: 0;
 			pointer-events: none;
+			border: none;
+			width: 100%;
+			cursor: pointer;
 
-			@media screen and (max-width: 600px) {
-				transition: opacity 0.25s ease;
+			&:focus-visible {
+				outline: 2px solid var(--white);
+				outline-offset: -3px;
 			}
 
 			&__title {
@@ -47,17 +43,20 @@
 			}
 		}
 
-		// Minimized state: crossfade full nav ↔ compact title (no layout change)
+		// Minimized: the full header leaves the layout entirely so the content
+		// actually gains the space; the slim mini bar takes its place.
+		// display:none is a one-shot layout change; only opacity animates.
 		&--minimized {
 			@media screen and (max-width: 600px) {
 				.page__header__full {
-					opacity: 0;
-					pointer-events: none;
+					display: none;
 				}
 
 				.page__header__mini {
+					position: static;
 					opacity: 1;
 					pointer-events: auto;
+					animation: page-header-mini-in var(--motion-base) var(--motion-ease);
 				}
 			}
 		}
@@ -272,5 +271,14 @@
 				margin: 0 auto;
 			}
 		}
+	}
+}
+@keyframes page-header-mini-in {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
 	}
 }

@@ -1,40 +1,19 @@
+// Page navigation transitions.
+// Mobile-safe motion budget: short (<= --motion-slow), transform/opacity
+// only, small offsets. Full-viewport translates and long durations made
+// the statement screen feel stuck on mobile.
 .slide-in {
-    animation: slideIn 0.5s ease-out;
-    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: slideIn var(--motion-slow) var(--motion-ease);
 }
 
 .slide-out {
-    animation: slideOut 0.5s ease-out;
-    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-// Slower animations for larger screens (1440px and above)
-@media (min-width: 1440px) {
-    .slide-in {
-        animation-duration: 0.9s;
-    }
-
-    .slide-out {
-        animation-duration: 0.9s;
-    }
-    
-    .zoom-in {
-        animation-duration: 0.9s;
-    }
-    
-    .zoom-out {
-        animation-duration: 0.9s;
-    }
+    animation: slideOut var(--motion-slow) var(--motion-ease);
 }
 
 @keyframes slideIn {
     0% {
-        opacity: 0.3;
-        transform: translateX(-100%);
-    }
-    
-    30% {
-        opacity: 0.7;
+        opacity: 0;
+        transform: translateX(-24px);
     }
 
     100% {
@@ -45,12 +24,8 @@
 
 @keyframes slideOut {
     0% {
-        opacity: 0.3;
-        transform: translateX(100%);
-    }
-    
-    30% {
-        opacity: 0.7;
+        opacity: 0;
+        transform: translateX(24px);
     }
 
     100% {
@@ -60,23 +35,17 @@
 }
 
 .zoom-in {
-    animation: zoomIn 0.5s ease-out;
-    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: zoomIn var(--motion-slow) var(--motion-ease);
 }
 
 .zoom-out {
-    animation: zoomOut 0.5s ease-out;
-    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: zoomOut var(--motion-slow) var(--motion-ease);
 }
 
 @keyframes zoomIn {
     0% {
-        opacity: 0.3;
-        transform: scale(0.85);
-    }
-    
-    40% {
-        opacity: 0.8;
+        opacity: 0;
+        transform: scale(0.98);
     }
 
     100% {
@@ -87,12 +56,8 @@
 
 @keyframes zoomOut {
     0% {
-        opacity: 0.3;
-        transform: scale(1.15);
-    }
-    
-    40% {
-        opacity: 0.8;
+        opacity: 0;
+        transform: scale(1.02);
     }
 
     100% {
@@ -102,11 +67,11 @@
 }
 
 .fade-in {
-    animation: fadeIn 0.5s ease-in-out;
+    animation: fadeIn var(--motion-slow) var(--motion-ease);
 }
 
 .fade-out {
-    animation: fadeOut 2s ease-in-out;
+    animation: fadeOut var(--motion-slow) var(--motion-ease-exit);
 }
 
 @keyframes fadeIn {

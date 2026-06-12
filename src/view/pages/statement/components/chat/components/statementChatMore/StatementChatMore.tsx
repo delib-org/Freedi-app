@@ -1,4 +1,4 @@
-import { FC, useMemo, MouseEvent, KeyboardEvent, TouchEvent } from 'react';
+import { FC, memo, useMemo, MouseEvent, KeyboardEvent, TouchEvent } from 'react';
 import styles from './StatementChatMore.module.scss';
 
 // Icons
@@ -6,11 +6,13 @@ import { useNavigate } from 'react-router';
 import ChatIcon from '@/assets/icons/roundedChatDotIcon.svg?react';
 
 // Types and Redux
-import { SimpleStatement, Statement, NotificationType } from '@freedi/shared-types';
+import { SimpleStatement, Statement } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
+import { createSelector } from '@reduxjs/toolkit';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { statementsSelector } from '@/redux/statements/statementsSlice';
+import { createPredicateCountSelector } from '@/redux/utils/selectorFactories';
 import { markStatementNotificationsAsReadDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import UnreadBadge from '@/view/components/unreadBadge/UnreadBadge';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -50,14 +52,22 @@ const StatementChatMore: FC<Props> = ({
 	// Redux store
 	const creator = useSelector(creatorSelector);
 
-	// Get sub-statements from Redux store for accurate count
-	const subStatements = useSelector(statementSubsSelector(statement.statementId));
+	// Per-instance memoized COUNT selectors returning primitives, so this
+	// component (rendered once per card) does not re-render on unrelated
+	// store dispatches. Creating a list selector inline on every render
+	// defeated memoization and re-rendered every card on every dispatch.
+	const selectSubCount = useMemo(
+		() =>
+			createPredicateCountSelector(statementsSelector)((s) => s.parentId === statement.statementId),
+		[statement.statementId],
+	);
+	const subStatementsCount = useSelector(selectSubCount);
 
 	// Get total sub-statements count - prioritize Redux store count, fallback to statement field
 	const totalMessages = useMemo(() => {
 		// Use Redux store count if available (more accurate)
-		if (subStatements && subStatements.length > 0) {
-			return subStatements.length;
+		if (subStatementsCount > 0) {
+			return subStatementsCount;
 		}
 
 		// Fallback to totalSubStatements field from the statement
@@ -66,19 +76,25 @@ const StatementChatMore: FC<Props> = ({
 		}
 
 		return 0;
-	}, [subStatements, statement]);
+	}, [subStatementsCount, statement]);
 
-	// Filter for UNREAD notifications only (with fallback for missing field)
-	const unreadNotificationsList: NotificationType[] = useSelector(
-		inAppNotificationsSelector,
-	).filter(
-		(n) =>
-			n.creatorId !== creator?.uid &&
-			n.parentId === statement.statementId &&
-			(!n.read || n.read === undefined), // Treat missing field as unread for backward compatibility
+	// Count UNREAD notifications only (missing `read` field counts as unread
+	// for backward compatibility)
+	const selectUnreadCount = useMemo(
+		() =>
+			createSelector(
+				[inAppNotificationsSelector],
+				(notifications) =>
+					notifications.filter(
+						(n) =>
+							n.creatorId !== creator?.uid &&
+							n.parentId === statement.statementId &&
+							(!n.read || n.read === undefined),
+					).length,
+			),
+		[creator?.uid, statement.statementId],
 	);
-
-	const unreadCount = unreadNotificationsList.length;
+	const unreadCount = useSelector(selectUnreadCount);
 	// Consider has messages if either we have total count or unread notifications
 	const hasMessages = totalMessages > 0 || unreadCount > 0;
 	const hasUnread = unreadCount > 0;
@@ -206,4 +222,4 @@ const StatementChatMore: FC<Props> = ({
 	);
 };
 
-export default StatementChatMore;
+export default memo(StatementChatMore);

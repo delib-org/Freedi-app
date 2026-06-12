@@ -7,7 +7,7 @@ import {
 	InferOutput,
 	enum_,
 } from 'valibot';
-import { ChangeDecision, ChangeSourceType } from './versionModel';
+import { ChangeDecision, ChangeSourceType } from './versionEnums';
 
 // ============================================================================
 // ENUMS

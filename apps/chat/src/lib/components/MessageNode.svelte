@@ -9,6 +9,9 @@
 	import type { SortMode, TreeNode } from '$lib/stores/messages';
 	import { sortChildren } from '$lib/stores/messages';
 	import { evalStatsOf } from '$lib/chat/node';
+	import { parseMessageSegments } from '$lib/chat/links';
+	import { timeAgo } from '$lib/chat/time';
+	import Avatar from './Avatar.svelte';
 	import EvidenceBadge from './EvidenceBadge.svelte';
 	import EvaluationBar from './EvaluationBar.svelte';
 	import CorrectnessRating from './CorrectnessRating.svelte';
@@ -21,6 +24,7 @@
 		node,
 		signedIn = false,
 		currentUid = null,
+		currentUser = null,
 		myEvaluations = {},
 		maxDepth = 4,
 		collapseVersion = 0,
@@ -32,6 +36,7 @@
 		node: TreeNode;
 		signedIn?: boolean;
 		currentUid?: string | null;
+		currentUser?: { displayName: string | null; photoURL: string | null } | null;
 		myEvaluations?: Record<string, number>;
 		maxDepth?: number;
 		collapseVersion?: number;
@@ -50,10 +55,14 @@
 	const scored = $derived(isOption || isEvidence);
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
 	const evalStats = $derived(evalStatsOf(s));
+	const textSegments = $derived(parseMessageSegments(s.statement));
 
 	const sorted = $derived(sortChildren(node.children, sortMode));
 	const hasChildren = $derived(node.children.length > 0 && !isQuestion);
 	const truncate = $derived(node.depth >= maxDepth && node.children.length > 0);
+
+	// FB sizing: top-level comments get 32px avatars, replies get 24px.
+	const avatarSize = $derived(node.depth === 0 ? 32 : 24);
 
 	let open = $state(true);
 	let showReply = $state(false);
@@ -129,9 +138,9 @@
 	const showFocus = $derived(open && mobileFocus);
 </script>
 
-<article class="node">
+<article class="node" style:--node-avatar="{avatarSize}px">
 	<div class="node__row">
-		{#if node.children.length > 0 && open && !truncate}
+		{#if showChildren}
 			<button
 				class="node__thread"
 				aria-label={open ? $t('Collapse thread') : $t('Expand thread')}
@@ -140,22 +149,15 @@
 			></button>
 		{/if}
 
-		<div class="node__main">
-			<div class="node__sender">
-				<span class="node__author">{s.creator?.displayName ?? $t('Anonymous')}</span>
-				{#if isEvidence && polarity === DialogicType.strengthen}
-					<span class="node__tag node__tag--strengthen">🛡 {$t('Strengthen')}</span>
-				{:else if isEvidence && polarity === DialogicType.critique}
-					<span class="node__tag node__tag--critique">⚡ {$t('Critique')}</span>
-				{:else if isSelected}
-					<span class="node__tag node__tag--selected">✓ {$t('Selected')}</span>
-				{:else if isOption}
-					<span class="node__tag node__tag--option">💡 {$t('Option')}</span>
-				{:else if isQuestion}
-					<span class="node__tag node__tag--question">❓ {$t('Question')}</span>
-				{/if}
-			</div>
+		<div class="node__rail">
+			<Avatar
+				name={s.creator?.displayName ?? $t('Anonymous')}
+				photoURL={s.creator?.photoURL ?? null}
+				size={avatarSize}
+			/>
+		</div>
 
+		<div class="node__main">
 			<div
 				class="node__bubble"
 				class:node__bubble--strengthen={isEvidence && polarity === DialogicType.strengthen}
@@ -164,59 +166,87 @@
 				class:node__bubble--selected={isSelected}
 				class:node__bubble--question={isQuestion}
 			>
+				<div class="node__sender">
+					<span class="node__author">{s.creator?.displayName ?? $t('Anonymous')}</span>
+					{#if isEvidence && polarity === DialogicType.strengthen}
+						<span class="node__tag node__tag--strengthen">🛡 {$t('Strengthen')}</span>
+					{:else if isEvidence && polarity === DialogicType.critique}
+						<span class="node__tag node__tag--critique">⚡ {$t('Critique')}</span>
+					{:else if isSelected}
+						<span class="node__tag node__tag--selected">✓ {$t('Selected')}</span>
+					{:else if isOption}
+						<span class="node__tag node__tag--option">💡 {$t('Option')}</span>
+					{:else if isQuestion}
+						<span class="node__tag node__tag--question">❓ {$t('Question')}</span>
+					{/if}
+				</div>
+
 				{#if isEvidence}
 					<div class="node__evidence-head">
 						<EvidenceBadge statement={s} />
 					</div>
 				{/if}
 
-				<p class="node__text">{s.statement}</p>
+				<p class="node__text">
+					{#each textSegments as segment, i (i)}
+						{#if segment.type === 'link'}
+							<a class="node__link" href={segment.url} target="_blank" rel="noopener noreferrer">
+								{segment.label}
+							</a>
+						{:else}
+							{segment.text}
+						{/if}
+					{/each}
+				</p>
+			</div>
 
-				<div class="node__meta">
-					<div class="node__meta-left">
-						{#if isEvidence}
-							<CorrectnessRating
-								statementId={s.statementId}
-								value={myEvaluations[s.statementId] ?? null}
-								corroboration={s.corroborationScore ?? null}
-								count={evalStats.count}
-							/>
-						{:else if isOption}
-							<!-- Collapsed: consensus · # evaluators · average vote -->
-							<EvaluationBar
-								statementId={s.statementId}
-								myEvaluation={myEvaluations[s.statementId] ?? null}
-								consensus={s.corroborationScore ?? null}
-								count={evalStats.count}
-								average={evalStats.average}
-							/>
-						{/if}
-					</div>
-					<div class="node__actions">
-						{#if scored && !truncate}
-							<button class="node__action" onclick={() => (showReply = !showReply)}>
-								{showReply ? $t('Cancel') : $t('Reply')}
-							</button>
-						{/if}
-						{#if node.children.length > 0}
-							<button class="node__action" onclick={() => (open = !open)}>
-								{open
-									? $t('Collapse')
-									: $tp('Expand ({{count}})', { count: node.children.length })}
-							</button>
-						{/if}
-						{#if canSummarize}
-							<button
-								class="node__action node__action--ai"
-								class:active={aiOpen || aiBusy}
-								onclick={toggleAi}
-								disabled={aiBusy}
-							>
-								✨ {aiBusy ? $t('Summarizing…') : aiOpen ? $t('Hide Summary') : $t('AI Summary')}
-							</button>
-						{/if}
-					</div>
-				</div>
+			<!-- FB action row: "1d · Like · Reply" — time, rating widget, then links. -->
+			<div class="node__meta">
+				<span class="node__time">{timeAgo(s.createdAt)}</span>
+				{#if isEvidence}
+					<CorrectnessRating
+						statementId={s.statementId}
+						value={myEvaluations[s.statementId] ?? null}
+						corroboration={s.corroborationScore ?? null}
+						count={evalStats.count}
+					/>
+				{:else if isOption}
+					<!-- Collapsed: consensus · # evaluators · average vote -->
+					<EvaluationBar
+						statementId={s.statementId}
+						myEvaluation={myEvaluations[s.statementId] ?? null}
+						consensus={s.corroborationScore ?? null}
+						count={evalStats.count}
+						average={evalStats.average}
+					/>
+				{/if}
+				{#if scored && !truncate}
+					<button class="node__action" onclick={() => (showReply = !showReply)}>
+						{showReply ? $t('Cancel') : $t('Reply')}
+					</button>
+				{/if}
+				{#if node.children.length > 0}
+					<button class="node__action" onclick={() => (open = !open)}>
+						{open
+							? $t('Hide replies')
+							: $tp(
+									node.children.length === 1
+										? 'View {{count}} reply'
+										: 'View all {{count}} replies',
+									{ count: node.children.length },
+								)}
+					</button>
+				{/if}
+				{#if canSummarize}
+					<button
+						class="node__action node__action--ai"
+						class:active={aiOpen || aiBusy}
+						onclick={toggleAi}
+						disabled={aiBusy}
+					>
+						✨ {aiBusy ? $t('Summarizing…') : aiOpen ? $t('Hide Summary') : $t('AI Summary')}
+					</button>
+				{/if}
 			</div>
 
 			{#if aiOpen}
@@ -237,38 +267,44 @@
 					)} →
 				</a>
 			{/if}
+
+			{#if showReply && scored && !truncate}
+				<div class="node__reply" transition:slideFade|local={{ duration: 240 }}>
+					<Composer
+						parentId={s.statementId}
+						parentType={s.statementType}
+						{signedIn}
+						userName={currentUser?.displayName ?? null}
+						userPhotoURL={currentUser?.photoURL ?? null}
+					/>
+				</div>
+			{/if}
+
+			{#if showFocus}
+				<div class="node__focus-wrap" transition:slideFade|local={{ duration: 240 }}>
+					<button class="node__focus-btn" onclick={() => onFocus?.(s.statementId)}>
+						{$tp(
+							node.children.length === 1
+								? 'Continue thread ({{count}} reply)'
+								: 'Continue thread ({{count}} replies)',
+							{ count: node.children.length },
+						)} →
+					</button>
+				</div>
+			{/if}
+
+			{#if showContinue}
+				<a class="node__continue" href={`/q/${s.statementId}`}>
+					{$tp(
+						node.children.length === 1
+							? 'Continue thread ({{count}} reply)'
+							: 'Continue thread ({{count}} replies)',
+						{ count: node.children.length },
+					)} →
+				</a>
+			{/if}
 		</div>
 	</div>
-
-	{#if showReply && scored && !truncate}
-		<div class="node__reply" transition:slideFade|local={{ duration: 240 }}>
-			<Composer parentId={s.statementId} parentType={s.statementType} {signedIn} />
-		</div>
-	{/if}
-
-	{#if showFocus}
-		<div class="node__focus-wrap" transition:slideFade|local={{ duration: 240 }}>
-			<button class="node__focus-btn" onclick={() => onFocus?.(s.statementId)}>
-				{$tp(
-					node.children.length === 1
-						? 'Continue thread ({{count}} reply)'
-						: 'Continue thread ({{count}} replies)',
-					{ count: node.children.length },
-				)} →
-			</button>
-		</div>
-	{/if}
-
-	{#if showContinue}
-		<a class="node__continue" href={`/q/${s.statementId}`}>
-			{$tp(
-				node.children.length === 1
-					? 'Continue thread ({{count}} reply)'
-					: 'Continue thread ({{count}} replies)',
-				{ count: node.children.length },
-			)} →
-		</a>
-	{/if}
 
 	{#if showChildren}
 		<div class="node__children" transition:slideFade|local={{ duration: 320 }}>
@@ -278,6 +314,7 @@
 						node={child}
 						{signedIn}
 						{currentUid}
+						{currentUser}
 						{myEvaluations}
 						{maxDepth}
 						{collapseVersion}
@@ -295,6 +332,9 @@
 <style lang="scss">
 	@use '../../styles/mixins' as *;
 
+	// FB comment-thread geometry. `--node-avatar` (set inline per depth) drives
+	// the rail width, the collapse line x-position, and the reply indent, so the
+	// curved connectors stay aligned at every depth — in LTR and RTL alike.
 	.node {
 		position: relative;
 		margin-top: var(--space-md);
@@ -302,44 +342,49 @@
 		&__row {
 			position: relative;
 			display: flex;
-			flex-direction: column;
+			gap: var(--space-sm);
 		}
 
+		// Collapse affordance: the vertical thread line running from under the
+		// avatar down to the replies (click to fold, like FB's gray line).
 		&__thread {
 			position: absolute;
-			inset-inline-start: -1.5rem;
-			top: 2.2rem;
-			bottom: -0.5rem;
+			inset-inline-start: calc(var(--node-avatar) / 2 - 1px);
+			top: calc(var(--node-avatar) + 4px);
+			bottom: 0;
 			width: 2px;
 			padding: 0;
 			border: none;
 			background: var(--thread-line);
-			border-radius: var(--radius-pill);
 			cursor: pointer;
-			transition: background 0.2s, width 0.2s;
+			transition: background 0.2s;
 
 			&:hover {
 				background: var(--accent);
-				width: 4px;
 			}
 		}
 
+		&__rail {
+			width: var(--node-avatar);
+			flex-shrink: 0;
+		}
+
 		&__main {
+			flex: 1;
 			min-width: 0;
 		}
 
 		&__sender {
 			display: flex;
+			flex-wrap: wrap;
 			align-items: center;
 			gap: var(--space-sm);
-			margin: 0 0 var(--space-xs) var(--space-sm);
-			font-size: 0.75rem;
-			font-weight: 500;
-			color: var(--text-muted);
 		}
 
 		&__author {
+			font-size: 0.8125rem;
 			font-weight: 600;
+			color: var(--text-body);
 		}
 
 		&__tag {
@@ -378,44 +423,37 @@
 			}
 		}
 
+		// FB comment bubble: gray, 18px radius, hugs its content.
 		&__bubble {
-			@include glass;
 			background: var(--bubble-other);
-			padding: var(--space-md);
-			border-radius: var(--radius-md);
-			border-end-start-radius: 4px;
+			padding: var(--space-sm) 12px;
+			border-radius: 18px;
 			display: flex;
 			flex-direction: column;
-			gap: var(--space-sm);
+			gap: 2px;
+			width: fit-content;
+			max-width: 100%;
 
+			// Type identity stays (it's functional), expressed as FB-subtle tints.
 			&--option {
-				border-radius: var(--radius-md);
 				border: 1px solid var(--option-border);
-				border-inline-start: 3px solid var(--option);
+				background: var(--option-soft);
 			}
 			&--selected {
-				border-radius: var(--radius-md);
 				border: 1px solid var(--selected-border);
-				border-inline-start: 3px solid var(--selected);
 				background: var(--selected-soft);
 			}
 			&--question {
-				border-radius: var(--radius-md);
 				border: 1px solid var(--question-border);
-				border-inline-start: 3px solid var(--question);
 				background: var(--question-soft);
 			}
 			&--strengthen {
-				border: 2px solid var(--strengthen-border);
-				border-radius: var(--radius-lg);
+				border: 1px solid var(--strengthen-border);
 				background: var(--strengthen-soft);
-				box-shadow: 0 4px 18px var(--strengthen-soft);
 			}
 			&--critique {
-				border: 2px dashed var(--critique-border);
-				border-radius: var(--radius-lg);
+				border: 1px dashed var(--critique-border);
 				background: var(--critique-soft);
-				box-shadow: 0 4px 18px var(--critique-soft);
 			}
 		}
 
@@ -426,38 +464,35 @@
 
 		&__text {
 			margin: 0;
-			font-size: 0.95rem;
-			line-height: 1.45;
+			font-size: 0.9375rem;
+			line-height: 1.33;
 			word-break: break-word;
 			color: var(--text-body);
 		}
 
+		&__link {
+			color: var(--accent);
+			text-decoration: underline;
+			word-break: break-all;
+
+			&:hover {
+				text-decoration: none;
+			}
+		}
+
+		// FB action row under the bubble: "1d · Like · Reply".
 		&__meta {
 			display: flex;
 			flex-wrap: wrap;
-			justify-content: space-between;
 			align-items: center;
-			gap: var(--space-sm) var(--space-md);
+			gap: var(--space-xs) 12px;
+			margin-top: var(--space-xs);
+			padding-inline-start: 12px;
 		}
 
-		&__meta-left {
-			display: flex;
-			align-items: center;
-			gap: var(--space-sm);
-			min-width: 0;
-		}
-
-		&__actions {
-			display: flex;
-			flex-wrap: wrap;
-			gap: var(--space-sm);
-			margin-inline-start: auto;
-			opacity: 0.7;
-			transition: opacity 0.2s;
-		}
-
-		&__bubble:hover &__actions {
-			opacity: 1;
+		&__time {
+			font-size: 0.75rem;
+			color: var(--text-muted);
 		}
 
 		&__action {
@@ -465,13 +500,13 @@
 			border: none;
 			color: var(--text-muted);
 			font: inherit;
-			font-size: 0.72rem;
-			font-weight: 600;
+			font-size: 0.75rem;
+			font-weight: 700;
 			cursor: pointer;
 			padding: 0;
 
 			&:hover {
-				color: var(--accent);
+				text-decoration: underline;
 			}
 			&--ai.active {
 				color: var(--accent);
@@ -499,26 +534,63 @@
 			margin: var(--space-sm) 0 0;
 		}
 
+		// Replies indent under the parent's content, FB-style: avatar + gap.
 		&__children {
-			margin-inline-start: 1.5rem;
-			padding-inline-start: var(--space-md);
+			margin-inline-start: calc(var(--node-avatar) + var(--space-sm));
 		}
 
+		// Each reply gets a curved elbow branching off the parent's thread line
+		// into its avatar; non-last replies also extend the vertical line through
+		// their own height so the line reads as continuous and stops at the last
+		// reply's elbow — exactly how FB draws it.
+		&__child {
+			position: relative;
+			margin-top: var(--space-sm);
+
+			&::before {
+				content: '';
+				position: absolute;
+				top: -8px;
+				inset-inline-start: calc(-1 * (var(--node-avatar) / 2 + 9px));
+				width: calc(var(--node-avatar) / 2 + 7px);
+				height: 20px;
+				border-inline-start: 2px solid var(--thread-line);
+				border-bottom: 2px solid var(--thread-line);
+				border-end-start-radius: 10px;
+				pointer-events: none;
+			}
+
+			&:not(:last-child)::after {
+				content: '';
+				position: absolute;
+				top: -8px;
+				bottom: calc(-1 * var(--space-sm));
+				inset-inline-start: calc(-1 * (var(--node-avatar) / 2 + 9px));
+				width: 2px;
+				background: var(--thread-line);
+				pointer-events: none;
+			}
+		}
+
+		// Nested nodes get their spacing from the `.node__child` wrapper.
+		// (:global — the recursive <Self> renders outside this template's
+		// static scope, so a scoped selector would be stripped as unused.)
+		&__child > :global(.node) {
+			margin-top: 0;
+		}
+
+		// FB's "View all N replies" link look.
 		&__continue {
 			display: inline-block;
 			margin: var(--space-sm) 0 0;
-			margin-inline-start: 1.5rem;
-			padding: var(--space-sm) var(--space-md);
-			background: var(--eval-bg);
-			border: 1px solid var(--glass-border);
-			border-radius: var(--radius-md);
-			color: var(--accent);
-			font-size: 0.82rem;
-			font-weight: 600;
+			padding-inline-start: 12px;
+			color: var(--text-muted);
+			font-size: 0.8125rem;
+			font-weight: 700;
 
 			&:hover {
-				border-color: var(--accent);
-				text-decoration: none;
+				color: var(--text-body);
+				text-decoration: underline;
 			}
 		}
 
@@ -549,32 +621,9 @@
 	}
 
 	@media (max-width: 480px) {
-		.node__children {
-			margin-inline-start: 0.9rem;
-			padding-inline-start: var(--space-sm);
-		}
-		.node__thread {
-			inset-inline-start: -0.9rem;
-		}
-		.node__bubble {
-			padding: var(--space-sm) var(--space-md);
-		}
-		// The eval pill is the widest element; let actions wrap under it and sit
-		// flush right so "Reply" never clips off the screen edge.
-		.node__actions {
-			width: 100%;
-			justify-content: flex-end;
-		}
 		.node__action {
 			// Comfortable touch target (≈44px tall hit area via padding).
 			padding: var(--space-xs) 2px;
-		}
-	}
-
-	// Touch devices have no hover, so reveal the action row by default.
-	@media (hover: none) {
-		.node__actions {
-			opacity: 1;
 		}
 	}
 </style>

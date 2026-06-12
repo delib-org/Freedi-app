@@ -1,49 +1,48 @@
 // Design tokens for the dialectical chat app.
-// Look & feel adapted from the reference impl (/Documents/chat-tests):
-// dark-first glassmorphism, Outfit type, indigo→purple accent gradient,
-// green (strengthen) / magenta (critique) dialectic pills with soft glow.
-// Dark is the default; OS light preference maps to the reference light theme.
+// Look & feel modeled on Facebook's comment threads: flat cards, gray rounded
+// bubbles, FB-blue accent, system font stack. Dark is the default (FB dark
+// mode palette); OS light preference maps to the FB light palette.
 
 :root {
-	// Surfaces
-	--bg-color: #0b0f19;
-	--bg-gradient: linear-gradient(135deg, #0b0f19 0%, #1a1525 100%);
-	--bg-page: #0b0f19;
-	--bg-card: rgba(255, 255, 255, 0.04);
-	--bg-muted: rgba(255, 255, 255, 0.06);
+	// Surfaces (FB dark mode)
+	--bg-color: #18191a;
+	--bg-gradient: none;
+	--bg-page: #18191a;
+	--bg-card: #242526;
+	--bg-muted: #3a3b3c;
 
-	// Glass
-	--glass-bg: rgba(255, 255, 255, 0.03);
-	--glass-border: rgba(255, 255, 255, 0.08);
-	--glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-	--glass-blur: 12px;
+	// "Glass" — kept as the card surface tokens; flat in the FB look.
+	--glass-bg: #242526;
+	--glass-border: rgba(255, 255, 255, 0.05);
+	--glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	--glass-blur: 0px;
 
 	// Borders
-	--border: rgba(255, 255, 255, 0.08);
-	--border-strong: rgba(255, 255, 255, 0.16);
+	--border: rgba(255, 255, 255, 0.1);
+	--border-strong: rgba(255, 255, 255, 0.2);
 
 	// Text
-	--text-body: #f8fafc;
-	--text-primary: #f8fafc;
-	--text-muted: #94a3b8;
-	--text-secondary: #94a3b8;
+	--text-body: #e4e6eb;
+	--text-primary: #e4e6eb;
+	--text-muted: #b0b3b8;
+	--text-secondary: #b0b3b8;
 	--text-inverse: #ffffff;
 
-	// Brand / accent
-	--accent: #6366f1;
-	--accent-dark: #4f46e5;
-	--accent-2: #8b5cf6;
-	--accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+	// Brand / accent (FB blue; links lighten in dark mode)
+	--accent: #4599ff;
+	--accent-dark: #2374e1;
+	--accent-2: #4599ff;
+	--accent-gradient: linear-gradient(135deg, #2374e1 0%, #2374e1 100%);
 
-	// Chat bubbles
-	--bubble-me: rgba(99, 102, 241, 0.15);
-	--bubble-other: rgba(255, 255, 255, 0.05);
-	--system-msg: rgba(255, 255, 255, 0.05);
-	--thread-line: rgba(255, 255, 255, 0.1);
-	--eval-bg: rgba(0, 0, 0, 0.3);
-	--eval-btn: rgba(255, 255, 255, 0.06);
-	--inset: rgba(0, 0, 0, 0.15);
-	--header-tint: rgba(255, 255, 255, 0.02);
+	// Chat bubbles (FB comment gray)
+	--bubble-me: #263951;
+	--bubble-other: #3a3b3c;
+	--system-msg: #3a3b3c;
+	--thread-line: #3e4042;
+	--eval-bg: #3a3b3c;
+	--eval-btn: #4e4f50;
+	--inset: transparent;
+	--header-tint: transparent;
 
 	// Dialectic polarity
 	--strengthen: #4ade80;
@@ -90,7 +89,9 @@
 
 	--shadow-card: var(--glass-shadow);
 	--max-width: 880px;
-	--font: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	// FB system font stack.
+	--font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+		sans-serif;
 	--ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -98,28 +99,32 @@
 // hasn't picked a theme, OR explicitly via the header's ☀️/🌙 toggle
 // (`data-theme="light"`). `data-theme="dark"` forces dark (the :root default).
 @mixin light-theme {
-	--bg-color: #f8fafc;
-	--bg-gradient: radial-gradient(circle at top center, #ffffff 0%, #f1f5f9 100%);
-	--bg-page: #f1f5f9;
-	--bg-card: rgba(255, 255, 255, 0.75);
-	--bg-muted: rgba(0, 0, 0, 0.04);
-	--glass-bg: rgba(255, 255, 255, 0.7);
-	--glass-border: rgba(0, 0, 0, 0.07);
-	--glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-	--border: rgba(0, 0, 0, 0.08);
-	--border-strong: rgba(0, 0, 0, 0.16);
-	--text-body: #1e293b;
-	--text-primary: #1e293b;
-	--text-muted: #64748b;
-	--text-secondary: #64748b;
-	--bubble-me: #eef2ff;
-	--bubble-other: #ffffff;
-	--system-msg: rgba(0, 0, 0, 0.05);
-	--thread-line: rgba(0, 0, 0, 0.1);
-	--eval-bg: rgba(0, 0, 0, 0.04);
-	--eval-btn: rgba(0, 0, 0, 0.04);
-	--inset: rgba(0, 0, 0, 0.03);
-	--header-tint: rgba(0, 0, 0, 0.015);
+	--bg-color: #f0f2f5;
+	--bg-gradient: none;
+	--bg-page: #f0f2f5;
+	--bg-card: #ffffff;
+	--bg-muted: #f0f2f5;
+	--glass-bg: #ffffff;
+	--glass-border: rgba(0, 0, 0, 0.06);
+	--glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	--border: rgba(0, 0, 0, 0.1);
+	--border-strong: rgba(0, 0, 0, 0.2);
+	--text-body: #050505;
+	--text-primary: #050505;
+	--text-muted: #65676b;
+	--text-secondary: #65676b;
+	--accent: #0866ff;
+	--accent-dark: #0653cc;
+	--accent-2: #0866ff;
+	--accent-gradient: linear-gradient(135deg, #0866ff 0%, #0866ff 100%);
+	--bubble-me: #e7f3ff;
+	--bubble-other: #f0f2f5;
+	--system-msg: #f0f2f5;
+	--thread-line: #ced0d4;
+	--eval-bg: #f0f2f5;
+	--eval-btn: #e4e6e9;
+	--inset: transparent;
+	--header-tint: transparent;
 	--strengthen: #166534;
 	--strengthen-soft: #dcfce7;
 	--strengthen-border: #86efac;

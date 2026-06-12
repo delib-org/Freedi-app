@@ -95,11 +95,26 @@ ${errorInfo.componentStack}
 }
 
 /**
- * Checks if an error is related to failed chunk/module loading (stale cache issue)
+ * Checks if an error is related to failed chunk/module loading (stale cache issue).
+ * Accepts unknown because rejection reasons (event.reason) may not be Error instances.
  */
-export function isChunkLoadError(error: Error): boolean {
-	const message = error.message.toLowerCase();
-	const name = error.name.toLowerCase();
+export function isChunkLoadError(error: unknown): boolean {
+	if (!error) return false;
+
+	let message = '';
+	let name = '';
+
+	if (typeof error === 'string') {
+		message = error.toLowerCase();
+	} else if (typeof error === 'object') {
+		const errorLike = error as { message?: unknown; name?: unknown };
+		if (typeof errorLike.message === 'string') {
+			message = errorLike.message.toLowerCase();
+		}
+		if (typeof errorLike.name === 'string') {
+			name = errorLike.name.toLowerCase();
+		}
+	}
 
 	return (
 		message.includes('dynamically imported module') ||

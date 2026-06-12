@@ -104,6 +104,17 @@ export function createCountSelector<T>(selectItems: StateSelector<T[]>) {
 }
 
 /**
+ * Create a memoized selector that counts items matching a predicate.
+ * Returns a primitive, so useSelector subscribers only re-render when the
+ * count itself changes — not on every unrelated dispatch. Instantiate once
+ * per component instance (wrap in useMemo keyed by the predicate inputs).
+ */
+export function createPredicateCountSelector<T>(selectItems: StateSelector<T[]>) {
+	return (predicate: (item: T) => boolean) =>
+		createSelector([selectItems], (items) => items.filter(predicate).length);
+}
+
+/**
  * Create a selector that checks if an item exists
  */
 export function createExistsSelector<T>(selectItems: StateSelector<T[]>, idKey: keyof T) {

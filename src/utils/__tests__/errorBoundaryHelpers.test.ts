@@ -48,6 +48,26 @@ describe('errorBoundaryHelpers', () => {
 			const error = new TypeError('Cannot read properties of null');
 			expect(isChunkLoadError(error)).toBe(false);
 		});
+
+		it('should not crash on undefined or null', () => {
+			expect(isChunkLoadError(undefined)).toBe(false);
+			expect(isChunkLoadError(null)).toBe(false);
+		});
+
+		it('should handle string rejection reasons', () => {
+			expect(isChunkLoadError('Loading chunk 7 failed')).toBe(true);
+			expect(isChunkLoadError('some other rejection')).toBe(false);
+		});
+
+		it('should not crash on objects without message or name', () => {
+			expect(isChunkLoadError({})).toBe(false);
+			expect(isChunkLoadError({ code: 500 })).toBe(false);
+		});
+
+		it('should handle error-like objects with non-string message', () => {
+			expect(isChunkLoadError({ message: undefined, name: 'ChunkLoadError' })).toBe(true);
+			expect(isChunkLoadError({ message: 42 })).toBe(false);
+		});
 	});
 
 	describe('getUserFriendlyErrorMessage', () => {

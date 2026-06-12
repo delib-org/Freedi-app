@@ -62,6 +62,7 @@ import {
 	createStatementsByTopParentSelector,
 	createFilteredStatementsSelector,
 	createCountSelector,
+	createPredicateCountSelector,
 	createExistsSelector,
 	sortByCreatedAt,
 	sortByLastUpdate,
@@ -438,6 +439,47 @@ describe('Selector Factories', () => {
 			const result = countSelector(state as never);
 
 			expect(result).toBe(0);
+		});
+	});
+
+	// -----------------------------------------------------------------------
+	// createPredicateCountSelector
+	// -----------------------------------------------------------------------
+	describe('createPredicateCountSelector', () => {
+		const selectStatements = (state: MockRootState) => state.statements.statements;
+		const factory = createPredicateCountSelector<MockStatement>(selectStatements as never);
+
+		it('should count only items matching the predicate', () => {
+			const s1 = buildStatement({ statementId: 's1', parentId: 'parent-A' });
+			const s2 = buildStatement({ statementId: 's2', parentId: 'parent-A' });
+			const s3 = buildStatement({ statementId: 's3', parentId: 'parent-B' });
+			const state = buildRootState([s1, s2, s3]);
+
+			const selector = factory((s) => s.parentId === 'parent-A');
+			const result = selector(state as never);
+
+			expect(result).toBe(2);
+		});
+
+		it('should return 0 when nothing matches', () => {
+			const state = buildRootState([buildStatement({ parentId: 'parent-A' })]);
+
+			const selector = factory((s) => s.parentId === 'missing');
+			const result = selector(state as never);
+
+			expect(result).toBe(0);
+		});
+
+		it('should memoize: same input state returns without re-running the predicate', () => {
+			const predicate = jest.fn((s: MockStatement) => s.parentId === 'parent-A');
+			const state = buildRootState([buildStatement({ parentId: 'parent-A' })]);
+
+			const selector = factory(predicate);
+			selector(state as never);
+			const callsAfterFirst = predicate.mock.calls.length;
+			selector(state as never);
+
+			expect(predicate.mock.calls.length).toBe(callsAfterFirst);
 		});
 	});
 

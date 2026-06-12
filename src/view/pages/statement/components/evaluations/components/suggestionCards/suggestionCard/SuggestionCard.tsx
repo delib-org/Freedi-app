@@ -136,7 +136,9 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		};
 
 		// Add a small delay to ensure rendering is complete
-		setTimeout(checkOverflow, 50);
+		const timeoutId = setTimeout(checkOverflow, 50);
+
+		return () => clearTimeout(timeoutId);
 	}, [statement?.statement, isExpanded]);
 
 	async function handleSetOption() {
@@ -475,4 +477,6 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	);
 };
 
-export default SuggestionCard;
+// Memoized: cards only re-render when their own statement/parent props
+// change, not on every store dispatch reaching the list container.
+export default React.memo(SuggestionCard);

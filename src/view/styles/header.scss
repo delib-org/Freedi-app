@@ -8,13 +8,23 @@ $headerHeight: 4.2rem;
   position: relative;
   z-index: 100;
   background-color: var(--header);
-  
+
   // Default LTR rounded corner
   border-radius: 0 0 calc($headerHeight / 2) 0;
-  
+
   // RTL rounded corner
   &[dir="rtl"] {
     border-radius: 0 0 0 calc($headerHeight / 2);
+  }
+
+  // Mobile: slimmer bar to give content more room
+  @media (max-width: 600px) {
+    height: 3.5rem;
+    border-radius: 0 0 1.75rem 0;
+
+    &[dir="rtl"] {
+      border-radius: 0 0 0 1.75rem;
+    }
   }
   
   // Sticky variant
@@ -106,6 +116,9 @@ $headerHeight: 4.2rem;
   border-radius: 50%;
   transition: background-color 0.2s ease;
   color: var(--white);
+  // WCAG touch target — the visual icon stays 24px
+  min-width: 44px;
+  min-height: 44px;
   
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
