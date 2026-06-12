@@ -38,6 +38,9 @@ interface RevisionDoc {
 /** Max sub-statements fed to the model (keeps the prompt within token limits). */
 const MAX_DESCENDANTS = 200;
 
+/** Bump to invalidate all cached summaries after a prompt change. */
+const PROMPT_V = 'v2';
+
 /**
  * A stable fingerprint of the subtree: count + a hash of every live descendant's
  * `id:lastUpdate`. Adding, removing, editing, or re-scoring a sub-statement all
@@ -51,7 +54,9 @@ function subtreeFingerprint(descendants: Statement[]): string {
 	let h = 5381;
 	for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
 
-	return `${live.length}-${h.toString(36)}`;
+	// PROMPT_V invalidates cached summaries whenever the prompt changes
+	// (v2: respond in the thread's language).
+	return `${PROMPT_V}-${live.length}-${h.toString(36)}`;
 }
 
 /**
@@ -147,7 +152,11 @@ Return:
 {
   "summary": "3-4 sentence neutral summary of the entire debate below this claim — what strengthens it, what the strongest critiques are, and where it currently stands",
   "improvementSuggestion": "a rewritten version of the CLAIM that keeps the valid strengths and addresses the strongest critiques raised anywhere in the thread"
-}`;
+}
+
+IMPORTANT: Write BOTH fields in the same language as the CLAIM and thread content
+(e.g. if the thread is in Hebrew, respond in Hebrew). If the thread mixes
+languages, use the dominant language of the CLAIM.`;
 
 		const result = await getGeminiModel().generateContent({
 			contents: [{ role: 'user', parts: [{ text: prompt }] }],
