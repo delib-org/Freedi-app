@@ -20,6 +20,7 @@ import {
 	startAfter,
 	QueryDocumentSnapshot,
 } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 import { DB, auth } from '@/controllers/db/config';
 import { createDocRef } from '@/utils/firebaseUtils';
 import {
@@ -38,10 +39,6 @@ import { getCachedConsent } from './researchConsentService';
 
 const SESSION_ID = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 const LOGIN_COUNT_KEY = 'freedi_research_login_count';
-
-function getUserId(): string | undefined {
-	return store.getState().creator.creator?.uid;
-}
 
 /**
  * In-memory cache for research-enabled status per topParentId.
@@ -104,12 +101,11 @@ export async function logResearchAction(
 	>,
 ): Promise<void> {
 	try {
-		const userId = getUserId();
+		// Firestore security rules require request.auth.uid == data.userId, so the
+		// uid must come from the auth token itself — not Redux, which can briefly
+		// hold a different uid around sign-in/sign-out transitions.
+		const userId = auth.currentUser?.uid;
 		if (!userId) return;
-
-		// Firestore security rules require an authenticated user.
-		// Redux may still hold the old uid after sign-out, so double-check auth.
-		if (!auth.currentUser) return;
 
 		// Check if research mode is enabled for this statement
 		const isGlobal = RESEARCH_GLOBAL_ACTIONS.includes(action);
@@ -144,6 +140,17 @@ export async function logResearchAction(
 		const docRef = createDocRef(Collections.researchLogs, logId);
 		await setDoc(docRef, cleanEntry);
 	} catch (error) {
+		// permission-denied here means the auth session changed between the
+		// auth check and the write landing (sign-out, account switch, queued
+		// offline write replayed under another session). Best-effort telemetry
+		// losing one entry isn't actionable — keep it out of Sentry.
+		if (error instanceof FirebaseError && error.code === 'permission-denied') {
+			console.info(
+				`[researchLogger] Skipped "${action}" log: auth session changed before write completed`,
+			);
+
+			return;
+		}
 		logError(error, {
 			operation: 'researchLogger.logResearchAction',
 			metadata: { action },
