@@ -3,15 +3,25 @@
 	import { StatementType } from '@freedi/shared-types';
 	import { composerChoicesFor, type ComposerChoice } from '$lib/chat/node';
 	import { formatLabeledLink, pastedUrl } from '$lib/chat/links';
+	import Avatar from './Avatar.svelte';
 	import { t } from '$lib/i18n';
 
 	// Context-aware composer (§4.1 / §6). Reads the parent's type to offer the
-	// right choices; posts to the `sendMessage` form action.
+	// right choices; posts to the `sendMessage` form action. Rendered as FB's
+	// inline reply row: your avatar next to a rounded gray field.
 	let {
 		parentId,
 		parentType,
 		signedIn = false,
-	}: { parentId: string; parentType: StatementType; signedIn?: boolean } = $props();
+		userName = null,
+		userPhotoURL = null,
+	}: {
+		parentId: string;
+		parentType: StatementType;
+		signedIn?: boolean;
+		userName?: string | null;
+		userPhotoURL?: string | null;
+	} = $props();
 
 	const choices = $derived(composerChoicesFor(parentType));
 	let choice = $state<ComposerChoice>('standard');
@@ -107,7 +117,11 @@
 			};
 		}}
 	>
-		<input type="hidden" name="parentId" value={parentId} />
+		<div class="composer__avatar">
+			<Avatar name={userName ?? $t('Anonymous')} photoURL={userPhotoURL} size={32} />
+		</div>
+		<div class="composer__field">
+			<input type="hidden" name="parentId" value={parentId} />
 		<div class="composer__pills" role="radiogroup" aria-label={$t('Reply type')}>
 			{#each choices as c (c)}
 				<label class="pill pill--{c}" class:active={choice === c}>
@@ -153,11 +167,12 @@
 				</div>
 			</div>
 		{/if}
-		<div class="composer__actions">
-			{#if !signedIn}
-				<span class="muted composer__hint">{$t("You'll be asked to sign in to post.")}</span>
-			{/if}
-			<button type="submit" class="composer__submit">{$t('Post')}</button>
+			<div class="composer__actions">
+				{#if !signedIn}
+					<span class="muted composer__hint">{$t("You'll be asked to sign in to post.")}</span>
+				{/if}
+				<button type="submit" class="composer__submit">{$t('Post')}</button>
+			</div>
 		</div>
 	</form>
 {/if}
@@ -165,12 +180,26 @@
 <style lang="scss">
 	@use '../../styles/mixins' as *;
 
+	// FB inline reply: avatar on the start side, a rounded gray field that holds
+	// the type pills, the textarea, and the actions.
 	.composer {
-		@include glass;
-		display: grid;
+		display: flex;
+		align-items: flex-start;
 		gap: var(--space-sm);
-		border-radius: var(--radius-md);
-		padding: var(--space-md);
+
+		&__avatar {
+			flex-shrink: 0;
+		}
+
+		&__field {
+			flex: 1;
+			min-width: 0;
+			display: grid;
+			gap: var(--space-sm);
+			background: var(--bubble-other);
+			border-radius: 18px;
+			padding: var(--space-sm) 12px;
+		}
 
 		&__pills {
 			display: flex;
@@ -180,20 +209,14 @@
 		textarea {
 			width: 100%;
 			resize: vertical;
-			border: 1px solid var(--glass-border);
-			border-radius: var(--radius-md);
-			padding: var(--space-sm) var(--space-md);
+			border: none;
+			padding: var(--space-xs) 0;
 			font: inherit;
-			font-size: 0.95rem;
+			font-size: 0.9375rem;
 			color: var(--text-body);
-			background: var(--eval-bg);
+			background: transparent;
 			outline: none;
-			transition: border-color 0.2s, background 0.2s;
 
-			&:focus {
-				border-color: rgba(99, 102, 241, 0.5);
-				background: var(--bubble-other);
-			}
 			&::placeholder {
 				color: var(--text-muted);
 			}
@@ -226,12 +249,12 @@
 			font: inherit;
 			font-size: 0.85rem;
 			color: var(--text-body);
-			background: var(--bubble-other);
+			background: var(--bg-card);
 			outline: none;
 			transition: border-color 0.2s;
 
 			&:focus {
-				border-color: rgba(99, 102, 241, 0.5);
+				border-color: var(--accent);
 			}
 			&::placeholder {
 				color: var(--text-muted);
@@ -270,13 +293,12 @@
 		}
 		&__submit {
 			@include pill-button;
-			background: var(--accent-gradient);
+			background: var(--accent-dark);
 			color: #fff;
 			padding: var(--space-sm) var(--space-lg);
-			box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
 
 			&:hover {
-				box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+				filter: brightness(1.1);
 			}
 		}
 	}

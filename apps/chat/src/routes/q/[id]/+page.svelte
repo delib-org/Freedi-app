@@ -289,6 +289,7 @@
 						{node}
 						signedIn={data.signedIn}
 						currentUid={data.currentUid}
+						currentUser={data.currentUser}
 						myEvaluations={data.myEvaluations}
 						{collapseVersion}
 						{collapseTarget}
@@ -306,6 +307,8 @@
 				parentId={root.statementId}
 				parentType={StatementType.question}
 				signedIn={data.signedIn}
+				userName={data.currentUser?.displayName ?? null}
+				userPhotoURL={data.currentUser?.photoURL ?? null}
 			/>
 		</section>
 	</div>
