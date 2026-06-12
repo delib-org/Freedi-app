@@ -13,6 +13,7 @@ import { useDispatch } from 'react-redux';
 import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 import { logError } from '@/utils/errorHandling';
 import { isBot } from '@/utils/botDetection';
+import { isTransientSwRegistrationError } from '@/utils/swErrors';
 import InstallPWA from './InstallPWA';
 import NotificationPrompt from '../notifications/NotificationPrompt';
 
@@ -219,14 +220,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 								}
 							})
 							.catch((error) => {
-								const msg = error instanceof Error ? error.message : '';
-								const isNetworkError =
-									msg.includes('fetching the script') ||
-									msg.includes('Failed to fetch') ||
-									msg.includes('network');
-								if (isNetworkError) {
+								if (isTransientSwRegistrationError(error)) {
 									console.info(
-										'[PWAWrapper] Firebase SW registration failed (network), will retry',
+										'[PWAWrapper] Firebase SW registration failed (transient), will retry',
 									);
 								} else {
 									logError(error, {
@@ -275,12 +271,24 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 				// Check for updates periodically (every 4 hours)
 				updateInterval = setInterval(() => {
-					registration?.update().catch((err) => {
-						// Network failures during periodic update checks are expected/transient
-						const message = err instanceof TypeError ? err.message : '';
-						if (message.includes('Failed to update a ServiceWorker') || message.includes('fetch')) {
+					(async () => {
+						// The registration captured at registration time can become invalid
+						// (e.g. chunk-error recovery unregisters all SWs), making update()
+						// throw InvalidStateError. Re-fetch the live registration each tick.
+						const currentRegistration =
+							(await navigator.serviceWorker.getRegistration()) ?? registration;
+						await currentRegistration?.update();
+					})().catch((err: unknown) => {
+						// Stale registrations and network failures during periodic update
+						// checks are expected/transient
+						const message = err instanceof Error ? err.message : '';
+						const isBenign =
+							(err instanceof DOMException && err.name === 'InvalidStateError') ||
+							message.includes('Failed to update a ServiceWorker') ||
+							message.includes('fetch');
+						if (isBenign) {
 							console.info(
-								'[PWAWrapper] SW update check failed (network), will retry next interval',
+								'[PWAWrapper] SW update check failed (stale registration or network), will retry next interval',
 							);
 						} else {
 							logError(err, {
@@ -292,13 +300,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				}, 4 * TIME.HOUR);
 			},
 			onRegisterError(error) {
-				const msg = error instanceof Error ? error.message : '';
-				const isNetworkError =
-					msg.includes('fetching the script') ||
-					msg.includes('Failed to fetch') ||
-					msg.includes('network');
-				if (isNetworkError) {
-					console.info('[PWAWrapper] SW registration failed (network), will retry on next load');
+				if (isTransientSwRegistrationError(error)) {
+					console.info('[PWAWrapper] SW registration failed (transient), will retry on next load');
 				} else {
 					logError(error, {
 						operation: 'pwa.PWAWrapper.unknown',

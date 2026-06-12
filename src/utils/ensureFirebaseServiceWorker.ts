@@ -1,5 +1,6 @@
 import { logError } from '@/utils/errorHandling';
 import { isBot } from '@/utils/botDetection';
+import { isTransientSwRegistrationError } from '@/utils/swErrors';
 
 let isRegistering = false;
 let checkInterval: ReturnType<typeof setInterval> | null = null;
@@ -97,13 +98,10 @@ export async function ensureFirebaseServiceWorker() {
 		return registration;
 	} catch (error) {
 		// permission-blocked is expected when users deny notifications — don't report to Sentry
-		// Network/fetch errors are transient — the monitor will retry automatically
+		// Network/abort errors are transient — the monitor will retry automatically
 		const message = error instanceof Error ? error.message : '';
 		const isSuppressed =
-			message.includes('permission-blocked') ||
-			message.includes('fetching the script') ||
-			message.includes('Failed to fetch') ||
-			message.includes('network');
+			message.includes('permission-blocked') || isTransientSwRegistrationError(error);
 		if (!isSuppressed) {
 			logError(error, {
 				operation: 'utils.ensureFirebaseServiceWorker.unknown',
