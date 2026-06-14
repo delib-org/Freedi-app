@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { scale, fly } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
-	import { t } from '$lib/i18n';
+	import { t, tp } from '$lib/i18n';
 	import {
 		applyOptimistic,
 		revertOptimistic,
@@ -11,11 +11,12 @@
 	} from '$lib/stores/evaluations.svelte';
 
 	// 5-emoji face rater (port of the reference EvaluationBar). Collapsed shows the
-	// option's three aggregate stats — consensus C_p (headline, with an arc meter),
-	// average vote, # evaluators; clicking expands to the faces. Each face is a
-	// real submit button posting to the `evaluate` action; `use:enhance` applies
-	// the vote optimistically (instant C_p/avg/count) and lets the realtime
-	// recompute reconcile — no full-page reload.
+	// option's aggregate stats — the average vote as a signed −100→+100 dial (the
+	// headline, value inside the ring), then C_p (consensus %) and the evaluator
+	// count as two side numbers; clicking expands to the faces. Each face is a real
+	// submit button posting to the `evaluate` action; `use:enhance` applies the
+	// vote optimistically (instant dial/C_p/count) and lets the realtime recompute
+	// reconcile — no full-page reload.
 	let {
 		statementId,
 		myEvaluation = null,
@@ -52,33 +53,32 @@
 	const view = $derived(viewEvaluation(statementId, base, leaf));
 
 	const myVote = $derived(view.myVote);
-	const consensusPct = $derived(view.consensus === null ? null : Math.round(view.consensus * 100));
-	const consensusTone = $derived(
-		consensusPct === null ? 'mid' : consensusPct >= 60 ? 'pos' : consensusPct >= 35 ? 'mid' : 'neg',
-	);
-	const avgText = $derived(
-		view.average === null
-			? null
-			: view.average > 0
-				? `+${view.average.toFixed(2)}`
-				: view.average.toFixed(2),
-	);
+
+	// Headline dial = the average vote on a signed −100→+100 scale; the value lives
+	// inside the ring. The arc fills 0→full across that range ((avg+1)/2), so −100
+	// reads empty, 0 half, +100 full; colour carries the sign.
+	const avgInt = $derived(view.average === null ? null : Math.round(view.average * 100));
+	const avgText = $derived(avgInt === null ? null : avgInt > 0 ? `+${avgInt}` : `${avgInt}`);
 	const avgTone = $derived(
 		view.average === null ? 'mid' : view.average >= 0.18 ? 'pos' : view.average <= -0.18 ? 'neg' : 'mid',
 	);
 
-	// Arc meter: r=12 → circumference 2π·12 ≈ 75.4. Dash length tracks the percent.
-	const RING_C = 75.4;
-	const ringDash = $derived(consensusPct === null ? 0 : (consensusPct / 100) * RING_C);
+	// Side number = consensus C_p as a percentage (0–100%).
+	const consensusPct = $derived(view.consensus === null ? null : Math.round(view.consensus * 100));
+	const consensusTone = $derived(
+		consensusPct === null ? 'mid' : consensusPct >= 60 ? 'pos' : consensusPct >= 35 ? 'mid' : 'neg',
+	);
 
-	// Optimistic-change pulse: bump a per-metric tick whenever its value changes so
-	// the CSS animation re-fires. Kept tiny — purely a confirmation flourish.
+	// Arc meter: r=12 → circumference 2π·12 ≈ 75.4. Dash length tracks the dial.
+	const RING_C = 75.4;
+	const ringDash = $derived(view.average === null ? 0 : ((view.average + 1) / 2) * RING_C);
+
 	// Pulse a metric only when its value *changes* after mount — never on the
 	// initial render (which would set every option pulsing at once on page load).
-	// The consensus ring also smoothly animates its arc via a CSS dasharray
-	// transition, so its pulse is just a confirming scale.
-	let cPulse = $state(false);
+	// The dial also smoothly animates its arc via a CSS dasharray transition, so
+	// its pulse is just a confirming scale.
 	let avgPulse = $state(false);
+	let cPulse = $state(false);
 	let nPulse = $state(false);
 	let prev: { c: number | null; a: number | null; n: number } | null = null;
 	function flash(set: (v: boolean) => void): void {
@@ -90,8 +90,8 @@
 		const a = view.average;
 		const n = view.count;
 		if (prev) {
-			if (c !== prev.c) flash((v) => (cPulse = v));
 			if (a !== prev.a) flash((v) => (avgPulse = v));
+			if (c !== prev.c) flash((v) => (cPulse = v));
 			if (n !== prev.n) flash((v) => (nPulse = v));
 		}
 		prev = { c, a, n };
@@ -147,53 +147,53 @@
 			type="button"
 			class="eval__summary"
 			onclick={() => (expanded = true)}
-			title={$t('Vote — shows consensus · average vote · evaluators')}
+			title={$t('Vote — shows average vote · consensus · evaluators')}
 		>
-			{#if consensusPct !== null}
-				<span
-					class="eval__headline eval__headline--{consensusTone}"
-					class:eval__headline--pulse={cPulse}
-				>
-					<span class="eval__ring" aria-hidden="true">
-						<svg viewBox="0 0 32 32">
-							<circle class="eval__ring-track" cx="16" cy="16" r="12" />
-							<circle
-								class="eval__ring-fill"
-								cx="16"
-								cy="16"
-								r="12"
-								stroke-dasharray="{ringDash} {RING_C}"
-							/>
-						</svg>
-						<span class="eval__ring-label">{consensusPct}</span>
-					</span>
-					<span class="eval__headline-text">
-						<span class="eval__k">{$t('consensus')}</span>
-						<span class="eval__v">{consensusPct}%</span>
-					</span>
-				</span>
-			{/if}
-
-			{#if view.count > 0}
-				<span class="eval__sep" aria-hidden="true"></span>
+			{#if avgText !== null || consensusPct !== null}
 				{#if avgText !== null}
 					<span
-						class="eval__metric eval__metric--{avgTone}"
-						class:eval__metric--pulse={avgPulse}
+						class="eval__dial eval__dial--{avgTone}"
+						class:eval__dial--pulse={avgPulse}
+						aria-label={$tp('Average evaluation {{value}} (−100…+100)', { value: avgText })}
 					>
-						<span class="eval__k">{$t('avg')}</span>
-						<span class="eval__v">{avgText}</span>
+						<span class="eval__ring" aria-hidden="true">
+							<svg viewBox="0 0 32 32">
+								<circle class="eval__ring-track" cx="16" cy="16" r="12" />
+								<circle
+									class="eval__ring-fill"
+									cx="16"
+									cy="16"
+									r="12"
+									stroke-dasharray="{ringDash} {RING_C}"
+								/>
+							</svg>
+							<span class="eval__ring-label">{avgText}</span>
+						</span>
 					</span>
 				{/if}
-				<span
-					class="eval__metric eval__metric--neutral"
-					class:eval__metric--pulse={nPulse}
-				>
-					<span class="eval__k">{$t('voters')}</span>
-					<span class="eval__v">{view.count}</span>
-				</span>
+
+				{#if consensusPct !== null}
+					{#if avgText !== null}<span class="eval__sep" aria-hidden="true"></span>{/if}
+					<span
+						class="eval__metric eval__metric--{consensusTone}"
+						class:eval__metric--pulse={cPulse}
+					>
+						<span class="eval__k">C_p</span>
+						<span class="eval__v">{consensusPct}%</span>
+					</span>
+				{/if}
+
+				{#if view.count > 0}
+					<span class="eval__sep" aria-hidden="true"></span>
+					<span
+						class="eval__metric eval__metric--neutral"
+						class:eval__metric--pulse={nPulse}
+					>
+						<span class="eval__k">{$t('voters')}</span>
+						<span class="eval__v">{view.count}</span>
+					</span>
+				{/if}
 			{:else}
-				<span class="eval__sep" aria-hidden="true"></span>
 				<span class="eval__metric eval__metric--rate">
 					<span class="eval__star">☆</span>{$t('Vote')}
 				</span>
@@ -244,11 +244,10 @@
 			}
 		}
 
-		// ── Headline: consensus with arc meter ──────────────────────────────────
-		&__headline {
+		// ── Dial: average vote as a signed −100→+100 ring ───────────────────────
+		&__dial {
 			display: inline-flex;
 			align-items: center;
-			gap: var(--space-xs);
 
 			--ring: var(--c-mid);
 			&--pos {
@@ -264,17 +263,11 @@
 				animation: eval-pulse 420ms var(--ease-spring);
 			}
 		}
-		&__headline-text {
-			display: inline-flex;
-			flex-direction: column;
-			align-items: flex-start;
-			line-height: 1.05;
-		}
 
 		&__ring {
 			position: relative;
-			width: 26px;
-			height: 26px;
+			width: 30px;
+			height: 30px;
 			flex-shrink: 0;
 
 			svg {
@@ -286,12 +279,12 @@
 		&__ring-track {
 			fill: none;
 			stroke: var(--glass-border);
-			stroke-width: 3.5;
+			stroke-width: 3;
 		}
 		&__ring-fill {
 			fill: none;
 			stroke: var(--ring);
-			stroke-width: 3.5;
+			stroke-width: 3;
 			stroke-linecap: round;
 			transition: stroke-dasharray 0.5s var(--ease-spring), stroke 0.3s ease;
 		}
@@ -301,13 +294,14 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			font-size: 0.58rem;
+			font-size: 0.55rem;
 			font-weight: 700;
 			font-variant-numeric: tabular-nums;
+			letter-spacing: -0.02em;
 			color: var(--ring);
 		}
 
-		// ── Secondary metrics: avg, voters ──────────────────────────────────────
+		// ── Side metrics: C_p, voters ───────────────────────────────────────────
 		&__metric {
 			display: inline-flex;
 			flex-direction: column;
@@ -351,9 +345,6 @@
 			font-size: 0.8rem;
 			font-weight: 700;
 			font-variant-numeric: tabular-nums;
-		}
-		&__headline .eval__v {
-			font-size: 0.85rem;
 		}
 
 		&__sep {
@@ -434,7 +425,7 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.eval__headline,
+		.eval__dial,
 		.eval__metric,
 		.eval__ring-fill,
 		.eval__face,
