@@ -3434,5 +3434,8 @@
   "statements": "היגדים",
   "Load all": "טען הכל",
   "Loading all statements": "טוען את כל ההיגדים",
-  "All statements loaded": "כל ההיגדים נטענו"
+  "All statements loaded": "כל ההיגדים נטענו",
+  "Re-cluster from scratch": "אשכול מחדש מאפס",
+  "Cleared": "נוקו",
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "לאשכל מחדש מאפס? פעולה זו מפרקת את כל האשכולות הנוכחיים של שאלה זו (ומשחזרת את ההצעות המקוריות) ובונה אותם מחדש. השתמשו בכך אם האשכולות נראים שגויים."
 }

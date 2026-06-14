@@ -2683,5 +2683,8 @@
   "statements": "stellingen",
   "Load all": "Alles laden",
   "Loading all statements": "Alle stellingen worden geladen",
-  "All statements loaded": "Alle stellingen geladen"
+  "All statements loaded": "Alle stellingen geladen",
+  "Re-cluster from scratch": "Opnieuw clusteren vanaf nul",
+  "Cleared": "Gewist",
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "Opnieuw clusteren vanaf nul? Dit ontbindt alle huidige clusters van deze vraag (en herstelt de oorspronkelijke opties) en bouwt ze opnieuw op. Gebruik dit als de clusters er verkeerd uitzien."
 }

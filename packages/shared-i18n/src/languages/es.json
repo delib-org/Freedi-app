@@ -2683,5 +2683,8 @@
   "statements": "declaraciones",
   "Load all": "Cargar todo",
   "Loading all statements": "Cargando todas las declaraciones",
-  "All statements loaded": "Todas las declaraciones cargadas"
+  "All statements loaded": "Todas las declaraciones cargadas",
+  "Re-cluster from scratch": "Reagrupar desde cero",
+  "Cleared": "Eliminados",
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "¿Reagrupar desde cero? Esto disuelve todos los grupos actuales de esta pregunta (restaurando las opciones originales) y los reconstruye. Úsalo si los grupos parecen incorrectos."
 }

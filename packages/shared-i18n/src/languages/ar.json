@@ -2806,5 +2806,8 @@
   "statements": "عبارات",
   "Load all": "تحميل الكل",
   "Loading all statements": "جارٍ تحميل جميع العبارات",
-  "All statements loaded": "تم تحميل جميع العبارات"
+  "All statements loaded": "تم تحميل جميع العبارات",
+  "Re-cluster from scratch": "إعادة التجميع من الصفر",
+  "Cleared": "تم المسح",
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "إعادة التجميع من الصفر؟ سيؤدي هذا إلى حلّ جميع التجميعات الحالية لهذا السؤال (واستعادة الخيارات الأصلية) وإعادة بنائها. استخدم هذا إذا بدت التجميعات خاطئة."
 }

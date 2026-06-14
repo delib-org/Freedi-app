@@ -3421,5 +3421,9 @@
   "statements": "statements",
   "Load all": "Load all",
   "Loading all statements": "Loading all statements",
-  "All statements loaded": "All statements loaded"
+  "All statements loaded": "All statements loaded",
+  "Re-cluster from scratch": "Re-cluster from scratch",
+  "Cleared": "Cleared",
+  "Queued": "Queued",
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong."
 }

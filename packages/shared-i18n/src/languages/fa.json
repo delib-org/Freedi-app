@@ -3206,5 +3206,8 @@
   "statements": "گزاره‌ها",
   "Load all": "بارگیری همه",
   "Loading all statements": "در حال بارگیری همه گزاره‌ها",
-  "All statements loaded": "همه گزاره‌ها بارگیری شدند"
+  "All statements loaded": "همه گزاره‌ها بارگیری شدند",
+  "Re-cluster from scratch": "خوشه‌بندی مجدد از ابتدا",
+  "Cleared": "پاک شد",
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "خوشه‌بندی مجدد از ابتدا؟ این کار تمام خوشه‌های فعلی این پرسش را منحل می‌کند (و گزینه‌های اصلی را بازمی‌گرداند) و آنها را بازسازی می‌کند. اگر خوشه‌ها نادرست به‌نظر می‌رسند از این استفاده کنید."
 }

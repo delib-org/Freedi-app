@@ -2683,5 +2683,8 @@
   "statements": "Aussagen",
   "Load all": "Alle laden",
   "Loading all statements": "Alle Aussagen werden geladen",
-  "All statements loaded": "Alle Aussagen geladen"
+  "All statements loaded": "Alle Aussagen geladen",
+  "Re-cluster from scratch": "Von Grund auf neu gruppieren",
+  "Cleared": "Gelöscht",
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "Von Grund auf neu gruppieren? Dies löst alle aktuellen Cluster dieser Frage auf (und stellt die ursprünglichen Optionen wieder her) und baut sie neu auf. Verwenden Sie dies, wenn die Cluster falsch aussehen."
 }
