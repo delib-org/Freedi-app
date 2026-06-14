@@ -317,3 +317,37 @@ export function composeViewLayers(
 
 	return { topLevelSynths, topicCards, flatRaw };
 }
+
+/**
+ * Which view layers actually have data under the parent. A layer with no data
+ * must not be selectable — otherwise turning it on (or landing on it via a saved
+ * preference / admin default) renders a blank Solutions list.
+ */
+export function deriveAvailableLayers(data: ViewLayersData): ViewLayersToggleState {
+	return {
+		raw: data.rawOriginals.length > 0,
+		synth: data.synthClusters.length > 0,
+		cluster: data.topicClusters.length > 0,
+	};
+}
+
+/**
+ * Gate the requested toggles by what data exists so the Solutions list never
+ * goes blank. Layers with no data are forced off; if that leaves nothing on,
+ * fall back to every layer that DOES have data (the richest non-empty view
+ * rather than an empty tab). With no data at all, returns all-off — the caller
+ * renders its own "nothing yet" state.
+ */
+export function gateViewLayers(
+	toggles: ViewLayersToggleState,
+	available: ViewLayersToggleState,
+): ViewLayersToggleState {
+	const gated: ViewLayersToggleState = {
+		raw: toggles.raw && available.raw,
+		synth: toggles.synth && available.synth,
+		cluster: toggles.cluster && available.cluster,
+	};
+	if (gated.raw || gated.synth || gated.cluster) return gated;
+
+	return { raw: available.raw, synth: available.synth, cluster: available.cluster };
+}

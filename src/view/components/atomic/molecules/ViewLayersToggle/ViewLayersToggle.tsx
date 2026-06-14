@@ -4,9 +4,14 @@ import { Lightbulb, Sparkles, Layers, Check, RotateCcw } from 'lucide-react';
 import type { ViewLayers } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
+const ALL_AVAILABLE: ViewLayers = { raw: true, synth: true, cluster: true };
+
 export interface ViewLayersToggleProps {
 	layers: ViewLayers;
 	onChange: (next: ViewLayers) => void;
+	/** Which layers currently have data. A layer with none is shown disabled and
+	 *  cannot be toggled on — selecting it would render a blank list. */
+	available?: ViewLayers;
 	/** Admins can save the current layers as the default everyone lands on. */
 	isAdmin?: boolean;
 	/** Persist the current layers as the statement default (admin only). */
@@ -23,6 +28,7 @@ type LayerKey = keyof ViewLayers;
 const ViewLayersToggle: React.FC<ViewLayersToggleProps> = ({
 	layers,
 	onChange,
+	available = ALL_AVAILABLE,
 	isAdmin = false,
 	onSetDefault,
 	hasUserOverride = false,
@@ -40,6 +46,8 @@ const ViewLayersToggle: React.FC<ViewLayersToggleProps> = ({
 	];
 
 	const toggle = (key: LayerKey) => {
+		// A layer with no data is not selectable — turning it on would blank the list.
+		if (!available[key]) return;
 		// Never allow turning off the last active layer — the list would go blank.
 		if (layers[key] && activeCount === 1) return;
 		onChange({ ...layers, [key]: !layers[key] });
@@ -50,6 +58,7 @@ const ViewLayersToggle: React.FC<ViewLayersToggleProps> = ({
 			<span className="view-layers-toggle__label">{t('View layers')}</span>
 			<div className="view-layers-toggle__chips" role="group" aria-label={t('View layers')}>
 				{chips.map(({ key, label, icon }) => {
+					const hasData = available[key];
 					const active = layers[key];
 					const isLastActive = active && activeCount === 1;
 
@@ -60,11 +69,18 @@ const ViewLayersToggle: React.FC<ViewLayersToggleProps> = ({
 							className={clsx(
 								'view-layers-toggle__chip',
 								active && 'view-layers-toggle__chip--active',
+								!hasData && 'view-layers-toggle__chip--unavailable',
 								`view-layers-toggle__chip--${key}`,
 							)}
 							aria-pressed={active}
-							aria-disabled={isLastActive}
-							title={isLastActive ? t('At least one layer must stay on') : undefined}
+							aria-disabled={!hasData || isLastActive}
+							title={
+								!hasData
+									? t('No items in this layer yet')
+									: isLastActive
+										? t('At least one layer must stay on')
+										: undefined
+							}
 							onClick={() => toggle(key)}
 						>
 							{icon}

@@ -28,6 +28,8 @@ import { ViewLayersToggle } from '@/view/components/atomic/molecules/ViewLayersT
 import {
 	createViewLayersDataSelector,
 	composeViewLayers,
+	deriveAvailableLayers,
+	gateViewLayers,
 } from '@/redux/statements/condensationSelectors';
 import type { RootState } from '@/redux/store';
 import { createStatementRef } from '@/utils/firebaseUtils';
@@ -133,7 +135,19 @@ const SuggestionCards: FC = () => {
 		adminDefault,
 	);
 
-	const plan = useMemo(() => composeViewLayers(viewData, layers), [viewData, layers]);
+	// Only layers that actually have data are selectable. Gate the saved toggles
+	// against availability so the list never goes blank: an empty selected layer
+	// (e.g. Synth with no AI proposals yet) falls back to whatever data exists.
+	const availableLayers = useMemo(() => deriveAvailableLayers(viewData), [viewData]);
+	const effectiveLayers = useMemo(
+		() => gateViewLayers(layers, availableLayers),
+		[layers, availableLayers],
+	);
+
+	const plan = useMemo(
+		() => composeViewLayers(viewData, effectiveLayers),
+		[viewData, effectiveLayers],
+	);
 
 	// Hidden-card visibility rules applied to the flat raw list: non-hidden are
 	// always shown; admins see hidden when the toggle is on; users see their own.
@@ -155,8 +169,8 @@ const SuggestionCards: FC = () => {
 	// list, which froze the screen on mobile during active deliberation.
 	const flipKey = useMemo(
 		() =>
-			`${sort}-${randomSeed}-${layers.raw}-${layers.synth}-${layers.cluster}-${visibleFlatRaw.length}`,
-		[sort, randomSeed, layers, visibleFlatRaw.length],
+			`${sort}-${randomSeed}-${effectiveLayers.raw}-${effectiveLayers.synth}-${effectiveLayers.cluster}-${visibleFlatRaw.length}`,
+		[sort, randomSeed, effectiveLayers, visibleFlatRaw.length],
 	);
 
 	useEffect(() => {
@@ -186,7 +200,7 @@ const SuggestionCards: FC = () => {
 		if (!statement) return;
 		setDoc(
 			createStatementRef(statement.statementId),
-			{ statementSettings: { condensation: { viewLayers: layers } } },
+			{ statementSettings: { condensation: { viewLayers: effectiveLayers } } },
 			{ merge: true },
 		).catch((error) =>
 			logError(error, {
@@ -194,7 +208,7 @@ const SuggestionCards: FC = () => {
 				statementId: statement.statementId,
 			}),
 		);
-	}, [statement, layers]);
+	}, [statement, effectiveLayers]);
 
 	// Stable reference so memoized GroupedSuggestionCard children don't
 	// re-render on every parent render.
@@ -213,7 +227,8 @@ const SuggestionCards: FC = () => {
 	return (
 		<>
 			<ViewLayersToggle
-				layers={layers}
+				layers={effectiveLayers}
+				available={availableLayers}
 				onChange={setLayers}
 				isAdmin={isAdmin}
 				onSetDefault={handleSetDefault}

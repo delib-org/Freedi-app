@@ -24,6 +24,8 @@ import {
 	createMembershipForOriginalSelector,
 	createViewLayersDataSelector,
 	composeViewLayers,
+	deriveAvailableLayers,
+	gateViewLayers,
 	type ViewLayersToggleState,
 } from '../condensationSelectors';
 
@@ -365,5 +367,50 @@ describe('composeViewLayers', () => {
 		// r9 was only under S2 (hidden) and in no topic → flat
 		expect(plan.flatRaw.map((r) => r.statementId)).toContain('r9');
 		expect(plan.flatRaw.map((r) => r.statementId)).toContain('r7');
+	});
+});
+
+describe('deriveAvailableLayers', () => {
+	const data = () =>
+		createViewLayersDataSelector(selectStatements)(PARENT_ID)(viewLayersScenario());
+
+	it('flags a layer available only when it has data', () => {
+		expect(deriveAvailableLayers(data())).toEqual({ raw: true, synth: true, cluster: true });
+	});
+
+	it('marks synth/cluster unavailable when only raw options exist', () => {
+		const state = buildState([option('a'), option('b')]);
+		const onlyRaw = createViewLayersDataSelector(selectStatements)(PARENT_ID)(state);
+		expect(deriveAvailableLayers(onlyRaw)).toEqual({ raw: true, synth: false, cluster: false });
+	});
+});
+
+describe('gateViewLayers', () => {
+	it('forces an unavailable layer off while keeping available ones', () => {
+		expect(
+			gateViewLayers(
+				{ raw: true, synth: true, cluster: true },
+				{ raw: true, synth: false, cluster: true },
+			),
+		).toEqual({ raw: true, synth: false, cluster: true });
+	});
+
+	it('falls back to all available layers when the selected layer has no data', () => {
+		// User landed on Synth-only but only clusters + raw exist → never blank.
+		expect(
+			gateViewLayers(
+				{ raw: false, synth: true, cluster: false },
+				{ raw: true, synth: false, cluster: true },
+			),
+		).toEqual({ raw: true, synth: false, cluster: true });
+	});
+
+	it('returns all-off when no data exists at all', () => {
+		expect(
+			gateViewLayers(
+				{ raw: true, synth: true, cluster: true },
+				{ raw: false, synth: false, cluster: false },
+			),
+		).toEqual({ raw: false, synth: false, cluster: false });
 	});
 });
