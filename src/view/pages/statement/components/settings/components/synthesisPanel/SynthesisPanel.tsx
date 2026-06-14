@@ -7,6 +7,7 @@ import {
 	synthesisCancel,
 	synthesisPause,
 	synthesisResume,
+	triggerReCluster,
 	triggerRejudgeGrayBand,
 	triggerSynthesizeNow,
 } from '@/controllers/db/synthesis/synthesisOperations';
@@ -265,6 +266,22 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 			setToast({
 				tone: 'info',
 				message: `${t('Queued')} ${result.enqueued} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+			});
+		}
+	}
+
+	async function handleReCluster(): Promise<void> {
+		const confirmed = window.confirm(
+			t(
+				'Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.',
+			),
+		);
+		if (!confirmed) return;
+		const result = await withBusy('recluster', () => triggerReCluster(statement.statementId));
+		if (result) {
+			setToast({
+				tone: 'info',
+				message: `${t('Cleared')} ${result.clustersReversed} ${t('clusters')} · ${t('Queued')} ${result.enqueued} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
 			});
 		}
 	}
@@ -577,6 +594,12 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							variant="secondary"
 							onClick={handleRejudge}
 							disabled={busyOp !== null || dirty}
+						/>
+						<Button
+							text={t('Re-cluster from scratch')}
+							variant="secondary"
+							onClick={handleReCluster}
+							disabled={isRunning || busyOp !== null || dirty}
 						/>
 					</div>
 

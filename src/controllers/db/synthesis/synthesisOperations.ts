@@ -37,6 +37,34 @@ export async function triggerSynthesizeNow(questionId: string): Promise<Synthesi
 	}
 }
 
+interface ReClusterResponse {
+	clustersReversed: number;
+	docsArchived: number;
+	membersRestored: number;
+	orphansRestored: number;
+	enqueued: number;
+	etaMinutes: number;
+}
+
+/**
+ * Clean-then-rebuild: dissolves every existing synth/cluster under the
+ * question, then re-enqueues all eligible options for a fresh clustering run.
+ * Use this to recover questions whose clusters drifted (over-merged, stale
+ * titles, overlapping membership).
+ */
+export async function triggerReCluster(questionId: string): Promise<ReClusterResponse> {
+	try {
+		const call = httpsCallable<QuestionOnlyRequest, ReClusterResponse>(functions, 'reCluster');
+		const result = await call({ questionId });
+		logger.info('Re-cluster run queued', { questionId, ...result.data });
+
+		return result.data;
+	} catch (error) {
+		logError(error, { operation: 'synthesis.triggerReCluster', statementId: questionId });
+		throw error;
+	}
+}
+
 interface SynthesizeSelectedRequest {
 	questionId: string;
 	optionIds: string[];

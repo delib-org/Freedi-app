@@ -1,6 +1,6 @@
 export type QueueItemKind = 'process-option' | 'rejudge-medoid-pair';
 
-export type QueueOperation = 'synthesizeNow' | 'selective' | 'rejudge' | 'mixed';
+export type QueueOperation = 'synthesizeNow' | 'selective' | 'rejudge' | 'mixed' | 'recluster';
 
 export type QueueStatus = 'idle' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
 
