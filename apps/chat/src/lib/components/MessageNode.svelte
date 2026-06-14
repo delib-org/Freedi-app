@@ -53,6 +53,11 @@
 	// A chosen option — mirrors the main app's green "selected" treatment.
 	const isSelected = $derived(isOption && (s.selected === true || s.isChosen === true));
 	const scored = $derived(isOption || isEvidence);
+	// An option with no direct evidence children — its C_p is purely vote-based,
+	// so the optimistic projection can reproduce it exactly.
+	const isLeafOption = $derived(
+		isOption && !node.children.some((c) => c.statement.statementType === StatementType.evidence),
+	);
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
 	const evalStats = $derived(evalStatsOf(s));
 	const textSegments = $derived(parseMessageSegments(s.statement));
@@ -218,6 +223,7 @@
 						consensus={s.corroborationScore ?? null}
 						count={evalStats.count}
 						average={evalStats.average}
+						leaf={isLeafOption}
 					/>
 				{/if}
 				{#if scored && !truncate}

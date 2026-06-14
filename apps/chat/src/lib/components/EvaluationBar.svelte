@@ -1,28 +1,39 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { fly, scale } from 'svelte/transition';
+	import { scale, fly } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 	import { t } from '$lib/i18n';
+	import {
+		applyOptimistic,
+		revertOptimistic,
+		viewEvaluation,
+		type EvalBase,
+	} from '$lib/stores/evaluations.svelte';
 
 	// 5-emoji face rater (port of the reference EvaluationBar). Collapsed shows the
-	// option's 3 aggregate stats — consensus, # evaluators, average vote; clicking
-	// expands to the faces. Each face is a real submit button posting to the
-	// `evaluate` action, so it works without JS; `use:enhance` re-highlights after.
+	// option's three aggregate stats — consensus C_p (headline, with an arc meter),
+	// average vote, # evaluators; clicking expands to the faces. Each face is a
+	// real submit button posting to the `evaluate` action; `use:enhance` applies
+	// the vote optimistically (instant C_p/avg/count) and lets the realtime
+	// recompute reconcile — no full-page reload.
 	let {
 		statementId,
 		myEvaluation = null,
 		consensus = null,
 		count = 0,
 		average = null,
+		leaf = true,
 	}: {
 		statementId: string;
 		myEvaluation?: number | null;
-		/** Consensus / corroboration level C ∈ [0,1]. */
+		/** Consensus / corroboration level C_p ∈ [0,1]. */
 		consensus?: number | null;
 		/** Number of evaluators. */
 		count?: number;
 		/** Average vote ∈ [-1,1]. */
 		average?: number | null;
+		/** Option has no direct evidence children — lets C_p be projected exactly. */
+		leaf?: boolean;
 	} = $props();
 
 	const FACES = [
@@ -35,26 +46,79 @@
 
 	let expanded = $state(false);
 
-	const consensusPct = $derived(consensus === null ? null : Math.round(consensus * 100));
+	// Server stats → optimistic projection. `view` is reactive to the store, so a
+	// click updates C_p / average / count here before the server round-trips.
+	const base = $derived<EvalBase>({ myVote: myEvaluation, count, average, consensus });
+	const view = $derived(viewEvaluation(statementId, base, leaf));
+
+	const myVote = $derived(view.myVote);
+	const consensusPct = $derived(view.consensus === null ? null : Math.round(view.consensus * 100));
 	const consensusTone = $derived(
 		consensusPct === null ? 'mid' : consensusPct >= 60 ? 'pos' : consensusPct >= 35 ? 'mid' : 'neg',
 	);
 	const avgText = $derived(
-		average === null ? null : average > 0 ? `+${average.toFixed(2)}` : average.toFixed(2),
+		view.average === null
+			? null
+			: view.average > 0
+				? `+${view.average.toFixed(2)}`
+				: view.average.toFixed(2),
 	);
 	const avgTone = $derived(
-		average === null ? 'mid' : average >= 0.18 ? 'pos' : average <= -0.18 ? 'neg' : 'mid',
+		view.average === null ? 'mid' : view.average >= 0.18 ? 'pos' : view.average <= -0.18 ? 'neg' : 'mid',
 	);
+
+	// Arc meter: r=12 → circumference 2π·12 ≈ 75.4. Dash length tracks the percent.
+	const RING_C = 75.4;
+	const ringDash = $derived(consensusPct === null ? 0 : (consensusPct / 100) * RING_C);
+
+	// Optimistic-change pulse: bump a per-metric tick whenever its value changes so
+	// the CSS animation re-fires. Kept tiny — purely a confirmation flourish.
+	// Pulse a metric only when its value *changes* after mount — never on the
+	// initial render (which would set every option pulsing at once on page load).
+	// The consensus ring also smoothly animates its arc via a CSS dasharray
+	// transition, so its pulse is just a confirming scale.
+	let cPulse = $state(false);
+	let avgPulse = $state(false);
+	let nPulse = $state(false);
+	let prev: { c: number | null; a: number | null; n: number } | null = null;
+	function flash(set: (v: boolean) => void): void {
+		set(true);
+		setTimeout(() => set(false), 450);
+	}
+	$effect(() => {
+		const c = view.consensus;
+		const a = view.average;
+		const n = view.count;
+		if (prev) {
+			if (c !== prev.c) flash((v) => (cPulse = v));
+			if (a !== prev.a) flash((v) => (avgPulse = v));
+			if (n !== prev.n) flash((v) => (nPulse = v));
+		}
+		prev = { c, a, n };
+	});
 </script>
 
 <form
 	method="POST"
 	action="?/evaluate"
 	class="eval"
-	use:enhance={() => {
-		return async ({ update }) => {
-			expanded = false;
-			await update();
+	use:enhance={({ formData }) => {
+		const value = Number(formData.get('value') ?? 0);
+		// Project locally before the network — instant feedback.
+		applyOptimistic(statementId, value, base);
+		expanded = false;
+
+		return async ({ result }) => {
+			// Redirect (anonymous → sign-in) or a failure: roll the projection back
+			// and let SvelteKit handle the navigation. Success: keep the projection;
+			// the realtime recompute will reconcile it. No `update()` — no reload.
+			if (result.type === 'failure' || result.type === 'error') {
+				revertOptimistic(statementId);
+			} else if (result.type === 'redirect') {
+				revertOptimistic(statementId);
+				const { goto } = await import('$app/navigation');
+				await goto(result.location);
+			}
 		};
 	}}
 	onmouseleave={() => (expanded = false)}
@@ -66,13 +130,16 @@
 			{#each FACES as f, i (f.v)}
 				<button
 					class="eval__face"
-					class:active={myEvaluation === f.v}
+					class:active={myVote === f.v}
 					name="value"
 					value={f.v}
 					title={$t(f.label)}
 					aria-label={$t(f.label)}
+					aria-pressed={myVote === f.v}
 					in:fly={{ x: -8, duration: 180, delay: i * 25 }}
-				>{f.e}</button>
+				>
+					<span class="eval__face-emoji" aria-hidden="true">{f.e}</span>
+				</button>
 			{/each}
 		</div>
 	{:else}
@@ -80,87 +147,229 @@
 			type="button"
 			class="eval__summary"
 			onclick={() => (expanded = true)}
-			title={$t('Vote — shows consensus · evaluators · average vote')}
+			title={$t('Vote — shows consensus · average vote · evaluators')}
 		>
 			{#if consensusPct !== null}
-				<span class="eval__metric eval__metric--{consensusTone}">
-					<span class="eval__k">{$t('consensus')}</span>{consensusPct}%
+				<span
+					class="eval__headline eval__headline--{consensusTone}"
+					class:eval__headline--pulse={cPulse}
+				>
+					<span class="eval__ring" aria-hidden="true">
+						<svg viewBox="0 0 32 32">
+							<circle class="eval__ring-track" cx="16" cy="16" r="12" />
+							<circle
+								class="eval__ring-fill"
+								cx="16"
+								cy="16"
+								r="12"
+								stroke-dasharray="{ringDash} {RING_C}"
+							/>
+						</svg>
+						<span class="eval__ring-label">{consensusPct}</span>
+					</span>
+					<span class="eval__headline-text">
+						<span class="eval__k">{$t('consensus')}</span>
+						<span class="eval__v">{consensusPct}%</span>
+					</span>
 				</span>
 			{/if}
-			{#if count > 0}
-				<span class="eval__metric">
-					<span class="eval__k">{$t('voters')}</span>{count}
-				</span>
+
+			{#if view.count > 0}
+				<span class="eval__sep" aria-hidden="true"></span>
 				{#if avgText !== null}
-					<span class="eval__metric eval__metric--{avgTone}">
-						<span class="eval__k">{$t('avg')}</span>{avgText}
+					<span
+						class="eval__metric eval__metric--{avgTone}"
+						class:eval__metric--pulse={avgPulse}
+					>
+						<span class="eval__k">{$t('avg')}</span>
+						<span class="eval__v">{avgText}</span>
 					</span>
 				{/if}
+				<span
+					class="eval__metric eval__metric--neutral"
+					class:eval__metric--pulse={nPulse}
+				>
+					<span class="eval__k">{$t('voters')}</span>
+					<span class="eval__v">{view.count}</span>
+				</span>
 			{:else}
-				<span class="eval__metric eval__metric--rate"><span class="eval__star">☆</span>{$t('Vote')}</span>
+				<span class="eval__sep" aria-hidden="true"></span>
+				<span class="eval__metric eval__metric--rate">
+					<span class="eval__star">☆</span>{$t('Vote')}
+				</span>
 			{/if}
 		</button>
 	{/if}
 </form>
 
 <style lang="scss">
+	@keyframes eval-pulse {
+		0% {
+			transform: scale(1);
+		}
+		35% {
+			transform: scale(1.08);
+		}
+		100% {
+			transform: scale(1);
+		}
+	}
+
 	.eval {
 		display: inline-flex;
 		align-items: center;
 		margin: 0;
 		min-height: 30px;
 
+		// ── Collapsed summary pill ──────────────────────────────────────────────
 		&__summary {
 			display: inline-flex;
 			align-items: center;
-			gap: var(--space-sm);
+			gap: var(--space-xs);
 			cursor: pointer;
 			background: var(--eval-bg);
 			border: 1px solid var(--glass-border);
 			border-radius: var(--radius-pill);
-			padding: 3px 12px;
+			padding: 2px 10px 2px 4px;
 			font: inherit;
-			transition: border-color 0.2s;
+			transition: border-color 0.2s, background 0.2s;
 
 			&:hover {
 				border-color: var(--accent);
 			}
+			&:focus-visible {
+				outline: none;
+				border-color: var(--accent);
+				box-shadow: 0 0 0 2px var(--accent);
+			}
 		}
-		&__metric {
-			display: inline-flex;
-			align-items: baseline;
-			gap: 4px;
-			font-size: 0.74rem;
-			font-weight: 700;
-			font-variant-numeric: tabular-nums;
-			color: var(--text-body);
 
+		// ── Headline: consensus with arc meter ──────────────────────────────────
+		&__headline {
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-xs);
+
+			--ring: var(--c-mid);
 			&--pos {
-				color: var(--c-high);
+				--ring: var(--c-high);
 			}
 			&--mid {
-				color: var(--c-mid);
+				--ring: var(--c-mid);
 			}
 			&--neg {
+				--ring: var(--c-low);
+			}
+			&--pulse {
+				animation: eval-pulse 420ms var(--ease-spring);
+			}
+		}
+		&__headline-text {
+			display: inline-flex;
+			flex-direction: column;
+			align-items: flex-start;
+			line-height: 1.05;
+		}
+
+		&__ring {
+			position: relative;
+			width: 26px;
+			height: 26px;
+			flex-shrink: 0;
+
+			svg {
+				width: 100%;
+				height: 100%;
+				transform: rotate(-90deg);
+			}
+		}
+		&__ring-track {
+			fill: none;
+			stroke: var(--glass-border);
+			stroke-width: 3.5;
+		}
+		&__ring-fill {
+			fill: none;
+			stroke: var(--ring);
+			stroke-width: 3.5;
+			stroke-linecap: round;
+			transition: stroke-dasharray 0.5s var(--ease-spring), stroke 0.3s ease;
+		}
+		&__ring-label {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.58rem;
+			font-weight: 700;
+			font-variant-numeric: tabular-nums;
+			color: var(--ring);
+		}
+
+		// ── Secondary metrics: avg, voters ──────────────────────────────────────
+		&__metric {
+			display: inline-flex;
+			flex-direction: column;
+			align-items: flex-start;
+			line-height: 1.05;
+
+			color: var(--text-body);
+			&--pos .eval__v {
+				color: var(--c-high);
+			}
+			&--mid .eval__v {
+				color: var(--c-mid);
+			}
+			&--neg .eval__v {
 				color: var(--c-low);
 			}
+			&--neutral .eval__v {
+				color: var(--text-body);
+			}
+			&--pulse {
+				animation: eval-pulse 420ms var(--ease-spring);
+			}
 			&--rate {
+				flex-direction: row;
+				align-items: center;
+				gap: 4px;
 				color: var(--text-muted);
+				font-size: 0.74rem;
 				font-weight: 600;
 			}
 		}
+
 		&__k {
-			font-size: 0.6rem;
+			font-size: 0.56rem;
 			font-weight: 600;
 			text-transform: uppercase;
-			letter-spacing: 0.04em;
+			letter-spacing: 0.05em;
 			color: var(--text-muted);
+		}
+		&__v {
+			font-size: 0.8rem;
+			font-weight: 700;
+			font-variant-numeric: tabular-nums;
+		}
+		&__headline .eval__v {
+			font-size: 0.85rem;
+		}
+
+		&__sep {
+			width: 3px;
+			height: 3px;
+			border-radius: 50%;
+			background: var(--glass-border);
+			flex-shrink: 0;
+			margin-inline: 2px;
 		}
 		&__star {
 			color: var(--amber);
 			font-size: 0.85rem;
 		}
 
+		// ── Expanded face rater ─────────────────────────────────────────────────
 		&__faces {
 			display: inline-flex;
 			gap: 3px;
@@ -170,8 +379,8 @@
 			padding: 3px;
 		}
 		&__face {
-			width: 28px;
-			height: 28px;
+			width: 30px;
+			height: 30px;
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
@@ -179,20 +388,59 @@
 			border-radius: var(--radius-pill);
 			background: transparent;
 			cursor: pointer;
-			font-size: 0.95rem;
-			filter: grayscale(0.45);
-			transition: transform 0.12s var(--ease-spring), filter 0.2s, background 0.2s;
+			padding: 0;
+			transition: transform 0.12s var(--ease-spring), background 0.2s, border-color 0.2s;
 
 			&:hover {
-				transform: scale(1.25);
-				filter: grayscale(0);
+				transform: scale(1.22);
 				z-index: 2;
 			}
+			&:focus-visible {
+				outline: none;
+				box-shadow: 0 0 0 2px var(--accent);
+			}
+			&:active {
+				transform: scale(0.94);
+			}
 			&.active {
-				filter: grayscale(0);
 				background: var(--eval-btn);
 				border-color: var(--accent);
 			}
+		}
+		&__face-emoji {
+			font-size: 0.95rem;
+			line-height: 1;
+			filter: grayscale(0.45);
+			transition: filter 0.2s, transform 0.2s var(--ease-spring);
+
+			.eval__face:hover &,
+			.eval__face.active & {
+				filter: grayscale(0);
+			}
+			.eval__face.active & {
+				transform: scale(1.12);
+			}
+		}
+	}
+
+	@media (max-width: 480px) {
+		.eval__face {
+			width: 38px;
+			height: 38px;
+		}
+		.eval__face-emoji {
+			font-size: 1.15rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.eval__headline,
+		.eval__metric,
+		.eval__ring-fill,
+		.eval__face,
+		.eval__face-emoji {
+			animation: none;
+			transition: none;
 		}
 	}
 </style>

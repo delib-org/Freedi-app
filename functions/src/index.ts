@@ -555,9 +555,11 @@ exports.onChatStatementCreated = createFirestoreFunction(
 	onChatStatementCreated,
 	'onChatStatementCreated',
 );
+// onDocumentWritten (not -Created): re-votes (update) and retractions (delete)
+// must recompute the option's denormalized C / average / evaluator count too.
 exports.onChatEvaluationCreated = createFirestoreFunction(
 	`/${Collections.evaluations}/{evaluationId}`,
-	onDocumentCreated,
+	onDocumentWritten,
 	onChatEvaluationCreated,
 	'onChatEvaluationCreated',
 );
