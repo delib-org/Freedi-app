@@ -30,6 +30,10 @@ Example: `1-6-2026-40-20-10-validation` = run on 2026-06-01 over 40 options,
 
 ## Reproducing (three levels)
 
+> **New to the repo / want to run this on your own machine with your own
+> sentences?** Start with [`../REPRODUCTION-GUIDE.md`](../REPRODUCTION-GUIDE.md)
+> — install → author a corpus → seed → cluster → score, end to end.
+
 1. **Verify the verdict** from committed artifacts — no deps, no keys, no emulator:
    `node score.mjs <test-folder>`
 2. **Re-derive the clustering** from the shipped embeddings — no OpenAI, no emulator

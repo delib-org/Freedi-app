@@ -10,6 +10,7 @@ import {
 	setDoc,
 	where,
 } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 import { Statement, StatementType, Collections, Evaluation } from '@freedi/shared-types';
 import { FireStore } from '@/controllers/db/config';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -39,6 +40,22 @@ function isDerivedOption(statement: Statement): boolean {
 		!!statement.synthesisMechanism ||
 		statement.statementType === StatementType.synthesis
 	);
+}
+
+/**
+ * A `permission-denied` here means the auth session changed between the
+ * read firing and landing (sign-in not yet hydrated, sign-out, account
+ * switch). These stats are best-effort and not actionable, so keep the
+ * expected session race out of Sentry while still surfacing real errors.
+ */
+function isAuthRace(error: unknown): boolean {
+	if (error instanceof FirebaseError && error.code === 'permission-denied') {
+		console.info('[useParticipationStats] Skipped read: auth session not ready');
+
+		return true;
+	}
+
+	return false;
 }
 
 /**
@@ -100,9 +117,12 @@ export function useParticipationStats(
 		});
 	}, [statementId, isQuestion, creator?.uid]);
 
-	// Fetch distinct evaluators and unique-entrant count (once per question)
+	// Fetch distinct evaluators and unique-entrant count (once per question).
+	// These reads require an authenticated session; wait for the auth token to
+	// hydrate (creator.uid) before querying so we don't fire during the
+	// sign-in race and trip Firestore's permission rules.
 	useEffect(() => {
-		if (!statementId || !isQuestion) return;
+		if (!statementId || !isQuestion || !creator?.uid) return;
 		let cancelled = false;
 
 		const evaluationsQuery = query(
@@ -123,6 +143,7 @@ export function useParticipationStats(
 				setAllEvaluatorIds(allEvaluators);
 			})
 			.catch((error) => {
+				if (isAuthRace(error)) return;
 				logError(error, {
 					operation: 'useParticipationStats.fetchEvaluators',
 					statementId,
@@ -139,6 +160,7 @@ export function useParticipationStats(
 				setViewsCount(snapshot.data().count);
 			})
 			.catch((error) => {
+				if (isAuthRace(error)) return;
 				logError(error, {
 					operation: 'useParticipationStats.countViews',
 					statementId,
@@ -148,7 +170,7 @@ export function useParticipationStats(
 		return () => {
 			cancelled = true;
 		};
-	}, [statementId, isQuestion]);
+	}, [statementId, isQuestion, creator?.uid]);
 
 	// View tracking started mid-project: never report fewer entrants than
 	// the union of people we know participated (any evaluation row, including
