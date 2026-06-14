@@ -22,7 +22,6 @@
 	"dependencies": {
 		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
 		"@freedi/shared-types": "file:freedi-shared-types-1.0.2.tgz",
-		"@google-cloud/vertexai": "^1.12.0",
 		"@sendgrid/mail": "^8.1.6",
 		"@sentry/sveltekit": "^10.57.0",
 		"@types/nodemailer": "^7.0.1",

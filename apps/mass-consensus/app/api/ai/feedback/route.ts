@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import {
   getQuestionFromFirebase,
   getUserSolutions,
@@ -12,7 +12,7 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 /**
  * POST /api/ai/feedback
  * Generate personalized AI feedback for user's solutions
- * Uses Gemini API to analyze top-performing solutions
+ * Uses OpenAI to analyze top-performing solutions
  */
 export async function POST(request: NextRequest) {
   // Rate limit check - strict for expensive AI operations
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for API key
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { error: 'AI feedback is not configured' },
         { status: 503 }
@@ -85,15 +85,14 @@ Provide a concise, constructive feedback summary (max 3 paragraphs) with 2-3 act
 Be encouraging and specific. Avoid generic advice.
 `;
 
-    // Call Gemini API
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+    // Call OpenAI API
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const completion = await openai.chat.completions.create({
+      model: process.env.OPENAI_FAST_MODEL || 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 800,
     });
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const feedback = response.text();
+    const feedback = completion.choices[0]?.message?.content || '';
 
     return NextResponse.json({ feedback });
   } catch (error) {

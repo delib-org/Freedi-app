@@ -8,7 +8,8 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logError } from './utils/errorHandling';
-import { callGemini, extractJSON, GEMINI_MODEL } from './ai/callGemini';
+import { callGemini, extractJSON } from './ai/callGemini';
+import { LLM_MODEL_HEAVY } from './config/gemini';
 
 const db = getFirestore();
 
@@ -364,7 +365,9 @@ async function analyzeParagraph(
 			`[analyzeParagraph] Calling Gemini for paragraph ${paragraph.paragraphId} with ${sources.length} sources`,
 		);
 
-		const response = await callGemini(PARAGRAPH_ANALYSIS_SYSTEM_PROMPT, userPrompt);
+		const response = await callGemini(PARAGRAPH_ANALYSIS_SYSTEM_PROMPT, userPrompt, {
+			model: LLM_MODEL_HEAVY,
+		});
 
 		console.info(`[analyzeParagraph] Gemini response length: ${response.length}`);
 
@@ -446,7 +449,9 @@ async function analyzeDocumentHolistically(
 			`[analyzeDocumentHolistically] Starting holistic analysis for ${paragraphs.length} paragraphs`,
 		);
 
-		const response = await callGemini(HOLISTIC_ANALYSIS_SYSTEM_PROMPT, userPrompt);
+		const response = await callGemini(HOLISTIC_ANALYSIS_SYSTEM_PROMPT, userPrompt, {
+			model: LLM_MODEL_HEAVY,
+		});
 
 		const parsed = extractJSON<{
 			paragraphActions?: Array<{
@@ -645,7 +650,9 @@ ${p.content || '(empty)'}`,
 			`[coherenceAnalysis] Starting analysis for version ${versionId} with ${paragraphs.length} paragraphs`,
 		);
 
-		const response = await callGemini(COHERENCE_SYSTEM_PROMPT, userPrompt);
+		const response = await callGemini(COHERENCE_SYSTEM_PROMPT, userPrompt, {
+			model: LLM_MODEL_HEAVY,
+		});
 
 		const parsed = extractJSON<{
 			incoherences?: Array<{
@@ -960,7 +967,7 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 		batch.update(versionRef, {
 			paragraphs: updatedParagraphs,
 			summary: `Version generated with ${analysisResults.length} AI-processed changes.${newParagraphChanges.length > 0 ? ` ${newParagraphChanges.length} new paragraphs proposed.` : ''}`,
-			aiModel: GEMINI_MODEL,
+			aiModel: LLM_MODEL_HEAVY,
 		});
 
 		await batch.commit();

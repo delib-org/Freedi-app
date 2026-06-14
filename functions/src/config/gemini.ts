@@ -1,152 +1,163 @@
-import {
-	VertexAI,
-	type ModelParams,
-	type GenerateContentRequest,
-	type GenerateContentResponse,
-} from '@google-cloud/vertexai';
+/**
+ * LLM access layer (OpenAI-backed).
+ *
+ * Historically this file wrapped Google Gemini / Vertex AI. The Gemini API key
+ * was compromised and Google blocked access, so the implementation now delegates
+ * to OpenAI via `callLLM()` (concurrency limiting + retry/backoff + JSON mode).
+ *
+ * The exported surface (`getGeminiModel`, `getGenAI`, `GEMINI_MODEL`, and the
+ * `Compat*` types) is preserved so the ~18 existing callers keep working
+ * unchanged. The `model` string callers pass is now an OpenAI model id.
+ */
+import { callLLM } from './openai-chat';
 
-// Centralized model name - update here when Google releases new versions
-// Current: gemini-2.5-flash (stable)
-// Check for updates: https://ai.google.dev/gemini-api/docs/models/gemini
-export const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// Model tiers. Both overridable via env vars.
+//   - gpt-4o      : heavy reasoning (version AI, integration/synthesis)
+//   - gpt-4o-mini : high-volume tasks (moderation, classification, summarization)
+export const LLM_MODEL_HEAVY = process.env.OPENAI_HEAVY_MODEL || 'gpt-4o';
+export const LLM_MODEL_FAST = process.env.OPENAI_FAST_MODEL || 'gpt-4o-mini';
 
-// Vertex AI region. Default to me-west1 (Tel Aviv) to co-locate with the
-// functions runtime; fall back to us-central1 automatically if the configured
-// region rejects the request (e.g. model not yet available in that region).
-const PRIMARY_LOCATION = process.env.VERTEX_LOCATION || 'me-west1';
-const FALLBACK_LOCATION = 'us-central1';
+// Back-compat alias: existing callers pass `GEMINI_MODEL`; it now resolves to the
+// fast OpenAI model. `GEMINI_MODEL` (or `OPENAI_FAST_MODEL`) env still overrides.
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || LLM_MODEL_FAST;
 
-let currentLocation = PRIMARY_LOCATION;
-let triedFallback = false;
-let cachedClient: VertexAI | null = null;
+// Gemini allowed large outputs by default; `callLLM` defaults to only 1024. Use a
+// generous fallback when a caller doesn't set `maxOutputTokens`, so summaries and
+// JSON responses are not silently truncated.
+const DEFAULT_MAX_OUTPUT_TOKENS = 8192;
 
-function getProjectId(): string {
-	const explicit = process.env.GCLOUD_PROJECT || process.env.GCP_PROJECT;
-	if (explicit) return explicit;
-	const firebaseConfig = process.env.FIREBASE_CONFIG;
-	if (firebaseConfig) {
-		try {
-			const parsed = JSON.parse(firebaseConfig);
-			if (parsed.projectId) return parsed.projectId;
-		} catch {
-			// fall through
-		}
-	}
-	throw new Error(
-		'Unable to determine GCP project for Vertex AI (set GCLOUD_PROJECT or FIREBASE_CONFIG)',
-	);
+// ---------------------------------------------------------------------------
+// Compat shapes that preserve the @google/generative-ai SDK surface so existing
+// callers (which use `result.response.text()` and inspect `candidates`) work.
+// ---------------------------------------------------------------------------
+
+interface CompatPart {
+	text?: string;
 }
 
-function getClient(): VertexAI {
-	if (cachedClient) return cachedClient;
-	cachedClient = new VertexAI({
-		project: getProjectId(),
-		location: currentLocation,
-	});
-
-	return cachedClient;
+interface CompatContent {
+	role?: string;
+	parts: CompatPart[];
 }
 
-function shouldFallback(error: unknown): boolean {
-	if (triedFallback) return false;
-	if (currentLocation === FALLBACK_LOCATION) return false;
-	const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
-
-	return (
-		message.includes('not found') ||
-		message.includes('not supported') ||
-		message.includes('unavailable') ||
-		message.includes('publisher model') ||
-		message.includes('does not exist') ||
-		message.includes('404')
-	);
+interface CompatGenerationConfig {
+	temperature?: number;
+	maxOutputTokens?: number;
+	responseMimeType?: string;
 }
 
-async function callWithRegionFallback<T>(fn: (client: VertexAI) => Promise<T>): Promise<T> {
-	try {
-		return await fn(getClient());
-	} catch (error) {
-		if (shouldFallback(error)) {
-			triedFallback = true;
-			currentLocation = FALLBACK_LOCATION;
-			cachedClient = null;
-			console.info(
-				`[gemini] Vertex AI region ${PRIMARY_LOCATION} unavailable, falling back to ${FALLBACK_LOCATION}`,
-			);
-
-			return await fn(getClient());
-		}
-		throw error;
-	}
+export interface CompatModelParams {
+	model: string;
+	generationConfig?: CompatGenerationConfig;
+	systemInstruction?: string | { parts?: CompatPart[] };
+	// Accept-and-ignore any other legacy fields (e.g. safetySettings) so callers
+	// that still pass them compile without changes.
+	[key: string]: unknown;
 }
 
-// Compat shapes that preserve the @google/generative-ai SDK's surface so
-// existing callers (which use `result.response.text()`) keep working.
+interface CompatCandidate {
+	finishReason: string;
+	content: { parts: CompatPart[] };
+}
+
 export interface CompatGenerateContentResponse {
 	text(): string;
-	candidates?: GenerateContentResponse['candidates'];
-	promptFeedback?: GenerateContentResponse['promptFeedback'];
-	usageMetadata?: GenerateContentResponse['usageMetadata'];
+	candidates?: CompatCandidate[];
 }
 
 export interface CompatGenerateContentResult {
 	response: CompatGenerateContentResponse;
 }
 
+export interface CompatGenerateContentRequest {
+	contents: CompatContent[];
+	systemInstruction?: string | { parts?: CompatPart[] };
+}
+
 export interface CompatGenerativeModel {
 	generateContent(
-		request: GenerateContentRequest | string,
+		request: CompatGenerateContentRequest | string,
 	): Promise<CompatGenerateContentResult>;
 }
 
 export interface CompatGenAI {
-	getGenerativeModel(params: ModelParams): CompatGenerativeModel;
+	getGenerativeModel(params: CompatModelParams): CompatGenerativeModel;
 }
 
-function wrapResponse(raw: GenerateContentResponse): CompatGenerateContentResponse {
-	return {
-		candidates: raw.candidates,
-		promptFeedback: raw.promptFeedback,
-		usageMetadata: raw.usageMetadata,
-		text(): string {
-			const parts = raw.candidates?.[0]?.content?.parts;
-			if (!parts) return '';
+function partsToText(parts?: CompatPart[]): string {
+	if (!parts) return '';
 
-			return parts
-				.map((part) => (typeof part.text === 'string' ? part.text : ''))
-				.join('');
+	return parts.map((part) => (typeof part.text === 'string' ? part.text : '')).join('');
+}
+
+function systemInstructionToText(
+	instruction: CompatModelParams['systemInstruction'],
+): string | undefined {
+	if (!instruction) return undefined;
+	if (typeof instruction === 'string') return instruction;
+
+	return partsToText(instruction.parts);
+}
+
+function wrapText(text: string): CompatGenerateContentResult {
+	return {
+		response: {
+			text: () => text,
+			candidates: [
+				{
+					finishReason: 'STOP',
+					content: { parts: [{ text }] },
+				},
+			],
 		},
 	};
 }
 
-function makeModel(params: ModelParams): CompatGenerativeModel {
+function makeModel(params: CompatModelParams): CompatGenerativeModel {
+	const model = params.model || GEMINI_MODEL;
+	const generationConfig = params.generationConfig;
+	const modelSystemInstruction = systemInstructionToText(params.systemInstruction);
+
 	return {
 		async generateContent(
-			request: GenerateContentRequest | string,
+			request: CompatGenerateContentRequest | string,
 		): Promise<CompatGenerateContentResult> {
-			return callWithRegionFallback(async (client) => {
-				const model = client.getGenerativeModel(params);
-				const normalizedRequest: GenerateContentRequest =
-					typeof request === 'string'
-						? { contents: [{ role: 'user', parts: [{ text: request }] }] }
-						: request;
-				const result = await model.generateContent(normalizedRequest);
+			let user: string;
+			let requestSystem: string | undefined;
 
-				return { response: wrapResponse(result.response) };
+			if (typeof request === 'string') {
+				user = request;
+			} else {
+				user = (request.contents || [])
+					.map((content) => partsToText(content.parts))
+					.filter(Boolean)
+					.join('\n\n');
+				requestSystem = systemInstructionToText(request.systemInstruction);
+			}
+
+			const text = await callLLM({
+				model,
+				system: requestSystem ?? modelSystemInstruction,
+				user,
+				temperature: generationConfig?.temperature,
+				maxTokens: generationConfig?.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+				jsonMode: generationConfig?.responseMimeType === 'application/json',
 			});
+
+			return wrapText(text);
 		},
 	};
 }
 
-// Initialize Gemini AI (default model, no extra config)
+// Default model (fast tier), no extra config.
 export function getGeminiModel(): CompatGenerativeModel {
 	return makeModel({ model: GEMINI_MODEL });
 }
 
-// Helper for files that need to pass custom generationConfig per call
+// Helper for callers that need to pass custom generationConfig / model per call.
 export function getGenAI(): CompatGenAI {
 	return {
-		getGenerativeModel(params: ModelParams): CompatGenerativeModel {
+		getGenerativeModel(params: CompatModelParams): CompatGenerativeModel {
 			return makeModel(params);
 		},
 	};
