@@ -55,15 +55,24 @@ function cosine(a: number[], b: number[]): number {
 export async function expandClusterEvidenceViaFullMembers(
 	evidence: Map<string, ClusterEvidenceLike>,
 	newOptionEmbedding: number[],
-): Promise<{ map: Map<string, ClusterEvidenceLike>; promotions: number }> {
-	if (evidence.size === 0) return { map: evidence, promotions: 0 };
+): Promise<{
+	map: Map<string, ClusterEvidenceLike>;
+	promotions: number;
+	/**
+	 * The member embeddings fetched during expansion, keyed by member id. The
+	 * cohesion gate reuses these so it never re-reads the same docs. Empty when
+	 * the fetch was skipped or failed.
+	 */
+	memberEmbeddings: Map<string, number[]>;
+}> {
+	if (evidence.size === 0) return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
 
 	// Union of all member IDs across clusters in the evidence map.
 	const memberIds = new Set<string>();
 	for (const entry of evidence.values()) {
 		for (const m of entry.cluster.integratedOptions ?? []) memberIds.add(m);
 	}
-	if (memberIds.size === 0) return { map: evidence, promotions: 0 };
+	if (memberIds.size === 0) return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
 
 	let memberEmbeddings: Map<string, number[]> | undefined;
 	try {
@@ -75,11 +84,11 @@ export async function expandClusterEvidenceViaFullMembers(
 			error: error instanceof Error ? error.message : String(error),
 		});
 
-		return { map: evidence, promotions: 0 };
+		return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
 	}
 	if (!memberEmbeddings || typeof memberEmbeddings.get !== 'function') {
 		// Defensive: a stubbed cache (e.g. in tests) may resolve undefined.
-		return { map: evidence, promotions: 0 };
+		return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
 	}
 
 	let promotions = 0;
@@ -106,5 +115,5 @@ export async function expandClusterEvidenceViaFullMembers(
 		}
 	}
 
-	return { map: evidence, promotions };
+	return { map: evidence, promotions, memberEmbeddings };
 }
