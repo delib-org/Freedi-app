@@ -72,6 +72,9 @@ export interface CompatGenerateContentResult {
 export interface CompatGenerateContentRequest {
 	contents: CompatContent[];
 	systemInstruction?: string | { parts?: CompatPart[] };
+	generationConfig?: CompatGenerationConfig;
+	// Accept-and-ignore any other legacy per-request fields (e.g. safetySettings).
+	[key: string]: unknown;
 }
 
 export interface CompatGenerativeModel {
@@ -124,6 +127,7 @@ function makeModel(params: CompatModelParams): CompatGenerativeModel {
 		): Promise<CompatGenerateContentResult> {
 			let user: string;
 			let requestSystem: string | undefined;
+			let requestConfig: CompatGenerationConfig | undefined;
 
 			if (typeof request === 'string') {
 				user = request;
@@ -133,15 +137,19 @@ function makeModel(params: CompatModelParams): CompatGenerativeModel {
 					.filter(Boolean)
 					.join('\n\n');
 				requestSystem = systemInstructionToText(request.systemInstruction);
+				requestConfig = request.generationConfig;
 			}
+
+			// Per-request generationConfig overrides the model-level config.
+			const config: CompatGenerationConfig = { ...generationConfig, ...requestConfig };
 
 			const text = await callLLM({
 				model,
 				system: requestSystem ?? modelSystemInstruction,
 				user,
-				temperature: generationConfig?.temperature,
-				maxTokens: generationConfig?.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
-				jsonMode: generationConfig?.responseMimeType === 'application/json',
+				temperature: config.temperature,
+				maxTokens: config.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
+				jsonMode: config.responseMimeType === 'application/json',
 			});
 
 			return wrapText(text);
