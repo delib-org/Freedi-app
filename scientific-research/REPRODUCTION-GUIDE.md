@@ -212,6 +212,73 @@ archetype catalog tells you which pipeline path each one needs).
 > cleaner than real deliberation. A PASS on synthetic data is *necessary, not
 > sufficient*. Always state this as a threat to validity.
 
+### 4a. Don't hand-tune cosines — let an AI write the corpus, then verify
+
+You cannot eyeball embedding similarity, and you shouldn't try. The reliable
+method is: **(1)** have a capable LLM (e.g. Claude, GPT-4-class) generate the
+corpus to the band rules, **(2)** seed it and run the §6 preview to *measure*
+whether the structure actually recovered, **(3)** regenerate only the synths that
+missed. The band rules are linguistic instructions the model can follow — the
+emulator is the ground-truth check.
+
+**Copy-paste prompt** (fill in the bracketed parts):
+
+```
+You are generating a SYNTHETIC TEST CORPUS for a sentence-clustering pipeline.
+The pipeline groups sentences by embedding cosine similarity, so the WORDING of
+each sentence determines which group it lands in. Follow these rules exactly.
+
+QUESTION: "[your deliberation question, e.g. How can we improve our neighborhood?]"
+STRUCTURE: [T] topics, [S] synths (distinct sub-ideas) per topic, [K] paraphrases
+per synth. (Use K >= 5.)
+
+RULES — these control cosine similarity, which is what the pipeline measures:
+1. The [K] paraphrases INSIDE ONE synth must all express the SAME single proposal
+   — identical meaning — but with MAXIMALLY VARIED wording: change the verb,
+   voice (active/passive), sentence length, and vocabulary. Do NOT reuse a stock
+   phrase or template across them. (Goal: high mutual similarity ~0.93–0.97, but
+   from shared MEANING, not shared words.)
+2. Different synths INSIDE THE SAME topic must be genuinely DIFFERENT actions on a
+   shared subject (e.g. "plant trees" vs "build a park" — both green-space, but
+   not rephrasings of each other). (Goal: clearly lower mutual similarity.)
+3. Different TOPICS must be about UNRELATED subjects. (Goal: low similarity.)
+4. One language only. One sentence per paraphrase, plain declarative, no lists.
+5. Avoid opposites/negations within a topic unless explicitly asked — the cosine
+   step merges opposites, so they need a special path.
+
+OUTPUT: strict JSON only, no prose, in exactly this shape:
+{
+  "questionText": "...",
+  "design": "[T] topics × [S] synths × [K] paraphrases = [N] options",
+  "topics": [
+    { "name": "kebab-case-topic",
+      "synths": [
+        { "name": "kebab-case-synth", "paraphrases": ["...", "... K total ..."] }
+      ]
+    }
+  ]
+}
+The `name` fields are the ground-truth labels — make them short, accurate, unique.
+```
+
+Save the model's output as `my-corpus.json`. Then **measure, don't trust**: seed
+it (§5) and run the preview sweep (§6) with `--ground-truth=../my-corpus.json`.
+The preview prints per-synth purity against your labels. Use this loop:
+
+| Preview shows | What it means | Fix |
+|---|---|---|
+| A synth's members split across two clusters | its paraphrases drifted too far apart (cosine < ~0.93) | ask the AI to rewrite that synth's paraphrases **closer in meaning / less exotic wording** |
+| Two synths merged into one cluster | they were too similar (rephrasings, not distinct actions) | ask the AI to make those two synths **more distinct actions** |
+| A synth dropped as noise | it had < 3 members | give it **≥ 5 paraphrases** |
+| Clean recovery at some `eps` | the corpus sits in the bands | done — proceed to §7 |
+
+Two or three regenerate-and-remeasure rounds is normal. The corpus is "good" when
+the §6 preview recovers your intended synth + topic counts at a defensible `eps`.
+
+> **Tip:** generating with `K = 8–10` paraphrases gives the clustering margin to
+> recover even if one or two paraphrases drift, which is why the published runs
+> use 5–10 per synth rather than the bare minimum of 3.
+
 ---
 
 ## 5. Create a question, then seed your sentences
