@@ -11,7 +11,7 @@ import Modal from '@/view/components/modal/Modal';
 import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
 import type { ClusterKind } from '../mapHelpers/mindElixirTransform';
 import { filterResultsByLayer } from '../mapHelpers/layerFilter';
-import type { MapLayerFilter } from '../mapHelpers/layerFilter';
+import type { LayerVisibility } from '../mapHelpers/layerFilter';
 import {
 	createMindMapChild,
 	createMindMapSibling,
@@ -25,7 +25,7 @@ import { logError } from '@/utils/errorHandling';
 interface Props {
 	descendants: Results;
 	filterBy: FilterType;
-	layerFilter: MapLayerFilter;
+	layerVisibility: LayerVisibility;
 	isAdmin: boolean;
 }
 
@@ -61,7 +61,7 @@ function findStatementById(results: Results, id: string): Statement | null {
 	return null;
 }
 
-function MindElixirMap({ descendants, isAdmin, filterBy, layerFilter }: Readonly<Props>) {
+function MindElixirMap({ descendants, isAdmin, filterBy, layerVisibility }: Readonly<Props>) {
 	const navigate = useNavigate();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const mindRef = useRef<MindElixirInstance | null>(null);
@@ -308,12 +308,12 @@ function MindElixirMap({ descendants, isAdmin, filterBy, layerFilter }: Readonly
 	);
 
 	const data = useMemo(() => {
-		const byLayer = filterResultsByLayer(descendants, layerFilter);
+		const byLayer = filterResultsByLayer(descendants, layerVisibility);
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(byLayer) : byLayer;
 
 		return filtered ? toMindElixirData(filtered, [], formatClusterTag) : null;
-	}, [descendants, filterBy, layerFilter, formatClusterTag]);
+	}, [descendants, filterBy, layerVisibility, formatClusterTag]);
 
 	// Initialize MindElixir
 	useEffect(() => {

@@ -1,48 +1,45 @@
 import { Results, Statement } from '@freedi/shared-types';
 
 /**
- * Which layer of the deliberation the mind map should show.
- * - `all`     — full nested view (clusters → synths → statements).
- * - `raw`     — only the original statements (clusters/synths removed, their
- *               members promoted up so nothing is lost).
- * - `synth`   — only synthesis clusters ("merged voice" nodes).
- * - `clusters`— only topic clusters (theme groupings).
+ * The layer a statement belongs to in the deliberation:
+ * - `raw`      — an original statement (not a cluster).
+ * - `synth`    — a synthesis cluster ("merged voice" node).
+ * - `clusters` — a topic cluster (theme grouping).
  */
-export type MapLayerFilter = 'all' | 'raw' | 'synth' | 'clusters';
+export type MapLayer = 'raw' | 'synth' | 'clusters';
 
-export const MAP_LAYER_FILTERS: MapLayerFilter[] = ['all', 'raw', 'synth', 'clusters'];
+export const MAP_LAYERS: MapLayer[] = ['raw', 'synth', 'clusters'];
 
-function matchesLayer(statement: Statement, filter: MapLayerFilter): boolean {
-	switch (filter) {
-		case 'raw':
-			return !statement.isCluster;
-		case 'synth':
-			return !!statement.isCluster && statement.derivedByPipeline === 'synthesis';
-		case 'clusters':
-			return !!statement.isCluster && statement.derivedByPipeline !== 'synthesis';
-		default:
-			return true;
-	}
+/** Which layers are currently shown. Each can be toggled independently. */
+export type LayerVisibility = Record<MapLayer, boolean>;
+
+export const ALL_LAYERS_VISIBLE: LayerVisibility = { raw: true, synth: true, clusters: true };
+
+export function layerOf(statement: Statement): MapLayer {
+	if (!statement.isCluster) return 'raw';
+
+	return statement.derivedByPipeline === 'synthesis' ? 'synth' : 'clusters';
 }
 
 /**
- * Prune a built Results tree down to a single layer. Nodes that don't match the
- * filter are dropped, but their matching descendants are promoted up to the
- * nearest kept ancestor — so "raw" still surfaces members hidden under a synth,
- * and "synth" surfaces synths nested inside a topic cluster. The root statement
- * is always kept as the tree's anchor.
+ * Prune a built Results tree to the visible layers. Nodes whose layer is hidden
+ * are dropped, but their visible descendants are promoted up to the nearest kept
+ * ancestor — so showing only "raw" still surfaces members hidden under a synth,
+ * and showing "synth" + "raw" shows synths with their members but no topic
+ * cluster wrappers. The root statement is always kept as the tree's anchor.
  */
-export function filterResultsByLayer(results: Results, filter: MapLayerFilter): Results {
-	if (filter === 'all') return results;
+export function filterResultsByLayer(results: Results, visibility: LayerVisibility): Results {
+	// Fast path: everything visible → return the tree as-is (full nested view).
+	if (visibility.raw && visibility.synth && visibility.clusters) return results;
 
 	function prune(node: Results, isRoot: boolean): Results[] {
 		const sub = node.sub.flatMap((child) => prune(child, false));
 
-		if (isRoot || matchesLayer(node.top, filter)) {
+		if (isRoot || visibility[layerOf(node.top)]) {
 			return [{ top: node.top, sub }];
 		}
 
-		// Node dropped — promote its kept descendants into its parent.
+		// Node hidden — promote its kept descendants into its parent.
 		return sub;
 	}
 

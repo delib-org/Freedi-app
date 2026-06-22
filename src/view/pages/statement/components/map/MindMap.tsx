@@ -17,11 +17,11 @@ import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
-import type { MapLayerFilter } from './mapHelpers/layerFilter';
+import { ALL_LAYERS_VISIBLE } from './mapHelpers/layerFilter';
+import type { LayerVisibility, MapLayer } from './mapHelpers/layerFilter';
 import styles from './MindMap.module.scss';
 
-const LAYER_OPTIONS: { value: MapLayerFilter; label: string }[] = [
-	{ value: 'all', label: 'All' },
+const LAYER_OPTIONS: { value: MapLayer; label: string }[] = [
 	{ value: 'raw', label: 'Raw' },
 	{ value: 'synth', label: 'Synths' },
 	{ value: 'clusters', label: 'Clusters' },
@@ -58,9 +58,12 @@ const MindMap: FC = () => {
 	// Use the fixed hook
 	const { results, flat } = useMindMap();
 
-	// Layer filter (raw / synth / clusters). Only meaningful when the question
+	// Layer filter (raw / synth / clusters) — each toggled independently; the map
+	// shows the union of the pressed layers. Only meaningful when the question
 	// actually has clusters or synths (i.e. the tree is not flat).
-	const [layerFilter, setLayerFilter] = useState<MapLayerFilter>('all');
+	const [layerVisibility, setLayerVisibility] = useState<LayerVisibility>(ALL_LAYERS_VISIBLE);
+	const toggleLayer = (layer: MapLayer) =>
+		setLayerVisibility((prev) => ({ ...prev, [layer]: !prev[layer] }));
 	const hasClusters = !flat;
 
 	const role = effectiveSubscription ? effectiveSubscription.role : Role.member;
@@ -204,9 +207,9 @@ const MindMap: FC = () => {
 								<button
 									key={value}
 									type="button"
-									aria-pressed={layerFilter === value}
-									className={`${styles.layerButton} ${layerFilter === value ? styles.layerButtonActive : ''}`}
-									onClick={() => setLayerFilter(value)}
+									aria-pressed={layerVisibility[value]}
+									className={`${styles.layerButton} ${layerVisibility[value] ? styles.layerButtonActive : ''}`}
+									onClick={() => toggleLayer(value)}
 								>
 									{t(label)}
 								</button>
@@ -220,7 +223,7 @@ const MindMap: FC = () => {
 						descendants={results}
 						isAdmin={_isAdmin}
 						filterBy={filterBy}
-						layerFilter={layerFilter}
+						layerVisibility={layerVisibility}
 					/>
 				) : (
 					<div
