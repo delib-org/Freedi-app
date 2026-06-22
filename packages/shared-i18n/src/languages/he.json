@@ -3451,5 +3451,7 @@
   "synths": "סינתזות",
   "topic clusters": "אשכולות נושא",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "לבצע קיבוץ גלובלי מאפס? פעולה זו מפרקת את כל האשכולות הנוכחיים ומקבצת מחדש את כל ההצעות במעבר אחד, לפי ספי הדמיון שמטה. מומלץ לאחר יצירת embeddings מחדש.",
-  "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "קיבוץ גלובלי מקבץ כל הצעה במעבר אחד לפי ספי הדמיון שמטה — קבוצות צפופות הופכות לסינתזות, רופפות יותר לאשכולות נושא. כדאי ליצור embeddings מחדש קודם."
+  "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "קיבוץ גלובלי מקבץ כל הצעה במעבר אחד לפי ספי הדמיון שמטה — קבוצות צפופות הופכות לסינתזות, רופפות יותר לאשכולות נושא. כדאי ליצור embeddings מחדש קודם.",
+  "merged": "מוזגו",
+  "grouped": "קובצו"
 }

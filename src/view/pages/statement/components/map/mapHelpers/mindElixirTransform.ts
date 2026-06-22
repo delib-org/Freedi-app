@@ -12,6 +12,84 @@ interface MindElixirNodeStyle {
 }
 
 /**
+ * The two kinds of cluster node we visualize distinctly in the mind map.
+ * - `synth`: a merge of near-duplicate options into one unified voice (members hidden).
+ * - `topic`: a theme grouping related-but-distinct options (members visible as children).
+ */
+export type ClusterKind = 'synth' | 'topic';
+
+/**
+ * Formats the count badge shown on a cluster node (e.g. "5 merged" / "7 grouped").
+ * Injected by the caller so the wording can be translated.
+ */
+export type ClusterTagFormatter = (kind: ClusterKind, count: number) => string;
+
+const defaultClusterTagFormatter: ClusterTagFormatter = (kind, count) =>
+	kind === 'synth' ? `${count} merged` : `${count} grouped`;
+
+/**
+ * Determine whether a statement is a cluster node and, if so, which kind.
+ * Synthesis-pipeline merges read as "synth"; everything else that is a cluster
+ * (topic detection, manual grouping) reads as a "topic" theme.
+ */
+export function getClusterKind(statement: Statement): ClusterKind | null {
+	if (!statement.isCluster) return null;
+
+	return statement.derivedByPipeline === 'synthesis' ? 'synth' : 'topic';
+}
+
+/**
+ * Inline style for a cluster node. Colors come from design tokens so light/high-contrast
+ * modes are handled by the stylesheet. The decorative glow/accent bar is applied via CSS
+ * (`me-tpc:has(.cluster-tag--*)`) keyed off the node's tag class.
+ */
+function getClusterStyle(kind: ClusterKind): MindElixirNodeStyle {
+	if (kind === 'synth') {
+		return {
+			background: 'var(--cluster-synth-bg)',
+			color: 'var(--cluster-synth-text)',
+			fontWeight: '600',
+		};
+	}
+
+	return {
+		background: 'var(--cluster-topic-bg)',
+		color: 'var(--cluster-topic-text)',
+		fontWeight: '600',
+	};
+}
+
+/**
+ * Attach the cluster icon, count badge, and (for topics) branch color to a node.
+ */
+function decorateClusterNode(
+	node: FreediNodeObj,
+	kind: ClusterKind,
+	statement: Statement,
+	result: Results,
+	format: ClusterTagFormatter,
+): void {
+	if (kind === 'synth') {
+		node.icons = ['✦'];
+		const count = statement.integratedOptions?.length ?? 0;
+		// A "merge of one" carries no information — only badge real merges.
+		if (count >= 2) {
+			node.tags = [{ text: format('synth', count), className: 'cluster-tag cluster-tag--synth' }];
+		}
+
+		return;
+	}
+
+	node.icons = ['#'];
+	const count = statement.integratedOptions?.length ?? result.sub?.length ?? 0;
+	if (count >= 1) {
+		node.tags = [{ text: format('topic', count), className: 'cluster-tag cluster-tag--topic' }];
+	}
+	// Tie the visible member branch to its topic header.
+	node.branchColor = '#6f8ce8';
+}
+
+/**
  * Get the CSS variable-based style for a statement type
  * Uses existing design system colors from style.scss
  */
@@ -53,6 +131,7 @@ export interface FreediNodeObj extends NodeObj {
 	statementId?: string;
 	parentId?: string;
 	isSelected?: boolean;
+	clusterKind?: ClusterKind;
 }
 
 /**
@@ -65,13 +144,18 @@ export interface FreediNodeObj extends NodeObj {
 export function toMindElixirData(
 	results: Results,
 	selectedStatementIds: string[] = [],
+	formatClusterTag: ClusterTagFormatter = defaultClusterTagFormatter,
 ): MindElixirData {
 	function transformNode(result: Results): FreediNodeObj {
 		const statement = result.top;
+		const clusterKind = getClusterKind(statement);
 		const isSelected =
 			selectedStatementIds.includes(statement.statementId) ||
 			!!(statement.isVoted || statement.isChosen);
-		const style = getStyleForType(statement.statementType, isSelected);
+		// Cluster styling takes priority over type/selection styling.
+		const style = clusterKind
+			? getClusterStyle(clusterKind)
+			: getStyleForType(statement.statementType, isSelected);
 
 		const node: FreediNodeObj = {
 			id: statement.statementId,
@@ -81,7 +165,12 @@ export function toMindElixirData(
 			statementId: statement.statementId,
 			parentId: statement.parentId,
 			isSelected,
+			clusterKind: clusterKind ?? undefined,
 		};
+
+		if (clusterKind) {
+			decorateClusterNode(node, clusterKind, statement, result, formatClusterTag);
+		}
 
 		// Transform children recursively
 		if (result.sub && result.sub.length > 0) {

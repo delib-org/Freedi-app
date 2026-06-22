@@ -9,6 +9,7 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { updateStatementParents } from '@/controllers/db/statements/setStatements';
 import Modal from '@/view/components/modal/Modal';
 import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
+import type { ClusterKind } from '../mapHelpers/mindElixirTransform';
 import {
 	createMindMapChild,
 	createMindMapSibling,
@@ -296,12 +297,19 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Memoize data to prevent unnecessary refresh calls that rebuild the DOM.
 	// Without memoization, toMindElixirData creates a new object every render,
 	// causing the refresh useEffect to fire and destroy any active inline edit (input-box).
+	// Translated count badges for cluster nodes ("5 merged" / "7 grouped").
+	const formatClusterTag = useCallback(
+		(kind: ClusterKind, count: number) =>
+			kind === 'synth' ? `${count} ${t('merged')}` : `${count} ${t('grouped')}`,
+		[t],
+	);
+
 	const data = useMemo(() => {
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
 
-		return filtered ? toMindElixirData(filtered) : null;
-	}, [descendants, filterBy]);
+		return filtered ? toMindElixirData(filtered, [], formatClusterTag) : null;
+	}, [descendants, filterBy, formatClusterTag]);
 
 	// Initialize MindElixir
 	useEffect(() => {

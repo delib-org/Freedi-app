@@ -2700,5 +2700,7 @@
   "synths": "Synthesen",
   "topic clusters": "Themencluster",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "Globale Clusterung von Grund auf? Dies löst alle aktuellen Cluster auf und gruppiert alle Optionen in einem Durchlauf neu, anhand der Ähnlichkeitsschwellen unten. Am besten nach erneutem Embedding.",
-  "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "Die globale Clusterung gruppiert alle Optionen in einem Durchlauf anhand der Ähnlichkeitsschwellen unten – enge Gruppen werden zu Synthesen, lockerere zu Themenclustern. Für beste Ergebnisse zuerst neu einbetten."
+  "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "Die globale Clusterung gruppiert alle Optionen in einem Durchlauf anhand der Ähnlichkeitsschwellen unten – enge Gruppen werden zu Synthesen, lockerere zu Themenclustern. Für beste Ergebnisse zuerst neu einbetten.",
+  "merged": "zusammengeführt",
+  "grouped": "gruppiert"
 }
