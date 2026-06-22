@@ -175,77 +175,83 @@ const MindMap: FC = () => {
 		<>
 			<style>{spinnerStyle}</style>
 			{statementId && <LoadAllBanner rootId={statementId} mode="descendants" />}
-			<div className={styles.filterToggle}>
-				<span className={styles.filterLabel}>
-					{showOnlySelected ? t('Selected only') : t('All')}
-				</span>
-				<button
-					type="button"
-					role="switch"
-					aria-checked={showOnlySelected}
-					aria-label={t('Show only selected options')}
-					className={`${styles.toggleSwitch} ${showOnlySelected ? styles.toggleSwitchActive : ''}`}
-					onClick={() =>
-						setFilterBy(
-							showOnlySelected ? FilterType.questionsResultsOptions : FilterType.questionsResults,
-						)
-					}
-				>
-					<span className={styles.toggleKnob} />
-				</button>
-			</div>
-			{hasClusters && (
-				<div className={styles.layerFilter} role="group" aria-label={t('Show map layer')}>
-					{LAYER_OPTIONS.map(({ value, label }) => (
+			<div className={styles.mapScreen}>
+				<div className={styles.controls}>
+					<div className={styles.filterToggle}>
+						<span className={styles.filterLabel}>
+							{showOnlySelected ? t('Selected only') : t('All')}
+						</span>
 						<button
-							key={value}
 							type="button"
-							aria-pressed={layerFilter === value}
-							className={`${styles.layerButton} ${layerFilter === value ? styles.layerButtonActive : ''}`}
-							onClick={() => setLayerFilter(value)}
+							role="switch"
+							aria-checked={showOnlySelected}
+							aria-label={t('Show only selected options')}
+							className={`${styles.toggleSwitch} ${showOnlySelected ? styles.toggleSwitchActive : ''}`}
+							onClick={() =>
+								setFilterBy(
+									showOnlySelected
+										? FilterType.questionsResultsOptions
+										: FilterType.questionsResults,
+								)
+							}
 						>
-							{t(label)}
+							<span className={styles.toggleKnob} />
 						</button>
-					))}
-				</div>
-			)}
-			{/* Only render map when results are available */}
-			{results ? (
-				<MindElixirMap
-					descendants={results}
-					isAdmin={_isAdmin}
-					filterBy={filterBy}
-					layerFilter={layerFilter}
-				/>
-			) : (
-				<div
-					style={{
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center',
-						height: '100%',
-						flexDirection: 'column',
-						gap: '1rem',
-					}}
-				>
-					{showSkeleton && (
-						<div
-							className="skeleton-loader"
-							style={{
-								width: '60px',
-								height: '60px',
-								border: '5px solid #f3f3f3',
-								borderTop: '5px solid var(--btn-primary)',
-								borderRadius: '50%',
-								animation: 'spin 1s linear infinite',
-							}}
-						></div>
-					)}
-					<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
-						{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
 					</div>
+					{hasClusters && (
+						<div className={styles.layerFilter} role="group" aria-label={t('Show map layer')}>
+							{LAYER_OPTIONS.map(({ value, label }) => (
+								<button
+									key={value}
+									type="button"
+									aria-pressed={layerFilter === value}
+									className={`${styles.layerButton} ${layerFilter === value ? styles.layerButtonActive : ''}`}
+									onClick={() => setLayerFilter(value)}
+								>
+									{t(label)}
+								</button>
+							))}
+						</div>
+					)}
 				</div>
-			)}
+				{/* Only render map when results are available */}
+				{results ? (
+					<MindElixirMap
+						descendants={results}
+						isAdmin={_isAdmin}
+						filterBy={filterBy}
+						layerFilter={layerFilter}
+					/>
+				) : (
+					<div
+						style={{
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							height: '100%',
+							flexDirection: 'column',
+							gap: '1rem',
+						}}
+					>
+						{showSkeleton && (
+							<div
+								className="skeleton-loader"
+								style={{
+									width: '60px',
+									height: '60px',
+									border: '5px solid #f3f3f3',
+									borderTop: '5px solid var(--btn-primary)',
+									borderRadius: '50%',
+									animation: 'spin 1s linear infinite',
+								}}
+							></div>
+						)}
+						<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
+							{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
+						</div>
+					</div>
+				)}
+			</div>
 
 			{mapContext.showModal && (
 				<Modal>

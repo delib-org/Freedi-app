@@ -391,11 +391,13 @@ function MindElixirMap({ descendants, isAdmin, filterBy, layerFilter }: Readonly
 		// Store reference
 		mindRef.current = mind;
 
-		// Use RIGHT layout for compact single-direction tree, then center
+		// Use RIGHT layout for compact single-direction tree, then scale the
+		// whole map to fill the available canvas (instead of just centering the
+		// root, which leaves a large tree mostly off-screen).
 		setTimeout(() => {
 			if (mindRef.current) {
 				mindRef.current.initRight();
-				mindRef.current.toCenter();
+				mindRef.current.scaleFit();
 			}
 		}, 100);
 
