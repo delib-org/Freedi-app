@@ -2696,5 +2696,9 @@
   "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Agrupa todas las opciones en una sola pasada: umbral más bajo = temas más amplios, más alto = casi duplicados más estrictos. Regenera los embeddings primero para mejores resultados.",
   "Re-embed options": "Regenerar embeddings",
   "Re-embedded": "Embeddings regenerados:",
-  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "¿Regenerar los embeddings de todas las opciones? Esto regenera el embedding de cada opción a partir de su resumen destilado. Ejecútalo una vez antes de agrupar para que los vectores sean consistentes. Puede tardar un minuto."
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "¿Regenerar los embeddings de todas las opciones? Esto regenera el embedding de cada opción a partir de su resumen destilado. Ejecútalo una vez antes de agrupar para que los vectores sean consistentes. Puede tardar un minuto.",
+  "synths": "síntesis",
+  "topic clusters": "grupos temáticos",
+  "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "¿Agrupar globalmente desde cero? Esto disuelve todos los grupos actuales y reagrupa todas las opciones en una sola pasada, usando los umbrales de similitud de abajo. Mejor después de regenerar los embeddings.",
+  "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "La agrupación global agrupa todas las opciones en una pasada usando los umbrales de similitud de abajo: los grupos compactos se convierten en síntesis y los más sueltos en grupos temáticos. Regenera los embeddings primero para mejores resultados."
 }

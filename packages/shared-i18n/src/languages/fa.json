@@ -3219,5 +3219,9 @@
   "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "همه گزینه‌ها را در یک گذر گروه‌بندی می‌کند — آستانه پایین‌تر = موضوع‌های گسترده‌تر، بالاتر = تکراری‌های نزدیک‌تر. برای بهترین نتیجه ابتدا دوباره embedding کنید.",
   "Re-embed options": "embedding مجدد گزینه‌ها",
   "Re-embedded": "embedding مجدد شد:",
-  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "همه گزینه‌ها دوباره embedding شوند؟ این کار embedding هر گزینه را از چکیده آن بازتولید می‌کند. یک بار پیش از خوشه‌بندی اجرا کنید تا بردارها سازگار باشند. ممکن است یک دقیقه طول بکشد."
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "همه گزینه‌ها دوباره embedding شوند؟ این کار embedding هر گزینه را از چکیده آن بازتولید می‌کند. یک بار پیش از خوشه‌بندی اجرا کنید تا بردارها سازگار باشند. ممکن است یک دقیقه طول بکشد.",
+  "synths": "سنتزها",
+  "topic clusters": "خوشه‌های موضوعی",
+  "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "خوشه‌بندی سراسری از ابتدا؟ این کار همه خوشه‌های فعلی را منحل می‌کند و همه گزینه‌ها را در یک گذر و با آستانه‌های شباهت زیر دوباره گروه‌بندی می‌کند. بهتر است پس از embedding مجدد انجام شود.",
+  "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "خوشه‌بندی سراسری همه گزینه‌ها را در یک گذر و با آستانه‌های شباهت زیر گروه‌بندی می‌کند — گروه‌های فشرده به سنتز و گروه‌های شل‌تر به خوشه‌های موضوعی تبدیل می‌شوند. برای بهترین نتیجه ابتدا دوباره embedding کنید."
 }

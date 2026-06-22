@@ -7,7 +7,13 @@ import { ALLOWED_ORIGINS } from '../../config/cors';
 import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { dissolveQuestionSynthesis } from '../derivedDocs';
 import { buildCandidateClusters } from '../candidateClusters';
-import { generateTopicLabel } from '../../services/integration-ai-service';
+import { cosineSimilarity, meanVector } from '../bulkCluster';
+import { embeddingCache } from '../../services/embedding-cache-service';
+import {
+	generateTopicLabel,
+	generateSynthesizedProposal,
+	type StatementWithEvaluation,
+} from '../../services/integration-ai-service';
 import { performIntegration } from '../../integrate/performIntegration';
 import { recomputeClusterEvaluation } from '../../condensation/aggregation';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
@@ -17,35 +23,28 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
  *
  * Unlike `reCluster` (which dissolves, then re-runs the INCREMENTAL one-option-
  * at-a-time pipeline via the queue), this looks at ALL eligible options at once
- * and groups them in one shot, then writes a topic-cluster per group. Seeing the
- * whole corpus together surfaces coherent themes that the order-dependent
- * incremental pass leaves unclustered.
+ * and groups them in one shot. Seeing the whole corpus together surfaces
+ * coherent themes that the order-dependent incremental pass leaves unclustered.
  *
- * Grouping uses cosine-threshold edges + connected components
- * (`buildCandidateClusters`), NOT UMAP→DBSCAN — the latter projects 1536-d
- * embeddings onto a connected manifold and returns a few giant blobs with zero
- * singletons (see `candidateClusters.ts`). Connected components preserves
- * genuinely-distinct ideas as singletons and only groups what is actually close.
+ * It uses the SAME thresholds the admin already configures in "Advanced
+ * similarity thresholds" — there is no separate global knob:
  *
- * The grouping threshold is the single most important knob and is corpus-
- * dependent — it is therefore an explicit request parameter (with an env default)
- * rather than silently tuned. With gist embeddings on (see gist-service), the
- * geometry sharpens, so a lower threshold than the near-duplicate synthesis path
- * captures topical groups without blobbing.
+ *   - group options into components at `clusterThreshold` (the topic floor),
+ *     using cosine edges + connected components (NOT UMAP→DBSCAN, which blobs —
+ *     see `candidateClusters.ts`),
+ *   - a tight component (mean member→centroid cosine ≥ `synthLowerBound`)
+ *     becomes a SYNTH (one merged proposal), and
+ *   - a looser component becomes a TOPIC cluster (a named theme).
  *
- * Each group becomes a TOPIC cluster (`derivedByPipeline: 'topic-cluster'`),
- * labelled by `generateTopicLabel`. This is the cheap "name what they share"
- * path, not the heavier proposal synthesis — themes group related-but-distinct
- * ideas; they don't claim the members are the same proposal.
+ * So the global pass produces the same synth/topic split as the live pipeline,
+ * just computed globally instead of incrementally.
  *
  * Synchronous: typical questions (tens to low-hundreds of options) yield a
- * handful of groups, so the LLM label calls fit comfortably in the 540s budget.
+ * handful of groups, so the LLM calls fit comfortably in the 540s budget.
  */
 
 interface GlobalClusterRequest {
 	questionId: string;
-	/** Cosine grouping threshold in (0, 1]. Falls back to env / default. */
-	threshold?: number;
 }
 
 interface GlobalClusterResponse {
@@ -55,30 +54,28 @@ interface GlobalClusterResponse {
 	evaluationsDeleted: number;
 	eligibleOptions: number;
 	groupsFound: number;
-	clustersCreated: number;
+	synthsCreated: number;
+	topicsCreated: number;
 	singletons: number;
-	threshold: number;
+	clusterThreshold: number;
+	synthLowerBound: number;
 }
 
-/**
- * Default grouping threshold. Lower than the near-duplicate synthesis default
- * (~0.90) because this pass intentionally forms broader topical groups, and gist
- * embeddings spread distinct topics further apart. Override per run or via env
- * `GLOBAL_CLUSTER_THRESHOLD`.
- */
-const DEFAULT_GLOBAL_CLUSTER_THRESHOLD = 0.55;
 const MAX_CONCURRENT_GROUPS = 5;
 
 function db() {
 	return getFirestore();
 }
 
-function resolveThreshold(requested?: number): number {
-	if (typeof requested === 'number' && requested > 0 && requested <= 1) return requested;
-	const env = Number(process.env.GLOBAL_CLUSTER_THRESHOLD);
-	if (Number.isFinite(env) && env > 0 && env <= 1) return env;
+/** Mean cosine of each member embedding to the group centroid — its cohesion. */
+function groupCohesion(vectors: number[][]): number {
+	if (vectors.length < 2) return 1;
+	const centroid = meanVector(vectors);
+	if (centroid.length === 0) return 0;
+	let sum = 0;
+	for (const v of vectors) sum += cosineSimilarity(v, centroid);
 
-	return DEFAULT_GLOBAL_CLUSTER_THRESHOLD;
+	return sum / vectors.length;
 }
 
 export const globalCluster = onCall<GlobalClusterRequest>(
@@ -95,69 +92,108 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 		if (!questionId) throw new HttpsError('invalid-argument', 'questionId is required');
 
 		const question = await assertSynthesisAdmin(questionId, uid);
-		const threshold = resolveThreshold(request.data.threshold);
+		const settings = await loadSynthesisSettings(questionId);
 
 		// 1. Clean slate: dissolve any prior synthesis output (restores members).
 		const dissolve = await dissolveQuestionSynthesis(questionId, { reversedByUserId: uid });
 
 		// 2. Load eligible options (evaluator-count gate only — consensus does not
 		//    gate clustering). Skip hidden / cluster / already-integrated docs.
-		const settings = await loadSynthesisSettings(questionId);
 		const optionsSnap = await db()
 			.collection(Collections.statements)
 			.where('parentId', '==', questionId)
 			.where('statementType', '==', StatementType.option)
 			.get();
 
-		const eligibleIds: string[] = [];
+		const eligible = new Map<string, Statement>();
 		for (const doc of optionsSnap.docs) {
 			const option = doc.data() as Statement;
 			if (option.hide === true) continue;
 			if (option.isCluster === true) continue;
 			if ((option.integratedOptions ?? []).length > 0) continue;
-			const evals = option.evaluation?.numberOfEvaluators ?? 0;
-			if (evals < settings.minEvaluators) continue;
-			eligibleIds.push(option.statementId);
+			if ((option.evaluation?.numberOfEvaluators ?? 0) < settings.minEvaluators) continue;
+			eligible.set(option.statementId, option);
 		}
+		const eligibleIds = [...eligible.keys()];
 
-		// 3. Group the whole set at once: cosine edges + connected components.
+		// 3. Group the whole set at once at the TOPIC floor (clusterThreshold).
 		const { clusters, singletonCount } = await buildCandidateClusters(eligibleIds, {
 			parentId: questionId,
-			threshold,
+			threshold: settings.clusterThreshold,
 		});
 
+		const embeddings = await embeddingCache.getBatchEmbeddings(eligibleIds);
 		const questionContext = question.statement || questionId;
 		const adminDoc = await db().collection('usersV2').doc(uid).get();
 		const adminData = adminDoc.exists ? adminDoc.data() : null;
 		const creatorDisplayName = adminData?.displayName || 'Admin';
 		const creatorDefaultLanguage = adminData?.defaultLanguage || 'en';
 
-		// 4. For each group (≥2), label it and write a topic cluster.
+		// 4. For each group (≥2): a tight group → synth, otherwise → topic cluster.
 		const limit = pLimit(MAX_CONCURRENT_GROUPS);
-		const createdClusterIds: string[] = [];
+		const created: Array<{ id: string; kind: 'synthesis' | 'topic-cluster' }> = [];
 		await Promise.all(
 			clusters.map((cluster) =>
 				limit(async () => {
-					try {
-						const memberDocs = await Promise.all(
-							cluster.memberIds.map((id) => db().collection(Collections.statements).doc(id).get()),
-						);
-						const members = memberDocs.filter((d) => d.exists).map((d) => d.data() as Statement);
-						if (members.length < 2) return;
+					const members = cluster.memberIds
+						.map((id) => eligible.get(id))
+						.filter((m): m is Statement => Boolean(m));
+					if (members.length < 2) return;
 
-						const label = await generateTopicLabel(members, questionContext);
+					const vectors = members
+						.map((m) => embeddings.get(m.statementId))
+						.filter((v): v is number[] => Array.isArray(v) && v.length > 0);
+					const cohesion = vectors.length >= 2 ? groupCohesion(vectors) : 0;
+					const wantSynth = cohesion >= settings.synthLowerBound;
+
+					try {
+						let title: string;
+						let description: string;
+						let paragraphs: string[] | undefined;
+						let derivedByPipeline: 'synthesis' | 'topic-cluster';
+
+						if (wantSynth) {
+							const llmInputs: StatementWithEvaluation[] = members.map((m) => ({
+								statementId: m.statementId,
+								statement: m.statement || '',
+								paragraphsText: '',
+								numberOfEvaluators: m.evaluation?.numberOfEvaluators ?? 0,
+								consensus: m.consensus ?? m.evaluation?.agreement ?? 0,
+								sumEvaluations: m.evaluation?.sumEvaluations ?? 0,
+							}));
+							const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+							if (proposal.cannotSynthesize === true) {
+								// Directional conflict etc. — fall back to a topic label.
+								const label = await generateTopicLabel(members, questionContext);
+								title = label.title;
+								description = label.description;
+								derivedByPipeline = 'topic-cluster';
+							} else {
+								title = proposal.title;
+								description = proposal.description;
+								paragraphs = proposal.paragraphs;
+								derivedByPipeline = 'synthesis';
+							}
+						} else {
+							const label = await generateTopicLabel(members, questionContext);
+							title = label.title;
+							description = label.description;
+							derivedByPipeline = 'topic-cluster';
+						}
+
 						const result = await performIntegration({
 							parentStatementId: questionId,
 							selectedStatementIds: members.map((m) => m.statementId),
-							integratedTitle: label.title,
-							integratedDescription: label.description,
+							integratedTitle: title,
+							integratedDescription: description,
 							creatorId: uid,
 							creatorDisplayName,
 							creatorDefaultLanguage,
-							derivedByPipeline: 'topic-cluster',
+							derivedByPipeline,
 							synthesisMechanism: 'bulk',
+							paragraphs,
 						});
-						createdClusterIds.push(result.newStatementId);
+						created.push({ id: result.newStatementId, kind: derivedByPipeline });
 					} catch (error) {
 						logger.error('globalCluster: group integration failed', {
 							questionId,
@@ -172,13 +208,13 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 		// 5. Re-aggregate each new cluster's evaluation from its members.
 		const finalizeLimit = pLimit(MAX_CONCURRENT_GROUPS);
 		await Promise.all(
-			createdClusterIds.map((clusterId) =>
+			created.map((c) =>
 				finalizeLimit(async () => {
 					try {
-						await recomputeClusterEvaluation(clusterId);
+						await recomputeClusterEvaluation(c.id);
 					} catch (error) {
 						logger.warn('globalCluster: finalize recompute failed (non-fatal)', {
-							clusterId,
+							clusterId: c.id,
 							error: error instanceof Error ? error.message : String(error),
 						});
 					}
@@ -193,9 +229,11 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 			evaluationsDeleted: dissolve.evaluationsDeleted,
 			eligibleOptions: eligibleIds.length,
 			groupsFound: clusters.length,
-			clustersCreated: createdClusterIds.length,
+			synthsCreated: created.filter((c) => c.kind === 'synthesis').length,
+			topicsCreated: created.filter((c) => c.kind === 'topic-cluster').length,
 			singletons: singletonCount,
-			threshold,
+			clusterThreshold: settings.clusterThreshold,
+			synthLowerBound: settings.synthLowerBound,
 		};
 		logger.info('globalCluster.complete', { questionId, uid, ...response });
 

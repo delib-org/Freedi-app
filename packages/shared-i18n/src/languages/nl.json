@@ -2696,5 +2696,9 @@
   "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Groepeert elke optie in één keer — lagere drempel = bredere themas, hogere = striktere bijna-duplicaten. Embed eerst opnieuw voor de beste resultaten.",
   "Re-embed options": "Opties opnieuw embedden",
   "Re-embedded": "Opnieuw geëmbed:",
-  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "Alle opties opnieuw embedden? Dit genereert de embedding van elke optie opnieuw uit de gedistilleerde kern. Voer dit één keer uit vóór het clusteren zodat de vectoren consistent zijn. Kan een minuut duren."
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "Alle opties opnieuw embedden? Dit genereert de embedding van elke optie opnieuw uit de gedistilleerde kern. Voer dit één keer uit vóór het clusteren zodat de vectoren consistent zijn. Kan een minuut duren.",
+  "synths": "syntheses",
+  "topic clusters": "themaclusters",
+  "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "Globaal clusteren vanaf nul? Dit ontbindt alle huidige clusters en hergroepeert alle opties in één keer, met de onderstaande gelijkenisdrempels. Het beste na opnieuw embedden.",
+  "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "Globaal clusteren groepeert elke optie in één keer met de onderstaande gelijkenisdrempels — strakke groepen worden syntheses, lossere themaclusters. Embed eerst opnieuw voor de beste resultaten."
 }

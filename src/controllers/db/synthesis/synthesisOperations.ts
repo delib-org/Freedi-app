@@ -65,11 +65,6 @@ export async function triggerReCluster(questionId: string): Promise<ReClusterRes
 	}
 }
 
-interface GlobalClusterRequest {
-	questionId: string;
-	threshold?: number;
-}
-
 interface GlobalClusterResponse {
 	clustersReversed: number;
 	docsArchived: number;
@@ -77,28 +72,28 @@ interface GlobalClusterResponse {
 	evaluationsDeleted: number;
 	eligibleOptions: number;
 	groupsFound: number;
-	clustersCreated: number;
+	synthsCreated: number;
+	topicsCreated: number;
 	singletons: number;
-	threshold: number;
+	clusterThreshold: number;
+	synthLowerBound: number;
 }
 
 /**
  * One-shot whole-question clustering: dissolves existing synthesis, then groups
- * ALL eligible options at once (cosine edges + connected components) and writes
- * a topic-cluster per group. Unlike re-cluster (incremental, one option at a
- * time), this sees the whole corpus together and surfaces themes the
- * incremental pass misses. `threshold` (0–1) tunes how tightly ideas group.
+ * ALL eligible options at once (cosine edges + connected components). Tight
+ * groups become synths, looser ones topic clusters — using the SAME thresholds
+ * configured under "Advanced similarity thresholds". Unlike re-cluster
+ * (incremental, one option at a time), this sees the whole corpus together and
+ * surfaces themes the incremental pass misses.
  */
-export async function triggerGlobalCluster(
-	questionId: string,
-	threshold?: number,
-): Promise<GlobalClusterResponse> {
+export async function triggerGlobalCluster(questionId: string): Promise<GlobalClusterResponse> {
 	try {
-		const call = httpsCallable<GlobalClusterRequest, GlobalClusterResponse>(
+		const call = httpsCallable<QuestionOnlyRequest, GlobalClusterResponse>(
 			functions,
 			'globalCluster',
 		);
-		const result = await call({ questionId, threshold });
+		const result = await call({ questionId });
 		logger.info('Global cluster run complete', { questionId, ...result.data });
 
 		return result.data;

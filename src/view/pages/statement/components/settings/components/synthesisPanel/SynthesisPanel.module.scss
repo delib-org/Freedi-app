@@ -509,33 +509,6 @@
 	margin: 0;
 }
 
-.globalClusterRow {
-	display: flex;
-	gap: 0.5rem;
-	flex-wrap: wrap;
-	align-items: center;
-
-	&__label {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		flex: 1 1 12rem;
-		min-inline-size: 12rem;
-		font-size: 0.875rem;
-		color: var(--text-body);
-
-		input[type='range'] {
-			flex: 1;
-		}
-	}
-
-	&__value {
-		font-variant-numeric: tabular-nums;
-		font-weight: 600;
-		min-inline-size: 2.5rem;
-		text-align: end;
-	}
-}
 
 /* ---------- Toast ---------- */
 
