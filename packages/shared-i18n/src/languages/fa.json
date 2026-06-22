@@ -3210,5 +3210,11 @@
   "All statements loaded": "همه گزاره‌ها بارگیری شدند",
   "Re-cluster from scratch": "خوشه‌بندی مجدد از ابتدا",
   "Cleared": "پاک شد",
-  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "خوشه‌بندی مجدد از ابتدا؟ این کار تمام خوشه‌های فعلی این پرسش را منحل می‌کند (و گزینه‌های اصلی را بازمی‌گرداند) و آنها را بازسازی می‌کند. اگر خوشه‌ها نادرست به‌نظر می‌رسند از این استفاده کنید."
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "خوشه‌بندی مجدد از ابتدا؟ این کار تمام خوشه‌های فعلی این پرسش را منحل می‌کند (و گزینه‌های اصلی را بازمی‌گرداند) و آنها را بازسازی می‌کند. اگر خوشه‌ها نادرست به‌نظر می‌رسند از این استفاده کنید.",
+  "from": "از",
+  "left ungrouped": "گروه‌بندی‌نشده",
+  "Grouping threshold": "آستانه گروه‌بندی",
+  "Global cluster (one pass)": "خوشه‌بندی سراسری (یک گذر)",
+  "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "خوشه‌بندی سراسری از ابتدا؟ این کار همه خوشه‌های فعلی را منحل می‌کند و همه گزینه‌ها را در یک گذر دوباره گروه‌بندی می‌کند. بهتر است پس از embedding مجدد انجام شود. برای آشکار کردن موضوع‌هایی که اجرای عادی از دست می‌دهد استفاده کنید.",
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "همه گزینه‌ها را در یک گذر گروه‌بندی می‌کند — آستانه پایین‌تر = موضوع‌های گسترده‌تر، بالاتر = تکراری‌های نزدیک‌تر. برای بهترین نتیجه ابتدا دوباره embedding کنید."
 }

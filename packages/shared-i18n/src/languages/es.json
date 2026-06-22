@@ -2687,5 +2687,11 @@
   "All statements loaded": "Todas las declaraciones cargadas",
   "Re-cluster from scratch": "Reagrupar desde cero",
   "Cleared": "Eliminados",
-  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "¿Reagrupar desde cero? Esto disuelve todos los grupos actuales de esta pregunta (restaurando las opciones originales) y los reconstruye. Úsalo si los grupos parecen incorrectos."
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "¿Reagrupar desde cero? Esto disuelve todos los grupos actuales de esta pregunta (restaurando las opciones originales) y los reconstruye. Úsalo si los grupos parecen incorrectos.",
+  "from": "de",
+  "left ungrouped": "sin agrupar",
+  "Grouping threshold": "Umbral de agrupación",
+  "Global cluster (one pass)": "Agrupación global (una pasada)",
+  "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "¿Agrupar globalmente desde cero? Esto disuelve todos los grupos actuales y reagrupa todas las opciones en una sola pasada. Mejor después de regenerar los embeddings. Úsalo para revelar temas que la ejecución normal no detecta.",
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Agrupa todas las opciones en una sola pasada: umbral más bajo = temas más amplios, más alto = casi duplicados más estrictos. Regenera los embeddings primero para mejores resultados."
 }

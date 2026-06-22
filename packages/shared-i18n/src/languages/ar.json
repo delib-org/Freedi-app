@@ -2810,5 +2810,11 @@
   "All statements loaded": "تم تحميل جميع العبارات",
   "Re-cluster from scratch": "إعادة التجميع من الصفر",
   "Cleared": "تم المسح",
-  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "إعادة التجميع من الصفر؟ سيؤدي هذا إلى حلّ جميع التجميعات الحالية لهذا السؤال (واستعادة الخيارات الأصلية) وإعادة بنائها. استخدم هذا إذا بدت التجميعات خاطئة."
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "إعادة التجميع من الصفر؟ سيؤدي هذا إلى حلّ جميع التجميعات الحالية لهذا السؤال (واستعادة الخيارات الأصلية) وإعادة بنائها. استخدم هذا إذا بدت التجميعات خاطئة.",
+  "from": "من",
+  "left ungrouped": "غير مجمّعة",
+  "Grouping threshold": "عتبة التجميع",
+  "Global cluster (one pass)": "تجميع شامل (تمريرة واحدة)",
+  "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "تجميع شامل من البداية؟ هذا يفكك كل التجمّعات الحالية ويعيد تجميع كل الخيارات في تمريرة واحدة. يُفضّل بعد إعادة التضمين. استخدمه لإظهار المواضيع التي يفوتها التشغيل العادي.",
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "يجمّع كل خيار في تمريرة واحدة — عتبة أقل = مواضيع أوسع، عتبة أعلى = تكرارات أقرب. أعد التضمين أولاً للحصول على أفضل النتائج."
 }

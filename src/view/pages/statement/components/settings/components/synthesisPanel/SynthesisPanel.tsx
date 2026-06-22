@@ -7,6 +7,7 @@ import {
 	synthesisCancel,
 	synthesisPause,
 	synthesisResume,
+	triggerGlobalCluster,
 	triggerReCluster,
 	triggerRejudgeGrayBand,
 	triggerSynthesizeNow,
@@ -152,6 +153,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 	const [toast, setToast] = useState<ToastState | null>(null);
 	const [dirty, setDirty] = useState(false);
 	const [advancedOpen, setAdvancedOpen] = useState(false);
+	const [globalThreshold, setGlobalThreshold] = useState(0.55);
 
 	useEffect(() => {
 		const unsub = listenSynthesisProgress(statement.statementId, setProgress);
@@ -282,6 +284,24 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 			setToast({
 				tone: 'info',
 				message: `${t('Cleared')} ${result.clustersReversed} ${t('clusters')} · ${t('Queued')} ${result.enqueued} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+			});
+		}
+	}
+
+	async function handleGlobalCluster(): Promise<void> {
+		const confirmed = window.confirm(
+			t(
+				'Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.',
+			),
+		);
+		if (!confirmed) return;
+		const result = await withBusy('globalCluster', () =>
+			triggerGlobalCluster(statement.statementId, globalThreshold),
+		);
+		if (result) {
+			setToast({
+				tone: 'info',
+				message: `${t('Created')} ${result.clustersCreated} ${t('clusters')} ${t('from')} ${result.eligibleOptions} ${t('options')} · ${result.singletons} ${t('left ungrouped')}`,
 			});
 		}
 	}
@@ -602,6 +622,34 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							disabled={isRunning || busyOp !== null || dirty}
 						/>
 					</div>
+
+					<div className={styles.globalClusterRow}>
+						<label className={styles.globalClusterRow__label} htmlFor="global-threshold">
+							<span>{t('Grouping threshold')}</span>
+							<input
+								id="global-threshold"
+								type="range"
+								min={0.3}
+								max={0.9}
+								step={0.05}
+								value={globalThreshold}
+								onChange={(e) => setGlobalThreshold(Number(e.target.value))}
+								disabled={isRunning || busyOp !== null || dirty}
+							/>
+							<span className={styles.globalClusterRow__value}>{globalThreshold.toFixed(2)}</span>
+						</label>
+						<Button
+							text={t('Global cluster (one pass)')}
+							variant="secondary"
+							onClick={handleGlobalCluster}
+							disabled={isRunning || busyOp !== null || dirty}
+						/>
+					</div>
+					<p className={styles.card__subtitle}>
+						{t(
+							'Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.',
+						)}
+					</p>
 
 					<hr className={styles.onDemandCard__divider} />
 

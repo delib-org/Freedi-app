@@ -2687,5 +2687,11 @@
   "All statements loaded": "Alle stellingen geladen",
   "Re-cluster from scratch": "Opnieuw clusteren vanaf nul",
   "Cleared": "Gewist",
-  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "Opnieuw clusteren vanaf nul? Dit ontbindt alle huidige clusters van deze vraag (en herstelt de oorspronkelijke opties) en bouwt ze opnieuw op. Gebruik dit als de clusters er verkeerd uitzien."
+  "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "Opnieuw clusteren vanaf nul? Dit ontbindt alle huidige clusters van deze vraag (en herstelt de oorspronkelijke opties) en bouwt ze opnieuw op. Gebruik dit als de clusters er verkeerd uitzien.",
+  "from": "van",
+  "left ungrouped": "niet gegroepeerd",
+  "Grouping threshold": "Groeperingsdrempel",
+  "Global cluster (one pass)": "Globaal clusteren (één keer)",
+  "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "Globaal clusteren vanaf nul? Dit ontbindt alle huidige clusters en hergroepeert alle opties in één keer. Het beste na opnieuw embedden. Gebruik dit om themas te onthullen die de normale run mist.",
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Groepeert elke optie in één keer — lagere drempel = bredere themas, hogere = striktere bijna-duplicaten. Embed eerst opnieuw voor de beste resultaten."
 }
