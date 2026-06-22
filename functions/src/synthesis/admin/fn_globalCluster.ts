@@ -7,6 +7,8 @@ import { ALLOWED_ORIGINS } from '../../config/cors';
 import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { dissolveQuestionSynthesis } from '../derivedDocs';
 import { cosineSimilarity } from '../bulkCluster';
+import { refineComponent } from '../completeLinkage';
+import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
 import { embeddingCache } from '../../services/embedding-cache-service';
 import {
 	generateTopicLabel,
@@ -33,12 +35,15 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
  * EVERY pair in a group to clear the threshold, so it cannot chain: it yields
  * tight, coherent groups at exactly the thresholds the admin configures.
  *
- * Two passes, using the panel's own thresholds:
- *   1. at `attachThreshold` (the "Synth (near-duplicate)" line) → SYNTH groups
- *      (one merged proposal; falls back to a topic label if the LLM refuses to
- *      merge across directions), then
- *   2. on whatever is left, at `clusterThreshold` (the "Topic cluster" line) →
- *      TOPIC clusters (named themes).
+ * Two tiers, using the panel's own thresholds:
+ *   1. SYNTH: cosine complete-linkage at `attachThreshold` (the "Synth
+ *      (near-duplicate)" line) forms candidate groups, then an LLM equivalence
+ *      judge (`refineComponent`) splits each into verified-"same" cliques —
+ *      cosine alone can't tell "absorb families" from "absorb RELIGIOUS
+ *      families" (both ~0.93), the judge can. Surviving cliques become synths.
+ *   2. TOPIC: whatever is left (cosine-singletons + judge-peeled members) is
+ *      grouped at `clusterThreshold` (the "Topic cluster" line) into named
+ *      themes — no equivalence judge, since topics are related-but-distinct.
  * Options in neither stay standalone.
  *
  * Synchronous: complete-linkage is O(n^3); fine for the typical tens-to-low-
@@ -192,10 +197,49 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 			})
 			.filter((x): x is Item => x !== null);
 
-		// 3. Two complete-linkage passes: synths first (tight), then topics on the
-		//    leftovers. Both at the admin's configured thresholds.
-		const synthPass = completeLinkageGroups(items, settings.attachThreshold);
-		const topicPass = completeLinkageGroups(synthPass.singletons, settings.clusterThreshold);
+		// 3. SYNTH tier — two stages so synths are tight AND semantically true:
+		//    (a) cosine complete-linkage at attachThreshold forms cheap candidate
+		//        groups, then (b) an LLM equivalence judge (refineComponent) splits
+		//        each candidate into verified-"same" cliques. Cosine alone can't tell
+		//        "absorb families" from "absorb RELIGIOUS families" (both ~0.93); the
+		//        judge peels the non-matching member out. Only cliques of ≥2 survive
+		//        as synths; everything the judge peels off falls through to topics.
+		const itemById = new Map(items.map((it) => [it.id, it]));
+		const texts = new Map(items.map((it) => [it.id, it.statement.statement || '']));
+		const synthCandidates = completeLinkageGroups(items, settings.attachThreshold);
+
+		const judgeLimit = pLimit(MAX_CONCURRENT_GROUPS);
+		const refined = await Promise.all(
+			synthCandidates.groups.map((g) =>
+				judgeLimit(() =>
+					refineComponent(
+						{ memberIds: g.map((m) => m.id), texts, verdicts: new Map() },
+						judgeSemanticEquivalenceCached,
+					),
+				),
+			),
+		);
+
+		const verifiedSynthGroups: Item[][] = [];
+		const consumed = new Set<string>();
+		for (const res of refined) {
+			for (const clique of res.cliques) {
+				const group = clique
+					.map((id) => itemById.get(id))
+					.filter((x): x is Item => x !== undefined);
+				if (group.length >= 2) {
+					verifiedSynthGroups.push(group);
+					clique.forEach((id) => consumed.add(id));
+				}
+			}
+		}
+
+		// 4. TOPIC tier — group everything NOT in a verified synth (cosine-singletons
+		//    plus judge-peeled members) at clusterThreshold. No equivalence judge
+		//    here: topics intentionally group related-but-DISTINCT ideas, so a
+		//    "same" check would reject them all.
+		const remainingItems = items.filter((it) => !consumed.has(it.id));
+		const topicPass = completeLinkageGroups(remainingItems, settings.clusterThreshold);
 
 		const questionContext = question.statement || questionId;
 		const adminDoc = await db().collection('usersV2').doc(uid).get();
@@ -278,17 +322,17 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 			}
 		};
 
-		// 4. Build all groups concurrently (capped).
+		// 5. Build all groups concurrently (capped).
 		const limit = pLimit(MAX_CONCURRENT_GROUPS);
 		const jobs = [
-			...synthPass.groups.map((g) => () => integrate(g, 'synthesis')),
+			...verifiedSynthGroups.map((g) => () => integrate(g, 'synthesis')),
 			...topicPass.groups.map((g) => () => integrate(g, 'topic-cluster')),
 		];
 		const created = (await Promise.all(jobs.map((job) => limit(job)))).filter(
 			(c): c is { id: string; kind: 'synthesis' | 'topic-cluster' } => c !== null,
 		);
 
-		// 5. Re-aggregate each new cluster's evaluation from its members.
+		// 6. Re-aggregate each new cluster's evaluation from its members.
 		const finalizeLimit = pLimit(MAX_CONCURRENT_GROUPS);
 		await Promise.all(
 			created.map((c) =>
