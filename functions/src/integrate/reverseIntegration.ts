@@ -4,28 +4,37 @@ import { logger } from 'firebase-functions';
 
 /**
  * Reverses an integration / synthesis operation, restoring the original
- * statements and soft-deleting the cluster. Mirrors `performIntegration`
+ * statements and removing the cluster. Mirrors `performIntegration`
  * by undoing each side effect:
  *
  *   1. Originals: clear `hide` and `integratedInto` so they re-appear in
  *      the parent's options list with their pre-merge evaluation intact.
- *   2. Cluster: marked `hide: true` and stamped with `reversedAt` /
- *      `reversedBy`. We keep `integratedOptions` and `derivedByPipeline`
- *      for audit — the cluster doc remains queryable, just hidden from
- *      participants.
+ *   2. Cluster: either hard-deleted (`deleteCluster: true`) or soft-hidden
+ *      (`hide: true` + `reversedAt` / `reversedBy`). Soft-hide keeps
+ *      `integratedOptions` and `derivedByPipeline` on the doc for audit and
+ *      keeps the action undoable; hard-delete removes the doc entirely so a
+ *      stale cluster disappears from EVERY view (including the tree view,
+ *      which does not filter `hide`).
  *   3. Migrated evaluations on the cluster (those carrying `migratedAt`)
  *      are deleted so the original-evaluation totals on the parent are
  *      not double-counted by `updateParentTotalEvaluators`.
  *
- * The cluster's own consensus / evaluation aggregations are kept on the
- * doc but the cluster is hidden, so consumers who filter `!hide` will
- * stop showing it. Callers can re-run synthesis to rebuild it.
+ * Soft-hide keeps the cluster's own consensus / evaluation aggregations on
+ * the doc; consumers who filter `!hide` stop showing it. Callers can re-run
+ * synthesis to rebuild it.
  *
  * Caller is responsible for authentication and authorization.
  */
 export interface ReverseIntegrationInput {
 	clusterStatementId: string;
 	reversedByUserId: string;
+	/**
+	 * When true, hard-delete the cluster document instead of soft-hiding it.
+	 * Used by the re-cluster cleanup so stale clusters leave Firestore entirely
+	 * (the tree view renders hidden docs, so hiding alone leaves ghosts). The
+	 * manual single-cluster reverse defaults to false so it stays undoable.
+	 */
+	deleteCluster?: boolean;
 }
 
 export interface ReverseIntegrationResult {
@@ -38,7 +47,7 @@ export interface ReverseIntegrationResult {
 export async function reverseIntegration(
 	input: ReverseIntegrationInput,
 ): Promise<ReverseIntegrationResult> {
-	const { clusterStatementId, reversedByUserId } = input;
+	const { clusterStatementId, reversedByUserId, deleteCluster = false } = input;
 
 	if (!clusterStatementId) {
 		throw new Error('reverseIntegration: clusterStatementId is required');
@@ -119,17 +128,21 @@ export async function reverseIntegration(
 		}
 	}
 
-	// 3. Soft-delete the cluster — hide it but keep audit fields. Consumers
-	//    that filter `!hide` (which includes `getOptionsUsingMethod` and the
-	//    suggestions list) will stop showing it. The full audit trail
-	//    (integratedOptions, derivedByPipeline, original evaluation) is
-	//    preserved on the doc for forensics.
-	await clusterRef.update({
-		hide: true,
-		reversedAt: now,
-		reversedBy: reversedByUserId,
-		lastUpdate: now,
-	});
+	// 3. Remove the cluster. Re-cluster cleanup hard-deletes so the stale doc
+	//    leaves Firestore entirely (the tree view renders hidden docs, so a
+	//    soft-hide would leave a ghost node). The manual single-cluster reverse
+	//    soft-hides instead, keeping the full audit trail (integratedOptions,
+	//    derivedByPipeline, original evaluation) so the action stays undoable.
+	if (deleteCluster) {
+		await clusterRef.delete();
+	} else {
+		await clusterRef.update({
+			hide: true,
+			reversedAt: now,
+			reversedBy: reversedByUserId,
+			lastUpdate: now,
+		});
+	}
 
 	// 4. Bump parent so client subscriptions invalidate caches.
 	if (parentStatementId) {

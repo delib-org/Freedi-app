@@ -15,9 +15,10 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
  * Unlike `synthesizeNow` (which skips options already in a cluster and piles
  * new synths on top of old ones), this first DISSOLVES every existing synth /
  * topic-cluster under the question via `dissolveQuestionSynthesis` — reversing
- * proper clusters (un-hiding members, undoing migrated evaluations), archiving
- * malformed/legacy derived docs, and restoring orphaned hidden options. It then
- * enqueues every eligible option for a fresh clustering pass.
+ * proper clusters (un-hiding members, undoing migrated evaluations, deleting the
+ * cluster doc), deleting malformed/legacy derived docs, and restoring orphaned
+ * hidden options. It then enqueues every eligible option for a fresh clustering
+ * pass.
  *
  * This is the recovery path for questions whose clusters drifted (over-merged,
  * stale fallback titles, overlapping membership). The dissolve is synchronous;

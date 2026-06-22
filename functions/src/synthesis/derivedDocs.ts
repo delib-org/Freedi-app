@@ -47,11 +47,11 @@ export function isDerived(statement: Statement): boolean {
 }
 
 export interface DissolveResult {
-	/** Proper clusters reversed via `reverseIntegration` (members restored, evals handled). */
+	/** Proper clusters reversed via `reverseIntegration` (members restored, evals handled, cluster deleted). */
 	clustersReversed: number;
-	/** Malformed/legacy derived docs archived (hidden) because they aren't reversible clusters. */
+	/** Malformed/legacy derived docs deleted because they aren't reversible clusters. */
 	docsArchived: number;
-	/** Member options re-shown after archiving a malformed derived doc. */
+	/** Member options re-shown after deleting a malformed derived doc. */
 	membersRestored: number;
 	/** Real options that were hidden with no `integratedInto` (orphaned) and got re-shown. */
 	orphansRestored: number;
@@ -69,9 +69,9 @@ export interface DissolveOptions {
  * pristine, visible state — the clean step that makes a bulk re-run idempotent.
  *
  *  1. Proper clusters (`isCluster && integratedOptions`) → `reverseIntegration`
- *     (un-hides members, soft-deletes the cluster, undoes migrated evaluations).
+ *     (un-hides members, hard-deletes the cluster, undoes migrated evaluations).
  *  2. Malformed/legacy derived docs (caught by `isDerived` but not a clean
- *     cluster: untagged, 0-member topic headers) → hidden + their members,
+ *     cluster: untagged, 0-member topic headers) → deleted + their members,
  *     if any, re-shown.
  *  3. Orphaned hidden options (real options hidden with no `integratedInto`) →
  *     re-shown.
@@ -120,9 +120,15 @@ export async function dissolveQuestionSynthesis(
 	}
 
 	// 1. Reverse proper clusters (handles member restore + evaluation migration).
+	//    Hard-delete the cluster doc — re-cluster wants a clean slate, and a
+	//    soft-hide would leave ghost nodes in the tree view (which ignores `hide`).
 	for (const cluster of properClusters) {
 		try {
-			await reverseIntegration({ clusterStatementId: cluster.statementId, reversedByUserId });
+			await reverseIntegration({
+				clusterStatementId: cluster.statementId,
+				reversedByUserId,
+				deleteCluster: true,
+			});
 			result.clustersReversed++;
 		} catch (error) {
 			logger.warn('dissolveQuestionSynthesis: reverseIntegration failed; archiving instead', {
@@ -134,14 +140,16 @@ export async function dissolveQuestionSynthesis(
 		}
 	}
 
-	// 2. Archive malformed/legacy derived docs and re-show their members.
+	// 2. Delete malformed/legacy derived docs and re-show their members. We
+	//    hard-delete (not hide) so stale headers leave Firestore entirely and
+	//    cannot resurface in the tree view, which does not filter `hide`.
 	const realById = new Map(realOptions.map((d) => [d.statementId, d]));
 	for (let i = 0; i < malformedDerived.length; i += 400) {
 		const batch = db.batch();
 		const slice = malformedDerived.slice(i, i + 400);
 		for (const doc of slice) {
 			const ref = db.collection(Collections.statements).doc(doc.statementId);
-			batch.update(ref, { hide: true, archivedBySynthesisCleanup: true, lastUpdate: now });
+			batch.delete(ref);
 			for (const memberId of doc.integratedOptions ?? []) {
 				const member = realById.get(memberId);
 				if (member && member.hide === true) {
