@@ -76,7 +76,7 @@ interface GlobalClusterResponse {
 	topicsCreated: number;
 	singletons: number;
 	clusterThreshold: number;
-	synthLowerBound: number;
+	synthThreshold: number;
 }
 
 /**

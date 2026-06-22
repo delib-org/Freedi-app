@@ -32,8 +32,8 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
  *   - group options into components at `clusterThreshold` (the topic floor),
  *     using cosine edges + connected components (NOT UMAP→DBSCAN, which blobs —
  *     see `candidateClusters.ts`),
- *   - a tight component (mean member→centroid cosine ≥ `synthLowerBound`)
- *     becomes a SYNTH (one merged proposal), and
+ *   - a tight component (mean member→centroid cosine ≥ `attachThreshold`, the
+ *     "Synth (near-duplicate)" line in the panel) becomes a SYNTH, and
  *   - a looser component becomes a TOPIC cluster (a named theme).
  *
  * So the global pass produces the same synth/topic split as the live pipeline,
@@ -58,7 +58,7 @@ interface GlobalClusterResponse {
 	topicsCreated: number;
 	singletons: number;
 	clusterThreshold: number;
-	synthLowerBound: number;
+	synthThreshold: number;
 }
 
 const MAX_CONCURRENT_GROUPS = 5;
@@ -144,7 +144,10 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 						.map((m) => embeddings.get(m.statementId))
 						.filter((v): v is number[] => Array.isArray(v) && v.length > 0);
 					const cohesion = vectors.length >= 2 ? groupCohesion(vectors) : 0;
-					const wantSynth = cohesion >= settings.synthLowerBound;
+					// Promote to a synth when the group is at least as tight as the
+					// "Synth (near-duplicate)" threshold the admin sets in the panel
+					// (attachThreshold); otherwise it's a topic cluster.
+					const wantSynth = cohesion >= settings.attachThreshold;
 
 					try {
 						let title: string;
@@ -233,7 +236,7 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 			topicsCreated: created.filter((c) => c.kind === 'topic-cluster').length,
 			singletons: singletonCount,
 			clusterThreshold: settings.clusterThreshold,
-			synthLowerBound: settings.synthLowerBound,
+			synthThreshold: settings.attachThreshold,
 		};
 		logger.info('globalCluster.complete', { questionId, uid, ...response });
 
