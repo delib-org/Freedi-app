@@ -3444,5 +3444,8 @@
   "Grouping threshold": "סף קיבוץ",
   "Global cluster (one pass)": "קיבוץ גלובלי (מעבר אחד)",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "לבצע קיבוץ גלובלי מאפס? פעולה זו מפרקת את כל האשכולות הנוכחיים ומקבצת מחדש את כל ההצעות במעבר אחד. מומלץ לאחר יצירת embeddings מחדש. השתמשו בכך כדי לחשוף נושאים שהריצה הרגילה מפספסת.",
-  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "מקבץ כל הצעה במעבר אחד — סף נמוך = נושאים רחבים יותר, סף גבוה = כפילויות קרובות יותר. כדאי ליצור embeddings מחדש קודם לתוצאות טובות."
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "מקבץ כל הצעה במעבר אחד — סף נמוך = נושאים רחבים יותר, סף גבוה = כפילויות קרובות יותר. כדאי ליצור embeddings מחדש קודם לתוצאות טובות.",
+  "Re-embed options": "יצירת embeddings מחדש",
+  "Re-embedded": "נוצרו embeddings מחדש עבור",
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "ליצור embeddings מחדש לכל ההצעות? פעולה זו מחדשת את ה-embedding של כל הצעה מתוך התמצית שלה. הריצו זאת פעם אחת לפני קיבוץ כדי שהוקטורים יהיו עקביים. עשוי לקחת כדקה."
 }

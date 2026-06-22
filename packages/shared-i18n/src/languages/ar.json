@@ -2816,5 +2816,8 @@
   "Grouping threshold": "عتبة التجميع",
   "Global cluster (one pass)": "تجميع شامل (تمريرة واحدة)",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "تجميع شامل من البداية؟ هذا يفكك كل التجمّعات الحالية ويعيد تجميع كل الخيارات في تمريرة واحدة. يُفضّل بعد إعادة التضمين. استخدمه لإظهار المواضيع التي يفوتها التشغيل العادي.",
-  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "يجمّع كل خيار في تمريرة واحدة — عتبة أقل = مواضيع أوسع، عتبة أعلى = تكرارات أقرب. أعد التضمين أولاً للحصول على أفضل النتائج."
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "يجمّع كل خيار في تمريرة واحدة — عتبة أقل = مواضيع أوسع، عتبة أعلى = تكرارات أقرب. أعد التضمين أولاً للحصول على أفضل النتائج.",
+  "Re-embed options": "إعادة تضمين الخيارات",
+  "Re-embedded": "أُعيد تضمين",
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "إعادة تضمين كل الخيارات؟ يعيد هذا توليد تضمين كل خيار من خلاصته المقطّرة. شغّله مرة واحدة قبل التجميع لتكون المتجهات متسقة. قد يستغرق دقيقة."
 }

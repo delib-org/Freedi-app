@@ -3216,5 +3216,8 @@
   "Grouping threshold": "آستانه گروه‌بندی",
   "Global cluster (one pass)": "خوشه‌بندی سراسری (یک گذر)",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "خوشه‌بندی سراسری از ابتدا؟ این کار همه خوشه‌های فعلی را منحل می‌کند و همه گزینه‌ها را در یک گذر دوباره گروه‌بندی می‌کند. بهتر است پس از embedding مجدد انجام شود. برای آشکار کردن موضوع‌هایی که اجرای عادی از دست می‌دهد استفاده کنید.",
-  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "همه گزینه‌ها را در یک گذر گروه‌بندی می‌کند — آستانه پایین‌تر = موضوع‌های گسترده‌تر، بالاتر = تکراری‌های نزدیک‌تر. برای بهترین نتیجه ابتدا دوباره embedding کنید."
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "همه گزینه‌ها را در یک گذر گروه‌بندی می‌کند — آستانه پایین‌تر = موضوع‌های گسترده‌تر، بالاتر = تکراری‌های نزدیک‌تر. برای بهترین نتیجه ابتدا دوباره embedding کنید.",
+  "Re-embed options": "embedding مجدد گزینه‌ها",
+  "Re-embedded": "embedding مجدد شد:",
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "همه گزینه‌ها دوباره embedding شوند؟ این کار embedding هر گزینه را از چکیده آن بازتولید می‌کند. یک بار پیش از خوشه‌بندی اجرا کنید تا بردارها سازگار باشند. ممکن است یک دقیقه طول بکشد."
 }

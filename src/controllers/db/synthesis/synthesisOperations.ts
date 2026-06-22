@@ -108,6 +108,31 @@ export async function triggerGlobalCluster(
 	}
 }
 
+interface ReEmbedResponse {
+	total: number;
+	embedded: number;
+	skipped: number;
+	failed: number;
+}
+
+/**
+ * Regenerate every option's embedding under the question (gist-based), so a
+ * subsequent re-cluster / global-cluster run compares consistent vectors.
+ * Run this once after enabling gist embeddings before clustering.
+ */
+export async function triggerReEmbed(questionId: string): Promise<ReEmbedResponse> {
+	try {
+		const call = httpsCallable<QuestionOnlyRequest, ReEmbedResponse>(functions, 'reEmbedQuestion');
+		const result = await call({ questionId });
+		logger.info('Re-embed complete', { questionId, ...result.data });
+
+		return result.data;
+	} catch (error) {
+		logError(error, { operation: 'synthesis.triggerReEmbed', statementId: questionId });
+		throw error;
+	}
+}
+
 interface SynthesizeSelectedRequest {
 	questionId: string;
 	optionIds: string[];

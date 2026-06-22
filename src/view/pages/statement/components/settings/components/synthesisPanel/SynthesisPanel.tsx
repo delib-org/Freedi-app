@@ -9,6 +9,7 @@ import {
 	synthesisResume,
 	triggerGlobalCluster,
 	triggerReCluster,
+	triggerReEmbed,
 	triggerRejudgeGrayBand,
 	triggerSynthesizeNow,
 } from '@/controllers/db/synthesis/synthesisOperations';
@@ -302,6 +303,22 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 			setToast({
 				tone: 'info',
 				message: `${t('Created')} ${result.clustersCreated} ${t('clusters')} ${t('from')} ${result.eligibleOptions} ${t('options')} · ${result.singletons} ${t('left ungrouped')}`,
+			});
+		}
+	}
+
+	async function handleReEmbed(): Promise<void> {
+		const confirmed = window.confirm(
+			t(
+				'Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.',
+			),
+		);
+		if (!confirmed) return;
+		const result = await withBusy('reembed', () => triggerReEmbed(statement.statementId));
+		if (result) {
+			setToast({
+				tone: 'info',
+				message: `${t('Re-embedded')} ${result.embedded} / ${result.total} ${t('options')}${result.failed ? ` · ${result.failed} ${t('failed')}` : ''}`,
 			});
 		}
 	}
@@ -619,6 +636,15 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							text={t('Re-cluster from scratch')}
 							variant="secondary"
 							onClick={handleReCluster}
+							disabled={isRunning || busyOp !== null || dirty}
+						/>
+					</div>
+
+					<div className={styles.onDemandActions}>
+						<Button
+							text={t('Re-embed options')}
+							variant="secondary"
+							onClick={handleReEmbed}
 							disabled={isRunning || busyOp !== null || dirty}
 						/>
 					</div>

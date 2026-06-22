@@ -2693,5 +2693,8 @@
   "Grouping threshold": "Gruppierungsschwelle",
   "Global cluster (one pass)": "Globale Clusterung (ein Durchlauf)",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "Globale Clusterung von Grund auf? Dies löst alle aktuellen Cluster auf und gruppiert alle Optionen in einem Durchlauf neu. Am besten nach erneutem Embedding. Damit lassen sich Themen aufdecken, die der normale Lauf übersieht.",
-  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Gruppiert alle Optionen in einem Durchlauf – niedrigere Schwelle = breitere Themen, höhere = engere Beinahe-Duplikate. Für beste Ergebnisse zuerst neu einbetten."
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Gruppiert alle Optionen in einem Durchlauf – niedrigere Schwelle = breitere Themen, höhere = engere Beinahe-Duplikate. Für beste Ergebnisse zuerst neu einbetten.",
+  "Re-embed options": "Optionen neu einbetten",
+  "Re-embedded": "Neu eingebettet:",
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "Alle Optionen neu einbetten? Dies erzeugt das Embedding jeder Option aus ihrer destillierten Kurzfassung neu. Einmal vor dem Clustern ausführen, damit die Vektoren konsistent sind. Kann eine Minute dauern."
 }

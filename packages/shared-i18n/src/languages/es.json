@@ -2693,5 +2693,8 @@
   "Grouping threshold": "Umbral de agrupación",
   "Global cluster (one pass)": "Agrupación global (una pasada)",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "¿Agrupar globalmente desde cero? Esto disuelve todos los grupos actuales y reagrupa todas las opciones en una sola pasada. Mejor después de regenerar los embeddings. Úsalo para revelar temas que la ejecución normal no detecta.",
-  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Agrupa todas las opciones en una sola pasada: umbral más bajo = temas más amplios, más alto = casi duplicados más estrictos. Regenera los embeddings primero para mejores resultados."
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Agrupa todas las opciones en una sola pasada: umbral más bajo = temas más amplios, más alto = casi duplicados más estrictos. Regenera los embeddings primero para mejores resultados.",
+  "Re-embed options": "Regenerar embeddings",
+  "Re-embedded": "Embeddings regenerados:",
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "¿Regenerar los embeddings de todas las opciones? Esto regenera el embedding de cada opción a partir de su resumen destilado. Ejecútalo una vez antes de agrupar para que los vectores sean consistentes. Puede tardar un minuto."
 }

@@ -2693,5 +2693,8 @@
   "Grouping threshold": "Groeperingsdrempel",
   "Global cluster (one pass)": "Globaal clusteren (één keer)",
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass. Best after re-embedding. Use this to surface themes the normal run misses.": "Globaal clusteren vanaf nul? Dit ontbindt alle huidige clusters en hergroepeert alle opties in één keer. Het beste na opnieuw embedden. Gebruik dit om themas te onthullen die de normale run mist.",
-  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Groepeert elke optie in één keer — lagere drempel = bredere themas, hogere = striktere bijna-duplicaten. Embed eerst opnieuw voor de beste resultaten."
+  "Groups every option in a single pass — lower threshold = broader themes, higher = tighter near-duplicates. Re-embed first for best results.": "Groepeert elke optie in één keer — lagere drempel = bredere themas, hogere = striktere bijna-duplicaten. Embed eerst opnieuw voor de beste resultaten.",
+  "Re-embed options": "Opties opnieuw embedden",
+  "Re-embedded": "Opnieuw geëmbed:",
+  "Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.": "Alle opties opnieuw embedden? Dit genereert de embedding van elke optie opnieuw uit de gedistilleerde kern. Voer dit één keer uit vóór het clusteren zodat de vectoren consistent zijn. Kan een minuut duren."
 }
