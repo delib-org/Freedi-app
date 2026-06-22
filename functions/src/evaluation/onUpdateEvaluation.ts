@@ -11,7 +11,7 @@ import { DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
 import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
-import { ActionTypes, isEventAlreadyProcessed, markEventAsProcessed } from './evaluationTypes';
+import { ActionTypes } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
@@ -30,14 +30,6 @@ export async function updateEvaluation(
 ): Promise<void> {
 	try {
 		const eventId = event.id;
-
-		// Check for duplicate event processing
-		if (isEventAlreadyProcessed(eventId)) {
-			logger.info(`Skipping duplicate update event ${eventId}`);
-
-			return;
-		}
-		markEventAsProcessed(eventId);
 
 		const before = event.data.before.data() as Evaluation;
 		const after = event.data.after.data() as Evaluation & { source?: string };
@@ -60,7 +52,7 @@ export async function updateEvaluation(
 			throw new Error('statementId is required');
 		}
 
-		const statement = await updateStatementEvaluation({
+		const { statement, duplicate } = await updateStatementEvaluation({
 			statementId: after.statementId,
 			evaluationDiff,
 			action: ActionTypes.update,
@@ -68,7 +60,15 @@ export async function updateEvaluation(
 			oldEvaluation: before.evaluation,
 			userId,
 			parentId: after.parentId,
+			eventId,
 		});
+
+		// Duplicate at-least-once delivery: increment already applied; skip side-effects.
+		if (duplicate) {
+			logger.info(`Skipping duplicate update event ${eventId}`);
+
+			return;
+		}
 
 		if (!statement) {
 			throw new Error('Failed to update statement');

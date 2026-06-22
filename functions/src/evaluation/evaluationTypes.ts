@@ -26,6 +26,23 @@ export interface UpdateStatementEvaluationProps {
 	oldEvaluation: number;
 	userId?: string;
 	parentId: string;
+	/**
+	 * Firestore trigger event id. Used as a durable, transaction-scoped
+	 * idempotency key so an at-least-once duplicate delivery cannot
+	 * double-apply the FieldValue.increment accumulation.
+	 */
+	eventId?: string;
+}
+
+export interface UpdateStatementEvaluationResult {
+	/** The updated statement, or undefined on error / when nothing was applied. */
+	statement?: Statement;
+	/**
+	 * True when this event was already processed (duplicate delivery) and the
+	 * increment was intentionally skipped. Callers should short-circuit their
+	 * remaining side-effects (e.g. history writes) when this is true.
+	 */
+	duplicate: boolean;
 }
 
 export interface CalcDiff {
@@ -42,35 +59,31 @@ export type StatementWithPopper = Statement & { popperHebbianScore?: PopperHebbi
 // IDEMPOTENCY TRACKING
 // ============================================================================
 
-// In-memory cache to track recently processed events (helps with immediate retries)
-// This is per-instance, so it's not perfect but catches most duplicates
-const processedEvents = new Map<string, number>();
-const EVENT_CACHE_TTL_MS = 60000; // 1 minute
+// Firebase delivers triggers at-least-once: the same evaluation write can fire
+// a handler more than once, sometimes on a different (cold) instance. Because
+// the accumulation uses FieldValue.increment, a duplicate delivery would
+// permanently inflate the counters. We therefore record a durable marker doc
+// keyed by the trigger event id and read/write it INSIDE the same transaction
+// that applies the increment — making the increment exactly-once per event.
 
-export function isEventAlreadyProcessed(eventId: string): boolean {
-	const processedAt = processedEvents.get(eventId);
-	if (processedAt) {
-		// Check if it's still within TTL
-		if (Date.now() - processedAt < EVENT_CACHE_TTL_MS) {
-			return true;
-		}
-		// Clean up expired entry
-		processedEvents.delete(eventId);
-	}
+/** Collection holding processed-event markers for evaluation idempotency. */
+export const PROCESSED_EVALUATION_EVENTS_COLLECTION = 'processedEvaluationEvents';
 
-	return false;
-}
+/**
+ * How long a processed-event marker is retained. Markers only need to outlive
+ * the window in which Firebase may re-deliver the same event (minutes), but we
+ * keep a generous buffer. A Firestore TTL policy on the `expireAt` field of the
+ * `processedEvaluationEvents` collection should be enabled to auto-purge them.
+ */
+export const PROCESSED_EVENT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-export function markEventAsProcessed(eventId: string): void {
-	processedEvents.set(eventId, Date.now());
-
-	// Periodic cleanup of old entries (every 100 entries)
-	if (processedEvents.size > 100) {
-		const now = Date.now();
-		for (const [key, timestamp] of processedEvents.entries()) {
-			if (now - timestamp > EVENT_CACHE_TTL_MS) {
-				processedEvents.delete(key);
-			}
-		}
-	}
+/**
+ * Builds a Firestore-safe document id for a processed-event marker.
+ *
+ * Document ids cannot contain '/', so any are replaced. The id is namespaced by
+ * action to avoid any cross-handler collision should a single underlying write
+ * ever surface the same event id to more than one handler.
+ */
+export function buildProcessedEventKey(action: ActionTypes, eventId: string): string {
+	return `${action}__${eventId}`.replace(/\//g, '_');
 }

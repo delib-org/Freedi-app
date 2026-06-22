@@ -7,7 +7,7 @@
  */
 
 import { logger } from 'firebase-functions/v1';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { number, parse } from 'valibot';
 import {
 	Collections,
@@ -22,7 +22,11 @@ import { db } from '../index';
 import { calculateConsensusValid } from '../helpers/consensusValidCalculator';
 import {
 	ActionTypes,
+	buildProcessedEventKey,
+	PROCESSED_EVALUATION_EVENTS_COLLECTION,
+	PROCESSED_EVENT_TTL_MS,
 	type UpdateStatementEvaluationProps,
+	type UpdateStatementEvaluationResult,
 	type StatementWithPopper,
 } from './evaluationTypes';
 import { calcDiffEvaluation, calcSquaredDiff, calculateEvaluation } from './agreementCalculation';
@@ -42,8 +46,8 @@ import { calcDiffEvaluation, calcSquaredDiff, calculateEvaluation } from './agre
  */
 export async function updateStatementEvaluation(
 	props: UpdateStatementEvaluationProps,
-): Promise<Statement | undefined> {
-	const { statementId, evaluationDiff, action, newEvaluation, oldEvaluation } = props;
+): Promise<UpdateStatementEvaluationResult> {
+	const { statementId, evaluationDiff, action, newEvaluation, oldEvaluation, eventId } = props;
 
 	try {
 		if (!statementId) {
@@ -67,24 +71,30 @@ export async function updateStatementEvaluation(
 			actualAddEvaluator = -1;
 		}
 
-		// Update statement evaluation
-		await updateStatementInTransaction(
+		// Update statement evaluation. The transaction skips the increment if this
+		// event was already processed (durable, atomic idempotency).
+		const { duplicate } = await updateStatementInTransaction(
 			statementId,
 			evaluationDiff,
 			actualAddEvaluator,
 			proConDiff,
 			squaredEvaluationDiff,
+			eventId ? buildProcessedEventKey(action, eventId) : undefined,
 		);
+
+		if (duplicate) {
+			return { duplicate: true };
+		}
 
 		// Return updated statement
 		const statementRef = db.collection(Collections.statements).doc(statementId);
 		const updatedStatement = await statementRef.get();
 
-		return updatedStatement.data() as Statement;
+		return { statement: updatedStatement.data() as Statement, duplicate: false };
 	} catch (error) {
 		logger.error('Error in updateStatementEvaluation:', error);
 
-		return undefined;
+		return { duplicate: false };
 	}
 }
 
@@ -175,9 +185,28 @@ async function updateStatementInTransaction(
 		conEvaluatorsDiff: number;
 	},
 	squaredEvaluationDiff: number,
-): Promise<void> {
-	await db.runTransaction(async (transaction) => {
+	processedEventKey?: string,
+): Promise<{ duplicate: boolean }> {
+	return db.runTransaction(async (transaction) => {
 		const statementRef = db.collection(Collections.statements).doc(statementId);
+
+		// Idempotency guard: read the processed-event marker BEFORE any write
+		// (Firestore requires all reads to precede writes in a transaction).
+		const markerRef = processedEventKey
+			? db.collection(PROCESSED_EVALUATION_EVENTS_COLLECTION).doc(processedEventKey)
+			: null;
+		if (markerRef) {
+			const markerDoc = await transaction.get(markerRef);
+			if (markerDoc.exists) {
+				logger.info('Skipping duplicate evaluation event (durable guard)', {
+					statementId,
+					processedEventKey,
+				});
+
+				return { duplicate: true };
+			}
+		}
+
 		const statementDoc = await transaction.get(statementRef);
 		const statementData = statementDoc.data();
 
@@ -199,7 +228,9 @@ async function updateStatementInTransaction(
 				statementId,
 			});
 
-			return;
+			// Not a duplicate — the aggregator still needs to run, so the caller
+			// must continue with its remaining (idempotent) side-effects.
+			return { duplicate: false };
 		}
 
 		// Check if this statement is missing averageEvaluation
@@ -305,5 +336,20 @@ async function updateStatementInTransaction(
 			// Safe: fn_statement_updates strips lastUpdate before change detection.
 			lastUpdate: Date.now(),
 		});
+
+		// Record the processed-event marker atomically with the increment so a
+		// re-delivery of this same event is detected and skipped above.
+		// `expireAt` is a Firestore Timestamp (not millis) because native TTL
+		// policies require a Timestamp field; enable a TTL policy on the
+		// `processedEvaluationEvents` collection's `expireAt` field to auto-purge.
+		if (markerRef) {
+			transaction.set(markerRef, {
+				statementId,
+				processedAt: Date.now(),
+				expireAt: Timestamp.fromMillis(Date.now() + PROCESSED_EVENT_TTL_MS),
+			});
+		}
+
+		return { duplicate: false };
 	});
 }

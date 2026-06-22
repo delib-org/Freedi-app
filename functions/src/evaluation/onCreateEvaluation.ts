@@ -11,7 +11,7 @@ import { DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
 import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
-import { ActionTypes, isEventAlreadyProcessed, markEventAsProcessed } from './evaluationTypes';
+import { ActionTypes } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { trackEvaluationEngagement } from '../engagement/credits/trackEngagement';
@@ -33,14 +33,6 @@ import {
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
 		const eventId = event.id;
-
-		// Check for duplicate event processing
-		if (isEventAlreadyProcessed(eventId)) {
-			logger.info(`Skipping duplicate event ${eventId} for evaluation ${event.data.id}`);
-
-			return;
-		}
-		markEventAsProcessed(eventId);
 
 		const evaluation = event.data.data() as Evaluation & { migratedAt?: number; source?: string };
 		const { statementId, parentId } = evaluation;
@@ -78,7 +70,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 
 		// Note: The evaluator count is now properly tracked in updateStatementEvaluation
 		// which handles the logic for when to actually increment the evaluator count
-		const statement = await updateStatementEvaluation({
+		const { statement, duplicate } = await updateStatementEvaluation({
 			statementId,
 			evaluationDiff: evaluation.evaluation,
 			addEvaluator: 0, // Will be calculated in updateStatementEvaluation
@@ -87,7 +79,17 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 			oldEvaluation: 0,
 			userId,
 			parentId,
+			eventId,
 		});
+
+		// Duplicate at-least-once delivery: the increment was already applied for
+		// this event. Skip all side-effects to avoid double-counting / duplicate
+		// history entries.
+		if (duplicate) {
+			logger.info(`Skipping duplicate create event ${eventId} for evaluation ${event.data.id}`);
+
+			return;
+		}
 
 		if (!statement) {
 			throw new Error('Failed to update statement');
