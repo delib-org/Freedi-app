@@ -245,6 +245,12 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 					description = label.description;
 				}
 
+				// Synth = a merged proposal that REPLACES its sources → hide them +
+				// migrate evals onto the synth. Topic = a grouping of VISIBLE options
+				// → keep members visible so the options-view selector nests them
+				// (a hidden topic member resolves to "No originals found"); the
+				// cluster's aggregate comes from recomputeClusterEvaluation.
+				const isSynth = derivedByPipeline === 'synthesis';
 				const result = await performIntegration({
 					parentStatementId: questionId,
 					selectedStatementIds: members.map((m) => m.id),
@@ -256,6 +262,8 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 					derivedByPipeline,
 					synthesisMechanism: 'bulk',
 					paragraphs,
+					hideMembers: isSynth,
+					migrateEvaluations: isSynth,
 				});
 
 				return { id: result.newStatementId, kind: derivedByPipeline };
