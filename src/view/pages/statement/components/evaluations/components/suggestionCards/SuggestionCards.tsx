@@ -23,6 +23,7 @@ import { useViewLayers } from '@/controllers/hooks/useViewLayers';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import styles from './SuggestionCards.module.scss';
 import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
+import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
 import { SectionDivider } from '@/view/components/atomic/molecules/SectionDivider';
 import { ViewLayersToggle } from '@/view/components/atomic/molecules/ViewLayersToggle';
 import {
@@ -235,6 +236,8 @@ const SuggestionCards: FC = () => {
 				hasUserOverride={hasUserOverride}
 				onReset={resetToDefault}
 			/>
+
+			<LoadAllBanner rootId={statement.statementId} mode="direct" />
 
 			{hasSynth && (
 				<>
