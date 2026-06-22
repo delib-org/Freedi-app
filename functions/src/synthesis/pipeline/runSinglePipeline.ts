@@ -187,9 +187,11 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 
 	if (!input.forceProcess) {
 		const evals = option.evaluation?.numberOfEvaluators ?? 0;
-		const cons = option.consensus ?? 0;
+		// Eligibility is evaluator-count only — consensus does NOT gate clustering.
+		// Grouping is about semantic similarity, not agreement; a controversial
+		// (low / negative consensus) option still belongs with its near-duplicates,
+		// it just ranks lower inside the group. (minConsensus retained as inert.)
 		if (evals < settings.minEvaluators) return skipped('below-min-evaluators', startedAt);
-		if (cons < settings.minConsensus) return skipped('below-min-consensus', startedAt);
 	}
 
 	const embedding =

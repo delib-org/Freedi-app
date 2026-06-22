@@ -97,8 +97,9 @@ export const reCluster = onCall<ReClusterRequest>(
 				continue;
 			}
 			const evals = option.evaluation?.numberOfEvaluators ?? 0;
-			const cons = option.consensus ?? 0;
-			if (evals < settings.minEvaluators || cons < settings.minConsensus) {
+			// Evaluator-count gate only — consensus does not gate clustering, so a
+			// downvoted option still clusters with its near-duplicates.
+			if (evals < settings.minEvaluators) {
 				skippedBelowThreshold++;
 				continue;
 			}
