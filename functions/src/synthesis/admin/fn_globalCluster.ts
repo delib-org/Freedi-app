@@ -6,7 +6,7 @@ import { Collections, StatementType, functionConfig, type Statement } from '@fre
 import { ALLOWED_ORIGINS } from '../../config/cors';
 import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { dissolveQuestionSynthesis } from '../derivedDocs';
-import { cosineSimilarity } from '../bulkCluster';
+import { cosineSimilarity, meanVector } from '../bulkCluster';
 import { refineComponent } from '../completeLinkage';
 import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
 import { embeddingCache } from '../../services/embedding-cache-service';
@@ -43,7 +43,9 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
  *      families" (both ~0.93), the judge can. Surviving cliques become synths.
  *   2. TOPIC: whatever is left (cosine-singletons + judge-peeled members) is
  *      grouped at `clusterThreshold` (the "Topic cluster" line) into named
- *      themes — no equivalence judge, since topics are related-but-distinct.
+ *      themes — no equivalence judge, since topics are related-but-distinct —
+ *      then a centroid-merge post-pass collapses near-identical topic clones
+ *      (complete-linkage shatters a dominant theme into several look-alikes).
  * Options in neither stay standalone.
  *
  * Synchronous: complete-linkage is O(n^3); fine for the typical tens-to-low-
@@ -71,10 +73,64 @@ const MAX_CONCURRENT_GROUPS = 5;
 /** Complete-linkage is O(n^3); guard against pathologically large questions. */
 const MAX_OPTIONS = 600;
 
+/**
+ * Topic clusters whose CENTROIDS are at least this similar are merged into one
+ * (env `GLOBAL_TOPIC_MERGE_THRESHOLD`, default 0.92). Complete-linkage shatters a
+ * dominant theme with no clean sub-structure into several internally-tight but
+ * near-identical clusters (observed: three "community development" topics at
+ * 0.95 centroid cosine). This post-pass collapses those clones while leaving
+ * genuinely-distinct topics (e.g. religious families, employment) separate.
+ *
+ * 0.92 is deliberately high: it's agglomerative (single-link on centroids), so a
+ * lower bar chains the whole "community" family into one blob (measured on a 61-
+ * option question: 0.90 → 46-member blob; 0.92 → a 32-member merged theme + 7
+ * distinct topics; 0.88 → everything). Raise toward 0.94 to merge less.
+ */
+function resolveTopicMergeThreshold(): number {
+	const v = Number(process.env.GLOBAL_TOPIC_MERGE_THRESHOLD);
+
+	return Number.isFinite(v) && v > 0 && v <= 1 ? v : 0.92;
+}
+
 interface Item {
 	id: string;
 	statement: Statement;
 	emb: number[];
+}
+
+/**
+ * Merge topic groups whose centroids are ≥ `threshold` similar. Iterative: each
+ * round merges the most-similar remaining pair and recomputes its centroid,
+ * until no pair clears the bar. Single-linkage on centroids is fine here — the
+ * bar is high (near-identical clones) and the goal is de-duplication.
+ */
+function mergeSimilarGroups(groups: Item[][], threshold: number): Item[][] {
+	const clusters = groups.map((items) => ({
+		items,
+		centroid: meanVector(items.map((m) => m.emb)),
+	}));
+
+	for (;;) {
+		let bi = -1;
+		let bj = -1;
+		let best = threshold;
+		for (let i = 0; i < clusters.length; i++) {
+			for (let j = i + 1; j < clusters.length; j++) {
+				const c = cosineSimilarity(clusters[i].centroid, clusters[j].centroid);
+				if (c >= best) {
+					best = c;
+					bi = i;
+					bj = j;
+				}
+			}
+		}
+		if (bi < 0) break;
+		clusters[bi].items = clusters[bi].items.concat(clusters[bj].items);
+		clusters[bi].centroid = meanVector(clusters[bi].items.map((m) => m.emb));
+		clusters.splice(bj, 1);
+	}
+
+	return clusters.map((c) => c.items);
 }
 
 /**
@@ -240,6 +296,8 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 		//    "same" check would reject them all.
 		const remainingItems = items.filter((it) => !consumed.has(it.id));
 		const topicPass = completeLinkageGroups(remainingItems, settings.clusterThreshold);
+		// De-dup: collapse near-identical topic clones into one (see helper).
+		const topicGroups = mergeSimilarGroups(topicPass.groups, resolveTopicMergeThreshold());
 
 		const questionContext = question.statement || questionId;
 		const adminDoc = await db().collection('usersV2').doc(uid).get();
@@ -326,7 +384,7 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 		const limit = pLimit(MAX_CONCURRENT_GROUPS);
 		const jobs = [
 			...verifiedSynthGroups.map((g) => () => integrate(g, 'synthesis')),
-			...topicPass.groups.map((g) => () => integrate(g, 'topic-cluster')),
+			...topicGroups.map((g) => () => integrate(g, 'topic-cluster')),
 		];
 		const created = (await Promise.all(jobs.map((job) => limit(job)))).filter(
 			(c): c is { id: string; kind: 'synthesis' | 'topic-cluster' } => c !== null,
