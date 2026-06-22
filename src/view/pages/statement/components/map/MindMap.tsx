@@ -17,7 +17,15 @@ import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
+import type { MapLayerFilter } from './mapHelpers/layerFilter';
 import styles from './MindMap.module.scss';
+
+const LAYER_OPTIONS: { value: MapLayerFilter; label: string }[] = [
+	{ value: 'all', label: 'All' },
+	{ value: 'raw', label: 'Raw' },
+	{ value: 'synth', label: 'Synths' },
+	{ value: 'clusters', label: 'Clusters' },
+];
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -48,7 +56,12 @@ const MindMap: FC = () => {
 	const effectiveSubscription = userSubscription || rootSubscription;
 
 	// Use the fixed hook
-	const { results } = useMindMap();
+	const { results, flat } = useMindMap();
+
+	// Layer filter (raw / synth / clusters). Only meaningful when the question
+	// actually has clusters or synths (i.e. the tree is not flat).
+	const [layerFilter, setLayerFilter] = useState<MapLayerFilter>('all');
+	const hasClusters = !flat;
 
 	const role = effectiveSubscription ? effectiveSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
@@ -181,9 +194,29 @@ const MindMap: FC = () => {
 					<span className={styles.toggleKnob} />
 				</button>
 			</div>
+			{hasClusters && (
+				<div className={styles.layerFilter} role="group" aria-label={t('Show map layer')}>
+					{LAYER_OPTIONS.map(({ value, label }) => (
+						<button
+							key={value}
+							type="button"
+							aria-pressed={layerFilter === value}
+							className={`${styles.layerButton} ${layerFilter === value ? styles.layerButtonActive : ''}`}
+							onClick={() => setLayerFilter(value)}
+						>
+							{t(label)}
+						</button>
+					))}
+				</div>
+			)}
 			{/* Only render map when results are available */}
 			{results ? (
-				<MindElixirMap descendants={results} isAdmin={_isAdmin} filterBy={filterBy} />
+				<MindElixirMap
+					descendants={results}
+					isAdmin={_isAdmin}
+					filterBy={filterBy}
+					layerFilter={layerFilter}
+				/>
 			) : (
 				<div
 					style={{

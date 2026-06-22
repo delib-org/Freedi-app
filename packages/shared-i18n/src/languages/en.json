@@ -3428,5 +3428,7 @@
   "Queued": "Queued",
   "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.": "Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.",
   "merged": "merged",
-  "grouped": "grouped"
+  "grouped": "grouped",
+  "Synths": "Synths",
+  "Show map layer": "Show map layer"
 }

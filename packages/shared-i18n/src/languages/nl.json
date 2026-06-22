@@ -2702,5 +2702,7 @@
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "Globaal clusteren vanaf nul? Dit ontbindt alle huidige clusters en hergroepeert alle opties in één keer, met de onderstaande gelijkenisdrempels. Het beste na opnieuw embedden.",
   "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "Globaal clusteren groepeert elke optie in één keer met de onderstaande gelijkenisdrempels — strakke groepen worden syntheses, lossere themaclusters. Embed eerst opnieuw voor de beste resultaten.",
   "merged": "samengevoegd",
-  "grouped": "gegroepeerd"
+  "grouped": "gegroepeerd",
+  "Synths": "Syntheses",
+  "Show map layer": "Kaartlaag tonen"
 }

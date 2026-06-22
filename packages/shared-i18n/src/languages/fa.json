@@ -3225,5 +3225,7 @@
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "خوشه‌بندی سراسری از ابتدا؟ این کار همه خوشه‌های فعلی را منحل می‌کند و همه گزینه‌ها را در یک گذر و با آستانه‌های شباهت زیر دوباره گروه‌بندی می‌کند. بهتر است پس از embedding مجدد انجام شود.",
   "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "خوشه‌بندی سراسری همه گزینه‌ها را در یک گذر و با آستانه‌های شباهت زیر گروه‌بندی می‌کند — گروه‌های فشرده به سنتز و گروه‌های شل‌تر به خوشه‌های موضوعی تبدیل می‌شوند. برای بهترین نتیجه ابتدا دوباره embedding کنید.",
   "merged": "ادغام‌شده",
-  "grouped": "گروه‌بندی‌شده"
+  "grouped": "گروه‌بندی‌شده",
+  "Synths": "ترکیب‌ها",
+  "Show map layer": "نمایش لایه نقشه"
 }

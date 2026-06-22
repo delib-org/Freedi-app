@@ -2825,5 +2825,7 @@
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "تجميع شامل من البداية؟ هذا يفكك كل التجمّعات الحالية ويعيد تجميع كل الخيارات في تمريرة واحدة، باستخدام عتبات التشابه أدناه. يُفضّل بعد إعادة التضمين.",
   "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "يجمّع التجميع الشامل كل خيار في تمريرة واحدة باستخدام عتبات التشابه أدناه — المجموعات المتماسكة تصبح مقترحات مُركّبة، والأقل تماسكًا تجمّعات موضوعية. أعد التضمين أولاً للحصول على أفضل النتائج.",
   "merged": "مدمجة",
-  "grouped": "مجمّعة"
+  "grouped": "مجمّعة",
+  "Synths": "المركّبات",
+  "Show map layer": "إظهار طبقة الخريطة"
 }

@@ -2702,5 +2702,7 @@
   "Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.": "¿Agrupar globalmente desde cero? Esto disuelve todos los grupos actuales y reagrupa todas las opciones en una sola pasada, usando los umbrales de similitud de abajo. Mejor después de regenerar los embeddings.",
   "Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.": "La agrupación global agrupa todas las opciones en una pasada usando los umbrales de similitud de abajo: los grupos compactos se convierten en síntesis y los más sueltos en grupos temáticos. Regenera los embeddings primero para mejores resultados.",
   "merged": "fusionadas",
-  "grouped": "agrupadas"
+  "grouped": "agrupadas",
+  "Synths": "Síntesis",
+  "Show map layer": "Mostrar capa del mapa"
 }

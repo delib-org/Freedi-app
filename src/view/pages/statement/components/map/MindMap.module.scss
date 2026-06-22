@@ -58,3 +58,55 @@
 		transform: translateX(18px);
 	}
 }
+
+// Layer filter — segmented control: All / Raw / Synths / Clusters
+.layerFilter {
+	position: fixed;
+	top: 8.5rem;
+	right: 1rem;
+	z-index: 100;
+	display: flex;
+	gap: 2px;
+	background: var(--card-default, #ffffff);
+	padding: 4px;
+	border-radius: 20px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.layerButton {
+	border: none;
+	background: transparent;
+	color: var(--text-body, #3d4d71);
+	font-size: 0.78rem;
+	font-weight: 500;
+	padding: 5px 12px;
+	border-radius: 16px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: var(--menu-active, #f2f6ff);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+}
+
+.layerButtonActive {
+	background: var(--btn-primary, #5f88e5);
+	color: #ffffff;
+
+	&:hover {
+		background: var(--btn-primary, #5f88e5);
+	}
+}
+
+@media (max-width: 767px) {
+	.layerButton {
+		padding: 5px 9px;
+		font-size: 0.72rem;
+	}
+}
