@@ -132,6 +132,7 @@ class EmbeddingCacheService {
 		embedding: number[],
 		context?: string,
 		text?: string,
+		gist?: string,
 	): Promise<void> {
 		if (embedding.length !== EMBEDDING_DIMENSIONS) {
 			logger.warn(
@@ -151,6 +152,9 @@ class EmbeddingCacheService {
 			};
 			if (text) {
 				updatePayload.textHash = computeTextHash(text);
+			}
+			if (gist) {
+				updatePayload.embeddingGist = gist;
 			}
 
 			await this.db.collection(this.statementsCollection).doc(statementId).update(updatePayload);

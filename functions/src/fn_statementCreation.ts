@@ -444,12 +444,13 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
 
 		// Save embedding to the statement document (text passed so textHash
-		// is written for the synthesis verdict cache).
+		// is written for the synthesis verdict cache; gist stored for debugging).
 		await embeddingCache.saveEmbedding(
 			statement.statementId,
 			result.embedding,
 			context,
 			statement.statement,
+			result.gist,
 		);
 
 		const duration = Date.now() - startTime;

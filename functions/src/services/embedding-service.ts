@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { logger } from 'firebase-functions';
 import { notifyAIError } from './error-notification-service';
+import { generateGist, gistEmbeddingsEnabled } from './gist-service';
 
 // OpenAI embedding configuration
 // text-embedding-3-small: Fast, cheap, good multilingual support (Hebrew, Arabic, etc.)
@@ -12,6 +13,8 @@ interface EmbeddingResult {
 	embedding: number[];
 	model: string;
 	dimensions: number;
+	/** The distilled text actually embedded, when gist embeddings are enabled. */
+	gist?: string;
 }
 
 interface APIError {
@@ -52,10 +55,16 @@ class EmbeddingService {
 		try {
 			const openai = getOpenAI();
 
+			// Embed a distilled "gist" instead of the full text so similar ideas
+			// cluster instead of blobbing on shared boilerplate (see gist-service).
+			// Fail-open: generateGist returns the original text on any error.
+			const useGist = gistEmbeddingsEnabled();
+			const answerText = useGist ? await generateGist(text, context) : text;
+
 			// Combine text with context for context-aware embedding
 			// This helps the embedding capture meaning relative to the question
 			// Context must ALWAYS be applied to match stored embeddings (which all have context)
-			const input = context ? `Question: ${context}\nAnswer: ${text}` : text;
+			const input = context ? `Question: ${context}\nAnswer: ${answerText}` : answerText;
 
 			logger.info('OpenAI Embedding API input', {
 				inputPreview: input.substring(0, 100),
@@ -87,6 +96,7 @@ class EmbeddingService {
 				embedding,
 				model: OPENAI_EMBEDDING_MODEL,
 				dimensions: embedding.length,
+				gist: useGist ? answerText : undefined,
 			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
