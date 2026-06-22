@@ -12,10 +12,11 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
  * Admin-initiated "Re-embed" — regenerate the embedding for every real option
  * under a question, overwriting the stored vector.
  *
- * Why this exists: embeddings are now built from a distilled "gist" of the
- * option (see gist-service) instead of the full text. Options embedded before
- * that change still carry full-text vectors, so clustering compares apples to
- * oranges. This forces a fresh gist-based embedding for the whole question so a
+ * Why this exists: embeddings are now built from a distilled "brief" of the
+ * option (see brief-service) instead of the full text — the original statement
+ * text is never changed. Options embedded before that change still carry
+ * full-text vectors, so clustering compares apples to oranges. This forces a
+ * fresh brief-based embedding for the whole question so a
  * subsequent re-cluster / global-cluster run sees consistent geometry.
  *
  * Skips cluster/derived docs and hidden options — only genuine user options are
@@ -84,7 +85,7 @@ export const reEmbedQuestion = onCall<ReEmbedRequest>(
 							result.embedding,
 							context,
 							option.statement,
-							result.gist,
+							result.brief,
 						);
 						embedded++;
 					} catch (error) {

@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { logger } from 'firebase-functions';
 import { notifyAIError } from './error-notification-service';
-import { generateGist, gistEmbeddingsEnabled } from './gist-service';
+import { generateBrief, briefEmbeddingsEnabled } from './brief-service';
 
 // OpenAI embedding configuration
 // text-embedding-3-small: Fast, cheap, good multilingual support (Hebrew, Arabic, etc.)
@@ -13,8 +13,11 @@ interface EmbeddingResult {
 	embedding: number[];
 	model: string;
 	dimensions: number;
-	/** The distilled text actually embedded, when gist embeddings are enabled. */
-	gist?: string;
+	/**
+	 * The distilled brief actually embedded, when brief embeddings are enabled.
+	 * This is a SEPARATE short text — the original statement is never changed.
+	 */
+	brief?: string;
 }
 
 interface APIError {
@@ -55,11 +58,13 @@ class EmbeddingService {
 		try {
 			const openai = getOpenAI();
 
-			// Embed a distilled "gist" instead of the full text so similar ideas
-			// cluster instead of blobbing on shared boilerplate (see gist-service).
-			// Fail-open: generateGist returns the original text on any error.
-			const useGist = gistEmbeddingsEnabled();
-			const answerText = useGist ? await generateGist(text, context) : text;
+			// Embed a distilled "brief" instead of the full text so similar ideas
+			// cluster instead of blobbing on shared boilerplate (see brief-service).
+			// This does NOT change the original statement — `text` is only the
+			// source we derive the brief from. Fail-open: generateBrief returns the
+			// original text on any error.
+			const useBrief = briefEmbeddingsEnabled();
+			const answerText = useBrief ? await generateBrief(text, context) : text;
 
 			// Combine text with context for context-aware embedding
 			// This helps the embedding capture meaning relative to the question
@@ -96,7 +101,7 @@ class EmbeddingService {
 				embedding,
 				model: OPENAI_EMBEDDING_MODEL,
 				dimensions: embedding.length,
-				gist: useGist ? answerText : undefined,
+				brief: useBrief ? answerText : undefined,
 			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
