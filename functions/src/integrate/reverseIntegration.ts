@@ -1,6 +1,39 @@
-import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { Collections, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
+
+/**
+ * Delete evaluation docs whose `statementId` is `statementId`, chunked to stay
+ * under the 500-write batch limit. Pass `migratedOnly` to delete only synthesized
+ * (`migratedAt`) evaluations and preserve direct votes; omit it to delete every
+ * evaluation (used when the host statement is being hard-deleted, so nothing is
+ * left pointing at a gone doc). Returns the number deleted.
+ */
+export async function deleteEvaluationsForStatement(
+	db: Firestore,
+	statementId: string,
+	opts: { migratedOnly?: boolean } = {},
+): Promise<number> {
+	const snap = await db
+		.collection(Collections.evaluations)
+		.where('statementId', '==', statementId)
+		.get();
+	const docs = opts.migratedOnly
+		? snap.docs.filter((d) => typeof (d.data() as { migratedAt?: number }).migratedAt === 'number')
+		: snap.docs;
+
+	let deleted = 0;
+	for (let i = 0; i < docs.length; i += 400) {
+		const batch = db.batch();
+		for (const d of docs.slice(i, i + 400)) {
+			batch.delete(d.ref);
+			deleted++;
+		}
+		await batch.commit();
+	}
+
+	return deleted;
+}
 
 /**
  * Reverses an integration / synthesis operation, restoring the original
@@ -15,9 +48,11 @@ import { logger } from 'firebase-functions';
  *      keeps the action undoable; hard-delete removes the doc entirely so a
  *      stale cluster disappears from EVERY view (including the tree view,
  *      which does not filter `hide`).
- *   3. Migrated evaluations on the cluster (those carrying `migratedAt`)
- *      are deleted so the original-evaluation totals on the parent are
- *      not double-counted by `updateParentTotalEvaluators`.
+ *   3. Evaluations on the cluster: soft-hide deletes only migrated evals
+ *      (those carrying `migratedAt`) so the original-evaluation totals on
+ *      the parent are not double-counted by `updateParentTotalEvaluators`;
+ *      hard-delete removes every evaluation on the cluster so none is left
+ *      orphaned once the doc is gone.
  *
  * Soft-hide keeps the cluster's own consensus / evaluation aggregations on
  * the doc; consumers who filter `!hide` stop showing it. Callers can re-run
@@ -101,32 +136,15 @@ export async function reverseIntegration(
 	}
 	await restoreBatch.commit();
 
-	// 2. Delete migrated evaluations on the cluster — they were synthesized
-	//    from the originals at integration time and would double-count
-	//    against the parent now that originals are visible again. We only
-	//    delete docs that carry the `migratedAt` flag set by
-	//    `migrateEvaluationsToNewStatement`; any direct evaluations made on
-	//    the cluster are preserved (they belong to users who voted on the
-	//    cluster itself, not on its sources).
-	const evalSnap = await db
-		.collection(Collections.evaluations)
-		.where('statementId', '==', clusterStatementId)
-		.get();
-
-	let deletedEvaluations = 0;
-	if (!evalSnap.empty) {
-		const evalBatch = db.batch();
-		evalSnap.forEach((doc) => {
-			const data = doc.data() as { migratedAt?: number };
-			if (typeof data.migratedAt === 'number') {
-				evalBatch.delete(doc.ref);
-				deletedEvaluations++;
-			}
-		});
-		if (deletedEvaluations > 0) {
-			await evalBatch.commit();
-		}
-	}
+	// 2. Delete evaluations on the cluster. When soft-hiding we remove only
+	//    migrated evals (synthesized from the originals at integration time)
+	//    so they don't double-count against the parent now that the originals
+	//    are visible again, preserving direct votes on the cluster itself.
+	//    When hard-deleting the cluster we remove ALL of its evaluations —
+	//    direct votes included — so nothing is left pointing at a gone doc.
+	const deletedEvaluations = await deleteEvaluationsForStatement(db, clusterStatementId, {
+		migratedOnly: !deleteCluster,
+	});
 
 	// 3. Remove the cluster. Re-cluster cleanup hard-deletes so the stale doc
 	//    leaves Firestore entirely (the tree view renders hidden docs, so a

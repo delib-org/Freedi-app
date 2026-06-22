@@ -1,7 +1,7 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { Collections, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
-import { reverseIntegration } from '../integrate/reverseIntegration';
+import { reverseIntegration, deleteEvaluationsForStatement } from '../integrate/reverseIntegration';
 
 /**
  * Shared helpers for identifying and clearing synthesis-derived documents, so a
@@ -55,6 +55,8 @@ export interface DissolveResult {
 	membersRestored: number;
 	/** Real options that were hidden with no `integratedInto` (orphaned) and got re-shown. */
 	orphansRestored: number;
+	/** Evaluation docs deleted because their host cluster/derived doc was removed. */
+	evaluationsDeleted: number;
 }
 
 export interface DissolveOptions {
@@ -69,10 +71,10 @@ export interface DissolveOptions {
  * pristine, visible state — the clean step that makes a bulk re-run idempotent.
  *
  *  1. Proper clusters (`isCluster && integratedOptions`) → `reverseIntegration`
- *     (un-hides members, hard-deletes the cluster, undoes migrated evaluations).
+ *     (un-hides members, hard-deletes the cluster and ALL its evaluations).
  *  2. Malformed/legacy derived docs (caught by `isDerived` but not a clean
- *     cluster: untagged, 0-member topic headers) → deleted + their members,
- *     if any, re-shown.
+ *     cluster: untagged, 0-member topic headers) → deleted, their evaluations
+ *     deleted, and their members, if any, re-shown.
  *  3. Orphaned hidden options (real options hidden with no `integratedInto`) →
  *     re-shown.
  */
@@ -106,6 +108,7 @@ export async function dissolveQuestionSynthesis(
 		docsArchived: 0,
 		membersRestored: 0,
 		orphansRestored: 0,
+		evaluationsDeleted: 0,
 	};
 
 	if (dryRun) {
@@ -124,12 +127,13 @@ export async function dissolveQuestionSynthesis(
 	//    soft-hide would leave ghost nodes in the tree view (which ignores `hide`).
 	for (const cluster of properClusters) {
 		try {
-			await reverseIntegration({
+			const reversed = await reverseIntegration({
 				clusterStatementId: cluster.statementId,
 				reversedByUserId,
 				deleteCluster: true,
 			});
 			result.clustersReversed++;
+			result.evaluationsDeleted += reversed.deletedEvaluationsCount;
 		} catch (error) {
 			logger.warn('dissolveQuestionSynthesis: reverseIntegration failed; archiving instead', {
 				questionId,
@@ -161,6 +165,12 @@ export async function dissolveQuestionSynthesis(
 		}
 		await batch.commit();
 		result.docsArchived += slice.length;
+	}
+
+	// 2b. Delete evaluations attached to the now-removed derived docs so no votes
+	//     linger orphaned, pointing at a gone statement.
+	for (const doc of malformedDerived) {
+		result.evaluationsDeleted += await deleteEvaluationsForStatement(db, doc.statementId);
 	}
 
 	// 3. Re-show orphaned hidden real options.
