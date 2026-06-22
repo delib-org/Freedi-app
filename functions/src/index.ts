@@ -1065,6 +1065,7 @@ exports.liveSynthOnOptionEvaluationChange = createFirestoreFunction(
 export { processSynthesisQueue } from './synthesis/queue/processSynthesisQueue';
 export { synthesizeNow } from './synthesis/admin/fn_synthesizeNow';
 export { reCluster } from './synthesis/admin/fn_reCluster';
+export { globalCluster } from './synthesis/admin/fn_globalCluster';
 export { synthesizeSelected } from './synthesis/admin/fn_synthesizeSelected';
 export { rejudgeGrayBand } from './synthesis/admin/fn_rejudgeGrayBand';
 export { saveSynthesisSettings } from './synthesis/admin/fn_saveSynthesisSettings';
