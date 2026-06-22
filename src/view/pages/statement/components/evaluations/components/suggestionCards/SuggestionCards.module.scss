@@ -8,11 +8,16 @@
 
 .card-wrapper {
 	width: 100%;
+	// The grouped-card count ribbon pops 10px above the card edge
+	// (top: -10px). content-visibility below applies paint containment,
+	// which clips at the border edge — without this the ribbon's top half
+	// gets cut off. Reserve the overhang inside the contained box.
+	padding-top: 12px;
 	// Skip layout/paint/raster work for off-screen cards. The React tree
 	// stays mounted; the browser only renders cards near the viewport.
 	// Unsupported browsers ignore both properties (graceful no-op).
 	content-visibility: auto;
-	contain-intrinsic-size: auto 180px;
+	contain-intrinsic-size: auto 192px;
 }
 
 .submitButtonContainer {

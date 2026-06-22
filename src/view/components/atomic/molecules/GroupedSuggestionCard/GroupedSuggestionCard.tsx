@@ -84,7 +84,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	nestedSlot,
 	className,
 }) => {
-	const { t } = useTranslation();
+	const { t, dir } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
 	const [mobileMetaOpen, setMobileMetaOpen] = useState(false);
 	const [isReversing, setIsReversing] = useState(false);
@@ -301,7 +301,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 		: t('Already counted in the group above');
 
 	return (
-		<div className={classes} aria-label={cardAriaLabel}>
+		<div className={classes} dir={dir} aria-label={cardAriaLabel}>
 			<span
 				className={clsx('grouped-suggestion__count-ribbon', ribbonModifier)}
 				aria-label={countLabel}
