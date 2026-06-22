@@ -592,6 +592,24 @@ describe('Selector Factories', () => {
 
 				expect(sortByConsensus(a as never, b as never)).toBe(0);
 			});
+
+			it('should fall back to top-level consensus when agreement is a stale 0', () => {
+				// evaluation.agreement === 0 must NOT mask a real top-level consensus
+				// (plain `?? ` would have kept the 0 and flattened the order).
+				const staleZeroHighConsensus = buildStatement({
+					consensus: 0.8,
+					evaluation: { agreement: 0, numberOfEvaluators: 4 },
+				});
+				const realLowAgreement = buildStatement({
+					consensus: 0.2,
+					evaluation: { agreement: 0.2, numberOfEvaluators: 4 },
+				});
+
+				// 0.8 (from consensus fallback) should outrank 0.2
+				expect(
+					sortByConsensus(staleZeroHighConsensus as never, realLowAgreement as never),
+				).toBeLessThan(0);
+			});
 		});
 
 		describe('sortByEvaluationCount', () => {

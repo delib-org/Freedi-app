@@ -21,6 +21,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
+import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
 import styles from './SuggestionCards.module.scss';
 import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
 import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
@@ -117,6 +118,11 @@ const SuggestionCards: FC = () => {
 	// Lazy-load older options as the user scrolls the list (the page subscription
 	// only loads the newest window; this pages in the rest on demand).
 	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadOptions(statementId);
+
+	// Ranked sorts (e.g. "most agreed") must rank the COMPLETE set, not just the
+	// newest window — otherwise older high-consensus options never surface. Eagerly
+	// bulk-load all direct children when such a sort is active.
+	const { isAutoLoading } = useAutoLoadAllForSort(statementId, sort);
 
 	// View-layer derivation (toggle-independent, memoized): split synth / topic /
 	// raw and assign each synth to its max-overlap topic.
@@ -327,9 +333,9 @@ const SuggestionCards: FC = () => {
 			{hasRaw && hasMore && (
 				<div ref={sentinelRef} className={styles['lazyLoadSentinel']} aria-hidden="true" />
 			)}
-			{isLoadingMore && (
+			{(isLoadingMore || isAutoLoading) && (
 				<div className={styles['lazyLoadStatus']} role="status">
-					{t('Loading more…')}
+					{isAutoLoading ? `${t('Ranking all options')}…` : t('Loading more…')}
 				</div>
 			)}
 			{isSubmitMode && (
