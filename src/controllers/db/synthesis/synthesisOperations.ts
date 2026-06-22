@@ -71,10 +71,9 @@ interface GlobalClusterResponse {
 	membersRestored: number;
 	evaluationsDeleted: number;
 	eligibleOptions: number;
-	groupsFound: number;
 	synthsCreated: number;
 	topicsCreated: number;
-	singletons: number;
+	standalone: number;
 	clusterThreshold: number;
 	synthThreshold: number;
 }
