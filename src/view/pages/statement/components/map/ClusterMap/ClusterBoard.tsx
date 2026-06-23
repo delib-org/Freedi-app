@@ -1,5 +1,6 @@
 import { DragEvent, FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { StatementType, type Results, type Statement } from '@freedi/shared-types';
+import { arrayRemove, arrayUnion, updateDoc } from 'firebase/firestore';
+import type { Results, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -7,14 +8,16 @@ import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
 import { setStatement, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { createMindMapChild, updateMindMapNodeText } from '../mapHelpers/mindMapStatements';
-import {
-	saveStatementToDB,
-	updateStatementParents,
-} from '@/controllers/db/statements/setStatements';
+import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import {
+	createEmptyCluster,
+	setGroupOverride,
+	STANDALONE_OVERRIDE,
+} from '@/controllers/db/statements/condensationCuration';
+import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
-import { canHaveChildren } from '../mapHelpers/mindElixirTransform';
 import { CLUSTER_PALETTE, type ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import ClusterCard from './ClusterCard';
 import styles from './ClusterBoard.module.scss';
@@ -35,16 +38,20 @@ const UNGROUPED_ID = '__ungrouped__';
 const UNGROUPED_COLOR: ClusterPaletteEntry = { line: '#9aa3b2', card: '#e7eaf0', text: '#3d4d71' };
 const DRAG_MIME = 'application/x-freedi-statement-id';
 
-/** A normalized cluster ready to render: either a real container or the synthetic "Ungrouped" group. */
+/**
+ * A normalized cluster ready to render. Clusters and their members all live
+ * FLAT under the question; membership is the cluster's `integratedOptions[]`
+ * (resolved into `members` by resultsByParentId), so notes stay visible in the
+ * main app's option list. The synthetic "Ungrouped" group holds options not in
+ * any cluster.
+ */
 interface BoardCluster {
 	id: string;
 	label: string;
 	color: ClusterPaletteEntry;
 	members: Results[];
-	/** Statement a new note is created under. */
-	addParent: Statement;
-	/** The cluster statement whose pill can be edited, or null for the synthetic group. */
-	pillEditTarget: Statement | null;
+	/** The cluster statement (isCluster option) — null for the synthetic "Ungrouped" group. */
+	clusterStatement: Statement | null;
 }
 
 interface PlacedCluster extends BoardCluster {
@@ -56,15 +63,15 @@ interface PlacedCluster extends BoardCluster {
 /**
  * Custom radial cluster board: a central "Subject" hub with colored cluster
  * pills around it, each cluster's member statements packed as a grid of
- * sticky-note cards. Clusters are container statements (questions); notes are
- * options. Leaf options directly under the subject are shown in an "Ungrouped"
- * block. Admins manage every card; authors manage their own; anyone with
- * access can add and evaluate. Real-time updates flow in via ClusterMap's
- * mind-map listener.
+ * sticky-note cards. Clusters are isCluster options under the question and
+ * notes are options under the question — the same model as the app's grouped
+ * suggestions — so everything stays consistent with the main app. Admins manage
+ * every card; authors manage their own; anyone with access can add and
+ * evaluate. Real-time updates flow in via ClusterMap's mind-map listener.
  */
 const ClusterBoard: FC<Props> = ({ results }) => {
 	const { t } = useTranslation();
-	const { user } = useAuthentication();
+	const { user, creator } = useAuthentication();
 	const subject = results.top;
 	const children = useMemo(() => results.sub ?? [], [results.sub]);
 
@@ -85,21 +92,21 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		[isAdmin, user],
 	);
 
-	// Split first-level children into real container clusters (questions/groups,
-	// which can hold notes) and loose leaf options (shown in an "Ungrouped" block).
+	// Split the question's children into clusters (isCluster) and loose options
+	// (rendered in an "Ungrouped" block). resultsByParentId already nested each
+	// cluster's members under it via integratedOptions.
 	const boardClusters = useMemo(() => {
 		const containers: BoardCluster[] = [];
 		const loose: Results[] = [];
 
 		children.forEach((child, i) => {
-			if (canHaveChildren(child.top.statementType)) {
+			if (child.top.isCluster) {
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,
 					color: CLUSTER_PALETTE[i % CLUSTER_PALETTE.length],
 					members: child.sub ?? [],
-					addParent: child.top,
-					pillEditTarget: child.top,
+					clusterStatement: child.top,
 				});
 			} else {
 				loose.push(child);
@@ -112,13 +119,12 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 				label: t('Ungrouped'),
 				color: UNGROUPED_COLOR,
 				members: loose,
-				addParent: subject,
-				pillEditTarget: null,
+				clusterStatement: null,
 			});
 		}
 
 		return containers;
-	}, [children, subject, t]);
+	}, [children, t]);
 
 	// Place clusters on a ring; larger clusters sit further out so their card
 	// grids don't collide with the hub.
@@ -163,7 +169,19 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const cx = reach;
 	const cy = reach;
 
-	// id → member Statement, for resolving drag-and-drop targets.
+	// memberId → the cluster statement it currently belongs to (for moves).
+	const sourceClusterByMember = useMemo(() => {
+		const map = new Map<string, Statement>();
+		for (const cluster of boardClusters) {
+			if (!cluster.clusterStatement) continue;
+			for (const member of cluster.members) {
+				map.set(member.top.statementId, cluster.clusterStatement);
+			}
+		}
+
+		return map;
+	}, [boardClusters]);
+
 	const membersById = useMemo(() => {
 		const map = new Map<string, Statement>();
 		for (const cluster of boardClusters) {
@@ -175,19 +193,17 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		return map;
 	}, [boardClusters]);
 
-	// cluster id → the statement a moved/added note is parented under.
-	const addParentById = useMemo(() => {
-		const map = new Map<string, Statement>();
+	const clusterById = useMemo(() => {
+		const map = new Map<string, Statement | null>();
 		for (const cluster of boardClusters) {
-			map.set(cluster.id, cluster.addParent);
+			map.set(cluster.id, cluster.clusterStatement);
 		}
 
 		return map;
 	}, [boardClusters]);
 
 	// Listen to the current user's evaluations under the subject and each cluster
-	// so cast votes show their selected state (aggregate stats arrive with the
-	// statement docs via ClusterMap's mind-map listener).
+	// so cast votes show their selected state.
 	useEffect(() => {
 		if (!user) return;
 		const parentIds = [subject.statementId, ...children.map((c) => c.top.statementId)];
@@ -203,31 +219,67 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		await updateMindMapNodeText({ statement, newText: trimmed });
 	};
 
-	const addMember = async (parent: Statement) => {
+	// Update membership: members and clusters all stay parented to the question;
+	// only the clusters' integratedOptions and the parent's override map change.
+	const assignMember = async (memberId: string, from: Statement | null, to: Statement | null) => {
+		const ts = getCurrentTimestamp();
+		const ops: Promise<void>[] = [];
+		if (from) {
+			ops.push(
+				updateDoc(createStatementRef(from.statementId), {
+					integratedOptions: arrayRemove(memberId),
+					lastUpdate: ts,
+				}),
+			);
+		}
+		if (to) {
+			ops.push(
+				updateDoc(createStatementRef(to.statementId), {
+					integratedOptions: arrayUnion(memberId),
+					lastUpdate: ts,
+				}),
+			);
+		}
+		await Promise.all(ops);
+		// Mirror the change into the parent's creator overrides so the
+		// condensation pipeline and the grouped view stay consistent.
+		await setGroupOverride({
+			parentStatementId: subject.statementId,
+			originalId: memberId,
+			targetClusterId: to ? to.statementId : STANDALONE_OVERRIDE,
+			currentAssignments: subject.creatorOverrides?.assignments ?? {},
+		}).catch(() => {
+			// best-effort; integratedOptions is the source of truth for display
+		});
+	};
+
+	// New notes are options under the question; if added to a cluster, also join
+	// that cluster's integratedOptions.
+	const addMember = async (cluster: BoardCluster) => {
 		if (busy) return;
 		setBusy(true);
 		try {
-			const created = await createMindMapChild({ parentStatement: parent });
-			if (created) setEditingId(created.statementId);
+			const created = await createMindMapChild({ parentStatement: subject });
+			if (created) {
+				if (cluster.clusterStatement) {
+					await assignMember(created.statementId, null, cluster.clusterStatement);
+				}
+				setEditingId(created.statementId);
+			}
+		} catch (error) {
+			logError(error, { operation: 'ClusterBoard.addMember', statementId: subject.statementId });
 		} finally {
 			setBusy(false);
 		}
 	};
 
-	// A cluster is a container question (so it can hold option notes).
+	// A cluster is an isCluster option under the question (same as the app's
+	// grouped suggestions), so it stays consistent with the main app.
 	const addCluster = async () => {
-		if (busy) return;
+		if (busy || !creator) return;
 		setBusy(true);
 		try {
-			const created = await saveStatementToDB({
-				text: t('New cluster'),
-				parentStatement: subject,
-				statementType: StatementType.question,
-			});
-			if (created) {
-				store.dispatch(setStatement(created));
-				setEditingId(created.statementId);
-			}
+			await createEmptyCluster({ parentStatement: subject, title: t('New cluster'), creator });
 		} catch (error) {
 			logError(error, { operation: 'ClusterBoard.addCluster', statementId: subject.statementId });
 		} finally {
@@ -235,16 +287,21 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		}
 	};
 
-	const duplicate = async (member: Statement, parent: Statement) => {
+	const duplicate = async (member: Statement, cluster: BoardCluster) => {
 		if (busy) return;
 		setBusy(true);
 		try {
 			const created = await saveStatementToDB({
 				text: member.statement,
-				parentStatement: parent,
+				parentStatement: subject,
 				statementType: member.statementType,
 			});
-			if (created) store.dispatch(setStatement(created));
+			if (created) {
+				store.dispatch(setStatement(created));
+				if (cluster.clusterStatement) {
+					await assignMember(created.statementId, null, cluster.clusterStatement);
+				}
+			}
 		} catch (error) {
 			logError(error, { operation: 'ClusterBoard.duplicate', statementId: member.statementId });
 		} finally {
@@ -256,31 +313,27 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		await deleteStatementFromDB(member, canManage(member), t);
 	};
 
-	// Move a note under a new cluster parent (drag-drop or the card's "Move to" menu).
-	const moveMember = async (member: Statement, targetParent: Statement) => {
+	const moveMember = async (member: Statement, targetClusterId: string) => {
 		if (!canManage(member)) return;
-		if (member.parentId === targetParent.statementId) return;
+		const from = sourceClusterByMember.get(member.statementId) ?? null;
+		const to = clusterById.get(targetClusterId) ?? null;
+		if (from?.statementId === to?.statementId) return;
 		try {
-			await updateStatementParents(member, targetParent);
+			await assignMember(member.statementId, from, to);
 		} catch (error) {
 			logError(error, {
-				operation: 'ClusterBoard.moveCard',
+				operation: 'ClusterBoard.moveMember',
 				statementId: member.statementId,
-				metadata: { targetParent: targetParent.statementId },
+				metadata: { targetClusterId },
 			});
 		}
 	};
 
-	const handleDrop = (e: DragEvent, targetParent: Statement) => {
+	const handleDrop = (e: DragEvent, targetClusterId: string) => {
 		e.preventDefault();
 		const draggedId = e.dataTransfer.getData(DRAG_MIME);
 		const dragged = draggedId ? membersById.get(draggedId) : undefined;
-		if (dragged) moveMember(dragged, targetParent);
-	};
-
-	const moveToCluster = (member: Statement, targetClusterId: string) => {
-		const targetParent = addParentById.get(targetClusterId);
-		if (targetParent) moveMember(member, targetParent);
+		if (dragged) moveMember(dragged, targetClusterId);
 	};
 
 	const handleDragStart = (e: DragEvent, member: Statement) => {
@@ -332,7 +385,10 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 				)}
 
 				{layout.map((l) => {
-					const canEditPill = !!l.pillEditTarget && canManage(l.pillEditTarget);
+					const canEditPill = !!l.clusterStatement && canManage(l.clusterStatement);
+					const moveTargets = boardClusters
+						.filter((c) => c.id !== l.id)
+						.map((c) => ({ id: c.id, label: c.label }));
 
 					return (
 						<div key={l.id}>
@@ -341,13 +397,13 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 								style={{ left: cx + l.pill.x, top: cy + l.pill.y, background: l.color.line }}
 								onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
 							>
-								{editingId === l.id && l.pillEditTarget ? (
+								{editingId === l.id && l.clusterStatement ? (
 									<textarea
 										className={styles.pillEdit}
-										defaultValue={l.pillEditTarget.statement}
+										defaultValue={l.clusterStatement.statement}
 										autoFocus
 										onFocus={(e) => e.currentTarget.select()}
-										onBlur={(e) => saveText(l.pillEditTarget as Statement, e.currentTarget.value)}
+										onBlur={(e) => saveText(l.clusterStatement as Statement, e.currentTarget.value)}
 										onKeyDown={(e) => {
 											if (e.key === 'Enter' && !e.shiftKey) {
 												e.preventDefault();
@@ -370,7 +426,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 									gap: GAP,
 								}}
 								onDragOver={(e) => e.preventDefault()}
-								onDrop={(e) => handleDrop(e, l.addParent)}
+								onDrop={(e) => handleDrop(e, l.id)}
 							>
 								{l.members.map((member) => (
 									<ClusterCard
@@ -383,13 +439,11 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										onRequestEdit={() => setEditingId(member.top.statementId)}
 										onSaveText={(value) => saveText(member.top, value)}
 										onCancelEdit={() => setEditingId(null)}
-										onDuplicate={() => duplicate(member.top, l.addParent)}
+										onDuplicate={() => duplicate(member.top, l)}
 										onDelete={() => remove(member.top)}
 										onDragStart={(e) => handleDragStart(e, member.top)}
-										moveTargets={boardClusters
-											.filter((c) => c.id !== l.id)
-											.map((c) => ({ id: c.id, label: c.label }))}
-										onMove={(targetId) => moveToCluster(member.top, targetId)}
+										moveTargets={moveTargets}
+										onMove={(targetId) => moveMember(member.top, targetId)}
 									/>
 								))}
 								{canContribute && (
@@ -397,7 +451,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										type="button"
 										className={styles.addCard}
 										style={{ color: l.color.text }}
-										onClick={() => addMember(l.addParent)}
+										onClick={() => addMember(l)}
 										disabled={busy}
 										aria-label={t('Add statement')}
 									>
