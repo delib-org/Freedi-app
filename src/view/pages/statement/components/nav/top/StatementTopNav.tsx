@@ -74,6 +74,12 @@ const StatementTopNav: FC<Props> = ({
 		handleNavigation(targetScreen);
 	}
 
+	function handleNavigateToClusterMap() {
+		if (!statement?.statementId) return;
+		setIsHeaderMenuOpen(false);
+		navigate(`/map/${statement.statementId}`);
+	}
+
 	return (
 		<nav
 			className="app-header app-header--sticky"
@@ -97,6 +103,7 @@ const StatementTopNav: FC<Props> = ({
 						onInvitePanel={handleInvitePanel}
 						onNavigateToSettings={handleNavigateToSettings}
 						onNavigateToScreen={handleNavigateToScreen}
+						onNavigateToClusterMap={handleNavigateToClusterMap}
 						isFollowMeActive={isFollowMeActive}
 					/>
 				)}
