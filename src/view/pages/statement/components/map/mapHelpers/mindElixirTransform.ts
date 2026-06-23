@@ -146,6 +146,15 @@ export const CLUSTER_PALETTE: ClusterPaletteEntry[] = [
 	{ line: '#ee8a37', card: '#fbd9b5', text: '#5a2f06' }, // orange
 	{ line: '#e76fa6', card: '#f8cfe0', text: '#5a1336' }, // pink
 	{ line: '#34bdb4', card: '#bdeeea', text: '#0c3b38' }, // teal
+	{ line: '#e2554d', card: '#fae0df', text: '#5a221f' }, // red
+	{ line: '#5b6cd6', card: '#e2e5f8', text: '#242b56' }, // indigo
+	{ line: '#8cbf3f', card: '#eaf3dc', text: '#384c19' }, // lime
+	{ line: '#2bb6c4', card: '#d9f2f4', text: '#11494e' }, // cyan
+	{ line: '#c455b8', card: '#f4e0f2', text: '#4e224a' }, // magenta
+	{ line: '#d99a2b', card: '#f8edd9', text: '#573e11' }, // amber
+	{ line: '#6b7a99', card: '#e4e7ed', text: '#2b313d' }, // slate
+	{ line: '#e06b8a', card: '#f9e4ea', text: '#5a2b37' }, // rose
+	{ line: '#4ab0e0', card: '#def1f9', text: '#1e465a' }, // sky
 ];
 
 /** Dark "Subject" hub style for the board root, matching the reference design. */

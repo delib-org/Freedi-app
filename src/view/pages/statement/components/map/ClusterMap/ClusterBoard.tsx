@@ -457,6 +457,13 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	return (
 		<div className={styles.scroll}>
 			<div className={styles.canvas} ref={canvasRef} style={{ width: size, height: size }}>
+				{colorPickerId && (
+					<div
+						className={styles.pickerBackdrop}
+						onClick={() => setColorPickerId(null)}
+						aria-hidden
+					/>
+				)}
 				<svg className={styles.connectors} width={size} height={size} aria-hidden>
 					{layout.map((l) => {
 						const x2 = cx + l.pill.x;
@@ -507,7 +514,12 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 						<div key={l.id}>
 							<div
 								className={styles.pill}
-								style={{ left: cx + l.pill.x, top: cy + l.pill.y, background: l.color.line }}
+								style={{
+									left: cx + l.pill.x,
+									top: cy + l.pill.y,
+									background: l.color.line,
+									zIndex: colorPickerId === l.id ? 12 : undefined,
+								}}
 								onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
 							>
 								{editingId === l.id && l.clusterStatement ? (
@@ -543,7 +555,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 								)}
 
 								{colorPickerId === l.id && l.clusterStatement && (
-									<div className={styles.colorPopover} onMouseLeave={() => setColorPickerId(null)}>
+									<div className={styles.colorPopover}>
 										{CLUSTER_PALETTE.map((entry) => (
 											<button
 												key={entry.line}
