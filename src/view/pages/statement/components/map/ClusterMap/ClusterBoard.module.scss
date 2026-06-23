@@ -83,6 +83,66 @@
 	word-break: break-word;
 }
 
+// Small handle on the pill corner that opens the cluster color picker.
+.colorDot {
+	position: absolute;
+	top: -7px;
+	right: -7px;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 2px solid #ffffff;
+	background:
+		conic-gradient(#f2c12e, #5fbb46, #34bdb4, #4a9fe0, #8b6fd6, #e76fa6, #f2c12e);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+	cursor: pointer;
+	padding: 0;
+	z-index: 4;
+
+	&:hover {
+		transform: scale(1.15);
+	}
+}
+
+.colorPopover {
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	padding: 6px 8px;
+	background: var(--card-default, #ffffff);
+	border-radius: 999px;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+	z-index: 10;
+}
+
+.swatch {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	border: 2px solid #ffffff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.1s ease;
+
+	&:hover {
+		transform: scale(1.18);
+	}
+}
+
+.colorInput {
+	width: 24px;
+	height: 24px;
+	border: none;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+}
+
 .pillEdit,
 .cardEdit {
 	width: 100%;

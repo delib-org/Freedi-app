@@ -47,6 +47,48 @@ const UNGROUPED_ID = '__ungrouped__';
 const UNGROUPED_COLOR: ClusterPaletteEntry = { line: '#9aa3b2', card: '#e7eaf0', text: '#3d4d71' };
 const DRAG_MIME = 'application/x-freedi-statement-id';
 
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+	const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+	if (!match) return null;
+	const value = parseInt(match[1], 16);
+
+	return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+}
+
+function toHex(r: number, g: number, b: number): string {
+	return (
+		'#' +
+		[r, g, b]
+			.map((v) =>
+				Math.max(0, Math.min(255, Math.round(v)))
+					.toString(16)
+					.padStart(2, '0'),
+			)
+			.join('')
+	);
+}
+
+/** Build a full cluster palette (pill line, light card tint, readable text) from one chosen color. */
+function deriveClusterPalette(hex: string): ClusterPaletteEntry {
+	const rgb = hexToRgb(hex);
+	if (!rgb) return UNGROUPED_COLOR;
+	const { r, g, b } = rgb;
+
+	return {
+		line: hex,
+		card: toHex(r + (255 - r) * 0.82, g + (255 - g) * 0.82, b + (255 - b) * 0.82),
+		text: toHex(r * 0.4, g * 0.4, b * 0.4),
+	};
+}
+
+/** A cluster's color: its saved `color`, else the default palette slot by index. */
+function resolveClusterColor(hex: string | undefined, index: number): ClusterPaletteEntry {
+	if (!hex) return CLUSTER_PALETTE[index % CLUSTER_PALETTE.length];
+	const preset = CLUSTER_PALETTE.find((entry) => entry.line.toLowerCase() === hex.toLowerCase());
+
+	return preset ?? deriveClusterPalette(hex);
+}
+
 /**
  * A normalized cluster ready to render. Clusters and their members all live
  * FLAT under the question; membership is the cluster's `integratedOptions[]`
@@ -94,6 +136,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const canContribute = !!user;
 
 	const [editingId, setEditingId] = useState<string | null>(null);
+	const [colorPickerId, setColorPickerId] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const prevRectsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
@@ -115,7 +158,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,
-					color: CLUSTER_PALETTE[i % CLUSTER_PALETTE.length],
+					color: resolveClusterColor(child.top.color, i),
 					members: child.sub ?? [],
 					clusterStatement: child.top,
 				});
@@ -271,6 +314,22 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		const trimmed = value.trim();
 		if (!trimmed || trimmed === statement.statement) return;
 		await updateMindMapNodeText({ statement, newText: trimmed });
+	};
+
+	const setClusterColor = async (clusterStatement: Statement, hex: string) => {
+		setColorPickerId(null);
+		if (clusterStatement.color === hex) return;
+		try {
+			await updateDoc(createStatementRef(clusterStatement.statementId), {
+				color: hex,
+				lastUpdate: getCurrentTimestamp(),
+			});
+		} catch (error) {
+			logError(error, {
+				operation: 'ClusterBoard.setClusterColor',
+				statementId: clusterStatement.statementId,
+			});
+		}
 	};
 
 	// Update membership: members and clusters all stay parented to the question;
@@ -468,6 +527,43 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 									/>
 								) : (
 									l.label
+								)}
+
+								{canEditPill && editingId !== l.id && (
+									<button
+										type="button"
+										className={styles.colorDot}
+										aria-label={t('Change color')}
+										title={t('Change color')}
+										onClick={(e) => {
+											e.stopPropagation();
+											setColorPickerId((id) => (id === l.id ? null : l.id));
+										}}
+									/>
+								)}
+
+								{colorPickerId === l.id && l.clusterStatement && (
+									<div className={styles.colorPopover} onMouseLeave={() => setColorPickerId(null)}>
+										{CLUSTER_PALETTE.map((entry) => (
+											<button
+												key={entry.line}
+												type="button"
+												className={styles.swatch}
+												style={{ background: entry.line }}
+												aria-label={entry.line}
+												onClick={() => setClusterColor(l.clusterStatement as Statement, entry.line)}
+											/>
+										))}
+										<input
+											type="color"
+											className={styles.colorInput}
+											defaultValue={l.color.line}
+											aria-label={t('Custom color')}
+											onChange={(e) =>
+												setClusterColor(l.clusterStatement as Statement, e.target.value)
+											}
+										/>
+									</div>
 								)}
 							</div>
 

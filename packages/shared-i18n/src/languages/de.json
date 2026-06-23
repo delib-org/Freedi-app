@@ -2717,5 +2717,7 @@
   "Duplicate": "Duplizieren",
   "New cluster": "Neuer Cluster",
   "Ungrouped": "Nicht gruppiert",
-  "Move to": "Verschieben nach"
+  "Move to": "Verschieben nach",
+  "Change color": "Farbe ändern",
+  "Custom color": "Eigene Farbe"
 }
