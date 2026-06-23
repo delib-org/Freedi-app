@@ -5,6 +5,8 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
+import { enhancedEvaluationsThumbs } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
+import { getEvaluationThumbIdByScore } from '@/view/pages/statement/components/evaluations/statementsEvaluationCont';
 import { logError } from '@/utils/errorHandling';
 import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import styles from './ClusterBoard.module.scss';
@@ -47,25 +49,32 @@ const ClusterCard: FC<Props> = ({
 	const { creator } = useAuthentication();
 	const myEval = useAppSelector(evaluationSelector(statement.statementId));
 	const [menuOpen, setMenuOpen] = useState(false);
+	const [facesOpen, setFacesOpen] = useState(false);
 
 	const evaluate = (value: number) => {
 		if (!creator) return;
-		const next = myEval === value ? 0 : value;
-		setEvaluationToDB(statement, creator, next).catch((error) =>
+		setEvaluationToDB(statement, creator, value).catch((error) =>
 			logError(error, {
 				operation: 'ClusterCard.evaluate',
 				statementId: statement.statementId,
 			}),
 		);
+		// Close the face picker once the user evaluates.
+		setFacesOpen(false);
 	};
 
 	const numberOfEvaluators = statement.evaluation?.numberOfEvaluators ?? 0;
 	const average = statement.evaluation?.averageEvaluation ?? 0;
 	const consensus = statement.consensus ?? 0;
+	const hasVoted = myEval !== undefined && myEval !== null;
+	const myThumbId = hasVoted ? getEvaluationThumbIdByScore(myEval) : null;
+	const myThumb = myThumbId
+		? enhancedEvaluationsThumbs.find((thumb) => thumb.id === myThumbId)
+		: undefined;
 
 	return (
 		<div
-			className={styles.card}
+			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
 			draggable={canManage}
 			onDragStart={onDragStart}
@@ -152,35 +161,48 @@ const ClusterCard: FC<Props> = ({
 			)}
 
 			<div className={styles.cardFooter}>
-				<div className={styles.evalButtons}>
-					<button
-						type="button"
-						className={`${styles.evalButton} ${myEval === 1 ? styles.evalButtonAgree : ''}`}
-						aria-label={t('Agree')}
-						aria-pressed={myEval === 1}
-						onClick={() => evaluate(1)}
-					>
-						▲
-					</button>
-					<button
-						type="button"
-						className={`${styles.evalButton} ${myEval === -1 ? styles.evalButtonDisagree : ''}`}
-						aria-label={t('Disagree')}
-						aria-pressed={myEval === -1}
-						onClick={() => evaluate(-1)}
-					>
-						▼
-					</button>
-				</div>
-
-				{showEval && (
+				{showEval ? (
 					<div className={styles.evalStats}>
-						<span title={t('Consensus')}>≈{consensus.toFixed(1)}</span>
+						<span title={t('Consensus')}>≈{Math.round(consensus * 100)}</span>
 						<span title={t('Evaluators')}>👤{numberOfEvaluators}</span>
 						<span title={t('Average')}>⌀{average.toFixed(1)}</span>
 					</div>
+				) : (
+					<span />
 				)}
+
+				<button
+					type="button"
+					className={`${styles.evalToggle} ${myThumb ? styles.evalToggleVoted : ''}`}
+					aria-label={t('Evaluate')}
+					aria-expanded={facesOpen}
+					onClick={() => setFacesOpen((open) => !open)}
+				>
+					{myThumb ? <img src={myThumb.svg} alt={t('Evaluate')} /> : t('Evaluate')}
+				</button>
 			</div>
+
+			{facesOpen && (
+				<div className={styles.facesPopup} onMouseLeave={() => setFacesOpen(false)}>
+					{enhancedEvaluationsThumbs.map((thumb) => {
+						const active = thumb.id === myThumbId;
+
+						return (
+							<button
+								key={thumb.id}
+								type="button"
+								className={`${styles.face} ${active ? styles.faceActive : ''}`}
+								style={{ backgroundColor: active ? thumb.colorSelected : thumb.color }}
+								aria-label={thumb.alt}
+								aria-pressed={active}
+								onClick={() => evaluate(thumb.evaluation)}
+							>
+								<img src={thumb.svg} alt={thumb.alt} />
+							</button>
+						);
+					})}
+				</div>
+			)}
 		</div>
 	);
 };
