@@ -2834,5 +2834,7 @@
   "Copy embed code": "نسخ رمز التضمين",
   "Loading map...": "جارٍ تحميل الخريطة...",
   "Building map...": "جارٍ بناء الخريطة...",
-  "Cluster Map": "خريطة العناقيد"
+  "Cluster Map": "خريطة العناقيد",
+  "Add cluster": "إضافة عنقود",
+  "Add statement": "إضافة عبارة"
 }

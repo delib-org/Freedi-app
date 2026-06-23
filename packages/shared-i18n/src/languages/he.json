@@ -3462,5 +3462,7 @@
   "Copy embed code": "העתקת קוד הטמעה",
   "Loading map...": "טוען מפה...",
   "Building map...": "בונה מפה...",
-  "Cluster Map": "מפת אשכולות"
+  "Cluster Map": "מפת אשכולות",
+  "Add cluster": "הוספת אשכול",
+  "Add statement": "הוספת היגד"
 }

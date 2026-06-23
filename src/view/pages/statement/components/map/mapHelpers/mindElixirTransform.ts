@@ -129,7 +129,16 @@ export function getStyleForType(
  * the SCAMPER board look. Concrete hex (not CSS vars) because mind-elixir paints
  * `branchColor` onto SVG connector strokes via JS, which doesn't resolve vars.
  */
-const BRANCH_PALETTE: { line: string; card: string; text: string }[] = [
+export interface ClusterPaletteEntry {
+	/** Strong color for connector lines and the branch/cluster pill. */
+	line: string;
+	/** Light tint for member sticky-note cards. */
+	card: string;
+	/** Readable text color on the card tint. */
+	text: string;
+}
+
+export const CLUSTER_PALETTE: ClusterPaletteEntry[] = [
 	{ line: '#f2c12e', card: '#fdeca8', text: '#5b4a00' }, // yellow
 	{ line: '#8b6fd6', card: '#d9ccf3', text: '#2e1d56' }, // purple
 	{ line: '#4a9fe0', card: '#c2e0f7', text: '#0f3350' }, // blue
@@ -182,7 +191,7 @@ export function toMindElixirData(
 	function transformNode(
 		result: Results,
 		depth: number,
-		branch: (typeof BRANCH_PALETTE)[number] | null,
+		branch: (typeof CLUSTER_PALETTE)[number] | null,
 	): FreediNodeObj {
 		const statement = result.top;
 		const clusterKind = getClusterKind(statement);
@@ -219,7 +228,7 @@ export function toMindElixirData(
 				transformNode(
 					subResult,
 					depth + 1,
-					branch ?? BRANCH_PALETTE[index % BRANCH_PALETTE.length],
+					branch ?? CLUSTER_PALETTE[index % CLUSTER_PALETTE.length],
 				),
 			);
 		}
@@ -240,7 +249,7 @@ export function toMindElixirData(
 function applyBoardStyle(
 	node: FreediNodeObj,
 	depth: number,
-	branch: (typeof BRANCH_PALETTE)[number] | null,
+	branch: (typeof CLUSTER_PALETTE)[number] | null,
 ): void {
 	if (depth === 0) {
 		node.style = { ...BOARD_ROOT_STYLE };

@@ -1,0 +1,162 @@
+// Custom radial cluster board: central hub, colored cluster pills, and a grid
+// of sticky-note cards per cluster. All nodes are absolutely positioned and
+// centered on their computed (x, y) via translate(-50%, -50%).
+
+.scroll {
+	flex: 1;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background: var(--background, #eef0f3);
+}
+
+.canvas {
+	position: relative;
+	margin: 0 auto;
+}
+
+.connectors {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.hub {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: #2b2b33;
+	color: #ffffff;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+	padding: 8px;
+	z-index: 3;
+}
+
+.hubText {
+	font-weight: 700;
+	font-size: 0.8rem;
+	text-align: center;
+	line-height: 1.15;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	word-break: break-word;
+}
+
+.addCluster {
+	position: absolute;
+	transform: translateX(-50%);
+	border: none;
+	border-radius: 999px;
+	padding: 0.35rem 0.85rem;
+	background: var(--btn-primary, #5f88e5);
+	color: #ffffff;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+	z-index: 3;
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+}
+
+.pill {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	max-width: 160px;
+	border-radius: 999px;
+	padding: 0.4rem 0.9rem;
+	color: #ffffff;
+	font-weight: 600;
+	font-size: 0.82rem;
+	text-align: center;
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+	z-index: 2;
+	cursor: default;
+	word-break: break-word;
+}
+
+.pillEdit,
+.cardEdit {
+	width: 100%;
+	border: none;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: inherit;
+	resize: none;
+	outline: none;
+	overflow: hidden;
+}
+
+.grid {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	display: grid;
+	z-index: 1;
+}
+
+.card {
+	width: 86px;
+	height: 86px;
+	border-radius: 10px;
+	padding: 8px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+	display: flex;
+	align-items: flex-start;
+	overflow: hidden;
+	transition: transform 0.12s ease, box-shadow 0.12s ease;
+	cursor: default;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+	}
+}
+
+.cardText {
+	font-size: 0.72rem;
+	line-height: 1.2;
+	word-break: break-word;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 5;
+	-webkit-box-orient: vertical;
+}
+
+.addCard {
+	width: 86px;
+	height: 86px;
+	border: 2px dashed rgba(0, 0, 0, 0.25);
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.4);
+	font-size: 1.6rem;
+	font-weight: 400;
+	cursor: pointer;
+	transition: background 0.12s ease, border-color 0.12s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.7);
+		border-color: rgba(0, 0, 0, 0.4);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.card,
+	.card:hover {
+		transition: none;
+		transform: none;
+	}
+}

@@ -2711,5 +2711,7 @@
   "Copy embed code": "Einbettungscode kopieren",
   "Loading map...": "Karte wird geladen...",
   "Building map...": "Karte wird erstellt...",
-  "Cluster Map": "Cluster-Karte"
+  "Cluster Map": "Cluster-Karte",
+  "Add cluster": "Cluster hinzufügen",
+  "Add statement": "Aussage hinzufügen"
 }

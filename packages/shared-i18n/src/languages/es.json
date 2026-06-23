@@ -2711,5 +2711,7 @@
   "Copy embed code": "Copiar código para insertar",
   "Loading map...": "Cargando mapa...",
   "Building map...": "Construyendo mapa...",
-  "Cluster Map": "Mapa de grupos"
+  "Cluster Map": "Mapa de grupos",
+  "Add cluster": "Añadir grupo",
+  "Add statement": "Añadir declaración"
 }

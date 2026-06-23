@@ -3437,5 +3437,7 @@
   "Copy embed code": "Copy embed code",
   "Loading map...": "Loading map...",
   "Building map...": "Building map...",
-  "Cluster Map": "Cluster Map"
+  "Cluster Map": "Cluster Map",
+  "Add cluster": "Add cluster",
+  "Add statement": "Add statement"
 }
