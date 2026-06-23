@@ -1,48 +1,84 @@
-import { FC, useMemo, useRef, useState } from 'react';
+import { DragEvent, FC, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Results, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { isAdmin as isAdminRole } from '@/controllers/general/helpers';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { setStatement } from '@/redux/statements/statementsSlice';
+import { store } from '@/redux/store';
 import { createMindMapChild, updateMindMapNodeText } from '../mapHelpers/mindMapStatements';
+import {
+	saveStatementToDB,
+	updateStatementParents,
+} from '@/controllers/db/statements/setStatements';
+import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import { logError } from '@/utils/errorHandling';
 import { CLUSTER_PALETTE, type ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
+import ClusterCard from './ClusterCard';
 import styles from './ClusterBoard.module.scss';
 
 interface Props {
 	/** Results tree from useMindMap: top = subject, sub = clusters, cluster.sub = members. */
 	results: Results;
-	/** When true, show add tiles and allow inline editing. */
-	canEdit: boolean;
 }
 
 // Card + layout geometry (px).
-const CARD = 86;
+const CARD = 120;
 const GAP = 12;
 const COLS = 3;
-const PILL_RADIUS = 190;
+const PILL_RADIUS = 210;
 const HUB = 120;
 
 interface ClusterLayout {
 	cluster: Results;
 	color: ClusterPaletteEntry;
-	dir: { x: number; y: number };
 	pill: { x: number; y: number };
 	grid: { x: number; y: number };
 	cols: number;
 }
 
+const DRAG_MIME = 'application/x-freedi-statement-id';
+
 /**
  * Custom radial cluster board: a central "Subject" hub with colored cluster
  * pills around it, each cluster's member statements packed as a grid of
- * sticky-note cards (so many statements fit compactly). Reuses the mind-map
- * data + edit functions; real-time updates flow in via the Redux listener that
- * ClusterMap owns.
+ * sticky-note cards. Admins manage every card; authors manage their own.
+ * Anyone with access can add cards and evaluate them. Reuses the mind-map data
+ * + edit functions; real-time updates flow in via the listener ClusterMap owns.
  */
-const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
+const ClusterBoard: FC<Props> = ({ results }) => {
 	const { t } = useTranslation();
+	const { user } = useAuthentication();
 	const subject = results.top;
 	const clusters = useMemo(() => results.sub ?? [], [results.sub]);
 
+	const subscription = useAppSelector(
+		statementSubscriptionSelector(subject.topParentId ?? subject.statementId),
+	);
+	const isAdmin = isAdminRole(subscription?.role);
+	const showEval = subject.statementSettings?.showEvaluation ?? false;
+	const canContribute = !!user;
+
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
-	const editRef = useRef<HTMLTextAreaElement>(null);
+
+	const canManage = useCallback(
+		(statement: Statement) => isAdmin || (!!user && statement.creatorId === user.uid),
+		[isAdmin, user],
+	);
+
+	// Listen to the current user's evaluations under the subject and each cluster
+	// so cast votes show their selected state (aggregate stats arrive with the
+	// statement docs via ClusterMap's mind-map listener).
+	useEffect(() => {
+		if (!user) return;
+		const parentIds = [subject.statementId, ...clusters.map((c) => c.top.statementId)];
+		const unsubscribers = parentIds.map((id) => listenToEvaluations(id, undefined, user.uid));
+
+		return () => unsubscribers.forEach((unsubscribe) => unsubscribe?.());
+	}, [user, subject.statementId, clusters]);
 
 	// Lay clusters out on a ring; larger clusters sit further out so their card
 	// grids don't collide with the hub.
@@ -54,28 +90,27 @@ const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
 			const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
 			const dir = { x: Math.cos(angle), y: Math.sin(angle) };
 
-			const memberCount = (cluster.sub?.length ?? 0) + (canEdit ? 1 : 0);
+			const memberCount = (cluster.sub?.length ?? 0) + (canContribute ? 1 : 0);
 			const cols = Math.max(1, Math.min(COLS, memberCount || 1));
 			const rows = Math.max(1, Math.ceil((memberCount || 1) / cols));
 			const blockH = rows * CARD + (rows - 1) * GAP;
-			const gridRadius = PILL_RADIUS + 70 + blockH / 2;
+			const gridRadius = PILL_RADIUS + 80 + blockH / 2;
 
 			return {
 				cluster,
 				color,
-				dir,
 				pill: { x: dir.x * PILL_RADIUS, y: dir.y * PILL_RADIUS },
 				grid: { x: dir.x * gridRadius, y: dir.y * gridRadius },
 				cols,
 			};
 		});
-	}, [clusters, canEdit]);
+	}, [clusters, canContribute]);
 
 	// Canvas big enough to hold the outermost grids; hub is centered.
 	const reach = useMemo(() => {
-		let max = PILL_RADIUS + 200;
+		let max = PILL_RADIUS + 240;
 		for (const l of layout) {
-			const memberCount = (l.cluster.sub?.length ?? 0) + (canEdit ? 1 : 0);
+			const memberCount = (l.cluster.sub?.length ?? 0) + (canContribute ? 1 : 0);
 			const rows = Math.max(1, Math.ceil((memberCount || 1) / l.cols));
 			const blockH = rows * CARD + (rows - 1) * GAP;
 			const blockW = l.cols * CARD + (l.cols - 1) * GAP;
@@ -84,11 +119,23 @@ const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
 		}
 
 		return max;
-	}, [layout, canEdit]);
+	}, [layout, canContribute]);
 
 	const size = reach * 2;
 	const cx = reach;
 	const cy = reach;
+
+	// id → member Statement, for resolving drag-and-drop targets.
+	const membersById = useMemo(() => {
+		const map = new Map<string, Statement>();
+		for (const cluster of clusters) {
+			for (const member of cluster.sub ?? []) {
+				map.set(member.top.statementId, member.top);
+			}
+		}
+
+		return map;
+	}, [clusters]);
 
 	const saveText = async (statement: Statement, value: string) => {
 		setEditingId(null);
@@ -119,43 +166,52 @@ const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
 		}
 	};
 
-	const renderCard = (member: Statement, color: ClusterPaletteEntry) => {
-		const isEditing = editingId === member.statementId;
+	const duplicate = async (member: Statement, parent: Statement) => {
+		if (busy) return;
+		setBusy(true);
+		try {
+			const created = await saveStatementToDB({
+				text: member.statement,
+				parentStatement: parent,
+				statementType: member.statementType,
+			});
+			if (created) store.dispatch(setStatement(created));
+		} catch (error) {
+			logError(error, { operation: 'ClusterBoard.duplicate', statementId: member.statementId });
+		} finally {
+			setBusy(false);
+		}
+	};
 
-		return (
-			<div
-				key={member.statementId}
-				className={styles.card}
-				style={{ background: color.card, color: color.text }}
-				onDoubleClick={canEdit ? () => setEditingId(member.statementId) : undefined}
-			>
-				{isEditing ? (
-					<textarea
-						ref={editRef}
-						className={styles.cardEdit}
-						defaultValue={member.statement}
-						autoFocus
-						onFocus={(e) => e.currentTarget.select()}
-						onBlur={(e) => saveText(member, e.currentTarget.value)}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' && !e.shiftKey) {
-								e.preventDefault();
-								e.currentTarget.blur();
-							}
-							if (e.key === 'Escape') setEditingId(null);
-						}}
-					/>
-				) : (
-					<span className={styles.cardText}>{member.statement}</span>
-				)}
-			</div>
-		);
+	const remove = async (member: Statement) => {
+		await deleteStatementFromDB(member, canManage(member), t);
+	};
+
+	const handleDrop = async (e: DragEvent, targetCluster: Statement) => {
+		e.preventDefault();
+		const draggedId = e.dataTransfer.getData(DRAG_MIME);
+		const dragged = draggedId ? membersById.get(draggedId) : undefined;
+		if (!dragged || !canManage(dragged)) return;
+		if (dragged.parentId === targetCluster.statementId) return;
+		try {
+			await updateStatementParents(dragged, targetCluster);
+		} catch (error) {
+			logError(error, {
+				operation: 'ClusterBoard.moveCard',
+				statementId: dragged.statementId,
+				metadata: { targetCluster: targetCluster.statementId },
+			});
+		}
+	};
+
+	const handleDragStart = (e: DragEvent, member: Statement) => {
+		e.dataTransfer.setData(DRAG_MIME, member.statementId);
+		e.dataTransfer.effectAllowed = 'move';
 	};
 
 	return (
 		<div className={styles.scroll}>
 			<div className={styles.canvas} style={{ width: size, height: size }}>
-				{/* Connectors */}
 				<svg className={styles.connectors} width={size} height={size} aria-hidden>
 					{layout.map((l) => {
 						const x2 = cx + l.pill.x;
@@ -176,7 +232,6 @@ const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
 					})}
 				</svg>
 
-				{/* Subject hub */}
 				<div
 					className={styles.hub}
 					style={{ left: cx, top: cy, width: HUB, height: HUB }}
@@ -185,7 +240,7 @@ const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
 					<span className={styles.hubText}>{subject.statement}</span>
 				</div>
 
-				{canEdit && (
+				{canContribute && (
 					<button
 						type="button"
 						className={styles.addCluster}
@@ -197,17 +252,14 @@ const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
 					</button>
 				)}
 
-				{/* Cluster pills + card grids */}
 				{layout.map((l) => (
 					<div key={l.cluster.top.statementId}>
 						<div
 							className={styles.pill}
-							style={{
-								left: cx + l.pill.x,
-								top: cy + l.pill.y,
-								background: l.color.line,
-							}}
-							onDoubleClick={canEdit ? () => setEditingId(l.cluster.top.statementId) : undefined}
+							style={{ left: cx + l.pill.x, top: cy + l.pill.y, background: l.color.line }}
+							onDoubleClick={
+								canManage(l.cluster.top) ? () => setEditingId(l.cluster.top.statementId) : undefined
+							}
 						>
 							{editingId === l.cluster.top.statementId ? (
 								<textarea
@@ -237,9 +289,26 @@ const ClusterBoard: FC<Props> = ({ results, canEdit }) => {
 								gridTemplateColumns: `repeat(${l.cols}, ${CARD}px)`,
 								gap: GAP,
 							}}
+							onDragOver={(e) => e.preventDefault()}
+							onDrop={(e) => handleDrop(e, l.cluster.top)}
 						>
-							{(l.cluster.sub ?? []).map((member) => renderCard(member.top, l.color))}
-							{canEdit && (
+							{(l.cluster.sub ?? []).map((member) => (
+								<ClusterCard
+									key={member.top.statementId}
+									statement={member.top}
+									color={l.color}
+									canManage={canManage(member.top)}
+									showEval={showEval}
+									isEditing={editingId === member.top.statementId}
+									onRequestEdit={() => setEditingId(member.top.statementId)}
+									onSaveText={(value) => saveText(member.top, value)}
+									onCancelEdit={() => setEditingId(null)}
+									onDuplicate={() => duplicate(member.top, l.cluster.top)}
+									onDelete={() => remove(member.top)}
+									onDragStart={(e) => handleDragStart(e, member.top)}
+								/>
+							))}
+							{canContribute && (
 								<button
 									type="button"
 									className={styles.addCard}

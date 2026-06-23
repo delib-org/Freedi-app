@@ -65,7 +65,7 @@ const ClusterMap: FC = () => {
 
 			<div className={styles.canvas}>
 				{results ? (
-					<ClusterBoard results={results} canEdit />
+					<ClusterBoard results={results} />
 				) : (
 					<div className={styles.loading}>
 						<div className={styles.spinner} />
