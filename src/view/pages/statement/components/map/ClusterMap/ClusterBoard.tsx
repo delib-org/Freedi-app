@@ -243,7 +243,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			el.style.transform = `translate(${dx}px, ${dy}px)`;
 			// …then play: animate to the natural new position on the next frame.
 			requestAnimationFrame(() => {
-				el.style.transition = 'transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+				el.style.transition = 'transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1)';
 				el.style.transform = '';
 				const onEnd = () => {
 					el.style.transition = '';
