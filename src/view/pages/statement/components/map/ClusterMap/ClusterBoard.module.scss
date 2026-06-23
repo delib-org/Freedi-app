@@ -187,6 +187,16 @@
 	}
 }
 
+.cardMenuLabel {
+	padding: 0.4rem 0.75rem 0.2rem;
+	font-size: 0.66rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	color: var(--text-secondary, #8a93a6);
+	border-top: 1px solid var(--border-light, #e4e8f0);
+}
+
 .cardFooter {
 	display: flex;
 	align-items: center;

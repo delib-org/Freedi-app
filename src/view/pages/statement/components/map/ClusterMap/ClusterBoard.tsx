@@ -71,7 +71,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const subscription = useAppSelector(
 		statementSubscriptionSelector(subject.topParentId ?? subject.statementId),
 	);
-	const isAdmin = isAdminRole(subscription?.role);
+	// The board owner (subject creator) is always an admin of the board, even
+	// before their subscription role loads — mirrors StatementTopNav.
+	const isAdmin = isAdminRole(subscription?.role) || (!!user && subject.creatorId === user.uid);
 	const showEval = subject.statementSettings?.showEvaluation ?? false;
 	const canContribute = !!user;
 
@@ -173,6 +175,16 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		return map;
 	}, [boardClusters]);
 
+	// cluster id → the statement a moved/added note is parented under.
+	const addParentById = useMemo(() => {
+		const map = new Map<string, Statement>();
+		for (const cluster of boardClusters) {
+			map.set(cluster.id, cluster.addParent);
+		}
+
+		return map;
+	}, [boardClusters]);
+
 	// Listen to the current user's evaluations under the subject and each cluster
 	// so cast votes show their selected state (aggregate stats arrive with the
 	// statement docs via ClusterMap's mind-map listener).
@@ -244,21 +256,31 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		await deleteStatementFromDB(member, canManage(member), t);
 	};
 
-	const handleDrop = async (e: DragEvent, targetParent: Statement) => {
-		e.preventDefault();
-		const draggedId = e.dataTransfer.getData(DRAG_MIME);
-		const dragged = draggedId ? membersById.get(draggedId) : undefined;
-		if (!dragged || !canManage(dragged)) return;
-		if (dragged.parentId === targetParent.statementId) return;
+	// Move a note under a new cluster parent (drag-drop or the card's "Move to" menu).
+	const moveMember = async (member: Statement, targetParent: Statement) => {
+		if (!canManage(member)) return;
+		if (member.parentId === targetParent.statementId) return;
 		try {
-			await updateStatementParents(dragged, targetParent);
+			await updateStatementParents(member, targetParent);
 		} catch (error) {
 			logError(error, {
 				operation: 'ClusterBoard.moveCard',
-				statementId: dragged.statementId,
+				statementId: member.statementId,
 				metadata: { targetParent: targetParent.statementId },
 			});
 		}
+	};
+
+	const handleDrop = (e: DragEvent, targetParent: Statement) => {
+		e.preventDefault();
+		const draggedId = e.dataTransfer.getData(DRAG_MIME);
+		const dragged = draggedId ? membersById.get(draggedId) : undefined;
+		if (dragged) moveMember(dragged, targetParent);
+	};
+
+	const moveToCluster = (member: Statement, targetClusterId: string) => {
+		const targetParent = addParentById.get(targetClusterId);
+		if (targetParent) moveMember(member, targetParent);
 	};
 
 	const handleDragStart = (e: DragEvent, member: Statement) => {
@@ -364,6 +386,10 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										onDuplicate={() => duplicate(member.top, l.addParent)}
 										onDelete={() => remove(member.top)}
 										onDragStart={(e) => handleDragStart(e, member.top)}
+										moveTargets={boardClusters
+											.filter((c) => c.id !== l.id)
+											.map((c) => ({ id: c.id, label: c.label }))}
+										onMove={(targetId) => moveToCluster(member.top, targetId)}
 									/>
 								))}
 								{canContribute && (

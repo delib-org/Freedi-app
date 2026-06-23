@@ -23,6 +23,9 @@ interface Props {
 	onDuplicate: () => void;
 	onDelete: () => void;
 	onDragStart: (e: DragEvent) => void;
+	/** Clusters this card can be moved to (excludes its current cluster). */
+	moveTargets: { id: string; label: string }[];
+	onMove: (targetId: string) => void;
 }
 
 const ClusterCard: FC<Props> = ({
@@ -37,6 +40,8 @@ const ClusterCard: FC<Props> = ({
 	onDuplicate,
 	onDelete,
 	onDragStart,
+	moveTargets,
+	onMove,
 }) => {
 	const { t } = useTranslation();
 	const { creator } = useAuthentication();
@@ -105,6 +110,23 @@ const ClusterCard: FC<Props> = ({
 							>
 								{t('Delete')}
 							</button>
+							{moveTargets.length > 0 && (
+								<>
+									<div className={styles.cardMenuLabel}>{t('Move to')}</div>
+									{moveTargets.map((target) => (
+										<button
+											key={target.id}
+											type="button"
+											onClick={() => {
+												setMenuOpen(false);
+												onMove(target.id);
+											}}
+										>
+											{target.label}
+										</button>
+									))}
+								</>
+							)}
 						</div>
 					)}
 				</div>

@@ -2,7 +2,9 @@ import { FC, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams, useSearchParams } from 'react-router';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
+import { listenToStatementSubscription } from '@/controllers/db/statements/listenToStatements';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
 import ClusterBoard from './ClusterBoard';
@@ -26,6 +28,7 @@ const ClusterMap: FC = () => {
 
 	const isEmbed = searchParams.get('embed') === '1' || location.pathname.endsWith('/embed');
 
+	const { creator } = useAuthentication();
 	const statement = useSelector(statementSelector(statementId));
 	const { results } = useMindMap();
 
@@ -37,6 +40,16 @@ const ClusterMap: FC = () => {
 
 		return () => unsubscribe();
 	}, [statementId]);
+
+	// Load the user's subscription/role for the board (and its top parent) so
+	// admins are recognized for managing every card.
+	useEffect(() => {
+		if (!creator) return;
+		const ids = [statement?.statementId, statement?.topParentId].filter((id): id is string => !!id);
+		const unsubscribers = ids.map((id) => listenToStatementSubscription(id, creator));
+
+		return () => unsubscribers.forEach((unsubscribe) => unsubscribe?.());
+	}, [creator, statement?.statementId, statement?.topParentId]);
 
 	if (!statement) {
 		return (
