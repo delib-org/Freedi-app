@@ -2714,5 +2714,7 @@
   "Cluster Map": "Cluster-Karte",
   "Add cluster": "Cluster hinzufügen",
   "Add statement": "Aussage hinzufügen",
-  "Duplicate": "Duplizieren"
+  "Duplicate": "Duplizieren",
+  "New cluster": "Neuer Cluster",
+  "Ungrouped": "Nicht gruppiert"
 }

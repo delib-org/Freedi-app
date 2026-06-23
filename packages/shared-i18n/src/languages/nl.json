@@ -2714,5 +2714,7 @@
   "Cluster Map": "Clusterkaart",
   "Add cluster": "Cluster toevoegen",
   "Add statement": "Stelling toevoegen",
-  "Duplicate": "Dupliceren"
+  "Duplicate": "Dupliceren",
+  "New cluster": "Nieuw cluster",
+  "Ungrouped": "Niet gegroepeerd"
 }

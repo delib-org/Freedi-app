@@ -3237,5 +3237,7 @@
   "Cluster Map": "نقشه خوشه‌ها",
   "Add cluster": "افزودن خوشه",
   "Add statement": "افزودن گزاره",
-  "Duplicate": "تکثیر"
+  "Duplicate": "تکثیر",
+  "New cluster": "خوشه جدید",
+  "Ungrouped": "دسته‌بندی‌نشده"
 }
