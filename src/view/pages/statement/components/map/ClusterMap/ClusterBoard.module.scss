@@ -211,38 +211,42 @@
 	margin-top: 4px;
 }
 
+// "Rate this" button: a face icon. Faded neutral face before voting, the
+// chosen face (on its color) after voting. The face SVGs are light, so they
+// must sit on their colored background to be visible.
 .evalToggle {
-	border: none;
-	background: rgba(255, 255, 255, 0.6);
-	border-radius: 999px;
-	min-width: 26px;
-	height: 26px;
-	padding: 0 8px;
-	font-size: 0.68rem;
-	font-weight: 600;
-	line-height: 1;
+	border: 1px solid rgba(0, 0, 0, 0.12);
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	padding: 3px;
 	cursor: pointer;
-	color: inherit;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	opacity: 0.55;
+	transition: opacity 0.12s ease, transform 0.12s ease;
 
 	&:hover {
-		background: rgba(255, 255, 255, 0.9);
+		opacity: 0.85;
+		transform: scale(1.08);
 	}
 
 	img {
-		width: 18px;
-		height: 18px;
+		width: 100%;
+		height: 100%;
 		display: block;
 	}
 }
 
 .evalToggleVoted {
-	background: #ffffff;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-	padding: 0;
-	width: 26px;
+	opacity: 1;
+	border-color: rgba(0, 0, 0, 0.18);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+
+	&:hover {
+		opacity: 1;
+	}
 }
 
 .facesPopup {

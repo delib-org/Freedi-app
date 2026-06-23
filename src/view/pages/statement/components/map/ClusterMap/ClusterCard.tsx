@@ -71,6 +71,9 @@ const ClusterCard: FC<Props> = ({
 	const myThumb = myThumbId
 		? enhancedEvaluationsThumbs.find((thumb) => thumb.id === myThumbId)
 		: undefined;
+	// Neutral face stands in as the "rate this" icon before the user has voted.
+	const neutralThumb = enhancedEvaluationsThumbs.find((thumb) => thumb.evaluation === 0);
+	const buttonThumb = myThumb ?? neutralThumb;
 
 	return (
 		<div
@@ -173,12 +176,14 @@ const ClusterCard: FC<Props> = ({
 
 				<button
 					type="button"
-					className={`${styles.evalToggle} ${myThumb ? styles.evalToggleVoted : ''}`}
+					className={`${styles.evalToggle} ${hasVoted ? styles.evalToggleVoted : ''}`}
+					style={{ backgroundColor: buttonThumb?.colorSelected }}
 					aria-label={t('Evaluate')}
 					aria-expanded={facesOpen}
+					title={t('Evaluate')}
 					onClick={() => setFacesOpen((open) => !open)}
 				>
-					{myThumb ? <img src={myThumb.svg} alt={t('Evaluate')} /> : t('Evaluate')}
+					{buttonThumb && <img src={buttonThumb.svg} alt={t('Evaluate')} />}
 				</button>
 			</div>
 
