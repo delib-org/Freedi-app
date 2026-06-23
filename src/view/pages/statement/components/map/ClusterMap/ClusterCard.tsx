@@ -79,6 +79,7 @@ const ClusterCard: FC<Props> = ({
 		<div
 			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
+			data-flip-id={statement.statementId}
 			draggable={canManage}
 			onDragStart={onDragStart}
 			onDoubleClick={canManage && !isEditing ? onRequestEdit : undefined}

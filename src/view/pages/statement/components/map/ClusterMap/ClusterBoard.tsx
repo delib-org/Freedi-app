@@ -1,4 +1,13 @@
-import { DragEvent, FC, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+	DragEvent,
+	FC,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import { arrayRemove, arrayUnion, updateDoc } from 'firebase/firestore';
 import type { Results, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -86,6 +95,8 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
+	const canvasRef = useRef<HTMLDivElement>(null);
+	const prevRectsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
 	const canManage = useCallback(
 		(statement: Statement) => isAdmin || (!!user && statement.creatorId === user.uid),
@@ -201,6 +212,49 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 
 		return map;
 	}, [boardClusters]);
+
+	// FLIP: when a card's position changes between renders — including when a
+	// move by another participant arrives via the real-time listener — animate
+	// it gliding from its previous position to the new one.
+	useLayoutEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+		const canvasRect = canvas.getBoundingClientRect();
+		const cards = canvas.querySelectorAll<HTMLElement>('[data-flip-id]');
+		const nextRects = new Map<string, { x: number; y: number }>();
+
+		cards.forEach((el) => {
+			const id = el.getAttribute('data-flip-id');
+			if (!id) return;
+			const rect = el.getBoundingClientRect();
+			const pos = { x: rect.left - canvasRect.left, y: rect.top - canvasRect.top };
+			nextRects.set(id, pos);
+
+			if (reduceMotion) return;
+			const prev = prevRectsRef.current.get(id);
+			if (!prev) return;
+			const dx = prev.x - pos.x;
+			const dy = prev.y - pos.y;
+			if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+
+			// Invert: jump back to the old position with no transition…
+			el.style.transition = 'none';
+			el.style.transform = `translate(${dx}px, ${dy}px)`;
+			// …then play: animate to the natural new position on the next frame.
+			requestAnimationFrame(() => {
+				el.style.transition = 'transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+				el.style.transform = '';
+				const onEnd = () => {
+					el.style.transition = '';
+					el.removeEventListener('transitionend', onEnd);
+				};
+				el.addEventListener('transitionend', onEnd);
+			});
+		});
+
+		prevRectsRef.current = nextRects;
+	});
 
 	// Listen to the current user's evaluations under the subject and each cluster
 	// so cast votes show their selected state.
@@ -343,7 +397,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 
 	return (
 		<div className={styles.scroll}>
-			<div className={styles.canvas} style={{ width: size, height: size }}>
+			<div className={styles.canvas} ref={canvasRef} style={{ width: size, height: size }}>
 				<svg className={styles.connectors} width={size} height={size} aria-hidden>
 					{layout.map((l) => {
 						const x2 = cx + l.pill.x;
