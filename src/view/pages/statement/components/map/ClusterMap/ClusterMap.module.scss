@@ -1,0 +1,107 @@
+// Standalone / embeddable cluster board page layout.
+// Chrome-less full-viewport shell around the reused MindElixirMap renderer.
+
+.board {
+	display: flex;
+	flex-direction: column;
+	width: 100vw;
+	height: 100dvh;
+	overflow: hidden;
+	background: var(--background, #eef0f3);
+}
+
+.toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding, 1rem);
+	padding: 0.75rem 1rem;
+	background: var(--card-default, #ffffff);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+	z-index: 2;
+}
+
+.title {
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: 600;
+	color: var(--text-body, #3d4d71);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.toolbarActions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.layerFilter {
+	display: inline-flex;
+	gap: 0.25rem;
+}
+
+.layerButton {
+	padding: 0.25rem 0.75rem;
+	border: 1px solid var(--border, #d4d9e4);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--text-body, #3d4d71);
+	font-size: 0.85rem;
+	cursor: pointer;
+	transition: background 0.12s ease, color 0.12s ease;
+
+	&:hover {
+		background: var(--background, #eef0f3);
+	}
+}
+
+.layerButtonActive {
+	background: var(--btn-primary, #5f88e5);
+	border-color: var(--btn-primary, #5f88e5);
+	color: #ffffff;
+
+	&:hover {
+		background: var(--btn-primary, #5f88e5);
+	}
+}
+
+.canvas {
+	flex: 1;
+	position: relative;
+	display: flex;
+	min-height: 0;
+}
+
+.loading {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	height: 100%;
+	color: var(--text-body, #3d4d71);
+}
+
+.spinner {
+	width: 48px;
+	height: 48px;
+	border: 5px solid var(--border, #f3f3f3);
+	border-top-color: var(--btn-primary, #5f88e5);
+	border-radius: 50%;
+	animation: clusterMapSpin 1s linear infinite;
+}
+
+@keyframes clusterMapSpin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.spinner {
+		animation: none;
+	}
+}

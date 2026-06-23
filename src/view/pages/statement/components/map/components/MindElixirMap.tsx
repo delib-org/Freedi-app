@@ -27,6 +27,14 @@ interface Props {
 	filterBy: FilterType;
 	layerVisibility: LayerVisibility;
 	isAdmin: boolean;
+	/**
+	 * Allow dragging/regrouping nodes even for non-admins. Used by the shareable
+	 * cluster board where any participant with access can co-edit. Defaults to
+	 * admin-only behavior so the in-app statement map is unchanged.
+	 */
+	allowRegroup?: boolean;
+	/** Render with the sticky-note "cluster board" styling (per-branch colors). */
+	boardMode?: boolean;
 }
 
 /**
@@ -61,8 +69,18 @@ function findStatementById(results: Results, id: string): Statement | null {
 	return null;
 }
 
-function MindElixirMap({ descendants, isAdmin, filterBy, layerVisibility }: Readonly<Props>) {
+function MindElixirMap({
+	descendants,
+	isAdmin,
+	filterBy,
+	layerVisibility,
+	allowRegroup = false,
+	boardMode = false,
+}: Readonly<Props>) {
 	const navigate = useNavigate();
+	// Dragging/regrouping is allowed for admins, or for anyone when the board
+	// explicitly opts into open co-editing.
+	const canDrag = isAdmin || allowRegroup;
 	const containerRef = useRef<HTMLDivElement>(null);
 	const mindRef = useRef<MindElixirInstance | null>(null);
 	const { mapContext, setMapContext } = useMapContext();
@@ -312,8 +330,8 @@ function MindElixirMap({ descendants, isAdmin, filterBy, layerVisibility }: Read
 		const filtered =
 			filterBy === FilterType.questionsResults ? filterDescendants(byLayer) : byLayer;
 
-		return filtered ? toMindElixirData(filtered, [], formatClusterTag) : null;
-	}, [descendants, filterBy, layerVisibility, formatClusterTag]);
+		return filtered ? toMindElixirData(filtered, [], formatClusterTag, { boardMode }) : null;
+	}, [descendants, filterBy, layerVisibility, formatClusterTag, boardMode]);
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -344,7 +362,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy, layerVisibility }: Read
 		const mind = new MindElixir({
 			el: container,
 			direction: MindElixir.SIDE,
-			draggable: isAdmin, // Only admins can drag nodes
+			draggable: canDrag, // Admins always; others when the board allows co-editing
 			contextMenu: true,
 			toolBar: false, // We'll use our own toolbar
 			keypress: false, // We handle keyboard shortcuts ourselves
@@ -449,7 +467,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy, layerVisibility }: Read
 
 		// Event: Operation happened (for tracking node moves and text edits)
 		mind.bus.addListener('operation', async (operation: Operation) => {
-			if (isAdmin && operation.name === 'moveNodeIn') {
+			if (canDrag && operation.name === 'moveNodeIn') {
 				// A node was moved - store IDs for confirmation
 				if ('obj' in operation && 'toObj' in operation) {
 					const typedOp = operation as { obj: NodeObj; toObj: NodeObj; name: string };
@@ -666,7 +684,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy, layerVisibility }: Read
 			mind.destroy();
 			mindRef.current = null;
 		};
-	}, [data?.nodeData.id, isAdmin]);
+	}, [data?.nodeData.id, canDrag]);
 
 	// Update data when descendants change
 	useEffect(() => {
@@ -839,7 +857,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy, layerVisibility }: Read
 
 	return (
 		<>
-			<div ref={containerRef} className={styles.mindElixirContainer} tabIndex={0} />
+			<div
+				ref={containerRef}
+				className={`${styles.mindElixirContainer}${boardMode ? ` ${styles.boardMode}` : ''}`}
+				tabIndex={0}
+			/>
 
 			{/* Node toolbar overlay — rendered in React, outside MindElixir's DOM */}
 			{toolbarState.visible && (

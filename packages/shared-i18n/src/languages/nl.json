@@ -2705,5 +2705,10 @@
   "merged": "samengevoegd",
   "grouped": "gegroepeerd",
   "Synths": "Syntheses",
-  "Show map layer": "Kaartlaag tonen"
+  "Show map layer": "Kaartlaag tonen",
+  "Share map": "Kaart delen",
+  "Embed code": "Insluitcode",
+  "Copy embed code": "Insluitcode kopiëren",
+  "Loading map...": "Kaart laden...",
+  "Building map...": "Kaart bouwen..."
 }

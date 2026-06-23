@@ -2705,5 +2705,10 @@
   "merged": "fusionadas",
   "grouped": "agrupadas",
   "Synths": "Síntesis",
-  "Show map layer": "Mostrar capa del mapa"
+  "Show map layer": "Mostrar capa del mapa",
+  "Share map": "Compartir mapa",
+  "Embed code": "Código para insertar",
+  "Copy embed code": "Copiar código para insertar",
+  "Loading map...": "Cargando mapa...",
+  "Building map...": "Construyendo mapa..."
 }

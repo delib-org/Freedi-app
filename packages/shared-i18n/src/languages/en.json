@@ -3431,5 +3431,10 @@
   "merged": "merged",
   "grouped": "grouped",
   "Synths": "Synths",
-  "Show map layer": "Show map layer"
+  "Show map layer": "Show map layer",
+  "Share map": "Share map",
+  "Embed code": "Embed code",
+  "Copy embed code": "Copy embed code",
+  "Loading map...": "Loading map...",
+  "Building map...": "Building map..."
 }

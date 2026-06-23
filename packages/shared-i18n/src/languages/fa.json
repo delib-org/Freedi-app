@@ -3228,5 +3228,10 @@
   "merged": "ادغام‌شده",
   "grouped": "گروه‌بندی‌شده",
   "Synths": "ترکیب‌ها",
-  "Show map layer": "نمایش لایه نقشه"
+  "Show map layer": "نمایش لایه نقشه",
+  "Share map": "اشتراک‌گذاری نقشه",
+  "Embed code": "کد جاسازی",
+  "Copy embed code": "کپی کد جاسازی",
+  "Loading map...": "در حال بارگذاری نقشه...",
+  "Building map...": "در حال ساخت نقشه..."
 }

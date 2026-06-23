@@ -2705,5 +2705,10 @@
   "merged": "zusammengeführt",
   "grouped": "gruppiert",
   "Synths": "Synthesen",
-  "Show map layer": "Kartenebene anzeigen"
+  "Show map layer": "Kartenebene anzeigen",
+  "Share map": "Karte teilen",
+  "Embed code": "Einbettungscode",
+  "Copy embed code": "Einbettungscode kopieren",
+  "Loading map...": "Karte wird geladen...",
+  "Building map...": "Karte wird erstellt..."
 }

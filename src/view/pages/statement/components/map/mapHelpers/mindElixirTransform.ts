@@ -124,6 +124,29 @@ export function getStyleForType(
 }
 
 /**
+ * Sticky-note palette for the shareable cluster board. Each first-level branch
+ * gets one entry; descendants inherit it so an arm and its cards share a hue —
+ * the SCAMPER board look. Concrete hex (not CSS vars) because mind-elixir paints
+ * `branchColor` onto SVG connector strokes via JS, which doesn't resolve vars.
+ */
+const BRANCH_PALETTE: { line: string; card: string; text: string }[] = [
+	{ line: '#f2c12e', card: '#fdeca8', text: '#5b4a00' }, // yellow
+	{ line: '#8b6fd6', card: '#d9ccf3', text: '#2e1d56' }, // purple
+	{ line: '#4a9fe0', card: '#c2e0f7', text: '#0f3350' }, // blue
+	{ line: '#5fbb46', card: '#cdeec0', text: '#1f3d10' }, // green
+	{ line: '#ee8a37', card: '#fbd9b5', text: '#5a2f06' }, // orange
+	{ line: '#e76fa6', card: '#f8cfe0', text: '#5a1336' }, // pink
+	{ line: '#34bdb4', card: '#bdeeea', text: '#0c3b38' }, // teal
+];
+
+/** Dark "Subject" hub style for the board root, matching the reference design. */
+const BOARD_ROOT_STYLE: MindElixirNodeStyle = {
+	background: '#2b2b33',
+	color: '#ffffff',
+	fontWeight: '700',
+};
+
+/**
  * Extended NodeObj with custom data for our app
  */
 export interface FreediNodeObj extends NodeObj {
@@ -141,12 +164,26 @@ export interface FreediNodeObj extends NodeObj {
  * @param selectedStatementIds - Optional array of selected statement IDs (for showing selected options)
  * @returns MindElixirData compatible with mind-elixir library
  */
+export interface ToMindElixirOptions {
+	/** Apply the sticky-note cluster-board styling (per-branch colors, dark hub). */
+	boardMode?: boolean;
+}
+
 export function toMindElixirData(
 	results: Results,
 	selectedStatementIds: string[] = [],
 	formatClusterTag: ClusterTagFormatter = defaultClusterTagFormatter,
+	options: ToMindElixirOptions = {},
 ): MindElixirData {
-	function transformNode(result: Results): FreediNodeObj {
+	const { boardMode = false } = options;
+
+	// depth 0 = root/subject, depth 1 = labeled branches (assigned a palette color),
+	// deeper = sticky cards inheriting their branch color.
+	function transformNode(
+		result: Results,
+		depth: number,
+		branch: (typeof BRANCH_PALETTE)[number] | null,
+	): FreediNodeObj {
 		const statement = result.top;
 		const clusterKind = getClusterKind(statement);
 		const isSelected =
@@ -172,17 +209,54 @@ export function toMindElixirData(
 			decorateClusterNode(node, clusterKind, statement, result, formatClusterTag);
 		}
 
+		if (boardMode) {
+			applyBoardStyle(node, depth, branch);
+		}
+
 		// Transform children recursively
 		if (result.sub && result.sub.length > 0) {
-			node.children = result.sub.map((subResult) => transformNode(subResult));
+			node.children = result.sub.map((subResult, index) =>
+				transformNode(
+					subResult,
+					depth + 1,
+					branch ?? BRANCH_PALETTE[index % BRANCH_PALETTE.length],
+				),
+			);
 		}
 
 		return node;
 	}
 
 	return {
-		nodeData: transformNode(results),
+		nodeData: transformNode(results, 0, null),
 	};
+}
+
+/**
+ * Override a node's appearance with the board look. Root = dark hub; first-level
+ * branch = solid colored pill; deeper nodes = tinted sticky cards. The branch
+ * color also tints the connector lines so each arm reads as one group.
+ */
+function applyBoardStyle(
+	node: FreediNodeObj,
+	depth: number,
+	branch: (typeof BRANCH_PALETTE)[number] | null,
+): void {
+	if (depth === 0) {
+		node.style = { ...BOARD_ROOT_STYLE };
+
+		return;
+	}
+	if (!branch) return;
+
+	node.branchColor = branch.line;
+	if (depth === 1) {
+		// Labeled branch pill — solid color, white text.
+		node.style = { background: branch.line, color: '#ffffff', fontWeight: '600' };
+	} else {
+		// Sticky-note card — light tint of the branch color.
+		node.style = { background: branch.card, color: branch.text };
+	}
 }
 
 /**

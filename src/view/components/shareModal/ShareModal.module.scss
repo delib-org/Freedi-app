@@ -83,6 +83,36 @@
 		animation: fadeIn 0.3s ease;
 	}
 
+	&__embed {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		width: 100%;
+	}
+
+	&__embedLabel {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--text-body);
+	}
+
+	&__embedInput {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--border-light);
+		border-radius: 8px;
+		font-family: monospace;
+		font-size: 0.78rem;
+		color: var(--text-body);
+		background-color: var(--bg-muted);
+		resize: vertical;
+
+		&:focus {
+			outline: none;
+			border-color: var(--btn-primary);
+		}
+	}
+
 	&__closeButton {
 		padding: 0.75rem 2rem;
 		background-color: transparent;

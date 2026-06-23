@@ -34,6 +34,10 @@ const GroupsCurationPage = lazyWithRetry(
 	() => import('@/view/pages/statement/components/groups/GroupsCurationPage'),
 	'GroupsCurationPage',
 );
+const ClusterMap = lazyWithRetry(
+	() => import('@/view/pages/statement/components/map/ClusterMap/ClusterMap'),
+	'ClusterMap',
+);
 
 // Helper to wrap with skeleton suspense (first load only)
 const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>
@@ -84,6 +88,17 @@ export const protectedRoutes: RouteObject[] = [
 	{
 		path: 'statement/:statementId/groups',
 		element: withLoadingSuspense(GroupsCurationPage),
+	},
+	{
+		// Shareable / embeddable cluster board. Access is governed by the
+		// statement's membership.access via ProtectedLayout (public statements
+		// auto sign-in anonymous visitors).
+		path: 'map/:statementId',
+		element: withStatementSuspense(ClusterMap),
+	},
+	{
+		path: 'map/:statementId/embed',
+		element: withStatementSuspense(ClusterMap),
 	},
 ];
 

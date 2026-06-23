@@ -12,7 +12,7 @@ const EXACT_PUBLIC_ROUTES = ['/', '/start'] as const;
  * Route prefixes that allow unauthenticated access.
  * These routes handle public content (statement routes may have public access).
  */
-const PUBLIC_ROUTE_PREFIXES = ['/statement/', '/stage/', '/statement-screen/'] as const;
+const PUBLIC_ROUTE_PREFIXES = ['/statement/', '/stage/', '/statement-screen/', '/map/'] as const;
 
 /**
  * Check if a route allows unauthenticated access.

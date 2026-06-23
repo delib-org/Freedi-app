@@ -3456,5 +3456,10 @@
   "merged": "מוזגו",
   "grouped": "קובצו",
   "Synths": "סינתזות",
-  "Show map layer": "הצג שכבת מפה"
+  "Show map layer": "הצג שכבת מפה",
+  "Share map": "שיתוף מפה",
+  "Embed code": "קוד הטמעה",
+  "Copy embed code": "העתקת קוד הטמעה",
+  "Loading map...": "טוען מפה...",
+  "Building map...": "בונה מפה..."
 }

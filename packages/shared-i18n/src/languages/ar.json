@@ -2828,5 +2828,10 @@
   "merged": "مدمجة",
   "grouped": "مجمّعة",
   "Synths": "المركّبات",
-  "Show map layer": "إظهار طبقة الخريطة"
+  "Show map layer": "إظهار طبقة الخريطة",
+  "Share map": "مشاركة الخريطة",
+  "Embed code": "رمز التضمين",
+  "Copy embed code": "نسخ رمز التضمين",
+  "Loading map...": "جارٍ تحميل الخريطة...",
+  "Building map...": "جارٍ بناء الخريطة..."
 }

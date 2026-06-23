@@ -10,17 +10,26 @@ interface ShareModalProps {
 	onClose: () => void;
 	url: string;
 	title?: string;
+	/** When provided, show a copy-paste iframe embed snippet for this URL. */
+	embedUrl?: string;
 }
 
-const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, url, title }) => {
+const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, url, title, embedUrl }) => {
 	const { t } = useTranslation();
 	const [copied, setCopied] = useState(false);
+	const [embedCopied, setEmbedCopied] = useState(false);
 
-	const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+	const toAbsolute = (value: string) =>
+		value.startsWith('http') ? value : `${window.location.origin}${value}`;
+
+	const fullUrl = toAbsolute(url);
+	const embedSnippet = embedUrl
+		? `<iframe src="${toAbsolute(embedUrl)}" width="100%" height="600" style="border:0" allow="clipboard-write" title="${title ?? 'Freedi map'}"></iframe>`
+		: '';
 
 	useEffect(() => {
 		if (isOpen) {
-			copyToClipboard();
+			copyToClipboard(fullUrl, setCopied);
 		}
 	}, [isOpen]);
 
@@ -32,14 +41,22 @@ const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, url, title }) => {
 		}
 	}, [copied]);
 
-	const copyToClipboard = async () => {
+	useEffect(() => {
+		if (embedCopied) {
+			const timer = setTimeout(() => setEmbedCopied(false), 3000);
+
+			return () => clearTimeout(timer);
+		}
+	}, [embedCopied]);
+
+	const copyToClipboard = async (value: string, onCopied: (copied: boolean) => void) => {
 		try {
-			await navigator.clipboard.writeText(fullUrl);
-			setCopied(true);
+			await navigator.clipboard.writeText(value);
+			onCopied(true);
 		} catch (error) {
 			logError(error, {
 				operation: 'shareModal.copyToClipboard',
-				metadata: { url: fullUrl },
+				metadata: { url: value },
 			});
 		}
 	};
@@ -69,13 +86,37 @@ const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, url, title }) => {
 						className={styles.shareModal__linkInput}
 						onClick={(e) => (e.target as HTMLInputElement).select()}
 					/>
-					<button type="button" onClick={copyToClipboard} className={styles.shareModal__copyButton}>
+					<button
+						type="button"
+						onClick={() => copyToClipboard(fullUrl, setCopied)}
+						className={styles.shareModal__copyButton}
+					>
 						{copied ? t('copied') : t('copy')}
 					</button>
 				</div>
 
 				{copied && (
 					<p className={styles.shareModal__copiedMessage}>{t('Link copied to clipboard')}</p>
+				)}
+
+				{embedSnippet && (
+					<div className={styles.shareModal__embed}>
+						<label className={styles.shareModal__embedLabel}>{t('Embed code')}</label>
+						<textarea
+							value={embedSnippet}
+							readOnly
+							className={styles.shareModal__embedInput}
+							rows={3}
+							onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+						/>
+						<button
+							type="button"
+							onClick={() => copyToClipboard(embedSnippet, setEmbedCopied)}
+							className={styles.shareModal__copyButton}
+						>
+							{embedCopied ? t('copied') : t('Copy embed code')}
+						</button>
+					</div>
 				)}
 
 				<button type="button" onClick={onClose} className={styles.shareModal__closeButton}>
