@@ -41,6 +41,7 @@ const CARD = 120;
 const GAP = 12;
 const COLS = 3;
 const PILL_RADIUS = 210;
+const PILL_W = 180; // approx pill footprint, for spacing pills around the ring
 const HUB = 120;
 
 const UNGROUPED_ID = '__ungrouped__';
@@ -109,6 +110,8 @@ interface PlacedCluster extends BoardCluster {
 	pill: { x: number; y: number };
 	grid: { x: number; y: number };
 	cols: number;
+	/** Half of the grid's largest dimension — used to size the canvas. */
+	half: number;
 }
 
 /**
@@ -180,26 +183,45 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		return containers;
 	}, [children, t]);
 
-	// Place clusters on a ring; larger clusters sit further out so their card
-	// grids don't collide with the hub.
+	// Place clusters on a ring. Radii are chosen so neighbouring grids never
+	// overlap: the chord between two adjacent centres is 2·R·sin(step/2), which
+	// we keep larger than the biggest block's footprint (plus a margin).
 	const layout = useMemo(() => {
 		const n = Math.max(boardClusters.length, 1);
+		const angleStep = (2 * Math.PI) / n;
+		const sinHalf = Math.max(Math.sin(angleStep / 2), 0.001);
 
-		return boardClusters.map((cluster, i): PlacedCluster => {
-			const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-			const dir = { x: Math.cos(angle), y: Math.sin(angle) };
-
+		const blocks = boardClusters.map((cluster) => {
 			const memberCount = cluster.members.length + (canContribute ? 1 : 0);
 			const cols = Math.max(1, Math.min(COLS, memberCount || 1));
 			const rows = Math.max(1, Math.ceil((memberCount || 1) / cols));
-			const blockH = rows * CARD + (rows - 1) * GAP;
-			const gridRadius = PILL_RADIUS + 80 + blockH / 2;
+
+			return {
+				cols,
+				w: cols * CARD + (cols - 1) * GAP,
+				h: rows * CARD + (rows - 1) * GAP,
+			};
+		});
+
+		const maxExtent = Math.max(CARD, ...blocks.map((b) => Math.max(b.w, b.h)));
+		const maxH = Math.max(CARD, ...blocks.map((b) => b.h));
+
+		// Pills on an inner ring, grids on an outer ring — both spaced to avoid
+		// collisions between neighbours.
+		const pillRing = n > 1 ? Math.max(PILL_RADIUS, (PILL_W + 28) / (2 * sinHalf)) : PILL_RADIUS;
+		const gridCollisionRing = n > 1 ? (maxExtent + 90) / (2 * sinHalf) : 0;
+		const gridRing = Math.max(pillRing + 100 + maxH / 2, gridCollisionRing);
+
+		return boardClusters.map((cluster, i): PlacedCluster => {
+			const angle = -Math.PI / 2 + i * angleStep;
+			const dir = { x: Math.cos(angle), y: Math.sin(angle) };
 
 			return {
 				...cluster,
-				pill: { x: dir.x * PILL_RADIUS, y: dir.y * PILL_RADIUS },
-				grid: { x: dir.x * gridRadius, y: dir.y * gridRadius },
-				cols,
+				pill: { x: dir.x * pillRing, y: dir.y * pillRing },
+				grid: { x: dir.x * gridRing, y: dir.y * gridRing },
+				cols: blocks[i].cols,
+				half: Math.max(blocks[i].w, blocks[i].h) / 2,
 			};
 		});
 	}, [boardClusters, canContribute]);
@@ -208,16 +230,11 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const reach = useMemo(() => {
 		let max = PILL_RADIUS + 240;
 		for (const l of layout) {
-			const memberCount = l.members.length + (canContribute ? 1 : 0);
-			const rows = Math.max(1, Math.ceil((memberCount || 1) / l.cols));
-			const blockH = rows * CARD + (rows - 1) * GAP;
-			const blockW = l.cols * CARD + (l.cols - 1) * GAP;
-			const r = Math.hypot(l.grid.x, l.grid.y) + Math.max(blockH, blockW) / 2 + 40;
-			max = Math.max(max, r);
+			max = Math.max(max, Math.hypot(l.grid.x, l.grid.y) + l.half + 60);
 		}
 
 		return max;
-	}, [layout, canContribute]);
+	}, [layout]);
 
 	const size = reach * 2;
 	const cx = reach;
@@ -374,10 +391,17 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		try {
 			const created = await createMindMapChild({ parentStatement: subject });
 			if (created) {
-				if (cluster.clusterStatement) {
-					await assignMember(created.statementId, null, cluster.clusterStatement);
-				}
 				setEditingId(created.statementId);
+				// Assign to the cluster in the background so a slow write never
+				// leaves the add button stuck disabled.
+				if (cluster.clusterStatement) {
+					assignMember(created.statementId, null, cluster.clusterStatement).catch((error) =>
+						logError(error, {
+							operation: 'ClusterBoard.addMember.assign',
+							statementId: created.statementId,
+						}),
+					);
+				}
 			}
 		} catch (error) {
 			logError(error, { operation: 'ClusterBoard.addMember', statementId: subject.statementId });
