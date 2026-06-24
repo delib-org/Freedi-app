@@ -683,6 +683,8 @@
   "Firestore (default)": "Firestore (standaard)",
   "First Evaluation": "Eerste Evaluatie",
   "Fit to screen": "Passend op scherm",
+  "Zoom in": "Inzoomen",
+  "Zoom out": "Uitzoomen",
   "Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.": "Corrigeer eventuele inconsistenties in beoordelingsaantallen door opnieuw te berekenen vanuit de werkelijke beoordelingsgegevens. Gebruik dit als u onjuiste stemaantallen opmerkt.",
   "Follow Instructor": "Volg Instructeur",
   "Follow Me": "Volg Mij",

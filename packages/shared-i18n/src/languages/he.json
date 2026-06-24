@@ -830,6 +830,8 @@
   "Firestore (default)": "Firestore (ברירת מחדל)",
   "First Evaluation": "הערכה ראשונה",
   "Fit to screen": "התאם למסך",
+  "Zoom in": "הגדלה",
+  "Zoom out": "הקטנה",
   "Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.": "תקן אי-התאמות בספירת ההערכות על ידי חישוב מחדש מנתוני ההערכה האמיתיים. השתמש בזה אם אתה מבחין בספירות הצבעה שגויות.",
   "Focus indicators for keyboard navigation": "מחווני מיקוד לניווט במקלדת",
   "Follow Instructor": "עקוב אחרי המדריך/ה",

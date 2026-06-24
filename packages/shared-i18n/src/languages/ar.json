@@ -705,6 +705,8 @@
   "Firestore (default)": "Firestore (افتراضي)",
   "First Evaluation": "التقييم الأول",
   "Fit to screen": "ملاءمة للشاشة",
+  "Zoom in": "تكبير",
+  "Zoom out": "تصغير",
   "Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.": "أصلح أي تناقضات في أعداد التقييم عن طريق إعادة الحساب من بيانات التقييم الفعلية. استخدم هذا إذا لاحظت أعداد تصويت غير صحيحة.",
   "Follow Instructor": "اتبع المدرب",
   "Follow Me": "اتبعني",

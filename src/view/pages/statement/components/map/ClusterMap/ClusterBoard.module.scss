@@ -3,16 +3,38 @@
 // centered on their computed (x, y) via translate(-50%, -50%).
 
 .scroll {
+	position: relative;
 	flex: 1;
 	width: 100%;
 	height: 100%;
-	overflow: auto;
+	overflow: hidden;
 	background: var(--background, #eef0f3);
+	touch-action: none; // we handle pan/zoom gestures ourselves
+	cursor: default;
+}
+
+// Space held: pan is armed. While actively dragging: closed-hand cursor.
+.spaceReady {
+	cursor: grab;
+}
+
+.panning {
+	cursor: grabbing;
+	user-select: none;
+}
+
+// Transformed layer that gets the pan/zoom (translate + scale). Origin at the
+// top-left so the hook's math (viewport-px translate) lines up.
+.pan {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	transform-origin: 0 0;
+	will-change: transform;
 }
 
 .canvas {
 	position: relative;
-	margin: 0 auto;
 }
 
 .connectors {

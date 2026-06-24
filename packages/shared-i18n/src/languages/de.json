@@ -683,6 +683,8 @@
   "Firestore (default)": "Firestore (Standard)",
   "First Evaluation": "Erste Bewertung",
   "Fit to screen": "An Bildschirm anpassen",
+  "Zoom in": "Vergrößern",
+  "Zoom out": "Verkleinern",
   "Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.": "Beheben Sie Inkonsistenzen in den Bewertungszahlen, indem Sie aus den tatsächlichen Bewertungsdaten neu berechnen. Verwenden Sie dies, wenn Sie falsche Stimmenzahlen bemerken.",
   "Follow Instructor": "Instruktor folgen",
   "Follow Me": "Folge mir",

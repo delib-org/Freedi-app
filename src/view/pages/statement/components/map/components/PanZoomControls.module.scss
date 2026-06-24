@@ -1,0 +1,62 @@
+// Floating zoom controls for the map canvas. Vertical stack, bottom-end corner.
+
+.controls {
+	position: absolute;
+	bottom: 1rem;
+	inset-inline-end: 1rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 6px;
+	background: var(--card-default, #ffffff);
+	border-radius: 999px;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+	z-index: 8;
+}
+
+.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--text-body, #3d4d71);
+	cursor: pointer;
+	transition: background 0.12s ease, transform 0.12s ease;
+
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	&:hover {
+		background: var(--background, #eef0f3);
+	}
+
+	&:active {
+		transform: scale(0.92);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+}
+
+.level {
+	font-size: 0.66rem;
+	font-weight: 700;
+	color: var(--text-secondary, #8a93a6);
+	user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.button {
+		transition: none;
+	}
+}

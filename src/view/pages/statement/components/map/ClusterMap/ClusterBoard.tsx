@@ -28,6 +28,8 @@ import {
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { CLUSTER_PALETTE, type ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
+import { usePanZoom } from '../hooks/usePanZoom';
+import PanZoomControls from '../components/PanZoomControls';
 import ClusterCard from './ClusterCard';
 import styles from './ClusterBoard.module.scss';
 
@@ -273,6 +275,20 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const cx = reach;
 	const cy = reach;
 
+	// Pan & zoom navigation: wheel/pinch to zoom, drag (or Space+drag) to pan,
+	// buttons to zoom and fit the whole board into view.
+	const {
+		viewportRef,
+		transform,
+		scaleRef,
+		spaceHeld,
+		isPanning,
+		zoomIn,
+		zoomOut,
+		fit,
+		onPointerDown,
+	} = usePanZoom({ contentWidth: size, contentHeight: size });
+
 	// memberId → the cluster statement it currently belongs to (for moves).
 	const sourceClusterByMember = useMemo(() => {
 		const map = new Map<string, Statement>();
@@ -330,8 +346,11 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			const prev = prevRectsRef.current.get(id);
 			// Only animate a genuine cluster change.
 			if (!prev || prev.cluster === cluster) return;
-			const dx = prev.x - pos.x;
-			const dy = prev.y - pos.y;
+			// Rects are measured in (scaled) screen space; the card's own transform
+			// is applied in its local space, so divide out the canvas zoom.
+			const zoom = scaleRef.current || 1;
+			const dx = (prev.x - pos.x) / zoom;
+			const dy = (prev.y - pos.y) / zoom;
 			if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
 
 			// Invert: jump back to the old position with no transition…
@@ -350,7 +369,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		});
 
 		prevRectsRef.current = nextRects;
-	});
+		// Re-measure only when the board structure changes — NOT on every pan/zoom
+		// re-render, which would query every card's rect on each pointer move.
+	}, [layout]);
 
 	// Listen to the current user's evaluations under the subject and each cluster
 	// so cast votes show their selected state.
@@ -515,177 +536,196 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	};
 
 	return (
-		<div className={styles.scroll}>
-			<div className={styles.canvas} ref={canvasRef} style={{ width: size, height: size }}>
-				{colorPickerId && (
+		<div
+			className={`${styles.scroll} ${spaceHeld ? styles.spaceReady : ''} ${
+				isPanning ? styles.panning : ''
+			}`}
+			ref={viewportRef}
+			onPointerDown={onPointerDown}
+		>
+			<div
+				className={styles.pan}
+				style={{
+					transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+				}}
+			>
+				<div className={styles.canvas} ref={canvasRef} style={{ width: size, height: size }}>
+					{colorPickerId && (
+						<div
+							className={styles.pickerBackdrop}
+							onClick={() => setColorPickerId(null)}
+							aria-hidden
+						/>
+					)}
+					<svg className={styles.connectors} width={size} height={size} aria-hidden>
+						{layout.map((l) => {
+							const x2 = cx + l.pill.x;
+							const y2 = cy + l.pill.y;
+							const c1y = cy + l.pill.y * 0.25;
+							const c2x = cx + l.pill.x * 0.75;
+
+							return (
+								<path
+									key={l.id}
+									d={`M ${cx} ${cy} C ${cx} ${c1y}, ${c2x} ${y2}, ${x2} ${y2}`}
+									fill="none"
+									stroke={l.color.line}
+									strokeWidth={2}
+									opacity={0.7}
+								/>
+							);
+						})}
+					</svg>
+
 					<div
-						className={styles.pickerBackdrop}
-						onClick={() => setColorPickerId(null)}
-						aria-hidden
-					/>
-				)}
-				<svg className={styles.connectors} width={size} height={size} aria-hidden>
+						className={styles.hub}
+						style={{ left: cx, top: cy, width: HUB, height: HUB }}
+						title={subject.statement}
+					>
+						<span className={styles.hubText}>{subject.statement}</span>
+					</div>
+
+					{canContribute && (
+						<button
+							type="button"
+							className={styles.addCluster}
+							style={{ left: cx, top: cy + HUB / 2 + 18 }}
+							onClick={addCluster}
+							disabled={busy}
+						>
+							+ {t('Add cluster')}
+						</button>
+					)}
+
 					{layout.map((l) => {
-						const x2 = cx + l.pill.x;
-						const y2 = cy + l.pill.y;
-						const c1y = cy + l.pill.y * 0.25;
-						const c2x = cx + l.pill.x * 0.75;
+						const canEditPill = !!l.clusterStatement && canManage(l.clusterStatement);
+						const moveTargets = boardClusters
+							.filter((c) => c.id !== l.id)
+							.map((c) => ({ id: c.id, label: c.label }));
 
 						return (
-							<path
-								key={l.id}
-								d={`M ${cx} ${cy} C ${cx} ${c1y}, ${c2x} ${y2}, ${x2} ${y2}`}
-								fill="none"
-								stroke={l.color.line}
-								strokeWidth={2}
-								opacity={0.7}
-							/>
+							<div key={l.id}>
+								<div
+									className={styles.pill}
+									style={{
+										left: cx + l.pill.x,
+										top: cy + l.pill.y,
+										background: l.color.line,
+										zIndex: colorPickerId === l.id ? 12 : undefined,
+									}}
+									onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
+								>
+									{editingId === l.id && l.clusterStatement ? (
+										<textarea
+											className={styles.pillEdit}
+											defaultValue={l.clusterStatement.statement}
+											autoFocus
+											onFocus={(e) => e.currentTarget.select()}
+											onBlur={(e) =>
+												saveText(l.clusterStatement as Statement, e.currentTarget.value)
+											}
+											onKeyDown={(e) => {
+												if (e.key === 'Enter' && !e.shiftKey) {
+													e.preventDefault();
+													e.currentTarget.blur();
+												}
+												if (e.key === 'Escape') setEditingId(null);
+											}}
+										/>
+									) : (
+										l.label
+									)}
+
+									{canEditPill && editingId !== l.id && (
+										<button
+											type="button"
+											className={styles.colorDot}
+											aria-label={t('Change color')}
+											title={t('Change color')}
+											onClick={(e) => {
+												e.stopPropagation();
+												setColorPickerId((id) => (id === l.id ? null : l.id));
+											}}
+										/>
+									)}
+
+									{colorPickerId === l.id && l.clusterStatement && (
+										<div className={styles.colorPopover}>
+											{CLUSTER_PALETTE.map((entry) => (
+												<button
+													key={entry.line}
+													type="button"
+													className={styles.swatch}
+													style={{ background: entry.line }}
+													aria-label={entry.line}
+													onClick={() =>
+														setClusterColor(l.clusterStatement as Statement, entry.line)
+													}
+												/>
+											))}
+											<input
+												type="color"
+												className={styles.colorInput}
+												defaultValue={l.color.line}
+												aria-label={t('Custom color')}
+												onChange={(e) =>
+													setClusterColor(l.clusterStatement as Statement, e.target.value)
+												}
+											/>
+										</div>
+									)}
+								</div>
+
+								<div
+									className={styles.grid}
+									style={{
+										left: cx + l.grid.x,
+										top: cy + l.grid.y,
+										gridTemplateColumns: `repeat(${l.cols}, ${CARD}px)`,
+										gap: GAP,
+									}}
+									onDragOver={(e) => e.preventDefault()}
+									onDrop={(e) => handleDrop(e, l.id)}
+								>
+									{l.members.map((member) => (
+										<ClusterCard
+											key={member.top.statementId}
+											statement={member.top}
+											color={l.color}
+											canManage={canManage(member.top)}
+											showEval={showEval}
+											isEditing={editingId === member.top.statementId}
+											onRequestEdit={() => setEditingId(member.top.statementId)}
+											onSaveText={(value) => saveText(member.top, value)}
+											onCancelEdit={() => setEditingId(null)}
+											onDuplicate={() => duplicate(member.top, l)}
+											onDelete={() => remove(member.top)}
+											onDragStart={(e) => handleDragStart(e, member.top)}
+											clusterId={l.id}
+											moveTargets={moveTargets}
+											onMove={(targetId) => moveMember(member.top, targetId)}
+										/>
+									))}
+									{canContribute && (
+										<button
+											type="button"
+											className={styles.addCard}
+											style={{ color: l.color.text }}
+											onClick={() => addMember(l)}
+											disabled={busy}
+											aria-label={t('Add statement')}
+										>
+											+
+										</button>
+									)}
+								</div>
+							</div>
 						);
 					})}
-				</svg>
-
-				<div
-					className={styles.hub}
-					style={{ left: cx, top: cy, width: HUB, height: HUB }}
-					title={subject.statement}
-				>
-					<span className={styles.hubText}>{subject.statement}</span>
 				</div>
-
-				{canContribute && (
-					<button
-						type="button"
-						className={styles.addCluster}
-						style={{ left: cx, top: cy + HUB / 2 + 18 }}
-						onClick={addCluster}
-						disabled={busy}
-					>
-						+ {t('Add cluster')}
-					</button>
-				)}
-
-				{layout.map((l) => {
-					const canEditPill = !!l.clusterStatement && canManage(l.clusterStatement);
-					const moveTargets = boardClusters
-						.filter((c) => c.id !== l.id)
-						.map((c) => ({ id: c.id, label: c.label }));
-
-					return (
-						<div key={l.id}>
-							<div
-								className={styles.pill}
-								style={{
-									left: cx + l.pill.x,
-									top: cy + l.pill.y,
-									background: l.color.line,
-									zIndex: colorPickerId === l.id ? 12 : undefined,
-								}}
-								onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
-							>
-								{editingId === l.id && l.clusterStatement ? (
-									<textarea
-										className={styles.pillEdit}
-										defaultValue={l.clusterStatement.statement}
-										autoFocus
-										onFocus={(e) => e.currentTarget.select()}
-										onBlur={(e) => saveText(l.clusterStatement as Statement, e.currentTarget.value)}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter' && !e.shiftKey) {
-												e.preventDefault();
-												e.currentTarget.blur();
-											}
-											if (e.key === 'Escape') setEditingId(null);
-										}}
-									/>
-								) : (
-									l.label
-								)}
-
-								{canEditPill && editingId !== l.id && (
-									<button
-										type="button"
-										className={styles.colorDot}
-										aria-label={t('Change color')}
-										title={t('Change color')}
-										onClick={(e) => {
-											e.stopPropagation();
-											setColorPickerId((id) => (id === l.id ? null : l.id));
-										}}
-									/>
-								)}
-
-								{colorPickerId === l.id && l.clusterStatement && (
-									<div className={styles.colorPopover}>
-										{CLUSTER_PALETTE.map((entry) => (
-											<button
-												key={entry.line}
-												type="button"
-												className={styles.swatch}
-												style={{ background: entry.line }}
-												aria-label={entry.line}
-												onClick={() => setClusterColor(l.clusterStatement as Statement, entry.line)}
-											/>
-										))}
-										<input
-											type="color"
-											className={styles.colorInput}
-											defaultValue={l.color.line}
-											aria-label={t('Custom color')}
-											onChange={(e) =>
-												setClusterColor(l.clusterStatement as Statement, e.target.value)
-											}
-										/>
-									</div>
-								)}
-							</div>
-
-							<div
-								className={styles.grid}
-								style={{
-									left: cx + l.grid.x,
-									top: cy + l.grid.y,
-									gridTemplateColumns: `repeat(${l.cols}, ${CARD}px)`,
-									gap: GAP,
-								}}
-								onDragOver={(e) => e.preventDefault()}
-								onDrop={(e) => handleDrop(e, l.id)}
-							>
-								{l.members.map((member) => (
-									<ClusterCard
-										key={member.top.statementId}
-										statement={member.top}
-										color={l.color}
-										canManage={canManage(member.top)}
-										showEval={showEval}
-										isEditing={editingId === member.top.statementId}
-										onRequestEdit={() => setEditingId(member.top.statementId)}
-										onSaveText={(value) => saveText(member.top, value)}
-										onCancelEdit={() => setEditingId(null)}
-										onDuplicate={() => duplicate(member.top, l)}
-										onDelete={() => remove(member.top)}
-										onDragStart={(e) => handleDragStart(e, member.top)}
-										clusterId={l.id}
-										moveTargets={moveTargets}
-										onMove={(targetId) => moveMember(member.top, targetId)}
-									/>
-								))}
-								{canContribute && (
-									<button
-										type="button"
-										className={styles.addCard}
-										style={{ color: l.color.text }}
-										onClick={() => addMember(l)}
-										disabled={busy}
-										aria-label={t('Add statement')}
-									>
-										+
-									</button>
-								)}
-							</div>
-						</div>
-					);
-				})}
 			</div>
+
+			<PanZoomControls scale={transform.scale} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={fit} />
 		</div>
 	);
 };

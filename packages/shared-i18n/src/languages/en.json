@@ -827,6 +827,8 @@
   "Firestore (default)": "Firestore (default)",
   "First Evaluation": "First Evaluation",
   "Fit to screen": "Fit to screen",
+  "Zoom in": "Zoom in",
+  "Zoom out": "Zoom out",
   "Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.": "Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.",
   "Focus indicators for keyboard navigation": "Focus indicators for keyboard navigation",
   "Follow Instructor": "Follow Instructor",

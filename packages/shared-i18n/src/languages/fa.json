@@ -784,6 +784,8 @@
   "Firestore (default)": "Firestore (پیش‌فرض)",
   "First Evaluation": "ارزیابی اول",
   "Fit to screen": "تناسب با صفحه",
+  "Zoom in": "بزرگ‌نمایی",
+  "Zoom out": "کوچک‌نمایی",
   "Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.": "با محاسبه مجدد از داده‌های واقعی ارزیابی، هرگونه ناهماهنگی در شمارش ارزیابی‌ها را برطرف کنید. اگر تعداد رأی نادرست مشاهده کردید از این استفاده کنید.",
   "Focus indicators for keyboard navigation": "نشانگرهای تمرکز برای ناوبری با کیبورد",
   "Follow Instructor": "دنبال کردن مدرس",
