@@ -142,7 +142,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const [colorPickerId, setColorPickerId] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 	const canvasRef = useRef<HTMLDivElement>(null);
-	const prevRectsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+	const prevRectsRef = useRef<Map<string, { x: number; y: number; cluster: string }>>(new Map());
 
 	const canManage = useCallback(
 		(statement: Statement) => isAdmin || (!!user && statement.creatorId === user.uid),
@@ -273,27 +273,30 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		return map;
 	}, [boardClusters]);
 
-	// FLIP: when a card's position changes between renders — including when a
-	// move by another participant arrives via the real-time listener — animate
-	// it gliding from its previous position to the new one.
+	// FLIP: animate a card gliding to its new spot ONLY when it actually changes
+	// cluster (a real move, local or from another participant). Cards that merely
+	// shift because the board reflowed (an add/remove elsewhere, canvas resize)
+	// jump instantly — otherwise the whole board "bumps" on every update.
 	useLayoutEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 		const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 		const canvasRect = canvas.getBoundingClientRect();
 		const cards = canvas.querySelectorAll<HTMLElement>('[data-flip-id]');
-		const nextRects = new Map<string, { x: number; y: number }>();
+		const nextRects = new Map<string, { x: number; y: number; cluster: string }>();
 
 		cards.forEach((el) => {
 			const id = el.getAttribute('data-flip-id');
 			if (!id) return;
+			const cluster = el.getAttribute('data-cluster-id') ?? '';
 			const rect = el.getBoundingClientRect();
-			const pos = { x: rect.left - canvasRect.left, y: rect.top - canvasRect.top };
+			const pos = { x: rect.left - canvasRect.left, y: rect.top - canvasRect.top, cluster };
 			nextRects.set(id, pos);
 
 			if (reduceMotion) return;
 			const prev = prevRectsRef.current.get(id);
-			if (!prev) return;
+			// Only animate a genuine cluster change.
+			if (!prev || prev.cluster === cluster) return;
 			const dx = prev.x - pos.x;
 			const dy = prev.y - pos.y;
 			if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
@@ -628,6 +631,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										onDuplicate={() => duplicate(member.top, l)}
 										onDelete={() => remove(member.top)}
 										onDragStart={(e) => handleDragStart(e, member.top)}
+										clusterId={l.id}
 										moveTargets={moveTargets}
 										onMove={(targetId) => moveMember(member.top, targetId)}
 									/>

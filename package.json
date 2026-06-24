@@ -94,6 +94,7 @@
     "dompurify": "^3.4.6",
     "esbuild": "0.25.2",
     "firebase": "^11.0.2",
+    "firebase-functions": "^7.2.5",
     "lucide-react": "^0.474.0",
     "mind-elixir": "^5.5.0",
     "qrcode.react": "^4.2.0",

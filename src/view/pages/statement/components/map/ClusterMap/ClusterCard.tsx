@@ -25,6 +25,8 @@ interface Props {
 	onDuplicate: () => void;
 	onDelete: () => void;
 	onDragStart: (e: DragEvent) => void;
+	/** Id of the cluster this card currently belongs to (for move animation). */
+	clusterId: string;
 	/** Clusters this card can be moved to (excludes its current cluster). */
 	moveTargets: { id: string; label: string }[];
 	onMove: (targetId: string) => void;
@@ -42,6 +44,7 @@ const ClusterCard: FC<Props> = ({
 	onDuplicate,
 	onDelete,
 	onDragStart,
+	clusterId,
 	moveTargets,
 	onMove,
 }) => {
@@ -80,6 +83,7 @@ const ClusterCard: FC<Props> = ({
 			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
 			data-flip-id={statement.statementId}
+			data-cluster-id={clusterId}
 			draggable={canManage}
 			onDragStart={onDragStart}
 			onDoubleClick={canManage && !isEditing ? onRequestEdit : undefined}
