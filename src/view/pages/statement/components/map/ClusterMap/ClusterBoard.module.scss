@@ -242,6 +242,14 @@
 	display: -webkit-box;
 	-webkit-line-clamp: 4;
 	-webkit-box-orient: vertical;
+	// Align to the logical start so dir="auto" (RTL text) right-aligns itself.
+	text-align: start;
+}
+
+// Card editor follows the typed text's direction (overrides the shared
+// `text-align: inherit` above, which the centered pill editor still uses).
+.cardEdit {
+	text-align: start;
 }
 
 .cardMenu {

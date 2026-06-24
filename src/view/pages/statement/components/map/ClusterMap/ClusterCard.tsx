@@ -154,6 +154,8 @@ const ClusterCard: FC<Props> = ({
 					className={styles.cardEdit}
 					defaultValue={statement.statement}
 					autoFocus
+					// Auto-detect LTR/RTL from the typed text and align accordingly.
+					dir="auto"
 					onFocus={(e) => e.currentTarget.select()}
 					onBlur={(e) => onSaveText(e.currentTarget.value)}
 					onKeyDown={(e) => {
@@ -165,7 +167,10 @@ const ClusterCard: FC<Props> = ({
 					}}
 				/>
 			) : (
-				<span className={styles.cardText}>{statement.statement}</span>
+				// dir="auto" aligns each note by its own content (Hebrew/Arabic → RTL).
+				<span className={styles.cardText} dir="auto">
+					{statement.statement}
+				</span>
 			)}
 
 			<div className={styles.cardFooter}>
