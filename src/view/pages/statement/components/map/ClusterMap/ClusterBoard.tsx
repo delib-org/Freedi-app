@@ -578,7 +578,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 					{colorPickerId && (
 						<div
 							className={styles.pickerBackdrop}
-							onClick={() => setColorPickerId(null)}
+							// data-no-pan so the press isn't swallowed by canvas panning.
+							data-no-pan
+							onPointerDown={() => setColorPickerId(null)}
 							aria-hidden
 						/>
 					)}
