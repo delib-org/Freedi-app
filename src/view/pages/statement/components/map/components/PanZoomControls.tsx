@@ -12,14 +12,32 @@ interface Props {
 	onZoomOut: () => void;
 	/** Fit the whole map within the view. */
 	onFit: () => void;
+	/** Anchor to the viewport (position: fixed) instead of the nearest container. */
+	fixed?: boolean;
+	/** Which bottom corner to dock in. Defaults to the trailing (end) edge. */
+	align?: 'start' | 'end';
 }
 
 /** Floating zoom controls (in / out / fit) for the map canvas. */
-const PanZoomControls: FC<Props> = ({ scale, onZoomIn, onZoomOut, onFit }) => {
+const PanZoomControls: FC<Props> = ({
+	scale,
+	onZoomIn,
+	onZoomOut,
+	onFit,
+	fixed,
+	align = 'end',
+}) => {
 	const { t } = useTranslation();
+	const classes = [
+		styles.controls,
+		fixed ? styles.fixed : '',
+		align === 'start' ? styles.alignStart : '',
+	]
+		.filter(Boolean)
+		.join(' ');
 
 	return (
-		<div className={styles.controls} data-no-pan>
+		<div className={classes} data-no-pan>
 			<button type="button" className={styles.button} onClick={onZoomIn} aria-label={t('Zoom in')}>
 				<PlusIcon />
 			</button>

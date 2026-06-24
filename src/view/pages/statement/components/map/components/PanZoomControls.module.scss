@@ -15,6 +15,18 @@
 	z-index: 8;
 }
 
+// Anchor to the viewport (for maps without a positioned scroll wrapper).
+.fixed {
+	position: fixed;
+	z-index: 100;
+}
+
+// Dock against the leading edge instead of the trailing edge.
+.alignStart {
+	inset-inline-start: 1rem;
+	inset-inline-end: auto;
+}
+
 .button {
 	display: inline-flex;
 	align-items: center;

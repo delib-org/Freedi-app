@@ -19,8 +19,14 @@ import {
 } from '../mapHelpers/mindMapStatements';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { FilterType } from '@/controllers/general/sorting';
+import PanZoomControls from './PanZoomControls';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
+
+// Zoom bounds + button step, shared by the wheel, pinch, and button handlers.
+const SCALE_MIN = 0.2;
+const SCALE_MAX = 3;
+const ZOOM_BUTTON_STEP = 1.25;
 
 interface Props {
 	descendants: Results;
@@ -107,6 +113,9 @@ function MindElixirMap({
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
+
+	// Live zoom level (1 = 100%) shown in the floating zoom controls.
+	const [mapScale, setMapScale] = useState(1);
 
 	// State for toolbar overlay (rendered in React, outside MindElixir DOM)
 	const [toolbarState, setToolbarState] = useState<{
@@ -353,11 +362,6 @@ function MindElixirMap({
 			return () => clearTimeout(timeoutId);
 		}
 
-		// Space + scroll wheel zoom state (must be before MindElixir constructor)
-		let spaceHeld = false;
-		const SCALE_MIN = 0.2;
-		const SCALE_MAX = 3;
-
 		// Create MindElixir instance
 		const mind = new MindElixir({
 			el: container,
@@ -369,26 +373,28 @@ function MindElixirMap({
 			editable: true, // Allow inline editing
 			allowUndo: true,
 			overflowHidden: false,
-			// Custom wheel handler: zoom when Space held, otherwise default pan
+			// Widen the library's zoom range (defaults cap at 1.4) so zoom controls
+			// and wheel zoom have real room to work.
+			scaleMin: SCALE_MIN,
+			scaleMax: SCALE_MAX,
+			// Wheel zooms toward the cursor (Space+drag is for panning). Continuous
+			// delta keeps both mouse wheel and trackpad smooth.
 			handleWheel: (e: WheelEvent) => {
-				if (spaceHeld && mindRef.current) {
-					e.preventDefault();
-					// Use continuous delta for smooth zoom (works with both mouse wheel and trackpad)
-					const delta = -e.deltaY * 0.002;
-					const currentScale = mindRef.current.scaleVal;
-					const targetScale = currentScale * (1 + delta);
-					const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
-					const factor = clampedScale / currentScale;
-					if (Math.abs(factor - 1) < 0.001) return;
-					const containerRect = container.getBoundingClientRect();
-					mindRef.current.scale(factor, {
-						x: e.clientX - containerRect.left,
-						y: e.clientY - containerRect.top,
-					});
-				} else if (mindRef.current) {
-					// Default panning behavior
-					mindRef.current.move(-e.deltaX, -e.deltaY);
-				}
+				if (!mindRef.current) return;
+				e.preventDefault();
+				const delta = -e.deltaY * 0.002;
+				const currentScale = mindRef.current.scaleVal;
+				// scale() takes an ABSOLUTE target (not a factor) and zooms toward the
+				// given point.
+				const targetScale = currentScale * (1 + delta);
+				const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
+				if (Math.abs(clampedScale - currentScale) < 0.001) return;
+				const containerRect = container.getBoundingClientRect();
+				mindRef.current.scale(clampedScale, {
+					x: e.clientX - containerRect.left,
+					y: e.clientY - containerRect.top,
+				});
+				setMapScale(clampedScale);
 			},
 			// Intercept operations before they happen
 			before: {
@@ -416,6 +422,7 @@ function MindElixirMap({
 			if (mindRef.current) {
 				mindRef.current.initRight();
 				mindRef.current.scaleFit();
+				setMapScale(mindRef.current.scaleVal);
 			}
 		}, 100);
 
@@ -601,22 +608,36 @@ function MindElixirMap({
 
 		container.addEventListener('click', handleContainerClick);
 
-		// Space key tracking for zoom mode (wheel zoom is in handleWheel above)
+		// Space + drag to pan. MindElixir pans natively while its `spacePressed`
+		// flag is set (and shows a grab cursor via the `space-pressed` class), but
+		// it only flips that flag from a keydown listener on its own container —
+		// so it silently fails unless the map has focus. Drive it from the window
+		// so Space+drag works regardless of where focus is.
+		const setSpacePan = (on: boolean) => {
+			const mind = mindRef.current as unknown as {
+				spacePressed?: boolean;
+				container?: HTMLElement;
+			} | null;
+			if (!mind) return;
+			mind.spacePressed = on;
+			// MindElixir nests its own `.map-container` inside our el; the grab-cursor
+			// CSS is scoped to that element, so toggle the class there.
+			(mind.container ?? container).classList.toggle('space-pressed', on);
+		};
+
 		const handleZoomKeyDown = (e: KeyboardEvent) => {
 			if (e.code === 'Space') {
 				const activeEl = document.activeElement as HTMLElement;
 				if (activeEl?.isContentEditable || activeEl?.id === 'input-box') return;
 				if (activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA') return;
 				e.preventDefault();
-				spaceHeld = true;
-				container.style.cursor = 'zoom-in';
+				setSpacePan(true);
 			}
 		};
 
 		const handleZoomKeyUp = (e: KeyboardEvent) => {
 			if (e.code === 'Space') {
-				spaceHeld = false;
-				container.style.cursor = '';
+				setSpacePan(false);
 			}
 		};
 
@@ -648,16 +669,17 @@ function MindElixirMap({
 			const currentDistance = getDistance(e.touches[0], e.touches[1]);
 			const pinchRatio = currentDistance / initialPinchDistance;
 			const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, initialScale * pinchRatio));
-			const factor = newScale / mindRef.current.scaleVal;
 
 			const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
 			const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
 			const rect = container.getBoundingClientRect();
 
-			mindRef.current.scale(factor, {
+			// scale() takes an ABSOLUTE target, zooming toward the pinch midpoint.
+			mindRef.current.scale(newScale, {
 				x: midX - rect.left,
 				y: midY - rect.top,
 			});
+			setMapScale(newScale);
 		};
 
 		const handleTouchEnd = (e: TouchEvent) => {
@@ -816,7 +838,24 @@ function MindElixirMap({
 	const handleFitToScreen = useCallback(() => {
 		if (!mindRef.current) return;
 		mindRef.current.scaleFit();
+		setMapScale(mindRef.current.scaleVal);
 	}, []);
+
+	// Zoom around the viewport center by a fixed step (floating controls).
+	const handleZoomBy = useCallback((step: number) => {
+		const mind = mindRef.current;
+		if (!mind) return;
+		const current = mind.scaleVal;
+		const target = Math.min(SCALE_MAX, Math.max(SCALE_MIN, current * step));
+		if (Math.abs(target - current) < 0.001) return;
+		const rect = containerRef.current?.getBoundingClientRect();
+		// scale() takes an ABSOLUTE target; zoom around the viewport center.
+		mind.scale(target, rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 });
+		setMapScale(target);
+	}, []);
+
+	const handleZoomIn = useCallback(() => handleZoomBy(ZOOM_BUTTON_STEP), [handleZoomBy]);
+	const handleZoomOut = useCallback(() => handleZoomBy(1 / ZOOM_BUTTON_STEP), [handleZoomBy]);
 
 	// Toolbar action handlers
 	const handleToolbarLink = useCallback(() => {
@@ -935,6 +974,16 @@ function MindElixirMap({
 					)}
 				</div>
 			)}
+
+			{/* Persistent zoom controls (bottom-start, clear of the FAB). */}
+			<PanZoomControls
+				fixed
+				align="start"
+				scale={mapScale}
+				onZoomIn={handleZoomIn}
+				onZoomOut={handleZoomOut}
+				onFit={handleFitToScreen}
+			/>
 
 			{/* Controls Panel */}
 			<div className={styles.controlsPanel}>
