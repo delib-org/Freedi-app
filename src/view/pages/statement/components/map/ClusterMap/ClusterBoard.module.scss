@@ -178,12 +178,14 @@
 	top: calc(100% + 8px);
 	left: 50%;
 	transform: translateX(-50%);
-	display: flex;
+	// Fixed 3-column grid (instead of a single wrapping flex column). width:
+	// max-content sizes the popover to its columns, not to the narrow pill.
+	display: grid;
+	grid-template-columns: repeat(3, 24px);
+	justify-items: center;
 	align-items: center;
-	flex-wrap: wrap;
-	justify-content: center;
-	max-width: 220px;
-	gap: 5px;
+	width: max-content;
+	gap: 6px;
 	padding: 8px 10px;
 	background: var(--card-default, #ffffff);
 	border-radius: 16px;
