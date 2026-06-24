@@ -3441,6 +3441,8 @@
   "Building map...": "Building map...",
   "Cluster Map": "Cluster Map",
   "Add cluster": "Add cluster",
+  "Delete cluster": "Delete cluster",
+  "Delete this cluster? Its notes will move to Ungrouped.": "Delete this cluster? Its notes will move to Ungrouped.",
   "Add statement": "Add statement",
   "Duplicate": "Duplicate",
   "New cluster": "New cluster",

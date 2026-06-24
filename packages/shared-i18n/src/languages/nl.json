@@ -2715,6 +2715,8 @@
   "Building map...": "Kaart bouwen...",
   "Cluster Map": "Clusterkaart",
   "Add cluster": "Cluster toevoegen",
+  "Delete cluster": "Cluster verwijderen",
+  "Delete this cluster? Its notes will move to Ungrouped.": "Dit cluster verwijderen? De notities gaan naar «Niet-gegroepeerd».",
   "Add statement": "Stelling toevoegen",
   "Duplicate": "Dupliceren",
   "New cluster": "Nieuw cluster",

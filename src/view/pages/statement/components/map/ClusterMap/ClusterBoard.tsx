@@ -23,6 +23,7 @@ import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	createEmptyCluster,
 	setGroupOverride,
+	ungroupCluster,
 	STANDALONE_OVERRIDE,
 } from '@/controllers/db/statements/condensationCuration';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
@@ -481,6 +482,30 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		}
 	};
 
+	// Delete a cluster: the cluster statement is removed and any overrides that
+	// pointed at it are cleared. Its notes are plain options under the question,
+	// so they survive and reappear in the "Ungrouped" block.
+	const removeCluster = async (cluster: BoardCluster) => {
+		if (!cluster.clusterStatement || busy) return;
+		const confirmed = window.confirm(t('Delete this cluster? Its notes will move to Ungrouped.'));
+		if (!confirmed) return;
+		setBusy(true);
+		try {
+			await ungroupCluster({
+				parentStatementId: subject.statementId,
+				clusterId: cluster.clusterStatement.statementId,
+				currentAssignments: subject.creatorOverrides?.assignments ?? {},
+			});
+		} catch (error) {
+			logError(error, {
+				operation: 'ClusterBoard.removeCluster',
+				statementId: cluster.clusterStatement.statementId,
+			});
+		} finally {
+			setBusy(false);
+		}
+	};
+
 	const duplicate = async (member: Statement, cluster: BoardCluster) => {
 		if (busy) return;
 		setBusy(true);
@@ -613,6 +638,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										background: l.color.line,
 										zIndex: colorPickerId === l.id ? 12 : undefined,
 									}}
+									// Keep the pill clickable (edit/color/delete) — don't let a press
+									// on it start a canvas pan, which would swallow the double-click.
+									data-no-pan
 									onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
 								>
 									{editingId === l.id && l.clusterStatement ? (
@@ -647,6 +675,22 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 												setColorPickerId((id) => (id === l.id ? null : l.id));
 											}}
 										/>
+									)}
+
+									{canEditPill && editingId !== l.id && (
+										<button
+											type="button"
+											className={styles.deleteDot}
+											aria-label={t('Delete cluster')}
+											title={t('Delete cluster')}
+											disabled={busy}
+											onClick={(e) => {
+												e.stopPropagation();
+												removeCluster(l);
+											}}
+										>
+											×
+										</button>
 									)}
 
 									{colorPickerId === l.id && l.clusterStatement && (

@@ -2838,6 +2838,8 @@
   "Building map...": "جارٍ بناء الخريطة...",
   "Cluster Map": "خريطة العناقيد",
   "Add cluster": "إضافة عنقود",
+  "Delete cluster": "حذف العنقود",
+  "Delete this cluster? Its notes will move to Ungrouped.": "حذف هذا العنقود؟ ستنتقل ملاحظاته إلى \"غير مصنّف\".",
   "Add statement": "إضافة عبارة",
   "Duplicate": "تكرار",
   "New cluster": "عنقود جديد",

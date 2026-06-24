@@ -3466,6 +3466,8 @@
   "Building map...": "בונה מפה...",
   "Cluster Map": "מפת אשכולות",
   "Add cluster": "הוספת אשכול",
+  "Delete cluster": "מחיקת אשכול",
+  "Delete this cluster? Its notes will move to Ungrouped.": "למחוק את האשכול? הפתקים שלו יעברו ל\"לא מקובצים\".",
   "Add statement": "הוספת היגד",
   "Duplicate": "שכפול",
   "New cluster": "אשכול חדש",

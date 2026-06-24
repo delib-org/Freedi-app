@@ -2715,6 +2715,8 @@
   "Building map...": "Construyendo mapa...",
   "Cluster Map": "Mapa de grupos",
   "Add cluster": "Añadir grupo",
+  "Delete cluster": "Eliminar grupo",
+  "Delete this cluster? Its notes will move to Ungrouped.": "¿Eliminar este grupo? Sus notas pasarán a «Sin agrupar».",
   "Add statement": "Añadir declaración",
   "Duplicate": "Duplicar",
   "New cluster": "Nuevo grupo",
