@@ -82,6 +82,9 @@ const ClusterCard: FC<Props> = ({
 		<div
 			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
+			// Mirror the whole card to the note's own direction so the menu docks
+			// opposite the text start (no overlap) and the footer reads naturally.
+			dir="auto"
 			data-flip-id={statement.statementId}
 			data-cluster-id={clusterId}
 			draggable={canManage}
