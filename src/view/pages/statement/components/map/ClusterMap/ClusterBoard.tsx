@@ -183,9 +183,11 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		return containers;
 	}, [children, t]);
 
-	// Place clusters on a ring. Radii are chosen so neighbouring grids never
-	// overlap: the chord between two adjacent centres is 2·R·sin(step/2), which
-	// we keep larger than the biggest block's footprint (plus a margin).
+	// Place clusters on a ring. Pills sit on an inner ring near the hub; each
+	// grid then hugs its OWN pill at a radius set by that cluster's own size, so
+	// small/empty clusters stay close instead of being flung out to match the
+	// biggest cluster. Only neighbours that would actually overlap get pushed
+	// apart, using their real sizes (law of cosines on their grid centres).
 	const layout = useMemo(() => {
 		const n = Math.max(boardClusters.length, 1);
 		const angleStep = (2 * Math.PI) / n;
@@ -195,33 +197,64 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			const memberCount = cluster.members.length + (canContribute ? 1 : 0);
 			const cols = Math.max(1, Math.min(COLS, memberCount || 1));
 			const rows = Math.max(1, Math.ceil((memberCount || 1) / cols));
+			const w = cols * CARD + (cols - 1) * GAP;
+			const h = rows * CARD + (rows - 1) * GAP;
 
-			return {
-				cols,
-				w: cols * CARD + (cols - 1) * GAP,
-				h: rows * CARD + (rows - 1) * GAP,
-			};
+			// Bounding-circle radius of the block, for collision checks.
+			return { cols, w, h, half: Math.hypot(w, h) / 2 };
 		});
 
-		const maxExtent = Math.max(CARD, ...blocks.map((b) => Math.max(b.w, b.h)));
-		const maxH = Math.max(CARD, ...blocks.map((b) => b.h));
-
-		// Pills on an inner ring, grids on an outer ring — both spaced to avoid
-		// collisions between neighbours.
+		// Pills on an inner ring, spaced so the pills themselves don't overlap.
 		const pillRing = n > 1 ? Math.max(PILL_RADIUS, (PILL_W + 28) / (2 * sinHalf)) : PILL_RADIUS;
-		const gridCollisionRing = n > 1 ? (maxExtent + 90) / (2 * sinHalf) : 0;
-		const gridRing = Math.max(pillRing + 100 + maxH / 2, gridCollisionRing);
+
+		const angles = boardClusters.map((_, i) => -Math.PI / 2 + i * angleStep);
+
+		// Start each grid just past its pill. The block is axis-aligned, so how far
+		// it juts back toward the hub depends on its angle: |w/2·cosθ| + |h/2·sinθ|.
+		// Using that (instead of the diagonal) keeps short/wide clusters close.
+		const radii = blocks.map((b, i) => {
+			const a = angles[i];
+			const radialReach = Math.abs((b.w / 2) * Math.cos(a)) + Math.abs((b.h / 2) * Math.sin(a));
+
+			return pillRing + 40 + radialReach;
+		});
+
+		// Tangential (sideways-along-the-ring) extent of each axis-aligned block at
+		// its angle — this is the room a neighbour actually needs, far less than the
+		// block's bounding circle, so we don't over-space radially-placed grids.
+		const tang = blocks.map((b, i) => {
+			const a = angles[i];
+
+			return Math.abs((b.w / 2) * Math.sin(a)) + Math.abs((b.h / 2) * Math.cos(a));
+		});
+
+		// Push apart only neighbouring grids that genuinely overlap.
+		if (n > 1) {
+			const cos = Math.cos(angleStep);
+			for (let pass = 0; pass < 6; pass++) {
+				for (let i = 0; i < n; i++) {
+					const j = (i + 1) % n;
+					const needed = tang[i] + tang[j] + 24;
+					const d = Math.sqrt(radii[i] ** 2 + radii[j] ** 2 - 2 * radii[i] * radii[j] * cos);
+					if (d < needed) {
+						const bump = (needed - d) / 2 + 1;
+						radii[i] += bump;
+						radii[j] += bump;
+					}
+				}
+			}
+		}
 
 		return boardClusters.map((cluster, i): PlacedCluster => {
-			const angle = -Math.PI / 2 + i * angleStep;
+			const angle = angles[i];
 			const dir = { x: Math.cos(angle), y: Math.sin(angle) };
 
 			return {
 				...cluster,
 				pill: { x: dir.x * pillRing, y: dir.y * pillRing },
-				grid: { x: dir.x * gridRing, y: dir.y * gridRing },
+				grid: { x: dir.x * radii[i], y: dir.y * radii[i] },
 				cols: blocks[i].cols,
-				half: Math.max(blocks[i].w, blocks[i].h) / 2,
+				half: blocks[i].half,
 			};
 		});
 	}, [boardClusters, canContribute]);
