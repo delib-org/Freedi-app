@@ -25,11 +25,20 @@
 
 // Transformed layer that gets the pan/zoom (translate + scale). Origin at the
 // top-left so the hook's math (viewport-px translate) lines up.
+//
+// NOTE: deliberately no `will-change: transform` at rest. Promoting this to a
+// cached GPU layer makes the browser rasterize it once at 1× and then magnify
+// the bitmap, so zoomed-in text/cards look blurry. Without promotion the vector
+// DOM re-rasterizes at the live zoom and stays crisp. We only promote it while
+// actively panning (below), where motion hides any softness and smoothness wins.
 .pan {
 	position: absolute;
 	top: 0;
 	inset-inline-start: 0;
 	transform-origin: 0 0;
+}
+
+.panning .pan {
 	will-change: transform;
 }
 
