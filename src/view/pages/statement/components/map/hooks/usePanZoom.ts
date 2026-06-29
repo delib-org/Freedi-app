@@ -283,9 +283,14 @@ export function usePanZoom({
 				pinch = { dist: newDist, cx, cy };
 			} else if (e.touches.length === 1 && touchPan) {
 				e.preventDefault();
-				const dx = e.touches[0].clientX - touchPan.x;
-				const dy = e.touches[0].clientY - touchPan.y;
-				setTransform((prev) => ({ ...prev, x: touchPan!.originX + dx, y: touchPan!.originY + dy }));
+				// Snapshot the origin before setTransform: React may invoke the
+				// updater during a later render, by which point onTouchEnd could
+				// have nulled `touchPan` (the "Cannot read properties of null
+				// (reading 'originX')" crash on mobile).
+				const { x: startX, y: startY, originX, originY } = touchPan;
+				const dx = e.touches[0].clientX - startX;
+				const dy = e.touches[0].clientY - startY;
+				setTransform((prev) => ({ ...prev, x: originX + dx, y: originY + dy }));
 			}
 		};
 

@@ -38,13 +38,19 @@ each box and reference the commit when done.
   - **Verified:** `npm run build` clean; `onOptionUpdateLive` tests 17/17.
     **Needs redeploy of `liveSynthOnOptionUpdate` to prod** to take effect.
 
-- [ ] **T0.2 — "Oops/unaccepted error" adding a cluster on Android**
-  - `ClusterBoard.tsx:473 addCluster()` returns silently when `creator` is undefined
-    (auth not ready on mobile); `createMindMapChild()`
-    (`map/mapHelpers/mindMapStatements.ts:72`) and `createEmptyCluster()`
-    (`condensationCuration.ts:347`) throw without user-facing feedback.
-  - Surface a toast on failure; guard against un-initialised `creator` (disable the
-    add button until auth ready). Reproduce on Android.
+- [x] **T0.2 — "Oops/unaccepted error" adding a cluster on Android**
+  - **Root cause:** the error string — *"Cannot read properties of null (reading
+    'originX')"* — comes from the touch-pan handler, not the add path. In
+    `map/hooks/usePanZoom.ts:288` the `setTransform` updater closed over the mutable
+    `let touchPan` via a `touchPan!` non-null assertion. React can invoke a functional
+    updater during a later render, by which point `onTouchEnd` may have nulled
+    `touchPan` → null deref crash on mobile during the touch sequence around an add.
+  - **Fix:** snapshot `touchPan` origin/start into block-scoped consts before
+    `setTransform`, so the updater never touches the mutable ref (`usePanZoom.ts`).
+  - **Secondary:** `addCluster()` returned silently while `creator` was undefined
+    (auth not ready on mobile). The add-cluster button is now `disabled` until
+    `creator` is ready, with a "Signing you in…" tooltip (i18n added to all 7
+    languages) — no more silent no-op (`ClusterBoard.tsx`).
 
 - [ ] **T0.3 — Items all show as UNGROUPED**
   - Likely a *symptom* of T0.1 (deleted cluster → members orphan into the synthetic

@@ -2715,6 +2715,7 @@
   "Building map...": "Karte wird erstellt...",
   "Cluster Map": "Cluster-Karte",
   "Add cluster": "Cluster hinzufügen",
+  "Signing you in…": "Anmeldung läuft…",
   "Delete cluster": "Cluster löschen",
   "Delete this cluster? Its notes will move to Ungrouped.": "Diesen Cluster löschen? Seine Notizen werden nach „Nicht gruppiert“ verschoben.",
   "Add statement": "Aussage hinzufügen",
