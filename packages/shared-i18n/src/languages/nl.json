@@ -2741,5 +2741,6 @@
   "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "Toon op elk cluster een regel \"samengesteld uit N reacties\" zodat mensen zien hoe het is gevormd.",
   "Cluster map": "Clusterkaart",
   "Control how the cluster map looks: text size, which layers show, and provenance.": "Bepaal hoe de clusterkaart eruitziet: tekstgrootte, welke lagen worden getoond en herkomst.",
-  "Map settings": "Kaartinstellingen"
+  "Map settings": "Kaartinstellingen",
+  "Cluster provenance": "Clusterherkomst"
 }

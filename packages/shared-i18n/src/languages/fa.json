@@ -3264,5 +3264,6 @@
   "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "نمایش یک خط «ساخته‌شده از N پاسخ» روی هر خوشه تا مردم ببینند چگونه شکل گرفته است.",
   "Cluster map": "نقشه خوشه‌ها",
   "Control how the cluster map looks: text size, which layers show, and provenance.": "کنترل ظاهر نقشه خوشه‌ها: اندازه متن، لایه‌های نمایش‌داده‌شده و منشأ.",
-  "Map settings": "تنظیمات نقشه"
+  "Map settings": "تنظیمات نقشه",
+  "Cluster provenance": "منشأ خوشه"
 }

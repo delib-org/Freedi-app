@@ -3466,5 +3466,6 @@
   "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "Display a \"made from N responses\" line on each cluster so people see how it was formed.",
   "Cluster map": "Cluster map",
   "Control how the cluster map looks: text size, which layers show, and provenance.": "Control how the cluster map looks: text size, which layers show, and provenance.",
-  "Map settings": "Map settings"
+  "Map settings": "Map settings",
+  "Cluster provenance": "Cluster provenance"
 }

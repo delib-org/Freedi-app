@@ -2863,5 +2863,6 @@
   "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "عرض سطر \"مُكوَّن من N ردًا\" على كل مجموعة ليرى الناس كيف تكوّنت.",
   "Cluster map": "خريطة المجموعات",
   "Control how the cluster map looks: text size, which layers show, and provenance.": "تحكّم في شكل خريطة المجموعات: حجم النص، والطبقات المعروضة، والمصدر.",
-  "Map settings": "إعدادات الخريطة"
+  "Map settings": "إعدادات الخريطة",
+  "Cluster provenance": "مصدر المجموعة"
 }

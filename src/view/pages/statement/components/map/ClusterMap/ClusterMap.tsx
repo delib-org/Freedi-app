@@ -1,8 +1,7 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams, useSearchParams } from 'react-router';
 import { StatementType } from '@freedi/shared-types';
-import { Settings, X } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -14,8 +13,8 @@ import {
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
 import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
-import MapControlCard from '@/view/pages/statement/components/settings/components/advancedSettings/MapControlCard';
 import ClusterBoard from './ClusterBoard';
+import MapAdminPanel from './MapAdminPanel';
 import { useMindMap } from '../MindMapMV';
 import styles from './ClusterMap.module.scss';
 
@@ -39,7 +38,6 @@ const ClusterMap: FC = () => {
 	const { user, creator } = useAuthentication();
 	const statement = useSelector(statementSelector(statementId));
 	const { results } = useMindMap();
-	const [showControls, setShowControls] = useState(false);
 
 	// Admins (board owner or admin-role) get the in-place map controls. Mirrors
 	// ClusterBoard's admin check so the gear shows for the same people who can
@@ -85,17 +83,6 @@ const ClusterMap: FC = () => {
 				<header className={styles.toolbar}>
 					<h1 className={styles.title}>{statement.statement}</h1>
 					<div className={styles.toolbarActions}>
-						{canConfigureMap && (
-							<button
-								type="button"
-								className={styles.settingsButton}
-								onClick={() => setShowControls(true)}
-								title={t('Map settings')}
-								aria-label={t('Map settings')}
-							>
-								<Settings size={18} />
-							</button>
-						)}
 						<ShareButton
 							title={t('Share map')}
 							text={t('Share')}
@@ -117,35 +104,8 @@ const ClusterMap: FC = () => {
 				)}
 			</div>
 
-			{canConfigureMap && showControls && (
-				<div
-					className={styles.panelBackdrop}
-					onClick={() => setShowControls(false)}
-					role="presentation"
-				>
-					<aside
-						className={styles.panel}
-						onClick={(e) => e.stopPropagation()}
-						role="dialog"
-						aria-modal="true"
-						aria-label={t('Map settings')}
-					>
-						<header className={styles.panelHeader}>
-							<h2 className={styles.panelTitle}>{t('Map settings')}</h2>
-							<button
-								type="button"
-								className={styles.panelClose}
-								onClick={() => setShowControls(false)}
-								aria-label={t('Close')}
-							>
-								<X size={18} />
-							</button>
-						</header>
-						<div className={styles.panelBody}>
-							<MapControlCard statement={statement} settings={statement.statementSettings ?? {}} />
-						</div>
-					</aside>
-				</div>
+			{canConfigureMap && (
+				<MapAdminPanel statement={statement} settings={statement.statementSettings ?? {}} />
 			)}
 		</div>
 	);

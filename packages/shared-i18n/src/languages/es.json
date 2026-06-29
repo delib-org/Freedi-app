@@ -2741,5 +2741,6 @@
   "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "Muestra una línea \"creado a partir de N respuestas\" en cada grupo para que se vea cómo se formó.",
   "Cluster map": "Mapa de grupos",
   "Control how the cluster map looks: text size, which layers show, and provenance.": "Controla el aspecto del mapa de grupos: tamaño del texto, qué capas se muestran y procedencia.",
-  "Map settings": "Ajustes del mapa"
+  "Map settings": "Ajustes del mapa",
+  "Cluster provenance": "Procedencia del grupo"
 }
