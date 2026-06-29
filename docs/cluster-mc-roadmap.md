@@ -70,9 +70,18 @@ each box and reference the commit when done.
   - **Verified:** tsc clean, ESLint clean. **Takes effect on next hosting deploy**
     (`npm run build` + `deploy:h:prod`), not a functions deploy.
 
-- [ ] **T0.4 — Bigger / clearer cluster titles**
-  - Pills `0.82rem`, hub `0.8rem` (`ClusterBoard.module.scss:109,71`). Increase
-    title sizing/prominence; optional font-size control. SCSS + design tokens only.
+- [x] **T0.5 — Admin map-control panel + bigger/clearer cluster titles** (was T0.4)
+  - New `statementSettings.map` schema (shared-types): `cardFontRem`,
+    `clusterFontRem`, `synthVisibility`, `showProvenance`.
+  - **(a)** Cluster pill/hub + card text driven by `--map-cluster-font` /
+    `--map-card-font` CSS vars from settings; raised defaults (cluster 1rem, card
+    0.9rem). Admin sliders (0.6–2.2rem). `ClusterBoard.tsx` + `.module.scss`.
+  - **(b)** `synthVisibility` layer gate: all / clusters-only / originals-only.
+  - **(c)** "made from N responses" provenance on each cluster (toggleable).
+  - **Panel:** `MapControlCard.tsx` → "Cluster map" subsection in `AISettings.tsx`
+    (questions only). i18n in all 7 languages.
+  - **Verified:** shared-types rebuilt, tsc + ESLint clean, `npm run build` ok.
+    Takes effect on next `deploy:h:prod`.
 
 ## 🟡 Tier 1 — High-value, smallish (right after conference)
 

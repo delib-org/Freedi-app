@@ -1,4 +1,5 @@
 import {
+	CSSProperties,
 	DragEvent,
 	FC,
 	useCallback,
@@ -9,7 +10,7 @@ import {
 	useState,
 } from 'react';
 import { arrayRemove, arrayUnion, updateDoc } from 'firebase/firestore';
-import type { Results, Statement } from '@freedi/shared-types';
+import type { MapSynthVisibility, Results, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -50,6 +51,22 @@ const HUB = 120;
 const UNGROUPED_ID = '__ungrouped__';
 const UNGROUPED_COLOR: ClusterPaletteEntry = { line: '#9aa3b2', card: '#e7eaf0', text: '#3d4d71' };
 const DRAG_MIME = 'application/x-freedi-statement-id';
+
+// Default map typography (rem). Admins override these per question via
+// statementSettings.map; the SCSS reads them as CSS custom properties so the
+// defaults here and the SCSS fallbacks stay in lock-step.
+const MAP_FONT_CARD_DEFAULT = 0.9; // sticky-note text
+const MAP_FONT_CLUSTER_DEFAULT = 1; // cluster pill + hub title
+// Sensible bounds so a stray setting can't make the board unreadable.
+const MAP_FONT_MIN = 0.6;
+const MAP_FONT_MAX = 2.2;
+const MAP_SYNTH_VISIBILITY_DEFAULT: MapSynthVisibility = 'all';
+
+function clampFont(value: number | undefined, fallback: number): number {
+	if (typeof value !== 'number' || Number.isNaN(value)) return fallback;
+
+	return Math.min(MAP_FONT_MAX, Math.max(MAP_FONT_MIN, value));
+}
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 	const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
@@ -156,6 +173,24 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const showEval = subject.statementSettings?.showEvaluation ?? false;
 	const canContribute = !!user;
 
+	// Admin-controlled map display (font sizes, which layers render, provenance).
+	const mapSettings = subject.statementSettings?.map;
+	const synthVisibility = mapSettings?.synthVisibility ?? MAP_SYNTH_VISIBILITY_DEFAULT;
+	const showProvenance = mapSettings?.showProvenance ?? true;
+	// Drive the SCSS typography off CSS custom properties so admin font sizes
+	// apply live to every card/pill/hub without re-styling each node inline.
+	const boardFontVars = useMemo<CSSProperties>(
+		() =>
+			({
+				'--map-card-font': `${clampFont(mapSettings?.cardFontRem, MAP_FONT_CARD_DEFAULT)}rem`,
+				'--map-cluster-font': `${clampFont(
+					mapSettings?.clusterFontRem,
+					MAP_FONT_CLUSTER_DEFAULT,
+				)}rem`,
+			}) as CSSProperties,
+		[mapSettings?.cardFontRem, mapSettings?.clusterFontRem],
+	);
+
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [colorPickerId, setColorPickerId] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
@@ -174,6 +209,29 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		const containers: BoardCluster[] = [];
 		const loose: Results[] = [];
 
+		// originals-only: ignore clustering entirely — every option (cluster
+		// members included) renders as a flat note with no pills/synth groups.
+		if (synthVisibility === 'originals-only') {
+			children.forEach((child) => {
+				if (child.top.isCluster) {
+					(child.sub ?? []).forEach((member) => loose.push(member));
+				} else {
+					loose.push(child);
+				}
+			});
+			if (loose.length > 0) {
+				containers.push({
+					id: UNGROUPED_ID,
+					label: t('All responses'),
+					color: UNGROUPED_COLOR,
+					members: loose,
+					clusterStatement: null,
+				});
+			}
+
+			return containers;
+		}
+
 		children.forEach((child) => {
 			if (child.top.isCluster) {
 				containers.push({
@@ -188,7 +246,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			}
 		});
 
-		if (loose.length > 0) {
+		// clusters-only: hide the synthetic "Ungrouped" block of un-clustered
+		// originals; the cluster/synth groups are all that render.
+		if (loose.length > 0 && synthVisibility !== 'clusters-only') {
 			containers.push({
 				id: UNGROUPED_ID,
 				label: t('Ungrouped'),
@@ -199,7 +259,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		}
 
 		return containers;
-	}, [children, t]);
+	}, [children, t, synthVisibility]);
 
 	// Place clusters on a ring. Pills sit on an inner ring near the hub; each
 	// grid then hugs its OWN pill at a radius set by that cluster's own size, so
@@ -582,6 +642,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			}`}
 			ref={viewportRef}
 			onPointerDown={onPointerDown}
+			style={boardFontVars}
 		>
 			<div
 				className={styles.pan}
@@ -633,7 +694,8 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 							className={styles.addCluster}
 							style={{ left: cx, top: cy + HUB / 2 + 18 }}
 							onClick={addCluster}
-							disabled={busy}
+							disabled={busy || !creator}
+							title={!creator ? t('Signing you in…') : undefined}
 						>
 							+ {t('Add cluster')}
 						</button>
@@ -680,6 +742,21 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 									) : (
 										l.label
 									)}
+
+									{showProvenance &&
+										l.clusterStatement &&
+										editingId !== l.id &&
+										l.members.length > 0 && (
+											<span
+												className={styles.provenance}
+												title={t('This cluster was made from these responses')}
+											>
+												{t('made from {count} responses').replace(
+													'{count}',
+													String(l.members.length),
+												)}
+											</span>
+										)}
 
 									{canEditPill && editingId !== l.id && (
 										<button

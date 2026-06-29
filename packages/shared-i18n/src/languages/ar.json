@@ -2846,5 +2846,21 @@
   "New cluster": "عنقود جديد",
   "Move to": "نقل إلى",
   "Change color": "تغيير اللون",
-  "Custom color": "لون مخصص"
+  "Custom color": "لون مخصص",
+  "All responses": "كل الردود",
+  "made from {count} responses": "مُكوَّن من {count} ردًا",
+  "This cluster was made from these responses": "تم تكوين هذه المجموعة من هذه الردود",
+  "Map text size": "حجم نص الخريطة",
+  "Set how large the cluster titles and the response cards appear on the map.": "حدّد حجم عناوين المجموعات وبطاقات الردود على الخريطة.",
+  "Cluster title size": "حجم عنوان المجموعة",
+  "Response card size": "حجم بطاقة الرد",
+  "What the map shows": "ما تعرضه الخريطة",
+  "Choose whether the map groups responses into clusters, or shows every response on its own.": "اختر ما إذا كانت الخريطة تجمع الردود في مجموعات أو تعرض كل رد على حدة.",
+  "Clusters + originals": "المجموعات + الأصلية",
+  "Clusters only": "المجموعات فقط",
+  "Originals only": "الأصلية فقط",
+  "Show what each cluster was made from": "إظهار مما تكوّنت كل مجموعة",
+  "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "عرض سطر \"مُكوَّن من N ردًا\" على كل مجموعة ليرى الناس كيف تكوّنت.",
+  "Cluster map": "خريطة المجموعات",
+  "Control how the cluster map looks: text size, which layers show, and provenance.": "تحكّم في شكل خريطة المجموعات: حجم النص، والطبقات المعروضة، والمصدر."
 }

@@ -2724,5 +2724,21 @@
   "Ungrouped": "Sin agrupar",
   "Move to": "Mover a",
   "Change color": "Cambiar color",
-  "Custom color": "Color personalizado"
+  "Custom color": "Color personalizado",
+  "All responses": "Todas las respuestas",
+  "made from {count} responses": "creado a partir de {count} respuestas",
+  "This cluster was made from these responses": "Este grupo se creó a partir de estas respuestas",
+  "Map text size": "Tamaño del texto del mapa",
+  "Set how large the cluster titles and the response cards appear on the map.": "Define el tamaño de los títulos de los grupos y las tarjetas de respuesta en el mapa.",
+  "Cluster title size": "Tamaño del título del grupo",
+  "Response card size": "Tamaño de la tarjeta de respuesta",
+  "What the map shows": "Qué muestra el mapa",
+  "Choose whether the map groups responses into clusters, or shows every response on its own.": "Elige si el mapa agrupa las respuestas en grupos o muestra cada respuesta por separado.",
+  "Clusters + originals": "Grupos + originales",
+  "Clusters only": "Solo grupos",
+  "Originals only": "Solo originales",
+  "Show what each cluster was made from": "Mostrar de qué se creó cada grupo",
+  "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "Muestra una línea \"creado a partir de N respuestas\" en cada grupo para que se vea cómo se formó.",
+  "Cluster map": "Mapa de grupos",
+  "Control how the cluster map looks: text size, which layers show, and provenance.": "Controla el aspecto del mapa de grupos: tamaño del texto, qué capas se muestran y procedencia."
 }

@@ -68,7 +68,8 @@
 
 .hubText {
 	font-weight: 700;
-	font-size: 0.8rem;
+	// Admin-controlled via --map-cluster-font (see ClusterBoard MAP_FONT_*).
+	font-size: var(--map-cluster-font, 1rem);
 	text-align: center;
 	line-height: 1.15;
 	overflow: hidden;
@@ -106,12 +107,23 @@
 	padding: 0.4rem 0.9rem;
 	color: #ffffff;
 	font-weight: 600;
-	font-size: 0.82rem;
+	// Admin-controlled via --map-cluster-font (see ClusterBoard MAP_FONT_*).
+	font-size: var(--map-cluster-font, 1rem);
 	text-align: center;
 	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
 	z-index: 2;
 	cursor: default;
 	word-break: break-word;
+}
+
+// "made from N responses" — synth provenance shown under the cluster title.
+.provenance {
+	display: block;
+	margin-top: 2px;
+	font-weight: 500;
+	// Scale with the cluster title but stay clearly secondary.
+	font-size: 0.7em;
+	opacity: 0.85;
 }
 
 // Small handle on the pill corner that opens the cluster color picker.
@@ -268,7 +280,8 @@
 
 .cardText {
 	flex: 1;
-	font-size: 0.74rem;
+	// Admin-controlled via --map-card-font (see ClusterBoard MAP_FONT_*).
+	font-size: var(--map-card-font, 0.9rem);
 	line-height: 1.2;
 	word-break: break-word;
 	overflow: hidden;

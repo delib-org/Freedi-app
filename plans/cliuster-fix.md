@@ -29,7 +29,22 @@ Create `docs/cluster-mc-roadmap.md` with the tickets below. Each ticket is self-
   - On **mobile**: pressing on a target should **not** focus/recenter the map (tapping a node currently steals/refocuses the viewport — disable the auto-focus-on-press on touch).
   - On **desktop**: the target does **not** center horizontally (centering is off-axis — fix so the focused target centers horizontally as well as vertically).
   - Files: `usePanZoom.ts` (focus/center logic) + `ClusterBoard.tsx` (tap/press handlers). Look at where a node press triggers a recenter and make it pointer-type aware.
-- [ ] **T0.5 — Admin map-control panel + bigger/clearer cluster titles** (new feature)
+- [x] **T0.5 — Admin map-control panel + bigger/clearer cluster titles** (new feature)
+  - **Done:** new `MapSettingsSchema` on `statementSettings.map` (shared-types) →
+    `cardFontRem`, `clusterFontRem`, `synthVisibility`, `showProvenance`.
+  - **(a)** Cluster pill/hub + card text now read `--map-cluster-font` /
+    `--map-card-font` CSS vars set on the board root from settings, with raised
+    defaults (cluster 1rem, card 0.9rem, was 0.82/0.74). Admin sliders in the new
+    panel (clamped 0.6–2.2rem). `ClusterBoard.tsx` + `.module.scss`.
+  - **(b)** `synthVisibility` gates layers in `boardClusters`: `all` (default),
+    `clusters-only` (hide Ungrouped block), `originals-only` (flatten, no pills).
+  - **(c)** "made from N responses" provenance line on each cluster pill
+    (toggleable via `showProvenance`).
+  - **Panel:** new `MapControlCard.tsx` rendered as a "Cluster map" subsection in
+    `AISettings.tsx` (questions only), persisted via `setDoc({statementSettings:
+    {map}}, {merge})`. i18n: 16 strings added to all 7 languages.
+  - **Verified:** shared-types rebuilt, `tsc` clean, ESLint clean, `npm run build`
+    succeeds. Takes effect on next `deploy:h:prod`.
   - **Goal:** give admins a panel to control how the cluster map renders, mirroring the existing "Join" / grouping admin-settings pattern. Settings persist on the statement so they apply for everyone viewing the map.
   - **(a) Font-size control + bigger titles** — admin sets the font size of the **sticky notes** (cards) and the **clusters** (pills/hub) independently. Today these are fixed in SCSS: card text `.cardText` `0.74rem`, cluster `.pill` `0.82rem`, hub `.hubText` `0.8rem` (`ClusterBoard.module.scss:69,101,269`). Drive them from CSS custom properties (e.g. `--map-card-font`, `--map-cluster-font`) set as inline style vars on the board root from settings, with the current rems as defaults. **Also raise the default title sizing/prominence** so clusters read clearly from a distance (the original "bigger/clearer cluster titles" ask) — bump the baseline via this same mechanism. SCSS via design tokens, no hardcoded values per CLAUDE.md.
   - **(b) Synth visibility toggle** — admin chooses what the map shows: **synth + originals together**, **clusters/synth only**, or **originals only (no synth)**. The data model already supports this: `CondensationConfig.viewLayers { raw, synth, cluster }` and `visibility.{main,massConsensus,join}` in `StatementSettings.ts` (`CondensationConfigSchema:135-153`). Reuse/extend these rather than inventing a new field. `ClusterBoard.tsx:178-189` filters `child.top.isCluster`; `mapCont.ts:115-120` resolves members from `integratedOptions[]` — gate which layer renders off the setting.
