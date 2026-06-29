@@ -175,6 +175,27 @@ export const SynthesisConfigSchema = object({
 });
 export type SynthesisConfig = InferOutput<typeof SynthesisConfigSchema>;
 
+/**
+ * Cluster-map display settings — admin-controlled rendering of the radial
+ * cluster board (ClusterBoard). Persisted on the question so every viewer sees
+ * the same map. All fields optional → the board falls back to its built-in
+ * defaults (see ClusterBoard MAP_FONT_* / MAP_SYNTH_VISIBILITY_DEFAULT).
+ */
+export const MapSynthVisibilitySchema = picklist([
+	'all', // clusters/synth AND ungrouped originals (default)
+	'clusters-only', // only clustered/synth groups; hide the ungrouped block
+	'originals-only', // flatten everything to originals; hide cluster grouping
+]);
+export type MapSynthVisibility = InferOutput<typeof MapSynthVisibilitySchema>;
+
+export const MapSettingsSchema = object({
+	cardFontRem: optional(number()), // sticky-note (card) text size, rem
+	clusterFontRem: optional(number()), // cluster pill + hub title size, rem
+	synthVisibility: optional(MapSynthVisibilitySchema), // which layers render
+	showProvenance: optional(boolean()), // show "made from N responses" on clusters
+});
+export type MapSettings = InferOutput<typeof MapSettingsSchema>;
+
 export enum evaluationType {
 	likeDislike = 'like-dislike',
 	range = 'range',
@@ -239,6 +260,7 @@ export const StatementSettingsSchema = object({
 	activationThreshold: optional(ActivationThresholdSchema), // min activists/organizers to activate an option
 	condensation: optional(CondensationConfigSchema), // grouped suggestions feature — see CondensationConfigSchema
 	synthesis: optional(SynthesisConfigSchema), // bulk idea synthesis — see SynthesisConfigSchema
+	map: optional(MapSettingsSchema), // cluster-map display controls — see MapSettingsSchema
 	// Join app: when true, the MainHub renders a QR code section that any
 	// participant can use to share the room URL with someone nearby (peer-to-
 	// peer invite). Hub-scoped — only honoured on the main statement, not

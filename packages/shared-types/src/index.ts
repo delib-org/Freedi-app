@@ -248,7 +248,9 @@ export type {
   CondensationSurfaceVisibility,
   CondensationVisibility,
   ViewLayers,
-  QuestionStatus
+  QuestionStatus,
+  MapSettings,
+  MapSynthVisibility
 } from "./models/statement/StatementSettings";
 
 export {
@@ -266,7 +268,9 @@ export {
   CondensationSurfaceVisibilitySchema,
   CondensationVisibilitySchema,
   ViewLayersSchema,
-  QuestionStatusSchema
+  QuestionStatusSchema,
+  MapSettingsSchema,
+  MapSynthVisibilitySchema
 } from "./models/statement/StatementSettings";
 
 export type {

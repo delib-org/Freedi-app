@@ -1,0 +1,342 @@
+// Admin map-control panel — mirrors the Join app's FacilitatorPanel: a floating
+// edge handle (draggable vertically) that opens a right-side drawer of sectioned
+// toggle rows, segmented controls, and slider rows. Uses the main app's design
+// tokens (no hardcoded colors) per CLAUDE.md.
+
+$panel-width: 320px;
+
+.root {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 9000;
+
+	> * {
+		pointer-events: auto;
+	}
+}
+
+.handle {
+	position: fixed;
+	top: 50%;
+	inset-inline-end: 0;
+	transform: translateY(-50%);
+	z-index: 9001;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 56px;
+	padding: 0;
+	color: #ffffff;
+	background: var(--btn-primary, #5f88e5);
+	border: 0;
+	border-start-start-radius: 14px;
+	border-end-start-radius: 14px;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+	cursor: grab;
+	touch-action: none; // so pointermove drag tracking works on touch
+	user-select: none;
+	-webkit-user-select: none;
+	transition:
+		background 0.14s ease,
+		transform 0.22s ease,
+		box-shadow 0.14s ease;
+
+	&:hover,
+	&:focus-visible {
+		filter: brightness(1.05);
+		outline: none;
+		box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+	}
+
+	&:active {
+		cursor: grabbing;
+	}
+}
+
+.handleIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+}
+
+// Once dragged, an exact top px is set inline — drop the centering translate.
+.handlePositioned {
+	transform: translateY(0);
+}
+
+.handleOpen {
+	transform: translateY(-50%) translateX(calc(-1 * #{$panel-width}));
+}
+
+.handlePositioned.handleOpen {
+	transform: translateY(0) translateX(calc(-1 * #{$panel-width}));
+}
+
+[dir='rtl'] .handleOpen {
+	transform: translateY(-50%) translateX(#{$panel-width});
+}
+
+[dir='rtl'] .handlePositioned.handleOpen {
+	transform: translateY(0) translateX(#{$panel-width});
+}
+
+.handleDragging {
+	transition: none;
+	cursor: grabbing;
+}
+
+.backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 9000;
+	background: rgba(15, 22, 41, 0.45);
+}
+
+.panel {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	inset-inline-end: 0;
+	z-index: 9002;
+	width: $panel-width;
+	max-width: 90vw;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1rem 0.85rem;
+	background: var(--card-default, #ffffff);
+	box-shadow: -4px 0 18px rgba(0, 0, 0, 0.2);
+	transform: translateX(100%);
+	transition: transform 0.22s ease;
+	overflow-y: auto;
+}
+
+[dir='rtl'] .panel {
+	transform: translateX(-100%);
+}
+
+.panelOpen,
+[dir='rtl'] .panelOpen {
+	transform: translateX(0);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--border, #e4e8f0);
+}
+
+.title {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-body, #3d4d71);
+}
+
+.close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--text-body, #3d4d71);
+	cursor: pointer;
+	transition: background 0.14s ease;
+
+	&:hover,
+	&:focus-visible {
+		background: var(--background, #eef0f3);
+		outline: none;
+	}
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding-block-start: 0.75rem;
+	margin-block-start: 0.25rem;
+	border-block-start: 1px solid var(--border, #e4e8f0);
+
+	&:first-of-type {
+		padding-block-start: 0;
+		margin-block-start: 0;
+		border-block-start: 0;
+	}
+}
+
+.sectionTitle {
+	display: block;
+	margin-block-end: 0.25rem;
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--text-secondary, #8a93a6);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.row {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding: 0.5rem 0;
+}
+
+.rowMain {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.rowLabel {
+	flex: 1;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-body, #3d4d71);
+}
+
+.rowIcon {
+	display: inline-block;
+	margin-inline-end: 0.4em;
+	font-size: 1.05em;
+	line-height: 1;
+	vertical-align: -0.05em;
+}
+
+.rowHelp {
+	font-size: 0.72rem;
+	color: var(--text-secondary, #8a93a6);
+	line-height: 1.4;
+}
+
+// Toggle switch (track + knob).
+.toggle {
+	position: relative;
+	width: 44px;
+	height: 24px;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	flex-shrink: 0;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+		border-radius: 999px;
+	}
+}
+
+.toggleTrack {
+	position: absolute;
+	inset: 0;
+	background: var(--border, #d6d3d1);
+	border-radius: 999px;
+	transition: background 0.14s ease;
+}
+
+.toggleKnob {
+	position: absolute;
+	top: 2px;
+	inset-inline-start: 2px;
+	width: 20px;
+	height: 20px;
+	background: #ffffff;
+	border-radius: 50%;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	transition: transform 0.14s ease;
+}
+
+.toggleOn .toggleTrack {
+	background: var(--btn-primary, #5f88e5);
+}
+
+.toggleOn .toggleKnob {
+	transform: translateX(20px);
+}
+
+[dir='rtl'] .toggleOn .toggleKnob {
+	transform: translateX(-20px);
+}
+
+// Segmented control (radiogroup of pill buttons).
+.segmented {
+	display: inline-flex;
+	flex-wrap: wrap;
+	border-radius: 999px;
+	background: var(--background, #eef0f3);
+	padding: 2px;
+	gap: 2px;
+}
+
+.segment {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: var(--text-body, #3d4d71);
+	font-size: 0.75rem;
+	font-weight: 500;
+	padding: 4px 10px;
+	border-radius: 999px;
+	cursor: pointer;
+	transition:
+		background 0.14s ease,
+		color 0.14s ease;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+}
+
+.segmentActive {
+	background: var(--btn-primary, #5f88e5);
+	color: #ffffff;
+}
+
+// Slider row (label + range + value).
+.sliderRow {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.35rem 0;
+}
+
+.sliderLabel {
+	flex: 1;
+	font-size: 0.875rem;
+	color: var(--text-body, #3d4d71);
+}
+
+.slider {
+	flex: 1;
+	accent-color: var(--btn-primary, #5f88e5);
+	cursor: pointer;
+}
+
+.sliderValue {
+	min-width: 3em;
+	text-align: end;
+	font-size: 0.75rem;
+	color: var(--text-secondary, #8a93a6);
+	font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.handle,
+	.panel,
+	.toggleTrack,
+	.toggleKnob {
+		transition: none;
+	}
+}

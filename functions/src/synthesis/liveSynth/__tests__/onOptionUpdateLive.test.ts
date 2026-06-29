@@ -326,6 +326,54 @@ describe('liveSynthOnOptionUpdate', () => {
 		expect(dissolveAudit?.[0]).toMatchObject({ clusterId: 'cluster1' });
 	});
 
+	it('keeps a member in a manual cluster (titleLockedByCreator) despite a "different" verdict', async () => {
+		const [before, after] = makeBeforeAfter({}, {});
+		const fs = setupFirestore();
+		mockFindClustersContainingMember.mockResolvedValue([
+			{
+				statementId: 'manualCluster',
+				integratedOptions: ['opt1', 'opt2', 'opt3'],
+				parentId: 'q1',
+				isCluster: true,
+				titleLockedByCreator: true,
+			},
+		]);
+		mockGenerateEmbedding.mockResolvedValue({ embedding: [1, 0, 0] });
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0, 1, 0]]]));
+		mockJudgeCached.mockResolvedValue([{ pairId: 'p', verdict: 'different', reason: 'mocked' }]);
+
+		await liveSynthOnOptionUpdate(before, after);
+
+		// No unlink write, no dissolve, no unlink audit event — the admin's
+		// hand-curated membership is left intact.
+		expect(fs.updateMock).not.toHaveBeenCalled();
+		expect(fs.deleteMock).not.toHaveBeenCalled();
+		const unlinkAudit = mockRecordLiveSynthEvent.mock.calls.find((c) => c[0]?.action === 'unlink');
+		expect(unlinkAudit).toBeUndefined();
+	});
+
+	it('does NOT dissolve a 2-member manual cluster on a "different" edit', async () => {
+		const [before, after] = makeBeforeAfter({}, {});
+		const fs = setupFirestore();
+		mockFindClustersContainingMember.mockResolvedValue([
+			{
+				statementId: 'manualCluster',
+				integratedOptions: ['opt1', 'opt2'], // would dissolve an auto cluster
+				parentId: 'q1',
+				isCluster: true,
+				titleLockedByCreator: true,
+			},
+		]);
+		mockGenerateEmbedding.mockResolvedValue({ embedding: [1, 0, 0] });
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0, 1, 0]]]));
+		mockJudgeCached.mockResolvedValue([{ pairId: 'p', verdict: 'different', reason: 'mocked' }]);
+
+		await liveSynthOnOptionUpdate(before, after);
+
+		expect(fs.deleteMock).not.toHaveBeenCalled();
+		expect(fs.updateMock).not.toHaveBeenCalled();
+	});
+
 	it('exposes the embedding-drift floor for documentation', () => {
 		expect(__INTERNAL.EMBEDDING_DRIFT_FLOOR).toBeGreaterThan(0);
 		expect(__INTERNAL.EMBEDDING_DRIFT_FLOOR).toBeLessThan(1);
