@@ -43,6 +43,14 @@ export function useMindMap(statementIdPassed: string | null = null) {
 		const cacheKey = JSON.stringify({
 			statementId: statement.statementId,
 			descendantsLength: descendants.length,
+			// Include the subject's own render-affecting fields so edits to it
+			// (title, color, and admin map settings) refresh results.top —
+			// otherwise keying on statementId alone leaves the board stale when
+			// only the subject changes (e.g. the map admin panel writes
+			// statementSettings.map).
+			subjectStatement: statement.statement,
+			subjectColor: statement.color,
+			subjectSettings: statement.statementSettings,
 			// Only include specific properties to limit unnecessary recalculations
 			descendants: descendants,
 		});
