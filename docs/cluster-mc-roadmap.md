@@ -52,6 +52,18 @@ each box and reference the commit when done.
     after T0.1; if it persists, chase the `useMindMap`/Redux listener race
     (`MindMapMV.tsx:13-74`).
 
+- [x] **T0.1c — Cluster shows a different color on each client/render**
+  - **Root cause:** clusters with no saved `color` fell back to
+    `CLUSTER_PALETTE[index % len]`, keyed on the cluster's *position* in the
+    children array. That position differs per client (load/sort order) and shifts
+    as notes are added/removed — so the same cluster rendered pink on one device,
+    green on another.
+  - **Fix:** derive the fallback palette slot from a stable hash of the cluster's
+    `statementId` (`paletteIndexForId`), so the color is identical on every client
+    and survives reorders. Frontend only — `ClusterBoard.tsx`. No data migration.
+  - **Verified:** tsc clean, ESLint clean. **Takes effect on next hosting deploy**
+    (`npm run build` + `deploy:h:prod`), not a functions deploy.
+
 - [ ] **T0.4 — Bigger / clearer cluster titles**
   - Pills `0.82rem`, hub `0.8rem` (`ClusterBoard.module.scss:109,71`). Increase
     title sizing/prominence; optional font-size control. SCSS + design tokens only.

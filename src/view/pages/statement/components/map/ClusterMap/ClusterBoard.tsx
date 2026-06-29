@@ -85,9 +85,24 @@ function deriveClusterPalette(hex: string): ClusterPaletteEntry {
 	};
 }
 
-/** A cluster's color: its saved `color`, else the default palette slot by index. */
-function resolveClusterColor(hex: string | undefined, index: number): ClusterPaletteEntry {
-	if (!hex) return CLUSTER_PALETTE[index % CLUSTER_PALETTE.length];
+/**
+ * Stable index into the palette derived from the cluster's id. Using the id
+ * (not the cluster's position in the array) keeps a cluster's color fixed as
+ * notes/clusters are added, removed, or re-sorted — otherwise the same cluster
+ * would change color between renders.
+ */
+function paletteIndexForId(id: string): number {
+	let hash = 0;
+	for (let i = 0; i < id.length; i++) {
+		hash = (hash * 31 + id.charCodeAt(i)) | 0;
+	}
+
+	return Math.abs(hash) % CLUSTER_PALETTE.length;
+}
+
+/** A cluster's color: its saved `color`, else a stable default palette slot from its id. */
+function resolveClusterColor(hex: string | undefined, clusterId: string): ClusterPaletteEntry {
+	if (!hex) return CLUSTER_PALETTE[paletteIndexForId(clusterId)];
 	const preset = CLUSTER_PALETTE.find((entry) => entry.line.toLowerCase() === hex.toLowerCase());
 
 	return preset ?? deriveClusterPalette(hex);
@@ -159,12 +174,12 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		const containers: BoardCluster[] = [];
 		const loose: Results[] = [];
 
-		children.forEach((child, i) => {
+		children.forEach((child) => {
 			if (child.top.isCluster) {
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,
-					color: resolveClusterColor(child.top.color, i),
+					color: resolveClusterColor(child.top.color, child.top.statementId),
 					members: child.sub ?? [],
 					clusterStatement: child.top,
 				});
