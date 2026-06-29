@@ -3490,5 +3490,6 @@
   "Show what each cluster was made from": "הצגת ממה כל אשכול נוצר",
   "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "הצגת שורת \"נוצר מ-N תגובות\" בכל אשכול כדי שיראו כיצד נוצר.",
   "Cluster map": "מפת אשכולות",
-  "Control how the cluster map looks: text size, which layers show, and provenance.": "שליטה על מראה מפת האשכולות: גודל טקסט, אילו שכבות מוצגות, ומקור."
+  "Control how the cluster map looks: text size, which layers show, and provenance.": "שליטה על מראה מפת האשכולות: גודל טקסט, אילו שכבות מוצגות, ומקור.",
+  "Map settings": "הגדרות מפה"
 }

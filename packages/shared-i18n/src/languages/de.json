@@ -2740,5 +2740,6 @@
   "Show what each cluster was made from": "Anzeigen, woraus jedes Cluster erstellt wurde",
   "Display a \"made from N responses\" line on each cluster so people see how it was formed.": "Zeige in jedem Cluster eine Zeile \"erstellt aus N Antworten\", damit sichtbar ist, wie es entstanden ist.",
   "Cluster map": "Cluster-Karte",
-  "Control how the cluster map looks: text size, which layers show, and provenance.": "Steuere das Aussehen der Cluster-Karte: Textgröße, welche Ebenen angezeigt werden und Herkunft."
+  "Control how the cluster map looks: text size, which layers show, and provenance.": "Steuere das Aussehen der Cluster-Karte: Textgröße, welche Ebenen angezeigt werden und Herkunft.",
+  "Map settings": "Karteneinstellungen"
 }
