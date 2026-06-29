@@ -211,6 +211,18 @@ async function unlinkOptionFromCluster(input: UnlinkInput): Promise<void> {
 	});
 
 	if (newMembers.length < 2) {
+		// Manually-created clusters (admin authored, title locked) are kept even
+		// when they drop below 2 members — auto-dissolution is only for
+		// auto-formed synth clusters, not the creator's deliberate clusters.
+		if (cluster.titleLockedByCreator === true) {
+			logger.info('liveSynth.unlink: manual cluster kept below 2 members', {
+				clusterId: cluster.statementId,
+				newMemberCount: newMembers.length,
+			});
+
+			return;
+		}
+
 		await dissolveCluster({
 			cluster,
 			remainingMember: newMembers[0] ?? '',

@@ -32,6 +32,19 @@ type DerivedFields = {
 };
 
 /**
+ * True iff the statement is a manually-created cluster: an admin authored it on
+ * the curation/map view and locked its title (`titleLockedByCreator`). These are
+ * deliberate user intent, NOT synthesis output, so the pipeline must never delete
+ * them during cleanup — otherwise a re-cluster run silently wipes the creator's
+ * clusters and orphans their members into "Ungrouped".
+ */
+export function isManualCluster(statement: Statement): boolean {
+	const s = statement as Statement & DerivedFields;
+
+	return s.isCluster === true && s.titleLockedByCreator === true;
+}
+
+/**
  * True iff the statement is a synthesis output (synth, topic-cluster, or a
  * legacy/untagged derived doc) rather than a genuine user-submitted option.
  */
@@ -57,6 +70,8 @@ export interface DissolveResult {
 	orphansRestored: number;
 	/** Evaluation docs deleted because their host cluster/derived doc was removed. */
 	evaluationsDeleted: number;
+	/** Manually-created clusters (`titleLockedByCreator`) left untouched — never deleted by cleanup. */
+	manualClustersPreserved: number;
 }
 
 export interface DissolveOptions {
@@ -94,12 +109,27 @@ export async function dissolveQuestionSynthesis(
 		.get();
 	const docs = snap.docs.map((d) => d.data() as Statement & DerivedFields);
 
+	// Manually-created clusters (admin authored, title locked) are user intent,
+	// NOT synthesis output. The pipeline must never delete them on cleanup, or a
+	// re-cluster run silently wipes the creator's clusters and orphans their
+	// members into "Ungrouped". Excluded from BOTH the reversible-cluster set and
+	// the malformed-derived sweep so they (and their members) survive untouched.
+	const manualClusterIds = new Set(
+		docs.filter(isManualCluster).map((d) => d.statementId),
+	);
+
 	const properClusters = docs.filter(
 		(d) =>
-			d.isCluster === true && Array.isArray(d.integratedOptions) && d.integratedOptions.length > 0,
+			!manualClusterIds.has(d.statementId) &&
+			d.isCluster === true &&
+			Array.isArray(d.integratedOptions) &&
+			d.integratedOptions.length > 0,
 	);
 	const properClusterIds = new Set(properClusters.map((d) => d.statementId));
-	const malformedDerived = docs.filter((d) => isDerived(d) && !properClusterIds.has(d.statementId));
+	const malformedDerived = docs.filter(
+		(d) =>
+			isDerived(d) && !properClusterIds.has(d.statementId) && !manualClusterIds.has(d.statementId),
+	);
 	const realOptions = docs.filter((d) => !isDerived(d));
 	const orphanedHidden = realOptions.filter((d) => d.hide === true && !d.integratedInto);
 
@@ -109,6 +139,7 @@ export async function dissolveQuestionSynthesis(
 		membersRestored: 0,
 		orphansRestored: 0,
 		evaluationsDeleted: 0,
+		manualClustersPreserved: manualClusterIds.size,
 	};
 
 	if (dryRun) {
