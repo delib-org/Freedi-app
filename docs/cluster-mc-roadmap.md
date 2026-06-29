@@ -25,6 +25,19 @@ each box and reference the commit when done.
     Still TODO before relying on it in prod: end-to-end on a test project + deploy
     affected functions via `npm run deploy:f:test`.
 
+- [x] **T0.1b — Adding a note to a cluster drops it into "Ungrouped"**
+  - **Root cause:** same family as T0.1. Adding a note creates a "New Option"
+    placeholder, assigns it to the cluster, then the user types the real text. That
+    edit fires `liveSynthOnOptionUpdate`, which judged the text "different" from
+    "New Option" and **unlinked the note from the cluster** — back to Ungrouped.
+    Live-synth defaults ON for Mass-Consensus questions (`SYNTHESIS_LIVE_SYNTH_ENABLED=true`).
+  - **Fix:** in the edit-invalidation unlink loop, skip clusters with
+    `titleLockedByCreator` — admin-curated membership is never auto-unlinked.
+  - **Files:** `functions/src/synthesis/liveSynth/onOptionUpdateLive.ts`,
+    test `.../liveSynth/__tests__/onOptionUpdateLive.test.ts`.
+  - **Verified:** `npm run build` clean; `onOptionUpdateLive` tests 17/17.
+    **Needs redeploy of `liveSynthOnOptionUpdate` to prod** to take effect.
+
 - [ ] **T0.2 — "Oops/unaccepted error" adding a cluster on Android**
   - `ClusterBoard.tsx:473 addCluster()` returns silently when `creator` is undefined
     (auth not ready on mobile); `createMindMapChild()`
