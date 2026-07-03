@@ -9,9 +9,13 @@ import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
 import { DemographicMode } from '@/types/demographics';
 
 interface SignatureInput {
-  signed: 'signed' | 'rejected' | 'viewed';
+  signed?: 'signed' | 'rejected' | 'viewed';
   levelOfSignature?: number;
+  /** Satisfaction rating (-1 to 1 in 0.5 steps) for satisfaction footer mode */
+  satisfaction?: number;
 }
+
+const VALID_SATISFACTION_SCORES = [-1, -0.5, 0, 0.5, 1];
 
 /**
  * GET /api/signatures/[docId]
@@ -71,10 +75,25 @@ export async function POST(
     }
 
     const body: SignatureInput = await request.json();
-    const { signed, levelOfSignature } = body;
+    const { signed, levelOfSignature, satisfaction } = body;
 
-    // Validate signed value
-    if (!['signed', 'rejected', 'viewed'].includes(signed)) {
+    // Validate satisfaction value if provided (satisfaction footer mode)
+    if (satisfaction !== undefined && !VALID_SATISFACTION_SCORES.includes(satisfaction)) {
+      return NextResponse.json(
+        { error: 'Invalid satisfaction score' },
+        { status: 400 }
+      );
+    }
+
+    // Validate signed value (optional when submitting a satisfaction rating)
+    if (signed === undefined && satisfaction === undefined) {
+      return NextResponse.json(
+        { error: 'Invalid signature status' },
+        { status: 400 }
+      );
+    }
+
+    if (signed !== undefined && !['signed', 'rejected', 'viewed'].includes(signed)) {
       return NextResponse.json(
         { error: 'Invalid signature status' },
         { status: 400 }
@@ -91,18 +110,23 @@ export async function POST(
     // Don't downgrade from signed/rejected to viewed
     if (
       signed === 'viewed' &&
+      satisfaction === undefined &&
       existingSignature &&
       (existingSignature.signed === 'signed' || existingSignature.signed === 'rejected')
     ) {
       return NextResponse.json({ signature: existingSignature });
     }
 
+    // A satisfaction-only submission keeps the existing signed status (or 'viewed')
+    const effectiveSigned = signed ?? existingSignature?.signed ?? 'viewed';
+
     // Get document info for topParentId and parentId
     const docRef = await db.collection(Collections.statements).doc(docId).get();
     const document = docRef.exists ? docRef.data() : null;
 
-    // For actual signatures (not just 'viewed'), verify demographic survey completion
-    if (signed !== 'viewed') {
+    // For actual signatures and satisfaction ratings (not just 'viewed'),
+    // verify demographic survey completion
+    if (effectiveSigned !== 'viewed' || satisfaction !== undefined) {
       const signSettings = document?.signSettings || {};
       const mode: DemographicMode = signSettings.demographicMode || 'disabled';
       const demographicRequired = signSettings.demographicRequired || false;
@@ -138,9 +162,10 @@ export async function POST(
       topParentId: document?.topParentId || docId,
       parentId: document?.parentId || docId,
       userId,
-      signed,
+      signed: effectiveSigned,
       date: Date.now(),
       levelOfSignature: levelOfSignature ?? 0,
+      ...(satisfaction !== undefined && { satisfaction }),
     };
 
     await db.collection(Collections.signatures).doc(signatureId).set(signature, { merge: true });
@@ -150,10 +175,10 @@ export async function POST(
     logResearchAction(userId, ResearchAction.VOTE, researchEnabled, {
       statementId: docId,
       topParentId: document?.topParentId || docId,
-      newValue: signed,
+      newValue: satisfaction !== undefined ? `satisfaction:${satisfaction}` : effectiveSigned,
     });
 
-    logger.info(`[Signatures API] Created/updated signature: ${signatureId} - ${signed}`);
+    logger.info(`[Signatures API] Created/updated signature: ${signatureId} - ${effectiveSigned}${satisfaction !== undefined ? ` (satisfaction: ${satisfaction})` : ''}`);
 
     return NextResponse.json({ success: true, signature });
   } catch (error) {

@@ -20,6 +20,8 @@ export interface Signature {
   date: number;
   levelOfSignature?: number;
   rejectionReason?: string;
+  /** Satisfaction rating (-1 to 1) when the document footer is in satisfaction mode */
+  satisfaction?: number;
 }
 
 export interface Approval {

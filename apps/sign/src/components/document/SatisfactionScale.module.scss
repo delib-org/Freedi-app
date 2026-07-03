@@ -1,0 +1,131 @@
+.scale {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.scaleButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 72px;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary, #5f88e5);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  min-height: 1.5em;
+}
+
+.label {
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Pastel backgrounds per rating (same palette as the mass-consensus scale) */
+.hate {
+  background-color: var(--rating-hate, #fee2e2);
+
+  &.selected {
+    background-color: #ef4444;
+    border-color: #dc2626;
+    color: #fff;
+  }
+}
+
+.dislike {
+  background-color: var(--rating-dislike, #fef3c7);
+
+  &.selected {
+    background-color: #f59e0b;
+    border-color: #d97706;
+    color: #fff;
+  }
+}
+
+.neutral {
+  background-color: var(--rating-neutral, #f1f5f9);
+
+  &.selected {
+    background-color: #64748b;
+    border-color: #475569;
+    color: #fff;
+  }
+}
+
+.like {
+  background-color: var(--rating-like, #d1fae5);
+
+  &.selected {
+    background-color: #10b981;
+    border-color: #059669;
+    color: #fff;
+  }
+}
+
+.love {
+  background-color: var(--rating-love, #ccfbf1);
+
+  &.selected {
+    background-color: #0d9488;
+    border-color: #0f766e;
+    color: #fff;
+  }
+}
+
+/* Mobile: keep all five buttons on one row */
+@media (max-width: 600px) {
+  .scale {
+    gap: 0.35rem;
+  }
+
+  .scaleButton {
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 0.5rem 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  .icon {
+    font-size: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scaleButton {
+    transition: none;
+
+    &:hover:not(:disabled) {
+      transform: none;
+    }
+  }
+}

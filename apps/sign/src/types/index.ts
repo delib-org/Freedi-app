@@ -113,6 +113,15 @@ export type TocPosition = 'auto' | 'left' | 'right';
 // 'before_viewing' - Video must be dismissed before viewing document
 export type ExplanationVideoMode = 'optional' | 'before_viewing';
 
+// Document footer mode
+// 'sign' - Classic Sign / Reject buttons
+// 'satisfaction' - Satisfaction rating scale (-1 to 1, like/dislike style)
+export type FooterMode = 'sign' | 'satisfaction';
+
+// Satisfaction rating values for the satisfaction footer (-1 to 1 scale)
+export const SATISFACTION_SCORES = [-1, -0.5, 0, 0.5, 1] as const;
+export type SatisfactionScore = (typeof SATISFACTION_SCORES)[number];
+
 // Table of Contents item for navigation
 export interface TocItem {
   id: string;          // paragraphId
@@ -193,6 +202,8 @@ export interface DocumentSettings {
   nonInteractiveNormalStyle?: boolean;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts?: boolean;
+  /** Footer behavior: 'sign' shows Sign/Reject buttons, 'satisfaction' shows a -1..1 satisfaction scale */
+  footerMode?: FooterMode;
 }
 
 // Default branding constants

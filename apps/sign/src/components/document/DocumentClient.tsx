@@ -15,6 +15,7 @@ import CommentThread from '../comments/CommentThread';
 import SuggestionThread from '../suggestions/SuggestionThread';
 import LoginModal from '../shared/LoginModal';
 import RejectionFeedbackModal from './RejectionFeedbackModal';
+import SatisfactionFeedbackModal from './SatisfactionFeedbackModal';
 import Toast from '../shared/Toast';
 import { DemographicSurveyModal } from '../demographics';
 import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
@@ -90,6 +91,9 @@ export default function DocumentClient({
 
   // State for rejection feedback modal
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
+  // State for satisfaction feedback modal (shown when rating < 1)
+  const [showSatisfactionModal, setShowSatisfactionModal] = useState(false);
 
   // Demographics store
   const {
@@ -345,6 +349,116 @@ export default function DocumentClient({
     ]
   );
 
+  // Handle satisfaction rating clicks (satisfaction footer mode)
+  const handleSatisfactionAction = useCallback(
+    async (score: number) => {
+      // Check if demographic status is still loading - prevent action until we know
+      if (isDemographicLoading || !demographicStatus.isLoaded) {
+        showToast('info', t('Please wait while we load your profile...'));
+
+        return;
+      }
+
+      // Check if blocked by demographic survey
+      if (isInteractionBlocked) {
+        openSurveyModal();
+        showToast('info', t('Please complete the survey first'));
+
+        return;
+      }
+
+      // Check if Google login is required for interactions
+      if (requireGoogleLogin && (!user || user.isAnonymous)) {
+        openModal('login', {});
+
+        return;
+      }
+
+      // Ensure user has an ID (create anonymous user if needed)
+      if (!user) {
+        try {
+          getOrCreateAnonymousUser();
+        } catch (err) {
+          logger.error('[DocumentClient] Failed to create anonymous user:', err);
+          showToast('error', t('Failed to initialize user. Please refresh and try again.'));
+
+          return;
+        }
+      }
+
+      setSubmitting(true);
+
+      try {
+        const response = await fetch(`/api/signatures/${documentId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            satisfaction: score,
+          }),
+        });
+
+        if (response.ok) {
+          if (score < 1) {
+            // Not fully satisfied - ask the user to explain why
+            setShowSatisfactionModal(true);
+
+            return; // Don't reload - the modal will handle it
+          }
+
+          // Fully satisfied - celebrate and refresh
+          triggerConfetti();
+          showToast('success', t('satisfactionThankYou') || 'Thank you for your feedback!');
+          await new Promise((resolve) =>
+            setTimeout(resolve, ANIMATION_DURATION.SUCCESS)
+          );
+          window.location.reload();
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          logger.error('[DocumentClient] Failed to submit satisfaction rating:', {
+            status: response.status,
+            error: errorData,
+            score,
+            documentId,
+          });
+
+          if (response.status === 401) {
+            showToast('error', t('Please sign in to continue'));
+          } else if (response.status === 400 && errorData.error === 'Survey incomplete') {
+            showToast('warning', t('Please complete the survey first'));
+            openSurveyModal();
+          } else {
+            showToast('error', t('Failed to submit. Please try again.'));
+          }
+        }
+      } catch (error) {
+        logger.error('[DocumentClient] Error submitting satisfaction rating:', {
+          error,
+          score,
+          documentId,
+        });
+        showToast('error', t('Network error. Please check your connection and try again.'));
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [
+      documentId,
+      user,
+      setSubmitting,
+      triggerConfetti,
+      isInteractionBlocked,
+      isDemographicLoading,
+      demographicStatus.isLoaded,
+      openSurveyModal,
+      requireGoogleLogin,
+      openModal,
+      showToast,
+      t,
+    ]
+  );
+
   // Initialize comment counts from server data
   useEffect(() => {
     initializeCommentCounts(commentCounts);
@@ -412,10 +526,17 @@ export default function DocumentClient({
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      const action = target.closest('[data-action]')?.getAttribute('data-action');
+      const actionElement = target.closest('[data-action]');
+      const action = actionElement?.getAttribute('data-action');
 
       if (action === 'sign' || action === 'reject') {
         handleSignatureAction(action);
+      } else if (action === 'satisfy') {
+        const score = parseFloat(actionElement?.getAttribute('data-score') ?? '');
+
+        if (!Number.isNaN(score)) {
+          handleSatisfactionAction(score);
+        }
       }
     };
 
@@ -424,7 +545,7 @@ export default function DocumentClient({
     return () => {
       document.removeEventListener('click', handleClick);
     };
-  }, [handleSignatureAction]);
+  }, [handleSignatureAction, handleSatisfactionAction]);
 
   // Track document view
   useEffect(() => {
@@ -547,6 +668,15 @@ export default function DocumentClient({
         <RejectionFeedbackModal
           documentId={documentId}
           onClose={() => setShowFeedbackModal(false)}
+        />
+      )}
+
+      {/* Satisfaction Feedback Modal (rating < 1) */}
+      {showSatisfactionModal && (
+        <SatisfactionFeedbackModal
+          documentId={documentId}
+          userId={user?.uid || null}
+          onClose={() => setShowSatisfactionModal(false)}
         />
       )}
 
