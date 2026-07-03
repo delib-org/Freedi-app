@@ -321,6 +321,7 @@ export async function saveDemographicQuestion(
       required: question.required || false,
       // Only include displayType if it's defined (Firestore doesn't allow undefined values)
       ...(question.displayType !== undefined && { displayType: question.displayType }),
+      ...(question.presetKey !== undefined && { presetKey: question.presetKey }),
     } as SignDemographicQuestion;
 
     await db

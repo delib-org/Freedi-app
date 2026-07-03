@@ -8,6 +8,7 @@ import { getVisitorId } from '@/lib/utils/visitor';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { getPseudoName } from '@/lib/utils/pseudoName';
+import { useIdentityDisplay } from '@/components/providers/IdentityDisplayProvider';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './Comment.module.scss';
 
@@ -23,6 +24,7 @@ interface CommentProps {
 
 export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate, hideUserIdentity = false }: CommentProps) {
   const { t } = useTranslation();
+  const identityDisplay = useIdentityDisplay();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
 
   // Use consensus from real-time parent data (comment prop updates via onSnapshot)
@@ -235,13 +237,17 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
     <article className={styles.comment}>
       <header className={styles.header}>
         <div className={styles.avatar}>
-          {hideUserIdentity
-            ? getPseudoName(comment.creatorId).charAt(0).toUpperCase()
-            : (comment.creator?.displayName?.charAt(0).toUpperCase() || '?')}
+          {identityDisplay
+            ? identityDisplay.getInitial(comment.creatorId, comment.creator?.displayName)
+            : (hideUserIdentity
+              ? getPseudoName(comment.creatorId).charAt(0).toUpperCase()
+              : (comment.creator?.displayName?.charAt(0).toUpperCase() || '?'))}
         </div>
         <div className={styles.meta}>
           <span className={styles.author}>
-            {hideUserIdentity ? getPseudoName(comment.creatorId) : (comment.creator?.displayName || t('Anonymous'))}
+            {identityDisplay
+              ? identityDisplay.getDisplayName(comment.creatorId, comment.creator?.displayName)
+              : (hideUserIdentity ? getPseudoName(comment.creatorId) : (comment.creator?.displayName || t('Anonymous')))}
           </span>
           <span className={styles.date}>
             {formatDate(comment.createdAt)}

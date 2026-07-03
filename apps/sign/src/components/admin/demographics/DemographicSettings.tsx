@@ -27,6 +27,8 @@ import {
   UserDemographicQuestionType,
   DemographicOption,
   SingleChoiceDisplayType,
+  DemographicPresetKey,
+  CreateQuestionRequest,
 } from '@/types/demographics';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './DemographicSettings.module.scss';
@@ -274,6 +276,9 @@ function SortableQuestionItem({
                 {question.required && (
                   <span className={styles.requiredBadge}>{t('Required')}</span>
                 )}
+                {question.presetKey === 'name' && (
+                  <span className={styles.presetBadge}>{t('Name field')}</span>
+                )}
                 {question.isInherited && (
                   <span className={styles.inheritedBadge}>{t('Inherited')}</span>
                 )}
@@ -312,6 +317,8 @@ interface DemographicSettingsProps {
   onModeChange: (mode: DemographicMode) => void;
   onRequiredChange: (required: boolean) => void;
   onSurveyTriggerChange: (trigger: SurveyTriggerMode) => void;
+  /** Notifies the parent whenever the question list is (re)loaded, e.g. to detect a name preset question */
+  onQuestionsChange?: (questions: SignDemographicQuestion[]) => void;
 }
 
 // Auto-save demographic settings to Firestore
@@ -351,6 +358,7 @@ export default function DemographicSettings({
   onModeChange,
   onRequiredChange,
   onSurveyTriggerChange,
+  onQuestionsChange,
 }: DemographicSettingsProps) {
   const { t, currentLanguage } = useTranslation();
   const rtl = isRTL(currentLanguage);
@@ -428,6 +436,7 @@ export default function DemographicSettings({
   const fetchQuestions = useCallback(async () => {
     if (mode === 'disabled') {
       setQuestions([]);
+      onQuestionsChange?.([]);
 
       return;
     }
@@ -438,6 +447,7 @@ export default function DemographicSettings({
       if (response.ok) {
         const data = await response.json();
         setQuestions(data.questions || []);
+        onQuestionsChange?.(data.questions || []);
       }
     } catch (error) {
       logError(error, {
@@ -447,7 +457,7 @@ export default function DemographicSettings({
     } finally {
       setLoading(false);
     }
-  }, [documentId, mode]);
+  }, [documentId, mode, onQuestionsChange]);
 
   useEffect(() => {
     fetchQuestions();
@@ -503,6 +513,64 @@ export default function DemographicSettings({
       logError(error, {
         operation: 'DemographicSettings.handleCreateQuestion',
         documentId,
+      });
+      alert(t('Failed to create question'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickAddPreset = async (presetKey: DemographicPresetKey) => {
+    const presetPayloads: Record<DemographicPresetKey, CreateQuestionRequest> = {
+      [DemographicPresetKey.name]: {
+        question: t('What is your name?'),
+        type: UserDemographicQuestionType.text,
+        required: true,
+        presetKey: DemographicPresetKey.name,
+      },
+      [DemographicPresetKey.age]: {
+        question: t('What is your age?'),
+        type: UserDemographicQuestionType.number,
+        presetKey: DemographicPresetKey.age,
+      },
+      [DemographicPresetKey.gender]: {
+        question: t('What is your gender?'),
+        type: UserDemographicQuestionType.radio,
+        displayType: 'radio',
+        options: [t('Female'), t('Male'), t('Other'), t('Prefer not to say')].map((option) => ({ option })),
+        presetKey: DemographicPresetKey.gender,
+      },
+      [DemographicPresetKey.city]: {
+        question: t('Which city do you live in?'),
+        type: UserDemographicQuestionType.text,
+        presetKey: DemographicPresetKey.city,
+      },
+    };
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/demographics/questions/${documentId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(presetPayloads[presetKey]),
+      });
+
+      if (response.ok) {
+        await fetchQuestions();
+      } else {
+        const errorData = await response.json();
+        logError(new Error(errorData.error || 'Failed to create preset question'), {
+          operation: 'DemographicSettings.handleQuickAddPreset',
+          documentId,
+          metadata: { presetKey, errorData },
+        });
+        alert(t('Failed to create question') + ': ' + (errorData.error || 'Unknown error'));
+      }
+    } catch (error) {
+      logError(error, {
+        operation: 'DemographicSettings.handleQuickAddPreset',
+        documentId,
+        metadata: { presetKey },
       });
       alert(t('Failed to create question'));
     } finally {
@@ -694,8 +762,16 @@ export default function DemographicSettings({
   const questionTypes: { value: UserDemographicQuestionType; label: string }[] = [
     { value: UserDemographicQuestionType.text, label: t('Text Input') },
     { value: UserDemographicQuestionType.textarea, label: t('Text Area') },
+    { value: UserDemographicQuestionType.number, label: t('Number Input') },
     { value: UserDemographicQuestionType.radio, label: t('Single Choice') },
     { value: UserDemographicQuestionType.checkbox, label: t('Multiple Choice') },
+  ];
+
+  const presetButtons: { key: DemographicPresetKey; label: string }[] = [
+    { key: DemographicPresetKey.name, label: t('Name') },
+    { key: DemographicPresetKey.age, label: t('Age') },
+    { key: DemographicPresetKey.gender, label: t('Gender') },
+    { key: DemographicPresetKey.city, label: t('City') },
   ];
 
   return (
@@ -771,6 +847,26 @@ export default function DemographicSettings({
             </div>
           )}
         </>
+      )}
+
+      {/* Quick-add preset questions (custom mode only) */}
+      {mode === 'custom' && (
+        <div className={styles.quickAddSection}>
+          <p className={styles.quickAddLabel}>{t('Quick add')}</p>
+          <div className={styles.quickAddButtons}>
+            {presetButtons.map((preset) => (
+              <button
+                key={preset.key}
+                type="button"
+                className={styles.quickAddButton}
+                onClick={() => handleQuickAddPreset(preset.key)}
+                disabled={loading || questions.some((q) => q.presetKey === preset.key)}
+              >
+                + {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Questions List */}
