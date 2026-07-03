@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { getPseudoName } from '@/lib/utils/pseudoName';
+import { useIdentityDisplay } from '@/components/providers/IdentityDisplayProvider';
 import styles from './TypingIndicator.module.scss';
 
 export interface TypingUser {
@@ -28,6 +29,7 @@ export default function TypingIndicator({
   hideUserIdentity = false,
 }: TypingIndicatorProps) {
   const { t, tWithParams } = useTranslation();
+  const identityDisplay = useIdentityDisplay();
 
   console.info('[TypingIndicator] Render with', typingUsers.length, 'typing users, currentUserId:', currentUserId);
 
@@ -49,6 +51,7 @@ export default function TypingIndicator({
 
   // Get display names or fallback
   const getDisplayName = (user: TypingUser): string => {
+    if (identityDisplay) return identityDisplay.getDisplayName(user.id, user.displayName);
     if (hideUserIdentity) return getPseudoName(user.id);
 
     return user.displayName || t('Someone');
@@ -85,6 +88,7 @@ export default function TypingIndicator({
 
   // Get first letter for avatar
   const getInitial = (user: TypingUser): string => {
+    if (identityDisplay) return identityDisplay.getInitial(user.id, user.displayName);
     if (hideUserIdentity) return getPseudoName(user.id).charAt(0).toUpperCase();
     if (user.displayName && user.displayName.length > 0) {
       return user.displayName.charAt(0).toUpperCase();
@@ -111,7 +115,7 @@ export default function TypingIndicator({
             key={user.id}
             className={styles.avatar}
             style={{ zIndex: displayedUsers.length - index }}
-            title={user.displayName || undefined}
+            title={getDisplayName(user)}
           >
             {getInitial(user)}
           </div>

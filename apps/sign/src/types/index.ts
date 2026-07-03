@@ -3,10 +3,12 @@
  */
 
 import { Statement, Paragraph as SharedParagraph } from '@freedi/shared-types';
+import type { IdentityDisplayMode } from './demographics';
 
 // Re-export from shared-types
 export { ParagraphType } from '@freedi/shared-types';
 export type { Suggestion } from '@freedi/shared-types';
+export type { IdentityDisplayMode } from './demographics';
 
 // Re-export from queries for convenience
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
@@ -159,6 +161,8 @@ export interface DocumentSettings {
   requireGoogleLogin: boolean;
   /** When true, hide display names in comments, suggestions, and interactions */
   hideUserIdentity: boolean;
+  /** How user identity is shown on interactions: anonymous pseudo-names, account name, or the name collected in the pre-form */
+  identityDisplayMode?: IdentityDisplayMode;
   isHidden: boolean;
   heatMapMode: HeatMapMode;
   // Demographic survey settings

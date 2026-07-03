@@ -7,6 +7,7 @@ import {
   UserDemographicQuestion,
   DemographicOption,
   UserDemographicQuestionType,
+  DemographicPresetKey,
 } from '@freedi/shared-types';
 
 // Re-export from delib-npm
@@ -17,6 +18,7 @@ export type {
 
 export {
   UserDemographicQuestionType,
+  DemographicPresetKey,
 };
 
 // Define scope type locally since delib-npm exports schema but not the type
@@ -27,6 +29,31 @@ export type DemographicMode = 'disabled' | 'inherit' | 'custom';
 
 // Survey trigger mode - when should the survey be shown
 export type SurveyTriggerMode = 'on_interaction' | 'before_viewing';
+
+// How user identity is displayed on interactions (comments, suggestions, typing indicators)
+export type IdentityDisplayMode = 'anonymous' | 'account' | 'form';
+
+const IDENTITY_DISPLAY_MODES: IdentityDisplayMode[] = ['anonymous', 'account', 'form'];
+
+export function isIdentityDisplayMode(value: unknown): value is IdentityDisplayMode {
+  return typeof value === 'string' && IDENTITY_DISPLAY_MODES.includes(value as IdentityDisplayMode);
+}
+
+/**
+ * Single source of the backward-compat rule: documents saved before
+ * identityDisplayMode existed only have the hideUserIdentity boolean
+ * (default true → anonymous pseudo-names).
+ */
+export function resolveIdentityDisplayMode(settings: {
+  identityDisplayMode?: string;
+  hideUserIdentity?: boolean;
+}): IdentityDisplayMode {
+  if (isIdentityDisplayMode(settings.identityDisplayMode)) {
+    return settings.identityDisplayMode;
+  }
+
+  return (settings.hideUserIdentity ?? true) ? 'anonymous' : 'account';
+}
 
 // Extended scope that includes 'sign' for Sign app specific questions
 // Note: 'sign' is not in delib-npm's DemographicQuestionScope enum yet
@@ -81,6 +108,7 @@ export interface CreateQuestionRequest {
   required?: boolean;
   order?: number;
   displayType?: SingleChoiceDisplayType; // For radio questions: show as radio buttons or dropdown
+  presetKey?: DemographicPresetKey;
 }
 
 export interface SaveAnswersRequest {

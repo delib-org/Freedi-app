@@ -3,7 +3,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
-import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
+import { DemographicMode, SurveyTriggerMode, IdentityDisplayMode, isIdentityDisplayMode, resolveIdentityDisplayMode } from '@/types/demographics';
 import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
@@ -15,6 +15,8 @@ export interface DocumentSettings {
   requireGoogleLogin: boolean;
   /** When true, hide display names in comments, suggestions, and interactions */
   hideUserIdentity: boolean;
+  /** How user identity is shown on interactions: anonymous pseudo-names, account name, or the name collected in the pre-form */
+  identityDisplayMode: IdentityDisplayMode;
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
@@ -57,6 +59,7 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   enableSuggestions: false,
   requireGoogleLogin: false,
   hideUserIdentity: true,
+  identityDisplayMode: 'anonymous',
   showHeatMap: true,
   showViewCounts: true,
   isPublic: true,
@@ -135,6 +138,7 @@ export async function GET(
       enableSuggestions: document?.signSettings?.enableSuggestions ?? DEFAULT_SETTINGS.enableSuggestions,
       requireGoogleLogin: document?.signSettings?.requireGoogleLogin ?? DEFAULT_SETTINGS.requireGoogleLogin,
       hideUserIdentity: document?.signSettings?.hideUserIdentity ?? DEFAULT_SETTINGS.hideUserIdentity,
+      identityDisplayMode: resolveIdentityDisplayMode(document?.signSettings ?? {}),
       showHeatMap: document?.signSettings?.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap,
       showViewCounts: document?.signSettings?.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts,
       isPublic: document?.signSettings?.isPublic ?? DEFAULT_SETTINGS.isPublic,
@@ -235,6 +239,25 @@ export async function PUT(
       ? body.surveyTrigger
       : (existingSettings.surveyTrigger ?? DEFAULT_SETTINGS.surveyTrigger);
 
+    // Validate identityDisplayMode; the two identity fields are kept consistent so
+    // legacy readers degrade to pseudo-names (never account names) in 'form' mode
+    let identityDisplayMode: IdentityDisplayMode;
+    let hideUserIdentity: boolean;
+    if (isIdentityDisplayMode(body.identityDisplayMode)) {
+      identityDisplayMode = body.identityDisplayMode;
+      hideUserIdentity = identityDisplayMode !== 'account';
+    } else if (body.hideUserIdentity !== undefined) {
+      // Legacy write: derive the mode from the boolean instead of keeping a stale conflicting mode
+      hideUserIdentity = Boolean(body.hideUserIdentity);
+      const existingMode = resolveIdentityDisplayMode(existingSettings);
+      identityDisplayMode = hideUserIdentity
+        ? (existingMode !== 'account' ? existingMode : 'anonymous')
+        : 'account';
+    } else {
+      identityDisplayMode = resolveIdentityDisplayMode(existingSettings);
+      hideUserIdentity = existingSettings.hideUserIdentity ?? DEFAULT_SETTINGS.hideUserIdentity;
+    }
+
     // Validate textDirection
     const validDirections: TextDirection[] = ['auto', 'ltr', 'rtl'];
     const textDirection: TextDirection = validDirections.includes(body.textDirection)
@@ -289,7 +312,8 @@ export async function PUT(
       allowApprovals: body.allowApprovals !== undefined ? Boolean(body.allowApprovals) : (existingSettings.allowApprovals ?? DEFAULT_SETTINGS.allowApprovals),
       enableSuggestions: body.enableSuggestions !== undefined ? Boolean(body.enableSuggestions) : (existingSettings.enableSuggestions ?? DEFAULT_SETTINGS.enableSuggestions),
       requireGoogleLogin: body.requireGoogleLogin !== undefined ? Boolean(body.requireGoogleLogin) : (existingSettings.requireGoogleLogin ?? DEFAULT_SETTINGS.requireGoogleLogin),
-      hideUserIdentity: body.hideUserIdentity !== undefined ? Boolean(body.hideUserIdentity) : (existingSettings.hideUserIdentity ?? DEFAULT_SETTINGS.hideUserIdentity),
+      hideUserIdentity,
+      identityDisplayMode,
       showHeatMap: body.showHeatMap !== undefined ? Boolean(body.showHeatMap) : (existingSettings.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap),
       showViewCounts: body.showViewCounts !== undefined ? Boolean(body.showViewCounts) : (existingSettings.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts),
       isPublic: body.isPublic !== undefined ? Boolean(body.isPublic) : (existingSettings.isPublic ?? DEFAULT_SETTINGS.isPublic),

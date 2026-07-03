@@ -50,6 +50,22 @@ export default function DemographicQuestionInput({
           />
         );
 
+      case 'number':
+        return (
+          <input
+            type="number"
+            inputMode="numeric"
+            className={styles.textInput}
+            value={typeof value === 'string' ? value : ''}
+            onChange={(e) => handleTextChange(e.target.value)}
+            placeholder={t('Enter your answer')}
+            min={question.min}
+            max={question.max}
+            step={question.step}
+            disabled={disabled}
+          />
+        );
+
       case 'textarea':
         return (
           <textarea

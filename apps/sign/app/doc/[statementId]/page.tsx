@@ -18,6 +18,7 @@ import DocumentVisitTracker from '@/components/document/DocumentVisitTracker';
 import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
+import { resolveIdentityDisplayMode } from '@/types/demographics';
 
 interface PageProps {
   params: Promise<{ statementId: string }>;
@@ -136,6 +137,7 @@ export default async function DocumentPage({ params }: PageProps) {
     isPublic?: boolean;
     requireGoogleLogin?: boolean;
     hideUserIdentity?: boolean;
+    identityDisplayMode?: string;
     showSignatureCounts?: boolean;
     enableRefinement?: boolean;
   } }).signSettings;
@@ -179,6 +181,7 @@ export default async function DocumentPage({ params }: PageProps) {
   const isPublic = signSettings?.isPublic ?? true;
   const requireGoogleLogin = signSettings?.requireGoogleLogin ?? false;
   const hideUserIdentity = signSettings?.hideUserIdentity ?? true;
+  const identityDisplayMode = resolveIdentityDisplayMode(signSettings ?? {});
 
   // Signature counts setting (default: true)
   const showSignatureCounts = signSettings?.showSignatureCounts ?? true;
@@ -262,6 +265,7 @@ export default async function DocumentPage({ params }: PageProps) {
         enableHeadingNumbering={enableHeadingNumbering}
         requireGoogleLogin={requireGoogleLogin}
         hideUserIdentity={hideUserIdentity}
+        identityDisplayMode={identityDisplayMode}
         showSignatureCounts={showSignatureCounts}
         enableResearchLogging={enableResearchLogging}
       />
