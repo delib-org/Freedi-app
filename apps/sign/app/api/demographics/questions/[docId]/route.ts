@@ -12,6 +12,7 @@ import {
   DemographicMode,
   CreateQuestionRequest,
   DemographicQuestionsResponse,
+  DemographicPresetKey,
 } from '@/types/demographics';
 import { logger } from '@/lib/utils/logger';
 
@@ -137,6 +138,12 @@ export async function POST(
     const signQuestions = existingQuestions.filter((q) => !q.isInherited);
     const order = body.order ?? signQuestions.length;
 
+    // Validate presetKey against known preset values
+    const validPresetKeys = Object.values(DemographicPresetKey);
+    const presetKey = body.presetKey && validPresetKeys.includes(body.presetKey)
+      ? body.presetKey
+      : undefined;
+
     // Save the question
     const savedQuestion = await saveDemographicQuestion(docId, topParentId, {
       question: body.question,
@@ -145,6 +152,7 @@ export async function POST(
       required: body.required,
       order,
       displayType: body.displayType,
+      presetKey,
     });
 
     console.info(`[API] Question created for document ${docId} by user ${userId}`);

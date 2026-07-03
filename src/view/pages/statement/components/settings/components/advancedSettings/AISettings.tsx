@@ -6,13 +6,14 @@ import {
 	StatementSettings,
 	StatementType,
 } from '@freedi/shared-types';
-import { Search, Target, Database, Scissors, Zap, PenLine, GitMerge } from 'lucide-react';
+import { Search, Target, Database, Scissors, Zap, PenLine, GitMerge, Map } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
 import GroupingSettings from './GroupingSettings';
+import MapControlCard from './MapControlCard';
 
 interface AISettingsProps {
 	statement: Statement;
@@ -175,6 +176,19 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 							/>
 						</>
 					)}
+				</Subsection>
+			)}
+
+			{/* 4. Cluster map display — admin controls for how the map renders */}
+			{isQuestion && (
+				<Subsection
+					icon={Map}
+					title={t('Cluster map')}
+					description={t(
+						'Control how the cluster map looks: text size, which layers show, and provenance.',
+					)}
+				>
+					<MapControlCard statement={statement} settings={settings} />
 				</Subsection>
 			)}
 		</div>

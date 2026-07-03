@@ -1,4 +1,5 @@
 import {
+	CSSProperties,
 	DragEvent,
 	FC,
 	useCallback,
@@ -9,7 +10,7 @@ import {
 	useState,
 } from 'react';
 import { arrayRemove, arrayUnion, updateDoc } from 'firebase/firestore';
-import type { Results, Statement } from '@freedi/shared-types';
+import type { MapSynthVisibility, Results, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -23,6 +24,7 @@ import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	createEmptyCluster,
 	setGroupOverride,
+	ungroupCluster,
 	STANDALONE_OVERRIDE,
 } from '@/controllers/db/statements/condensationCuration';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
@@ -49,6 +51,22 @@ const HUB = 120;
 const UNGROUPED_ID = '__ungrouped__';
 const UNGROUPED_COLOR: ClusterPaletteEntry = { line: '#9aa3b2', card: '#e7eaf0', text: '#3d4d71' };
 const DRAG_MIME = 'application/x-freedi-statement-id';
+
+// Default map typography (rem). Admins override these per question via
+// statementSettings.map; the SCSS reads them as CSS custom properties so the
+// defaults here and the SCSS fallbacks stay in lock-step.
+const MAP_FONT_CARD_DEFAULT = 0.9; // sticky-note text
+const MAP_FONT_CLUSTER_DEFAULT = 1; // cluster pill + hub title
+// Sensible bounds so a stray setting can't make the board unreadable.
+const MAP_FONT_MIN = 0.6;
+const MAP_FONT_MAX = 2.2;
+const MAP_SYNTH_VISIBILITY_DEFAULT: MapSynthVisibility = 'all';
+
+function clampFont(value: number | undefined, fallback: number): number {
+	if (typeof value !== 'number' || Number.isNaN(value)) return fallback;
+
+	return Math.min(MAP_FONT_MAX, Math.max(MAP_FONT_MIN, value));
+}
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 	const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
@@ -84,9 +102,24 @@ function deriveClusterPalette(hex: string): ClusterPaletteEntry {
 	};
 }
 
-/** A cluster's color: its saved `color`, else the default palette slot by index. */
-function resolveClusterColor(hex: string | undefined, index: number): ClusterPaletteEntry {
-	if (!hex) return CLUSTER_PALETTE[index % CLUSTER_PALETTE.length];
+/**
+ * Stable index into the palette derived from the cluster's id. Using the id
+ * (not the cluster's position in the array) keeps a cluster's color fixed as
+ * notes/clusters are added, removed, or re-sorted — otherwise the same cluster
+ * would change color between renders.
+ */
+function paletteIndexForId(id: string): number {
+	let hash = 0;
+	for (let i = 0; i < id.length; i++) {
+		hash = (hash * 31 + id.charCodeAt(i)) | 0;
+	}
+
+	return Math.abs(hash) % CLUSTER_PALETTE.length;
+}
+
+/** A cluster's color: its saved `color`, else a stable default palette slot from its id. */
+function resolveClusterColor(hex: string | undefined, clusterId: string): ClusterPaletteEntry {
+	if (!hex) return CLUSTER_PALETTE[paletteIndexForId(clusterId)];
 	const preset = CLUSTER_PALETTE.find((entry) => entry.line.toLowerCase() === hex.toLowerCase());
 
 	return preset ?? deriveClusterPalette(hex);
@@ -140,6 +173,24 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const showEval = subject.statementSettings?.showEvaluation ?? false;
 	const canContribute = !!user;
 
+	// Admin-controlled map display (font sizes, which layers render, provenance).
+	const mapSettings = subject.statementSettings?.map;
+	const synthVisibility = mapSettings?.synthVisibility ?? MAP_SYNTH_VISIBILITY_DEFAULT;
+	const showProvenance = mapSettings?.showProvenance ?? true;
+	// Drive the SCSS typography off CSS custom properties so admin font sizes
+	// apply live to every card/pill/hub without re-styling each node inline.
+	const boardFontVars = useMemo<CSSProperties>(
+		() =>
+			({
+				'--map-card-font': `${clampFont(mapSettings?.cardFontRem, MAP_FONT_CARD_DEFAULT)}rem`,
+				'--map-cluster-font': `${clampFont(
+					mapSettings?.clusterFontRem,
+					MAP_FONT_CLUSTER_DEFAULT,
+				)}rem`,
+			}) as CSSProperties,
+		[mapSettings?.cardFontRem, mapSettings?.clusterFontRem],
+	);
+
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [colorPickerId, setColorPickerId] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
@@ -158,12 +209,35 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		const containers: BoardCluster[] = [];
 		const loose: Results[] = [];
 
-		children.forEach((child, i) => {
+		// originals-only: ignore clustering entirely — every option (cluster
+		// members included) renders as a flat note with no pills/synth groups.
+		if (synthVisibility === 'originals-only') {
+			children.forEach((child) => {
+				if (child.top.isCluster) {
+					(child.sub ?? []).forEach((member) => loose.push(member));
+				} else {
+					loose.push(child);
+				}
+			});
+			if (loose.length > 0) {
+				containers.push({
+					id: UNGROUPED_ID,
+					label: t('All responses'),
+					color: UNGROUPED_COLOR,
+					members: loose,
+					clusterStatement: null,
+				});
+			}
+
+			return containers;
+		}
+
+		children.forEach((child) => {
 			if (child.top.isCluster) {
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,
-					color: resolveClusterColor(child.top.color, i),
+					color: resolveClusterColor(child.top.color, child.top.statementId),
 					members: child.sub ?? [],
 					clusterStatement: child.top,
 				});
@@ -172,7 +246,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			}
 		});
 
-		if (loose.length > 0) {
+		// clusters-only: hide the synthetic "Ungrouped" block of un-clustered
+		// originals; the cluster/synth groups are all that render.
+		if (loose.length > 0 && synthVisibility !== 'clusters-only') {
 			containers.push({
 				id: UNGROUPED_ID,
 				label: t('Ungrouped'),
@@ -183,7 +259,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		}
 
 		return containers;
-	}, [children, t]);
+	}, [children, t, synthVisibility]);
 
 	// Place clusters on a ring. Pills sit on an inner ring near the hub; each
 	// grid then hugs its OWN pill at a radius set by that cluster's own size, so
@@ -481,6 +557,30 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 		}
 	};
 
+	// Delete a cluster: the cluster statement is removed and any overrides that
+	// pointed at it are cleared. Its notes are plain options under the question,
+	// so they survive and reappear in the "Ungrouped" block.
+	const removeCluster = async (cluster: BoardCluster) => {
+		if (!cluster.clusterStatement || busy) return;
+		const confirmed = window.confirm(t('Delete this cluster? Its notes will move to Ungrouped.'));
+		if (!confirmed) return;
+		setBusy(true);
+		try {
+			await ungroupCluster({
+				parentStatementId: subject.statementId,
+				clusterId: cluster.clusterStatement.statementId,
+				currentAssignments: subject.creatorOverrides?.assignments ?? {},
+			});
+		} catch (error) {
+			logError(error, {
+				operation: 'ClusterBoard.removeCluster',
+				statementId: cluster.clusterStatement.statementId,
+			});
+		} finally {
+			setBusy(false);
+		}
+	};
+
 	const duplicate = async (member: Statement, cluster: BoardCluster) => {
 		if (busy) return;
 		setBusy(true);
@@ -542,6 +642,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			}`}
 			ref={viewportRef}
 			onPointerDown={onPointerDown}
+			style={boardFontVars}
 		>
 			<div
 				className={styles.pan}
@@ -553,7 +654,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 					{colorPickerId && (
 						<div
 							className={styles.pickerBackdrop}
-							onClick={() => setColorPickerId(null)}
+							// data-no-pan so the press isn't swallowed by canvas panning.
+							data-no-pan
+							onPointerDown={() => setColorPickerId(null)}
 							aria-hidden
 						/>
 					)}
@@ -591,7 +694,8 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 							className={styles.addCluster}
 							style={{ left: cx, top: cy + HUB / 2 + 18 }}
 							onClick={addCluster}
-							disabled={busy}
+							disabled={busy || !creator}
+							title={!creator ? t('Signing you in…') : undefined}
 						>
 							+ {t('Add cluster')}
 						</button>
@@ -613,6 +717,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										background: l.color.line,
 										zIndex: colorPickerId === l.id ? 12 : undefined,
 									}}
+									// Keep the pill clickable (edit/color/delete) — don't let a press
+									// on it start a canvas pan, which would swallow the double-click.
+									data-no-pan
 									onDoubleClick={canEditPill ? () => setEditingId(l.id) : undefined}
 								>
 									{editingId === l.id && l.clusterStatement ? (
@@ -636,6 +743,21 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										l.label
 									)}
 
+									{showProvenance &&
+										l.clusterStatement &&
+										editingId !== l.id &&
+										l.members.length > 0 && (
+											<span
+												className={styles.provenance}
+												title={t('This cluster was made from these responses')}
+											>
+												{t('made from {count} responses').replace(
+													'{count}',
+													String(l.members.length),
+												)}
+											</span>
+										)}
+
 									{canEditPill && editingId !== l.id && (
 										<button
 											type="button"
@@ -647,6 +769,22 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 												setColorPickerId((id) => (id === l.id ? null : l.id));
 											}}
 										/>
+									)}
+
+									{canEditPill && editingId !== l.id && (
+										<button
+											type="button"
+											className={styles.deleteDot}
+											aria-label={t('Delete cluster')}
+											title={t('Delete cluster')}
+											disabled={busy}
+											onClick={(e) => {
+												e.stopPropagation();
+												removeCluster(l);
+											}}
+										>
+											×
+										</button>
 									)}
 
 									{colorPickerId === l.id && l.clusterStatement && (

@@ -57,6 +57,19 @@ export default function DemographicResponses({ documentId }: DemographicResponse
     return answer;
   };
 
+  // When a name preset question exists, label rows with the user's form name
+  const nameQuestion = questions.find((q) => q.presetKey === 'name');
+  const getUserLabel = (response: UserResponse, index: number): string => {
+    const nameAnswer = nameQuestion?.userQuestionId
+      ? response.answers[nameQuestion.userQuestionId]
+      : undefined;
+    if (typeof nameAnswer === 'string' && nameAnswer.trim()) {
+      return nameAnswer.trim();
+    }
+
+    return `${t('User')} ${index + 1}`;
+  };
+
   // Calculate stats for each question
   const getQuestionStats = (questionId: string) => {
     const answers = responses
@@ -192,7 +205,7 @@ export default function DemographicResponses({ documentId }: DemographicResponse
                 {responses.map((response, rIndex) => (
                   <tr key={response.odlUserId || rIndex}>
                     <td className={styles.userCell}>
-                      {t('User')} {rIndex + 1}
+                      {getUserLabel(response, rIndex)}
                     </td>
                     {questions.map((q, qIndex) => (
                       <td key={q.userQuestionId || qIndex} className={styles.answerCell}>

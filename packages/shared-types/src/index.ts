@@ -248,7 +248,9 @@ export type {
   CondensationSurfaceVisibility,
   CondensationVisibility,
   ViewLayers,
-  QuestionStatus
+  QuestionStatus,
+  MapSettings,
+  MapSynthVisibility
 } from "./models/statement/StatementSettings";
 
 export {
@@ -266,7 +268,9 @@ export {
   CondensationSurfaceVisibilitySchema,
   CondensationVisibilitySchema,
   ViewLayersSchema,
-  QuestionStatusSchema
+  QuestionStatusSchema,
+  MapSettingsSchema,
+  MapSynthVisibilitySchema
 } from "./models/statement/StatementSettings";
 
 export type {
@@ -386,7 +390,8 @@ export { StatementHistoryEntrySchema, StatementHistorySourceSchema } from "./mod
 export type { UserDemographicQuestion, DemographicOption, DemographicQuestionScope, ExcludedInheritedDemographics } from "./models/userDemographic/userDemographicModel";
 export {
   UserDemographicQuestionType, UserDemographicQuestionSchema,
-  DemographicOptionSchema, DemographicQuestionScopeSchema, ExcludedInheritedDemographicsSchema } from "./models/userDemographic/userDemographicModel";
+  DemographicOptionSchema, DemographicQuestionScopeSchema, ExcludedInheritedDemographicsSchema,
+  DemographicPresetKey, DemographicPresetKeySchema } from "./models/userDemographic/userDemographicModel";
 
 export { Collections } from "./models/collections/collectionsModel";
 

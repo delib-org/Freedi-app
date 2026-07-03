@@ -7,7 +7,7 @@ import { isRTL, LanguagesEnum } from '@freedi/shared-i18n';
 import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
-import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
+import { DemographicMode, SurveyTriggerMode, IdentityDisplayMode, SignDemographicQuestion } from '@/types/demographics';
 import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
@@ -37,6 +37,7 @@ interface Settings {
   enableSuggestions: boolean;
   requireGoogleLogin: boolean;
   hideUserIdentity: boolean;
+  identityDisplayMode: IdentityDisplayMode;
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
@@ -86,6 +87,7 @@ export default function AdminSettingsPage() {
     enableSuggestions: false,
     requireGoogleLogin: false,
     hideUserIdentity: true,
+    identityDisplayMode: 'anonymous',
     showHeatMap: true,
     showViewCounts: true,
     isPublic: true,
@@ -114,6 +116,11 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [hasNameQuestion, setHasNameQuestion] = useState(false);
+
+  const handleQuestionsChange = useCallback((questions: SignDemographicQuestion[]) => {
+    setHasNameQuestion(questions.some((q) => q.presetKey === 'name'));
+  }, []);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -240,17 +247,39 @@ export default function AdminSettingsPage() {
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
-            <p className={styles.settingLabel}>{t('Hide User Identity')}</p>
+            <p className={styles.settingLabel}>{t('Identity Display')}</p>
             <p className={styles.settingDescription}>
-              {t('Hide display names in comments, suggestions, and interactions')}
+              {settings.identityDisplayMode === 'form'
+                ? t('Names collected in the pre-form are visible to everyone viewing the document. Users without a name answer appear with an anonymous name.')
+                : t('How user names appear in comments, suggestions and typing indicators')}
             </p>
+            {settings.identityDisplayMode !== 'form' && (settings.demographicMode === 'disabled' || !hasNameQuestion) && (
+              <p className={styles.settingDescription}>
+                {settings.demographicMode === 'disabled'
+                  ? t('To show names from the pre-form, enable a custom demographics survey below')
+                  : t('Requires a name question in the demographics survey')}
+              </p>
+            )}
           </div>
-          <button
-            type="button"
-            className={`${styles.toggle} ${settings.hideUserIdentity ? styles.active : ''}`}
-            onClick={() => handleToggle('hideUserIdentity')}
-            aria-pressed={settings.hideUserIdentity}
-          />
+          <select
+            className={styles.select}
+            value={settings.identityDisplayMode}
+            onChange={(e) => {
+              const identityDisplayMode = e.target.value as IdentityDisplayMode;
+              setSettings(prev => ({
+                ...prev,
+                identityDisplayMode,
+                hideUserIdentity: identityDisplayMode !== 'account',
+              }));
+              setSaved(false);
+            }}
+          >
+            <option value="anonymous">{t('Anonymous pseudo-names')}</option>
+            <option value="account">{t('Account name')}</option>
+            <option value="form" disabled={settings.demographicMode === 'disabled' || !hasNameQuestion}>
+              {t('Name from pre-form')}
+            </option>
+          </select>
         </div>
       </section>
 
@@ -607,6 +636,7 @@ export default function AdminSettingsPage() {
             setSettings((prev) => ({ ...prev, surveyTrigger: trigger }));
             setSaved(false);
           }}
+          onQuestionsChange={handleQuestionsChange}
         />
       </section>
 

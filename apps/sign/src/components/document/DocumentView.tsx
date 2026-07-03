@@ -12,6 +12,8 @@ import { useRealtimeSignatureCounts } from '@/hooks/useRealtimeSignatureCounts';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import { useHeatMapStore } from '@/store/heatMapStore';
 import DocumentClient from './DocumentClient';
+import { IdentityDisplayProvider } from '../providers/IdentityDisplayProvider';
+import { IdentityDisplayMode } from '@/types/demographics';
 import ResearchConsentBanner from '../shared/ResearchConsentBanner';
 import SignButton from './SignButton';
 
@@ -68,6 +70,8 @@ interface DocumentViewProps {
   requireGoogleLogin?: boolean;
   /** When true, hide display names in comments, suggestions, and interactions */
   hideUserIdentity?: boolean;
+  /** How user identity is shown on interactions: anonymous pseudo-names, account name, or the name collected in the pre-form */
+  identityDisplayMode?: IdentityDisplayMode;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts?: boolean;
   /** When true, research logging is enabled and consent banner should be shown */
@@ -99,6 +103,7 @@ export default function DocumentView({
   enableHeadingNumbering = false,
   requireGoogleLogin = false,
   hideUserIdentity = true,
+  identityDisplayMode,
   showSignatureCounts = true,
   enableResearchLogging = false,
 }: DocumentViewProps) {
@@ -156,8 +161,15 @@ export default function DocumentView({
   // Determine if TOC should be shown
   const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
 
+  // Fallback for callers that only pass the legacy hideUserIdentity prop
+  const resolvedIdentityMode: IdentityDisplayMode =
+    identityDisplayMode ?? (hideUserIdentity ? 'anonymous' : 'account');
+
   return (
-      <>
+      <IdentityDisplayProvider
+        documentId={document.statementId}
+        mode={resolvedIdentityMode}
+      >
       {enableResearchLogging && (
         <ResearchConsentBanner topParentId={document.statementId} />
       )}
@@ -364,6 +376,6 @@ export default function DocumentView({
           </div>
         </div>
       </DocumentClient>
-      </>
+      </IdentityDisplayProvider>
   );
 }

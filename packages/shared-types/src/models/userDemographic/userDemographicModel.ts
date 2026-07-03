@@ -29,6 +29,16 @@ export const DemographicQuestionScopeSchema = enum_(DemographicQuestionScope);
 
 export const UserQuestionTypeSchema = enum_(UserDemographicQuestionType);
 
+// Preset demographic fields that can be quick-added and identified programmatically
+export enum DemographicPresetKey {
+    name = 'name',
+    age = 'age',
+    gender = 'gender',
+    city = 'city',
+}
+
+export const DemographicPresetKeySchema = enum_(DemographicPresetKey);
+
 export const DemographicOptionSchema = object({
     option: string(),
     color: optional(string()),
@@ -56,6 +66,7 @@ export const UserDemographicQuestionSchema = object({
     step: optional(number()),
     minLabel: optional(string()),
     maxLabel: optional(string()),
+    presetKey: optional(DemographicPresetKeySchema), // identifies quick-added preset fields (e.g. the 'name' question used for identity display)
 });
 
 export type UserDemographicQuestion = InferOutput<typeof UserDemographicQuestionSchema>;

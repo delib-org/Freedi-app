@@ -1,4 +1,4 @@
-import { DragEvent, FC, useState } from 'react';
+import { DragEvent, FC, useEffect, useRef, useState } from 'react';
 import type { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -53,6 +53,32 @@ const ClusterCard: FC<Props> = ({
 	const myEval = useAppSelector(evaluationSelector(statement.statementId));
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [facesOpen, setFacesOpen] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
+	const facesRef = useRef<HTMLDivElement>(null);
+	const faceToggleRef = useRef<HTMLButtonElement>(null);
+
+	// Close the card's menu / faces popup when pressing anywhere outside them.
+	// Capture phase so it fires before the canvas pan handler (and before any
+	// toggle's own click), regardless of pointer capture.
+	useEffect(() => {
+		if (!menuOpen && !facesOpen) return;
+		const onPointerDown = (e: PointerEvent) => {
+			const target = e.target as Node;
+			if (menuOpen && menuRef.current && !menuRef.current.contains(target)) {
+				setMenuOpen(false);
+			}
+			if (
+				facesOpen &&
+				!facesRef.current?.contains(target) &&
+				!faceToggleRef.current?.contains(target)
+			) {
+				setFacesOpen(false);
+			}
+		};
+		document.addEventListener('pointerdown', onPointerDown, true);
+
+		return () => document.removeEventListener('pointerdown', onPointerDown, true);
+	}, [menuOpen, facesOpen]);
 
 	const evaluate = (value: number) => {
 		if (!creator) return;
@@ -82,6 +108,9 @@ const ClusterCard: FC<Props> = ({
 		<div
 			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
+			// Mirror the whole card to the note's own direction so the menu docks
+			// opposite the text start (no overlap) and the footer reads naturally.
+			dir="auto"
 			data-flip-id={statement.statementId}
 			data-cluster-id={clusterId}
 			draggable={canManage}
@@ -89,7 +118,7 @@ const ClusterCard: FC<Props> = ({
 			onDoubleClick={canManage && !isEditing ? onRequestEdit : undefined}
 		>
 			{canManage && !isEditing && (
-				<div className={styles.cardMenu}>
+				<div className={styles.cardMenu} ref={menuRef}>
 					<button
 						type="button"
 						className={styles.cardMenuButton}
@@ -99,7 +128,7 @@ const ClusterCard: FC<Props> = ({
 						⋮
 					</button>
 					{menuOpen && (
-						<div className={styles.cardMenuList} onMouseLeave={() => setMenuOpen(false)}>
+						<div className={styles.cardMenuList}>
 							<button
 								type="button"
 								onClick={() => {
@@ -154,6 +183,8 @@ const ClusterCard: FC<Props> = ({
 					className={styles.cardEdit}
 					defaultValue={statement.statement}
 					autoFocus
+					// Auto-detect LTR/RTL from the typed text and align accordingly.
+					dir="auto"
 					onFocus={(e) => e.currentTarget.select()}
 					onBlur={(e) => onSaveText(e.currentTarget.value)}
 					onKeyDown={(e) => {
@@ -165,7 +196,10 @@ const ClusterCard: FC<Props> = ({
 					}}
 				/>
 			) : (
-				<span className={styles.cardText}>{statement.statement}</span>
+				// dir="auto" aligns each note by its own content (Hebrew/Arabic → RTL).
+				<span className={styles.cardText} dir="auto">
+					{statement.statement}
+				</span>
 			)}
 
 			<div className={styles.cardFooter}>
@@ -180,6 +214,7 @@ const ClusterCard: FC<Props> = ({
 				)}
 
 				<button
+					ref={faceToggleRef}
 					type="button"
 					className={`${styles.evalToggle} ${hasVoted ? styles.evalToggleVoted : ''}`}
 					style={{ backgroundColor: buttonThumb?.colorSelected }}
@@ -193,7 +228,7 @@ const ClusterCard: FC<Props> = ({
 			</div>
 
 			{facesOpen && (
-				<div className={styles.facesPopup} onMouseLeave={() => setFacesOpen(false)}>
+				<div className={styles.facesPopup} ref={facesRef}>
 					{enhancedEvaluationsThumbs.map((thumb) => {
 						const active = thumb.id === myThumbId;
 

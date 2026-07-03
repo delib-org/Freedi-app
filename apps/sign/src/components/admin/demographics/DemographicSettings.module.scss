@@ -333,6 +333,53 @@
   font-weight: 500;
 }
 
+.presetBadge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: var(--agree, #2e7d32);
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.quickAddSection {
+  margin-top: var(--spacing-md);
+}
+
+.quickAddLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.quickAddButtons {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.quickAddButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--card-default);
+  color: var(--btn-primary);
+  border: 1px dashed var(--btn-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(95, 136, 229, 0.1);
+  }
+
+  &:disabled {
+    color: var(--text-secondary);
+    border-color: var(--border-light);
+    cursor: default;
+  }
+}
+
 .displayTypeBadge {
   font-size: 0.7rem;
   padding: 2px 6px;

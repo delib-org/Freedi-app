@@ -211,6 +211,18 @@ async function unlinkOptionFromCluster(input: UnlinkInput): Promise<void> {
 	});
 
 	if (newMembers.length < 2) {
+		// Manually-created clusters (admin authored, title locked) are kept even
+		// when they drop below 2 members — auto-dissolution is only for
+		// auto-formed synth clusters, not the creator's deliberate clusters.
+		if (cluster.titleLockedByCreator === true) {
+			logger.info('liveSynth.unlink: manual cluster kept below 2 members', {
+				clusterId: cluster.statementId,
+				newMemberCount: newMembers.length,
+			});
+
+			return;
+		}
+
 		await dissolveCluster({
 			cluster,
 			remainingMember: newMembers[0] ?? '',
@@ -360,6 +372,19 @@ export async function liveSynthOnOptionUpdate(
 		// from every cluster the option currently sits in.
 		const reason = `LLM verdict='${verdict.verdict}' on edit (drift=${drift.toFixed(3)})`;
 		for (const cluster of containingClusters) {
+			// Manually-created clusters (titleLockedByCreator) are admin-curated:
+			// the creator deliberately placed this member, so an edit must never
+			// auto-unlink it. Edit-invalidation is only for auto-formed synth
+			// clusters. Without this guard, adding a note to a cluster — which
+			// creates a "New Option" placeholder, assigns it, then lets the user
+			// type the real text — yanks the fresh note straight to "Ungrouped".
+			if (cluster.titleLockedByCreator === true) {
+				logger.info('liveSynth.onOptionUpdate: kept member in manual cluster despite edit', {
+					statementId: diff.statementId,
+					clusterId: cluster.statementId,
+				});
+				continue;
+			}
 			await unlinkOptionFromCluster({
 				cluster,
 				optionId: diff.statementId,
