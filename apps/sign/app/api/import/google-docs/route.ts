@@ -238,10 +238,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       });
     }
 
-    // Generate description from text paragraphs (first 200 chars)
+    // Generate description from text paragraphs (first 200 chars, plain text)
     const description = paragraphs
       .filter((p) => p.content) // Only paragraphs with text content
-      .map((p) => p.content)
+      .map((p) => p.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
       .join(' ')
       .slice(0, 200);
 

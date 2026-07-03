@@ -360,8 +360,319 @@ describe('converter', () => {
 			expect(result.paragraphs).toHaveLength(1);
 			expect(result.paragraphs[0].type).toBe(ParagraphType.table);
 			expect(result.paragraphs[0].content).toContain('<table>');
-			expect(result.paragraphs[0].content).toContain('<th>Header 1</th>');
+			expect(result.paragraphs[0].content).toContain('<th scope="col">Header 1</th>');
 			expect(result.paragraphs[0].content).toContain('<td>Cell 1</td>');
+		});
+
+		it('should preserve text colors as inline styles', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							paragraph: {
+								elements: [
+									{
+										textRun: {
+											content: 'Green text',
+											textStyle: {
+												foregroundColor: {
+													color: { rgbColor: { red: 0.1, green: 0.4, blue: 0.2 } },
+												},
+											},
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).toBe(
+				'<span style="color:#1a6633">Green text</span>'
+			);
+		});
+
+		it('should skip default black text color', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							paragraph: {
+								elements: [
+									{
+										textRun: {
+											content: 'Black text',
+											textStyle: {
+												foregroundColor: {
+													color: { rgbColor: {} },
+												},
+											},
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).toBe('Black text');
+		});
+
+		it('should preserve text highlight (background) colors', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							paragraph: {
+								elements: [
+									{
+										textRun: {
+											content: 'Highlighted',
+											textStyle: {
+												backgroundColor: {
+													color: { rgbColor: { red: 1, green: 1, blue: 0 } },
+												},
+											},
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).toBe(
+				'<span style="background-color:#ffff00">Highlighted</span>'
+			);
+		});
+
+		it('should convert links to anchor tags', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							paragraph: {
+								elements: [
+									{
+										textRun: {
+											content: 'Visit us',
+											textStyle: {
+												underline: true,
+												link: { url: 'https://example.com/page' },
+											},
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).toBe(
+				'<a href="https://example.com/page">Visit us</a>'
+			);
+		});
+
+		it('should not create anchors for unsafe link protocols', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							paragraph: {
+								elements: [
+									{
+										textRun: {
+											content: 'Click',
+											// eslint-disable-next-line no-script-url
+											textStyle: { link: { url: 'javascript:alert(1)' } },
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).not.toContain('<a ');
+		});
+
+		it('should preserve paragraph alignment and shading (callouts)', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							paragraph: {
+								paragraphStyle: {
+									alignment: 'CENTER',
+									shading: {
+										backgroundColor: {
+											color: { rgbColor: { red: 0.91, green: 0.96, blue: 0.93 } },
+										},
+									},
+								},
+								elements: [{ textRun: { content: 'Callout text' } }],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).toBe(
+				'<span style="display:block;text-align:center;background-color:#e8f5ed">Callout text</span>'
+			);
+		});
+
+		it('should preserve table cell backgrounds, spans, and column widths', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							table: {
+								tableStyle: {
+									tableColumnProperties: [
+										{ widthType: 'FIXED_WIDTH', width: { magnitude: 300 } },
+										{ widthType: 'FIXED_WIDTH', width: { magnitude: 100 } },
+									],
+								},
+								tableRows: [
+									{
+										tableCells: [
+											{
+												tableCellStyle: {
+													backgroundColor: {
+														color: { rgbColor: { red: 0.1, green: 0.36, blue: 0.22 } },
+													},
+													columnSpan: 2,
+												},
+												content: [
+													{
+														paragraph: {
+															paragraphStyle: { alignment: 'CENTER' },
+															elements: [{ textRun: { content: 'Header' } }],
+														},
+													},
+												],
+											},
+										],
+									},
+									{
+										tableCells: [
+											{
+												content: [
+													{
+														paragraph: {
+															elements: [{ textRun: { content: 'A' } }],
+														},
+													},
+												],
+											},
+											{
+												content: [
+													{
+														paragraph: {
+															elements: [{ textRun: { content: 'B' } }],
+														},
+													},
+												],
+											},
+										],
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+			const content = result.paragraphs[0].content;
+
+			expect(content).toContain('<colgroup><col style="width:75.0%"><col style="width:25.0%"></colgroup>');
+			expect(content).toContain('colspan="2"');
+			expect(content).toContain('background-color:#1a5c38');
+			expect(content).toContain('text-align:center');
+		});
+
+		it('should join multi-paragraph cells with <br> and keep bullets', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							table: {
+								tableRows: [
+									{
+										tableCells: [
+											{
+												content: [
+													{
+														paragraph: {
+															elements: [{ textRun: { content: 'Line one\n' } }],
+														},
+													},
+													{
+														paragraph: {
+															bullet: { listId: 'list1' },
+															elements: [{ textRun: { content: 'Bullet line\n' } }],
+														},
+													},
+												],
+											},
+										],
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).toContain('Line one<br>• Bullet line');
+			// Single-row tables are callouts: cells stay td, not th
+			expect(result.paragraphs[0].content).not.toContain('<th');
+		});
+
+		it('should keep paragraph-terminating newlines out of formatting tags', () => {
+			const doc = {
+				body: {
+					content: [
+						{
+							paragraph: {
+								elements: [
+									{
+										textRun: {
+											content: 'Bold text\n',
+											textStyle: { bold: true },
+										},
+									},
+								],
+							},
+						},
+					],
+				},
+			};
+
+			const result = convertGoogleDocsToParagraphs(doc);
+
+			expect(result.paragraphs[0].content).toBe('<strong>Bold text</strong>');
 		});
 
 		it('should extract images from document', () => {
