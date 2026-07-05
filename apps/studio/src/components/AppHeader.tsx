@@ -8,7 +8,7 @@ export default function AppHeader() {
 	return (
 		<header className={styles.bar}>
 			<Link to="/" className={styles.brand}>
-				Freedi <span className={styles.brandAccent}>Studio</span>
+				WizCol <span className={styles.brandAccent}>Studio</span>
 			</Link>
 			<div className={styles.right}>
 				{user?.displayName && <span className={styles.user}>{user.displayName}</span>}

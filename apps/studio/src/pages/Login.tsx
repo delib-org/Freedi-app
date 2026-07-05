@@ -18,7 +18,7 @@ export default function Login() {
 	return (
 		<main className={styles.login}>
 			<div className={styles.card}>
-				<h1 className={styles.title}>Freedi Studio</h1>
+				<h1 className={styles.title}>WizCol Studio</h1>
 				<p className={styles.subtitle}>Create, manage and run your events.</p>
 				<button type="button" className={styles.button} onClick={handleSignIn}>
 					Sign in with Google

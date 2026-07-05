@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { listFacilitatorEvents, type FacilitatorEvent } from '@freedi/event-core';
 import { useAuth } from '@/auth/AuthContext';
 import { db } from '@/firebase';
+import NewEventModal from '@/components/NewEventModal';
 import styles from './MyEvents.module.css';
 
 export default function MyEvents() {
 	const { user } = useAuth();
+	const navigate = useNavigate();
 	const [events, setEvents] = useState<FacilitatorEvent[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
+	const [showModal, setShowModal] = useState(false);
 
 	useEffect(() => {
 		if (!user) return;
@@ -35,7 +38,7 @@ export default function MyEvents() {
 		<main className={styles.page}>
 			<div className={styles.header}>
 				<h1 className={styles.title}>My Events</h1>
-				<button type="button" className={styles.newBtn} disabled title="Coming soon">
+				<button type="button" className={styles.newBtn} onClick={() => setShowModal(true)}>
 					+ New Event
 				</button>
 			</div>
@@ -45,7 +48,7 @@ export default function MyEvents() {
 
 			{!loading && !error && events.length === 0 && (
 				<p className={styles.muted}>
-					You don’t administer any events yet. Events are the top-level groups you manage.
+					No events yet. Click “+ New Event” to create your first one.
 				</p>
 			)}
 
@@ -59,6 +62,13 @@ export default function MyEvents() {
 					</li>
 				))}
 			</ul>
+
+			{showModal && (
+				<NewEventModal
+					onClose={() => setShowModal(false)}
+					onCreated={(eventId) => navigate(`/events/${eventId}`)}
+				/>
+			)}
 		</main>
 	);
 }

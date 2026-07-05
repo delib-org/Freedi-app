@@ -57,18 +57,18 @@ export async function listFacilitatorEvents(
 	db: Firestore,
 	userId: string,
 ): Promise<FacilitatorEvent[]> {
+	// Query by userId only (single-field, auto-indexed) and filter role +
+	// top-level-group client-side. Combining `userId ==` with `role in [...]`
+	// would require a composite index we'd otherwise have to provision.
 	const subsRef = collection(db, Collections.statementsSubscribe);
-	const q = query(
-		subsRef,
-		where('userId', '==', userId),
-		where('role', 'in', FACILITATOR_ROLES),
-	);
+	const q = query(subsRef, where('userId', '==', userId));
 
 	const snapshot = await getDocs(q);
 	const events: FacilitatorEvent[] = [];
 
 	snapshot.forEach((docSnap) => {
 		const sub = docSnap.data() as SubscriptionLike;
+		if (!sub.role || !FACILITATOR_ROLES.includes(sub.role)) return;
 		if (!isTopLevelGroup(sub)) return;
 		const s = sub.statement!;
 		events.push({

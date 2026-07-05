@@ -1,0 +1,83 @@
+.scrim {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: grid;
+	place-items: center;
+	padding: var(--pad);
+	background: rgba(0, 0, 0, 0.55);
+}
+
+.modal {
+	width: 100%;
+	max-width: 420px;
+	padding: 1.5rem;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+
+.title {
+	margin: 0 0 1rem;
+	font-size: 1.25rem;
+}
+
+.label {
+	display: block;
+	margin-bottom: 0.375rem;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.input {
+	width: 100%;
+	padding: 0.625rem 0.75rem;
+	font-size: 1rem;
+	color: var(--text);
+	background: var(--bg);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+}
+
+.input:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 1px;
+}
+
+.error {
+	margin: 0.75rem 0 0;
+	color: var(--reject);
+	font-size: 0.875rem;
+}
+
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-top: 1.5rem;
+}
+
+.cancel,
+.create {
+	padding: 0.5rem 1rem;
+	font-size: 0.9375rem;
+	border-radius: 20px;
+	cursor: pointer;
+}
+
+.cancel {
+	color: var(--text-muted);
+	background: transparent;
+	border: 1px solid var(--border);
+}
+
+.create {
+	color: var(--primary-contrast);
+	background: var(--primary);
+	border: 1px solid var(--primary);
+}
+
+.create:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

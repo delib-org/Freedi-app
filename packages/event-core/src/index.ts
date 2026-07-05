@@ -15,3 +15,6 @@ export { deriveActivities } from './deriveActivities';
 
 export type { FacilitatorEvent } from './myEvents';
 export { listFacilitatorEvents } from './myEvents';
+
+export type { CreateEventInput, CreateEventUser } from './createEvent';
+export { createEvent } from './createEvent';

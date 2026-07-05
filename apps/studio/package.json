@@ -2,7 +2,7 @@
   "name": "@freedi/studio",
   "version": "0.1.0",
   "private": true,
-  "description": "Freedi Studio — facilitator app to create, manage and run events across all Freedi apps",
+  "description": "WizCol Studio — facilitator app to create, manage and run events across all WizCol apps",
   "type": "module",
   "scripts": {
     "dev": "vite --port 3008",
