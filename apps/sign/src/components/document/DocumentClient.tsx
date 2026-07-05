@@ -92,8 +92,9 @@ export default function DocumentClient({
   // State for rejection feedback modal
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
-  // State for satisfaction feedback modal (shown when rating < 1)
+  // State for satisfaction feedback modal (shown after every rating)
   const [showSatisfactionModal, setShowSatisfactionModal] = useState(false);
+  const [satisfactionScore, setSatisfactionScore] = useState<number>(0);
 
   // Demographics store
   const {
@@ -400,20 +401,17 @@ export default function DocumentClient({
         });
 
         if (response.ok) {
-          if (score < 1) {
-            // Not fully satisfied - ask the user to explain why
-            setShowSatisfactionModal(true);
-
-            return; // Don't reload - the modal will handle it
+          // Fully satisfied gets a celebration before the feedback modal
+          if (score >= 1) {
+            triggerConfetti();
           }
 
-          // Fully satisfied - celebrate and refresh
-          triggerConfetti();
-          showToast('success', t('satisfactionThankYou') || 'Thank you for your feedback!');
-          await new Promise((resolve) =>
-            setTimeout(resolve, ANIMATION_DURATION.SUCCESS)
-          );
-          window.location.reload();
+          // Always ask for a written explanation - why it was great,
+          // or why it fell short
+          setSatisfactionScore(score);
+          setShowSatisfactionModal(true);
+
+          return; // Don't reload - the modal will handle it
         } else {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
           logger.error('[DocumentClient] Failed to submit satisfaction rating:', {
@@ -671,11 +669,12 @@ export default function DocumentClient({
         />
       )}
 
-      {/* Satisfaction Feedback Modal (rating < 1) */}
+      {/* Satisfaction Feedback Modal (shown after every rating) */}
       {showSatisfactionModal && (
         <SatisfactionFeedbackModal
           documentId={documentId}
           userId={user?.uid || null}
+          score={satisfactionScore}
           onClose={() => setShowSatisfactionModal(false)}
         />
       )}

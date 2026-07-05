@@ -3477,5 +3477,8 @@
   "Very unsatisfied": "מאוד לא מרוצה",
   "Unsatisfied": "לא מרוצה",
   "Satisfied": "מרוצה",
-  "Very satisfied": "מאוד מרוצה"
+  "Very satisfied": "מאוד מרוצה",
+  "Full name": "שם מלא",
+  "satisfactionPositiveFeedbackTitle": "שמחים שאהבתם!",
+  "satisfactionPositiveFeedbackBody": "תוכלו לשתף מה אהבתם במסמך? כשאנחנו יודעים מה עבד טוב, אנחנו יכולים לשמר את זה."
 }

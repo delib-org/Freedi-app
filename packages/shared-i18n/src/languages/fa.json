@@ -3228,5 +3228,8 @@
   "Very unsatisfied": "بسیار ناراضی",
   "Unsatisfied": "ناراضی",
   "Satisfied": "راضی",
-  "Very satisfied": "بسیار راضی"
+  "Very satisfied": "بسیار راضی",
+  "Full name": "نام کامل",
+  "satisfactionPositiveFeedbackTitle": "خوشحالیم که پسندیدید!",
+  "satisfactionPositiveFeedbackBody": "می‌توانید بگویید چه چیزی را در این سند پسندیدید؟ دانستن اینکه چه چیزی خوب بوده به ما کمک می‌کند آن را حفظ کنیم."
 }

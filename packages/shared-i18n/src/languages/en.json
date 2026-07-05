@@ -3464,5 +3464,8 @@
   "Very unsatisfied": "Very unsatisfied",
   "Unsatisfied": "Unsatisfied",
   "Satisfied": "Satisfied",
-  "Very satisfied": "Very satisfied"
+  "Very satisfied": "Very satisfied",
+  "Full name": "Full name",
+  "satisfactionPositiveFeedbackTitle": "Glad you liked it!",
+  "satisfactionPositiveFeedbackBody": "Can you share what you liked about this document? Knowing what worked well helps us keep it that way."
 }

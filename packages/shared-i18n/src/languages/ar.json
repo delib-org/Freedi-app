@@ -2849,5 +2849,8 @@
   "Very unsatisfied": "غير راضٍ إطلاقًا",
   "Unsatisfied": "غير راضٍ",
   "Satisfied": "راضٍ",
-  "Very satisfied": "راضٍ جدًا"
+  "Very satisfied": "راضٍ جدًا",
+  "Full name": "الاسم الكامل",
+  "satisfactionPositiveFeedbackTitle": "يسعدنا أن المستند أعجبك!",
+  "satisfactionPositiveFeedbackBody": "هل يمكنك مشاركة ما أعجبك في هذا المستند؟ معرفة ما نجح تساعدنا في الحفاظ عليه."
 }

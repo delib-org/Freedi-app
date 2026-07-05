@@ -2726,5 +2726,8 @@
   "Very unsatisfied": "Zeer ontevreden",
   "Unsatisfied": "Ontevreden",
   "Satisfied": "Tevreden",
-  "Very satisfied": "Zeer tevreden"
+  "Very satisfied": "Zeer tevreden",
+  "Full name": "Volledige naam",
+  "satisfactionPositiveFeedbackTitle": "Fijn dat je het goed vond!",
+  "satisfactionPositiveFeedbackBody": "Kun je delen wat je goed vond aan dit document? Weten wat goed werkte helpt ons het zo te houden."
 }
