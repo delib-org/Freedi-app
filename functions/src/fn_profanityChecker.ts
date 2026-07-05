@@ -34,27 +34,23 @@ async function containsBadLanguage(text: string): Promise<boolean> {
 		const result = await model.generateContent(prompt);
 		const response = result.response;
 
-		// Check if Gemini's safety filters blocked the content
+		// If the model returned nothing usable, don't punish the author — allow.
 		if (!response.candidates || response.candidates.length === 0) {
-			console.info('Content blocked by Gemini safety filters');
+			console.info('Moderation returned no candidates — allowing content');
 
-			return true;
+			return false;
 		}
 
 		const output = response.text().trim().toLowerCase();
-		console.info('Gemini moderation response:', output);
+		console.info('Moderation response:', output);
 
 		return output.includes('true');
 	} catch (error: unknown) {
-		// Any error (safety block, network, etc.) — treat as inappropriate
-		const message = error instanceof Error ? error.message : String(error);
-		if (message.includes('SAFETY') || message.includes('blocked') || message.includes('harm')) {
-			console.info('Content blocked by Gemini safety filters (exception)', { message });
-		} else {
-			logError(error, { operation: 'profanityChecker.containsBadLanguage' });
-		}
+		// Fail OPEN: an infrastructure error is our problem, not the author's.
+		// Allow the content rather than wrongly accusing a real participant.
+		logError(error, { operation: 'profanityChecker.containsBadLanguage' });
 
-		return true; // fail-closed: block text if Gemini fails
+		return false;
 	}
 }
 

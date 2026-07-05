@@ -53,7 +53,7 @@ export async function findSimilarStatements(request: Request, response: Response
 			// Log rejection to Firestore (non-blocking)
 			logModerationRejection({
 				originalText: userInput,
-				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				reason: contentCheck.reason || "This didn't quite fit here. Please rephrase and try again.",
 				category: contentCheck.category || 'other',
 				userId: creatorId,
 				parentId: statementId,
@@ -66,7 +66,7 @@ export async function findSimilarStatements(request: Request, response: Response
 			response.status(400).send({
 				ok: false,
 				error: 'Input contains inappropriate content',
-				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				reason: contentCheck.reason || "This didn't quite fit here. Please rephrase and try again.",
 				category: contentCheck.category || 'other',
 			});
 

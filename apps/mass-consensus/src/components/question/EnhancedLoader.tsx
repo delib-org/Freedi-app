@@ -24,10 +24,10 @@ interface StageConfig {
 const STAGES: StageConfig[] = [
   {
     stage: 'content-check',
-    icon: '🔍',
-    messageKey: 'Checking for inappropriate content...',
-    subMessageKey: 'Ensuring safe community standards',
-    tipKey: 'AI scans for profanity and harmful content',
+    icon: '✨',
+    messageKey: 'Reviewing your idea...',
+    subMessageKey: 'Getting it ready to share',
+    tipKey: 'A quick check helps keep the space welcoming for everyone',
     ...LOADER_STAGES.CONTENT_CHECK,
   },
   {

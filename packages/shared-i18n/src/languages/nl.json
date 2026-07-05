@@ -2794,5 +2794,11 @@
   "minWordsHint": "Vereis dat elk antwoord minstens zoveel woorden bevat. 0 = geen minimum.",
   "Minimum words per response": "Minimum aantal woorden per antwoord",
   "Minimum words": "Minimum woorden",
-  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Vereis dat elk antwoord minstens zoveel woorden bevat. Zet op 0 om antwoorden van elke lengte toe te staan."
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Vereis dat elk antwoord minstens zoveel woorden bevat. Zet op 0 om antwoorden van elke lengte toe te staan.",
+  "This didn't quite fit here. Please rephrase and try again.": "Dit paste hier niet helemaal. Herformuleer het en probeer het opnieuw.",
+  "Let's try that again": "Laten we het opnieuw proberen",
+  "We couldn't check that just now": "We konden dat zojuist niet controleren",
+  "Reviewing your idea...": "We bekijken je idee...",
+  "Getting it ready to share": "We maken het klaar om te delen",
+  "A quick check helps keep the space welcoming for everyone": "Een snelle controle houdt de ruimte gastvrij voor iedereen"
 }

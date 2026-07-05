@@ -74,7 +74,7 @@ export async function detectMultipleSuggestions(
 			// Log rejection to Firestore (non-blocking)
 			logModerationRejection({
 				originalText: userInput,
-				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				reason: contentCheck.reason || "This didn't quite fit here. Please rephrase and try again.",
 				category: contentCheck.category || 'other',
 				userId,
 				parentId: questionId,
@@ -87,7 +87,7 @@ export async function detectMultipleSuggestions(
 			response.status(400).send({
 				ok: false,
 				error: 'Input contains inappropriate content',
-				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				reason: contentCheck.reason || "This didn't quite fit here. Please rephrase and try again.",
 				category: contentCheck.category || 'other',
 				isMultipleSuggestions: false,
 				suggestions: [],

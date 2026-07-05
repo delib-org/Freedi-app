@@ -200,7 +200,6 @@ export async function checkForInappropriateContent(
       Arabic: "أغبياء", "غبي", "حمار"
     - Sexually explicit or suggestive content
     - Direct threats of violence or incitement to harm specific people
-    - Spam, gibberish, or meaningless text
 
     Text to analyze: "${userInput}"
 
@@ -213,7 +212,7 @@ export async function checkForInappropriateContent(
     - Only flag content that is clearly and intentionally offensive, hateful, or abusive. When in doubt, ALWAYS allow the content. Strongly prefer permissiveness over false positives.
 
     Return ONLY this JSON format (no markdown, no code blocks):
-    - If inappropriate: { "inappropriate": true, "reason": "Brief explanation in the same language as the input text", "category": "one of: profanity, hate_speech, personal_attack, sexual_content, violence_threats, spam, other" }
+    - If inappropriate: { "inappropriate": true, "reason": "A short, kind message in the same language as the input text, addressed to the author. Assume good faith, gently explain why it doesn't fit, and invite them to rephrase. Never call the person names or imply they are a bad person.", "category": "one of: profanity, hate_speech, personal_attack, sexual_content, violence_threats, other" }
     - If acceptable: { "inappropriate": false }
   `;
 
@@ -247,34 +246,24 @@ export async function checkForInappropriateContent(
 			category: parsed.category,
 		};
 	} catch (error) {
-		// Log the error for debugging
+		// Log the error for debugging + async admin review.
 		logger.error('Error checking for inappropriate content:', error);
 
-		// Check if the error is due to Google's safety filters blocking the content
+		// Fail OPEN: when our moderation service errors (LLM outage, rate limit,
+		// JSON parse failure, model refusal), we must NOT accuse a well-meaning
+		// participant of posting "inappropriate content". On a live deliberation
+		// event, wrongly rejecting a real contribution in front of the room is a
+		// far worse outcome than letting a rare item through — the content is
+		// public and admins can remove it after the fact. So we allow the content
+		// and flag it for later review instead of blocking the author.
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		if (
-			errorMessage.includes('SAFETY') ||
-			errorMessage.includes('blocked') ||
-			errorMessage.includes('harm')
-		) {
-			logger.warn('Content blocked by Google safety filters - treating as inappropriate');
-
-			return {
-				isInappropriate: true,
-				reason: 'Content blocked by safety filters',
-				category: 'other',
-				error: 'Content blocked by safety filters',
-			};
-		}
-
-		// On error, block the content — fail closed to prevent abuse
-		logger.warn('Content moderation failed, blocking content for safety');
+		logger.warn('Content moderation unavailable — allowing content and flagging for review', {
+			errorMessage,
+		});
 
 		return {
-			isInappropriate: true,
-			reason: 'Content moderation unavailable',
-			category: 'other',
-			error: 'Content moderation unavailable — blocked for safety',
+			isInappropriate: false,
+			error: 'Content moderation unavailable — allowed and flagged for review',
 		};
 	}
 }

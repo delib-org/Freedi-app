@@ -2794,5 +2794,11 @@
   "minWordsHint": "Verlange, dass jede Antwort mindestens so viele Wörter enthält. 0 = kein Minimum.",
   "Minimum words per response": "Mindestanzahl an Wörtern pro Antwort",
   "Minimum words": "Mindestwörter",
-  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Verlange, dass jede Antwort mindestens so viele Wörter enthält. Auf 0 setzen, um Antworten beliebiger Länge zuzulassen."
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Verlange, dass jede Antwort mindestens so viele Wörter enthält. Auf 0 setzen, um Antworten beliebiger Länge zuzulassen.",
+  "This didn't quite fit here. Please rephrase and try again.": "Das hat hier nicht ganz gepasst. Bitte formuliere es um und versuche es erneut.",
+  "Let's try that again": "Versuchen wir es noch einmal",
+  "We couldn't check that just now": "Wir konnten das gerade nicht prüfen",
+  "Reviewing your idea...": "Wir schauen uns deine Idee an...",
+  "Getting it ready to share": "Wir machen sie bereit zum Teilen",
+  "A quick check helps keep the space welcoming for everyone": "Eine kurze Prüfung hält den Raum für alle einladend"
 }

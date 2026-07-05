@@ -3296,5 +3296,11 @@
   "minWordsHint": "هر پاسخ باید حداقل این تعداد کلمه داشته باشد. ۰ = بدون حداقل.",
   "Minimum words per response": "حداقل تعداد کلمات برای هر پاسخ",
   "Minimum words": "حداقل کلمات",
-  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "هر پاسخ باید حداقل این تعداد کلمه داشته باشد. برای مجاز کردن پاسخ‌هایی با هر طول، آن را روی ۰ بگذارید."
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "هر پاسخ باید حداقل این تعداد کلمه داشته باشد. برای مجاز کردن پاسخ‌هایی با هر طول، آن را روی ۰ بگذارید.",
+  "This didn't quite fit here. Please rephrase and try again.": "این کاملاً اینجا مناسب نبود. لطفاً بازنویسی کنید و دوباره امتحان کنید.",
+  "Let's try that again": "بیایید دوباره امتحان کنیم",
+  "We couldn't check that just now": "در حال حاضر نتوانستیم آن را بررسی کنیم",
+  "Reviewing your idea...": "در حال بررسی ایدهٔ شما...",
+  "Getting it ready to share": "آماده‌سازی برای اشتراک‌گذاری",
+  "A quick check helps keep the space welcoming for everyone": "یک بررسی سریع کمک می‌کند فضا برای همه دلپذیر بماند"
 }

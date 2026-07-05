@@ -3544,5 +3544,11 @@
   "minWordsHint": "דרוש שכל תשובה תכיל לפחות מספר מילים זה. 0 = ללא מינימום.",
   "Minimum words per response": "מספר מילים מינימלי לתשובה",
   "Minimum words": "מילים מינימום",
-  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "דרוש שכל תשובה תכיל לפחות מספר מילים זה. הגדר 0 כדי לאפשר תשובות בכל אורך."
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "דרוש שכל תשובה תכיל לפחות מספר מילים זה. הגדר 0 כדי לאפשר תשובות בכל אורך.",
+  "This didn't quite fit here. Please rephrase and try again.": "זה לא ממש התאים כאן. אפשר לנסח מחדש ולנסות שוב?",
+  "Let's try that again": "בוא ננסה שוב",
+  "We couldn't check that just now": "לא הצלחנו לבדוק את זה כרגע",
+  "Reviewing your idea...": "בודקים את הרעיון שלך...",
+  "Getting it ready to share": "מכינים אותו לשיתוף",
+  "A quick check helps keep the space welcoming for everyone": "בדיקה קצרה עוזרת לשמור על מרחב מזמין לכולם"
 }

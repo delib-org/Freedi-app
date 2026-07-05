@@ -2794,5 +2794,11 @@
   "minWordsHint": "Exige que cada respuesta tenga al menos esta cantidad de palabras. 0 = sin mínimo.",
   "Minimum words per response": "Mínimo de palabras por respuesta",
   "Minimum words": "Mínimo de palabras",
-  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Exige que cada respuesta tenga al menos esta cantidad de palabras. Ponlo en 0 para permitir respuestas de cualquier longitud."
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Exige que cada respuesta tenga al menos esta cantidad de palabras. Ponlo en 0 para permitir respuestas de cualquier longitud.",
+  "This didn't quite fit here. Please rephrase and try again.": "Esto no encajó del todo aquí. Reformúlalo e inténtalo de nuevo.",
+  "Let's try that again": "Intentémoslo de nuevo",
+  "We couldn't check that just now": "No pudimos revisarlo en este momento",
+  "Reviewing your idea...": "Revisando tu idea...",
+  "Getting it ready to share": "Preparándola para compartir",
+  "A quick check helps keep the space welcoming for everyone": "Una revisión rápida ayuda a mantener un espacio acogedor para todos"
 }

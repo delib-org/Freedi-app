@@ -96,7 +96,7 @@ export default function AddSolutionFlow({
           const errorMessage = similarData.reason || similarData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
           showToast({
             type: 'error',
-            title: t('Invalid Content'),
+            title: t('Let\'s try that again'),
             message: errorMessage,
           });
           setFlowState({ step: 'input' });
@@ -166,7 +166,7 @@ export default function AddSolutionFlow({
         const errorMessage = multiErrorData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
         showToast({
           type: 'error',
-          title: t('Invalid Content'),
+          title: t('Let\'s try that again'),
           message: errorMessage,
         });
         setFlowState({ step: 'input' });
@@ -220,7 +220,7 @@ export default function AddSolutionFlow({
       // On error, reset to input form
       showToast({
         type: 'error',
-        title: t('Check Failed'),
+        title: t('We couldn\'t check that just now'),
         message: ERROR_MESSAGES.CHECK_SIMILAR_FAILED,
       });
       setFlowState({ step: 'input' });

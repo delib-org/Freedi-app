@@ -128,11 +128,35 @@ each box and reference the commit when done.
     MC lint clean; unit tests green (wordCount, cascade, proposalController,
     surveyCrud, shared-types). **Takes effect on next `deploy:h:prod` (hosting)
     + MC deploy; no functions deploy needed.**
-- [ ] **T1.2 — Reword "inappropriate content"** to explain what the system is doing
-  (`functions/src/services/moderation-log-service.ts`, `ai-service.ts:186`). i18n.
-- [ ] **T1.3 — Moderation over-sensitivity** (Hebrew/cultural terms e.g. "Bedouins")
-  + **too many admin alerts**. Tune Gemini prompt (`ai-service.ts:186-280`,
-  `fn_profanityChecker.ts`); throttle/aggregate admin notifications.
+- [x] **T1.2 — Warm, good-faith rejection copy** (the "rejection moment")
+  - Replaced *"Your submission contains inappropriate content. Please revise."*
+    with *"This didn't quite fit here. Please rephrase and try again."* and the
+    model now returns its `reason` as a short, kind, good-faith message in the
+    author's language (never name-calling).
+  - Warmed the toast titles (*Invalid Content* → *Let's try that again*;
+    *Check Failed* → *We couldn't check that just now*) and the pre-submit loader
+    (*Checking for inappropriate content* → *Reviewing your idea* / *A quick check
+    helps keep the space welcoming for everyone*).
+  - **Files:** `ai-service.ts`, `fn_findSimilarStatements.ts`,
+    `fn_detectMultipleSuggestions.ts`, MC `constants/common.ts`,
+    `AddSolutionFlow.tsx`, `EnhancedLoader.tsx`; i18n in all 7 languages.
+- [~] **T1.3 — Moderation over-sensitivity** (participant-facing half done)
+  - **Root cause corrected:** moderation now runs on OpenAI (gpt-4o-mini), not
+    Gemini — so Google's SAFETY filter is no longer the culprit. The wrongful
+    accusations came from **fail-closed** error handling: any LLM error / JSON
+    parse failure / model refusal returned `isInappropriate: true` and accused a
+    well-meaning participant. Under conference load (rate limits, hiccups) this
+    spiked.
+  - **Fix (done):** `checkForInappropriateContent` now **fails open** — on any
+    error it allows the content and logs it for async review instead of blocking
+    the author. Removed *"spam / gibberish / meaningless text"* from the flag list
+    so terse/unusual-but-legitimate answers aren't rejected. Aligned the unused
+    `containsBadLanguage` to fail open too. (`ai-service.ts`, `fn_profanityChecker.ts`)
+  - **Remaining (admin-facing, separate from the participant experience):**
+    throttle/aggregate the **admin alert flood** — the AI-error email throttle is
+    in-memory (per-instance, weak under scale) and per-new-suggestion subscriber
+    notifications may also pile up. Make the throttle Firestore-backed and/or
+    digest per-event admin pings.
 - [ ] **T1.4 — Emoji reactions** (heart/smiley/like) replacing like/dislike. Config
   already exists: `RATING_CONFIG`/`ZONE_CONFIG` (`apps/mass-consensus/src/constants/common.ts:147-195`),
   `RatingIcon.tsx`, `SwipeCard.tsx`, `RatingButtons.tsx`.

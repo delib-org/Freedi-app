@@ -221,7 +221,7 @@ export const ERROR_MESSAGES = {
   NETWORK: 'Network error. Please check your connection and try again.',
   VALIDATION: 'Please check your input and try again.',
   MISSING_INPUT: 'Please provide a valid solution and ensure you are logged in.',
-  INAPPROPRIATE_CONTENT: 'Your submission contains inappropriate content. Please revise.',
+  INAPPROPRIATE_CONTENT: "This didn't quite fit here. Please rephrase and try again.",
   LIMIT_REACHED: "You've reached the maximum number of solutions for this question.",
   SUBMIT_FAILED: 'Failed to submit solution',
   CHECK_SIMILAR_FAILED: 'Unable to check for similar solutions. Please try again.',

@@ -2916,5 +2916,11 @@
   "minWordsHint": "اطلب أن تحتوي كل إجابة على هذا العدد من الكلمات على الأقل. 0 = لا حد أدنى.",
   "Minimum words per response": "الحد الأدنى لعدد الكلمات لكل إجابة",
   "Minimum words": "الحد الأدنى للكلمات",
-  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "اطلب أن تحتوي كل إجابة على هذا العدد من الكلمات على الأقل. اضبط على 0 للسماح بإجابات من أي طول."
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "اطلب أن تحتوي كل إجابة على هذا العدد من الكلمات على الأقل. اضبط على 0 للسماح بإجابات من أي طول.",
+  "This didn't quite fit here. Please rephrase and try again.": "هذه لم تكن مناسبة تمامًا هنا. يرجى إعادة الصياغة والمحاولة مرة أخرى.",
+  "Let's try that again": "لنجرّب ذلك مرة أخرى",
+  "We couldn't check that just now": "لم نتمكن من التحقق من ذلك الآن",
+  "Reviewing your idea...": "نراجع فكرتك...",
+  "Getting it ready to share": "نجهّزها للمشاركة",
+  "A quick check helps keep the space welcoming for everyone": "فحص سريع يساعد في الحفاظ على مساحة ترحيبية للجميع"
 }
