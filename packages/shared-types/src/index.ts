@@ -745,3 +745,13 @@ export {
   getResearchCategory,
   getResearchActionLabel,
 } from "./models/researchLog";
+
+// Event Control Center — activity registry (Phase 1)
+export type { ActivityTypeDef, ActivityStatusSource } from "./models/event/activityRegistry";
+export {
+  ActivityType,
+  ACTIVITY_REGISTRY,
+  getActivityType,
+  getActivityDef,
+  isActivityStatement,
+} from "./models/event/activityRegistry";

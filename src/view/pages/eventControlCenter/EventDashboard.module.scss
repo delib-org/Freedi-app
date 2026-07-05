@@ -1,0 +1,251 @@
+.dashboard {
+	max-width: 1100px;
+	margin: 0 auto;
+	padding: var(--padding, 1rem);
+}
+
+/* ---- Header ---- */
+.header {
+	margin-bottom: 1.5rem;
+}
+
+.header__badge {
+	display: inline-block;
+	padding: 0.125rem 0.625rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--btn-primary);
+	background: color-mix(in srgb, var(--btn-primary) 12%, transparent);
+	border-radius: 20px;
+}
+
+.header__title {
+	margin: 0.5rem 0 0.25rem;
+	color: var(--text-body, #3d4d71);
+}
+
+.header__meta {
+	margin: 0;
+	color: var(--text-muted, #8a94a6);
+	font-size: 0.875rem;
+}
+
+/* ---- Layout ---- */
+.layout {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1.5rem;
+
+	@media (min-width: 900px) {
+		grid-template-columns: minmax(0, 1fr) 320px;
+	}
+}
+
+/* ---- Agenda ---- */
+.agenda__title,
+.shareHub__title {
+	margin: 0 0 0.75rem;
+	font-size: 1.125rem;
+	color: var(--text-body, #3d4d71);
+}
+
+.agenda__empty {
+	color: var(--text-muted, #8a94a6);
+	font-size: 0.9375rem;
+}
+
+.agenda__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+/* ---- Activity row ---- */
+.activity {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
+	background: var(--card-default, #ffffff);
+	border: 1px solid var(--border-color, #e6e9ef);
+	border-radius: 12px;
+}
+
+.activity__order {
+	flex: 0 0 auto;
+	width: 1.5rem;
+	height: 1.5rem;
+	display: grid;
+	place-items: center;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--text-muted, #8a94a6);
+	background: var(--background-secondary, #f4f6fa);
+	border-radius: 50%;
+}
+
+.activity__icon {
+	flex: 0 0 auto;
+	font-size: 1.25rem;
+	line-height: 1;
+}
+
+.activity__body {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.activity__title {
+	font-weight: 500;
+	color: var(--text-body, #3d4d71);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.activity__type {
+	font-size: 0.8125rem;
+	color: var(--text-muted, #8a94a6);
+}
+
+.activity__actions {
+	flex: 0 0 auto;
+	display: flex;
+	gap: 0.5rem;
+}
+
+/* ---- Buttons ---- */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.375rem 0.875rem;
+	font-size: 0.875rem;
+	text-decoration: none;
+	border-radius: 20px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.btn--primary {
+	color: #ffffff;
+	background: var(--btn-primary, #5f88e5);
+	border: 1px solid var(--btn-primary, #5f88e5);
+}
+
+.btn--secondary {
+	color: var(--btn-primary, #5f88e5);
+	background: transparent;
+	border: 1px solid var(--btn-primary, #5f88e5);
+}
+
+/* ---- Run-state pills ---- */
+.pill {
+	flex: 0 0 auto;
+	padding: 0.125rem 0.625rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 20px;
+	white-space: nowrap;
+}
+
+.pill--queued {
+	color: var(--text-muted, #6b7280);
+	background: var(--background-secondary, #eceff4);
+}
+
+.pill--open {
+	color: #ffffff;
+	background: var(--agree, #3a9d5d);
+}
+
+.pill--frozen {
+	color: #7a5200;
+	background: #ffe6a6;
+}
+
+.pill--closed {
+	color: #ffffff;
+	background: var(--reject, #c0504d);
+}
+
+/* ---- Share Hub ---- */
+.shareHub {
+	padding: 1rem;
+	background: var(--card-default, #ffffff);
+	border: 1px solid var(--border-color, #e6e9ef);
+	border-radius: 12px;
+	align-self: start;
+}
+
+.shareHub__empty {
+	color: var(--text-muted, #8a94a6);
+	font-size: 0.875rem;
+}
+
+.shareHub__list {
+	list-style: none;
+	margin: 0 0 1rem;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.shareHub__item {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.625rem;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	cursor: pointer;
+	text-align: start;
+}
+
+.shareHub__item--selected {
+	border-color: var(--btn-primary, #5f88e5);
+	background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
+}
+
+.shareHub__itemIcon {
+	flex: 0 0 auto;
+}
+
+.shareHub__itemTitle {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-size: 0.875rem;
+	color: var(--text-body, #3d4d71);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.shareHub__qr {
+	display: flex;
+	justify-content: center;
+	padding-top: 0.5rem;
+	border-top: 1px solid var(--border-color, #eceff4);
+}
+
+/* ---- Denied ---- */
+.denied {
+	text-align: center;
+	padding: 3rem 1rem;
+	color: var(--text-body, #3d4d71);
+}
+
+.denied__link {
+	display: inline-block;
+	margin-top: 1rem;
+	color: var(--btn-primary, #5f88e5);
+}

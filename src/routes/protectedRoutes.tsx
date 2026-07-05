@@ -38,6 +38,10 @@ const ClusterMap = lazyWithRetry(
 	() => import('@/view/pages/statement/components/map/ClusterMap/ClusterMap'),
 	'ClusterMap',
 );
+const EventDashboard = lazyWithRetry(
+	() => import('@/view/pages/eventControlCenter/EventDashboard'),
+	'EventDashboard',
+);
 
 // Helper to wrap with skeleton suspense (first load only)
 const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>
@@ -99,6 +103,12 @@ export const protectedRoutes: RouteObject[] = [
 	{
 		path: 'map/:statementId/embed',
 		element: withStatementSuspense(ClusterMap),
+	},
+	{
+		// Event Control Center — read-only dashboard over a group's activities.
+		// Guarded by ProtectedLayout (group membership) + facilitator (admin) check.
+		path: 'events/:statementId',
+		element: withLoadingSuspense(EventDashboard),
 	},
 ];
 
