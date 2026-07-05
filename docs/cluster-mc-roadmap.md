@@ -52,11 +52,19 @@ each box and reference the commit when done.
     `creator` is ready, with a "Signing you in…" tooltip (i18n added to all 7
     languages) — no more silent no-op (`ClusterBoard.tsx`).
 
-- [ ] **T0.3 — Items all show as UNGROUPED**
-  - Likely a *symptom* of T0.1 (deleted cluster → members orphan into the synthetic
-    "Ungrouped" block: `map/mapCont.ts:91-159`, `ClusterBoard.tsx:176-184`). Re-test
-    after T0.1; if it persists, chase the `useMindMap`/Redux listener race
-    (`MindMapMV.tsx:13-74`).
+- [x] **T0.3 — Items all show as UNGROUPED**
+  - **Cause 1 — cluster deletion** (fixed by T0.1/b/c): a deleted cluster doc
+    orphaned its members into "Ungrouped".
+  - **Cause 2 — load-limit eviction** (fixed here): `listenToMindMapData` loads
+    only the newest 200 descendants (`createdAt desc, limit 200`). Synthesis-made
+    cluster docs get pushed out of that window once a question gathers a burst of
+    newer responses, so their members all orphan into "Ungrouped" — matches why it
+    hit at the conference (high volume) but not in testing.
+  - **Fix:** dedicated `listenToMindMapClusters` always loads the (few) `isCluster`
+    docs under the question (`parentId == q && isCluster == true`; no orderBy → no
+    composite index) and merges them into Redux, composed into
+    `listenToMindMapData`'s unsubscribe. Grouping invariant unit-tested.
+    **Live re-check on a >200-response question recommended. Hosting deploy needed.**
 
 - [x] **T0.4 — Editing a sticky note steals the viewport on touch**
   - **Root cause:** the note-edit and cluster-title `<textarea>` used the bare

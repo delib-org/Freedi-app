@@ -128,6 +128,19 @@ describe('resultsByParentId — cluster nesting', () => {
 		expect(childIds(synth as Results)).toEqual(['o1']);
 	});
 
+	// T0.3: when the cluster doc itself is missing from the loaded set (e.g. it
+	// was evicted by the mind-map load limit), its members have nothing to nest
+	// under and correctly fall back to flat "Ungrouped" siblings. This is why
+	// listenToMindMapData loads cluster docs unconditionally — so this fallback
+	// stops happening for real clusters.
+	it('leaves members flat when their cluster doc is not loaded', () => {
+		const descendants = [make({ statementId: 'o1' }), make({ statementId: 'o2' })];
+		// The cluster (c1) that lists o1/o2 in integratedOptions is NOT in the set.
+		const tree = resultsByParentId(question, descendants);
+
+		expect(childIds(tree).sort()).toEqual(['o1', 'o2']);
+	});
+
 	it('does not duplicate a member referenced by two clusters', () => {
 		const descendants = [
 			make({ statementId: 'cA', isCluster: true, integratedOptions: ['o1'] }),

@@ -71,7 +71,7 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 		let isFirstBatch = true;
 		const startTime = Date.now();
 
-		return createManagedCollectionListener(
+		const unsubscribeMain = createManagedCollectionListener(
 			q,
 			listenerKey,
 			(snapshot: QuerySnapshot<DocumentData>) => {
@@ -171,9 +171,95 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 			},
 			'query',
 		);
+
+		// Cluster docs (isCluster options) are created by synthesis and can be
+		// OLDER than a burst of new responses, so the newest-200 window above can
+		// evict them — orphaning every member into "Ungrouped" (T0.3). Load the
+		// (few) cluster docs with a dedicated listener so they are always present,
+		// regardless of how many responses the question accumulates.
+		const unsubscribeClusters = listenToMindMapClusters(statementId);
+
+		return (): void => {
+			unsubscribeMain();
+			unsubscribeClusters();
+		};
 	} catch (error) {
 		logError(error, {
 			operation: 'listenToMindMapData.setup',
+			metadata: { parentStatementId: statementId },
+		});
+
+		return (): void => {
+			// No-op unsubscribe
+		};
+	}
+}
+
+/**
+ * Dedicated listener for a question's cluster docs (isCluster options), which
+ * all live flat under the question (`parentId === questionId`). The main
+ * mind-map listener caps at the newest 200 descendants, so on busy questions the
+ * older cluster docs can fall out of that window and disappear — leaving their
+ * members with no cluster to nest under, so they all render as "Ungrouped".
+ * Clusters are few (tens at most), so loading them unconditionally is cheap and
+ * guarantees the board can always group its notes.
+ */
+function listenToMindMapClusters(statementId: string): Unsubscribe {
+	try {
+		const statementsRef = collection(FireStore, Collections.statements);
+
+		// Clusters are few; this bound only guards against a pathological case.
+		const MAX_CLUSTER_DOCUMENTS = 500;
+
+		// Two equality filters + limit (no orderBy) — served by single-field
+		// indexes via zigzag merge join, so no composite index is required.
+		const q = query(
+			statementsRef,
+			and(where('parentId', '==', statementId), where('isCluster', '==', true)),
+			limit(MAX_CLUSTER_DOCUMENTS),
+		);
+
+		const listenerKey = generateListenerKey('mindmap-clusters', 'statement', statementId);
+
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(snapshot: QuerySnapshot<DocumentData>) => {
+				// docChanges reports every doc as 'added' on the first snapshot, so
+				// this covers both the initial load and subsequent updates.
+				snapshot.docChanges().forEach((change) => {
+					try {
+						const statement = parse(StatementSchema, normalizeStatementData(change.doc.data()));
+
+						switch (change.type) {
+							case 'added':
+							case 'modified':
+								store.dispatch(setStatement(statement));
+								break;
+							case 'removed':
+								store.dispatch(deleteStatement(statement.statementId));
+								break;
+						}
+					} catch (error) {
+						logError(error, {
+							operation: 'listenToMindMapClusters.processChange',
+							statementId: change.doc.id,
+							metadata: { parentStatementId: statementId, changeType: change.type },
+						});
+					}
+				});
+			},
+			(error) => {
+				logError(error, {
+					operation: 'listenToMindMapClusters.listener',
+					metadata: { parentStatementId: statementId },
+				});
+			},
+			'query',
+		);
+	} catch (error) {
+		logError(error, {
+			operation: 'listenToMindMapClusters.setup',
 			metadata: { parentStatementId: statementId },
 		});
 

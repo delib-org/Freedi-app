@@ -24,7 +24,25 @@ Create `docs/cluster-mc-roadmap.md` with the tickets below. Each ticket is self-
   - Root: `ClusterBoard.tsx:473 addCluster()` returns silently when `creator` is undefined (auth not ready on mobile); `createMindMapChild()` (`mapHelpers/mindMapStatements.ts:72`) and `createEmptyCluster()` (`condensationCuration.ts:347`) throw without user-facing feedback.
   - Approach: surface a toast/error on failure instead of silent return; guard against un-initialised `creator` (await auth / disable the add button until ready); verify required Statement fields are populated on mobile. Reproduce on Android via the MCP browser or a device.
 - [x] **T0.3 — Items all show as UNGROUPED**
-  - Likely a *symptom* of T0.1 (when a cluster doc is deleted, its members orphan into the synthetic "Ungrouped" block — `mapCont.ts:91-159`, `ClusterBoard.tsx:176-184`). Verify it is resolved by T0.1 first; if it persists, investigate the `useMindMap`/Redux listener race (`MindMapMV.tsx:13-74`).
+  - **Two causes, both now addressed.**
+  - **(1) Cluster deletion** *(fixed by T0.1/T0.1b/T0.1c)* — a deleted cluster doc
+    orphaned its members into the synthetic "Ungrouped" block.
+  - **(2) Load-limit eviction** *(fixed here)* — `listenToMindMapData`
+    (`optimizedListeners.ts`) loads only the newest **200** descendants
+    (`orderBy createdAt desc, limit 200`). Cluster docs are created by synthesis;
+    once a question takes on a burst of newer responses (a live conference), the
+    older cluster docs fall out of the newest-200 window and vanish from the
+    client, so their still-loaded members all render as "Ungrouped". This matches
+    why it appeared at the conference but not in quiet testing.
+    - **Fix:** a dedicated `listenToMindMapClusters` listener that loads *all*
+      `isCluster` docs under the question (`parentId == q && isCluster == true`,
+      few docs, no `orderBy` → no composite index needed) and merges them into the
+      same Redux store. Composed into `listenToMindMapData`'s unsubscribe, so every
+      map surface (cluster board, enhanced mind map, statement listeners) benefits.
+    - **Verified:** tsc + ESLint clean; grouping invariant unit-tested
+      (`mapCont.test.ts` — members stay flat when their cluster is absent).
+    - **Live re-check still worthwhile:** open a question that had >200 responses
+      and confirm clusters group correctly. **Takes effect on next hosting deploy.**
 - [x] **T0.4 — Sticky-note edit steals the viewport on touch** *(mobile part done)*
   - **Mobile (fixed):** on the sticky-note board, editing a note or a cluster title
     opened a `<textarea autoFocus>`. On touch, `autoFocus` makes the browser scroll
