@@ -227,6 +227,28 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'APP_VERSION': 'VITE_APP_VERSION',
     },
     extra: ''
+  },
+  studio: {
+    path: path.join(ROOT_DIR, 'apps', 'studio'),
+    filename: '.env.local',
+    // Freedi Studio (facilitator app). Prefer a dedicated STUDIO_FIREBASE_*
+    // web app registration if present (like join, whose key is restricted to
+    // its own domains); otherwise fall back to the shared FIREBASE_* values.
+    mapping: {
+      'STUDIO_FIREBASE_API_KEY|FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
+      'STUDIO_FIREBASE_AUTH_DOMAIN|FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
+      'STUDIO_FIREBASE_PROJECT_ID|FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',
+      'STUDIO_FIREBASE_STORAGE_BUCKET|FIREBASE_STORAGE_BUCKET': 'VITE_FIREBASE_STORAGE_BUCKET',
+      'STUDIO_FIREBASE_MESSAGING_SENDER_ID|FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      'STUDIO_FIREBASE_APP_ID|FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
+      'STUDIO_FIREBASE_MEASUREMENT_ID|FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      // Deep-link base URLs for building activity links across the apps.
+      'VITE_SIGN_APP_URL': 'VITE_SIGN_APP_URL',
+      'VITE_APP_MASS_CONSENSUS_URL': 'VITE_MASS_CONSENSUS_URL',
+      // Emulator toggle (studio reads VITE_USE_EMULATORS === 'true').
+      'USE_FIREBASE_EMULATOR': 'VITE_USE_EMULATORS',
+    },
+    extra: ''
   }
 };
 

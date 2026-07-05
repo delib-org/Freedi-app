@@ -64,6 +64,7 @@
     "deploy:flow": "npm run env:prod && cd apps/flow && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:flow && npm run env:dev",
     "deploy:admin": "npm run env:prod && cd apps/admin && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:admin && npm run env:dev",
     "deploy:join": "npm run env:prod && cd apps/join && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:join && npm run env:dev",
+    "deploy:studio": "npm run env:prod && cd apps/studio && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:studio && npm run env:dev",
     "deploy:chat": "npm run env:prod && cd apps/chat && npm run build && cd ../.. && node apps/chat/scripts/copy-ssr-to-functions.cjs && firebase use wizcol && firebase deploy --only functions:ssrChat,hosting:chat && npm run env:dev",
     "deploy:sign": "cd apps/sign && ./deploy.sh",
     "deploy:sign:vercel": "curl -X POST \"https://api.vercel.com/v1/integrations/deploy/prj_0m8aMtkMP7PPgfqdOpLVO55AsvfU/gsFjuMHuE9\"",
