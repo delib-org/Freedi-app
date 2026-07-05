@@ -4,7 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
 import { DemographicMode, SurveyTriggerMode, IdentityDisplayMode, isIdentityDisplayMode, resolveIdentityDisplayMode } from '@/types/demographics';
-import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
+import { TextDirection, TocPosition, ExplanationVideoMode, FooterMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
 export interface DocumentSettings {
@@ -43,6 +43,8 @@ export interface DocumentSettings {
   enableHeadingNumbering: boolean;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts: boolean;
+  /** Footer behavior: 'sign' shows Sign/Reject buttons, 'satisfaction' shows a -1..1 satisfaction scale */
+  footerMode: FooterMode;
   /** When true, enables the suggestion refinement workflow (AI synthesis + phase controls) */
   enableRefinement: boolean;
   /** Default consensus threshold for filtering suggestions in refinement phase (0-1, default 0.2) */
@@ -81,6 +83,7 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   headerColors: DEFAULT_HEADER_COLORS,
   enableHeadingNumbering: false,
   showSignatureCounts: true,
+  footerMode: 'sign',
   enableRefinement: false,
   defaultConsensusThreshold: 0.2,
   targetPopulation: 0,
@@ -160,6 +163,7 @@ export async function GET(
       headerColors: document?.signSettings?.headerColors ?? DEFAULT_SETTINGS.headerColors,
       enableHeadingNumbering: document?.signSettings?.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering,
       showSignatureCounts: document?.signSettings?.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts,
+      footerMode: document?.signSettings?.footerMode ?? DEFAULT_SETTINGS.footerMode,
       enableRefinement: document?.signSettings?.enableRefinement ?? DEFAULT_SETTINGS.enableRefinement,
       defaultConsensusThreshold: document?.signSettings?.defaultConsensusThreshold ?? DEFAULT_SETTINGS.defaultConsensusThreshold,
       targetPopulation: document?.signSettings?.targetPopulation ?? DEFAULT_SETTINGS.targetPopulation,
@@ -306,6 +310,12 @@ export async function PUT(
       ? validateHeaderColors(body.headerColors)
       : (existingSettings.headerColors ?? DEFAULT_SETTINGS.headerColors);
 
+    // Validate footerMode
+    const validFooterModes: FooterMode[] = ['sign', 'satisfaction'];
+    const footerMode: FooterMode = validFooterModes.includes(body.footerMode)
+      ? body.footerMode
+      : (existingSettings.footerMode ?? DEFAULT_SETTINGS.footerMode);
+
     // Merge settings - only update fields that are provided
     const settings: DocumentSettings = {
       allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
@@ -335,6 +345,7 @@ export async function PUT(
       headerColors,
       enableHeadingNumbering: body.enableHeadingNumbering !== undefined ? Boolean(body.enableHeadingNumbering) : (existingSettings.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering),
       showSignatureCounts: body.showSignatureCounts !== undefined ? Boolean(body.showSignatureCounts) : (existingSettings.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts),
+      footerMode,
       enableRefinement: body.enableRefinement !== undefined ? Boolean(body.enableRefinement) : (existingSettings.enableRefinement ?? DEFAULT_SETTINGS.enableRefinement),
       defaultConsensusThreshold: body.defaultConsensusThreshold !== undefined && typeof body.defaultConsensusThreshold === 'number' && body.defaultConsensusThreshold >= 0 && body.defaultConsensusThreshold <= 1
         ? body.defaultConsensusThreshold

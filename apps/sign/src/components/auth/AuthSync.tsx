@@ -102,14 +102,35 @@ export function AuthSync() {
 					// Firebase Auth might still be restoring the session
 					// WAIT for auth to restore before creating anonymous user
 
-					// Give auth 2 seconds to restore
-					// If auth doesn't restore in 2 seconds, cookie is stale -> create anonymous
+					// A non-empty display name cookie means this user previously signed
+					// in with a real account (guests get an empty name). Give real
+					// accounts a longer restore window, and NEVER silently replace them
+					// with a fresh anonymous user - that would hide their documents and
+					// attribute everything they do to a throwaway uid while the UI still
+					// shows their name.
+					const wasAuthenticated = Boolean(getCookie('userDisplayName'));
+
 					authRestoreTimeout.current = setTimeout(async () => {
 						if (!auth.currentUser && !hasAttemptedAnonymousLogin.current) {
 							hasAttemptedAnonymousLogin.current = true;
-							await safeAnonymousLogin('timeout');
+
+							if (wasAuthenticated) {
+								// Session expired / could not be restored - sign out honestly
+								// (clears the HttpOnly _uid cookie too) and reload so the
+								// server renders the signed-out state
+								try {
+									await fetch('/api/auth/clear-session', { method: 'POST' });
+								} catch (error) {
+									logError(error, { operation: 'AuthSync.clearStaleSession' });
+								}
+								document.cookie = 'userId=; path=/; max-age=0';
+								document.cookie = 'userDisplayName=; path=/; max-age=0';
+								window.location.reload();
+							} else {
+								await safeAnonymousLogin('timeout');
+							}
 						}
-					}, 2000);
+					}, wasAuthenticated ? 6000 : 2000);
 
 					isInitialized.current = true;
 				} else if (!userId && !isInitialized.current && !hasAttemptedAnonymousLogin.current) {

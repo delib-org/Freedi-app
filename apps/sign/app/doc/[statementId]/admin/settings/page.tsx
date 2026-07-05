@@ -8,7 +8,7 @@ import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
 import { DemographicMode, SurveyTriggerMode, IdentityDisplayMode, SignDemographicQuestion } from '@/types/demographics';
-import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
+import { TextDirection, TocPosition, ExplanationVideoMode, FooterMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
@@ -68,6 +68,8 @@ interface Settings {
   enableHeadingNumbering: boolean;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts: boolean;
+  /** Footer behavior: 'sign' shows Sign/Reject buttons, 'satisfaction' shows a -1..1 satisfaction scale */
+  footerMode: FooterMode;
   /** When true, enables the suggestion refinement workflow */
   enableRefinement: boolean;
   /** Default consensus threshold for refinement filtering (0-1) */
@@ -110,6 +112,7 @@ export default function AdminSettingsPage() {
     nonInteractiveNormalStyle: false,
     enableHeadingNumbering: false,
     showSignatureCounts: true,
+    footerMode: 'sign',
     enableRefinement: false,
     defaultConsensusThreshold: 0.2,
   });
@@ -286,6 +289,28 @@ export default function AdminSettingsPage() {
       {/* Interaction Settings */}
       <section className={styles.settingsSection}>
         <h2 className={styles.settingsSectionTitle}>{t('Interactions')}</h2>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Document Footer')}</p>
+            <p className={styles.settingDescription}>
+              {settings.footerMode === 'satisfaction'
+                ? t('Users rate their satisfaction with the document from very unsatisfied to very satisfied. Users who are not fully satisfied are asked to explain why.')
+                : t('Choose what users see at the bottom of the document: Sign/Reject buttons or a satisfaction rating scale')}
+            </p>
+          </div>
+          <select
+            className={styles.select}
+            value={settings.footerMode}
+            onChange={(e) => {
+              setSettings(prev => ({ ...prev, footerMode: e.target.value as FooterMode }));
+              setSaved(false);
+            }}
+          >
+            <option value="sign">{t('Sign / Reject buttons')}</option>
+            <option value="satisfaction">{t('Satisfaction rating')}</option>
+          </select>
+        </div>
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>

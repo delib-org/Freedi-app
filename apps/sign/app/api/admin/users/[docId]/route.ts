@@ -14,6 +14,10 @@ export interface UserData {
   approvalsCount: number;
   commentsCount: number;
   rejectionReason?: string;
+  /** Satisfaction rating (-1 to 1) when the document footer is in satisfaction mode */
+  satisfaction?: number;
+  /** Explanation left by users who were not fully satisfied (document-level comment) */
+  satisfactionReason?: string;
 }
 
 /**
@@ -84,11 +88,20 @@ export async function GET(
       .get();
 
     const commentsByUser = new Map<string, number>();
+    // Document-level comments (parentId === docId) hold satisfaction explanations
+    const satisfactionReasonByUser = new Map<string, { text: string; displayName?: string }>();
     commentsSnap.docs.forEach((doc) => {
       const data = doc.data() as DocumentData;
       if (data.creatorId) {
         const count = commentsByUser.get(data.creatorId) || 0;
         commentsByUser.set(data.creatorId, count + 1);
+
+        if (data.parentId === docId && !data.hide && data.statement) {
+          satisfactionReasonByUser.set(data.creatorId, {
+            text: data.statement,
+            displayName: data.creator?.displayName,
+          });
+        }
       }
     });
 
@@ -97,9 +110,11 @@ export async function GET(
       const sig = doc.data() as DocumentData;
       const userId = sig.odlUserId || sig.userId;
 
+      const satisfactionFeedback = satisfactionReasonByUser.get(userId);
+
       const userData: UserData = {
         odlUserId: userId,
-        odlUserDisplayName: sig.odlUserDisplayName || sig.displayName || 'Anonymous',
+        odlUserDisplayName: sig.odlUserDisplayName || sig.displayName || satisfactionFeedback?.displayName || 'Anonymous',
         signed: sig.signed || 'pending',
         signedAt: sig.date || null,
         approvalsCount: approvalsByUser.get(userId) || 0,
@@ -109,6 +124,14 @@ export async function GET(
       // Include rejection reason if available
       if (sig.rejectionReason) {
         userData.rejectionReason = sig.rejectionReason;
+      }
+
+      // Include satisfaction rating + explanation if available
+      if (typeof sig.satisfaction === 'number') {
+        userData.satisfaction = sig.satisfaction;
+      }
+      if (satisfactionFeedback) {
+        userData.satisfactionReason = satisfactionFeedback.text;
       }
 
       return userData;

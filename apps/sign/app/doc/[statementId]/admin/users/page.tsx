@@ -15,6 +15,8 @@ interface User {
   approvalsCount: number;
   commentsCount: number;
   rejectionReason?: string;
+  satisfaction?: number;
+  satisfactionReason?: string;
 }
 
 export default function AdminUsersPage() {
@@ -100,6 +102,22 @@ export default function AdminUsersPage() {
   const formatDate = (timestamp: number | null) => {
     if (!timestamp) return '-';
     return new Date(timestamp).toLocaleDateString();
+  };
+
+  const formatSatisfaction = (satisfaction?: number) => {
+    if (satisfaction === undefined) return '-';
+
+    const labels: Record<string, string> = {
+      '-1': t('Very unsatisfied'),
+      '-0.5': t('Unsatisfied'),
+      '0': t('Neutral'),
+      '0.5': t('Satisfied'),
+      '1': t('Very satisfied'),
+    };
+    const label = labels[String(satisfaction)] ?? String(satisfaction);
+    const sign = satisfaction > 0 ? '+' : '';
+
+    return `${label} (${sign}${satisfaction})`;
   };
 
   const getStatusClass = (status: string) => {
@@ -198,6 +216,7 @@ export default function AdminUsersPage() {
                 <th>{t('Date')}</th>
                 <th>{t('Approvals')}</th>
                 <th>{t('Comments')}</th>
+                <th>{t('Satisfaction')}</th>
                 <th>{t('Reason')}</th>
               </tr>
             </thead>
@@ -221,19 +240,21 @@ export default function AdminUsersPage() {
                   <td>{formatDate(user.signedAt)}</td>
                   <td>{user.approvalsCount}</td>
                   <td>{user.commentsCount}</td>
+                  <td>{formatSatisfaction(user.satisfaction)}</td>
                   <td>
-                    {user.signed === 'rejected' && user.rejectionReason ? (
-                      <span
-                        className={styles.rejectionReason}
-                        title={user.rejectionReason}
-                      >
-                        {user.rejectionReason.length > 50
-                          ? `${user.rejectionReason.substring(0, 50)}...`
-                          : user.rejectionReason}
-                      </span>
-                    ) : (
-                      '-'
-                    )}
+                    {(() => {
+                      const reason =
+                        (user.signed === 'rejected' && user.rejectionReason) ||
+                        user.satisfactionReason;
+
+                      if (!reason) return '-';
+
+                      return (
+                        <span className={styles.rejectionReason} title={reason}>
+                          {reason.length > 50 ? `${reason.substring(0, 50)}...` : reason}
+                        </span>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
