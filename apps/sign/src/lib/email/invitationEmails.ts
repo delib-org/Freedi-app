@@ -27,7 +27,7 @@ function buildHtmlShell(innerHtml: string): string {
     <div style="background:#ffffff;border-radius:12px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
       ${innerHtml}
     </div>
-    <p style="font-size:12px;color:#a0aec0;text-align:center;margin-top:18px;">Freedi Sign</p>
+    <p style="font-size:12px;color:#a0aec0;text-align:center;margin-top:18px;">WizCol Sign</p>
   </div>
 </body>
 </html>`;
@@ -58,7 +58,7 @@ export async function sendInvitationEmailToInvitee(params: InviteeEmailParams): 
     <p style="font-size:16px;margin:0 0 16px;">שלום,</p>
     <p style="font-size:16px;margin:0 0 16px;">
       ${inviter} הזמין/ה אותך לנהל את המסמך <strong>"${title}"</strong>
-      ב-Freedi Sign בהרשאת <strong>${role}</strong>.
+      ב-WizCol Sign בהרשאת <strong>${role}</strong>.
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${params.inviteLink}" style="background:rgb(132,187,247);color:#ffffff;padding:13px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;font-size:16px;">
@@ -77,7 +77,7 @@ export async function sendInvitationEmailToInvitee(params: InviteeEmailParams): 
 		await transporter.sendMail({
 			from: getFromAddress(),
 			to: params.to,
-			subject: `הוזמנת לנהל מסמך ב-Freedi Sign`,
+			subject: `הוזמנת לנהל מסמך ב-WizCol Sign`,
 			html: buildHtmlShell(inner),
 		});
 

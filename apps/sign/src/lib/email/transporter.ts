@@ -36,7 +36,7 @@ export function getEmailTransporter(): Transporter | null {
 
 /** The "From" address for outgoing Sign emails. */
 export function getFromAddress(): string {
-	const user = process.env.EMAIL_USER || 'noreply@freedi.tech';
+	const user = process.env.EMAIL_USER || 'noreply@wizcol.com';
 
-	return `Freedi Sign <${user}>`;
+	return `WizCol Sign <${user}>`;
 }
