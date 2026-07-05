@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { VALIDATION } from '@/constants/common';
 import { countWords } from '@/lib/utils/wordCount';
+import { moderationMessageKey } from '@/lib/utils/moderationMessage';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
@@ -143,7 +144,9 @@ export default function SolutionPromptModal({
         const data = await similarResponse.json();
 
         if (similarResponse.status === 400) {
-          const errorMessage = data.reason || data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+          // Show a warm, category-based message in the user's UI language
+          // (rendered via t()). The server's specific reason is kept for admins.
+          const errorMessage = moderationMessageKey(data.category);
           setError(errorMessage);
           setFlowState({ step: 'input' });
 
@@ -194,8 +197,8 @@ export default function SolutionPromptModal({
         }
       } else if (multiResponse.status === 400) {
         // Content moderation blocked this input — do NOT allow submission
-        const multiErrorData = await multiResponse.json().catch(() => ({ error: '' }));
-        const errorMessage = multiErrorData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+        const multiErrorData = await multiResponse.json().catch(() => ({ category: undefined }));
+        const errorMessage = moderationMessageKey(multiErrorData.category);
         setError(errorMessage);
         setFlowState({ step: 'input' });
 
