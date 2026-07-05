@@ -83,6 +83,21 @@
 		font-style: italic;
 	}
 
+	&__attempts {
+		font-size: 0.75rem;
+		padding: 0.15rem 0.5rem;
+		border-radius: 4px;
+		background: var(--icons-blue);
+		color: var(--white);
+		font-weight: 600;
+	}
+
+	&__lastAttempt {
+		font-size: 0.75rem;
+		color: var(--text-body);
+		opacity: 0.8;
+	}
+
 	&__text,
 	&__reason {
 		font-size: 0.85rem;

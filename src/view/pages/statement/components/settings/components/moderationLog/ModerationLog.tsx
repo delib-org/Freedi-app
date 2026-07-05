@@ -91,6 +91,16 @@ const ModerationLog: FC<ModerationLogProps> = ({ statement }) => {
 								{log.displayName && (
 									<span className={styles.moderationLog__user}>{log.displayName}</span>
 								)}
+								{log.attemptCount && log.attemptCount > 1 && (
+									<span className={styles.moderationLog__attempts}>
+										{`×${log.attemptCount} ${t('attempts')}`}
+									</span>
+								)}
+								{log.lastAttemptAt && log.attemptCount && log.attemptCount > 1 && (
+									<span className={styles.moderationLog__lastAttempt}>
+										{`${t('Last attempt')}: ${formatDate(log.lastAttemptAt)}`}
+									</span>
+								)}
 							</div>
 							<div className={styles.moderationLog__text}>
 								<strong>{t('Original text')}:</strong>

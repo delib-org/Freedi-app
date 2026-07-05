@@ -19,8 +19,17 @@ export const ModerationLogSchema = object({
 	topParentId: string(),
 	/** Whether it was blocked by Google safety filters vs AI moderation */
 	blockedBySafetyFilter: boolean(),
-	/** Timestamp in milliseconds */
+	/** Timestamp of the first rejection in this coalesced entry, in milliseconds */
 	createdAt: number(),
+	/**
+	 * How many rejections this row represents. Repeated rejections by the same
+	 * user on the same question are coalesced into one row (see
+	 * logModerationRejection) instead of flooding admins with near-identical
+	 * entries. Absent/1 on legacy single-event rows.
+	 */
+	attemptCount: optional(number()),
+	/** Timestamp of the most recent rejection folded into this row, in milliseconds */
+	lastAttemptAt: optional(number()),
 });
 
 export type ModerationLog = InferOutput<typeof ModerationLogSchema>;

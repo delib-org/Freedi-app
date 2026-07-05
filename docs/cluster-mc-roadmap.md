@@ -140,7 +140,7 @@ each box and reference the commit when done.
   - **Files:** `ai-service.ts`, `fn_findSimilarStatements.ts`,
     `fn_detectMultipleSuggestions.ts`, MC `constants/common.ts`,
     `AddSolutionFlow.tsx`, `EnhancedLoader.tsx`; i18n in all 7 languages.
-- [~] **T1.3 — Moderation over-sensitivity** (participant-facing half done)
+- [x] **T1.3 — Moderation over-sensitivity + admin-alert flood** (done)
   - **Root cause corrected:** moderation now runs on OpenAI (gpt-4o-mini), not
     Gemini — so Google's SAFETY filter is no longer the culprit. The wrongful
     accusations came from **fail-closed** error handling: any LLM error / JSON
@@ -152,11 +152,20 @@ each box and reference the commit when done.
     the author. Removed *"spam / gibberish / meaningless text"* from the flag list
     so terse/unusual-but-legitimate answers aren't rejected. Aligned the unused
     `containsBadLanguage` to fail open too. (`ai-service.ts`, `fn_profanityChecker.ts`)
-  - **Remaining (admin-facing, separate from the participant experience):**
-    throttle/aggregate the **admin alert flood** — the AI-error email throttle is
-    in-memory (per-instance, weak under scale) and per-new-suggestion subscriber
-    notifications may also pile up. Make the throttle Firestore-backed and/or
-    digest per-event admin pings.
+  - **Admin-alert flood (done) — two sources:**
+    - **ModerationLog panel pile-up:** `logModerationRejection` wrote one
+      `moderationLogs` doc per attempt. Now coalesced into one row per
+      (user, question) keyed `${userId}__${parentId}`, with `attemptCount` +
+      `lastAttemptAt` and a "×N attempts" badge in the admin panel.
+      (`moderation-log-service.ts`, `ModerationLog.tsx`, shared-types `ModerationLog`.)
+    - **Admin error EMAIL flood:** `notifyAIError` emailed the admin on every
+      permanent AI failure, throttled only by an in-memory (per-instance) Map — weak
+      under autoscaling. Now Firestore-backed (`reserveErrorNotificationSlot`,
+      `adminErrorThrottle`): 1/hour/error-type **across instances**, with a
+      suppressed-count digest line on the next sent email. Fails safe if the store is
+      unreachable. (`error-notification-service.ts`.)
+    - Unit-tested (9 tests across `__tests__/moderation-log-service.test.ts` +
+      `__tests__/error-notification-throttle.test.ts`).
 - [ ] **T1.4 — Emoji reactions** (heart/smiley/like) replacing like/dislike. Config
   already exists: `RATING_CONFIG`/`ZONE_CONFIG` (`apps/mass-consensus/src/constants/common.ts:147-195`),
   `RatingIcon.tsx`, `SwipeCard.tsx`, `RatingButtons.tsx`.

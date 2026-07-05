@@ -16,8 +16,8 @@ work is on `main-sign`, which does **not** yet have T0.3/T0.4/T1.x — merge for
 ready).
 - **Tier 0 — all done:** T0.1 (+T0.1b/c), T0.2, T0.3, T0.4 (mobile; desktop-centering not
   reproduced), T0.5. Cluster-map conference blockers are cleared.
-- **Tier 1 — in progress:** T1.1 ✅, T1.2 ✅, T1.3 🔶 (moderation fail-open done; admin-alert
-  throttling remains). **Next open items:** finish T1.3 admin throttling, then T1.4–T1.6.
+- **Tier 1 — in progress:** T1.1 ✅, T1.2 ✅, T1.3 ✅ (moderation fail-open + admin-alert
+  coalescing both done). **Next open items:** T1.4 (emoji reactions), T1.5, T1.6.
 - Also landed on this branch (separate plans): Events Phase 1 dashboard, Freedi Studio app.
 - **Not yet deployed:** cluster fixes take effect on next `deploy:h:prod`; MC changes on next
   MC hosting deploy; no functions redeployed yet.
@@ -119,18 +119,42 @@ Create `docs/cluster-mc-roadmap.md` with the tickets below. Each ticket is self-
     to a `t()` string, falling back to "This didn't quite fit here").
   - Warmer toast titles + pre-submit loader copy (no more "scanning for profanity").
     Model's free-text `reason` kept server-side for the admin log. i18n all 7 langs.
-- [~] **T1.3 — Moderation over-sensitivity + admin-alert flood** *(content half done, commit `a03ac3c9e`)*
-  - **Done:** `checkForInappropriateContent` now **fails open** — any LLM error,
-    JSON-parse failure, rate limit or model refusal previously returned
+- [x] **T1.3 — Moderation over-sensitivity + admin-alert flood** *(commits `a03ac3c9e` + this session)*
+  - **Content sensitivity (done):** `checkForInappropriateContent` now **fails open** —
+    any LLM error, JSON-parse failure, rate limit or model refusal previously returned
     `isInappropriate=true` and accused the author (a real risk under live load); it
     now allows + logs for async review. Removed "spam / gibberish / meaningless
     text" from the flag list so terse-but-legitimate answers aren't rejected.
     `containsBadLanguage()` aligned to fail open. (Moderation runs on OpenAI, not
     Gemini — the original "Gemini SAFETY filter" theory was wrong; it was
     fail-closed handling.)
-  - **Remaining:** throttle/aggregate the **admin alert flood** (admin-facing) — one
-    notification per rejection is too noisy at conference scale. Batch/debounce or
-    digest the moderation-log admin notifications.
+  - **Admin-alert flood (done, this session) — two sources, both fixed:**
+    - **(A) ModerationLog panel pile-up:** `logModerationRejection` wrote **one
+      `moderationLogs` doc per attempt** (retries + over-firing → hundreds of
+      near-identical rows). Now **coalesced**: the write targets a deterministic doc
+      id `${userId}__${parentId}` in a transaction — first rejection creates the row
+      (`attemptCount: 1`), each retry on the same question increments the count +
+      updates `lastAttemptAt` and the latest text/reason/category, keeping the
+      original `createdAt`. Result: **one row per (user, question)** with a
+      "×N attempts" badge, not a flood.
+      - shared-types: `ModerationLog` gains optional `attemptCount` + `lastAttemptAt`.
+      - `functions/src/services/moderation-log-service.ts`: transactional coalescing
+        write (5 unit tests).
+      - `ModerationLog.tsx` + `.module.scss`: "×N attempts" badge + last-attempt time;
+        i18n `attempts` / `Last attempt` in all 7 languages.
+    - **(B) Admin ERROR EMAIL flood (the literal inbox alert):** any permanent AI
+      failure during moderation (`checkForInappropriateContent` → `ai-service`
+      `handleError`) emails `tal.yaron@gmail.com` via `notifyAIError`. The 1/hour
+      throttle was an **in-memory Map** — per Cloud-Function instance, so an
+      autoscaled burst under conference load sent one email per instance per hour.
+      Now **Firestore-backed** (`reserveErrorNotificationSlot`, collection
+      `adminErrorThrottle`): the hourly slot is reserved in a transaction so the limit
+      holds **across instances**; suppressed same-type errors are counted and the next
+      email that goes out carries a "N more … suppressed" digest line. Fails safe
+      (stays silent) if the throttle store is unreachable. (4 unit tests.)
+    - **Verified:** shared-types rebuilt; main-app `tsc` clean; functions `tsc` clean;
+      ESLint clean on changed files; jest 41/41 green (9 new). Takes effect on next
+      `deploy:f:*` (functions) + hosting deploy (admin UI).
 - [ ] **T1.4 — Emoji reactions** (heart / smiley / like) replacing like/dislike. Config already exists: `RATING_CONFIG`/`ZONE_CONFIG` emoji (`apps/mass-consensus/src/constants/common.ts:147-195`), `RatingIcon.tsx`, `SwipeCard.tsx`, `RatingButtons.tsx`.
 - [ ] **T1.5 — Micro-copy refinement** pass across the interface (i18n files).
 - [ ] **T1.6 — Font-size adjustment** for the whole map view (readability from a distance).
