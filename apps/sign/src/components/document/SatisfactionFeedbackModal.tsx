@@ -9,24 +9,28 @@ import styles from './RejectionFeedbackModal.module.scss';
 interface SatisfactionFeedbackModalProps {
   documentId: string;
   userId: string | null;
+  /** The rating just submitted (-1..1); phrases the ask positively for satisfied users */
+  score?: number;
   onClose: () => void;
 }
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
 /**
- * Shown after a user rates a document below "very satisfied" (< 1) in
- * satisfaction footer mode. Asks the user to explain why and saves the
- * explanation through the existing comments mechanism (a comment attached
- * directly to the document), so the user's name is preserved and the
- * feedback is visible to admins.
+ * Shown after a user rates a document in satisfaction footer mode. Asks
+ * satisfied users what worked well and unsatisfied users what fell short,
+ * saving the explanation through the existing comments mechanism (a comment
+ * attached directly to the document), so the user's name is preserved and
+ * the feedback is visible to admins.
  */
 export default function SatisfactionFeedbackModal({
   documentId,
   userId,
+  score = 0,
   onClose,
 }: SatisfactionFeedbackModalProps) {
   const { t } = useTranslation();
+  const isPositive = score >= 1;
   const [reason, setReason] = useState('');
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -129,13 +133,17 @@ export default function SatisfactionFeedbackModal({
 
   return (
     <Modal
-      title={t('satisfactionFeedbackTitle') || 'Help us improve'}
+      title={isPositive
+        ? (t('satisfactionPositiveFeedbackTitle') || 'Glad you liked it!')
+        : (t('satisfactionFeedbackTitle') || 'Help us improve')}
       onClose={handleSkip}
       size="small"
     >
       <div className={styles.feedbackContent}>
         <p className={styles.description}>
-          {t('satisfactionFeedbackBody') || 'Can you share why you are not fully satisfied with this document? Your feedback helps us improve it.'}
+          {isPositive
+            ? (t('satisfactionPositiveFeedbackBody') || 'Can you share what you liked about this document? Knowing what worked well helps us keep it that way.')
+            : (t('satisfactionFeedbackBody') || 'Can you share why you are not fully satisfied with this document? Your feedback helps us improve it.')}
         </p>
 
         <textarea

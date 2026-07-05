@@ -2727,5 +2727,7 @@
   "Unsatisfied": "Insatisfecho",
   "Satisfied": "Satisfecho",
   "Very satisfied": "Muy satisfecho",
-  "Full name": "Nombre completo"
+  "Full name": "Nombre completo",
+  "satisfactionPositiveFeedbackTitle": "¡Nos alegra que te haya gustado!",
+  "satisfactionPositiveFeedbackBody": "¿Puedes compartir qué te gustó de este documento? Saber qué funcionó bien nos ayuda a mantenerlo así."
 }

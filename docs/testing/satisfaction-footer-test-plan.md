@@ -48,7 +48,7 @@
 |---|-----|-------|----------|
 | 3.1 | 🔴 | Click **Satisfied (+0.5)** | Feedback modal **"Help us improve"** opens with a textarea |
 | 3.2 | 🔴 | Type an explanation → **Send Feedback** | "Thank you!" state → page reloads → footer shows **"Thank you for your feedback!"** and the **Satisfied** button is highlighted/selected |
-| 3.3 | 🔴 | Click **Very satisfied (+1)** | **No modal.** Confetti + success toast → reload → Very satisfied selected |
+| 3.3 | 🔴 | Click **Very satisfied (+1)** | Confetti, then the feedback modal opens with **positive phrasing** ("Glad you liked it! … what did you like?"). Send or Skip → reload → Very satisfied selected |
 | 3.4 | 🔴 | Click **Unsatisfied (−0.5)** → modal opens → type **different** text → send | Works; later in 5.2 verify the explanation was **updated, not duplicated** |
 | 3.5 | 🟡 | Click **Neutral (0)** → modal opens → press **Skip** | Modal closes, page reloads, Neutral is selected, previous explanation untouched |
 | 3.6 | 🟡 | Click a rating → modal opens → **close via X** | Same as Skip: reload, rating saved |
@@ -107,7 +107,7 @@
 | 9.2 | 🔴 | Enable Satisfaction rating in prod admin settings | Saves and persists |
 | 9.3 | 🔴 | Full happy path: rate 0.5 → explain → send → reload | Thank-you state, rating selected |
 | 9.4 | 🔴 | Prod admin Users table | Satisfaction + Reason visible with correct name |
-| 9.5 | 🔴 | Rate +1 from a second account | No modal, confetti, saved |
+| 9.5 | 🔴 | Rate +1 from a second account | Confetti + positive feedback modal, rating saved |
 | 9.6 | 🟡 | Existing **live** documents spot-check (view only) | Footers unchanged, no console errors |
 | 9.7 | 🟡 | Switch the prod test doc back to sign mode | Classic footer returns cleanly |
 
@@ -122,7 +122,7 @@
 ## Known Limitations (don't file as bugs)
 
 1. **~3–5s guard after load** — ratings are blocked until the demographics/profile check finishes (identical to Sign/Reject; shows "Please wait…" toast).
-2. **"Anonymous" in Users table for happy raters** — users who rate +1 leave no comment, so if their signature has no display name they show as Anonymous (same as signers today). Users who leave an explanation get their name from the comment.
+2. **"Anonymous" in Users table for raters who skip the comment** — the signature stores no display name, so raters who skip the feedback modal show as Anonymous (same as signers today). Users who leave an explanation get their name from the comment.
 3. **CSV exports** (`Export Users` / `Export Detailed`) do **not** yet include the satisfaction column — planned follow-up if needed.
 
 ## Rollback
