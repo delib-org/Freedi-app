@@ -150,10 +150,13 @@ function convertParagraphElement(
     }
   }
 
+  // Preserve paragraph-level alignment and shading (e.g., callout blocks)
+  const styledContent = applyParagraphStyling(content.trim(), paragraph.paragraphStyle);
+
   const para: Paragraph = {
     paragraphId: generateParagraphId(),
     type,
-    content: content.trim(),
+    content: styledContent,
     order,
   };
 
@@ -165,8 +168,109 @@ function convertParagraphElement(
 }
 
 /**
- * Extract text content from paragraph elements with formatting (bold, italic)
- * Returns HTML string with appropriate formatting tags
+ * Convert a Google Docs OptionalColor to a CSS hex color.
+ * Returns null for unset/transparent colors.
+ */
+function optionalColorToHex(
+  optionalColor?: docs_v1.Schema$OptionalColor | null
+): string | null {
+  const rgb = optionalColor?.color?.rgbColor;
+  if (!rgb) return null;
+
+  const toHexChannel = (value?: number | null): string =>
+    Math.round((value ?? 0) * 255)
+      .toString(16)
+      .padStart(2, '0');
+
+  return `#${toHexChannel(rgb.red)}${toHexChannel(rgb.green)}${toHexChannel(rgb.blue)}`;
+}
+
+/** Colors treated as "default" and therefore not emitted as inline styles */
+const DEFAULT_TEXT_COLOR = '#000000';
+const DEFAULT_BACKGROUND_COLOR = '#ffffff';
+
+/**
+ * Build an inline CSS string from a Google Docs text style (colors only).
+ * Formatting handled by tags (bold/italic/etc.) is excluded.
+ */
+function textStyleToCss(textStyle?: docs_v1.Schema$TextStyle | null): string {
+  if (!textStyle) return '';
+
+  const rules: string[] = [];
+
+  const foreground = optionalColorToHex(textStyle.foregroundColor);
+  if (foreground && foreground !== DEFAULT_TEXT_COLOR) {
+    rules.push(`color:${foreground}`);
+  }
+
+  const background = optionalColorToHex(textStyle.backgroundColor);
+  if (background && background !== DEFAULT_BACKGROUND_COLOR) {
+    rules.push(`background-color:${background}`);
+  }
+
+  return rules.join(';');
+}
+
+/**
+ * Map a Google Docs paragraph alignment to a CSS text-align value.
+ * Uses logical values (end) so RTL documents align correctly.
+ */
+function alignmentToCss(alignment?: string | null): string | null {
+  switch (alignment) {
+    case 'CENTER':
+      return 'center';
+    case 'END':
+      return 'end';
+    case 'JUSTIFIED':
+      return 'justify';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Build an inline CSS string for paragraph-level styling
+ * (alignment and shading/callout background).
+ */
+function paragraphStyleToCss(
+  paragraphStyle?: docs_v1.Schema$ParagraphStyle | null
+): string {
+  if (!paragraphStyle) return '';
+
+  const rules: string[] = [];
+
+  const textAlign = alignmentToCss(paragraphStyle.alignment);
+  if (textAlign) {
+    rules.push(`text-align:${textAlign}`);
+  }
+
+  const shading = optionalColorToHex(paragraphStyle.shading?.backgroundColor);
+  if (shading && shading !== DEFAULT_BACKGROUND_COLOR) {
+    rules.push(`background-color:${shading}`);
+  }
+
+  return rules.join(';');
+}
+
+/**
+ * Wrap paragraph content with a block-level span when the paragraph itself
+ * carries visual styling (alignment, shading). Returns content unchanged when
+ * there is nothing to preserve.
+ */
+function applyParagraphStyling(
+  content: string,
+  paragraphStyle?: docs_v1.Schema$ParagraphStyle | null
+): string {
+  const css = paragraphStyleToCss(paragraphStyle);
+  if (!css) return content;
+
+  return `<span style="display:block;${css}">${content}</span>`;
+}
+
+/**
+ * Extract text content from paragraph elements with formatting
+ * (bold, italic, underline, strikethrough, sub/sup, colors, links).
+ * Returns HTML string with appropriate formatting tags.
  */
 function extractTextContent(elements?: docs_v1.Schema$ParagraphElement[]): string {
   if (!elements) return '';
@@ -174,14 +278,24 @@ function extractTextContent(elements?: docs_v1.Schema$ParagraphElement[]): strin
   return elements
     .map((element) => {
       if (element.textRun?.content) {
-        let text = element.textRun.content;
+        // Strip the paragraph-terminating newline so it never lands inside
+        // formatting tags (e.g., <strong>text\n</strong>)
+        let text = element.textRun.content.replace(/\n$/, '');
+        if (!text) return '';
+
         const textStyle = element.textRun.textStyle;
 
-        // Escape HTML entities in the text content first
-        text = escapeHtml(text);
+        // Escape HTML entities, then convert soft line breaks () to <br>
+        text = escapeHtml(text).replace(//g, '<br>');
 
         // Apply formatting based on textStyle
         if (textStyle) {
+          // Superscript / subscript
+          if (textStyle.baselineOffset === 'SUPERSCRIPT') {
+            text = `<sup>${text}</sup>`;
+          } else if (textStyle.baselineOffset === 'SUBSCRIPT') {
+            text = `<sub>${text}</sub>`;
+          }
           // Wrap with italic if needed
           if (textStyle.italic) {
             text = `<em>${text}</em>`;
@@ -190,13 +304,27 @@ function extractTextContent(elements?: docs_v1.Schema$ParagraphElement[]): strin
           if (textStyle.bold) {
             text = `<strong>${text}</strong>`;
           }
-          // Wrap with underline if needed
-          if (textStyle.underline) {
+          const linkUrl = textStyle.link?.url;
+          const isSafeLink =
+            typeof linkUrl === 'string' && /^https?:\/\//i.test(linkUrl);
+
+          // Underline: skip for links (browsers style them already)
+          if (textStyle.underline && !isSafeLink) {
             text = `<u>${text}</u>`;
           }
           // Wrap with strikethrough if needed
           if (textStyle.strikethrough) {
             text = `<s>${text}</s>`;
+          }
+
+          if (isSafeLink) {
+            // Links keep their default styling; skip color rules
+            text = `<a href="${escapeHtml(linkUrl)}">${text}</a>`;
+          } else {
+            const css = textStyleToCss(textStyle);
+            if (css) {
+              text = `<span style="${css}">${text}</span>`;
+            }
           }
         }
 
@@ -212,11 +340,56 @@ function extractTextContent(elements?: docs_v1.Schema$ParagraphElement[]): strin
  * Check if content contains HTML formatting tags
  */
 export function hasHtmlFormatting(content: string): boolean {
-  return /<(strong|em|u|s|table|tr|td|th)>/i.test(content);
+  return /<(strong|em|u|s|table|tr|td|th|span|a|sup|sub|br|col|colgroup)(\s[^>]*)?\/?>/i.test(content);
 }
 
 /**
- * Convert a table element to an HTML table paragraph
+ * Build a <colgroup> preserving relative column widths, when Google provides
+ * fixed widths for every column.
+ */
+function buildColgroup(table: docs_v1.Schema$Table): string {
+  const columns = table.tableStyle?.tableColumnProperties;
+  if (!columns || columns.length === 0) return '';
+
+  const widths = columns.map((col) =>
+    col.widthType === 'FIXED_WIDTH' ? col.width?.magnitude ?? null : null
+  );
+  if (widths.some((w) => w === null || w <= 0)) return '';
+
+  const total = (widths as number[]).reduce((sum, w) => sum + w, 0);
+  if (total <= 0) return '';
+
+  const cols = (widths as number[])
+    .map((w) => `<col style="width:${((w / total) * 100).toFixed(1)}%">`)
+    .join('');
+
+  return `<colgroup>${cols}</colgroup>`;
+}
+
+/**
+ * Build the inline CSS for a table cell (background color and alignment of
+ * its first paragraph).
+ */
+function tableCellCss(cell: docs_v1.Schema$TableCell): string {
+  const rules: string[] = [];
+
+  const background = optionalColorToHex(cell.tableCellStyle?.backgroundColor);
+  if (background && background !== DEFAULT_BACKGROUND_COLOR) {
+    rules.push(`background-color:${background}`);
+  }
+
+  const firstParagraph = cell.content?.find((el) => el.paragraph)?.paragraph;
+  const textAlign = alignmentToCss(firstParagraph?.paragraphStyle?.alignment);
+  if (textAlign) {
+    rules.push(`text-align:${textAlign}`);
+  }
+
+  return rules.join(';');
+}
+
+/**
+ * Convert a table element to an HTML table paragraph, preserving cell
+ * background colors, merged cells, column widths, and in-cell formatting.
  */
 function convertTableElement(
   table: docs_v1.Schema$Table,
@@ -226,16 +399,31 @@ function convertTableElement(
     return null;
   }
 
-  let html = '<table>';
+  const rowCount = table.tableRows.length;
+  let html = `<table>${buildColgroup(table)}`;
 
   table.tableRows.forEach((row, rowIndex) => {
     html += '<tr>';
 
     row.tableCells?.forEach((cell) => {
       const cellContent = extractCellContent(cell);
-      const tag = rowIndex === 0 ? 'th' : 'td';
+      // Single-row tables are usually callouts/cards, not data tables
+      const tag = rowIndex === 0 && rowCount > 1 ? 'th' : 'td';
+
+      const attrs: string[] = [];
+      if (tag === 'th') attrs.push('scope="col"');
+
+      const columnSpan = cell.tableCellStyle?.columnSpan;
+      if (columnSpan && columnSpan > 1) attrs.push(`colspan="${columnSpan}"`);
+      const rowSpan = cell.tableCellStyle?.rowSpan;
+      if (rowSpan && rowSpan > 1) attrs.push(`rowspan="${rowSpan}"`);
+
+      const css = tableCellCss(cell);
+      if (css) attrs.push(`style="${css}"`);
+
+      const attrString = attrs.length > 0 ? ` ${attrs.join(' ')}` : '';
       // cellContent is already HTML-safe (escaping done in extractTextContent)
-      html += `<${tag}>${cellContent}</${tag}>`;
+      html += `<${tag}${attrString}>${cellContent}</${tag}>`;
     });
 
     html += '</tr>';
@@ -252,20 +440,31 @@ function convertTableElement(
 }
 
 /**
- * Extract text content from a table cell
+ * Extract content from a table cell. Each cell paragraph becomes a line
+ * (joined with <br>), keeping inline formatting, alignment, and bullets.
  */
 function extractCellContent(cell: docs_v1.Schema$TableCell): string {
   if (!cell.content) return '';
 
-  return cell.content
-    .map((element) => {
-      if (element.paragraph) {
-        return extractTextContent(element.paragraph.elements);
-      }
-      return '';
-    })
-    .join('\n')
-    .trim();
+  const lines: string[] = [];
+
+  for (const element of cell.content) {
+    if (!element.paragraph) continue;
+
+    let line = extractTextContent(element.paragraph.elements).trim();
+    if (!line) continue;
+
+    // Preserve bullet-list items inside cells as visible bullets
+    if (element.paragraph.bullet) {
+      line = `• ${line}`;
+    }
+
+    // Preserve per-paragraph alignment/shading inside the cell (only when it
+    // differs from the cell-level alignment already emitted on the td/th)
+    lines.push(line);
+  }
+
+  return lines.join('<br>');
 }
 
 /**

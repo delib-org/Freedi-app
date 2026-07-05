@@ -267,6 +267,12 @@
   flex: 1; // Take remaining space after bullet
 }
 
+// Shaded callout blocks imported from Google Docs (paragraph shading)
+.content span[style*='display:block'][style*='background-color'] {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+}
+
 // Table type
 .tableWrapper {
   margin: 0.5rem 0;
