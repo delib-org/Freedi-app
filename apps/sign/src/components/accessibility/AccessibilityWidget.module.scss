@@ -7,7 +7,9 @@
   position: fixed;
   bottom: 100px; // Above the sign/reject footer
   right: var(--spacing-lg, 24px);
-  z-index: 9999;
+  // Below modal overlays (1000) so open modals (demographic survey, comments,
+  // feedback) cover the floating button instead of the button hiding their content
+  z-index: 950;
   font-family: var(--font-family-base, sans-serif);
 
   @media (max-width: 600px) {
@@ -325,7 +327,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 1000; // Same layer as other app modals
   animation: fadeIn 0.15s ease;
 }
 
