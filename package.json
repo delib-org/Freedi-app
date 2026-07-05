@@ -35,6 +35,8 @@
     "seed:chat:large": "cd apps/chat && FIRESTORE_EMULATOR_HOST=localhost:8081 node scripts/seed20.cjs",
     "dev:admin": "npm run env:dev && cd apps/admin && npm run dev",
     "dev:join": "npm run env:dev && cd apps/join && npm run dev",
+    "dev:studio": "cd apps/studio && npm run dev",
+    "build:studio": "cd apps/studio && npm run build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

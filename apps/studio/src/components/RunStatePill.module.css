@@ -1,0 +1,28 @@
+.pill {
+	flex: 0 0 auto;
+	padding: 0.125rem 0.625rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 20px;
+	white-space: nowrap;
+}
+
+.queued {
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+}
+
+.open {
+	color: #ffffff;
+	background: var(--agree);
+}
+
+.frozen {
+	color: var(--frozen-text);
+	background: var(--frozen-bg);
+}
+
+.closed {
+	color: #ffffff;
+	background: var(--reject);
+}
