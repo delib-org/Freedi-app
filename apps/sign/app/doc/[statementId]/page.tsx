@@ -17,7 +17,7 @@ import DocumentView from '@/components/document/DocumentView';
 import DocumentVisitTracker from '@/components/document/DocumentVisitTracker';
 import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
-import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
+import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, FooterMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { resolveIdentityDisplayMode } from '@/types/demographics';
 
 interface PageProps {
@@ -139,6 +139,7 @@ export default async function DocumentPage({ params }: PageProps) {
     hideUserIdentity?: boolean;
     identityDisplayMode?: string;
     showSignatureCounts?: boolean;
+    footerMode?: FooterMode;
     enableRefinement?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
@@ -185,6 +186,9 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Signature counts setting (default: true)
   const showSignatureCounts = signSettings?.showSignatureCounts ?? true;
+
+  // Footer mode setting (default: classic sign/reject buttons)
+  const footerMode: FooterMode = signSettings?.footerMode === 'satisfaction' ? 'satisfaction' : 'sign';
 
   // Research logging setting (from statementSettings, not signSettings)
   const enableResearchLogging = (document as { statementSettings?: { enableResearchLogging?: boolean } }).statementSettings?.enableResearchLogging === true;
@@ -267,6 +271,7 @@ export default async function DocumentPage({ params }: PageProps) {
         hideUserIdentity={hideUserIdentity}
         identityDisplayMode={identityDisplayMode}
         showSignatureCounts={showSignatureCounts}
+        footerMode={footerMode}
         enableResearchLogging={enableResearchLogging}
       />
     </LanguageOverrideProvider>

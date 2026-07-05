@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, FooterMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { SignUser } from '@/lib/utils/user';
 import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
@@ -26,6 +26,7 @@ const InsertionPoint = dynamic(() => import('../paragraph/InsertionPoint'), {
   ssr: false,
 });
 import RejectButton from './RejectButton';
+import SatisfactionScale from './SatisfactionScale';
 import ExplanationButton from './ExplanationButton';
 import ExplanationVideoOverlay from './ExplanationVideoOverlay';
 import ProgressBar from './ProgressBar';
@@ -74,6 +75,8 @@ interface DocumentViewProps {
   identityDisplayMode?: IdentityDisplayMode;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts?: boolean;
+  /** Footer behavior: 'sign' shows Sign/Reject buttons, 'satisfaction' shows a -1..1 satisfaction scale */
+  footerMode?: FooterMode;
   /** When true, research logging is enabled and consent banner should be shown */
   enableResearchLogging?: boolean;
 }
@@ -105,6 +108,7 @@ export default function DocumentView({
   hideUserIdentity = true,
   identityDisplayMode,
   showSignatureCounts = true,
+  footerMode = 'sign',
   enableResearchLogging = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
@@ -303,7 +307,21 @@ export default function DocumentView({
               <footer className={styles.footer}>
                 <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
-                  {!user ? (
+                  {footerMode === 'satisfaction' ? (
+                    !user ? (
+                      <p className={styles.unsignedStatus}>
+                        {t('signInToRate') || 'Sign in to rate this document'}
+                      </p>
+                    ) : userSignature?.satisfaction !== undefined ? (
+                      <p className={styles.signedStatus}>
+                        {t('satisfactionThankYou') || 'Thank you for your feedback!'}
+                      </p>
+                    ) : (
+                      <p className={styles.unsignedStatus}>
+                        {t('satisfactionQuestion') || 'How satisfied are you with this document?'}
+                      </p>
+                    )
+                  ) : !user ? (
                     <p className={styles.unsignedStatus}>
                       {t('signInToReview') || 'Sign in to review and sign this document'}
                     </p>
@@ -327,8 +345,12 @@ export default function DocumentView({
                       className={styles.signButton}
                       style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      {t('signInToSign') || 'Sign In to Sign'}
+                      {footerMode === 'satisfaction'
+                        ? (t('signInToRate') || 'Sign in to rate this document')
+                        : (t('signInToSign') || 'Sign In to Sign')}
                     </a>
+                  ) : footerMode === 'satisfaction' ? (
+                    <SatisfactionScale currentScore={userSignature?.satisfaction} />
                   ) : (
                     <>
                       <RejectButton
