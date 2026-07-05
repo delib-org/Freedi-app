@@ -58,6 +58,19 @@ each box and reference the commit when done.
     after T0.1; if it persists, chase the `useMindMap`/Redux listener race
     (`MindMapMV.tsx:13-74`).
 
+- [x] **T0.4 — Editing a sticky note steals the viewport on touch**
+  - **Root cause:** the note-edit and cluster-title `<textarea>` used the bare
+    `autoFocus` attribute. On touch, the browser scrolls the focused field into view
+    and opens the keyboard, yanking the map viewport — read as "tapping a node
+    recenters the map."
+  - **Fix:** `focusEditField` ref helper (`map/mapHelpers/focusEditField.ts`) —
+    focuses with `{ preventScroll: true }` only on fine-pointer devices, no-op on
+    touch (user taps to open the keyboard). Wired into `ClusterCard.tsx` +
+    `ClusterBoard.tsx`; `autoFocus` removed. Unit-tested.
+  - The old "desktop doesn't center horizontally" note could not be reproduced on
+    the cluster board (no tap-to-center there; `fit()` already centers both axes) —
+    left for a concrete repro. **Takes effect on next hosting deploy.**
+
 - [x] **T0.1c — Cluster shows a different color on each client/render**
   - **Root cause:** clusters with no saved `color` fell back to
     `CLUSTER_PALETTE[index % len]`, keyed on the cluster's *position* in the

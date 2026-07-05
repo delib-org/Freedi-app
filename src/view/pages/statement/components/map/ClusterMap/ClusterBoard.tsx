@@ -30,6 +30,7 @@ import {
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { CLUSTER_PALETTE, type ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
+import { focusEditField } from '../mapHelpers/focusEditField';
 import { usePanZoom } from '../hooks/usePanZoom';
 import PanZoomControls from '../components/PanZoomControls';
 import ClusterCard from './ClusterCard';
@@ -726,7 +727,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 										<textarea
 											className={styles.pillEdit}
 											defaultValue={l.clusterStatement.statement}
-											autoFocus
+											// Focus on pointer devices only; on touch this would scroll
+											// the field into view and yank the map viewport.
+											ref={focusEditField}
 											onFocus={(e) => e.currentTarget.select()}
 											onBlur={(e) =>
 												saveText(l.clusterStatement as Statement, e.currentTarget.value)

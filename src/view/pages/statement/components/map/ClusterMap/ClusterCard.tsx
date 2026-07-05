@@ -9,6 +9,7 @@ import { enhancedEvaluationsThumbs } from '@/view/pages/statement/components/eva
 import { getEvaluationThumbIdByScore } from '@/view/pages/statement/components/evaluations/statementsEvaluationCont';
 import { logError } from '@/utils/errorHandling';
 import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
+import { focusEditField } from '../mapHelpers/focusEditField';
 import styles from './ClusterBoard.module.scss';
 
 interface Props {
@@ -182,7 +183,9 @@ const ClusterCard: FC<Props> = ({
 				<textarea
 					className={styles.cardEdit}
 					defaultValue={statement.statement}
-					autoFocus
+					// Focus on pointer devices only; on touch this would scroll the
+					// field into view and yank the map viewport (focusEditField).
+					ref={focusEditField}
 					// Auto-detect LTR/RTL from the typed text and align accordingly.
 					dir="auto"
 					onFocus={(e) => e.currentTarget.select()}

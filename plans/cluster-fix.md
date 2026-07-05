@@ -25,10 +25,25 @@ Create `docs/cluster-mc-roadmap.md` with the tickets below. Each ticket is self-
   - Approach: surface a toast/error on failure instead of silent return; guard against un-initialised `creator` (await auth / disable the add button until ready); verify required Statement fields are populated on mobile. Reproduce on Android via the MCP browser or a device.
 - [x] **T0.3 — Items all show as UNGROUPED**
   - Likely a *symptom* of T0.1 (when a cluster doc is deleted, its members orphan into the synthetic "Ungrouped" block — `mapCont.ts:91-159`, `ClusterBoard.tsx:176-184`). Verify it is resolved by T0.1 first; if it persists, investigate the `useMindMap`/Redux listener race (`MindMapMV.tsx:13-74`).
-- [ ] **T0.4 — Target tap/center behavior on the map**
-  - On **mobile**: pressing on a target should **not** focus/recenter the map (tapping a node currently steals/refocuses the viewport — disable the auto-focus-on-press on touch).
-  - On **desktop**: the target does **not** center horizontally (centering is off-axis — fix so the focused target centers horizontally as well as vertically).
-  - Files: `usePanZoom.ts` (focus/center logic) + `ClusterBoard.tsx` (tap/press handlers). Look at where a node press triggers a recenter and make it pointer-type aware.
+- [x] **T0.4 — Sticky-note edit steals the viewport on touch** *(mobile part done)*
+  - **Mobile (fixed):** on the sticky-note board, editing a note or a cluster title
+    opened a `<textarea autoFocus>`. On touch, `autoFocus` makes the browser scroll
+    the field into view + open the keyboard, yanking the map viewport out from under
+    the user — this was the "tapping a node recenters the map" symptom. Fix: new
+    `focusEditField` ref helper (`map/mapHelpers/focusEditField.ts`) that focuses on
+    fine-pointer (mouse/pen) devices with `{ preventScroll: true }` and does **nothing**
+    on coarse-pointer (touch) devices, where the user taps the field to open the
+    keyboard when ready. Wired into `ClusterCard.tsx` (note edit) and `ClusterBoard.tsx`
+    (cluster-title edit); unit-tested (`focusEditField.test.ts`). `autoFocus` removed
+    from both textareas. tsc + ESLint + jest all clean.
+  - **Desktop centering (not reproduced):** the original note said the focused target
+    "does not center horizontally." No tap-to-center behavior exists on the sticky
+    board — the only auto-centering is in the *old* mind-elixir map (`selectNode`), and
+    the board's `fit()` already centers on both axes. Left unchanged pending a concrete
+    repro; if it resurfaces it's likely the mind-elixir map or a side-panel offset, not
+    the cluster board.
+  - Files touched: `map/mapHelpers/focusEditField.ts` (new), `ClusterCard.tsx`,
+    `ClusterBoard.tsx`, `__tests__/focusEditField.test.ts` (new).
 - [x] **T0.5 — Admin map-control panel + bigger/clearer cluster titles** (new feature)
   - **Done:** new `MapSettingsSchema` on `statementSettings.map` (shared-types) →
     `cardFontRem`, `clusterFontRem`, `synthVisibility`, `showProvenance`.
