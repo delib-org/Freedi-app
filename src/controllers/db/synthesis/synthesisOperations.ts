@@ -37,6 +37,96 @@ export async function triggerSynthesizeNow(questionId: string): Promise<Synthesi
 	}
 }
 
+interface ReClusterResponse {
+	clustersReversed: number;
+	docsArchived: number;
+	membersRestored: number;
+	orphansRestored: number;
+	enqueued: number;
+	etaMinutes: number;
+}
+
+/**
+ * Clean-then-rebuild: dissolves every existing synth/cluster under the
+ * question, then re-enqueues all eligible options for a fresh clustering run.
+ * Use this to recover questions whose clusters drifted (over-merged, stale
+ * titles, overlapping membership).
+ */
+export async function triggerReCluster(questionId: string): Promise<ReClusterResponse> {
+	try {
+		const call = httpsCallable<QuestionOnlyRequest, ReClusterResponse>(functions, 'reCluster');
+		const result = await call({ questionId });
+		logger.info('Re-cluster run queued', { questionId, ...result.data });
+
+		return result.data;
+	} catch (error) {
+		logError(error, { operation: 'synthesis.triggerReCluster', statementId: questionId });
+		throw error;
+	}
+}
+
+interface GlobalClusterResponse {
+	clustersReversed: number;
+	docsArchived: number;
+	membersRestored: number;
+	evaluationsDeleted: number;
+	eligibleOptions: number;
+	synthsCreated: number;
+	topicsCreated: number;
+	standalone: number;
+	clusterThreshold: number;
+	synthThreshold: number;
+}
+
+/**
+ * One-shot whole-question clustering: dissolves existing synthesis, then groups
+ * ALL eligible options at once (cosine edges + connected components). Tight
+ * groups become synths, looser ones topic clusters — using the SAME thresholds
+ * configured under "Advanced similarity thresholds". Unlike re-cluster
+ * (incremental, one option at a time), this sees the whole corpus together and
+ * surfaces themes the incremental pass misses.
+ */
+export async function triggerGlobalCluster(questionId: string): Promise<GlobalClusterResponse> {
+	try {
+		const call = httpsCallable<QuestionOnlyRequest, GlobalClusterResponse>(
+			functions,
+			'globalCluster',
+		);
+		const result = await call({ questionId });
+		logger.info('Global cluster run complete', { questionId, ...result.data });
+
+		return result.data;
+	} catch (error) {
+		logError(error, { operation: 'synthesis.triggerGlobalCluster', statementId: questionId });
+		throw error;
+	}
+}
+
+interface ReEmbedResponse {
+	total: number;
+	embedded: number;
+	skipped: number;
+	failed: number;
+}
+
+/**
+ * Regenerate every option's embedding under the question (gist-based), so a
+ * subsequent re-cluster / global-cluster run compares consistent vectors.
+ * Run this once after enabling gist embeddings before clustering.
+ */
+export async function triggerReEmbed(questionId: string): Promise<ReEmbedResponse> {
+	try {
+		const call = httpsCallable<QuestionOnlyRequest, ReEmbedResponse>(functions, 'reEmbedQuestion');
+		const result = await call({ questionId });
+		logger.info('Re-embed complete', { questionId, ...result.data });
+
+		return result.data;
+	} catch (error) {
+		logError(error, { operation: 'synthesis.triggerReEmbed', statementId: questionId });
+		throw error;
+	}
+}
+
 interface SynthesizeSelectedRequest {
 	questionId: string;
 	optionIds: string[];

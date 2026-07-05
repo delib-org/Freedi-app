@@ -70,10 +70,8 @@ const reviewMock = jest.fn();
 jest.mock('../pipeline/clusterOps', () => {
 	const isCluster = (s: Statement) =>
 		Array.isArray(s.integratedOptions) && s.integratedOptions.length > 0;
-	const isSynth = (s: Statement) =>
-		isCluster(s) && s.derivedByPipeline === 'synthesis';
-	const isTopicCluster = (s: Statement) =>
-		isCluster(s) && s.derivedByPipeline !== 'synthesis';
+	const isSynth = (s: Statement) => isCluster(s) && s.derivedByPipeline === 'synthesis';
+	const isTopicCluster = (s: Statement) => isCluster(s) && s.derivedByPipeline !== 'synthesis';
 
 	return {
 		isCluster,
@@ -88,6 +86,15 @@ jest.mock('../pipeline/clusterOps', () => {
 // Now import the SUT.
 import { runSinglePipeline } from '../pipeline/runSinglePipeline';
 import { DEFAULT_SYNTHESIS_SETTINGS, MC_DEFAULT_SYNTHESIS_SETTINGS } from '../pipeline/types';
+import { embeddingCache } from '../../services/embedding-cache-service';
+
+const getBatchEmbeddingsMock = embeddingCache.getBatchEmbeddings as jest.Mock;
+
+// The option embedding the pipeline sees (from ensureEmbeddingMock) is uniform.
+// A vector with alternating ±1 components is orthogonal to it (cosine 0), so it
+// stands in for a cluster member that is NOT cohesive with the new option.
+const UNIFORM_VEC = Array(1536).fill(0.1);
+const ORTHOGONAL_VEC = Array.from({ length: 1536 }, (_, i) => (i % 2 === 0 ? 1 : -1));
 
 function makeOption(overrides: Partial<Statement> = {}): Statement {
 	return {
@@ -259,6 +266,69 @@ describe('runSinglePipeline', () => {
 		expect(spawnMock).not.toHaveBeenCalled();
 	});
 
+	it('does NOT attach to a synth when the newcomer is a cohesion outlier (snowball brake)', async () => {
+		const option = makeOption();
+		const parent = makeParent();
+		// High direct cosine to the synth (clears attachThreshold via Stage A)...
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'synth-7',
+					integratedOptions: ['opt-a', 'opt-b'],
+					derivedByPipeline: 'synthesis',
+				} as unknown as Statement,
+				similarity: 0.97,
+			},
+		]);
+		// ...but the new option is orthogonal to every actual member → fails the
+		// centroid floor AND the quorum, so the attach must be withheld.
+		getBatchEmbeddingsMock.mockResolvedValue(
+			new Map([
+				['opt-a', ORTHOGONAL_VEC],
+				['opt-b', ORTHOGONAL_VEC],
+			]),
+		);
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+		expect(result.action).not.toBe('attached');
+		expect(attachMock).not.toHaveBeenCalled();
+	});
+
+	it('attaches to a synth when the newcomer is cohesive with the members', async () => {
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'synth-7',
+					integratedOptions: ['opt-a', 'opt-b'],
+					derivedByPipeline: 'synthesis',
+				} as unknown as Statement,
+				similarity: 0.97,
+			},
+		]);
+		// Members aligned with the new option → centroid cosine ~1, full quorum.
+		getBatchEmbeddingsMock.mockResolvedValue(
+			new Map([
+				['opt-a', UNIFORM_VEC],
+				['opt-b', UNIFORM_VEC],
+			]),
+		);
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+		expect(result.action).toBe('attached');
+		expect(result.clusterId).toBe('synth-7');
+		expect(attachMock).toHaveBeenCalled();
+	});
+
 	it('spawns a SYNTH when LLM agrees (high cosine pair)', async () => {
 		const option = makeOption();
 		const parent = makeParent();
@@ -365,10 +435,7 @@ describe('runSinglePipeline', () => {
 		expect(result.action).toBe('spawned');
 		expect(result.clusterId).toBe('topic-fallback');
 		expect(spawnMock).toHaveBeenCalledTimes(2);
-		expect(spawnMock).toHaveBeenNthCalledWith(
-			1,
-			expect.objectContaining({ mode: 'synth' }),
-		);
+		expect(spawnMock).toHaveBeenNthCalledWith(1, expect.objectContaining({ mode: 'synth' }));
 		expect(spawnMock).toHaveBeenNthCalledWith(
 			2,
 			expect.objectContaining({ mode: 'cluster', bypassDebounce: true }),

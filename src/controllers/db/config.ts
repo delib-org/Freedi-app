@@ -107,6 +107,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 		);
 
 		return initializeFirestore(app, {
+			experimentalAutoDetectLongPolling: true,
 			localCache: memoryLocalCache(),
 		});
 	}
@@ -116,6 +117,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 		console.info('iOS detected: Using memory-only cache for Firestore');
 
 		return initializeFirestore(app, {
+			experimentalAutoDetectLongPolling: true,
 			localCache: memoryLocalCache(),
 		});
 	}
@@ -125,6 +127,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 		console.info('Previous IndexedDB errors detected: Using memory-only cache');
 
 		return initializeFirestore(app, {
+			experimentalAutoDetectLongPolling: true,
 			localCache: memoryLocalCache(),
 		});
 	}
@@ -133,6 +136,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 	// Single-tab manager causes "Failed to obtain exclusive access" errors
 	try {
 		return initializeFirestore(app, {
+			experimentalAutoDetectLongPolling: true,
 			localCache: persistentLocalCache({
 				tabManager: persistentMultipleTabManager(),
 			}),
@@ -147,6 +151,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 		recordIndexedDBError();
 
 		return initializeFirestore(app, {
+			experimentalAutoDetectLongPolling: true,
 			localCache: memoryLocalCache(),
 		});
 	}

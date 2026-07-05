@@ -33,6 +33,7 @@ interface HeaderMenuProps {
 	onInvitePanel: () => void;
 	onNavigateToSettings: () => void;
 	onNavigateToScreen: (screen: Screen) => void;
+	onNavigateToClusterMap: () => void;
 	isFollowMeActive?: boolean;
 }
 
@@ -50,6 +51,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onInvitePanel,
 	onNavigateToSettings,
 	onNavigateToScreen,
+	onNavigateToClusterMap,
 	isFollowMeActive,
 }) => {
 	const [showLanguagePopover, setShowLanguagePopover] = useState(false);
@@ -109,6 +111,14 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 					label={t('Mind Map')}
 					icon={<MapIcon style={menuIconStyle} />}
 					onOptionClick={() => handleNavigateToMap(Screen.mindMap)}
+				/>
+				<MenuOption
+					label={t('Cluster Map')}
+					icon={<MapIcon style={menuIconStyle} />}
+					onOptionClick={() => {
+						onNavigateToClusterMap();
+						setIsMenuOpen(false);
+					}}
 				/>
 				{statement.statementSettings?.enableSubQuestionsMap !== false && (
 					<MenuOption

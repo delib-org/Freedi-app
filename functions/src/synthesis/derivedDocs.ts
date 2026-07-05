@@ -1,7 +1,7 @@
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { Collections, Statement } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
-import { reverseIntegration } from '../integrate/reverseIntegration';
+import { reverseIntegration, deleteEvaluationsForStatement } from '../integrate/reverseIntegration';
 
 /**
  * Shared helpers for identifying and clearing synthesis-derived documents, so a
@@ -32,6 +32,19 @@ type DerivedFields = {
 };
 
 /**
+ * True iff the statement is a manually-created cluster: an admin authored it on
+ * the curation/map view and locked its title (`titleLockedByCreator`). These are
+ * deliberate user intent, NOT synthesis output, so the pipeline must never delete
+ * them during cleanup — otherwise a re-cluster run silently wipes the creator's
+ * clusters and orphans their members into "Ungrouped".
+ */
+export function isManualCluster(statement: Statement): boolean {
+	const s = statement as Statement & DerivedFields;
+
+	return s.isCluster === true && s.titleLockedByCreator === true;
+}
+
+/**
  * True iff the statement is a synthesis output (synth, topic-cluster, or a
  * legacy/untagged derived doc) rather than a genuine user-submitted option.
  */
@@ -47,14 +60,18 @@ export function isDerived(statement: Statement): boolean {
 }
 
 export interface DissolveResult {
-	/** Proper clusters reversed via `reverseIntegration` (members restored, evals handled). */
+	/** Proper clusters reversed via `reverseIntegration` (members restored, evals handled, cluster deleted). */
 	clustersReversed: number;
-	/** Malformed/legacy derived docs archived (hidden) because they aren't reversible clusters. */
+	/** Malformed/legacy derived docs deleted because they aren't reversible clusters. */
 	docsArchived: number;
-	/** Member options re-shown after archiving a malformed derived doc. */
+	/** Member options re-shown after deleting a malformed derived doc. */
 	membersRestored: number;
 	/** Real options that were hidden with no `integratedInto` (orphaned) and got re-shown. */
 	orphansRestored: number;
+	/** Evaluation docs deleted because their host cluster/derived doc was removed. */
+	evaluationsDeleted: number;
+	/** Manually-created clusters (`titleLockedByCreator`) left untouched — never deleted by cleanup. */
+	manualClustersPreserved: number;
 }
 
 export interface DissolveOptions {
@@ -69,10 +86,10 @@ export interface DissolveOptions {
  * pristine, visible state — the clean step that makes a bulk re-run idempotent.
  *
  *  1. Proper clusters (`isCluster && integratedOptions`) → `reverseIntegration`
- *     (un-hides members, soft-deletes the cluster, undoes migrated evaluations).
+ *     (un-hides members, hard-deletes the cluster and ALL its evaluations).
  *  2. Malformed/legacy derived docs (caught by `isDerived` but not a clean
- *     cluster: untagged, 0-member topic headers) → hidden + their members,
- *     if any, re-shown.
+ *     cluster: untagged, 0-member topic headers) → deleted, their evaluations
+ *     deleted, and their members, if any, re-shown.
  *  3. Orphaned hidden options (real options hidden with no `integratedInto`) →
  *     re-shown.
  */
@@ -92,12 +109,27 @@ export async function dissolveQuestionSynthesis(
 		.get();
 	const docs = snap.docs.map((d) => d.data() as Statement & DerivedFields);
 
+	// Manually-created clusters (admin authored, title locked) are user intent,
+	// NOT synthesis output. The pipeline must never delete them on cleanup, or a
+	// re-cluster run silently wipes the creator's clusters and orphans their
+	// members into "Ungrouped". Excluded from BOTH the reversible-cluster set and
+	// the malformed-derived sweep so they (and their members) survive untouched.
+	const manualClusterIds = new Set(
+		docs.filter(isManualCluster).map((d) => d.statementId),
+	);
+
 	const properClusters = docs.filter(
 		(d) =>
-			d.isCluster === true && Array.isArray(d.integratedOptions) && d.integratedOptions.length > 0,
+			!manualClusterIds.has(d.statementId) &&
+			d.isCluster === true &&
+			Array.isArray(d.integratedOptions) &&
+			d.integratedOptions.length > 0,
 	);
 	const properClusterIds = new Set(properClusters.map((d) => d.statementId));
-	const malformedDerived = docs.filter((d) => isDerived(d) && !properClusterIds.has(d.statementId));
+	const malformedDerived = docs.filter(
+		(d) =>
+			isDerived(d) && !properClusterIds.has(d.statementId) && !manualClusterIds.has(d.statementId),
+	);
 	const realOptions = docs.filter((d) => !isDerived(d));
 	const orphanedHidden = realOptions.filter((d) => d.hide === true && !d.integratedInto);
 
@@ -106,6 +138,8 @@ export async function dissolveQuestionSynthesis(
 		docsArchived: 0,
 		membersRestored: 0,
 		orphansRestored: 0,
+		evaluationsDeleted: 0,
+		manualClustersPreserved: manualClusterIds.size,
 	};
 
 	if (dryRun) {
@@ -120,10 +154,17 @@ export async function dissolveQuestionSynthesis(
 	}
 
 	// 1. Reverse proper clusters (handles member restore + evaluation migration).
+	//    Hard-delete the cluster doc — re-cluster wants a clean slate, and a
+	//    soft-hide would leave ghost nodes in the tree view (which ignores `hide`).
 	for (const cluster of properClusters) {
 		try {
-			await reverseIntegration({ clusterStatementId: cluster.statementId, reversedByUserId });
+			const reversed = await reverseIntegration({
+				clusterStatementId: cluster.statementId,
+				reversedByUserId,
+				deleteCluster: true,
+			});
 			result.clustersReversed++;
+			result.evaluationsDeleted += reversed.deletedEvaluationsCount;
 		} catch (error) {
 			logger.warn('dissolveQuestionSynthesis: reverseIntegration failed; archiving instead', {
 				questionId,
@@ -134,14 +175,16 @@ export async function dissolveQuestionSynthesis(
 		}
 	}
 
-	// 2. Archive malformed/legacy derived docs and re-show their members.
+	// 2. Delete malformed/legacy derived docs and re-show their members. We
+	//    hard-delete (not hide) so stale headers leave Firestore entirely and
+	//    cannot resurface in the tree view, which does not filter `hide`.
 	const realById = new Map(realOptions.map((d) => [d.statementId, d]));
 	for (let i = 0; i < malformedDerived.length; i += 400) {
 		const batch = db.batch();
 		const slice = malformedDerived.slice(i, i + 400);
 		for (const doc of slice) {
 			const ref = db.collection(Collections.statements).doc(doc.statementId);
-			batch.update(ref, { hide: true, archivedBySynthesisCleanup: true, lastUpdate: now });
+			batch.delete(ref);
 			for (const memberId of doc.integratedOptions ?? []) {
 				const member = realById.get(memberId);
 				if (member && member.hide === true) {
@@ -153,6 +196,12 @@ export async function dissolveQuestionSynthesis(
 		}
 		await batch.commit();
 		result.docsArchived += slice.length;
+	}
+
+	// 2b. Delete evaluations attached to the now-removed derived docs so no votes
+	//     linger orphaned, pointing at a gone statement.
+	for (const doc of malformedDerived) {
+		result.evaluationsDeleted += await deleteEvaluationsForStatement(db, doc.statementId);
 	}
 
 	// 3. Re-show orphaned hidden real options.

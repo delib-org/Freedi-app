@@ -88,8 +88,8 @@ export const synthesizeNow = onCall<SynthesizeNowRequest>(
 				continue;
 			}
 			const evals = option.evaluation?.numberOfEvaluators ?? 0;
-			const cons = option.consensus ?? 0;
-			if (evals < settings.minEvaluators || cons < settings.minConsensus) {
+			// Evaluator-count gate only — consensus does not gate clustering.
+			if (evals < settings.minEvaluators) {
 				skippedBelowThreshold++;
 				continue;
 			}

@@ -1,7 +1,6 @@
-import { HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
 import { logger } from 'firebase-functions';
 import {
-	GEMINI_MODEL,
+	LLM_MODEL_HEAVY,
 	getGenAI,
 	type CompatGenerativeModel,
 } from '../config/gemini';
@@ -84,29 +83,12 @@ async function getIntegrationModel(): Promise<CompatGenerativeModel> {
 		const genAI = getGenAI();
 
 		const modelConfig = {
-			model: GEMINI_MODEL,
+			// Synthesis is reasoning-heavy — use the capable model tier.
+			model: LLM_MODEL_HEAVY,
 			generationConfig: {
 				responseMimeType: 'application/json',
 				temperature: 0.4, // Slightly higher for creative merging
 			},
-			safetySettings: [
-				{
-					category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-				{
-					category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-				{
-					category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-				{
-					category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-			],
 		};
 
 		_integrationModel = genAI.getGenerativeModel(modelConfig);

@@ -7,6 +7,9 @@ import {
 	synthesisCancel,
 	synthesisPause,
 	synthesisResume,
+	triggerGlobalCluster,
+	triggerReCluster,
+	triggerReEmbed,
 	triggerRejudgeGrayBand,
 	triggerSynthesizeNow,
 } from '@/controllers/db/synthesis/synthesisOperations';
@@ -265,6 +268,56 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 			setToast({
 				tone: 'info',
 				message: `${t('Queued')} ${result.enqueued} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+			});
+		}
+	}
+
+	async function handleReCluster(): Promise<void> {
+		const confirmed = window.confirm(
+			t(
+				'Re-cluster from scratch? This dissolves all current clusters for this question (restoring the original options) and rebuilds them. Use this if the clusters look wrong.',
+			),
+		);
+		if (!confirmed) return;
+		const result = await withBusy('recluster', () => triggerReCluster(statement.statementId));
+		if (result) {
+			setToast({
+				tone: 'info',
+				message: `${t('Cleared')} ${result.clustersReversed} ${t('clusters')} · ${t('Queued')} ${result.enqueued} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+			});
+		}
+	}
+
+	async function handleGlobalCluster(): Promise<void> {
+		const confirmed = window.confirm(
+			t(
+				'Global cluster from scratch? This dissolves all current clusters and re-groups every option in one pass, using the similarity thresholds below. Best after re-embedding.',
+			),
+		);
+		if (!confirmed) return;
+		const result = await withBusy('globalCluster', () =>
+			triggerGlobalCluster(statement.statementId),
+		);
+		if (result) {
+			setToast({
+				tone: 'info',
+				message: `${t('Created')} ${result.synthsCreated} ${t('synths')} · ${result.topicsCreated} ${t('topic clusters')} ${t('from')} ${result.eligibleOptions} ${t('options')}`,
+			});
+		}
+	}
+
+	async function handleReEmbed(): Promise<void> {
+		const confirmed = window.confirm(
+			t(
+				'Re-embed all options? This regenerates every option’s embedding from its distilled gist. Run this once before clustering so the vectors are consistent. May take a minute.',
+			),
+		);
+		if (!confirmed) return;
+		const result = await withBusy('reembed', () => triggerReEmbed(statement.statementId));
+		if (result) {
+			setToast({
+				tone: 'info',
+				message: `${t('Re-embedded')} ${result.embedded} / ${result.total} ${t('options')}${result.failed ? ` · ${result.failed} ${t('failed')}` : ''}`,
 			});
 		}
 	}
@@ -578,7 +631,33 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							onClick={handleRejudge}
 							disabled={busyOp !== null || dirty}
 						/>
+						<Button
+							text={t('Re-cluster from scratch')}
+							variant="secondary"
+							onClick={handleReCluster}
+							disabled={isRunning || busyOp !== null || dirty}
+						/>
 					</div>
+
+					<div className={styles.onDemandActions}>
+						<Button
+							text={t('Re-embed options')}
+							variant="secondary"
+							onClick={handleReEmbed}
+							disabled={isRunning || busyOp !== null || dirty}
+						/>
+						<Button
+							text={t('Global cluster (one pass)')}
+							variant="secondary"
+							onClick={handleGlobalCluster}
+							disabled={isRunning || busyOp !== null || dirty}
+						/>
+					</div>
+					<p className={styles.card__subtitle}>
+						{t(
+							'Global cluster groups every option in one pass using the similarity thresholds below — tight groups become synths, looser ones topic clusters. Re-embed first for best results.',
+						)}
+					</p>
 
 					<hr className={styles.onDemandCard__divider} />
 

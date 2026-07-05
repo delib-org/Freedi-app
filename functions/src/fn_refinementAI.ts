@@ -8,7 +8,8 @@
 
 import { Request, Response } from 'firebase-functions/v1';
 import { logError } from './utils/errorHandling';
-import { callGemini, extractJSON, GEMINI_MODEL } from './ai/callGemini';
+import { callGemini, extractJSON } from './ai/callGemini';
+import { LLM_MODEL_HEAVY } from './config/gemini';
 
 // ============================================================================
 // TYPES
@@ -193,7 +194,7 @@ async function handleSynthesize(req: Request, res: Response): Promise<void> {
 		suggestionsList,
 	);
 
-	const response = await callGemini(systemPrompt, userPrompt);
+	const response = await callGemini(systemPrompt, userPrompt, { model: LLM_MODEL_HEAVY });
 
 	const parsed = extractJSON<{
 		synthesizedText?: string;
@@ -214,7 +215,7 @@ async function handleSynthesize(req: Request, res: Response): Promise<void> {
 	res.json({
 		success: true,
 		result,
-		model: GEMINI_MODEL,
+		model: LLM_MODEL_HEAVY,
 	});
 }
 
@@ -248,7 +249,7 @@ async function handleImprove(req: Request, res: Response): Promise<void> {
 		.replace('{suggestionContent}', suggestionContent)
 		.replace('{commentsList}', commentsList);
 
-	const response = await callGemini(IMPROVE_SYSTEM_PROMPT, userPrompt);
+	const response = await callGemini(IMPROVE_SYSTEM_PROMPT, userPrompt, { model: LLM_MODEL_HEAVY });
 
 	const parsed = extractJSON<{
 		improvedText?: string;
@@ -270,6 +271,6 @@ async function handleImprove(req: Request, res: Response): Promise<void> {
 	res.json({
 		success: true,
 		result,
-		model: GEMINI_MODEL,
+		model: LLM_MODEL_HEAVY,
 	});
 }

@@ -523,7 +523,7 @@ export default function DemographicSettings({
   const handleQuickAddPreset = async (presetKey: DemographicPresetKey) => {
     const presetPayloads: Record<DemographicPresetKey, CreateQuestionRequest> = {
       [DemographicPresetKey.name]: {
-        question: t('Full name'),
+        question: t('What is your name?'),
         type: UserDemographicQuestionType.text,
         required: true,
         presetKey: DemographicPresetKey.name,

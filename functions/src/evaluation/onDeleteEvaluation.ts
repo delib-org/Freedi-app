@@ -10,7 +10,7 @@ import { logger } from 'firebase-functions/v1';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import type { Evaluation } from '@freedi/shared-types';
-import { ActionTypes, isEventAlreadyProcessed, markEventAsProcessed } from './evaluationTypes';
+import { ActionTypes } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
@@ -20,14 +20,6 @@ import { isResearchEnabledForTopParent } from '../statements/history/isResearchE
 export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
 		const eventId = event.id;
-
-		// Check for duplicate event processing
-		if (isEventAlreadyProcessed(eventId)) {
-			logger.info(`Skipping duplicate delete event ${eventId}`);
-
-			return;
-		}
-		markEventAsProcessed(eventId);
 
 		const evaluation = event.data.data() as Evaluation & { source?: string };
 		const { statementId, evaluation: evaluationValue } = evaluation;
@@ -44,7 +36,7 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 			throw new Error('statementId is required');
 		}
 
-		const statement = await updateStatementEvaluation({
+		const { statement, duplicate } = await updateStatementEvaluation({
 			statementId,
 			evaluationDiff: -1 * evaluationValue,
 			addEvaluator: 0, // Will be calculated in updateStatementEvaluation
@@ -53,7 +45,15 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 			oldEvaluation: evaluationValue,
 			userId,
 			parentId: evaluation.parentId,
+			eventId,
 		});
+
+		// Duplicate at-least-once delivery: increment already applied; skip side-effects.
+		if (duplicate) {
+			logger.info(`Skipping duplicate delete event ${eventId}`);
+
+			return;
+		}
 
 		if (!statement) {
 			throw new Error('Failed to update statement');

@@ -7,9 +7,11 @@ interface ShareButtonProps {
 	readonly title?: string;
 	readonly text?: string;
 	readonly url?: string;
+	/** When set, the share modal also offers a copy-paste iframe embed snippet. */
+	readonly embedUrl?: string;
 }
 
-function ShareButton({ title, text, url }: ShareButtonProps) {
+function ShareButton({ title, text, url, embedUrl }: ShareButtonProps) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const shareUrl = url || window.location.pathname;
@@ -28,7 +30,13 @@ function ShareButton({ title, text, url }: ShareButtonProps) {
 				<LinkIcon />
 				{text}
 			</button>
-			<ShareModal isOpen={isModalOpen} onClose={handleCloseModal} url={shareUrl} title={title} />
+			<ShareModal
+				isOpen={isModalOpen}
+				onClose={handleCloseModal}
+				url={shareUrl}
+				title={title}
+				embedUrl={embedUrl}
+			/>
 		</>
 	);
 }

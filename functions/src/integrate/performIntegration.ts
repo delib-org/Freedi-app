@@ -43,6 +43,20 @@ export interface PerformIntegrationInput {
 	 * `paragraphs[]` array.
 	 */
 	paragraphs?: string[];
+	/**
+	 * Hide the source options (`hide: true, integratedInto`) after merging.
+	 * Default true — a synthesized proposal REPLACES its sources. Set false for
+	 * topic clusters, which only GROUP visible options: the options-view selector
+	 * nests visible members under the topic card, and a hidden member resolves to
+	 * nothing there ("No originals found").
+	 */
+	hideMembers?: boolean;
+	/**
+	 * Migrate member evaluations onto the new cluster. Default true. Set false
+	 * when members stay visible — `recomputeClusterEvaluation` already aggregates
+	 * from the members, and migrating would strip their individual evaluations.
+	 */
+	migrateEvaluations?: boolean;
 }
 
 export interface PerformIntegrationResult {
@@ -67,6 +81,8 @@ export async function performIntegration(
 		synthesisRunId,
 		synthesisMechanism,
 		paragraphs,
+		hideMembers = true,
+		migrateEvaluations = true,
 	} = input;
 
 	if (!parentStatementId) {
@@ -199,27 +215,31 @@ export async function performIntegration(
 	}
 
 	let migratedCount = 0;
-	try {
-		const migrationResult = await migrateEvaluationsToNewStatement(
-			selectedStatementIds,
-			newStatementId,
-			parentStatementId,
-		);
-		migratedCount = migrationResult.migratedCount;
-	} catch (error) {
-		logger.error('performIntegration: evaluation migration failed', error);
+	if (migrateEvaluations) {
+		try {
+			const migrationResult = await migrateEvaluationsToNewStatement(
+				selectedStatementIds,
+				newStatementId,
+				parentStatementId,
+			);
+			migratedCount = migrationResult.migratedCount;
+		} catch (error) {
+			logger.error('performIntegration: evaluation migration failed', error);
+		}
 	}
 
-	const batch = db.batch();
-	for (const statement of selectedStatements) {
-		const ref = db.collection(Collections.statements).doc(statement.statementId);
-		batch.update(ref, {
-			hide: true,
-			integratedInto: newStatementId,
-			lastUpdate: now,
-		});
+	if (hideMembers) {
+		const batch = db.batch();
+		for (const statement of selectedStatements) {
+			const ref = db.collection(Collections.statements).doc(statement.statementId);
+			batch.update(ref, {
+				hide: true,
+				integratedInto: newStatementId,
+				lastUpdate: now,
+			});
+		}
+		await batch.commit();
 	}
-	await batch.commit();
 
 	await db.collection(Collections.statements).doc(parentStatementId).update({
 		lastChildUpdate: now,
@@ -229,7 +249,7 @@ export async function performIntegration(
 	return {
 		newStatementId,
 		migratedEvaluationsCount: migratedCount,
-		hiddenStatementsCount: selectedStatements.length,
-		hiddenStatementIds: selectedStatements.map((s) => s.statementId),
+		hiddenStatementsCount: hideMembers ? selectedStatements.length : 0,
+		hiddenStatementIds: hideMembers ? selectedStatements.map((s) => s.statementId) : [],
 	};
 }

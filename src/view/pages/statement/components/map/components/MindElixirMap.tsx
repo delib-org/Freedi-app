@@ -9,6 +9,9 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { updateStatementParents } from '@/controllers/db/statements/setStatements';
 import Modal from '@/view/components/modal/Modal';
 import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
+import type { ClusterKind } from '../mapHelpers/mindElixirTransform';
+import { filterResultsByLayer } from '../mapHelpers/layerFilter';
+import type { LayerVisibility } from '../mapHelpers/layerFilter';
 import {
 	createMindMapChild,
 	createMindMapSibling,
@@ -16,13 +19,28 @@ import {
 } from '../mapHelpers/mindMapStatements';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { FilterType } from '@/controllers/general/sorting';
+import PanZoomControls from './PanZoomControls';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
+
+// Zoom bounds + button step, shared by the wheel, pinch, and button handlers.
+const SCALE_MIN = 0.2;
+const SCALE_MAX = 3;
+const ZOOM_BUTTON_STEP = 1.25;
 
 interface Props {
 	descendants: Results;
 	filterBy: FilterType;
+	layerVisibility: LayerVisibility;
 	isAdmin: boolean;
+	/**
+	 * Allow dragging/regrouping nodes even for non-admins. Used by the shareable
+	 * cluster board where any participant with access can co-edit. Defaults to
+	 * admin-only behavior so the in-app statement map is unchanged.
+	 */
+	allowRegroup?: boolean;
+	/** Render with the sticky-note "cluster board" styling (per-branch colors). */
+	boardMode?: boolean;
 }
 
 /**
@@ -57,8 +75,18 @@ function findStatementById(results: Results, id: string): Statement | null {
 	return null;
 }
 
-function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
+function MindElixirMap({
+	descendants,
+	isAdmin,
+	filterBy,
+	layerVisibility,
+	allowRegroup = false,
+	boardMode = false,
+}: Readonly<Props>) {
 	const navigate = useNavigate();
+	// Dragging/regrouping is allowed for admins, or for anyone when the board
+	// explicitly opts into open co-editing.
+	const canDrag = isAdmin || allowRegroup;
 	const containerRef = useRef<HTMLDivElement>(null);
 	const mindRef = useRef<MindElixirInstance | null>(null);
 	const { mapContext, setMapContext } = useMapContext();
@@ -85,6 +113,9 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
+
+	// Live zoom level (1 = 100%) shown in the floating zoom controls.
+	const [mapScale, setMapScale] = useState(1);
 
 	// State for toolbar overlay (rendered in React, outside MindElixir DOM)
 	const [toolbarState, setToolbarState] = useState<{
@@ -296,12 +327,20 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Memoize data to prevent unnecessary refresh calls that rebuild the DOM.
 	// Without memoization, toMindElixirData creates a new object every render,
 	// causing the refresh useEffect to fire and destroy any active inline edit (input-box).
-	const data = useMemo(() => {
-		const filtered =
-			filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
+	// Translated count badges for cluster nodes ("5 merged" / "7 grouped").
+	const formatClusterTag = useCallback(
+		(kind: ClusterKind, count: number) =>
+			kind === 'synth' ? `${count} ${t('merged')}` : `${count} ${t('grouped')}`,
+		[t],
+	);
 
-		return filtered ? toMindElixirData(filtered) : null;
-	}, [descendants, filterBy]);
+	const data = useMemo(() => {
+		const byLayer = filterResultsByLayer(descendants, layerVisibility);
+		const filtered =
+			filterBy === FilterType.questionsResults ? filterDescendants(byLayer) : byLayer;
+
+		return filtered ? toMindElixirData(filtered, [], formatClusterTag, { boardMode }) : null;
+	}, [descendants, filterBy, layerVisibility, formatClusterTag, boardMode]);
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -323,42 +362,39 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			return () => clearTimeout(timeoutId);
 		}
 
-		// Space + scroll wheel zoom state (must be before MindElixir constructor)
-		let spaceHeld = false;
-		const SCALE_MIN = 0.2;
-		const SCALE_MAX = 3;
-
 		// Create MindElixir instance
 		const mind = new MindElixir({
 			el: container,
 			direction: MindElixir.SIDE,
-			draggable: isAdmin, // Only admins can drag nodes
+			draggable: canDrag, // Admins always; others when the board allows co-editing
 			contextMenu: true,
 			toolBar: false, // We'll use our own toolbar
 			keypress: false, // We handle keyboard shortcuts ourselves
 			editable: true, // Allow inline editing
 			allowUndo: true,
 			overflowHidden: false,
-			// Custom wheel handler: zoom when Space held, otherwise default pan
+			// Widen the library's zoom range (defaults cap at 1.4) so zoom controls
+			// and wheel zoom have real room to work.
+			scaleMin: SCALE_MIN,
+			scaleMax: SCALE_MAX,
+			// Wheel zooms toward the cursor (Space+drag is for panning). Continuous
+			// delta keeps both mouse wheel and trackpad smooth.
 			handleWheel: (e: WheelEvent) => {
-				if (spaceHeld && mindRef.current) {
-					e.preventDefault();
-					// Use continuous delta for smooth zoom (works with both mouse wheel and trackpad)
-					const delta = -e.deltaY * 0.002;
-					const currentScale = mindRef.current.scaleVal;
-					const targetScale = currentScale * (1 + delta);
-					const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
-					const factor = clampedScale / currentScale;
-					if (Math.abs(factor - 1) < 0.001) return;
-					const containerRect = container.getBoundingClientRect();
-					mindRef.current.scale(factor, {
-						x: e.clientX - containerRect.left,
-						y: e.clientY - containerRect.top,
-					});
-				} else if (mindRef.current) {
-					// Default panning behavior
-					mindRef.current.move(-e.deltaX, -e.deltaY);
-				}
+				if (!mindRef.current) return;
+				e.preventDefault();
+				const delta = -e.deltaY * 0.002;
+				const currentScale = mindRef.current.scaleVal;
+				// scale() takes an ABSOLUTE target (not a factor) and zooms toward the
+				// given point.
+				const targetScale = currentScale * (1 + delta);
+				const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
+				if (Math.abs(clampedScale - currentScale) < 0.001) return;
+				const containerRect = container.getBoundingClientRect();
+				mindRef.current.scale(clampedScale, {
+					x: e.clientX - containerRect.left,
+					y: e.clientY - containerRect.top,
+				});
+				setMapScale(clampedScale);
 			},
 			// Intercept operations before they happen
 			before: {
@@ -379,11 +415,14 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		// Store reference
 		mindRef.current = mind;
 
-		// Use RIGHT layout for compact single-direction tree, then center
+		// Use RIGHT layout for compact single-direction tree, then scale the
+		// whole map to fill the available canvas (instead of just centering the
+		// root, which leaves a large tree mostly off-screen).
 		setTimeout(() => {
 			if (mindRef.current) {
 				mindRef.current.initRight();
-				mindRef.current.toCenter();
+				mindRef.current.scaleFit();
+				setMapScale(mindRef.current.scaleVal);
 			}
 		}, 100);
 
@@ -435,7 +474,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 		// Event: Operation happened (for tracking node moves and text edits)
 		mind.bus.addListener('operation', async (operation: Operation) => {
-			if (isAdmin && operation.name === 'moveNodeIn') {
+			if (canDrag && operation.name === 'moveNodeIn') {
 				// A node was moved - store IDs for confirmation
 				if ('obj' in operation && 'toObj' in operation) {
 					const typedOp = operation as { obj: NodeObj; toObj: NodeObj; name: string };
@@ -569,22 +608,36 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 		container.addEventListener('click', handleContainerClick);
 
-		// Space key tracking for zoom mode (wheel zoom is in handleWheel above)
+		// Space + drag to pan. MindElixir pans natively while its `spacePressed`
+		// flag is set (and shows a grab cursor via the `space-pressed` class), but
+		// it only flips that flag from a keydown listener on its own container —
+		// so it silently fails unless the map has focus. Drive it from the window
+		// so Space+drag works regardless of where focus is.
+		const setSpacePan = (on: boolean) => {
+			const mind = mindRef.current as unknown as {
+				spacePressed?: boolean;
+				container?: HTMLElement;
+			} | null;
+			if (!mind) return;
+			mind.spacePressed = on;
+			// MindElixir nests its own `.map-container` inside our el; the grab-cursor
+			// CSS is scoped to that element, so toggle the class there.
+			(mind.container ?? container).classList.toggle('space-pressed', on);
+		};
+
 		const handleZoomKeyDown = (e: KeyboardEvent) => {
 			if (e.code === 'Space') {
 				const activeEl = document.activeElement as HTMLElement;
 				if (activeEl?.isContentEditable || activeEl?.id === 'input-box') return;
 				if (activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA') return;
 				e.preventDefault();
-				spaceHeld = true;
-				container.style.cursor = 'zoom-in';
+				setSpacePan(true);
 			}
 		};
 
 		const handleZoomKeyUp = (e: KeyboardEvent) => {
 			if (e.code === 'Space') {
-				spaceHeld = false;
-				container.style.cursor = '';
+				setSpacePan(false);
 			}
 		};
 
@@ -616,16 +669,17 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			const currentDistance = getDistance(e.touches[0], e.touches[1]);
 			const pinchRatio = currentDistance / initialPinchDistance;
 			const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, initialScale * pinchRatio));
-			const factor = newScale / mindRef.current.scaleVal;
 
 			const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
 			const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
 			const rect = container.getBoundingClientRect();
 
-			mindRef.current.scale(factor, {
+			// scale() takes an ABSOLUTE target, zooming toward the pinch midpoint.
+			mindRef.current.scale(newScale, {
 				x: midX - rect.left,
 				y: midY - rect.top,
 			});
+			setMapScale(newScale);
 		};
 
 		const handleTouchEnd = (e: TouchEvent) => {
@@ -652,7 +706,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			mind.destroy();
 			mindRef.current = null;
 		};
-	}, [data?.nodeData.id, isAdmin]);
+	}, [data?.nodeData.id, canDrag]);
 
 	// Update data when descendants change
 	useEffect(() => {
@@ -784,7 +838,24 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const handleFitToScreen = useCallback(() => {
 		if (!mindRef.current) return;
 		mindRef.current.scaleFit();
+		setMapScale(mindRef.current.scaleVal);
 	}, []);
+
+	// Zoom around the viewport center by a fixed step (floating controls).
+	const handleZoomBy = useCallback((step: number) => {
+		const mind = mindRef.current;
+		if (!mind) return;
+		const current = mind.scaleVal;
+		const target = Math.min(SCALE_MAX, Math.max(SCALE_MIN, current * step));
+		if (Math.abs(target - current) < 0.001) return;
+		const rect = containerRef.current?.getBoundingClientRect();
+		// scale() takes an ABSOLUTE target; zoom around the viewport center.
+		mind.scale(target, rect ? { x: rect.width / 2, y: rect.height / 2 } : { x: 0, y: 0 });
+		setMapScale(target);
+	}, []);
+
+	const handleZoomIn = useCallback(() => handleZoomBy(ZOOM_BUTTON_STEP), [handleZoomBy]);
+	const handleZoomOut = useCallback(() => handleZoomBy(1 / ZOOM_BUTTON_STEP), [handleZoomBy]);
 
 	// Toolbar action handlers
 	const handleToolbarLink = useCallback(() => {
@@ -825,7 +896,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 	return (
 		<>
-			<div ref={containerRef} className={styles.mindElixirContainer} tabIndex={0} />
+			<div
+				ref={containerRef}
+				className={`${styles.mindElixirContainer}${boardMode ? ` ${styles.boardMode}` : ''}`}
+				tabIndex={0}
+			/>
 
 			{/* Node toolbar overlay — rendered in React, outside MindElixir's DOM */}
 			{toolbarState.visible && (
@@ -899,6 +974,16 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 					)}
 				</div>
 			)}
+
+			{/* Persistent zoom controls (bottom-start, clear of the FAB). */}
+			<PanZoomControls
+				fixed
+				align="start"
+				scale={mapScale}
+				onZoomIn={handleZoomIn}
+				onZoomOut={handleZoomOut}
+				onFit={handleFitToScreen}
+			/>
 
 			{/* Controls Panel */}
 			<div className={styles.controlsPanel}>

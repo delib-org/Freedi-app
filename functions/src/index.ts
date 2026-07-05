@@ -555,9 +555,11 @@ exports.onChatStatementCreated = createFirestoreFunction(
 	onChatStatementCreated,
 	'onChatStatementCreated',
 );
+// onDocumentWritten (not -Created): re-votes (update) and retractions (delete)
+// must recompute the option's denormalized C / average / evaluator count too.
 exports.onChatEvaluationCreated = createFirestoreFunction(
 	`/${Collections.evaluations}/{evaluationId}`,
-	onDocumentCreated,
+	onDocumentWritten,
 	onChatEvaluationCreated,
 	'onChatEvaluationCreated',
 );
@@ -1062,6 +1064,9 @@ exports.liveSynthOnOptionEvaluationChange = createFirestoreFunction(
 
 export { processSynthesisQueue } from './synthesis/queue/processSynthesisQueue';
 export { synthesizeNow } from './synthesis/admin/fn_synthesizeNow';
+export { reCluster } from './synthesis/admin/fn_reCluster';
+export { globalCluster } from './synthesis/admin/fn_globalCluster';
+export { reEmbedQuestion } from './synthesis/admin/fn_reEmbedQuestion';
 export { synthesizeSelected } from './synthesis/admin/fn_synthesizeSelected';
 export { rejudgeGrayBand } from './synthesis/admin/fn_rejudgeGrayBand';
 export { saveSynthesisSettings } from './synthesis/admin/fn_saveSynthesisSettings';

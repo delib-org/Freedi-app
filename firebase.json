@@ -96,6 +96,15 @@
           ]
         },
         {
+          "source": "/map/**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+            }
+          ]
+        },
+        {
           "source": "**/*",
           "headers": [
             {
@@ -183,6 +192,15 @@
             {
               "key": "Referrer-Policy",
               "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "/map/**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
             }
           ]
         },
@@ -278,6 +296,15 @@
           ]
         },
         {
+          "source": "/map/**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+            }
+          ]
+        },
+        {
           "source": "**/*",
           "headers": [
             {
@@ -365,6 +392,15 @@
             {
               "key": "Referrer-Policy",
               "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "/map/**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
             }
           ]
         },
@@ -492,6 +528,15 @@
           ]
         },
         {
+          "source": "/map/**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+            }
+          ]
+        },
+        {
           "source": "**/*",
           "headers": [
             {
@@ -579,6 +624,15 @@
           ]
         },
         {
+          "source": "/map/**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+            }
+          ]
+        },
+        {
           "source": "**/*",
           "headers": [
             {
@@ -662,6 +716,15 @@
             {
               "key": "Referrer-Policy",
               "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "/map/**",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
             }
           ]
         },

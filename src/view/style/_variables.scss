@@ -400,6 +400,27 @@
   --map-question-current-contrast: #1093fd;
   --map-suggestion-current-contrast: #00bd9a;
 
+  // Mind-map clusters & synths
+  // Synth (merged voice) — a distilled, unified option
+  --cluster-synth-bg: linear-gradient(135deg, #4fbfa9 0%, #2f9e8b 100%);
+  --cluster-synth-ring: #8fe0d2;
+  --cluster-synth-glow: rgba(47, 158, 139, 0.35);
+  --cluster-synth-text: #ffffff;
+  // Topic cluster (theme grouping) — a header over related, visible options
+  --cluster-topic-bg: #6f8ce8;
+  --cluster-topic-accent: #4d6fd0;
+  --cluster-topic-text: #ffffff;
+  // Shared cluster pill
+  --cluster-pill-bg: rgba(255, 255, 255, 0.22);
+  --cluster-pill-text: #ffffff;
+
+  // Mind-map clusters high contrast
+  --cluster-synth-bg-high-contrast: linear-gradient(135deg, #2f9e8b 0%, #1f7e6e 100%);
+  --cluster-synth-ring-high-contrast: #5cffe1;
+  --cluster-topic-bg-high-contrast: #4a66c4;
+  --cluster-topic-accent-high-contrast: #2f4aa8;
+  --cluster-pill-bg-high-contrast: rgba(0, 0, 0, 0.35);
+
   // Member
   --member-awaiting: #b4e0f8;
   --member-voter: #e7def7;

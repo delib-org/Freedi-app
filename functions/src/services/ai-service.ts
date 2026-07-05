@@ -1,4 +1,3 @@
-import { HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
 import { logger } from 'firebase-functions';
 import 'dotenv/config';
 import {
@@ -42,24 +41,6 @@ async function getGenerativeAIModel(): Promise<CompatGenerativeModel> {
 				responseMimeType: 'application/json',
 				temperature: 0.3, // Lower temperature for faster, more deterministic responses
 			},
-			safetySettings: [
-				{
-					category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-				{
-					category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-				{
-					category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-				{
-					category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-					threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-				},
-			],
 		};
 
 		_generativeModel = genAI.getGenerativeModel(modelConfig);

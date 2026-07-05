@@ -79,11 +79,24 @@ export function getResultsByOptions(
 /**
  * Optimized O(n) algorithm for building tree structure
  * Previous implementation was O(n²) due to filtering entire array for each node
+ *
+ * Cluster nesting: clusters (synths and topic clusters) are stored FLAT — they
+ * and their members all share `parentId = question`; membership lives in the
+ * cluster's `integratedOptions[]`, not in `parentId`. To represent that in the
+ * map we lift each cluster's members out of their flat position and nest them
+ * under the cluster. Because a member can itself be a cluster (a topic cluster
+ * whose members are synths), this nests recursively to produce
+ * cluster → synth → statement (or any shorter chain).
  */
 export function resultsByParentId(parentStatement: Statement, subStatements: Statement[]): Results {
 	try {
 		if (!parentStatement) throw new Error('No parentStatement');
 		if (!subStatements?.length) return { top: parentStatement, sub: [] };
+
+		// Index every statement by id for cluster-membership lookups.
+		const byId = new Map<string, Statement>();
+		byId.set(parentStatement.statementId, parentStatement);
+		subStatements.forEach((statement) => byId.set(statement.statementId, statement));
 
 		// Build parent-child map in single pass O(n)
 		const childrenMap = new Map<string, Statement[]>();
@@ -96,14 +109,38 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 			}
 		});
 
-		// Build tree recursively using map (no filtering needed)
-		function buildNode(statement: Statement): Results {
-			const children = childrenMap.get(statement.statementId) || [];
+		// Members that belong to a loaded cluster: nest them under the cluster
+		// instead of leaving them as flat siblings of the question.
+		const absorbedIds = new Set<string>();
+		subStatements.forEach((statement) => {
+			if (statement.isCluster && Array.isArray(statement.integratedOptions)) {
+				statement.integratedOptions.forEach((memberId) => {
+					if (byId.has(memberId)) absorbedIds.add(memberId);
+				});
+			}
+		});
 
-			return {
-				top: statement,
-				sub: children.map((child) => buildNode(child)),
-			};
+		// Guard against cycles / a member listed by more than one cluster.
+		const visited = new Set<string>();
+
+		function buildNode(statement: Statement): Results {
+			visited.add(statement.statementId);
+
+			// Direct children by parentId, excluding any absorbed into a cluster.
+			const sub: Results[] = (childrenMap.get(statement.statementId) || [])
+				.filter((child) => !absorbedIds.has(child.statementId))
+				.map((child) => buildNode(child));
+
+			// Nest this cluster's members (which may themselves be clusters).
+			if (statement.isCluster && Array.isArray(statement.integratedOptions)) {
+				statement.integratedOptions.forEach((memberId) => {
+					const member = byId.get(memberId);
+					if (!member || visited.has(memberId)) return;
+					sub.push(buildNode(member));
+				});
+			}
+
+			return { top: statement, sub };
 		}
 
 		return buildNode(parentStatement);

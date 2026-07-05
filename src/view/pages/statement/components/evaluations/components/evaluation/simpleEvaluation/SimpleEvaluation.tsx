@@ -19,8 +19,12 @@ const SimpleEvaluation: FC<Props> = ({
 }) => {
 	const { rowDirection } = useTranslation();
 
-	const initialContVotesCount = statement.con ?? 0;
-	const initialProVotesCount = statement.pro ?? 0;
+	// Read accumulated counts from the live evaluation object (server source of
+	// truth, kept fresh by the statement listener). The legacy top-level
+	// `statement.pro`/`statement.con` fields are no longer written by the
+	// evaluation pipeline, so they're only used as a fallback for old data.
+	const initialContVotesCount = statement.evaluation?.sumCon ?? statement.con ?? 0;
+	const initialProVotesCount = statement.evaluation?.sumPro ?? statement.pro ?? 0;
 
 	// number of people who gave a bad evaluation
 	const [conVotesCount, setConVotesCount] = useState(initialContVotesCount);
@@ -34,9 +38,9 @@ const SimpleEvaluation: FC<Props> = ({
 	const consensusToDisplay = consensus ? Math.round(consensus * 100) / 100 : 0;
 
 	useEffect(() => {
-		setConVotesCount(initialContVotesCount);
-		setProVotesCount(initialProVotesCount);
-	}, [statement.con, statement.pro]);
+		setConVotesCount(statement.evaluation?.sumCon ?? statement.con ?? 0);
+		setProVotesCount(statement.evaluation?.sumPro ?? statement.pro ?? 0);
+	}, [statement.evaluation?.sumCon, statement.evaluation?.sumPro, statement.con, statement.pro]);
 
 	return (
 		<div className={styles.simpleEvaluation}>

@@ -5,10 +5,15 @@ a **known ground-truth structure**. Each run records the input statements, the
 produced grouping (synths and topic-clusters), and a short report scoring the
 output against the ground truth.
 
-> **Start here:** [`FINDINGS.md`](./FINDINGS.md) — the scientific summary across
-> all runs (objective, results, the three production bugs found & fixed,
-> conclusions, threats to validity). The per-run `report.md` files have the
-> details.
+> **Start here:**
+> - [`VALIDATION-REPORT.md`](./VALIDATION-REPORT.md) — the formal scientific paper
+>   (abstract, related work, methods, results, threats, references) covering the
+>   whole campaign.
+> - [`FINDINGS.md`](./FINDINGS.md) — the condensed internal summary across all
+>   runs (objective, results, the three production bugs found & fixed, conclusions,
+>   threats to validity).
+>
+> The per-run `report.md` files have the per-experiment details.
 
 ## Layout
 

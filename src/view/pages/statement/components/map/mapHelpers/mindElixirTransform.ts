@@ -12,6 +12,84 @@ interface MindElixirNodeStyle {
 }
 
 /**
+ * The two kinds of cluster node we visualize distinctly in the mind map.
+ * - `synth`: a merge of near-duplicate options into one unified voice (members hidden).
+ * - `topic`: a theme grouping related-but-distinct options (members visible as children).
+ */
+export type ClusterKind = 'synth' | 'topic';
+
+/**
+ * Formats the count badge shown on a cluster node (e.g. "5 merged" / "7 grouped").
+ * Injected by the caller so the wording can be translated.
+ */
+export type ClusterTagFormatter = (kind: ClusterKind, count: number) => string;
+
+const defaultClusterTagFormatter: ClusterTagFormatter = (kind, count) =>
+	kind === 'synth' ? `${count} merged` : `${count} grouped`;
+
+/**
+ * Determine whether a statement is a cluster node and, if so, which kind.
+ * Synthesis-pipeline merges read as "synth"; everything else that is a cluster
+ * (topic detection, manual grouping) reads as a "topic" theme.
+ */
+export function getClusterKind(statement: Statement): ClusterKind | null {
+	if (!statement.isCluster) return null;
+
+	return statement.derivedByPipeline === 'synthesis' ? 'synth' : 'topic';
+}
+
+/**
+ * Inline style for a cluster node. Colors come from design tokens so light/high-contrast
+ * modes are handled by the stylesheet. The decorative glow/accent bar is applied via CSS
+ * (`me-tpc:has(.cluster-tag--*)`) keyed off the node's tag class.
+ */
+function getClusterStyle(kind: ClusterKind): MindElixirNodeStyle {
+	if (kind === 'synth') {
+		return {
+			background: 'var(--cluster-synth-bg)',
+			color: 'var(--cluster-synth-text)',
+			fontWeight: '600',
+		};
+	}
+
+	return {
+		background: 'var(--cluster-topic-bg)',
+		color: 'var(--cluster-topic-text)',
+		fontWeight: '600',
+	};
+}
+
+/**
+ * Attach the cluster icon, count badge, and (for topics) branch color to a node.
+ */
+function decorateClusterNode(
+	node: FreediNodeObj,
+	kind: ClusterKind,
+	statement: Statement,
+	result: Results,
+	format: ClusterTagFormatter,
+): void {
+	if (kind === 'synth') {
+		node.icons = ['✦'];
+		const count = statement.integratedOptions?.length ?? 0;
+		// A "merge of one" carries no information — only badge real merges.
+		if (count >= 2) {
+			node.tags = [{ text: format('synth', count), className: 'cluster-tag cluster-tag--synth' }];
+		}
+
+		return;
+	}
+
+	node.icons = ['#'];
+	const count = statement.integratedOptions?.length ?? result.sub?.length ?? 0;
+	if (count >= 1) {
+		node.tags = [{ text: format('topic', count), className: 'cluster-tag cluster-tag--topic' }];
+	}
+	// Tie the visible member branch to its topic header.
+	node.branchColor = '#6f8ce8';
+}
+
+/**
  * Get the CSS variable-based style for a statement type
  * Uses existing design system colors from style.scss
  */
@@ -46,6 +124,47 @@ export function getStyleForType(
 }
 
 /**
+ * Sticky-note palette for the shareable cluster board. Each first-level branch
+ * gets one entry; descendants inherit it so an arm and its cards share a hue —
+ * the SCAMPER board look. Concrete hex (not CSS vars) because mind-elixir paints
+ * `branchColor` onto SVG connector strokes via JS, which doesn't resolve vars.
+ */
+export interface ClusterPaletteEntry {
+	/** Strong color for connector lines and the branch/cluster pill. */
+	line: string;
+	/** Light tint for member sticky-note cards. */
+	card: string;
+	/** Readable text color on the card tint. */
+	text: string;
+}
+
+export const CLUSTER_PALETTE: ClusterPaletteEntry[] = [
+	{ line: '#f2c12e', card: '#fdeca8', text: '#5b4a00' }, // yellow
+	{ line: '#8b6fd6', card: '#d9ccf3', text: '#2e1d56' }, // purple
+	{ line: '#4a9fe0', card: '#c2e0f7', text: '#0f3350' }, // blue
+	{ line: '#5fbb46', card: '#cdeec0', text: '#1f3d10' }, // green
+	{ line: '#ee8a37', card: '#fbd9b5', text: '#5a2f06' }, // orange
+	{ line: '#e76fa6', card: '#f8cfe0', text: '#5a1336' }, // pink
+	{ line: '#34bdb4', card: '#bdeeea', text: '#0c3b38' }, // teal
+	{ line: '#e2554d', card: '#fae0df', text: '#5a221f' }, // red
+	{ line: '#5b6cd6', card: '#e2e5f8', text: '#242b56' }, // indigo
+	{ line: '#8cbf3f', card: '#eaf3dc', text: '#384c19' }, // lime
+	{ line: '#2bb6c4', card: '#d9f2f4', text: '#11494e' }, // cyan
+	{ line: '#c455b8', card: '#f4e0f2', text: '#4e224a' }, // magenta
+	{ line: '#d99a2b', card: '#f8edd9', text: '#573e11' }, // amber
+	{ line: '#6b7a99', card: '#e4e7ed', text: '#2b313d' }, // slate
+	{ line: '#e06b8a', card: '#f9e4ea', text: '#5a2b37' }, // rose
+	{ line: '#4ab0e0', card: '#def1f9', text: '#1e465a' }, // sky
+];
+
+/** Dark "Subject" hub style for the board root, matching the reference design. */
+const BOARD_ROOT_STYLE: MindElixirNodeStyle = {
+	background: '#2b2b33',
+	color: '#ffffff',
+	fontWeight: '700',
+};
+
+/**
  * Extended NodeObj with custom data for our app
  */
 export interface FreediNodeObj extends NodeObj {
@@ -53,6 +172,7 @@ export interface FreediNodeObj extends NodeObj {
 	statementId?: string;
 	parentId?: string;
 	isSelected?: boolean;
+	clusterKind?: ClusterKind;
 }
 
 /**
@@ -62,16 +182,35 @@ export interface FreediNodeObj extends NodeObj {
  * @param selectedStatementIds - Optional array of selected statement IDs (for showing selected options)
  * @returns MindElixirData compatible with mind-elixir library
  */
+export interface ToMindElixirOptions {
+	/** Apply the sticky-note cluster-board styling (per-branch colors, dark hub). */
+	boardMode?: boolean;
+}
+
 export function toMindElixirData(
 	results: Results,
 	selectedStatementIds: string[] = [],
+	formatClusterTag: ClusterTagFormatter = defaultClusterTagFormatter,
+	options: ToMindElixirOptions = {},
 ): MindElixirData {
-	function transformNode(result: Results): FreediNodeObj {
+	const { boardMode = false } = options;
+
+	// depth 0 = root/subject, depth 1 = labeled branches (assigned a palette color),
+	// deeper = sticky cards inheriting their branch color.
+	function transformNode(
+		result: Results,
+		depth: number,
+		branch: (typeof CLUSTER_PALETTE)[number] | null,
+	): FreediNodeObj {
 		const statement = result.top;
+		const clusterKind = getClusterKind(statement);
 		const isSelected =
 			selectedStatementIds.includes(statement.statementId) ||
 			!!(statement.isVoted || statement.isChosen);
-		const style = getStyleForType(statement.statementType, isSelected);
+		// Cluster styling takes priority over type/selection styling.
+		const style = clusterKind
+			? getClusterStyle(clusterKind)
+			: getStyleForType(statement.statementType, isSelected);
 
 		const node: FreediNodeObj = {
 			id: statement.statementId,
@@ -81,19 +220,61 @@ export function toMindElixirData(
 			statementId: statement.statementId,
 			parentId: statement.parentId,
 			isSelected,
+			clusterKind: clusterKind ?? undefined,
 		};
+
+		if (clusterKind) {
+			decorateClusterNode(node, clusterKind, statement, result, formatClusterTag);
+		}
+
+		if (boardMode) {
+			applyBoardStyle(node, depth, branch);
+		}
 
 		// Transform children recursively
 		if (result.sub && result.sub.length > 0) {
-			node.children = result.sub.map((subResult) => transformNode(subResult));
+			node.children = result.sub.map((subResult, index) =>
+				transformNode(
+					subResult,
+					depth + 1,
+					branch ?? CLUSTER_PALETTE[index % CLUSTER_PALETTE.length],
+				),
+			);
 		}
 
 		return node;
 	}
 
 	return {
-		nodeData: transformNode(results),
+		nodeData: transformNode(results, 0, null),
 	};
+}
+
+/**
+ * Override a node's appearance with the board look. Root = dark hub; first-level
+ * branch = solid colored pill; deeper nodes = tinted sticky cards. The branch
+ * color also tints the connector lines so each arm reads as one group.
+ */
+function applyBoardStyle(
+	node: FreediNodeObj,
+	depth: number,
+	branch: (typeof CLUSTER_PALETTE)[number] | null,
+): void {
+	if (depth === 0) {
+		node.style = { ...BOARD_ROOT_STYLE };
+
+		return;
+	}
+	if (!branch) return;
+
+	node.branchColor = branch.line;
+	if (depth === 1) {
+		// Labeled branch pill — solid color, white text.
+		node.style = { background: branch.line, color: '#ffffff', fontWeight: '600' };
+	} else {
+		// Sticky-note card — light tint of the branch color.
+		node.style = { background: branch.card, color: branch.text };
+	}
 }
 
 /**

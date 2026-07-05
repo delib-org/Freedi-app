@@ -21,5 +21,12 @@
     --gray0-2: var(--gray0-2-high-contrast);
     --gray0-2-border: var(--gray0-2-border-high-contrast);
     --gray0-2-text: var(--gray0-2-text-high-contrast);
+
+    // Mind-map clusters & synths high contrast overrides
+    --cluster-synth-bg: var(--cluster-synth-bg-high-contrast);
+    --cluster-synth-ring: var(--cluster-synth-ring-high-contrast);
+    --cluster-topic-bg: var(--cluster-topic-bg-high-contrast);
+    --cluster-topic-accent: var(--cluster-topic-accent-high-contrast);
+    --cluster-pill-bg: var(--cluster-pill-bg-high-contrast);
   }
 }

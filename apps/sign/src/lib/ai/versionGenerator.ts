@@ -452,10 +452,10 @@ export { callAI, extractJSON };
 
 /**
  * Get the default AI configuration from environment variables
- * Priority: Gemini (smartest) > OpenAI > Claude
+ * Default provider: OpenAI (override with AI_PROVIDER=gemini|claude)
  */
 export function getDefaultAIConfig(): AIConfig {
-	const provider = (process.env.AI_PROVIDER as AIProvider) || 'gemini';
+	const provider = (process.env.AI_PROVIDER as AIProvider) || 'openai';
 
 	let apiKey = '';
 	switch (provider) {

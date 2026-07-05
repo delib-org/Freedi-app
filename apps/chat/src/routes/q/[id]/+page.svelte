@@ -13,6 +13,7 @@
 	import ConvergenceMeter from '$lib/components/ConvergenceMeter.svelte';
 	import FollowQuestion from '$lib/components/FollowQuestion.svelte';
 	import { subscribeToConversation } from '$lib/realtime';
+	import { reconcileOptimistic } from '$lib/stores/evaluations.svelte';
 	import { t, tp } from '$lib/i18n';
 
 	let { data }: { data: PageData } = $props();
@@ -139,7 +140,12 @@
 		const unsub = subscribeToConversation(
 			root.statementId,
 			data.visibility,
-			(next) => (live = next),
+			(next) => {
+				// Drop optimistic vote overrides whose authoritative recompute has now
+				// landed, then publish the fresh server statements.
+				reconcileOptimistic(next);
+				live = next;
+			},
 			() => statements,
 		);
 

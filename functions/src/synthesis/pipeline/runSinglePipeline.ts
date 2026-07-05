@@ -6,6 +6,7 @@ import { findClustersContainingMember } from '../liveSynth/clusterRecompute';
 import { loadSynthesisSettingsFromStatement } from './loadSynthesisSettings';
 import { ensureEmbedding } from './embedding';
 import { expandClusterEvidenceViaFullMembers } from './candidateExpansion';
+import { assessCohesion, passesCohesionGate, type CohesionGate } from './clusterCohesion';
 import { routeByCosine } from './bandRouter';
 import {
 	attachOptionToCluster,
@@ -68,6 +69,18 @@ import {
  */
 
 const NEIGHBOR_LIMIT = 10;
+
+/**
+ * Snowball brake for synth attaches: a newcomer that clears `attachThreshold`
+ * to one member must ALSO be cohesive with the cluster as a whole — either
+ * close to the member centroid, or broadly related to a quorum of members.
+ * Topic-cluster attaches (Pass 2) are intentionally lenient and not gated.
+ *
+ * `SYNTH_COHESION_QUORUM` is the fraction of members the option must be
+ * "broadly related" to (cosine ≥ clusterThreshold) when the centroid signal
+ * alone doesn't carry it.
+ */
+const SYNTH_COHESION_QUORUM = 0.5;
 
 export interface PipelineInput {
 	optionId: string;
@@ -174,9 +187,11 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 
 	if (!input.forceProcess) {
 		const evals = option.evaluation?.numberOfEvaluators ?? 0;
-		const cons = option.consensus ?? 0;
+		// Eligibility is evaluator-count only — consensus does NOT gate clustering.
+		// Grouping is about semantic similarity, not agreement; a controversial
+		// (low / negative consensus) option still belongs with its near-duplicates,
+		// it just ranks lower inside the group. (minConsensus retained as inert.)
 		if (evals < settings.minEvaluators) return skipped('below-min-evaluators', startedAt);
-		if (cons < settings.minConsensus) return skipped('below-min-consensus', startedAt);
 	}
 
 	const embedding =
@@ -279,6 +294,7 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	// See candidateExpansion.ts for the rationale on top-2-average.
 	const stageBStarted = Date.now();
 	const stageB = await expandClusterEvidenceViaFullMembers(clusterEvidence, embedding);
+	const memberEmbeddings = stageB.memberEmbeddings ?? new Map<string, number[]>();
 	if (stageB.promotions > 0) {
 		logger.debug('synthesis.pipeline.stageB.promotions', {
 			optionId: option.statementId,
@@ -290,11 +306,37 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 
 	// =====================================================================
 	// PASS 1 — SYNTH ATTACH: any synth with best evidence ≥ attachThreshold
+	// AND cohesion with the cluster as a whole (the snowball brake).
 	// =====================================================================
-	const synthMatch = Array.from(clusterEvidence.values())
+	// `bestSimilarity` is "≥ threshold to the best single member" — the
+	// candidacy signal. Before attaching we additionally require the newcomer
+	// to fit the cluster's centroid or a quorum of members, so a single close
+	// member can no longer drag in a far outlier (see clusterCohesion.ts).
+	const cohesionGate: CohesionGate = {
+		centroidFloor: settings.synthLowerBound,
+		memberFloor: settings.clusterThreshold,
+		quorumFraction: SYNTH_COHESION_QUORUM,
+	};
+	const synthMatches = Array.from(clusterEvidence.values())
 		.filter((x) => isSynth(x.cluster) && x.bestSimilarity >= settings.attachThreshold)
-		.sort((a, b) => b.bestSimilarity - a.bestSimilarity)[0];
-	if (synthMatch) {
+		.sort((a, b) => b.bestSimilarity - a.bestSimilarity);
+	for (const synthMatch of synthMatches) {
+		const memberVecs = (synthMatch.cluster.integratedOptions ?? [])
+			.map((id) => memberEmbeddings.get(id))
+			.filter((v): v is number[] => Array.isArray(v) && v.length > 0);
+		const cohesion = assessCohesion(memberVecs, embedding, cohesionGate.memberFloor);
+		if (!passesCohesionGate(cohesion, cohesionGate)) {
+			logger.info('synthesis.pipeline.attach.cohesionRejected', {
+				optionId: option.statementId,
+				clusterId: synthMatch.cluster.statementId,
+				bestSimilarity: Number(synthMatch.bestSimilarity.toFixed(3)),
+				centroidCosine: Number(cohesion.centroidCosine.toFixed(3)),
+				fractionAboveFloor: Number(cohesion.fractionAboveFloor.toFixed(2)),
+				memberCount: cohesion.memberCount,
+			});
+			continue;
+		}
+
 		const result = await attachOptionToCluster({
 			cluster: synthMatch.cluster,
 			option,
@@ -307,7 +349,7 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 
 		return {
 			action: 'attached',
-			reason: `synth attach cosine=${synthMatch.bestSimilarity.toFixed(3)} ≥ ${settings.attachThreshold}${synthMatch.viaMember ? ' (via member)' : ''}`,
+			reason: `synth attach cosine=${synthMatch.bestSimilarity.toFixed(3)} ≥ ${settings.attachThreshold}${synthMatch.viaMember ? ' (via member)' : ''} cohesion(centroid=${cohesion.centroidCosine.toFixed(2)}, quorum=${cohesion.fractionAboveFloor.toFixed(2)})`,
 			clusterId: synthMatch.cluster.statementId,
 			llmCalled: false,
 			durationMs: Date.now() - startedAt,
@@ -319,9 +361,7 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	// ≥ clusterThreshold
 	// =====================================================================
 	const topicMatch = Array.from(clusterEvidence.values())
-		.filter(
-			(x) => isTopicCluster(x.cluster) && x.bestSimilarity >= settings.clusterThreshold,
-		)
+		.filter((x) => isTopicCluster(x.cluster) && x.bestSimilarity >= settings.clusterThreshold)
 		.sort((a, b) => b.bestSimilarity - a.bestSimilarity)[0];
 	if (topicMatch) {
 		const result = await attachOptionToCluster({

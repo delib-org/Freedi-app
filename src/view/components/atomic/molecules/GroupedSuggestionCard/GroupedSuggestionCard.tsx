@@ -84,7 +84,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	nestedSlot,
 	className,
 }) => {
-	const { t } = useTranslation();
+	const { t, dir } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
 	const [mobileMetaOpen, setMobileMetaOpen] = useState(false);
 	const [isReversing, setIsReversing] = useState(false);
@@ -133,15 +133,27 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	);
 	const previewRemainder = Math.max(0, count - previewMembers.length);
 
-	// Full member list. When the parent supplies `explicitMembers` (view-layer
-	// model) we render those directly; otherwise fetch from Firestore on open.
-	const shouldFetch = mode === 'both' && expanded && !explicitMembers;
+	// Full member list on expand.
+	//
+	// A card with a `nestedSlot` renders its children (nested synth cards) in
+	// that slot; its own flat list is the topic's `directRaw` (raw not already
+	// shown under a nested synth), supplied as `explicitMembers`. We render
+	// those directly and do NOT fetch — fetching would re-pull the nested
+	// synths' raw (and the synth clusters themselves) as duplicates.
+	//
+	// A card WITHOUT a nestedSlot (top-level synth, nested synth, or a topic
+	// whose members are all raw) owns a complete flat list. `explicitMembers`
+	// here is only a synchronous hint resolved from the paginated Redux store,
+	// so it can be empty or partial. `useGroupMembers` is authoritative — it
+	// merges the store members with any missing ids fetched from Firestore —
+	// so we always use it for the reveal, ensuring every original shows.
+	const shouldFetch = mode === 'both' && expanded && !nestedSlot;
 	const { members: fetchedMembers, isLoading: isFetching } = useGroupMembers(
 		shouldFetch ? cluster.statementId : undefined,
 		shouldFetch,
 	);
-	const members = explicitMembers ?? fetchedMembers;
-	const isLoading = explicitMembers ? false : isFetching;
+	const members = nestedSlot ? (explicitMembers ?? fetchedMembers) : fetchedMembers;
+	const isLoading = shouldFetch ? isFetching : false;
 
 	const numberOfEvaluators = evaluation?.numberOfEvaluators ?? 0;
 	const isAwaiting = numberOfEvaluators === 0;
@@ -301,7 +313,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 		: t('Already counted in the group above');
 
 	return (
-		<div className={classes} aria-label={cardAriaLabel}>
+		<div className={classes} dir={dir} aria-label={cardAriaLabel}>
 			<span
 				className={clsx('grouped-suggestion__count-ribbon', ribbonModifier)}
 				aria-label={countLabel}

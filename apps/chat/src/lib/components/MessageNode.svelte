@@ -53,6 +53,11 @@
 	// A chosen option — mirrors the main app's green "selected" treatment.
 	const isSelected = $derived(isOption && (s.selected === true || s.isChosen === true));
 	const scored = $derived(isOption || isEvidence);
+	// An option with no direct evidence children — its C_p is purely vote-based,
+	// so the optimistic projection can reproduce it exactly.
+	const isLeafOption = $derived(
+		isOption && !node.children.some((c) => c.statement.statementType === StatementType.evidence),
+	);
 	const polarity = $derived(s.dialecticType ?? DialogicType.standard);
 	const evalStats = $derived(evalStatsOf(s));
 	const textSegments = $derived(parseMessageSegments(s.statement));
@@ -198,28 +203,35 @@
 						{/if}
 					{/each}
 				</p>
+
+				<!-- Evaluation indicators live inside the bubble, under the claim text. -->
+				{#if isEvidence}
+					<div class="node__indicators">
+						<CorrectnessRating
+							statementId={s.statementId}
+							value={myEvaluations[s.statementId] ?? null}
+							corroboration={s.corroborationScore ?? null}
+							count={evalStats.count}
+						/>
+					</div>
+				{:else if isOption}
+					<div class="node__indicators">
+						<!-- Collapsed: average dial · consensus · # evaluators -->
+						<EvaluationBar
+							statementId={s.statementId}
+							myEvaluation={myEvaluations[s.statementId] ?? null}
+							consensus={s.corroborationScore ?? null}
+							count={evalStats.count}
+							average={evalStats.average}
+							leaf={isLeafOption}
+						/>
+					</div>
+				{/if}
 			</div>
 
-			<!-- FB action row: "1d · Like · Reply" — time, rating widget, then links. -->
+			<!-- FB action row: "1d · Reply · replies · AI". -->
 			<div class="node__meta">
 				<span class="node__time">{timeAgo(s.createdAt)}</span>
-				{#if isEvidence}
-					<CorrectnessRating
-						statementId={s.statementId}
-						value={myEvaluations[s.statementId] ?? null}
-						corroboration={s.corroborationScore ?? null}
-						count={evalStats.count}
-					/>
-				{:else if isOption}
-					<!-- Collapsed: consensus · # evaluators · average vote -->
-					<EvaluationBar
-						statementId={s.statementId}
-						myEvaluation={myEvaluations[s.statementId] ?? null}
-						consensus={s.corroborationScore ?? null}
-						count={evalStats.count}
-						average={evalStats.average}
-					/>
-				{/if}
 				{#if scored && !truncate}
 					<button class="node__action" onclick={() => (showReply = !showReply)}>
 						{showReply ? $t('Cancel') : $t('Reply')}
@@ -468,6 +480,14 @@
 			line-height: 1.33;
 			word-break: break-word;
 			color: var(--text-body);
+		}
+
+		// Evaluation indicators tucked inside the bubble, set off from the claim
+		// text by a hairline divider so they read as the claim's standing.
+		&__indicators {
+			margin-top: var(--space-xs);
+			padding-top: var(--space-xs);
+			border-top: 1px solid var(--glass-border);
 		}
 
 		&__link {

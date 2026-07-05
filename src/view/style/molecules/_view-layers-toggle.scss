@@ -78,6 +78,16 @@
       cursor: default;
       opacity: 0.9;
     }
+
+    // No data in this layer — greyed out and not selectable.
+    &--unavailable {
+      opacity: 0.4;
+      cursor: not-allowed;
+
+      &:hover {
+        color: var(--text-secondary, #777);
+      }
+    }
   }
 
   &__actions {

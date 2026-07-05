@@ -92,8 +92,9 @@ export async function liveSynthOnOptionEvaluationChange(
 		return;
 	}
 
-	const wasBelow = beforeEvals < settings.minEvaluators || beforeCons < settings.minConsensus;
-	const nowAbove = afterEvals >= settings.minEvaluators && afterCons >= settings.minConsensus;
+	// Eligibility is evaluator-count only — consensus does not gate clustering.
+	const wasBelow = beforeEvals < settings.minEvaluators;
+	const nowAbove = afterEvals >= settings.minEvaluators;
 
 	if (!(wasBelow && nowAbove)) {
 		logger.info('liveSynth.skip: threshold not crossed', {

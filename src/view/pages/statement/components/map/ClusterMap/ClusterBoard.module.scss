@@ -1,0 +1,483 @@
+// Custom radial cluster board: central hub, colored cluster pills, and a grid
+// of sticky-note cards per cluster. All nodes are absolutely positioned and
+// centered on their computed (x, y) via translate(-50%, -50%).
+
+.scroll {
+	position: relative;
+	flex: 1;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: var(--background, #eef0f3);
+	touch-action: none; // we handle pan/zoom gestures ourselves
+	cursor: default;
+}
+
+// Space held: pan is armed. While actively dragging: closed-hand cursor.
+.spaceReady {
+	cursor: grab;
+}
+
+.panning {
+	cursor: grabbing;
+	user-select: none;
+}
+
+// Transformed layer that gets the pan/zoom (translate + scale). Origin at the
+// top-left so the hook's math (viewport-px translate) lines up.
+//
+// NOTE: deliberately no `will-change: transform` at rest. Promoting this to a
+// cached GPU layer makes the browser rasterize it once at 1× and then magnify
+// the bitmap, so zoomed-in text/cards look blurry. Without promotion the vector
+// DOM re-rasterizes at the live zoom and stays crisp. We only promote it while
+// actively panning (below), where motion hides any softness and smoothness wins.
+.pan {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	transform-origin: 0 0;
+}
+
+.panning .pan {
+	will-change: transform;
+}
+
+.canvas {
+	position: relative;
+}
+
+.connectors {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.hub {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: #2b2b33;
+	color: #ffffff;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+	padding: 8px;
+	z-index: 3;
+}
+
+.hubText {
+	font-weight: 700;
+	// Admin-controlled via --map-cluster-font (see ClusterBoard MAP_FONT_*).
+	font-size: var(--map-cluster-font, 1rem);
+	text-align: center;
+	line-height: 1.15;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	word-break: break-word;
+}
+
+.addCluster {
+	position: absolute;
+	transform: translateX(-50%);
+	border: none;
+	border-radius: 999px;
+	padding: 0.35rem 0.85rem;
+	background: var(--btn-primary, #5f88e5);
+	color: #ffffff;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+	z-index: 3;
+
+	&:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+}
+
+.pill {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	max-width: 160px;
+	border-radius: 999px;
+	padding: 0.4rem 0.9rem;
+	color: #ffffff;
+	font-weight: 600;
+	// Admin-controlled via --map-cluster-font (see ClusterBoard MAP_FONT_*).
+	font-size: var(--map-cluster-font, 1rem);
+	text-align: center;
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+	z-index: 2;
+	cursor: default;
+	word-break: break-word;
+}
+
+// "made from N responses" — synth provenance shown under the cluster title.
+.provenance {
+	display: block;
+	margin-top: 2px;
+	font-weight: 500;
+	// Scale with the cluster title but stay clearly secondary.
+	font-size: 0.7em;
+	opacity: 0.85;
+}
+
+// Small handle on the pill corner that opens the cluster color picker.
+.colorDot {
+	position: absolute;
+	top: -7px;
+	right: -7px;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 2px solid #ffffff;
+	background:
+		conic-gradient(#f2c12e, #5fbb46, #34bdb4, #4a9fe0, #8b6fd6, #e76fa6, #f2c12e);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+	cursor: pointer;
+	padding: 0;
+	z-index: 4;
+
+	&:hover {
+		transform: scale(1.15);
+	}
+}
+
+// Delete-cluster handle on the opposite pill corner from the color dot.
+.deleteDot {
+	position: absolute;
+	top: -7px;
+	left: -7px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	padding: 0;
+	border-radius: 50%;
+	border: 2px solid #ffffff;
+	background: var(--reject, #e05a5a);
+	color: #ffffff;
+	font-size: 12px;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+	z-index: 4;
+
+	&:hover {
+		transform: scale(1.15);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+// Transparent click-catcher that closes the color picker when clicking away.
+.pickerBackdrop {
+	position: absolute;
+	inset: 0;
+	z-index: 9;
+}
+
+.colorPopover {
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%);
+	// Fixed 3-column grid (instead of a single wrapping flex column). width:
+	// max-content sizes the popover to its columns, not to the narrow pill.
+	display: grid;
+	grid-template-columns: repeat(3, 24px);
+	justify-items: center;
+	align-items: center;
+	width: max-content;
+	gap: 6px;
+	padding: 8px 10px;
+	background: var(--card-default, #ffffff);
+	border-radius: 16px;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+	z-index: 10;
+}
+
+.swatch {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	border: 2px solid #ffffff;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.1s ease;
+
+	&:hover {
+		transform: scale(1.18);
+	}
+}
+
+.colorInput {
+	width: 24px;
+	height: 24px;
+	border: none;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+.pillEdit,
+.cardEdit {
+	width: 100%;
+	border: none;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: inherit;
+	resize: none;
+	outline: none;
+	overflow: hidden;
+}
+
+.grid {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	display: grid;
+	z-index: 1;
+}
+
+.card {
+	position: relative;
+	width: 120px;
+	height: 120px;
+	border-radius: 10px;
+	padding: 8px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	transition: transform 0.12s ease, box-shadow 0.12s ease;
+	cursor: default;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+	}
+
+	&[draggable='true'] {
+		cursor: grab;
+	}
+}
+
+// While the face picker is open, let it overflow the card and sit above siblings.
+.cardElevated {
+	overflow: visible;
+	z-index: 6;
+}
+
+.cardText {
+	flex: 1;
+	// Admin-controlled via --map-card-font (see ClusterBoard MAP_FONT_*).
+	font-size: var(--map-card-font, 0.9rem);
+	line-height: 1.2;
+	word-break: break-word;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+	// Align to the logical start so dir="auto" (RTL text) right-aligns itself.
+	text-align: start;
+}
+
+// Card editor follows the typed text's direction (overrides the shared
+// `text-align: inherit` above, which the centered pill editor still uses).
+.cardEdit {
+	text-align: start;
+}
+
+.cardMenu {
+	position: absolute;
+	top: 2px;
+	// Logical end so the menu docks opposite the note's text start (RTL-aware).
+	inset-inline-end: 2px;
+	z-index: 2;
+}
+
+.cardMenuButton {
+	border: none;
+	background: rgba(255, 255, 255, 0.5);
+	border-radius: 6px;
+	width: 22px;
+	height: 22px;
+	line-height: 1;
+	font-size: 1rem;
+	cursor: pointer;
+	color: inherit;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.85);
+	}
+}
+
+.cardMenuList {
+	position: absolute;
+	top: 24px;
+	inset-inline-end: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 96px;
+	background: var(--card-default, #ffffff);
+	border-radius: 8px;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+	overflow: hidden;
+
+	button {
+		border: none;
+		background: transparent;
+		padding: 0.5rem 0.75rem;
+		text-align: start;
+		font-size: 0.8rem;
+		color: var(--text-body, #3d4d71);
+		cursor: pointer;
+
+		&:hover {
+			background: var(--background, #eef0f3);
+		}
+	}
+}
+
+.cardMenuLabel {
+	padding: 0.4rem 0.75rem 0.2rem;
+	font-size: 0.66rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	color: var(--text-secondary, #8a93a6);
+	border-top: 1px solid var(--border-light, #e4e8f0);
+}
+
+.cardFooter {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 4px;
+	margin-top: 4px;
+}
+
+// "Rate this" button: a face icon. Faded neutral face before voting, the
+// chosen face (on its color) after voting. The face SVGs are light, so they
+// must sit on their colored background to be visible.
+.evalToggle {
+	border: 1px solid rgba(0, 0, 0, 0.12);
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	padding: 3px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0.55;
+	transition: opacity 0.12s ease, transform 0.12s ease;
+
+	&:hover {
+		opacity: 0.85;
+		transform: scale(1.08);
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+}
+
+.evalToggleVoted {
+	opacity: 1;
+	border-color: rgba(0, 0, 0, 0.18);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+
+	&:hover {
+		opacity: 1;
+	}
+}
+
+.facesPopup {
+	position: absolute;
+	bottom: 6px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	gap: 4px;
+	padding: 6px;
+	background: var(--card-default, #ffffff);
+	border-radius: 999px;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+	z-index: 5;
+}
+
+.face {
+	border: none;
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+	padding: 3px;
+	cursor: pointer;
+	transition: transform 0.1s ease;
+
+	&:hover {
+		transform: scale(1.15);
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+}
+
+.faceActive {
+	transform: scale(1.1);
+}
+
+.evalStats {
+	display: inline-flex;
+	gap: 5px;
+	font-size: 0.62rem;
+	font-weight: 600;
+	opacity: 0.85;
+	white-space: nowrap;
+}
+
+.addCard {
+	width: 120px;
+	height: 120px;
+	border: 2px dashed rgba(0, 0, 0, 0.25);
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.4);
+	font-size: 1.6rem;
+	font-weight: 400;
+	cursor: pointer;
+	transition: background 0.12s ease, border-color 0.12s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.7);
+		border-color: rgba(0, 0, 0, 0.4);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.card,
+	.card:hover {
+		transition: none;
+		transform: none;
+	}
+}

@@ -28,7 +28,20 @@ export function middleware(request: NextRequest) {
   // anonymous after a successful Google sign-in, and bounces them back to
   // `/login` — an infinite loop.
   if (secureUid && legacyUid && legacyUid !== secureUid) {
-    const response = NextResponse.next();
+    // Rewrite the INCOMING request cookie too, not just the response cookie.
+    //
+    // `response.cookies.set()` alone only updates the cookie sent back to the
+    // browser — it does NOT change what `cookies()` returns inside the Server
+    // Component that renders on THIS request. Without also rewriting the
+    // request cookie, the home page would render with the stale `_uid`, query
+    // Firestore under the old (anonymous) uid, and show zero documents. The
+    // user only self-heals on a manual refresh. Forwarding the mutated request
+    // headers makes the same-request render read the fresh Google uid.
+    request.cookies.set(SECURE_UID_COOKIE, legacyUid);
+
+    const response = NextResponse.next({
+      request: { headers: request.headers },
+    });
     response.cookies.set(SECURE_UID_COOKIE, legacyUid, {
       httpOnly: true,
       secure: isProduction,

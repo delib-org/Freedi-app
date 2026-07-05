@@ -83,15 +83,26 @@ export const sortByCreatedAt = (a: Statement, b: Statement): number => a.created
 
 export const sortByLastUpdate = (a: Statement, b: Statement): number => b.lastUpdate - a.lastUpdate;
 
-export const sortByConsensus = (a: Statement, b: Statement): number => {
-	// Prefer the StatementEvaluation.agreement since that's what the
-	// evaluation pipeline + cluster aggregator write. Fall back to the
-	// top-level `consensus` field for legacy docs without `evaluation`.
-	const aScore = a.evaluation?.agreement ?? a.consensus ?? 0;
-	const bScore = b.evaluation?.agreement ?? b.consensus ?? 0;
+/**
+ * Resolve a statement's consensus score for sorting.
+ *
+ * The live pipeline + cluster aggregator write `evaluation.agreement` and the
+ * top-level `consensus` to the same value, but they can diverge for legacy /
+ * partially-migrated docs. A plain `evaluation.agreement ?? consensus` is
+ * unsafe: `??` only falls back on null/undefined, so a stale `agreement: 0`
+ * would mask a real `consensus` and flatten the order. Prefer the field that
+ * actually carries signal: use `evaluation.agreement` when it's a non-zero
+ * number, otherwise fall back to `consensus` (then 0).
+ */
+export const getConsensusScore = (statement: Statement): number => {
+	const agreement = statement.evaluation?.agreement;
+	if (typeof agreement === 'number' && agreement !== 0) return agreement;
 
-	return bScore - aScore;
+	return statement.consensus ?? agreement ?? 0;
 };
+
+export const sortByConsensus = (a: Statement, b: Statement): number =>
+	getConsensusScore(b) - getConsensusScore(a);
 
 export const sortByEvaluationCount = (a: Statement, b: Statement): number =>
 	(b.evaluation?.numberOfEvaluators || 0) - (a.evaluation?.numberOfEvaluators || 0);

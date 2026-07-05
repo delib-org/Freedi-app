@@ -17,7 +17,15 @@ import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
+import { ALL_LAYERS_VISIBLE } from './mapHelpers/layerFilter';
+import type { LayerVisibility, MapLayer } from './mapHelpers/layerFilter';
 import styles from './MindMap.module.scss';
+
+const LAYER_OPTIONS: { value: MapLayer; label: string }[] = [
+	{ value: 'raw', label: 'Raw' },
+	{ value: 'synth', label: 'Synths' },
+	{ value: 'clusters', label: 'Clusters' },
+];
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -48,7 +56,15 @@ const MindMap: FC = () => {
 	const effectiveSubscription = userSubscription || rootSubscription;
 
 	// Use the fixed hook
-	const { results } = useMindMap();
+	const { results, flat } = useMindMap();
+
+	// Layer filter (raw / synth / clusters) — each toggled independently; the map
+	// shows the union of the pressed layers. Only meaningful when the question
+	// actually has clusters or synths (i.e. the tree is not flat).
+	const [layerVisibility, setLayerVisibility] = useState<LayerVisibility>(ALL_LAYERS_VISIBLE);
+	const toggleLayer = (layer: MapLayer) =>
+		setLayerVisibility((prev) => ({ ...prev, [layer]: !prev[layer] }));
+	const hasClusters = !flat;
 
 	const role = effectiveSubscription ? effectiveSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
@@ -162,57 +178,83 @@ const MindMap: FC = () => {
 		<>
 			<style>{spinnerStyle}</style>
 			{statementId && <LoadAllBanner rootId={statementId} mode="descendants" />}
-			<div className={styles.filterToggle}>
-				<span className={styles.filterLabel}>
-					{showOnlySelected ? t('Selected only') : t('All')}
-				</span>
-				<button
-					type="button"
-					role="switch"
-					aria-checked={showOnlySelected}
-					aria-label={t('Show only selected options')}
-					className={`${styles.toggleSwitch} ${showOnlySelected ? styles.toggleSwitchActive : ''}`}
-					onClick={() =>
-						setFilterBy(
-							showOnlySelected ? FilterType.questionsResultsOptions : FilterType.questionsResults,
-						)
-					}
-				>
-					<span className={styles.toggleKnob} />
-				</button>
-			</div>
-			{/* Only render map when results are available */}
-			{results ? (
-				<MindElixirMap descendants={results} isAdmin={_isAdmin} filterBy={filterBy} />
-			) : (
-				<div
-					style={{
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center',
-						height: '100%',
-						flexDirection: 'column',
-						gap: '1rem',
-					}}
-				>
-					{showSkeleton && (
-						<div
-							className="skeleton-loader"
-							style={{
-								width: '60px',
-								height: '60px',
-								border: '5px solid #f3f3f3',
-								borderTop: '5px solid var(--btn-primary)',
-								borderRadius: '50%',
-								animation: 'spin 1s linear infinite',
-							}}
-						></div>
-					)}
-					<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
-						{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
+			<div className={styles.mapScreen}>
+				<div className={styles.controls}>
+					<div className={styles.filterToggle}>
+						<span className={styles.filterLabel}>
+							{showOnlySelected ? t('Selected only') : t('All')}
+						</span>
+						<button
+							type="button"
+							role="switch"
+							aria-checked={showOnlySelected}
+							aria-label={t('Show only selected options')}
+							className={`${styles.toggleSwitch} ${showOnlySelected ? styles.toggleSwitchActive : ''}`}
+							onClick={() =>
+								setFilterBy(
+									showOnlySelected
+										? FilterType.questionsResultsOptions
+										: FilterType.questionsResults,
+								)
+							}
+						>
+							<span className={styles.toggleKnob} />
+						</button>
 					</div>
+					{hasClusters && (
+						<div className={styles.layerFilter} role="group" aria-label={t('Show map layer')}>
+							{LAYER_OPTIONS.map(({ value, label }) => (
+								<button
+									key={value}
+									type="button"
+									aria-pressed={layerVisibility[value]}
+									className={`${styles.layerButton} ${layerVisibility[value] ? styles.layerButtonActive : ''}`}
+									onClick={() => toggleLayer(value)}
+								>
+									{t(label)}
+								</button>
+							))}
+						</div>
+					)}
 				</div>
-			)}
+				{/* Only render map when results are available */}
+				{results ? (
+					<MindElixirMap
+						descendants={results}
+						isAdmin={_isAdmin}
+						filterBy={filterBy}
+						layerVisibility={layerVisibility}
+					/>
+				) : (
+					<div
+						style={{
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							height: '100%',
+							flexDirection: 'column',
+							gap: '1rem',
+						}}
+					>
+						{showSkeleton && (
+							<div
+								className="skeleton-loader"
+								style={{
+									width: '60px',
+									height: '60px',
+									border: '5px solid #f3f3f3',
+									borderTop: '5px solid var(--btn-primary)',
+									borderRadius: '50%',
+									animation: 'spin 1s linear infinite',
+								}}
+							></div>
+						)}
+						<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
+							{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
+						</div>
+					</div>
+				)}
+			</div>
 
 			{mapContext.showModal && (
 				<Modal>
