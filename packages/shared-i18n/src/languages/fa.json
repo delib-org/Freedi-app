@@ -3290,5 +3290,11 @@
   "Very satisfied": "بسیار راضی",
   "Full name": "نام کامل",
   "satisfactionPositiveFeedbackTitle": "خوشحالیم که پسندیدید!",
-  "satisfactionPositiveFeedbackBody": "می‌توانید بگویید چه چیزی را در این سند پسندیدید؟ دانستن اینکه چه چیزی خوب بوده به ما کمک می‌کند آن را حفظ کنیم."
+  "satisfactionPositiveFeedbackBody": "می‌توانید بگویید چه چیزی را در این سند پسندیدید؟ دانستن اینکه چه چیزی خوب بوده به ما کمک می‌کند آن را حفظ کنیم.",
+  "words": "کلمه",
+  "minWordsThisQuestion": "حداقل تعداد کلمات برای هر پاسخ",
+  "minWordsHint": "هر پاسخ باید حداقل این تعداد کلمه داشته باشد. ۰ = بدون حداقل.",
+  "Minimum words per response": "حداقل تعداد کلمات برای هر پاسخ",
+  "Minimum words": "حداقل کلمات",
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "هر پاسخ باید حداقل این تعداد کلمه داشته باشد. برای مجاز کردن پاسخ‌هایی با هر طول، آن را روی ۰ بگذارید."
 }

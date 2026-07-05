@@ -106,9 +106,28 @@ each box and reference the commit when done.
 
 ## 🟡 Tier 1 — High-value, smallish (right after conference)
 
-- [ ] **T1.1 — Min 7-word requirement** on MC responses
-  (`apps/mass-consensus/src/constants/common.ts:34`,
-  `app/api/statements/[id]/submit/route.ts:110`, `proposalController.ts:31`). i18n.
+- [x] **T1.1 — Configurable minimum-word requirement** on responses
+  - **Change of scope:** instead of a hardcoded 7-word rule, the minimum is now
+    admin-configurable and **only enforced when set** (`undefined`/`0` = off).
+  - **Source of truth:** `statementSettings.minResponseWords` on the question
+    Statement (shared-types). Read by the submit route, the client modal and the
+    map panel.
+  - **Enforcement (authoritative):** MC submit route rejects below-minimum
+    responses with `400` + `MIN_WORDS` code (`app/api/statements/[id]/submit/route.ts`).
+    Word counting via `src/lib/utils/wordCount.ts` (unit-tested, Unicode-safe).
+  - **Client hint:** `SolutionPromptModal.tsx` disables submit + shows
+    "minimum N words", threaded from `SwipeInterface` via the question settings.
+  - **Admin — sticky-note map:** number input in `MapControlCard.tsx` writes
+    `statementSettings.minResponseWords` directly.
+  - **Admin — MC:** per-question number input in `UnifiedFlowEditor.tsx` stores a
+    `minResponseWords` override in the survey config; `cascadeMinResponseWords.ts`
+    mirrors it onto each question Statement on survey save (only when explicitly
+    set, so it never clobbers a value set from the map panel).
+  - **i18n:** new strings added to all 7 languages (en, he, ar, es, de, nl, fa).
+  - **Verified:** shared-types rebuilt; `npm run typecheck` clean (main + MC);
+    MC lint clean; unit tests green (wordCount, cascade, proposalController,
+    surveyCrud, shared-types). **Takes effect on next `deploy:h:prod` (hosting)
+    + MC deploy; no functions deploy needed.**
 - [ ] **T1.2 — Reword "inappropriate content"** to explain what the system is doing
   (`functions/src/services/moderation-log-service.ts`, `ai-service.ts:186`). i18n.
 - [ ] **T1.3 — Moderation over-sensitivity** (Hebrew/cultural terms e.g. "Bedouins")

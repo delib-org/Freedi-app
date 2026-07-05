@@ -122,6 +122,8 @@ export const QuestionOverrideSettingsSchema = object({
   showViewProgress: optional(boolean()),
   /** Ask user for a solution AFTER completing minimum evaluations for THIS question */
   askUserForASolutionAfterEvaluation: optional(boolean()),
+  /** Minimum words a response must contain for THIS question (0 / undefined = no minimum) */
+  minResponseWords: optional(number()),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -335,4 +337,5 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   suggestionMode: undefined,
   showViewProgress: undefined,
   askUserForASolutionAfterEvaluation: undefined,
+  minResponseWords: undefined,
 };

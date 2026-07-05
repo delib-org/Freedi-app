@@ -466,6 +466,27 @@ function QuestionSettingsPanel({
 
       <div className={styles.settingRow}>
         <label className={styles.settingLabel}>
+          <span>{t('minWordsThisQuestion') || 'Minimum words per response'}</span>
+          <input
+            type="number"
+            className={styles.numberInput}
+            value={questionSetting?.minResponseWords ?? ''}
+            placeholder="0"
+            min={0}
+            max={100}
+            onChange={(e) => {
+              const val = e.target.value;
+              handleNumber('minResponseWords', val ? parseInt(val, 10) : undefined);
+            }}
+          />
+        </label>
+        <span className={styles.settingHint}>
+          {t('minWordsHint') || 'Require each response to have at least this many words. 0 = no minimum.'}
+        </span>
+      </div>
+
+      <div className={styles.settingRow}>
+        <label className={styles.settingLabel}>
           <input
             type="checkbox"
             checked={questionSetting?.showViewProgress ?? true}

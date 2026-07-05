@@ -5,6 +5,7 @@ import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
+import { countWords } from '@/lib/utils/wordCount';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -159,6 +160,24 @@ export async function POST(
         questionId,
         userId,
       );
+    }
+
+    // Enforce the optional per-question minimum-word requirement. Only applies
+    // to new free-text solutions and only when an admin has set a minimum > 0.
+    const minResponseWords = questionData?.statementSettings?.minResponseWords;
+    if (minResponseWords && minResponseWords > 0) {
+      const wordCount = countWords(trimmedText);
+      if (wordCount < minResponseWords) {
+        return NextResponse.json(
+          {
+            error: `Your response must contain at least ${minResponseWords} words.`,
+            code: 'MIN_WORDS',
+            minWords: minResponseWords,
+            wordCount,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Check user limit for new solutions

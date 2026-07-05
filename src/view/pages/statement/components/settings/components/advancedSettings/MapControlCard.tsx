@@ -42,6 +42,7 @@ const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 	const clusterFont = map.clusterFontRem ?? CLUSTER_FONT_DEFAULT;
 	const synthVisibility: MapSynthVisibility = map.synthVisibility ?? 'all';
 	const showProvenance = map.showProvenance ?? true;
+	const minResponseWords = settings.minResponseWords ?? 0;
 
 	function update(patch: Partial<MapSettings>): void {
 		void setDoc(
@@ -51,6 +52,19 @@ const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 		).catch((error) => {
 			logError(error, {
 				operation: 'mapControlCard.update',
+				statementId: statement.statementId,
+			});
+		});
+	}
+
+	function updateSettings(patch: Partial<StatementSettings>): void {
+		void setDoc(
+			createStatementRef(statement.statementId),
+			{ statementSettings: patch },
+			{ merge: true },
+		).catch((error) => {
+			logError(error, {
+				operation: 'mapControlCard.updateSettings',
 				statementId: statement.statementId,
 			});
 		});
@@ -172,6 +186,39 @@ const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 				)}
 				icon={Sparkles}
 			/>
+
+			{/* Minimum words per response */}
+			<div className={styles.sliderHeader} style={{ marginTop: 16 }}>
+				<span className={styles.sliderLabel}>{t('Minimum words per response')}</span>
+			</div>
+			<p className={styles.sliderDescription}>
+				{t(
+					'Require each response to have at least this many words. Set to 0 to allow responses of any length.',
+				)}
+			</p>
+			<label
+				style={{
+					display: 'flex',
+					alignItems: 'center',
+					gap: 12,
+					padding: '8px 16px',
+					fontSize: '0.875rem',
+				}}
+			>
+				<span style={{ flex: 1 }}>{t('Minimum words')}</span>
+				<input
+					type="number"
+					min={0}
+					max={100}
+					step={1}
+					value={minResponseWords}
+					onChange={(e) => {
+						const next = Math.max(0, Math.floor(Number(e.target.value) || 0));
+						updateSettings({ minResponseWords: next });
+					}}
+					style={{ width: 80, textAlign: 'end' }}
+				/>
+			</label>
 		</div>
 	);
 };

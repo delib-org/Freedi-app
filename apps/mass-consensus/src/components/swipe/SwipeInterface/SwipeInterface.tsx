@@ -442,6 +442,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         questionId={question.statementId}
         questionText={question.statement}
         questionDescription={getParagraphsText(question.paragraphs)}
+        minWords={question.statementSettings?.minResponseWords}
         userId={userId}
         userName={userName}
       />
@@ -468,6 +469,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         questionId={question.statementId}
         questionText={question.statement}
         questionDescription={getParagraphsText(question.paragraphs)}
+        minWords={question.statementSettings?.minResponseWords}
         userId={userId}
         userName={userName}
         requiresSolution={requiresSolution}

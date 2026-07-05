@@ -2788,5 +2788,11 @@
   "Very satisfied": "Sehr zufrieden",
   "Full name": "Vollständiger Name",
   "satisfactionPositiveFeedbackTitle": "Schön, dass es Ihnen gefällt!",
-  "satisfactionPositiveFeedbackBody": "Können Sie uns mitteilen, was Ihnen an diesem Dokument gefallen hat? Zu wissen, was gut funktioniert, hilft uns, es beizubehalten."
+  "satisfactionPositiveFeedbackBody": "Können Sie uns mitteilen, was Ihnen an diesem Dokument gefallen hat? Zu wissen, was gut funktioniert, hilft uns, es beizubehalten.",
+  "words": "Wörter",
+  "minWordsThisQuestion": "Mindestanzahl an Wörtern pro Antwort",
+  "minWordsHint": "Verlange, dass jede Antwort mindestens so viele Wörter enthält. 0 = kein Minimum.",
+  "Minimum words per response": "Mindestanzahl an Wörtern pro Antwort",
+  "Minimum words": "Mindestwörter",
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Verlange, dass jede Antwort mindestens so viele Wörter enthält. Auf 0 setzen, um Antworten beliebiger Länge zuzulassen."
 }

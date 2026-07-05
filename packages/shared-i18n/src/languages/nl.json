@@ -2788,5 +2788,11 @@
   "Very satisfied": "Zeer tevreden",
   "Full name": "Volledige naam",
   "satisfactionPositiveFeedbackTitle": "Fijn dat je het goed vond!",
-  "satisfactionPositiveFeedbackBody": "Kun je delen wat je goed vond aan dit document? Weten wat goed werkte helpt ons het zo te houden."
+  "satisfactionPositiveFeedbackBody": "Kun je delen wat je goed vond aan dit document? Weten wat goed werkte helpt ons het zo te houden.",
+  "words": "woorden",
+  "minWordsThisQuestion": "Minimum aantal woorden per antwoord",
+  "minWordsHint": "Vereis dat elk antwoord minstens zoveel woorden bevat. 0 = geen minimum.",
+  "Minimum words per response": "Minimum aantal woorden per antwoord",
+  "Minimum words": "Minimum woorden",
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "Vereis dat elk antwoord minstens zoveel woorden bevat. Zet op 0 om antwoorden van elke lengte toe te staan."
 }

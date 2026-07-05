@@ -3538,5 +3538,11 @@
   "Very satisfied": "מאוד מרוצה",
   "Full name": "שם מלא",
   "satisfactionPositiveFeedbackTitle": "שמחים שאהבתם!",
-  "satisfactionPositiveFeedbackBody": "תוכלו לשתף מה אהבתם במסמך? כשאנחנו יודעים מה עבד טוב, אנחנו יכולים לשמר את זה."
+  "satisfactionPositiveFeedbackBody": "תוכלו לשתף מה אהבתם במסמך? כשאנחנו יודעים מה עבד טוב, אנחנו יכולים לשמר את זה.",
+  "words": "מילים",
+  "minWordsThisQuestion": "מספר מילים מינימלי לתשובה",
+  "minWordsHint": "דרוש שכל תשובה תכיל לפחות מספר מילים זה. 0 = ללא מינימום.",
+  "Minimum words per response": "מספר מילים מינימלי לתשובה",
+  "Minimum words": "מילים מינימום",
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "דרוש שכל תשובה תכיל לפחות מספר מילים זה. הגדר 0 כדי לאפשר תשובות בכל אורך."
 }

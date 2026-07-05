@@ -3513,5 +3513,8 @@
   "Very satisfied": "Very satisfied",
   "Full name": "Full name",
   "satisfactionPositiveFeedbackTitle": "Glad you liked it!",
-  "satisfactionPositiveFeedbackBody": "Can you share what you liked about this document? Knowing what worked well helps us keep it that way."
+  "satisfactionPositiveFeedbackBody": "Can you share what you liked about this document? Knowing what worked well helps us keep it that way.",
+  "words": "words",
+  "minWordsThisQuestion": "Minimum words per response",
+  "minWordsHint": "Require each response to have at least this many words. 0 = no minimum."
 }

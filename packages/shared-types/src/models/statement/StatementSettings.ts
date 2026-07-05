@@ -241,6 +241,11 @@ export const StatementSettingsSchema = object({
 	hasChat: optional(boolean()),
 	hasChildren: optional(boolean()),
 	numberOfOptionsPerUser: optional(number()),
+	// Minimum number of words a participant's response must contain to be
+	// accepted. Undefined or <= 0 means "no minimum" (the default — nothing is
+	// enforced). Admins can set it from the MC per-question editor or the
+	// cluster/sticky-note map control panel. Enforced server-side on submit.
+	minResponseWords: optional(number()),
 	enableAIImprovement: optional(boolean()),
 	popperianDiscussionEnabled: optional(boolean()),
 	popperianPreCheckEnabled: optional(boolean()),

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { VALIDATION } from '@/constants/common';
+import { countWords } from '@/lib/utils/wordCount';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
@@ -28,6 +29,8 @@ interface SolutionPromptModalProps {
   questionDescription?: string;
   /** Controls UX friction when adding new suggestions vs merging */
   suggestionMode?: SuggestionMode;
+  /** Optional per-question minimum word count. Undefined/<=0 means no minimum. */
+  minWords?: number;
   /** When true, shows "Add your answer later" instead of "Cancel" */
   requiresSolution?: boolean;
   hasCheckedUserSolutions?: boolean;
@@ -47,6 +50,7 @@ export default function SolutionPromptModal({
   questionText,
   questionDescription,
   suggestionMode = SuggestionMode.encourage,
+  minWords,
   requiresSolution = false,
   hasCheckedUserSolutions: _hasCheckedUserSolutions = false,
   userName: _userName,
@@ -62,9 +66,13 @@ export default function SolutionPromptModal({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const characterCount = text.length;
+  const hasWordMinimum = typeof minWords === 'number' && minWords > 0;
+  const wordCount = countWords(text);
+  const meetsWordMinimum = !hasWordMinimum || wordCount >= (minWords as number);
   const isValid =
     characterCount >= VALIDATION.MIN_SOLUTION_LENGTH &&
-    characterCount <= VALIDATION.MAX_SOLUTION_LENGTH;
+    characterCount <= VALIDATION.MAX_SOLUTION_LENGTH &&
+    meetsWordMinimum;
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -469,6 +477,9 @@ export default function SolutionPromptModal({
               </span>
               {characterCount > 0 && characterCount < VALIDATION.MIN_SOLUTION_LENGTH && (
                 <span className={styles.hint}> ({t('minimum')} {VALIDATION.MIN_SOLUTION_LENGTH} {t('characters')})</span>
+              )}
+              {hasWordMinimum && !meetsWordMinimum && (
+                <span className={styles.hint}> ({t('minimum')} {minWords} {t('words')})</span>
               )}
             </div>
 

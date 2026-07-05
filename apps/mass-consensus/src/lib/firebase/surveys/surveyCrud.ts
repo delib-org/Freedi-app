@@ -14,6 +14,7 @@ import {
 import { logger } from '@/lib/utils/logger';
 import { SURVEYS_COLLECTION, generateSurveyId } from './surveyHelpers';
 import { cascadeSynthesisToggle } from '../synthesis/cascadeSynthesisToggle';
+import { cascadeMinResponseWords } from './cascadeMinResponseWords';
 
 /**
  * Create a new survey
@@ -230,6 +231,18 @@ export async function updateSurvey(
       await cascadeSynthesisToggle(merged);
     } catch (error) {
       logger.error('[updateSurvey] cascadeSynthesisToggle failed:', surveyId, error);
+    }
+  }
+
+  // Mirror per-question minResponseWords onto each question Statement's
+  // statementSettings (the single source of truth read by the submit route and
+  // the map control panel). Only needed when per-question settings or the
+  // question set changed.
+  if (data.questionSettings !== undefined || data.questionIds !== undefined) {
+    try {
+      await cascadeMinResponseWords(merged);
+    } catch (error) {
+      logger.error('[updateSurvey] cascadeMinResponseWords failed:', surveyId, error);
     }
   }
 

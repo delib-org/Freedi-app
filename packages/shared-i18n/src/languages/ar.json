@@ -2910,5 +2910,11 @@
   "Very satisfied": "راضٍ جدًا",
   "Full name": "الاسم الكامل",
   "satisfactionPositiveFeedbackTitle": "يسعدنا أن المستند أعجبك!",
-  "satisfactionPositiveFeedbackBody": "هل يمكنك مشاركة ما أعجبك في هذا المستند؟ معرفة ما نجح تساعدنا في الحفاظ عليه."
+  "satisfactionPositiveFeedbackBody": "هل يمكنك مشاركة ما أعجبك في هذا المستند؟ معرفة ما نجح تساعدنا في الحفاظ عليه.",
+  "words": "كلمات",
+  "minWordsThisQuestion": "الحد الأدنى لعدد الكلمات لكل إجابة",
+  "minWordsHint": "اطلب أن تحتوي كل إجابة على هذا العدد من الكلمات على الأقل. 0 = لا حد أدنى.",
+  "Minimum words per response": "الحد الأدنى لعدد الكلمات لكل إجابة",
+  "Minimum words": "الحد الأدنى للكلمات",
+  "Require each response to have at least this many words. Set to 0 to allow responses of any length.": "اطلب أن تحتوي كل إجابة على هذا العدد من الكلمات على الأقل. اضبط على 0 للسماح بإجابات من أي طول."
 }
