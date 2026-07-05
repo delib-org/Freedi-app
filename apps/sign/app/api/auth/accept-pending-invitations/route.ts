@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getUserEmailFromCookie } from '@/lib/utils/user';
+import { getFirebaseAdmin, verifyAuthHeader } from '@/lib/firebase/admin';
+import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import {
 	Collections,
 	AdminInvitation,
@@ -24,12 +24,18 @@ export async function POST(
 	request: NextRequest
 ): Promise<NextResponse> {
 	try {
-		const cookieHeader = request.headers.get('cookie');
-		const userId = getUserIdFromCookie(cookieHeader);
-		const userDisplayName = getUserDisplayNameFromCookie(cookieHeader) || 'Unknown';
-		const userEmail = getUserEmailFromCookie(cookieHeader);
+		// The invitee's email is the source of truth for matching invitations.
+		// It is no longer stored in cookies (PII removal), so we verify the
+		// Firebase ID token from the Authorization header to obtain a trusted email.
+		const verifiedUser = await verifyAuthHeader(request.headers.get('authorization'));
 
-		// Must be logged in with Google (need email)
+		const cookieHeader = request.headers.get('cookie');
+		const userId = verifiedUser?.uid ?? getUserIdFromCookie(cookieHeader);
+		const userDisplayName =
+			verifiedUser?.displayName || getUserDisplayNameFromCookie(cookieHeader) || 'Unknown';
+		const userEmail = verifiedUser?.email ?? null;
+
+		// Must be logged in with Google (need a verified email)
 		if (!userId || !userEmail) {
 			return NextResponse.json({
 				success: false,
@@ -40,13 +46,6 @@ export async function POST(
 
 		const { db } = getFirebaseAdmin();
 		const normalizedEmail = userEmail.toLowerCase();
-
-		// DEBUG: Log email being used for query
-		logger.info('[DEBUG] Auto-accept - Searching for invitations:', {
-			userEmail: userEmail,
-			normalizedEmail: normalizedEmail,
-			userId: userId,
-		});
 
 		// Find all pending invitations for this email
 		const invitationsRef = db.collection(Collections.adminInvitations);
