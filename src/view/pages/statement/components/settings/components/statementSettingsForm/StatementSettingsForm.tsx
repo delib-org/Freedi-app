@@ -14,6 +14,7 @@ import {
 	BarChart3,
 	ShieldAlert,
 	Clock,
+	UserCog,
 } from 'lucide-react';
 
 // Custom components
@@ -41,6 +42,7 @@ import { StatementSubscription, Role, Statement, StatementType } from '@freedi/s
 import MembershipSettings from '../membershipSettings/MembershipSettings';
 import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSetting';
 import MembersSettings from '../membership/MembersSettings';
+import AdminsManagement from '../membership/AdminsManagement/AdminsManagement';
 import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
 // ClusteringAdmin is now rendered inside AISettings (AI & Automation block).
@@ -160,6 +162,20 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				</form>
 				{!isNewStatement && (
 					<>
+						{/* Manage Admins Section — creator/admins only */}
+						{isAdminOrCreator && (
+							<SettingsSection
+								title={t('Manage Admins')}
+								description={t('Add or remove admins for this discussion')}
+								icon={UserCog}
+								priority="high"
+								defaultExpanded={false}
+								tooltip={t('Promote members to admins so they can help manage this discussion')}
+							>
+								<AdminsManagement statement={statement} />
+							</SettingsSection>
+						)}
+
 						{/* Membership & Access Section */}
 						<SettingsSection
 							title={t('Membership & Access')}

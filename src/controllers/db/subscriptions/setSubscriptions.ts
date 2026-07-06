@@ -169,20 +169,23 @@ export async function updateLastReadTimestamp(statementId: string, userId: strin
 
 export async function setRoleToDB(statement: Statement, role: Role, user: User): Promise<void> {
 	try {
-		//getting current user role in statement
-		const currentUserStatementSubscriptionId = getStatementSubscriptionId(
+		//getting the acting (logged-in) user's role in the statement
+		const actingUser = store.getState().creator.creator;
+		if (!actingUser?.uid) throw new Error('Error in getting acting user');
+
+		const actingUserSubscriptionId = getStatementSubscriptionId(
 			statement.statementId,
-			user.uid,
+			actingUser.uid,
 		);
-		if (!currentUserStatementSubscriptionId)
-			throw new Error('Error in getting statementSubscriptionId');
-		const currentUserStatementSubscriptionRef = createSubscriptionRef(
-			currentUserStatementSubscriptionId,
-		);
-		const currentUserStatementSubscription = await getDoc(currentUserStatementSubscriptionRef);
-		const currentUserRole = currentUserStatementSubscription.data()?.role;
-		if (!currentUserRole) throw new Error('Error in getting currentUserRole');
-		if (currentUserRole !== Role.admin || statement.creator?.uid === user.uid) return;
+		if (!actingUserSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
+		const actingUserSubscription = await getDoc(createSubscriptionRef(actingUserSubscriptionId));
+		const actingUserRole = actingUserSubscription.data()?.role;
+		const actingUserIsAdmin =
+			actingUserRole === Role.admin ||
+			actingUserRole === Role.creator ||
+			statement.creator?.uid === actingUser.uid;
+		//only admins/creator may set roles, and the creator's own role must never be changed
+		if (!actingUserIsAdmin || statement.creator?.uid === user.uid) return;
 
 		//setting user role in statement
 		const statementSubscriptionId = getStatementSubscriptionId(statement.statementId, user.uid);
