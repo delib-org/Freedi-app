@@ -10,7 +10,7 @@ import {
 	useState,
 } from 'react';
 import { arrayRemove, arrayUnion, updateDoc } from 'firebase/firestore';
-import type { MapSynthVisibility, Results, Statement } from '@freedi/shared-types';
+import type { MapFilterMetric, MapSynthVisibility, Results, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -140,6 +140,12 @@ interface BoardCluster {
 	members: Results[];
 	/** The cluster statement (isCluster option) — null for the synthetic "Ungrouped" group. */
 	clusterStatement: Statement | null;
+	/**
+	 * Member count BEFORE the map filter hides any — so the "made from N
+	 * responses" provenance line reflects how the cluster was formed, not how
+	 * many members happen to pass the current filter.
+	 */
+	sourceCount: number;
 }
 
 interface PlacedCluster extends BoardCluster {
@@ -178,6 +184,25 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const mapSettings = subject.statementSettings?.map;
 	const synthVisibility = mapSettings?.synthVisibility ?? MAP_SYNTH_VISIBILITY_DEFAULT;
 	const showProvenance = mapSettings?.showProvenance ?? true;
+
+	// Admin-controlled response filter. Hides notes whose consensus / average
+	// evaluation falls below the threshold; clusters left with no visible
+	// members drop off the board entirely. Persisted on the question, so the
+	// filtered view is shared by everyone who opens the map.
+	const filterMetric: MapFilterMetric = mapSettings?.filterMetric ?? 'none';
+	const minConsensus = mapSettings?.minConsensus ?? -1;
+	const minAverageEvaluation = mapSettings?.minAverageEvaluation ?? -1;
+	const passesFilter = useCallback(
+		(statement: Statement): boolean => {
+			if (filterMetric === 'consensus') return (statement.consensus ?? 0) >= minConsensus;
+			if (filterMetric === 'average') {
+				return (statement.evaluation?.averageEvaluation ?? 0) >= minAverageEvaluation;
+			}
+
+			return true;
+		},
+		[filterMetric, minConsensus, minAverageEvaluation],
+	);
 	// Drive the SCSS typography off CSS custom properties so admin font sizes
 	// apply live to every card/pill/hub without re-styling each node inline.
 	const boardFontVars = useMemo<CSSProperties>(
@@ -220,13 +245,16 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 					loose.push(child);
 				}
 			});
-			if (loose.length > 0) {
+			const sourceCount = loose.length;
+			const visibleLoose = loose.filter((member) => passesFilter(member.top));
+			if (visibleLoose.length > 0) {
 				containers.push({
 					id: UNGROUPED_ID,
 					label: t('All responses'),
 					color: UNGROUPED_COLOR,
-					members: loose,
+					members: visibleLoose,
 					clusterStatement: null,
+					sourceCount,
 				});
 			}
 
@@ -235,14 +263,19 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 
 		children.forEach((child) => {
 			if (child.top.isCluster) {
+				const allMembers = child.sub ?? [];
+				const visibleMembers = allMembers.filter((member) => passesFilter(member.top));
+				// A cluster with no members left after filtering drops off the board.
+				if (visibleMembers.length === 0) return;
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,
 					color: resolveClusterColor(child.top.color, child.top.statementId),
-					members: child.sub ?? [],
+					members: visibleMembers,
 					clusterStatement: child.top,
+					sourceCount: allMembers.length,
 				});
-			} else {
+			} else if (passesFilter(child.top)) {
 				loose.push(child);
 			}
 		});
@@ -256,11 +289,12 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 				color: UNGROUPED_COLOR,
 				members: loose,
 				clusterStatement: null,
+				sourceCount: loose.length,
 			});
 		}
 
 		return containers;
-	}, [children, t, synthVisibility]);
+	}, [children, t, synthVisibility, passesFilter]);
 
 	// Place clusters on a ring. Pills sit on an inner ring near the hub; each
 	// grid then hugs its OWN pill at a radius set by that cluster's own size, so
@@ -749,15 +783,12 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 									{showProvenance &&
 										l.clusterStatement &&
 										editingId !== l.id &&
-										l.members.length > 0 && (
+										l.sourceCount > 0 && (
 											<span
 												className={styles.provenance}
 												title={t('This cluster was made from these responses')}
 											>
-												{t('made from {count} responses').replace(
-													'{count}',
-													String(l.members.length),
-												)}
+												{t('made from {count} responses').replace('{count}', String(l.sourceCount))}
 											</span>
 										)}
 

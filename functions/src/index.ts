@@ -94,6 +94,7 @@ import { scheduledStatementHistorySnapshot } from './statements/history/schedule
 import { cleanupStatementHistory } from './statements/history/historyRetention';
 import { recalculateIndices } from './fn_recalculateIndices';
 import { fixClusterIntegration } from './fn_fixClusterIntegration';
+import { setMapFilter } from './fn_setMapFilter';
 import { handleImproveSuggestion } from './fn_improveSuggestion';
 import { onStatementCreated } from './fn_statementCreation';
 import { analyzeSubscriptionPatterns } from './fn_metrics';
@@ -503,6 +504,7 @@ exports.scheduledStatementHistorySnapshot = scheduledStatementHistorySnapshot;
 exports.cleanupStatementHistory = cleanupStatementHistory;
 exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
+exports.setMapFilter = setMapFilter;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);

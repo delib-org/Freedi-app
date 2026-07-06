@@ -13,6 +13,7 @@ import {
 	StatementSettings,
 	MapSettings,
 	MapSynthVisibility,
+	MapFilterMetric,
 } from '@freedi/shared-types';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
@@ -22,7 +23,22 @@ import styles from './MapAdminPanel.module.scss';
 interface MapAdminPanelProps {
 	statement: Statement;
 	settings: StatementSettings;
+	/**
+	 * True when the viewer is an admin/creator who can change every map setting.
+	 * False for a permitted non-admin viewer, who only sees the filter section
+	 * and whose filter writes go through the `setMapFilter` callable (direct
+	 * writes to statementSettings are blocked by Firestore rules for non-admins).
+	 */
+	canConfigure: boolean;
 }
+
+const filterMetricOrder: MapFilterMetric[] = ['none', 'consensus', 'average'];
+
+// The filter threshold spans the full evaluation range; -1 means "show all".
+const FILTER_MIN = -1;
+const FILTER_MAX = 1;
+const FILTER_STEP = 0.05;
+const FILTER_DEFAULT = -1;
 
 // Mirror the ClusterBoard defaults so the panel shows what the map renders.
 const CARD_FONT_DEFAULT = 0.9;
@@ -68,7 +84,7 @@ function loadHandleY(): number | null {
  * position persisted) that opens a right-side drawer of map settings. Modeled
  * on the Join app's FacilitatorPanel so admins get a consistent control surface.
  */
-const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings }) => {
+const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings, canConfigure }) => {
 	const { t } = useTranslation();
 	const [open, setOpen] = useState(false);
 	const [handleY, setHandleY] = useState<number | null>(null);
@@ -106,6 +122,10 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings }) => {
 	const clusterFont = map.clusterFontRem ?? CLUSTER_FONT_DEFAULT;
 	const synthVisibility: MapSynthVisibility = map.synthVisibility ?? 'all';
 	const showProvenance = map.showProvenance ?? true;
+	const filterMetric: MapFilterMetric = map.filterMetric ?? 'none';
+	const minConsensus = map.minConsensus ?? FILTER_DEFAULT;
+	const minAverageEvaluation = map.minAverageEvaluation ?? FILTER_DEFAULT;
+	const allowViewerFilter = map.allowViewerFilter ?? false;
 
 	const update = useCallback(
 		(patch: Partial<MapSettings>) => {
@@ -121,6 +141,40 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings }) => {
 			});
 		},
 		[statement.statementId],
+	);
+
+	// Filter writes. Admins write statementSettings directly; permitted viewers
+	// go through the setMapFilter callable (Firestore rules block non-admins from
+	// writing statementSettings). The callable persists only the filter fields.
+	const updateFilter = useCallback(
+		(
+			patch: Pick<Partial<MapSettings>, 'filterMetric' | 'minConsensus' | 'minAverageEvaluation'>,
+		) => {
+			if (canConfigure) {
+				update(patch);
+
+				return;
+			}
+			void (async () => {
+				try {
+					const { httpsCallable } = await import('firebase/functions');
+					const { functions } = await import('@/controllers/db/config');
+					const call = httpsCallable(functions, 'setMapFilter');
+					await call({
+						statementId: statement.statementId,
+						filterMetric: patch.filterMetric ?? filterMetric,
+						minConsensus: patch.minConsensus ?? minConsensus,
+						minAverageEvaluation: patch.minAverageEvaluation ?? minAverageEvaluation,
+					});
+				} catch (error) {
+					logError(error, {
+						operation: 'mapAdminPanel.updateFilter',
+						statementId: statement.statementId,
+					});
+				}
+			})();
+		},
+		[canConfigure, update, statement.statementId, filterMetric, minConsensus, minAverageEvaluation],
 	);
 
 	const onHandlePointerDown = (e: ReactPointerEvent) => {
@@ -192,6 +246,16 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings }) => {
 				? t('Clusters only')
 				: t('Originals only');
 
+	const filterMetricLabel = (m: MapFilterMetric): string =>
+		m === 'none' ? t('None') : m === 'consensus' ? t('Consensus') : t('Average rating');
+
+	// The active threshold + which field it writes depend on the chosen metric.
+	const activeThreshold = filterMetric === 'average' ? minAverageEvaluation : minConsensus;
+	const thresholdDisplay =
+		filterMetric === 'consensus'
+			? `${Math.round(activeThreshold * 100)}%`
+			: activeThreshold.toFixed(2);
+
 	return (
 		<div className={styles.root}>
 			<button
@@ -237,103 +301,183 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings }) => {
 					</button>
 				</header>
 
-				{/* Text size */}
+				{/* Filter responses — shown to admins and to permitted viewers */}
 				<section className={styles.section}>
-					<span className={styles.sectionTitle}>{t('Map text size')}</span>
-					<div className={styles.sliderRow}>
-						<span className={styles.sliderLabel}>{t('Cluster title size')}</span>
-						<input
-							type="range"
-							className={styles.slider}
-							min={FONT_MIN}
-							max={FONT_MAX}
-							step={FONT_STEP}
-							value={clusterFont}
-							aria-label={t('Cluster title size')}
-							onChange={(e) => update({ clusterFontRem: Number(e.target.value) })}
-						/>
-						<span className={styles.sliderValue}>{clusterFont.toFixed(2)}</span>
-					</div>
-					<div className={styles.sliderRow}>
-						<span className={styles.sliderLabel}>{t('Response card size')}</span>
-						<input
-							type="range"
-							className={styles.slider}
-							min={FONT_MIN}
-							max={FONT_MAX}
-							step={FONT_STEP}
-							value={cardFont}
-							aria-label={t('Response card size')}
-							onChange={(e) => update({ cardFontRem: Number(e.target.value) })}
-						/>
-						<span className={styles.sliderValue}>{cardFont.toFixed(2)}</span>
-					</div>
-				</section>
-
-				{/* What the map shows */}
-				<section className={styles.section}>
-					<span className={styles.sectionTitle}>{t('What the map shows')}</span>
+					<span className={styles.sectionTitle}>{t('Filter responses')}</span>
 					<div className={styles.row}>
-						<div
-							className={styles.segmented}
-							role="radiogroup"
-							aria-label={t('What the map shows')}
-						>
-							{visibilityOrder.map((v) => {
-								const active = synthVisibility === v;
+						<div className={styles.segmented} role="radiogroup" aria-label={t('Filter by')}>
+							{filterMetricOrder.map((m) => {
+								const active = filterMetric === m;
 
 								return (
 									<button
-										key={v}
+										key={m}
 										type="button"
 										role="radio"
 										aria-checked={active}
 										className={`${styles.segment} ${active ? styles.segmentActive : ''}`}
-										onClick={() => update({ synthVisibility: v })}
+										onClick={() => updateFilter({ filterMetric: m })}
 									>
-										{visibilityLabel(v)}
+										{filterMetricLabel(m)}
 									</button>
 								);
 							})}
 						</div>
-						<p className={styles.rowHelp}>
-							{t(
-								'Choose whether the map groups responses into clusters, or shows every response on its own.',
-							)}
-						</p>
+						{filterMetric !== 'none' && (
+							<div className={styles.sliderRow}>
+								<span className={styles.sliderLabel}>
+									{filterMetric === 'consensus' ? t('Minimum consensus') : t('Minimum rating')}
+								</span>
+								<input
+									type="range"
+									className={styles.slider}
+									min={FILTER_MIN}
+									max={FILTER_MAX}
+									step={FILTER_STEP}
+									value={activeThreshold}
+									aria-label={
+										filterMetric === 'consensus' ? t('Minimum consensus') : t('Minimum rating')
+									}
+									onChange={(e) =>
+										updateFilter(
+											filterMetric === 'average'
+												? { minAverageEvaluation: Number(e.target.value) }
+												: { minConsensus: Number(e.target.value) },
+										)
+									}
+								/>
+								<span className={styles.sliderValue}>{thresholdDisplay}</span>
+							</div>
+						)}
+						<p className={styles.rowHelp}>{t('Only show responses at or above this score')}</p>
 					</div>
 				</section>
 
-				{/* Provenance */}
-				<section className={styles.section}>
-					<span className={styles.sectionTitle}>{t('Cluster provenance')}</span>
-					<div className={styles.row}>
-						<div className={styles.rowMain}>
-							<span className={styles.rowLabel}>
-								<span className={styles.rowIcon} aria-hidden>
-									✨
-								</span>
-								{t('Show what each cluster was made from')}
-							</span>
-							<button
-								type="button"
-								role="switch"
-								aria-checked={showProvenance}
-								aria-label={t('Show what each cluster was made from')}
-								className={`${styles.toggle} ${showProvenance ? styles.toggleOn : ''}`}
-								onClick={() => update({ showProvenance: !showProvenance })}
-							>
-								<span className={styles.toggleTrack} />
-								<span className={styles.toggleKnob} />
-							</button>
-						</div>
-						<p className={styles.rowHelp}>
-							{t(
-								'Display a "made from N responses" line on each cluster so people see how it was formed.',
-							)}
-						</p>
-					</div>
-				</section>
+				{canConfigure && (
+					<>
+						{/* Text size */}
+						<section className={styles.section}>
+							<span className={styles.sectionTitle}>{t('Map text size')}</span>
+							<div className={styles.sliderRow}>
+								<span className={styles.sliderLabel}>{t('Cluster title size')}</span>
+								<input
+									type="range"
+									className={styles.slider}
+									min={FONT_MIN}
+									max={FONT_MAX}
+									step={FONT_STEP}
+									value={clusterFont}
+									aria-label={t('Cluster title size')}
+									onChange={(e) => update({ clusterFontRem: Number(e.target.value) })}
+								/>
+								<span className={styles.sliderValue}>{clusterFont.toFixed(2)}</span>
+							</div>
+							<div className={styles.sliderRow}>
+								<span className={styles.sliderLabel}>{t('Response card size')}</span>
+								<input
+									type="range"
+									className={styles.slider}
+									min={FONT_MIN}
+									max={FONT_MAX}
+									step={FONT_STEP}
+									value={cardFont}
+									aria-label={t('Response card size')}
+									onChange={(e) => update({ cardFontRem: Number(e.target.value) })}
+								/>
+								<span className={styles.sliderValue}>{cardFont.toFixed(2)}</span>
+							</div>
+						</section>
+
+						{/* What the map shows */}
+						<section className={styles.section}>
+							<span className={styles.sectionTitle}>{t('What the map shows')}</span>
+							<div className={styles.row}>
+								<div
+									className={styles.segmented}
+									role="radiogroup"
+									aria-label={t('What the map shows')}
+								>
+									{visibilityOrder.map((v) => {
+										const active = synthVisibility === v;
+
+										return (
+											<button
+												key={v}
+												type="button"
+												role="radio"
+												aria-checked={active}
+												className={`${styles.segment} ${active ? styles.segmentActive : ''}`}
+												onClick={() => update({ synthVisibility: v })}
+											>
+												{visibilityLabel(v)}
+											</button>
+										);
+									})}
+								</div>
+								<p className={styles.rowHelp}>
+									{t(
+										'Choose whether the map groups responses into clusters, or shows every response on its own.',
+									)}
+								</p>
+							</div>
+						</section>
+
+						{/* Provenance */}
+						<section className={styles.section}>
+							<span className={styles.sectionTitle}>{t('Cluster provenance')}</span>
+							<div className={styles.row}>
+								<div className={styles.rowMain}>
+									<span className={styles.rowLabel}>
+										<span className={styles.rowIcon} aria-hidden>
+											✨
+										</span>
+										{t('Show what each cluster was made from')}
+									</span>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={showProvenance}
+										aria-label={t('Show what each cluster was made from')}
+										className={`${styles.toggle} ${showProvenance ? styles.toggleOn : ''}`}
+										onClick={() => update({ showProvenance: !showProvenance })}
+									>
+										<span className={styles.toggleTrack} />
+										<span className={styles.toggleKnob} />
+									</button>
+								</div>
+								<p className={styles.rowHelp}>
+									{t(
+										'Display a "made from N responses" line on each cluster so people see how it was formed.',
+									)}
+								</p>
+							</div>
+						</section>
+
+						{/* Sharing — let non-admin viewers adjust the filter */}
+						<section className={styles.section}>
+							<span className={styles.sectionTitle}>{t('Sharing')}</span>
+							<div className={styles.row}>
+								<div className={styles.rowMain}>
+									<span className={styles.rowLabel}>{t('Let viewers filter the map')}</span>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={allowViewerFilter}
+										aria-label={t('Let viewers filter the map')}
+										className={`${styles.toggle} ${allowViewerFilter ? styles.toggleOn : ''}`}
+										onClick={() => update({ allowViewerFilter: !allowViewerFilter })}
+									>
+										<span className={styles.toggleTrack} />
+										<span className={styles.toggleKnob} />
+									</button>
+								</div>
+								<p className={styles.rowHelp}>
+									{t('When on, anyone who can view the map can adjust the filter')}
+								</p>
+							</div>
+						</section>
+					</>
+				)}
 			</aside>
 		</div>
 	);

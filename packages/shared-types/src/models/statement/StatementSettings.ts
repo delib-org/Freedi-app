@@ -188,11 +188,23 @@ export const MapSynthVisibilitySchema = picklist([
 ]);
 export type MapSynthVisibility = InferOutput<typeof MapSynthVisibilitySchema>;
 
+// Which score the map filter keys off of. 'none' = no filtering (default).
+export const MapFilterMetricSchema = picklist([
+	'none', // show every response (default)
+	'consensus', // filter by statement.consensus (Cₚ)
+	'average', // filter by statement.evaluation.averageEvaluation
+]);
+export type MapFilterMetric = InferOutput<typeof MapFilterMetricSchema>;
+
 export const MapSettingsSchema = object({
 	cardFontRem: optional(number()), // sticky-note (card) text size, rem
 	clusterFontRem: optional(number()), // cluster pill + hub title size, rem
 	synthVisibility: optional(MapSynthVisibilitySchema), // which layers render
 	showProvenance: optional(boolean()), // show "made from N responses" on clusters
+	filterMetric: optional(MapFilterMetricSchema), // which score to filter by (default 'none')
+	minConsensus: optional(number()), // threshold when filterMetric === 'consensus', range [-1,1]
+	minAverageEvaluation: optional(number()), // threshold when filterMetric === 'average', range [-1,1]
+	allowViewerFilter: optional(boolean()), // admin lets non-admin viewers adjust the filter
 });
 export type MapSettings = InferOutput<typeof MapSettingsSchema>;
 

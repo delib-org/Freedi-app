@@ -6,8 +6,9 @@ import {
 	StatementType,
 	MapSettings,
 	MapSynthVisibility,
+	MapFilterMetric,
 } from '@freedi/shared-types';
-import { Eye, Sparkles } from 'lucide-react';
+import { Eye, Sparkles, Users } from 'lucide-react';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -27,6 +28,13 @@ const FONT_MAX = 2.2;
 const FONT_STEP = 0.05;
 
 const visibilityOrder: MapSynthVisibility[] = ['all', 'clusters-only', 'originals-only'];
+const filterMetricOrder: MapFilterMetric[] = ['none', 'consensus', 'average'];
+
+// The filter threshold spans the full evaluation range; -1 means "show all".
+const FILTER_MIN = -1;
+const FILTER_MAX = 1;
+const FILTER_STEP = 0.05;
+const FILTER_DEFAULT = -1;
 
 const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 	const { t } = useTranslation();
@@ -42,7 +50,17 @@ const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 	const clusterFont = map.clusterFontRem ?? CLUSTER_FONT_DEFAULT;
 	const synthVisibility: MapSynthVisibility = map.synthVisibility ?? 'all';
 	const showProvenance = map.showProvenance ?? true;
+	const filterMetric: MapFilterMetric = map.filterMetric ?? 'none';
+	const minConsensus = map.minConsensus ?? FILTER_DEFAULT;
+	const minAverageEvaluation = map.minAverageEvaluation ?? FILTER_DEFAULT;
+	const allowViewerFilter = map.allowViewerFilter ?? false;
 	const minResponseWords = settings.minResponseWords ?? 0;
+
+	const activeThreshold = filterMetric === 'average' ? minAverageEvaluation : minConsensus;
+	const thresholdDisplay =
+		filterMetric === 'consensus'
+			? `${Math.round(activeThreshold * 100)}%`
+			: activeThreshold.toFixed(2);
 
 	function update(patch: Partial<MapSettings>): void {
 		void setDoc(
@@ -76,6 +94,9 @@ const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 			: v === 'clusters-only'
 				? t('Clusters only')
 				: t('Originals only');
+
+	const filterMetricLabel = (m: MapFilterMetric): string =>
+		m === 'none' ? t('None') : m === 'consensus' ? t('Consensus') : t('Average rating');
 
 	return (
 		<div className={styles.sliderSection}>
@@ -185,6 +206,86 @@ const MapControlCard: FC<MapControlCardProps> = ({ statement, settings }) => {
 					'Display a "made from N responses" line on each cluster so people see how it was formed.',
 				)}
 				icon={Sparkles}
+			/>
+
+			{/* Filter responses */}
+			<div className={styles.sliderHeader} style={{ marginTop: 16 }}>
+				<span className={styles.sliderLabel}>{t('Filter responses')}</span>
+			</div>
+			<p className={styles.sliderDescription}>{t('Only show responses at or above this score')}</p>
+			<div
+				role="radiogroup"
+				aria-label={t('Filter by')}
+				style={{ display: 'flex', gap: 8, padding: '0 16px 8px', flexWrap: 'wrap' }}
+			>
+				{filterMetricOrder.map((m) => {
+					const active = filterMetric === m;
+
+					return (
+						<button
+							key={m}
+							type="button"
+							role="radio"
+							aria-checked={active}
+							onClick={() => update({ filterMetric: m })}
+							style={{
+								flex: 1,
+								minWidth: 100,
+								padding: '8px 12px',
+								borderRadius: 8,
+								border: active
+									? '2px solid var(--btn-primary)'
+									: '1px solid var(--border-color, #ccc)',
+								background: active ? 'var(--btn-primary)' : 'transparent',
+								color: active ? 'var(--btn-primary-text, #fff)' : 'inherit',
+								fontWeight: active ? 600 : 400,
+								cursor: 'pointer',
+							}}
+						>
+							{filterMetricLabel(m)}
+						</button>
+					);
+				})}
+			</div>
+			{filterMetric !== 'none' && (
+				<label
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						gap: 12,
+						padding: '8px 16px',
+						fontSize: '0.875rem',
+					}}
+				>
+					<span style={{ flex: 1 }}>
+						{filterMetric === 'consensus' ? t('Minimum consensus') : t('Minimum rating')}
+					</span>
+					<input
+						type="range"
+						min={FILTER_MIN}
+						max={FILTER_MAX}
+						step={FILTER_STEP}
+						value={activeThreshold}
+						onChange={(e) =>
+							update(
+								filterMetric === 'average'
+									? { minAverageEvaluation: Number(e.target.value) }
+									: { minConsensus: Number(e.target.value) },
+							)
+						}
+						style={{ flex: 1 }}
+					/>
+					<span style={{ width: 48, textAlign: 'end' }}>{thresholdDisplay}</span>
+				</label>
+			)}
+
+			{/* Let viewers filter the map */}
+			<ToggleSwitch
+				isChecked={allowViewerFilter}
+				onChange={(checked) => update({ allowViewerFilter: checked })}
+				label={t('Let viewers filter the map')}
+				description={t('When on, anyone who can view the map can adjust the filter')}
+				icon={Users}
 			/>
 
 			{/* Minimum words per response */}

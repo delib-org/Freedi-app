@@ -46,8 +46,12 @@ const ClusterMap: FC = () => {
 		statementSubscriptionSelector(statement?.topParentId ?? statement?.statementId ?? ''),
 	);
 	const isAdmin = isAdminRole(subscription?.role) || (!!user && statement?.creatorId === user.uid);
-	const canConfigureMap =
-		isAdmin && !isEmbed && statement?.statementType === StatementType.question;
+	const isQuestion = statement?.statementType === StatementType.question;
+	const canConfigureMap = isAdmin && !isEmbed && isQuestion;
+	// Admins get the full panel; permitted viewers get a filter-only panel when
+	// the admin has opted in via statementSettings.map.allowViewerFilter.
+	const allowViewerFilter = statement?.statementSettings?.map?.allowViewerFilter ?? false;
+	const canFilterMap = !isEmbed && isQuestion && (isAdmin || allowViewerFilter);
 
 	// Real-time descendants + root for the board (mirrors useStatementListeners'
 	// 'mind-map' branch). The standalone page owns this listener itself.
@@ -104,8 +108,12 @@ const ClusterMap: FC = () => {
 				)}
 			</div>
 
-			{canConfigureMap && (
-				<MapAdminPanel statement={statement} settings={statement.statementSettings ?? {}} />
+			{canFilterMap && (
+				<MapAdminPanel
+					statement={statement}
+					settings={statement.statementSettings ?? {}}
+					canConfigure={canConfigureMap}
+				/>
 			)}
 		</div>
 	);
