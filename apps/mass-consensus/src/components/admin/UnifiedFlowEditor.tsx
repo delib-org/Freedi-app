@@ -9,6 +9,7 @@ import type {
   SurveyExplanationPage,
   SurveySettings,
   QuestionOverrideSettings,
+  RatingMode,
 } from '@freedi/shared-types';
 import { UserDemographicQuestionType, SuggestionMode } from '@freedi/shared-types';
 import {
@@ -360,6 +361,17 @@ function QuestionSettingsPanel({
     }
   };
 
+  const handleRatingMode = (value: string) => {
+    if (value === 'default') {
+      // 'default' = no override → falls back to agree-disagree everywhere
+      const newSetting = { ...questionSetting };
+      delete newSetting.ratingMode;
+      onChange(newSetting);
+    } else {
+      onChange({ ...questionSetting, ratingMode: value as RatingMode });
+    }
+  };
+
   // Get the survey default label for the dropdown
   const getSurveyDefaultLabel = () => {
     const defaultMode = surveySettings.suggestionMode || SuggestionMode.encourage;
@@ -482,6 +494,27 @@ function QuestionSettingsPanel({
         </label>
         <span className={styles.settingHint}>
           {t('minWordsHint') || 'Require each response to have at least this many words. 0 = no minimum.'}
+        </span>
+      </div>
+
+      <div className={styles.settingRow}>
+        <label className={styles.settingLabel}>
+          <span>{t('ratingModeThisQuestion') || 'How participants rate options'}</span>
+          <select
+            className={styles.selectInput}
+            value={questionSetting?.ratingMode || 'default'}
+            onChange={(e) => handleRatingMode(e.target.value)}
+          >
+            <option value="default">
+              {t('ratingModeAgreeDisagree') || 'Agree – Disagree (default)'}
+            </option>
+            <option value="reactions">
+              {t('ratingModeReactions') || 'Emoji reactions 😐🙂😊👍❤️'}
+            </option>
+          </select>
+        </label>
+        <span className={styles.settingHint}>
+          {t('ratingModeHint') || 'Reactions use a positive-only scale (no disagree). Applies across all apps.'}
         </span>
       </div>
 

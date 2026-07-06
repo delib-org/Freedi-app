@@ -6,6 +6,7 @@
 	import { slideFade } from '$lib/transitions';
 	import Self from './MessageNode.svelte';
 	import { StatementType, DialogicType } from '@freedi/shared-types';
+	import type { RatingMode } from '@freedi/shared-types';
 	import type { SortMode, TreeNode } from '$lib/stores/messages';
 	import { sortChildren } from '$lib/stores/messages';
 	import { evalStatsOf } from '$lib/chat/node';
@@ -31,6 +32,7 @@
 		collapseTarget = true,
 		sortMode = 'agreement',
 		isMobile = false,
+		ratingMode = undefined,
 		onFocus,
 	}: {
 		node: TreeNode;
@@ -43,6 +45,9 @@
 		collapseTarget?: boolean;
 		sortMode?: SortMode;
 		isMobile?: boolean;
+		/** Evaluation mode from the conversation's question — threaded down to the
+		 *  face rater so options render agree-disagree faces or reactions. */
+		ratingMode?: RatingMode;
 		onFocus?: (id: string) => void;
 	} = $props();
 
@@ -224,6 +229,7 @@
 							count={evalStats.count}
 							average={evalStats.average}
 							leaf={isLeafOption}
+							{ratingMode}
 						/>
 					</div>
 				{/if}
@@ -333,6 +339,7 @@
 						{collapseTarget}
 						{sortMode}
 						{isMobile}
+						{ratingMode}
 						{onFocus}
 					/>
 				</div>

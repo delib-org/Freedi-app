@@ -3309,5 +3309,21 @@
   "Let's keep it friendly — could you rephrase that without the strong language?": "بیایید فضا را دوستانه نگه داریم — می‌توانید آن را بدون کلمات تند بازنویسی کنید؟",
   "That could come across as hurtful to a group of people. Could you rephrase it more respectfully?": "این ممکن است برای گروهی از مردم آزاردهنده باشد. می‌توانید آن را محترمانه‌تر بازنویسی کنید؟",
   "That's a little too explicit for here. Could you rephrase it?": "این برای اینجا کمی صریح است. می‌توانید آن را بازنویسی کنید؟",
-  "That reads as a threat. Could you make your point without it?": "این مانند یک تهدید خوانده می‌شود. می‌توانید نظرتان را بدون آن بیان کنید؟"
+  "That reads as a threat. Could you make your point without it?": "این مانند یک تهدید خوانده می‌شود. می‌توانید نظرتان را بدون آن بیان کنید؟",
+  "Not for me": "مناسب من نیست",
+  "It's okay": "بد نیست",
+  "I like it": "دوستش دارم",
+  "I really like it": "خیلی دوستش دارم",
+  "I love it": "عاشقشم",
+  "Meh": "همین‌طوری",
+  "Okay": "خوبه",
+  "Like": "پسندیدم",
+  "Great": "عالیه",
+  "Love": "عاشقشم",
+  "ratingModeThisQuestion": "چگونه شرکت‌کنندگان گزینه‌ها را ارزیابی می‌کنند",
+  "ratingModeAgreeDisagree": "موافق – مخالف (پیش‌فرض)",
+  "ratingModeReactions": "واکنش‌های ایموجی 😐🙂😊👍❤️",
+  "ratingModeHint": "واکنش‌ها از مقیاس صرفاً مثبت استفاده می‌کنند (بدون مخالفت). در همه اپ‌ها اعمال می‌شود.",
+  "Emoji reactions": "واکنش‌های ایموجی",
+  "Reactions use a positive-only scale (no disagree). Applies across all apps.": "واکنش‌ها از مقیاس صرفاً مثبت استفاده می‌کنند (بدون مخالفت). در همه اپ‌ها اعمال می‌شود."
 }

@@ -203,6 +203,22 @@ export enum evaluationType {
 	communityVoice = 'community-voice',
 }
 
+/**
+ * How participants evaluate options — cross-app source of truth.
+ *
+ * - 'agree-disagree' (default): the classic signed scale in [-1, +1]
+ *   (strongly-disagree … strongly-agree). Sign encodes polarity, magnitude
+ *   encodes intensity; consensus math relies on this.
+ * - 'reactions': a positive-only 0→1 emoji-reaction scale (😐 0 · 🙂 0.25 ·
+ *   😊 0.5 · 👍 0.75 · ❤️ 1). No "disagree" — expresses degrees of liking.
+ *
+ * The concrete scale (values, emoji, labels, throw direction) is defined once
+ * in `evaluationScale.ts` via `getEvaluationScale(mode)` so every app renders
+ * and validates the same thing. Undefined = 'agree-disagree'.
+ */
+export const RatingModeSchema = picklist(['agree-disagree', 'reactions']);
+export type RatingMode = InferOutput<typeof RatingModeSchema>;
+
 
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
@@ -246,6 +262,10 @@ export const StatementSettingsSchema = object({
 	// enforced). Admins can set it from the MC per-question editor or the
 	// cluster/sticky-note map control panel. Enforced server-side on submit.
 	minResponseWords: optional(number()),
+	// How participants evaluate options under this statement. Cross-app: read
+	// by every evaluation surface (MC swipe/classic, main-app faces, etc.) via
+	// getEvaluationScale(ratingMode). Undefined = 'agree-disagree' (default).
+	ratingMode: optional(RatingModeSchema),
 	enableAIImprovement: optional(boolean()),
 	popperianDiscussionEnabled: optional(boolean()),
 	popperianPreCheckEnabled: optional(boolean()),

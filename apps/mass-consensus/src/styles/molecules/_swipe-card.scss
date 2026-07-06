@@ -276,6 +276,32 @@
       background: var(--rating-strongly-disagree);
       border: 2px solid var(--rating-strongly-disagree-border);
     }
+
+    // Reaction mode variants (positive-only 0..1)
+    &--reaction-meh {
+      background: var(--reaction-meh, #f1f5f9);
+      border: 2px solid var(--reaction-meh-border, #cbd5e1);
+    }
+
+    &--reaction-okay {
+      background: var(--reaction-okay, #e0f2fe);
+      border: 2px solid var(--reaction-okay-border, #7dd3fc);
+    }
+
+    &--reaction-good {
+      background: var(--reaction-good, #d1fae5);
+      border: 2px solid var(--reaction-good-border, #6ee7b7);
+    }
+
+    &--reaction-great {
+      background: var(--reaction-great, #fef3c7);
+      border: 2px solid var(--reaction-great-border, #fcd34d);
+    }
+
+    &--reaction-love {
+      background: var(--reaction-love, #ffe4e6);
+      border: 2px solid var(--reaction-love-border, #fb7185);
+    }
   }
 
   &__confirmation-emoji {

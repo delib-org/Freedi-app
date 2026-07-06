@@ -142,6 +142,64 @@
     }
   }
 
+  // ---- Reaction mode (positive-only 0..1) ----
+  // Cool→warm gradient ending in heart-pink; all positive, no red.
+
+  // Meh (0) - Soft gray
+  &--reaction-meh {
+    background: var(--reaction-meh, #f1f5f9);
+    border-color: var(--reaction-meh-border, #cbd5e1);
+    color: var(--reaction-meh-text, #64748b);
+
+    &:hover:not(.rating-button--disabled) {
+      background: var(--reaction-meh-hover, #e2e8f0);
+    }
+  }
+
+  // Okay (0.25) - Soft blue
+  &--reaction-okay {
+    background: var(--reaction-okay, #e0f2fe);
+    border-color: var(--reaction-okay-border, #7dd3fc);
+    color: var(--reaction-okay-text, #0284c7);
+
+    &:hover:not(.rating-button--disabled) {
+      background: var(--reaction-okay-hover, #bae6fd);
+    }
+  }
+
+  // Like (0.5) - Soft green
+  &--reaction-good {
+    background: var(--reaction-good, #d1fae5);
+    border-color: var(--reaction-good-border, #6ee7b7);
+    color: var(--reaction-good-text, #059669);
+
+    &:hover:not(.rating-button--disabled) {
+      background: var(--reaction-good-hover, #a7f3d0);
+    }
+  }
+
+  // Great (0.75) - Warm amber
+  &--reaction-great {
+    background: var(--reaction-great, #fef3c7);
+    border-color: var(--reaction-great-border, #fcd34d);
+    color: var(--reaction-great-text, #d97706);
+
+    &:hover:not(.rating-button--disabled) {
+      background: var(--reaction-great-hover, #fde68a);
+    }
+  }
+
+  // Love (1) - Heart pink
+  &--reaction-love {
+    background: var(--reaction-love, #ffe4e6);
+    border-color: var(--reaction-love-border, #fb7185);
+    color: var(--reaction-love-text, #e11d48);
+
+    &:hover:not(.rating-button--disabled) {
+      background: var(--reaction-love-hover, #fecdd3);
+    }
+  }
+
   // Size modifiers
   &--small {
     padding: 0.5rem;

@@ -14,6 +14,7 @@ import {
   UserQuestionTypeSchema,
   DemographicOptionSchema,
 } from '../userDemographic/userDemographicModel';
+import { RatingModeSchema } from '../statement/StatementSettings';
 
 // ============================================
 // Survey Status Enum
@@ -124,6 +125,8 @@ export const QuestionOverrideSettingsSchema = object({
   askUserForASolutionAfterEvaluation: optional(boolean()),
   /** Minimum words a response must contain for THIS question (0 / undefined = no minimum) */
   minResponseWords: optional(number()),
+  /** How participants evaluate options for THIS question (agree-disagree | reactions). Cascaded onto the question Statement's statementSettings.ratingMode. */
+  ratingMode: optional(RatingModeSchema),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -338,4 +341,5 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   showViewProgress: undefined,
   askUserForASolutionAfterEvaluation: undefined,
   minResponseWords: undefined,
+  ratingMode: undefined,
 };

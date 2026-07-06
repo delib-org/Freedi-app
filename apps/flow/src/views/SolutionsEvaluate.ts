@@ -3,6 +3,7 @@ import { EvaluationCard } from '../components/EvaluationCard';
 import { ProgressBar } from '../components/ProgressBar';
 import {
   loadStatements,
+  loadRatingMode,
   submitEvaluation,
   submitComment,
   submitSuggestion,
@@ -12,6 +13,7 @@ import {
 } from '../lib/deliberation';
 import { getUserState } from '../lib/user';
 import { t } from '../lib/i18n';
+import type { RatingMode } from '@freedi/shared-types';
 
 export interface SolutionsEvaluateAttrs {
   questionId: string;
@@ -25,6 +27,7 @@ export function SolutionsEvaluate(initialVnode: m.Vnode<SolutionsEvaluateAttrs>)
   let currentIndex = 0;
   let currentRating: number | null = null;
   let loading = true;
+  let ratingMode: RatingMode | undefined;
   let showDisagreePrompt = false;
   let commentModalOpen = false;
   let suggestModalOpen = false;
@@ -34,7 +37,14 @@ export function SolutionsEvaluate(initialVnode: m.Vnode<SolutionsEvaluateAttrs>)
   let submittingComment = false;
   let submittingSuggestion = false;
 
-  loadStatements(initialVnode.attrs.questionId).then((result) => {
+  const { questionId } = initialVnode.attrs;
+
+  loadRatingMode(questionId).then((mode) => {
+    ratingMode = mode;
+    m.redraw();
+  });
+
+  loadStatements(questionId).then((result) => {
     const { user } = getUserState();
     statements = result.filter((s) => s.creatorId !== user?.uid);
     loading = false;
@@ -107,6 +117,7 @@ export function SolutionsEvaluate(initialVnode: m.Vnode<SolutionsEvaluateAttrs>)
             currentIndex,
             totalCount: totalToEval,
             ratingValue: currentRating,
+            mode: ratingMode,
             showActions: true,
             onRate: async (value: number) => {
               currentRating = value;

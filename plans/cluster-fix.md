@@ -161,7 +161,32 @@ Create `docs/cluster-mc-roadmap.md` with the tickets below. Each ticket is self-
     - **Verified:** shared-types rebuilt; main-app `tsc` clean; functions `tsc` clean;
       ESLint clean on changed files; jest 41/41 green (9 new). Takes effect on next
       `deploy:f:*` (functions) + hosting deploy (admin UI).
-- [ ] **T1.4 — Emoji reactions** (heart / smiley / like) replacing like/dislike. Config already exists: `RATING_CONFIG`/`ZONE_CONFIG` emoji (`apps/mass-consensus/src/constants/common.ts:147-195`), `RatingIcon.tsx`, `SwipeCard.tsx`, `RatingButtons.tsx`.
+- [x] **T1.4 — Emoji reactions** — admin-optional, cross-app evaluation mode.
+  - Shipped as an **admin-configurable** `statementSettings.ratingMode`
+    (`'agree-disagree'` default | `'reactions'`), **not** a hard replacement — the
+    classic agree/disagree scale is untouched unless an admin switches a question
+    to reactions. Per the user: reactions are a **positive-only 0→1** scale (no
+    disagree) — 😐 0 · 🙂 0.25 · 😊 0.5 · 👍 0.75 · ❤️ 1.
+  - **Single cross-app source of truth** in `@freedi/shared-types`:
+    `RatingModeSchema` + `getEvaluationScale(mode)` / `getEvaluationRange` /
+    `isValidEvaluationValue` / `getEvaluationEntry` (`models/statement/evaluationScale.ts`,
+    14 unit tests). Every app builds its evaluation UI + validation from this, so
+    a question set to reactions renders reactions **everywhere it's shown**.
+  - **Honored in all 5 evaluation apps:** main app (`EnhancedEvaluation` faces →
+    emoji), mass-consensus (swipe `SwipeCard`/`RatingButton` + classic
+    `EvaluationButtons`), join (Mithril `Evaluation.ts`), flow (`RatingButtons.ts`),
+    chat (`EvaluationBar.svelte`). Sign (binary ±1) and studio (no eval) are N/A.
+  - **Admin toggles:** MC per-question (`UnifiedFlowEditor` → cascaded onto each
+    question Statement via new `cascadeRatingMode`, sibling of
+    `cascadeMinResponseWords`); main app (`EvaluationSettings` "Emoji reactions"
+    toggle on the range/enhanced type). i18n: reaction labels + admin strings in
+    all 7 languages.
+  - **Consensus-safe:** reaction values (0..1) are a subset of the existing
+    `[-1,1]` write range, so averages/pro-con counts keep working; no backend or
+    consensus-math change. **Verified:** shared-types build + 180 jest; MC tsc +
+    lint + 50 jest (swipe/cascade/scale); main-app tsc + lint; join tsc; flow
+    tsc + build; chat svelte-check — all clean. Takes effect on next hosting
+    deploys of each app.
 - [ ] **T1.5 — Micro-copy refinement** pass across the interface (i18n files).
 - [ ] **T1.6 — Font-size adjustment** for the whole map view (readability from a distance).
 

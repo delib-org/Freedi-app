@@ -10,6 +10,7 @@ import {
 	Award,
 	Send,
 	RefreshCw,
+	Heart,
 } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
@@ -126,6 +127,23 @@ const EvaluationSettings: FC<EvaluationSettingsProps> = ({
 					/>
 				</div>
 			</div>
+
+			{/* Emoji reactions — positive-only 0..1 scale for the range/enhanced
+			    view. Cross-app: writes statementSettings.ratingMode, honored by
+			    every app's evaluation surface. */}
+			{(settings.evaluationType ?? evaluationType.range) === evaluationType.range && (
+				<ToggleSwitch
+					isChecked={settings.ratingMode === 'reactions'}
+					onChange={(checked) =>
+						handleSettingChange('ratingMode', checked ? 'reactions' : 'agree-disagree')
+					}
+					label={t('Emoji reactions')}
+					description={t(
+						'Reactions use a positive-only scale (no disagree). Applies across all apps.',
+					)}
+					icon={Heart}
+				/>
+			)}
 
 			{/* Vote Limiting */}
 			{(settings.evaluationType ?? evaluationType.range) === evaluationType.singleLike && (

@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { RatingButtons } from './RatingButtons';
 import { t } from '../lib/i18n';
+import type { RatingMode } from '@freedi/shared-types';
 
 export interface EvaluationCardAttrs {
   text: string;
@@ -11,6 +12,8 @@ export interface EvaluationCardAttrs {
   onComment?: () => void;
   onSuggestImprovement?: () => void;
   showActions?: boolean;
+  /** Evaluation mode from the parent statement's `statementSettings.ratingMode`. */
+  mode?: RatingMode;
 }
 
 export const EvaluationCard: m.Component<EvaluationCardAttrs> = {
@@ -24,6 +27,7 @@ export const EvaluationCard: m.Component<EvaluationCardAttrs> = {
       onComment,
       onSuggestImprovement,
       showActions = false,
+      mode,
     } = vnode.attrs;
 
     return m('.eval-card', {
@@ -33,7 +37,7 @@ export const EvaluationCard: m.Component<EvaluationCardAttrs> = {
       m('.eval-card__counter', { 'aria-live': 'polite' },
         `${currentIndex + 1} / ${totalCount}`),
       m('.eval-card__statement', text),
-      m(RatingButtons, { value: ratingValue, onRate }),
+      m(RatingButtons, { value: ratingValue, onRate, mode }),
       showActions
         ? m('.eval-card__actions', [
             onComment

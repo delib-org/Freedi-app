@@ -77,7 +77,7 @@ const EvaluationPopup: FC<Props> = ({ parentStatement }) => {
 				>
 					<EvaluationThumb
 						statement={parentStatement}
-						optimisticScore={evaluationScore}
+						isActive={evaluationScore !== undefined}
 						evaluationThumb={thumb}
 						onEvaluate={() => {
 							/* read-only in popup */

@@ -2929,5 +2929,21 @@
   "Let's keep it friendly — could you rephrase that without the strong language?": "لنحافظ على أجواء ودّية — هل يمكنك إعادة صياغته دون لغة قاسية؟",
   "That could come across as hurtful to a group of people. Could you rephrase it more respectfully?": "قد يبدو هذا مؤذيًا لمجموعة من الناس. هل يمكنك إعادة صياغته باحترام أكثر؟",
   "That's a little too explicit for here. Could you rephrase it?": "هذا صريح قليلاً بالنسبة لهذا المكان. هل يمكنك إعادة صياغته؟",
-  "That reads as a threat. Could you make your point without it?": "يُقرأ هذا كتهديد. هل يمكنك إيصال فكرتك دون ذلك؟"
+  "That reads as a threat. Could you make your point without it?": "يُقرأ هذا كتهديد. هل يمكنك إيصال فكرتك دون ذلك؟",
+  "Not for me": "ليس لي",
+  "It's okay": "لا بأس",
+  "I like it": "يعجبني",
+  "I really like it": "يعجبني كثيرًا",
+  "I love it": "أحبه",
+  "Meh": "لا بأس",
+  "Okay": "حسنًا",
+  "Like": "أعجبني",
+  "Great": "رائع",
+  "Love": "أحببته",
+  "ratingModeThisQuestion": "كيف يقيّم المشاركون الخيارات",
+  "ratingModeAgreeDisagree": "موافق – غير موافق (افتراضي)",
+  "ratingModeReactions": "تفاعلات إيموجي 😐🙂😊👍❤️",
+  "ratingModeHint": "تستخدم التفاعلات مقياسًا إيجابيًا فقط (بدون رفض). ينطبق على جميع التطبيقات.",
+  "Emoji reactions": "تفاعلات إيموجي",
+  "Reactions use a positive-only scale (no disagree). Applies across all apps.": "تستخدم التفاعلات مقياسًا إيجابيًا فقط (بدون رفض). ينطبق على جميع التطبيقات."
 }

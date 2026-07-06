@@ -3,12 +3,14 @@
 /**
  * RatingButton Component
  *
- * Displays a single rating option with emoji and accessible label.
- * Uses the new -1 to +1 scale with 0.5 increments for precise agreement measurement.
+ * Displays a single evaluation option with a face/emoji and accessible label.
+ * Mode-aware via the shared cross-app scale (`getEvaluationScale`):
+ * - 'agree-disagree' (default): signed -1..1 scale, SVG thumbs.
+ * - 'reactions': positive 0..1 scale, emoji reactions.
  *
  * Design principles:
  * - Emoji-only display for universal clarity
- * - Color-coded backgrounds indicate sentiment intensity
+ * - Color-coded backgrounds indicate intensity
  * - Circular buttons for consistent tap targets
  * - Scale effect on interaction for tactile feedback
  */
@@ -16,14 +18,18 @@
 import React from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
-import { RATING, RATING_CONFIG } from '@/constants/common';
+import { getEvaluationEntry } from '@freedi/shared-types';
+import type { RatingMode } from '@freedi/shared-types';
 import { playClickSound } from '../SwipeCard/soundEffects';
-import RatingIcon from '@/components/icons/RatingIcon';
+import EvaluationFace from '@/components/icons/EvaluationFace';
 
-export type RatingValue = (typeof RATING)[keyof typeof RATING];
+/** Any evaluation value from either mode (-1..1 or 0..1). */
+export type RatingValue = number;
 
 export interface RatingButtonProps {
   rating: RatingValue;
+  /** Evaluation mode; undefined = agree-disagree (default). */
+  ratingMode?: RatingMode;
   onClick: (rating: RatingValue) => void;
   disabled?: boolean;
   size?: 'small' | 'medium' | 'large';
@@ -33,6 +39,7 @@ export interface RatingButtonProps {
 
 export default function RatingButton({
   rating,
+  ratingMode,
   onClick,
   disabled = false,
   size = 'medium',
@@ -40,7 +47,7 @@ export default function RatingButton({
   className,
 }: RatingButtonProps) {
   const { t } = useTranslation();
-  const config = RATING_CONFIG[rating];
+  const entry = getEvaluationEntry(rating, ratingMode);
 
   const handleClick = () => {
     if (disabled) return;
@@ -50,12 +57,14 @@ export default function RatingButton({
 
   const classes = clsx(
     'rating-button',
-    `rating-button--${config.variant}`,
+    entry && `rating-button--${entry.variant}`,
     size !== 'medium' && `rating-button--${size}`,
     disabled && 'rating-button--disabled',
     isSelected && 'rating-button--selected',
     className
   );
+
+  const label = entry ? t(entry.labelKey) : '';
 
   return (
     <button
@@ -63,11 +72,13 @@ export default function RatingButton({
       className={classes}
       onClick={handleClick}
       disabled={disabled}
-      aria-label={t(config.labelKey)}
-      title={t(config.labelKey)}
+      aria-label={label}
+      title={label}
     >
-      <span className="rating-button__emoji"><RatingIcon rating={rating} /></span>
-      <span className="rating-button__label">{t(config.shortLabelKey)}</span>
+      <span className="rating-button__emoji">
+        <EvaluationFace value={rating} mode={ratingMode} />
+      </span>
+      <span className="rating-button__label">{entry ? t(entry.shortLabelKey) : ''}</span>
     </button>
   );
 }

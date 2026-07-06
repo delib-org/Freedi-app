@@ -49,3 +49,57 @@ export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 		alt: 'dislike',
 	},
 ];
+
+/**
+ * Reaction-mode thumbs (statementSettings.ratingMode === 'reactions').
+ * Positive-only 0→1 scale rendered as emoji, ordered high→low to match the
+ * layout of enhancedEvaluationsThumbs. Values mirror the shared cross-app
+ * REACTIONS_SCALE in @freedi/shared-types.
+ */
+export const reactionEvaluationsThumbs: EnhancedEvaluationThumb[] = [
+	{
+		id: 'ra',
+		evaluation: 1,
+		svg: '',
+		color: 'rgba(0,0,0, 0.12)',
+		colorSelected: 'var(--emoji-smiley)',
+		alt: 'I love it',
+		emoji: '❤️',
+	},
+	{
+		id: 'rb',
+		evaluation: 0.75,
+		svg: '',
+		color: 'rgba(0,0,0, 0.12)',
+		colorSelected: 'var(--emoji-happy)',
+		alt: 'I really like it',
+		emoji: '👍',
+	},
+	{
+		id: 'rc',
+		evaluation: 0.5,
+		svg: '',
+		color: 'rgba(0,0,0, 0.12)',
+		colorSelected: 'var(--emoji-neutral)',
+		alt: 'I like it',
+		emoji: '😊',
+	},
+	{
+		id: 'rd',
+		evaluation: 0.25,
+		svg: '',
+		color: 'rgba(0,0,0, 0.12)',
+		colorSelected: 'var(--emoji-thinking)',
+		alt: "It's okay",
+		emoji: '🙂',
+	},
+	{
+		id: 're',
+		evaluation: 0,
+		svg: '',
+		color: 'rgba(0,0,0, 0.12)',
+		colorSelected: 'var(--emoji-sad)',
+		alt: 'Not for me',
+		emoji: '😐',
+	},
+];

@@ -221,6 +221,52 @@
         box-shadow: 0 0 16px rgba(125, 214, 179, 0.4);
       }
     }
+
+    // Reaction mode (positive-only 0→1) — progressive mint intensity.
+    // Variant names mirror @freedi/shared-types REACTIONS_SCALE.
+    &--reaction-meh {
+      &.rating__btn--active {
+        background: var(--color-neutral);
+        border-color: var(--color-neutral);
+        box-shadow: 0 0 16px rgba(212, 197, 224, 0.4);
+      }
+    }
+
+    &--reaction-okay {
+      &.rating__btn--active {
+        background: var(--color-accent-mint);
+        border-color: var(--color-accent-mint);
+        color: var(--text-primary);
+        box-shadow: 0 0 16px rgba(168, 230, 207, 0.4);
+      }
+    }
+
+    &--reaction-good {
+      &.rating__btn--active {
+        background: var(--color-agree);
+        border-color: var(--color-agree);
+        color: var(--text-primary);
+        box-shadow: 0 0 16px rgba(168, 230, 207, 0.4);
+      }
+    }
+
+    &--reaction-great {
+      &.rating__btn--active {
+        background: var(--color-agree-strong);
+        border-color: var(--color-agree-strong);
+        color: var(--text-inverse);
+        box-shadow: 0 0 16px rgba(125, 214, 179, 0.4);
+      }
+    }
+
+    &--reaction-love {
+      &.rating__btn--active {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: var(--text-inverse);
+        box-shadow: var(--shadow-glow);
+      }
+    }
   }
 }
 

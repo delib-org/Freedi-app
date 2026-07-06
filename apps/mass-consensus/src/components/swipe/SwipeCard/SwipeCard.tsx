@@ -21,14 +21,18 @@ import { createPortal } from 'react-dom';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
-import { SWIPE, RATING_CONFIG, RATING, ZONES, ZONE_CONFIG } from '@/constants/common';
+import { SWIPE, ZONES } from '@/constants/common';
+import { getEvaluationScale, getEvaluationEntry } from '@freedi/shared-types';
+import type { RatingMode } from '@freedi/shared-types';
 import { playWhooshSound } from './soundEffects';
 import type { RatingValue } from '../RatingButton';
-import RatingIcon from '@/components/icons/RatingIcon';
+import EvaluationFace from '@/components/icons/EvaluationFace';
 
 export interface SwipeCardProps {
   statement: Statement;
   onSwipe: (rating: RatingValue) => void | Promise<void>;
+  /** Evaluation mode; undefined = agree-disagree (default). */
+  ratingMode?: RatingMode;
   totalCards: number;
   currentIndex: number;
   programmaticThrow?: { rating: RatingValue; direction: 'left' | 'right' } | null;
@@ -57,12 +61,17 @@ function isVerticalSwipeComplete(dragY: number): boolean {
 export default function SwipeCard({
   statement,
   onSwipe,
+  ratingMode,
   totalCards,
   currentIndex,
   programmaticThrow,
   onCommentClick,
 }: SwipeCardProps) {
   const { t, tWithParams } = useTranslation();
+
+  // Ordered left→right (zoneIndex 0..4). Shared cross-app scale so the swipe
+  // zones, center value and confirmation match the buttons exactly.
+  const scale = getEvaluationScale(ratingMode);
 
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragX, setDragX] = useState(0);
@@ -211,7 +220,7 @@ export default function SwipeCard({
     if (isVerticalDrag) {
       // CENTER ZONE: Check vertical threshold
       if (isVerticalSwipeComplete(dragY)) {
-        const rating = RATING.NEUTRAL;
+        const rating = scale[ZONES.CENTER_ZONE_INDEX].value;
 
         if (isLearningMode) {
           // Show confirmation in learning mode
@@ -236,8 +245,7 @@ export default function SwipeCard({
 
       if (dragDistance >= ZONES.HORIZONTAL_SWIPE_THRESHOLD && dragStartZone !== null) {
         // Sufficient horizontal swipe - evaluate rating using the initially grabbed zone
-        const config = ZONE_CONFIG[dragStartZone];
-        const rating = config.rating;
+        const rating = scale[dragStartZone].value;
         // Negative zones (0, 1 - left side) throw left, positive zones (3, 4 - right side) throw right
         const direction = dragStartZone < ZONES.CENTER_ZONE_INDEX ? 'left' : 'right';
 
@@ -260,7 +268,7 @@ export default function SwipeCard({
         resetDragState();
       }
     }
-  }, [dragStart, dragY, dragX, dragStartZone, isVerticalDrag, isThrowing, onSwipe, resetDragState, isLearningMode]);
+  }, [dragStart, dragY, dragX, dragStartZone, isVerticalDrag, isThrowing, onSwipe, resetDragState, isLearningMode, scale]);
 
   // Handle confirmation - user confirms their rating
   const handleConfirm = useCallback(() => {
@@ -391,17 +399,19 @@ export default function SwipeCard({
     >
       {/* Zone strips (always visible) */}
       <div className="swipe-card__zones">
-        {ZONE_CONFIG.map((zone) => (
+        {scale.map((zone) => (
           <div
-            key={zone.index}
+            key={zone.zoneIndex}
             className={clsx(
               'swipe-card__zone',
-              `swipe-card__zone--zone-${zone.index}`,
-              highlightedZone === zone.index && 'swipe-card__zone--active'
+              `swipe-card__zone--zone-${zone.zoneIndex}`,
+              highlightedZone === zone.zoneIndex && 'swipe-card__zone--active'
             )}
             aria-hidden="true"
           >
-            <span className="swipe-card__zone-emoji"><RatingIcon rating={zone.rating} /></span>
+            <span className="swipe-card__zone-emoji">
+              <EvaluationFace value={zone.value} mode={ratingMode} />
+            </span>
           </div>
         ))}
       </div>
@@ -446,17 +456,17 @@ export default function SwipeCard({
           <div
             className={clsx(
               'swipe-card__confirmation-modal',
-              `swipe-card__confirmation-modal--${RATING_CONFIG[pendingRating].variant}`
+              `swipe-card__confirmation-modal--${getEvaluationEntry(pendingRating, ratingMode)?.variant ?? 'neutral'}`
             )}
           >
             <div className="swipe-card__confirmation-emoji">
-              <RatingIcon rating={pendingRating} />
+              <EvaluationFace value={pendingRating} mode={ratingMode} />
             </div>
             <h3 className="swipe-card__confirmation-title">
               {t('You have rated it as')}
             </h3>
             <p className="swipe-card__confirmation-rating">
-              {t(RATING_CONFIG[pendingRating].labelKey)}
+              {t(getEvaluationEntry(pendingRating, ratingMode)?.labelKey ?? '')}
             </p>
             <p className="swipe-card__confirmation-question" dir="auto">
               {t('Are you sure?')}

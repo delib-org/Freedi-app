@@ -2,32 +2,33 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { getEvaluationScale } from '@freedi/shared-types';
+import type { RatingMode } from '@freedi/shared-types';
 import styles from './EvaluationButtons.module.css';
-import RatingIcon from '@/components/icons/RatingIcon';
+import EvaluationFace from '@/components/icons/EvaluationFace';
 
 interface EvaluationButtonsProps {
   onEvaluate: (score: number, direction?: 'left' | 'right') => void;
   currentScore?: number | null;
+  /** Evaluation mode; undefined = agree-disagree (default). */
+  ratingMode?: RatingMode;
   showLabels?: boolean;
   compact?: boolean;
 }
 
-// Evaluation scale: -1, -0.5, 0, 0.5, 1
-const EVALUATION_SCORES = [
-  { score: -1, labelKey: 'Strongly disagree', direction: 'left' as const, colorClass: 'hate' },
-  { score: -0.5, labelKey: 'Disagree', direction: 'left' as const, colorClass: 'dislike' },
-  { score: 0, labelKey: 'Neutral', direction: null, colorClass: 'neutral' },
-  { score: 0.5, labelKey: 'Agree', direction: 'right' as const, colorClass: 'like' },
-  { score: 1, labelKey: 'Strongly agree', direction: 'right' as const, colorClass: 'love' },
-];
+// Positional pastel color classes (left→right), reused for both modes.
+const COLOR_CLASSES = ['hate', 'dislike', 'neutral', 'like', 'love'] as const;
 
 /**
  * Evaluation buttons component
- * 5-point scale from -1 to 1 with pastel colors
+ * Mode-aware 5-point scale driven by the shared cross-app scale:
+ * - 'agree-disagree' (default): signed -1..1, SVG thumbs.
+ * - 'reactions': positive 0..1 emoji reactions.
  */
 export default function EvaluationButtons({
   onEvaluate,
   currentScore,
+  ratingMode,
   showLabels = false,
   compact = false,
 }: EvaluationButtonsProps) {
@@ -43,11 +44,17 @@ export default function EvaluationButtons({
 
   const evaluationOptions = useMemo(
     () =>
-      EVALUATION_SCORES.map((option) => ({
-        ...option,
-        label: t(option.labelKey),
-      })),
-    [t]
+      getEvaluationScale(ratingMode).map((entry) => {
+        const rawDirection = entry.direction === 'up' ? null : entry.direction;
+
+        return {
+          score: entry.value,
+          label: t(entry.labelKey),
+          direction: rawDirection,
+          colorClass: COLOR_CLASSES[entry.zoneIndex] ?? 'neutral',
+        };
+      }),
+    [t, ratingMode]
   );
 
   const handleClick = (score: number, direction: 'left' | 'right' | null) => {
@@ -67,7 +74,7 @@ export default function EvaluationButtons({
           title={label}
           aria-label={label}
         >
-          <span className={styles.emoji}><RatingIcon rating={score} /></span>
+          <span className={styles.emoji}><EvaluationFace value={score} mode={ratingMode} /></span>
           {showLabels && <span className={styles.label}>{label}</span>}
           {!showLabels && !compact && (
             <span className={styles.score}>{score > 0 ? '+' : ''}{score}</span>

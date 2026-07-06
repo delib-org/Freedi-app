@@ -154,4 +154,25 @@ describe('RatingButton', () => {
     expect(RATING.AGREE).toBe(0.5);
     expect(RATING.STRONGLY_AGREE).toBe(1);
   });
+
+  describe('reactions mode', () => {
+    it('applies the reaction variant class for a positive value', () => {
+      render(<RatingButton rating={1} ratingMode="reactions" onClick={jest.fn()} />);
+      expect(screen.getByRole('button')).toHaveClass('rating-button--reaction-love');
+    });
+
+    it('renders the emoji character instead of the thumbs icon', () => {
+      render(<RatingButton rating={1} ratingMode="reactions" onClick={jest.fn()} />);
+      // No RatingIcon in reaction mode
+      expect(screen.queryByTestId('rating-icon')).not.toBeInTheDocument();
+      expect(screen.getByRole('button').textContent).toContain('❤️');
+    });
+
+    it('submits the reaction value on click', () => {
+      const onClick = jest.fn();
+      render(<RatingButton rating={0.75} ratingMode="reactions" onClick={onClick} />);
+      fireEvent.click(screen.getByRole('button'));
+      expect(onClick).toHaveBeenCalledWith(0.75);
+    });
+  });
 });

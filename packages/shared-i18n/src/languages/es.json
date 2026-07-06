@@ -2807,5 +2807,21 @@
   "Let's keep it friendly — could you rephrase that without the strong language?": "Mantengamos un tono amable: ¿podrías reformularlo sin lenguaje fuerte?",
   "That could come across as hurtful to a group of people. Could you rephrase it more respectfully?": "Esto podría resultar hiriente para un grupo de personas. ¿Podrías reformularlo con más respeto?",
   "That's a little too explicit for here. Could you rephrase it?": "Esto es un poco demasiado explícito para aquí. ¿Podrías reformularlo?",
-  "That reads as a threat. Could you make your point without it?": "Esto se lee como una amenaza. ¿Podrías expresar tu idea sin eso?"
+  "That reads as a threat. Could you make your point without it?": "Esto se lee como una amenaza. ¿Podrías expresar tu idea sin eso?",
+  "Not for me": "No es para mí",
+  "It's okay": "Está bien",
+  "I like it": "Me gusta",
+  "I really like it": "Me gusta mucho",
+  "I love it": "Me encanta",
+  "Meh": "Meh",
+  "Okay": "Vale",
+  "Like": "Me gusta",
+  "Great": "Genial",
+  "Love": "Me encanta",
+  "ratingModeThisQuestion": "Cómo valoran las opciones los participantes",
+  "ratingModeAgreeDisagree": "De acuerdo – En desacuerdo (predeterminado)",
+  "ratingModeReactions": "Reacciones emoji 😐🙂😊👍❤️",
+  "ratingModeHint": "Las reacciones usan una escala solo positiva (sin desacuerdo). Se aplica en todas las apps.",
+  "Emoji reactions": "Reacciones emoji",
+  "Reactions use a positive-only scale (no disagree). Applies across all apps.": "Las reacciones usan una escala solo positiva (sin desacuerdo). Se aplica en todas las apps."
 }

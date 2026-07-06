@@ -35,7 +35,7 @@ import {
 } from '@/store/slices/swipeSelectors';
 import { submitRating, fetchPreviousEvaluations } from '@/controllers/swipeController';
 import { submitComment } from '@/controllers/commentController';
-import { RATING, RATING_CONFIG } from '@/constants/common';
+import { getEvaluationScale, getEvaluationEntry } from '@freedi/shared-types';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
@@ -69,6 +69,10 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const { showToast } = useToast();
+
+  // Evaluation mode for this question (agree-disagree default | reactions).
+  // Cross-app: read from the shared statementSettings.ratingMode.
+  const ratingMode = question.statementSettings?.ratingMode;
   const currentCard = useSelector(selectCurrentCard);
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
@@ -241,9 +245,9 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     // Capture statementId BEFORE the setTimeout to avoid stale closure
     const capturedStatementId = currentCard.statementId;
 
-    // Get throw direction from rating config
-    const config = RATING_CONFIG[rating];
-    const rawDirection = config?.direction || 'right';
+    // Get throw direction from the shared evaluation scale
+    const entry = getEvaluationEntry(rating, ratingMode);
+    const rawDirection = entry?.direction || 'right';
     const direction: 'left' | 'right' = rawDirection === 'up' ? 'right' : rawDirection;
 
     // Trigger throw animation
@@ -360,6 +364,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
             <SwipeCard
               statement={currentCard}
               onSwipe={handleSwipe}
+              ratingMode={ratingMode}
               totalCards={totalCount}
               currentIndex={evaluatedCount}
               programmaticThrow={programmaticThrow}
@@ -377,35 +382,15 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
             {(() => {
               const prevRating = currentCard ? previousEvaluations.get(currentCard.statementId) : undefined;
 
-              return (
-                <>
-                  <RatingButton
-                    rating={RATING.STRONGLY_DISAGREE}
-                    onClick={handleSwipe}
-                    isSelected={prevRating === RATING.STRONGLY_DISAGREE}
-                  />
-                  <RatingButton
-                    rating={RATING.DISAGREE}
-                    onClick={handleSwipe}
-                    isSelected={prevRating === RATING.DISAGREE}
-                  />
-                  <RatingButton
-                    rating={RATING.NEUTRAL}
-                    onClick={handleSwipe}
-                    isSelected={prevRating === RATING.NEUTRAL}
-                  />
-                  <RatingButton
-                    rating={RATING.AGREE}
-                    onClick={handleSwipe}
-                    isSelected={prevRating === RATING.AGREE}
-                  />
-                  <RatingButton
-                    rating={RATING.STRONGLY_AGREE}
-                    onClick={handleSwipe}
-                    isSelected={prevRating === RATING.STRONGLY_AGREE}
-                  />
-                </>
-              );
+              return getEvaluationScale(ratingMode).map((entry) => (
+                <RatingButton
+                  key={entry.value}
+                  rating={entry.value}
+                  ratingMode={ratingMode}
+                  onClick={handleSwipe}
+                  isSelected={prevRating === entry.value}
+                />
+              ));
             })()}
           </div>
         </>

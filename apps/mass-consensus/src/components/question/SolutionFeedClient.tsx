@@ -563,6 +563,7 @@ export default function SolutionFeedClient({
                   solution={solution}
                   onEvaluate={handleEvaluate}
                   currentScore={evaluationScores.get(solution.statementId)}
+                  ratingMode={question.statementSettings?.ratingMode}
                 />
               ))}
             </div>

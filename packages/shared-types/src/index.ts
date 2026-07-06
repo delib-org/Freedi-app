@@ -250,11 +250,13 @@ export type {
   ViewLayers,
   QuestionStatus,
   MapSettings,
-  MapSynthVisibility
+  MapSynthVisibility,
+  RatingMode
 } from "./models/statement/StatementSettings";
 
 export {
   StatementSettingsSchema,
+  RatingModeSchema,
   evaluationType,
   JoinFormFieldSchema,
   JoinFormFieldTypeSchema,
@@ -272,6 +274,20 @@ export {
   MapSettingsSchema,
   MapSynthVisibilitySchema
 } from "./models/statement/StatementSettings";
+
+export type {
+  EvaluationScaleEntry,
+  EvaluationDirection
+} from "./models/statement/evaluationScale";
+
+export {
+  AGREE_DISAGREE_SCALE,
+  REACTIONS_SCALE,
+  getEvaluationScale,
+  getEvaluationRange,
+  isValidEvaluationValue,
+  getEvaluationEntry
+} from "./models/statement/evaluationScale";
 
 export type {
   JoinFormSubmission

@@ -24,6 +24,9 @@
 	const statements = $derived(live ?? data.statements);
 
 	const root = $derived(data.root);
+	// The question's evaluation mode governs every option's face rater in this
+	// conversation. Undefined falls back to the classic agree-disagree scale.
+	const ratingMode = $derived(root.statementSettings?.ratingMode);
 	const tree = $derived(buildTree(statements, root.statementId));
 
 	// Active sort mode, shared with every MessageNode so nested levels sort alike.
@@ -301,6 +304,7 @@
 						{collapseTarget}
 						{sortMode}
 						{isMobile}
+						{ratingMode}
 						onFocus={focusOn}
 					/>
 				</div>

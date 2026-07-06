@@ -1,7 +1,11 @@
 import { FC, useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { getEvaluationThumbIdByScore } from '../../../statementsEvaluationCont';
 import styles from './EnhancedEvaluation.module.scss';
-import { enhancedEvaluationsThumbs, EnhancedEvaluationThumb } from './EnhancedEvaluationModel';
+import {
+	enhancedEvaluationsThumbs,
+	reactionEvaluationsThumbs,
+	EnhancedEvaluationThumb,
+} from './EnhancedEvaluationModel';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -37,12 +41,19 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const evaluationBarRef = useRef<HTMLDivElement>(null);
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 
+	// Cross-app evaluation mode: reactions (positive 0..1 emoji) or the default
+	// agree-disagree thumbs. Read from the same shared statementSettings.ratingMode.
+	const ratingMode = parentStatement?.statementSettings?.ratingMode;
+	const thumbs = ratingMode === 'reactions' ? reactionEvaluationsThumbs : enhancedEvaluationsThumbs;
+
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
 
 	useEffect(() => {
 		setOptimisticScore(evaluationScore);
 	}, [evaluationScore]);
+
+	const activeThumbId = getEvaluationThumbIdByScore(optimisticScore, thumbs);
 
 	const handleEvaluate = useCallback((score: number) => {
 		setOptimisticScore(score);
@@ -116,11 +127,11 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 		<div className={`${styles.evaluation}`}>
 			<div className={styles['enhanced-evaluation']}>
 				<div className={styles['evaluation-thumbs']}>
-					{enhancedEvaluationsThumbs.map((evaluationThumb) => (
+					{thumbs.map((evaluationThumb) => (
 						<EvaluationThumb
 							key={evaluationThumb.id}
 							evaluationThumb={evaluationThumb}
-							optimisticScore={optimisticScore}
+							isActive={evaluationThumb.id === activeThumbId}
 							statement={statement}
 							enableEvaluation={enableEvaluation}
 							onEvaluate={handleEvaluate}
@@ -214,7 +225,7 @@ export default EnhancedEvaluation;
 
 export interface EvaluationThumbProps {
 	statement: Statement;
-	optimisticScore: number | undefined;
+	isActive: boolean;
 	evaluationThumb: EnhancedEvaluationThumb;
 	enableEvaluation?: boolean;
 	onEvaluate: (score: number) => void;
@@ -222,7 +233,7 @@ export interface EvaluationThumbProps {
 
 export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	evaluationThumb,
-	optimisticScore,
+	isActive,
 	statement,
 	enableEvaluation = true,
 	onEvaluate,
@@ -241,9 +252,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 		});
 	};
 
-	const isThumbActive =
-		optimisticScore !== undefined &&
-		evaluationThumb.id === getEvaluationThumbIdByScore(optimisticScore);
+	const isThumbActive = isActive;
 
 	const button = (
 		<button
@@ -257,9 +266,15 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 			onClick={enableEvaluation ? handleSetEvaluation : undefined}
 			disabled={!enableEvaluation}
 			aria-disabled={!enableEvaluation}
-			aria-label={enableEvaluation ? evaluationThumb.alt : t('Voting disabled - view only')}
+			aria-label={enableEvaluation ? t(evaluationThumb.alt) : t('Voting disabled - view only')}
 		>
-			<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
+			{evaluationThumb.emoji ? (
+				<span className={styles['evaluation-thumb__emoji']} aria-hidden="true">
+					{evaluationThumb.emoji}
+				</span>
+			) : (
+				<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
+			)}
 		</button>
 	);
 

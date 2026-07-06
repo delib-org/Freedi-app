@@ -3557,5 +3557,21 @@
   "Let's keep it friendly — could you rephrase that without the strong language?": "בוא נשמור על שיח נעים — אפשר לנסח את זה בלי מילים בוטות?",
   "That could come across as hurtful to a group of people. Could you rephrase it more respectfully?": "זה עלול להישמע פוגעני כלפי קבוצת אנשים. אפשר לנסח את זה בצורה מכבדת יותר?",
   "That's a little too explicit for here. Could you rephrase it?": "זה מעט מפורש מדי למקום הזה. אפשר לנסח את זה מחדש?",
-  "That reads as a threat. Could you make your point without it?": "זה נקרא כמו איום. אפשר להביע את הנקודה שלך בלי זה?"
+  "That reads as a threat. Could you make your point without it?": "זה נקרא כמו איום. אפשר להביע את הנקודה שלך בלי זה?",
+  "Not for me": "לא בשבילי",
+  "It's okay": "זה בסדר",
+  "I like it": "אני אוהב/ת את זה",
+  "I really like it": "אני מאוד אוהב/ת את זה",
+  "I love it": "אני מת/ה על זה",
+  "Meh": "ככה־ככה",
+  "Okay": "בסדר",
+  "Like": "אוהב/ת",
+  "Great": "מעולה",
+  "Love": "מת/ה על זה",
+  "ratingModeThisQuestion": "איך משתתפים מדרגים אפשרויות",
+  "ratingModeAgreeDisagree": "מסכים – לא מסכים (ברירת מחדל)",
+  "ratingModeReactions": "תגובות אימוג'י 😐🙂😊👍❤️",
+  "ratingModeHint": "תגובות משתמשות בסולם חיובי בלבד (ללא אי־הסכמה). חל בכל האפליקציות.",
+  "Emoji reactions": "תגובות אימוג'י",
+  "Reactions use a positive-only scale (no disagree). Applies across all apps.": "תגובות משתמשות בסולם חיובי בלבד (ללא אי־הסכמה). חל בכל האפליקציות."
 }

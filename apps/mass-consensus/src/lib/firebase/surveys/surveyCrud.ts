@@ -15,6 +15,7 @@ import { logger } from '@/lib/utils/logger';
 import { SURVEYS_COLLECTION, generateSurveyId } from './surveyHelpers';
 import { cascadeSynthesisToggle } from '../synthesis/cascadeSynthesisToggle';
 import { cascadeMinResponseWords } from './cascadeMinResponseWords';
+import { cascadeRatingMode } from './cascadeRatingMode';
 
 /**
  * Create a new survey
@@ -243,6 +244,14 @@ export async function updateSurvey(
       await cascadeMinResponseWords(merged);
     } catch (error) {
       logger.error('[updateSurvey] cascadeMinResponseWords failed:', surveyId, error);
+    }
+
+    // Mirror per-question ratingMode onto each question Statement's
+    // statementSettings.ratingMode (cross-app evaluation-mode source of truth).
+    try {
+      await cascadeRatingMode(merged);
+    } catch (error) {
+      logger.error('[updateSurvey] cascadeRatingMode failed:', surveyId, error);
     }
   }
 

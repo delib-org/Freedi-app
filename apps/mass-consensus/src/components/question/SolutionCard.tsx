@@ -1,6 +1,7 @@
 'use client';
 
 import { Statement } from '@freedi/shared-types';
+import type { RatingMode } from '@freedi/shared-types';
 import EvaluationButtons from './EvaluationButtons';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import InlineMarkdown from '../shared/InlineMarkdown';
@@ -11,6 +12,8 @@ interface SolutionCardProps {
   solution: Statement;
   onEvaluate: (solutionId: string, score: number) => void;
   currentScore?: number | null;
+  /** Evaluation mode; undefined = agree-disagree (default). */
+  ratingMode?: RatingMode;
 }
 
 /**
@@ -26,6 +29,7 @@ export default function SolutionCard({
   solution,
   onEvaluate,
   currentScore,
+  ratingMode,
 }: SolutionCardProps) {
   const handleEvaluate = (score: number) => {
     onEvaluate(solution.statementId, score);
@@ -59,6 +63,7 @@ export default function SolutionCard({
       <EvaluationButtons
         onEvaluate={handleEvaluate}
         currentScore={currentScore}
+        ratingMode={ratingMode}
       />
       {isCluster && <ScoreBreakdown clusterId={solution.statementId} />}
     </div>

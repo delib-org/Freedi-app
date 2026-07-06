@@ -1185,6 +1185,23 @@
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
 }
 
+// Reaction mode: positive-only emoji faces (😐🙂😊👍❤️) driven by the shared
+// `getEvaluationScale('reactions')`. Unlike the agree-disagree SVGs, these have
+// no per-face colour, so they sit on a soft neutral circle and reuse the exact
+// same active halo / recede / check-badge treatment as the classic faces.
+.evaluation__thumb--emoji {
+  background: var(--surface-2, rgba(0, 0, 0, 0.05));
+}
+
+.evaluation__thumb-emoji {
+  font-size: 26px;
+  line-height: 1;
+  display: block;
+  pointer-events: none;
+  // Match the line-art faces' subtle lift off their circle.
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+}
+
 // Pulse: a brief overshoot beyond the steady-state 1.18 scale, settling
 // back. Reads as "yes, that registered" without being celebratory.
 @keyframes evaluation-pulse {

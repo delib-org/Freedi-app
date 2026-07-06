@@ -11,8 +11,8 @@ import { query, where, getDocs, limit as firestoreLimit, orderBy, collection } f
 import { Statement } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { db } from '@/lib/firebase/client';
-import { RATING, SWIPE } from '@/constants/common';
-import { Collections } from '@freedi/shared-types';
+import { SWIPE } from '@/constants/common';
+import { Collections, isValidEvaluationValue } from '@freedi/shared-types';
 
 /**
  * Submit a rating for a statement via API route
@@ -35,13 +35,11 @@ export async function submitRating(
   surveyId?: string
 ): Promise<void> {
   try {
-    // Validate rating
-    const validRatings: readonly number[] = Object.values(RATING);
-    if (!validRatings.includes(rating)) {
-      throw new ValidationError('Invalid rating value', {
-        rating,
-        allowedValues: validRatings,
-      });
+    // Validate rating — accept any discrete step from either evaluation mode
+    // (agree-disagree -1..1 or reactions 0..1). The mode is a per-question
+    // display concern; the stored value just has to be a valid step.
+    if (!isValidEvaluationValue(rating, 'agree-disagree') && !isValidEvaluationValue(rating, 'reactions')) {
+      throw new ValidationError('Invalid rating value', { rating });
     }
 
     // Validate IDs

@@ -3,6 +3,7 @@ import { EvaluationCard } from '../components/EvaluationCard';
 import { ProgressBar } from '../components/ProgressBar';
 import {
   loadStatements,
+  loadRatingMode,
   submitEvaluation,
   StatementData,
   SessionState,
@@ -10,6 +11,7 @@ import {
 } from '../lib/deliberation';
 import { getUserState } from '../lib/user';
 import { t } from '../lib/i18n';
+import type { RatingMode } from '@freedi/shared-types';
 
 export interface NeedsEvaluateAttrs {
   questionId: string;
@@ -23,8 +25,16 @@ export function NeedsEvaluate(initialVnode: m.Vnode<NeedsEvaluateAttrs>): m.Comp
   let currentIndex = 0;
   let currentRating: number | null = null;
   let loading = true;
+  let ratingMode: RatingMode | undefined;
 
-  loadStatements(initialVnode.attrs.questionId).then((result) => {
+  const { questionId } = initialVnode.attrs;
+
+  loadRatingMode(questionId).then((mode) => {
+    ratingMode = mode;
+    m.redraw();
+  });
+
+  loadStatements(questionId).then((result) => {
     const { user } = getUserState();
     statements = result.filter((s) => s.creatorId !== user?.uid);
     loading = false;
@@ -80,6 +90,7 @@ export function NeedsEvaluate(initialVnode: m.Vnode<NeedsEvaluateAttrs>): m.Comp
             currentIndex,
             totalCount: totalToEval,
             ratingValue: currentRating,
+            mode: ratingMode,
             onRate: async (value: number) => {
               currentRating = value;
               m.redraw();

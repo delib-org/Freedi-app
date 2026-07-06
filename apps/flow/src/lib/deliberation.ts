@@ -1,5 +1,6 @@
 import { db, doc, getDoc, collection, getDocs, query, where, orderBy, setDoc, updateDoc } from './firebase';
 import { getUserState } from './user';
+import type { RatingMode } from '@freedi/shared-types';
 
 /** Stage progression for the forward flow */
 export type FlowStage = 'intro' | 'needs-write' | 'needs-evaluate' | 'solutions-write' | 'solutions-evaluate' | 'state' | 'done';
@@ -396,6 +397,20 @@ export async function loadStatements(questionId: string): Promise<StatementData[
 
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ statementId: d.id, ...d.data() }) as StatementData);
+}
+
+/**
+ * Read the evaluation mode for a question/parent statement.
+ * Returns `statementSettings.ratingMode` ('agree-disagree' | 'reactions'), or
+ * undefined (treated as the default agree-disagree scale) when unset.
+ */
+export async function loadRatingMode(questionId: string): Promise<RatingMode | undefined> {
+  const ref = doc(db, 'statements', questionId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return undefined;
+
+  const settings = snap.data().statementSettings as { ratingMode?: RatingMode } | undefined;
+  return settings?.ratingMode;
 }
 
 /** Minimal statement data used in this app */

@@ -144,13 +144,18 @@ export function sortSubStatements(
 
 const defaultThumb = enhancedEvaluationsThumbs[2];
 
-export const getEvaluationThumbIdByScore = (evaluationScore: number | undefined): string => {
-	if (evaluationScore === undefined) return defaultThumb.id;
+export const getEvaluationThumbIdByScore = (
+	evaluationScore: number | undefined,
+	thumbs: EnhancedEvaluationThumb[] = enhancedEvaluationsThumbs,
+): string => {
+	if (evaluationScore === undefined) {
+		return thumbs[Math.floor(thumbs.length / 2)]?.id ?? defaultThumb.id;
+	}
 
 	// find the nearest evaluation
-	let nearestThumb = enhancedEvaluationsThumbs[0];
+	let nearestThumb = thumbs[0];
 
-	enhancedEvaluationsThumbs.forEach((evaluationThumb) => {
+	thumbs.forEach((evaluationThumb) => {
 		const current = Math.abs(evaluationScore - evaluationThumb.evaluation);
 		const nearest = Math.abs(evaluationScore - nearestThumb.evaluation);
 

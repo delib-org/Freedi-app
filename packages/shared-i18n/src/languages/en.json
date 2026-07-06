@@ -3518,5 +3518,21 @@
   "satisfactionPositiveFeedbackBody": "Can you share what you liked about this document? Knowing what worked well helps us keep it that way.",
   "words": "words",
   "minWordsThisQuestion": "Minimum words per response",
-  "minWordsHint": "Require each response to have at least this many words. 0 = no minimum."
+  "minWordsHint": "Require each response to have at least this many words. 0 = no minimum.",
+  "Not for me": "Not for me",
+  "It's okay": "It's okay",
+  "I like it": "I like it",
+  "I really like it": "I really like it",
+  "I love it": "I love it",
+  "Meh": "Meh",
+  "Okay": "Okay",
+  "Like": "Like",
+  "Great": "Great",
+  "Love": "Love",
+  "ratingModeThisQuestion": "How participants rate options",
+  "ratingModeAgreeDisagree": "Agree – Disagree (default)",
+  "ratingModeReactions": "Emoji reactions 😐🙂😊👍❤️",
+  "ratingModeHint": "Reactions use a positive-only scale (no disagree). Applies across all apps.",
+  "Emoji reactions": "Emoji reactions",
+  "Reactions use a positive-only scale (no disagree). Applies across all apps.": "Reactions use a positive-only scale (no disagree). Applies across all apps."
 }

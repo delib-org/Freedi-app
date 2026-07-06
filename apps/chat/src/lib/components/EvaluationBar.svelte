@@ -3,6 +3,7 @@
 	import { scale, fly } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 	import { t, tp } from '$lib/i18n';
+	import { getEvaluationScale, type RatingMode } from '@freedi/shared-types';
 	import {
 		applyOptimistic,
 		revertOptimistic,
@@ -24,6 +25,7 @@
 		count = 0,
 		average = null,
 		leaf = true,
+		ratingMode = undefined,
 	}: {
 		statementId: string;
 		myEvaluation?: number | null;
@@ -35,15 +37,31 @@
 		average?: number | null;
 		/** Option has no direct evidence children — lets C_p be projected exactly. */
 		leaf?: boolean;
+		/** Evaluation mode from the question's statementSettings. 'reactions' →
+		 *  positive-only 0..1 emoji scale; undefined/'agree-disagree' → signed faces. */
+		ratingMode?: RatingMode;
 	} = $props();
 
-	const FACES = [
+	// Agree-disagree (default) keeps the app's original signed face row exactly.
+	// 'reactions' uses the shared cross-app positive-only emoji scale (values 0..1)
+	// so the chat renders the same reactions as every other app.
+	const AGREE_DISAGREE_FACES = [
 		{ v: -1, e: '😡', label: 'Strongly disagree' },
 		{ v: -0.5, e: '😕', label: 'Disagree' },
 		{ v: 0, e: '😐', label: 'Neutral' },
 		{ v: 0.5, e: '🙂', label: 'Agree' },
 		{ v: 1, e: '😍', label: 'Strongly agree' },
 	];
+
+	const FACES = $derived(
+		ratingMode === 'reactions'
+			? getEvaluationScale('reactions').map((entry) => ({
+					v: entry.value,
+					e: entry.emoji,
+					label: entry.labelKey,
+				}))
+			: AGREE_DISAGREE_FACES,
+	);
 
 	let expanded = $state(false);
 

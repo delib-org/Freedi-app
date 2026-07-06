@@ -16,7 +16,7 @@
  */
 
 import m from 'mithril';
-import { Statement, Collections, Creator } from '@freedi/shared-types';
+import { Statement, Collections, Creator, getEvaluationRange } from '@freedi/shared-types';
 import { db, collection, doc, setDoc, query, where, onSnapshot, Unsubscribe } from './firebase';
 import { getUserState } from './user';
 import { unhighlightOption } from './newSolutionsBuffer';
@@ -58,7 +58,17 @@ function buildCreator(): Creator | null {
  * entry as soon as the server snapshot matches.
  */
 export async function setEvaluation(option: Statement, score: number): Promise<void> {
-	if (score < -1 || score > 1) return;
+	// Accept any value within the union of both rating-mode ranges: classic
+	// agree-disagree is [-1, 1], reactions is [0, 1]. The stored `evaluation`
+	// stays a plain number — the question's `ratingMode` decides which discrete
+	// steps the UI actually offers; this guard only rejects clearly-out-of-band
+	// writes. Bounds come from the shared `getEvaluationRange` so this stays in
+	// lockstep with the cross-app scale definition.
+	const adRange = getEvaluationRange('agree-disagree');
+	const reactionRange = getEvaluationRange('reactions');
+	const min = Math.min(adRange.min, reactionRange.min);
+	const max = Math.max(adRange.max, reactionRange.max);
+	if (score < min || score > max) return;
 	if (!option.parentId) return;
 
 	const creator = buildCreator();
