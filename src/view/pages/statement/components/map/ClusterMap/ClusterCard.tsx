@@ -1,5 +1,10 @@
 import { DragEvent, FC, useEffect, useRef, useState } from 'react';
-import type { Statement } from '@freedi/shared-types';
+import {
+	getEvaluationScale,
+	getEvaluationEntry,
+	type RatingMode,
+	type Statement,
+} from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -19,6 +24,12 @@ interface Props {
 	canManage: boolean;
 	/** True when the admin enabled evaluation display on this board. */
 	showEval: boolean;
+	/**
+	 * How participants rate this option — inherited from the question's
+	 * statementSettings.ratingMode. 'reactions' renders the positive-only 0→1
+	 * emoji scale (😐🙂😊👍❤️); anything else keeps the classic agree/disagree faces.
+	 */
+	ratingMode?: RatingMode;
 	isEditing: boolean;
 	onRequestEdit: () => void;
 	onSaveText: (newText: string) => void;
@@ -38,6 +49,7 @@ const ClusterCard: FC<Props> = ({
 	color,
 	canManage,
 	showEval,
+	ratingMode,
 	isEditing,
 	onRequestEdit,
 	onSaveText,
@@ -104,6 +116,14 @@ const ClusterCard: FC<Props> = ({
 	// Neutral face stands in as the "rate this" icon before the user has voted.
 	const neutralThumb = enhancedEvaluationsThumbs.find((thumb) => thumb.evaluation === 0);
 	const buttonThumb = myThumb ?? neutralThumb;
+
+	// Reactions mode (0→1 emoji scale) renders emoji instead of the SVG faces;
+	// the classic agree/disagree path is untouched. The scale is the shared,
+	// cross-app source of truth so the cluster map matches every other surface.
+	const isReactions = ratingMode === 'reactions';
+	const reactionScale = getEvaluationScale('reactions');
+	const myReaction = hasVoted ? getEvaluationEntry(myEval, 'reactions') : undefined;
+	const buttonReactionEmoji = myReaction?.emoji ?? reactionScale[0].emoji;
 
 	return (
 		<div
@@ -225,35 +245,62 @@ const ClusterCard: FC<Props> = ({
 					ref={faceToggleRef}
 					type="button"
 					className={`${styles.evalToggle} ${hasVoted ? styles.evalToggleVoted : ''}`}
-					style={{ backgroundColor: buttonThumb?.colorSelected }}
+					style={isReactions ? undefined : { backgroundColor: buttonThumb?.colorSelected }}
 					aria-label={t('Evaluate')}
 					aria-expanded={facesOpen}
 					title={t('Evaluate')}
 					onClick={() => setFacesOpen((open) => !open)}
 				>
-					{buttonThumb && <img src={buttonThumb.svg} alt={t('Evaluate')} />}
+					{isReactions ? (
+						<span className={styles.reactionEmoji} aria-hidden>
+							{buttonReactionEmoji}
+						</span>
+					) : (
+						buttonThumb && <img src={buttonThumb.svg} alt={t('Evaluate')} />
+					)}
 				</button>
 			</div>
 
 			{facesOpen && (
 				<div className={styles.facesPopup} ref={facesRef}>
-					{enhancedEvaluationsThumbs.map((thumb) => {
-						const active = thumb.id === myThumbId;
+					{isReactions
+						? reactionScale.map((entry) => {
+								const active = myReaction?.value === entry.value;
 
-						return (
-							<button
-								key={thumb.id}
-								type="button"
-								className={`${styles.face} ${active ? styles.faceActive : ''}`}
-								style={{ backgroundColor: active ? thumb.colorSelected : thumb.color }}
-								aria-label={thumb.alt}
-								aria-pressed={active}
-								onClick={() => evaluate(thumb.evaluation)}
-							>
-								<img src={thumb.svg} alt={thumb.alt} />
-							</button>
-						);
-					})}
+								return (
+									<button
+										key={entry.value}
+										type="button"
+										className={`${styles.face} ${styles.reactionFace} ${
+											active ? styles.faceActive : ''
+										}`}
+										aria-label={t(entry.labelKey)}
+										aria-pressed={active}
+										onClick={() => evaluate(entry.value)}
+									>
+										<span className={styles.reactionEmoji} aria-hidden>
+											{entry.emoji}
+										</span>
+									</button>
+								);
+							})
+						: enhancedEvaluationsThumbs.map((thumb) => {
+								const active = thumb.id === myThumbId;
+
+								return (
+									<button
+										key={thumb.id}
+										type="button"
+										className={`${styles.face} ${active ? styles.faceActive : ''}`}
+										style={{ backgroundColor: active ? thumb.colorSelected : thumb.color }}
+										aria-label={thumb.alt}
+										aria-pressed={active}
+										onClick={() => evaluate(thumb.evaluation)}
+									>
+										<img src={thumb.svg} alt={thumb.alt} />
+									</button>
+								);
+							})}
 				</div>
 			)}
 		</div>

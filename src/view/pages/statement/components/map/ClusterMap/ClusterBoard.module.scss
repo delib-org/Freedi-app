@@ -454,6 +454,23 @@
 	transform: scale(1.1);
 }
 
+// Reactions mode (0→1 emoji scale): the popup faces and the toggle render an
+// emoji glyph instead of an SVG face. Neutral background so the emoji reads.
+.reactionFace {
+	background: var(--card-default, #ffffff);
+	border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.reactionEmoji {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	font-size: 1.1rem;
+	line-height: 1;
+}
+
 .evalStats {
 	display: inline-flex;
 	gap: 5px;

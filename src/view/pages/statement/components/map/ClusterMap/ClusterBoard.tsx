@@ -185,6 +185,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	// before their subscription role loads — mirrors StatementTopNav.
 	const isAdmin = isAdminRole(subscription?.role) || (!!user && subject.creatorId === user.uid);
 	const showEval = subject.statementSettings?.showEvaluation ?? false;
+	// How participants rate options on this board — inherited from the question
+	// so the sticky notes match every other surface (reactions vs agree/disagree).
+	const ratingMode = subject.statementSettings?.ratingMode;
 	const canContribute = !!user;
 
 	// Admin-controlled map display (font sizes, which layers render, provenance).
@@ -972,6 +975,7 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 											color={l.color}
 											canManage={canManage(member.top)}
 											showEval={showEval}
+											ratingMode={ratingMode}
 											isEditing={editingId === member.top.statementId}
 											onRequestEdit={() => setEditingId(member.top.statementId)}
 											onSaveText={(value) => saveText(member.top, value)}
