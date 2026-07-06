@@ -477,6 +477,74 @@
 	}
 }
 
+// "Keep visible or hide?" prompt shown when a just-added option's grace period
+// ends while it's still below the active filter threshold. Sits above the board
+// (outside the pan/zoom layer), bottom-centered so it never covers the toolbar.
+.filterPrompt {
+	position: absolute;
+	left: 50%;
+	bottom: 1rem;
+	transform: translateX(-50%);
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	max-width: min(92%, 30rem);
+	padding: 0.75rem 1rem;
+	background: var(--card-default, #ffffff);
+	border-radius: 12px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.filterPromptBody {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.filterPromptTitle {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--text-body, #3d4d71);
+}
+
+.filterPromptText {
+	max-width: 18rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.78rem;
+	color: var(--text-secondary, #8a93a6);
+	text-align: start;
+}
+
+.filterPromptActions {
+	display: flex;
+	flex-shrink: 0;
+	gap: 0.4rem;
+}
+
+.filterPromptKeep,
+.filterPromptHide {
+	border: none;
+	border-radius: 999px;
+	padding: 0.4rem 0.85rem;
+	font-size: 0.78rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.filterPromptKeep {
+	background: var(--btn-primary, #5f88e5);
+	color: #ffffff;
+}
+
+.filterPromptHide {
+	background: var(--background, #eef0f3);
+	color: var(--text-body, #3d4d71);
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.card,
 	.card:hover {

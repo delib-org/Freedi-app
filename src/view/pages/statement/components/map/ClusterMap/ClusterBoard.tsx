@@ -29,6 +29,7 @@ import {
 } from '@/controllers/db/statements/condensationCuration';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+import { TIME } from '@/constants/common';
 import { CLUSTER_PALETTE, type ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import { focusEditField } from '../mapHelpers/focusEditField';
 import { usePanZoom } from '../hooks/usePanZoom';
@@ -62,6 +63,12 @@ const MAP_FONT_CLUSTER_DEFAULT = 1; // cluster pill + hub title
 const MAP_FONT_MIN = 0.6;
 const MAP_FONT_MAX = 2.2;
 const MAP_SYNTH_VISIBILITY_DEFAULT: MapSynthVisibility = 'all';
+
+// A freshly-added option starts at 0 consensus/evaluation, so an active filter
+// would hide it the instant it's created — including the card the add-flow just
+// dropped into edit mode. We keep the author's new options visible for this long,
+// then ask whether to keep showing them or let the filter hide them.
+const KEEP_VISIBLE_GRACE_MS = 2 * TIME.MINUTE;
 
 function clampFont(value: number | undefined, fallback: number): number {
 	if (typeof value !== 'number' || Number.isNaN(value)) return fallback;
@@ -192,7 +199,20 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const filterMetric: MapFilterMetric = mapSettings?.filterMetric ?? 'none';
 	const minConsensus = mapSettings?.minConsensus ?? -1;
 	const minAverageEvaluation = mapSettings?.minAverageEvaluation ?? -1;
-	const passesFilter = useCallback(
+
+	// Options this user just added that are kept visible past an active filter for
+	// a grace period (see KEEP_VISIBLE_GRACE_MS) — session-only and local to this
+	// user, so the shared, persisted filter view everyone else sees is untouched.
+	// `filterPrompts` queues the "keep visible or hide?" question raised once an
+	// exempt option's grace period ends while it's still below the threshold.
+	const [exemptIds, setExemptIds] = useState<Set<string>>(() => new Set());
+	const [filterPrompts, setFilterPrompts] = useState<{ id: string; text: string }[]>([]);
+	const graceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+	const membersByIdRef = useRef<Map<string, Statement>>(new Map());
+
+	// The filter exactly as configured (ignores the local exemption) — used when a
+	// grace period ends to check whether the option now clears the filter on its own.
+	const passesRawFilter = useCallback(
 		(statement: Statement): boolean => {
 			if (filterMetric === 'consensus') return (statement.consensus ?? 0) >= minConsensus;
 			if (filterMetric === 'average') {
@@ -202,6 +222,14 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			return true;
 		},
 		[filterMetric, minConsensus, minAverageEvaluation],
+	);
+	const passesRawFilterRef = useRef(passesRawFilter);
+	passesRawFilterRef.current = passesRawFilter;
+
+	const passesFilter = useCallback(
+		(statement: Statement): boolean =>
+			exemptIds.has(statement.statementId) || passesRawFilter(statement),
+		[exemptIds, passesRawFilter],
 	);
 	// Drive the SCSS typography off CSS custom properties so admin font sizes
 	// apply live to every card/pill/hub without re-styling each node inline.
@@ -425,6 +453,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 
 		return map;
 	}, [boardClusters]);
+	// Keep the grace-timer callback reading the latest member statements (fresh
+	// consensus/evaluation) without re-arming the timer on every board update.
+	membersByIdRef.current = membersById;
 
 	const clusterById = useMemo(() => {
 		const map = new Map<string, Statement | null>();
@@ -434,6 +465,73 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 
 		return map;
 	}, [boardClusters]);
+
+	// Keep a freshly-added option visible past an active filter, then — once the
+	// grace period ends — either stop exempting it silently (it has since cleared
+	// the filter, or was deleted) or ask the author whether to keep showing it.
+	const keepVisibleDuringGrace = useCallback((statementId: string) => {
+		setExemptIds((prev) => {
+			if (prev.has(statementId)) return prev;
+			const next = new Set(prev);
+			next.add(statementId);
+
+			return next;
+		});
+		const existing = graceTimers.current.get(statementId);
+		if (existing) clearTimeout(existing);
+		const timer = setTimeout(() => {
+			graceTimers.current.delete(statementId);
+			const statement = membersByIdRef.current.get(statementId);
+			if (!statement || passesRawFilterRef.current(statement)) {
+				setExemptIds((prev) => {
+					if (!prev.has(statementId)) return prev;
+					const next = new Set(prev);
+					next.delete(statementId);
+
+					return next;
+				});
+
+				return;
+			}
+			setFilterPrompts((prev) =>
+				prev.some((p) => p.id === statementId)
+					? prev
+					: [...prev, { id: statementId, text: statement.statement }],
+			);
+		}, KEEP_VISIBLE_GRACE_MS);
+		graceTimers.current.set(statementId, timer);
+	}, []);
+
+	// Answer the "keep visible or hide?" prompt: keep leaves the option exempt for
+	// the rest of the session; hide drops the exemption so the filter hides it.
+	const resolveFilterPrompt = useCallback((statementId: string, keep: boolean) => {
+		setFilterPrompts((prev) => prev.filter((p) => p.id !== statementId));
+		if (keep) return;
+		setExemptIds((prev) => {
+			if (!prev.has(statementId)) return prev;
+			const next = new Set(prev);
+			next.delete(statementId);
+
+			return next;
+		});
+	}, []);
+
+	// When the filter is switched off there's nothing to exempt or ask about —
+	// drop any pending timers, exemptions and prompts.
+	useEffect(() => {
+		if (filterMetric !== 'none') return;
+		graceTimers.current.forEach((timer) => clearTimeout(timer));
+		graceTimers.current.clear();
+		setExemptIds((prev) => (prev.size ? new Set() : prev));
+		setFilterPrompts((prev) => (prev.length ? [] : prev));
+	}, [filterMetric]);
+
+	// Clear any outstanding grace timers on unmount.
+	useEffect(() => {
+		const timers = graceTimers.current;
+
+		return () => timers.forEach((timer) => clearTimeout(timer));
+	}, []);
 
 	// FLIP: animate a card gliding to its new spot ONLY when it actually changes
 	// cluster (a real move, local or from another participant). Cards that merely
@@ -562,6 +660,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			const created = await createMindMapChild({ parentStatement: subject });
 			if (created) {
 				setEditingId(created.statementId);
+				// A new option starts below any active filter; keep it visible to the
+				// author for a grace period instead of letting it vanish instantly.
+				if (filterMetric !== 'none') keepVisibleDuringGrace(created.statementId);
 				// Assign to the cluster in the background so a slow write never
 				// leaves the add button stuck disabled.
 				if (cluster.clusterStatement) {
@@ -629,6 +730,9 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			});
 			if (created) {
 				store.dispatch(setStatement(created));
+				// Like a new option, a duplicate starts below any active filter — keep
+				// it visible to the author for a grace period rather than vanishing.
+				if (filterMetric !== 'none') keepVisibleDuringGrace(created.statementId);
 				if (cluster.clusterStatement) {
 					await assignMember(created.statementId, null, cluster.clusterStatement);
 				}
@@ -900,6 +1004,35 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			</div>
 
 			<PanZoomControls scale={transform.scale} onZoomIn={zoomIn} onZoomOut={zoomOut} onFit={fit} />
+
+			{filterPrompts.length > 0 && (
+				<div className={styles.filterPrompt} role="alertdialog" aria-live="polite" data-no-pan>
+					<div className={styles.filterPromptBody}>
+						<span className={styles.filterPromptTitle}>
+							{t('Your new option does not meet the current filter yet.')}
+						</span>
+						<span className={styles.filterPromptText} dir="auto">
+							{filterPrompts[0].text || t('Untitled option')}
+						</span>
+					</div>
+					<div className={styles.filterPromptActions}>
+						<button
+							type="button"
+							className={styles.filterPromptKeep}
+							onClick={() => resolveFilterPrompt(filterPrompts[0].id, true)}
+						>
+							{t('Keep visible')}
+						</button>
+						<button
+							type="button"
+							className={styles.filterPromptHide}
+							onClick={() => resolveFilterPrompt(filterPrompts[0].id, false)}
+						>
+							{t('Hide')}
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };
