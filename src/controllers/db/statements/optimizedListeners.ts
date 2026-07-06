@@ -11,7 +11,7 @@ import {
 	QuerySnapshot,
 } from 'firebase/firestore';
 import { Statement, StatementType, StatementSchema } from '@freedi/shared-types';
-import { parse } from 'valibot';
+import { parse, safeParse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { FireStore } from '../config';
 import { Collections } from '@freedi/shared-types';
@@ -23,6 +23,67 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+
+/**
+ * Coerce a required-number field that arrived as null/undefined to 0, following
+ * a valibot issue path. Walks object keys only; bails if the path doesn't match
+ * a live object so a malformed path can never throw.
+ */
+function setPathToZero(
+	target: Record<string, unknown>,
+	path: ReadonlyArray<{ key?: unknown }>,
+): void {
+	if (!Array.isArray(path) || path.length === 0) return;
+	let node: Record<string, unknown> = target;
+	for (let i = 0; i < path.length - 1; i++) {
+		const key = path[i]?.key;
+		if (typeof key !== 'string' && typeof key !== 'number') return;
+		const next = node[key as string];
+		if (next === null || typeof next !== 'object') return;
+		node = next as Record<string, unknown>;
+	}
+	const last = path[path.length - 1]?.key;
+	if (typeof last === 'string' || typeof last === 'number') {
+		node[last as string] = 0;
+	}
+}
+
+/**
+ * Normalize + parse a raw statement doc, tolerant of legacy/synth production
+ * data. Some older docs store a required numeric field (e.g. evaluation.agreement
+ * or evaluation.numberOfEvaluators) as null; StatementSchema declares those as
+ * number(), so a strict parse would drop the whole doc from the map. When that
+ * happens we coerce every required-number field that came in as null/undefined
+ * to 0 — the same neutral default normalizeStatementData already applies to
+ * consensus/timestamps — and re-parse. If it still fails, we throw so the caller
+ * logs and skips that single doc (unchanged behavior).
+ */
+function parseStatement(raw: unknown): Statement {
+	const normalized = normalizeStatementData(raw);
+	const result = safeParse(StatementSchema, normalized);
+	if (result.success) return result.output;
+
+	if (normalized && typeof normalized === 'object') {
+		let coerced = false;
+		for (const issue of result.issues) {
+			if (
+				issue.expected === 'number' &&
+				(issue.received === 'null' || issue.received === 'undefined') &&
+				Array.isArray(issue.path)
+			) {
+				setPathToZero(normalized as Record<string, unknown>, issue.path);
+				coerced = true;
+			}
+		}
+		if (coerced) {
+			const retry = safeParse(StatementSchema, normalized);
+			if (retry.success) return retry.output;
+		}
+	}
+
+	// Still invalid after coercion — throw so the caller logs + skips this doc.
+	return parse(StatementSchema, normalized);
+}
 
 /**
  * Consolidated listener for mind-map data
@@ -83,7 +144,7 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 						snapshot.forEach((doc) => {
 							try {
 								const data = doc.data();
-								const statement = parse(StatementSchema, normalizeStatementData(data));
+								const statement = parseStatement(data);
 								validStatements.push(statement);
 								loadedCount++;
 							} catch (error) {
@@ -125,7 +186,7 @@ export function listenToMindMapData(statementId: string): Unsubscribe {
 						changes.forEach((change) => {
 							try {
 								const data = change.doc.data();
-								const statement = parse(StatementSchema, normalizeStatementData(data));
+								const statement = parseStatement(data);
 
 								switch (change.type) {
 									case 'added':
@@ -229,7 +290,7 @@ function listenToMindMapClusters(statementId: string): Unsubscribe {
 				// this covers both the initial load and subsequent updates.
 				snapshot.docChanges().forEach((change) => {
 					try {
-						const statement = parse(StatementSchema, normalizeStatementData(change.doc.data()));
+						const statement = parseStatement(change.doc.data());
 
 						switch (change.type) {
 							case 'added':
