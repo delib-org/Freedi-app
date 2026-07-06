@@ -238,3 +238,78 @@ Commit T0.1 once built + verified (finished, verified changes commit immediately
 ## After Fix #1
 `/clear`, then start **T0.2 (Android error)** fresh — the roadmap doc carries all context forward.
 
+---
+
+## 🗓️ Fix batch #2 — 2026-07-06 (ALL due today)
+
+New issues from live testing. Same workflow: fix one ticket at a time, `/clear` between each, tick + commit. Suggested order (independent first, cheapest UX wins, then deeper backend): **F2.1 → F2.2 → F2.5 → F2.4 → F2.9 → F2.8 → F2.6 → F2.3 → F2.7**.
+
+### ⚠️ Branch reality check (read first — blocks F2.3 & F2.7)
+The working tree is currently on **`feat/agora-app`**. All the cluster-map T0/T1 work — **and specifically the cluster-map response FILTER (F2.7) and the `ratingMode`/0→1 reactions feature (F2.3)** — live only on **`feat/cluster-map-roadmap`** (commits `65facac`, `0a1f175`). In this checkout `filterMetric`/`passesFilter`/`MapFilterMetric`/`setMapFilter` and `ratingMode`/`getEvaluationScale`/`RatingModeSchema` **do not exist**. The base cluster map (`ClusterBoard.tsx`, `ClusterCard.tsx`) and MC do exist here.
+- **Before executing this batch, decide the target branch.** Do the work on `feat/cluster-map-roadmap` (has everything), or merge `feat/cluster-map-roadmap` forward first. F2.1/F2.5/F2.9/F2.8 touch code present on both; F2.3/F2.7 require the roadmap branch.
+
+### ❓ Two product decisions to confirm before coding
+- **F2.3:** Is "like" = the existing **reactions mode** (positive-only 0→1: 😐🙂😊👍❤️), or a **new simple binary like** (0↔1, thumb) independent of `ratingMode`? Spec below assumes the reactions mode.
+- **F2.6:** Should the completion link point at MC's **existing all-solutions results** (`/q/{id}/results?tab=all`, exists today) or the **main-app cluster map** (cross-app URL — "the map")? User said "the map"; confirm which surface.
+
+---
+
+- [ ] **F2.1 — RTL sticky-note menu overlaps the card text**
+  - **Problem:** `.cardMenu` is `position:absolute; inset-inline-end:2px` and `.card` carries `dir="auto"`, so for Hebrew/Arabic notes the card flips to RTL and the "⋮" button docks to the same corner where RTL text starts. `.cardText` (`text-align:start`) reserves **no** inline space for the absolutely-positioned 22px button, so it covers the first word. LTR is unaffected (menu top-right, text top-left).
+  - **Files:** `src/view/pages/statement/components/map/ClusterMap/ClusterCard.tsx` (menu JSX ~120-179, text ~200-202); `.../ClusterBoard.module.scss` (`.card` 252-273, `.cardText` 281-293, `.cardMenu` 301-307, `.cardMenuButton` 309-323, `.cardMenuList` 325-350).
+  - **Approach:** reserve inline space so text never sits under the menu — add `padding-inline-end` (~26px) to `.cardText` (matching the menu's corner), or a first-line indent / float spacer. Keep the menu on the inline-end corner (RTL-correct) but ensure text wraps clear of it. Design tokens / logical props only (no hardcoded `left/right`).
+  - **Verify:** long Hebrew + long English note, admin (menu visible) and non-admin — no overlap in either direction; footer eval row still fits.
+
+- [ ] **F2.2 — MC moderation loader copy is too clinical/accusatory**
+  - **Problem:** `EnhancedLoader` stage `content-check` shows **"Checking for inappropriate content…"** / "Ensuring safe community standards" / tip "AI scans for profanity and harmful content". T1.2 warmed the *rejection* + some loader copy but this stage still reads like a background check. Make it polite/neutral.
+  - **Files:** `apps/mass-consensus/src/components/question/EnhancedLoader.tsx` (stage config lines 26-31; `messageKey`/`subMessageKey`/`tipKey`); stage constants in `apps/mass-consensus/src/constants/common.ts` (`LOADER_STAGES.CONTENT_CHECK`). Uses i18n `t()` with English-string keys (via `@freedi/shared-i18n/next`). Shown from `ProposalModal.tsx:142`, `AddSolutionFlow.tsx:348,373`.
+  - **Approach:** rewrite the three strings to warm framing (e.g. "Reviewing your response…", "Getting it ready to share", drop the profanity tip). If key strings change, update the component + constants and add the new keys/values to **all 7** language files (en/he/ar/es/de/nl/fa); if reusing keys, just update translations.
+  - **Verify:** submit in MC, watch the loader first stage; confirm new copy renders and every language has it.
+
+- [ ] **F2.3 — "Likes" on sticky notes / MC cards don't behave as a 0→1 like** *(needs `feat/cluster-map-roadmap`)*
+  - **Problem:** `ClusterCard.tsx` still uses the classic **5-face −1..+1 agree/disagree** (`enhancedEvaluationsThumbs`, `getEvaluationThumbIdByScore`) and shows consensus/average — **never migrated to `ratingMode`**, even on the roadmap branch. MC cards (`EvaluationButtons.tsx`, `RatingButton.tsx`, swipe cards) also use −1..+1. So no positive-only 0→1 "like".
+  - **How to enable the mode (answer to "show me how to set"):** per-question toggle — main app **Settings → Evaluation → "Emoji reactions"** (`EvaluationSettings.tsx`, range/enhanced type) sets `statementSettings.ratingMode = 'reactions'`; MC **UnifiedFlowEditor → "How participants rate options" → Emoji reactions** (cascaded via `cascadeRatingMode`). **Both exist only on `feat/cluster-map-roadmap`, and neither wires the cluster-map sticky note**, so toggling alone won't fix it without the code change below.
+  - **Files:** `ClusterCard.tsx` (lines 8, 85, 95-99, 205-248), `ClusterBoard.tsx` (thread `ratingMode` to the card), `packages/shared-types/src/models/statement/evaluationScale.ts` (`getEvaluationScale`, `REACTIONS_SCALE` 😐0·🙂0.25·😊0.5·👍0.75·❤️1), `src/controllers/db/evaluation/setEvaluation.ts` (already accepts 0..1 since it's ⊂ −1..1). MC verify: `EvaluationButtons.tsx`, `RatingButton.tsx`, `SwipeCard.tsx`.
+  - **Approach:** make `ClusterCard`/`ClusterBoard` read `statement.statementSettings?.ratingMode` and build the face/emoji row from `getEvaluationScale(ratingMode)` instead of the hardcoded thumbs; emit the scale's value (0..1 for reactions). Confirm MC evaluation components honor `ratingMode` (T1.4 claims all 5 apps — re-verify the cluster map + MC cards specifically). Show the like as filled(1)/empty(0).
+  - **Verify:** set a question to reactions → open cluster map + MC → like a card → value 0→1, persists, shows everywhere.
+
+- [ ] **F2.4 — Clusters & synth must run automatically for MC questions**
+  - **Finding (mostly already works — verify + guard):** MC live-synth defaults **ON**. `functions/src/synthesis/liveSynth/featureGate.ts` defaults MC questions ON when `statementSettings.liveSynthEnabled` is unset (non-MC OFF); `apps/mass-consensus/src/lib/firebase/synthesis/cascadeSynthesisToggle.ts` defaults ON at survey (`surveyOn = surveyOverride ?? true`) and per-question (`?? true`), written on survey save via `surveyCrud.ts` (`createSurvey`/`updateSurvey`). Only an explicit admin disable turns it off.
+  - **Approach:** verify a freshly created MC question actually clusters with **no** manual toggling. If it doesn't: check (a) the question is typed `questionSettings.questionType === massConsensus` so `isMassConsensus()` detects it, (b) no stale survey default wrote `liveSynthEnabled:false`, (c) enough members to trigger clustering, (d) it isn't the F2.5 pipeline bug eating clusters. Likely no code change — but if the default isn't reliably applied, make it explicit at MC question creation.
+  - **Verify:** create MC survey + question → add responses → clusters form automatically; toggling survey OFF still kills it.
+
+- [ ] **F2.5 — "Add cluster" disappears ~1s later (empty manual cluster eaten by the on-create live-synth pipeline)**
+  - **Root cause (confirmed):** `createEmptyCluster` (`src/controllers/db/statements/condensationCuration.ts:347-398`) writes a `StatementType.option` doc with `isCluster:true, titleLockedByCreator:true, integratedOptions:[]`. The two `dissolve*` cleanup paths ARE guarded for manual clusters (`derivedDocs.ts` `isManualCluster` 41-45; `onOptionUpdateLive.ts` guard 217-224). **But the on-CREATE pipeline is not:** `functions/src/synthesis/liveSynth/onOptionCreateLive.ts:58` only returns when `integratedOptions.length > 0` (empty cluster passes), then `runSinglePipeline.ts` (145-188) has **no `isCluster`/`titleLockedByCreator` early-skip** — so the empty cluster is embedded and attached/merged into a similar cluster (or hidden via `integratedInto`), vanishing ~1s later (async CF round-trip). Fires only when live-synth is on — i.e. exactly MC/cluster maps.
+  - **Files:** `functions/src/synthesis/liveSynth/onOptionCreateLive.ts` (~line 58), `functions/src/synthesis/pipeline/runSinglePipeline.ts` (~lines 150-155). Reuse the existing `isManualCluster`/an `isClusterDoc` helper.
+  - **Approach:** add an early-skip: if `option.isCluster === true` (and/or `titleLockedByCreator === true`), the create pipeline treats it as a **container, never a member option** and returns before embedding/attach. Guard at `onOptionCreateLive.ts:58` and defensively in `runSinglePipeline`.
+  - **Verify:** functions `tsc` + unit test (isCluster option → pipeline skips it). E2E on a live-synth question: add cluster → still present after >5s. Deploy affected fns to **test** (`npm run deploy:f:test -- <fns>`, me-west1).
+
+- [ ] **F2.6 — MC setting: after completion, show a link to "all the solutions" (the map)**
+  - **Finding:** MC has **no dedicated cluster-MAP view** — the map is a main-app feature. MC "all solutions" surfaces today: `/q/{statementId}/results?tab=all` and `/q-results/{statementId}`. Completion screen = `apps/mass-consensus/src/components/survey/SurveyComplete.tsx` (rendered by `app/s/[surveyId]/complete/page.tsx`); it already gates buttons on `survey.showEmailSignup` (lines 266, 298-313) — the exact pattern to copy.
+  - **Files:** schema `packages/shared-types/src/models/survey/surveyModel.ts` (`SurveySchema` 231-277 — add optional top-level field like `showEmailSignup` at 270); request DTOs `apps/mass-consensus/src/types/survey.ts` (`CreateSurveyRequest` 64-90, `UpdateSurveyRequest` 95-130); admin toggle `apps/mass-consensus/src/components/admin/SurveyForm.tsx`; completion UI `SurveyComplete.tsx`.
+  - **Approach:** add `showAllSolutionsLink?: boolean` (+ optional `allSolutionsLinkLabel?`) to `SurveySchema`, thread through the DTOs + `SurveyForm`, then render a gated link (per question in `survey.questionIds`) on `SurveyComplete`. **DECISION (see top):** point at MC `/q/{id}/results?tab=all` (exists) or the main-app cluster map (cross-app URL). i18n label all 7 langs.
+  - **Verify:** enable setting → complete survey → link appears → clicking lands on the chosen surface.
+
+- [ ] **F2.7 — Cluster-map filter: viewer filter local-to-self; admin filters everyone (+ admin "only me" switch)** *(needs `feat/cluster-map-roadmap`)*
+  - **Problem (current on branch):** every writer — admin **or** permitted viewer — mutates the **shared** `statementSettings.map`, so a viewer's filter changes the map for everyone.
+  - **Files (branch `65facac`):** read/apply `ClusterBoard.tsx` (`mapSettings` ~191, `filterMetric`/`minConsensus`/`minAverageEvaluation` 199-201, `passesFilter` ~229, applied in `boardClusters` 277/295/308); write `MapAdminPanel.tsx` (`update` 134-148 = shared write, `updateFilter` 153-181, `allowViewerFilter` toggle 460-471); gating `ClusterMap.tsx` (53-54); callable `functions/src/fn_setMapFilter.ts` (`applyMapFilter` — writes shared map, requires `allowViewerFilter`).
+  - **Approach:** (1) add a **per-user local** filter state (component state + `localStorage` keyed by `statementId+uid`). (2) `passesFilter` prefers the local filter when set, else falls back to the shared admin filter. (3) **Non-admin viewer writes local only** — stop calling `setMapFilter`/writing shared map. (4) **Admin switch**: "Apply to everyone" → current shared `update`; "Only me" → local state. (5) `allowViewerFilter` still gates whether viewers may filter at all; `setMapFilter` becomes admin-only or is deprecated for viewers.
+  - **Verify:** viewer filter changes only their view; admin "everyone" changes all; admin "only me" stays local.
+
+- [ ] **F2.8 — Simple "add admins" interface for the question's main admin**
+  - **Finding:** promote-to-admin UI **already exists** — `MembershipCard.tsx` (`handleSetRole` 58-71) and `EnhancedMemberCard.tsx` (`onRoleChange(userId, Role.admin)` 131-132) both call `updateMemberRole` (`src/controllers/db/subscriptions/setSubscriptions.ts:200`). Gap: it only promotes **existing subscribers**; no "add admin by email" for a non-member. Also flag a possibly-inverted guard in `setRoleToDB` (`setSubscriptions.ts:185`).
+  - **Files:** controller `setSubscriptions.ts` (`updateMemberRole` 200, `setStatementSubscriptionToDB` 32/83 auto-admins creator); UI `.../settings/components/membership/` (`MembersManagement.tsx`, `EnhancedMembersManagement.tsx`, `MembershipCard.tsx`); `InviteModal.tsx`.
+  - **Approach:** surface a focused "Admins" section for the creator/main admin. Reuse `MembersManagement` + `updateMemberRole` to promote existing members. For non-members: invite-then-promote via `InviteModal` (creates `member`) + promote, or a small "Add admin by email" that creates a subscription with `Role.admin` (mirror `setStatementSubscriptionToDB`, guarded to creator/admin). Fix the `setRoleToDB` guard if inverted.
+  - **Verify:** as creator, add another user as admin → role written → that user gains admin powers; guard prevents non-admins.
+
+- [ ] **F2.9 — Cluster-map "Summarize top solutions" button (reuse existing mechanism)**
+  - **Finding:** existing summary flow — `SummarizeButton` (admin-only) + `SummarizeModal` + `SummaryDisplay` (visible to **all**) under `src/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/`; hook `useSummarization.ts` (`generateSummary`) → `summarizationController.ts` (`requestDiscussionSummary`) → callable **`summarizeDiscussion`** (`functions/src/fn_summarizeDiscussion.ts`) → writes `summary` + `summaryGeneratedAt` on the **question doc** (shared → all can read). It selects "top solutions" via `where('isChosen','==',true)` sorted by `consensus` desc.
+  - **Files:** reuse the above; wire into `ClusterMap.tsx`/`ClusterBoard.tsx` (toolbar button + summary panel).
+  - **Approach:** add an admin/creator-gated "Summarize" button in the cluster map (same `useEditPermission`) that calls `requestDiscussionSummary(subject.statementId, prompt)`; render `SummaryDisplay` reading `subject.summary` for everyone. **Caveat:** `summarizeDiscussion` errors if **no** options are `isChosen` — confirm the cluster-map question has chosen/top options, else extend the CF to fall back to top-by-consensus or ensure the cutoff ran.
+  - **Verify:** as admin in the cluster map, press Summarize → summary generates and appears for all viewers.
+
+### Deploy targets for batch #2
+- **Hosting** (main app): F2.1, F2.3, F2.7, F2.8, F2.9 UI → `deploy:h:prod` (or `:test` first).
+- **MC hosting**: F2.2, F2.4, F2.6 → MC deploy.
+- **Functions** (me-west1, `deploy:f:*`): F2.5 (`onOptionCreateLive`/`runSinglePipeline`), possibly F2.9 (`summarizeDiscussion` if the isChosen fallback is added), F2.7 (`fn_setMapFilter` if repurposed). Watch the stale-functions abort (delete removed fns first) and never `--force` prod indexes.
+
