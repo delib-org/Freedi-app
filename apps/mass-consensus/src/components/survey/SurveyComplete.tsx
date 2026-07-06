@@ -9,6 +9,8 @@ import { logError } from '@/lib/utils/errorHandling';
 import WizColAttribution from '../shared/WizColAttribution';
 import styles from './Survey.module.scss';
 
+const MAIN_APP_URL = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.wizcol.com';
+
 interface SurveyCompleteProps {
   survey: SurveyWithQuestions;
 }
@@ -296,6 +298,25 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
       )}
 
       <div className={styles.completeActions}>
+        {survey.showAllSolutionsLink === true &&
+          survey.questionIds.map((questionId) => {
+            const question = survey.questions.find((q) => q.statementId === questionId);
+            const label = survey.allSolutionsLinkLabel || t('seeAllSolutions');
+
+            return (
+              <a
+                key={questionId}
+                className={`${styles.actionButton} ${styles.primary}`}
+                href={`${MAIN_APP_URL}/map/${questionId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {survey.questionIds.length > 1 && question
+                  ? `${label}: ${question.statement}`
+                  : label}
+              </a>
+            );
+          })}
         {hasSuggestions && (
           <button
             className={`${styles.actionButton} ${styles.primary}`}

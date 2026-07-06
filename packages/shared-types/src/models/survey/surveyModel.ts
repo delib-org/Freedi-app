@@ -277,6 +277,10 @@ export const SurveySchema = object({
   customEmailTitle: optional(string()),
   /** Custom email signup description (replaces default i18n 'emailSignupDescription') */
   customEmailDescription: optional(string()),
+  /** Whether to show a link to all solutions (the map) on completion screen (defaults to false) */
+  showAllSolutionsLink: optional(boolean()),
+  /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
+  allSolutionsLinkLabel: optional(string()),
   createdAt: number(),
   lastUpdate: number(),
 });

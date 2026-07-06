@@ -87,6 +87,10 @@ export interface CreateSurveyRequest {
   customEmailTitle?: string;
   /** Custom email signup description (replaces default i18n 'emailSignupDescription') */
   customEmailDescription?: string;
+  /** Whether to show a link to all solutions (the map) on completion screen (defaults to false) */
+  showAllSolutionsLink?: boolean;
+  /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
+  allSolutionsLinkLabel?: string;
 }
 
 /**
@@ -127,6 +131,10 @@ export interface UpdateSurveyRequest {
   customEmailTitle?: string;
   /** Custom email signup description (replaces default i18n 'emailSignupDescription') */
   customEmailDescription?: string;
+  /** Whether to show a link to all solutions (the map) on completion screen (defaults to false) */
+  showAllSolutionsLink?: boolean;
+  /** Custom label for the all-solutions link (replaces default i18n 'seeAllSolutions') */
+  allSolutionsLinkLabel?: string;
 }
 
 /**

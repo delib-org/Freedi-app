@@ -47,6 +47,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
   const [showEmailSignup, setShowEmailSignup] = useState(existingSurvey?.showEmailSignup ?? true);
   const [customEmailTitle, setCustomEmailTitle] = useState(existingSurvey?.customEmailTitle || '');
   const [customEmailDescription, setCustomEmailDescription] = useState(existingSurvey?.customEmailDescription || '');
+  const [showAllSolutionsLink, setShowAllSolutionsLink] = useState(existingSurvey?.showAllSolutionsLink ?? false);
+  const [allSolutionsLinkLabel, setAllSolutionsLinkLabel] = useState(existingSurvey?.allSolutionsLinkLabel || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
@@ -163,6 +165,8 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         showEmailSignup: showEmailSignup,
         customEmailTitle: customEmailTitle.trim() || undefined,
         customEmailDescription: customEmailDescription.trim() || undefined,
+        showAllSolutionsLink: showAllSolutionsLink,
+        allSolutionsLinkLabel: allSolutionsLinkLabel.trim() || undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -670,6 +674,37 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
               </p>
             </div>
           </>
+        )}
+
+        <div className={styles.formGroup}>
+          <label>
+            <input
+              type="checkbox"
+              checked={showAllSolutionsLink}
+              onChange={(e) => setShowAllSolutionsLink(e.target.checked)}
+            />
+            {' '}{t('showAllSolutionsLink')}
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('showAllSolutionsLinkDescription')}
+          </p>
+        </div>
+
+        {showAllSolutionsLink && (
+          <div className={styles.formGroup}>
+            <label htmlFor="allSolutionsLinkLabel">{t('allSolutionsLinkLabel')}</label>
+            <input
+              id="allSolutionsLinkLabel"
+              type="text"
+              className={styles.textInput}
+              value={allSolutionsLinkLabel}
+              onChange={(e) => setAllSolutionsLinkLabel(e.target.value)}
+              placeholder={t('seeAllSolutions')}
+            />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              {t('leaveBlankForDefault')}
+            </p>
+          </div>
         )}
       </div>
 

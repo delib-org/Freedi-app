@@ -65,6 +65,12 @@ export async function createSurvey(
   if (data.customEmailDescription !== undefined) {
     survey.customEmailDescription = data.customEmailDescription;
   }
+  if (data.showAllSolutionsLink !== undefined) {
+    survey.showAllSolutionsLink = data.showAllSolutionsLink;
+  }
+  if (data.allSolutionsLinkLabel !== undefined) {
+    survey.allSolutionsLinkLabel = data.allSolutionsLinkLabel;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
 
@@ -208,6 +214,12 @@ export async function updateSurvey(
   }
   if (data.customEmailDescription !== undefined) {
     updates.customEmailDescription = data.customEmailDescription;
+  }
+  if (data.showAllSolutionsLink !== undefined) {
+    updates.showAllSolutionsLink = data.showAllSolutionsLink;
+  }
+  if (data.allSolutionsLinkLabel !== undefined) {
+    updates.allSolutionsLinkLabel = data.allSolutionsLinkLabel;
   }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);

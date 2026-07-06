@@ -103,6 +103,8 @@ export async function POST(request: NextRequest) {
       forceLanguage: body.forceLanguage,
       demographicPages: body.demographicPages,
       explanationPages: body.explanationPages,
+      showAllSolutionsLink: body.showAllSolutionsLink,
+      allSolutionsLinkLabel: body.allSolutionsLinkLabel,
     });
 
     logger.info('[POST /api/surveys] Created survey:', survey.surveyId, 'questionSettings:', JSON.stringify(body.questionSettings));
