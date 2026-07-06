@@ -1116,3 +1116,6 @@ exports.evaluationDriftCorrection = evaluationDriftCorrection;
 export { backupSurveyOnRequest } from './backups/backupSurveyOnRequest';
 export { scheduledDailyBackups } from './backups/scheduledDailyBackups';
 export { backupSurveyCallable } from './backups/backupSurveyCallable';
+
+// Agora classroom deliberative game — session lifecycle
+export { agoraCreateSession, agoraJoinSession, agoraAdvanceStage } from './agora';
