@@ -1118,4 +1118,9 @@ export { scheduledDailyBackups } from './backups/scheduledDailyBackups';
 export { backupSurveyCallable } from './backups/backupSurveyCallable';
 
 // Agora classroom deliberative game — session lifecycle
-export { agoraCreateSession, agoraJoinSession, agoraAdvanceStage } from './agora';
+export {
+	agoraCreateSession,
+	agoraJoinSession,
+	agoraAdvanceStage,
+	agoraGradeValueIdentification,
+} from './agora';

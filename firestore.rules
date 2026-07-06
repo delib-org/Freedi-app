@@ -85,9 +85,11 @@ service cloud.firestore {
 
     // Value-identification answers: students create and read their own;
     // AI grading fields are written by functions (admin SDK bypasses rules).
+    // resource == null allows listening to the doc before it exists (the
+    // client attaches the listener first and submits after).
     match /agoraValueAnswers/{answerId} {
       allow get: if isAuthenticated() &&
-                    resource.data.userId == request.auth.uid;
+                    (resource == null || resource.data.userId == request.auth.uid);
       allow list: if isAuthenticated();
       allow create: if isAuthenticated() &&
                        request.resource.data.userId == request.auth.uid;
