@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams, useSearchParams } from 'react-router';
 import { StatementType } from '@freedi/shared-types';
@@ -12,7 +12,12 @@ import {
 	statementSelector,
 	statementSubscriptionSelector,
 } from '@/redux/statements/statementsSlice';
+import { useSummarization } from '@/controllers/hooks/useSummarization';
 import ShareButton from '@/view/components/buttons/shareButton/ShareButton';
+import Modal from '@/view/components/modal/Modal';
+import SummarizeButton from '@/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/SummarizeButton/SummarizeButton';
+import SummarizeModal from '@/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
+import SummaryDisplay from '@/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
 import ClusterBoard from './ClusterBoard';
 import MapAdminPanel from './MapAdminPanel';
 import { useMindMap } from '../MindMapMV';
@@ -53,6 +58,29 @@ const ClusterMap: FC = () => {
 	const allowViewerFilter = statement?.statementSettings?.map?.allowViewerFilter ?? false;
 	const canFilterMap = !isEmbed && isQuestion && (isAdmin || allowViewerFilter);
 
+	// Discussion summary — reuses the same mechanism as the question document:
+	// admins generate/regenerate it (callable `summarizeDiscussion` writes
+	// `summary` + `summaryGeneratedAt` onto the question doc), and anyone with
+	// access can open it via "Show summary" since it lives on the shared doc.
+	const { generateSummary, isGenerating } = useSummarization();
+	const [summarizeModalOpen, setSummarizeModalOpen] = useState(false);
+	const [showSummary, setShowSummary] = useState(false);
+	const summary = statement?.summary;
+	// `summaryGeneratedAt` is written by the summarizeDiscussion CF but not in the
+	// shared-types schema — read it via a cast, the same pattern the question
+	// document sections (IntroductionSection/SimpleQuestion/StagePage) use.
+	const summaryGeneratedAt = (statement as { summaryGeneratedAt?: number } | undefined)
+		?.summaryGeneratedAt;
+
+	const handleGenerateSummary = async (customPrompt: string) => {
+		if (!statementId) return;
+		const ok = await generateSummary(statementId, customPrompt || undefined);
+		if (ok) {
+			setSummarizeModalOpen(false);
+			setShowSummary(true);
+		}
+	};
+
 	// Real-time descendants + root for the board (mirrors useStatementListeners'
 	// 'mind-map' branch). The standalone page owns this listener itself.
 	useEffect(() => {
@@ -87,6 +115,22 @@ const ClusterMap: FC = () => {
 				<header className={styles.toolbar}>
 					<h1 className={styles.title}>{statement.statement}</h1>
 					<div className={styles.toolbarActions}>
+						{isQuestion && summary && (
+							<button
+								type="button"
+								className="btn btn--secondary"
+								onClick={() => setShowSummary(true)}
+							>
+								{t('Show summary')}
+							</button>
+						)}
+						{isQuestion && (
+							<SummarizeButton
+								statement={statement}
+								onOpenModal={() => setSummarizeModalOpen(true)}
+								isLoading={isGenerating}
+							/>
+						)}
 						<ShareButton
 							title={t('Share map')}
 							text={t('Share')}
@@ -114,6 +158,20 @@ const ClusterMap: FC = () => {
 					settings={statement.statementSettings ?? {}}
 					canConfigure={canConfigureMap}
 				/>
+			)}
+
+			<SummarizeModal
+				isOpen={summarizeModalOpen}
+				onClose={() => setSummarizeModalOpen(false)}
+				onGenerate={handleGenerateSummary}
+				isLoading={isGenerating}
+				questionTitle={statement.statement}
+			/>
+
+			{showSummary && summary && (
+				<Modal closeModal={() => setShowSummary(false)}>
+					<SummaryDisplay summary={summary} generatedAt={summaryGeneratedAt} />
+				</Modal>
 			)}
 		</div>
 	);
