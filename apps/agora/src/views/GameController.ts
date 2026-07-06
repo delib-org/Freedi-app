@@ -4,6 +4,8 @@ import { ensureUser } from '../lib/user';
 import { listenToSession, stopListening, getSessionState } from '../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
+import { listenToNotifications, stopNotifications } from '../lib/notifications';
+import { ToastStack } from '../components/Toast';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
@@ -33,13 +35,17 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		onremove() {
 			stopListening();
 			stopValueAnswerListeners();
+			stopNotifications();
 		},
 
 		view() {
 			// Re-attach on every render (idempotent per sessionId). Mount/unmount
 			// interleavings during route transitions can kill the module-level
 			// listeners after an async attach; the next redraw self-heals.
-			if (userId) listenToSession(sessionId, userId);
+			if (userId) {
+				listenToSession(sessionId, userId);
+				listenToNotifications(userId);
+			}
 
 			const { session, participants, myParticipant, loading, error } = getSessionState();
 
@@ -80,56 +86,59 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					.map((kind) => topic.scenes.find((scene) => scene.kind === kind))
 					.filter((scene) => scene !== undefined);
 
-			switch (session.stage) {
-				case AgoraStage.framing:
-					return m(SceneStage, {
-						scenes: scenesOf(
-							AgoraSceneKind.intro,
-							AgoraSceneKind.timeTunnel,
-							AgoraSceneKind.periodExplainer,
-						),
-						storageKey: `agora_${sessionId}_framing`,
-					});
+			const stageView = ((): m.Children => {
+				switch (session.stage) {
+					case AgoraStage.framing:
+						return m(SceneStage, {
+							scenes: scenesOf(
+								AgoraSceneKind.intro,
+								AgoraSceneKind.timeTunnel,
+								AgoraSceneKind.periodExplainer,
+							),
+							storageKey: `agora_${sessionId}_framing`,
+						});
 
-				case AgoraStage.perspectives:
-					return m(SceneStage, {
-						scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
-						storageKey: `agora_${sessionId}_perspectives`,
-					});
+					case AgoraStage.perspectives:
+						return m(SceneStage, {
+							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
+							storageKey: `agora_${sessionId}_perspectives`,
+						});
 
-				case AgoraStage.valueIdentification:
-					return m(ValueIdentification, { sessionId, userId, topic });
+					case AgoraStage.valueIdentification:
+						return m(ValueIdentification, { sessionId, userId, topic });
 
-				case AgoraStage.positioning:
-					return myParticipant
-						? m(Positioning, { topic, myParticipant })
-						: m(
-								'.shell',
-								m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
-							);
+					case AgoraStage.positioning:
+						return myParticipant
+							? m(Positioning, { topic, myParticipant })
+							: m(
+									'.shell',
+									m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
+								);
 
-				case AgoraStage.deliberation:
-					return myParticipant
-						? m(Deliberation, { session, myParticipant, userId })
-						: m(
-								'.shell',
-								m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
-							);
+					case AgoraStage.deliberation:
+						return myParticipant
+							? m(Deliberation, { session, myParticipant, userId })
+							: m(
+									'.shell',
+									m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
+								);
 
-				case AgoraStage.results:
-				case AgoraStage.ended:
-					return m(Results, { session, topic });
+					case AgoraStage.results:
+					case AgoraStage.ended:
+						return m(Results, { session, topic });
 
-				default:
-					// deliberation / results / ended land in Phases 4-5
-					return m('.shell', [
-						m(
-							'.shell__content.text-center',
-							{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
-							[m('h2', t('lobby.get_ready')), m('p.lobby__status', session.stage)],
-						),
-					]);
-			}
+					default:
+						return m('.shell', [
+							m(
+								'.shell__content.text-center',
+								{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
+								[m('h2', t('lobby.get_ready')), m('p.lobby__status', session.stage)],
+							),
+						]);
+				}
+			})();
+
+			return m('.game', [m(ToastStack), stageView]);
 		},
 	};
 }

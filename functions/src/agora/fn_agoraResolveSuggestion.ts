@@ -13,6 +13,8 @@ import {
 	getRandomUID,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { awardCredit } from '../engagement/credits/creditEngine';
+import { CreditAction } from '@freedi/shared-types';
 
 interface Request {
 	sessionId: string;
@@ -88,6 +90,20 @@ export const agoraResolveSuggestion = onCall(
 			});
 
 			if (suggesterId && suggesterId !== uid) {
+				// Cross-app engagement credits — non-blocking by design
+				if (resolution === AgoraSuggestionStatus.accepted) {
+					awardCredit({
+						userId: suggesterId,
+						action: CreditAction.SUGGESTION_ACCEPTED,
+						sourceApp: SourceApp.AGORA,
+						statementId: suggestionId,
+					}).catch((error: unknown) => {
+						logError(error, {
+							operation: 'agora.resolveSuggestion.awardCredit',
+							userId: suggesterId,
+						});
+					});
+				}
 				const suggesterRef = db
 					.collection(Collections.agoraParticipants)
 					.doc(createAgoraParticipantId(sessionId, suggesterId));

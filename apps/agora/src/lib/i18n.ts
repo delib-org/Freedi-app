@@ -146,6 +146,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'המסע מוכן לכיתה',
 		'editor.ready': 'מוכן',
 		'editor.draft': 'טיוטה',
+		'toast.suggestion_accepted': 'ההצעה שלכם לשיפור התקבלה! +10 נקודות עזרה',
+		'toast.suggestion_thanked': 'קיבלתם תודה על הצעת השיפור! +5 נקודות',
+		'toast.round_started': 'סבב חדש נפתח בכיכר!',
 	},
 	en: {
 		'common.loading': 'Loading...',
@@ -287,6 +290,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'Journey is ready for class',
 		'editor.ready': 'Ready',
 		'editor.draft': 'Draft',
+		'toast.suggestion_accepted': 'Your improvement was accepted! +10 helping points',
+		'toast.suggestion_thanked': 'You got a thank-you for your suggestion! +5 points',
+		'toast.round_started': 'A new round opened in the square!',
 	},
 	ar: {
 		'common.loading': 'جارٍ التحميل...',
@@ -427,6 +433,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'الرحلة جاهزة للصف',
 		'editor.ready': 'جاهزة',
 		'editor.draft': 'مسودة',
+		'toast.suggestion_accepted': 'قُبل اقتراحكم للتحسين! +10 نقاط مساعدة',
+		'toast.suggestion_thanked': 'تلقيتم شكرًا على اقتراحكم! +5 نقاط',
+		'toast.round_started': 'فُتحت جولة جديدة في الساحة!',
 	},
 	es: {
 		'common.loading': 'Cargando...',
@@ -572,6 +581,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'El viaje está listo para la clase',
 		'editor.ready': 'Listo',
 		'editor.draft': 'Borrador',
+		'toast.suggestion_accepted': '¡Vuestra mejora fue aceptada! +10 puntos de ayuda',
+		'toast.suggestion_thanked': '¡Os agradecieron la sugerencia! +5 puntos',
+		'toast.round_started': '¡Se abrió una nueva ronda en la plaza!',
 	},
 	de: {
 		'common.loading': 'Wird geladen...',
@@ -717,6 +729,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'Reise ist bereit für die Klasse',
 		'editor.ready': 'Bereit',
 		'editor.draft': 'Entwurf',
+		'toast.suggestion_accepted': 'Eure Verbesserung wurde angenommen! +10 Hilfspunkte',
+		'toast.suggestion_thanked': 'Ihr habt ein Dankeschön erhalten! +5 Punkte',
+		'toast.round_started': 'Eine neue Runde hat auf dem Platz begonnen!',
 	},
 	nl: {
 		'common.loading': 'Laden...',
@@ -863,6 +878,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'De reis is klaar voor de klas',
 		'editor.ready': 'Klaar',
 		'editor.draft': 'Concept',
+		'toast.suggestion_accepted': 'Jullie verbetering is geaccepteerd! +10 hulppunten',
+		'toast.suggestion_thanked': 'Jullie kregen een bedankje voor de suggestie! +5 punten',
+		'toast.round_started': 'Een nieuwe ronde is geopend op het plein!',
 	},
 };
 

@@ -14,6 +14,8 @@ import {
 	functionConfig,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { awardCredit } from '../engagement/credits/creditEngine';
+import { CreditAction, SourceApp } from '@freedi/shared-types';
 
 interface CampDelta {
 	sum: number;
@@ -141,6 +143,18 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 					.get();
 				const creatorId = proposalSnap.data()?.creatorId as string | undefined;
 				if (creatorId) {
+					// Cross-app engagement credit for reaching cross-camp consensus
+					awardCredit({
+						userId: creatorId,
+						action: CreditAction.CONSENSUS_REACHED,
+						sourceApp: SourceApp.AGORA,
+						statementId,
+					}).catch((creditError: unknown) => {
+						logError(creditError, {
+							operation: 'agora.onEvaluationWritten.awardCredit',
+							userId: creatorId,
+						});
+					});
 					const authorRef = db
 						.collection(Collections.agoraParticipants)
 						.doc(createAgoraParticipantId(sessionId, creatorId));

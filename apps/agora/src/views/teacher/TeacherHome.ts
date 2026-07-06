@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import { createSession } from '../../lib/callables';
-import { db, collection, query, where, getDocs } from '../../lib/firebase';
+import { db, collection, query, getDocs } from '../../lib/firebase';
 import {
 	Collections,
 	AgoraDeviceMode,

@@ -12,6 +12,7 @@ import {
 	AgoraProposal,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
+import { PointsPill } from '../components/PointsPill';
 import { EraMap, EraMapLantern } from '../components/EraMap';
 import {
 	AgoraParticipant,
@@ -114,6 +115,7 @@ export function Deliberation(
 					? m('.delib__header', [
 							m('span.delib__round', t('delib.round', { n: live.roundNumber })),
 							live.roundEndsAt ? m(CountdownTimer, { endsAt: live.roundEndsAt }) : null,
+							m(PointsPill, { total: myParticipant.points.total }),
 						])
 					: null,
 			];

@@ -1127,5 +1127,6 @@ export {
 	agoraSetRound,
 	agoraResolveSuggestion,
 	agoraGenerateTopicPackage,
+	agoraSessionSweep,
 	onAgoraEvaluationWritten,
 } from './agora';

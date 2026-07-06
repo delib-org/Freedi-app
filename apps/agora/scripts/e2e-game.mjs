@@ -140,6 +140,10 @@ await pageA.getByRole('button', { name: /^(Accept|קבלת ההצעה)$/i }).cli
 await pageA.waitForSelector('text=/Accepted|התקבלה/', { timeout: 10000 });
 console.log('A ACCEPTED SUGGESTION');
 
+// B receives the in-app toast
+await pageB.waitForSelector('.toast', { timeout: 10000 });
+console.log('B TOAST:', await pageB.locator('.toast__text').textContent());
+
 // Verify helper points + notification
 await new Promise((r) => setTimeout(r, 1500));
 const partsRes2 = await ownerFetch('agoraParticipants');
