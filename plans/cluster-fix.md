@@ -10,17 +10,23 @@ This plan does two things:
 
 **Confirmed conference scope (everything else moves after Thursday):** cluster-map stability — clusters being lost, the Android "Oops" error, items showing as UNGROUPED — plus bigger/clearer cluster titles. Moderation tuning and the 7-word rule are post-conference.
 
-### 📍 Status snapshot (2026-07-05)
+### 📍 Status snapshot (2026-07-06)
 Work lives on branch **`feat/cluster-map-roadmap`** (not `feat/cluster-map`; the sign
 work is on `main-sign`, which does **not** yet have T0.3/T0.4/T1.x — merge forward when
 ready).
 - **Tier 0 — all done:** T0.1 (+T0.1b/c), T0.2, T0.3, T0.4 (mobile; desktop-centering not
   reproduced), T0.5. Cluster-map conference blockers are cleared.
-- **Tier 1 — in progress:** T1.1 ✅, T1.2 ✅, T1.3 ✅ (moderation fail-open + admin-alert
-  coalescing both done). **Next open items:** T1.4 (emoji reactions), T1.5, T1.6.
+- **Tier 1 — in progress:** T1.1 ✅, T1.2 ✅, T1.3 ✅ (moderation fail-open + BOTH admin-alert
+  floods fixed: ModerationLog coalescing + Firestore-backed error-email throttle; committed
+  `11671516f`, 41/41 jest). **Next open items:** T1.4 (emoji reactions), T1.5, T1.6.
 - Also landed on this branch (separate plans): Events Phase 1 dashboard, Freedi Studio app.
-- **Not yet deployed:** cluster fixes take effect on next `deploy:h:prod`; MC changes on next
-  MC hosting deploy; no functions redeployed yet.
+- **Not yet deployed:**
+  - **Functions** (T1.3): `moderation-log-service` + `error-notification-service` changes
+    need `deploy:f:*` (me-west1) — e.g. `detectMultipleSuggestions`, `findSimilarStatements`,
+    and any fn using the AI error-email path. Coalescing + cross-instance throttle only take
+    effect once deployed.
+  - **Hosting**: cluster fixes (T0.x) on next `deploy:h:prod`; admin ModerationLog "×N
+    attempts" UI + MC copy (T1.1/T1.2) on next respective hosting deploy.
 
 ---
 
