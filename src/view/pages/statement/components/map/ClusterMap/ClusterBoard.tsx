@@ -265,8 +265,10 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 			if (child.top.isCluster) {
 				const allMembers = child.sub ?? [];
 				const visibleMembers = allMembers.filter((member) => passesFilter(member.top));
-				// A cluster with no members left after filtering drops off the board.
-				if (visibleMembers.length === 0) return;
+				// Drop a cluster only when the filter hid ALL of its members. A
+				// genuinely empty cluster (e.g. one just created via "Add cluster",
+				// or awaiting its first note) must still render so it can be filled.
+				if (allMembers.length > 0 && visibleMembers.length === 0) return;
 				containers.push({
 					id: child.top.statementId,
 					label: child.top.statement,

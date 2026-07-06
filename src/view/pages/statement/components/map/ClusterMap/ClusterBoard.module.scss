@@ -34,7 +34,10 @@
 .pan {
 	position: absolute;
 	top: 0;
-	inset-inline-start: 0;
+	// Anchor to the PHYSICAL left, not the inline-start — the pan/zoom transform
+	// math (usePanZoom.fit) and every node coordinate (cx + pill.x) are
+	// left-based, so an RTL right-anchor would push the whole map off-centre.
+	left: 0;
 	transform-origin: 0 0;
 }
 
