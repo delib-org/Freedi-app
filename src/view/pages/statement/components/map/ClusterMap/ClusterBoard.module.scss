@@ -301,6 +301,14 @@
 	text-align: start;
 }
 
+// When the manage "⋮" menu is rendered it overlays the top inline-end corner.
+// Reserve inline-end space so note text (which fills the card width and wraps
+// toward the inline-end edge) never runs underneath the button. Logical prop →
+// correct in both LTR and RTL (Hebrew/Arabic) without direction-specific rules.
+.cardTextHasMenu {
+	padding-inline-end: 1.4rem;
+}
+
 .cardMenu {
 	position: absolute;
 	top: 2px;

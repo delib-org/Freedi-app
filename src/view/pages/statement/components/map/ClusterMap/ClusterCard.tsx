@@ -200,7 +200,12 @@ const ClusterCard: FC<Props> = ({
 				/>
 			) : (
 				// dir="auto" aligns each note by its own content (Hebrew/Arabic → RTL).
-				<span className={styles.cardText} dir="auto">
+				// When the "⋮" menu is shown it overlays the top inline-end corner, so
+				// reserve inline-end space (cardTextHasMenu) so text never runs under it.
+				<span
+					className={`${styles.cardText} ${canManage && !isEditing ? styles.cardTextHasMenu : ''}`}
+					dir="auto"
+				>
 					{statement.statement}
 				</span>
 			)}
