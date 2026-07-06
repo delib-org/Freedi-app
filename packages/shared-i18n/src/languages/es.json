@@ -1,4 +1,8 @@
 {
+  "Apply filter to everyone": "Aplicar filtro a todos",
+  "Your filter changes what everyone sees on this map": "Tu filtro cambia lo que todos ven en este mapa",
+  "Your filter changes only your own view": "Tu filtro cambia solo tu propia vista",
+  "Reset to shared view": "Restablecer a la vista compartida",
   "Your new option does not meet the current filter yet.": "Tu nueva opción aún no cumple con el filtro actual.",
   "Keep visible": "Mantener visible",
   "Untitled option": "Opción sin título",

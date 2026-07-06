@@ -1,4 +1,8 @@
 {
+  "Apply filter to everyone": "Apply filter to everyone",
+  "Your filter changes what everyone sees on this map": "Your filter changes what everyone sees on this map",
+  "Your filter changes only your own view": "Your filter changes only your own view",
+  "Reset to shared view": "Reset to shared view",
   "Your new option does not meet the current filter yet.": "Your new option does not meet the current filter yet.",
   "Keep visible": "Keep visible",
   "Untitled option": "Untitled option",

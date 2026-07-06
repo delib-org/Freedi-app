@@ -1,4 +1,8 @@
 {
+  "Apply filter to everyone": "تطبيق التصفية على الجميع",
+  "Your filter changes what everyone sees on this map": "تصفيتك تغيّر ما يراه الجميع على هذه الخريطة",
+  "Your filter changes only your own view": "تصفيتك تغيّر عرضك أنت فقط",
+  "Reset to shared view": "إعادة التعيين إلى العرض المشترك",
   "Your new option does not meet the current filter yet.": "خيارك الجديد لا يستوفي عامل التصفية الحالي بعد.",
   "Keep visible": "إبقاؤه ظاهرًا",
   "Untitled option": "خيار بدون عنوان",

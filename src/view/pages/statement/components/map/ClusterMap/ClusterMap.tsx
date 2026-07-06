@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams, useSearchParams } from 'react-router';
 import { StatementType } from '@freedi/shared-types';
@@ -20,6 +20,7 @@ import SummarizeModal from '@/view/pages/statement/components/statementTypes/que
 import SummaryDisplay from '@/view/pages/statement/components/statementTypes/question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
 import ClusterBoard from './ClusterBoard';
 import MapAdminPanel from './MapAdminPanel';
+import { loadLocalFilter, saveLocalFilter, type LocalMapFilter } from './mapLocalFilter';
 import { useMindMap } from '../MindMapMV';
 import styles from './ClusterMap.module.scss';
 
@@ -57,6 +58,27 @@ const ClusterMap: FC = () => {
 	// the admin has opted in via statementSettings.map.allowViewerFilter.
 	const allowViewerFilter = statement?.statementSettings?.map?.allowViewerFilter ?? false;
 	const canFilterMap = !isEmbed && isQuestion && (isAdmin || allowViewerFilter);
+
+	// Per-viewer local filter override. A viewer (and an admin who picks "only me")
+	// filters their OWN view via this, without touching the shared statementSettings
+	// filter everyone else sees. Persisted per (statement, user) in localStorage.
+	// `applyToEveryone` (admins only, session state) decides where an admin's filter
+	// edits go: the shared setting (default) or this local override.
+	const [localFilter, setLocalFilter] = useState<LocalMapFilter | null>(null);
+	const [applyToEveryone, setApplyToEveryone] = useState(true);
+
+	useEffect(() => {
+		if (!statementId) return;
+		setLocalFilter(loadLocalFilter(statementId, user?.uid));
+	}, [statementId, user?.uid]);
+
+	const updateLocalFilter = useCallback(
+		(next: LocalMapFilter | null) => {
+			setLocalFilter(next);
+			if (statementId) saveLocalFilter(statementId, user?.uid, next);
+		},
+		[statementId, user?.uid],
+	);
 
 	// Discussion summary — reuses the same mechanism as the question document:
 	// admins generate/regenerate it (callable `summarizeDiscussion` writes
@@ -143,7 +165,7 @@ const ClusterMap: FC = () => {
 
 			<div className={styles.canvas}>
 				{results ? (
-					<ClusterBoard results={results} />
+					<ClusterBoard results={results} localFilter={localFilter} />
 				) : (
 					<div className={styles.loading}>
 						<div className={styles.spinner} />
@@ -157,6 +179,10 @@ const ClusterMap: FC = () => {
 					statement={statement}
 					settings={statement.statementSettings ?? {}}
 					canConfigure={canConfigureMap}
+					localFilter={localFilter}
+					onLocalFilterChange={updateLocalFilter}
+					applyToEveryone={applyToEveryone}
+					onApplyToEveryoneChange={setApplyToEveryone}
 				/>
 			)}
 

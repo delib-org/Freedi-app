@@ -1,4 +1,8 @@
 {
+  "Apply filter to everyone": "Filter op iedereen toepassen",
+  "Your filter changes what everyone sees on this map": "Je filter verandert wat iedereen op deze kaart ziet",
+  "Your filter changes only your own view": "Je filter verandert alleen je eigen weergave",
+  "Reset to shared view": "Terug naar gedeelde weergave",
   "Your new option does not meet the current filter yet.": "Je nieuwe optie voldoet nog niet aan het huidige filter.",
   "Keep visible": "Zichtbaar houden",
   "Untitled option": "Naamloze optie",

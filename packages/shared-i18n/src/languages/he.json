@@ -1,4 +1,8 @@
 {
+  "Apply filter to everyone": "החל סינון על כולם",
+  "Your filter changes what everyone sees on this map": "הסינון שלך משנה את מה שכולם רואים במפה",
+  "Your filter changes only your own view": "הסינון שלך משנה רק את התצוגה שלך",
+  "Reset to shared view": "איפוס לתצוגה המשותפת",
   "Your new option does not meet the current filter yet.": "האפשרות החדשה שלך עדיין אינה עומדת בסינון הנוכחי.",
   "Keep visible": "להשאיר גלוי",
   "Untitled option": "אפשרות ללא כותרת",

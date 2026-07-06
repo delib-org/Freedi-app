@@ -35,11 +35,18 @@ import { focusEditField } from '../mapHelpers/focusEditField';
 import { usePanZoom } from '../hooks/usePanZoom';
 import PanZoomControls from '../components/PanZoomControls';
 import ClusterCard from './ClusterCard';
+import type { LocalMapFilter } from './mapLocalFilter';
 import styles from './ClusterBoard.module.scss';
 
 interface Props {
 	/** Results tree from useMindMap: top = subject, sub = clusters, cluster.sub = members. */
 	results: Results;
+	/**
+	 * Per-viewer local filter override (localStorage-backed, owned by ClusterMap).
+	 * When set it takes precedence over the shared statementSettings.map filter, so
+	 * a viewer's — or an admin's "only me" — filter affects only their own view.
+	 */
+	localFilter?: LocalMapFilter | null;
 }
 
 // Card + layout geometry (px).
@@ -172,7 +179,7 @@ interface PlacedCluster extends BoardCluster {
  * every card; authors manage their own; anyone with access can add and
  * evaluate. Real-time updates flow in via ClusterMap's mind-map listener.
  */
-const ClusterBoard: FC<Props> = ({ results }) => {
+const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 	const { t } = useTranslation();
 	const { user, creator } = useAuthentication();
 	const subject = results.top;
@@ -195,13 +202,16 @@ const ClusterBoard: FC<Props> = ({ results }) => {
 	const synthVisibility = mapSettings?.synthVisibility ?? MAP_SYNTH_VISIBILITY_DEFAULT;
 	const showProvenance = mapSettings?.showProvenance ?? true;
 
-	// Admin-controlled response filter. Hides notes whose consensus / average
-	// evaluation falls below the threshold; clusters left with no visible
-	// members drop off the board entirely. Persisted on the question, so the
-	// filtered view is shared by everyone who opens the map.
-	const filterMetric: MapFilterMetric = mapSettings?.filterMetric ?? 'none';
-	const minConsensus = mapSettings?.minConsensus ?? -1;
-	const minAverageEvaluation = mapSettings?.minAverageEvaluation ?? -1;
+	// Response filter. Hides notes whose consensus / average evaluation falls
+	// below the threshold; clusters left with no visible members drop off the
+	// board. The shared filter is persisted on the question (everyone sees it);
+	// a per-viewer `localFilter` (this user's own, or an admin's "only me")
+	// overrides it for this device only, so it takes precedence when present.
+	const filterMetric: MapFilterMetric =
+		localFilter?.filterMetric ?? mapSettings?.filterMetric ?? 'none';
+	const minConsensus = localFilter?.minConsensus ?? mapSettings?.minConsensus ?? -1;
+	const minAverageEvaluation =
+		localFilter?.minAverageEvaluation ?? mapSettings?.minAverageEvaluation ?? -1;
 
 	// Options this user just added that are kept visible past an active filter for
 	// a grace period (see KEEP_VISIBLE_GRACE_MS) — session-only and local to this

@@ -1,4 +1,8 @@
 {
+  "Apply filter to everyone": "اعمال فیلتر برای همه",
+  "Your filter changes what everyone sees on this map": "فیلتر شما آنچه را همه روی این نقشه می‌بینند تغییر می‌دهد",
+  "Your filter changes only your own view": "فیلتر شما فقط نمای خودتان را تغییر می‌دهد",
+  "Reset to shared view": "بازنشانی به نمای مشترک",
   "Your new option does not meet the current filter yet.": "گزینه جدید شما هنوز با فیلتر فعلی مطابقت ندارد.",
   "Keep visible": "نمایش بماند",
   "Untitled option": "گزینه بدون عنوان",

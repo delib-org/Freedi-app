@@ -18,18 +18,28 @@ import {
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import type { LocalMapFilter } from './mapLocalFilter';
 import styles from './MapAdminPanel.module.scss';
 
 interface MapAdminPanelProps {
 	statement: Statement;
 	settings: StatementSettings;
 	/**
-	 * True when the viewer is an admin/creator who can change every map setting.
-	 * False for a permitted non-admin viewer, who only sees the filter section
-	 * and whose filter writes go through the `setMapFilter` callable (direct
-	 * writes to statementSettings are blocked by Firestore rules for non-admins).
+	 * True when the viewer is an admin/creator who can change every map setting
+	 * AND write the shared filter for everyone. False for a permitted non-admin
+	 * viewer, whose filter is always local to their own device.
 	 */
 	canConfigure: boolean;
+	/** This viewer's local filter override (null = following the shared filter). */
+	localFilter: LocalMapFilter | null;
+	/** Persist/clear this viewer's local filter override. */
+	onLocalFilterChange: (filter: LocalMapFilter | null) => void;
+	/**
+	 * Admin-only scope switch. true (default) → filter edits write the SHARED
+	 * setting (everyone sees them); false → edits stay in the admin's local view.
+	 */
+	applyToEveryone: boolean;
+	onApplyToEveryoneChange: (everyone: boolean) => void;
 }
 
 const filterMetricOrder: MapFilterMetric[] = ['none', 'consensus', 'average'];
@@ -84,7 +94,15 @@ function loadHandleY(): number | null {
  * position persisted) that opens a right-side drawer of map settings. Modeled
  * on the Join app's FacilitatorPanel so admins get a consistent control surface.
  */
-const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings, canConfigure }) => {
+const MapAdminPanel: FC<MapAdminPanelProps> = ({
+	statement,
+	settings,
+	canConfigure,
+	localFilter,
+	onLocalFilterChange,
+	applyToEveryone,
+	onApplyToEveryoneChange,
+}) => {
 	// The app applies RTL via the CSS `direction` property but does NOT set a
 	// `dir="rtl"` attribute, so `[dir='rtl']` selectors never match. Drive RTL
 	// off the app's own direction via a scoped `.rtl` class instead.
@@ -126,10 +144,16 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings, canConfigu
 	const clusterFont = map.clusterFontRem ?? CLUSTER_FONT_DEFAULT;
 	const synthVisibility: MapSynthVisibility = map.synthVisibility ?? 'all';
 	const showProvenance = map.showProvenance ?? true;
-	const filterMetric: MapFilterMetric = map.filterMetric ?? 'none';
-	const minConsensus = map.minConsensus ?? FILTER_DEFAULT;
-	const minAverageEvaluation = map.minAverageEvaluation ?? FILTER_DEFAULT;
 	const allowViewerFilter = map.allowViewerFilter ?? false;
+
+	// The filter that actually drives this viewer's board: their local override
+	// when present (viewer, or admin "only me"), otherwise the shared setting.
+	// Admin edits write the shared setting only when `writeShared` is true.
+	const writeShared = canConfigure && applyToEveryone;
+	const filterMetric: MapFilterMetric = localFilter?.filterMetric ?? map.filterMetric ?? 'none';
+	const minConsensus = localFilter?.minConsensus ?? map.minConsensus ?? FILTER_DEFAULT;
+	const minAverageEvaluation =
+		localFilter?.minAverageEvaluation ?? map.minAverageEvaluation ?? FILTER_DEFAULT;
 
 	const update = useCallback(
 		(patch: Partial<MapSettings>) => {
@@ -147,38 +171,43 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings, canConfigu
 		[statement.statementId],
 	);
 
-	// Filter writes. Admins write statementSettings directly; permitted viewers
-	// go through the setMapFilter callable (Firestore rules block non-admins from
-	// writing statementSettings). The callable persists only the filter fields.
+	// Filter writes. When an admin has "apply to everyone" on, edits go to the
+	// SHARED statementSettings.map (everyone's view). Otherwise — a non-admin
+	// viewer, or an admin filtering "only me" — the edit stays in this device's
+	// local override and never touches the shared setting or the DB.
 	const updateFilter = useCallback(
 		(
 			patch: Pick<Partial<MapSettings>, 'filterMetric' | 'minConsensus' | 'minAverageEvaluation'>,
 		) => {
-			if (canConfigure) {
+			if (writeShared) {
 				update(patch);
 
 				return;
 			}
-			void (async () => {
-				try {
-					const { httpsCallable } = await import('firebase/functions');
-					const { functions } = await import('@/controllers/db/config');
-					const call = httpsCallable(functions, 'setMapFilter');
-					await call({
-						statementId: statement.statementId,
-						filterMetric: patch.filterMetric ?? filterMetric,
-						minConsensus: patch.minConsensus ?? minConsensus,
-						minAverageEvaluation: patch.minAverageEvaluation ?? minAverageEvaluation,
-					});
-				} catch (error) {
-					logError(error, {
-						operation: 'mapAdminPanel.updateFilter',
-						statementId: statement.statementId,
-					});
-				}
-			})();
+			onLocalFilterChange({
+				filterMetric: patch.filterMetric ?? filterMetric,
+				minConsensus: patch.minConsensus ?? minConsensus,
+				minAverageEvaluation: patch.minAverageEvaluation ?? minAverageEvaluation,
+			});
 		},
-		[canConfigure, update, statement.statementId, filterMetric, minConsensus, minAverageEvaluation],
+		[writeShared, update, onLocalFilterChange, filterMetric, minConsensus, minAverageEvaluation],
+	);
+
+	// Admin scope switch. Turning "apply to everyone" ON drops the admin's local
+	// override so they see/edit the shared filter; turning it OFF seeds a local
+	// override from the current view so they keep filtering just for themselves.
+	const handleApplyToEveryone = useCallback(
+		(everyone: boolean) => {
+			onApplyToEveryoneChange(everyone);
+			onLocalFilterChange(everyone ? null : { filterMetric, minConsensus, minAverageEvaluation });
+		},
+		[
+			onApplyToEveryoneChange,
+			onLocalFilterChange,
+			filterMetric,
+			minConsensus,
+			minAverageEvaluation,
+		],
 	);
 
 	const onHandlePointerDown = (e: ReactPointerEvent) => {
@@ -354,6 +383,43 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings, canConfigu
 							</div>
 						)}
 						<p className={styles.rowHelp}>{t('Only show responses at or above this score')}</p>
+
+						{canConfigure ? (
+							<>
+								<div className={styles.rowMain}>
+									<span className={styles.rowLabel}>{t('Apply filter to everyone')}</span>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={applyToEveryone}
+										aria-label={t('Apply filter to everyone')}
+										className={`${styles.toggle} ${applyToEveryone ? styles.toggleOn : ''}`}
+										onClick={() => handleApplyToEveryone(!applyToEveryone)}
+									>
+										<span className={styles.toggleTrack} />
+										<span className={styles.toggleKnob} />
+									</button>
+								</div>
+								<p className={styles.rowHelp}>
+									{applyToEveryone
+										? t('Your filter changes what everyone sees on this map')
+										: t('Your filter changes only your own view')}
+								</p>
+							</>
+						) : (
+							<>
+								<p className={styles.rowHelp}>{t('Your filter changes only your own view')}</p>
+								{localFilter && (
+									<button
+										type="button"
+										className={styles.resetLink}
+										onClick={() => onLocalFilterChange(null)}
+									>
+										{t('Reset to shared view')}
+									</button>
+								)}
+							</>
+						)}
 					</div>
 				</section>
 
