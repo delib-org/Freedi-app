@@ -1,10 +1,23 @@
 import m from 'mithril';
 import type { AgoraParticipant } from '@freedi/shared-types';
 
+export interface EraMapLantern {
+	id: string;
+	/** 0..1 — consensus/support drives the glow */
+	brightness: number;
+	/** 0..1 — share of support coming from the left camp (colors the ring) */
+	leftShare: number;
+	/** 0..1 — bridging score colors toward gold as camps agree */
+	bridging: number;
+	isMine?: boolean;
+}
+
 export interface EraMapAttrs {
 	participants: AgoraParticipant[];
 	/** Participant to highlight (the viewer's own marker) */
 	myParticipantId?: string;
+	/** Idea lanterns filling the town square during deliberation */
+	lanterns?: EraMapLantern[];
 }
 
 /**
@@ -47,13 +60,39 @@ const STAR_POSITIONS: Array<[number, number, number]> = Array.from({ length: 26 
 	0.8 + hash01(`star-${index}`, 5) * 1.4,
 ]);
 
+/** Idea lanterns hang inside the town-square ellipse (cx 505, cy 470) */
+function lanternPosition(id: string): { x: number; y: number } {
+	const angle = hash01(id, 6) * Math.PI * 2;
+	const radial = Math.sqrt(hash01(id, 7));
+
+	return {
+		x: 505 + Math.cos(angle) * 125 * radial,
+		y: 462 + Math.sin(angle) * 26 * radial,
+	};
+}
+
+/** Blend camp color by left share, pulled toward lantern gold by bridging */
+function lanternRingColor(leftShare: number, bridging: number): string {
+	const left = { r: 91, g: 123, b: 214 }; // --camp-left
+	const right = { r: 214, g: 91, b: 107 }; // --camp-right
+	const gold = { r: 255, g: 216, b: 130 }; // --lantern-glow
+	const base = {
+		r: left.r * leftShare + right.r * (1 - leftShare),
+		g: left.g * leftShare + right.g * (1 - leftShare),
+		b: left.b * leftShare + right.b * (1 - leftShare),
+	};
+	const mix = (a: number, b: number) => Math.round(a * (1 - bridging) + b * bridging);
+
+	return `rgb(${mix(base.r, gold.r)}, ${mix(base.g, gold.g)}, ${mix(base.b, gold.b)})`;
+}
+
 function building(x: number, y: number, width: number, height: number, fill: string): m.Children {
 	return m('rect', { x, y: y - height, width, height, fill, rx: 2 });
 }
 
 export const EraMap: m.Component<EraMapAttrs> = {
 	view(vnode) {
-		const { participants, myParticipantId } = vnode.attrs;
+		const { participants, myParticipantId, lanterns = [] } = vnode.attrs;
 
 		return m('.era-map', { 'aria-hidden': 'true' }, [
 			m(
@@ -231,6 +270,32 @@ export const EraMap: m.Component<EraMapAttrs> = {
 							'stroke-linecap': 'round',
 						}),
 					]),
+
+					// --- Layer 5: idea lanterns in the town square ---
+					lanterns.map((lantern) => {
+						const { x, y } = lanternPosition(lantern.id);
+						const glow = 0.25 + lantern.brightness * 0.75;
+						const ring = lanternRingColor(lantern.leftShare, lantern.bridging);
+
+						return m('g.era-map__marker', { key: `lantern-${lantern.id}` }, [
+							m('circle.era-map__marker-glow', {
+								cx: x,
+								cy: y,
+								r: 10 + lantern.brightness * 10,
+								fill: 'url(#em-glow)',
+								opacity: glow,
+							}),
+							m('circle', {
+								cx: x,
+								cy: y,
+								r: lantern.isMine ? 6 : 4.5,
+								fill: '#f5b944',
+								opacity: 0.55 + lantern.brightness * 0.45,
+								stroke: ring,
+								'stroke-width': lantern.isMine ? 3 : 2,
+							}),
+						]);
+					}),
 
 					// --- Layer 6: participant markers (staging by the portal) ---
 					participants.map((participant) => {

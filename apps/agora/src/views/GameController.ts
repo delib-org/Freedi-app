@@ -8,6 +8,7 @@ import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
+import { Deliberation } from './Deliberation';
 import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
 
 /**
@@ -101,6 +102,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				case AgoraStage.positioning:
 					return myParticipant
 						? m(Positioning, { topic, myParticipant })
+						: m(
+								'.shell',
+								m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
+							);
+
+				case AgoraStage.deliberation:
+					return myParticipant
+						? m(Deliberation, { session, myParticipant, userId })
 						: m(
 								'.shell',
 								m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),

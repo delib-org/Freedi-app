@@ -1123,4 +1123,8 @@ export {
 	agoraJoinSession,
 	agoraAdvanceStage,
 	agoraGradeValueIdentification,
+	agoraWritingAssistant,
+	agoraSetRound,
+	agoraResolveSuggestion,
+	onAgoraEvaluationWritten,
 } from './agora';

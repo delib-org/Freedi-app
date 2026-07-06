@@ -3,6 +3,15 @@ import { t } from '../../lib/i18n';
 import { ensureUser } from '../../lib/user';
 import { listenToSession, stopListening, getSessionState } from '../../lib/session';
 import { advanceStage } from '../../lib/callables';
+import {
+	getDeliberationState,
+	listenToDeliberation,
+	stopDeliberationListeners,
+	setRound,
+} from '../../lib/proposals';
+import { lanternsFromState } from '../Deliberation';
+import { CountdownTimer } from '../../components/CountdownTimer';
+import { AgoraRoundPhase } from '@freedi/shared-types';
 import { EraMap } from '../../components/EraMap';
 import { QRShare } from '../../components/QRShare';
 import { AgoraStage } from '@freedi/shared-types';
@@ -47,9 +56,25 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			});
 	}
 
+	let settingRound = false;
+
+	function handleSetRound(phase: AgoraRoundPhase): void {
+		if (settingRound) return;
+		settingRound = true;
+		setRound(sessionId, phase)
+			.catch((error: unknown) => {
+				console.error('[Teacher] Set round failed:', error);
+			})
+			.finally(() => {
+				settingRound = false;
+				m.redraw();
+			});
+	}
+
 	return {
 		onremove() {
 			stopListening();
+			stopDeliberationListeners();
 		},
 
 		view() {
@@ -84,9 +109,65 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const nextStage =
 				stageIndex >= 0 && stageIndex < STAGE_ORDER.length - 1 ? STAGE_ORDER[stageIndex + 1] : null;
 
+			const inDeliberation = session.stage === AgoraStage.deliberation;
+			if (inDeliberation && userId) listenToDeliberation(sessionId, userId);
+			const { proposals, scores } = getDeliberationState();
+
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-					m(EraMap, { participants }),
+					m(EraMap, {
+						participants,
+						lanterns: inDeliberation ? lanternsFromState(proposals, scores, userId) : [],
+					}),
+
+					inDeliberation
+						? m('.card.stack', [
+								m('p.teacher__section-title', t('teacher.round_controls')),
+								m('.delib__header', [
+									m('span.delib__round', t('delib.round', { n: session.roundNumber })),
+									session.roundEndsAt ? m(CountdownTimer, { endsAt: session.roundEndsAt }) : null,
+									m('span.values__score', `${t('teacher.proposals_count')}: ${proposals.length}`),
+								]),
+								m('.teacher__mode-row', [
+									m(
+										'button.btn',
+										{
+											class:
+												session.roundPhase === AgoraRoundPhase.propose
+													? 'btn--primary'
+													: 'btn--secondary',
+											disabled: settingRound,
+											onclick: () => handleSetRound(AgoraRoundPhase.propose),
+										},
+										t('teacher.round_propose'),
+									),
+									m(
+										'button.btn',
+										{
+											class:
+												session.roundPhase === AgoraRoundPhase.rate
+													? 'btn--primary'
+													: 'btn--secondary',
+											disabled: settingRound,
+											onclick: () => handleSetRound(AgoraRoundPhase.rate),
+										},
+										t('teacher.round_rate'),
+									),
+									m(
+										'button.btn',
+										{
+											class:
+												session.roundPhase === AgoraRoundPhase.improve
+													? 'btn--primary'
+													: 'btn--secondary',
+											disabled: settingRound,
+											onclick: () => handleSetRound(AgoraRoundPhase.improve),
+										},
+										t('teacher.round_improve'),
+									),
+								]),
+							])
+						: null,
 
 					m('.card.teacher__code-panel', [
 						session.stage === AgoraStage.lobby

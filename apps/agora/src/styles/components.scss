@@ -488,3 +488,170 @@
 		}
 	}
 }
+
+// --- Deliberation ---
+.delib {
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-md);
+		flex-wrap: wrap;
+	}
+
+	&__round {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+		font-size: var(--font-size-lg);
+	}
+
+	&__actions {
+		display: flex;
+		gap: var(--space-sm);
+
+		.btn {
+			flex: 1;
+		}
+	}
+
+	&__coach {
+		border-inline-start: 3px solid var(--lantern);
+
+		strong {
+			color: var(--lantern-glow);
+		}
+	}
+
+	&__rate-card {
+		animation: scene-enter var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__rate-buttons {
+		display: flex;
+		gap: var(--space-md);
+		margin-top: var(--space-md);
+
+		.btn {
+			flex: 1;
+		}
+	}
+}
+
+.btn--rate {
+	font-size: var(--font-size-lg);
+	padding: 1em;
+	transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-base) ease;
+
+	&:active {
+		transform: scale(0.94) rotate(-1deg);
+	}
+}
+
+.btn--rate-agree {
+	background: linear-gradient(180deg, var(--success), #5cb586);
+	color: var(--ink);
+
+	&:hover {
+		box-shadow: 0 0 18px rgba(125, 214, 163, 0.5);
+	}
+}
+
+.btn--rate-disagree {
+	background: transparent;
+	color: var(--danger);
+	border: 1px solid var(--danger);
+
+	&:hover {
+		box-shadow: 0 0 14px rgba(240, 142, 155, 0.35);
+	}
+}
+
+// --- Camp support bars ---
+.camp-bar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+
+	&__label {
+		font-family: var(--font-display);
+		min-width: 1.4em;
+	}
+
+	&__track {
+		flex: 1;
+		height: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+	}
+
+	&__fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__count {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		min-width: 1.4em;
+		text-align: end;
+	}
+}
+
+// --- Fuse countdown ---
+.fuse {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	min-width: 180px;
+	flex: 1;
+
+	&__track {
+		position: relative;
+		flex: 1;
+		height: 6px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		direction: ltr;
+	}
+
+	&__burn {
+		height: 100%;
+		background: linear-gradient(90deg, var(--lantern-deep), var(--lantern-glow));
+		border-radius: var(--radius-full);
+		transition: width 1s linear;
+	}
+
+	&__spark {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: radial-gradient(circle, #fff 0%, var(--lantern-glow) 45%, transparent 70%);
+		animation: era-map-marker-pulse 0.8s ease-in-out infinite;
+	}
+
+	&__time {
+		font-family: var(--font-display);
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+
+	&__label {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&--urgent {
+		.fuse__burn {
+			background: linear-gradient(90deg, #8a2f3c, var(--danger));
+		}
+
+		.fuse__time {
+			color: var(--danger);
+		}
+	}
+}
