@@ -37,7 +37,15 @@ import {
 	connectFunctionsEmulator,
 	httpsCallable,
 } from 'firebase/functions';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
+import {
+	getStorage,
+	FirebaseStorage,
+	connectStorageEmulator,
+	ref as storageRef,
+	uploadBytesResumable,
+	getDownloadURL,
+	UploadTask,
+} from 'firebase/storage';
 
 // Functions deploy to me-west1 (Tel Aviv) — never rely on the us-central1 default.
 const FUNCTIONS_REGION = 'me-west1';
@@ -90,6 +98,11 @@ function init(): void {
 		} catch (error) {
 			console.error('[Firebase] Functions emulator connection failed:', error);
 		}
+		try {
+			connectStorageEmulator(storage, 'localhost', 9199);
+		} catch (error) {
+			console.error('[Firebase] Storage emulator connection failed:', error);
+		}
 	}
 }
 
@@ -119,6 +132,11 @@ export {
 	signInWithPopup,
 	linkWithPopup,
 	onAuthStateChanged,
+	storageRef,
+	uploadBytesResumable,
+	getDownloadURL,
 };
+
+export type { UploadTask };
 
 export type { User, Unsubscribe, DocumentReference, CollectionReference, QueryConstraint };

@@ -6,3 +6,4 @@ export { agoraWritingAssistant } from './fn_agoraWritingAssistant';
 export { agoraSetRound } from './fn_agoraSetRound';
 export { agoraResolveSuggestion } from './fn_agoraResolveSuggestion';
 export { onAgoraEvaluationWritten } from './fn_onAgoraEvaluation';
+export { agoraGenerateTopicPackage } from './fn_agoraGenerateTopicPackage';

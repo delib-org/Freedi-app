@@ -23,12 +23,7 @@ export function TeacherHome(): m.Component {
 	async function loadTopics(): Promise<void> {
 		try {
 			await ensureUser();
-			const snapshot = await getDocs(
-				query(
-					collection(db, Collections.agoraTopicPackages),
-					where('status', '==', AgoraTopicStatus.ready),
-				),
-			);
+			const snapshot = await getDocs(query(collection(db, Collections.agoraTopicPackages)));
 			const loaded: AgoraTopicPackage[] = [];
 			snapshot.forEach((docSnap) => {
 				try {
@@ -134,7 +129,27 @@ export function TeacherHome(): m.Component {
 													role: 'button',
 													tabindex: 0,
 												},
-												[m('strong', topic.title), m('span', topic.language)],
+												[
+													m('strong', topic.title),
+													m('.editor__row', [
+														m(
+															'span.values__score',
+															topic.status === AgoraTopicStatus.ready
+																? t('editor.ready')
+																: t('editor.draft'),
+														),
+														m(
+															'button.btn.btn--ghost',
+															{
+																onclick: (event: Event) => {
+																	event.stopPropagation();
+																	m.route.set(`/teach/topic/${topic.topicPackageId}`);
+																},
+															},
+															'✎',
+														),
+													]),
+												],
 											),
 										),
 									),

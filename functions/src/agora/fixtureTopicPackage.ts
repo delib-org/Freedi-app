@@ -1,0 +1,160 @@
+/**
+ * Deterministic French Revolution topic package used when OPENAI_API_KEY
+ * is absent (emulators/e2e/CI). Mirrors the demo seed content.
+ */
+export const FIXTURE_TOPIC_PACKAGE = {
+	title: 'המהפכה הצרפתית — 1789',
+	framingText:
+		'הכיתה שלכם נבחרה למשימה נועזת: לחזור בזמן לצרפת של 1789, רגע לפני שהמהפכה יוצאת משליטה. העם רעב, האוצר ריק, והמדינה עומדת על סף מלחמת אזרחים. בני התקופה מבקשים את עזרתכם במציאת פתרון שיהיה מקובל על כל הצדדים.',
+	characters: [
+		{
+			characterId: 'char-a',
+			name: 'הרוזן דה-לה-רוש',
+			role: 'אציל מלוכני',
+			arguments: [
+				'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים.',
+				'המסורת והכנסייה מחזיקות את החברה יחד כבר אלף שנה.',
+				'שינויים חייבים לבוא בהדרגה, מלמעלה, בידי מי שיודע לנהל ממלכה.',
+			],
+			values: [
+				{ valueId: 'val-order', label: 'סדר ויציבות', description: 'חשש עמוק מכאוס ומאלימות המונים' },
+				{ valueId: 'val-tradition', label: 'מסורת', description: 'כבוד למוסדות ההיסטוריים — הכתר והכנסייה' },
+				{ valueId: 'val-hierarchy', label: 'היררכיה', description: 'אמונה שהנהגה דורשת ניסיון ומעמד' },
+			],
+		},
+		{
+			characterId: 'char-b',
+			name: 'קמיל דופון',
+			role: 'עורך דין יעקוביני',
+			arguments: [
+				'העם גווע ברעב בזמן שהארמון עורך נשפים. זה חייב להיגמר.',
+				'כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.',
+				'רק שלטון של העם, למען העם, יביא צדק לצרפת.',
+			],
+			values: [
+				{ valueId: 'val-equality', label: 'שוויון', description: 'ביטול זכויות היתר של האצולה' },
+				{ valueId: 'val-liberty', label: 'חירות', description: 'חופש הפרט מול שלטון עריץ' },
+				{ valueId: 'val-popular', label: 'ריבונות העם', description: 'הלגיטימציה לשלטון באה מהעם בלבד' },
+			],
+		},
+	],
+	positioningScale: {
+		leftLabel: 'מלוכנים',
+		rightLabel: 'יעקובינים',
+		leftCharacterId: 'char-a',
+		rightCharacterId: 'char-b',
+	},
+	challengeQuestion:
+		'מה צריך לעשות כדי לבנות שלטון צודק ויציב בצרפת — בלי להידרדר לטרור או לרעב?',
+	plausibilityRubric: {
+		criteria: [
+			{
+				criterionId: 'crit-period',
+				label: 'התאמה לתקופה',
+				description: 'הפתרון אפשרי בטכנולוגיה, במוסדות ובידע של 1789',
+				weight: 0.4,
+			},
+			{
+				criterionId: 'crit-feasible',
+				label: 'ישימות פוליטית',
+				description: 'לפחות חלק מהכוחות בתקופה היו יכולים לקבל את הפתרון',
+				weight: 0.35,
+			},
+			{
+				criterionId: 'crit-specific',
+				label: 'קונקרטיות',
+				description: 'הפתרון מציע צעדים ממשיים ולא סיסמאות',
+				weight: 0.25,
+			},
+		],
+	},
+	healthMetrics: [
+		{
+			metricId: 'met-bread',
+			label: 'מחיר הלחם',
+			description: 'יוקר המחיה של פשוטי העם',
+			min: 0,
+			max: 100,
+			baseline: 25,
+			higherIsBetter: false,
+		},
+		{
+			metricId: 'met-stability',
+			label: 'יציבות שלטונית',
+			description: 'הסיכוי להימנע ממלחמת אזרחים',
+			min: 0,
+			max: 100,
+			baseline: 30,
+		},
+		{
+			metricId: 'met-rights',
+			label: 'זכויות האזרח',
+			description: 'חירויות הפרט והשוויון בפני החוק',
+			min: 0,
+			max: 100,
+			baseline: 20,
+		},
+		{
+			metricId: 'met-treasury',
+			label: 'קופת המדינה',
+			description: 'יכולת המדינה לממן את עצמה',
+			min: 0,
+			max: 100,
+			baseline: 15,
+		},
+	],
+	scenes: [
+		{
+			sceneId: 'scene-intro',
+			kind: 'intro',
+			title: 'המשימה',
+			text: 'צרפת, 1789. הממלכה על סף תהום. אתם — נוסעי הזמן — המשימה שלכם: למצוא פתרון שכל הצדדים יוכלו לחיות איתו.',
+		},
+		{
+			sceneId: 'scene-tunnel',
+			kind: 'timeTunnel',
+			title: 'מנהרת הזמן',
+			text: 'המנהרה נפתחת. אורות חולפים על פניכם — מאתיים שנה אחורה. כשהערפל מתפזר, אתם עומדים ברחובות פריז.',
+		},
+		{
+			sceneId: 'scene-period',
+			kind: 'periodExplainer',
+			title: 'פריז, 1789',
+			text: 'המדינה שקועה בחובות אחרי מלחמות יקרות. הקציר נכשל ומחיר הלחם הכפיל את עצמו. האצולה והכנסייה פטורות ממס, והעם נושא בנטל.',
+		},
+		{
+			sceneId: 'scene-a',
+			kind: 'perspectiveA',
+			title: 'בארמון',
+			text: 'הרוזן דה-לה-רוש מקבל אתכם בטרקלין מוזהב.',
+			dialogue: [
+				{ speaker: 'הרוזן דה-לה-רוש', line: 'ברוכים הבאים. שמעתי שבאתם מרחוק לעזור לצרפת.' },
+				{ speaker: 'הרוזן דה-לה-רוש', line: 'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס.' },
+				{ speaker: 'הרוזן דה-לה-רוש', line: 'שינויים חייבים לבוא בהדרגה, מלמעלה.' },
+			],
+		},
+		{
+			sceneId: 'scene-b',
+			kind: 'perspectiveB',
+			title: 'בבית הקפה',
+			text: 'קמיל דופון יושב בבית קפה הומה, מוקף בעיתונים.',
+			dialogue: [
+				{ speaker: 'קמיל דופון', line: 'תראו — מחיר הלחם עלה שוב, והמלכה מזמינה תכשיטים.' },
+				{ speaker: 'קמיל דופון', line: 'כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.' },
+				{ speaker: 'קמיל דופון', line: 'רק שלטון של העם, למען העם, יביא צדק לצרפת.' },
+			],
+		},
+		{
+			sceneId: 'scene-success',
+			kind: 'successEnding',
+			title: 'הצלחתם!',
+			text: 'הפתרון שלכם התקבל על ידי שני המחנות. צרפת פוסעת בדרך חדשה — בלי טרור, בלי רעב.',
+		},
+		{
+			sceneId: 'scene-failure',
+			kind: 'failureEnding',
+			title: 'המשימה נכשלה... הפעם',
+			text: 'המחנות לא הצליחו להתקרב. אבל מסע בזמן אפשר לנסות שוב — עכשיו אתם מבינים טוב יותר מה כל צד צריך.',
+		},
+	],
+} as const;

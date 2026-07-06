@@ -9,6 +9,8 @@ import { JoinSession } from './views/JoinSession';
 import { GameController } from './views/GameController';
 import { TeacherHome } from './views/teacher/TeacherHome';
 import { TeacherSession } from './views/teacher/TeacherSession';
+import { TopicWizard } from './views/teacher/TopicWizard';
+import { TopicEditor } from './views/teacher/TopicEditor';
 
 initAuth();
 initI18n();
@@ -32,6 +34,8 @@ if (root) {
 		'/join/:code': JoinSession,
 		'/play/:id': GameController,
 		'/teach': TeacherHome,
+		'/teach/new': TopicWizard,
+		'/teach/topic/:id': TopicEditor,
 		'/teach/session/:id': TeacherSession,
 	});
 }

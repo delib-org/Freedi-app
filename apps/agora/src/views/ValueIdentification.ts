@@ -46,21 +46,24 @@ export function ValueIdentification(): m.Component<ValueIdentificationAttrs> {
 						{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
 						[
 							m('h3', t('scene.done_waiting')),
-							...characters.map((candidate) => {
-								const graded = answers[candidate.characterId];
+							m(
+								'.stack',
+								characters.map((candidate) => {
+									const graded = answers[candidate.characterId];
 
-								return graded?.gradedAt
-									? m('.card.values__result', { key: candidate.characterId }, [
-											m('strong', candidate.name),
-											m('p.values__feedback', graded.aiFeedback ?? ''),
-											m('span.values__score', `${t('values.score')}: ${graded.aiScore ?? 0}/100`),
-										])
-									: m(
-											'p.lobby__status',
-											{ key: candidate.characterId },
-											`${candidate.name}: ${t('values.waiting_grade')}`,
-										);
-							}),
+									return graded?.gradedAt
+										? m('.card.values__result', { key: candidate.characterId }, [
+												m('strong', candidate.name),
+												m('p.values__feedback', graded.aiFeedback ?? ''),
+												m('span.values__score', `${t('values.score')}: ${graded.aiScore ?? 0}/100`),
+											])
+										: m(
+												'p.lobby__status',
+												{ key: candidate.characterId },
+												`${candidate.name}: ${t('values.waiting_grade')}`,
+											);
+								}),
+							),
 						],
 					),
 				]);
