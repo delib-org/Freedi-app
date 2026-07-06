@@ -1,0 +1,310 @@
+@use './tokens';
+
+// ============================================================================
+// Agora component styles (BEM)
+// ============================================================================
+
+// --- Home ---
+.home-hero {
+  text-align: center;
+  padding-top: var(--space-2xl);
+
+  &__title {
+    color: var(--lantern-glow);
+    text-shadow: 0 0 30px rgba(255, 216, 130, 0.35);
+    letter-spacing: 0.04em;
+  }
+
+  &__tagline {
+    color: var(--text-secondary);
+    font-size: var(--font-size-lg);
+    margin-top: var(--space-sm);
+  }
+}
+
+.home-explanation {
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 46ch;
+  margin: 0 auto;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: var(--z-header);
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__text {
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  &__row {
+    display: flex;
+    gap: var(--space-sm);
+  }
+}
+
+// --- Code entry (large, kid-friendly) ---
+.code-input {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  text-align: center;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+// --- Join screen ---
+.join {
+  &__team-picker {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+  }
+
+  &__team-option {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-inset);
+    color: var(--text-primary);
+    font-size: var(--font-size-xl);
+    font-family: var(--font-display);
+    cursor: pointer;
+    transition:
+      border-color var(--motion-fast) ease,
+      box-shadow var(--motion-base) ease,
+      transform var(--motion-fast) var(--ease-spring);
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    &--selected {
+      border-color: var(--border-lantern);
+      box-shadow: var(--glow-lantern);
+      color: var(--lantern-glow);
+    }
+  }
+
+  &__error {
+    color: var(--danger);
+    text-align: center;
+  }
+}
+
+// --- Era map ---
+.era-map {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  z-index: var(--z-map);
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  &__star {
+    animation: era-map-twinkle 3.4s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  &__portal-swirl {
+    animation: era-map-swirl 14s linear infinite;
+    transform-origin: 150px 430px;
+  }
+
+  &__marker {
+    animation: era-map-marker-pop var(--motion-slow) var(--ease-spring) both;
+  }
+
+  &__marker-glow {
+    animation: era-map-marker-pulse 2.6s ease-in-out infinite;
+  }
+
+  &__window {
+    animation: era-map-window-flicker 5.2s ease-in-out infinite;
+  }
+}
+
+@keyframes era-map-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+@keyframes era-map-swirl {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes era-map-marker-pop {
+  0% { opacity: 0; transform: translateY(-26px) scale(0.4); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes era-map-marker-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes era-map-window-flicker {
+  0%, 100% { opacity: 0.85; }
+  42% { opacity: 0.55; }
+  58% { opacity: 0.95; }
+}
+
+// --- Lobby ---
+.lobby {
+  &__status {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--font-size-lg);
+  }
+
+  &__count {
+    font-family: var(--font-display);
+    font-size: var(--font-size-2xl);
+    color: var(--lantern-glow);
+  }
+
+  &__name {
+    text-align: center;
+
+    strong {
+      font-family: var(--font-display);
+      color: var(--lantern-glow);
+      font-size: var(--font-size-lg);
+      letter-spacing: 0.03em;
+    }
+  }
+
+  &__waiting-dots::after {
+    content: '';
+    animation: lobby-dots 1.8s steps(4) infinite;
+  }
+}
+
+@keyframes lobby-dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+
+// --- Teacher ---
+.teacher {
+  &__section-title {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  &__topic-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color var(--motion-fast) ease;
+
+    &:hover,
+    &--selected {
+      border-color: var(--border-lantern);
+    }
+  }
+
+  &__mode-row {
+    display: flex;
+    gap: var(--space-sm);
+
+    .btn {
+      flex: 1;
+    }
+  }
+
+  &__code-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  &__code {
+    font-family: var(--font-display);
+    font-size: 3.4rem;
+    letter-spacing: 0.3em;
+    color: var(--lantern-glow);
+    text-shadow: var(--glow-lantern);
+    // keep code characters LTR even in RTL locales
+    direction: ltr;
+    unicode-bidi: bidi-override;
+  }
+
+  &__qr {
+    background: var(--parchment);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+
+    img,
+    canvas {
+      display: block;
+    }
+  }
+}
+
+// --- Language picker ---
+.lang-picker {
+  position: relative;
+
+  select {
+    appearance: none;
+    background: var(--bg-inset);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    padding: 0.4em 1.2em;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--lantern-glow);
+    }
+  }
+}
+
+// --- Utility ---
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+  border: 3px solid var(--border-subtle);
+  border-top-color: var(--lantern);
+  border-radius: 50%;
+  animation: spinner-turn 0.9s linear infinite;
+}
+
+@keyframes spinner-turn {
+  to { transform: rotate(360deg); }
+}
