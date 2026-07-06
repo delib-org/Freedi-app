@@ -745,3 +745,5 @@ export {
   getResearchCategory,
   getResearchActionLabel,
 } from "./models/researchLog";
+// Agora classroom deliberative game
+export * from "./models/agora";

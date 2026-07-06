@@ -24,6 +24,10 @@ export const APP_DEEP_LINKS: Record<SourceApp, Record<string, string>> = {
 		question: '/q/{statementId}',
 		profile: '/u/{userId}',
 	},
+	[SourceApp.AGORA]: {
+		session: '/play/{sessionId}',
+		join: '/join/{code}',
+	},
 };
 
 /**
