@@ -148,6 +148,11 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	const option = input.option ?? (await loadStatement(input.optionId));
 	if (!option) return skipped('option-not-found', startedAt);
 	if (!isOption(option)) return skipped('not-an-option', startedAt);
+	// A cluster container is a StatementType.option with isCluster:true and would
+	// pass isOption() — never process one as a member (it would be embedded and
+	// attached/merged into another cluster, deleting a just-created manual cluster).
+	// Central guard covering every pipeline source (onCreate, threshold, queue, admin).
+	if (option.isCluster === true) return skipped('is-cluster', startedAt);
 	if (!option.parentId || option.parentId === 'top') return skipped('no-parent', startedAt);
 	// `integratedOptions` is populated on CLUSTER statements; this guards against
 	// running the pipeline on a cluster (or a legacy option that carries the

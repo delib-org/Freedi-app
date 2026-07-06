@@ -54,6 +54,13 @@ export async function liveSynthOnOptionCreate(rawStatement: unknown): Promise<vo
 	if (!isOption(statement)) return;
 	if (!statement.parentId || statement.parentId === 'top') return;
 
+	// A cluster container is itself a StatementType.option (with isCluster:true),
+	// so it slips past isOption(). Never run a cluster through synthesis: a freshly
+	// created (empty) manual cluster would otherwise be embedded and attached/merged
+	// into a similar cluster, making it vanish ~1s after the admin adds it. Clusters
+	// are containers, not member options.
+	if (statement.isCluster === true) return;
+
 	// Skip if already in a cluster (e.g. the foreground flow attached it first).
 	if ((statement.integratedOptions ?? []).length > 0) return;
 
@@ -105,10 +112,7 @@ export async function liveSynthOnOptionCreate(rawStatement: unknown): Promise<vo
 					} catch (saveError) {
 						logger.warn('liveSynth.onOptionCreate: cache save failed (non-fatal)', {
 							statementId: statement.statementId,
-							error:
-								saveError instanceof Error
-									? saveError.message
-									: String(saveError),
+							error: saveError instanceof Error ? saveError.message : String(saveError),
 						});
 					}
 				}

@@ -667,6 +667,32 @@ describe('runSinglePipeline', () => {
 		expect(ensureEmbeddingMock).not.toHaveBeenCalled();
 	});
 
+	it('skips a cluster container (isCluster) so a just-created empty cluster is never merged away', async () => {
+		// A manual cluster is a StatementType.option with isCluster:true and an
+		// empty integratedOptions — it must never be processed as a member option,
+		// otherwise the pipeline embeds it and attaches/merges it into a similar
+		// cluster, deleting the cluster the admin just added (~1s later).
+		const clusterOption = makeOption({
+			statementId: 'cluster-empty',
+			isCluster: true,
+			titleLockedByCreator: true,
+			integratedOptions: [],
+		} as never);
+		const parent = makeParent();
+		const result = await runSinglePipeline({
+			optionId: clusterOption.statementId,
+			source: 'onCreate',
+			option: clusterOption,
+			parent,
+		});
+		expect(result.action).toBe('skipped');
+		expect(result.reason).toBe('is-cluster');
+		expect(ensureEmbeddingMock).not.toHaveBeenCalled();
+		expect(findSimilarMock).not.toHaveBeenCalled();
+		expect(attachMock).not.toHaveBeenCalled();
+		expect(spawnMock).not.toHaveBeenCalled();
+	});
+
 	it('uses MC defaults when no settings block is present and parent is MC', async () => {
 		const option = makeOption();
 		const parent = makeParent({
