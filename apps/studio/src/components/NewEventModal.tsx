@@ -32,8 +32,14 @@ export default function NewEventModal({ onClose, onCreated }: NewEventModalProps
 				},
 			});
 			onCreated(event.statementId);
-		} catch {
-			setError('Could not create the event. Please try again.');
+		} catch (err) {
+			const e = err as { code?: string; message?: string };
+			console.error('[Studio] createEvent failed', e?.code, e?.message, err);
+			setError(
+				e?.code || e?.message
+					? `Could not create the event: ${e.code ?? ''} ${e.message ?? ''}`.trim()
+					: 'Could not create the event. Please try again.',
+			);
 			setSubmitting(false);
 		}
 	};

@@ -66,7 +66,13 @@ export async function createEvent(
 	// Event group is open for participants to join by default.
 	group.membership = { access: Access.openToAll };
 
-	await setDoc(doc(db, Collections.statements, statementId), group);
+	await setDoc(doc(db, Collections.statements, statementId), group).catch((e: unknown) => {
+		const err = e as { code?: string; message?: string };
+		throw Object.assign(new Error(`event-group write failed: ${err?.message ?? e}`), {
+			code: err?.code,
+			step: 'group',
+		});
+	});
 
 	// Creator subscription so the event appears in "My Events".
 	const subId = getStatementSubscriptionId(statementId, creator);
@@ -87,7 +93,15 @@ export async function createEvent(
 		topParentId: statementId,
 		getInAppNotification: true,
 	};
-	await setDoc(doc(db, Collections.statementsSubscribe, subId), subscription);
+	await setDoc(doc(db, Collections.statementsSubscribe, subId), subscription).catch(
+		(e: unknown) => {
+			const err = e as { code?: string; message?: string };
+			throw Object.assign(new Error(`event-subscription write failed: ${err?.message ?? e}`), {
+				code: err?.code,
+				step: 'subscription',
+			});
+		},
+	);
 
 	return {
 		statementId,
