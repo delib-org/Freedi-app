@@ -2,6 +2,7 @@ import m from 'mithril';
 import {
 	auth,
 	signInAnonymously,
+	signInWithCredential,
 	GoogleAuthProvider,
 	signInWithPopup,
 	linkWithPopup,
@@ -109,4 +110,30 @@ export function initAuth(): void {
 
 		m.redraw();
 	});
+}
+
+/**
+ * Dev-only scripted Google sign-in against the Auth emulator, used by
+ * e2e/smoke tests where the popup flow cannot be driven. The Auth emulator
+ * accepts unsigned identity claims as the credential's idToken. Never
+ * shipped active: guarded by DEV mode + localhost.
+ */
+interface DevSignInClaims {
+	sub: string;
+	email: string;
+	name?: string;
+}
+
+declare global {
+	interface Window {
+		__agoraDevSignIn?: (claims: DevSignInClaims) => Promise<void>;
+	}
+}
+
+if (import.meta.env.DEV && window.location.hostname === 'localhost') {
+	window.__agoraDevSignIn = async (claims: DevSignInClaims): Promise<void> => {
+		const credential = GoogleAuthProvider.credential(JSON.stringify(claims));
+		await signInWithCredential(auth, credential);
+		m.redraw();
+	};
 }
