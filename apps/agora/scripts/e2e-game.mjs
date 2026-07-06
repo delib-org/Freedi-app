@@ -166,6 +166,17 @@ await pageT.goto(`http://localhost:3009/#!/play/${sessionId}`, { waitUntil: 'dom
 await pageT.waitForSelector('.era-map', { timeout: 10000 }).catch(() => {});
 await pageT.waitForTimeout(1500);
 
+// ---- Phase 5: results ----
+await call('agoraAdvanceStage', { sessionId, stage: 'results' }, teacher.idToken);
+await pageA.waitForSelector('.results__total', { timeout: 90000 });
+console.log('CLASS SCORE:', await pageA.locator('.results__total').textContent());
+console.log('METRICS:', await pageA.locator('.metric__delta').allTextContents());
+const narrative = await pageA.locator('.metric__narrative').first().textContent().catch(() => '');
+console.log('NARRATIVE:', (narrative ?? '').slice(0, 110));
+const ending = await pageA.locator('.scene__title').textContent().catch(() => '(no ending scene)');
+console.log('ENDING SCENE:', ending);
+await pageA.screenshot({ path: 'agora-results.png', fullPage: true });
+
 console.log('PAGE ERRORS:', errs.length ? errs : 'none');
 await browser.close();
-console.log('E2E PHASE 4 COMPLETE');
+console.log('E2E PHASES 4+5 COMPLETE');

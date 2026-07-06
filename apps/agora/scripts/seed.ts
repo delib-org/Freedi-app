@@ -118,7 +118,7 @@ const topicPackage = {
 		],
 	},
 	healthMetrics: [
-		{ metricId: 'met-bread', label: 'מחיר הלחם', description: 'יוקר המחיה של פשוטי העם', min: 0, max: 100, baseline: 25 },
+		{ metricId: 'met-bread', label: 'מחיר הלחם', description: 'יוקר המחיה של פשוטי העם', min: 0, max: 100, baseline: 25, higherIsBetter: false },
 		{ metricId: 'met-stability', label: 'יציבות שלטונית', description: 'הסיכוי להימנע ממלחמת אזרחים', min: 0, max: 100, baseline: 30 },
 		{ metricId: 'met-rights', label: 'זכויות האזרח', description: 'חירויות הפרט והשוויון בפני החוק', min: 0, max: 100, baseline: 20 },
 		{ metricId: 'met-treasury', label: 'קופת המדינה', description: 'יכולת המדינה לממן את עצמה', min: 0, max: 100, baseline: 15 },

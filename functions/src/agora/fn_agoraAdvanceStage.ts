@@ -8,6 +8,7 @@ import {
 	functionConfig,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { computeSessionResults } from './classScore';
 
 interface Request {
 	sessionId: string;
@@ -78,6 +79,13 @@ export const agoraAdvanceStage = onCall(
 				status,
 				lastUpdate: Date.now(),
 			});
+
+			// Entering results: run the AI plausibility batch + health-metric
+			// simulation + class score. Students see a "computing" state until
+			// session.classScore lands via their listener.
+			if (stage === AgoraStage.results) {
+				await computeSessionResults(sessionId);
+			}
 
 			return { ok: true };
 		} catch (error) {

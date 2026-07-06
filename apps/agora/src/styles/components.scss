@@ -655,3 +655,114 @@
 		}
 	}
 }
+
+// --- Results ---
+.results {
+	&__score-panel {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-md);
+	}
+
+	&__total {
+		font-family: var(--font-display);
+		font-size: 4rem;
+		line-height: 1;
+		direction: ltr;
+
+		&--success {
+			color: var(--success);
+			text-shadow: 0 0 30px rgba(125, 214, 163, 0.45);
+		}
+
+		&--failure {
+			color: var(--danger);
+			text-shadow: 0 0 24px rgba(240, 142, 155, 0.35);
+		}
+	}
+
+	&__breakdown {
+		display: flex;
+		gap: var(--space-xl);
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	&__part {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__part-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--lantern-glow);
+	}
+
+	&__part-label {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+}
+
+// --- Health metrics ---
+.metric {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+
+	&__head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+
+	&__label {
+		color: var(--text-primary);
+	}
+
+	&__delta {
+		font-family: var(--font-display);
+		direction: ltr;
+
+		&--up { color: var(--success); }
+		&--down { color: var(--danger); }
+	}
+
+	&__track {
+		position: relative;
+		height: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__fill {
+		height: 100%;
+		background: linear-gradient(90deg, var(--lantern-deep), var(--success));
+		border-radius: var(--radius-full);
+		transition: width var(--motion-camera) var(--ease-camera);
+
+		&--down {
+			background: linear-gradient(90deg, #8a2f3c, var(--danger));
+		}
+	}
+
+	&__baseline {
+		position: absolute;
+		top: -2px;
+		bottom: -2px;
+		width: 2px;
+		background: var(--parchment-dim);
+		opacity: 0.8;
+	}
+
+	&__narrative {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+}

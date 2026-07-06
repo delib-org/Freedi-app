@@ -18,6 +18,8 @@ export interface EraMapAttrs {
 	myParticipantId?: string;
 	/** Idea lanterns filling the town square during deliberation */
 	lanterns?: EraMapLantern[];
+	/** Endings: the city prospers or burns */
+	mood?: 'neutral' | 'prosperous' | 'ruined';
 }
 
 /**
@@ -92,7 +94,7 @@ function building(x: number, y: number, width: number, height: number, fill: str
 
 export const EraMap: m.Component<EraMapAttrs> = {
 	view(vnode) {
-		const { participants, myParticipantId, lanterns = [] } = vnode.attrs;
+		const { participants, myParticipantId, lanterns = [], mood = 'neutral' } = vnode.attrs;
 
 		return m('.era-map', { 'aria-hidden': 'true' }, [
 			m(
@@ -270,6 +272,64 @@ export const EraMap: m.Component<EraMapAttrs> = {
 							'stroke-linecap': 'round',
 						}),
 					]),
+
+					// --- Layer 4.5: fate of the realm (endings) ---
+					mood === 'prosperous'
+						? m('g', [
+								[300, 380, 505, 660, 720, 905].map((x, index) =>
+									m('circle.era-map__marker-glow', {
+										cx: x,
+										cy: 380 - (index % 3) * 14,
+										r: 26,
+										fill: 'url(#em-glow)',
+										opacity: 0.5,
+									}),
+								),
+								m('rect', {
+									width: MAP_W,
+									height: MAP_H,
+									fill: '#ffd882',
+									opacity: 0.06,
+								}),
+							])
+						: null,
+					mood === 'ruined'
+						? m('g', [
+								[330, 690, 505].map((x, index) =>
+									m('g', { key: `smoke-${index}` }, [
+										m('ellipse.era-map__smoke', {
+											cx: x,
+											cy: 300 - index * 10,
+											rx: 34,
+											ry: 16,
+											fill: '#3a3542',
+											opacity: 0.75,
+										}),
+										m('ellipse.era-map__smoke', {
+											cx: x + 14,
+											cy: 262 - index * 10,
+											rx: 26,
+											ry: 13,
+											fill: '#474252',
+											opacity: 0.6,
+										}),
+										m('circle', {
+											cx: x,
+											cy: 348,
+											r: 12,
+											fill: '#d65b6b',
+											opacity: 0.45,
+										}),
+									]),
+								),
+								m('rect', {
+									width: MAP_W,
+									height: MAP_H,
+									fill: '#1a1020',
+									opacity: 0.28,
+								}),
+							])
+						: null,
 
 					// --- Layer 5: idea lanterns in the town square ---
 					lanterns.map((lantern) => {

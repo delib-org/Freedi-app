@@ -2,6 +2,7 @@ import {
 	object,
 	string,
 	number,
+	boolean,
 	optional,
 	array,
 	tuple,
@@ -64,6 +65,8 @@ export const AgoraHealthMetricDefSchema = object({
 	min: number(),
 	max: number(),
 	baseline: number(),
+	/** false for metrics where a drop is good (e.g. bread price); default true */
+	higherIsBetter: optional(boolean()),
 });
 
 export type AgoraHealthMetricDef = InferOutput<typeof AgoraHealthMetricDefSchema>;

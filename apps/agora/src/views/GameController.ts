@@ -9,6 +9,7 @@ import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
+import { Results } from './Results';
 import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
 
 /**
@@ -114,6 +115,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								'.shell',
 								m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
 							);
+
+				case AgoraStage.results:
+				case AgoraStage.ended:
+					return m(Results, { session, topic });
 
 				default:
 					// deliberation / results / ended land in Phases 4-5

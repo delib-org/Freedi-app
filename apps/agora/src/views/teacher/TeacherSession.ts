@@ -10,6 +10,8 @@ import {
 	setRound,
 } from '../../lib/proposals';
 import { lanternsFromState } from '../Deliberation';
+import { Results } from '../Results';
+import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { AgoraRoundPhase } from '@freedi/shared-types';
 import { EraMap } from '../../components/EraMap';
@@ -112,6 +114,35 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const inDeliberation = session.stage === AgoraStage.deliberation;
 			if (inDeliberation && userId) listenToDeliberation(sessionId, userId);
 			const { proposals, scores } = getDeliberationState();
+
+			// Results/ended: the teacher projects the same transformed map + score
+			if (session.stage === AgoraStage.results || session.stage === AgoraStage.ended) {
+				const topic = getTopicPackage(session.topicPackageId);
+				if (!topic) {
+					loadTopicPackage(session.topicPackageId);
+
+					return m(
+						'.shell',
+						m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
+					);
+				}
+
+				return m('.shell.shell--wide', [
+					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
+						m(Results, { session, topic }),
+						nextStage
+							? m(
+									'button.btn.btn--secondary.btn--full',
+									{
+										disabled: advancing,
+										onclick: () => handleAdvance(nextStage),
+									},
+									t('teacher.advance', { stage: t(`stage.${nextStage}`) }),
+								)
+							: null,
+					]),
+				]);
+			}
 
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
