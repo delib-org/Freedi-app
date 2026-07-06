@@ -85,7 +85,11 @@ function loadHandleY(): number | null {
  * on the Join app's FacilitatorPanel so admins get a consistent control surface.
  */
 const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings, canConfigure }) => {
-	const { t } = useTranslation();
+	// The app applies RTL via the CSS `direction` property but does NOT set a
+	// `dir="rtl"` attribute, so `[dir='rtl']` selectors never match. Drive RTL
+	// off the app's own direction via a scoped `.rtl` class instead.
+	const { t, dir } = useTranslation();
+	const isRtl = dir === 'rtl';
 	const [open, setOpen] = useState(false);
 	const [handleY, setHandleY] = useState<number | null>(null);
 	const [dragging, setDragging] = useState(false);
@@ -257,7 +261,7 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({ statement, settings, canConfigu
 			: activeThreshold.toFixed(2);
 
 	return (
-		<div className={styles.root}>
+		<div className={`${styles.root} ${isRtl ? styles.rtl : ''}`}>
 			<button
 				type="button"
 				className={handleClasses}

@@ -75,11 +75,11 @@ $panel-width: 320px;
 	transform: translateY(0) translateX(calc(-1 * #{$panel-width}));
 }
 
-[dir='rtl'] .handleOpen {
+.rtl .handleOpen {
 	transform: translateY(-50%) translateX(#{$panel-width});
 }
 
-[dir='rtl'] .handlePositioned.handleOpen {
+.rtl .handlePositioned.handleOpen {
 	transform: translateY(0) translateX(#{$panel-width});
 }
 
@@ -114,12 +114,12 @@ $panel-width: 320px;
 	overflow-y: auto;
 }
 
-[dir='rtl'] .panel {
+.rtl .panel {
 	transform: translateX(-100%);
 }
 
 .panelOpen,
-[dir='rtl'] .panelOpen {
+.rtl .panelOpen {
 	transform: translateX(0);
 }
 
@@ -265,7 +265,7 @@ $panel-width: 320px;
 	transform: translateX(20px);
 }
 
-[dir='rtl'] .toggleOn .toggleKnob {
+.rtl .toggleOn .toggleKnob {
 	transform: translateX(-20px);
 }
 
