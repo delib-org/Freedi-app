@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, StatementType } from '@freedi/shared-types';
+import { isUserBlocked } from '@/lib/admin/blocklist';
+import { getDemographicName } from '@/lib/firebase/demographicQueries';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
@@ -92,6 +94,13 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
+    if (await isUserBlocked(db, documentId, userId)) {
+      return NextResponse.json(
+        { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
+
     // Check if user already has a comment on this paragraph
     const existingCommentSnapshot = await db
       .collection(Collections.statements)
@@ -109,8 +118,12 @@ export async function POST(
       );
     }
 
-    // Get display name
-    const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
+    // Get display name. Anonymous users (no account name) fall back to the name
+    // they entered in the demographic survey before the anonymous pseudo-name.
+    const displayName =
+      getUserDisplayNameFromCookie(cookieHeader) ||
+      (await getDemographicName(documentId, userId)) ||
+      getAnonymousDisplayName(userId);
 
     // Generate unique ID
     const statementId = `${userId}--${Date.now()}--${Math.random().toString(36).substring(2, 9)}`;

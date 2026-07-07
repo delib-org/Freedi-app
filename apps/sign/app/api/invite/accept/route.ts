@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getUserEmailFromCookie } from '@/lib/utils/user';
+import { getFirebaseAdmin, verifyAuthHeader } from '@/lib/firebase/admin';
+import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import {
 	Collections,
 	AdminInvitation,
@@ -29,18 +29,15 @@ export async function GET(
 			);
 		}
 
-		const cookieHeader = request.headers.get('cookie');
-		const userId = getUserIdFromCookie(cookieHeader);
-		const userDisplayName = getUserDisplayNameFromCookie(cookieHeader) || 'Unknown';
-		const userEmail = getUserEmailFromCookie(cookieHeader);
+		// The invitee's email is verified from the Firebase ID token (Authorization
+		// header) rather than a cookie — email is no longer stored in cookies (PII).
+		const verifiedUser = await verifyAuthHeader(request.headers.get('authorization'));
 
-		// DEBUG: Log cookie extraction
-		logger.info('[DEBUG] Invite accept - Cookie extraction:', {
-			hasUserId: !!userId,
-			hasUserEmail: !!userEmail,
-			userEmail: userEmail,
-			userEmailLower: userEmail?.toLowerCase(),
-		});
+		const cookieHeader = request.headers.get('cookie');
+		const userId = verifiedUser?.uid ?? getUserIdFromCookie(cookieHeader);
+		const userDisplayName =
+			verifiedUser?.displayName || getUserDisplayNameFromCookie(cookieHeader) || 'Unknown';
+		const userEmail = verifiedUser?.email ?? null;
 
 		// If not logged in, return info to redirect to login
 		if (!userId) {
@@ -78,17 +75,6 @@ export async function GET(
 
 		const invitationDoc = querySnapshot.docs[0];
 		const invitation = invitationDoc.data() as AdminInvitation;
-
-		// DEBUG: Log invitation data and email comparison
-		logger.info('[DEBUG] Invite accept - Email comparison:', {
-			invitedEmail: invitation.invitedEmail,
-			invitedEmailLower: invitation.invitedEmail.toLowerCase(),
-			userEmail: userEmail,
-			userEmailLower: userEmail?.toLowerCase(),
-			emailsMatch: userEmail?.toLowerCase() === invitation.invitedEmail.toLowerCase(),
-			invitationStatus: invitation.status,
-			documentId: invitation.documentId,
-		});
 
 		// Check invitation status
 		if (invitation.status !== AdminInvitationStatus.pending) {

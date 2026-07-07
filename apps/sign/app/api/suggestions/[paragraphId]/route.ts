@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { isUserBlocked } from '@/lib/admin/blocklist';
+import { getDemographicName } from '@/lib/firebase/demographicQueries';
 import { Collections, StatementType, Statement, SourceApp } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -140,6 +142,13 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
+    if (await isUserBlocked(db, documentId, userId)) {
+      return NextResponse.json(
+        { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
+
     // Check if user is admin (admins can create unlimited suggestions)
     const adminAccess = await checkAdminAccess(db, documentId, userId);
 
@@ -161,8 +170,12 @@ export async function POST(
       }
     }
 
-    // Get display name
-    const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
+    // Get display name. Anonymous users (no account name) fall back to the name
+    // they entered in the demographic survey before the anonymous pseudo-name.
+    const displayName =
+      getUserDisplayNameFromCookie(cookieHeader) ||
+      (await getDemographicName(documentId, userId)) ||
+      getAnonymousDisplayName(userId);
 
     // Create user object
     const creator = {

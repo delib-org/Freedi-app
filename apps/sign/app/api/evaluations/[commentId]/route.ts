@@ -3,6 +3,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { isUserBlocked } from '@/lib/admin/blocklist';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
@@ -127,6 +128,14 @@ export async function POST(
     }
 
     const comment = commentRef.data();
+
+    const evalDocumentId = comment?.topParentId || commentId;
+    if (await isUserBlocked(db, evalDocumentId, effectiveId)) {
+      return NextResponse.json(
+        { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
 
     if (comment?.creatorId === effectiveId) {
       return NextResponse.json(

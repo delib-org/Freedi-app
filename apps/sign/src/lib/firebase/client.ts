@@ -145,9 +145,8 @@ export async function googleLogin(): Promise<User | null> {
     setCookiesFromUser(result.user);
 
     // Auto-accept any pending invitations for this user's email
-    // Use sendBeacon to survive page navigation/refresh after login
     if (result.user.email) {
-      triggerAutoAcceptInvitations();
+      triggerAutoAcceptInvitations(result.user);
     }
 
     return result.user;
@@ -204,9 +203,8 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
       setCookiesFromUser(user);
 
       // Auto-accept pending invitations when user has email (Google login)
-      // Use sendBeacon to survive page navigation/refresh
       if (user.email) {
-        triggerAutoAcceptInvitations();
+        triggerAutoAcceptInvitations(user);
       }
     }
     callback(user);
@@ -240,25 +238,25 @@ export function getCurrentUser(): User | null {
 }
 
 /**
- * Trigger auto-accept using sendBeacon (fire-and-forget)
- * This survives page navigation/refresh after login
+ * Trigger auto-accept after login (fire-and-forget).
+ *
+ * The server verifies the user's identity from the Firebase ID token, so we must
+ * send it in the Authorization header. sendBeacon cannot set headers, so we use
+ * fetch with keepalive to survive page navigation/refresh.
  */
-function triggerAutoAcceptInvitations(): void {
-  try {
-    // sendBeacon survives page unload/navigation
-    const success = navigator.sendBeacon('/api/auth/accept-pending-invitations');
-    if (!success) {
-      // Fallback to fetch if sendBeacon fails
-      acceptPendingInvitations().catch((error) => {
-        logError(error, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
-      });
-    }
-  } catch {
-    // Fallback to fetch if sendBeacon throws
-    acceptPendingInvitations().catch((err) => {
-      logError(err, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
+function triggerAutoAcceptInvitations(user: User): void {
+  user
+    .getIdToken()
+    .then((idToken) =>
+      fetch('/api/auth/accept-pending-invitations', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        keepalive: true,
+      })
+    )
+    .catch((error) => {
+      logError(error, { operation: 'auth.triggerAutoAcceptInvitations' });
     });
-  }
 }
 
 /**
@@ -270,11 +268,16 @@ export async function acceptPendingInvitations(): Promise<{
   acceptedInvitations: Array<{ documentId: string; permissionLevel: string }>;
 }> {
   try {
+    const currentUser = getCurrentUser();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (currentUser) {
+      const idToken = await currentUser.getIdToken();
+      headers.Authorization = `Bearer ${idToken}`;
+    }
+
     const response = await fetch('/api/auth/accept-pending-invitations', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {

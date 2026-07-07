@@ -37,7 +37,16 @@ function InvitePageContent() {
     setStatus('processing');
 
     try {
-      const response = await fetch(`/api/invite/accept?token=${token}`);
+      // The server verifies the invitee's email from the Firebase ID token, so
+      // pass it in the Authorization header when the user is logged in.
+      const currentUser = getCurrentUser();
+      const headers: Record<string, string> = {};
+      if (currentUser) {
+        const idToken = await currentUser.getIdToken();
+        headers.Authorization = `Bearer ${idToken}`;
+      }
+
+      const response = await fetch(`/api/invite/accept?token=${token}`, { headers });
       const data: InviteResponse = await response.json();
 
       if (data.requiresLogin || data.requiresGoogleLogin) {

@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getStorage, Storage } from 'firebase-admin/storage';
+import { getAuth, Auth } from 'firebase-admin/auth';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Set emulator host BEFORE any Firebase initialization
@@ -12,6 +13,7 @@ if (process.env.USE_FIREBASE_EMULATOR === 'true' && process.env.FIRESTORE_EMULAT
 let app: App;
 let firestore: Firestore;
 let storage: Storage;
+let auth: Auth;
 
 /**
  * Initialize Firebase Admin SDK
@@ -110,6 +112,61 @@ export function getFirebaseAdmin(): { db: Firestore; app: App } {
     db: getFirestoreAdmin(),
     app,
   };
+}
+
+/**
+ * Get Firebase Admin Auth instance
+ */
+export function getAuthAdmin(): Auth {
+  if (!auth) {
+    if (!app) {
+      initializeFirebaseAdmin();
+    }
+    auth = getAuth(app);
+  }
+
+  return auth;
+}
+
+/**
+ * Verified user identity extracted from a Firebase ID token.
+ */
+export interface VerifiedUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+}
+
+/**
+ * Verify a Firebase ID token from an `Authorization: Bearer <token>` header.
+ * Returns the trusted user identity (uid, email, displayName) or null when the
+ * header is missing/malformed or the token fails verification.
+ *
+ * This is the source of truth for the invitee's email — the email is no longer
+ * stored in cookies (PII removal), so invitation-accept routes must verify the
+ * ID token here instead of reading a cookie.
+ */
+export async function verifyAuthHeader(
+  authHeader: string | null
+): Promise<VerifiedUser | null> {
+  if (!authHeader) return null;
+
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+
+  try {
+    const decoded = await getAuthAdmin().verifyIdToken(match[1]);
+
+    return {
+      uid: decoded.uid,
+      email: decoded.email ?? null,
+      displayName: (decoded.name as string | undefined) ?? null,
+    };
+  } catch (error) {
+    logError(error, { operation: 'firebase.verifyAuthHeader' });
+
+    return null;
+  }
 }
 
 /**
