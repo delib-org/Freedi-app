@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections } from '@freedi/shared-types';
 import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
 import { DemographicMode, SurveyTriggerMode, DemographicStatusResponse } from '@/types/demographics';
@@ -53,6 +54,28 @@ export async function GET(
     const mode: DemographicMode = signSettings.demographicMode || 'disabled';
     const required = signSettings.demographicRequired || false;
     const surveyTrigger: SurveyTriggerMode = signSettings.surveyTrigger || 'on_interaction';
+
+    // Admins are never required to fill the demographic survey — report complete
+    // so no client gate (auto-open modal, interaction block) ever fires for them.
+    // Only pay the admin lookup when a required survey could otherwise block.
+    if (mode !== 'disabled' && required) {
+      const adminAccess = await checkAdminAccess(db, docId, userId);
+      if (adminAccess.isAdmin) {
+        const response: DemographicStatusResponse = {
+          status: {
+            isComplete: true,
+            totalQuestions: 0,
+            answeredQuestions: 0,
+            isRequired: false,
+            missingQuestionIds: [],
+            surveyTrigger,
+          },
+          mode,
+        };
+
+        return NextResponse.json(response);
+      }
+    }
 
     // Check completion status
     const status = await checkSurveyCompletion(

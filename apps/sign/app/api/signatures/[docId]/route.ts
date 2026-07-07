@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
+import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
-import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { checkSurveyCompletion, getDemographicName } from '@/lib/firebase/demographicQueries';
 import { DemographicMode } from '@/types/demographics';
 
 interface SignatureInput {
@@ -140,7 +141,12 @@ export async function POST(
       const demographicRequired = signSettings.demographicRequired || false;
       const topParentId = document?.topParentId || docId;
 
-      if (mode !== 'disabled' && demographicRequired) {
+      // Admins are exempt from the required demographic survey.
+      const adminAccess = mode !== 'disabled' && demographicRequired
+        ? await checkAdminAccess(db, docId, userId)
+        : null;
+
+      if (mode !== 'disabled' && demographicRequired && !adminAccess?.isAdmin) {
         const surveyStatus = await checkSurveyCompletion(
           docId,
           userId,
@@ -164,12 +170,20 @@ export async function POST(
       }
     }
 
+    // Resolve a display name for the admin participants list — account name, or
+    // the name the signer entered in the demographic survey (anonymous users).
+    const signerName =
+      getUserDisplayNameFromCookie(request.headers.get('cookie')) ||
+      (await getDemographicName(docId, userId)) ||
+      undefined;
+
     const signature = {
       signatureId,
       documentId: docId,
       topParentId: document?.topParentId || docId,
       parentId: document?.parentId || docId,
       userId,
+      ...(signerName && { odlUserDisplayName: signerName }),
       signed: effectiveSigned,
       date: Date.now(),
       levelOfSignature: levelOfSignature ?? 0,

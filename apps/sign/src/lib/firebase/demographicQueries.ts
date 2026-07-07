@@ -401,6 +401,59 @@ export async function saveUserDemographicAnswers(
   }
 }
 
+/** Max length of a name we surface as a display name. */
+const MAX_DISPLAY_NAME_LENGTH = 60;
+
+/**
+ * Resolve the name a user typed into the demographic "name" question on a
+ * document, to use as their display name (e.g. for anonymous participants).
+ *
+ * Returns null when: no name question exists, the user hasn't answered it, the
+ * document has demographics disabled, or the admin explicitly set the identity
+ * display mode to 'anonymous' (an explicit anonymity choice is respected; the
+ * legacy default is not treated as explicit).
+ */
+export async function getDemographicName(
+  documentId: string,
+  userId: string
+): Promise<string | null> {
+  const db = getFirestoreAdmin();
+
+  try {
+    const docSnap = await db.collection(Collections.statements).doc(documentId).get();
+    if (!docSnap.exists) return null;
+
+    const document = docSnap.data();
+    const signSettings = document?.signSettings || {};
+
+    // Respect an explicit anonymity choice by the admin.
+    if (signSettings.identityDisplayMode === 'anonymous') return null;
+
+    const mode: DemographicMode = signSettings.demographicMode || 'disabled';
+    if (mode === 'disabled') return null;
+
+    const topParentId = document?.topParentId || documentId;
+    const questions = await getDemographicQuestions(documentId, mode, topParentId);
+    const nameQuestion = questions.find((q) => q.presetKey === 'name');
+    if (!nameQuestion?.userQuestionId) return null;
+
+    const answerId = `${nameQuestion.userQuestionId}--${userId}`;
+    const answerSnap = await db.collection(Collections.usersData).doc(answerId).get();
+    if (!answerSnap.exists) return null;
+
+    const answer = answerSnap.data()?.answer;
+    if (typeof answer !== 'string') return null;
+
+    const trimmed = answer.trim();
+
+    return trimmed ? trimmed.slice(0, MAX_DISPLAY_NAME_LENGTH) : null;
+  } catch (error) {
+    logError(error, { operation: 'demographics.getDemographicName', documentId, userId });
+
+    return null;
+  }
+}
+
 /**
  * Get all questions for a document (for admin viewing)
  */

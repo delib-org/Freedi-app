@@ -3,6 +3,7 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { isUserBlocked } from '@/lib/admin/blocklist';
+import { getDemographicName } from '@/lib/firebase/demographicQueries';
 import { Collections, StatementType, Statement, SourceApp } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -169,8 +170,12 @@ export async function POST(
       }
     }
 
-    // Get display name
-    const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
+    // Get display name. Anonymous users (no account name) fall back to the name
+    // they entered in the demographic survey before the anonymous pseudo-name.
+    const displayName =
+      getUserDisplayNameFromCookie(cookieHeader) ||
+      (await getDemographicName(documentId, userId)) ||
+      getAnonymousDisplayName(userId);
 
     // Create user object
     const creator = {

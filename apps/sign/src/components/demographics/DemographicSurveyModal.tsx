@@ -12,6 +12,41 @@ interface DemographicSurveyModalProps {
   isAdmin?: boolean;
 }
 
+/**
+ * Cross-document cache of previously-entered answers, keyed by preset
+ * (name/age/gender/city…), so a returning participant doesn't re-type details
+ * they already provided on another document.
+ */
+const PRESET_CACHE_KEY = 'sign:demographic-presets';
+type PresetCache = Record<string, string | string[]>;
+
+function readPresetCache(): PresetCache {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(PRESET_CACHE_KEY);
+
+    return raw ? (JSON.parse(raw) as PresetCache) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePresetCache(values: PresetCache): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(PRESET_CACHE_KEY, JSON.stringify(values));
+  } catch {
+    // Ignore quota / private-mode errors — caching is best-effort.
+  }
+}
+
+function hasValue(value: string | string[] | undefined): boolean {
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+
+  return false;
+}
+
 export default function DemographicSurveyModal({
   documentId,
   isAdmin = false,
@@ -41,10 +76,26 @@ export default function DemographicSurveyModal({
     }
   }, [isSurveyModalOpen, documentId, fetchQuestions, fetchAnswers]);
 
-  // Sync local answers with store
+  // Initialise local answers: this document's saved answers take priority, and
+  // any empty preset question is pre-filled from the cross-document cache so the
+  // user doesn't re-enter details (name, age, …) they already provided.
   useEffect(() => {
-    setLocalAnswers(currentAnswers);
-  }, [currentAnswers]);
+    const presets = readPresetCache();
+    const next: Record<string, string | string[]> = {};
+
+    for (const q of questions) {
+      const uqid = q.userQuestionId;
+      if (!uqid) continue;
+
+      if (hasValue(currentAnswers[uqid])) {
+        next[uqid] = currentAnswers[uqid];
+      } else if (q.presetKey && presets[q.presetKey] !== undefined) {
+        next[uqid] = presets[q.presetKey];
+      }
+    }
+
+    setLocalAnswers(next);
+  }, [currentAnswers, questions]);
 
   const handleAnswerChange = useCallback(
     (questionId: string, value: string | string[]) => {
@@ -71,6 +122,16 @@ export default function DemographicSurveyModal({
 
     const success = await submitAnswers(documentId, answers);
     if (success) {
+      // Cache preset answers so they pre-fill on the next document.
+      const presets = readPresetCache();
+      for (const q of questions) {
+        if (!q.presetKey || !q.userQuestionId) continue;
+        const value = localAnswers[q.userQuestionId];
+        if (hasValue(value)) {
+          presets[q.presetKey] = value;
+        }
+      }
+      writePresetCache(presets);
       closeSurveyModal();
     }
   };
