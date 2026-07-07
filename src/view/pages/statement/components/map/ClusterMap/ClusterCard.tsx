@@ -17,6 +17,36 @@ import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import { focusEditField } from '../mapHelpers/focusEditField';
 import styles from './ClusterBoard.module.scss';
 
+/**
+ * The note's own text direction, decided by its first strong-directional
+ * character — like `dir="auto"`, but scoped to the NOTE text alone. We set this
+ * EXPLICITLY on the card (not `dir="auto"`) so the menu's `inset-inline-end` and
+ * the text's `padding-inline-end` resolve against the SAME direction and land on
+ * the same side — otherwise the "⋮" overlaps RTL text. (`dir="auto"` on the card
+ * would ignore the note — the menu/footer would flip it to LTR — and each
+ * child's own `inset-inline-*` resolves against ITS OWN direction, not the card's.)
+ */
+function detectTextDir(text: string): 'rtl' | 'ltr' {
+	for (const ch of text) {
+		const c = ch.codePointAt(0);
+		if (c === undefined) continue;
+		// RTL scripts: Hebrew, Arabic, Syriac, Thaana, NKo + Arabic presentation forms.
+		if (
+			(c >= 0x0590 && c <= 0x08ff) ||
+			(c >= 0xfb1d && c <= 0xfdff) ||
+			(c >= 0xfe70 && c <= 0xfeff)
+		) {
+			return 'rtl';
+		}
+		// Strong LTR: Latin, Greek, Cyrillic letters (covers the common cases).
+		if ((c >= 0x0041 && c <= 0x024f) || (c >= 0x0370 && c <= 0x04ff)) {
+			return 'ltr';
+		}
+	}
+
+	return 'ltr';
+}
+
 interface Props {
 	statement: Statement;
 	color: ClusterPaletteEntry;
@@ -129,9 +159,10 @@ const ClusterCard: FC<Props> = ({
 		<div
 			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
-			// Mirror the whole card to the note's own direction so the menu docks
-			// opposite the text start (no overlap) and the footer reads naturally.
-			dir="auto"
+			// Explicit note direction (not "auto") so the menu and the reserved text
+			// padding resolve on the same side — see detectTextDir. The menu and text
+			// inherit this; the footer reads naturally in the note's direction too.
+			dir={detectTextDir(statement.statement)}
 			data-flip-id={statement.statementId}
 			data-cluster-id={clusterId}
 			draggable={canManage}
@@ -219,12 +250,12 @@ const ClusterCard: FC<Props> = ({
 					}}
 				/>
 			) : (
-				// dir="auto" aligns each note by its own content (Hebrew/Arabic → RTL).
-				// When the "⋮" menu is shown it overlays the top inline-end corner, so
-				// reserve inline-end space (cardTextHasMenu) so text never runs under it.
+				// NO own dir here: inherit the card's dir="auto" (which now resolves from
+				// this note's text, since the menu carries its own dir). That keeps the
+				// menu, the text alignment and the reserved inline-end space (cardTextHasMenu)
+				// all on the SAME side, so the "⋮" never overlaps the text — LTR or RTL.
 				<span
 					className={`${styles.cardText} ${canManage && !isEditing ? styles.cardTextHasMenu : ''}`}
-					dir="auto"
 				>
 					{statement.statement}
 				</span>
