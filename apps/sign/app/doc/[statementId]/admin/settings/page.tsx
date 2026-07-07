@@ -11,6 +11,7 @@ import { DemographicMode, SurveyTriggerMode, IdentityDisplayMode, SignDemographi
 import { TextDirection, TocPosition, ExplanationVideoMode, FooterMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
+import DangerZone from '../DangerZone';
 import styles from '../admin.module.scss';
 
 /**
@@ -785,6 +786,9 @@ export default function AdminSettingsPage() {
       >
         {saving ? t('Saving...') : saved ? t('Saved!') : t('Save Settings')}
       </button>
+
+      {/* Data management & moderation */}
+      <DangerZone statementId={statementId} />
     </div>
   );
 }

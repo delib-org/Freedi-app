@@ -31,6 +31,9 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [exporting, setExporting] = useState(false);
   const [exportingDetailed, setExportingDetailed] = useState(false);
+  const [bannedIds, setBannedIds] = useState<Set<string>>(new Set());
+  const [actionUserId, setActionUserId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -51,9 +54,62 @@ export default function AdminUsersPage() {
     }
   }, [statementId, statusFilter, search]);
 
+  const fetchBanned = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/data-management/${statementId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBannedIds(new Set((data.blockedUsers || []).map((u: { userId: string }) => u.userId)));
+      }
+    } catch (error) {
+      console.error('Failed to fetch blocked users:', error);
+    }
+  }, [statementId]);
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  useEffect(() => {
+    fetchBanned();
+  }, [fetchBanned]);
+
+  const runAction = useCallback(
+    async (userId: string, body: Record<string, unknown>) => {
+      setActionUserId(userId);
+      try {
+        const res = await fetch(`/api/admin/data-management/${statementId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          console.error('Action failed:', data.error);
+        }
+      } catch (error) {
+        console.error('Action failed:', error);
+      } finally {
+        setActionUserId(null);
+        await Promise.all([fetchUsers(), fetchBanned()]);
+      }
+    },
+    [statementId, fetchUsers, fetchBanned]
+  );
+
+  const handlePurgeUser = async (user: User) => {
+    await runAction(user.odlUserId, { action: 'purgeUser', targetUserId: user.odlUserId });
+    setConfirmDeleteId(null);
+  };
+
+  const handleToggleBan = async (user: User) => {
+    const isBanned = bannedIds.has(user.odlUserId);
+    await runAction(user.odlUserId, {
+      action: isBanned ? 'unban' : 'ban',
+      targetUserId: user.odlUserId,
+      targetUserName: user.odlUserDisplayName,
+    });
+  };
 
   const handleExport = async () => {
     try {
@@ -218,6 +274,7 @@ export default function AdminUsersPage() {
                 <th>{t('Comments')}</th>
                 <th>{t('Satisfaction')}</th>
                 <th>{t('Reason')}</th>
+                <th>{t('Actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -255,6 +312,57 @@ export default function AdminUsersPage() {
                         </span>
                       );
                     })()}
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                      {confirmDeleteId === user.odlUserId ? (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.exportButton}
+                            style={{ background: 'var(--danger, #dc2626)', padding: '0.25rem 0.5rem' }}
+                            onClick={() => handlePurgeUser(user)}
+                            disabled={actionUserId === user.odlUserId}
+                          >
+                            {actionUserId === user.odlUserId ? t('Working...') : t('Confirm delete')}
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.exportButton}
+                            style={{ background: 'var(--text-secondary)', padding: '0.25rem 0.5rem' }}
+                            onClick={() => setConfirmDeleteId(null)}
+                            disabled={actionUserId === user.odlUserId}
+                          >
+                            {t('Cancel')}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.exportButton}
+                            style={{ background: 'var(--danger, #dc2626)', padding: '0.25rem 0.5rem' }}
+                            onClick={() => setConfirmDeleteId(user.odlUserId)}
+                            disabled={actionUserId === user.odlUserId}
+                            title={t('Delete all of this user’s data on this document (restorable)')}
+                          >
+                            {t('Delete data')}
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.exportButton}
+                            style={{
+                              background: bannedIds.has(user.odlUserId) ? 'var(--agree)' : 'var(--warning, #f59e0b)',
+                              padding: '0.25rem 0.5rem',
+                            }}
+                            onClick={() => handleToggleBan(user)}
+                            disabled={actionUserId === user.odlUserId}
+                          >
+                            {bannedIds.has(user.odlUserId) ? t('Unblock') : t('Block')}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

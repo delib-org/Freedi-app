@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, StatementType } from '@freedi/shared-types';
+import { isUserBlocked } from '@/lib/admin/blocklist';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
@@ -91,6 +92,13 @@ export async function POST(
     }
 
     const db = getFirestoreAdmin();
+
+    if (await isUserBlocked(db, documentId, userId)) {
+      return NextResponse.json(
+        { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
 
     // Check if user already has a comment on this paragraph
     const existingCommentSnapshot = await db
