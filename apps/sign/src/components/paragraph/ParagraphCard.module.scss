@@ -131,6 +131,15 @@
     margin-top: var(--spacing-xs);
     pointer-events: auto;
   }
+
+  // Force-open mode - fully reveal every interaction bar (global "show all comments" toggle)
+  // so readers can immediately see which paragraphs carry a comment count.
+  &.forceOpen {
+    opacity: 1;
+    max-height: 60px;
+    margin-top: var(--spacing-xs);
+    pointer-events: auto;
+  }
 }
 
 // Default paragraph type

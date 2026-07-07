@@ -40,6 +40,11 @@ export interface UIState {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
 
+  // Force-open every paragraph's interaction bar (reveal where comments are)
+  showAllInteractions: boolean;
+  toggleShowAllInteractions: () => void;
+  setShowAllInteractions: (value: boolean) => void;
+
   // Table of contents
   isTocExpanded: boolean;
   toggleToc: () => void;
@@ -113,6 +118,12 @@ export const useUIStore = create<UIState>((set, get) => ({
   // View mode
   viewMode: 'default',
   setViewMode: (mode) => set({ viewMode: mode }),
+
+  // Force-open every paragraph's interaction bar
+  showAllInteractions: false,
+  toggleShowAllInteractions: () =>
+    set((state) => ({ showAllInteractions: !state.showAllInteractions })),
+  setShowAllInteractions: (value) => set({ showAllInteractions: value }),
 
   // Table of contents
   isTocExpanded: false,
@@ -242,6 +253,9 @@ export const selectModalContext = (state: UIState) => state.modalContext;
 export const selectIsEditMode = (state: UIState) => state.isEditMode;
 
 export const selectViewMode = (state: UIState) => state.viewMode;
+
+export const selectShowAllInteractions = (state: UIState) =>
+  state.showAllInteractions;
 
 export const selectIsTocExpanded = (state: UIState) => state.isTocExpanded;
 

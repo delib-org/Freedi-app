@@ -249,6 +249,47 @@
   }
 }
 
+// "Show all comments" toggle - reveals every paragraph's interaction bar
+.commentsToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border, #d1d5db);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    color: var(--text-body);
+    border-color: var(--btn-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.commentsToggleActive {
+  background: var(--btn-primary);
+  border-color: var(--btn-primary);
+  color: #ffffff;
+
+  &:hover {
+    background: var(--btn-primary-hover);
+    color: #ffffff;
+  }
+}
+
 :global(body.a11y-contrast-light) .adminButton {
   color: #ffffff;
   text-decoration: none;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie } from '@/lib/utils/user';
+import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
@@ -164,6 +164,10 @@ export async function POST(
       }
     }
 
+    // Persist the signer's real display name (from the auth cookie) so the admin
+    // Users table can show real names without extra lookups. Guests have no cookie name.
+    const displayName = getUserDisplayNameFromCookie(request.headers.get('cookie'));
+
     const signature = {
       signatureId,
       documentId: docId,
@@ -174,6 +178,7 @@ export async function POST(
       date: Date.now(),
       levelOfSignature: levelOfSignature ?? 0,
       ...(satisfaction !== undefined && { satisfaction }),
+      ...(displayName && { odlUserDisplayName: displayName }),
     };
 
     await db.collection(Collections.signatures).doc(signatureId).set(signature, { merge: true });

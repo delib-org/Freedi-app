@@ -357,6 +357,63 @@
   text-overflow: ellipsis;
 }
 
+// Clickable reason cell that opens the full-feedback modal
+.reasonCell {
+  display: block;
+  max-width: 220px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  unicode-bidi: plaintext;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-body);
+    text-decoration-style: solid;
+  }
+}
+
+// Full-feedback modal body
+.feedbackModal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 1rem);
+}
+
+.feedbackSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 0.25rem);
+}
+
+.feedbackLabel {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.feedbackText {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-body);
+  white-space: pre-wrap;
+  word-break: break-word;
+  unicode-bidi: plaintext;
+}
+
 /* Settings Page */
 .settingsPage {
   max-width: 800px;
