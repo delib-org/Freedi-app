@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import DemographicResponses from '@/components/admin/demographics/DemographicResponses';
+import Modal from '@/components/shared/Modal';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
 
@@ -34,6 +35,7 @@ export default function AdminUsersPage() {
   const [bannedIds, setBannedIds] = useState<Set<string>>(new Set());
   const [actionUserId, setActionUserId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [reasonUser, setReasonUser] = useState<User | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -306,10 +308,19 @@ export default function AdminUsersPage() {
 
                       if (!reason) return '-';
 
+                      const isTruncated = reason.length > 50;
+
                       return (
-                        <span className={styles.rejectionReason} title={reason}>
-                          {reason.length > 50 ? `${reason.substring(0, 50)}...` : reason}
-                        </span>
+                        <button
+                          type="button"
+                          className={styles.reasonCell}
+                          onClick={() => setReasonUser(user)}
+                          title={t('Show full feedback')}
+                          aria-haspopup="dialog"
+                          aria-label={`${t('Show full feedback')} — ${user.odlUserDisplayName}`}
+                        >
+                          {isTruncated ? `${reason.substring(0, 50)}…` : reason}
+                        </button>
                       );
                     })()}
                   </td>
@@ -376,6 +387,34 @@ export default function AdminUsersPage() {
         <h2 className={styles.sectionTitle}>{t('Demographics Survey Responses')}</h2>
         <DemographicResponses documentId={statementId} />
       </section>
+
+      {/* Full feedback modal */}
+      {reasonUser && (
+        <Modal
+          title={reasonUser.odlUserDisplayName || t('User feedback')}
+          onClose={() => setReasonUser(null)}
+          size="small"
+          direction="rtl"
+        >
+          <div className={styles.feedbackModal}>
+            {reasonUser.rejectionReason && (
+              <div className={styles.feedbackSection}>
+                <h3 className={styles.feedbackLabel}>{t('Rejection reason')}</h3>
+                <p className={styles.feedbackText}>{reasonUser.rejectionReason}</p>
+              </div>
+            )}
+            {reasonUser.satisfactionReason && (
+              <div className={styles.feedbackSection}>
+                <h3 className={styles.feedbackLabel}>{t('Satisfaction comment')}</h3>
+                <p className={styles.feedbackText}>{reasonUser.satisfactionReason}</p>
+              </div>
+            )}
+            {!reasonUser.rejectionReason && !reasonUser.satisfactionReason && (
+              <p className={styles.feedbackText}>{t('No feedback')}</p>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

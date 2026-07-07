@@ -131,6 +131,9 @@ export default function ParagraphCard({
   // Get evaluation state from store (updates in real-time when user votes)
   const storeEvaluation = useUIStore((state: UIState) => state.evaluations[paragraph.paragraphId]);
 
+  // Global "show all comments" toggle - force-open every interaction bar
+  const showAllInteractions = useUIStore((state: UIState) => state.showAllInteractions);
+
   // Get interaction state from store (updates in real-time when user comments/evaluates)
   const storeHasInteracted = useUIStore((state: UIState) => state.userInteractions.has(paragraph.paragraphId));
 
@@ -374,7 +377,8 @@ export default function ParagraphCard({
       {!effectiveNonInteractive && (
         <div className={clsx(
           styles.interactionWrapper,
-          enhancedVisibility && styles.alwaysVisible
+          enhancedVisibility && !showAllInteractions && styles.alwaysVisible,
+          showAllInteractions && styles.forceOpen
         )}>
           <InteractionBar
             paragraphId={paragraph.paragraphId}

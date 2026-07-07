@@ -11,6 +11,7 @@ import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
 import { useRealtimeSignatureCounts } from '@/hooks/useRealtimeSignatureCounts';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import { useHeatMapStore } from '@/store/heatMapStore';
+import { useUIStore } from '@/store/uiStore';
 import DocumentClient from './DocumentClient';
 import { IdentityDisplayProvider } from '../providers/IdentityDisplayProvider';
 import { IdentityDisplayMode } from '@/types/demographics';
@@ -113,6 +114,10 @@ export default function DocumentView({
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
+  // Global "show all comments" toggle - force-open every paragraph's interaction bar
+  const showAllInteractions = useUIStore((state) => state.showAllInteractions);
+  const toggleShowAllInteractions = useUIStore((state) => state.toggleShowAllInteractions);
+
   // State to track if blocking video overlay has been dismissed
   const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
 
@@ -165,9 +170,12 @@ export default function DocumentView({
   // Determine if TOC should be shown
   const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
 
-  // Fallback for callers that only pass the legacy hideUserIdentity prop
-  const resolvedIdentityMode: IdentityDisplayMode =
-    identityDisplayMode ?? (hideUserIdentity ? 'anonymous' : 'account');
+  // Fallback for callers that only pass the legacy hideUserIdentity prop.
+  // Admins always see real names (account mode), regardless of the public
+  // anonymity setting — consistent with the admin panel.
+  const resolvedIdentityMode: IdentityDisplayMode = isAdmin
+    ? 'account'
+    : identityDisplayMode ?? (hideUserIdentity ? 'anonymous' : 'account');
 
   return (
       <IdentityDisplayProvider
@@ -225,6 +233,18 @@ export default function DocumentView({
                 />
               </a>
               <div className={styles.topBarActions}>
+                <button
+                  type="button"
+                  className={`${styles.commentsToggle} ${showAllInteractions ? styles.commentsToggleActive : ''}`}
+                  onClick={toggleShowAllInteractions}
+                  aria-pressed={showAllInteractions}
+                  title={showAllInteractions ? t('Hide all comments') : t('Show all comments')}
+                  aria-label={showAllInteractions ? t('Hide all comments') : t('Show all comments')}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
+                  </svg>
+                </button>
                 {isAdmin && (
                   <a href={`/doc/${document.statementId}/admin`} className={styles.adminButton}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
