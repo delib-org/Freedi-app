@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { isUserBlocked } from '@/lib/admin/blocklist';
 import { Collections, StatementType, Statement, SourceApp } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -139,6 +140,13 @@ export async function POST(
     }
 
     const db = getFirestoreAdmin();
+
+    if (await isUserBlocked(db, documentId, userId)) {
+      return NextResponse.json(
+        { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
 
     // Check if user is admin (admins can create unlimited suggestions)
     const adminAccess = await checkAdminAccess(db, documentId, userId);

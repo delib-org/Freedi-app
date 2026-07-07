@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { isUserBlocked } from '@/lib/admin/blocklist';
 import { logger } from '@/lib/utils/logger';
 
 interface ApprovalInput {
@@ -85,6 +86,14 @@ export async function POST(
     }
 
     const db = getFirestoreAdmin();
+
+    if (await isUserBlocked(db, documentId, userId)) {
+      return NextResponse.json(
+        { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
+
     const approvalId = `${userId}--${paragraphId}`;
 
     // For statement-based paragraphs:
