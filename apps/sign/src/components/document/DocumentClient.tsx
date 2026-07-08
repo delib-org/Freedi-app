@@ -104,8 +104,14 @@ export default function DocumentClient({
     status: demographicStatus,
     isLoading: isDemographicLoading,
   } = useDemographicStore();
-  const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
-  const isViewBlocked = useDemographicStore(selectIsViewBlocked);
+  const interactionBlockedByStore = useDemographicStore(selectIsInteractionBlocked);
+  const viewBlockedByStore = useDemographicStore(selectIsViewBlocked);
+
+  // Admins are never required to fill the demographic survey. Guard on the client
+  // as well so admin-skip does not rely solely on the async status/questions APIs
+  // staying consistent (e.g. a transient error re-gating an admin).
+  const isInteractionBlocked = !isAdmin && interactionBlockedByStore;
+  const isViewBlocked = !isAdmin && viewBlockedByStore;
 
   const confettiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
