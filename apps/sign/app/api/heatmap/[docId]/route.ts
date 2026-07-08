@@ -3,6 +3,7 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType, Statement, DEMOGRAPHIC_CONSTANTS } from '@freedi/shared-types';
 import { StatementWithParagraphs, Paragraph } from '@/types';
 import { HeatMapData, SegmentMetadata, DemographicHeatMapData } from '@/types/heatMap';
+import { getDocumentParagraphs } from '@/lib/firebase/queries';
 import { logger } from '@/lib/utils/logger';
 
 const PARAGRAPH_VIEWS_COLLECTION = 'paragraphViews';
@@ -186,7 +187,12 @@ export async function GET(
     }
 
     const document = docSnapshot.data() as StatementWithParagraphs;
-    const paragraphs: Paragraph[] = document.paragraphs || [];
+
+    // Resolve paragraphs the same way the document page does so heat map keys
+    // match the rendered paragraphs. Modern documents store paragraphs as
+    // official paragraph statements (paragraphId = statementId); the legacy
+    // embedded `document.paragraphs` array is empty after migration.
+    const paragraphs: Paragraph[] = await getDocumentParagraphs(document);
     const paragraphIds = paragraphs.map((p) => p.paragraphId);
 
     if (paragraphIds.length === 0) {
