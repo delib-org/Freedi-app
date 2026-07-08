@@ -76,6 +76,72 @@
 	padding-block-start: 1.75rem;
 }
 
+// Editor: fills the same space as the read view, so editing feels like the
+// note itself became writable (not a separate form).
+.noteEdit {
+	flex: 1 1 auto;
+	min-height: 6rem;
+	width: 100%;
+	box-sizing: border-box;
+	resize: none;
+	border: none;
+	outline: none;
+	background: rgba(255, 255, 255, 0.35);
+	border-radius: 8px;
+	padding: 0.6rem 0.75rem;
+	color: inherit;
+	font: inherit;
+	font-size: 1rem;
+	line-height: 1.5;
+	text-align: start;
+	// Room so text never runs under the close button in its corner.
+	margin-block-start: 1.75rem;
+
+	&:focus-visible {
+		box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+	}
+}
+
+.footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-block-start: 0.9rem;
+}
+
+.btnPrimary,
+.btnSecondary {
+	border: none;
+	border-radius: 8px;
+	padding: 0.5rem 1.1rem;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	min-height: 2.5rem;
+	transition: background var(--motion-fast) var(--motion-ease),
+		opacity var(--motion-fast) var(--motion-ease);
+}
+
+.btnPrimary {
+	background: var(--btn-primary, #5f88e5);
+	color: #fff;
+
+	&:hover,
+	&:focus-visible {
+		opacity: 0.9;
+	}
+}
+
+.btnSecondary {
+	background: rgba(255, 255, 255, 0.55);
+	color: inherit;
+
+	&:hover,
+	&:focus-visible {
+		background: rgba(255, 255, 255, 0.85);
+	}
+}
+
 .close {
 	position: absolute;
 	top: 0.5rem;

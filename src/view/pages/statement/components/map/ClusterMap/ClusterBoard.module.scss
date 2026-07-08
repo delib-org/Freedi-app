@@ -309,8 +309,7 @@
 	padding-inline-end: 1.4rem;
 }
 
-// Wraps the note text so the "read more" chip can sit at the bottom-end of the
-// text area (above the footer) without disturbing the card's column layout.
+// Wraps the note text so it fills the card's middle row cleanly.
 .cardTextWrap {
 	position: relative;
 	flex: 1;
@@ -320,33 +319,24 @@
 }
 
 // When the text is clamped, fade its last line so the clip reads as
-// "there's more", pointing the eye at the chip. Uses the note's own paper
-// color via mask (no hardcoded color), so it works on every palette tint.
+// "there's more to read". Uses a mask (no hardcoded color), so it works on
+// every palette tint.
 .cardTextClamped {
 	mask-image: linear-gradient(to bottom, black 68%, rgba(0, 0, 0, 0.35) 100%);
 	-webkit-mask-image: linear-gradient(to bottom, black 68%, rgba(0, 0, 0, 0.35) 100%);
 }
 
-// Small pill affordance to open the full-note overlay. Native button so it's
-// keyboard-reachable; hit area padded up for touch.
-.cardMore {
-	position: absolute;
-	bottom: 0;
-	inset-inline-end: 0;
-	border: none;
-	border-radius: 999px;
-	padding: 0.05rem 0.4rem;
-	font-size: 0.8rem;
-	font-weight: 700;
-	line-height: 1;
-	background: rgba(255, 255, 255, 0.65);
-	color: inherit;
+// Pressing the text opens the focus box (read the full note / edit it there).
+// Signal that with a pointer cursor and a faint hover wash.
+.cardTextClickable {
 	cursor: pointer;
+	border-radius: 6px;
 	transition: background var(--motion-fast) var(--motion-ease);
 
 	&:hover,
 	&:focus-visible {
-		background: rgba(255, 255, 255, 0.95);
+		background: rgba(255, 255, 255, 0.28);
+		outline: none;
 	}
 }
 

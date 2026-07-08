@@ -13,7 +13,7 @@ import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import styles from './NoteFocusOverlay.module.scss';
 
 interface Props {
-	/** Full note text to display. */
+	/** Full note text to display / edit. */
 	text: string;
 	/** The note's own text direction (LTR/RTL), decided by the caller. */
 	dir: 'ltr' | 'rtl';
@@ -21,6 +21,14 @@ interface Props {
 	color: ClusterPaletteEntry;
 	/** The source card's viewport rect at open time — the scale-in origin. */
 	sourceRect: DOMRect;
+	/** Whether the current user may edit this note. */
+	canEdit: boolean;
+	/** Open directly in edit mode (parent-controlled). */
+	editing: boolean;
+	/** Ask the parent to switch this note into edit mode. */
+	onRequestEdit: () => void;
+	/** Persist edited text. */
+	onSave: (value: string) => void;
 	/** Close the overlay (parent unmounts this component). */
 	onClose: () => void;
 }
@@ -29,20 +37,36 @@ interface Props {
 // exit was interrupted, or reduced-motion collapsed the transition to nothing).
 const EXIT_FALLBACK_MS = 320;
 
+const FOCUSABLE = 'button, textarea, [href], input, select, [tabindex]:not([tabindex="-1"])';
+
 /**
  * "Lift the note" focus overlay. Renders the full note text in a large,
- * scrollable panel that scales up from the source card's position. Portaled to
- * document.body so it escapes the board's pan/zoom transform and pan handler.
+ * scrollable panel that scales up from the source card's position. With edit
+ * rights the same panel becomes the editor — so editing happens in a
+ * comfortable box, not the cramped 120px card. Portaled to document.body so it
+ * escapes the board's pan/zoom transform and pan handler.
  */
-const NoteFocusOverlay: FC<Props> = ({ text, dir, color, sourceRect, onClose }) => {
+const NoteFocusOverlay: FC<Props> = ({
+	text,
+	dir,
+	color,
+	sourceRect,
+	canEdit,
+	editing,
+	onRequestEdit,
+	onSave,
+	onClose,
+}) => {
 	const { t } = useTranslation();
 	const backdropRef = useRef<HTMLDivElement>(null);
 	const noteRef = useRef<HTMLDivElement>(null);
 	const closeRef = useRef<HTMLButtonElement>(null);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	// The element focused before we opened, so we can restore focus on close.
 	const returnFocusRef = useRef<HTMLElement | null>(null);
 	const [open, setOpen] = useState(false);
 	const [closing, setClosing] = useState(false);
+	const [draft, setDraft] = useState(text);
 
 	// Enter animation: anchor the scale-in origin to the source card, then flip
 	// `open` on the next frame so the CSS transition runs from that origin.
@@ -60,14 +84,28 @@ const NoteFocusOverlay: FC<Props> = ({ text, dir, color, sourceRect, onClose }) 
 		return () => cancelAnimationFrame(raf);
 	}, [sourceRect]);
 
-	// Move focus into the dialog once it's mounted; restore it on unmount.
+	// Focus the editor when editing, else the close button. Restore focus on
+	// unmount so keyboard users return to where they were on the board.
 	useEffect(() => {
-		closeRef.current?.focus();
+		if (editing) {
+			const el = textareaRef.current;
+			if (el) {
+				el.focus();
+				// Caret at the end rather than selecting everything — friendlier for
+				// appending to an existing note.
+				el.setSelectionRange(el.value.length, el.value.length);
+			}
+		} else {
+			closeRef.current?.focus();
+		}
+	}, [editing]);
 
-		return () => {
+	useEffect(
+		() => () => {
 			returnFocusRef.current?.focus?.();
-		};
-	}, []);
+		},
+		[],
+	);
 
 	const beginClose = useCallback(() => {
 		if (closing) return;
@@ -83,8 +121,13 @@ const NoteFocusOverlay: FC<Props> = ({ text, dir, color, sourceRect, onClose }) 
 		noteEl?.addEventListener('transitionend', onEnd);
 	}, [closing, onClose]);
 
-	// Escape closes; keep focus trapped between the close button and the
-	// scrollable text region so keyboard users can't tab out to the board.
+	const save = useCallback(() => {
+		onSave(draft.trim());
+		beginClose();
+	}, [draft, onSave, beginClose]);
+
+	// Escape closes/cancels; Tab is trapped within the panel so focus can't
+	// escape to the board behind the backdrop.
 	const onKeyDown = (e: ReactKeyboardEvent) => {
 		if (e.key === 'Escape') {
 			e.stopPropagation();
@@ -93,9 +136,9 @@ const NoteFocusOverlay: FC<Props> = ({ text, dir, color, sourceRect, onClose }) 
 			return;
 		}
 		if (e.key !== 'Tab') return;
-		const focusables = [closeRef.current, noteRef.current].filter(
-			(el): el is HTMLButtonElement | HTMLDivElement => el !== null,
-		);
+		const focusables = Array.from(
+			noteRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [],
+		).filter((el) => !el.hasAttribute('disabled'));
 		if (focusables.length === 0) return;
 		const first = focusables[0];
 		const last = focusables[focusables.length - 1];
@@ -128,7 +171,7 @@ const NoteFocusOverlay: FC<Props> = ({ text, dir, color, sourceRect, onClose }) 
 				dir={dir}
 				role="dialog"
 				aria-modal="true"
-				aria-label={t('Full note')}
+				aria-label={editing ? t('Edit') : t('Full note')}
 			>
 				<button
 					ref={closeRef}
@@ -139,9 +182,46 @@ const NoteFocusOverlay: FC<Props> = ({ text, dir, color, sourceRect, onClose }) 
 				>
 					✕
 				</button>
-				{/* tabindex so keyboard users can focus and scroll the long text. */}
-				<div className={styles.noteText} tabIndex={0}>
-					{text}
+
+				{editing ? (
+					<textarea
+						ref={textareaRef}
+						className={styles.noteEdit}
+						value={draft}
+						dir="auto"
+						onChange={(e) => setDraft(e.target.value)}
+						onKeyDown={(e) => {
+							// Enter inserts a newline (multi-line notes); Cmd/Ctrl+Enter saves.
+							if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+								e.preventDefault();
+								save();
+							}
+						}}
+					/>
+				) : (
+					// tabindex so keyboard users can focus and scroll the long text.
+					<div className={styles.noteText} tabIndex={0}>
+						{text}
+					</div>
+				)}
+
+				<div className={styles.footer}>
+					{editing ? (
+						<>
+							<button type="button" className={styles.btnSecondary} onClick={beginClose}>
+								{t('Cancel')}
+							</button>
+							<button type="button" className={styles.btnPrimary} onClick={save}>
+								{t('Save')}
+							</button>
+						</>
+					) : (
+						canEdit && (
+							<button type="button" className={styles.btnPrimary} onClick={onRequestEdit}>
+								{t('Edit')}
+							</button>
+						)
+					)}
 				</div>
 			</div>
 		</div>,
