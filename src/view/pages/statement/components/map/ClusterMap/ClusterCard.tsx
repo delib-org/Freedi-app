@@ -15,6 +15,7 @@ import { getEvaluationThumbIdByScore } from '@/view/pages/statement/components/e
 import { logError } from '@/utils/errorHandling';
 import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
 import { focusEditField } from '../mapHelpers/focusEditField';
+import NoteFocusOverlay from './NoteFocusOverlay';
 import styles from './ClusterBoard.module.scss';
 
 /**
@@ -99,6 +100,39 @@ const ClusterCard: FC<Props> = ({
 	const menuRef = useRef<HTMLDivElement>(null);
 	const facesRef = useRef<HTMLDivElement>(null);
 	const faceToggleRef = useRef<HTMLButtonElement>(null);
+	// The card and its text node — used to detect clamped text and to anchor the
+	// focus overlay's scale-in to the card's on-screen position.
+	const cardRef = useRef<HTMLDivElement>(null);
+	const textRef = useRef<HTMLSpanElement>(null);
+	// True when the note text is longer than the 4-line clamp can show, so we
+	// surface the "read more" affordance and open the lift-to-focus overlay.
+	const [isClamped, setIsClamped] = useState(false);
+	// The source card rect captured when the overlay opens (null = overlay closed).
+	const [focusRect, setFocusRect] = useState<DOMRect | null>(null);
+
+	const noteDir = detectTextDir(statement.statement);
+
+	// Re-measure clamping whenever the text, the admin font-size control
+	// (--map-card-font), or the card size changes. scrollHeight > clientHeight
+	// means the -webkit-line-clamp is hiding overflow.
+	useEffect(() => {
+		const el = textRef.current;
+		if (!el || isEditing) {
+			setIsClamped(false);
+
+			return;
+		}
+		const measure = () => setIsClamped(el.scrollHeight > el.clientHeight + 1);
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(el);
+
+		return () => observer.disconnect();
+	}, [statement.statement, isEditing]);
+
+	const openFocus = () => {
+		if (cardRef.current) setFocusRect(cardRef.current.getBoundingClientRect());
+	};
 
 	// Close the card's menu / faces popup when pressing anywhere outside them.
 	// Capture phase so it fires before the canvas pan handler (and before any
@@ -157,12 +191,13 @@ const ClusterCard: FC<Props> = ({
 
 	return (
 		<div
+			ref={cardRef}
 			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
 			// Explicit note direction (not "auto") so the menu and the reserved text
 			// padding resolve on the same side — see detectTextDir. The menu and text
 			// inherit this; the footer reads naturally in the note's direction too.
-			dir={detectTextDir(statement.statement)}
+			dir={noteDir}
 			data-flip-id={statement.statementId}
 			data-cluster-id={clusterId}
 			draggable={canManage}
@@ -254,11 +289,30 @@ const ClusterCard: FC<Props> = ({
 				// this note's text, since the menu carries its own dir). That keeps the
 				// menu, the text alignment and the reserved inline-end space (cardTextHasMenu)
 				// all on the SAME side, so the "⋮" never overlaps the text — LTR or RTL.
-				<span
-					className={`${styles.cardText} ${canManage && !isEditing ? styles.cardTextHasMenu : ''}`}
-				>
-					{statement.statement}
-				</span>
+				<div className={styles.cardTextWrap}>
+					<span
+						ref={textRef}
+						className={`${styles.cardText} ${
+							canManage && !isEditing ? styles.cardTextHasMenu : ''
+						} ${isClamped ? styles.cardTextClamped : ''}`}
+					>
+						{statement.statement}
+					</span>
+					{isClamped && (
+						<button
+							type="button"
+							className={styles.cardMore}
+							aria-label={t('Read more')}
+							aria-haspopup="dialog"
+							onClick={(e) => {
+								e.stopPropagation();
+								openFocus();
+							}}
+						>
+							…
+						</button>
+					)}
+				</div>
 			)}
 
 			<div className={styles.cardFooter}>
@@ -333,6 +387,16 @@ const ClusterCard: FC<Props> = ({
 								);
 							})}
 				</div>
+			)}
+
+			{focusRect && (
+				<NoteFocusOverlay
+					text={statement.statement}
+					dir={noteDir}
+					color={color}
+					sourceRect={focusRect}
+					onClose={() => setFocusRect(null)}
+				/>
 			)}
 		</div>
 	);
