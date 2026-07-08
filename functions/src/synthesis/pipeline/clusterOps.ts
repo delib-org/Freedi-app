@@ -278,6 +278,10 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		description,
 		statementType: StatementType.option,
 		parentId: option.parentId,
+		// Full ancestor chain so this cluster is picked up by descendant
+		// queries/selectors that filter on parents[] (e.g. the cluster map).
+		// Without it the map drops auto-generated clusters and shows flat mode.
+		parents: [...(parentStatement.parents ?? []), parentStatement.statementId],
 		topParentId: option.topParentId ?? option.parentId,
 		creatorId: option.creatorId,
 		creator: option.creator,

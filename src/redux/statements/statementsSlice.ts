@@ -512,7 +512,17 @@ export const subStatementsByTopParentIdMemo = (statementId: string | undefined) 
 export const statementDescendantsSelector = (statementId: string) =>
 	createSelector(
 		(state: { statements: StatementsState }) => state.statements.statements,
-		(statements) => statements.filter((statement) => statement.parents?.includes(statementId)),
+		(statements) =>
+			statements.filter(
+				// A statement is a descendant if the subject is in its ancestor
+				// chain (parents[]) OR it is a direct child (parentId === subject).
+				// The parentId fallback keeps the map resilient to auto-generated
+				// clusters whose parents[] array was never populated by the
+				// synthesis writers — otherwise those clusters are dropped here and
+				// the board collapses to flat mode with no clusters shown.
+				(statement) =>
+					statement.parents?.includes(statementId) || statement.parentId === statementId,
+			),
 	);
 
 export const statementsRoomSolutions =

@@ -1,0 +1,184 @@
+// "Lift the note" focus overlay — the same sticky note, enlarged into a
+// readable, scrollable panel above a dimmed backdrop. Rendered via a portal on
+// document.body so it escapes the board's pan/zoom transform (crisp at any
+// zoom) and the canvas pan handler (interacting here never pans the board).
+
+.backdrop {
+	position: fixed;
+	inset: 0;
+	// Above .filterPrompt (z-index 20) and every card/menu on the board.
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--padding);
+	background: rgba(0, 0, 0, 0.42);
+	opacity: 0;
+	transition: opacity var(--motion-slow) var(--motion-ease);
+
+	&.open {
+		opacity: 1;
+	}
+
+	&.closing {
+		opacity: 0;
+		transition-duration: var(--motion-base);
+		transition-timing-function: var(--motion-ease-exit);
+	}
+}
+
+.note {
+	// Same paper language as the board card — enlarged, not a generic dialog.
+	// background / color come inline from the note's ClusterPaletteEntry.
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	width: min(92vw, 32rem);
+	max-height: min(80dvh, 40rem);
+	padding: calc(var(--padding) * 1.5);
+	border-radius: 14px;
+	// Deep shadow reads as physically lifted off the board.
+	box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
+	// transform-origin is set inline toward the source card's viewport position
+	// so the note appears to grow from where it sits on the board.
+	transform: scale(0.24);
+	opacity: 0;
+	transition: transform var(--motion-slow) var(--motion-ease),
+		opacity var(--motion-slow) var(--motion-ease);
+
+	.open & {
+		transform: scale(1);
+		opacity: 1;
+	}
+
+	.closing & {
+		transform: scale(0.24);
+		opacity: 0;
+		transition-duration: var(--motion-base);
+		transition-timing-function: var(--motion-ease-exit);
+	}
+}
+
+.noteText {
+	flex: 1 1 auto;
+	min-height: 0;
+	// Very long notes scroll INSIDE the lifted note, independent of board zoom.
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	font-size: 1rem;
+	line-height: 1.5;
+	word-break: break-word;
+	white-space: pre-wrap;
+	// Logical start so RTL notes right-align themselves (dir set on .note).
+	text-align: start;
+	// Room so text never runs under the close button in its corner.
+	padding-block-start: 1.75rem;
+}
+
+// Editor: fills the same space as the read view, so editing feels like the
+// note itself became writable (not a separate form).
+.noteEdit {
+	flex: 1 1 auto;
+	min-height: 6rem;
+	width: 100%;
+	box-sizing: border-box;
+	resize: none;
+	border: none;
+	outline: none;
+	background: rgba(255, 255, 255, 0.35);
+	border-radius: 8px;
+	padding: 0.6rem 0.75rem;
+	color: inherit;
+	font: inherit;
+	font-size: 1rem;
+	line-height: 1.5;
+	text-align: start;
+	// Room so text never runs under the close button in its corner.
+	margin-block-start: 1.75rem;
+
+	&:focus-visible {
+		box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+	}
+}
+
+.footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-block-start: 0.9rem;
+}
+
+.btnPrimary,
+.btnSecondary {
+	border: none;
+	border-radius: 8px;
+	padding: 0.5rem 1.1rem;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	min-height: 2.5rem;
+	transition: background var(--motion-fast) var(--motion-ease),
+		opacity var(--motion-fast) var(--motion-ease);
+}
+
+.btnPrimary {
+	background: var(--btn-primary, #5f88e5);
+	color: #fff;
+
+	&:hover,
+	&:focus-visible {
+		opacity: 0.9;
+	}
+}
+
+.btnSecondary {
+	background: rgba(255, 255, 255, 0.55);
+	color: inherit;
+
+	&:hover,
+	&:focus-visible {
+		background: rgba(255, 255, 255, 0.85);
+	}
+}
+
+.close {
+	position: absolute;
+	top: 0.5rem;
+	// Logical end so it docks opposite the note's text start (RTL-aware).
+	inset-inline-end: 0.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border: none;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.55);
+	color: inherit;
+	font-size: 1.15rem;
+	line-height: 1;
+	cursor: pointer;
+	transition: background var(--motion-fast) var(--motion-ease);
+
+	&:hover,
+	&:focus-visible {
+		background: rgba(255, 255, 255, 0.9);
+	}
+}
+
+// Honor reduced-motion: appear/disappear instantly, no scale/translate.
+@media (prefers-reduced-motion: reduce) {
+	.backdrop,
+	.note {
+		transition: none;
+	}
+
+	.note {
+		transform: none;
+	}
+
+	.closing .note {
+		transform: none;
+	}
+}
