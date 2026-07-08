@@ -521,8 +521,7 @@ export const statementDescendantsSelector = (statementId: string) =>
 				// synthesis writers — otherwise those clusters are dropped here and
 				// the board collapses to flat mode with no clusters shown.
 				(statement) =>
-					statement.parents?.includes(statementId) ||
-					statement.parentId === statementId,
+					statement.parents?.includes(statementId) || statement.parentId === statementId,
 			),
 	);
 
