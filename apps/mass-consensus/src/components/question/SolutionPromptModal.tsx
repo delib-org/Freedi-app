@@ -451,10 +451,11 @@ export default function SolutionPromptModal({
                     <InlineMarkdown text={questionDescription} />
                   </p>
                 )}
-                {(questionText.length > 150 || questionDescription) && (
+                {questionDescription && (
                   <button
                     type="button"
                     className={styles.expandButton}
+                    aria-expanded={isQuestionExpanded}
                     onClick={() => setIsQuestionExpanded(!isQuestionExpanded)}
                   >
                     {isQuestionExpanded ? t('Show less') : t('Show more')}

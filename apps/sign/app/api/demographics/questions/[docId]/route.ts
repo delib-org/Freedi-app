@@ -26,7 +26,7 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { docId } = await params;
-    // userId is available via getUserIdFromCookie(request.headers.get('cookie')) if needed
+    const userId = getUserIdFromCookie(request.headers.get('cookie'));
 
     const { db } = getFirebaseAdmin();
 
@@ -46,7 +46,18 @@ export async function GET(
     const signSettings = document?.signSettings || {};
 
     const mode: DemographicMode = signSettings.demographicMode || 'disabled';
-    const required = signSettings.demographicRequired || false;
+    let required = signSettings.demographicRequired || false;
+
+    // Admins are never required to fill the demographic survey. Report the survey
+    // as not required so the store's fetchQuestions does not overwrite the
+    // admin-safe status from /status and re-gate the admin. Mirrors the exemption
+    // in /api/demographics/status/[docId].
+    if (userId && mode !== 'disabled' && required) {
+      const adminAccess = await checkAdminAccess(db, docId, userId);
+      if (adminAccess.isAdmin) {
+        required = false;
+      }
+    }
 
     // Get questions based on mode
     const questions = await getDemographicQuestions(docId, mode, topParentId);
