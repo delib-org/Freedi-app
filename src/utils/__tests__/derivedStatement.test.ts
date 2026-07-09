@@ -9,7 +9,7 @@
 import { Statement, StatementType } from '@freedi/shared-types';
 import { isDerivedStatement, resolveDerivedPipeline } from '../derivedStatement';
 
-function makeStatement(overrides: Partial<Statement> = {}): Statement {
+function makeStatement(overrides: Partial<Statement> & Record<string, unknown> = {}): Statement {
 	return {
 		statementId: 'opt-1',
 		statement: 'An option',
@@ -58,6 +58,12 @@ describe('derivedStatement', () => {
 				true,
 			);
 		});
+
+		it('detects a live-spawn doc via the off-schema liveSynthOrigin marker', () => {
+			const statement = makeStatement({ liveSynthOrigin: 'spawn' });
+
+			expect(isDerivedStatement(statement)).toBe(true);
+		});
 	});
 
 	describe('resolveDerivedPipeline', () => {
@@ -78,6 +84,14 @@ describe('derivedStatement', () => {
 
 		it('reports unknown-cluster for legacy docs carrying only isCluster', () => {
 			expect(resolveDerivedPipeline(makeStatement({ isCluster: true }))).toBe('unknown-cluster');
+		});
+
+		it('falls back to the legacy isSynthesis boolean when derivedByPipeline is absent', () => {
+			const synth = makeStatement({ isCluster: true, isSynthesis: true });
+			const topic = makeStatement({ isCluster: true, isSynthesis: false });
+
+			expect(resolveDerivedPipeline(synth)).toBe('synthesis');
+			expect(resolveDerivedPipeline(topic)).toBe('topic-cluster');
 		});
 
 		it('does not let statementType override an explicit pipeline', () => {

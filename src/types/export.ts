@@ -77,6 +77,8 @@ export interface ExportableStatementData {
 	anchored?: boolean;
 	/** True when produced by the clustering/synthesis pipeline rather than submitted by a participant */
 	isDerived: boolean;
+	/** True when the statement is a cluster container grouping other statements */
+	isCluster?: boolean;
 	/** Which pipeline produced it, when derived */
 	derivedByPipeline?: 'topic-cluster' | 'synthesis' | 'unknown-cluster';
 	/** IDs of the source statements merged into this one, when derived */
@@ -219,6 +221,7 @@ export function extractExportableData(statement: Statement): ExportableStatement
 		hide: statement.hide,
 		anchored: statement.anchored,
 		isDerived: derived,
+		isCluster: statement.isCluster,
 		derivedByPipeline: derived ? resolveDerivedPipeline(statement) : undefined,
 		integratedOptions: derived ? statement.integratedOptions : undefined,
 	};

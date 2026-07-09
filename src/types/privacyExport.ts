@@ -78,6 +78,8 @@ export interface OptionEvaluationSummary {
 	sumEvaluations: number;
 	/** True when the option was produced by the clustering/synthesis pipeline rather than submitted by a participant */
 	isDerived: boolean;
+	/** True when the option is a cluster container grouping other options */
+	isCluster?: boolean;
 	/** Which pipeline produced it, when derived. Documents predating the field report 'unknown-cluster'. */
 	derivedByPipeline?: 'topic-cluster' | 'synthesis' | 'unknown-cluster';
 	/** IDs of the source options merged into this one, when derived */

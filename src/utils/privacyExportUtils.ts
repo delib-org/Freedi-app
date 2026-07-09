@@ -198,6 +198,7 @@ function buildOptionSummaries(
 			neutralCount: stats.neutralCount,
 			sumEvaluations: stats.sumEvaluations,
 			isDerived: derived,
+			isCluster: option.isCluster,
 			derivedByPipeline: derived ? resolveDerivedPipeline(option) : undefined,
 			integratedOptions: derived ? option.integratedOptions : undefined,
 		};
@@ -505,7 +506,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	// Section 2: Option Evaluation Summary
 	lines.push('# === OPTION EVALUATION SUMMARY ===');
 	lines.push(
-		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations,Is Derived,Derived By Pipeline,Integrated Options',
+		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations,Is Derived,Is Cluster,Derived By Pipeline,Integrated Options',
 	);
 
 	data.optionEvaluations.forEach((opt) => {
@@ -520,6 +521,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 				opt.neutralCount,
 				opt.sumEvaluations.toFixed(3),
 				opt.isDerived ? 'Yes' : 'No',
+				opt.isCluster ? 'Yes' : 'No',
 				escapeCSV(opt.derivedByPipeline ?? ''),
 				escapeCSV(opt.integratedOptions?.join(' ') ?? ''),
 			].join(','),
