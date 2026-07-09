@@ -309,6 +309,37 @@
 	padding-inline-end: 1.4rem;
 }
 
+// Wraps the note text so it fills the card's middle row cleanly.
+.cardTextWrap {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+// When the text is clamped, fade its last line so the clip reads as
+// "there's more to read". Uses a mask (no hardcoded color), so it works on
+// every palette tint.
+.cardTextClamped {
+	mask-image: linear-gradient(to bottom, black 68%, rgba(0, 0, 0, 0.35) 100%);
+	-webkit-mask-image: linear-gradient(to bottom, black 68%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+// Pressing the text opens the focus box (read the full note / edit it there).
+// Signal that with a pointer cursor and a faint hover wash.
+.cardTextClickable {
+	cursor: pointer;
+	border-radius: 6px;
+	transition: background var(--motion-fast) var(--motion-ease);
+
+	&:hover,
+	&:focus-visible {
+		background: rgba(255, 255, 255, 0.28);
+		outline: none;
+	}
+}
+
 .cardMenu {
 	position: absolute;
 	top: 2px;

@@ -14,7 +14,7 @@ import { enhancedEvaluationsThumbs } from '@/view/pages/statement/components/eva
 import { getEvaluationThumbIdByScore } from '@/view/pages/statement/components/evaluations/statementsEvaluationCont';
 import { logError } from '@/utils/errorHandling';
 import type { ClusterPaletteEntry } from '../mapHelpers/mindElixirTransform';
-import { focusEditField } from '../mapHelpers/focusEditField';
+import NoteFocusOverlay from './NoteFocusOverlay';
 import styles from './ClusterBoard.module.scss';
 
 /**
@@ -99,6 +99,49 @@ const ClusterCard: FC<Props> = ({
 	const menuRef = useRef<HTMLDivElement>(null);
 	const facesRef = useRef<HTMLDivElement>(null);
 	const faceToggleRef = useRef<HTMLButtonElement>(null);
+	// The card and its text node — used to detect clamped text and to anchor the
+	// focus overlay's scale-in to the card's on-screen position.
+	const cardRef = useRef<HTMLDivElement>(null);
+	const textRef = useRef<HTMLSpanElement>(null);
+	// True when the note text is longer than the 4-line clamp can show, so a
+	// non-manager still gets a pressable affordance to read the whole note.
+	const [isClamped, setIsClamped] = useState(false);
+	// The source card rect captured when the overlay opens (null = overlay closed).
+	const [focusRect, setFocusRect] = useState<DOMRect | null>(null);
+
+	const noteDir = detectTextDir(statement.statement);
+
+	// Re-measure clamping whenever the text, the admin font-size control
+	// (--map-card-font), or the card size changes. scrollHeight > clientHeight
+	// means the -webkit-line-clamp is hiding overflow.
+	useEffect(() => {
+		const el = textRef.current;
+		if (!el) return;
+		const measure = () => setIsClamped(el.scrollHeight > el.clientHeight + 1);
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(el);
+
+		return () => observer.disconnect();
+	}, [statement.statement]);
+
+	// The text is a pressable affordance when there's something the box adds:
+	// more text than the card can show, or edit rights.
+	const canOpen = isClamped || canManage;
+
+	// Open the focus box, anchoring its scale-in to the card's on-screen rect.
+	const openFocus = () => {
+		if (cardRef.current) setFocusRect(cardRef.current.getBoundingClientRect());
+	};
+
+	// Editing lives inside the focus box. When the parent turns edit mode on
+	// (menu "Edit", or a freshly added card that starts in edit mode), open the
+	// box automatically — capture the rect here so it works without a prior tap.
+	useEffect(() => {
+		if (isEditing && cardRef.current) {
+			setFocusRect((rect) => rect ?? cardRef.current!.getBoundingClientRect());
+		}
+	}, [isEditing]);
 
 	// Close the card's menu / faces popup when pressing anywhere outside them.
 	// Capture phase so it fires before the canvas pan handler (and before any
@@ -157,19 +200,19 @@ const ClusterCard: FC<Props> = ({
 
 	return (
 		<div
+			ref={cardRef}
 			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
 			style={{ background: color.card, color: color.text }}
 			// Explicit note direction (not "auto") so the menu and the reserved text
 			// padding resolve on the same side — see detectTextDir. The menu and text
 			// inherit this; the footer reads naturally in the note's direction too.
-			dir={detectTextDir(statement.statement)}
+			dir={noteDir}
 			data-flip-id={statement.statementId}
 			data-cluster-id={clusterId}
 			draggable={canManage}
 			onDragStart={onDragStart}
-			onDoubleClick={canManage && !isEditing ? onRequestEdit : undefined}
 		>
-			{canManage && !isEditing && (
+			{canManage && (
 				<div className={styles.cardMenu} ref={menuRef}>
 					<button
 						type="button"
@@ -230,36 +273,40 @@ const ClusterCard: FC<Props> = ({
 				</div>
 			)}
 
-			{isEditing ? (
-				<textarea
-					className={styles.cardEdit}
-					defaultValue={statement.statement}
-					// Focus on pointer devices only; on touch this would scroll the
-					// field into view and yank the map viewport (focusEditField).
-					ref={focusEditField}
-					// Auto-detect LTR/RTL from the typed text and align accordingly.
-					dir="auto"
-					onFocus={(e) => e.currentTarget.select()}
-					onBlur={(e) => onSaveText(e.currentTarget.value)}
-					onKeyDown={(e) => {
-						if (e.key === 'Enter' && !e.shiftKey) {
-							e.preventDefault();
-							e.currentTarget.blur();
-						}
-						if (e.key === 'Escape') onCancelEdit();
-					}}
-				/>
-			) : (
-				// NO own dir here: inherit the card's dir="auto" (which now resolves from
-				// this note's text, since the menu carries its own dir). That keeps the
-				// menu, the text alignment and the reserved inline-end space (cardTextHasMenu)
-				// all on the SAME side, so the "⋮" never overlaps the text — LTR or RTL.
+			{/* Press the text to open the focus box: read the full note, and — with
+			    edit rights — edit it there instead of in the cramped card. The box
+			    opens when there's more to show (clamped) or the user can edit. */}
+			<div className={styles.cardTextWrap}>
 				<span
-					className={`${styles.cardText} ${canManage && !isEditing ? styles.cardTextHasMenu : ''}`}
+					ref={textRef}
+					className={`${styles.cardText} ${canManage ? styles.cardTextHasMenu : ''} ${
+						isClamped ? styles.cardTextClamped : ''
+					} ${canOpen ? styles.cardTextClickable : ''}`}
+					role={canOpen ? 'button' : undefined}
+					tabIndex={canOpen ? 0 : undefined}
+					aria-haspopup={canOpen ? 'dialog' : undefined}
+					onClick={
+						canOpen
+							? (e) => {
+									e.stopPropagation();
+									openFocus();
+								}
+							: undefined
+					}
+					onKeyDown={
+						canOpen
+							? (e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										openFocus();
+									}
+								}
+							: undefined
+					}
 				>
 					{statement.statement}
 				</span>
-			)}
+			</div>
 
 			<div className={styles.cardFooter}>
 				{showEval ? (
@@ -333,6 +380,23 @@ const ClusterCard: FC<Props> = ({
 								);
 							})}
 				</div>
+			)}
+
+			{focusRect && (
+				<NoteFocusOverlay
+					text={statement.statement}
+					dir={noteDir}
+					color={color}
+					sourceRect={focusRect}
+					canEdit={canManage}
+					editing={isEditing}
+					onRequestEdit={onRequestEdit}
+					onSave={(value) => onSaveText(value)}
+					onClose={() => {
+						if (isEditing) onCancelEdit();
+						setFocusRect(null);
+					}}
+				/>
 			)}
 		</div>
 	);
