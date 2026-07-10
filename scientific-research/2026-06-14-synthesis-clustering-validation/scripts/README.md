@@ -35,7 +35,7 @@ emulator:
 cd functions
 FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test \
   npx tsx scripts/cleanRawSeed.ts <questionId> \
-    ../scientific-research/scripts/seedSynthBenchmark.data.json "<question text>"
+    ../scientific-research/2026-06-14-synthesis-clustering-validation/scripts/seedSynthBenchmark.data.json "<question text>"
 ```
 
 Optional env: `SEED_DELAY_MS` (ms between writes; default 1500),
@@ -50,7 +50,7 @@ internals, so they are not copied here. Use them at the recorded commit:
 |---|---|
 | `functions/scripts/bulkRebuild.ts` | Cluster the seeded options (UMAP→DBSCAN) — preview/sweep/execute. |
 | `functions/scripts/verifyFromEmbeddings.ts` | Re-derive the clustering from a run's shipped `embeddings.json` (offline verification). |
-| `scientific-research/validation/score.mjs` | Verify a run's verdict from its committed artifacts (no deps). |
+| `scientific-research/2026-06-14-synthesis-clustering-validation/validation/score.mjs` | Verify a run's verdict from its committed artifacts (no deps). |
 
 There is also `functions/scripts/seedSynthBenchmark.ts` — a *different* seeder
 that turns live synthesis **on** (used to test the live/incremental path, not the

@@ -218,7 +218,7 @@ Three levels, cheapest first.
 **Level 1 — verify the verdict from the committed artifacts (no deps, no keys, no emulator).**
 Recompute every metric in §4 from `statements.json` + `results.json`:
 ```bash
-cd scientific-research/validation
+cd scientific-research/2026-06-14-synthesis-clustering-validation/validation
 node score.mjs 1-6-2026-40-20-10-validation     # → ✅ PASS — 10/10 checks
 ```
 
@@ -227,7 +227,7 @@ Re-runs the real pipeline primitive on `embeddings.json` and scores purity vs gr
 ```bash
 cd functions && npm install
 npx tsx scripts/verifyFromEmbeddings.ts \
-  ../scientific-research/validation/1-6-2026-40-20-10-validation
+  ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/1-6-2026-40-20-10-validation
 # → ✅ REPRODUCED — 4 clusters, 0 noise, all 100% pure
 ```
 

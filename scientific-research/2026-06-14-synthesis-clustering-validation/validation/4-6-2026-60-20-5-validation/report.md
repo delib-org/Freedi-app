@@ -218,14 +218,14 @@ production data. See §8 for the recommended next step.
 
 **Level 1 — verify the verdict from committed artifacts (no deps/keys/emulator):**
 ```bash
-cd scientific-research/validation
+cd scientific-research/2026-06-14-synthesis-clustering-validation/validation
 node score.mjs 4-6-2026-60-20-5-validation     # → ❌ FAIL — 9/19 checks
 ```
 
 **Level 2 — re-derive the clustering from shipped embeddings (no OpenAI/emulator):**
 ```bash
 cd functions && npx tsx scripts/verifyFromEmbeddings.ts \
-  ../scientific-research/validation/4-6-2026-60-20-5-validation --eps=0.45 --seed=42
+  ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/4-6-2026-60-20-5-validation --eps=0.45 --seed=42
 # → 11 disjoint clusters (the pre-judge input). The twoTierJudge step is NOT
 #   reproducible offline — it needs the LLM equivalence judge (see §7).
 ```

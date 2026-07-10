@@ -143,11 +143,11 @@ still-open diagnostic — see §6.)
 
 ```bash
 # Level 1 — verdict from artifacts (no deps/keys/emulator):
-cd scientific-research/validation && node score.mjs 4-6-2026-60-20-5-tight-validation   # ❌ 17/19 (synths clean)
+cd scientific-research/2026-06-14-synthesis-clustering-validation/validation && node score.mjs 4-6-2026-60-20-5-tight-validation   # ❌ 17/19 (synths clean)
 
 # Level 2 — re-derive clustering from shipped embeddings (no OpenAI/emulator):
 cd functions && npx tsx scripts/verifyFromEmbeddings.ts \
-  ../scientific-research/validation/4-6-2026-60-20-5-tight-validation --eps=0.45 --seed=42
+  ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/4-6-2026-60-20-5-tight-validation --eps=0.45 --seed=42
 #   → 12 clusters, 0 noise, all 100% pure (membership reproduces exactly)
 
 # Level 3 — full production-path run (emulator + API keys):

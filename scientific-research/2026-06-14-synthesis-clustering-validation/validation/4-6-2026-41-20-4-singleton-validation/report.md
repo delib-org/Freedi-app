@@ -97,9 +97,9 @@ an otherwise-coherent cluster are no longer absorbed.
   to one sentence. The eps sweep confirmed no ε both recovered the synths and
   left the outlier as DBSCAN noise; the fix solves it at the judge layer instead.
 ```bash
-cd scientific-research/validation && node score.mjs 4-6-2026-41-20-4-singleton-validation   # ✅ 18/18
+cd scientific-research/2026-06-14-synthesis-clustering-validation/validation && node score.mjs 4-6-2026-41-20-4-singleton-validation   # ✅ 18/18
 cd functions && npx tsx scripts/verifyFromEmbeddings.ts \
-  ../scientific-research/validation/4-6-2026-41-20-4-singleton-validation --eps=0.45 --seed=42
+  ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/4-6-2026-41-20-4-singleton-validation --eps=0.45 --seed=42
 #   → 10 clusters; the off-topic groups with daily-cardio at the cosine step (the judge then drops it — needs the LLM path)
 ```
 

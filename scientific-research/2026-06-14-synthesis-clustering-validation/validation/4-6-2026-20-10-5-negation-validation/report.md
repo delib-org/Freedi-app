@@ -141,9 +141,9 @@ FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test \
 - The two-tier split is LLM-driven, so member counts on the dropped side can
   vary run-to-run; the *stance separation* (4 pure synths) is the stable result.
 ```bash
-cd scientific-research/validation && node score.mjs 4-6-2026-20-10-5-negation-validation
+cd scientific-research/2026-06-14-synthesis-clustering-validation/validation && node score.mjs 4-6-2026-20-10-5-negation-validation
 cd functions && npx tsx scripts/verifyFromEmbeddings.ts \
-  ../scientific-research/validation/4-6-2026-20-10-5-negation-validation --eps=0.8 --seed=42
+  ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/4-6-2026-20-10-5-negation-validation --eps=0.8 --seed=42
 #   → 2 clusters (pro+anti merged at the cosine step); the judge split is not reproduced offline (needs the LLM)
 ```
 

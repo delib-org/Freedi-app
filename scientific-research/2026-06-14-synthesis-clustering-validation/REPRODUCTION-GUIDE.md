@@ -355,11 +355,11 @@ the corpus path at `my-corpus.json`. It writes:
 
 ```bash
 # Level 1 — score the output against your ground truth (no deps, no keys, no emulator):
-cd scientific-research/validation && node score.mjs <run-folder>
+cd scientific-research/2026-06-14-synthesis-clustering-validation/validation && node score.mjs <run-folder>
 
 # Level 2 — re-derive the clustering from the shipped embeddings (no OpenAI, no emulator):
 cd functions && npx tsx scripts/verifyFromEmbeddings.ts \
-  ../scientific-research/validation/<run-folder> --eps=<chosen> --seed=42
+  ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/<run-folder> --eps=<chosen> --seed=42
 ```
 
 `score.mjs` derives the expected structure from your labels and checks: synth

@@ -11,7 +11,7 @@
  * USAGE (from functions/):
  *   npx tsx scripts/verifyFromEmbeddings.ts <validation-folder> [--eps=0.8] [--seed=42]
  *   e.g. npx tsx scripts/verifyFromEmbeddings.ts \
- *         ../scientific-research/validation/1-6-2026-40-20-10-validation
+ *         ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/1-6-2026-40-20-10-validation
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

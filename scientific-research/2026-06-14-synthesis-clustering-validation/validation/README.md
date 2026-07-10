@@ -43,7 +43,7 @@ Example: `1-6-2026-40-20-10-validation` = run on 2026-06-01 over 40 options,
    `node score.mjs <test-folder>`
 2. **Re-derive the clustering** from the shipped embeddings — no OpenAI, no emulator
    (uses the real pipeline primitive):
-   `cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/validation/<test-folder>`
+   `cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/<test-folder>`
 3. **Full end-to-end** (regenerate embeddings from text, run the whole pipeline) —
    requires Node 22.17.1, the Firebase emulators, and API keys (`OPENAI_API_KEY`
    for embeddings + Gemini credentials for titles) in `functions/.env`. See each

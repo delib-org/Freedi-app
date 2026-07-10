@@ -38,7 +38,7 @@ that every reported number is independently reproducible offline.
 > **Author's note.** Section 2 (Related Work) is a seeded stub: it sketches the
 > relevant literature and supplies starter citations, to be expanded by the
 > authors. All empirical claims in Sections 4–8 are sourced from the committed
-> per-run artifacts under `scientific-research/validation/`.
+> per-run artifacts under `scientific-research/2026-06-14-synthesis-clustering-validation/validation/`.
 
 ---
 
@@ -378,14 +378,14 @@ the findings are independently falsifiable.
 
 ## 10. Reproducibility and Data Availability
 
-All artifacts live under `scientific-research/validation/`. Three independence
+All artifacts live under `scientific-research/2026-06-14-synthesis-clustering-validation/validation/`. Three independence
 levels, cheapest first (exact commands in each run's `report.md`; a from-scratch
 install guide is in `REPRODUCTION-GUIDE.md`):
 
 1. **Verify the verdict from committed artifacts** — no dependencies, keys, or
    emulator: `node score.mjs <run-folder>`.
 2. **Re-derive the clustering from shipped embeddings** — no OpenAI/emulator:
-   `cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/validation/<run-folder> --eps=<ε> --seed=42`.
+   `cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/<run-folder> --eps=<ε> --seed=42`.
    Reproduces deterministic membership; the LLM judge step is not replayed offline.
 3. **Full end-to-end** — emulator + API keys: seed the corpus with
    `cleanRawSeed.ts`, then `bulkRebuild.ts <qid> --eps=<ε> --two-tier --max-llm-calls=2000 --execute`.
@@ -441,5 +441,5 @@ Automatic Content Analysis Methods for Political Texts.* Political Analysis,
 
 *Companion internal documents:* the architecture and algorithm description in
 `docs/clusters and synthesis/clustering-and-synthesis-paper.md`; the
-cross-run summary in `scientific-research/validation/FINDINGS.md`; per-run reports
+cross-run summary in `scientific-research/2026-06-14-synthesis-clustering-validation/validation/FINDINGS.md`; per-run reports
 in each `<run-folder>/report.md`.

@@ -45,7 +45,7 @@ option-creation trigger) → run the **production** bulk path
 LLM semantic-equivalence + complete-linkage `refineComponent`) → export artifacts
 → score with a structure-agnostic scorer (`score.mjs`) that derives the expected
 structure from the per-statement labels. Protocols:
-`scientific-research/DESIGNING-TEST-CORPORA.md` and
+`scientific-research/2026-06-14-synthesis-clustering-validation/DESIGNING-TEST-CORPORA.md` and
 `PREPARING-VALIDATION-REPORTS.md`. Each run has its own `report.md` with full
 parameters, sweep, and reproduction commands.
 
@@ -175,7 +175,7 @@ Three levels per run (cheapest first); exact commands in each run's `report.md`.
 1. **Verify the verdict from committed artifacts** (no deps/keys/emulator):
    `node score.mjs <run-folder>`.
 2. **Re-derive the clustering from shipped embeddings** (no OpenAI/emulator):
-   `cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/validation/<run-folder> --eps=<ε> --seed=42`.
+   `cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/<run-folder> --eps=<ε> --seed=42`.
    Reproduces the deterministic membership; the LLM judge step is not replayed
    offline.
 3. **Full end-to-end** (emulator + API keys): seed corpus, then

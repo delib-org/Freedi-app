@@ -1,7 +1,7 @@
 # How to prepare a validation report (agent protocol)
 
 Instructions for a Claude/agent session asked to validate the synthesis &
-clustering pipeline and record it under `scientific-research/validation/`.
+clustering pipeline and record it under `scientific-research/2026-06-14-synthesis-clustering-validation/validation/`.
 Follow this end to end. The goal is a record another scientist can **replicate
 and falsify** from the repo alone.
 
@@ -122,10 +122,10 @@ console.info("exported to",DIR,"runDate",runDate);
 
 ```bash
 # Level 1 — verify the verdict from artifacts (no deps/keys/emulator):
-cd scientific-research/validation && node score.mjs <run-folder>
+cd scientific-research/2026-06-14-synthesis-clustering-validation/validation && node score.mjs <run-folder>
 
 # Level 2 — re-derive clustering from shipped embeddings (no OpenAI/emulator):
-cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/validation/<run-folder>
+cd functions && npx tsx scripts/verifyFromEmbeddings.ts ../scientific-research/2026-06-14-synthesis-clustering-validation/validation/<run-folder>
 ```
 
 Both must pass before you write PASS in the report. If they disagree with what
@@ -189,7 +189,7 @@ scientific-research/
 ```
 
 The canonical scripts live in the repo (`functions/scripts/`, `scripts/`);
-`scientific-research/scripts/` surfaces the seed script + corpus as **symlinks**
+`scientific-research/2026-06-14-synthesis-clustering-validation/scripts/` surfaces the seed script + corpus as **symlinks**
 to them (single source of truth, no duplication, no drift). Exact per-run content
 is pinned by the commit in each run's `report.md`.
 
