@@ -193,6 +193,7 @@
     --nav-scrim-to: rgba(16, 21, 31, 1);
 
     // Inactive evaluation thumb → light circle so smileys read on dark cards.
-    --evaluation-thumb-inactive: rgba(255, 255, 255, 0.14);
+    --evaluation-thumb-inactive: rgba(255, 255, 255, 0.22);
+    --evaluation-thumb-ring: rgba(255, 255, 255, 0.28);
   }
 }
