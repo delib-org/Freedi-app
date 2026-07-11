@@ -88,7 +88,7 @@
 }
 
 .selectAllWrapper :global(.checkbox-label) {
-  color: #2a3346 !important;
+  color: var(--text-subtitle) !important;
 }
 
 .reverseCheckboxLayout {

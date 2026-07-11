@@ -182,5 +182,10 @@
 
     // --- ENGAGEMENT PROGRESS TRACK ---
     --progress-track: #2c3650;
+
+    // --- LEGACY STATUS TEXT (brightened for dark tinted backgrounds) ---
+    --error-text: #fca5a5;
+    --success-text: #6ee7b7;
+    --warning: #fcd34d;
   }
 }

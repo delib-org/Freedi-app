@@ -90,7 +90,7 @@
       
       &.default {
         background-color: #ffc107;
-        color: #333;
+        color: var(--text-body);
       }
     }
   }
