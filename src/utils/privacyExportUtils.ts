@@ -64,6 +64,30 @@ async function fetchEvaluations(parentId: string): Promise<Evaluation[]> {
 }
 
 /**
+ * Fetch all option statements for a parent directly from Firestore.
+ *
+ * The export must not rely on whatever sub-statements happen to be loaded in
+ * Redux at click time — a partially-hydrated listener would silently truncate
+ * the option list while evaluations (fetched fresh below) stay complete,
+ * producing an internally inconsistent export. Query the source of truth.
+ *
+ * Keeps both `option` and `synthesis` docs; pipeline-derived options are
+ * stored as `option` but synthesis docs carry `statementType: synthesis`.
+ */
+async function fetchOptions(parentId: string): Promise<Statement[]> {
+	const statementsRef = collection(FireStore, Collections.statements);
+	const q = query(statementsRef, where('parentId', '==', parentId));
+	const snapshot = await getDocs(q);
+
+	return snapshot.docs
+		.map((doc) => doc.data() as Statement)
+		.filter(
+			(s) =>
+				s.statementType === StatementType.option || s.statementType === StatementType.synthesis,
+		);
+}
+
+/**
  * Fetch demographic questions for a statement (including group-level)
  */
 async function fetchDemographicQuestions(
@@ -366,11 +390,22 @@ export async function createPrivacyPreservingExport(
 	const kThreshold = kAnonymityThreshold ?? PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD;
 
 	try {
-		// Fetch all required data
-		const [evaluations, questions] = await Promise.all([
+		// Fetch all required data. Options come from Firestore (not the caller's
+		// possibly-partial Redux snapshot) so the option list is always complete
+		// and consistent with the evaluations fetched alongside it.
+		const [evaluations, questions, fetchedOptions] = await Promise.all([
 			fetchEvaluations(parentStatement.statementId),
 			fetchDemographicQuestions(parentStatement.statementId, parentStatement.topParentId),
+			fetchOptions(parentStatement.statementId),
 		]);
+
+		// Merge the authoritative DB options with any passed in, preferring the
+		// DB copy. Union guarantees we never export fewer options than the caller
+		// supplied, while the DB fetch backfills anything the caller was missing.
+		const optionsById = new Map<string, Statement>();
+		options.forEach((o) => optionsById.set(o.statementId, o));
+		fetchedOptions.forEach((o) => optionsById.set(o.statementId, o));
+		const allOptions = Array.from(optionsById.values());
 
 		const questionIds = questions.map((q) => q.userQuestionId).filter((id): id is string => !!id);
 
@@ -378,9 +413,9 @@ export async function createPrivacyPreservingExport(
 
 		// Build export components
 		const demographicStats = buildDemographicStats(questions, answers);
-		const optionSummaries = buildOptionSummaries(options, evaluations);
+		const optionSummaries = buildOptionSummaries(allOptions, evaluations);
 		const { breakdowns, suppressedCount } = buildDemographicBreakdowns(
-			options,
+			allOptions,
 			evaluations,
 			questions,
 			answers,
@@ -388,10 +423,10 @@ export async function createPrivacyPreservingExport(
 		);
 
 		// Build anonymized evaluations
-		const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, options);
+		const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, allOptions);
 
 		// Participation funnel: entered → suggested → evaluated
-		const participation = buildParticipationSummary(parentStatement, options, evaluations);
+		const participation = buildParticipationSummary(parentStatement, allOptions, evaluations);
 
 		// Count unique evaluators and respondents
 		const uniqueEvaluators = participation.evaluatedCount;
@@ -401,7 +436,7 @@ export async function createPrivacyPreservingExport(
 			exportedAt: new Date().toISOString(),
 			exportFormat: 'json',
 			appVersion: '1.0.0',
-			totalRecords: options.length,
+			totalRecords: allOptions.length,
 			kAnonymityThreshold: kThreshold,
 			suppressedGroupCount: suppressedCount,
 			totalEvaluators: uniqueEvaluators,
