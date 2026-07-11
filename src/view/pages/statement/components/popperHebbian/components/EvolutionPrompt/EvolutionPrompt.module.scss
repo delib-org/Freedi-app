@@ -16,7 +16,7 @@
 	align-items: center;
 	gap: 0.5rem;
 	padding: 0.4rem 0.75rem;
-	background: white;
+	background: var(--card-default);
 	border-radius: 20px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -40,24 +40,24 @@
 
 .promptTitle {
 	font-size: var(--h4-font-size);
-	color: #333;
+	color: var(--text-body);
 	margin: 0 0 1rem 0;
 }
 
 .challengeSummary {
 	font-size: 1rem;
-	color: #555;
+	color: var(--text-body);
 	line-height: 1.6;
 	margin: 0 0 1rem 0;
 	padding: 1rem;
-	background: white;
+	background: var(--card-default);
 	border-radius: 8px;
 	border-left: 4px solid var(--reject);
 }
 
 .evolutionExplanation {
 	font-size: 0.95rem;
-	color: #666;
+	color: var(--text-caption);
 	line-height: 1.5;
 
 	p {

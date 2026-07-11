@@ -4,7 +4,9 @@
 .input{
     font-size: 2rem;
     padding: 1rem;
-    background-color: rgb(226, 226, 206);
+    background-color: var(--input-active);
+    color: var(--text-body);
+    border: 1px solid var(--border-light);
     margin-bottom: 2rem;
 
     //on mobile

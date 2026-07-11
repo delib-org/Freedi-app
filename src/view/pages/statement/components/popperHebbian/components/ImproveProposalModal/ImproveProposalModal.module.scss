@@ -1,5 +1,5 @@
 .modalContainer {
-	background: white;
+	background: var(--card-default);
 	border-radius: 0.5rem;
 	max-width: 800px;
 	width: 95vw;
@@ -14,13 +14,13 @@
 	justify-content: space-between;
 	align-items: center;
 	padding: var(--padding);
-	border-bottom: 1px solid #f0f0f0;
+	border-bottom: 1px solid var(--border-light);
 }
 
 .modalTitle {
 	margin: 0;
 	font-size: var(--h3-font-size);
-	color: #333;
+	color: var(--text-body);
 }
 
 .closeButton {
@@ -28,7 +28,7 @@
 	border: none;
 	font-size: 2rem;
 	line-height: 1;
-	color: #999;
+	color: var(--text-caption);
 	cursor: pointer;
 	padding: 0;
 	width: 32px;
@@ -40,8 +40,8 @@
 	transition: all 0.2s ease;
 
 	&:hover {
-		background: #f5f5f5;
-		color: #333;
+		background: var(--bg-hover);
+		color: var(--text-body);
 	}
 }
 
@@ -56,7 +56,7 @@
 	justify-content: flex-end;
 	gap: 0.75rem;
 	padding: var(--padding);
-	border-top: 1px solid #f0f0f0;
+	border-top: 1px solid var(--border-light);
 }
 
 // Loading State
@@ -72,7 +72,7 @@
 .spinner {
 	width: 48px;
 	height: 48px;
-	border: 3px solid #f0f0f0;
+	border: 3px solid var(--border-light);
 	border-top-color: var(--accent);
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
@@ -87,7 +87,7 @@
 
 .loadingMessage {
 	font-size: 1.1rem;
-	color: #555;
+	color: var(--text-body);
 	animation: fadeInOut 2.5s ease-in-out infinite;
 }
 
@@ -151,7 +151,7 @@
 // Comparison Section (for Title and Description)
 .comparisonSection {
 	padding-bottom: 1rem;
-	border-bottom: 1px solid #e5e7eb;
+	border-bottom: 1px solid var(--border-light);
 
 	&:last-of-type {
 		border-bottom: none;
@@ -162,7 +162,7 @@
 	margin: 0 0 0.75rem 0;
 	font-size: 1rem;
 	font-weight: 600;
-	color: #333;
+	color: var(--text-body);
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 }
@@ -183,7 +183,7 @@
 .diffColumnTitle {
 	font-size: 0.875rem;
 	font-weight: 600;
-	color: #666;
+	color: var(--text-caption);
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 	margin-bottom: 0.5rem;
@@ -192,9 +192,9 @@
 .diffContent {
 	flex: 1;
 	padding: 1rem;
-	background: #f9fafb;
+	background: var(--card-default);
 	border-radius: 8px;
-	border: 1px solid #e5e7eb;
+	border: 1px solid var(--border-light);
 
 	&.improved {
 		background: #f0fdf4;
@@ -206,13 +206,13 @@
 	margin: 0;
 	font-size: 0.95rem;
 	line-height: 1.6;
-	color: #374151;
+	color: var(--text-body);
 	white-space: pre-wrap;
 }
 
 .diffDivider {
 	width: 2px;
-	background: linear-gradient(180deg, transparent, #e5e7eb, transparent);
+	background: linear-gradient(180deg, transparent, var(--border-light), transparent);
 }
 
 // Changes Section
@@ -227,7 +227,7 @@
 	margin: 0 0 0.75rem 0;
 	font-size: 1rem;
 	font-weight: 600;
-	color: #333;
+	color: var(--text-body);
 }
 
 .changesList {
@@ -239,14 +239,14 @@
 .changeItem {
 	margin-bottom: 0.5rem;
 	font-size: 0.95rem;
-	color: #555;
+	color: var(--text-body);
 	line-height: 1.4;
 }
 
 .summary {
 	margin: 0 0 0.75rem 0;
 	font-size: 0.95rem;
-	color: #555;
+	color: var(--text-body);
 	line-height: 1.5;
 }
 
@@ -254,7 +254,7 @@
 	display: flex;
 	gap: 1rem;
 	font-size: 0.85rem;
-	color: #888;
+	color: var(--text-caption);
 }
 
 .evidenceCount,
@@ -276,7 +276,7 @@
 	p {
 		margin-top: 1rem;
 		font-size: 1rem;
-		color: #555;
+		color: var(--text-body);
 	}
 }
 
@@ -325,21 +325,21 @@
 
 .discardButton,
 .cancelButton {
-	background: white;
-	color: #666;
-	border: 1px solid #ddd;
+	background: var(--card-default);
+	color: var(--text-caption);
+	border: 1px solid var(--border-light);
 
 	&:hover:not(:disabled) {
-		background: #f5f5f5;
+		background: var(--bg-hover);
 	}
 }
 
 .historyButton {
-	background: #f3f4f6;
-	color: #374151;
+	background: var(--bg-disabled);
+	color: var(--text-body);
 
 	&:hover:not(:disabled) {
-		background: #e5e7eb;
+		background: var(--bg-hover);
 	}
 }
 
@@ -364,7 +364,7 @@
 
 // Version History
 .versionHistoryContainer {
-	background: white;
+	background: var(--card-default);
 	border-radius: 0.5rem;
 	max-width: 600px;
 	width: 95vw;
@@ -382,13 +382,13 @@
 .versionItem {
 	padding: 1rem;
 	margin-bottom: 0.75rem;
-	border: 1px solid #e5e7eb;
+	border: 1px solid var(--border-light);
 	border-radius: 8px;
 	cursor: pointer;
 	transition: all 0.2s ease;
 
 	&:hover {
-		background: #f9fafb;
+		background: var(--bg-hover);
 	}
 
 	&.current {
@@ -412,7 +412,7 @@
 
 .versionNumber {
 	font-weight: 600;
-	color: #333;
+	color: var(--text-body);
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -429,7 +429,7 @@
 
 .versionDate {
 	font-size: 0.85rem;
-	color: #888;
+	color: var(--text-caption);
 }
 
 .versionMeta {
@@ -451,20 +451,20 @@
 	}
 
 	&.manual {
-		background: #f3f4f6;
-		color: #4b5563;
+		background: var(--bg-disabled);
+		color: var(--text-body);
 	}
 }
 
 .versionSummary {
 	font-size: 0.85rem;
-	color: #666;
+	color: var(--text-caption);
 	font-style: italic;
 }
 
 .versionText {
 	font-size: 0.9rem;
-	color: #555;
+	color: var(--text-body);
 	line-height: 1.5;
 	margin: 0;
 }

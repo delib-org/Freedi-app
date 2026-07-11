@@ -30,7 +30,7 @@
 	justify-content: center;
 	gap: 0.5rem;
 	padding: 1rem 0.75rem;
-	background: white;
+	background: var(--card-default);
 	border: 2px solid var(--border-primary);
 	border-radius: 12px;
 	cursor: pointer;
@@ -165,20 +165,3 @@
 	}
 }
 
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-	.optionCard {
-		background: #1a1a1a;
-		border-color: rgba(255, 255, 255, 0.1);
-
-		&:hover:not(.selected) {
-			background: rgba(95, 136, 229, 0.1);
-			border-color: rgba(95, 136, 229, 0.5);
-		}
-
-		&.selected {
-			background: linear-gradient(135deg, rgba(95, 136, 229, 0.2) 0%, rgba(95, 136, 229, 0.1) 100%);
-			border-color: var(--btn-primary);
-		}
-	}
-}

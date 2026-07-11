@@ -188,7 +188,7 @@
 
   &--light {
     .tooltip__content {
-      background-color: var(--white);
+      background-color: var(--card-default);
       color: var(--text-body);
       border: 1px solid var(--border-light);
       @include shadow-elevated;

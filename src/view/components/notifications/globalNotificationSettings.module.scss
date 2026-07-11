@@ -103,7 +103,7 @@
 		border: 1px solid var(--border-color, #ddd);
 		border-radius: 4px;
 		font-size: 0.9rem;
-		background: var(--input-bg, #fff);
+		background: var(--input-active);
 		color: var(--text-primary);
 	}
 }
@@ -156,12 +156,3 @@
 	}
 }
 
-@media (prefers-color-scheme: dark) {
-	.settings {
-		--text-primary: #fff;
-		--text-secondary: #aaa;
-		--border-color: #333;
-		--switch-bg: #555;
-		--input-bg: #1e1e1e;
-	}
-}

@@ -6,7 +6,7 @@
   border-radius: 4px;
   background-color: var(--inputBackground);
   box-shadow: var(--elevation-1);
-  border-left: 8px solid white;
+  border-left: 8px solid var(--card-default);
 
   width: 100%;
   box-sizing: border-box;
@@ -678,7 +678,7 @@
   transform: translate(-50%, -50%);
   width: 90%;
   max-width: 400px;
-  background: white;
+  background: var(--card-default);
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);

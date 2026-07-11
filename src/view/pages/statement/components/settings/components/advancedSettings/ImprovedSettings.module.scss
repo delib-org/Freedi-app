@@ -16,7 +16,7 @@
         justify-content: space-between;
         align-items: flex-start;
         padding: 1.5rem;
-        background: linear-gradient(135deg, var(--white) 0%, #f8faff 100%);
+        background: var(--card-default);
         border-radius: 16px;
         border: 1px solid rgba(124, 172, 248, 0.1);
         box-shadow: 0 4px 24px rgba(33, 36, 48, 0.04);
@@ -64,7 +64,7 @@
                 align-items: center;
                 gap: 0.4rem;
                 padding: 0.6rem 1rem;
-                background: white;
+                background: var(--card-default);
                 border: 1px solid var(--lighter);
                 border-radius: 20px;
                 color: var(--text-tertiary);
@@ -195,7 +195,7 @@
 
     // Category Section Styles
     .category {
-        background: white;
+        background: var(--card-default);
         border-radius: 14px;
         border: 1px solid rgba(0, 0, 0, 0.06);
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
@@ -223,7 +223,7 @@
         .categoryHeader {
             width: 100%;
             padding: 1.25rem;
-            background: linear-gradient(135deg, #fafbff 0%, white 100%);
+            background: var(--card-default);
             border: none;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -233,7 +233,7 @@
             text-align: left;
 
             &:hover {
-                background: linear-gradient(135deg, #f5f8ff 0%, #fafbff 100%);
+                background: var(--bg-hover);
             }
 
             .categoryHeaderContent {
@@ -292,7 +292,7 @@
 
         .categoryContent {
             padding: 1.5rem;
-            background: white;
+            background: var(--card-default);
             animation: slideDown 0.3s ease;
 
             .settingsGrid {
@@ -438,7 +438,7 @@
     .evaluationCard {
         position: relative;
         padding: 1.25rem;
-        background: white;
+        background: var(--card-default);
         border: 2px solid var(--lighter);
         border-radius: 12px;
         text-align: center;
@@ -547,7 +547,7 @@
                     border-radius: 8px;
                     font-size: 1rem;
                     text-align: center;
-                    background: white;
+                    background: var(--input-active);
                     transition: all 0.2s ease;
 
                     &:focus {
@@ -621,7 +621,7 @@
 
         .helpIcon {
             color: var(--tooltip);
-            background: white;
+            background: var(--card-default);
             padding: 0.75rem;
             border-radius: 50%;
             display: flex;
@@ -648,7 +648,7 @@
 
         .helpButton {
             padding: 0.6rem 1.25rem;
-            background: white;
+            background: var(--card-default);
             border: 1px solid var(--tooltip);
             color: var(--tooltip);
             border-radius: 20px;
@@ -778,40 +778,4 @@
         }
     }
 
-    // Dark Mode Support
-    @media (prefers-color-scheme: dark) {
-        background: #1a1a1a;
-
-        .header {
-            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
-            border-color: rgba(255, 255, 255, 0.1);
-
-            .headerText {
-                .title, .subtitle {
-                    color: white;
-                }
-            }
-        }
-
-        .category {
-            background: #2a2a2a;
-            border-color: rgba(255, 255, 255, 0.1);
-
-            .categoryHeader {
-                background: linear-gradient(135deg, #333 0%, #2a2a2a 100%);
-            }
-
-            .categoryContent {
-                background: #2a2a2a;
-            }
-        }
-
-        .toggleItem {
-            background: rgba(255, 255, 255, 0.05);
-
-            &:hover {
-                background: rgba(255, 255, 255, 0.1);
-            }
-        }
-    }
 }

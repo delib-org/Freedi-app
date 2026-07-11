@@ -1,5 +1,5 @@
 .evidencePost {
-	background: white;
+	background: var(--card-default);
 	border-radius: 8px;
 	box-shadow: 0px 3px 6px rgba(115, 138, 191, 0.1);
 	padding: var(--padding);
@@ -95,7 +95,7 @@
 
 .noticeText {
 	font-size: 0.9rem;
-	color: #333;
+	color: var(--text-body);
 	line-height: 1.4;
 }
 
@@ -168,7 +168,7 @@
 	p {
 		margin: 0;
 		line-height: 1.5;
-		color: #333;
+		color: var(--text-body);
 		font-size: 1rem;
 	}
 }
@@ -213,14 +213,14 @@
 
 .linkDomain {
 	font-size: 0.85rem;
-	color: #666;
+	color: var(--text-caption);
 	font-weight: 500;
 }
 
 .linkSummaryText {
 	margin: 0;
 	font-size: 0.9rem;
-	color: #555;
+	color: var(--text-body);
 	line-height: 1.4;
 	font-style: italic;
 }
@@ -230,7 +230,7 @@
 	justify-content: space-between;
 	align-items: center;
 	padding-top: 0.75rem;
-	border-top: 1px solid #f0f0f0;
+	border-top: 1px solid var(--border-light);
 }
 
 .votingButtons {
@@ -243,9 +243,9 @@
 	align-items: center;
 	gap: 0.25rem;
 	padding: 0.4rem 0.75rem;
-	border: 1px solid #ddd;
+	border: 1px solid var(--border-light);
 	border-radius: 20px;
-	background: white;
+	background: var(--card-default);
 	cursor: pointer;
 	transition: all 0.2s ease;
 	font-size: 0.9rem;
@@ -281,13 +281,13 @@
 }
 
 .netScoreLabel {
-	color: #666;
+	color: var(--text-caption);
 	font-weight: 400;
 }
 
 .netScoreValue {
 	font-weight: 500;
-	color: #333;
+	color: var(--text-body);
 
 	&Positive {
 		color: var(--agree);

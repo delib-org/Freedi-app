@@ -22,8 +22,8 @@
             resize: none;
             outline: none;
             border: none;
-            color: #232f4a;
-            background-color: white;
+            color: var(--text-body);
+            background-color: var(--input-active);
             min-height: 4rem;
             flex: auto;
             box-shadow: 0px 2px 4px 0px rgba(181, 197, 232, 0.48);
@@ -32,7 +32,7 @@
             transition: all 0.3s ease-in-out;
 
             &::placeholder {
-                color: #979797;
+                color: var(--text-caption);
             }
         }
 

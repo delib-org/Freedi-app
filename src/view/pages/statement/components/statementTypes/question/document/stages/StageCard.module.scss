@@ -14,7 +14,7 @@ $bottomCard: 1.5rem;
 		border-inline-start: 4px solid var(--header-question);
 		display: flex;
 		justify-content: space-between;
-		background-color: white;
+		background-color: var(--card-default);
 		width: 100%;
 		cursor: grab;
 
@@ -46,7 +46,7 @@ $bottomCard: 1.5rem;
 	}
 
 	.suggestions {
-		background-color: #e8edf5;
+		background-color: var(--bg-selected);
 		border-inline-start: 4px solid (--header-chosen);
 
 		&:nth-child(even) {

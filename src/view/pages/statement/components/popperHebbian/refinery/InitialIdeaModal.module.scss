@@ -94,7 +94,7 @@
 	padding: 0.75rem;
 	border: 2px solid transparent;
 	border-radius: 12px;
-	background: white;
+	background: var(--input-active);
 	font-size: 1rem;
 	font-family: 'Open Sans', sans-serif;
 	line-height: 1.4;
@@ -107,7 +107,7 @@
 	&:focus {
 		outline: none;
 		border-color: var(--btn-primary);
-		background: white;
+		background: var(--input-active);
 		box-shadow:
 			0px 0px 0px 4px rgba(95, 136, 229, 0.1),
 			0px 4px 12px rgba(0, 0, 0, 0.1);
@@ -132,7 +132,7 @@
 	right: 0.75rem;
 	font-size: 0.85rem;
 	color: var(--text-tertiary);
-	background: white;
+	background: var(--input-active);
 	padding: 0.25rem 0.5rem;
 	border-radius: 4px;
 	transition: color 0.2s;
@@ -194,7 +194,7 @@
 }
 
 .buttonSecondary {
-	background: white;
+	background: var(--card-default);
 	color: var(--btn-secondary);
 	border: 2px solid var(--btn-secondary);
 

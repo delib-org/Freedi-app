@@ -31,7 +31,7 @@
   }
 
   &--secondary {
-    background-color: white;
+    background-color: var(--card-default);
     color: var(--btn-secondary);
     border: 1px solid var(--btn-secondary);
 

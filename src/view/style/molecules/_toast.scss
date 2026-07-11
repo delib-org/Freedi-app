@@ -15,7 +15,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background-color: var(--white);
+  background-color: var(--card-default);
   border-radius: 0.5rem;
   min-width: 300px;
   max-width: 500px;
@@ -145,7 +145,7 @@
   }
 
   &--default {
-    background-color: var(--white);
+    background-color: var(--card-default);
     border-left: 4px solid var(--text-caption);
   }
 

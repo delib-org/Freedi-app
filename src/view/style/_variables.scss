@@ -8,6 +8,11 @@
   direction: ltr;
   text-orientation: mixed;
 
+  // Advertise light-first with dark support so native UA controls (form fields,
+  // scrollbars, autofill) follow the OS. Dark token overrides live in
+  // _variables-dark.scss under @media (prefers-color-scheme: dark).
+  color-scheme: light;
+
   // --- MAIN COLORS ---
   --mainBackground: #1f5895;
   --statementBackground: #f2f6ff;

@@ -30,7 +30,7 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 1rem;
-        background: white;
+        background: var(--card-default);
         border: 2px solid var(--border-color);
         border-radius: 8px;
         color: var(--text-primary);
@@ -59,7 +59,7 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.75rem;
-        background: white;
+        background: var(--card-default);
         border: 2px solid;
         border-radius: 8px;
         transition: all 0.2s ease;
@@ -116,7 +116,7 @@
       position: relative;
       display: flex;
       align-items: center;
-      background: white;
+      background: var(--input-active);
       border: 2px solid var(--border-color);
       border-radius: 8px;
       padding: 0 1rem;
@@ -171,7 +171,7 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.75rem 1rem;
-      background: white;
+      background: var(--card-default);
       border: 2px solid var(--border-color);
       border-radius: 8px;
       color: var(--text-primary);
@@ -239,7 +239,7 @@
         padding: 0.5rem;
         border: 2px solid var(--border-color);
         border-radius: 6px;
-        background: white;
+        background: var(--input-active);
         font-size: 0.95rem;
         color: var(--text-primary);
         cursor: pointer;
@@ -254,7 +254,7 @@
 
     .clearFilters {
       padding: 0.5rem 1rem;
-      background: white;
+      background: var(--card-default);
       border: 2px solid var(--border-color);
       border-radius: 6px;
       color: var(--text-secondary);
@@ -280,7 +280,7 @@
 
   // Member Card
   .memberCard {
-    background: white;
+    background: var(--card-default);
     border: 2px solid var(--border-color);
     border-radius: 12px;
     overflow: hidden;
@@ -455,7 +455,7 @@
       position: absolute;
       top: 60px;
       right: 1rem;
-      background: white;
+      background: var(--card-default);
       border: 2px solid var(--border-color);
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -516,7 +516,7 @@
           align-items: center;
           gap: 0.5rem;
           padding: 0.5rem;
-          background: white;
+          background: var(--card-default);
           border-radius: 6px;
 
           svg {
@@ -577,7 +577,7 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 1rem;
-      background: white;
+      background: var(--card-default);
       border: 2px solid var(--border-color);
       border-radius: 6px;
       color: var(--text-primary);

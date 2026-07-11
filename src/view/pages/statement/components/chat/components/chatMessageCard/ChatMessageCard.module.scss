@@ -199,7 +199,7 @@
       // Option/question messages (non-statement)
       .messageBox {
         direction: rtl;
-        background-color: white;
+        background-color: var(--card-default);
         margin-left: auto;
         margin-right: 3rem;
         border-left: 4px solid;
@@ -246,7 +246,7 @@
 
       .messageBox {
         direction: ltr;
-        background-color: white;
+        background-color: var(--card-default);
         margin-right: auto;
         margin-left: 3rem;
         border-right: 4px solid;
@@ -317,7 +317,7 @@
       }
 
       .messageBoxStatement {
-        background-color: #ffffff;
+        background-color: var(--card-default);
         border-right: none;
         margin-left: 0.5rem;
         border-radius: 7.5px;
@@ -332,7 +332,7 @@
           height: 0;
           border-style: solid;
           border-width: 0 8px 10px 0;
-          border-color: transparent #ffffff transparent transparent;
+          border-color: transparent var(--card-default) transparent transparent;
         }
       }
     }
@@ -363,7 +363,7 @@
       }
 
       .messageBoxStatement {
-        background-color: #ffffff;
+        background-color: var(--card-default);
         border-left: none;
         margin-right: 0.5rem;
         border-radius: 7.5px;
@@ -378,7 +378,7 @@
           height: 0;
           border-style: solid;
           border-width: 0 8px 10px 0;
-          border-color: transparent #ffffff transparent transparent;
+          border-color: transparent var(--card-default) transparent transparent;
         }
       }
     }

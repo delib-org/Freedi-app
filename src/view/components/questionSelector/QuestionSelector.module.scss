@@ -137,7 +137,7 @@ $color-inactive-text: #6B7280;
 .contentCard {
 	margin-top: 32px;
 	padding: 24px;
-	background-color: white;
+	background-color: var(--card-default);
 	border-radius: 8px;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -145,11 +145,11 @@ $color-inactive-text: #6B7280;
 .contentTitle {
 	font-size: 18px;
 	font-weight: 600;
-	color: #333;
+	color: var(--text-body);
 	margin-bottom: 12px;
 }
 
 .contentText {
-	color: #666;
+	color: var(--text-caption);
 	line-height: 1.5;
 }

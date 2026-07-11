@@ -1,5 +1,5 @@
 .scoreboard {
-	background: white;
+	background: var(--card-default);
 	border-radius: 8px;
 	box-shadow: 0px 3px 6px #4162862b;
 	padding: var(--padding);
@@ -91,7 +91,7 @@
 
 .scoreLabel {
 	font-size: 0.9rem;
-	color: #666;
+	color: var(--text-caption);
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
 }
@@ -99,7 +99,7 @@
 .scoreInterpretation {
 	text-align: center;
 	font-size: 1rem;
-	color: #444;
+	color: var(--text-body);
 	padding: 0.75rem;
 	background: var(--statementBackground);
 	border-radius: 8px;
@@ -112,7 +112,7 @@
 
 .scoreBar {
 	height: 8px;
-	background: #e0e0e0;
+	background: var(--border-light);
 	border-radius: 4px;
 	overflow: visible;
 	position: relative;
@@ -149,7 +149,7 @@
 	align-items: center;
 	margin-top: 0.5rem;
 	font-size: 0.75rem;
-	color: #888;
+	color: var(--text-caption);
 
 	.thresholdLabel {
 		position: absolute;

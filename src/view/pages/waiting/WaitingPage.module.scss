@@ -19,7 +19,7 @@
 	}
 
 	&__card {
-		background: white;
+		background: var(--card-default);
 		border-radius: 16px;
 		padding: 2.5rem 2rem;
 		box-shadow: 0 4px 20px rgba(31, 88, 149, 0.08);
