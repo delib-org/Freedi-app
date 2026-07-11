@@ -187,5 +187,12 @@
     --error-text: #fca5a5;
     --success-text: #6ee7b7;
     --warning: #fcd34d;
+
+    // Scrim gradient behind floating bottom nav → fades to the dark page bg.
+    --nav-scrim-from: rgba(16, 21, 31, 0);
+    --nav-scrim-to: rgba(16, 21, 31, 1);
+
+    // Inactive evaluation thumb → light circle so smileys read on dark cards.
+    --evaluation-thumb-inactive: rgba(255, 255, 255, 0.14);
   }
 }

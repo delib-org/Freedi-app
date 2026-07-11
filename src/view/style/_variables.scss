@@ -748,4 +748,11 @@
   --success-text: #065f46;
   --warning: #d97706;
   --warning-background: var(--bg-warning-light);
+
+  // Scrim gradient behind floating bottom nav (fades page content out).
+  --nav-scrim-from: rgba(242, 246, 255, 0);
+  --nav-scrim-to: rgba(242, 246, 255, 1);
+
+  // Inactive evaluation thumb (smiley) background — subtle circle behind icons.
+  --evaluation-thumb-inactive: rgba(0, 0, 0, 0.18);
 }
