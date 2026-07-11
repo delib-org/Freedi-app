@@ -133,6 +133,9 @@ import { fn_syncParagraphChildrenToDescription } from './fn_syncParagraphChildre
 // Strategic export (AI-ready report)
 import { strategicExport } from './fn_strategicExport';
 
+// Privacy-preserving user-data export (k-anonymized, server-side aggregation)
+import { privacyExport } from './fn_privacyExport';
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
 import { refineIdea } from './fn_popperHebbian_refineIdea';
@@ -1100,6 +1103,15 @@ exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterP
 // dependency, plus runs an LLM topic-grouping pass — needs the same memory/
 // timeout profile as triggerTopicClusterPipeline.
 exports.strategicExport = wrapAdminHttpFunction(strategicExport, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
+});
+
+// Privacy-preserving user-data export. Reads all options + every user's raw
+// evaluations and demographic answers, aggregates with k-anonymity suppression
+// server-side, and returns only the anonymized result. Large deliberations mean
+// heavier reads/aggregation, so it gets a raised memory/timeout profile.
+exports.privacyExport = wrapAdminHttpFunction(privacyExport, {
 	memory: '1GiB',
 	timeoutSeconds: 540,
 });
