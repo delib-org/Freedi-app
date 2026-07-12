@@ -44,12 +44,42 @@ export async function getLatestTermsAcceptance(
 	}
 }
 
-export async function saveTermsAcceptance(acceptance: TermsOfUseAcceptance): Promise<boolean> {
-	try {
-		if (!auth.currentUser) {
-			return false;
-		}
+/**
+ * Outcome of attempting to persist a terms-of-use acceptance.
+ * `blocked` means the write was rejected before it reached our security rules —
+ * almost always a failed Firebase App Check token because a browser extension /
+ * ad blocker is blocking reCAPTCHA. That case needs a user-facing message, not a
+ * silent no-op.
+ *
+ * A string-literal union (rather than a boolean-discriminated object union) is
+ * used deliberately: this project compiles without `strictNullChecks`, where
+ * boolean-literal discriminants do not narrow reliably.
+ */
+export type SaveTermsResult = 'success' | 'not-authenticated' | 'blocked' | 'unknown';
 
+/**
+ * Detect a Firestore permission-denied error. When App Check is enforced, a
+ * missing/failed App Check token surfaces here as `permission-denied` even though
+ * the user is authenticated and the rules would otherwise allow the write.
+ */
+function isPermissionDeniedError(error: unknown): boolean {
+	if (!(error instanceof Error)) return false;
+
+	const code = (error as { code?: unknown }).code;
+
+	return (
+		code === 'permission-denied' || error.message.includes('Missing or insufficient permissions')
+	);
+}
+
+export async function saveTermsAcceptance(
+	acceptance: TermsOfUseAcceptance,
+): Promise<SaveTermsResult> {
+	if (!auth.currentUser) {
+		return 'not-authenticated';
+	}
+
+	try {
 		const termsRef = collection(DB, Collections.termsOfUseAcceptance);
 
 		await addDoc(termsRef, {
@@ -57,14 +87,17 @@ export async function saveTermsAcceptance(acceptance: TermsOfUseAcceptance): Pro
 			date: Date.now(),
 		});
 
-		return true;
+		return 'success';
 	} catch (error) {
+		const blocked = isPermissionDeniedError(error);
+
 		logError(error, {
 			operation: 'termsOfUse.termsOfUseService.saveTermsAcceptance',
-			metadata: { message: 'Error saving terms acceptance:' },
+			userId: auth.currentUser.uid,
+			metadata: { message: 'Error saving terms acceptance', blocked },
 		});
 
-		return false;
+		return blocked ? 'blocked' : 'unknown';
 	}
 }
 
