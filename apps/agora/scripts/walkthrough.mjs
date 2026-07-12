@@ -174,7 +174,13 @@ await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לבי
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');
 
 // Lap 2, step "mine": header shows lap 2, panel shows the received suggestion
-await s1.waitForSelector('.camp-bar', { timeout: 15000 });
+try {
+	await s1.waitForSelector('.camp-bar', { timeout: 15000 });
+} catch (e) {
+	console.log('S1 BODY:', (await s1.evaluate(() => document.body.innerText)).slice(0, 400).replaceAll('\n', ' | '));
+	await shot(s1, 'debug-lap2-mine');
+	throw e;
+}
 const lapLabel = await s1.locator('.delib__round').textContent();
 if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, header says: ${lapLabel}`);
 console.log('S1 ON LAP:', lapLabel);
@@ -189,16 +195,20 @@ await s2.waitForTimeout(600);
 await shot(s2, '07b-celebration-accepted');
 await s2.locator('.celebration button.btn--primary').click();
 
-// In-character reviews from the "mine" panel: ask both characters
-await s1.waitForSelector('.char-review', { timeout: 10000 });
-const countCard = s1.locator('.char-review').nth(0);
-const camilleCard = s1.locator('.char-review').nth(1);
-await countCard.locator('button.btn--secondary').click();
-await countCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
-console.log('COUNT VERDICT:', (await countCard.locator('.char-review__bubble').textContent()).slice(0, 100));
-await camilleCard.locator('button.btn--secondary').click();
-await camilleCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
-console.log('CAMILLE VERDICT:', (await camilleCard.locator('.char-review__bubble').textContent()).slice(0, 100));
+// In-character reviews: character chips expand into the verdict accordion
+await s1.waitForSelector('.char-chips__chip', { timeout: 10000 });
+const reviewCard = s1.locator('.char-review');
+await s1.locator('.char-chips__chip').nth(0).click(); // the Count
+await reviewCard.locator('button.btn--secondary').first().click();
+await reviewCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
+console.log('COUNT VERDICT:', (await reviewCard.locator('.char-review__bubble').textContent()).slice(0, 100));
+await s1.locator('.char-chips__chip').nth(1).click(); // switch accordion to Camille
+await reviewCard.locator('button.btn--secondary').first().click();
+await reviewCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
+console.log('CAMILLE VERDICT:', (await reviewCard.locator('.char-review__bubble').textContent()).slice(0, 100));
+// The Count's chip now carries his score badge
+const chipScore = await s1.locator('.char-chips__chip').nth(0).locator('.char-chips__score').textContent();
+console.log('COUNT CHIP BADGE:', chipScore);
 await shot(s1, '07-character-review');
 
 // Backend: each character rated as 3 camp raters + 1 human rater = {3,4}

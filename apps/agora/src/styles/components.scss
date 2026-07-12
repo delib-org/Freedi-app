@@ -599,6 +599,140 @@
 	}
 }
 
+// --- Cycle strip: lap chip + the three loop steps, current one lit ---
+.cycle-strip {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+
+	&__lap {
+		color: var(--text-muted);
+	}
+
+	&__steps {
+		display: flex;
+		gap: var(--space-xs);
+		flex: 1;
+		justify-content: center;
+	}
+
+	&__step {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		padding: 2px var(--space-sm);
+		border: 1px solid transparent;
+		border-radius: var(--radius-full);
+		white-space: nowrap;
+
+		&--active {
+			color: var(--lantern-glow);
+			border-color: var(--lantern-deep);
+			text-shadow: 0 0 12px rgba(255, 216, 130, 0.35);
+		}
+
+		&--done {
+			opacity: 0.55;
+		}
+	}
+}
+
+// --- My lantern: the student's own proposal as the hero object ---
+.my-lantern {
+	border: 1px solid var(--lantern-deep);
+	box-shadow: 0 0 24px rgba(255, 216, 130, 0.12);
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		margin-block-end: var(--space-sm);
+	}
+
+	&__icon {
+		font-size: 1.3rem;
+		line-height: 1;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+	}
+
+	&__edit {
+		margin-inline-start: auto;
+	}
+
+	&__text {
+		color: var(--text-primary);
+		font-size: var(--font-size-lg);
+		line-height: 1.6;
+	}
+}
+
+// --- Character chips: compact tappable row; verdict expands beneath ---
+.char-chips {
+	display: flex;
+	gap: var(--space-sm);
+
+	&__chip {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-sm);
+		background: var(--bg-inset);
+		border: 1px solid transparent;
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		color: var(--text-primary);
+
+		&:hover {
+			border-color: var(--lantern-deep);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: 2px;
+		}
+
+		&--open {
+			border-color: var(--lantern-deep);
+			box-shadow: 0 0 14px rgba(255, 216, 130, 0.2);
+		}
+	}
+
+	&__name {
+		font-size: var(--font-size-sm);
+		text-align: center;
+	}
+
+	&__score {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+	}
+
+	&__cta {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// Sub-lines of the "what does the square say" stream
+.square-says__meaning {
+	color: var(--text-muted);
+	font-size: var(--font-size-sm);
+}
+
+.camp-bar__dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
 // --- Five-level rating scale (MC-style, -1 … +1) ---
 .rate-scale {
 	display: flex;
