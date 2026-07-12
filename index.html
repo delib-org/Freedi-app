@@ -55,6 +55,19 @@
 		--agree: #57c6b2;
 	}
 
+	/* Dark-mode initial tokens — must mirror _variables-dark.scss. This inline
+	   block sits last in the cascade, so without a dark override it would pin
+	   these surfaces to their light values even after the main CSS loads. */
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--mainBackground: #16406e;
+			--statementBackground: #10151f;
+			--inputBackground: #161c29;
+			--bg-screen: #10151f;
+			--surface-background: #10151f;
+		}
+	}
+
 	* {
 		margin: 0;
 		padding: 0;
