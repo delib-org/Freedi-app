@@ -7,6 +7,7 @@ import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
+import { CelebrationOverlay } from '../components/Celebration';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
@@ -152,7 +153,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				}
 			})();
 
-			return m('.game', [m(ToastStack), stageView]);
+			return m('.game', [m(ToastStack), m(CelebrationOverlay), stageView]);
 		},
 	};
 }

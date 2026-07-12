@@ -1,6 +1,9 @@
 import m from 'mithril';
 import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe } from './firebase';
-import { Collections, SourceApp } from '@freedi/shared-types';
+import { Collections, NotificationTriggerType, SourceApp } from '@freedi/shared-types';
+import { t } from './i18n';
+import { celebrate } from './celebration';
+import { getDeliberationState } from './proposals';
 
 export interface AgoraToast {
 	notificationId: string;
@@ -50,8 +53,31 @@ export function listenToNotifications(userId: string): void {
 					notificationId?: string;
 					triggerType?: string;
 					text?: string;
+					statementId?: string;
 				};
 				if (!data.notificationId) return;
+
+				// An accepted improvement deserves glitter, not a toast: pop the
+				// celebration with the suggestion text (already in the local
+				// deliberation state) and mark the notification read.
+				if (data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED) {
+					const suggestion = Object.values(getDeliberationState().suggestions)
+						.flat()
+						.find((candidate) => candidate.statementId === data.statementId);
+					celebrate({
+						message: t('celebrate.suggestion_accepted'),
+						detail: suggestion?.statement,
+					});
+					updateDoc(doc(db, Collections.inAppNotifications, data.notificationId), {
+						read: true,
+						readAt: Date.now(),
+					}).catch((error: unknown) => {
+						console.error('[Notifications] Marking read failed:', error);
+					});
+
+					return;
+				}
+
 				if (toasts.some((toast) => toast.notificationId === data.notificationId)) return;
 				const toast: AgoraToast = {
 					notificationId: data.notificationId,

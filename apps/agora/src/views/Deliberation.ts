@@ -16,6 +16,7 @@ import { CountdownTimer } from '../components/CountdownTimer';
 import { PointsPill } from '../components/PointsPill';
 import { EraMap, EraMapLantern } from '../components/EraMap';
 import { NeedsPeek } from '../components/NeedsBoard';
+import { celebrate } from '../lib/celebration';
 import {
 	AgoraCharacter,
 	AgoraCharacterReview,
@@ -265,7 +266,19 @@ export function Deliberation(
 									disabled: submitting || draft.trim().length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH,
 									onclick: () => {
 										submitting = true;
-										submitProposal(live, anonName, draft.trim(), myProposal?.statementId)
+										const isImprovement = Boolean(myProposal);
+										const text = draft.trim();
+										submitProposal(live, anonName, text, myProposal?.statementId)
+											.then(() => {
+												// Improving your own proposal earns glitter — the
+												// behavior the game most wants to reinforce
+												if (isImprovement) {
+													celebrate({
+														message: t('celebrate.proposal_improved'),
+														detail: text,
+													});
+												}
+											})
 											.catch((error: unknown) => {
 												console.error('[Delib] Submit proposal failed:', error);
 											})
