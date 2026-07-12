@@ -120,10 +120,10 @@ await position(s2, 'S2', 85); // right — jacobin
 await shot(s1, '05-student-positioned');
 
 // ---------- Deliberation ----------
-step('TEACHER advances → DELIBERATION + propose round');
+step('TEACHER advances → DELIBERATION (round 1 propose auto-starts)');
 await advance();
 await teacher.waitForSelector('text=/Round controls|שליטת סבבים/i', { timeout: 15000 });
-await teacher.getByRole('button', { name: /Propose round|סבב הצעות/i }).click();
+// No round click needed — entering deliberation auto-starts the propose round
 
 const propose = async (page, label, text) => {
 	await page.waitForSelector('textarea.values__textarea', { timeout: 15000 });

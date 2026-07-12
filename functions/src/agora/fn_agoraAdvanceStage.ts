@@ -2,9 +2,11 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import { db } from '../db';
 import {
 	Collections,
+	AgoraRoundPhase,
 	AgoraSession,
 	AgoraSessionStatus,
 	AgoraStage,
+	AGORA_SESSION,
 	functionConfig,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
@@ -87,9 +89,22 @@ export const agoraAdvanceStage = onCall(
 			const status =
 				stage === AgoraStage.ended ? AgoraSessionStatus.ended : AgoraSessionStatus.live;
 
+			// Entering deliberation auto-starts round 1 (propose) — otherwise
+			// students wait on "the teacher is opening the next round" while the
+			// teacher's prominent CTA is already pointing at the NEXT stage.
+			const roundStart =
+				stage === AgoraStage.deliberation && session.roundNumber === 0
+					? {
+							roundNumber: 1,
+							roundPhase: AgoraRoundPhase.propose,
+							roundEndsAt: Date.now() + AGORA_SESSION.DEFAULT_ROUND_MS,
+						}
+					: {};
+
 			await sessionRef.update({
 				stage,
 				status,
+				...roundStart,
 				lastUpdate: Date.now(),
 			});
 
