@@ -114,9 +114,15 @@ The characters again — but no podium now: the Count by candlelight, Camille in
 bare room. Human, vulnerable, specific ("at the level where a tired woman with a
 newborn describes her nights").
 
-### Value identification (existing stage, keep)
-*"What values guide the Count? And Camille?"* — free text, AI-graded against the value
-key, feedback streams back while play continues.
+### The needs board (implemented — replaces the value-identification stage)
+When the needs scenes end, **both characters' needs appear side by side** and stay on
+screen — and from positioning and every deliberation phase the student can reopen them
+with one tap ("Remind me what both sides need"). The needs are the raw material of
+every good proposal; they must be re-readable at the moment of writing, not a memory.
+
+*(The free-text value-identification stage was removed from the flow — Tal: too much
+cognitive load, a heavy writing task right before the proposal writing. The AI value
+grading infrastructure remains for possible later use.)*
 
 👩‍🏫 Teacher card: *"Notice: nobody asked you to agree with them. You were asked to
 **see** them. Nobody is asked to renounce a worldview at the door — only to let its
@@ -127,6 +133,8 @@ parts be examined one at a time."*
 ## Act IV — Where Do You Stand? (positioning)
 
 Student places their marker on the bridge between palace and assembly (0–100 → camp).
+The scale ends are labeled with the **character names** (camp in parentheses) — students
+met the Count and Camille, not "Royalists" and "Jacobins".
 
 🎙 "Be honest — this is not a quiz. The game rewards you for building bridges *from*
 where you actually stand, not for standing in the middle."

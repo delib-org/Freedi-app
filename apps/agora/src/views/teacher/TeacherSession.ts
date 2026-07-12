@@ -22,12 +22,13 @@ import { AgoraStage } from '@freedi/shared-types';
  * Teacher live panel — projector-friendly: join code + QR + the era map
  * filling with travelers, and the "open the time tunnel" control.
  */
+// valueIdentification removed from the flow (cognitive load) — enum kept
+// for legacy sessions; see fn_agoraAdvanceStage STAGE_ORDER
 const STAGE_ORDER: AgoraStage[] = [
 	AgoraStage.lobby,
 	AgoraStage.framing,
 	AgoraStage.perspectives,
 	AgoraStage.needs,
-	AgoraStage.valueIdentification,
 	AgoraStage.positioning,
 	AgoraStage.deliberation,
 	AgoraStage.results,
@@ -108,7 +109,12 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			}
 
 			const joinUrl = `${window.location.origin}/join/${session.code}`;
-			const stageIndex = STAGE_ORDER.indexOf(session.stage);
+			// Legacy sessions on the removed valueIdentification stage advance
+			// as if they were at needs (its old predecessor)
+			const stageIndex =
+				session.stage === AgoraStage.valueIdentification
+					? STAGE_ORDER.indexOf(AgoraStage.needs)
+					: STAGE_ORDER.indexOf(session.stage);
 			const nextStage =
 				stageIndex >= 0 && stageIndex < STAGE_ORDER.length - 1 ? STAGE_ORDER[stageIndex + 1] : null;
 

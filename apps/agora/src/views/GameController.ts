@@ -6,6 +6,7 @@ import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
 import { ToastStack } from '../components/Toast';
+import { NeedsBoard } from '../components/NeedsBoard';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
@@ -112,6 +113,9 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								AgoraSceneKind.needsB,
 							),
 							storageKey: `agora_${sessionId}_needs`,
+							// Both sides' needs stay on screen for re-reading while
+							// the class finishes the scenes
+							epilogue: m(NeedsBoard, { topic }),
 						});
 
 					case AgoraStage.valueIdentification:

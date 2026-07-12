@@ -19,18 +19,29 @@ interface Result {
 	ok: boolean;
 }
 
-/** Forward order of the game stages — the teacher can only move forward */
+/**
+ * Forward order of the game stages — the teacher can only move forward.
+ * valueIdentification was removed from the flow (too much cognitive load —
+ * a heavy writing task right before the proposal writing); the enum value
+ * remains so sessions already at that stage keep working, and old sessions
+ * there may advance to positioning (it sits between needs and positioning
+ * in the legacy order).
+ */
 const STAGE_ORDER: AgoraStage[] = [
 	AgoraStage.lobby,
 	AgoraStage.framing,
 	AgoraStage.perspectives,
 	AgoraStage.needs,
-	AgoraStage.valueIdentification,
 	AgoraStage.positioning,
 	AgoraStage.deliberation,
 	AgoraStage.results,
 	AgoraStage.ended,
 ];
+
+/** Legacy sessions stuck on the removed stage advance into this order after needs */
+const LEGACY_STAGE_POSITION: Partial<Record<AgoraStage, number>> = {
+	[AgoraStage.valueIdentification]: STAGE_ORDER.indexOf(AgoraStage.needs),
+};
 
 /**
  * Teacher-only stage transition. The session doc is the single source of
@@ -64,7 +75,10 @@ export const agoraAdvanceStage = onCall(
 				throw new HttpsError('permission-denied', 'Only the session teacher can advance stages');
 			}
 
-			const fromIndex = STAGE_ORDER.indexOf(session.stage);
+			const fromIndex =
+				STAGE_ORDER.indexOf(session.stage) !== -1
+					? STAGE_ORDER.indexOf(session.stage)
+					: (LEGACY_STAGE_POSITION[session.stage] ?? -1);
 			const toIndex = STAGE_ORDER.indexOf(stage);
 			if (toIndex <= fromIndex) {
 				throw new HttpsError('failed-precondition', 'Stages only move forward');

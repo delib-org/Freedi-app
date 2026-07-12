@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { CampScale } from '../components/CampScale';
+import { NeedsPeek } from '../components/NeedsBoard';
 import { db, doc, updateDoc } from '../lib/firebase';
 import { Collections, AgoraParticipant, AgoraTopicPackage, deriveCamp } from '@freedi/shared-types';
 
@@ -24,6 +25,13 @@ export function Positioning(): m.Component<PositioningAttrs> {
 			const { topic, myParticipant } = vnode.attrs;
 			const scale = topic.positioningScale;
 			const confirmed = myParticipant.campPosition !== undefined;
+			// Students know the CHARACTERS, not the camp names — label the
+			// scale ends "character (camp)"
+			const byId = new Map(topic.characters.map((character) => [character.characterId, character]));
+			const leftName = byId.get(scale.leftCharacterId)?.name;
+			const rightName = byId.get(scale.rightCharacterId)?.name;
+			const leftLabel = leftName ? `${leftName} (${scale.leftLabel})` : scale.leftLabel;
+			const rightLabel = rightName ? `${rightName} (${scale.rightLabel})` : scale.rightLabel;
 
 			if (!initialized) {
 				value = myParticipant.campPosition ?? 50;
@@ -54,8 +62,8 @@ export function Positioning(): m.Component<PositioningAttrs> {
 
 					m('.card.stack', [
 						m(CampScale, {
-							leftLabel: scale.leftLabel,
-							rightLabel: scale.rightLabel,
+							leftLabel,
+							rightLabel,
 							value,
 							disabled: confirmed,
 							onChange: (next) => {
@@ -70,6 +78,7 @@ export function Positioning(): m.Component<PositioningAttrs> {
 									t('positioning.confirm'),
 								),
 					]),
+					m(NeedsPeek, { topic }),
 				]),
 			]);
 		},

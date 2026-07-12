@@ -15,6 +15,7 @@ import {
 import { CountdownTimer } from '../components/CountdownTimer';
 import { PointsPill } from '../components/PointsPill';
 import { EraMap, EraMapLantern } from '../components/EraMap';
+import { NeedsPeek } from '../components/NeedsBoard';
 import {
 	AgoraCharacter,
 	AgoraCharacterReview,
@@ -231,6 +232,7 @@ export function Deliberation(
 								draft = (event.target as HTMLTextAreaElement).value;
 							},
 						}),
+						m(NeedsPeek, { topic }),
 						coachNote
 							? m('.card.delib__coach', [m('strong', t('delib.coach_note')), m('p', coachNote)])
 							: null,
@@ -294,6 +296,7 @@ export function Deliberation(
 						...header,
 						m('h2.text-center', t('delib.phase_rate')),
 						m('p.home-explanation', t('delib.rate_hint')),
+						m(NeedsPeek, { topic }),
 						current
 							? m('.card.delib__rate-card', [
 									m('p.scene__text', current.statement),
@@ -333,6 +336,7 @@ export function Deliberation(
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					...header,
 					m('h2.text-center', t('delib.phase_improve')),
+					m(NeedsPeek, { topic }),
 					m('.teacher__mode-row', [
 						m(
 							'button.btn',

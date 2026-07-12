@@ -599,6 +599,103 @@
 	}
 }
 
+// --- Needs board: both sides' needs, side by side ---
+.needs-board {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	text-align: start;
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+		text-align: center;
+	}
+
+	&__columns {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-md);
+
+		@media (max-width: 560px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&__column {
+		background: var(--bg-inset);
+		border-radius: var(--radius-md);
+		padding: var(--space-md);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		border-block-start: 3px solid;
+
+		&--left {
+			border-color: var(--camp-left-glow);
+		}
+
+		&--right {
+			border-color: var(--camp-right-glow);
+		}
+	}
+
+	&__who {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__portrait {
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		object-fit: cover;
+
+		&--fallback {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-family: var(--font-display);
+			color: var(--lantern-glow);
+			background: var(--bg-primary, rgba(0, 0, 0, 0.3));
+		}
+	}
+
+	&__names {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__role {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__list {
+		margin: 0;
+		padding-inline-start: 1.1em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		line-height: 1.5;
+	}
+}
+
+// Collapsible needs board on the deliberation/positioning screens
+.needs-peek {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__toggle {
+		align-self: center;
+	}
+}
+
 // --- In-character proposal review ---
 .char-review {
 	display: flex;

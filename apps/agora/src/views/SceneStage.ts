@@ -8,6 +8,8 @@ export interface SceneStageAttrs {
 	scenes: AgoraScene[];
 	/** Persist key so a refresh keeps the student's place */
 	storageKey: string;
+	/** Rendered on the waiting screen after the last scene (e.g. the needs board) */
+	epilogue?: m.Children;
 }
 
 /**
@@ -18,7 +20,7 @@ export interface SceneStageAttrs {
 export function SceneStage(): m.Component<SceneStageAttrs> {
 	return {
 		view(vnode) {
-			const { scenes, storageKey } = vnode.attrs;
+			const { scenes, storageKey, epilogue } = vnode.attrs;
 			const index = Number(sessionStorage.getItem(storageKey) ?? '0');
 			const done = index >= scenes.length;
 
@@ -27,7 +29,7 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 					m(
 						'.shell__content.text-center',
 						{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
-						[m('.scene__waiting-glow'), m('h3', t('scene.done_waiting'))],
+						[m('.scene__waiting-glow'), m('h3', t('scene.done_waiting')), epilogue ?? null],
 					),
 				]);
 			}

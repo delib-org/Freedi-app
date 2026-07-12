@@ -53,14 +53,15 @@ const advance = async () => {
 	await teacher.waitForTimeout(1200);
 };
 
-// Student-paced scenes: click continue until the waiting screen appears
+// Student-paced scenes: click through dialogue reveals ('···', secondary)
+// and continue buttons (primary) until the waiting screen appears
 const clickThroughScenes = async (page, label) => {
-	for (let i = 0; i < 8; i++) {
-		const btn = page.locator('button.btn--primary.btn--full.btn--lg');
+	for (let i = 0; i < 30; i++) {
+		const btn = page.locator('.scene__actions button');
 		if ((await btn.count()) === 0) break;
 		try {
 			await btn.first().click({ timeout: 4000 });
-			await page.waitForTimeout(700);
+			await page.waitForTimeout(400);
 		} catch {
 			break;
 		}
@@ -78,38 +79,32 @@ for (const stage of ['FRAMING (intro→tunnel→period)', 'PERSPECTIVES (both si
 	await Promise.all([clickThroughScenes(s1, 'S1'), clickThroughScenes(s2, 'S2')]);
 }
 
-// ---------- Value identification ----------
-step('TEACHER advances → VALUE IDENTIFICATION');
-await advance();
-const answerValues = async (page, label, texts) => {
-	for (const text of texts) {
-		await page.waitForSelector('textarea.values__textarea', { timeout: 20000 });
-		await page.locator('textarea.values__textarea').fill(text);
-		await page.locator('button.btn--primary.btn--full.btn--lg').click();
-		// answer card appears; "next character" / continue is a secondary full button
-		await page.waitForSelector('.values__result', { timeout: 20000 });
-		await page.locator('button.btn--secondary.btn--full').click();
-		await page.waitForTimeout(600);
-	}
-	console.log(`${label} answered both characters`);
-};
-await Promise.all([
-	answerValues(s1, 'S1', [
-		'הרוזן מאמין בסדר וביציבות, הוא מפחד מכאוס ורוצה לשמור על המסורת של המדינה',
-		'קמיל מאמין בשוויון ובחירות, הוא רוצה שהעם ישלוט ושהחוק יחול על כולם בצדק',
-	]),
-	answerValues(s2, 'S2', [
-		'חשוב לו לשמור על ההיררכיה והמסורת ושהחברה תישאר יציבה בלי אלימות',
-		'חשובים לו צדק חברתי, ריבונות העם וחירות לכל אדם באשר הוא',
-	]),
-]);
-// AI grading lands async — give it a moment and screenshot the feedback
-await s1.waitForTimeout(8000);
-await shot(s1, '04-student-values-feedback');
+// After the needs scenes: both sides' needs stay on screen, side by side
+try {
+	await s1.waitForSelector('.needs-board', { timeout: 10000 });
+} catch (e) {
+	console.log('S1 BODY:', (await s1.evaluate(() => document.body.innerText)).slice(0, 300));
+	await shot(s1, 'debug-needs-board');
+	throw e;
+}
+console.log(
+	'NEEDS BOARD COLUMNS:',
+	await s1.locator('.needs-board__column').count(),
+	'| first need:',
+	(await s1.locator('.needs-board__list li').first().textContent()).slice(0, 50)
+);
+await shot(s1, '04-needs-board');
 
 // ---------- Positioning ----------
 step('TEACHER advances → POSITIONING');
 await advance();
+// Scale ends must show the CHARACTER names (camp in parentheses)
+await s1.waitForSelector('.camp-scale', { timeout: 15000 });
+const scaleText = await s1.locator('.camp-scale').innerText();
+if (!scaleText.includes('הרוזן') || !scaleText.includes('(')) {
+	throw new Error(`Camp scale missing character names: ${scaleText.replaceAll('\n', ' | ')}`);
+}
+console.log('SCALE LABELS:', scaleText.replaceAll('\n', ' | ').slice(0, 120));
 const position = async (page, label, value) => {
 	await page.waitForSelector('input.camp-scale__slider', { timeout: 15000 });
 	await page.locator('input.camp-scale__slider').evaluate((el, v) => {
@@ -137,6 +132,14 @@ const propose = async (page, label, text) => {
 	await page.waitForTimeout(1200);
 	console.log(`${label} proposed`);
 };
+// The needs board is one tap away while writing a proposal
+await s1.waitForSelector('.needs-peek__toggle', { timeout: 15000 });
+await s1.locator('.needs-peek__toggle').click();
+await s1.waitForSelector('.needs-board', { timeout: 5000 });
+console.log('NEEDS PEEK opens during propose');
+await shot(s1, '06a-needs-peek-in-propose');
+await s1.locator('.needs-peek__toggle').click();
+
 await propose(s1, 'S1', 'נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, וזכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן.');
 await propose(s2, 'S2', 'נקים אספה לאומית שבה לעם רוב קולות, נבטל את הפטור ממס של האצולה, אך נבטיח לאצילים שמירה על ביטחונם האישי ורכושם הבסיסי.');
 await shot(s1, '06-propose');
