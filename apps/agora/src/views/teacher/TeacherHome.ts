@@ -111,7 +111,14 @@ export function TeacherHome(): m.Component {
 						!topicsLoaded
 							? m('.spinner')
 							: topics.length === 0
-								? m('p.home-explanation', t('teacher.no_topics'))
+								? m('.stack', [
+										m('p.home-explanation', t('teacher.no_topics')),
+										m(
+											'button.btn.btn--primary.btn--full',
+											{ onclick: () => m.route.set('/teach/new') },
+											t('teacher.create_topic'),
+										),
+									])
 								: m(
 										'.stack',
 										topics.map((topic) =>
