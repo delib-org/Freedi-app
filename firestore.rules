@@ -729,9 +729,24 @@ service cloud.firestore {
     }
 
     match /usersV2/{userId} {
+      // `systemAdmin` is a privilege flag trusted by these rules (isSystemAdmin)
+      // AND by server-side admin gates (functions/src/utils/httpAuth.ts). It must
+      // NEVER be settable by the client, or any authenticated user (anonymous
+      // sign-in included) could self-promote to system admin by writing their own
+      // doc. The legitimate client (setUser.ts) never writes this field, and
+      // merge writes preserve its existing value, so this guard is transparent to
+      // real flows. It is granted only server-side via the Admin SDK.
+      function preservesSystemAdmin() {
+        let existing = resource != null ? resource.data.get('systemAdmin', false) : false;
+        return request.resource.data.get('systemAdmin', false) == existing;
+      }
+
       allow read: if request.auth != null;
-      // Allow users to write their own document (userId must match auth uid)
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Allow users to write their own document (userId must match auth uid),
+      // but never to set or change the systemAdmin privilege flag.
+      allow write: if request.auth != null &&
+                      request.auth.uid == userId &&
+                      preservesSystemAdmin();
 
       // Subcollections - user can only access their own subcollections
       match /chat/{chat=**} {
