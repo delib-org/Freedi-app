@@ -507,11 +507,24 @@ service cloud.firestore {
       allow read: if request.auth.uid != null;
 
       // For create
+      // A user may only create their OWN subscription (userId == uid). Elevated
+      // roles ('admin'/'statement-creator') are reserved for the genuine
+      // statement creator or an existing admin — isCreator() reads the statement
+      // doc and checks creatorId, which is how a creator gets their 'admin' sub.
+      // Everyone else may only self-register at a non-privileged role, gated by
+      // the statement's access level. Without the role guard, any user could
+      // create statementsSubscribe/{uid}--{publicStatementId} with role:'admin'
+      // and self-grant statement-admin (edit protected settings, delete, ban).
       allow create: if request.auth.uid != null &&
-                     (isPublic() ||
-                      isOpenToAll() ||
-                      isOpenForRegistered() ||
-                      (isModerated() && isWaitingRole()));
+                     request.resource.data.userId == request.auth.uid &&
+                     (isAdminOrCreator() ||
+                      (request.resource.data.role != 'admin' &&
+                       request.resource.data.role != 'statement-creator' &&
+                       request.resource.data.role != 'banned' &&
+                       (isPublic() ||
+                        isOpenToAll() ||
+                        isOpenForRegistered() ||
+                        (isModerated() && isWaitingRole()))));
 
       // For update
       allow update: if request.auth.uid != null &&
