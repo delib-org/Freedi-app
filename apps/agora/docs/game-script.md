@@ -146,13 +146,20 @@ SAME_W 0.35). Deliberate **heterogeneity** is the correction for shared blind sp
 
 ---
 
-## Act V — The Agora (deliberation rounds)
+## Act V — The Agora (personal deliberation cycles)
 
 The town square. Proposals appear as **idea lanterns** — brightness = support,
 color blend = cross-camp support. The core mechanic must be *felt*: when someone from
 the other camp supports your idea, your lantern visibly blends both camps' colors.
 
-### Phase 1 · Propose — *independent first*
+**Structure (implemented): each student runs their own cycle, self-paced — 5 laps of
+*my proposal → evaluate others → help someone*.** No teacher-synchronized phases; the
+teacher opens the square and later decides when it closes. Rating is attention-fair
+(least-rated proposals first, per-student ordering) and capped per lap; help targets
+favor proposals with the fewest open suggestions. The join code stays on the teacher
+board through every stage so latecomers can always enter.
+
+### Step 1 · My proposal — *independent first, then improve each lap*
 🎙 "Before you see anyone else's idea — write your own. **A solution I propose, that we
 could do together.** Which need of the Count does it serve? Which need of Camille?"
 

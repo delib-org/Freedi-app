@@ -119,11 +119,13 @@ await position(s1, 'S1', 15); // left — royalist
 await position(s2, 'S2', 85); // right — jacobin
 await shot(s1, '05-student-positioned');
 
-// ---------- Deliberation ----------
-step('TEACHER advances → DELIBERATION (round 1 propose auto-starts)');
+// ---------- Deliberation: personal cycles ----------
+step('TEACHER advances → DELIBERATION (students cycle: mine → rate → help)');
 await advance();
-await teacher.waitForSelector('text=/Round controls|שליטת סבבים/i', { timeout: 15000 });
-// No round click needed — entering deliberation auto-starts the propose round
+
+const FS = 'http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents';
+const ownerGet = async (path) =>
+	(await fetch(`${FS}/${path}`, { headers: { Authorization: 'Bearer owner' } })).json();
 
 const propose = async (page, label, text) => {
 	await page.waitForSelector('textarea.values__textarea', { timeout: 15000 });
@@ -132,7 +134,7 @@ const propose = async (page, label, text) => {
 	await page.waitForTimeout(1200);
 	console.log(`${label} proposed`);
 };
-// The needs board is one tap away while writing a proposal
+// Lap 1, step "mine": the needs board is one tap away while writing
 await s1.waitForSelector('.needs-peek__toggle', { timeout: 15000 });
 await s1.locator('.needs-peek__toggle').click();
 await s1.waitForSelector('.needs-board', { timeout: 5000 });
@@ -142,9 +144,81 @@ await s1.locator('.needs-peek__toggle').click();
 
 await propose(s1, 'S1', 'נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, וזכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן.');
 await propose(s2, 'S2', 'נקים אספה לאומית שבה לעם רוב קולות, נבטל את הפטור ממס של האצולה, אך נבטיח לאצילים שמירה על ביטחונם האישי ורכושם הבסיסי.');
-await shot(s1, '06-propose');
 
-// Improving your own proposal pops the glitter celebration
+// Both auto-advanced to step "rate" — each rates the other (cross-camp)
+for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
+	await page.waitForSelector('.delib__rate-card', { timeout: 15000 });
+	await page.locator('.btn--rate-agree').click();
+	console.log(`${label} rated agree`);
+}
+await shot(s1, '06-rate-step');
+
+// Candidates exhausted → continue to helping
+for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
+	await page.getByRole('button', { name: /Continue to helping|המשיכו לעזרה/i }).click({ timeout: 10000 });
+	console.log(`${label} → help step`);
+}
+
+// Step "help": each writes a suggestion for the other → advances to lap 2
+const suggest = async (page, label, text) => {
+	await page.waitForSelector('textarea.text-input', { timeout: 15000 });
+	await page.locator('textarea.text-input').fill(text);
+	await page.getByRole('button', { name: /Send|שליחת|improvement|שיפור/i }).click();
+	await page.waitForTimeout(800);
+	console.log(`${label} sent suggestion`);
+};
+await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
+await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');
+
+// Lap 2, step "mine": header shows lap 2, panel shows the received suggestion
+await s1.waitForSelector('.camp-bar', { timeout: 15000 });
+const lapLabel = await s1.locator('.delib__round').textContent();
+if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, header says: ${lapLabel}`);
+console.log('S1 ON LAP:', lapLabel);
+console.log('S1 bridging:', await s1.locator('.values__score').first().textContent());
+
+// Accept the suggestion → the suggester gets the glitter celebration
+await s1.getByRole('button', { name: /^(Accept|קבלת ההצעה)$/i }).click();
+await s2.waitForSelector('.celebration', { timeout: 15000 });
+console.log('S2 CELEBRATION (accepted):', (await s2.locator('.celebration__message').textContent()).slice(0, 60));
+console.log('S2 CELEBRATION DETAIL:', (await s2.locator('.celebration__detail').textContent()).slice(0, 60));
+await s2.waitForTimeout(600);
+await shot(s2, '07b-celebration-accepted');
+await s2.locator('.celebration button.btn--primary').click();
+
+// In-character reviews from the "mine" panel: ask both characters
+await s1.waitForSelector('.char-review', { timeout: 10000 });
+const countCard = s1.locator('.char-review').nth(0);
+const camilleCard = s1.locator('.char-review').nth(1);
+await countCard.locator('button.btn--secondary').click();
+await countCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
+console.log('COUNT VERDICT:', (await countCard.locator('.char-review__bubble').textContent()).slice(0, 100));
+await camilleCard.locator('button.btn--secondary').click();
+await camilleCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
+console.log('CAMILLE VERDICT:', (await camilleCard.locator('.char-review__bubble').textContent()).slice(0, 100));
+await shot(s1, '07-character-review');
+
+// Backend: each character rated as 3 camp raters + 1 human rater = {3,4}
+await new Promise((r) => setTimeout(r, 4000));
+const raterTotal = (d) =>
+	['left', 'right', 'center'].reduce(
+		(sum, side) =>
+			sum + Number(d.fields.perCamp.mapValue.fields[side].mapValue.fields.n.integerValue ?? 0),
+		0
+	);
+// S1's proposal: 2 characters × 3 AI raters + 1 human = 7 raters
+const myProposalScore = ((await ownerGet('agoraScores?pageSize=300')).documents ?? []).find(
+	(d) => d.fields.sessionId.stringValue === sessionId && raterTotal(d) >= 7
+);
+if (!myProposalScore) throw new Error('No score doc with 7 raters found');
+const campN = (side) =>
+	Number(myProposalScore.fields.perCamp.mapValue.fields[side].mapValue.fields.n.integerValue ?? 0);
+const ns = [campN('left'), campN('right')].sort();
+if (ns[0] !== 3 || ns[1] !== 4)
+	throw new Error(`Expected per-camp raters {3,4}, got left=${campN('left')} right=${campN('right')}`);
+console.log('PER-CAMP RATERS OK:', { left: campN('left'), right: campN('right') });
+
+// S1 improves their own proposal → glitter, then lands on the rate step of lap 2
 await s1
 	.locator('textarea.values__textarea')
 	.fill('נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד, אספה נבחרת תחוקק ותאשר מסים, זכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן — ותוקם ועדה משותפת לאצולה ולעם שתלווה את המעבר.');
@@ -154,45 +228,6 @@ console.log('S1 CELEBRATION (own improvement):', (await s1.locator('.celebration
 await s1.waitForTimeout(600);
 await shot(s1, '06b-celebration-own-improvement');
 await s1.locator('.celebration button.btn--primary').click();
-
-step('Rate round — each student rates the other (cross-camp)');
-await teacher.getByRole('button', { name: /Rating round|סבב דירוג/i }).click();
-for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
-	await page.waitForSelector('.delib__rate-card', { timeout: 15000 });
-	await page.locator('.btn--rate-agree').click();
-	console.log(`${label} rated agree`);
-}
-await s1.waitForTimeout(3000);
-
-step('Improve round — suggestions + in-character reviews');
-await teacher.getByRole('button', { name: /Improve round|סבב שיפור/i }).click();
-// S2 sends a suggestion to S1's proposal
-await s2.waitForSelector('textarea.text-input', { timeout: 15000 });
-await s2.locator('textarea.text-input').fill('כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
-await s2.getByRole('button', { name: /Send|שליחת|improvement|שיפור/i }).click();
-console.log('S2 sent suggestion');
-
-// S1 opens "my proposal": bridging + character reviews + accept suggestion
-await s1.getByRole('button', { name: /My proposal|ההצעה שלי/i }).click();
-await s1.waitForSelector('.camp-bar', { timeout: 10000 });
-console.log('S1 bridging:', await s1.locator('.values__score').first().textContent());
-
-await s1.waitForSelector('.char-review', { timeout: 10000 });
-const countCard = s1.locator('.char-review').nth(0);
-await countCard.locator('button.btn--secondary').click();
-await countCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
-console.log('COUNT VERDICT:', (await countCard.locator('.char-review__bubble').textContent()).slice(0, 100));
-console.log('COUNT SCORE:', await countCard.locator('.values__score').textContent());
-await shot(s1, '07-character-review');
-
-await s1.getByRole('button', { name: /^(Accept|קבלת ההצעה)$/i }).click();
-// The suggester gets the full glitter celebration quoting their improvement
-await s2.waitForSelector('.celebration', { timeout: 15000 });
-console.log('S2 CELEBRATION (accepted):', (await s2.locator('.celebration__message').textContent()).slice(0, 60));
-console.log('S2 CELEBRATION DETAIL:', (await s2.locator('.celebration__detail').textContent()).slice(0, 60));
-await s2.waitForTimeout(600);
-await shot(s2, '07b-celebration-accepted');
-await s2.locator('.celebration button.btn--primary').click();
 
 await shot(teacher, '08-teacher-deliberation');
 

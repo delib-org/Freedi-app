@@ -46,11 +46,21 @@ export const AGORA_POINTS = {
 	SUGGESTION_THANKED: 5,
 } as const;
 
+export const AGORA_CYCLE = {
+	/** Personal deliberation rounds per student: my proposal → rate others → help someone */
+	ROUNDS: 5,
+	/** Ratings asked of the student in each cycle round */
+	RATINGS_PER_ROUND: 3,
+	/** The deliberation-stage fuse set when the teacher opens the square */
+	DELIBERATION_TOTAL_MS: 20 * 60 * 1000,
+} as const;
+
 export const AGORA_AI_REVIEW = {
 	/** Each character's verdict counts as this many raters in the evaluation pipeline */
 	RATERS_PER_CHARACTER: 3,
-	/** In-character review requests allowed per character per proposal per round */
-	MAX_ASKS_PER_CHARACTER_PER_ROUND: 2,
+	/** In-character review requests allowed per character per proposal per (server) round — the
+	 * personal-cycle deliberation keeps one server round, so effectively per session */
+	MAX_ASKS_PER_CHARACTER_PER_ROUND: 5,
 	/** campPosition assigned to the left character's AI rater identities */
 	LEFT_CAMP_POSITION: 10,
 	/** campPosition assigned to the right character's AI rater identities */

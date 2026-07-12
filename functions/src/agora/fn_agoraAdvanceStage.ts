@@ -6,7 +6,7 @@ import {
 	AgoraSession,
 	AgoraSessionStatus,
 	AgoraStage,
-	AGORA_SESSION,
+	AGORA_CYCLE,
 	functionConfig,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
@@ -97,7 +97,7 @@ export const agoraAdvanceStage = onCall(
 					? {
 							roundNumber: 1,
 							roundPhase: AgoraRoundPhase.propose,
-							roundEndsAt: Date.now() + AGORA_SESSION.DEFAULT_ROUND_MS,
+							roundEndsAt: Date.now() + AGORA_CYCLE.DELIBERATION_TOTAL_MS,
 						}
 					: {};
 

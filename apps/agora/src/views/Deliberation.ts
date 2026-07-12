@@ -21,11 +21,12 @@ import {
 	AgoraCharacter,
 	AgoraCharacterReview,
 	AgoraParticipant,
-	AgoraRoundPhase,
+	AgoraProposalScore,
 	AgoraSession,
 	AgoraSuggestionStatus,
 	AgoraTopicPackage,
 	AGORA_AI_REVIEW,
+	AGORA_CYCLE,
 	AGORA_LIMITS,
 	createAgoraCharacterReviewId,
 } from '@freedi/shared-types';
@@ -94,6 +95,28 @@ function campSupportBar(
 	]);
 }
 
+function totalRaters(score: AgoraProposalScore | undefined): number {
+	if (!score) return 0;
+
+	return score.perCamp.left.n + score.perCamp.right.n + score.perCamp.center.n;
+}
+
+type CycleStep = 'mine' | 'rate' | 'help' | 'done';
+
+interface CycleState {
+	round: number;
+	step: CycleStep;
+	/** Ratings given so far in this cycle round */
+	rated: number;
+}
+
+/**
+ * The deliberation square as a PERSONAL cycle (the book's protocol, self-
+ * paced): my proposal (write, then improve on later laps) → evaluate a few
+ * classmates' proposals → help someone with a suggestion — repeated for
+ * AGORA_CYCLE.ROUNDS laps. No teacher-synchronized phases; the teacher only
+ * decides when the square closes (advance to results).
+ */
 export function Deliberation(
 	initialVnode: m.Vnode<DeliberationAttrs>,
 ): m.Component<DeliberationAttrs> {
@@ -103,10 +126,45 @@ export function Deliberation(
 	let aiBusy = false;
 	let submitting = false;
 	let suggestionDraft = '';
-	let helpIndex = 0;
-	let improveTab: 'help' | 'mine' = 'help';
+	let helpSkips = 0;
 	/** characterId → in-flight review request */
 	const reviewBusy: Record<string, boolean> = {};
+
+	const cycleKey = `agora_${session.sessionId}_cycle`;
+	let cycle: CycleState = { round: 1, step: 'mine', rated: 0 };
+	try {
+		const stored = sessionStorage.getItem(cycleKey);
+		if (stored) cycle = { ...cycle, ...(JSON.parse(stored) as Partial<CycleState>) };
+	} catch {
+		// Corrupt storage — start the cycle over
+	}
+
+	function setCycle(patch: Partial<CycleState>): void {
+		cycle = { ...cycle, ...patch };
+		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
+		m.redraw();
+	}
+
+	function advanceRound(): void {
+		if (cycle.round >= AGORA_CYCLE.ROUNDS) {
+			setCycle({ step: 'done' });
+		} else {
+			setCycle({ round: cycle.round + 1, step: 'mine', rated: 0 });
+			draft = '';
+			coachNote = '';
+		}
+	}
+
+	/** Deterministic per-student ordering so classmates fan out over different proposals */
+	function studentOrder(id: string): number {
+		const seed = `${userId}--${id}`;
+		let hash = 0;
+		for (let index = 0; index < seed.length; index++) {
+			hash = (hash * 31 + seed.charCodeAt(index)) | 0;
+		}
+
+		return hash;
+	}
 
 	listenToDeliberation(session.sessionId, userId);
 
@@ -181,6 +239,81 @@ export function Deliberation(
 		]);
 	}
 
+	/** Feedback on my lantern: support, character verdicts, received suggestions */
+	function minePanel(
+		live: AgoraSession,
+		myProposal: AgoraProposal,
+		topic: AgoraTopicPackage,
+	): m.Children {
+		const { suggestions, scores, characterReviews } = getDeliberationState();
+		const myScore = scores[myProposal.statementId];
+		const mySuggestions = suggestions[myProposal.statementId] ?? [];
+
+		return m('.stack', [
+			m('.card.stack', [
+				m('p.teacher__section-title', t('delib.supporters')),
+				campSupportBar('◀', '--camp-left-glow', myScore?.perCamp.left),
+				campSupportBar('▶', '--camp-right-glow', myScore?.perCamp.right),
+				m('p.values__score', `${t('delib.bridging_score')}: ${myScore?.bridgingScore ?? 0}/100`),
+			]),
+			m('p.teacher__section-title', t('delib.show_to_characters')),
+			m('p.home-explanation', t('delib.character_review_hint')),
+			...topic.characters.map((character) =>
+				characterReviewCard(
+					live,
+					character,
+					myProposal.statementId,
+					characterReviews[
+						createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
+					],
+				),
+			),
+			m('p.teacher__section-title', t('delib.suggestions_received')),
+			mySuggestions.length === 0
+				? m('p.lobby__status', t('delib.no_suggestions'))
+				: mySuggestions.map((suggestion) =>
+						m('.card.stack', { key: suggestion.statementId }, [
+							m('p', suggestion.statement),
+							suggestion.suggestionStatus === AgoraSuggestionStatus.open
+								? m('.delib__actions', [
+										m(
+											'button.btn.btn--secondary',
+											{
+												onclick: () => {
+													void resolveSuggestion(
+														live.sessionId,
+														suggestion.statementId,
+														AgoraSuggestionStatus.thanked,
+													);
+												},
+											},
+											t('delib.thank'),
+										),
+										m(
+											'button.btn.btn--primary',
+											{
+												onclick: () => {
+													void resolveSuggestion(
+														live.sessionId,
+														suggestion.statementId,
+														AgoraSuggestionStatus.accepted,
+													);
+												},
+											},
+											t('delib.accept'),
+										),
+									])
+								: m(
+										'span.values__score',
+										suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
+											? t('delib.accepted')
+											: t('delib.thanked'),
+									),
+						]),
+					),
+		]);
+	}
+
 	return {
 		onremove() {
 			stopDeliberationListeners();
@@ -188,42 +321,29 @@ export function Deliberation(
 
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
-			const { proposals, suggestions, myRatings, scores, characterReviews } =
-				getDeliberationState();
+			const { proposals, suggestions, myRatings, scores } = getDeliberationState();
 			const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
 			const anonName = myParticipant.anonName;
 
-			const header = [
-				live.roundPhase
-					? m('.delib__header', [
-							m('span.delib__round', t('delib.round', { n: live.roundNumber })),
-							live.roundEndsAt ? m(CountdownTimer, { endsAt: live.roundEndsAt }) : null,
-							m(PointsPill, { total: myParticipant.points.total }),
-						])
-					: null,
-			];
+			const header = m('.delib__header', [
+				m(
+					'span.delib__round',
+					t('delib.cycle_round', { n: cycle.round, total: AGORA_CYCLE.ROUNDS }),
+				),
+				live.roundEndsAt ? m(CountdownTimer, { endsAt: live.roundEndsAt }) : null,
+				m(PointsPill, { total: myParticipant.points.total }),
+			]);
 
-			if (!live.roundPhase) {
-				return m('.shell.shell--wide', [
-					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-						m(EraMap, {
-							participants: [],
-							lanterns: lanternsFromState(proposals, scores, userId),
-						}),
-						m('p.lobby__status.lobby__waiting-dots.text-center', t('delib.waiting_round')),
-					]),
-				]);
-			}
-
-			// ---------- PROPOSE ----------
-			if (live.roundPhase === AgoraRoundPhase.propose) {
+			// ---------- STEP: MY PROPOSAL (write, later improve) ----------
+			if (cycle.step === 'mine') {
 				if (myProposal && !draft) draft = myProposal.statement;
 
 				return m('.shell', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-						...header,
-						m('h2.text-center', t('delib.phase_propose')),
+						header,
+						m('h2.text-center', myProposal ? t('delib.my_proposal') : t('delib.phase_propose')),
 						m('p.home-explanation', t('delib.propose_hint')),
+						myProposal ? minePanel(live, myProposal, topic) : null,
 						m('textarea.text-input.values__textarea', {
 							value: draft,
 							rows: 6,
@@ -267,17 +387,19 @@ export function Deliberation(
 									onclick: () => {
 										submitting = true;
 										const isImprovement = Boolean(myProposal);
+										const unchanged = myProposal?.statement === draft.trim();
 										const text = draft.trim();
 										submitProposal(live, anonName, text, myProposal?.statementId)
 											.then(() => {
 												// Improving your own proposal earns glitter — the
 												// behavior the game most wants to reinforce
-												if (isImprovement) {
+												if (isImprovement && !unchanged) {
 													celebrate({
 														message: t('celebrate.proposal_improved'),
 														detail: text,
 													});
 												}
+												setCycle({ step: 'rate', rated: 0 });
 											})
 											.catch((error: unknown) => {
 												console.error('[Delib] Submit proposal failed:', error);
@@ -291,26 +413,48 @@ export function Deliberation(
 								myProposal ? t('delib.update_proposal') : t('delib.submit_proposal'),
 							),
 						]),
-						myProposal ? m('p.text-center.values__score', t('delib.submitted')) : null,
+						myProposal
+							? m(
+									'button.btn.btn--ghost.btn--full',
+									{
+										onclick: () => {
+											setCycle({ step: 'rate', rated: 0 });
+										},
+									},
+									t('delib.to_rating'),
+								)
+							: null,
 					]),
 				]);
 			}
 
-			// ---------- RATE ----------
-			if (live.roundPhase === AgoraRoundPhase.rate) {
-				const toRate = proposals.filter(
-					(proposal) =>
-						proposal.creatorId !== userId && myRatings[proposal.statementId] === undefined,
-				);
-				const current = toRate[0];
+			// ---------- STEP: RATE OTHERS ----------
+			if (cycle.step === 'rate') {
+				// Fair attention: least-rated proposals first; deterministic
+				// per-student tiebreak fans classmates out over different lanterns
+				const candidates = proposals
+					.filter(
+						(proposal) =>
+							proposal.creatorId !== userId && myRatings[proposal.statementId] === undefined,
+					)
+					.sort(
+						(a, b) =>
+							totalRaters(scores[a.statementId]) - totalRaters(scores[b.statementId]) ||
+							studentOrder(a.statementId) - studentOrder(b.statementId),
+					);
+				const current = candidates[0];
+				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
 
 				return m('.shell', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-						...header,
+						header,
 						m('h2.text-center', t('delib.phase_rate')),
-						m('p.home-explanation', t('delib.rate_hint')),
+						m(
+							'p.home-explanation',
+							`${t('delib.rate_hint')} (${Math.min(cycle.rated + 1, AGORA_CYCLE.RATINGS_PER_ROUND)}/${AGORA_CYCLE.RATINGS_PER_ROUND})`,
+						),
 						m(NeedsPeek, { topic }),
-						current
+						current && !quotaDone
 							? m('.card.delib__rate-card', [
 									m('p.scene__text', current.statement),
 									m('.delib__rate-buttons', [
@@ -319,6 +463,7 @@ export function Deliberation(
 											{
 												onclick: () => {
 													void rateProposal(live, current.statementId, -1);
+													setCycle({ rated: cycle.rated + 1 });
 												},
 											},
 											t('delib.disagree'),
@@ -328,53 +473,55 @@ export function Deliberation(
 											{
 												onclick: () => {
 													void rateProposal(live, current.statementId, 1);
+													setCycle({ rated: cycle.rated + 1 });
 												},
 											},
 											t('delib.agree'),
 										),
 									]),
 								])
-							: m('.text-center.stack', [m('.scene__waiting-glow'), m('h3', t('delib.rate_done'))]),
+							: m('.text-center.stack', [
+									m('.scene__waiting-glow'),
+									m('h3', quotaDone ? t('delib.rate_done') : t('delib.nothing_to_rate')),
+								]),
+						current && !quotaDone
+							? null
+							: m(
+									'button.btn.btn--primary.btn--full',
+									{
+										onclick: () => {
+											setCycle({ step: 'help' });
+										},
+									},
+									t('delib.to_helping'),
+								),
 					]),
 				]);
 			}
 
-			// ---------- IMPROVE ----------
-			const others = proposals.filter((proposal) => proposal.creatorId !== userId);
-			const helpTarget = others.length > 0 ? others[helpIndex % others.length] : undefined;
-			const myScore = myProposal ? scores[myProposal.statementId] : undefined;
-			const mySuggestions = myProposal ? (suggestions[myProposal.statementId] ?? []) : [];
+			// ---------- STEP: HELP SOMEONE ----------
+			if (cycle.step === 'help') {
+				// Spread the help: proposals with the fewest open suggestions first
+				const openSuggestions = (proposal: AgoraProposal) =>
+					(suggestions[proposal.statementId] ?? []).filter(
+						(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+					).length;
+				const targets = proposals
+					.filter((proposal) => proposal.creatorId !== userId)
+					.sort(
+						(a, b) =>
+							openSuggestions(a) - openSuggestions(b) ||
+							studentOrder(a.statementId) - studentOrder(b.statementId),
+					);
+				const helpTarget = targets.length > 0 ? targets[helpSkips % targets.length] : undefined;
 
-			return m('.shell', [
-				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-					...header,
-					m('h2.text-center', t('delib.phase_improve')),
-					m(NeedsPeek, { topic }),
-					m('.teacher__mode-row', [
-						m(
-							'button.btn',
-							{
-								class: improveTab === 'help' ? 'btn--primary' : 'btn--secondary',
-								onclick: () => {
-									improveTab = 'help';
-								},
-							},
-							t('delib.help_others'),
-						),
-						m(
-							'button.btn',
-							{
-								class: improveTab === 'mine' ? 'btn--primary' : 'btn--secondary',
-								onclick: () => {
-									improveTab = 'mine';
-								},
-							},
-							t('delib.my_proposal'),
-						),
-					]),
-
-					improveTab === 'help'
-						? helpTarget
+				return m('.shell', [
+					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
+						header,
+						m('h2.text-center', t('delib.help_others')),
+						m('p.home-explanation', t('delib.help_hint')),
+						m(NeedsPeek, { topic }),
+						helpTarget
 							? m('.stack', [
 									m('.card', m('p.scene__text', helpTarget.statement)),
 									m('textarea.text-input', {
@@ -390,7 +537,7 @@ export function Deliberation(
 											'button.btn.btn--ghost',
 											{
 												onclick: () => {
-													helpIndex++;
+													helpSkips++;
 													suggestionDraft = '';
 												},
 											},
@@ -403,84 +550,44 @@ export function Deliberation(
 												onclick: () => {
 													const text = suggestionDraft.trim();
 													suggestionDraft = '';
-													helpIndex++;
 													void submitSuggestion(live, helpTarget, anonName, text);
+													advanceRound();
 												},
 											},
 											t('delib.send_suggestion'),
 										),
 									]),
 								])
-							: m('p.text-center.lobby__status', t('delib.no_more'))
-						: myProposal
-							? m('.stack', [
-									m('.card', m('p.scene__text', myProposal.statement)),
-									m('.card.stack', [
-										m('p.teacher__section-title', t('delib.supporters')),
-										campSupportBar('◀', '--camp-left-glow', myScore?.perCamp.left),
-										campSupportBar('▶', '--camp-right-glow', myScore?.perCamp.right),
-										m(
-											'p.values__score',
-											`${t('delib.bridging_score')}: ${myScore?.bridgingScore ?? 0}/100`,
-										),
-									]),
-									m('p.teacher__section-title', t('delib.show_to_characters')),
-									m('p.home-explanation', t('delib.character_review_hint')),
-									...topic.characters.map((character) =>
-										characterReviewCard(
-											live,
-											character,
-											myProposal.statementId,
-											characterReviews[
-												createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
-											],
-										),
-									),
-									m('p.teacher__section-title', t('delib.suggestions_received')),
-									mySuggestions.length === 0
-										? m('p.lobby__status', t('delib.no_suggestions'))
-										: mySuggestions.map((suggestion) =>
-												m('.card.stack', { key: suggestion.statementId }, [
-													m('p', suggestion.statement),
-													suggestion.suggestionStatus === AgoraSuggestionStatus.open
-														? m('.delib__actions', [
-																m(
-																	'button.btn.btn--secondary',
-																	{
-																		onclick: () => {
-																			void resolveSuggestion(
-																				live.sessionId,
-																				suggestion.statementId,
-																				AgoraSuggestionStatus.thanked,
-																			);
-																		},
-																	},
-																	t('delib.thank'),
-																),
-																m(
-																	'button.btn.btn--primary',
-																	{
-																		onclick: () => {
-																			void resolveSuggestion(
-																				live.sessionId,
-																				suggestion.statementId,
-																				AgoraSuggestionStatus.accepted,
-																			);
-																		},
-																	},
-																	t('delib.accept'),
-																),
-															])
-														: m(
-																'span.values__score',
-																suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-																	? t('delib.accepted')
-																	: t('delib.thanked'),
-															),
-												]),
-											),
-								])
-							: m('p.text-center.lobby__status', t('delib.no_proposal_yet')),
+							: m('p.text-center.lobby__status', t('delib.no_more')),
+						m(
+							'button.btn.btn--ghost.btn--full',
+							{ onclick: advanceRound },
+							cycle.round >= AGORA_CYCLE.ROUNDS ? t('delib.finish_cycles') : t('delib.skip_help'),
+						),
+					]),
+				]);
+			}
+
+			// ---------- DONE: all cycles complete ----------
+			return m('.shell.shell--wide', [
+				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
+					header,
+					m(EraMap, {
+						participants: [],
+						lanterns: lanternsFromState(proposals, scores, userId),
+					}),
+					m('h3.text-center', t('delib.cycle_done_title')),
+					m('p.home-explanation', t('delib.cycle_done_hint')),
+					myProposal ? minePanel(live, myProposal, topic) : null,
+					m(
+						'button.btn.btn--secondary.btn--full',
+						{
+							onclick: () => {
+								setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
+							},
+						},
+						t('delib.keep_helping'),
+					),
 				]),
 			]);
 		},

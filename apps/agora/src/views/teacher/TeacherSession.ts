@@ -7,13 +7,11 @@ import {
 	getDeliberationState,
 	listenToDeliberation,
 	stopDeliberationListeners,
-	setRound,
 } from '../../lib/proposals';
 import { lanternsFromState } from '../Deliberation';
 import { Results } from '../Results';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
-import { AgoraRoundPhase } from '@freedi/shared-types';
 import { EraMap } from '../../components/EraMap';
 import { QRShare } from '../../components/QRShare';
 import { AgoraStage } from '@freedi/shared-types';
@@ -56,21 +54,6 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			})
 			.finally(() => {
 				advancing = false;
-				m.redraw();
-			});
-	}
-
-	let settingRound = false;
-
-	function handleSetRound(phase: AgoraRoundPhase): void {
-		if (settingRound) return;
-		settingRound = true;
-		setRound(sessionId, phase)
-			.catch((error: unknown) => {
-				console.error('[Teacher] Set round failed:', error);
-			})
-			.finally(() => {
-				settingRound = false;
 				m.redraw();
 			});
 	}
@@ -158,63 +141,24 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						lanterns: inDeliberation ? lanternsFromState(proposals, scores, userId) : [],
 					}),
 
+					// Students cycle propose→rate→help on their own; the teacher's
+					// deliberation panel just shows progress (no round buttons)
 					inDeliberation
 						? m('.card.stack', [
-								m('p.teacher__section-title', t('teacher.round_controls')),
 								m('.delib__header', [
-									m('span.delib__round', t('delib.round', { n: session.roundNumber })),
 									session.roundEndsAt ? m(CountdownTimer, { endsAt: session.roundEndsAt }) : null,
 									m('span.values__score', `${t('teacher.proposals_count')}: ${proposals.length}`),
-								]),
-								m('.teacher__mode-row', [
-									m(
-										'button.btn',
-										{
-											class:
-												session.roundPhase === AgoraRoundPhase.propose
-													? 'btn--primary'
-													: 'btn--secondary',
-											disabled: settingRound,
-											onclick: () => handleSetRound(AgoraRoundPhase.propose),
-										},
-										t('teacher.round_propose'),
-									),
-									m(
-										'button.btn',
-										{
-											class:
-												session.roundPhase === AgoraRoundPhase.rate
-													? 'btn--primary'
-													: 'btn--secondary',
-											disabled: settingRound,
-											onclick: () => handleSetRound(AgoraRoundPhase.rate),
-										},
-										t('teacher.round_rate'),
-									),
-									m(
-										'button.btn',
-										{
-											class:
-												session.roundPhase === AgoraRoundPhase.improve
-													? 'btn--primary'
-													: 'btn--secondary',
-											disabled: settingRound,
-											onclick: () => handleSetRound(AgoraRoundPhase.improve),
-										},
-										t('teacher.round_improve'),
-									),
 								]),
 							])
 						: null,
 
 					m('.card.teacher__code-panel', [
+						// The join code stays on the board through EVERY stage, so a
+						// latecomer can always join mid-lesson
+						m('p.teacher__section-title', t('teacher.session_code')),
+						m('.teacher__code', session.code),
 						session.stage === AgoraStage.lobby
-							? [
-									m('p.teacher__section-title', t('teacher.session_code')),
-									m('.teacher__code', session.code),
-									m(QRShare, { url: joinUrl }),
-									m('p.lobby__status', t('teacher.scan_to_join')),
-								]
+							? [m(QRShare, { url: joinUrl }), m('p.lobby__status', t('teacher.scan_to_join'))]
 							: [
 									m('p.teacher__section-title', t('teacher.current_stage')),
 									m('h3', t(`stage.${session.stage}`)),
