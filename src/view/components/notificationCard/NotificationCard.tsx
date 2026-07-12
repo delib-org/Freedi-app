@@ -10,7 +10,8 @@ const NotificationCard: React.FC<NotificationType> = (notification) => {
 		if (isChatMessage(notification.statementType))
 			return `/statement-screen/${notification.parentId}/chat`;
 
-		if (isMassConsensus(notification.questionType)) return `/statement/${notification.parentId}`;
+		if (notification.questionType && isMassConsensus(notification.questionType))
+			return `/statement/${notification.parentId}`;
 
 		return `/statement/${notification.statementId}`;
 	};

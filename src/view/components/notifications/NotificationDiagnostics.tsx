@@ -195,7 +195,9 @@ export const NotificationDiagnostics: React.FC = () => {
 						{diagnostics.permission === 'default' && (
 							<Button
 								text="Request Permission"
-								onClick={handleRequestPermission}
+								onClick={() => {
+									void handleRequestPermission();
+								}}
 								buttonType={ButtonType.SECONDARY}
 								className={styles.smallButton}
 							/>
@@ -227,7 +229,9 @@ export const NotificationDiagnostics: React.FC = () => {
 						{diagnostics.hasToken && (
 							<Button
 								text={refreshing ? 'Refreshing...' : 'Refresh'}
-								onClick={handleRefreshToken}
+								onClick={() => {
+									void handleRefreshToken();
+								}}
 								buttonType={ButtonType.SECONDARY}
 								disabled={refreshing}
 								className={styles.smallButton}
@@ -263,7 +267,9 @@ export const NotificationDiagnostics: React.FC = () => {
 				<div className={styles.actions}>
 					<Button
 						text={testSending ? 'Sending Test...' : 'Send Test Notification'}
-						onClick={handleTestNotification}
+						onClick={() => {
+							void handleTestNotification();
+						}}
 						disabled={!diagnostics.hasToken || testSending}
 						buttonType={ButtonType.PRIMARY}
 						className={styles.fullButton}
@@ -278,7 +284,9 @@ export const NotificationDiagnostics: React.FC = () => {
 
 					<Button
 						text="Refresh Diagnostics"
-						onClick={loadDiagnostics}
+						onClick={() => {
+							void loadDiagnostics();
+						}}
 						buttonType={ButtonType.SECONDARY}
 						className={styles.fullButton}
 						icon={<RefreshCw className="w-4 h-4" />}

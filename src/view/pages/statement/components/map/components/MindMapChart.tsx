@@ -77,7 +77,7 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 	useEffect(() => {
 		const { nodes: createdNodes, edges: createdEdges } = createInitialNodesAndEdges(
-			filterBy !== FilterType.questionsResults ? descendants : filtered,
+			filterBy !== FilterType.questionsResults ? descendants : (filtered ?? undefined),
 		);
 
 		const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutElements(
@@ -223,7 +223,8 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	}
 
 	const handleAddSiblingNode = () => {
-		const hoveredStatement = findStatementById(descendants, selectedId) ?? descendants.top;
+		const hoveredStatement =
+			(selectedId ? findStatementById(descendants, selectedId) : null) ?? descendants.top;
 		setMapContext((prev) => ({
 			...prev,
 			showModal: true,

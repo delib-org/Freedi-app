@@ -70,6 +70,8 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	const barHeight =
 		selections > 0 && totalVotes > 0 ? Math.round((selections / totalVotes) * 100) : 0;
 	const handleVotePress = useCallback(async () => {
+		if (!creator) return;
+
 		// Optimistic update - immediately update UI
 		const newVoteId = optimisticVoteId === option.statementId ? 'none' : option.statementId;
 

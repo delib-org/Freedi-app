@@ -81,7 +81,7 @@ const HomeMain = () => {
 	const hasTopics = topSubscriptions.length > 0;
 
 	useEffect(() => {
-		if (userId && user.advanceUser && hasTopics) {
+		if (userId && user?.advanceUser && hasTopics) {
 			setSubPage('topics');
 		} else {
 			setSubPage('decisions');

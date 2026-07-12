@@ -50,7 +50,7 @@ export const setStatementToDB = async ({
 		if (!parentStatement) throw new Error('Parent statement is undefined');
 
 		const storeState = store.getState();
-		const creator: Creator = storeState.creator?.creator;
+		const creator: Creator | null = storeState.creator?.creator ?? null;
 		if (!creator) throw new Error('Creator is undefined');
 
 		if (statement.statement.length < 2) {
@@ -115,7 +115,7 @@ export const setStatementToDB = async ({
 
 		//set statement
 		const statementRef = createStatementRef(statement.statementId);
-		const statementPromises = [];
+		const statementPromises: void[] = [];
 
 		//update timestamp
 		const statementPromise = await setDoc(statementRef, statement, {
@@ -207,11 +207,12 @@ export async function saveStatementToDB({
 		});
 
 		if (statement.statementType !== StatementType.group) {
+			const existingResultsSettings = statement.resultsSettings ?? resultsSettingsDefault;
 			statement.resultsSettings = {
-				...statement.resultsSettings,
-				resultsBy: resultsBy || statement.resultsSettings.resultsBy,
-				numberOfResults: numberOfResults || statement.resultsSettings.numberOfResults,
-				cutoffBy: statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
+				...existingResultsSettings,
+				resultsBy: resultsBy || existingResultsSettings.resultsBy,
+				numberOfResults: numberOfResults || existingResultsSettings.numberOfResults,
+				cutoffBy: existingResultsSettings.cutoffBy || CutoffBy.topOptions,
 			};
 		}
 

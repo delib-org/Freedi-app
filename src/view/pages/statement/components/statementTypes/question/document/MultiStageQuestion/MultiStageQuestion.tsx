@@ -20,7 +20,7 @@ import { DragGhostItem } from './components/DragGhostItem';
 
 // Styles
 import styles from './MultiStageQuestion.module.scss';
-import { StatementType } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { getParagraphsText, hasParagraphsContent } from '@/utils/paragraphUtils';
 
 const MultiStageQuestion: FC = () => {
@@ -44,10 +44,15 @@ const MultiStageQuestion: FC = () => {
 		hasStages,
 		hasTopSuggestions,
 		imageUrl,
-	} = useStageManagement({ statement });
+		// This question document only renders with a loaded statement (the hook
+		// itself dereferences statement.results); rules-of-hooks forbids an early
+		// return before this hook, so assert the type it already relies on.
+	} = useStageManagement({ statement: statement as Statement });
 
 	const { draggedIndex, draggedItem, handleDragStart, handleDragOver, handleDrop, handleDragEnd } =
 		useDragAndDrop({ stages: initialStages });
+
+	if (!statement) return null;
 
 	return (
 		<>

@@ -72,23 +72,24 @@ const SubQuestionsMap = () => {
 	const getLineMargin = (res: Results) => {
 		if (res.sub.length < 1) return;
 		const margin =
-			nodeHeights.get(res.top.statementId) - nodeHeights.get(res.sub[0].top.statementId) || 0;
+			(nodeHeights.get(res.top.statementId) ?? NaN) -
+				(nodeHeights.get(res.sub[0].top.statementId) ?? NaN) || 0;
 
 		return margin;
 	};
 	const getLineLength = (res: Results) => {
 		if (res.sub.length < 1) return;
 		const height =
-			nodeHeights.get(res.sub[res.sub.length - 1].top.statementId) -
-				nodeHeights.get(res.sub[0].top.statementId) || 0;
+			(nodeHeights.get(res.sub[res.sub.length - 1].top.statementId) ?? NaN) -
+				(nodeHeights.get(res.sub[0].top.statementId) ?? NaN) || 0;
 
 		return height;
 	};
 	const getLineToChild = (res: Results) => {
 		if (res.sub.length < 1) return;
 		const height =
-			nodeHeights.get(res.sub.length > 0 ? res.sub[0].top.statementId : '') -
-				nodeHeights.get(res.top.statementId) || 0;
+			(nodeHeights.get(res.sub.length > 0 ? res.sub[0].top.statementId : '') ?? NaN) -
+				(nodeHeights.get(res.top.statementId) ?? NaN) || 0;
 
 		return height;
 	};

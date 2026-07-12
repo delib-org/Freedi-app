@@ -76,7 +76,13 @@ const My = () => {
 						checked={!!isAdvancedUser}
 						onChange={() => setUserAdvanceUserToDB(true)}
 					/>
-					<Button className={styles.save} text="save" onClick={() => navigate('/home')} />
+					<Button
+						className={styles.save}
+						text="save"
+						onClick={() => {
+							void navigate('/home');
+						}}
+					/>
 				</div>
 
 				{/* Settings button using SCSS classes */}

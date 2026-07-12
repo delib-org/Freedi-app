@@ -42,10 +42,10 @@ interface UpdateStatementSettingsReturnType {
 
 interface UpdateStatementSettingsParams {
 	statement: Statement;
-	enableAddEvaluationOption: boolean;
-	enableAddVotingOption: boolean;
-	evaluationType: EvalType;
-	showEvaluation: boolean;
+	enableAddEvaluationOption?: boolean;
+	enableAddVotingOption?: boolean;
+	evaluationType?: EvalType;
+	showEvaluation?: boolean;
 }
 
 function updateStatementSettings({

@@ -29,7 +29,7 @@ export async function getToVoteOnParent(
 		const parentVoteRef = createDocRef(Collections.votes, voteId);
 		const voteDB = await getDoc(parentVoteRef);
 
-		if (!voteDB.exists()) return null;
+		if (!voteDB.exists()) return;
 		const vote = parse(VoteSchema, voteDB.data());
 
 		const statementRef = createStatementRef(vote.statementId);
@@ -40,7 +40,7 @@ export async function getToVoteOnParent(
 	} catch (error) {
 		logError(error, { operation: 'vote.getVotes.getToVoteOnParent' });
 
-		return null;
+		return;
 	}
 }
 

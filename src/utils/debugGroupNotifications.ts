@@ -181,7 +181,7 @@ export async function debugGroupNotifications(statementId?: string) {
 		console.info('   - Push notification registrations:', debugInfo.askedToBeNotified.length);
 
 		// Check for issues
-		const issues = [];
+		const issues: string[] = [];
 
 		if (!currentToken) {
 			issues.push('No FCM token available');

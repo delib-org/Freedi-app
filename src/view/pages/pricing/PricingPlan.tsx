@@ -23,7 +23,7 @@ export default function PricingPlan() {
 			return;
 		}
 
-		if (user.isAnonymous) {
+		if (user?.isAnonymous) {
 			navigate('/login-first', {
 				state: { from: window.location.pathname },
 			});

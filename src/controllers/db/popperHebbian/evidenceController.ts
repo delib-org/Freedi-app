@@ -8,6 +8,7 @@ import {
 	onSnapshot,
 	increment,
 	Unsubscribe,
+	UpdateData,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../config';
@@ -429,7 +430,7 @@ export async function updateEvidencePost(
 			updateData['evidence.linkMetadata'] = linkMetadata;
 		}
 
-		await updateDoc(statementRef, updateData);
+		await updateDoc(statementRef, updateData as UpdateData<Statement>);
 
 		logger.info('Evidence post updated', { statementId });
 	} catch (error) {

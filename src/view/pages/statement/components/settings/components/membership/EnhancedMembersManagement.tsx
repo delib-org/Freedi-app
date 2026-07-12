@@ -70,7 +70,7 @@ const MemberCard: FC<MemberCardProps> = ({
 	const displayName = member.user?.displayName ?? '';
 
 	// Calculate member statistics
-	const memberSince = new Date(member.createdAt).toLocaleDateString();
+	const memberSince = new Date(member.createdAt ?? 0).toLocaleDateString();
 	const lastActive = member.lastUpdate ? new Date(member.lastUpdate).toLocaleDateString() : 'Never';
 	const isOnline = member.lastUpdate && Date.now() - member.lastUpdate < 5 * 60 * 1000;
 
@@ -235,7 +235,7 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
 				case 'role':
 					return a.role.localeCompare(b.role);
 				case 'joinDate':
-					return a.createdAt - b.createdAt;
+					return (a.createdAt ?? 0) - (b.createdAt ?? 0);
 				case 'activity':
 					return (b.lastUpdate || 0) - (a.lastUpdate || 0);
 				default:

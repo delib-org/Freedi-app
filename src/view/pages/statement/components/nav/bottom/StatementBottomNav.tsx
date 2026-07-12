@@ -47,7 +47,7 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statementId } = useParams<{ statementId: string }>();
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
-	const { user } = useAuthentication();
+	const { user, creator } = useAuthentication();
 
 	const [searchParams] = useSearchParams();
 	const activeTab = searchParams.get('tab') ?? 'chat';
@@ -183,7 +183,7 @@ const StatementBottomNav: FC<Props> = () => {
 	}
 
 	async function handlePublishRefinedIdea(refinedText: string) {
-		if (!statement || !user) return;
+		if (!statement || !user || !creator) return;
 
 		try {
 			// Close the refinery modal
@@ -217,7 +217,7 @@ const StatementBottomNav: FC<Props> = () => {
 				newStatement: { statementType: defaultType },
 				newStatementQuestionType: statement.questionSettings?.questionType || QuestionType.simple,
 				currentLanguage,
-				user,
+				user: creator,
 				dispatch,
 			});
 		} catch (error) {

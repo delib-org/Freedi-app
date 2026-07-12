@@ -61,7 +61,7 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 	const corroborationColor = getCorroborationColor(corroborationScore);
 	const corroborationLabel = getCorroborationLabel(corroborationScore, t);
 
-	const getEvidenceTypeLabel = (type: EvidenceType): string => {
+	const getEvidenceTypeLabel = (type: EvidenceType | undefined): string => {
 		switch (type) {
 			case EvidenceType.data:
 				return t('Data');
@@ -78,7 +78,7 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 		}
 	};
 
-	const getEvidenceTypeColor = (type: EvidenceType): string => {
+	const getEvidenceTypeColor = (type: EvidenceType | undefined): string => {
 		switch (type) {
 			case EvidenceType.data:
 				return 'data';

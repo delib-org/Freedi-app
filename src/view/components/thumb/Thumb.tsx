@@ -45,6 +45,7 @@ const Thumb: FC<ThumbProps> = ({
 
 			return;
 		}
+		if (!creator) return;
 		if (isUp) {
 			if (evaluation > 0) {
 				// Set evaluation in DB

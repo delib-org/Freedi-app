@@ -168,7 +168,7 @@ export default function GetInitialStatementData() {
 				<div className={styles.similarityToggle}>
 					<Checkbox
 						label={t(similarSearchLabel)}
-						isChecked={lookingForSimilarStatements}
+						isChecked={lookingForSimilarStatements ?? false}
 						onChange={setLookingForSimilarStatements}
 					/>
 					{lookingForSimilarStatements && (

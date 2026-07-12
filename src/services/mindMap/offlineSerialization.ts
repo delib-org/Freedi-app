@@ -28,8 +28,8 @@ function serializeNode(node: MindMapNode): SerializedNode {
 		statement: node.statement,
 		children: node.children.map((child) => serializeNode(child)),
 		depth: node.depth,
-		isExpanded: node.isExpanded,
-		isLoading: node.isLoading,
+		isExpanded: node.isExpanded ?? false,
+		isLoading: node.isLoading ?? false,
 	};
 }
 

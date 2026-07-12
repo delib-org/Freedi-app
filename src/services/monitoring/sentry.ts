@@ -162,7 +162,9 @@ export function captureException(error: Error, context?: Record<string, unknown>
 export function withSentryRouting<T extends React.ComponentType<React.ComponentProps<T>>>(
 	Component: T,
 ): T {
-	return Sentry.withSentryRouting(Component);
+	return Sentry.withSentryRouting(
+		Component as unknown as Parameters<typeof Sentry.withSentryRouting>[0],
+	) as unknown as T;
 }
 
 // Custom hook for route tracking

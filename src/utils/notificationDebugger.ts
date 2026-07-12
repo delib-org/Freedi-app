@@ -187,7 +187,7 @@ export async function comprehensiveNotificationDebug() {
 
 	// 7. Common Issues Check
 	console.info('7. Common Issues Check');
-	const issues = [];
+	const issues: string[] = [];
 
 	if (!vapidKey || vapidKey === 'undefined' || vapidKey.length < 10) {
 		issues.push('❌ VAPID key is missing or invalid');

@@ -1,4 +1,5 @@
 import { setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import type { UpdateData, DocumentData } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../config';
 import { Collections } from '@freedi/shared-types';
@@ -188,7 +189,7 @@ export async function submitRefinementResponse(
 			{} as Record<string, unknown>,
 		);
 
-		await updateDoc(sessionRef, cleanedUpdate);
+		await updateDoc(sessionRef, cleanedUpdate as UpdateData<DocumentData>);
 
 		logger.info('Refinement response submitted', { sessionId });
 

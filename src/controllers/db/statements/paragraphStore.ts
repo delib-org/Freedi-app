@@ -8,6 +8,7 @@ import {
 	where,
 	writeBatch,
 } from 'firebase/firestore';
+import type { DocumentData, UpdateData } from 'firebase/firestore';
 import { Collections, StatementType } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import type { ParagraphBatch, ParagraphDeps, ParagraphStore } from '@freedi/shared-utils';
@@ -38,14 +39,15 @@ const paragraphStore: ParagraphStore = {
 
 		return {
 			set: (statement) => batch.set(createStatementRef(statement.statementId), statement),
-			update: (id, patch) => batch.update(createStatementRef(id), patch),
+			update: (id, patch) =>
+				batch.update(createStatementRef(id), patch as UpdateData<DocumentData>),
 			delete: (id) => batch.delete(createStatementRef(id)),
 			commit: () => batch.commit(),
 		};
 	},
 
 	async update(id, patch): Promise<void> {
-		await updateDoc(createStatementRef(id), patch);
+		await updateDoc(createStatementRef(id), patch as UpdateData<DocumentData>);
 	},
 
 	async delete(id): Promise<void> {
@@ -72,7 +74,6 @@ const paragraphStore: ParagraphStore = {
 /** Shared-CRUD dependencies for the main app. */
 export const paragraphDeps: ParagraphDeps = {
 	store: paragraphStore,
-	creator: () => store.getState().creator?.creator,
-	logError: (error, context) =>
-		logError(error, { operation: 'paragraphCrud', ...(context ?? {}) }),
+	creator: () => store.getState().creator?.creator ?? undefined,
+	logError: (error, context) => logError(error, { operation: 'paragraphCrud', ...(context ?? {}) }),
 };

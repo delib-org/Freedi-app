@@ -95,6 +95,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 
 	function handleCutoffChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
+		if (!resultsSettings) return;
 
 		const newResultsSettings = {
 			...resultsSettings,
@@ -108,6 +109,8 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 	function handleRangeChange(
 		e: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>,
 	) {
+		if (!resultsSettings) return;
+
 		const displayValue = (e.target as HTMLInputElement).valueAsNumber;
 
 		setRangeProps({
@@ -203,7 +206,7 @@ interface ComponentRangeProps {
 
 function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
 	const { t } = useTranslation();
-	const [value, setValue] = useState<number>(statement.resultsSettings.numberOfResults ?? 1);
+	const [value, setValue] = useState<number>(statement.resultsSettings?.numberOfResults ?? 1);
 	const rangeProps = {
 		maxValue: 20,
 		minValue: 1,
@@ -237,7 +240,9 @@ function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentR
 }
 function AboveThresholdRange({ statement, handleRangeChange }: ComponentRangeProps) {
 	const { t } = useTranslation();
-	const { resultsBy, cutoffNumber } = statement.resultsSettings;
+	const { resultsBy, cutoffNumber } = statement.resultsSettings ?? {
+		resultsBy: ResultsBy.consensus,
+	};
 	const rangeConfig = getRangeConfig(resultsBy);
 
 	const getInitialDisplayValue = (): number => {

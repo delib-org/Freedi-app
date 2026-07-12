@@ -30,7 +30,7 @@ export default function AddButton() {
 			case 'question':
 				dispatch(
 					setNewStatementModal({
-						parentStatement: statement,
+						parentStatement: statement ?? null,
 						newStatement: {
 							statementType: StatementType.question,
 							questionSettings: {
@@ -46,7 +46,7 @@ export default function AddButton() {
 			case 'compound':
 				dispatch(
 					setNewStatementModal({
-						parentStatement: statement,
+						parentStatement: statement ?? null,
 						newStatement: {
 							statementType: StatementType.question,
 							questionSettings: {

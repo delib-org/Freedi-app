@@ -72,7 +72,7 @@ export async function createStatementWithSubscription({
 		setStatementSubscription({
 			role: Role.admin,
 			statement: _newStatement,
-			statementsSubscribeId: getStatementSubscriptionId(_newStatement.statementId, user),
+			statementsSubscribeId: getStatementSubscriptionId(_newStatement.statementId, user) ?? '',
 			statementId: _newStatement.statementId,
 			user: {
 				uid: user.uid,

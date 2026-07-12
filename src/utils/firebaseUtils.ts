@@ -10,6 +10,8 @@ import {
 	writeBatch,
 	DocumentReference,
 	CollectionReference,
+	DocumentData,
+	UpdateData,
 } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { Collections } from '@freedi/shared-types';
@@ -59,14 +61,14 @@ export interface BatchUpdate {
 
 export async function executeBatchUpdates(updates: BatchUpdate[]): Promise<void> {
 	const BATCH_SIZE = 500; // Firestore limit
-	const batches = [];
+	const batches: Promise<void>[] = [];
 
 	for (let i = 0; i < updates.length; i += BATCH_SIZE) {
 		const batchUpdates = updates.slice(i, i + BATCH_SIZE);
 		const batch = writeBatch(FireStore);
 
 		batchUpdates.forEach(({ ref, data }) => {
-			batch.update(ref, data);
+			batch.update(ref, data as UpdateData<DocumentData>);
 		});
 
 		batches.push(batch.commit());

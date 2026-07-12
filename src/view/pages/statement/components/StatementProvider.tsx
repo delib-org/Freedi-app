@@ -52,8 +52,8 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 
 	const contextValue = useMemo(
 		() => ({
-			statement,
-			stage,
+			statement: statement ?? undefined,
+			stage: stage ?? undefined,
 			talker,
 			handleShowTalker,
 			role,

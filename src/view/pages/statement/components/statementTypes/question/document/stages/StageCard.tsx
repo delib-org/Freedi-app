@@ -23,7 +23,8 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
 
 	const votingResults: SimpleStatement | undefined = statement.topVotedOption;
-	const chosen: SimpleStatement[] = isVoting && votingResults ? [votingResults] : statement.results;
+	const chosen: SimpleStatement[] =
+		isVoting && votingResults ? [votingResults] : (statement.results ?? []);
 
 	const getTitle = () => {
 		if (isDescription) return 'Description';

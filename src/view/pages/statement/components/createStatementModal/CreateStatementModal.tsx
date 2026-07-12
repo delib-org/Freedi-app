@@ -78,6 +78,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 
 	// Submit a single statement
 	const submitSingleStatement = async () => {
+		if (!creator) return;
 		setShowModal(false);
 
 		await createStatementFromModal({
@@ -147,6 +148,7 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 
 	// Handle confirming multiple suggestions
 	const handleConfirmMultiSuggestions = async (suggestions: SplitSuggestion[]) => {
+		if (!creator) return;
 		setShowModal(false);
 
 		for (const suggestion of suggestions) {

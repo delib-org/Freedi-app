@@ -22,7 +22,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	statement,
 	childCount,
 	setNodeHeights,
-	heightMargin,
+	heightMargin = 0,
 	numberOfElements,
 	isFirstChild = false,
 	heightToChild = 0,
@@ -40,7 +40,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
 	const ref = useRef<HTMLDivElement>(null);
 
 	const updateMap = (key: string, height: number) => {
-		setNodeHeights((prev) => new Map(prev).set(key, height));
+		setNodeHeights?.((prev) => new Map(prev).set(key, height));
 	};
 	useEffect(() => {
 		if (!ref.current) return;

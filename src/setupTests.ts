@@ -3,7 +3,7 @@ import { TextEncoder, TextDecoder } from 'util';
 
 // Polyfill for TextEncoder/TextDecoder
 global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
 // Global mock for valibot - applied to all imports across the project
 jest.mock('valibot', () => {

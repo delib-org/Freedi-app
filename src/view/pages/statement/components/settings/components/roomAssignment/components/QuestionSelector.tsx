@@ -29,21 +29,22 @@ const QuestionSelector: FC<QuestionSelectorProps> = ({
 	return (
 		<div className={styles.questionSelector}>
 			{questions.map((question) => {
-				const isSelected = selectedQuestionIds.includes(question.userQuestionId);
+				const questionId = question.userQuestionId ?? '';
+				const isSelected = selectedQuestionIds.includes(questionId);
 				const optionCount = question.options?.length || 0;
 
 				return (
 					<div
-						key={question.userQuestionId}
+						key={questionId}
 						className={`${styles.questionSelector__item} ${isSelected ? styles['questionSelector__item--selected'] : ''}`}
-						onClick={() => onToggle(question.userQuestionId)}
+						onClick={() => onToggle(questionId)}
 						role="checkbox"
 						aria-checked={isSelected}
 						tabIndex={0}
 						onKeyDown={(e) => {
 							if (e.key === 'Enter' || e.key === ' ') {
 								e.preventDefault();
-								onToggle(question.userQuestionId);
+								onToggle(questionId);
 							}
 						}}
 					>

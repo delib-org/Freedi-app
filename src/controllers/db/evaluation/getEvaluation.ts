@@ -121,6 +121,11 @@ export function listenToEvaluation(statementId: string, userId: string): () => v
 		}
 
 		const evaluationId = getStatementSubscriptionId(statementId, userId);
+		if (!evaluationId) {
+			console.info('listenToEvaluation skipped: no evaluationId');
+
+			return () => {};
+		}
 
 		const evaluationsRef = createEvaluationRef(evaluationId);
 

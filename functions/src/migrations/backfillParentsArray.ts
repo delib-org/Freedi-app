@@ -1,7 +1,7 @@
 import { db } from '../index';
 import { Collections } from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
-import { DocumentSnapshot } from 'firebase-admin/firestore';
+import { DocumentSnapshot, UpdateData } from 'firebase-admin/firestore';
 
 /**
  * Migration script to backfill the `parents` array on statements created in the last month.
@@ -157,7 +157,7 @@ export async function migrateBackfillParents(): Promise<MigrationResult> {
 					}
 
 					// Also fix topParentId if it's missing
-					const updateData: Record<string, unknown> = { parents };
+					const updateData: UpdateData<Record<string, unknown>> = { parents };
 					if (!data.topParentId) {
 						updateData.topParentId = parents[0]; // first ancestor is the top parent
 					}

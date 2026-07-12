@@ -12,11 +12,13 @@ interface Props {
 }
 
 const ClusterButton: FC<Props> = ({ selectedId, addToIconsRef }) => {
-	const children = useSelector(statementOptionsSelector(selectedId));
+	const children = useSelector(statementOptionsSelector(selectedId ?? undefined));
 
 	const hasClusterChildren = children.every((child) => child.isCluster);
 
 	const { handleCluster, handleRecoverSnapshot, loading } = useMindMap();
+
+	if (!selectedId) return null;
 
 	if (!children || children.length === 0) return null;
 

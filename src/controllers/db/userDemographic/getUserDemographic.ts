@@ -142,7 +142,7 @@ export function listenToUserDemographicAnswers(statementId: string) {
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographic(validatedAnswer));
-					} else if (change.type === 'removed') {
+					} else if (change.type === 'removed' && data.userQuestionId) {
 						store.dispatch(deleteUserDemographic(data.userQuestionId));
 					}
 				} catch (validationError) {
@@ -213,6 +213,10 @@ export async function getUserDemographicResponses(
 			const responseData = doc.data();
 			const response = responseData as UserDemographicQuestion;
 
+			if (!response.userId) {
+				return;
+			}
+
 			if (!userResponsesMap.has(response.userId)) {
 				// Get the validation status for this user, default to 'pending' if not found
 				const validationStatus = validationStatuses.get(response.userId);
@@ -239,7 +243,7 @@ export async function getUserDemographicResponses(
 			// Find the matching question
 			const question = questions.find((q) => q.userQuestionId === response.userQuestionId);
 
-			if (question) {
+			if (question && response.userQuestionId) {
 				userData.responses.push({
 					questionId: response.userQuestionId,
 					question: question.question,
@@ -364,7 +368,7 @@ export function listenToGroupDemographicAnswers(topParentId: string): () => void
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographic(validatedAnswer));
-					} else if (change.type === 'removed') {
+					} else if (change.type === 'removed' && data.userQuestionId) {
 						store.dispatch(deleteUserDemographic(data.userQuestionId));
 					}
 				} catch (validationError) {

@@ -1,4 +1,5 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import type { UpdateData, DocumentData } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { EMBEDDING_DIMENSIONS, OPENAI_EMBEDDING_MODEL } from './embedding-service';
 import { computeTextHash } from '../synthesis/textHash';
@@ -209,7 +210,7 @@ class EmbeddingCacheService {
 						payload.textHash = computeTextHash(item.text);
 					}
 
-					batch.update(docRef, payload);
+					batch.update(docRef, payload as UpdateData<DocumentData>);
 					success++;
 				} catch (error) {
 					logger.warn(`Failed to add to batch: ${item.statementId}`, { error });

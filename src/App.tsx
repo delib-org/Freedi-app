@@ -11,7 +11,7 @@ import { useResearchRouteTracking } from './controllers/db/researchLogs/useResea
 
 export default function App() {
 	const authState = useAuthentication();
-	const { isLoading, user } = authState;
+	const { isLoading, creator } = authState;
 
 	// Handle auth-based navigation (redirects unauthenticated users)
 	const { isRedirecting } = useAuthRedirect(authState);
@@ -30,7 +30,7 @@ export default function App() {
 			<Accessibility />
 			<ListenerStats />
 			<OfflineAlert />
-			<AgreementProvider user={user}>
+			<AgreementProvider user={creator}>
 				<Outlet />
 			</AgreementProvider>
 		</Suspense>

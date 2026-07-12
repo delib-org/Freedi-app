@@ -270,6 +270,7 @@ const GroupsCurationPage: FC = () => {
 		originalId: string,
 		targetClusterId: string | typeof STANDALONE_OVERRIDE,
 	) {
+		if (!parent) return;
 		try {
 			await moveOriginalToCluster({
 				parentStatementId: parent.statementId,
@@ -419,7 +420,7 @@ const GroupsCurationPage: FC = () => {
 
 	async function handleCreateGroup() {
 		const trimmed = newGroupTitle.trim();
-		if (!trimmed || !creator) return;
+		if (!trimmed || !creator || !parent) return;
 		setCreatingSubmit(true);
 		try {
 			const newId = await createEmptyCluster({
@@ -467,7 +468,7 @@ const GroupsCurationPage: FC = () => {
 
 	async function handleRemoveAllGroupings() {
 		const total = view.clusters.length;
-		if (total === 0 || isRemovingAll) return;
+		if (total === 0 || isRemovingAll || !parent) return;
 		const message = t(
 			'Remove all {count} groupings? Each group will be deleted and its originals will reappear as standalone options. This cannot be undone.',
 		).replace('{count}', String(total));
@@ -502,6 +503,7 @@ const GroupsCurationPage: FC = () => {
 	}
 
 	async function handleUngroup(cluster: Statement) {
+		if (!parent) return;
 		if (
 			!window.confirm(t('Ungroup this suggestion? Originals will appear as standalone options.'))
 		) {
@@ -525,7 +527,7 @@ const GroupsCurationPage: FC = () => {
 	}
 
 	async function handleMergeInto(source: Statement, target: Statement) {
-		if (source.statementId === target.statementId || isMerging) return;
+		if (source.statementId === target.statementId || isMerging || !parent) return;
 		const sourceCount = source.integratedOptions?.length ?? 0;
 		const targetCount = target.integratedOptions?.length ?? 0;
 		const message = t(
@@ -561,6 +563,7 @@ const GroupsCurationPage: FC = () => {
 	}
 
 	async function handleSplit(cluster: Statement) {
+		if (!parent) return;
 		if (selectedMemberIds.size < 2) {
 			window.alert(t('Select at least two members to split into a new group.'));
 

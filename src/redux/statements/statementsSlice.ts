@@ -167,6 +167,9 @@ export const statementsSlice = createSlice({
 					...st,
 					evaluation: {
 						...st.evaluation,
+						sumEvaluations: st.evaluation?.sumEvaluations ?? 0,
+						agreement: st.evaluation?.agreement ?? 0,
+						numberOfEvaluators: st.evaluation?.numberOfEvaluators ?? 0,
 						selectionFunction: undefined,
 					},
 				}));

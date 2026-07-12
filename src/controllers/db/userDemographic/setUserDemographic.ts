@@ -30,7 +30,7 @@ export async function setUserDemographicQuestion(
 	question: UserDemographicQuestion,
 ) {
 	try {
-		if (!statement || !question) {
+		if (!statement || !question || !question.userQuestionId) {
 			throw new Error('Statement and question must be provided');
 		}
 		parse(UserDemographicQuestionSchema, question);

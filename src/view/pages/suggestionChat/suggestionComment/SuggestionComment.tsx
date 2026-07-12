@@ -32,7 +32,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const subscription = useSelector(statementSubscriptionSelector(statement.statementId));
 	const initialStatement = useRef(parentStatement.statement);
 	const initialParagraphsText = useRef(getParagraphsText(parentStatement.paragraphs));
-	const { user } = useAuthentication();
+	const { user, creator } = useAuthentication();
 	const comments = useSelector(statementSubsSelector(statement.statementId));
 	const previousEvaluation = useSelector(
 		evaluationSelector(parentStatement.statementId, user?.uid),
@@ -120,11 +120,11 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 					statementType: StatementType.statement,
 				});
 
-				if (!isCreator && !subscription) {
+				if (!isCreator && !subscription && creator) {
 					//subscribe to the parent statement
 					setStatementSubscriptionToDB({
 						statement,
-						creator: user,
+						creator,
 						getInAppNotification: true,
 					});
 				}

@@ -76,12 +76,7 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({ statement, screen, headerStyle,
 			</button>
 
 			{isOpen && (
-				<div
-					ref={(node) => {
-						if (dropdownRef) dropdownRef.current = node;
-					}}
-					className={styles.viewsDropdown__menu}
-				>
+				<div ref={dropdownRef} className={styles.viewsDropdown__menu}>
 					<MenuOption
 						label={t('Agreement Map')}
 						icon={<TriangleIcon style={{ color: '#4E88C7' }} />}

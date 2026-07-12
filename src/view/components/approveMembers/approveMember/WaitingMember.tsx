@@ -43,7 +43,7 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 				<div className={styles.userInfo}>
 					<div className={styles.displayName}>{wait.user.displayName}</div>
 					<div className={styles.requestDate}>
-						{new Date(wait.createdAt).toLocaleDateString('en-US', {
+						{new Date(wait.createdAt ?? 0).toLocaleDateString('en-US', {
 							month: 'short',
 							day: 'numeric',
 							year: 'numeric',

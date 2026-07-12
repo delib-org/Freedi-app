@@ -144,6 +144,8 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 	const isActive = optimisticScore !== undefined && optimisticScore === option.evaluation;
 
 	const handleSetEvaluation = (): void => {
+		if (!creator) return;
+
 		// Toggle: if already selected, deselect (set to 0), otherwise select
 		const newScore = isActive ? 0 : option.evaluation;
 

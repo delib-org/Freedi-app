@@ -1,5 +1,5 @@
 import { setDoc } from 'firebase/firestore';
-import { Statement } from '@freedi/shared-types';
+import { Statement, CompoundPhase } from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { store } from '@/redux/store';
@@ -26,6 +26,9 @@ export async function toggleParticipantAccess({
 			questionSettings: {
 				...statement.questionSettings,
 				compoundSettings: {
+					currentPhase:
+						statement.questionSettings?.compoundSettings?.currentPhase ??
+						CompoundPhase.defineQuestion,
 					...statement.questionSettings?.compoundSettings,
 					allowParticipantsToAddSubQuestions: newValue,
 				},

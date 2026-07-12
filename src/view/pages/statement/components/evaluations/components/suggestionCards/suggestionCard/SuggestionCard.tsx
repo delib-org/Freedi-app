@@ -143,6 +143,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 
 	async function handleSetOption() {
 		try {
+			if (!statement) return;
 			if (statement?.statementType === StatementType.option) {
 				const cancelOption = window.confirm('Are you sure you want to cancel this option?');
 				if (!cancelOption) return;
@@ -223,6 +224,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
+		if (!statement) return;
 		toggleStatementHide(statement.statementId);
 	}
 

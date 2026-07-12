@@ -217,7 +217,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					onClick={(value) => {
 						handleEvaluationTypeChange(value as EvaluationUI);
 					}}
-					currentValue={statement.evaluationSettings?.evaluationUI}
+					currentValue={statement.evaluationSettings?.evaluationUI ?? ''}
 				/>
 				{isVoting && <VotingSettings />}
 

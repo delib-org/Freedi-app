@@ -36,10 +36,14 @@ async function trySilentGoogleSignIn(): Promise<boolean> {
 
 		// Attempt silent sign-in with Google
 		const provider = new GoogleAuthProvider();
-		provider.setCustomParameters({
+		const customParameters: Record<string, string> = {
 			prompt: 'none', // Don't show account chooser
-			login_hint: localStorage.getItem('lastGoogleEmail') || undefined,
-		});
+		};
+		const lastGoogleEmail = localStorage.getItem('lastGoogleEmail');
+		if (lastGoogleEmail) {
+			customParameters.login_hint = lastGoogleEmail;
+		}
+		provider.setCustomParameters(customParameters);
 
 		const result = await signInWithPopup(auth, provider);
 

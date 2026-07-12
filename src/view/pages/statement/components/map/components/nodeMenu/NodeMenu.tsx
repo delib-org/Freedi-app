@@ -35,8 +35,8 @@ const NodeMenu: FC<Props> = ({
 	handleAddChildNode,
 	handleAddSiblingNode,
 }) => {
-	const nodeMenuRef = useRef(null);
-	const iconsRef = useRef([]);
+	const nodeMenuRef = useRef<HTMLDivElement | null>(null);
+	const iconsRef = useRef<HTMLButtonElement[]>([]);
 	// Get the current zoom level from the react-flow store
 	const zoom = useStore((state) => state.transform[2]);
 	const { isAuthorized } = useAuthorization(selectedId);
@@ -69,15 +69,17 @@ const NodeMenu: FC<Props> = ({
 	}, [zoom]);
 
 	// Function to add ref to icons array
-	const addToIconsRef = (el) => {
+	const addToIconsRef = (el: HTMLButtonElement | null) => {
 		if (el && !iconsRef.current.includes(el)) {
 			iconsRef.current.push(el);
 		}
 	};
 	const deleteNode = async () => {
+		if (!statement) return;
 		await deleteStatementFromDB(statement, isAuthorized, t);
 	};
 	const changeNodeStatementType = async () => {
+		if (!statement) return;
 		const newType =
 			statement.statementType === StatementType.option
 				? StatementType.question
@@ -98,7 +100,7 @@ const NodeMenu: FC<Props> = ({
 	// Check if we can add child nodes (options cannot have children)
 	const canAddChild = statement?.statementType !== StatementType.option;
 	const editStatement = () => {
-		setIsEdit(true);
+		setIsEdit?.(true);
 	};
 
 	return (
@@ -122,9 +124,9 @@ const NodeMenu: FC<Props> = ({
 				<button className={styles.editBtn} ref={addToIconsRef} onClick={editStatement}>
 					<EditIcon />
 				</button>
-				<ClusterButton selectedId={selectedId} addToIconsRef={addToIconsRef} />
+				<ClusterButton selectedId={selectedId ?? null} addToIconsRef={addToIconsRef} />
 			</div>
-			{statement.statementType === StatementType.option && (
+			{statement?.statementType === StatementType.option && (
 				<div className={styles.rateMenuContainer}>
 					<Evaluation statement={statement} />
 				</div>

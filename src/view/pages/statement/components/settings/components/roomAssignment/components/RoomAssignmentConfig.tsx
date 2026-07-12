@@ -206,7 +206,13 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 								buttonType={ButtonType.SECONDARY}
 								onClick={() => setShowConfirm(false)}
 							/>
-							<Button text={t('Replace')} buttonType={ButtonType.PRIMARY} onClick={handleCreate} />
+							<Button
+								text={t('Replace')}
+								buttonType={ButtonType.PRIMARY}
+								onClick={() => {
+									void handleCreate();
+								}}
+							/>
 						</div>
 					</div>
 				</div>

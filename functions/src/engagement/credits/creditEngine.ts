@@ -14,6 +14,7 @@
  */
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import type { DocumentData, UpdateData } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, CreditAction, EngagementLevel, SourceApp } from '@freedi/shared-types';
 import type { CreditRule, CreditTransaction, UserEngagement } from '@freedi/shared-types';
@@ -165,7 +166,7 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 			const newTotalCredits = engagement.totalCredits + amount;
 			const newLevel = calculateLevel(newTotalCredits);
 
-			const engagementUpdate: Record<string, unknown> = {
+			const engagementUpdate: UpdateData<DocumentData> = {
 				totalCredits: newTotalCredits,
 				level: newLevel,
 				dailyCreditsEarned: (engagement.dailyCreditsEarned ?? 0) + amount,

@@ -68,7 +68,7 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 						aria-hidden={isSurveyMandatory || undefined}
 					>
 						<StatementHeader
-							topParentStatement={topParentStatement}
+							topParentStatement={topParentStatement ?? undefined}
 							onActiveViewChange={handleActiveViewChange}
 						/>
 

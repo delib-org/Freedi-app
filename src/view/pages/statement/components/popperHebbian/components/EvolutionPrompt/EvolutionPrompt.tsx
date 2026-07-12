@@ -43,7 +43,7 @@ const EvolutionPrompt: FC<EvolutionPromptProps> = ({ score, onCreateImprovedVers
 			<div className={styles.promptBody}>
 				<h3 className={styles.promptTitle}>{t('Time to Evolve This Idea')}</h3>
 
-				<p className={styles.challengeSummary}>{getChallengeSummary(score.totalScore)}</p>
+				<p className={styles.challengeSummary}>{getChallengeSummary(score.totalScore ?? 0)}</p>
 
 				<div className={styles.evolutionExplanation}>
 					<p>

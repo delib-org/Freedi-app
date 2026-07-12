@@ -128,6 +128,8 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		property: keyof StatementSettings,
 		newValue: boolean | string | number | undefined,
 	) {
+		if (newValue === undefined) return;
+
 		setStatementSettingToDB({
 			statement,
 			property,

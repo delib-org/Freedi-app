@@ -89,10 +89,10 @@ const StatementMain: React.FC = () => {
 	});
 
 	// Set up notifications
-	useNotificationSetup({ statement, setError });
+	useNotificationSetup({ statement: statement ?? null, setError });
 
 	// Set document title
-	useDocumentTitle({ statement });
+	useDocumentTitle({ statement: statement ?? null });
 
 	// Track statement view and interaction time
 	const { elementRef } = useStatementViewTracking({
@@ -151,9 +151,9 @@ const StatementMain: React.FC = () => {
 			case COMPONENT_STATES.AUTHORIZED:
 				return (
 					<StatementProvider
-						statement={statement}
-						stage={stage}
-						topParentStatement={topParentStatement}
+						statement={statement ?? null}
+						stage={stage ?? null}
+						topParentStatement={topParentStatement ?? null}
 						talker={talker}
 						role={role}
 						newStatementType={newStatementType}

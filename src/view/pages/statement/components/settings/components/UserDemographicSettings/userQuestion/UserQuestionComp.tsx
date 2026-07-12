@@ -114,6 +114,8 @@ const UserQuestionComp = ({
 	};
 
 	function handleChangeOptionColor(optionIndex: number, color: string) {
+		if (!userQuestions.userQuestionId) return;
+
 		dispatch(
 			updateUserDemographicQuestionOptionColor({
 				userQuestionId: userQuestions.userQuestionId,

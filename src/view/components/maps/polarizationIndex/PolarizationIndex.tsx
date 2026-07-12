@@ -242,7 +242,7 @@ const PolarizationIndexComp = () => {
 	const { t } = useTranslation();
 	const statement = useSelector(statementSelector(statementId));
 	const topParentId = statement?.topParentId || statementId;
-	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId));
+	const polarizationIndexes = useSelector(selectPolarizationIndexByParentId(statementId || ''));
 	const userQuestions: UserDemographicQuestion[] = useSelector(
 		selectEffectiveQuestions(statementId || '', topParentId || ''),
 	);
@@ -467,7 +467,7 @@ const PolarizationIndexComp = () => {
 	);
 
 	useEffect(() => {
-		let unsubscribe: () => void;
+		let unsubscribe: (() => void) | undefined;
 		let userDataQuestionsUnsubscribe: () => void;
 		let groupDemographicsUnsubscribe: () => void;
 
@@ -1152,7 +1152,7 @@ function calculatePositions(
 	viewport: Viewport = FULL_VIEWPORT,
 ): Point[] {
 	try {
-		return points.map((point) => {
+		const mappedPoints = points.map((point) => {
 			try {
 				const { statementId, statement, overallMAD, overallMean, overallN, axes, color } = point;
 				if (!statementId)
@@ -1218,6 +1218,8 @@ function calculatePositions(
 				});
 			}
 		});
+
+		return mappedPoints.filter((point) => point !== undefined) as Point[];
 	} catch (error) {
 		logError(error, {
 			operation: 'polarizationIndex.PolarizationIndex.unknown',

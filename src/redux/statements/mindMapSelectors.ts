@@ -82,7 +82,7 @@ export const createMindMapTreeSelector = () => {
 			}
 
 			// Get children from cached map O(1)
-			const children = (childrenMap.get(statement.statementId) || [])
+			const children = (childrenMap?.get(statement.statementId) || [])
 				.filter(isValidMindMapStatement)
 				.sort(sortMindMapStatements);
 

@@ -282,7 +282,7 @@ describe('statementsSlice', () => {
 		describe('totalMessageBoxesSelector', () => {
 			it('should return count of statements', () => {
 				const result = totalMessageBoxesSelector(
-					mockRootState as Parameters<typeof totalMessageBoxesSelector>[0],
+					mockRootState as unknown as Parameters<typeof totalMessageBoxesSelector>[0],
 				);
 				expect(result).toBe(1);
 			});
@@ -290,7 +290,9 @@ describe('statementsSlice', () => {
 
 		describe('screenSelector', () => {
 			it('should return current screen', () => {
-				const result = screenSelector(mockRootState as Parameters<typeof screenSelector>[0]);
+				const result = screenSelector(
+					mockRootState as unknown as Parameters<typeof screenSelector>[0],
+				);
 				expect(result).toBe(StatementScreen.chat);
 			});
 		});
@@ -298,19 +300,19 @@ describe('statementsSlice', () => {
 		describe('statementSelectorById', () => {
 			it('should return statement by ID', () => {
 				const selector = statementSelectorById(mockStatement.statementId);
-				const result = selector(mockRootState as Parameters<typeof selector>[0]);
+				const result = selector(mockRootState as unknown as Parameters<typeof selector>[0]);
 				expect(result?.statementId).toBe(mockStatement.statementId);
 			});
 
 			it('should return undefined for non-existent ID', () => {
 				const selector = statementSelectorById('non-existent');
-				const result = selector(mockRootState as Parameters<typeof selector>[0]);
+				const result = selector(mockRootState as unknown as Parameters<typeof selector>[0]);
 				expect(result).toBeUndefined();
 			});
 
 			it('should return undefined for undefined ID', () => {
 				const selector = statementSelectorById(undefined);
-				const result = selector(mockRootState as Parameters<typeof selector>[0]);
+				const result = selector(mockRootState as unknown as Parameters<typeof selector>[0]);
 				expect(result).toBeUndefined();
 			});
 		});
@@ -318,7 +320,7 @@ describe('statementsSlice', () => {
 		describe('statementsSelector', () => {
 			it('should return all statements', () => {
 				const result = statementsSelector(
-					mockRootState as Parameters<typeof statementsSelector>[0],
+					mockRootState as unknown as Parameters<typeof statementsSelector>[0],
 				);
 				expect(result).toHaveLength(1);
 				expect(result[0].statementId).toBe(mockStatement.statementId);

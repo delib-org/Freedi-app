@@ -45,6 +45,8 @@ const MySuggestions: FC = () => {
 		if (!statementId || !userId) return;
 
 		const subscriptionId = getStatementSubscriptionId(statementId, userId);
+		if (!subscriptionId) return;
+
 		getStatementSubscriptionFromDB(subscriptionId).then((sub) => {
 			if (sub) {
 				dispatch(setStatementSubscription(sub));

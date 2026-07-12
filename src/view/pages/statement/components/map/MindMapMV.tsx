@@ -12,7 +12,7 @@ import { logError } from '@/utils/errorHandling';
 
 export function useMindMap(statementIdPassed: string | null = null) {
 	const { statementId: paramsStatement } = useParams();
-	const statementId = statementIdPassed ?? paramsStatement;
+	const statementId = statementIdPassed ?? paramsStatement ?? '';
 	const statement = useSelector(statementSelector(statementId));
 	const allDescendants: Statement[] = useSelector(statementDescendantsSelector(statementId));
 	const descendants = allDescendants.filter((statement) => !isChatMessage(statement.statementType));

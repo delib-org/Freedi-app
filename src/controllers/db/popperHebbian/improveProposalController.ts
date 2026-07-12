@@ -1,5 +1,5 @@
 import { httpsCallable } from 'firebase/functions';
-import { updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { updateDoc, arrayUnion, getDoc, UpdateData } from 'firebase/firestore';
 import { functions, auth } from '../config';
 import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
@@ -87,7 +87,7 @@ export async function applyImprovement(
 			updates.versions = arrayUnion(newVersion);
 		}
 
-		await updateDoc(statementRef, updates);
+		await updateDoc(statementRef, updates as UpdateData<Statement>);
 		logger.info('Improvement applied', {
 			statementId,
 			newVersion: currentVersion + 1,

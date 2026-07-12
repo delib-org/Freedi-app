@@ -248,7 +248,7 @@ class AnalyticsService {
 
 		try {
 			setUserId(analytics, userId);
-			logger.info('Analytics user ID set', { userId });
+			logger.info('Analytics user ID set', { userId: userId ?? undefined });
 		} catch (error) {
 			logger.error('Failed to set analytics user ID', error);
 		}

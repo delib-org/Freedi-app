@@ -13,7 +13,7 @@ export const usePolarizationData = () => {
 	const [isLoading, setIsLoading] = useState(true);
 	// Get polarization data from Redux
 	const polarizationIndexes: PolarizationIndex[] =
-		useSelector(selectPolarizationIndexByParentId(statementId)) || [];
+		useSelector(selectPolarizationIndexByParentId(statementId ?? '')) || [];
 	// Safety check: Get current statement data with fallback
 	const currentStatementData = polarizationIndexes[selectedStatementIndex];
 	const hasData = polarizationIndexes.length > 0 && !!currentStatementData;

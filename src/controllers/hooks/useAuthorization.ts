@@ -85,6 +85,8 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		if (!statementId || !creatorUid) return;
 
 		const subscriptionToListenId = statementAccess ? statementId : topParentId;
+		if (!subscriptionToListenId || !creator) return;
+
 		const unsubscribe = listenToStatementSubscription(
 			subscriptionToListenId,
 			creator,
@@ -157,7 +159,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				errorMessage: '',
 				creator,
 				isWaitingForApproval: false,
-				role,
+				role: role || Role.member,
 				isAdmin: isAdminRole(role),
 			};
 

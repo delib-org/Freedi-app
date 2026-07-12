@@ -110,7 +110,9 @@ const RoomsList: FC<RoomsListProps> = ({ settings, rooms, participants, onReassi
 					<Button
 						text={isNotifying ? t('Sending...') : allNotified ? t('All Notified') : t('Notify All')}
 						buttonType={ButtonType.PRIMARY}
-						onClick={handleNotify}
+						onClick={() => {
+							void handleNotify();
+						}}
 						disabled={isNotifying || allNotified}
 					/>
 					<Button text={t('Reassign')} buttonType={ButtonType.SECONDARY} onClick={onReassign} />
@@ -150,7 +152,13 @@ const RoomsList: FC<RoomsListProps> = ({ settings, rooms, participants, onReassi
 								buttonType={ButtonType.SECONDARY}
 								onClick={() => setShowDeleteConfirm(false)}
 							/>
-							<Button text={t('Delete')} buttonType={ButtonType.PRIMARY} onClick={handleDelete} />
+							<Button
+								text={t('Delete')}
+								buttonType={ButtonType.PRIMARY}
+								onClick={() => {
+									void handleDelete();
+								}}
+							/>
 						</div>
 					</div>
 				</div>

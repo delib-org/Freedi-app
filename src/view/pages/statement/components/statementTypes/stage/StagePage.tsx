@@ -175,7 +175,7 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 export default StagePage;
 
 interface StagePageSwitchProps {
-	readonly statement: Statement;
+	readonly statement: Statement | undefined;
 }
 
 function StagePageSwitch({ statement }: StagePageSwitchProps) {

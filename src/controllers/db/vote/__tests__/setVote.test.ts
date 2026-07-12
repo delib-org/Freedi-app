@@ -225,9 +225,9 @@ describe('setVote', () => {
 			await setVoteToDB(mockOption as never, mockUser as never);
 
 			expect(capturedVote).not.toBeNull();
-			expect(capturedVote?.statementId).toBe('option-123');
-			expect(capturedVote?.userId).toBe('user-123');
-			expect(capturedVote?.parentId).toBe('parent-123');
+			expect((capturedVote as Record<string, unknown> | null)?.statementId).toBe('option-123');
+			expect((capturedVote as Record<string, unknown> | null)?.userId).toBe('user-123');
+			expect((capturedVote as Record<string, unknown> | null)?.parentId).toBe('parent-123');
 		});
 
 		it('should include voter information in vote data', async () => {
@@ -249,7 +249,7 @@ describe('setVote', () => {
 			await setVoteToDB(mockOption as never, mockUser as never);
 
 			expect(capturedVote).not.toBeNull();
-			expect(capturedVote?.voter).toEqual(mockUser);
+			expect((capturedVote as Record<string, unknown> | null)?.voter).toEqual(mockUser);
 		});
 
 		it('should include timestamps in vote data', async () => {
@@ -271,8 +271,8 @@ describe('setVote', () => {
 			await setVoteToDB(mockOption as never, mockUser as never);
 
 			expect(capturedVote).not.toBeNull();
-			expect(typeof capturedVote?.lastUpdate).toBe('number');
-			expect(typeof capturedVote?.createdAt).toBe('number');
+			expect(typeof (capturedVote as Record<string, unknown> | null)?.lastUpdate).toBe('number');
+			expect(typeof (capturedVote as Record<string, unknown> | null)?.createdAt).toBe('number');
 		});
 	});
 
@@ -310,7 +310,7 @@ describe('setVote', () => {
 
 			await setVoteToDB(mockOption as never, mockUser as never);
 
-			expect(capturedVote?.statementId).toBe('none');
+			expect((capturedVote as Record<string, unknown> | null)?.statementId).toBe('none');
 		});
 
 		it('should not track analytics when removing vote', async () => {
@@ -365,7 +365,7 @@ describe('setVote', () => {
 			await setVoteToDB(mockOption as never, mockUser as never);
 
 			// Should store the new option, not 'none'
-			expect(capturedVote?.statementId).toBe('option-123');
+			expect((capturedVote as Record<string, unknown> | null)?.statementId).toBe('option-123');
 		});
 
 		it('should track analytics when changing vote', async () => {

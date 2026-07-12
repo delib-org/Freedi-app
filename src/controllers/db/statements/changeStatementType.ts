@@ -1,4 +1,5 @@
 import { getDoc, updateDoc, query, where, getDocs } from 'firebase/firestore';
+import type { DocumentData, UpdateData } from 'firebase/firestore';
 import {
 	Collections,
 	Statement,
@@ -78,7 +79,7 @@ export async function changeStatementType(
 		}
 
 		// Prepare update data
-		const updateData: Record<string, unknown> = {
+		const updateData: UpdateData<DocumentData> = {
 			statementType: newType,
 			lastUpdate: Date.now(),
 		};

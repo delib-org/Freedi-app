@@ -61,8 +61,8 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 
 	const { consensus: _consensus } = statement;
 	const {
-		sumPro,
-		sumCon,
+		sumPro = 0,
+		sumCon = 0,
 		numberOfEvaluators,
 		sumEvaluations = 0,
 		sumSquaredEvaluations = 0,
@@ -243,6 +243,8 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	const decreaseLearning = useDecreaseLearningRemain();
 
 	const handleSetEvaluation = (): void => {
+		if (!creator) return;
+
 		onEvaluate(evaluationThumb.evaluation);
 
 		setEvaluationToDB(statement, creator, evaluationThumb.evaluation);

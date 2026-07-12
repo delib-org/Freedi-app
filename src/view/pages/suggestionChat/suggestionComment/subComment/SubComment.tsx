@@ -23,7 +23,9 @@ const SubComment: FC<Props> = ({ statement, parentStatement }) => {
 			<div className={styles.commentCard}>
 				<div className={styles.creatorInfo}>
 					<span className={styles.creatorName}>{getCreatorDisplayName(statement)}</span>
-					<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+					{evaluationNumber !== undefined && (
+						<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
+					)}
 				</div>
 				<div className={styles.commentText} style={{ userSelect: 'text' }}>
 					{statement.statement}

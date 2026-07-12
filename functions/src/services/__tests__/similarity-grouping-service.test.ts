@@ -161,7 +161,7 @@ describe('similarity-grouping-service', () => {
 			mockGetBatchEmbeddings.mockResolvedValue(embeddings);
 			mockFindSimilarByEmbedding.mockImplementation(
 				async (queryEmb: number[], _pid: string, _opts: { threshold: number }) => {
-					const results = [];
+					const results: ReturnType<typeof similarResult>[] = [];
 					for (const [id, emb] of embeddings) {
 						const dist = Math.sqrt((queryEmb[0] - emb[0]) ** 2 + (queryEmb[1] - emb[1]) ** 2);
 						const sim = 1 - dist; // 1 for identical, low for far

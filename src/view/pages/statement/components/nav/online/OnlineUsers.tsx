@@ -91,7 +91,11 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 						)}
 
 						<UserProfilePopover
-							user={online.user}
+							user={{
+								displayName: online.user.displayName,
+								photoURL: online.user.photoURL ?? undefined,
+								uid: online.user.uid,
+							}}
 							isActive={online.tabInFocus}
 							visible={isPopoverVisible}
 						/>

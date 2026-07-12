@@ -252,7 +252,7 @@ describe('setEvaluation', () => {
 			const statementWithoutParent = { ...mockStatement, parentId: undefined };
 			const { logger } = require('@/services/logger');
 
-			await setEvaluationToDB(statementWithoutParent as Statement, mockUser, 0.5);
+			await setEvaluationToDB(statementWithoutParent as unknown as Statement, mockUser, 0.5);
 
 			expect(logger.error).toHaveBeenCalled();
 		});

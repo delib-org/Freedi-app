@@ -93,7 +93,10 @@ const StatementVote: FC = () => {
 			</div>
 			{isStatementInfoModalOpen && (
 				<Modal>
-					<StatementInfo statement={statementInfo} setShowInfo={setIsStatementInfoModalOpen} />
+					<StatementInfo
+						statement={statementInfo ?? null}
+						setShowInfo={setIsStatementInfoModalOpen}
+					/>
 				</Modal>
 			)}
 		</>

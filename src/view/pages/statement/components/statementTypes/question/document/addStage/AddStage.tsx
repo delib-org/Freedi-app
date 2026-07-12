@@ -60,6 +60,8 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 		setShowAddStage(false);
 	}
 
+	if (!statement) return null;
+
 	return (
 		<div className={styles.box}>
 			<form onSubmit={handleAddStage}>

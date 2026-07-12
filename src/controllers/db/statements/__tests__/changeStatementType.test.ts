@@ -273,7 +273,9 @@ describe('changeStatementType', () => {
 				statementType: StatementType.option,
 				lastUpdate: expect.any(Number),
 			});
-			expect(capturedUpdateData.questionSettings).toBeUndefined();
+			expect(
+				(capturedUpdateData as Record<string, unknown> | null)?.questionSettings,
+			).toBeUndefined();
 		});
 	});
 

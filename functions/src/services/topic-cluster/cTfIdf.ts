@@ -120,7 +120,7 @@ const STOPWORDS = new Set([
 ]);
 
 function tokenize(text: string): string[] {
-	const matches = text.toLowerCase().match(TOKEN_RE) || [];
+	const matches: string[] = text.toLowerCase().match(TOKEN_RE) || [];
 
 	return matches.filter((t) => t.length > 1 && !STOPWORDS.has(t));
 }

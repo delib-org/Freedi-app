@@ -75,7 +75,7 @@ describe('semantic-equivalence-service', () => {
 			mockGenerateContent.mockImplementation(() => {
 				const start = callIndex * 20;
 				const end = Math.min(start + 20, 50);
-				const items = [];
+				const items: Array<{ pairIndex: number; verdict: string; reason: string }> = [];
 				for (let i = start; i < end; i++) {
 					items.push({
 						pairIndex: i - start + 1,

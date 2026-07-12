@@ -34,7 +34,7 @@ export default function Accessibility() {
 	const startPos = useRef({ x: 0, y: 0 });
 	const isDragging = useRef(false);
 	const touchMoved = useRef(false);
-	const buttonRef = useRef(null);
+	const buttonRef = useRef<HTMLButtonElement | null>(null);
 
 	const handleMove = useCallback((event) => {
 		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;

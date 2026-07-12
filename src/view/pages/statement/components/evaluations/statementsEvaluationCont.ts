@@ -103,7 +103,7 @@ export function sortSubStatements(
 
 					if (allMeasured) {
 						// All heights measured - calculate real positions
-						totalHeight += subStatement.elementHight + gap;
+						totalHeight += (subStatement.elementHight ?? 0) + gap;
 					} else {
 						// Not all measured yet - stack with minimal offset to allow measurement
 						// Use small offset to prevent complete overlap during measurement

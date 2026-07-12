@@ -14,6 +14,8 @@ import {
 	updateDoc,
 	where,
 	writeBatch,
+	type DocumentData,
+	type UpdateData,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { createStatementRef } from '@/utils/firebaseUtils';
@@ -131,7 +133,7 @@ export async function updateClusterTitle({
 	lockTitle,
 }: UpdateClusterTitleArgs): Promise<void> {
 	try {
-		const patch: Record<string, unknown> = {
+		const patch: UpdateData<DocumentData> = {
 			statement,
 			lastUpdate: getCurrentTimestamp(),
 		};

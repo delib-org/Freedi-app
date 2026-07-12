@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Access } from '@freedi/shared-types';
+import { Access, Statement } from '@freedi/shared-types';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { handlePublicAutoAuth } from '@/controllers/auth/publicAuthHandler';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -58,9 +58,9 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 				}
 
 				// Get the top parent statement if needed
-				let topParentStatement = null;
+				let topParentStatement: Statement | null = null;
 				if (statement.topParentId && statement.topParentId !== statementId) {
-					topParentStatement = await getStatementFromDB(statement.topParentId);
+					topParentStatement = (await getStatementFromDB(statement.topParentId)) ?? null;
 					if (!isMounted) return;
 				}
 

@@ -80,11 +80,7 @@ const NotificationBtn = () => {
 			)}
 			<MailIcon />
 			{showInAppNotifications && (
-				<div
-					ref={(node) => {
-						if (notifRef) notifRef.current = node;
-					}}
-				>
+				<div ref={notifRef}>
 					<InAppNotifications />
 				</div>
 			)}

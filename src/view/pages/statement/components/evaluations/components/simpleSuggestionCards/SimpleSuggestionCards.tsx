@@ -62,11 +62,11 @@ const SimpleSuggestionCards: FC<Props> = ({ subStatements: propSubStatements }) 
 		};
 	}, [statementId, creator?.uid]);
 
+	if (!statement) return null;
+
 	if (!subStatements || subStatements.length === 0) {
 		return <EmptyScreen statement={statement} />;
 	}
-
-	if (!statement) return null;
 
 	return (
 		<div className={styles['simple-suggestions-wrapper']}>

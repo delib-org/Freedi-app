@@ -17,6 +17,8 @@ const VotingSettings = () => {
 	const showPercentage = statement.votingSettings?.showPercentages ?? false;
 
 	function handleShowPercentageChange(checked: boolean) {
+		if (!statement) return;
+
 		setVotingSettingsToDB({
 			statementId: statement.statementId,
 			votingSettings: {
