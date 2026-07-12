@@ -7,6 +7,8 @@ export enum AgoraStage {
 	lobby = 'lobby',
 	framing = 'framing',
 	perspectives = 'perspectives',
+	/** After positions: each side answers "what do you actually need?" — empathy before solutions */
+	needs = 'needs',
 	valueIdentification = 'valueIdentification',
 	positioning = 'positioning',
 	deliberation = 'deliberation',
@@ -48,6 +50,10 @@ export enum AgoraSceneKind {
 	periodExplainer = 'periodExplainer',
 	perspectiveA = 'perspectiveA',
 	perspectiveB = 'perspectiveB',
+	/** The narrator turns to both sides: "beyond your positions — what do you actually need?" */
+	needsQuestion = 'needsQuestion',
+	needsA = 'needsA',
+	needsB = 'needsB',
 	successEnding = 'successEnding',
 	failureEnding = 'failureEnding',
 }

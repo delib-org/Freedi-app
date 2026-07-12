@@ -29,6 +29,12 @@ export const AgoraCharacterSchema = object({
 	portraitUrl: optional(string()),
 	/** The character's spoken arguments, in presentation order */
 	arguments: array(string()),
+	/**
+	 * The human needs beneath the positions — the character's answer to
+	 * "what do you actually need?", shown after the arguments to build
+	 * empathy. Optional for packages authored before the needs stage.
+	 */
+	needs: optional(array(string())),
 	/** The values underlying the arguments — used as the grading answer key */
 	values: array(AgoraValueSchema),
 });

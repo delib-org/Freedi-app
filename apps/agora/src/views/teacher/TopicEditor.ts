@@ -151,6 +151,10 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			textArea(character.arguments.join('\n'), 4, (next) => {
 				update({ arguments: next.split('\n').filter((line) => line.trim()) });
 			}),
+			m('label.teacher__section-title', t('editor.char_needs')),
+			textArea((character.needs ?? []).join('\n'), 4, (next) => {
+				update({ needs: next.split('\n').filter((line) => line.trim()) });
+			}),
 			m('label.teacher__section-title', t('editor.char_values')),
 			textArea(
 				character.values.map((value) => `${value.label} | ${value.description}`).join('\n'),
@@ -196,7 +200,10 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			]),
 			m('label.teacher__section-title', t('editor.scene_text')),
 			textArea(scene.text, 3, (next) => update({ text: next })),
-			scene.dialogue.length > 0 || scene.kind.startsWith('perspective')
+			scene.dialogue.length > 0 ||
+		scene.kind.startsWith('perspective') ||
+		scene.kind === 'needsA' ||
+		scene.kind === 'needsB'
 				? [
 						m('label.teacher__section-title', t('editor.scene_dialogue')),
 						textArea(
@@ -333,6 +340,10 @@ function sceneStageLabel(kind: string): string {
 		case 'perspectiveA':
 		case 'perspectiveB':
 			return 'perspectives';
+		case 'needsQuestion':
+		case 'needsA':
+		case 'needsB':
+			return 'needs';
 		default:
 			return 'results';
 	}

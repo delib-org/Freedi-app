@@ -104,6 +104,16 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							storageKey: `agora_${sessionId}_perspectives`,
 						});
 
+					case AgoraStage.needs:
+						return m(SceneStage, {
+							scenes: scenesOf(
+								AgoraSceneKind.needsQuestion,
+								AgoraSceneKind.needsA,
+								AgoraSceneKind.needsB,
+							),
+							storageKey: `agora_${sessionId}_needs`,
+						});
+
 					case AgoraStage.valueIdentification:
 						return m(ValueIdentification, { sessionId, userId, topic });
 

@@ -26,6 +26,7 @@ const STAGE_ORDER: AgoraStage[] = [
 	AgoraStage.lobby,
 	AgoraStage.framing,
 	AgoraStage.perspectives,
+	AgoraStage.needs,
 	AgoraStage.valueIdentification,
 	AgoraStage.positioning,
 	AgoraStage.deliberation,

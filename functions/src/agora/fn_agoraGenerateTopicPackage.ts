@@ -34,7 +34,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 function buildPrompt(topic: string, language: string): { system: string; user: string } {
 	const languageName = LANGUAGE_NAMES[language] ?? 'English';
 
-	const system = `You author a complete "topic package" for a classroom deliberative time-travel game. Students visit a historical dilemma, meet TWO opposing characters, identify their values, position themselves between the camps, and deliberate solutions.
+	const system = `You author a complete "topic package" for a classroom deliberative time-travel game. Students visit a historical dilemma, meet TWO opposing characters, hear each side's positions, then ask both sides "what do you actually need?" and hear the human needs beneath the positions (empathy before solutions), identify their values, position themselves between the camps, and deliberate solutions.
 
 Respond ONLY with JSON matching exactly this shape (all content text in ${languageName}):
 {
@@ -45,6 +45,7 @@ Respond ONLY with JSON matching exactly this shape (all content text in ${langua
       "characterId": "char-a" | "char-b",
       "name": string, "role": string,
       "arguments": string[3],            // spoken, first person
+      "needs": string[3],                // first person: the human needs BENEATH the positions (safety, dignity, being heard...) — not restated demands
       "values": [{"valueId": string, "label": string, "description": string}]  // exactly 3, the answer key
     }
   ],
@@ -52,17 +53,20 @@ Respond ONLY with JSON matching exactly this shape (all content text in ${langua
   "challengeQuestion": string,           // the deliberation prompt: build a solution acceptable to both camps
   "plausibilityRubric": {"criteria": [{"criterionId": string, "label": string, "description": string, "weight": number}]},  // 3 criteria, weights sum to 1
   "healthMetrics": [{"metricId": string, "label": string, "description": string, "min": 0, "max": 100, "baseline": number, "higherIsBetter": boolean}],  // exactly 4 national wellbeing gauges
-  "scenes": [                            // EXACTLY 7, kinds in this order:
+  "scenes": [                            // EXACTLY 10, kinds in this order:
     {"sceneId": string, "kind": "intro", "title": string, "text": string},
     {"sceneId": string, "kind": "timeTunnel", "title": string, "text": string},
     {"sceneId": string, "kind": "periodExplainer", "title": string, "text": string},   // rich, accurate historical context
     {"sceneId": string, "kind": "perspectiveA", "title": string, "text": string, "dialogue": [{"speaker": string, "line": string}]},  // 3 lines by character A
     {"sceneId": string, "kind": "perspectiveB", "title": string, "text": string, "dialogue": [{"speaker": string, "line": string}]},  // 3 lines by character B
+    {"sceneId": string, "kind": "needsQuestion", "title": string, "text": string},     // the class turns to both sides and asks: beyond your positions, what do you actually NEED?
+    {"sceneId": string, "kind": "needsA", "title": string, "text": string, "dialogue": [{"speaker": string, "line": string}]},  // 3 lines: character A opens up about their needs (vulnerable, human, mirrors characters[0].needs)
+    {"sceneId": string, "kind": "needsB", "title": string, "text": string, "dialogue": [{"speaker": string, "line": string}]},  // 3 lines: character B opens up about their needs (mirrors characters[1].needs)
     {"sceneId": string, "kind": "successEnding", "title": string, "text": string},
     {"sceneId": string, "kind": "failureEnding", "title": string, "text": string}      // hopeful, invites retry
   ]
 }
-Historical accuracy matters — a teacher will review. Age-appropriate for ages 12-18. Both characters must be sympathetic, never straw men.`;
+Historical accuracy matters — a teacher will review. Age-appropriate for ages 12-18. Both characters must be sympathetic, never straw men. In the needs scenes the characters drop the rhetoric and speak as vulnerable humans — this is where students learn that rivals have understandable needs.`;
 
 	const user = `Topic: ${topic}`;
 
