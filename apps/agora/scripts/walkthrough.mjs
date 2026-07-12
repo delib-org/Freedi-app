@@ -145,13 +145,16 @@ await s1.locator('.needs-peek__toggle').click();
 await propose(s1, 'S1', 'נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, וזכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן.');
 await propose(s2, 'S2', 'נקים אספה לאומית שבה לעם רוב קולות, נבטל את הפטור ממס של האצולה, אך נבטיח לאצילים שמירה על ביטחונם האישי ורכושם הבסיסי.');
 
-// Both auto-advanced to step "rate" — each rates the other (cross-camp)
-for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
-	await page.waitForSelector('.delib__rate-card', { timeout: 15000 });
-	await page.locator('.btn--rate-agree').click();
-	console.log(`${label} rated agree`);
-}
+// Both auto-advanced to step "rate" — five-level scale, cross-camp ratings
+await s1.waitForSelector('.rate-scale', { timeout: 15000 });
+const scaleCount = await s1.locator('.rate-scale__option').count();
+if (scaleCount !== 5) throw new Error(`Expected 5 rating levels, got ${scaleCount}`);
 await shot(s1, '06-rate-step');
+await s1.locator('.rate-scale__option--strong-for').click(); // +1
+console.log('S1 rated: very much for (+1)');
+await s2.waitForSelector('.rate-scale', { timeout: 15000 });
+await s2.locator('.rate-scale__option--for').click(); // +0.5 — fractional value through the pipeline
+console.log('S2 rated: for (+0.5)');
 
 // Candidates exhausted → continue to helping
 for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {

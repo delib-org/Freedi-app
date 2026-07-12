@@ -11,6 +11,7 @@ import {
 	improveWithAI,
 	askCharacterReview,
 	AgoraProposal,
+	AgoraRating,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { PointsPill } from '../components/PointsPill';
@@ -100,6 +101,20 @@ function totalRaters(score: AgoraProposalScore | undefined): number {
 
 	return score.perCamp.left.n + score.perCamp.right.n + score.perCamp.center.n;
 }
+
+/** The five-level rating scale, MC-style, ordered strongest-against → strongest-for */
+const RATE_OPTIONS: ReadonlyArray<{
+	value: AgoraRating;
+	variant: string;
+	emoji: string;
+	labelKey: string;
+}> = [
+	{ value: -1, variant: 'strong-against', emoji: '😠', labelKey: 'rate.strong_against' },
+	{ value: -0.5, variant: 'against', emoji: '🙁', labelKey: 'rate.against' },
+	{ value: 0, variant: 'abstain', emoji: '😐', labelKey: 'rate.abstain' },
+	{ value: 0.5, variant: 'for', emoji: '🙂', labelKey: 'rate.for' },
+	{ value: 1, variant: 'strong-for', emoji: '😍', labelKey: 'rate.strong_for' },
+];
 
 type CycleStep = 'mine' | 'rate' | 'help' | 'done';
 
@@ -457,28 +472,24 @@ export function Deliberation(
 						current && !quotaDone
 							? m('.card.delib__rate-card', [
 									m('p.scene__text', current.statement),
-									m('.delib__rate-buttons', [
-										m(
-											'button.btn.btn--rate.btn--rate-disagree',
-											{
-												onclick: () => {
-													void rateProposal(live, current.statementId, -1);
-													setCycle({ rated: cycle.rated + 1 });
+									m(
+										'.rate-scale',
+										RATE_OPTIONS.map((option) =>
+											m(
+												`button.rate-scale__option.rate-scale__option--${option.variant}`,
+												{
+													onclick: () => {
+														void rateProposal(live, current.statementId, option.value);
+														setCycle({ rated: cycle.rated + 1 });
+													},
 												},
-											},
-											t('delib.disagree'),
+												[
+													m('span.rate-scale__emoji', option.emoji),
+													m('span.rate-scale__label', t(option.labelKey)),
+												],
+											),
 										),
-										m(
-											'button.btn.btn--rate.btn--rate-agree',
-											{
-												onclick: () => {
-													void rateProposal(live, current.statementId, 1);
-													setCycle({ rated: cycle.rated + 1 });
-												},
-											},
-											t('delib.agree'),
-										),
-									]),
+									),
 								])
 							: m('.text-center.stack', [
 									m('.scene__waiting-glow'),

@@ -232,11 +232,14 @@ export async function submitProposal(
 	});
 }
 
-/** Rate a proposal: agree (+1) or disagree (-1). Deterministic id dedupes. */
+/** Five-level rating scale, MC-style: -1 … +1 in half steps */
+export type AgoraRating = -1 | -0.5 | 0 | 0.5 | 1;
+
+/** Rate a proposal on the five-level scale. Deterministic id dedupes. */
 export async function rateProposal(
 	session: AgoraSession,
 	statementId: string,
-	value: 1 | -1,
+	value: AgoraRating,
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
