@@ -7,12 +7,17 @@ import {
 	functionConfig,
 	getRandomUID,
 	AgoraDeviceMode,
+	AgoraParticipant,
 	AgoraSession,
 	AgoraSessionStatus,
 	AgoraStage,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
+	AGORA_AI_REVIEW,
 	AGORA_SESSION,
+	createAgoraAiRaterUid,
+	createAgoraParticipantId,
+	deriveCamp,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
@@ -154,13 +159,45 @@ export const agoraCreateSession = onCall(
 			const batch = db.batch();
 			batch.set(
 				db.collection(Collections.statements).doc(rootStatement.statementId),
-				rootStatement
+				rootStatement,
 			);
 			batch.set(
 				db.collection(Collections.statements).doc(challengeStatement.statementId),
-				challengeStatement
+				challengeStatement,
 			);
 			batch.set(db.collection(Collections.agoraSessions).doc(sessionId), session);
+
+			// Seed the characters' synthetic AI rater identities — each character
+			// reviews proposals "as if they were 3 participants". Their participant
+			// docs must exist (with a camp) before their first evaluation, because
+			// the bridging trigger resolves camps server-side. Excluded everywhere
+			// from participantCount and student-only metrics via isAI.
+			for (const character of topic.characters) {
+				const campPosition =
+					character.characterId === topic.positioningScale.rightCharacterId
+						? AGORA_AI_REVIEW.RIGHT_CAMP_POSITION
+						: AGORA_AI_REVIEW.LEFT_CAMP_POSITION;
+				for (let index = 1; index <= AGORA_AI_REVIEW.RATERS_PER_CHARACTER; index++) {
+					const aiUid = createAgoraAiRaterUid(character.characterId, index);
+					const aiParticipant: AgoraParticipant = {
+						participantId: createAgoraParticipantId(sessionId, aiUid),
+						sessionId,
+						userId: aiUid,
+						anonName: character.name,
+						isAI: true,
+						campPosition,
+						camp: deriveCamp(campPosition),
+						points: { valueAccuracy: 0, proposals: 0, helping: 0, total: 0 },
+						joinedAt: now,
+						lastActive: now,
+					};
+					batch.set(
+						db.collection(Collections.agoraParticipants).doc(aiParticipant.participantId),
+						aiParticipant,
+					);
+				}
+			}
+
 			await batch.commit();
 
 			return { sessionId, code };
@@ -173,5 +210,5 @@ export const agoraCreateSession = onCall(
 			});
 			throw new HttpsError('internal', 'Failed to create session');
 		}
-	}
+	},
 );

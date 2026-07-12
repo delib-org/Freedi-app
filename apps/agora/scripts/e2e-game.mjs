@@ -56,10 +56,16 @@ for (const page of [pageA, pageB]) {
 console.log('BOTH JOINED');
 
 // Camps: A=left, B=right (owner-bypass patch — late-position shortcut for the test)
-const partsRes = await ownerFetch(`agoraParticipants`);
-const parts = (await partsRes.json()).documents.filter(
+const partsRes = await ownerFetch(`agoraParticipants?pageSize=300`);
+const allParts = (await partsRes.json()).documents.filter(
 	(d) => d.fields.sessionId.stringValue === sessionId
 );
+// The two characters' synthetic rater identities are seeded at session
+// creation (3 per character) and must never be mistaken for students
+const aiParts = allParts.filter((d) => d.fields.isAI?.booleanValue === true);
+const parts = allParts.filter((d) => d.fields.isAI?.booleanValue !== true);
+if (aiParts.length !== 6) throw new Error(`Expected 6 AI participants, got ${aiParts.length}`);
+console.log('AI RATERS SEEDED:', aiParts.length);
 const [pA, pB] = parts;
 for (const [participant, camp, pos] of [[pA, 'left', 20], [pB, 'right', 80]]) {
 	await ownerFetch(
@@ -112,7 +118,7 @@ console.log('B RATED A: agree (cross-camp)');
 
 // Give the bridging trigger a moment, then check the score doc
 await new Promise((r) => setTimeout(r, 4000));
-const scoresRes = await ownerFetch('agoraScores');
+const scoresRes = await ownerFetch('agoraScores?pageSize=300');
 const scoreDocs = ((await scoresRes.json()).documents ?? []).filter(
 	(d) => d.fields.sessionId.stringValue === sessionId
 );
@@ -134,8 +140,68 @@ console.log('B SENT SUGGESTION');
 // A opens "my proposal" tab, sees per-camp support + suggestion, accepts it
 await pageA.waitForSelector('.teacher__mode-row', { timeout: 10000 });
 await pageA.getByRole('button', { name: /My proposal|ההצעה שלי/i }).click();
-await pageA.waitForSelector('.camp-bar', { timeout: 8000 });
+try {
+	await pageA.waitForSelector('.camp-bar', { timeout: 8000 });
+} catch (e) {
+	console.log('PAGE ERRORS SO FAR:', errs);
+	console.log('A BODY:', (await pageA.evaluate(() => document.body.innerText)).slice(0, 400));
+	await pageA.screenshot({ path: 'debug-improve-mine.png' });
+	throw e;
+}
 console.log('A SEES BRIDGING:', await pageA.locator('.values__score').first().textContent());
+
+// ---- In-character reviews: A shows the proposal to both characters ----
+await pageA.waitForSelector('.char-review', { timeout: 8000 });
+const countCard = pageA.locator('.char-review').nth(0); // char-a — the Count (left)
+const camilleCard = pageA.locator('.char-review').nth(1); // char-b — Camille (right)
+
+await countCard.locator('button.btn--secondary').click();
+await countCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
+console.log('COUNT VERDICT:', (await countCard.locator('.char-review__bubble').textContent()).slice(0, 90));
+console.log('COUNT SCORE:', await countCard.locator('.values__score').textContent());
+
+await camilleCard.locator('button.btn--secondary').click();
+await camilleCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
+console.log('CAMILLE VERDICT:', (await camilleCard.locator('.char-review__bubble').textContent()).slice(0, 90));
+
+// Each character rates through the real pipeline as 3 raters
+await new Promise((r) => setTimeout(r, 4000));
+const scoresRes2 = await ownerFetch('agoraScores?pageSize=300');
+const scoreDoc = ((await scoresRes2.json()).documents ?? []).find(
+	(d) => d.fields.sessionId.stringValue === sessionId
+);
+const campN = (side) =>
+	Number(scoreDoc.fields.perCamp.mapValue.fields[side].mapValue.fields.n.integerValue ?? 0);
+console.log('PER-CAMP RATERS:', { left: campN('left'), right: campN('right') });
+// 3 AI raters per camp + the 1 human rater in one of them (browser↔camp
+// mapping is arbitrary), so the pair must be {3, 4} in some order
+const ns = [campN('left'), campN('right')].sort();
+if (ns[0] !== 3 || ns[1] !== 4)
+	throw new Error(`Expected per-camp raters {3,4}, got left=${campN('left')} right=${campN('right')}`);
+console.log(
+	'BRIDGING AFTER AI REVIEWS:',
+	scoreDoc.fields.bridgingScore.integerValue ?? scoreDoc.fields.bridgingScore.doubleValue
+);
+
+// Rate limit: one re-ask allowed per round, then the button disables
+await countCard.locator('button.btn--secondary').click();
+await new Promise((r) => setTimeout(r, 1000));
+await countCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
+const askAgainDisabled = await countCard.locator('button.btn--secondary').isDisabled({ timeout: 30000 });
+if (!askAgainDisabled) throw new Error('Expected ask button disabled after 2 asks this round');
+console.log('RATE LIMIT OK: 2 asks per character per round, button now disabled');
+
+// Re-asks overwrite the 3 evaluation docs — never double-count
+const scoresRes3 = await ownerFetch('agoraScores?pageSize=300');
+const scoreDoc3 = ((await scoresRes3.json()).documents ?? []).find(
+	(d) => d.fields.sessionId.stringValue === sessionId
+);
+const campN3 = (side) =>
+	Number(scoreDoc3.fields.perCamp.mapValue.fields[side].mapValue.fields.n.integerValue ?? 0);
+const ns3 = [campN3('left'), campN3('right')].sort();
+if (ns3[0] !== 3 || ns3[1] !== 4)
+	throw new Error(`Re-ask double-counted: left=${campN3('left')} right=${campN3('right')}`);
+console.log('RE-ASK IDEMPOTENT: per-camp raters still {3,4}');
 await pageA.getByRole('button', { name: /^(Accept|קבלת ההצעה)$/i }).click();
 await pageA.waitForSelector('text=/Accepted|התקבלה/', { timeout: 10000 });
 console.log('A ACCEPTED SUGGESTION');
@@ -146,7 +212,7 @@ console.log('B TOAST:', await pageB.locator('.toast__text').textContent());
 
 // Verify helper points + notification
 await new Promise((r) => setTimeout(r, 1500));
-const partsRes2 = await ownerFetch('agoraParticipants');
+const partsRes2 = await ownerFetch('agoraParticipants?pageSize=300');
 const parts2 = (await partsRes2.json()).documents.filter(
 	(d) => d.fields.sessionId.stringValue === sessionId
 );
@@ -158,7 +224,7 @@ console.log(
 		total: d.fields.points.mapValue.fields.total.integerValue,
 	}))
 );
-const notifRes = await ownerFetch('inAppNotifications');
+const notifRes = await ownerFetch('inAppNotifications?pageSize=300');
 const notifs = ((await notifRes.json()).documents ?? []).filter(
 	(d) => d.fields.sourceApp?.stringValue === 'agora'
 );
@@ -174,6 +240,9 @@ await pageT.waitForTimeout(1500);
 await call('agoraAdvanceStage', { sessionId, stage: 'results' }, teacher.idToken);
 await pageA.waitForSelector('.results__total', { timeout: 90000 });
 console.log('CLASS SCORE:', await pageA.locator('.results__total').textContent());
+console.log('OUTCOME:', await pageA.locator('.results__outcome-label').textContent());
+await pageA.waitForSelector('.results__debrief', { timeout: 10000 });
+console.log('DEBRIEF ITEMS:', await pageA.locator('.results__debrief-list li').allTextContents());
 console.log('METRICS:', await pageA.locator('.metric__delta').allTextContents());
 const narrative = await pageA.locator('.metric__narrative').first().textContent().catch(() => '');
 console.log('NARRATIVE:', (narrative ?? '').slice(0, 110));

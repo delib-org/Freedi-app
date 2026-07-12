@@ -53,7 +53,7 @@ Respond ONLY with JSON matching exactly this shape (all content text in ${langua
   "challengeQuestion": string,           // the deliberation prompt: build a solution acceptable to both camps
   "plausibilityRubric": {"criteria": [{"criterionId": string, "label": string, "description": string, "weight": number}]},  // 3 criteria, weights sum to 1
   "healthMetrics": [{"metricId": string, "label": string, "description": string, "min": 0, "max": 100, "baseline": number, "higherIsBetter": boolean}],  // exactly 4 national wellbeing gauges
-  "scenes": [                            // EXACTLY 10, kinds in this order:
+  "scenes": [                            // EXACTLY 11, kinds in this order:
     {"sceneId": string, "kind": "intro", "title": string, "text": string},
     {"sceneId": string, "kind": "timeTunnel", "title": string, "text": string},
     {"sceneId": string, "kind": "periodExplainer", "title": string, "text": string},   // rich, accurate historical context
@@ -63,6 +63,7 @@ Respond ONLY with JSON matching exactly this shape (all content text in ${langua
     {"sceneId": string, "kind": "needsA", "title": string, "text": string, "dialogue": [{"speaker": string, "line": string}]},  // 3 lines: character A opens up about their needs (vulnerable, human, mirrors characters[0].needs)
     {"sceneId": string, "kind": "needsB", "title": string, "text": string, "dialogue": [{"speaker": string, "line": string}]},  // 3 lines: character B opens up about their needs (mirrors characters[1].needs)
     {"sceneId": string, "kind": "successEnding", "title": string, "text": string},
+    {"sceneId": string, "kind": "honestDisagreementEnding", "title": string, "text": string},  // no proposal won both camps, but the class mapped exactly where the disagreement lives — dignified, warm, an achievement rather than a defeat; the next attempt starts here
     {"sceneId": string, "kind": "failureEnding", "title": string, "text": string}      // hopeful, invites retry
   ]
 }
@@ -112,7 +113,10 @@ export const agoraGenerateTopicPackage = onCall(
 				});
 				draft = JSON.parse(extractJson(raw)) as Record<string, unknown>;
 			} else {
-				draft = { ...FIXTURE_TOPIC_PACKAGE, title: `${FIXTURE_TOPIC_PACKAGE.title} (${topic.trim()})` };
+				draft = {
+					...FIXTURE_TOPIC_PACKAGE,
+					title: `${FIXTURE_TOPIC_PACKAGE.title} (${topic.trim()})`,
+				};
 			}
 
 			const characters = (draft.characters ?? []) as Array<{
@@ -145,10 +149,7 @@ export const agoraGenerateTopicPackage = onCall(
 			// fails loudly here instead of breaking clients later.
 			const validated: AgoraTopicPackage = parse(AgoraTopicPackageSchema, candidate);
 
-			await db
-				.collection(Collections.agoraTopicPackages)
-				.doc(topicPackageId)
-				.set(validated);
+			await db.collection(Collections.agoraTopicPackages).doc(topicPackageId).set(validated);
 
 			return { topicPackageId };
 		} catch (error) {
@@ -160,5 +161,5 @@ export const agoraGenerateTopicPackage = onCall(
 			});
 			throw new HttpsError('internal', 'Failed to generate topic package');
 		}
-	}
+	},
 );

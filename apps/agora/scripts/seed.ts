@@ -223,6 +223,14 @@ const topicPackage = {
 			dialogue: [],
 		},
 		{
+			sceneId: 'scene-honest-disagreement',
+			kind: 'honestDisagreementEnding',
+			title: 'מחלוקת כנה — הישג בפני עצמו',
+			text: 'לא הצלתם את צרפת היום. אבל עשיתם משהו שצרפת של 1789 מעולם לא הצליחה לעשות — מצאתם בדיוק היכן חיה המחלוקת, והקשבתם זה לזה עד הסוף. מכאן מתחיל הניסיון הבא. מנהרת הזמן נשארת פתוחה.',
+			imageUrls: [],
+			dialogue: [],
+		},
+		{
 			sceneId: 'scene-failure',
 			kind: 'failureEnding',
 			title: 'המשימה נכשלה... הפעם',

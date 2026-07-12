@@ -13,6 +13,7 @@ import {
 	AgoraRoundPhase,
 	AgoraDeviceMode,
 	AgoraSessionStatus,
+	AgoraSessionOutcome,
 } from './agoraEnums';
 
 export const AgoraHealthMetricOutcomeSchema = object({
@@ -23,6 +24,24 @@ export const AgoraHealthMetricOutcomeSchema = object({
 });
 
 export type AgoraHealthMetricOutcome = InferOutput<typeof AgoraHealthMetricOutcomeSchema>;
+
+/** Warm, formative class debrief — "each failure is the empirical learning it paid for" */
+export const AgoraDebriefSchema = object({
+	whatWentWell: array(string()),
+	whatToTryNextTime: array(string()),
+	encouragement: string(),
+});
+
+export type AgoraDebrief = InferOutput<typeof AgoraDebriefSchema>;
+
+export const AgoraOutcomeStatsSchema = object({
+	/** Proposals rated by both wing camps (students only) */
+	crossRatedProposals: number(),
+	/** Distinct student raters / positioned students, 0..1 */
+	raterCoverage: number(),
+});
+
+export type AgoraOutcomeStats = InferOutput<typeof AgoraOutcomeStatsSchema>;
 
 export const AgoraClassScoreSchema = object({
 	/** Highest agreementIndex reached by any proposal, 0-100 */
@@ -36,6 +55,11 @@ export const AgoraClassScoreSchema = object({
 	/** Threshold that was applied (from AGORA_SESSION.SUCCESS_THRESHOLD or session override) */
 	threshold: number(),
 	success: boolean(),
+	/** Three-way outcome; optional for sessions computed before it existed (fall back on `success`) */
+	outcome: optional(enum_(AgoraSessionOutcome)),
+	outcomeStats: optional(AgoraOutcomeStatsSchema),
+	/** AI-written formative debrief, always warm — fuller card shown on non-success */
+	debrief: optional(AgoraDebriefSchema),
 	healthMetricOutcomes: array(AgoraHealthMetricOutcomeSchema),
 	computedAt: number(),
 });

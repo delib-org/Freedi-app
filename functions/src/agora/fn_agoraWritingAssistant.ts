@@ -41,10 +41,7 @@ export const agoraWritingAssistant = onCall(
 		}
 
 		try {
-			const sessionSnap = await db
-				.collection(Collections.agoraSessions)
-				.doc(sessionId)
-				.get();
+			const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
 			if (!sessionSnap.exists) throw new HttpsError('not-found', 'Session not found');
 			const session = sessionSnap.data() as AgoraSession;
 			const topicSnap = await db
@@ -94,5 +91,5 @@ Student's proposal draft:
 			});
 			throw new HttpsError('internal', 'Writing assistant failed');
 		}
-	}
+	},
 );

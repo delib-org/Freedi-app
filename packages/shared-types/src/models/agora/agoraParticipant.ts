@@ -4,6 +4,7 @@ import {
 	number,
 	optional,
 	array,
+	boolean,
 	enum_,
 	InferOutput,
 } from 'valibot';
@@ -39,6 +40,8 @@ export const AgoraParticipantSchema = object({
 	anonName: string(),
 	/** Number of students at this device in team mode */
 	teamMemberCount: optional(number()),
+	/** Synthetic AI rater identity (in-character reviews) — excluded from counts, points and coverage */
+	isAI: optional(boolean()),
 	/** 0 (fully left camp) … 100 (fully right camp) */
 	campPosition: optional(number()),
 	camp: optional(enum_(AgoraCamp)),

@@ -1,11 +1,6 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { db } from '../db';
-import {
-	Collections,
-	AgoraSessionStatus,
-	AgoraStage,
-	functionConfig,
-} from '@freedi/shared-types';
+import { Collections, AgoraSessionStatus, AgoraStage, functionConfig } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 
 /**
@@ -37,5 +32,5 @@ export const agoraSessionSweep = onSchedule(
 		} catch (error) {
 			logError(error, { operation: 'agora.sessionSweep' });
 		}
-	}
+	},
 );

@@ -71,9 +71,7 @@ export const agoraAdvanceStage = onCall(
 			}
 
 			const status =
-				stage === AgoraStage.ended
-					? AgoraSessionStatus.ended
-					: AgoraSessionStatus.live;
+				stage === AgoraStage.ended ? AgoraSessionStatus.ended : AgoraSessionStatus.live;
 
 			await sessionRef.update({
 				stage,
@@ -98,5 +96,5 @@ export const agoraAdvanceStage = onCall(
 			});
 			throw new HttpsError('internal', 'Failed to advance stage');
 		}
-	}
+	},
 );

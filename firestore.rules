@@ -83,6 +83,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // In-character AI proposal reviews: written by the agoraCharacterReview
+    // function only (admin SDK bypasses rules).
+    match /agoraCharacterReviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
     // Value-identification answers: students create and read their own;
     // AI grading fields are written by functions (admin SDK bypasses rules).
     // resource == null allows listening to the doc before it exists (the

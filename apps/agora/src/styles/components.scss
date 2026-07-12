@@ -599,6 +599,91 @@
 	}
 }
 
+// --- In-character proposal review ---
+.char-review {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__portrait {
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 1px solid var(--lantern-deep);
+
+		&--fallback {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-family: var(--font-display);
+			font-size: var(--font-size-lg);
+			color: var(--lantern-glow);
+			background: var(--bg-inset);
+		}
+	}
+
+	&__who {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__role {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__thinking {
+		color: var(--text-secondary);
+		font-style: italic;
+	}
+
+	&__bubble {
+		position: relative;
+		background: var(--bg-inset);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm) var(--space-md);
+		color: var(--text-primary);
+	}
+
+	&__meter {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__meter-track {
+		flex: 1;
+		height: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__meter-fill {
+		height: 100%;
+		background: linear-gradient(90deg, var(--lantern-deep), var(--lantern-glow));
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__advice {
+		margin: 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		color: var(--text-primary);
+	}
+}
+
 // --- Fuse countdown ---
 .fuse {
 	display: flex;
@@ -680,6 +765,38 @@
 			color: var(--danger);
 			text-shadow: 0 0 24px rgba(240, 142, 155, 0.35);
 		}
+
+		// Honest disagreement — a dignified twilight, neither triumph nor ruin
+		&--honest {
+			color: var(--lantern-glow);
+			text-shadow: 0 0 26px rgba(255, 216, 130, 0.4);
+		}
+	}
+
+	&__outcome-label {
+		font-family: var(--font-display);
+		color: var(--text-secondary);
+		text-align: center;
+	}
+
+	&__debrief-heading {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+	}
+
+	&__debrief-list {
+		margin: 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		color: var(--text-primary);
+	}
+
+	&__debrief-encouragement {
+		color: var(--text-secondary);
+		font-style: italic;
+		text-align: center;
 	}
 
 	&__breakdown {

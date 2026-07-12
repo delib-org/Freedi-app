@@ -74,5 +74,5 @@ export const agoraSetRound = onCall(
 			});
 			throw new HttpsError('internal', 'Failed to set round');
 		}
-	}
+	},
 );

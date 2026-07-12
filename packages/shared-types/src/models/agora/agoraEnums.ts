@@ -56,6 +56,19 @@ export enum AgoraSceneKind {
 	needsB = 'needsB',
 	successEnding = 'successEnding',
 	failureEnding = 'failureEnding',
+	/** No proposal won both camps, but the class mapped the divergence — a dignified ending, not a defeat */
+	honestDisagreementEnding = 'honestDisagreementEnding',
+}
+
+/**
+ * How the session ended. "Honest disagreement is itself an achievement" —
+ * a class that mapped exactly where the camps differ gets a dignified ending,
+ * not the collapse one.
+ */
+export enum AgoraSessionOutcome {
+	success = 'success',
+	honestDisagreement = 'honestDisagreement',
+	collapse = 'collapse',
 }
 
 export enum AgoraSuggestionStatus {

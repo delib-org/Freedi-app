@@ -1140,6 +1140,7 @@ export {
 	agoraWritingAssistant,
 	agoraSetRound,
 	agoraResolveSuggestion,
+	agoraCharacterReview,
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
 	onAgoraEvaluationWritten,

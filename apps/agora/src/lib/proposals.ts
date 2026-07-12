@@ -14,6 +14,8 @@ import {
 } from './firebase';
 import {
 	Collections,
+	AgoraCharacterReview,
+	AgoraCharacterReviewSchema,
 	AgoraProposalScore,
 	AgoraProposalScoreSchema,
 	AgoraSession,
@@ -22,6 +24,7 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { getUserState } from './user';
+import { getSessionState } from './session';
 
 // Flow-app precedent: improvement suggestions are statements with this raw
 // type tag (not a StatementType enum member).
@@ -49,6 +52,8 @@ export interface DeliberationState {
 	myRatings: Record<string, number>;
 	/** proposalId → server-computed camp score */
 	scores: Record<string, AgoraProposalScore>;
+	/** `${statementId}--${characterId}` → in-character AI review */
+	characterReviews: Record<string, AgoraCharacterReview>;
 }
 
 const state: DeliberationState = {
@@ -56,6 +61,7 @@ const state: DeliberationState = {
 	suggestions: {},
 	myRatings: {},
 	scores: {},
+	characterReviews: {},
 };
 
 let unsubscribers: Unsubscribe[] = [];
@@ -153,7 +159,28 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 		},
 	);
 
-	unsubscribers = [statementsUnsub, ratingsUnsub, scoresUnsub];
+	const reviewsUnsub = onSnapshot(
+		query(collection(db, Collections.agoraCharacterReviews), where('sessionId', '==', sessionId)),
+		(snapshot) => {
+			const reviews: Record<string, AgoraCharacterReview> = {};
+			snapshot.forEach((docSnap) => {
+				try {
+					const review = parse(AgoraCharacterReviewSchema, docSnap.data());
+					reviews[review.reviewId] = review;
+				} catch {
+					// Ignore docs mid-write (the ask-slot reservation lands before
+					// the verdict fields do)
+				}
+			});
+			state.characterReviews = reviews;
+			m.redraw();
+		},
+		(error) => {
+			console.error('[Delib] Character reviews listener failed:', error);
+		},
+	);
+
+	unsubscribers = [statementsUnsub, ratingsUnsub, scoresUnsub, reviewsUnsub];
 }
 
 export function stopDeliberationListeners(): void {
@@ -164,6 +191,7 @@ export function stopDeliberationListeners(): void {
 	state.suggestions = {};
 	state.myRatings = {};
 	state.scores = {};
+	state.characterReviews = {};
 }
 
 /** Create the student's proposal, or update it on later rounds */
@@ -220,6 +248,13 @@ export async function rateProposal(
 		statementId,
 		evaluatorId: user.uid,
 		evaluation: value,
+		// The shared pipeline (statement.evaluation stats) requires an evaluator
+		// object; anonName keeps students anonymous to each other
+		evaluator: {
+			uid: user.uid,
+			displayName: getSessionState().myParticipant?.anonName ?? 'traveler',
+			isAnonymous: true,
+		},
 		agoraSessionId: session.sessionId,
 		updatedAt: Date.now(),
 	});
@@ -264,6 +299,28 @@ export async function resolveSuggestion(
 		{ ok: boolean }
 	>(functions, 'agoraResolveSuggestion');
 	await call({ sessionId, suggestionId, resolution });
+}
+
+export interface CharacterReviewResult {
+	verdictText: string;
+	acceptanceScore: number;
+	advice: string[];
+	asksLeft: number;
+}
+
+/** Show my proposal to a historical character — in-character verdict + rating */
+export async function askCharacterReview(
+	sessionId: string,
+	characterId: string,
+	statementId: string,
+): Promise<CharacterReviewResult> {
+	const call = httpsCallable<
+		{ sessionId: string; characterId: string; statementId: string },
+		CharacterReviewResult
+	>(functions, 'agoraCharacterReview');
+	const result = await call({ sessionId, characterId, statementId });
+
+	return result.data;
 }
 
 export async function improveWithAI(

@@ -46,6 +46,26 @@ export const AGORA_POINTS = {
 	SUGGESTION_THANKED: 5,
 } as const;
 
+export const AGORA_AI_REVIEW = {
+	/** Each character's verdict counts as this many raters in the evaluation pipeline */
+	RATERS_PER_CHARACTER: 3,
+	/** In-character review requests allowed per character per proposal per round */
+	MAX_ASKS_PER_CHARACTER_PER_ROUND: 2,
+	/** campPosition assigned to the left character's AI rater identities */
+	LEFT_CAMP_POSITION: 10,
+	/** campPosition assigned to the right character's AI rater identities */
+	RIGHT_CAMP_POSITION: 90,
+	/** Prefix of synthetic AI rater uids — used to exclude them from student-only metrics */
+	AI_UID_PREFIX: 'agora-ai--',
+} as const;
+
+export const AGORA_OUTCOME = {
+	/** ≥ this many proposals rated by BOTH wing camps (students only) counts as mapped divergence */
+	MIN_CROSS_RATED_PROPOSALS: 2,
+	/** ≥ this share of positioned students rated at least one proposal */
+	MIN_RATER_COVERAGE: 0.5,
+} as const;
+
 export const AGORA_LIMITS = {
 	MIN_ANSWER_LENGTH: 10,
 	MAX_ANSWER_LENGTH: 1000,

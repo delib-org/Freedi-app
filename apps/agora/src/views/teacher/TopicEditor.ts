@@ -201,9 +201,9 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			m('label.teacher__section-title', t('editor.scene_text')),
 			textArea(scene.text, 3, (next) => update({ text: next })),
 			scene.dialogue.length > 0 ||
-		scene.kind.startsWith('perspective') ||
-		scene.kind === 'needsA' ||
-		scene.kind === 'needsB'
+			scene.kind.startsWith('perspective') ||
+			scene.kind === 'needsA' ||
+			scene.kind === 'needsB'
 				? [
 						m('label.teacher__section-title', t('editor.scene_dialogue')),
 						textArea(

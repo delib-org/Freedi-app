@@ -19,7 +19,7 @@ export interface EraMapAttrs {
 	/** Idea lanterns filling the town square during deliberation */
 	lanterns?: EraMapLantern[];
 	/** Endings: the city prospers or burns */
-	mood?: 'neutral' | 'prosperous' | 'ruined';
+	mood?: 'neutral' | 'prosperous' | 'dusk' | 'ruined';
 }
 
 /**
@@ -290,6 +290,27 @@ export const EraMap: m.Component<EraMapAttrs> = {
 									height: MAP_H,
 									fill: '#ffd882',
 									opacity: 0.06,
+								}),
+							])
+						: null,
+					// Dignified twilight — honest disagreement: no smoke, no fires,
+					// a few lanterns still burning while the light softens
+					mood === 'dusk'
+						? m('g', [
+								[505, 660].map((x, index) =>
+									m('circle.era-map__marker-glow', {
+										cx: x,
+										cy: 372 - index * 10,
+										r: 22,
+										fill: 'url(#em-glow)',
+										opacity: 0.35,
+									}),
+								),
+								m('rect', {
+									width: MAP_W,
+									height: MAP_H,
+									fill: '#6a5a8c',
+									opacity: 0.18,
 								}),
 							])
 						: null,

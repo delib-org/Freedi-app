@@ -5,6 +5,7 @@ export { agoraGradeValueIdentification } from './fn_agoraGradeValueIdentificatio
 export { agoraWritingAssistant } from './fn_agoraWritingAssistant';
 export { agoraSetRound } from './fn_agoraSetRound';
 export { agoraResolveSuggestion } from './fn_agoraResolveSuggestion';
+export { agoraCharacterReview } from './fn_agoraCharacterReview';
 export { onAgoraEvaluationWritten } from './fn_onAgoraEvaluation';
 export { agoraGenerateTopicPackage } from './fn_agoraGenerateTopicPackage';
 export { agoraSessionSweep } from './fn_agoraSessionSweep';

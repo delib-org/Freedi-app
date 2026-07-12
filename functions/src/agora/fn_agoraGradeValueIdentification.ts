@@ -38,7 +38,7 @@ interface Grade {
  */
 function fixtureGrade(
 	answerText: string,
-	values: Array<{ valueId: string; label: string; description: string }>
+	values: Array<{ valueId: string; label: string; description: string }>,
 ): Grade {
 	const normalized = answerText.toLowerCase();
 	const matched = values.filter((value) => {
@@ -51,10 +51,7 @@ function fixtureGrade(
 
 		return hits >= 2;
 	});
-	const score = Math.min(
-		100,
-		Math.round((matched.length / Math.max(1, values.length)) * 100)
-	);
+	const score = Math.min(100, Math.round((matched.length / Math.max(1, values.length)) * 100));
 
 	return {
 		score,
@@ -72,7 +69,7 @@ async function aiGrade(
 	answerText: string,
 	characterName: string,
 	values: Array<{ valueId: string; label: string; description: string }>,
-	language: string
+	language: string,
 ): Promise<Grade> {
 	const valueList = values
 		.map((value) => `- ${value.valueId}: ${value.label} (${value.description})`)
@@ -133,10 +130,7 @@ export const agoraGradeValueIdentification = onCall(
 		}
 
 		try {
-			const sessionSnap = await db
-				.collection(Collections.agoraSessions)
-				.doc(sessionId)
-				.get();
+			const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
 			if (!sessionSnap.exists) throw new HttpsError('not-found', 'Session not found');
 			const session = sessionSnap.data() as AgoraSession;
 
@@ -147,12 +141,8 @@ export const agoraGradeValueIdentification = onCall(
 			if (!topicSnap.exists) throw new HttpsError('not-found', 'Topic package not found');
 			const topic = topicSnap.data() as AgoraTopicPackage;
 
-			const character = topic.characters.find(
-				(candidate) => candidate.characterId === characterId
-			);
-			const answerKey = topic.valueAnswerKey.find(
-				(entry) => entry.characterId === characterId
-			);
+			const character = topic.characters.find((candidate) => candidate.characterId === characterId);
+			const answerKey = topic.valueAnswerKey.find((entry) => entry.characterId === characterId);
 			if (!character || !answerKey) {
 				throw new HttpsError('not-found', 'Character not found in topic package');
 			}
@@ -191,12 +181,8 @@ export const agoraGradeValueIdentification = onCall(
 
 			// Points: value accuracy scaled to AGORA_POINTS.VALUE_ACCURACY_MAX per
 			// character. Re-grades replace the previous contribution (delta update).
-			const newPoints = Math.round(
-				(grade.score / 100) * AGORA_POINTS.VALUE_ACCURACY_MAX
-			);
-			const oldPoints = Math.round(
-				(previousScore / 100) * AGORA_POINTS.VALUE_ACCURACY_MAX
-			);
+			const newPoints = Math.round((grade.score / 100) * AGORA_POINTS.VALUE_ACCURACY_MAX);
+			const oldPoints = Math.round((previousScore / 100) * AGORA_POINTS.VALUE_ACCURACY_MAX);
 			const delta = newPoints - oldPoints;
 			if (delta !== 0) {
 				const participantRef = db
@@ -223,5 +209,5 @@ export const agoraGradeValueIdentification = onCall(
 			});
 			throw new HttpsError('internal', 'Failed to grade answer');
 		}
-	}
+	},
 );

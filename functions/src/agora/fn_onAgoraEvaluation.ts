@@ -44,12 +44,8 @@ function emptyAggregate(): AgoraCampAggregate {
 export const onAgoraEvaluationWritten = onDocumentWritten(
 	{ document: `${Collections.evaluations}/{evaluationId}`, ...functionConfig },
 	async (event) => {
-		const after = event.data?.after.exists
-			? (event.data.after.data() as Evaluation)
-			: null;
-		const before = event.data?.before.exists
-			? (event.data.before.data() as Evaluation)
-			: null;
+		const after = event.data?.after.exists ? (event.data.after.data() as Evaluation) : null;
+		const before = event.data?.before.exists ? (event.data.before.data() as Evaluation) : null;
 		const evaluation = after ?? before;
 		if (!evaluation?.agoraSessionId) return;
 
@@ -86,7 +82,7 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				} else {
 					// Lazy init: resolve the proposal author's camp once
 					const proposalSnap = await transaction.get(
-						db.collection(Collections.statements).doc(statementId)
+						db.collection(Collections.statements).doc(statementId),
 					);
 					const creatorId = proposalSnap.data()?.creatorId as string | undefined;
 					let authorCamp = AgoraCamp.center;
@@ -94,11 +90,10 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 						const authorSnap = await transaction.get(
 							db
 								.collection(Collections.agoraParticipants)
-								.doc(createAgoraParticipantId(sessionId, creatorId))
+								.doc(createAgoraParticipantId(sessionId, creatorId)),
 						);
 						authorCamp =
-							(authorSnap.data() as AgoraParticipant | undefined)?.camp ??
-							AgoraCamp.center;
+							(authorSnap.data() as AgoraParticipant | undefined)?.camp ?? AgoraCamp.center;
 					}
 					score = {
 						statementId,
@@ -137,10 +132,7 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 
 			// Bridging bonus for the author — once per proposal
 			if (authorToCredit) {
-				const proposalSnap = await db
-					.collection(Collections.statements)
-					.doc(statementId)
-					.get();
+				const proposalSnap = await db.collection(Collections.statements).doc(statementId).get();
 				const creatorId = proposalSnap.data()?.creatorId as string | undefined;
 				if (creatorId) {
 					// Cross-app engagement credit for reaching cross-camp consensus
@@ -176,5 +168,5 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				metadata: { sessionId, evaluatorId },
 			});
 		}
-	}
+	},
 );

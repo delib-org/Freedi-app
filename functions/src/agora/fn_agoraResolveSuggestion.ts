@@ -66,7 +66,10 @@ export const agoraResolveSuggestion = onCall(
 			if (suggestion.agoraSessionId !== sessionId) {
 				throw new HttpsError('failed-precondition', 'Suggestion is not part of this session');
 			}
-			if (suggestion.suggestionStatus && suggestion.suggestionStatus !== AgoraSuggestionStatus.open) {
+			if (
+				suggestion.suggestionStatus &&
+				suggestion.suggestionStatus !== AgoraSuggestionStatus.open
+			) {
 				return { ok: true }; // already resolved — idempotent
 			}
 
@@ -75,7 +78,10 @@ export const agoraResolveSuggestion = onCall(
 				.doc(suggestion.parentId ?? '')
 				.get();
 			if (!proposalSnap.exists || proposalSnap.data()?.creatorId !== uid) {
-				throw new HttpsError('permission-denied', 'Only the proposal author can resolve suggestions');
+				throw new HttpsError(
+					'permission-denied',
+					'Only the proposal author can resolve suggestions',
+				);
 			}
 
 			const suggesterId = suggestion.creatorId;
@@ -118,27 +124,30 @@ export const agoraResolveSuggestion = onCall(
 				});
 
 				const notificationId = getRandomUID();
-				await db.collection(Collections.inAppNotifications).doc(notificationId).set({
-					notificationId,
-					userId: suggesterId,
-					parentId: suggestion.parentId ?? '',
-					statementId: suggestionId,
-					statementType: StatementType.statement,
-					text:
-						resolution === AgoraSuggestionStatus.accepted
-							? 'Your improvement suggestion was accepted!'
-							: 'You received a thank-you for your suggestion!',
-					creatorId: uid,
-					creatorName: 'Anonymous traveler',
-					sourceApp: SourceApp.AGORA,
-					triggerType:
-						resolution === AgoraSuggestionStatus.accepted
-							? NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED
-							: NotificationTriggerType.AGORA_SUGGESTION_THANKED,
-					targetPath: `/play/${sessionId}`,
-					read: false,
-					createdAt: Date.now(),
-				});
+				await db
+					.collection(Collections.inAppNotifications)
+					.doc(notificationId)
+					.set({
+						notificationId,
+						userId: suggesterId,
+						parentId: suggestion.parentId ?? '',
+						statementId: suggestionId,
+						statementType: StatementType.statement,
+						text:
+							resolution === AgoraSuggestionStatus.accepted
+								? 'Your improvement suggestion was accepted!'
+								: 'You received a thank-you for your suggestion!',
+						creatorId: uid,
+						creatorName: 'Anonymous traveler',
+						sourceApp: SourceApp.AGORA,
+						triggerType:
+							resolution === AgoraSuggestionStatus.accepted
+								? NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED
+								: NotificationTriggerType.AGORA_SUGGESTION_THANKED,
+						targetPath: `/play/${sessionId}`,
+						read: false,
+						createdAt: Date.now(),
+					});
 			}
 
 			return { ok: true };
@@ -151,5 +160,5 @@ export const agoraResolveSuggestion = onCall(
 			});
 			throw new HttpsError('internal', 'Failed to resolve suggestion');
 		}
-	}
+	},
 );

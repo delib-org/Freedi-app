@@ -127,7 +127,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.deliberation:
 						return myParticipant
-							? m(Deliberation, { session, myParticipant, userId })
+							? m(Deliberation, { session, myParticipant, userId, topic })
 							: m(
 									'.shell',
 									m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),

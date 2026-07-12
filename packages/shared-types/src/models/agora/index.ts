@@ -7,6 +7,7 @@ export {
 	AgoraTopicStatus,
 	AgoraSceneKind,
 	AgoraSuggestionStatus,
+	AgoraSessionOutcome,
 } from './agoraEnums';
 
 export {
@@ -15,6 +16,8 @@ export {
 	AGORA_SESSION,
 	AGORA_POINTS,
 	AGORA_LIMITS,
+	AGORA_AI_REVIEW,
+	AGORA_OUTCOME,
 } from './agoraConstants';
 
 export type {
@@ -48,11 +51,15 @@ export type {
 	AgoraHealthMetricOutcome,
 	AgoraClassScore,
 	AgoraSession,
+	AgoraDebrief,
+	AgoraOutcomeStats,
 } from './agoraSession';
 export {
 	AgoraHealthMetricOutcomeSchema,
 	AgoraClassScoreSchema,
 	AgoraSessionSchema,
+	AgoraDebriefSchema,
+	AgoraOutcomeStatsSchema,
 } from './agoraSession';
 
 export type {
@@ -88,3 +95,15 @@ export {
 
 export type { BridgingInput } from './agoraBridging';
 export { deriveCamp, calcBridgingScore } from './agoraBridging';
+
+export type { AgoraCharacterReview } from './agoraCharacterReview';
+export {
+	AgoraCharacterReviewSchema,
+	createAgoraCharacterReviewId,
+	createAgoraAiRaterUid,
+	isAgoraAiUid,
+	agoraScoreToEvaluation,
+} from './agoraCharacterReview';
+
+export type { AgoraOutcomeInput } from './agoraOutcome';
+export { deriveAgoraOutcome } from './agoraOutcome';

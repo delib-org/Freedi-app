@@ -81,7 +81,11 @@ export function listenToSession(sessionId: string, userId: string): void {
 			const participants: AgoraParticipant[] = [];
 			snapshot.forEach((docSnap) => {
 				try {
-					participants.push(parse(AgoraParticipantSchema, docSnap.data()));
+					const participant = parse(AgoraParticipantSchema, docSnap.data());
+					// The characters' synthetic rater identities never appear as
+					// classmates — not on the map, not in counts, not in gating
+					if (participant.isAI) return;
+					participants.push(participant);
 				} catch (error) {
 					console.error('[Session] Invalid participant doc:', error);
 				}

@@ -58,9 +58,7 @@ export const agoraJoinSession = onCall(
 
 			const session = sessionSnap.docs[0].data() as AgoraSession;
 			const participantId = createAgoraParticipantId(session.sessionId, uid);
-			const participantRef = db
-				.collection(Collections.agoraParticipants)
-				.doc(participantId);
+			const participantRef = db.collection(Collections.agoraParticipants).doc(participantId);
 
 			const existing = await participantRef.get();
 			if (existing.exists) {
@@ -104,13 +102,10 @@ export const agoraJoinSession = onCall(
 
 			const batch = db.batch();
 			batch.set(participantRef, participant);
-			batch.update(
-				db.collection(Collections.agoraSessions).doc(session.sessionId),
-				{
-					participantCount: FieldValue.increment(1),
-					lastUpdate: now,
-				}
-			);
+			batch.update(db.collection(Collections.agoraSessions).doc(session.sessionId), {
+				participantCount: FieldValue.increment(1),
+				lastUpdate: now,
+			});
 			await batch.commit();
 
 			return { sessionId: session.sessionId, participantId, anonName };
@@ -123,5 +118,5 @@ export const agoraJoinSession = onCall(
 			});
 			throw new HttpsError('internal', 'Failed to join session');
 		}
-	}
+	},
 );

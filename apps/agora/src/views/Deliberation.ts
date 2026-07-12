@@ -9,23 +9,30 @@ import {
 	submitSuggestion,
 	resolveSuggestion,
 	improveWithAI,
+	askCharacterReview,
 	AgoraProposal,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { PointsPill } from '../components/PointsPill';
 import { EraMap, EraMapLantern } from '../components/EraMap';
 import {
+	AgoraCharacter,
+	AgoraCharacterReview,
 	AgoraParticipant,
 	AgoraRoundPhase,
 	AgoraSession,
 	AgoraSuggestionStatus,
+	AgoraTopicPackage,
+	AGORA_AI_REVIEW,
 	AGORA_LIMITS,
+	createAgoraCharacterReviewId,
 } from '@freedi/shared-types';
 
 export interface DeliberationAttrs {
 	session: AgoraSession;
 	myParticipant: AgoraParticipant;
 	userId: string;
+	topic: AgoraTopicPackage;
 }
 
 export function lanternsFromState(
@@ -96,8 +103,81 @@ export function Deliberation(
 	let suggestionDraft = '';
 	let helpIndex = 0;
 	let improveTab: 'help' | 'mine' = 'help';
+	/** characterId → in-flight review request */
+	const reviewBusy: Record<string, boolean> = {};
 
 	listenToDeliberation(session.sessionId, userId);
+
+	function characterReviewCard(
+		live: AgoraSession,
+		character: AgoraCharacter,
+		myProposalId: string,
+		review: AgoraCharacterReview | undefined,
+	): m.Children {
+		const asksUsed = review?.asksByRound?.[String(live.roundNumber)] ?? 0;
+		const asksLeft = Math.max(0, AGORA_AI_REVIEW.MAX_ASKS_PER_CHARACTER_PER_ROUND - asksUsed);
+		const busy = reviewBusy[character.characterId] === true;
+		const ask = () => {
+			reviewBusy[character.characterId] = true;
+			askCharacterReview(live.sessionId, character.characterId, myProposalId)
+				.catch((error: unknown) => {
+					console.error('[Delib] Character review failed:', error);
+				})
+				.finally(() => {
+					reviewBusy[character.characterId] = false;
+					m.redraw();
+				});
+		};
+
+		// No key: these cards are spread among unkeyed siblings, and Mithril
+		// forbids mixed keyed/unkeyed fragments (two stable cards need no key)
+		return m('.card.char-review', [
+			m('.char-review__header', [
+				character.portraitUrl
+					? m('img.char-review__portrait', { src: character.portraitUrl, alt: character.name })
+					: m('.char-review__portrait.char-review__portrait--fallback', character.name.charAt(0)),
+				m('.char-review__who', [
+					m('strong', character.name),
+					m('span.char-review__role', character.role),
+				]),
+			]),
+			busy
+				? m('p.char-review__thinking', t('delib.character_thinking', { name: character.name }))
+				: review
+					? m('.stack', [
+							m('p.char-review__bubble', review.verdictText),
+							m('.char-review__meter', [
+								m('.char-review__meter-track', [
+									m('.char-review__meter-fill', {
+										style: { width: `${review.acceptanceScore}%` },
+									}),
+								]),
+								m('span.values__score', `${review.acceptanceScore}/100`),
+							]),
+							review.advice.length > 0
+								? m('.stack', [
+										m('p.teacher__section-title', t('delib.character_advice')),
+										m(
+											'ul.char-review__advice',
+											review.advice.map((entry, index) => m('li', { key: index }, entry)),
+										),
+									])
+								: null,
+							m(
+								'button.btn.btn--secondary',
+								{ disabled: asksLeft === 0, onclick: ask },
+								asksLeft > 0
+									? `${t('delib.ask_again')} (${t('delib.asks_left', { n: asksLeft })})`
+									: t('delib.no_asks_left'),
+							),
+						])
+					: m(
+							'button.btn.btn--secondary',
+							{ disabled: asksLeft === 0, onclick: ask },
+							t('delib.ask_character', { name: character.name }),
+						),
+		]);
+	}
 
 	return {
 		onremove() {
@@ -105,8 +185,9 @@ export function Deliberation(
 		},
 
 		view(vnode) {
-			const { session: live, myParticipant } = vnode.attrs;
-			const { proposals, suggestions, myRatings, scores } = getDeliberationState();
+			const { session: live, myParticipant, topic } = vnode.attrs;
+			const { proposals, suggestions, myRatings, scores, characterReviews } =
+				getDeliberationState();
 			const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
 			const anonName = myParticipant.anonName;
 
@@ -326,6 +407,18 @@ export function Deliberation(
 											`${t('delib.bridging_score')}: ${myScore?.bridgingScore ?? 0}/100`,
 										),
 									]),
+									m('p.teacher__section-title', t('delib.show_to_characters')),
+									m('p.home-explanation', t('delib.character_review_hint')),
+									...topic.characters.map((character) =>
+										characterReviewCard(
+											live,
+											character,
+											myProposal.statementId,
+											characterReviews[
+												createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
+											],
+										),
+									),
 									m('p.teacher__section-title', t('delib.suggestions_received')),
 									mySuggestions.length === 0
 										? m('p.lobby__status', t('delib.no_suggestions'))
