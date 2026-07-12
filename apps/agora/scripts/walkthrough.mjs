@@ -249,6 +249,12 @@ await s1.waitForTimeout(600);
 await shot(s1, '06b-celebration-own-improvement');
 await s1.locator('.celebration button.btn--primary').click();
 
+// Improving STAYS on "my proposal" and old verdicts are marked stale
+await s1.waitForSelector('.char-chips__chip', { timeout: 10000 });
+const staleLabel = await s1.locator('.char-chips__chip').nth(0).locator('.char-chips__cta').textContent();
+console.log('COUNT CHIP AFTER UPDATE (stale):', staleLabel);
+if (!/changed|השתנה/i.test(staleLabel)) throw new Error(`Expected stale chip label, got: ${staleLabel}`);
+
 await shot(teacher, '08-teacher-deliberation');
 
 // ---------- Results ----------

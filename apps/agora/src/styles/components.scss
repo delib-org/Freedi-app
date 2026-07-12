@@ -1150,6 +1150,15 @@
 		font-style: italic;
 	}
 
+	&__stale {
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+	}
+
+	&__bubble--stale {
+		opacity: 0.55;
+	}
+
 	&__bubble {
 		position: relative;
 		background: var(--bg-inset);

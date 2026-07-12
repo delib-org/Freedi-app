@@ -191,15 +191,18 @@ export function Deliberation(
 	function characterReviewCard(
 		live: AgoraSession,
 		character: AgoraCharacter,
-		myProposalId: string,
+		myProposal: AgoraProposal,
 		review: AgoraCharacterReview | undefined,
 	): m.Children {
 		const asksUsed = review?.asksByRound?.[String(live.roundNumber)] ?? 0;
 		const asksLeft = Math.max(0, AGORA_AI_REVIEW.MAX_ASKS_PER_CHARACTER_PER_ROUND - asksUsed);
 		const busy = reviewBusy[character.characterId] === true;
+		// The verdict was given about an OLDER text — say so, don't let it
+		// impersonate an opinion of the current proposal
+		const stale = review !== undefined && myProposal.lastUpdate > review.lastUpdate;
 		const ask = () => {
 			reviewBusy[character.characterId] = true;
-			askCharacterReview(live.sessionId, character.characterId, myProposalId)
+			askCharacterReview(live.sessionId, character.characterId, myProposal.statementId)
 				.catch((error: unknown) => {
 					console.error('[Delib] Character review failed:', error);
 				})
@@ -225,7 +228,12 @@ export function Deliberation(
 				? m('p.char-review__thinking', t('delib.character_thinking', { name: character.name }))
 				: review
 					? m('.stack', [
-							m('p.char-review__bubble', review.verdictText),
+							stale ? m('p.char-review__stale', t('delib.stale_review')) : null,
+							m(
+								'p.char-review__bubble',
+								{ class: stale ? 'char-review__bubble--stale' : undefined },
+								review.verdictText,
+							),
 							m('.char-review__meter', [
 								m('.char-review__meter-track', [
 									m('.char-review__meter-fill', {
@@ -244,7 +252,8 @@ export function Deliberation(
 									])
 								: null,
 							m(
-								'button.btn.btn--secondary',
+								// A stale verdict makes re-asking THE next action
+								stale ? 'button.btn.btn--primary' : 'button.btn.btn--secondary',
 								{ disabled: asksLeft === 0, onclick: ask },
 								asksLeft > 0
 									? `${t('delib.ask_again')} (${t('delib.asks_left', { n: asksLeft })})`
@@ -406,6 +415,7 @@ export function Deliberation(
 							createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
 						];
 					const open = openCharacterId === character.characterId;
+					const stale = review !== undefined && myProposal.lastUpdate > review.lastUpdate;
 
 					return m(
 						'button.char-chips__chip',
@@ -428,7 +438,9 @@ export function Deliberation(
 									),
 							m('span.char-chips__name', character.name),
 							review
-								? m('span.char-chips__score', `${review.acceptanceScore}/100`)
+								? stale
+									? m('span.char-chips__cta', t('delib.stale_chip'))
+									: m('span.char-chips__score', `${review.acceptanceScore}/100`)
 								: m('span.char-chips__cta', t('delib.ask_me')),
 						],
 					);
@@ -438,7 +450,7 @@ export function Deliberation(
 				? characterReviewCard(
 						live,
 						openCharacter,
-						myProposal.statementId,
+						myProposal,
 						getDeliberationState().characterReviews[
 							createAgoraCharacterReviewId(myProposal.statementId, openCharacter.characterId)
 						],
@@ -569,7 +581,11 @@ export function Deliberation(
 												});
 											}
 											isEditing = false;
-											setCycle({ step: 'rate', rated: 0 });
+											// First write moves the lap forward; an improvement
+											// STAYS here so the advisors can see the new text
+											if (!isImprovement) {
+												setCycle({ step: 'rate', rated: 0 });
+											}
 										})
 										.catch((error: unknown) => {
 											console.error('[Delib] Submit proposal failed:', error);

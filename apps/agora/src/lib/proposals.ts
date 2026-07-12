@@ -39,6 +39,7 @@ export interface AgoraProposal {
 	statementType: string;
 	parentId: string;
 	createdAt: number;
+	lastUpdate: number;
 	suggestionStatus?: AgoraSuggestionStatus;
 	consensus?: number;
 	evaluation?: { agreement?: number; agreementIndex?: number; numberOfEvaluators?: number };
@@ -80,6 +81,7 @@ function toProposal(data: Record<string, unknown>): AgoraProposal {
 		statementType: String(data.statementType ?? ''),
 		parentId: String(data.parentId ?? ''),
 		createdAt: Number(data.createdAt ?? 0),
+		lastUpdate: Number(data.lastUpdate ?? data.createdAt ?? 0),
 		suggestionStatus: data.suggestionStatus as AgoraSuggestionStatus | undefined,
 		consensus: typeof data.consensus === 'number' ? data.consensus : undefined,
 		evaluation: data.evaluation as AgoraProposal['evaluation'],
