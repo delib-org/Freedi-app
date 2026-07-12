@@ -20,6 +20,8 @@ export interface EraMapAttrs {
 	lanterns?: EraMapLantern[];
 	/** Endings: the city prospers or burns */
 	mood?: 'neutral' | 'prosperous' | 'dusk' | 'ruined';
+	/** 'bottom' anchors the crop to the ground line (the world-strip panorama) */
+	crop?: 'center' | 'bottom';
 }
 
 /**
@@ -94,14 +96,20 @@ function building(x: number, y: number, width: number, height: number, fill: str
 
 export const EraMap: m.Component<EraMapAttrs> = {
 	view(vnode) {
-		const { participants, myParticipantId, lanterns = [], mood = 'neutral' } = vnode.attrs;
+		const {
+			participants,
+			myParticipantId,
+			lanterns = [],
+			mood = 'neutral',
+			crop = 'center',
+		} = vnode.attrs;
 
 		return m('.era-map', { 'aria-hidden': 'true' }, [
 			m(
 				'svg',
 				{
 					viewBox: `0 0 ${MAP_W} ${MAP_H}`,
-					preserveAspectRatio: 'xMidYMid slice',
+					preserveAspectRatio: crop === 'bottom' ? 'xMidYMax slice' : 'xMidYMid slice',
 					role: 'img',
 				},
 				[

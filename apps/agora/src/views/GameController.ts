@@ -8,6 +8,9 @@ import { listenToNotifications, stopNotifications } from '../lib/notifications';
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
+import { EraMap } from '../components/EraMap';
+import { lanternsFromState } from './Deliberation';
+import { getDeliberationState } from '../lib/proposals';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
@@ -153,7 +156,31 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				}
 			})();
 
-			return m('.game', [m(ToastStack), m(CelebrationOverlay), stageView]);
+			// The world never leaves the screen: a panoramic strip of the era map
+			// crowns every in-game stage (lobby and results render the full map
+			// themselves). During deliberation the strip carries the live lanterns.
+			const inDeliberation = session.stage === AgoraStage.deliberation;
+			const { proposals, scores } = getDeliberationState();
+			// (lobby already returned above with the full map)
+			const showWorldStrip =
+				session.stage !== AgoraStage.results && session.stage !== AgoraStage.ended;
+
+			return m('.game', [
+				m(ToastStack),
+				m(CelebrationOverlay),
+				showWorldStrip
+					? m(
+							'.world-strip',
+							m(EraMap, {
+								participants,
+								myParticipantId: myParticipant?.participantId,
+								lanterns: inDeliberation ? lanternsFromState(proposals, scores, userId) : [],
+								crop: 'bottom',
+							}),
+						)
+					: null,
+				stageView,
+			]);
 		},
 	};
 }

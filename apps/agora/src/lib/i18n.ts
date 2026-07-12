@@ -273,14 +273,17 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_mine': 'My proposal',
 		'delib.step_rate': 'Rate',
 		'delib.step_help': 'Help',
-		'delib.improve_hint': 'This is your proposal in the square. Read what people think, improve it — and continue.',
+		'delib.improve_hint':
+			'This is your proposal in the square. Read what people think, improve it — and continue.',
 		'delib.square_says': 'What does the square say?',
 		'delib.raters_count': '{{n}} rated',
 		'delib.bridge_power': 'Bridge power',
 		'delib.bridge_meaning': 'How much your proposal brings the two camps closer',
-		'delib.no_raters_yet': 'No one has rated your proposal yet — keep going and check back next lap.',
+		'delib.no_raters_yet':
+			'No one has rated your proposal yet — keep going and check back next lap.',
 		'delib.suggestion_from': 'Improvement idea from {{name}}',
-		'delib.accept_hint': 'Accept = adopt the idea: weave it into your text, and the suggester earns points.',
+		'delib.accept_hint':
+			'Accept = adopt the idea: weave it into your text, and the suggester earns points.',
 		'delib.ask_elders': 'Ask the people of the era',
 		'delib.ask_me': 'Ask me',
 		'delib.cancel_edit': 'Cancel',
@@ -673,14 +676,17 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_mine': 'Mi propuesta',
 		'delib.step_rate': 'Valorar',
 		'delib.step_help': 'Ayudar',
-		'delib.improve_hint': 'Así se ve vuestra propuesta en la plaza. Leed qué piensan, mejoradla — y continuad.',
+		'delib.improve_hint':
+			'Así se ve vuestra propuesta en la plaza. Leed qué piensan, mejoradla — y continuad.',
 		'delib.square_says': '¿Qué dice la plaza?',
 		'delib.raters_count': '{{n}} valoraron',
 		'delib.bridge_power': 'Fuerza del puente',
 		'delib.bridge_meaning': 'Cuánto acerca vuestra propuesta a los dos bandos',
-		'delib.no_raters_yet': 'Nadie ha valorado vuestra propuesta aún — seguid y volved en la próxima vuelta.',
+		'delib.no_raters_yet':
+			'Nadie ha valorado vuestra propuesta aún — seguid y volved en la próxima vuelta.',
 		'delib.suggestion_from': 'Idea de mejora de {{name}}',
-		'delib.accept_hint': 'Aceptar = adoptar la idea: integradla en vuestro texto, y quien la propuso gana puntos.',
+		'delib.accept_hint':
+			'Aceptar = adoptar la idea: integradla en vuestro texto, y quien la propuso gana puntos.',
 		'delib.ask_elders': 'Preguntad a la gente de la época',
 		'delib.ask_me': 'Preguntadme',
 		'delib.cancel_edit': 'Cancelar',
@@ -877,14 +883,17 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_mine': 'Mein Vorschlag',
 		'delib.step_rate': 'Bewerten',
 		'delib.step_help': 'Helfen',
-		'delib.improve_hint': 'So sieht euer Vorschlag auf dem Platz aus. Lest, was andere denken, verbessert ihn — und weiter.',
+		'delib.improve_hint':
+			'So sieht euer Vorschlag auf dem Platz aus. Lest, was andere denken, verbessert ihn — und weiter.',
 		'delib.square_says': 'Was sagt der Platz?',
 		'delib.raters_count': '{{n}} bewertet',
 		'delib.bridge_power': 'Brückenkraft',
 		'delib.bridge_meaning': 'Wie sehr euer Vorschlag die beiden Lager einander näherbringt',
-		'delib.no_raters_yet': 'Noch hat niemand euren Vorschlag bewertet — macht weiter und schaut nächste Runde wieder.',
+		'delib.no_raters_yet':
+			'Noch hat niemand euren Vorschlag bewertet — macht weiter und schaut nächste Runde wieder.',
 		'delib.suggestion_from': 'Verbesserungsidee von {{name}}',
-		'delib.accept_hint': 'Annehmen = die Idee übernehmen: arbeitet sie in euren Text ein, und wer sie vorschlug bekommt Punkte.',
+		'delib.accept_hint':
+			'Annehmen = die Idee übernehmen: arbeitet sie in euren Text ein, und wer sie vorschlug bekommt Punkte.',
 		'delib.ask_elders': 'Fragt die Menschen der Epoche',
 		'delib.ask_me': 'Fragt mich',
 		'delib.cancel_edit': 'Abbrechen',
@@ -1083,14 +1092,17 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_mine': 'Mijn voorstel',
 		'delib.step_rate': 'Beoordelen',
 		'delib.step_help': 'Helpen',
-		'delib.improve_hint': 'Zo ziet jullie voorstel eruit op het plein. Lees wat men denkt, verbeter het — en ga verder.',
+		'delib.improve_hint':
+			'Zo ziet jullie voorstel eruit op het plein. Lees wat men denkt, verbeter het — en ga verder.',
 		'delib.square_says': 'Wat zegt het plein?',
 		'delib.raters_count': '{{n}} beoordeeld',
 		'delib.bridge_power': 'Brugkracht',
 		'delib.bridge_meaning': 'Hoezeer jullie voorstel de twee kampen dichter bij elkaar brengt',
-		'delib.no_raters_yet': 'Nog niemand heeft jullie voorstel beoordeeld — ga door en kijk volgende ronde weer.',
+		'delib.no_raters_yet':
+			'Nog niemand heeft jullie voorstel beoordeeld — ga door en kijk volgende ronde weer.',
 		'delib.suggestion_from': 'Verbeteridee van {{name}}',
-		'delib.accept_hint': 'Accepteren = het idee overnemen: verwerk het in jullie tekst, en de indiener krijgt punten.',
+		'delib.accept_hint':
+			'Accepteren = het idee overnemen: verwerk het in jullie tekst, en de indiener krijgt punten.',
 		'delib.ask_elders': 'Vraag de mensen van het tijdperk',
 		'delib.ask_me': 'Vraag mij',
 		'delib.cancel_edit': 'Annuleren',

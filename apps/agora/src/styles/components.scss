@@ -319,6 +319,26 @@
 	&__title {
 		text-align: center;
 		color: var(--lantern-glow);
+		text-shadow: 0 0 24px rgba(255, 216, 130, 0.3);
+
+		// Cinematic flourish: a gold rule with a diamond under every scene title
+		&::after {
+			content: '';
+			display: block;
+			width: 140px;
+			height: 7px;
+			margin: var(--space-sm) auto 0;
+			background:
+				radial-gradient(circle at 50% 50%, var(--lantern-glow) 0 2.5px, transparent 3px),
+				linear-gradient(
+					90deg,
+					transparent,
+					var(--lantern-deep) 25%,
+					var(--lantern-deep) 75%,
+					transparent
+				)
+				center / 100% 1px no-repeat;
+		}
 	}
 
 	&__video {
@@ -393,6 +413,30 @@
 @keyframes scene-enter {
 	from { opacity: 0; transform: translateY(14px); }
 	to { opacity: 1; transform: translateY(0); }
+}
+
+// Stage headings share the scene-title flourish — every screen is a scene
+.shell__content > h2.text-center {
+	color: var(--lantern-glow);
+	text-shadow: 0 0 24px rgba(255, 216, 130, 0.25);
+
+	&::after {
+		content: '';
+		display: block;
+		width: 140px;
+		height: 7px;
+		margin: var(--space-sm) auto 0;
+		background:
+			radial-gradient(circle at 50% 50%, var(--lantern-glow) 0 2.5px, transparent 3px),
+			linear-gradient(
+				90deg,
+				transparent,
+				var(--lantern-deep) 25%,
+				var(--lantern-deep) 75%,
+				transparent
+			)
+			center / 100% 1px no-repeat;
+	}
 }
 
 // --- Value identification ---
@@ -599,12 +643,62 @@
 	}
 }
 
-// --- Cycle strip: lap chip + the three loop steps, current one lit ---
+// --- World strip: the era map crowns every in-game screen ---
+.world-strip {
+	height: clamp(96px, 20vw, 150px);
+	overflow: hidden;
+	border-block-end: 1px solid rgba(185, 127, 30, 0.35);
+	box-shadow: 0 6px 24px rgba(10, 8, 22, 0.6);
+
+	.era-map {
+		height: 100%;
+		border: none;
+		border-radius: 0;
+		box-shadow: none;
+
+		svg {
+			height: 100%;
+		}
+	}
+}
+
+// --- Cycle strip: lantern lap pips + the three loop steps, current one lit ---
 .cycle-strip {
 	display: flex;
 	align-items: center;
 	gap: var(--space-sm);
 	flex-wrap: wrap;
+	background: var(--bg-inset);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-full);
+	padding: var(--space-xs) var(--space-md);
+
+	&__laps {
+		display: flex;
+		gap: 5px;
+		align-items: center;
+	}
+
+	// One lap = one lantern: lit ones are behind you, the current one burns
+	&__pip {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--bg-page);
+		border: 1px solid var(--lantern-deep);
+
+		&--done {
+			background: var(--lantern);
+			border-color: var(--lantern);
+		}
+
+		&--current {
+			background: var(--lantern-glow);
+			border-color: var(--lantern-glow);
+			box-shadow: 0 0 8px rgba(255, 216, 130, 0.8);
+			animation: era-map-marker-pulse 1.6s ease-in-out infinite;
+		}
+	}
 
 	&__lap {
 		color: var(--text-muted);

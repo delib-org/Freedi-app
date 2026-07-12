@@ -28,6 +28,51 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+// Living night sky: two drifting star layers behind every screen.
+// Pure decoration — fixed, non-interactive, killed by reduced-motion.
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-repeat: repeat;
+}
+
+body::before {
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%, rgba(244, 232, 207, 0.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 44% 8%, rgba(244, 232, 207, 0.55) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 71% 26%, rgba(255, 216, 130, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 12%, rgba(244, 232, 207, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 29% 33%, rgba(244, 232, 207, 0.4) 50%, transparent 51%);
+  background-size: 520px 420px;
+  animation: sky-twinkle 7s ease-in-out infinite alternate;
+}
+
+body::after {
+  background-image:
+    radial-gradient(1px 1px at 62% 41%, rgba(244, 232, 207, 0.35) 50%, transparent 51%),
+    radial-gradient(1.3px 1.3px at 18% 52%, rgba(255, 216, 130, 0.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 83% 57%, rgba(244, 232, 207, 0.3) 50%, transparent 51%);
+  background-size: 640px 560px;
+  animation: sky-twinkle 11s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes sky-twinkle {
+  from { opacity: 0.45; }
+  to { opacity: 1; }
+}
+
+// Content sits above the sky
+#app,
+.game,
+.shell {
+  position: relative;
+  z-index: 1;
+}
+
 h1,
 h2,
 h3 {
@@ -115,24 +160,45 @@ p {
   }
 
   &--primary {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
     background: linear-gradient(180deg, var(--lantern-glow), var(--lantern));
     color: var(--text-on-lantern);
-    box-shadow: var(--glow-lantern);
+    border: 1px solid rgba(120, 74, 10, 0.55);
+    // Bevel: light catches the top edge, weight settles at the bottom
+    box-shadow:
+      inset 0 1px 0 rgba(255, 245, 220, 0.55),
+      inset 0 -2px 0 rgba(120, 74, 10, 0.35),
+      var(--glow-lantern);
 
     &:hover:not(:disabled) {
-      box-shadow: 0 0 26px rgba(255, 216, 130, 0.65);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 245, 220, 0.55),
+        inset 0 -2px 0 rgba(120, 74, 10, 0.35),
+        0 0 26px rgba(255, 216, 130, 0.65);
       transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(1px) scale(0.99);
+      box-shadow:
+        inset 0 2px 3px rgba(120, 74, 10, 0.45),
+        0 0 14px rgba(255, 216, 130, 0.4);
     }
   }
 
   &--secondary {
-    background: transparent;
+    background: rgba(244, 232, 207, 0.03);
     color: var(--text-primary);
     border: 1px solid var(--border-strong);
+    box-shadow: inset 0 1px 0 rgba(244, 232, 207, 0.06);
 
     &:hover:not(:disabled) {
       border-color: var(--lantern);
       color: var(--lantern-glow);
+      box-shadow:
+        inset 0 1px 0 rgba(244, 232, 207, 0.06),
+        0 0 14px rgba(255, 216, 130, 0.18);
     }
   }
 
@@ -178,13 +244,17 @@ p {
   }
 }
 
-// --- Card ---
+// --- Card: a game panel, not a web card ---
 .card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, rgba(244, 232, 207, 0.03), transparent 40%), var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  box-shadow: var(--shadow-card);
+  // Parchment hairline inside the frame + depth below
+  box-shadow:
+    inset 0 0 0 1px rgba(244, 232, 207, 0.04),
+    inset 0 1px 0 rgba(244, 232, 207, 0.07),
+    var(--shadow-card);
   backdrop-filter: blur(6px);
 }
 

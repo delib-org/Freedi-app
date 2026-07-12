@@ -283,7 +283,11 @@ export function Deliberation(
 	}
 
 	/** "What does the square say?" — camp support, bridge power, received suggestions */
-	function squareSays(live: AgoraSession, myProposal: AgoraProposal, topic: AgoraTopicPackage): m.Children {
+	function squareSays(
+		live: AgoraSession,
+		myProposal: AgoraProposal,
+		topic: AgoraTopicPackage,
+	): m.Children {
 		const { suggestions, scores } = getDeliberationState();
 		const myScore = scores[myProposal.statementId];
 		const mySuggestions = suggestions[myProposal.statementId] ?? [];
@@ -327,7 +331,10 @@ export function Deliberation(
 						mySuggestions.map((suggestion) =>
 							m('.card.stack', { key: suggestion.statementId }, [
 								suggestion.anonName
-									? m('p.char-review__role', t('delib.suggestion_from', { name: suggestion.anonName }))
+									? m(
+											'p.char-review__role',
+											t('delib.suggestion_from', { name: suggestion.anonName }),
+										)
 									: null,
 								m('p', suggestion.statement),
 								suggestion.suggestionStatus === AgoraSuggestionStatus.open
@@ -379,7 +386,11 @@ export function Deliberation(
 	}
 
 	/** The characters as a compact tappable chip row; verdict expands beneath */
-	function charChips(live: AgoraSession, myProposal: AgoraProposal, topic: AgoraTopicPackage): m.Children {
+	function charChips(
+		live: AgoraSession,
+		myProposal: AgoraProposal,
+		topic: AgoraTopicPackage,
+	): m.Children {
 		const { characterReviews } = getDeliberationState();
 		const openCharacter = topic.characters.find(
 			(character) => character.characterId === openCharacterId,
@@ -411,7 +422,10 @@ export function Deliberation(
 										src: character.portraitUrl,
 										alt: character.name,
 									})
-								: m('.char-review__portrait.char-review__portrait--fallback', character.name.charAt(0)),
+								: m(
+										'.char-review__portrait.char-review__portrait--fallback',
+										character.name.charAt(0),
+									),
 							m('span.char-chips__name', character.name),
 							review
 								? m('span.char-chips__score', `${review.acceptanceScore}/100`)
@@ -454,8 +468,20 @@ export function Deliberation(
 			const activeIndex = STEPS.findIndex((entry) => entry.id === cycle.step);
 			const header = m('.cycle-strip', [
 				m(
-					'span.cycle-strip__lap.delib__round',
-					t('delib.cycle_round', { n: cycle.round, total: AGORA_CYCLE.ROUNDS }),
+					'.cycle-strip__laps',
+					{ 'aria-label': t('delib.cycle_round', { n: cycle.round, total: AGORA_CYCLE.ROUNDS }) },
+					[
+						Array.from({ length: AGORA_CYCLE.ROUNDS }, (_, index) =>
+							m('span.cycle-strip__pip', {
+								class:
+									index + 1 < cycle.round
+										? 'cycle-strip__pip--done'
+										: index + 1 === cycle.round
+											? 'cycle-strip__pip--current'
+											: undefined,
+							}),
+						),
+					],
 				),
 				m(
 					'.cycle-strip__steps',

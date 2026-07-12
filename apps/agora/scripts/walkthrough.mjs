@@ -26,7 +26,14 @@ await teacher.waitForFunction(() => typeof window.__agoraDevSignIn === 'function
 await teacher.evaluate(() =>
 	window.__agoraDevSignIn({ sub: 'walk-teacher', email: 'walk-teacher@example.com', name: 'Walkthrough Teacher' })
 );
-await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 20000 });
+try {
+	await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 20000 });
+} catch {
+	// First load after source edits: vite may still be transforming modules.
+	// Auth persists in the context — reload and retry once.
+	await teacher.reload({ waitUntil: 'domcontentloaded' });
+	await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
+}
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
@@ -181,8 +188,8 @@ try {
 	await shot(s1, 'debug-lap2-mine');
 	throw e;
 }
-const lapLabel = await s1.locator('.delib__round').textContent();
-if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, header says: ${lapLabel}`);
+const lapLabel = await s1.locator('.cycle-strip__laps').getAttribute('aria-label');
+if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, pips say: ${lapLabel}`);
 console.log('S1 ON LAP:', lapLabel);
 console.log('S1 bridging:', await s1.locator('.values__score').first().textContent());
 
