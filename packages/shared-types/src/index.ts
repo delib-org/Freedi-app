@@ -773,3 +773,6 @@ export {
   getActivityDef,
   isActivityStatement,
 } from "./models/event/activityRegistry";
+
+// Agora classroom deliberative game
+export * from "./models/agora";

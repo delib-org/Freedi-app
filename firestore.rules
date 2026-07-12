@@ -37,6 +37,65 @@ service cloud.firestore {
       allow read;
     }
 
+    // === Agora classroom deliberative game ===
+
+    // Topic packages: teachers author them; ready packages are readable by
+    // any signed-in user (students need scenes/artwork during the game).
+    match /agoraTopicPackages/{topicPackageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.resource.data.creatorId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+                               resource.data.creatorId == request.auth.uid;
+    }
+
+    // Sessions: created via callable only. The teacher may update live-control
+    // fields directly; everyone in the class reads the session doc (it is the
+    // single source of truth for stage/round state).
+    match /agoraSessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create, delete: if false;
+      allow update: if isAuthenticated() &&
+                       resource.data.teacherId == request.auth.uid &&
+                       request.resource.data.teacherId == resource.data.teacherId &&
+                       request.resource.data.sessionId == resource.data.sessionId &&
+                       request.resource.data.code == resource.data.code;
+    }
+
+    // Participants: created via callable only (anon names are server-issued).
+    // Reads are open to the class — docs contain only anonymous data.
+    // A participant may update their own doc (camp positioning, lastActive)
+    // but never their points (function-written).
+    match /agoraParticipants/{participantId} {
+      allow read: if isAuthenticated();
+      allow create, delete: if false;
+      allow update: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == resource.data.userId &&
+                       request.resource.data.sessionId == resource.data.sessionId &&
+                       request.resource.data.anonName == resource.data.anonName &&
+                       request.resource.data.points == resource.data.points;
+    }
+
+    // Proposal scores (bridging/plausibility): server-computed only.
+    match /agoraScores/{statementId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Value-identification answers: students create and read their own;
+    // AI grading fields are written by functions (admin SDK bypasses rules).
+    // resource == null allows listening to the doc before it exists (the
+    // client attaches the listener first and submits after).
+    match /agoraValueAnswers/{answerId} {
+      allow get: if isAuthenticated() &&
+                    (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
 	match /polarizationIndex/{statementId=**} {
 	  allow read: if request.auth.uid != null;
 	

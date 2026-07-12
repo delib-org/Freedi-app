@@ -29,5 +29,19 @@ service firebase.storage {
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
+
+    // Agora topic-package media: scene videos (<= 300MB) and era artwork
+    // images (<= 5MB). Teachers upload during authoring; students read
+    // during the game.
+    match /agora/{topicPackageId}/{mediaPath=**} {
+      allow read;
+      allow write: if request.auth != null
+        && (
+          (request.resource.size < 300 * 1024 * 1024
+            && request.resource.contentType.matches('video/.*'))
+          || (request.resource.size < 5 * 1024 * 1024
+            && request.resource.contentType.matches('image/.*'))
+        );
+    }
   }
 }

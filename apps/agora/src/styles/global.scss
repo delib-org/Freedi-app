@@ -1,0 +1,199 @@
+@use './tokens';
+
+// ============================================================================
+// Agora global styles — resets, shell layout, base elements
+// ============================================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background:
+    radial-gradient(ellipse 120% 70% at 50% -10%, var(--bg-page-high) 0%, var(--bg-page) 60%),
+    var(--bg-page);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.2;
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+
+p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: -9999px;
+  z-index: var(--z-modal);
+
+  &:focus {
+    inset-inline-start: var(--space-md);
+    top: var(--space-md);
+    background: var(--lantern);
+    color: var(--text-on-lantern);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+  }
+}
+
+// --- App shell ---
+.shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-md);
+
+  &--wide {
+    max-width: 1080px;
+  }
+
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+// --- Buttons ---
+.btn {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.8em 1.6em;
+  cursor: pointer;
+  transition:
+    transform var(--motion-fast) var(--ease-spring),
+    box-shadow var(--motion-base) ease,
+    background-color var(--motion-fast) ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--lantern-glow);
+    outline-offset: 2px;
+  }
+
+  &--primary {
+    background: linear-gradient(180deg, var(--lantern-glow), var(--lantern));
+    color: var(--text-on-lantern);
+    box-shadow: var(--glow-lantern);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 0 26px rgba(255, 216, 130, 0.65);
+      transform: translateY(-1px);
+    }
+  }
+
+  &--secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+
+    &:hover:not(:disabled) {
+      border-color: var(--lantern);
+      color: var(--lantern-glow);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--text-secondary);
+
+    &:hover:not(:disabled) {
+      color: var(--text-primary);
+    }
+  }
+
+  &--full {
+    width: 100%;
+  }
+
+  &--lg {
+    font-size: var(--font-size-lg);
+    padding: 1em 2em;
+  }
+}
+
+// --- Inputs ---
+.text-input {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.8em 1em;
+  width: 100%;
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-base) ease;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--border-lantern);
+    box-shadow: 0 0 0 3px rgba(245, 185, 68, 0.18);
+  }
+}
+
+// --- Card ---
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -95,4 +95,11 @@ export enum Collections {
     // Topic-cluster pipeline caches
     clusteringTaxonomies = 'clusteringTaxonomies',
     clusteringNormalizations = 'clusteringNormalizations',
+
+    // Agora classroom deliberative game
+    agoraTopicPackages = 'agoraTopicPackages',
+    agoraSessions = 'agoraSessions',
+    agoraParticipants = 'agoraParticipants',
+    agoraScores = 'agoraScores',
+    agoraValueAnswers = 'agoraValueAnswers',
 }
