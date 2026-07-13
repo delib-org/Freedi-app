@@ -118,6 +118,22 @@ export async function POST(
       );
     }
 
+    // Enforce paragraph-level interaction rules server-side. Titles/headings are
+    // structural and never accept comments (the allowHeaderReactions setting governs
+    // only approve/reject on headers, not comments). Paragraphs an admin marked
+    // non-interactive are also off-limits. This was previously only gated client-side,
+    // so headers/titles imported as bold text could still be commented via direct API.
+    const paragraphSnap = await db.collection(Collections.statements).doc(paragraphId).get();
+    const paragraphData = paragraphSnap.data();
+    const paragraphType = paragraphData?.blockType || paragraphData?.doc?.paragraphType || 'paragraph';
+    const isHeaderParagraph = /^h[1-6]$/.test(paragraphType);
+    if (isHeaderParagraph || paragraphData?.doc?.isNonInteractive === true) {
+      return NextResponse.json(
+        { error: 'Comments are not allowed on this paragraph' },
+        { status: 403 }
+      );
+    }
+
     // Check if user already has a comment on this paragraph
     const existingCommentSnapshot = await db
       .collection(Collections.statements)
