@@ -248,12 +248,16 @@ await s2.locator('.celebration button.btn--primary').click();
 // In-character reviews: character chips expand into the verdict accordion
 await s1.waitForSelector('.char-chips__chip', { timeout: 10000 });
 const reviewCard = s1.locator('.char-review');
+// One tap per character: opening the chip auto-asks when no verdict exists
 await s1.locator('.char-chips__chip').nth(0).click(); // the Count
-await reviewCard.locator('button.btn--secondary').first().click();
 await reviewCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
 console.log('COUNT VERDICT:', (await reviewCard.locator('.char-review__bubble').textContent()).slice(0, 100));
-await s1.locator('.char-chips__chip').nth(1).click(); // switch accordion to Camille
-await reviewCard.locator('button.btn--secondary').first().click();
+await s1.locator('.char-chips__chip').nth(1).click(); // Camille — auto-asks too
+// Let the accordion swap to Camille's "thinking" state before grabbing her bubble
+await reviewCard
+	.locator('.char-review__thinking')
+	.waitFor({ timeout: 10000 })
+	.catch(() => {});
 await reviewCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
 console.log('CAMILLE VERDICT:', (await reviewCard.locator('.char-review__bubble').textContent()).slice(0, 100));
 // The Count's chip now carries his score badge

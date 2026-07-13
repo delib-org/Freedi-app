@@ -322,28 +322,42 @@ export function Deliberation(
 
 	listenToDeliberation(session.sessionId, userId);
 
+	function asksLeftFor(live: AgoraSession, review: AgoraCharacterReview | undefined): number {
+		const asksUsed = review?.asksByRound?.[String(live.roundNumber)] ?? 0;
+
+		return Math.max(0, AGORA_AI_REVIEW.MAX_ASKS_PER_CHARACTER_PER_ROUND - asksUsed);
+	}
+
+	function askCharacter(
+		live: AgoraSession,
+		character: AgoraCharacter,
+		myProposal: AgoraProposal,
+	): void {
+		if (reviewBusy[character.characterId]) return;
+		reviewBusy[character.characterId] = true;
+		askCharacterReview(live.sessionId, character.characterId, myProposal.statementId)
+			.catch((error: unknown) => {
+				console.error('[Delib] Character review failed:', error);
+			})
+			.finally(() => {
+				reviewBusy[character.characterId] = false;
+				m.redraw();
+			});
+	}
+
 	function characterReviewCard(
 		live: AgoraSession,
 		character: AgoraCharacter,
 		myProposal: AgoraProposal,
 		review: AgoraCharacterReview | undefined,
 	): m.Children {
-		const asksUsed = review?.asksByRound?.[String(live.roundNumber)] ?? 0;
-		const asksLeft = Math.max(0, AGORA_AI_REVIEW.MAX_ASKS_PER_CHARACTER_PER_ROUND - asksUsed);
+		const asksLeft = asksLeftFor(live, review);
 		const busy = reviewBusy[character.characterId] === true;
 		// The verdict was given about an OLDER text — say so, don't let it
 		// impersonate an opinion of the current proposal
 		const stale = review !== undefined && myProposal.lastUpdate > review.lastUpdate;
 		const ask = () => {
-			reviewBusy[character.characterId] = true;
-			askCharacterReview(live.sessionId, character.characterId, myProposal.statementId)
-				.catch((error: unknown) => {
-					console.error('[Delib] Character review failed:', error);
-				})
-				.finally(() => {
-					reviewBusy[character.characterId] = false;
-					m.redraw();
-				});
+			askCharacter(live, character, myProposal);
 		};
 
 		// No key: these cards are spread among unkeyed siblings, and Mithril
@@ -675,6 +689,11 @@ export function Deliberation(
 							'aria-expanded': String(open),
 							onclick: () => {
 								openCharacterId = open ? '' : character.characterId;
+								// One tap does it: opening a character with no verdict
+								// (or one about older text) asks them right away
+								if (!open && (!review || stale) && asksLeftFor(live, review) > 0) {
+									askCharacter(live, character, myProposal);
+								}
 							},
 						},
 						[
