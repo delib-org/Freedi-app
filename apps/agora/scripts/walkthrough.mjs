@@ -307,8 +307,11 @@ step('COLLABORATION LOOP: S2 sees the improvement, re-rates, follows up');
 // S2 (on lap-2 mine) gets a badge on the Others tab: a proposal they helped moved
 await s2.waitForSelector('.delib-nav__badge', { timeout: 15000 });
 console.log('S2 OTHERS BADGE:', await s2.locator('.delib-nav__badge').textContent());
-// Others → rate pool is exhausted → continue to helping → "Proposals I helped"
+// One tap on Others: the "Proposals I helped" section is already visible
+// on the rate step (no need to click through to helping)
 await s2.locator('.delib-nav__item').last().click();
+await s2.waitForSelector('.helped__item', { timeout: 15000 });
+console.log('S2 HELPED SECTION VISIBLE ON RATE STEP ✓');
 await s2.getByRole('button', { name: /Continue to helping|המשיכו לעזרה/i }).click();
 await s2.waitForSelector('.helped__item', { timeout: 15000 });
 const helped = s2.locator('.helped__item');

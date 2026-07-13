@@ -746,9 +746,16 @@ export function Deliberation(
 	function helpedChangedCount(): number {
 		const seen = readHelpedSeen();
 
-		return getHelpedProposals(userId).filter(
-			({ proposal }) => proposal.lastUpdate > (seen[proposal.statementId] ?? 0),
-		).length;
+		return getHelpedProposals(userId).filter(({ proposal, mySuggestions }) => {
+			// Never-seen baseline = my latest input there, so the badge only
+			// lights for REAL changes after my suggestion, not for the
+			// suggestion itself
+			const baseline =
+				seen[proposal.statementId] ??
+				Math.max(...mySuggestions.map((suggestion) => suggestion.createdAt));
+
+			return proposal.lastUpdate > baseline;
+		}).length;
 	}
 
 	/** Rendering the section counts as seeing it (equality-guarded — no storage thrash) */
@@ -1089,6 +1096,9 @@ export function Deliberation(
 									},
 									t('delib.to_helping'),
 								),
+						// The collaboration loop stays in reach on the whole Others
+						// side — one tap on the Others tab and it's visible
+						helpedSection(live),
 					]),
 				]);
 			}
