@@ -115,6 +115,20 @@ beveled gold buttons; scene-title gold-diamond flourishes.
   silent redraw crash. Hit 3×.
 - Stale browser tabs after code changes look like data bugs (e.g. teacher
   showing 8 participants = 6 AI raters unfiltered by old JS). Hard-refresh.
+- **PWA service worker poisoning (2026-07-13)**: a production-build SW once
+  registered on localhost:3009 serves its stale precache FOREVER (dev
+  changes "never arrive", even across restarts — teacher saw removed
+  stages). Fixed twice over: dev server serves a kill-switch /sw.js
+  (vite.config plugin) and src/index.ts unregisters SWs in dev. One plain
+  reload heals a poisoned browser.
+- **Firestore emulator OOM**: after ~a day of walkthrough runs the java
+  emulator hits `OutOfMemoryError: Java heap space` — browsers time out
+  ("offline mode") while curl still answers, export fails. Rescue small
+  collections via REST (`Authorization: Bearer owner`), restart emulators
+  (`firebase emulators:start --only hosting:dev,firestore,auth,functions,storage,database
+  --project freedi-test` — the --project flag matters if the shell's active
+  project is wizcol-app), PATCH the docs back, re-run seed. Sessions/auth
+  users are wiped; topic packages are the only data worth rescuing.
 - AI-rater pollution: any student-facing count/metric must filter
   `participant.isAI` / `isAgoraAiUid(evaluatorId)` (outcome stats do).
 - With 2 students, honest-disagreement is mathematically unreachable
