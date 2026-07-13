@@ -814,10 +814,17 @@ export function Deliberation(
 						: 'delib.helped_status_open';
 
 		return m('.card.stack.helped__item', { key: proposal.statementId }, [
+			// The proposal itself comes first — that's what I'm evaluating
 			m('p.char-review__role', t('delib.proposal_by', { name: proposal.anonName || '?' })),
-			// My suggestions + live status chips — the acknowledgment.
+			m('p.helped__current', proposal.statement),
+			improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
+			m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
+			reRateScale(live, proposal),
+			// My improvement ideas + live status chips — the acknowledgment —
+			// sit beneath the evaluation, with the follow-up box continuing them.
 			// Nested array (own fragment): keyed children must not be spread
 			// among unkeyed siblings (Mithril mixed-keys crash)
+			m('p.teacher__section-title', t('delib.helped_your_ideas')),
 			mySuggestions.map((suggestion) =>
 				m('.helped__suggestion', { key: suggestion.statementId }, [
 					m('p.helped__suggestion-text', suggestion.statement),
@@ -828,11 +835,6 @@ export function Deliberation(
 					),
 				]),
 			),
-			improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
-			m('p.teacher__section-title', t('delib.helped_current_label')),
-			m('p.helped__current', proposal.statement),
-			m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
-			reRateScale(live, proposal),
 			m('textarea.text-input.helped__followup', {
 				value: draft,
 				rows: 2,
