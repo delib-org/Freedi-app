@@ -489,8 +489,10 @@ export function Deliberation(
 	}
 
 	/**
-	 * MY proposal as an always-editable card: the live text sits in the box,
-	 * ready to be reworked. No AI rewriting — only the reception forecast.
+	 * MY whole workshop as ONE card: the always-editable proposal text, the
+	 * reception forecast, the improvements received, the ask-the-characters
+	 * helpers and the needs reminder — everything under the same gold frame.
+	 * No AI rewriting anywhere: the AI only reacts.
 	 */
 	function editableProposalCard(
 		live: AgoraSession,
@@ -509,7 +511,7 @@ export function Deliberation(
 		const changed =
 			text !== myProposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
-		return m('.card.my-lantern', [
+		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
 				m('span.my-lantern__icon', '🏮'),
 				m('span.my-lantern__title', t('delib.my_proposal')),
@@ -525,7 +527,7 @@ export function Deliberation(
 			}),
 			m('.delib__actions', [
 				m(
-					'button.btn.btn--primary',
+					'button.btn.btn--primary.my-lantern__save',
 					{
 						disabled: !changed || submitting,
 						onclick: () => {
@@ -555,6 +557,12 @@ export function Deliberation(
 			]),
 			// The mirror: how would the camps receive this version?
 			estimateSection(live, mineDraft, topic),
+			m('.my-lantern__divider'),
+			suggestionsSection(live, myProposal),
+			m('.my-lantern__divider'),
+			askSection(live, myProposal, topic),
+			m('.my-lantern__divider'),
+			m(NeedsPeek, { topic }),
 		]);
 	}
 
@@ -822,18 +830,14 @@ export function Deliberation(
 					]);
 				}
 
-				// Lap 2+ (or a peek from rate/help): scoreboard → my proposal in an
-				// always-editable box → the latest suggestions → the era's AI
-				// helpers → needs reference
+				// Lap 2+ (or a peek from rate/help): scoreboard → ONE workshop card
+				// (editable box, forecast, suggestions, characters, needs)
 				return m('.shell.shell--delib', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
 						scoreboard(topic, scores[myProposal.statementId]),
 						editableProposalCard(live, myProposal, topic),
-						suggestionsSection(live, myProposal),
-						askSection(live, myProposal, topic),
-						m(NeedsPeek, { topic }),
 						// The guided path continues only from the real step —
 						// a peek returns via the Others tab instead
 						cycle.step === 'mine'
@@ -1023,8 +1027,6 @@ export function Deliberation(
 						? [
 								scoreboard(topic, scores[myProposal.statementId]),
 								editableProposalCard(live, myProposal, topic),
-								suggestionsSection(live, myProposal),
-								askSection(live, myProposal, topic),
 							]
 						: null,
 					m(

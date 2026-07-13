@@ -285,7 +285,7 @@ console.log('PER-CAMP RATERS OK:', { left: campN('left'), right: campN('right') 
 await s1
 	.locator('textarea.my-lantern__textarea')
 	.fill('נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד, אספה נבחרת תחוקק ותאשר מסים, זכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן — ותוקם ועדה משותפת לאצולה ולעם שתלווה את המעבר.');
-await s1.locator('.my-lantern .delib__actions .btn--primary').click();
+await s1.locator('.my-lantern__save').click();
 await s1.waitForSelector('.celebration', { timeout: 10000 });
 console.log('S1 CELEBRATION (own improvement):', (await s1.locator('.celebration__message').textContent()).slice(0, 60));
 await s1.waitForTimeout(600);

@@ -776,6 +776,18 @@
 		line-height: 1.6;
 	}
 
+	// The whole workshop under one gold frame: editor, forecast,
+	// suggestions, characters, needs — separated by faint dividers
+	&--workshop {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	&__divider {
+		border-block-start: 1px solid var(--border-subtle);
+	}
+
 	// The always-editable proposal box — the live text, ready to be reworked
 	&__textarea {
 		width: 100%;
