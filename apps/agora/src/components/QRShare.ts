@@ -16,7 +16,7 @@ export function QRShare(): m.Component<QRShareAttrs> {
 		QRCode.toDataURL(url, {
 			width: size,
 			margin: 1,
-			color: { dark: '#2b2416', light: '#f4e8cf' },
+			color: { dark: '#253352', light: '#ffffff' },
 		})
 			.then((result) => {
 				dataUrl = result;

@@ -116,7 +116,7 @@ function scoreboard(
 			m(
 				'span.owner-chip',
 				{ class: own ? 'owner-chip--mine' : 'owner-chip--peer' },
-				own ? `🏮 ${t('delib.owner_mine')}` : `📜 ${t('delib.owner_peer')}`,
+				own ? `📘 ${t('delib.owner_mine')}` : `📙 ${t('delib.owner_peer')}`,
 			),
 			!own && proposalN !== undefined
 				? m('span.owner-row__number', t('delib.proposal_number', { n: proposalN }))
@@ -304,7 +304,7 @@ export function Deliberation(
 					},
 				},
 				[
-					m('span.delib-nav__icon', '🏮'),
+					m('span.delib-nav__icon', '📘'),
 					m('span.delib-nav__label', t('delib.nav_mine')),
 					// New feedback beckons while I'm away from my workshop
 					!mineActive && openCount > 0 ? m('span.delib-nav__badge', String(openCount)) : null,
@@ -552,7 +552,7 @@ export function Deliberation(
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
-				m('span.my-lantern__icon', '🏮'),
+				m('span.my-lantern__icon', '📘'),
 				m('span.my-lantern__title', t('delib.my_proposal')),
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
@@ -845,7 +845,7 @@ export function Deliberation(
 		return m('.card.stack.helped__item', { key: proposal.statementId }, [
 			// The proposal itself comes first — that's what I'm evaluating
 			m('.owner-row', [
-				m('span.owner-chip.owner-chip--peer', `📜 ${t('delib.owner_peer')}`),
+				m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
 				m('span.owner-row__number', t('delib.proposal_number', { n: proposalNumber(proposal) })),
 			]),
 			m('p.helped__current', proposal.statement),
@@ -1097,7 +1097,7 @@ export function Deliberation(
 							? m('.card.stack.delib__rate-card', [
 									// Whose proposal am I rating? A classmate's — say so
 									m('.owner-row', [
-										m('span.owner-chip.owner-chip--peer', `📜 ${t('delib.owner_peer')}`),
+										m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
 										m(
 											'span.owner-row__number',
 											t('delib.proposal_number', { n: proposalNumber(current) }),
@@ -1183,7 +1183,7 @@ export function Deliberation(
 									// beneath it — same unified frame as the mine screen
 									m('.card.my-lantern.my-lantern--theirs.my-lantern--workshop', [
 										m('.my-lantern__header', [
-											m('span.my-lantern__icon', '📜'),
+											m('span.my-lantern__icon', '📙'),
 											m(
 												'span.my-lantern__title',
 												t('delib.proposal_number', { n: proposalNumber(helpTarget) }),
