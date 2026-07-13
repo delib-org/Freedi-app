@@ -220,7 +220,8 @@ const lapLabel = await s1.locator('.cycle-strip__laps').getAttribute('aria-label
 if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, pips say: ${lapLabel}`);
 console.log('S1 ON LAP:', lapLabel);
 console.log('S1 bridging:', await s1.locator('.scoreboard__bridge-value').textContent());
-console.log('S1 FEEDBACK BADGE:', await s1.locator('.workshop__badge').first().textContent());
+await s1.waitForSelector('.workshop__item', { timeout: 10000 });
+console.log('S1 SUGGESTIONS INLINE:', await s1.locator('.workshop__item').count());
 await shot(s1, '06a-workshop-mine');
 
 // Accept the suggestion ("I'll implement") → the suggester gets the glitter
@@ -233,9 +234,8 @@ await s2.waitForTimeout(600);
 await shot(s2, '07b-celebration-accepted');
 await s2.locator('.celebration button.btn--primary').click();
 
-// The editor replaced the work area — close it to consult the characters first
-await s1.waitForSelector('textarea.values__textarea', { timeout: 10000 });
-await s1.getByRole('button', { name: /^(Cancel|ביטול)$/i }).click();
+// The proposal box is always editable now — no modal editor to close;
+// characters and suggestions stay on screen
 
 // In-character reviews: character chips expand into the verdict accordion
 await s1.waitForSelector('.char-chips__chip', { timeout: 10000 });
@@ -273,13 +273,11 @@ if (ns[0] !== 3 || ns[1] !== 4)
 	throw new Error(`Expected per-camp raters {3,4}, got left=${campN('left')} right=${campN('right')}`);
 console.log('PER-CAMP RATERS OK:', { left: campN('left'), right: campN('right') });
 
-// S1 improves their own proposal → glitter, then lands on the rate step of lap 2
-await s1.getByRole('button', { name: /Update proposal|עדכון ההצעה/i }).click();
-await s1.waitForSelector('textarea.values__textarea', { timeout: 10000 });
+// S1 improves their own proposal in the always-editable box → glitter
 await s1
-	.locator('textarea.values__textarea')
+	.locator('textarea.my-lantern__textarea')
 	.fill('נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד, אספה נבחרת תחוקק ותאשר מסים, זכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן — ותוקם ועדה משותפת לאצולה ולעם שתלווה את המעבר.');
-await s1.locator('.delib__actions .btn--primary').click();
+await s1.locator('.my-lantern .delib__actions .btn--primary').click();
 await s1.waitForSelector('.celebration', { timeout: 10000 });
 console.log('S1 CELEBRATION (own improvement):', (await s1.locator('.celebration__message').textContent()).slice(0, 60));
 await s1.waitForTimeout(600);

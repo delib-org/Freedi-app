@@ -46,18 +46,18 @@ their own workshop and classmates' proposals: "Mine" during rate/help is a
 PEEK (lap progression untouched, badge shows unseen open suggestions);
 "Others" from the mine step advances to rating; after all laps it means
 "keep helping". Hidden on lap 1 until the first proposal is written.
-- **My proposal workshop**: scoreboard panel (camp columns side by side +
-  bridge-power meter with big N/100 and gold spark), gold-glow hero card
-  (own text + ✏️), then a tabbed workshop card [Feedback (badge = open
-  suggestions) | AI help | Needs]. Feedback = ONE attributed inbox:
-  character chips (the Count/Camille → in-character AI verdicts, score
-  0–100, advice; their rating enters the REAL evaluation pipeline as 3 camp
-  raters each; stale after edit → "text changed", re-ask primary) + peer
-  suggestions with "I'll implement / Thanks / No thanks" (declined status —
-  quiet, no points). Accept auto-opens editing (editor REPLACES the work
-  area) and celebrates the suggester with a glitter popup. AI help tab =
-  improve-my-wording (opens editor with coach draft) + coach note. Needs
-  tab = the needs board. Improving your own proposal celebrates + stays.
+- **My proposal workshop** (flattened 2026-07-13, Tal's request — no tabs):
+  scoreboard panel (camp columns + bridge-power meter) → my proposal in an
+  ALWAYS-EDITABLE box inside the gold card (live text pre-filled; "Improve
+  with the guide" rewrites the draft + coach note; "Update proposal"
+  enabled only when changed, celebrates + verdicts go stale) → "suggestions
+  received" stream directly under it, newest first, with "I'll implement /
+  Thanks / No thanks" (declined — quiet, no points; accepting celebrates
+  the suggester with a glitter popup; the edit box is right above for
+  weaving the idea in) → ask-the-characters buttons (in-character AI
+  verdicts, score 0–100 + advice; their rating enters the REAL evaluation
+  pipeline as 3 camp raters each; stale after edit → "text changed") →
+  collapsible needs board.
 - **Rate**: five-level emoji scale (−1…+1 half steps), least-rated-first
   candidate ordering with per-student tiebreak, 3 per lap.
 - **Help**: same skeleton — their scoreboard, NEUTRAL hero card ("Proposal

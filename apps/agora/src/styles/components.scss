@@ -775,6 +775,27 @@
 		font-size: var(--font-size-lg);
 		line-height: 1.6;
 	}
+
+	// The always-editable proposal box — the live text, ready to be reworked
+	&__textarea {
+		width: 100%;
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		padding: var(--space-md);
+		color: var(--text-primary);
+		font-family: var(--font-body);
+		font-size: var(--font-size-lg);
+		line-height: 1.6;
+		resize: vertical;
+		margin-block-end: var(--space-md);
+
+		&:focus {
+			outline: none;
+			border-color: var(--border-lantern);
+			box-shadow: 0 0 0 3px rgba(245, 185, 68, 0.18);
+		}
+	}
 }
 
 // --- Mine | Others navigation: top tab row on desktop, fixed bottom bar
