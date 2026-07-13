@@ -902,6 +902,80 @@
 	}
 }
 
+// --- Reception forecast: numbers-only mirror of how the camps would take
+// the current draft (no AI advice — the thinking stays with the student) ---
+.estimate {
+	background: var(--bg-inset);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	transition: opacity var(--motion-base) ease;
+
+	&--stale {
+		opacity: 0.55;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		min-width: 90px;
+	}
+
+	&__track {
+		flex: 1;
+		height: 8px;
+		background: rgba(6, 4, 16, 0.5);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__value {
+		font-family: var(--font-display);
+		color: var(--text-primary);
+		min-width: 2em;
+		text-align: end;
+	}
+
+	&__avg {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-sm);
+		color: var(--text-secondary);
+
+		strong {
+			font-family: var(--font-display);
+			font-size: var(--font-size-xl);
+			color: var(--lantern-glow);
+		}
+	}
+}
+
 // --- Class progress: the teacher's "who finished, can I advance?" card ---
 .class-progress {
 	display: flex;

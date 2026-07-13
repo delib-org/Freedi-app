@@ -48,16 +48,24 @@ PEEK (lap progression untouched, badge shows unseen open suggestions);
 "keep helping". Hidden on lap 1 until the first proposal is written.
 - **My proposal workshop** (flattened 2026-07-13, Tal's request — no tabs):
   scoreboard panel (camp columns + bridge-power meter) → my proposal in an
-  ALWAYS-EDITABLE box inside the gold card (live text pre-filled; "Improve
-  with the guide" rewrites the draft + coach note; "Update proposal"
-  enabled only when changed, celebrates + verdicts go stale) → "suggestions
-  received" stream directly under it, newest first, with "I'll implement /
-  Thanks / No thanks" (declined — quiet, no points; accepting celebrates
-  the suggester with a glitter popup; the edit box is right above for
-  weaving the idea in) → ask-the-characters buttons (in-character AI
-  verdicts, score 0–100 + advice; their rating enters the REAL evaluation
-  pipeline as 3 camp raters each; stale after edit → "text changed") →
-  collapsible needs board.
+  ALWAYS-EDITABLE box inside the gold card (live text pre-filled; "Update
+  proposal" enabled only when changed, celebrates + verdicts go stale) →
+  "suggestions received" stream directly under it, newest first, with
+  "I'll implement / Thanks / No thanks" (declined — quiet, no points;
+  accepting celebrates the suggester with a glitter popup; the edit box is
+  right above for weaving the idea in) → ask-the-characters buttons
+  (in-character AI verdicts, score 0–100 + advice; their rating enters the
+  REAL evaluation pipeline as 3 camp raters each; stale after edit → "text
+  changed") → collapsible needs board.
+  **Pedagogy rule (Tal, 2026-07-13): the AI never WRITES for students** —
+  the improve-my-wording and phrase-my-suggestion buttons were removed
+  ("otherwise they will not think"). Instead: `agoraEstimateReception`
+  callable — an on-demand, NUMBERS-ONLY reception forecast (per-camp 0-100
+  support + predicted average, fixture = needs-keyword overlap) shown under
+  the edit box; goes stale when the text changes. AI opinions/critique live
+  only in the in-character reviews. `agoraWritingAssistant` still deployed
+  but no longer called by the client (keep in source or deploys will demand
+  a functions:delete).
 - **Rate**: five-level emoji scale (−1…+1 half steps), least-rated-first
   candidate ordering with per-student tiebreak, 3 per lap.
 - **Help**: same skeleton — their scoreboard, NEUTRAL hero card ("Proposal

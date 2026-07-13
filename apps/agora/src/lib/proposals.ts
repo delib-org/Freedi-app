@@ -328,6 +328,29 @@ export async function askCharacterReview(
 	return result.data;
 }
 
+export interface ReceptionEstimate {
+	/** Predicted support of the LEFT camp, 0-100 */
+	left: number;
+	/** Predicted support of the RIGHT camp, 0-100 */
+	right: number;
+	/** Predicted average evaluation, 0-100 */
+	average: number;
+}
+
+/** Numbers-only forecast of how each camp would receive this draft (no AI advice) */
+export async function estimateReception(
+	sessionId: string,
+	text: string,
+): Promise<ReceptionEstimate> {
+	const call = httpsCallable<{ sessionId: string; text: string }, ReceptionEstimate>(
+		functions,
+		'agoraEstimateReception',
+	);
+	const result = await call({ sessionId, text });
+
+	return result.data;
+}
+
 export async function improveWithAI(
 	sessionId: string,
 	text: string,

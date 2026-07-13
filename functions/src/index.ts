@@ -1141,6 +1141,7 @@ export {
 	agoraSetRound,
 	agoraResolveSuggestion,
 	agoraCharacterReview,
+	agoraEstimateReception,
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
 	onAgoraEvaluationWritten,

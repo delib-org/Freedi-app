@@ -8,10 +8,11 @@ import {
 	rateProposal,
 	submitSuggestion,
 	resolveSuggestion,
-	improveWithAI,
+	estimateReception,
 	askCharacterReview,
 	AgoraProposal,
 	AgoraRating,
+	ReceptionEstimate,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { PointsPill } from '../components/PointsPill';
@@ -203,9 +204,11 @@ export function Deliberation(
 ): m.Component<DeliberationAttrs> {
 	const { session, userId } = initialVnode.attrs;
 	let draft = '';
-	let coachNote = '';
-	let aiBusy = false;
 	let submitting = false;
+	/** Reception forecast for the CURRENT draft text (stale once the text changes) */
+	let estimate: ReceptionEstimate | null = null;
+	let estimateText = '';
+	let estimateBusy = false;
 	let suggestionDraft = '';
 	let helpSkips = 0;
 	/** The always-editable box on the mine screen + the proposal text it was seeded from */
@@ -216,9 +219,7 @@ export function Deliberation(
 	/** characterId → in-flight review request */
 	const reviewBusy: Record<string, boolean> = {};
 	/** Active tab of the workshop card on the "help" step */
-	let helpTab: 'suggest' | 'ai' | 'needs' = 'suggest';
-	let helpCoachNote = '';
-	let helpAiBusy = false;
+	let helpTab: 'suggest' | 'needs' = 'suggest';
 	/**
 	 * Mine/Others navigation (bottom tabs on mobile, top tabs on desktop).
 	 * "Mine" during rate/help is a PEEK at my workshop — the lap's guided
@@ -252,7 +253,6 @@ export function Deliberation(
 		} else {
 			setCycle({ round: cycle.round + 1, step: 'mine', rated: 0 });
 			draft = '';
-			coachNote = '';
 		}
 	}
 
@@ -422,10 +422,81 @@ export function Deliberation(
 	}
 
 	/**
-	 * MY proposal as an always-editable card: the live text sits in the box,
-	 * ready to be reworked — coach improve + save, no separate edit mode.
+	 * Reception forecast — numbers only, on demand. The AI never writes or
+	 * advises here (a mirror, not a ghost-writer): it only predicts how each
+	 * camp would receive the current draft, so the thinking stays with the
+	 * student. Opinions live in the in-character reviews.
 	 */
-	function editableProposalCard(live: AgoraSession, myProposal: AgoraProposal): m.Children {
+	function estimateSection(
+		live: AgoraSession,
+		rawText: string,
+		topic: AgoraTopicPackage,
+	): m.Children {
+		const text = rawText.trim();
+		const tooShort = text.length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+		const stale = estimate !== null && estimateText !== text;
+
+		const campRow = (label: string, colorVar: string, value: number) =>
+			m('.estimate__row', [
+				m('span.estimate__label', { style: { color: `var(${colorVar})` } }, label),
+				m('.estimate__track', [
+					m('.estimate__fill', {
+						style: { width: `${value}%`, background: `var(${colorVar})` },
+					}),
+				]),
+				m('span.estimate__value', String(value)),
+			]);
+
+		return m('.stack', [
+			m(
+				'button.btn.btn--secondary.estimate__button',
+				{
+					disabled: estimateBusy || tooShort,
+					onclick: () => {
+						estimateBusy = true;
+						estimateReception(live.sessionId, text)
+							.then((result) => {
+								estimate = result;
+								estimateText = text;
+							})
+							.catch((error: unknown) => {
+								console.error('[Delib] Reception estimate failed:', error);
+							})
+							.finally(() => {
+								estimateBusy = false;
+								m.redraw();
+							});
+					},
+				},
+				estimateBusy ? t('delib.ai_thinking') : `🔮 ${t('delib.estimate_button')}`,
+			),
+			estimate
+				? m('.estimate', { class: stale ? 'estimate--stale' : undefined }, [
+						m('p.estimate__title', t('delib.estimate_title')),
+						campRow(topic.positioningScale.leftLabel, '--camp-left-glow', estimate.left),
+						campRow(topic.positioningScale.rightLabel, '--camp-right-glow', estimate.right),
+						m('.estimate__avg', [
+							m('span', t('delib.estimate_avg')),
+							m('strong', `${estimate.average}/100`),
+						]),
+						m(
+							'p.square-says__meaning',
+							stale ? t('delib.estimate_stale') : t('delib.estimate_hint'),
+						),
+					])
+				: null,
+		]);
+	}
+
+	/**
+	 * MY proposal as an always-editable card: the live text sits in the box,
+	 * ready to be reworked. No AI rewriting — only the reception forecast.
+	 */
+	function editableProposalCard(
+		live: AgoraSession,
+		myProposal: AgoraProposal,
+		topic: AgoraTopicPackage,
+	): m.Children {
 		// Seed / re-seed the draft when the proposal changes underneath —
 		// without clobbering what the student is currently typing
 		if (mineDraftBase !== myProposal.statement) {
@@ -452,32 +523,7 @@ export function Deliberation(
 					mineDraft = (event.target as HTMLTextAreaElement).value;
 				},
 			}),
-			coachNote
-				? m('.card.delib__coach', [m('strong', t('delib.coach_note')), m('p', coachNote)])
-				: null,
 			m('.delib__actions', [
-				m(
-					'button.btn.btn--secondary',
-					{
-						disabled: aiBusy || text.length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH,
-						onclick: () => {
-							aiBusy = true;
-							improveWithAI(live.sessionId, text)
-								.then((result) => {
-									mineDraft = result.improvedText;
-									coachNote = result.coachNote;
-								})
-								.catch((error: unknown) => {
-									console.error('[Delib] AI improve failed:', error);
-								})
-								.finally(() => {
-									aiBusy = false;
-									m.redraw();
-								});
-						},
-					},
-					aiBusy ? t('delib.ai_thinking') : t('delib.improve_ai'),
-				),
 				m(
 					'button.btn.btn--primary',
 					{
@@ -507,6 +553,8 @@ export function Deliberation(
 					t('delib.update_proposal'),
 				),
 			]),
+			// The mirror: how would the camps receive this version?
+			estimateSection(live, mineDraft, topic),
 		]);
 	}
 
@@ -654,41 +702,6 @@ export function Deliberation(
 		]);
 	}
 
-	/** AI-help tab while helping someone: phrase my suggestion better */
-	function helpAiTab(live: AgoraSession): m.Children {
-		return m('.stack', [
-			m(
-				'button.btn.btn--secondary',
-				{
-					disabled: helpAiBusy || suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-					onclick: () => {
-						helpAiBusy = true;
-						improveWithAI(live.sessionId, suggestionDraft.trim())
-							.then((result) => {
-								suggestionDraft = result.improvedText;
-								helpCoachNote = result.coachNote;
-								helpTab = 'suggest';
-							})
-							.catch((error: unknown) => {
-								console.error('[Delib] AI phrase failed:', error);
-							})
-							.finally(() => {
-								helpAiBusy = false;
-								m.redraw();
-							});
-					},
-				},
-				helpAiBusy ? t('delib.ai_thinking') : t('delib.phrase_suggestion'),
-			),
-			suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH
-				? m('p.square-says__meaning', t('delib.help_dont_attack'))
-				: null,
-			helpCoachNote
-				? m('.card.delib__coach', [m('strong', t('delib.coach_note')), m('p', helpCoachNote)])
-				: null,
-		]);
-	}
-
 	return {
 		onremove() {
 			stopDeliberationListeners();
@@ -768,32 +781,9 @@ export function Deliberation(
 						},
 					}),
 					m(NeedsPeek, { topic }),
-					coachNote
-						? m('.card.delib__coach', [m('strong', t('delib.coach_note')), m('p', coachNote)])
-						: null,
+					// The reception mirror works from the first draft on
+					estimateSection(live, draft, topic),
 					m('.delib__actions', [
-						m(
-							'button.btn.btn--secondary',
-							{
-								disabled: aiBusy || draft.trim().length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH,
-								onclick: () => {
-									aiBusy = true;
-									improveWithAI(live.sessionId, draft.trim())
-										.then((result) => {
-											draft = result.improvedText;
-											coachNote = result.coachNote;
-										})
-										.catch((error: unknown) => {
-											console.error('[Delib] AI improve failed:', error);
-										})
-										.finally(() => {
-											aiBusy = false;
-											m.redraw();
-										});
-								},
-							},
-							aiBusy ? t('delib.ai_thinking') : t('delib.improve_ai'),
-						),
 						m(
 							'button.btn.btn--primary',
 							{
@@ -840,7 +830,7 @@ export function Deliberation(
 						header,
 						delibNav(myProposal),
 						scoreboard(topic, scores[myProposal.statementId]),
-						editableProposalCard(live, myProposal),
+						editableProposalCard(live, myProposal, topic),
 						suggestionsSection(live, myProposal),
 						askSection(live, myProposal, topic),
 						m(NeedsPeek, { topic }),
@@ -961,14 +951,12 @@ export function Deliberation(
 										onNext: () => {
 											helpSkips++;
 											suggestionDraft = '';
-											helpCoachNote = '';
 										},
 									}),
 									m('.card.workshop', [
 										workshopTabs(
 											[
 												{ id: 'suggest', label: t('delib.tab_suggest') },
-												{ id: 'ai', label: t('delib.tab_ai') },
 												{ id: 'needs', label: t('delib.tab_needs') },
 											],
 											helpTab,
@@ -990,12 +978,6 @@ export function Deliberation(
 																suggestionDraft = (event.target as HTMLTextAreaElement).value;
 															},
 														}),
-														helpCoachNote
-															? m('.card.delib__coach', [
-																	m('strong', t('delib.coach_note')),
-																	m('p', helpCoachNote),
-																])
-															: null,
 														m('.delib__actions', [
 															m('button.btn.btn--ghost', { onclick: advanceRound }, skipLabel),
 															m(
@@ -1006,7 +988,6 @@ export function Deliberation(
 																	onclick: () => {
 																		const text = suggestionDraft.trim();
 																		suggestionDraft = '';
-																		helpCoachNote = '';
 																		void submitSuggestion(live, helpTarget, anonName, text);
 																		advanceRound();
 																	},
@@ -1015,9 +996,7 @@ export function Deliberation(
 															),
 														]),
 													])
-												: helpTab === 'ai'
-													? helpAiTab(live)
-													: m(NeedsBoard, { topic }),
+												: m(NeedsBoard, { topic }),
 										),
 									]),
 								]
@@ -1043,7 +1022,7 @@ export function Deliberation(
 					myProposal
 						? [
 								scoreboard(topic, scores[myProposal.statementId]),
-								editableProposalCard(live, myProposal),
+								editableProposalCard(live, myProposal, topic),
 								suggestionsSection(live, myProposal),
 								askSection(live, myProposal, topic),
 							]
