@@ -8,7 +8,7 @@ workshop-screen redesign), `../DESIGN.md` (Era-of-Lanterns art direction),
 `plans/agora-deliberative-game-plan.md` (original architecture plan).
 
 ## What Agora is
-
+  
 A classroom deliberation game (`apps/agora`, Mithril + Vite SPA, Hebrew-first
 RTL, port 3009). A teacher sends the class "through a time tunnel" to a
 historical crisis (demo: French Revolution 1789). Students meet two opposing
