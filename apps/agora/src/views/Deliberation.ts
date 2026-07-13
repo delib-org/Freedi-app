@@ -340,6 +340,19 @@ export function Deliberation(
 
 	listenToDeliberation(session.sessionId, userId);
 
+	/**
+	 * Proposals are shown by NUMBER, not by author name — evaluate the idea,
+	 * not the person. Stable across clients: state.proposals is sorted by
+	 * createdAt everywhere.
+	 */
+	function proposalNumber(proposal: AgoraProposal): number {
+		const index = getDeliberationState().proposals.findIndex(
+			(candidate) => candidate.statementId === proposal.statementId,
+		);
+
+		return index + 1;
+	}
+
 	function asksLeftFor(live: AgoraSession, review: AgoraCharacterReview | undefined): number {
 		const asksUsed = review?.asksByRound?.[String(live.roundNumber)] ?? 0;
 
@@ -815,7 +828,7 @@ export function Deliberation(
 
 		return m('.card.stack.helped__item', { key: proposal.statementId }, [
 			// The proposal itself comes first — that's what I'm evaluating
-			m('p.char-review__role', t('delib.proposal_by', { name: proposal.anonName || '?' })),
+			m('p.char-review__role', t('delib.proposal_number', { n: proposalNumber(proposal) })),
 			m('p.helped__current', proposal.statement),
 			improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
 			m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
@@ -1140,7 +1153,7 @@ export function Deliberation(
 											m('span.my-lantern__icon', '📜'),
 											m(
 												'span.my-lantern__title',
-												t('delib.proposal_by', { name: helpTarget.anonName || '?' }),
+												t('delib.proposal_number', { n: proposalNumber(helpTarget) }),
 											),
 											m(
 												'button.btn.btn--ghost.my-lantern__edit',
