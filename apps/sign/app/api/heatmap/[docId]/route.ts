@@ -199,6 +199,7 @@ export async function GET(
       return NextResponse.json({
         data: {
           approval: {},
+          approvalCount: {},
           comments: {},
           rating: {},
           viewership: {},
@@ -256,6 +257,7 @@ export async function GET(
     // Process data into HeatMapData format
     const heatMapData: HeatMapData = {
       approval: {},
+      approvalCount: {},
       comments: {},
       rating: {},
       viewership: {},
@@ -266,6 +268,7 @@ export async function GET(
     // Initialize all paragraphs with defaults
     paragraphIds.forEach((id) => {
       heatMapData.approval[id] = 0;
+      heatMapData.approvalCount[id] = 0;
       heatMapData.comments[id] = 0;
       heatMapData.rating[id] = 0;
       heatMapData.viewership[id] = 0;
@@ -299,11 +302,13 @@ export async function GET(
     });
 
     // Convert to -1 to 1 scale: (positive - negative) / total
+    // and record the number of voters (total evaluations) per paragraph
     Object.entries(evalsByParagraph).forEach(([id, data]) => {
       const total = data.positive + data.negative;
       heatMapData.approval[id] = total > 0
         ? Math.round(((data.positive - data.negative) / total) * 100) / 100
         : 0;
+      heatMapData.approvalCount[id] = total;
     });
 
     // Count comments per paragraph

@@ -62,6 +62,7 @@ const initialConfig: HeatMapConfig = {
 
 const initialData: HeatMapData = {
   approval: {},
+  approvalCount: {},
   comments: {},
   rating: {},
   viewership: {},
