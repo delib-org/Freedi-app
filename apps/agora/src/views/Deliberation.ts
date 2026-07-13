@@ -220,6 +220,12 @@ export function Deliberation(
 	let helpTab: 'suggest' | 'ai' | 'needs' = 'suggest';
 	let helpCoachNote = '';
 	let helpAiBusy = false;
+	/**
+	 * Mine/Others navigation (bottom tabs on mobile, top tabs on desktop).
+	 * "Mine" during rate/help is a PEEK at my workshop — the lap's guided
+	 * progression (mine → rate → help) is untouched.
+	 */
+	let peekMine = false;
 
 	const cycleKey = `agora_${session.sessionId}_cycle`;
 	let cycle: CycleState = { round: 1, step: 'mine', rated: 0 };
@@ -235,6 +241,7 @@ export function Deliberation(
 			// Each step opens its workshop on the default tab
 			workTab = 'feedback';
 			helpTab = 'suggest';
+			peekMine = false;
 		}
 		cycle = { ...cycle, ...patch };
 		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
@@ -249,6 +256,59 @@ export function Deliberation(
 			draft = '';
 			coachNote = '';
 		}
+	}
+
+	/**
+	 * The Mine | Others tabs. Mobile: fixed bottom bar; desktop: tab row
+	 * under the HUD (CSS switches placement on one element). Hidden until
+	 * the student has a proposal — lap 1 starts with writing.
+	 */
+	function delibNav(myProposal: AgoraProposal | undefined): m.Children {
+		if (!myProposal) return null;
+		const { suggestions } = getDeliberationState();
+		const openCount = (suggestions[myProposal.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+		).length;
+		const mineActive = cycle.step === 'mine' || cycle.step === 'done' || peekMine;
+
+		return m('nav.delib-nav', [
+			m(
+				'button.delib-nav__item',
+				{
+					class: mineActive ? 'delib-nav__item--active' : undefined,
+					'aria-selected': String(mineActive),
+					onclick: () => {
+						peekMine = cycle.step === 'rate' || cycle.step === 'help';
+						m.redraw();
+					},
+				},
+				[
+					m('span.delib-nav__icon', '🏮'),
+					m('span.delib-nav__label', t('delib.nav_mine')),
+					// New feedback beckons while I'm away from my workshop
+					!mineActive && openCount > 0 ? m('span.delib-nav__badge', String(openCount)) : null,
+				],
+			),
+			m(
+				'button.delib-nav__item',
+				{
+					class: mineActive ? undefined : 'delib-nav__item--active',
+					'aria-selected': String(!mineActive),
+					onclick: () => {
+						peekMine = false;
+						if (cycle.step === 'mine') {
+							setCycle({ step: 'rate', rated: 0 });
+						} else if (cycle.step === 'done') {
+							// After the laps, "Others" means: keep helping
+							setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
+						} else {
+							m.redraw();
+						}
+					},
+				},
+				[m('span.delib-nav__icon', '👥'), m('span.delib-nav__label', t('delib.nav_others'))],
+			),
+		]);
 	}
 
 	/** Deterministic per-student ordering so classmates fan out over different proposals */
@@ -678,7 +738,11 @@ export function Deliberation(
 			]);
 
 			// ---------- STEP: MY PROPOSAL (write, later improve) ----------
-			if (cycle.step === 'mine') {
+			// Also rendered as a PEEK from rate/help via the Mine tab — the
+			// step itself doesn't move.
+			const minePeek =
+				peekMine && myProposal !== undefined && (cycle.step === 'rate' || cycle.step === 'help');
+			if (cycle.step === 'mine' || minePeek) {
 				const writeMode = !myProposal;
 				if (writeMode) isEditing = true;
 
@@ -785,26 +849,32 @@ export function Deliberation(
 					]);
 				}
 
-				// Lap 2+: the workshop skeleton — scoreboard → my proposal on the
-				// table → tabbed work area (editing replaces the work area)
-				return m('.shell', [
+				// Lap 2+ (or a peek from rate/help): the workshop skeleton —
+				// scoreboard → my proposal on the table → tabbed work area
+				// (editing replaces the work area)
+				return m('.shell.shell--delib', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
+						delibNav(myProposal),
 						scoreboard(topic, scores[myProposal.statementId]),
 						heroCard(myProposal, { mine: true, editable: true }),
 						isEditing
 							? m('.card.workshop', m('.workshop__body.stack', editPanel))
 							: [
 									mineWorkshop(live, myProposal, topic),
-									m(
-										'button.btn.btn--primary.btn--full.btn--lg',
-										{
-											onclick: () => {
-												setCycle({ step: 'rate', rated: 0 });
-											},
-										},
-										t('delib.to_rating'),
-									),
+									// The guided path continues only from the real step —
+									// a peek returns via the Others tab instead
+									cycle.step === 'mine'
+										? m(
+												'button.btn.btn--primary.btn--full.btn--lg',
+												{
+													onclick: () => {
+														setCycle({ step: 'rate', rated: 0 });
+													},
+												},
+												t('delib.to_rating'),
+											)
+										: null,
 								],
 					]),
 				]);
@@ -827,9 +897,10 @@ export function Deliberation(
 				const current = candidates[0];
 				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
 
-				return m('.shell', [
+				return m('.shell.shell--delib', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
+						delibNav(myProposal),
 						m('h2.text-center', t('delib.phase_rate')),
 						m(
 							'p.home-explanation',
@@ -897,9 +968,10 @@ export function Deliberation(
 
 				// Same workshop skeleton as "mine" — but the proposal on the table
 				// is a classmate's, and the tabs help ME help THEM
-				return m('.shell', [
+				return m('.shell.shell--delib', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
+						delibNav(myProposal),
 						m('h2.text-center', t('delib.help_others')),
 						helpTarget
 							? [
@@ -978,9 +1050,10 @@ export function Deliberation(
 			}
 
 			// ---------- DONE: all cycles complete ----------
-			return m('.shell.shell--wide', [
+			return m('.shell.shell--wide.shell--delib', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					header,
+					delibNav(myProposal),
 					m(EraMap, {
 						participants: [],
 						lanterns: lanternsFromState(proposals, scores, userId),

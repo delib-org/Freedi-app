@@ -189,6 +189,21 @@ const suggest = async (page, label, text) => {
 	console.log(`${label} sent suggestion`);
 };
 await shot(s2, '05b-workshop-help');
+
+// Mine | Others tabs: peek at my workshop mid-help, then return to helping
+await s1.waitForSelector('.delib-nav', { timeout: 10000 });
+await s1.locator('.delib-nav__item').first().click();
+await s1.waitForSelector('.my-lantern:not(.my-lantern--theirs)', { timeout: 5000 });
+console.log('S1 NAV: peeked at Mine during help');
+console.log(
+	'S1 NAV CLASSES:',
+	await s1.locator('.delib-nav__item').evaluateAll((els) => els.map((e) => e.className))
+);
+await shot(s1, '05c-nav-peek-mine');
+await s1.locator('.delib-nav__item').last().click();
+await s1.waitForSelector('textarea.text-input', { timeout: 5000 });
+console.log('S1 NAV: back to Others');
+
 await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');
 

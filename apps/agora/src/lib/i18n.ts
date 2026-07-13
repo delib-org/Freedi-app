@@ -173,6 +173,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_dont_attack': 'חזקו את ההצעה או גשרו על פער — אל תתקפו את הכוונה שלה.',
 		'delib.phrase_suggestion': 'עזרו לי לנסח את ההצעה',
 		'delib.no_feedback_yet': 'עוד אין משוב — דירוגים ורעיונות מהכיכר יתאספו כאן.',
+		'delib.nav_mine': 'שלי',
+		'delib.nav_others': 'של אחרים',
 		'timer.left': 'זמן שנותר',
 		'teacher.round_controls': 'שליטת סבבים',
 		'teacher.round_propose': 'סבב הצעות',
@@ -393,6 +395,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.phrase_suggestion': 'Help me phrase my suggestion',
 		'delib.no_feedback_yet':
 			'No feedback yet — ratings and ideas from the square will gather here.',
+		'delib.nav_mine': 'Mine',
+		'delib.nav_others': 'Others',
 		'timer.left': 'Time left',
 		'teacher.round_controls': 'Round controls',
 		'teacher.round_propose': 'Propose round',
@@ -609,6 +613,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_dont_attack': 'قَوِّ الاقتراح أو اردم فجوة — لا تهاجم جوهر الفكرة.',
 		'delib.phrase_suggestion': 'ساعدني في صياغة اقتراحي',
 		'delib.no_feedback_yet': 'لا ملاحظات بعد — ستتجمع هنا التقييمات والأفكار من الساحة.',
+		'delib.nav_mine': 'اقتراحي',
+		'delib.nav_others': 'الآخرون',
 		'timer.left': 'الوقت المتبقي',
 		'teacher.round_controls': 'التحكم بالجولات',
 		'teacher.round_propose': 'جولة اقتراحات',
@@ -835,6 +841,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.phrase_suggestion': 'Ayúdame a redactar mi sugerencia',
 		'delib.no_feedback_yet':
 			'Aún no hay comentarios — aquí se reunirán las valoraciones e ideas de la plaza.',
+		'delib.nav_mine': 'La mía',
+		'delib.nav_others': 'Otras',
 		'timer.left': 'Tiempo restante',
 		'teacher.round_controls': 'Control de rondas',
 		'teacher.round_propose': 'Ronda de propuestas',
@@ -1062,6 +1070,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.phrase_suggestion': 'Hilf mir, meinen Vorschlag zu formulieren',
 		'delib.no_feedback_yet':
 			'Noch keine Rückmeldungen — Bewertungen und Ideen vom Platz sammeln sich hier.',
+		'delib.nav_mine': 'Meiner',
+		'delib.nav_others': 'Andere',
 		'timer.left': 'Verbleibende Zeit',
 		'teacher.round_controls': 'Rundensteuerung',
 		'teacher.round_propose': 'Vorschlagsrunde',
@@ -1289,6 +1299,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.phrase_suggestion': 'Help me mijn suggestie te formuleren',
 		'delib.no_feedback_yet':
 			'Nog geen feedback — beoordelingen en ideeën van het plein verzamelen zich hier.',
+		'delib.nav_mine': 'Mijn',
+		'delib.nav_others': 'Anderen',
 		'timer.left': 'Resterende tijd',
 		'teacher.round_controls': 'Rondebesturing',
 		'teacher.round_propose': 'Voorstelronde',

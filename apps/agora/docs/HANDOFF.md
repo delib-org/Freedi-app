@@ -40,7 +40,12 @@ everywhere) → positioning (slider labeled with character names + camp) →
 
 Key deliberation mechanics (Stitch workshop redesign implemented 2026-07-13 —
 "mine" and "help" share ONE skeleton: scoreboard → proposal on the table →
-tabbed work area):
+tabbed work area). **Mine | Others tabs** (`delib-nav`: fixed bottom bar on
+mobile ≤700px, top tab row on desktop) let the student move freely between
+their own workshop and classmates' proposals: "Mine" during rate/help is a
+PEEK (lap progression untouched, badge shows unseen open suggestions);
+"Others" from the mine step advances to rating; after all laps it means
+"keep helping". Hidden on lap 1 until the first proposal is written.
 - **My proposal workshop**: scoreboard panel (camp columns side by side +
   bridge-power meter with big N/100 and gold spark), gold-glow hero card
   (own text + ✏️), then a tabbed workshop card [Feedback (badge = open

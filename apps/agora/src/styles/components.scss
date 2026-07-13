@@ -777,6 +777,110 @@
 	}
 }
 
+// --- Mine | Others navigation: top tab row on desktop, fixed bottom bar
+// on mobile. One element; the media query moves it. ---
+.delib-nav {
+	display: flex;
+	justify-content: center;
+	gap: var(--space-sm);
+
+	&__item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		position: relative;
+		padding: 6px var(--space-lg);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) ease,
+			color var(--motion-fast) ease,
+			transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.95);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: 2px;
+		}
+
+		&--active {
+			background: var(--lantern);
+			border-color: var(--lantern);
+			color: var(--text-on-lantern);
+			box-shadow: 0 0 14px rgba(245, 185, 68, 0.35);
+		}
+	}
+
+	&__icon {
+		font-size: 1.1rem;
+		line-height: 1;
+	}
+
+	&__badge {
+		position: absolute;
+		inset-block-start: -6px;
+		inset-inline-end: -4px;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--camp-right);
+		color: var(--parchment);
+		border-radius: var(--radius-full);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		box-shadow: 0 0 10px rgba(214, 91, 107, 0.5);
+	}
+
+	@media (max-width: 700px) {
+		position: fixed;
+		inset-inline: 0;
+		inset-block-end: 0;
+		z-index: var(--z-header);
+		justify-content: space-around;
+		gap: 0;
+		padding: var(--space-sm) var(--space-md)
+			calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
+		background: rgba(30, 25, 58, 0.92);
+		backdrop-filter: blur(8px);
+		border-block-start: 1px solid var(--border-lantern);
+		border-start-start-radius: var(--radius-md);
+		border-start-end-radius: var(--radius-md);
+		box-shadow: 0 -4px 20px rgba(6, 4, 16, 0.6);
+
+		&__item {
+			flex-direction: column;
+			gap: 2px;
+			padding: 4px var(--space-xl);
+			background: transparent;
+			border-color: transparent;
+
+			&--active {
+				background: var(--lantern);
+				border-color: var(--lantern);
+			}
+		}
+	}
+}
+
+// Keep the last content (CTA buttons) clear of the fixed mobile bar
+@media (max-width: 700px) {
+	.shell--delib .shell__content {
+		padding-block-end: 96px;
+	}
+}
+
 // --- Class progress: the teacher's "who finished, can I advance?" card ---
 .class-progress {
 	display: flex;
