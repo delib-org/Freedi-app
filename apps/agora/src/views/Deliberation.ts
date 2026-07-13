@@ -105,11 +105,23 @@ function scoreboard(
 	score: AgoraProposalScore | undefined,
 	own = true,
 	ratingsMoved = 0,
+	proposalN?: number,
 ): m.Children {
 	const raters = totalRaters(score);
 	const bridging = score?.bridgingScore ?? 0;
 
 	return m('.card.scoreboard', [
+		// Whose numbers are these? The chip answers before a word is read
+		m('.owner-row', [
+			m(
+				'span.owner-chip',
+				{ class: own ? 'owner-chip--mine' : 'owner-chip--peer' },
+				own ? `🏮 ${t('delib.owner_mine')}` : `📜 ${t('delib.owner_peer')}`,
+			),
+			!own && proposalN !== undefined
+				? m('span.owner-row__number', t('delib.proposal_number', { n: proposalN }))
+				: null,
+		]),
 		m('.scoreboard__camps', [
 			campColumn(topic.positioningScale.leftLabel, '--camp-left-glow', score?.perCamp.left),
 			m('.scoreboard__divider'),
@@ -299,7 +311,7 @@ export function Deliberation(
 				],
 			),
 			m(
-				'button.delib-nav__item',
+				'button.delib-nav__item.delib-nav__item--peer',
 				{
 					class: mineActive ? undefined : 'delib-nav__item--active',
 					'aria-selected': String(!mineActive),
@@ -542,6 +554,7 @@ export function Deliberation(
 			m('.my-lantern__header', [
 				m('span.my-lantern__icon', '🏮'),
 				m('span.my-lantern__title', t('delib.my_proposal')),
+				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
 			m('textarea.my-lantern__textarea', {
 				value: mineDraft,
@@ -609,7 +622,10 @@ export function Deliberation(
 			mySuggestions.map((suggestion) =>
 				m('.card.stack.workshop__item', { key: suggestion.statementId }, [
 					suggestion.anonName
-						? m('p.char-review__role', t('delib.suggestion_from', { name: suggestion.anonName }))
+						? m(
+								'p.workshop__from',
+								`💡 ${t('delib.suggestion_from', { name: suggestion.anonName })}`,
+							)
 						: null,
 					m('p', suggestion.statement),
 					suggestion.suggestionStatus === AgoraSuggestionStatus.open
@@ -828,7 +844,10 @@ export function Deliberation(
 
 		return m('.card.stack.helped__item', { key: proposal.statementId }, [
 			// The proposal itself comes first — that's what I'm evaluating
-			m('p.char-review__role', t('delib.proposal_number', { n: proposalNumber(proposal) })),
+			m('.owner-row', [
+				m('span.owner-chip.owner-chip--peer', `📜 ${t('delib.owner_peer')}`),
+				m('span.owner-row__number', t('delib.proposal_number', { n: proposalNumber(proposal) })),
+			]),
 			m('p.helped__current', proposal.statement),
 			improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
 			m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
@@ -1012,7 +1031,7 @@ export function Deliberation(
 
 				// Lap 1: nothing exists yet — plain write screen
 				if (writeMode) {
-					return m('.shell', [
+					return m('.shell.shell--mode-mine', [
 						m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 							header,
 							m('h2.text-center', t('delib.phase_propose')),
@@ -1024,7 +1043,7 @@ export function Deliberation(
 
 				// Lap 2+ (or a peek from rate/help): scoreboard → ONE workshop card
 				// (editable box, forecast, suggestions, characters, needs)
-				return m('.shell.shell--delib', [
+				return m('.shell.shell--delib.shell--mode-mine', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
@@ -1047,7 +1066,7 @@ export function Deliberation(
 				]);
 			}
 
-			// ---------- STEP: RATE OTHERS ----------
+			// ---------- STEP: RATE OTHERS (peer mode — silver accent) ----------
 			if (cycle.step === 'rate') {
 				// Fair attention: least-rated proposals first; deterministic
 				// per-student tiebreak fans classmates out over different lanterns
@@ -1064,7 +1083,7 @@ export function Deliberation(
 				const current = candidates[0];
 				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
 
-				return m('.shell.shell--delib', [
+				return m('.shell.shell--delib.shell--mode-peer', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
@@ -1075,7 +1094,15 @@ export function Deliberation(
 						),
 						m(NeedsPeek, { topic }),
 						current && !quotaDone
-							? m('.card.delib__rate-card', [
+							? m('.card.stack.delib__rate-card', [
+									// Whose proposal am I rating? A classmate's — say so
+									m('.owner-row', [
+										m('span.owner-chip.owner-chip--peer', `📜 ${t('delib.owner_peer')}`),
+										m(
+											'span.owner-row__number',
+											t('delib.proposal_number', { n: proposalNumber(current) }),
+										),
+									]),
 									m('p.scene__text', current.statement),
 									m(
 										'.rate-scale',
@@ -1138,14 +1165,20 @@ export function Deliberation(
 
 				// Same workshop skeleton as "mine" — but the proposal on the table
 				// is a classmate's, and the tabs help ME help THEM
-				return m('.shell.shell--delib', [
+				return m('.shell.shell--delib.shell--mode-peer', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
 						m('h2.text-center', t('delib.help_others')),
 						helpTarget
 							? [
-									scoreboard(topic, scores[helpTarget.statementId], false),
+									scoreboard(
+										topic,
+										scores[helpTarget.statementId],
+										false,
+										0,
+										proposalNumber(helpTarget),
+									),
 									// ONE box: their proposal on top, my suggestion workshop
 									// beneath it — same unified frame as the mine screen
 									m('.card.my-lantern.my-lantern--theirs.my-lantern--workshop', [
@@ -1155,6 +1188,7 @@ export function Deliberation(
 												'span.my-lantern__title',
 												t('delib.proposal_number', { n: proposalNumber(helpTarget) }),
 											),
+											m('span.owner-chip.owner-chip--peer', t('delib.owner_peer')),
 											m(
 												'button.btn.btn--ghost.my-lantern__edit',
 												{
@@ -1222,7 +1256,7 @@ export function Deliberation(
 			}
 
 			// ---------- DONE: all cycles complete ----------
-			return m('.shell.shell--wide.shell--delib', [
+			return m('.shell.shell--wide.shell--delib.shell--mode-mine', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					header,
 					delibNav(myProposal),

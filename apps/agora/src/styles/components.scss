@@ -568,6 +568,9 @@
 
 	&__rate-card {
 		animation: scene-enter var(--motion-base) var(--ease-camera) both;
+		// A classmate's proposal — carries the silver peer identity
+		border-color: rgba(169, 183, 208, 0.35);
+		border-inline-start: 3px solid var(--peer);
 	}
 
 	&__rate-buttons {
@@ -732,20 +735,24 @@
 }
 
 // --- My lantern: the proposal on the table as the hero object ---
-// Mine glows gold; --theirs is the neutral frame of a classmate's proposal.
+// Ownership grammar: gold lantern = MINE, moonlight silver = a CLASSMATE's.
+// The border-inline-start ribbon is the scannable cue (RTL-safe).
 .my-lantern {
 	border: 1px solid var(--lantern-deep);
-	box-shadow: 0 0 24px rgba(255, 216, 130, 0.12);
+	border-inline-start: 3px solid var(--lantern);
+	box-shadow: 0 0 24px rgba(255, 216, 130, 0.18);
 
 	&--theirs {
-		border-color: var(--border-subtle);
-		box-shadow: none;
+		border-color: rgba(169, 183, 208, 0.35);
+		border-inline-start: 3px solid var(--peer);
+		box-shadow: 0 0 18px rgba(215, 224, 242, 0.08);
 
 		.my-lantern__title {
-			color: var(--text-secondary);
-			font-size: var(--font-size-sm);
-			font-family: var(--font-body);
-			font-style: italic;
+			color: var(--peer-glow);
+		}
+
+		.my-lantern__text {
+			padding-inline-start: var(--space-md);
 		}
 	}
 
@@ -768,6 +775,14 @@
 
 	&__edit {
 		margin-inline-start: auto;
+	}
+
+	// "You can edit anytime" — the editable-affordance whisper on MY card
+	&__hint {
+		margin-inline-start: auto;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
 	}
 
 	&__text {
@@ -850,6 +865,14 @@
 			color: var(--text-on-lantern);
 			box-shadow: 0 0 14px rgba(245, 185, 68, 0.35);
 		}
+
+		// The Others tab wears the classmate silver, never the "mine" gold
+		&--peer.delib-nav__item--active {
+			background: var(--peer);
+			border-color: var(--peer);
+			color: var(--bg-card-solid);
+			box-shadow: 0 0 14px rgba(169, 183, 208, 0.4);
+		}
 	}
 
 	&__icon {
@@ -887,7 +910,8 @@
 			calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
 		background: rgba(30, 25, 58, 0.92);
 		backdrop-filter: blur(8px);
-		border-block-start: 1px solid var(--border-lantern);
+		// The bar's top edge is the persistent mode beacon (gold/silver)
+		border-block-start: 2px solid var(--mode-accent, var(--border-lantern));
 		border-start-start-radius: var(--radius-md);
 		border-start-end-radius: var(--radius-md);
 		box-shadow: 0 -4px 20px rgba(6, 4, 16, 0.6);
@@ -903,6 +927,11 @@
 				background: var(--lantern);
 				border-color: var(--lantern);
 			}
+
+			&--peer.delib-nav__item--active {
+				background: var(--peer);
+				border-color: var(--peer);
+			}
 		}
 	}
 }
@@ -914,11 +943,81 @@
 	}
 }
 
+// --- Ownership mode: whose space am I in right now? ---
+// Gold = my workshop, moonlight silver = a classmate's. The accent is
+// AMBIENT (fixed top strip + mobile-bar edge), so it survives scrolling.
+.shell--mode-mine {
+	--mode-accent: var(--lantern);
+	--mode-accent-glow: var(--lantern-glow);
+}
+
+.shell--mode-peer {
+	--mode-accent: var(--peer);
+	--mode-accent-glow: var(--peer-glow);
+}
+
+.shell--mode-mine::before,
+.shell--mode-peer::before {
+	content: '';
+	position: fixed;
+	inset-block-start: 0;
+	inset-inline: 0;
+	height: 3px;
+	z-index: var(--z-header);
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--mode-accent) 20%,
+		var(--mode-accent) 80%,
+		transparent
+	);
+	pointer-events: none;
+}
+
+// --- Owner chip: whose proposal is on the table (🏮 mine / 📜 a classmate's) ---
+.owner-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: 2px var(--space-sm);
+	border-radius: var(--radius-full);
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+	white-space: nowrap;
+
+	&--mine {
+		border: 1px solid var(--lantern-deep);
+		color: var(--lantern-glow);
+		background: rgba(245, 185, 68, 0.1);
+	}
+
+	&--peer {
+		border: 1px solid rgba(169, 183, 208, 0.45);
+		color: var(--peer-glow);
+		background: rgba(169, 183, 208, 0.1);
+	}
+}
+
+// Owner row: chip + proposal number heading a proposal card
+.owner-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+
+	&__number {
+		color: var(--peer-glow);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+}
+
 // --- The collaboration loop: "proposals I helped" ---
 .helped {
 	&__item {
 		background: var(--bg-inset);
-		border-inline-start: 3px solid var(--camp-center);
+		// Peer silver, not a camp color — ownership and camps never share a hue
+		border-inline-start: 3px solid var(--peer);
 	}
 
 	&__suggestion {
@@ -1326,7 +1425,13 @@
 
 	&__item {
 		background: var(--bg-inset);
-		border-inline-start: 3px solid var(--lantern-deep);
+		// A classmate's voice inside my gold card — mark the voice, not the frame
+		border-inline-start: 2px solid rgba(169, 183, 208, 0.45);
+	}
+
+	&__from {
+		color: var(--peer-glow);
+		font-size: var(--font-size-sm);
 	}
 
 	&__question {
