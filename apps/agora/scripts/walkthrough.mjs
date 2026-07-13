@@ -84,6 +84,15 @@ for (const stage of ['FRAMING (intro→tunnel→period)', 'PERSPECTIVES (both si
 	if (stage.startsWith('NEEDS')) await shot(s1, '03-student-needs-scene');
 	if (stage.startsWith('PERSPECTIVES')) await shot(s1, '03a-student-perspective');
 	await Promise.all([clickThroughScenes(s1, 'S1'), clickThroughScenes(s2, 'S2')]);
+	// The teacher's class-progress card fills as students finish their scenes
+	await teacher
+		.locator('.class-progress__count--all')
+		.waitFor({ timeout: 15000 });
+	console.log(
+		'TEACHER CLASS PROGRESS:',
+		await teacher.locator('.class-progress__count').textContent()
+	);
+	if (stage.startsWith('FRAMING')) await shot(teacher, '02b-teacher-class-progress');
 }
 
 // After the needs scenes: both sides' needs stay on screen, side by side
@@ -169,20 +178,39 @@ for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
 	console.log(`${label} → help step`);
 }
 
-// Step "help": each writes a suggestion for the other → advances to lap 2
+// Step "help": each writes a suggestion for the other → advances to lap 2.
+// Same workshop skeleton as "mine": scoreboard + neutral hero + tabbed work area
 const suggest = async (page, label, text) => {
 	await page.waitForSelector('textarea.text-input', { timeout: 15000 });
+	console.log(`${label} HELP HERO:`, (await page.locator('.my-lantern--theirs .my-lantern__title').textContent()).slice(0, 50));
 	await page.locator('textarea.text-input').fill(text);
 	await page.getByRole('button', { name: /Send|שליחת|improvement|שיפור/i }).click();
 	await page.waitForTimeout(800);
 	console.log(`${label} sent suggestion`);
 };
+await shot(s2, '05b-workshop-help');
+
+// Mine | Others tabs: peek at my workshop mid-help, then return to helping
+await s1.waitForSelector('.delib-nav', { timeout: 10000 });
+await s1.locator('.delib-nav__item').first().click();
+await s1.waitForSelector('.my-lantern:not(.my-lantern--theirs)', { timeout: 5000 });
+console.log('S1 NAV: peeked at Mine during help');
+console.log(
+	'S1 NAV CLASSES:',
+	await s1.locator('.delib-nav__item').evaluateAll((els) => els.map((e) => e.className))
+);
+await shot(s1, '05c-nav-peek-mine');
+await s1.locator('.delib-nav__item').last().click();
+await s1.waitForSelector('textarea.text-input', { timeout: 5000 });
+console.log('S1 NAV: back to Others');
+
 await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');
 
-// Lap 2, step "mine": header shows lap 2, panel shows the received suggestion
+// Lap 2, step "mine": the workshop skeleton — scoreboard, hero card, tabbed
+// work area with the received suggestion in the Feedback tab
 try {
-	await s1.waitForSelector('.camp-bar', { timeout: 15000 });
+	await s1.waitForSelector('.scoreboard', { timeout: 15000 });
 } catch (e) {
 	console.log('S1 BODY:', (await s1.evaluate(() => document.body.innerText)).slice(0, 400).replaceAll('\n', ' | '));
 	await shot(s1, 'debug-lap2-mine');
@@ -191,10 +219,22 @@ try {
 const lapLabel = await s1.locator('.cycle-strip__laps').getAttribute('aria-label');
 if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, pips say: ${lapLabel}`);
 console.log('S1 ON LAP:', lapLabel);
-console.log('S1 bridging:', await s1.locator('.values__score').first().textContent());
+console.log('S1 bridging:', await s1.locator('.scoreboard__bridge-value').textContent());
+await s1.waitForSelector('.workshop__item', { timeout: 10000 });
+console.log('S1 SUGGESTIONS INLINE:', await s1.locator('.workshop__item').count());
 
-// Accept the suggestion → the suggester gets the glitter celebration
-await s1.getByRole('button', { name: /^(Accept|קבלת ההצעה)$/i }).click();
+// Reception forecast: numbers-only mirror of how the camps would take the draft
+await s1.locator('.estimate__button').click();
+await s1.waitForSelector('.estimate', { timeout: 60000 });
+console.log(
+	'S1 RECEPTION ESTIMATE:',
+	(await s1.locator('.estimate').innerText()).slice(0, 120).replaceAll('\n', ' | ')
+);
+await shot(s1, '06a-workshop-mine');
+
+// Accept the suggestion ("I'll implement") → the suggester gets the glitter
+// celebration, and the accepter's editor opens to weave the idea in
+await s1.getByRole('button', { name: /^(I'll implement|אשלב את הרעיון)$/i }).click();
 await s2.waitForSelector('.celebration', { timeout: 15000 });
 console.log('S2 CELEBRATION (accepted):', (await s2.locator('.celebration__message').textContent()).slice(0, 60));
 console.log('S2 CELEBRATION DETAIL:', (await s2.locator('.celebration__detail').textContent()).slice(0, 60));
@@ -202,15 +242,22 @@ await s2.waitForTimeout(600);
 await shot(s2, '07b-celebration-accepted');
 await s2.locator('.celebration button.btn--primary').click();
 
+// The proposal box is always editable now — no modal editor to close;
+// characters and suggestions stay on screen
+
 // In-character reviews: character chips expand into the verdict accordion
 await s1.waitForSelector('.char-chips__chip', { timeout: 10000 });
 const reviewCard = s1.locator('.char-review');
+// One tap per character: opening the chip auto-asks when no verdict exists
 await s1.locator('.char-chips__chip').nth(0).click(); // the Count
-await reviewCard.locator('button.btn--secondary').first().click();
 await reviewCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
 console.log('COUNT VERDICT:', (await reviewCard.locator('.char-review__bubble').textContent()).slice(0, 100));
-await s1.locator('.char-chips__chip').nth(1).click(); // switch accordion to Camille
-await reviewCard.locator('button.btn--secondary').first().click();
+await s1.locator('.char-chips__chip').nth(1).click(); // Camille — auto-asks too
+// Let the accordion swap to Camille's "thinking" state before grabbing her bubble
+await reviewCard
+	.locator('.char-review__thinking')
+	.waitFor({ timeout: 10000 })
+	.catch(() => {});
 await reviewCard.locator('.char-review__bubble').waitFor({ timeout: 90000 });
 console.log('CAMILLE VERDICT:', (await reviewCard.locator('.char-review__bubble').textContent()).slice(0, 100));
 // The Count's chip now carries his score badge
@@ -238,11 +285,11 @@ if (ns[0] !== 3 || ns[1] !== 4)
 	throw new Error(`Expected per-camp raters {3,4}, got left=${campN('left')} right=${campN('right')}`);
 console.log('PER-CAMP RATERS OK:', { left: campN('left'), right: campN('right') });
 
-// S1 improves their own proposal → glitter, then lands on the rate step of lap 2
+// S1 improves their own proposal in the always-editable box → glitter
 await s1
-	.locator('textarea.values__textarea')
+	.locator('textarea.my-lantern__textarea')
 	.fill('נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד, אספה נבחרת תחוקק ותאשר מסים, זכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן — ותוקם ועדה משותפת לאצולה ולעם שתלווה את המעבר.');
-await s1.locator('.delib__actions .btn--primary').click();
+await s1.locator('.my-lantern__save').click();
 await s1.waitForSelector('.celebration', { timeout: 10000 });
 console.log('S1 CELEBRATION (own improvement):', (await s1.locator('.celebration__message').textContent()).slice(0, 60));
 await s1.waitForTimeout(600);
@@ -254,6 +301,55 @@ await s1.waitForSelector('.char-chips__chip', { timeout: 10000 });
 const staleLabel = await s1.locator('.char-chips__chip').nth(0).locator('.char-chips__cta').textContent();
 console.log('COUNT CHIP AFTER UPDATE (stale):', staleLabel);
 if (!/changed|השתנה/i.test(staleLabel)) throw new Error(`Expected stale chip label, got: ${staleLabel}`);
+
+// ---------- The collaboration loop ----------
+step('COLLABORATION LOOP: S2 sees the improvement, re-rates, follows up');
+// S2 (on lap-2 mine) gets a badge on the Others tab: a proposal they helped moved
+await s2.waitForSelector('.delib-nav__badge', { timeout: 15000 });
+console.log('S2 OTHERS BADGE:', await s2.locator('.delib-nav__badge').textContent());
+// One tap on Others: the "Proposals I helped" section is already visible
+// on the rate step (no need to click through to helping)
+await s2.locator('.delib-nav__item').last().click();
+await s2.waitForSelector('.helped__item', { timeout: 15000 });
+console.log('S2 HELPED SECTION VISIBLE ON RATE STEP ✓');
+await s2.getByRole('button', { name: /Continue to helping|המשיכו לעזרה/i }).click();
+await s2.waitForSelector('.helped__item', { timeout: 15000 });
+const helped = s2.locator('.helped__item');
+if ((await helped.locator('.helped__chip--accepted').count()) === 0)
+	throw new Error('Helped section missing the accepted-status chip');
+if ((await helped.locator('.helped__improved').count()) === 0)
+	throw new Error('Helped section missing the improved-since marker');
+const currentText = await helped.locator('.helped__current').textContent();
+if (!currentText.includes('ועדה משותפת'))
+	throw new Error('Helped section does not show the improved proposal text');
+console.log('S2 SEES ACKNOWLEDGMENT + IMPROVED TEXT ✓');
+await shot(s2, '08a-helped-section');
+
+// S2 changes their vote: +0.5 (for) → +1 (very much for)
+await helped.locator('.rate-scale__option--strong-for').click();
+await s2.waitForSelector(
+	'.helped__item .rate-scale__option--strong-for.rate-scale__option--selected',
+	{ timeout: 10000 }
+);
+console.log('S2 RE-RATED to +1 ✓');
+
+// S1 (owner) sees the aggregate loop-closing signal — no names
+await s1.waitForSelector('.scoreboard__updated', { timeout: 15000 });
+console.log('S1 RATINGS-MOVED SIGNAL:', await s1.locator('.scoreboard__updated').textContent());
+
+// S2 sends a FREE follow-up — the lap must not advance
+await helped.locator('textarea.helped__followup').fill('עכשיו זה משכנע יותר — אולי הוסיפו גם נציגות לאיכרים בוועדה.');
+await helped.locator('button.btn--secondary').click();
+await s2.waitForTimeout(800);
+const lapAfter = await s2.locator('.cycle-strip__laps').getAttribute('aria-label');
+if (!lapAfter.includes('2')) throw new Error(`Follow-up advanced the lap: ${lapAfter}`);
+console.log('S2 FOLLOW-UP SENT, still on lap 2 ✓');
+
+// S1 sees the follow-up land in the suggestions stream
+await s1.waitForFunction(() => document.querySelectorAll('.workshop__item').length >= 2, {
+	timeout: 15000,
+});
+console.log('S1 SEES FOLLOW-UP: suggestion items =', await s1.locator('.workshop__item').count());
 
 await shot(teacher, '08-teacher-deliberation');
 

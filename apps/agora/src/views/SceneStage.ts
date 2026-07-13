@@ -10,6 +10,8 @@ export interface SceneStageAttrs {
 	storageKey: string;
 	/** Rendered on the waiting screen after the last scene (e.g. the needs board) */
 	epilogue?: m.Children;
+	/** Publishes (scenesDone, scenesTotal) so the teacher sees who finished */
+	onProgress?: (scenesDone: number, scenesTotal: number) => void;
 }
 
 /**
@@ -20,9 +22,11 @@ export interface SceneStageAttrs {
 export function SceneStage(): m.Component<SceneStageAttrs> {
 	return {
 		view(vnode) {
-			const { scenes, storageKey, epilogue } = vnode.attrs;
+			const { scenes, storageKey, epilogue, onProgress } = vnode.attrs;
 			const index = Number(sessionStorage.getItem(storageKey) ?? '0');
 			const done = index >= scenes.length;
+			// Report on every render — refresh-safe, and the reporter dedupes
+			onProgress?.(Math.min(index, scenes.length), scenes.length);
 
 			if (scenes.length === 0 || done) {
 				return m('.shell', [
@@ -43,6 +47,7 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 						doneLabel: t('scene.continue'),
 						onDone: () => {
 							sessionStorage.setItem(storageKey, String(index + 1));
+							onProgress?.(Math.min(index + 1, scenes.length), scenes.length);
 							m.redraw();
 						},
 					}),

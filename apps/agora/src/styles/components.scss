@@ -11,7 +11,6 @@
 
   &__title {
     color: var(--lantern-glow);
-    text-shadow: 0 0 30px rgba(255, 216, 130, 0.35);
     letter-spacing: 0.04em;
   }
 
@@ -319,7 +318,6 @@
 	&__title {
 		text-align: center;
 		color: var(--lantern-glow);
-		text-shadow: 0 0 24px rgba(255, 216, 130, 0.3);
 
 		// Cinematic flourish: a gold rule with a diamond under every scene title
 		&::after {
@@ -418,7 +416,6 @@
 // Stage headings share the scene-title flourish — every screen is a scene
 .shell__content > h2.text-center {
 	color: var(--lantern-glow);
-	text-shadow: 0 0 24px rgba(255, 216, 130, 0.25);
 
 	&::after {
 		content: '';
@@ -568,6 +565,9 @@
 
 	&__rate-card {
 		animation: scene-enter var(--motion-base) var(--ease-camera) both;
+		// A classmate's proposal — carries the silver peer identity
+		border-color: rgba(224, 119, 20, 0.35);
+		border-inline-start: 3px solid var(--peer);
 	}
 
 	&__rate-buttons {
@@ -592,11 +592,11 @@
 }
 
 .btn--rate-agree {
-	background: linear-gradient(180deg, var(--success), #5cb586);
-	color: var(--ink);
+	background: linear-gradient(180deg, #22a05e, #17804d);
+	color: #ffffff;
 
 	&:hover {
-		box-shadow: 0 0 18px rgba(125, 214, 163, 0.5);
+		box-shadow: 0 0 18px rgba(23, 128, 77, 0.5);
 	}
 }
 
@@ -606,7 +606,7 @@
 	border: 1px solid var(--danger);
 
 	&:hover {
-		box-shadow: 0 0 14px rgba(240, 142, 155, 0.35);
+		box-shadow: 0 0 14px rgba(209, 61, 78, 0.35);
 	}
 }
 
@@ -647,8 +647,8 @@
 .world-strip {
 	height: clamp(96px, 20vw, 150px);
 	overflow: hidden;
-	border-block-end: 1px solid rgba(185, 127, 30, 0.35);
-	box-shadow: 0 6px 24px rgba(10, 8, 22, 0.6);
+	border-block-end: 1px solid rgba(29, 85, 171, 0.35);
+	box-shadow: 0 6px 24px rgba(37, 51, 82, 0.18);
 
 	.era-map {
 		height: 100%;
@@ -687,15 +687,16 @@
 		background: var(--bg-page);
 		border: 1px solid var(--lantern-deep);
 
+		// Finished laps are little suns; the current lap wears MY blue
 		&--done {
-			background: var(--lantern);
-			border-color: var(--lantern);
+			background: #ffd23f;
+			border-color: #b97300;
 		}
 
 		&--current {
-			background: var(--lantern-glow);
-			border-color: var(--lantern-glow);
-			box-shadow: 0 0 8px rgba(255, 216, 130, 0.8);
+			background: var(--mine);
+			border-color: var(--mine);
+			box-shadow: 0 0 8px rgba(43, 111, 214, 0.6);
 			animation: era-map-marker-pulse 1.6s ease-in-out infinite;
 		}
 	}
@@ -722,7 +723,6 @@
 		&--active {
 			color: var(--lantern-glow);
 			border-color: var(--lantern-deep);
-			text-shadow: 0 0 12px rgba(255, 216, 130, 0.35);
 		}
 
 		&--done {
@@ -731,10 +731,27 @@
 	}
 }
 
-// --- My lantern: the student's own proposal as the hero object ---
+// --- My lantern: the proposal on the table as the hero object ---
+// Ownership grammar: BLUE = MINE, ORANGE = a CLASSMATE's.
+// The border-inline-start ribbon is the scannable cue (RTL-safe).
 .my-lantern {
-	border: 1px solid var(--lantern-deep);
-	box-shadow: 0 0 24px rgba(255, 216, 130, 0.12);
+	border: 1px solid rgba(43, 111, 214, 0.45);
+	border-inline-start: 3px solid var(--mine);
+	box-shadow: 0 4px 16px rgba(43, 111, 214, 0.12);
+
+	&--theirs {
+		border-color: rgba(224, 119, 20, 0.45);
+		border-inline-start: 3px solid var(--peer);
+		box-shadow: 0 4px 16px rgba(224, 119, 20, 0.12);
+
+		.my-lantern__title {
+			color: var(--peer-glow);
+		}
+
+		.my-lantern__text {
+			padding-inline-start: var(--space-md);
+		}
+	}
 
 	&__header {
 		display: flex;
@@ -757,10 +774,678 @@
 		margin-inline-start: auto;
 	}
 
+	// "You can edit anytime" — the editable-affordance whisper on MY card
+	&__hint {
+		margin-inline-start: auto;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+	}
+
 	&__text {
 		color: var(--text-primary);
 		font-size: var(--font-size-lg);
 		line-height: 1.6;
+	}
+
+	// The whole workshop under one gold frame: editor, forecast,
+	// suggestions, characters, needs — separated by faint dividers
+	&--workshop {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	&__divider {
+		border-block-start: 1px solid var(--border-subtle);
+	}
+
+	// The always-editable proposal box — the live text, ready to be reworked
+	&__textarea {
+		width: 100%;
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		padding: var(--space-md);
+		color: var(--text-primary);
+		font-family: var(--font-body);
+		font-size: var(--font-size-lg);
+		line-height: 1.6;
+		resize: vertical;
+		margin-block-end: var(--space-md);
+
+		&:focus {
+			outline: none;
+			border-color: var(--border-lantern);
+			box-shadow: 0 0 0 3px rgba(43, 111, 214, 0.18);
+		}
+	}
+}
+
+// --- Mine | Others navigation: top tab row on desktop, fixed bottom bar
+// on mobile. One element; the media query moves it. ---
+.delib-nav {
+	display: flex;
+	justify-content: center;
+	gap: var(--space-sm);
+
+	&__item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		position: relative;
+		padding: 6px var(--space-lg);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) ease,
+			color var(--motion-fast) ease,
+			transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.95);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: 2px;
+		}
+
+		&--active {
+			background: var(--mine);
+			border-color: var(--mine);
+			color: #ffffff;
+			box-shadow: 0 2px 0 var(--mine-deep);
+		}
+
+		// The Others tab wears the classmate orange, never MY blue.
+		// Deepened fill so white text stays AA — still unambiguously orange.
+		&--peer.delib-nav__item--active {
+			background: #b05e0d;
+			border-color: #b05e0d;
+			color: #ffffff;
+			box-shadow: 0 2px 0 var(--peer-deep);
+		}
+	}
+
+	&__icon {
+		font-size: 1.1rem;
+		line-height: 1;
+	}
+
+	&__badge {
+		position: absolute;
+		inset-block-start: -6px;
+		inset-inline-end: -4px;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		// A notification badge must not wear a camp color
+		background: var(--danger);
+		color: #ffffff;
+		border-radius: var(--radius-full);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		box-shadow: 0 0 10px rgba(209, 61, 78, 0.35);
+	}
+
+	@media (max-width: 700px) {
+		position: fixed;
+		inset-inline: 0;
+		inset-block-end: 0;
+		z-index: var(--z-header);
+		justify-content: space-around;
+		gap: 0;
+		padding: var(--space-sm) var(--space-md)
+			calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
+		background: rgba(255, 255, 255, 0.94);
+		backdrop-filter: blur(8px);
+		// The bar's top edge is the persistent mode beacon (gold/silver)
+		border-block-start: 2px solid var(--mode-accent, var(--border-lantern));
+		border-start-start-radius: var(--radius-md);
+		border-start-end-radius: var(--radius-md);
+		box-shadow: 0 -4px 20px rgba(37, 51, 82, 0.18);
+
+		&__item {
+			flex-direction: column;
+			gap: 2px;
+			padding: 4px var(--space-xl);
+			background: transparent;
+			border-color: transparent;
+
+			&--active {
+				background: var(--mine);
+				border-color: var(--mine);
+			}
+
+			&--peer.delib-nav__item--active {
+				background: #b05e0d;
+				border-color: #b05e0d;
+			}
+		}
+	}
+}
+
+// Keep the last content (CTA buttons) clear of the fixed mobile bar
+@media (max-width: 700px) {
+	.shell--delib .shell__content {
+		padding-block-end: 96px;
+	}
+}
+
+// --- Ownership mode: whose space am I in right now? ---
+// Blue = my workshop, orange = a classmate's. The accent is
+// AMBIENT (fixed top strip + mobile-bar edge), so it survives scrolling.
+.shell--mode-mine {
+	--mode-accent: var(--lantern);
+	--mode-accent-glow: var(--lantern-glow);
+}
+
+.shell--mode-peer {
+	--mode-accent: var(--peer);
+	--mode-accent-glow: var(--peer-glow);
+}
+
+.shell--mode-mine::before,
+.shell--mode-peer::before {
+	content: '';
+	position: fixed;
+	inset-block-start: 0;
+	inset-inline: 0;
+	height: 3px;
+	z-index: var(--z-header);
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--mode-accent) 20%,
+		var(--mode-accent) 80%,
+		transparent
+	);
+	pointer-events: none;
+}
+
+// --- Owner chip: whose proposal is on the table (📘 mine / 📙 a classmate's) ---
+.owner-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: 2px var(--space-sm);
+	border-radius: var(--radius-full);
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+	white-space: nowrap;
+	animation: chip-pop var(--motion-base) var(--ease-spring) both;
+
+	&--mine {
+		border: 1px solid rgba(43, 111, 214, 0.5);
+		color: var(--mine-glow);
+		background: rgba(43, 111, 214, 0.1);
+	}
+
+	&--peer {
+		border: 1px solid rgba(224, 119, 20, 0.55);
+		color: var(--peer-glow);
+		background: rgba(224, 119, 20, 0.12);
+	}
+}
+
+@keyframes chip-pop {
+	from {
+		transform: scale(0.8);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+// Owner row: chip + proposal number heading a proposal card
+.owner-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+
+	&__number {
+		color: var(--peer-glow);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// --- The collaboration loop: "proposals I helped" ---
+.helped {
+	&__item {
+		// Peer orange, not a camp color — ownership and camps never share a hue
+		background: rgba(224, 119, 20, 0.05);
+		border-inline-start: 3px solid var(--peer);
+	}
+
+	&__suggestion {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__suggestion-text {
+		color: var(--text-secondary);
+		font-style: italic;
+		flex: 1;
+	}
+
+	&__chip {
+		flex-shrink: 0;
+		padding: 2px var(--space-md);
+		border-radius: var(--radius-full);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		border: 1px solid var(--border-subtle);
+		color: var(--text-muted);
+
+		&--open {
+			border-color: var(--lantern-deep);
+			color: var(--lantern-glow);
+		}
+
+		&--accepted {
+			border-color: var(--success);
+			color: var(--success);
+			box-shadow: 0 0 10px rgba(23, 128, 77, 0.25);
+		}
+
+		&--thanked {
+			border-color: var(--camp-center-glow);
+			color: var(--camp-center-glow);
+		}
+
+		&--declined {
+			opacity: 0.6;
+		}
+	}
+
+	&__improved {
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+	}
+
+	&__current {
+		color: var(--text-primary);
+		line-height: 1.6;
+	}
+}
+
+// Compact re-rate scale inside helped items; --selected marks my current vote
+.rate-scale--compact .rate-scale__option {
+	padding: var(--space-xs) var(--space-sm);
+
+	.rate-scale__emoji {
+		font-size: 1.1rem;
+	}
+
+	.rate-scale__label {
+		font-size: var(--font-size-xs);
+	}
+}
+
+.rate-scale__option--selected {
+	border-color: var(--lantern);
+	box-shadow: 0 0 12px rgba(43, 111, 214, 0.35);
+}
+
+// Votes moved after my latest improvement (aggregate only)
+.scoreboard__updated {
+	color: var(--success);
+	font-size: var(--font-size-sm);
+	text-align: center;
+}
+
+// --- Reception forecast: numbers-only mirror of how the camps would take
+// the current draft (no AI advice — the thinking stays with the student) ---
+.estimate {
+	background: var(--bg-inset);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	transition: opacity var(--motion-base) ease;
+
+	&--stale {
+		opacity: 0.55;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		min-width: 90px;
+	}
+
+	&__track {
+		flex: 1;
+		height: 8px;
+		background: rgba(37, 51, 82, 0.18);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__value {
+		font-family: var(--font-display);
+		color: var(--text-primary);
+		min-width: 2em;
+		text-align: end;
+	}
+
+	&__avg {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-sm);
+		color: var(--text-secondary);
+
+		strong {
+			font-family: var(--font-display);
+			font-size: var(--font-size-xl);
+			color: var(--lantern-glow);
+		}
+	}
+}
+
+// --- Class progress: the teacher's "who finished, can I advance?" card ---
+.class-progress {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-md);
+
+		.teacher__section-title {
+			margin: 0;
+		}
+	}
+
+	&__count {
+		font-family: var(--font-display);
+		color: var(--text-secondary);
+		white-space: nowrap;
+
+		&--all {
+			color: var(--success);
+		}
+	}
+
+	&__chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__chip {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-xs) var(--space-md);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+
+		&--done {
+			border-color: var(--success);
+			color: var(--text-primary);
+
+			.class-progress__state {
+				color: var(--success);
+			}
+		}
+	}
+
+	&__state {
+		font-family: var(--font-display);
+		color: var(--text-muted);
+	}
+}
+
+// --- Scoreboard: both camps side by side + the bridge-power meter ---
+.scoreboard {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__camps {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-md);
+	}
+
+	&__camp {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__camp-name {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+
+	&__camp-track {
+		width: 100%;
+		max-width: 140px;
+		height: 6px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__camp-fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__camp-count {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__divider {
+		width: 1px;
+		background: var(--border-subtle);
+	}
+
+	&__bridge {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-md);
+	}
+
+	&__bridge-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+
+	&__bridge-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	&__bridge-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--lantern-glow);
+	}
+
+	&__bridge-max {
+		font-size: var(--font-size-base);
+		opacity: 0.5;
+	}
+
+	// The bridge spans from one camp's bank to the other's; the lantern
+	// spark rides the leading edge
+	&__meter {
+		height: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		padding: 1px;
+		direction: ltr;
+	}
+
+	&__meter-fill {
+		position: relative;
+		height: 100%;
+		min-width: 8px;
+		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__meter-spark {
+		position: absolute;
+		inset-block-start: 50%;
+		inset-inline-end: 0;
+		transform: translate(2px, -50%);
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--lantern-glow);
+		box-shadow: var(--glow-marker);
+	}
+
+	&__caption {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		font-style: italic;
+		text-align: center;
+	}
+}
+
+// --- Workshop: the tabbed work area shared by "mine" and "help" ---
+.workshop {
+	padding: 0;
+	overflow: hidden;
+
+	&__tabs {
+		display: flex;
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__tab {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-xs);
+		background: transparent;
+		border: none;
+		border-block-end: 2px solid transparent;
+		color: var(--text-muted);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition: color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+
+		&:hover {
+			color: var(--text-secondary);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: -2px;
+		}
+
+		&--active {
+			color: var(--lantern-glow);
+			border-block-end-color: var(--lantern);
+		}
+	}
+
+	&__badge {
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--lantern);
+		color: var(--text-on-lantern);
+		border-radius: var(--radius-full);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	&__body {
+		padding: var(--space-md);
+	}
+
+	&__item {
+		background: var(--bg-inset);
+		// A classmate's voice inside my gold card — mark the voice, not the frame
+		border-inline-start: 2px solid rgba(224, 119, 20, 0.45);
+	}
+
+	&__from {
+		color: var(--peer-glow);
+		font-size: var(--font-size-sm);
+	}
+
+	&__question {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--lantern-glow);
+		line-height: 1.4;
 	}
 }
 
@@ -793,7 +1478,7 @@
 
 		&--open {
 			border-color: var(--lantern-deep);
-			box-shadow: 0 0 14px rgba(255, 216, 130, 0.2);
+			box-shadow: 0 0 14px rgba(43, 111, 214, 0.2);
 		}
 	}
 
@@ -858,34 +1543,40 @@
 		}
 
 		&--strong-against {
-			border-color: rgba(240, 142, 155, 0.55);
-			&:hover { box-shadow: 0 0 16px rgba(240, 142, 155, 0.4); }
+			border-color: rgba(209, 61, 78, 0.55);
+			&:hover { box-shadow: 0 0 16px rgba(209, 61, 78, 0.4); }
 		}
 
 		&--against {
-			border-color: rgba(240, 142, 155, 0.3);
-			&:hover { box-shadow: 0 0 12px rgba(240, 142, 155, 0.25); }
+			border-color: rgba(209, 61, 78, 0.3);
+			&:hover { box-shadow: 0 0 12px rgba(209, 61, 78, 0.25); }
 		}
 
 		&--abstain {
-			border-color: rgba(185, 174, 214, 0.3);
-			&:hover { box-shadow: 0 0 12px rgba(185, 174, 214, 0.25); }
+			border-color: rgba(77, 94, 125, 0.3);
+			&:hover { box-shadow: 0 0 12px rgba(77, 94, 125, 0.25); }
 		}
 
 		&--for {
-			border-color: rgba(125, 214, 163, 0.3);
-			&:hover { box-shadow: 0 0 12px rgba(125, 214, 163, 0.25); }
+			border-color: rgba(23, 128, 77, 0.3);
+			&:hover { box-shadow: 0 0 12px rgba(23, 128, 77, 0.25); }
 		}
 
 		&--strong-for {
-			border-color: rgba(125, 214, 163, 0.55);
-			&:hover { box-shadow: 0 0 16px rgba(125, 214, 163, 0.4); }
+			border-color: rgba(23, 128, 77, 0.55);
+			&:hover { box-shadow: 0 0 16px rgba(23, 128, 77, 0.4); }
 		}
 	}
 
 	&__emoji {
 		font-size: 1.6rem;
 		line-height: 1;
+		transition: transform var(--motion-fast) var(--ease-spring);
+	}
+
+	// The emoji wiggles when you hover its option — tiny, playful, cheap
+	&__option:hover &__emoji {
+		transform: rotate(-8deg) scale(1.15);
 	}
 
 	&__label {
@@ -899,6 +1590,10 @@
 			transform: none;
 			transition: none;
 		}
+
+		&__option:hover &__emoji {
+			transform: none;
+		}
 	}
 }
 
@@ -911,7 +1606,7 @@
 	align-items: center;
 	justify-content: center;
 	padding: var(--space-lg);
-	background: rgba(10, 8, 22, 0.7);
+	background: var(--bg-overlay);
 	animation: celebration-fade-in var(--motion-slow) ease both;
 
 	&__card {
@@ -920,12 +1615,12 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-md);
-		background: var(--bg-inset);
+		background: var(--bg-card-solid);
 		border: 1px solid var(--lantern-deep);
 		border-radius: var(--radius-lg);
 		padding: var(--space-xl);
 		text-align: center;
-		box-shadow: 0 0 60px rgba(255, 216, 130, 0.25);
+		box-shadow: 0 0 60px rgba(43, 111, 214, 0.25);
 		animation: celebration-pop var(--motion-slow) cubic-bezier(0.34, 1.56, 0.64, 1) both;
 	}
 
@@ -943,11 +1638,17 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: radial-gradient(circle, #fff 0%, var(--lantern-glow) 45%, transparent 75%);
+		// Festival confetti: the sparks cycle all five theme hues
+		background: radial-gradient(circle, #fff 0%, var(--spark-color, #ffd23f) 45%, transparent 75%);
 		transform: rotate(calc(var(--spark-index) * 20deg)) translateY(-30px);
 		opacity: 0;
 		animation: celebration-spark 1.1s ease-out both;
 		animation-delay: calc(var(--spark-index) * 28ms);
+
+		&:nth-child(5n + 1) { --spark-color: #2b6fd6; }
+		&:nth-child(5n + 2) { --spark-color: #e07714; }
+		&:nth-child(5n + 3) { --spark-color: #8a52cf; }
+		&:nth-child(5n + 4) { --spark-color: #14a08f; }
 	}
 
 	&__hooray {
@@ -955,7 +1656,6 @@
 		font-size: 2.4rem;
 		line-height: 1;
 		color: var(--lantern-glow);
-		text-shadow: 0 0 26px rgba(255, 216, 130, 0.55);
 	}
 
 	&__message {
@@ -963,7 +1663,7 @@
 	}
 
 	&__detail {
-		background: rgba(10, 8, 22, 0.5);
+		background: var(--bg-inset);
 		border-inline-start: 3px solid var(--lantern-glow);
 		border-radius: var(--radius-md);
 		padding: var(--space-sm) var(--space-md);
@@ -1068,7 +1768,7 @@
 			justify-content: center;
 			font-family: var(--font-display);
 			color: var(--lantern-glow);
-			background: var(--bg-primary, rgba(0, 0, 0, 0.3));
+			background: var(--bg-inset);
 		}
 	}
 
@@ -1247,7 +1947,7 @@
 
 	&--urgent {
 		.fuse__burn {
-			background: linear-gradient(90deg, #8a2f3c, var(--danger));
+			background: linear-gradient(90deg, #a5303f, var(--danger));
 		}
 
 		.fuse__time {
@@ -1273,18 +1973,15 @@
 
 		&--success {
 			color: var(--success);
-			text-shadow: 0 0 30px rgba(125, 214, 163, 0.45);
 		}
 
 		&--failure {
 			color: var(--danger);
-			text-shadow: 0 0 24px rgba(240, 142, 155, 0.35);
 		}
 
 		// Honest disagreement — a dignified twilight, neither triumph nor ruin
 		&--honest {
 			color: var(--lantern-glow);
-			text-shadow: 0 0 26px rgba(255, 216, 130, 0.4);
 		}
 	}
 
@@ -1380,7 +2077,7 @@
 		transition: width var(--motion-camera) var(--ease-camera);
 
 		&--down {
-			background: linear-gradient(90deg, #8a2f3c, var(--danger));
+			background: linear-gradient(90deg, #a5303f, var(--danger));
 		}
 	}
 

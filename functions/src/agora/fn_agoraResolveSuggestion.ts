@@ -46,9 +46,10 @@ export const agoraResolveSuggestion = onCall(
 		}
 		if (
 			resolution !== AgoraSuggestionStatus.accepted &&
-			resolution !== AgoraSuggestionStatus.thanked
+			resolution !== AgoraSuggestionStatus.thanked &&
+			resolution !== AgoraSuggestionStatus.declined
 		) {
-			throw new HttpsError('invalid-argument', 'resolution must be accepted or thanked');
+			throw new HttpsError('invalid-argument', 'resolution must be accepted, thanked or declined');
 		}
 
 		try {
@@ -94,6 +95,11 @@ export const agoraResolveSuggestion = onCall(
 				suggestionStatus: resolution,
 				lastUpdate: Date.now(),
 			});
+
+			// A polite decline closes the suggestion quietly — no points, no ping
+			if (resolution === AgoraSuggestionStatus.declined) {
+				return { ok: true };
+			}
 
 			if (suggesterId && suggesterId !== uid) {
 				// Cross-app engagement credits — non-blocking by design

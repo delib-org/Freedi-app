@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie } from '@/lib/utils/user';
+import { getUserIdFromCookie, getUserDisplayNameFromCookie, isAnonymousRequest } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
@@ -132,6 +132,26 @@ export async function POST(
     // Get document info for topParentId and parentId
     const docRef = await db.collection(Collections.statements).doc(docId).get();
     const document = docRef.exists ? docRef.data() : null;
+
+    // Enforce the document's "require Google login" setting server-side.
+    // Otherwise it is only a client-side gate: every visitor gets an anonymous
+    // "_uid" from middleware, so anonymous users could still be written into the
+    // signatures collection — including via the automatic 'viewed' tracking —
+    // and surface as "Anonymous" participants on the admin/users page.
+    if (
+      document?.signSettings?.requireGoogleLogin === true &&
+      isAnonymousRequest(request.headers.get('cookie'))
+    ) {
+      logger.info(`[Signatures API] Blocked anonymous write - requireGoogleLogin: ${userId} on ${docId}`);
+
+      return NextResponse.json(
+        {
+          error: 'Google sign-in required',
+          message: 'You must sign in with Google to participate in this document.',
+        },
+        { status: 403 }
+      );
+    }
 
     // For actual signatures and satisfaction ratings (not just 'viewed'),
     // verify demographic survey completion

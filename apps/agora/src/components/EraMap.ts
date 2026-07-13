@@ -58,10 +58,11 @@ function markerPosition(participantId: string): { x: number; y: number } {
 	};
 }
 
+// Daytime: the old stars become soft white cloud flecks (bigger, fewer-look)
 const STAR_POSITIONS: Array<[number, number, number]> = Array.from({ length: 26 }, (_, index) => [
 	hash01(`star-${index}`, 3) * MAP_W,
 	hash01(`star-${index}`, 4) * 190,
-	0.8 + hash01(`star-${index}`, 5) * 1.4,
+	2 + hash01(`star-${index}`, 5) * 3.5,
 ]);
 
 /** Idea lanterns hang inside the town-square ellipse (cx 505, cy 470) */
@@ -75,11 +76,11 @@ function lanternPosition(id: string): { x: number; y: number } {
 	};
 }
 
-/** Blend camp color by left share, pulled toward lantern gold by bridging */
+/** Blend camp color by left share, pulled toward sun-gold by bridging */
 function lanternRingColor(leftShare: number, bridging: number): string {
-	const left = { r: 91, g: 123, b: 214 }; // --camp-left
-	const right = { r: 214, g: 91, b: 107 }; // --camp-right
-	const gold = { r: 255, g: 216, b: 130 }; // --lantern-glow
+	const left = { r: 138, g: 82, b: 207 }; // --camp-left (royal purple)
+	const right = { r: 20, g: 160, b: 143 }; // --camp-right (teal)
+	const gold = { r: 255, g: 210, b: 63 }; // sun-gold (bridging)
 	const base = {
 		r: left.r * leftShare + right.r * (1 - leftShare),
 		g: left.g * leftShare + right.g * (1 - leftShare),
@@ -115,22 +116,22 @@ export const EraMap: m.Component<EraMapAttrs> = {
 				[
 					m('defs', [
 						m('linearGradient', { id: 'em-sky', x1: '0', y1: '0', x2: '0', y2: '1' }, [
-							m('stop', { offset: '0%', 'stop-color': '#241d45' }),
-							m('stop', { offset: '58%', 'stop-color': '#1a1533' }),
-							m('stop', { offset: '100%', 'stop-color': '#141126' }),
+							m('stop', { offset: '0%', 'stop-color': '#7ec3f2' }),
+							m('stop', { offset: '58%', 'stop-color': '#b9e0fa' }),
+							m('stop', { offset: '100%', 'stop-color': '#e9f5fe' }),
 						]),
 						m('linearGradient', { id: 'em-ground', x1: '0', y1: '0', x2: '0', y2: '1' }, [
-							m('stop', { offset: '0%', 'stop-color': '#2a2352' }),
-							m('stop', { offset: '100%', 'stop-color': '#191437' }),
+							m('stop', { offset: '0%', 'stop-color': '#a5da88' }),
+							m('stop', { offset: '100%', 'stop-color': '#7cbd60' }),
 						]),
 						m('radialGradient', { id: 'em-portal', cx: '50%', cy: '50%', r: '50%' }, [
-							m('stop', { offset: '0%', 'stop-color': '#c3a9f0', 'stop-opacity': '0.95' }),
-							m('stop', { offset: '55%', 'stop-color': '#7b5bd6', 'stop-opacity': '0.55' }),
-							m('stop', { offset: '100%', 'stop-color': '#7b5bd6', 'stop-opacity': '0' }),
+							m('stop', { offset: '0%', 'stop-color': '#b98df0', 'stop-opacity': '0.95' }),
+							m('stop', { offset: '55%', 'stop-color': '#8a52cf', 'stop-opacity': '0.55' }),
+							m('stop', { offset: '100%', 'stop-color': '#8a52cf', 'stop-opacity': '0' }),
 						]),
 						m('radialGradient', { id: 'em-glow', cx: '50%', cy: '50%', r: '50%' }, [
-							m('stop', { offset: '0%', 'stop-color': '#ffd882', 'stop-opacity': '0.9' }),
-							m('stop', { offset: '100%', 'stop-color': '#ffd882', 'stop-opacity': '0' }),
+							m('stop', { offset: '0%', 'stop-color': '#ffd23f', 'stop-opacity': '0.9' }),
+							m('stop', { offset: '100%', 'stop-color': '#ffd23f', 'stop-opacity': '0' }),
 						]),
 					]),
 
@@ -141,17 +142,16 @@ export const EraMap: m.Component<EraMapAttrs> = {
 							cx: x,
 							cy: y,
 							r,
-							fill: '#f4e8cf',
+							fill: '#ffffff',
 							style: `animation-delay: ${(index % 7) * 0.5}s`,
 						}),
 					),
-					m('circle', { cx: 830, cy: 86, r: 34, fill: '#f4e8cf', opacity: 0.85 }),
-					m('circle', { cx: 818, cy: 78, r: 30, fill: '#241d45', opacity: 0.55 }),
+					m('circle', { cx: 830, cy: 86, r: 34, fill: '#ffd23f', opacity: 0.95 }),
 
 					// --- Layer 2: distant city silhouette ---
 					m('path', {
 						d: 'M0 320 L60 320 L70 290 L80 320 L150 320 L150 300 L170 300 L170 320 L260 320 L275 275 L290 320 L420 320 L420 305 L450 285 L480 305 L480 320 L610 320 L620 300 L640 300 L648 282 L656 300 L676 300 L688 320 L800 320 L812 296 L824 320 L1000 320 L1000 560 L0 560 Z',
-						fill: '#1c1738',
+						fill: '#bcd9ec',
 					}),
 
 					// --- Layer 3: ground plane ---
@@ -171,7 +171,7 @@ export const EraMap: m.Component<EraMapAttrs> = {
 								rx: 52,
 								ry: 66,
 								fill: 'none',
-								stroke: '#c3a9f0',
+								stroke: '#b98df0',
 								'stroke-width': 2.5,
 								'stroke-dasharray': '10 14',
 								opacity: 0.8,
@@ -192,19 +192,19 @@ export const EraMap: m.Component<EraMapAttrs> = {
 
 					// Palace (left camp seat) on a western rise
 					m('g', [
-						m('path', { d: 'M250 392 Q 330 368 410 392 L 410 400 L 250 400 Z', fill: '#221c44' }),
-						building(280, 392, 100, 62, '#2e2757'),
-						building(268, 392, 16, 78, '#352d63'),
-						building(376, 392, 16, 78, '#352d63'),
-						m('path', { d: 'M276 314 L284 300 L292 314 Z', fill: '#5b7bd6' }),
-						m('path', { d: 'M384 314 L392 300 L400 314 Z', fill: '#5b7bd6' }),
+						m('path', { d: 'M250 392 Q 330 368 410 392 L 410 400 L 250 400 Z', fill: '#8cc973' }),
+						building(280, 392, 100, 62, '#e3d8c4'),
+						building(268, 392, 16, 78, '#d3c6ab'),
+						building(376, 392, 16, 78, '#d3c6ab'),
+						m('path', { d: 'M276 314 L284 300 L292 314 Z', fill: '#8a52cf' }),
+						m('path', { d: 'M384 314 L392 300 L400 314 Z', fill: '#8a52cf' }),
 						[296, 318, 340].map((x) =>
 							m('rect.era-map__window', {
 								x,
 								y: 348,
 								width: 9,
 								height: 14,
-								fill: '#8ea9f0',
+								fill: '#b98df0',
 								rx: 1.5,
 							}),
 						),
@@ -212,11 +212,11 @@ export const EraMap: m.Component<EraMapAttrs> = {
 
 					// Assembly (right camp seat) on an eastern rise
 					m('g', [
-						m('path', { d: 'M600 396 Q 690 372 780 396 L 780 404 L 600 404 Z', fill: '#221c44' }),
-						building(630, 396, 120, 54, '#2e2757'),
-						m('path', { d: 'M624 342 L690 316 L756 342 Z', fill: '#3a3170' }),
+						m('path', { d: 'M600 396 Q 690 372 780 396 L 780 404 L 600 404 Z', fill: '#8cc973' }),
+						building(630, 396, 120, 54, '#e3d8c4'),
+						m('path', { d: 'M624 342 L690 316 L756 342 Z', fill: '#14a08f' }),
 						[640, 664, 688, 712].map((x) =>
-							m('rect', { x, y: 356, width: 8, height: 40, fill: '#251f4c' }),
+							m('rect', { x, y: 356, width: 8, height: 40, fill: '#cbbfa4' }),
 						),
 						[648, 676, 704].map((x) =>
 							m('rect.era-map__window', {
@@ -224,7 +224,7 @@ export const EraMap: m.Component<EraMapAttrs> = {
 								y: 362,
 								width: 9,
 								height: 13,
-								fill: '#f08e9b',
+								fill: '#0e8f80',
 								rx: 1.5,
 							}),
 						),
@@ -234,14 +234,14 @@ export const EraMap: m.Component<EraMapAttrs> = {
 					m('path', {
 						d: 'M410 384 Q 505 352 600 388',
 						fill: 'none',
-						stroke: '#4a3f85',
+						stroke: '#a97e52',
 						'stroke-width': 7,
 						'stroke-linecap': 'round',
 					}),
 					m('path', {
 						d: 'M410 384 Q 505 352 600 388',
 						fill: 'none',
-						stroke: '#6d5db3',
+						stroke: '#e8d3a8',
 						'stroke-width': 2.5,
 						'stroke-linecap': 'round',
 						'stroke-dasharray': '2 16',
@@ -249,33 +249,33 @@ export const EraMap: m.Component<EraMapAttrs> = {
 
 					// Town square — the agora (deliberation heart)
 					m('g', [
-						m('ellipse', { cx: 505, cy: 470, rx: 150, ry: 40, fill: '#242051', opacity: 0.9 }),
+						m('ellipse', { cx: 505, cy: 470, rx: 150, ry: 40, fill: '#f2e4c6', opacity: 0.9 }),
 						m('ellipse', {
 							cx: 505,
 							cy: 470,
 							rx: 108,
 							ry: 27,
 							fill: 'none',
-							stroke: '#3d3577',
+							stroke: '#d8c294',
 							'stroke-width': 2,
 						}),
 						// central obelisk
-						m('path', { d: 'M500 470 L503 404 L507 404 L510 470 Z', fill: '#352d63' }),
+						m('path', { d: 'M500 470 L503 404 L507 404 L510 470 Z', fill: '#d3c6ab' }),
 						m('circle', { cx: 505, cy: 398, r: 12, fill: 'url(#em-glow)' }),
-						m('circle', { cx: 505, cy: 398, r: 4, fill: '#ffd882' }),
+						m('circle', { cx: 505, cy: 398, r: 4, fill: '#ffd23f' }),
 					]),
 
 					// Observatory (period explainer) on the far eastern hill
 					m('g', [
-						m('path', { d: 'M840 384 Q 900 358 968 384 L 968 392 L 840 392 Z', fill: '#221c44' }),
-						building(880, 384, 48, 40, '#2e2757'),
-						m('path', { d: 'M878 344 A 26 26 0 0 1 930 344 Z', fill: '#3a3170' }),
+						m('path', { d: 'M840 384 Q 900 358 968 384 L 968 392 L 840 392 Z', fill: '#8cc973' }),
+						building(880, 384, 48, 40, '#e3d8c4'),
+						m('path', { d: 'M878 344 A 26 26 0 0 1 930 344 Z', fill: '#c96f4a' }),
 						m('line', {
 							x1: 904,
 							y1: 330,
 							x2: 922,
 							y2: 306,
-							stroke: '#8ea9f0',
+							stroke: '#4d5c8f',
 							'stroke-width': 3,
 							'stroke-linecap': 'round',
 						}),
@@ -296,8 +296,8 @@ export const EraMap: m.Component<EraMapAttrs> = {
 								m('rect', {
 									width: MAP_W,
 									height: MAP_H,
-									fill: '#ffd882',
-									opacity: 0.06,
+									fill: '#ffd23f',
+									opacity: 0.1,
 								}),
 							])
 						: null,
@@ -317,8 +317,8 @@ export const EraMap: m.Component<EraMapAttrs> = {
 								m('rect', {
 									width: MAP_W,
 									height: MAP_H,
-									fill: '#6a5a8c',
-									opacity: 0.18,
+									fill: '#f2a65e',
+									opacity: 0.2,
 								}),
 							])
 						: null,
@@ -331,7 +331,7 @@ export const EraMap: m.Component<EraMapAttrs> = {
 											cy: 300 - index * 10,
 											rx: 34,
 											ry: 16,
-											fill: '#3a3542',
+											fill: '#9a97a5',
 											opacity: 0.75,
 										}),
 										m('ellipse.era-map__smoke', {
@@ -339,14 +339,14 @@ export const EraMap: m.Component<EraMapAttrs> = {
 											cy: 262 - index * 10,
 											rx: 26,
 											ry: 13,
-											fill: '#474252',
+											fill: '#b3b0bd',
 											opacity: 0.6,
 										}),
 										m('circle', {
 											cx: x,
 											cy: 348,
 											r: 12,
-											fill: '#d65b6b',
+											fill: '#d13d4e',
 											opacity: 0.45,
 										}),
 									]),
@@ -354,8 +354,8 @@ export const EraMap: m.Component<EraMapAttrs> = {
 								m('rect', {
 									width: MAP_W,
 									height: MAP_H,
-									fill: '#1a1020',
-									opacity: 0.28,
+									fill: '#54486a',
+									opacity: 0.22,
 								}),
 							])
 						: null,
@@ -378,7 +378,8 @@ export const EraMap: m.Component<EraMapAttrs> = {
 								cx: x,
 								cy: y,
 								r: lantern.isMine ? 6 : 4.5,
-								fill: '#f5b944',
+								// Ownership on the map too: my idea-dot is my blue
+								fill: lantern.isMine ? '#2b6fd6' : '#e07714',
 								opacity: 0.55 + lantern.brightness * 0.45,
 								stroke: ring,
 								'stroke-width': lantern.isMine ? 3 : 2,
@@ -402,8 +403,8 @@ export const EraMap: m.Component<EraMapAttrs> = {
 								cx: x,
 								cy: y,
 								r: isMine ? 5.5 : 4,
-								fill: isMine ? '#ffd882' : '#f5b944',
-								stroke: '#2b2416',
+								fill: isMine ? '#2b6fd6' : '#e07714',
+								stroke: '#ffffff',
 								'stroke-width': 1,
 							}),
 						]);

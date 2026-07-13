@@ -43,7 +43,7 @@ export default function SatisfactionScale({ currentScore }: SatisfactionScalePro
     <div
       className={styles.scale}
       role="group"
-      aria-label={t('satisfactionQuestion') || 'How satisfied are you with this document?'}
+      aria-label={t('satisfactionQuestion') || 'What do you think about this proposal?'}
     >
       {SATISFACTION_SCORES.map((score) => {
         const { key, fallback } = SCORE_LABEL_KEYS[score];

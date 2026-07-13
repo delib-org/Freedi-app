@@ -25,6 +25,29 @@ export default defineConfig({
   },
 
   plugins: [
+    {
+      // A production-build service worker once registered on this origin
+      // pins every browser to its stale precache (dev changes "never
+      // arrive"). Serving a kill-switch /sw.js lets the old worker's
+      // auto-update check replace itself with one that unregisters and
+      // reloads — a single refresh heals any poisoned browser/profile.
+      name: 'agora-dev-sw-killswitch',
+      apply: 'serve' as const,
+      configureServer(server) {
+        server.middlewares.use('/sw.js', (_req, res) => {
+          res.setHeader('Content-Type', 'application/javascript');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(
+            'self.addEventListener("install",()=>self.skipWaiting());' +
+              'self.addEventListener("activate",e=>{e.waitUntil(' +
+              'self.registration.unregister()' +
+              '.then(()=>self.clients.matchAll({type:"window"}))' +
+              '.then(clients=>{clients.forEach(client=>client.navigate(client.url));})' +
+              ');});',
+          );
+        });
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {

@@ -1,50 +1,62 @@
 // ============================================================================
-// Agora design tokens — "Era of Lanterns"
-// Dark, cinematic, era-themed. See apps/agora/DESIGN.md for the full brief.
+// Agora design tokens — "Festival Day"
+// Light, playful, blue=mine / orange=classmate. See apps/agora/DESIGN.md.
+// NOTE the -glow role flip vs. the old night theme: on a light page readable
+// emphasis is DARK, so every *-glow token holds the text-safe dark shade of
+// its family (all measured WCAG AA on white / --bg-inset).
 // ============================================================================
 
 :root {
-  // --- Night sky (page backdrop) ---
-  --bg-page: #141126;
-  --bg-page-high: #241d45; // upper sky in gradients
-  --bg-card: rgba(30, 25, 58, 0.82);
-  --bg-card-solid: #1e193a;
-  --bg-overlay: rgba(10, 8, 22, 0.66);
-  --bg-inset: rgba(12, 10, 26, 0.6);
+  // --- Day sky (page backdrop) ---
+  --bg-page: #f4faff;
+  --bg-page-high: #aed9f9; // upper sky in gradients
+  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card-solid: #ffffff;
+  --bg-overlay: rgba(30, 48, 80, 0.45);
+  --bg-inset: rgba(37, 90, 150, 0.07);
 
-  // --- Parchment & ink (content surfaces) ---
-  --parchment: #f4e8cf;
-  --parchment-dim: #d9c9a8;
-  --ink: #2b2416;
+  // --- Paper & ink (content surfaces) ---
+  --parchment: #fff8ea;
+  --parchment-dim: #efe3c8;
+  --ink: #253352;
 
-  // --- Lantern golds (primary accent, points, glow) ---
-  --lantern: #f5b944;
-  --lantern-glow: #ffd882;
-  --lantern-deep: #b97f1e;
+  // --- MINE blue (primary accent; token names kept from the lantern era —
+  // var(--lantern*) is "primary accent = mine" everywhere) ---
+  --lantern: #2b6fd6; // fill; white text on it = 4.83:1 AA
+  --lantern-glow: #1d55ab; // text-safe emphasis (7.14:1 on white)
+  --lantern-deep: #164a92; // borders, pressed states, gradient bottoms
 
-  // --- Camps (core game semantics) ---
-  --camp-left: #5b7bd6;   // royal blue
-  --camp-left-glow: #8ea9f0;
-  --camp-right: #d65b6b;  // revolution red
-  --camp-right-glow: #f08e9b;
-  --camp-center: #9b7bd6; // violet blend
-  --camp-center-glow: #c3a9f0;
+  // --- Ownership aliases + PEER orange ---
+  --mine: var(--lantern);
+  --mine-deep: var(--lantern-deep);
+  --mine-glow: var(--lantern-glow);
+  --peer: #e07714; // fill/ribbon; UI only, never small text
+  --peer-glow: #9c5300; // text-safe emphasis (5.75:1 on white)
+  --peer-deep: #8a4a02; // borders/pressed
+
+  // --- Camps (core game semantics — never blue/orange) ---
+  --camp-left: #8a52cf;   // royal purple
+  --camp-left-glow: #6a34ab;
+  --camp-right: #14a08f;  // teal
+  --camp-right-glow: #0b7568;
+  --camp-center: #6f7fb3; // purple+teal blend, desaturated
+  --camp-center-glow: #4d5c8f;
 
   // --- Semantic ---
-  --success: #7dd6a3;
-  --danger: #f08e9b;
-  --warning: #f5b944;
+  --success: #17804d;
+  --danger: #d13d4e;
+  --warning: #b97300; // borders/fills only; warning copy uses --text-primary
 
   // --- Text ---
-  --text-primary: #f4e8cf;
-  --text-secondary: #b9aed6;
-  --text-muted: #7d739e;
-  --text-on-lantern: #2b2416;
+  --text-primary: #253352;
+  --text-secondary: #4d5e7d;
+  --text-muted: #5e6f8c;
+  --text-on-lantern: #ffffff;
 
   // --- Borders ---
-  --border-subtle: rgba(244, 232, 207, 0.14);
-  --border-strong: rgba(244, 232, 207, 0.32);
-  --border-lantern: rgba(245, 185, 68, 0.55);
+  --border-subtle: rgba(37, 51, 82, 0.12);
+  --border-strong: rgba(37, 51, 82, 0.28);
+  --border-lantern: rgba(43, 111, 214, 0.55);
 
   // --- Spacing (8-point grid) ---
   --space-xs: 4px;
@@ -74,9 +86,9 @@
   --radius-full: 999px;
 
   // --- Elevation / glow ---
-  --shadow-card: 0 6px 24px rgba(6, 4, 16, 0.5);
-  --glow-lantern: 0 0 18px rgba(255, 216, 130, 0.45);
-  --glow-marker: 0 0 12px rgba(255, 216, 130, 0.7);
+  --shadow-card: 0 6px 20px rgba(37, 51, 82, 0.1);
+  --glow-lantern: 0 4px 14px rgba(43, 111, 214, 0.25);
+  --glow-marker: 0 0 12px rgba(43, 111, 214, 0.45);
 
   // --- Motion (camera-move easing; never hard cuts) ---
   --motion-fast: 150ms;

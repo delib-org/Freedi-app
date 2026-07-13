@@ -11,6 +11,8 @@ function toastText(triggerType: string, fallback: string): string {
 			return t('toast.suggestion_thanked');
 		case 'agora_round_started':
 			return t('toast.round_started');
+		case 'agora_helped_improved':
+			return t('toast.helped_improved');
 		default:
 			return fallback;
 	}

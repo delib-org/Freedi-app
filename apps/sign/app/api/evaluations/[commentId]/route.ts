@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
+import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName, isAnonymousRequest } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { logger } from '@/lib/utils/logger';
@@ -133,6 +133,23 @@ export async function POST(
     if (await isUserBlocked(db, evalDocumentId, effectiveId)) {
       return NextResponse.json(
         { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
+
+    // Enforce the document's "require Google login" setting server-side —
+    // it is otherwise only a client-side gate. Anonymous visitors (cookie
+    // "anon_" ids or visitorId-based evaluations) must be blocked here.
+    const evalDocSnap = await db.collection(Collections.statements).doc(evalDocumentId).get();
+    if (
+      evalDocSnap.data()?.signSettings?.requireGoogleLogin === true &&
+      isAnonymousRequest(cookieHeader)
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Google sign-in required',
+          message: 'You must sign in with Google to evaluate on this document.',
+        },
         { status: 403 }
       );
     }

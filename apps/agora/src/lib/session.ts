@@ -1,11 +1,12 @@
 import m from 'mithril';
-import { db, doc, collection, query, where, onSnapshot, Unsubscribe } from './firebase';
+import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe } from './firebase';
 import {
 	Collections,
 	AgoraSession,
 	AgoraParticipant,
 	AgoraSessionSchema,
 	AgoraParticipantSchema,
+	AgoraStage,
 	createAgoraParticipantId,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
@@ -106,6 +107,35 @@ export function listenToSession(sessionId: string, userId: string): void {
 	);
 
 	unsubscribers = [sessionUnsub, participantsUnsub];
+}
+
+// Last progress written, to keep view-driven reporting idempotent (no
+// duplicate writes on redraws)
+let lastProgressKey = '';
+
+/**
+ * Publish the student's self-paced scene progress onto their participant
+ * doc — the teacher's "who finished, can I advance?" signal.
+ */
+export function reportStageProgress(
+	sessionId: string,
+	userId: string,
+	stage: AgoraStage,
+	scenesDone: number,
+	scenesTotal: number,
+): void {
+	const key = `${sessionId}--${stage}--${scenesDone}/${scenesTotal}`;
+	if (lastProgressKey === key) return;
+	lastProgressKey = key;
+
+	updateDoc(doc(db, Collections.agoraParticipants, createAgoraParticipantId(sessionId, userId)), {
+		stageProgress: { stage, scenesDone, scenesTotal },
+		lastActive: Date.now(),
+	}).catch((error: unknown) => {
+		// Progress is a courtesy signal — never block the student on it
+		console.error('[Session] Report progress failed:', error);
+		lastProgressKey = '';
+	});
 }
 
 export function stopListening(): void {

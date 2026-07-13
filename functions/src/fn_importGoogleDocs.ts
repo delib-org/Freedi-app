@@ -46,6 +46,52 @@ const HEADING_STYLE_MAP: Record<string, ParagraphType> = {
 	NORMAL_TEXT: ParagraphType.paragraph,
 };
 
+/** Leading section-number pattern, e.g. "1.", "1.1", "2)" */
+const NUMBER_PREFIX = /^\s*(\d+(?:\.\d+)*)[.)]?\s+\S/;
+
+/**
+ * Detect a section title authored as bold (and/or numbered) text rather than with a
+ * Google Docs "Heading" style, so it still becomes a real heading. Titles that are
+ * merely bold arrive as NORMAL_TEXT and would otherwise stay ParagraphType.paragraph.
+ * Returns the heading ParagraphType (h2..h6) or null. Level follows numbering depth.
+ */
+function detectHeadingFromRuns(
+	elements: docs_v1.Schema$ParagraphElement[] | undefined,
+): ParagraphType | null {
+	if (!elements || elements.length === 0) return null;
+
+	const runs = elements
+		.map((el) => el.textRun)
+		.filter((r): r is docs_v1.Schema$TextRun => Boolean(r?.content))
+		.map((r) => ({ text: (r.content || '').replace(/\n$/, ''), bold: Boolean(r.textStyle?.bold) }));
+
+	const text = runs.map((r) => r.text).join('').trim();
+	if (!text) return null;
+
+	const firstNonEmpty = runs.find((r) => r.text.trim().length > 0);
+	const leadingBold = Boolean(firstNonEmpty?.bold);
+
+	const boldChars = runs.filter((r) => r.bold).reduce((n, r) => n + r.text.trim().length, 0);
+	const visibleChars = runs.reduce((n, r) => n + r.text.trim().length, 0);
+	const fullyBold = visibleChars > 0 && boldChars >= Math.floor(visibleChars * 0.9);
+
+	const numMatch = text.match(NUMBER_PREFIX);
+	if (numMatch) {
+		if (!fullyBold && !leadingBold) return null;
+		const depth = numMatch[1].split('.').length;
+		const level = Math.min(depth + 1, 6);
+
+		return `h${level}` as ParagraphType;
+	}
+
+	const wordCount = text.split(/\s+/).length;
+	if (fullyBold && text.length <= 60 && wordCount <= 12 && !/[.!?]$/.test(text)) {
+		return ParagraphType.h2;
+	}
+
+	return null;
+}
+
 /**
  * Generate a unique paragraph ID
  */
@@ -191,6 +237,14 @@ function convertParagraphElement(
 	const namedStyle = paragraph.paragraphStyle?.namedStyleType;
 	if (namedStyle && HEADING_STYLE_MAP[namedStyle]) {
 		type = HEADING_STYLE_MAP[namedStyle];
+	}
+
+	// Promote bold / numbered section titles that lack a Google Docs heading style.
+	if (type === ParagraphType.paragraph && !paragraph.bullet) {
+		const detected = detectHeadingFromRuns(paragraph.elements);
+		if (detected) {
+			type = detected;
+		}
 	}
 
 	if (paragraph.bullet) {

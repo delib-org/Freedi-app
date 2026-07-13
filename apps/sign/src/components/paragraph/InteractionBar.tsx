@@ -25,6 +25,8 @@ interface InteractionBarProps {
   positiveEvaluations?: number;
   /** Negative evaluation count from evaluations system */
   negativeEvaluations?: number;
+  /** When true, this is a heading/title: hide comment & suggest (approve/reject only) */
+  isHeader?: boolean;
 }
 
 export default function InteractionBar({
@@ -38,6 +40,7 @@ export default function InteractionBar({
   isAnonymous = false,
   positiveEvaluations,
   negativeEvaluations,
+  isHeader = false,
 }: InteractionBarProps) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -252,30 +255,33 @@ export default function InteractionBar({
         </button>
       </div>
 
-      <button
-        type="button"
-        className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
-        onClick={(e) => handleButtonClick(e, handleOpenComments)}
-        title={blockedTitle || t('Comments')}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      {/* Comment button - hidden on headings/titles (structural, not for discussion) */}
+      {!isHeader && (
+        <button
+          type="button"
+          className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
+          onClick={(e) => handleButtonClick(e, handleOpenComments)}
+          title={blockedTitle || t('Comments')}
         >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-        <span className={styles.buttonText}>{t('Comments')}</span>
-        {commentCount > 0 && (
-          <span className={styles.commentCount}>{commentCount}</span>
-        )}
-      </button>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span className={styles.buttonText}>{t('Comments')}</span>
+          {commentCount > 0 && (
+            <span className={styles.commentCount}>{commentCount}</span>
+          )}
+        </button>
+      )}
 
-      {/* Suggest button - only show if suggestions are enabled */}
-      {enableSuggestions && (
+      {/* Suggest button - only show if suggestions are enabled and not a heading */}
+      {enableSuggestions && !isHeader && (
         <button
           type="button"
           className={`${styles.button} ${styles.suggestButton} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
