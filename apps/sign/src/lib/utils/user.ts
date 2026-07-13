@@ -110,6 +110,25 @@ export function getUserEmailFromCookie(_cookieHeader: string | null): string | n
 }
 
 /**
+ * Determine whether a request comes from an anonymous user, from cookies alone
+ * (server-side).
+ *
+ * A visitor is anonymous when they have no user id, when their id is a
+ * middleware-minted "anon_" id, or when they carry no display-name cookie.
+ * Google-authenticated users always get a non-empty `userDisplayName` cookie
+ * (set by `setFirebaseUser`), while Firebase-anonymous logins set it empty —
+ * so a missing/empty display name reliably marks an anonymous session. This is
+ * the server-side counterpart to the client-only `requireGoogleLogin` gate.
+ */
+export function isAnonymousRequest(cookieHeader: string | null): boolean {
+  const userId = getUserIdFromCookie(cookieHeader);
+  if (!userId) return true;
+  if (userId.startsWith('anon_')) return true;
+
+  return !getUserDisplayNameFromCookie(cookieHeader);
+}
+
+/**
  * Get user ID from Next.js cookies API (server-side)
  * @param cookieStore - Next.js cookies() return value
  */
