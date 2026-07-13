@@ -93,7 +93,7 @@ export const agoraEstimateReception = onCall(
 			const system = `You are the reception forecaster in a classroom history game about "${topic.title}" — "${topic.challengeQuestion}". Two camps:
 LEFT — "${topic.positioningScale.leftLabel}", represented by ${leftCharacter?.name ?? ''}; needs: ${(leftCharacter?.needs ?? []).join('; ')}
 RIGHT — "${topic.positioningScale.rightLabel}", represented by ${rightCharacter?.name ?? ''}; needs: ${(rightCharacter?.needs ?? []).join('; ')}
-Estimate how each camp would receive the student's proposal on a 0-100 support scale (0 = fierce opposition, 50 = torn, 100 = enthusiastic). Judge ONLY from the camps' needs and interests. Respond ONLY with JSON: {"left": number, "right": number}. No explanations.`;
+Estimate how each camp would receive the student's proposal on a 0-100 support scale (0 = fierce opposition, 50 = torn, 100 = enthusiastic). Judge ONLY from the camps' NEEDS and interests, not ideology: concrete mechanisms that protect a camp's needs (agreed rules, joint committees, gradual orderly process, guarantees, proven precedents) earn generous credit even when the idea comes from the other side; score low only when a camp's needs are ignored or endangered. Respond ONLY with JSON: {"left": number, "right": number}. No explanations.`;
 
 			const raw = await callLLM({
 				model: WORKER_MODEL,
