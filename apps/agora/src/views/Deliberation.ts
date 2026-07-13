@@ -435,24 +435,6 @@ export function Deliberation(
 	}
 
 	/** The proposal on the table. Mine glows gold; a classmate's sits in a neutral frame. */
-	/** A classmate's proposal on the table — neutral frame, attributed, read-only */
-	function heroCard(proposal: AgoraProposal, options: { onNext?: () => void }): m.Children {
-		return m('.card.my-lantern.my-lantern--theirs', [
-			m('.my-lantern__header', [
-				m('span.my-lantern__icon', '📜'),
-				m('span.my-lantern__title', t('delib.proposal_by', { name: proposal.anonName || '?' })),
-				options.onNext
-					? m(
-							'button.btn.btn--ghost.my-lantern__edit',
-							{ onclick: options.onNext },
-							`↻ ${t('delib.next_proposal')}`,
-						)
-					: null,
-			]),
-			m('p.my-lantern__text', proposal.statement),
-		]);
-	}
-
 	/**
 	 * Reception forecast — numbers only, on demand. The AI never writes or
 	 * advises here (a mirror, not a ghost-writer): it only predicts how each
@@ -1139,13 +1121,28 @@ export function Deliberation(
 						helpTarget
 							? [
 									scoreboard(topic, scores[helpTarget.statementId], false),
-									heroCard(helpTarget, {
-										onNext: () => {
-											helpSkips++;
-											suggestionDraft = '';
-										},
-									}),
-									m('.card.workshop', [
+									// ONE box: their proposal on top, my suggestion workshop
+									// beneath it — same unified frame as the mine screen
+									m('.card.my-lantern.my-lantern--theirs.my-lantern--workshop', [
+										m('.my-lantern__header', [
+											m('span.my-lantern__icon', '📜'),
+											m(
+												'span.my-lantern__title',
+												t('delib.proposal_by', { name: helpTarget.anonName || '?' }),
+											),
+											m(
+												'button.btn.btn--ghost.my-lantern__edit',
+												{
+													onclick: () => {
+														helpSkips++;
+														suggestionDraft = '';
+													},
+												},
+												`↻ ${t('delib.next_proposal')}`,
+											),
+										]),
+										m('p.my-lantern__text', helpTarget.statement),
+										m('.my-lantern__divider'),
 										workshopTabs(
 											[
 												{ id: 'suggest', label: t('delib.tab_suggest') },
@@ -1156,40 +1153,37 @@ export function Deliberation(
 												helpTab = id as typeof helpTab;
 											},
 										),
-										m(
-											'.workshop__body',
-											helpTab === 'suggest'
-												? m('.stack', [
-														m('p.workshop__question', t('delib.help_question')),
-														m('p.square-says__meaning', t('delib.help_dont_attack')),
-														m('textarea.text-input', {
-															value: suggestionDraft,
-															rows: 4,
-															placeholder: t('delib.suggest_placeholder'),
-															oninput: (event: InputEvent) => {
-																suggestionDraft = (event.target as HTMLTextAreaElement).value;
-															},
-														}),
-														m('.delib__actions', [
-															m('button.btn.btn--ghost', { onclick: advanceRound }, skipLabel),
-															m(
-																'button.btn.btn--primary',
-																{
-																	disabled:
-																		suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-																	onclick: () => {
-																		const text = suggestionDraft.trim();
-																		suggestionDraft = '';
-																		void submitSuggestion(live, helpTarget, anonName, text);
-																		advanceRound();
-																	},
+										helpTab === 'suggest'
+											? m('.stack', [
+													m('p.workshop__question', t('delib.help_question')),
+													m('p.square-says__meaning', t('delib.help_dont_attack')),
+													m('textarea.text-input', {
+														value: suggestionDraft,
+														rows: 4,
+														placeholder: t('delib.suggest_placeholder'),
+														oninput: (event: InputEvent) => {
+															suggestionDraft = (event.target as HTMLTextAreaElement).value;
+														},
+													}),
+													m('.delib__actions', [
+														m('button.btn.btn--ghost', { onclick: advanceRound }, skipLabel),
+														m(
+															'button.btn.btn--primary',
+															{
+																disabled:
+																	suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+																onclick: () => {
+																	const text = suggestionDraft.trim();
+																	suggestionDraft = '';
+																	void submitSuggestion(live, helpTarget, anonName, text);
+																	advanceRound();
 																},
-																t('delib.send_suggestion'),
-															),
-														]),
-													])
-												: m(NeedsBoard, { topic }),
-										),
+															},
+															t('delib.send_suggestion'),
+														),
+													]),
+												])
+											: m(NeedsBoard, { topic }),
 									]),
 									helpedSection(live),
 								]
