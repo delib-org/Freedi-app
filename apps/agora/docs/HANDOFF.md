@@ -25,6 +25,11 @@ service, expanding agreement, honest disagreement as an achievement.
 session (join code + QR stay on the board through ALL stages for latecomers)
 → advance stages with one button: lobby → framing → perspectives → needs →
 positioning → deliberation (auto-starts, no round management) → results.
+A **class-progress card** (per-student chips) shows who finished the current
+stage's self-paced steps — scene stages read `participant.stageProgress`
+(written by SceneStage via `reportStageProgress`), positioning reads
+`campPosition`, deliberation reads "has a proposal" — so the teacher knows
+when to advance. Participant count is students only (AI raters filtered).
 
 **Student** (`/join/<code>`, anonymous): lobby (marker on the era map) →
 scenes (framing/perspectives/needs, self-paced, dialogue reveals) → **needs

@@ -84,6 +84,15 @@ for (const stage of ['FRAMING (intro→tunnel→period)', 'PERSPECTIVES (both si
 	if (stage.startsWith('NEEDS')) await shot(s1, '03-student-needs-scene');
 	if (stage.startsWith('PERSPECTIVES')) await shot(s1, '03a-student-perspective');
 	await Promise.all([clickThroughScenes(s1, 'S1'), clickThroughScenes(s2, 'S2')]);
+	// The teacher's class-progress card fills as students finish their scenes
+	await teacher
+		.locator('.class-progress__count--all')
+		.waitFor({ timeout: 15000 });
+	console.log(
+		'TEACHER CLASS PROGRESS:',
+		await teacher.locator('.class-progress__count').textContent()
+	);
+	if (stage.startsWith('FRAMING')) await shot(teacher, '02b-teacher-class-progress');
 }
 
 // After the needs scenes: both sides' needs stay on screen, side by side

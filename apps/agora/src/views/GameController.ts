@@ -1,7 +1,12 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { ensureUser } from '../lib/user';
-import { listenToSession, stopListening, getSessionState } from '../lib/session';
+import {
+	listenToSession,
+	stopListening,
+	getSessionState,
+	reportStageProgress,
+} from '../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
@@ -91,6 +96,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					.map((kind) => topic.scenes.find((scene) => scene.kind === kind))
 					.filter((scene) => scene !== undefined);
 
+			// Scene stages publish self-paced progress so the teacher knows
+			// who finished and when to advance
+			const onProgress = (scenesDone: number, scenesTotal: number) => {
+				if (userId) {
+					reportStageProgress(sessionId, userId, session.stage, scenesDone, scenesTotal);
+				}
+			};
+
 			const stageView = ((): m.Children => {
 				switch (session.stage) {
 					case AgoraStage.framing:
@@ -101,12 +114,14 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 								AgoraSceneKind.periodExplainer,
 							),
 							storageKey: `agora_${sessionId}_framing`,
+							onProgress,
 						});
 
 					case AgoraStage.perspectives:
 						return m(SceneStage, {
 							scenes: scenesOf(AgoraSceneKind.perspectiveA, AgoraSceneKind.perspectiveB),
 							storageKey: `agora_${sessionId}_perspectives`,
+							onProgress,
 						});
 
 					case AgoraStage.needs:
@@ -120,6 +135,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							// Both sides' needs stay on screen for re-reading while
 							// the class finishes the scenes
 							epilogue: m(NeedsBoard, { topic }),
+							onProgress,
 						});
 
 					case AgoraStage.valueIdentification:
