@@ -33,19 +33,28 @@ everywhere) → positioning (slider labeled with character names + camp) →
 **deliberation: 5 self-paced laps** of *my proposal → rate 3 → help someone*
 → results.
 
-Key deliberation mechanics:
-- **My proposal workshop**: hero lantern card (own text), "what does the
-  square say" (named camp bars + bridge-power meter + empty state), received
-  suggestions (accept auto-opens editing; accepting celebrates the suggester
-  with a full-screen glitter popup quoting their improvement), character
-  chips → in-character AI verdicts (the Count/Camille judge the proposal,
-  score 0–100, advice; their rating enters the REAL evaluation pipeline as
-  3 camp raters each; verdicts older than the latest edit show "text
-  changed" and re-ask becomes primary). Improving your own proposal
-  celebrates + stays on this screen.
+Key deliberation mechanics (Stitch workshop redesign implemented 2026-07-13 —
+"mine" and "help" share ONE skeleton: scoreboard → proposal on the table →
+tabbed work area):
+- **My proposal workshop**: scoreboard panel (camp columns side by side +
+  bridge-power meter with big N/100 and gold spark), gold-glow hero card
+  (own text + ✏️), then a tabbed workshop card [Feedback (badge = open
+  suggestions) | AI help | Needs]. Feedback = ONE attributed inbox:
+  character chips (the Count/Camille → in-character AI verdicts, score
+  0–100, advice; their rating enters the REAL evaluation pipeline as 3 camp
+  raters each; stale after edit → "text changed", re-ask primary) + peer
+  suggestions with "I'll implement / Thanks / No thanks" (declined status —
+  quiet, no points). Accept auto-opens editing (editor REPLACES the work
+  area) and celebrates the suggester with a glitter popup. AI help tab =
+  improve-my-wording (opens editor with coach draft) + coach note. Needs
+  tab = the needs board. Improving your own proposal celebrates + stays.
 - **Rate**: five-level emoji scale (−1…+1 half steps), least-rated-first
   candidate ordering with per-student tiebreak, 3 per lap.
-- **Help**: one suggestion per lap, fewest-open-suggestions targets first.
+- **Help**: same skeleton — their scoreboard, NEUTRAL hero card ("Proposal
+  by <anon>" + ↻ next proposal), tabs [My suggestion | AI help | Needs];
+  suggestion tab asks "How could this proposal serve BOTH camps better?",
+  AI help = phrase-my-suggestion. One suggestion per lap,
+  fewest-open-suggestions targets first.
 - **Results**: three outcomes — success / honest disagreement (dignified
   "dusk" map + achievement framing) / collapse — plus a warm AI class
   debrief (what went well / what to try next time). Class score = 0.45
@@ -110,11 +119,10 @@ beveled gold buttons; scene-title gold-diamond flourishes.
 
 ## Next steps (agreed direction)
 
-1. **Workshop-screens redesign via Google Stitch** — Tal iterates in Stitch
-   using `stitch-brief.md` (one shared skeleton for "my proposal" and "help
-   someone": scene image → scoreboard → proposal on the table → tabbed work
-   area [Feedback|AI help|Needs] with a unified attributed feedback inbox and
-   "I'll implement / Thanks / No thanks"). When a design lands, implement it.
+1. ~~Workshop-screens redesign via Google Stitch~~ — DONE 2026-07-13 (shared
+   skeleton, tabbed work area, unified feedback inbox, declined status).
+   Not adopted from the Stitch export: sentiment-emoji rows on the help
+   screen (rating stays its own step) and the fixed bottom nav.
 2. **Diverging camp bars** — show opposition (red, from baseline) vs support;
    "3 rated" with an empty bar currently hides active rejection (offered,
    not yet approved).

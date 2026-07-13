@@ -731,10 +731,23 @@
 	}
 }
 
-// --- My lantern: the student's own proposal as the hero object ---
+// --- My lantern: the proposal on the table as the hero object ---
+// Mine glows gold; --theirs is the neutral frame of a classmate's proposal.
 .my-lantern {
 	border: 1px solid var(--lantern-deep);
 	box-shadow: 0 0 24px rgba(255, 216, 130, 0.12);
+
+	&--theirs {
+		border-color: var(--border-subtle);
+		box-shadow: none;
+
+		.my-lantern__title {
+			color: var(--text-secondary);
+			font-size: var(--font-size-sm);
+			font-family: var(--font-body);
+			font-style: italic;
+		}
+	}
 
 	&__header {
 		display: flex;
@@ -761,6 +774,206 @@
 		color: var(--text-primary);
 		font-size: var(--font-size-lg);
 		line-height: 1.6;
+	}
+}
+
+// --- Scoreboard: both camps side by side + the bridge-power meter ---
+.scoreboard {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&__camps {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-md);
+	}
+
+	&__camp {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__camp-name {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+
+	&__camp-track {
+		width: 100%;
+		max-width: 140px;
+		height: 6px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__camp-fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__camp-count {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__divider {
+		width: 1px;
+		background: var(--border-subtle);
+	}
+
+	&__bridge {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-md);
+	}
+
+	&__bridge-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+
+	&__bridge-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	&__bridge-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--lantern-glow);
+	}
+
+	&__bridge-max {
+		font-size: var(--font-size-base);
+		opacity: 0.5;
+	}
+
+	// The bridge spans from one camp's bank to the other's; the lantern
+	// spark rides the leading edge
+	&__meter {
+		height: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		padding: 1px;
+		direction: ltr;
+	}
+
+	&__meter-fill {
+		position: relative;
+		height: 100%;
+		min-width: 8px;
+		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__meter-spark {
+		position: absolute;
+		inset-block-start: 50%;
+		inset-inline-end: 0;
+		transform: translate(2px, -50%);
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--lantern-glow);
+		box-shadow: var(--glow-marker);
+	}
+
+	&__caption {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		font-style: italic;
+		text-align: center;
+	}
+}
+
+// --- Workshop: the tabbed work area shared by "mine" and "help" ---
+.workshop {
+	padding: 0;
+	overflow: hidden;
+
+	&__tabs {
+		display: flex;
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__tab {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-xs);
+		background: transparent;
+		border: none;
+		border-block-end: 2px solid transparent;
+		color: var(--text-muted);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition: color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+
+		&:hover {
+			color: var(--text-secondary);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: -2px;
+		}
+
+		&--active {
+			color: var(--lantern-glow);
+			border-block-end-color: var(--lantern);
+			text-shadow: 0 0 12px rgba(255, 216, 130, 0.35);
+		}
+	}
+
+	&__badge {
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--lantern);
+		color: var(--text-on-lantern);
+		border-radius: var(--radius-full);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	&__body {
+		padding: var(--space-md);
+	}
+
+	&__item {
+		background: var(--bg-inset);
+		border-inline-start: 3px solid var(--lantern-deep);
+	}
+
+	&__question {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--lantern-glow);
+		line-height: 1.4;
 	}
 }
 

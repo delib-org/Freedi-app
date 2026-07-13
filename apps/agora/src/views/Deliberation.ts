@@ -16,7 +16,7 @@ import {
 import { CountdownTimer } from '../components/CountdownTimer';
 import { PointsPill } from '../components/PointsPill';
 import { EraMap, EraMapLantern } from '../components/EraMap';
-import { NeedsPeek } from '../components/NeedsBoard';
+import { NeedsBoard, NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
 import {
 	AgoraCharacter,
@@ -73,8 +73,8 @@ export function lanternsFromState(
 	});
 }
 
-/** Support bar per camp — named after the CHARACTERS' camps, counts as sentences */
-function campSupportBar(
+/** One camp column of the scoreboard: dot + name over a support bar + "N rated" */
+function campColumn(
 	label: string,
 	colorVar: string,
 	aggregate: { sum: number; n: number } | undefined,
@@ -82,19 +82,84 @@ function campSupportBar(
 	const n = aggregate?.n ?? 0;
 	const support = n > 0 ? Math.max(0, Math.min(1, (aggregate?.sum ?? 0) / n)) : 0;
 
-	return m('.camp-bar', [
-		m('span.camp-bar__dot', { style: { background: `var(${colorVar})` } }),
-		m('span.camp-bar__label', { style: { color: `var(${colorVar})` } }, label),
-		m('.camp-bar__track', [
-			m('.camp-bar__fill', {
-				style: {
-					width: `${support * 100}%`,
-					background: `var(${colorVar})`,
-				},
+	return m('.scoreboard__camp', [
+		m('.scoreboard__camp-name', [
+			m('span.camp-bar__dot', { style: { background: `var(${colorVar})` } }),
+			m('span', { style: { color: `var(${colorVar})` } }, label),
+		]),
+		m('.scoreboard__camp-track', [
+			m('.scoreboard__camp-fill', {
+				style: { width: `${support * 100}%`, background: `var(${colorVar})` },
 			}),
 		]),
-		m('span.camp-bar__count', t('delib.raters_count', { n })),
+		m('span.scoreboard__camp-count', t('delib.raters_count', { n })),
 	]);
+}
+
+/** The scoreboard panel: both camps side by side + the bridge-power meter */
+function scoreboard(
+	topic: AgoraTopicPackage,
+	score: AgoraProposalScore | undefined,
+	own = true,
+): m.Children {
+	const raters = totalRaters(score);
+	const bridging = score?.bridgingScore ?? 0;
+
+	return m('.card.scoreboard', [
+		m('.scoreboard__camps', [
+			campColumn(topic.positioningScale.leftLabel, '--camp-left-glow', score?.perCamp.left),
+			m('.scoreboard__divider'),
+			campColumn(topic.positioningScale.rightLabel, '--camp-right-glow', score?.perCamp.right),
+		]),
+		m('.scoreboard__bridge', [
+			m('.scoreboard__bridge-head', [
+				m('span.scoreboard__bridge-label', t('delib.bridge_power')),
+				m('span.scoreboard__bridge-value', [
+					String(bridging),
+					m('span.scoreboard__bridge-max', '/100'),
+				]),
+			]),
+			m('.scoreboard__meter', [
+				m(
+					'.scoreboard__meter-fill',
+					{ style: { width: `${bridging}%` } },
+					m('span.scoreboard__meter-spark'),
+				),
+			]),
+			m(
+				'p.scoreboard__caption',
+				// "no one rated YOUR proposal yet" only fits the owner's screen
+				raters === 0 && own ? t('delib.no_raters_yet') : t('delib.bridge_meaning'),
+			),
+		]),
+	]);
+}
+
+/** Tab header of the workshop card */
+function workshopTabs(
+	tabs: ReadonlyArray<{ id: string; label: string; badge?: number }>,
+	active: string,
+	onSelect: (id: string) => void,
+): m.Children {
+	return m(
+		'.workshop__tabs',
+		tabs.map((tab) =>
+			m(
+				'button.workshop__tab',
+				{
+					class: tab.id === active ? 'workshop__tab--active' : undefined,
+					'aria-selected': String(tab.id === active),
+					onclick: () => onSelect(tab.id),
+				},
+				[
+					tab.label,
+					tab.badge !== undefined && tab.badge > 0
+						? m('span.workshop__badge', String(tab.badge))
+						: null,
+				],
+			),
+		),
+	);
 }
 
 function totalRaters(score: AgoraProposalScore | undefined): number {
@@ -149,6 +214,12 @@ export function Deliberation(
 	let openCharacterId = '';
 	/** characterId → in-flight review request */
 	const reviewBusy: Record<string, boolean> = {};
+	/** Active tab of the workshop card on the "mine" step */
+	let workTab: 'feedback' | 'ai' | 'needs' = 'feedback';
+	/** Active tab of the workshop card on the "help" step */
+	let helpTab: 'suggest' | 'ai' | 'needs' = 'suggest';
+	let helpCoachNote = '';
+	let helpAiBusy = false;
 
 	const cycleKey = `agora_${session.sessionId}_cycle`;
 	let cycle: CycleState = { round: 1, step: 'mine', rated: 0 };
@@ -160,6 +231,11 @@ export function Deliberation(
 	}
 
 	function setCycle(patch: Partial<CycleState>): void {
+		if (patch.step !== undefined && patch.step !== cycle.step) {
+			// Each step opens its workshop on the default tab
+			workTab = 'feedback';
+			helpTab = 'suggest';
+		}
 		cycle = { ...cycle, ...patch };
 		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
 		m.redraw();
@@ -268,145 +344,57 @@ export function Deliberation(
 		]);
 	}
 
-	/** The hero: the student's own lantern — their proposal, read-only and glowing */
-	function heroCard(myProposal: AgoraProposal, editable: boolean): m.Children {
-		return m('.card.my-lantern', [
+	/** The proposal on the table. Mine glows gold; a classmate's sits in a neutral frame. */
+	function heroCard(
+		proposal: AgoraProposal,
+		options: { mine: boolean; editable?: boolean; onNext?: () => void },
+	): m.Children {
+		return m('.card.my-lantern', { class: options.mine ? undefined : 'my-lantern--theirs' }, [
 			m('.my-lantern__header', [
-				m('span.my-lantern__icon', '🏮'),
-				m('span.my-lantern__title', t('delib.my_proposal')),
-				editable && !isEditing
+				m('span.my-lantern__icon', options.mine ? '🏮' : '📜'),
+				m(
+					'span.my-lantern__title',
+					options.mine
+						? t('delib.my_proposal')
+						: t('delib.proposal_by', { name: proposal.anonName || '?' }),
+				),
+				options.mine && options.editable === true && !isEditing
 					? m(
 							'button.btn.btn--ghost.my-lantern__edit',
 							{
 								onclick: () => {
-									draft = myProposal.statement;
+									draft = proposal.statement;
 									isEditing = true;
 								},
 							},
 							`✏️ ${t('delib.update_proposal')}`,
 						)
 					: null,
+				options.onNext
+					? m(
+							'button.btn.btn--ghost.my-lantern__edit',
+							{ onclick: options.onNext },
+							`↻ ${t('delib.next_proposal')}`,
+						)
+					: null,
 			]),
-			m('p.my-lantern__text', myProposal.statement),
+			m('p.my-lantern__text', proposal.statement),
 		]);
 	}
 
-	/** "What does the square say?" — camp support, bridge power, received suggestions */
-	function squareSays(
+	/** Feedback tab: character chips + ONE attributed inbox (verdicts + peer suggestions) */
+	function feedbackStream(
 		live: AgoraSession,
 		myProposal: AgoraProposal,
 		topic: AgoraTopicPackage,
 	): m.Children {
-		const { suggestions, scores } = getDeliberationState();
-		const myScore = scores[myProposal.statementId];
+		const { suggestions, characterReviews } = getDeliberationState();
 		const mySuggestions = suggestions[myProposal.statementId] ?? [];
-		const raters = totalRaters(myScore);
-
-		return m('.stack', [
-			m('p.teacher__section-title', t('delib.square_says')),
-			raters === 0
-				? m('p.lobby__status.text-center', t('delib.no_raters_yet'))
-				: m('.card.stack', [
-						campSupportBar(
-							topic.positioningScale.leftLabel,
-							'--camp-left-glow',
-							myScore?.perCamp.left,
-						),
-						campSupportBar(
-							topic.positioningScale.rightLabel,
-							'--camp-right-glow',
-							myScore?.perCamp.right,
-						),
-						m('.char-review__meter', [
-							m('span.values__score', t('delib.bridge_power')),
-							m('.char-review__meter-track', [
-								m('.char-review__meter-fill', {
-									style: { width: `${myScore?.bridgingScore ?? 0}%` },
-								}),
-							]),
-							m('span.values__score', `${myScore?.bridgingScore ?? 0}/100`),
-						]),
-						m('p.square-says__meaning', t('delib.bridge_meaning')),
-					]),
-			mySuggestions.length === 0
-				? null
-				: m('.stack', [
-						m(
-							'p.teacher__section-title',
-							`${t('delib.suggestions_received')} (${mySuggestions.length})`,
-						),
-						// Nested array (own fragment) — keyed cards must not be spread
-						// among unkeyed siblings (Mithril mixed-keys crash)
-						mySuggestions.map((suggestion) =>
-							m('.card.stack', { key: suggestion.statementId }, [
-								suggestion.anonName
-									? m(
-											'p.char-review__role',
-											t('delib.suggestion_from', { name: suggestion.anonName }),
-										)
-									: null,
-								m('p', suggestion.statement),
-								suggestion.suggestionStatus === AgoraSuggestionStatus.open
-									? [
-											m('.delib__actions', [
-												m(
-													'button.btn.btn--secondary',
-													{
-														onclick: () => {
-															void resolveSuggestion(
-																live.sessionId,
-																suggestion.statementId,
-																AgoraSuggestionStatus.thanked,
-															);
-														},
-													},
-													t('delib.thank'),
-												),
-												m(
-													'button.btn.btn--primary',
-													{
-														onclick: () => {
-															void resolveSuggestion(
-																live.sessionId,
-																suggestion.statementId,
-																AgoraSuggestionStatus.accepted,
-															);
-															// Accepting flows straight into weaving the
-															// idea into your own text
-															draft = myProposal.statement;
-															isEditing = true;
-														},
-													},
-													t('delib.accept'),
-												),
-											]),
-											m('p.square-says__meaning', t('delib.accept_hint')),
-										]
-									: m(
-											'span.values__score',
-											suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-												? t('delib.accepted')
-												: t('delib.thanked'),
-										),
-							]),
-						),
-					]),
-		]);
-	}
-
-	/** The characters as a compact tappable chip row; verdict expands beneath */
-	function charChips(
-		live: AgoraSession,
-		myProposal: AgoraProposal,
-		topic: AgoraTopicPackage,
-	): m.Children {
-		const { characterReviews } = getDeliberationState();
 		const openCharacter = topic.characters.find(
 			(character) => character.characterId === openCharacterId,
 		);
 
 		return m('.stack', [
-			m('p.teacher__section-title', t('delib.ask_elders')),
 			m(
 				'.char-chips',
 				topic.characters.map((character) => {
@@ -456,6 +444,177 @@ export function Deliberation(
 						],
 					)
 				: null,
+			mySuggestions.length === 0 && !openCharacter
+				? m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))
+				: null,
+			// Nested array (own fragment) — keyed cards must not be spread
+			// among unkeyed siblings (Mithril mixed-keys crash)
+			mySuggestions.map((suggestion) =>
+				m('.card.stack.workshop__item', { key: suggestion.statementId }, [
+					suggestion.anonName
+						? m('p.char-review__role', t('delib.suggestion_from', { name: suggestion.anonName }))
+						: null,
+					m('p', suggestion.statement),
+					suggestion.suggestionStatus === AgoraSuggestionStatus.open
+						? [
+								m('.delib__actions', [
+									m(
+										'button.btn.btn--ghost',
+										{
+											onclick: () => {
+												void resolveSuggestion(
+													live.sessionId,
+													suggestion.statementId,
+													AgoraSuggestionStatus.declined,
+												);
+											},
+										},
+										t('delib.no_thanks'),
+									),
+									m(
+										'button.btn.btn--secondary',
+										{
+											onclick: () => {
+												void resolveSuggestion(
+													live.sessionId,
+													suggestion.statementId,
+													AgoraSuggestionStatus.thanked,
+												);
+											},
+										},
+										t('delib.thank'),
+									),
+									m(
+										'button.btn.btn--primary',
+										{
+											onclick: () => {
+												void resolveSuggestion(
+													live.sessionId,
+													suggestion.statementId,
+													AgoraSuggestionStatus.accepted,
+												);
+												// Accepting flows straight into weaving the
+												// idea into your own text
+												draft = myProposal.statement;
+												isEditing = true;
+											},
+										},
+										t('delib.will_implement'),
+									),
+								]),
+								m('p.square-says__meaning', t('delib.accept_hint')),
+							]
+						: m(
+								'span.values__score',
+								suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
+									? t('delib.accepted')
+									: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
+										? t('delib.declined')
+										: t('delib.thanked'),
+							),
+				]),
+			),
+		]);
+	}
+
+	/** AI-help tab for MY proposal: improve wording → opens the editor with the coach's draft */
+	function mineAiTab(live: AgoraSession, myProposal: AgoraProposal): m.Children {
+		return m('.stack', [
+			m(
+				'button.btn.btn--secondary',
+				{
+					disabled: aiBusy,
+					onclick: () => {
+						aiBusy = true;
+						improveWithAI(live.sessionId, myProposal.statement)
+							.then((result) => {
+								draft = result.improvedText;
+								coachNote = result.coachNote;
+								isEditing = true;
+							})
+							.catch((error: unknown) => {
+								console.error('[Delib] AI improve failed:', error);
+							})
+							.finally(() => {
+								aiBusy = false;
+								m.redraw();
+							});
+					},
+				},
+				aiBusy ? t('delib.ai_thinking') : t('delib.improve_ai'),
+			),
+			coachNote
+				? m('.card.delib__coach', [m('strong', t('delib.coach_note')), m('p', coachNote)])
+				: null,
+		]);
+	}
+
+	/** AI-help tab while helping someone: phrase my suggestion better */
+	function helpAiTab(live: AgoraSession): m.Children {
+		return m('.stack', [
+			m(
+				'button.btn.btn--secondary',
+				{
+					disabled: helpAiBusy || suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+					onclick: () => {
+						helpAiBusy = true;
+						improveWithAI(live.sessionId, suggestionDraft.trim())
+							.then((result) => {
+								suggestionDraft = result.improvedText;
+								helpCoachNote = result.coachNote;
+								helpTab = 'suggest';
+							})
+							.catch((error: unknown) => {
+								console.error('[Delib] AI phrase failed:', error);
+							})
+							.finally(() => {
+								helpAiBusy = false;
+								m.redraw();
+							});
+					},
+				},
+				helpAiBusy ? t('delib.ai_thinking') : t('delib.phrase_suggestion'),
+			),
+			suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH
+				? m('p.square-says__meaning', t('delib.help_dont_attack'))
+				: null,
+			helpCoachNote
+				? m('.card.delib__coach', [m('strong', t('delib.coach_note')), m('p', helpCoachNote)])
+				: null,
+		]);
+	}
+
+	/** The workshop card on the "mine" step: Feedback | AI help | Needs */
+	function mineWorkshop(
+		live: AgoraSession,
+		myProposal: AgoraProposal,
+		topic: AgoraTopicPackage,
+	): m.Children {
+		const { suggestions } = getDeliberationState();
+		const openCount = (suggestions[myProposal.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+		).length;
+
+		return m('.card.workshop', [
+			workshopTabs(
+				[
+					{ id: 'feedback', label: t('delib.tab_feedback'), badge: openCount },
+					{ id: 'ai', label: t('delib.tab_ai') },
+					{ id: 'needs', label: t('delib.tab_needs') },
+				],
+				workTab,
+				(id) => {
+					workTab = id as typeof workTab;
+				},
+			),
+			m(
+				'.workshop__body',
+				workTab === 'feedback'
+					? feedbackStream(live, myProposal, topic)
+					: workTab === 'ai'
+						? mineAiTab(live, myProposal)
+						: m(NeedsBoard, { topic }),
+			),
 		]);
 	}
 
@@ -626,26 +785,27 @@ export function Deliberation(
 					]);
 				}
 
-				// Lap 2+: hero (my lantern) → what the square says → improve → onward
+				// Lap 2+: the workshop skeleton — scoreboard → my proposal on the
+				// table → tabbed work area (editing replaces the work area)
 				return m('.shell', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
-						heroCard(myProposal, true),
-						m('p.home-explanation', t('delib.improve_hint')),
-						...(isEditing ? editPanel : []),
-						squareSays(live, myProposal, topic),
-						charChips(live, myProposal, topic),
+						scoreboard(topic, scores[myProposal.statementId]),
+						heroCard(myProposal, { mine: true, editable: true }),
 						isEditing
-							? null
-							: m(
-									'button.btn.btn--primary.btn--full.btn--lg',
-									{
-										onclick: () => {
-											setCycle({ step: 'rate', rated: 0 });
+							? m('.card.workshop', m('.workshop__body.stack', editPanel))
+							: [
+									mineWorkshop(live, myProposal, topic),
+									m(
+										'button.btn.btn--primary.btn--full.btn--lg',
+										{
+											onclick: () => {
+												setCycle({ step: 'rate', rated: 0 });
+											},
 										},
-									},
-									t('delib.to_rating'),
-								),
+										t('delib.to_rating'),
+									),
+								],
 					]),
 				]);
 			}
@@ -732,56 +892,87 @@ export function Deliberation(
 							studentOrder(a.statementId) - studentOrder(b.statementId),
 					);
 				const helpTarget = targets.length > 0 ? targets[helpSkips % targets.length] : undefined;
+				const skipLabel =
+					cycle.round >= AGORA_CYCLE.ROUNDS ? t('delib.finish_cycles') : t('delib.skip_help');
 
+				// Same workshop skeleton as "mine" — but the proposal on the table
+				// is a classmate's, and the tabs help ME help THEM
 				return m('.shell', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						m('h2.text-center', t('delib.help_others')),
-						m('p.home-explanation', t('delib.help_hint')),
-						m(NeedsPeek, { topic }),
 						helpTarget
-							? m('.stack', [
-									m('.card', m('p.scene__text', helpTarget.statement)),
-									m('textarea.text-input', {
-										value: suggestionDraft,
-										rows: 3,
-										placeholder: t('delib.suggest_placeholder'),
-										oninput: (event: InputEvent) => {
-											suggestionDraft = (event.target as HTMLTextAreaElement).value;
+							? [
+									scoreboard(topic, scores[helpTarget.statementId], false),
+									heroCard(helpTarget, {
+										mine: false,
+										onNext: () => {
+											helpSkips++;
+											suggestionDraft = '';
+											helpCoachNote = '';
 										},
 									}),
-									m('.delib__actions', [
-										m(
-											'button.btn.btn--ghost',
-											{
-												onclick: () => {
-													helpSkips++;
-													suggestionDraft = '';
-												},
+									m('.card.workshop', [
+										workshopTabs(
+											[
+												{ id: 'suggest', label: t('delib.tab_suggest') },
+												{ id: 'ai', label: t('delib.tab_ai') },
+												{ id: 'needs', label: t('delib.tab_needs') },
+											],
+											helpTab,
+											(id) => {
+												helpTab = id as typeof helpTab;
 											},
-											t('delib.next_proposal'),
 										),
 										m(
-											'button.btn.btn--primary',
-											{
-												disabled: suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-												onclick: () => {
-													const text = suggestionDraft.trim();
-													suggestionDraft = '';
-													void submitSuggestion(live, helpTarget, anonName, text);
-													advanceRound();
-												},
-											},
-											t('delib.send_suggestion'),
+											'.workshop__body',
+											helpTab === 'suggest'
+												? m('.stack', [
+														m('p.workshop__question', t('delib.help_question')),
+														m('p.square-says__meaning', t('delib.help_dont_attack')),
+														m('textarea.text-input', {
+															value: suggestionDraft,
+															rows: 4,
+															placeholder: t('delib.suggest_placeholder'),
+															oninput: (event: InputEvent) => {
+																suggestionDraft = (event.target as HTMLTextAreaElement).value;
+															},
+														}),
+														helpCoachNote
+															? m('.card.delib__coach', [
+																	m('strong', t('delib.coach_note')),
+																	m('p', helpCoachNote),
+																])
+															: null,
+														m('.delib__actions', [
+															m('button.btn.btn--ghost', { onclick: advanceRound }, skipLabel),
+															m(
+																'button.btn.btn--primary',
+																{
+																	disabled:
+																		suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+																	onclick: () => {
+																		const text = suggestionDraft.trim();
+																		suggestionDraft = '';
+																		helpCoachNote = '';
+																		void submitSuggestion(live, helpTarget, anonName, text);
+																		advanceRound();
+																	},
+																},
+																t('delib.send_suggestion'),
+															),
+														]),
+													])
+												: helpTab === 'ai'
+													? helpAiTab(live)
+													: m(NeedsBoard, { topic }),
 										),
 									]),
-								])
-							: m('p.text-center.lobby__status', t('delib.no_more')),
-						m(
-							'button.btn.btn--ghost.btn--full',
-							{ onclick: advanceRound },
-							cycle.round >= AGORA_CYCLE.ROUNDS ? t('delib.finish_cycles') : t('delib.skip_help'),
-						),
+								]
+							: [
+									m('p.text-center.lobby__status', t('delib.no_more')),
+									m('button.btn.btn--ghost.btn--full', { onclick: advanceRound }, skipLabel),
+								],
 					]),
 				]);
 			}
@@ -798,9 +989,9 @@ export function Deliberation(
 					m('p.home-explanation', t('delib.cycle_done_hint')),
 					myProposal
 						? [
-								heroCard(myProposal, false),
-								squareSays(live, myProposal, topic),
-								charChips(live, myProposal, topic),
+								scoreboard(topic, scores[myProposal.statementId]),
+								heroCard(myProposal, { mine: true }),
+								mineWorkshop(live, myProposal, topic),
 							]
 						: null,
 					m(
