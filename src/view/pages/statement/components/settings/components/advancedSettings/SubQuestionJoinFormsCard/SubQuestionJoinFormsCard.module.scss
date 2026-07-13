@@ -50,7 +50,7 @@
 	flex-direction: column;
 	border: 1.5px solid var(--border-light, #e0e8fa);
 	border-radius: 12px;
-	background: var(--white, #fff);
+	background: var(--card-default);
 	overflow: hidden;
 
 	&--open {

@@ -1,7 +1,7 @@
 .loginFirst {
     width: 100svw;
     height: 100svh;
-    background-color: #f2f6ff;
+    background-color: var(--surface-background);
     padding-bottom: 2rem;
 
     .contentContainer {
@@ -21,7 +21,7 @@
             font-weight: 700;
             text-align: center;
             width: 60%;
-            color: #3b4f7d;
+            color: var(--text-body);
         }
 
         button {

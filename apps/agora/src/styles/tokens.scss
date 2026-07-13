@@ -1,0 +1,95 @@
+// ============================================================================
+// Agora design tokens — "Era of Lanterns"
+// Dark, cinematic, era-themed. See apps/agora/DESIGN.md for the full brief.
+// ============================================================================
+
+:root {
+  // --- Night sky (page backdrop) ---
+  --bg-page: #141126;
+  --bg-page-high: #241d45; // upper sky in gradients
+  --bg-card: rgba(30, 25, 58, 0.82);
+  --bg-card-solid: #1e193a;
+  --bg-overlay: rgba(10, 8, 22, 0.66);
+  --bg-inset: rgba(12, 10, 26, 0.6);
+
+  // --- Parchment & ink (content surfaces) ---
+  --parchment: #f4e8cf;
+  --parchment-dim: #d9c9a8;
+  --ink: #2b2416;
+
+  // --- Lantern golds (primary accent, points, glow) ---
+  --lantern: #f5b944;
+  --lantern-glow: #ffd882;
+  --lantern-deep: #b97f1e;
+
+  // --- Camps (core game semantics) ---
+  --camp-left: #5b7bd6;   // royal blue
+  --camp-left-glow: #8ea9f0;
+  --camp-right: #d65b6b;  // revolution red
+  --camp-right-glow: #f08e9b;
+  --camp-center: #9b7bd6; // violet blend
+  --camp-center-glow: #c3a9f0;
+
+  // --- Semantic ---
+  --success: #7dd6a3;
+  --danger: #f08e9b;
+  --warning: #f5b944;
+
+  // --- Text ---
+  --text-primary: #f4e8cf;
+  --text-secondary: #b9aed6;
+  --text-muted: #7d739e;
+  --text-on-lantern: #2b2416;
+
+  // --- Borders ---
+  --border-subtle: rgba(244, 232, 207, 0.14);
+  --border-strong: rgba(244, 232, 207, 0.32);
+  --border-lantern: rgba(245, 185, 68, 0.55);
+
+  // --- Spacing (8-point grid) ---
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  // --- Typography ---
+  // Display face: era-flavored serif with Hebrew coverage; webfont lands in
+  // the polish phase — the stack degrades gracefully until then.
+  --font-display: 'Suez One', 'Frank Ruhl Libre', Georgia, 'Times New Roman', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Heebo', Arial, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.75rem;
+
+  // --- Radius ---
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  // --- Elevation / glow ---
+  --shadow-card: 0 6px 24px rgba(6, 4, 16, 0.5);
+  --glow-lantern: 0 0 18px rgba(255, 216, 130, 0.45);
+  --glow-marker: 0 0 12px rgba(255, 216, 130, 0.7);
+
+  // --- Motion (camera-move easing; never hard cuts) ---
+  --motion-fast: 150ms;
+  --motion-base: 300ms;
+  --motion-slow: 600ms;
+  --motion-camera: 1200ms;
+  --ease-camera: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  // --- Z layers ---
+  --z-map: 1;
+  --z-content: 10;
+  --z-header: 50;
+  --z-toast: 90;
+  --z-modal: 100;
+}

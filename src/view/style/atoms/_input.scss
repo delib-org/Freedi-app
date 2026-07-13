@@ -28,7 +28,7 @@
     color: var(--text-caption);
     padding: 0 0.5rem;
     border-radius: 0.5rem;
-    background-color: var(--white);
+    background-color: var(--card-default);
 
     @include rtl {
       left: auto;
@@ -45,7 +45,7 @@
     border-radius: 0.5rem;
     padding: 1.25rem 1rem;
     height: 100%;
-    background-color: var(--white);
+    background-color: var(--card-default);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:focus-within {

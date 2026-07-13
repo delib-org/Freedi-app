@@ -69,7 +69,7 @@
         filter: drop-shadow(0px 2px 4px rgba(151, 173, 184, 0.525));
 
         .percentageText {
-            color: #6e8aa6;
+            color: var(--text-caption);
             display: flex;
             align-items: center;
             font-family: "Patrick Hand", cursive;
@@ -136,7 +136,7 @@
 
         .title {
             transform: rotate(270deg) translate(11rem, -2rem);
-            color: #6e8aa6;
+            color: var(--text-caption);
             width: 19rem;
             text-align: end;
 
@@ -180,9 +180,9 @@
             .numberOfSelections {
                 top: 0;
                 transform: rotate(270deg);
-                background-color: white;
+                background-color: var(--card-default);
                 border-radius: 50%;
-                color: #3b4f7d;
+                color: var(--text-body);
                 width: 30px;
                 height: 30px;
                 display: flex;
@@ -201,7 +201,7 @@
 
         .title {
             transform: rotate(270deg);
-            color: #6e8aa6;
+            color: var(--text-caption);
             position: absolute;
             width: 20rem;
             height: fit-content;

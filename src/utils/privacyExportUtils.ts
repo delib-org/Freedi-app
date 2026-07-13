@@ -16,6 +16,7 @@ import {
 	StatementType,
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { isDerivedStatement, resolveDerivedPipeline } from '@/utils/derivedStatement';
 import { downloadFile } from '@/utils/exportUtils';
 import {
 	PRIVACY_CONFIG,
@@ -60,6 +61,30 @@ async function fetchEvaluations(parentId: string): Promise<Evaluation[]> {
 	const snapshot = await getDocs(q);
 
 	return snapshot.docs.map((doc) => doc.data() as Evaluation);
+}
+
+/**
+ * Fetch all option statements for a parent directly from Firestore.
+ *
+ * The export must not rely on whatever sub-statements happen to be loaded in
+ * Redux at click time — a partially-hydrated listener would silently truncate
+ * the option list while evaluations (fetched fresh below) stay complete,
+ * producing an internally inconsistent export. Query the source of truth.
+ *
+ * Keeps both `option` and `synthesis` docs; pipeline-derived options are
+ * stored as `option` but synthesis docs carry `statementType: synthesis`.
+ */
+async function fetchOptions(parentId: string): Promise<Statement[]> {
+	const statementsRef = collection(FireStore, Collections.statements);
+	const q = query(statementsRef, where('parentId', '==', parentId));
+	const snapshot = await getDocs(q);
+
+	return snapshot.docs
+		.map((doc) => doc.data() as Statement)
+		.filter(
+			(s) =>
+				s.statementType === StatementType.option || s.statementType === StatementType.synthesis,
+		);
 }
 
 /**
@@ -185,6 +210,7 @@ function buildOptionSummaries(
 		const optionEvaluations = evaluations.filter((e) => e.statementId === option.statementId);
 
 		const stats = calculateEvaluationStats(optionEvaluations.map((e) => e.evaluation));
+		const derived = isDerivedStatement(option);
 
 		return {
 			statementId: option.statementId,
@@ -195,6 +221,10 @@ function buildOptionSummaries(
 			conCount: stats.conCount,
 			neutralCount: stats.neutralCount,
 			sumEvaluations: stats.sumEvaluations,
+			isDerived: derived,
+			isCluster: option.isCluster,
+			derivedByPipeline: derived ? resolveDerivedPipeline(option) : undefined,
+			integratedOptions: derived ? option.integratedOptions : undefined,
 		};
 	});
 }
@@ -290,22 +320,6 @@ function buildDemographicBreakdowns(
 }
 
 /**
- * Pipeline-derived option detection (cluster/synthesis spawns are stored with
- * statementType: option). Mirrors `isDerivedStatement` in the MC app so all
- * participation surfaces count the same set of genuine submissions.
- */
-function isDerivedOption(statement: Statement): boolean {
-	return (
-		statement.isCluster === true ||
-		!!statement.derivedByPipeline ||
-		(Array.isArray(statement.integratedOptions) && statement.integratedOptions.length > 0) ||
-		!!statement.synthesisRunId ||
-		!!statement.synthesisMechanism ||
-		statement.statementType === StatementType.synthesis
-	);
-}
-
-/**
  * Build participation funnel summary: entered → suggested → evaluated.
  *
  * Definitions are aligned with the MC stats API and survey admin panel:
@@ -323,7 +337,7 @@ export function buildParticipationSummary(
 ): ParticipationSummary {
 	const suggesters = new Set(
 		options
-			.filter((o) => !isDerivedOption(o))
+			.filter((o) => !isDerivedStatement(o))
 			.map((o) => o.creatorId || o.creator?.uid)
 			.filter((id): id is string => !!id),
 	);
@@ -376,11 +390,22 @@ export async function createPrivacyPreservingExport(
 	const kThreshold = kAnonymityThreshold ?? PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD;
 
 	try {
-		// Fetch all required data
-		const [evaluations, questions] = await Promise.all([
+		// Fetch all required data. Options come from Firestore (not the caller's
+		// possibly-partial Redux snapshot) so the option list is always complete
+		// and consistent with the evaluations fetched alongside it.
+		const [evaluations, questions, fetchedOptions] = await Promise.all([
 			fetchEvaluations(parentStatement.statementId),
 			fetchDemographicQuestions(parentStatement.statementId, parentStatement.topParentId),
+			fetchOptions(parentStatement.statementId),
 		]);
+
+		// Merge the authoritative DB options with any passed in, preferring the
+		// DB copy. Union guarantees we never export fewer options than the caller
+		// supplied, while the DB fetch backfills anything the caller was missing.
+		const optionsById = new Map<string, Statement>();
+		options.forEach((o) => optionsById.set(o.statementId, o));
+		fetchedOptions.forEach((o) => optionsById.set(o.statementId, o));
+		const allOptions = Array.from(optionsById.values());
 
 		const questionIds = questions.map((q) => q.userQuestionId).filter((id): id is string => !!id);
 
@@ -388,9 +413,9 @@ export async function createPrivacyPreservingExport(
 
 		// Build export components
 		const demographicStats = buildDemographicStats(questions, answers);
-		const optionSummaries = buildOptionSummaries(options, evaluations);
+		const optionSummaries = buildOptionSummaries(allOptions, evaluations);
 		const { breakdowns, suppressedCount } = buildDemographicBreakdowns(
-			options,
+			allOptions,
 			evaluations,
 			questions,
 			answers,
@@ -398,10 +423,10 @@ export async function createPrivacyPreservingExport(
 		);
 
 		// Build anonymized evaluations
-		const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, options);
+		const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, allOptions);
 
 		// Participation funnel: entered → suggested → evaluated
-		const participation = buildParticipationSummary(parentStatement, options, evaluations);
+		const participation = buildParticipationSummary(parentStatement, allOptions, evaluations);
 
 		// Count unique evaluators and respondents
 		const uniqueEvaluators = participation.evaluatedCount;
@@ -411,7 +436,7 @@ export async function createPrivacyPreservingExport(
 			exportedAt: new Date().toISOString(),
 			exportFormat: 'json',
 			appVersion: '1.0.0',
-			totalRecords: options.length,
+			totalRecords: allOptions.length,
 			kAnonymityThreshold: kThreshold,
 			suppressedGroupCount: suppressedCount,
 			totalEvaluators: uniqueEvaluators,
@@ -516,7 +541,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	// Section 2: Option Evaluation Summary
 	lines.push('# === OPTION EVALUATION SUMMARY ===');
 	lines.push(
-		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations',
+		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations,Is Derived,Is Cluster,Derived By Pipeline,Integrated Options',
 	);
 
 	data.optionEvaluations.forEach((opt) => {
@@ -530,6 +555,10 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 				opt.conCount,
 				opt.neutralCount,
 				opt.sumEvaluations.toFixed(3),
+				opt.isDerived ? 'Yes' : 'No',
+				opt.isCluster ? 'Yes' : 'No',
+				escapeCSV(opt.derivedByPipeline ?? ''),
+				escapeCSV(opt.integratedOptions?.join(' ') ?? ''),
 			].join(','),
 		);
 	});
@@ -562,7 +591,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	if (data.demographicBreakdowns.length > 0) {
 		lines.push('# === DEMOGRAPHIC BREAKDOWNS BY OPTION ===');
 		lines.push(
-			'Option Text,Demographic Question,Demographic Value,Evaluator Count,Meets K-Anonymity,Average Evaluation,Pro,Con,Neutral,Privacy Note',
+			'Option Text,Option Is Derived,Demographic Question,Demographic Value,Evaluator Count,Meets K-Anonymity,Average Evaluation,Pro,Con,Neutral,Privacy Note',
 		);
 
 		data.demographicBreakdowns.forEach((optBreakdown) => {
@@ -570,6 +599,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 				lines.push(
 					[
 						escapeCSV(optBreakdown.option.statementText),
+						optBreakdown.option.isDerived ? 'Yes' : 'No',
 						escapeCSV(demo.questionText),
 						escapeCSV(demo.optionValue),
 						demo.evaluatorCount,
@@ -616,8 +646,12 @@ export async function exportPrivacyPreservingData(
 	kAnonymityThreshold?: number,
 ): Promise<void> {
 	try {
-		// Filter to only include options
-		const filteredOptions = options.filter((s) => s.statementType === StatementType.option);
+		// Pipeline-derived options are stored as `option`, but synthesis docs may
+		// also carry `statementType: synthesis` — keep both, flagged via isDerived.
+		const filteredOptions = options.filter(
+			(s) =>
+				s.statementType === StatementType.option || s.statementType === StatementType.synthesis,
+		);
 
 		const data = await createPrivacyPreservingExport(
 			parentStatement,

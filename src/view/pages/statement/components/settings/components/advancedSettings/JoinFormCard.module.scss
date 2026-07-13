@@ -39,7 +39,7 @@
 		gap: 0.625rem;
 		padding: 0.75rem 0.875rem;
 		border: 1.5px solid var(--border-light, #e0e8fa);
-		background: var(--white, #fff);
+		background: var(--card-default);
 		border-radius: 10px;
 		cursor: pointer;
 		text-align: start;
@@ -90,7 +90,7 @@
 	border-radius: 10px;
 	font-size: 0.9rem;
 	color: var(--text-title, #191e29);
-	background: var(--white, #fff);
+	background: var(--card-default);
 	transition: border-color 0.2s ease;
 
 	&:focus {
@@ -124,7 +124,7 @@
 		flex: 1;
 		min-width: 0;
 		padding: 0.25rem 0.5rem;
-		background: var(--white, #fff);
+		background: var(--card-default);
 		border: 1px solid var(--border-light, #e0e8fa);
 		border-radius: 6px;
 		font-family: monospace;
@@ -167,7 +167,7 @@
 		border: 1.5px solid var(--border-light, #e0e8fa);
 		border-radius: 8px;
 		font-size: 0.85rem;
-		background: var(--white, #fff);
+		background: var(--card-default);
 		color: var(--text-title, #191e29);
 		transition: border-color 0.2s ease;
 		min-width: 0;
@@ -194,7 +194,7 @@
 		height: 28px;
 		border-radius: 8px;
 		border: 1.5px solid var(--border-light, #e0e8fa);
-		background: var(--white, #fff);
+		background: var(--card-default);
 		color: var(--text-caption, #7484a9);
 		cursor: pointer;
 		transition: all 0.2s ease;

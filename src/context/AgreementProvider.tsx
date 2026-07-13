@@ -5,6 +5,7 @@ import TermsOfUse from '@/view/components/termsOfUse/TermsOfUse';
 import {
 	getLatestTermsAcceptance,
 	saveTermsAcceptance,
+	type SaveTermsResult,
 } from '@/controllers/db/termsOfUse/termsOfUseService';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import { TermsOfUseAcceptance } from '@/types/agreement/Agreement';
@@ -21,6 +22,8 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }
 	const [showSignAgreement, setShowSignAgreement] = useState(false);
 	const [agreement, setAgreement] = useState<string>('');
 	const [loading, setLoading] = useState(true);
+	const [saveError, setSaveError] = useState<string | null>(null);
+	const [isSaving, setIsSaving] = useState(false);
 
 	useEffect(() => {
 		const checkTermsAcceptance = async () => {
@@ -67,9 +70,25 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }
 					accepted: true,
 				};
 
-				const isSuccess = await saveTermsAcceptance(agreement);
-				if (isSuccess) {
+				setSaveError(null);
+				setIsSaving(true);
+				const result: SaveTermsResult = await saveTermsAcceptance(agreement);
+				setIsSaving(false);
+
+				if (result === 'success') {
 					setShowSignAgreement(false);
+				} else if (result === 'blocked') {
+					// The most common cause: a browser extension / ad blocker blocks
+					// reCAPTCHA, which fails App Check, which rejects the write with
+					// permission-denied. Tell the user instead of leaving the modal
+					// silently stuck.
+					setSaveError(
+						t(
+							"We couldn't save your response. An ad blocker or privacy extension may be blocking this site — please disable it for this page and try again.",
+						),
+					);
+				} else {
+					setSaveError(t('Something went wrong saving your response. Please try again.'));
 				}
 			} else {
 				setShowSignAgreement(false);
@@ -90,7 +109,14 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }
 	return (
 		<>
 			{children}
-			{showSignAgreement && <TermsOfUse handleAgreement={handleAgreement} agreement={agreement} />}
+			{showSignAgreement && (
+				<TermsOfUse
+					handleAgreement={handleAgreement}
+					agreement={agreement}
+					error={saveError}
+					isSaving={isSaving}
+				/>
+			)}
 		</>
 	);
 };

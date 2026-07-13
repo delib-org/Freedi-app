@@ -12,4 +12,9 @@ export enum NotificationTriggerType {
 	WELCOME_BACK = 'welcome_back',
 	EVIDENCE_ADDED = 'evidence_added',
 	MENTION = 'mention',
+	// Agora classroom game
+	AGORA_SUGGESTION_RECEIVED = 'agora_suggestion_received',
+	AGORA_SUGGESTION_ACCEPTED = 'agora_suggestion_accepted',
+	AGORA_SUGGESTION_THANKED = 'agora_suggestion_thanked',
+	AGORA_ROUND_STARTED = 'agora_round_started',
 }

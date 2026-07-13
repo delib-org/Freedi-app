@@ -46,7 +46,7 @@
 .improveHint {
 	margin: 0.75rem 0 0 0;
 	font-size: 0.875rem;
-	color: #666;
+	color: var(--text-caption);
 	line-height: 1.4;
 }
 
@@ -66,7 +66,7 @@
 .evidenceTitle {
 	margin: 0;
 	font-size: var(--h4-font-size);
-	color: #333;
+	color: var(--text-body);
 }
 
 .addEvidenceButton {
@@ -110,7 +110,7 @@
 .loadingState {
 	text-align: center;
 	padding: 3rem 1rem;
-	color: #666;
+	color: var(--text-caption);
 }
 
 .emptyState {
@@ -129,12 +129,12 @@
 .emptyTitle {
 	margin: 0 0 0.5rem 0;
 	font-size: var(--h4-font-size);
-	color: #333;
+	color: var(--text-body);
 }
 
 .emptyText {
 	margin: 0 0 1.5rem 0;
-	color: #666;
+	color: var(--text-caption);
 	line-height: 1.5;
 }
 

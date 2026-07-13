@@ -161,7 +161,7 @@
   font-size: 1rem;
   font-family: 'Roboto', sans-serif;
   color: var(--text-body);
-  background-color: var(--white);
+  background-color: var(--card-default);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
   &::placeholder {

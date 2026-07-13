@@ -1,5 +1,5 @@
 .notificationPreferences {
-	background: var(--card-background, #fff);
+	background: var(--card-default);
 	border-radius: 8px;
 	padding: 1.5rem;
 	max-width: 500px;
@@ -21,7 +21,7 @@
 			transform: translateX(-50%);
 			width: 40px;
 			height: 4px;
-			background-color: var(--border-color, #ddd);
+			background-color: var(--border-light);
 			border-radius: 2px;
 		}
 	}
@@ -49,7 +49,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 1rem 0;
-		border-bottom: 1px solid var(--border-color, #eee);
+		border-bottom: 1px solid var(--border-light);
 
 		&:last-of-type {
 			border-bottom: none;
@@ -158,7 +158,7 @@
 	.quietHoursSection {
 		margin-top: 1.5rem;
 		padding-top: 1.5rem;
-		border-top: 1px solid var(--border-color, #eee);
+		border-top: 1px solid var(--border-light);
 
 		h4 {
 			margin: 0 0 0.5rem 0;
@@ -198,10 +198,10 @@
 
 				input[type="time"] {
 					padding: 0.5rem;
-					border: 1px solid var(--border-color, #ddd);
+					border: 1px solid var(--border-light);
 					border-radius: 4px;
 					font-size: 0.875rem;
-					background: var(--input-bg, #fff);
+					background: var(--input-active);
 					color: var(--text-primary);
 
 					&:disabled {
@@ -221,16 +221,5 @@
 			font-size: 0.75rem;
 			color: var(--text-secondary);
 		}
-	}
-}
-
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-	.notificationPreferences {
-		--card-background: #1e1e1e;
-		--text-primary: #fff;
-		--text-secondary: #aaa;
-		--border-color: #333;
-		--switch-bg: #555;
 	}
 }

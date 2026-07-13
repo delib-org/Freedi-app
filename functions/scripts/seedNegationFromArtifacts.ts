@@ -24,7 +24,7 @@ if (getApps().length === 0) {
 	initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
 }
 
-const RUN = '../scientific-research/validation/4-6-2026-20-10-5-negation-validation';
+const RUN = '../scientific-research/2026-06-14-synthesis-clustering-validation/validation/4-6-2026-20-10-5-negation-validation';
 const QUESTION_ID = 'NegationTest0001';
 const QUESTION_TEXT = 'What should our country do';
 const USER_UID = 'dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY';

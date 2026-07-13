@@ -3,7 +3,7 @@
 	align-items: start;
 	gap: 1rem;
 	flex: 1;
-	color: #3d4d71;
+	color: var(--text-body);
 
 	@media screen and (max-width: 768px) {
 		display: flex;
@@ -14,7 +14,7 @@
 .commentCard {
 	display: flex;
 	flex-direction: column;
-	background-color: white;
+	background-color: var(--card-default);
 	padding: 0.7rem 1rem;
 	border-radius: 5px;
 	width: 100%;
@@ -23,12 +23,12 @@
 
 .subCommentCard {
 	position: relative;
-	background-color: #e0e8fa;
+	background-color: var(--bg-selected);
 	padding: 0.7rem 1rem;
 	border-radius: 5px;
 	border-start-start-radius: 0;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	border: 1px solid #d2dffe;
+	border: 1px solid var(--border-primary);
 	width: 100%;
 
 	&::before {
@@ -39,7 +39,7 @@
 		width: 0;
 		height: 0;
 		border-bottom: 13px solid transparent;
-		border-inline-end: 11px solid #d2dffe;
+		border-inline-end: 11px solid var(--border-primary);
 		z-index: 0;
 	}
 
@@ -51,7 +51,7 @@
 		width: 0;
 		height: 0;
 		border-bottom: 10px solid transparent;
-		border-inline-end: 10px solid #e0e8fa;
+		border-inline-end: 10px solid var(--bg-selected);
 		z-index: 1;
 	}
 

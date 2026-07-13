@@ -37,6 +37,72 @@ service cloud.firestore {
       allow read;
     }
 
+    // === Agora classroom deliberative game ===
+
+    // Topic packages: teachers author them; ready packages are readable by
+    // any signed-in user (students need scenes/artwork during the game).
+    match /agoraTopicPackages/{topicPackageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.resource.data.creatorId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+                               resource.data.creatorId == request.auth.uid;
+    }
+
+    // Sessions: created via callable only. The teacher may update live-control
+    // fields directly; everyone in the class reads the session doc (it is the
+    // single source of truth for stage/round state).
+    match /agoraSessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create, delete: if false;
+      allow update: if isAuthenticated() &&
+                       resource.data.teacherId == request.auth.uid &&
+                       request.resource.data.teacherId == resource.data.teacherId &&
+                       request.resource.data.sessionId == resource.data.sessionId &&
+                       request.resource.data.code == resource.data.code;
+    }
+
+    // Participants: created via callable only (anon names are server-issued).
+    // Reads are open to the class — docs contain only anonymous data.
+    // A participant may update their own doc (camp positioning, lastActive)
+    // but never their points (function-written).
+    match /agoraParticipants/{participantId} {
+      allow read: if isAuthenticated();
+      allow create, delete: if false;
+      allow update: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == resource.data.userId &&
+                       request.resource.data.sessionId == resource.data.sessionId &&
+                       request.resource.data.anonName == resource.data.anonName &&
+                       request.resource.data.points == resource.data.points;
+    }
+
+    // Proposal scores (bridging/plausibility): server-computed only.
+    match /agoraScores/{statementId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // In-character AI proposal reviews: written by the agoraCharacterReview
+    // function only (admin SDK bypasses rules).
+    match /agoraCharacterReviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Value-identification answers: students create and read their own;
+    // AI grading fields are written by functions (admin SDK bypasses rules).
+    // resource == null allows listening to the doc before it exists (the
+    // client attaches the listener first and submits after).
+    match /agoraValueAnswers/{answerId} {
+      allow get: if isAuthenticated() &&
+                    (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
 	match /polarizationIndex/{statementId=**} {
 	  allow read: if request.auth.uid != null;
 	
@@ -441,11 +507,24 @@ service cloud.firestore {
       allow read: if request.auth.uid != null;
 
       // For create
+      // A user may only create their OWN subscription (userId == uid). Elevated
+      // roles ('admin'/'statement-creator') are reserved for the genuine
+      // statement creator or an existing admin — isCreator() reads the statement
+      // doc and checks creatorId, which is how a creator gets their 'admin' sub.
+      // Everyone else may only self-register at a non-privileged role, gated by
+      // the statement's access level. Without the role guard, any user could
+      // create statementsSubscribe/{uid}--{publicStatementId} with role:'admin'
+      // and self-grant statement-admin (edit protected settings, delete, ban).
       allow create: if request.auth.uid != null &&
-                     (isPublic() ||
-                      isOpenToAll() ||
-                      isOpenForRegistered() ||
-                      (isModerated() && isWaitingRole()));
+                     request.resource.data.userId == request.auth.uid &&
+                     (isAdminOrCreator() ||
+                      (request.resource.data.role != 'admin' &&
+                       request.resource.data.role != 'statement-creator' &&
+                       request.resource.data.role != 'banned' &&
+                       (isPublic() ||
+                        isOpenToAll() ||
+                        isOpenForRegistered() ||
+                        (isModerated() && isWaitingRole()))));
 
       // For update
       allow update: if request.auth.uid != null &&
@@ -595,23 +674,16 @@ service cloud.firestore {
     }
 
     match /userEvaluations/{documentId} {
-      // Users can read their own evaluation tracking or if they're an anonymous user
-      allow read: if request.auth != null ||
-        (resource != null && resource.data.userId != null);
-
-      // Users can create their own evaluation tracking document
-      allow create: if request.auth != null ||
-        (request.resource.data.userId != null &&
-         request.resource.data.parentStatementId != null);
-
-      // Users can update their own evaluation tracking
-      // For anonymous users, check that the userId matches what's in the document
-      allow update: if request.auth != null ||
-        (resource != null &&
-         resource.data.userId == request.resource.data.userId);
-
-      // Prevent deletion to maintain history
-      allow delete: if false;
+      // This collection is read/written EXCLUSIVELY by the MC API routes via the
+      // Firebase Admin SDK (getFirestoreAdmin), which bypasses these rules. There
+      // is no client-SDK access anywhere in the codebase. The previous rules
+      // allowed unauthenticated client reads (any doc with a userId) and, worse,
+      // unauthenticated updates (the anonymous branch `resource.data.userId ==
+      // request.resource.data.userId` is trivially satisfiable), letting anyone
+      // overwrite any tracking doc. Lock the client surface entirely; the Admin
+      // SDK is unaffected.
+      allow read: if request.auth != null;
+      allow write: if false;
     }
 
     match /approval/{approvalId=**} {
@@ -663,9 +735,24 @@ service cloud.firestore {
     }
 
     match /usersV2/{userId} {
+      // `systemAdmin` is a privilege flag trusted by these rules (isSystemAdmin)
+      // AND by server-side admin gates (functions/src/utils/httpAuth.ts). It must
+      // NEVER be settable by the client, or any authenticated user (anonymous
+      // sign-in included) could self-promote to system admin by writing their own
+      // doc. The legitimate client (setUser.ts) never writes this field, and
+      // merge writes preserve its existing value, so this guard is transparent to
+      // real flows. It is granted only server-side via the Admin SDK.
+      function preservesSystemAdmin() {
+        let existing = resource != null ? resource.data.get('systemAdmin', false) : false;
+        return request.resource.data.get('systemAdmin', false) == existing;
+      }
+
       allow read: if request.auth != null;
-      // Allow users to write their own document (userId must match auth uid)
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Allow users to write their own document (userId must match auth uid),
+      // but never to set or change the systemAdmin privilege flag.
+      allow write: if request.auth != null &&
+                      request.auth.uid == userId &&
+                      preservesSystemAdmin();
 
       // Subcollections - user can only access their own subcollections
       match /chat/{chat=**} {
@@ -847,9 +934,12 @@ service cloud.firestore {
         return subscription != null && (subscription.role == 'admin' || subscription.role == 'statement-creator');
       }
 
-      // Allow creation with valid email and statementId (for public subscription)
-      // Most writes happen through Firebase Admin SDK which bypasses rules
-      allow create: if request.resource.data.email != null &&
+      // Subscriptions are written by the MC subscribe API route via the Admin SDK
+      // (bypasses rules). Require auth on the client `create` path so it can't be
+      // driven by unauthenticated scripts to spam-create subscriber docs / email
+      // arbitrary addresses. Anonymous-auth users (MC) still satisfy this.
+      allow create: if request.auth != null &&
+                      request.resource.data.email != null &&
                       request.resource.data.statementId != null &&
                       request.resource.data.isActive == true;
 
@@ -864,9 +954,12 @@ service cloud.firestore {
       allow delete: if request.auth != null && isStatementAdmin();
     }
 
-    // Result Subscriptions - legacy collection for backwards compatibility
+    // Result Subscriptions - legacy collection for backwards compatibility.
+    // No code references it anymore; require auth on create so the unused path
+    // can't be used by unauthenticated scripts to spam-create docs.
     match /resultSubscriptions/{subscriptionId} {
-      allow create: if request.resource.data.email != null &&
+      allow create: if request.auth != null &&
+                      request.resource.data.email != null &&
                       request.resource.data.statementId != null;
       allow read: if request.auth != null;
       allow update, delete: if false;
@@ -937,12 +1030,21 @@ service cloud.firestore {
     // Research consent - users manage their own consent records
     // Supports both Firebase Auth users and anonymous users (MC/Sign apps)
     // For anonymous users: consentId = "userId_topParentId", validated by matching userId field
+    // Research consent — read/written client-side (main + MC) via
+    // researchConsentService, always with a Firebase auth token (real or
+    // anonymous). Require auth on every operation: `read: if true` leaked consent
+    // records (userId, topParentId) publicly, and the unauthenticated create/
+    // update let anyone write consent docs. Ownership can't be tied to auth.uid
+    // because anonymous users store a custom userId, so auth-presence is the
+    // boundary. Anonymous-auth users still satisfy `request.auth != null`.
     match /researchConsent/{consentId} {
-      allow create: if request.resource.data.userId is string &&
+      allow create: if request.auth != null &&
+                     request.resource.data.userId is string &&
                      request.resource.data.topParentId is string &&
                      request.resource.data.consentId == consentId;
-      allow read: if true;
-      allow update: if request.resource.data.consentId == consentId &&
+      allow read: if request.auth != null;
+      allow update: if request.auth != null &&
+                     request.resource.data.consentId == consentId &&
                      request.resource.data.userId == resource.data.userId;
       allow delete: if false;
     }

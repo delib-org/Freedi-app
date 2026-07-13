@@ -21,7 +21,7 @@
   right: 20px;
   top: 100px;
   width: 360px;
-  background-color: white;
+  background-color: var(--card-default);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 9999;
@@ -90,7 +90,7 @@
       
       &.default {
         background-color: #ffc107;
-        color: #333;
+        color: var(--text-body);
       }
     }
   }
@@ -110,7 +110,7 @@
     textarea {
       width: 100%;
       padding: 8px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-light);
       border-radius: 4px;
       font-family: monospace;
       font-size: 12px;
@@ -130,16 +130,16 @@
       border: none;
       
       &.copyButton {
-        background-color: #f5f5f5;
-        color: #333;
-        
+        background-color: var(--bg-hover);
+        color: var(--text-body);
+
         &:hover {
-          background-color: #e0e0e0;
+          background-color: var(--bg-selected);
         }
-        
+
         &:disabled {
-          background-color: #f5f5f5;
-          color: #999;
+          background-color: var(--bg-disabled);
+          color: var(--text-caption);
           cursor: not-allowed;
         }
       }

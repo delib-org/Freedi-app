@@ -22,7 +22,7 @@
 		display: flex;
 		width: 11rem;
 		flex-direction: column;
-		background-color: white;
+		background-color: var(--card-default);
 		box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.44);
 
 		&__fonts {
@@ -59,7 +59,7 @@
 		}
 
 		.changeFontSizeButton {
-			background-color: var(--white);
+			background-color: var(--card-default);
 			width: 2.5rem;
 			height: 2.2rem;
 			border-radius: 0.1rem;

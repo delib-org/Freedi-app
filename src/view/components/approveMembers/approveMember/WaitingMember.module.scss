@@ -42,7 +42,7 @@ $memberbg: #f2f6ff;
   &:hover {
     color: #be3b3d;
     border-color: #be3b3d;
-    background-color: rgb(228, 228, 228);
+    background-color: var(--bg-hover);
   }
 }
 
@@ -84,7 +84,7 @@ $memberbg: #f2f6ff;
       width: 105px;
       height: 28px;
       font-size: 16px;
-      color: #2a3346;
+      color: var(--text-subtitle);
 
       @media screen and (max-width: 667px) {
         margin-right: 0;

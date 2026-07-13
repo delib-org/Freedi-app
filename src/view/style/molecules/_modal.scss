@@ -39,7 +39,7 @@
     @include shadow-modal;
     position: relative;
     z-index: 1;
-    background-color: var(--white);
+    background-color: var(--card-default);
     border-radius: 0.5rem;
     padding: 1.5rem;
     max-width: 90vw;

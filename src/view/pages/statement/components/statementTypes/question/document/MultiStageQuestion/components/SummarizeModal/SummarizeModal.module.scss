@@ -50,7 +50,7 @@
 	padding: 0.5rem;
 	border: none;
 	outline: none;
-	background-color: var(--white);
+	background-color: var(--card-default);
 	border-radius: 3px;
 	font-family: 'Open Sans', sans-serif;
 	resize: none;
@@ -79,7 +79,7 @@
 
 .btnSecondary {
 	padding: 0.4rem 1rem;
-	background-color: var(--white);
+	background-color: var(--card-default);
 	color: var(--btn-secondary);
 	cursor: pointer;
 	border-radius: 20px;

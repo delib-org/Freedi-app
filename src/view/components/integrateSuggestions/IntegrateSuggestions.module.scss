@@ -599,7 +599,7 @@
     }
 
     &--secondary {
-      background: white;
+      background: var(--card-default);
       color: var(--text-body, #3d4d71);
       border: 1px solid var(--border-primary, #C6D8F7);
 
@@ -743,7 +743,7 @@
     display: flex;
     gap: 0.875rem;
     padding: 1rem;
-    background: white;
+    background: var(--card-default);
     border: 2px solid var(--border-primary, #C6D8F7);
     border-radius: 12px;
     cursor: pointer;
@@ -827,7 +827,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
+    background: var(--input-active);
     transition: all 0.2s ease;
     margin-top: 2px;
   }
@@ -1011,7 +1011,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    background: white;
+    background: var(--card-default);
     border-bottom: 1px solid var(--border-primary, #C6D8F7);
   }
 
@@ -1065,7 +1065,7 @@
     transition: background 0.2s ease;
 
     &:hover {
-      background: white;
+      background: var(--bg-hover);
     }
   }
 
@@ -1090,7 +1090,7 @@
   // ---------------------------------------------------------------------------
 
   &__editCard {
-    background: white;
+    background: var(--card-default);
     border-radius: 12px;
     padding: 1.25rem;
     border: 1px solid var(--border-primary, #C6D8F7);
@@ -1136,7 +1136,7 @@
     font-size: 0.9375rem;
     font-family: inherit;
     color: var(--text-body, #3d4d71);
-    background: white;
+    background: var(--input-active);
     transition: all 0.2s ease;
 
     &::placeholder {

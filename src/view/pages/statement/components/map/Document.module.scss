@@ -1,11 +1,11 @@
 .document {
-    background-color: white;
+    background-color: var(--card-default);
     padding: 1rem;
     border-radius: 0.5rem;
 }
 
 .resultsWrapper {
-    background-color: #fff;
+    background-color: var(--card-default);
     border-radius: 1rem;
     padding: 1rem;
     display: flex;

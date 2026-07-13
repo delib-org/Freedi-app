@@ -18,7 +18,7 @@
 	top: -0.875rem;
 	left: 0.5rem;
 	z-index: 1;
-	background-color: #ffffff;
+	background-color: var(--card-default);
 	border-radius: 0.5rem;
 	padding: 0 0.5rem;
 	height: 1.75rem;
@@ -38,14 +38,14 @@
 .label {
 	font-size: 1rem;
 	line-height: 175%;
-	color: #7484a9;
+	color: var(--text-caption);
 	font-weight: 400;
 	white-space: nowrap;
 }
 
 .inputContainer {
 	flex: 1;
-	border: 1px solid #bdcef4;
+	border: 1px solid var(--border-primary);
 	border-radius: 0.5rem;
 	padding: 1.25rem 1rem;
 	height: 100%;
@@ -62,7 +62,7 @@
 	line-height: 1.5rem;
 	font-weight: 300;
 	font-style: italic;
-	color: #7484a9;
+	color: var(--text-caption);
 	padding: 0;
 	min-height: 1.5rem;
 	resize: none;
@@ -92,13 +92,13 @@
 	}
 
 	&::-webkit-scrollbar-thumb {
-		background: #bdcef4;
+		background: var(--border-primary);
 		border-radius: 0.1875rem;
 	}
 }
 
 .charCounter {
 	font-size: 12px;
-	color: #7484a9;
+	color: var(--text-caption);
 	margin-top: 4px;
 }

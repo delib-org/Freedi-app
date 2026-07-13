@@ -1,5 +1,5 @@
 .modalContainer {
-	background: white;
+	background: var(--card-default);
 	border-radius: 0.5rem;
 	max-width: 600px;
 	width: 90vw;
@@ -14,13 +14,13 @@
 	justify-content: space-between;
 	align-items: center;
 	padding: var(--padding);
-	border-bottom: 1px solid #f0f0f0;
+	border-bottom: 1px solid var(--border-light);
 }
 
 .modalTitle {
 	margin: 0;
 	font-size: var(--h3-font-size);
-	color: #333;
+	color: var(--text-body);
 }
 
 .closeButton {
@@ -28,7 +28,7 @@
 	border: none;
 	font-size: 2rem;
 	line-height: 1;
-	color: #999;
+	color: var(--text-caption);
 	cursor: pointer;
 	padding: 0;
 	width: 32px;
@@ -40,8 +40,8 @@
 	transition: all 0.2s ease;
 
 	&:hover {
-		background: #f5f5f5;
-		color: #333;
+		background: var(--bg-hover);
+		color: var(--text-body);
 	}
 }
 
@@ -59,14 +59,14 @@
 	display: block;
 	font-size: 1rem;
 	font-weight: 500;
-	color: #333;
+	color: var(--text-body);
 	margin-bottom: 0.5rem;
 }
 
 .textarea {
 	width: 100%;
 	padding: 0.75rem;
-	border: 1px solid #ddd;
+	border: 1px solid var(--border-light);
 	border-radius: 8px;
 	font-size: 1rem;
 	font-family: inherit;
@@ -81,7 +81,7 @@
 	}
 
 	&:disabled {
-		background: #f5f5f5;
+		background: var(--bg-disabled);
 		cursor: not-allowed;
 	}
 }
@@ -95,7 +95,7 @@
 	border-left: 3px solid var(--accent);
 	border-radius: 4px;
 	font-size: 0.9rem;
-	color: #555;
+	color: var(--text-body);
 	line-height: 1.5;
 }
 
@@ -120,7 +120,7 @@
 	justify-content: flex-end;
 	gap: 0.75rem;
 	padding: var(--padding);
-	border-top: 1px solid #f0f0f0;
+	border-top: 1px solid var(--border-light);
 }
 
 .cancelButton,
@@ -140,12 +140,12 @@
 }
 
 .cancelButton {
-	background: white;
-	color: #666;
-	border: 1px solid #ddd;
+	background: var(--card-default);
+	color: var(--text-caption);
+	border: 1px solid var(--border-light);
 
 	&:hover:not(:disabled) {
-		background: #f5f5f5;
+		background: var(--bg-hover);
 	}
 }
 

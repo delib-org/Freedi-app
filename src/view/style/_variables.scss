@@ -8,6 +8,11 @@
   direction: ltr;
   text-orientation: mixed;
 
+  // Advertise light-first with dark support so native UA controls (form fields,
+  // scrollbars, autofill) follow the OS. Dark token overrides live in
+  // _variables-dark.scss under @media (prefers-color-scheme: dark).
+  color-scheme: light;
+
   // --- MAIN COLORS ---
   --mainBackground: #1f5895;
   --statementBackground: #f2f6ff;
@@ -711,4 +716,44 @@
   // --- ELEVATION TOKENS ---
   --elevation-1: 0 1px 2px var(--shadow);
   --elevation-2: 0 2px 6px var(--shadow);
+
+  // --- LEGACY / ORPHAN TOKEN ALIASES ---
+  // These token names are referenced across the codebase with hardcoded
+  // fallbacks (e.g. `var(--text-heading, #1a1a2e)`) but were never defined,
+  // so they always resolved to their light fallback — invisible in dark mode.
+  // Aliasing neutral ones to themed tokens makes them adapt automatically
+  // (CSS var indirection resolves at use time). Status/accent ones get concrete
+  // values here and dark-tuned overrides in _variables-dark.scss.
+  --text-heading: var(--text-title);
+  --dark-text: var(--text-body);
+  --dark-header: var(--text-title);
+  --light-header: #ffffff;
+  --Text-Title: var(--text-title);
+  --text-muted: var(--text-caption);
+  --Text-lighter: var(--lighter);
+  --text-inverse: #ffffff;
+  --btn-primary-text: #ffffff;
+  --text-danger: var(--text-error);
+  --Text-Error: var(--text-error);
+  --background-secondary: var(--bg-hover);
+  --background-tertiary: var(--bg-disabled);
+  --background-hover: var(--bg-hover);
+  --bg-secondary: var(--bg-hover);
+  --page-background: var(--surface-background);
+  --switch-bg: var(--toggle-background);
+  --primary-color: #4caf50;
+  --primary-hover: #45a049;
+  --error-text: #991b1b;
+  --error-bg: var(--bg-error-light);
+  --success-text: #065f46;
+  --warning: #d97706;
+  --warning-background: var(--bg-warning-light);
+
+  // Scrim gradient behind floating bottom nav (fades page content out).
+  --nav-scrim-from: rgba(242, 246, 255, 0);
+  --nav-scrim-to: rgba(242, 246, 255, 1);
+
+  // Inactive evaluation thumb (smiley) background — subtle circle behind icons.
+  --evaluation-thumb-inactive: rgba(0, 0, 0, 0.18);
+  --evaluation-thumb-ring: rgba(0, 0, 0, 0.22);
 }

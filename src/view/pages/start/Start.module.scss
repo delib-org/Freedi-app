@@ -8,7 +8,7 @@
 }
 
 .splashPage {
-	background: #f2f6ff;
+	background: var(--surface-background);
 	display: flex;
 	flex-direction: column;
 	align-items: center;

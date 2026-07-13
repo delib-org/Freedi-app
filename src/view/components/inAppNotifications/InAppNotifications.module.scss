@@ -3,7 +3,7 @@
 	top: 3.5rem;
 	left: 50%;
 	transform: translateX(-50%);
-	background-color: white;
+	background-color: var(--card-default);
 	box-shadow: 3px 3px 10px #a9adf49a;
 	border-radius: 15px;
 	padding: 10px;
@@ -18,7 +18,7 @@
 		text-align: start;
 
 		&:hover {
-			color: black;
+			color: var(--text-title);
 		}
 	}
 }
@@ -74,5 +74,5 @@
 .noNotifications {
 	text-align: center;
 	padding: 2rem 1rem;
-	color: #666;
+	color: var(--text-caption);
 }

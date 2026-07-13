@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
+import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName, isAnonymousRequest } from '@/lib/utils/user';
 import { Collections, StatementType } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
 import { getDemographicName } from '@/lib/firebase/demographicQueries';
@@ -97,6 +97,23 @@ export async function POST(
     if (await isUserBlocked(db, documentId, userId)) {
       return NextResponse.json(
         { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
+
+    // Enforce the document's "require Google login" setting server-side —
+    // it is otherwise only a client-side gate, and every visitor carries an
+    // anonymous "_uid" cookie minted by middleware.
+    const commentDocSnap = await db.collection(Collections.statements).doc(documentId).get();
+    if (
+      commentDocSnap.data()?.signSettings?.requireGoogleLogin === true &&
+      isAnonymousRequest(cookieHeader)
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Google sign-in required',
+          message: 'You must sign in with Google to comment on this document.',
+        },
         { status: 403 }
       );
     }

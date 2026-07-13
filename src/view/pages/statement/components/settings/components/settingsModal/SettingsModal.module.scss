@@ -1,5 +1,5 @@
 .modal {
-	background-color: white;
+	background-color: var(--card-default);
 	position: fixed;
 	top: 20px;
 	left: 50%;
@@ -12,7 +12,7 @@
 	height: calc(100vh - 40px);
 	box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1);
 	overflow-y: auto;
-	border: 1px solid #e8ecf5;
+	border: 1px solid var(--border-light);
 
 	@media screen and (max-width: 768px) {
 		height: 100vh;
@@ -32,7 +32,7 @@
 	height: 100svh;
 	box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1);
 	overflow-y: auto;
-	border: 1px solid #e8ecf5;
+	border: 1px solid var(--border-light);
 
 	@media screen and (max-width: 768px) {
 		height: 100vh;

@@ -72,11 +72,11 @@
 		gap: 0.5rem;
 		align-items: center;
 		font-size: 0.875rem;
-		color: #666;
+		color: var(--text-caption);
 
 		.count {
 			font-weight: 500;
-			color: #333;
+			color: var(--text-body);
 		}
 
 		.percentage {

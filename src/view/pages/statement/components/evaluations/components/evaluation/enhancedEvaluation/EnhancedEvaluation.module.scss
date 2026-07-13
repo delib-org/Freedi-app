@@ -32,8 +32,10 @@
 				min-height: 1.8rem;
 				cursor: pointer;
 				user-select: none;
-				opacity: 0.8;
+				opacity: 0.95;
 				border: none;
+				// Subtle ring so inactive thumbs clearly read as tappable.
+				box-shadow: inset 0 0 0 1px var(--evaluation-thumb-ring);
 				-webkit-tap-highlight-color: transparent;
 				transform: scale(1);
 
@@ -41,10 +43,16 @@
 					transform: scale(0.95);
 				}
 
+				&:hover:not(:disabled):not(.active) {
+					opacity: 1;
+					transform: scale(1.08);
+				}
+
 				&.active {
 					transform: scale(1.2);
 					z-index: 0;
 					opacity: 1;
+					box-shadow: none;
 				}
 
 				&:disabled {
@@ -134,7 +142,7 @@
 			justify-content: space-between;
 			font-weight: 300;
 			font-size: 0.8rem;
-			color: rgba(0, 0, 0, 0.711);
+			color: var(--text-caption);
 			text-align: center;
 			width: 100%;
 		}

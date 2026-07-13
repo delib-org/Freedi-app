@@ -15,6 +15,10 @@ import {
 	downloadStrategicExport,
 	fetchStrategicExport,
 } from '@/controllers/db/strategicExport/strategicExportController';
+import {
+	fetchPrivacyExport,
+	downloadPrivacyExport,
+} from '@/controllers/db/privacyExport/privacyExportController';
 import type { ExportFormat } from '@/types/export';
 import styles from './EnhancedAdvancedSettings.module.scss';
 
@@ -92,7 +96,24 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 	async function handleUserDataExport(format: ExportFormat) {
 		setIsUserDataExporting((prev) => ({ ...prev, [format]: true }));
 		try {
-			await exportPrivacyPreservingData(statement, subStatements, format);
+			// Prefer the server-side export: it reads every option and all raw
+			// per-user data with the Admin SDK, aggregates + k-anonymizes there, and
+			// returns only the anonymized result — so the option list is always
+			// complete and raw data never reaches the browser.
+			try {
+				const data = await fetchPrivacyExport({ statementId: statement.statementId });
+				downloadPrivacyExport(data, statement.statement, format);
+			} catch (serverError) {
+				// Fall back to the client-side path (e.g. if the function is
+				// unavailable). This may under-count options when the listener is
+				// only partially hydrated, so it is a fallback, not the default.
+				logError(serverError, {
+					operation: 'ExportSettings.handleUserDataExport.serverFallback',
+					statementId: statement.statementId,
+					metadata: { format },
+				});
+				await exportPrivacyPreservingData(statement, subStatements, format);
+			}
 		} catch (error) {
 			logError(error, {
 				operation: 'ExportSettings.handleUserDataExport',

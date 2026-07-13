@@ -6,6 +6,7 @@
  */
 
 import { Statement, StatementEvaluation, Paragraph } from '@freedi/shared-types';
+import { isDerivedStatement, resolveDerivedPipeline } from '@/utils/derivedStatement';
 
 /**
  * Anonymized version of SimpleStatement - removes all personal data
@@ -74,6 +75,14 @@ export interface ExportableStatementData {
 	// NOTE: 'creator' and 'creatorId' are intentionally excluded for privacy
 	hide?: boolean;
 	anchored?: boolean;
+	/** True when produced by the clustering/synthesis pipeline rather than submitted by a participant */
+	isDerived: boolean;
+	/** True when the statement is a cluster container grouping other statements */
+	isCluster?: boolean;
+	/** Which pipeline produced it, when derived */
+	derivedByPipeline?: 'topic-cluster' | 'synthesis' | 'unknown-cluster';
+	/** IDs of the source statements merged into this one, when derived */
+	integratedOptions?: string[];
 }
 
 /**
@@ -169,6 +178,8 @@ export function extractExportableData(statement: Statement): ExportableStatement
 	// Calculate average con (only if there are con evaluators)
 	const averageCon = numberOfConEvaluators > 0 ? sumCon / numberOfConEvaluators : undefined;
 
+	const derived = isDerivedStatement(statement);
+
 	return {
 		statement: statement.statement,
 		description: statement.paragraphs?.[0]?.content,
@@ -209,5 +220,9 @@ export function extractExportableData(statement: Statement): ExportableStatement
 		// NOTE: 'joined' is intentionally NOT exported - it contains user names/IDs
 		hide: statement.hide,
 		anchored: statement.anchored,
+		isDerived: derived,
+		isCluster: statement.isCluster,
+		derivedByPipeline: derived ? resolveDerivedPipeline(statement) : undefined,
+		integratedOptions: derived ? statement.integratedOptions : undefined,
 	};
 }

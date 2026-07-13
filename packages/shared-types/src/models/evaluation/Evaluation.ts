@@ -30,6 +30,12 @@ export const EvaluationSchema = object({
 	 * an ancestor walk. Omitted for evaluations made outside any survey.
 	 */
 	demographicAnchorId: optional(string()),
+	/**
+	 * Set when the evaluation was made inside an agora classroom session.
+	 * Guards the agora bridging-score trigger — evaluations without it never
+	 * touch the agora pipeline.
+	 */
+	agoraSessionId: optional(string()),
 });
 
 export type Evaluation = InferOutput<typeof EvaluationSchema>;

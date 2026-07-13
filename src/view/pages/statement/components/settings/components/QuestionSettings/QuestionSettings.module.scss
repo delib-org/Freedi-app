@@ -212,7 +212,7 @@
 		}
 
 		&__preview {
-			background: white;
+			background: var(--card-default);
 			border: 1px solid var(--border-color);
 			border-radius: 8px;
 			padding: 1rem;
@@ -261,7 +261,7 @@
 		&--hasImage {
 			border-style: solid;
 			padding: 0;
-			background: white;
+			background: var(--card-default);
 		}
 
 		&__empty {

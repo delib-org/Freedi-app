@@ -1,0 +1,199 @@
+// =============================================================================
+// Dark Mode Overrides
+// Applied automatically when the OS/browser reports prefers-color-scheme: dark.
+//
+// Strategy: the app is authored light-first. Here we ONLY re-point the
+// *semantic surface / text / border / shadow* design tokens to a dark palette.
+// Because components consume these tokens (var(--card-default), var(--text-body),
+// var(--surface-background), ...), the whole app flips automatically. Brand /
+// accent colours (blues, teals, question/group, emojis, voting palette) are left
+// untouched — they read well on dark and carry meaning.
+//
+// Dark palette is blue-tinted to match the app's light theme (#f2f6ff family).
+// Elevation ladder (darkest -> lightest):
+//   page  #10151f  ·  surface #161c29  ·  card #1c2434  ·  raised #232c40
+// =============================================================================
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    // Let native controls (form fields, scrollbars, autofill) render dark.
+    color-scheme: dark;
+
+    // --- MAIN BACKGROUNDS ---
+    --mainBackground: #16406e;
+    --statementBackground: #10151f;
+    --inputBackground: #161c29;
+
+    // --- CORE TEXT (light on dark) ---
+    --text-primary: rgba(237, 240, 248, 1);
+    --text-primary-contrast: rgba(255, 255, 255, 1);
+
+    --text-secondary: rgba(198, 205, 223, 1);
+    --text-secondary-contrast: rgba(226, 231, 243, 1);
+
+    --text-tertiary: rgba(158, 167, 190, 1);
+    --text-tertiary-contrast: rgba(198, 205, 223, 1);
+
+    --lighter: rgba(128, 137, 162, 1);
+    --lighter-contrast: rgba(170, 178, 200, 1);
+
+    // --- COMMUNITY VOICE GRAY SCALE (dark: dark greys, light text) ---
+    --gray0-1: hsl(220, 16%, 18%);
+    --gray0-1-border: hsl(220, 16%, 26%);
+    --gray0-1-text: #e7ebf3;
+
+    --gray0-125: hsl(220, 16%, 20%);
+    --gray0-125-border: hsl(220, 16%, 28%);
+    --gray0-125-text: #e7ebf3;
+
+    --gray0-15: hsl(220, 16%, 23%);
+    --gray0-15-border: hsl(220, 16%, 31%);
+    --gray0-15-text: #eef1f7;
+
+    --gray0-2: hsl(220, 16%, 27%);
+    --gray0-2-border: hsl(220, 16%, 36%);
+    --gray0-2-text: #f4f6fb;
+
+    // --- ALERTS / ACCENTS (kept vivid) ---
+    --tooltip: #6db0f9;
+    --accent: #7cacf8;
+
+    // Option / result text (were dark navy on light chips)
+    --option-text: #d3dcf1;
+    --result-text: #c6cde0;
+
+    // --- SHADOW & ELEVATION (deeper on dark) ---
+    --shadow: rgba(0, 0, 0, 0.55);
+
+    // --- BUTTONS (inactive) ---
+    --inactive: #39415a;
+    --inactive-text: #737c98;
+
+    --white: #ffffff; // keep literal white available for on-colour text
+
+    --placeHolder: #6d7590;
+    --link: #8fa8ff;
+    --link-contrast: #b8c6ff;
+
+    // --- CARDS ---
+    --card-default: #1c2434;
+    --card-needs-surface: #16332e;
+    --card-needs-top: #1d453e;
+    --card-suggestion-added: #2b2a1a;
+    --card-question-added: #142a3c;
+    --card-other-message: #26221b;
+
+    --card-default-contrast: #1c2434;
+
+    // --- CHIPS ---
+    --chips-default: #232c40;
+
+    // --- DROPDOWNS ---
+    --dropdown-cluster-active: #232c40;
+    --dropdown-option-active: #232c40;
+    --dropdown-rooms-active: #232c40;
+    --dropdown-step-default: #161c29;
+    --dropdown-step-active: #232c40;
+    --dropdown-step-activity-active: #1c2434;
+
+    // --- INPUT ---
+    --input-active: #1f2740;
+
+    // --- MAP ---
+    --map-statement: #1c2434;
+
+    // --- MEMBER (leave brand-ish tints, darken awaiting) ---
+    --member-awaiting: #223a52;
+    --member-voter: #2e2748;
+    --member-evaluator: #1d453e;
+
+    // --- MENU ---
+    --menu-default: #1c2434;
+    --menu-active: #232c40;
+
+    // --- OFF-CANVAS ---
+    --off-canvas-background: #161c29;
+
+    // --- POPUP ---
+    --popup-default: #1c2434;
+
+    // --- STEPPER ---
+    --stepper-default: #1c2434;
+
+    // --- SURFACE ---
+    --surface-background: #10151f;
+    --surface-overlay: rgba(0, 0, 0, 0.66);
+    --surface-edit: #161c29;
+    --surface-Surface-60: rgba(28, 36, 52, 0.6);
+    --Surface-tabSys-background-level-1: rgba(16, 21, 31, 0);
+    --Surface-tabSys-background-level-2: #161c29;
+
+    // --- BORDERS ---
+    --border-primary: #2c3650;
+    --border-light: #262f45;
+    --border-color: #2c3650;
+
+    // --- TEXT ROLES ---
+    --text-title: #f2f5fb;
+    --text-subtitle: #dfe4f0;
+    --text-body: #c6cde0;
+    --text-caption: #97a0bb;
+    --text-label: #97a0bb;
+    --text-negative: #ffffff;
+    --text-disabled: #6d7590;
+    --text-blue: #8fa8ff;
+
+    // --- TOGGLE ---
+    --toggle-background: #2a344e;
+
+    // --- LAYOUT / BORDER ALIASES ---
+    --border-light: #262f45;
+
+    // --- BACKGROUNDS ---
+    --bg-hover: #232c40;
+    --bg-disabled: #1a2030;
+    --bg-selected: #263255;
+    --bg-main: #10151f;
+
+    // --- HEADING COLORS ---
+    --h2Color: #c6cde0;
+    --h3Color: #c6cde0;
+    --h4Color: #c6cde0;
+    --h5Color: #c6cde0;
+
+    // --- TEXT ALIASES ---
+    --text-paragraph: #c6cde0;
+    --text-headline: #f2f5fb;
+    --text-description: #97a0bb;
+
+    // --- SEMANTIC BACKGROUND TINTS (translucent so they sit on dark) ---
+    --bg-success-light: rgba(79, 171, 154, 0.14);
+    --bg-error-light: rgba(247, 74, 77, 0.14);
+    --bg-warning-light: rgba(239, 117, 80, 0.14);
+    --bg-info-light: rgba(95, 136, 229, 0.14);
+
+    // --- BUTTONS (disabled) ---
+    --btn-disabled: #2a3348;
+    --btn-disabled-text: #6d7590;
+
+    // --- SKELETON LOADING ---
+    --skeleton-base: #222b40;
+    --skeleton-shine: #2c3752;
+
+    // --- ENGAGEMENT PROGRESS TRACK ---
+    --progress-track: #2c3650;
+
+    // --- LEGACY STATUS TEXT (brightened for dark tinted backgrounds) ---
+    --error-text: #fca5a5;
+    --success-text: #6ee7b7;
+    --warning: #fcd34d;
+
+    // Scrim gradient behind floating bottom nav → fades to the dark page bg.
+    --nav-scrim-from: rgba(16, 21, 31, 0);
+    --nav-scrim-to: rgba(16, 21, 31, 1);
+
+    // Inactive evaluation thumb → light circle so smileys read on dark cards.
+    --evaluation-thumb-inactive: rgba(255, 255, 255, 0.22);
+    --evaluation-thumb-ring: rgba(255, 255, 255, 0.28);
+  }
+}

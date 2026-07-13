@@ -51,7 +51,7 @@
 	right: 50%;
 	transform: translateX(50%);
 	margin-top: 0.5rem;
-	background-color: var(--card-background, #fff);
+	background-color: var(--card-default);
 	box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
 	border-radius: 8px;
 	z-index: 1000;
@@ -173,16 +173,5 @@
 	}
 	to {
 		opacity: 1;
-	}
-}
-
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-	.dropdown {
-		--card-background: #1e1e1e;
-		--text-primary: #fff;
-		--text-secondary: #aaa;
-		--primary-color: #4CAF50;
-		--primary-hover: #5CBF60;
 	}
 }

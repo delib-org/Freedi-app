@@ -338,7 +338,7 @@ export default function DocumentView({
                       </p>
                     ) : (
                       <p className={styles.unsignedStatus}>
-                        {t('satisfactionQuestion') || 'How satisfied are you with this document?'}
+                        {t('satisfactionQuestion') || 'What do you think about this proposal?'}
                       </p>
                     )
                   ) : !user ? (

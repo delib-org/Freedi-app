@@ -133,6 +133,9 @@ import { fn_syncParagraphChildrenToDescription } from './fn_syncParagraphChildre
 // Strategic export (AI-ready report)
 import { strategicExport } from './fn_strategicExport';
 
+// Privacy-preserving user-data export (k-anonymized, server-side aggregation)
+import { privacyExport } from './fn_privacyExport';
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
 import { refineIdea } from './fn_popperHebbian_refineIdea';
@@ -1104,6 +1107,15 @@ exports.strategicExport = wrapAdminHttpFunction(strategicExport, {
 	timeoutSeconds: 540,
 });
 
+// Privacy-preserving user-data export. Reads all options + every user's raw
+// evaluations and demographic answers, aggregates with k-anonymity suppression
+// server-side, and returns only the anonymized result. Large deliberations mean
+// heavier reads/aggregation, so it gets a raised memory/timeout profile.
+exports.privacyExport = wrapAdminHttpFunction(privacyExport, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
+});
+
 // Condensation / Grouped Suggestions — non-destructive clustering on demand,
 // evaluation aggregation writeback, and stale-marking trigger.
 exports.runCondensation = runCondensation;
@@ -1118,3 +1130,19 @@ exports.evaluationDriftCorrection = evaluationDriftCorrection;
 export { backupSurveyOnRequest } from './backups/backupSurveyOnRequest';
 export { scheduledDailyBackups } from './backups/scheduledDailyBackups';
 export { backupSurveyCallable } from './backups/backupSurveyCallable';
+
+// Agora classroom deliberative game — session lifecycle
+export {
+	agoraCreateSession,
+	agoraJoinSession,
+	agoraAdvanceStage,
+	agoraGradeValueIdentification,
+	agoraWritingAssistant,
+	agoraSetRound,
+	agoraResolveSuggestion,
+	agoraCharacterReview,
+	agoraEstimateReception,
+	agoraGenerateTopicPackage,
+	agoraSessionSweep,
+	onAgoraEvaluationWritten,
+} from './agora';

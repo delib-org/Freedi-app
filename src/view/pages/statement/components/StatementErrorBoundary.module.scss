@@ -36,7 +36,7 @@
   }
 
   &__card {
-    background: var(--white);
+    background: var(--card-default);
     border: 1px solid rgba(71, 180, 239, 0.15);
     border-radius: 16px;
     padding: 2rem;
@@ -221,7 +221,7 @@
   }
 
   &__detailsText {
-    background: #fafafa;
+    background: var(--card-default);
     border: 1px solid rgba(247, 74, 77, 0.15);
     border-radius: 6px;
     padding: 0.75rem;
