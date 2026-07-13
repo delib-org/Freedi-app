@@ -21,10 +21,12 @@ import {
 	AgoraSession,
 	AgoraSuggestionStatus,
 	StatementType,
+	isAgoraAiUid,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { getUserState } from './user';
 import { getSessionState } from './session';
+import { detectHelpedImprovements } from './notifications';
 
 // Flow-app precedent: improvement suggestions are statements with this raw
 // type tag (not a StatementType enum member).
@@ -49,8 +51,14 @@ export interface DeliberationState {
 	proposals: AgoraProposal[];
 	/** proposalId → improvement suggestions */
 	suggestions: Record<string, AgoraProposal[]>;
-	/** statementId → my rating (-1 | 1) */
-	myRatings: Record<string, number>;
+	/** statementId → my rating (five-level value) + when I cast/updated it */
+	myRatings: Record<string, { value: number; updatedAt: number }>;
+	/**
+	 * statementId → all STUDENT raters' (evaluatorId, updatedAt). AI raters
+	 * excluded at ingestion. Values are deliberately NOT stored — individual
+	 * ratings stay anonymous; only aggregate counts may be displayed.
+	 */
+	studentEvalTimes: Record<string, Array<{ evaluatorId: string; updatedAt: number }>>;
 	/** proposalId → server-computed camp score */
 	scores: Record<string, AgoraProposalScore>;
 	/** `${statementId}--${characterId}` → in-character AI review */
@@ -61,6 +69,7 @@ const state: DeliberationState = {
 	proposals: [],
 	suggestions: {},
 	myRatings: {},
+	studentEvalTimes: {},
 	scores: {},
 	characterReviews: {},
 };
@@ -112,6 +121,8 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			Object.values(suggestions).forEach((list) => list.sort((a, b) => a.createdAt - b.createdAt));
 			state.proposals = proposals;
 			state.suggestions = suggestions;
+			// Close the collaboration loop: tell helpers their proposal moved
+			detectHelpedImprovements(sessionId, userId);
 			m.redraw();
 		},
 		(error) => {
@@ -119,21 +130,37 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 		},
 	);
 
+	// ONE session-wide evaluations listener feeds both my own ratings and the
+	// anonymous "who rated when" timeline (owner-side aggregate signals).
 	const ratingsUnsub = onSnapshot(
-		query(
-			collection(db, Collections.evaluations),
-			where('agoraSessionId', '==', sessionId),
-			where('evaluatorId', '==', userId),
-		),
+		query(collection(db, Collections.evaluations), where('agoraSessionId', '==', sessionId)),
 		(snapshot) => {
-			const ratings: Record<string, number> = {};
+			const ratings: DeliberationState['myRatings'] = {};
+			const evalTimes: DeliberationState['studentEvalTimes'] = {};
 			snapshot.forEach((docSnap) => {
-				const data = docSnap.data() as { statementId?: string; evaluation?: number };
-				if (data.statementId && typeof data.evaluation === 'number') {
-					ratings[data.statementId] = data.evaluation;
+				const data = docSnap.data() as {
+					statementId?: string;
+					evaluatorId?: string;
+					evaluation?: number;
+					updatedAt?: number;
+				};
+				if (!data.statementId || typeof data.evaluation !== 'number' || !data.evaluatorId) {
+					return;
 				}
+				// The characters' synthetic raters never appear in student-facing
+				// counts (their weight lives in the server-side camp aggregates)
+				if (isAgoraAiUid(data.evaluatorId)) return;
+				const updatedAt = data.updatedAt ?? 0;
+				if (data.evaluatorId === userId) {
+					ratings[data.statementId] = { value: data.evaluation, updatedAt };
+				}
+				(evalTimes[data.statementId] ??= []).push({
+					evaluatorId: data.evaluatorId,
+					updatedAt,
+				});
 			});
 			state.myRatings = ratings;
+			state.studentEvalTimes = evalTimes;
 			m.redraw();
 		},
 		(error) => {
@@ -192,8 +219,28 @@ export function stopDeliberationListeners(): void {
 	state.proposals = [];
 	state.suggestions = {};
 	state.myRatings = {};
+	state.studentEvalTimes = {};
 	state.scores = {};
 	state.characterReviews = {};
+}
+
+/** A helped proposal: someone else's proposal I sent at least one suggestion on */
+export interface HelpedProposal {
+	proposal: AgoraProposal;
+	mySuggestions: AgoraProposal[];
+}
+
+/** Proposals I contributed suggestions to — the "collaboration loop" roster */
+export function getHelpedProposals(userId: string): HelpedProposal[] {
+	return state.proposals
+		.filter((proposal) => proposal.creatorId !== userId)
+		.map((proposal) => ({
+			proposal,
+			mySuggestions: (state.suggestions[proposal.statementId] ?? []).filter(
+				(suggestion) => suggestion.creatorId === userId,
+			),
+		}))
+		.filter((entry) => entry.mySuggestions.length > 0);
 }
 
 /** Create the student's proposal, or update it on later rounds */

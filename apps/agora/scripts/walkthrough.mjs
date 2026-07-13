@@ -302,6 +302,52 @@ const staleLabel = await s1.locator('.char-chips__chip').nth(0).locator('.char-c
 console.log('COUNT CHIP AFTER UPDATE (stale):', staleLabel);
 if (!/changed|השתנה/i.test(staleLabel)) throw new Error(`Expected stale chip label, got: ${staleLabel}`);
 
+// ---------- The collaboration loop ----------
+step('COLLABORATION LOOP: S2 sees the improvement, re-rates, follows up');
+// S2 (on lap-2 mine) gets a badge on the Others tab: a proposal they helped moved
+await s2.waitForSelector('.delib-nav__badge', { timeout: 15000 });
+console.log('S2 OTHERS BADGE:', await s2.locator('.delib-nav__badge').textContent());
+// Others → rate pool is exhausted → continue to helping → "Proposals I helped"
+await s2.locator('.delib-nav__item').last().click();
+await s2.getByRole('button', { name: /Continue to helping|המשיכו לעזרה/i }).click();
+await s2.waitForSelector('.helped__item', { timeout: 15000 });
+const helped = s2.locator('.helped__item');
+if ((await helped.locator('.helped__chip--accepted').count()) === 0)
+	throw new Error('Helped section missing the accepted-status chip');
+if ((await helped.locator('.helped__improved').count()) === 0)
+	throw new Error('Helped section missing the improved-since marker');
+const currentText = await helped.locator('.helped__current').textContent();
+if (!currentText.includes('ועדה משותפת'))
+	throw new Error('Helped section does not show the improved proposal text');
+console.log('S2 SEES ACKNOWLEDGMENT + IMPROVED TEXT ✓');
+await shot(s2, '08a-helped-section');
+
+// S2 changes their vote: +0.5 (for) → +1 (very much for)
+await helped.locator('.rate-scale__option--strong-for').click();
+await s2.waitForSelector(
+	'.helped__item .rate-scale__option--strong-for.rate-scale__option--selected',
+	{ timeout: 10000 }
+);
+console.log('S2 RE-RATED to +1 ✓');
+
+// S1 (owner) sees the aggregate loop-closing signal — no names
+await s1.waitForSelector('.scoreboard__updated', { timeout: 15000 });
+console.log('S1 RATINGS-MOVED SIGNAL:', await s1.locator('.scoreboard__updated').textContent());
+
+// S2 sends a FREE follow-up — the lap must not advance
+await helped.locator('textarea.helped__followup').fill('עכשיו זה משכנע יותר — אולי הוסיפו גם נציגות לאיכרים בוועדה.');
+await helped.locator('button.btn--secondary').click();
+await s2.waitForTimeout(800);
+const lapAfter = await s2.locator('.cycle-strip__laps').getAttribute('aria-label');
+if (!lapAfter.includes('2')) throw new Error(`Follow-up advanced the lap: ${lapAfter}`);
+console.log('S2 FOLLOW-UP SENT, still on lap 2 ✓');
+
+// S1 sees the follow-up land in the suggestions stream
+await s1.waitForFunction(() => document.querySelectorAll('.workshop__item').length >= 2, {
+	timeout: 15000,
+});
+console.log('S1 SEES FOLLOW-UP: suggestion items =', await s1.locator('.workshop__item').count());
+
 await shot(teacher, '08-teacher-deliberation');
 
 // ---------- Results ----------

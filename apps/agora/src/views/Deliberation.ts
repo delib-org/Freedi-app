@@ -10,8 +10,10 @@ import {
 	resolveSuggestion,
 	estimateReception,
 	askCharacterReview,
+	getHelpedProposals,
 	AgoraProposal,
 	AgoraRating,
+	HelpedProposal,
 	ReceptionEstimate,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
@@ -102,6 +104,7 @@ function scoreboard(
 	topic: AgoraTopicPackage,
 	score: AgoraProposalScore | undefined,
 	own = true,
+	ratingsMoved = 0,
 ): m.Children {
 	const raters = totalRaters(score);
 	const bridging = score?.bridgingScore ?? 0;
@@ -132,6 +135,11 @@ function scoreboard(
 				// "no one rated YOUR proposal yet" only fits the owner's screen
 				raters === 0 && own ? t('delib.no_raters_yet') : t('delib.bridge_meaning'),
 			),
+			// The loop closing: votes moved after my latest improvement.
+			// Aggregate ONLY — individual ratings stay anonymous.
+			own && ratingsMoved > 0
+				? m('p.scoreboard__updated', `📈 ${t('delib.ratings_moved', { n: ratingsMoved })}`)
+				: null,
 		]),
 	]);
 }
@@ -218,6 +226,9 @@ export function Deliberation(
 	let openCharacterId = '';
 	/** characterId → in-flight review request */
 	const reviewBusy: Record<string, boolean> = {};
+	/** proposalId → follow-up comment draft (the collaboration loop; per-proposal) */
+	const followUpDrafts: Record<string, string> = {};
+	const followUpBusy: Record<string, boolean> = {};
 	/** Active tab of the workshop card on the "help" step */
 	let helpTab: 'suggest' | 'needs' = 'suggest';
 	/**
@@ -304,7 +315,14 @@ export function Deliberation(
 						}
 					},
 				},
-				[m('span.delib-nav__icon', '👥'), m('span.delib-nav__label', t('delib.nav_others'))],
+				[
+					m('span.delib-nav__icon', '👥'),
+					m('span.delib-nav__label', t('delib.nav_others')),
+					// Proposals I helped moved while I was away — come see
+					mineActive && helpedChangedCount() > 0
+						? m('span.delib-nav__badge', String(helpedChangedCount()))
+						: null,
+				],
 			),
 		]);
 	}
@@ -729,6 +747,149 @@ export function Deliberation(
 		]);
 	}
 
+	// ---------- The collaboration loop: "proposals I helped" ----------
+
+	/** sessionStorage map: helped proposalId → lastUpdate already SEEN in the section */
+	const helpedSeenKey = `agora_${session.sessionId}_helped_seen`;
+
+	function readHelpedSeen(): Record<string, number> {
+		try {
+			return JSON.parse(sessionStorage.getItem(helpedSeenKey) ?? '{}') as Record<string, number>;
+		} catch {
+			return {};
+		}
+	}
+
+	/** Helped proposals that moved since I last looked — feeds the Others badge */
+	function helpedChangedCount(): number {
+		const seen = readHelpedSeen();
+
+		return getHelpedProposals(userId).filter(
+			({ proposal }) => proposal.lastUpdate > (seen[proposal.statementId] ?? 0),
+		).length;
+	}
+
+	/** Rendering the section counts as seeing it (equality-guarded — no storage thrash) */
+	function markHelpedSeen(entries: readonly HelpedProposal[]): void {
+		const seen = readHelpedSeen();
+		let changed = false;
+		for (const { proposal } of entries) {
+			if (seen[proposal.statementId] !== proposal.lastUpdate) {
+				seen[proposal.statementId] = proposal.lastUpdate;
+				changed = true;
+			}
+		}
+		if (changed) sessionStorage.setItem(helpedSeenKey, JSON.stringify(seen));
+	}
+
+	/** Compact five-level scale for CHANGING my vote — never touches cycle state */
+	function reRateScale(live: AgoraSession, proposal: AgoraProposal): m.Children {
+		const current = getDeliberationState().myRatings[proposal.statementId]?.value;
+
+		return m(
+			'.rate-scale.rate-scale--compact',
+			RATE_OPTIONS.map((option) =>
+				m(
+					`button.rate-scale__option.rate-scale__option--${option.variant}`,
+					{
+						class: current === option.value ? 'rate-scale__option--selected' : undefined,
+						'aria-pressed': String(current === option.value),
+						onclick: () => {
+							void rateProposal(live, proposal.statementId, option.value);
+						},
+					},
+					[
+						m('span.rate-scale__emoji', option.emoji),
+						m('span.rate-scale__label', t(option.labelKey)),
+					],
+				),
+			),
+		);
+	}
+
+	/** One helped proposal: my suggestions + status, the current text, re-rate, follow-up */
+	function helpedItem(live: AgoraSession, entry: HelpedProposal): m.Children {
+		const { proposal, mySuggestions } = entry;
+		// createdAt, NOT lastUpdate: resolving a suggestion bumps its lastUpdate,
+		// which would wrongly hide the marker when the owner edited first
+		const latestInput = Math.max(...mySuggestions.map((suggestion) => suggestion.createdAt));
+		const improvedSince = proposal.lastUpdate > latestInput;
+		const draft = followUpDrafts[proposal.statementId] ?? '';
+		const statusKey = (suggestion: AgoraProposal): string =>
+			suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
+				? 'delib.accepted'
+				: suggestion.suggestionStatus === AgoraSuggestionStatus.thanked
+					? 'delib.thanked'
+					: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
+						? 'delib.declined'
+						: 'delib.helped_status_open';
+
+		return m('.card.stack.helped__item', { key: proposal.statementId }, [
+			m('p.char-review__role', t('delib.proposal_by', { name: proposal.anonName || '?' })),
+			// My suggestions + live status chips — the acknowledgment.
+			// Nested array (own fragment): keyed children must not be spread
+			// among unkeyed siblings (Mithril mixed-keys crash)
+			mySuggestions.map((suggestion) =>
+				m('.helped__suggestion', { key: suggestion.statementId }, [
+					m('p.helped__suggestion-text', suggestion.statement),
+					m(
+						'span.helped__chip',
+						{ class: `helped__chip--${suggestion.suggestionStatus ?? 'open'}` },
+						t(statusKey(suggestion)),
+					),
+				]),
+			),
+			improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
+			m('p.teacher__section-title', t('delib.helped_current_label')),
+			m('p.helped__current', proposal.statement),
+			m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
+			reRateScale(live, proposal),
+			m('textarea.text-input.helped__followup', {
+				value: draft,
+				rows: 2,
+				placeholder: t('delib.helped_followup_placeholder'),
+				oninput: (event: InputEvent) => {
+					followUpDrafts[proposal.statementId] = (event.target as HTMLTextAreaElement).value;
+				},
+			}),
+			m(
+				'button.btn.btn--secondary',
+				{
+					disabled:
+						followUpBusy[proposal.statementId] === true ||
+						draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+					onclick: () => {
+						const text = draft.trim();
+						followUpBusy[proposal.statementId] = true;
+						followUpDrafts[proposal.statementId] = '';
+						// A free follow-up: continues the conversation, no lap advance
+						submitSuggestion(live, proposal, initialVnode.attrs.myParticipant.anonName, text)
+							.catch((error: unknown) => {
+								console.error('[Delib] Follow-up failed:', error);
+							})
+							.finally(() => {
+								followUpBusy[proposal.statementId] = false;
+								m.redraw();
+							});
+					},
+				},
+				t('delib.send_suggestion'),
+			),
+		]);
+	}
+
+	/** "Proposals I helped" — hidden until I've actually helped something */
+	function helpedSection(live: AgoraSession): m.Children {
+		const entries = getHelpedProposals(userId);
+		if (entries.length === 0) return null;
+		markHelpedSeen(entries);
+
+		return m('.stack', [
+			m('p.teacher__section-title', t('delib.helped_title')),
+			entries.map((entry) => helpedItem(live, entry)),
+		]);
+	}
+
 	return {
 		onremove() {
 			stopDeliberationListeners();
@@ -736,9 +897,17 @@ export function Deliberation(
 
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
-			const { proposals, suggestions, myRatings, scores } = getDeliberationState();
+			const { proposals, suggestions, myRatings, studentEvalTimes, scores } =
+				getDeliberationState();
 			const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
 			const anonName = myParticipant.anonName;
+			// Aggregate loop-closing signal for the owner: how many classmates
+			// (re)rated AFTER my latest improvement (AI raters already excluded)
+			const ratingsMoved = myProposal
+				? (studentEvalTimes[myProposal.statementId] ?? []).filter(
+						(entry) => entry.evaluatorId !== userId && entry.updatedAt > myProposal.lastUpdate,
+					).length
+				: 0;
 
 			// Orientation strip: lap chip + the three steps of the loop, current
 			// one lit. A dead countdown reads as "broken" — only show a live one.
@@ -855,7 +1024,7 @@ export function Deliberation(
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						scoreboard(topic, scores[myProposal.statementId]),
+						scoreboard(topic, scores[myProposal.statementId], true, ratingsMoved),
 						editableProposalCard(live, myProposal, topic),
 						// The guided path continues only from the real step —
 						// a peek returns via the Others tab instead
@@ -1022,9 +1191,11 @@ export function Deliberation(
 												: m(NeedsBoard, { topic }),
 										),
 									]),
+									helpedSection(live),
 								]
 							: [
 									m('p.text-center.lobby__status', t('delib.no_more')),
+									helpedSection(live),
 									m('button.btn.btn--ghost.btn--full', { onclick: advanceRound }, skipLabel),
 								],
 					]),
@@ -1044,10 +1215,11 @@ export function Deliberation(
 					m('p.home-explanation', t('delib.cycle_done_hint')),
 					myProposal
 						? [
-								scoreboard(topic, scores[myProposal.statementId]),
+								scoreboard(topic, scores[myProposal.statementId], true, ratingsMoved),
 								editableProposalCard(live, myProposal, topic),
 							]
 						: null,
+					helpedSection(live),
 					m(
 						'button.btn.btn--secondary.btn--full',
 						{

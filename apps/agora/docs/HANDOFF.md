@@ -66,6 +66,19 @@ PEEK (lap progression untouched, badge shows unseen open suggestions);
   only in the in-character reviews. `agoraWritingAssistant` still deployed
   but no longer called by the client (keep in source or deploys will demand
   a functions:delete).
+- **The collaboration loop (2026-07-13)**: helper B and owner A iterate.
+  B's sent suggestions live in a "Proposals I helped" section (help step +
+  done screen): live status chips (the acknowledgment), the proposal's
+  CURRENT text with an "improved since your idea" marker (compared against
+  suggestion.createdAt — NOT lastUpdate, which resolution bumps), an inline
+  compact re-rate scale (overwrites the evaluation; the onWrite bridging
+  trigger diffs before/after) and a FREE follow-up box (no lap advance).
+  B gets a local toast + an Others-tab badge when a helped proposal is
+  edited (client-side detection, sessionStorage watermark — no backend).
+  A sees an AGGREGATE-ONLY "N ratings updated since your last improvement"
+  line in the scoreboard (studentEvalTimes from ONE session-wide
+  evaluations listener; AI raters excluded via isAgoraAiUid; individual
+  votes stay anonymous by design — Tal's decision).
 - **Rate**: five-level emoji scale (−1…+1 half steps), least-rated-first
   candidate ordering with per-student tiebreak, 3 per lap.
 - **Help**: same skeleton — their scoreboard, NEUTRAL hero card ("Proposal

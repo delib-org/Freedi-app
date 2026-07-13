@@ -914,6 +914,94 @@
 	}
 }
 
+// --- The collaboration loop: "proposals I helped" ---
+.helped {
+	&__item {
+		background: var(--bg-inset);
+		border-inline-start: 3px solid var(--camp-center);
+	}
+
+	&__suggestion {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__suggestion-text {
+		color: var(--text-secondary);
+		font-style: italic;
+		flex: 1;
+	}
+
+	&__chip {
+		flex-shrink: 0;
+		padding: 2px var(--space-md);
+		border-radius: var(--radius-full);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		border: 1px solid var(--border-subtle);
+		color: var(--text-muted);
+
+		&--open {
+			border-color: var(--lantern-deep);
+			color: var(--lantern-glow);
+		}
+
+		&--accepted {
+			border-color: var(--success);
+			color: var(--success);
+			box-shadow: 0 0 10px rgba(125, 214, 163, 0.25);
+		}
+
+		&--thanked {
+			border-color: var(--camp-center-glow);
+			color: var(--camp-center-glow);
+		}
+
+		&--declined {
+			opacity: 0.6;
+		}
+	}
+
+	&__improved {
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+		text-shadow: 0 0 12px rgba(255, 216, 130, 0.35);
+	}
+
+	&__current {
+		color: var(--text-primary);
+		line-height: 1.6;
+	}
+}
+
+// Compact re-rate scale inside helped items; --selected marks my current vote
+.rate-scale--compact .rate-scale__option {
+	padding: var(--space-xs) var(--space-sm);
+
+	.rate-scale__emoji {
+		font-size: 1.1rem;
+	}
+
+	.rate-scale__label {
+		font-size: var(--font-size-xs);
+	}
+}
+
+.rate-scale__option--selected {
+	border-color: var(--lantern);
+	box-shadow: 0 0 12px rgba(245, 185, 68, 0.4);
+}
+
+// Votes moved after my latest improvement (aggregate only)
+.scoreboard__updated {
+	color: var(--success);
+	font-size: var(--font-size-sm);
+	text-align: center;
+	text-shadow: 0 0 12px rgba(125, 214, 163, 0.3);
+}
+
 // --- Reception forecast: numbers-only mirror of how the camps would take
 // the current draft (no AI advice — the thinking stays with the student) ---
 .estimate {
