@@ -1,10 +1,13 @@
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-07-13, branch `feat/dark-mode`. Companion docs: `game-script.md` (the
-pedagogical script — what each beat teaches and why, grounded in Tal's book
-*On Deliberation*), `stitch-brief.md` (Google Stitch prompts for the next
-workshop-screen redesign), `../DESIGN.md` (Era-of-Lanterns art direction),
+2026-07-14, branch `dev` (this iteration's agora work was done on
+`main-sign` and merged into `dev` at 500fa7777 — both carry it).
+Companion docs: `game-script.md` (the pedagogical
+script — what each beat teaches and why, grounded in Tal's book *On
+Deliberation*), `stitch-brief.md` (Google Stitch prompts for the workshop
+redesign, DONE), `../DESIGN.md` (⚠️ STALE: still describes the old
+Era-of-Lanterns night theme — superseded by the Festival Day theme below),
 `plans/agora-deliberative-game-plan.md` (original architecture plan).
 
 ## What Agora is
@@ -91,10 +94,34 @@ PEEK (lap progression untouched, badge shows unseen open suggestions);
   debrief (what went well / what to try next time). Class score = 0.45
   bridging + 0.25 points + 0.3 plausibility, threshold 70.
 
-**Game feel**: a panoramic world-strip of the era map (ground-anchored crop:
-portal, traveler markers, live lanterns) crowns every in-game screen; HUD
-with 5 lantern lap-pips + step chips + fuse + points; star-field sky;
-beveled gold buttons; scene-title gold-diamond flourishes.
+**Game feel — "Festival Day" theme (2026-07-13, replaced Era-of-Lanterns
+night look)**: light, playful, for ages 12-15. Day-sky page background with
+cloud puffs + a 5-hue sparkle field; white cards, navy ink text;
+"candy-press" buttons (solid ledge underneath, squashes on tap); the era map
+is a sunny meadow scene (sun, sand plaza, purple-pennant palace, teal-roof
+assembly); rating emojis wiggle on hover; done-pips are little suns;
+celebration confetti bursts in all five theme hues. A panoramic world-strip
+of the era map still crowns every in-game screen; HUD with 5 lap-pips +
+step chips + fuse + points.
+
+**Ownership identity system (2026-07-13/14, playtest-driven — students
+couldn't tell "mine" from "others")**: BLUE = MINE (📘), ORANGE = A
+CLASSMATE'S (📙), used consistently everywhere: card ribbons
+(`border-inline-start`, RTL-safe), owner chips (`.owner-chip--mine/--peer`
+with `delib.owner_mine`/`delib.owner_peer` labels), delib-nav active tabs
+(Mine=blue / Others=deep orange `#b05e0d` for AA), an ambient fixed
+3px mode strip (`.shell--mode-mine/--mode-peer` sets `--mode-accent`),
+mobile bottom-bar edge, scoreboard chips, the rate card (chip + proposal
+number), helped items, suggestion-stream items, and even map dots
+(my idea-dot blue, classmates' orange). CRITICAL COLOR RULES: camps are
+royal purple (`--camp-left`) vs teal (`--camp-right`) and must NEVER share
+hues with ownership blue/orange; notification badges are danger-red, never
+a camp color. Tokens: `--lantern*` values were REDEFINED to the mine-blue
+family (name kept — ~100 usages mean "primary accent = mine");
+`--mine*`/`--peer*` aliases exist for new ownership CSS. Every `*-glow`
+token now holds the DARK text-safe shade of its family (light-theme role
+flip); all pairs measured WCAG AA. Anonymity unchanged: proposals by
+number, never names.
 
 ## Architecture cheat-sheet
 
@@ -168,21 +195,30 @@ beveled gold buttons; scene-title gold-diamond flourishes.
    skeleton, tabbed work area, unified feedback inbox, declined status).
    Not adopted from the Stitch export: sentiment-emoji rows on the help
    screen (rating stays its own step) and the fixed bottom nav.
-2. **Diverging camp bars** — show opposition (red, from baseline) vs support;
+2. ~~Mine-vs-others distinction~~ — DONE 2026-07-13/14 in two passes
+   (ownership chips/ribbons, then the full Festival Day blue/orange
+   re-theme). Worth a real-classroom re-test, incl. whether 📘/📙 emoji
+   render on school Chromebooks (fallback pair if not: 💙/🧡).
+3. **Update `../DESIGN.md`** — still documents the retired Era-of-Lanterns
+   night direction; rewrite around Festival Day (palette + rules live in
+   `src/styles/tokens.scss` comments and the HANDOFF game-feel section).
+4. **Diverging camp bars** — show opposition (from baseline) vs support;
    "3 rated" with an empty bar currently hides active rejection (offered,
    not yet approved).
-3. **Artwork generation** (`agoraGenerateArtwork`, gpt-image-1): painterly
+5. **Artwork generation** (`agoraGenerateArtwork`, gpt-image-1): painterly
    backdrops, character portraits, per-location vignettes — the biggest
    remaining "wow" upgrade; plan sketch in plans/agora-deliberative-game-plan.md.
-4. From the script's open questions: interactive needs check ("say it back
+   Prompts must now target the DAYTIME festival look, not night.
+6. From the script's open questions: interactive needs check ("say it back
    until the Count agrees he's been understood"), teacher cards, narrator
    interstitials, evidence cards, bias-events deck, expanding-agreement
    (~80% net support) as the success verdict, two-lesson arc.
-5. Ops: agora functions/hosting not yet deployed anywhere (emulator only);
+7. Ops: agora functions/hosting not yet deployed anywhere (emulator only);
    `wizcol-agora` hosting site must be created before first deploy.
 
-## Recent commit trail (this iteration, newest last)
+## Recent commit trail (newest last)
 
+Previous iteration:
 - `62950a426` character reviews + three endings + debrief (+ evaluator-object fix)
 - `460dbe14c` walkthrough script
 - `0fb18696f` needs board + remove value-identification + scale labels
@@ -194,3 +230,15 @@ beveled gold buttons; scene-title gold-diamond flourishes.
 - `8f51a6f87` game-feel pass (world strip, HUD pips, stars, gold buttons)
 - `0da1f7ac9` stale verdicts + improve-stays-on-screen
 - `221c18c1c` Stitch brief
+
+This iteration (2026-07-13/14, on `main-sign`):
+- `7e18b7038` help screen — classmate's proposal + suggestion workshop in one box
+- `6480732d0` collaboration loop findable — helped section on rate step, honest badge
+- `3f6da4636` helped card order — proposal first, rate scale, then my ideas
+- `d7b7bc084` proposals shown by number, not author name
+- `67dea3b5b` characters judge by NEEDS with fair calibration
+- `cfe9713ab` ownership identity v1 (gold lantern vs moon-silver scroll)
+- `5e3ed9668` **"Festival Day" light re-theme — blue=mine / orange=classmate**
+  (tokens rewrite, day sky, candy-press buttons, sunny EraMap, camps →
+  purple/teal, 📘/📙 icons, WCAG-verified palette)
+- `3504c7a35` removed accidentally-tracked .claude/worktrees gitlinks
