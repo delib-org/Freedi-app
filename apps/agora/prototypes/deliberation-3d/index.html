@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>אגורה · כיכר הדיון בתלת־ממד (אב־טיפוס)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --gold: #f5c86a;
+    --gold-bright: #ffe3a1;
+    --indigo-deep: #0a0c22;
+    --panel: rgba(13, 15, 43, 0.78);
+    --panel-border: rgba(245, 200, 106, 0.35);
+    --parchment: #e9dcc0;
+    --ink: #221d3a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: var(--indigo-deep); }
+  body { font-family: 'Heebo', system-ui, sans-serif; color: var(--parchment); }
+  #scene { position: fixed; inset: 0; display: block; cursor: grab; }
+  #scene.dragging { cursor: grabbing; }
+
+  /* ---------- HUD chrome ---------- */
+  .hud { position: fixed; z-index: 10; pointer-events: none; }
+  .hud > * { pointer-events: auto; }
+
+  #topbar {
+    top: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px;
+    background: linear-gradient(to bottom, rgba(8,9,28,.85), transparent);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .flame {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #fff3cf 0%, var(--gold) 45%, rgba(245,200,106,0) 75%);
+    box-shadow: 0 0 22px 4px rgba(245, 200, 106, .55);
+    animation: flicker 2.6s ease-in-out infinite;
+  }
+  @keyframes flicker { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(.92); opacity: .85 } }
+  .brand h1 { font-size: 1.05rem; font-weight: 800; letter-spacing: .02em; color: var(--gold-bright); text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  .brand small { display: block; font-size: .68rem; font-weight: 400; color: rgba(233,220,192,.75); }
+
+  #bell {
+    position: relative;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 999px; padding: 9px 16px;
+    color: var(--gold-bright); font-family: inherit; font-size: .9rem; font-weight: 600;
+    cursor: pointer; backdrop-filter: blur(10px);
+    transition: box-shadow .25s, transform .15s;
+  }
+  #bell:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(245,200,106,.35); }
+  #bell .count {
+    min-width: 22px; height: 22px; border-radius: 999px;
+    background: var(--gold); color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: .78rem; font-weight: 800;
+    box-shadow: 0 0 12px rgba(245,200,106,.8);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  #bell .count.zero { background: rgba(233,220,192,.25); color: var(--parchment); box-shadow: none; animation: none; }
+  @keyframes pulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.15) } }
+
+  /* ---------- Notification drawer ---------- */
+  #drawer {
+    top: 64px; left: 16px; width: min(340px, calc(100vw - 32px));
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 16px; backdrop-filter: blur(14px);
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    overflow: hidden;
+    transform: translateY(-12px); opacity: 0; visibility: hidden;
+    transition: all .25s ease;
+  }
+  #drawer.open { transform: translateY(0); opacity: 1; visibility: visible; }
+  #drawer header { padding: 12px 16px 8px; font-weight: 800; color: var(--gold-bright); font-size: .92rem; border-bottom: 1px solid rgba(245,200,106,.15); }
+  #drawer ul { list-style: none; max-height: 46vh; overflow-y: auto; }
+  #drawer li {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 12px 16px; cursor: pointer; font-size: .86rem; line-height: 1.35;
+    border-bottom: 1px solid rgba(233,220,192,.07);
+    transition: background .15s;
+  }
+  #drawer li:hover { background: rgba(245,200,106,.1); }
+  #drawer li .ico { font-size: 1.15rem; filter: drop-shadow(0 0 6px rgba(245,200,106,.6)); }
+  #drawer li time { display: block; font-size: .7rem; color: rgba(233,220,192,.55); margin-top: 2px; }
+  #drawer li .go { margin-inline-start: auto; align-self: center; color: var(--gold); font-size: .78rem; white-space: nowrap; }
+  #drawer .empty { padding: 22px 16px; text-align: center; font-size: .85rem; color: rgba(233,220,192,.6); }
+
+  /* ---------- Room panel (bottom sheet) ---------- */
+  #roomPanel {
+    bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: center;
+    padding: 0 14px calc(14px + env(safe-area-inset-bottom));
+    transform: translateY(110%); transition: transform .35s cubic-bezier(.2,.9,.25,1.1);
+  }
+  #roomPanel.open { transform: translateY(0); }
+  #roomPanel .sheet {
+    width: min(560px, 100%);
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 20px; backdrop-filter: blur(14px);
+    box-shadow: 0 -8px 40px rgba(0,0,0,.55);
+    padding: 16px 20px 18px;
+  }
+  #roomPanel .owner { font-size: .78rem; color: var(--gold); font-weight: 600; }
+  #roomPanel h2 { font-size: 1.12rem; font-weight: 800; margin: 2px 0 10px; color: var(--gold-bright); line-height: 1.3; }
+  .supportRow { display: flex; align-items: center; gap: 10px; font-size: .8rem; margin-bottom: 12px; }
+  .supportTrack { flex: 1; height: 8px; border-radius: 999px; background: rgba(233,220,192,.18); overflow: hidden; }
+  .supportFill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); box-shadow: 0 0 10px rgba(245,200,106,.7); transition: width .6s ease; }
+  #roomNotifs { list-style: none; margin-bottom: 12px; }
+  #roomNotifs li { font-size: .82rem; padding: 7px 10px; margin-bottom: 6px; border-radius: 10px; background: rgba(245,200,106,.12); border: 1px solid rgba(245,200,106,.22); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .actions button {
+    flex: 1; min-width: 110px;
+    font-family: inherit; font-size: .85rem; font-weight: 700;
+    padding: 10px 12px; border-radius: 12px; cursor: pointer;
+    border: 1px solid var(--panel-border);
+    background: rgba(245,200,106,.14); color: var(--gold-bright);
+    transition: background .15s, transform .12s;
+  }
+  .actions button:hover { background: rgba(245,200,106,.28); transform: translateY(-1px); }
+  .actions button.back { background: rgba(233,220,192,.08); color: var(--parchment); }
+
+  /* ---------- hint / toast ---------- */
+  #hint {
+    bottom: calc(16px + env(safe-area-inset-bottom)); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,12,34,.65); border: 1px solid rgba(245,200,106,.2);
+    border-radius: 999px; padding: 8px 18px;
+    font-size: .78rem; color: rgba(233,220,192,.85);
+    backdrop-filter: blur(8px); white-space: nowrap;
+    transition: opacity .5s;
+  }
+  #toast {
+    top: 76px; left: 50%; transform: translateX(-50%) translateY(-8px);
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 14px; padding: 12px 20px;
+    font-size: .88rem; font-weight: 600; color: var(--gold-bright);
+    box-shadow: 0 0 30px rgba(245,200,106,.25), 0 10px 30px rgba(0,0,0,.5);
+    backdrop-filter: blur(10px);
+    opacity: 0; visibility: hidden; transition: all .35s ease;
+    max-width: min(420px, calc(100vw - 40px)); text-align: center;
+  }
+  #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- intro vignette ---------- */
+  #veil { position: fixed; inset: 0; z-index: 30; background: var(--indigo-deep); pointer-events: none; transition: opacity 1.6s ease .2s; }
+  #veil.gone { opacity: 0; }
+  .vignette { position: fixed; inset: 0; z-index: 5; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(5,6,20,.55) 100%); }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div class="vignette"></div>
+<div id="veil"></div>
+
+<div class="hud" id="topbar">
+  <div class="brand">
+    <div class="flame"></div>
+    <h1>כיכר הדיון<small>פריז 1789 · אב־טיפוס תלת־ממד</small></h1>
+  </div>
+  <button id="bell">🔔 התראות <span class="count" id="bellCount">0</span></button>
+</div>
+
+<div class="hud" id="drawer">
+  <header>מה חדש בכיכר</header>
+  <ul id="notifList"></ul>
+</div>
+
+<div class="hud" id="roomPanel">
+  <div class="sheet">
+    <div class="owner" id="roomOwner"></div>
+    <h2 id="roomTitle"></h2>
+    <div class="supportRow">
+      <span>תמיכה</span>
+      <div class="supportTrack"><div class="supportFill" id="roomSupport"></div></div>
+      <b id="roomSupportPct"></b>
+    </div>
+    <ul id="roomNotifs"></ul>
+    <div class="actions">
+      <button id="btnImprove">💡 הצע שיפור</button>
+      <button id="btnSupport">🤍 תמכו</button>
+      <button id="btnWatch">👁 עקוב</button>
+      <button class="back" id="btnBack">↩ חזרה לכיכר</button>
+    </div>
+  </div>
+</div>
+
+<div class="hud" id="hint">גררו כדי להביט סביב · WASD לתנועה · לחצו על ביתן כדי להיכנס</div>
+<div class="hud" id="toast"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.164.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+/* ================================================================
+   DATA — mock proposals & notifications (what the real game feeds)
+   ================================================================ */
+const ROOMS = [
+  { id: 'mine', owner: 'ההצעה שלך', proposal: 'להקים מועצת לחם משותפת לאצילים ולעם, שתקבע מחיר הוגן לקמח', support: 64, mine: true },
+  { id: 'r2',   owner: 'קמיל',      proposal: 'לבטל את מס המלח למשך שנה שלמה',                          support: 71 },
+  { id: 'r3',   owner: 'הרוזן',     proposal: 'לפתוח את מחסני החורף של הארמון לציבור הרעב',              support: 58 },
+  { id: 'r4',   owner: 'מארי',      proposal: 'אסיפת נציגים נבחרת מכל שכונה בפריז',                      support: 47 },
+  { id: 'r5',   owner: 'ז׳אן',      proposal: 'בתי ספר פתוחים בחינם לכל ילד וילדה',                      support: 82 },
+  { id: 'r6',   owner: 'לואיז',     proposal: 'שוק חופשי בכיכר בכל יום ראשון, ללא מכסים',                support: 39 },
+];
+
+let notifications = [
+  { roomId: 'mine',   ico: '💡', text: 'קמיל הציע שיפור להצעה שלך',                    time: 'לפני 2 דק׳' },
+  { roomId: 'mine',   ico: '✍️', text: 'מארי הציעה ניסוח חדש להצעה שלך',               time: 'לפני 6 דק׳' },
+  { roomId: 'r3',     ico: '🏅', text: 'השיפור שהצעת לרוזן התקבל! ההצעה עודכנה',        time: 'לפני 11 דק׳' },
+  { roomId: 'r5',     ico: '👁', text: 'הצעה שאתה עוקב אחריה השתנתה — גרסה חדשה',       time: 'לפני 14 דק׳' },
+  { roomId: 'square', ico: '🆕', text: '3 הצעות חדשות הגיעו לכיכר',                     time: 'לפני 20 דק׳' },
+];
+
+/* ================================================================
+   RENDERER / SCENE / CAMERA
+   ================================================================ */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0c22);
+scene.fog = new THREE.FogExp2(0x0e1130, 0.02);
+
+const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 300);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.7, 0.55, 0.78);
+composer.addPass(bloom);
+
+/* ================================================================
+   LIGHTS — indigo moonlight + one warm heart at the center
+   ================================================================ */
+scene.add(new THREE.HemisphereLight(0x3a4380, 0x141024, 0.55));
+const moon = new THREE.DirectionalLight(0x7d8fd6, 0.5);
+moon.position.set(-30, 40, -20);
+scene.add(moon);
+const heart = new THREE.PointLight(0xffc86e, 60, 55, 1.8);
+heart.position.set(0, 5, 0);
+scene.add(heart);
+
+/* ================================================================
+   TEXTURE HELPERS (procedural canvases — no external assets)
+   ================================================================ */
+function makeCanvas(w, h, draw) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/* cobblestone ground */
+const cobbleTex = makeCanvas(512, 512, (g, w, h) => {
+  g.fillStyle = '#181b36'; g.fillRect(0, 0, w, h);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const cx = x * 32 + (y % 2) * 16 + 16, cy = y * 32 + 16;
+    const l = 22 + Math.random() * 14;
+    g.fillStyle = `hsl(${228 + Math.random() * 14}, 26%, ${l}%)`;
+    g.beginPath();
+    g.ellipse(cx, cy, 13 + Math.random() * 3, 11 + Math.random() * 3, Math.random() * .6, 0, 7);
+    g.fill();
+  }
+});
+cobbleTex.wrapS = cobbleTex.wrapT = THREE.RepeatWrapping;
+cobbleTex.repeat.set(18, 18);
+
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(80, 64),
+  new THREE.MeshStandardMaterial({ map: cobbleTex, roughness: 0.92 })
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+/* facade texture variants for the distant Paris skyline */
+const facades = [0, 1, 2, 3].map(() => makeCanvas(256, 512, (g, w, h) => {
+  g.fillStyle = '#121430'; g.fillRect(0, 0, w, h);
+  for (let fy = 0; fy < 7; fy++) for (let fx = 0; fx < 4; fx++) {
+    const lit = Math.random() < 0.28;
+    g.fillStyle = lit ? `rgba(255,205,120,${.55 + Math.random() * .45})` : 'rgba(20,22,52,.9)';
+    g.fillRect(24 + fx * 56, 34 + fy * 66, 30, 42);
+  }
+}));
+
+/* ================================================================
+   SKYLINE, STARS, MOON DISC
+   ================================================================ */
+const skyline = new THREE.Group();
+for (let i = 0; i < 26; i++) {
+  const a = (i / 26) * Math.PI * 2 + Math.random() * 0.15;
+  const r = 46 + Math.random() * 14;
+  const bw = 7 + Math.random() * 6, bh = 9 + Math.random() * 9;
+  const b = new THREE.Mesh(
+    new THREE.BoxGeometry(bw, bh, 6),
+    new THREE.MeshStandardMaterial({
+      map: facades[i % 4], emissive: 0xffcf7a, emissiveMap: facades[i % 4], emissiveIntensity: 0.9, roughness: 1
+    })
+  );
+  b.position.set(Math.sin(a) * r, bh / 2, Math.cos(a) * r);
+  b.lookAt(0, bh / 2, 0);
+  skyline.add(b);
+  const roof = new THREE.Mesh(
+    new THREE.ConeGeometry(bw * 0.62, 3 + Math.random() * 2, 4),
+    new THREE.MeshStandardMaterial({ color: 0x0d0f28, roughness: 1 })
+  );
+  roof.position.copy(b.position); roof.position.y = bh + 1.4;
+  roof.rotation.y = b.rotation.y + Math.PI / 4;
+  skyline.add(roof);
+}
+scene.add(skyline);
+
+const starGeo = new THREE.BufferGeometry();
+const starPos = [];
+for (let i = 0; i < 900; i++) {
+  const a = Math.random() * Math.PI * 2, e = Math.random() * Math.PI * 0.48;
+  const r = 180;
+  starPos.push(Math.sin(a) * Math.cos(e) * r, Math.sin(e) * r + 8, Math.cos(a) * Math.cos(e) * r);
+}
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcdd7ff, size: 0.55, sizeAttenuation: true, transparent: true, opacity: 0.85, fog: false })));
+
+const moonTex = makeCanvas(128, 128, (g) => {
+  const grd = g.createRadialGradient(64, 64, 8, 64, 64, 62);
+  grd.addColorStop(0, 'rgba(240,244,255,1)'); grd.addColorStop(0.5, 'rgba(190,205,255,.6)'); grd.addColorStop(1, 'rgba(190,205,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+});
+const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: moonTex, transparent: true, fog: false }));
+moonSprite.position.set(-70, 62, -110); moonSprite.scale.setScalar(26);
+scene.add(moonSprite);
+
+/* ================================================================
+   CENTER — the "idea lantern" obelisk of the agora
+   ================================================================ */
+const center = new THREE.Group();
+const plinth = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.1, 1, 10),
+  new THREE.MeshStandardMaterial({ color: 0x4a5090, roughness: .75 }));
+plinth.position.y = 0.5; center.add(plinth);
+const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 6.4, 8),
+  new THREE.MeshStandardMaterial({ color: 0x6a5f8f, roughness: .55, metalness: .4 }));
+pole.position.y = 4.2; center.add(pole);
+const bigLantern = new THREE.Mesh(new THREE.IcosahedronGeometry(0.85, 1),
+  new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffb84d, emissiveIntensity: 3.2, roughness: .3 }));
+bigLantern.position.y = 7.6; center.add(bigLantern);
+const glowTex = makeCanvas(128, 128, (g) => {
+  const grd = g.createRadialGradient(64, 64, 2, 64, 64, 62);
+  grd.addColorStop(0, 'rgba(255,220,150,.95)'); grd.addColorStop(1, 'rgba(255,190,90,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+});
+const bigGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+bigGlow.position.y = 7.6; bigGlow.scale.setScalar(4.5);
+center.add(bigGlow);
+scene.add(center);
+
+/* floating idea-lanterns rising from the obelisk */
+const risers = [];
+for (let i = 0; i < 10; i++) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
+  s.userData = { a: Math.random() * Math.PI * 2, r: 1.5 + Math.random() * 2.5, sp: 0.25 + Math.random() * 0.35, y0: Math.random() * 10 };
+  s.scale.setScalar(0.9 + Math.random() * 0.8);
+  risers.push(s); scene.add(s);
+}
+
+/* fireflies drifting across the square */
+const flyGeo = new THREE.BufferGeometry();
+const flyBase = [];
+for (let i = 0; i < 220; i++) {
+  const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 30;
+  flyBase.push({ x: Math.sin(a) * r, y: 0.6 + Math.random() * 4.5, z: Math.cos(a) * r, ph: Math.random() * 7, sp: 0.4 + Math.random() * 0.8 });
+}
+flyGeo.setAttribute('position', new THREE.Float32BufferAttribute(flyBase.flatMap(p => [p.x, p.y, p.z]), 3));
+const flies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xffd98a, size: 0.14, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+scene.add(flies);
+
+/* ================================================================
+   TIME PORTAL — the way home (decorative anchor of the game)
+   ================================================================ */
+const portal = new THREE.Group();
+const ring = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.2, 16, 60),
+  new THREE.MeshStandardMaterial({ color: 0x8fc2ff, emissive: 0x4d8dff, emissiveIntensity: 2.6, roughness: .3 }));
+portal.add(ring);
+const swirlTex = makeCanvas(256, 256, (g) => {
+  const grd = g.createRadialGradient(128, 128, 4, 128, 128, 126);
+  grd.addColorStop(0, 'rgba(230,242,255,.95)'); grd.addColorStop(0.4, 'rgba(110,160,255,.55)'); grd.addColorStop(1, 'rgba(60,90,220,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 3;
+  for (let s = 0; s < 3; s++) {
+    g.beginPath();
+    for (let t = 0; t < 60; t++) {
+      const ang = t / 9 + s * 2.1, rr = t * 2;
+      const x = 128 + Math.cos(ang) * rr, y = 128 + Math.sin(ang) * rr;
+      t ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+  }
+});
+const swirl = new THREE.Mesh(new THREE.CircleGeometry(2.4, 40),
+  new THREE.MeshBasicMaterial({ map: swirlTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+portal.add(swirl);
+portal.position.set(0, 3, -30);
+scene.add(portal);
+const portalLight = new THREE.PointLight(0x5a8dff, 25, 26, 1.9);
+portalLight.position.copy(portal.position);
+scene.add(portalLight);
+
+/* ================================================================
+   PAVILIONS — one room per proposal, arranged around the plaza
+   ================================================================ */
+const R = 16;
+const wrapText = (g, text, maxW) => {
+  const words = text.split(' '); const lines = []; let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (g.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+    else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+};
+
+function boardTexture(room) {
+  return makeCanvas(1024, 640, (g, w, h) => {
+    g.fillStyle = '#e9dcc0'; g.fillRect(0, 0, w, h);
+    const vg = g.createRadialGradient(w / 2, h / 2, h / 3, w / 2, h / 2, h);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(90,60,20,.35)');
+    g.fillStyle = vg; g.fillRect(0, 0, w, h);
+    g.fillStyle = room.mine ? '#8a5d13' : '#2b2f58';
+    g.fillRect(0, 0, w, 110);
+    g.direction = 'rtl'; g.textAlign = 'center';
+    g.fillStyle = '#ffe3a1'; g.font = '800 54px Heebo, sans-serif';
+    g.fillText(room.mine ? '⭐ ' + room.owner : 'ההצעה של ' + room.owner, w / 2, 74);
+    g.fillStyle = '#221d3a'; g.font = '700 58px Heebo, sans-serif';
+    const lines = wrapText(g, room.proposal, w - 140);
+    lines.forEach((ln, i) => g.fillText(ln, w / 2, 210 + i * 78));
+    const by = h - 92;
+    g.fillStyle = 'rgba(43,47,88,.25)'; g.fillRect(120, by, w - 240, 34);
+    g.fillStyle = '#c99b2e'; g.fillRect(120 + (w - 240) * (1 - room.support / 100), by, (w - 240) * room.support / 100, 34);
+    g.font = '800 44px Heebo, sans-serif'; g.fillStyle = '#2b2f58';
+    g.fillText(`תמיכה ${room.support}%`, w / 2, by - 18);
+  });
+}
+
+function nameSprite(room) {
+  const tex = makeCanvas(512, 128, (g, w, h) => {
+    g.direction = 'rtl'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '800 62px Heebo, sans-serif';
+    g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 14;
+    g.fillStyle = room.mine ? '#ffe3a1' : '#e9dcc0';
+    g.fillText(room.owner, w / 2, h / 2);
+  });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  s.scale.set(4.6, 1.15, 1);
+  return s;
+}
+
+function badgeTexture(count) {
+  return makeCanvas(128, 128, (g) => {
+    if (!count) return;
+    const grd = g.createRadialGradient(64, 64, 8, 64, 64, 62);
+    grd.addColorStop(0, 'rgba(255,225,150,1)'); grd.addColorStop(0.55, 'rgba(245,200,106,.95)'); grd.addColorStop(1, 'rgba(245,200,106,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    g.fillStyle = '#221d3a'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '800 56px Heebo, sans-serif';
+    g.fillText(String(count), 64, 66);
+  });
+}
+
+const colMat = new THREE.MeshStandardMaterial({ color: 0xbfae8e, roughness: .7 });
+const roofMat = new THREE.MeshStandardMaterial({ color: 0x272b52, roughness: .85 });
+const goldMat = new THREE.MeshStandardMaterial({ color: 0xf5c86a, emissive: 0xb07f1e, emissiveIntensity: .7, metalness: .6, roughness: .35 });
+
+const pavilions = new Map();
+ROOMS.forEach((room, i) => {
+  const a = (i / ROOMS.length) * Math.PI * 2 + Math.PI / 6;
+  const px = Math.sin(a) * R, pz = Math.cos(a) * R;
+  const grp = new THREE.Group();
+  grp.position.set(px, 0, pz);
+  grp.lookAt(0, 0, 0);
+
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.35, 0.35, 24),
+    new THREE.MeshStandardMaterial({ color: 0x323764, roughness: .85 }));
+  base.position.y = 0.17; grp.add(base);
+
+  [[-2.1, -1.6], [2.1, -1.6], [-2.1, 1.6], [2.1, 1.6]].forEach(([cx, cz]) => {
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 3.4, 10), colMat);
+    col.position.set(cx, 2, cz); grp.add(col);
+  });
+
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 1.5, 8), room.mine ? goldMat : roofMat);
+  roof.position.y = 4.4; grp.add(roof);
+
+  const boardTex = boardTexture(room);
+  const board = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.6),
+    new THREE.MeshStandardMaterial({ map: boardTex, emissive: 0xffffff, emissiveMap: boardTex, emissiveIntensity: 0.42, roughness: .8 }));
+  board.position.set(0, 2.15, -1.85);   /* back wall, faces the plaza */
+  grp.add(board);
+
+  const lant = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12),
+    new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffb84d, emissiveIntensity: room.mine ? 3 : 2 }));
+  lant.position.set(0, 3.9, 1.9); grp.add(lant);
+  const lg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.8 }));
+  lg.position.copy(lant.position); lg.scale.setScalar(room.mine ? 2.6 : 1.9); grp.add(lg);
+
+  if (room.mine) {
+    const trim = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.06, 8, 48), goldMat);
+    trim.rotation.x = Math.PI / 2; trim.position.y = 0.37; grp.add(trim);
+  }
+
+  const name = nameSprite(room); name.position.set(0, 5.6, 0); grp.add(name);
+
+  const badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTexture(0), transparent: true, depthWrite: false }));
+  badge.position.set(0, 6.6, 0); badge.scale.setScalar(1.6); grp.add(badge);
+
+  const hit = new THREE.Mesh(new THREE.CylinderGeometry(3.3, 3.3, 6.5, 12),
+    new THREE.MeshBasicMaterial({ visible: false }));
+  hit.position.y = 3.2; hit.userData.roomId = room.id; grp.add(hit);
+
+  scene.add(grp);
+  pavilions.set(room.id, { room, grp, badge, lantGlow: lg, hit, angle: a, pos: new THREE.Vector3(px, 0, pz) });
+});
+
+/* ================================================================
+   CAMERA RIG — first-person yaw/pitch + WASD + cinematic flights
+   ================================================================ */
+const rig = { pos: new THREE.Vector3(), yaw: 0, pitch: 0 };
+const minePav = pavilions.get('mine');
+rig.pos.copy(minePav.pos).multiplyScalar(0.62).setY(1.7);
+rig.yaw = Math.atan2(-rig.pos.x, -rig.pos.z) + Math.PI;   /* start facing the plaza from near your room */
+
+let flight = null;
+function flyTo(pos, yaw, pitch, dur, onDone) {
+  const dy = ((yaw - rig.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  flight = { p0: rig.pos.clone(), p1: pos.clone(), y0: rig.yaw, dy, pi0: rig.pitch, pi1: pitch, t: 0, dur, onDone };
+}
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+let mode = 'square';           /* 'square' | roomId */
+const keys = new Set();
+addEventListener('keydown', e => keys.add(e.code));
+addEventListener('keyup', e => keys.delete(e.code));
+
+let dragging = false, moved = 0, lx = 0, ly = 0;
+canvas.addEventListener('pointerdown', e => { dragging = true; moved = 0; lx = e.clientX; ly = e.clientY; canvas.classList.add('dragging'); canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lx, dy = e.clientY - ly;
+  moved += Math.abs(dx) + Math.abs(dy);
+  lx = e.clientX; ly = e.clientY;
+  if (flight) return;
+  rig.yaw -= dx * 0.0042;
+  rig.pitch = THREE.MathUtils.clamp(rig.pitch - dy * 0.0035, -0.7, 0.55);
+});
+canvas.addEventListener('pointerup', e => {
+  dragging = false; canvas.classList.remove('dragging');
+  if (moved < 7) handleClick(e);
+});
+
+const ray = new THREE.Raycaster();
+function handleClick(e) {
+  if (flight) return;
+  const nd = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(nd, camera);
+  const hits = ray.intersectObjects([...pavilions.values()].map(p => p.hit));
+  if (hits.length) enterRoom(hits[0].object.userData.roomId);
+}
+
+/* ================================================================
+   ROOM NAVIGATION
+   ================================================================ */
+const $ = id => document.getElementById(id);
+
+function enterRoom(roomId) {
+  const pav = pavilions.get(roomId);
+  if (!pav || mode === roomId) return;
+  mode = roomId;
+  closeDrawer();
+  const dir = pav.pos.clone().normalize();
+  const camPos = pav.pos.clone().sub(dir.clone().multiplyScalar(7.2)).setY(2.1);
+  const yaw = Math.atan2(pav.pos.x - camPos.x, pav.pos.z - camPos.z) + Math.PI;
+  flyTo(camPos, yaw, 0.0, 1.6, () => {
+    openRoomPanel(pav.room);
+    clearRoomNotifs(roomId);
+  });
+  $('hint').style.opacity = '0';
+}
+
+function backToSquare() {
+  mode = 'square';
+  $('roomPanel').classList.remove('open');
+  const p = new THREE.Vector3(0, 1.8, 7.5);
+  flyTo(p, Math.PI, 0.02, 1.4);
+  $('hint').style.opacity = '1';
+}
+$('btnBack').onclick = backToSquare;
+
+function overviewFlight() {
+  mode = 'square';
+  $('roomPanel').classList.remove('open');
+  closeDrawer();
+  flyTo(new THREE.Vector3(0, 10, 20), Math.PI, -0.42, 1.8, () => {
+    clearRoomNotifs('square');
+  });
+}
+
+function openRoomPanel(room) {
+  $('roomOwner').textContent = room.mine ? '⭐ הביתן שלך' : `הביתן של ${room.owner}`;
+  $('roomTitle').textContent = room.proposal;
+  $('roomSupport').style.width = room.support + '%';
+  $('roomSupportPct').textContent = room.support + '%';
+  const list = $('roomNotifs');
+  list.innerHTML = '';
+  notifications.filter(n => n.roomId === room.id).forEach(n => {
+    const li = document.createElement('li');
+    li.textContent = `${n.ico} ${n.text}`;
+    list.appendChild(li);
+  });
+  $('roomPanel').classList.add('open');
+}
+
+/* ================================================================
+   NOTIFICATIONS — bell, drawer, floating badges
+   ================================================================ */
+function refreshBadges() {
+  const counts = {};
+  notifications.forEach(n => counts[n.roomId] = (counts[n.roomId] || 0) + 1);
+  pavilions.forEach((pav, id) => {
+    pav.badge.material.map = badgeTexture(counts[id] || 0);
+    pav.badge.material.needsUpdate = true;
+    pav.badge.userData.active = !!counts[id];
+  });
+  const total = notifications.length;
+  const bc = $('bellCount');
+  bc.textContent = total;
+  bc.classList.toggle('zero', !total);
+  const list = $('notifList');
+  list.innerHTML = '';
+  if (!total) {
+    list.innerHTML = '<div class="empty">הכול נקרא — הכיכר שקטה 🌙</div>';
+    return;
+  }
+  notifications.forEach(n => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="ico">${n.ico}</span><div>${n.text}<time>${n.time || ''}</time></div><span class="go">${n.roomId === 'square' ? 'למבט־על ←' : 'לביתן ←'}</span>`;
+    li.onclick = () => n.roomId === 'square' ? overviewFlight() : enterRoom(n.roomId);
+    list.appendChild(li);
+  });
+}
+
+function clearRoomNotifs(roomId) {
+  const before = notifications.length;
+  notifications = notifications.filter(n => n.roomId !== roomId);
+  if (notifications.length !== before) refreshBadges();
+}
+
+let drawerOpen = false;
+function closeDrawer() { drawerOpen = false; $('drawer').classList.remove('open'); }
+$('bell').onclick = () => { drawerOpen = !drawerOpen; $('drawer').classList.toggle('open', drawerOpen); };
+
+function toast(msg, ms = 3800) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+['btnImprove', 'btnSupport', 'btnWatch'].forEach(id => {
+  $(id).onclick = () => toast('✨ באב־טיפוס זה רק הדגמה — במשחק האמיתי הפעולה תישלח לכיכר');
+});
+
+/* a live event lands while you're in the square — proves the loop */
+setTimeout(() => {
+  notifications.unshift({ roomId: 'r2', ico: '👁', text: 'ההצעה של קמיל עודכנה — נוסף סעיף חדש', time: 'עכשיו' });
+  refreshBadges();
+  toast('👁 עדכון חדש: ההצעה של קמיל השתנתה');
+}, 14000);
+
+refreshBadges();
+setTimeout(() => toast(`🔔 יש לך ${notifications.length} התראות — פתחו את הפעמון או חפשו את הפנסים הזוהרים`), 2200);
+
+/* ================================================================
+   MAIN LOOP
+   ================================================================ */
+const clock = new THREE.Clock();
+const fwd = new THREE.Vector3(), rightv = new THREE.Vector3();
+
+function tick() {
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  /* flight tween */
+  if (flight) {
+    flight.t += dt / flight.dur;
+    const k = ease(Math.min(flight.t, 1));
+    rig.pos.lerpVectors(flight.p0, flight.p1, k);
+    rig.pos.y = THREE.MathUtils.lerp(flight.p0.y, flight.p1.y, k) + Math.sin(k * Math.PI) * 0.7;
+    rig.yaw = flight.y0 + flight.dy * k;
+    rig.pitch = THREE.MathUtils.lerp(flight.pi0, flight.pi1, k);
+    if (flight.t >= 1) { const f = flight; flight = null; f.onDone && f.onDone(); }
+  } else if (mode === 'square') {
+    /* WASD walk */
+    fwd.set(-Math.sin(rig.yaw), 0, -Math.cos(rig.yaw));
+    rightv.set(-fwd.z, 0, fwd.x);
+    const sp = 6 * dt;
+    if (keys.has('KeyW') || keys.has('ArrowUp')) rig.pos.addScaledVector(fwd, sp);
+    if (keys.has('KeyS') || keys.has('ArrowDown')) rig.pos.addScaledVector(fwd, -sp);
+    if (keys.has('KeyA') || keys.has('ArrowLeft')) rig.pos.addScaledVector(rightv, -sp);
+    if (keys.has('KeyD') || keys.has('ArrowRight')) rig.pos.addScaledVector(rightv, sp);
+    const rr = Math.hypot(rig.pos.x, rig.pos.z);
+    if (rr > 26) { rig.pos.x *= 26 / rr; rig.pos.z *= 26 / rr; }
+    rig.pos.y = 1.7;
+  }
+
+  camera.position.copy(rig.pos);
+  camera.rotation.set(0, 0, 0, 'YXZ');
+  camera.rotateY(rig.yaw);
+  camera.rotateX(rig.pitch);
+
+  /* ambient life */
+  heart.intensity = 58 + Math.sin(t * 2.3) * 6;
+  bigLantern.position.y = 7.6 + Math.sin(t * 1.1) * 0.12;
+  bigGlow.position.y = bigLantern.position.y;
+  bigGlow.material.opacity = 0.85 + Math.sin(t * 2.7) * 0.12;
+  swirl.rotation.z = -t * 0.9;
+  ring.rotation.z = t * 0.25;
+  portal.position.y = 3 + Math.sin(t * 0.8) * 0.15;
+  portalLight.position.y = portal.position.y;
+
+  risers.forEach(s => {
+    const u = s.userData;
+    const y = ((t * u.sp + u.y0) % 11);
+    s.position.set(Math.sin(u.a + t * 0.2) * u.r, 1.2 + y, Math.cos(u.a + t * 0.2) * u.r);
+    s.material.opacity = Math.min(1, y * 0.8) * Math.max(0, 1 - y / 11) * 1.6;
+  });
+
+  const fp = flies.geometry.attributes.position;
+  for (let i = 0; i < flyBase.length; i++) {
+    const p = flyBase[i];
+    fp.setY(i, p.y + Math.sin(t * p.sp + p.ph) * 0.5);
+    fp.setX(i, p.x + Math.sin(t * 0.3 + p.ph) * 0.6);
+  }
+  fp.needsUpdate = true;
+
+  pavilions.forEach(pav => {
+    if (pav.badge.userData.active) {
+      const k = 1.6 + Math.sin(t * 3.4 + pav.angle * 5) * 0.22;
+      pav.badge.scale.setScalar(k);
+      pav.badge.position.y = 6.6 + Math.sin(t * 1.8 + pav.angle) * 0.12;
+      pav.lantGlow.material.opacity = 0.9 + Math.sin(t * 4 + pav.angle) * 0.1;
+    } else {
+      pav.badge.scale.setScalar(0.001);
+    }
+  });
+
+  composer.render();
+}
+tick();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+/* lift the veil */
+requestAnimationFrame(() => document.getElementById('veil').classList.add('gone'));
+</script>
+</body>
+</html>
