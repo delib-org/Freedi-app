@@ -195,7 +195,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.perspectiveA,
 				title: 'בארמון',
 				text: 'הרוזן דה-לה-רוש מקבל אתכם בטרקלין מוזהב.',
-				imageUrls: [],
+				imageUrls: ['/scenes/perspective-royalist.png'],
 				dialogue: [
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'ברוכים הבאים. שמעתי שבאתם מרחוק לעזור לצרפת.' },
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים. ראיתם מה קורה כשההמון משתלט על הרחוב?' },
@@ -207,7 +207,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.perspectiveB,
 				title: 'בבית הקפה',
 				text: 'קמיל דופון יושב בבית קפה הומה, מוקף בעיתונים ובכרוזים.',
-				imageUrls: [],
+				imageUrls: ['/scenes/perspective-jacobin.png'],
 				dialogue: [
 					{ speaker: 'קמיל דופון', line: 'שבו, שבו. תראו מה כתוב כאן — מחיר הלחם עלה שוב, והמלכה מזמינה תכשיטים.' },
 					{ speaker: 'קמיל דופון', line: 'העם גווע ברעב בזמן שהארמון עורך נשפים. כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.' },

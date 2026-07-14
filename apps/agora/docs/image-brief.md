@@ -151,7 +151,7 @@ through the clouds. 16:9.
 ## 3 · Perspective scenes — Act II "Two Sides, One Country"
 
 ### 3.1 The Count's position — scene `scene-royalist` ("בארמון")
-- **File:** `public/scenes/perspective-royalist.png` — ⬜ **needed**
+- **File:** `public/scenes/perspective-royalist.png` — ✅ **done**
 - **Where:** `perspectiveA`; the royalist noble presents his case.
 - **Prompt:**
 ```
@@ -163,7 +163,7 @@ loves. Warm gold candle-glow. 16:9.
 ```
 
 ### 3.2 Camille's position — scene `scene-jacobin` ("בבית הקפה")
-- **File:** `public/scenes/perspective-jacobin.png` — ⬜ **needed**
+- **File:** `public/scenes/perspective-jacobin.png` — ✅ **done**
 - **Where:** `perspectiveB`; the Jacobin lawyer presents his case.
 - **Prompt:**
 ```
@@ -302,8 +302,8 @@ night** (this is the one place the "Era of Lanterns" night palette leads).
 | 2 | Mission brief | `scenes/time-machine-briefing.png` | ✅ done |
 | 3 | Time tunnel (video) | `scenes/time-tunnel.mp4` | ✅ done |
 | 4 | Paris 1789 | `scenes/french-revolution-intro.png` | ✅ done |
-| 5 | Count's position | `scenes/perspective-royalist.png` | ⬜ needed |
-| 6 | Camille's position | `scenes/perspective-jacobin.png` | ⬜ needed |
+| 5 | Count's position | `scenes/perspective-royalist.png` | ✅ done |
+| 6 | Camille's position | `scenes/perspective-jacobin.png` | ✅ done |
 | 7 | Needs question | `scenes/needs-question.png` | ✅ done |
 | 8 | Count opens up | `scenes/needs-royalist.png` | ✅ done |
 | 9 | Camille opens up | `scenes/needs-jacobin.png` | ✅ done |
