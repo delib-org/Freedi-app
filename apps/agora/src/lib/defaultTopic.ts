@@ -28,7 +28,7 @@ export function defaultTopicPackageId(creatorId: string): string {
  */
 export function backfillDefaultArtwork(
 	pkg: AgoraTopicPackage,
-): Partial<Pick<AgoraTopicPackage, 'scenes' | 'characters'>> | null {
+): Partial<Pick<AgoraTopicPackage, 'scenes' | 'characters' | 'artwork'>> | null {
 	const defaults = buildDefaultFrenchRevolutionTopic(pkg.creatorId);
 	const defaultsBySceneId = new Map<string, AgoraTopicPackage['scenes'][number]>();
 	for (const scene of defaults.scenes) {
@@ -71,7 +71,21 @@ export function backfillDefaultArtwork(
 		return character;
 	}) as AgoraTopicPackage['characters'];
 
-	return changed ? { scenes, characters } : null;
+	// Fill the deliberation square art only if the package has none.
+	const defaultSquare = defaults.artwork?.locationVignetteUrls?.square;
+	let artwork = pkg.artwork;
+	if (defaultSquare && !pkg.artwork?.locationVignetteUrls?.square) {
+		artwork = {
+			...pkg.artwork,
+			locationVignetteUrls: {
+				...pkg.artwork?.locationVignetteUrls,
+				square: defaultSquare,
+			},
+		};
+		changed = true;
+	}
+
+	return changed ? { scenes, characters, artwork } : null;
 }
 
 export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopicPackage {
@@ -291,6 +305,11 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				dialogue: [],
 			},
 		],
+		// The deliberation stage's "location" art — the town square (agora)
+		// where the class gathers to propose. Rendered as the delib banner.
+		artwork: {
+			locationVignetteUrls: { square: '/scenes/deliberation-square.png' },
+		},
 		createdAt: now,
 		lastUpdate: now,
 	};

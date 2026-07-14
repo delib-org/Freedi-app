@@ -940,7 +940,7 @@ export function Deliberation(
 				{ id: 'help', labelKey: 'delib.step_help' },
 			];
 			const activeIndex = STEPS.findIndex((entry) => entry.id === cycle.step);
-			const header = m('.cycle-strip', [
+			const cycleStrip = m('.cycle-strip', [
 				m(
 					'.cycle-strip__laps',
 					{ 'aria-label': t('delib.cycle_round', { n: cycle.round, total: AGORA_CYCLE.ROUNDS }) },
@@ -979,6 +979,22 @@ export function Deliberation(
 					: null,
 				m(PointsPill, { total: myParticipant.points.total }),
 			]);
+
+			// The deliberation "location": the town square (agora) where ideas
+			// gather. Teacher-editable via topic artwork; hidden if absent/broken.
+			const squareUrl = topic.artwork?.locationVignetteUrls?.square;
+			const header = [
+				squareUrl
+					? m('img.delib-banner', {
+							src: squareUrl,
+							alt: '',
+							onerror: (event: Event) => {
+								(event.target as HTMLElement).style.display = 'none';
+							},
+						})
+					: null,
+				cycleStrip,
+			];
 
 			// ---------- STEP: MY PROPOSAL (write, later improve) ----------
 			// Also rendered as a PEEK from rate/help via the Mine tab — the

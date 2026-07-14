@@ -242,6 +242,9 @@ const topicPackage = {
 			dialogue: [],
 		},
 	],
+	artwork: {
+		locationVignetteUrls: { square: '/scenes/deliberation-square.png' },
+	},
 	createdAt: now,
 	lastUpdate: now,
 };

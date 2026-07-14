@@ -68,6 +68,21 @@ control panels floating beside it. Empty, inviting, awe-struck — an invitation
 step through. Warm gold light spills from the portal rim. 16:9.
 ```
 
+### 1.2 Deliberation banner — the town square (agora)
+- **File:** `public/scenes/deliberation-square.png` — ⬜ **needed**
+- **Where:** the header banner across the deliberation stage (all sub-screens:
+  my proposal, rate, help). Data slot: `artwork.locationVignetteUrls.square`
+  (teacher-editable). Renders wide/short — a panoramic composition works best;
+  hidden automatically until the file exists.
+- **Prompt:**
+```
+[STYLE CAPSULE] Era mode, evening. A wide panoramic view of a 1789 Parisian
+town square (the agora) as the sun sets — cobblestones, elegant stone facades,
+warm gold street lanterns beginning to glow, a few small groups of towns­people
+gathering to talk. Calm, hopeful, an inviting stage for debate. No crowd chaos,
+no violence. Composition leaves the center open. Wide 16:9 (or wider) panorama.
+```
+
 ---
 
 ## 2 · Framing scenes — Act I "Through the Tunnel"
