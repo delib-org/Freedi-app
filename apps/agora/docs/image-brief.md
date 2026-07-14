@@ -80,9 +80,9 @@ kids look up in wonder. Hopeful, cinematic, gold rim-light from the portal. 16:9
 ```
 
 ### 2.2 Time tunnel — scene `scene-tunnel` ("מנהרת הזמן")
-- **File:** `public/scenes/time-tunnel.png` — ⬜ **needed** *(can be a ≤20s video instead — `videoUrl`)*
+- **File:** `public/scenes/time-tunnel.png` — ⬜ **needed** *(better as an ≤8s video — `videoUrl`)*
 - **Where:** pure spectacle between briefing and arrival.
-- **Prompt:**
+- **Still-image prompt:**
 ```
 [STYLE CAPSULE] Time-Lab mode. First-person plunge THROUGH a time tunnel: a
 swirling vortex of blue and gold light streaks rushing past, faint historical
@@ -90,6 +90,42 @@ imagery (clock faces, Roman numerals, Parisian rooftops) dissolving in the walls
 of the tunnel, a bright warm-gold vanishing point ahead. Motion, speed, wonder.
 No people. 16:9.
 ```
+
+#### 🎬 Gemini / Veo video prompt (image-to-video, 8 seconds)
+
+Start frame: `time-machine-briefing.png` (the students at the CHRONOS portal).
+Upload that image, set 16:9, 8s, then paste:
+
+```
+Animate this image into an 8-second cinematic time-travel shot for a kids'
+educational game. Keep the exact painterly style, characters and color grade of
+the source image.
+
+0–2s: The blue-and-gold CHRONOS portal spins up — the vortex swirls faster, gold
+light pulses along its rim, the scientist raises her hand, the students step
+forward toward it, hair and backpack straps lifting in the energy wind.
+2–5s: Camera pushes through the portal WITH the students — a euphoric plunge down
+a swirling tunnel of blue and gold light streaks, translucent history rushing past
+in the tunnel walls (spinning clock faces, Roman numerals, dissolving Parisian
+rooftops), sparks of gold trailing off the students' silhouettes.
+5–8s: The tunnel's warm-gold vanishing point blooms into a bright flash, then
+resolves into a cobblestone street of Paris 1789 at dawn — tricolor flags, stone
+buildings — as the light settles. End on a held, awe-struck beat.
+
+Camera: smooth continuous forward push-in / dolly, slight acceleration through the
+tunnel, gentle settle at the end. No cuts — one flowing shot.
+Mood: wonder, hope, adventure — fascinating, never scary, no gore.
+Lighting: luminous blue core with warm gold rim-light throughout.
+Audio: a rising resonant hum building to a soft whoosh at the portal, shimmering
+chimes through the tunnel, easing into faint 18th-century street ambience (distant
+bell, murmur) as Paris appears.
+No text, no words, no logos, no watermarks, no modern objects.
+```
+
+> **Tip:** if Veo drifts from the look, add "match the source image exactly, same
+> illustration style, do not photorealize." For a pure text-to-video version (no
+> start frame), prepend the `[STYLE CAPSULE]` block and describe the students at
+> the portal in the first line.
 
 ### 2.3 The world you must understand — scene `scene-period` ("פריז, 1789")
 - **File:** `public/scenes/french-revolution-intro.png` — ✅ **done**
