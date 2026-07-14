@@ -26,6 +26,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
 	<button
 		type="button"
 		onClick={onClick}
+		onMouseDown={(e) => e.preventDefault()}
 		disabled={disabled}
 		title={title}
 		aria-label={title}
