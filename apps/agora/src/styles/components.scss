@@ -9,6 +9,16 @@
   text-align: center;
   padding-top: var(--space-2xl);
 
+  &__image {
+    display: block;
+    width: 100%;
+    max-width: 30rem;
+    height: auto;
+    margin: 0 auto var(--space-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
   &__title {
     color: var(--lantern-glow);
     letter-spacing: 0.04em;
@@ -219,12 +229,40 @@
     padding: var(--space-md);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
+    background: transparent;
     cursor: pointer;
-    transition: border-color var(--motion-fast) ease;
+    transition:
+      border-color var(--motion-fast) ease,
+      background-color var(--motion-fast) ease,
+      box-shadow var(--motion-fast) ease,
+      transform var(--motion-fast) var(--ease-camera);
 
-    &:hover,
-    &--selected {
+    &:hover {
       border-color: var(--border-lantern);
+    }
+
+    // tactile press: sink slightly while the pointer is down
+    &:active {
+      transform: scale(0.985);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--lantern-glow);
+      outline-offset: 2px;
+    }
+
+    // picked: filled tint + lantern ring + glow so the choice reads as
+    // committed, not just hovered
+    &--selected {
+      border-color: var(--lantern);
+      background: var(--bg-inset);
+      box-shadow:
+        inset 0 0 0 1px var(--lantern),
+        var(--glow-lantern);
+
+      strong {
+        color: var(--lantern-glow);
+      }
     }
   }
 
@@ -2127,6 +2165,27 @@
 			cursor: pointer;
 			margin-inline-end: var(--space-sm);
 		}
+	}
+
+	&__image-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__image-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__image-thumb {
+		width: 96px;
+		height: 96px;
+		object-fit: cover;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-subtle);
 	}
 }
 

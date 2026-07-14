@@ -139,7 +139,7 @@ const topicPackage = {
 			kind: 'intro',
 			title: 'המשימה',
 			text: 'צרפת, 1789. הממלכה על סף תהום. אתם — נוסעי הזמן — המשימה שלכם: למצוא פתרון שכל הצדדים יוכלו לחיות איתו.',
-			imageUrls: [],
+			imageUrls: ['/scenes/french-revolution-intro.png'],
 			dialogue: [],
 		},
 		{

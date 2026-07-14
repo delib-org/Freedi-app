@@ -34,6 +34,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	let saving = false;
 	let savedFlash = false;
 	const uploadProgress: Record<string, number> = {};
+	const imageUploadProgress: Record<string, number> = {};
 
 	function load(): void {
 		getDoc(doc(db, Collections.agoraTopicPackages, topicPackageId))
@@ -106,6 +107,52 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 					});
 			},
 		);
+	}
+
+	function uploadImage(scene: AgoraScene, file: File): void {
+		const path = `agora/${topicPackageId}/${scene.sceneId}-img-${file.name}`;
+		const task = uploadBytesResumable(storageRef(storage, path), file);
+		imageUploadProgress[scene.sceneId] = 0;
+		task.on(
+			'state_changed',
+			(snapshot) => {
+				imageUploadProgress[scene.sceneId] = Math.round(
+					(snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+				);
+				m.redraw();
+			},
+			(error) => {
+				console.error('[Editor] Image upload failed:', error);
+				delete imageUploadProgress[scene.sceneId];
+				m.redraw();
+			},
+			() => {
+				getDownloadURL(task.snapshot.ref)
+					.then((url) => {
+						if (!pkg) return;
+						const scenes = pkg.scenes.map((candidate) =>
+							candidate.sceneId === scene.sceneId
+								? { ...candidate, imageUrls: [...candidate.imageUrls, url] }
+								: candidate,
+						);
+						delete imageUploadProgress[scene.sceneId];
+						save({ scenes });
+					})
+					.catch((error: unknown) => {
+						console.error('[Editor] Getting image URL failed:', error);
+					});
+			},
+		);
+	}
+
+	function removeSceneImage(scene: AgoraScene, url: string): void {
+		if (!pkg) return;
+		const scenes = pkg.scenes.map((candidate) =>
+			candidate.sceneId === scene.sceneId
+				? { ...candidate, imageUrls: candidate.imageUrls.filter((current) => current !== url) }
+				: candidate,
+		);
+		save({ scenes });
 	}
 
 	function textArea(value: string, rows: number, onchange: (next: string) => void): m.Children {
@@ -187,6 +234,7 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			pkg = { ...pkg, scenes };
 		};
 		const progress = uploadProgress[scene.sceneId];
+		const imageProgress = imageUploadProgress[scene.sceneId];
 
 		return m('.card.stack', { key: scene.sceneId }, [
 			m('.editor__row', [
@@ -224,6 +272,34 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						),
 					]
 				: null,
+			m('label.teacher__section-title', t('editor.images')),
+			scene.imageUrls.length > 0
+				? m(
+						'.editor__image-list',
+						scene.imageUrls.map((url) =>
+							m('.editor__image-item', { key: url }, [
+								m('img.editor__image-thumb', { src: url, alt: '' }),
+								m(
+									'button.btn.btn--ghost.btn--sm',
+									{ onclick: () => removeSceneImage(scene, url) },
+									t('editor.remove_image'),
+								),
+							]),
+						),
+					)
+				: null,
+			imageProgress !== undefined
+				? m('p.lobby__status', t('editor.image_uploading', { pct: imageProgress }))
+				: m('input.editor__file', {
+						type: 'file',
+						accept: 'image/*',
+						onchange: (event: Event) => {
+							const file = (event.target as HTMLInputElement).files?.[0];
+							if (file && file.size <= AGORA_LIMITS.MAX_IMAGE_BYTES) {
+								uploadImage(scene, file);
+							}
+						},
+					}),
 			m('label.teacher__section-title', t('editor.video')),
 			progress !== undefined
 				? m('p.lobby__status', t('editor.video_uploading', { pct: progress }))

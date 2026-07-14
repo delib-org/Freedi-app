@@ -229,6 +229,11 @@ p {
     font-size: var(--font-size-lg);
     padding: 1em 2em;
   }
+
+  &--sm {
+    font-size: var(--font-size-sm);
+    padding: 0.4em 0.9em;
+  }
 }
 
 // --- Inputs ---
