@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>אגורה · כיכר הדיון בתלת־ממד (אב־טיפוס)</title>
+<title>אגורה · היכל הדיונים (אב־טיפוס תלת־ממד)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&display=swap" rel="stylesheet" />
@@ -11,15 +11,17 @@
   :root {
     --gold: #f5c86a;
     --gold-bright: #ffe3a1;
-    --indigo-deep: #0a0c22;
-    --panel: rgba(13, 15, 43, 0.78);
-    --panel-border: rgba(245, 200, 106, 0.35);
-    --parchment: #e9dcc0;
-    --ink: #221d3a;
+    --cyan: #6fd7ff;
+    --cyan-soft: rgba(111, 215, 255, 0.35);
+    --space: #050810;
+    --panel: rgba(8, 14, 32, 0.74);
+    --panel-border: rgba(111, 215, 255, 0.3);
+    --text: #dbe9ff;
+    --ink: #0a1020;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; overflow: hidden; background: var(--indigo-deep); }
-  body { font-family: 'Heebo', system-ui, sans-serif; color: var(--parchment); }
+  html, body { height: 100%; overflow: hidden; background: var(--space); }
+  body { font-family: 'Heebo', system-ui, sans-serif; color: var(--text); }
   #scene { position: fixed; inset: 0; display: block; cursor: grab; }
   #scene.dragging { cursor: grabbing; }
 
@@ -31,29 +33,30 @@
     top: 0; left: 0; right: 0;
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 18px;
-    background: linear-gradient(to bottom, rgba(8,9,28,.85), transparent);
+    background: linear-gradient(to bottom, rgba(4,6,16,.85), transparent);
   }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand .flame {
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .core {
     width: 34px; height: 34px; border-radius: 50%;
-    background: radial-gradient(circle at 50% 40%, #fff3cf 0%, var(--gold) 45%, rgba(245,200,106,0) 75%);
-    box-shadow: 0 0 22px 4px rgba(245, 200, 106, .55);
-    animation: flicker 2.6s ease-in-out infinite;
+    background: radial-gradient(circle at 50% 42%, #ffffff 0%, var(--cyan) 40%, rgba(111,215,255,0) 74%);
+    box-shadow: 0 0 22px 4px rgba(111,215,255,.55), inset 0 0 8px rgba(255,255,255,.8);
+    animation: corePulse 3s ease-in-out infinite;
   }
-  @keyframes flicker { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(.92); opacity: .85 } }
-  .brand h1 { font-size: 1.05rem; font-weight: 800; letter-spacing: .02em; color: var(--gold-bright); text-shadow: 0 2px 12px rgba(0,0,0,.6); }
-  .brand small { display: block; font-size: .68rem; font-weight: 400; color: rgba(233,220,192,.75); }
+  @keyframes corePulse { 0%,100% { transform: scale(1); opacity: 1 } 50% { transform: scale(.9); opacity: .8 } }
+  .brand h1 { font-size: 1.05rem; font-weight: 800; letter-spacing: .04em; color: #eaf6ff; text-shadow: 0 0 14px rgba(111,215,255,.6); }
+  .brand small { display: block; font-size: .68rem; font-weight: 400; letter-spacing: .12em; color: rgba(219,233,255,.65); }
 
   #bell {
     position: relative;
     display: flex; align-items: center; gap: 8px;
     background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 999px; padding: 9px 16px;
-    color: var(--gold-bright); font-family: inherit; font-size: .9rem; font-weight: 600;
+    border-radius: 10px; padding: 9px 16px;
+    color: #eaf6ff; font-family: inherit; font-size: .9rem; font-weight: 600;
     cursor: pointer; backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
     transition: box-shadow .25s, transform .15s;
   }
-  #bell:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(245,200,106,.35); }
+  #bell:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(111,215,255,.35); }
   #bell .count {
     min-width: 22px; height: 22px; border-radius: 999px;
     background: var(--gold); color: var(--ink);
@@ -62,33 +65,33 @@
     box-shadow: 0 0 12px rgba(245,200,106,.8);
     animation: pulse 1.8s ease-in-out infinite;
   }
-  #bell .count.zero { background: rgba(233,220,192,.25); color: var(--parchment); box-shadow: none; animation: none; }
+  #bell .count.zero { background: rgba(219,233,255,.2); color: var(--text); box-shadow: none; animation: none; }
   @keyframes pulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.15) } }
 
   /* ---------- Notification drawer ---------- */
   #drawer {
     top: 64px; left: 16px; width: min(340px, calc(100vw - 32px));
     background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 16px; backdrop-filter: blur(14px);
-    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    border-radius: 12px; backdrop-filter: blur(14px);
+    box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 30px rgba(111,215,255,.08);
     overflow: hidden;
     transform: translateY(-12px); opacity: 0; visibility: hidden;
     transition: all .25s ease;
   }
   #drawer.open { transform: translateY(0); opacity: 1; visibility: visible; }
-  #drawer header { padding: 12px 16px 8px; font-weight: 800; color: var(--gold-bright); font-size: .92rem; border-bottom: 1px solid rgba(245,200,106,.15); }
+  #drawer header { padding: 12px 16px 8px; font-weight: 800; color: var(--cyan); font-size: .92rem; letter-spacing: .05em; border-bottom: 1px solid rgba(111,215,255,.15); }
   #drawer ul { list-style: none; max-height: 46vh; overflow-y: auto; }
   #drawer li {
     display: flex; gap: 10px; align-items: flex-start;
     padding: 12px 16px; cursor: pointer; font-size: .86rem; line-height: 1.35;
-    border-bottom: 1px solid rgba(233,220,192,.07);
+    border-bottom: 1px solid rgba(219,233,255,.06);
     transition: background .15s;
   }
-  #drawer li:hover { background: rgba(245,200,106,.1); }
-  #drawer li .ico { font-size: 1.15rem; filter: drop-shadow(0 0 6px rgba(245,200,106,.6)); }
-  #drawer li time { display: block; font-size: .7rem; color: rgba(233,220,192,.55); margin-top: 2px; }
+  #drawer li:hover { background: rgba(111,215,255,.1); }
+  #drawer li .ico { font-size: 1.15rem; filter: drop-shadow(0 0 6px rgba(111,215,255,.6)); }
+  #drawer li time { display: block; font-size: .7rem; color: rgba(219,233,255,.5); margin-top: 2px; }
   #drawer li .go { margin-inline-start: auto; align-self: center; color: var(--gold); font-size: .78rem; white-space: nowrap; }
-  #drawer .empty { padding: 22px 16px; text-align: center; font-size: .85rem; color: rgba(233,220,192,.6); }
+  #drawer .empty { padding: 22px 16px; text-align: center; font-size: .85rem; color: rgba(219,233,255,.55); }
 
   /* ---------- Room panel (bottom sheet) ---------- */
   #roomPanel {
@@ -101,45 +104,45 @@
   #roomPanel .sheet {
     width: min(560px, 100%);
     background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 20px; backdrop-filter: blur(14px);
-    box-shadow: 0 -8px 40px rgba(0,0,0,.55);
+    border-radius: 14px; backdrop-filter: blur(14px);
+    box-shadow: 0 -8px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
     padding: 16px 20px 18px;
   }
-  #roomPanel .owner { font-size: .78rem; color: var(--gold); font-weight: 600; }
-  #roomPanel h2 { font-size: 1.12rem; font-weight: 800; margin: 2px 0 10px; color: var(--gold-bright); line-height: 1.3; }
+  #roomPanel .owner { font-size: .78rem; color: var(--cyan); font-weight: 600; letter-spacing: .06em; }
+  #roomPanel h2 { font-size: 1.12rem; font-weight: 800; margin: 2px 0 10px; color: #f2f8ff; line-height: 1.3; }
   .supportRow { display: flex; align-items: center; gap: 10px; font-size: .8rem; margin-bottom: 12px; }
-  .supportTrack { flex: 1; height: 8px; border-radius: 999px; background: rgba(233,220,192,.18); overflow: hidden; }
+  .supportTrack { flex: 1; height: 8px; border-radius: 999px; background: rgba(219,233,255,.15); overflow: hidden; }
   .supportFill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--gold-bright)); box-shadow: 0 0 10px rgba(245,200,106,.7); transition: width .6s ease; }
   #roomNotifs { list-style: none; margin-bottom: 12px; }
-  #roomNotifs li { font-size: .82rem; padding: 7px 10px; margin-bottom: 6px; border-radius: 10px; background: rgba(245,200,106,.12); border: 1px solid rgba(245,200,106,.22); }
+  #roomNotifs li { font-size: .82rem; padding: 7px 10px; margin-bottom: 6px; border-radius: 8px; background: rgba(111,215,255,.1); border: 1px solid rgba(111,215,255,.2); }
   .actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .actions button {
     flex: 1; min-width: 110px;
     font-family: inherit; font-size: .85rem; font-weight: 700;
-    padding: 10px 12px; border-radius: 12px; cursor: pointer;
+    padding: 10px 12px; border-radius: 10px; cursor: pointer;
     border: 1px solid var(--panel-border);
-    background: rgba(245,200,106,.14); color: var(--gold-bright);
-    transition: background .15s, transform .12s;
+    background: rgba(111,215,255,.12); color: #eaf6ff;
+    transition: background .15s, transform .12s, box-shadow .2s;
   }
-  .actions button:hover { background: rgba(245,200,106,.28); transform: translateY(-1px); }
-  .actions button.back { background: rgba(233,220,192,.08); color: var(--parchment); }
+  .actions button:hover { background: rgba(111,215,255,.25); transform: translateY(-1px); box-shadow: 0 0 14px rgba(111,215,255,.25); }
+  .actions button.back { background: rgba(219,233,255,.06); color: var(--text); }
 
   /* ---------- hint / toast ---------- */
   #hint {
     bottom: calc(16px + env(safe-area-inset-bottom)); left: 50%;
     transform: translateX(-50%);
-    background: rgba(10,12,34,.65); border: 1px solid rgba(245,200,106,.2);
+    background: rgba(5,8,18,.6); border: 1px solid rgba(111,215,255,.18);
     border-radius: 999px; padding: 8px 18px;
-    font-size: .78rem; color: rgba(233,220,192,.85);
+    font-size: .78rem; color: rgba(219,233,255,.8);
     backdrop-filter: blur(8px); white-space: nowrap;
     transition: opacity .5s;
   }
   #toast {
     top: 76px; left: 50%; transform: translateX(-50%) translateY(-8px);
     background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 14px; padding: 12px 20px;
-    font-size: .88rem; font-weight: 600; color: var(--gold-bright);
-    box-shadow: 0 0 30px rgba(245,200,106,.25), 0 10px 30px rgba(0,0,0,.5);
+    border-radius: 12px; padding: 12px 20px;
+    font-size: .88rem; font-weight: 600; color: #eaf6ff;
+    box-shadow: 0 0 30px rgba(111,215,255,.25), 0 10px 30px rgba(0,0,0,.5);
     backdrop-filter: blur(10px);
     opacity: 0; visibility: hidden; transition: all .35s ease;
     max-width: min(420px, calc(100vw - 40px)); text-align: center;
@@ -147,10 +150,10 @@
   #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
   /* ---------- intro vignette ---------- */
-  #veil { position: fixed; inset: 0; z-index: 30; background: var(--indigo-deep); pointer-events: none; transition: opacity 1.6s ease .2s; }
+  #veil { position: fixed; inset: 0; z-index: 30; background: var(--space); pointer-events: none; transition: opacity 1.6s ease .2s; }
   #veil.gone { opacity: 0; }
   .vignette { position: fixed; inset: 0; z-index: 5; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(5,6,20,.55) 100%); }
+    background: radial-gradient(ellipse at center, transparent 58%, rgba(2,4,10,.55) 100%); }
 </style>
 </head>
 <body>
@@ -161,14 +164,14 @@
 
 <div class="hud" id="topbar">
   <div class="brand">
-    <div class="flame"></div>
-    <h1>כיכר הדיון<small>פריז 1789 · אב־טיפוס תלת־ממד</small></h1>
+    <div class="core"></div>
+    <h1>היכל הדיונים<small>CHRONOS · מועצת המסע בזמן · אב־טיפוס</small></h1>
   </div>
   <button id="bell">🔔 התראות <span class="count" id="bellCount">0</span></button>
 </div>
 
 <div class="hud" id="drawer">
-  <header>מה חדש בכיכר</header>
+  <header>מה חדש בהיכל</header>
   <ul id="notifList"></ul>
 </div>
 
@@ -186,12 +189,12 @@
       <button id="btnImprove">💡 הצע שיפור</button>
       <button id="btnSupport">🤍 תמכו</button>
       <button id="btnWatch">👁 עקוב</button>
-      <button class="back" id="btnBack">↩ חזרה לכיכר</button>
+      <button class="back" id="btnBack">↩ חזרה להיכל</button>
     </div>
   </div>
 </div>
 
-<div class="hud" id="hint">גררו כדי להביט סביב · WASD לתנועה · לחצו על ביתן כדי להיכנס</div>
+<div class="hud" id="hint">גררו כדי להביט סביב · WASD לתנועה · לחצו על תא דיון כדי להיכנס</div>
 <div class="hud" id="toast"></div>
 
 <script type="importmap">
@@ -208,6 +211,8 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
 
 /* ================================================================
    DATA — mock proposals & notifications (what the real game feeds)
@@ -226,7 +231,7 @@ let notifications = [
   { roomId: 'mine',   ico: '✍️', text: 'מארי הציעה ניסוח חדש להצעה שלך',               time: 'לפני 6 דק׳' },
   { roomId: 'r3',     ico: '🏅', text: 'השיפור שהצעת לרוזן התקבל! ההצעה עודכנה',        time: 'לפני 11 דק׳' },
   { roomId: 'r5',     ico: '👁', text: 'הצעה שאתה עוקב אחריה השתנתה — גרסה חדשה',       time: 'לפני 14 דק׳' },
-  { roomId: 'square', ico: '🆕', text: '3 הצעות חדשות הגיעו לכיכר',                     time: 'לפני 20 דק׳' },
+  { roomId: 'square', ico: '🆕', text: '3 הצעות חדשות הגיעו להיכל',                     time: 'לפני 20 דק׳' },
 ];
 
 /* ================================================================
@@ -237,29 +242,37 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.12;
+renderer.toneMappingExposure = 1.06;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0c22);
-scene.fog = new THREE.FogExp2(0x0e1130, 0.02);
+scene.background = new THREE.Color(0x0a1020);
+scene.fog = new THREE.FogExp2(0x8fa6d8, 0.0045);
 
-const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 300);
+/* image-based lighting → realistic metal/glass response */
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 400);
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.7, 0.55, 0.78);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.5, 0.88);
 composer.addPass(bloom);
 
 /* ================================================================
-   LIGHTS — indigo moonlight + one warm heart at the center
+   LIGHTS — cool council-hall key + warm gold signature accent
    ================================================================ */
-scene.add(new THREE.HemisphereLight(0x3a4380, 0x141024, 0.55));
-const moon = new THREE.DirectionalLight(0x7d8fd6, 0.5);
-moon.position.set(-30, 40, -20);
-scene.add(moon);
-const heart = new THREE.PointLight(0xffc86e, 60, 55, 1.8);
-heart.position.set(0, 5, 0);
-scene.add(heart);
+scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x6a5a40, 0.65));
+const keySpot = new THREE.SpotLight(0xfff2dd, 750, 70, 0.6, 0.55, 1.6);
+keySpot.position.set(0, 34, 0);
+keySpot.target.position.set(0, 0, 0);
+scene.add(keySpot, keySpot.target);
+const coreLight = new THREE.PointLight(0x8fdcff, 70, 40, 1.8);
+coreLight.position.set(0, 5, 0);
+scene.add(coreLight);
+const goldLight = new THREE.PointLight(0xffc86e, 45, 32, 2);
+goldLight.position.set(0, 7, 0);
+scene.add(goldLight);
 
 /* ================================================================
    TEXTURE HELPERS (procedural canvases — no external assets)
@@ -273,133 +286,238 @@ function makeCanvas(w, h, draw) {
   return t;
 }
 
-/* cobblestone ground */
-const cobbleTex = makeCanvas(512, 512, (g, w, h) => {
-  g.fillStyle = '#181b36'; g.fillRect(0, 0, w, h);
-  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
-    const cx = x * 32 + (y % 2) * 16 + 16, cy = y * 32 + 16;
-    const l = 22 + Math.random() * 14;
-    g.fillStyle = `hsl(${228 + Math.random() * 14}, 26%, ${l}%)`;
-    g.beginPath();
-    g.ellipse(cx, cy, 13 + Math.random() * 3, 11 + Math.random() * 3, Math.random() * .6, 0, 7);
-    g.fill();
-  }
-});
-cobbleTex.wrapS = cobbleTex.wrapT = THREE.RepeatWrapping;
-cobbleTex.repeat.set(18, 18);
-
-const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(80, 64),
-  new THREE.MeshStandardMaterial({ map: cobbleTex, roughness: 0.92 })
-);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
-
-/* facade texture variants for the distant Paris skyline */
-const facades = [0, 1, 2, 3].map(() => makeCanvas(256, 512, (g, w, h) => {
-  g.fillStyle = '#121430'; g.fillRect(0, 0, w, h);
-  for (let fy = 0; fy < 7; fy++) for (let fx = 0; fx < 4; fx++) {
-    const lit = Math.random() < 0.28;
-    g.fillStyle = lit ? `rgba(255,205,120,${.55 + Math.random() * .45})` : 'rgba(20,22,52,.9)';
-    g.fillRect(24 + fx * 56, 34 + fy * 66, 30, 42);
-  }
-}));
-
-/* ================================================================
-   SKYLINE, STARS, MOON DISC
-   ================================================================ */
-const skyline = new THREE.Group();
-for (let i = 0; i < 26; i++) {
-  const a = (i / 26) * Math.PI * 2 + Math.random() * 0.15;
-  const r = 46 + Math.random() * 14;
-  const bw = 7 + Math.random() * 6, bh = 9 + Math.random() * 9;
-  const b = new THREE.Mesh(
-    new THREE.BoxGeometry(bw, bh, 6),
-    new THREE.MeshStandardMaterial({
-      map: facades[i % 4], emissive: 0xffcf7a, emissiveMap: facades[i % 4], emissiveIntensity: 0.9, roughness: 1
-    })
-  );
-  b.position.set(Math.sin(a) * r, bh / 2, Math.cos(a) * r);
-  b.lookAt(0, bh / 2, 0);
-  skyline.add(b);
-  const roof = new THREE.Mesh(
-    new THREE.ConeGeometry(bw * 0.62, 3 + Math.random() * 2, 4),
-    new THREE.MeshStandardMaterial({ color: 0x0d0f28, roughness: 1 })
-  );
-  roof.position.copy(b.position); roof.position.y = bh + 1.4;
-  roof.rotation.y = b.rotation.y + Math.PI / 4;
-  skyline.add(roof);
-}
-scene.add(skyline);
-
-const starGeo = new THREE.BufferGeometry();
-const starPos = [];
-for (let i = 0; i < 900; i++) {
-  const a = Math.random() * Math.PI * 2, e = Math.random() * Math.PI * 0.48;
-  const r = 180;
-  starPos.push(Math.sin(a) * Math.cos(e) * r, Math.sin(e) * r + 8, Math.cos(a) * Math.cos(e) * r);
-}
-starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcdd7ff, size: 0.55, sizeAttenuation: true, transparent: true, opacity: 0.85, fog: false })));
-
-const moonTex = makeCanvas(128, 128, (g) => {
-  const grd = g.createRadialGradient(64, 64, 8, 64, 64, 62);
-  grd.addColorStop(0, 'rgba(240,244,255,1)'); grd.addColorStop(0.5, 'rgba(190,205,255,.6)'); grd.addColorStop(1, 'rgba(190,205,255,0)');
-  g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
-});
-const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: moonTex, transparent: true, fog: false }));
-moonSprite.position.set(-70, 62, -110); moonSprite.scale.setScalar(26);
-scene.add(moonSprite);
-
-/* ================================================================
-   CENTER — the "idea lantern" obelisk of the agora
-   ================================================================ */
-const center = new THREE.Group();
-const plinth = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.1, 1, 10),
-  new THREE.MeshStandardMaterial({ color: 0x4a5090, roughness: .75 }));
-plinth.position.y = 0.5; center.add(plinth);
-const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 6.4, 8),
-  new THREE.MeshStandardMaterial({ color: 0x6a5f8f, roughness: .55, metalness: .4 }));
-pole.position.y = 4.2; center.add(pole);
-const bigLantern = new THREE.Mesh(new THREE.IcosahedronGeometry(0.85, 1),
-  new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffb84d, emissiveIntensity: 3.2, roughness: .3 }));
-bigLantern.position.y = 7.6; center.add(bigLantern);
-const glowTex = makeCanvas(128, 128, (g) => {
+const glowTexGold = makeCanvas(128, 128, (g) => {
   const grd = g.createRadialGradient(64, 64, 2, 64, 64, 62);
   grd.addColorStop(0, 'rgba(255,220,150,.95)'); grd.addColorStop(1, 'rgba(255,190,90,0)');
   g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
 });
-const bigGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-bigGlow.position.y = 7.6; bigGlow.scale.setScalar(4.5);
-center.add(bigGlow);
-scene.add(center);
-
-/* floating idea-lanterns rising from the obelisk */
-const risers = [];
-for (let i = 0; i < 10; i++) {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.9 }));
-  s.userData = { a: Math.random() * Math.PI * 2, r: 1.5 + Math.random() * 2.5, sp: 0.25 + Math.random() * 0.35, y0: Math.random() * 10 };
-  s.scale.setScalar(0.9 + Math.random() * 0.8);
-  risers.push(s); scene.add(s);
-}
-
-/* fireflies drifting across the square */
-const flyGeo = new THREE.BufferGeometry();
-const flyBase = [];
-for (let i = 0; i < 220; i++) {
-  const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 30;
-  flyBase.push({ x: Math.sin(a) * r, y: 0.6 + Math.random() * 4.5, z: Math.cos(a) * r, ph: Math.random() * 7, sp: 0.4 + Math.random() * 0.8 });
-}
-flyGeo.setAttribute('position', new THREE.Float32BufferAttribute(flyBase.flatMap(p => [p.x, p.y, p.z]), 3));
-const flies = new THREE.Points(flyGeo, new THREE.PointsMaterial({ color: 0xffd98a, size: 0.14, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
-scene.add(flies);
+const glowTexCyan = makeCanvas(128, 128, (g) => {
+  const grd = g.createRadialGradient(64, 64, 2, 64, 64, 62);
+  grd.addColorStop(0, 'rgba(210,240,255,.95)'); grd.addColorStop(1, 'rgba(110,200,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+});
+const shaftTex = makeCanvas(64, 256, (g, w, h) => {
+  const grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, 'rgba(255,240,210,.55)'); grd.addColorStop(1, 'rgba(255,240,210,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+});
 
 /* ================================================================
-   TIME PORTAL — the way home (decorative anchor of the game)
+   FLOOR — real-time mirror + brushed overlay = polished composite
+   ================================================================ */
+const HALL_R = 30;
+const mirror = new Reflector(new THREE.CircleGeometry(HALL_R, 72), {
+  clipBias: 0.003,
+  textureWidth: Math.floor(innerWidth * Math.min(devicePixelRatio, 1.5)),
+  textureHeight: Math.floor(innerHeight * Math.min(devicePixelRatio, 1.5)),
+  color: 0x929eb8,
+});
+mirror.rotation.x = -Math.PI / 2;
+scene.add(mirror);
+
+const floorTex = makeCanvas(1024, 1024, (g, w, h) => {
+  g.fillStyle = 'rgba(164,176,204,1)'; g.fillRect(0, 0, w, h);
+  /* brushed radial streaks */
+  for (let i = 0; i < 900; i++) {
+    const a = Math.random() * Math.PI * 2, r0 = Math.random() * 500;
+    g.strokeStyle = `rgba(${70 + Math.random() * 40},${85 + Math.random() * 40},${130 + Math.random() * 50},${0.02 + Math.random() * 0.045})`;
+    g.lineWidth = 1 + Math.random() * 2;
+    g.beginPath();
+    g.arc(w / 2, h / 2, r0, a, a + 0.25 + Math.random() * 0.6);
+    g.stroke();
+  }
+  /* concentric guide rings */
+  [76, 150, 328, 486].forEach((r, i) => {
+    g.strokeStyle = i % 2 ? 'rgba(60,130,190,.30)' : 'rgba(60,130,190,.15)';
+    g.lineWidth = 2.5;
+    g.beginPath(); g.arc(w / 2, h / 2, r, 0, 7); g.stroke();
+  });
+});
+const floorSkin = new THREE.Mesh(
+  new THREE.CircleGeometry(HALL_R, 72),
+  new THREE.MeshStandardMaterial({ map: floorTex, transparent: true, opacity: 0.78, roughness: 0.42, metalness: 0.25 })
+);
+floorSkin.rotation.x = -Math.PI / 2;
+floorSkin.position.y = 0.012;
+scene.add(floorSkin);
+
+/* emissive floor rings marking the pod circle + core */
+[[4.6, 0xf5c86a, .5], [19.4, 0x6fd7ff, .45]].forEach(([r, col, op]) => {
+  const ringF = new THREE.Mesh(new THREE.RingGeometry(r - 0.09, r + 0.09, 96),
+    new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
+  ringF.rotation.x = -Math.PI / 2; ringF.position.y = 0.02;
+  scene.add(ringF);
+});
+
+/* ================================================================
+   HALL SHELL — plinth, glass band, dome with ribs & light rings
+   ================================================================ */
+const shellMat = new THREE.MeshStandardMaterial({ color: 0xcbd6ef, metalness: 0.3, roughness: 0.55, side: THREE.BackSide });
+const plinthWall = new THREE.Mesh(new THREE.CylinderGeometry(HALL_R, HALL_R, 1.6, 72, 1, true), shellMat);
+plinthWall.position.y = 0.8; scene.add(plinthWall);
+const glassBand = new THREE.Mesh(new THREE.CylinderGeometry(HALL_R, HALL_R, 3.6, 72, 1, true),
+  new THREE.MeshStandardMaterial({ color: 0x9fc4ff, metalness: 0.1, roughness: 0.05, transparent: true, opacity: 0.1, side: THREE.DoubleSide }));
+glassBand.position.y = 3.4; scene.add(glassBand);
+const upperWall = new THREE.Mesh(new THREE.CylinderGeometry(HALL_R, HALL_R, 0.8, 72, 1, true), shellMat);
+upperWall.position.y = 5.6; scene.add(upperWall);
+
+/* mullions between glass panes */
+const mullionMat = new THREE.MeshStandardMaterial({ color: 0x9fb0d6, metalness: 0.7, roughness: 0.3 });
+for (let i = 0; i < 24; i++) {
+  const a = (i / 24) * Math.PI * 2;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.28, 4.4, 0.28), mullionMat);
+  m.position.set(Math.sin(a) * (HALL_R - 0.1), 3.4, Math.cos(a) * (HALL_R - 0.1));
+  scene.add(m);
+}
+
+const dome = new THREE.Mesh(new THREE.SphereGeometry(HALL_R, 64, 28, 0, Math.PI * 2, 0, Math.PI / 2), shellMat);
+dome.position.y = 6; scene.add(dome);
+
+/* dome ribs */
+const ribMat = new THREE.MeshStandardMaterial({ color: 0xb4c2e6, metalness: 0.5, roughness: 0.4, emissive: 0x8fa8d8, emissiveIntensity: 0.3 });
+for (let i = 0; i < 12; i++) {
+  const rib = new THREE.Mesh(new THREE.TorusGeometry(HALL_R - 0.35, 0.16, 8, 40, Math.PI / 2), ribMat);
+  rib.position.y = 6;
+  rib.rotation.y = (i / 12) * Math.PI * 2;
+  rib.rotation.z = 0;
+  scene.add(rib);
+}
+/* glowing rings on the dome */
+[[28, 16], [21.2, 27.2]].forEach(([r, y]) => {
+  const lr = new THREE.Mesh(new THREE.TorusGeometry(r, 0.1, 8, 96),
+    new THREE.MeshStandardMaterial({ color: 0xbfe9ff, emissive: 0x9fd8ff, emissiveIntensity: 2.2, roughness: .4 }));
+  lr.rotation.x = Math.PI / 2; lr.position.y = y;
+  scene.add(lr);
+});
+
+/* oculus + volumetric-style shaft */
+const oculus = new THREE.Mesh(new THREE.CircleGeometry(3.6, 48),
+  new THREE.MeshBasicMaterial({ color: 0xeaf4ff }));
+oculus.rotation.x = Math.PI / 2; oculus.position.y = 35.4;
+scene.add(oculus);
+const shaft = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 6.5, 34, 32, 1, true), new THREE.MeshBasicMaterial({
+  map: shaftTex, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+}));
+shaft.material.opacity = 0.16;
+shaft.position.y = 18;
+scene.add(shaft);
+
+/* ================================================================
+   OUTSIDE — starfield + nebulae seen through the glass band
+   ================================================================ */
+const starGeo = new THREE.BufferGeometry();
+const starPos = [];
+for (let i = 0; i < 1400; i++) {
+  const a = Math.random() * Math.PI * 2, e = (Math.random() - 0.15) * Math.PI * 0.5;
+  const r = 200;
+  starPos.push(Math.sin(a) * Math.cos(e) * r, Math.sin(e) * r + 4, Math.cos(a) * Math.cos(e) * r);
+}
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcdd7ff, size: 0.6, sizeAttenuation: true, transparent: true, opacity: 0.9, fog: false })));
+
+/* soft aurora band outside the glass — warm horizon, feel-good */
+const auroraTex = makeCanvas(64, 256, (g, w, h) => {
+  const grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, 'rgba(120,190,255,0)');
+  grd.addColorStop(0.35, 'rgba(140,205,255,.5)');
+  grd.addColorStop(0.62, 'rgba(255,210,150,.55)');
+  grd.addColorStop(1, 'rgba(255,180,110,.15)');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+});
+const aurora = new THREE.Mesh(new THREE.CylinderGeometry(110, 110, 26, 72, 1, true),
+  new THREE.MeshBasicMaterial({ map: auroraTex, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide, fog: false }));
+aurora.position.y = 8;
+scene.add(aurora);
+
+const nebTex = makeCanvas(256, 256, (g) => {
+  for (let i = 0; i < 5; i++) {
+    const x = 60 + Math.random() * 136, y = 60 + Math.random() * 136, r = 40 + Math.random() * 70;
+    const grd = g.createRadialGradient(x, y, 4, x, y, r);
+    const hue = 200 + Math.random() * 60;
+    grd.addColorStop(0, `hsla(${hue}, 90%, 70%, .5)`); grd.addColorStop(1, `hsla(${hue}, 90%, 60%, 0)`);
+    g.fillStyle = grd; g.fillRect(0, 0, 256, 256);
+  }
+});
+for (let i = 0; i < 4; i++) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: nebTex, transparent: true, opacity: 0.45, fog: false, depthWrite: false }));
+  const a = i * 1.7 + 0.4;
+  s.position.set(Math.sin(a) * 160, 6 + Math.random() * 30, Math.cos(a) * 160);
+  s.scale.setScalar(90 + Math.random() * 60);
+  scene.add(s);
+}
+
+/* ================================================================
+   CENTRAL CORE — the shared-question hologram of the council
+   ================================================================ */
+const daisMat = new THREE.MeshStandardMaterial({ color: 0xaebde0, metalness: 0.65, roughness: 0.28 });
+const dais1 = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.5, 0.3, 48), daisMat); dais1.position.y = 0.15;
+const dais2 = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.7, 0.3, 48), daisMat); dais2.position.y = 0.45;
+const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.2, 0.9, 24),
+  new THREE.MeshStandardMaterial({ color: 0x93a3cc, metalness: 0.8, roughness: 0.25 }));
+pedestal.position.y = 1.05;
+scene.add(dais1, dais2, pedestal);
+const daisTrim = new THREE.Mesh(new THREE.TorusGeometry(4.35, 0.05, 8, 64),
+  new THREE.MeshStandardMaterial({ color: 0x9fd8ff, emissive: 0x6fc4ff, emissiveIntensity: 2, roughness: .4 }));
+daisTrim.rotation.x = Math.PI / 2; daisTrim.position.y = 0.32;
+scene.add(daisTrim);
+
+const holoTex = makeCanvas(256, 512, (g, w, h) => {
+  const grd = g.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0, 'rgba(140,220,255,0)'); grd.addColorStop(0.25, 'rgba(140,220,255,.5)');
+  grd.addColorStop(0.8, 'rgba(140,220,255,.35)'); grd.addColorStop(1, 'rgba(140,220,255,0)');
+  g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  g.globalCompositeOperation = 'destination-out';
+  for (let y = 0; y < h; y += 7) { g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(0, y, w, 2.4); }
+});
+holoTex.wrapS = THREE.RepeatWrapping;
+const holoCol = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.35, 7.5, 32, 1, true),
+  new THREE.MeshBasicMaterial({ map: holoTex, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+holoCol.position.y = 5.2;
+scene.add(holoCol);
+const holoCol2 = holoCol.clone();
+holoCol2.scale.set(0.65, 0.96, 0.65);
+scene.add(holoCol2);
+
+const coreRings = [];
+[1.7, 2.15, 2.6].forEach((r, i) => {
+  const cr = new THREE.Mesh(new THREE.TorusGeometry(r, 0.035, 8, 64),
+    new THREE.MeshBasicMaterial({ color: 0x5fb8ef, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+  cr.position.y = 5 + i * 0.4;
+  coreRings.push(cr); scene.add(cr);
+});
+const coreGem = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 0),
+  new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffb84d, emissiveIntensity: 2.6, metalness: .4, roughness: .25 }));
+coreGem.position.y = 8.6;
+scene.add(coreGem);
+const coreGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexGold, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .9 }));
+coreGlow.position.y = 8.6; coreGlow.scale.setScalar(3.6);
+scene.add(coreGlow);
+
+/* particles rising inside the holo column */
+const riseN = 140;
+const riseGeo = new THREE.BufferGeometry();
+const riseData = Array.from({ length: riseN }, () => ({ a: Math.random() * 7, r: Math.random() * 1.05, sp: 0.5 + Math.random(), y0: Math.random() * 8 }));
+riseGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Array(riseN * 3).fill(0), 3));
+const risePts = new THREE.Points(riseGeo, new THREE.PointsMaterial({ color: 0xbfe9ff, size: 0.09, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+scene.add(risePts);
+
+/* dust motes drifting through the hall (realism) */
+const dustN = 320;
+const dustGeo = new THREE.BufferGeometry();
+const dustData = Array.from({ length: dustN }, () => {
+  const a = Math.random() * Math.PI * 2, r = 2 + Math.random() * 26;
+  return { x: Math.sin(a) * r, y: 0.4 + Math.random() * 11, z: Math.cos(a) * r, ph: Math.random() * 7, sp: 0.15 + Math.random() * 0.4 };
+});
+dustGeo.setAttribute('position', new THREE.Float32BufferAttribute(dustData.flatMap(p => [p.x, p.y, p.z]), 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xaac6ff, size: 0.05, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }));
+scene.add(dust);
+
+/* ================================================================
+   TIME PORTAL — the CHRONOS gate at the hall's edge
    ================================================================ */
 const portal = new THREE.Group();
-const ring = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.2, 16, 60),
-  new THREE.MeshStandardMaterial({ color: 0x8fc2ff, emissive: 0x4d8dff, emissiveIntensity: 2.6, roughness: .3 }));
+const ring = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.22, 24, 72),
+  new THREE.MeshStandardMaterial({ color: 0xaecdf5, metalness: 0.9, roughness: 0.2, emissive: 0x3d7dff, emissiveIntensity: 1.2 }));
 portal.add(ring);
 const swirlTex = makeCanvas(256, 256, (g) => {
   const grd = g.createRadialGradient(128, 128, 4, 128, 128, 126);
@@ -416,19 +534,21 @@ const swirlTex = makeCanvas(256, 256, (g) => {
     g.stroke();
   }
 });
-const swirl = new THREE.Mesh(new THREE.CircleGeometry(2.4, 40),
+const swirl = new THREE.Mesh(new THREE.CircleGeometry(2.2, 40),
   new THREE.MeshBasicMaterial({ map: swirlTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
 portal.add(swirl);
-portal.position.set(0, 3, -30);
+const portAngle = Math.PI / 3 + Math.PI / 3 * 4.5;
+portal.position.set(Math.sin(portAngle) * 25.5, 3.1, Math.cos(portAngle) * 25.5);
+portal.lookAt(0, 3.1, 0);
 scene.add(portal);
-const portalLight = new THREE.PointLight(0x5a8dff, 25, 26, 1.9);
+const portalLight = new THREE.PointLight(0x5a8dff, 30, 24, 1.9);
 portalLight.position.copy(portal.position);
 scene.add(portalLight);
 
 /* ================================================================
-   PAVILIONS — one room per proposal, arranged around the plaza
+   DELIBERATION PODS — one per proposal, ringed around the core
    ================================================================ */
-const R = 16;
+const R = 20;
 const wrapText = (g, text, maxW) => {
   const words = text.split(' '); const lines = []; let line = '';
   for (const w of words) {
@@ -440,35 +560,56 @@ const wrapText = (g, text, maxW) => {
   return lines;
 };
 
-function boardTexture(room) {
+function screenTexture(room) {
   return makeCanvas(1024, 640, (g, w, h) => {
-    g.fillStyle = '#e9dcc0'; g.fillRect(0, 0, w, h);
-    const vg = g.createRadialGradient(w / 2, h / 2, h / 3, w / 2, h / 2, h);
-    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(90,60,20,.35)');
-    g.fillStyle = vg; g.fillRect(0, 0, w, h);
-    g.fillStyle = room.mine ? '#8a5d13' : '#2b2f58';
-    g.fillRect(0, 0, w, 110);
+    g.fillStyle = 'rgba(6,14,34,.92)'; g.fillRect(0, 0, w, h);
+    /* scanlines */
+    for (let y = 0; y < h; y += 6) { g.fillStyle = 'rgba(120,200,255,.035)'; g.fillRect(0, y, w, 2); }
+    /* frame + corner brackets */
+    const edge = room.mine ? '#f5c86a' : '#6fd7ff';
+    g.strokeStyle = edge; g.lineWidth = 5;
+    g.shadowColor = edge; g.shadowBlur = 22;
+    g.strokeRect(10, 10, w - 20, h - 20);
+    g.shadowBlur = 0;
+    g.lineWidth = 10;
+    [[10, 10, 1, 1], [w - 10, 10, -1, 1], [10, h - 10, 1, -1], [w - 10, h - 10, -1, -1]].forEach(([x, y, sx, sy]) => {
+      g.beginPath(); g.moveTo(x + 70 * sx, y); g.lineTo(x, y); g.lineTo(x, y + 55 * sy); g.stroke();
+    });
     g.direction = 'rtl'; g.textAlign = 'center';
-    g.fillStyle = '#ffe3a1'; g.font = '800 54px Heebo, sans-serif';
-    g.fillText(room.mine ? '⭐ ' + room.owner : 'ההצעה של ' + room.owner, w / 2, 74);
-    g.fillStyle = '#221d3a'; g.font = '700 58px Heebo, sans-serif';
-    const lines = wrapText(g, room.proposal, w - 140);
-    lines.forEach((ln, i) => g.fillText(ln, w / 2, 210 + i * 78));
-    const by = h - 92;
-    g.fillStyle = 'rgba(43,47,88,.25)'; g.fillRect(120, by, w - 240, 34);
-    g.fillStyle = '#c99b2e'; g.fillRect(120 + (w - 240) * (1 - room.support / 100), by, (w - 240) * room.support / 100, 34);
-    g.font = '800 44px Heebo, sans-serif'; g.fillStyle = '#2b2f58';
-    g.fillText(`תמיכה ${room.support}%`, w / 2, by - 18);
+    g.fillStyle = room.mine ? '#ffe3a1' : '#9fe0ff';
+    g.font = '800 50px Heebo, sans-serif';
+    g.fillText(room.mine ? '⭐ ' + room.owner : 'ההצעה של ' + room.owner, w / 2, 96);
+    g.strokeStyle = 'rgba(111,215,255,.4)'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(150, 126); g.lineTo(w - 150, 126); g.stroke();
+    g.fillStyle = '#f2f8ff'; g.font = '700 56px Heebo, sans-serif';
+    g.shadowColor = 'rgba(160,220,255,.7)'; g.shadowBlur = 10;
+    const lines = wrapText(g, room.proposal, w - 170);
+    lines.forEach((ln, i) => g.fillText(ln, w / 2, 230 + i * 76));
+    g.shadowBlur = 0;
+    const by = h - 96;
+    g.fillStyle = 'rgba(219,233,255,.14)'; g.fillRect(130, by, w - 260, 30);
+    const grd = g.createLinearGradient(0, 0, w, 0);
+    grd.addColorStop(0, '#ffe3a1'); grd.addColorStop(1, '#f5c86a');
+    g.fillStyle = grd;
+    g.fillRect(130 + (w - 260) * (1 - room.support / 100), by, (w - 260) * room.support / 100, 30);
+    g.font = '800 42px Heebo, sans-serif'; g.fillStyle = '#bfe9ff';
+    g.fillText(`תמיכה ${room.support}%`, w / 2, by - 20);
   });
 }
 
 function nameSprite(room) {
   const tex = makeCanvas(512, 128, (g, w, h) => {
     g.direction = 'rtl'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.font = '800 62px Heebo, sans-serif';
-    g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 14;
-    g.fillStyle = room.mine ? '#ffe3a1' : '#e9dcc0';
-    g.fillText(room.owner, w / 2, h / 2);
+    g.font = '800 58px Heebo, sans-serif';
+    const tw = g.measureText(room.owner).width + 70;
+    g.fillStyle = 'rgba(10,18,40,.72)';
+    g.beginPath(); g.roundRect((w - tw) / 2, 18, tw, 92, 46); g.fill();
+    g.strokeStyle = room.mine ? 'rgba(245,200,106,.8)' : 'rgba(111,215,255,.7)';
+    g.lineWidth = 3; g.stroke();
+    g.shadowColor = room.mine ? 'rgba(245,200,106,.95)' : 'rgba(111,215,255,.95)';
+    g.shadowBlur = 14;
+    g.fillStyle = room.mine ? '#ffe3a1' : '#eaf6ff';
+    g.fillText(room.owner, w / 2, h / 2 + 4);
   });
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
   s.scale.set(4.6, 1.15, 1);
@@ -481,64 +622,83 @@ function badgeTexture(count) {
     const grd = g.createRadialGradient(64, 64, 8, 64, 64, 62);
     grd.addColorStop(0, 'rgba(255,225,150,1)'); grd.addColorStop(0.55, 'rgba(245,200,106,.95)'); grd.addColorStop(1, 'rgba(245,200,106,0)');
     g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
-    g.fillStyle = '#221d3a'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#0a1020'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.font = '800 56px Heebo, sans-serif';
     g.fillText(String(count), 64, 66);
   });
 }
 
-const colMat = new THREE.MeshStandardMaterial({ color: 0xbfae8e, roughness: .7 });
-const roofMat = new THREE.MeshStandardMaterial({ color: 0x272b52, roughness: .85 });
-const goldMat = new THREE.MeshStandardMaterial({ color: 0xf5c86a, emissive: 0xb07f1e, emissiveIntensity: .7, metalness: .6, roughness: .35 });
+const podPlateMat = new THREE.MeshStandardMaterial({ color: 0x9fb0d6, metalness: 0.7, roughness: 0.3 });
+const podWallMat = new THREE.MeshStandardMaterial({ color: 0xc6d1ec, metalness: 0.45, roughness: 0.4, side: THREE.DoubleSide });
+const pylonMat = new THREE.MeshStandardMaterial({ color: 0x8fa0c8, metalness: 0.6, roughness: 0.35, emissive: 0x3d4c78, emissiveIntensity: 0.35 });
 
 const pavilions = new Map();
 ROOMS.forEach((room, i) => {
   const a = (i / ROOMS.length) * Math.PI * 2 + Math.PI / 6;
   const px = Math.sin(a) * R, pz = Math.cos(a) * R;
+  const accent = room.mine ? 0xf5c86a : 0x6fd7ff;
+  const accentEm = room.mine ? 0xb07f1e : 0x2f8fc9;
   const grp = new THREE.Group();
   grp.position.set(px, 0, pz);
   grp.lookAt(0, 0, 0);
 
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.35, 0.35, 24),
-    new THREE.MeshStandardMaterial({ color: 0x323764, roughness: .85 }));
-  base.position.y = 0.17; grp.add(base);
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.3, 3.55, 0.24, 40), podPlateMat);
+  plate.position.y = 0.12; grp.add(plate);
+  const trim = new THREE.Mesh(new THREE.TorusGeometry(3.38, 0.05, 8, 64),
+    new THREE.MeshStandardMaterial({ color: accent, emissive: accentEm, emissiveIntensity: 1.8, metalness: .6, roughness: .3 }));
+  trim.rotation.x = Math.PI / 2; trim.position.y = 0.26; grp.add(trim);
 
-  [[-2.1, -1.6], [2.1, -1.6], [-2.1, 1.6], [2.1, 1.6]].forEach(([cx, cz]) => {
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 3.4, 10), colMat);
-    col.position.set(cx, 2, cz); grp.add(col);
+  const wall = new THREE.Mesh(new THREE.CylinderGeometry(3.1, 3.1, 4.4, 28, 1, true, Math.PI - 1.05, 2.1), podWallMat);
+  wall.position.y = 2.2; grp.add(wall);
+
+  [[-2.7, 0.4], [2.7, 0.4]].forEach(([cx, cz]) => {
+    const py = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.18, 4.6, 12), pylonMat);
+    py.position.set(cx, 2.3, cz); grp.add(py);
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10),
+      new THREE.MeshStandardMaterial({ color: accent, emissive: accentEm, emissiveIntensity: 3 }));
+    lamp.position.set(cx, 4.7, cz); grp.add(lamp);
   });
 
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(3.5, 1.5, 8), room.mine ? goldMat : roofMat);
-  roof.position.y = 4.4; grp.add(roof);
+  const canopy = new THREE.Mesh(new THREE.TorusGeometry(3.25, 0.1, 10, 40, 2.1), pylonMat);
+  canopy.rotation.x = Math.PI / 2;
+  canopy.rotation.z = Math.PI - 1.05;
+  canopy.position.y = 4.6; grp.add(canopy);
 
-  const boardTex = boardTexture(room);
-  const board = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.6),
-    new THREE.MeshStandardMaterial({ map: boardTex, emissive: 0xffffff, emissiveMap: boardTex, emissiveIntensity: 0.42, roughness: .8 }));
-  board.position.set(0, 2.15, -1.85);   /* back wall, faces the plaza */
-  grp.add(board);
+  const screenTex = screenTexture(room);
+  const holoScreen = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.75),
+    new THREE.MeshBasicMaterial({ map: screenTex, transparent: true, opacity: 0.96, side: THREE.DoubleSide }));
+  holoScreen.position.set(0, 2.45, -1.7);
+  grp.add(holoScreen);
 
-  const lant = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12),
-    new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffb84d, emissiveIntensity: room.mine ? 3 : 2 }));
-  lant.position.set(0, 3.9, 1.9); grp.add(lant);
-  const lg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.8 }));
-  lg.position.copy(lant.position); lg.scale.setScalar(room.mine ? 2.6 : 1.9); grp.add(lg);
+  /* small holo-pedestal at the pod mouth */
+  const pod = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 0.7, 16), pylonMat);
+  pod.position.set(0, 0.6, 1.6); grp.add(pod);
+  const holoBit = new THREE.Mesh(new THREE.OctahedronGeometry(0.2, 0),
+    new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+  holoBit.position.set(0, 1.35, 1.6); grp.add(holoBit);
 
-  if (room.mine) {
-    const trim = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.06, 8, 48), goldMat);
-    trim.rotation.x = Math.PI / 2; trim.position.y = 0.37; grp.add(trim);
-  }
+  const podLight = new THREE.PointLight(accent, 7, 9, 2);
+  podLight.position.set(0, 3.6, -0.4); grp.add(podLight);
 
-  const name = nameSprite(room); name.position.set(0, 5.6, 0); grp.add(name);
-
+  const name = nameSprite(room); name.position.set(0, 5.5, 0); grp.add(name);
   const badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTexture(0), transparent: true, depthWrite: false }));
-  badge.position.set(0, 6.6, 0); badge.scale.setScalar(1.6); grp.add(badge);
+  badge.position.set(0, 6.5, 0); badge.scale.setScalar(1.6); grp.add(badge);
 
-  const hit = new THREE.Mesh(new THREE.CylinderGeometry(3.3, 3.3, 6.5, 12),
+  /* wayfinding light-spoke on the floor toward the pod */
+  const spoke = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 13.6),
+    new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: room.mine ? 0.5 : 0.28, blending: THREE.AdditiveBlending, depthWrite: false }));
+  spoke.rotation.x = -Math.PI / 2;
+  const mid = new THREE.Vector3(px, 0, pz).multiplyScalar((4.8 + 18.4) / 2 / R);
+  spoke.position.set(mid.x, 0.025, mid.z);
+  spoke.rotation.z = Math.atan2(px, pz);
+  scene.add(spoke);
+
+  const hit = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 6.5, 12),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.position.y = 3.2; hit.userData.roomId = room.id; grp.add(hit);
 
   scene.add(grp);
-  pavilions.set(room.id, { room, grp, badge, lantGlow: lg, hit, angle: a, pos: new THREE.Vector3(px, 0, pz) });
+  pavilions.set(room.id, { room, grp, badge, holoScreen, holoBit, hit, angle: a, pos: new THREE.Vector3(px, 0, pz) });
 });
 
 /* ================================================================
@@ -546,8 +706,8 @@ ROOMS.forEach((room, i) => {
    ================================================================ */
 const rig = { pos: new THREE.Vector3(), yaw: 0, pitch: 0 };
 const minePav = pavilions.get('mine');
-rig.pos.copy(minePav.pos).multiplyScalar(0.62).setY(1.7);
-rig.yaw = Math.atan2(-rig.pos.x, -rig.pos.z) + Math.PI;   /* start facing the plaza from near your room */
+rig.pos.copy(minePav.pos).multiplyScalar(0.6).setY(1.7);
+rig.yaw = Math.atan2(-rig.pos.x, -rig.pos.z) + Math.PI;
 
 let flight = null;
 function flyTo(pos, yaw, pitch, dur, onDone) {
@@ -562,7 +722,7 @@ addEventListener('keydown', e => keys.add(e.code));
 addEventListener('keyup', e => keys.delete(e.code));
 
 let dragging = false, moved = 0, lx = 0, ly = 0;
-canvas.addEventListener('pointerdown', e => { dragging = true; moved = 0; lx = e.clientX; ly = e.clientY; canvas.classList.add('dragging'); canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointerdown', e => { dragging = true; moved = 0; lx = e.clientX; ly = e.clientY; canvas.classList.add('dragging'); try { canvas.setPointerCapture(e.pointerId); } catch {} });
 canvas.addEventListener('pointermove', e => {
   if (!dragging) return;
   const dx = e.clientX - lx, dy = e.clientY - ly;
@@ -570,7 +730,7 @@ canvas.addEventListener('pointermove', e => {
   lx = e.clientX; ly = e.clientY;
   if (flight) return;
   rig.yaw -= dx * 0.0042;
-  rig.pitch = THREE.MathUtils.clamp(rig.pitch - dy * 0.0035, -0.7, 0.55);
+  rig.pitch = THREE.MathUtils.clamp(rig.pitch - dy * 0.0035, -0.7, 0.6);
 });
 canvas.addEventListener('pointerup', e => {
   dragging = false; canvas.classList.remove('dragging');
@@ -597,7 +757,7 @@ function enterRoom(roomId) {
   mode = roomId;
   closeDrawer();
   const dir = pav.pos.clone().normalize();
-  const camPos = pav.pos.clone().sub(dir.clone().multiplyScalar(7.2)).setY(2.1);
+  const camPos = pav.pos.clone().sub(dir.clone().multiplyScalar(7.4)).setY(2.1);
   const yaw = Math.atan2(pav.pos.x - camPos.x, pav.pos.z - camPos.z) + Math.PI;
   flyTo(camPos, yaw, 0.0, 1.6, () => {
     openRoomPanel(pav.room);
@@ -609,7 +769,7 @@ function enterRoom(roomId) {
 function backToSquare() {
   mode = 'square';
   $('roomPanel').classList.remove('open');
-  const p = new THREE.Vector3(0, 1.8, 7.5);
+  const p = new THREE.Vector3(0, 1.8, 9);
   flyTo(p, Math.PI, 0.02, 1.4);
   $('hint').style.opacity = '1';
 }
@@ -619,13 +779,13 @@ function overviewFlight() {
   mode = 'square';
   $('roomPanel').classList.remove('open');
   closeDrawer();
-  flyTo(new THREE.Vector3(0, 10, 20), Math.PI, -0.42, 1.8, () => {
+  flyTo(new THREE.Vector3(0, 11, 21), Math.PI, -0.42, 1.8, () => {
     clearRoomNotifs('square');
   });
 }
 
 function openRoomPanel(room) {
-  $('roomOwner').textContent = room.mine ? '⭐ הביתן שלך' : `הביתן של ${room.owner}`;
+  $('roomOwner').textContent = room.mine ? '⭐ תא הדיון שלך' : `תא הדיון של ${room.owner}`;
   $('roomTitle').textContent = room.proposal;
   $('roomSupport').style.width = room.support + '%';
   $('roomSupportPct').textContent = room.support + '%';
@@ -657,12 +817,12 @@ function refreshBadges() {
   const list = $('notifList');
   list.innerHTML = '';
   if (!total) {
-    list.innerHTML = '<div class="empty">הכול נקרא — הכיכר שקטה 🌙</div>';
+    list.innerHTML = '<div class="empty">הכול נקרא — ההיכל שקט 🌌</div>';
     return;
   }
   notifications.forEach(n => {
     const li = document.createElement('li');
-    li.innerHTML = `<span class="ico">${n.ico}</span><div>${n.text}<time>${n.time || ''}</time></div><span class="go">${n.roomId === 'square' ? 'למבט־על ←' : 'לביתן ←'}</span>`;
+    li.innerHTML = `<span class="ico">${n.ico}</span><div>${n.text}<time>${n.time || ''}</time></div><span class="go">${n.roomId === 'square' ? 'למבט־על ←' : 'לתא ←'}</span>`;
     li.onclick = () => n.roomId === 'square' ? overviewFlight() : enterRoom(n.roomId);
     list.appendChild(li);
   });
@@ -687,10 +847,10 @@ function toast(msg, ms = 3800) {
 }
 
 ['btnImprove', 'btnSupport', 'btnWatch'].forEach(id => {
-  $(id).onclick = () => toast('✨ באב־טיפוס זה רק הדגמה — במשחק האמיתי הפעולה תישלח לכיכר');
+  $(id).onclick = () => toast('✨ באב־טיפוס זה רק הדגמה — במשחק האמיתי הפעולה תישלח להיכל');
 });
 
-/* a live event lands while you're in the square — proves the loop */
+/* a live event lands while you're in the hall — proves the loop */
 setTimeout(() => {
   notifications.unshift({ roomId: 'r2', ico: '👁', text: 'ההצעה של קמיל עודכנה — נוסף סעיף חדש', time: 'עכשיו' });
   refreshBadges();
@@ -698,7 +858,7 @@ setTimeout(() => {
 }, 14000);
 
 refreshBadges();
-setTimeout(() => toast(`🔔 יש לך ${notifications.length} התראות — פתחו את הפעמון או חפשו את הפנסים הזוהרים`), 2200);
+setTimeout(() => toast(`🔔 יש לך ${notifications.length} התראות — פתחו את הפעמון או חפשו את התאים הזוהרים`), 2200);
 
 /* ================================================================
    MAIN LOOP
@@ -730,7 +890,8 @@ function tick() {
     if (keys.has('KeyA') || keys.has('ArrowLeft')) rig.pos.addScaledVector(rightv, -sp);
     if (keys.has('KeyD') || keys.has('ArrowRight')) rig.pos.addScaledVector(rightv, sp);
     const rr = Math.hypot(rig.pos.x, rig.pos.z);
-    if (rr > 26) { rig.pos.x *= 26 / rr; rig.pos.z *= 26 / rr; }
+    if (rr > 24) { rig.pos.x *= 24 / rr; rig.pos.z *= 24 / rr; }
+    if (rr < 5.4 && rr > 0.001) { rig.pos.x *= 5.4 / rr; rig.pos.z *= 5.4 / rr; }
     rig.pos.y = 1.7;
   }
 
@@ -740,36 +901,46 @@ function tick() {
   camera.rotateX(rig.pitch);
 
   /* ambient life */
-  heart.intensity = 58 + Math.sin(t * 2.3) * 6;
-  bigLantern.position.y = 7.6 + Math.sin(t * 1.1) * 0.12;
-  bigGlow.position.y = bigLantern.position.y;
-  bigGlow.material.opacity = 0.85 + Math.sin(t * 2.7) * 0.12;
+  coreLight.intensity = 56 + Math.sin(t * 2.1) * 8;
+  holoCol.rotation.y = t * 0.5;
+  holoCol2.rotation.y = -t * 0.8;
+  holoTex.offset.y = -t * 0.06;
+  coreRings.forEach((cr, i) => {
+    cr.rotation.x = Math.PI / 2 + Math.sin(t * 0.6 + i) * 0.28;
+    cr.rotation.y = t * (0.4 + i * 0.25);
+    cr.position.y = 5 + i * 0.4 + Math.sin(t * 1.4 + i * 2) * 0.15;
+  });
+  coreGem.rotation.y = t * 0.7;
+  coreGem.rotation.x = Math.sin(t * 0.5) * 0.3;
+  coreGem.position.y = 8.6 + Math.sin(t * 1.2) * 0.18;
+  coreGlow.position.y = coreGem.position.y;
   swirl.rotation.z = -t * 0.9;
   ring.rotation.z = t * 0.25;
-  portal.position.y = 3 + Math.sin(t * 0.8) * 0.15;
-  portalLight.position.y = portal.position.y;
 
-  risers.forEach(s => {
-    const u = s.userData;
-    const y = ((t * u.sp + u.y0) % 11);
-    s.position.set(Math.sin(u.a + t * 0.2) * u.r, 1.2 + y, Math.cos(u.a + t * 0.2) * u.r);
-    s.material.opacity = Math.min(1, y * 0.8) * Math.max(0, 1 - y / 11) * 1.6;
-  });
-
-  const fp = flies.geometry.attributes.position;
-  for (let i = 0; i < flyBase.length; i++) {
-    const p = flyBase[i];
-    fp.setY(i, p.y + Math.sin(t * p.sp + p.ph) * 0.5);
-    fp.setX(i, p.x + Math.sin(t * 0.3 + p.ph) * 0.6);
+  const rp = risePts.geometry.attributes.position;
+  for (let i = 0; i < riseN; i++) {
+    const d = riseData[i];
+    const y = (t * d.sp + d.y0) % 8;
+    rp.setXYZ(i, Math.sin(d.a + t * 0.7) * d.r, 1.4 + y, Math.cos(d.a + t * 0.7) * d.r);
   }
-  fp.needsUpdate = true;
+  rp.needsUpdate = true;
+
+  const dp = dust.geometry.attributes.position;
+  for (let i = 0; i < dustN; i++) {
+    const p = dustData[i];
+    dp.setY(i, p.y + Math.sin(t * p.sp + p.ph) * 0.4);
+    dp.setX(i, p.x + Math.sin(t * 0.12 + p.ph) * 0.8);
+  }
+  dp.needsUpdate = true;
 
   pavilions.forEach(pav => {
+    pav.holoScreen.position.y = 2.45 + Math.sin(t * 1.1 + pav.angle * 3) * 0.045;
+    pav.holoBit.rotation.y = t * 1.6;
+    pav.holoBit.position.y = 1.35 + Math.sin(t * 2 + pav.angle) * 0.08;
     if (pav.badge.userData.active) {
       const k = 1.6 + Math.sin(t * 3.4 + pav.angle * 5) * 0.22;
       pav.badge.scale.setScalar(k);
-      pav.badge.position.y = 6.6 + Math.sin(t * 1.8 + pav.angle) * 0.12;
-      pav.lantGlow.material.opacity = 0.9 + Math.sin(t * 4 + pav.angle) * 0.1;
+      pav.badge.position.y = 6.5 + Math.sin(t * 1.8 + pav.angle) * 0.12;
     } else {
       pav.badge.scale.setScalar(0.001);
     }
