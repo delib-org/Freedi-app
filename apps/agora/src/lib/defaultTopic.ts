@@ -219,7 +219,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.needsQuestion,
 				title: 'השאלה שמשנה הכל',
 				text: 'שמעתם את העמדות של שני הצדדים. עכשיו אתם פונים אליהם ושואלים את השאלה שמאחורי הוויכוח: "מה אתם בעצם צריכים?"',
-				imageUrls: [],
+				imageUrls: ['/scenes/needs-question.png'],
 				dialogue: [],
 			},
 			{
@@ -227,7 +227,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.needsA,
 				title: 'הרוזן נפתח',
 				text: 'הרוזן דה-לה-רוש שותק רגע ארוך. ואז, בקול שקט יותר, הוא עונה.',
-				imageUrls: [],
+				imageUrls: ['/scenes/needs-royalist.png'],
 				dialogue: [
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'אני צריך לדעת שמשפחתי לא תיפגע ושאחוזתי לא תישרף בידי המון זועם.' },
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'אני צריך שהעולם שגדלתי בו לא ייעלם בן לילה — שיישאר משהו מהמסורת שלנו.' },
@@ -239,7 +239,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.needsB,
 				title: 'קמיל נפתח',
 				text: 'קמיל דופון מניח את העיתון. לרגע הוא לא נואם — הוא פשוט מדבר.',
-				imageUrls: [],
+				imageUrls: ['/scenes/needs-jacobin.png'],
 				dialogue: [
 					{ speaker: 'קמיל דופון', line: 'אני צריך שלילדים שלנו יהיה לחם על השולחן — ביטחון קיומי בסיסי.' },
 					{ speaker: 'קמיל דופון', line: 'אני צריך שישמעו אותנו — שלעם יהיה קול אמיתי בהחלטות שמעצבות את חייו.' },

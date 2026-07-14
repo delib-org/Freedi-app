@@ -178,7 +178,7 @@ but sympathetic, a man speaking for the hungry. Warm gold lantern-glow. 16:9.
 ## 4 · Needs scenes — Act III "What do you actually need?"
 
 ### 4.1 The question that changes everything — scene `scene-needs-q`
-- **File:** `public/scenes/needs-question.png` — ⬜ **needed**
+- **File:** `public/scenes/needs-question.png` — ✅ **done**
 - **Where:** `needsQuestion`; the narrator turns to both sides.
 - **Prompt:**
 ```
@@ -190,7 +190,7 @@ question. Quiet, human, hopeful. 16:9.
 ```
 
 ### 4.2 The Count opens up — scene `scene-needs-a`
-- **File:** `public/scenes/needs-royalist.png` — ⬜ **needed**
+- **File:** `public/scenes/needs-royalist.png` — ✅ **done**
 - **Where:** `needsA`; the noble drops his guard.
 - **Prompt:**
 ```
@@ -201,7 +201,7 @@ family. Soft candlelight, shallow depth of field, warm gold key-light. 16:9.
 ```
 
 ### 4.3 Camille opens up — scene `scene-needs-b`
-- **File:** `public/scenes/needs-jacobin.png` — ⬜ **needed**
+- **File:** `public/scenes/needs-jacobin.png` — ✅ **done**
 - **Where:** `needsB`; the lawyer stops performing and just speaks.
 - **Prompt:**
 ```
@@ -304,9 +304,9 @@ night** (this is the one place the "Era of Lanterns" night palette leads).
 | 4 | Paris 1789 | `scenes/french-revolution-intro.png` | ✅ done |
 | 5 | Count's position | `scenes/perspective-royalist.png` | ⬜ needed |
 | 6 | Camille's position | `scenes/perspective-jacobin.png` | ⬜ needed |
-| 7 | Needs question | `scenes/needs-question.png` | ⬜ needed |
-| 8 | Count opens up | `scenes/needs-royalist.png` | ⬜ needed |
-| 9 | Camille opens up | `scenes/needs-jacobin.png` | ⬜ needed |
+| 7 | Needs question | `scenes/needs-question.png` | ✅ done |
+| 8 | Count opens up | `scenes/needs-royalist.png` | ✅ done |
+| 9 | Camille opens up | `scenes/needs-jacobin.png` | ✅ done |
 | 10 | Success ending | `scenes/ending-success.png` | ⬜ needed |
 | 11 | Honest-disagreement ending | `scenes/ending-honest-disagreement.png` | ⬜ needed |
 | 12 | Failure ending | `scenes/ending-failure.png` | ⬜ needed |
