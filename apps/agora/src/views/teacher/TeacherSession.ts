@@ -10,6 +10,7 @@ import {
 } from '../../lib/proposals';
 import { lanternsFromState } from '../Deliberation';
 import { Results } from '../Results';
+import { TeacherInstructions } from './TeacherInstructions';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { EraMap } from '../../components/EraMap';
@@ -211,6 +212,11 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				]);
 			}
 
+			// The instruction text students read for the current stage —
+			// projected so the teacher can read along and lead a discussion
+			const topic = getTopicPackage(session.topicPackageId);
+			if (!topic) loadTopicPackage(session.topicPackageId);
+
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					m(EraMap, {
@@ -219,6 +225,8 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					}),
 
 					classProgressCard(session.stage, participants, proposals),
+
+					topic ? m(TeacherInstructions, { stage: session.stage, topic }) : null,
 
 					// Students cycle propose→rate→help on their own; the teacher's
 					// deliberation panel just shows progress (no round buttons)

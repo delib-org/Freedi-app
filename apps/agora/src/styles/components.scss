@@ -1282,6 +1282,69 @@
 	}
 }
 
+// --- Teacher instructions: mirrors on the projector what students read ---
+.teacher-instructions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	.teacher__section-title {
+		margin: 0;
+	}
+
+	&__scenes {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	&__scene {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		padding: var(--space-md);
+	}
+
+	&__scene-title {
+		color: var(--lantern-glow);
+		margin: 0;
+	}
+
+	&__text {
+		color: var(--text-primary);
+		line-height: 1.6;
+		margin: 0;
+	}
+
+	&__dialogue {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__line {
+		background: var(--bg-card);
+		border-inline-start: 3px solid var(--lantern);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm) var(--space-md);
+	}
+
+	&__speaker {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+		margin-bottom: var(--space-xs);
+	}
+
+	&__quote {
+		color: var(--text-primary);
+		margin: 0;
+	}
+}
+
 // --- Scoreboard: both camps side by side + the bridge-power meter ---
 .scoreboard {
 	display: flex;
