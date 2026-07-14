@@ -8,19 +8,17 @@ import {
 	listenToDeliberation,
 	stopDeliberationListeners,
 } from '../../lib/proposals';
-import { lanternsFromState } from '../Deliberation';
 import { Results } from '../Results';
 import { TeacherInstructions } from './TeacherInstructions';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
-import { EraMap } from '../../components/EraMap';
 import { QRShare } from '../../components/QRShare';
 import { AgoraParticipant, AgoraStage } from '@freedi/shared-types';
 import { AgoraProposal } from '../../lib/proposals';
 
 /**
- * Teacher live panel — projector-friendly: join code + QR + the era map
- * filling with travelers, and the "open the time tunnel" control.
+ * Teacher live panel — projector-friendly: class progress, stage
+ * instructions, join code + QR, and the "open the time tunnel" control.
  */
 // valueIdentification removed from the flow (cognitive load) — enum kept
 // for legacy sessions; see fn_agoraAdvanceStage STAGE_ORDER
@@ -181,7 +179,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const inDeliberation = session.stage === AgoraStage.deliberation;
 			if (inDeliberation && userId) listenToDeliberation(sessionId, userId);
-			const { proposals, scores } = getDeliberationState();
+			const { proposals } = getDeliberationState();
 
 			// Results/ended: the teacher projects the same transformed map + score
 			if (session.stage === AgoraStage.results || session.stage === AgoraStage.ended) {
@@ -219,11 +217,6 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-					m(EraMap, {
-						participants,
-						lanterns: inDeliberation ? lanternsFromState(proposals, scores, userId) : [],
-					}),
-
 					classProgressCard(session.stage, participants, proposals),
 
 					topic ? m(TeacherInstructions, { stage: session.stage, topic }) : null,
