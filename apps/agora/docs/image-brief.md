@@ -216,7 +216,7 @@ lantern light, shallow depth of field, warm gold key-light. 16:9.
 ## 5 · Ending scenes
 
 ### 5.1 Success — scene `scene-success` ("הצלחתם!")
-- **File:** `public/scenes/ending-success.png` — ⬜ **needed**
+- **File:** `public/scenes/ending-success.png` — ✅ **done**
 - **Where:** `successEnding`; both camps accepted the solution.
 - **Prompt:**
 ```
@@ -227,7 +227,7 @@ Relief and hope. A radiant warm gold glow. 16:9.
 ```
 
 ### 5.2 Honest disagreement — scene `scene-honest-disagreement`
-- **File:** `public/scenes/ending-honest-disagreement.png` — ⬜ **needed**
+- **File:** `public/scenes/ending-honest-disagreement.png` — ✅ **done**
 - **Where:** `honestDisagreementEnding`; a dignified ending, not a defeat.
 - **Prompt:**
 ```
@@ -307,8 +307,8 @@ night** (this is the one place the "Era of Lanterns" night palette leads).
 | 7 | Needs question | `scenes/needs-question.png` | ✅ done |
 | 8 | Count opens up | `scenes/needs-royalist.png` | ✅ done |
 | 9 | Camille opens up | `scenes/needs-jacobin.png` | ✅ done |
-| 10 | Success ending | `scenes/ending-success.png` | ⬜ needed |
-| 11 | Honest-disagreement ending | `scenes/ending-honest-disagreement.png` | ⬜ needed |
+| 10 | Success ending | `scenes/ending-success.png` | ✅ done |
+| 11 | Honest-disagreement ending | `scenes/ending-honest-disagreement.png` | ✅ done |
 | 12 | Failure ending | `scenes/ending-failure.png` | ⬜ needed |
 | 13 | Count portrait | `scenes/char-royalist.png` | ⬜ needed |
 | 14 | Camille portrait | `scenes/char-jacobin.png` | ⬜ needed |

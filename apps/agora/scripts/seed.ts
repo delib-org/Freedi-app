@@ -220,7 +220,7 @@ const topicPackage = {
 			kind: 'successEnding',
 			title: 'הצלחתם!',
 			text: 'הפתרון שלכם התקבל על ידי שני המחנות. צרפת פוסעת בדרך חדשה — בלי טרור, בלי רעב. ההיסטוריה תזכור את נוסעי הזמן שהצילו את המהפכה מעצמה.',
-			imageUrls: [],
+			imageUrls: ['/scenes/ending-success.png'],
 			dialogue: [],
 		},
 		{
@@ -228,7 +228,7 @@ const topicPackage = {
 			kind: 'honestDisagreementEnding',
 			title: 'מחלוקת כנה — הישג בפני עצמו',
 			text: 'לא הצלתם את צרפת היום. אבל עשיתם משהו שצרפת של 1789 מעולם לא הצליחה לעשות — מצאתם בדיוק היכן חיה המחלוקת, והקשבתם זה לזה עד הסוף. מכאן מתחיל הניסיון הבא. מנהרת הזמן נשארת פתוחה.',
-			imageUrls: [],
+			imageUrls: ['/scenes/ending-honest-disagreement.png'],
 			dialogue: [],
 		},
 		{
