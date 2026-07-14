@@ -148,7 +148,7 @@ const topicPackage = {
 			title: 'מנהרת הזמן',
 			text: 'המנהרה נפתחת. אורות חולפים על פניכם — מאתיים שנה אחורה. כשהערפל מתפזר, אתם עומדים ברחובות פריז.',
 			videoUrl: '/scenes/time-tunnel.mp4',
-			imageUrls: [],
+			imageUrls: ['/scenes/time-tunnel.png'],
 			dialogue: [],
 		},
 		{

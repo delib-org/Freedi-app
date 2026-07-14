@@ -17,6 +17,11 @@ DALL·E, Ideogram, Firefly, etc.).
 Copy this verbatim — it is already embedded at the top of every prompt below.
 If you regenerate a single image, keep this block unchanged so it matches.
 
+> **Reference image:** the "kids at the portal watching it open onto 1789 Paris"
+> render is the visual "same style" contract — not a screen slot, not wired
+> anywhere. Kept locally as the look-and-feel anchor (loose images aren't tracked
+> in `docs/` per `.gitignore`).
+
 ```
 Cinematic, richly painterly digital illustration for a children's educational
 time-travel game. Semi-realistic, hand-painted feel — like a high-end animated
@@ -80,7 +85,9 @@ kids look up in wonder. Hopeful, cinematic, gold rim-light from the portal. 16:9
 ```
 
 ### 2.2 Time tunnel — scene `scene-tunnel` ("מנהרת הזמן")
-- **File:** `public/scenes/time-tunnel.mp4` — ✅ **done** *(8s Veo video, autoplays on the scene)*
+- **Files:** `public/scenes/time-tunnel.mp4` (video) + `public/scenes/time-tunnel.png`
+  (still) — ✅ **done**. The video autoplays; the still is its **poster** (instant
+  frame before playback + fallback), set as the scene's first `imageUrls` entry.
 - **Where:** pure spectacle between briefing and arrival; the "time travel machine" moment.
 - **Still-image prompt:**
 ```

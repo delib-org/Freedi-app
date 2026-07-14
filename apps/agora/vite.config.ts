@@ -52,9 +52,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Bundled scene artwork is loaded on demand when a student reaches the
-        // scene — cache it at runtime rather than bloating the install precache.
-        globIgnores: ['**/scenes/**'],
+        // Large illustrations (home hero + scene artwork) load on demand — cache
+        // them at runtime rather than bloating the install precache.
+        globIgnores: ['**/scenes/**', 'time-machine.png'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
@@ -65,8 +65,8 @@ export default defineConfig({
             },
           },
           {
-            // Bundled scene media (default topic artwork + video) from /scenes/
-            urlPattern: /\/scenes\/.*\.(?:png|jpe?g|webp|gif|mp4|webm|mov)$/i,
+            // Bundled illustrations: home hero + scene media (images + video)
+            urlPattern: /(?:\/scenes\/.*|\/time-machine)\.(?:png|jpe?g|webp|gif|mp4|webm|mov)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'agora-scene-cache',

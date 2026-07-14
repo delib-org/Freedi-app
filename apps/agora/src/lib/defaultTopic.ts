@@ -178,7 +178,8 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				title: 'מנהרת הזמן',
 				text: 'המנהרה נפתחת. אורות חולפים על פניכם — מאתיים שנה אחורה. כשהערפל מתפזר, אתם עומדים ברחובות פריז.',
 				videoUrl: '/scenes/time-tunnel.mp4',
-				imageUrls: [],
+				// still used as the video poster (instant frame before autoplay + fallback)
+				imageUrls: ['/scenes/time-tunnel.png'],
 				dialogue: [],
 			},
 			{

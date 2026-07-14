@@ -29,6 +29,10 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 			const hasVideo = Boolean(scene.videoUrl);
 			const hasDialogue = scene.dialogue.length > 0;
 			const allRevealed = !hasDialogue || revealed >= scene.dialogue.length;
+			// When a scene has a video, its first image is the video poster
+			// (instant frame + fallback) — the rest render as a gallery below.
+			const poster = hasVideo ? scene.imageUrls[0] : undefined;
+			const galleryImages = hasVideo ? scene.imageUrls.slice(1) : scene.imageUrls;
 
 			return m('.scene', [
 				m('h2.scene__title', scene.title),
@@ -36,6 +40,7 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 				hasVideo
 					? m('video.scene__video', {
 							src: scene.videoUrl,
+							poster,
 							autoplay: true,
 							controls: true,
 							playsinline: true,
@@ -43,10 +48,10 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 						})
 					: null,
 
-				scene.imageUrls.length > 0
+				galleryImages.length > 0
 					? m(
 							'.scene__images',
-							scene.imageUrls.map((url) => m('img.scene__image', { src: url, alt: '' })),
+							galleryImages.map((url) => m('img.scene__image', { src: url, alt: '' })),
 						)
 					: null,
 
