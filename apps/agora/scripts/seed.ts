@@ -139,7 +139,7 @@ const topicPackage = {
 			kind: 'intro',
 			title: 'המשימה',
 			text: 'צרפת, 1789. הממלכה על סף תהום. אתם — נוסעי הזמן — המשימה שלכם: למצוא פתרון שכל הצדדים יוכלו לחיות איתו.',
-			imageUrls: ['/scenes/french-revolution-intro.png'],
+			imageUrls: ['/scenes/time-machine-briefing.png'],
 			dialogue: [],
 		},
 		{
@@ -155,7 +155,7 @@ const topicPackage = {
 			kind: 'periodExplainer',
 			title: 'פריז, 1789',
 			text: 'המדינה שקועה בחובות אחרי מלחמות יקרות. הקציר נכשל ומחיר הלחם הכפיל את עצמו. האצולה והכנסייה פטורות ממס, והעם נושא בנטל. המלך לואי ה-16 כינס את אספת המעמדות — בפעם הראשונה מזה 175 שנה.',
-			imageUrls: [],
+			imageUrls: ['/scenes/french-revolution-intro.png'],
 			dialogue: [],
 		},
 		{

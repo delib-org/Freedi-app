@@ -19,6 +19,39 @@ export function defaultTopicPackageId(creatorId: string): string {
 	return `french-revolution-${creatorId}`;
 }
 
+/**
+ * Backfill the bundled default scene artwork into a package that was
+ * provisioned before the artwork existed. Only fills scenes that currently
+ * have NO media (empty imageUrls and no video) — never overwrites images or
+ * videos a teacher added. Returns the patched scenes, or null if nothing
+ * needed changing.
+ */
+export function backfillDefaultArtwork(
+	pkg: AgoraTopicPackage,
+): AgoraTopicPackage['scenes'] | null {
+	const defaults = buildDefaultFrenchRevolutionTopic(pkg.creatorId);
+	const defaultImagesBySceneId = new Map<string, string[]>();
+	for (const scene of defaults.scenes) {
+		if (scene.imageUrls.length > 0) {
+			defaultImagesBySceneId.set(scene.sceneId, scene.imageUrls);
+		}
+	}
+
+	let changed = false;
+	const scenes = pkg.scenes.map((scene) => {
+		const defaultImages = defaultImagesBySceneId.get(scene.sceneId);
+		if (defaultImages && scene.imageUrls.length === 0 && !scene.videoUrl) {
+			changed = true;
+
+			return { ...scene, imageUrls: [...defaultImages] };
+		}
+
+		return scene;
+	});
+
+	return changed ? scenes : null;
+}
+
 export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopicPackage {
 	const now = Date.now();
 
@@ -132,7 +165,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.intro,
 				title: 'המשימה',
 				text: 'צרפת, 1789. הממלכה על סף תהום. אתם — נוסעי הזמן — המשימה שלכם: למצוא פתרון שכל הצדדים יוכלו לחיות איתו.',
-				imageUrls: ['/scenes/french-revolution-intro.png'],
+				imageUrls: ['/scenes/time-machine-briefing.png'],
 				dialogue: [],
 			},
 			{
@@ -148,7 +181,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.periodExplainer,
 				title: 'פריז, 1789',
 				text: 'המדינה שקועה בחובות אחרי מלחמות יקרות. הקציר נכשל ומחיר הלחם הכפיל את עצמו. האצולה והכנסייה פטורות ממס, והעם נושא בנטל. המלך לואי ה-16 כינס את אספת המעמדות — בפעם הראשונה מזה 175 שנה.',
-				imageUrls: [],
+				imageUrls: ['/scenes/french-revolution-intro.png'],
 				dialogue: [],
 			},
 			{

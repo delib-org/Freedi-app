@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import { createSession } from '../../lib/callables';
-import { db, collection, query, where, getDocs, doc, setDoc } from '../../lib/firebase';
+import { db, collection, query, where, getDocs, doc, setDoc, updateDoc } from '../../lib/firebase';
 import {
 	Collections,
 	AgoraDeviceMode,
@@ -11,7 +11,7 @@ import {
 	AgoraTopicStatus,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
-import { buildDefaultFrenchRevolutionTopic } from '../../lib/defaultTopic';
+import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 
 export function TeacherHome(): m.Component {
@@ -37,6 +37,26 @@ export function TeacherHome(): m.Component {
 		}
 	}
 
+	/**
+	 * Heal packages provisioned before the bundled scene artwork existed:
+	 * backfill default images into scenes that still have no media. Runs
+	 * fire-and-forget so it never blocks the teacher home from rendering.
+	 */
+	async function healArtwork(pkg: AgoraTopicPackage): Promise<AgoraTopicPackage> {
+		const scenes = backfillDefaultArtwork(pkg);
+		if (!scenes) return pkg;
+		const patched = { ...pkg, scenes, lastUpdate: Date.now() };
+		try {
+			await updateDoc(doc(db, Collections.agoraTopicPackages, pkg.topicPackageId), { scenes });
+		} catch (error) {
+			console.error('[Teacher] Backfilling default artwork failed:', error);
+
+			return pkg;
+		}
+
+		return patched;
+	}
+
 	async function loadTopics(): Promise<void> {
 		try {
 			const user = await ensureUser();
@@ -46,7 +66,7 @@ export function TeacherHome(): m.Component {
 					where('creatorId', '==', user.uid),
 				),
 			);
-			const loaded: AgoraTopicPackage[] = [];
+			let loaded: AgoraTopicPackage[] = [];
 			snapshot.forEach((docSnap) => {
 				try {
 					loaded.push(parse(AgoraTopicPackageSchema, docSnap.data()));
@@ -54,6 +74,9 @@ export function TeacherHome(): m.Component {
 					console.error('[Teacher] Invalid topic package:', error);
 				}
 			});
+
+			// Heal any package still missing its default scene artwork.
+			loaded = await Promise.all(loaded.map((pkg) => healArtwork(pkg)));
 
 			// A teacher signing in for the first time has no topics of their own —
 			// give them the ready-to-run French Revolution game by default. Only
