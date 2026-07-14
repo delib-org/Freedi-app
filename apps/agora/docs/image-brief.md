@@ -238,7 +238,7 @@ them signaling "we can try again." Calm, respectful, bittersweet-hopeful. 16:9.
 ```
 
 ### 5.3 Failure (try again) — scene `scene-failure`
-- **File:** `public/scenes/ending-failure.png` — ⬜ **needed**
+- **File:** `public/scenes/ending-failure.png` — ✅ **done**
 - **Where:** `failureEnding`; the camps drifted apart — but time travel means retry.
 - **Prompt:**
 ```
@@ -309,7 +309,7 @@ night** (this is the one place the "Era of Lanterns" night palette leads).
 | 9 | Camille opens up | `scenes/needs-jacobin.png` | ✅ done |
 | 10 | Success ending | `scenes/ending-success.png` | ✅ done |
 | 11 | Honest-disagreement ending | `scenes/ending-honest-disagreement.png` | ✅ done |
-| 12 | Failure ending | `scenes/ending-failure.png` | ⬜ needed |
+| 12 | Failure ending | `scenes/ending-failure.png` | ✅ done |
 | 13 | Count portrait | `scenes/char-royalist.png` | ⬜ needed |
 | 14 | Camille portrait | `scenes/char-jacobin.png` | ⬜ needed |
 | 15–19 | EraMap artwork (optional) | — | ⬜ optional |

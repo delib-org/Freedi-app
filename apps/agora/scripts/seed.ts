@@ -236,7 +236,7 @@ const topicPackage = {
 			kind: 'failureEnding',
 			title: 'המשימה נכשלה... הפעם',
 			text: 'המחנות לא הצליחו להתקרב, והמהפכה גלשה לטרור. אבל מסע בזמן אפשר לנסות שוב — עכשיו אתם מבינים טוב יותר מה כל צד באמת צריך.',
-			imageUrls: [],
+			imageUrls: ['/scenes/ending-failure.png'],
 			dialogue: [],
 		},
 	],
