@@ -16,6 +16,7 @@ import {
 	sortParagraphChildren,
 } from '@/controllers/db/statements/paragraphChildren';
 import RichTextEditor from '@/view/components/richTextEditor/RichTextEditor';
+import { sanitizeInlineHtml } from '@/view/components/richTextEditor/editorSerialization';
 import { logError } from '@/utils/errorHandling';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 
@@ -65,6 +66,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 					content: p.content,
 					blockType: p.type,
 					...(p.listType !== undefined && { listType: p.listType }),
+					...(p.contentHtml !== undefined && { contentHtml: p.contentHtml }),
 					...(existingIds.has(p.paragraphId) && { statementId: p.paragraphId }),
 				}));
 				const ids = await replaceAllParagraphChildren(host, lines, paragraphs);
@@ -126,6 +128,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 
 			{paragraphs.map((p) => {
 				const blockType = p.blockType ?? ParagraphType.paragraph;
+				const contentHtml = p.doc?.contentHtml;
 
 				return (
 					<div
@@ -134,7 +137,14 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 					>
 						{renderTypedContent(
 							blockType,
-							<span className="statement-body__text">{p.statement ?? ''}</span>,
+							contentHtml ? (
+								<span
+									className="statement-body__text"
+									dangerouslySetInnerHTML={{ __html: sanitizeInlineHtml(contentHtml) }}
+								/>
+							) : (
+								<span className="statement-body__text">{p.statement ?? ''}</span>
+							),
 						)}
 					</div>
 				);

@@ -46,6 +46,20 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 	return (
 		<div className={styles.toolbar}>
 			<ToolbarButton
+				onClick={() => editor.chain().focus().toggleBold().run()}
+				isActive={editor.isActive('bold')}
+				title={t('Bold')}
+			>
+				<span className={styles.boldIcon}>B</span>
+			</ToolbarButton>
+			<ToolbarButton
+				onClick={() => editor.chain().focus().toggleItalic().run()}
+				isActive={editor.isActive('italic')}
+				title={t('Italic')}
+			>
+				<span className={styles.italicIcon}>I</span>
+			</ToolbarButton>
+			<ToolbarButton
 				onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
 				isActive={editor.isActive('heading')}
 				title={t('Heading')}

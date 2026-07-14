@@ -38,6 +38,15 @@
 }
 
 // Additional component-specific styles
+.boldIcon {
+	font-weight: 700;
+}
+
+.italicIcon {
+	font-style: italic;
+	font-family: serif;
+}
+
 .loading {
 	display: flex;
 	align-items: center;

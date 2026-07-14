@@ -239,6 +239,8 @@ export interface ReplaceParagraphLine {
 	content: string;
 	blockType?: ParagraphType;
 	listType?: ListType;
+	/** Inline-formatted content (<strong>/<em> only); `content` stays plain text. */
+	contentHtml?: string;
 	/** Keep this id for an existing paragraph so it survives the replace. */
 	statementId?: string;
 }
@@ -285,6 +287,7 @@ export async function replaceAllParagraphChildren(
 				order: index,
 				blockType: line.blockType,
 				...(line.listType !== undefined && { listType: line.listType }),
+				...(line.contentHtml !== undefined && { contentHtml: line.contentHtml }),
 				...(line.statementId && { statementId: line.statementId }),
 				...(args.isOfficial && { isOfficial: true }),
 			});
