@@ -67,3 +67,16 @@ export function moveParagraphChild(
 ): Promise<boolean> {
 	return shared.moveParagraphChild(paragraphDeps, paragraphId, direction, currentParagraphs);
 }
+
+/**
+ * Replace the entire body of `host` with `lines` (in order). Lines that carry
+ * a `statementId` keep that id; everything else is recreated. Returns the
+ * created paragraph ids, or undefined on failure.
+ */
+export function replaceAllParagraphChildren(
+	host: Statement,
+	lines: shared.ReplaceParagraphLine[],
+	existing?: Statement[],
+): Promise<string[] | undefined> {
+	return shared.replaceAllParagraphChildren(paragraphDeps, { host, lines, existing });
+}

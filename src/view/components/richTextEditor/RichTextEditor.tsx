@@ -7,6 +7,7 @@ import { generateParagraphId, sortParagraphs } from '@/utils/paragraphUtils';
 import EditorToolbar from './EditorToolbar';
 import styles from './RichTextEditor.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import clsx from 'clsx';
 
 interface RichTextEditorProps {
 	paragraphs: Paragraph[];
@@ -14,6 +15,7 @@ interface RichTextEditorProps {
 	onCancel: () => void;
 	placeholder?: string;
 	isLoading?: boolean;
+	compact?: boolean;
 }
 
 // TipTap node types for type safety
@@ -244,21 +246,34 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 	onCancel,
 	placeholder = 'Start typing...',
 	isLoading = false,
+	compact = false,
 }) => {
 	const { t } = useTranslation();
 
 	const editor = useEditor({
 		extensions: [
+			// Only headings and lists survive the Paragraph[] model — marks
+			// (bold, italic, links…) are stripped on save, so disable them
 			StarterKit.configure({
 				heading: {
 					levels: [1, 2, 3, 4, 5, 6],
 				},
+				bold: false,
+				italic: false,
+				strike: false,
+				code: false,
+				codeBlock: false,
+				blockquote: false,
+				horizontalRule: false,
+				link: false,
+				underline: false,
 			}),
 			Placeholder.configure({
 				placeholder,
 			}),
 		],
 		content: paragraphsToEditor(paragraphs),
+		autofocus: 'end',
 		editorProps: {
 			attributes: {
 				class: 'rich-text-editor__prose',
@@ -298,8 +313,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 		await onSave(mergedParagraphs);
 	}, [editor, onSave, paragraphs]);
 
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.key === 'Escape' && !isLoading) {
+				e.stopPropagation();
+				onCancel();
+			}
+		},
+		[isLoading, onCancel],
+	);
+
 	return (
-		<div className={styles.editor}>
+		<div className={clsx(styles.editor, compact && styles.editorCompact)} onKeyDown={handleKeyDown}>
 			<EditorToolbar editor={editor} />
 
 			<div className={styles.content}>

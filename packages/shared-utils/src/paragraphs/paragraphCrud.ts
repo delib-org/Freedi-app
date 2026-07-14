@@ -11,10 +11,7 @@
  * main app's callers do not change.
  */
 
-import {
-	createParagraphChildStatement,
-	ParagraphType,
-} from '@freedi/shared-types';
+import { createParagraphChildStatement, ParagraphType } from '@freedi/shared-types';
 import type { ListType, Statement } from '@freedi/shared-types';
 import type { ParagraphDeps } from './types';
 
@@ -241,6 +238,9 @@ export async function reorderParagraphChildren(
 export interface ReplaceParagraphLine {
 	content: string;
 	blockType?: ParagraphType;
+	listType?: ListType;
+	/** Keep this id for an existing paragraph so it survives the replace. */
+	statementId?: string;
 }
 
 /**
@@ -266,8 +266,13 @@ export async function replaceAllParagraphChildren(
 		const existing = args.existing ?? (await deps.store.getParagraphChildren(host.statementId));
 		const batch = deps.store.batch();
 
+		// Ids re-used by `lines` are overwritten by their set() below — deleting
+		// them too would put two writes on the same doc in one batch.
+		const keptIds = new Set(lines.map((line) => line.statementId).filter(Boolean));
 		for (const p of existing) {
-			batch.delete(p.statementId);
+			if (!keptIds.has(p.statementId)) {
+				batch.delete(p.statementId);
+			}
 		}
 
 		const ids: string[] = [];
@@ -279,6 +284,8 @@ export async function replaceAllParagraphChildren(
 				creatorId: creator.uid,
 				order: index,
 				blockType: line.blockType,
+				...(line.listType !== undefined && { listType: line.listType }),
+				...(line.statementId && { statementId: line.statementId }),
 				...(args.isOfficial && { isOfficial: true }),
 			});
 			if (stmt) {
