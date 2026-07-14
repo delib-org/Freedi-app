@@ -54,7 +54,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Large illustrations (home hero + scene artwork) load on demand — cache
         // them at runtime rather than bloating the install precache.
-        globIgnores: ['**/scenes/**', 'time-machine.png'],
+        globIgnores: ['**/scenes/**', 'time-machine.webp'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,

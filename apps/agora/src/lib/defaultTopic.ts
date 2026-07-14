@@ -105,7 +105,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				characterId: ROYALIST_ID,
 				name: 'הרוזן דה-לה-רוש',
 				role: 'אציל מלוכני',
-				portraitUrl: '/scenes/char-royalist.png',
+				portraitUrl: '/scenes/char-royalist.webp',
 				arguments: [
 					'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים.',
 					'המסורת והכנסייה מחזיקות את החברה יחד כבר אלף שנה.',
@@ -126,7 +126,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				characterId: JACOBIN_ID,
 				name: 'קמיל דופון',
 				role: 'עורך דין יעקוביני',
-				portraitUrl: '/scenes/char-jacobin.png',
+				portraitUrl: '/scenes/char-jacobin.webp',
 				arguments: [
 					'העם גווע ברעב בזמן שהארמון עורך נשפים. זה חייב להיגמר.',
 					'כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.',
@@ -203,7 +203,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.intro,
 				title: 'המשימה',
 				text: 'צרפת, 1789. הממלכה על סף תהום. אתם — נוסעי הזמן — המשימה שלכם: למצוא פתרון שכל הצדדים יוכלו לחיות איתו.',
-				imageUrls: ['/scenes/time-machine-briefing.png'],
+				imageUrls: ['/scenes/time-machine-briefing.webp'],
 				dialogue: [],
 			},
 			{
@@ -213,7 +213,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				text: 'המנהרה נפתחת. אורות חולפים על פניכם — מאתיים שנה אחורה. כשהערפל מתפזר, אתם עומדים ברחובות פריז.',
 				videoUrl: '/scenes/time-tunnel.mp4',
 				// still used as the video poster (instant frame before autoplay + fallback)
-				imageUrls: ['/scenes/time-tunnel.png'],
+				imageUrls: ['/scenes/time-tunnel.webp'],
 				dialogue: [],
 			},
 			{
@@ -221,7 +221,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.periodExplainer,
 				title: 'פריז, 1789',
 				text: 'המדינה שקועה בחובות אחרי מלחמות יקרות. הקציר נכשל ומחיר הלחם הכפיל את עצמו. האצולה והכנסייה פטורות ממס, והעם נושא בנטל. המלך לואי ה-16 כינס את אספת המעמדות — בפעם הראשונה מזה 175 שנה.',
-				imageUrls: ['/scenes/french-revolution-intro.png'],
+				imageUrls: ['/scenes/french-revolution-intro.webp'],
 				dialogue: [],
 			},
 			{
@@ -229,7 +229,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.perspectiveA,
 				title: 'בארמון',
 				text: 'הרוזן דה-לה-רוש מקבל אתכם בטרקלין מוזהב.',
-				imageUrls: ['/scenes/perspective-royalist.png'],
+				imageUrls: ['/scenes/perspective-royalist.webp'],
 				dialogue: [
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'ברוכים הבאים. שמעתי שבאתם מרחוק לעזור לצרפת.' },
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים. ראיתם מה קורה כשההמון משתלט על הרחוב?' },
@@ -241,7 +241,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.perspectiveB,
 				title: 'בבית הקפה',
 				text: 'קמיל דופון יושב בבית קפה הומה, מוקף בעיתונים ובכרוזים.',
-				imageUrls: ['/scenes/perspective-jacobin.png'],
+				imageUrls: ['/scenes/perspective-jacobin.webp'],
 				dialogue: [
 					{ speaker: 'קמיל דופון', line: 'שבו, שבו. תראו מה כתוב כאן — מחיר הלחם עלה שוב, והמלכה מזמינה תכשיטים.' },
 					{ speaker: 'קמיל דופון', line: 'העם גווע ברעב בזמן שהארמון עורך נשפים. כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.' },
@@ -253,7 +253,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.needsQuestion,
 				title: 'השאלה שמשנה הכל',
 				text: 'שמעתם את העמדות של שני הצדדים. עכשיו אתם פונים אליהם ושואלים את השאלה שמאחורי הוויכוח: "מה אתם בעצם צריכים?"',
-				imageUrls: ['/scenes/needs-question.png'],
+				imageUrls: ['/scenes/needs-question.webp'],
 				dialogue: [],
 			},
 			{
@@ -261,7 +261,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.needsA,
 				title: 'הרוזן נפתח',
 				text: 'הרוזן דה-לה-רוש שותק רגע ארוך. ואז, בקול שקט יותר, הוא עונה.',
-				imageUrls: ['/scenes/needs-royalist.png'],
+				imageUrls: ['/scenes/needs-royalist.webp'],
 				dialogue: [
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'אני צריך לדעת שמשפחתי לא תיפגע ושאחוזתי לא תישרף בידי המון זועם.' },
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'אני צריך שהעולם שגדלתי בו לא ייעלם בן לילה — שיישאר משהו מהמסורת שלנו.' },
@@ -273,7 +273,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.needsB,
 				title: 'קמיל נפתח',
 				text: 'קמיל דופון מניח את העיתון. לרגע הוא לא נואם — הוא פשוט מדבר.',
-				imageUrls: ['/scenes/needs-jacobin.png'],
+				imageUrls: ['/scenes/needs-jacobin.webp'],
 				dialogue: [
 					{ speaker: 'קמיל דופון', line: 'אני צריך שלילדים שלנו יהיה לחם על השולחן — ביטחון קיומי בסיסי.' },
 					{ speaker: 'קמיל דופון', line: 'אני צריך שישמעו אותנו — שלעם יהיה קול אמיתי בהחלטות שמעצבות את חייו.' },
@@ -285,7 +285,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.successEnding,
 				title: 'הצלחתם!',
 				text: 'הפתרון שלכם התקבל על ידי שני המחנות. צרפת פוסעת בדרך חדשה — בלי טרור, בלי רעב. ההיסטוריה תזכור את נוסעי הזמן שהצילו את המהפכה מעצמה.',
-				imageUrls: ['/scenes/ending-success.png'],
+				imageUrls: ['/scenes/ending-success.webp'],
 				dialogue: [],
 			},
 			{
@@ -293,7 +293,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.honestDisagreementEnding,
 				title: 'מחלוקת כנה — הישג בפני עצמו',
 				text: 'לא הצלתם את צרפת היום. אבל עשיתם משהו שצרפת של 1789 מעולם לא הצליחה לעשות — מצאתם בדיוק היכן חיה המחלוקת, והקשבתם זה לזה עד הסוף. מכאן מתחיל הניסיון הבא. מנהרת הזמן נשארת פתוחה.',
-				imageUrls: ['/scenes/ending-honest-disagreement.png'],
+				imageUrls: ['/scenes/ending-honest-disagreement.webp'],
 				dialogue: [],
 			},
 			{
@@ -301,14 +301,14 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.failureEnding,
 				title: 'המשימה נכשלה... הפעם',
 				text: 'המחנות לא הצליחו להתקרב, והמהפכה גלשה לטרור. אבל מסע בזמן אפשר לנסות שוב — עכשיו אתם מבינים טוב יותר מה כל צד באמת צריך.',
-				imageUrls: ['/scenes/ending-failure.png'],
+				imageUrls: ['/scenes/ending-failure.webp'],
 				dialogue: [],
 			},
 		],
 		// The deliberation stage's "location" art — the town square (agora)
 		// where the class gathers to propose. Rendered as the delib banner.
 		artwork: {
-			locationVignetteUrls: { square: '/scenes/deliberation-square.png' },
+			locationVignetteUrls: { square: '/scenes/deliberation-square.webp' },
 		},
 		createdAt: now,
 		lastUpdate: now,

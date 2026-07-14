@@ -57,7 +57,7 @@ centered with headroom so nothing important is lost to the crop.
 ## 1 · App screens
 
 ### 1.1 Home hero — student landing `/`
-- **File:** `public/time-machine.png` — ✅ **done**
+- **File:** `public/time-machine.webp` — ✅ **done**
 - **Where:** `Home.ts` `.home-hero__image`, top of the join screen.
 - **Prompt:**
 ```
@@ -69,7 +69,7 @@ step through. Warm gold light spills from the portal rim. 16:9.
 ```
 
 ### 1.2 Deliberation banner — the town square (agora)
-- **File:** `public/scenes/deliberation-square.png` — ⬜ **needed**
+- **File:** `public/scenes/deliberation-square.webp` — ⬜ **needed**
 - **Where:** the header banner across the deliberation stage (all sub-screens:
   my proposal, rate, help). Data slot: `artwork.locationVignetteUrls.square`
   (teacher-editable). Renders wide/short — a panoramic composition works best;
@@ -88,7 +88,7 @@ no violence. Composition leaves the center open. Wide 16:9 (or wider) panorama.
 ## 2 · Framing scenes — Act I "Through the Tunnel"
 
 ### 2.1 Mission brief — scene `scene-intro` ("המשימה")
-- **File:** `public/scenes/time-machine-briefing.png` — ✅ **done**
+- **File:** `public/scenes/time-machine-briefing.webp` — ✅ **done**
 - **Where:** first scene students see; the briefing.
 - **Prompt:**
 ```
@@ -100,7 +100,7 @@ kids look up in wonder. Hopeful, cinematic, gold rim-light from the portal. 16:9
 ```
 
 ### 2.2 Time tunnel — scene `scene-tunnel` ("מנהרת הזמן")
-- **Files:** `public/scenes/time-tunnel.mp4` (video) + `public/scenes/time-tunnel.png`
+- **Files:** `public/scenes/time-tunnel.mp4` (video) + `public/scenes/time-tunnel.webp`
   (still) — ✅ **done**. The video autoplays; the still is its **poster** (instant
   frame before playback + fallback), set as the scene's first `imageUrls` entry.
 - **Where:** pure spectacle between briefing and arrival; the "time travel machine" moment.
@@ -115,7 +115,7 @@ No people. 16:9.
 
 #### 🎬 Gemini / Veo video prompt (image-to-video, 8 seconds)
 
-Start frame: `time-machine-briefing.png` (the students at the CHRONOS portal).
+Start frame: `time-machine-briefing.webp` (the students at the CHRONOS portal).
 Upload that image, set 16:9, 8s, then paste:
 
 ```
@@ -150,7 +150,7 @@ No text, no words, no logos, no watermarks, no modern objects.
 > the portal in the first line.
 
 ### 2.3 The world you must understand — scene `scene-period` ("פריז, 1789")
-- **File:** `public/scenes/french-revolution-intro.png` — ✅ **done**
+- **File:** `public/scenes/french-revolution-intro.webp` — ✅ **done**
 - **Where:** the period explainer; arrival in revolutionary Paris.
 - **Prompt:**
 ```
@@ -166,7 +166,7 @@ through the clouds. 16:9.
 ## 3 · Perspective scenes — Act II "Two Sides, One Country"
 
 ### 3.1 The Count's position — scene `scene-royalist` ("בארמון")
-- **File:** `public/scenes/perspective-royalist.png` — ✅ **done**
+- **File:** `public/scenes/perspective-royalist.webp` — ✅ **done**
 - **Where:** `perspectiveA`; the royalist noble presents his case.
 - **Prompt:**
 ```
@@ -178,7 +178,7 @@ loves. Warm gold candle-glow. 16:9.
 ```
 
 ### 3.2 Camille's position — scene `scene-jacobin` ("בבית הקפה")
-- **File:** `public/scenes/perspective-jacobin.png` — ✅ **done**
+- **File:** `public/scenes/perspective-jacobin.webp` — ✅ **done**
 - **Where:** `perspectiveB`; the Jacobin lawyer presents his case.
 - **Prompt:**
 ```
@@ -193,7 +193,7 @@ but sympathetic, a man speaking for the hungry. Warm gold lantern-glow. 16:9.
 ## 4 · Needs scenes — Act III "What do you actually need?"
 
 ### 4.1 The question that changes everything — scene `scene-needs-q`
-- **File:** `public/scenes/needs-question.png` — ✅ **done**
+- **File:** `public/scenes/needs-question.webp` — ✅ **done**
 - **Where:** `needsQuestion`; the narrator turns to both sides.
 - **Prompt:**
 ```
@@ -205,7 +205,7 @@ question. Quiet, human, hopeful. 16:9.
 ```
 
 ### 4.2 The Count opens up — scene `scene-needs-a`
-- **File:** `public/scenes/needs-royalist.png` — ✅ **done**
+- **File:** `public/scenes/needs-royalist.webp` — ✅ **done**
 - **Where:** `needsA`; the noble drops his guard.
 - **Prompt:**
 ```
@@ -216,7 +216,7 @@ family. Soft candlelight, shallow depth of field, warm gold key-light. 16:9.
 ```
 
 ### 4.3 Camille opens up — scene `scene-needs-b`
-- **File:** `public/scenes/needs-jacobin.png` — ✅ **done**
+- **File:** `public/scenes/needs-jacobin.webp` — ✅ **done**
 - **Where:** `needsB`; the lawyer stops performing and just speaks.
 - **Prompt:**
 ```
@@ -231,7 +231,7 @@ lantern light, shallow depth of field, warm gold key-light. 16:9.
 ## 5 · Ending scenes
 
 ### 5.1 Success — scene `scene-success` ("הצלחתם!")
-- **File:** `public/scenes/ending-success.png` — ✅ **done**
+- **File:** `public/scenes/ending-success.webp` — ✅ **done**
 - **Where:** `successEnding`; both camps accepted the solution.
 - **Prompt:**
 ```
@@ -242,7 +242,7 @@ Relief and hope. A radiant warm gold glow. 16:9.
 ```
 
 ### 5.2 Honest disagreement — scene `scene-honest-disagreement`
-- **File:** `public/scenes/ending-honest-disagreement.png` — ✅ **done**
+- **File:** `public/scenes/ending-honest-disagreement.webp` — ✅ **done**
 - **Where:** `honestDisagreementEnding`; a dignified ending, not a defeat.
 - **Prompt:**
 ```
@@ -253,7 +253,7 @@ them signaling "we can try again." Calm, respectful, bittersweet-hopeful. 16:9.
 ```
 
 ### 5.3 Failure (try again) — scene `scene-failure`
-- **File:** `public/scenes/ending-failure.png` — ✅ **done**
+- **File:** `public/scenes/ending-failure.webp` — ✅ **done**
 - **Where:** `failureEnding`; the camps drifted apart — but time travel means retry.
 - **Prompt:**
 ```
@@ -271,7 +271,7 @@ Small circular avatars in the needs board and the deliberation feedback cards.
 Head-and-shoulders, centered, plain painterly background.
 
 ### 6.1 The Count — `char-royalist` (`portraitUrl`)
-- **File:** `public/scenes/char-royalist.png` — ✅ **done**
+- **File:** `public/scenes/char-royalist.webp` — ✅ **done**
 - **Prompt:**
 ```
 [STYLE CAPSULE] Era mode, portrait. Square head-and-shoulders portrait of a
@@ -281,7 +281,7 @@ background. Warm gold rim-light. Centered with headroom for a circular crop. 1:1
 ```
 
 ### 6.2 Camille — `char-jacobin` (`portraitUrl`)
-- **File:** `public/scenes/char-jacobin.png` — ✅ **done**
+- **File:** `public/scenes/char-jacobin.webp` — ✅ **done**
 - **Prompt:**
 ```
 [STYLE CAPSULE] Era mode, portrait. Square head-and-shoulders portrait of a young
@@ -313,20 +313,20 @@ night** (this is the one place the "Era of Lanterns" night palette leads).
 
 | # | Image | File | Status |
 |---|---|---|---|
-| 1 | Home hero | `time-machine.png` | ✅ done |
-| 2 | Mission brief | `scenes/time-machine-briefing.png` | ✅ done |
+| 1 | Home hero | `time-machine.webp` | ✅ done |
+| 2 | Mission brief | `scenes/time-machine-briefing.webp` | ✅ done |
 | 3 | Time tunnel (video) | `scenes/time-tunnel.mp4` | ✅ done |
-| 4 | Paris 1789 | `scenes/french-revolution-intro.png` | ✅ done |
-| 5 | Count's position | `scenes/perspective-royalist.png` | ✅ done |
-| 6 | Camille's position | `scenes/perspective-jacobin.png` | ✅ done |
-| 7 | Needs question | `scenes/needs-question.png` | ✅ done |
-| 8 | Count opens up | `scenes/needs-royalist.png` | ✅ done |
-| 9 | Camille opens up | `scenes/needs-jacobin.png` | ✅ done |
-| 10 | Success ending | `scenes/ending-success.png` | ✅ done |
-| 11 | Honest-disagreement ending | `scenes/ending-honest-disagreement.png` | ✅ done |
-| 12 | Failure ending | `scenes/ending-failure.png` | ✅ done |
-| 13 | Count portrait | `scenes/char-royalist.png` | ✅ done |
-| 14 | Camille portrait | `scenes/char-jacobin.png` | ✅ done |
+| 4 | Paris 1789 | `scenes/french-revolution-intro.webp` | ✅ done |
+| 5 | Count's position | `scenes/perspective-royalist.webp` | ✅ done |
+| 6 | Camille's position | `scenes/perspective-jacobin.webp` | ✅ done |
+| 7 | Needs question | `scenes/needs-question.webp` | ✅ done |
+| 8 | Count opens up | `scenes/needs-royalist.webp` | ✅ done |
+| 9 | Camille opens up | `scenes/needs-jacobin.webp` | ✅ done |
+| 10 | Success ending | `scenes/ending-success.webp` | ✅ done |
+| 11 | Honest-disagreement ending | `scenes/ending-honest-disagreement.webp` | ✅ done |
+| 12 | Failure ending | `scenes/ending-failure.webp` | ✅ done |
+| 13 | Count portrait | `scenes/char-royalist.webp` | ✅ done |
+| 14 | Camille portrait | `scenes/char-jacobin.webp` | ✅ done |
 | 15–19 | EraMap artwork (optional) | — | ⬜ optional |
 
 **10 scene/portrait images + 1 optional map set to complete the set.** When you

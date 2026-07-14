@@ -26,7 +26,7 @@ export function Home(): m.Component {
 				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-xl)' } }, [
 					m('.home-hero', [
 						m('img.home-hero__image', {
-							src: '/time-machine.png',
+							src: '/time-machine.webp',
 							alt: t('home.hero_alt'),
 						}),
 						m('h1.home-hero__title', 'Agora'),
