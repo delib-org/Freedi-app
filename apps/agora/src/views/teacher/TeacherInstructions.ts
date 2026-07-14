@@ -19,10 +19,26 @@ const STAGE_SCENE_KINDS: Partial<Record<AgoraStage, AgoraSceneKind[]>> = {
 	[AgoraStage.needs]: [AgoraSceneKind.needsQuestion, AgoraSceneKind.needsA, AgoraSceneKind.needsB],
 };
 
-/** One scene rendered read-only: title, narration text, and all dialogue lines */
+/** One scene rendered read-only: the same media, title, text and dialogue students see */
 function sceneCard(scene: AgoraScene): m.Children {
 	return m('.teacher-instructions__scene', { key: scene.sceneId }, [
 		m('h4.teacher-instructions__scene-title', scene.title),
+		scene.videoUrl
+			? m('video.teacher-instructions__video', {
+					src: scene.videoUrl,
+					controls: true,
+					playsinline: true,
+					preload: 'metadata',
+				})
+			: null,
+		scene.imageUrls.length > 0
+			? m(
+					'.teacher-instructions__images',
+					scene.imageUrls.map((url, index) =>
+						m('img.teacher-instructions__image', { key: index, src: url, alt: '' }),
+					),
+				)
+			: null,
 		scene.text ? m('p.teacher-instructions__text', scene.text) : null,
 		scene.dialogue.length > 0
 			? m(

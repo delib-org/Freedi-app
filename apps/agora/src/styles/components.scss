@@ -1313,6 +1313,23 @@
 		margin: 0;
 	}
 
+	&__video {
+		width: 100%;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-subtle);
+	}
+
+	&__images {
+		display: flex;
+		gap: var(--space-sm);
+		overflow-x: auto;
+	}
+
+	&__image {
+		max-width: 100%;
+		border-radius: var(--radius-md);
+	}
+
 	&__text {
 		color: var(--text-primary);
 		line-height: 1.6;
