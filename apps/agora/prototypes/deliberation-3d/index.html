@@ -21,8 +21,8 @@
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; overflow: hidden; background: var(--space); }
-  body { font-family: 'Heebo', system-ui, sans-serif; color: var(--text); }
-  #scene { position: fixed; inset: 0; display: block; cursor: grab; }
+  body { font-family: 'Heebo', system-ui, sans-serif; color: var(--text); overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+  #scene { position: fixed; inset: 0; display: block; cursor: grab; touch-action: none; }
   #scene.dragging { cursor: grabbing; }
 
   /* ---------- HUD chrome ---------- */
@@ -149,6 +149,38 @@
   }
   #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- virtual joystick (touch devices) ---------- */
+  #stick {
+    position: fixed; z-index: 10;
+    bottom: calc(24px + env(safe-area-inset-bottom)); left: 22px;
+    width: 112px; height: 112px; border-radius: 50%;
+    background: rgba(8,14,32,.35); border: 1px solid rgba(111,215,255,.35);
+    backdrop-filter: blur(6px);
+    display: none; touch-action: none;
+    box-shadow: inset 0 0 20px rgba(111,215,255,.12);
+  }
+  #stickKnob {
+    position: absolute; left: 50%; top: 50%;
+    width: 50px; height: 50px; border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at 35% 30%, rgba(210,240,255,.95), rgba(111,215,255,.55));
+    box-shadow: 0 0 16px rgba(111,215,255,.55);
+    pointer-events: none;
+  }
+  #stick.hidden { display: none !important; }
+  @media (pointer: coarse) { #stick { display: block; } }
+
+  /* ---------- small screens ---------- */
+  @media (max-width: 520px) {
+    .brand h1 { font-size: .92rem; }
+    .brand small { font-size: .58rem; letter-spacing: .06em; }
+    #bell { padding: 8px 12px; font-size: .8rem; }
+    #hint { font-size: .68rem; padding: 7px 12px; max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+    #roomPanel .sheet { padding: 12px 14px 14px; }
+    #roomPanel h2 { font-size: 1rem; }
+    .actions button { min-width: 40%; font-size: .8rem; padding: 9px 8px; }
+  }
+
   /* ---------- intro vignette ---------- */
   #veil { position: fixed; inset: 0; z-index: 30; background: var(--space); pointer-events: none; transition: opacity 1.6s ease .2s; }
   #veil.gone { opacity: 0; }
@@ -196,6 +228,7 @@
 
 <div class="hud" id="hint">גררו כדי להביט סביב · WASD לתנועה · לחצו על תא דיון כדי להיכנס</div>
 <div class="hud" id="toast"></div>
+<div id="stick"><div id="stickKnob"></div></div>
 
 <script type="importmap">
 {
@@ -237,9 +270,10 @@ let notifications = [
 /* ================================================================
    RENDERER / SCENE / CAMERA
    ================================================================ */
+const isTouch = matchMedia('(pointer: coarse)').matches;
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, isTouch ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.06;
@@ -253,6 +287,12 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 400);
+function updateProjection() {
+  camera.aspect = innerWidth / innerHeight;
+  camera.fov = camera.aspect < 0.9 ? 78 : 62;   /* wider in portrait so pods stay in view */
+  camera.updateProjectionMatrix();
+}
+updateProjection();
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
@@ -308,8 +348,8 @@ const shaftTex = makeCanvas(64, 256, (g, w, h) => {
 const HALL_R = 30;
 const mirror = new Reflector(new THREE.CircleGeometry(HALL_R, 72), {
   clipBias: 0.003,
-  textureWidth: Math.floor(innerWidth * Math.min(devicePixelRatio, 1.5)),
-  textureHeight: Math.floor(innerHeight * Math.min(devicePixelRatio, 1.5)),
+  textureWidth: isTouch ? 640 : Math.floor(innerWidth * Math.min(devicePixelRatio, 1.5)),
+  textureHeight: isTouch ? 640 : Math.floor(innerHeight * Math.min(devicePixelRatio, 1.5)),
   color: 0x929eb8,
 });
 mirror.rotation.x = -Math.PI / 2;
@@ -502,7 +542,7 @@ const risePts = new THREE.Points(riseGeo, new THREE.PointsMaterial({ color: 0xbf
 scene.add(risePts);
 
 /* dust motes drifting through the hall (realism) */
-const dustN = 320;
+const dustN = isTouch ? 160 : 320;
 const dustGeo = new THREE.BufferGeometry();
 const dustData = Array.from({ length: dustN }, () => {
   const a = Math.random() * Math.PI * 2, r = 2 + Math.random() * 26;
@@ -721,10 +761,16 @@ const keys = new Set();
 addEventListener('keydown', e => keys.add(e.code));
 addEventListener('keyup', e => keys.delete(e.code));
 
-let dragging = false, moved = 0, lx = 0, ly = 0;
-canvas.addEventListener('pointerdown', e => { dragging = true; moved = 0; lx = e.clientX; ly = e.clientY; canvas.classList.add('dragging'); try { canvas.setPointerCapture(e.pointerId); } catch {} });
+/* look-drag bound to a single pointer so a second finger (joystick) never fights it */
+let dragId = null, moved = 0, lx = 0, ly = 0;
+canvas.addEventListener('pointerdown', e => {
+  if (dragId !== null) return;
+  dragId = e.pointerId; moved = 0; lx = e.clientX; ly = e.clientY;
+  canvas.classList.add('dragging');
+  try { canvas.setPointerCapture(e.pointerId); } catch {}
+});
 canvas.addEventListener('pointermove', e => {
-  if (!dragging) return;
+  if (e.pointerId !== dragId) return;
   const dx = e.clientX - lx, dy = e.clientY - ly;
   moved += Math.abs(dx) + Math.abs(dy);
   lx = e.clientX; ly = e.clientY;
@@ -732,10 +778,36 @@ canvas.addEventListener('pointermove', e => {
   rig.yaw -= dx * 0.0042;
   rig.pitch = THREE.MathUtils.clamp(rig.pitch - dy * 0.0035, -0.7, 0.6);
 });
-canvas.addEventListener('pointerup', e => {
-  dragging = false; canvas.classList.remove('dragging');
-  if (moved < 7) handleClick(e);
+const endDrag = e => {
+  if (e.pointerId !== dragId) return;
+  dragId = null; canvas.classList.remove('dragging');
+  if (e.type === 'pointerup' && moved < 9) handleClick(e);
+};
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+/* virtual joystick — walking on touch devices */
+const joy = { x: 0, y: 0, id: null };
+const stick = document.getElementById('stick');
+const knob = document.getElementById('stickKnob');
+function setKnob(dx, dy) { knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; }
+function joyMove(e) {
+  const r = stick.getBoundingClientRect();
+  let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  const m = Math.hypot(dx, dy), max = 42;
+  if (m > max) { dx *= max / m; dy *= max / m; }
+  joy.x = dx / max; joy.y = dy / max;
+  setKnob(dx, dy);
+}
+stick.addEventListener('pointerdown', e => {
+  joy.id = e.pointerId;
+  try { stick.setPointerCapture(e.pointerId); } catch {}
+  joyMove(e);
 });
+stick.addEventListener('pointermove', e => { if (e.pointerId === joy.id) joyMove(e); });
+const joyEnd = e => { if (e.pointerId !== joy.id) return; joy.id = null; joy.x = joy.y = 0; setKnob(0, 0); };
+stick.addEventListener('pointerup', joyEnd);
+stick.addEventListener('pointercancel', joyEnd);
 
 const ray = new THREE.Raycaster();
 function handleClick(e) {
@@ -764,14 +836,16 @@ function enterRoom(roomId) {
     clearRoomNotifs(roomId);
   });
   $('hint').style.opacity = '0';
+  $('stick').classList.add('hidden');
 }
 
 function backToSquare() {
   mode = 'square';
   $('roomPanel').classList.remove('open');
   const p = new THREE.Vector3(0, 1.8, 9);
-  flyTo(p, Math.PI, 0.02, 1.4);
+  flyTo(p, 0, 0.02, 1.4);   /* yaw 0 at +Z faces the core */
   $('hint').style.opacity = '1';
+  $('stick').classList.remove('hidden');
 }
 $('btnBack').onclick = backToSquare;
 
@@ -779,9 +853,10 @@ function overviewFlight() {
   mode = 'square';
   $('roomPanel').classList.remove('open');
   closeDrawer();
-  flyTo(new THREE.Vector3(0, 11, 21), Math.PI, -0.42, 1.8, () => {
+  flyTo(new THREE.Vector3(0, 11, 21), 0, -0.42, 1.8, () => {
     clearRoomNotifs('square');
   });
+  $('stick').classList.remove('hidden');
 }
 
 function openRoomPanel(room) {
@@ -858,6 +933,7 @@ setTimeout(() => {
 }, 14000);
 
 refreshBadges();
+if (isTouch) $('hint').textContent = 'גררו כדי להביט סביב · הג׳ויסטיק מזיז · הקישו על תא דיון כדי להיכנס';
 setTimeout(() => toast(`🔔 יש לך ${notifications.length} התראות — פתחו את הפעמון או חפשו את התאים הזוהרים`), 2200);
 
 /* ================================================================
@@ -889,6 +965,10 @@ function tick() {
     if (keys.has('KeyS') || keys.has('ArrowDown')) rig.pos.addScaledVector(fwd, -sp);
     if (keys.has('KeyA') || keys.has('ArrowLeft')) rig.pos.addScaledVector(rightv, -sp);
     if (keys.has('KeyD') || keys.has('ArrowRight')) rig.pos.addScaledVector(rightv, sp);
+    if (joy.id !== null) {
+      rig.pos.addScaledVector(fwd, -joy.y * 6 * dt);
+      rig.pos.addScaledVector(rightv, joy.x * 6 * dt);
+    }
     const rr = Math.hypot(rig.pos.x, rig.pos.z);
     if (rr > 24) { rig.pos.x *= 24 / rr; rig.pos.z *= 24 / rr; }
     if (rr < 5.4 && rr > 0.001) { rig.pos.x *= 5.4 / rr; rig.pos.z *= 5.4 / rr; }
@@ -951,8 +1031,7 @@ function tick() {
 tick();
 
 addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
+  updateProjection();
   renderer.setSize(innerWidth, innerHeight);
   composer.setSize(innerWidth, innerHeight);
 });
