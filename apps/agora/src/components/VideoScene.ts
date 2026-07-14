@@ -35,8 +35,6 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 
 				hasVideo
 					? m('video.scene__video', {
-							// key so the element is recreated per scene — restarts autoplay
-							key: `video-${scene.sceneId}`,
 							src: scene.videoUrl,
 							autoplay: true,
 							controls: true,
