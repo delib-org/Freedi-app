@@ -219,6 +219,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 	}
 
 	function classHero(
+		topic: AgoraTopicPackage,
 		classMax: number,
 		threshold: number,
 		step: ScoreHudStep,
@@ -229,18 +230,27 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 		const recordNow = Date.now() < recordUntil;
 
 		return m('.scorehud__class', [
-			m('.scorehud__class-head', [
-				m(
-					'span.scorehud__class-label',
-					recordNow ? `✨ ${t('hud.record_broken')}` : t('hud.class_label'),
-				),
-				m(
-					'span.scorehud__class-value',
-					{ 'aria-label': t('hud.class_aria', { score: classMax, goal: threshold }) },
-					hasScores
-						? [String(state.shown), m('span.scorehud__class-max', '/100'), deltaChip(state)]
-						: m('span.scorehud__class-dash', { 'aria-label': t('hud.class_empty_dash_aria') }, '—'),
-				),
+			// The stadium header: camp banner ribbons flanking the score plate
+			m('.scorehud__header', [
+				m('span.scorehud__banner.scorehud__banner--left', topic.positioningScale.leftLabel),
+				m('.scorehud__plate', [
+					m(
+						'span.scorehud__class-label',
+						recordNow ? `✨ ${t('hud.record_broken')}` : t('hud.class_label'),
+					),
+					m(
+						'span.scorehud__class-value',
+						{ 'aria-label': t('hud.class_aria', { score: classMax, goal: threshold }) },
+						hasScores
+							? [String(state.shown), m('span.scorehud__class-max', '/100'), deltaChip(state)]
+							: m(
+									'span.scorehud__class-dash',
+									{ 'aria-label': t('hud.class_empty_dash_aria') },
+									'—',
+								),
+					),
+				]),
+				m('span.scorehud__banner.scorehud__banner--right', topic.positioningScale.rightLabel),
 			]),
 			m('.scorehud__meter', [
 				m('.scorehud__meter-goalzone', { style: { insetInlineStart: `${threshold}%` } }),
@@ -258,7 +268,25 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 		]);
 	}
 
-	// ---------- tiles: my proposal + helping ----------
+	// ---------- the stat board: rows with per-camp side chips ----------
+
+	/** A camp value chip: signed percent, or an empty socket before any raters */
+	function campChip(side: 'left' | 'right', value: number | undefined): m.Children {
+		return m(
+			`span.scorehud__chip.scorehud__chip--${side}`,
+			{ class: value === undefined ? 'scorehud__chip--empty' : undefined },
+			value === undefined ? '—' : `${Math.round(value * 100)}%`,
+		);
+	}
+
+	/** Static stat row: left-camp count | centered label | right-camp count */
+	function statRow(label: string, leftN: number, rightN: number): m.Children {
+		return m('.scorehud__row', [
+			m('span.scorehud__chip.scorehud__chip--left', String(leftN)),
+			m('span.scorehud__row-label', label),
+			m('span.scorehud__chip.scorehud__chip--right', String(rightN)),
+		]);
+	}
 
 	function mineTile(
 		myProposal: AgoraProposal | undefined,
@@ -292,19 +320,25 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 				onclick: onToggleDetail,
 			},
 			[
-				state
-					? m(
-							'span.scorehud__tile-value',
-							{ class: state.timer ? 'scorehud__tile-value--ticking' : undefined },
-							[`📘 ${state.shown}`, deltaChip(state)],
-						)
-					: m('span.scorehud__tile-dash', '📘 —'),
-				m('span.scorehud__tile-label', t('hud.mine_label')),
-				m(
-					'span.scorehud__tile-hint',
-					{ class: moved ? 'scorehud__tile-hint--moved' : undefined },
-					`${hint} ↗`,
-				),
+				campChip('left', campAvg(myScore?.perCamp.left)),
+				m('span.scorehud__tile-mid', [
+					m('span.scorehud__tile-label', [
+						t('hud.mine_label'),
+						state
+							? m(
+									'span.scorehud__tile-score',
+									{ class: state.timer ? 'scorehud__tile-value--ticking' : undefined },
+									[` · ${state.shown}`, deltaChip(state)],
+								)
+							: null,
+					]),
+					m(
+						'span.scorehud__tile-hint',
+						{ class: moved ? 'scorehud__tile-hint--moved' : undefined },
+						`${hint} ↗`,
+					),
+				]),
+				campChip('right', campAvg(myScore?.perCamp.right)),
 			],
 		);
 	}
@@ -322,15 +356,17 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 				},
 			},
 			[
+				m('span.scorehud__tile-mid', [
+					m('span.scorehud__tile-label', t('hud.helping_label')),
+					m(
+						'span.scorehud__tile-hint',
+						`${t('hud.helping_hint', { n: AGORA_POINTS.SUGGESTION_ACCEPTED })} ↗`,
+					),
+				]),
 				m(
-					'span.scorehud__tile-value',
+					'span.scorehud__chip.scorehud__chip--gold',
 					{ class: state.timer ? 'scorehud__tile-value--ticking' : undefined },
-					[`🤝 ${state.shown}`, deltaChip(state)],
-				),
-				m('span.scorehud__tile-label', t('hud.helping_label')),
-				m(
-					'span.scorehud__tile-hint',
-					`${t('hud.helping_hint', { n: AGORA_POINTS.SUGGESTION_ACCEPTED })} ↗`,
+					[String(state.shown), deltaChip(state)],
 				),
 			],
 		);
@@ -581,7 +617,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 		const recordNow = Date.now() < recordUntil;
 
 		return m(
-			'button.card.scorehud.scorehud--collapsed',
+			'button.scorehud.scorehud--collapsed',
 			{
 				type: 'button',
 				class: [
@@ -643,8 +679,8 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 
 			// Lap 1, still writing: the hero alone — a promise of the game ahead
 			if (!myProposal) {
-				return m('section.card.scorehud.scorehud--intro', [
-					classHero(classMax, threshold, step, hasScores),
+				return m('section.scorehud.scorehud--intro', [
+					classHero(topic, classMax, threshold, step, hasScores),
 				]);
 			}
 
@@ -663,9 +699,19 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 
 			const bars = buildBars(proposals, scores, userId);
 			const recordNow = Date.now() < recordUntil;
+			// Whole-class activity: total ratings per camp across all proposals —
+			// a number every student's own rating visibly moves
+			const classLeftN = Object.values(scores).reduce(
+				(sum, score) => sum + score.perCamp.left.n,
+				0,
+			);
+			const classRightN = Object.values(scores).reduce(
+				(sum, score) => sum + score.perCamp.right.n,
+				0,
+			);
 
 			return m(
-				'section.card.scorehud',
+				'section.scorehud',
 				{
 					class: [
 						classMax >= threshold ? 'scorehud--goal' : undefined,
@@ -675,11 +721,17 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 						.join(' '),
 				},
 				[
-					classHero(classMax, threshold, step, hasScores),
+					classHero(topic, classMax, threshold, step, hasScores),
 					m('.scorehud__tiles', [
 						mineTile(myProposal, myScore, ratingsMoved, detailOpen, () => {
 							detailOpen = !detailOpen;
 						}),
+						statRow(
+							t('hud.row_ratings_mine'),
+							myScore?.perCamp.left.n ?? 0,
+							myScore?.perCamp.right.n ?? 0,
+						),
+						statRow(t('hud.row_class_ratings'), classLeftN, classRightN),
 						helpingTile(myParticipant.points.helping, step, onGoHelp),
 					]),
 					mineDetail(topic, myScore, ratingsMoved),

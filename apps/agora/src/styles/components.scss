@@ -2352,60 +2352,205 @@
 }
 
 // ============================================================================
-// ScoreHUD — "Raising the Festival Bridge" game scoreboard
-// Hero class meter + personal tiles + the support chart ("the square").
+// ScoreHUD v2 — "The Night Board Over the Square" (stadium scoreboard)
+// A glossy indigo-black board with a metallic bezel, hanging over the light
+// festival page. Component-scoped dark palette; the --camp/--text/--bg token
+// SHADOWS below are the master lever that re-skins every descendant (chart,
+// detail card, reused .scoreboard__camp* internals) without touching their
+// rules. Global tokens untouched.
 // ============================================================================
 .scorehud {
+	// --- board surfaces ---
+	--board-bg: #16132b;
+	--board-bg-hi: #2a2450;
+	--board-row: #0d0b1d;
+	--board-row-hi: #211c3e;
+	// --- bezel metal ---
+	--board-bezel-hi: #d8dced;
+	--board-bezel: #8f96ad;
+	--board-bezel-lo: #4a4f63;
+	// --- ink ---
+	--board-text: #ffffff;
+	--board-text-dim: #b9c0d8;
+	// --- lantern gold (the night-theme accent, back home on dark) ---
+	--board-gold: #ffd882;
+	--board-gold-deep: #f5b944;
+	// --- chip anchors (carry white numerals — AA verified at the anchor) ---
+	--board-chip-left: #8a52cf;
+	--board-chip-right: #0c7d6f;
+	// --- bright variants (graphics on dark: bars, fills, camp text) ---
+	--board-camp-left-bright: #a875e8;
+	--board-camp-right-bright: #17b7a4;
+	--board-camp-center-bright: #8b9be0;
+	--board-mine-bright: #6ba3f5;
+	--board-up: #56d78d;
+
+	// Scoped shadows of the global tokens every descendant consumes
+	--camp-left: var(--board-camp-left-bright);
+	--camp-right: var(--board-camp-right-bright);
+	--camp-center: var(--board-camp-center-bright);
+	--camp-left-glow: var(--board-camp-left-bright);
+	--camp-right-glow: var(--board-camp-right-bright);
+	--mine: var(--board-mine-bright);
+	--mine-glow: var(--board-mine-bright);
+	--lantern: var(--board-gold);
+	--lantern-glow: var(--board-gold);
+	--success: var(--board-up);
+	--text-primary: var(--board-text);
+	--text-secondary: var(--board-text-dim);
+	--text-muted: var(--board-text-dim);
+	--bg-inset: rgba(255, 255, 255, 0.08);
+	--border-subtle: rgba(216, 220, 237, 0.16);
+	--border-strong: rgba(216, 220, 237, 0.42);
+	--border-lantern: rgba(255, 216, 130, 0.6);
+	--glow-lantern: 0 4px 18px rgba(255, 216, 130, 0.3);
+	--glow-marker: 0 0 12px rgba(255, 216, 130, 0.65);
+
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-md);
+	padding: var(--space-md);
+	border-radius: var(--radius-lg);
+	// metallic bezel: gradient border via the two-layer background-clip trick
+	border: 3px solid transparent;
+	background:
+		linear-gradient(180deg, var(--board-bg-hi) 0%, var(--board-bg) 26%, var(--board-bg) 100%)
+			padding-box,
+		linear-gradient(
+				160deg,
+				var(--board-bezel-hi) 0%,
+				var(--board-bezel) 28%,
+				var(--board-bezel-lo) 55%,
+				var(--board-bezel) 78%,
+				var(--board-bezel-hi) 100%
+			)
+			border-box;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.08),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+		0 10px 28px rgba(13, 11, 29, 0.45);
+	color: var(--board-text);
 
 	&--goal {
-		border: 1px solid var(--border-lantern);
-		box-shadow: var(--glow-lantern);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.08),
+			inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+			0 10px 28px rgba(13, 11, 29, 0.45),
+			var(--glow-lantern);
 	}
 
-	// --- hero: class bridge ---
+	// --- hero: banners + score plate + light-tube meter ---
 	&__class {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-xs);
+		gap: var(--space-sm);
 	}
 
-	&__class-head {
+	&__header {
 		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
+		align-items: stretch;
 		gap: var(--space-sm);
+	}
+
+	// Painted-metal camp ribbons (vertical gradients — direction-free)
+	&__banner {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		padding: var(--space-xs) var(--space-sm);
+		border: 2px solid transparent;
+		border-radius: var(--radius-sm);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: #fff;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.35),
+			inset 0 -2px 4px rgba(0, 0, 0, 0.35),
+			0 3px 8px rgba(0, 0, 0, 0.4);
+
+		&--left {
+			background:
+				linear-gradient(180deg, #a875e8 0%, #8a52cf 30%, #6a34ab 100%) padding-box,
+				linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
+		}
+
+		&--right {
+			background:
+				linear-gradient(180deg, #17b7a4 0%, #0c7d6f 35%, #0b5f55 100%) padding-box,
+				linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
+		}
+	}
+
+	// Glossy black score plate with inner bevel + static specular sheen
+	&__plate {
+		position: relative;
+		flex: 0 1 auto;
+		min-width: 9.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: var(--space-xs) var(--space-md);
+		border: 2px solid transparent;
+		border-radius: var(--radius-md);
+		background:
+			linear-gradient(180deg, var(--board-row-hi) 0%, var(--board-row) 55%, var(--board-bg) 100%)
+				padding-box,
+			linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.14),
+			inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0 0 50% 0;
+			border-radius: inherit;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0));
+			pointer-events: none;
+		}
 	}
 
 	&__class-label {
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
-		color: var(--lantern-glow);
+		color: var(--board-text-dim);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
+
+		.scorehud--record & {
+			color: var(--board-gold);
+		}
 	}
 
 	&__class-value {
 		font-family: var(--font-display);
 		font-size: var(--font-size-3xl);
 		line-height: 1;
-		color: var(--text-primary);
+		color: var(--board-text);
+		text-shadow: 0 0 14px rgba(255, 255, 255, 0.22);
 		font-variant-numeric: tabular-nums;
 
 		.scorehud--goal & {
-			color: var(--lantern-glow);
+			color: var(--board-gold);
 		}
 	}
 
 	&__class-max {
 		font-size: var(--font-size-lg);
-		opacity: 0.45;
+		opacity: 0.55;
 	}
 
 	&__class-dash {
-		color: var(--text-muted);
+		color: var(--board-text-dim);
 	}
 
 	&__delta {
@@ -2417,13 +2562,17 @@
 		animation: scorehud-delta 1.2s var(--ease-camera) both;
 	}
 
+	// The light-tube meter: dark trench, glowing camp gradient, gold goal flag
 	&__meter {
 		position: relative;
 		display: flex;
-		height: 14px;
-		background: var(--bg-inset);
+		height: 16px;
+		background: #060512;
 		border-radius: var(--radius-full);
-		padding: 1px;
+		padding: 2px;
+		box-shadow:
+			inset 0 2px 6px rgba(0, 0, 0, 0.8),
+			inset 0 -1px 0 rgba(255, 255, 255, 0.06);
 		// room for the goal flag + number below
 		margin-block-end: var(--space-md);
 	}
@@ -2433,30 +2582,56 @@
 		height: 100%;
 		min-width: 10px;
 		border-radius: var(--radius-full);
-		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+		background: linear-gradient(
+			90deg,
+			var(--board-camp-left-bright),
+			var(--board-camp-right-bright)
+		);
+		box-shadow:
+			0 0 10px rgba(168, 117, 232, 0.45),
+			0 0 16px rgba(23, 183, 164, 0.35);
 		transition: width var(--motion-slow) var(--ease-camera);
 
 		[dir='rtl'] & {
-			background: linear-gradient(90deg, var(--camp-right), var(--camp-left));
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-right-bright),
+				var(--board-camp-left-bright)
+			);
 		}
 
 		.scorehud--goal & {
-			background: linear-gradient(90deg, var(--camp-left), var(--camp-right), var(--lantern));
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-left-bright),
+				var(--board-camp-right-bright),
+				var(--board-gold)
+			);
+			box-shadow: 0 0 14px rgba(255, 216, 130, 0.55);
 
 			[dir='rtl'] & {
-				background: linear-gradient(90deg, var(--lantern), var(--camp-right), var(--camp-left));
+				background: linear-gradient(
+					90deg,
+					var(--board-gold),
+					var(--board-camp-right-bright),
+					var(--board-camp-left-bright)
+				);
 			}
 		}
 	}
 
 	// record-broken shimmer sweeps the fill once
-	.scorehud--record &__meter-fill::after,
 	&--record &__meter-fill::after {
 		content: '';
 		position: absolute;
 		inset: 0;
 		border-radius: inherit;
-		background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.65), transparent 70%);
+		background: linear-gradient(
+			105deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.65),
+			transparent 70%
+		);
 		animation: scorehud-shimmer var(--motion-camera) var(--ease-camera) both;
 	}
 
@@ -2468,16 +2643,16 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: var(--lantern-glow);
-		box-shadow: var(--glow-marker);
+		background: #fff;
+		box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8);
 	}
 
 	&__meter-goalzone {
 		position: absolute;
-		inset-block: 1px;
-		inset-inline-end: 1px;
+		inset-block: 2px;
+		inset-inline-end: 2px;
 		background: var(--lantern);
-		opacity: 0.12;
+		opacity: 0.1;
 		border-start-end-radius: var(--radius-full);
 		border-end-end-radius: var(--radius-full);
 	}
@@ -2487,7 +2662,7 @@
 		inset-block-start: -4px;
 		inset-block-end: -4px;
 		width: 2px;
-		background: var(--warning);
+		background: var(--board-gold-deep);
 		transform: translateX(-50%);
 
 		[dir='rtl'] & {
@@ -2495,7 +2670,7 @@
 		}
 
 		.scorehud--goal & {
-			background: var(--lantern);
+			background: var(--board-gold);
 		}
 	}
 
@@ -2507,10 +2682,10 @@
 		height: 0;
 		border-block-start: 5px solid transparent;
 		border-block-end: 5px solid transparent;
-		border-inline-start: 9px solid var(--warning);
+		border-inline-start: 9px solid var(--board-gold-deep);
 
 		.scorehud--goal & {
-			border-inline-start-color: var(--lantern);
+			border-inline-start-color: var(--board-gold);
 			filter: drop-shadow(var(--glow-marker));
 			animation: scorehud-flag-pop var(--motion-slow) var(--ease-spring) both;
 		}
@@ -2521,8 +2696,9 @@
 		inset-block-start: calc(100% + 6px);
 		inset-inline-start: 50%;
 		transform: translateX(-50%);
+		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
-		color: var(--text-muted);
+		color: var(--board-gold);
 		white-space: nowrap;
 
 		[dir='rtl'] & {
@@ -2531,90 +2707,138 @@
 	}
 
 	&__class-hint {
-		color: var(--text-muted);
+		color: var(--board-text-dim);
 		font-size: var(--font-size-sm);
-		font-style: italic;
+		text-align: center;
 		margin: 0;
 	}
 
-	// --- personal tiles ---
+	// --- the stat board: slim rows, camp chips at the ends ---
 	&__tiles {
 		display: flex;
-		gap: var(--space-md);
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__tile,
+	&__row {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		min-height: 48px;
+		width: 100%;
+		padding: var(--space-xs) var(--space-sm);
+		border: none;
+		border-radius: var(--radius-sm);
+		background: linear-gradient(180deg, var(--board-row-hi) 0%, var(--board-row) 60%);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.07),
+			inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+		text-align: center;
+		font-family: var(--font-body);
 	}
 
 	&__tile {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--space-xs);
-		min-height: 64px;
-		padding: var(--space-sm) var(--space-md);
-		background: var(--bg-inset);
-		border: 1px solid var(--border-subtle);
-		border-radius: var(--radius-md);
 		cursor: pointer;
-		font-family: var(--font-body);
-		text-align: center;
+		color: var(--board-text);
+
+		&:hover {
+			filter: brightness(1.18);
+		}
 
 		&:focus-visible {
 			outline: 2px solid var(--lantern-glow);
 			outline-offset: 2px;
 		}
-
-		&--mine {
-			border-color: var(--border-lantern);
-
-			.scorehud__tile-value,
-			.scorehud__tile-dash {
-				color: var(--mine-glow);
-			}
-		}
-
-		&--helping {
-			border-color: rgba(224, 119, 20, 0.45);
-
-			.scorehud__tile-value {
-				color: var(--peer-glow);
-			}
-		}
 	}
 
-	&__tile-value,
-	&__tile-dash {
-		font-family: var(--font-display);
-		font-size: var(--font-size-xl);
-		line-height: 1.1;
-		font-variant-numeric: tabular-nums;
-		transition: text-shadow var(--motion-base) ease;
+	&__tile-mid,
+	&__row-label {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
 	}
 
-	&__tile-value--ticking {
-		text-shadow: 0 0 12px rgba(43, 111, 214, 0.45);
-	}
-
-	&__tile-dash {
-		color: var(--text-muted);
-	}
-
+	&__row-label,
 	&__tile-label {
-		font-size: var(--font-size-xs);
-		color: var(--text-muted);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--board-text);
+	}
+
+	&__tile-score {
+		font-family: var(--font-display);
+		color: var(--board-gold);
+
+		&.scorehud__tile-value--ticking {
+			text-shadow: 0 0 12px rgba(255, 216, 130, 0.6);
+		}
 	}
 
 	&__tile-hint {
 		font-size: var(--font-size-xs);
-		color: var(--text-secondary);
+		color: var(--board-text-dim);
 
 		&--moved {
-			color: var(--success);
+			color: var(--board-up);
 		}
 	}
 
-	// --- my per-camp breakdown (reuses .scoreboard__camp* internals) ---
+	// Glossy value chips (gradient stays within ±10% luminance of the anchor)
+	&__chip {
+		flex: 0 0 auto;
+		min-width: 46px;
+		padding: 3px 10px;
+		border-radius: 8px;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		line-height: 1.2;
+		text-align: center;
+		color: #fff;
+		font-variant-numeric: tabular-nums;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.35),
+			inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+			0 2px 5px rgba(0, 0, 0, 0.5);
+
+		&--left {
+			background: linear-gradient(180deg, #9c66d9, #8a52cf 40%, #7443b4);
+		}
+
+		&--right {
+			background: linear-gradient(180deg, #109180, #0c7d6f 40%, #0a6a5e);
+		}
+
+		&--gold {
+			background: linear-gradient(180deg, #ffd882, #f5b944 45%, #d99b23);
+			color: var(--board-bg);
+		}
+
+		&--empty {
+			background: var(--board-row);
+			color: var(--board-text-dim);
+			box-shadow: inset 0 0 0 1px rgba(216, 220, 237, 0.25);
+		}
+
+		&.scorehud__tile-value--ticking {
+			box-shadow:
+				inset 0 1px 0 rgba(255, 255, 255, 0.35),
+				inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+				0 0 12px rgba(255, 216, 130, 0.6);
+		}
+	}
+
+	// --- my per-camp breakdown (internals re-skin via the token shadows) ---
 	&__detail {
-		border-block-start: 1px solid var(--border-subtle);
+		position: relative;
 		padding-block-start: var(--space-md);
 		animation: scorehud-reveal var(--motion-base) var(--ease-camera) both;
 	}
@@ -2641,7 +2865,7 @@
 		background: none;
 		border: none;
 		padding: var(--space-xs);
-		color: var(--text-muted);
+		color: var(--board-text-dim);
 		font-size: var(--font-size-sm);
 		cursor: pointer;
 
@@ -2668,13 +2892,14 @@
 		}
 	}
 
-	// --- collapsed strip (~56px, whole strip expands on tap) ---
+	// --- collapsed strip: the board in miniature (~52px) ---
 	&--collapsed {
 		flex-direction: row;
 		align-items: center;
 		gap: var(--space-sm);
-		padding: var(--space-sm) var(--space-md);
-		border: 1px solid var(--border-subtle);
+		min-height: 52px;
+		padding: var(--space-xs) var(--space-md);
+		border-width: 2px;
 		cursor: pointer;
 		width: 100%;
 		font-family: var(--font-body);
@@ -2690,13 +2915,13 @@
 		display: inline-flex;
 		align-items: baseline;
 		gap: 2px;
-		color: var(--text-secondary);
+		color: var(--board-text-dim);
 		white-space: nowrap;
 
 		strong {
 			font-family: var(--font-display);
 			font-size: var(--font-size-lg);
-			color: var(--lantern-glow);
+			color: var(--board-gold);
 			font-variant-numeric: tabular-nums;
 		}
 	}
@@ -2707,19 +2932,29 @@
 		display: flex;
 		height: 8px;
 		min-width: 40px;
-		background: var(--bg-inset);
+		background: #060512;
 		border-radius: var(--radius-full);
+		box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
 	}
 
 	&__strip-fill {
 		height: 100%;
 		min-width: 6px;
 		border-radius: var(--radius-full);
-		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+		background: linear-gradient(
+			90deg,
+			var(--board-camp-left-bright),
+			var(--board-camp-right-bright)
+		);
+		box-shadow: 0 0 6px rgba(168, 117, 232, 0.5);
 		transition: width var(--motion-slow) var(--ease-camera);
 
 		[dir='rtl'] & {
-			background: linear-gradient(90deg, var(--camp-right), var(--camp-left));
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-right-bright),
+				var(--board-camp-left-bright)
+			);
 		}
 	}
 
@@ -2727,8 +2962,23 @@
 		position: absolute;
 		inset-block: -2px;
 		width: 2px;
-		background: var(--warning);
+		background: var(--board-gold);
 	}
+}
+
+// The lens-flare separator streak above each board section (symmetric → RTL-free)
+.scorehud__tile::before,
+.scorehud__row::before,
+.scorehud__detail::before,
+.scorehud .support-chart::before {
+	content: '';
+	position: absolute;
+	inset-inline: 10%;
+	inset-block-start: -1px;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, rgba(216, 220, 237, 0.85) 50%, transparent);
+	filter: drop-shadow(0 0 3px rgba(216, 220, 237, 0.55));
+	pointer-events: none;
 }
 
 @keyframes scorehud-delta {
@@ -2752,18 +3002,19 @@
 	to { opacity: 1; transform: translateY(0); }
 }
 
-// --- The square: variable-width support chart ---
+// --- The square: variable-width support chart (geometry unchanged; on the
+// board it re-skins through the .scorehud token shadows) ---
 .support-chart {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-sm);
-	border-block-start: 1px solid var(--border-subtle);
 	padding-block-start: var(--space-md);
 
 	&__title {
 		font-family: var(--font-display);
 		font-size: var(--font-size-sm);
-		color: var(--text-secondary);
+		color: var(--text-primary);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		margin: 0;
@@ -2864,19 +3115,27 @@
 			opacity: 0.55;
 		}
 
-		// net-opposition bars: same camp identity, softened — "still gathering
-		// support", never a shaming red
+		// net-opposition bars: same camp identity, quieted — "still gathering
+		// support", never a shaming red; inset ring keeps a visible boundary
 		&--negative .support-chart__seg {
-			opacity: 0.35;
+			opacity: 0.45;
 		}
 
-		// the current class-record holder wears a gold cap
+		&--negative .support-chart__col {
+			box-shadow: inset 0 0 0 1px rgba(216, 220, 237, 0.35);
+		}
+
+		// the current class-record holder wears a glowing gold cap
 		&--top .support-chart__col {
-			box-shadow: 0 -3px 0 0 var(--lantern);
+			box-shadow:
+				0 -3px 0 0 var(--lantern),
+				0 -3px 8px rgba(255, 216, 130, 0.5);
 		}
 
 		&--top .support-chart__col--negative {
-			box-shadow: 0 3px 0 0 var(--lantern);
+			box-shadow:
+				0 3px 0 0 var(--lantern),
+				0 3px 8px rgba(255, 216, 130, 0.5);
 		}
 	}
 
@@ -2887,8 +3146,9 @@
 		gap: 2px; // surface gap between camp segments (dataviz spacer rule)
 		border-start-start-radius: 3px;
 		border-start-end-radius: 3px;
-		transform-origin: bottom;
 		overflow: hidden;
+		transform-origin: bottom;
+		box-shadow: 0 0 8px rgba(255, 255, 255, 0.12);
 		transition: height var(--motion-slow) var(--ease-camera);
 		animation: support-bar-grow var(--motion-slow) var(--ease-spring) both;
 
@@ -2901,6 +3161,7 @@
 
 		&--ghost {
 			background: var(--bg-inset);
+			box-shadow: none;
 		}
 	}
 
@@ -2927,7 +3188,7 @@
 		height: 4px;
 		background: var(--mine);
 		border-radius: var(--radius-full);
-		box-shadow: var(--glow-marker);
+		box-shadow: 0 0 10px rgba(107, 163, 245, 0.7);
 	}
 
 	&__num {
@@ -2976,15 +3237,18 @@
 	to { transform: scaleY(1); }
 }
 
-// --- tap-to-detail card under the chart ---
+// --- tap-to-detail: a dark plate in the same board language ---
 .chart-detail {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-sm);
-	background: var(--bg-inset);
-	border: 1px solid var(--border-subtle);
+	background: linear-gradient(180deg, var(--board-row-hi), var(--board-row) 60%);
+	border: 1px solid rgba(216, 220, 237, 0.2);
 	border-radius: var(--radius-md);
 	padding: var(--space-md);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.07),
+		0 4px 12px rgba(0, 0, 0, 0.5);
 	animation: scorehud-reveal var(--motion-base) var(--ease-camera) both;
 
 	&__crown {
@@ -3009,7 +3273,7 @@
 	}
 
 	&__fill--negative {
-		opacity: 0.35;
+		opacity: 0.45;
 	}
 
 	&__bridge-label {
@@ -3017,10 +3281,18 @@
 	}
 
 	&__bridge-fill {
-		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+		background: linear-gradient(
+			90deg,
+			var(--board-camp-left-bright),
+			var(--board-camp-right-bright)
+		);
 
 		[dir='rtl'] & {
-			background: linear-gradient(90deg, var(--camp-right), var(--camp-left));
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-right-bright),
+				var(--board-camp-left-bright)
+			);
 		}
 	}
 
@@ -3036,38 +3308,17 @@
 	}
 }
 
-// ScoreHUD desktop: hero + tiles share one row
+// ScoreHUD desktop: the board stays symmetric, just larger
 @media (min-width: 768px) {
-	.scorehud:not(.scorehud--collapsed):not(.scorehud--intro) {
-		display: grid;
-		grid-template-columns: 2fr 1fr 1fr;
-		grid-template-areas:
-			'class tiles tiles'
-			'detail detail detail'
-			'chart chart chart'
-			'toggle toggle toggle';
-		align-items: start;
+	.scorehud:not(.scorehud--collapsed) {
+		padding: var(--space-lg);
+	}
 
-		.scorehud__class {
-			grid-area: class;
-		}
+	.scorehud__class-value {
+		font-size: 3.5rem;
+	}
 
-		.scorehud__tiles {
-			grid-area: tiles;
-			height: 100%;
-			align-items: stretch;
-		}
-
-		.scorehud__detail {
-			grid-area: detail;
-		}
-
-		.support-chart {
-			grid-area: chart;
-		}
-
-		.scorehud__toggle {
-			grid-area: toggle;
-		}
+	.scorehud__banner {
+		font-size: var(--font-size-base);
 	}
 }

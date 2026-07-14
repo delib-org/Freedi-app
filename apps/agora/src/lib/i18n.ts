@@ -281,6 +281,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chart.bar_top_aria': '— שיא הכיתה',
 		'chart.legend_center': 'אמצע',
 		'chart.detail_close': 'סגירה',
+		'hud.row_ratings_mine': 'דירוגים על שלי',
+		'hud.row_class_ratings': 'דירוגי הכיתה',
 	},
 	en: {
 		'common.loading': 'Loading...',
@@ -562,6 +564,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chart.bar_top_aria': '— the class record',
 		'chart.legend_center': 'Middle',
 		'chart.detail_close': 'Close',
+		'hud.row_ratings_mine': 'Ratings on mine',
+		'hud.row_class_ratings': 'Class ratings',
 	},
 	ar: {
 		'common.loading': 'جارٍ التحميل...',
@@ -837,6 +841,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chart.bar_top_aria': '— الرقم القياسي للصف',
 		'chart.legend_center': 'الوسط',
 		'chart.detail_close': 'إغلاق',
+		'hud.row_ratings_mine': 'تقييمات على اقتراحي',
+		'hud.row_class_ratings': 'تقييمات الصف',
 	},
 	es: {
 		'common.loading': 'Cargando...',
@@ -1124,6 +1130,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chart.bar_top_aria': '— el récord de la clase',
 		'chart.legend_center': 'Centro',
 		'chart.detail_close': 'Cerrar',
+		'hud.row_ratings_mine': 'Valoraciones a la mía',
+		'hud.row_class_ratings': 'Valoraciones de la clase',
 	},
 	de: {
 		'common.loading': 'Wird geladen...',
@@ -1415,6 +1423,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chart.bar_top_aria': '— der Klassenrekord',
 		'chart.legend_center': 'Mitte',
 		'chart.detail_close': 'Schließen',
+		'hud.row_ratings_mine': 'Bewertungen zu meinem',
+		'hud.row_class_ratings': 'Klassen-Bewertungen',
 	},
 	nl: {
 		'common.loading': 'Laden...',
@@ -1702,6 +1712,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chart.bar_top_aria': '— het klassenrecord',
 		'chart.legend_center': 'Midden',
 		'chart.detail_close': 'Sluiten',
+		'hud.row_ratings_mine': 'Beoordelingen op de mijne',
+		'hud.row_class_ratings': 'Klassenbeoordelingen',
 	},
 };
 

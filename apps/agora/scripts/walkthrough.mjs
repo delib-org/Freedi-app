@@ -229,7 +229,7 @@ const lapLabel = await s1.locator('.cycle-strip__laps').getAttribute('aria-label
 if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, pips say: ${lapLabel}`);
 console.log('S1 ON LAP:', lapLabel);
 console.log('S1 CLASS BRIDGE:', (await s1.locator('.scorehud__class-value').textContent()).trim());
-console.log('S1 MINE TILE:', (await s1.locator('.scorehud__tile--mine .scorehud__tile-value').textContent()).trim());
+console.log('S1 MINE ROW:', (await s1.locator('.scorehud__tile--mine').innerText()).replaceAll('\n', ' | '));
 // The square: one bar per proposal, tap opens the anonymous detail card
 const barCount = await s1.locator('.support-chart__bar').count();
 if (barCount < 2) throw new Error(`Support chart shows ${barCount} bars, expected >= 2`);
