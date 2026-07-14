@@ -18,7 +18,7 @@ import {
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { ScoreHud } from '../components/ScoreHud';
-import { EraMap, EraMapLantern } from '../components/EraMap';
+import { EraMapLantern } from '../components/EraMap';
 import { NeedsBoard, NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
 import {
@@ -1289,14 +1289,11 @@ export function Deliberation(
 			}
 
 			// ---------- DONE: all cycles complete ----------
+			// The ScoreHUD's chart is the data view here — no map scenery needed
 			return m('.shell.shell--wide.shell--delib.shell--mode-mine', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					header,
 					delibNav(myProposal),
-					m(EraMap, {
-						participants: [],
-						lanterns: lanternsFromState(proposals, scores, userId),
-					}),
 					m('h3.text-center', t('delib.cycle_done_title')),
 					m('p.home-explanation', t('delib.cycle_done_hint')),
 					myProposal ? [editableProposalCard(live, myProposal, topic)] : null,
