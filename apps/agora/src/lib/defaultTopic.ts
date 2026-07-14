@@ -20,33 +20,37 @@ export function defaultTopicPackageId(creatorId: string): string {
 }
 
 /**
- * Backfill the bundled default scene artwork into a package that was
- * provisioned before the artwork existed. Only fills scenes that currently
- * have NO media (empty imageUrls and no video) — never overwrites images or
- * videos a teacher added. Returns the patched scenes, or null if nothing
- * needed changing.
+ * Backfill the bundled default scene media (images + video) into a package
+ * that was provisioned before that media existed. Fills each field only when
+ * the scene currently has none of it — never overwrites images or videos a
+ * teacher added. Returns the patched scenes, or null if nothing needed changing.
  */
 export function backfillDefaultArtwork(
 	pkg: AgoraTopicPackage,
 ): AgoraTopicPackage['scenes'] | null {
-	const defaults = buildDefaultFrenchRevolutionTopic(pkg.creatorId);
-	const defaultImagesBySceneId = new Map<string, string[]>();
-	for (const scene of defaults.scenes) {
-		if (scene.imageUrls.length > 0) {
-			defaultImagesBySceneId.set(scene.sceneId, scene.imageUrls);
-		}
+	const defaultsBySceneId = new Map<string, AgoraTopicPackage['scenes'][number]>();
+	for (const scene of buildDefaultFrenchRevolutionTopic(pkg.creatorId).scenes) {
+		defaultsBySceneId.set(scene.sceneId, scene);
 	}
 
 	let changed = false;
 	const scenes = pkg.scenes.map((scene) => {
-		const defaultImages = defaultImagesBySceneId.get(scene.sceneId);
-		if (defaultImages && scene.imageUrls.length === 0 && !scene.videoUrl) {
-			changed = true;
+		const defaults = defaultsBySceneId.get(scene.sceneId);
+		if (!defaults) return scene;
 
-			return { ...scene, imageUrls: [...defaultImages] };
+		let next = scene;
+		// Fill default images only if this scene has no image of its own.
+		if (defaults.imageUrls.length > 0 && scene.imageUrls.length === 0) {
+			next = { ...next, imageUrls: [...defaults.imageUrls] };
+			changed = true;
+		}
+		// Fill the default video only if this scene has no video of its own.
+		if (defaults.videoUrl && !scene.videoUrl) {
+			next = { ...next, videoUrl: defaults.videoUrl };
+			changed = true;
 		}
 
-		return scene;
+		return next;
 	});
 
 	return changed ? scenes : null;
@@ -173,6 +177,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				kind: AgoraSceneKind.timeTunnel,
 				title: 'מנהרת הזמן',
 				text: 'המנהרה נפתחת. אורות חולפים על פניכם — מאתיים שנה אחורה. כשהערפל מתפזר, אתם עומדים ברחובות פריז.',
+				videoUrl: '/scenes/time-tunnel.mp4',
 				imageUrls: [],
 				dialogue: [],
 			},

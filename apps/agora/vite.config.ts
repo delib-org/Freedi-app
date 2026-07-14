@@ -65,11 +65,12 @@ export default defineConfig({
             },
           },
           {
-            // Bundled scene images (default topic artwork) served from /scenes/
-            urlPattern: /\/scenes\/.*\.(?:png|jpe?g|webp|gif)$/i,
+            // Bundled scene media (default topic artwork + video) from /scenes/
+            urlPattern: /\/scenes\/.*\.(?:png|jpe?g|webp|gif|mp4|webm|mov)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'agora-scene-cache',
+              rangeRequests: true,
               expiration: { maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 },
             },
           },

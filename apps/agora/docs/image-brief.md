@@ -80,8 +80,8 @@ kids look up in wonder. Hopeful, cinematic, gold rim-light from the portal. 16:9
 ```
 
 ### 2.2 Time tunnel — scene `scene-tunnel` ("מנהרת הזמן")
-- **File:** `public/scenes/time-tunnel.png` — ⬜ **needed** *(better as an ≤8s video — `videoUrl`)*
-- **Where:** pure spectacle between briefing and arrival.
+- **File:** `public/scenes/time-tunnel.mp4` — ✅ **done** *(8s Veo video, autoplays on the scene)*
+- **Where:** pure spectacle between briefing and arrival; the "time travel machine" moment.
 - **Still-image prompt:**
 ```
 [STYLE CAPSULE] Time-Lab mode. First-person plunge THROUGH a time tunnel: a
@@ -293,7 +293,7 @@ night** (this is the one place the "Era of Lanterns" night palette leads).
 |---|---|---|---|
 | 1 | Home hero | `time-machine.png` | ✅ done |
 | 2 | Mission brief | `scenes/time-machine-briefing.png` | ✅ done |
-| 3 | Time tunnel | `scenes/time-tunnel.png` | ⬜ needed |
+| 3 | Time tunnel (video) | `scenes/time-tunnel.mp4` | ✅ done |
 | 4 | Paris 1789 | `scenes/french-revolution-intro.png` | ✅ done |
 | 5 | Count's position | `scenes/perspective-royalist.png` | ⬜ needed |
 | 6 | Camille's position | `scenes/perspective-jacobin.png` | ⬜ needed |
