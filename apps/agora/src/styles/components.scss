@@ -2350,3 +2350,724 @@
 		font-size: var(--font-size-xs);
 	}
 }
+
+// ============================================================================
+// ScoreHUD — "Raising the Festival Bridge" game scoreboard
+// Hero class meter + personal tiles + the support chart ("the square").
+// ============================================================================
+.scorehud {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	&--goal {
+		border: 1px solid var(--border-lantern);
+		box-shadow: var(--glow-lantern);
+	}
+
+	// --- hero: class bridge ---
+	&__class {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__class-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__class-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	&__class-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-3xl);
+		line-height: 1;
+		color: var(--text-primary);
+		font-variant-numeric: tabular-nums;
+
+		.scorehud--goal & {
+			color: var(--lantern-glow);
+		}
+	}
+
+	&__class-max {
+		font-size: var(--font-size-lg);
+		opacity: 0.45;
+	}
+
+	&__class-dash {
+		color: var(--text-muted);
+	}
+
+	&__delta {
+		display: inline-block;
+		margin-inline-start: var(--space-xs);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		color: var(--success);
+		animation: scorehud-delta 1.2s var(--ease-camera) both;
+	}
+
+	&__meter {
+		position: relative;
+		display: flex;
+		height: 14px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		padding: 1px;
+		// room for the goal flag + number below
+		margin-block-end: var(--space-md);
+	}
+
+	&__meter-fill {
+		position: relative;
+		height: 100%;
+		min-width: 10px;
+		border-radius: var(--radius-full);
+		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+		transition: width var(--motion-slow) var(--ease-camera);
+
+		[dir='rtl'] & {
+			background: linear-gradient(90deg, var(--camp-right), var(--camp-left));
+		}
+
+		.scorehud--goal & {
+			background: linear-gradient(90deg, var(--camp-left), var(--camp-right), var(--lantern));
+
+			[dir='rtl'] & {
+				background: linear-gradient(90deg, var(--lantern), var(--camp-right), var(--camp-left));
+			}
+		}
+	}
+
+	// record-broken shimmer sweeps the fill once
+	.scorehud--record &__meter-fill::after,
+	&--record &__meter-fill::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.65), transparent 70%);
+		animation: scorehud-shimmer var(--motion-camera) var(--ease-camera) both;
+	}
+
+	&__meter-spark {
+		position: absolute;
+		inset-block-start: 50%;
+		inset-inline-end: 0;
+		transform: translate(2px, -50%);
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--lantern-glow);
+		box-shadow: var(--glow-marker);
+	}
+
+	&__meter-goalzone {
+		position: absolute;
+		inset-block: 1px;
+		inset-inline-end: 1px;
+		background: var(--lantern);
+		opacity: 0.12;
+		border-start-end-radius: var(--radius-full);
+		border-end-end-radius: var(--radius-full);
+	}
+
+	&__goal {
+		position: absolute;
+		inset-block-start: -4px;
+		inset-block-end: -4px;
+		width: 2px;
+		background: var(--warning);
+		transform: translateX(-50%);
+
+		[dir='rtl'] & {
+			transform: translateX(50%);
+		}
+
+		.scorehud--goal & {
+			background: var(--lantern);
+		}
+	}
+
+	&__goal-flag {
+		position: absolute;
+		inset-block-start: -6px;
+		inset-inline-start: 0;
+		width: 0;
+		height: 0;
+		border-block-start: 5px solid transparent;
+		border-block-end: 5px solid transparent;
+		border-inline-start: 9px solid var(--warning);
+
+		.scorehud--goal & {
+			border-inline-start-color: var(--lantern);
+			filter: drop-shadow(var(--glow-marker));
+			animation: scorehud-flag-pop var(--motion-slow) var(--ease-spring) both;
+		}
+	}
+
+	&__goal-num {
+		position: absolute;
+		inset-block-start: calc(100% + 6px);
+		inset-inline-start: 50%;
+		transform: translateX(-50%);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		white-space: nowrap;
+
+		[dir='rtl'] & {
+			transform: translateX(50%);
+		}
+	}
+
+	&__class-hint {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		font-style: italic;
+		margin: 0;
+	}
+
+	// --- personal tiles ---
+	&__tiles {
+		display: flex;
+		gap: var(--space-md);
+	}
+
+	&__tile {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		min-height: 64px;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		font-family: var(--font-body);
+		text-align: center;
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+
+		&--mine {
+			border-color: var(--border-lantern);
+
+			.scorehud__tile-value,
+			.scorehud__tile-dash {
+				color: var(--mine-glow);
+			}
+		}
+
+		&--helping {
+			border-color: rgba(224, 119, 20, 0.45);
+
+			.scorehud__tile-value {
+				color: var(--peer-glow);
+			}
+		}
+	}
+
+	&__tile-value,
+	&__tile-dash {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+		transition: text-shadow var(--motion-base) ease;
+	}
+
+	&__tile-value--ticking {
+		text-shadow: 0 0 12px rgba(43, 111, 214, 0.45);
+	}
+
+	&__tile-dash {
+		color: var(--text-muted);
+	}
+
+	&__tile-label {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__tile-hint {
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+
+		&--moved {
+			color: var(--success);
+		}
+	}
+
+	// --- my per-camp breakdown (reuses .scoreboard__camp* internals) ---
+	&__detail {
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-md);
+		animation: scorehud-reveal var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__camps {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-md);
+	}
+
+	&__moved {
+		margin: var(--space-sm) 0 0;
+		text-align: center;
+		color: var(--success);
+		font-size: var(--font-size-sm);
+	}
+
+	// --- expand/collapse ---
+	&__toggle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		background: none;
+		border: none;
+		padding: var(--space-xs);
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__chevron {
+		width: 8px;
+		height: 8px;
+		// physical borders: the caret is a rotated square corner and must not
+		// mirror in RTL (a flipped corner points sideways, not up/down)
+		border-right: 2px solid currentColor;
+		border-bottom: 2px solid currentColor;
+
+		&--down {
+			transform: rotate(45deg) translateY(-2px);
+		}
+
+		&--up {
+			transform: rotate(225deg) translateY(-2px);
+		}
+	}
+
+	// --- collapsed strip (~56px, whole strip expands on tap) ---
+	&--collapsed {
+		flex-direction: row;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border: 1px solid var(--border-subtle);
+		cursor: pointer;
+		width: 100%;
+		font-family: var(--font-body);
+		font-size: var(--font-size-sm);
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__strip-item {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 2px;
+		color: var(--text-secondary);
+		white-space: nowrap;
+
+		strong {
+			font-family: var(--font-display);
+			font-size: var(--font-size-lg);
+			color: var(--lantern-glow);
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	&__strip-meter {
+		position: relative;
+		flex: 1;
+		display: flex;
+		height: 8px;
+		min-width: 40px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+	}
+
+	&__strip-fill {
+		height: 100%;
+		min-width: 6px;
+		border-radius: var(--radius-full);
+		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+		transition: width var(--motion-slow) var(--ease-camera);
+
+		[dir='rtl'] & {
+			background: linear-gradient(90deg, var(--camp-right), var(--camp-left));
+		}
+	}
+
+	&__strip-goal {
+		position: absolute;
+		inset-block: -2px;
+		width: 2px;
+		background: var(--warning);
+	}
+}
+
+@keyframes scorehud-delta {
+	0% { opacity: 0; transform: translateY(0); }
+	25% { opacity: 1; }
+	100% { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes scorehud-shimmer {
+	from { transform: translateX(-100%); }
+	to { transform: translateX(100%); }
+}
+
+@keyframes scorehud-flag-pop {
+	from { transform: scale(0.6); }
+	to { transform: scale(1); }
+}
+
+@keyframes scorehud-reveal {
+	from { opacity: 0; transform: translateY(8px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+// --- The square: variable-width support chart ---
+.support-chart {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	border-block-start: 1px solid var(--border-subtle);
+	padding-block-start: var(--space-md);
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		margin: 0;
+	}
+
+	&__legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm) var(--space-md);
+	}
+
+	&__legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__scroll {
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		-webkit-overflow-scrolling: touch;
+		mask-image: linear-gradient(
+			to right,
+			transparent,
+			black 12px,
+			black calc(100% - 12px),
+			transparent
+		);
+		scrollbar-width: thin;
+	}
+
+	&__plot {
+		position: relative;
+		display: flex;
+		align-items: stretch;
+		justify-content: safe center;
+		gap: 3px;
+		height: 160px;
+		min-width: max-content;
+		margin-inline: auto;
+		padding-block: var(--space-sm);
+		// breathing room so edge bars clear the fade mask + axis labels
+		padding-inline: var(--space-lg);
+
+		@media (min-width: 768px) {
+			height: 200px;
+		}
+	}
+
+	&__zero {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: 50%;
+		height: 1px;
+		background: var(--border-strong);
+	}
+
+	&__axis {
+		position: absolute;
+		inset-inline-start: var(--space-xs);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+
+		&--up {
+			inset-block-start: calc(50% - 1.4em);
+		}
+
+		&--down {
+			inset-block-start: calc(50% + 0.4em);
+		}
+	}
+
+	&__bar {
+		position: relative;
+		height: 100%;
+		padding: 0;
+		background: none;
+		border: none;
+		border-radius: 2px;
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: opacity var(--motion-fast) ease;
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 1px;
+		}
+
+		// ring the visible column, not the full-height tap target
+		&--selected .support-chart__col {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 1px;
+		}
+
+		&--dimmed {
+			opacity: 0.55;
+		}
+
+		// net-opposition bars: same camp identity, softened — "still gathering
+		// support", never a shaming red
+		&--negative .support-chart__seg {
+			opacity: 0.35;
+		}
+
+		// the current class-record holder wears a gold cap
+		&--top .support-chart__col {
+			box-shadow: 0 -3px 0 0 var(--lantern);
+		}
+
+		&--top .support-chart__col--negative {
+			box-shadow: 0 3px 0 0 var(--lantern);
+		}
+	}
+
+	&__col {
+		position: absolute;
+		inset-inline: 0;
+		display: flex;
+		gap: 2px; // surface gap between camp segments (dataviz spacer rule)
+		border-start-start-radius: 3px;
+		border-start-end-radius: 3px;
+		transform-origin: bottom;
+		overflow: hidden;
+		transition: height var(--motion-slow) var(--ease-camera);
+		animation: support-bar-grow var(--motion-slow) var(--ease-spring) both;
+
+		&--negative {
+			border-radius: 0;
+			border-end-start-radius: 3px;
+			border-end-end-radius: 3px;
+			transform-origin: top;
+		}
+
+		&--ghost {
+			background: var(--bg-inset);
+		}
+	}
+
+	&__seg {
+		height: 100%;
+
+		&--left {
+			background: var(--camp-left);
+		}
+
+		&--center {
+			background: var(--camp-center);
+		}
+
+		&--right {
+			background: var(--camp-right);
+		}
+	}
+
+	&__keel {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		height: 4px;
+		background: var(--mine);
+		border-radius: var(--radius-full);
+		box-shadow: var(--glow-marker);
+	}
+
+	&__num {
+		position: absolute;
+		inset-block-end: 6px;
+		inset-inline: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-align: center;
+		pointer-events: none;
+	}
+
+	&__empty {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__plot--ghost {
+		justify-content: center;
+		gap: var(--space-md);
+		min-width: 0;
+	}
+
+	&__ghost {
+		position: relative;
+		align-self: flex-end;
+		width: 24px;
+		background: var(--bg-inset);
+		border: 1px dashed var(--border-subtle);
+		border-radius: 3px 3px 0 0;
+		margin-block-end: 50%;
+	}
+
+	&__empty-caption {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		font-style: italic;
+		text-align: center;
+		margin: 0;
+	}
+}
+
+@keyframes support-bar-grow {
+	from { transform: scaleY(0); }
+	to { transform: scaleY(1); }
+}
+
+// --- tap-to-detail card under the chart ---
+.chart-detail {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	background: var(--bg-inset);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-md);
+	animation: scorehud-reveal var(--motion-base) var(--ease-camera) both;
+
+	&__crown {
+		font-size: var(--font-size-xs);
+		color: var(--lantern-glow);
+	}
+
+	&__text {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		display: -webkit-box;
+		-webkit-line-clamp: 4;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	&__stats {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__fill--negative {
+		opacity: 0.35;
+	}
+
+	&__bridge-label {
+		color: var(--lantern-glow);
+	}
+
+	&__bridge-fill {
+		background: linear-gradient(90deg, var(--camp-left), var(--camp-right));
+
+		[dir='rtl'] & {
+			background: linear-gradient(90deg, var(--camp-right), var(--camp-left));
+		}
+	}
+
+	&__raters {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-align: center;
+	}
+
+	&__close {
+		align-self: center;
+	}
+}
+
+// ScoreHUD desktop: hero + tiles share one row
+@media (min-width: 768px) {
+	.scorehud:not(.scorehud--collapsed):not(.scorehud--intro) {
+		display: grid;
+		grid-template-columns: 2fr 1fr 1fr;
+		grid-template-areas:
+			'class tiles tiles'
+			'detail detail detail'
+			'chart chart chart'
+			'toggle toggle toggle';
+		align-items: start;
+
+		.scorehud__class {
+			grid-area: class;
+		}
+
+		.scorehud__tiles {
+			grid-area: tiles;
+			height: 100%;
+			align-items: stretch;
+		}
+
+		.scorehud__detail {
+			grid-area: detail;
+		}
+
+		.support-chart {
+			grid-area: chart;
+		}
+
+		.scorehud__toggle {
+			grid-area: toggle;
+		}
+	}
+}

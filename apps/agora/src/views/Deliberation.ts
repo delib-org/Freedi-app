@@ -17,7 +17,7 @@ import {
 	ReceptionEstimate,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
-import { PointsPill } from '../components/PointsPill';
+import { ScoreHud } from '../components/ScoreHud';
 import { EraMap, EraMapLantern } from '../components/EraMap';
 import { NeedsBoard, NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
@@ -977,8 +977,25 @@ export function Deliberation(
 				live.roundEndsAt && live.roundEndsAt > Date.now()
 					? m(CountdownTimer, { endsAt: live.roundEndsAt })
 					: null,
-				m(PointsPill, { total: myParticipant.points.total }),
 			]);
+
+			// The game HUD: class bridge, my score, helping points, the chart.
+			// Personal points moved from the old PointsPill into the helping tile.
+			const scoreHud = m(ScoreHud, {
+				session: live,
+				topic,
+				myParticipant,
+				myProposal,
+				proposals,
+				scores,
+				userId,
+				step: peekMine ? 'mine' : cycle.step,
+				ratingsMoved,
+				onGoHelp: () => {
+					peekMine = false;
+					setCycle({ step: 'help' });
+				},
+			});
 
 			// The deliberation "location": the town square (agora) where ideas
 			// gather. Teacher-editable via topic artwork; hidden if absent/broken.
@@ -994,6 +1011,7 @@ export function Deliberation(
 						})
 					: null,
 				cycleStrip,
+				scoreHud,
 			];
 
 			// ---------- STEP: MY PROPOSAL (write, later improve) ----------
@@ -1063,7 +1081,6 @@ export function Deliberation(
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						scoreboard(topic, scores[myProposal.statementId], true, ratingsMoved),
 						editableProposalCard(live, myProposal, topic),
 						// The guided path continues only from the real step —
 						// a peek returns via the Others tab instead
@@ -1282,12 +1299,7 @@ export function Deliberation(
 					}),
 					m('h3.text-center', t('delib.cycle_done_title')),
 					m('p.home-explanation', t('delib.cycle_done_hint')),
-					myProposal
-						? [
-								scoreboard(topic, scores[myProposal.statementId], true, ratingsMoved),
-								editableProposalCard(live, myProposal, topic),
-							]
-						: null,
+					myProposal ? [editableProposalCard(live, myProposal, topic)] : null,
 					helpedSection(live),
 					m(
 						'button.btn.btn--secondary.btn--full',

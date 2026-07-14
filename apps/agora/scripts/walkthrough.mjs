@@ -10,6 +10,14 @@ const browser = await chromium.launch();
 const mkPage = async (label) => {
 	const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 	const page = await ctx.newPage();
+	// AGORA_LANG=he node scripts/walkthrough.mjs → run the whole game in that
+	// language (RTL check); default follows the browser locale (en)
+	if (process.env.AGORA_LANG) {
+		await page.addInitScript(
+			(lang) => window.localStorage.setItem('agora_lang', lang),
+			process.env.AGORA_LANG,
+		);
+	}
 	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
 	return page;
 };
@@ -184,7 +192,8 @@ const suggest = async (page, label, text) => {
 	await page.waitForSelector('textarea.text-input', { timeout: 15000 });
 	console.log(`${label} HELP HERO:`, (await page.locator('.my-lantern--theirs .my-lantern__title').textContent()).slice(0, 50));
 	await page.locator('textarea.text-input').fill(text);
-	await page.getByRole('button', { name: /Send|שליחת|improvement|שיפור/i }).click();
+	// .btn--primary only: the loose regex also matches the Hebrew tab label
+	await page.locator('button.btn--primary', { hasText: /Send|שליחת/i }).click();
 	await page.waitForTimeout(800);
 	console.log(`${label} sent suggestion`);
 };
@@ -207,10 +216,10 @@ console.log('S1 NAV: back to Others');
 await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');
 
-// Lap 2, step "mine": the workshop skeleton — scoreboard, hero card, tabbed
+// Lap 2, step "mine": the workshop skeleton — ScoreHUD, hero card, tabbed
 // work area with the received suggestion in the Feedback tab
 try {
-	await s1.waitForSelector('.scoreboard', { timeout: 15000 });
+	await s1.waitForSelector('.scorehud', { timeout: 15000 });
 } catch (e) {
 	console.log('S1 BODY:', (await s1.evaluate(() => document.body.innerText)).slice(0, 400).replaceAll('\n', ' | '));
 	await shot(s1, 'debug-lap2-mine');
@@ -219,7 +228,16 @@ try {
 const lapLabel = await s1.locator('.cycle-strip__laps').getAttribute('aria-label');
 if (!lapLabel.includes('2')) throw new Error(`Expected lap 2, pips say: ${lapLabel}`);
 console.log('S1 ON LAP:', lapLabel);
-console.log('S1 bridging:', await s1.locator('.scoreboard__bridge-value').textContent());
+console.log('S1 CLASS BRIDGE:', (await s1.locator('.scorehud__class-value').textContent()).trim());
+console.log('S1 MINE TILE:', (await s1.locator('.scorehud__tile--mine .scorehud__tile-value').textContent()).trim());
+// The square: one bar per proposal, tap opens the anonymous detail card
+const barCount = await s1.locator('.support-chart__bar').count();
+if (barCount < 2) throw new Error(`Support chart shows ${barCount} bars, expected >= 2`);
+await s1.locator('.support-chart__bar').first().click();
+await s1.waitForSelector('.chart-detail', { timeout: 5000 });
+console.log('S1 CHART DETAIL:', (await s1.locator('.chart-detail__text').textContent()).slice(0, 60));
+await shot(s1, '06b-scorehud-chart');
+await s1.locator('.chart-detail__close').click();
 await s1.waitForSelector('.workshop__item', { timeout: 10000 });
 console.log('S1 SUGGESTIONS INLINE:', await s1.locator('.workshop__item').count());
 
@@ -333,9 +351,10 @@ await s2.waitForSelector(
 );
 console.log('S2 RE-RATED to +1 ✓');
 
-// S1 (owner) sees the aggregate loop-closing signal — no names
-await s1.waitForSelector('.scoreboard__updated', { timeout: 15000 });
-console.log('S1 RATINGS-MOVED SIGNAL:', await s1.locator('.scoreboard__updated').textContent());
+// S1 (owner) sees the aggregate loop-closing signal — no names — right on
+// the HUD's mine tile
+await s1.waitForSelector('.scorehud__tile-hint--moved', { timeout: 15000 });
+console.log('S1 RATINGS-MOVED SIGNAL:', await s1.locator('.scorehud__tile-hint--moved').textContent());
 
 // S2 sends a FREE follow-up — the lap must not advance
 await helped.locator('textarea.helped__followup').fill('עכשיו זה משכנע יותר — אולי הוסיפו גם נציגות לאיכרים בוועדה.');
