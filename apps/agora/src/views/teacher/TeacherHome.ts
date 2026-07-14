@@ -38,16 +38,16 @@ export function TeacherHome(): m.Component {
 	}
 
 	/**
-	 * Heal packages provisioned before the bundled scene artwork existed:
-	 * backfill default images into scenes that still have no media. Runs
-	 * fire-and-forget so it never blocks the teacher home from rendering.
+	 * Heal packages provisioned before the bundled artwork existed: backfill
+	 * default scene media + character portraits where they're still missing.
+	 * Runs fire-and-forget so it never blocks the teacher home from rendering.
 	 */
 	async function healArtwork(pkg: AgoraTopicPackage): Promise<AgoraTopicPackage> {
-		const scenes = backfillDefaultArtwork(pkg);
-		if (!scenes) return pkg;
-		const patched = { ...pkg, scenes, lastUpdate: Date.now() };
+		const patch = backfillDefaultArtwork(pkg);
+		if (!patch) return pkg;
+		const patched = { ...pkg, ...patch, lastUpdate: Date.now() };
 		try {
-			await updateDoc(doc(db, Collections.agoraTopicPackages, pkg.topicPackageId), { scenes });
+			await updateDoc(doc(db, Collections.agoraTopicPackages, pkg.topicPackageId), patch);
 		} catch (error) {
 			console.error('[Teacher] Backfilling default artwork failed:', error);
 

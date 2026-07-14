@@ -256,7 +256,7 @@ Small circular avatars in the needs board and the deliberation feedback cards.
 Head-and-shoulders, centered, plain painterly background.
 
 ### 6.1 The Count — `char-royalist` (`portraitUrl`)
-- **File:** `public/scenes/char-royalist.png` — ⬜ **needed**
+- **File:** `public/scenes/char-royalist.png` — ✅ **done**
 - **Prompt:**
 ```
 [STYLE CAPSULE] Era mode, portrait. Square head-and-shoulders portrait of a
@@ -266,7 +266,7 @@ background. Warm gold rim-light. Centered with headroom for a circular crop. 1:1
 ```
 
 ### 6.2 Camille — `char-jacobin` (`portraitUrl`)
-- **File:** `public/scenes/char-jacobin.png` — ⬜ **needed**
+- **File:** `public/scenes/char-jacobin.png` — ✅ **done**
 - **Prompt:**
 ```
 [STYLE CAPSULE] Era mode, portrait. Square head-and-shoulders portrait of a young
@@ -310,8 +310,8 @@ night** (this is the one place the "Era of Lanterns" night palette leads).
 | 10 | Success ending | `scenes/ending-success.png` | ✅ done |
 | 11 | Honest-disagreement ending | `scenes/ending-honest-disagreement.png` | ✅ done |
 | 12 | Failure ending | `scenes/ending-failure.png` | ✅ done |
-| 13 | Count portrait | `scenes/char-royalist.png` | ⬜ needed |
-| 14 | Camille portrait | `scenes/char-jacobin.png` | ⬜ needed |
+| 13 | Count portrait | `scenes/char-royalist.png` | ✅ done |
+| 14 | Camille portrait | `scenes/char-jacobin.png` | ✅ done |
 | 15–19 | EraMap artwork (optional) | — | ⬜ optional |
 
 **10 scene/portrait images + 1 optional map set to complete the set.** When you

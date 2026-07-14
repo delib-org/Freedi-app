@@ -43,6 +43,7 @@ const topicPackage = {
 			characterId: ROYALIST_ID,
 			name: 'הרוזן דה-לה-רוש',
 			role: 'אציל מלוכני',
+			portraitUrl: '/scenes/char-royalist.png',
 			arguments: [
 				'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים.',
 				'המסורת והכנסייה מחזיקות את החברה יחד כבר אלף שנה.',
@@ -63,6 +64,7 @@ const topicPackage = {
 			characterId: JACOBIN_ID,
 			name: 'קמיל דופון',
 			role: 'עורך דין יעקוביני',
+			portraitUrl: '/scenes/char-jacobin.png',
 			arguments: [
 				'העם גווע ברעב בזמן שהארמון עורך נשפים. זה חייב להיגמר.',
 				'כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.',

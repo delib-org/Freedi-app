@@ -23,37 +23,55 @@ export function defaultTopicPackageId(creatorId: string): string {
  * Backfill the bundled default scene media (images + video) into a package
  * that was provisioned before that media existed. Fills each field only when
  * the scene currently has none of it — never overwrites images or videos a
- * teacher added. Returns the patched scenes, or null if nothing needed changing.
+ * teacher added. Returns a partial patch (scenes and/or characters), or null
+ * if nothing needed changing.
  */
 export function backfillDefaultArtwork(
 	pkg: AgoraTopicPackage,
-): AgoraTopicPackage['scenes'] | null {
+): Partial<Pick<AgoraTopicPackage, 'scenes' | 'characters'>> | null {
+	const defaults = buildDefaultFrenchRevolutionTopic(pkg.creatorId);
 	const defaultsBySceneId = new Map<string, AgoraTopicPackage['scenes'][number]>();
-	for (const scene of buildDefaultFrenchRevolutionTopic(pkg.creatorId).scenes) {
+	for (const scene of defaults.scenes) {
 		defaultsBySceneId.set(scene.sceneId, scene);
+	}
+	const defaultsByCharacterId = new Map<string, AgoraTopicPackage['characters'][number]>();
+	for (const character of defaults.characters) {
+		defaultsByCharacterId.set(character.characterId, character);
 	}
 
 	let changed = false;
 	const scenes = pkg.scenes.map((scene) => {
-		const defaults = defaultsBySceneId.get(scene.sceneId);
-		if (!defaults) return scene;
+		const scDefault = defaultsBySceneId.get(scene.sceneId);
+		if (!scDefault) return scene;
 
 		let next = scene;
 		// Fill default images only if this scene has no image of its own.
-		if (defaults.imageUrls.length > 0 && scene.imageUrls.length === 0) {
-			next = { ...next, imageUrls: [...defaults.imageUrls] };
+		if (scDefault.imageUrls.length > 0 && scene.imageUrls.length === 0) {
+			next = { ...next, imageUrls: [...scDefault.imageUrls] };
 			changed = true;
 		}
 		// Fill the default video only if this scene has no video of its own.
-		if (defaults.videoUrl && !scene.videoUrl) {
-			next = { ...next, videoUrl: defaults.videoUrl };
+		if (scDefault.videoUrl && !scene.videoUrl) {
+			next = { ...next, videoUrl: scDefault.videoUrl };
 			changed = true;
 		}
 
 		return next;
 	});
 
-	return changed ? scenes : null;
+	// Fill each character's default portrait only if it has none of its own.
+	const characters = pkg.characters.map((character) => {
+		const chDefault = defaultsByCharacterId.get(character.characterId);
+		if (chDefault?.portraitUrl && !character.portraitUrl) {
+			changed = true;
+
+			return { ...character, portraitUrl: chDefault.portraitUrl };
+		}
+
+		return character;
+	}) as AgoraTopicPackage['characters'];
+
+	return changed ? { scenes, characters } : null;
 }
 
 export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopicPackage {
@@ -73,6 +91,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				characterId: ROYALIST_ID,
 				name: 'הרוזן דה-לה-רוש',
 				role: 'אציל מלוכני',
+				portraitUrl: '/scenes/char-royalist.png',
 				arguments: [
 					'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים.',
 					'המסורת והכנסייה מחזיקות את החברה יחד כבר אלף שנה.',
@@ -93,6 +112,7 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				characterId: JACOBIN_ID,
 				name: 'קמיל דופון',
 				role: 'עורך דין יעקוביני',
+				portraitUrl: '/scenes/char-jacobin.png',
 				arguments: [
 					'העם גווע ברעב בזמן שהארמון עורך נשפים. זה חייב להיגמר.',
 					'כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.',
