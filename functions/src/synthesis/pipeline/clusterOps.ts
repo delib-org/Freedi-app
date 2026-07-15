@@ -5,6 +5,7 @@ import {
 	generateSynthesizedProposal,
 	generateTopicLabel,
 } from '../../services/integration-ai-service';
+import { claimFieldsForSpawn, generateClaim } from '../../services/claim-registry-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { checkAndUpdateSpawnDebounce, markSpawnedNow } from './debounce';
@@ -138,6 +139,12 @@ interface SpawnInput {
 	 * Defaults to 'synth' for back-compat.
 	 */
 	mode?: 'synth' | 'cluster';
+	/**
+	 * Claim-registry questions stamp canonicalClaim/publicExplanation on the
+	 * new cluster (claim = the generated title, explanation = the generated
+	 * description — no extra LLM call). See docs/architecture/CLAIM_REGISTRY.md.
+	 */
+	stampClaim?: boolean;
 }
 
 interface SpawnResult {
@@ -183,6 +190,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		triggerSource,
 		bypassDebounce,
 		mode = 'synth',
+		stampClaim = false,
 	} = input;
 
 	if (!bypassDebounce) {
@@ -300,6 +308,10 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		// short-circuit when nothing has changed. Initialized to 2 because
 		// spawn always starts with the option+sibling pair.
 		...(isSynthMode ? { lastTitleRegeneratedMembers: 2, lastTitleRegeneratedAt: now } : {}),
+		// Claim-registry questions: the generated title IS the canonical claim
+		// (short unified proposal / theme label), the description the public
+		// explanation — no extra LLM call at spawn.
+		...(stampClaim ? { ...claimFieldsForSpawn(title, description) } : {}),
 	};
 
 	try {
@@ -364,6 +376,94 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 			error: error instanceof Error ? error.message : String(error),
 		});
 	}
+
+	return { spawned: true, clusterId };
+}
+
+interface SingletonSpawnInput {
+	option: Statement;
+	parentStatement: Statement;
+	triggerSource: string;
+}
+
+/**
+ * Claim-registry live-from-start behavior: a true singleton (no cosine
+ * candidates, no registry match) still gets a single-member provisional claim
+ * cluster, so the public sees every idea labeled in simple terms from
+ * statement #1. New arrivals then attach to it via the registry pass (or
+ * cosine, once geometry fills in). One WORKER_MODEL call for the claim +
+ * public explanation.
+ *
+ * Not debounced: claim-per-statement is intentional on registry questions.
+ * Deduped by the caller (pipeline's already-member guard).
+ */
+export async function spawnSingletonClaimCluster(input: SingletonSpawnInput): Promise<SpawnResult> {
+	const { option, parentStatement, triggerSource } = input;
+
+	const generated = await generateClaim({
+		questionText: parentStatement.statement || parentStatement.statementId,
+		texts: [option.statement ?? ''],
+	});
+	if (!generated.canonicalClaim) {
+		return { spawned: false };
+	}
+
+	const clusterId = getRandomUID();
+	const now = Date.now();
+	const newCluster: Partial<Statement> & Record<string, unknown> = {
+		statementId: clusterId,
+		statement: generated.canonicalClaim,
+		description: generated.publicExplanation,
+		statementType: StatementType.option,
+		parentId: option.parentId,
+		parents: [...(parentStatement.parents ?? []), parentStatement.statementId],
+		topParentId: option.topParentId ?? option.parentId,
+		creatorId: option.creatorId,
+		creator: option.creator,
+		createdAt: now,
+		lastUpdate: now,
+		consensus: 0,
+		integratedOptions: [option.statementId],
+		isCluster: true,
+		isSynthesis: false,
+		derivedByPipeline: 'topic-cluster',
+		synthesisMechanism: 'live-spawn',
+		liveSynthOrigin: 'spawn',
+		hide: false,
+		...claimFieldsForSpawn(generated.canonicalClaim, generated.publicExplanation),
+	};
+
+	try {
+		await db().collection(Collections.statements).doc(clusterId).set(newCluster);
+	} catch (error) {
+		logger.warn('synthesis.pipeline.singletonClaim: cluster write failed', {
+			clusterId,
+			optionId: option.statementId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return { spawned: false };
+	}
+
+	logger.info('synthesis.pipeline.singletonClaim.spawn', {
+		clusterId,
+		optionId: option.statementId,
+		claim: generated.canonicalClaim.substring(0, 80),
+		triggerSource,
+	});
+
+	await recordLiveSynthEvent({
+		action: 'spawn',
+		clusterId,
+		optionId: option.statementId,
+		reason: 'singleton provisional claim (claim registry)',
+		prevState: { sourceOptionId: option.statementId },
+		newState: { clusterId, integratedOptions: [option.statementId], mode: 'singleton-claim' },
+		triggerSource,
+		parentStatementId: option.parentId,
+	});
+
+	await enqueueClusterRecompute(clusterId, `${triggerSource}:singleton-claim`, option.creatorId);
 
 	return { spawned: true, clusterId };
 }

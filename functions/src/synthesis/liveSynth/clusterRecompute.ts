@@ -13,6 +13,8 @@ import {
 } from '../../services/integration-ai-service';
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { embeddingService } from '../../services/embedding-service';
+import { readClaimFields } from '../../services/claim-registry-service';
+import { applyClaimTextChange } from '../consolidation/claimMutation';
 
 /**
  * Live-synth cluster recompute pipeline.
@@ -181,20 +183,13 @@ async function maybeRegenerateSynthTitle(cluster: Statement, clusterId: string):
 	if (flags.lastTitleRegeneratedMembers === members.length) return false;
 
 	// Fetch member option docs in one round-trip via getAll.
-	const memberRefs = members.map((id) =>
-		db().collection(Collections.statements).doc(id),
-	);
+	const memberRefs = members.map((id) => db().collection(Collections.statements).doc(id));
 	const memberSnaps = await db().getAll(...memberRefs);
-	const memberStatements = memberSnaps
-		.filter((s) => s.exists)
-		.map((s) => s.data() as Statement);
+	const memberStatements = memberSnaps.filter((s) => s.exists).map((s) => s.data() as Statement);
 	if (memberStatements.length < 2) return false;
 
 	// Use the parent question as context, matching the spawn-path prompt.
-	const parentSnap = await db()
-		.collection(Collections.statements)
-		.doc(cluster.parentId)
-		.get();
+	const parentSnap = await db().collection(Collections.statements).doc(cluster.parentId).get();
 	const questionContext = parentSnap.exists
 		? (parentSnap.data() as Statement).statement || cluster.parentId
 		: cluster.parentId;
@@ -229,13 +224,16 @@ async function maybeRegenerateSynthTitle(cluster: Statement, clusterId: string):
 
 	const now = Date.now();
 	try {
-		await db().collection(Collections.statements).doc(clusterId).update({
-			statement: proposal.title,
-			description: proposal.description ?? '',
-			lastTitleRegeneratedMembers: memberStatements.length,
-			lastTitleRegeneratedAt: now,
-			lastUpdate: now,
-		});
+		await db()
+			.collection(Collections.statements)
+			.doc(clusterId)
+			.update({
+				statement: proposal.title,
+				description: proposal.description ?? '',
+				lastTitleRegeneratedMembers: memberStatements.length,
+				lastTitleRegeneratedAt: now,
+				lastUpdate: now,
+			});
 	} catch (error) {
 		logger.warn('recomputeSynthCluster: title-update write failed', {
 			clusterId,
@@ -245,14 +243,38 @@ async function maybeRegenerateSynthTitle(cluster: Statement, clusterId: string):
 		return false;
 	}
 
+	// Claim-registry mutation protocol: the regenerated title IS the cluster's
+	// canonical claim on registry questions. Classify how the meaning moved;
+	// narrow/different triggers a batched member re-validation and detached
+	// members auto-reprocess (docs/architecture/CLAIM_REGISTRY.md §3).
+	if (readClaimFields(cluster) !== null) {
+		try {
+			const mutation = await applyClaimTextChange({
+				cluster,
+				newClaim: proposal.title,
+				newExplanation: proposal.description ?? '',
+				triggerSource: 'clusterRecompute:title-regen',
+			});
+			if (mutation.change !== 'none') {
+				logger.info('recomputeSynthCluster: claim mutation applied', {
+					clusterId,
+					change: mutation.change,
+					detachedCount: mutation.detachedIds.length,
+				});
+			}
+		} catch (error) {
+			logger.warn('recomputeSynthCluster: claim mutation failed (non-fatal)', {
+				clusterId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	}
+
 	// Re-embed the synth so future neighbor queries use the fresh title.
 	// Without this, the cluster keeps matching by its founding-pair
 	// embedding even though its display text has moved on.
 	try {
-		const newEmbedding = await embeddingService.generateEmbedding(
-			proposal.title,
-			cluster.parentId,
-		);
+		const newEmbedding = await embeddingService.generateEmbedding(proposal.title, cluster.parentId);
 		await embeddingCache.saveEmbedding(
 			clusterId,
 			newEmbedding.embedding,

@@ -3,11 +3,14 @@ import { logger } from 'firebase-functions';
 import { Collections, StatementType, type Statement } from '@freedi/shared-types';
 import { vectorSearchService } from '../../services/vector-search-service';
 import { findClustersContainingMember } from '../liveSynth/clusterRecompute';
+import { noteStatementProcessed, runConsolidation } from '../consolidation/consolidateClaims';
 import { loadSynthesisSettingsFromStatement } from './loadSynthesisSettings';
+import type { SynthesisSettings } from './types';
 import { ensureEmbedding } from './embedding';
 import { expandClusterEvidenceViaFullMembers } from './candidateExpansion';
 import { assessCohesion, passesCohesionGate, type CohesionGate } from './clusterCohesion';
 import { routeByCosine } from './bandRouter';
+import { runRegistryPass } from './registryPass';
 import {
 	attachOptionToCluster,
 	isCluster,
@@ -15,6 +18,7 @@ import {
 	isTopicCluster,
 	queueForReview,
 	spawnClusterFromPair,
+	spawnSingletonClaimCluster,
 } from './clusterOps';
 
 /**
@@ -142,7 +146,37 @@ function skipped(reason: string, startedAt: number): PipelineResult {
 	return { action: 'skipped', reason, llmCalled: false, durationMs: Date.now() - startedAt };
 }
 
+interface PipelineContext {
+	parent?: Statement;
+	settings?: SynthesisSettings;
+}
+
 export async function runSinglePipeline(input: PipelineInput): Promise<PipelineResult> {
+	const ctx: PipelineContext = {};
+	const result = await executePipeline(input, ctx);
+
+	// Claim-registry cadence: count placed statements; every Nth placement
+	// triggers a claim-level consolidation pass (merge equivalent claims,
+	// flag too-broad ones, confirm mature provisional claims). Runs after
+	// placement so the new statement's cluster participates in the pass.
+	if (
+		ctx.settings?.claimRegistryEnabled &&
+		ctx.parent &&
+		(result.action === 'attached' || result.action === 'spawned')
+	) {
+		const due = await noteStatementProcessed(ctx.parent.statementId);
+		if (due) {
+			await runConsolidation(ctx.parent.statementId, ctx.parent.statement ?? '');
+		}
+	}
+
+	return result;
+}
+
+async function executePipeline(
+	input: PipelineInput,
+	ctx: PipelineContext,
+): Promise<PipelineResult> {
 	const startedAt = Date.now();
 
 	const option = input.option ?? (await loadStatement(input.optionId));
@@ -179,6 +213,8 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	if (!parent) return skipped('parent-not-found', startedAt);
 
 	const settings = loadSynthesisSettingsFromStatement(parent);
+	ctx.parent = parent;
+	ctx.settings = settings;
 
 	// `enabled` means "continuous (background) synthesis is on". It gates
 	// only the two automatic-trigger sources. On-demand work (admin clicked
@@ -211,17 +247,55 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	});
 
 	const candidates = neighbors.filter((n) => n.statement.statementId !== option.statementId);
+	const triggerSource = `pipeline:${input.source}`;
 	if (candidates.length === 0) {
+		// ★ REGISTRY PASS (zero-candidate path). Vector search found NOTHING —
+		// exactly the "same meaning, distant embeddings" recall gap. Classify
+		// against the full claim codebook before declaring a singleton; a true
+		// singleton spawns a single-member provisional claim so the idea is
+		// labeled from statement #1. See docs/architecture/CLAIM_REGISTRY.md.
+		if (settings.claimRegistryEnabled) {
+			const registryResult = await runRegistryPass({
+				option,
+				parent,
+				settings,
+				cosineByCluster: new Map(),
+				triggerSource,
+			});
+			if (registryResult?.attached) {
+				return {
+					action: 'attached',
+					reason: registryResult.reason,
+					clusterId: registryResult.clusterId,
+					llmCalled: true,
+					durationMs: Date.now() - startedAt,
+				};
+			}
+			const singleton = await spawnSingletonClaimCluster({
+				option,
+				parentStatement: parent,
+				triggerSource,
+			});
+			if (singleton.spawned) {
+				return {
+					action: 'spawned',
+					reason: 'singleton provisional claim (no neighbors, no registry match)',
+					clusterId: singleton.clusterId,
+					llmCalled: true,
+					durationMs: Date.now() - startedAt,
+				};
+			}
+		}
+
 		return {
 			action: 'seeded-singleton',
 			reason: 'no-neighbors-above-review-lower-bound',
-			llmCalled: false,
+			llmCalled: settings.claimRegistryEnabled,
 			durationMs: Date.now() - startedAt,
 		};
 	}
 
 	const top = candidates[0];
-	const triggerSource = `pipeline:${input.source}`;
 	const bypassDebounce = input.source === 'synthesizeNow' || input.source === 'selective';
 
 	// =====================================================================
@@ -388,6 +462,34 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 		};
 	}
 
+	// =====================================================================
+	// ★ REGISTRY PASS — cosine couldn't place the option (Passes 1–2 missed);
+	// classify against the full claim codebook before spawning. A match here
+	// at low/absent cosine is the Procaccia case, caught and logged.
+	// =====================================================================
+	if (settings.claimRegistryEnabled) {
+		const cosineByCluster = new Map<string, number>();
+		for (const [clusterId, evidence] of clusterEvidence) {
+			cosineByCluster.set(clusterId, evidence.bestSimilarity);
+		}
+		const registryResult = await runRegistryPass({
+			option,
+			parent,
+			settings,
+			cosineByCluster,
+			triggerSource,
+		});
+		if (registryResult?.attached) {
+			return {
+				action: 'attached',
+				reason: registryResult.reason,
+				clusterId: registryResult.clusterId,
+				llmCalled: true,
+				durationMs: Date.now() - startedAt,
+			};
+		}
+	}
+
 	// Top plain option for spawn — must NOT already be a member of any
 	// cluster in candidates, or we'd create a duplicate synth sharing
 	// members with an existing one.
@@ -416,6 +518,7 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 				triggerSource,
 				bypassDebounce,
 				mode: 'cluster',
+				stampClaim: settings.claimRegistryEnabled,
 			});
 			if (clusterAttempt.spawned) {
 				return {
@@ -442,6 +545,7 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 			triggerSource,
 			bypassDebounce,
 			mode: 'synth',
+			stampClaim: settings.claimRegistryEnabled,
 		});
 		if (synthAttempt.spawned) {
 			return {
@@ -461,6 +565,7 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 				triggerSource,
 				bypassDebounce: true,
 				mode: 'cluster',
+				stampClaim: settings.claimRegistryEnabled,
 			});
 			if (clusterFallback.spawned) {
 				return {

@@ -40,6 +40,19 @@ export interface SynthesisSettings {
 	synthLowerBound: number;
 	/** Cosine in [reviewLowerBound, clusterThreshold) → send to admin review (no LLM call). */
 	reviewLowerBound: number;
+	/**
+	 * Claim-registry layer (see docs/architecture/CLAIM_REGISTRY.md). When ON:
+	 *   - options the cosine passes can't place are classified by an LLM against
+	 *     the full list of canonical claims for the question (recall independent
+	 *     of embedding geometry),
+	 *   - spawns stamp canonicalClaim/publicExplanation on the new cluster,
+	 *   - true singletons spawn a single-member provisional claim cluster so the
+	 *     public sees a labeled idea from statement #1,
+	 *   - a claim-level consolidation pass runs every ~N statements.
+	 * Default OFF for every question type — admins opt in per question; the
+	 * toggle-on flow runs a first-run backfill + catch-up enqueue.
+	 */
+	claimRegistryEnabled: boolean;
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
@@ -70,6 +83,10 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	synthLowerBound: 0.78,
 	clusterThreshold: 0.6,
 	reviewLowerBound: 0.45,
+	// Opt-in per question. Not inherited from `enabled` — continuous synthesis
+	// can run without the registry, and MC questions (enabled: true) still
+	// default to registry OFF.
+	claimRegistryEnabled: false,
 };
 
 /**
