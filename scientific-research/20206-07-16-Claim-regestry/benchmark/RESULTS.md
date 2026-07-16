@@ -49,6 +49,17 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | Distractor "none" | 1.9% [1.2, 3.1] (17/875) |
 | Mean confidence (match / distractor) | 0.912 / 0.934 |
 
+## Condition B2E2 — enriched + stance-caution prompt (Phase 0b), n=875
+
+| Metric | Value |
+|---|---|
+| **Triplet accuracy** (match attaches ∧ distractor does not) | 88.6% [86.3, 90.5] (775/875) |
+| Match recall (attaches) | 91.7% [89.6, 93.3] (802/875) |
+| Distractor false-attach | 3.8% [2.7, 5.2] (33/875) |
+| Distractor detected as "opposes" | 95.1% [93.4, 96.3] (832/875) |
+| Distractor "none" | 1.1% [0.6, 2.1] (10/875) |
+| Mean confidence (match / distractor) | 0.901 / 0.941 |
+
 ## Condition D — registry, raw-anchor claim, gpt-4o, n=875
 
 | Metric | Value |
@@ -102,6 +113,18 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | Distractor opposes own anchor claim | 47.3% [44.0, 50.6] (414/875) |
 | Mean codebook size | 94.3 |
 
+## Condition CE2 — Enriched + stance-caution prompt (Phase 0b), n=875
+
+| Metric | Value |
+|---|---|
+| **Triplet accuracy** (match → own claim ∧ distractor ↛ own claim) | 53.8% [50.5, 57.1] (471/875) |
+| Match → own anchor claim | 59.0% [55.7, 62.2] (516/875) |
+| Match → any claim (secondary; near-duplicates legitimate) | 89.8% [87.6, 91.7] (786/875) |
+| Distractor → own anchor claim (false attach) | 10.3% [8.4, 12.5] (90/875) |
+| Distractor → any claim | 19.4% [16.9, 22.2] (170/875) |
+| Distractor opposes own anchor claim | 54.7% [51.4, 58.0] (479/875) |
+| Mean codebook size | 94.3 |
+
 ## Paired McNemar tests (triplet-correct, common ids)
 
 | Comparison (A vs B) | n | A✓B✗ | A✗B✓ | p (exact) |
@@ -111,6 +134,8 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | B1 raw-anchor vs B2 generated-claim | 875 | 222 | 4 | 2.00e-60 |
 | B2 bare canonical vs B2E enriched (Phase 0) | 875 | 4 | 156 | 3.69e-41 |
 | C bare codebook vs CE enriched (Phase 0) | 875 | 40 | 159 | 5.43e-18 |
+| B2E enriched vs B2E2 stance-caution (Phase 0b) | 875 | 14 | 24 | 1.43e-1 |
+| CE enriched vs CE2 stance-caution (Phase 0b) | 875 | 27 | 64 | 1.32e-4 |
 | B1 gpt-4o-mini vs D gpt-4o | 875 | 12 | 25 | 4.70e-2 |
 | B1 single-claim vs C full codebook | 875 | 521 | 5 | 3.03e-147 |
 

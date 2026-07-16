@@ -103,9 +103,11 @@ function main(): void {
 	const b1 = readJsonl<RegistryRow>('registry-single-B1.jsonl').filter(isMain);
 	const b2 = readJsonl<RegistryRow>('registry-single-B2.jsonl').filter(isMain);
 	const b2e = readJsonl<RegistryRow>('registry-single-B2E.jsonl').filter(isMain);
+	const b2e2 = readJsonl<RegistryRow>('registry-single-B2E2.jsonl').filter(isMain);
 	const d = readJsonl<RegistryRow>('registry-single-D.jsonl').filter(isMain);
 	const c = readJsonl<CodebookRow>('registry-codebook-C.jsonl').filter(isMain);
 	const ce = readJsonl<CodebookRow>('registry-codebook-CE.jsonl').filter(isMain);
+	const ce2 = readJsonl<CodebookRow>('registry-codebook-CE2.jsonl').filter(isMain);
 
 	const cosById = new Map(cosines.map((r) => [r.id, r]));
 	const lines: string[] = [];
@@ -141,6 +143,7 @@ function main(): void {
 		['B1 — registry, raw-anchor claim, gpt-4o-mini', b1],
 		['B2 — registry, generated canonical claim', b2],
 		['B2E — registry, ENRICHED claim (canonical + explanation + exemplar)', b2e],
+		['B2E2 — enriched + stance-caution prompt (Phase 0b)', b2e2],
 		['D — registry, raw-anchor claim, gpt-4o', d],
 	];
 	for (const [title, rows] of singleConditions) {
@@ -183,6 +186,7 @@ function main(): void {
 	const codebookConditions: Array<[string, CodebookRow[]]> = [
 		['C — Full per-dataset codebook', c],
 		['CE — Full codebook, ENRICHED claims (Phase 0)', ce],
+		['CE2 — Enriched + stance-caution prompt (Phase 0b)', ce2],
 	];
 	for (const [cTitle, cRows] of codebookConditions) {
 		if (cRows.length === 0) continue;
@@ -240,6 +244,17 @@ function main(): void {
 			r.match.confidence >= MIN_CONFIDENCE &&
 			!(r.distractor.matchedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE);
 		put(mcnemarLine('C bare codebook vs CE enriched (Phase 0)', correctnessMap(c, cCorrect), correctnessMap(ce, cCorrect)));
+	}
+	if (b2e.length && b2e2.length) {
+		const ok = (r: RegistryRow): boolean => attaches(r.match) && !attaches(r.distractor);
+		put(mcnemarLine('B2E enriched vs B2E2 stance-caution (Phase 0b)', correctnessMap(b2e, ok), correctnessMap(b2e2, ok)));
+	}
+	if (ce.length && ce2.length) {
+		const ok = (r: CodebookRow): boolean =>
+			r.match.matchedClusterId === r.id &&
+			r.match.confidence >= MIN_CONFIDENCE &&
+			!(r.distractor.matchedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE);
+		put(mcnemarLine('CE enriched vs CE2 stance-caution (Phase 0b)', correctnessMap(ce, ok), correctnessMap(ce2, ok)));
 	}
 	if (b1.length && d.length) {
 		put(mcnemarLine('B1 gpt-4o-mini vs D gpt-4o', b1Map, correctnessMap(d, b1Correct)));

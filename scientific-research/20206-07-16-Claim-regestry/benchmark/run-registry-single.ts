@@ -74,6 +74,8 @@ function parseArgs(): {
 	generated: boolean;
 	enriched: boolean;
 	model: string;
+	/** Suffix for the condition/result file — reruns after prompt changes get fresh files. */
+	tag: string;
 } {
 	const args = process.argv.slice(2);
 	const get = (flag: string): string | undefined => {
@@ -92,6 +94,7 @@ function parseArgs(): {
 		generated: enriched || args.includes('--generated-claims'),
 		enriched,
 		model: get('--model') ?? WORKER_MODEL,
+		tag: get('--tag') ?? '',
 	};
 }
 
@@ -157,8 +160,8 @@ async function classifyWithRetry(input: {
 }
 
 async function main(): Promise<void> {
-	const { file, limit, sample, generated, enriched, model } = parseArgs();
-	const condition = enriched ? 'B2E' : generated ? 'B2' : model === WORKER_MODEL ? 'B1' : 'D';
+	const { file, limit, sample, generated, enriched, model, tag } = parseArgs();
+	const condition = (enriched ? 'B2E' : generated ? 'B2' : model === WORKER_MODEL ? 'B1' : 'D') + tag;
 	const resultFile = `registry-single-${condition}.jsonl`;
 
 	let triplets = loadTriplets(file);

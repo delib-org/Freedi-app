@@ -2,11 +2,11 @@
 
 **Goal:** extend the claim registry from a flat per-question codebook to a two-level claim hierarchy (topic-level claims → specific claims), so classification stays accurate and cheap as codebooks grow past ~50–100 claims, and so the codebook itself becomes a navigable structure for synthesis and admins.
 
-**Status:** Phase 0 SHIPPED and verified (commit `f403bf05a`, 2026-07-16): benchmark re-run shows B2 70.1% → B2E **87.4%** (single claim) and C 36.0% → CE **49.6%** strict / 74.4% → **92.9%** any-attach (94-claim codebooks). Known trade-off: the anchor exemplar attracts lexically-similar stance-flips (codebook-scale distractor→own-claim 10.3%→19.3%); candidate mitigations in Phase 0b below. Phases 1–4 not started.
-
-## Phase 0b — exemplar false-attach mitigation (follow-up, small)
-
-The exemplar restores recall (+18.5pp at codebook scale) but its wording also pulls in opposite-stance statements that mimic it. Candidates, in order of preference: (a) add one line to CLASSIFY_SYSTEM: "an example's wording may resemble an OPPOSING statement — always judge stance, not phrasing overlap"; (b) prefer a non-anchor member brief as exemplar when available. Verify with the same B2E/CE harness flags.
+**Status (2026-07-16):**
+- Phase 0 SHIPPED + verified (`f403bf05a`): B2 70.1% → B2E 87.4%; codebook any-attach 74.4% → 92.9%.
+- Phase 0b SHIPPED + verified (`273b341fd`): stance-caution prompt line halved codebook false merges (19.3% → **10.3%**, p ≈ 1.3e-4 — back to pre-enrichment baseline) at −3.1pp recall; single-claim 88.6% / 3.8% false-attach. Combined 0+0b: recall gained without net precision cost.
+- Phase 1 SHIPPED (`273b341fd`): hierarchy fields + `isAttachTarget` invariant wired (no-op until topics exist).
+- Phases 2–4 not started; Phase 2 is the first behavior change (gate on ≥30-claim codebooks).
 
 **Evidence base:** the 2026-07-16 hard-triplet benchmark (`scientific-research/20206-07-16-Claim-regestry/TEST_REPORT.md`):
 - Registry classifier vs raw statements: 95.0% triplet accuracy; vs `generateClaim` canonicals: 70.1% → **the −25pp canonicalization loss is the biggest known defect** (§5.3).

@@ -44,7 +44,7 @@ interface GeneratedClaimRow {
 export interface CodebookRow {
 	id: string;
 	dataset: string;
-	condition: 'C' | 'CE';
+	condition: string;
 	codebookSize: number;
 	/** 1-based position of the triplet's own anchor claim in the prompt list. */
 	anchorRankMatch: number;
@@ -80,7 +80,7 @@ async function embedBatch(inputs: string[]): Promise<number[][]> {
 	return out;
 }
 
-function parseArgs(): { file: 'dev' | 'main'; limit?: number; sample?: string; enriched: boolean } {
+function parseArgs(): { file: 'dev' | 'main'; limit?: number; sample?: string; enriched: boolean; tag: string } {
 	const args = process.argv.slice(2);
 	const get = (flag: string): string | undefined => {
 		const i = args.indexOf(flag);
@@ -94,12 +94,13 @@ function parseArgs(): { file: 'dev' | 'main'; limit?: number; sample?: string; e
 		sample: get('--sample'),
 		// Phase 0 enrichment: publicExplanation + anchor exemplar on every codebook line.
 		enriched: args.includes('--enriched'),
+		tag: get('--tag') ?? '',
 	};
 }
 
 async function main(): Promise<void> {
-	const { file, limit, sample, enriched } = parseArgs();
-	const condition = enriched ? 'CE' : 'C';
+	const { file, limit, sample, enriched, tag } = parseArgs();
+	const condition = (enriched ? 'CE' : 'C') + tag;
 	const resultFile = `${RESULT_FILE_BASE}-${condition}.jsonl`;
 	let triplets = loadTriplets(file);
 	if (sample) {

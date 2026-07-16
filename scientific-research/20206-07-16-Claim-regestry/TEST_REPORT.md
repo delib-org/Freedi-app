@@ -136,7 +136,19 @@ B2 replaces the raw anchor with `generateClaim`'s 5–15-word canonical — exac
 | Full codebook, strict triplet accuracy | C: 36.0% | **CE: 49.6%** | +13.6pp | 159 fixed / 40 regressed, p ≈ 5e-18 |
 | Full codebook, match → any claim | 74.4% | **92.9%** | +18.5pp | |
 
-Enrichment recovers ~69% of the canonicalization loss and lifts codebook-scale attach recall to near single-claim levels (92.9% vs B1's 96.8%). **Trade-off:** the exemplar (the anchor's own wording) also attracts the lexically-mimicking stance-flip — distractor false-attach rises from 12.8%→6.6%… improved at single-claim scale, but at codebook scale distractor→own-claim rises 10.3%→19.3%. Net accuracy improves strongly in both settings; the residual B2E failures split evenly between missed matches (59) and false attaches (58). The false-attach side is worth a follow-up: rendering the exemplar with an explicit "wording may resemble opposing statements — judge stance" instruction, or choosing a member exemplar other than the anchor.
+Enrichment recovers ~69% of the canonicalization loss and lifts codebook-scale attach recall to near single-claim levels (92.9% vs B1's 96.8%). **Trade-off:** the exemplar (the anchor's own wording) also attracts the lexically-mimicking stance-flip — at codebook scale distractor→own-claim rose 10.3%→19.3%.
+
+**Phase 0b (stance-caution instruction, shipped in `273b341fd`)** added one line to the classifier system prompt — shared phrasing with an example is never evidence of a match; judge stance only — and re-ran both conditions (B2E2/CE2, n=875 each):
+
+| | Phase 0 | Phase 0b | Δ | McNemar |
+|---|---|---|---|---|
+| Single claim: distractor false-attach | 6.6% | **3.8%** | −42% rel. | net accuracy 87.4→88.6, p = 0.14 (ns) |
+| Single claim: match recall | 93.3% | 91.7% | −1.6pp | |
+| Codebook: distractor→own false merge | 19.3% | **10.3%** | **halved — back to the pre-enrichment baseline** | strict 49.6→53.8, p ≈ 1.3e-4 |
+| Codebook: match → any claim | 92.9% | 89.8% | −3.1pp (still +15.4pp vs pre-enrichment) | |
+| Codebook: distractor opposes own claim | 47.3% | 54.7% | +7.4pp | |
+
+Net effect of Phase 0 + 0b together vs the original bare-canonical configuration: single-claim triplet accuracy 70.1% → **88.6%**, codebook any-claim recall 74.4% → **89.8%**, codebook false merges unchanged at 10.3% — recall bought without paying in precision. The trade (small recall dip for halved false merges) is the right side of the cost asymmetry: a false merge corrupts a cluster and everything synthesis builds on it, while a missed match spawns a duplicate claim that consolidation later merges (and logs as self-audit data).
 
 ### 5.4 Embedding-gated retrieval ties the registry here — by construction, not in general
 
