@@ -49,16 +49,21 @@ interface GeneratedClaimRow {
 	publicExplanation: string;
 }
 
-function makeClaim(clusterId: string, canonicalClaim: string): ClusterClaim {
+function makeClaim(
+	clusterId: string,
+	canonicalClaim: string,
+	extras?: { publicExplanation?: string; exemplar?: string },
+): ClusterClaim {
 	return {
 		clusterId,
 		canonicalClaim,
-		publicExplanation: '',
+		publicExplanation: extras?.publicExplanation ?? '',
 		claimVersion: 1,
 		claimStatus: 'confirmed',
 		claimUpdatedAt: 0,
 		isSynth: false,
 		memberCount: 1,
+		exemplar: extras?.exemplar,
 	};
 }
 
@@ -67,6 +72,7 @@ function parseArgs(): {
 	limit?: number;
 	sample?: string;
 	generated: boolean;
+	enriched: boolean;
 	model: string;
 } {
 	const args = process.argv.slice(2);
@@ -75,39 +81,44 @@ function parseArgs(): {
 
 		return i >= 0 ? args[i + 1] : undefined;
 	};
+	const enriched = args.includes('--enriched');
 
 	return {
 		file: (get('--file') ?? 'main') as 'dev' | 'main',
 		limit: get('--limit') ? Number(get('--limit')) : undefined,
 		sample: get('--sample'),
-		generated: args.includes('--generated-claims'),
+		// --enriched tests Phase 0: generated canonical + publicExplanation +
+		// anchor exemplar (what production codebooks look like post-enrichment).
+		generated: enriched || args.includes('--generated-claims'),
+		enriched,
 		model: get('--model') ?? WORKER_MODEL,
 	};
 }
 
 /** Cache anchor → generated canonical claim (results/generated-claims.jsonl). */
 const CLAIM_CACHE_FILE = 'generated-claims.jsonl';
-const claimCache = new Map<string, string>();
+const claimCache = new Map<string, GeneratedClaimRow>();
 
 function preloadClaimCache(): void {
 	for (const row of readJsonl<GeneratedClaimRow>(CLAIM_CACHE_FILE)) {
-		claimCache.set(row.id, row.canonicalClaim);
+		claimCache.set(row.id, row);
 	}
 }
 
-async function generatedClaimFor(t: Triplet): Promise<string> {
+async function generatedClaimFor(t: Triplet): Promise<GeneratedClaimRow> {
 	const cached = claimCache.get(t.id);
 	if (cached) return cached;
 
 	const generated = await generateClaim({ questionText: questionFor(t.dataset), texts: [t.anchor] });
-	claimCache.set(t.id, generated.canonicalClaim);
-	appendJsonl(CLAIM_CACHE_FILE, {
+	const row: GeneratedClaimRow = {
 		id: t.id,
 		canonicalClaim: generated.canonicalClaim,
 		publicExplanation: generated.publicExplanation,
-	} satisfies GeneratedClaimRow);
+	};
+	claimCache.set(t.id, row);
+	appendJsonl(CLAIM_CACHE_FILE, row);
 
-	return generated.canonicalClaim;
+	return row;
 }
 
 /**
@@ -146,8 +157,8 @@ async function classifyWithRetry(input: {
 }
 
 async function main(): Promise<void> {
-	const { file, limit, sample, generated, model } = parseArgs();
-	const condition = generated ? 'B2' : model === WORKER_MODEL ? 'B1' : 'D';
+	const { file, limit, sample, generated, enriched, model } = parseArgs();
+	const condition = enriched ? 'B2E' : generated ? 'B2' : model === WORKER_MODEL ? 'B1' : 'D';
 	const resultFile = `registry-single-${condition}.jsonl`;
 
 	let triplets = loadTriplets(file);
@@ -169,8 +180,23 @@ async function main(): Promise<void> {
 	// fire everything and let the limiter pace the API.
 	await Promise.all(
 		todo.map(async (t) => {
-			const claimText = generated ? await generatedClaimFor(t) : t.anchor;
-			const claims = [makeClaim(t.id, claimText)];
+			let claimText = t.anchor;
+			let claims: ClusterClaim[];
+			if (generated) {
+				const row = await generatedClaimFor(t);
+				claimText = row.canonicalClaim;
+				claims = [
+					makeClaim(
+						t.id,
+						row.canonicalClaim,
+						enriched
+							? { publicExplanation: row.publicExplanation, exemplar: t.anchor }
+							: undefined,
+					),
+				];
+			} else {
+				claims = [makeClaim(t.id, claimText)];
+			}
 			const questionText = questionFor(t.dataset);
 
 			const [matchResult, distractorResult] = await Promise.all([

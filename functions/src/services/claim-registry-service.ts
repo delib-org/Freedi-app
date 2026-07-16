@@ -53,6 +53,34 @@ export interface ClusterClaim extends ClaimFields {
 	clusterId: string;
 	isSynth: boolean;
 	memberCount: number;
+	/**
+	 * A representative full-text statement for the claim (the cluster's own
+	 * synthesized/title text). Shown to the classifier alongside the canonical
+	 * claim: the 5–15-word canonical alone loses stance nuance (benchmarked at
+	 * −25pp triplet accuracy — see scientific-research/20206-07-16-Claim-regestry),
+	 * and the exemplar restores what compression drops.
+	 */
+	exemplar?: string;
+}
+
+/** Max exemplar characters rendered into the classification prompt. */
+const EXEMPLAR_MAX_CHARS = 180;
+
+/**
+ * One codebook line for an LLM prompt: canonical claim, plus the public
+ * explanation and a truncated exemplar when they add information.
+ */
+export function renderClaimLine(claim: ClusterClaim, index: number): string {
+	let line = `${index + 1}. ${claim.canonicalClaim}`;
+	if (claim.publicExplanation && claim.publicExplanation !== claim.canonicalClaim) {
+		line += ` — ${claim.publicExplanation}`;
+	}
+	const exemplar = claim.exemplar?.trim();
+	if (exemplar && exemplar !== claim.canonicalClaim) {
+		line += ` (e.g.: "${exemplar.slice(0, EXEMPLAR_MAX_CHARS)}")`;
+	}
+
+	return line;
 }
 
 /** Read registry fields off a cluster doc; null when the cluster has no claim yet. */
@@ -122,6 +150,9 @@ export async function loadClaims(questionId: string): Promise<ClusterClaim[]> {
 				clusterId: statement.statementId,
 				isSynth: statement.derivedByPipeline === 'synthesis',
 				memberCount: members.length,
+				// The cluster's own text (synthesized statement / title) as exemplar —
+				// no extra reads; renderClaimLine drops it when it adds nothing.
+				exemplar: statement.statement ?? undefined,
 			});
 		}
 
@@ -194,6 +225,8 @@ export function orderClaimsForClassification(
 
 const CLASSIFY_SYSTEM = `You classify a citizen's statement against a list of canonical claims from the same deliberation question. Statements may be in any language (including Hebrew and Arabic); judge meaning, not wording.
 
+Each claim line gives the canonical claim, and may add a plain-language explanation after "—" and an example member statement in (e.g.: "..."). Use the explanation and example to judge the claim's PRECISE meaning — the short canonical wording alone can under-specify it.
+
 Rules:
 - "expresses": the statement proposes essentially the SAME thing as one claim — its author would agree the claim states their idea. Different vocabulary, framing, or sentence structure does NOT matter; identical MEANING does.
 - "opposes": the statement contradicts a claim (proposes the opposite action on the same subject). Report the opposed claim but it is NOT a match.
@@ -217,7 +250,7 @@ export async function classifyAgainstClaims(input: {
 	const { statementText, questionText, claims } = input;
 	if (claims.length === 0 || !statementText.trim()) return { ...NO_MATCH };
 
-	const claimList = claims.map((c, idx) => `${idx + 1}. ${c.canonicalClaim}`).join('\n');
+	const claimList = claims.map((c, idx) => renderClaimLine(c, idx)).join('\n');
 	const user = `Question: "${questionText}"
 
 Existing claims:

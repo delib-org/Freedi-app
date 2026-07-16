@@ -32,7 +32,7 @@ import { loadTriplets, questionFor, type Triplet } from './lib/datasets';
 import { appendJsonl, doneIds, readJsonl, resultsPath } from './lib/io';
 
 const EMBEDDING_MODEL = 'text-embedding-3-small';
-const RESULT_FILE = 'registry-codebook-C.jsonl';
+const RESULT_FILE_BASE = 'registry-codebook';
 const CLAIM_CACHE_FILE = 'generated-claims.jsonl';
 
 interface GeneratedClaimRow {
@@ -44,7 +44,7 @@ interface GeneratedClaimRow {
 export interface CodebookRow {
 	id: string;
 	dataset: string;
-	condition: 'C';
+	condition: 'C' | 'CE';
 	codebookSize: number;
 	/** 1-based position of the triplet's own anchor claim in the prompt list. */
 	anchorRankMatch: number;
@@ -80,7 +80,7 @@ async function embedBatch(inputs: string[]): Promise<number[][]> {
 	return out;
 }
 
-function parseArgs(): { file: 'dev' | 'main'; limit?: number; sample?: string } {
+function parseArgs(): { file: 'dev' | 'main'; limit?: number; sample?: string; enriched: boolean } {
 	const args = process.argv.slice(2);
 	const get = (flag: string): string | undefined => {
 		const i = args.indexOf(flag);
@@ -92,11 +92,15 @@ function parseArgs(): { file: 'dev' | 'main'; limit?: number; sample?: string } 
 		file: (get('--file') ?? 'main') as 'dev' | 'main',
 		limit: get('--limit') ? Number(get('--limit')) : undefined,
 		sample: get('--sample'),
+		// Phase 0 enrichment: publicExplanation + anchor exemplar on every codebook line.
+		enriched: args.includes('--enriched'),
 	};
 }
 
 async function main(): Promise<void> {
-	const { file, limit, sample } = parseArgs();
+	const { file, limit, sample, enriched } = parseArgs();
+	const condition = enriched ? 'CE' : 'C';
+	const resultFile = `${RESULT_FILE_BASE}-${condition}.jsonl`;
 	let triplets = loadTriplets(file);
 	if (sample) {
 		const ids = new Set(JSON.parse(readFileSync(sample, 'utf8')) as string[]);
@@ -105,9 +109,9 @@ async function main(): Promise<void> {
 	if (limit) triplets = triplets.slice(0, limit);
 
 	// 1. Canonical claim per anchor (cache-first).
-	const claimCache = new Map<string, string>();
+	const claimCache = new Map<string, GeneratedClaimRow>();
 	for (const row of readJsonl<GeneratedClaimRow>(CLAIM_CACHE_FILE)) {
-		claimCache.set(row.id, row.canonicalClaim);
+		claimCache.set(row.id, row);
 	}
 	const missing = triplets.filter((t) => !claimCache.has(t.id));
 	console.info(`Codebook C: ${missing.length} claims to generate (${claimCache.size} cached)`);
@@ -117,16 +121,17 @@ async function main(): Promise<void> {
 				questionText: questionFor(t.dataset),
 				texts: [t.anchor],
 			});
-			claimCache.set(t.id, generated.canonicalClaim);
-			appendJsonl(CLAIM_CACHE_FILE, {
+			const row: GeneratedClaimRow = {
 				id: t.id,
 				canonicalClaim: generated.canonicalClaim,
 				publicExplanation: generated.publicExplanation,
-			} satisfies GeneratedClaimRow);
+			};
+			claimCache.set(t.id, row);
+			appendJsonl(CLAIM_CACHE_FILE, row);
 		}),
 	);
 
-	const done = doneIds(RESULT_FILE);
+	const done = doneIds(resultFile);
 	const byDataset = new Map<string, Triplet[]>();
 	for (const t of triplets) {
 		const arr = byDataset.get(t.dataset) ?? [];
@@ -138,13 +143,14 @@ async function main(): Promise<void> {
 		const questionText = questionFor(dataset);
 		const claims: ClusterClaim[] = group.map((t) => ({
 			clusterId: t.id,
-			canonicalClaim: claimCache.get(t.id)!,
-			publicExplanation: '',
+			canonicalClaim: claimCache.get(t.id)!.canonicalClaim,
+			publicExplanation: enriched ? claimCache.get(t.id)!.publicExplanation : '',
 			claimVersion: 1,
 			claimStatus: 'confirmed',
 			claimUpdatedAt: 0,
 			isSynth: false,
 			memberCount: 1,
+			exemplar: enriched ? t.anchor : undefined,
 		}));
 
 		const todo = group.filter((t) => !done.has(t.id));
@@ -192,10 +198,10 @@ async function main(): Promise<void> {
 					classifyOrdered(t.distractor, statementVectors[ti * 2 + 1]),
 				]);
 
-				appendJsonl(RESULT_FILE, {
+				appendJsonl(resultFile, {
 					id: t.id,
 					dataset,
-					condition: 'C',
+					condition,
 					codebookSize: claims.length,
 					anchorRankMatch: m.anchorRank,
 					anchorRankDistractor: d.anchorRank,
@@ -207,7 +213,7 @@ async function main(): Promise<void> {
 			}),
 		);
 	}
-	console.info(`Done → ${resultsPath(RESULT_FILE)}`);
+	console.info(`Done → ${resultsPath(resultFile)}`);
 }
 
 main().catch((error) => {

@@ -176,6 +176,48 @@ describe('claim-registry-service', () => {
 			expect(result.failedClosed).toBeUndefined();
 		});
 
+		it('renders enriched codebook lines (explanation + exemplar) into the prompt', async () => {
+			mockCallLLM.mockResolvedValue(
+				JSON.stringify({ matchIndex: 1, relation: 'expresses', confidence: 0.9, reason: '' }),
+			);
+			const enriched: ClusterClaim[] = [
+				{
+					...makeClaims(['Add more bike lanes downtown'])[0],
+					publicExplanation: 'Build protected cycling paths in the city center.',
+					exemplar: 'We really need safe places to ride bikes near the shops.',
+				},
+			];
+
+			await classifyAgainstClaims({
+				statementText: 'x',
+				questionText: 'q',
+				claims: enriched,
+			});
+
+			const user = mockCallLLM.mock.calls[0][0].user;
+			expect(user).toContain(
+				'1. Add more bike lanes downtown — Build protected cycling paths in the city center. (e.g.: "We really need safe places to ride bikes near the shops.")',
+			);
+		});
+
+		it('renders a bare canonical line when explanation and exemplar add nothing', async () => {
+			mockCallLLM.mockResolvedValue(
+				JSON.stringify({ matchIndex: null, relation: 'none', confidence: 0.5, reason: 'x' }),
+			);
+			const bare: ClusterClaim[] = [
+				{
+					...makeClaims(['Add more bike lanes downtown'])[0],
+					exemplar: 'Add more bike lanes downtown',
+				},
+			];
+
+			await classifyAgainstClaims({ statementText: 'x', questionText: 'q', claims: bare });
+
+			const user = mockCallLLM.mock.calls[0][0].user;
+			expect(user).toContain('1. Add more bike lanes downtown\n');
+			expect(user).not.toContain('e.g.');
+		});
+
 		it('clamps confidence into [0, 1]', async () => {
 			mockCallLLM.mockResolvedValue(
 				JSON.stringify({ matchIndex: 1, relation: 'expresses', confidence: 7, reason: '' }),

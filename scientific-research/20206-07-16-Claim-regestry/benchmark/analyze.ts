@@ -102,8 +102,10 @@ function main(): void {
 	const cosines = readJsonl<CosineRow>('cosines.jsonl').filter(isMain);
 	const b1 = readJsonl<RegistryRow>('registry-single-B1.jsonl').filter(isMain);
 	const b2 = readJsonl<RegistryRow>('registry-single-B2.jsonl').filter(isMain);
+	const b2e = readJsonl<RegistryRow>('registry-single-B2E.jsonl').filter(isMain);
 	const d = readJsonl<RegistryRow>('registry-single-D.jsonl').filter(isMain);
 	const c = readJsonl<CodebookRow>('registry-codebook-C.jsonl').filter(isMain);
+	const ce = readJsonl<CodebookRow>('registry-codebook-CE.jsonl').filter(isMain);
 
 	const cosById = new Map(cosines.map((r) => [r.id, r]));
 	const lines: string[] = [];
@@ -138,6 +140,7 @@ function main(): void {
 	const singleConditions: Array<[string, RegistryRow[]]> = [
 		['B1 — registry, raw-anchor claim, gpt-4o-mini', b1],
 		['B2 — registry, generated canonical claim', b2],
+		['B2E — registry, ENRICHED claim (canonical + explanation + exemplar)', b2e],
 		['D — registry, raw-anchor claim, gpt-4o', d],
 	];
 	for (const [title, rows] of singleConditions) {
@@ -177,8 +180,13 @@ function main(): void {
 	}
 
 	// ---- Condition C: full codebook ----------------------------------------
-	if (c.length > 0) {
-		put(`## Condition C — Full per-dataset codebook, n=${c.length}`);
+	const codebookConditions: Array<[string, CodebookRow[]]> = [
+		['C — Full per-dataset codebook', c],
+		['CE — Full codebook, ENRICHED claims (Phase 0)', ce],
+	];
+	for (const [cTitle, cRows] of codebookConditions) {
+		if (cRows.length === 0) continue;
+		put(`## Condition ${cTitle}, n=${cRows.length}`);
 		put();
 		const ownMatch = (r: CodebookRow): boolean =>
 			r.match.matchedClusterId === r.id && r.match.confidence >= MIN_CONFIDENCE;
@@ -186,13 +194,13 @@ function main(): void {
 			r.distractor.matchedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE;
 		put('| Metric | Value |');
 		put('|---|---|');
-		put(`| **Triplet accuracy** (match → own claim ∧ distractor ↛ own claim) | ${fmtRate(rateOf(c, (r) => ownMatch(r) && !ownDistractor(r)))} |`);
-		put(`| Match → own anchor claim | ${fmtRate(rateOf(c, ownMatch))} |`);
-		put(`| Match → any claim (secondary; near-duplicates legitimate) | ${fmtRate(rateOf(c, (r) => attaches(r.match)))} |`);
-		put(`| Distractor → own anchor claim (false attach) | ${fmtRate(rateOf(c, ownDistractor))} |`);
-		put(`| Distractor → any claim | ${fmtRate(rateOf(c, (r) => attaches(r.distractor)))} |`);
-		put(`| Distractor opposes own anchor claim | ${fmtRate(rateOf(c, (r) => r.distractor.opposedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE))} |`);
-		const meanSize = c.reduce((s, r) => s + r.codebookSize, 0) / c.length;
+		put(`| **Triplet accuracy** (match → own claim ∧ distractor ↛ own claim) | ${fmtRate(rateOf(cRows, (r) => ownMatch(r) && !ownDistractor(r)))} |`);
+		put(`| Match → own anchor claim | ${fmtRate(rateOf(cRows, ownMatch))} |`);
+		put(`| Match → any claim (secondary; near-duplicates legitimate) | ${fmtRate(rateOf(cRows, (r) => attaches(r.match)))} |`);
+		put(`| Distractor → own anchor claim (false attach) | ${fmtRate(rateOf(cRows, ownDistractor))} |`);
+		put(`| Distractor → any claim | ${fmtRate(rateOf(cRows, (r) => attaches(r.distractor)))} |`);
+		put(`| Distractor opposes own anchor claim | ${fmtRate(rateOf(cRows, (r) => r.distractor.opposedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE))} |`);
+		const meanSize = cRows.reduce((s, r) => s + r.codebookSize, 0) / cRows.length;
 		put(`| Mean codebook size | ${meanSize.toFixed(1)} |`);
 		put();
 	}
@@ -222,6 +230,17 @@ function main(): void {
 	if (b1.length && b2.length) {
 		put(mcnemarLine('B1 raw-anchor vs B2 generated-claim', b1Map, correctnessMap(b2, b1Correct)));
 	}
+	if (b2.length && b2e.length) {
+		const b2eCorrect = (r: RegistryRow): boolean => attaches(r.match) && !attaches(r.distractor);
+		put(mcnemarLine('B2 bare canonical vs B2E enriched (Phase 0)', correctnessMap(b2, b2eCorrect), correctnessMap(b2e, b2eCorrect)));
+	}
+	if (c.length && ce.length) {
+		const cCorrect = (r: CodebookRow): boolean =>
+			r.match.matchedClusterId === r.id &&
+			r.match.confidence >= MIN_CONFIDENCE &&
+			!(r.distractor.matchedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE);
+		put(mcnemarLine('C bare codebook vs CE enriched (Phase 0)', correctnessMap(c, cCorrect), correctnessMap(ce, cCorrect)));
+	}
 	if (b1.length && d.length) {
 		put(mcnemarLine('B1 gpt-4o-mini vs D gpt-4o', b1Map, correctnessMap(d, b1Correct)));
 	}
@@ -242,15 +261,18 @@ function main(): void {
 	const colA = perDataset(cosines, (r) => r.cosRawMatch > r.cosRawDistractor);
 	const colB1 = perDataset(b1, b1Correct);
 	const colB2 = perDataset(b2, (r) => attaches(r.match) && !attaches(r.distractor));
+	const colB2E = perDataset(b2e, (r) => attaches(r.match) && !attaches(r.distractor));
 	const colD = perDataset(d, (r) => attaches(r.match) && !attaches(r.distractor));
-	const colC = perDataset(c, (r) => {
+	const codebookCorrect = (r: CodebookRow): boolean => {
 		const own = r.match.matchedClusterId === r.id && r.match.confidence >= MIN_CONFIDENCE;
 		const ownD = r.distractor.matchedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE;
 
 		return own && !ownD;
-	});
-	put('| Dataset | A cosine-raw | B1 registry | B2 generated | D gpt-4o | C codebook |');
-	put('|---|---|---|---|---|---|');
+	};
+	const colC = perDataset(c, codebookCorrect);
+	const colCE = perDataset(ce, codebookCorrect);
+	put('| Dataset | A cosine-raw | B1 registry | B2 generated | B2E enriched | D gpt-4o | C codebook | CE enriched |');
+	put('|---|---|---|---|---|---|---|---|');
 	const cell = (m: Map<string, Rate>, dataset: string): string => {
 		const r = m.get(dataset);
 
@@ -258,7 +280,7 @@ function main(): void {
 	};
 	for (const dataset of datasets) {
 		put(
-			`| ${dataset} | ${cell(colA, dataset)} | ${cell(colB1, dataset)} | ${cell(colB2, dataset)} | ${cell(colD, dataset)} | ${cell(colC, dataset)} |`,
+			`| ${dataset} | ${cell(colA, dataset)} | ${cell(colB1, dataset)} | ${cell(colB2, dataset)} | ${cell(colB2E, dataset)} | ${cell(colD, dataset)} | ${cell(colC, dataset)} | ${cell(colCE, dataset)} |`,
 		);
 	}
 	put();

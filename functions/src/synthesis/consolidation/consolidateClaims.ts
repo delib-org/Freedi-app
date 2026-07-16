@@ -2,7 +2,11 @@ import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement } from '@freedi/shared-types';
 import { callLLM, extractJson, WORKER_MODEL } from '../../config/openai-chat';
-import { loadClaims, type ClusterClaim } from '../../services/claim-registry-service';
+import {
+	loadClaims,
+	renderClaimLine,
+	type ClusterClaim,
+} from '../../services/claim-registry-service';
 import { logError } from '../../utils/errorHandling';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
@@ -93,8 +97,10 @@ async function proposeConsolidation(
 	const empty: ConsolidationProposal = { merges: [], tooBroad: [] };
 	if (claims.length < 2) return empty;
 	try {
+		// Enriched lines (explanation + exemplar): merge/too-broad judgments lose
+		// the same nuance to canonical compression as classification does.
 		const list = claims
-			.map((c, i) => `${i + 1}. ${c.canonicalClaim} (${c.memberCount} statements)`)
+			.map((c, i) => `${renderClaimLine(c, i)} (${c.memberCount} statements)`)
 			.join('\n');
 		const text = await callLLM({
 			model: WORKER_MODEL,
