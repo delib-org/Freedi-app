@@ -21,9 +21,22 @@ import { enqueueItem } from '../queue/enqueue';
  *     auto-reprocessed through the pipeline (match another claim or spawn a
  *     provisional one). No admin queue on this path.
  *
+ * Broaden-ratchet guard: each broaden is individually safe (old ⊨ new ⇒ every
+ * member still expresses the claim), but broadens COMPOSE — N successive small
+ * generalizations can drift the meaning arbitrarily with zero member checks.
+ * The cluster therefore tracks `claimAnchorText` (the last wording members
+ * were actually validated against) and `claimBroadensSinceAnchor`; once the
+ * counter would exceed MAX_UNCHECKED_BROADENS, the new wording is classified
+ * against the ANCHOR directly. Anchor ⊨ new → accept and reset the counter
+ * (the entailment chain was re-established end-to-end); otherwise the drift is
+ * real → batched member re-validation, and the anchor moves to the new text.
+ *
  * Kept separate from consolidateClaims.ts so clusterRecompute (the title
  * regeneration site) can import it without an import cycle.
  */
+
+/** Consecutive broadens allowed before the new wording is checked against the anchor. */
+const MAX_UNCHECKED_BROADENS = 2;
 
 function db() {
 	return getFirestore();
@@ -51,6 +64,15 @@ export async function applyClaimTextChange(input: ClaimChangeInput): Promise<Cla
 		return { change: 'none', detachedIds: [] };
 	}
 
+	const anchorText =
+		typeof raw['claimAnchorText'] === 'string' && (raw['claimAnchorText'] as string).trim()
+			? (raw['claimAnchorText'] as string)
+			: oldClaim;
+	const broadensSinceAnchor =
+		typeof raw['claimBroadensSinceAnchor'] === 'number'
+			? (raw['claimBroadensSinceAnchor'] as number)
+			: 0;
+
 	const change = await classifyClaimChange(oldClaim, newClaim);
 	const now = Date.now();
 	const clusterRef = db().collection(Collections.statements).doc(cluster.statementId);
@@ -63,13 +85,56 @@ export async function applyClaimTextChange(input: ClaimChangeInput): Promise<Cla
 		lastUpdate: now,
 	};
 
-	if (change === 'reword' || change === 'broaden') {
-		await clusterRef.update(claimUpdate);
+	if (change === 'reword') {
+		await clusterRef.update({
+			...claimUpdate,
+			claimAnchorText: anchorText,
+			claimBroadensSinceAnchor: broadensSinceAnchor,
+		});
 
 		return { change, detachedIds: [] };
 	}
 
-	// narrow / different → batched member re-validation over briefs.
+	if (change === 'broaden') {
+		const nextCount = broadensSinceAnchor + 1;
+		if (nextCount <= MAX_UNCHECKED_BROADENS) {
+			await clusterRef.update({
+				...claimUpdate,
+				claimAnchorText: anchorText,
+				claimBroadensSinceAnchor: nextCount,
+			});
+
+			return { change, detachedIds: [] };
+		}
+
+		// Ratchet check: too many unchecked broadens — verify the entailment
+		// end-to-end against the anchor, not just against the previous step.
+		const anchorChange = anchorText.trim()
+			? await classifyClaimChange(anchorText, newClaim)
+			: 'broaden';
+		if (anchorChange === 'reword' || anchorChange === 'broaden') {
+			// Anchor ⊨ new holds directly; the chain is sound. Counter resets —
+			// the next broadens are again measured from this verified anchor.
+			await clusterRef.update({
+				...claimUpdate,
+				claimAnchorText: anchorText,
+				claimBroadensSinceAnchor: 0,
+			});
+
+			return { change, detachedIds: [] };
+		}
+
+		logger.info('claimRegistry.mutation.broadenRatchet', {
+			clusterId: cluster.statementId,
+			broadensSinceAnchor: nextCount,
+			anchorChange,
+		});
+		// Cumulative drift is real (anchor → new is narrow/different): fall
+		// through to member re-validation below.
+	}
+
+	// narrow / different (or a failed broaden-ratchet check) → batched member
+	// re-validation over briefs.
 	const memberIds = cluster.integratedOptions ?? [];
 	const memberSnaps =
 		memberIds.length > 0
@@ -91,6 +156,10 @@ export async function applyClaimTextChange(input: ClaimChangeInput): Promise<Cla
 
 	await clusterRef.update({
 		...claimUpdate,
+		// Members were just validated against the new wording — it becomes the
+		// anchor and the broaden counter restarts from a checked state.
+		claimAnchorText: newClaim,
+		claimBroadensSinceAnchor: 0,
 		...(detached.length > 0
 			? { integratedOptions: memberIds.filter((id) => !detached.includes(id)) }
 			: {}),

@@ -1,4 +1,4 @@
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement } from '@freedi/shared-types';
 import { callLLM, extractJson, WORKER_MODEL } from '../../config/openai-chat';
@@ -297,6 +297,31 @@ export async function runConsolidation(
 	// Surviving the pass untouched is the "survived one consolidation" half of
 	// the provisional → confirmed transition; member count is the other half.
 	await confirmMatureClaims(claims, touched);
+
+	// Registry self-audit: every merge is an OBSERVED false-"new" — the
+	// classifier (or a cosine spawn) created two claims for one proposal. The
+	// cumulative counters on the meta doc are therefore a running estimate of
+	// the registry's own recall error, the quantity that is otherwise silent
+	// (the mechanism's §5 measures the embeddings, not itself).
+	try {
+		await db()
+			.collection(META_COLLECTION)
+			.doc(questionId)
+			.set(
+				{
+					consolidationPasses: FieldValue.increment(1),
+					totalMergesApplied: FieldValue.increment(result.mergesApplied),
+					totalTooBroadFlagged: FieldValue.increment(result.flaggedTooBroad),
+					lastClaimCount: result.claimCount,
+				},
+				{ merge: true },
+			);
+	} catch (error) {
+		logError(error, {
+			operation: 'claimRegistry.consolidation.metrics',
+			statementId: questionId,
+		});
+	}
 
 	logger.info('claimRegistry.consolidation.done', { questionId, ...result });
 

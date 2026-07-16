@@ -161,10 +161,24 @@ The statement→claim relationship records `claimVersion` at attach time plus at
 method (`cosine` | `registry`) and confidence, so we always know which members were
 validated against which wording.
 
+**Broaden-ratchet guard:** each *broaden* is individually safe (old ⊨ new, so every
+member still expresses the claim), but broadens compose — several small
+generalizations can drift the meaning arbitrarily with zero member checks along the
+way. The cluster tracks `claimAnchorText` (the last wording members were actually
+validated against) and `claimBroadensSinceAnchor`; once the counter would exceed
+`MAX_UNCHECKED_BROADENS` (2), the new wording is classified against the **anchor**
+directly. Anchor ⊨ new → accept and reset the counter; otherwise the drift is real
+and the normal batched member re-validation runs, after which the anchor moves to
+the new text.
+
 **Opposite-meaning guard:** the classification prompt distinguishes *expresses* vs
 *opposes* a claim (same four-way taxonomy as `semantic-equivalence-service.ts`:
 same / related / different / opposite). A statement that opposes a claim is never
-attached to it.
+attached to it — but the contradiction itself is preserved as a first-class edge
+(confidence ≥ floor): the option gets `opposesClusterId`, the opposed cluster
+accumulates `counterStatementIds`. This is exactly the pro/con structure synthesis
+and the UI want (a claim shown together with its counter-positions) and previously
+was computed and then thrown away.
 
 ---
 
@@ -208,6 +222,16 @@ document, read through typed helpers rather than the shared schema.
 | `claimVersion` | `number` | Increments on any claim text change |
 | `claimStatus` | `'provisional' \| 'confirmed'` | Lifecycle state (§2.4) |
 | `claimUpdatedAt` | `number` (ms) | Timestamp of last claim change |
+| `claimAnchorText` | `string` | Last wording members were validated against (broaden-ratchet, §3) |
+| `claimBroadensSinceAnchor` | `number` | Consecutive unchecked broadens since the anchor |
+| `counterStatementIds` | `string[]` | Statements that oppose this claim (pro/con edge, §3) |
+
+**New field on option statements:** `opposesClusterId: string` — the claim this
+statement contradicts (set by the registry pass on a confident *opposes* verdict).
+
+Claim language: canonical claims and public explanations are generated in the
+**question's** language regardless of the statement's language, so a multilingual
+corpus still yields a uniform codebook (no founder-language effect).
 
 **New setting on `statementSettings.synthesis`:**
 
@@ -216,15 +240,36 @@ document, read through typed helpers rather than the shared schema.
 | `claimRegistryEnabled` | `boolean` | `false` |
 
 **Registry meta doc** (`_claimRegistry/{questionId}`): consolidation bookkeeping —
-`statementsSinceConsolidation`, `lastConsolidationAt`, counters for decision
-logging.
+`statementsSinceConsolidation`, `lastConsolidationAt` — plus cumulative
+self-audit counters: `consolidationPasses`, `totalMergesApplied`,
+`totalTooBroadFlagged`, `lastClaimCount`. **Every consolidation merge is an
+observed false-"new"** (two claims were created for one proposal), so
+`totalMergesApplied` is a running estimate of the registry's own recall error —
+the quantity that is otherwise structurally silent.
 
 **Decision log:** every registry decision is logged structurally
-(`logger.info('claimRegistry.decision', {...})`) with
-`{ optionId, matchedClusterId, cosineAtMatch, method: 'registry' | 'cosine', verdict }`.
+(`logger.info('claimRegistry.decision', {...})`) **and persisted** to
+`_claimRegistry/{questionId}/decisions` (Cloud Logging retention is too short and
+unqueryable for analysis) with
+`{ optionId, matchedClusterId, opposedClusterId, cosineAtMatch, relation, confidence, claimCount }`.
 A registry match at low cosine is precisely the "same meaning, distant embedding"
 case — the log measures how often it actually happens and accumulates labeled
-pairs for a potential future embedding fine-tune (out of scope for now).
+pairs for a potential future embedding fine-tune (out of scope for now). The
+persisted confidence values are also the dataset for calibrating the 0.6
+confidence floor empirically (LLM self-reported confidence is not trustworthy
+until measured).
+
+**Second-model audit:** ~5% of registry classifications are re-run on
+`TAXONOMY_MODEL` (the stronger model), detached from the pipeline; agreement is
+persisted alongside decisions (`kind: 'audit'`). This bounds the
+single-model-family bias the mechanism doc's §6 concedes is unmeasured. Audit
+disagreement never changes the primary decision — it only accumulates evidence.
+
+**Codebook ordering:** before classification the codebook is sorted
+most-plausible-first (cosine evidence where available, then member count) —
+LLMs under-match entries buried in the middle of long in-context lists, so
+geometry is used as a *ranker* (its good role) while the LLM remains the
+*gatekeeper*.
 
 ---
 

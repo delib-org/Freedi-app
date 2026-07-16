@@ -1,11 +1,15 @@
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement } from '@freedi/shared-types';
 import {
+	AUDIT_SAMPLE_RATE,
+	auditClassification,
 	classifyAgainstClaims,
 	loadClaims,
 	logRegistryDecision,
+	orderClaimsForClassification,
 } from '../../services/claim-registry-service';
+import { logError } from '../../utils/errorHandling';
 import { attachOptionToCluster } from './clusterOps';
 import type { SynthesisSettings } from './types';
 
@@ -56,8 +60,12 @@ export async function runRegistryPass(
 	const { option, parent, settings, cosineByCluster, triggerSource } = input;
 	if (!settings.claimRegistryEnabled) return null;
 
-	const claims = await loadClaims(option.parentId);
-	if (claims.length === 0) return null;
+	const loaded = await loadClaims(option.parentId);
+	if (loaded.length === 0) return null;
+
+	// Most-plausible-first mitigates LLM position bias on long codebooks:
+	// geometry is demoted from gatekeeper to ranker, its actually-good role.
+	const claims = orderClaimsForClassification(loaded, cosineByCluster);
 
 	const classification = await classifyAgainstClaims({
 		statementText: option.statement ?? '',
@@ -74,11 +82,36 @@ export async function runRegistryPass(
 		optionId: option.statementId,
 		method: 'registry',
 		matchedClusterId: classification.matchedClusterId,
+		opposedClusterId: classification.opposedClusterId,
 		cosineAtMatch,
 		relation: classification.relation,
 		confidence: classification.confidence,
 		claimCount: claims.length,
 	});
+
+	// Sampled second-model audit — detached: observes the classifier, never
+	// blocks or changes the pipeline decision.
+	if (Math.random() < AUDIT_SAMPLE_RATE) {
+		void auditClassification({
+			questionId: option.parentId,
+			optionId: option.statementId,
+			statementText: option.statement ?? '',
+			questionText: parent.statement ?? '',
+			claims,
+			primary: classification,
+		});
+	}
+
+	// An opposing statement is never attached to the claim it contradicts, but
+	// the contradiction itself is structure synthesis wants (pro/con pairing) —
+	// record the edge instead of discarding it, then continue to spawn/none.
+	if (
+		classification.relation === 'opposes' &&
+		classification.opposedClusterId &&
+		classification.confidence >= REGISTRY_MIN_CONFIDENCE
+	) {
+		await recordOpposesEdge(option, classification.opposedClusterId);
+	}
 
 	if (!classification.matchedClusterId) return null;
 	if (classification.confidence < REGISTRY_MIN_CONFIDENCE) {
@@ -114,4 +147,36 @@ export async function runRegistryPass(
 		clusterId: cluster.statementId,
 		reason: `registry match confidence=${classification.confidence.toFixed(2)} cosine=${cosineAtMatch === null ? 'n/a' : cosineAtMatch.toFixed(3)}`,
 	};
+}
+
+/**
+ * Persist a statement-opposes-claim edge on both endpoints: the option carries
+ * `opposesClusterId`, the opposed cluster accumulates `counterStatementIds`.
+ * Fail-soft — the edge is enrichment, never a pipeline gate.
+ */
+async function recordOpposesEdge(option: Statement, opposedClusterId: string): Promise<void> {
+	const now = Date.now();
+	try {
+		await db().collection(Collections.statements).doc(option.statementId).update({
+			opposesClusterId: opposedClusterId,
+			lastUpdate: now,
+		});
+		await db()
+			.collection(Collections.statements)
+			.doc(opposedClusterId)
+			.update({
+				counterStatementIds: FieldValue.arrayUnion(option.statementId),
+				lastUpdate: now,
+			});
+		logger.info('claimRegistry.opposesEdge', {
+			optionId: option.statementId,
+			opposedClusterId,
+		});
+	} catch (error) {
+		logError(error, {
+			operation: 'claimRegistry.recordOpposesEdge',
+			statementId: option.statementId,
+			metadata: { opposedClusterId },
+		});
+	}
 }

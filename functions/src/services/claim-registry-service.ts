@@ -1,7 +1,7 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement } from '@freedi/shared-types';
-import { callLLM, extractJson, WORKER_MODEL } from '../config/openai-chat';
+import { callLLM, extractJson, TAXONOMY_MODEL, WORKER_MODEL } from '../config/openai-chat';
 import { logError } from '../utils/errorHandling';
 
 /**
@@ -36,6 +36,19 @@ export interface ClaimFields {
 	claimUpdatedAt: number;
 }
 
+/**
+ * Broaden-ratchet anchor (mutation protocol). Individual "broaden" changes are
+ * safe without re-validation, but broadens COMPOSE: several small generalizations
+ * can move a claim's meaning substantially with zero member checks along the way.
+ * The anchor is the last wording the members were actually validated against;
+ * after MAX_UNCHECKED_BROADENS consecutive broadens the new wording is compared
+ * to the anchor directly, breaking the ratchet.
+ */
+export interface ClaimAnchorFields {
+	claimAnchorText: string;
+	claimBroadensSinceAnchor: number;
+}
+
 export interface ClusterClaim extends ClaimFields {
 	clusterId: string;
 	isSynth: boolean;
@@ -58,13 +71,18 @@ export function readClaimFields(cluster: Statement): ClaimFields | null {
 }
 
 /** Initial claim fields stamped on a freshly spawned cluster. */
-export function claimFieldsForSpawn(claim: string, explanation: string): ClaimFields {
+export function claimFieldsForSpawn(
+	claim: string,
+	explanation: string,
+): ClaimFields & ClaimAnchorFields {
 	return {
 		canonicalClaim: claim,
 		publicExplanation: explanation,
 		claimVersion: 1,
 		claimStatus: 'provisional',
 		claimUpdatedAt: Date.now(),
+		claimAnchorText: claim,
+		claimBroadensSinceAnchor: 0,
 	};
 }
 
@@ -127,6 +145,12 @@ export type ClaimRelation = 'expresses' | 'opposes' | 'none';
 export interface ClaimClassification {
 	/** Matched cluster, only when relation === 'expresses'. */
 	matchedClusterId: string | null;
+	/**
+	 * Contradicted cluster, only when relation === 'opposes'. Never an attach
+	 * target — but "claim X has counter-statements" is exactly the pro/con
+	 * structure synthesis wants, so the edge is preserved instead of discarded.
+	 */
+	opposedClusterId: string | null;
 	relation: ClaimRelation;
 	confidence: number;
 	reason: string;
@@ -134,10 +158,32 @@ export interface ClaimClassification {
 
 const NO_MATCH: ClaimClassification = {
 	matchedClusterId: null,
+	opposedClusterId: null,
 	relation: 'none',
 	confidence: 0,
 	reason: '',
 };
+
+/**
+ * Order the codebook for the classification prompt: LLMs have position bias in
+ * long in-context lists (entries buried mid-list are under-matched), so the most
+ * plausible candidates go first. Cosine evidence — where geometry produced any —
+ * is a good plausibility ranker even when it is a poor gatekeeper; clusters
+ * without evidence are ranked by member count (larger claims are the likelier
+ * match a priori). Pure reorder: never adds or drops claims.
+ */
+export function orderClaimsForClassification(
+	claims: ClusterClaim[],
+	cosineByCluster: ReadonlyMap<string, number>,
+): ClusterClaim[] {
+	return [...claims].sort((a, b) => {
+		const cosA = cosineByCluster.get(a.clusterId) ?? -1;
+		const cosB = cosineByCluster.get(b.clusterId) ?? -1;
+		if (cosA !== cosB) return cosB - cosA;
+
+		return b.memberCount - a.memberCount;
+	});
+}
 
 const CLASSIFY_SYSTEM = `You classify a citizen's statement against a list of canonical claims from the same deliberation question. Statements may be in any language (including Hebrew and Arabic); judge meaning, not wording.
 
@@ -158,6 +204,8 @@ export async function classifyAgainstClaims(input: {
 	statementText: string;
 	questionText: string;
 	claims: ClusterClaim[];
+	/** Model override — used by the sampled second-model audit (defaults to WORKER_MODEL). */
+	model?: string;
 }): Promise<ClaimClassification> {
 	const { statementText, questionText, claims } = input;
 	if (claims.length === 0 || !statementText.trim()) return { ...NO_MATCH };
@@ -174,7 +222,7 @@ Which claim (if any) does the new statement express? Respond with the JSON objec
 
 	try {
 		const text = await callLLM({
-			model: WORKER_MODEL,
+			model: input.model ?? WORKER_MODEL,
 			system: CLASSIFY_SYSTEM,
 			user,
 			temperature: 0,
@@ -191,10 +239,13 @@ Which claim (if any) does the new statement express? Respond with the JSON objec
 		const relation: ClaimRelation =
 			parsed.relation === 'expresses' || parsed.relation === 'opposes' ? parsed.relation : 'none';
 		const idx = typeof parsed.matchIndex === 'number' ? parsed.matchIndex - 1 : -1;
-		const matched = relation === 'expresses' && idx >= 0 && idx < claims.length;
+		const indexValid = idx >= 0 && idx < claims.length;
+		const matched = relation === 'expresses' && indexValid;
+		const opposed = relation === 'opposes' && indexValid;
 
 		return {
 			matchedClusterId: matched ? claims[idx].clusterId : null,
+			opposedClusterId: opposed ? claims[idx].clusterId : null,
 			relation: matched ? 'expresses' : relation === 'opposes' ? 'opposes' : 'none',
 			confidence:
 				typeof parsed.confidence === 'number' && Number.isFinite(parsed.confidence)
@@ -222,8 +273,10 @@ export interface GeneratedClaim {
 }
 
 const GENERATE_SYSTEM = `You write canonical claims for a public deliberation platform. Given a question and one or more statements proposing the same idea, produce:
-- "canonicalClaim": the core proposal in 5-15 words, neutral, present tense, no rhetoric. Same language as the statements.
-- "publicExplanation": 1-2 plain-language sentences explaining the proposal to the general public. Same language as the statements.
+- "canonicalClaim": the core proposal in 5-15 words, neutral, present tense, no rhetoric.
+- "publicExplanation": 1-2 plain-language sentences explaining the proposal to the general public.
+
+Write BOTH fields in the language of the QUESTION, even when the statements are in a different language — every claim of one question must share the question's language, so the codebook stays uniform regardless of which participant spoke first.
 
 Respond with JSON only: {"canonicalClaim": "...", "publicExplanation": "..."}`;
 
@@ -398,17 +451,112 @@ export async function revalidateMembers(
 // Decision log — the measurement layer. A registry match at low cosine is the
 // "same meaning, distant embeddings" case; the log both quantifies how often
 // it happens and accumulates labeled pairs for a future embedding fine-tune.
+//
+// Decisions are PERSISTED to Firestore (`_claimRegistry/{questionId}/decisions`),
+// not only logged: Cloud Logging retention is short and unqueryable for
+// analysis, while calibrating the confidence floor and estimating the
+// classifier's error rates both need the accumulated decision set.
 // ---------------------------------------------------------------------------
 
-export function logRegistryDecision(decision: {
+const META_COLLECTION = '_claimRegistry';
+const DECISIONS_SUBCOLLECTION = 'decisions';
+
+export interface RegistryDecision {
 	questionId: string;
 	optionId: string;
 	method: 'registry' | 'cosine';
 	matchedClusterId: string | null;
+	opposedClusterId?: string | null;
 	cosineAtMatch: number | null;
 	relation: ClaimRelation;
 	confidence: number;
 	claimCount: number;
-}): void {
+	model?: string;
+}
+
+/** Fire-and-forget: measurement must never delay or fail the pipeline. */
+export function logRegistryDecision(decision: RegistryDecision): void {
 	logger.info('claimRegistry.decision', decision);
+	db()
+		.collection(META_COLLECTION)
+		.doc(decision.questionId)
+		.collection(DECISIONS_SUBCOLLECTION)
+		.add({ ...decision, kind: 'decision', createdAt: Date.now() })
+		.catch((error: unknown) => {
+			logError(error, {
+				operation: 'claimRegistry.logRegistryDecision',
+				statementId: decision.questionId,
+			});
+		});
+}
+
+// ---------------------------------------------------------------------------
+// Sampled second-model audit. §6 of the mechanism doc concedes that systematic
+// biases of a single model family go unmeasured; re-running a small sample of
+// classifications on the stronger TAXONOMY_MODEL and persisting agreement is
+// the cheapest way to bound them. Runs detached from the pipeline (never on
+// the latency path) and only observes — an audit disagreement changes nothing
+// about the primary decision, it accumulates evidence for tuning.
+// ---------------------------------------------------------------------------
+
+export const AUDIT_SAMPLE_RATE = 0.05;
+
+export async function auditClassification(input: {
+	questionId: string;
+	optionId: string;
+	statementText: string;
+	questionText: string;
+	claims: ClusterClaim[];
+	primary: ClaimClassification;
+}): Promise<void> {
+	const { questionId, optionId, statementText, questionText, claims, primary } = input;
+	try {
+		const secondary = await classifyAgainstClaims({
+			statementText,
+			questionText,
+			claims,
+			model: TAXONOMY_MODEL,
+		});
+		const agrees =
+			secondary.relation === primary.relation &&
+			secondary.matchedClusterId === primary.matchedClusterId;
+
+		logger.info('claimRegistry.audit', {
+			questionId,
+			optionId,
+			agrees,
+			primaryRelation: primary.relation,
+			secondaryRelation: secondary.relation,
+		});
+		await db()
+			.collection(META_COLLECTION)
+			.doc(questionId)
+			.collection(DECISIONS_SUBCOLLECTION)
+			.add({
+				kind: 'audit',
+				questionId,
+				optionId,
+				agrees,
+				primary: {
+					relation: primary.relation,
+					matchedClusterId: primary.matchedClusterId,
+					confidence: primary.confidence,
+					model: WORKER_MODEL,
+				},
+				secondary: {
+					relation: secondary.relation,
+					matchedClusterId: secondary.matchedClusterId,
+					confidence: secondary.confidence,
+					model: TAXONOMY_MODEL,
+				},
+				claimCount: claims.length,
+				createdAt: Date.now(),
+			});
+	} catch (error) {
+		logError(error, {
+			operation: 'claimRegistry.auditClassification',
+			statementId: questionId,
+			metadata: { optionId },
+		});
+	}
 }

@@ -131,10 +131,16 @@ Properties:
    `new`. Assignments are therefore consistent by construction: two
    equivalent statements are compared against the same codebook, not against
    two independent generations.
-3. **Directionality guard.** The three-way output separates *expresses* from
-   *opposes* (contradiction of the same proposition), inheriting the
-   `same/related/different/opposite` taxonomy of the pairwise judge; an
-   opposing statement is never attached to the claim it contradicts.
+3. **Directionality guard — and a byproduct edge.** The three-way output
+   separates *expresses* from *opposes* (contradiction of the same
+   proposition), inheriting the `same/related/different/opposite` taxonomy of
+   the pairwise judge; an opposing statement is never attached to the claim it
+   contradicts. The verdict is not discarded: a confident *opposes* is
+   persisted as a first-class statement→claim edge (the option records the
+   claim it contradicts; the claim accumulates its counter-statements). The
+   relation "$s$ contradicts $c_i$" is precisely the pro/con structure the
+   synthesis layer needs to present a proposal together with its
+   counter-positions — information the classifier computes anyway.
 4. **Cost structure.** The fast path is unchanged: cosine attach passes
    (zero LLM calls) still resolve the typical high-similarity arrival. The
    registry call fires only when geometry fails — by construction, the
@@ -143,6 +149,17 @@ Properties:
    confidence floor ($0.6$) plus a "when in doubt, answer new" prompt prior
    biases the classifier toward precision; its false negatives degrade to the
    status quo ante rather than below it.
+
+Two implementation details matter for oracle quality. First, **prompt order**:
+LLMs exhibit position bias in long in-context lists (mid-list entries are
+under-matched), so the codebook is presented most-plausible-first — ranked by
+cosine evidence where geometry produced any, then by class size. This demotes
+the embedding from *gatekeeper* (where it fails) to *ranker* (where it is
+adequate), while the oracle retains the decision. Second, **codebook
+language**: canonical claims are generated in the *question's* language
+regardless of the arriving statement's language, so a multilingual corpus
+yields a uniform codebook rather than one whose per-claim language is an
+accident of who spoke first.
 
 Viewed abstractly, this is **online exemplar-based clustering with a
 linguistic oracle**: claims play the role of prototypes, but prototype
@@ -224,6 +241,19 @@ meaning moved* — one LLM call classifying the change into:
 | narrow | $c' \models c$ strictly | re-validate |
 | different | neither entailment | re-validate |
 
+The broaden row carries a hidden ratchet: each broaden is individually safe
+($c \models c'$ preserves membership), but broadens **compose** — a chain
+$c_1 \models c_2 \models \dots \models c_n$ of small generalizations can move
+the meaning arbitrarily far with zero member checks, because each step is
+locally exempt from re-validation. The protocol therefore maintains an
+**anchor**: the last wording the members were actually validated against.
+After $M$ consecutive unchecked broadens ($M = 2$), the new wording is
+classified against the anchor *directly*; if the anchor still entails it, the
+chain is re-established end-to-end and the counter resets, otherwise the
+accumulated drift is treated as narrow/different and members are re-validated
+(after which the anchor moves to the new text). This bounds unchecked
+composition without touching the common case.
+
 Re-validation is **one batched call per cluster**, not one per member: the
 prompt contains $c'$ and every member's brief, and returns the surviving
 subset. Members that no longer express the claim are detached and re-enter
@@ -243,10 +273,12 @@ cleanup but must never scatter an equivalence class.
 ## 5. Measurement: The Mechanism Audits Itself
 
 Every registry decision is logged as
-$(s, \hat{c}, \text{relation}, \text{confidence}, \cos_{\text{at-match}})$.
-A match whose recorded cosine is low (or absent — the zero-candidate path)
-is *precisely* an instance of the recall gap of §1.2, now observed rather
-than silent. The log therefore yields:
+$(s, \hat{c}, \text{relation}, \text{confidence}, \cos_{\text{at-match}})$ —
+and **persisted** (a per-question decision collection), since calibration and
+error estimation need the accumulated set, not ephemeral log lines. A match
+whose recorded cosine is low (or absent — the zero-candidate path) is
+*precisely* an instance of the recall gap of §1.2, now observed rather than
+silent. The log therefore yields:
 
 1. a running **estimate of the false-negative rate** of embedding-only
    retrieval on this exact corpus (the empirical question underlying the
@@ -257,6 +289,23 @@ than silent. The log therefore yields:
    (multiple-negatives-ranking or triplet objectives). The cheap mechanism
    bootstraps the expensive one.
 
+The registry's *own* errors are measured symmetrically, closing what would
+otherwise be the §1.2 blind spot recurring one level up:
+
+- **False-`new` rate.** When the classifier wrongly answers `new`, two claims
+  come to exist for one proposal — and every consolidation **merge is an
+  observed instance** of exactly that error. Cumulative merge counters per
+  question therefore estimate the classifier's recall error from data the
+  system already produces.
+- **Single-model bias.** A small sample (~5%) of classifications is re-run on
+  a stronger model from a different tier, detached from the decision path;
+  persisted (dis)agreement bounds family-systematic error without adding
+  latency or changing any primary decision.
+- **Confidence calibration.** Self-reported LLM confidence is not trustworthy
+  a priori; the persisted (confidence, outcome) pairs are the dataset from
+  which the confidence floor (currently $0.6$, a placeholder) is to be set
+  empirically.
+
 ---
 
 ## 6. Limitations and Failure Analysis
@@ -264,9 +313,10 @@ than silent. The log therefore yields:
 - **Oracle error.** The LLM classifier can attach wrongly (precision) or
   miss (recall). Precision is defended by the conservative prompt prior, the
   confidence floor, and the opposes-guard; recall failures degrade to the
-  pre-registry status quo, never below it. Systematic biases of a single
-  model family remain unmeasured; the decision log supports later human
-  audit.
+  pre-registry status quo, never below it — and are additionally *observed*
+  post hoc as consolidation merges (§5). Single-model systematic bias is
+  bounded by the sampled second-model audit (§5); residual shared-family bias
+  remains, and the persisted decision log supports later human audit.
 - **Prompt growth.** The classification prompt is linear in $K$. Proposal
   saturation keeps $K$ small in practice, and the existing
   synth/topic-cluster hierarchy supports two-stage classification
@@ -274,12 +324,15 @@ than silent. The log therefore yields:
   $K \sim 10^3$.
 - **Transitivity is approximate.** $\equiv$ drifts at class boundaries;
   chained merges can accrete non-equivalent members. Mitigations: one merge
-  per cluster per pass, conservative merge prompt, too-broad flagging, and
-  the mutation protocol's re-validation whenever a representative's meaning
-  moves.
+  per cluster per pass, conservative merge prompt, too-broad flagging, the
+  mutation protocol's re-validation whenever a representative's meaning
+  moves, and the broaden-ratchet anchor (§4) bounding unchecked chains of
+  generalization.
 - **Order effects remain, damped.** The first phrasing to arrive seeds the
   claim's wording and thus anchors subsequent classification. Consolidation
-  and title regeneration erode, but do not eliminate, founder effects.
+  and title regeneration erode, but do not eliminate, founder effects; pinning
+  the claim language to the question's language removes the *language*
+  component of the founder effect, not the framing component.
 - **Latency-sensitive paths are excluded by design.** The interactive
   find-similar flow (user mid-submission) receives a cheaper recall aid —
   query paraphrase expansion with max-similarity pooling — because a

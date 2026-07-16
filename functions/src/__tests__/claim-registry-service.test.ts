@@ -4,6 +4,7 @@ import {
 	classifyAgainstClaims,
 	classifyClaimChange,
 	generateClaim,
+	orderClaimsForClassification,
 	readClaimFields,
 	revalidateMembers,
 	type ClusterClaim,
@@ -82,6 +83,22 @@ describe('claim-registry-service', () => {
 
 			expect(result.matchedClusterId).toBeNull();
 			expect(result.relation).toBe('opposes');
+			// The contradiction edge is preserved (pro/con structure), not discarded.
+			expect(result.opposedClusterId).toBe('cluster-2');
+		});
+
+		it('leaves opposedClusterId empty on an "expresses" verdict', async () => {
+			mockCallLLM.mockResolvedValue(
+				JSON.stringify({ matchIndex: 1, relation: 'expresses', confidence: 0.9, reason: '' }),
+			);
+
+			const result = await classifyAgainstClaims({
+				statementText: 'x',
+				questionText: 'q',
+				claims,
+			});
+
+			expect(result.opposedClusterId).toBeNull();
 		});
 
 		it('returns no match for "none"', async () => {
@@ -300,6 +317,54 @@ describe('claim-registry-service', () => {
 			expect(fields.claimStatus).toBe('provisional');
 			expect(fields.canonicalClaim).toBe('claim text');
 			expect(fields.publicExplanation).toBe('explanation');
+		});
+
+		it('seeds the broaden-ratchet anchor at spawn', () => {
+			const fields = claimFieldsForSpawn('claim text', 'explanation');
+
+			expect(fields.claimAnchorText).toBe('claim text');
+			expect(fields.claimBroadensSinceAnchor).toBe(0);
+		});
+	});
+
+	describe('orderClaimsForClassification', () => {
+		it('puts claims with cosine evidence first, descending', () => {
+			const claims = makeClaims(['a', 'b', 'c']);
+			const cosine = new Map([
+				['cluster-1', 0.5],
+				['cluster-3', 0.8],
+			]);
+
+			const ordered = orderClaimsForClassification(claims, cosine);
+
+			expect(ordered.map((c) => c.clusterId)).toEqual(['cluster-3', 'cluster-1', 'cluster-2']);
+		});
+
+		it('breaks ties by member count (larger claims are the likelier match)', () => {
+			const claims = makeClaims(['a', 'b', 'c']);
+			claims[2].memberCount = 9;
+
+			const ordered = orderClaimsForClassification(claims, new Map());
+
+			expect(ordered[0].clusterId).toBe('cluster-3');
+		});
+
+		it('never adds or drops claims (pure reorder)', () => {
+			const claims = makeClaims(['a', 'b', 'c', 'd']);
+
+			const ordered = orderClaimsForClassification(claims, new Map([['cluster-2', 0.7]]));
+
+			expect(ordered).toHaveLength(claims.length);
+			expect(new Set(ordered.map((c) => c.clusterId))).toEqual(
+				new Set(claims.map((c) => c.clusterId)),
+			);
+			// Input untouched.
+			expect(claims.map((c) => c.clusterId)).toEqual([
+				'cluster-1',
+				'cluster-2',
+				'cluster-3',
+				'cluster-4',
+			]);
 		});
 	});
 });
