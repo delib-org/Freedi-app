@@ -4,8 +4,10 @@ import {
 	classifyAgainstClaims,
 	classifyClaimChange,
 	generateClaim,
+	isAttachTarget,
 	orderClaimsForClassification,
 	readClaimFields,
+	readClaimHierarchy,
 	revalidateMembers,
 	type ClusterClaim,
 } from '../services/claim-registry-service';
@@ -387,6 +389,48 @@ describe('claim-registry-service', () => {
 
 			expect(fields.claimAnchorText).toBe('claim text');
 			expect(fields.claimBroadensSinceAnchor).toBe(0);
+		});
+
+		it('spawns as a root-level specific claim (hierarchy defaults)', () => {
+			const fields = claimFieldsForSpawn('claim text', 'explanation');
+
+			expect(fields.claimLevel).toBe('specific');
+			expect(fields.parentClaimId).toBeNull();
+			expect(fields.childClaimIds).toEqual([]);
+		});
+	});
+
+	describe('readClaimHierarchy / isAttachTarget', () => {
+		it('defaults to a root-level specific claim on a doc without hierarchy fields', () => {
+			const cluster = { statementId: 'x', canonicalClaim: 'c' } as unknown as Statement;
+
+			expect(readClaimHierarchy(cluster)).toEqual({
+				parentClaimId: null,
+				claimLevel: 'specific',
+				childClaimIds: [],
+			});
+		});
+
+		it('reads explicit hierarchy fields and drops malformed child ids', () => {
+			const cluster = {
+				statementId: 'topic-1',
+				canonicalClaim: 'Transportation',
+				claimLevel: 'topic',
+				parentClaimId: null,
+				childClaimIds: ['a', 42, 'b', null],
+			} as unknown as Statement;
+
+			expect(readClaimHierarchy(cluster)).toEqual({
+				parentClaimId: null,
+				claimLevel: 'topic',
+				childClaimIds: ['a', 'b'],
+			});
+		});
+
+		it('topic claims are never attach targets; specific and legacy claims are', () => {
+			expect(isAttachTarget({ claimLevel: 'topic' })).toBe(false);
+			expect(isAttachTarget({ claimLevel: 'specific' })).toBe(true);
+			expect(isAttachTarget({})).toBe(true);
 		});
 	});
 

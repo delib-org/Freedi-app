@@ -49,6 +49,44 @@ export interface ClaimAnchorFields {
 	claimBroadensSinceAnchor: number;
 }
 
+// ---------------------------------------------------------------------------
+// Hierarchy (plans/claim-registry-hierarchy-plan.md, Phase 1 — data model only)
+//
+// Two levels: 'topic' claims are themes that organize 'specific' claims;
+// statements only ever attach to specific claims — a topic is a routing and
+// roll-up node, never an attach target. No production code creates topic
+// claims yet (Phase 3 grows them via consolidation splits / crowding); until
+// then every claim is 'specific' and behavior is unchanged.
+// ---------------------------------------------------------------------------
+
+export type ClaimLevel = 'topic' | 'specific';
+
+export interface ClaimHierarchyFields {
+	/** Topic-level claim this claim sits under; null = root/uncategorized. */
+	parentClaimId: string | null;
+	claimLevel: ClaimLevel;
+	/** Denormalized children of a topic claim (empty for specific claims). */
+	childClaimIds: string[];
+}
+
+/** Read hierarchy fields off a cluster doc; absent fields get safe defaults. */
+export function readClaimHierarchy(cluster: Statement): ClaimHierarchyFields {
+	const raw = cluster as unknown as Record<string, unknown>;
+
+	return {
+		parentClaimId: typeof raw['parentClaimId'] === 'string' ? raw['parentClaimId'] : null,
+		claimLevel: raw['claimLevel'] === 'topic' ? 'topic' : 'specific',
+		childClaimIds: Array.isArray(raw['childClaimIds'])
+			? (raw['childClaimIds'] as unknown[]).filter((id): id is string => typeof id === 'string')
+			: [],
+	};
+}
+
+/** Statements attach only to specific claims; topics organize, never hold members. */
+export function isAttachTarget(claim: Pick<ClusterClaim, 'claimLevel'>): boolean {
+	return claim.claimLevel !== 'topic';
+}
+
 export interface ClusterClaim extends ClaimFields {
 	clusterId: string;
 	isSynth: boolean;
@@ -61,6 +99,10 @@ export interface ClusterClaim extends ClaimFields {
 	 * and the exemplar restores what compression drops.
 	 */
 	exemplar?: string;
+	/** Hierarchy level; absent means 'specific' (every claim today). */
+	claimLevel?: ClaimLevel;
+	/** Topic this claim sits under; absent/null = root. */
+	parentClaimId?: string | null;
 }
 
 /** Max exemplar characters rendered into the classification prompt. */
@@ -102,7 +144,7 @@ export function readClaimFields(cluster: Statement): ClaimFields | null {
 export function claimFieldsForSpawn(
 	claim: string,
 	explanation: string,
-): ClaimFields & ClaimAnchorFields {
+): ClaimFields & ClaimAnchorFields & ClaimHierarchyFields {
 	return {
 		canonicalClaim: claim,
 		publicExplanation: explanation,
@@ -111,6 +153,11 @@ export function claimFieldsForSpawn(
 		claimUpdatedAt: Date.now(),
 		claimAnchorText: claim,
 		claimBroadensSinceAnchor: 0,
+		// Hierarchy defaults: every spawned claim is a root-level specific claim
+		// until topic routing (hierarchy plan Phase 2/3) places it.
+		parentClaimId: null,
+		claimLevel: 'specific',
+		childClaimIds: [],
 	};
 }
 
@@ -145,6 +192,7 @@ export async function loadClaims(questionId: string): Promise<ClusterClaim[]> {
 				claimUpdatedAt: 0,
 			};
 			if (!fields.canonicalClaim) continue;
+			const hierarchy = readClaimHierarchy(statement);
 			claims.push({
 				...fields,
 				clusterId: statement.statementId,
@@ -153,6 +201,8 @@ export async function loadClaims(questionId: string): Promise<ClusterClaim[]> {
 				// The cluster's own text (synthesized statement / title) as exemplar —
 				// no extra reads; renderClaimLine drops it when it adds nothing.
 				exemplar: statement.statement ?? undefined,
+				claimLevel: hierarchy.claimLevel,
+				parentClaimId: hierarchy.parentClaimId,
 			});
 		}
 
@@ -226,6 +276,7 @@ export function orderClaimsForClassification(
 const CLASSIFY_SYSTEM = `You classify a citizen's statement against a list of canonical claims from the same deliberation question. Statements may be in any language (including Hebrew and Arabic); judge meaning, not wording.
 
 Each claim line gives the canonical claim, and may add a plain-language explanation after "—" and an example member statement in (e.g.: "..."). Use the explanation and example to judge the claim's PRECISE meaning — the short canonical wording alone can under-specify it.
+CAUTION: a statement may reuse an example's exact wording while taking the OPPOSITE stance (e.g. an inserted "not", a swapped verb). Shared phrasing is never evidence of a match — judge stance and meaning only.
 
 Rules:
 - "expresses": the statement proposes essentially the SAME thing as one claim — its author would agree the claim states their idea. Different vocabulary, framing, or sentence structure does NOT matter; identical MEANING does.

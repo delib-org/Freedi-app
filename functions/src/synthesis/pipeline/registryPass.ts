@@ -5,6 +5,7 @@ import {
 	AUDIT_SAMPLE_RATE,
 	auditClassification,
 	classifyAgainstClaims,
+	isAttachTarget,
 	loadClaims,
 	logRegistryDecision,
 	orderClaimsForClassification,
@@ -60,7 +61,10 @@ export async function runRegistryPass(
 	const { option, parent, settings, cosineByCluster, triggerSource } = input;
 	if (!settings.claimRegistryEnabled) return null;
 
-	const loaded = await loadClaims(option.parentId);
+	// Statements attach only to specific claims — topic-level claims (hierarchy
+	// plan Phase 1+) are routing/roll-up nodes and never enter this codebook.
+	// No-op until topic claims exist; enforces the invariant from day one.
+	const loaded = (await loadClaims(option.parentId)).filter(isAttachTarget);
 	if (loaded.length === 0) return null;
 
 	// Most-plausible-first mitigates LLM position bias on long codebooks:
