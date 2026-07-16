@@ -6,7 +6,8 @@
 - Phase 0 SHIPPED + verified (`f403bf05a`): B2 70.1% → B2E 87.4%; codebook any-attach 74.4% → 92.9%.
 - Phase 0b SHIPPED + verified (`273b341fd`): stance-caution prompt line halved codebook false merges (19.3% → **10.3%**, p ≈ 1.3e-4 — back to pre-enrichment baseline) at −3.1pp recall; single-claim 88.6% / 3.8% false-attach. Combined 0+0b: recall gained without net precision cost.
 - Phase 1 SHIPPED (`273b341fd`): hierarchy fields + `isAttachTarget` invariant wired (no-op until topics exist).
-- Phases 2–4 not started; Phase 2 is the first behavior change (gate on ≥30-claim codebooks).
+- Phase 2 SHIPPED (`09be6876e`): `classifyHierarchical` two-hop + flat fallback, wired into `runRegistryPass`, decision-log method/routedTopicIds, 7 unit tests. DORMANT in production (no topic claims exist until Phase 3). Full-scale CH benchmark verification pending OpenAI daily request quota reset (10k RPD exhausted by 2026-07-16 benchmark runs) — run `LLM_CONCURRENCY=4 npx tsx run-registry-hierarchical.ts` then `analyze.ts`; gates: within 2pp of CE2 strict, fallback < 15%, mean candidates < 40% of codebook.
+- Phases 3–4 not started.
 
 **Evidence base:** the 2026-07-16 hard-triplet benchmark (`scientific-research/20206-07-16-Claim-regestry/TEST_REPORT.md`):
 - Registry classifier vs raw statements: 95.0% triplet accuracy; vs `generateClaim` canonicals: 70.1% → **the −25pp canonicalization loss is the biggest known defect** (§5.3).
