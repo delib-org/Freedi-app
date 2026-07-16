@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Can an AI Reader Beat Geometry? — Claim-Registry Benchmark Report</title>
+<style>
+  @page { size: A4; margin: 22mm 20mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 10.5pt; line-height: 1.55; color: #1a1a1a;
+    max-width: 170mm; margin: 0 auto;
+  }
+  h1 { font-size: 19pt; line-height: 1.25; margin: 0 0 4pt; }
+  .subtitle { font-size: 11.5pt; color: #444; margin-bottom: 2pt; font-style: italic; }
+  .meta { font-size: 9pt; color: #666; margin-bottom: 18pt; }
+  h2 { font-size: 13.5pt; margin: 22pt 0 6pt; border-bottom: 1.5pt solid #1a1a1a; padding-bottom: 3pt; }
+  h3 { font-size: 11.5pt; margin: 14pt 0 4pt; }
+  p { margin: 0 0 8pt; text-align: justify; }
+  .abstract { background: #f4f4f0; padding: 12pt 14pt; border-left: 3pt solid #1a1a1a; margin-bottom: 6pt; }
+  .abstract p { margin-bottom: 6pt; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0 12pt; font-size: 9.5pt; }
+  th { border-bottom: 1.5pt solid #1a1a1a; border-top: 1.5pt solid #1a1a1a; padding: 4pt 6pt; text-align: left; font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; }
+  td { border-bottom: 0.5pt solid #bbb; padding: 4pt 6pt; vertical-align: top; }
+  tr.hl td { background: #eef3ea; font-weight: bold; }
+  tr.ref td { color: #666; font-style: italic; }
+  .caption { font-size: 8.5pt; color: #555; margin: -8pt 0 14pt; font-family: Helvetica, Arial, sans-serif; }
+  .box { border: 1pt solid #999; padding: 10pt 12pt; margin: 10pt 0; background: #fafaf7; }
+  .box .lbl { font-family: Helvetica, Arial, sans-serif; font-size: 8pt; letter-spacing: 1pt; text-transform: uppercase; color: #666; margin-bottom: 4pt; }
+  .triplet td:first-child { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; white-space: nowrap; color: #555; }
+  code, .mono { font-family: 'SF Mono', Menlo, monospace; font-size: 9pt; background: #f0f0ec; padding: 0 2pt; }
+  .cond { margin: 10pt 0 12pt; padding-left: 10pt; border-left: 2.5pt solid #8aa07a; }
+  .cond h3 { margin-top: 0; }
+  .footnote { font-size: 8.5pt; color: #555; }
+  .pagebreak { page-break-before: always; }
+  ol li, ul li { margin-bottom: 5pt; }
+</style>
+</head>
+<body>
+
+<h1>Can an AI Reader Beat Geometry?</h1>
+<p class="subtitle">Benchmarking Freedi's claim registry against text embeddings on 875 adversarial statement triplets</p>
+<p class="meta">Freedi Research &nbsp;·&nbsp; 16 July 2026 &nbsp;·&nbsp; Branch <span class="mono">feat/claim-registry-improvements</span> &nbsp;·&nbsp; Evaluation data: Blair, Procaccia &amp; Tambe, <i>Embeddings for Preferences, Not Semantics</i> (2026)</p>
+
+<div class="abstract">
+<p><b>Abstract.</b> Deliberation platforms must decide, for every incoming statement, whether it repeats an idea already on the table, contradicts one, or introduces something new. The standard technique — measuring the distance between text <i>embeddings</i> — has a documented blind spot: it confuses <i>similar wording</i> with <i>similar opinion</i>. We tested Freedi's alternative, the <b>claim registry</b> (a small language model that reads a list of existing claims and judges each new statement against them), on the hardest published test of this blind spot: 875 triplets in which the correct partner statement uses different words and the wrong one uses nearly identical words with the opposite stance.</p>
+<p>The registry's production model (gpt-4o-mini) resolved <b>95.0%</b> of triplets correctly. The embedding model used in Freedi's own pipeline resolved <b>0.5%</b>, and the reference paper's best system — an embedding model fine-tuned specifically for this task — reached <b>80.0%</b>. However, when the registry judged against the short AI-written claim <i>summaries</i> that production actually stores, accuracy fell to <b>70.1%</b>: the weak link is not the judge but the summarized text it is given. We conclude with the production changes this implies and the run's operational lessons.</p>
+</div>
+
+<h2>1&nbsp;&nbsp;The problem in one example</h2>
+<p>Suppose one participant has already written:</p>
+<div class="box"><span class="lbl">Existing statement (anchor)</span>
+“It's so high that it will definitely cost some needy people their jobs.”</div>
+<p>Two new statements arrive:</p>
+<div class="box"><span class="lbl">New statement 1 — same opinion, different words (the “match”)</span>
+“The increase is so substantial that it is bound to lead to job losses among those in need.”
+<div style="height:6pt"></div>
+<span class="lbl">New statement 2 — nearly identical words, opposite opinion (the “distractor”)</span>
+“It's so high that it will definitely <b>provide</b> some needy people <b>with job opportunities</b>.”</div>
+<p>A deliberation platform should file statement&nbsp;1 <i>together with</i> the anchor and keep statement&nbsp;2 <i>apart</i> (ideally noting that it disagrees). This is harder than it looks for machines. The dominant technique converts each sentence into a point in a high-dimensional space — an <b>embedding</b> — and treats small distances as “same idea.” But embeddings are dominated by topic and vocabulary. Statement&nbsp;2 shares almost every word with the anchor, so it sits <i>closer</i> in embedding space than statement&nbsp;1, which says the same thing in fresh words. The geometry files the disagreement together with the opinion it disagrees with, and exiles the honest paraphrase.</p>
+<p>Blair, Procaccia and Tambe (Harvard) formalized this failure and published an evaluation set of 875 such <b>hard triplets</b> — (anchor, match, distractor) — drawn from eleven real public deliberations (Polis conversations on the Seattle minimum wage, Brexit, Canadian electoral reform, universal basic income, and a Kentucky town plan; Remesh sessions on campus protests, foreign intervention, and the right to assemble; and three generative-social-choice surveys on abortion policy and chatbot personalization). The anchors are real participant statements; the match and distractor are controlled rewrites. A system scores a triplet correct only if it accepts the match <i>and</i> rejects the distractor. Off-the-shelf embedding models score between 6% and 48% on this test — worse than coin-flipping — and the paper's own remedy, an embedding model fine-tuned on synthetic stance data (“DPT”), reaches 80.0%.</p>
+<p>Freedi's <b>claim registry</b> takes a different route entirely: instead of improving the ruler, it hires a reader.</p>
+
+<h2>2&nbsp;&nbsp;What the claim registry is</h2>
+<p>In Freedi, every question accumulates a <b>codebook</b>: a short list of <i>claims</i>, one per distinct idea participants have raised (“Add protected bike lanes on main streets”). When a new statement arrives and the fast geometric checks cannot place it, the registry makes <b>one call to a small, inexpensive language model</b> (gpt-4o-mini). The model is shown three things — the question, the numbered list of claims, and the new statement — and must answer in a fixed format: does the statement <b>express</b> one of the claims (same proposal in any words), <b>oppose</b> one (the contrary proposal on the same subject), or <b>none</b>? It also reports a confidence; production only files a statement under a claim when the answer is “expresses” with confidence ≥ 0.6. An “opposes” verdict is never filed as a match — it is recorded as a <i>counter-edge</i>, giving the synthesis layer explicit pro/con structure.</p>
+<p>Crucially, the model never sees other participants' raw statements and never compares statements to each other — only the short claim list and one new statement per call. Cost therefore grows with the number of distinct <i>ideas</i>, not the number of <i>participants</i>: about $0.11 per thousand statements at typical codebook sizes.</p>
+
+<h2>3&nbsp;&nbsp;What we tested — the six conditions</h2>
+<p>All conditions answer the same 875 triplets; they differ only in <i>which mechanism decides</i>. The benchmark calls Freedi's production code directly — nothing was re-implemented for the test.</p>
+
+<div class="cond">
+<h3>Condition A — Embeddings only (today's pipeline without the registry)</h3>
+<p>Each statement becomes a point using the exact embedding model Freedi's pipeline uses (<span class="mono">text-embedding-3-small</span>), and cosine distance decides. A triplet passes if the match lands closer to the anchor than the distractor. We also simulated the pipeline's real attachment thresholds (join a cluster at similarity ≥ 0.60; ≥ 0.85 for the stricter first pass) to ask: what would production do <i>without</i> the registry?</p>
+</div>
+
+<div class="cond">
+<h3>Condition A2 — Embeddings shortlist, then the reader (the standard “RAG” pattern)</h3>
+<p>The common industry design: use cheap geometry to <i>shortlist</i> candidate claims, and let the language model judge only the shortlist. If geometry never shortlists the right claim, the reader never sees it. Freedi's registry deliberately skips the shortlist and always shows the full claim list; this condition measures what that choice is worth here.</p>
+</div>
+
+<div class="cond">
+<h3>Condition B1 — The registry reading the participant's own words</h3>
+<p>The registry classifier exactly as designed, in the cleanest setting: the codebook contains one claim — the anchor statement verbatim — and the model judges the match and the distractor against it in separate calls, with the production confidence rule applied. This isolates the pure judging ability of the mechanism.</p>
+</div>
+
+<div class="cond">
+<h3>Condition B2 — The registry reading the AI-written summary (production-faithful)</h3>
+<p>Identical to B1 with one change: the claim text is not the anchor's own words but the 5–15-word neutral summary that production's claim-generation step writes when a claim is born — because that summary is what real codebooks store. Comparing B1 to B2 measures how much meaning the summarization step loses.</p>
+</div>
+
+<div class="cond">
+<h3>Condition C — The registry with a realistic, crowded codebook</h3>
+<p>Real questions have dozens of claims, not one. Here the codebook contains the generated claims of <i>all</i> anchors from the same deliberation (13–100 claims, average 94), ordered exactly as production orders them. The model must pick the right claim out of the crowd. One caveat known in advance: this benchmark codebook never ran production's <i>consolidation</i> step, which merges duplicate claims — so many equivalent claims coexist, and matching an equivalent-but-different claim is (unfairly) scored as an error.</p>
+</div>
+
+<div class="cond">
+<h3>Condition D — Same as B1, with the expensive model</h3>
+<p>gpt-4o (≈20× the price of gpt-4o-mini) replaces the worker model, answering whether production is leaving accuracy on the table by using the cheap model.</p>
+</div>
+
+<p class="footnote">Method notes: a stratified 150-triplet pilot (fixed seed, proportional across the 11 source deliberations) served as a go/no-go gate before the full run. All rates carry Wilson 95% confidence intervals; paired comparisons use exact McNemar tests. The triplet files do not include the original question text, so per-deliberation questions were reconstructed from the paper's dataset descriptions.</p>
+
+<div class="pagebreak"></div>
+
+<h2>4&nbsp;&nbsp;Results</h2>
+
+<table>
+<tr><th>System (n = 875 triplets)</th><th>Triplet accuracy</th><th>95% CI</th></tr>
+<tr><td>A — Embeddings only (Freedi's production embedding model)</td><td>0.5%</td><td>[0.2, 1.2]</td></tr>
+<tr class="ref"><td>Best off-the-shelf encoder in the reference paper (sentence-T5-XL)</td><td>48.3%</td><td>—</td></tr>
+<tr class="ref"><td>Reference paper's fine-tuned system (DPT sentence-T5-XL)</td><td>80.0%</td><td>—</td></tr>
+<tr><td>B2 — Registry reading AI-written claim summaries (production-faithful)</td><td>70.1%</td><td>[66.9, 73.0]</td></tr>
+<tr class="hl"><td>B1 — Registry reading the participant's own words (gpt-4o-mini)</td><td>95.0%</td><td>[93.3, 96.2]</td></tr>
+<tr><td>A2 — Embedding shortlist + reader (gate 0.45 or 0.60)</td><td>95.0%</td><td>identical to B1</td></tr>
+<tr><td>D — Registry, participant's own words, gpt-4o</td><td>96.5%</td><td>[95.0, 97.5]</td></tr>
+<tr><td>C — Registry, 94-claim codebooks, strict own-claim scoring</td><td>36.0%</td><td>[32.9, 39.2] (§4.4)</td></tr>
+</table>
+<p class="caption">Table 1 — Headline triplet accuracy. Statistical strength of the central contrasts (exact McNemar): registry (B1) vs embeddings (A): 827 vs 0 discordant triplets, p ≈ 10<sup>−249</sup>; B1 vs B2: 222 vs 4, p ≈ 10<sup>−60</sup>; B1 vs D: 12 vs 25, p = 0.047.</p>
+
+<h3>4.1&nbsp;&nbsp;Embeddings cannot see disagreement — and production thresholds make it worse</h3>
+<p>The production embedding model resolved 4 triplets out of 875. This is below every encoder in the reference paper: the stance flip barely moves the vector because the vector is made of topic and vocabulary, which the flip shares by construction. The threshold simulation turns this into an operational statement: <b>100%</b> of the stance-flipped distractors score above the pipeline's cluster-joining threshold (0.60) against the anchor, and 99.1% clear even the strict 0.85 threshold. Without the registry pass, essentially every “I oppose X” arriving after “I support X” would be merged into the same cluster. No threshold can fix this — on these pairs the flip is <i>always</i> at least as close as the honest paraphrase.</p>
+
+<h3>4.2&nbsp;&nbsp;The reader beats the ruler — including the purpose-built ruler</h3>
+<p>Reading the claim and judging meaning (B1) resolved 831 of 875 triplets: 96.8% of matches accepted, only 2.1% of distractors wrongly accepted — and 95.9% of distractors explicitly recognized as <i>opposing</i> the claim, a verdict no distance measure can express and which production stores as pro/con structure. This is 15 points above the reference paper's fine-tuned embedding, achieved with zero task-specific training and a model that costs ≈$0.11 per thousand statements. Inspection of B1's 44 failures shows they concentrate in genuinely ambiguous anchors (sarcasm, self-contradiction) and a few triplets whose “paraphrase” arguably flips the anchor's stance itself — i.e., partly label noise in the evaluation set rather than classifier error.</p>
+
+<h3>4.3&nbsp;&nbsp;The main discovery: the summaries, not the judge, are the weak link</h3>
+<p>Under B2 — the same judge reading the 5–15-word canonical summary that production actually stores — accuracy fell 24.9 points to 70.1%. Two hundred twenty-two triplets that B1 resolves correctly fail under B2, against 4 in the other direction. The failure mechanism is consistent and visible: compression shifts the proposition. An anchor arguing that <i>individuals guided by doctors</i> should decide became the summary “The medical community should decide abortion policy”; the judge then — correctly — refused to match statements that no longer agree with the shifted text. The judge is faithful; its input is lossy.</p>
+<p>This is the report's most actionable finding, because it is cheap to fix: the classification prompt currently renders each codebook entry as the bare summary line. Including the claim's public explanation and one exemplar member statement per line should recover most of the lost fidelity — a prompt-construction change, verifiable by re-running this benchmark.</p>
+
+<h3>4.4&nbsp;&nbsp;A crowded codebook mostly inherits known losses</h3>
+<p>Under strict scoring (the match must attach to <i>its own</i> anchor's claim among ~94) condition C scores 36.0%. Decomposition shows most of the gap is not list-scale confusion: 74.4% of matches attach to <i>some</i> claim (versus 79.7% single-claim recall in B2 — so list length itself costs only ~5 points); 290 matches attach to a <i>different</i> claim, and sampling shows these are predominantly legitimate equivalents — the unconsolidated benchmark codebook contains many near-duplicate claims, in one sampled case two word-for-word identical ones. Meanwhile the critical safety property holds: distractors wrongly attaching to their own claim stayed at 10.3%, in line with B2. At production scale the judge keeps rejecting flips and keeps filing paraphrases somewhere reasonable; it inherits the summary problem of §4.3 and is penalized by duplicates that production's consolidation would have merged.</p>
+
+<h3>4.5&nbsp;&nbsp;The cheap model is the right model</h3>
+<p>gpt-4o gains 1.5 points over gpt-4o-mini (96.5% vs 95.0%, p = 0.047) at roughly twenty times the price. Interestingly, the cheap model names the opposition more often (“opposes”: 95.9% vs 80.6%; gpt-4o prefers a cautious “none”), so mini actually yields <i>better</i> counter-edge coverage while both reject the false attachment equally well. Production's division of labor — mini decides, gpt-4o audits a 5% sample — is validated.</p>
+
+<h3>4.6&nbsp;&nbsp;Per-deliberation consistency</h3>
+<table>
+<tr><th>Source deliberation</th><th>A embeddings</th><th>B1 registry</th><th>B2 summaries</th><th>D gpt-4o</th></tr>
+<tr><td>Abortion survey (generation)</td><td>0.0%</td><td>98.0%</td><td>76.0%</td><td>98.0%</td></tr>
+<tr><td>Abortion survey (validation)</td><td>1.0%</td><td>92.0%</td><td>79.0%</td><td>97.0%</td></tr>
+<tr><td>Chatbot personalization survey</td><td>0.0%</td><td>90.9%</td><td>52.5%</td><td>90.9%</td></tr>
+<tr><td>Seattle $15 minimum wage (n=13)</td><td>0.0%</td><td>76.9%</td><td>30.8%</td><td>92.3%</td></tr>
+<tr><td>Bowling Green town plan</td><td>0.0%</td><td>99.0%</td><td>93.0%</td><td>99.0%</td></tr>
+<tr><td>Brexit consensus</td><td>0.0%</td><td>97.9%</td><td>68.8%</td><td>97.9%</td></tr>
+<tr><td>Canadian electoral reform</td><td>0.0%</td><td>96.0%</td><td>60.0%</td><td>97.0%</td></tr>
+<tr><td>Universal basic income (n=15)</td><td>0.0%</td><td>93.3%</td><td>80.0%</td><td>100.0%</td></tr>
+<tr><td>Campus protests</td><td>2.0%</td><td>98.0%</td><td>68.0%</td><td>98.0%</td></tr>
+<tr><td>Foreign intervention</td><td>0.0%</td><td>97.0%</td><td>62.0%</td><td>97.0%</td></tr>
+<tr><td>Right to assemble</td><td>1.0%</td><td>90.0%</td><td>74.0%</td><td>94.0%</td></tr>
+</table>
+<p class="caption">Table 2 — Triplet accuracy by source deliberation. The registry (B1) is ≥ 90% on ten of eleven; the exception is the smallest and noisiest set (n = 13, containing sarcastic anchors).</p>
+
+<div class="pagebreak"></div>
+
+<h2>5&nbsp;&nbsp;What A2 does and does not prove</h2>
+<p>The shortlist-then-read design (A2) tied B1 exactly — because on this dataset the shortlist never filtered anything. Hard triplets are lexically close <i>on purpose</i>; every candidate sails past the similarity gate, so the reader always saw the right claim. Two consequences. First, all of the accuracy comes from the reader; the geometry contributed nothing here. Second, this dataset <b>cannot</b> test the registry's other design claim — that always reading the <i>full</i> list catches same-idea/different-words statements that a geometric shortlist would miss. Testing that requires the opposite kind of pair (low similarity, same meaning), which the registry's own production decision log accumulates over time.</p>
+
+<h2>6&nbsp;&nbsp;Operational lesson: rate limits can silently corrupt fail-safe classifiers</h2>
+<p>The gpt-4o condition initially saturated the organization's 30,000-tokens-per-minute limit for that model. The production LLM wrapper retried three times within ~1.5 seconds — tuned for transient blips, not a bucket that refills over a minute — and the classifier then <i>failed closed</i>, returning “none.” By design that is the safe degradation for a live pipeline; but a failed-closed “none” was indistinguishable from an honest “none,” and 260 corrupted results entered the data before detection. The rows were purged and re-run under matched concurrency (zero corruption after). Two production fixes were merged from this lesson (commit <span class="mono">25f25c07</span>): rate-limit-aware retries that honor the server's requested wait, and an explicit <span class="mono">failedClosed</span> marker so degraded verdicts can never masquerade as judgments — in a live deployment the old behavior would have surfaced as a silent burst of spurious “new claim” spawns during any dense backfill.</p>
+
+<h2>7&nbsp;&nbsp;Cost</h2>
+<table>
+<tr><th>Stage</th><th>LLM calls</th><th>Estimated cost</th></tr>
+<tr><td>B1 — classification, gpt-4o-mini</td><td>1,750</td><td>$0.19</td></tr>
+<tr><td>B2 — claim generation + classification</td><td>2,625</td><td>$0.25</td></tr>
+<tr><td>D — classification, gpt-4o</td><td>1,750</td><td>$3.16</td></tr>
+<tr><td>C — classification against ~94-claim codebooks</td><td>1,750</td><td>$0.72</td></tr>
+<tr><td>Embeddings (conditions A and C ordering)</td><td>≈7,500 texts</td><td>$0.01</td></tr>
+<tr class="hl"><td>Entire benchmark</td><td>≈8,000</td><td>≈ $4.30</td></tr>
+</table>
+<p class="caption">Table 3 — Benchmark cost. Production-relevant rates: ≈ $0.11 per 1,000 registry classifications at small codebooks; ≈ $0.41 per 1,000 at 100-claim codebooks (gpt-4o-mini).</p>
+
+<h2>8&nbsp;&nbsp;Limitations</h2>
+<ol>
+<li><b>Question texts were reconstructed.</b> The triplet files carry no question; we wrote per-deliberation questions from the paper's descriptions. Marginal judgments could shift with different wording.</li>
+<li><b>The evaluation set contains label noise.</b> Anchors are raw participant text (including sarcasm), and a few of the paper's GPT-4o-generated “paraphrases” arguably flip stance themselves. The registry's residual errors concentrate exactly there.</li>
+<li><b>The recall claim is untested here</b> (§5): this dataset can only measure resistance to false merging, not the ability to find matches that geometry misses.</li>
+<li><b>Condition C conflates three effects</b> (summary loss, unconsolidated duplicates, true list-scale confusion); its strict score is a lower bound. A consolidated-codebook variant is the natural follow-up.</li>
+<li><b>Pairwise, English-only, single run.</b> The test isolates one decision; it does not simulate the full pipeline's dynamics (cosine passes firing first, spawning, consolidation over time). Temperature-0 runs are near-deterministic but were not repeated.</li>
+</ol>
+
+<h2>9&nbsp;&nbsp;Conclusions and recommendations</h2>
+<ol>
+<li><b>Ship the registry pass.</b> It is the only mechanism in the pipeline that distinguishes disagreement from agreement; the embedding passes alone would merge opposing statements essentially always (§4.1). Cost: $0.11–0.41 per thousand statements.</li>
+<li><b>Fix the codebook text, not the judge.</b> Enrich each claim line in the classification prompt with the public explanation and one exemplar statement; the B1–B2 gap bounds the available gain at ≈25 points (§4.3). Re-run conditions B2 and C afterwards to verify.</li>
+<li><b>Keep gpt-4o-mini as the worker</b> and gpt-4o as the sampled auditor (§4.5).</li>
+<li><b>Respect per-model rate ceilings in any batch operation</b> (backfills, first-runs): size concurrency to the model's tokens-per-minute limit; the merged retry and marker fixes make violations visible rather than silent (§6).</li>
+<li><b>Follow-up measurements:</b> a consolidated-codebook version of condition C; and a low-similarity paraphrase benchmark built from production decision logs, to measure the recall advantage this dataset cannot show.</li>
+</ol>
+
+<p class="footnote" style="margin-top:16pt; border-top: 0.5pt solid #999; padding-top: 6pt;">
+Reproduction: <span class="mono">scientific-research/20206-07-16-Claim-regestry/benchmark/</span> — the harness imports the production classifier unmodified; all raw per-triplet decisions are preserved in append-only result files. Reference: C. Blair, A.&nbsp;D. Procaccia, M. Tambe, “Embeddings for Preferences, Not Semantics,” 2026 (evaluation set <span class="mono">hard_eval_triplets_1k.jsonl</span>, n = 875). Engineering companion with full statistical tables: <span class="mono">TEST_REPORT.md</span> in this directory.
+</p>
+
+</body>
+</html>
