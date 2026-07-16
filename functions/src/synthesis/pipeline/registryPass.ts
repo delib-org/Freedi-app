@@ -87,11 +87,13 @@ export async function runRegistryPass(
 		relation: classification.relation,
 		confidence: classification.confidence,
 		claimCount: claims.length,
+		...(classification.failedClosed ? { failedClosed: true } : {}),
 	});
 
 	// Sampled second-model audit — detached: observes the classifier, never
-	// blocks or changes the pipeline decision.
-	if (Math.random() < AUDIT_SAMPLE_RATE) {
+	// blocks or changes the pipeline decision. A failed-closed primary is not a
+	// judgment, so there is nothing to audit (and gpt-4o budget is scarce).
+	if (Math.random() < AUDIT_SAMPLE_RATE && !classification.failedClosed) {
 		void auditClassification({
 			questionId: option.parentId,
 			optionId: option.statementId,

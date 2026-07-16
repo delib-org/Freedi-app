@@ -142,7 +142,7 @@ describe('claim-registry-service', () => {
 			expect(mockCallLLM).not.toHaveBeenCalled();
 		});
 
-		it('fails closed (no match) on LLM error', async () => {
+		it('fails closed (no match) on LLM error, marked as failedClosed', async () => {
 			mockCallLLM.mockRejectedValue(new Error('rate limited'));
 
 			const result = await classifyAgainstClaims({
@@ -153,6 +153,27 @@ describe('claim-registry-service', () => {
 
 			expect(result.matchedClusterId).toBeNull();
 			expect(result.relation).toBe('none');
+			expect(result.failedClosed).toBe(true);
+		});
+
+		it('does NOT mark an honest LLM "none" verdict as failedClosed', async () => {
+			mockCallLLM.mockResolvedValue(
+				JSON.stringify({
+					matchIndex: null,
+					relation: 'none',
+					confidence: 0.9,
+					reason: 'unrelated',
+				}),
+			);
+
+			const result = await classifyAgainstClaims({
+				statementText: 'anything',
+				questionText: 'q',
+				claims,
+			});
+
+			expect(result.relation).toBe('none');
+			expect(result.failedClosed).toBeUndefined();
 		});
 
 		it('clamps confidence into [0, 1]', async () => {

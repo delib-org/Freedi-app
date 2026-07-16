@@ -154,6 +154,13 @@ export interface ClaimClassification {
 	relation: ClaimRelation;
 	confidence: number;
 	reason: string;
+	/**
+	 * True when the LLM call itself failed (outage, exhausted rate-limit
+	 * retries) and the "none" is a degraded default, NOT a judgment. Without
+	 * this, a saturated TPM ceiling looks like a burst of honest "new claim"
+	 * verdicts — silent classifier corruption the decision log can't see.
+	 */
+	failedClosed?: boolean;
 }
 
 const NO_MATCH: ClaimClassification = {
@@ -259,7 +266,7 @@ Which claim (if any) does the new statement express? Respond with the JSON objec
 			metadata: { claimCount: claims.length },
 		});
 
-		return { ...NO_MATCH };
+		return { ...NO_MATCH, failedClosed: true };
 	}
 }
 
@@ -472,6 +479,8 @@ export interface RegistryDecision {
 	confidence: number;
 	claimCount: number;
 	model?: string;
+	/** The classifier call failed and this decision is a degraded no-match, not a judgment. */
+	failedClosed?: boolean;
 }
 
 /** Fire-and-forget: measurement must never delay or fail the pipeline. */
@@ -517,6 +526,13 @@ export async function auditClassification(input: {
 			claims,
 			model: TAXONOMY_MODEL,
 		});
+		// A failed audit call says nothing about (dis)agreement — persisting it
+		// would poison the family-bias estimate with rate-limit noise.
+		if (secondary.failedClosed) {
+			logger.warn('claimRegistry.audit.skippedFailedClosed', { questionId, optionId });
+
+			return;
+		}
 		const agrees =
 			secondary.relation === primary.relation &&
 			secondary.matchedClusterId === primary.matchedClusterId;
