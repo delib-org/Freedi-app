@@ -38,6 +38,17 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | Distractor "none" | 13.9% [11.8, 16.4] (122/875) |
 | Mean confidence (match / distractor) | 0.880 / 0.894 |
 
+## Condition B2E — registry, ENRICHED claim (canonical + explanation + exemplar), n=875
+
+| Metric | Value |
+|---|---|
+| **Triplet accuracy** (match attaches ∧ distractor does not) | 87.4% [85.1, 89.5] (765/875) |
+| Match recall (attaches) | 93.3% [91.4, 94.7] (816/875) |
+| Distractor false-attach | 6.6% [5.2, 8.5] (58/875) |
+| Distractor detected as "opposes" | 91.4% [89.4, 93.1] (800/875) |
+| Distractor "none" | 1.9% [1.2, 3.1] (17/875) |
+| Mean confidence (match / distractor) | 0.912 / 0.934 |
+
 ## Condition D — registry, raw-anchor claim, gpt-4o, n=875
 
 | Metric | Value |
@@ -79,6 +90,18 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | Distractor opposes own anchor claim | 35.5% [32.4, 38.8] (311/875) |
 | Mean codebook size | 94.3 |
 
+## Condition CE — Full codebook, ENRICHED claims (Phase 0), n=875
+
+| Metric | Value |
+|---|---|
+| **Triplet accuracy** (match → own claim ∧ distractor ↛ own claim) | 49.6% [46.3, 52.9] (434/875) |
+| Match → own anchor claim | 62.3% [59.0, 65.4] (545/875) |
+| Match → any claim (secondary; near-duplicates legitimate) | 92.9% [91.0, 94.4] (813/875) |
+| Distractor → own anchor claim (false attach) | 19.3% [16.8, 22.1] (169/875) |
+| Distractor → any claim | 31.8% [28.8, 34.9] (278/875) |
+| Distractor opposes own anchor claim | 47.3% [44.0, 50.6] (414/875) |
+| Mean codebook size | 94.3 |
+
 ## Paired McNemar tests (triplet-correct, common ids)
 
 | Comparison (A vs B) | n | A✓B✗ | A✗B✓ | p (exact) |
@@ -86,23 +109,25 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | B1 registry vs A cosine-raw | 875 | 827 | 0 | 2.23e-249 |
 | B1 registry vs A2 gate 0.45 | 875 | 0 | 0 | 1.00e+0 |
 | B1 raw-anchor vs B2 generated-claim | 875 | 222 | 4 | 2.00e-60 |
+| B2 bare canonical vs B2E enriched (Phase 0) | 875 | 4 | 156 | 3.69e-41 |
+| C bare codebook vs CE enriched (Phase 0) | 875 | 40 | 159 | 5.43e-18 |
 | B1 gpt-4o-mini vs D gpt-4o | 875 | 12 | 25 | 4.70e-2 |
 | B1 single-claim vs C full codebook | 875 | 521 | 5 | 3.03e-147 |
 
 ## Per-dataset triplet accuracy
 
-| Dataset | A cosine-raw | B1 registry | B2 generated | D gpt-4o | C codebook |
-|---|---|---|---|---|---|
-| gsc_abortion_gen | 0.0% (0/100) | 98.0% (98/100) | 76.0% (76/100) | 98.0% (98/100) | 22.0% (22/100) |
-| gsc_abortion_val | 1.0% (1/100) | 92.0% (92/100) | 79.0% (79/100) | 97.0% (97/100) | 32.0% (32/100) |
-| gsc_chatbot_gen | 0.0% (0/99) | 90.9% (90/99) | 52.5% (52/99) | 90.9% (90/99) | 27.3% (27/99) |
-| polis_15_per_hour_seattle | 0.0% (0/13) | 76.9% (10/13) | 30.8% (4/13) | 92.3% (12/13) | 7.7% (1/13) |
-| polis_american_assembly_bowling_green | 0.0% (0/100) | 99.0% (99/100) | 93.0% (93/100) | 99.0% (99/100) | 81.0% (81/100) |
-| polis_brexit_consensus | 0.0% (0/48) | 97.9% (47/48) | 68.8% (33/48) | 97.9% (47/48) | 54.2% (26/48) |
-| polis_canadian_electoral_reform | 0.0% (0/100) | 96.0% (96/100) | 60.0% (60/100) | 97.0% (97/100) | 23.0% (23/100) |
-| polis_scoop_hivemind_ubi | 0.0% (0/15) | 93.3% (14/15) | 80.0% (12/15) | 100.0% (15/15) | 60.0% (9/15) |
-| remesh_campus_protests | 2.0% (2/100) | 98.0% (98/100) | 68.0% (68/100) | 98.0% (98/100) | 31.0% (31/100) |
-| remesh_foreign_intervention | 0.0% (0/100) | 97.0% (97/100) | 62.0% (62/100) | 97.0% (97/100) | 26.0% (26/100) |
-| remesh_right_to_assemble | 1.0% (1/100) | 90.0% (90/100) | 74.0% (74/100) | 94.0% (94/100) | 37.0% (37/100) |
+| Dataset | A cosine-raw | B1 registry | B2 generated | B2E enriched | D gpt-4o | C codebook | CE enriched |
+|---|---|---|---|---|---|---|---|
+| gsc_abortion_gen | 0.0% (0/100) | 98.0% (98/100) | 76.0% (76/100) | 88.0% (88/100) | 98.0% (98/100) | 22.0% (22/100) | 30.0% (30/100) |
+| gsc_abortion_val | 1.0% (1/100) | 92.0% (92/100) | 79.0% (79/100) | 88.0% (88/100) | 97.0% (97/100) | 32.0% (32/100) | 34.0% (34/100) |
+| gsc_chatbot_gen | 0.0% (0/99) | 90.9% (90/99) | 52.5% (52/99) | 78.8% (78/99) | 90.9% (90/99) | 27.3% (27/99) | 37.4% (37/99) |
+| polis_15_per_hour_seattle | 0.0% (0/13) | 76.9% (10/13) | 30.8% (4/13) | 61.5% (8/13) | 92.3% (12/13) | 7.7% (1/13) | 46.2% (6/13) |
+| polis_american_assembly_bowling_green | 0.0% (0/100) | 99.0% (99/100) | 93.0% (93/100) | 97.0% (97/100) | 99.0% (99/100) | 81.0% (81/100) | 95.0% (95/100) |
+| polis_brexit_consensus | 0.0% (0/48) | 97.9% (47/48) | 68.8% (33/48) | 83.3% (40/48) | 97.9% (47/48) | 54.2% (26/48) | 66.7% (32/48) |
+| polis_canadian_electoral_reform | 0.0% (0/100) | 96.0% (96/100) | 60.0% (60/100) | 86.0% (86/100) | 97.0% (97/100) | 23.0% (23/100) | 57.0% (57/100) |
+| polis_scoop_hivemind_ubi | 0.0% (0/15) | 93.3% (14/15) | 80.0% (12/15) | 100.0% (15/15) | 100.0% (15/15) | 60.0% (9/15) | 100.0% (15/15) |
+| remesh_campus_protests | 2.0% (2/100) | 98.0% (98/100) | 68.0% (68/100) | 92.0% (92/100) | 98.0% (98/100) | 31.0% (31/100) | 46.0% (46/100) |
+| remesh_foreign_intervention | 0.0% (0/100) | 97.0% (97/100) | 62.0% (62/100) | 86.0% (86/100) | 97.0% (97/100) | 26.0% (26/100) | 35.0% (35/100) |
+| remesh_right_to_assemble | 1.0% (1/100) | 90.0% (90/100) | 74.0% (74/100) | 87.0% (87/100) | 94.0% (94/100) | 37.0% (37/100) | 47.0% (47/100) |
 
 Paper Table 3 reference — hard triplets: base ST5-XL 48.3%, DPT-tuned 80.0 ± 0.37%.

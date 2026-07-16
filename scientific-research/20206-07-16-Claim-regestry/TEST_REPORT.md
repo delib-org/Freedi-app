@@ -127,6 +127,17 @@ B2 replaces the raw anchor with `generateClaim`'s 5–15-word canonical — exac
 
 **Production implication (recommended change):** classify against richer claim context — at minimum `canonicalClaim` + `publicExplanation`, ideally plus one exemplar member statement per claim. This is a prompt-construction change in `classifyAgainstClaims` (the codebook line currently renders `canonicalClaim` only). The B1↔B2 gap bounds the available gain at up to ~25 points on stance-critical matching.
 
+**Post-fix verification (Phase 0, shipped in commit `f403bf05a`).** Codebook lines were enriched to `<canonical> — <explanation> (e.g.: "<exemplar>")` and conditions B2/C re-run as B2E/CE (n=875 each):
+
+| | Bare canonicals | Enriched (Phase 0) | Δ | McNemar |
+|---|---|---|---|---|
+| Single claim, triplet accuracy | B2: 70.1% | **B2E: 87.4%** [85.1, 89.5] | +17.3pp | 156 fixed / 4 regressed, p ≈ 4e-41 |
+| Single claim, match recall | 79.7% | 93.3% | +13.6pp | |
+| Full codebook, strict triplet accuracy | C: 36.0% | **CE: 49.6%** | +13.6pp | 159 fixed / 40 regressed, p ≈ 5e-18 |
+| Full codebook, match → any claim | 74.4% | **92.9%** | +18.5pp | |
+
+Enrichment recovers ~69% of the canonicalization loss and lifts codebook-scale attach recall to near single-claim levels (92.9% vs B1's 96.8%). **Trade-off:** the exemplar (the anchor's own wording) also attracts the lexically-mimicking stance-flip — distractor false-attach rises from 12.8%→6.6%… improved at single-claim scale, but at codebook scale distractor→own-claim rises 10.3%→19.3%. Net accuracy improves strongly in both settings; the residual B2E failures split evenly between missed matches (59) and false attaches (58). The false-attach side is worth a follow-up: rendering the exemplar with an explicit "wording may resemble opposing statements — judge stance" instruction, or choosing a member exemplar other than the anchor.
+
 ### 5.4 Embedding-gated retrieval ties the registry here — by construction, not in general
 
 A2 (cosine gate ≥ 0.45 or 0.60, then judge) is *identical* to B1 on this dataset: 0 of 875 matches were lost at the gate, because hard triplets are lexically close on purpose — nuisance similarity is the trap. This dataset therefore **cannot test the registry's recall claim** (finding same-meaning/different-wording statements that cosine retrieval misses, the §1.2 "recall gap" of the mechanism doc). What it does establish: all of the accuracy comes from the judge, none from the geometry. Measuring the recall-gap advantage needs the opposite dataset — low-cosine paraphrase pairs — which the registry's own decision log accumulates in production (matches recorded at low/absent cosine).
