@@ -108,6 +108,14 @@ function main(): void {
 	const c = readJsonl<CodebookRow>('registry-codebook-C.jsonl').filter(isMain);
 	const ce = readJsonl<CodebookRow>('registry-codebook-CE.jsonl').filter(isMain);
 	const ce2 = readJsonl<CodebookRow>('registry-codebook-CE2.jsonl').filter(isMain);
+	interface HierRow extends CodebookRow {
+		topicCount: number;
+		candidateCountMatch: number;
+		candidateCountDistractor: number;
+		match: CodebookRow['match'] & { method?: string; routedTopicIds?: string[] };
+		distractor: CodebookRow['distractor'] & { method?: string; routedTopicIds?: string[] };
+	}
+	const ch = readJsonl<HierRow>('registry-hierarchical-CH.jsonl').filter(isMain);
 
 	const cosById = new Map(cosines.map((r) => [r.id, r]));
 	const lines: string[] = [];
@@ -187,6 +195,7 @@ function main(): void {
 		['C — Full per-dataset codebook', c],
 		['CE — Full codebook, ENRICHED claims (Phase 0)', ce],
 		['CE2 — Enriched + stance-caution prompt (Phase 0b)', ce2],
+		['CH — Two-hop hierarchical + flat fallback (Phase 2)', ch],
 	];
 	for (const [cTitle, cRows] of codebookConditions) {
 		if (cRows.length === 0) continue;
@@ -206,6 +215,27 @@ function main(): void {
 		put(`| Distractor opposes own anchor claim | ${fmtRate(rateOf(cRows, (r) => r.distractor.opposedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE))} |`);
 		const meanSize = cRows.reduce((s, r) => s + r.codebookSize, 0) / cRows.length;
 		put(`| Mean codebook size | ${meanSize.toFixed(1)} |`);
+		put();
+	}
+
+	// ---- CH routing metrics (Phase 2 gates) --------------------------------
+	if (ch.length > 0) {
+		const sides = ch.flatMap((r) => [
+			{ method: r.match.method, candidates: r.candidateCountMatch, size: r.codebookSize },
+			{ method: r.distractor.method, candidates: r.candidateCountDistractor, size: r.codebookSize },
+		]);
+		const n = sides.length;
+		const hier = sides.filter((s) => s.method === 'registry-hier').length;
+		const fallback = sides.filter((s) => s.method === 'registry-fallback').length;
+		const meanCand = sides.reduce((a, s) => a + s.candidates, 0) / n;
+		const meanSize = sides.reduce((a, s) => a + s.size, 0) / n;
+		put('## CH routing metrics (Phase 2 gates)');
+		put();
+		put('| Metric | Value | Gate |');
+		put('|---|---|---|');
+		put(`| Fallback rate (either hop said none) | ${fmtRate(wilson(fallback, n))} | < 15% |`);
+		put(`| Routed (two-hop) decisions | ${fmtRate(wilson(hier, n))} | — |`);
+		put(`| Mean candidate-list size | ${meanCand.toFixed(1)} of ${meanSize.toFixed(1)} (${((meanCand / meanSize) * 100).toFixed(0)}%) | < 40% of codebook |`);
 		put();
 	}
 
@@ -258,6 +288,13 @@ function main(): void {
 	}
 	if (b1.length && d.length) {
 		put(mcnemarLine('B1 gpt-4o-mini vs D gpt-4o', b1Map, correctnessMap(d, b1Correct)));
+	}
+	if (ce2.length && ch.length) {
+		const ok = (r: CodebookRow): boolean =>
+			r.match.matchedClusterId === r.id &&
+			r.match.confidence >= MIN_CONFIDENCE &&
+			!(r.distractor.matchedClusterId === r.id && r.distractor.confidence >= MIN_CONFIDENCE);
+		put(mcnemarLine('CE2 flat enriched vs CH two-hop (Phase 2)', correctnessMap(ce2, ok), correctnessMap(ch, ok)));
 	}
 	if (b1.length && c.length) {
 		const cMap = correctnessMap(c, (r) =>

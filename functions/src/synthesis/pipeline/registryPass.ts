@@ -4,11 +4,10 @@ import { Collections, type Statement } from '@freedi/shared-types';
 import {
 	AUDIT_SAMPLE_RATE,
 	auditClassification,
-	classifyAgainstClaims,
+	classifyHierarchical,
 	isAttachTarget,
 	loadClaims,
 	logRegistryDecision,
-	orderClaimsForClassification,
 } from '../../services/claim-registry-service';
 import { logError } from '../../utils/errorHandling';
 import { attachOptionToCluster } from './clusterOps';
@@ -61,20 +60,19 @@ export async function runRegistryPass(
 	const { option, parent, settings, cosineByCluster, triggerSource } = input;
 	if (!settings.claimRegistryEnabled) return null;
 
-	// Statements attach only to specific claims — topic-level claims (hierarchy
-	// plan Phase 1+) are routing/roll-up nodes and never enter this codebook.
-	// No-op until topic claims exist; enforces the invariant from day one.
-	const loaded = (await loadClaims(option.parentId)).filter(isAttachTarget);
-	if (loaded.length === 0) return null;
+	// Full codebook including topic claims — classifyHierarchical routes via
+	// topics on large codebooks (two small hops + flat fallback) and reads the
+	// flat list directly on small ones. Statements only ever attach to specific
+	// claims; topics are routing nodes (isAttachTarget enforced inside).
+	const loaded = await loadClaims(option.parentId);
+	const specifics = loaded.filter(isAttachTarget);
+	if (specifics.length === 0) return null;
 
-	// Most-plausible-first mitigates LLM position bias on long codebooks:
-	// geometry is demoted from gatekeeper to ranker, its actually-good role.
-	const claims = orderClaimsForClassification(loaded, cosineByCluster);
-
-	const classification = await classifyAgainstClaims({
+	const classification = await classifyHierarchical({
 		statementText: option.statement ?? '',
 		questionText: parent.statement ?? '',
-		claims,
+		claims: loaded,
+		cosineByCluster,
 	});
 
 	const cosineAtMatch = classification.matchedClusterId
@@ -84,13 +82,16 @@ export async function runRegistryPass(
 	logRegistryDecision({
 		questionId: option.parentId,
 		optionId: option.statementId,
-		method: 'registry',
+		method: classification.method,
 		matchedClusterId: classification.matchedClusterId,
 		opposedClusterId: classification.opposedClusterId,
 		cosineAtMatch,
 		relation: classification.relation,
 		confidence: classification.confidence,
-		claimCount: claims.length,
+		claimCount: specifics.length,
+		...(classification.routedTopicIds.length > 0
+			? { routedTopicIds: classification.routedTopicIds }
+			: {}),
 		...(classification.failedClosed ? { failedClosed: true } : {}),
 	});
 
@@ -103,7 +104,7 @@ export async function runRegistryPass(
 			optionId: option.statementId,
 			statementText: option.statement ?? '',
 			questionText: parent.statement ?? '',
-			claims,
+			claims: specifics,
 			primary: classification,
 		});
 	}

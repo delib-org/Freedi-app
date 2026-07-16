@@ -355,6 +355,141 @@ Which claim (if any) does the new statement express? Respond with the JSON objec
 }
 
 // ---------------------------------------------------------------------------
+// Hierarchical classification (hierarchy plan Phase 2): route to topics first,
+// classify within them, and ALWAYS fall back to the full flat list when a hop
+// answers "none" — routing may save tokens on the common path, it must never
+// hide a claim (the recall-gap lesson: a gate that filters can misfile; a
+// gate with an ungated second look cannot).
+// ---------------------------------------------------------------------------
+
+/** Below this many specific claims a flat read is already cheap — no routing hop. */
+export const HIERARCHY_MIN_CLAIMS = 30;
+/** Boundary statements straddle themes; routing keeps the top TWO candidates. */
+const MAX_ROUTED_TOPICS = 2;
+
+export type RegistryMethod = 'registry' | 'registry-hier' | 'registry-fallback';
+
+export interface HierarchicalClassification extends ClaimClassification {
+	/** Which path produced the decision — the fallback-hit rate is a live routing-quality metric. */
+	method: RegistryMethod;
+	/** Topic claims hop 1 routed to (empty on the flat paths). */
+	routedTopicIds: string[];
+}
+
+const ROUTE_SYSTEM = `You route a citizen's statement to the topics of a deliberation question. Topics are broad themes that organize specific claims; you are NOT judging agreement, only subject relevance. Statements may be in any language; judge meaning, not wording.
+
+Pick UP TO TWO topics the statement most plausibly belongs under. If no listed topic covers the statement's subject, return an empty list.
+
+Respond with JSON only: {"topicIndices": [<1-based indices, up to 2>], "reason": "<brief>"}`;
+
+/**
+ * Hop 1: which topic claims does the statement fall under? Fails open to []
+ * (→ flat fallback). Exported: Phase 3 uses the same routing to place newly
+ * spawned claims under topics.
+ */
+export async function routeToTopics(input: {
+	statementText: string;
+	questionText: string;
+	topics: ClusterClaim[];
+	model?: string;
+}): Promise<ClusterClaim[]> {
+	const { statementText, questionText, topics } = input;
+	if (topics.length === 0) return [];
+	try {
+		const list = topics.map((t, i) => renderClaimLine(t, i)).join('\n');
+		const text = await callLLM({
+			model: input.model ?? WORKER_MODEL,
+			system: ROUTE_SYSTEM,
+			user: `Question: "${questionText}"\n\nTopics:\n${list}\n\nStatement: "${statementText}"\n\nRespond with the JSON object.`,
+			temperature: 0,
+			maxTokens: 200,
+			jsonMode: true,
+		});
+		const parsed = JSON.parse(extractJson(text)) as { topicIndices?: unknown };
+		if (!Array.isArray(parsed.topicIndices)) return [];
+
+		return parsed.topicIndices
+			.filter((i): i is number => typeof i === 'number')
+			.map((i) => i - 1)
+			.filter((i) => i >= 0 && i < topics.length)
+			.slice(0, MAX_ROUTED_TOPICS)
+			.map((i) => topics[i]);
+	} catch (error) {
+		logError(error, {
+			operation: 'claimRegistry.routeToTopics',
+			metadata: { topicCount: topics.length },
+		});
+
+		return [];
+	}
+}
+
+/**
+ * Two-hop classification over a hierarchical codebook, with flat fallback.
+ *
+ * Flat read when the codebook is small or has no topics (today's behavior).
+ * Otherwise: hop 1 routes to ≤2 topics; hop 2 classifies against those topics'
+ * children plus root-level specifics; any "none" along the way triggers one
+ * flat classification over ALL specific claims before concluding no-match.
+ * Topic claims are never attach targets — hop 2 and the fallback see only
+ * specific claims.
+ */
+export async function classifyHierarchical(input: {
+	statementText: string;
+	questionText: string;
+	/** Full codebook including topic claims (loadClaims output). */
+	claims: ClusterClaim[];
+	cosineByCluster: ReadonlyMap<string, number>;
+	model?: string;
+}): Promise<HierarchicalClassification> {
+	const { statementText, questionText, claims, cosineByCluster, model } = input;
+	const specifics = claims.filter(isAttachTarget);
+	const topics = claims.filter((c) => c.claimLevel === 'topic');
+
+	const flat = async (method: RegistryMethod): Promise<HierarchicalClassification> => {
+		const ordered = orderClaimsForClassification(specifics, cosineByCluster);
+		const result = await classifyAgainstClaims({
+			statementText,
+			questionText,
+			claims: ordered,
+			model,
+		});
+
+		return { ...result, method, routedTopicIds: [] };
+	};
+
+	if (topics.length === 0 || specifics.length < HIERARCHY_MIN_CLAIMS) {
+		return flat('registry');
+	}
+
+	const routed = await routeToTopics({ statementText, questionText, topics, model });
+	if (routed.length === 0) return flat('registry-fallback');
+
+	const routedIds = new Set(routed.map((t) => t.clusterId));
+	const candidates = specifics.filter(
+		(c) => (c.parentClaimId != null && routedIds.has(c.parentClaimId)) || c.parentClaimId == null,
+	);
+	// Routing that excludes nothing has no fallback to offer — classify flat once.
+	if (candidates.length >= specifics.length) {
+		const result = await flat('registry-hier');
+
+		return { ...result, routedTopicIds: [...routedIds] };
+	}
+
+	const ordered = orderClaimsForClassification(candidates, cosineByCluster);
+	const hop2 = await classifyAgainstClaims({ statementText, questionText, claims: ordered, model });
+	if (hop2.relation !== 'none' && !hop2.failedClosed) {
+		return { ...hop2, method: 'registry-hier', routedTopicIds: [...routedIds] };
+	}
+
+	// "None" within the routed scope is not "none" — the right claim may live
+	// under an unrouted topic. One full flat read decides.
+	const fallback = await flat('registry-fallback');
+
+	return { ...fallback, routedTopicIds: [...routedIds] };
+}
+
+// ---------------------------------------------------------------------------
 // Claim generation (spawn of singletons, first-run backfill)
 // ---------------------------------------------------------------------------
 
@@ -555,7 +690,7 @@ const DECISIONS_SUBCOLLECTION = 'decisions';
 export interface RegistryDecision {
 	questionId: string;
 	optionId: string;
-	method: 'registry' | 'cosine';
+	method: RegistryMethod | 'cosine';
 	matchedClusterId: string | null;
 	opposedClusterId?: string | null;
 	cosineAtMatch: number | null;
@@ -565,6 +700,8 @@ export interface RegistryDecision {
 	model?: string;
 	/** The classifier call failed and this decision is a degraded no-match, not a judgment. */
 	failedClosed?: boolean;
+	/** Topic claims hop 1 routed to (hierarchical path only). */
+	routedTopicIds?: string[];
 }
 
 /** Fire-and-forget: measurement must never delay or fail the pipeline. */

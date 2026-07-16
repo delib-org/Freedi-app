@@ -3,7 +3,9 @@ import {
 	claimFieldsForSpawn,
 	classifyAgainstClaims,
 	classifyClaimChange,
+	classifyHierarchical,
 	generateClaim,
+	HIERARCHY_MIN_CLAIMS,
 	isAttachTarget,
 	orderClaimsForClassification,
 	readClaimFields,
@@ -397,6 +399,161 @@ describe('claim-registry-service', () => {
 			expect(fields.claimLevel).toBe('specific');
 			expect(fields.parentClaimId).toBeNull();
 			expect(fields.childClaimIds).toEqual([]);
+		});
+	});
+
+	describe('classifyHierarchical', () => {
+		const noCosine = new Map<string, number>();
+
+		/** Codebook: 2 topics, `n` specifics split under them plus some at root. */
+		function makeHierarchy(n: number): ClusterClaim[] {
+			const topics: ClusterClaim[] = [
+				{ ...makeClaims(['Transportation themes'])[0], clusterId: 'topic-a', claimLevel: 'topic' },
+				{ ...makeClaims(['Housing themes'])[0], clusterId: 'topic-b', claimLevel: 'topic' },
+			];
+			const specifics: ClusterClaim[] = Array.from({ length: n }, (_, i) => ({
+				...makeClaims([`Specific claim number ${i}`])[0],
+				clusterId: `spec-${i}`,
+				claimLevel: 'specific' as const,
+				parentClaimId: i % 3 === 0 ? 'topic-a' : i % 3 === 1 ? 'topic-b' : null,
+			}));
+
+			return [...topics, ...specifics];
+		}
+
+		const expressesReply = (index: number): string =>
+			JSON.stringify({ matchIndex: index, relation: 'expresses', confidence: 0.9, reason: 'r' });
+		const noneReply = JSON.stringify({
+			matchIndex: null,
+			relation: 'none',
+			confidence: 0.8,
+			reason: 'r',
+		});
+
+		it('reads the flat list in one call when there are no topic claims', async () => {
+			mockCallLLM.mockResolvedValue(expressesReply(1));
+			const claims = makeHierarchy(HIERARCHY_MIN_CLAIMS + 5).filter(
+				(c) => c.claimLevel !== 'topic',
+			);
+
+			const result = await classifyHierarchical({
+				statementText: 's',
+				questionText: 'q',
+				claims,
+				cosineByCluster: noCosine,
+			});
+
+			expect(result.method).toBe('registry');
+			expect(mockCallLLM).toHaveBeenCalledTimes(1);
+		});
+
+		it('reads the flat list when the codebook is below HIERARCHY_MIN_CLAIMS', async () => {
+			mockCallLLM.mockResolvedValue(expressesReply(1));
+
+			const result = await classifyHierarchical({
+				statementText: 's',
+				questionText: 'q',
+				claims: makeHierarchy(5),
+				cosineByCluster: noCosine,
+			});
+
+			expect(result.method).toBe('registry');
+			expect(mockCallLLM).toHaveBeenCalledTimes(1);
+		});
+
+		it('routes then classifies within the routed topic (two calls, scoped hop 2)', async () => {
+			mockCallLLM
+				.mockResolvedValueOnce(JSON.stringify({ topicIndices: [1], reason: 'transport' }))
+				.mockResolvedValueOnce(expressesReply(1));
+
+			const result = await classifyHierarchical({
+				statementText: 's',
+				questionText: 'q',
+				claims: makeHierarchy(HIERARCHY_MIN_CLAIMS + 6),
+				cosineByCluster: noCosine,
+			});
+
+			expect(result.method).toBe('registry-hier');
+			expect(result.routedTopicIds).toEqual(['topic-a']);
+			expect(result.matchedClusterId).not.toBeNull();
+			expect(mockCallLLM).toHaveBeenCalledTimes(2);
+			// hop 2 must NOT contain topic-b's children
+			const hop2User = mockCallLLM.mock.calls[1][0].user;
+			expect(hop2User).not.toMatch(/Specific claim number 1\b/); // 1 % 3 === 1 → topic-b
+			expect(hop2User).toMatch(/Specific claim number 0\b/); // topic-a child
+			expect(hop2User).toMatch(/Specific claim number 2\b/); // root — always included
+		});
+
+		it('falls back to the full flat list when routing answers none', async () => {
+			mockCallLLM
+				.mockResolvedValueOnce(JSON.stringify({ topicIndices: [], reason: 'no theme' }))
+				.mockResolvedValueOnce(expressesReply(2));
+
+			const result = await classifyHierarchical({
+				statementText: 's',
+				questionText: 'q',
+				claims: makeHierarchy(HIERARCHY_MIN_CLAIMS + 6),
+				cosineByCluster: noCosine,
+			});
+
+			expect(result.method).toBe('registry-fallback');
+			expect(result.matchedClusterId).not.toBeNull();
+			expect(mockCallLLM).toHaveBeenCalledTimes(2);
+		});
+
+		it('falls back to the full flat list when the scoped hop answers none', async () => {
+			mockCallLLM
+				.mockResolvedValueOnce(JSON.stringify({ topicIndices: [2], reason: 'housing' }))
+				.mockResolvedValueOnce(noneReply)
+				.mockResolvedValueOnce(expressesReply(1));
+
+			const result = await classifyHierarchical({
+				statementText: 's',
+				questionText: 'q',
+				claims: makeHierarchy(HIERARCHY_MIN_CLAIMS + 6),
+				cosineByCluster: noCosine,
+			});
+
+			expect(result.method).toBe('registry-fallback');
+			expect(result.matchedClusterId).not.toBeNull();
+			expect(mockCallLLM).toHaveBeenCalledTimes(3);
+			// the fallback call sees ALL specifics
+			const fallbackUser = mockCallLLM.mock.calls[2][0].user;
+			expect(fallbackUser).toContain('Specific claim number 0');
+			expect(fallbackUser).toContain('Specific claim number 1');
+		});
+
+		it('routing errors fail open to the flat fallback, not to no-match', async () => {
+			mockCallLLM.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce(expressesReply(1));
+
+			const result = await classifyHierarchical({
+				statementText: 's',
+				questionText: 'q',
+				claims: makeHierarchy(HIERARCHY_MIN_CLAIMS + 6),
+				cosineByCluster: noCosine,
+			});
+
+			expect(result.method).toBe('registry-fallback');
+			expect(result.matchedClusterId).not.toBeNull();
+		});
+
+		it('never lets hop 2 attach to a topic claim (topics excluded from candidates)', async () => {
+			mockCallLLM
+				.mockResolvedValueOnce(JSON.stringify({ topicIndices: [1, 2], reason: 'both' }))
+				.mockResolvedValueOnce(expressesReply(1));
+
+			const result = await classifyHierarchical({
+				statementText: 's',
+				questionText: 'q',
+				claims: makeHierarchy(HIERARCHY_MIN_CLAIMS + 6),
+				cosineByCluster: noCosine,
+			});
+
+			// routing to ALL topics covers every specific → flat read, single classify
+			expect(result.routedTopicIds).toEqual(['topic-a', 'topic-b']);
+			const classifyUser = mockCallLLM.mock.calls[1][0].user;
+			expect(classifyUser).not.toContain('Transportation themes');
+			expect(classifyUser).not.toContain('Housing themes');
 		});
 	});
 
