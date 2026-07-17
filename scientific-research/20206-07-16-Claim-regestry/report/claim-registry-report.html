@@ -40,7 +40,7 @@
 
 <h1>Can an AI Reader Beat Geometry?</h1>
 <p class="subtitle">Benchmarking Freedi's claim registry against text embeddings on 875 adversarial statement triplets</p>
-<p class="meta">Freedi Research &nbsp;·&nbsp; 16 July 2026 &nbsp;·&nbsp; Branch <span class="mono">feat/claim-registry-improvements</span> &nbsp;·&nbsp; Evaluation data: Blair, Procaccia &amp; Tambe, <i>Embeddings for Preferences, Not Semantics</i> (2026)</p>
+<p class="meta">Freedi Research &nbsp;·&nbsp; 16–17 July 2026 &nbsp;·&nbsp; Branch <span class="mono">feat/claim-registry-improvements</span> &nbsp;·&nbsp; Evaluation data: Blair, Procaccia &amp; Tambe, <i>Embeddings for Preferences, Not Semantics</i> (2026)</p>
 
 <div class="abstract">
 <p><b>Abstract.</b> Deliberation platforms must decide, for every incoming statement, whether it repeats an idea already on the table, contradicts one, or introduces something new. The standard technique — measuring the distance between text <i>embeddings</i> — has a documented blind spot: it confuses <i>similar wording</i> with <i>similar opinion</i>. We tested Freedi's alternative, the <b>claim registry</b> (a small language model that reads a list of existing claims and judges each new statement against them), on the hardest published test of this blind spot: 875 triplets in which the correct partner statement uses different words and the wrong one uses nearly identical words with the opposite stance.</p>
@@ -211,6 +211,15 @@
 <li><b>Respect per-model rate ceilings in any batch operation</b> (backfills, first-runs): size concurrency to the model's tokens-per-minute limit; the merged retry and marker fixes make violations visible rather than silent (§6).</li>
 <li><b>Follow-up measurements:</b> a consolidated-codebook version of condition C; an Arabic extension of the cross-language recall test; and the organic recall gap from production decision logs as the feature runs live.</li>
 </ol>
+
+<h2>10&nbsp;&nbsp;Postscript: engineering status after the benchmark (17 July 2026)</h2>
+<p>The findings above were acted on immediately; the branch now carries, in order:</p>
+<ol>
+<li><b>Rate-limit hardening</b> — patient 429 retries honoring the server's requested wait, and an explicit marker on failed-closed classifications so degraded verdicts can never masquerade as judgments (§6). Verified under real rate-limit storms across ~20,000 subsequent calls with zero corrupted results.</li>
+<li><b>Enriched codebook + stance caution</b> (the §4.3 fixes) — verified on the full evaluation set; production configuration now 88.6% single-claim accuracy with false merges at the pre-enrichment baseline.</li>
+<li><b>Claim-hierarchy groundwork</b> — a two-level topic/claim data model, and a two-hop classifier (route to topics, judge within them, always fall back to the full list when a hop answers "none" — the §5 lesson encoded as a hard rule). Every decision logs which path produced it, so routing quality is measurable in production. Both ship <i>dormant</i>: nothing creates topic claims yet, so live behavior is unchanged.</li>
+</ol>
+<p>One verification remains before the hierarchy may be activated: the two-hop path must pass its scale test on these same 875 triplets (accuracy within 2 points of the flat enriched run, fallback rate under 15%, candidate lists under 40% of the codebook). The run is prepared and resumable but was deferred — the benchmark itself exhausted the organization's 10,000-requests/day API quota (a day of research re-answers each question eight ways; production needs ~1.2–2.4 requests per statement). Instructions, pass/fail gates, and decision rules are in <span class="mono">TESTING_HANDOFF.md</span>.</p>
 
 <p class="footnote" style="margin-top:16pt; border-top: 0.5pt solid #999; padding-top: 6pt;">
 Reproduction: <span class="mono">scientific-research/20206-07-16-Claim-regestry/benchmark/</span> — the harness imports the production classifier unmodified; all raw per-triplet decisions are preserved in append-only result files. Reference: C. Blair, A.&nbsp;D. Procaccia, M. Tambe, “Embeddings for Preferences, Not Semantics,” 2026 (evaluation set <span class="mono">hard_eval_triplets_1k.jsonl</span>, n = 875). Engineering companions with full statistical tables: <span class="mono">TEST_REPORT.md</span> and <span class="mono">benchmark/RECALL_GAP.md</span> in this directory.
