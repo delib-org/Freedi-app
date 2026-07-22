@@ -96,7 +96,10 @@ async function buildTopicStructure(
 	group: Triplet[],
 	claimCache: Map<string, GeneratedClaimRow>,
 ): Promise<TopicStructureRow> {
-	const cached = readJsonl<TopicStructureRow>(TOPIC_CACHE_FILE).find((r) => r.dataset === dataset);
+	const requiredIds = group.map((t) => t.id);
+	const cached = readJsonl<TopicStructureRow>(TOPIC_CACHE_FILE).find(
+		(r) => r.dataset === dataset && requiredIds.every((id) => id in r.assignments),
+	);
 	if (cached) return cached;
 
 	const questionText = questionFor(dataset);
