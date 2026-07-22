@@ -25,6 +25,9 @@ Developer guides, coding standards, and user-facing docs.
 - `design-guide.md` - Visual design guide (colors, typography, components)
 - `participant-personas.md` - User personas and research (.pdf available)
 
+### [`WHY_FREEDI.md`](./WHY_FREEDI.md)
+Competitive positioning: what makes Freedi unique for deliberation and decision-making in large, factional audiences, with an honest comparison to Pol.is, Community Notes-style bridging, Decidim, Consul, Loomio, Kialo, Consider.it, Remesh, All Our Ideas, and Ethelo.
+
 ### [`PRIVACY_AND_RESEARCH_POLICY.md`](./PRIVACY_AND_RESEARCH_POLICY.md)
 Privacy policy and scientific research data policy covering data collection, consent model, anonymization, retention, and user rights.
 

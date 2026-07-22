@@ -17,6 +17,8 @@ export interface SynthesisSettings {
 	clusterThreshold: number;
 	/** Cosine in [reviewLowerBound, clusterThreshold) → admin review band. */
 	reviewLowerBound: number;
+	/** Stamp canonical claims on ideas + catch same-meaning rewordings. */
+	claimRegistryEnabled: boolean;
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
@@ -29,6 +31,7 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	attachThreshold: 0.85,
 	clusterThreshold: 0.6,
 	reviewLowerBound: 0.5,
+	claimRegistryEnabled: false,
 };
 
 export type SynthesisQueueStatus =

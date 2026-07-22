@@ -60,6 +60,8 @@ export const saveSynthesisSettings = onCall<SaveRequest>(
 			synthLowerBound: settings.synthLowerBound ?? DEFAULT_SYNTHESIS_SETTINGS.synthLowerBound,
 			clusterThreshold: settings.clusterThreshold ?? DEFAULT_SYNTHESIS_SETTINGS.clusterThreshold,
 			reviewLowerBound: settings.reviewLowerBound ?? DEFAULT_SYNTHESIS_SETTINGS.reviewLowerBound,
+			claimRegistryEnabled:
+				settings.claimRegistryEnabled ?? DEFAULT_SYNTHESIS_SETTINGS.claimRegistryEnabled,
 		};
 
 		await getFirestore()

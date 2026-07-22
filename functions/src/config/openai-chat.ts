@@ -12,6 +12,14 @@ export const WORKER_MODEL = process.env.OPENAI_WORKER_MODEL || 'gpt-4o-mini';
 const DEFAULT_CONCURRENCY = 10;
 const DEFAULT_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 500;
+// 429s get more attempts with much longer waits: a sustained tokens-per-minute
+// ceiling (e.g. gpt-4o at 30k TPM) refills slowly, so the fast 5xx backoff
+// exhausts all attempts inside ~2s and the caller fails closed. Waiting inside
+// the limiter slot also throttles overall throughput, which is exactly what a
+// saturated bucket needs.
+const RATE_LIMIT_RETRIES = 6;
+const RATE_LIMIT_BASE_DELAY_MS = 1000;
+const RATE_LIMIT_MAX_DELAY_MS = 20_000;
 
 let _client: OpenAI | null = null;
 
@@ -37,6 +45,10 @@ interface CallOptions {
 	jsonMode?: boolean;
 }
 
+function isRateLimitError(error: unknown): boolean {
+	return (error as { status?: number })?.status === 429;
+}
+
 function isRetryableError(error: unknown): boolean {
 	const e = error as { status?: number };
 	if (!e) return false;
@@ -47,16 +59,63 @@ function isRetryableError(error: unknown): boolean {
 }
 
 /**
+ * The wait the server asked for on a 429, from the `retry-after-ms` /
+ * `retry-after` response headers (the OpenAI SDK exposes them on APIError) or,
+ * failing that, the "Please try again in 428ms" phrase in the error message.
+ * Null when no hint is present. Exported for tests.
+ */
+export function parseRetryAfterMs(error: unknown): number | null {
+	const e = error as { headers?: unknown; message?: string };
+	const getHeader = (name: string): string | undefined => {
+		const headers = e?.headers;
+		if (!headers) return undefined;
+		if (typeof (headers as Headers).get === 'function') {
+			return (headers as Headers).get(name) ?? undefined;
+		}
+
+		return (headers as Record<string, string | undefined>)[name];
+	};
+
+	const ms = Number(getHeader('retry-after-ms'));
+	if (Number.isFinite(ms) && ms > 0) return ms;
+	const seconds = Number(getHeader('retry-after'));
+	if (Number.isFinite(seconds) && seconds > 0) return seconds * 1000;
+
+	const hinted = e?.message?.match(/try again in ([\d.]+)\s*(ms|s)\b/i);
+	if (hinted) {
+		const value = Number(hinted[1]);
+		if (Number.isFinite(value) && value > 0) {
+			return hinted[2].toLowerCase() === 'ms' ? value : value * 1000;
+		}
+	}
+
+	return null;
+}
+
+/** Backoff before retry `attempt` (1-based): server hint when given, else exponential; jittered, capped. */
+function retryDelayMs(error: unknown, attempt: number): number {
+	if (isRateLimitError(error)) {
+		const base = parseRetryAfterMs(error) ?? RATE_LIMIT_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+		const jittered = base * (1 + Math.random() * 0.25);
+
+		return Math.min(RATE_LIMIT_MAX_DELAY_MS, jittered);
+	}
+
+	return RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+}
+
+/**
  * Single OpenAI Chat Completion call. Returns the assistant's text content.
  * Concurrency-limited (env LLM_CONCURRENCY, default 10).
- * Retries up to 3 times with exponential backoff on 429/5xx.
+ * Retries 5xx up to 3 times with fast exponential backoff; 429s get up to 6
+ * attempts honoring the server's retry-after hint (jittered, capped at 20s).
  */
 export async function callLLM(opts: CallOptions): Promise<string> {
 	return limiter(async () => {
 		const client = getOpenAI();
 		let lastError: unknown;
 
-		for (let attempt = 1; attempt <= DEFAULT_RETRIES; attempt++) {
+		for (let attempt = 1; attempt <= RATE_LIMIT_RETRIES; attempt++) {
 			try {
 				const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
 				if (opts.system) messages.push({ role: 'system', content: opts.system });
@@ -77,9 +136,10 @@ export async function callLLM(opts: CallOptions): Promise<string> {
 				return text;
 			} catch (error) {
 				lastError = error;
-				if (!isRetryableError(error) || attempt === DEFAULT_RETRIES) break;
-				const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
-				logger.warn(`OpenAI call retry ${attempt}/${DEFAULT_RETRIES} after ${delay}ms`, {
+				const maxAttempts = isRateLimitError(error) ? RATE_LIMIT_RETRIES : DEFAULT_RETRIES;
+				if (!isRetryableError(error) || attempt >= maxAttempts) break;
+				const delay = Math.round(retryDelayMs(error, attempt));
+				logger.warn(`OpenAI call retry ${attempt}/${maxAttempts} after ${delay}ms`, {
 					model: opts.model,
 					error: (error as Error).message,
 				});

@@ -3,7 +3,7 @@ import { DocumentData } from 'firebase-admin/firestore';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
-import { Collections } from '@freedi/shared-types';
+import { Collections, StatementType } from '@freedi/shared-types';
 import { Signature } from '@/lib/firebase/queries';
 import { logger } from '@/lib/utils/logger';
 
@@ -80,19 +80,26 @@ export async function GET(
 
     const paragraphIds = paragraphsSnap.docs.map((doc) => doc.id);
 
-    // Get comments count
+    // Get comments count (comments are child statements with statementType 'statement')
+    const commentCountByParagraph = new Map<string, number>();
     let totalComments = 0;
     if (paragraphIds.length > 0) {
-      // Query comments for each paragraph (batch of 10 at a time due to Firestore limitations)
-      for (let i = 0; i < paragraphIds.length; i += 10) {
-        const batch = paragraphIds.slice(i, i + 10);
-        const commentsSnap = await db
-          .collection(Collections.statements)
-          .where('parentId', 'in', batch)
-          .where('statementType', '==', 'comment')
-          .get();
-        totalComments += commentsSnap.size;
-      }
+      const paragraphIdSet = new Set(paragraphIds);
+      const commentsSnap = await db
+        .collection(Collections.statements)
+        .where('topParentId', '==', docId)
+        .where('statementType', '==', StatementType.statement)
+        .get();
+
+      commentsSnap.docs.forEach((commentDoc) => {
+        const comment = commentDoc.data();
+        if (comment.hide || !paragraphIdSet.has(comment.parentId)) return;
+        totalComments += 1;
+        commentCountByParagraph.set(
+          comment.parentId,
+          (commentCountByParagraph.get(comment.parentId) || 0) + 1
+        );
+      });
     }
 
     // Get approvals
@@ -119,20 +126,18 @@ export async function GET(
         ? paragraphApprovals.reduce((sum: number, a: DocumentData) => sum + (a.evaluation || 0), 0) / paragraphApprovals.length
         : 0;
 
-      // Get paragraph comment count
-      const paragraphCommentsSnap = await db
-        .collection(Collections.statements)
-        .where('parentId', '==', paragraphId)
-        .where('statementType', '==', 'comment')
-        .get();
+      // viewed is an object ({ individualViews }) on modern statements
+      const viewed = paragraph.viewed as { individualViews?: number } | number | undefined;
+      const viewCount =
+        typeof viewed === 'number' ? viewed : viewed?.individualViews ?? 0;
 
       paragraphStats.push({
         paragraphId,
         statement: paragraph.statement?.substring(0, 100) || '',
-        viewCount: paragraph.viewed || 0,
+        viewCount,
         approvalCount: paragraphApprovals.length,
         avgApproval: Math.round(avgApproval * 100) / 100,
-        commentCount: paragraphCommentsSnap.size,
+        commentCount: commentCountByParagraph.get(paragraphId) || 0,
       });
     }
 

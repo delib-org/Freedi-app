@@ -37,6 +37,40 @@ export async function triggerSynthesizeNow(questionId: string): Promise<Synthesi
 	}
 }
 
+interface ClaimRegistryFirstRunResponse {
+	backfilledClaims: number;
+	enqueuedOptions: number;
+	etaMinutes: number;
+}
+
+/**
+ * One-time pass invoked right after `claimRegistryEnabled` flips false→true:
+ * backfills canonical claims on existing clusters and enqueues unclustered
+ * options through the shared synthesis queue. The server throws
+ * failed-precondition if the flag has not been saved yet, so callers must
+ * persist settings first.
+ */
+export async function runClaimRegistryFirstRun(
+	questionId: string,
+): Promise<ClaimRegistryFirstRunResponse> {
+	try {
+		const call = httpsCallable<QuestionOnlyRequest, ClaimRegistryFirstRunResponse>(
+			functions,
+			'claimRegistryFirstRun',
+		);
+		const result = await call({ questionId });
+		logger.info('Claim-registry first run queued', { questionId, ...result.data });
+
+		return result.data;
+	} catch (error) {
+		logError(error, {
+			operation: 'synthesis.runClaimRegistryFirstRun',
+			statementId: questionId,
+		});
+		throw error;
+	}
+}
+
 interface ReClusterResponse {
 	clustersReversed: number;
 	docsArchived: number;
