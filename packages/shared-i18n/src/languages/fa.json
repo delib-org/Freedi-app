@@ -3420,5 +3420,9 @@
   "AI analysis": "تحلیل هوش مصنوعی",
   "No AI report yet. Generate one to get insights and recommendations.": "هنوز گزارش هوش مصنوعی وجود ندارد. برای دریافت بینش‌ها و توصیه‌ها یکی ایجاد کنید.",
   "Failed to load report": "بارگذاری گزارش ناموفق بود",
-  "AI report generation failed": "ایجاد گزارش هوش مصنوعی ناموفق بود"
+  "AI report generation failed": "ایجاد گزارش هوش مصنوعی ناموفق بود",
+  "Paragraph voters": "رأی‌دهندگان بندها",
+  "Rated the document": "سند را امتیاز دادند",
+  "Positive ratings": "امتیازهای مثبت",
+  "Negative ratings": "امتیازهای منفی"
 }

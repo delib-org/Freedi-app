@@ -2921,5 +2921,9 @@
   "AI analysis": "KI-Analyse",
   "No AI report yet. Generate one to get insights and recommendations.": "Noch kein KI-Bericht. Erstellen Sie einen, um Einblicke und Empfehlungen zu erhalten.",
   "Failed to load report": "Bericht konnte nicht geladen werden",
-  "AI report generation failed": "KI-Berichterstellung fehlgeschlagen"
+  "AI report generation failed": "KI-Berichterstellung fehlgeschlagen",
+  "Paragraph voters": "Absatz-Abstimmende",
+  "Rated the document": "Dokument bewertet",
+  "Positive ratings": "Positive Bewertungen",
+  "Negative ratings": "Negative Bewertungen"
 }

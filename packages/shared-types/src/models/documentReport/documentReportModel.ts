@@ -9,7 +9,7 @@
 
 import type { DemographicQuestionSummary } from "../strategicExport/strategicExportModel";
 
-export const DOCUMENT_REPORT_VERSION = "1.0";
+export const DOCUMENT_REPORT_VERSION = "1.1";
 
 /**
  * A flat field-path → description map. Embedded in the report so a downstream
@@ -35,7 +35,7 @@ export interface DocumentReportFunnel {
 	uniqueVisitors: number;
 	/** Distinct commenters (authors of at least one visible comment). */
 	commenters: number;
-	/** Distinct users who approved/rejected at least one paragraph. */
+	/** Distinct users who voted on at least one paragraph (boolean approval OR ±1 evaluation). */
 	approvers: number;
 	/** Signatures with status 'signed'. */
 	signers: number;
@@ -105,7 +105,22 @@ export interface ParagraphReport {
 export interface DocumentSignatureStats {
 	signed: number;
 	rejected: number;
+	/**
+	 * Signature records with status 'viewed'. In satisfaction mode most of these
+	 * users DID respond — check the satisfaction fields before reading this as
+	 * "opened but did not complete".
+	 */
 	viewed: number;
+	/**
+	 * Users who rated the whole document on the -1..+1 satisfaction scale.
+	 * In satisfaction mode this is the document-level verdict; approve/reject
+	 * are simply the +1/-1 endpoints of this same scale.
+	 */
+	satisfactionCount: number;
+	/** Satisfaction ratings > 0 (leaning approve). */
+	satisfactionPositive: number;
+	/** Satisfaction ratings < 0 (leaning reject). */
+	satisfactionNegative: number;
 	/** Mean of Signature.satisfaction (-1..1), null when none reported. */
 	averageSatisfaction: number | null;
 	/** Free-text rejection reasons, stripped of any user identifiers. */
@@ -117,7 +132,10 @@ export interface ParagraphRef {
 	paragraphId: string;
 	order: number;
 	textPreview: string;
-	/** The metric value that ranked this paragraph (meaning given in `reason`). */
+	/**
+	 * Support level 0..1 that ranked this paragraph, derived from boolean
+	 * approvals when present, otherwise from ±1 evaluations mapped to 0..1.
+	 */
 	score: number;
 	/** Human-readable explanation of why this paragraph is listed. */
 	reason: string;

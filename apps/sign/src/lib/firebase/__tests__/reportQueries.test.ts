@@ -24,7 +24,12 @@ jest.mock('../exportQueries', () => ({
 	getAnonymizedDemographicAnswers: jest.fn(),
 }));
 
-import { buildInsights, capComments, buildDemographicSummaries } from '../reportQueries';
+import {
+	buildInsights,
+	capComments,
+	buildDemographicSummaries,
+	paragraphSupport,
+} from '../reportQueries';
 
 function makeParagraph(overrides: Partial<ParagraphReport> & { paragraphId: string; order: number }): ParagraphReport {
 	return {
@@ -127,6 +132,31 @@ describe('reportQueries', () => {
 			expect(insights.topFriction.map((r) => r.paragraphId)).not.toContain('few-voters');
 		});
 
+		it('ranks paragraphs by ±1 evaluations when no boolean approvals exist', () => {
+			const insights = buildInsights([
+				makeParagraph({
+					paragraphId: 'liked',
+					order: 0,
+					evaluations: { pro: 5, con: 0, avg: 1, total: 5 },
+				}),
+				makeParagraph({
+					paragraphId: 'contested',
+					order: 1,
+					evaluations: { pro: 1, con: 4, avg: -0.6, total: 5 },
+				}),
+				makeParagraph({
+					paragraphId: 'unvoted',
+					order: 2,
+				}),
+			]);
+
+			expect(insights.topConsensus[0].paragraphId).toBe('liked');
+			expect(insights.topConsensus[0].score).toBe(1);
+			expect(insights.topFriction[0].paragraphId).toBe('contested');
+			expect(insights.topFriction[0].score).toBe(0.2);
+			expect(insights.topConsensus.map((r) => r.paragraphId)).not.toContain('unvoted');
+		});
+
 		it('excludes fully approved paragraphs from friction', () => {
 			const insights = buildInsights([
 				makeParagraph({
@@ -138,6 +168,37 @@ describe('reportQueries', () => {
 
 			expect(insights.topFriction).toHaveLength(0);
 			expect(insights.topConsensus).toHaveLength(1);
+		});
+	});
+
+	describe('paragraphSupport', () => {
+		it('prefers boolean approvals when both mechanisms have votes', () => {
+			const support = paragraphSupport(
+				makeParagraph({
+					paragraphId: 'p',
+					order: 0,
+					approval: { approved: 3, totalVoters: 4, averageApproval: 0.75 },
+					evaluations: { pro: 1, con: 1, avg: 0, total: 2 },
+				})
+			);
+
+			expect(support).toEqual({ value: 0.75, voters: 4, source: 'approval' });
+		});
+
+		it('maps ±1 evaluation average to a 0..1 support level', () => {
+			const support = paragraphSupport(
+				makeParagraph({
+					paragraphId: 'p',
+					order: 0,
+					evaluations: { pro: 1, con: 4, avg: -0.6, total: 5 },
+				})
+			);
+
+			expect(support).toEqual({ value: 0.2, voters: 5, source: 'evaluations' });
+		});
+
+		it('returns null when nobody voted', () => {
+			expect(paragraphSupport(makeParagraph({ paragraphId: 'p', order: 0 }))).toBeNull();
 		});
 	});
 

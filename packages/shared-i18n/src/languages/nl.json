@@ -2921,5 +2921,9 @@
   "AI analysis": "AI-analyse",
   "No AI report yet. Generate one to get insights and recommendations.": "Nog geen AI-rapport. Genereer er een voor inzichten en aanbevelingen.",
   "Failed to load report": "Rapport laden mislukt",
-  "AI report generation failed": "Genereren van AI-rapport mislukt"
+  "AI report generation failed": "Genereren van AI-rapport mislukt",
+  "Paragraph voters": "Paragraafstemmers",
+  "Rated the document": "Document beoordeeld",
+  "Positive ratings": "Positieve beoordelingen",
+  "Negative ratings": "Negatieve beoordelingen"
 }

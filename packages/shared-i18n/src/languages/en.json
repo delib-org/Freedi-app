@@ -3629,5 +3629,9 @@
   "AI analysis": "AI analysis",
   "No AI report yet. Generate one to get insights and recommendations.": "No AI report yet. Generate one to get insights and recommendations.",
   "Failed to load report": "Failed to load report",
-  "AI report generation failed": "AI report generation failed"
+  "AI report generation failed": "AI report generation failed",
+  "Paragraph voters": "Paragraph voters",
+  "Rated the document": "Rated the document",
+  "Positive ratings": "Positive ratings",
+  "Negative ratings": "Negative ratings"
 }

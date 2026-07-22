@@ -3043,5 +3043,9 @@
   "AI analysis": "تحليل الذكاء الاصطناعي",
   "No AI report yet. Generate one to get insights and recommendations.": "لا يوجد تقرير ذكاء اصطناعي بعد. أنشئ تقريرًا للحصول على رؤى وتوصيات.",
   "Failed to load report": "فشل تحميل التقرير",
-  "AI report generation failed": "فشل إنشاء تقرير الذكاء الاصطناعي"
+  "AI report generation failed": "فشل إنشاء تقرير الذكاء الاصطناعي",
+  "Paragraph voters": "المصوّتون على الفقرات",
+  "Rated the document": "قيّموا المستند",
+  "Positive ratings": "تقييمات إيجابية",
+  "Negative ratings": "تقييمات سلبية"
 }
