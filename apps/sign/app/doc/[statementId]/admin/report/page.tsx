@@ -342,6 +342,39 @@ export default function DocumentReportPage() {
 						</section>
 					)}
 
+					{report.demographics.length > 0 && (
+						<section className={styles.refSection}>
+							<h3>{t('Demographics')}</h3>
+							{report.demographics.map((question) => (
+								<div key={question.demographicQuestionId} className={styles.demoQuestion}>
+									<p className={styles.demoQuestionText}>
+										{question.questionText} · {question.totalRespondents} {t('respondents')}
+									</p>
+									{question.answers.map((answer) => (
+										<div key={answer.answer} className={styles.demoRow}>
+											<span className={styles.demoLabel}>{answer.answer}</span>
+											<div className={styles.demoTrack}>
+												{!answer.suppressedByKAnonymity && question.totalRespondents > 0 && (
+													<div
+														className={styles.demoFill}
+														style={{
+															width: `${Math.round((answer.count / question.totalRespondents) * 100)}%`,
+														}}
+													/>
+												)}
+											</div>
+											<span className={styles.demoCount}>
+												{answer.suppressedByKAnonymity
+													? t('Hidden for privacy')
+													: `${answer.count} (${Math.round((answer.count / question.totalRespondents) * 100)}%)`}
+											</span>
+										</div>
+									))}
+								</div>
+							))}
+						</section>
+					)}
+
 					{report.documentComments && report.documentComments.count > 0 && (
 						<section className={styles.refSection}>
 							<h3>
