@@ -9,7 +9,7 @@
 
 import type { DemographicQuestionSummary } from "../strategicExport/strategicExportModel";
 
-export const DOCUMENT_REPORT_VERSION = "1.1";
+export const DOCUMENT_REPORT_VERSION = "1.2";
 
 /**
  * A flat field-path → description map. Embedded in the report so a downstream
@@ -33,7 +33,7 @@ export interface DocumentReportMetadata {
 export interface DocumentReportFunnel {
 	/** Distinct visitor ids with at least one recorded paragraph view. */
 	uniqueVisitors: number;
-	/** Distinct commenters (authors of at least one visible comment). */
+	/** Distinct authors of at least one visible comment anywhere in the document (on a paragraph or on the document itself). */
 	commenters: number;
 	/** Distinct users who voted on at least one paragraph (boolean approval OR ±1 evaluation). */
 	approvers: number;
@@ -92,7 +92,7 @@ export interface ParagraphComments {
 
 export interface ParagraphReport {
 	paragraphId: string;
-	/** Position in the document, 0-based. */
+	/** 1-based paragraph number, matching the §N shown to readers and admins. */
 	order: number;
 	/** First ~200 characters of the paragraph text. */
 	textPreview: string;
@@ -130,6 +130,7 @@ export interface DocumentSignatureStats {
 /** Reference to a notable paragraph with the score that made it notable. */
 export interface ParagraphRef {
 	paragraphId: string;
+	/** 1-based paragraph number, matching the §N shown to readers and admins. */
 	order: number;
 	textPreview: string;
 	/**
@@ -175,6 +176,8 @@ export interface DocumentReport {
 	funnel: DocumentReportFunnel;
 	/** Ordered by paragraph order. */
 	paragraphs: ParagraphReport[];
+	/** Comments attached to the whole document rather than a specific paragraph. */
+	documentComments: ParagraphComments;
 	documentSignatures: DocumentSignatureStats;
 	insights: DocumentReportInsights;
 	/** K-anonymized demographic summaries (empty when no demographic data). */

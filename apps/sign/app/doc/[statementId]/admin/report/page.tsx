@@ -76,7 +76,7 @@ function ParagraphRefList({ title, refs, tone }: { title: string; refs: Paragrap
 			<ul className={styles.refList}>
 				{refs.map((ref) => (
 					<li key={ref.paragraphId} className={`${styles.refCard} ${styles[tone]}`}>
-						<span className={styles.refOrder}>§{ref.order + 1}</span>
+						<span className={styles.refOrder}>§{ref.order}</span>
 						<div className={styles.refBody}>
 							<p className={styles.refText}>{ref.textPreview}</p>
 							<p className={styles.refReason}>{ref.reason}</p>
@@ -298,9 +298,22 @@ export default function DocumentReportPage() {
 							<ul className={styles.dropOffList}>
 								{report.insights.dropOff.map((point) => (
 									<li key={point.paragraphId}>
-										§{point.order + 1}: {Math.round(point.retentionBefore * 100)}% →{' '}
+										§{point.order}: {Math.round(point.retentionBefore * 100)}% →{' '}
 										{Math.round(point.retentionAfter * 100)}%
 									</li>
+								))}
+							</ul>
+						</section>
+					)}
+
+					{report.documentComments && report.documentComments.count > 0 && (
+						<section className={styles.refSection}>
+							<h3>
+								{t('Comments on the whole document')} ({report.documentComments.count})
+							</h3>
+							<ul className={styles.reasonsList}>
+								{report.documentComments.items.map((comment, index) => (
+									<li key={index}>{comment.text}</li>
 								))}
 							</ul>
 						</section>
