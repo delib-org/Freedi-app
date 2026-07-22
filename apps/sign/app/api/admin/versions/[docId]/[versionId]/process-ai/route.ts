@@ -5,6 +5,11 @@ import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { logger } from '@/lib/utils/logger';
 import { getFirebaseFunctionUrl } from '@/lib/utils/firebaseFunctions';
 
+// Next.js segment config — Vercel honors this over vercel.json globs.
+// The route waits on the processVersionAI Cloud Function, which can exceed
+// the 30s platform default on large documents.
+export const maxDuration = 60;
+
 // Inline constants to avoid import issues with shared-types
 const COLLECTIONS = {
 	documentVersions: 'documentVersions',
