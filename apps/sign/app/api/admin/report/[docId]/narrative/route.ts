@@ -13,6 +13,11 @@ import { buildDocumentReport } from '@/lib/firebase/reportQueries';
 import { getFirebaseFunctionUrl } from '@/lib/utils/firebaseFunctions';
 import { logger } from '@/lib/utils/logger';
 
+// Next.js segment config — Vercel honors this over vercel.json globs.
+// The route waits on the generateDocumentReportAI Cloud Function (gpt-4o),
+// which takes ~30s on large documents; the platform default of 30s cuts it off.
+export const maxDuration = 60;
+
 /**
  * POST /api/admin/report/[docId]/narrative
  * Rebuilds the JSON report, then delegates AI narrative generation to the

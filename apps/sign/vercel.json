@@ -51,7 +51,7 @@
     "app/api/admin/versions/**/process-ai/route.ts": {
       "maxDuration": 60
     },
-    "app/api/admin/report/**/narrative/route.ts": {
+    "app/api/admin/report/[docId]/narrative/route.ts": {
       "maxDuration": 60
     }
   },
