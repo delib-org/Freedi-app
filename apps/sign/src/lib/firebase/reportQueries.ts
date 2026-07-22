@@ -82,10 +82,10 @@ function buildReportSchemaDoc(): DocumentReportSchema {
 		'metadata.kAnonymity': 'Minimum people per demographic segment; smaller segments are suppressed.',
 		'funnel.uniqueVisitors': 'Distinct visitors with at least one recorded paragraph view (>=5s dwell).',
 		'funnel.commenters': 'Distinct authors of at least one visible comment.',
-		'funnel.approvers': 'Distinct users who approved or rejected at least one paragraph.',
+		'funnel.approvers': 'Distinct users who voted on at least one paragraph (boolean approve/reject OR ±1 evaluation — documents typically use one of the two mechanisms).',
 		'funnel.signers': "Users whose whole-document signature status is 'signed'.",
 		'funnel.rejecters': "Users whose whole-document signature status is 'rejected'.",
-		'funnel.viewedOnlySignatures': 'Users who opened the sign flow but neither signed nor rejected.',
+		'funnel.viewedOnlySignatures': "Signature records with status 'viewed'. IMPORTANT: in satisfaction mode these users typically DID respond by rating the document — see documentSignatures.satisfactionCount before interpreting this as incomplete participation.",
 		'paragraphs[]': 'Per-paragraph stats, ordered by position in the document.',
 		'paragraphs[].views.total': 'Recorded views (one per visitor per paragraph, >=5s dwell).',
 		'paragraphs[].views.uniqueViewers': 'Distinct visitors who viewed this paragraph.',
@@ -97,12 +97,15 @@ function buildReportSchemaDoc(): DocumentReportSchema {
 		'paragraphs[].comments.items[].anonymousId': 'Stable pseudonym (user_N); real identities are never included.',
 		'paragraphs[].comments.items[].likes': 'Positive evaluations this comment received.',
 		'paragraphs[].comments.items[].dislikes': 'Negative evaluations this comment received.',
-		'documentSignatures.signed': 'Whole-document signatures.',
-		'documentSignatures.rejected': 'Whole-document rejections.',
+		'documentSignatures.signed': 'Whole-document signatures. Can be 0 in satisfaction mode even when the community responded — check satisfactionCount.',
+		'documentSignatures.rejected': 'Whole-document rejections. Can be 0 in satisfaction mode — check satisfactionNegative.',
+		'documentSignatures.satisfactionCount': 'Users who rated the whole document on the -1..+1 satisfaction scale. In satisfaction mode this IS the document-level verdict: approve/reject are the +1/-1 endpoints of the same scale, so a satisfaction rating is a completed response, not an abandoned one.',
+		'documentSignatures.satisfactionPositive': 'Satisfaction ratings > 0 (leaning approve).',
+		'documentSignatures.satisfactionNegative': 'Satisfaction ratings < 0 (leaning reject).',
 		'documentSignatures.averageSatisfaction': 'Mean satisfaction (-1..1) when the document uses satisfaction mode (null when unused).',
 		'documentSignatures.rejectionReasons[]': 'Free-text reasons given when rejecting the document (anonymous).',
-		'insights.topConsensus[]': 'Paragraphs with the highest approval rate (minimum voter floor applied); score = approval rate 0..1.',
-		'insights.topFriction[]': 'Paragraphs with the lowest approval rate / most negative signals; score = approval rate 0..1.',
+		'insights.topConsensus[]': 'Paragraphs with the highest support (minimum voter floor applied); score = support 0..1, from boolean approvals when present, otherwise from ±1 evaluations mapped to 0..1.',
+		'insights.topFriction[]': 'Paragraphs with the lowest support / most negative signals; score = support 0..1 (same derivation as topConsensus).',
 		'insights.readThroughCurve[]': 'Reader retention per paragraph in document order (uniqueViewers / uniqueVisitors).',
 		'insights.dropOff[]': `Paragraphs where retention falls more than ${DROP_OFF_THRESHOLD * 100}% versus the previous paragraph.`,
 		'demographics[]': 'Answer distributions per demographic question; answers below the k-anonymity floor are suppressed.',
@@ -203,6 +206,10 @@ export async function buildDocumentReport(
 			if (typeof evaluation.evaluation !== 'number') return;
 
 			if (paragraphIdSet.has(evaluation.statementId)) {
+				const evaluatorId =
+					evaluation.odlUserId || evaluation.odluserId || evaluation.evaluatorId;
+				if (evaluatorId) approverIds.add(evaluatorId);
+
 				const entry = paragraphEvals.get(evaluation.statementId) ?? { pro: 0, con: 0, sum: 0, total: 0 };
 				if (evaluation.evaluation > 0) entry.pro += 1;
 				else if (evaluation.evaluation < 0) entry.con += 1;
@@ -261,6 +268,9 @@ export async function buildDocumentReport(
 			signed,
 			rejected,
 			viewed: viewedOnly,
+			satisfactionCount: satisfactions.length,
+			satisfactionPositive: satisfactions.filter((s) => s > 0).length,
+			satisfactionNegative: satisfactions.filter((s) => s < 0).length,
 			averageSatisfaction:
 				satisfactions.length > 0
 					? round2(satisfactions.reduce((a, b) => a + b, 0) / satisfactions.length)
@@ -391,38 +401,74 @@ export function buildInsights(paragraphReports: ParagraphReport[]): DocumentRepo
 		}
 	}
 
-	const ranked = paragraphReports.filter((p) => p.approval.totalVoters >= MIN_VOTERS_FOR_RANKING);
+	const ranked = paragraphReports
+		.map((p) => ({ paragraph: p, support: paragraphSupport(p) }))
+		.filter(
+			(entry): entry is { paragraph: ParagraphReport; support: ParagraphSupport } =>
+				entry.support !== null && entry.support.voters >= MIN_VOTERS_FOR_RANKING
+		);
 
-	const toRef = (p: ParagraphReport, reason: string): ParagraphRef => ({
+	const toRef = (p: ParagraphReport, support: ParagraphSupport, reason: string): ParagraphRef => ({
 		paragraphId: p.paragraphId,
 		order: p.order,
 		textPreview: p.textPreview,
-		score: p.approval.averageApproval,
+		score: support.value,
 		reason,
 	});
 
+	const supportReason = (p: ParagraphReport, support: ParagraphSupport): string => {
+		const pct = Math.round(support.value * 100);
+
+		return support.source === 'approval'
+			? `${p.approval.approved}/${p.approval.totalVoters} approved (${pct}%)`
+			: `${p.evaluations.pro} in favor, ${p.evaluations.con} against (${pct}% support)`;
+	};
+
 	const topConsensus = [...ranked]
-		.sort((a, b) => b.approval.averageApproval - a.approval.averageApproval)
+		.sort((a, b) => b.support.value - a.support.value)
 		.slice(0, TOP_PARAGRAPHS_COUNT)
-		.map((p) =>
-			toRef(
-				p,
-				`${p.approval.approved}/${p.approval.totalVoters} approved (${Math.round(p.approval.averageApproval * 100)}%)`
-			)
-		);
+		.map(({ paragraph, support }) => toRef(paragraph, support, supportReason(paragraph, support)));
 
 	const topFriction = [...ranked]
-		.sort((a, b) => a.approval.averageApproval - b.approval.averageApproval)
+		.sort((a, b) => a.support.value - b.support.value)
 		.slice(0, TOP_PARAGRAPHS_COUNT)
-		.filter((p) => p.approval.averageApproval < 1)
-		.map((p) =>
+		.filter(({ support }) => support.value < 1)
+		.map(({ paragraph, support }) =>
 			toRef(
-				p,
-				`${p.approval.totalVoters - p.approval.approved}/${p.approval.totalVoters} rejected, ${p.comments.count} comments, ${p.evaluations.con} negative evaluations`
+				paragraph,
+				support,
+				`${supportReason(paragraph, support)}, ${paragraph.comments.count} comments`
 			)
 		);
 
 	return { topConsensus, topFriction, readThroughCurve, dropOff };
+}
+
+interface ParagraphSupport {
+	/** Support level 0..1. */
+	value: number;
+	voters: number;
+	source: 'approval' | 'evaluations';
+}
+
+/**
+ * Unified support signal for a paragraph: boolean approvals when present,
+ * otherwise ±1 evaluations mapped from -1..1 to 0..1. Null when nobody voted.
+ */
+export function paragraphSupport(p: ParagraphReport): ParagraphSupport | null {
+	if (p.approval.totalVoters > 0) {
+		return { value: p.approval.averageApproval, voters: p.approval.totalVoters, source: 'approval' };
+	}
+
+	if (p.evaluations.total > 0) {
+		return {
+			value: round2((p.evaluations.avg + 1) / 2),
+			voters: p.evaluations.total,
+			source: 'evaluations',
+		};
+	}
+
+	return null;
 }
 
 interface DemographicAnswerLike {

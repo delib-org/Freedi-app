@@ -3666,5 +3666,9 @@
   "AI analysis": "ניתוח AI",
   "No AI report yet. Generate one to get insights and recommendations.": "אין עדיין דוח AI. צרו דוח כדי לקבל תובנות והמלצות.",
   "Failed to load report": "טעינת הדוח נכשלה",
-  "AI report generation failed": "יצירת דוח ה-AI נכשלה"
+  "AI report generation failed": "יצירת דוח ה-AI נכשלה",
+  "Paragraph voters": "מצביעים על פסקאות",
+  "Rated the document": "דירגו את המסמך",
+  "Positive ratings": "דירוגים חיוביים",
+  "Negative ratings": "דירוגים שליליים"
 }

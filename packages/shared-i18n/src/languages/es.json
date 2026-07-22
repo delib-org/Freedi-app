@@ -2919,5 +2919,9 @@
   "AI analysis": "Análisis de IA",
   "No AI report yet. Generate one to get insights and recommendations.": "Aún no hay informe de IA. Genera uno para obtener conclusiones y recomendaciones.",
   "Failed to load report": "Error al cargar el informe",
-  "AI report generation failed": "Error al generar el informe de IA"
+  "AI report generation failed": "Error al generar el informe de IA",
+  "Paragraph voters": "Votantes de párrafos",
+  "Rated the document": "Calificaron el documento",
+  "Positive ratings": "Calificaciones positivas",
+  "Negative ratings": "Calificaciones negativas"
 }

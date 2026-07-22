@@ -222,9 +222,30 @@ export default function DocumentReportPage() {
 					<div className={styles.metricsGrid}>
 						<MetricTile value={report.funnel.uniqueVisitors} label={t('Unique visitors')} />
 						<MetricTile value={report.funnel.commenters} label={t('Commenters')} />
-						<MetricTile value={report.funnel.approvers} label={t('Approvers')} />
-						<MetricTile value={report.documentSignatures.signed} label={t('Signed')} />
-						<MetricTile value={report.documentSignatures.rejected} label={t('Rejected')} />
+						<MetricTile value={report.funnel.approvers} label={t('Paragraph voters')} />
+						{report.documentSignatures.signed === 0 &&
+						report.documentSignatures.rejected === 0 &&
+						report.documentSignatures.satisfactionCount > 0 ? (
+							<>
+								<MetricTile
+									value={report.documentSignatures.satisfactionCount}
+									label={t('Rated the document')}
+								/>
+								<MetricTile
+									value={report.documentSignatures.satisfactionPositive}
+									label={t('Positive ratings')}
+								/>
+								<MetricTile
+									value={report.documentSignatures.satisfactionNegative}
+									label={t('Negative ratings')}
+								/>
+							</>
+						) : (
+							<>
+								<MetricTile value={report.documentSignatures.signed} label={t('Signed')} />
+								<MetricTile value={report.documentSignatures.rejected} label={t('Rejected')} />
+							</>
+						)}
 						{report.documentSignatures.averageSatisfaction !== null && (
 							<MetricTile
 								value={report.documentSignatures.averageSatisfaction}
