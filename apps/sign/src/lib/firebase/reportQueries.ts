@@ -31,8 +31,8 @@ import {
 	createAnonymousIdMap,
 	getAllDocumentUserIds,
 	getDemographicQuestionsForExport,
-	getAnonymizedDemographicAnswers,
 } from './exportQueries';
+import type { DemographicQuestionExport } from './exportQueries';
 import { StatementWithParagraphs, Paragraph } from '@/types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -118,7 +118,8 @@ function buildReportSchemaDoc(): DocumentReportSchema {
 		'insights.topFriction[]': 'Paragraphs with the lowest support / most negative signals; score = support 0..1 (same derivation as topConsensus).',
 		'insights.readThroughCurve[]': 'Reader retention per paragraph in document order (uniqueViewers / uniqueVisitors).',
 		'insights.dropOff[]': `Paragraphs where retention falls more than ${DROP_OFF_THRESHOLD * 100}% versus the previous paragraph.`,
-		'demographics[]': 'Answer distributions per demographic question; answers below the k-anonymity floor are suppressed.',
+		'demographics[]': 'Answer distributions per demographic question, counting every respondent to the questions attached to this document (may legitimately exceed funnel numbers — the survey can be shared at group scope and answering it is a separate action from viewing or rating). Only option-based questions appear; free-text questions are excluded to protect privacy. Answers below the k-anonymity floor are suppressed.',
+		'_note.metrics': 'Funnel, signature, and demographic counts measure DIFFERENT actions by potentially different people — they are not nested subsets and small mismatches between them are expected, not errors.',
 	};
 }
 
@@ -351,12 +352,10 @@ export async function buildDocumentReport(
 
 		const insights = buildInsights(paragraphReports);
 
-		const demographicAnswers = await getAnonymizedDemographicAnswers(demographicQuestions, userIdMap);
-		const demographics = buildDemographicSummaries(
-			demographicQuestions,
-			demographicAnswers,
-			minSegmentSize
-		);
+		// Only option-based questions are reported. Free-text questions (e.g.
+		// "full name") can contain PII and must never appear in the report.
+		const optionQuestions = demographicQuestions.filter((q) => q.options.length > 0);
+		const demographics = await buildDemographicCountSummaries(db, optionQuestions, minSegmentSize);
 
 		const signSettings = (document as unknown as { signSettings?: { defaultLanguage?: string } })
 			.signSettings;
@@ -515,6 +514,9 @@ export function buildDemographicSummaries(
 	minSegmentSize: number
 ): DemographicQuestionSummary[] {
 	return questions.map((question) => {
+		// Only predefined option values are ever reported — free-typed answer
+		// text could contain PII and must not leak into the summary.
+		const allowedValues = new Set(question.options);
 		const questionAnswers = answers.filter((a) => a.questionId === question.questionId);
 		const respondents = new Set(questionAnswers.map((a) => a.anonymousId));
 
@@ -525,6 +527,7 @@ export function buildDemographicSummaries(
 				...(answer.answerOptions ?? []),
 			];
 			values.forEach((value) => {
+				if (!allowedValues.has(value)) return;
 				if (!counts.has(value)) counts.set(value, new Set());
 				counts.get(value)?.add(answer.anonymousId);
 			});
@@ -534,15 +537,56 @@ export function buildDemographicSummaries(
 			demographicQuestionId: question.questionId,
 			questionText: question.text,
 			totalRespondents: respondents.size,
-			answers: [...counts.entries()].map(([answer, users]) => {
-				const suppressed = minSegmentSize > 0 && users.size < minSegmentSize;
+			answers: question.options
+				.filter((option) => counts.has(option))
+				.map((option) => {
+					const users = counts.get(option) as Set<string>;
+					const suppressed = minSegmentSize > 0 && users.size < minSegmentSize;
 
-				return {
-					answer,
-					count: suppressed ? 0 : users.size,
-					suppressedByKAnonymity: suppressed,
-				};
-			}),
+					return {
+						answer: option,
+						count: suppressed ? 0 : users.size,
+						suppressedByKAnonymity: suppressed,
+					};
+				}),
 		};
 	});
+}
+
+/**
+ * Demographic summaries counting EVERY respondent to the document's questions
+ * (matching the admin survey view), not only users who also interacted with
+ * the document. User ids are used in-memory for distinct counting only —
+ * nothing identifying is emitted.
+ */
+async function buildDemographicCountSummaries(
+	db: FirebaseFirestore.Firestore,
+	questions: DemographicQuestionExport[],
+	minSegmentSize: number
+): Promise<DemographicQuestionSummary[]> {
+	const answers: DemographicAnswerLike[] = [];
+
+	for (const question of questions) {
+		const snapshot = await db
+			.collection(Collections.usersData)
+			.where('userQuestionId', '==', question.questionId)
+			.get();
+
+		snapshot.docs.forEach((doc) => {
+			const data = doc.data() as {
+				odlUserId?: string;
+				answer?: string;
+				answerOptions?: string[];
+			};
+			if (!data.odlUserId) return;
+			answers.push({
+				questionId: question.questionId,
+				answer: data.answer ?? null,
+				answerOptions: data.answerOptions ?? null,
+				anonymousId: data.odlUserId,
+			});
+		});
+	}
+
+	return buildDemographicSummaries(questions, answers, minSegmentSize);
 }

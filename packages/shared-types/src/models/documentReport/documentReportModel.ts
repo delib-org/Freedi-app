@@ -9,7 +9,7 @@
 
 import type { DemographicQuestionSummary } from "../strategicExport/strategicExportModel";
 
-export const DOCUMENT_REPORT_VERSION = "1.2";
+export const DOCUMENT_REPORT_VERSION = "1.3";
 
 /**
  * A flat field-path → description map. Embedded in the report so a downstream
@@ -180,7 +180,11 @@ export interface DocumentReport {
 	documentComments: ParagraphComments;
 	documentSignatures: DocumentSignatureStats;
 	insights: DocumentReportInsights;
-	/** K-anonymized demographic summaries (empty when no demographic data). */
+	/**
+	 * K-anonymized demographic summaries (empty when no demographic data).
+	 * Counts every respondent to the document's option-based questions;
+	 * free-text questions are excluded because they can contain PII.
+	 */
 	demographics: DemographicQuestionSummary[];
 }
 
