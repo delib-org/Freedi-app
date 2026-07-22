@@ -8,6 +8,7 @@ import type {
 	DocumentReportNarrative,
 	DocumentReportRecord,
 	ParagraphRef,
+	ParagraphReport,
 } from '@freedi/shared-types';
 import styles from './report.module.scss';
 
@@ -65,10 +66,41 @@ function MetricTile({ value, label }: { value: string | number; label: string })
 	);
 }
 
-function ParagraphRefList({ title, refs, tone }: { title: string; refs: ParagraphRef[]; tone: 'positive' | 'negative' }) {
+function ParagraphRefList({
+	title,
+	refs,
+	tone,
+	paragraphs,
+}: {
+	title: string;
+	refs: ParagraphRef[];
+	tone: 'positive' | 'negative';
+	paragraphs: ParagraphReport[];
+}) {
 	const { t } = useTranslation();
 
 	if (refs.length === 0) return null;
+
+	// Localized stats built from the structured data — the JSON's English
+	// `reason` string is for AI consumers and scrambles in RTL layouts.
+	const statsLine = (ref: ParagraphRef): string => {
+		const paragraph = paragraphs.find((p) => p.paragraphId === ref.paragraphId);
+		if (!paragraph) return '';
+
+		const parts: string[] = [];
+		if (paragraph.approval.totalVoters > 0) {
+			parts.push(`${t('In favor')}: ${paragraph.approval.approved}`);
+			parts.push(`${t('Against')}: ${paragraph.approval.totalVoters - paragraph.approval.approved}`);
+		} else if (paragraph.evaluations.total > 0) {
+			parts.push(`${t('In favor')}: ${paragraph.evaluations.pro}`);
+			parts.push(`${t('Against')}: ${paragraph.evaluations.con}`);
+		}
+		if (paragraph.comments.count > 0) {
+			parts.push(`${t('Comments')}: ${paragraph.comments.count}`);
+		}
+
+		return parts.join(' · ');
+	};
 
 	return (
 		<section className={styles.refSection}>
@@ -76,10 +108,10 @@ function ParagraphRefList({ title, refs, tone }: { title: string; refs: Paragrap
 			<ul className={styles.refList}>
 				{refs.map((ref) => (
 					<li key={ref.paragraphId} className={`${styles.refCard} ${styles[tone]}`}>
-						<span className={styles.refOrder}>§{ref.order}</span>
+						<span className={styles.refOrder} dir="ltr">§{ref.order}</span>
 						<div className={styles.refBody}>
 							<p className={styles.refText}>{ref.textPreview}</p>
-							<p className={styles.refReason}>{ref.reason}</p>
+							<p className={styles.refReason}>{statsLine(ref)}</p>
 						</div>
 						<span className={styles.refScore} title={t('approvalRate')}>
 							{Math.round(ref.score * 100)}%
@@ -285,11 +317,13 @@ export default function DocumentReportPage() {
 						title={t('What the community supports')}
 						refs={report.insights.topConsensus}
 						tone="positive"
+						paragraphs={report.paragraphs}
 					/>
 					<ParagraphRefList
 						title={t('Friction points')}
 						refs={report.insights.topFriction}
 						tone="negative"
+						paragraphs={report.paragraphs}
 					/>
 
 					{report.insights.dropOff.length > 0 && (
@@ -298,8 +332,10 @@ export default function DocumentReportPage() {
 							<ul className={styles.dropOffList}>
 								{report.insights.dropOff.map((point) => (
 									<li key={point.paragraphId}>
-										§{point.order}: {Math.round(point.retentionBefore * 100)}% →{' '}
-										{Math.round(point.retentionAfter * 100)}%
+										<span dir="ltr">
+											§{point.order}: {Math.round(point.retentionBefore * 100)}% →{' '}
+											{Math.round(point.retentionAfter * 100)}%
+										</span>
 									</li>
 								))}
 							</ul>
