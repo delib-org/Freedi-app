@@ -240,6 +240,55 @@
   }
 }
 
+// Demographics
+.demoQuestion {
+  margin-bottom: var(--spacing-md);
+}
+
+.demoQuestionText {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-body);
+  margin: 0 0 var(--spacing-xs);
+}
+
+.demoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.demoLabel {
+  flex: 0 0 30%;
+  min-width: 0;
+  font-size: 0.8125rem;
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.demoTrack {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border-light);
+  overflow: hidden;
+}
+
+.demoFill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--btn-primary);
+}
+
+.demoCount {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
 // AI narrative
 .narrativeSection {
   border-top: 1px solid var(--border-light);
