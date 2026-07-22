@@ -29,6 +29,7 @@ import {
 	capComments,
 	buildDemographicSummaries,
 	paragraphSupport,
+	textPreview,
 } from '../reportQueries';
 
 function makeParagraph(overrides: Partial<ParagraphReport> & { paragraphId: string; order: number }): ParagraphReport {
@@ -168,6 +169,22 @@ describe('reportQueries', () => {
 
 			expect(insights.topFriction).toHaveLength(0);
 			expect(insights.topConsensus).toHaveLength(1);
+		});
+	});
+
+	describe('textPreview', () => {
+		it('keeps word boundaries when stripping table markup', () => {
+			const html =
+				'<table><tr><th>קריטריון</th><th>ניקוד</th></tr><tr><td>בן ראשון</td><td>15</td></tr></table>';
+
+			expect(textPreview(html)).toBe('קריטריון ניקוד בן ראשון 15');
+		});
+
+		it('truncates long content with an ellipsis', () => {
+			const result = textPreview('a'.repeat(300));
+
+			expect(result.length).toBe(201);
+			expect(result.endsWith('…')).toBe(true);
 		});
 	});
 

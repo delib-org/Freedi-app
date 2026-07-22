@@ -62,8 +62,15 @@ interface EvaluationDoc {
 	odluserId?: string;
 }
 
-function textPreview(content: string): string {
-	const clean = content.replace(/<[^>]*>/g, '').trim();
+/**
+ * Human-readable preview: strips HTML but keeps word boundaries so table
+ * cells and adjacent elements don't mash together into unreadable text.
+ */
+export function textPreview(content: string): string {
+	const clean = content
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
 
 	return clean.length > TEXT_PREVIEW_LENGTH
 		? `${clean.slice(0, TEXT_PREVIEW_LENGTH)}…`
@@ -81,12 +88,14 @@ function buildReportSchemaDoc(): DocumentReportSchema {
 		'metadata.language': "Document language (signSettings.defaultLanguage, fallback 'en'). The narrative report should be written in this language.",
 		'metadata.kAnonymity': 'Minimum people per demographic segment; smaller segments are suppressed.',
 		'funnel.uniqueVisitors': 'Distinct visitors with at least one recorded paragraph view (>=5s dwell).',
-		'funnel.commenters': 'Distinct authors of at least one visible comment.',
+		'funnel.commenters': 'Distinct authors of at least one visible comment anywhere in the document — on a paragraph or on the document as a whole.',
 		'funnel.approvers': 'Distinct users who voted on at least one paragraph (boolean approve/reject OR ±1 evaluation — documents typically use one of the two mechanisms).',
 		'funnel.signers': "Users whose whole-document signature status is 'signed'.",
 		'funnel.rejecters': "Users whose whole-document signature status is 'rejected'.",
 		'funnel.viewedOnlySignatures': "Signature records with status 'viewed'. IMPORTANT: in satisfaction mode these users typically DID respond by rating the document — see documentSignatures.satisfactionCount before interpreting this as incomplete participation.",
 		'paragraphs[]': 'Per-paragraph stats, ordered by position in the document.',
+		'paragraphs[].order': 'The 1-based paragraph number, exactly as shown to readers and admins (§N). Always cite paragraphs by this number.',
+		'paragraphs[].textPreview': 'First ~200 characters, HTML stripped. For table paragraphs this is flattened cell text — refer to such paragraphs by number and topic rather than quoting the preview verbatim.',
 		'paragraphs[].views.total': 'Recorded views (one per visitor per paragraph, >=5s dwell).',
 		'paragraphs[].views.uniqueViewers': 'Distinct visitors who viewed this paragraph.',
 		'paragraphs[].views.avgDurationSeconds': 'Mean dwell time in seconds (null when no views).',
@@ -97,6 +106,7 @@ function buildReportSchemaDoc(): DocumentReportSchema {
 		'paragraphs[].comments.items[].anonymousId': 'Stable pseudonym (user_N); real identities are never included.',
 		'paragraphs[].comments.items[].likes': 'Positive evaluations this comment received.',
 		'paragraphs[].comments.items[].dislikes': 'Negative evaluations this comment received.',
+		'documentComments': 'Comments attached to the whole document rather than a specific paragraph — weigh these alongside paragraph comments; they often carry overall sentiment and process feedback.',
 		'documentSignatures.signed': 'Whole-document signatures. Can be 0 in satisfaction mode even when the community responded — check satisfactionCount.',
 		'documentSignatures.rejected': 'Whole-document rejections. Can be 0 in satisfaction mode — check satisfactionNegative.',
 		'documentSignatures.satisfactionCount': 'Users who rated the whole document on the -1..+1 satisfaction scale. In satisfaction mode this IS the document-level verdict: approve/reject are the +1/-1 endpoints of the same scale, so a satisfaction rating is a completed response, not an abandoned one.',
@@ -224,27 +234,38 @@ export async function buildDocumentReport(
 			}
 		});
 
-		// ----- Comments -----
+		// ----- Comments (on paragraphs AND on the document itself) -----
 		const commentsByParagraph = new Map<string, ReportComment[]>();
+		const documentCommentItems: ReportComment[] = [];
 		const commenterIds = new Set<string>();
 
 		commentsSnap.docs.forEach((doc) => {
 			const comment = doc.data() as Statement;
-			if (comment.hide || !paragraphIdSet.has(comment.parentId)) return;
+			if (comment.hide) return;
+
+			const onParagraph = paragraphIdSet.has(comment.parentId);
+			const onDocument = comment.parentId === documentId;
+			if (!onParagraph && !onDocument) return;
 
 			commenterIds.add(comment.creatorId);
 			const anonymousId = userIdMap.get(comment.creatorId) ?? 'user_unknown';
 			const evals = commentEvals.get(comment.statementId) ?? { likes: 0, dislikes: 0 };
 
-			const items = commentsByParagraph.get(comment.parentId) ?? [];
-			items.push({
+			const item: ReportComment = {
 				anonymousId,
 				text: comment.statement,
 				likes: evals.likes,
 				dislikes: evals.dislikes,
 				createdAt: comment.createdAt,
-			});
-			commentsByParagraph.set(comment.parentId, items);
+			};
+
+			if (onDocument) {
+				documentCommentItems.push(item);
+			} else {
+				const items = commentsByParagraph.get(comment.parentId) ?? [];
+				items.push(item);
+				commentsByParagraph.set(comment.parentId, items);
+			}
 		});
 
 		// ----- Signatures -----
@@ -289,7 +310,7 @@ export async function buildDocumentReport(
 
 			return {
 				paragraphId: paragraph.paragraphId,
-				order: index,
+				order: index + 1,
 				textPreview: textPreview(paragraph.content),
 				views: {
 					total: viewTotals?.total ?? 0,
@@ -353,6 +374,10 @@ export async function buildDocumentReport(
 			},
 			funnel,
 			paragraphs: paragraphReports,
+			documentComments: {
+				count: documentCommentItems.length,
+				items: capComments(documentCommentItems),
+			},
 			documentSignatures,
 			insights,
 			demographics,
