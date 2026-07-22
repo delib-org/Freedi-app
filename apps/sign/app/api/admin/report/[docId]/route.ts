@@ -53,7 +53,11 @@ export async function GET(
 		const cachedSnap = await reportRef.get();
 		let record = cachedSnap.exists ? (cachedSnap.data() as DocumentReportRecord) : null;
 
-		if (!record || forceFresh) {
+		// A cache from an older schema version is treated as a miss so readers
+		// never see stale shapes after a report-format upgrade.
+		const outdated = record !== null && record.json?.reportVersion !== DOCUMENT_REPORT_VERSION;
+
+		if (!record || forceFresh || outdated) {
 			const docSnap = await db.collection(Collections.statements).doc(docId).get();
 
 			if (!docSnap.exists) {
