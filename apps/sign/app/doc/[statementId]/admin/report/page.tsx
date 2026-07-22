@@ -132,6 +132,32 @@ export default function DocumentReportPage() {
 	}, [statementId, fetchReport]);
 
 	const handleGenerateNarrative = useCallback(async () => {
+		const previousGeneratedAt = record?.narrative?.generatedAt ?? 0;
+
+		// The Cloud Function keeps running and saves the narrative to Firestore
+		// even if this route times out — poll for the saved result before failing.
+		const pollForNarrative = async (): Promise<boolean> => {
+			const POLL_ATTEMPTS = 18;
+			const POLL_INTERVAL_MS = 5000;
+			for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
+				await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+				try {
+					const response = await fetch(`/api/admin/report/${statementId}`);
+					if (!response.ok) continue;
+					const result = (await response.json()) as DocumentReportRecord;
+					if (result.narrative && result.narrative.generatedAt > previousGeneratedAt) {
+						setRecord(result);
+
+						return true;
+					}
+				} catch {
+					// transient — keep polling
+				}
+			}
+
+			return false;
+		};
+
 		try {
 			setError(null);
 			setGenerating(true);
@@ -145,11 +171,12 @@ export default function DocumentReportPage() {
 			// Refetch the record so JSON stats and narrative stay in sync
 			await fetchReport(false);
 		} catch (err) {
+			if (await pollForNarrative()) return;
 			setError(err instanceof Error ? err.message : t('AI report generation failed'));
 		} finally {
 			setGenerating(false);
 		}
-	}, [statementId, fetchReport, t]);
+	}, [statementId, record, fetchReport, t]);
 
 	if (loading) {
 		return (
