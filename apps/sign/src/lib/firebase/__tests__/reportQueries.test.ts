@@ -285,6 +285,21 @@ describe('reportQueries', () => {
 			expect(young?.count).toBe(0);
 		});
 
+		it('never emits values outside the predefined options (PII protection)', () => {
+			const summaries = buildDemographicSummaries(
+				[question],
+				[
+					{ questionId: 'q1', answer: '18-30', answerOptions: null, anonymousId: 'user_1' },
+					{ questionId: 'q1', answer: 'ישראל ישראלי', answerOptions: null, anonymousId: 'user_2' },
+				],
+				0
+			);
+
+			const values = summaries[0].answers.map((a) => a.answer);
+			expect(values).toEqual(['18-30']);
+			expect(summaries[0].totalRespondents).toBe(2);
+		});
+
 		it('counts multi-select answerOptions', () => {
 			const summaries = buildDemographicSummaries(
 				[{ questionId: 'q2', text: 'Interests', options: ['a', 'b'] }],
