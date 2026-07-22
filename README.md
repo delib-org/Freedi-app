@@ -18,6 +18,7 @@ Whether you're drafting policies, brainstorming in teams, or running public cons
 ## Table of Contents
 
 - [Why Freedi?](#why-freedi)
+- [How Freedi Compares](#how-freedi-compares)
 - [How It Works](#how-it-works)
 - [The Consensus Algorithm](#the-consensus-algorithm)
 - [Key Features](#key-features)
@@ -52,6 +53,29 @@ Freedi addresses this by drawing from deliberative democracy principles:
 | **Outcome** | Winner takes all | Broad agreement emerges naturally |
 
 This creates adaptive, inclusive processes that scale from 10 to 10,000+ participants, reducing bias and fostering collective wisdom.
+
+## How Freedi Compares
+
+The deliberation-tech field has excellent tools — Pol.is for listening at scale, Decidim/Consul for municipal participation, Loomio for team decisions, Kialo for argument mapping. Freedi's distinctive position: it covers the **whole arc from open ideation to a signed decision**, and it is built specifically for audiences **divided into factions**.
+
+Four things set it apart:
+
+1. **Bridging is built into the math.** The Consensus Score (Mean − SEM) penalizes the variance of evaluations, so a proposal loved by one faction and rejected by another structurally cannot win — a moderate proposal both sides accept beats it. Unlike Pol.is's group-aware consensus or Community Notes' matrix factorization, this requires **no clustering of participants into groups**: it works from the first handful of votes, is robust to every cleavage at once, and the formula fits in one sentence. (Recent axiomatic work on bridging metrics — [Blair et al., *The Structure of Bridging*](https://www.cs.toronto.edu/~nisarg/papers/bridging.pdf) — identifies fixed-partition dependence as the key weakness of current platforms, and endorses pairwise-disagreement measures; Freedi's variance penalty is mathematically a partition-free pairwise-disagreement penalty.)
+
+2. **Intensity, not binary.** A continuous −1 to +1 scale lets moderates say "I can live with this" — exactly the signal bridging needs and agree/disagree buttons destroy.
+
+3. **An open, evolving option set.** Anyone can propose or refine options mid-process, and the uncertainty-aware scoring lets new syntheses genuinely overtake incumbents.
+
+4. **Deliberation ends in a decision, not a dashboard.** Sensemaking tools output opinion maps for experts to interpret; Freedi outputs a live consensus ranking — and, via Freedi Sign, a collaboratively refined, publicly endorsed document.
+
+| | Sensemaking tools (Pol.is, Consider.it) | Participation portals (Decidim, Consul) | Team tools (Loomio) | **Freedi** |
+|---|---|---|---|---|
+| Primary output | Opinion map | Majoritarian vote counts | Small-group consent | **Quantified consensus + decision + document** |
+| Faction handling | Post-hoc clustering | Mobilization wins | Veto/block mechanics | **Variance penalty — bridging proposals win** |
+| Expression | Binary agree/disagree | Support counts | 4 positions | **Continuous −1..+1, updatable** |
+| Scale | 100s–100,000s | City-wide | Dozens | **10 → 10,000+ (anonymous, no-login option)** |
+
+> **Full comparison** — including Pol.is, Community Notes-style bridging, Decidim, Consul, Loomio, Kialo, Consider.it, Remesh, All Our Ideas, and Ethelo, plus an honest "when *not* to use Freedi" section: **[Why Freedi? Platform Comparison](./docs/WHY_FREEDI.md)**
 
 ## How It Works
 
