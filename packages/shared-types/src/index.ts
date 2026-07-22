@@ -573,6 +573,34 @@ export type {
 
 export { RESULTS_EXPORT_SCHEMA_VERSION } from "./models/results-export/ResultsExport";
 
+// Sign Document Report (JSON + AI narrative) models
+export type {
+  DocumentReport,
+  DocumentReportSchema,
+  DocumentReportMetadata,
+  DocumentReportFunnel,
+  ParagraphReport,
+  ParagraphViewStats,
+  ParagraphApprovalStats,
+  ParagraphEvaluationStats,
+  ParagraphComments,
+  ReportComment,
+  DocumentSignatureStats,
+  DocumentReportInsights,
+  ParagraphRef,
+  ReadThroughPoint,
+  DropOffPoint,
+  NarrativeSectionId,
+  NarrativeSection,
+  DocumentReportNarrative,
+  DocumentReportRecord,
+} from "./models/documentReport/documentReportModel";
+
+export {
+  DOCUMENT_REPORT_VERSION,
+  NARRATIVE_SECTION_IDS,
+} from "./models/documentReport/documentReportModel";
+
 // Topic-cluster pipeline cache models
 export type {
   TaxonomyCategory,

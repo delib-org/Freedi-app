@@ -185,6 +185,9 @@ import { importGoogleDoc } from './fn_importGoogleDocs';
 // Document Version AI Processing
 import { processVersionAI } from './fn_versionAI';
 
+// Sign Document Report AI narrative
+import { generateDocumentReportAI } from './fn_documentReport';
+
 // Suggestion Refinement AI (per-suggestion synthesis + improvement)
 import { processRefinementAI } from './fn_refinementAI';
 
@@ -798,6 +801,9 @@ exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 
 // Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
 exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
+
+// Sign Document Report AI narrative (for Sign app - uses 540s timeout vs Vercel's 30s limit)
+exports.generateDocumentReportAI = wrapMemoryIntensiveHttpFunction(generateDocumentReportAI);
 
 // Suggestion Refinement AI (per-suggestion synthesis + improvement from comments)
 exports.processRefinementAI = wrapMemoryIntensiveHttpFunction(processRefinementAI);

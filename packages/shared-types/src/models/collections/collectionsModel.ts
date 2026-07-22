@@ -74,6 +74,7 @@ export enum Collections {
     versionControlAudit = 'versionControlAudit',
     coherenceRecords = 'coherenceRecords',
     documentActionHistory = 'documentActionHistory',
+    documentReports = 'documentReports',
 
     // Admin analytics
     adminStats = 'adminStats',

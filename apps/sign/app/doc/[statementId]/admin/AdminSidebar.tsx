@@ -129,6 +129,17 @@ export default function AdminSidebar({
         </Link>
 
         {canManageSettings && (
+          <Link href={`/doc/${statementId}/admin/report`} className={styles.navLink}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <path d="M14 2v6h6" />
+              <path d="M8 17l3-4 2 2 3-5" />
+            </svg>
+            {t('Report')}
+          </Link>
+        )}
+
+        {canManageSettings && (
           <Link href={`/doc/${statementId}/admin/editor`} className={styles.navLink}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />

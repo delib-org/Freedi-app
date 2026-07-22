@@ -4,4 +4,5 @@ export enum SourceApp {
 	MASS_CONSENSUS = 'mass-consensus',
 	FLOW = 'flow',
 	CHAT = 'chat',
+	AGORA = 'agora',
 }
