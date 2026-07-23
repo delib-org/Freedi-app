@@ -477,6 +477,26 @@
 	}
 }
 
+/* ---- Claim registry (canonical labels) ---- */
+
+.claimRegistryCard {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	padding: 1rem;
+	background: var(--bg-main);
+	border: 1px solid var(--border-light);
+	border-radius: 10px;
+}
+
+.claimRegistryCard__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
 /* ---- On-demand ---- */
 
 .onDemandCard {

@@ -4,6 +4,7 @@ import type { Statement } from '@freedi/shared-types';
 import { saveSynthesisSettings } from '@/controllers/db/synthesis/saveSynthesisSettings';
 import { listenSynthesisProgress } from '@/controllers/db/synthesis/listenSynthesisProgress';
 import {
+	runClaimRegistryFirstRun,
 	synthesisCancel,
 	synthesisPause,
 	synthesisResume,
@@ -77,6 +78,10 @@ function readInitialSettings(statement: Statement): SynthesisSettings {
 			typeof raw.reviewLowerBound === 'number'
 				? raw.reviewLowerBound
 				: DEFAULT_SYNTHESIS_SETTINGS.reviewLowerBound,
+		claimRegistryEnabled:
+			typeof raw.claimRegistryEnabled === 'boolean'
+				? raw.claimRegistryEnabled
+				: DEFAULT_SYNTHESIS_SETTINGS.claimRegistryEnabled,
 	};
 }
 
@@ -154,6 +159,11 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 	const [toast, setToast] = useState<ToastState | null>(null);
 	const [dirty, setDirty] = useState(false);
 	const [advancedOpen, setAdvancedOpen] = useState(false);
+	// Last PERSISTED value of the claim-registry flag — the first-run pass must
+	// only fire on a saved false→true transition, not on every save while on.
+	const [savedClaimRegistryEnabled, setSavedClaimRegistryEnabled] = useState(
+		initial.claimRegistryEnabled,
+	);
 
 	useEffect(() => {
 		const unsub = listenSynthesisProgress(statement.statementId, setProgress);
@@ -223,9 +233,13 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 
 			return;
 		}
+		// The first-run backfill must only fire when the SAVED flag flips
+		// false→true (the callable rejects with failed-precondition otherwise).
+		const claimRegistryTurnedOn = settings.claimRegistryEnabled && !savedClaimRegistryEnabled;
 		setSaving(true);
 		try {
 			await saveSynthesisSettings(statement.statementId, settings);
+			setSavedClaimRegistryEnabled(settings.claimRegistryEnabled);
 			setDirty(false);
 			setToast({ tone: 'success', message: t('Synthesis settings saved') });
 		} catch (error) {
@@ -233,8 +247,24 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 				tone: 'error',
 				message: error instanceof Error ? error.message : t('Save failed'),
 			});
+
+			return;
 		} finally {
 			setSaving(false);
+		}
+		if (claimRegistryTurnedOn) {
+			// Settings are persisted — kick off the one-time backfill. Progress
+			// shows up through the existing listenSynthesisProgress subscription
+			// because the first run reuses the same queue.
+			const result = await withBusy('claimRegistryFirstRun', () =>
+				runClaimRegistryFirstRun(statement.statementId),
+			);
+			if (result) {
+				setToast({
+					tone: 'info',
+					message: `${t('Claim registry first run started')} · ${result.backfilledClaims} ${t('claims backfilled')} · ${t('Queued')} ${result.enqueuedOptions} ${t('options')} · ${t('ETA')} ${result.etaMinutes} ${t('min')}`,
+				});
+			}
 		}
 	}
 
@@ -605,6 +635,33 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							? t('Triggers on every new option and on every threshold crossing.')
 							: t('Continuous synthesis is off. On-demand actions below are still available.')}
 					</p>
+				</section>
+
+				{/* Claim registry — canonical labels, saved with the settings.
+					Turning it on triggers a one-time backfill after save. */}
+				<section
+					className={styles.claimRegistryCard}
+					aria-labelledby="synthesis-claim-registry-heading"
+				>
+					<div className={styles.claimRegistryCard__head}>
+						<div>
+							<h3 id="synthesis-claim-registry-heading" className={styles.card__title}>
+								{t('Claim registry (canonical labels)')}
+							</h3>
+							<p className={styles.card__subtitle}>
+								{t(
+									'Label every idea in simple terms from the first statement, and catch same-meaning suggestions that use different words. Turning it on runs a first pass over existing statements.',
+								)}
+							</p>
+						</div>
+						<Toggle
+							id="synthesis-claim-registry-enabled"
+							checked={settings.claimRegistryEnabled}
+							onChange={(checked) => updateField('claimRegistryEnabled', checked)}
+							label={settings.claimRegistryEnabled ? t('On') : t('Off')}
+							ariaLabel={t('Enable claim registry')}
+						/>
+					</div>
 				</section>
 
 				{/* On-demand — admin-initiated bulk operations */}

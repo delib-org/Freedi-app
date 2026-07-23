@@ -19,6 +19,7 @@ import {
 } from './services/cached-ai-service';
 import { vectorSearchService } from './services/vector-search-service';
 import { embeddingCache } from './services/embedding-cache-service';
+import { generateParaphrases } from './services/paraphrase-service';
 import { SimilaritySearchMethod } from '@freedi/shared-types';
 import { logModerationRejection } from './services/moderation-log-service';
 
@@ -257,6 +258,48 @@ async function fetchDataAndProcess(
 					coveragePercent: coverage.coveragePercent,
 				});
 
+				// Paraphrase expansion: a single embedding of the user's input can
+				// miss same-meaning suggestions written with different vocabulary.
+				// When the direct search leaves headroom, embed 2 LLM paraphrases
+				// and merge by max similarity per candidate. Fail-open — any error
+				// just skips the expansion.
+				if (similarStatementIds.length < numberOfOptionsToGenerate) {
+					try {
+						const paraphrases = await generateParaphrases(userInput, parentStatement.statement, 2);
+						if (paraphrases.length > 0) {
+							const expansions = await Promise.all(
+								paraphrases.map((p) =>
+									vectorSearchService.findSimilarToText(p, statementId, parentStatement.statement, {
+										limit: numberOfOptionsToGenerate,
+										threshold,
+									}),
+								),
+							);
+							for (const results of expansions) {
+								for (const r of results) {
+									const id = r.statement.statementId;
+									const best = similarityScores.get(id);
+									if (best === undefined || r.similarity > best) {
+										similarityScores.set(id, r.similarity);
+									}
+									if (!similarStatementIds.includes(id)) {
+										similarStatementIds.push(id);
+									}
+								}
+							}
+							logger.info('Paraphrase expansion completed', {
+								paraphraseCount: paraphrases.length,
+								totalResults: similarStatementIds.length,
+							});
+						}
+					} catch (expansionError) {
+						logger.warn('Paraphrase expansion failed (non-fatal)', {
+							error:
+								expansionError instanceof Error ? expansionError.message : String(expansionError),
+						});
+					}
+				}
+
 				// If embedding search returns too few results, supplement with LLM
 				if (similarStatementIds.length < 3 && subStatements.length > 10) {
 					logger.info('Supplementing with LLM search due to few embedding results');
@@ -309,6 +352,14 @@ async function fetchDataAndProcess(
 				parentStatement.statement,
 				numberOfOptionsToGenerate,
 			);
+		}
+
+		// Paraphrase expansion can push the merged set past the requested count —
+		// keep the strongest matches (unscored LLM-supplement ids rank last).
+		if (similarStatementIds.length > numberOfOptionsToGenerate) {
+			similarStatementIds = [...similarStatementIds]
+				.sort((a, b) => (similarityScores.get(b) ?? -1) - (similarityScores.get(a) ?? -1))
+				.slice(0, numberOfOptionsToGenerate);
 		}
 
 		logger.info(

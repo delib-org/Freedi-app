@@ -11,7 +11,11 @@
 		"target": "es2017",
 		"skipLibCheck": true,
 		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["../src/*"]
+		}
 	},
 	"compileOnSave": true,
 	"include": ["src", "scripts"],
