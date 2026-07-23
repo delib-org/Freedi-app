@@ -450,18 +450,43 @@ new UI. That's the payoff of §2.3: adding an app to the router is a data change
 
 ---
 
-## 9. Open Questions for Tal
+## 9. Decided (v1) — product-owner decisions, locked
 
-1. **Role gate:** v1 admin/creator-only — right call, or should members get pure-open
-   routes (Join/MC) immediately? The registry's `minRole` makes either cheap.
-2. **Join deep link:** what is the canonical join-app URL for a question
-   (`<join>/{statementId}`? hash? code-based `/join/{code}` like `APP_DEEP_LINKS` hints)?
-   Needs one authoritative answer before Phase 1.
-3. **Questions → Sign:** keep v1 options-only (my recommendation, matches the existing
-   controller and Sign's model), or extend Sign to question-anchored documents now?
-4. **"Continue in…" label:** happy with the verb-first framing and no app names in the
-   rows? Alternative: lead with app names for a team that already thinks in app terms.
-5. **Retiring the legacy "Mark as a Document" menu row** in favor of the Sign route — OK
-   to remove in the same release, or keep both for a transition period?
-6. **MC routing + `questionType`:** confirmed that routing to MC should NOT set
-   `questionType = massConsensus`? (Strawman says don't; MC settings own it.)
+These decisions are final for v1 and OVERRIDE the strawman wherever they differ
+(notably §3.1's proposal to retire the legacy menu row, and §5.3's "MC is write-free").
+Implemented on branch `feat/C`.
+
+1. **Role gate — admins/creators ONLY.** The "Continue in…" action is visible and
+   usable only to users who are admin or creator of the relevant group/statement.
+   Regular members never see it. Implemented via a read-only role check
+   (`useRouteTargets`: subscription role from Redux — own statement, else top
+   parent, same precedence as `useAuthorization` — plus the statement-creator
+   check); `deriveRouteTargets` drops all targets below `minRole`, so the entry
+   point simply never renders for members.
+2. **Join — pure open via the existing long route.** Investigation found the doc's
+   premise outdated: the join app already has a canonical statementId route —
+   `/q/:qid` (`apps/join/src/index.ts`), which loads the question directly by
+   document id (`loadQuestion` → `getDoc(statements/{qid})`) and is public
+   (auto-anonymous via `ensureUser`). No new join-app route was needed. The
+   resolver builds `joinBaseUrl + /q/{statementId}` (`EventUrlConfig.joinBaseUrl`,
+   main app: `getJoinAppUrl()` — `VITE_JOIN_APP_URL` override, localhost:3007 in dev).
+3. **Sign — options-only, confirm + idempotent write + undo.** Only
+   `StatementType.option` may route to Sign; questions show the row disabled with
+   "Only answers (options) can become documents". Confirm step writes
+   `isDocument: true` via the new idempotent `setIsDocument(statementId, value)`
+   (added beside the legacy `toggleIsDocument` in
+   `src/controllers/db/statements/setIsDocument.ts`); the Sign tab opens only after
+   the write resolves; the success toast offers Undo (`setIsDocument(id, false)`).
+4. **Legacy "Mark as a Document" row stays.** Contrary to §3.1's strawman, the
+   standalone menu row is NOT removed or modified this release — it and the router
+   coexist. Revisit retirement in a later release.
+5. **Mass-Consensus — confirm + write + undo (NOT write-free).** Contrary to §5.3's
+   strawman, routing to MC is a two-step route mirroring Sign: the admin confirms
+   "make this a crowd-consensus question", and on confirm the router writes
+   `questionSettings.questionType = QuestionType.massConsensus` (enum value
+   `'mass-consensus'` from shared-types) via the new idempotent
+   `setQuestionType(statementId, type)` — which returns the previous question type
+   so Undo restores it — then opens `<mc>/q/{statementId}`.
+
+Also settled implicitly: the verb-first, no-app-names labeling stands (Q4 of the
+original open questions).
