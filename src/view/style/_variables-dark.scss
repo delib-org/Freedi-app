@@ -77,6 +77,10 @@
 
     // --- CARDS ---
     --card-default: #1c2434;
+    // Raised step of the elevation ladder (see header): surfaces floating
+    // above cards (hover cards, popovers) must be lighter than the cards
+    // they cover, otherwise they visually merge with the content behind.
+    --card-raised: #232c40;
     --card-needs-surface: #16332e;
     --card-needs-top: #1d453e;
     --card-suggestion-added: #2b2a1a;
