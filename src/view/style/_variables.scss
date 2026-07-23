@@ -271,6 +271,10 @@
 
   // Card
   --card-default: #ffffff;
+  // Surface elevated ABOVE cards (hover cards, popovers). Same as card in
+  // light mode (separation comes from border + shadow); a lighter step of
+  // the elevation ladder in dark mode so it reads as a distinct surface.
+  --card-raised: #ffffff;
   --card-needs-surface: #c7e5e0;
   --card-needs-top: #93cdc2;
   --card-suggestion-added: #fdffe0;

@@ -32,6 +32,7 @@ import {
 enum StatementType {
 	option = 'option',
 	question = 'question',
+	statement = 'statement',
 }
 
 interface MockStatement {
@@ -309,6 +310,16 @@ describe('createViewLayersDataSelector', () => {
 		]);
 		const data = createViewLayersDataSelector(selectStatements)(PARENT_ID)(state);
 		expect(data.synthToTopic['SX']).toBe('TA'); // higher consensus wins
+	});
+
+	it('excludes simple statements (discussion messages) from the options surface', () => {
+		const state = buildState([
+			option('o1'),
+			option('chat1', { statementType: StatementType.statement }),
+			option('chat2', { statementType: StatementType.statement }),
+		]);
+		const data = createViewLayersDataSelector(selectStatements)(PARENT_ID)(state);
+		expect(ids(data.rawOriginals)).toEqual(['o1']);
 	});
 });
 

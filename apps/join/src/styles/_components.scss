@@ -2976,7 +2976,10 @@ $facilitator-panel-width: 300px;
   flex-direction: column;
   gap: var(--space-md);
   padding: var(--space-lg) var(--space-md);
-  background: var(--bg-paper, #ffffff);
+  // `--bg-paper` is defined in _tokens.scss as an alias of `--bg-card`, so
+  // the drawer is white in light mode and a proper dark surface in dark mode
+  // (the old hardcoded #ffffff fallback kept it white on a dark page).
+  background: var(--bg-paper);
   box-shadow: var(--shadow-lg);
   transform: translateX(100%);
   transition: transform var(--dur-base, 220ms) var(--ease-out);
@@ -3326,13 +3329,17 @@ $facilitator-panel-width: 300px;
   flex-shrink: 0;
 }
 
+// Text and background MUST come from the same dark-aware token pair —
+// `--text-primary` on `--bg-input` stays AA in both schemes. (Historically
+// this used then-undefined `--text-strong`/`--bg-muted`, whose hardcoded
+// light fallbacks left near-black text on a dark surface in dark mode.)
 .facilitator-panel__lang-select {
   padding: 4px 8px;
   font: inherit;
   font-size: var(--font-size-xs, 0.75rem);
-  color: var(--text-strong, #1c1917);
-  background: var(--paper, #ffffff);
-  border: 1px solid var(--bg-muted, #d6d3d1);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   max-width: 9rem;
   cursor: pointer;
@@ -3491,15 +3498,18 @@ $facilitator-panel-width: 300px;
   align-self: flex-start;
 }
 
+// Text + surface from the same dark-aware pair (`--text-primary` on
+// `--bg-input`). The old `--paper` background flips to page-black in dark
+// mode while the hardcoded dark text fallback stayed — invisible entries.
 .facilitator-panel__joinform-input,
 .facilitator-panel__joinform-select {
   width: 100%;
   padding: 6px 10px;
   font: inherit;
   font-size: var(--font-size-sm, 0.875rem);
-  color: var(--text-strong, #1c1917);
-  background: var(--paper, #ffffff);
-  border: 1px solid var(--bg-muted, #d6d3d1);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   transition: border-color var(--dur-quick, 140ms) var(--ease-out);
 
@@ -3542,8 +3552,8 @@ $facilitator-panel-width: 300px;
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid var(--bg-muted, #d6d3d1);
-  background: var(--paper, #ffffff);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-input);
   color: var(--text-muted, #78716c);
   border-radius: var(--radius-sm, 6px);
   font-size: 1rem;
@@ -3570,22 +3580,24 @@ $facilitator-panel-width: 300px;
   }
 }
 
+// Same dark-aware pairing as the inputs it sits beside; the hover tint uses
+// `--teal-50`, which dark mode redefines as a translucent teal overlay.
 .facilitator-panel__joinform-check {
   flex-shrink: 0;
   padding: 6px 10px;
   font: inherit;
   font-size: var(--font-size-xs, 0.75rem);
   white-space: nowrap;
-  color: var(--text-strong, #1c1917);
-  background: var(--paper, #ffffff);
-  border: 1px solid var(--bg-muted, #d6d3d1);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;
   transition: background var(--dur-quick, 140ms) var(--ease-out),
               border-color var(--dur-quick, 140ms) var(--ease-out);
 
   &:hover:not(:disabled) {
-    background: rgba(20, 95, 84, 0.06);
+    background: var(--teal-50);
     border-color: var(--teal-600, #145f54);
   }
 
@@ -3669,6 +3681,12 @@ $facilitator-panel-width: 300px;
   &:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
+  }
+
+  // Dark mode: the ramp shifts one step, so `--teal-700` lands at ~3:1 on
+  // the dark fill; `--teal-500` is the text-safe step there (~5:1 AA).
+  @media (prefers-color-scheme: dark) {
+    color: var(--teal-500);
   }
 }
 
@@ -3991,10 +4009,12 @@ $facilitator-panel-width: 300px;
 }
 
 // Language row label ("🌐 Language")
+// `--text-primary` flips with the dark-mode token block so the label stays
+// readable on the panel's `--bg-card` surface in both schemes.
 .a11y-widget__lang-label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--text-strong);
+  color: var(--text-primary);
   text-align: start;
 }
 
@@ -4002,14 +4022,19 @@ $facilitator-panel-width: 300px;
 // Native control gives free OS-level keyboard, type-ahead, and the mobile
 // system picker. We deliberately don't customize the dropdown arrow so the
 // element keeps platform-native affordance recognition.
+// Color/background come from the SAME dark-aware token pair (`--text-primary`
+// on `--bg-input`) so the selected language always meets AA in both schemes:
+// #1c1917 on #ffffff (~16.9:1) light, #f4ece0 on paper-deep (~12:1) dark.
+// `--bg-input` is the sanctioned input surface — one step above the card in
+// dark mode, so the control doesn't vanish into the panel.
 .a11y-widget__lang-select {
   width: 100%;
   min-height: 36px;
   padding: 6px 10px;
   font: inherit;
   font-size: var(--font-size-sm);
-  color: var(--text-strong);
-  background: var(--paper, #ffffff);
+  color: var(--text-primary);
+  background: var(--bg-input);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;
@@ -4025,10 +4050,13 @@ $facilitator-panel-width: 300px;
     border-color: var(--teal-600);
   }
 
+  // Disabled (facilitator forced a language): `--bg-subtle` is dark-aware —
+  // the previous `var(--bg-muted, #f5f5f4)` (then undefined) always painted
+  // its light fallback, making the light text invisible on it in dark mode.
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: var(--bg-muted, #f5f5f4);
+    background: var(--bg-subtle);
   }
 }
 
