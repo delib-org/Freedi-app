@@ -1682,6 +1682,12 @@ export const resetOptionJoining = _resetOptionJoining;
 export const resetQuestionJoining = _resetQuestionJoining;
 export const reconcileJoinSheet = _reconcileJoinSheet;
 
+// Permanent option deletion (single option + "delete all suggestions").
+// Lives in ./optionDeletion.ts; re-exported here so views keep importing
+// everything option-related from `@/lib/store`.
+export type { DeleteAllOptionsResult } from './optionDeletion';
+export { deleteOption, deleteAllOptions } from './optionDeletion';
+
 /** All visible options under the current question where the user is a
  *  member in either role (joined or organizers). Wraps the pure helper
  *  in ./join/joinCallables.ts with the active-question state. */
