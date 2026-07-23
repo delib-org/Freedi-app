@@ -17,7 +17,8 @@
 
 import m from 'mithril';
 import { Statement, Collections, Creator, getEvaluationRange } from '@freedi/shared-types';
-import { db, collection, doc, setDoc, query, where, onSnapshot, Unsubscribe } from './firebase';
+import { db, collection, doc, setDoc, query, where, Unsubscribe } from './firebase';
+import { resilientOnSnapshot } from './resilientListeners';
 import { getUserState } from './user';
 import { unhighlightOption } from './newSolutionsBuffer';
 
@@ -132,7 +133,7 @@ export function subscribeUserEvaluations(questionId: string): Unsubscribe {
 		where('evaluatorId', '==', creator.uid),
 	);
 
-	listenerUnsub = onSnapshot(q, (snap) => {
+	listenerUnsub = resilientOnSnapshot('userEvaluations', q, (snap) => {
 		const next = new Map<string, number>();
 		for (const d of snap.docs) {
 			const data = d.data() as { statementId?: string; evaluation?: number };

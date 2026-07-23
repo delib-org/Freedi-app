@@ -14,7 +14,8 @@
  */
 
 import m from 'mithril';
-import { db, doc, getDoc, setDoc, onSnapshot, Unsubscribe } from '../firebase';
+import { db, doc, getDoc, setDoc, Unsubscribe } from '../firebase';
+import { resilientOnSnapshot } from '../resilientListeners';
 import { Collections } from '@freedi/shared-types';
 import { getUserState } from '../user';
 
@@ -184,7 +185,7 @@ export function subscribeUserJoinFormSubmission(questionId: string): Unsubscribe
 	const key = cacheKey(questionId, uid);
 	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', uid);
 
-	return onSnapshot(submissionRef, (snap) => {
+	return resilientOnSnapshot('joinFormSubmission', submissionRef, (snap) => {
 		if (!snap.exists()) {
 			joinFormSubmittedRole.delete(key);
 			joinFormSubmissionCache.delete(key);
