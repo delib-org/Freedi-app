@@ -48,7 +48,9 @@ describe('synthesis settings', () => {
 				attachThreshold: 0.85,
 			});
 			expect(result.valid).toBe(false);
-			expect(result.errors.join(' ')).toMatch(/clusterThreshold must be strictly less than attachThreshold/);
+			expect(result.errors.join(' ')).toMatch(
+				/clusterThreshold must be strictly less than attachThreshold/,
+			);
 		});
 
 		it('rejects reviewLowerBound >= clusterThreshold', () => {
@@ -57,7 +59,9 @@ describe('synthesis settings', () => {
 				clusterThreshold: 0.6,
 			});
 			expect(result.valid).toBe(false);
-			expect(result.errors.join(' ')).toMatch(/reviewLowerBound must be strictly less than clusterThreshold/);
+			expect(result.errors.join(' ')).toMatch(
+				/reviewLowerBound must be strictly less than clusterThreshold/,
+			);
 		});
 
 		it('accepts the three-band default (review < cluster < attach)', () => {
@@ -117,6 +121,7 @@ describe('synthesis settings', () => {
 				synthLowerBound: DEFAULT_SYNTHESIS_SETTINGS.synthLowerBound,
 				clusterThreshold: 0.75,
 				reviewLowerBound: 0.6,
+				claimRegistryEnabled: DEFAULT_SYNTHESIS_SETTINGS.claimRegistryEnabled,
 			});
 		});
 

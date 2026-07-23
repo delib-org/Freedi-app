@@ -87,6 +87,10 @@ function mergeWithDefaults(
 			typeof partial.reviewLowerBound === 'number' && Number.isFinite(partial.reviewLowerBound)
 				? partial.reviewLowerBound
 				: defaults.reviewLowerBound,
+		claimRegistryEnabled:
+			typeof partial.claimRegistryEnabled === 'boolean'
+				? partial.claimRegistryEnabled
+				: defaults.claimRegistryEnabled,
 	};
 }
 

@@ -3,6 +3,12 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { logger } from '@/lib/utils/logger';
+import { getFirebaseFunctionUrl } from '@/lib/utils/firebaseFunctions';
+
+// Next.js segment config — Vercel honors this over vercel.json globs.
+// The route waits on the processVersionAI Cloud Function, which can exceed
+// the 30s platform default on large documents.
+export const maxDuration = 60;
 
 // Inline constants to avoid import issues with shared-types
 const COLLECTIONS = {
@@ -18,24 +24,6 @@ const VERSION_STATUS = {
 const ADMIN_PERMISSION_LEVEL = {
 	viewer: 'viewer',
 } as const;
-
-/**
- * Firebase Function URL for AI processing
- * Uses Firebase Functions for longer timeout (540s vs Vercel's 30s)
- */
-function getFirebaseFunctionUrl(): string {
-	if (process.env.FIREBASE_FUNCTIONS_URL) {
-		return process.env.FIREBASE_FUNCTIONS_URL;
-	}
-
-	if (process.env.USE_FIREBASE_EMULATOR === 'true') {
-		const projectId = process.env.FIREBASE_PROJECT_ID || 'freedi-test';
-
-		return `http://localhost:5001/${projectId}/me-west1`;
-	}
-
-	return 'https://me-west1-wizcol-app.cloudfunctions.net';
-}
 
 /**
  * POST /api/admin/versions/[docId]/[versionId]/process-ai
