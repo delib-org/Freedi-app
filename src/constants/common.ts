@@ -55,6 +55,11 @@ export const UI = {
 	ANIMATION_DURATION: 200,
 	MODAL_Z_INDEX: 1000,
 	TOOLTIP_DELAY: 500,
+	// Minimum gap between two animated list reorders. Live evaluation updates
+	// can reshuffle a consensus ranking many times a second; coalescing them
+	// keeps the FLIP glide followable and stops the measure-storm that used to
+	// freeze mobile during active deliberation.
+	REORDER_THROTTLE_DELAY: 1200,
 } as const;
 
 /**
