@@ -3,12 +3,10 @@ import { RouteObject } from 'react-router';
 import { StatementSkeleton } from '@/view/components/atomic/molecules/StatementSkeleton';
 import withSuspense, { withCustomSuspense } from './withSuspense';
 import lazyWithRetry from './lazyWithRetry';
+// Hot path — loaded eagerly so opening a statement has no chunk round-trip
+import StatementMain from '@/view/pages/statement/StatementMain';
 
-// Lazy load protected route components with retry on chunk failure
-const StatementMain = lazyWithRetry(
-	() => import('@/view/pages/statement/StatementMain'),
-	'StatementMain',
-);
+// Lazy load rarely-used protected route components with retry on chunk failure
 const MySuggestions = lazyWithRetry(
 	() => import('@/view/pages/my-suggestions/MySuggestions'),
 	'MySuggestions',
@@ -55,15 +53,15 @@ const withLoadingSuspense = (Component: React.LazyExoticComponent<React.Componen
 export const protectedRoutes: RouteObject[] = [
 	{
 		path: 'stage/:statementId',
-		element: withStatementSuspense(StatementMain),
+		element: <StatementMain />,
 	},
 	{
 		path: 'statement/:statementId',
-		element: withStatementSuspense(StatementMain),
+		element: <StatementMain />,
 		children: [
 			{
 				path: ':sort',
-				element: withStatementSuspense(StatementMain),
+				element: <StatementMain />,
 			},
 		],
 	},
@@ -73,17 +71,17 @@ export const protectedRoutes: RouteObject[] = [
 	},
 	{
 		path: 'statement-screen/:statementId',
-		element: withStatementSuspense(StatementMain),
+		element: <StatementMain />,
 		children: [
 			{
 				path: ':screen',
-				element: withStatementSuspense(StatementMain),
+				element: <StatementMain />,
 			},
 		],
 	},
 	{
 		path: 'stage/:statementId/:sort',
-		element: withStatementSuspense(StatementMain),
+		element: <StatementMain />,
 	},
 	{
 		path: 'my-suggestions/statement/:statementId',

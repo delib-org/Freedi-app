@@ -5,7 +5,7 @@ import {
 	Direction,
 	RowDirection,
 } from '@/context/UserConfigContext';
-import { getDirection, getRowDirection, getLanguageData } from '@freedi/shared-i18n';
+import { getDirection, getRowDirection } from '@freedi/shared-i18n';
 
 export interface UseTranslationReturn {
 	t: (text: string) => string;
@@ -15,18 +15,15 @@ export interface UseTranslationReturn {
 	rowDirection: RowDirection;
 }
 
-// Default English translations for fallback
-const defaultLanguageData = getLanguageData(LanguagesEnum.en);
-
 /**
  * Hook for accessing translation functionality
- * Works even outside UserConfigProvider (uses English fallback)
+ * Works even outside UserConfigProvider (falls back to the key, which is English text)
  */
 export function useTranslation(): UseTranslationReturn {
 	const context = useContext(UserConfigContext);
 
-	// Fallback translation function
-	const fallbackT = useCallback((text: string) => defaultLanguageData[text] || text, []);
+	// Fallback translation function — keys are English text, so identity is safe
+	const fallbackT = useCallback((text: string) => text, []);
 
 	// Fallback when context is not available
 	const fallback = useMemo<UseTranslationReturn>(

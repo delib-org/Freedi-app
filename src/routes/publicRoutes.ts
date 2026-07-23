@@ -1,12 +1,14 @@
 import { RouteObject } from 'react-router';
+import React from 'react';
 import withSuspense from './withSuspense';
 import lazyWithRetry from './lazyWithRetry';
 
-const Home = lazyWithRetry(() => import('@/view/pages/home/Home'), 'Home');
-const HomeMain = lazyWithRetry(() => import('@/view/pages/home/main/HomeMain'), 'HomeMain');
+// Hot paths — loaded eagerly so first navigation has no chunk round-trip
+import Home from '@/view/pages/home/Home';
+import HomeMain from '@/view/pages/home/main/HomeMain';
+import Start from '@/view/pages/start/Start';
+import LoginPage from '@/view/pages/login/LoginFirst';
 
-const Start = lazyWithRetry(() => import('@/view/pages/start/Start'), 'Start');
-const LoginPage = lazyWithRetry(() => import('@/view/pages/login/LoginFirst'), 'LoginPage');
 const MemberRejection = lazyWithRetry(
 	() => import('@/view/pages/memberRejection/MemberRejection'),
 	'MemberRejection',
@@ -15,21 +17,21 @@ const MemberRejection = lazyWithRetry(
 export const publicRoutes: RouteObject[] = [
 	{
 		path: 'home',
-		element: withSuspense(Home),
+		element: React.createElement(Home),
 		children: [
 			{
 				index: true,
-				element: withSuspense(HomeMain),
+				element: React.createElement(HomeMain),
 			},
 		],
 	},
 	{
 		index: true,
-		element: withSuspense(Start),
+		element: React.createElement(Start),
 	},
 	{
 		path: 'login-first',
-		element: withSuspense(LoginPage),
+		element: React.createElement(LoginPage),
 	},
 	{
 		path: 'member-rejection',

@@ -18,5 +18,8 @@ export {
   type TranslationDictionary,
 } from './core';
 
-// Language exports
+// Language exports (static — bundles ALL dictionaries; use server-side only)
 export { languages, getLanguageData, en, he, ar, de, es, nl } from './languages';
+
+// Async, code-split language loading (use in client apps)
+export { loadLanguageData } from './languages/loader';

@@ -4,6 +4,7 @@ import svgr from 'vite-plugin-svgr';
 import path from 'path';
 import pkg from './package.json';
 import { VitePWA } from 'vite-plugin-pwa';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -69,6 +70,10 @@ export default defineConfig(({ mode }) => {
 					maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
 				}
 			}),
+			// Bundle analysis: ANALYZE=1 npm run build → stats.html in project root
+			...(process.env.ANALYZE
+				? [visualizer({ filename: 'stats.html', gzipSize: true, brotliSize: true })]
+				: []),
 		],
 		resolve: {
 			alias: {
@@ -100,7 +105,7 @@ export default defineConfig(({ mode }) => {
 		build: {
 			minify: (!isTestMode && !isProdUnminified) || isTestMinified, // Minify unless test mode or prod-unminified
 			sourcemap: (isTestMode && !isTestMinified) || isProdUnminified, // Sourcemaps for test (non-minified) and prod-unminified
-			cssCodeSplit: false, // Extract all CSS into a single file
+			cssCodeSplit: true, // Per-chunk CSS: lazy screens' styles no longer block first paint
 			rollupOptions: {
 				// Suppress warnings from third-party libraries
 				onwarn(warning, warn) {
@@ -144,11 +149,6 @@ export default defineConfig(({ mode }) => {
 							id.includes('node_modules/prosemirror')) {
 							return 'vendor-editor';
 						}
-						// i18n - internationalization
-						if (id.includes('node_modules/i18next') ||
-							id.includes('node_modules/react-i18next')) {
-							return 'vendor-i18n';
-						}
 						// Sentry - error monitoring
 						if (id.includes('node_modules/@sentry/')) {
 							return 'vendor-sentry';
@@ -161,13 +161,7 @@ export default defineConfig(({ mode }) => {
 							return 'vendor-markdown';
 						}
 					},
-					assetFileNames: (assetInfo) => {
-						if (assetInfo.name?.endsWith('.css')) {
-							return 'assets/style.[hash].css';
-						}
-
-						return 'assets/[name]-[hash][extname]';
-					},
+					assetFileNames: 'assets/[name]-[hash][extname]',
 				},
 			},
 			chunkSizeWarningLimit: 500,
