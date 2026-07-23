@@ -6,6 +6,7 @@
 import { getFirestoreAdmin } from './admin';
 import { Collections, StatementType, Statement } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
+import { htmlToPreviewText } from '@/utils/textUtils';
 import { QUERY_LIMITS, FIREBASE } from '@/constants/common';
 
 export interface HomeDocument {
@@ -434,13 +435,16 @@ function statementToHomeDocument(
 ): HomeDocument | null {
   if (!data.statementId || !data.statement) return null;
 
-  // description is stored in Firestore but not in the Statement type
+  // description is stored in Firestore but not in the Statement type.
+  // It caches the joined paragraph children, which are rich-text HTML — strip
+  // the markup so cards and the search filter see readable plain text.
   const dataWithDescription = data as Statement & { description?: string };
+  const previewText = htmlToPreviewText(dataWithDescription.description);
 
   return {
     statementId: data.statementId,
     statement: data.statement,
-    description: dataWithDescription.description || undefined,
+    description: previewText || undefined,
     createdAt: toMillis(data.createdAt),
     lastUpdate: toMillis(data.lastUpdate),
     creatorId: data.creatorId || '',
