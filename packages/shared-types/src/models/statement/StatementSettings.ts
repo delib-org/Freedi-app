@@ -316,6 +316,12 @@ export const StatementSettingsSchema = object({
 	// still showing the question; 'closed' replaces the question with a
 	// "This question is closed" screen.
 	questionStatus: optional(QuestionStatusSchema),
+	// Join app: when true, participants (not just admins) may navigate the hub
+	// on their own — sub-question cards become clickable and a Back button
+	// appears inside each question. Default (undefined/false) keeps the
+	// facilitator-led flow where `powerFollowMe` is the only way to move.
+	// Hub-scoped — only honoured on the main (top-parent) statement.
+	allowParticipantNavigation: optional(boolean()),
 });
 
 
