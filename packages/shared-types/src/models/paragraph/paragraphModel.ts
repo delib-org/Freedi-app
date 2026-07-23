@@ -1,12 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	optional,
-	enum_,
-	picklist,
-	InferOutput,
-} from 'valibot';
+import { object, string, number, optional, enum_, picklist, InferOutput } from 'valibot';
 
 /**
  * ParagraphType enum defines the types of paragraphs supported in rich text content.
@@ -38,7 +30,8 @@ export type ListType = 'ul' | 'ol';
 export const ParagraphSchema = object({
 	paragraphId: string(), // Unique identifier for the paragraph
 	type: enum_(ParagraphType), // The type of paragraph (h1-h6, paragraph, li, table, image)
-	content: string(), // The text content of the paragraph (empty for images)
+	content: string(), // The plain-text content of the paragraph (empty for images)
+	contentHtml: optional(string()), // Inline-formatted content (only <strong>/<em>); present only when formatting exists. `content` stays the plain-text source of truth.
 	order: number(), // Position in the document (0-based)
 	listType: optional(ListTypeSchema), // For list items: 'ul' (unordered) or 'ol' (ordered)
 	sourceStatementId: optional(string()), // ID of the original statement this paragraph came from (for merged proposals)

@@ -36,7 +36,10 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
-import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
+import {
+	DISCUSSABLE_STATEMENT_TYPES,
+	NON_DOCUMENT_STATEMENT_TYPES,
+} from '@/helpers/statementTypeHelpers';
 
 // Tracks subscription docs whose schema-validation failure we've already
 // logged this session, so a malformed doc on a hot listener doesn't spam the
@@ -74,9 +77,10 @@ export const listenToStatementSubscription = (
 
 						return;
 					}
-					const rawData = convertTimestampsToMillis(
-						statementSubscriptionDB.data(),
-					) as Record<string, unknown>;
+					const rawData = convertTimestampsToMillis(statementSubscriptionDB.data()) as Record<
+						string,
+						unknown
+					>;
 
 					const parseResult = safeParse(StatementSubscriptionSchema, rawData);
 					let statementSubscription: StatementSubscription;
@@ -108,16 +112,15 @@ export const listenToStatementSubscription = (
 							role: (rawData.role as Role) ?? Role.unsubscribed,
 							lastUpdate: (rawData.lastUpdate as number) ?? Date.now(),
 							createdAt: (rawData.createdAt as number) ?? Date.now(),
-							statement:
-								(rawData.statement as StatementSubscription['statement']) ?? {
-									statementId,
-									statement: '',
-									statementType: StatementType.question,
-									creatorId: creator.uid,
-									creator,
-									parentId: 'top',
-									consensus: 0,
-								},
+							statement: (rawData.statement as StatementSubscription['statement']) ?? {
+								statementId,
+								statement: '',
+								statementType: StatementType.question,
+								creatorId: creator.uid,
+								creator,
+								parentId: 'top',
+								consensus: 0,
+							},
 							parentId: rawData.parentId as string | undefined,
 							statementType: rawData.statementType as StatementType | undefined,
 							topParentId: rawData.topParentId as string | undefined,
@@ -244,7 +247,7 @@ export const listenToSubStatements = (
 		let q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
-			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
+			where('statementType', 'in', DISCUSSABLE_STATEMENT_TYPES),
 			orderBy('createdAt', descAsc),
 		);
 
@@ -349,8 +352,11 @@ export async function fetchOlderSubStatements(
 
 		snapshot.forEach((doc) => {
 			const statement = normalizeStatementData(doc.data()) as Statement;
-			// Filter out document types client-side
-			if (statement.statementType !== StatementType.document) {
+			// Filter out document and paragraph (body content) types client-side
+			if (
+				statement.statementType !== StatementType.document &&
+				statement.statementType !== StatementType.paragraph
+			) {
 				statements.push(statement);
 			}
 		});

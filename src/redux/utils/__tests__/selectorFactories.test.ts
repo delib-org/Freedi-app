@@ -119,6 +119,22 @@ describe('Selector Factories', () => {
 			expect(result.map((s) => s.statementId)).toEqual(['s1', 's2']);
 		});
 
+		it('should exclude paragraph children (body content, not list members)', () => {
+			const s1 = buildStatement({ statementId: 's1', parentId: 'parent-A', createdAt: 100 });
+			const p1 = buildStatement({
+				statementId: 'p1',
+				parentId: 'parent-A',
+				createdAt: 200,
+				statementType: StatementType.paragraph,
+			});
+			const state = buildRootState([s1, p1]);
+
+			const selector = factory('parent-A');
+			const result = selector(state as never);
+
+			expect(result.map((s) => s.statementId)).toEqual(['s1']);
+		});
+
 		it('should sort results by createdAt ascending', () => {
 			const s1 = buildStatement({ statementId: 's1', parentId: 'parent-A', createdAt: 300 });
 			const s2 = buildStatement({ statementId: 's2', parentId: 'parent-A', createdAt: 100 });

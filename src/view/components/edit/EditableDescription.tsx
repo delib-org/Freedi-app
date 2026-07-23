@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { DocumentEditModal, ParagraphsDisplay } from '@/view/components/richTextEditor';
+import { DescriptionEditor, ParagraphsDisplay } from '@/view/components/richTextEditor';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import styles from './EditableDescription.module.scss';
@@ -40,33 +40,31 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 		);
 	}
 
-	// Editable mode - click to open rich editor
+	// Editable mode - click to edit in place with a simple WYSIWYG editor
+	if (isEditorOpen) {
+		return <DescriptionEditor statement={statement} onClose={() => setIsEditorOpen(false)} />;
+	}
+
 	// Use different class when empty to hide on mobile
 	const containerClass = hasParagraphs
 		? styles.editableDescription
 		: `${styles.editableDescription} ${styles.editableDescriptionEmpty}`;
 
 	return (
-		<>
-			<button type="button" className={containerClass} onClick={() => setIsEditorOpen(true)}>
-				<div className={styles.editButton}>
-					<EditIcon />
-					<span>{t('Edit Description')}</span>
-				</div>
+		<button type="button" className={containerClass} onClick={() => setIsEditorOpen(true)}>
+			<div className={styles.editButton}>
+				<EditIcon />
+				<span>{t('Edit Description')}</span>
+			</div>
 
-				<div className={styles.descriptionContent}>
-					{hasParagraphs ? (
-						<ParagraphsDisplay statement={statement} />
-					) : (
-						<p className={styles.placeholder}>{t(placeholder)}</p>
-					)}
-				</div>
-			</button>
-
-			{isEditorOpen && (
-				<DocumentEditModal statement={statement} onClose={() => setIsEditorOpen(false)} />
-			)}
-		</>
+			<div className={styles.descriptionContent}>
+				{hasParagraphs ? (
+					<ParagraphsDisplay statement={statement} />
+				) : (
+					<p className={styles.placeholder}>{t(placeholder)}</p>
+				)}
+			</div>
+		</button>
 	);
 };
 

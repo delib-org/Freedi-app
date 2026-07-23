@@ -13,13 +13,20 @@ import { Statement, StatementType } from '@freedi/shared-types';
 type StateSelector<T> = (state: any) => T;
 
 /**
- * Create a selector that filters statements by parent ID
+ * Create a selector that filters statements by parent ID.
+ *
+ * Paragraph children are excluded: they are the parent's rich body content
+ * (rendered by StatementBody), not discussable list members — including them
+ * would leak body paragraphs into chat feeds, tab counts, and child lists.
  */
 export function createStatementsByParentSelector(selectStatements: StateSelector<Statement[]>) {
 	return (parentId: string | undefined) =>
 		createSelector([selectStatements], (statements) =>
 			statements
-				.filter((statement) => statement.parentId === parentId)
+				.filter(
+					(statement) =>
+						statement.parentId === parentId && statement.statementType !== StatementType.paragraph,
+				)
 				.sort((a, b) => a.createdAt - b.createdAt),
 		);
 }

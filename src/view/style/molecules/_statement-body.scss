@@ -234,6 +234,31 @@
     @include focus-visible;
   }
 
+  // ----- "Edit Description" button above the rendered body ------------------
+  &__edit-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    padding: 0.25rem 0;
+    background: transparent;
+    border: none;
+    color: var(--btn-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    @include focus-visible;
+  }
+
   // ----- "+ Add paragraph" button at end ------------------------------------
   &__add-end {
     display: inline-flex;

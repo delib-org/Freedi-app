@@ -5,12 +5,12 @@
 	composes: rich-text-editor from global;
 }
 
-.toolbar {
-	composes: rich-text-editor__toolbar from global;
+.editorCompact {
+	composes: rich-text-editor--compact from global;
 }
 
-.toolbarGroup {
-	composes: rich-text-editor__toolbar-group from global;
+.toolbar {
+	composes: rich-text-editor__toolbar from global;
 }
 
 .toolbarButton {
@@ -38,6 +38,15 @@
 }
 
 // Additional component-specific styles
+.boldIcon {
+	font-weight: 700;
+}
+
+.italicIcon {
+	font-style: italic;
+	font-family: serif;
+}
+
 .loading {
 	display: flex;
 	align-items: center;

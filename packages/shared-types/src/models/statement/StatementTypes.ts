@@ -35,7 +35,10 @@ import { StageSelectionType } from '../stage/stageTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 import { StatementSettingsSchema } from './StatementSettings';
 import { UserDataSchema } from '../user/UserSettings';
-import { StatementEvaluationSchema, StatementEvaluationSettingsSchema } from '../evaluation/Evaluation';
+import {
+	StatementEvaluationSchema,
+	StatementEvaluationSettingsSchema,
+} from '../evaluation/Evaluation';
 import { QuestionnaireSchema } from '../questionnaire/questionnaireModel';
 import { FairDivisionSelectionSchema } from './fairDivision';
 import { VotingSettingsSchema } from '../vote/votingModel';
@@ -75,14 +78,16 @@ export const StatementSchema = object({
 	creator: UserSchema, // the creator of the statement
 	statementType: enum_(StatementType), // the type of the statement: group, stage, option, chat-message, etc.
 	blockType: optional(enum_(ParagraphType)), // for paragraph child-statements (statementType === paragraph): visual block type (h1..h6, paragraph, li). Distinct from the nested doc.paragraphType used by Sign app.
-	evidence: optional(object({
-		evidenceType: optional(enum_(EvidenceType)), // the type of evidence: data, testimony, argument, anecdote, fallacy
-		support: optional(number()), // the strength of support of the evidence (-1 to 1): -1 = strongly challenges, 0 = neutral, 1 = strongly supports
-		helpfulCount: optional(number()), // the number of helpful votes for the evidence
-		notHelpfulCount: optional(number()), // the number of not-helpful votes for the evidence
-		netScore: optional(number()), // the net score of the evidence (helpfulCount - notHelpfulCount)
-		evidenceWeight: optional(number()), // calculated weight based on evidence type and vote quality (can be > 1.0)
-	})),
+	evidence: optional(
+		object({
+			evidenceType: optional(enum_(EvidenceType)), // the type of evidence: data, testimony, argument, anecdote, fallacy
+			support: optional(number()), // the strength of support of the evidence (-1 to 1): -1 = strongly challenges, 0 = neutral, 1 = strongly supports
+			helpfulCount: optional(number()), // the number of helpful votes for the evidence
+			notHelpfulCount: optional(number()), // the number of not-helpful votes for the evidence
+			netScore: optional(number()), // the net score of the evidence (helpfulCount - notHelpfulCount)
+			evidenceWeight: optional(number()), // calculated weight based on evidence type and vote quality (can be > 1.0)
+		}),
+	),
 	deliberativeElement: optional(enum_(DeliberativeElement)), // the deliberative element of the statement: need, explanation, question, suggestion, conclusion, etc.
 	color: optional(string()), // it is a color assigned to a statement
 	defaultLanguage: optional(string()), // the default language of the statement
@@ -94,11 +99,13 @@ export const StatementSchema = object({
 	parents: optional(array(string())), // the list of all parents of the statement
 	topParentId: string(), // the id of the top parent of the statement
 	hasChildren: optional(boolean()), // if true, the user can add sub statements to the statement
-	lastMessage: optional(object({
-		message: string(),
-		creator: string(),
-		createdAt: number(),
-	})), // the last message in the statement
+	lastMessage: optional(
+		object({
+			message: string(),
+			creator: string(),
+			createdAt: number(),
+		}),
+	), // the last message in the statement
 	lastSubStatements: optional(array(SimpleStatementSchema)), // the last sub-statements of the statement
 	lastUpdate: number(), // the last update of the statement
 	lastChildUpdate: optional(number()), // the last update of the last child of the statement
@@ -113,6 +120,7 @@ export const StatementSchema = object({
 			// Paragraph type info (for official paragraphs converted from embedded array)
 			paragraphType: optional(enum_(ParagraphType)), // h1, h2, paragraph, li, etc.
 			listType: optional(ListTypeSchema), // ul or ol (for list items)
+			contentHtml: optional(string()), // Inline-formatted paragraph content (<strong>/<em> only); `statement` stays plain text
 			imageUrl: optional(string()), // Firebase Storage URL for image paragraphs
 			imageAlt: optional(string()), // Alt text for accessibility
 			imageCaption: optional(string()), // Optional caption for images
@@ -122,39 +130,48 @@ export const StatementSchema = object({
 
 			// Insertion point fields
 			isInsertionPoint: optional(boolean()), // true if this is an insertion point (not a real paragraph)
-			insertionBetween: optional(object({
-				beforeParagraphId: optional(string()), // null/undefined = beginning of document
-				afterParagraphId: optional(string()),  // null/undefined = end of document
-			})),
+			insertionBetween: optional(
+				object({
+					beforeParagraphId: optional(string()), // null/undefined = beginning of document
+					afterParagraphId: optional(string()), // null/undefined = end of document
+				}),
+			),
 			consumed: optional(boolean()), // true after a suggestion on this insertion point was accepted
 
-			versionControlSettings: optional(object({
-				// MVP: Manual mode only
-				enabled: boolean(), // default: false (opt-in per document)
-				// Minimum consensus to appear in review queue
-				reviewThreshold: optional(number()), // default: 0.5 (50%)
-				// Admin can edit suggestion before approval
-				allowAdminEdit: optional(boolean()), // default: true
-				// History settings
-				enableVersionHistory: optional(boolean()), // default: true
-				maxRecentVersions: optional(number()), // default: 4 (full storage)
-				maxTotalVersions: optional(number()), // default: 50 (including compressed)
+			versionControlSettings: optional(
+				object({
+					// MVP: Manual mode only
+					enabled: boolean(), // default: false (opt-in per document)
+					// Minimum consensus to appear in review queue
+					reviewThreshold: optional(number()), // default: 0.5 (50%)
+					// Admin can edit suggestion before approval
+					allowAdminEdit: optional(boolean()), // default: true
+					// History settings
+					enableVersionHistory: optional(boolean()), // default: true
+					maxRecentVersions: optional(number()), // default: 4 (full storage)
+					maxTotalVersions: optional(number()), // default: 50 (including compressed)
 
-				// Consensus-driven action settings
-				consensusSettings: optional(object({
-					removalThreshold: optional(number()),  // default: -0.4
-					additionThreshold: optional(number()), // default: 0.4
-					minEvaluators: optional(number()),     // default: 3
-				})),
+					// Consensus-driven action settings
+					consensusSettings: optional(
+						object({
+							removalThreshold: optional(number()), // default: -0.4
+							additionThreshold: optional(number()), // default: 0.4
+							minEvaluators: optional(number()), // default: 3
+						}),
+					),
 
-				// Tracking
-				lastSettingsUpdate: optional(number()),
-				updatedBy: optional(string()), // userId
-			})),
-		})
+					// Tracking
+					lastSettingsUpdate: optional(number()),
+					updatedBy: optional(string()), // userId
+				}),
+			),
+		}),
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
-	consensus: pipe(nullable(number()), transform((v) => v ?? 0)), // the consensus of the statement
+	consensus: pipe(
+		nullable(number()),
+		transform((v) => v ?? 0),
+	), // the consensus of the statement
 	consensusValid: optional(number()), // gives a combine number of the level of consensus and its validity
 	PopperHebbianScore: optional(PopperHebbianScoreSchema), // the Popper Hebbian score of the statement
 	order: optional(number()), // the order of the statement relative to its siblings
@@ -175,37 +192,49 @@ export const StatementSchema = object({
 	synthesisRunId: optional(string()), // id of the run that produced this derived option — enables surgical per-run cleanup & provenance
 	synthesisMechanism: optional(picklist(['bulk', 'live-spawn', 'live-attach'])), // which synthesis path created this derived option
 	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
-	condensationStatus: optional(object({ // set on parent questions when the grouping pipeline runs
-		lastRunAt: optional(number()),
-		lastRunBy: optional(string()), // userId of the creator, or 'scheduler' for auto runs
-		isStale: optional(boolean()), // marked true when new suggestions arrive, cleared after run
-		inputCount: optional(number()), // number of candidate originals in the last run
-		producedGroupCount: optional(number()), // number of clusters produced by the last run
-		level: optional(picklist(['loose', 'balanced', 'tight'])),
-		error: optional(string()),
-	})),
-	synthesisRun: optional(object({ // set on parent questions when bulk idea synthesis runs (see docs/clusters and synthesis/clustering-and-synthesis-paper.md §5)
-		lastRunAt: optional(number()),
-		lastRunBy: optional(string()), // userId of the admin who triggered the run
-		threshold: optional(number()), // cosine candidate threshold used (e.g. 0.90)
-		filters: optional(object({ // engagement pre-filters applied for this run
-			minAverage: optional(number()),
-			minConsensus: optional(number()),
-			minEvaluators: optional(number()),
-		})),
-		inputCount: optional(number()), // number of options surviving pre-filter
-		candidateEdgeCount: optional(number()), // edges produced by ANN before LLM verdict
-		groupsCreated: optional(number()), // number of synthesis groups committed by the admin
-		runId: optional(string()), // synthesisRuns subcollection doc id, for audit drill-down
-		status: optional(picklist(['building-graph', 'awaiting-confirmation', 'complete', 'error'])),
-		error: optional(string()),
-	})),
-	creatorOverrides: optional(object({ // set on parent questions — manual reassignments by the creator
-		// map of originalStatementId → clusterStatementId | '__standalone__'
-		// the pipeline respects these on re-run instead of re-grouping them automatically
-		assignments: optional(any()), // Record<string, string> — validated at call sites
-		updatedAt: optional(number()),
-	})),
+	condensationStatus: optional(
+		object({
+			// set on parent questions when the grouping pipeline runs
+			lastRunAt: optional(number()),
+			lastRunBy: optional(string()), // userId of the creator, or 'scheduler' for auto runs
+			isStale: optional(boolean()), // marked true when new suggestions arrive, cleared after run
+			inputCount: optional(number()), // number of candidate originals in the last run
+			producedGroupCount: optional(number()), // number of clusters produced by the last run
+			level: optional(picklist(['loose', 'balanced', 'tight'])),
+			error: optional(string()),
+		}),
+	),
+	synthesisRun: optional(
+		object({
+			// set on parent questions when bulk idea synthesis runs (see docs/clusters and synthesis/clustering-and-synthesis-paper.md §5)
+			lastRunAt: optional(number()),
+			lastRunBy: optional(string()), // userId of the admin who triggered the run
+			threshold: optional(number()), // cosine candidate threshold used (e.g. 0.90)
+			filters: optional(
+				object({
+					// engagement pre-filters applied for this run
+					minAverage: optional(number()),
+					minConsensus: optional(number()),
+					minEvaluators: optional(number()),
+				}),
+			),
+			inputCount: optional(number()), // number of options surviving pre-filter
+			candidateEdgeCount: optional(number()), // edges produced by ANN before LLM verdict
+			groupsCreated: optional(number()), // number of synthesis groups committed by the admin
+			runId: optional(string()), // synthesisRuns subcollection doc id, for audit drill-down
+			status: optional(picklist(['building-graph', 'awaiting-confirmation', 'complete', 'error'])),
+			error: optional(string()),
+		}),
+	),
+	creatorOverrides: optional(
+		object({
+			// set on parent questions — manual reassignments by the creator
+			// map of originalStatementId → clusterStatementId | '__standalone__'
+			// the pipeline respects these on re-run instead of re-grouping them automatically
+			assignments: optional(any()), // Record<string, string> — validated at call sites
+			updatedAt: optional(number()),
+		}),
+	),
 	voted: optional(number()), // the number of votes for the statement
 	totalSubStatements: optional(number()), // the total number of sub statements of the statement
 	membership: optional(MembershipSchema), // the membership of the statement
@@ -218,7 +247,7 @@ export const StatementSchema = object({
 		object({
 			main: optional(string()), // the main image of the statement
 			more: optional(array(string())), // the other images of the statement
-		})
+		}),
 	),
 	totalEvaluators: optional(number()), // the total number of evaluators of the statement
 	isInMultiStage: optional(boolean()), // if true, the statement is in a multi-stage
@@ -229,7 +258,7 @@ export const StatementSchema = object({
 	viewed: optional(
 		object({
 			individualViews: optional(number()), // the number of views of the statement - used for Freedi-sign.
-		})
+		}),
 	),
 	stageSelectionType: optional(enum_(StageSelectionType)), // the type of the stage selection of the statement
 	creatorData: optional(UserDataSchema), // the creator data of the statement
@@ -237,28 +266,30 @@ export const StatementSchema = object({
 	chosenSolutions: optional(array(string())), // the chosen solutions of the statement
 	summary: optional(string()), // the summary of the statement - should be generated by the AI
 	evaluation: optional(StatementEvaluationSchema), // the evaluation of the statement
-	evaluationSettings: optional(StatementEvaluationSettingsSchema),// the evaluation settings of the statement	
+	evaluationSettings: optional(StatementEvaluationSettingsSchema), // the evaluation settings of the statement
 	importanceData: optional(
 		object({
 			sumImportance: number(), // the sum of the importance of the statement
 			numberOfUsers: number(), // the number of users who voted for the statement
 			numberOfViews: number(), // the number of views of the statement
-		})
+		}),
 	),
-	documentSettings: optional( //used for Freedi-sign
+	documentSettings: optional(
+		//used for Freedi-sign
 		object({
 			parentDocumentId: string(), // the id of the parent document of the statement
 			order: number(), // the order of the statement relative to its siblings
 			type: enum_(DocumentType), // the type of the document
 			isTop: boolean(), // if true, the statement is a top-statement
-		})
+		}),
 	),
 	resultsSettings: optional(ResultsSettingsSchema), // the settings of the results of the statement
-	steps: optional( // steps are used to generate a solution using several steps, like suggestion, and then voting
+	steps: optional(
+		// steps are used to generate a solution using several steps, like suggestion, and then voting
 		object({
 			currentStep: StepSchema,
 			allSteps: optional(array(StepSchema)),
-		})
+		}),
 	),
 	votingSettings: optional(VotingSettingsSchema), // the settings of the voting of the statement
 	questionSettings: optional(QuestionSettingsSchema), // the settings of the question of the statement
@@ -282,11 +313,14 @@ export const StatementSchema = object({
 	creatorRole: optional(enum_(Role)),
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
-	replyTo: optional(object({ // reference to the message this is a reply to (chat view threading)
-		statementId: string(),
-		statement: string(), // text preview of the replied-to message
-		creatorDisplayName: string(), // display name of the original author
-	})),
+	replyTo: optional(
+		object({
+			// reference to the message this is a reply to (chat view threading)
+			statementId: string(),
+			statement: string(), // text preview of the replied-to message
+			creatorDisplayName: string(), // display name of the original author
+		}),
+	),
 	// ===== Dialectical Chat app (apps/chat) =====
 	// All optional + denormalized for SSR/UI. Authoritative verdict history lives
 	// in the `evidenceVerdicts/{statementId}/{scorerVersion}` subcollection.
@@ -314,35 +348,40 @@ export const StatementSchema = object({
 	randomSeed: optional(number()), // an optional random seed for the statement
 	locked: optional(StatementLockedSchema), // generic locking: any admin can lock a statement
 	sourceApp: optional(enum_(SourceApp)), // which app created this statement: main, sign, mass-consensus, flow
-	versionControl: optional(object({
-		// Version info
-		currentVersion: number(), // increments on each replacement (starts at 1)
-		// Applied suggestion tracking
-		appliedSuggestionId: optional(string()), // last suggestion that replaced this
-		appliedAt: optional(number()),
-		// History entry tracking (for archived versions)
-		replacedBy: optional(string()), // statementId of the suggestion that replaced this
-		replacedAt: optional(number()), // timestamp when replaced
-		// Finalization info (MVP: manual only)
-		finalizedBy: optional(string()), // userId
-		finalizedAt: optional(number()),
-		finalizedReason: optional(string()), // 'manual_approval' | 'rollback' (MVP only)
-		finalized: optional(boolean()), // true if this suggestion was finalized
-		// Admin actions
-		adminEditedContent: optional(string()), // if admin modified before approval
-		adminEditedAt: optional(number()),
-		adminNotes: optional(string()),
-		// Suggestion versioning (for preservation on replacement)
-		forVersion: optional(number()), // For suggestions: which paragraph version this was an alternative for
-		promotedToVersion: optional(number()), // For winning suggestions: which version number they became
-		promotedAt: optional(number()), // Timestamp when promoted to official
-		evaluationSnapshot: optional(object({ // Snapshot of evaluation state at time of archival
-			numberOfProEvaluators: optional(number()),
-			numberOfConEvaluators: optional(number()),
-			numberOfEvaluators: optional(number()),
-			consensus: optional(number()),
-		})),
-	})),
+	versionControl: optional(
+		object({
+			// Version info
+			currentVersion: number(), // increments on each replacement (starts at 1)
+			// Applied suggestion tracking
+			appliedSuggestionId: optional(string()), // last suggestion that replaced this
+			appliedAt: optional(number()),
+			// History entry tracking (for archived versions)
+			replacedBy: optional(string()), // statementId of the suggestion that replaced this
+			replacedAt: optional(number()), // timestamp when replaced
+			// Finalization info (MVP: manual only)
+			finalizedBy: optional(string()), // userId
+			finalizedAt: optional(number()),
+			finalizedReason: optional(string()), // 'manual_approval' | 'rollback' (MVP only)
+			finalized: optional(boolean()), // true if this suggestion was finalized
+			// Admin actions
+			adminEditedContent: optional(string()), // if admin modified before approval
+			adminEditedAt: optional(number()),
+			adminNotes: optional(string()),
+			// Suggestion versioning (for preservation on replacement)
+			forVersion: optional(number()), // For suggestions: which paragraph version this was an alternative for
+			promotedToVersion: optional(number()), // For winning suggestions: which version number they became
+			promotedAt: optional(number()), // Timestamp when promoted to official
+			evaluationSnapshot: optional(
+				object({
+					// Snapshot of evaluation state at time of archival
+					numberOfProEvaluators: optional(number()),
+					numberOfConEvaluators: optional(number()),
+					numberOfEvaluators: optional(number()),
+					consensus: optional(number()),
+				}),
+			),
+		}),
+	),
 });
 
 export type Statement = InferOutput<typeof StatementSchema>;
