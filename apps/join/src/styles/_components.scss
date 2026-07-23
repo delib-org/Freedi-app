@@ -310,14 +310,20 @@
 
   // New-solutions notification pill — appears in the sticky header when fresh
   // options arrive after the initial load. User taps to flush + highlight them.
+  // Centered under the title so the arrival of fresh answers reads as a
+  // deliberate call to action rather than a header decoration.
   &__new-pill {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: var(--space-xs);
-    margin-top: var(--space-sm);
-    padding: 6px 14px;
+    justify-content: center;
+    gap: var(--space-sm);
+    width: fit-content;
+    max-width: 100%;
+    margin: var(--space-md) auto 0;
+    padding: 10px 22px;
+    min-height: var(--touch-target);
     font-family: var(--font-body);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     color: var(--text-inverse);
     background: var(--teal-600);
@@ -327,7 +333,11 @@
     box-shadow: var(--shadow-sm);
     position: relative;
     z-index: 2;
-    animation: pill-pop-in var(--dur-base, 200ms) var(--ease-out, ease-out);
+    // Pop in once, then twinkle gently forever so it stays noticeable
+    // without pulling attention away from the answers themselves.
+    animation:
+      pill-pop-in var(--dur-base, 200ms) var(--ease-out, ease-out),
+      pill-twinkle 2.4s var(--ease-in-out, ease-in-out) 400ms infinite;
     transition:
       background-color var(--dur-quick, 150ms) var(--ease-out, ease-out),
       transform var(--dur-quick, 150ms) var(--ease-out, ease-out),
@@ -346,7 +356,7 @@
   }
 
   &__new-pill-arrow {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);
     line-height: 1;
     animation: arrow-bounce 1.2s ease-in-out infinite;
   }
@@ -1821,6 +1831,21 @@
 @keyframes arrow-bounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-3px); }
+}
+
+// Soft breathing glow for the new-answers pill. Deliberately glow-only (no
+// transform) so it never fights the hover/active lift on the same element.
+@keyframes pill-twinkle {
+  0% {
+    box-shadow:
+      var(--shadow-sm),
+      0 0 0 0 rgba(26, 122, 108, 0.45);
+  }
+  60%, 100% {
+    box-shadow:
+      var(--shadow-sm),
+      0 0 0 10px rgba(26, 122, 108, 0);
+  }
 }
 
 // Highlight fades from teal-50 wash + teal border back to default card styles.
