@@ -1039,6 +1039,14 @@ export function getMainStatement(): Statement | null {
 	return mainStatement;
 }
 
+/** Hub-scoped permission: has the admin allowed participants to move between
+ *  sub-questions on their own? When false (the default) participants only move
+ *  where `powerFollowMe` sends them — hub cards are inert and no Back button is
+ *  rendered inside a question. Admins always navigate freely regardless. */
+export function isParticipantNavigationAllowed(): boolean {
+	return mainStatement?.statementSettings?.allowParticipantNavigation === true;
+}
+
 export function getSubQuestions(): Statement[] {
 	// Admin-controlled order via the `Statement.order` field. Statements without
 	// an explicit order fall back to creation time so brand-new sub-questions
@@ -1277,19 +1285,37 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 		// `joinFollowMe` is owned by the Join app alone, so a stray main-app
 		// session can't fight us.
 		//
-		// No outer dedupe on `activePath !== lastFollowedPath`: if a participant
-		// drifted off the followed route (browser back, share-link, refresh),
-		// we want any subsequent snapshot — even one carrying the same path —
-		// to pull them back. `applyFacilitatorRedirect` is a no-op when the
-		// resolved route already matches `m.route.get()`, so calling it on
-		// every snapshot is cheap.
+		// No outer dedupe on `activePath !== lastFollowedPath` in the default
+		// facilitator-led mode: if a participant drifted off the followed route
+		// (browser back, share-link, refresh), we want any subsequent snapshot —
+		// even one carrying the same path — to pull them back.
+		// `applyFacilitatorRedirect` is a no-op when the resolved route already
+		// matches `m.route.get()`, so calling it on every snapshot is cheap.
+		// When the facilitator has allowed free navigation, `shouldFollow`
+		// narrows this to genuine broadcast changes only.
 		const activePath = data.joinFollowMe ?? '';
+		const pathChanged = activePath !== lastFollowedPath;
 		lastFollowedPath = activePath;
-		if (!isAdmin()) {
+		if (!isAdmin() && shouldFollow(pathChanged)) {
 			void applyFacilitatorRedirect(activePath, mainId);
 		}
 		m.redraw();
 	});
+}
+
+/** Should this snapshot pull the participant back to the facilitator's path?
+ *
+ *  Facilitator-led mode (the default): always — see the "no outer dedupe"
+ *  note above; drifting participants get re-gathered on the next snapshot.
+ *
+ *  Free-navigation mode (`allowParticipantNavigation`): only when the
+ *  facilitator actually moved the broadcast. Otherwise every unrelated
+ *  main-statement write (theme, QR, a resync after the tab wakes up) would
+ *  yank a participant out of the question they deliberately opened, which
+ *  would make the Back button and hub cards feel broken. A fresh "follow me"
+ *  press still gathers everyone. */
+function shouldFollow(pathChanged: boolean): boolean {
+	return pathChanged || !isParticipantNavigationAllowed();
 }
 
 /** Re-read the active main statement and re-apply its `joinFollowMe`. Used by
@@ -1297,7 +1323,9 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
  *  websocket (mobile tabs suspended for ~20 min often lose the listener
  *  silently — no error, no fresh snapshots). Forcing a `getDoc` round-trip
  *  bypasses the cache and yanks participants back to the facilitator's
- *  current path if they missed updates while in the background. */
+ *  current path if they missed updates while in the background — subject to
+ *  `shouldFollow`, so a free-navigation room doesn't drag people out of the
+ *  question they chose just because their tab woke up. */
 async function resyncFacilitatorState(): Promise<void> {
 	const mainId = activeFacilitatedMainId;
 	if (!mainId) return;
@@ -1308,8 +1336,9 @@ async function resyncFacilitatorState(): Promise<void> {
 		mainStatement = data;
 		syncMainStatementLanguage();
 		const activePath = data.joinFollowMe ?? '';
+		const pathChanged = activePath !== lastFollowedPath;
 		lastFollowedPath = activePath;
-		if (!isAdmin()) {
+		if (!isAdmin() && shouldFollow(pathChanged)) {
 			void applyFacilitatorRedirect(activePath, mainId);
 		}
 		m.redraw();

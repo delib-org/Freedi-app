@@ -10,6 +10,7 @@ import {
 	createSubQuestion,
 	setSubQuestionsOrder,
 	setSubQuestionHidden,
+	isParticipantNavigationAllowed,
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { markOpenedInJoin } from '@/lib/joinSubscriptions';
@@ -157,6 +158,10 @@ export const MainHub: m.Component = {
 		const accentColor = main.color || 'var(--terra-500)';
 		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 		const admin = isAdmin();
+		// Participants can open a sub-question only when the facilitator has
+		// switched on hub navigation; otherwise the cards stay inert and
+		// `powerFollowMe` remains the only way into a question.
+		const canNavigate = admin || isParticipantNavigationAllowed();
 		const mainId = main.statementId;
 
 		return m('.main-hub', { style: `--q-accent: ${accentColor}` }, [
@@ -204,7 +209,9 @@ export const MainHub: m.Component = {
 								// requires all children of a fragment to either be keyed or
 								// unkeyed — so the drop-end zone is rendered as a sibling
 								// outside this list, never mixed in.
-								subs.map((q: Statement) => renderQuestionCard(q, mainId, admin, currentIds)),
+								subs.map((q: Statement) =>
+									renderQuestionCard(q, mainId, admin, canNavigate, currentIds),
+								),
 							),
 							admin && subQuestionReorder.isActive()
 								? m('.main-hub__question-drop-end', {
@@ -292,6 +299,7 @@ function renderQuestionCard(
 	q: Statement,
 	mainId: string,
 	admin: boolean,
+	canNavigate: boolean,
 	currentIds: string[],
 ): m.Vnode {
 	const isHidden = q.hide === true;
@@ -301,7 +309,7 @@ function renderQuestionCard(
 	const classes = [
 		'main-hub__question-card',
 		admin ? 'main-hub__question-card--admin' : null,
-		admin ? 'main-hub__question-card--interactive' : null,
+		canNavigate ? 'main-hub__question-card--interactive' : null,
 		isHidden ? 'main-hub__question-card--hidden' : null,
 		dragging ? 'main-hub__question-card--dragging' : null,
 		isDropTarget ? 'main-hub__question-card--drop-target' : null,
@@ -312,11 +320,11 @@ function renderQuestionCard(
 		{
 			key: q.statementId,
 			class: classes.join(' '),
-			role: admin ? 'button' : undefined,
-			tabindex: admin ? '0' : undefined,
-			'aria-disabled': admin ? undefined : 'true',
+			role: canNavigate ? 'button' : undefined,
+			tabindex: canNavigate ? '0' : undefined,
+			'aria-disabled': canNavigate ? undefined : 'true',
 			...subQuestionReorder.cardAttrs(q.statementId, currentIds),
-			onclick: admin
+			onclick: canNavigate
 				? (e: MouseEvent) => {
 						// Don't navigate when the click came from a control inside
 						// the card (drag handle, hide button) — those handlers stop
@@ -326,7 +334,7 @@ function renderQuestionCard(
 						m.route.set(`/m/${mainId}/q/${q.statementId}`);
 					}
 				: undefined,
-			onkeydown: admin
+			onkeydown: canNavigate
 				? (e: KeyboardEvent) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault();

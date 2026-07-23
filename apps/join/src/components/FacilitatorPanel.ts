@@ -402,6 +402,20 @@ async function flipShowQR(main: Statement): Promise<void> {
 	});
 }
 
+/** Hub-scoped: writes to the *main* statement so the permission applies to the
+ *  whole workspace. When on, participants can open any sub-question from the
+ *  hub themselves and get a Back button inside each question; when off (the
+ *  default) they only move where "Follow me" sends them. */
+async function flipAllowParticipantNavigation(main: Statement): Promise<void> {
+	const next = !(main.statementSettings?.allowParticipantNavigation ?? false);
+	await setMainStatementSetting(main.statementId, {
+		statementSettings: {
+			...main.statementSettings,
+			allowParticipantNavigation: next,
+		},
+	});
+}
+
 /** Five-button segmented control for the admin-controlled sort. Writes to the
  *  question's `defaultSortType` so every subscriber sees the same order on
  *  the next snapshot — the chosen sort travels with "follow me" because both
@@ -1522,6 +1536,13 @@ export const FacilitatorPanel: m.Component = {
 		const main = getMainStatement();
 		const canFlipShowQR = main !== null && Boolean(mainId);
 		const showQROn = canFlipShowQR ? (main!.statementSettings?.showQR ?? false) : false;
+		// Free navigation is hub-scoped for the same reason as the QR: it's a
+		// property of the room, not of one question. Hidden on legacy
+		// non-facilitated routes (`/q/:qid`) where there's no hub to navigate.
+		const canFlipNavigation = main !== null && Boolean(mainId);
+		const allowNavigationOn = canFlipNavigation
+			? (main!.statementSettings?.allowParticipantNavigation ?? false)
+			: false;
 
 		const positioned = handleY !== null;
 		const dragging = dragState !== null;
@@ -1648,6 +1669,21 @@ export const FacilitatorPanel: m.Component = {
 											void flipShowQR(main!);
 										},
 										help: t('facilitator.toggle.showQR.help'),
+									})
+								: null,
+							// Free navigation — the counterpart to Follow Me. Sits next
+							// to it so the facilitator can hand the wheel to the
+							// participants (and take it back) in one place.
+							canFlipNavigation
+								? renderToggle({
+										icon: '🧭',
+										label: t('facilitator.toggle.allowNavigation'),
+										on: allowNavigationOn,
+										onflip: () => {
+											if (!canFlipNavigation) return;
+											void flipAllowParticipantNavigation(main!);
+										},
+										help: t('facilitator.toggle.allowNavigation.help'),
 									})
 								: null,
 							// Lifecycle gate — Live / Frozen / Closed. Sits with the other

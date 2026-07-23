@@ -12,6 +12,7 @@ import {
 	subscribeQuestion,
 	subscribeMainStatement,
 	getMainIdForQuestion,
+	isParticipantNavigationAllowed,
 	subscribeUserEvaluations,
 	subscribeUserJoinFormSubmission,
 	getUnreadCount,
@@ -218,9 +219,17 @@ export const Solutions: m.Component = {
 		// Frozen is handled inside the cards (joining + evaluation are disabled).
 		const questionStatus = question.statementSettings?.questionStatus ?? 'live';
 		if (questionStatus === 'closed' && !isAdmin()) {
+			const closedMainId = m.route.param('mid');
+			const closedFacilitated = isFacilitatedMode();
+
 			return m('.solutions.solutions--closed', [
 				m(BackButton, {
-					to: isFacilitatedMode() && m.route.param('mid') ? `/m/${m.route.param('mid')}` : '/',
+					to: closedFacilitated && closedMainId ? `/m/${closedMainId}` : '/',
+					// Participants only get a way out of a closed question when the
+					// facilitator has opened up hub navigation — and only back to
+					// the hub, never to the admin-only `/` page.
+					allowParticipants:
+						closedFacilitated && Boolean(closedMainId) && isParticipantNavigationAllowed(),
 				}),
 				m('.solutions__closed', [
 					m('.solutions__closed-icon', { 'aria-hidden': 'true' }, '🔒'),
@@ -253,8 +262,12 @@ export const Solutions: m.Component = {
 			// Admin gets a return path: in facilitated mode that's the workspace
 			// hub; otherwise (e.g. a question created from /, or a /q share link
 			// opened by its admin) it's the join app's main page. The BackButton
-			// self-gates on `isAdmin()`, so participants don't see it either way.
-			m(BackButton, { to: facilitated && mainId ? `/m/${mainId}` : '/' }),
+			// self-gates on `isAdmin()`, so participants only see it when the
+			// facilitator allowed free navigation — and then only back to the hub.
+			m(BackButton, {
+				to: facilitated && mainId ? `/m/${mainId}` : '/',
+				allowParticipants: facilitated && Boolean(mainId) && isParticipantNavigationAllowed(),
+			}),
 			m('.solutions__header', { style: `--q-accent: ${accentColor}` }, [
 				m(EditableTitle, {
 					statementId: question.statementId,
