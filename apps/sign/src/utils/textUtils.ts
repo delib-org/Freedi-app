@@ -29,15 +29,50 @@ export function stripHtml(html: string): string {
  * Regex-based HTML stripping (fallback method)
  */
 function regexStripHtml(html: string): string {
-	return html
-		.replace(/<[^>]*>/g, '') // Remove HTML tags
-		.replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
-		.replace(/&amp;/g, '&') // Replace &amp; with &
-		.replace(/&lt;/g, '<') // Replace &lt; with <
-		.replace(/&gt;/g, '>') // Replace &gt; with >
-		.replace(/&quot;/g, '"') // Replace &quot; with "
-		.replace(/&#39;/g, "'") // Replace &#39; with '
-		.trim();
+	return decodeEntities(html.replace(/<[^>]*>/g, '')).trim();
+}
+
+/**
+ * Tags that imply a word/line boundary — replaced with a space so text from
+ * adjacent blocks (paragraphs, list items, table cells) doesn't run together.
+ */
+const BLOCK_LEVEL_TAGS =
+	/<\/?(?:p|div|br|hr|li|ul|ol|dl|dt|dd|h[1-6]|table|thead|tbody|tfoot|tr|td|th|caption|blockquote|section|article|header|footer|aside|nav|figure|figcaption|pre|form|fieldset)\b[^>]*>/gi;
+
+/**
+ * Decode the HTML entities that show up in rich-text content.
+ * Always run this AFTER tags are stripped — decoding first would turn an
+ * escaped `&lt;b&gt;` into a real tag and delete text the author meant to show.
+ */
+function decodeEntities(text: string): string {
+	return text
+		.replace(/&nbsp;/gi, ' ')
+		.replace(/&lt;/gi, '<')
+		.replace(/&gt;/gi, '>')
+		.replace(/&quot;/gi, '"')
+		.replace(/&#0*39;/g, "'")
+		.replace(/&apos;/gi, "'")
+		.replace(/&#x([0-9a-f]+);/gi, (_, hex: string) =>
+			String.fromCodePoint(parseInt(hex, 16))
+		)
+		.replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(Number(dec)))
+		.replace(/&amp;/gi, '&'); // Last: so &amp;lt; decodes to "&lt;", not "<"
+}
+
+/**
+ * Convert rich-text HTML into a single-line plain-text preview.
+ *
+ * Block-level tags become spaces so words don't run together, remaining tags
+ * are dropped, entities are decoded, and whitespace is collapsed. Regex-only
+ * (no DOMParser) so it behaves identically on the server and in the browser,
+ * and so it can insert the word boundaries `textContent` would swallow.
+ */
+export function htmlToPreviewText(html: string | null | undefined): string {
+	if (!html) return '';
+
+	const withoutTags = html.replace(BLOCK_LEVEL_TAGS, ' ').replace(/<[^>]*>/g, '');
+
+	return decodeEntities(withoutTags).replace(/\s+/g, ' ').trim();
 }
 
 /**
