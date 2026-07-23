@@ -516,12 +516,17 @@
 
   // Phase 1 of the FLIP reorder animation (lib/flipAnimate.ts): the inline
   // transform that "inverts" the card to its old position is applied with
-  // transitions disabled, so the snap-back is instantaneous. The next frame
-  // strips this class and clears the inline transform — the existing
-  // `transition: transform var(--dur-base) var(--ease-out)` then animates
-  // the card to its new spot.
+  // transitions disabled, so the snap-back is instantaneous.
   &--flipping {
     transition: none;
+  }
+
+  // Phase 2: the next frame strips `--flipping`, clears the inline transform
+  // and adds this class, which glides the card to its new spot over
+  // --dur-reorder (slower than the --dur-base used for hover, so the reorder
+  // is easy to follow). Removed on transitionend so hover stays snappy.
+  &--flip-play {
+    transition: transform var(--dur-reorder) var(--ease-in-out);
   }
 
   // -----------------------------------------------------------------------
