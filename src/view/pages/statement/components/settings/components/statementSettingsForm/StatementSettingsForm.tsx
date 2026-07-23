@@ -35,6 +35,7 @@ import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 
 // Hooks & Helpers
 import styles from './StatementSettingsForm.module.scss';
+import advStyles from '../advancedSettings/EnhancedAdvancedSettings.module.scss';
 import { useStatementSettingsHandlers } from '../../useStatementSettingsHandlers';
 import { defaultStatementSettings } from '../../emptyStatementModel';
 
@@ -70,6 +71,11 @@ interface StatementSettingsFormProps {
 	parentStatement?: Statement | 'top';
 	setStatementToEdit: Dispatch<Statement>;
 }
+
+// The shared settings SCSS module nests everything under .enhancedSettings;
+// flat groups keep that context via this wrapper (flatGroup drops the old
+// page-shell padding/width).
+const groupWrapClass = `${advStyles.enhancedSettings} ${advStyles.flatGroup}`;
 
 const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	statement,
@@ -216,17 +222,19 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							priority="high"
 							defaultExpanded={false}
 						>
-							<ParticipationSettings
-								statement={settingsStatement}
-								settings={settings}
-								handleSettingChange={handlers.handleSettingChange}
-							/>
-							{isQuestion && (
-								<>
-									<JoinFormSettings statement={settingsStatement} />
-									<JoinResolutionSettings statement={settingsStatement} />
-								</>
-							)}
+							<div className={groupWrapClass}>
+								<ParticipationSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isQuestion && (
+									<>
+										<JoinFormSettings statement={settingsStatement} />
+										<JoinResolutionSettings statement={settingsStatement} />
+									</>
+								)}
+							</div>
 						</SettingsSection>
 
 						{/* Breakout rooms — renders its own section */}
@@ -240,19 +248,21 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							priority="high"
 							defaultExpanded={false}
 						>
-							{isQuestion && <ChoseBySettings {...statementSettingsProps} />}
-							{isQuestion && <DeadlineSettings statement={settingsStatement} />}
-							<EvaluationSettings
-								statement={settingsStatement}
-								settings={settings}
-								handleSettingChange={handlers.handleSettingChange}
-							/>
-							{isQuestion && (
-								<>
-									<AnchoredSettings statement={settingsStatement} />
-									<ConfidenceIndexSettings statement={settingsStatement} />
-								</>
-							)}
+							<div className={groupWrapClass}>
+								{isQuestion && <ChoseBySettings {...statementSettingsProps} />}
+								{isQuestion && <DeadlineSettings statement={settingsStatement} />}
+								<EvaluationSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isQuestion && (
+									<>
+										<AnchoredSettings statement={settingsStatement} />
+										<ConfidenceIndexSettings statement={settingsStatement} />
+									</>
+								)}
+							</div>
 						</SettingsSection>
 
 						{/* Group 4 — AI & Smart Features */}
@@ -263,18 +273,20 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							priority="medium"
 							defaultExpanded={false}
 						>
-							<AISettings
-								statement={settingsStatement}
-								settings={settings}
-								handleSettingChange={handlers.handleSettingChange}
-							/>
-							{isQuestion && <SynthesisPanel statement={settingsStatement} />}
-							<DiscussionSettings
-								statement={settingsStatement}
-								settings={settings}
-								handleSettingChange={handlers.handleSettingChange}
-							/>
-							{isAdminOrCreator && <ModerationLog statement={settingsStatement} />}
+							<div className={groupWrapClass}>
+								<AISettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isQuestion && <SynthesisPanel statement={settingsStatement} />}
+								<DiscussionSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isAdminOrCreator && <ModerationLog statement={settingsStatement} />}
+							</div>
 						</SettingsSection>
 
 						{/* Group 5 — Members & Access */}
@@ -285,14 +297,16 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							priority="high"
 							defaultExpanded={false}
 						>
-							<MembershipSettings
-								statement={settingsStatement}
-								setStatementToEdit={setStatementToEdit}
-							/>
-							<MembersSettings statement={settingsStatement} />
-							{isAdminOrCreator && <AdminsManagement statement={settingsStatement} />}
-							{isQuestion && <MemberValidation statement={settingsStatement} />}
-							<UserDemographicSetting statement={settingsStatement} />
+							<div className={groupWrapClass}>
+								<MembershipSettings
+									statement={settingsStatement}
+									setStatementToEdit={setStatementToEdit}
+								/>
+								<MembersSettings statement={settingsStatement} />
+								{isAdminOrCreator && <AdminsManagement statement={settingsStatement} />}
+								{isQuestion && <MemberValidation statement={settingsStatement} />}
+								<UserDemographicSetting statement={settingsStatement} />
+							</div>
 						</SettingsSection>
 
 						{/* Group 6 — Data & Advanced */}
@@ -303,33 +317,35 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							priority="low"
 							defaultExpanded={false}
 						>
-							<QuestionSettings {...statementSettingsProps} />
-							<VisibilitySettings
-								statement={settingsStatement}
-								settings={settings}
-								handleHideChange={handlers.handleHideChange}
-								handleSettingChange={handlers.handleSettingChange}
-								handlePowerFollowMeChange={handlers.handlePowerFollowMeChange}
-								handleIsDocumentChange={handlers.handleIsDocumentChange}
-							/>
-							<NavigationSettings
-								statement={settingsStatement}
-								settings={settings}
-								handleSettingChange={handlers.handleSettingChange}
-							/>
-							<LocalizationSettings
-								statement={settingsStatement}
-								handleDefaultLanguageChange={handlers.handleDefaultLanguageChange}
-								handleForceLanguageChange={handlers.handleForceLanguageChange}
-							/>
-							<EmailNotifications statement={settingsStatement} />
-							<ExportSettings statement={settingsStatement} subStatements={subStatements} />
-							<section className={styles.getMembersArea}>
-								<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
-							</section>
-							<section className={styles.getMembersArea}>
-								<GetEvaluators statementId={statementId} />
-							</section>
+							<div className={groupWrapClass}>
+								<QuestionSettings {...statementSettingsProps} />
+								<VisibilitySettings
+									statement={settingsStatement}
+									settings={settings}
+									handleHideChange={handlers.handleHideChange}
+									handleSettingChange={handlers.handleSettingChange}
+									handlePowerFollowMeChange={handlers.handlePowerFollowMeChange}
+									handleIsDocumentChange={handlers.handleIsDocumentChange}
+								/>
+								<NavigationSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								<LocalizationSettings
+									statement={settingsStatement}
+									handleDefaultLanguageChange={handlers.handleDefaultLanguageChange}
+									handleForceLanguageChange={handlers.handleForceLanguageChange}
+								/>
+								<EmailNotifications statement={settingsStatement} />
+								<ExportSettings statement={settingsStatement} subStatements={subStatements} />
+								<section className={styles.getMembersArea}>
+									<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
+								</section>
+								<section className={styles.getMembersArea}>
+									<GetEvaluators statementId={statementId} />
+								</section>
+							</div>
 						</SettingsSection>
 					</>
 				)}

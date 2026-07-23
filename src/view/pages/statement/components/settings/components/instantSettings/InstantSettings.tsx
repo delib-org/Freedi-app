@@ -25,6 +25,11 @@ import UsersIcon from '@/assets/icons/users20px.svg?react';
 import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import EvaluationsIcon from '@/assets/icons/evaluationsIcon.svg?react';
 import styles from './InstantSettings.module.scss';
+import advStyles from '../advancedSettings/EnhancedAdvancedSettings.module.scss';
+
+// The shared ToggleSwitch styles are nested under .enhancedSettings in the
+// SCSS module — this wrapper provides that context without the old shell.
+const toggleWrapClass = `${advStyles.enhancedSettings} ${advStyles.flatGroup}`;
 
 const SAVED_FLASH_MS = 1600;
 
@@ -186,16 +191,18 @@ const InstantSettings: FC<InstantSettingsProps> = ({ statement: propStatement })
 							currentValue={currentScale}
 						/>
 						{currentScale === evaluationType.range && (
-							<ToggleSwitch
-								isChecked={settings.ratingMode === 'reactions'}
-								onChange={(checked) => {
-									handleSettingChange('ratingMode', checked ? 'reactions' : 'agree-disagree');
-									flashSaved('ratingMode');
-								}}
-								label={t('Use emoji reactions')}
-								description={t('Show playful emoji instead of agree/disagree faces')}
-								icon={Heart}
-							/>
+							<div className={toggleWrapClass}>
+								<ToggleSwitch
+									isChecked={settings.ratingMode === 'reactions'}
+									onChange={(checked) => {
+										handleSettingChange('ratingMode', checked ? 'reactions' : 'agree-disagree');
+										flashSaved('ratingMode');
+									}}
+									label={t('Use emoji reactions')}
+									description={t('Show playful emoji instead of agree/disagree faces')}
+									icon={Heart}
+								/>
+							</div>
 						)}
 						{savedPill('ratingMode')}
 					</div>
@@ -205,7 +212,7 @@ const InstantSettings: FC<InstantSettingsProps> = ({ statement: propStatement })
 					</p>
 				))}
 
-			<div className={styles.instantSettings__toggles}>
+			<div className={`${styles.instantSettings__toggles} ${toggleWrapClass}`}>
 				<ToggleSwitch
 					isChecked={settings.enableEvaluation ?? true}
 					onChange={(checked) => toggle('enableEvaluation', checked)}
