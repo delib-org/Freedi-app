@@ -192,6 +192,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'Show QR code',
 		'facilitator.toggle.showQR.help':
 			'Show a QR on the hub so anyone here can invite someone nearby.',
+		'facilitator.toggle.allowNavigation': 'Let participants navigate',
+		'facilitator.toggle.allowNavigation.help':
+			'Participants can open any question from the hub and go back on their own.',
 		'facilitator.joinForm.label': 'Join form',
 		'facilitator.joinForm.help':
 			'Ask participants for contact details when they press Join. Each sub-question can have its own form.',
@@ -636,6 +639,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'הצגת קוד QR',
 		'facilitator.toggle.showQR.help':
 			'מציגים קוד QR בעמוד הראשי כדי שכל משתתף יוכל להזמין מישהו לידו.',
+		'facilitator.toggle.allowNavigation': 'ניווט חופשי למשתתפים',
+		'facilitator.toggle.allowNavigation.help':
+			'המשתתפים יוכלו להיכנס לכל שאלה מהעמוד הראשי ולחזור בחזרה בעצמם.',
 		'facilitator.theme.label': 'סגנון ויזואלי',
 		'facilitator.theme.help': 'בוחרים את האווירה למפגש. לכל סגנון יש גם פלטה למצב כהה.',
 		'facilitator.theme.serious': 'רציני',
@@ -1014,6 +1020,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'عرض رمز QR',
 		'facilitator.toggle.showQR.help':
 			'اعرض رمز QR في الصفحة الرئيسية ليتمكن الجميع من دعوة شخص بجانبهم.',
+		'facilitator.toggle.allowNavigation': 'السماح للمشاركين بالتنقل',
+		'facilitator.toggle.allowNavigation.help':
+			'يمكن للمشاركين فتح أي سؤال من الصفحة الرئيسية والعودة بأنفسهم.',
 		'facilitator.theme.label': 'النمط البصري',
 		'facilitator.theme.help': 'اختر مزاج الجلسة. لكل نمط لوحة ألوان مخصصة للوضع الداكن.',
 		'facilitator.theme.serious': 'جاد',
@@ -1368,6 +1377,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'QR-Code anzeigen',
 		'facilitator.toggle.showQR.help':
 			'Zeigt einen QR-Code auf der Hub-Seite, damit alle Anwesenden jemanden einladen können.',
+		'facilitator.toggle.allowNavigation': 'Teilnehmende dürfen navigieren',
+		'facilitator.toggle.allowNavigation.help':
+			'Teilnehmende können jede Frage von der Hub-Seite aus öffnen und selbst zurückgehen.',
 		'facilitator.theme.label': 'Visueller Stil',
 		'facilitator.theme.help':
 			'Wähle die Stimmung für den Raum. Jeder Stil hat eine eigene Dark-Mode-Palette.',
@@ -1742,6 +1754,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'Mostrar código QR',
 		'facilitator.toggle.showQR.help':
 			'Muestra un QR en la página principal para que cualquiera invite a alguien cercano.',
+		'facilitator.toggle.allowNavigation': 'Permitir navegación',
+		'facilitator.toggle.allowNavigation.help':
+			'Los participantes pueden abrir cualquier pregunta desde la página principal y volver por su cuenta.',
 		'facilitator.theme.label': 'Estilo visual',
 		'facilitator.theme.help':
 			'Elige el ambiente de la sala. Cada estilo tiene su propia paleta para modo oscuro.',
@@ -2110,6 +2125,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'QR-code tonen',
 		'facilitator.toggle.showQR.help':
 			'Toon een QR-code op de hub zodat iedereen iemand uit de buurt kan uitnodigen.',
+		'facilitator.toggle.allowNavigation': 'Deelnemers laten navigeren',
+		'facilitator.toggle.allowNavigation.help':
+			'Deelnemers kunnen elke vraag vanaf de hub openen en zelf terugkeren.',
 		'facilitator.theme.label': 'Visuele stijl',
 		'facilitator.theme.help':
 			'Kies de sfeer voor de ruimte. Elke stijl heeft een eigen dark-mode palet.',
@@ -2466,6 +2484,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'نمایش کد QR',
 		'facilitator.toggle.showQR.help':
 			'یک کد QR در صفحه اصلی نشان داده می‌شود تا هرکس بتواند فردی نزدیک خود را دعوت کند.',
+		'facilitator.toggle.allowNavigation': 'اجازه جابه‌جایی به شرکت‌کنندگان',
+		'facilitator.toggle.allowNavigation.help':
+			'شرکت‌کنندگان می‌توانند هر پرسش را از صفحه اصلی باز کنند و خودشان بازگردند.',
 		'facilitator.theme.label': 'سبک بصری',
 		'facilitator.theme.help': 'حالت اتاق را انتخاب کنید. هر سبک پالت اختصاصی برای حالت تاریک دارد.',
 		'facilitator.theme.serious': 'جدی',

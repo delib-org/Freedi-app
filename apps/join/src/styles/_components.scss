@@ -2254,8 +2254,9 @@
     transform: none;
   }
 
-  // Admin-interactive variant: card behaves as a button. Hover/focus give
-  // it a subtle lift so it's clear the whole row is clickable.
+  // Interactive variant: card behaves as a button. Applied for admins, and
+  // for participants once the facilitator allows hub navigation. Hover/focus
+  // give it a subtle lift so it's clear the whole row is clickable.
   &--interactive {
     cursor: pointer;
 
