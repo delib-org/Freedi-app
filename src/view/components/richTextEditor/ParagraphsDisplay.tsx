@@ -2,7 +2,17 @@ import React, { FC } from 'react';
 import DOMPurify from 'dompurify';
 import { Statement, Paragraph, ParagraphType } from '@freedi/shared-types';
 import { sortParagraphs } from '@/utils/paragraphUtils';
+import { sanitizeInlineHtml } from './editorSerialization';
 import styles from './ParagraphsDisplay.module.scss';
+
+/** Inline paragraph content: formatted (sanitized) when contentHtml exists. */
+function inlineContent(para: Paragraph): React.ReactNode {
+	if (para.contentHtml) {
+		return <span dangerouslySetInnerHTML={{ __html: sanitizeInlineHtml(para.contentHtml) }} />;
+	}
+
+	return para.content;
+}
 
 interface ParagraphsDisplayProps {
 	statement: Statement;
@@ -34,7 +44,7 @@ const ParagraphsDisplay: FC<ParagraphsDisplayProps> = ({ statement, className })
 				elements.push(
 					<ListTag key={`list-${elements.length}`}>
 						{currentListItems.map((item) => (
-							<li key={item.paragraphId}>{item.content}</li>
+							<li key={item.paragraphId}>{inlineContent(item)}</li>
 						))}
 					</ListTag>,
 				);
@@ -74,7 +84,7 @@ const ParagraphsDisplay: FC<ParagraphsDisplayProps> = ({ statement, className })
  */
 function renderParagraph(para: Paragraph): React.ReactNode {
 	const key = para.paragraphId;
-	const content = para.content;
+	const content = inlineContent(para);
 
 	switch (para.type) {
 		case ParagraphType.h1:
@@ -94,7 +104,7 @@ function renderParagraph(para: Paragraph): React.ReactNode {
 				<div
 					key={key}
 					className={styles.table}
-					dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+					dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(para.content) }}
 				/>
 			);
 		case ParagraphType.paragraph:

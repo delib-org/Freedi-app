@@ -11,3 +11,13 @@ import { StatementType } from '@freedi/shared-types';
 export const NON_DOCUMENT_STATEMENT_TYPES: StatementType[] = Object.values(StatementType).filter(
 	(t): t is StatementType => t !== StatementType.document,
 );
+
+/**
+ * Statement types that belong in discussion feeds and child lists: everything
+ * except `document` and `paragraph`. Paragraph children are the parent's rich
+ * body content (rendered by StatementBody via its own subscription) — loading
+ * them into chat listeners wastes reads and leaks body text into the feed.
+ */
+export const DISCUSSABLE_STATEMENT_TYPES: StatementType[] = NON_DOCUMENT_STATEMENT_TYPES.filter(
+	(t) => t !== StatementType.paragraph,
+);

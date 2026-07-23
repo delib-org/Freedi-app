@@ -159,12 +159,14 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 		const result = safeParse(StatementSchema, newStatement);
 		if (!result.success) {
 			console.error('Statement validation failed:', result.issues);
+
 			return undefined;
 		}
 
 		return result.output;
 	} catch (error) {
 		console.error('Error creating statement object:', error);
+
 		return undefined;
 	}
 }
@@ -229,7 +231,7 @@ export function createBasicStatement({
 export function createParagraphStatement(
 	paragraph: Paragraph,
 	documentId: string,
-	creator: User
+	creator: User,
 ): Statement | undefined {
 	const statement = createStatementObject({
 		statement: paragraph.content,
@@ -290,7 +292,7 @@ export function createSuggestionStatement(
 	officialParagraphId: string,
 	documentId: string,
 	creator: User,
-	reasoning?: string
+	reasoning?: string,
 ): Statement | undefined {
 	return createStatementObject({
 		statement: suggestedText,
@@ -333,6 +335,8 @@ export interface CreateParagraphChildParams {
 	blockType?: ParagraphType;
 	/** List style for list-item blocks. */
 	listType?: ListType;
+	/** Inline-formatted content (<strong>/<em> only); `content` stays plain text. */
+	contentHtml?: string;
 	/** Image fields (for `ParagraphType.image`). */
 	imageUrl?: string;
 	imageAlt?: string;
@@ -362,7 +366,7 @@ export interface CreateParagraphChildParams {
  * @returns A valid paragraph Statement, or undefined if validation fails.
  */
 export function createParagraphChildStatement(
-	params: CreateParagraphChildParams
+	params: CreateParagraphChildParams,
 ): Statement | undefined {
 	const blockType = params.blockType ?? ParagraphType.paragraph;
 
@@ -387,6 +391,7 @@ export function createParagraphChildStatement(
 	const hasMeta =
 		params.isOfficial === true ||
 		params.listType !== undefined ||
+		params.contentHtml !== undefined ||
 		params.imageUrl !== undefined ||
 		params.imageAlt !== undefined ||
 		params.imageCaption !== undefined;
@@ -397,6 +402,7 @@ export function createParagraphChildStatement(
 			paragraphType: blockType,
 			...(params.isOfficial && { isOfficialParagraph: true, isDoc: true }),
 			...(params.listType !== undefined && { listType: params.listType }),
+			...(params.contentHtml !== undefined && { contentHtml: params.contentHtml }),
 			...(params.imageUrl !== undefined && { imageUrl: params.imageUrl }),
 			...(params.imageAlt !== undefined && { imageAlt: params.imageAlt }),
 			...(params.imageCaption !== undefined && { imageCaption: params.imageCaption }),
@@ -419,6 +425,7 @@ export function statementToParagraph(statement: Statement): Paragraph {
 		content: statement.statement,
 		order: statement.order ?? doc?.order ?? statement.createdAt ?? 0,
 		...(doc?.listType !== undefined && { listType: doc.listType }),
+		...(doc?.contentHtml !== undefined && { contentHtml: doc.contentHtml }),
 		...(statement.derivedFromStatementId !== undefined && {
 			sourceStatementId: statement.derivedFromStatementId,
 		}),
@@ -437,7 +444,7 @@ export function paragraphToFactoryParams(
 	paragraph: Paragraph,
 	host: Pick<Statement, 'statementId' | 'topParentId'>,
 	creator: User,
-	opts?: { isOfficial?: boolean; sourceApp?: SourceApp }
+	opts?: { isOfficial?: boolean; sourceApp?: SourceApp },
 ): CreateParagraphChildParams {
 	return {
 		content: paragraph.content,
@@ -447,6 +454,7 @@ export function paragraphToFactoryParams(
 		blockType: paragraph.type,
 		statementId: paragraph.paragraphId,
 		...(paragraph.listType !== undefined && { listType: paragraph.listType }),
+		...(paragraph.contentHtml !== undefined && { contentHtml: paragraph.contentHtml }),
 		...(paragraph.imageUrl !== undefined && { imageUrl: paragraph.imageUrl }),
 		...(paragraph.imageAlt !== undefined && { imageAlt: paragraph.imageAlt }),
 		...(paragraph.imageCaption !== undefined && { imageCaption: paragraph.imageCaption }),
