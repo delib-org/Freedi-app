@@ -39,7 +39,7 @@
 }
 
 .sortSuggestionActive {
-    background: linear-gradient(180deg, #F2F6FF 76.47%, rgba(242, 246, 255, 0) 100%);
+    background: linear-gradient(180deg, var(--nav-scrim-to) 76.47%, var(--nav-scrim-from) 100%);
     position: absolute;
     width: clamp(20rem, 55.41rem, 100%);
     top: 8.2rem;
@@ -96,7 +96,7 @@
 @media screen and (max-width: 1024px) {
     .addingStatementWrapper {
         gap: 3rem;
-        background: linear-gradient(180deg, rgba(242, 246, 255, 0) 5.91%, #F2F6FF 31.82%);
+        background: linear-gradient(180deg, var(--nav-scrim-from) 5.91%, var(--nav-scrim-to) 31.82%);
         padding-bottom: 1rem;
 
         .header {
@@ -125,7 +125,7 @@
 @media screen and (min-width: 1024px) and (max-width: 1440px) {
     .addingStatementWrapper {
         gap: 4rem;
-        background: linear-gradient(180deg, rgba(242, 246, 255, 0) 5.91%, #F2F6FF 31.82%);
+        background: linear-gradient(180deg, var(--nav-scrim-from) 5.91%, var(--nav-scrim-to) 31.82%);
 
         .header {
             width: 19rem;
