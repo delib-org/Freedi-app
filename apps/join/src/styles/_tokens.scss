@@ -73,6 +73,21 @@
   // it was undefined, the `#fff` fallback always won and cards stayed white.
   --surface-card: var(--bg-card);
   --surface-input: var(--bg-input);
+  // Same trick for the token names referenced across the facilitator panel
+  // and other legacy BEM blocks (--bg-paper, --bg-muted, --text-strong,
+  // --text-body, --border, --agree, --disagree). While these were undefined,
+  // every usage's hardcoded light-scheme fallback won — permanently, even in
+  // dark mode — so the panel stayed white and controls painted near-black
+  // text onto dark-aware surfaces (invisible language selector). Aliases
+  // resolve at paint time, so dark mode and the playful themes pick up their
+  // own values here with no extra per-scheme overrides.
+  --bg-paper: var(--bg-card);          // drawer / side-panel surface
+  --bg-muted: var(--paper-deep);       // neutral fill — segmented/toggle tracks, chips
+  --text-strong: var(--text-primary);
+  --text-body: var(--text-secondary);
+  --border: var(--border-light);       // hairline dividers
+  --agree: var(--teal-500);            // text-safe success (AA on cards/inputs)
+  --disagree: var(--danger);
 
   // ---- TEXT ALIASES ----
   --text-primary: var(--ink);
@@ -250,6 +265,10 @@
     --indigo-500: #9a8fe5;        // lifted ~6:1 ✓ AA
     --indigo-600: #7c70d4;
     --indigo-700: #5e52b8;
+
+    // Lifted danger — the light-scheme #9a2a1e sinks to ~1.8:1 against the
+    // near-black surfaces. ~5.5:1 on paper, ~4.8:1 on inputs ✓ AA.
+    --danger: #e57666;
 
     // Tint backgrounds (the *-50 / *-100 shades) — replace with translucent
     // overlays that automatically inherit whatever surface they sit on.
