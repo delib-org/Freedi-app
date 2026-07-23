@@ -135,6 +135,8 @@ export default async function DocumentPage({ params }: PageProps) {
     nonInteractiveNormalStyle?: boolean;
     enableHeadingNumbering?: boolean;
     isPublic?: boolean;
+    isFrozen?: boolean;
+    isHidden?: boolean;
     requireGoogleLogin?: boolean;
     hideUserIdentity?: boolean;
     identityDisplayMode?: string;
@@ -180,6 +182,8 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Visibility and access settings
   const isPublic = signSettings?.isPublic ?? true;
+  const isFrozen = signSettings?.isFrozen ?? false;
+  const isHidden = signSettings?.isHidden ?? false;
   const requireGoogleLogin = signSettings?.requireGoogleLogin ?? false;
   const hideUserIdentity = signSettings?.hideUserIdentity ?? true;
   const identityDisplayMode = resolveIdentityDisplayMode(signSettings ?? {});
@@ -192,6 +196,19 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Research logging setting (from statementSettings, not signSettings)
   const enableResearchLogging = (document as { statementSettings?: { enableResearchLogging?: boolean } }).statementSettings?.enableResearchLogging === true;
+
+  // Enforce isHidden: only admins can view a hidden document — no login prompt,
+  // no collaborator/subscriber exception
+  if (isHidden && !isAdmin) {
+    return (
+      <LanguageOverrideProvider
+        adminLanguage={defaultLanguage}
+        forceLanguage={forceLanguage}
+      >
+        <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} variant="hidden" />
+      </LanguageOverrideProvider>
+    );
+  }
 
   // Enforce isPublic: private document access control
   if (!isPublic && !isAdmin) {
@@ -260,6 +277,7 @@ export default async function DocumentPage({ params }: PageProps) {
         tocSettings={tocSettings}
         enableSuggestions={enableSuggestions}
         enableRefinement={enableRefinement}
+        frozen={isFrozen}
         enhancedVisibility={enhancedVisibility}
         explanationVideoUrl={explanationVideoUrl}
         explanationVideoMode={explanationVideoMode}

@@ -42,6 +42,10 @@ interface Settings {
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
+  /** When true, all interactions are frozen — the document is read-only for everyone */
+  isFrozen: boolean;
+  /** When true, only admins can view the document */
+  isHidden: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
   surveyTrigger: SurveyTriggerMode;
@@ -94,6 +98,8 @@ export default function AdminSettingsPage() {
     showHeatMap: true,
     showViewCounts: true,
     isPublic: true,
+    isFrozen: false,
+    isHidden: false,
     demographicMode: 'disabled',
     demographicRequired: false,
     surveyTrigger: 'on_interaction',
@@ -236,6 +242,21 @@ export default function AdminSettingsPage() {
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Hide Document')}</p>
+            <p className={styles.settingDescription}>
+              {t('Hide the document from everyone except admins')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.isHidden ? styles.active : ''}`}
+            onClick={() => handleToggle('isHidden')}
+            aria-pressed={settings.isHidden}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
             <p className={styles.settingLabel}>{t('Require Google Login')}</p>
             <p className={styles.settingDescription}>
               {t('Users must sign in with Google to comment, suggest, or approve')}
@@ -290,6 +311,21 @@ export default function AdminSettingsPage() {
       {/* Interaction Settings */}
       <section className={styles.settingsSection}>
         <h2 className={styles.settingsSectionTitle}>{t('Interactions')}</h2>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Freeze Interactions')}</p>
+            <p className={styles.settingDescription}>
+              {t('Pause all interactions. Users can read the document but cannot comment, suggest, approve, or sign.')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.isFrozen ? styles.active : ''}`}
+            onClick={() => handleToggle('isFrozen')}
+            aria-pressed={settings.isFrozen}
+          />
+        </div>
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>

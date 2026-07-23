@@ -20,6 +20,10 @@ export interface DocumentSettings {
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
+  /** When true, all interactions are frozen — the document is read-only for everyone */
+  isFrozen: boolean;
+  /** When true, only admins can view the document */
+  isHidden: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
   surveyTrigger: SurveyTriggerMode;
@@ -65,6 +69,8 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   showHeatMap: true,
   showViewCounts: true,
   isPublic: true,
+  isFrozen: false,
+  isHidden: false,
   demographicMode: 'disabled',
   demographicRequired: false,
   surveyTrigger: 'on_interaction',
@@ -145,6 +151,8 @@ export async function GET(
       showHeatMap: document?.signSettings?.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap,
       showViewCounts: document?.signSettings?.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts,
       isPublic: document?.signSettings?.isPublic ?? DEFAULT_SETTINGS.isPublic,
+      isFrozen: document?.signSettings?.isFrozen ?? DEFAULT_SETTINGS.isFrozen,
+      isHidden: document?.signSettings?.isHidden ?? DEFAULT_SETTINGS.isHidden,
       demographicMode: document?.signSettings?.demographicMode ?? DEFAULT_SETTINGS.demographicMode,
       demographicRequired: document?.signSettings?.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired,
       surveyTrigger: document?.signSettings?.surveyTrigger ?? DEFAULT_SETTINGS.surveyTrigger,
@@ -327,6 +335,8 @@ export async function PUT(
       showHeatMap: body.showHeatMap !== undefined ? Boolean(body.showHeatMap) : (existingSettings.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap),
       showViewCounts: body.showViewCounts !== undefined ? Boolean(body.showViewCounts) : (existingSettings.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts),
       isPublic: body.isPublic !== undefined ? Boolean(body.isPublic) : (existingSettings.isPublic ?? DEFAULT_SETTINGS.isPublic),
+      isFrozen: body.isFrozen !== undefined ? Boolean(body.isFrozen) : (existingSettings.isFrozen ?? DEFAULT_SETTINGS.isFrozen),
+      isHidden: body.isHidden !== undefined ? Boolean(body.isHidden) : (existingSettings.isHidden ?? DEFAULT_SETTINGS.isHidden),
       demographicMode,
       demographicRequired: body.demographicRequired !== undefined ? Boolean(body.demographicRequired) : (existingSettings.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired),
       surveyTrigger,

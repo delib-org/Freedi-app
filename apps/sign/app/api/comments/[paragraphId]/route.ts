@@ -3,6 +3,7 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, StatementType } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
+import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { getDemographicName } from '@/lib/firebase/demographicQueries';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
@@ -97,6 +98,13 @@ export async function POST(
     if (await isUserBlocked(db, documentId, userId)) {
       return NextResponse.json(
         { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
+
+    if (await isDocumentFrozen(db, documentId)) {
+      return NextResponse.json(
+        { error: FROZEN_DOCUMENT_ERROR },
         { status: 403 }
       );
     }
