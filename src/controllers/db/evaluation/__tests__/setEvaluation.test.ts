@@ -357,7 +357,7 @@ describe('setEvaluation', () => {
 			await setMaxVotesPerUser('stmt-123', 5);
 
 			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
-				'evaluationSettings.axVotesPerUser': 5,
+				'evaluationSettings.maxVotesPerUser': 5,
 			});
 		});
 
@@ -365,7 +365,7 @@ describe('setEvaluation', () => {
 			await setMaxVotesPerUser('stmt-123', undefined);
 
 			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
-				'evaluationSettings.axVotesPerUser': null,
+				'evaluationSettings.maxVotesPerUser': null,
 			});
 		});
 

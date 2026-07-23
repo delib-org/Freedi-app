@@ -25,10 +25,22 @@
 		color: #232f4a;
 	}
 
-	.switchesArea {
+	.saveArea {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 3rem 5rem;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding-block-start: 0.5rem;
+
+		button {
+			cursor: pointer;
+		}
+	}
+
+	.saveCaption {
+		color: var(--text-caption, #6b7a99);
+		font-size: 0.8125rem;
+		margin: 0;
 	}
 
 	.getMembersArea {
@@ -45,23 +57,6 @@
 
 		.votersButton {
 			color: var(--text-blue);
-		}
-	}
-
-	.submitButton {
-		transform: scale(1.25);
-		transition: all 0.13s ease-in-out;
-		color: var(--white);
-		margin: auto;
-		cursor: pointer;
-		position: fixed;
-		bottom: 2%;
-		left: 63%;
-		z-index: 1000;
-		background-color: var(--btn-primary);
-
-		&:hover {
-			transform: scale(1.4);
 		}
 	}
 

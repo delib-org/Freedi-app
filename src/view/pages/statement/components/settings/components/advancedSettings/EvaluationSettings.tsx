@@ -1,24 +1,12 @@
 import React, { FC, useState, useEffect } from 'react';
 import { Statement, StatementSettings, evaluationType } from '@freedi/shared-types';
-import {
-	Target,
-	BarChart3,
-	ThumbsUp,
-	Lock,
-	PieChart,
-	Vote,
-	Award,
-	Send,
-	RefreshCw,
-	Heart,
-} from 'lucide-react';
+import { Lock, Award, Send, RefreshCw } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 import { requestRecalculateEvaluations } from '@/controllers/db/evaluation/recalculateEvaluations';
 import { logError } from '@/utils/errorHandling';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
-import EvaluationCard from './EvaluationCard';
 
 interface EvaluationSettingsProps {
 	statement: Statement;
@@ -101,50 +89,9 @@ const EvaluationSettings: FC<EvaluationSettingsProps> = ({
 
 	return (
 		<>
-			<div className={styles.evaluationTypeSection}>
-				<h4 className={styles.sectionTitle}>
-					<Target size={18} />
-					{t('Evaluation Method')}
-				</h4>
-				<div className={styles.evaluationCards}>
-					<EvaluationCard
-						type={evaluationType.range}
-						title={t('Range Voting')}
-						description={t('Rate options on a scale')}
-						icon={BarChart3}
-						isSelected={(settings.evaluationType ?? evaluationType.range) === evaluationType.range}
-						onClick={() => handleSettingChange('evaluationType', evaluationType.range)}
-					/>
-					<EvaluationCard
-						type={evaluationType.singleLike}
-						title={t('Single Choice')}
-						description={t('Vote for preferred options')}
-						icon={ThumbsUp}
-						isSelected={
-							(settings.evaluationType ?? evaluationType.range) === evaluationType.singleLike
-						}
-						onClick={() => handleSettingChange('evaluationType', evaluationType.singleLike)}
-					/>
-				</div>
-			</div>
-
-			{/* Emoji reactions — positive-only 0..1 scale for the range/enhanced
-			    view. Cross-app: writes statementSettings.ratingMode, honored by
-			    every app's evaluation surface. */}
-			{(settings.evaluationType ?? evaluationType.range) === evaluationType.range && (
-				<ToggleSwitch
-					isChecked={settings.ratingMode === 'reactions'}
-					onChange={(checked) =>
-						handleSettingChange('ratingMode', checked ? 'reactions' : 'agree-disagree')
-					}
-					label={t('Emoji reactions')}
-					description={t(
-						'Reactions use a positive-only scale (no disagree). Applies across all apps.',
-					)}
-					icon={Heart}
-				/>
-			)}
-
+			{/* The evaluation method / rating scale / show-results / enable-voting
+			    controls live in InstantSettings (the hero panel) — do not add
+			    duplicates here. */}
 			{/* Vote Limiting */}
 			{(settings.evaluationType ?? evaluationType.range) === evaluationType.singleLike && (
 				<div className={styles.voteLimitSection}>
@@ -180,21 +127,6 @@ const EvaluationSettings: FC<EvaluationSettingsProps> = ({
 			)}
 
 			<ToggleSwitch
-				isChecked={settings.showEvaluation ?? false}
-				onChange={(checked) => handleSettingChange('showEvaluation', checked)}
-				label={t('Show Results')}
-				description={t('Display evaluation results to participants')}
-				icon={PieChart}
-			/>
-			<ToggleSwitch
-				isChecked={settings.enableEvaluation ?? true}
-				onChange={(checked) => handleSettingChange('enableEvaluation', checked)}
-				label={t('Enable Voting')}
-				description={t('Allow users to vote and evaluate options')}
-				icon={Vote}
-				badge="recommended"
-			/>
-			<ToggleSwitch
 				isChecked={settings.inVotingGetOnlyResults ?? false}
 				onChange={(checked) => handleSettingChange('inVotingGetOnlyResults', checked)}
 				label={t('Show Top Results Only')}
@@ -204,8 +136,8 @@ const EvaluationSettings: FC<EvaluationSettingsProps> = ({
 			<ToggleSwitch
 				isChecked={settings.isSubmitMode ?? false}
 				onChange={(checked) => handleSettingChange('isSubmitMode', checked)}
-				label={t('Submit Mode')}
-				description={t('Users submit final choices rather than continuous voting')}
+				label={t('Collect ideas only (no rating yet)')}
+				description={t('Gather suggestions now, open rating later')}
 				icon={Send}
 			/>
 
