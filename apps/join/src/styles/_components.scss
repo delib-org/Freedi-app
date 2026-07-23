@@ -308,38 +308,6 @@
     line-height: var(--line-height-normal);
   }
 
-  &__counter {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--ink-muted);               // 8.7:1 ✓ AAA
-  }
-
-  &__counter-total::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: var(--terra-500);
-    border-radius: 50%;
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-
-  &__counter-unread {
-    background: var(--terra-600);
-    color: var(--text-inverse);            // 6.4:1 ✓ AA
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-xs);
-    padding: 3px 10px;
-    border-radius: var(--radius-full);
-    letter-spacing: 0.02em;
-  }
-
   // New-solutions notification pill — appears in the sticky header when fresh
   // options arrive after the initial load. User taps to flush + highlight them.
   &__new-pill {
@@ -3721,22 +3689,24 @@ $facilitator-panel-width: 300px;
   width: 2.25rem;
   height: 2.25rem;
   padding: 0;
-  border: 1px solid var(--paper-line, rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--border-light, rgba(0, 0, 0, 0.08));
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
+  // Theme-driven surface — a hardcoded white here left the chevron
+  // (--text-primary, near-white in dark mode) invisible on its own button.
+  background: color-mix(in srgb, var(--bg-card, #fff) 92%, transparent);
   color: var(--text-primary, #1c1917);
   font-size: 1.4rem;
   line-height: 1;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   // Backdrop blur when supported gives the iOS chrome-on-photo feel; the
-  // rgba background above is the fallback.
+  // translucent background above is the fallback.
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
   &:hover,
   &:focus-visible {
-    background: #fff;
+    background: var(--bg-card, #fff);
   }
 
   &:focus-visible {
@@ -3746,6 +3716,19 @@ $facilitator-panel-width: 300px;
 
   &:active {
     transform: translateY(1px);
+  }
+
+  // Dark mode: the button floats over the near-black hero header, so the
+  // card surface alone barely separates from it. Step up one surface level
+  // and firm up the hairline so the circle keeps a visible edge.
+  @media (prefers-color-scheme: dark) {
+    border-color: var(--border-medium, #58493c);
+    background: color-mix(in srgb, var(--paper-deep) 92%, transparent);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--paper-elevated, var(--paper-deep));
+    }
   }
 }
 
