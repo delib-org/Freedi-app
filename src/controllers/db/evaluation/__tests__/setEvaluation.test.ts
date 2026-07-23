@@ -291,7 +291,7 @@ describe('setEvaluation', () => {
 
 			expect(mockDoc).toHaveBeenCalledWith(expect.anything(), Collections.statements, 'stmt-123');
 			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
-				evaluationSettings: { evaluationUI: EvaluationUI.voting },
+				'evaluationSettings.evaluationUI': EvaluationUI.voting,
 			});
 		});
 

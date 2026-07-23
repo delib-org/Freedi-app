@@ -104,7 +104,9 @@ export async function setEvaluationToDB(
 
 export function setEvaluationUIType(statementId: string, evaluationUI: EvaluationUI) {
 	const evaluationUIRef = createStatementRef(statementId);
-	updateDoc(evaluationUIRef, { evaluationSettings: { evaluationUI: evaluationUI } }).catch(
+	// Dot-path update — a nested object here would REPLACE the whole
+	// evaluationSettings map and wipe anchored/maxVotesPerUser/etc.
+	updateDoc(evaluationUIRef, { 'evaluationSettings.evaluationUI': evaluationUI }).catch(
 		(error) => {
 			logger.error('Error updating evaluation UI', error, { statementId });
 		},
