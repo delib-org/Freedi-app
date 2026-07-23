@@ -33,6 +33,8 @@ import {
 	resetQuestionJoining,
 	reconcileJoinSheet,
 	ReconcileJoinSheetResult,
+	getAllOptions,
+	deleteAllOptions,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 import { ManualReorder, ManualReorderMode } from '@/components/ManualReorder';
@@ -1084,6 +1086,93 @@ function renderResetJoiningSection(question: Statement | null): m.Vnode | null {
 	]);
 }
 
+/** Destructive admin action, one step past "Reset all joining": permanently
+ *  removes every option under the question along with its chat and paragraph
+ *  children, leaving a clean slate for a fresh round. Guarded by a typed
+ *  confirmation (the option count) rather than a plain OK/Cancel, because
+ *  unlike the reset above there is nothing left to recover afterwards. */
+let deleteAllInProgress = false;
+
+function renderDeleteAllOptionsSection(question: Statement | null): m.Vnode | null {
+	if (!question) return null;
+	if (!isAdmin()) return null;
+
+	// Counts the raw subscription set (not `getVisibleOptions`) so hidden and
+	// organizer-authored options are included — they get deleted too.
+	const optionCount = getAllOptions().length;
+
+	return m('.facilitator-panel__row', [
+		m('.facilitator-panel__row-main', [
+			m(
+				'button.btn.btn--small.btn--danger.facilitator-panel__action',
+				{
+					type: 'button',
+					disabled: deleteAllInProgress || optionCount === 0,
+					onclick: async () => {
+						if (deleteAllInProgress) return;
+						if (!window.confirm(t('facilitator.delete_all_confirm', { count: optionCount }))) {
+							return;
+						}
+						// Second gate: the admin has to type the option count. Cheap
+						// to satisfy deliberately, impossible to hit by accident.
+						const typed = window.prompt(
+							t('facilitator.delete_all_prompt', { count: optionCount }),
+							'',
+						);
+						if (typed === null) return;
+						if (typed.trim() !== String(optionCount)) {
+							window.alert(t('facilitator.delete_all_mismatch'));
+
+							return;
+						}
+
+						deleteAllInProgress = true;
+						m.redraw();
+						try {
+							const result = await deleteAllOptions(question.statementId);
+							if (result.errors.length > 0) {
+								const errorLines = result.errors
+									.map((id) => t(`facilitator.delete_all_error.${id}`))
+									.filter(Boolean);
+								window.alert(
+									`${t('facilitator.delete_all_done', {
+										options: result.optionsDeleted,
+										descendants: result.descendantsDeleted,
+									})}\n\n${t('facilitator.delete_all_partial')}\n${errorLines.join('\n')}`,
+								);
+
+								return;
+							}
+							window.alert(
+								t('facilitator.delete_all_done', {
+									options: result.optionsDeleted,
+									descendants: result.descendantsDeleted,
+								}),
+							);
+						} catch (err) {
+							console.error('[FacilitatorPanel] deleteAllOptions failed:', err);
+							window.alert(t('facilitator.delete_all_error'));
+						} finally {
+							deleteAllInProgress = false;
+							m.redraw();
+						}
+					},
+				},
+				[
+					m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🗑️'),
+					m(
+						'span.facilitator-panel__action-label',
+						deleteAllInProgress
+							? t('facilitator.delete_all.in_progress')
+							: t('facilitator.delete_all'),
+					),
+				],
+			),
+		]),
+		m('.facilitator-panel__row-help', t('facilitator.delete_all.help')),
+	]);
+}
+
 /** Per-question delegate management. Only real admins can issue invites,
  *  so the section is hidden behind `isAdmin()`. The list listeners are
  *  mounted lazily on first expand (and torn down on collapse / panel close
@@ -1912,7 +2001,10 @@ export const FacilitatorPanel: m.Component = {
 						id: 'danger',
 						titleKey: 'facilitator.section.danger',
 						danger: true,
-						children: [renderResetJoiningSection(question)],
+						children: [
+							renderResetJoiningSection(question),
+							renderDeleteAllOptionsSection(question),
+						],
 					}),
 				],
 			),

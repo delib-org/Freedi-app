@@ -23,7 +23,8 @@ import {
 	Collections,
 	getJoinDelegateId,
 } from '@freedi/shared-types';
-import { db, collection, doc, query, where, onSnapshot, Unsubscribe } from '../firebase';
+import { db, collection, doc, query, where, Unsubscribe } from '../firebase';
+import { resilientOnSnapshot } from '../resilientListeners';
 import { getUserState } from '../user';
 import { setCurrentDelegate } from '../admin';
 
@@ -50,16 +51,13 @@ export function subscribeMyDelegate(questionId: string): void {
 	const delegateId = getJoinDelegateId(questionId, user.uid);
 	const ref = doc(db, Collections.joinDelegates, delegateId);
 
-	myDelegateUnsub = onSnapshot(
-		ref,
-		(snap) => {
-			const delegate = snap.exists() ? (snap.data() as JoinDelegate) : null;
-			setCurrentDelegate(delegate, questionId);
-		},
-		() => {
-			/* read may be denied if rules haven't propagated yet; ignore */
-		},
-	);
+	// Permission-denied is expected here when rules haven't propagated yet;
+	// the resilient wrapper retries a few times then goes dormant until the
+	// next wake resync, which covers the propagation window without spam.
+	myDelegateUnsub = resilientOnSnapshot('myDelegate', ref, (snap) => {
+		const delegate = snap.exists() ? (snap.data() as JoinDelegate) : null;
+		setCurrentDelegate(delegate, questionId);
+	});
 }
 
 /**
@@ -75,7 +73,7 @@ export function subscribeQuestionDelegates(questionId: string): void {
 		collection(db, Collections.joinDelegates),
 		where('questionId', '==', questionId),
 	);
-	delegatesUnsub = onSnapshot(delegatesQuery, (snap) => {
+	delegatesUnsub = resilientOnSnapshot('questionDelegates', delegatesQuery, (snap) => {
 		delegatesForQuestion = snap.docs
 			.map((d) => d.data() as JoinDelegate)
 			.sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));
@@ -86,7 +84,7 @@ export function subscribeQuestionDelegates(questionId: string): void {
 		collection(db, Collections.joinDelegateInvitations),
 		where('questionId', '==', questionId),
 	);
-	delegateInvitationsUnsub = onSnapshot(invitesQuery, (snap) => {
+	delegateInvitationsUnsub = resilientOnSnapshot('delegateInvitations', invitesQuery, (snap) => {
 		delegateInvitationsForQuestion = snap.docs
 			.map((d) => d.data() as JoinDelegateInvitation)
 			.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));

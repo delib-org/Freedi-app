@@ -1,45 +1,25 @@
 /**
- * NAMING CLARIFICATION:
- * - EvaluationUI (evaluationSettings.evaluationUI) = Evaluation MODE (how users participate: suggestions, voting, checkbox, clustering)
- * - evaluationType (statementSettings.evaluationType) = Rating SCALE (what input UI they see: range/5-point, likeDislike/simple, singleLike/like-only)
+ * Question format & data settings (question type, Mass Consensus link,
+ * nightly backup). The participation-mode and rating-scale controls live in
+ * InstantSettings (the hero panel) — the single source of truth.
  */
 import React, { FC } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import {
-	EvaluationUI,
-	StatementType,
-	evaluationType,
-	QuestionType,
-	CompoundPhase,
-} from '@freedi/shared-types';
+import { StatementType, QuestionType, CompoundPhase } from '@freedi/shared-types';
 import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { setDoc } from 'firebase/firestore';
-import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
-import SuggestionsIcon from '@/assets/icons/smile.svg?react';
-import VotingIcon from '@/assets/icons/votingIcon.svg?react';
-import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
-import UsersIcon from '@/assets/icons/users20px.svg?react';
-import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import EvaluationsIcon from '@/assets/icons/evaluationsIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
-import RatingScaleButtons from './RatingScaleButtons/RatingScaleButtons';
 import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall';
-import { setEvaluationUIType } from '@/controllers/db/evaluation/setEvaluation';
-import VotingSettings from './votingSettings/VotingSettings';
 import { logError } from '@/utils/errorHandling';
 import { requestSurveyBackup } from '@/controllers/db/backup/backupController';
 
 // Sub-components
 import QuestionLinkSection from './QuestionLinkSection';
-import AnchoredSettings from './AnchoredSettings';
-import ConfidenceIndexSettings from './ConfidenceIndexSettings';
-import JoinFormSettings from './JoinFormSettings/JoinFormSettings';
-import JoinResolutionSettings from './JoinResolutionSettings/JoinResolutionSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -78,71 +58,6 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	try {
 		const { questionSettings } = statement;
 		if (statement.statementType !== StatementType.question) return null;
-		const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
-
-		function handleRequireSolutionToggle(enabled: boolean) {
-			setStatementSettingToDB({
-				statement,
-				property: 'askUserForASolutionBeforeEvaluation',
-				newValue: enabled,
-				settingsSection: 'questionSettings',
-			});
-		}
-
-		/**
-		 * Handle evaluation type change - sets both evaluationSettings.evaluationUI
-		 * and statementSettings.evaluationType for main app compatibility.
-		 * enhancedEvaluation is auto-derived from evaluationType for backward compat.
-		 */
-		function handleEvaluationTypeChange(value: EvaluationUI) {
-			setEvaluationUIType(statement.statementId, value);
-
-			let evalType: evaluationType;
-			switch (value) {
-				case EvaluationUI.voting:
-				case EvaluationUI.checkbox:
-					evalType = evaluationType.singleLike;
-					break;
-				case EvaluationUI.suggestions:
-				case EvaluationUI.clustering:
-				default:
-					evalType = evaluationType.range;
-					break;
-			}
-
-			setStatementSettingToDB({
-				statement,
-				property: 'evaluationType',
-				newValue: evalType,
-				settingsSection: 'statementSettings',
-			});
-
-			setStatementSettingToDB({
-				statement,
-				property: 'enhancedEvaluation',
-				newValue: evalType === evaluationType.range,
-				settingsSection: 'statementSettings',
-			});
-		}
-
-		/**
-		 * Handle rating scale change - sets statementSettings.evaluationType
-		 */
-		function handleRatingScaleChange(scale: evaluationType) {
-			setStatementSettingToDB({
-				statement,
-				property: 'evaluationType',
-				newValue: scale,
-				settingsSection: 'statementSettings',
-			});
-
-			setStatementSettingToDB({
-				statement,
-				property: 'enhancedEvaluation',
-				newValue: scale === evaluationType.range,
-				settingsSection: 'statementSettings',
-			});
-		}
 
 		function handleQuestionTypeChange(ev: React.ChangeEvent<HTMLSelectElement>) {
 			const newType = ev.target.value as QuestionType;
@@ -168,7 +83,10 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 		return (
 			<div className={styles.questionSettings}>
-				<SectionTitle title={t('Question Type')} />
+				<SectionTitle title={t('Question format')} />
+				<p className={styles.sectionDescription}>
+					{t('Changing this changes the whole participant flow')}
+				</p>
 				<select
 					className={styles.questionTypeSelect}
 					value={questionSettings?.questionType || QuestionType.multiStage}
@@ -186,106 +104,12 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					</p>
 				)}
 
-				<SectionTitle title={t('Evaluation Mode')} />
-				<MultiSwitch
-					options={[
-						{
-							label: t('Like-mindedness'),
-							value: EvaluationUI.suggestions,
-							icon: <SuggestionsIcon />,
-							toolTip: t('Consensus'),
-						},
-						{
-							label: t('Voting'),
-							value: EvaluationUI.voting,
-							icon: <VotingIcon />,
-							toolTip: t('Voting'),
-						},
-						{
-							label: t('Approval'),
-							value: EvaluationUI.checkbox,
-							icon: <ConsentIcon />,
-							toolTip: t('Consent'),
-						},
-						{
-							label: t('Cluster'),
-							value: EvaluationUI.clustering,
-							icon: <ClusterIcon />,
-							toolTip: t('Clustering'),
-						},
-					]}
-					onClick={(value) => {
-						handleEvaluationTypeChange(value as EvaluationUI);
-					}}
-					currentValue={statement.evaluationSettings?.evaluationUI}
-				/>
-				{isVoting && <VotingSettings />}
-
-				<SectionTitle title={t('Rating Scale')} />
-				<RatingScaleButtons
-					options={[
-						{
-							label: t('5-Point Scale'),
-							value: evaluationType.range,
-							icon: <SuggestionsIcon />,
-							toolTip: t('5 emoji faces from negative to positive'),
-							score: 0,
-						},
-						{
-							label: t('Simple Scale'),
-							value: evaluationType.likeDislike,
-							icon: <EvaluationsIcon />,
-							toolTip: t('Thumbs up or down'),
-							score: 1,
-						},
-						{
-							label: t('Like Only'),
-							value: evaluationType.singleLike,
-							icon: <LikeIcon />,
-							toolTip: t('Only positive feedback'),
-							score: 2,
-						},
-						{
-							label: t('Community Voice'),
-							value: evaluationType.communityVoice,
-							icon: <UsersIcon />,
-							toolTip: t('Respectful 4-level resonance scale'),
-							score: 3,
-						},
-					]}
-					onClick={(value) => {
-						handleRatingScaleChange(value as evaluationType);
-					}}
-					currentValue={statement.statementSettings?.evaluationType || evaluationType.range}
-				/>
-
 				<SectionTitle title={t('Mass Consensus Settings')} />
 				<p className={styles.sectionDescription}>
 					{t('These settings control the new Mass Consensus app behavior')}
 				</p>
 
 				<QuestionLinkSection statementId={statement.statementId} />
-
-				<SectionTitle title={t('Require original input before viewing others')} />
-				<CustomSwitchSmall
-					label={t('Request solution at start')}
-					checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
-					setChecked={handleRequireSolutionToggle}
-					textChecked={t('Request solution at start')}
-					textUnchecked={t("Don't ask")}
-					imageChecked={<SuggestionsIcon />}
-					imageUnchecked={<SuggestionsIcon />}
-					colorChecked="var(--question)"
-					colorUnchecked="var(--question)"
-				/>
-
-				<AnchoredSettings statement={statement} />
-
-				<SectionTitle title={t('Sample Representativeness')} />
-				<ConfidenceIndexSettings statement={statement} />
-
-				<JoinFormSettings statement={statement} />
-				<JoinResolutionSettings statement={statement} />
 
 				<SectionTitle title={t('Daily Backup')} />
 				<p className={styles.sectionDescription}>

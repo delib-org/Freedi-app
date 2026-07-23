@@ -54,6 +54,8 @@ interface DocumentViewProps {
   enableSuggestions?: boolean;
   /** Whether refinement workflow is enabled */
   enableRefinement?: boolean;
+  /** When true, all interactions are frozen — the document is read-only for everyone */
+  frozen?: boolean;
   /** When true, shows ghosted interaction buttons always (for elderly users / accessibility) */
   enhancedVisibility?: boolean;
   /** YouTube video URL for explanation video */
@@ -98,6 +100,7 @@ export default function DocumentView({
   tocSettings,
   enableSuggestions = false,
   enableRefinement = false,
+  frozen = false,
   enhancedVisibility = false,
   explanationVideoUrl = '',
   explanationVideoMode = 'optional',
@@ -278,6 +281,19 @@ export default function DocumentView({
           )}
         </header>
 
+        {/* Frozen notice - interactions are paused by the admin */}
+        {frozen && (
+          <div className={styles.frozenBanner} role="status">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>
+              {t('Interactions are paused by the document admin. You can read the document, but commenting, suggesting, and signing are disabled.')}
+            </span>
+          </div>
+        )}
+
         {/* Paragraphs */}
         <main className={styles.content}>
           {paragraphs.length === 0 ? (
@@ -287,6 +303,7 @@ export default function DocumentView({
           ) : (
             paragraphs.map((paragraph) =>
               paragraph.isInsertionPoint ? (
+                frozen ? null : (
                 <InsertionPoint
                   key={paragraph.paragraphId}
                   paragraph={paragraph}
@@ -297,6 +314,7 @@ export default function DocumentView({
                   requireGoogleLogin={requireGoogleLogin}
                   isAnonymous={!user || user.isAnonymous}
                 />
+                )
               ) : (
                 <ParagraphCard
                   key={paragraph.paragraphId}
@@ -316,6 +334,7 @@ export default function DocumentView({
                   headingNumber={headingNumbers.get(paragraph.paragraphId)}
                   requireGoogleLogin={requireGoogleLogin}
                   isAnonymous={!user || user.isAnonymous}
+                  frozen={frozen}
                 />
               )
             )
@@ -327,7 +346,11 @@ export default function DocumentView({
               <footer className={styles.footer}>
                 <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
-                  {footerMode === 'satisfaction' ? (
+                  {frozen ? (
+                    <p className={styles.unsignedStatus}>
+                      {t('Interactions are currently paused by the document admin')}
+                    </p>
+                  ) : footerMode === 'satisfaction' ? (
                     !user ? (
                       <p className={styles.unsignedStatus}>
                         {t('signInToRate') || 'Sign in to rate this document'}
@@ -358,6 +381,7 @@ export default function DocumentView({
                   )}
                 </div>
 
+                {!frozen && (
                 <div className={styles.signatureActions}>
                   {!user ? (
                     <a
@@ -384,6 +408,7 @@ export default function DocumentView({
                     </>
                   )}
                 </div>
+                )}
                 </div>
               </footer>
             )}

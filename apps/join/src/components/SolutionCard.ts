@@ -11,6 +11,7 @@ import {
 	getClusterEvaluatorCount,
 	setOptionFlag,
 	resetOptionJoining,
+	deleteOption,
 	canEditSuggestion,
 	getOptionParagraphs,
 	loadOptionParagraphs,
@@ -51,6 +52,40 @@ const expandedOptions = new Set<string>();
 // rich-body's natural height exceeds its visible (clamped) height. Drives
 // whether the "Read more" affordance appears at all.
 const overflowingOptions = new Set<string>();
+
+// Options with a delete in flight. Module-level for the same reason as the
+// expand state above: the vnode tree is rebuilt on every redraw, so a local
+// flag would be lost the moment anything else on the page re-renders.
+const deletingOptions = new Set<string>();
+
+/** Confirm + permanently delete an option. The options listener removes the
+ *  card from the list on its own once Firestore acks, so there's nothing to
+ *  clean up locally beyond the in-flight flag. */
+async function handleDeleteOption(option: Statement): Promise<void> {
+	if (deletingOptions.has(option.statementId)) return;
+
+	const { title } = splitStatement(option.statement);
+	const joinedCount = option.joined?.length ?? 0;
+	const organizerCount = option.organizers?.length ?? 0;
+	const message = t('admin.delete_confirm', {
+		title: title || option.statement,
+		activists: joinedCount,
+		organizers: organizerCount,
+	});
+	if (!window.confirm(message)) return;
+
+	deletingOptions.add(option.statementId);
+	m.redraw();
+	try {
+		await deleteOption(option);
+	} catch (err) {
+		console.error('[SolutionCard] deleteOption failed:', err);
+		window.alert(t('admin.delete_error'));
+	} finally {
+		deletingOptions.delete(option.statementId);
+		m.redraw();
+	}
+}
 
 function isExpanded(optionId: string): boolean {
 	return expandedOptions.has(optionId);
@@ -715,6 +750,23 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 										t('admin.reset'),
 									)
 								: null,
+							// Permanent delete. Last in the row and danger-tinted because
+							// it's the only irreversible action on the card — Hide is the
+							// reversible alternative. Outline rather than solid so it
+							// doesn't outweigh the curation buttons beside it.
+							m(
+								'button.btn.btn--small.btn--outline.solution-card__delete',
+								{
+									disabled: deletingOptions.has(option.statementId) ? true : undefined,
+									onclick: (e: Event) => {
+										e.stopPropagation();
+										void handleDeleteOption(option);
+									},
+								},
+								deletingOptions.has(option.statementId)
+									? t('admin.delete.in_progress')
+									: t('admin.delete'),
+							),
 						])
 					: null,
 			],

@@ -82,8 +82,9 @@ describe('homeQueries', () => {
 		 * 1. getCreatedDocuments
 		 * 2. getCollaboratedDocuments
 		 * 3. getSignedDocuments
-		 * 4. getUserGroups
-		 * 5. batchGetSignatureCounts (only if there are documents in the result)
+		 * 4. getSubscribedDocuments
+		 * 5. getUserGroups
+		 * 6. batchGetSignatureCounts (only if there are documents in the result)
 		 *
 		 * (invitedDocs is skipped when no email is passed)
 		 */
@@ -103,12 +104,15 @@ describe('homeQueries', () => {
 			// 3. getSignedDocuments (empty)
 			mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
 
-			// 4. getUserGroups
+			// 4. getSubscribedDocuments (empty)
+			mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+
+			// 5. getUserGroups
 			mockGet.mockResolvedValueOnce({
 				docs: groups.map((g) => ({ data: () => g })),
 			});
 
-			// 5. batchGetSignatureCounts — only called when there are documents
+			// 6. batchGetSignatureCounts — only called when there are documents
 			if (hasDocuments) {
 				mockGet.mockResolvedValueOnce({ docs: [] });
 			}
@@ -138,9 +142,9 @@ describe('homeQueries', () => {
 			expect(result.documents[0].statementId).toBe('option-1');
 		});
 
-		it('should filter questions at query level (statementType in [option, document])', async () => {
-			// With the updated query, questions are excluded by the Firestore
-			// where clause, not by JS code. Verify the query doesn't include question.
+		it('should filter non-documents at query level (isDocument == true)', async () => {
+			// Statements that aren't Sign documents (questions, plain options) are
+			// excluded by the Firestore where clause, not by JS code.
 			setupMockQueries({
 				createdDocs: [],
 				hasDocuments: false,
@@ -148,16 +152,13 @@ describe('homeQueries', () => {
 
 			await getUserHomeDocuments('user-1');
 
-			// Verify the first .where() call includes only option and document types
-			const whereCallArgs = mockWhere.mock.calls;
-			const statementTypeCall = whereCallArgs.find(
-				(args: unknown[]) => args[0] === 'statementType' && args[1] === 'in'
+			const isDocumentCall = mockWhere.mock.calls.find(
+				(args: unknown[]) => args[0] === 'isDocument'
 			);
 
-			expect(statementTypeCall).toBeDefined();
-			expect(statementTypeCall![2]).toContain(StatementType.option);
-			expect(statementTypeCall![2]).toContain(StatementType.document);
-			expect(statementTypeCall![2]).not.toContain(StatementType.question);
+			expect(isDocumentCall).toBeDefined();
+			expect(isDocumentCall![1]).toBe('==');
+			expect(isDocumentCall![2]).toBe(true);
 		});
 
 		it('should still return legacy StatementType.document', async () => {
@@ -183,14 +184,13 @@ describe('homeQueries', () => {
 			expect(result.documents[0].statementId).toBe('legacy-doc-1');
 		});
 
-		it('should NOT return options without isDocument flag', async () => {
+		it('should skip statements missing an id or a title', async () => {
 			setupMockQueries({
 				createdDocs: [
 					{
-						statementId: 'plain-option',
-						statement: 'Not a document option',
+						statementId: 'no-title',
 						statementType: StatementType.option,
-						isDocument: false,
+						isDocument: true,
 						creatorId: 'user-1',
 						createdAt: Date.now(),
 						lastUpdate: Date.now(),
@@ -229,6 +229,56 @@ describe('homeQueries', () => {
 
 			expect(result.documents[0].topParentId).toBe('group-1');
 		});
+
+		it('should strip HTML markup from the description preview', async () => {
+			setupMockQueries({
+				createdDocs: [
+					{
+						statementId: 'option-1',
+						statement: 'My Document',
+						statementType: StatementType.option,
+						isDocument: true,
+						description:
+							'<strong>עקרונות היסוד</strong><p>&quot;החוקה&quot; תהיה חוק המדינה.</p>',
+						creatorId: 'user-1',
+						createdAt: Date.now(),
+						lastUpdate: Date.now(),
+						parentId: 'question-1',
+						topParentId: 'group-1',
+						creator: { displayName: 'Test User', uid: 'user-1' },
+					},
+				],
+			});
+
+			const result = await getUserHomeDocuments('user-1');
+
+			expect(result.documents[0].description).toBe(
+				'עקרונות היסוד "החוקה" תהיה חוק המדינה.'
+			);
+		});
+
+		it('should leave the description undefined when there is none', async () => {
+			setupMockQueries({
+				createdDocs: [
+					{
+						statementId: 'option-1',
+						statement: 'My Document',
+						statementType: StatementType.option,
+						isDocument: true,
+						creatorId: 'user-1',
+						createdAt: Date.now(),
+						lastUpdate: Date.now(),
+						parentId: 'question-1',
+						topParentId: 'group-1',
+						creator: { displayName: 'Test User', uid: 'user-1' },
+					},
+				],
+			});
+
+			const result = await getUserHomeDocuments('user-1');
+
+			expect(result.documents[0].description).toBeUndefined();
+		});
 	});
 
 	describe('getUserHomeDocuments - group name resolution', () => {
@@ -244,11 +294,13 @@ describe('homeQueries', () => {
 			mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
 			// 3. signed (empty)
 			mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
-			// 4. groups
+			// 4. subscribed (empty)
+			mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+			// 5. groups
 			mockGet.mockResolvedValueOnce({
 				docs: [{ data: () => group }],
 			});
-			// 5. batchGetSignatureCounts
+			// 6. batchGetSignatureCounts
 			mockGet.mockResolvedValueOnce({ docs: [] });
 		}
 

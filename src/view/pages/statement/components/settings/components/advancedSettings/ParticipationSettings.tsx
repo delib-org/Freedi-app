@@ -5,7 +5,7 @@ import {
 	StatementType,
 	ActivationThreshold,
 } from '@freedi/shared-types';
-import { UserPlus, Plus, Target } from 'lucide-react';
+import { UserPlus, Plus, Target, Lightbulb } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import ToggleSwitch from './ToggleSwitch';
@@ -41,10 +41,26 @@ const ParticipationSettings: FC<ParticipationSettingsProps> = ({
 		});
 	}
 
+	function handleRequireSolutionToggle(enabled: boolean) {
+		setStatementSettingToDB({
+			statement,
+			property: 'askUserForASolutionBeforeEvaluation',
+			newValue: enabled,
+			settingsSection: 'questionSettings',
+		});
+	}
+
 	return (
 		<>
 			{statement.statementType === StatementType.question && (
 				<>
+					<ToggleSwitch
+						isChecked={statement.questionSettings?.askUserForASolutionBeforeEvaluation ?? false}
+						onChange={handleRequireSolutionToggle}
+						label={t('Ask for their own idea first')}
+						description={t('Participants must suggest before they can rate others')}
+						icon={Lightbulb}
+					/>
 					<ToggleSwitch
 						isChecked={settings.joiningEnabled ?? false}
 						onChange={(checked) => handleSettingChange('joiningEnabled', checked)}

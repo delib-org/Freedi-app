@@ -3,23 +3,11 @@ import { logError } from '@/utils/errorHandling';
 
 // Third party imports
 import { useNavigate, useParams } from 'react-router';
-import {
-	Settings,
-	Users,
-	Vote,
-	HelpCircle,
-	UserCheck,
-	Shield,
-	Bell,
-	BarChart3,
-	ShieldAlert,
-	Clock,
-	UserCog,
-} from 'lucide-react';
+import { Pencil, Users, BarChart3, Brain, Shield, Settings } from 'lucide-react';
 
 // Custom components
+import InstantSettings from '../instantSettings/InstantSettings';
 import QuestionSettings from '../QuestionSettings/QuestionSettings';
-import EnhancedAdvancedSettings from './../../components/advancedSettings/EnhancedAdvancedSettings';
 import ChoseBySettings from '../choseBy/ChoseBySettings';
 import GetEvaluators from './../../components/GetEvaluators';
 import GetVoters from './../../components/GetVoters';
@@ -29,32 +17,65 @@ import { setNewStatement } from './../../statementSettingsCont';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 
+// Settings sub-components (former "General Settings" categories, now flat)
+import VisibilitySettings from '../advancedSettings/VisibilitySettings';
+import ParticipationSettings from '../advancedSettings/ParticipationSettings';
+import EvaluationSettings from '../advancedSettings/EvaluationSettings';
+import AISettings from '../advancedSettings/AISettings';
+import DiscussionSettings from '../advancedSettings/DiscussionSettings';
+import NavigationSettings from '../advancedSettings/NavigationSettings';
+import LocalizationSettings from '../advancedSettings/LocalizationSettings';
+import ExportSettings from '../advancedSettings/ExportSettings';
+import SynthesisPanel from '../synthesisPanel/SynthesisPanel';
+import AnchoredSettings from '../QuestionSettings/AnchoredSettings';
+import ConfidenceIndexSettings from '../QuestionSettings/ConfidenceIndexSettings';
+import JoinFormSettings from '../QuestionSettings/JoinFormSettings/JoinFormSettings';
+import JoinResolutionSettings from '../QuestionSettings/JoinResolutionSettings/JoinResolutionSettings';
+import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
+
 // Hooks & Helpers
 import styles from './StatementSettingsForm.module.scss';
+import advStyles from '../advancedSettings/EnhancedAdvancedSettings.module.scss';
+import { useStatementSettingsHandlers } from '../../useStatementSettingsHandlers';
+import { defaultStatementSettings } from '../../emptyStatementModel';
 
 // Redux & Types
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useSelector } from 'react-redux';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import {
+	statementSelector,
+	statementSubscriptionSelector,
+} from '@/redux/statements/statementsSlice';
+import { createStatementsByParentSelector } from '@/redux/utils/selectorFactories';
 import Loader from '@/view/components/loaders/Loader';
-import { StatementSubscription, Role, Statement, StatementType } from '@freedi/shared-types';
+import {
+	StatementSubscription,
+	Role,
+	Statement,
+	StatementSettings,
+	StatementType,
+} from '@freedi/shared-types';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
 import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSetting';
 import MembersSettings from '../membership/MembersSettings';
 import AdminsManagement from '../membership/AdminsManagement/AdminsManagement';
 import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
-// ClusteringAdmin is now rendered inside AISettings (AI & Automation block).
 import { OptionRooms } from '../optionRooms';
 import ModerationLog from '../moderationLog/ModerationLog';
-import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
 	parentStatement?: Statement | 'top';
 	setStatementToEdit: Dispatch<Statement>;
 }
+
+// The shared settings SCSS module nests everything under .enhancedSettings;
+// flat groups keep that context via this wrapper (flatGroup drops the old
+// page-shell padding/width).
+const groupWrapClass = `${advStyles.enhancedSettings} ${advStyles.flatGroup}`;
 
 const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	statement,
@@ -71,6 +92,14 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const [image, setImage] = useState<string>(imageUrl);
 	const [loading, setLoading] = useState<boolean>(false);
 
+	// Prefer the live Redux statement for instant-save groups so toggles
+	// reflect Firestore writes as soon as the listener fires.
+	const liveStatement = useAppSelector(statementSelector(statement.statementId));
+	const settingsStatement = liveStatement ?? statement;
+	const settings: StatementSettings =
+		settingsStatement.statementSettings ?? defaultStatementSettings;
+	const handlers = useStatementSettingsHandlers(settingsStatement);
+
 	// Selector to get the statement memberships
 	const statementMembershipSelector = (statementId: string | undefined) =>
 		createSelector(
@@ -85,6 +114,11 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 	const currentUserSubscription = useAppSelector(statementSubscriptionSelector(statementId));
 	const isAdminOrCreator =
 		currentUserSubscription?.role === Role.admin || currentUserSubscription?.role === Role.creator;
+
+	const selectSubStatements = createStatementsByParentSelector(
+		(state: RootState) => state.statements.statements,
+	);
+	const subStatements = useSelector(selectSubStatements(statement.statementId));
 
 	try {
 		const joinedMembers = members
@@ -108,10 +142,10 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		};
 
 		const isNewStatement = !statementId;
-		const isQuestion = statement.statementType === StatementType.question;
+		const isQuestion = settingsStatement.statementType === StatementType.question;
 
 		const statementSettingsProps = {
-			statement,
+			statement: settingsStatement,
 			setStatementToEdit,
 		} as const;
 
@@ -126,181 +160,192 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 
 		return (
 			<div className="wrapper">
+				{/* ⚡ Instant Settings — always visible, single source of truth for
+				    participation mode, rating scale, and high-frequency toggles */}
+				{!isNewStatement && <InstantSettings statement={settingsStatement} />}
+
+				{/* Group 1 — Question & Description (the only part that needs Save) */}
 				<form
 					onSubmit={handleSubmit}
 					className={styles.statementSettingsForm}
 					data-cy="statement-settings-form"
 				>
-					<TitleAndDescription statement={statement} setStatementToEdit={setStatementToEdit} />
-					<UploadImage
-						statement={statementSettingsProps.statement}
-						image={image}
-						setImage={setImage}
-					/>
-					{!isNewStatement && (
+					{isNewStatement ? (
+						<>
+							<TitleAndDescription statement={statement} setStatementToEdit={setStatementToEdit} />
+							<UploadImage statement={statement} image={image} setImage={setImage} />
+							<button
+								type="submit"
+								className="btn btn--primary"
+								aria-label="Submit button"
+								data-cy="settings-statement-submit-btn"
+							>
+								{t('Save')}
+							</button>
+						</>
+					) : (
 						<SettingsSection
-							title={t('General Settings')}
-							description={t('Configure the behavior and appearance of your discussion')}
-							icon={Settings}
+							title={t('Question & Description')}
+							description={t('The question text and image everyone sees')}
+							icon={Pencil}
 							priority="high"
 							defaultExpanded={true}
-							tooltip={t('These settings control how participants interact with your discussion')}
 						>
-							<section className={styles.switchesArea}>
-								<EnhancedAdvancedSettings {...statementSettingsProps} />
-							</section>
+							<TitleAndDescription statement={statement} setStatementToEdit={setStatementToEdit} />
+							<UploadImage statement={statement} image={image} setImage={setImage} />
+							<div className={styles.saveArea}>
+								<p className={styles.saveCaption}>
+									{t(
+										'Only the question text and image need saving — everything else on this page saves automatically',
+									)}
+								</p>
+								<button
+									type="submit"
+									className="btn btn--primary"
+									aria-label="Submit button"
+									data-cy="settings-statement-submit-btn"
+								>
+									{t('Save')}
+								</button>
+							</div>
 						</SettingsSection>
 					)}
-					<button
-						type="submit"
-						className={`${!isNewStatement && styles.submitButton} btn btn--primary`}
-						aria-label="Submit button"
-						data-cy="settings-statement-submit-btn"
-					>
-						{t('Save')}
-					</button>
 				</form>
+
 				{!isNewStatement && (
 					<>
-						{/* Manage Admins Section — creator/admins only */}
-						{isAdminOrCreator && (
-							<SettingsSection
-								title={t('Manage Admins')}
-								description={t('Add or remove admins for this discussion')}
-								icon={UserCog}
-								priority="high"
-								defaultExpanded={false}
-								tooltip={t('Promote members to admins so they can help manage this discussion')}
-							>
-								<AdminsManagement statement={statement} />
-							</SettingsSection>
-						)}
-
-						{/* Membership & Access Section */}
+						{/* Group 2 — Participation Rules */}
 						<SettingsSection
-							title={t('Membership & Access')}
-							description={t('Control who can access and participate in this discussion')}
+							title={t('Participation Rules')}
+							description={t('What participants are allowed to do')}
 							icon={Users}
 							priority="high"
 							defaultExpanded={false}
-							tooltip={t('Manage membership types and access permissions')}
 						>
-							<MembershipSettings statement={statement} setStatementToEdit={setStatementToEdit} />
-							<MembersSettings statement={statement} />
+							<div className={groupWrapClass}>
+								<ParticipationSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isQuestion && (
+									<>
+										<JoinFormSettings statement={settingsStatement} />
+										<JoinResolutionSettings statement={settingsStatement} />
+									</>
+								)}
+							</div>
 						</SettingsSection>
 
-						{/* Decision Making Section - only for questions */}
-						{statement.statementType === StatementType.question && (
-							<SettingsSection
-								title={t('Decision Making')}
-								description={t('Configure how decisions are made')}
-								icon={Vote}
-								priority="medium"
-								defaultExpanded={false}
-								tooltip={t('Set up voting and selection methods')}
-							>
-								<ChoseBySettings {...statementSettingsProps} />
-							</SettingsSection>
-						)}
+						{/* Breakout rooms — renders its own section */}
+						<OptionRooms statement={settingsStatement} />
 
-						{/* Deadline Timer Section - only for questions */}
-						{isQuestion && (
-							<SettingsSection
-								title={t('Deadline Timer')}
-								description={t('Set a countdown timer visible to all participants')}
-								icon={Clock}
-								priority="high"
-								defaultExpanded={true}
-								tooltip={t('Add a deadline timer to this question')}
-							>
-								<DeadlineSettings statement={statement} />
-							</SettingsSection>
-						)}
-
-						{/* Question Structure Section */}
+						{/* Group 3 — Results & Decision */}
 						<SettingsSection
-							title={t('Question Structure')}
-							description={t('Configure question types and sub-questions')}
-							icon={HelpCircle}
+							title={t('Results & Decision')}
+							description={t('How results are shown and how the winner is chosen')}
+							icon={BarChart3}
+							priority="high"
+							defaultExpanded={false}
+						>
+							<div className={groupWrapClass}>
+								{isQuestion && <ChoseBySettings {...statementSettingsProps} />}
+								{isQuestion && <DeadlineSettings statement={settingsStatement} />}
+								<EvaluationSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isQuestion && (
+									<>
+										<AnchoredSettings statement={settingsStatement} />
+										<ConfidenceIndexSettings statement={settingsStatement} />
+									</>
+								)}
+							</div>
+						</SettingsSection>
+
+						{/* Group 4 — AI & Smart Features */}
+						<SettingsSection
+							title={t('AI & Smart Features')}
+							description={t('Optional AI help. Everything here is off unless you turn it on')}
+							icon={Brain}
 							priority="medium"
 							defaultExpanded={false}
-							tooltip={t('Organize your discussion structure')}
 						>
-							<QuestionSettings {...statementSettingsProps} />
+							<div className={groupWrapClass}>
+								<AISettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isQuestion && <SynthesisPanel statement={settingsStatement} />}
+								<DiscussionSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								{isAdminOrCreator && <ModerationLog statement={settingsStatement} />}
+							</div>
 						</SettingsSection>
 
-						{/* User Demographics Section */}
+						{/* Group 5 — Members & Access */}
 						<SettingsSection
-							title={t('User Demographics')}
-							description={t('Collect demographic information from participants')}
-							icon={UserCheck}
-							priority="low"
+							title={t('Members & Access')}
+							description={t('Who can see this question and who runs it')}
+							icon={Shield}
+							priority="high"
 							defaultExpanded={false}
-							tooltip={t('Gather optional demographic data for analysis')}
 						>
-							<UserDemographicSetting statement={statement} />
+							<div className={groupWrapClass}>
+								<MembershipSettings
+									statement={settingsStatement}
+									setStatementToEdit={setStatementToEdit}
+								/>
+								<MembersSettings statement={settingsStatement} />
+								{isAdminOrCreator && <AdminsManagement statement={settingsStatement} />}
+								{isQuestion && <MemberValidation statement={settingsStatement} />}
+								<UserDemographicSetting statement={settingsStatement} />
+							</div>
 						</SettingsSection>
 
-						{/* Option Rooms Section - for grouping participants */}
-						<OptionRooms statement={statement} />
-
-						{/* Validation Section - only for questions */}
-						{isQuestion && (
-							<SettingsSection
-								title={t('Member Validation')}
-								description={t('Verify participant eligibility')}
-								icon={Shield}
-								priority="low"
-								defaultExpanded={false}
-								tooltip={t('Set up validation rules for participants')}
-							>
-								<MemberValidation statement={statement} />
-							</SettingsSection>
-						)}
-
-						{/* Notifications Section */}
+						{/* Group 6 — Data & Advanced */}
 						<SettingsSection
-							title={t('Email Notifications')}
-							description={t('Configure email alerts and notifications')}
-							icon={Bell}
+							title={t('Data & Advanced')}
+							description={t('Exports, notifications, language, and rarely-changed setup')}
+							icon={Settings}
 							priority="low"
 							defaultExpanded={false}
-							tooltip={t('Set up email notifications for participants')}
 						>
-							<EmailNotifications statement={statement} />
-						</SettingsSection>
-
-						{/* Content Moderation Log Section — admins/creators only (Firestore rules deny others) */}
-						{isAdminOrCreator && (
-							<SettingsSection
-								title={t('Content Moderation')}
-								description={t('View content rejected by AI moderation')}
-								icon={ShieldAlert}
-								priority="low"
-								defaultExpanded={false}
-								tooltip={t(
-									'Track content that was flagged and rejected by the AI content moderator',
-								)}
-							>
-								<ModerationLog statement={statement} />
-							</SettingsSection>
-						)}
-
-						{/* Participants Data Section */}
-						<SettingsSection
-							title={t('Participants Data')}
-							description={t('View and export participant information')}
-							icon={BarChart3}
-							priority="low"
-							defaultExpanded={false}
-							tooltip={t('Access voter and evaluator data')}
-						>
-							<section className={styles.getMembersArea}>
-								<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
-							</section>
-							<section className={styles.getMembersArea}>
-								<GetEvaluators statementId={statementId} />
-							</section>
+							<div className={groupWrapClass}>
+								<QuestionSettings {...statementSettingsProps} />
+								<VisibilitySettings
+									statement={settingsStatement}
+									settings={settings}
+									handleHideChange={handlers.handleHideChange}
+									handleSettingChange={handlers.handleSettingChange}
+									handlePowerFollowMeChange={handlers.handlePowerFollowMeChange}
+									handleIsDocumentChange={handlers.handleIsDocumentChange}
+								/>
+								<NavigationSettings
+									statement={settingsStatement}
+									settings={settings}
+									handleSettingChange={handlers.handleSettingChange}
+								/>
+								<LocalizationSettings
+									statement={settingsStatement}
+									handleDefaultLanguageChange={handlers.handleDefaultLanguageChange}
+									handleForceLanguageChange={handlers.handleForceLanguageChange}
+								/>
+								<EmailNotifications statement={settingsStatement} />
+								<ExportSettings statement={settingsStatement} subStatements={subStatements} />
+								<section className={styles.getMembersArea}>
+									<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
+								</section>
+								<section className={styles.getMembersArea}>
+									<GetEvaluators statementId={statementId} />
+								</section>
+							</div>
 						</SettingsSection>
 					</>
 				)}

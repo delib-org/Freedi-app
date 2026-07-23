@@ -308,48 +308,22 @@
     line-height: var(--line-height-normal);
   }
 
-  &__counter {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--ink-muted);               // 8.7:1 ✓ AAA
-  }
-
-  &__counter-total::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: var(--terra-500);
-    border-radius: 50%;
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-
-  &__counter-unread {
-    background: var(--terra-600);
-    color: var(--text-inverse);            // 6.4:1 ✓ AA
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-xs);
-    padding: 3px 10px;
-    border-radius: var(--radius-full);
-    letter-spacing: 0.02em;
-  }
-
   // New-solutions notification pill — appears in the sticky header when fresh
   // options arrive after the initial load. User taps to flush + highlight them.
+  // Centered under the title so the arrival of fresh answers reads as a
+  // deliberate call to action rather than a header decoration.
   &__new-pill {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: var(--space-xs);
-    margin-top: var(--space-sm);
-    padding: 6px 14px;
+    justify-content: center;
+    gap: var(--space-sm);
+    width: fit-content;
+    max-width: 100%;
+    margin: var(--space-md) auto 0;
+    padding: 10px 22px;
+    min-height: var(--touch-target);
     font-family: var(--font-body);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     color: var(--text-inverse);
     background: var(--teal-600);
@@ -359,7 +333,11 @@
     box-shadow: var(--shadow-sm);
     position: relative;
     z-index: 2;
-    animation: pill-pop-in var(--dur-base, 200ms) var(--ease-out, ease-out);
+    // Pop in once, then twinkle gently forever so it stays noticeable
+    // without pulling attention away from the answers themselves.
+    animation:
+      pill-pop-in var(--dur-base, 200ms) var(--ease-out, ease-out),
+      pill-twinkle 2.4s var(--ease-in-out, ease-in-out) 400ms infinite;
     transition:
       background-color var(--dur-quick, 150ms) var(--ease-out, ease-out),
       transform var(--dur-quick, 150ms) var(--ease-out, ease-out),
@@ -378,7 +356,7 @@
   }
 
   &__new-pill-arrow {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);
     line-height: 1;
     animation: arrow-bounce 1.2s ease-in-out infinite;
   }
@@ -516,12 +494,17 @@
 
   // Phase 1 of the FLIP reorder animation (lib/flipAnimate.ts): the inline
   // transform that "inverts" the card to its old position is applied with
-  // transitions disabled, so the snap-back is instantaneous. The next frame
-  // strips this class and clears the inline transform — the existing
-  // `transition: transform var(--dur-base) var(--ease-out)` then animates
-  // the card to its new spot.
+  // transitions disabled, so the snap-back is instantaneous.
   &--flipping {
     transition: none;
+  }
+
+  // Phase 2: the next frame strips `--flipping`, clears the inline transform
+  // and adds this class, which glides the card to its new spot over
+  // --dur-reorder (slower than the --dur-base used for hover, so the reorder
+  // is easy to follow). Removed on transitionend so hover stays snappy.
+  &--flip-play {
+    transition: transform var(--dur-reorder) var(--ease-in-out);
   }
 
   // -----------------------------------------------------------------------
@@ -1850,6 +1833,21 @@
   50%       { transform: translateY(-3px); }
 }
 
+// Soft breathing glow for the new-answers pill. Deliberately glow-only (no
+// transform) so it never fights the hover/active lift on the same element.
+@keyframes pill-twinkle {
+  0% {
+    box-shadow:
+      var(--shadow-sm),
+      0 0 0 0 rgba(26, 122, 108, 0.45);
+  }
+  60%, 100% {
+    box-shadow:
+      var(--shadow-sm),
+      0 0 0 10px rgba(26, 122, 108, 0);
+  }
+}
+
 // Highlight fades from teal-50 wash + teal border back to default card styles.
 // Duration matches BUFFER_HIGHLIGHT_MS in store.ts (10 s).
 @keyframes card-new-highlight {
@@ -2106,6 +2104,22 @@
   margin-top: var(--space-sm);
   padding-top: var(--space-sm);
   border-top: 1px dashed var(--paper-line);
+}
+
+// Irreversible action in an otherwise reversible row (Hide / Force show /
+// Reset counters). Danger-tinted outline: readable as "destructive" without
+// the visual weight of the solid `.btn--danger` used in the panel's danger
+// zone. Pushed to the end of the row so it can't be hit by muscle memory.
+.solution-card__delete {
+  margin-inline-start: auto;
+  color: var(--danger);
+  border-color: var(--danger);
+
+  &:hover:not(:disabled) {
+    background: var(--danger);
+    color: var(--text-inverse);
+    border-color: var(--danger);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -3716,22 +3730,24 @@ $facilitator-panel-width: 300px;
   width: 2.25rem;
   height: 2.25rem;
   padding: 0;
-  border: 1px solid var(--paper-line, rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--border-light, rgba(0, 0, 0, 0.08));
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
+  // Theme-driven surface — a hardcoded white here left the chevron
+  // (--text-primary, near-white in dark mode) invisible on its own button.
+  background: color-mix(in srgb, var(--bg-card, #fff) 92%, transparent);
   color: var(--text-primary, #1c1917);
   font-size: 1.4rem;
   line-height: 1;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   // Backdrop blur when supported gives the iOS chrome-on-photo feel; the
-  // rgba background above is the fallback.
+  // translucent background above is the fallback.
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
   &:hover,
   &:focus-visible {
-    background: #fff;
+    background: var(--bg-card, #fff);
   }
 
   &:focus-visible {
@@ -3741,6 +3757,19 @@ $facilitator-panel-width: 300px;
 
   &:active {
     transform: translateY(1px);
+  }
+
+  // Dark mode: the button floats over the near-black hero header, so the
+  // card surface alone barely separates from it. Step up one surface level
+  // and firm up the hairline so the circle keeps a visible edge.
+  @media (prefers-color-scheme: dark) {
+    border-color: var(--border-medium, #58493c);
+    background: color-mix(in srgb, var(--paper-deep) 92%, transparent);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--paper-elevated, var(--paper-deep));
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, calcBinaryConsensus } from '@freedi/shared-types';
 import type { Statement, StatementEvaluation } from '@freedi/shared-types';
+import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { logger } from '@/lib/utils/logger';
 
 interface EvaluationInput {
@@ -192,6 +193,13 @@ export async function POST(
     if (suggestion?.creatorId === userId) {
       return NextResponse.json(
         { error: 'Cannot evaluate your own suggestion' },
+        { status: 403 }
+      );
+    }
+
+    if (await isDocumentFrozen(db, suggestion?.topParentId || '')) {
+      return NextResponse.json(
+        { error: FROZEN_DOCUMENT_ERROR },
         { status: 403 }
       );
     }

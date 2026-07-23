@@ -19,7 +19,8 @@
 
 import m from 'mithril';
 import { Statement, StatementType, Collections } from '@freedi/shared-types';
-import { db, collection, query, where, onSnapshot, Unsubscribe } from '../firebase';
+import { db, collection, query, where, Unsubscribe } from '../firebase';
+import { resilientOnSnapshot } from '../resilientListeners';
 
 const LAST_READ_KEY = 'freedi_join_last_read';
 const BATCH_SIZE = 30;
@@ -77,8 +78,19 @@ function getLastReadMap(): Record<string, number> {
  * Replace the current subscription set so it covers exactly `optionIds`.
  * Tears down all prior listeners before mounting new ones. Triggers a
  * redraw on every snapshot.
+ *
+ * Called from every options snapshot, so it memoizes on the id set: any vote
+ * in the room re-delivers the options snapshot, and rebuilding every chat
+ * listener each time both wastes reads and churns the connection right when
+ * other snapshots are trying to land.
  */
+let subscribedSignature: string | null = null;
+
 export function subscribeMessageCounts(optionIds: string[]): void {
+	const signature = [...optionIds].sort().join('|');
+	if (signature === subscribedSignature) return;
+	subscribedSignature = signature;
+
 	for (const unsub of messageCountsUnsubs) unsub();
 	messageCountsUnsubs = [];
 
@@ -93,7 +105,7 @@ export function subscribeMessageCounts(optionIds: string[]): void {
 			where('statementType', '==', StatementType.statement),
 		);
 
-		const unsub = onSnapshot(chatQuery, (snap) => {
+		const unsub = resilientOnSnapshot(`messageCounts:${i / BATCH_SIZE}`, chatQuery, (snap) => {
 			// Clear this batch's entries before re-counting so a deleted
 			// message decrements the counter correctly.
 			for (const id of batch) {
