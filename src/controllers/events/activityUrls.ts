@@ -1,5 +1,5 @@
 import { createActivityUrlResolver, type ActivityUrlResolver } from '@freedi/event-core';
-import { getMassConsensusUrl } from '@/controllers/db/config';
+import { getJoinAppUrl, getMassConsensusUrl } from '@/controllers/db/config';
 
 /**
  * Event Control Center — main-app activity URL resolver.
@@ -20,5 +20,6 @@ export function getMainAppResolver(): ActivityUrlResolver {
 		mainAppBaseUrl: origin,
 		massConsensusBaseUrl: getMassConsensusUrl(),
 		signBaseUrl: SIGN_APP_BASE_URL,
+		joinBaseUrl: getJoinAppUrl(),
 	});
 }

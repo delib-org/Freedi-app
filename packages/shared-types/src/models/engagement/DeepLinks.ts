@@ -28,6 +28,10 @@ export const APP_DEEP_LINKS: Record<SourceApp, Record<string, string>> = {
 		session: '/play/{sessionId}',
 		join: '/join/{code}',
 	},
+	[SourceApp.JOIN]: {
+		// Opens a specific question by its statementId (join-app route `/q/:qid`).
+		question: '/q/{statementId}',
+	},
 };
 
 /**
