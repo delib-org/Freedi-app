@@ -125,25 +125,25 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | Distractor opposes own anchor claim | 54.7% [51.4, 58.0] (479/875) |
 | Mean codebook size | 94.3 |
 
-## Condition CH — Two-hop hierarchical + flat fallback (Phase 2), n=249
+## Condition CH — Two-hop hierarchical + flat fallback (Phase 2), n=613
 
 | Metric | Value |
 |---|---|
-| **Triplet accuracy** (match → own claim ∧ distractor ↛ own claim) | 51.8% [45.6, 57.9] (129/249) |
-| Match → own anchor claim | 54.6% [48.4, 60.7] (136/249) |
-| Match → any claim (secondary; near-duplicates legitimate) | 91.6% [87.5, 94.4] (228/249) |
-| Distractor → own anchor claim (false attach) | 6.8% [4.3, 10.7] (17/249) |
-| Distractor → any claim | 19.7% [15.2, 25.1] (49/249) |
-| Distractor opposes own anchor claim | 49.8% [43.6, 56.0] (124/249) |
-| Mean codebook size | 100.0 |
+| **Triplet accuracy** (match → own claim ∧ distractor ↛ own claim) | 55.8% [51.8, 59.7] (342/613) |
+| Match → own anchor claim | 60.8% [56.9, 64.6] (373/613) |
+| Match → any claim (secondary; near-duplicates legitimate) | 92.2% [89.8, 94.0] (565/613) |
+| Distractor → own anchor claim (false attach) | 8.2% [6.2, 10.6] (50/613) |
+| Distractor → any claim | 22.3% [19.2, 25.8] (137/613) |
+| Distractor opposes own anchor claim | 51.7% [47.8, 55.6] (317/613) |
+| Mean codebook size | 95.9 |
 
 ## CH routing metrics (Phase 2 gates)
 
 | Metric | Value | Gate |
 |---|---|---|
-| Fallback rate (either hop said none) | 27.7% [24.0, 31.8] (138/498) | < 15% |
-| Routed (two-hop) decisions | 72.3% [68.2, 76.0] (360/498) | — |
-| Mean candidate-list size | 55.6 of 100.0 (56%) | < 40% of codebook |
+| Fallback rate (either hop said none) | 22.3% [20.0, 24.7] (273/1226) | < 15% |
+| Routed (two-hop) decisions | 77.7% [75.3, 80.0] (953/1226) | — |
+| Mean candidate-list size | 50.8 of 95.9 (53%) | < 40% of codebook |
 
 ## Paired McNemar tests (triplet-correct, common ids)
 
@@ -157,7 +157,7 @@ Paper reference (Table 2, hard n=875): ST5-XL 48.3, e5-large-v2 26.7, BGE-large 
 | B2E enriched vs B2E2 stance-caution (Phase 0b) | 875 | 14 | 24 | 1.43e-1 |
 | CE enriched vs CE2 stance-caution (Phase 0b) | 875 | 27 | 64 | 1.32e-4 |
 | B1 gpt-4o-mini vs D gpt-4o | 875 | 12 | 25 | 4.70e-2 |
-| CE2 flat enriched vs CH two-hop (Phase 2) | 249 | 29 | 24 | 5.83e-1 |
+| CE2 flat enriched vs CH two-hop (Phase 2) | 613 | 59 | 45 | 2.02e-1 |
 | B1 single-claim vs C full codebook | 875 | 521 | 5 | 3.03e-147 |
 
 ## Per-dataset triplet accuracy
