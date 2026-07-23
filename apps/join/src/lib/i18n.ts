@@ -84,6 +84,12 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.reset': 'Reset counters',
 		'admin.reset_confirm':
 			'Reset joining counters for "{{title}}"?\n\nThis will clear {{activists}} activists and {{organizers}} organizers on this option. Form submissions and Google Sheet rows are kept.',
+		'admin.delete': 'Delete',
+		'admin.delete.in_progress': 'Deleting…',
+		'admin.delete_confirm':
+			'Permanently delete "{{title}}"?\n\nThis removes the suggestion, its chat messages, and {{activists}} activists / {{organizers}} organizers on it. This cannot be undone — use Hide if you only want it out of sight.',
+		'admin.delete_error':
+			'Could not delete the suggestion. Please try again or check the console for details.',
 		'facilitator.reset_all': 'Reset all joining',
 		'facilitator.reset_all.in_progress': 'Resetting…',
 		'facilitator.reset_all.help':
@@ -103,6 +109,27 @@ const translations: Record<string, Record<string, string>> = {
 			'• Form submissions could not be deleted. Deploy the latest Firestore rules: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Some Google Sheet rows could not be removed. Check the fn_removeUserFromSheet CORS allowlist or sheet credentials.',
+		'facilitator.delete_all': 'Delete all suggestions',
+		'facilitator.delete_all.in_progress': 'Deleting…',
+		'facilitator.delete_all.help':
+			'Permanently removes every suggestion under this question, along with its chat messages. Use it to start a fresh round. Cannot be undone.',
+		'facilitator.delete_all_confirm':
+			'Permanently delete ALL {{count}} suggestions in this question?\n\nTheir chat messages go with them. This cannot be undone.',
+		'facilitator.delete_all_prompt':
+			'To confirm, type the number of suggestions to delete: {{count}}',
+		'facilitator.delete_all_mismatch': 'The number did not match. Nothing was deleted.',
+		'facilitator.delete_all_done':
+			'Deleted {{options}} suggestions and {{descendants}} related items.',
+		'facilitator.delete_all_partial': 'Some steps did not complete:',
+		'facilitator.delete_all_error':
+			'Delete failed. Please try again or check the console for details.',
+		'facilitator.delete_all_error.not_admin': '• Only question admins can delete all suggestions.',
+		'facilitator.delete_all_error.read':
+			'• Could not read the suggestions. Check Firestore permissions.',
+		'facilitator.delete_all_error.descendants':
+			'• Could not read chat messages and paragraphs; some may be left behind.',
+		'facilitator.delete_all_error.delete':
+			'• The delete did not finish. Some suggestions may remain.',
 		'facilitator.reconcileSheet': 'Sync sheet now',
 		'facilitator.reconcileSheet.in_progress': 'Syncing…',
 		'facilitator.reconcileSheet.help':
@@ -516,6 +543,11 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.reset': 'איפוס מונים',
 		'admin.reset_confirm':
 			'לאפס את מונה ההצטרפות עבור "{{title}}"?\n\nפעולה זו תנקה {{activists}} פעילים ו-{{organizers}} מארגנים באפשרות זו. הטפסים ושורות גיליון Google יישמרו.',
+		'admin.delete': 'מחיקה',
+		'admin.delete.in_progress': 'מוחק…',
+		'admin.delete_confirm':
+			'למחוק לצמיתות את "{{title}}"?\n\nהפעולה תמחק את ההצעה, את הודעות הצ׳אט שלה, ואת {{activists}} הפעילים / {{organizers}} המארגנים שלה. לא ניתן לבטל — אם רק רוצים להסתיר, השתמשו ב"הסתרה".',
+		'admin.delete_error': 'לא ניתן היה למחוק את ההצעה. נסו שוב או בדקו את הקונסול.',
 		'facilitator.reset_all': 'איפוס כל ההצטרפויות',
 		'facilitator.reset_all.in_progress': 'מאפס…',
 		'facilitator.reset_all.help':
@@ -534,6 +566,22 @@ const translations: Record<string, Record<string, string>> = {
 			'• הטפסים לא נמחקו. יש לפרוס את חוקי Firestore העדכניים: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• חלק מהשורות בגיליון Google לא הוסרו. בדקו את רשימת ההיתרים ב-CORS של fn_removeUserFromSheet או את אישור הגיליון.',
+		'facilitator.delete_all': 'מחיקת כל ההצעות',
+		'facilitator.delete_all.in_progress': 'מוחק…',
+		'facilitator.delete_all.help':
+			'מוחק לצמיתות את כל ההצעות בשאלה זו, כולל הודעות הצ׳אט שלהן. שימושי לפתיחת סבב חדש. לא ניתן לבטל.',
+		'facilitator.delete_all_confirm':
+			'למחוק לצמיתות את כל {{count}} ההצעות בשאלה זו?\n\nגם הודעות הצ׳אט יימחקו. לא ניתן לבטל.',
+		'facilitator.delete_all_prompt': 'לאישור, הקלידו את מספר ההצעות למחיקה: {{count}}',
+		'facilitator.delete_all_mismatch': 'המספר לא תאם. לא נמחק דבר.',
+		'facilitator.delete_all_done': 'נמחקו {{options}} הצעות ו-{{descendants}} פריטים קשורים.',
+		'facilitator.delete_all_partial': 'חלק מהשלבים לא הושלמו:',
+		'facilitator.delete_all_error': 'המחיקה נכשלה. נסו שוב או בדקו את הקונסול.',
+		'facilitator.delete_all_error.not_admin': '• רק מנהלי השאלה יכולים למחוק את כל ההצעות.',
+		'facilitator.delete_all_error.read': '• לא ניתן היה לקרוא את ההצעות. בדקו הרשאות ב-Firestore.',
+		'facilitator.delete_all_error.descendants':
+			'• לא ניתן היה לקרוא הודעות צ׳אט ופסקאות; ייתכן שחלקן נשארו.',
+		'facilitator.delete_all_error.delete': '• המחיקה לא הסתיימה. ייתכן שחלק מההצעות נשארו.',
 		'facilitator.reconcileSheet': 'סנכרון הגיליון',
 		'facilitator.reconcileSheet.in_progress': 'מסנכרן…',
 		'facilitator.reconcileSheet.help':
@@ -922,6 +970,11 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.reset': 'إعادة تعيين العدّادات',
 		'admin.reset_confirm':
 			'إعادة تعيين عدّادات الانضمام لـ "{{title}}"؟\n\nسيؤدي ذلك إلى مسح {{activists}} ناشطين و{{organizers}} منظمين على هذا الخيار. سيتم الاحتفاظ بنماذج التقديم وصفوف Google Sheet.',
+		'admin.delete': 'حذف',
+		'admin.delete.in_progress': 'جارٍ الحذف…',
+		'admin.delete_confirm':
+			'حذف "{{title}}" نهائيًا؟\n\nسيؤدي ذلك إلى إزالة الاقتراح ورسائل الدردشة الخاصة به و{{activists}} ناشطين / {{organizers}} منظمين عليه. لا يمكن التراجع — استخدم «إخفاء» إذا كنت تريد إخفاءه فقط.',
+		'admin.delete_error': 'تعذّر حذف الاقتراح. حاول مرة أخرى أو راجع وحدة التحكم.',
 		'facilitator.reset_all': 'إعادة تعيين كل الانضمام',
 		'facilitator.reset_all.in_progress': 'جارٍ إعادة التعيين…',
 		'facilitator.reset_all.help':
@@ -941,6 +994,22 @@ const translations: Record<string, Record<string, string>> = {
 			'• تعذر حذف النماذج. انشر قواعد Firestore الأحدث: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• تعذر إزالة بعض صفوف Google Sheet. تحقق من قائمة CORS الخاصة بـ fn_removeUserFromSheet أو بيانات اعتماد الجدول.',
+		'facilitator.delete_all': 'حذف كل الاقتراحات',
+		'facilitator.delete_all.in_progress': 'جارٍ الحذف…',
+		'facilitator.delete_all.help':
+			'يزيل نهائيًا كل اقتراح ضمن هذا السؤال، بما في ذلك رسائل الدردشة. استخدمه لبدء جولة جديدة. لا يمكن التراجع.',
+		'facilitator.delete_all_confirm':
+			'حذف كل الاقتراحات ({{count}}) في هذا السؤال نهائيًا؟\n\nسيتم حذف رسائل الدردشة أيضًا. لا يمكن التراجع.',
+		'facilitator.delete_all_prompt': 'للتأكيد، اكتب عدد الاقتراحات المراد حذفها: {{count}}',
+		'facilitator.delete_all_mismatch': 'الرقم غير مطابق. لم يتم حذف أي شيء.',
+		'facilitator.delete_all_done': 'تم حذف {{options}} اقتراحًا و{{descendants}} عنصرًا مرتبطًا.',
+		'facilitator.delete_all_partial': 'لم تكتمل بعض الخطوات:',
+		'facilitator.delete_all_error': 'فشل الحذف. حاول مرة أخرى أو راجع وحدة التحكم.',
+		'facilitator.delete_all_error.not_admin': '• يمكن لمشرفي السؤال فقط حذف جميع الاقتراحات.',
+		'facilitator.delete_all_error.read': '• تعذّر قراءة الاقتراحات. تحقّق من أذونات Firestore.',
+		'facilitator.delete_all_error.descendants':
+			'• تعذّر قراءة رسائل الدردشة والفقرات؛ قد يبقى بعضها.',
+		'facilitator.delete_all_error.delete': '• لم يكتمل الحذف. قد تبقى بعض الاقتراحات.',
 		'facilitator.reconcileSheet': 'مزامنة الجدول الآن',
 		'facilitator.reconcileSheet.in_progress': 'جارٍ المزامنة…',
 		'facilitator.reconcileSheet.help':
@@ -1278,6 +1347,12 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.reset': 'Zähler zurücksetzen',
 		'admin.reset_confirm':
 			'Beitrittszähler für "{{title}}" zurücksetzen?\n\nDies löscht {{activists}} Aktivisten und {{organizers}} Organisatoren auf dieser Option. Formularantworten und Google-Sheet-Zeilen bleiben erhalten.',
+		'admin.delete': 'Löschen',
+		'admin.delete.in_progress': 'Wird gelöscht…',
+		'admin.delete_confirm':
+			'"{{title}}" endgültig löschen?\n\nDies entfernt den Vorschlag, seine Chat-Nachrichten sowie {{activists}} Aktivisten / {{organizers}} Organisatoren. Kann nicht rückgängig gemacht werden — nutze „Ausblenden“, wenn er nur unsichtbar sein soll.',
+		'admin.delete_error':
+			'Der Vorschlag konnte nicht gelöscht werden. Bitte erneut versuchen oder die Konsole prüfen.',
 		'facilitator.reset_all': 'Alle Beitritte zurücksetzen',
 		'facilitator.reset_all.in_progress': 'Wird zurückgesetzt…',
 		'facilitator.reset_all.help':
@@ -1297,6 +1372,28 @@ const translations: Record<string, Record<string, string>> = {
 			'• Formularantworten konnten nicht gelöscht werden. Aktuelle Firestore-Regeln deployen: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Einige Google-Sheet-Zeilen konnten nicht entfernt werden. CORS-Allowlist von fn_removeUserFromSheet oder Sheet-Anmeldedaten prüfen.',
+		'facilitator.delete_all': 'Alle Vorschläge löschen',
+		'facilitator.delete_all.in_progress': 'Wird gelöscht…',
+		'facilitator.delete_all.help':
+			'Entfernt endgültig jeden Vorschlag zu dieser Frage samt Chat-Nachrichten. Für einen frischen Durchgang. Kann nicht rückgängig gemacht werden.',
+		'facilitator.delete_all_confirm':
+			'ALLE {{count}} Vorschläge dieser Frage endgültig löschen?\n\nDie Chat-Nachrichten verschwinden mit. Kann nicht rückgängig gemacht werden.',
+		'facilitator.delete_all_prompt':
+			'Zur Bestätigung die Anzahl der zu löschenden Vorschläge eingeben: {{count}}',
+		'facilitator.delete_all_mismatch': 'Die Zahl stimmte nicht. Es wurde nichts gelöscht.',
+		'facilitator.delete_all_done':
+			'{{options}} Vorschläge und {{descendants}} zugehörige Elemente gelöscht.',
+		'facilitator.delete_all_partial': 'Einige Schritte wurden nicht abgeschlossen:',
+		'facilitator.delete_all_error':
+			'Löschen fehlgeschlagen. Bitte erneut versuchen oder die Konsole prüfen.',
+		'facilitator.delete_all_error.not_admin':
+			'• Nur Admins der Frage können alle Vorschläge löschen.',
+		'facilitator.delete_all_error.read':
+			'• Vorschläge konnten nicht gelesen werden. Firestore-Berechtigungen prüfen.',
+		'facilitator.delete_all_error.descendants':
+			'• Chat-Nachrichten und Absätze konnten nicht gelesen werden; einige bleiben eventuell zurück.',
+		'facilitator.delete_all_error.delete':
+			'• Das Löschen wurde nicht abgeschlossen. Einige Vorschläge bleiben eventuell bestehen.',
 		'facilitator.reconcileSheet': 'Sheet jetzt synchronisieren',
 		'facilitator.reconcileSheet.in_progress': 'Synchronisieren…',
 		'facilitator.reconcileSheet.help':
@@ -1656,6 +1753,12 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.reset': 'Reiniciar contadores',
 		'admin.reset_confirm':
 			'¿Reiniciar contadores de unión para "{{title}}"?\n\nEsto borrará {{activists}} activistas y {{organizers}} organizadores en esta opción. Las respuestas de formularios y filas de Google Sheet se mantienen.',
+		'admin.delete': 'Eliminar',
+		'admin.delete.in_progress': 'Eliminando…',
+		'admin.delete_confirm':
+			'¿Eliminar "{{title}}" permanentemente?\n\nEsto borra la sugerencia, sus mensajes de chat y {{activists}} activistas / {{organizers}} organizadores. No se puede deshacer: usa «Ocultar» si solo quieres quitarla de la vista.',
+		'admin.delete_error':
+			'No se pudo eliminar la sugerencia. Inténtalo de nuevo o revisa la consola.',
 		'facilitator.reset_all': 'Reiniciar todas las uniones',
 		'facilitator.reset_all.in_progress': 'Reiniciando…',
 		'facilitator.reset_all.help':
@@ -1674,6 +1777,27 @@ const translations: Record<string, Record<string, string>> = {
 			'• No se pudieron eliminar los formularios. Despliega las reglas de Firestore: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Algunas filas de Google Sheet no se pudieron quitar. Revisa la lista CORS de fn_removeUserFromSheet o las credenciales del sheet.',
+		'facilitator.delete_all': 'Eliminar todas las sugerencias',
+		'facilitator.delete_all.in_progress': 'Eliminando…',
+		'facilitator.delete_all.help':
+			'Elimina permanentemente todas las sugerencias de esta pregunta, incluidos sus mensajes de chat. Úsalo para empezar una ronda nueva. No se puede deshacer.',
+		'facilitator.delete_all_confirm':
+			'¿Eliminar permanentemente TODAS las {{count}} sugerencias de esta pregunta?\n\nSus mensajes de chat también se borran. No se puede deshacer.',
+		'facilitator.delete_all_prompt':
+			'Para confirmar, escribe el número de sugerencias a eliminar: {{count}}',
+		'facilitator.delete_all_mismatch': 'El número no coincide. No se eliminó nada.',
+		'facilitator.delete_all_done':
+			'Se eliminaron {{options}} sugerencias y {{descendants}} elementos relacionados.',
+		'facilitator.delete_all_partial': 'Algunos pasos no se completaron:',
+		'facilitator.delete_all_error': 'Error al eliminar. Inténtalo de nuevo o revisa la consola.',
+		'facilitator.delete_all_error.not_admin':
+			'• Solo los administradores de la pregunta pueden eliminar todas las sugerencias.',
+		'facilitator.delete_all_error.read':
+			'• No se pudieron leer las sugerencias. Revisa los permisos de Firestore.',
+		'facilitator.delete_all_error.descendants':
+			'• No se pudieron leer los mensajes de chat ni los párrafos; algunos pueden quedar.',
+		'facilitator.delete_all_error.delete':
+			'• La eliminación no terminó. Puede que queden algunas sugerencias.',
 		'facilitator.reconcileSheet': 'Sincronizar el sheet ahora',
 		'facilitator.reconcileSheet.in_progress': 'Sincronizando…',
 		'facilitator.reconcileSheet.help':
@@ -2027,6 +2151,12 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.reset': 'Tellers resetten',
 		'admin.reset_confirm':
 			'Aanmeldtellers voor "{{title}}" resetten?\n\nDit wist {{activists}} activisten en {{organizers}} organisatoren op deze optie. Formulierinzendingen en Google Sheet-rijen blijven behouden.',
+		'admin.delete': 'Verwijderen',
+		'admin.delete.in_progress': 'Verwijderen…',
+		'admin.delete_confirm':
+			'"{{title}}" definitief verwijderen?\n\nDit verwijdert de suggestie, haar chatberichten en {{activists}} activisten / {{organizers}} organisatoren. Dit kan niet ongedaan worden gemaakt — gebruik «Verbergen» als je haar alleen uit het zicht wilt.',
+		'admin.delete_error':
+			'De suggestie kon niet worden verwijderd. Probeer het opnieuw of bekijk de console.',
 		'facilitator.reset_all': 'Alle aanmeldingen resetten',
 		'facilitator.reset_all.in_progress': 'Bezig met resetten…',
 		'facilitator.reset_all.help':
@@ -2046,6 +2176,28 @@ const translations: Record<string, Record<string, string>> = {
 			'• Formulierinzendingen konden niet worden verwijderd. Deploy de nieuwste Firestore-regels: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Sommige Google Sheet-rijen konden niet worden verwijderd. Controleer de CORS-allowlist van fn_removeUserFromSheet of de sheet-credentials.',
+		'facilitator.delete_all': 'Alle suggesties verwijderen',
+		'facilitator.delete_all.in_progress': 'Verwijderen…',
+		'facilitator.delete_all.help':
+			'Verwijdert definitief elke suggestie onder deze vraag, inclusief de chatberichten. Handig om een nieuwe ronde te starten. Kan niet ongedaan worden gemaakt.',
+		'facilitator.delete_all_confirm':
+			'ALLE {{count}} suggesties in deze vraag definitief verwijderen?\n\nHun chatberichten verdwijnen mee. Dit kan niet ongedaan worden gemaakt.',
+		'facilitator.delete_all_prompt':
+			'Typ ter bevestiging het aantal te verwijderen suggesties: {{count}}',
+		'facilitator.delete_all_mismatch': 'Het aantal klopte niet. Er is niets verwijderd.',
+		'facilitator.delete_all_done':
+			'{{options}} suggesties en {{descendants}} gerelateerde items verwijderd.',
+		'facilitator.delete_all_partial': 'Sommige stappen zijn niet voltooid:',
+		'facilitator.delete_all_error':
+			'Verwijderen mislukt. Probeer het opnieuw of bekijk de console.',
+		'facilitator.delete_all_error.not_admin':
+			'• Alleen beheerders van de vraag kunnen alle suggesties verwijderen.',
+		'facilitator.delete_all_error.read':
+			'• De suggesties konden niet worden gelezen. Controleer de Firestore-rechten.',
+		'facilitator.delete_all_error.descendants':
+			'• Chatberichten en paragrafen konden niet worden gelezen; sommige blijven mogelijk achter.',
+		'facilitator.delete_all_error.delete':
+			'• Het verwijderen is niet afgerond. Sommige suggesties blijven mogelijk staan.',
 		'facilitator.reconcileSheet': 'Sheet nu synchroniseren',
 		'facilitator.reconcileSheet.in_progress': 'Synchroniseren…',
 		'facilitator.reconcileSheet.help':
@@ -2392,6 +2544,11 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.reset': 'بازنشانی شمارنده‌ها',
 		'admin.reset_confirm':
 			'بازنشانی شمارنده‌های پیوستن برای "{{title}}"؟\n\nاین کار {{activists}} فعال و {{organizers}} سازمان‌دهنده را در این گزینه پاک می‌کند. فرم‌های ارسال‌شده و ردیف‌های Google Sheet حفظ می‌شوند.',
+		'admin.delete': 'حذف',
+		'admin.delete.in_progress': 'در حال حذف…',
+		'admin.delete_confirm':
+			'«{{title}}» برای همیشه حذف شود؟\n\nاین کار پیشنهاد، پیام‌های گفت‌وگوی آن و {{activists}} فعال / {{organizers}} سازمان‌دهنده را حذف می‌کند. قابل بازگشت نیست — اگر فقط می‌خواهید پنهان شود از «پنهان» استفاده کنید.',
+		'admin.delete_error': 'حذف پیشنهاد ممکن نشد. دوباره تلاش کنید یا کنسول را بررسی کنید.',
 		'facilitator.reset_all': 'بازنشانی تمام پیوستن‌ها',
 		'facilitator.reset_all.in_progress': 'در حال بازنشانی…',
 		'facilitator.reset_all.help':
@@ -2411,6 +2568,25 @@ const translations: Record<string, Record<string, string>> = {
 			'• فرم‌های پیوستن حذف نشدند. قوانین Firestore را به‌روزرسانی کنید: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• برخی ردیف‌های Google Sheet حذف نشدند. فهرست CORS تابع fn_removeUserFromSheet یا اعتبارنامه Sheet را بررسی کنید.',
+		'facilitator.delete_all': 'حذف همه پیشنهادها',
+		'facilitator.delete_all.in_progress': 'در حال حذف…',
+		'facilitator.delete_all.help':
+			'همه پیشنهادهای این پرسش را به‌همراه پیام‌های گفت‌وگو برای همیشه حذف می‌کند. برای شروع دور تازه. قابل بازگشت نیست.',
+		'facilitator.delete_all_confirm':
+			'همه {{count}} پیشنهاد این پرسش برای همیشه حذف شود؟\n\nپیام‌های گفت‌وگو هم حذف می‌شوند. قابل بازگشت نیست.',
+		'facilitator.delete_all_prompt':
+			'برای تأیید، تعداد پیشنهادهای قابل حذف را تایپ کنید: {{count}}',
+		'facilitator.delete_all_mismatch': 'عدد مطابقت نداشت. چیزی حذف نشد.',
+		'facilitator.delete_all_done': '{{options}} پیشنهاد و {{descendants}} مورد مرتبط حذف شد.',
+		'facilitator.delete_all_partial': 'برخی مراحل کامل نشد:',
+		'facilitator.delete_all_error': 'حذف ناموفق بود. دوباره تلاش کنید یا کنسول را بررسی کنید.',
+		'facilitator.delete_all_error.not_admin':
+			'• فقط مدیران پرسش می‌توانند همه پیشنهادها را حذف کنند.',
+		'facilitator.delete_all_error.read':
+			'• خواندن پیشنهادها ممکن نشد. مجوزهای Firestore را بررسی کنید.',
+		'facilitator.delete_all_error.descendants':
+			'• خواندن پیام‌های گفت‌وگو و پاراگراف‌ها ممکن نشد؛ ممکن است برخی باقی بمانند.',
+		'facilitator.delete_all_error.delete': '• حذف کامل نشد. ممکن است برخی پیشنهادها باقی بمانند.',
 		'facilitator.reconcileSheet': 'هم‌سان‌سازی Sheet',
 		'facilitator.reconcileSheet.in_progress': 'در حال هم‌سان‌سازی…',
 		'facilitator.reconcileSheet.help':

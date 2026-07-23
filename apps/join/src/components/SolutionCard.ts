@@ -750,11 +750,12 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 										t('admin.reset'),
 									)
 								: null,
-							// Permanent delete. Last in the row and visually separated
-							// (btn--danger) because it's the only irreversible action
-							// on the card — Hide is the reversible alternative.
+							// Permanent delete. Last in the row and danger-tinted because
+							// it's the only irreversible action on the card — Hide is the
+							// reversible alternative. Outline rather than solid so it
+							// doesn't outweigh the curation buttons beside it.
 							m(
-								'button.btn.btn--small.btn--danger.solution-card__delete',
+								'button.btn.btn--small.btn--outline.solution-card__delete',
 								{
 									disabled: deletingOptions.has(option.statementId) ? true : undefined,
 									onclick: (e: Event) => {

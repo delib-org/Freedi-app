@@ -2106,6 +2106,22 @@
   border-top: 1px dashed var(--paper-line);
 }
 
+// Irreversible action in an otherwise reversible row (Hide / Force show /
+// Reset counters). Danger-tinted outline: readable as "destructive" without
+// the visual weight of the solid `.btn--danger` used in the panel's danger
+// zone. Pushed to the end of the row so it can't be hit by muscle memory.
+.solution-card__delete {
+  margin-inline-start: auto;
+  color: var(--danger);
+  border-color: var(--danger);
+
+  &:hover:not(:disabled) {
+    background: var(--danger);
+    color: var(--text-inverse);
+    border-color: var(--danger);
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Main Hub — facilitated entry page
 // -----------------------------------------------------------------------------
