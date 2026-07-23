@@ -9,7 +9,13 @@ import {
 	SetStateAction,
 	ReactNode,
 } from 'react';
-import { Position } from 'reactflow';
+// Type-only import: a value import of the Position enum would pull the whole
+// reactflow module into the eager Statement bundle (the MindMap itself is lazy)
+import type { Position } from 'reactflow';
+
+// reactflow's Position enum values, inlined (see import note above)
+const POSITION_TOP = 'top' as Position;
+const POSITION_BOTTOM = 'bottom' as Position;
 
 // Define the context
 interface MapProps {
@@ -55,8 +61,8 @@ export const MapProvider: FC<MapProviderProps> = ({ children }) => {
 		parentStatement: 'top',
 		isOption: false,
 		isQuestion: false,
-		targetPosition: Position.Top,
-		sourcePosition: Position.Bottom,
+		targetPosition: POSITION_TOP,
+		sourcePosition: POSITION_BOTTOM,
 		nodeWidth: 50,
 		nodeHeight: 50,
 		direction: 'TB',

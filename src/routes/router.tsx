@@ -12,12 +12,8 @@ import ProtectedLayout from './ProtectedLayout';
 // Error page must be synchronous to catch errors during initial load
 import ErrorPage from '@/view/pages/error/ErrorPage';
 
-// Start page (needs to be available at root level for /start route)
-import { Suspense } from 'react';
-import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
-import lazyWithRetry from './lazyWithRetry';
-
-const Start = lazyWithRetry(() => import('@/view/pages/start/Start'), 'Start-root');
+// Start page — eager: it's the first page most users hit
+import Start from '@/view/pages/start/Start';
 
 // Combine all routes into a single router
 export const router = createBrowserRouter([
@@ -28,11 +24,7 @@ export const router = createBrowserRouter([
 	},
 	{
 		path: '/start',
-		element: (
-			<Suspense fallback={<LoadingPage />}>
-				<Start />
-			</Suspense>
-		),
+		element: <Start />,
 	},
 	{
 		// App layout with User Authentication.

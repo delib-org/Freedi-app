@@ -8,7 +8,7 @@ import {
 	DEFAULT_LANGUAGE as SHARED_DEFAULT_LANGUAGE,
 	getDirection,
 	getRowDirection,
-	getLanguageData,
+	loadLanguageData,
 	type Direction,
 	type RowDirection,
 } from '@freedi/shared-i18n';
@@ -113,9 +113,9 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 		return DEFAULT_CONFIG;
 	});
 
-	const [languageData, setLanguageData] = useState<Record<string, string>>(() =>
-		getLanguageData(config.chosenLanguage),
-	);
+	// Dictionaries are code-split per language and loaded async (see effect below).
+	// Until loaded, t() falls back to the key itself (keys are English text).
+	const [languageData, setLanguageData] = useState<Record<string, string>>({});
 
 	// Save to localStorage whenever config changes
 	useEffect(() => {
@@ -190,8 +190,24 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 
 	// Load language data when language changes (uses shared package)
 	useEffect(() => {
-		const data = getLanguageData(config.chosenLanguage);
-		setLanguageData(data);
+		let cancelled = false;
+
+		loadLanguageData(config.chosenLanguage)
+			.then((data) => {
+				if (!cancelled) {
+					setLanguageData(data);
+				}
+			})
+			.catch((error) => {
+				logError(error, {
+					operation: 'context.UserConfigContext.loadLanguageData',
+					metadata: { language: config.chosenLanguage },
+				});
+			});
+
+		return () => {
+			cancelled = true;
+		};
 	}, [config.chosenLanguage]);
 
 	// Apply color contrast effect
