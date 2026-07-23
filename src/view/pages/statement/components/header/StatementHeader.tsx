@@ -18,7 +18,6 @@ import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/Se
 import ParticipationFunnel from '@/view/components/atomic/atoms/ParticipationFunnel/ParticipationFunnel';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
 import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
-import DeadlineBanner from '../deadlineBanner/DeadlineBanner';
 import TreeFilterChips from '../treeView/components/TreeFilterChips/TreeFilterChips';
 import { useTreeFilterOptional } from '../treeView/TreeFilterContext';
 import { StatementContext } from '../../StatementCont';
@@ -238,7 +237,6 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 													evaluated={participation.evaluated}
 												/>
 											)}
-											<DeadlineBanner statement={statement} role={role} />
 											{showSegmentedControl && (
 												<div className={styles.segmentedControlWrapper}>
 													<SegmentedControl
@@ -266,7 +264,6 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 											evaluated={participation.evaluated}
 										/>
 									)}
-									<DeadlineBanner statement={statement} role={role} />
 									{showSegmentedControl && (
 										<div className={styles.segmentedControlWrapper}>
 											<SegmentedControl
