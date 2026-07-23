@@ -1,9 +1,4 @@
-import {
-	QuestionType,
-	SourceApp,
-	StatementType,
-	type Statement,
-} from '@freedi/shared-types';
+import { QuestionType, SourceApp, StatementType, type Statement } from '@freedi/shared-types';
 import {
 	deriveRouteTargets,
 	type RouteTarget,
