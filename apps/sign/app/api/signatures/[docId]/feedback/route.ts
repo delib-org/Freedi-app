@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
+import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { logger } from '@/lib/utils/logger';
 
 interface FeedbackInput {
@@ -39,6 +40,14 @@ export async function POST(
     }
 
     const db = getFirestoreAdmin();
+
+    if (await isDocumentFrozen(db, docId)) {
+      return NextResponse.json(
+        { error: FROZEN_DOCUMENT_ERROR },
+        { status: 403 }
+      );
+    }
+
     const signatureId = `${userId}--${docId}`;
 
     // Get existing signature

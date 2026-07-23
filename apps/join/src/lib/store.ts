@@ -10,12 +10,12 @@ import {
 	query,
 	where,
 	orderBy,
-	onSnapshot,
 	runTransaction,
 	httpsCallable,
 	writeBatch,
 	Unsubscribe,
 } from './firebase';
+import { resilientOnSnapshot } from './resilientListeners';
 import { getUserState, ensureUser } from './user';
 import { applyStatementLanguage, isLanguageForced, t } from './i18n';
 import {
@@ -1009,7 +1009,7 @@ async function prefetchJoinFormSubmission(questionId: string): Promise<void> {
 }
 
 export function subscribeQuestion(questionId: string): Unsubscribe {
-	return onSnapshot(doc(db, Collections.statements, questionId), (snap) => {
+	return resilientOnSnapshot('question', doc(db, Collections.statements, questionId), (snap) => {
 		if (snap.exists()) {
 			question = snap.data() as Statement;
 			syncQuestionLanguage();
@@ -1260,7 +1260,7 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 	// (the symptom: "after ~20 minutes some participants stop following").
 	ensureFacilitatorResyncListeners();
 
-	return onSnapshot(doc(db, Collections.statements, mainId), (snap) => {
+	return resilientOnSnapshot('mainStatement', doc(db, Collections.statements, mainId), (snap) => {
 		if (!snap.exists()) {
 			mainStatement = null;
 			applyThemeStyleToDOM();
@@ -1399,7 +1399,7 @@ export function subscribeSubQuestions(mainId: string): Unsubscribe {
 		where('statementType', '==', StatementType.question),
 	);
 
-	return onSnapshot(subQ, (snap) => {
+	return resilientOnSnapshot('subQuestions', subQ, (snap) => {
 		subQuestions = snap.docs.map((d) => d.data() as Statement);
 		m.redraw();
 	});
@@ -1464,7 +1464,7 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 		where('statementType', '==', StatementType.option),
 	);
 
-	return onSnapshot(optionsQuery, (snap) => {
+	return resilientOnSnapshot('options', optionsQuery, (snap) => {
 		const incoming = snap.docs.map((d) => d.data() as Statement);
 		const currentUid = getUserState().user?.uid;
 
@@ -1486,13 +1486,26 @@ export function subscribeOptions(questionId: string): Unsubscribe {
  * Subscribe to `clusterEvaluationLinks` for every currently-visible cluster,
  * so the card can show a counts-only breakdown ("Combined votes from N
  * evaluators"). Tears down prior subscriptions when the cluster set changes.
+ *
+ * Called from every options snapshot, so it memoizes on the cluster-id set:
+ * an unchanged set keeps the existing listeners instead of tearing down and
+ * rebuilding on every vote anyone in the room casts.
  */
+let clusterLinksSignature: string | null = null;
+
 function subscribeClusterLinks(): void {
+	const clusterIds = allOptions
+		.filter((o) => o.isCluster === true)
+		.map((o) => o.statementId)
+		.sort();
+	const signature = clusterIds.join('|');
+	if (signature === clusterLinksSignature) return;
+	clusterLinksSignature = signature;
+
 	for (const unsub of clusterLinksUnsubs) unsub();
 	clusterLinksUnsubs = [];
 	clusterEvaluatorCounts = new Map();
 
-	const clusterIds = allOptions.filter((o) => o.isCluster === true).map((o) => o.statementId);
 	if (clusterIds.length === 0) return;
 
 	const BATCH = 30;
@@ -1502,7 +1515,7 @@ function subscribeClusterLinks(): void {
 			collection(db, Collections.clusterEvaluationLinks),
 			where('clusterId', 'in', batch),
 		);
-		const unsub = onSnapshot(q, (snap) => {
+		const unsub = resilientOnSnapshot(`clusterLinks:${i / BATCH}`, q, (snap) => {
 			const counts = new Map<string, number>();
 			snap.forEach((d) => {
 				const link = d.data() as { clusterId?: string };
@@ -1544,7 +1557,7 @@ export function subscribeChat(optionId: string): void {
 		orderBy('createdAt'),
 	);
 
-	chatUnsubscribe = onSnapshot(chatQuery, (snap) => {
+	chatUnsubscribe = resilientOnSnapshot('chat', chatQuery, (snap) => {
 		messages = snap.docs.map((d) => d.data() as Statement);
 		m.redraw();
 	});
@@ -1668,6 +1681,12 @@ export const testSheetAccess = _testSheetAccess;
 export const resetOptionJoining = _resetOptionJoining;
 export const resetQuestionJoining = _resetQuestionJoining;
 export const reconcileJoinSheet = _reconcileJoinSheet;
+
+// Permanent option deletion (single option + "delete all suggestions").
+// Lives in ./optionDeletion.ts; re-exported here so views keep importing
+// everything option-related from `@/lib/store`.
+export type { DeleteAllOptionsResult } from './optionDeletion';
+export { deleteOption, deleteAllOptions } from './optionDeletion';
 
 /** All visible options under the current question where the user is a
  *  member in either role (joined or organizers). Wraps the pure helper

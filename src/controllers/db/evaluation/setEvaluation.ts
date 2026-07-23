@@ -1,7 +1,14 @@
 import { setDoc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { number, parse } from 'valibot';
-import { EvaluationSchema, Statement, User, EvaluationUI } from '@freedi/shared-types';
+import {
+	EvaluationSchema,
+	Statement,
+	User,
+	EvaluationUI,
+	evaluationType,
+} from '@freedi/shared-types';
+import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
 import { store } from '@/redux/store';
@@ -97,13 +104,73 @@ export async function setEvaluationToDB(
 
 export function setEvaluationUIType(statementId: string, evaluationUI: EvaluationUI) {
 	const evaluationUIRef = createStatementRef(statementId);
-	updateDoc(evaluationUIRef, { evaluationSettings: { evaluationUI: evaluationUI } }).catch(
+	// Dot-path update — a nested object here would REPLACE the whole
+	// evaluationSettings map and wipe anchored/maxVotesPerUser/etc.
+	updateDoc(evaluationUIRef, { 'evaluationSettings.evaluationUI': evaluationUI }).catch(
 		(error) => {
 			logger.error('Error updating evaluation UI', error, { statementId });
 		},
 	);
 
 	return evaluationUIRef;
+}
+
+/**
+ * Single source of truth for changing the participation mode
+ * (evaluationSettings.evaluationUI). Also derives the rating scale
+ * (statementSettings.evaluationType) and enhancedEvaluation so all apps
+ * stay consistent.
+ */
+export function setParticipationMode(statement: Statement, mode: EvaluationUI): void {
+	setEvaluationUIType(statement.statementId, mode);
+
+	let evalType: evaluationType;
+	switch (mode) {
+		case EvaluationUI.voting:
+		case EvaluationUI.checkbox:
+			evalType = evaluationType.singleLike;
+			break;
+		case EvaluationUI.suggestions:
+		case EvaluationUI.clustering:
+		default:
+			evalType = evaluationType.range;
+			break;
+	}
+
+	setStatementSettingToDB({
+		statement,
+		property: 'evaluationType',
+		newValue: evalType,
+		settingsSection: 'statementSettings',
+	});
+
+	setStatementSettingToDB({
+		statement,
+		property: 'enhancedEvaluation',
+		newValue: evalType === evaluationType.range,
+		settingsSection: 'statementSettings',
+	});
+}
+
+/**
+ * Single source of truth for changing the rating scale
+ * (statementSettings.evaluationType). Only meaningful when the
+ * participation mode is "suggestions" — other modes derive the scale.
+ */
+export function setRatingScale(statement: Statement, scale: evaluationType): void {
+	setStatementSettingToDB({
+		statement,
+		property: 'evaluationType',
+		newValue: scale,
+		settingsSection: 'statementSettings',
+	});
+
+	setStatementSettingToDB({
+		statement,
+		property: 'enhancedEvaluation',
+		newValue: scale === evaluationType.range,
+		settingsSection: 'statementSettings',
+	});
 }
 
 export async function setAnchoredEvaluationSettings(
@@ -147,7 +214,7 @@ export async function setMaxVotesPerUser(
 		const statementRef = createStatementRef(statementId);
 
 		await updateDoc(statementRef, {
-			'evaluationSettings.axVotesPerUser': maxVotes || null,
+			'evaluationSettings.maxVotesPerUser': maxVotes || null,
 		});
 
 		// Log event

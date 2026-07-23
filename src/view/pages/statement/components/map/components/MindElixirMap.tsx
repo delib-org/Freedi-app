@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useCallback, useState, memo, useMemo } from 'react';
 import MindElixir from 'mind-elixir';
+// Library CSS loads with this lazy chunk instead of the global stylesheet
+import 'mind-elixir/style.css';
 import type { MindElixirInstance, NodeObj, Operation } from 'mind-elixir';
 import { useNavigate } from 'react-router';
 import { Results, Statement, StatementType } from '@freedi/shared-types';

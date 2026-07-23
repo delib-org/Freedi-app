@@ -1376,3 +1376,15 @@
     }
   }
 }
+// Wrapper for the flat settings groups (post-redesign). Combine with
+// .enhancedSettings so its descendant styles (toggles, section titles,
+// cards) still apply, while dropping the old page-shell chrome.
+.flatGroup {
+  padding: 0;
+  max-width: none;
+  gap: 1rem;
+  animation: none;
+  // The section card behind the group handles theming; without this the
+  // .enhancedSettings dark-scheme background paints a dark island.
+  background: transparent;
+}

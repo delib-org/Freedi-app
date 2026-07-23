@@ -42,6 +42,8 @@ interface ParagraphCardProps {
   requireGoogleLogin?: boolean;
   /** Whether the current user is anonymous */
   isAnonymous?: boolean;
+  /** When true, all interactions are frozen by the admin — hide the interaction bar */
+  frozen?: boolean;
 }
 
 export default function ParagraphCard({
@@ -64,6 +66,7 @@ export default function ParagraphCard({
   headingNumber,
   requireGoogleLogin = false,
   isAnonymous = false,
+  frozen = false,
 }: ParagraphCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -373,8 +376,8 @@ export default function ParagraphCard({
         {renderContent()}
       </div>
 
-      {/* Show interaction bar only when paragraph is interactive */}
-      {!effectiveNonInteractive && (
+      {/* Show interaction bar only when paragraph is interactive and the document is not frozen */}
+      {!effectiveNonInteractive && !frozen && (
         <div className={clsx(
           styles.interactionWrapper,
           enhancedVisibility && !showAllInteractions && styles.alwaysVisible,

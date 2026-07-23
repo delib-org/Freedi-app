@@ -30,4 +30,5 @@
 
 // External stylesheets
 @import "../../assets/fonts.css";
-@import "mind-elixir/style.css";
+// mind-elixir/style.css is imported by the lazy MindElixirMap component,
+// so it only loads when the mind map is opened.

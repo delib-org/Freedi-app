@@ -8,6 +8,13 @@
 //   playFlipAnimation(listEl, before);
 
 const FLIP_ATTR = 'data-flip-id';
+const INVERT_CLASS = 'solution-card--flipping';
+const PLAY_CLASS = 'solution-card--flip-play';
+
+// Safety net for the `--flip-play` class: transitionend never fires if the
+// element is removed, re-patched or interrupted mid-glide. Keep in sync with
+// --dur-reorder in styles/_tokens.scss (560ms) plus a little slack.
+const PLAY_CLEANUP_MS = 700;
 
 /** Snapshot the bounding rect of every direct or descendant child carrying
  *  `data-flip-id`. Returns a map keyed by id. Safe to call before the DOM is
@@ -48,7 +55,8 @@ export function playFlipAnimation(container: HTMLElement, oldRects: Map<string, 
 		if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) continue;
 
 		// Phase 1 (Invert): jump back to where we were, transitions off.
-		el.classList.add('solution-card--flipping');
+		el.classList.add(INVERT_CLASS);
+		el.classList.remove(PLAY_CLASS);
 		el.style.transform = `translate(${dx}px, ${dy}px)`;
 		moved.push(el);
 	}
@@ -56,15 +64,37 @@ export function playFlipAnimation(container: HTMLElement, oldRects: Map<string, 
 	if (moved.length === 0) return;
 
 	// Phase 2 (Play): on the next frame, drop the inline transform and the
-	// transition-off class. The existing `.solution-card { transition:
-	// transform var(--dur-base) var(--ease-out) }` rule animates the card
-	// back to its real position.
+	// transition-off class, and switch on the slower reorder transition
+	// (`--flip-play`, transform var(--dur-reorder)) so the card glides to its
+	// real position at a pace participants can follow.
 	requestAnimationFrame(() => {
 		// Force a layout read so the browser commits Phase 1 before we strip it.
 		void container.offsetHeight;
 		for (const el of moved) {
-			el.classList.remove('solution-card--flipping');
+			el.classList.remove(INVERT_CLASS);
+			el.classList.add(PLAY_CLASS);
 			el.style.transform = '';
+			releaseAfterGlide(el);
 		}
 	});
+}
+
+/** Drop the slow-transition class once the glide finishes, so hover and other
+ *  transform changes keep using the snappier --dur-base timing. */
+function releaseAfterGlide(el: HTMLElement): void {
+	let done = false;
+	const finish = (): void => {
+		if (done) return;
+		done = true;
+		el.removeEventListener('transitionend', onEnd);
+		window.clearTimeout(timer);
+		el.classList.remove(PLAY_CLASS);
+	};
+	const onEnd = (event: TransitionEvent): void => {
+		if (event.target !== el || event.propertyName !== 'transform') return;
+		finish();
+	};
+
+	el.addEventListener('transitionend', onEnd);
+	const timer = window.setTimeout(finish, PLAY_CLEANUP_MS);
 }

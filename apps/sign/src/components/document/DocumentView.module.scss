@@ -405,6 +405,23 @@
   color: var(--text-secondary);
 }
 
+.frozenBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  background: var(--card-default);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
 .footer {
   position: fixed;
   bottom: 0;

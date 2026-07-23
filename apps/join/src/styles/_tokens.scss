@@ -153,6 +153,9 @@
   --dur-base: 220ms;
   --dur-slow: 380ms;
   --dur-celebrate: 680ms;
+  // Reorder (FLIP) glide — deliberately slower than --dur-base so participants
+  // can follow a card as it moves to its new rank.
+  --dur-reorder: 560ms;
   --ease-out: cubic-bezier(0.2, 0.9, 0.25, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);

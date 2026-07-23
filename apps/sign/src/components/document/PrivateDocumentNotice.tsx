@@ -11,14 +11,26 @@ interface PrivateDocumentNoticeProps {
   brandName?: string;
   /** When true, show a login prompt instead of access denied */
   showLoginPrompt?: boolean;
+  /** 'private' = access restricted, 'hidden' = admin has hidden the document */
+  variant?: 'private' | 'hidden';
 }
 
 export default function PrivateDocumentNotice({
   logoUrl = DEFAULT_LOGO_URL,
   brandName = DEFAULT_BRAND_NAME,
   showLoginPrompt = false,
+  variant = 'private',
 }: PrivateDocumentNoticeProps) {
   const { t } = useTranslation();
+
+  const title = variant === 'hidden'
+    ? t('This document is temporarily unavailable')
+    : t('This document is private');
+  const description = variant === 'hidden'
+    ? t('The document owner has hidden this document. Please check back later or contact the document owner.')
+    : showLoginPrompt
+      ? t('Please sign in with Google to access this document.')
+      : t('This document is not available for public viewing. Please contact the document owner for access.');
 
   return (
     <div className={styles.container}>
@@ -32,14 +44,10 @@ export default function PrivateDocumentNotice({
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </svg>
-      <h1 className={styles.title}>{t('This document is private')}</h1>
-      <p className={styles.description}>
-        {showLoginPrompt
-          ? t('Please sign in with Google to access this document.')
-          : t('This document is not available for public viewing. Please contact the document owner for access.')}
-      </p>
+      <h1 className={styles.title}>{title}</h1>
+      <p className={styles.description}>{description}</p>
 
-      {showLoginPrompt ? (
+      {showLoginPrompt && variant !== 'hidden' ? (
         <div className={styles.loginWrapper}>
           <Modal title={t('Sign In Required')} onClose={() => { /* non-dismissible */ }}>
             <LoginModal onClose={() => { /* non-dismissible */ }} hideGuestOption />

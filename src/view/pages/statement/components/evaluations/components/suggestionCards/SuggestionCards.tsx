@@ -22,6 +22,9 @@ import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
 import { useLazyLoadOptions } from '@/view/pages/statement/hooks/useLazyLoadOptions';
 import { useAutoLoadAllForSort } from '@/view/pages/statement/hooks/useAutoLoadAllForSort';
+import { useThrottledOrder } from '@/view/pages/statement/hooks/useThrottledOrder';
+import { usePrefersReducedMotion } from '@/controllers/hooks/usePrefersReducedMotion';
+import { UI } from '@/constants/common';
 import styles from './SuggestionCards.module.scss';
 import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
 import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
@@ -36,6 +39,13 @@ import {
 import type { RootState } from '@/redux/store';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+
+// Stable identity accessor for useThrottledOrder (must not change per render).
+const getStatementId = (statement: Statement): string => statement.statementId;
+
+// Reorder glide. Softer than a UI spring on purpose: a card changing rank has
+// to be trackable by eye across the whole list, not just snap.
+const REORDER_SPRING = { stiffness: 140, damping: 24 } as const;
 
 // Helper function to sort statements
 function sortStatements(
@@ -169,15 +179,29 @@ const SuggestionCards: FC = () => {
 		return sortStatements(plan.flatRaw.filter(canSee), sort, randomSeed, statement);
 	}, [plan.flatRaw, isAdmin, showHiddenCards, creator?.uid, sort, randomSeed, statement]);
 
-	// FLIP animates only on intentional changes (user re-sorts, toggles
-	// layers, cards added/removed) — NOT on every live evaluation update.
-	// Keying on the full id order caused react-flip-toolkit to read
-	// getBoundingClientRect on every card whenever consensus reordered the
-	// list, which froze the screen on mobile during active deliberation.
+	// Ordering *intent*: a change here (user picks a sort, re-rolls the random
+	// seed, toggles a layer) skips the throttle so the list reorders instantly.
+	const orderIntentKey = `${sort}-${randomSeed}-${effectiveLayers.raw}-${effectiveLayers.synth}-${effectiveLayers.cluster}`;
+
+	// Live evaluation updates can reshuffle the consensus ranking many times a
+	// second. Keying FLIP on every one of those made react-flip-toolkit measure
+	// each card repeatedly and froze mobile during active deliberation — which
+	// is why the order used to be pinned out of the key entirely, killing the
+	// animation. Throttling the *applied* order restores the glide and keeps
+	// the measuring bounded to once per window.
+	const orderedFlatRaw = useThrottledOrder(visibleFlatRaw, getStatementId, {
+		intervalMs: UI.REORDER_THROTTLE_DELAY,
+		intentKey: orderIntentKey,
+	});
+
+	const prefersReducedMotion = usePrefersReducedMotion();
+
+	// A constant key parks FLIP: positions still update, they just jump instead
+	// of gliding — the JS equivalent of the reduced-motion CSS blocks.
 	const flipKey = useMemo(
 		() =>
-			`${sort}-${randomSeed}-${effectiveLayers.raw}-${effectiveLayers.synth}-${effectiveLayers.cluster}-${visibleFlatRaw.length}`,
-		[sort, randomSeed, effectiveLayers, visibleFlatRaw.length],
+			prefersReducedMotion ? 'reduced-motion' : orderedFlatRaw.map((s) => s.statementId).join(','),
+		[orderedFlatRaw, prefersReducedMotion],
 	);
 
 	useEffect(() => {
@@ -317,12 +341,8 @@ const SuggestionCards: FC = () => {
 					variant="default"
 				/>
 			)}
-			<Flipper
-				flipKey={flipKey}
-				spring={{ stiffness: 300, damping: 30 }}
-				className={styles['suggestions-wrapper']}
-			>
-				{visibleFlatRaw.map((statementSub: Statement) => (
+			<Flipper flipKey={flipKey} spring={REORDER_SPRING} className={styles['suggestions-wrapper']}>
+				{orderedFlatRaw.map((statementSub: Statement) => (
 					<Flipped key={statementSub.statementId} flipId={statementSub.statementId}>
 						<div className={styles['card-wrapper']}>
 							<SuggestionCard parentStatement={statement} statement={statementSub} />

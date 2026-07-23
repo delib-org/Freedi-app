@@ -35,9 +35,9 @@ import {
 	deleteField,
 	query,
 	where,
-	onSnapshot,
 } from './firebase';
 import type { Unsubscribe } from './firebase';
+import { resilientOnSnapshot } from './resilientListeners';
 
 export interface JoinMainEntry {
 	id: string;
@@ -159,7 +159,8 @@ export function subscribeToJoinMain(
 		where('openedInJoin', '>', 0),
 	);
 
-	return onSnapshot(
+	return resilientOnSnapshot(
+		'joinMain',
 		q,
 		(snap) => {
 			const entries: JoinMainEntry[] = [];

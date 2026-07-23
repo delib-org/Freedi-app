@@ -4,6 +4,7 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName, isAnonymousRequest } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { isUserBlocked } from '@/lib/admin/blocklist';
+import { isDocumentFrozen, FROZEN_DOCUMENT_ERROR } from '@/lib/admin/documentStatus';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
@@ -133,6 +134,14 @@ export async function POST(
     if (await isUserBlocked(db, evalDocumentId, effectiveId)) {
       return NextResponse.json(
         { error: 'You are not permitted to contribute to this document' },
+        { status: 403 }
+      );
+    }
+
+    // Reject all interaction when an admin has frozen the document.
+    if (await isDocumentFrozen(db, evalDocumentId)) {
+      return NextResponse.json(
+        { error: FROZEN_DOCUMENT_ERROR },
         { status: 403 }
       );
     }

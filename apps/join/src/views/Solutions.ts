@@ -15,8 +15,6 @@ import {
 	isParticipantNavigationAllowed,
 	subscribeUserEvaluations,
 	subscribeUserJoinFormSubmission,
-	getUnreadCount,
-	getTotalVisibleCount,
 	getNewOptionsPendingCount,
 	flushNewOptions,
 	isOptionNewlyArrived,
@@ -240,8 +238,6 @@ export const Solutions: m.Component = {
 		}
 
 		const options = getVisibleOptions();
-		const total = getTotalVisibleCount();
-		const unread = getUnreadCount();
 		const pendingCount = getNewOptionsPendingCount();
 		const accentColor = question.color || 'var(--terra-500)';
 		const facilitated = isFacilitatedMode();
@@ -335,12 +331,6 @@ export const Solutions: m.Component = {
 							m('span', t('solutions.subtitle.evaluate')),
 						])
 					: null,
-				m('.solutions__counter', [
-					m('span.solutions__counter-total', t('solutions.counter.options', { count: total })),
-					unread > 0
-						? m('span.solutions__counter-unread', t('solutions.counter.new', { count: unread }))
-						: null,
-				]),
 				isAdmin()
 					? m('.solutions__admin-toolbar', [
 							// Admin can always add an organizer suggestion — it goes
