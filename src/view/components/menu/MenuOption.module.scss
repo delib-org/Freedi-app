@@ -107,10 +107,11 @@
     flex: 1;
     display: flex;
     align-items: center;
-    min-width: 0; // Allow text truncation
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 0; // Let the label shrink inside the flex row
+    // Long labels (e.g. translated "Mark as a Solution") wrap to a second
+    // line instead of being ellipsized — a menu action must stay readable.
+    white-space: normal;
+    overflow-wrap: break-word;
     transition: color 0.15s ease;
   }
 
