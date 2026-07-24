@@ -253,7 +253,39 @@ Note C/CE2/CH also report **"match → *any* claim" at 90–93%** — most "miss
 
 ---
 
-## 9. Where things stand in the conversation this came from
+## 9. RESULTS — condition E, 150-triplet pilot (run 2026-07-24)
+
+Full write-up: `SIM_E_RESULTS.md`. Raw: `benchmark/results/sim-e.jsonl`, `sim-e-datasets.jsonl`.
+
+| metric | value (Wilson 95% CI) | prior art |
+|---|---|---|
+| **tripletCorrect** | **61.3%** [53.3–68.8] | CH 55.8%, CE2 53.8%, cosine-only 0.5% |
+| **falseMerge** | **8.0%** [4.6–13.5] | CH 8.2% |
+| synthRecall | 67.3% | — |
+| clusterRecall | 80.7% | (analog of C/CH "match → any claim" 90–93%) |
+| distractorSameCluster | 71.3% | — |
+| counterEdgeToAnchor | 47.3% | — |
+
+450 statements → 56 clusters, 239 synths · **2.78 LLM calls per statement** · mean candidate lists 2.7 clusters / 7.5 synths.
+
+**Verdict: promising, not yet proven — but the bottleneck is diagnosed.** E beats CH at an equal false-merge rate, but the CIs overlap, so this is not a significant win on n=150.
+
+Three findings that should drive the next iteration:
+
+1. **The cluster step is the bottleneck.** Of 49 matches that missed their anchor's synth, **29 never reached the anchor's cluster** (cluster-step misroute) vs only 20 true synth-step misses. The judge is not the weak link — routing is.
+2. **Fragmentation causes it, and it is measurable.** Pearson r between clusters-per-statement and `distractorSameCluster` = **−0.82**, and vs `clusterRecall` = **−0.70**. Low-fragmentation datasets (≤0.10 clusters/statement) score 94% clusterRecall / 78% synthRecall / 85% distractorSameCluster; high-fragmentation (>0.15) collapse to 66% / 58% / 51%. This is failure mode §7.3 (uncontrolled granularity) confirmed — it outranked §7.2 (sticky routing errors) in practice.
+3. **Fragmentation silently destroys the pro/con payoff.** `counterEdgeToAnchor` is only 47.3% because a counter-edge can only form when the distractor lands in its anchor's cluster. The structural benefit that motivated this design is the first thing fragmentation takes.
+
+**Next simulations (cheapest first), all at the cluster step — do NOT touch the judge prompt:**
+- (e1) **join-biased routing** — instruct the router to prefer the nearest existing topic; reserve new clusters for genuinely uncovered subjects.
+- (e2) **merge/repair pass** — periodically judge cluster-label pairs for redundancy and merge (the repair pass §7 predicted would be needed).
+- (e3) **creation guard** — require cosine below a floor to the nearest centroid before a new cluster may be created (cosine guarding *creation*, never *matching*).
+
+Also worth a cheap ablation: 3-vs-1 cluster exemplars, and lazy label updates (33% of all calls are label regeneration).
+
+---
+
+## 10. Where things stand in the conversation this came from
 
 Agreed so far:
 - Embedding cannot distinguish agree/disagree (0.5% on triplets); the judge can (95%+). So **no attach without a judge verdict** — that's the definition of ELJ.
