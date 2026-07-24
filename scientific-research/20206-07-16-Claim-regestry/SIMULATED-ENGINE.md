@@ -1,0 +1,159 @@
+# Simulated Engine — Tiered ELJ (working document)
+
+**Date:** 2026-07-24 · **Authors:** Tal + Claude · **Status:** design to explore by simulation
+
+This document is self-contained so a fresh session can pick it up with no other context.
+
+---
+
+## 1. Vocabulary
+
+| term | meaning |
+|---|---|
+| **ELJ** | Embedding + LLM Judge: cosine similarity *fetches* candidates, an LLM judge *decides* meaning. Embedding never decides on its own. |
+| **judge** | One LLM call (gpt-4o-mini). Input: question + list of candidate texts + new statement. Output: `expresses` / `opposes` / `none` + confidence. Attach only on `expresses` with confidence ≥ 0.6. `opposes` → counter-edge, never a merge. |
+| **synth** | Tight group of statements with the same meaning (high-similarity tier). |
+| **cluster** | Looser group around the same idea/topic (lower tier). |
+| **anchor / match / distractor** | Benchmark triplet: existing statement / same-meaning-different-words / same-words-opposite-meaning. |
+
+---
+
+## 2. The engine Tal proposed (to be simulated)
+
+```
+new statement arrives
+│
+├─ 1) EMBED the statement
+│
+├─ 2) SYNTH TIER — cutoff 0.85
+│     fetch all statements with cosine ≥ 0.85
+│     → JUDGE them: which truly have the same meaning?
+│     → if same-meaning statements found:
+│           · attach to an existing close synth, or
+│           · create a NEW synth containing them + the new statement
+│
+└─ 3) CLUSTER TIER — cutoff 0.60 (if synth tier found nothing)
+      fetch all statements with cosine ≥ 0.60
+      → JUDGE them the same way
+      → attach the new statement to a CLUSTER
+```
+
+**The core idea:** keep the two-tier structure of the current pipeline (synth at 0.85, cluster at 0.60), but insert the judge at **both** tiers. Cosine proposes, judge disposes — at every level. No attach ever happens on cosine alone.
+
+### How this differs from production today
+
+| | production today | this engine |
+|---|---|---|
+| cosine ≥ 0.85 | attach immediately, **no judge** | judge first, then synth-attach |
+| cosine ≥ 0.60 | attach immediately, **no judge** | judge first, then cluster-attach |
+| below 0.60 | registry pass (judge vs full codebook), off by default | *open question — see §4.Q1* |
+| judge compares against | claim summaries (codebook) | the similar **statements themselves** |
+
+Note the last row: this engine judges against **raw neighbor statements**, not claim summaries. The benchmark showed judging raw text is far more accurate than judging summaries (95.0% vs 70.1%) — so this design may sidestep the summary-loss problem entirely at the synth tier.
+
+---
+
+## 3. Known numbers to hold the simulation against (from the July 2026 benchmark)
+
+All cosines in production format: `"Question: …\nAnswer: …"`, model `text-embedding-3-small`.
+
+### Judge accuracy (n = 875 adversarial triplets)
+- Judge reading raw statement text: **95.0%** triplet accuracy; accepts 96.8% of matches, wrongly accepts only 2.1% of distractors, names 95.9% of distractors as *opposing*.
+- Judge reading 5–15-word claim summaries: 70.1% (→ 88.6% after enrichment fix). Summaries, not the judge, are the weak link.
+- Hebrew paraphrases vs English anchors: judge = **125/125 (100%)**.
+- Cost: ≈ $0.11 per 1,000 statements (small lists), $0.41 (≈94-entry lists).
+
+### Cosine distributions (the critical geometry facts)
+| population | min | median | max |
+|---|---|---|---|
+| true matches (same meaning, n=880) | 0.734 | 0.871 | 0.962 |
+| **distractors (opposite meaning)** | 0.743 | **0.969** | 0.999 |
+| English adversarial rewrites (same meaning, n=147) | 0.738 | 0.860 | 0.965 |
+| Hebrew paraphrases (same meaning, n=125) | 0.574 | 0.702 | **0.822** |
+
+Consequences:
+- **99.1% of opposite-meaning distractors score ≥ 0.85** → the synth tier's fetch will be FULL of opposites. The judge must carry the entire load there. (Benchmark says it can: 2.1% false-accept.)
+- Only **71%** of true matches score ≥ 0.85 → many same-meaning statements skip the synth tier and land at the cluster tier. Expected, fine.
+- **0%** of Hebrew matches reach 0.85; **95%** reach 0.60; 6/125 fall below 0.60.
+- Translating to English inside the brief step (before embedding only — judge keeps original text) could lift cross-language cosines; unmeasured, needs native-Hebrew test data.
+
+### Production facts that affect simulation fidelity
+- Vector search is capped at **top-10 neighbors** (`NEIGHBOR_LIMIT = 10`, `runSinglePipeline.ts:75`) and floor 0.45.
+- Embedding is computed over an LLM-written 5–15-word **brief**, not the raw text (`EMBEDDING_USE_BRIEF` default true). Benchmark cosines above were on raw text — real production cosines are likely LOWER. All cutoffs should be re-checked with brief-based embeddings.
+- Current registry pass (when enabled) loads the **full codebook** with no cutoff; cosine only re-orders the list.
+- `claimRegistryEnabled: false` by default today.
+
+---
+
+## 4. Open questions to explore in the simulation
+
+**Q1 — What happens below 0.60?**
+The engine as written stops at the cluster tier. But 6/125 verified Hebrew same-meaning pairs scored 0.574–0.60. Options: (a) a third tier — judge vs the claim codebook (today's registry pass) as final catch-all; (b) drop the floor to 0.45; (c) translate-for-embedding so everything relevant clears 0.60. To decide by simulation.
+
+**Q2 — Does the 0.85 tier earn its keep?**
+Since the judge runs at both tiers anyway, what does the two-tier split buy over a single fetch at 0.60 judged once? Candidate answers: shorter judge lists (cost), and the synth/cluster distinction itself (product structure). Measure both.
+
+**Q3 — Judge list size and the top-10 cap.**
+At 0.60 in a big deliberation, "all statements above cutoff" can be hundreds. Does the engine fetch statements or claim/synth representatives? Does top-10 truncation hurt? (In the triplet data the right answer is nearly always rank 1–2 — but distractors outrank matches in 863/880 cases, so top-10 by cosine is full of opposites-first.)
+
+**Q4 — "Create a new synth" semantics.**
+Step 2 says same-meaning neighbors that aren't yet in a synth get pulled INTO a new synth together with the new statement. This retroactively organizes old statements — a real difference from production (which only files the new statement). Simulate the effect on cluster quality and on churn.
+
+**Q5 — Opposes handling per tier.**
+When the judge says `opposes` at the synth tier, does the statement then fall through to the cluster tier (same topic, opposite stance → maybe same cluster, different synth)? This could naturally produce pro/con structure inside a cluster. Attractive; simulate it.
+
+**Q6 — Cost & latency.**
+Worst case two judge calls per statement (synth tier + cluster tier). Still ~$0.2–0.8 per 1,000 statements. Latency: ~1–2 s added. Confirm acceptable.
+
+---
+
+## 5. Simulation plan (suggested)
+
+1. Build a small driver that replays the 875 triplets + the 150 recall-gap anchors (English + Hebrew rewrites) through the tiered engine above.
+2. Reuse existing harness pieces in `scientific-research/20206-07-16-Claim-regestry/benchmark/` — it already imports the production classifier and has embeddings cached (`results/claim-embeddings-cache.jsonl`, `results/cosines.jsonl`, `results/recall-gap-E.jsonl`).
+3. Score: false merges (distractor attached to anchor's synth/cluster), recall (match filed with anchor at either tier), tier usage rates, judge-list sizes, cost.
+4. Compare four configurations: (a) production today (cosine-only fast paths), (b) this tiered ELJ, (c) flat ELJ (single 0.45 fetch + one judge call), (d) verdict-tiered ELJ (§6 — flat fetch over representatives, judge assigns the tier).
+
+---
+
+## 6. Alternative engine (configuration d): verdict-tiered ELJ
+
+Proposed 2026-07-24 in response to weaknesses of the 0.85/0.60 design. Core move: **cosine never assigns the tier — the judge does.** Rationale: opposites score above 0.85, Hebrew matches score below it, and brief-based embeddings shift all cutoffs; meanwhile the synth/cluster distinction is semantic, which is exactly what the judge measures.
+
+```
+new statement arrives
+│
+├─ 1) EMBED (optionally translate→English for embedding only; judge sees original text)
+│
+├─ 2) FETCH once, floor 0.45, over REPRESENTATIVES:
+│     · one exemplar (most central member, raw text) per existing synth
+│     · plus all statements not yet in any synth
+│
+├─ 3) ONE judge call, four-way verdict per candidate:
+│     same-meaning / same-topic / opposes / unrelated  (+ confidence)
+│
+└─ 4) FILE by strongest verdict:
+      · same-meaning w/ synth exemplar   → join that synth (inherits its cluster)
+      · same-meaning w/ loose statement  → NEW synth containing both (Q4 built in)
+      · only same-topic                  → attach to that candidate's cluster, loose
+      · only opposes                     → counter-edge; join opponent's CLUSTER,
+                                           never its synth (Q5 built in, one call)
+      · nothing                          → seed a new cluster
+```
+
+Why it should fill tiers more correctly than §2:
+- **Tier assignment is semantic.** A Hebrew paraphrase at cosine 0.70 joins the synth (judge: same-meaning); under §2 it is structurally locked out of synths forever (0% of Hebrew matches reach 0.85).
+- **Robust to brief-embedding drift** — only the 0.45 floor touches the embedding, and 0.45 lost nothing in any language.
+- **Fixes top-K crowding structurally**: merged opposites collapse into one exemplar slot, so a pile of near-duplicate opposing statements can no longer push the true match out of the candidate list (distractors outrank matches in 863/880 cases). Candidate count scales O(synths + loose), shrinking as the corpus organizes.
+- **One judge call per statement** (vs up to two in §2), and no double-judging of `opposes` pairs — each re-judge is another ~2% chance of a false merge.
+
+**Key unvalidated assumption:** `same-meaning` vs `same-topic` is a new discrimination — the 875 triplets only test express/oppose. Risk: over-merging near-miss statements into synths. The simulation must measure this boundary (recall-gap set + hand-labeled same-topic-but-different pairs) before trusting configuration (d). Exemplar selection policy is a second knob to test.
+
+---
+
+## 7. Where things stand in the conversation this came from
+
+Agreed so far:
+- Embedding cannot distinguish agree/disagree (0.5% on triplets); the judge can (95%+). So **no attach without a judge verdict** — that's the definition of ELJ.
+- Cosine cutoffs are safe as *fetch floors*, dangerous as *decision thresholds*. 0.45 lost nothing in any language; 0.85 loses 29% of English matches and 100% of Hebrew.
+- This document's engine is Tal's proposal to keep tiers AND judge everywhere. Next step: simulate it (see §5).
