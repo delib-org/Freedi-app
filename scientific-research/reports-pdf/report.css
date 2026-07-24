@@ -1,0 +1,80 @@
+@page { size: A4; margin: 20mm 18mm 20mm 18mm; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: "Charter", "Georgia", "Times New Roman", serif;
+  font-size: 10.5pt; line-height: 1.55; color: #1a1a1a;
+  max-width: 100%; margin: 0;
+}
+h1 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 20pt; line-height: 1.25; margin: 0 0 4pt 0;
+  color: #0f172a; letter-spacing: -0.01em;
+}
+h3 { /* used as subtitle right under h1 */
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12pt; font-weight: 400; font-style: italic;
+  color: #475569; margin: 0 0 14pt 0; line-height: 1.35;
+}
+h2 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13.5pt; margin: 20pt 0 7pt 0; padding-bottom: 3pt;
+  border-bottom: 1.2pt solid #cbd5e1; color: #0f172a;
+  page-break-after: avoid; break-after: avoid;
+}
+h4 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 11pt; margin: 13pt 0 4pt 0; color: #1e293b;
+  page-break-after: avoid; break-after: avoid;
+}
+p { margin: 0 0 8pt 0; text-align: justify; hyphens: auto; }
+strong { color: #0f172a; font-weight: 700; }
+em { color: #334155; }
+a { color: #1d4ed8; text-decoration: none; word-break: break-word; }
+
+/* metadata block: the leading paragraph list under the title */
+blockquote {
+  margin: 10pt 0; padding: 7pt 12pt;
+  border-left: 3pt solid #94a3b8; background: #f8fafc;
+  color: #334155; font-style: normal;
+}
+blockquote p { margin: 0 0 4pt 0; }
+blockquote p:last-child { margin-bottom: 0; }
+
+table {
+  border-collapse: collapse; width: 100%;
+  margin: 10pt 0 12pt 0; font-size: 9pt;
+  page-break-inside: avoid; break-inside: avoid;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+th {
+  background: #1e293b; color: #fff; font-weight: 600;
+  text-align: left; padding: 5pt 7pt; border: 0.5pt solid #1e293b;
+  font-size: 8.5pt; letter-spacing: 0.01em;
+}
+td { padding: 4.5pt 7pt; border: 0.5pt solid #cbd5e1; vertical-align: top; }
+tbody tr:nth-child(even) { background: #f1f5f9; }
+
+code {
+  font-family: "SF Mono", "Menlo", monospace; font-size: 8.8pt;
+  background: #f1f5f9; padding: 1pt 3pt; border-radius: 2pt;
+  color: #0f172a;
+}
+pre {
+  background: #f8fafc; border: 0.5pt solid #cbd5e1; border-left: 2.5pt solid #64748b;
+  padding: 8pt 10pt; overflow-x: auto; font-size: 8.5pt; line-height: 1.4;
+  page-break-inside: avoid; break-inside: avoid; margin: 9pt 0;
+  border-radius: 2pt;
+}
+pre code { background: none; padding: 0; font-size: 8.5pt; }
+
+ul, ol { margin: 0 0 9pt 0; padding-left: 16pt; }
+li { margin-bottom: 3.5pt; text-align: justify; }
+
+hr { border: none; border-top: 0.5pt solid #cbd5e1; margin: 16pt 0; }
+
+/* keep a heading with the paragraph that follows it */
+h2 + p, h4 + p, h2 + table, h4 + table { page-break-before: avoid; }
+
+/* pandoc's standalone template inserts its own title header — the documents
+   carry their own H1, so suppress the duplicate. */
+#title-block-header { display: none; }
