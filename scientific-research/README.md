@@ -11,6 +11,7 @@ word for it.
 | Study | Date | Summary |
 |---|---|---|
 | [`2026-06-14-synthesis-clustering-validation/`](./2026-06-14-synthesis-clustering-validation/README.md) | 1–14 June 2026 | Controlled ground-truth validation of the synthesis & clustering pipeline (merging paraphrased contributions into distinct proposals, keeping opposites apart, grouping into topics). 5 experiments, 3 production bugs found and fixed. |
+| [`2026-07-24-delta-support-probe/`](./2026-07-24-delta-support-probe/README.md) | 24 July 2026 | Method design (pre-registration stage): embedded probe sampling — 1 of 6 evaluation slots serves a current top-avg-eval proposal — yielding a within-user Δ(r) convergence curve plus top-set churn, at zero participant burden. Includes implementation spec for the MC app. |
 
 *(Future studies get their own dated sub-folder here, following the same
 `YYYY-MM-DD-short-name/` convention and internal structure — see below.)*
