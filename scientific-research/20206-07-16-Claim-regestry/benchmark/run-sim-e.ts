@@ -539,7 +539,16 @@ async function routeStatement(
 			return { clusterId: cid, synthId: synth.id, verdict: 'opposes' };
 		}
 
-		return createCluster(model, questionText, statement, state);
+		// No existing claim matched. Escalate to the creation guard before opening
+		// a cluster: "no claim matches" still does not prove "no topic matches".
+		// (With --create-floor unset this is 1.01 and never fires, so the flag
+		// alone reproduces production's plain flat-fallback behaviour.)
+		if (scored[0].sim < createFloor) {
+			return createCluster(model, questionText, statement, state);
+		}
+		cluster = scored[0].cluster;
+		guardedJoin = true;
+		state.guarded++;
 	} else if (scored[0].sim >= createFloor) {
 		// Creation guard: the router found no home, but geometry says this is the
 		// same subject as an existing cluster — join rather than fragment.

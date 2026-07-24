@@ -27,6 +27,7 @@ const CONFIGS: Array<{ tag: string; label: string }> = [
 	{ tag: 'merge', label: 'merge pass (post-seed)' },
 	{ tag: 'g70m', label: 'guard + merge pass' },
 	{ tag: 'flat', label: 'flat fallback (production rule)' },
+	{ tag: 'flatg70', label: 'flat fallback + guard' },
 ];
 
 /** Wilson score interval — correct near 0 and 1, unlike the normal approximation. */

@@ -276,12 +276,27 @@ Three findings that should drive the next iteration:
 2. **Fragmentation causes it, and it is measurable.** Pearson r between clusters-per-statement and `distractorSameCluster` = **−0.82**, and vs `clusterRecall` = **−0.70**. Low-fragmentation datasets (≤0.10 clusters/statement) score 94% clusterRecall / 78% synthRecall / 85% distractorSameCluster; high-fragmentation (>0.15) collapse to 66% / 58% / 51%. This is failure mode §7.3 (uncontrolled granularity) confirmed — it outranked §7.2 (sticky routing errors) in practice.
 3. **Fragmentation silently destroys the pro/con payoff.** `counterEdgeToAnchor` is only 47.3% because a counter-edge can only form when the distractor lands in its anchor's cluster. The structural benefit that motivated this design is the first thing fragmentation takes.
 
-**Next simulations (cheapest first), all at the cluster step — do NOT touch the judge prompt:**
-- (e1) **join-biased routing** — instruct the router to prefer the nearest existing topic; reserve new clusters for genuinely uncovered subjects.
-- (e2) **merge/repair pass** — periodically judge cluster-label pairs for redundancy and merge (the repair pass §7 predicted would be needed).
-- (e3) **creation guard** — require cosine below a floor to the nearest centroid before a new cluster may be created (cosine guarding *creation*, never *matching*).
+### Round 2 — the fix (run 2026-07-24, same 150 triplets)
 
-Also worth a cheap ablation: 3-vs-1 cluster exemplars, and lazy label updates (33% of all calls are label regeneration).
+**Result: 61.3% → 75.3%, p = 0.00075 (exact McNemar, +29/−8).** Full detail in `SIM_E_RESULTS.md`.
+
+| config | accuracy | clusters | McNemar vs baseline |
+|---|---|---|---|
+| baseline (create cluster on empty routing) | 61.3% | 56 | — |
+| merge pass (post-seed) | 66.0% | 58 | p = 0.14 **ns** |
+| **flat fallback (production's rule)** | **75.3%** | **22** | **p = 0.00075 \*\*\*** |
+| flat fallback + creation guard | 79.3% | 11 | (vs flat: p = 0.15 ns) |
+| creation guard alone (cos ≥ 0.70) | 82.0% | 11 | (vs flat+guard: p = 0.42 ns) |
+
+**The one-line diagnosis:** the engine treated *"the router found no matching topic"* as *"this IS a new topic"* and created a cluster. It almost never was — the statements spawning those clusters were mostly **matches**, i.e. paraphrases of anchors already in the corpus. Seeding 17 anchors gave 1–4 clusters; by the end there were 3–12. Once a statement is in the wrong cluster the synth judge never sees its twin, so the good judge never gets a chance.
+
+**The fix is a rule production already has.** `classifyHierarchical` treats empty routing as routing FAILURE and falls back to the full flat codebook — *"a gate that filters can misfile; a gate with an ungated second look cannot"*. Only the simulation invented create-on-empty. Production also skips routing entirely below `HIERARCHY_MIN_CLAIMS = 30`, and our corpora (17–33 synths) sit right at that boundary.
+
+**Caveat that governs the recommendation:** accuracy on this pilot is monotone in cluster *collapse* (56 → 22 → 11 clusters tracks 61% → 75% → 82%), and the two top configs put every dataset in ONE cluster. They don't cluster better, they stop clustering — and since each pilot dataset is a single-topic question, the benchmark cannot punish that. `clusterRecall`/`distractorSameCluster` of 100% are trivial at k=1; the flat fallback's 98.7%/93.3% at k=22 are earned.
+
+**Adopt the flat fallback; do NOT adopt the cosine creation guard on this evidence** (its extra gain is not significant and is bought by deleting the cluster layer). Re-test the guard only on genuinely multi-topic data.
+
+**Still untested:** periodic (not one-shot) repair passes; 3-vs-1 cluster exemplars; lazy label updates (33% of all calls are label regeneration); and — most promising — swapping the retrieval embedding for a preference-tuned one (see `COMPARISON-BLAIR-PROCACCIA-TAMBE.md`: DPT directly targets our top-K crowding problem).
 
 ---
 
