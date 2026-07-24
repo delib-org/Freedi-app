@@ -7,6 +7,7 @@
 
 import { createSelector } from '@reduxjs/toolkit';
 import { Statement, StatementType } from '@freedi/shared-types';
+import { isDocumentBodyParagraph } from '@/helpers/statementTypeHelpers';
 
 // Generic state selector type - avoids importing RootState and creating circular dependencies
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,14 +19,16 @@ type StateSelector<T> = (state: any) => T;
  * Paragraph children are excluded: they are the parent's rich body content
  * (rendered by StatementBody), not discussable list members — including them
  * would leak body paragraphs into chat feeds, tab counts, and child lists.
+ * This covers both canonical `paragraph`-typed children and Sign's legacy
+ * option-typed official paragraphs (`doc.isOfficialParagraph`) — see
+ * isDocumentBodyParagraph.
  */
 export function createStatementsByParentSelector(selectStatements: StateSelector<Statement[]>) {
 	return (parentId: string | undefined) =>
 		createSelector([selectStatements], (statements) =>
 			statements
 				.filter(
-					(statement) =>
-						statement.parentId === parentId && statement.statementType !== StatementType.paragraph,
+					(statement) => statement.parentId === parentId && !isDocumentBodyParagraph(statement),
 				)
 				.sort((a, b) => a.createdAt - b.createdAt),
 		);
