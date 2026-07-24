@@ -1,4 +1,4 @@
-# Δ-Support Probe — Embedded Measurement of Convergence in Deliberative Events
+# Δ-Support Probe — Embedded Measurement of Convergence on Leading Proposals
 
 - **Date:** 2026-07-24
 - **Status:** Method design + implementation spec (pre-registration stage — no data collected yet)

@@ -29,6 +29,6 @@ build "$RESEARCH/20206-07-16-Claim-regestry/REPORT-2-HYBRID-PREFERENCE-GEOMETRY.
       "$HERE/2-ELJ-plus-preference-geometry.pdf" \
       "Closing the Loop: Preference Geometry and LLM Judgment"
 build "$RESEARCH/2026-07-24-delta-support-probe/delta-support-probe-method.md" \
-      "$HERE/3-embedded-probe-sampling.pdf" \
-      "Embedded Probe Sampling for Measuring Convergence"
+      "$HERE/3-probe-sampling-convergence.pdf" \
+      "Embedded Probe Sampling for Measuring Convergence on Leading Proposals"
 echo "Done."

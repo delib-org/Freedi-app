@@ -1,4 +1,4 @@
-# Embedded Probe Sampling for Measuring Convergence in Online Deliberative Events
+# Embedded Probe Sampling for Measuring Convergence on Leading Proposals in Online Deliberative Events
 
 **Method report and implementation specification**
 
