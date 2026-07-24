@@ -197,7 +197,50 @@ Refinements:
 
 ---
 
-## 8. Where things stand in the conversation this came from
+## 8. Test recipe — condition E: corpus replay of configuration (e) on the 150-triplet pilot
+
+**Status 2026-07-24:** runner written (`benchmark/run-sim-e.ts`), engine = §7 with both amendments (cosine as ranker, four-way synth verdict) + living labels. Judge model: `gpt-4o-mini` (cheap worker model), overridable with `--model`.
+
+### What the test does (unlike conditions A–D, this is a growing corpus, not isolated triplets)
+
+Per dataset:
+1. **Phase A (seed):** all pilot anchors stream through the engine in file order, building clusters + synths from an empty store.
+2. **Phase B (probe):** all matches + distractors stream through the same engine in a seeded shuffle (seed 20260724), attaching into the grown structure.
+
+Engine per statement: cluster step (LLM vs living-label + 3 centroid exemplars per cluster, cosine-ranked, top 20) → synth step (LLM four-way vs synths in the chosen cluster, 2 member texts each) → centroid + top-10 exemplar refresh → label regenerated only when the exemplar set changed.
+
+### Scoring (per triplet, written to `results/sim-e.jsonl`)
+| field | meaning |
+|---|---|
+| `synthRecall` | match filed into its anchor's synth |
+| `clusterRecall` | match filed into its anchor's cluster |
+| `falseMerge` | distractor filed into its anchor's synth |
+| `distractorSameCluster` | distractor in anchor's cluster (desired pro/con structure) |
+| `counterEdgeToAnchor` | distractor's synth carries a counter-edge to anchor's synth |
+| `tripletCorrect` | `synthRecall && !falseMerge` |
+
+Per-dataset structure stats (cluster/synth counts, LLM calls by type, mean list sizes) go to `results/sim-e-datasets.jsonl`.
+
+### Running
+
+```bash
+cd scientific-research/20206-07-16-Claim-regestry/benchmark
+npx tsx run-sim-e.ts --sample results/pilot-ids.json     # the 150-triplet pilot
+```
+
+- Requires `OPENAI_API_KEY` in `functions/.env` (auto-loaded).
+- Resumable **per dataset** (a partially-replayed dataset re-runs whole; only missing rows append). Embeddings cached in `results/claim-embeddings-cache.jsonl`.
+- ~1,350 judge calls + label calls for the full pilot; a few dollars cents-range on gpt-4o-mini. Datasets replay in parallel, statements within a dataset sequentially (state mutates).
+- Caveat: if a smoke run with `--limit` polluted `results/sim-e.jsonl`, delete it before the real run — partial datasets re-replay with a different corpus, which muddies scoring.
+
+### Numbers to compare against (from §3)
+- Judge-on-raw-text ceiling: 95.0% triplet accuracy, 2.1% distractor false-accept.
+- Production cosine-only: ~0.5% triplet accuracy (embeddings can't see stance).
+- Success gates for (e): tripletCorrect ≥ 90%, falseMerge ≤ 5%, and — new for corpus replay — cluster fragmentation sane (clusters ≪ statements) and `distractorSameCluster` high (pro/con lives inside topic clusters).
+
+---
+
+## 9. Where things stand in the conversation this came from
 
 Agreed so far:
 - Embedding cannot distinguish agree/disagree (0.5% on triplets); the judge can (95%+). So **no attach without a judge verdict** — that's the definition of ELJ.
