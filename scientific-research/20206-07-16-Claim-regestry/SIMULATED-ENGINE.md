@@ -235,10 +235,21 @@ npx tsx run-sim-e.ts --sample results/pilot-ids.json     # the 150-triplet pilot
 - ~1,350 judge calls + label calls for the full pilot; a few dollars cents-range on gpt-4o-mini. Datasets replay in parallel, statements within a dataset sequentially (state mutates).
 - Caveat: if a smoke run with `--limit` polluted `results/sim-e.jsonl`, delete it before the real run — partial datasets re-replay with a different corpus, which muddies scoring.
 
-### Numbers to compare against (from §3)
-- Judge-on-raw-text ceiling: 95.0% triplet accuracy, 2.1% distractor false-accept.
-- Production cosine-only: ~0.5% triplet accuracy (embeddings can't see stance).
-- Success gates for (e): tripletCorrect ≥ 90%, falseMerge ≤ 5%, and — new for corpus replay — cluster fragmentation sane (clusters ≪ statements) and `distractorSameCluster` high (pro/con lives inside topic clusters).
+### Numbers to compare against — pick the RIGHT baseline
+
+The 95.0% figure quoted throughout §3 is condition **B1: a one-claim codebook** — the judge is asked only "does this match *the anchor*?" with no competing candidates. Condition E is a corpus replay where the match must find its anchor's synth among ~17+ rivals, so the honest comparison is the **full-codebook** family (mean codebook 94 claims):
+
+| condition | what | triplet accuracy | distractor false-attach |
+|---|---|---|---|
+| A (cosine only) | production fast paths | 0.5% | 100% ≥ 0.6 |
+| B1 (1-claim codebook) | judge, no competition | **95.0%** | 2.1% |
+| C (94-claim codebook) | judge, raw claims | 36.0% | 10.3% |
+| CE2 (94-claim, enriched + stance caution) | judge, best flat | 53.8% | 10.3% |
+| CH (two-hop hierarchical + flat fallback) | closest prior art to (e) | **55.8%** | 8.2% |
+
+Note C/CE2/CH also report **"match → *any* claim" at 90–93%** — most "misses" are the match attaching to a *different but equivalent* claim, which is arguably correct behavior, not an error. Condition E's `clusterRecall` plays the same role as that secondary metric.
+
+**Success gates for (e):** beat CH's 55.8% strict accuracy at a lower false-merge rate than 8.2%, with `clusterRecall` ≥ 90% (matches land in the right topic even when they miss the exact synth), cluster fragmentation sane (clusters ≪ statements), and `distractorSameCluster` high (pro/con lives inside one topic cluster — the structural payoff this engine is for).
 
 ---
 
