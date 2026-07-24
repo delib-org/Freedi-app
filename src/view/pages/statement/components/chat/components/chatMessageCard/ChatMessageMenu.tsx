@@ -1,4 +1,5 @@
-import { FC, RefObject } from 'react';
+import { FC, RefObject, useState } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
@@ -8,8 +9,10 @@ import { changeStatementType } from '@/controllers/db/statements/changeStatement
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { validateStatementTypeHierarchy } from '@/controllers/general/helpers';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useRouteTargets } from '@/controllers/statementRouter/useRouteTargets';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
+import RoutePicker from '@/view/components/statementRouter/RoutePicker/RoutePicker';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 
@@ -33,6 +36,8 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
 	fileInputRef,
 }) => {
 	const { t } = useTranslation();
+	const routeTargets = useRouteTargets(statement);
+	const [showRoutePicker, setShowRoutePicker] = useState(false);
 	const isQuestion = statement.statementType === StatementType.question;
 	const isOption = statement.statementType === StatementType.option;
 
@@ -58,71 +63,88 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
 	}
 
 	return (
-		<Menu
-			setIsOpen={setIsCardMenuOpen}
-			isMenuOpen={isCardMenuOpen}
-			iconColor="var(--icon-blue)"
-			isCardMenu={true}
-			isChatMenu={true}
-		>
-			{isAuthorized && (
-				<MenuOption
-					label={t('Edit Text')}
-					icon={<EditIcon />}
-					onOptionClick={() => {
-						setIsEdit(true);
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAuthorized && (
-				<MenuOption
-					label={t('Upload Image')}
-					icon={<UploadImageIcon />}
-					onOptionClick={() => fileInputRef.current?.click()}
-				/>
-			)}
-			{isAuthorized && canCreateOption && (
-				<MenuOption
-					isOptionSelected={isOption}
-					icon={<LightBulbIcon />}
-					label={isOption ? t('Unmark as a Solution') : t('Mark as a Solution')}
-					onOptionClick={() => {
-						handleSetOption();
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
+		<>
+			<Menu
+				setIsOpen={setIsCardMenuOpen}
+				isMenuOpen={isCardMenuOpen}
+				iconColor="var(--icon-blue)"
+				isCardMenu={true}
+				isChatMenu={true}
+			>
+				{isAuthorized && (
+					<MenuOption
+						label={t('Edit Text')}
+						icon={<EditIcon />}
+						onOptionClick={() => {
+							setIsEdit(true);
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAuthorized && (
+					<MenuOption
+						label={t('Upload Image')}
+						icon={<UploadImageIcon />}
+						onOptionClick={() => fileInputRef.current?.click()}
+					/>
+				)}
+				{isAuthorized && canCreateOption && (
+					<MenuOption
+						isOptionSelected={isOption}
+						icon={<LightBulbIcon />}
+						label={isOption ? t('Unmark as a Solution') : t('Mark as a Solution')}
+						onOptionClick={() => {
+							handleSetOption();
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
 
-			{!isOption && (
-				<MenuOption
-					isOptionSelected={isQuestion}
-					label={isQuestion ? t('Unmark as a Question') : t('Mark as a Question')}
-					icon={<QuestionMarkIcon />}
-					onOptionClick={async () => {
-						const newType =
-							statement.statementType === StatementType.question
-								? StatementType.statement
-								: StatementType.question;
-						const result = await changeStatementType(statement, newType, isAuthorized);
-						if (!result.success && result.error) {
-							console.info(result.error);
-						}
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAuthorized && (
-				<MenuOption
-					label={t('Delete')}
-					icon={<DeleteIcon />}
-					onOptionClick={() => {
-						deleteStatementFromDB(statement, !!isAuthorized, t);
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-		</Menu>
+				{!isOption && (
+					<MenuOption
+						isOptionSelected={isQuestion}
+						label={isQuestion ? t('Unmark as a Question') : t('Mark as a Question')}
+						icon={<QuestionMarkIcon />}
+						onOptionClick={async () => {
+							const newType =
+								statement.statementType === StatementType.question
+									? StatementType.statement
+									: StatementType.question;
+							const result = await changeStatementType(statement, newType, isAuthorized);
+							if (!result.success && result.error) {
+								console.info(result.error);
+							}
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{routeTargets.length > 0 && (
+					<MenuOption
+						label={t('Continue in…')}
+						icon={<ArrowUpRight size={20} />}
+						onOptionClick={() => {
+							setShowRoutePicker(true);
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAuthorized && (
+					<MenuOption
+						label={t('Delete')}
+						icon={<DeleteIcon />}
+						onOptionClick={() => {
+							deleteStatementFromDB(statement, !!isAuthorized, t);
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+			</Menu>
+			<RoutePicker
+				statement={statement}
+				isOpen={showRoutePicker}
+				onClose={() => setShowRoutePicker(false)}
+			/>
+		</>
 	);
 };
 
