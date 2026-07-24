@@ -519,6 +519,25 @@ async function routeStatement(
 
 			return { clusterId: cid, synthId: sid, verdict: 'flat-rescue' };
 		}
+		if (flatVerdict.relation === 'opposes' && flatVerdict.opposedClusterId) {
+			// Contradicting an existing claim proves shared SUBJECT — the strongest
+			// possible evidence against opening a new topic. File as a distinct synth
+			// in the opposed claim's cluster, with the counter-edge recorded.
+			const [, cid, sid] = flatVerdict.opposedClusterId.split(':').map(Number);
+			const home = state.clusters[cid];
+			const synth: Synth = {
+				id: Math.max(...home.synths.map((s) => s.id)) + 1,
+				memberIds: [statement.id],
+				opposes: [sid],
+			};
+			home.synths.push(synth);
+			home.memberIds.push(statement.id);
+			state.verdicts.set(statement.id, 'opposes');
+			state.rescued++;
+			await refreshCluster(model, questionText, home, state);
+
+			return { clusterId: cid, synthId: synth.id, verdict: 'opposes' };
+		}
 
 		return createCluster(model, questionText, statement, state);
 	} else if (scored[0].sim >= createFloor) {
