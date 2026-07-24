@@ -351,7 +351,9 @@ export function getJoinAppUrl(): string {
 		return 'http://localhost:3007';
 	}
 
-	return import.meta.env.VITE_JOIN_APP_URL || 'https://join.wizcol.com';
+	// wizcol-join.web.app is the live hosting site; the join.wizcol.com custom
+	// domain does not resolve. Override with VITE_JOIN_APP_URL if that changes.
+	return import.meta.env.VITE_JOIN_APP_URL || 'https://wizcol-join.web.app';
 }
 
 /**
