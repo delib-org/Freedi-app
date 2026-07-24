@@ -182,6 +182,19 @@ Recommended amendments (keeps the approach, patches the holes):
 - Use the embedding as a **ranker, not a filter**: order the cluster list by cosine and cap it, so the cluster step scales past hundreds of clusters. Ranking can't lock anything out the way the 0.85 cutoff did.
 - Keep the **four-way verdict at the synth step** (same-meaning / same-topic / opposes / unrelated), so an opposing statement creates its synth *with a counter-edge* to the synth it opposes rather than sitting next to it unlinked.
 
+### Living cluster labels (Tal, 2026-07-24)
+
+Represent each cluster by its **10 most-centered statements** (nearest the embedding centroid). The judge routes by looking at those exemplars. When a new statement is attached, the LLM regenerates the label from the 10 exemplars + the new statement.
+
+Why this is sound:
+- **Re-grounding, not ratcheting**: the label is regenerated from raw statements every time — never rewritten from the previous label — so summary drift cannot compound through the label. This is the benchmark's "enrichment fix" (70.1% → 88.6%) applied continuously.
+- **Centroid exemplars are stance-safe**: cosine can't tell pro from con, but a cluster is a *topic* — pro/con statements embedding near-identically means the centroid captures the topic exactly. Cosine's fatal weakness as a merge decision is harmless for picking topic exemplars.
+
+Refinements:
+1. **Route on exemplars, label as headline.** The cluster-step judge sees label + raw exemplar statements; raw statements decide (95% regime), label only orients. 3–5 exemplars per cluster may suffice for routing — ablate 3 vs 10 in the sim.
+2. **Lazy label updates.** Only regenerate when the top-10 exemplar set actually changes (new statement enters top-10 or centroid shifts past a threshold). Most attaches change nothing → label maintenance is nearly free, not one extra LLM call per statement.
+3. **Error legitimization (the real risk).** A misrouted statement that lands near the centroid becomes an exemplar; the label updates to accommodate it; the mistake is now written into the cluster's self-description, attracting more of the same. The living label cannot distinguish "cluster genuinely broadening" from "we filed something wrong" — the periodic repair pass is still required, slightly more than before.
+
 ---
 
 ## 8. Where things stand in the conversation this came from
