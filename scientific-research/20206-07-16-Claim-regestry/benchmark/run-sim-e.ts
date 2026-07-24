@@ -38,7 +38,16 @@
  * result file is skipped; a partially-written dataset is replayed and only
  * missing rows are appended.
  *
- * Usage: npx tsx run-sim-e.ts [--sample results/pilot-ids.json] [--limit N] [--model gpt-4o-mini]
+ * Cluster-step configurations (the judge prompt is never varied):
+ *   (baseline)        create a new cluster whenever routing returns empty
+ *   --create-floor c  join the nearest cluster instead, when its centroid ≥ c
+ *   --merge-pass      judge redundant cluster pairs after seeding and merge
+ *   --flat-fallback   on empty routing, classify against ALL synths in the
+ *                     corpus before concluding "new" — production's rule
+ *
+ * Usage: npx tsx run-sim-e.ts [--sample results/pilot-ids.json] [--limit N]
+ *        [--model gpt-4o-mini] [--create-floor 0.7] [--merge-pass]
+ *        [--flat-fallback] [--tag NAME]
  */
 import { readFileSync } from 'node:fs';
 import { loadEnv } from './lib/env';
@@ -124,9 +133,17 @@ interface EngineState {
 	merges: number;
 	/** Cluster creations suppressed by the creation guard. */
 	guarded: number;
+	/** Statements saved from a spurious new cluster by the flat fallback. */
+	rescued: number;
 }
 
-type Verdict = 'new-cluster' | 'same-meaning' | 'opposes' | 'new-synth' | 'guarded-join';
+type Verdict =
+	| 'new-cluster'
+	| 'same-meaning'
+	| 'opposes'
+	| 'new-synth'
+	| 'guarded-join'
+	| 'flat-rescue';
 
 interface Placement {
 	clusterId: number;
@@ -434,6 +451,7 @@ async function routeStatement(
 	statement: StoredStatement,
 	state: EngineState,
 	createFloor: number,
+	flatFallback: boolean,
 ): Promise<Placement> {
 	state.statements.set(statement.id, statement);
 	const active = state.clusters.filter((c) => c.active);
@@ -461,6 +479,48 @@ async function routeStatement(
 	let guardedJoin = false;
 	if (routed.length > 0) {
 		cluster = state.clusters[Number(routed[0].clusterId.split(':')[1])];
+	} else if (flatFallback) {
+		// Production's rule (classifyHierarchical): a router that finds nothing has
+		// FAILED, it has not discovered a new topic. Look at every synth in the
+		// corpus before concluding this is new — "a gate with an ungated second
+		// look cannot misfile". Creating a cluster on empty routing is precisely
+		// the fragmentation mechanism that cost 20pp in the first run.
+		const all = active.flatMap((c) => c.synths.map((s) => ({ cluster: c, synth: s })));
+		const claims = all.map((x) => asSynthClaim(x.cluster, x.synth, state));
+		const cosineAll = new Map(
+			all.map((x) => [
+				`synth:${x.cluster.id}:${x.synth.id}`,
+				cosine(
+					statement.vector,
+					meanVector(x.synth.memberIds.map((id) => state.statements.get(id)!.vector)),
+				),
+			]),
+		);
+		state.calls.synth++;
+		state.synthListSizes.push(claims.length);
+		const flatVerdict = await classifySynth({
+			statementText: statement.text,
+			questionText,
+			claims: orderClaimsForClassification(claims, cosineAll),
+			model,
+		});
+		if (
+			flatVerdict.relation === 'expresses' &&
+			flatVerdict.matchedClusterId &&
+			flatVerdict.confidence >= ATTACH_CONFIDENCE
+		) {
+			const [, cid, sid] = flatVerdict.matchedClusterId.split(':').map(Number);
+			const home = state.clusters[cid];
+			home.synths.find((s) => s.id === sid)!.memberIds.push(statement.id);
+			home.memberIds.push(statement.id);
+			state.verdicts.set(statement.id, 'flat-rescue');
+			state.rescued++;
+			await refreshCluster(model, questionText, home, state);
+
+			return { clusterId: cid, synthId: sid, verdict: 'flat-rescue' };
+		}
+
+		return createCluster(model, questionText, statement, state);
 	} else if (scored[0].sim >= createFloor) {
 		// Creation guard: the router found no home, but geometry says this is the
 		// same subject as an existing cluster — join rather than fragment.
@@ -535,6 +595,8 @@ interface Config {
 	/** Join the nearest cluster instead of splitting when the router declines all and cosine ≥ this. */
 	createFloor: number;
 	mergePass: boolean;
+	/** On empty routing, judge against ALL synths before creating a cluster (production's rule). */
+	flatFallback: boolean;
 	/** Result-file suffix so configurations can be compared side by side. */
 	tag: string;
 }
@@ -554,6 +616,7 @@ function parseArgs(): Config {
 		// 1.01 = unreachable, i.e. guard off (the original condition E).
 		createFloor: get('--create-floor') ? Number(get('--create-floor')) : 1.01,
 		mergePass: args.includes('--merge-pass'),
+		flatFallback: args.includes('--flat-fallback'),
 		tag: get('--tag') ?? '',
 	};
 }
@@ -587,6 +650,7 @@ async function replayDataset(
 		verdicts: new Map(),
 		merges: 0,
 		guarded: 0,
+		rescued: 0,
 	};
 
 	// Phase A — seed with anchors, file order.
@@ -597,6 +661,7 @@ async function replayDataset(
 			{ id: `${t.id}:a`, text: t.anchor, vector: vectorOf.get(`${t.id}:a`)! },
 			state,
 			config.createFloor,
+			config.flatFallback,
 		);
 	}
 	const activeCount = (): number => state.clusters.filter((c) => c.active).length;
@@ -627,6 +692,7 @@ async function replayDataset(
 			},
 			state,
 			config.createFloor,
+			config.flatFallback,
 		);
 	}
 
@@ -672,6 +738,7 @@ async function replayDataset(
 		calls: state.calls,
 		merges: state.merges,
 		guardedJoins: state.guarded,
+		flatRescues: state.rescued,
 		meanClusterList:
 			state.clusterListSizes.reduce((a, b) => a + b, 0) / (state.clusterListSizes.length || 1),
 		meanSynthList:
@@ -702,7 +769,7 @@ async function main(): Promise<void> {
 		group.some((t) => !done.has(t.id)),
 	);
 	console.info(
-		`model=${config.model} · createFloor=${config.createFloor} · mergePass=${config.mergePass} · ${pending.length}/${byDataset.size} datasets`,
+		`model=${config.model} · createFloor=${config.createFloor} · mergePass=${config.mergePass} · flatFallback=${config.flatFallback} · ${pending.length}/${byDataset.size} datasets`,
 	);
 	await Promise.all(
 		pending.map(([dataset, group]) => replayDataset(dataset, group, config, done)),
