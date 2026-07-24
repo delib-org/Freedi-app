@@ -17,6 +17,8 @@ import {
 } from '@/controllers/db/statements/paragraphChildren';
 import RichTextEditor from '@/view/components/richTextEditor/RichTextEditor';
 import { sanitizeInlineHtml } from '@/view/components/richTextEditor/editorSerialization';
+import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import { containsRichHtml } from '@/utils/richHtml';
 import { logError } from '@/utils/errorHandling';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 
@@ -33,11 +35,12 @@ interface StatementBodyProps {
  */
 const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => {
 	const { t } = useTranslation();
-	const [paragraphs, setParagraphs] = useState<Statement[]>([]);
+	const [canonicalParagraphs, setCanonicalParagraphs] = useState<Statement[]>([]);
+	const [officialParagraphs, setOfficialParagraphs] = useState<Statement[]>([]);
 	const [isEditing, setIsEditing] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 
-	// Subscribe to paragraph children of `host`.
+	// Subscribe to canonical paragraph children of `host`.
 	useEffect(() => {
 		const q = query(
 			collection(FireStore, Collections.statements),
@@ -46,11 +49,55 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 		);
 		const unsub = onSnapshot(q, (snap) => {
 			const next = snap.docs.map((d) => d.data() as Statement);
-			setParagraphs(sortParagraphChildren(next));
+			setCanonicalParagraphs(sortParagraphChildren(next));
 		});
 
 		return () => unsub();
 	}, [host.statementId]);
+
+	// Dual-read (Sign legacy): official body paragraphs written by Sign are
+	// option-typed children flagged with `doc.isOfficialParagraph`. Without
+	// this subscription a Sign document's body is invisible in the main app.
+	useEffect(() => {
+		const q = query(
+			collection(FireStore, Collections.statements),
+			where('parentId', '==', host.statementId),
+			where('doc.isOfficialParagraph', '==', true),
+		);
+		const unsub = onSnapshot(
+			q,
+			(snap) => {
+				const next = snap.docs.map((d) => d.data() as Statement).filter((s) => !s.hide);
+				setOfficialParagraphs(next);
+			},
+			(error) => {
+				logError(error, {
+					operation: 'StatementBody.listenOfficialParagraphs',
+					statementId: host.statementId,
+				});
+			},
+		);
+
+		return () => unsub();
+	}, [host.statementId]);
+
+	// Merge both shapes, dedupe by id (canonical wins), keep document order.
+	const paragraphs = useMemo(() => {
+		const byId = new Map<string, Statement>();
+		for (const p of officialParagraphs) byId.set(p.statementId, p);
+		for (const p of canonicalParagraphs) byId.set(p.statementId, p);
+
+		return sortParagraphChildren([...byId.values()]);
+	}, [canonicalParagraphs, officialParagraphs]);
+
+	// Sign-authored bodies carry rich HTML the inline editor can't round-trip
+	// (it only supports bold/italic) — editing would destroy colors/tables and,
+	// for legacy option-typed paragraphs, duplicate the body. Hide editing.
+	const hasSignAuthoredBody = useMemo(
+		() => officialParagraphs.length > 0 || paragraphs.some((p) => containsRichHtml(p.statement)),
+		[officialParagraphs, paragraphs],
+	);
+	const canEditBody = canEdit && !hasSignAuthoredBody;
 
 	const editorParagraphs = useMemo<Paragraph[]>(
 		() => paragraphs.map(statementToParagraph),
@@ -86,7 +133,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 
 	const isEmpty = paragraphs.length === 0;
 
-	if (!canEdit && isEmpty) return null;
+	if (!canEditBody && isEmpty) return null;
 
 	if (isEditing) {
 		return (
@@ -105,7 +152,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 
 	return (
 		<div className={clsx('statement-body', className)}>
-			{canEdit && !isEmpty && (
+			{canEditBody && !isEmpty && (
 				<button
 					type="button"
 					className="statement-body__edit-button"
@@ -116,7 +163,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 				</button>
 			)}
 
-			{isEmpty && canEdit && (
+			{isEmpty && canEditBody && (
 				<button
 					type="button"
 					className="statement-body__placeholder"
@@ -127,7 +174,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 			)}
 
 			{paragraphs.map((p) => {
-				const blockType = p.blockType ?? ParagraphType.paragraph;
+				const blockType = p.blockType ?? p.doc?.paragraphType ?? ParagraphType.paragraph;
 				const contentHtml = p.doc?.contentHtml;
 
 				return (
@@ -142,6 +189,10 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 									className="statement-body__text"
 									dangerouslySetInnerHTML={{ __html: sanitizeInlineHtml(contentHtml) }}
 								/>
+							) : containsRichHtml(p.statement) ? (
+								// Sign-authored rich HTML (colored spans, tables, entities) —
+								// sanitized inside RichHtmlContent with the shared allowlist.
+								<RichHtmlContent content={p.statement} className="statement-body__text" />
 							) : (
 								<span className="statement-body__text">{p.statement ?? ''}</span>
 							),
@@ -172,6 +223,10 @@ function renderTypedContent(type: ParagraphType, inner: React.ReactNode): React.
 			// Render as div with list-item visual styling — bare <li> is invalid
 			// outside <ul>/<ol> and we don't group consecutive list items.
 			return <div className="statement-body__li">{inner}</div>;
+		case ParagraphType.table:
+			// Table markup lives inside the (sanitized) content; a <p> wrapper
+			// would be invalid around it.
+			return <div className="statement-body__table">{inner}</div>;
 		case ParagraphType.paragraph:
 		default:
 			return <p className="statement-body__paragraph">{inner}</p>;

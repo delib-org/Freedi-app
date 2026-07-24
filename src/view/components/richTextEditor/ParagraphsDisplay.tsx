@@ -1,17 +1,21 @@
 import React, { FC } from 'react';
-import DOMPurify from 'dompurify';
 import { Statement, Paragraph, ParagraphType } from '@freedi/shared-types';
 import { sortParagraphs } from '@/utils/paragraphUtils';
+import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import { sanitizeInlineHtml } from './editorSerialization';
 import styles from './ParagraphsDisplay.module.scss';
 
-/** Inline paragraph content: formatted (sanitized) when contentHtml exists. */
+/**
+ * Inline paragraph content: formatted (sanitized) when contentHtml exists.
+ * Sign-authored content stores rich HTML directly in `content` —
+ * RichHtmlContent sanitizes and renders it (plain text passes through as-is).
+ */
 function inlineContent(para: Paragraph): React.ReactNode {
 	if (para.contentHtml) {
 		return <span dangerouslySetInnerHTML={{ __html: sanitizeInlineHtml(para.contentHtml) }} />;
 	}
 
-	return para.content;
+	return <RichHtmlContent content={para.content} />;
 }
 
 interface ParagraphsDisplayProps {
@@ -101,11 +105,9 @@ function renderParagraph(para: Paragraph): React.ReactNode {
 			return <h6 key={key}>{content}</h6>;
 		case ParagraphType.table:
 			return (
-				<div
-					key={key}
-					className={styles.table}
-					dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(para.content) }}
-				/>
+				<div key={key} className={styles.table}>
+					<RichHtmlContent content={para.content} />
+				</div>
 			);
 		case ParagraphType.paragraph:
 		default:

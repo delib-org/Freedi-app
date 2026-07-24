@@ -23,6 +23,7 @@ import {
 } from '@/controllers/db/integration/integrationController';
 import SendIcon from '@/view/components/icons/SendIcon';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
+import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import styles from './TreeOptionNode.module.scss';
 
 // Stable empty array reference shared across all non-synthesis nodes, so the
@@ -320,17 +321,23 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 					/>
 				) : (
 					<>
-						<div className={styles['tree-option-node__text']}>{statement.statement}</div>
+						<div className={styles['tree-option-node__text']}>
+							<RichHtmlContent content={statement.statement} />
+						</div>
 						{statement.paragraphs && statement.paragraphs.length > 0 ? (
 							<div className={styles['tree-option-node__paragraphs']}>
 								{[...statement.paragraphs]
 									.sort((a, b) => a.order - b.order)
 									.map((p) => (
-										<p key={p.paragraphId}>{p.content}</p>
+										<p key={p.paragraphId}>
+											<RichHtmlContent content={p.content} />
+										</p>
 									))}
 							</div>
 						) : statement.description ? (
-							<div className={styles['tree-option-node__description']}>{statement.description}</div>
+							<div className={styles['tree-option-node__description']}>
+								<RichHtmlContent content={statement.description} />
+							</div>
 						) : null}
 						{isSynthesis && (
 							<>
