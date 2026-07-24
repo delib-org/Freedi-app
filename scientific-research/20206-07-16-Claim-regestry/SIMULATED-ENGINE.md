@@ -207,7 +207,9 @@ Per dataset:
 1. **Phase A (seed):** all pilot anchors stream through the engine in file order, building clusters + synths from an empty store.
 2. **Phase B (probe):** all matches + distractors stream through the same engine in a seeded shuffle (seed 20260724), attaching into the grown structure.
 
-Engine per statement: cluster step (LLM vs living-label + 3 centroid exemplars per cluster, cosine-ranked, top 20) → synth step (LLM four-way vs synths in the chosen cluster, 2 member texts each) → centroid + top-10 exemplar refresh → label regenerated only when the exemplar set changed.
+Engine per statement: cluster step (production `routeToTopics` vs living-label + 3 centroid exemplars per cluster, cosine-ranked, top 20) → synth step (production `classifyAgainstClaims` vs synths in the chosen cluster, each rendered as **raw member text**, attach on `expresses` ≥ 0.6, `opposes` → new synth + counter-edge) → centroid + top-10 exemplar refresh → label regenerated only when the exemplar set changed.
+
+> **Finding before the run — never re-roll the judge prompt.** The first version of the runner used hand-written cluster/synth prompts. On the first 14 triplets it produced **43% false merges** (vs the production prompt's 2.1% on isolated triplets) — 6/14 distractors judged same-meaning. Cause: the hand-written prompt lacked production's two defenses against exactly this attack — *"CAUTION: a statement may reuse an example's exact wording while taking the OPPOSITE stance… shared phrasing is never evidence of a match"* and *"when in doubt between expresses and none, answer none"* — plus the ≥ 0.6 confidence gate. Swapping in the production functions fixed the first three triplets from 0/2 → 3/3 with all distractors correctly marked `opposes`. Archived at `results/sim-e-handrolled-prompt.jsonl`. **Lesson: the harness must always import the production classifier; a plausible-looking substitute prompt silently costs ~40pp.**
 
 ### Scoring (per triplet, written to `results/sim-e.jsonl`)
 | field | meaning |

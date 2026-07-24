@@ -1,0 +1,3 @@
+{"dataset":"polis_15_per_hour_seattle","model":"gpt-4o-mini","statements":9,"clusters":1,"synths":5,"calls":{"cluster":8,"synth":8,"label":9},"meanClusterList":1,"meanSynthList":3}
+{"dataset":"polis_scoop_hivemind_ubi","model":"gpt-4o-mini","statements":9,"clusters":1,"synths":5,"calls":{"cluster":8,"synth":8,"label":9},"meanClusterList":1,"meanSynthList":3.125}
+{"dataset":"polis_brexit_consensus","model":"gpt-4o-mini","statements":24,"clusters":6,"synths":15,"calls":{"cluster":23,"synth":18,"label":24},"meanClusterList":3.4782608695652173,"meanSynthList":5}

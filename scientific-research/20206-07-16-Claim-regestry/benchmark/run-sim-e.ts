@@ -9,13 +9,20 @@
  *   Phase B (probe): all matches + distractors stream through the same engine
  *                    in a seeded shuffle, attaching into the grown structure.
  *
- * Engine per statement (no cosine filter — cosine only RANKS cluster lists):
- *   1. cluster step — one LLM call vs clusters (living label + 3 centroid
- *      exemplars each, ranked by centroid cosine, top 20). Topic decision,
- *      stance-blind. None → create cluster.
- *   2. synth step — one LLM call vs the synths inside the chosen cluster
- *      (2 member texts each). sameMeaning → join; opposes → new synth with a
- *      counter-edge; neither → new synth.
+ * Both judge steps call the PRODUCTION classifier — nothing is reimplemented.
+ * (A hand-written synth prompt was tried first and measured 43% false merges vs
+ * the production prompt's 2.1%: it lacked the "shared phrasing is never
+ * evidence of a match" caution and the confidence threshold. Never re-roll the
+ * judge prompt in this harness.)
+ *
+ * Engine per statement (no cosine filter — cosine only RANKS candidate lists):
+ *   1. cluster step — routeToTopics() vs clusters (living label + 3 centroid
+ *      exemplars each, cosine-ranked, top 20). Stance-blind topic routing;
+ *      empty result → create cluster.
+ *   2. synth step — classifyAgainstClaims() vs the synths inside the chosen
+ *      cluster, each rendered as RAW member text (the 95% regime, never a
+ *      summary). expresses ≥ 0.6 → join; opposes → new synth + counter-edge;
+ *      none → new synth.
  *   3. living label — recompute centroid + top-10 exemplars; if the exemplar
  *      set changed, one LLM call regenerates the label from raw exemplars.
  *
@@ -39,6 +46,12 @@ import { loadEnv } from './lib/env';
 loadEnv();
 
 import { callLLM, extractJson, WORKER_MODEL } from '../../../functions/src/config/openai-chat';
+import {
+	classifyAgainstClaims,
+	orderClaimsForClassification,
+	routeToTopics,
+	type ClusterClaim,
+} from '../../../functions/src/services/claim-registry-service';
 import { loadTriplets, questionFor, type Triplet } from './lib/datasets';
 import { cachedEmbedBatch } from './lib/embeddings';
 import { appendJsonl, doneIds, resultsPath } from './lib/io';
@@ -50,6 +63,16 @@ const CLUSTER_LIST_CAP = 20;
 const CLUSTER_EXEMPLARS_SHOWN = 3;
 const SYNTH_MEMBERS_SHOWN = 2;
 const EXEMPLAR_SET_SIZE = 10;
+/**
+ * The org's gpt-4o-mini bucket is 500 RPM / 200k TPM. Production's retry ladder
+ * tops out around 51s, which loses to a 60s token-bucket reset, so this harness
+ * wraps every call in a longer, patient ladder of its own. Run with a low
+ * LLM_CONCURRENCY (2–3) to stay inside the TPM ceiling in the first place.
+ */
+const RATE_LIMIT_ATTEMPTS = 8;
+const RATE_LIMIT_WAIT_MS = 20_000;
+/** ELJ definition (§1): attach only on `expresses` at or above this confidence. */
+const ATTACH_CONFIDENCE = 0.6;
 
 interface StoredStatement {
 	id: string;
@@ -104,21 +127,24 @@ export interface SimERow {
 	tripletCorrect: boolean;
 }
 
-const CLUSTER_SYSTEM = `You organize statements from a public deliberation into topic clusters. A cluster groups statements about the same specific topic or issue REGARDLESS OF STANCE — supporting and opposing statements about the same issue belong in the SAME cluster. Decide whether the new statement belongs under one of the existing clusters (same topic), or none of them.
-
-Respond with JSON only: {"cluster": <number>} or {"cluster": null}`;
-
-const SYNTH_SYSTEM = `A synth is a group of statements that all express the SAME claim: same meaning AND same stance, even in different words or a different language. Statements about the same issue with OPPOSITE stances are NOT the same claim.
-
-Given the new statement and the synths in this cluster (each shown by example statements), decide:
-1. "sameMeaning": which synth (if any) expresses the same claim as the new statement.
-2. "opposes": if none has the same meaning, which synth (if any) takes the opposite stance on the same specific issue.
-
-Respond with JSON only: {"sameMeaning": <number or null>, "opposes": <number or null>}`;
-
 const LABEL_SYSTEM = `Write a short neutral label (5–12 words) naming the topic that ALL of the following deliberation statements are about. The label names the TOPIC, not a stance — someone agreeing and someone disagreeing should both recognize it as their topic.
 
 Respond with JSON only: {"label": "..."}`;
+
+/** callLLM with a patient 429 ladder — a saturated TPM bucket refills over ~60s. */
+async function callJudge(options: Parameters<typeof callLLM>[0]): Promise<string> {
+	let lastError: unknown;
+	for (let attempt = 0; attempt < RATE_LIMIT_ATTEMPTS; attempt++) {
+		try {
+			return await callLLM(options);
+		} catch (error) {
+			if ((error as { status?: number })?.status !== 429) throw error;
+			lastError = error;
+			await new Promise((r) => setTimeout(r, RATE_LIMIT_WAIT_MS));
+		}
+	}
+	throw lastError;
+}
 
 function cosine(a: number[], b: number[]): number {
 	let dot = 0;
@@ -166,11 +192,68 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
 	return out;
 }
 
-function parseIndex(value: unknown, max: number): number | null {
-	const n = typeof value === 'number' ? value : Number(value);
-	if (!Number.isInteger(n) || n < 1 || n > max) return null;
+/**
+ * A cluster as a routing target: the living label is the claim line, its most
+ * central statements are the evidence. Extra exemplars ride in the explanation
+ * slot so the production renderer shows all three.
+ */
+function asTopicClaim(cluster: Cluster, state: EngineState): ClusterClaim {
+	const exemplars = cluster.exemplarIds
+		.slice(0, CLUSTER_EXEMPLARS_SHOWN)
+		.map((id) => state.statements.get(id)!.text);
 
-	return n - 1;
+	return {
+		clusterId: `cluster:${cluster.id}`,
+		canonicalClaim: cluster.label,
+		publicExplanation:
+			exemplars.length > 1
+				? `statements in this topic include: ${exemplars.slice(1).map((t) => `"${t}"`).join('; ')}`
+				: '',
+		claimVersion: 1,
+		claimStatus: 'confirmed',
+		claimUpdatedAt: 0,
+		isSynth: false,
+		memberCount: cluster.memberIds.length,
+		exemplar: exemplars[0],
+		claimLevel: 'topic',
+	};
+}
+
+/**
+ * A synth as a classification target. The claim text IS a raw member statement —
+ * the benchmark's 95%-accuracy regime — never a generated summary (70.1%).
+ */
+function asSynthClaim(cluster: Cluster, synth: Synth, state: EngineState): ClusterClaim {
+	const members = synth.memberIds.slice(0, SYNTH_MEMBERS_SHOWN).map((id) => state.statements.get(id)!.text);
+
+	return {
+		clusterId: `synth:${cluster.id}:${synth.id}`,
+		canonicalClaim: members[0],
+		publicExplanation: '',
+		claimVersion: 1,
+		claimStatus: 'confirmed',
+		claimUpdatedAt: 0,
+		isSynth: true,
+		memberCount: synth.memberIds.length,
+		exemplar: members[1],
+		claimLevel: 'specific',
+	};
+}
+
+/**
+ * classifyAgainstClaims fails CLOSED on an LLM error — a rate-limited call
+ * returns a "none" that is indistinguishable from an honest new-claim verdict
+ * and would silently inflate synth counts. Retry until it is a real judgment.
+ */
+async function classifySynth(
+	input: Parameters<typeof classifyAgainstClaims>[0],
+): Promise<Awaited<ReturnType<typeof classifyAgainstClaims>>> {
+	for (let attempt = 0; attempt < RATE_LIMIT_ATTEMPTS; attempt++) {
+		const result = await classifyAgainstClaims(input);
+		if (!result.failedClosed) return result;
+		await new Promise((r) => setTimeout(r, RATE_LIMIT_WAIT_MS));
+	}
+	throw new Error('classifyAgainstClaims failed closed after retries');
 }
 
 async function generateLabel(
@@ -180,7 +263,7 @@ async function generateLabel(
 	state: EngineState,
 ): Promise<string> {
 	state.calls.label++;
-	const text = await callLLM({
+	const text = await callJudge({
 		model,
 		system: LABEL_SYSTEM,
 		user: `Question: "${questionText}"\n\nStatements:\n${texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n\nRespond with the JSON object.`,
@@ -254,82 +337,73 @@ async function routeStatement(
 		return createCluster(model, questionText, statement, state);
 	}
 
-	// ---- cluster step: cosine ranks, judge decides ----
+	// ---- cluster step: cosine RANKS, production routeToTopics decides ----
+	// routeToTopics is the stance-blind topic router ("NOT judging agreement,
+	// only subject relevance") — exactly the cluster step's semantics.
 	const ranked = state.clusters
 		.map((c) => ({ cluster: c, sim: cosine(statement.vector, c.centroid) }))
 		.sort((a, b) => b.sim - a.sim)
 		.slice(0, CLUSTER_LIST_CAP)
 		.map((r) => r.cluster);
 	state.clusterListSizes.push(ranked.length);
-	const clusterLines = ranked
-		.map((c, i) => {
-			const examples = c.exemplarIds
-				.slice(0, CLUSTER_EXEMPLARS_SHOWN)
-				.map((id) => `"${state.statements.get(id)!.text}"`)
-				.join(' | ');
-
-			return `${i + 1}. topic: ${c.label}\n   examples: ${examples}`;
-		})
-		.join('\n');
 	state.calls.cluster++;
-	const clusterAnswer = await callLLM({
+	const routed = await routeToTopics({
+		statementText: statement.text,
+		questionText,
+		topics: ranked.map((c) => asTopicClaim(c, state)),
 		model,
-		system: CLUSTER_SYSTEM,
-		user: `Question: "${questionText}"\n\nExisting clusters:\n${clusterLines}\n\nNew statement: "${statement.text}"\n\nRespond with the JSON object.`,
-		temperature: 0,
-		maxTokens: 60,
-		jsonMode: true,
 	});
-	const clusterParsed = JSON.parse(extractJson(clusterAnswer)) as { cluster?: unknown };
-	const clusterIndex = parseIndex(clusterParsed.cluster, ranked.length);
-	if (clusterIndex === null) {
+	if (routed.length === 0) {
 		return createCluster(model, questionText, statement, state);
 	}
-	const cluster = ranked[clusterIndex];
+	const cluster = state.clusters[Number(routed[0].clusterId.split(':')[1])];
 
-	// ---- synth step: four-way verdict inside the chosen cluster ----
+	// ---- synth step: production classifyAgainstClaims inside the cluster ----
+	// Its prompt carries the distractor defense this benchmark exists to test
+	// ("shared phrasing is never evidence of a match") plus the confidence
+	// threshold — a hand-written substitute measured 43% false merges.
 	state.synthListSizes.push(cluster.synths.length);
-	const synthLines = cluster.synths
-		.map((s, i) => {
-			const examples = s.memberIds
-				.slice(0, SYNTH_MEMBERS_SHOWN)
-				.map((id) => `"${state.statements.get(id)!.text}"`)
-				.join(' | ');
-
-			return `${i + 1}. ${examples}`;
-		})
-		.join('\n');
+	const synthClaims = cluster.synths.map((s) => asSynthClaim(cluster, s, state));
+	const cosineBySynth = new Map(
+		cluster.synths.map((s) => [
+			`synth:${cluster.id}:${s.id}`,
+			cosine(statement.vector, meanVector(s.memberIds.map((id) => state.statements.get(id)!.vector))),
+		]),
+	);
 	state.calls.synth++;
-	const synthAnswer = await callLLM({
+	const verdict = await classifySynth({
+		statementText: statement.text,
+		questionText,
+		claims: orderClaimsForClassification(synthClaims, cosineBySynth),
 		model,
-		system: SYNTH_SYSTEM,
-		user: `Question: "${questionText}"\n\nSynths in this cluster:\n${synthLines}\n\nNew statement: "${statement.text}"\n\nRespond with the JSON object.`,
-		temperature: 0,
-		maxTokens: 60,
-		jsonMode: true,
 	});
-	const synthParsed = JSON.parse(extractJson(synthAnswer)) as {
-		sameMeaning?: unknown;
-		opposes?: unknown;
-	};
-	const sameIndex = parseIndex(synthParsed.sameMeaning, cluster.synths.length);
-	const opposesIndex = parseIndex(synthParsed.opposes, cluster.synths.length);
+	const synthIdOf = (clusterId: string): number => Number(clusterId.split(':')[2]);
+	const matchedId =
+		verdict.relation === 'expresses' &&
+		verdict.matchedClusterId &&
+		verdict.confidence >= ATTACH_CONFIDENCE
+			? synthIdOf(verdict.matchedClusterId)
+			: null;
+	const opposedId =
+		verdict.relation === 'opposes' && verdict.opposedClusterId
+			? synthIdOf(verdict.opposedClusterId)
+			: null;
 
 	let placement: Placement;
-	if (sameIndex !== null) {
-		cluster.synths[sameIndex].memberIds.push(statement.id);
-		placement = { clusterId: cluster.id, synthId: cluster.synths[sameIndex].id, verdict: 'same-meaning' };
+	if (matchedId !== null) {
+		cluster.synths.find((s) => s.id === matchedId)!.memberIds.push(statement.id);
+		placement = { clusterId: cluster.id, synthId: matchedId, verdict: 'same-meaning' };
 	} else {
 		const synth: Synth = {
 			id: cluster.synths.length,
 			memberIds: [statement.id],
-			opposes: opposesIndex !== null ? [cluster.synths[opposesIndex].id] : [],
+			opposes: opposedId !== null ? [opposedId] : [],
 		};
 		cluster.synths.push(synth);
 		placement = {
 			clusterId: cluster.id,
 			synthId: synth.id,
-			verdict: opposesIndex !== null ? 'opposes' : 'new-synth',
+			verdict: opposedId !== null ? 'opposes' : 'new-synth',
 		};
 	}
 
