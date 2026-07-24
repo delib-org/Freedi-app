@@ -112,7 +112,7 @@ Worst case two judge calls per statement (synth tier + cluster tier). Still ~$0.
 1. Build a small driver that replays the 875 triplets + the 150 recall-gap anchors (English + Hebrew rewrites) through the tiered engine above.
 2. Reuse existing harness pieces in `scientific-research/20206-07-16-Claim-regestry/benchmark/` — it already imports the production classifier and has embeddings cached (`results/claim-embeddings-cache.jsonl`, `results/cosines.jsonl`, `results/recall-gap-E.jsonl`).
 3. Score: false merges (distractor attached to anchor's synth/cluster), recall (match filed with anchor at either tier), tier usage rates, judge-list sizes, cost.
-4. Compare four configurations: (a) production today (cosine-only fast paths), (b) this tiered ELJ, (c) flat ELJ (single 0.45 fetch + one judge call), (d) verdict-tiered ELJ (§6 — flat fetch over representatives, judge assigns the tier).
+4. Compare five configurations: (a) production today (cosine-only fast paths), (b) this tiered ELJ, (c) flat ELJ (single 0.45 fetch + one judge call), (d) verdict-tiered ELJ (§6 — flat fetch over representatives, judge assigns the tier), (e) pure hierarchical LLM routing (§7 — cluster step then synth step, no cosine filter).
 
 ---
 
@@ -151,7 +151,40 @@ Why it should fill tiers more correctly than §2:
 
 ---
 
-## 7. Where things stand in the conversation this came from
+## 7. Alternative engine (configuration e): pure hierarchical LLM routing
+
+Proposed by Tal 2026-07-24. No cosine filter at all — the judge walks the hierarchy:
+
+```
+new statement arrives
+│
+├─ 1) CLUSTER STEP — one judge call vs all clusters
+│     "is there a cluster this sits under?"
+│     · yes → enter that cluster
+│     · no  → create a new cluster (statement seeds it)
+│
+└─ 2) SYNTH STEP — one judge call vs the synths inside the chosen cluster
+      · same-meaning synth found → join it
+      · none → create a new synth in this cluster
+```
+
+Properties:
+- **Cheap and bounded**: two short calls per statement; list sizes scale with #clusters and cluster size, not corpus size. Stays in the small-list regime where judge accuracy (95%) was actually measured. ≈ $0.2–0.5 per 1,000 statements at any scale.
+- **No cosine failure modes**: no Hebrew synth lockout, no brief-embedding drift, no top-K opposites crowding. Pro/con falls out naturally — opposing statements share a topic cluster but form separate synths.
+- Every statement ends in exactly one cluster and one synth (singleton synths allowed).
+
+Failure modes to measure in simulation (in order of importance):
+1. **Cluster representation = the summary trap.** The cluster step must show 2–3 raw exemplar statements per cluster, NOT a label/summary — judging summaries scored 70.1% vs 95.0% raw.
+2. **Sticky, compounding routing errors.** A wrong cluster pick means the synth search happens in the wrong place → duplicate synth created elsewhere → every future similar statement has two plausible homes. No step ever looks across clusters, so structure only degrades. Needs a periodic repair pass (merge duplicate synths/clusters).
+3. **Uncontrolled cluster granularity + arrival-order dependence.** "Create new cluster if none fits" is a fuzzy, unbenchmarked boundary — risk of fragmentation (hundreds of near-duplicate clusters) or mega-clusters (synth lists grow huge). First arrivals define the map; different replay order → different structure. Measure with order-shuffled replays.
+
+Recommended amendments (keeps the approach, patches the holes):
+- Use the embedding as a **ranker, not a filter**: order the cluster list by cosine and cap it, so the cluster step scales past hundreds of clusters. Ranking can't lock anything out the way the 0.85 cutoff did.
+- Keep the **four-way verdict at the synth step** (same-meaning / same-topic / opposes / unrelated), so an opposing statement creates its synth *with a counter-edge* to the synth it opposes rather than sitting next to it unlinked.
+
+---
+
+## 8. Where things stand in the conversation this came from
 
 Agreed so far:
 - Embedding cannot distinguish agree/disagree (0.5% on triplets); the judge can (95%+). So **no attach without a judge verdict** — that's the definition of ELJ.
