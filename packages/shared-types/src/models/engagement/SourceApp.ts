@@ -5,4 +5,5 @@ export enum SourceApp {
 	FLOW = 'flow',
 	CHAT = 'chat',
 	AGORA = 'agora',
+	JOIN = 'join',
 }

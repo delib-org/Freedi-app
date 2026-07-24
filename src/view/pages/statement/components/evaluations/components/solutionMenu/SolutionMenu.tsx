@@ -1,4 +1,5 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
 import DocumentIcon from '@/assets/icons/document.svg?react';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
@@ -12,8 +13,10 @@ import { toggleIsDocument } from '@/controllers/db/statements/setIsDocument';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useRouteTargets } from '@/controllers/statementRouter/useRouteTargets';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
+import RoutePicker from '@/view/components/statementRouter/RoutePicker/RoutePicker';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
@@ -43,6 +46,8 @@ const SolutionMenu: FC<Props> = ({
 }) => {
 	const { t } = useTranslation();
 	const user = useSelector(creatorSelector);
+	const routeTargets = useRouteTargets(statement);
+	const [showRoutePicker, setShowRoutePicker] = useState(false);
 	const isCreator = statement.creatorId === user?.uid;
 	const isCreatorOrAdmin = isCreator || isAdmin;
 	const isOption = statement.statementType === StatementType.option;
@@ -68,95 +73,112 @@ const SolutionMenu: FC<Props> = ({
 	if (!isCreatorOrAdmin && statement.statementType !== StatementType.statement) return null;
 
 	return (
-		<Menu
-			setIsOpen={setIsCardMenuOpen}
-			isMenuOpen={isCardMenuOpen}
-			iconColor="#5899E0"
-			isCardMenu={true}
-			isNavMenu={false}
-		>
-			{isAuthorized && isCreatorOrAdmin && (
-				<MenuOption
-					label={t('Edit Text')}
-					icon={<EditIcon />}
-					onOptionClick={() => {
-						setIsEdit(!isEdit);
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAuthorized && (
-				<MenuOption
-					isOptionSelected={isOption}
-					icon={<LightBulbIcon />}
-					label={isOption ? t('Unmark as a Solution') : t('Mark as a Solution')}
-					onOptionClick={() => {
-						handleSetOption();
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAuthorized && (
-				<MenuOption
-					isOptionSelected={isResearch}
-					icon={<QuestionMarkIcon />}
-					label={isResearch ? t('Unmark as a Question') : t('Mark as a Question')}
-					onOptionClick={async () => {
-						const newType =
-							statement.statementType === StatementType.question
-								? StatementType.statement
-								: StatementType.question;
-						const result = await changeStatementType(statement, newType, isAuthorized);
-						if (!result.success && result.error) {
-							alert(result.error);
-						}
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAuthorized && (
-				<MenuOption
-					isOptionSelected={isHide}
-					icon={isHide ? <EyeIcon /> : <EyeCrossIcon />}
-					label={isHide ? t('Unhide') : t('Hide')}
-					onOptionClick={() => {
-						handleToggleHideStatement();
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAdmin && isOption && (
-				<MenuOption
-					isOptionSelected={isDocumentMarked}
-					icon={<DocumentIcon />}
-					label={isDocumentMarked ? t('Unmark as a Document') : t('Mark as a Document')}
-					onOptionClick={() => {
-						toggleIsDocument(statement.statementId);
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAdmin && onIntegrate && (
-				<MenuOption
-					label={t('Integrate Similar')}
-					icon={<NetworkIcon />}
-					onOptionClick={() => {
-						onIntegrate();
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-			{isAuthorized && isCreatorOrAdmin && (
-				<MenuOption
-					label={t('Delete')}
-					icon={<DeleteIcon />}
-					onOptionClick={() => {
-						deleteStatementFromDB(statement, isAuthorized, t);
-						setIsCardMenuOpen(false);
-					}}
-				/>
-			)}
-		</Menu>
+		<>
+			<Menu
+				setIsOpen={setIsCardMenuOpen}
+				isMenuOpen={isCardMenuOpen}
+				iconColor="#5899E0"
+				isCardMenu={true}
+				isNavMenu={false}
+			>
+				{isAuthorized && isCreatorOrAdmin && (
+					<MenuOption
+						label={t('Edit Text')}
+						icon={<EditIcon />}
+						onOptionClick={() => {
+							setIsEdit(!isEdit);
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAuthorized && (
+					<MenuOption
+						isOptionSelected={isOption}
+						icon={<LightBulbIcon />}
+						label={isOption ? t('Unmark as a Solution') : t('Mark as a Solution')}
+						onOptionClick={() => {
+							handleSetOption();
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAuthorized && (
+					<MenuOption
+						isOptionSelected={isResearch}
+						icon={<QuestionMarkIcon />}
+						label={isResearch ? t('Unmark as a Question') : t('Mark as a Question')}
+						onOptionClick={async () => {
+							const newType =
+								statement.statementType === StatementType.question
+									? StatementType.statement
+									: StatementType.question;
+							const result = await changeStatementType(statement, newType, isAuthorized);
+							if (!result.success && result.error) {
+								alert(result.error);
+							}
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAuthorized && (
+					<MenuOption
+						isOptionSelected={isHide}
+						icon={isHide ? <EyeIcon /> : <EyeCrossIcon />}
+						label={isHide ? t('Unhide') : t('Hide')}
+						onOptionClick={() => {
+							handleToggleHideStatement();
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAdmin && isOption && (
+					<MenuOption
+						isOptionSelected={isDocumentMarked}
+						icon={<DocumentIcon />}
+						label={isDocumentMarked ? t('Unmark as a Document') : t('Mark as a Document')}
+						onOptionClick={() => {
+							toggleIsDocument(statement.statementId);
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAdmin && onIntegrate && (
+					<MenuOption
+						label={t('Integrate Similar')}
+						icon={<NetworkIcon />}
+						onOptionClick={() => {
+							onIntegrate();
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{routeTargets.length > 0 && (
+					<MenuOption
+						label={t('Continue in…')}
+						icon={<ArrowUpRight size={20} />}
+						onOptionClick={() => {
+							setShowRoutePicker(true);
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+				{isAuthorized && isCreatorOrAdmin && (
+					<MenuOption
+						label={t('Delete')}
+						icon={<DeleteIcon />}
+						onOptionClick={() => {
+							deleteStatementFromDB(statement, isAuthorized, t);
+							setIsCardMenuOpen(false);
+						}}
+					/>
+				)}
+			</Menu>
+			<RoutePicker
+				statement={statement}
+				isOpen={showRoutePicker}
+				onClose={() => setShowRoutePicker(false)}
+			/>
+		</>
 	);
 };
 

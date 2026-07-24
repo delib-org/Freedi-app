@@ -5,11 +5,29 @@ import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 import { Statement } from '@freedi/shared-types';
-import { ComponentProps, FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import {
+	ComponentProps,
+	FC,
+	ReactNode,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from 'react';
+import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
 import styles from './Menu.module.scss';
 import { Link } from 'react-router';
+
+// Geometry constants mirroring Menu.module.scss `.menuContent.card` sizing —
+// keep in sync with the stylesheet.
+const CARD_MENU_WIDTH = 260;
+const CARD_MENU_MOBILE_MAX_WIDTH = 280;
+const MOBILE_BREAKPOINT = 768;
+const VIEWPORT_EDGE_MARGIN = 8;
+const MENU_BUTTON_GAP = 4;
 
 interface MenuProps extends ComponentProps<'div'> {
 	iconColor: string;
@@ -43,6 +61,7 @@ const Menu: FC<MenuProps> = ({
 	const { backgroundColor } = useStatementColor({ statement });
 
 	const menuRef = useRef<HTMLDivElement>(null);
+	const portalRef = useRef<HTMLDivElement>(null);
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const [showAbove, setShowAbove] = useState(false);
 	const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
@@ -54,8 +73,8 @@ const Menu: FC<MenuProps> = ({
 		const handleClickOutside = (e: MouseEvent) => {
 			const target = e.target as HTMLElement;
 
-			// Check if click is inside menu
-			if (menuRef.current?.contains(target)) {
+			// Check if click is inside the trigger or the (possibly portaled) menu
+			if (menuRef.current?.contains(target) || portalRef.current?.contains(target)) {
 				return;
 			}
 
@@ -71,10 +90,16 @@ const Menu: FC<MenuProps> = ({
 		};
 	}, [isMenuOpen, setIsOpen]);
 
-	// Calculate fixed position for card/chat menus to escape overflow containers
-	useEffect(() => {
+	// Calculate fixed position for card/chat menus to escape overflow containers.
+	// useLayoutEffect so the menu never paints in its in-card fallback position
+	// (which is clipped/overlapped by sibling cards' stacking contexts).
+	useLayoutEffect(() => {
 		// Apply fixed positioning for both card menus and chat menus
-		if ((!isChatMenu && !isCardMenu) || !isMenuOpen || !buttonRef.current) return;
+		if ((!isChatMenu && !isCardMenu) || !isMenuOpen || !buttonRef.current) {
+			setMenuPosition(null);
+
+			return;
+		}
 
 		const buttonRect = buttonRef.current.getBoundingClientRect();
 		const windowHeight = window.innerHeight;
@@ -85,21 +110,26 @@ const Menu: FC<MenuProps> = ({
 		const shouldShowAbove = buttonCenterY > windowHeight / 2;
 		setShowAbove(shouldShowAbove);
 
-		// Calculate fixed position for menu
-		const menuWidth = 280; // Approximate menu width
+		// Actual rendered menu width (mirrors Menu.module.scss `.card` sizing)
+		const menuWidth =
+			windowWidth <= MOBILE_BREAKPOINT
+				? Math.min(CARD_MENU_MOBILE_MAX_WIDTH, windowWidth - 2 * VIEWPORT_EDGE_MARGIN)
+				: CARD_MENU_WIDTH;
 		let left = buttonRect.left + buttonRect.width / 2 - menuWidth / 2;
 
 		// Keep menu within viewport horizontally
-		if (left < 8) left = 8;
-		if (left + menuWidth > windowWidth - 8) left = windowWidth - menuWidth - 8;
+		if (left < VIEWPORT_EDGE_MARGIN) left = VIEWPORT_EDGE_MARGIN;
+		if (left + menuWidth > windowWidth - VIEWPORT_EDGE_MARGIN) {
+			left = windowWidth - menuWidth - VIEWPORT_EDGE_MARGIN;
+		}
 
 		let top: number;
 		if (shouldShowAbove) {
 			// Position above button with some gap
-			top = buttonRect.top - 4; // Will use bottom positioning in CSS
+			top = buttonRect.top - MENU_BUTTON_GAP; // Will use bottom positioning in CSS
 		} else {
 			// Position below button
-			top = buttonRect.bottom + 4;
+			top = buttonRect.bottom + MENU_BUTTON_GAP;
 		}
 
 		setMenuPosition({ top, left });
@@ -108,6 +138,59 @@ const Menu: FC<MenuProps> = ({
 	const handleToggle = useCallback(() => {
 		setIsOpen(!isMenuOpen);
 	}, [isMenuOpen, setIsOpen]);
+
+	// Card/chat menus render in a portal at document.body: position:fixed alone
+	// fixes geometry but NOT paint order — the menu stays trapped in the card
+	// header's stacking context (position:absolute + z-index), so later sibling
+	// cards and their "…" buttons paint over it. Portaling escapes every
+	// ancestor stacking/overflow context.
+	const usePortal = (isChatMenu || isCardMenu) && menuPosition !== null;
+
+	const menuContent = isMenuOpen ? (
+		<div
+			className={[
+				styles.menuContent,
+				isCardMenu ? styles.card : '',
+				isChatMenu ? styles.chatMenu : '',
+				(isChatMenu || isCardMenu) && showAbove ? styles.above : '',
+				usePortal ? styles.fixed : '',
+			].join(' ')}
+			role="menu"
+			style={
+				usePortal && menuPosition
+					? {
+							position: 'fixed',
+							left: `${menuPosition.left}px`,
+							...(showAbove
+								? { bottom: `${window.innerHeight - menuPosition.top}px`, top: 'auto' }
+								: { top: `${menuPosition.top}px`, bottom: 'auto' }),
+						}
+					: undefined
+			}
+		>
+			{isNavMenu && !isCardMenu && (
+				<div className={styles.menuHeader} style={{ backgroundColor }}>
+					<h2 className={styles.menuTitle}>FreeDi</h2>
+					<Link to="/my" className={styles.menuUser}>
+						<img className={styles.menuAvatar} src={avatarSrc} alt="User avatar" />
+						<span className={styles.menuUsername}>{user?.displayName}</span>
+					</Link>
+				</div>
+			)}
+
+			{children}
+
+			{footer && (
+				<div
+					className={styles.menuFooter}
+					onClick={(e) => e.stopPropagation()}
+					style={{ backgroundColor, color: 'white' }}
+				>
+					{footer}
+				</div>
+			)}
+		</div>
+	) : null;
 
 	return (
 		<div
@@ -128,51 +211,14 @@ const Menu: FC<MenuProps> = ({
 				)}
 			</IconButton>
 
-			{isMenuOpen && (
-				<div
-					className={[
-						styles.menuContent,
-						isCardMenu ? styles.card : '',
-						isChatMenu ? styles.chatMenu : '',
-						(isChatMenu || isCardMenu) && showAbove ? styles.above : '',
-						(isChatMenu || isCardMenu) && menuPosition ? styles.fixed : '',
-					].join(' ')}
-					role="menu"
-					style={
-						(isChatMenu || isCardMenu) && menuPosition
-							? {
-									position: 'fixed',
-									left: `${menuPosition.left}px`,
-									...(showAbove
-										? { bottom: `${window.innerHeight - menuPosition.top}px`, top: 'auto' }
-										: { top: `${menuPosition.top}px`, bottom: 'auto' }),
-								}
-							: undefined
-					}
-				>
-					{isNavMenu && !isCardMenu && (
-						<div className={styles.menuHeader} style={{ backgroundColor }}>
-							<h2 className={styles.menuTitle}>FreeDi</h2>
-							<Link to="/my" className={styles.menuUser}>
-								<img className={styles.menuAvatar} src={avatarSrc} alt="User avatar" />
-								<span className={styles.menuUsername}>{user?.displayName}</span>
-							</Link>
-						</div>
-					)}
-
-					{children}
-
-					{footer && (
-						<div
-							className={styles.menuFooter}
-							onClick={(e) => e.stopPropagation()}
-							style={{ backgroundColor, color: 'white' }}
-						>
-							{footer}
-						</div>
-					)}
-				</div>
-			)}
+			{usePortal
+				? createPortal(
+						<div ref={portalRef} className={`${styles.menu} ${styles['menu--open']}`} dir={dir}>
+							{menuContent}
+						</div>,
+						document.body,
+					)
+				: menuContent}
 		</div>
 	);
 };

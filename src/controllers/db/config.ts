@@ -343,6 +343,18 @@ export function getMassConsensusQuestionUrl(statementId: string): string {
 }
 
 /**
+ * Get the join app base URL based on the environment.
+ * The join app opens a specific question via its `/q/{statementId}` route.
+ */
+export function getJoinAppUrl(): string {
+	if (!isProduction) {
+		return 'http://localhost:3007';
+	}
+
+	return import.meta.env.VITE_JOIN_APP_URL || 'https://join.wizcol.com';
+}
+
+/**
  * Get the results page URL for a specific statement in the mass-consensus app
  */
 export function getMassConsensusResultsUrl(statementId: string): string {

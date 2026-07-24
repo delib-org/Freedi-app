@@ -23,6 +23,7 @@ const APP_BASE_URLS: Record<SourceApp, string> = {
 	[SourceApp.MASS_CONSENSUS]: process.env.MC_APP_URL || 'https://mc.freedi.tech',
 	[SourceApp.FLOW]: process.env.FLOW_APP_URL || 'https://flow.freedi.tech',
 	[SourceApp.AGORA]: process.env.AGORA_APP_URL || 'https://agora.freedi.tech',
+	[SourceApp.JOIN]: process.env.JOIN_APP_URL || 'https://join.wizcol.com',
 };
 
 /** Resolve a possibly-relative targetPath to an absolute URL for the given app. */

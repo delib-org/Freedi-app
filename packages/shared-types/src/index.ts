@@ -802,5 +802,13 @@ export {
   isActivityStatement,
 } from "./models/event/activityRegistry";
 
+// Cross-App Statement Router — route registry (v1)
+export type { RouteTargetDef, RouteMinRole } from "./models/event/routeRegistry";
+export {
+  RoutePrerequisite,
+  ROUTE_REGISTRY,
+  getRouteTargetDef,
+} from "./models/event/routeRegistry";
+
 // Agora classroom deliberative game
 export * from "./models/agora";
