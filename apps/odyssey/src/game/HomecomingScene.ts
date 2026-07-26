@@ -114,6 +114,7 @@ export class HomecomingScene extends SeaScene {
 					.setOrigin(0.5);
 				children.push(lantern, label);
 				const container = this.add.container(0, 0, children).setDepth(30);
+				if (art) this.addIsletLife(container, art.displayWidth, art.displayHeight);
 				this.islandNodes.push(container);
 
 				// lanterns light one by one — equal glow for every island

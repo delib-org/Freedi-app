@@ -254,6 +254,58 @@ export abstract class SeaScene extends Phaser.Scene {
 		return image;
 	}
 
+	/**
+	 * Ambient "alive" layer for an islet: a breathing waterline foam glow
+	 * and periodic expanding shore ripples. Skipped under reduced motion.
+	 * Rebuilds leave the loop timers as harmless no-ops (guarded by
+	 * container.active) — they die with the scene.
+	 */
+	protected addIsletLife(
+		container: Phaser.GameObjects.Container,
+		artWidth: number,
+		artHeight: number,
+	): void {
+		if (this.reducedMotion) return;
+
+		const foam = this.add
+			.image(0, artHeight * 0.34, 'glow')
+			.setDisplaySize(artWidth * 1.2, artHeight * 0.55)
+			.setTint(0xbfe6ff)
+			.setAlpha(0.16);
+		container.addAt(foam, 0);
+		this.tweens.add({
+			targets: foam,
+			alpha: 0.3,
+			duration: 2400 + Math.random() * 900,
+			yoyo: true,
+			repeat: -1,
+			ease: 'Sine.inOut',
+		});
+
+		this.time.addEvent({
+			delay: 3600 + Math.random() * 3200,
+			loop: true,
+			callback: () => {
+				if (!container.active) return;
+				const ring = this.add
+					.image(container.x, container.y + artHeight * 0.36, 'ring')
+					.setTint(0xbfe6ff)
+					.setAlpha(0.3)
+					.setScale(artWidth / 120, artWidth / 300)
+					.setDepth(container.depth - 1);
+				this.tweens.add({
+					targets: ring,
+					scaleX: artWidth / 34,
+					scaleY: artWidth / 110,
+					alpha: 0,
+					duration: 1900,
+					ease: 'Sine.out',
+					onComplete: () => ring.destroy(),
+				});
+			},
+		});
+	}
+
 	/** Plain-Hebrew Phaser label (never mix digits/Latin into Phaser strings). */
 	protected hebrewLabel(
 		x: number,

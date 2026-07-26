@@ -155,6 +155,19 @@ export class ChartScene extends SeaScene {
 			children.push(anchor, label);
 			if (lantern) children.push(lantern);
 			const container = this.add.container(x, y, children).setDepth(40);
+			if (art) {
+				this.addIsletLife(container, art.displayWidth, art.displayHeight);
+				if (!this.reducedMotion) {
+					this.tweens.add({
+						targets: art,
+						angle: { from: -0.7, to: 0.7 },
+						duration: 3200 + index * 260,
+						yoyo: true,
+						repeat: -1,
+						ease: 'Sine.inOut',
+					});
+				}
+			}
 			// ≥60px hit area even though the disc renders smaller
 			container.setSize(72, 72);
 			container.setInteractive({ useHandCursor: true });

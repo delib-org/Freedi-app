@@ -101,7 +101,7 @@ export class VoyageScene extends SeaScene {
 		this.buoys.clear();
 
 		const children: Phaser.GameObjects.GameObject[] = [];
-		const art = this.islandArtImage(info.imageUrl, 250);
+		const art = this.islandArtImage(info.imageUrl, 300);
 		let titleY = 92;
 		if (art) {
 			titleY = art.displayHeight / 2 + 22;
@@ -137,6 +137,21 @@ export class VoyageScene extends SeaScene {
 		}
 
 		this.vignette = this.add.container(this.W * 0.3, this.H * 0.3, children).setDepth(60);
+		if (art) {
+			this.addIsletLife(this.vignette, art.displayWidth, art.displayHeight);
+			this.addVignetteGulls(art.displayHeight);
+			if (!this.reducedMotion) {
+				this.tweens.add({
+					targets: this.vignette,
+					y: this.H * 0.3 + 5,
+					angle: 0.8,
+					duration: 3000,
+					yoyo: true,
+					repeat: -1,
+					ease: 'Sine.inOut',
+				});
+			}
+		}
 		if (animate && !this.reducedMotion) {
 			// next island approaches from the left, growing
 			this.vignette.setX(-this.W * 0.2).setScale(0.4);
@@ -146,6 +161,39 @@ export class VoyageScene extends SeaScene {
 				scale: 1,
 				duration: TWEEN_ISLAND_MS,
 				ease: 'Sine.out',
+			});
+		}
+	}
+
+	/** Two gulls slowly circling above the island — pure ambience. */
+	private addVignetteGulls(artHeight: number): void {
+		if (!this.vignette || this.reducedMotion) return;
+		for (let i = 0; i < 2; i++) {
+			const gull = this.add.image(0, 0, i === 0 ? 'gull0' : 'gull1').setScale(0.8);
+			this.vignette.add(gull);
+			const radiusX = artHeight * (0.9 + i * 0.25);
+			const radiusY = 18 + i * 8;
+			const baseY = -artHeight * 0.55 - i * 16;
+			const offset = Math.random() * Math.PI * 2;
+			this.tweens.addCounter({
+				from: 0,
+				to: Math.PI * 2,
+				duration: 9000 + i * 2600,
+				repeat: -1,
+				onUpdate: (tween) => {
+					if (!gull.active) return;
+					const angle = (tween.getValue() ?? 0) + offset;
+					gull.setPosition(Math.cos(angle) * radiusX, baseY + Math.sin(angle) * radiusY);
+				},
+			});
+			this.time.addEvent({
+				delay: 240 + i * 60,
+				loop: true,
+				callback: () => {
+					if (gull.active) {
+						gull.setTexture(gull.texture.key === 'gull0' ? 'gull1' : 'gull0');
+					}
+				},
 			});
 		}
 	}
