@@ -86,7 +86,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 							label={t('Disconnect')}
 							icon={<DisconnectIcon />}
 							onOptionClick={onLogout}
-							style={{ color: 'white' }}
+							// inherits the accent's contrast ink from the menu footer
 						/>
 					</div>
 				}

@@ -58,7 +58,9 @@ const Menu: FC<MenuProps> = ({
 	const { dir } = useTranslation();
 	const user = useSelector((state: RootState) => state.creator.creator);
 	const avatarSrc = user?.photoURL || DefaultAvatar;
-	const { backgroundColor } = useStatementColor({ statement });
+	// color is the luminance-derived contrast ink for the accent background —
+	// white text vanishes on light accents (e.g. the option-yellow header).
+	const { backgroundColor, color: accentInk } = useStatementColor({ statement });
 
 	const menuRef = useRef<HTMLDivElement>(null);
 	const portalRef = useRef<HTMLDivElement>(null);
@@ -169,7 +171,7 @@ const Menu: FC<MenuProps> = ({
 			}
 		>
 			{isNavMenu && !isCardMenu && (
-				<div className={styles.menuHeader} style={{ backgroundColor }}>
+				<div className={styles.menuHeader} style={{ backgroundColor, color: accentInk }}>
 					<h2 className={styles.menuTitle}>FreeDi</h2>
 					<Link to="/my" className={styles.menuUser}>
 						<img className={styles.menuAvatar} src={avatarSrc} alt="User avatar" />
@@ -184,7 +186,7 @@ const Menu: FC<MenuProps> = ({
 				<div
 					className={styles.menuFooter}
 					onClick={(e) => e.stopPropagation()}
-					style={{ backgroundColor, color: 'white' }}
+					style={{ backgroundColor, color: accentInk }}
 				>
 					{footer}
 				</div>

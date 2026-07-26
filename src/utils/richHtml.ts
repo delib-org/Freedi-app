@@ -157,3 +157,123 @@ export function sanitizeRichHtml(html: string, options?: SanitizeRichHtmlOptions
 
 	return container.innerHTML;
 }
+
+// ============================================================================
+// Dark-mode adaptation of Sign-authored inline colors
+// ============================================================================
+//
+// Sign documents carry HARDCODED inline colors chosen for Sign's light page
+// (near-black body text like #1a1a1a, greys like #555555, dark accent
+// headings like #1a5c38, and light table-cell background tints). Rendered on
+// the main app's dark theme those dark inks land on a dark card and become
+// unreadable.
+//
+// Approach: rewrite each inline `color` / `background-color` declaration to
+//
+//   color: <original>;
+//   color: light-dark(<original>, oklch(from <original> calc(max(l, Lmin)) c h));
+//
+// so the browser resolves the ORIGINAL value under the light scheme (light
+// mode stays pixel-identical) and a LUMINANCE-CLAMPED value under the dark
+// scheme (`:root` sets `color-scheme: dark` there — see _variables-dark.scss).
+// Text colors are lifted to a minimum OKLCH lightness and backgrounds capped
+// to a maximum, both PRESERVING hue and chroma, so a dark-green heading stays
+// green (emphasis intact) and a tinted header cell keeps its tint as a dark
+// shade. Clamping text up and surfaces down guarantees the two never meet:
+// worst-case pairs stay above WCAG AA (4.5:1) — see the values below.
+//
+// The duplicated declaration is deliberate: browsers without light-dark() /
+// relative-color support drop the second declaration and keep the original —
+// exactly today's behavior, no regression. No `!important`, no sanitizer
+// changes (this runs on already-sanitized markup and only touches the two
+// color properties inside existing style attributes).
+
+/**
+ * Minimum OKLCH lightness for inline TEXT colors in dark mode. 0.8 keeps
+ * ~8:1 against the dark card (#1c2434) for neutral inks and >6:1 for
+ * saturated hues — comfortably past WCAG AA.
+ */
+const DARK_TEXT_MIN_LIGHTNESS = 0.8;
+
+/**
+ * Maximum OKLCH lightness for inline BACKGROUND colors in dark mode. 0.3
+ * keeps clamped text (>= 0.8 L) above ~5:1 on the darkened surface while the
+ * surface still reads as a tinted cell against the card.
+ */
+const DARK_BG_MAX_LIGHTNESS = 0.3;
+
+/** A single color literal: hex, rgb()/hsl() function, or a color keyword. */
+const SIMPLE_COLOR_VALUE_PATTERN = /^(#[0-9a-f]{3,8}|(?:rgb|hsl)a?\([^()]*\)|[a-z]+)$/i;
+
+/** Values that must never be wrapped in a relative-color expression. */
+const NON_ADAPTABLE_COLOR_KEYWORDS = new Set([
+	'inherit',
+	'initial',
+	'unset',
+	'revert',
+	'currentcolor',
+	'transparent',
+]);
+
+function isAdaptableColorValue(value: string): boolean {
+	if (NON_ADAPTABLE_COLOR_KEYWORDS.has(value.toLowerCase())) return false;
+
+	return SIMPLE_COLOR_VALUE_PATTERN.test(value);
+}
+
+/** Lifts a text color to a readable lightness under the dark scheme only. */
+function schemeAdaptiveTextColor(value: string): string {
+	return `light-dark(${value}, oklch(from ${value} calc(max(l, ${DARK_TEXT_MIN_LIGHTNESS})) c h))`;
+}
+
+/** Caps a surface color to a dark lightness under the dark scheme only. */
+function schemeAdaptiveSurfaceColor(value: string): string {
+	return `light-dark(${value}, oklch(from ${value} calc(min(l, ${DARK_BG_MAX_LIGHTNESS})) c h))`;
+}
+
+const SCHEME_ADAPTIVE_PROPERTIES: Record<string, (value: string) => string> = {
+	color: schemeAdaptiveTextColor,
+	'background-color': schemeAdaptiveSurfaceColor,
+	background: schemeAdaptiveSurfaceColor, // only when the value is a lone color
+};
+
+function adaptStyleDeclarations(style: string): string {
+	return style
+		.split(';')
+		.map((declaration) => {
+			const separatorIndex = declaration.indexOf(':');
+			if (separatorIndex === -1) return declaration;
+
+			const property = declaration.slice(0, separatorIndex).trim().toLowerCase();
+			const value = declaration.slice(separatorIndex + 1).trim();
+			const adapt = SCHEME_ADAPTIVE_PROPERTIES[property];
+			if (!adapt || !value || !isAdaptableColorValue(value)) return declaration;
+
+			// Original kept first as the no-support fallback (see block comment).
+			return `${property}:${value};${property}:${adapt(value)}`;
+		})
+		.join(';');
+}
+
+/**
+ * Rewrites inline `color` / `background-color` declarations in sanitized
+ * Sign-authored HTML into scheme-adaptive pairs so the content stays readable
+ * on the dark theme while remaining pixel-identical in light mode. Call with
+ * ALREADY-SANITIZED markup (output of `sanitizeRichHtml`).
+ */
+export function adaptRichHtmlColorsToColorScheme(html: string): string {
+	if (!html.includes('style=')) return html;
+
+	const container = document.createElement('div');
+	container.innerHTML = html;
+
+	container.querySelectorAll('[style]').forEach((element) => {
+		const style = element.getAttribute('style');
+		if (!style || style.includes('light-dark(')) return;
+
+		const adapted = adaptStyleDeclarations(style);
+		if (adapted !== style) element.setAttribute('style', adapted);
+	});
+
+	return container.innerHTML;
+}

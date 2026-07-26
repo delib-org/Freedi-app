@@ -121,13 +121,15 @@ $headerHeight: 4.2rem;
   min-height: 44px;
   
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    // Derived from the current ink so the wash is visible on light accents
+    // (dark ink) as well as dark ones (light ink).
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
   }
-  
+
   svg {
     width: 24px;
     height: 24px;
-    color: var(--white);
+    color: currentColor;
   }
   
   // RTL support - only rotate chevron/arrow icons, not home or other icons

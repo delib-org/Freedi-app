@@ -370,6 +370,15 @@
   --header-not-chosen-contrast: #ffd324;
   --header-group-contrast: #8a62d8;
 
+  // Header contrast inks — icon/text colors paired with the header ACCENT
+  // background above (which can be any lightness: option yellow, question
+  // blue, group purple...). useStatementColor picks the ink by measuring the
+  // accent's luminance, so these are theme-INDEPENDENT (they pair with the
+  // header bar, not the page background) and are intentionally not overridden
+  // in _variables-dark.scss.
+  --header-ink-on-light: #2a3346; // dark ink for light header accents
+  --header-ink-on-dark: #ffffff; // light ink for dark header accents
+
   // Icons
   --icons-blue: #5f88e5;
   --icons-primary: #3a60d6;
