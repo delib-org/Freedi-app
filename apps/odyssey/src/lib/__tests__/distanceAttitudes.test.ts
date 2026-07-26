@@ -6,9 +6,9 @@ import {
 	opinionDistance,
 	opinionDistanceEngine,
 	partyAttitudes,
-} from './distance';
-import { attitudeValue } from './evaluations';
-import type { IslandContent } from './game';
+} from '../distance';
+import { attitudeValue } from '../evaluations';
+import type { IslandContent } from '../game';
 
 /** Minimal island fixture — the engine only reads statementId + stance ids. */
 function island(statementId: string, stanceIds: string[]): IslandContent {
