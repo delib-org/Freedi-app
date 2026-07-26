@@ -1,19 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { OdysseyCompassAnswer } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import { useGame } from '../state/GameContext';
 import NoGameYet from '../components/NoGameYet';
+import { useMode } from '../lib/mode';
+import { stageBus } from '../lib/stageBus';
 
 const TOP_VALUES = 5;
 
 /**
  * ארבע רוחות המצפון: three open questions with inspiration chips, then the
  * fourth wind — ranking the top values. Personal/reflective, stored on the
- * journey doc (not statements).
+ * journey doc (not statements). In game mode the compass rose on the sea
+ * stage reacts: answered winds light petals, ranked values hoist pennants.
  */
 export default function Compass() {
 	const navigate = useNavigate();
+	const mode = useMode();
 	const { content, journey, text, updateJourney } = useGame();
 	const [answers, setAnswers] = useState<Record<string, OdysseyCompassAnswer>>(() => ({
 		...(journey?.compassAnswers ?? {}),
@@ -25,11 +29,47 @@ export default function Compass() {
 	);
 	const [saving, setSaving] = useState(false);
 
+	const questions = useMemo(
+		() =>
+			(content?.game.compassQuestions ?? [])
+				.filter((question) => question.enabled)
+				.sort((a, b) => a.sortOrder - b.sortOrder),
+		[content],
+	);
+
+	/** One boolean per wind: the 3 questions + the values wind. */
+	const windsLit = useMemo(
+		() => [
+			...questions.map((question) => {
+				const entry = answers[question.questionId] ?? { answer: '', chips: [] };
+
+				return entry.answer.trim() !== '' || entry.chips.length > 0;
+			}),
+			ranked.length === TOP_VALUES,
+		],
+		[questions, answers, ranked],
+	);
+
+	const previousWinds = useRef<boolean[]>([]);
+	useEffect(() => {
+		if (mode !== 'game') return;
+		windsLit.forEach((lit, index) => {
+			if (previousWinds.current[index] !== lit) {
+				stageBus.send({ type: 'compassWind', index, lit });
+			}
+		});
+		previousWinds.current = windsLit;
+		if (windsLit.length > 1 && windsLit.every(Boolean)) {
+			stageBus.send({ type: 'compassComplete' });
+		}
+	}, [mode, windsLit]);
+
+	useEffect(() => {
+		if (mode === 'game') stageBus.send({ type: 'setPennants', count: ranked.length });
+	}, [mode, ranked.length]);
+
 	if (!content || !journey) return <NoGameYet />;
 
-	const questions = content.game.compassQuestions
-		.filter((question) => question.enabled)
-		.sort((a, b) => a.sortOrder - b.sortOrder);
 	const values = content.game.values
 		.filter((value) => value.enabled)
 		.sort((a, b) => a.sortOrder - b.sortOrder);
@@ -94,6 +134,11 @@ export default function Compass() {
 						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">{text('compassTitle')}</h1>
 						<p className="text-[15px] text-[#cfe6f5] mt-2">{text('compassIntro')}</p>
 					</header>
+
+					{mode === 'game' ? (
+						// breathing room for the compass rose on the sea stage
+						<div className="h-[30vh]" aria-hidden="true" />
+					) : null}
 
 					{questions.map((question, index) => (
 						<section key={question.questionId} className="panel fade-in">

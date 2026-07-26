@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
 import { enabledIslands } from '../lib/game';
 import { useMode } from '../lib/mode';
+import { stageBus } from '../lib/stageBus';
 
 /** Rough voyage length per the design doc: 3→~5min, 5→~8, 8→~12, 12→~20. */
 function estimateMinutes(count: number): number {
@@ -16,22 +17,21 @@ function estimateMinutes(count: number): number {
 /**
  * המפה נפתחת: the civic issues spread out as islands on the sea. Each island
  * is a Freedi `question` Statement; choosing islands only marks the journey —
- * answering happens on the voyage.
+ * answering happens on the voyage. In game mode the islands live on the
+ * Phaser chart (tap → anchor stamp); selection state stays here in React.
  */
 export default function MapPage() {
 	const navigate = useNavigate();
 	const mode = useMode();
-	const { content, journey, text, updateJourney } = useGame();
+	const { content, journey, attitudes, text, updateJourney } = useGame();
 	const [selected, setSelected] = useState<Set<string>>(
 		() => new Set(journey?.selectedIslandIds ?? []),
 	);
 	const [saving, setSaving] = useState(false);
 
-	if (!content || !journey) return <NoGameYet />;
+	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
 
-	const islands = enabledIslands(content);
-
-	function toggle(statementId: string): void {
+	const toggle = useCallback((statementId: string): void => {
 		setSelected((current) => {
 			const next = new Set(current);
 			if (next.has(statementId)) next.delete(statementId);
@@ -39,7 +39,38 @@ export default function MapPage() {
 
 			return next;
 		});
-	}
+	}, []);
+
+	// Feed the chart scene: islands (with revisit lanterns) + live selection.
+	useEffect(() => {
+		if (mode !== 'game' || islands.length === 0) return;
+		stageBus.send({
+			type: 'setIslands',
+			islands: islands.map((island) => ({
+				id: island.statementId,
+				title: island.title,
+				posX: island.posX,
+				posY: island.posY,
+				imageUrl: island.imageUrl ?? null,
+				visited: island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
+			})),
+		});
+	}, [mode, islands, attitudes]);
+
+	useEffect(() => {
+		if (mode !== 'game') return;
+		stageBus.send({ type: 'setSelection', islandIds: [...selected] });
+	}, [mode, selected]);
+
+	useEffect(
+		() =>
+			stageBus.onEvent((event) => {
+				if (event.type === 'islandTapped') toggle(event.islandId);
+			}),
+		[toggle],
+	);
+
+	if (!content || !journey) return <NoGameYet />;
 
 	async function sail(): Promise<void> {
 		setSaving(true);
@@ -65,44 +96,8 @@ export default function MapPage() {
 					</header>
 
 					{mode === 'game' ? (
-						<div
-							className="relative w-full rounded-xl border border-[rgba(232,185,88,0.7)] overflow-hidden fade-in"
-							style={{
-								aspectRatio: '16 / 10',
-								background: 'url(/assets/mediterranean-ocean.png) center / cover no-repeat',
-							}}
-						>
-							<div className="absolute inset-0 bg-[rgba(6,24,44,0.35)]" />
-							<div className="absolute top-3 left-4 text-[13px] bg-[rgba(4,18,34,0.8)] border border-[rgba(232,185,88,0.7)] rounded-lg px-3 py-1.5">
-								🏰 {text('destinationName')}
-							</div>
-							{islands.map((island, index) => (
-								<button
-									key={island.statementId}
-									type="button"
-									className={`island-node ${selected.has(island.statementId) ? 'selected' : ''}`}
-									style={{
-										right: `${island.posX}%`,
-										top: `${island.posY}%`,
-										transform: 'translate(50%, -50%)',
-									}}
-									onClick={() => toggle(island.statementId)}
-									title={island.shortExplain}
-									aria-pressed={selected.has(island.statementId)}
-								>
-									<span className="island-disc">
-										{island.imageUrl ? (
-											<img src={island.imageUrl} alt="" />
-										) : (
-											<span aria-hidden="true">
-												{selected.has(island.statementId) ? '⚓' : `${index + 1}`}
-											</span>
-										)}
-									</span>
-									<span className="island-label">{island.title}</span>
-								</button>
-							))}
-						</div>
+						// the islands live on the Phaser chart behind this window
+						<div className="h-[52vh]" aria-hidden="true" />
 					) : (
 						<div className="flex flex-col gap-2 fade-in">
 							{islands.map((island) => (

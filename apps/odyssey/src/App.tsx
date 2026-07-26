@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { GameProvider, useGame } from './state/GameContext';
 import { useUser } from './lib/user';
+import SeaStage from './components/SeaStage';
 import Intro from './pages/Intro';
 import Compass from './pages/Compass';
 import MapPage from './pages/MapPage';
@@ -31,6 +32,7 @@ export default function App() {
 		<GameProvider>
 			<main dir="rtl">
 				<div className="ocean-bg" />
+				<SeaStage />
 				<div className="vignette" />
 				<Routes>
 					<Route path="/" element={<Intro />} />

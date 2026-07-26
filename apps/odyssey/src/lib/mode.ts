@@ -8,7 +8,14 @@ const listeners = new Set<() => void>();
 
 function current(): GameMode {
 	try {
-		return localStorage.getItem(STORAGE_KEY) === 'direct' ? 'direct' : 'game';
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (stored === 'direct') return 'direct';
+		if (stored === 'game') return 'game';
+
+		// No stored preference: reduced-motion users get the plain
+		// questionnaire by default — the direct flow IS the accessible path.
+		// The topnav toggle still lets them opt into game mode explicitly.
+		return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'direct' : 'game';
 	} catch {
 		return 'game';
 	}

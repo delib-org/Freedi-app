@@ -1,21 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Evaluation } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
-import PartySea from '../components/PartySea';
+import OpinionMap from '../components/OpinionMap';
 import { useGame } from '../state/GameContext';
 import { useUser } from '../lib/user';
 import { useMode } from '../lib/mode';
-import OpinionMap from '../components/OpinionMap';
 import { distanceEngine, ParticipantDistance } from '../lib/distance';
 import { buildOpinionMap } from '../lib/opinionMap';
 import { loadGameEvaluations } from '../lib/evaluations';
+import { stageBus } from '../lib/stageBus';
 
 /**
  * תוצר סוף המסע: not a "which party are you" quiz result — a personal
- * sailing map. Compass journal, ships by distance from your route, fellow
- * sailors (computed from everyone's evaluations), and the Agora gate.
+ * sailing map. In game mode the homecoming tableau (lanterns, wake trail,
+ * ships at their true distances, the lighthouse Agora gate) plays on the sea
+ * stage; the DOM keeps the journal, the lists and the SVG opinion map
+ * (whose honesty rules stay exactly as they are).
  */
 export default function Summary() {
 	const { user } = useUser();
@@ -48,22 +50,81 @@ export default function Summary() {
 		[content],
 	);
 
+	const partyDistances = useMemo(
+		() =>
+			content
+				? distanceEngine.partyDistances({ attitudes, islands: content.islands, parties })
+				: [],
+		[content, attitudes, parties],
+	);
+
 	const opinionMap = useMemo(() => {
 		if (!uid || !content || evaluations.length === 0) return null;
 
 		return buildOpinionMap({ uid, evaluations, islands: content.islands, parties });
 	}, [uid, content, evaluations, parties]);
 
-	if (!content || !journey) return <NoGameYet />;
-
-	const partyDistances = distanceEngine.partyDistances({
-		attitudes,
-		islands: content.islands,
-		parties,
-	});
-	const distanceMap = Object.fromEntries(
-		partyDistances.map((entry) => [entry.partyId, entry.distance]),
+	const sortedParticipants = useMemo(
+		() =>
+			participants
+				.filter((entry) => entry.distance !== null)
+				.sort((a, b) => (a.distance ?? 2) - (b.distance ?? 2))
+				.slice(0, 8),
+		[participants],
 	);
+
+	// Feed the homecoming tableau: lit islands, ships, sailors — then the
+	// one-time arrival celebration (skippable by simply scrolling on).
+	const celebrated = useRef(false);
+	useEffect(() => {
+		if (mode !== 'game' || !content) return;
+		const visitedIslandIds = content.islands
+			.filter((island) =>
+				island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
+			)
+			.map((island) => island.statementId);
+
+		stageBus.send({
+			type: 'setIslands',
+			islands: content.islands.map((island) => ({
+				id: island.statementId,
+				title: island.title,
+				posX: island.posX,
+				posY: island.posY,
+				imageUrl: island.imageUrl ?? null,
+				visited: visitedIslandIds.includes(island.statementId),
+			})),
+		});
+		stageBus.send({
+			type: 'setParties',
+			parties: parties.map((party) => ({
+				id: party.partyId,
+				name: party.name,
+				color: party.color,
+			})),
+		});
+		stageBus.send({
+			type: 'updateDistances',
+			distances: Object.fromEntries(partyDistances.map((entry) => [entry.partyId, entry.distance])),
+			animate: false,
+		});
+		if (!celebrated.current && visitedIslandIds.length > 0) {
+			celebrated.current = true;
+			stageBus.send({ type: 'celebrateArrival', islandCount: visitedIslandIds.length });
+		}
+	}, [mode, content, attitudes, parties, partyDistances]);
+
+	useEffect(() => {
+		if (mode !== 'game') return;
+		stageBus.send({
+			type: 'setSailors',
+			distances: sortedParticipants
+				.map((entry) => entry.distance)
+				.filter((distance): distance is number => distance !== null),
+		});
+	}, [mode, sortedParticipants]);
+
+	if (!content || !journey) return <NoGameYet />;
 
 	const sortedParties = [...partyDistances]
 		.map((entry) => ({
@@ -72,11 +133,6 @@ export default function Summary() {
 		}))
 		.filter((entry) => entry.party)
 		.sort((a, b) => (a.distance ?? 2) - (b.distance ?? 2));
-
-	const sortedParticipants = participants
-		.filter((entry) => entry.distance !== null)
-		.sort((a, b) => (a.distance ?? 2) - (b.distance ?? 2))
-		.slice(0, 8);
 
 	const rankedValues = Object.entries(journey.valueRankings)
 		.sort((a, b) => a[1] - b[1])
@@ -100,15 +156,14 @@ export default function Summary() {
 					</header>
 
 					{mode === 'game' ? (
-						<PartySea
-							parties={parties.map((party) => ({
-								id: party.partyId,
-								name: party.name,
-								color: party.color,
-							}))}
-							distances={distanceMap}
-							caption="ספינות קרובות שטות במסלול דומה לשלך. הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת הצבעה."
-						/>
+						<>
+							{/* the homecoming tableau plays on the sea stage behind this window */}
+							<div className="h-[44vh]" aria-hidden="true" />
+							<div className="panel !py-2.5 text-center text-[13px] text-[#d5ecf7]">
+								ספינות קרובות שטות במסלול דומה לשלך. הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת
+								הצבעה.
+							</div>
+						</>
 					) : null}
 
 					<section className="panel fade-in">
@@ -238,7 +293,15 @@ export default function Summary() {
 						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2">🏛️ שער לאגורה</h2>
 						<p className="text-[15px] text-[#dcecf7] mt-0 mb-4">{text('agoraQuestion')}</p>
 						{agoraUrl ? (
-							<a className="btn" href={agoraUrl}>
+							<a
+								className="btn"
+								href={agoraUrl}
+								onClick={() => {
+									// fire-and-go: the boat sails into the lighthouse beam,
+									// navigation is never blocked on the animation
+									if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
+								}}
+							>
 								{text('agoraButton')}
 							</a>
 						) : (

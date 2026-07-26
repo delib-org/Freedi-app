@@ -1,19 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ODYSSEY_ATTITUDES, OdysseyAttitudeKey } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
-import PartySea, { SeaDistances } from '../components/PartySea';
 import { useGame } from '../state/GameContext';
 import { useMode } from '../lib/mode';
 import { distanceEngine } from '../lib/distance';
 import { valueToAttitude } from '../lib/evaluations';
+import { stageBus, type SeaDistances } from '../lib/stageBus';
 
 /**
  * ההפלגה: one island (a `question` Statement) at a time. Each of its stances
  * is an `option` Statement; marking תומך/יכול לחיות עם/מתנגד writes a
- * standard Freedi evaluation on that option. After each island the sea
- * reacts — party ships tween by the updated distances.
+ * standard Freedi evaluation on that option. In game mode the sea stage
+ * shows the island vignette; marking an attitude plants a buoy, and after
+ * each island the sea reacts — party ships sail by the updated distances
+ * (only in the reaction phase, never mid-question).
  */
 export default function Voyage() {
 	const navigate = useNavigate();
@@ -40,27 +42,80 @@ export default function Voyage() {
 	const [log, setLog] = useState('');
 	const [saving, setSaving] = useState(false);
 
+	const island = useMemo(
+		() => selectedIslands[Math.min(index, Math.max(0, selectedIslands.length - 1))] ?? null,
+		[selectedIslands, index],
+	);
+
+	const parties = useMemo(
+		() =>
+			(content?.game.parties ?? [])
+				.filter((party) => party.enabled)
+				.sort((a, b) => a.sortOrder - b.sortOrder),
+		[content],
+	);
+
+	const distances: SeaDistances = useMemo(
+		() =>
+			content
+				? Object.fromEntries(
+						distanceEngine
+							.partyDistances({ attitudes, islands: content.islands, parties })
+							.map((entry) => [entry.partyId, entry.distance]),
+					)
+				: {},
+		[content, attitudes, parties],
+	);
+
+	// Feed the voyage scene: parties once, then the current island vignette.
+	// Ships take their positions instantly on entry (no mid-question motion).
+	useEffect(() => {
+		if (mode !== 'game' || parties.length === 0) return;
+		stageBus.send({
+			type: 'setParties',
+			parties: parties.map((party) => ({
+				id: party.partyId,
+				name: party.name,
+				color: party.color,
+			})),
+		});
+	}, [mode, parties]);
+
+	useEffect(() => {
+		if (mode !== 'game' || !island) return;
+		stageBus.send({
+			type: 'voyageIsland',
+			island: {
+				islandId: island.statementId,
+				title: island.title,
+				index: Math.min(index, selectedIslands.length - 1),
+				count: selectedIslands.length,
+				stanceCount: island.stances.length,
+			},
+		});
+		stageBus.send({ type: 'updateDistances', distances, animate: false });
+		// distances intentionally omitted: ships take a snapshot when the island
+		// changes and only move again during the reaction phase
+	}, [mode, island, index, selectedIslands.length]);
+
 	if (!content || !journey) return <NoGameYet />;
 	if (selectedIslands.length === 0) {
 		navigate('/map');
 
 		return null;
 	}
-
-	const island = selectedIslands[Math.min(index, selectedIslands.length - 1)];
-	const parties = content.game.parties
-		.filter((party) => party.enabled)
-		.sort((a, b) => a.sortOrder - b.sortOrder);
-
-	const distances: SeaDistances = Object.fromEntries(
-		distanceEngine
-			.partyDistances({ attitudes, islands: content.islands, parties })
-			.map((entry) => [entry.partyId, entry.distance]),
-	);
+	if (!island) return null;
 
 	const answeredOnIsland = island.stances.filter(
 		(stance) => attitudes[stance.statementId] !== undefined,
 	).length;
+
+	function markAttitude(stanceIndex: number, stanceId: string, key: OdysseyAttitudeKey): void {
+		void setAttitude(island!.statementId, stanceId, key);
+		if (mode === 'game') {
+			stageBus.send({ type: 'attitudeMarked', stanceIndex, attitude: key });
+		}
+	}
 
 	async function submitIsland(): Promise<void> {
 		setSaving(true);
@@ -69,14 +124,14 @@ export default function Voyage() {
 			if (depth.trim()) {
 				patch.depthAnswers = {
 					...journey!.depthAnswers,
-					[island.statementId]: depth.trim(),
+					[island!.statementId]: depth.trim(),
 				};
 			}
 			if (log.trim()) {
 				patch.logEntries = [
 					...journey!.logEntries,
 					{
-						islandStatementId: island.statementId,
+						islandStatementId: island!.statementId,
 						text: log.trim(),
 						createdAt: Date.now(),
 					},
@@ -86,6 +141,11 @@ export default function Voyage() {
 			setDepth('');
 			setLog('');
 			setPhase('reaction');
+			if (mode === 'game') {
+				// the log-stamp beat, then the sea reacts
+				stageBus.send({ type: 'islandCompleted', islandId: island!.statementId });
+				stageBus.send({ type: 'updateDistances', distances, animate: true });
+			}
 		} finally {
 			setSaving(false);
 		}
@@ -118,6 +178,11 @@ export default function Voyage() {
 						<h1 className="text-3xl font-bold text-[var(--cream)] mt-1 mb-1">{island.title}</h1>
 						<p className="text-[15px] text-[#cfe6f5] m-0">{island.issue}</p>
 					</header>
+
+					{mode === 'game' && phase === 'question' ? (
+						// window onto the island vignette and the sea
+						<div className="h-[26vh]" aria-hidden="true" />
+					) : null}
 
 					{phase === 'question' ? (
 						<section className="panel fade-in flex flex-col gap-4" key={island.statementId}>
@@ -158,8 +223,8 @@ export default function Voyage() {
 														type="button"
 														className={`attitude ${myAttitude === attitude.key ? `active-${attitude.key}` : ''}`}
 														onClick={() =>
-															void setAttitude(
-																island.statementId,
+															markAttitude(
+																stanceIndex,
 																stance.statementId,
 																attitude.key as OdysseyAttitudeKey,
 															)
@@ -217,15 +282,13 @@ export default function Voyage() {
 					) : (
 						<section className="fade-in flex flex-col gap-4">
 							{mode === 'game' ? (
-								<PartySea
-									parties={parties.map((party) => ({
-										id: party.partyId,
-										name: party.name,
-										color: party.color,
-									}))}
-									distances={distances}
-									caption={text('voyageShipsNote')}
-								/>
+								<>
+									{/* the sea itself reacts behind this window */}
+									<div className="h-[38vh]" aria-hidden="true" />
+									<div className="panel !py-2.5 text-center text-[14px] text-[#d5ecf7]">
+										{text('voyageShipsNote')}
+									</div>
+								</>
 							) : (
 								<div className="panel">
 									<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-2">

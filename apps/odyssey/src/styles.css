@@ -43,13 +43,39 @@ body {
   background: linear-gradient(180deg, rgba(6, 24, 44, 0.55), rgba(6, 24, 44, 0.8));
 }
 
+/* Persistent Phaser canvas behind the player screens (game mode) */
+.sea-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.sea-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .page {
   position: relative;
+  z-index: 10;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 84px 20px 48px;
+  /* Let empty page areas pass pointer events through to the sea stage;
+     interactive elements re-enable themselves below. */
+  pointer-events: none;
+}
+
+.page a,
+.page button,
+.page textarea,
+.page input,
+.page select,
+.page label,
+.page .panel {
+  pointer-events: auto;
 }
 
 /* Gold-framed panel used across the game */
@@ -242,7 +268,8 @@ textarea:focus, input:focus, select:focus {
 .vignette {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  /* above the sea-stage canvas (z 0), below page content (z 10) */
+  z-index: 5;
   pointer-events: none;
   background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 10, 20, 0.55) 100%);
 }
