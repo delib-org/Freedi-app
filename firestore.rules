@@ -103,6 +103,35 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // === Israeli Odyssey pre-election civic-voice game ===
+
+    // Game config (texts, island map metadata, party routes). The
+    // deliberative content itself lives in /statements and /evaluations.
+    // Public read (the intro screen shows game texts before login);
+    // writes by the game creator or listed admins only.
+    match /odysseyGames/{gameId} {
+      allow read;
+      allow create: if isAuthenticated() &&
+                       request.resource.data.creatorId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+                               (resource.data.creatorId == request.auth.uid ||
+                                request.auth.uid in resource.data.adminUids);
+    }
+
+    // Personal voyage state (compass answers, chosen islands, captain's log).
+    // Strictly owner-only — doc id is `${uid}--${gameId}`.
+    // resource == null allows reading the doc before it exists (the client
+    // loads the journey on login and creates it on first save).
+    match /odysseyJourneys/{journeyId} {
+      allow read: if isAuthenticated() &&
+                     (resource == null ||
+                      resource.data.userId == request.auth.uid);
+      allow delete: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid;
+      allow create, update: if isAuthenticated() &&
+                               request.resource.data.userId == request.auth.uid;
+    }
+
 	match /polarizationIndex/{statementId=**} {
 	  allow read: if request.auth.uid != null;
 	

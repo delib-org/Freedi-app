@@ -1,0 +1,36 @@
+{
+	"name": "@freedi/odyssey",
+	"version": "0.1.0",
+	"private": true,
+	"description": "אודיסיאה ישראלית — pre-election civic-voice voyage game; a preface to the Agora deliberation",
+	"type": "module",
+	"scripts": {
+		"env:dev": "cd ../.. && npm run env:dev",
+		"dev": "vite --port 3010",
+		"build": "tsc --noEmit && vite build",
+		"preview": "vite preview --port 3010",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint \"src/**/*.{ts,tsx}\"",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"check-all": "npm run typecheck && npm run lint && npm run test"
+	},
+	"dependencies": {
+		"@freedi/shared-types": "file:../../packages/shared-types",
+		"firebase": "^11.0.0",
+		"phaser": "^4.2.1",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"react-router-dom": "^6.26.0"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.0.0",
+		"@types/react": "^18.3.3",
+		"@types/react-dom": "^18.3.0",
+		"@vitejs/plugin-react": "^4.3.1",
+		"tailwindcss": "^4.0.0",
+		"typescript": "^5.5.4",
+		"vite": "^6.0.0",
+		"vitest": "^4.1.10"
+	}
+}
