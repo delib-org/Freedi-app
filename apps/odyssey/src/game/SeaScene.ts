@@ -222,6 +222,38 @@ export abstract class SeaScene extends Phaser.Scene {
 		}
 	}
 
+	/** Game-wide texture key for a runtime-loaded island illustration. */
+	protected islandTextureKey(url: string): string {
+		return `islandart--${url}`;
+	}
+
+	/**
+	 * Queue any not-yet-loaded island illustrations; `onLoaded` fires once
+	 * after the load finishes (never synchronously, and not at all when
+	 * everything is already cached — callers use the cached path directly).
+	 */
+	protected ensureIslandTextures(urls: (string | null)[], onLoaded: () => void): void {
+		const missing = [...new Set(urls)].filter(
+			(url): url is string => !!url && !this.textures.exists(this.islandTextureKey(url)),
+		);
+		if (missing.length === 0) return;
+		for (const url of missing) this.load.image(this.islandTextureKey(url), url);
+		this.load.once(Phaser.Loader.Events.COMPLETE, () => {
+			if (this.scene.isActive()) onLoaded();
+		});
+		this.load.start();
+	}
+
+	/** Island illustration if loaded, sized to `width` px; null → caller
+	 *  falls back to the generated disc. */
+	protected islandArtImage(url: string | null, width: number): Phaser.GameObjects.Image | null {
+		if (!url || !this.textures.exists(this.islandTextureKey(url))) return null;
+		const image = this.add.image(0, 0, this.islandTextureKey(url));
+		image.setScale(width / image.width);
+
+		return image;
+	}
+
 	/** Plain-Hebrew Phaser label (never mix digits/Latin into Phaser strings). */
 	protected hebrewLabel(
 		x: number,

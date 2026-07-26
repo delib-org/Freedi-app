@@ -7,6 +7,7 @@ import { useGame } from '../state/GameContext';
 import { useMode } from '../lib/mode';
 import { distanceEngine } from '../lib/distance';
 import { valueToAttitude } from '../lib/evaluations';
+import { islandArtUrl } from '../lib/islandArt';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
 
 /**
@@ -91,6 +92,7 @@ export default function Voyage() {
 				index: Math.min(index, selectedIslands.length - 1),
 				count: selectedIslands.length,
 				stanceCount: island.stances.length,
+				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),
 			},
 		});
 		stageBus.send({ type: 'updateDistances', distances, animate: false });

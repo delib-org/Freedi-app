@@ -11,6 +11,8 @@ interface IslandNode {
 	rim: Phaser.GameObjects.Image;
 	anchor: Phaser.GameObjects.Text;
 	lantern: Phaser.GameObjects.Image | null;
+	/** true when the node shows the island illustration (rim = selection ring only) */
+	hasArt: boolean;
 }
 
 /**
@@ -109,19 +111,36 @@ export class ChartScene extends SeaScene {
 
 		stageState.islands.forEach((island, index) => {
 			const { x, y } = islandPosition(island.posX, island.posY, this.W, this.H);
-			const disc = this.add.image(0, 0, 'disc');
+			const children: Phaser.GameObjects.GameObject[] = [];
+
+			// illustration when loaded; generated disc + number as fallback
+			const art = this.islandArtImage(island.imageUrl, 124);
 			const rim = this.add.image(0, 0, 'discRim').setTint(COLOR_CYAN);
-			const indexText = this.add
-				.text(0, 0, String(index + 1), {
-					fontFamily: 'Arial',
-					fontSize: '22px',
-					color: '#fff4d3',
-					fontStyle: 'bold',
-				})
-				.setOrigin(0.5);
+			let labelY = 42;
+			if (art) {
+				labelY = art.displayHeight / 2 + 14;
+				rim
+					.setDisplaySize(art.displayHeight * 1.5, art.displayHeight * 1.5)
+					.setTint(COLOR_GOLD)
+					.setAlpha(0.9)
+					.setVisible(false);
+				children.push(rim, art);
+			} else {
+				const disc = this.add.image(0, 0, 'disc');
+				const indexText = this.add
+					.text(0, 0, String(index + 1), {
+						fontFamily: 'Arial',
+						fontSize: '22px',
+						color: '#fff4d3',
+						fontStyle: 'bold',
+					})
+					.setOrigin(0.5);
+				children.push(disc, rim, indexText);
+			}
+
 			const anchor = this.glyph(0, -24, '⚓', 22).setAlpha(0);
 			const label = this.add
-				.text(0, 42, island.title, {
+				.text(0, labelY, island.title, {
 					fontFamily: 'Arial',
 					fontSize: '13px',
 					color: '#fff4d3',
@@ -133,7 +152,7 @@ export class ChartScene extends SeaScene {
 				? this.add.image(0, -8, 'glow').setScale(1.1).setAlpha(0.7)
 				: null;
 
-			const children: Phaser.GameObjects.GameObject[] = [disc, rim, indexText, anchor, label];
+			children.push(anchor, label);
 			if (lantern) children.push(lantern);
 			const container = this.add.container(x, y, children).setDepth(40);
 			// ≥60px hit area even though the disc renders smaller
@@ -154,9 +173,18 @@ export class ChartScene extends SeaScene {
 				});
 			}
 
-			this.nodes.push({ island, container, rim, anchor, lantern });
+			this.nodes.push({ island, container, rim, anchor, lantern, hasArt: !!art });
 		});
 		this.syncSelection(false);
+
+		// illustrations still downloading → rebuild once they land
+		this.ensureIslandTextures(
+			stageState.islands.map((island) => island.imageUrl),
+			() => {
+				this.buildIslands();
+				this.drawRoute();
+			},
+		);
 	}
 
 	/** Anchor stamps drop in on select, float away on deselect — symmetric. */
@@ -165,7 +193,12 @@ export class ChartScene extends SeaScene {
 		for (const node of this.nodes) {
 			const isSelected = selected.has(node.island.id);
 			const wasSelected = node.anchor.alpha > 0.5;
-			node.rim.setTint(isSelected ? COLOR_GOLD : COLOR_CYAN);
+			if (node.hasArt) {
+				// with art the rim is a pure selection ring
+				node.rim.setVisible(isSelected);
+			} else {
+				node.rim.setTint(isSelected ? COLOR_GOLD : COLOR_CYAN);
+			}
 			if (isSelected === wasSelected) continue;
 
 			if (!animate || this.reducedMotion) {

@@ -9,6 +9,7 @@ import { useUser } from '../lib/user';
 import { useMode } from '../lib/mode';
 import { distanceEngine, ParticipantDistance } from '../lib/distance';
 import { buildOpinionMap } from '../lib/opinionMap';
+import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
 import { stageBus } from '../lib/stageBus';
 
@@ -91,7 +92,7 @@ export default function Summary() {
 				title: island.title,
 				posX: island.posX,
 				posY: island.posY,
-				imageUrl: island.imageUrl ?? null,
+				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),
 				visited: visitedIslandIds.includes(island.statementId),
 			})),
 		});

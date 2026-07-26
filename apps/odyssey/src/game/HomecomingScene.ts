@@ -90,11 +90,21 @@ export class HomecomingScene extends SeaScene {
 		stageState.islands
 			.filter((island) => island.visited)
 			.forEach((island, index) => {
-				const disc = this.add.image(0, 0, 'disc').setScale(0.7);
-				const rim = this.add.image(0, 0, 'discRim').setScale(0.7).setTint(COLOR_GOLD);
+				const children: Phaser.GameObjects.GameObject[] = [];
+				const art = this.islandArtImage(island.imageUrl, 78);
+				let labelY = 30;
+				if (art) {
+					labelY = art.displayHeight / 2 + 12;
+					children.push(art);
+				} else {
+					children.push(
+						this.add.image(0, 0, 'disc').setScale(0.7),
+						this.add.image(0, 0, 'discRim').setScale(0.7).setTint(COLOR_GOLD),
+					);
+				}
 				const lantern = this.add.image(0, -6, 'glow').setScale(0).setAlpha(0);
 				const label = this.add
-					.text(0, 30, island.title, {
+					.text(0, labelY, island.title, {
 						fontFamily: 'Arial',
 						fontSize: '12px',
 						color: '#fff4d3',
@@ -102,7 +112,8 @@ export class HomecomingScene extends SeaScene {
 						padding: { x: 7, y: 2 },
 					})
 					.setOrigin(0.5);
-				const container = this.add.container(0, 0, [disc, rim, lantern, label]).setDepth(30);
+				children.push(lantern, label);
+				const container = this.add.container(0, 0, children).setDepth(30);
 				this.islandNodes.push(container);
 
 				// lanterns light one by one — equal glow for every island
@@ -123,6 +134,12 @@ export class HomecomingScene extends SeaScene {
 			});
 		this.positionIslands();
 		this.drawWake();
+
+		// illustrations still downloading → rebuild once they land
+		this.ensureIslandTextures(
+			stageState.islands.filter((island) => island.visited).map((island) => island.imageUrl),
+			() => this.buildIslands(),
+		);
 	}
 
 	private positionIslands(): void {

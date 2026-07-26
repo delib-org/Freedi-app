@@ -37,6 +37,7 @@ export interface VoyageIslandInfo {
 	index: number;
 	count: number;
 	stanceCount: number;
+	imageUrl: string | null;
 }
 
 export type StageCommand =

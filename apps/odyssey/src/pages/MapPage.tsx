@@ -4,6 +4,7 @@ import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
 import { enabledIslands } from '../lib/game';
+import { islandArtUrl } from '../lib/islandArt';
 import { useMode } from '../lib/mode';
 import { stageBus } from '../lib/stageBus';
 
@@ -51,7 +52,7 @@ export default function MapPage() {
 				title: island.title,
 				posX: island.posX,
 				posY: island.posY,
-				imageUrl: island.imageUrl ?? null,
+				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),
 				visited: island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
 			})),
 		});

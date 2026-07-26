@@ -100,10 +100,22 @@ export class VoyageScene extends SeaScene {
 		this.buoys.forEach((buoy) => buoy.destroy());
 		this.buoys.clear();
 
-		const disc = this.add.image(0, 0, 'disc').setScale(2.2);
-		const rim = this.add.image(0, 0, 'discRim').setTint(COLOR_GOLD).setScale(2.2);
+		const children: Phaser.GameObjects.GameObject[] = [];
+		const art = this.islandArtImage(info.imageUrl, 250);
+		let titleY = 92;
+		if (art) {
+			titleY = art.displayHeight / 2 + 22;
+			children.push(art);
+		} else {
+			children.push(
+				this.add.image(0, 0, 'disc').setScale(2.2),
+				this.add.image(0, 0, 'discRim').setTint(COLOR_GOLD).setScale(2.2),
+			);
+			// illustration still downloading → rebuild the vignette once ready
+			this.ensureIslandTextures([info.imageUrl], () => this.rebuildVignette());
+		}
 		const title = this.add
-			.text(0, 92, info.title, {
+			.text(0, titleY, info.title, {
 				fontFamily: 'Arial',
 				fontSize: '16px',
 				color: '#fff4d3',
@@ -112,7 +124,7 @@ export class VoyageScene extends SeaScene {
 				padding: { x: 10, y: 4 },
 			})
 			.setOrigin(0.5);
-		const children: Phaser.GameObjects.GameObject[] = [disc, rim, title];
+		children.push(title);
 
 		// shore jetties on the lower arc, one per stance, 32° apart
 		for (let i = 0; i < info.stanceCount; i++) {
@@ -135,6 +147,16 @@ export class VoyageScene extends SeaScene {
 				duration: TWEEN_ISLAND_MS,
 				ease: 'Sine.out',
 			});
+		}
+	}
+
+	/** Re-show the current island (e.g. after its art finished loading),
+	 *  restoring the buoys already planted there. */
+	private rebuildVignette(): void {
+		this.currentIslandId = null;
+		this.showIsland(false);
+		for (const [stanceIndex, attitude] of Object.entries(stageState.voyageAttitudes)) {
+			this.placeBuoy(Number(stanceIndex), attitude, false);
 		}
 	}
 
