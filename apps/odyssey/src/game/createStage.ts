@@ -50,6 +50,13 @@ export function createStage(parent: HTMLElement): Phaser.Game {
 			const current = activeSeaScene();
 			const targetKey = SCENE_KEY_MAP[command.scene];
 			if (!current) return; // BootScene will start the right scene itself
+			if (document.hidden) {
+				// background tab: the loop is asleep, a fade would never
+				// complete — switch instantly so the route change lands
+				current.scene.start(targetKey);
+
+				return;
+			}
 			const camera = current.cameras.main;
 			camera.fadeOut(TWEEN_FADE_MS, 4, 18, 34);
 			camera.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
