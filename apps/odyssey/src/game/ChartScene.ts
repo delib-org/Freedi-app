@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLOR_CREAM, COLOR_CYAN, COLOR_GOLD } from '../lib/stageConstants';
-import { islandPosition } from '../lib/seaLayout';
+import { islandDepth, islandPosition } from '../lib/seaLayout';
 import { stageBus, type StageCommand, type StageIsland } from '../lib/stageBus';
 import { stageState } from './stageState';
 import { SeaScene } from './SeaScene';
@@ -154,7 +154,14 @@ export class ChartScene extends SeaScene {
 
 			children.push(anchor, label);
 			if (lantern) children.push(lantern);
-			const container = this.add.container(x, y, children).setDepth(40);
+			// Atmospheric perspective: near islands large and crisp, far ones
+			// smaller, hazier, drawn behind (painter's order by y).
+			const depth = islandDepth(island.posY);
+			const container = this.add
+				.container(x, y, children)
+				.setScale(depth.scale)
+				.setAlpha(1 - depth.haze * 0.8)
+				.setDepth(40 + Math.round((y / this.H) * 20));
 			if (art) {
 				this.addIsletLife(container, art.displayWidth, art.displayHeight);
 				if (!this.reducedMotion) {
@@ -168,8 +175,9 @@ export class ChartScene extends SeaScene {
 					});
 				}
 			}
-			// ≥60px hit area even though the disc renders smaller
-			container.setSize(72, 72);
+			// ≥60px effective hit area even after the perspective scale
+			const hit = Math.max(72, 84 / depth.scale);
+			container.setSize(hit, hit);
 			container.setInteractive({ useHandCursor: true });
 			container.on('pointerdown', () => {
 				stageBus.emit({ type: 'islandTapped', islandId: island.id });
@@ -231,7 +239,7 @@ export class ChartScene extends SeaScene {
 							scale: { from: 1.15, to: 1 },
 							duration: 80,
 						});
-						this.ripple(node.container.x, node.container.y);
+						this.ripple(node.container.x, node.container.y, node.container.scaleX);
 					},
 				});
 				const angle = Phaser.Math.Angle.Between(
@@ -259,12 +267,16 @@ export class ChartScene extends SeaScene {
 		}
 	}
 
-	private ripple(x: number, y: number): void {
+	private ripple(x: number, y: number, factor = 1): void {
 		if (this.reducedMotion) return;
-		const ring = this.add.image(x, y, 'ring').setTint(COLOR_CYAN).setScale(0.2).setDepth(35);
+		const ring = this.add
+			.image(x, y, 'ring')
+			.setTint(COLOR_CYAN)
+			.setScale(0.2 * factor)
+			.setDepth(35);
 		this.tweens.add({
 			targets: ring,
-			scale: 2,
+			scale: 2 * factor,
 			alpha: 0,
 			duration: 500,
 			ease: 'Cubic.out',

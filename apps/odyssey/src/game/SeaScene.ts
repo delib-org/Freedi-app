@@ -287,16 +287,18 @@ export abstract class SeaScene extends Phaser.Scene {
 			loop: true,
 			callback: () => {
 				if (!container.active) return;
+				// respect the container's perspective scale at fire time
+				const width = artWidth * container.scaleX;
 				const ring = this.add
-					.image(container.x, container.y + artHeight * 0.36, 'ring')
+					.image(container.x, container.y + artHeight * container.scaleY * 0.36, 'ring')
 					.setTint(0xbfe6ff)
 					.setAlpha(0.3)
-					.setScale(artWidth / 120, artWidth / 300)
+					.setScale(width / 120, width / 300)
 					.setDepth(container.depth - 1);
 				this.tweens.add({
 					targets: ring,
-					scaleX: artWidth / 34,
-					scaleY: artWidth / 110,
+					scaleX: width / 34,
+					scaleY: width / 110,
 					alpha: 0,
 					duration: 1900,
 					ease: 'Sine.out',

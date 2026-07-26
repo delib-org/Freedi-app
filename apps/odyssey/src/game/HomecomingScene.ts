@@ -7,7 +7,7 @@ import {
 	STAGGER_LANTERN_MS,
 	TWEEN_SHIP_MS,
 } from '../lib/stageConstants';
-import { islandPosition, sailorPlacement, shipLayout } from '../lib/seaLayout';
+import { islandDepth, islandPosition, sailorPlacement, shipLayout } from '../lib/seaLayout';
 import type { StageCommand } from '../lib/stageBus';
 import { stageState } from './stageState';
 import { SeaScene, type PartyShip } from './SeaScene';
@@ -152,8 +152,13 @@ export class HomecomingScene extends SeaScene {
 			// compress the chart into the upper band so the DOM sections scroll below
 			node.setPosition(
 				this.W * 0.18 + base.x * 0.7,
-				this.H * 0.12 + (base.y / this.H) * this.H * 0.4,
+				this.H * 0.05 + (base.y / this.H) * this.H * 0.45,
 			);
+			// same atmospheric perspective as the chart, gentler at tableau size
+			const depth = islandDepth(island.posY);
+			node.setScale(0.55 + 0.45 * depth.scale);
+			node.setAlpha(1 - depth.haze * 0.7);
+			node.setDepth(30 + Math.round((node.y / this.H) * 10));
 		});
 	}
 

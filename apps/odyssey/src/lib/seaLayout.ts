@@ -34,9 +34,21 @@ export function shipLayout(
 	};
 }
 
+/** Vertical band of the chart that reads as sea (below the horizon/city). */
+const CHART_TOP = 0.3;
+const CHART_BOTTOM = 0.78;
+/** How much the far row squeezes toward the center (perspective frustum). */
+const FAR_SQUEEZE = 0.78;
+
+function clamp01(value: number): number {
+	return Math.min(1, Math.max(0, value));
+}
+
 /**
  * Island position on the chart. Admin data stores `posX` as percent from the
  * RIGHT edge (the DOM version used `right: posX%`), so Phaser x flips it.
+ * The archipelago is kept together: posY maps into the sea band (never onto
+ * the horizon), and far rows pull toward the center like a receding seascape.
  */
 export function islandPosition(
 	posX: number,
@@ -44,9 +56,26 @@ export function islandPosition(
 	width: number,
 	height: number,
 ): { x: number; y: number } {
+	const t = clamp01(posY / 100);
+	const xRaw = width * (1 - posX / 100);
+	const squeeze = FAR_SQUEEZE + (1 - FAR_SQUEEZE) * t;
+
 	return {
-		x: width * (1 - posX / 100),
-		y: height * (posY / 100),
+		x: width / 2 + (xRaw - width / 2) * squeeze,
+		y: height * (CHART_TOP + (CHART_BOTTOM - CHART_TOP) * t),
+	};
+}
+
+/**
+ * Atmospheric perspective for an island: nearer (larger posY) → bigger;
+ * farther → smaller and hazier. `haze` is 0 (near, crisp) .. ~0.35 (far).
+ */
+export function islandDepth(posY: number): { scale: number; haze: number } {
+	const t = clamp01(posY / 100);
+
+	return {
+		scale: 0.6 + 0.55 * t,
+		haze: 0.35 * (1 - t),
 	};
 }
 

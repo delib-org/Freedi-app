@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { dayPhaseForIsland, islandPosition, sailorPlacement, shipLayout } from '../seaLayout';
+import {
+	dayPhaseForIsland,
+	islandDepth,
+	islandPosition,
+	sailorPlacement,
+	shipLayout,
+} from '../seaLayout';
 
 const W = 1280;
 const H = 720;
@@ -35,9 +41,46 @@ describe('shipLayout', () => {
 
 describe('islandPosition', () => {
 	it('flips posX because admin data measures from the right (RTL chart)', () => {
-		expect(islandPosition(25, 40, W, H)).toEqual({ x: W * 0.75, y: H * 0.4 });
-		expect(islandPosition(0, 0, W, H)).toEqual({ x: W, y: 0 });
-		expect(islandPosition(100, 100, W, H)).toEqual({ x: 0, y: H });
+		const left = islandPosition(100, 100, W, H);
+		const right = islandPosition(0, 100, W, H);
+		expect(left.x).toBeLessThan(right.x);
+		// near row (posY 100) has no squeeze: full width reach
+		expect(right.x).toBeCloseTo(W, 5);
+		expect(left.x).toBeCloseTo(0, 5);
+	});
+
+	it('keeps the archipelago inside the sea band (never on the horizon)', () => {
+		expect(islandPosition(50, 0, W, H).y).toBeCloseTo(H * 0.3, 5);
+		expect(islandPosition(50, 100, W, H).y).toBeCloseTo(H * 0.78, 5);
+		expect(islandPosition(50, 40, W, H).y).toBeGreaterThan(H * 0.3);
+		expect(islandPosition(50, 40, W, H).y).toBeLessThan(H * 0.78);
+	});
+
+	it('squeezes far rows toward the center (perspective frustum)', () => {
+		const farEdge = islandPosition(0, 0, W, H);
+		const nearEdge = islandPosition(0, 100, W, H);
+		// same posX, but the far one sits closer to the center line
+		expect(Math.abs(farEdge.x - W / 2)).toBeLessThan(Math.abs(nearEdge.x - W / 2));
+		// center islands stay centered at any depth
+		expect(islandPosition(50, 0, W, H).x).toBeCloseTo(W / 2, 5);
+	});
+});
+
+describe('islandDepth', () => {
+	it('makes near islands larger and crisp, far islands smaller and hazy', () => {
+		const near = islandDepth(100);
+		const far = islandDepth(0);
+		expect(near.scale).toBeCloseTo(1.15, 5);
+		expect(near.haze).toBeCloseTo(0, 5);
+		expect(far.scale).toBeCloseTo(0.6, 5);
+		expect(far.haze).toBeCloseTo(0.35, 5);
+		expect(islandDepth(50).scale).toBeGreaterThan(far.scale);
+		expect(islandDepth(50).scale).toBeLessThan(near.scale);
+	});
+
+	it('clamps out-of-range posY', () => {
+		expect(islandDepth(-20)).toEqual(islandDepth(0));
+		expect(islandDepth(140)).toEqual(islandDepth(100));
 	});
 });
 
