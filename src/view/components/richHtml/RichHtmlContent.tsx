@@ -1,6 +1,10 @@
 import { FC, useMemo } from 'react';
 
-import { containsRichHtml, sanitizeRichHtml } from '@/utils/richHtml';
+import {
+	adaptRichHtmlColorsToColorScheme,
+	containsRichHtml,
+	sanitizeRichHtml,
+} from '@/utils/richHtml';
 import styles from './RichHtmlContent.module.scss';
 
 interface RichHtmlContentProps {
@@ -19,10 +23,15 @@ interface RichHtmlContentProps {
  */
 const RichHtmlContent: FC<RichHtmlContentProps> = ({ content, className }) => {
 	const isRich = useMemo(() => containsRichHtml(content), [content]);
+	// Sanitize first, then rewrite inline colors into scheme-adaptive pairs:
+	// Sign-authored colors are chosen for a light page and become unreadable
+	// on the dark theme (see adaptRichHtmlColorsToColorScheme in @/utils/richHtml).
 	const sanitized = useMemo(
 		() =>
 			isRich && content
-				? sanitizeRichHtml(content, { tableWrapperClass: styles.tableWrapper })
+				? adaptRichHtmlColorsToColorScheme(
+						sanitizeRichHtml(content, { tableWrapperClass: styles.tableWrapper }),
+					)
 				: '',
 		[isRich, content],
 	);

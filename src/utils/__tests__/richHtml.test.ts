@@ -1,4 +1,4 @@
-import { containsRichHtml, sanitizeRichHtml } from '../richHtml';
+import { adaptRichHtmlColorsToColorScheme, containsRichHtml, sanitizeRichHtml } from '../richHtml';
 
 describe('richHtml', () => {
 	describe('containsRichHtml', () => {
@@ -124,6 +124,63 @@ describe('richHtml', () => {
 
 		it('leaves plain text untouched', () => {
 			expect(sanitizeRichHtml('hello world')).toBe('hello world');
+		});
+	});
+
+	describe('adaptRichHtmlColorsToColorScheme', () => {
+		it('rewrites inline text colors into light-dark pairs with the original as fallback', () => {
+			const output = adaptRichHtmlColorsToColorScheme('<span style="color:#1a1a1a">body</span>');
+			// Original declaration retained first (fallback for browsers
+			// without light-dark()/relative-color support).
+			expect(output).toContain('color:#1a1a1a;');
+			expect(output).toContain(
+				'color:light-dark(#1a1a1a, oklch(from #1a1a1a calc(max(l, 0.8)) c h))',
+			);
+		});
+
+		it('caps inline background colors instead of lifting them', () => {
+			const output = adaptRichHtmlColorsToColorScheme(
+				'<table><tbody><tr><td style="background-color:#d8f0e3">cell</td></tr></tbody></table>',
+			);
+			expect(output).toContain(
+				'background-color:light-dark(#d8f0e3, oklch(from #d8f0e3 calc(min(l, 0.3)) c h))',
+			);
+		});
+
+		it('adapts both properties on the same element and keeps other declarations', () => {
+			const output = adaptRichHtmlColorsToColorScheme(
+				'<table><tbody><tr><th style="width:120px;background-color:#1a5c38;color:#ffffff">head</th></tr></tbody></table>',
+			);
+			expect(output).toContain('width:120px');
+			expect(output).toContain('background-color:light-dark(#1a5c38,');
+			expect(output).toContain('color:light-dark(#ffffff,');
+		});
+
+		it('leaves non-adaptable values (keywords, gradients, var()) untouched', () => {
+			const transparent = '<span style="color:transparent">x</span>';
+			expect(adaptRichHtmlColorsToColorScheme(transparent)).toBe(transparent);
+
+			const gradient = '<div style="background:linear-gradient(red, blue)">x</div>';
+			expect(adaptRichHtmlColorsToColorScheme(gradient)).toBe(gradient);
+
+			const varColor = '<span style="color:var(--text-body)">x</span>';
+			expect(adaptRichHtmlColorsToColorScheme(varColor)).toBe(varColor);
+		});
+
+		it('is idempotent (already-adapted markup is not double-wrapped)', () => {
+			const once = adaptRichHtmlColorsToColorScheme('<span style="color:#555555">x</span>');
+			expect(adaptRichHtmlColorsToColorScheme(once)).toBe(once);
+		});
+
+		it('returns markup without style attributes unchanged', () => {
+			const plain = '<p>hello <strong>world</strong></p>';
+			expect(adaptRichHtmlColorsToColorScheme(plain)).toBe(plain);
+		});
+
+		it('does not touch non-color declarations (colgroup widths preserved)', () => {
+			const widths =
+				'<table><colgroup><col style="width:25%"><col style="width:75%"></colgroup><tbody><tr><td>x</td></tr></tbody></table>';
+			expect(adaptRichHtmlColorsToColorScheme(widths)).toBe(widths);
 		});
 	});
 });

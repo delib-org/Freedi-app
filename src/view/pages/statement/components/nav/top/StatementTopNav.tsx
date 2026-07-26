@@ -85,7 +85,9 @@ const StatementTopNav: FC<Props> = ({
 			className="app-header app-header--sticky"
 			dir={dir}
 			data-cy="statement-nav"
-			style={{ backgroundColor: headerStyle.backgroundColor }}
+			// color cascades to icons that inherit (language pill, mail icon) so
+			// every glyph pairs with the accent background's contrast ink.
+			style={{ backgroundColor: headerStyle.backgroundColor, color: headerStyle.color }}
 		>
 			<div className="app-header-wrapper">
 				{statement && (
