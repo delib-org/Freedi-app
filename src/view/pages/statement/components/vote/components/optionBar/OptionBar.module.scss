@@ -49,6 +49,27 @@
         color: var(--text-caption);
     }
 
+    // The option's own name. Base direction comes from the text itself rather
+    // than the container: .votingArea forces `direction: ltr` for its flex
+    // order, which made Hebrew labels ellipsise at the wrong end — chopping the
+    // start of the sentence and keeping the tail. `plaintext` reads the first
+    // strong character instead, so Hebrew and Latin options each truncate at
+    // their own logical end.
+    .titleText {
+        // inline-block, not inline: text-overflow needs a block container to
+        // ellipsise against.
+        display: inline-block;
+        max-width: 100%;
+        box-sizing: border-box;
+        unicode-bidi: plaintext;
+        text-align: start;
+        color: var(--text-title);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .column {
         display: flex;
         flex-direction: column;
@@ -124,9 +145,10 @@
             }
         }
 
+        // Colour lives on .titleText now — the label's text moved into that
+        // span, so a colour here would style nothing.
         .title {
             transform: rotate(270deg) translate(11rem, -2rem);
-            color: var(--text-caption);
             width: 19rem;
             text-align: end;
 
@@ -203,22 +225,37 @@
             }
         }
 
+        // The lane is 76px and the bar is 58px of it, so a label physically
+        // cannot clear the bar — it always overlaps something. Rather than
+        // fight that, the text sits on its own chip so it stays readable over
+        // the fill or the page, in either theme.
+        //
+        // Keep `width` fixed. The parent rotates 90deg, which turns this box's
+        // horizontal layout position into vertical screen movement, so the
+        // width and the offsets below are coupled: change one and the label
+        // moves. That coupling is why this used to carry per-breakpoint
+        // overrides — getBarWidth returns a constant 76 for the sided layout
+        // now, so a single pair of offsets holds at every width.
         .title {
-            transform: rotate(270deg);
-            color: var(--text-caption);
             position: absolute;
             width: 20rem;
             height: fit-content;
             bottom: 9.5rem;
-            right: -6rem;
-            @media (max-width: 540px) {
-                width: 24rem;
-                bottom: 11.2rem;
-            }
-            @media (max-width: 500px) {
-                width: 21rem;
-                bottom: 9.8rem;
-            }
+            right: -5.7rem;
+            transform: rotate(270deg);
+            text-align: left;
+            z-index: 2;
+            // Decorative: never swallow a tap meant for the bar underneath.
+            pointer-events: none;
+        }
+
+        .titleText {
+            padding: 2px 8px;
+            border-radius: 6px;
+            background-color: color-mix(in srgb, var(--card-default) 88%, transparent);
+            font-size: 0.8125rem;
+            line-height: 1.45;
+            vertical-align: top;
         }
     }
 }

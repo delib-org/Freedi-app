@@ -120,7 +120,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 			</div>
 			{isVertical && infoButton}
 			<div className={`${styles.title} ${barWidth < 90 ? styles.isBarSmall : ''}`}>
-				{shortVersion}
+				<span className={styles.titleText}>{shortVersion}</span>
 			</div>
 		</div>
 	);
