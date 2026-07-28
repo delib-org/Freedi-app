@@ -1,4 +1,13 @@
 import m from 'mithril';
+// Self-hosted so the PWA precaches them: classroom devices get the real faces
+// offline, and no student's IP reaches a third-party font CDN.
+// Assistant = body. Alef = titles & buttons; it ships 400/700 only, so never
+// ask for 500/600 with --font-display or the browser fakes the bold.
+import '@fontsource/assistant/400.css';
+import '@fontsource/assistant/600.css';
+import '@fontsource/assistant/700.css';
+import '@fontsource/alef/400.css';
+import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
 import { initAuth, getUserState } from './lib/user';

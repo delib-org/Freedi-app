@@ -17,6 +17,8 @@
     "seed:clear": "npx tsx scripts/seed.ts --clear"
   },
   "dependencies": {
+    "@fontsource/alef": "^5.3.0",
+    "@fontsource/assistant": "^5.3.0",
     "@freedi/engagement-core": "file:../../packages/engagement-core",
     "@freedi/shared-types": "file:../../packages/shared-types",
     "firebase": "^11.0.2",

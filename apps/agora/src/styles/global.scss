@@ -88,9 +88,11 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 400;
+  // 700, not the old 400: Suez One was a display face that read heavy at
+  // regular, Alef is a plain grotesque that would leave titles limp.
+  font-weight: 700;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 h1 { font-size: var(--font-size-3xl); }
@@ -153,9 +155,11 @@ p {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  font-family: var(--font-body);
+  // Alef for every button, not just the primary one. 700 because Alef has no
+  // 600 — the old value would have been faux-bolded.
+  font-family: var(--font-display);
   font-size: var(--font-size-base);
-  font-weight: 600;
+  font-weight: 700;
   border: 1px solid transparent;
   border-radius: var(--radius-full);
   padding: 0.8em 1.7em;
@@ -199,7 +203,6 @@ p {
   &--primary {
     --btn-glow: var(--lantern);
 
-    font-family: var(--font-display);
     background: var(--lantern);
     color: #ffffff;
 
