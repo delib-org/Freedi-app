@@ -992,6 +992,79 @@
 	}
 }
 
+// --- Workbench: the workshop card's parts as labeled drawers. Each section
+// carries an icon chip + a real title, so the board reads as distinct tools
+// instead of a flat stack behind hairlines. ---
+.workbench__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	background: var(--bg-inset);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	padding: var(--space-md);
+
+	// The editor is the primary zone: white, wearing the mine-blue frame —
+	// the textarea and its ONE button visibly belong to each other
+	&--edit {
+		background: var(--bg-card-solid);
+		border-color: rgba(43, 111, 214, 0.4);
+		box-shadow: inset 0 0 0 1px rgba(43, 111, 214, 0.1);
+
+		.my-lantern__textarea {
+			margin-block-end: 0;
+			background: var(--bg-inset);
+		}
+	}
+
+	// Quiet footer drawer (the needs reminder brings its own toggle)
+	&--plain {
+		background: transparent;
+		border-style: dashed;
+	}
+}
+
+.workbench__head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+}
+
+.workbench__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	flex: 0 0 auto;
+	border-radius: var(--radius-sm);
+	background: rgba(255, 210, 63, 0.3);
+	border: 1px solid rgba(185, 115, 0, 0.25);
+	font-size: 1rem;
+	line-height: 1;
+}
+
+.workbench__title {
+	font-family: var(--font-display);
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+// New-feedback count: notification badge = danger-red (never a camp color)
+.workbench__count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: var(--radius-full);
+	background: var(--danger);
+	color: #ffffff;
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+}
+
 // --- Visiting: their proposal as a mounted POSTER — framed parchment with a
 // pin, clearly not an input. The anatomy twin of "mine" is broken on purpose. ---
 .stand-poster {
@@ -1187,10 +1260,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-md);
-	}
-
-	&__divider {
-		border-block-start: 1px solid var(--border-subtle);
 	}
 
 	// The always-editable proposal box — the live text, ready to be reworked

@@ -268,6 +268,33 @@ function placeScene(kind: 'mine' | 'rate' | 'help'): m.Children {
 	]);
 }
 
+/**
+ * One labeled drawer of the workshop card. The board reads as a stack of
+ * these: every part gets an icon chip + a real title, so the eye can tell
+ * where one tool ends and the next begins (was: bare hairline dividers).
+ */
+function workbenchSection(
+	icon: string,
+	title: string,
+	body: m.Children,
+	opts?: { count?: number; variant?: 'edit' | 'plain' },
+): m.Children {
+	return m(
+		'.workbench__section',
+		{ class: opts?.variant ? `workbench__section--${opts.variant}` : undefined },
+		[
+			m('.workbench__head', [
+				m('span.workbench__icon', { 'aria-hidden': 'true' }, icon),
+				m('span.workbench__title', title),
+				opts?.count !== undefined && opts.count > 0
+					? m('span.workbench__count', String(opts.count))
+					: null,
+			]),
+			body,
+		],
+	);
+}
+
 /** The place header: scene strip + name + one-line "what happens here" */
 function placeBanner(kind: 'mine' | 'rate' | 'help'): m.Children {
 	const place = PLACES[kind];
@@ -677,59 +704,66 @@ export function Deliberation(
 		const changed =
 			text !== myProposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
+		// Fresh feedback count surfaces on the drawer label, not buried inside
+		const openCount = (getDeliberationState().suggestions[myProposal.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+		).length;
+
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
 				m('span.my-lantern__icon', '📘'),
 				m('span.my-lantern__title', t('delib.my_proposal')),
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
-			m('textarea.my-lantern__textarea', {
-				value: mineDraft,
-				rows: 4,
-				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-				placeholder: t('delib.placeholder'),
-				oninput: (event: InputEvent) => {
-					mineDraft = (event.target as HTMLTextAreaElement).value;
-				},
-			}),
-			m('.delib__actions', [
-				m(
-					'button.btn.btn--primary.my-lantern__save',
-					{
-						disabled: !changed || submitting,
-						onclick: () => {
-							submitting = true;
-							submitProposal(
-								live,
-								initialVnode.attrs.myParticipant.anonName,
-								text,
-								myProposal.statementId,
-							)
-								.then(() => {
-									// Improving your own proposal earns glitter — the
-									// behavior the game most wants to reinforce
-									celebrate({ message: t('celebrate.proposal_improved'), detail: text });
-								})
-								.catch((error: unknown) => {
-									console.error('[Delib] Update proposal failed:', error);
-								})
-								.finally(() => {
-									submitting = false;
-									m.redraw();
-								});
-						},
+			// The primary zone: text + its ONE action, visually bound together
+			m('.workbench__section.workbench__section--edit', [
+				m('textarea.my-lantern__textarea', {
+					value: mineDraft,
+					rows: 4,
+					maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
+					placeholder: t('delib.placeholder'),
+					oninput: (event: InputEvent) => {
+						mineDraft = (event.target as HTMLTextAreaElement).value;
 					},
-					t('delib.update_proposal'),
-				),
+				}),
+				m('.delib__actions', [
+					m(
+						'button.btn.btn--primary.my-lantern__save',
+						{
+							disabled: !changed || submitting,
+							onclick: () => {
+								submitting = true;
+								submitProposal(
+									live,
+									initialVnode.attrs.myParticipant.anonName,
+									text,
+									myProposal.statementId,
+								)
+									.then(() => {
+										// Improving your own proposal earns glitter — the
+										// behavior the game most wants to reinforce
+										celebrate({ message: t('celebrate.proposal_improved'), detail: text });
+									})
+									.catch((error: unknown) => {
+										console.error('[Delib] Update proposal failed:', error);
+									})
+									.finally(() => {
+										submitting = false;
+										m.redraw();
+									});
+							},
+						},
+						t('delib.update_proposal'),
+					),
+				]),
 			]),
 			// The mirror: how would the camps receive this version?
-			estimateSection(live, mineDraft, topic),
-			m('.my-lantern__divider'),
-			suggestionsSection(live, myProposal),
-			m('.my-lantern__divider'),
-			askSection(live, myProposal, topic),
-			m('.my-lantern__divider'),
-			m(NeedsPeek, { topic }),
+			workbenchSection('🔮', t('delib.estimate_title'), estimateSection(live, mineDraft, topic)),
+			workbenchSection('💡', t('delib.suggestions_received'), suggestionsSection(live, myProposal), {
+				count: openCount,
+			}),
+			workbenchSection('🎭', t('delib.ask_elders'), askSection(live, myProposal, topic)),
+			m('.workbench__section.workbench__section--plain', m(NeedsPeek, { topic })),
 		]);
 	}
 
@@ -740,7 +774,6 @@ export function Deliberation(
 		const mySuggestions = [...(suggestions[myProposal.statementId] ?? [])].reverse();
 
 		return m('.stack', [
-			m('p.teacher__section-title', t('delib.suggestions_received')),
 			mySuggestions.length === 0
 				? m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))
 				: null,
@@ -827,7 +860,6 @@ export function Deliberation(
 		);
 
 		return m('.stack', [
-			m('p.teacher__section-title', t('delib.ask_elders')),
 			m(
 				'.char-chips',
 				topic.characters.map((character) => {
