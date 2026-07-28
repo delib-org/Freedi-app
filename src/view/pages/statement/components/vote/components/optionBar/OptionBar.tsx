@@ -1,25 +1,23 @@
-import { FC, useState, useEffect, memo, useCallback } from 'react';
+import { CSSProperties, FC, memo, useCallback } from 'react';
 
-// Redux store
-import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
-
-// Statements helpers
-import { getSelections } from '../../statementVoteCont';
 import InfoIcon from '@/assets/icons/infoCircleIcon.svg?react';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import { OptionBarProps } from '../../voteTypesHelper';
 import styles from './OptionBar.module.scss';
-import { getBarWidth } from './OptionBarCont';
-import { setVoteToDB } from '@/controllers/db/vote/setVote';
+import { getBarWidth, getBarPadding } from './OptionBarCont';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
-import { parentVoteSelector, setVoteToStore } from '@/redux/vote/votesSlice';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { getOptionColor } from '@/controllers/utils/colorUtils';
+
+/** Above this share of the vote the bar is dark enough to carry a white info icon. */
+const WHITE_INFO_ICON_THRESHOLD = 10;
 
 const OptionBarComponent: FC<OptionBarProps> = ({
 	option,
+	selections,
+	isSelected,
+	castVote,
 	totalVotes,
-	statement,
 	order,
 	setStatementInfo,
 	setShowInfo,
@@ -27,83 +25,45 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	optionsCount,
 	screenWidth,
 }) => {
-	const { creator } = useAuthentication();
-	// * Redux * //
-	const dispatch = useAppDispatch();
-	const vote = useAppSelector(parentVoteSelector(option.parentId));
-
-	// * Optimistic UI State * //
-	const [isVotePending, setIsVotePending] = useState(false);
-	const [optimisticVoteId, setOptimisticVoteId] = useState(vote?.statementId);
-
-	useEffect(() => {
-		setOptimisticVoteId(vote?.statementId);
-		setIsVotePending(false);
-	}, [vote]);
-
 	// * Variables * //
 	const _optionOrder = option.order || 0;
-	// Calculate optimistic selections based on current and optimistic vote state
-	const baseSelections: number = getSelections(statement, option);
-	const selections = (() => {
-		if (!isVotePending) return baseSelections;
-
-		// If we're switching to this option
-		if (optimisticVoteId === option.statementId && vote?.statementId !== option.statementId) {
-			return baseSelections + 1;
-		}
-		// If we're switching away from this option
-		if (vote?.statementId === option.statementId && optimisticVoteId !== option.statementId) {
-			return Math.max(0, baseSelections - 1);
-		}
-
-		return baseSelections;
-	})();
+	const optionColor = getOptionColor(option);
 
 	const barWidth = getBarWidth({
 		isVertical,
 		totalOptionsCount: optionsCount,
 		screenWidth,
 	});
-	const padding = 40;
+	const padding = getBarPadding(isVertical);
+	const barThickness = barWidth - padding;
 	const { shortVersion } = statementTitleToDisplay(option.statement, 30);
 	const barHeight =
 		selections > 0 && totalVotes > 0 ? Math.round((selections / totalVotes) * 100) : 0;
-	const handleVotePress = useCallback(async () => {
-		// Optimistic update - immediately update UI
-		const newVoteId = optimisticVoteId === option.statementId ? 'none' : option.statementId;
 
-		setOptimisticVoteId(newVoteId);
-		setIsVotePending(true);
-
-		// Update store optimistically
-		dispatch(setVoteToStore(option));
-
-		// Database operation in background (removed redundant getStatementFromDB - listener handles updates)
-		try {
-			await setVoteToDB(option, creator);
-		} finally {
-			setIsVotePending(false);
-		}
-	}, [optimisticVoteId, option, dispatch, creator]);
-
-	const isOptionSelected = optimisticVoteId === option.statementId;
+	const handleVotePress = useCallback(() => {
+		castVote(option);
+	}, [castVote, option]);
 
 	const containerInset = `${(_optionOrder - order) * barWidth}px`;
 	const containerStyle = {
 		[isVertical ? 'right' : 'left']: containerInset,
 		width: `${barWidth}px`,
-	};
+		// Drives the sided layout's rounding and count badge, which have to
+		// follow the bar's real thickness.
+		'--bar-thickness': `${barThickness}px`,
+	} as CSSProperties;
 
 	const voteButtonStyle = {
-		width: `${barWidth - padding}px`,
-		backgroundColor: isOptionSelected ? option.color : 'White',
+		width: `${barThickness}px`,
+		// Unvoted buttons wear a wash of the bar's own colour rather than plain
+		// white, so button and bar read as one object.
+		backgroundColor: isSelected ? optionColor : `color-mix(in srgb, ${optionColor} 16%, white)`,
 	};
 
 	const barStyle = {
 		height: `${barHeight}%`,
-		width: `${barWidth - padding}px`,
-		backgroundColor: option.color,
+		width: `${barThickness}px`,
+		backgroundColor: optionColor,
 	};
 
 	const shouldShowStat = barHeight > 0;
@@ -123,11 +83,11 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 				<button
 					onClick={handleVotePress}
 					aria-label="Vote button"
+					aria-pressed={isSelected}
 					style={voteButtonStyle}
-					className={`${styles.voteButton} ${isOptionSelected ? styles.selected : ''} ${isVotePending ? styles.pending : ''}`}
-					disabled={isVotePending}
+					className={`${styles.voteButton} ${isSelected ? styles.selected : ''}`}
 				>
-					{isOptionSelected ? <LikeIcon /> : <HandIcon style={{ color: option.color }} />}
+					{isSelected ? <LikeIcon /> : <HandIcon style={{ color: optionColor }} />}
 				</button>
 			</div>
 			<button
@@ -138,7 +98,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 					setShowInfo(true);
 				}}
 			>
-				<InfoIcon style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }} />
+				<InfoIcon style={{ color: barHeight > WHITE_INFO_ICON_THRESHOLD ? 'white' : '#6E8AA6' }} />
 			</button>
 			<div className={`${styles.title} ${barWidth < 90 ? styles.isBarSmall : ''}`}>
 				{shortVersion}
@@ -152,8 +112,12 @@ export const OptionBar = memo(OptionBarComponent, (prevProps, nextProps) => {
 	// Custom comparison - only re-render when relevant props change
 	return (
 		prevProps.option.statementId === nextProps.option.statementId &&
-		prevProps.option.selections === nextProps.option.selections &&
+		prevProps.option.statement === nextProps.option.statement &&
+		prevProps.option.order === nextProps.option.order &&
 		prevProps.option.color === nextProps.option.color &&
+		prevProps.selections === nextProps.selections &&
+		prevProps.isSelected === nextProps.isSelected &&
+		prevProps.castVote === nextProps.castVote &&
 		prevProps.totalVotes === nextProps.totalVotes &&
 		prevProps.order === nextProps.order &&
 		prevProps.isVertical === nextProps.isVertical &&

@@ -4,7 +4,6 @@
     }
     .voteButton {
         border-radius: 5px;
-        background-color: teal;
         clip-path: polygon(50% 0%, 100% 11px, 100% 100%, 0% 99%, 0% 11px);
         color: white;
         user-select: none;
@@ -25,31 +24,19 @@
         transition: background-color 100ms ease-out, transform 50ms ease-out;
         transform: scale(1);
 
-        &:hover:not(:disabled) {
+        &:hover {
             overflow: visible;
             transform: scale(1.02);
         }
-        
-        &:active:not(:disabled) {
+
+        &:active {
             transform: scale(0.98);
         }
-        
-        &.pending {
-            animation: votePulse 0.6s ease-in-out infinite;
-            cursor: wait;
-        }
-        
-        &:disabled {
-            cursor: not-allowed;
-            opacity: 0.9;
-        }
 
-        svg {
+        // The unvoted icon is tinted inline with the option's colour; the voted
+        // one sits on the full-strength colour, so it goes white.
+        &.selected svg {
             color: White;
-        }
-
-        &.selected {
-            background-color: var(--selected);
         }
     }
 
@@ -154,9 +141,16 @@
         gap: 5px;
         transition: right 300ms ease-out, left 300ms ease-out;
 
-        .voteButton svg {
-            transform: rotate(270deg) translate(-3px);
-            width: 19px;
+        // In the sided layout the whole area is rotated, so the button's CSS
+        // height is what the eye reads as its length. 35px made it a sliver.
+        .voteButton {
+            height: 48px;
+
+            svg {
+                transform: rotate(270deg);
+                width: 26px;
+                height: 26px;
+            }
         }
 
         .infoIcon {
@@ -173,9 +167,9 @@
             }
         }
         .bar {
-            width: 30px;
-            height: 30px;
-            border-radius: 15px 15px 0 0;
+            // Width and height come from the inline style; only the rounding is
+            // ours, and it has to track the bar's real thickness.
+            border-radius: calc(var(--bar-thickness) / 4) calc(var(--bar-thickness) / 4) 0 0;
 
             .numberOfSelections {
                 top: 0;
@@ -183,8 +177,8 @@
                 background-color: var(--card-default);
                 border-radius: 50%;
                 color: var(--text-body);
-                width: 30px;
-                height: 30px;
+                width: calc(var(--bar-thickness) * 0.55);
+                height: calc(var(--bar-thickness) * 0.55);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -216,14 +210,5 @@
                 bottom: 9.8rem;
             }
         }
-    }
-}
-
-@keyframes votePulse {
-    0%, 100% {
-        opacity: 0.9;
-    }
-    50% {
-        opacity: 0.6;
     }
 }

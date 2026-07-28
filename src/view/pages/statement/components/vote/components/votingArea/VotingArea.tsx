@@ -14,6 +14,9 @@ interface VotingAreaProps {
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
+	selectionsById: Record<string, number>;
+	votedOptionId: string;
+	castVote: (option: Statement) => Promise<void>;
 }
 
 const VotingArea: FC<VotingAreaProps> = ({
@@ -21,6 +24,9 @@ const VotingArea: FC<VotingAreaProps> = ({
 	subStatements,
 	setShowInfo,
 	totalVotes,
+	selectionsById,
+	votedOptionId,
+	castVote,
 }) => {
 	const { statementId, sort } = useParams();
 	const statement = useSelector(statementSelectorById(statementId));
@@ -67,8 +73,10 @@ const VotingArea: FC<VotingAreaProps> = ({
 						key={option.statementId}
 						order={i}
 						option={option}
+						selections={selectionsById[option.statementId] ?? 0}
+						isSelected={votedOptionId === option.statementId}
+						castVote={castVote}
 						totalVotes={totalVotes}
-						statement={statement}
 						setShowInfo={setShowInfo}
 						setStatementInfo={setStatementInfo}
 						optionsCount={optionsCount}

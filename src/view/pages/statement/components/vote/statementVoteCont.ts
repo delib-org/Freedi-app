@@ -58,47 +58,8 @@ export function sortOptionsIndex(options: Statement[], sort: string | undefined)
 	return _options;
 }
 
-export function getTotalVoters(statement: Statement | undefined) {
-	try {
-		if (!statement) return 0;
-		const { selections } = statement;
-
-		if (selections) {
-			let totalVoters = 0;
-			Object.keys(statement.selections).forEach((key: string) => {
-				if (key !== 'none') {
-					totalVoters += statement.selections[key];
-				}
-			});
-
-			return totalVoters;
-		}
-
-		return 0;
-	} catch (error) {
-		logError(error, { operation: 'vote.statementVoteCont.getTotalVoters' });
-
-		return 0;
-	}
-}
-
-// TODO: Not used. Delete later
-export function getSelections(statement: Statement, option: Statement) {
-	try {
-		if (statement.selections?.[option.statementId] !== undefined) {
-			const optionSelections = statement.selections[option.statementId];
-			if (!optionSelections) return 0;
-
-			return optionSelections;
-		}
-
-		return 0;
-	} catch (error) {
-		logError(error, { operation: 'vote.statementVoteCont.getSelections' });
-
-		return 0;
-	}
-}
+// Tallies and per-option counts now come from `useOptimisticVotes`, which reads
+// the same `statement.selections` but can also adjust for an unconfirmed vote.
 
 // Re-export from canonical location
 export {

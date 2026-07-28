@@ -1,6 +1,7 @@
 import { DeliberativeElement, Statement } from '@freedi/shared-types';
 import {
 	getRandomColor,
+	getOptionColor,
 	getSiblingOptionsByParentId,
 	getExistingOptionColors,
 } from '../colorUtils';
@@ -22,6 +23,42 @@ describe('colorUtils', () => {
 			const color = getRandomColor([]);
 			expect(color).toBeTruthy();
 			expect(typeof color).toBe('string');
+		});
+	});
+
+	describe('getOptionColor', () => {
+		const paletteColor = /^var\(--voting-palette-pair-\d+-(?:light|dark)\)$/;
+
+		it('should use the stored color when the option has one', () => {
+			const color = getOptionColor({
+				statementId: 'opt1',
+				color: 'var(--voting-palette-pair-4-dark)',
+			});
+			expect(color).toBe('var(--voting-palette-pair-4-dark)');
+		});
+
+		it('should fall back to a palette color when the option has none', () => {
+			const color = getOptionColor({ statementId: 'opt1', color: undefined });
+			expect(color).toMatch(paletteColor);
+		});
+
+		it('should fall back to a palette color for an empty stored color', () => {
+			const color = getOptionColor({ statementId: 'opt1', color: '' });
+			expect(color).toMatch(paletteColor);
+		});
+
+		it('should return the same fallback for the same id every time', () => {
+			const first = getOptionColor({ statementId: 'stable-id', color: undefined });
+			const second = getOptionColor({ statementId: 'stable-id', color: undefined });
+			expect(first).toBe(second);
+		});
+
+		it('should spread different ids across the palette', () => {
+			const ids = Array.from({ length: 40 }, (_, i) => `opt-${i}`);
+			const colors = new Set(
+				ids.map((id) => getOptionColor({ statementId: id, color: undefined })),
+			);
+			expect(colors.size).toBeGreaterThan(1);
 		});
 	});
 

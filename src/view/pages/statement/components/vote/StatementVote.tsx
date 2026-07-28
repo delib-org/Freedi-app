@@ -2,7 +2,7 @@ import { FC, useContext, useEffect, useState } from 'react';
 import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/helpers';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
-import { getTotalVoters } from './statementVoteCont';
+import { useOptimisticVotes } from './useOptimisticVotes';
 import HandIcon from '@/assets/icons/handIcon.svg?react';
 import X from '@/assets/icons/x.svg?react';
 import { getToVoteOnParent } from '@/controllers/db/vote/getVotes';
@@ -52,15 +52,22 @@ const StatementVote: FC = () => {
 	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(undefined);
 
 	// * Variables * //
-	const totalVotes = getTotalVoters(statement);
+	const { selectionsById, totalVotes, votedOptionId, castVote } = useOptimisticVotes(statement);
 
 	useEffect(() => {
-		if (!getVoteFromDB && user?.uid) {
-			getToVoteOnParent(statement?.statementId, user.uid, (option: Statement) =>
-				dispatch(setVoteToStore(option)),
-			);
-			getVoteFromDB = true;
-		}
+		const parentId = statement?.statementId;
+		if (getVoteFromDB || !user?.uid || !parentId) return;
+
+		getToVoteOnParent(parentId, user.uid, (option: Statement) =>
+			dispatch(
+				setVoteToStore({
+					parentId,
+					optionId: option.statementId,
+					userId: user.uid,
+				}),
+			),
+		);
+		getVoteFromDB = true;
 	}, [statement?.statementId, dispatch, user?.uid]);
 
 	return (
@@ -86,6 +93,9 @@ const StatementVote: FC = () => {
 				</div>
 				<VotingArea
 					totalVotes={totalVotes}
+					selectionsById={selectionsById}
+					votedOptionId={votedOptionId}
+					castVote={castVote}
 					setShowInfo={setIsStatementInfoModalOpen}
 					subStatements={subStatements}
 					setStatementInfo={setStatementInfo}

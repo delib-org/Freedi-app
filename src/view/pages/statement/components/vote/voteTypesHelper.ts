@@ -12,8 +12,12 @@ export interface OptionsBarsProps {
 
 export interface OptionBarProps {
 	option: Statement;
+	/** Vote count for this option, already adjusted for an unconfirmed vote. */
+	selections: number;
+	/** Whether the user's vote currently sits on this option. */
+	isSelected: boolean;
+	castVote: (option: Statement) => Promise<void>;
 	totalVotes: number;
-	statement: Statement;
 	order: number;
 	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
