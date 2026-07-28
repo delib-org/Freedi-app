@@ -71,13 +71,12 @@ PEEK (lap progression untouched, badge shows unseen open suggestions);
   changed") → collapsible needs board.
   **Pedagogy rule (Tal, 2026-07-13): the AI never WRITES for students** —
   the improve-my-wording and phrase-my-suggestion buttons were removed
-  ("otherwise they will not think"). Instead: `agoraEstimateReception`
-  callable — an on-demand, NUMBERS-ONLY reception forecast (per-camp 0-100
-  support + predicted average, fixture = needs-keyword overlap) shown under
-  the edit box; goes stale when the text changes. AI opinions/critique live
-  only in the in-character reviews. `agoraWritingAssistant` still deployed
-  but no longer called by the client (keep in source or deploys will demand
-  a functions:delete).
+  ("otherwise they will not think"). AI opinions/critique live only in the
+  in-character reviews. The numbers-only reception forecast
+  (`agoraEstimateReception`) was ALSO removed from the client (Tal,
+  2026-07-28 — it duplicated the character reviews' scores); the callable
+  plus `agoraWritingAssistant` remain deployed but uncalled (keep both in
+  source or deploys will demand a functions:delete).
 - **The collaboration loop (2026-07-13)**: helper B and owner A iterate.
   B's sent suggestions live in a "Proposals I helped" section (help step +
   done screen): live status chips (the acknowledgment), the proposal's
