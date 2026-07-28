@@ -8,13 +8,11 @@ import {
 	rateProposal,
 	submitSuggestion,
 	resolveSuggestion,
-	estimateReception,
 	askCharacterReview,
 	getHelpedProposals,
 	AgoraProposal,
 	AgoraRating,
 	HelpedProposal,
-	ReceptionEstimate,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { ScoreHud } from '../components/ScoreHud';
@@ -351,9 +349,6 @@ export function Deliberation(
 	let draft = '';
 	let submitting = false;
 	/** Reception forecast for the CURRENT draft text (stale once the text changes) */
-	let estimate: ReceptionEstimate | null = null;
-	let estimateText = '';
-	let estimateBusy = false;
 	let suggestionDraft = '';
 	let helpSkips = 0;
 	/** The always-editable box on the mine screen + the proposal text it was seeded from */
@@ -613,79 +608,12 @@ export function Deliberation(
 		]);
 	}
 
-	/** The proposal on the table. Mine glows gold; a classmate's sits in a neutral frame. */
-	/**
-	 * Reception forecast — numbers only, on demand. The AI never writes or
-	 * advises here (a mirror, not a ghost-writer): it only predicts how each
-	 * camp would receive the current draft, so the thinking stays with the
-	 * student. Opinions live in the in-character reviews.
-	 */
-	function estimateSection(
-		live: AgoraSession,
-		rawText: string,
-		topic: AgoraTopicPackage,
-	): m.Children {
-		const text = rawText.trim();
-		const tooShort = text.length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
-		const stale = estimate !== null && estimateText !== text;
-
-		const campRow = (label: string, colorVar: string, value: number) =>
-			m('.estimate__row', [
-				m('span.estimate__label', { style: { color: `var(${colorVar})` } }, label),
-				m('.estimate__track', [
-					m('.estimate__fill', {
-						style: { width: `${value}%`, background: `var(${colorVar})` },
-					}),
-				]),
-				m('span.estimate__value', String(value)),
-			]);
-
-		return m('.stack', [
-			m(
-				'button.btn.btn--secondary.estimate__button',
-				{
-					disabled: estimateBusy || tooShort,
-					onclick: () => {
-						estimateBusy = true;
-						estimateReception(live.sessionId, text)
-							.then((result) => {
-								estimate = result;
-								estimateText = text;
-							})
-							.catch((error: unknown) => {
-								console.error('[Delib] Reception estimate failed:', error);
-							})
-							.finally(() => {
-								estimateBusy = false;
-								m.redraw();
-							});
-					},
-				},
-				estimateBusy ? t('delib.ai_thinking') : `🔮 ${t('delib.estimate_button')}`,
-			),
-			estimate
-				? m('.estimate', { class: stale ? 'estimate--stale' : undefined }, [
-						m('p.estimate__title', t('delib.estimate_title')),
-						campRow(topic.positioningScale.leftLabel, '--camp-left-glow', estimate.left),
-						campRow(topic.positioningScale.rightLabel, '--camp-right-glow', estimate.right),
-						m('.estimate__avg', [
-							m('span', t('delib.estimate_avg')),
-							m('strong', `${estimate.average}/100`),
-						]),
-						m(
-							'p.square-says__meaning',
-							stale ? t('delib.estimate_stale') : t('delib.estimate_hint'),
-						),
-					])
-				: null,
-		]);
-	}
-
 	/**
 	 * MY whole workshop as ONE card: the always-editable proposal text, the
-	 * reception forecast, the improvements received, the ask-the-characters
-	 * helpers and the needs reminder — everything under the same gold frame.
-	 * No AI rewriting anywhere: the AI only reacts.
+	 * improvements received, the ask-the-characters helpers and the needs
+	 * reminder — everything under the same frame. No AI rewriting anywhere:
+	 * the AI only reacts. (The numbers-only reception forecast was removed
+	 * 2026-07-28 — it duplicated the in-character reviews' scores.)
 	 */
 	function editableProposalCard(
 		live: AgoraSession,
@@ -757,11 +685,14 @@ export function Deliberation(
 					),
 				]),
 			]),
-			// The mirror: how would the camps receive this version?
-			workbenchSection('🔮', t('delib.estimate_title'), estimateSection(live, mineDraft, topic)),
-			workbenchSection('💡', t('delib.suggestions_received'), suggestionsSection(live, myProposal), {
-				count: openCount,
-			}),
+			workbenchSection(
+				'💡',
+				t('delib.suggestions_received'),
+				suggestionsSection(live, myProposal),
+				{
+					count: openCount,
+				},
+			),
 			workbenchSection('🎭', t('delib.ask_elders'), askSection(live, myProposal, topic)),
 			m('.workbench__section.workbench__section--plain', m(NeedsPeek, { topic })),
 		]);
@@ -1239,8 +1170,6 @@ export function Deliberation(
 						},
 					}),
 					m(NeedsPeek, { topic }),
-					// The reception mirror works from the first draft on
-					estimateSection(live, draft, topic),
 					m('.delib__actions', [
 						m(
 							'button.btn.btn--primary',

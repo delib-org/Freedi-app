@@ -1596,8 +1596,10 @@
 	text-align: center;
 }
 
-// --- Reception forecast: numbers-only mirror of how the camps would take
-// the current draft (no AI advice — the thinking stays with the student) ---
+// --- Camp meter rows (label + track + value). Born as the reception
+// forecast (feature removed 2026-07-28 — duplicated the character reviews);
+// the __row/__label/__track/__fill/__value pieces live on in the ScoreHud
+// chart-detail card ---
 .estimate {
 	background: var(--bg-inset);
 	border: 1px solid var(--border-subtle);

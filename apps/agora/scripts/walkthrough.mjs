@@ -242,13 +242,6 @@ await s1.locator('.chart-detail__close').click();
 await s1.waitForSelector('.workshop__item', { timeout: 10000 });
 console.log('S1 SUGGESTIONS INLINE:', await s1.locator('.workshop__item').count());
 
-// Reception forecast: numbers-only mirror of how the camps would take the draft
-await s1.locator('.estimate__button').click();
-await s1.waitForSelector('.estimate', { timeout: 60000 });
-console.log(
-	'S1 RECEPTION ESTIMATE:',
-	(await s1.locator('.estimate').innerText()).slice(0, 120).replaceAll('\n', ' | ')
-);
 await shot(s1, '06a-workshop-mine');
 
 // Accept the suggestion ("I'll implement") → the suggester gets the glitter
