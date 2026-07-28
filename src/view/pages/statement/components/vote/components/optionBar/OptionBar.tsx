@@ -9,7 +9,11 @@ import { getBarWidth, getBarPadding } from './OptionBarCont';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { getOptionColor } from '@/controllers/utils/colorUtils';
 
-/** Above this share of the vote the bar is dark enough to carry a white info icon. */
+/**
+ * Above this share of the vote the bar is dark enough to carry a white info
+ * icon. Only relevant in the vertical layout, where the button still overlaps
+ * the fill — the sided layout parks it past the percentage, clear of the bar.
+ */
 const WHITE_INFO_ICON_THRESHOLD = 10;
 
 const OptionBarComponent: FC<OptionBarProps> = ({
@@ -68,12 +72,36 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 
 	const shouldShowStat = barHeight > 0;
 
+	const infoButton = (
+		<button
+			className={styles.infoIcon}
+			aria-label="Info button"
+			onClick={() => {
+				setStatementInfo(option);
+				setShowInfo(true);
+			}}
+		>
+			<InfoIcon
+				style={isVertical && barHeight > WHITE_INFO_ICON_THRESHOLD ? { color: 'white' } : undefined}
+			/>
+		</button>
+	);
+
 	return (
 		<div
 			className={`${styles.optionBar} ${isVertical ? styles.vertical : styles.horizontal}`}
 			style={containerStyle}
 		>
 			<div className={styles.column} style={{ width: `${barWidth}px` }}>
+				{/*
+				 * Sided layout only: in the flow of the bottom-packed column, so the
+				 * button trails the bar and its percentage however long the bar is.
+				 * It must NOT go here in the vertical layout — .column carries a
+				 * filter, which makes it the containing block for absolutely
+				 * positioned children, so vertical's `bottom: 70px` would silently
+				 * start measuring from the column instead of the whole bar.
+				 */}
+				{!isVertical && infoButton}
 				{shouldShowStat && <div className={styles.percentageText}>{barHeight}%</div>}
 				<div className={`${styles.bar} ${styles.dropShadow}`} style={barStyle}>
 					<div className={styles.numberOfSelections}>{selections}</div>
@@ -90,16 +118,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 					{isSelected ? <LikeIcon /> : <HandIcon style={{ color: optionColor }} />}
 				</button>
 			</div>
-			<button
-				className={styles.infoIcon}
-				aria-label="Info button"
-				onClick={() => {
-					setStatementInfo(option);
-					setShowInfo(true);
-				}}
-			>
-				<InfoIcon style={{ color: barHeight > WHITE_INFO_ICON_THRESHOLD ? 'white' : '#6E8AA6' }} />
-			</button>
+			{isVertical && infoButton}
 			<div className={`${styles.title} ${barWidth < 90 ? styles.isBarSmall : ''}`}>
 				{shortVersion}
 			</div>

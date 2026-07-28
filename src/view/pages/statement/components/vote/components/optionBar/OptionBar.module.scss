@@ -44,6 +44,9 @@
         background: none;
         user-select: none;
         position: absolute;
+        // Default for when the button sits on the page rather than on a bar.
+        // The inline white override only applies where it overlaps the fill.
+        color: var(--text-caption);
     }
 
     .column {
@@ -153,13 +156,20 @@
             }
         }
 
+        // In the flow of the bottom-packed column, so it trails the bar and its
+        // percentage instead of overlapping the vote button. Absolute anchoring
+        // can't work here: `bottom: 0` sits on the vote button and `top: 0`
+        // parks it at the far end of a full-viewport track, nowhere near the bar.
         .infoIcon {
-            bottom: 0px;
+            position: static;
             display: flex;
             align-items: center;
-            @media (max-width: 540px) {
-                transform: translateY(-2.7rem) rotate(270deg);
-            }
+            justify-content: center;
+            // Bottom margin is the gap to the percentage — the column is
+            // bottom-packed, so CSS-below is screen-left, toward the label.
+            margin-bottom: 10px;
+            padding: 4px;
+            transform: rotate(270deg);
 
             svg {
                 width: 23px;
