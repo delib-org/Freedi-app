@@ -34,6 +34,13 @@ export const AGORA_SESSION = {
 	 * only, so the space is far larger than the number of concurrent classes.
 	 */
 	JOIN_CODE_ALPHABET: '0123456789',
+	/**
+	 * A newly minted code must not collide with any session created inside this
+	 * window. Scoping by age rather than by status means a code stays reserved
+	 * for a full day even after its lesson ends — so a student who kept
+	 * yesterday's code on a note cannot wander into today's unrelated class.
+	 */
+	JOIN_CODE_UNIQUE_WINDOW_MS: 24 * 60 * 60 * 1000,
 	TEAM_SIZE_MIN: 1,
 	TEAM_SIZE_MAX: 3,
 	/** Default lesson length in milliseconds (45 minutes) */

@@ -61,10 +61,7 @@ export function TeacherHome(): m.Component {
 		try {
 			const user = await ensureUser();
 			const snapshot = await getDocs(
-				query(
-					collection(db, Collections.agoraTopicPackages),
-					where('creatorId', '==', user.uid),
-				),
+				query(collection(db, Collections.agoraTopicPackages), where('creatorId', '==', user.uid)),
 			);
 			let loaded: AgoraTopicPackage[] = [];
 			snapshot.forEach((docSnap) => {

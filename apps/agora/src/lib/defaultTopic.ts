@@ -1,8 +1,4 @@
-import {
-	AgoraSceneKind,
-	AgoraTopicPackage,
-	AgoraTopicStatus,
-} from '@freedi/shared-types';
+import { AgoraSceneKind, AgoraTopicPackage, AgoraTopicStatus } from '@freedi/shared-types';
 
 /**
  * The built-in French Revolution scenario (Hebrew). A teacher who signs in
@@ -117,9 +113,21 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 					'אני צריך כבוד — שלא יראו בי אויב רק בגלל המעמד שנולדתי אליו.',
 				],
 				values: [
-					{ valueId: 'val-order', label: 'סדר ויציבות', description: 'חשש עמוק מכאוס ומאלימות המונים' },
-					{ valueId: 'val-tradition', label: 'מסורת', description: 'כבוד למוסדות ההיסטוריים — הכתר והכנסייה' },
-					{ valueId: 'val-hierarchy', label: 'היררכיה', description: 'אמונה שהנהגה דורשת ניסיון ומעמד' },
+					{
+						valueId: 'val-order',
+						label: 'סדר ויציבות',
+						description: 'חשש עמוק מכאוס ומאלימות המונים',
+					},
+					{
+						valueId: 'val-tradition',
+						label: 'מסורת',
+						description: 'כבוד למוסדות ההיסטוריים — הכתר והכנסייה',
+					},
+					{
+						valueId: 'val-hierarchy',
+						label: 'היררכיה',
+						description: 'אמונה שהנהגה דורשת ניסיון ומעמד',
+					},
 				],
 			},
 			{
@@ -140,7 +148,11 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				values: [
 					{ valueId: 'val-equality', label: 'שוויון', description: 'ביטול זכויות היתר של האצולה' },
 					{ valueId: 'val-liberty', label: 'חירות', description: 'חופש הפרט מול שלטון עריץ' },
-					{ valueId: 'val-popular', label: 'ריבונות העם', description: 'הלגיטימציה לשלטון באה מהעם בלבד' },
+					{
+						valueId: 'val-popular',
+						label: 'ריבונות העם',
+						description: 'הלגיטימציה לשלטון באה מהעם בלבד',
+					},
 				],
 			},
 		],
@@ -150,14 +162,27 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 			leftCharacterId: ROYALIST_ID,
 			rightCharacterId: JACOBIN_ID,
 		},
-		challengeQuestion: 'מה צריך לעשות כדי לבנות שלטון צודק ויציב בצרפת — בלי להידרדר לטרור או לרעב?',
+		challengeQuestion:
+			'מה צריך לעשות כדי לבנות שלטון צודק ויציב בצרפת — בלי להידרדר לטרור או לרעב?',
 		valueAnswerKey: [
 			{
 				characterId: ROYALIST_ID,
 				expectedValues: [
-					{ valueId: 'val-order', label: 'סדר ויציבות', description: 'חשש עמוק מכאוס ומאלימות המונים' },
-					{ valueId: 'val-tradition', label: 'מסורת', description: 'כבוד למוסדות ההיסטוריים — הכתר והכנסייה' },
-					{ valueId: 'val-hierarchy', label: 'היררכיה', description: 'אמונה שהנהגה דורשת ניסיון ומעמד' },
+					{
+						valueId: 'val-order',
+						label: 'סדר ויציבות',
+						description: 'חשש עמוק מכאוס ומאלימות המונים',
+					},
+					{
+						valueId: 'val-tradition',
+						label: 'מסורת',
+						description: 'כבוד למוסדות ההיסטוריים — הכתר והכנסייה',
+					},
+					{
+						valueId: 'val-hierarchy',
+						label: 'היררכיה',
+						description: 'אמונה שהנהגה דורשת ניסיון ומעמד',
+					},
 				],
 			},
 			{
@@ -165,7 +190,11 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				expectedValues: [
 					{ valueId: 'val-equality', label: 'שוויון', description: 'ביטול זכויות היתר של האצולה' },
 					{ valueId: 'val-liberty', label: 'חירות', description: 'חופש הפרט מול שלטון עריץ' },
-					{ valueId: 'val-popular', label: 'ריבונות העם', description: 'הלגיטימציה לשלטון באה מהעם בלבד' },
+					{
+						valueId: 'val-popular',
+						label: 'ריבונות העם',
+						description: 'הלגיטימציה לשלטון באה מהעם בלבד',
+					},
 				],
 			},
 		],
@@ -192,10 +221,39 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 			],
 		},
 		healthMetrics: [
-			{ metricId: 'met-bread', label: 'מחיר הלחם', description: 'יוקר המחיה של פשוטי העם', min: 0, max: 100, baseline: 25, higherIsBetter: false },
-			{ metricId: 'met-stability', label: 'יציבות שלטונית', description: 'הסיכוי להימנע ממלחמת אזרחים', min: 0, max: 100, baseline: 30 },
-			{ metricId: 'met-rights', label: 'זכויות האזרח', description: 'חירויות הפרט והשוויון בפני החוק', min: 0, max: 100, baseline: 20 },
-			{ metricId: 'met-treasury', label: 'קופת המדינה', description: 'יכולת המדינה לממן את עצמה', min: 0, max: 100, baseline: 15 },
+			{
+				metricId: 'met-bread',
+				label: 'מחיר הלחם',
+				description: 'יוקר המחיה של פשוטי העם',
+				min: 0,
+				max: 100,
+				baseline: 25,
+				higherIsBetter: false,
+			},
+			{
+				metricId: 'met-stability',
+				label: 'יציבות שלטונית',
+				description: 'הסיכוי להימנע ממלחמת אזרחים',
+				min: 0,
+				max: 100,
+				baseline: 30,
+			},
+			{
+				metricId: 'met-rights',
+				label: 'זכויות האזרח',
+				description: 'חירויות הפרט והשוויון בפני החוק',
+				min: 0,
+				max: 100,
+				baseline: 20,
+			},
+			{
+				metricId: 'met-treasury',
+				label: 'קופת המדינה',
+				description: 'יכולת המדינה לממן את עצמה',
+				min: 0,
+				max: 100,
+				baseline: 15,
+			},
 		],
 		scenes: [
 			{
@@ -232,8 +290,14 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				imageUrls: ['/scenes/perspective-royalist.webp'],
 				dialogue: [
 					{ speaker: 'הרוזן דה-לה-רוש', line: 'ברוכים הבאים. שמעתי שבאתם מרחוק לעזור לצרפת.' },
-					{ speaker: 'הרוזן דה-לה-רוש', line: 'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים. ראיתם מה קורה כשההמון משתלט על הרחוב?' },
-					{ speaker: 'הרוזן דה-לה-רוש', line: 'המסורת והכנסייה מחזיקות את החברה יחד כבר אלף שנה. שינויים חייבים לבוא בהדרגה, מלמעלה.' },
+					{
+						speaker: 'הרוזן דה-לה-רוש',
+						line: 'המלוכה היא סדר. בלי מלך, צרפת תתפרק לכאוס ולשפיכות דמים. ראיתם מה קורה כשההמון משתלט על הרחוב?',
+					},
+					{
+						speaker: 'הרוזן דה-לה-רוש',
+						line: 'המסורת והכנסייה מחזיקות את החברה יחד כבר אלף שנה. שינויים חייבים לבוא בהדרגה, מלמעלה.',
+					},
 				],
 			},
 			{
@@ -243,9 +307,18 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				text: 'קמיל דופון יושב בבית קפה הומה, מוקף בעיתונים ובכרוזים.',
 				imageUrls: ['/scenes/perspective-jacobin.webp'],
 				dialogue: [
-					{ speaker: 'קמיל דופון', line: 'שבו, שבו. תראו מה כתוב כאן — מחיר הלחם עלה שוב, והמלכה מזמינה תכשיטים.' },
-					{ speaker: 'קמיל דופון', line: 'העם גווע ברעב בזמן שהארמון עורך נשפים. כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.' },
-					{ speaker: 'קמיל דופון', line: 'רק שלטון של העם, למען העם, יביא צדק לצרפת. השאלה היא רק איך — ובאיזה מחיר.' },
+					{
+						speaker: 'קמיל דופון',
+						line: 'שבו, שבו. תראו מה כתוב כאן — מחיר הלחם עלה שוב, והמלכה מזמינה תכשיטים.',
+					},
+					{
+						speaker: 'קמיל דופון',
+						line: 'העם גווע ברעב בזמן שהארמון עורך נשפים. כל אדם נולד חופשי ושווה — אין זכויות יתר מלידה.',
+					},
+					{
+						speaker: 'קמיל דופון',
+						line: 'רק שלטון של העם, למען העם, יביא צדק לצרפת. השאלה היא רק איך — ובאיזה מחיר.',
+					},
 				],
 			},
 			{
@@ -263,9 +336,18 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				text: 'הרוזן דה-לה-רוש שותק רגע ארוך. ואז, בקול שקט יותר, הוא עונה.',
 				imageUrls: ['/scenes/needs-royalist.webp'],
 				dialogue: [
-					{ speaker: 'הרוזן דה-לה-רוש', line: 'אני צריך לדעת שמשפחתי לא תיפגע ושאחוזתי לא תישרף בידי המון זועם.' },
-					{ speaker: 'הרוזן דה-לה-רוש', line: 'אני צריך שהעולם שגדלתי בו לא ייעלם בן לילה — שיישאר משהו מהמסורת שלנו.' },
-					{ speaker: 'הרוזן דה-לה-רוש', line: 'ואני צריך כבוד — שלא יראו בי אויב רק בגלל המעמד שנולדתי אליו.' },
+					{
+						speaker: 'הרוזן דה-לה-רוש',
+						line: 'אני צריך לדעת שמשפחתי לא תיפגע ושאחוזתי לא תישרף בידי המון זועם.',
+					},
+					{
+						speaker: 'הרוזן דה-לה-רוש',
+						line: 'אני צריך שהעולם שגדלתי בו לא ייעלם בן לילה — שיישאר משהו מהמסורת שלנו.',
+					},
+					{
+						speaker: 'הרוזן דה-לה-רוש',
+						line: 'ואני צריך כבוד — שלא יראו בי אויב רק בגלל המעמד שנולדתי אליו.',
+					},
 				],
 			},
 			{
@@ -275,9 +357,18 @@ export function buildDefaultFrenchRevolutionTopic(creatorId: string): AgoraTopic
 				text: 'קמיל דופון מניח את העיתון. לרגע הוא לא נואם — הוא פשוט מדבר.',
 				imageUrls: ['/scenes/needs-jacobin.webp'],
 				dialogue: [
-					{ speaker: 'קמיל דופון', line: 'אני צריך שלילדים שלנו יהיה לחם על השולחן — ביטחון קיומי בסיסי.' },
-					{ speaker: 'קמיל דופון', line: 'אני צריך שישמעו אותנו — שלעם יהיה קול אמיתי בהחלטות שמעצבות את חייו.' },
-					{ speaker: 'קמיל דופון', line: 'ואני צריך צדק — שהחוק יחול על כולם באותה מידה, גם על החזקים.' },
+					{
+						speaker: 'קמיל דופון',
+						line: 'אני צריך שלילדים שלנו יהיה לחם על השולחן — ביטחון קיומי בסיסי.',
+					},
+					{
+						speaker: 'קמיל דופון',
+						line: 'אני צריך שישמעו אותנו — שלעם יהיה קול אמיתי בהחלטות שמעצבות את חייו.',
+					},
+					{
+						speaker: 'קמיל דופון',
+						line: 'ואני צריך צדק — שהחוק יחול על כולם באותה מידה, גם על החזקים.',
+					},
 				],
 			},
 			{

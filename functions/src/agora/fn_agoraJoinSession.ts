@@ -44,10 +44,17 @@ export const agoraJoinSession = onCall(
 			throw new HttpsError('invalid-argument', 'code is required');
 		}
 
+		// Codes are digits now, so the old .toUpperCase() was a no-op. Normalise
+		// the same way the client does, so a stray space or dash still resolves.
+		const normalisedCode = code.replace(/\D/g, '');
+		if (normalisedCode.length !== AGORA_SESSION.JOIN_CODE_LENGTH) {
+			throw new HttpsError('invalid-argument', 'code must be 5 digits');
+		}
+
 		try {
 			const sessionSnap = await db
 				.collection(Collections.agoraSessions)
-				.where('code', '==', code.toUpperCase())
+				.where('code', '==', normalisedCode)
 				.where('status', 'in', [AgoraSessionStatus.open, AgoraSessionStatus.live])
 				.limit(1)
 				.get();
