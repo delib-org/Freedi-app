@@ -1,8 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react';
 
-//image
 import EditIcon from '@/assets/icons/editIcon.svg?react';
-import infoGraphic from '@/assets/images/infoGraphic.png';
 import { isAuthorized } from '@/controllers/general/helpers';
 
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -42,10 +40,6 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 
 	return (
 		<div className={styles.statementInfo}>
-			<div className={styles.infoGraphic}>
-				<img src={infoGraphic} alt="info" />
-			</div>
-
 			<div className={styles.texts}>
 				<h3>
 					<EditableStatement
