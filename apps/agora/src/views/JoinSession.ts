@@ -18,7 +18,8 @@ type JoinPhase = 'looking' | 'team-size' | 'joining' | 'error';
 export function JoinSession(
 	initialVnode: m.Vnode<{ code: string }>,
 ): m.Component<{ code: string }> {
-	const code = initialVnode.attrs.code.toUpperCase();
+	// Deep links (/join/12345) get the same digits-only normalisation as typing
+	const code = initialVnode.attrs.code.replace(/\D/g, '');
 	let phase: JoinPhase = 'looking';
 	let errorKey = 'join.invalid_code';
 	let session: AgoraSession | null = null;
