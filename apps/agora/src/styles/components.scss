@@ -742,6 +742,388 @@
 	}
 }
 
+// --- Journey strip: the whole journey as stations, the current one lit.
+// Persistent on every stage — the game's "you are here". ---
+.journey-strip {
+	position: relative;
+	z-index: var(--z-content);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-xs);
+	max-width: 720px;
+	margin: var(--space-sm) auto 0;
+	padding: var(--space-xs) var(--space-md);
+
+	&__station {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+
+		// The road between stations
+		&:not(:first-child)::before {
+			content: '';
+			width: clamp(8px, 3vw, 26px);
+			height: 2px;
+			border-radius: 1px;
+			background: var(--border-strong);
+			margin-inline-end: var(--space-xs);
+		}
+
+		&--done:not(:first-child)::before,
+		&--current:not(:first-child)::before {
+			background: var(--lantern);
+		}
+	}
+
+	&__dot {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		background: var(--bg-card-solid);
+		border: 1.5px solid var(--border-strong);
+		font-size: 0.95rem;
+		line-height: 1;
+	}
+
+	&__station--done &__dot {
+		background: rgba(43, 111, 214, 0.12);
+		border-color: var(--lantern);
+		color: var(--lantern-glow);
+		font-weight: 700;
+	}
+
+	&__station--current &__dot {
+		border-color: var(--lantern);
+		box-shadow:
+			0 0 0 3px rgba(43, 111, 214, 0.2),
+			var(--glow-marker);
+		animation: era-map-marker-pulse 1.8s ease-in-out infinite;
+	}
+
+	&__station--pending &__dot {
+		opacity: 0.55;
+		filter: grayscale(0.7);
+	}
+
+	&__label {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		white-space: nowrap;
+	}
+
+	// Station names for screen readers only (sighted users read the lit label)
+	&__sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+}
+
+@media (max-width: 480px) {
+	.journey-strip__dot {
+		width: 26px;
+		height: 26px;
+		font-size: 0.85rem;
+	}
+}
+
+// --- Stage transition: the camera move between journey legs — the era map
+// settling from a wide shot while the destination announces itself ---
+.stage-transition {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background:
+		radial-gradient(
+			ellipse 120% 70% at 50% -10%,
+			var(--bg-page-high) 0%,
+			#e2f1fd 55%,
+			var(--bg-page) 100%
+		),
+		var(--bg-page);
+	animation: stage-transition-in var(--motion-slow) var(--ease-camera) both;
+	transition: opacity 400ms ease;
+
+	&--leaving {
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	&__map {
+		position: absolute;
+		inset: 0;
+		opacity: 0.5;
+		animation: stage-transition-camera var(--motion-camera) var(--ease-camera) both;
+
+		.era-map,
+		.era-map svg {
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	&__panel {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-sm);
+		text-align: center;
+		padding: var(--space-lg) var(--space-xl);
+		background: var(--bg-card);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		backdrop-filter: blur(6px);
+		animation: stage-transition-panel var(--motion-slow) var(--ease-camera) 200ms both;
+	}
+
+	&__icon {
+		font-size: 2.6rem;
+		line-height: 1;
+	}
+
+	&__title {
+		color: var(--text-primary);
+	}
+
+	&__line {
+		color: var(--text-secondary);
+		max-width: 34ch;
+	}
+}
+
+@keyframes stage-transition-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes stage-transition-camera {
+	from {
+		transform: scale(1.18) translateY(-3%);
+	}
+	to {
+		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes stage-transition-panel {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+// --- Place banner: each deliberation step is a LOCATION with its own scene.
+// mine = my workbench (blue), rate = the square, help = a classmate's stand
+// (orange awning). Peripheral vision alone should answer "where am I?". ---
+.place-banner {
+	--place-accent: var(--lantern);
+	--place-accent-soft: rgba(43, 111, 214, 0.12);
+
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	gap: var(--space-md);
+	border: 1px solid var(--border-subtle);
+	border-inline-start: 4px solid var(--place-accent);
+	border-radius: var(--radius-lg);
+	background: linear-gradient(180deg, var(--place-accent-soft), transparent 80%), var(--bg-card);
+	padding: var(--space-sm) var(--space-md);
+	animation: scene-enter var(--motion-slow) var(--ease-camera) both;
+
+	&--rate {
+		--place-accent: var(--camp-center-glow);
+		--place-accent-soft: rgba(111, 127, 179, 0.14);
+	}
+
+	&--help {
+		--place-accent: var(--peer);
+		--place-accent-soft: rgba(224, 119, 20, 0.14);
+	}
+
+	&__scene {
+		flex: 0 0 clamp(96px, 24vw, 150px);
+
+		svg {
+			display: block;
+			width: 100%;
+			height: auto;
+		}
+	}
+
+	&__text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__title {
+		font-size: var(--font-size-xl);
+		color: var(--text-primary);
+	}
+
+	&__sub {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// --- Visiting: their proposal as a mounted POSTER — framed parchment with a
+// pin, clearly not an input. The anatomy twin of "mine" is broken on purpose. ---
+.stand-poster {
+	position: relative;
+	background: linear-gradient(180deg, rgba(224, 119, 20, 0.08), transparent 30%), var(--parchment);
+	border: 1px solid rgba(169, 126, 82, 0.5);
+	border-block-start: 10px solid var(--peer);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	padding: var(--space-lg);
+
+	&__pin {
+		position: absolute;
+		inset-block-start: -7px;
+		inset-inline-start: 50%;
+		transform: translateX(-50%);
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: #ffd23f;
+		border: 2px solid #b97300;
+		box-shadow: 0 2px 4px rgba(37, 51, 82, 0.3);
+	}
+
+	&__next {
+		margin-inline-start: auto;
+	}
+
+	&__text {
+		margin-block-start: var(--space-md);
+		color: var(--ink);
+		font-size: var(--font-size-lg);
+		line-height: 1.7;
+	}
+}
+
+// --- My advice note: a sticky note, deliberately SMALLER than the poster —
+// the input is mine, the poster is theirs ---
+.advice-note {
+	width: 92%;
+	margin-inline-start: auto;
+	background: linear-gradient(180deg, #fff3c9, #ffedb3);
+	border: 1px solid rgba(185, 115, 0, 0.4);
+	border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-md);
+	box-shadow: 0 6px 14px rgba(37, 51, 82, 0.14);
+	padding: var(--space-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	transform: rotate(-0.6deg);
+
+	&__label {
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--peer-glow);
+		font-size: var(--font-size-sm);
+	}
+
+	&__input {
+		background: rgba(255, 255, 255, 0.65);
+	}
+}
+
+// --- Travel splash: covers step/lap changes so a new place never hard-cuts
+// in. Tap anywhere to skip. ---
+.delib-splash {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--bg-overlay);
+	backdrop-filter: blur(3px);
+	animation: stage-transition-in var(--motion-base) ease both;
+	cursor: pointer;
+
+	&__card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-sm);
+		text-align: center;
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		padding: var(--space-xl) var(--space-2xl);
+		max-width: min(90vw, 420px);
+		animation: stage-transition-panel var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__icon {
+		font-size: 3rem;
+		line-height: 1;
+	}
+
+	&__title {
+		color: var(--text-primary);
+	}
+
+	&__sub {
+		color: var(--text-secondary);
+		max-width: 30ch;
+	}
+
+	&__steps {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-sm);
+	}
+
+	&__step {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		color: var(--text-muted);
+		font-family: var(--font-display);
+
+		&--first {
+			color: var(--lantern-glow);
+			font-weight: 700;
+		}
+	}
+
+	&__step-icon {
+		font-size: 1.2rem;
+	}
+}
+
 // --- My lantern: the proposal on the table as the hero object ---
 // Ownership grammar: BLUE = MINE, ORANGE = a CLASSMATE's.
 // The border-inline-start ribbon is the scannable cue (RTL-safe).
@@ -982,6 +1364,30 @@
 		transparent
 	);
 	pointer-events: none;
+}
+
+// --- Place washes: a full-column tint per deliberation place, so even
+// peripheral vision separates "my workshop" from "visiting a stand" ---
+.shell--place-mine {
+	background: linear-gradient(
+		180deg,
+		rgba(43, 111, 214, 0.06),
+		rgba(255, 248, 234, 0.5) 30%,
+		transparent 70%
+	);
+}
+
+.shell--place-square {
+	background: linear-gradient(180deg, rgba(111, 127, 179, 0.08), transparent 60%);
+}
+
+.shell--place-visit {
+	background: linear-gradient(
+		180deg,
+		rgba(224, 119, 20, 0.1),
+		rgba(255, 243, 201, 0.35) 30%,
+		transparent 70%
+	);
 }
 
 // --- Owner chip: whose proposal is on the table (📘 mine / 📙 a classmate's) ---
@@ -2314,38 +2720,39 @@
 }
 
 // ============================================================================
-// ScoreHUD v2 — "The Night Board Over the Square" (stadium scoreboard)
-// A glossy indigo-black board with a metallic bezel, hanging over the light
-// festival page. Component-scoped dark palette; the --camp/--text/--bg token
-// SHADOWS below are the master lever that re-skins every descendant (chart,
-// detail card, reused .scoreboard__camp* internals) without touching their
-// rules. Global tokens untouched.
+// ScoreHUD v3 — "The Day Board Over the Square" (festival scoreboard)
+// The night board re-skinned for Festival Day: a warm-white plate with a
+// light metal bezel, sitting IN the sunny page instead of hanging over it.
+// Component-scoped palette; the --camp/--text/--bg token SHADOWS below are
+// the master lever that re-skins every descendant (chart, detail card,
+// reused .scoreboard__camp* internals) without touching their rules.
+// Global tokens untouched.
 // ============================================================================
 .scorehud {
-	// --- board surfaces ---
-	--board-bg: #16132b;
-	--board-bg-hi: #2a2450;
-	--board-row: #0d0b1d;
-	--board-row-hi: #211c3e;
-	// --- bezel metal ---
-	--board-bezel-hi: #d8dced;
-	--board-bezel: #8f96ad;
-	--board-bezel-lo: #4a4f63;
+	// --- board surfaces (warm daylight plate) ---
+	--board-bg: #fdfbf4;
+	--board-bg-hi: #ffffff;
+	--board-row: #f1ecdd;
+	--board-row-hi: #faf7ec;
+	// --- bezel metal (light brushed metal) ---
+	--board-bezel-hi: #ffffff;
+	--board-bezel: #c3c9da;
+	--board-bezel-lo: #97a0b8;
 	// --- ink ---
-	--board-text: #ffffff;
-	--board-text-dim: #b9c0d8;
-	// --- lantern gold (the night-theme accent, back home on dark) ---
-	--board-gold: #ffd882;
-	--board-gold-deep: #f5b944;
+	--board-text: #253352;
+	--board-text-dim: #5e6f8c;
+	// --- gold accent: text-safe dark gold on light surfaces ---
+	--board-gold: #9c6a00;
+	--board-gold-deep: #b97300;
 	// --- chip anchors (carry white numerals — AA verified at the anchor) ---
 	--board-chip-left: #8a52cf;
 	--board-chip-right: #0c7d6f;
-	// --- bright variants (graphics on dark: bars, fills, camp text) ---
-	--board-camp-left-bright: #a875e8;
-	--board-camp-right-bright: #17b7a4;
-	--board-camp-center-bright: #8b9be0;
-	--board-mine-bright: #6ba3f5;
-	--board-up: #56d78d;
+	// --- AA variants (graphics & camp text on the light board) ---
+	--board-camp-left-bright: #6a34ab;
+	--board-camp-right-bright: #0b7568;
+	--board-camp-center-bright: #4d5c8f;
+	--board-mine-bright: #1d55ab;
+	--board-up: #17804d;
 
 	// Scoped shadows of the global tokens every descendant consumes
 	--camp-left: var(--board-camp-left-bright);
@@ -2361,12 +2768,12 @@
 	--text-primary: var(--board-text);
 	--text-secondary: var(--board-text-dim);
 	--text-muted: var(--board-text-dim);
-	--bg-inset: rgba(255, 255, 255, 0.08);
-	--border-subtle: rgba(216, 220, 237, 0.16);
-	--border-strong: rgba(216, 220, 237, 0.42);
-	--border-lantern: rgba(255, 216, 130, 0.6);
-	--glow-lantern: 0 4px 18px rgba(255, 216, 130, 0.3);
-	--glow-marker: 0 0 12px rgba(255, 216, 130, 0.65);
+	--bg-inset: rgba(37, 90, 150, 0.07);
+	--border-subtle: rgba(37, 51, 82, 0.12);
+	--border-strong: rgba(37, 51, 82, 0.3);
+	--border-lantern: rgba(185, 115, 0, 0.5);
+	--glow-lantern: 0 4px 18px rgba(185, 115, 0, 0.25);
+	--glow-marker: 0 0 12px rgba(185, 115, 0, 0.4);
 
 	position: relative;
 	display: flex;
@@ -2389,16 +2796,16 @@
 			)
 			border-box;
 	box-shadow:
-		inset 0 1px 0 rgba(255, 255, 255, 0.08),
-		inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-		0 10px 28px rgba(13, 11, 29, 0.45);
+		inset 0 1px 0 rgba(255, 255, 255, 0.8),
+		inset 0 -1px 0 rgba(37, 51, 82, 0.08),
+		0 10px 28px rgba(37, 51, 82, 0.16);
 	color: var(--board-text);
 
 	&--goal {
 		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.08),
-			inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-			0 10px 28px rgba(13, 11, 29, 0.45),
+			inset 0 1px 0 rgba(255, 255, 255, 0.8),
+			inset 0 -1px 0 rgba(37, 51, 82, 0.08),
+			0 10px 28px rgba(37, 51, 82, 0.16),
 			var(--glow-lantern);
 	}
 
@@ -2468,15 +2875,15 @@
 				padding-box,
 			linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
 		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.14),
-			inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+			inset 0 1px 0 rgba(255, 255, 255, 0.7),
+			inset 0 -6px 12px rgba(37, 51, 82, 0.08);
 
 		&::before {
 			content: '';
 			position: absolute;
 			inset: 0 0 50% 0;
 			border-radius: inherit;
-			background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0));
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
 			pointer-events: none;
 		}
 	}
@@ -2498,7 +2905,6 @@
 		font-size: var(--font-size-3xl);
 		line-height: 1;
 		color: var(--board-text);
-		text-shadow: 0 0 14px rgba(255, 255, 255, 0.22);
 		font-variant-numeric: tabular-nums;
 
 		.scorehud--goal & {
@@ -2524,17 +2930,17 @@
 		animation: scorehud-delta 1.2s var(--ease-camera) both;
 	}
 
-	// The light-tube meter: dark trench, glowing camp gradient, gold goal flag
+	// The meter: light trench, saturated camp gradient, gold goal flag
 	&__meter {
 		position: relative;
 		display: flex;
 		height: 16px;
-		background: #060512;
+		background: #dce4f0;
 		border-radius: var(--radius-full);
 		padding: 2px;
 		box-shadow:
-			inset 0 2px 6px rgba(0, 0, 0, 0.8),
-			inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+			inset 0 2px 6px rgba(37, 51, 82, 0.25),
+			inset 0 -1px 0 rgba(255, 255, 255, 0.6);
 		// room for the goal flag + number below
 		margin-block-end: var(--space-md);
 	}
@@ -2550,8 +2956,8 @@
 			var(--board-camp-right-bright)
 		);
 		box-shadow:
-			0 0 10px rgba(168, 117, 232, 0.45),
-			0 0 16px rgba(23, 183, 164, 0.35);
+			0 0 10px rgba(106, 52, 171, 0.3),
+			0 0 16px rgba(11, 117, 104, 0.25);
 		transition: width var(--motion-slow) var(--ease-camera);
 
 		[dir='rtl'] & {
@@ -2567,14 +2973,14 @@
 				90deg,
 				var(--board-camp-left-bright),
 				var(--board-camp-right-bright),
-				var(--board-gold)
+				var(--board-gold-deep)
 			);
-			box-shadow: 0 0 14px rgba(255, 216, 130, 0.55);
+			box-shadow: 0 0 14px rgba(185, 115, 0, 0.45);
 
 			[dir='rtl'] & {
 				background: linear-gradient(
 					90deg,
-					var(--board-gold),
+					var(--board-gold-deep),
 					var(--board-camp-right-bright),
 					var(--board-camp-left-bright)
 				);
@@ -2697,8 +3103,8 @@
 		border-radius: var(--radius-sm);
 		background: linear-gradient(180deg, var(--board-row-hi) 0%, var(--board-row) 60%);
 		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.07),
-			inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+			inset 0 1px 0 rgba(255, 255, 255, 0.75),
+			inset 0 -1px 0 rgba(37, 51, 82, 0.12);
 		text-align: center;
 		font-family: var(--font-body);
 	}
@@ -2708,7 +3114,7 @@
 		color: var(--board-text);
 
 		&:hover {
-			filter: brightness(1.18);
+			filter: brightness(0.97);
 		}
 
 		&:focus-visible {
@@ -2741,7 +3147,7 @@
 		color: var(--board-gold);
 
 		&.scorehud__tile-value--ticking {
-			text-shadow: 0 0 12px rgba(255, 216, 130, 0.6);
+			text-shadow: 0 0 12px rgba(185, 115, 0, 0.35);
 		}
 	}
 
@@ -2769,7 +3175,7 @@
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.35),
 			inset 0 -2px 3px rgba(0, 0, 0, 0.3),
-			0 2px 5px rgba(0, 0, 0, 0.5);
+			0 2px 5px rgba(37, 51, 82, 0.3);
 
 		&--left {
 			background: linear-gradient(180deg, #9c66d9, #8a52cf 40%, #7443b4);
@@ -2781,20 +3187,20 @@
 
 		&--gold {
 			background: linear-gradient(180deg, #ffd882, #f5b944 45%, #d99b23);
-			color: var(--board-bg);
+			color: #5b4200;
 		}
 
 		&--empty {
 			background: var(--board-row);
 			color: var(--board-text-dim);
-			box-shadow: inset 0 0 0 1px rgba(216, 220, 237, 0.25);
+			box-shadow: inset 0 0 0 1px rgba(37, 51, 82, 0.18);
 		}
 
 		&.scorehud__tile-value--ticking {
 			box-shadow:
 				inset 0 1px 0 rgba(255, 255, 255, 0.35),
 				inset 0 -2px 3px rgba(0, 0, 0, 0.3),
-				0 0 12px rgba(255, 216, 130, 0.6);
+				0 0 12px rgba(185, 115, 0, 0.4);
 		}
 	}
 
@@ -2894,9 +3300,9 @@
 		display: flex;
 		height: 8px;
 		min-width: 40px;
-		background: #060512;
+		background: #dce4f0;
 		border-radius: var(--radius-full);
-		box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+		box-shadow: inset 0 1px 3px rgba(37, 51, 82, 0.25);
 	}
 
 	&__strip-fill {
@@ -2908,7 +3314,7 @@
 			var(--board-camp-left-bright),
 			var(--board-camp-right-bright)
 		);
-		box-shadow: 0 0 6px rgba(168, 117, 232, 0.5);
+		box-shadow: 0 0 6px rgba(106, 52, 171, 0.35);
 		transition: width var(--motion-slow) var(--ease-camera);
 
 		[dir='rtl'] & {
@@ -2928,7 +3334,7 @@
 	}
 }
 
-// The lens-flare separator streak above each board section (symmetric → RTL-free)
+// The separator streak above each board section (symmetric → RTL-free)
 .scorehud__tile::before,
 .scorehud__row::before,
 .scorehud__detail::before,
@@ -2938,8 +3344,7 @@
 	inset-inline: 10%;
 	inset-block-start: -1px;
 	height: 1px;
-	background: linear-gradient(90deg, transparent, rgba(216, 220, 237, 0.85) 50%, transparent);
-	filter: drop-shadow(0 0 3px rgba(216, 220, 237, 0.55));
+	background: linear-gradient(90deg, transparent, rgba(37, 51, 82, 0.28) 50%, transparent);
 	pointer-events: none;
 }
 
@@ -3084,20 +3489,20 @@
 		}
 
 		&--negative .support-chart__col {
-			box-shadow: inset 0 0 0 1px rgba(216, 220, 237, 0.35);
+			box-shadow: inset 0 0 0 1px rgba(37, 51, 82, 0.25);
 		}
 
 		// the current class-record holder wears a glowing gold cap
 		&--top .support-chart__col {
 			box-shadow:
 				0 -3px 0 0 var(--lantern),
-				0 -3px 8px rgba(255, 216, 130, 0.5);
+				0 -3px 8px rgba(185, 115, 0, 0.35);
 		}
 
 		&--top .support-chart__col--negative {
 			box-shadow:
 				0 3px 0 0 var(--lantern),
-				0 3px 8px rgba(255, 216, 130, 0.5);
+				0 3px 8px rgba(185, 115, 0, 0.35);
 		}
 	}
 
@@ -3110,7 +3515,7 @@
 		border-start-end-radius: 3px;
 		overflow: hidden;
 		transform-origin: bottom;
-		box-shadow: 0 0 8px rgba(255, 255, 255, 0.12);
+		box-shadow: 0 1px 4px rgba(37, 51, 82, 0.18);
 		transition: height var(--motion-slow) var(--ease-camera);
 		animation: support-bar-grow var(--motion-slow) var(--ease-spring) both;
 
@@ -3150,7 +3555,7 @@
 		height: 4px;
 		background: var(--mine);
 		border-radius: var(--radius-full);
-		box-shadow: 0 0 10px rgba(107, 163, 245, 0.7);
+		box-shadow: 0 0 10px rgba(29, 85, 171, 0.5);
 	}
 
 	&__num {

@@ -41,9 +41,18 @@ everywhere) → positioning (slider labeled with character names + camp) →
 **deliberation: 5 self-paced laps** of *my proposal → rate 3 → help someone*
 → results.
 
-Key deliberation mechanics (Stitch workshop redesign implemented 2026-07-13 —
-"mine" and "help" share ONE skeleton: scoreboard → proposal on the table →
-tabbed work area). **Mine | Others tabs** (`delib-nav`: fixed bottom bar on
+Key deliberation mechanics ("Places, not modes" redesign 2026-07-28 — the
+shared mine/help skeleton is GONE, playtests showed color alone couldn't
+separate them. Each cycle step is now a distinct PLACE with its own
+`placeBanner()` scene (mine = blue workbench 🛠️, rate = the square ⚖️,
+help = orange market stand 🤝), a `.shell--place-*` background wash, and a
+travel splash (`.delib-splash`) on step/lap changes. On "help" the
+classmate's proposal is a read-only `.stand-poster` (pinned parchment,
+orange top bar) and my input is a smaller `.advice-note` sticky note —
+no more twin textareas. A persistent `JourneyStrip` (all stages) + a
+`StageTransition` camera interstitial on teacher stage-advances complete
+the orientation layer; the ScoreHud was re-skinned to a light "Day Board").
+**Mine | Others tabs** (`delib-nav`: fixed bottom bar on
 mobile ≤700px, top tab row on desktop) let the student move freely between
 their own workshop and classmates' proposals: "Mine" during rate/help is a
 PEEK (lap progression untouched, badge shows unseen open suggestions);

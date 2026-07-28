@@ -187,11 +187,12 @@ for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
 }
 
 // Step "help": each writes a suggestion for the other → advances to lap 2.
-// Same workshop skeleton as "mine": scoreboard + neutral hero + tabbed work area
+// A distinct PLACE now: their proposal is a mounted stand-poster, my advice
+// a smaller sticky note beneath it (no shared skeleton with "mine")
 const suggest = async (page, label, text) => {
-	await page.waitForSelector('textarea.text-input', { timeout: 15000 });
-	console.log(`${label} HELP HERO:`, (await page.locator('.my-lantern--theirs .my-lantern__title').textContent()).slice(0, 50));
-	await page.locator('textarea.text-input').fill(text);
+	await page.waitForSelector('.advice-note textarea.text-input', { timeout: 15000 });
+	console.log(`${label} HELP POSTER:`, (await page.locator('.stand-poster .owner-row__number').textContent()).slice(0, 50));
+	await page.locator('.advice-note textarea.text-input').fill(text);
 	// .btn--primary only: the loose regex also matches the Hebrew tab label
 	await page.locator('button.btn--primary', { hasText: /Send|שליחת/i }).click();
 	await page.waitForTimeout(800);
@@ -202,7 +203,7 @@ await shot(s2, '05b-workshop-help');
 // Mine | Others tabs: peek at my workshop mid-help, then return to helping
 await s1.waitForSelector('.delib-nav', { timeout: 10000 });
 await s1.locator('.delib-nav__item').first().click();
-await s1.waitForSelector('.my-lantern:not(.my-lantern--theirs)', { timeout: 5000 });
+await s1.waitForSelector('.my-lantern', { timeout: 5000 });
 console.log('S1 NAV: peeked at Mine during help');
 console.log(
 	'S1 NAV CLASSES:',

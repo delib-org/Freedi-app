@@ -19,7 +19,7 @@ import {
 import { CountdownTimer } from '../components/CountdownTimer';
 import { ScoreHud } from '../components/ScoreHud';
 import { EraMapLantern } from '../components/EraMap';
-import { NeedsBoard, NeedsPeek } from '../components/NeedsBoard';
+import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
 import {
 	AgoraCharacter,
@@ -156,31 +156,129 @@ function scoreboard(
 	]);
 }
 
-/** Tab header of the workshop card */
-function workshopTabs(
-	tabs: ReadonlyArray<{ id: string; label: string; badge?: number }>,
-	active: string,
-	onSelect: (id: string) => void,
-): m.Children {
-	return m(
-		'.workshop__tabs',
-		tabs.map((tab) =>
-			m(
-				'button.workshop__tab',
-				{
-					class: tab.id === active ? 'workshop__tab--active' : undefined,
-					'aria-selected': String(tab.id === active),
-					onclick: () => onSelect(tab.id),
-				},
-				[
-					tab.label,
-					tab.badge !== undefined && tab.badge > 0
-						? m('span.workshop__badge', String(tab.badge))
-						: null,
-				],
+/**
+ * Each cycle step is a PLACE the student travels to, not a toggled mode —
+ * playtests showed color coding alone couldn't separate "mine" from "help".
+ * The banner scene, wash and icon repeat in the cycle strip and splashes,
+ * so every surface tells the same "where am I?" story.
+ */
+const PLACES: Record<
+	'mine' | 'rate' | 'help',
+	{ icon: string; titleKey: string; subKey: string; shellClass: string }
+> = {
+	mine: {
+		icon: '🛠️',
+		titleKey: 'place.mine_title',
+		subKey: 'place.mine_sub',
+		shellClass: 'shell--place-mine',
+	},
+	rate: {
+		icon: '⚖️',
+		titleKey: 'place.rate_title',
+		subKey: 'place.rate_sub',
+		shellClass: 'shell--place-square',
+	},
+	help: {
+		icon: '🤝',
+		titleKey: 'place.help_title',
+		subKey: 'place.help_sub',
+		shellClass: 'shell--place-visit',
+	},
+};
+
+/** Tiny inline scene per place — same visual language as the EraMap */
+function placeScene(kind: 'mine' | 'rate' | 'help'): m.Children {
+	const svg = (children: m.Children) =>
+		m(
+			'svg',
+			{ viewBox: '0 0 200 64', preserveAspectRatio: 'xMidYMax meet', 'aria-hidden': 'true' },
+			children,
+		);
+
+	if (kind === 'mine') {
+		// My workbench: a table with MY blue lantern hanging above it
+		return svg([
+			m('rect', { x: 40, y: 44, width: 120, height: 6, rx: 3, fill: '#a97e52' }),
+			m('rect', { x: 52, y: 50, width: 8, height: 12, fill: '#8a6a45' }),
+			m('rect', { x: 140, y: 50, width: 8, height: 12, fill: '#8a6a45' }),
+			m('line', { x1: 100, y1: 4, x2: 100, y2: 16, stroke: '#8a6a45', 'stroke-width': 2 }),
+			m('circle', { cx: 100, cy: 26, r: 13, fill: '#ffd23f', opacity: 0.35 }),
+			m('rect', { x: 93, y: 18, width: 14, height: 17, rx: 4, fill: '#2b6fd6' }),
+			m('rect', { x: 96, y: 22, width: 8, height: 9, rx: 2, fill: '#ffd23f' }),
+			m('rect', {
+				x: 70,
+				y: 36,
+				width: 26,
+				height: 8,
+				rx: 1.5,
+				fill: '#fff8ea',
+				transform: 'rotate(-6 83 40)',
+			}),
+			m('rect', {
+				x: 108,
+				y: 37,
+				width: 20,
+				height: 7,
+				rx: 1.5,
+				fill: '#efe3c8',
+				transform: 'rotate(4 118 40)',
+			}),
+		]);
+	}
+
+	if (kind === 'rate') {
+		// The open square: obelisk + a row of classmates' lanterns to weigh
+		return svg([
+			m('ellipse', { cx: 100, cy: 56, rx: 86, ry: 8, fill: '#f2e4c6' }),
+			m('path', { d: 'M97 54 L99 18 L101 18 L103 54 Z', fill: '#d3c6ab' }),
+			m('circle', { cx: 100, cy: 14, r: 5, fill: '#ffd23f' }),
+			[46, 68, 132, 154].map((x, index) =>
+				m('g', { key: `lantern-${x}` }, [
+					m('line', { x1: x, y1: 30, x2: x, y2: 38, stroke: '#8a6a45', 'stroke-width': 1.5 }),
+					m('rect', {
+						x: x - 5,
+						y: 38,
+						width: 10,
+						height: 12,
+						rx: 3,
+						fill: index % 2 === 0 ? '#8a52cf' : '#14a08f',
+					}),
+					m('rect', { x: x - 2.5, y: 41, width: 5, height: 6, rx: 1, fill: '#ffd23f' }),
+				]),
 			),
+		]);
+	}
+
+	// Visiting a classmate's stand: an orange-awning market stall
+	return svg([
+		m('rect', { x: 58, y: 34, width: 84, height: 24, rx: 2, fill: '#e3d8c4' }),
+		m('rect', { x: 62, y: 58, width: 6, height: 6, fill: '#8a6a45' }),
+		m('rect', { x: 132, y: 58, width: 6, height: 6, fill: '#8a6a45' }),
+		m('path', { d: 'M50 34 L100 12 L150 34 Z', fill: '#e07714' }),
+		[62, 84, 106, 128].map((x) =>
+			m('path', {
+				key: `scallop-${x}`,
+				d: `M${x} 34 Q ${x + 5.5} 42 ${x + 11} 34 Z`,
+				fill: '#f0994a',
+			}),
 		),
-	);
+		m('rect', { x: 84, y: 40, width: 32, height: 14, rx: 2, fill: '#fff8ea' }),
+		m('line', { x1: 88, y1: 45, x2: 112, y2: 45, stroke: '#c9b892', 'stroke-width': 1.5 }),
+		m('line', { x1: 88, y1: 49, x2: 106, y2: 49, stroke: '#c9b892', 'stroke-width': 1.5 }),
+	]);
+}
+
+/** The place header: scene strip + name + one-line "what happens here" */
+function placeBanner(kind: 'mine' | 'rate' | 'help'): m.Children {
+	const place = PLACES[kind];
+
+	return m('.place-banner', { class: `place-banner--${kind}` }, [
+		m('.place-banner__scene', placeScene(kind)),
+		m('.place-banner__text', [
+			m('h2.place-banner__title', `${place.icon} ${t(place.titleKey)}`),
+			m('p.place-banner__sub', t(place.subKey)),
+		]),
+	]);
 }
 
 function totalRaters(score: AgoraProposalScore | undefined): number {
@@ -241,8 +339,6 @@ export function Deliberation(
 	/** proposalId → follow-up comment draft (the collaboration loop; per-proposal) */
 	const followUpDrafts: Record<string, string> = {};
 	const followUpBusy: Record<string, boolean> = {};
-	/** Active tab of the workshop card on the "help" step */
-	let helpTab: 'suggest' | 'needs' = 'suggest';
 	/**
 	 * Mine/Others navigation (bottom tabs on mobile, top tabs on desktop).
 	 * "Mine" during rate/help is a PEEK at my workshop — the lap's guided
@@ -259,14 +355,45 @@ export function Deliberation(
 		// Corrupt storage — start the cycle over
 	}
 
+	// --- Travel splashes: a short "you are moving to a new place" card on
+	// every step change, a bigger "lap N" card when a round completes. The
+	// same icons as the place banners — one visual story everywhere.
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	let splash:
+		| { kind: 'step'; step: 'mine' | 'rate' | 'help' }
+		| { kind: 'round'; round: number }
+		| null = null;
+	let splashTimer: number | undefined;
+
+	function showSplash(next: NonNullable<typeof splash>): void {
+		splash = next;
+		window.clearTimeout(splashTimer);
+		const hold = next.kind === 'round' ? (reducedMotion ? 1100 : 2000) : reducedMotion ? 600 : 1300;
+		splashTimer = window.setTimeout(() => {
+			splash = null;
+			m.redraw();
+		}, hold);
+	}
+
+	function dismissSplash(): void {
+		window.clearTimeout(splashTimer);
+		splash = null;
+	}
+
 	function setCycle(patch: Partial<CycleState>): void {
-		if (patch.step !== undefined && patch.step !== cycle.step) {
-			// Each step opens its workshop on the default tab
-			helpTab = 'suggest';
+		const roundChanged = patch.round !== undefined && patch.round !== cycle.round;
+		const stepChanged = patch.step !== undefined && patch.step !== cycle.step;
+		if (stepChanged) {
 			peekMine = false;
 		}
 		cycle = { ...cycle, ...patch };
 		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
+		// A new lap outranks a step change — one splash at a time
+		if (roundChanged) {
+			showSplash({ kind: 'round', round: cycle.round });
+		} else if (stepChanged && cycle.step !== 'done') {
+			showSplash({ kind: 'step', step: cycle.step });
+		}
 		m.redraw();
 	}
 
@@ -915,6 +1042,7 @@ export function Deliberation(
 
 	return {
 		onremove() {
+			window.clearTimeout(splashTimer);
 			stopDeliberationListeners();
 		},
 
@@ -970,7 +1098,9 @@ export function Deliberation(
 											? 'cycle-strip__step--done'
 											: undefined,
 							},
-							`${index + 1} · ${t(entry.labelKey)}`,
+							// The step chip wears its place's icon — the same one on
+							// the banner below, so strip and screen always agree
+							`${PLACES[entry.id as 'mine' | 'rate' | 'help'].icon} ${t(entry.labelKey)}`,
 						),
 					),
 				),
@@ -997,10 +1127,53 @@ export function Deliberation(
 				},
 			});
 
+			// Travel splash: covers the step/lap change so a new place never
+			// hard-cuts in. Tap anywhere to skip.
+			const splashOverlay = splash
+				? m(
+						'.delib-splash',
+						{
+							onclick: () => {
+								dismissSplash();
+							},
+							'aria-live': 'polite',
+						},
+						splash.kind === 'round'
+							? m('.delib-splash__card', [
+									m(
+										'h2.delib-splash__title',
+										t('round.splash_title', { n: splash.round, total: AGORA_CYCLE.ROUNDS }),
+									),
+									m(
+										'.delib-splash__steps',
+										STEPS.map((entry, index) =>
+											m(
+												'.delib-splash__step',
+												{ class: index === 0 ? 'delib-splash__step--first' : undefined },
+												[
+													m(
+														'span.delib-splash__step-icon',
+														PLACES[entry.id as 'mine' | 'rate' | 'help'].icon,
+													),
+													m('span', t(entry.labelKey)),
+												],
+											),
+										),
+									),
+								])
+							: m('.delib-splash__card', [
+									m('span.delib-splash__icon', PLACES[splash.step].icon),
+									m('h2.delib-splash__title', t(PLACES[splash.step].titleKey)),
+									m('p.delib-splash__sub', t(PLACES[splash.step].subKey)),
+								]),
+					)
+				: null;
+
 			// The deliberation "location": the town square (agora) where ideas
 			// gather. Teacher-editable via topic artwork; hidden if absent/broken.
 			const squareUrl = topic.artwork?.locationVignetteUrls?.square;
 			const header = [
+				splashOverlay,
 				squareUrl
 					? m('img.delib-banner', {
 							src: squareUrl,
@@ -1065,10 +1238,10 @@ export function Deliberation(
 
 				// Lap 1: nothing exists yet — plain write screen
 				if (writeMode) {
-					return m('.shell.shell--mode-mine', [
+					return m('.shell.shell--mode-mine.shell--place-mine', [
 						m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 							header,
-							m('h2.text-center', t('delib.phase_propose')),
+							placeBanner('mine'),
 							m('p.home-explanation', t('delib.propose_hint')),
 							...editPanel,
 						]),
@@ -1077,10 +1250,11 @@ export function Deliberation(
 
 				// Lap 2+ (or a peek from rate/help): scoreboard → ONE workshop card
 				// (editable box, forecast, suggestions, characters, needs)
-				return m('.shell.shell--delib.shell--mode-mine', [
+				return m('.shell.shell--delib.shell--mode-mine.shell--place-mine', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
+						placeBanner('mine'),
 						editableProposalCard(live, myProposal, topic),
 						// The guided path continues only from the real step —
 						// a peek returns via the Others tab instead
@@ -1116,11 +1290,11 @@ export function Deliberation(
 				const current = candidates[0];
 				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
 
-				return m('.shell.shell--delib.shell--mode-peer', [
+				return m('.shell.shell--delib.shell--mode-peer.shell--place-square', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						m('h2.text-center', t('delib.phase_rate')),
+						placeBanner('rate'),
 						m(
 							'p.home-explanation',
 							`${t('delib.rate_hint')} (${Math.min(cycle.rated + 1, AGORA_CYCLE.RATINGS_PER_ROUND)}/${AGORA_CYCLE.RATINGS_PER_ROUND})`,
@@ -1196,13 +1370,15 @@ export function Deliberation(
 				const skipLabel =
 					cycle.round >= AGORA_CYCLE.ROUNDS ? t('delib.finish_cycles') : t('delib.skip_help');
 
-				// Same workshop skeleton as "mine" — but the proposal on the table
-				// is a classmate's, and the tabs help ME help THEM
-				return m('.shell.shell--delib.shell--mode-peer', [
+				// A DIFFERENT place, not a recolored copy of my workshop: their
+				// proposal hangs as a read-only POSTER on their stand, and my
+				// advice is a small note pinned beneath it — the two screens no
+				// longer share a skeleton (playtests: color alone didn't work)
+				return m('.shell.shell--delib.shell--mode-peer.shell--place-visit', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						m('h2.text-center', t('delib.help_others')),
+						placeBanner('help'),
 						helpTarget
 							? [
 									scoreboard(
@@ -1212,18 +1388,17 @@ export function Deliberation(
 										0,
 										proposalNumber(helpTarget),
 									),
-									// ONE box: their proposal on top, my suggestion workshop
-									// beneath it — same unified frame as the mine screen
-									m('.card.my-lantern.my-lantern--theirs.my-lantern--workshop', [
-										m('.my-lantern__header', [
-											m('span.my-lantern__icon', '📙'),
+									// Their proposal: mounted, framed, clearly NOT an input
+									m('.stand-poster', [
+										m('.stand-poster__pin', { 'aria-hidden': 'true' }),
+										m('.owner-row', [
+											m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
 											m(
-												'span.my-lantern__title',
+												'span.owner-row__number',
 												t('delib.proposal_number', { n: proposalNumber(helpTarget) }),
 											),
-											m('span.owner-chip.owner-chip--peer', t('delib.owner_peer')),
 											m(
-												'button.btn.btn--ghost.my-lantern__edit',
+												'button.btn.btn--ghost.btn--sm.stand-poster__next',
 												{
 													onclick: () => {
 														helpSkips++;
@@ -1233,50 +1408,40 @@ export function Deliberation(
 												`↻ ${t('delib.next_proposal')}`,
 											),
 										]),
-										m('p.my-lantern__text', helpTarget.statement),
-										m('.my-lantern__divider'),
-										workshopTabs(
-											[
-												{ id: 'suggest', label: t('delib.tab_suggest') },
-												{ id: 'needs', label: t('delib.tab_needs') },
-											],
-											helpTab,
-											(id) => {
-												helpTab = id as typeof helpTab;
-											},
-										),
-										helpTab === 'suggest'
-											? m('.stack', [
-													m('p.workshop__question', t('delib.help_question')),
-													m('p.square-says__meaning', t('delib.help_dont_attack')),
-													m('textarea.text-input', {
-														value: suggestionDraft,
-														rows: 4,
-														placeholder: t('delib.suggest_placeholder'),
-														oninput: (event: InputEvent) => {
-															suggestionDraft = (event.target as HTMLTextAreaElement).value;
-														},
-													}),
-													m('.delib__actions', [
-														m('button.btn.btn--ghost', { onclick: advanceRound }, skipLabel),
-														m(
-															'button.btn.btn--primary',
-															{
-																disabled:
-																	suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-																onclick: () => {
-																	const text = suggestionDraft.trim();
-																	suggestionDraft = '';
-																	void submitSuggestion(live, helpTarget, anonName, text);
-																	advanceRound();
-																},
-															},
-															t('delib.send_suggestion'),
-														),
-													]),
-												])
-											: m(NeedsBoard, { topic }),
+										m('p.stand-poster__text', helpTarget.statement),
 									]),
+									// My advice: a deliberately smaller sticky note — the
+									// input belongs to ME, the poster belongs to THEM
+									m('.advice-note', [
+										m('p.advice-note__label', `📝 ${t('place.advice_note')}`),
+										m('p.workshop__question', t('delib.help_question')),
+										m('p.square-says__meaning', t('delib.help_dont_attack')),
+										m('textarea.text-input.advice-note__input', {
+											value: suggestionDraft,
+											rows: 3,
+											placeholder: t('delib.suggest_placeholder'),
+											oninput: (event: InputEvent) => {
+												suggestionDraft = (event.target as HTMLTextAreaElement).value;
+											},
+										}),
+										m('.delib__actions', [
+											m('button.btn.btn--ghost', { onclick: advanceRound }, skipLabel),
+											m(
+												'button.btn.btn--primary',
+												{
+													disabled: suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+													onclick: () => {
+														const text = suggestionDraft.trim();
+														suggestionDraft = '';
+														void submitSuggestion(live, helpTarget, anonName, text);
+														advanceRound();
+													},
+												},
+												t('delib.send_suggestion'),
+											),
+										]),
+									]),
+									m(NeedsPeek, { topic }),
 									helpedSection(live),
 								]
 							: [
@@ -1290,7 +1455,7 @@ export function Deliberation(
 
 			// ---------- DONE: all cycles complete ----------
 			// The ScoreHUD's chart is the data view here — no map scenery needed
-			return m('.shell.shell--wide.shell--delib.shell--mode-mine', [
+			return m('.shell.shell--wide.shell--delib.shell--mode-mine.shell--place-mine', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					header,
 					delibNav(myProposal),
