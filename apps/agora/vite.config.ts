@@ -89,8 +89,16 @@ export default defineConfig({
         name: 'Agora — משחק דיוני',
         short_name: 'Agora',
         description: 'Classroom deliberative time-tunnel game',
-        theme_color: '#141126',
-        background_color: '#141126',
+        // The plugin defaults to lang 'en', which mislabels a Hebrew-first
+        // RTL app in the install prompt and the launcher.
+        lang: 'he',
+        dir: 'rtl',
+        // Festival Day, matching tokens.scss: --bg-page-high (top of the sky
+        // gradient) for the chrome, --bg-page for the splash. These were still
+        // the retired night-theme indigo, so an installed app flashed a dark
+        // splash and then rendered a light UI.
+        theme_color: '#aed9f9',
+        background_color: '#f4faff',
         display: 'standalone',
         start_url: '/',
         icons: [

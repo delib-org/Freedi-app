@@ -3284,3 +3284,27 @@
 		font-size: var(--font-size-base);
 	}
 }
+
+// --- RTL typography: tracking is a Latin device ---
+// Positive letter-spacing exists to open up uppercase eyebrows and small
+// caps. Hebrew has no case at all and depends on tight letter adjacency, so
+// tracking just fragments the words; in Arabic it is worse still, because
+// spacing the letters apart severs the cursive joins. Keep the tracked look
+// for the LTR languages this app ships (en/es/de/nl) and drop it for he/ar.
+//
+// Join codes are deliberately NOT in this list. They are digits, and spacing
+// them out is exactly what makes a code readable when a student copies it off
+// the board — that holds in every script. The .home__title wordmark is also
+// exempt: "Agora" is set in Latin whatever the UI language is.
+[dir='rtl'] {
+	.lobby__name strong,
+	.teacher__section-title,
+	.estimate__title,
+	.scoreboard__bridge-label,
+	.scorehud__banner,
+	.scorehud__class-label,
+	.scorehud__tile-label,
+	.support-chart__title {
+		letter-spacing: normal;
+	}
+}
