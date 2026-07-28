@@ -608,44 +608,6 @@
 		border-inline-start: 3px solid var(--peer);
 	}
 
-	&__rate-buttons {
-		display: flex;
-		gap: var(--space-md);
-		margin-top: var(--space-md);
-
-		.btn {
-			flex: 1;
-		}
-	}
-}
-
-.btn--rate {
-	font-size: var(--font-size-lg);
-	padding: 1em;
-	transition: transform var(--motion-fast) var(--ease-spring), box-shadow var(--motion-base) ease;
-
-	&:active {
-		transform: scale(0.94) rotate(-1deg);
-	}
-}
-
-.btn--rate-agree {
-	background: linear-gradient(180deg, #22a05e, #17804d);
-	color: #ffffff;
-
-	&:hover {
-		box-shadow: 0 0 18px rgba(23, 128, 77, 0.5);
-	}
-}
-
-.btn--rate-disagree {
-	background: transparent;
-	color: var(--danger);
-	border: 1px solid var(--danger);
-
-	&:hover {
-		box-shadow: 0 0 14px rgba(209, 61, 78, 0.35);
-	}
 }
 
 // --- Camp support bars ---
@@ -909,7 +871,7 @@
 			background: var(--mine);
 			border-color: var(--mine);
 			color: #ffffff;
-			box-shadow: 0 2px 0 var(--mine-deep);
+			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--mine) 60%, transparent);
 		}
 
 		// The Others tab wears the classmate orange, never MY blue.
@@ -918,7 +880,7 @@
 			background: #b05e0d;
 			border-color: #b05e0d;
 			color: #ffffff;
-			box-shadow: 0 2px 0 var(--peer-deep);
+			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--peer) 60%, transparent);
 		}
 	}
 
