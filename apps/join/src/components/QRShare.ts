@@ -157,9 +157,9 @@ export const QRShare: m.Component<QRShareAttrs> = {
 		const presenterSvg = getCachedSvg(url, presenterSize);
 		const canShare = typeof navigator.share === 'function';
 
-		return m('section.main-hub__qr', { 'aria-labelledby': 'main-hub-qr-label' }, [
+		return m('section.qr-share', { 'aria-labelledby': 'qr-share-label' }, [
 			m(
-				'button.main-hub__qr-canvas',
+				'button.qr-share__canvas',
 				{
 					type: 'button',
 					'aria-label': t('qrShare.expandAria'),
@@ -167,12 +167,12 @@ export const QRShare: m.Component<QRShareAttrs> = {
 				},
 				compactSvg ? m.trust(compactSvg) : null,
 			),
-			m('.main-hub__qr-body', [
-				m('p.main-hub__qr-label', { id: 'main-hub-qr-label' }, t('qrShare.label')),
-				m('.main-hub__qr-actions', [
+			m('.qr-share__body', [
+				m('p.qr-share__label', { id: 'qr-share-label' }, t('qrShare.label')),
+				m('.qr-share__actions', [
 					canShare
 						? m(
-								'button.btn.btn--primary.btn--small.main-hub__qr-action',
+								'button.btn.btn--primary.btn--small.qr-share__action',
 								{
 									type: 'button',
 									onclick: () => void shareLink(url, title),
@@ -181,7 +181,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 							)
 						: null,
 					m(
-						'button.btn.btn--secondary.btn--small.main-hub__qr-action',
+						'button.btn.btn--secondary.btn--small.qr-share__action',
 						{
 							type: 'button',
 							onclick: () => void copyLink(url),
@@ -193,7 +193,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 			]),
 			presenterOpen
 				? m(
-						'.main-hub__qr-presenter',
+						'.qr-share__presenter',
 						{
 							role: 'dialog',
 							'aria-modal': 'true',
@@ -206,7 +206,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 						},
 						[
 							m(
-								'button.main-hub__qr-presenter-close',
+								'button.qr-share__presenter-close',
 								{
 									type: 'button',
 									'aria-label': t('qrShare.close'),
@@ -214,9 +214,9 @@ export const QRShare: m.Component<QRShareAttrs> = {
 								},
 								'×',
 							),
-							m('h2.main-hub__qr-presenter-title', title),
-							m('.main-hub__qr-presenter-canvas', presenterSvg ? m.trust(presenterSvg) : null),
-							m('p.main-hub__qr-presenter-url', { dir: 'ltr' }, url),
+							m('h2.qr-share__presenter-title', title),
+							m('.qr-share__presenter-canvas', presenterSvg ? m.trust(presenterSvg) : null),
+							m('p.qr-share__presenter-url', { dir: 'ltr' }, url),
 						],
 					)
 				: null,

@@ -219,6 +219,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'Show QR code',
 		'facilitator.toggle.showQR.help':
 			'Show a QR on the hub so anyone here can invite someone nearby.',
+		'facilitator.toggle.showQR.help.question':
+			'Show a QR for this question, so a scan opens this question directly.',
+		'facilitator.scope.confirm':
+			'You are on the workspace page, so this change applies to all {{count}} questions. Apply it to all of them?',
+		'facilitator.scope.notice': 'Editing all {{count}} questions in this workspace.',
 		'facilitator.toggle.allowNavigation': 'Let participants navigate',
 		'facilitator.toggle.allowNavigation.help':
 			'Participants can open any question from the hub and go back on their own.',
@@ -687,6 +692,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'הצגת קוד QR',
 		'facilitator.toggle.showQR.help':
 			'מציגים קוד QR בעמוד הראשי כדי שכל משתתף יוכל להזמין מישהו לידו.',
+		'facilitator.toggle.showQR.help.question':
+			'מציגים קוד QR לשאלה הזו, כך שסריקה פותחת ישירות את השאלה.',
+		'facilitator.scope.confirm':
+			'אתם בעמוד הראשי, ולכן השינוי הזה חל על כל {{count}} השאלות. להחיל אותו על כולן?',
+		'facilitator.scope.notice': 'עורכים את כל {{count}} השאלות במרחב הזה.',
 		'facilitator.toggle.allowNavigation': 'ניווט חופשי למשתתפים',
 		'facilitator.toggle.allowNavigation.help':
 			'המשתתפים יוכלו להיכנס לכל שאלה מהעמוד הראשי ולחזור בחזרה בעצמם.',
@@ -1089,6 +1099,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'عرض رمز QR',
 		'facilitator.toggle.showQR.help':
 			'اعرض رمز QR في الصفحة الرئيسية ليتمكن الجميع من دعوة شخص بجانبهم.',
+		'facilitator.toggle.showQR.help.question':
+			'اعرض رمز QR لهذا السؤال، بحيث يفتح المسح هذا السؤال مباشرة.',
+		'facilitator.scope.confirm':
+			'أنت في الصفحة الرئيسية، لذا ينطبق هذا التغيير على جميع الأسئلة ({{count}}). هل تريد تطبيقه عليها كلها؟',
+		'facilitator.scope.notice': 'تحرير جميع الأسئلة ({{count}}) في مساحة العمل هذه.',
 		'facilitator.toggle.allowNavigation': 'السماح للمشاركين بالتنقل',
 		'facilitator.toggle.allowNavigation.help':
 			'يمكن للمشاركين فتح أي سؤال من الصفحة الرئيسية والعودة بأنفسهم.',
@@ -1474,6 +1489,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'QR-Code anzeigen',
 		'facilitator.toggle.showQR.help':
 			'Zeigt einen QR-Code auf der Hub-Seite, damit alle Anwesenden jemanden einladen können.',
+		'facilitator.toggle.showQR.help.question':
+			'Zeigt einen QR-Code für diese Frage — ein Scan öffnet direkt diese Frage.',
+		'facilitator.scope.confirm':
+			'Du bist auf der Hub-Seite, diese Änderung gilt also für alle {{count}} Fragen. Auf alle anwenden?',
+		'facilitator.scope.notice': 'Du bearbeitest alle {{count}} Fragen dieses Arbeitsbereichs.',
 		'facilitator.toggle.allowNavigation': 'Teilnehmende dürfen navigieren',
 		'facilitator.toggle.allowNavigation.help':
 			'Teilnehmende können jede Frage von der Hub-Seite aus öffnen und selbst zurückgehen.',
@@ -1878,6 +1898,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'Mostrar código QR',
 		'facilitator.toggle.showQR.help':
 			'Muestra un QR en la página principal para que cualquiera invite a alguien cercano.',
+		'facilitator.toggle.showQR.help.question':
+			'Muestra un QR de esta pregunta, para que al escanearlo se abra directamente.',
+		'facilitator.scope.confirm':
+			'Estás en la página principal, así que este cambio se aplica a las {{count}} preguntas. ¿Aplicarlo a todas?',
+		'facilitator.scope.notice': 'Editando las {{count}} preguntas de este espacio.',
 		'facilitator.toggle.allowNavigation': 'Permitir navegación',
 		'facilitator.toggle.allowNavigation.help':
 			'Los participantes pueden abrir cualquier pregunta desde la página principal y volver por su cuenta.',
@@ -2277,6 +2302,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'QR-code tonen',
 		'facilitator.toggle.showQR.help':
 			'Toon een QR-code op de hub zodat iedereen iemand uit de buurt kan uitnodigen.',
+		'facilitator.toggle.showQR.help.question':
+			'Toon een QR-code voor deze vraag, zodat scannen direct deze vraag opent.',
+		'facilitator.scope.confirm':
+			'Je bent op de hub-pagina, dus deze wijziging geldt voor alle {{count}} vragen. Op alle vragen toepassen?',
+		'facilitator.scope.notice': 'Je bewerkt alle {{count}} vragen in deze werkruimte.',
 		'facilitator.toggle.allowNavigation': 'Deelnemers laten navigeren',
 		'facilitator.toggle.allowNavigation.help':
 			'Deelnemers kunnen elke vraag vanaf de hub openen en zelf terugkeren.',
@@ -2660,6 +2690,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'نمایش کد QR',
 		'facilitator.toggle.showQR.help':
 			'یک کد QR در صفحه اصلی نشان داده می‌شود تا هرکس بتواند فردی نزدیک خود را دعوت کند.',
+		'facilitator.toggle.showQR.help.question':
+			'یک کد QR برای این پرسش نشان داده می‌شود تا اسکن آن مستقیماً همین پرسش را باز کند.',
+		'facilitator.scope.confirm':
+			'شما در صفحه اصلی هستید، بنابراین این تغییر روی هر {{count}} پرسش اعمال می‌شود. روی همه اعمال شود؟',
+		'facilitator.scope.notice': 'در حال ویرایش هر {{count}} پرسش این فضای کاری.',
 		'facilitator.toggle.allowNavigation': 'اجازه جابه‌جایی به شرکت‌کنندگان',
 		'facilitator.toggle.allowNavigation.help':
 			'شرکت‌کنندگان می‌توانند هر پرسش را از صفحه اصلی باز کنند و خودشان بازگردند.',

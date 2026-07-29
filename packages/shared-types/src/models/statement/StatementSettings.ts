@@ -298,10 +298,11 @@ export const StatementSettingsSchema = object({
 	condensation: optional(CondensationConfigSchema), // grouped suggestions feature — see CondensationConfigSchema
 	synthesis: optional(SynthesisConfigSchema), // bulk idea synthesis — see SynthesisConfigSchema
 	map: optional(MapSettingsSchema), // cluster-map display controls — see MapSettingsSchema
-	// Join app: when true, the MainHub renders a QR code section that any
-	// participant can use to share the room URL with someone nearby (peer-to-
-	// peer invite). Hub-scoped — only honoured on the main statement, not
-	// per-question. Admin-controlled via the FacilitatorPanel.
+	// Join app: when true, a QR code section is rendered that any participant
+	// can use to share this statement's URL with someone nearby (peer-to-peer
+	// invite). Honoured on both the main statement (MainHub → hub URL) and on a
+	// sub-question (Solutions → that question's URL); the two are independent
+	// flags on independent docs. Admin-controlled via the FacilitatorPanel.
 	showQR: optional(boolean()),
 	// Join app: seed used when `defaultSortType === SortType.random` so every
 	// participant computes the same shuffle locally. Admin re-randomizes by

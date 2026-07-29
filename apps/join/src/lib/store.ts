@@ -687,12 +687,44 @@ export async function setQuestionSetting(
 	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
 }
 
+/** Firestore caps a single batch at 500 writes. Workspace-wide setting changes
+ *  fan out one write per sub-question, so they chunk on this boundary. */
+const SETTINGS_BATCH_LIMIT = 500;
+
+/** Fan a settings patch out to several question docs at once. Used by the
+ *  facilitator panel's workspace-wide mode: a setting flipped on the hub is
+ *  applied to every sub-question in one go.
+ *
+ *  Patches must be *minimal* — pass `{ statementSettings: { hasChat: false } }`,
+ *  never a spread of some reference question's settings. Firestore deep-merges
+ *  nested maps, so a minimal patch touches only the named key and leaves each
+ *  question's own join form, sort order and thresholds untouched. */
+export async function setSettingOnQuestions(
+	questionIds: string[],
+	patch: Partial<Statement>,
+): Promise<void> {
+	if (questionIds.length === 0) return;
+	const now = Date.now();
+	for (let i = 0; i < questionIds.length; i += SETTINGS_BATCH_LIMIT) {
+		const batch = writeBatch(db);
+		for (const id of questionIds.slice(i, i + SETTINGS_BATCH_LIMIT)) {
+			batch.set(
+				doc(db, Collections.statements, id),
+				{ ...patch, lastUpdate: now },
+				{ merge: true },
+			);
+		}
+		await batch.commit();
+	}
+}
+
 /** Hub-scoped settings live on the main statement, not on a question doc.
- *  Currently used for the QR sharing toggle (`statementSettings.showQR`),
- *  which any participant can act on but only an admin can flip. The local
- *  `subscribeMainStatement` listener propagates the change to every
- *  participant on the next snapshot, so the QR appears/disappears for the
- *  room without a refresh. */
+ *  Used for room-wide flags such as free participant navigation, and for the
+ *  hub's own QR toggle (`statementSettings.showQR` — sub-questions carry the
+ *  same field for their own QR). Any participant can act on them but only an
+ *  admin can flip them. The local `subscribeMainStatement` listener propagates
+ *  the change to every participant on the next snapshot, so the change lands
+ *  for the room without a refresh. */
 export async function setMainStatementSetting(
 	mainId: string,
 	patch: Partial<Statement>,

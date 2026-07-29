@@ -30,6 +30,7 @@ import { AddSuggestionModal } from '@/components/AddSuggestionModal';
 import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
+import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
@@ -296,6 +297,19 @@ export const Solutions: m.Component = {
 					: null,
 			]),
 			m('.solutions__scroll', [
+				// Per-question QR. Independent from the hub's QR: the facilitator
+				// turns this one on from inside the question, and it encodes *this*
+				// question's URL, so a scan lands the newcomer directly here instead
+				// of on the hub. `window.location.href` is that URL by construction
+				// (the component never builds one), which keeps it correct on both
+				// the facilitated `/m/:mid/q/:qid` route and the legacy `/q/:qid`
+				// share link.
+				question.statementSettings?.showQR
+					? m(QRShare, {
+							url: window.location.href,
+							title: question.statement,
+						})
+					: null,
 				// Status banner \u2014 only rendered for admins (participants either
 				// see the closed screen above or the normal frozen-but-disabled
 				// surface). Reassures the admin that participants are getting the

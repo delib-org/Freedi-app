@@ -2488,13 +2488,15 @@
 }
 
 // =============================================================================
-// QR share section — peer-to-peer URL sharing on the MainHub.
-// Compact card sits in the hub flow; tapping the canvas opens a fullscreen
+// QR share section — peer-to-peer URL sharing. Rendered on the MainHub (hub
+// URL) and inside a sub-question (that question's URL), so the block owns its
+// own class names rather than borrowing the host page's.
+// Compact card sits in the page flow; tapping the canvas opens a fullscreen
 // presenter overlay for projector / cross-room scanning. The QR canvas is
 // always white-bg + black-fg regardless of theme — scanners read luminance,
 // dark-mode inversion would break them.
 // =============================================================================
-.main-hub__qr {
+.qr-share {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -2515,7 +2517,7 @@
   }
 }
 
-.main-hub__qr-body {
+.qr-share__body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -2528,7 +2530,7 @@
   }
 }
 
-.main-hub__qr-label {
+.qr-share__label {
   margin: 0;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -2536,7 +2538,7 @@
   line-height: var(--line-height-snug);
 }
 
-.main-hub__qr-canvas {
+.qr-share__canvas {
   // Reset UA button defaults — without `appearance: none` Safari/Chromium
   // ship a grey "buttonface" background and platform-specific cursor that
   // override our zoom hint. We render the canvas as a plain interactive
@@ -2577,7 +2579,7 @@
   }
 }
 
-.main-hub__qr-actions {
+.qr-share__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
@@ -2588,13 +2590,13 @@
   }
 }
 
-.main-hub__qr-action {
+.qr-share__action {
   flex: 0 0 auto;
   min-height: 36px;
 }
 
 // ---- Fullscreen presenter overlay -------------------------------------------
-.main-hub__qr-presenter {
+.qr-share__presenter {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -2614,7 +2616,7 @@
   to   { opacity: 1; }
 }
 
-.main-hub__qr-presenter-title {
+.qr-share__presenter-title {
   margin: 0;
   max-width: min(80vw, 720px);
   font-family: var(--font-display);
@@ -2625,7 +2627,7 @@
   line-height: var(--line-height-snug);
 }
 
-.main-hub__qr-presenter-canvas {
+.qr-share__presenter-canvas {
   width: min(60vw, 60vh, 720px);
   height: min(60vw, 60vh, 720px);
   padding: var(--space-md);
@@ -2640,7 +2642,7 @@
   }
 }
 
-.main-hub__qr-presenter-url {
+.qr-share__presenter-url {
   margin: 0;
   max-width: min(80vw, 720px);
   padding: var(--space-sm) var(--space-md);
@@ -2658,7 +2660,7 @@
   word-break: break-all;
 }
 
-.main-hub__qr-presenter-close {
+.qr-share__presenter-close {
   position: absolute;
   top: var(--space-md);
   inset-inline-end: var(--space-md);
@@ -2688,28 +2690,28 @@
 }
 
 // ---- High-contrast (manual toggle + OS preference) -------------------------
-:root[data-high-contrast] .main-hub__qr-canvas,
-:root[data-high-contrast] .main-hub__qr-presenter-canvas {
+:root[data-high-contrast] .qr-share__canvas,
+:root[data-high-contrast] .qr-share__presenter-canvas {
   background: #ffffff;
   border: 2px solid #000000;
 }
 
 @media (forced-colors: active) {
-  .main-hub__qr-canvas,
-  .main-hub__qr-presenter-canvas {
+  .qr-share__canvas,
+  .qr-share__presenter-canvas {
     forced-color-adjust: none;     // protect QR module colors specifically
     background-color: #ffffff;     // …and force white where modules sit
     border: 2px solid CanvasText;
   }
 
-  .main-hub__qr-presenter {
+  .qr-share__presenter {
     backdrop-filter: none;
     background: Canvas;
   }
 
-  .main-hub__qr-presenter-title,
-  .main-hub__qr-presenter-url,
-  .main-hub__qr-presenter-close {
+  .qr-share__presenter-title,
+  .qr-share__presenter-url,
+  .qr-share__presenter-close {
     color: CanvasText;
     background: Canvas;
     border-color: CanvasText;
@@ -2718,13 +2720,13 @@
 
 // ---- Reduced motion --------------------------------------------------------
 @media (prefers-reduced-motion: reduce) {
-  .main-hub__qr-canvas {
+  .qr-share__canvas {
     transition: none;
 
     &:hover { transform: none; }
   }
 
-  .main-hub__qr-presenter {
+  .qr-share__presenter {
     animation: none;
     backdrop-filter: none;
   }
@@ -3046,6 +3048,16 @@ $facilitator-panel-width: 300px;
   background: var(--terra-50);
   border-radius: var(--radius-sm);
   font-style: italic;
+}
+
+// Scope notice — shown on the hub, where every settings row below writes to
+// all sub-questions at once. Louder than the plain notice (upright text, an
+// accent bar on the inline-start edge) because it changes what every control
+// underneath it means, and it stays on screen for the whole panel session.
+.facilitator-panel__notice--scope {
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+  border-inline-start: 3px solid var(--terra-500);
 }
 
 // Section grouping — wraps a logically related set of rows under an uppercase
