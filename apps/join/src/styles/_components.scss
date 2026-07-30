@@ -2310,6 +2310,28 @@
   }
 }
 
+// Leading badge marking the card as a question: a white question mark inside
+// a round blue disc. The disc colour comes from `color` (the SVG circle is
+// filled with `currentColor`), so it follows the workspace/theme palette.
+.main-hub__question-card-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  // Nudged down so the disc centres on the first line of the title rather
+  // than the card's flex-start edge.
+  margin-top: 1px;
+  color: var(--indigo-600, #362c82);
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
 .main-hub__question-card-body {
   flex: 1 1 auto;
   min-width: 0;
@@ -2353,6 +2375,12 @@
   cursor: pointer;
   color: var(--text-muted, #78716c);
   transition: background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    display: block;
+  }
 
   &:hover,
   &:focus-visible {
