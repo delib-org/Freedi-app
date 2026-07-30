@@ -227,6 +227,7 @@ import { fn_onJoinDelegateInvitationCreated } from './engagement/joinDelegate/fn
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
+import { joinOg } from './fn_joinOgTags';
 import {
 	generateBulkEmbeddings,
 	getEmbeddingStatus,
@@ -798,6 +799,8 @@ exports.summarizeDiscussion = summarizeDiscussion;
 
 // Dynamic OG Tags for social media sharing
 exports.serveOgTags = serveOgTags;
+// Join app share routes (/q/**, /m/**) — per-question link previews + app shell
+exports.joinOg = joinOg;
 
 // Google Docs Import
 exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
