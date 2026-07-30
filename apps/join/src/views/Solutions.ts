@@ -524,17 +524,20 @@ export const Solutions: m.Component = {
 			renderEditModal(),
 			showFab
 				? m(
-						'button.solutions__fab',
-						{
-							type: 'button',
-							'aria-label': t('solutions.add_suggestion'),
-							title: t('solutions.add_suggestion'),
-							onclick: () => {
-								addAsOrganizer = false;
-								showAddSuggestion = true;
+						'.solutions__fab-wrap',
+						m(
+							'button.solutions__fab',
+							{
+								type: 'button',
+								'aria-label': t('solutions.add_suggestion'),
+								title: t('solutions.add_suggestion'),
+								onclick: () => {
+									addAsOrganizer = false;
+									showAddSuggestion = true;
+								},
 							},
-						},
-						m('span.solutions__fab-icon', { 'aria-hidden': 'true' }, '+'),
+							m('span.solutions__fab-icon', { 'aria-hidden': 'true' }, '+'),
+						),
 					)
 				: null,
 			m(FacilitatorPanel),

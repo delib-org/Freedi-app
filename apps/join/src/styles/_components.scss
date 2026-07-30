@@ -2032,13 +2032,35 @@
 // clear of the start-side a11y widget and back button). Additive — the inline
 // `.solutions__add-row` button stays exactly where it is; this is the
 // thumb-reachable path once the participant has scrolled into the list.
-.solutions__fab {
+//
+// The wrapper re-creates `.solutions`' own centred column (same --max-width,
+// same auto margins) as a fixed strip, so the button tracks the *content*
+// column's inline-end edge rather than the far viewport edge. On phones the
+// column is the whole screen and this collapses to a plain corner FAB; on a
+// desktop window it stays tucked against the app's own edge. Measuring the
+// column this way — rather than with `50vw` arithmetic — keeps it correct when
+// a classic scrollbar takes width out of the viewport.
+.solutions__fab-wrap {
   position: fixed;
-  inset-inline-end: var(--space-md);
+  inset-inline: 0;
   bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
   // Deliberately below `.modal__overlay` (100): once the add modal opens the
   // FAB should sit behind the blurred backdrop like the rest of the page.
   z-index: 90;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-md);
+  // The strip spans the full column width but is invisible — clicks belong to
+  // the cards underneath it, so only the button itself opts back in.
+  pointer-events: none;
+}
+
+.solutions__fab {
+  pointer-events: auto;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2088,10 +2110,15 @@
   margin-block-start: -0.125rem;
 }
 
-// The FAB overlaps the tail of the scroll content (the WizCol footer), so make
-// room for it whenever it's rendered.
+// The FAB floats over the tail of the scroll content, so reserve its full
+// footprint — button height + the gap it sits above the bottom edge + the
+// device safe area — plus a breathing gap. Without this the last suggestion
+// card (or the WizCol footer below it) ends up underneath the button once the
+// participant scrolls to the end of the list.
 .solutions--has-fab .solutions__scroll {
-  padding-bottom: calc(3.5rem + var(--space-xl));
+  padding-bottom: calc(
+    3.5rem + var(--space-md) + var(--space-lg) + env(safe-area-inset-bottom, 0px)
+  );
 }
 
 // Discreet sign-in affordance for admins visiting anonymously — small,
