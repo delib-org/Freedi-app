@@ -1,4 +1,4 @@
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { EMBEDDING_DIMENSIONS, OPENAI_EMBEDDING_MODEL } from './embedding-service';
 import { computeTextHash } from '../synthesis/textHash';
@@ -41,8 +41,8 @@ class EmbeddingCacheService {
 	// admin.initializeApp() has run. Without this, transitively importing
 	// the singleton from any bootstrap-path module crashes the function
 	// loader with "The default Firebase app does not exist."
-	private _db: FirebaseFirestore.Firestore | null = null;
-	private get db(): FirebaseFirestore.Firestore {
+	private _db: Firestore | null = null;
+	private get db(): Firestore {
 		if (!this._db) this._db = getFirestore();
 
 		return this._db;

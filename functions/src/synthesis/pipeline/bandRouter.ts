@@ -32,11 +32,7 @@ import type { SynthesisSettings } from './types';
  * sub-synthLowerBound band directly to topic-cluster preserves that
  * structural distinction and avoids the wasted synth-prompt call.
  */
-export type BandOutcome =
-	| 'spawn-synth'
-	| 'spawn-topic-cluster'
-	| 'review'
-	| 'singleton';
+export type BandOutcome = 'spawn-synth' | 'spawn-topic-cluster' | 'review' | 'singleton';
 
 export function routeByCosine(similarity: number, settings: SynthesisSettings): BandOutcome {
 	if (similarity >= settings.synthLowerBound) return 'spawn-synth';

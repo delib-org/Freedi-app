@@ -1,9 +1,5 @@
 import { logger } from 'firebase-functions';
-import {
-	LLM_MODEL_HEAVY,
-	getGenAI,
-	type CompatGenerativeModel,
-} from '../config/gemini';
+import { LLM_MODEL_HEAVY, getGenAI, type CompatGenerativeModel } from '../config/gemini';
 import { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { getParagraphsText } from '../helpers';
 

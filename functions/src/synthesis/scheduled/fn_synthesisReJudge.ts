@@ -196,7 +196,10 @@ async function mergeSynths(
 	}
 }
 
-async function processParent(parentId: string, synthDocs: Statement[]): Promise<{
+async function processParent(
+	parentId: string,
+	synthDocs: Statement[],
+): Promise<{
 	merges: number;
 }> {
 	if (synthDocs.length < 2) return { merges: 0 };

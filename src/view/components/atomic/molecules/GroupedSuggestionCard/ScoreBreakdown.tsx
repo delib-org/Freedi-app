@@ -105,12 +105,9 @@ const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({
 	// unless the list actually changes); build the per-id title lookup in a
 	// memo so we don't return a fresh function from the selector on every
 	// dispatch.
-	const allStatements = useAppSelector(
-		(state: RootState) => state.statements.statements,
-	);
+	const allStatements = useAppSelector((state: RootState) => state.statements.statements);
 	const defaultGetTitle = useMemo(
-		() => (id: string) =>
-			allStatements.find((s) => s.statementId === id)?.statement,
+		() => (id: string) => allStatements.find((s) => s.statementId === id)?.statement,
 		[allStatements],
 	);
 	const resolveTitle = getOriginalTitle ?? defaultGetTitle;

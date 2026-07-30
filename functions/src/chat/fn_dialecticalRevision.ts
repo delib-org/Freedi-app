@@ -12,12 +12,7 @@
  */
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import {
-	Collections,
-	StatementType,
-	EvidenceStatus,
-	functionConfig,
-} from '@freedi/shared-types';
+import { Collections, StatementType, EvidenceStatus, functionConfig } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { getGeminiModel } from '../config/gemini';
 import { recomputeAncestors } from './recomputeAncestors';
@@ -65,7 +60,10 @@ function subtreeFingerprint(descendants: Statement[]): string {
  * recursively — labelled by kind/polarity and corroboration so the model can
  * summarise the whole debate, not just the direct evidence.
  */
-function buildSubtreeDigest(root: Statement, descendants: Statement[]): { digest: string; count: number } {
+function buildSubtreeDigest(
+	root: Statement,
+	descendants: Statement[],
+): { digest: string; count: number } {
 	const byParent = new Map<string, Statement[]>();
 	for (const s of descendants) {
 		if (s.dialecticSnapshot) continue; // skip archived revision snapshots

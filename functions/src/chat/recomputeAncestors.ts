@@ -122,16 +122,13 @@ async function recomputeScored(statement: Statement): Promise<number> {
 	const count = scorable?.N ?? 0;
 	const evaluationAverage = count > 0 ? 2 * ((scorable?.sum ?? 0) / count) - 1 : 0;
 
-	await getFirestore()
-		.collection(Collections.statements)
-		.doc(statement.statementId)
-		.update({
-			corroborationScore: c,
-			evaluationAverage,
-			evaluationCount: count,
-			lastActivityAt: Date.now(),
-			lastUpdate: Date.now(),
-		});
+	await getFirestore().collection(Collections.statements).doc(statement.statementId).update({
+		corroborationScore: c,
+		evaluationAverage,
+		evaluationCount: count,
+		lastActivityAt: Date.now(),
+		lastUpdate: Date.now(),
+	});
 
 	return c;
 }
@@ -193,7 +190,10 @@ export async function recomputeAncestors(statementId: string): Promise<void> {
 
 	for (let i = startIdx; i < chain.length; i++) {
 		const node = chain[i];
-		if (node.statementType === StatementType.option || node.statementType === StatementType.evidence) {
+		if (
+			node.statementType === StatementType.option ||
+			node.statementType === StatementType.evidence
+		) {
 			await recomputeScored(node);
 		} else if (node.statementType === StatementType.question) {
 			await recomputeQuestion(node);

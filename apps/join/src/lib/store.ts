@@ -10,7 +10,6 @@ import {
 	query,
 	where,
 	orderBy,
-	runTransaction,
 	httpsCallable,
 	writeBatch,
 	Unsubscribe,
@@ -21,8 +20,6 @@ import { applyStatementLanguage, isLanguageForced, t } from './i18n';
 import {
 	Access,
 	Collections,
-	JoinDelegate,
-	JoinDelegateInvitation,
 	Statement,
 	StatementType,
 	Creator,
@@ -32,7 +29,6 @@ import {
 	createStatementObject,
 	createParagraphChildStatement,
 	CutoffBy,
-	getJoinDelegateId,
 } from '@freedi/shared-types';
 import {
 	canEditOption,
@@ -40,7 +36,6 @@ import {
 	canEditParticipantOptions,
 	checkAdminStatus,
 	isAdmin,
-	setCurrentDelegate,
 } from './admin';
 import {
 	mapMainAppPathToJoinTarget,
@@ -100,7 +95,6 @@ import {
 	ingestOptionForBuffer,
 	isOptionPending,
 	isOptionHighlighted,
-	unhighlightOption,
 	getNewOptionsPendingCount as _getNewOptionsPendingCount,
 	isOptionNewlyArrived as _isOptionNewlyArrived,
 	flushNewOptions as _flushNewOptions,
@@ -124,12 +118,27 @@ export const subscribeUserEvaluations = _subscribeUserEvaluations;
 
 let customDisplayName: string | null = null;
 
+/** Admin hand-placed ordering. Neither field is declared on the shared
+ *  `StatementSettings` schema — the join app is their only writer — so they're
+ *  read through this narrow shape rather than an `any` cast.
+ *  `manualOptionOrder` orders the crowd list, `manualOrganizerOrder` the
+ *  organizer section. `null` clears a saved order. */
+export type ManualOrderSettings = {
+	manualOptionOrder?: string[] | null;
+	manualOrganizerOrder?: string[] | null;
+};
+
+/** Read the manual-order fields off a question's settings without widening to
+ *  `any`. Returns an empty object when the question or its settings are absent
+ *  so call sites can destructure unconditionally. */
+function manualOrderOf(q: Statement | null): ManualOrderSettings {
+	return (q?.statementSettings as ManualOrderSettings | undefined) ?? {};
+}
+
 // Join-form submission cache + API moved to ./join/joinFormCache.ts. The
 // public API is re-exported below so call sites that import from `@/lib/store`
 // keep working.
 import {
-	type JoinRole,
-	type JoinFormSubmissionData,
 	hasJoinFormSubmission as _hasJoinFormSubmission,
 	getCachedJoinFormSubmissionRole as _getCachedJoinFormSubmissionRole,
 	getCachedJoinFormSubmissionData as _getCachedJoinFormSubmissionData,
@@ -137,7 +146,6 @@ import {
 	getJoinFormSubmissionRole as _getJoinFormSubmissionRole,
 	saveJoinFormSubmission as _saveJoinFormSubmission,
 	subscribeUserJoinFormSubmission as _subscribeUserJoinFormSubmission,
-	clearJoinFormCacheForUsers,
 } from './join/joinFormCache';
 
 export type { JoinRole, JoinFormSubmissionData } from './join/joinFormCache';
@@ -282,8 +290,7 @@ export async function loadOptionParagraphs(optionId: string): Promise<void> {
 		// `sortParagraphChildren` used by the other apps). `createStatementObject`
 		// → `createParagraphChildStatement` writes `order`; older paragraphs only
 		// carry the staggered `createdAt`.
-		const orderKey = (p: Statement): number =>
-			p.order ?? p.doc?.order ?? p.createdAt ?? 0;
+		const orderKey = (p: Statement): number => p.order ?? p.doc?.order ?? p.createdAt ?? 0;
 		const paras = snap.docs
 			.map((d) => d.data() as Statement)
 			.sort((a, b) => orderKey(a) - orderKey(b));
@@ -316,9 +323,7 @@ export function getVisibleOptions(): Statement[] {
 	// (array of option IDs) and sort by that order instead.
 	const sortType = question?.statementSettings?.defaultSortType;
 	const randomSeed = question?.statementSettings?.randomSortSeed ?? 0;
-	const manualOrder = (question?.statementSettings as any)?.manualOptionOrder as
-		| string[]
-		| undefined;
+	const manualOrder = manualOrderOf(question).manualOptionOrder;
 	const isManualSort = manualOrder && manualOrder.length > 0;
 
 	let opts = allOptions
@@ -424,9 +429,7 @@ export function getVisibleOptions(): Statement[] {
  *  manual order list fall to the bottom (preserving newest-first among them)
  *  so freshly added organizer options stay visible until reordered. */
 export function getOrganizerSuggestions(): Statement[] {
-	const manualOrder = (question?.statementSettings as any)?.manualOrganizerOrder as
-		| string[]
-		| undefined;
+	const manualOrder = manualOrderOf(question).manualOrganizerOrder;
 	const isManualSort = Array.isArray(manualOrder) && manualOrder.length > 0;
 
 	const filtered = allOptions
@@ -440,6 +443,7 @@ export function getOrganizerSuggestions(): Statement[] {
 			const aIdx = manualOrderMap.get(a.statementId) ?? Infinity;
 			const bIdx = manualOrderMap.get(b.statementId) ?? Infinity;
 			if (aIdx !== bIdx) return aIdx - bIdx;
+
 			// Tiebreak by newest-first for items not in the manual order.
 			return (b.createdAt ?? 0) - (a.createdAt ?? 0);
 		});
@@ -590,8 +594,7 @@ export async function setSortType(questionId: string, value: SortType): Promise<
 		statementSettings: {
 			defaultSortType: SortType;
 			randomSortSeed?: number;
-			manualOptionOrder?: string[];
-		};
+		} & ManualOrderSettings;
 	} = {
 		statementSettings: { defaultSortType: value },
 	};
@@ -599,8 +602,8 @@ export async function setSortType(questionId: string, value: SortType): Promise<
 		patch.statementSettings.randomSortSeed = Date.now();
 	}
 	// Clear manual order when switching away from manual mode
-	if (value !== SortType.random && (question?.statementSettings as any)?.manualOptionOrder) {
-		(patch.statementSettings as any).manualOptionOrder = null;
+	if (value !== SortType.random && manualOrderOf(question).manualOptionOrder) {
+		patch.statementSettings.manualOptionOrder = null;
 	}
 	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
 }

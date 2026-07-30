@@ -65,7 +65,10 @@ function detectHeadingFromRuns(
 		.filter((r): r is docs_v1.Schema$TextRun => Boolean(r?.content))
 		.map((r) => ({ text: (r.content || '').replace(/\n$/, ''), bold: Boolean(r.textStyle?.bold) }));
 
-	const text = runs.map((r) => r.text).join('').trim();
+	const text = runs
+		.map((r) => r.text)
+		.join('')
+		.trim();
 	if (!text) return null;
 
 	const firstNonEmpty = runs.find((r) => r.text.trim().length > 0);

@@ -34,9 +34,7 @@ describe('ParticipationFunnel', () => {
 	it('exposes a single fluent sentence to screen readers', () => {
 		render(<ParticipationFunnel entered={18} suggested={13} evaluated={9} />);
 
-		const funnel = screen.getByLabelText(
-			'Participation: 18 entered, 13 suggested, 9 evaluated',
-		);
+		const funnel = screen.getByLabelText('Participation: 18 entered, 13 suggested, 9 evaluated');
 		expect(funnel).toBeInTheDocument();
 	});
 

@@ -114,9 +114,7 @@ export async function dissolveQuestionSynthesis(
 	// re-cluster run silently wipes the creator's clusters and orphans their
 	// members into "Ungrouped". Excluded from BOTH the reversible-cluster set and
 	// the malformed-derived sweep so they (and their members) survive untouched.
-	const manualClusterIds = new Set(
-		docs.filter(isManualCluster).map((d) => d.statementId),
-	);
+	const manualClusterIds = new Set(docs.filter(isManualCluster).map((d) => d.statementId));
 
 	const properClusters = docs.filter(
 		(d) =>

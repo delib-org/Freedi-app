@@ -40,10 +40,7 @@ export async function ensureEmbedding(
 		hasParentText: Boolean(parentText),
 	});
 	try {
-		const result = await embeddingService.generateEmbedding(
-			statement.statement,
-			parentText ?? '',
-		);
+		const result = await embeddingService.generateEmbedding(statement.statement, parentText ?? '');
 
 		// Persist so subsequent callers (including the upstream
 		// `generateEmbeddingForStatement` task that might still be running)

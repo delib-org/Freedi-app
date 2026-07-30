@@ -1,10 +1,6 @@
 import { logger } from 'firebase-functions';
 import 'dotenv/config';
-import {
-	GEMINI_MODEL,
-	getGenAI,
-	type CompatGenerativeModel,
-} from '../config/gemini';
+import { GEMINI_MODEL, getGenAI, type CompatGenerativeModel } from '../config/gemini';
 import { notifyAIError } from './error-notification-service';
 
 interface APIError {

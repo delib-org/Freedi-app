@@ -37,6 +37,7 @@ import {
 	deleteAllOptions,
 	getSubQuestions,
 	setSettingOnQuestions,
+	type ManualOrderSettings,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 import { ManualReorder, ManualReorderMode } from '@/components/ManualReorder';
@@ -516,10 +517,8 @@ const SORT_OPTIONS: Array<{ value: SortType | string; icon: string; labelKey: st
 ];
 
 // `manualOptionOrder` isn't declared on the shared StatementSettings schema (the
-// join app is its only writer), so it's read through a narrow local shape rather
-// than an `any` cast.
-type ManualOrderSettings = { manualOptionOrder?: string[] | null };
-
+// join app is its only writer), so it's read through the narrow
+// `ManualOrderSettings` shape exported by the store rather than an `any` cast.
 function isManualSort(question: Statement | null): boolean {
 	const settings = question?.statementSettings as ManualOrderSettings | undefined;
 
@@ -1534,11 +1533,7 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 												},
 											},
 											[
-												m(
-													'span.facilitator-panel__action-icon',
-													{ 'aria-hidden': 'true' },
-													'🔄',
-												),
+												m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🔄'),
 												m(
 													'span.facilitator-panel__action-label',
 													reconcileInProgress
@@ -1548,10 +1543,7 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 											],
 										),
 									]),
-									m(
-										'.facilitator-panel__row-help',
-										t('facilitator.reconcileSheet.help'),
-									),
+									m('.facilitator-panel__row-help', t('facilitator.reconcileSheet.help')),
 									reconcileResult
 										? m(
 												`.facilitator-panel__joinform-check-status${reconcileResult.errors === 0 ? '.facilitator-panel__joinform-check-status--ok' : '.facilitator-panel__joinform-check-status--fail'}`,

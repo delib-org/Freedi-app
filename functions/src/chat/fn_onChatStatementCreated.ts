@@ -57,7 +57,8 @@ export async function onChatStatementCreated(
 	if (!parent) return;
 
 	const isEvidenceEdge =
-		parent.statementType === StatementType.option || parent.statementType === StatementType.evidence;
+		parent.statementType === StatementType.option ||
+		parent.statementType === StatementType.evidence;
 	if (!isEvidenceEdge) return;
 
 	const pill = (child.dialecticType as DialecticPolarity) ?? 'standard';
