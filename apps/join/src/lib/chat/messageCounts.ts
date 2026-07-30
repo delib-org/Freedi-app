@@ -21,6 +21,7 @@ import m from 'mithril';
 import { Statement, StatementType, Collections } from '@freedi/shared-types';
 import { db, collection, query, where, Unsubscribe } from '../firebase';
 import { resilientOnSnapshot } from '../resilientListeners';
+import { resetAuthorAlerts, notifyLatestMessage } from './authorCommentAlerts';
 
 const LAST_READ_KEY = 'freedi_join_last_read';
 const BATCH_SIZE = 30;
@@ -94,6 +95,10 @@ export function subscribeMessageCounts(optionIds: string[]): void {
 	for (const unsub of messageCountsUnsubs) unsub();
 	messageCountsUnsubs = [];
 
+	// Fresh listeners deliver full initial snapshots — make sure those record
+	// silently instead of beeping for messages that already existed.
+	resetAuthorAlerts();
+
 	if (optionIds.length === 0) return;
 
 	for (let i = 0; i < optionIds.length; i += BATCH_SIZE) {
@@ -126,6 +131,13 @@ export function subscribeMessageCounts(optionIds: string[]): void {
 				const arr = messagesByOption.get(pid) ?? [];
 				arr.push(ts);
 				messagesByOption.set(pid, arr);
+			}
+
+			// Let the author-alert module see each option's new latest timestamp
+			// so it can beep for fresh comments on the user's own suggestions.
+			for (const id of batch) {
+				const latest = messageLatest.get(id);
+				if (latest) notifyLatestMessage(id, latest);
 			}
 			m.redraw();
 		});

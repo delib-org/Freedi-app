@@ -7,6 +7,12 @@ import { formatText, matchNumberedItem } from '@/lib/formatText';
 interface ChatMessageAttrs {
 	message: Statement;
 	isMine: boolean;
+	/** The suggestion author's private triage mark on this comment. Only ever
+	 *  passed when the viewer is the suggestion's author. */
+	verdict?: 'helpful' | 'ignored';
+	/** Present only for the suggestion's author viewing someone else's comment —
+	 *  renders the helpful/ignore toggle chips. */
+	onVerdict?: (verdict: 'helpful' | 'ignored') => void;
 }
 
 function formatTime(timestamp: number): string {
@@ -73,7 +79,7 @@ function uidToColor(uid: string): string {
 
 export const ChatMessage: m.Component<ChatMessageAttrs> = {
 	view(vnode) {
-		const { message, isMine } = vnode.attrs;
+		const { message, isMine, verdict, onVerdict } = vnode.attrs;
 		const displayName = message.creator?.displayName || t('common.anonymous');
 		const uid = message.creatorId || '';
 		const color = uidToColor(uid);
@@ -87,7 +93,12 @@ export const ChatMessage: m.Component<ChatMessageAttrs> = {
 			? message.description.split(' | ').filter((s) => s.trim().length > 0)
 			: [];
 
-		return m(`.chat-message${isMine ? '.chat-message--mine' : ''}`, [
+		const classes = [
+			isMine ? '.chat-message--mine' : '',
+			verdict === 'ignored' ? '.chat-message--ignored' : '',
+		].join('');
+
+		return m(`.chat-message${classes}`, [
 			!isMine
 				? m('.chat-message__header', [
 						m('.chat-message__avatar', { style: { background: color } }, initials),
@@ -99,6 +110,26 @@ export const ChatMessage: m.Component<ChatMessageAttrs> = {
 				? m('.chat-message__body', renderChatBodyParagraphs(bodyParagraphs))
 				: null,
 			m('.chat-message__time', formatTime(message.createdAt)),
+			onVerdict
+				? m('.chat-message__verdicts', [
+						m(
+							`button.chat-message__verdict${verdict === 'helpful' ? '.chat-message__verdict--on' : ''}`,
+							{
+								onclick: () => onVerdict('helpful'),
+								'aria-pressed': verdict === 'helpful' ? 'true' : 'false',
+							},
+							`👍 ${t('chat.verdict_helpful')}`,
+						),
+						m(
+							`button.chat-message__verdict${verdict === 'ignored' ? '.chat-message__verdict--on' : ''}`,
+							{
+								onclick: () => onVerdict('ignored'),
+								'aria-pressed': verdict === 'ignored' ? 'true' : 'false',
+							},
+							t('chat.verdict_ignored'),
+						),
+					])
+				: null,
 		]);
 	},
 };

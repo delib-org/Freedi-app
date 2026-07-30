@@ -8,6 +8,21 @@ interface ImproveSuggestionRequest {
 	instructions?: string;
 	parentTitle?: string;
 	parentDescription?: string;
+	comments?: { content: string }[];
+}
+
+const MAX_COMMENTS = 50;
+const MAX_COMMENT_LENGTH = 2000;
+
+/** Drop non-string/empty entries, cap count and per-comment length. */
+function normalizeComments(comments: ImproveSuggestionRequest['comments']): string[] {
+	if (!Array.isArray(comments)) return [];
+
+	return comments
+		.map((c) => (typeof c?.content === 'string' ? c.content.trim() : ''))
+		.filter((content) => content.length > 0)
+		.slice(0, MAX_COMMENTS)
+		.map((content) => content.slice(0, MAX_COMMENT_LENGTH));
 }
 
 interface ImproveSuggestionResponse {
@@ -31,7 +46,7 @@ export async function handleImproveSuggestion(req: Request, res: Response): Prom
 		}
 
 		// Extract and validate request body
-		const { title, description, instructions, parentTitle, parentDescription } =
+		const { title, description, instructions, parentTitle, parentDescription, comments } =
 			req.body as ImproveSuggestionRequest;
 
 		if (!title || typeof title !== 'string' || title.trim().length === 0) {
@@ -40,12 +55,21 @@ export async function handleImproveSuggestion(req: Request, res: Response): Prom
 			return;
 		}
 
+		if (comments !== undefined && !Array.isArray(comments)) {
+			res.status(400).json({ error: 'comments must be an array of { content } objects' });
+
+			return;
+		}
+
+		const normalizedComments = normalizeComments(comments);
+
 		// Log the request for monitoring
 		logger.info('Improving suggestion', {
 			titleLength: title.length,
 			hasDescription: !!description,
 			hasInstructions: !!instructions,
 			hasParentContext: !!parentTitle,
+			commentsCount: normalizedComments.length,
 		});
 
 		// Call the AI service to improve the suggestion - language will be detected by AI
@@ -55,6 +79,7 @@ export async function handleImproveSuggestion(req: Request, res: Response): Prom
 			instructions,
 			parentTitle,
 			parentDescription,
+			normalizedComments.length > 0 ? normalizedComments : undefined,
 		);
 
 		// Send successful response

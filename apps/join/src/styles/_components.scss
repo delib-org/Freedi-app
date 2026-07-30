@@ -935,6 +935,20 @@
       background: var(--ink);
       color: var(--paper);
     }
+
+    // The viewer's own suggestion has unread comments — peers are giving
+    // feedback. Distinct teal treatment so it reads differently from the
+    // generic "unread messages" state on other cards.
+    &--feedback {
+      border-color: var(--teal-600);
+      background: var(--teal-50);
+      color: var(--teal-700);              // on teal-50 ~9:1 ✓ AAA
+
+      &:hover {
+        background: var(--teal-600);
+        color: var(--text-inverse);
+      }
+    }
   }
 
   &__chat-icon {
@@ -966,6 +980,19 @@
     padding: 0 5px;
     border: 2px solid var(--bg-card);
     animation: corner-pop var(--dur-base) var(--ease-spring);
+
+    // Author-facing variant: comments on the viewer's own suggestion. Teal to
+    // match the --feedback pill, plus a gentle repeating pulse to draw the
+    // author's eye without demanding it.
+    &--author {
+      background: var(--teal-600);         // white text ~7.1:1 ✓ AAA
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation:
+          corner-pop var(--dur-base) var(--ease-spring),
+          author-badge-pulse 2.4s var(--ease-out) 3;
+      }
+    }
   }
 
   &__actions {
@@ -1608,6 +1635,104 @@
     letter-spacing: 0.02em;
     font-variant-numeric: tabular-nums;
   }
+
+  // The suggestion author marked this comment "ignore" — keep it readable but
+  // visually parked. The verdict chips stay at full opacity so the author can
+  // still change their mind.
+  &--ignored &__text,
+  &--ignored &__body,
+  &--ignored &__header {
+    opacity: 0.55;
+  }
+
+  // Author-only triage row: helpful / ignore toggle chips under the bubble.
+  // Rendered only for the suggestion's author on other people's comments —
+  // commenters never see these (verdicts are private working state).
+  &__verdicts {
+    display: flex;
+    gap: var(--space-xs);
+    margin-top: 6px;
+  }
+
+  &__verdict {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+    background: var(--bg-card);
+    border: 1px solid var(--ink-soft);
+    border-radius: var(--radius-full);
+    padding: 4px 10px;
+    min-height: 28px;
+    cursor: pointer;
+    transition:
+      background var(--dur-quick) var(--ease-out),
+      color var(--dur-quick) var(--ease-out),
+      border-color var(--dur-quick) var(--ease-out);
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+
+    &--on {
+      background: var(--teal-600);
+      border-color: var(--teal-600);
+      color: var(--text-inverse);           // ~7.1:1 ✓ AAA
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Chat author toolbar — shown to the suggestion's author between the chat
+// header and the messages. Surfaces the helpful-mark count and the two ways
+// to act on feedback: edit manually or ask AI for a draft grounded in the
+// comments marked helpful.
+// -----------------------------------------------------------------------------
+.chat-author-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--teal-50);
+  border-bottom: 1px solid var(--teal-100);
+
+  &__info {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+
+  &__title {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);                 // on teal-50 ~9:1 ✓ AAA
+  }
+
+  &__count {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  &__error {
+    flex-basis: 100%;
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+  }
 }
 
 // Inline link rendered by `linkify()` inside chat messages and solution-card
@@ -1831,6 +1956,18 @@
 @keyframes arrow-bounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-3px); }
+}
+
+// Gentle repeating pulse for the author-feedback corner badge — glow-only so
+// it layers cleanly on top of the one-shot corner-pop entrance. Runs a few
+// cycles then rests (iteration count set at the call site).
+@keyframes author-badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 122, 108, 0.5);
+  }
+  70%, 100% {
+    box-shadow: 0 0 0 8px rgba(26, 122, 108, 0);
+  }
 }
 
 // Soft breathing glow for the new-answers pill. Deliberately glow-only (no

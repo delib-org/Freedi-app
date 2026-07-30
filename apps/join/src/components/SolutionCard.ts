@@ -441,6 +441,9 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 		const organizerCount = option.organizers?.length ?? 0;
 		const messageCount = getMessageCount(option.statementId);
 		const newMsgCount = getNewMessageCount(option.statementId);
+		// New comments on the viewer's own suggestion get a distinct
+		// author-facing treatment: peers are giving them feedback.
+		const isAuthorFeedback = newMsgCount > 0 && !!user?.uid && option.creatorId === user.uid;
 
 		const isJoinedAsActivist = user
 			? (option.joined?.some((c: Creator) => c.uid === user.uid) ?? false)
@@ -597,14 +600,23 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 						: m(
 								'.solution-card__chat',
 								{
-									class: messageCount > 0 ? 'solution-card__chat--active' : '',
+									class: [
+										messageCount > 0 ? 'solution-card__chat--active' : '',
+										isAuthorFeedback ? 'solution-card__chat--feedback' : '',
+									]
+										.filter(Boolean)
+										.join(' '),
 									role: 'button',
 									tabindex: 0,
 									'aria-label':
 										newMsgCount > 0
-											? t(newMsgCount > 1 ? 'card.new_messages_plural' : 'card.new_messages', {
-													count: newMsgCount,
-												})
+											? isAuthorFeedback
+												? t(newMsgCount > 1 ? 'card.feedback_new_plural' : 'card.feedback_new', {
+														count: newMsgCount,
+													})
+												: t(newMsgCount > 1 ? 'card.new_messages_plural' : 'card.new_messages', {
+														count: newMsgCount,
+													})
 											: t('chat.open'),
 									onclick: (e: Event) => {
 										e.stopPropagation();
@@ -622,7 +634,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 									m('.solution-card__chat-icon', { 'aria-hidden': 'true' }, '\uD83D\uDCAC'),
 									messageCount > 0 ? m('.solution-card__chat-count', messageCount) : null,
 									newMsgCount > 0
-										? m('.solution-card__chat-new', { 'aria-hidden': 'true' }, newMsgCount)
+										? m(
+												`.solution-card__chat-new${isAuthorFeedback ? '.solution-card__chat-new--author' : ''}`,
+												{ 'aria-hidden': 'true' },
+												newMsgCount,
+											)
 										: null,
 								],
 							),

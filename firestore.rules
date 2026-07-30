@@ -715,6 +715,25 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Private per-author verdicts on suggestion comments (Join app peer
+    // improvement). A suggestion author marks comments on their suggestion as
+    // helpful/ignored — working state that only the author may ever read, so
+    // list queries must filter authorId == uid to be provable.
+    match /commentVerdicts/{verdictId} {
+      allow read: if request.auth != null &&
+                    resource.data.authorId == request.auth.uid;
+      allow create: if request.auth != null &&
+                      request.resource.data.authorId == request.auth.uid &&
+                      request.resource.data.keys().hasAll(['verdictId', 'optionId', 'commentId', 'authorId', 'verdict', 'updatedAt']) &&
+                      request.resource.data.verdict in ['helpful', 'ignored'];
+      allow update: if request.auth != null &&
+                      resource.data.authorId == request.auth.uid &&
+                      request.resource.data.authorId == request.auth.uid &&
+                      request.resource.data.verdict in ['helpful', 'ignored'];
+      allow delete: if request.auth != null &&
+                      resource.data.authorId == request.auth.uid;
+    }
+
     match /approval/{approvalId=**} {
       allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;

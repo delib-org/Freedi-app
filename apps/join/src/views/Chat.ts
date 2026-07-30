@@ -13,6 +13,8 @@ import {
 	loadQuestion,
 	subscribeQuestion,
 	getQuestion,
+	getOptionParagraphs,
+	loadOptionParagraphs,
 } from '@/lib/store';
 import { generateTemporalName } from '@/lib/nameGenerator';
 import { t } from '@/lib/i18n';
@@ -20,7 +22,20 @@ import { isFacilitatedMode } from '@/lib/facilitator';
 import { db, doc, getDoc, Unsubscribe } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
 import { getUserState, waitForAuthReady } from '@/lib/user';
+import {
+	getVerdict,
+	setVerdict,
+	countHelpful,
+	subscribeCommentVerdicts,
+	unsubscribeCommentVerdicts,
+} from '@/lib/commentVerdicts';
+import {
+	buildImprovePayload,
+	composeDraftText,
+	requestImprovedDraft,
+} from '@/lib/improveSuggestion';
 import { ChatMessage } from '@/components/ChatMessage';
+import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { SplashLoader } from '@/views/Splash';
@@ -45,6 +60,13 @@ let currentChatOptionId: string | null = null;
 let isAtBottom = true;
 let newMessageCount = 0;
 let prevMessageCount = 0;
+
+// Author-only state: peer-improvement tools (comment verdicts + AI redraft).
+let aiDrafting = false;
+let aiError: string | null = null;
+let editModalOpen = false;
+// AI-drafted textarea seed; null means the modal opens with the stored text.
+let editModalText: string | null = null;
 
 const BOTTOM_THRESHOLD = 60;
 
@@ -74,6 +96,7 @@ function closeNamePrompt(): void {
 
 function teardownChatSubscriptions(): void {
 	unsubscribeChat();
+	unsubscribeCommentVerdicts();
 	if (mainUnsub) {
 		mainUnsub();
 		mainUnsub = null;
@@ -100,6 +123,10 @@ async function initChatForOption(optionId: string): Promise<void> {
 	isAtBottom = true;
 	newMessageCount = 0;
 	prevMessageCount = 0;
+	aiDrafting = false;
+	aiError = null;
+	editModalOpen = false;
+	editModalText = null;
 	m.redraw();
 
 	try {
@@ -131,6 +158,13 @@ async function initChatForOption(optionId: string): Promise<void> {
 		if (currentChatOptionId !== optionId) return;
 		if (needsDisplayName()) {
 			showNamePrompt = true;
+		}
+
+		// Author of this suggestion: subscribe to their private comment verdicts
+		// and warm the paragraph cache so edit/AI flows open instantly.
+		if (option && option.creatorId === getUserState().user?.uid) {
+			subscribeCommentVerdicts(optionId);
+			void loadOptionParagraphs(optionId);
 		}
 	} catch (err) {
 		console.error('[Chat] Failed to load option:', err);
@@ -211,6 +245,12 @@ export const Chat: m.Component = {
 		// affordance \u2014 kept since it's already wired up.
 		const backTo = facilitated && mainId ? `/m/${mainId}/q/${questionId}` : `/q/${questionId}`;
 
+		const isAuthor = !!user?.uid && option.creatorId === user.uid;
+		const otherMsgIds = msgs
+			.filter((msg) => msg.creatorId !== user?.uid)
+			.map((msg) => msg.statementId);
+		const helpfulCount = isAuthor ? countHelpful(otherMsgIds) : 0;
+
 		return m(`.chat${facilitated ? '.chat--facilitated' : ''}`, [
 			facilitated && mainId ? m(BackButton, { to: `/m/${mainId}/q/${questionId}` }) : null,
 			m('.chat__header', [
@@ -224,6 +264,8 @@ export const Chat: m.Component = {
 				),
 				m('.chat__title', option.statement),
 			]),
+
+			isAuthor && msgs.length > 0 ? renderAuthorTools(helpfulCount) : null,
 
 			msgs.length === 0
 				? m('.chat__empty', t('chat.empty'))
@@ -252,13 +294,29 @@ export const Chat: m.Component = {
 									}
 								},
 							},
-							msgs.map((msg) =>
-								m(ChatMessage, {
+							msgs.map((msg) => {
+								const isMine = msg.creatorId === user?.uid;
+								// Only the suggestion's author triages other people's
+								// comments — their own messages get no verdict chips.
+								const canJudge = isAuthor && !isMine;
+
+								return m(ChatMessage, {
 									key: msg.statementId,
 									message: msg,
-									isMine: msg.creatorId === user?.uid,
-								}),
-							),
+									isMine,
+									verdict: canJudge ? getVerdict(msg.statementId) : undefined,
+									onVerdict: canJudge
+										? (v: 'helpful' | 'ignored') => {
+												const current = getVerdict(msg.statementId);
+												void setVerdict(
+													option?.statementId ?? '',
+													msg.statementId,
+													current === v ? null : v,
+												);
+											}
+										: undefined,
+								});
+							}),
 						),
 						newMessageCount > 0
 							? m(
@@ -385,10 +443,115 @@ export const Chat: m.Component = {
 								),
 							]),
 						]),
+			editModalOpen && option
+				? m(EditSuggestionModal, {
+						option,
+						initialText: editModalText ?? undefined,
+						onClose: closeEditModal,
+					})
+				: null,
+
 			m(FacilitatorPanel),
 		]);
 	},
 };
+
+/** Compact author toolbar: helpful-mark count + edit / AI-draft actions. */
+function renderAuthorTools(helpfulCount: number): m.Vnode {
+	return m('.chat-author-tools', [
+		m('.chat-author-tools__info', [
+			m('.chat-author-tools__title', t('chat.author_tools_title')),
+			m(
+				'.chat-author-tools__count',
+				helpfulCount > 0
+					? t('chat.helpful_count', { count: helpfulCount })
+					: t('chat.improve_ai_hint'),
+			),
+		]),
+		m('.chat-author-tools__actions', [
+			m(
+				'button.btn.btn--secondary.btn--small',
+				{
+					onclick: () => {
+						editModalText = null;
+						editModalOpen = true;
+					},
+				},
+				t('solutions.edit_suggestion'),
+			),
+			m(
+				'button.btn.btn--primary.btn--small',
+				{
+					disabled: helpfulCount === 0 || aiDrafting,
+					onclick: () => void handleImproveWithAI(),
+				},
+				aiDrafting ? t('chat.improve_ai_loading') : `✨ ${t('chat.improve_ai')}`,
+			),
+		]),
+		aiError ? m('.chat-author-tools__error', aiError) : null,
+	]);
+}
+
+/**
+ * Ask the AI for a redraft grounded in the helpful-marked comments, then open
+ * the edit modal with the draft as editable textarea text. The author always
+ * reviews and can rewrite before submitting — AI never publishes directly.
+ */
+async function handleImproveWithAI(): Promise<void> {
+	if (!option || aiDrafting) return;
+	const optionId = option.statementId;
+
+	aiDrafting = true;
+	aiError = null;
+	m.redraw();
+
+	try {
+		await loadOptionParagraphs(optionId);
+		const uid = getUserState().user?.uid;
+		const helpfulMessages = getMessages().filter(
+			(msg) => msg.creatorId !== uid && getVerdict(msg.statementId) === 'helpful',
+		);
+		const payload = buildImprovePayload(
+			option,
+			getOptionParagraphs(optionId),
+			getQuestion(),
+			helpfulMessages,
+		);
+		const result = await requestImprovedDraft(payload);
+		if (currentChatOptionId !== optionId) return;
+
+		editModalText = composeDraftText(result.improvedTitle, result.improvedDescription);
+		editModalOpen = true;
+	} catch (err) {
+		console.error('[Chat] AI improvement failed:', err);
+		if (currentChatOptionId === optionId) {
+			aiError = t('chat.improve_ai_error');
+		}
+	} finally {
+		if (currentChatOptionId === optionId) {
+			aiDrafting = false;
+		}
+		m.redraw();
+	}
+}
+
+function closeEditModal(): void {
+	editModalOpen = false;
+	editModalText = null;
+	// Refresh the pinned header title in case the author just saved an edit —
+	// the option doc isn't otherwise subscribed here.
+	const optionId = currentChatOptionId;
+	if (optionId) {
+		void getDoc(doc(db, Collections.statements, optionId))
+			.then((snap) => {
+				if (currentChatOptionId !== optionId || !snap.exists()) return;
+				option = snap.data() as Statement;
+				m.redraw();
+			})
+			.catch((err) => console.error('[Chat] Failed to refresh option:', err));
+	}
+	m.redraw();
+}
 
 function confirmName(): void {
 	if (!nameInput.trim()) return;

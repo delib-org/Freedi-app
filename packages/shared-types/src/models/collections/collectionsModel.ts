@@ -58,6 +58,7 @@ export enum Collections {
     evidencePosts = 'evidencePosts',
     evidenceVotes = 'evidenceVotes',
     userEvaluations = 'userEvaluations',
+    commentVerdicts = 'commentVerdicts',
     surveys = 'surveys',
     surveyProgress = 'surveyProgress',
     adminInvitations = 'adminInvitations',
