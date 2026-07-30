@@ -1,5 +1,4 @@
 import m from 'mithril';
-import QRCode from 'qrcode';
 import { t } from '@/lib/i18n';
 
 // Module-level cache: re-rendering the same URL is the common case (Mithril
@@ -9,6 +8,31 @@ import { t } from '@/lib/i18n';
 // redraw while the next promise resolves.
 const svgCache = new Map<string, string>();
 
+// `qrcode` is ~24 kB raw of encoder tables that only matter to the small share
+// card on the hub — nobody opening a question on a slow phone should pay for it
+// before the question renders. The component already tolerates the SVG arriving
+// a frame late (that's what `ensureSvgBuilt` + the redraw are for), so loading
+// the encoder on first use costs nothing beyond that same placeholder frame.
+// The promise is memoised so concurrent sizes share one fetch.
+type QRCodeApi = typeof import('qrcode');
+
+let encoderPromise: Promise<QRCodeApi> | null = null;
+
+function loadEncoder(): Promise<QRCodeApi> {
+	if (!encoderPromise) {
+		// `qrcode` is CommonJS. Depending on how the interop shakes out the
+		// namespace either carries the API directly or wraps it under
+		// `default`, so accept both rather than betting on one.
+		encoderPromise = import('qrcode').then((mod) => {
+			const wrapped = mod as QRCodeApi & { default?: QRCodeApi };
+
+			return wrapped.default ?? wrapped;
+		});
+	}
+
+	return encoderPromise;
+}
+
 function cacheKey(url: string, size: number): string {
 	return `${size}::${url}`;
 }
@@ -17,6 +41,7 @@ async function buildSvg(url: string, size: number): Promise<string> {
 	const key = cacheKey(url, size);
 	const cached = svgCache.get(key);
 	if (cached) return cached;
+	const QRCode = await loadEncoder();
 	const svg = await QRCode.toString(url, {
 		type: 'svg',
 		errorCorrectionLevel: 'M',

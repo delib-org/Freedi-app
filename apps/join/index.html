@@ -8,6 +8,30 @@
     <meta name="description" content="WizCol-Join — propose, evaluate and choose solutions together." />
     <title>WizCol-Join</title>
 
+    <!-- Warm up the connections the first render actually blocks on. Firebase
+         can't start its DNS+TCP+TLS handshakes until the JS bundle has parsed,
+         so on a high-latency link these three handshakes are pure serial cost
+         in front of the first Firestore read. Doing them while the bundle is
+         still downloading takes that cost off the critical path.
+         identitytoolkit = anonymous sign-up (first visit),
+         securetoken = token refresh (returning visit). -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin />
+
+    <!-- Self-hosted Assistant (see src/styles/_fonts.scss). The @font-face rules
+         live in the bundled CSS, so without this preload the font request would
+         only start after index.css finished downloading. Latin is always needed
+         — digits and Latin UI text appear in every language; the Hebrew subset
+         is preloaded conditionally by the boot script below. -->
+    <link
+      rel="preload"
+      href="/fonts/assistant-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />

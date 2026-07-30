@@ -2,8 +2,9 @@ import m from 'mithril';
 import { auth } from '@/lib/firebase';
 import { signInWithGoogle, signOut, waitForAuthReady, getUserState } from '@/lib/user';
 import { acceptJoinDelegateInvite } from '@/lib/store';
-import { t, isRTL } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { SplashLoader } from '@/views/Splash';
+import { BrandLogo } from '@/components/BrandLogo';
 
 type InviteState =
 	| 'loading'
@@ -213,18 +214,9 @@ export const Invite: m.Component = {
 			return m(SplashLoader);
 		}
 
-		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
-
 		return m('.login', [
 			m('.login__card.invite__card', { role: 'status', 'aria-live': 'polite' }, [
-				m('img.login__logo', {
-					src: logoSrc,
-					alt: 'WizCol',
-					width: 72,
-					height: 72,
-					loading: 'eager',
-					decoding: 'async',
-				}),
+				m(BrandLogo, { size: 72, className: 'login__logo' }),
 				renderBody(),
 			]),
 		]);

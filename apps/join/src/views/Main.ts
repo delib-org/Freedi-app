@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { getUserState, signOut } from '@/lib/user';
-import { t, isRTL } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { parseWorkspaceId } from '@/lib/myWorkspaces';
 import {
@@ -13,6 +13,7 @@ import {
 import type { Unsubscribe } from '@/lib/firebase';
 import { createSimpleQuestion, loadQuestion, getQuestion } from '@/lib/store';
 import { createDragReorder } from '@/lib/dragReorder';
+import { BrandLogo } from '@/components/BrandLogo';
 
 let workspaces: JoinMainEntry[] = [];
 let workspacesUnsub: Unsubscribe | null = null;
@@ -217,7 +218,6 @@ export const Main: m.Component = {
 
 	view() {
 		const user = getUserState().user;
-		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 		const isGuest = !user || user.isAnonymous;
 		// Apply the optimistic post-drop ordering while the Firestore write
 		// settles, so the card stays where the user dropped it until the
@@ -227,14 +227,7 @@ export const Main: m.Component = {
 
 		return m('.main-page', [
 			m('header.main-page__header', [
-				m('img.main-page__logo', {
-					src: logoSrc,
-					alt: 'WizCol',
-					width: 48,
-					height: 48,
-					loading: 'eager',
-					decoding: 'async',
-				}),
+				m(BrandLogo, { size: 48, className: 'main-page__logo' }),
 				m(
 					'button.main-page__signout',
 					{

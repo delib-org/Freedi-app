@@ -1,7 +1,8 @@
 import m from 'mithril';
 import { signInWithGoogle, signInAsGuest, waitForAuthReady, isSignedIn } from '@/lib/user';
-import { t, isRTL } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { SplashLoader } from '@/views/Splash';
+import { BrandLogo } from '@/components/BrandLogo';
 
 let busy: 'google' | 'guest' | null = null;
 let error: string | null = null;
@@ -72,18 +73,9 @@ export const Login: m.Component = {
 			return m(SplashLoader);
 		}
 
-		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
-
 		return m('.login', [
 			m('.login__card', [
-				m('img.login__logo', {
-					src: logoSrc,
-					alt: 'WizCol',
-					width: 72,
-					height: 72,
-					loading: 'eager',
-					decoding: 'async',
-				}),
+				m(BrandLogo, { size: 72, className: 'login__logo' }),
 				m('h1.login__title', t('login.title')),
 				m('p.login__tagline', t('login.tagline')),
 				error ? m('.login__error', { role: 'alert' }, error) : null,

@@ -14,7 +14,7 @@ import {
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { markOpenedInJoin } from '@/lib/joinSubscriptions';
-import { t, isRTL } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
@@ -22,6 +22,7 @@ import { QRShare } from '@/components/QRShare';
 import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { createDragReorder } from '@/lib/dragReorder';
+import { BrandLogo } from '@/components/BrandLogo';
 import type { Unsubscribe } from '@/lib/firebase';
 
 function getStatementBody(s: Statement): string | null {
@@ -156,7 +157,6 @@ export const MainHub: m.Component = {
 		const subs = subQuestionReorder.applyOrder(subsRaw, (s) => s.statementId);
 		const currentIds = subs.map((s) => s.statementId);
 		const accentColor = main.color || 'var(--terra-500)';
-		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 		const admin = isAdmin();
 		// Participants can open a sub-question only when the facilitator has
 		// switched on hub navigation; otherwise the cards stay inert and
@@ -168,16 +168,7 @@ export const MainHub: m.Component = {
 			// Admin-only return path to /. The BackButton self-gates on
 			// `isAdmin()`, so participants visiting via a share link never see it.
 			m(BackButton, { to: '/' }),
-			m('.main-hub__brand', [
-				m('img.main-hub__logo', {
-					src: logoSrc,
-					alt: 'WizCol',
-					width: 64,
-					height: 64,
-					loading: 'eager',
-					decoding: 'async',
-				}),
-			]),
+			m('.main-hub__brand', [m(BrandLogo, { size: 64, className: 'main-hub__logo' })]),
 			m(EditableTitle, {
 				statementId: main.statementId,
 				value: main.statement,
