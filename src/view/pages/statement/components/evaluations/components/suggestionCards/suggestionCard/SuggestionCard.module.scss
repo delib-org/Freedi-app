@@ -302,8 +302,10 @@
 
 .textContent {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  // The title shares this block with any legacy inline paragraphs, so it needs
+  // more than a title's worth of room.
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: var(--font-size-md);
@@ -350,6 +352,29 @@
       background: var(--text-body);
     }
   }
+}
+
+// Body preview, sourced from the cached `description`. Set a step below the
+// title in size and colour so the card still reads title-first at a glance.
+.description {
+  margin: var(--space-2xs) 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  color: var(--text-meta);
+  overflow-wrap: break-word;
+  white-space: pre-line;
+}
+
+.descriptionExpanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
 }
 
 .showMore {

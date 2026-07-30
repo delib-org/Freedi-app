@@ -21,6 +21,7 @@ import {
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EditableStatement from '@/view/components/edit/EditableStatement';
+import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
@@ -67,6 +68,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
+	const descriptionRef = useRef<HTMLParagraphElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Early return if statement is not defined
@@ -121,8 +123,13 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					if (isExpanded) {
 						textElement.classList.add(styles.hasOverflow);
 					} else {
-						// Only show when actually overflowing
-						const isOverflowing = textContainer.scrollHeight > textContainer.clientHeight;
+						// Only show when actually overflowing. The description is
+						// clamped independently of the title, so a short title with a
+						// long body still needs the expand affordance.
+						const description = descriptionRef.current;
+						const isOverflowing =
+							textContainer.scrollHeight > textContainer.clientHeight ||
+							(!!description && description.scrollHeight > description.clientHeight);
 						if (isOverflowing) {
 							textElement.classList.add(styles.hasOverflow);
 						} else {
@@ -137,7 +144,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		const timeoutId = setTimeout(checkOverflow, 50);
 
 		return () => clearTimeout(timeoutId);
-	}, [statement?.statement, isExpanded]);
+	}, [statement?.statement, statement?.description, isExpanded]);
 
 	async function handleSetOption() {
 		try {
@@ -243,6 +250,13 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		isCardMenuOpen && styles['statement-evaluation-card--menu-open'],
 	);
 
+	// Legacy inline paragraphs are rendered by EditableStatement; newer
+	// statements keep their body in child paragraph statements and expose only
+	// this cached preview.
+	const descriptionPreview = hasParagraphsContent(statement.paragraphs)
+		? ''
+		: (statement.description ?? '').trim();
+
 	const showBadgeRow = statement.hide || showVotingWinner;
 	const showJoinRow = Boolean(enableJoining);
 	const showMetaRow =
@@ -346,6 +360,21 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 								saveButtonClassName={styles.editButtons}
 							/>
 						</div>
+
+						{/* Body preview. The rich body lives in child paragraph
+						    statements; `description` is the cached ~200-char preview
+						    of them, which is what a card should read rather than
+						    querying the children. Only rendered when there are no
+						    legacy `paragraphs` — EditableStatement already renders
+						    those above, and showing both would duplicate the text. */}
+						{descriptionPreview && (
+							<p
+								ref={descriptionRef}
+								className={`${styles.description} ${isExpanded ? styles.descriptionExpanded : ''}`}
+							>
+								{descriptionPreview}
+							</p>
+						)}
 
 						<button
 							type="button"
