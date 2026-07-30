@@ -744,6 +744,11 @@ export {
   DigestItemSchema,
   DigestContentSchema,
 
+  // Helper points
+  HelperPointsSchema,
+  HELPER_POINTS_TOTAL_SCOPE,
+  getHelperPointsId,
+
   // Pure functions
   canPerformAction,
   getRequiredLevel,
@@ -763,6 +768,7 @@ export type {
   BranchPreference,
   DigestItem,
   DigestContent,
+  HelperPoints,
 } from "./models/engagement";
 
 // Analytics models (admin stats)

@@ -80,6 +80,7 @@ import {
 	markOptionChatRead,
 	subscribeMessageCounts,
 } from './chat/messageCounts';
+import { setMyOptionIds } from './chat/authorCommentAlerts';
 
 export const getMessageCount = _getMessageCount;
 export const getNewMessageCount = _getNewMessageCount;
@@ -1508,6 +1509,11 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 		}
 
 		allOptions = incoming;
+		setMyOptionIds(
+			currentUid
+				? incoming.filter((o) => o.creatorId === currentUid).map((o) => o.statementId)
+				: [],
+		);
 		subscribeMessageCounts(allOptions.map((o) => o.statementId));
 		subscribeClusterLinks();
 		m.redraw();

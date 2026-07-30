@@ -308,6 +308,24 @@
     line-height: var(--line-height-normal);
   }
 
+  // The viewer's own helper-points total — a quiet score chip in the header
+  // that grows as their comments get marked helpful across discussions.
+  &__points-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: center;
+    margin-top: var(--space-xs);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);               // on teal-50 ~9:1 ✓ AAA
+    background: var(--teal-50);
+    border: 1px solid var(--teal-100);
+    border-radius: var(--radius-full);
+    padding: 2px 12px;
+  }
+
   // New-solutions notification pill — appears in the sticky header when fresh
   // options arrive after the initial load. User taps to flush + highlight them.
   // Centered under the title so the arrival of fresh answers reads as a
@@ -947,6 +965,20 @@
       background: var(--ink);
       color: var(--paper);
     }
+
+    // The viewer's own suggestion has unread comments — peers are giving
+    // feedback. Distinct teal treatment so it reads differently from the
+    // generic "unread messages" state on other cards.
+    &--feedback {
+      border-color: var(--teal-600);
+      background: var(--teal-50);
+      color: var(--teal-700);              // on teal-50 ~9:1 ✓ AAA
+
+      &:hover {
+        background: var(--teal-600);
+        color: var(--text-inverse);
+      }
+    }
   }
 
   &__chat-icon {
@@ -978,6 +1010,19 @@
     padding: 0 5px;
     border: 2px solid var(--bg-card);
     animation: corner-pop var(--dur-base) var(--ease-spring);
+
+    // Author-facing variant: comments on the viewer's own suggestion. Teal to
+    // match the --feedback pill, plus a gentle repeating pulse to draw the
+    // author's eye without demanding it.
+    &--author {
+      background: var(--teal-600);         // white text ~7.1:1 ✓ AAA
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation:
+          corner-pop var(--dur-base) var(--ease-spring),
+          author-badge-pulse 2.4s var(--ease-out) 3;
+      }
+    }
   }
 
   &__actions {
@@ -1620,6 +1665,117 @@
     letter-spacing: 0.02em;
     font-variant-numeric: tabular-nums;
   }
+
+  // The suggestion author marked this comment "ignore" — keep it readable but
+  // visually parked. The verdict chips stay at full opacity so the author can
+  // still change their mind.
+  &--ignored &__text,
+  &--ignored &__body,
+  &--ignored &__header {
+    opacity: 0.55;
+  }
+
+  // Helper-points star badge next to the sender's name — social proof that
+  // this participant's comments keep getting marked helpful.
+  &__points {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);               // on teal-50 ~9:1 ✓ AAA
+    background: var(--teal-50);
+    border-radius: var(--radius-full);
+    padding: 1px 8px;
+    white-space: nowrap;
+  }
+
+  // Author-only triage row: helpful / ignore toggle chips under the bubble.
+  // Rendered only for the suggestion's author on other people's comments —
+  // commenters never see these (verdicts are private working state).
+  &__verdicts {
+    display: flex;
+    gap: var(--space-xs);
+    margin-top: 6px;
+  }
+
+  &__verdict {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+    background: var(--bg-card);
+    border: 1px solid var(--ink-soft);
+    border-radius: var(--radius-full);
+    padding: 4px 10px;
+    min-height: 28px;
+    cursor: pointer;
+    transition:
+      background var(--dur-quick) var(--ease-out),
+      color var(--dur-quick) var(--ease-out),
+      border-color var(--dur-quick) var(--ease-out);
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+
+    &--on {
+      background: var(--teal-600);
+      border-color: var(--teal-600);
+      color: var(--text-inverse);           // ~7.1:1 ✓ AAA
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Chat author toolbar — shown to the suggestion's author between the chat
+// header and the messages. Surfaces the helpful-mark count and the two ways
+// to act on feedback: edit manually or ask AI for a draft grounded in the
+// comments marked helpful.
+// -----------------------------------------------------------------------------
+.chat-author-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--teal-50);
+  border-bottom: 1px solid var(--teal-100);
+
+  &__info {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+
+  &__title {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);                 // on teal-50 ~9:1 ✓ AAA
+  }
+
+  &__count {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  &__error {
+    flex-basis: 100%;
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+  }
 }
 
 // Inline link rendered by `linkify()` inside chat messages and solution-card
@@ -1843,6 +1999,18 @@
 @keyframes arrow-bounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-3px); }
+}
+
+// Gentle repeating pulse for the author-feedback corner badge — glow-only so
+// it layers cleanly on top of the one-shot corner-pop entrance. Runs a few
+// cycles then rests (iteration count set at the call site).
+@keyframes author-badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 122, 108, 0.5);
+  }
+  70%, 100% {
+    box-shadow: 0 0 0 8px rgba(26, 122, 108, 0);
+  }
 }
 
 // Soft breathing glow for the new-answers pill. Deliberately glow-only (no
@@ -2939,6 +3107,130 @@
   .facilitator-toast {
     transition: opacity var(--dur-quick, 150ms) linear;
     transform: translate(-50%, 0);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Points toast — the "+1 ⭐ helper point" celebration, appended to <body>.
+// A slower, more theatrical timeline than the facilitator toast: drops in
+// from the top edge with a spring, settles and blinks its glow twice so the
+// star registers, holds, then floats back up and away. Element lifetime is
+// POINTS_TOAST_TOTAL_MS in lib/pointsToast.ts — keep in sync.
+// -----------------------------------------------------------------------------
+.points-toast {
+  position: fixed;
+  top: var(--space-lg);
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-inverse);              // on teal-600 ~7.1:1 ✓ AAA
+  background: var(--teal-600);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  max-width: min(92vw, 30rem);
+
+  // Timeline (total ~4.5s):
+  //   0s    → 0.55s  drop in from above with a spring overshoot
+  //   0.8s  → 2.6s   two slow glow blinks while settled
+  //   3.9s  → 4.5s   rise back up and fade out (forwards holds the end state)
+  animation:
+    points-toast-drop 0.55s var(--ease-spring) both,
+    points-toast-blink 0.9s ease-in-out 0.8s 2,
+    points-toast-rise 0.6s var(--ease-out) 3.9s forwards;
+
+  &__star {
+    font-size: var(--font-size-lg);
+    line-height: 1;
+    animation: points-toast-star 0.9s ease-in-out 0.8s 2;
+  }
+
+  &__text {
+    line-height: var(--line-height-normal);
+  }
+}
+
+@keyframes points-toast-drop {
+  from {
+    transform: translate(-50%, -220%);
+    opacity: 0;
+  }
+  65% {
+    transform: translate(-50%, 10%);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+// Glow-and-lift blink: box-shadow ring swells while the pill scales a touch.
+@keyframes points-toast-blink {
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    box-shadow:
+      var(--shadow-md),
+      0 0 0 0 rgba(26, 122, 108, 0.55);
+  }
+  50% {
+    transform: translate(-50%, 0) scale(1.06);
+    box-shadow:
+      var(--shadow-md),
+      0 0 0 12px rgba(26, 122, 108, 0);
+  }
+}
+
+@keyframes points-toast-star {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.35) rotate(12deg);
+  }
+}
+
+@keyframes points-toast-rise {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -220%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .points-toast {
+    // No travel, no blinking — a plain fade in and out on the same clock.
+    animation: points-toast-fade 4.5s linear both;
+
+    &__star {
+      animation: none;
+    }
+  }
+}
+
+@keyframes points-toast-fade {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 

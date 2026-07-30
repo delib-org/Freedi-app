@@ -108,4 +108,16 @@ export const DEFAULT_CREDIT_RULES: CreditRule[] = [
 		dailyLimit: 5,
 		enabled: true,
 	},
+	{
+		// Peer-granted: a suggestion author marked this user's comment helpful.
+		// Awarded by fn_onCommentVerdictWritten with its own idempotent
+		// ledger path (flat 1 credit, revocable) — this rule entry documents
+		// the action for admin tuning UIs; the trigger does not read it.
+		ruleId: CreditAction.COMMENT_MARKED_HELPFUL,
+		action: CreditAction.COMMENT_MARKED_HELPFUL,
+		baseAmount: 1,
+		cooldownMs: 0,
+		dailyLimit: 100,
+		enabled: true,
+	},
 ];
