@@ -3072,6 +3072,130 @@
 }
 
 // -----------------------------------------------------------------------------
+// Points toast — the "+1 ⭐ helper point" celebration, appended to <body>.
+// A slower, more theatrical timeline than the facilitator toast: drops in
+// from the top edge with a spring, settles and blinks its glow twice so the
+// star registers, holds, then floats back up and away. Element lifetime is
+// POINTS_TOAST_TOTAL_MS in lib/pointsToast.ts — keep in sync.
+// -----------------------------------------------------------------------------
+.points-toast {
+  position: fixed;
+  top: var(--space-lg);
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-inverse);              // on teal-600 ~7.1:1 ✓ AAA
+  background: var(--teal-600);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  max-width: min(92vw, 30rem);
+
+  // Timeline (total ~4.5s):
+  //   0s    → 0.55s  drop in from above with a spring overshoot
+  //   0.8s  → 2.6s   two slow glow blinks while settled
+  //   3.9s  → 4.5s   rise back up and fade out (forwards holds the end state)
+  animation:
+    points-toast-drop 0.55s var(--ease-spring) both,
+    points-toast-blink 0.9s ease-in-out 0.8s 2,
+    points-toast-rise 0.6s var(--ease-out) 3.9s forwards;
+
+  &__star {
+    font-size: var(--font-size-lg);
+    line-height: 1;
+    animation: points-toast-star 0.9s ease-in-out 0.8s 2;
+  }
+
+  &__text {
+    line-height: var(--line-height-normal);
+  }
+}
+
+@keyframes points-toast-drop {
+  from {
+    transform: translate(-50%, -220%);
+    opacity: 0;
+  }
+  65% {
+    transform: translate(-50%, 10%);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+// Glow-and-lift blink: box-shadow ring swells while the pill scales a touch.
+@keyframes points-toast-blink {
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    box-shadow:
+      var(--shadow-md),
+      0 0 0 0 rgba(26, 122, 108, 0.55);
+  }
+  50% {
+    transform: translate(-50%, 0) scale(1.06);
+    box-shadow:
+      var(--shadow-md),
+      0 0 0 12px rgba(26, 122, 108, 0);
+  }
+}
+
+@keyframes points-toast-star {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.35) rotate(12deg);
+  }
+}
+
+@keyframes points-toast-rise {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -220%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .points-toast {
+    // No travel, no blinking — a plain fade in and out on the same clock.
+    animation: points-toast-fade 4.5s linear both;
+
+    &__star {
+      animation: none;
+    }
+  }
+}
+
+@keyframes points-toast-fade {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
 // Facilitator panel — admin-only side drawer for live per-question controls.
 // Opened via the pinned "Facilitate" handle on the inline-end edge. Mounted
 // alongside hub / solutions / chat so the handle persists across views.

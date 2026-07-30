@@ -18,7 +18,7 @@ import { Collections, HELPER_POINTS_TOTAL_SCOPE, getHelperPointsId } from '@free
 import { db, doc, getDoc, Unsubscribe } from './firebase';
 import { resilientOnSnapshot } from './resilientListeners';
 import { getUserState } from './user';
-import { showFacilitatorToast } from './facilitatorToast';
+import { showPointsToast } from './pointsToast';
 import { t } from './i18n';
 
 let myTotal = 0;
@@ -62,7 +62,7 @@ export function subscribeMyHelperPoints(questionId: string): Unsubscribe {
 	totalUnsub = resilientOnSnapshot('helperPoints:total', totalRef, (snap) => {
 		const points = snap.exists() ? ((snap.data() as { points?: number }).points ?? 0) : 0;
 		if (shouldToastOnPoints(myTotal, points, myTotalInitialized)) {
-			showFacilitatorToast(t('points.earned_toast'));
+			showPointsToast(t('points.earned_toast'));
 		}
 		myTotal = points;
 		myTotalInitialized = true;
