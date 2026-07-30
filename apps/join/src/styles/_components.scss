@@ -3942,6 +3942,17 @@ $facilitator-panel-width: 300px;
   // baseline and look offset inside a perfectly centered button.
   margin-block-start: -2px;
   font-weight: 600;
+  // `‹` is a bidi-mirrored character: dropped into an RTL paragraph the
+  // browser renders it flipped on its own, which fought with (and cancelled
+  // out) any glyph swap done in JS. Isolate it as an LTR run so the glyph is
+  // always drawn pointing left, then flip it explicitly for RTL below.
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+// RTL reads right-to-left, so "back" points right.
+[dir='rtl'] .back-button__chevron {
+  transform: scaleX(-1);
 }
 
 // -----------------------------------------------------------------------------
