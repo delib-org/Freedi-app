@@ -2027,6 +2027,73 @@
   line-height: 1;
 }
 
+// Floating "+" shortcut, mirroring the main app's FAB pattern: a rounded square
+// pinned to the bottom inline-end corner (LTR → bottom-right, RTL → bottom-left,
+// clear of the start-side a11y widget and back button). Additive — the inline
+// `.solutions__add-row` button stays exactly where it is; this is the
+// thumb-reachable path once the participant has scrolled into the list.
+.solutions__fab {
+  position: fixed;
+  inset-inline-end: var(--space-md);
+  bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+  // Deliberately below `.modal__overlay` (100): once the add modal opens the
+  // FAB should sit behind the blurred backdrop like the rest of the page.
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0;
+  // Same terracotta as the inline `.btn--primary` "add a suggestion" button.
+  color: var(--text-inverse);
+  background: var(--terra-600);
+  border: 1.5px solid var(--terra-600);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition:
+    transform var(--dur-quick) var(--ease-out),
+    background-color var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+
+  &:hover {
+    background: var(--terra-700);
+    border-color: var(--terra-700);
+    box-shadow: var(--shadow-lg);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.solutions__fab-icon {
+  font-size: 2rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  // The glyph's own line box sits slightly low inside the flex centre; nudging
+  // it back up keeps the crossbars visually centred in the square.
+  margin-block-start: -0.125rem;
+}
+
+// The FAB overlaps the tail of the scroll content (the WizCol footer), so make
+// room for it whenever it's rendered.
+.solutions--has-fab .solutions__scroll {
+  padding-bottom: calc(3.5rem + var(--space-xl));
+}
+
 // Discreet sign-in affordance for admins visiting anonymously — small,
 // subdued, placed where the admin toolbar would be once they're recognized.
 .solutions__admin-signin {

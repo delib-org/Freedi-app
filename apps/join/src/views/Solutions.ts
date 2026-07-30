@@ -254,8 +254,17 @@ export const Solutions: m.Component = {
 		// organizer one — they can seed the crowd list "as a regular person"
 		// regardless of whether participants are allowed to add.
 		const showAdminParticipantAdd = isAdmin();
+		// The floating "+" is a second entry point into the same participant-style
+		// add flow the inline button uses — shown whenever either inline add button
+		// is available, and hidden while its own modal is open so it doesn't linger
+		// behind the backdrop as a stray tab stop.
+		const showFab = (showUserAddButton || showAdminParticipantAdd) && !showAddSuggestion;
+		// `--has-fab` only reserves bottom scroll room for the floating button.
+		const rootSelector = `.solutions${facilitated ? '.solutions--facilitated' : ''}${
+			showFab ? '.solutions--has-fab' : ''
+		}`;
 
-		return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
+		return m(rootSelector, [
 			// Admin gets a return path: in facilitated mode that's the workspace
 			// hub; otherwise (e.g. a question created from /, or a /q share link
 			// opened by its admin) it's the join app's main page. The BackButton
@@ -513,6 +522,21 @@ export const Solutions: m.Component = {
 					})
 				: null,
 			renderEditModal(),
+			showFab
+				? m(
+						'button.solutions__fab',
+						{
+							type: 'button',
+							'aria-label': t('solutions.add_suggestion'),
+							title: t('solutions.add_suggestion'),
+							onclick: () => {
+								addAsOrganizer = false;
+								showAddSuggestion = true;
+							},
+						},
+						m('span.solutions__fab-icon', { 'aria-hidden': 'true' }, '+'),
+					)
+				: null,
 			m(FacilitatorPanel),
 		]);
 	},
