@@ -841,14 +841,14 @@
         {
           "source": "/q/**",
           "function": {
-            "functionId": "joinOg",
+            "functionId": "serveJoinShareRoutes",
             "region": "me-west1"
           }
         },
         {
           "source": "/m/**",
           "function": {
-            "functionId": "joinOg",
+            "functionId": "serveJoinShareRoutes",
             "region": "me-west1"
           }
         },

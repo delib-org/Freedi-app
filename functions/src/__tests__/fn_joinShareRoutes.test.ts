@@ -4,7 +4,7 @@ import type { Response } from 'express';
 import { Statement } from '@freedi/shared-types';
 
 /**
- * Unit tests for `joinOg` — the function that serves the Join app's share
+ * Unit tests for `serveJoinShareRoutes` — the function that serves the Join app's share
  * routes so WhatsApp/Facebook previews show the shared question and its
  * sub-questions instead of the generic app card, while humans still get the
  * untouched static app shell.
@@ -29,9 +29,9 @@ jest.mock('../utils/errorHandling', () => ({
 import {
 	extractJoinStatementId,
 	buildDescription,
-	handleJoinOg,
+	handleShareRequest,
 	__resetShellCacheForTests,
-} from '../fn_joinOgTags';
+} from '../fn_joinShareRoutes';
 
 const WHATSAPP_UA = 'WhatsApp/2.23.20.0 A';
 const BROWSER_UA =
@@ -84,7 +84,7 @@ function makeStatement(overrides: Partial<Statement> = {}): Statement {
 	} as Statement;
 }
 
-describe('fn_joinOgTags', () => {
+describe('fn_joinShareRoutes', () => {
 	describe('extractJoinStatementId', () => {
 		it('reads the question id from a plain share link', () => {
 			expect(extractJoinStatementId('/q/QID123')).toBe('QID123');
@@ -175,7 +175,7 @@ describe('fn_joinOgTags', () => {
 		});
 	});
 
-	describe('handleJoinOg', () => {
+	describe('handleShareRequest', () => {
 		const originalFetch = global.fetch;
 		const shellHtml = '<!DOCTYPE html><html><body><div id="app"></div></body></html>';
 
@@ -196,7 +196,7 @@ describe('fn_joinOgTags', () => {
 		it('serves the static app shell to real browsers without touching Firestore', async () => {
 			const { res, body, statusCode } = fakeResponse();
 
-			await handleJoinOg(fakeRequest('/m/MID', BROWSER_UA), res);
+			await handleShareRequest(fakeRequest('/m/MID', BROWSER_UA), res);
 
 			expect(statusCode()).toBe(200);
 			expect(body()).toBe(shellHtml);
@@ -204,8 +204,8 @@ describe('fn_joinOgTags', () => {
 		});
 
 		it('caches the shell so a burst of clicks costs one origin fetch', async () => {
-			await handleJoinOg(fakeRequest('/m/MID', BROWSER_UA), fakeResponse().res);
-			await handleJoinOg(fakeRequest('/m/MID', BROWSER_UA), fakeResponse().res);
+			await handleShareRequest(fakeRequest('/m/MID', BROWSER_UA), fakeResponse().res);
+			await handleShareRequest(fakeRequest('/m/MID', BROWSER_UA), fakeResponse().res);
 
 			expect(global.fetch).toHaveBeenCalledTimes(1);
 		});
@@ -218,7 +218,7 @@ describe('fn_joinOgTags', () => {
 			})) as unknown as typeof global.fetch;
 			const { res, body, statusCode } = fakeResponse();
 
-			await handleJoinOg(fakeRequest('/q/QID', BROWSER_UA), res);
+			await handleShareRequest(fakeRequest('/q/QID', BROWSER_UA), res);
 
 			expect(statusCode()).toBe(503);
 			expect(body()).toContain('http-equiv="refresh"');
@@ -238,7 +238,7 @@ describe('fn_joinOgTags', () => {
 			});
 			const { res, body, headers } = fakeResponse();
 
-			await handleJoinOg(fakeRequest('/m/MID', WHATSAPP_UA), res);
+			await handleShareRequest(fakeRequest('/m/MID', WHATSAPP_UA), res);
 
 			expect(body()).toContain('<meta property="og:title" content="Neighbourhood budget 2027">');
 			expect(body()).toContain(
@@ -264,7 +264,7 @@ describe('fn_joinOgTags', () => {
 			mockSubQuestionsGet.mockResolvedValue({ docs: [] });
 			const { res, body } = fakeResponse();
 
-			await handleJoinOg(fakeRequest('/q/QID', WHATSAPP_UA), res);
+			await handleShareRequest(fakeRequest('/q/QID', WHATSAPP_UA), res);
 
 			expect(body()).not.toContain('<script>');
 			expect(body()).toContain('Ban &quot;bots&quot; &amp; &lt;script&gt;');
@@ -274,7 +274,7 @@ describe('fn_joinOgTags', () => {
 			mockDocGet.mockResolvedValue({ exists: false });
 			const { res, body } = fakeResponse();
 
-			await handleJoinOg(fakeRequest('/q/GONE', WHATSAPP_UA), res);
+			await handleShareRequest(fakeRequest('/q/GONE', WHATSAPP_UA), res);
 
 			expect(body()).toContain('<meta property="og:title" content="WizCol-Join">');
 			expect(mockSubQuestionsGet).not.toHaveBeenCalled();
@@ -284,7 +284,7 @@ describe('fn_joinOgTags', () => {
 			mockDocGet.mockRejectedValue(new Error('firestore down'));
 			const { res, body } = fakeResponse();
 
-			await handleJoinOg(fakeRequest('/q/QID', WHATSAPP_UA), res);
+			await handleShareRequest(fakeRequest('/q/QID', WHATSAPP_UA), res);
 
 			expect(body()).toContain('<meta property="og:title" content="WizCol-Join">');
 			expect(body()).toContain('Propose, evaluate and choose solutions together.');

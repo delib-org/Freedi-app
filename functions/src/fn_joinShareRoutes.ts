@@ -1,7 +1,8 @@
 /**
- * `joinOg` — serves the Join app's share routes so link previews (WhatsApp,
- * Telegram, Facebook, Slack, …) show the *question* being shared instead of the
- * generic "WizCol-Join" card baked into `apps/join/index.html`.
+ * `serveJoinShareRoutes` — serves the Join app's share routes (`/q/**`, `/m/**`)
+ * so link previews (WhatsApp, Telegram, Facebook, Slack, …) show the *question*
+ * being shared instead of the generic "WizCol-Join" card baked into
+ * `apps/join/index.html`.
  *
  * The Join app is a Mithril SPA on Firebase Hosting, so its static
  * `index.html` carries one fixed set of OG tags and crawlers never run the JS
@@ -271,7 +272,7 @@ async function getAppShell(origin: string): Promise<string | null> {
 		return html;
 	} catch (error) {
 		logError(error, {
-			operation: 'joinOgTags.getAppShell',
+			operation: 'joinShareRoutes.getAppShell',
 			metadata: { origin, servedStale: shellCache !== null },
 		});
 
@@ -296,7 +297,7 @@ function retryHtml(): string {
 
 /** Exported for unit tests — the `onRequest` wrapper below is the only caller
  *  in production. */
-export async function handleJoinOg(req: Request, res: Response): Promise<void> {
+export async function handleShareRequest(req: Request, res: Response): Promise<void> {
 	const path = req.path || '/';
 	const host = req.headers.host || 'join.wizcol.com';
 	const protocol = (req.headers['x-forwarded-proto'] as string) || 'https';
@@ -361,7 +362,7 @@ export async function handleJoinOg(req: Request, res: Response): Promise<void> {
 		);
 	} catch (error) {
 		logError(error, {
-			operation: 'joinOgTags.handleJoinOg',
+			operation: 'joinShareRoutes.handleShareRequest',
 			statementId,
 			metadata: { path },
 		});
@@ -370,7 +371,7 @@ export async function handleJoinOg(req: Request, res: Response): Promise<void> {
 	}
 }
 
-export const joinOg = onRequest(
+export const serveJoinShareRoutes = onRequest(
 	{
 		...functionConfig,
 		timeoutSeconds: 30,
@@ -380,7 +381,7 @@ export const joinOg = onRequest(
 		minInstances: 1,
 		cors: true,
 	},
-	handleJoinOg,
+	handleShareRequest,
 );
 
 /** Test seam: the app-shell cache lives for the life of the instance, so tests
