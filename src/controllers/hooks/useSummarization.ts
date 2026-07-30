@@ -1,10 +1,18 @@
 import { useState, useCallback } from 'react';
-import { requestDiscussionSummary } from '@/controllers/db/summarization/summarizationController';
+import {
+	requestDiscussionSummary,
+	SummarizationNotReadyError,
+} from '@/controllers/db/summarization/summarizationController';
 import { logError } from '@/utils/errorHandling';
 
 interface UseSummarizationResult {
 	isGenerating: boolean;
 	error: string | null;
+	/**
+	 * 'not-ready' means the admin must configure cutoff settings before a summary
+	 * can be generated — show a prompt, not a failure. 'failed' is a real error.
+	 */
+	errorKind: 'not-ready' | 'failed' | null;
 	generateSummary: (statementId: string, customPrompt?: string) => Promise<boolean>;
 	clearError: () => void;
 }
@@ -15,12 +23,14 @@ interface UseSummarizationResult {
 export const useSummarization = (): UseSummarizationResult => {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [errorKind, setErrorKind] = useState<'not-ready' | 'failed' | null>(null);
 
 	const generateSummary = useCallback(
 		async (statementId: string, customPrompt?: string): Promise<boolean> => {
 			try {
 				setIsGenerating(true);
 				setError(null);
+				setErrorKind(null);
 
 				await requestDiscussionSummary(statementId, customPrompt);
 
@@ -30,6 +40,16 @@ export const useSummarization = (): UseSummarizationResult => {
 			} catch (err) {
 				const errorMessage = err instanceof Error ? err.message : 'Failed to generate summary';
 				setError(errorMessage);
+
+				// Missing cutoff settings is an admin configuration step, not a bug —
+				// surface it to the UI without adding noise to the error tracker.
+				if (err instanceof SummarizationNotReadyError) {
+					setErrorKind('not-ready');
+
+					return false;
+				}
+
+				setErrorKind('failed');
 				logError(err, {
 					operation: 'useSummarization.generateSummary',
 					statementId,
@@ -45,11 +65,13 @@ export const useSummarization = (): UseSummarizationResult => {
 
 	const clearError = useCallback(() => {
 		setError(null);
+		setErrorKind(null);
 	}, []);
 
 	return {
 		isGenerating,
 		error,
+		errorKind,
 		generateSummary,
 		clearError,
 	};

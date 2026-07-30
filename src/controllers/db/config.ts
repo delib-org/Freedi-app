@@ -22,9 +22,12 @@ import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import firebaseConfig from './configKey';
 import { initializeFirebaseAppCheck } from './appCheck';
 import { logError } from '@/utils/errorHandling';
-
-// Storage key to track if we've had IndexedDB issues
-const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
+import {
+	clearIndexedDBErrorRecord,
+	recordIndexedDBError,
+	setPersistentCacheEnabled,
+	shouldSkipIndexedDB,
+} from '@/utils/firestorePersistenceFallback';
 
 // Helper to detect iOS devices
 function isIOS(): boolean {
@@ -58,41 +61,13 @@ async function isIndexedDBAvailable(): Promise<boolean> {
 	}
 }
 
-// Check if we should skip IndexedDB due to previous errors
-function shouldSkipIndexedDB(): boolean {
-	try {
-		const errorData = localStorage.getItem(INDEXEDDB_ERROR_KEY);
-		if (errorData) {
-			const { timestamp, count } = JSON.parse(errorData);
-			const hoursSinceError = (Date.now() - timestamp) / (1000 * 60 * 60);
-			// Reset after 24 hours to allow retry
-			if (hoursSinceError > 24) {
-				localStorage.removeItem(INDEXEDDB_ERROR_KEY);
+function initializeWithMemoryCache(app: ReturnType<typeof initializeApp>): Firestore {
+	setPersistentCacheEnabled(false);
 
-				return false;
-			}
-			// Skip IndexedDB if we've had multiple errors recently
-
-			return count >= 2;
-		}
-	} catch {
-		// Ignore localStorage errors
-	}
-
-	return false;
-}
-
-// Record an IndexedDB error for future reference
-function recordIndexedDBError(): void {
-	try {
-		const existing = localStorage.getItem(INDEXEDDB_ERROR_KEY);
-		const data = existing ? JSON.parse(existing) : { count: 0 };
-		data.timestamp = Date.now();
-		data.count = (data.count || 0) + 1;
-		localStorage.setItem(INDEXEDDB_ERROR_KEY, JSON.stringify(data));
-	} catch {
-		// Ignore localStorage errors
-	}
+	return initializeFirestore(app, {
+		experimentalAutoDetectLongPolling: true,
+		localCache: memoryLocalCache(),
+	});
 }
 
 // Initialize Firestore with appropriate cache settings based on platform
@@ -106,41 +81,37 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 			'Localhost detected: Using memory-only cache for Firestore (fresh data on refresh)',
 		);
 
-		return initializeFirestore(app, {
-			experimentalAutoDetectLongPolling: true,
-			localCache: memoryLocalCache(),
-		});
+		return initializeWithMemoryCache(app);
 	}
 
 	// iOS Safari has issues with IndexedDB, use memory-only cache
 	if (isIOSDevice) {
 		console.info('iOS detected: Using memory-only cache for Firestore');
 
-		return initializeFirestore(app, {
-			experimentalAutoDetectLongPolling: true,
-			localCache: memoryLocalCache(),
-		});
+		return initializeWithMemoryCache(app);
 	}
 
-	// Skip IndexedDB if we've had repeated assertion errors
+	// Skip IndexedDB if a previous load hit an assertion/persistence error.
+	// The Firestore internal-assertion bug is not self-healing, so retrying the
+	// persistent cache just reproduces the crash for this user.
 	if (shouldSkipIndexedDB()) {
 		console.info('Previous IndexedDB errors detected: Using memory-only cache');
 
-		return initializeFirestore(app, {
-			experimentalAutoDetectLongPolling: true,
-			localCache: memoryLocalCache(),
-		});
+		return initializeWithMemoryCache(app);
 	}
 
 	// For other browsers, use multi-tab manager to allow multiple tabs
 	// Single-tab manager causes "Failed to obtain exclusive access" errors
 	try {
-		return initializeFirestore(app, {
+		const firestore = initializeFirestore(app, {
 			experimentalAutoDetectLongPolling: true,
 			localCache: persistentLocalCache({
 				tabManager: persistentMultipleTabManager(),
 			}),
 		});
+		setPersistentCacheEnabled(true);
+
+		return firestore;
 	} catch (error) {
 		logError(error, {
 			operation: 'config.initializeFirestoreDB',
@@ -150,10 +121,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 		});
 		recordIndexedDBError();
 
-		return initializeFirestore(app, {
-			experimentalAutoDetectLongPolling: true,
-			localCache: memoryLocalCache(),
-		});
+		return initializeWithMemoryCache(app);
 	}
 }
 
@@ -164,7 +132,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 export async function clearFirestorePersistence(): Promise<void> {
 	try {
 		await clearIndexedDbPersistence(FireStore);
-		localStorage.removeItem(INDEXEDDB_ERROR_KEY);
+		clearIndexedDBErrorRecord();
 		console.info('Firestore IndexedDB persistence cleared successfully');
 	} catch (error) {
 		logError(error, {

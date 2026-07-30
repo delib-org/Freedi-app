@@ -100,14 +100,20 @@ export class NotificationService {
 			// Initialize Firebase Messaging
 			const messagingResult = await initializeMessaging();
 			if (!messagingResult.success) {
-				logError(
-					new Error(
-						`[NotificationService] Failed to initialize messaging: ${messagingResult.reason}`,
-					),
-					{
-						operation: 'services.notificationService.initialize',
-					},
-				);
+				if (messagingResult.unsupported) {
+					// Expected on unsupported platforms (iOS outside PWA mode, browsers
+					// without Push APIs). Skip silently instead of reporting an error.
+					console.info(`[NotificationService] Messaging unavailable: ${messagingResult.reason}`);
+				} else {
+					logError(
+						new Error(
+							`[NotificationService] Failed to initialize messaging: ${messagingResult.reason}`,
+						),
+						{
+							operation: 'services.notificationService.initialize',
+						},
+					);
+				}
 
 				return;
 			}

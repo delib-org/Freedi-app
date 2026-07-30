@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "moderationLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "topParentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "statements",
       "queryScope": "COLLECTION",
       "fields": [

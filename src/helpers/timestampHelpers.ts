@@ -75,9 +75,41 @@ export function preprocessFirestoreData(data: unknown): unknown {
 }
 
 /**
+ * Recursively remove properties whose value is `null`.
+ *
+ * Firestore happily stores explicit nulls, but valibot's `optional(...)` only
+ * accepts `undefined` — a stored `null` fails with "Invalid type: Expected number
+ * but received null" and drops the whole document. Semantically a null in these
+ * documents means "no value", which is exactly an absent key, so stripping is the
+ * faithful conversion. Required fields are unaffected: they are either present
+ * with a real value, or already patched by the callers below.
+ *
+ * Arrays keep their length (a null element becomes `undefined`) so that any
+ * positional meaning is preserved.
+ */
+export function stripNullValues(data: unknown): unknown {
+	if (data === null) return undefined;
+	if (typeof data !== 'object') return data;
+	if (data instanceof Date) return data;
+
+	if (Array.isArray(data)) {
+		return data.map((item) => stripNullValues(item));
+	}
+
+	const result: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+		if (value === null) continue;
+		result[key] = stripNullValues(value);
+	}
+
+	return result;
+}
+
+/**
  * Normalize statement data before valibot parsing
  * - Converts timestamps to milliseconds
  * - Fills in missing topParentId for legacy data
+ * - Strips stored nulls that optional() would reject
  *
  * This handles old Firestore documents that may not have topParentId set
  */
@@ -131,5 +163,7 @@ export function normalizeStatementData(data: unknown): unknown {
 		}
 	}
 
-	return obj;
+	// Done last so the targeted null patches above (consensus, createdAt,
+	// lastUpdate) still get their defaults before the rest are dropped.
+	return stripNullValues(obj);
 }

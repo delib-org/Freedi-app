@@ -2,6 +2,7 @@
  * User management utilities for Sign app
  * Supports both Firebase Auth and anonymous users
  */
+import { safeLocalStorage } from './safeStorage';
 
 const USER_ID_KEY = 'signUserId';
 const FIREBASE_USER_KEY = 'firebaseUser';
@@ -22,11 +23,11 @@ export function getOrCreateAnonymousUser(): string {
     throw new Error('getOrCreateAnonymousUser can only be called on client-side');
   }
 
-  let userId = localStorage.getItem(USER_ID_KEY);
+  let userId = safeLocalStorage.getItem(USER_ID_KEY);
 
   if (!userId) {
     userId = generateAnonymousUserId();
-    localStorage.setItem(USER_ID_KEY, userId);
+    safeLocalStorage.setItem(USER_ID_KEY, userId);
   }
 
   // Cookie is now set by middleware (HttpOnly _uid cookie)
@@ -43,8 +44,8 @@ export function setFirebaseUser(user: { uid: string; displayName: string | null;
 
   // Store in localStorage for client-side access (display purposes only)
   // Do NOT store email — PII should not persist in browser storage
-  localStorage.setItem(FIREBASE_USER_KEY, JSON.stringify({ uid: user.uid, displayName: user.displayName }));
-  localStorage.setItem(USER_ID_KEY, user.uid);
+  safeLocalStorage.setItem(FIREBASE_USER_KEY, JSON.stringify({ uid: user.uid, displayName: user.displayName }));
+  safeLocalStorage.setItem(USER_ID_KEY, user.uid);
 
   // Set legacy cookies for server-side access
   // The authoritative _uid HttpOnly cookie is set by middleware
@@ -60,8 +61,8 @@ export function setFirebaseUser(user: { uid: string; displayName: string | null;
 export function clearUserData(): void {
   if (typeof window === 'undefined') return;
 
-  localStorage.removeItem(USER_ID_KEY);
-  localStorage.removeItem(FIREBASE_USER_KEY);
+  safeLocalStorage.removeItem(USER_ID_KEY);
+  safeLocalStorage.removeItem(FIREBASE_USER_KEY);
 
   // Clear cookies
   document.cookie = 'userId=; path=/; max-age=0';
@@ -177,7 +178,7 @@ export function isAnonymousUser(userId: string): boolean {
   // which indicates a Firebase anonymous auth user
   if (typeof window !== 'undefined') {
     try {
-      const storedUser = localStorage.getItem(FIREBASE_USER_KEY);
+      const storedUser = safeLocalStorage.getItem(FIREBASE_USER_KEY);
       if (storedUser) {
         const parsed = JSON.parse(storedUser) as { uid: string; email: string | null };
         if (parsed.uid === userId && !parsed.email) return true;

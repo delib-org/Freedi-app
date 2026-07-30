@@ -1,103 +1,104 @@
-import { logError } from '@/utils/errorHandling';
 /**
- * Global error handler for IndexedDB connection errors
- * Prevents app crashes from IndexedDB failures, especially on iOS Safari
+ * Global error handler for IndexedDB / Firestore persistence errors.
+ *
+ * Goal: keep the app alive when the local persistence layer misbehaves
+ * (iOS Safari, private browsing, multi-tab conflicts, Firestore SDK internal
+ * assertion bugs) WITHOUT triggering a reload storm.
+ *
+ * History: this handler used to respond to every Firestore
+ * "INTERNAL ASSERTION FAILED" by deleting hard-coded IndexedDB databases and
+ * calling `window.location.reload()`. The database names were stale (they named
+ * `delib-5` / `freedi-test`, never the live `wizcol-app` project), so the delete
+ * was a no-op and the reload simply replayed the same failure — producing the
+ * "Max recovery attempts reached" errors seen in Sentry. Reloading never fixes
+ * the SDK assertion bug, so we no longer reload for it: we record the failure so
+ * the next load starts in memory-cache mode, and otherwise degrade quietly.
  */
+import { logError } from '@/utils/errorHandling';
+import { safeSessionStorage } from '@/utils/safeStorage';
+import {
+	clearIndexedDBErrorRecord,
+	isPersistentCacheEnabled,
+	recordIndexedDBError,
+} from '@/utils/firestorePersistenceFallback';
 
-// Key for tracking recovery attempts in sessionStorage
-const RECOVERY_ATTEMPT_KEY = 'firestore_recovery_attempt';
-const RECOVERY_TIMESTAMP_KEY = 'firestore_recovery_timestamp';
-const MAX_RECOVERY_ATTEMPTS = 2;
-const RECOVERY_COOLDOWN_MS = 60000; // 1 minute cooldown between recovery attempts
+// Marks that we already ran a hard recovery in this tab, so we never loop.
+const RECOVERY_DONE_KEY = 'firestore_recovery_done';
 
-// Key for tracking IndexedDB errors to skip persistence on next load
-const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
+// How many assertion errors we report to the error tracker per page load.
+// The SDK can fire the same assertion dozens of times once it is in a bad
+// state; reporting each one buries the signal and inflates Sentry volume.
+const MAX_REPORTED_ASSERTIONS = 1;
+
+let reportedAssertions = 0;
+let degradedNoticeLogged = false;
 
 export function setupIndexedDBErrorHandler(): void {
-	// Listen for unhandled promise rejections that might be IndexedDB-related
+	// Unhandled promise rejections that might be IndexedDB-related
 	window.addEventListener('unhandledrejection', (event) => {
-		const error = event.reason;
-
-		// Check if this is an IndexedDB-related error
-		if (isIndexedDBError(error)) {
-			logError(error, {
-				operation: 'utils.indexedDBErrorHandler.setupIndexedDBErrorHandler',
-				metadata: { message: 'IndexedDB error detected:' },
-			});
-
+		if (handlePersistenceError(event.reason)) {
 			// Prevent the error from crashing the app
 			event.preventDefault();
-
-			// Record Firestore assertion errors for memory cache fallback
-			if (isFirestoreAssertionError(error)) {
-				recordIndexedDBError();
-			}
-
-			// Check if this is a multi-tab persistence error and attempt recovery
-			if (isMultiTabPersistenceError(error) || isFirestoreAssertionError(error)) {
-				attemptRecovery();
-			} else {
-				// Log user-friendly message for other IndexedDB errors
-				logUserFriendlyError();
-			}
 		}
 	});
 
-	// Also listen for regular errors (Firestore assertion errors come through error events)
+	// Firestore assertion errors also surface through plain error events
 	window.addEventListener('error', (event) => {
-		const error = event.error;
-		if (isFirestoreAssertionError(error)) {
-			logError(error, {
-				operation: 'utils.indexedDBErrorHandler.unknown',
-				metadata: { message: 'Firestore assertion error detected:' },
-			});
+		if (handlePersistenceError(event.error)) {
 			event.preventDefault();
-			recordIndexedDBError();
-			attemptRecovery();
 		}
 	});
-
-	// Clear recovery counter on successful app load (after 5 seconds)
-	setTimeout(() => {
-		sessionStorage.removeItem(RECOVERY_ATTEMPT_KEY);
-	}, 5000);
 
 	console.info('[IndexedDB Error Handler] Initialized');
 }
 
 /**
- * Attempt to recover from persistence errors with protection against infinite loops
+ * Central triage for a candidate persistence error.
+ * Returns true when the error was recognised and handled (caller should
+ * suppress it), false when it should bubble up normally.
  */
-function attemptRecovery(): void {
-	const attemptCount = parseInt(sessionStorage.getItem(RECOVERY_ATTEMPT_KEY) || '0', 10);
-	const lastAttempt = parseInt(sessionStorage.getItem(RECOVERY_TIMESTAMP_KEY) || '0', 10);
-	const now = Date.now();
+function handlePersistenceError(error: unknown): boolean {
+	if (!isIndexedDBError(error)) return false;
 
-	// Check if we're in cooldown period
-	if (now - lastAttempt < RECOVERY_COOLDOWN_MS && attemptCount >= MAX_RECOVERY_ATTEMPTS) {
-		logError(
-			new Error('Max recovery attempts reached. Please close other tabs and refresh manually.'),
-			{ operation: 'indexedDBErrorHandler.attemptRecovery' },
-		);
-		logUserFriendlyError();
+	const assertion = isFirestoreAssertionError(error);
 
-		return;
+	// Report at most once per page load — repeats carry no extra information.
+	if (reportedAssertions < MAX_REPORTED_ASSERTIONS) {
+		reportedAssertions++;
+		logError(error, {
+			operation: 'utils.indexedDBErrorHandler.handlePersistenceError',
+			metadata: {
+				message: 'Firestore persistence error detected',
+				isAssertion: assertion,
+				persistentCacheEnabled: isPersistentCacheEnabled(),
+			},
+		});
 	}
 
-	// Reset counter if cooldown has passed
-	if (now - lastAttempt >= RECOVERY_COOLDOWN_MS) {
-		sessionStorage.setItem(RECOVERY_ATTEMPT_KEY, '1');
-	} else {
-		sessionStorage.setItem(RECOVERY_ATTEMPT_KEY, String(attemptCount + 1));
+	if (assertion) {
+		// Tell the next page load to start in memory-cache mode. This is the only
+		// thing that actually helps: the SDK cannot recover in-place, but a fresh
+		// load without the persistent tab manager avoids the bug entirely.
+		recordIndexedDBError();
 	}
-	sessionStorage.setItem(RECOVERY_TIMESTAMP_KEY, String(now));
 
-	console.info(`[IndexedDB Recovery] Attempt ${attemptCount + 1}/${MAX_RECOVERY_ATTEMPTS}`);
-	handleMultiTabPersistenceError();
+	// A genuine multi-tab exclusive-access conflict IS recoverable by clearing
+	// the local database, but only when we were actually using it, and only once
+	// per tab — anything more is a reload storm.
+	if (isMultiTabPersistenceError(error) && isPersistentCacheEnabled() && !hasRecovered()) {
+		markRecovered();
+		void recoverFromMultiTabConflict();
+
+		return true;
+	}
+
+	logDegradedMode();
+
+	return true;
 }
 
 /**
- * Check if an error is related to IndexedDB
+ * Check if an error is related to IndexedDB / Firestore persistence
  */
 function isIndexedDBError(error: unknown): boolean {
 	if (!error) return false;
@@ -120,13 +121,13 @@ function isIndexedDBError(error: unknown): boolean {
 		'exclusive access',
 		'persistence layer',
 		'multi-tab synchronization',
-		// Firestore internal assertion errors (known bug with persistentMultipleTabManager)
+		// Firestore internal assertion errors (known SDK bug, see file header)
 		'INTERNAL ASSERTION FAILED',
 		'Unexpected state',
 	];
 
 	// Check for Firestore persistence error codes
-	const firestoreErrorCodes = ['failed-precondition', 'unavailable', 'aborted'];
+	const firestoreErrorCodes = ['failed-precondition', 'aborted'];
 
 	return (
 		indexedDBPatterns.some((pattern) =>
@@ -137,44 +138,14 @@ function isIndexedDBError(error: unknown): boolean {
 }
 
 /**
- * Check if this is a Firestore internal assertion error
- * These are known bugs in Firebase SDK related to multi-tab persistence
+ * Check if this is a Firestore internal assertion error.
+ * These are known bugs in the Firebase SDK's persistence/target layer.
  */
 function isFirestoreAssertionError(error: unknown): boolean {
 	if (!error) return false;
 	const errorMessage = error instanceof Error ? error.message : String(error);
 
 	return errorMessage.includes('INTERNAL ASSERTION FAILED');
-}
-
-/**
- * Record IndexedDB error to localStorage to skip persistence on next load
- */
-function recordIndexedDBError(): void {
-	try {
-		const existing = localStorage.getItem(INDEXEDDB_ERROR_KEY);
-		const data = existing ? JSON.parse(existing) : { count: 0 };
-		data.timestamp = Date.now();
-		data.count = (data.count || 0) + 1;
-		localStorage.setItem(INDEXEDDB_ERROR_KEY, JSON.stringify(data));
-		console.info('[IndexedDB Recovery] Error recorded, will use memory cache on next load');
-	} catch {
-		// Ignore localStorage errors
-	}
-}
-
-/**
- * Log a user-friendly error message to the console
- * In the future, this could show a toast notification
- */
-function logUserFriendlyError(): void {
-	console.info(
-		'[App] Running in limited mode. Offline features may be unavailable. ' +
-			'This is common on iOS Safari and private browsing mode.',
-	);
-
-	// TODO: Add toast notification when UI toast system is available
-	// Example: toast.info('App running in limited mode. Offline features temporarily disabled.')
 }
 
 /**
@@ -188,46 +159,100 @@ function isMultiTabPersistenceError(error: unknown): boolean {
 	return errorMessage.includes('exclusive access') || errorMessage.includes('persistence layer');
 }
 
-/**
- * Clear Firestore IndexedDB databases to recover from persistence conflicts
- * This is a last-resort recovery mechanism
- */
-async function clearFirestoreIndexedDB(): Promise<void> {
-	const dbsToDelete = [
-		'firestore/[DEFAULT]/freedi-test/main', // Testing env
-		'firestore/[DEFAULT]/delib-5/main', // Production env
-	];
+function hasRecovered(): boolean {
+	return safeSessionStorage.getItem(RECOVERY_DONE_KEY) === '1';
+}
 
-	for (const dbName of dbsToDelete) {
-		try {
-			await new Promise<void>((resolve, reject) => {
-				const request = indexedDB.deleteDatabase(dbName);
-				request.onsuccess = () => resolve();
-				request.onerror = () => reject(request.error);
-				request.onblocked = () => {
-					console.info(
-						`[IndexedDB Recovery] Database ${dbName} is blocked, will retry after reload`,
-					);
-					resolve();
-				};
-			});
-			console.info(`[IndexedDB Recovery] Cleared database: ${dbName}`);
-		} catch {
-			// Ignore errors - database might not exist
-		}
-	}
+function markRecovered(): void {
+	safeSessionStorage.setItem(RECOVERY_DONE_KEY, '1');
 }
 
 /**
- * Handle multi-tab persistence errors with recovery option
+ * Log a user-friendly message once per page load.
+ */
+function logDegradedMode(): void {
+	if (degradedNoticeLogged) return;
+	degradedNoticeLogged = true;
+
+	console.info(
+		'[App] Running in limited mode. Offline features may be unavailable. ' +
+			'This is common on iOS Safari and private browsing mode.',
+	);
+}
+
+/**
+ * Delete the Firestore IndexedDB databases for the current project.
+ *
+ * The database name format is `firestore/{appName}/{projectId}/main`. We derive
+ * it from the live config rather than hard-coding project ids, and additionally
+ * sweep any `firestore/*` databases the browser reports so stale databases from
+ * an earlier project id are cleaned up too.
+ */
+async function clearFirestoreIndexedDB(): Promise<void> {
+	const names = new Set<string>();
+
+	const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+	if (projectId) {
+		names.add(`firestore/[DEFAULT]/${projectId}/main`);
+	}
+
+	// `indexedDB.databases()` is unavailable in Firefox/Safari — best effort only.
+	try {
+		const databases = await indexedDB.databases?.();
+		databases?.forEach((db) => {
+			if (db.name?.startsWith('firestore/')) names.add(db.name);
+		});
+	} catch {
+		// Enumeration not supported — the derived name above is our fallback.
+	}
+
+	await Promise.all(
+		Array.from(names).map(
+			(dbName) =>
+				new Promise<void>((resolve) => {
+					try {
+						const request = indexedDB.deleteDatabase(dbName);
+						request.onsuccess = () => {
+							console.info(`[IndexedDB Recovery] Cleared database: ${dbName}`);
+							resolve();
+						};
+						request.onerror = () => resolve();
+						request.onblocked = () => {
+							console.info(`[IndexedDB Recovery] Database ${dbName} is blocked by another tab`);
+							resolve();
+						};
+					} catch {
+						resolve();
+					}
+				}),
+		),
+	);
+}
+
+/**
+ * Recover from a multi-tab persistence conflict: clear the local database and
+ * reload once so Firestore re-initialises. Only ever called once per tab.
  */
 export async function handleMultiTabPersistenceError(): Promise<void> {
-	console.info('[IndexedDB Recovery] Attempting to recover from multi-tab persistence conflict...');
+	await recoverFromMultiTabConflict();
+}
 
-	// Try to clear the IndexedDB databases
+async function recoverFromMultiTabConflict(): Promise<void> {
+	console.info('[IndexedDB Recovery] Recovering from multi-tab persistence conflict...');
+
+	// Make sure the next load skips persistence even if the reload is interrupted.
+	recordIndexedDBError();
 	await clearFirestoreIndexedDB();
 
-	// Reload the page to reinitialize Firestore
 	console.info('[IndexedDB Recovery] Reloading page to reinitialize Firestore...');
 	window.location.reload();
+}
+
+/**
+ * Clear the "skip persistence" marker so the app retries IndexedDB on next load.
+ * Exposed for support/debugging.
+ */
+export function resetPersistenceFallback(): void {
+	clearIndexedDBErrorRecord();
+	safeSessionStorage.removeItem(RECOVERY_DONE_KEY);
 }

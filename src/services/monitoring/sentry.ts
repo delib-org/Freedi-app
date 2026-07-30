@@ -3,6 +3,41 @@ import { useLocation, useNavigationType } from 'react-router';
 import React, { useEffect } from 'react';
 import { logError } from '@/utils/errorHandling';
 
+// Null-dereference messages the Firestore SDK throws from its own persistence /
+// target layer (`removeTarget`, LRU garbage collection). Harmless to drop only
+// when the frames really are inside the Firestore bundle — see isFirestoreInternalCrash.
+const FIRESTORE_INTERNAL_MESSAGES = [
+	'INTERNAL ASSERTION FAILED',
+	"Cannot read properties of null (reading 'target')",
+	"Cannot read properties of null (reading 'withSequenceNumber')",
+];
+
+/**
+ * True when the event is one of the Firestore SDK's internal persistence crashes.
+ * Requires both a known message and a stack rooted in the Firestore vendor chunk,
+ * so app-code null-dereferences with a similar message still get reported.
+ */
+function isFirestoreInternalCrash(event: Sentry.ErrorEvent, error: unknown): boolean {
+	const messages: string[] = [];
+	if (error instanceof Error && error.message) messages.push(error.message);
+	event.exception?.values?.forEach((exc) => {
+		if (exc.value) messages.push(exc.value);
+	});
+
+	const hasKnownMessage = messages.some((msg) =>
+		FIRESTORE_INTERNAL_MESSAGES.some((known) => msg.includes(known)),
+	);
+	if (!hasKnownMessage) return false;
+
+	const frames = event.exception?.values?.flatMap((exc) => exc.stacktrace?.frames ?? []) ?? [];
+	if (frames.length === 0) {
+		// Assertion errors carry their own unmistakable prefix even without a stack.
+		return messages.some((msg) => msg.includes('INTERNAL ASSERTION FAILED'));
+	}
+
+	return frames.every((frame) => (frame.filename ?? '').includes('vendor-firebase'));
+}
+
 export function initSentry() {
 	const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
 
@@ -70,6 +105,17 @@ export function initSentry() {
 						);
 					})
 				) {
+					return null;
+				}
+
+				// Filter out the Firestore SDK's internal persistence crashes.
+				// These fire from inside the minified Firestore bundle when its local
+				// target/persistence layer gets into a bad state. They are not fixable
+				// from app code and repeat dozens of times per bad session.
+				// `indexedDBErrorHandler` catches them, records the failure so the next
+				// load uses the memory cache, and reports a single structured event
+				// instead — that is the signal to watch.
+				if (isFirestoreInternalCrash(event, error)) {
 					return null;
 				}
 
