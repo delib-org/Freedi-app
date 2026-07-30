@@ -83,7 +83,7 @@ const MultiStageQuestion: FC = () => {
 			)}
 
 			{!hasStages ? (
-				<StagePage showStageTitle={false} showBottomNav={!(isOption && isPopperHebbianEnabled)} />
+				<StagePage showBottomNav={!(isOption && isPopperHebbianEnabled)} />
 			) : (
 				<div className={styles.stagesWrapper}>
 					<IntroductionSection statement={statement} />

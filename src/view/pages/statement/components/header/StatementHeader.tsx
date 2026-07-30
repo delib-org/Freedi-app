@@ -18,8 +18,6 @@ import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/Se
 import ParticipationFunnel from '@/view/components/atomic/atoms/ParticipationFunnel/ParticipationFunnel';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
 import { useParticipationStats } from '@/controllers/hooks/useParticipationStats';
-import TreeFilterChips from '../treeView/components/TreeFilterChips/TreeFilterChips';
-import { useTreeFilterOptional } from '../treeView/TreeFilterContext';
 import { StatementContext } from '../../StatementCont';
 import {
 	statementSubsSelector,
@@ -43,7 +41,6 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 	const { statement } = useContext(StatementContext);
 	const { role } = useAuthorization(statement?.statementId);
 	const isAdmin = role === Role.admin || role === Role.creator;
-	const treeFilter = useTreeFilterOptional();
 
 	// Nav state
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
@@ -230,7 +227,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 									</button>
 									{!headerCollapsed && (
 										<div className={styles.headerCollapsible}>
-											{isQuestion && (
+											{isQuestion && isAdmin && (
 												<ParticipationFunnel
 													entered={participation.entered}
 													suggested={participation.suggested}
@@ -257,7 +254,12 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 											callToAction={t('Share your thoughts below')}
 										/>
 									)}
-									{isQuestion && (
+									{/* Facilitator metric, not a participant one: the tab
+									    counts already tell a participant how much is here,
+									    and this was costing a full band above the fold on
+									    every visit. useParticipationStats still runs for
+									    everyone — it records the "entered" event. */}
+									{isQuestion && isAdmin && (
 										<ParticipationFunnel
 											entered={participation.entered}
 											suggested={participation.suggested}
@@ -276,14 +278,10 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 								</>
 							)}
 
-							{treeFilter && showSegmentedControl && (
-								<TreeFilterChips
-									activeFilter={treeFilter.filterMode}
-									onFilterChange={treeFilter.setFilterMode}
-									onToggleCollapse={treeFilter.toggleCollapseExpand}
-									isCollapsed={treeFilter.isCollapsed}
-								/>
-							)}
+							{/* The filter chips used to render here, gated only on
+							    showSegmentedControl — so they appeared on the Discussion
+							    tab too, offering to filter a list that tab does not have.
+							    They now live in ListToolbar, inside the list they act on. */}
 						</div>
 					</div>
 				</div>

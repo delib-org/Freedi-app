@@ -29,7 +29,8 @@ import styles from './SuggestionCards.module.scss';
 import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
 import { LoadAllBanner } from '@/view/components/atomic/molecules/LoadAllBanner';
 import { SectionDivider } from '@/view/components/atomic/molecules/SectionDivider';
-import { ViewLayersToggle } from '@/view/components/atomic/molecules/ViewLayersToggle';
+import { ListToolbar } from '@/view/components/atomic/molecules/ListToolbar';
+import { useTreeFilterOptional } from '../../../treeView/TreeFilterContext';
 import {
 	createViewLayersDataSelector,
 	composeViewLayers,
@@ -125,6 +126,7 @@ const SuggestionCards: FC = () => {
 		creator?.uid === parentSubscription?.statement?.creatorId ||
 		parentSubscription?.role === Role.admin;
 	const { showHiddenCards } = useShowHiddenCards();
+	const treeFilter = useTreeFilterOptional();
 	// Lazy-load older options as the user scrolls the list (the page subscription
 	// only loads the newest window; this pages in the rest on demand).
 	const { sentinelRef, isLoadingMore, hasMore } = useLazyLoadOptions(statementId);
@@ -257,15 +259,25 @@ const SuggestionCards: FC = () => {
 
 	return (
 		<>
-			<ViewLayersToggle
-				layers={effectiveLayers}
-				available={availableLayers}
-				onChange={setLayers}
-				isAdmin={isAdmin}
-				onSetDefault={handleSetDefault}
-				hasUserOverride={hasUserOverride}
-				onReset={resetToDefault}
-			/>
+			{/* One band of list controls. Filters, view layers and participation
+			    stats used to occupy three separate bands above the list — the
+			    filter chips even rendered on the Discussion tab, which has no
+			    list for them to filter. */}
+			{treeFilter && (
+				<ListToolbar
+					filterMode={treeFilter.filterMode}
+					onFilterChange={treeFilter.setFilterMode}
+					onToggleCollapse={treeFilter.toggleCollapseExpand}
+					isCollapsed={treeFilter.isCollapsed}
+					layers={effectiveLayers}
+					availableLayers={availableLayers}
+					onLayersChange={setLayers}
+					isAdmin={isAdmin}
+					onSetLayersDefault={handleSetDefault}
+					hasLayersOverride={hasUserOverride}
+					onResetLayers={resetToDefault}
+				/>
+			)}
 
 			<LoadAllBanner rootId={statement.statementId} mode="direct" />
 

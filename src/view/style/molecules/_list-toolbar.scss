@@ -1,0 +1,226 @@
+@import '../mixins';
+
+// =============================================================================
+// List toolbar
+//
+// One row of list controls, replacing three stacked bands (a permanent four-chip
+// filter row, a full-width "VIEW LAYERS" card, and a participation stats line).
+//
+// Resting state is transparent — a control strip should not read as a card
+// floating over the list it controls.
+// =============================================================================
+
+.list-toolbar {
+  width: 100%;
+  margin-bottom: var(--space-xs);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    min-height: 44px;
+    flex-wrap: wrap;
+  }
+
+  &__spacer {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  // --- Filter trigger -------------------------------------------------------
+
+  &__sheet-anchor {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  &__trigger {
+    @include hit-target;
+
+    gap: var(--space-2xs);
+    padding: 0 var(--space-sm);
+    border: var(--hairline);
+    border-radius: var(--radius-pill);
+    background: var(--card-default);
+    color: var(--text-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--motion-ease);
+
+    &:hover {
+      background: var(--bg-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+
+    // Non-default filter is a state the user must be able to notice at a
+    // glance — otherwise a filtered list reads as an empty one.
+    &--active {
+      border-color: var(--btn-primary);
+      color: var(--btn-primary);
+    }
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--btn-primary);
+    flex-shrink: 0;
+  }
+
+  // --- Sheet ----------------------------------------------------------------
+
+  &__sheet {
+    position: absolute;
+    inset-block-start: calc(100% + var(--space-2xs));
+    inset-inline-start: 0;
+    z-index: 30;
+    min-width: 15rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--card-default);
+    border: var(--hairline);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-3);
+
+    // Full-width bottom sheet on touch, where a small anchored popover is hard
+    // to hit and easy to dismiss by accident.
+    @include mobile {
+      position: fixed;
+      inset-block-start: auto;
+      inset-block-end: 0;
+      inset-inline: 0;
+      min-width: 0;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: var(--space-md);
+      padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  &__section-label {
+    margin: 0;
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-caps);
+    text-transform: uppercase;
+    color: var(--text-meta);
+  }
+
+  // Participation stats are inline-only on desktop; inside the sheet they are
+  // already under their own heading.
+  &__section--stats {
+    @include desktop {
+      display: none;
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    min-height: 36px;
+    padding: 0 var(--space-sm);
+    border: var(--hairline);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-body);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--motion-ease);
+
+    &:hover {
+      background: var(--bg-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+
+    &--active {
+      background: var(--btn-primary);
+      border-color: var(--btn-primary);
+      color: var(--btn-primary-text);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+
+  // --- Inline slots ---------------------------------------------------------
+
+  // The layers control is a bare chip group here — the standalone card and its
+  // "VIEW LAYERS" caption are gone; the chips are self-explanatory in context.
+  &__layers {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+
+    .view-layers-toggle__label {
+      @include visually-hidden;
+    }
+  }
+
+  &__stats {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    color: var(--text-meta);
+    white-space: nowrap;
+
+    // Below desktop the stats live in the sheet instead — an at-a-glance
+    // number is not worth a line of its own on a phone.
+    @media screen and (max-width: 1024px) {
+      display: none;
+    }
+  }
+
+  &__icon-btn {
+    @include hit-target;
+
+    flex-shrink: 0;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-meta);
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--motion-ease);
+
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-body);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list-toolbar__trigger,
+  .list-toolbar__chip,
+  .list-toolbar__icon-btn {
+    transition: none;
+  }
+}

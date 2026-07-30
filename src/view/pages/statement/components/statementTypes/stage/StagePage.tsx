@@ -16,11 +16,10 @@ import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { Lightbulb, Plus, MessageSquare } from 'lucide-react';
 
 interface Props {
-	showStageTitle?: boolean;
 	showBottomNav?: boolean;
 }
 
-const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
+const StagePage = ({ showBottomNav = true }: Props) => {
 	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const stageRef = useRef<HTMLDivElement>(null);
@@ -69,24 +68,21 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 		summaryGeneratedAt?: number;
 	};
 
-	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
-	const isClustering = statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
-	// Suppress the "Stage: …" heading when this stage IS the top-level question
-	// — the page header already shows that title, so the heading would just
-	// duplicate it. Real sub-stages (distinct topParentId) keep their heading.
-	const isRootStage = statement?.statementId === statement?.topParentId;
+	// The "Stage: …" heading used to render here. It read its title from
+	// StatementContext — the same context StatementHeader renders as the page
+	// <h1> — so it was always a verbatim duplicate sitting directly under the
+	// title. An `isRootStage` guard tried to catch this by comparing
+	// statementId to topParentId, but that is only true for a top-level
+	// question: every sub-question failed the check and re-printed its own
+	// title. Removed rather than re-guarded, because the remaining call sites
+	// (QuestionPage, SwitchScreen) always render the routed statement, and the
+	// one caller that renders a stage in a list already opted out via the
+	// showStageTitle prop.
 
 	return (
 		<>
 			{hasSubStatements ? (
 				<div className={`${styles['stage-page']} wrapper`}>
-					{!isClustering && showStageTitle && !isRootStage && (
-						<h2>
-							{t('Stage')}
-							{statement?.statement && stageName}
-						</h2>
-					)}
-
 					{/* Summary Display */}
 					<SummaryDisplay
 						summary={statementWithSummary?.summary}

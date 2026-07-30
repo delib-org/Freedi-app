@@ -1,106 +1,135 @@
+@import '../../../../../../../style/mixins';
+
+// The 5-face scale.
+//
+// Was a column (faces / results / labels) whose faces were ~1.8rem — below the
+// 44px minimum target — and which stacked its result numbers underneath,
+// doubling the height of every card footer. Now a single wrapping row, with the
+// hit target grown to 44px while the painted face stays small: the background
+// colour (set inline per face) is clipped to the content box, so the coloured
+// circle is ~28px inside a 44px tappable button.
 .evaluation {
 	display: flex;
-	gap: 0.5rem;
 	align-items: center;
-
-	.enhanced-evaluation {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-
-		@media screen and (max-width: 500px) {
-			display: flex;
-			flex-direction: column;
-			width: fit-content;
-			margin: auto;
-			margin-top: 1rem;
-		}
-
-		.evaluation-thumbs {
-			display: flex;
-			flex-direction: row-reverse;
-			// direction: ltr; // Default direction
-			gap: 0.5rem;
-
-			.evaluation-thumb {
-				transition: transform 0.15s ease-out, opacity 0.15s ease-out, background-color 0.1s ease-out;
-				display: flex;
-				border-radius: 3rem;
-				justify-content: center;
-				align-items: center;
-				min-width: 1.8rem;
-				min-height: 1.8rem;
-				cursor: pointer;
-				user-select: none;
-				opacity: 0.95;
-				border: none;
-				// Subtle ring so inactive thumbs clearly read as tappable.
-				box-shadow: inset 0 0 0 1px var(--evaluation-thumb-ring);
-				-webkit-tap-highlight-color: transparent;
-				transform: scale(1);
-
-				&:active:not(:disabled) {
-					transform: scale(0.95);
-				}
-
-				&:hover:not(:disabled):not(.active) {
-					opacity: 1;
-					transform: scale(1.08);
-				}
-
-				&.active {
-					transform: scale(1.2);
-					z-index: 0;
-					opacity: 1;
-					box-shadow: none;
-				}
-
-				&:disabled {
-					cursor: not-allowed;
-				}
-
-				&.disabled {
-					opacity: 0.6;
-					cursor: not-allowed;
-					pointer-events: none;
-					filter: grayscale(30%);
-				}
-
-				img {
-					pointer-events: none;
-				}
-
-				// Reaction mode: emoji rendered in place of the SVG thumb.
-				.evaluation-thumb__emoji {
-					pointer-events: none;
-					font-size: 1.5rem;
-					line-height: 1;
-				}
-			}
-		}
-
-		.explain {
-			justify-content: space-between;
-			color: var(--text-label);
-
-			&--ltr {
-				flex-direction: row-reverse;
-			}
-		}
-
-		.evaluation-explain {
-			display: flex;
-			justify-content: space-between;
-			font-weight: 300;
-			font-size: 0.8rem;
-			color: var(--text-caption);
-			text-align: center;
-			width: 100%;
-		}
-	}
-
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	min-width: 0;
 }
 
-.active {
-	transform: scale(1.1);
+.enhanced-evaluation {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-xs) var(--space-sm);
+	min-width: 0;
+}
+
+.evaluation-thumbs {
+	// A rating scale reads low-to-high as a number line, independent of the
+	// surrounding script.
+	display: flex;
+	flex-direction: row-reverse;
+	align-items: center;
+	gap: var(--space-3xs);
+	flex-shrink: 0;
+}
+
+.evaluation-thumb {
+	@include hit-target;
+
+	padding: var(--space-xs);
+	border: none;
+	border-radius: var(--radius-pill);
+	// Paint the inline background only over the content box, so growing the
+	// target does not grow the coloured face.
+	background-clip: content-box;
+	cursor: pointer;
+	user-select: none;
+	opacity: 0.95;
+	// Subtle ring so inactive thumbs clearly read as tappable.
+	box-shadow: inset 0 0 0 1px var(--evaluation-thumb-ring);
+	-webkit-tap-highlight-color: transparent;
+	transform: scale(1);
+	transition:
+		transform var(--motion-fast) var(--motion-ease),
+		opacity var(--motion-fast) var(--motion-ease);
+
+	img {
+		pointer-events: none;
+		width: 24px;
+		height: 24px;
+	}
+
+	&:active:not(:disabled) {
+		transform: scale(0.95);
+	}
+
+	&:hover:not(:disabled):not(.active) {
+		opacity: 1;
+		transform: scale(1.08);
+	}
+
+	// Selection is carried by scale (shape) as well as fill, so it survives
+	// greyscale and colour-blindness.
+	&.active {
+		transform: scale(1.15);
+		z-index: 0;
+		opacity: 1;
+		box-shadow: none;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+	}
+
+	&.disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		pointer-events: none;
+		filter: grayscale(30%);
+	}
+
+	// Reaction mode: emoji rendered in place of the SVG thumb.
+	.evaluation-thumb__emoji {
+		pointer-events: none;
+		font-size: 1.5rem;
+		line-height: 1;
+	}
+}
+
+.explain {
+	justify-content: space-between;
+	color: var(--text-label);
+	flex-basis: 100%;
+
+	&--ltr {
+		flex-direction: row-reverse;
+	}
+}
+
+.evaluation-explain {
+	display: flex;
+	justify-content: space-between;
+	font-weight: var(--font-weight-regular);
+	font-size: var(--font-size-xs);
+	color: var(--text-meta);
+	text-align: center;
+	width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.evaluation-thumb {
+		transition: none;
+
+		&:hover:not(:disabled):not(.active),
+		&:active:not(:disabled) {
+			transform: none;
+		}
+	}
 }

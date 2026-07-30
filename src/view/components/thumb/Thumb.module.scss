@@ -1,19 +1,80 @@
+@import '../../style/mixins';
+
 .thumb {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    // 44x44 minimum target (WCAG 2.5.5). The glyph stays 24px; padding makes
+    // up the difference, so the control is easy to hit without looking heavy.
+    @include hit-target;
+
+    gap: var(--space-2xs);
+    padding: 0 var(--space-xs);
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-body);
+    cursor: pointer;
+    transition:
+        background-color var(--motion-fast) var(--motion-ease),
+        transform var(--motion-fast) var(--motion-ease);
 
     svg {
-        width: 27px;
-        height: 27px;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
     }
+
+    // The tally for this side, bound to its own control rather than floating
+    // beside the pair as a bare number.
+    .count {
+        @include stat-number;
+
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        line-height: 1;
+        color: var(--text-meta);
+    }
+
+    &:hover:not(.disabled) {
+        background-color: var(--bg-hover);
+    }
+
+    &:active:not(.disabled) {
+        transform: scale(0.95);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--btn-primary);
+        outline-offset: 2px;
+    }
+
+    // Selected state is carried by fill AND opacity, never colour alone.
+    &.active {
+        background-color: var(--bg-hover);
+
+        .count {
+            color: var(--text-body);
+        }
+    }
+
     &.inactive {
-        opacity: 0.4;
+        svg {
+            opacity: 0.45;
+        }
     }
+
     &.disabled {
         opacity: 0.6;
         cursor: not-allowed;
         pointer-events: none;
         filter: grayscale(30%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .thumb {
+        transition: none;
+
+        &:active:not(.disabled) {
+            transform: none;
+        }
     }
 }
