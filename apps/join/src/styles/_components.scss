@@ -450,11 +450,14 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-card);
-  border: 1.5px solid transparent;
+  // `transparent` in light mode (the shadow does the separating), a real
+  // hairline in dark / high-contrast where a black shadow is invisible.
+  border: 1.5px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-md) var(--space-md);
   transition:
     transform var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
     box-shadow var(--dur-base) var(--ease-out);
 
   &:focus-visible {
@@ -465,6 +468,15 @@
   &:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
+  }
+
+  // Dark mode: lift the surface a step on hover and brighten the edge, since
+  // the drop shadow contributes nothing against a near-black page.
+  @media (prefers-color-scheme: dark) {
+    &:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--ink-soft);
+    }
   }
 
   // Activation — hero moment. Teal accent + stamped offset shadow.
