@@ -79,55 +79,6 @@
 			}
 		}
 
-		.evaluation-bar {
-			background-color: transparent;
-			width: 100%;
-			height: 0.3rem;
-			position: relative;
-			border-radius: 3px;
-			// The indicator is absolutely positioned from a measured width —
-			// clip so stale/extreme positions can never widen the card.
-			overflow: hidden;
-
-			&__indicator {
-				height: 100%;
-				position: absolute;
-				border-radius: 3px;
-				transition: right 0.3s ease, background-color 0.3s ease;
-			}
-		}
-
-		.evaluation-score {
-			display: flex;
-			gap: 0.2rem;
-			align-items: center;
-			justify-content: center;
-			color: var(--text-body);
-			color: var(--emoji-happy);
-
-			// Adding new styles for tooltips
-			.scoreValue {
-				font-weight: 500;
-				padding: 0.15rem 0.25rem;
-				border-radius: 3px;
-				transition: background-color 0.2s ease;
-				direction: ltr;
-
-				&:hover {
-					background-color: rgba(
-						0,
-						0,
-						0,
-						0.05
-					); // subtle highlight on hover
-				}
-			}
-
-			&.negative .scoreValue {
-				color: var(--emoji-thinking);
-			}
-		}
-
 		.explain {
 			justify-content: space-between;
 			color: var(--text-label);
@@ -148,48 +99,8 @@
 		}
 	}
 
-	.total-evaluators {
-		direction: ltr;
-		opacity: 0.8;
-		transition: opacity 0.2s ease;
-		color: var(--text-label);
-
-		&:hover {
-			opacity: 1;
-		}
-	}
-
-	.consensus-score {
-		direction: ltr;
-		font-weight: 600;
-		font-size: 0.9rem;
-		color: var(--agree);
-		transition: opacity 0.2s ease;
-		cursor: default;
-
-		&:hover {
-			opacity: 0.8;
-		}
-
-		&--negative {
-			color: var(--reject);
-		}
-	}
 }
 
 .active {
 	transform: scale(1.1);
-}
-
-// Mobile optimizations for tooltips
-@media screen and (max-width: 500px) {
-	.enhanced-evaluation {
-		.evaluation-score {
-			.scoreValue,
-			.total-evaluators {
-				// Make tap targets larger on mobile
-				padding: 0.25rem 0.3rem;
-			}
-		}
-	}
 }

@@ -5,6 +5,7 @@ import Thumb from '@/view/components/thumb/Thumb';
 import styles from './SimpleEvaluation.module.scss';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 
 interface Props {
 	statement: Statement;
@@ -33,9 +34,6 @@ const SimpleEvaluation: FC<Props> = ({
 	const [proVotesCount, setProVotesCount] = useState(initialProVotesCount);
 
 	const evaluation = useAppSelector(evaluationSelector(statement.statementId));
-
-	const { consensus } = statement;
-	const consensusToDisplay = consensus ? Math.round(consensus * 100) / 100 : 0;
 
 	useEffect(() => {
 		setConVotesCount(statement.evaluation?.sumCon ?? statement.con ?? 0);
@@ -68,7 +66,9 @@ const SimpleEvaluation: FC<Props> = ({
 				</div>
 				{shouldDisplayScore && <span>{proVotesCount}</span>}
 			</div>
-			{shouldDisplayScore && <div className={styles.totalEvaluations}>{consensusToDisplay}</div>}
+			{/* Consensus / average / evaluators, labelled — replaces the bare
+			    unlabelled consensus decimal that used to sit here. */}
+			{shouldDisplayScore && <ResultsStrip statement={statement} className={styles.results} />}
 		</div>
 	);
 };
