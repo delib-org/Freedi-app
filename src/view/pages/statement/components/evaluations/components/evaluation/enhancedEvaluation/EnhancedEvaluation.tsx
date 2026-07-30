@@ -118,24 +118,34 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	const button = (
 		<button
 			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${!enableEvaluation ? styles.disabled : ''}`}
-			style={{
-				backgroundColor: isThumbActive ? evaluationThumb.colorSelected : evaluationThumb.color,
-				...(!enableEvaluation && isThumbActive
+			style={
+				!enableEvaluation && isThumbActive
 					? { opacity: 1, filter: 'none', transform: 'scale(1.2)' }
-					: {}),
-			}}
+					: undefined
+			}
 			onClick={enableEvaluation ? handleSetEvaluation : undefined}
 			disabled={!enableEvaluation}
 			aria-disabled={!enableEvaluation}
 			aria-label={enableEvaluation ? t(evaluationThumb.alt) : t('Voting disabled - view only')}
 		>
-			{evaluationThumb.emoji ? (
-				<span className={styles['evaluation-thumb__emoji']} aria-hidden="true">
-					{evaluationThumb.emoji}
-				</span>
-			) : (
-				<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
-			)}
+			{/* The coloured disc is a child, not the button itself. The button is
+			    a transparent 44px hit target (WCAG 2.5.5); if the fill and its ring
+			    were painted on the button, growing the target would grow the face
+			    into a large hollow circle with the glyph adrift inside it. */}
+			<span
+				className={styles['evaluation-thumb__face']}
+				style={{
+					backgroundColor: isThumbActive ? evaluationThumb.colorSelected : evaluationThumb.color,
+				}}
+			>
+				{evaluationThumb.emoji ? (
+					<span className={styles['evaluation-thumb__emoji']} aria-hidden="true">
+						{evaluationThumb.emoji}
+					</span>
+				) : (
+					<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
+				)}
+			</span>
 		</button>
 	);
 

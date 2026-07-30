@@ -35,38 +35,26 @@
 	flex-shrink: 0;
 }
 
+// The button is only a hit target: transparent, no fill, no ring. Everything
+// visible lives on __face, so the target can be 44px while the face stays 32px.
 .evaluation-thumb {
 	@include hit-target;
 
-	padding: var(--space-xs);
+	padding: 0;
 	border: none;
+	background: none;
 	border-radius: var(--radius-pill);
-	// Paint the inline background only over the content box, so growing the
-	// target does not grow the coloured face.
-	background-clip: content-box;
 	cursor: pointer;
 	user-select: none;
-	opacity: 0.95;
-	// Subtle ring so inactive thumbs clearly read as tappable.
-	box-shadow: inset 0 0 0 1px var(--evaluation-thumb-ring);
 	-webkit-tap-highlight-color: transparent;
 	transform: scale(1);
-	transition:
-		transform var(--motion-fast) var(--motion-ease),
-		opacity var(--motion-fast) var(--motion-ease);
-
-	img {
-		pointer-events: none;
-		width: 24px;
-		height: 24px;
-	}
+	transition: transform var(--motion-fast) var(--motion-ease);
 
 	&:active:not(:disabled) {
 		transform: scale(0.95);
 	}
 
 	&:hover:not(:disabled):not(.active) {
-		opacity: 1;
 		transform: scale(1.08);
 	}
 
@@ -75,13 +63,17 @@
 	&.active {
 		transform: scale(1.15);
 		z-index: 0;
-		opacity: 1;
-		box-shadow: none;
 	}
 
+	// The ring follows the face, not the 44px box — otherwise it reads as a
+	// large empty circle around a small glyph.
 	&:focus-visible {
-		outline: 2px solid var(--btn-primary);
-		outline-offset: 2px;
+		outline: none;
+
+		.evaluation-thumb__face {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: 2px;
+		}
 	}
 
 	&:disabled {
@@ -94,13 +86,43 @@
 		pointer-events: none;
 		filter: grayscale(30%);
 	}
+}
+
+.evaluation-thumb__face {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-pill);
+	pointer-events: none;
+	opacity: 0.95;
+	// Subtle ring so inactive faces clearly read as tappable.
+	box-shadow: inset 0 0 0 1px var(--evaluation-thumb-ring);
+	transition: opacity var(--motion-fast) var(--motion-ease);
+
+	img {
+		width: 22px;
+		height: 22px;
+		pointer-events: none;
+	}
 
 	// Reaction mode: emoji rendered in place of the SVG thumb.
 	.evaluation-thumb__emoji {
 		pointer-events: none;
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 		line-height: 1;
 	}
+}
+
+.evaluation-thumb:hover:not(:disabled) .evaluation-thumb__face,
+.evaluation-thumb.active .evaluation-thumb__face {
+	opacity: 1;
+}
+
+// The selected face carries the full-strength fill; the ring would only muddy it.
+.evaluation-thumb.active .evaluation-thumb__face {
+	box-shadow: none;
 }
 
 .explain {
