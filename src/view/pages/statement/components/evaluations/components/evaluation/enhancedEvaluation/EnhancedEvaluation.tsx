@@ -54,29 +54,33 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	return (
 		<div className={`${styles.evaluation}`}>
 			<div className={styles['enhanced-evaluation']}>
-				<div className={styles['evaluation-thumbs']}>
-					{thumbs.map((evaluationThumb) => (
-						<EvaluationThumb
-							key={evaluationThumb.id}
-							evaluationThumb={evaluationThumb}
-							isActive={evaluationThumb.id === activeThumbId}
-							statement={statement}
-							enableEvaluation={enableEvaluation}
-							onEvaluate={handleEvaluate}
-						/>
-					))}
+				{/* Faces and their end labels are one unit, sized to the faces. If the
+				    labels are a sibling of the row instead, they stretch to the width
+				    of the whole card and "Disagree"/"Agree" drift away from the ends
+				    of the scale they name. */}
+				<div className={styles.scale}>
+					<div className={styles['evaluation-thumbs']}>
+						{thumbs.map((evaluationThumb) => (
+							<EvaluationThumb
+								key={evaluationThumb.id}
+								evaluationThumb={evaluationThumb}
+								isActive={evaluationThumb.id === activeThumbId}
+								statement={statement}
+								enableEvaluation={enableEvaluation}
+								onEvaluate={handleEvaluate}
+							/>
+						))}
+					</div>
+					{learning.evaluation > 0 && (
+						<div className={styles['evaluation-explain']}>
+							<span>{t('Disagree')}</span>
+							<span>{t('Agree')}</span>
+						</div>
+					)}
 				</div>
 				{/* The three result numbers, spelled out. They used to live only in
 				    a hover tooltip on a colour bar, so touch users never saw them. */}
 				{showEvaluation && <ResultsStrip statement={statement} />}
-				{learning.evaluation > 0 && (
-					<div className={styles.explain}>
-						<div className={`${styles['evaluation-explain']}`}>
-							<span>{t('Disagree')}</span>
-							<span>{t('Agree')}</span>
-						</div>
-					</div>
-				)}
 			</div>
 		</div>
 	);
