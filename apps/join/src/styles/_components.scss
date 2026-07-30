@@ -308,6 +308,24 @@
     line-height: var(--line-height-normal);
   }
 
+  // The viewer's own helper-points total — a quiet score chip in the header
+  // that grows as their comments get marked helpful across discussions.
+  &__points-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: center;
+    margin-top: var(--space-xs);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);               // on teal-50 ~9:1 ✓ AAA
+    background: var(--teal-50);
+    border: 1px solid var(--teal-100);
+    border-radius: var(--radius-full);
+    padding: 2px 12px;
+  }
+
   // New-solutions notification pill — appears in the sticky header when fresh
   // options arrive after the initial load. User taps to flush + highlight them.
   // Centered under the title so the arrival of fresh answers reads as a
@@ -1643,6 +1661,19 @@
   &--ignored &__body,
   &--ignored &__header {
     opacity: 0.55;
+  }
+
+  // Helper-points star badge next to the sender's name — social proof that
+  // this participant's comments keep getting marked helpful.
+  &__points {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);               // on teal-50 ~9:1 ✓ AAA
+    background: var(--teal-50);
+    border-radius: var(--radius-full);
+    padding: 1px 8px;
+    white-space: nowrap;
   }
 
   // Author-only triage row: helpful / ignore toggle chips under the bubble.

@@ -21,6 +21,14 @@ export {
 	type CreditTransaction,
 } from './CreditModel';
 
+// Helper Points (comment-marked-helpful tallies)
+export {
+	HelperPointsSchema,
+	type HelperPoints,
+	HELPER_POINTS_TOTAL_SCOPE,
+	getHelperPointsId,
+} from './HelperPoints';
+
 // Engagement Model
 export {
 	EngagementLevel,

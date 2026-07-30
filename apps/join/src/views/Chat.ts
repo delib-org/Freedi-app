@@ -34,6 +34,12 @@ import {
 	composeDraftText,
 	requestImprovedDraft,
 } from '@/lib/improveSuggestion';
+import {
+	subscribeMyHelperPoints,
+	unsubscribeMyHelperPoints,
+	loadHelperPointsTotals,
+	getHelperPointsFor,
+} from '@/lib/helperPoints';
 import { ChatMessage } from '@/components/ChatMessage';
 import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
@@ -97,6 +103,7 @@ function closeNamePrompt(): void {
 function teardownChatSubscriptions(): void {
 	unsubscribeChat();
 	unsubscribeCommentVerdicts();
+	unsubscribeMyHelperPoints();
 	if (mainUnsub) {
 		mainUnsub();
 		mainUnsub = null;
@@ -165,6 +172,13 @@ async function initChatForOption(optionId: string): Promise<void> {
 		if (option && option.creatorId === getUserState().user?.uid) {
 			subscribeCommentVerdicts(optionId);
 			void loadOptionParagraphs(optionId);
+		}
+
+		// Own helper points: keeps the "+1 ⭐" toast live while the commenter
+		// is reading this thread.
+		const questionIdForPoints = m.route.param('qid') ?? option?.parentId;
+		if (questionIdForPoints) {
+			subscribeMyHelperPoints(questionIdForPoints);
 		}
 	} catch (err) {
 		console.error('[Chat] Failed to load option:', err);
@@ -251,6 +265,10 @@ export const Chat: m.Component = {
 			.map((msg) => msg.statementId);
 		const helpfulCount = isAuthor ? countHelpful(otherMsgIds) : 0;
 
+		// Star badges next to sender names — kick off cached fetches for any
+		// senders we haven't loaded yet (no-op for cached/in-flight uids).
+		loadHelperPointsTotals(msgs.map((msg) => msg.creatorId).filter(Boolean) as string[]);
+
 		return m(`.chat${facilitated ? '.chat--facilitated' : ''}`, [
 			facilitated && mainId ? m(BackButton, { to: `/m/${mainId}/q/${questionId}` }) : null,
 			m('.chat__header', [
@@ -304,6 +322,7 @@ export const Chat: m.Component = {
 									key: msg.statementId,
 									message: msg,
 									isMine,
+									helperPoints: msg.creatorId ? getHelperPointsFor(msg.creatorId) : undefined,
 									verdict: canJudge ? getVerdict(msg.statementId) : undefined,
 									onVerdict: canJudge
 										? (v: 'helpful' | 'ignored') => {

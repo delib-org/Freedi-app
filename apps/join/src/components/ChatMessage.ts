@@ -13,6 +13,9 @@ interface ChatMessageAttrs {
 	/** Present only for the suggestion's author viewing someone else's comment —
 	 *  renders the helpful/ignore toggle chips. */
 	onVerdict?: (verdict: 'helpful' | 'ignored') => void;
+	/** Sender's global helper-points total — shows a ⭐ badge next to their
+	 *  name when > 0. */
+	helperPoints?: number;
 }
 
 function formatTime(timestamp: number): string {
@@ -79,7 +82,7 @@ function uidToColor(uid: string): string {
 
 export const ChatMessage: m.Component<ChatMessageAttrs> = {
 	view(vnode) {
-		const { message, isMine, verdict, onVerdict } = vnode.attrs;
+		const { message, isMine, verdict, onVerdict, helperPoints } = vnode.attrs;
 		const displayName = message.creator?.displayName || t('common.anonymous');
 		const uid = message.creatorId || '';
 		const color = uidToColor(uid);
@@ -103,6 +106,16 @@ export const ChatMessage: m.Component<ChatMessageAttrs> = {
 				? m('.chat-message__header', [
 						m('.chat-message__avatar', { style: { background: color } }, initials),
 						m('.chat-message__sender', { style: { color } }, displayName),
+						helperPoints && helperPoints > 0
+							? m(
+									'.chat-message__points',
+									{
+										'aria-label': t('points.helper_badge_aria', { count: helperPoints }),
+										title: t('points.helper_badge_aria', { count: helperPoints }),
+									},
+									`⭐ ${helperPoints}`,
+								)
+							: null,
 					])
 				: null,
 			m('.chat-message__text', linkify(message.statement)),

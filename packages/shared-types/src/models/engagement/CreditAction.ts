@@ -11,4 +11,5 @@ export enum CreditAction {
 	SUGGESTION_ACCEPTED = 'suggestion_accepted',
 	MC_PARTICIPATION = 'mc_participation',
 	INVITE_FRIEND = 'invite_friend',
+	COMMENT_MARKED_HELPFUL = 'comment_marked_helpful',
 }

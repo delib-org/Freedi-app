@@ -21,6 +21,11 @@ import {
 } from '@/lib/store';
 import { isAdmin, checkAdminStatus } from '@/lib/admin';
 import { markOpenedInJoin } from '@/lib/joinSubscriptions';
+import {
+	subscribeMyHelperPoints,
+	unsubscribeMyHelperPoints,
+	getMyHelperPoints,
+} from '@/lib/helperPoints';
 import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { SolutionCard } from '@/components/SolutionCard';
@@ -97,6 +102,7 @@ function teardownSolutionsSubscriptions(): void {
 		joinSubmissionUnsub();
 		joinSubmissionUnsub = null;
 	}
+	unsubscribeMyHelperPoints();
 }
 
 async function initSolutionsForQuestion(questionId: string): Promise<void> {
@@ -137,6 +143,7 @@ async function initSolutionsForQuestion(questionId: string): Promise<void> {
 		optionsUnsub = subscribeOptions(questionId);
 		evaluationsUnsub = subscribeUserEvaluations(questionId);
 		joinSubmissionUnsub = subscribeUserJoinFormSubmission(questionId);
+		subscribeMyHelperPoints(questionId);
 
 		let mainId: string | undefined = m.route.param('mid');
 		if (!mainId) {
@@ -282,6 +289,18 @@ export const Solutions: m.Component = {
 					as: 'h1',
 					className: 'solutions__title',
 				}),
+				getMyHelperPoints().total > 0
+					? m(
+							'.solutions__points-pill',
+							{
+								'aria-label': t('points.my_points_aria', {
+									count: getMyHelperPoints().total,
+								}),
+								title: t('points.my_points_aria', { count: getMyHelperPoints().total }),
+							},
+							`⭐ ${getMyHelperPoints().total}`,
+						)
+					: null,
 				pendingCount > 0
 					? m(
 							'button.solutions__new-pill',
