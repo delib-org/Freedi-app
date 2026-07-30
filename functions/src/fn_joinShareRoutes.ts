@@ -73,6 +73,17 @@ const SHELL_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const DEFAULT_TITLE = 'WizCol-Join';
 const DEFAULT_DESCRIPTION = 'Propose, evaluate and choose solutions together.';
 
+/** The Join hosting site. `wizcol-join.web.app` always resolves to it whatever
+ *  custom domains are attached, so it is the one origin safe to fetch the app
+ *  shell from — see `getAppShell`. */
+const CANONICAL_ORIGIN = 'https://wizcol-join.web.app';
+/** Header marking this function's own shell fetch, so a request that loops back
+ *  here is recognisable. */
+const SHELL_REQUEST_MARK = 'x-wizcol-shell-fetch';
+const SHELL_FETCH_TIMEOUT_MS = 5000;
+/** Hosts that mean "this function", i.e. never a public Join address. */
+const INTERNAL_HOST_SUFFIXES = ['.run.app', '.cloudfunctions.net'];
+
 function isSocialMediaBot(userAgent: string): boolean {
 	if (!userAgent) return false;
 	const ua = userAgent.toLowerCase();
@@ -255,14 +266,24 @@ let shellCache: ShellCache | null = null;
  * fetching it does not re-enter this function (the rewrites only cover
  * `/q/**` and `/m/**`). A stale cached copy is preferred over an error page if
  * the origin fetch fails.
+ *
+ * The origin is the canonical Hosting site, never anything derived from the
+ * request: behind a rewrite this function runs on Cloud Run and sees its own
+ * `*.run.app` host, so fetching "the host that called us" would call *this
+ * function* in a loop until Hosting's 60s gateway timeout. `SHELL_REQUEST_MARK`
+ * is a second line of defence — a request carrying it is a shell fetch that
+ * somehow came back around, and is refused rather than expanded.
  */
-async function getAppShell(origin: string): Promise<string | null> {
+async function getAppShell(): Promise<string | null> {
 	const now = Date.now();
 	if (shellCache && now - shellCache.fetchedAt < SHELL_TTL_MS) return shellCache.html;
 
 	try {
-		const response = await fetch(`${origin}/index.html`, {
-			headers: { 'cache-control': 'no-cache' },
+		const response = await fetch(`${CANONICAL_ORIGIN}/index.html`, {
+			headers: { 'cache-control': 'no-cache', [SHELL_REQUEST_MARK]: '1' },
+			// Bound the wait so a slow origin can't hold the request open until
+			// the gateway times out and pile up instances behind it.
+			signal: AbortSignal.timeout(SHELL_FETCH_TIMEOUT_MS),
 		});
 		if (!response.ok) throw new Error(`Shell fetch returned ${response.status}`);
 		const html = await response.text();
@@ -273,7 +294,7 @@ async function getAppShell(origin: string): Promise<string | null> {
 	} catch (error) {
 		logError(error, {
 			operation: 'joinShareRoutes.getAppShell',
-			metadata: { origin, servedStale: shellCache !== null },
+			metadata: { origin: CANONICAL_ORIGIN, servedStale: shellCache !== null },
 		});
 
 		return shellCache?.html ?? null;
@@ -295,21 +316,44 @@ function retryHtml(): string {
 </html>`;
 }
 
+/**
+ * The address the visitor actually typed/clicked — what `og:url` and the
+ * canonical link must say. Behind a Hosting rewrite the `Host` header is this
+ * function's own Cloud Run host, so prefer `X-Forwarded-Host` (the public
+ * domain Hosting was reached on) and fall back to the canonical site rather
+ * than ever advertising an internal URL.
+ */
+export function publicOrigin(req: Request): string {
+	const forwarded = (req.headers['x-forwarded-host'] as string | undefined)?.split(',')[0]?.trim();
+	const host = forwarded || req.headers.host || '';
+	if (!host || INTERNAL_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix))) {
+		return CANONICAL_ORIGIN;
+	}
+	const protocol = host.startsWith('localhost') ? 'http' : 'https';
+
+	return `${protocol}://${host}`;
+}
+
 /** Exported for unit tests — the `onRequest` wrapper below is the only caller
  *  in production. */
 export async function handleShareRequest(req: Request, res: Response): Promise<void> {
 	const path = req.path || '/';
-	const host = req.headers.host || 'join.wizcol.com';
-	const protocol = (req.headers['x-forwarded-proto'] as string) || 'https';
-	const origin = `${protocol}://${host}`;
+	const origin = publicOrigin(req);
 	const fullUrl = `${origin}${req.originalUrl || path}`;
 
 	res.set('Cache-Control', 'no-store');
 	res.set('Content-Type', 'text/html; charset=utf-8');
 	res.set('X-Content-Type-Options', 'nosniff');
 
+	// A shell fetch that came back here would be the start of a loop.
+	if (req.headers[SHELL_REQUEST_MARK]) {
+		res.status(508).send(retryHtml());
+
+		return;
+	}
+
 	if (!isSocialMediaBot(req.headers['user-agent'] || '')) {
-		const shell = await getAppShell(origin);
+		const shell = await getAppShell();
 		if (!shell) {
 			res.status(503).send(retryHtml());
 

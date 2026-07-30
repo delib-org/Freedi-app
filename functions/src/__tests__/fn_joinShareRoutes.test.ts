@@ -29,6 +29,7 @@ jest.mock('../utils/errorHandling', () => ({
 import {
 	extractJoinStatementId,
 	buildDescription,
+	publicOrigin,
 	handleShareRequest,
 	__resetShellCacheForTests,
 } from '../fn_joinShareRoutes';
@@ -69,11 +70,24 @@ function fakeResponse(): FakeResponse {
 	return { res, body: () => body, statusCode: () => statusCode, headers: () => headers };
 }
 
-function fakeRequest(path: string, userAgent: string): Request {
+/** Mirrors what a request looks like behind a Hosting rewrite: `host` is this
+ *  function's own Cloud Run address, and the public domain arrives in
+ *  `x-forwarded-host`. */
+function fakeRequest(
+	path: string,
+	userAgent: string,
+	headers: Record<string, string> = {},
+): Request {
 	return {
 		path,
 		originalUrl: path,
-		headers: { host: 'join.wizcol.com', 'user-agent': userAgent, 'x-forwarded-proto': 'https' },
+		headers: {
+			host: 'servejoinshareroutes-t356nxwhlq-zf.a.run.app',
+			'x-forwarded-host': 'wizcol-join.web.app',
+			'user-agent': userAgent,
+			'x-forwarded-proto': 'https',
+			...headers,
+		},
 	} as unknown as Request;
 }
 
@@ -175,6 +189,45 @@ describe('fn_joinShareRoutes', () => {
 		});
 	});
 
+	describe('publicOrigin', () => {
+		// Regression: the first deploy derived the origin from `Host`, which
+		// behind a Hosting rewrite is this function's own Cloud Run address — so
+		// the shell fetch called the function in a loop until it 504'd, and
+		// og:url advertised an internal URL.
+		it('never returns the function’s own Cloud Run host', () => {
+			const req = {
+				headers: { host: 'servejoinshareroutes-t356nxwhlq-zf.a.run.app' },
+			} as unknown as Request;
+
+			expect(publicOrigin(req)).toBe('https://wizcol-join.web.app');
+		});
+
+		it('prefers the public domain Hosting was reached on', () => {
+			const req = {
+				headers: {
+					host: 'servejoinshareroutes-t356nxwhlq-zf.a.run.app',
+					'x-forwarded-host': 'join.wizcol.com',
+				},
+			} as unknown as Request;
+
+			expect(publicOrigin(req)).toBe('https://join.wizcol.com');
+		});
+
+		it('takes the first hop of a multi-value forwarded host', () => {
+			const req = {
+				headers: { 'x-forwarded-host': 'join.wizcol.com, proxy.internal' },
+			} as unknown as Request;
+
+			expect(publicOrigin(req)).toBe('https://join.wizcol.com');
+		});
+
+		it('falls back to the canonical site when no host is known', () => {
+			expect(publicOrigin({ headers: {} } as unknown as Request)).toBe(
+				'https://wizcol-join.web.app',
+			);
+		});
+	});
+
 	describe('handleShareRequest', () => {
 		const originalFetch = global.fetch;
 		const shellHtml = '<!DOCTYPE html><html><body><div id="app"></div></body></html>';
@@ -201,6 +254,30 @@ describe('fn_joinShareRoutes', () => {
 			expect(statusCode()).toBe(200);
 			expect(body()).toBe(shellHtml);
 			expect(mockDocGet).not.toHaveBeenCalled();
+		});
+
+		it('fetches the shell from the canonical site, never from the calling host', async () => {
+			await handleShareRequest(fakeRequest('/m/MID', BROWSER_UA), fakeResponse().res);
+
+			const [url, init] = (global.fetch as jest.Mock).mock.calls[0] as unknown as [
+				string,
+				{ headers: Record<string, string> },
+			];
+			expect(url).toBe('https://wizcol-join.web.app/index.html');
+			expect(url).not.toContain('run.app');
+			expect(init.headers['x-wizcol-shell-fetch']).toBe('1');
+		});
+
+		it('refuses a request carrying the shell-fetch mark instead of looping', async () => {
+			const { res, statusCode } = fakeResponse();
+
+			await handleShareRequest(
+				fakeRequest('/m/MID', BROWSER_UA, { 'x-wizcol-shell-fetch': '1' }),
+				res,
+			);
+
+			expect(statusCode()).toBe(508);
+			expect(global.fetch).not.toHaveBeenCalled();
 		});
 
 		it('caches the shell so a burst of clicks costs one origin fetch', async () => {
@@ -244,9 +321,9 @@ describe('fn_joinShareRoutes', () => {
 			expect(body()).toContain(
 				'<meta property="og:description" content="• Where should the park go?&#10;• How do we fund it?">',
 			);
-			expect(body()).toContain('<meta property="og:url" content="https://join.wizcol.com/m/MID">');
+			expect(body()).toContain('<meta property="og:url" content="https://wizcol-join.web.app/m/MID">');
 			expect(body()).toContain(
-				'<meta property="og:image" content="https://join.wizcol.com/icons/icon-512.png">',
+				'<meta property="og:image" content="https://wizcol-join.web.app/icons/icon-512.png">',
 			);
 			expect(body()).toContain('<html lang="he">');
 			// Hidden sub-questions stay out of a public preview.
