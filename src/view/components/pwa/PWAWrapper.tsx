@@ -206,6 +206,14 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 								scope: '/firebase-cloud-messaging-push-scope',
 							})
 							.then((registration) => {
+								// Privacy extensions and automation harnesses sometimes stub
+								// register() so it resolves undefined instead of a registration.
+								if (!registration) {
+									console.info('[PWAWrapper] Firebase Messaging SW registration returned nothing');
+
+									return;
+								}
+
 								console.info(
 									'[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope',
 								);
@@ -340,16 +348,25 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		window.addEventListener('freedi:open-install-prompt', handleOpenInstallPrompt);
 
 		// Try to listen for permission changes (not supported in all browsers)
+		let notificationPermissionStatus: PermissionStatus | undefined;
 		if ('permissions' in navigator) {
 			navigator.permissions
 				.query({ name: 'notifications' as PermissionName })
 				.then((permissionStatus) => {
-					permissionStatus.onchange = handlePermissionChange;
+					// Some browsers and automation harnesses resolve a plain object rather
+					// than a real PermissionStatus; assigning onchange then throws
+					// "Illegal invocation". addEventListener degrades more gracefully.
+					if (typeof permissionStatus?.addEventListener !== 'function') {
+						return;
+					}
+					notificationPermissionStatus = permissionStatus;
+					permissionStatus.addEventListener('change', handlePermissionChange);
 				})
 				.catch((error: unknown) => logError(error, { operation: 'PWAWrapper.permissionQuery' }));
 		}
 
 		return () => {
+			notificationPermissionStatus?.removeEventListener('change', handlePermissionChange);
 			if (updateInterval) {
 				clearInterval(updateInterval);
 			}

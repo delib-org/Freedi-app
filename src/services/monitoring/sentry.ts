@@ -38,6 +38,34 @@ function isFirestoreInternalCrash(event: Sentry.ErrorEvent, error: unknown): boo
 	return frames.every((frame) => (frame.filename ?? '').includes('vendor-firebase'));
 }
 
+/**
+ * True when the event is workbox-window dereferencing a registration that
+ * `serviceWorker.register()` never returned. Privacy extensions and automation
+ * harnesses stub register() so it resolves undefined; the crash happens inside
+ * the minified workbox bundle, so app code can't guard it. Requires both the
+ * null-deref message and a stack rooted entirely in workbox-window, so real
+ * app-code dereferences with a similar message still get reported.
+ */
+function isBlockedServiceWorkerCrash(event: Sentry.ErrorEvent, error: unknown): boolean {
+	const messages: string[] = [];
+	if (error instanceof Error && error.message) messages.push(error.message);
+	event.exception?.values?.forEach((exc) => {
+		if (exc.value) messages.push(exc.value);
+	});
+
+	const hasKnownMessage = messages.some((msg) =>
+		/Cannot read propert(?:y|ies) of (?:undefined|null) \(reading '(?:waiting|installing|active)'\)|(?:undefined|null) is not an object \(evaluating '.*\.(?:waiting|installing|active)'\)/.test(
+			msg,
+		),
+	);
+	if (!hasKnownMessage) return false;
+
+	const frames = event.exception?.values?.flatMap((exc) => exc.stacktrace?.frames ?? []) ?? [];
+	if (frames.length === 0) return false;
+
+	return frames.every((frame) => (frame.filename ?? '').includes('workbox-window'));
+}
+
 export function initSentry() {
 	const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
 
@@ -116,6 +144,12 @@ export function initSentry() {
 				// load uses the memory cache, and reports a single structured event
 				// instead — that is the signal to watch.
 				if (isFirestoreInternalCrash(event, error)) {
+					return null;
+				}
+
+				// Filter out workbox-window crashes caused by a stubbed
+				// serviceWorker.register(). Not fixable from app code.
+				if (isBlockedServiceWorkerCrash(event, error)) {
 					return null;
 				}
 

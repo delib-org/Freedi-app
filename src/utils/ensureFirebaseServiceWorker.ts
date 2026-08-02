@@ -71,6 +71,14 @@ export async function ensureFirebaseServiceWorker() {
 
 		// Firebase SW registration successful
 
+		// Privacy extensions and automation harnesses sometimes stub register()
+		// so it resolves undefined instead of a ServiceWorkerRegistration.
+		if (!registration) {
+			console.info('[FirebaseSW] Registration returned no registration object, skipping');
+
+			return undefined;
+		}
+
 		// Wait for the service worker to be ready
 		if (registration.installing || registration.waiting) {
 			// Wait for Firebase SW activation
