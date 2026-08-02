@@ -148,7 +148,10 @@ describe('getBulkStatements', () => {
 
 		expect(mockWhere).toHaveBeenCalledWith('parentId', '==', rootId);
 		expect(res.statusCode).toBe(200);
-		const body = res.body as { statements: Array<{ statementId: string }>; nextCursor: string | null };
+		const body = res.body as {
+			statements: Array<{ statementId: string }>;
+			nextCursor: string | null;
+		};
 		expect(body.statements.map((s) => s.statementId)).toEqual(['a']);
 		expect(body.nextCursor).toBeNull();
 	});

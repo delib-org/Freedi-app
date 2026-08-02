@@ -36,6 +36,7 @@ export interface HeatMapValue {
  */
 export interface HeatMapData {
   approval: Record<string, number>;    // paragraphId -> score (-1 to 1)
+  approvalCount: Record<string, number>;  // paragraphId -> number of voters - used for display
   comments: Record<string, number>;    // paragraphId -> count
   rating: Record<string, number>;      // paragraphId -> average (0-5)
   viewership: Record<string, number>;  // paragraphId -> percentage (0-100) - used for heat level calculation
@@ -114,17 +115,19 @@ export function calculateHeatLevel(
 export function formatHeatValue(
   value: number,
   type: Exclude<HeatMapType, 'none'>,
-  viewerCount?: number
+  count?: number
 ): string {
   switch (type) {
-    case 'approval':
-      // Show as signed decimal (-1 to +1)
+    case 'approval': {
+      // Show as signed decimal (-1 to +1) followed by the number of voters
       const sign = value > 0 ? '+' : '';
+      const avg = `${sign}${value.toFixed(1)}`;
 
-      return `${sign}${value.toFixed(1)}`;
+      return count !== undefined ? `${avg} (${count})` : avg;
+    }
     case 'viewership':
       // Display actual viewer count instead of percentage
-      return viewerCount !== undefined ? viewerCount.toString() : Math.round(value).toString();
+      return count !== undefined ? count.toString() : Math.round(value).toString();
     case 'comments':
       return value.toString();
     case 'rating':
@@ -148,14 +151,19 @@ export function getHeatMapValue(
     return null;
   }
 
-  // For viewership, get the viewer count for display
-  const viewerCount = type === 'viewership' ? data.viewershipCount?.[paragraphId] : undefined;
+  // For viewership show the viewer count; for approval show the number of voters
+  let count: number | undefined;
+  if (type === 'viewership') {
+    count = data.viewershipCount?.[paragraphId];
+  } else if (type === 'approval') {
+    count = data.approvalCount?.[paragraphId];
+  }
 
   return {
     type,
     level: calculateHeatLevel(rawValue, type),
     rawValue,
-    displayValue: formatHeatValue(rawValue, type, viewerCount),
+    displayValue: formatHeatValue(rawValue, type, count),
   };
 }
 

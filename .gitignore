@@ -75,6 +75,7 @@ apps/sign/tsconfig.tsbuildinfo
 
 # Worktrees
 .worktrees/
+.claude/worktrees/
 
 env/prod-service-account.json
 

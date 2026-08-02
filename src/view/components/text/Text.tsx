@@ -3,6 +3,8 @@ import ReactMarkdown, { Components } from 'react-markdown';
 import { Statement } from '@freedi/shared-types';
 import UrlParser from '../edit/URLParse';
 import { ParagraphsDisplay } from '@/view/components/richTextEditor';
+import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
+import { containsRichHtml } from '@/utils/richHtml';
 import styles from './Text.module.scss';
 import { logError } from '@/utils/errorHandling';
 
@@ -122,6 +124,27 @@ const Text: FC<Props> = ({
 					</>
 				);
 			}
+		}
+
+		// Sign-authored descriptions carry rich HTML (colored spans, tables,
+		// entities) — render them sanitized instead of printing raw markup.
+		// Plain/markdown descriptions never hit this branch.
+		if (description && containsRichHtml(description)) {
+			return (
+				<>
+					{statement && (
+						<span
+							className={styles.statement}
+							style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}
+						>
+							<UrlParser text={statement} />
+						</span>
+					)}
+					<div className={styles.description}>
+						<RichHtmlContent content={description} />
+					</div>
+				</>
+			);
 		}
 
 		const markdownComponents = createMarkdownComponents(fontSize);

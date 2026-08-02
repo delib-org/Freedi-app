@@ -8,6 +8,7 @@ import {
 	convertTimestampsToMillis,
 	preprocessFirestoreData,
 	normalizeStatementData,
+	stripNullValues,
 } from '../timestampHelpers';
 
 // Helper to create a mock Firebase Timestamp object
@@ -354,5 +355,87 @@ describe('normalizeStatementData', () => {
 			expect(nested.ts).toBe(500);
 			expect(result.topParentId).toBeUndefined();
 		});
+	});
+});
+
+describe('stripNullValues', () => {
+	it('drops top-level null properties', () => {
+		expect(stripNullValues({ a: 1, b: null, c: 'x' })).toEqual({ a: 1, c: 'x' });
+	});
+
+	it('drops nested null properties', () => {
+		const result = stripNullValues({
+			evaluation: { sumEvaluations: null, averageEvaluation: 0.5 },
+		}) as Record<string, Record<string, unknown>>;
+
+		expect(result.evaluation).toEqual({ averageEvaluation: 0.5 });
+		expect('sumEvaluations' in result.evaluation).toBe(false);
+	});
+
+	it('keeps falsy-but-valid values', () => {
+		expect(stripNullValues({ zero: 0, empty: '', no: false })).toEqual({
+			zero: 0,
+			empty: '',
+			no: false,
+		});
+	});
+
+	it('preserves array length, turning null elements into undefined', () => {
+		const result = stripNullValues([1, null, 3]) as unknown[];
+
+		expect(result).toHaveLength(3);
+		expect(result[0]).toBe(1);
+		expect(result[1]).toBeUndefined();
+		expect(result[2]).toBe(3);
+	});
+
+	it('converts a bare null into undefined', () => {
+		expect(stripNullValues(null)).toBeUndefined();
+	});
+
+	it('passes primitives through unchanged', () => {
+		expect(stripNullValues(42)).toBe(42);
+		expect(stripNullValues('text')).toBe('text');
+		expect(stripNullValues(undefined)).toBeUndefined();
+	});
+
+	it('leaves Date objects intact', () => {
+		const date = new Date(1000);
+
+		expect(stripNullValues(date)).toBe(date);
+	});
+});
+
+describe('normalizeStatementData null handling', () => {
+	// Regression: valibot's optional() rejects null, so a stored null on an
+	// optional numeric field failed the whole document with
+	// "Invalid type: Expected number but received null".
+	it('strips optional fields stored as null', () => {
+		const result = normalizeStatementData({
+			statementId: 'stmt-1',
+			parentId: 'stmt-1',
+			createdAt: 1000,
+			lastUpdate: 1000,
+			order: null,
+			color: null,
+		}) as Record<string, unknown>;
+
+		expect('order' in result).toBe(false);
+		expect('color' in result).toBe(false);
+		expect(result.statementId).toBe('stmt-1');
+	});
+
+	it('still defaults required numeric fields rather than stripping them', () => {
+		const result = normalizeStatementData({
+			statementId: 'stmt-2',
+			parentId: 'stmt-2',
+			consensus: null,
+			createdAt: null,
+			lastUpdate: null,
+		}) as Record<string, unknown>;
+
+		expect(result.consensus).toBe(0);
+		expect(typeof result.createdAt).toBe('number');
+		expect(typeof result.lastUpdate).toBe('number');
 	});
 });

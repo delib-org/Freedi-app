@@ -5,6 +5,14 @@ import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
 import { logLogout } from '@/controllers/db/researchLogs/researchLogger';
 
+// The user dismissing the Google popup is a normal outcome, not a failure.
+// Reporting these as errors filled the tracker with `auth/popup-closed-by-user`.
+const CANCELLED_SIGN_IN_CODES = new Set([
+	'auth/popup-closed-by-user',
+	'auth/cancelled-popup-request',
+	'auth/user-cancelled',
+]);
+
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
 	signInWithPopup(auth, provider)
@@ -20,6 +28,21 @@ export function googleLogin() {
 			}
 		})
 		.catch((error) => {
+			const code = (error as { code?: string })?.code;
+
+			if (code && CANCELLED_SIGN_IN_CODES.has(code)) {
+				logger.info('Google sign-in cancelled by user', { code });
+
+				return;
+			}
+
+			if (code === 'auth/popup-blocked') {
+				// Browser-level setting; the user needs to allow popups. Not a defect.
+				logger.info('Google sign-in popup was blocked by the browser', { code });
+
+				return;
+			}
+
 			logger.error('Google login failed', error);
 			analyticsService.trackValidationError('google_login_failed', 'auth');
 		});

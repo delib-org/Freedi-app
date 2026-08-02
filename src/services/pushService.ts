@@ -165,6 +165,13 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 export interface MessagingInitResult {
 	success: boolean;
 	reason?: string;
+	/**
+	 * True when messaging simply isn't available in this environment (iOS Safari
+	 * outside PWA mode, browsers without the Push APIs). That is an expected
+	 * platform limitation, not a fault — callers should skip quietly rather than
+	 * report it as an error.
+	 */
+	unsupported?: boolean;
 }
 
 /**
@@ -178,7 +185,7 @@ export const initializeMessaging = async (): Promise<MessagingInitResult> => {
 
 		console.info(`[PushService] Firebase Messaging not supported: ${reason}`);
 
-		return { success: false, reason };
+		return { success: false, reason, unsupported: true };
 	}
 
 	try {
@@ -211,14 +218,19 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 		// Initialize messaging if not already done
 		const messagingResult = await initializeMessaging();
 		if (!messagingResult.success) {
-			logError(
-				new Error(
-					`[PushService] Failed to initialize messaging in getOrRefreshToken: ${messagingResult.reason}`,
-				),
-				{
-					operation: 'services.pushService.getOrRefreshToken',
-				},
-			);
+			if (messagingResult.unsupported) {
+				// Expected on unsupported platforms — nothing to fix, nothing to report.
+				console.info(`[PushService] Skipping token refresh: ${messagingResult.reason}`);
+			} else {
+				logError(
+					new Error(
+						`[PushService] Failed to initialize messaging in getOrRefreshToken: ${messagingResult.reason}`,
+					),
+					{
+						operation: 'services.pushService.getOrRefreshToken',
+					},
+				);
+			}
 
 			return null;
 		}

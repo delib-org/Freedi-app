@@ -36,6 +36,7 @@ export async function liveSynthOnOptionEvaluationChange(
 ): Promise<void> {
 	if (!synthesisFlags.liveSynth) {
 		logger.info('liveSynth.skip: flag disabled');
+
 		return;
 	}
 
@@ -47,6 +48,7 @@ export async function liveSynthOnOptionEvaluationChange(
 			statementId: raw?.statementId,
 			statementType: raw?.statementType,
 		});
+
 		return;
 	}
 	if (!afterStatement.parentId || afterStatement.parentId === 'top') {
@@ -54,6 +56,7 @@ export async function liveSynthOnOptionEvaluationChange(
 			statementId: afterStatement.statementId,
 			parentId: afterStatement.parentId,
 		});
+
 		return;
 	}
 
@@ -63,6 +66,7 @@ export async function liveSynthOnOptionEvaluationChange(
 			statementId: afterStatement.statementId,
 			integratedOptionsCount: afterStatement.integratedOptions?.length,
 		});
+
 		return;
 	}
 
@@ -80,6 +84,7 @@ export async function liveSynthOnOptionEvaluationChange(
 			beforeCons,
 			afterCons,
 		});
+
 		return;
 	}
 
@@ -89,6 +94,7 @@ export async function liveSynthOnOptionEvaluationChange(
 			statementId: afterStatement.statementId,
 			parentId: afterStatement.parentId,
 		});
+
 		return;
 	}
 
@@ -108,6 +114,7 @@ export async function liveSynthOnOptionEvaluationChange(
 			wasBelow,
 			nowAbove,
 		});
+
 		return;
 	}
 

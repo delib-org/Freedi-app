@@ -10,6 +10,7 @@ import { logError } from '@/utils/errorHandling';
 import { createCollectionRef, createSubscriptionRef } from '@/utils/firebaseUtils';
 import { getPseudoName } from '@/utils/temporalNameGenerator';
 import { parse } from 'valibot';
+import { stripNullValues } from '@/helpers/timestampHelpers';
 
 // Use string literal for scope until delib-npm exports the enum value
 const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
@@ -55,7 +56,7 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 					const data = doc.data();
 					// Validate the data against the UserDemographicQuestion schema
 
-					return parse(UserDemographicQuestionSchema, data);
+					return parse(UserDemographicQuestionSchema, stripNullValues(data));
 				} catch (validationError) {
 					logError(validationError, {
 						operation: 'userDemographic.getUserDemographicQuestions.validation',
@@ -92,7 +93,7 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 			userQuestionsDB.docChanges().forEach((change) => {
 				try {
 					const data = change.doc.data();
-					const validatedQuestion = parse(UserDemographicQuestionSchema, data);
+					const validatedQuestion = parse(UserDemographicQuestionSchema, stripNullValues(data));
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographicQuestion(validatedQuestion));
@@ -138,7 +139,7 @@ export function listenToUserDemographicAnswers(statementId: string) {
 			userAnswersDB.docChanges().forEach((change) => {
 				try {
 					const data = change.doc.data() as UserDemographicQuestion;
-					const validatedAnswer = parse(UserDemographicQuestionSchema, data);
+					const validatedAnswer = parse(UserDemographicQuestionSchema, stripNullValues(data));
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographic(validatedAnswer));
@@ -188,7 +189,7 @@ export async function getUserDemographicResponses(
 		questionsSnapshot.forEach((doc) => {
 			try {
 				const data = doc.data();
-				const validatedQuestion = parse(UserDemographicQuestionSchema, data);
+				const validatedQuestion = parse(UserDemographicQuestionSchema, stripNullValues(data));
 				questions.push(validatedQuestion);
 			} catch (error) {
 				logError(error, {
@@ -308,7 +309,7 @@ export function listenToGroupDemographicQuestions(topParentId: string): () => vo
 			userQuestionsDB.docChanges().forEach((change) => {
 				try {
 					const data = change.doc.data();
-					const validatedQuestion = parse(UserDemographicQuestionSchema, data);
+					const validatedQuestion = parse(UserDemographicQuestionSchema, stripNullValues(data));
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographicQuestion(validatedQuestion));
@@ -360,7 +361,7 @@ export function listenToGroupDemographicAnswers(topParentId: string): () => void
 			userAnswersDB.docChanges().forEach((change) => {
 				try {
 					const data = change.doc.data() as UserDemographicQuestion;
-					const validatedAnswer = parse(UserDemographicQuestionSchema, data);
+					const validatedAnswer = parse(UserDemographicQuestionSchema, stripNullValues(data));
 
 					if (change.type === 'added' || change.type === 'modified') {
 						store.dispatch(setUserDemographic(validatedAnswer));
@@ -414,7 +415,7 @@ export async function getGroupDemographicQuestions(
 				try {
 					const data = docSnap.data();
 
-					return parse(UserDemographicQuestionSchema, data);
+					return parse(UserDemographicQuestionSchema, stripNullValues(data));
 				} catch (validationError) {
 					logError(validationError, {
 						operation: 'userDemographic.getGroupDemographicQuestions.validation',
@@ -467,7 +468,7 @@ export async function getUserGroupAnswers(
 				try {
 					const data = docSnap.data();
 
-					return parse(UserDemographicQuestionSchema, data);
+					return parse(UserDemographicQuestionSchema, stripNullValues(data));
 				} catch (validationError) {
 					logError(validationError, {
 						operation: 'userDemographic.getUserGroupAnswers.validation',

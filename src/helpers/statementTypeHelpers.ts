@@ -1,4 +1,4 @@
-import { StatementType } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 
 /**
  * All StatementType values except `document`. Used in Firestore `in` filters
@@ -21,3 +21,22 @@ export const NON_DOCUMENT_STATEMENT_TYPES: StatementType[] = Object.values(State
 export const DISCUSSABLE_STATEMENT_TYPES: StatementType[] = NON_DOCUMENT_STATEMENT_TYPES.filter(
 	(t) => t !== StatementType.paragraph,
 );
+
+/**
+ * True when a statement is part of its parent document's rich BODY rather
+ * than a discussable child. Two data shapes exist:
+ * - canonical: `statementType === paragraph`
+ * - legacy (Sign): `statementType === option` with `doc.isOfficialParagraph`
+ *   (written by Sign's `createParagraphStatement`/migration; still the shape
+ *   of most Sign documents until the option→paragraph data migration lands).
+ *
+ * Both must be excluded from chat feeds and child lists — otherwise a Sign
+ * document's body paragraphs (raw HTML content) leak into the main app's
+ * discussion view as chat messages.
+ */
+export function isDocumentBodyParagraph(statement: Statement): boolean {
+	return (
+		statement.statementType === StatementType.paragraph ||
+		statement.doc?.isOfficialParagraph === true
+	);
+}

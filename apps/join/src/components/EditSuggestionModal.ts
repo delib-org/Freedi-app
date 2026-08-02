@@ -6,6 +6,9 @@ import { getOptionParagraphs, loadOptionParagraphs, updateSuggestion } from '@/l
 interface EditSuggestionModalAttrs {
 	option: Statement;
 	onClose: () => void;
+	/** Pre-filled textarea content (e.g. an AI-drafted improvement). When set,
+	 *  the modal skips seeding from the option's stored text. */
+	initialText?: string;
 }
 
 let text = '';
@@ -47,19 +50,29 @@ export const EditSuggestionModal: m.Component<EditSuggestionModalAttrs> = {
 	oninit(vnode) {
 		// Seed immediately from whatever's already cached so the modal paints
 		// without waiting on a fetch. Tracking the option id lets us reset
-		// cleanly when reopening on a different card.
+		// cleanly when reopening on a different card. An explicit `initialText`
+		// (AI draft) wins over the stored text and must not be overwritten by a
+		// late paragraph fetch.
 		lastOptionId = vnode.attrs.option.statementId;
-		text = seedTextFromOption(vnode.attrs.option);
 		submitting = false;
-		loadAndReseed(vnode.attrs.option);
+		if (vnode.attrs.initialText !== undefined) {
+			text = vnode.attrs.initialText;
+		} else {
+			text = seedTextFromOption(vnode.attrs.option);
+			loadAndReseed(vnode.attrs.option);
+		}
 	},
 
 	onupdate(vnode) {
 		if (vnode.attrs.option.statementId !== lastOptionId) {
 			lastOptionId = vnode.attrs.option.statementId;
-			text = seedTextFromOption(vnode.attrs.option);
 			submitting = false;
-			loadAndReseed(vnode.attrs.option);
+			if (vnode.attrs.initialText !== undefined) {
+				text = vnode.attrs.initialText;
+			} else {
+				text = seedTextFromOption(vnode.attrs.option);
+				loadAndReseed(vnode.attrs.option);
+			}
 		}
 	},
 

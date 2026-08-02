@@ -11,6 +11,7 @@ import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
+import SimpleQuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './QuestionsView.module.scss';
 import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
@@ -128,27 +129,57 @@ const QuestionsView: FC = () => {
 			</div>
 
 			<div className={styles.addButtonWrapper}>
-				{menuOpen && (
-					<>
-						<button className={styles.overlay} onClick={() => setMenuOpen(false)} />
+				<div className={styles.addButtonGroup}>
+					{menuOpen && (
 						<button
-							className={styles.secondaryButton}
+							className={styles.overlay}
+							onClick={() => setMenuOpen(false)}
+							aria-label={t('Close')}
+						/>
+					)}
+					<div
+						className={`${styles.fanMenu} ${menuOpen ? styles.fanMenuOpen : ''}`}
+						role="menu"
+						aria-hidden={!menuOpen}
+					>
+						<button
+							className={`${styles.fanItem} ${styles.fanItemSimple}`}
+							onClick={handleAddQuestion}
+							aria-label={t('Simple Question')}
+							title={t('Simple Question')}
+							tabIndex={menuOpen ? 0 : -1}
+							role="menuitem"
+						>
+							<span className={styles.fanItem__icon}>
+								<SimpleQuestionIcon />
+							</span>
+							<span className={styles.fanItem__label}>{t('Simple Question')}</span>
+						</button>
+						<button
+							className={`${styles.fanItem} ${styles.fanItemCompound}`}
 							onClick={handleAddCompoundQuestion}
 							aria-label={t('Compound Question')}
 							title={t('Compound Question')}
+							tabIndex={menuOpen ? 0 : -1}
+							role="menuitem"
 						>
-							<CompoundIcon style={{ color: '#fff' }} />
+							<span className={styles.fanItem__icon}>
+								<CompoundIcon />
+							</span>
+							<span className={styles.fanItem__label}>{t('Compound Question')}</span>
 						</button>
-					</>
-				)}
-				<button
-					className={`${styles.addButton} ${menuOpen ? styles.addButtonActive : ''}`}
-					style={statementColor}
-					onClick={menuOpen ? handleAddQuestion : () => setMenuOpen(true)}
-					aria-label={t('Add a question')}
-				>
-					<PlusIcon style={{ color: statementColor.color }} />
-				</button>
+					</div>
+					<button
+						className={`${styles.addButton} ${menuOpen ? styles.addButtonActive : ''}`}
+						style={statementColor}
+						onClick={() => setMenuOpen((open) => !open)}
+						aria-label={t('Add a question')}
+						aria-expanded={menuOpen}
+						aria-haspopup="menu"
+					>
+						<PlusIcon style={{ color: statementColor.color }} />
+					</button>
+				</div>
 			</div>
 		</>
 	);

@@ -75,4 +75,6 @@ export enum AgoraSuggestionStatus {
 	open = 'open',
 	accepted = 'accepted',
 	thanked = 'thanked',
+	/** Polite decline ("no thanks") — closes the suggestion; no points, no notification */
+	declined = 'declined',
 }

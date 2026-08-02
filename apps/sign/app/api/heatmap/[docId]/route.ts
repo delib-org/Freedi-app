@@ -194,11 +194,15 @@ export async function GET(
     // embedded `document.paragraphs` array is empty after migration.
     const paragraphs: Paragraph[] = await getDocumentParagraphs(document);
     const paragraphIds = paragraphs.map((p) => p.paragraphId);
+    // Membership is tested once per evaluation/comment/view/suggestion below, so
+    // an O(1) Set beats repeated Array.includes scans over every paragraph.
+    const paragraphIdSet = new Set(paragraphIds);
 
     if (paragraphIds.length === 0) {
       return NextResponse.json({
         data: {
           approval: {},
+          approvalCount: {},
           comments: {},
           rating: {},
           viewership: {},
@@ -208,45 +212,51 @@ export async function GET(
       });
     }
 
+    // Steps 2-6 are independent reads. They used to run as sequential awaits —
+    // roughly ten consecutive Query.Get round-trips, which Sentry flagged as a
+    // 4.6s degraded operation. They now issue together and the route waits once.
+
     // 2. Get all evaluations for paragraphs (used for approval heat map)
     // Query evaluations where statementId matches any paragraphId
     // Firestore `in` queries limited to 30 items, so batch if needed
     const BATCH_SIZE = 30;
-    const paragraphEvalDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+    const evalBatches: string[][] = [];
     for (let i = 0; i < paragraphIds.length; i += BATCH_SIZE) {
-      const batch = paragraphIds.slice(i, i + BATCH_SIZE);
-      const batchSnapshot = await db
-        .collection(Collections.evaluations)
-        .where('statementId', 'in', batch)
-        .get();
-      paragraphEvalDocs.push(...batchSnapshot.docs);
+      evalBatches.push(paragraphIds.slice(i, i + BATCH_SIZE));
     }
 
-    // 3. Get all comments (statements with parentId in paragraphIds)
-    const commentsSnapshot = await db
-      .collection(Collections.statements)
-      .where('topParentId', '==', docId)
-      .where('statementType', '==', StatementType.statement)
-      .get();
+    const [
+      paragraphEvalSnapshots,
+      // 3. Get all comments (statements with parentId in paragraphIds)
+      commentsSnapshot,
+      // 4. Get all evaluations for comments (for rating heat map)
+      evaluationsSnapshot,
+      // 5. Get all views
+      viewsSnapshot,
+      // 6. Get all suggestions
+      suggestionsSnapshot,
+    ] = await Promise.all([
+      Promise.all(
+        evalBatches.map((batch) =>
+          db.collection(Collections.evaluations).where('statementId', 'in', batch).get()
+        )
+      ),
+      db
+        .collection(Collections.statements)
+        .where('topParentId', '==', docId)
+        .where('statementType', '==', StatementType.statement)
+        .get(),
+      db.collection(Collections.evaluations).where('documentId', '==', docId).get(),
+      db.collection(PARAGRAPH_VIEWS_COLLECTION).where('documentId', '==', docId).get(),
+      db
+        .collection(Collections.suggestions)
+        .where('documentId', '==', docId)
+        .where('hide', '==', false)
+        .get(),
+    ]);
 
-    // 4. Get all evaluations for comments (for rating heat map)
-    const evaluationsSnapshot = await db
-      .collection(Collections.evaluations)
-      .where('documentId', '==', docId)
-      .get();
-
-    // 5. Get all views
-    const viewsSnapshot = await db
-      .collection(PARAGRAPH_VIEWS_COLLECTION)
-      .where('documentId', '==', docId)
-      .get();
-
-    // 6. Get all suggestions
-    const suggestionsSnapshot = await db
-      .collection(Collections.suggestions)
-      .where('documentId', '==', docId)
-      .where('hide', '==', false)
-      .get();
+    const paragraphEvalDocs: FirebaseFirestore.QueryDocumentSnapshot[] =
+      paragraphEvalSnapshots.flatMap((snapshot) => snapshot.docs);
 
     // 7. Get total unique visitors for viewership percentage
     const totalVisitors = new Set(
@@ -256,6 +266,7 @@ export async function GET(
     // Process data into HeatMapData format
     const heatMapData: HeatMapData = {
       approval: {},
+      approvalCount: {},
       comments: {},
       rating: {},
       viewership: {},
@@ -266,6 +277,7 @@ export async function GET(
     // Initialize all paragraphs with defaults
     paragraphIds.forEach((id) => {
       heatMapData.approval[id] = 0;
+      heatMapData.approvalCount[id] = 0;
       heatMapData.comments[id] = 0;
       heatMapData.rating[id] = 0;
       heatMapData.viewership[id] = 0;
@@ -286,7 +298,7 @@ export async function GET(
         return;
       }
 
-      if (paragraphId && paragraphIds.includes(paragraphId)) {
+      if (paragraphId && paragraphIdSet.has(paragraphId)) {
         if (!evalsByParagraph[paragraphId]) {
           evalsByParagraph[paragraphId] = { positive: 0, negative: 0 };
         }
@@ -299,11 +311,13 @@ export async function GET(
     });
 
     // Convert to -1 to 1 scale: (positive - negative) / total
+    // and record the number of voters (total evaluations) per paragraph
     Object.entries(evalsByParagraph).forEach(([id, data]) => {
       const total = data.positive + data.negative;
       heatMapData.approval[id] = total > 0
         ? Math.round(((data.positive - data.negative) / total) * 100) / 100
         : 0;
+      heatMapData.approvalCount[id] = total;
     });
 
     // Count comments per paragraph
@@ -316,7 +330,7 @@ export async function GET(
         return;
       }
 
-      if (!comment.hide && paragraphIds.includes(comment.parentId)) {
+      if (!comment.hide && paragraphIdSet.has(comment.parentId)) {
         heatMapData.comments[comment.parentId] =
           (heatMapData.comments[comment.parentId] || 0) + 1;
       }
@@ -329,7 +343,7 @@ export async function GET(
     const commentToParagraph: Record<string, string> = {};
     commentsSnapshot.docs.forEach((doc) => {
       const comment = doc.data() as Statement;
-      if (!comment.hide && paragraphIds.includes(comment.parentId)) {
+      if (!comment.hide && paragraphIdSet.has(comment.parentId)) {
         commentToParagraph[comment.statementId] = comment.parentId;
       }
     });
@@ -379,7 +393,7 @@ export async function GET(
 
       filteredVisitors.add(visitorId);
 
-      if (paragraphIds.includes(view.paragraphId)) {
+      if (paragraphIdSet.has(view.paragraphId)) {
         if (!viewsByParagraph[view.paragraphId]) {
           viewsByParagraph[view.paragraphId] = new Set();
         }
@@ -411,7 +425,7 @@ export async function GET(
         return;
       }
 
-      if (paragraphId && paragraphIds.includes(paragraphId)) {
+      if (paragraphId && paragraphIdSet.has(paragraphId)) {
         heatMapData.suggestions[paragraphId] =
           (heatMapData.suggestions[paragraphId] || 0) + 1;
       }

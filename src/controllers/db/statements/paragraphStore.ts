@@ -73,6 +73,5 @@ const paragraphStore: ParagraphStore = {
 export const paragraphDeps: ParagraphDeps = {
 	store: paragraphStore,
 	creator: () => store.getState().creator?.creator,
-	logError: (error, context) =>
-		logError(error, { operation: 'paragraphCrud', ...(context ?? {}) }),
+	logError: (error, context) => logError(error, { operation: 'paragraphCrud', ...(context ?? {}) }),
 };

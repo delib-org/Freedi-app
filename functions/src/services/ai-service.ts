@@ -1,10 +1,6 @@
 import { logger } from 'firebase-functions';
 import 'dotenv/config';
-import {
-	GEMINI_MODEL,
-	getGenAI,
-	type CompatGenerativeModel,
-} from '../config/gemini';
+import { GEMINI_MODEL, getGenAI, type CompatGenerativeModel } from '../config/gemini';
 import { notifyAIError } from './error-notification-service';
 
 interface APIError {
@@ -384,6 +380,8 @@ export async function generateSimilar(
  * @param instructions - Optional user instructions for improvement
  * @param parentTitle - The parent statement's title (question) for context
  * @param parentDescription - The parent statement's description for context
+ * @param comments - Peer comments the author marked helpful; when present the
+ *   improvement is driven by these instead of instructions
  * @returns Object containing improved title, description and detected language
  */
 export async function improveSuggestion(
@@ -392,6 +390,7 @@ export async function improveSuggestion(
 	instructions?: string,
 	parentTitle?: string,
 	parentDescription?: string,
+	comments?: string[],
 ): Promise<{ improvedTitle: string; improvedDescription?: string; detectedLanguage: string }> {
 	try {
 		// Always detect language from the title (or description if title is too short)
@@ -410,7 +409,38 @@ export async function improveSuggestion(
         `
 			: '';
 
-		if (instructions && instructions.trim()) {
+		if (comments && comments.length > 0) {
+			// Comment-driven improvement: the suggestion author selected peer
+			// comments they found helpful; rewrite the suggestion so it addresses
+			// them while staying the author's idea.
+			const commentsList = comments.map((c, i) => `${i + 1}. ${c}`).join('\n');
+			prompt = `
+        ${parentContext}
+        The author of the following suggestion received feedback comments from other participants
+        and marked the ones below as helpful. Rewrite the suggestion so it incorporates this feedback.
+
+        Original suggestion title: "${title}"
+        ${description ? `Original suggestion description: "${description}"` : ''}
+
+        Helpful comments from other participants:
+${commentsList}
+
+        Requirements:
+        1. Only make changes that are supported by the comments above
+        2. Preserve the core idea and intent of the original suggestion — improve it, do not replace it
+        3. Write in ${detectedLanguage || 'the same language as the original'}
+        4. Keep the improved title concise (one sentence); put elaboration in the description
+        5. Ensure proper grammar and structure
+        6. The description may span multiple paragraphs, separated by a newline character
+        7. Ensure the suggestion stays relevant to the question/topic provided in the context
+
+        Return ONLY a JSON object with this format:
+        {
+          "improvedTitle": "improved title here",
+          "improvedDescription": "improved description here"
+        }
+      `;
+		} else if (instructions && instructions.trim()) {
 			// User provided specific instructions
 			prompt = `
         ${parentContext}

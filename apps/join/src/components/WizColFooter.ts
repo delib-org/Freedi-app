@@ -1,5 +1,6 @@
 import m from 'mithril';
-import { t, isRTL } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
+import { BrandLogo } from '@/components/BrandLogo';
 
 const WIZCOL_URL = 'https://wizcol.com/experience';
 
@@ -108,8 +109,6 @@ export const WizColFooter: m.Component = {
 	},
 
 	view() {
-		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
-
 		return m('footer.wizcol-footer', [
 			m(
 				'a.wizcol-footer__brand',
@@ -119,13 +118,10 @@ export const WizColFooter: m.Component = {
 					rel: 'noopener noreferrer',
 				},
 				[
-					m('img.wizcol-footer__logo', {
-						src: logoSrc,
-						alt: 'WizCol',
-						width: 32,
-						height: 32,
+					m(BrandLogo, {
+						size: 32,
+						className: 'wizcol-footer__logo',
 						loading: 'lazy',
-						decoding: 'async',
 					}),
 					m('span.wizcol-footer__brand-text', t('poweredByWizCol')),
 				],

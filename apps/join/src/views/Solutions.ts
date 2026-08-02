@@ -21,6 +21,11 @@ import {
 } from '@/lib/store';
 import { isAdmin, checkAdminStatus } from '@/lib/admin';
 import { markOpenedInJoin } from '@/lib/joinSubscriptions';
+import {
+	subscribeMyHelperPoints,
+	unsubscribeMyHelperPoints,
+	getMyHelperPoints,
+} from '@/lib/helperPoints';
 import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { SolutionCard } from '@/components/SolutionCard';
@@ -30,6 +35,7 @@ import { AddSuggestionModal } from '@/components/AddSuggestionModal';
 import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
+import { QRShare } from '@/components/QRShare';
 import { WizColFooter } from '@/components/WizColFooter';
 import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
@@ -96,6 +102,7 @@ function teardownSolutionsSubscriptions(): void {
 		joinSubmissionUnsub();
 		joinSubmissionUnsub = null;
 	}
+	unsubscribeMyHelperPoints();
 }
 
 async function initSolutionsForQuestion(questionId: string): Promise<void> {
@@ -136,6 +143,7 @@ async function initSolutionsForQuestion(questionId: string): Promise<void> {
 		optionsUnsub = subscribeOptions(questionId);
 		evaluationsUnsub = subscribeUserEvaluations(questionId);
 		joinSubmissionUnsub = subscribeUserJoinFormSubmission(questionId);
+		subscribeMyHelperPoints(questionId);
 
 		let mainId: string | undefined = m.route.param('mid');
 		if (!mainId) {
@@ -253,8 +261,17 @@ export const Solutions: m.Component = {
 		// organizer one — they can seed the crowd list "as a regular person"
 		// regardless of whether participants are allowed to add.
 		const showAdminParticipantAdd = isAdmin();
+		// The floating "+" is a second entry point into the same participant-style
+		// add flow the inline button uses — shown whenever either inline add button
+		// is available, and hidden while its own modal is open so it doesn't linger
+		// behind the backdrop as a stray tab stop.
+		const showFab = (showUserAddButton || showAdminParticipantAdd) && !showAddSuggestion;
+		// `--has-fab` only reserves bottom scroll room for the floating button.
+		const rootSelector = `.solutions${facilitated ? '.solutions--facilitated' : ''}${
+			showFab ? '.solutions--has-fab' : ''
+		}`;
 
-		return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
+		return m(rootSelector, [
 			// Admin gets a return path: in facilitated mode that's the workspace
 			// hub; otherwise (e.g. a question created from /, or a /q share link
 			// opened by its admin) it's the join app's main page. The BackButton
@@ -272,6 +289,18 @@ export const Solutions: m.Component = {
 					as: 'h1',
 					className: 'solutions__title',
 				}),
+				getMyHelperPoints().total > 0
+					? m(
+							'.solutions__points-pill',
+							{
+								'aria-label': t('points.my_points_aria', {
+									count: getMyHelperPoints().total,
+								}),
+								title: t('points.my_points_aria', { count: getMyHelperPoints().total }),
+							},
+							`⭐ ${getMyHelperPoints().total}`,
+						)
+					: null,
 				pendingCount > 0
 					? m(
 							'button.solutions__new-pill',
@@ -296,6 +325,19 @@ export const Solutions: m.Component = {
 					: null,
 			]),
 			m('.solutions__scroll', [
+				// Per-question QR. Independent from the hub's QR: the facilitator
+				// turns this one on from inside the question, and it encodes *this*
+				// question's URL, so a scan lands the newcomer directly here instead
+				// of on the hub. `window.location.href` is that URL by construction
+				// (the component never builds one), which keeps it correct on both
+				// the facilitated `/m/:mid/q/:qid` route and the legacy `/q/:qid`
+				// share link.
+				question.statementSettings?.showQR
+					? m(QRShare, {
+							url: window.location.href,
+							title: question.statement,
+						})
+					: null,
 				// Status banner \u2014 only rendered for admins (participants either
 				// see the closed screen above or the normal frozen-but-disabled
 				// surface). Reassures the admin that participants are getting the
@@ -499,6 +541,24 @@ export const Solutions: m.Component = {
 					})
 				: null,
 			renderEditModal(),
+			showFab
+				? m(
+						'.solutions__fab-wrap',
+						m(
+							'button.solutions__fab',
+							{
+								type: 'button',
+								'aria-label': t('solutions.add_suggestion'),
+								title: t('solutions.add_suggestion'),
+								onclick: () => {
+									addAsOrganizer = false;
+									showAddSuggestion = true;
+								},
+							},
+							m('span.solutions__fab-icon', { 'aria-hidden': 'true' }, '+'),
+						),
+					)
+				: null,
 			m(FacilitatorPanel),
 		]);
 	},

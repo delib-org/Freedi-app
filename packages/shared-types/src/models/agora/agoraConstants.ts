@@ -25,9 +25,22 @@ export const AGORA_CAMP_BOUNDS = {
 } as const;
 
 export const AGORA_SESSION = {
-	JOIN_CODE_LENGTH: 6,
-	/** Characters used for join codes — no ambiguous 0/O/1/I */
-	JOIN_CODE_ALPHABET: 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789',
+	JOIN_CODE_LENGTH: 5,
+	/**
+	 * Digits only. Students type this off the board on a phone, so a numeric
+	 * keypad beats a full keyboard — and with no letters there is nothing left
+	 * to confuse (the old alphabet had to drop O/0 and I/1 by hand).
+	 * 10^5 = 100,000 codes, checked for collisions against open/live sessions
+	 * only, so the space is far larger than the number of concurrent classes.
+	 */
+	JOIN_CODE_ALPHABET: '0123456789',
+	/**
+	 * A newly minted code must not collide with any session created inside this
+	 * window. Scoping by age rather than by status means a code stays reserved
+	 * for a full day even after its lesson ends — so a student who kept
+	 * yesterday's code on a note cannot wander into today's unrelated class.
+	 */
+	JOIN_CODE_UNIQUE_WINDOW_MS: 24 * 60 * 60 * 1000,
 	TEAM_SIZE_MIN: 1,
 	TEAM_SIZE_MAX: 3,
 	/** Default lesson length in milliseconds (45 minutes) */

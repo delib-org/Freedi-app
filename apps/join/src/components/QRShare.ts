@@ -1,5 +1,4 @@
 import m from 'mithril';
-import QRCode from 'qrcode';
 import { t } from '@/lib/i18n';
 
 // Module-level cache: re-rendering the same URL is the common case (Mithril
@@ -9,6 +8,31 @@ import { t } from '@/lib/i18n';
 // redraw while the next promise resolves.
 const svgCache = new Map<string, string>();
 
+// `qrcode` is ~24 kB raw of encoder tables that only matter to the small share
+// card on the hub — nobody opening a question on a slow phone should pay for it
+// before the question renders. The component already tolerates the SVG arriving
+// a frame late (that's what `ensureSvgBuilt` + the redraw are for), so loading
+// the encoder on first use costs nothing beyond that same placeholder frame.
+// The promise is memoised so concurrent sizes share one fetch.
+type QRCodeApi = typeof import('qrcode');
+
+let encoderPromise: Promise<QRCodeApi> | null = null;
+
+function loadEncoder(): Promise<QRCodeApi> {
+	if (!encoderPromise) {
+		// `qrcode` is CommonJS. Depending on how the interop shakes out the
+		// namespace either carries the API directly or wraps it under
+		// `default`, so accept both rather than betting on one.
+		encoderPromise = import('qrcode').then((mod) => {
+			const wrapped = mod as QRCodeApi & { default?: QRCodeApi };
+
+			return wrapped.default ?? wrapped;
+		});
+	}
+
+	return encoderPromise;
+}
+
 function cacheKey(url: string, size: number): string {
 	return `${size}::${url}`;
 }
@@ -17,6 +41,7 @@ async function buildSvg(url: string, size: number): Promise<string> {
 	const key = cacheKey(url, size);
 	const cached = svgCache.get(key);
 	if (cached) return cached;
+	const QRCode = await loadEncoder();
 	const svg = await QRCode.toString(url, {
 		type: 'svg',
 		errorCorrectionLevel: 'M',
@@ -157,9 +182,9 @@ export const QRShare: m.Component<QRShareAttrs> = {
 		const presenterSvg = getCachedSvg(url, presenterSize);
 		const canShare = typeof navigator.share === 'function';
 
-		return m('section.main-hub__qr', { 'aria-labelledby': 'main-hub-qr-label' }, [
+		return m('section.qr-share', { 'aria-labelledby': 'qr-share-label' }, [
 			m(
-				'button.main-hub__qr-canvas',
+				'button.qr-share__canvas',
 				{
 					type: 'button',
 					'aria-label': t('qrShare.expandAria'),
@@ -167,12 +192,12 @@ export const QRShare: m.Component<QRShareAttrs> = {
 				},
 				compactSvg ? m.trust(compactSvg) : null,
 			),
-			m('.main-hub__qr-body', [
-				m('p.main-hub__qr-label', { id: 'main-hub-qr-label' }, t('qrShare.label')),
-				m('.main-hub__qr-actions', [
+			m('.qr-share__body', [
+				m('p.qr-share__label', { id: 'qr-share-label' }, t('qrShare.label')),
+				m('.qr-share__actions', [
 					canShare
 						? m(
-								'button.btn.btn--primary.btn--small.main-hub__qr-action',
+								'button.btn.btn--primary.btn--small.qr-share__action',
 								{
 									type: 'button',
 									onclick: () => void shareLink(url, title),
@@ -181,7 +206,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 							)
 						: null,
 					m(
-						'button.btn.btn--secondary.btn--small.main-hub__qr-action',
+						'button.btn.btn--secondary.btn--small.qr-share__action',
 						{
 							type: 'button',
 							onclick: () => void copyLink(url),
@@ -193,7 +218,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 			]),
 			presenterOpen
 				? m(
-						'.main-hub__qr-presenter',
+						'.qr-share__presenter',
 						{
 							role: 'dialog',
 							'aria-modal': 'true',
@@ -206,7 +231,7 @@ export const QRShare: m.Component<QRShareAttrs> = {
 						},
 						[
 							m(
-								'button.main-hub__qr-presenter-close',
+								'button.qr-share__presenter-close',
 								{
 									type: 'button',
 									'aria-label': t('qrShare.close'),
@@ -214,9 +239,9 @@ export const QRShare: m.Component<QRShareAttrs> = {
 								},
 								'×',
 							),
-							m('h2.main-hub__qr-presenter-title', title),
-							m('.main-hub__qr-presenter-canvas', presenterSvg ? m.trust(presenterSvg) : null),
-							m('p.main-hub__qr-presenter-url', { dir: 'ltr' }, url),
+							m('h2.qr-share__presenter-title', title),
+							m('.qr-share__presenter-canvas', presenterSvg ? m.trust(presenterSvg) : null),
+							m('p.qr-share__presenter-url', { dir: 'ltr' }, url),
 						],
 					)
 				: null,

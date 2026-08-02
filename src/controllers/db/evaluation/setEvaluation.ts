@@ -106,11 +106,9 @@ export function setEvaluationUIType(statementId: string, evaluationUI: Evaluatio
 	const evaluationUIRef = createStatementRef(statementId);
 	// Dot-path update — a nested object here would REPLACE the whole
 	// evaluationSettings map and wipe anchored/maxVotesPerUser/etc.
-	updateDoc(evaluationUIRef, { 'evaluationSettings.evaluationUI': evaluationUI }).catch(
-		(error) => {
-			logger.error('Error updating evaluation UI', error, { statementId });
-		},
-	);
+	updateDoc(evaluationUIRef, { 'evaluationSettings.evaluationUI': evaluationUI }).catch((error) => {
+		logger.error('Error updating evaluation UI', error, { statementId });
+	});
 
 	return evaluationUIRef;
 }

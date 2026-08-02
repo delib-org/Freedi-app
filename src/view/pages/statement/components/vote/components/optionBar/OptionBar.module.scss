@@ -4,7 +4,6 @@
     }
     .voteButton {
         border-radius: 5px;
-        background-color: teal;
         clip-path: polygon(50% 0%, 100% 11px, 100% 100%, 0% 99%, 0% 11px);
         color: white;
         user-select: none;
@@ -25,31 +24,19 @@
         transition: background-color 100ms ease-out, transform 50ms ease-out;
         transform: scale(1);
 
-        &:hover:not(:disabled) {
+        &:hover {
             overflow: visible;
             transform: scale(1.02);
         }
-        
-        &:active:not(:disabled) {
+
+        &:active {
             transform: scale(0.98);
         }
-        
-        &.pending {
-            animation: votePulse 0.6s ease-in-out infinite;
-            cursor: wait;
-        }
-        
-        &:disabled {
-            cursor: not-allowed;
-            opacity: 0.9;
-        }
 
-        svg {
+        // The unvoted icon is tinted inline with the option's colour; the voted
+        // one sits on the full-strength colour, so it goes white.
+        &.selected svg {
             color: White;
-        }
-
-        &.selected {
-            background-color: var(--selected);
         }
     }
 
@@ -57,6 +44,30 @@
         background: none;
         user-select: none;
         position: absolute;
+        // Default for when the button sits on the page rather than on a bar.
+        // The inline white override only applies where it overlaps the fill.
+        color: var(--text-caption);
+    }
+
+    // The option's own name. Base direction comes from the text itself rather
+    // than the container: .votingArea forces `direction: ltr` for its flex
+    // order, which made Hebrew labels ellipsise at the wrong end — chopping the
+    // start of the sentence and keeping the tail. `plaintext` reads the first
+    // strong character instead, so Hebrew and Latin options each truncate at
+    // their own logical end.
+    .titleText {
+        // inline-block, not inline: text-overflow needs a block container to
+        // ellipsise against.
+        display: inline-block;
+        max-width: 100%;
+        box-sizing: border-box;
+        unicode-bidi: plaintext;
+        text-align: start;
+        color: var(--text-title);
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .column {
@@ -134,9 +145,10 @@
             }
         }
 
+        // Colour lives on .titleText now — the label's text moved into that
+        // span, so a colour here would style nothing.
         .title {
             transform: rotate(270deg) translate(11rem, -2rem);
-            color: var(--text-caption);
             width: 19rem;
             text-align: end;
 
@@ -154,18 +166,32 @@
         gap: 5px;
         transition: right 300ms ease-out, left 300ms ease-out;
 
-        .voteButton svg {
-            transform: rotate(270deg) translate(-3px);
-            width: 19px;
+        // In the sided layout the whole area is rotated, so the button's CSS
+        // height is what the eye reads as its length. 35px made it a sliver.
+        .voteButton {
+            height: 48px;
+
+            svg {
+                transform: rotate(270deg);
+                width: 26px;
+                height: 26px;
+            }
         }
 
+        // In the flow of the bottom-packed column, so it trails the bar and its
+        // percentage instead of overlapping the vote button. Absolute anchoring
+        // can't work here: `bottom: 0` sits on the vote button and `top: 0`
+        // parks it at the far end of a full-viewport track, nowhere near the bar.
         .infoIcon {
-            bottom: 0px;
+            position: static;
             display: flex;
             align-items: center;
-            @media (max-width: 540px) {
-                transform: translateY(-2.7rem) rotate(270deg);
-            }
+            justify-content: center;
+            // Bottom margin is the gap to the percentage — the column is
+            // bottom-packed, so CSS-below is screen-left, toward the label.
+            margin-bottom: 10px;
+            padding: 4px;
+            transform: rotate(270deg);
 
             svg {
                 width: 23px;
@@ -173,9 +199,9 @@
             }
         }
         .bar {
-            width: 30px;
-            height: 30px;
-            border-radius: 15px 15px 0 0;
+            // Width and height come from the inline style; only the rounding is
+            // ours, and it has to track the bar's real thickness.
+            border-radius: calc(var(--bar-thickness) / 4) calc(var(--bar-thickness) / 4) 0 0;
 
             .numberOfSelections {
                 top: 0;
@@ -183,8 +209,8 @@
                 background-color: var(--card-default);
                 border-radius: 50%;
                 color: var(--text-body);
-                width: 30px;
-                height: 30px;
+                width: calc(var(--bar-thickness) * 0.55);
+                height: calc(var(--bar-thickness) * 0.55);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -199,31 +225,37 @@
             }
         }
 
+        // The lane is 76px and the bar is 58px of it, so a label physically
+        // cannot clear the bar — it always overlaps something. Rather than
+        // fight that, the text sits on its own chip so it stays readable over
+        // the fill or the page, in either theme.
+        //
+        // Keep `width` fixed. The parent rotates 90deg, which turns this box's
+        // horizontal layout position into vertical screen movement, so the
+        // width and the offsets below are coupled: change one and the label
+        // moves. That coupling is why this used to carry per-breakpoint
+        // overrides — getBarWidth returns a constant 76 for the sided layout
+        // now, so a single pair of offsets holds at every width.
         .title {
-            transform: rotate(270deg);
-            color: var(--text-caption);
             position: absolute;
             width: 20rem;
             height: fit-content;
             bottom: 9.5rem;
-            right: -6rem;
-            @media (max-width: 540px) {
-                width: 24rem;
-                bottom: 11.2rem;
-            }
-            @media (max-width: 500px) {
-                width: 21rem;
-                bottom: 9.8rem;
-            }
+            right: -5.7rem;
+            transform: rotate(270deg);
+            text-align: left;
+            z-index: 2;
+            // Decorative: never swallow a tap meant for the bar underneath.
+            pointer-events: none;
         }
-    }
-}
 
-@keyframes votePulse {
-    0%, 100% {
-        opacity: 0.9;
-    }
-    50% {
-        opacity: 0.6;
+        .titleText {
+            padding: 2px 8px;
+            border-radius: 6px;
+            background-color: color-mix(in srgb, var(--card-default) 88%, transparent);
+            font-size: 0.8125rem;
+            line-height: 1.45;
+            vertical-align: top;
+        }
     }
 }

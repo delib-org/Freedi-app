@@ -1,125 +1,149 @@
+// A popup, not a page. Every colour here is a semantic token, so the card
+// follows the theme automatically — _variables-dark.scss re-points the same
+// names under prefers-color-scheme: dark.
+//
+// The radius deliberately matches Modal's .modalContent (0.5rem). This card
+// paints its own raised surface over the wrapper's page-coloured one, and a
+// larger radius would let the wrapper's colour peek at the corners.
 .statementInfo {
     position: relative;
-    border-radius: 0.5rem;
-    width: 35ch;
-    max-width: 80vw;
-    height: fit-content;
-    min-height: 300px;
-    gap: 1rem;
     display: flex;
     flex-direction: column;
+    gap: 1rem;
+    width: 42ch;
+    max-width: min(88vw, 42ch);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--popup-default);
     font-family: "Roboto", "Open Sans", sans-serif;
 
-    .infoGraphic {
-        width: 100%;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        img {
-            height: 260px;
-            width: auto;
-            margin-top: -86px;
-            cursor: unset;
-        }
-    }
-
-    .form {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        height: 100%;
-
-        .inputs {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            height: auto;
-            padding: 0 1rem;
-        }
-
-        textarea {
-            resize: none;
-            min-height: 7rem;
-        }
-    }
-
-    .formButtons {
-        margin-top: auto;
-        display: flex;
-        align-items: center;
-        width: 100%;
-        height: 55px;
-        box-shadow:
-            0 8px 16px 0 rgba(0, 0, 0, 0.2),
-            0 6px 20px 0 rgba(0, 0, 0, 0.19);
-        border-bottom-left-radius: 6px;
-        border-bottom-right-radius: 6px;
-        overflow: hidden;
-
-        button {
-            height: 55px;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            font-family: "Roboto", "Open Sans", sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .cancelButton {
-            color: #f26d6d;
-            background-color: var(--surface-background);
-        }
-
-        .saveButton,
-        .closeButton {
-            background-color: #3d98e7;
-            color: white;
-        }
-    }
-
     .texts {
-        padding: 0 2rem;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        color: #6e8aa6;
+        gap: 0.625rem;
         overflow: hidden;
-        font-family: "Roboto", "Open Sans", sans-serif;
 
         h3 {
-            color: var(--text-body);
-            width: 100%;
             display: flex;
+            align-items: flex-start;
             justify-content: space-between;
-            font-size: 1rem;
+            gap: 0.5rem;
+            margin: 0;
+            color: var(--text-title);
+            font-size: 1.0625rem;
+            font-weight: 600;
+            line-height: 1.35;
+        }
 
-            img {
-                cursor: pointer;
-                user-select: none;
-            }
+        .statementTitle {
+            flex: 1;
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .editIcon {
-            width: 24px;
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: none;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+
+            &:hover {
+                background-color: var(--bg-hover);
+            }
 
             svg {
-                color: #226cbc;
-                width: 24px;
+                width: 18px;
+                height: 18px;
+                color: var(--btn-primary);
             }
         }
 
+        // Long descriptions scroll inside the card instead of growing it past
+        // the viewport — the old min-height did the opposite, padding short
+        // ones out to 300px.
         .text {
-            flex: 1;
-            max-height: 30vh;
+            max-height: 40vh;
             overflow-y: auto;
             scrollbar-width: thin;
-            padding-right: 5px;
+            padding-inline-end: 4px;
+        }
+
+        .description {
+            color: var(--text-body);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    // Shared shape for the two inline editors. Without these the component was
+    // passing class names this stylesheet never defined, so the inputs
+    // rendered with class="undefined" and no styling at all.
+    .titleInput,
+    .descriptionInput {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.5rem 0.625rem;
+        border: 1px solid var(--border-light);
+        border-radius: 0.375rem;
+        background-color: var(--inputBackground);
+        color: var(--text-body);
+        font-family: inherit;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+
+        &:focus {
+            outline: none;
+            border-color: var(--btn-primary);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--btn-primary) 22%, transparent);
+        }
+    }
+
+    .titleInput {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-title);
+    }
+
+    .descriptionInput {
+        resize: vertical;
+        min-height: 5rem;
+    }
+
+    // One right-aligned action, not a full-bleed 55px bar with a double shadow
+    // under it.
+    .formButtons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding-top: 0.875rem;
+        border-top: 1px solid var(--border-light);
+
+        button {
+            min-width: 6.5rem;
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+        }
+
+        .closeButton {
+            background-color: var(--btn-primary);
+            color: #ffffff;
+
+            &:hover {
+                background-color: var(--btn-primary-hover);
+            }
         }
     }
 }

@@ -313,3 +313,28 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+// =============================================================================
+// Numeric stats
+// =============================================================================
+
+// Any number rendered inside a Hebrew/Arabic (RTL) line. `direction: ltr` plus
+// `unicode-bidi: isolate` stop the bidi algorithm reordering composite values
+// like "3/5" or "12 · 78%" when they sit in RTL text. `tabular-nums` keeps the
+// glyph advance fixed so a live-updating count does not shift the layout around
+// it on every tick.
+@mixin stat-number {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+
+// A minimum 44x44 interactive target (WCAG 2.5.5) around a smaller glyph.
+// Padding supplies the difference, so the icon stays visually light.
+@mixin hit-target($size: 44px) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: $size;
+  min-height: $size;
+}

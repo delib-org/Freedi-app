@@ -1,8 +1,43 @@
-import * as Sentry from '@sentry/browser';
+import { afterLoad } from '@/lib/deferWork';
 
+/** Error reporting, kept off the first-paint critical path.
+ *
+ *  `@sentry/browser` + `@sentry/core` cost ~120 kB raw (~35 kB gzipped) in the
+ *  entry chunk, which on a slow connection delayed the question the visitor
+ *  actually came to see. The SDK is now imported dynamically once the page has
+ *  loaded and the browser is idle.
+ *
+ *  Deferring the SDK would normally mean losing exactly the errors that matter
+ *  most — the ones thrown during boot. So `initSentry()` installs two cheap
+ *  native listeners immediately and buffers anything they catch; the buffer is
+ *  replayed into Sentry as soon as the real SDK is in place. Nothing is lost,
+ *  it just arrives a few seconds later.
+ *
+ *  `browserTracingIntegration` is deliberately gone. It pulled in
+ *  `@sentry-internal/browser-utils` (~24 kB raw on its own) and its pageload
+ *  transaction would be meaningless anyway now that init happens after load. */
+
+type SentryClient = typeof import('@/lib/sentryClient');
+type SentryOptions = import('@/lib/sentryClient').BrowserOptions;
+
+let sdk: SentryClient | null = null;
+/** True from the moment `Sentry.init()` returns. The pre-init listeners check
+ *  this so an error thrown in the window between init and listener removal is
+ *  reported once by Sentry's own global handlers, not twice. */
 let initialized = false;
 
-export function initSentry(): void {
+interface BufferedError {
+	error: unknown;
+	context?: Record<string, unknown>;
+}
+
+/** Bounded so a boot-time error loop can't grow this without limit. */
+const MAX_BUFFERED = 10;
+const buffered: BufferedError[] = [];
+let pendingUid: string | null = null;
+let hasPendingUid = false;
+
+function resolveDsn(): string | null {
 	const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
 	if (
@@ -11,15 +46,34 @@ export function initSentry(): void {
 		dsn === 'YOUR_SENTRY_DSN_HERE' ||
 		!dsn.startsWith('https://')
 	) {
-		return;
+		return null;
 	}
 
-	Sentry.init({
+	return dsn;
+}
+
+function buffer(error: unknown, context?: Record<string, unknown>): void {
+	if (buffered.length >= MAX_BUFFERED) return;
+	buffered.push({ error, context });
+}
+
+function onEarlyError(event: ErrorEvent): void {
+	if (initialized) return;
+	buffer(event.error ?? event.message, { source: 'pre-init window.onerror' });
+}
+
+function onEarlyRejection(event: PromiseRejectionEvent): void {
+	if (initialized) return;
+	buffer(event.reason, { source: 'pre-init unhandledrejection' });
+}
+
+/** The Sentry options object. Extracted so the dynamic-import path stays
+ *  readable; it's plain data and adds ~1 kB to the entry chunk. */
+function sentryOptions(dsn: string): SentryOptions {
+	return {
 		dsn,
 		environment: (import.meta.env.VITE_ENVIRONMENT as string) || 'production',
 		release: (import.meta.env.VITE_APP_VERSION as string) || '1.0.0',
-		integrations: [Sentry.browserTracingIntegration()],
-		tracesSampleRate: 0.1,
 		initialScope: {
 			tags: { app: 'join' },
 		},
@@ -94,22 +148,75 @@ export function initSentry(): void {
 			/serviceWorker\.register/i,
 			/Failed to register a ServiceWorker/i,
 		],
-	});
+	};
+}
 
-	initialized = true;
+async function loadAndInit(dsn: string): Promise<void> {
+	try {
+		const Sentry = await import('@/lib/sentryClient');
+
+		Sentry.initClient(sentryOptions(dsn));
+		sdk = Sentry;
+		initialized = true;
+
+		window.removeEventListener('error', onEarlyError);
+		window.removeEventListener('unhandledrejection', onEarlyRejection);
+
+		if (hasPendingUid) {
+			Sentry.setUser(pendingUid ? { id: pendingUid } : null);
+			hasPendingUid = false;
+		}
+
+		const replay = buffered.splice(0, buffered.length);
+		for (const item of replay) {
+			captureException(item.error, item.context);
+		}
+	} catch {
+		// The SDK chunk failed to load (offline, blocked by an extension, CDN
+		// hiccup). Reporting errors is best-effort — drop the buffer and leave
+		// the app running rather than surfacing a monitoring failure to users.
+		buffered.length = 0;
+	}
+}
+
+export function initSentry(): void {
+	const dsn = resolveDsn();
+	if (!dsn) return;
+
+	window.addEventListener('error', onEarlyError);
+	window.addEventListener('unhandledrejection', onEarlyRejection);
+
+	afterLoad(() => {
+		void loadAndInit(dsn);
+	});
 }
 
 export function setSentryUser(uid: string | null): void {
-	if (!initialized) return;
-	Sentry.setUser(uid ? { id: uid } : null);
+	if (!resolveDsn()) return;
+
+	if (!sdk) {
+		pendingUid = uid;
+		hasPendingUid = true;
+
+		return;
+	}
+
+	sdk.setUser(uid ? { id: uid } : null);
 }
 
 export function captureException(error: unknown, context?: Record<string, unknown>): void {
-	if (!initialized) return;
-	Sentry.withScope((scope) => {
+	if (!resolveDsn()) return;
+
+	if (!sdk) {
+		buffer(error, context);
+
+		return;
+	}
+
+	sdk.withScope((scope) => {
 		if (context) {
 			scope.setContext('additional', context);
 		}
-		Sentry.captureException(error);
+		sdk?.captureException(error);
 	});
 }

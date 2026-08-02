@@ -1,0 +1,282 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #06182c;
+  --navy-soft: rgba(6, 24, 44, 0.9);
+  --panel-top: rgba(15, 48, 73, 0.96);
+  --panel-bottom: rgba(4, 20, 39, 0.96);
+  --gold: #d8aa4b;
+  --gold-strong: #e8b958;
+  --cream: #fff3d1;
+  --cyan: #5edfff;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  min-height: 100%;
+  margin: 0;
+}
+
+html { background: #06182c; }
+
+body {
+  /* Keep body transparent: an opaque body background would paint over the
+     fixed .ocean-bg layer, which sits at a negative z-index. */
+  background: transparent;
+  font-family: Arial, Helvetica, sans-serif;
+  color: white;
+}
+
+/* Full-screen sea backdrop behind every screen */
+.ocean-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("/assets/mediterranean-ocean.png") center / cover no-repeat #06182c;
+}
+
+.ocean-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 24, 44, 0.55), rgba(6, 24, 44, 0.8));
+}
+
+/* Persistent Phaser canvas behind the player screens (game mode) */
+.sea-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.sea-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.page {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 84px 20px 48px;
+  /* Let empty page areas pass pointer events through to the sea stage;
+     interactive elements re-enable themselves below. */
+  pointer-events: none;
+}
+
+.page a,
+.page button,
+.page textarea,
+.page input,
+.page select,
+.page label,
+.page .panel {
+  pointer-events: auto;
+}
+
+/* Gold-framed panel used across the game */
+.panel {
+  border: 1px solid rgba(232, 185, 88, 0.92);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+  box-shadow:
+    inset 0 0 0 3px rgba(211, 163, 66, 0.12),
+    0 12px 35px rgba(0, 0, 0, 0.35);
+  padding: 22px 26px;
+}
+
+.eyebrow {
+  color: var(--gold-strong);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(232, 185, 88, 0.95);
+  border-radius: 999px;
+  padding: 12px 34px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2b1c04;
+  background: linear-gradient(180deg, #f3cf7e, #d8a63e);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(232, 185, 88, 0.8);
+  border-radius: 999px;
+  padding: 9px 22px;
+  font-size: 15px;
+  color: var(--cream);
+  background: rgba(6, 26, 48, 0.72);
+  transition: background 0.15s ease;
+}
+
+.btn-outline:hover:not(:disabled) { background: rgba(15, 48, 73, 0.9); }
+.btn-outline:disabled { opacity: 0.45; cursor: default; }
+
+/* Inspiration chips (compass) */
+.chip {
+  cursor: pointer;
+  border: 1px solid rgba(94, 223, 255, 0.4);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: #cfeefc;
+  background: rgba(9, 38, 62, 0.75);
+  transition: all 0.15s ease;
+}
+
+.chip:hover { border-color: rgba(94, 223, 255, 0.8); }
+
+.chip.active {
+  color: #06263e;
+  background: var(--cyan);
+  border-color: var(--cyan);
+  font-weight: 700;
+}
+
+/* Attitude buttons (island stances) */
+.attitude {
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #e6f2ff;
+  background: rgba(9, 38, 62, 0.7);
+  transition: all 0.12s ease;
+}
+
+.attitude.active-support { background: #1d7a4f; border-color: #35d68d; font-weight: 700; }
+.attitude.active-livewith { background: #7a6420; border-color: #e8c860; font-weight: 700; }
+.attitude.active-oppose { background: #7a2731; border-color: #ff8a96; font-weight: 700; }
+
+textarea, input[type="text"], input[type="number"], input[type="email"], select {
+  width: 100%;
+  border: 1px solid rgba(94, 223, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(4, 18, 34, 0.85);
+  color: #eaf6ff;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+textarea:focus, input:focus, select:focus {
+  outline: 2px solid rgba(94, 223, 255, 0.6);
+}
+
+/* Island node on the map */
+.island-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--cream);
+  padding: 0;
+}
+
+.island-disc {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  border: 3px solid rgba(232, 185, 88, 0.85);
+  background: radial-gradient(circle at 35% 30%, #3f7d55 0%, #2a5238 55%, #17331f 100%);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.island-disc img { width: 100%; height: 100%; object-fit: cover; }
+
+.island-node:hover .island-disc { transform: scale(1.08); }
+
+.island-node.selected .island-disc {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 5px rgba(94, 223, 255, 0.35), 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+
+.island-label {
+  background: rgba(6, 26, 48, 0.88);
+  border: 1px solid rgba(232, 185, 88, 0.85);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.island-node.selected .island-label { border-color: var(--cyan); }
+
+/* Distance bar in the summary */
+.distance-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.distance-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #35d68d, #e8c860, #ff8a96);
+}
+
+/* Top navigation bar */
+.topnav {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  background: linear-gradient(180deg, rgba(4, 18, 34, 0.95), rgba(4, 18, 34, 0.75));
+  border-bottom: 1px solid rgba(232, 185, 88, 0.5);
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  /* above the sea-stage canvas (z 0), below page content (z 10) */
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 10, 20, 0.55) 100%);
+}
+
+.fade-in { animation: fadeIn 0.5s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}

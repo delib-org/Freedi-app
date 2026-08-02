@@ -744,6 +744,11 @@ export {
   DigestItemSchema,
   DigestContentSchema,
 
+  // Helper points
+  HelperPointsSchema,
+  HELPER_POINTS_TOTAL_SCOPE,
+  getHelperPointsId,
+
   // Pure functions
   canPerformAction,
   getRequiredLevel,
@@ -763,6 +768,7 @@ export type {
   BranchPreference,
   DigestItem,
   DigestContent,
+  HelperPoints,
 } from "./models/engagement";
 
 // Analytics models (admin stats)
@@ -802,5 +808,16 @@ export {
   isActivityStatement,
 } from "./models/event/activityRegistry";
 
+// Cross-App Statement Router — route registry (v1)
+export type { RouteTargetDef, RouteMinRole } from "./models/event/routeRegistry";
+export {
+  RoutePrerequisite,
+  ROUTE_REGISTRY,
+  getRouteTargetDef,
+} from "./models/event/routeRegistry";
+
 // Agora classroom deliberative game
 export * from "./models/agora";
+
+// Israeli Odyssey pre-election civic-voice game
+export * from "./models/odyssey";

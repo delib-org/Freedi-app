@@ -77,6 +77,10 @@
 
     // --- CARDS ---
     --card-default: #1c2434;
+    // Raised step of the elevation ladder (see header): surfaces floating
+    // above cards (hover cards, popovers) must be lighter than the cards
+    // they cover, otherwise they visually merge with the content behind.
+    --card-raised: #232c40;
     --card-needs-surface: #16332e;
     --card-needs-top: #1d453e;
     --card-suggestion-added: #2b2a1a;
@@ -195,5 +199,15 @@
     // Inactive evaluation thumb → light circle so smileys read on dark cards.
     --evaluation-thumb-inactive: rgba(255, 255, 255, 0.22);
     --evaluation-thumb-ring: rgba(255, 255, 255, 0.28);
+
+    // --- SCALE TOKENS (dark) ---
+    // Spacing, radius, type and hairline widths are theme-free, and --wash-*
+    // / --divider derive from --card-default / --border-light, which are
+    // already re-pointed above — so they adapt with no work here. Only the
+    // tokens carrying an explicit light-mode hex need a dark twin.
+    --text-meta: #97a0bb; // ~5.9:1 on the #1c2434 card
+    --approve-ink: #57c6b2; // on dark the brand teal IS the readable ink
+    --warning-ink: #fcd34d; // matches the dark --warning above
+    --elevation-4: 0 20px 50px rgba(0, 0, 0, 0.6);
   }
 }

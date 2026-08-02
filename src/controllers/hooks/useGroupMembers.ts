@@ -36,9 +36,7 @@ export function useGroupMembers(clusterId: string | undefined, enabled: boolean)
 	// Deriving members inside the selector would return a fresh array on every
 	// render, which destabilises `missingIds` and drives the effect below into
 	// an infinite setState loop. Derive with useMemo against the stable array.
-	const allStatements = useAppSelector(
-		(state: RootState) => state.statements.statements,
-	);
+	const allStatements = useAppSelector((state: RootState) => state.statements.statements);
 
 	const cluster = useMemo(
 		() => allStatements.find((s) => s.statementId === clusterId),

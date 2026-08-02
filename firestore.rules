@@ -103,6 +103,35 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // === Israeli Odyssey pre-election civic-voice game ===
+
+    // Game config (texts, island map metadata, party routes). The
+    // deliberative content itself lives in /statements and /evaluations.
+    // Public read (the intro screen shows game texts before login);
+    // writes by the game creator or listed admins only.
+    match /odysseyGames/{gameId} {
+      allow read;
+      allow create: if isAuthenticated() &&
+                       request.resource.data.creatorId == request.auth.uid;
+      allow update, delete: if isAuthenticated() &&
+                               (resource.data.creatorId == request.auth.uid ||
+                                request.auth.uid in resource.data.adminUids);
+    }
+
+    // Personal voyage state (compass answers, chosen islands, captain's log).
+    // Strictly owner-only — doc id is `${uid}--${gameId}`.
+    // resource == null allows reading the doc before it exists (the client
+    // loads the journey on login and creates it on first save).
+    match /odysseyJourneys/{journeyId} {
+      allow read: if isAuthenticated() &&
+                     (resource == null ||
+                      resource.data.userId == request.auth.uid);
+      allow delete: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid;
+      allow create, update: if isAuthenticated() &&
+                               request.resource.data.userId == request.auth.uid;
+    }
+
 	match /polarizationIndex/{statementId=**} {
 	  allow read: if request.auth.uid != null;
 	
@@ -682,6 +711,33 @@ service cloud.firestore {
       // request.resource.data.userId` is trivially satisfiable), letting anyone
       // overwrite any tracking doc. Lock the client surface entirely; the Admin
       // SDK is unaffected.
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Private per-author verdicts on suggestion comments (Join app peer
+    // improvement). A suggestion author marks comments on their suggestion as
+    // helpful/ignored — working state that only the author may ever read, so
+    // list queries must filter authorId == uid to be provable.
+    match /commentVerdicts/{verdictId} {
+      allow read: if request.auth != null &&
+                    resource.data.authorId == request.auth.uid;
+      allow create: if request.auth != null &&
+                      request.resource.data.authorId == request.auth.uid &&
+                      request.resource.data.keys().hasAll(['verdictId', 'optionId', 'commentId', 'authorId', 'verdict', 'updatedAt']) &&
+                      request.resource.data.verdict in ['helpful', 'ignored'];
+      allow update: if request.auth != null &&
+                      resource.data.authorId == request.auth.uid &&
+                      request.resource.data.authorId == request.auth.uid &&
+                      request.resource.data.verdict in ['helpful', 'ignored'];
+      allow delete: if request.auth != null &&
+                      resource.data.authorId == request.auth.uid;
+    }
+
+    // Helper-points tallies (comment-marked-helpful rewards). Written only by
+    // the onCommentVerdictWritten Cloud Function; publicly readable so any
+    // app can show a user's helper score next to their name.
+    match /helperPoints/{helperPointsId} {
       allow read: if request.auth != null;
       allow write: if false;
     }

@@ -4,25 +4,6 @@
 
 // Mock @freedi/shared-types before import
 jest.mock('@freedi/shared-types', () => ({
-	StatementType: {
-		statement: 'statement',
-		option: 'option',
-		question: 'question',
-		document: 'document',
-		group: 'group',
-		comment: 'comment',
-	},
-	ResultsBy: {
-		consensus: 'consensus',
-		mostLiked: 'mostLiked',
-		averageLikesDislikes: 'averageLikesDislikes',
-		topOptions: 'topOptions',
-	},
-	CutoffBy: {
-		topOptions: 'topOptions',
-		aboveThreshold: 'aboveThreshold',
-	},
-	StatementSchema: {},
 	getVoteId: jest.fn((userId: string, parentId: string) => `${userId}--${parentId}`),
 	updateArray: jest.fn((array: unknown[], newItem: unknown, key: string) => {
 		const arr = array as Record<string, unknown>[];
@@ -39,69 +20,9 @@ jest.mock('@freedi/shared-types', () => ({
 	}),
 }));
 
-// Mock valibot
-jest.mock('valibot', () => ({
-	parse: jest.fn((schema, value) => value),
-	safeParse: jest.fn((schema, data) => ({ success: true, output: data })),
-	string: jest.fn(() => ({})),
-	number: jest.fn(() => ({})),
-	boolean: jest.fn(() => ({})),
-	object: jest.fn(() => ({})),
-	array: jest.fn(() => ({})),
-	optional: jest.fn((s) => s),
-	nullable: jest.fn((s) => s),
-	union: jest.fn(() => ({})),
-	literal: jest.fn(() => ({})),
-	enum_: jest.fn(() => ({})),
+jest.mock('@/utils/firebaseUtils', () => ({
+	getCurrentTimestamp: jest.fn(() => 1700000000000),
 }));
-
-// Define types locally since we're mocking the module
-enum StatementType {
-	statement = 'statement',
-	option = 'option',
-	question = 'question',
-	document = 'document',
-	group = 'group',
-	comment = 'comment',
-}
-
-enum ResultsBy {
-	consensus = 'consensus',
-	mostLiked = 'mostLiked',
-	averageLikesDislikes = 'averageLikesDislikes',
-	topOptions = 'topOptions',
-}
-
-enum CutoffBy {
-	topOptions = 'topOptions',
-	aboveThreshold = 'aboveThreshold',
-}
-
-interface Creator {
-	uid: string;
-	displayName: string;
-	email: string;
-}
-
-interface Statement {
-	statementId: string;
-	parentId: string;
-	topParentId: string;
-	statement: string;
-	statementType: StatementType;
-	creator: Creator;
-	creatorId: string;
-	createdAt: number;
-	lastUpdate: number;
-	consensus: number;
-	parents: string[];
-	results: unknown[];
-	resultsSettings: {
-		resultsBy: ResultsBy;
-		numberOfResults: number;
-		cutoffBy: CutoffBy;
-	};
-}
 
 interface Vote {
 	voteId: string;
@@ -119,46 +40,34 @@ import {
 	votesSelector,
 	parentVoteSelector,
 } from '../votesSlice';
+import { logError } from '@/utils/errorHandling';
 
-// Mock timestamp helpers
-jest.mock('@/helpers/timestampHelpers', () => ({
-	normalizeStatementData: jest.fn((data) => data),
-}));
+jest.mock('@/utils/errorHandling', () => {
+	class ValidationError extends Error {}
+
+	return {
+		logError: jest.fn(),
+		ValidationError,
+	};
+});
 
 describe('votesSlice', () => {
-	const mockStatement: Statement = {
-		statementId: 'option-123',
+	const votePayload = {
 		parentId: 'parent-123',
-		topParentId: 'top-123',
-		statement: 'Test option',
-		statementType: StatementType.option,
-		creator: {
-			uid: 'user-123',
-			displayName: 'Test User',
-			email: 'test@example.com',
-		},
-		creatorId: 'user-123',
-		createdAt: Date.now(),
-		lastUpdate: Date.now(),
-		consensus: 0,
-		parents: ['top-123', 'parent-123'],
-		results: [],
-		resultsSettings: {
-			resultsBy: ResultsBy.consensus,
-			numberOfResults: 1,
-			cutoffBy: CutoffBy.topOptions,
-		},
+		optionId: 'option-123',
+		userId: 'user-123',
 	};
 
 	const initialState = votesSlice.getInitialState();
 
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
+
 	describe('reducers', () => {
 		describe('setVoteToStore', () => {
 			it('should add new vote when no existing vote', () => {
-				const newState = votesSlice.reducer(
-					initialState,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
-				);
+				const newState = votesSlice.reducer(initialState, setVoteToStore(votePayload));
 
 				expect(newState.votes).toHaveLength(1);
 				expect(newState.votes[0].statementId).toBe('option-123');
@@ -166,94 +75,110 @@ describe('votesSlice', () => {
 				expect(newState.votes[0].userId).toBe('user-123');
 			});
 
-			it('should toggle vote to "none" when voting for same option', () => {
-				const existingVote: Vote = {
-					voteId: 'user-123--parent-123',
-					statementId: 'option-123',
-					parentId: 'parent-123',
-					userId: 'user-123',
-					createdAt: Date.now(),
-					lastUpdate: Date.now(),
-				};
-
+			it('should store "none" verbatim when the caller withdraws the vote', () => {
 				const stateWithVote = {
-					votes: [existingVote],
+					votes: [
+						{
+							voteId: 'user-123--parent-123',
+							statementId: 'option-123',
+							parentId: 'parent-123',
+							userId: 'user-123',
+							createdAt: 1,
+							lastUpdate: 1,
+						},
+					] as Vote[],
 				};
 
 				const newState = votesSlice.reducer(
 					stateWithVote,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
+					setVoteToStore({ ...votePayload, optionId: 'none' }),
 				);
 
 				expect(newState.votes).toHaveLength(1);
 				expect(newState.votes[0].statementId).toBe('none');
 			});
 
-			it('should change vote when voting for different option', () => {
-				const existingVote: Vote = {
-					voteId: 'user-123--parent-123',
-					statementId: 'other-option-456',
-					parentId: 'parent-123',
-					userId: 'user-123',
-					createdAt: Date.now(),
-					lastUpdate: Date.now(),
-				};
-
+			it('should not toggle off when the same option is set twice', () => {
 				const stateWithVote = {
-					votes: [existingVote],
+					votes: [
+						{
+							voteId: 'user-123--parent-123',
+							statementId: 'option-123',
+							parentId: 'parent-123',
+							userId: 'user-123',
+							createdAt: 1,
+							lastUpdate: 1,
+						},
+					] as Vote[],
 				};
 
-				const newState = votesSlice.reducer(
-					stateWithVote,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
-				);
+				const newState = votesSlice.reducer(stateWithVote, setVoteToStore(votePayload));
+
+				expect(newState.votes).toHaveLength(1);
+				expect(newState.votes[0].statementId).toBe('option-123');
+			});
+
+			it('should change vote when voting for different option', () => {
+				const stateWithVote = {
+					votes: [
+						{
+							voteId: 'user-123--parent-123',
+							statementId: 'other-option-456',
+							parentId: 'parent-123',
+							userId: 'user-123',
+							createdAt: 1,
+							lastUpdate: 1,
+						},
+					] as Vote[],
+				};
+
+				const newState = votesSlice.reducer(stateWithVote, setVoteToStore(votePayload));
 
 				expect(newState.votes).toHaveLength(1);
 				expect(newState.votes[0].statementId).toBe('option-123');
 			});
 
 			it('should create correct voteId from user and parent', () => {
-				const newState = votesSlice.reducer(
-					initialState,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
-				);
+				const newState = votesSlice.reducer(initialState, setVoteToStore(votePayload));
 
 				expect(newState.votes[0].voteId).toBe('user-123--parent-123');
 			});
 
-			it('should include timestamp fields', () => {
-				const newState = votesSlice.reducer(
-					initialState,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
-				);
+			it('should include timestamp fields in milliseconds', () => {
+				const newState = votesSlice.reducer(initialState, setVoteToStore(votePayload));
 
-				expect(newState.votes[0].createdAt).toBeDefined();
-				expect(newState.votes[0].lastUpdate).toBeDefined();
-				expect(typeof newState.votes[0].createdAt).toBe('number');
-				expect(typeof newState.votes[0].lastUpdate).toBe('number');
+				expect(newState.votes[0].createdAt).toBe(1700000000000);
+				expect(newState.votes[0].lastUpdate).toBe(1700000000000);
 			});
 
 			it('should handle multiple votes for different parents', () => {
-				let state = initialState;
+				let state = votesSlice.reducer(initialState, setVoteToStore(votePayload));
 
-				// First vote
 				state = votesSlice.reducer(
 					state,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
-				);
-
-				// Second vote for different parent
-				const secondStatement = {
-					...mockStatement,
-					statementId: 'option-456',
-					parentId: 'parent-456',
-				};
-				state = votesSlice.reducer(
-					state,
-					setVoteToStore(secondStatement as Parameters<typeof setVoteToStore>[0]),
+					setVoteToStore({
+						parentId: 'parent-456',
+						optionId: 'option-456',
+						userId: 'user-123',
+					}),
 				);
 
 				expect(state.votes).toHaveLength(2);
+			});
+
+			it('should log and drop an incomplete payload', () => {
+				const newState = votesSlice.reducer(
+					initialState,
+					setVoteToStore({ ...votePayload, userId: '' }),
+				);
+
+				expect(newState.votes).toHaveLength(0);
+				expect(logError).toHaveBeenCalledWith(
+					expect.any(Error),
+					expect.objectContaining({
+						operation: 'redux.vote.votesSlice.setVoteToStore',
+					}),
+				);
 			});
 		});
 
@@ -266,16 +191,16 @@ describe('votesSlice', () => {
 							statementId: 'option-1',
 							parentId: 'parent-1',
 							userId: 'user-1',
-							createdAt: Date.now(),
-							lastUpdate: Date.now(),
+							createdAt: 1,
+							lastUpdate: 1,
 						},
 						{
 							voteId: 'vote-2',
 							statementId: 'option-2',
 							parentId: 'parent-2',
 							userId: 'user-2',
-							createdAt: Date.now(),
-							lastUpdate: Date.now(),
+							createdAt: 1,
+							lastUpdate: 1,
 						},
 					] as Vote[],
 				};
@@ -302,16 +227,16 @@ describe('votesSlice', () => {
 						statementId: 'option-123',
 						parentId: 'parent-123',
 						userId: 'user-123',
-						createdAt: Date.now(),
-						lastUpdate: Date.now(),
+						createdAt: 1,
+						lastUpdate: 1,
 					},
 					{
 						voteId: 'user-456--parent-456',
 						statementId: 'option-456',
 						parentId: 'parent-456',
 						userId: 'user-456',
-						createdAt: Date.now(),
-						lastUpdate: Date.now(),
+						createdAt: 1,
+						lastUpdate: 1,
 					},
 				] as Vote[],
 			},
@@ -364,10 +289,10 @@ describe('votesSlice', () => {
 
 	describe('action creators', () => {
 		it('setVoteToStore should create correct action', () => {
-			const action = setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]);
+			const action = setVoteToStore(votePayload);
 
 			expect(action.type).toBe('votes/setVoteToStore');
-			expect(action.payload).toEqual(mockStatement);
+			expect(action.payload).toEqual(votePayload);
 		});
 
 		it('resetVotes should create correct action', () => {

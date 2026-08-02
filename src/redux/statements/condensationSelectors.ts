@@ -29,11 +29,14 @@ export interface GroupedView {
 	allowDrillToOriginals: boolean;
 }
 
+/**
+ * Only true options belong on the Solutions/Options surface. Simple statements
+ * (`StatementType.statement`) are discussion messages — including them here
+ * made them render as evaluable option cards in the Solutions tab.
+ * Clusters (synthesis + topic) are also written as `StatementType.option`.
+ */
 function isOptionLike(statement: Statement): boolean {
-	return (
-		statement.statementType === StatementType.option ||
-		statement.statementType === StatementType.statement
-	);
+	return statement.statementType === StatementType.option;
 }
 
 function buildMaps(clusters: Statement[]): {

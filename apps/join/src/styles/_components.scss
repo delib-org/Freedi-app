@@ -308,6 +308,24 @@
     line-height: var(--line-height-normal);
   }
 
+  // The viewer's own helper-points total — a quiet score chip in the header
+  // that grows as their comments get marked helpful across discussions.
+  &__points-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: center;
+    margin-top: var(--space-xs);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);               // on teal-50 ~9:1 ✓ AAA
+    background: var(--teal-50);
+    border: 1px solid var(--teal-100);
+    border-radius: var(--radius-full);
+    padding: 2px 12px;
+  }
+
   // New-solutions notification pill — appears in the sticky header when fresh
   // options arrive after the initial load. User taps to flush + highlight them.
   // Centered under the title so the arrival of fresh answers reads as a
@@ -450,11 +468,14 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-card);
-  border: 1.5px solid transparent;
+  // `transparent` in light mode (the shadow does the separating), a real
+  // hairline in dark / high-contrast where a black shadow is invisible.
+  border: 1.5px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-md) var(--space-md);
   transition:
     transform var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
     box-shadow var(--dur-base) var(--ease-out);
 
   &:focus-visible {
@@ -465,6 +486,15 @@
   &:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
+  }
+
+  // Dark mode: lift the surface a step on hover and brighten the edge, since
+  // the drop shadow contributes nothing against a near-black page.
+  @media (prefers-color-scheme: dark) {
+    &:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--ink-soft);
+    }
   }
 
   // Activation — hero moment. Teal accent + stamped offset shadow.
@@ -935,6 +965,20 @@
       background: var(--ink);
       color: var(--paper);
     }
+
+    // The viewer's own suggestion has unread comments — peers are giving
+    // feedback. Distinct teal treatment so it reads differently from the
+    // generic "unread messages" state on other cards.
+    &--feedback {
+      border-color: var(--teal-600);
+      background: var(--teal-50);
+      color: var(--teal-700);              // on teal-50 ~9:1 ✓ AAA
+
+      &:hover {
+        background: var(--teal-600);
+        color: var(--text-inverse);
+      }
+    }
   }
 
   &__chat-icon {
@@ -966,6 +1010,19 @@
     padding: 0 5px;
     border: 2px solid var(--bg-card);
     animation: corner-pop var(--dur-base) var(--ease-spring);
+
+    // Author-facing variant: comments on the viewer's own suggestion. Teal to
+    // match the --feedback pill, plus a gentle repeating pulse to draw the
+    // author's eye without demanding it.
+    &--author {
+      background: var(--teal-600);         // white text ~7.1:1 ✓ AAA
+
+      @media (prefers-reduced-motion: no-preference) {
+        animation:
+          corner-pop var(--dur-base) var(--ease-spring),
+          author-badge-pulse 2.4s var(--ease-out) 3;
+      }
+    }
   }
 
   &__actions {
@@ -1608,6 +1665,117 @@
     letter-spacing: 0.02em;
     font-variant-numeric: tabular-nums;
   }
+
+  // The suggestion author marked this comment "ignore" — keep it readable but
+  // visually parked. The verdict chips stay at full opacity so the author can
+  // still change their mind.
+  &--ignored &__text,
+  &--ignored &__body,
+  &--ignored &__header {
+    opacity: 0.55;
+  }
+
+  // Helper-points star badge next to the sender's name — social proof that
+  // this participant's comments keep getting marked helpful.
+  &__points {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);               // on teal-50 ~9:1 ✓ AAA
+    background: var(--teal-50);
+    border-radius: var(--radius-full);
+    padding: 1px 8px;
+    white-space: nowrap;
+  }
+
+  // Author-only triage row: helpful / ignore toggle chips under the bubble.
+  // Rendered only for the suggestion's author on other people's comments —
+  // commenters never see these (verdicts are private working state).
+  &__verdicts {
+    display: flex;
+    gap: var(--space-xs);
+    margin-top: 6px;
+  }
+
+  &__verdict {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+    background: var(--bg-card);
+    border: 1px solid var(--ink-soft);
+    border-radius: var(--radius-full);
+    padding: 4px 10px;
+    min-height: 28px;
+    cursor: pointer;
+    transition:
+      background var(--dur-quick) var(--ease-out),
+      color var(--dur-quick) var(--ease-out),
+      border-color var(--dur-quick) var(--ease-out);
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+
+    &--on {
+      background: var(--teal-600);
+      border-color: var(--teal-600);
+      color: var(--text-inverse);           // ~7.1:1 ✓ AAA
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Chat author toolbar — shown to the suggestion's author between the chat
+// header and the messages. Surfaces the helpful-mark count and the two ways
+// to act on feedback: edit manually or ask AI for a draft grounded in the
+// comments marked helpful.
+// -----------------------------------------------------------------------------
+.chat-author-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--teal-50);
+  border-bottom: 1px solid var(--teal-100);
+
+  &__info {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+
+  &__title {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--teal-700);                 // on teal-50 ~9:1 ✓ AAA
+  }
+
+  &__count {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+  }
+
+  &__error {
+    flex-basis: 100%;
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--danger);
+  }
 }
 
 // Inline link rendered by `linkify()` inside chat messages and solution-card
@@ -1833,6 +2001,18 @@
   50%       { transform: translateY(-3px); }
 }
 
+// Gentle repeating pulse for the author-feedback corner badge — glow-only so
+// it layers cleanly on top of the one-shot corner-pop entrance. Runs a few
+// cycles then rests (iteration count set at the call site).
+@keyframes author-badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(26, 122, 108, 0.5);
+  }
+  70%, 100% {
+    box-shadow: 0 0 0 8px rgba(26, 122, 108, 0);
+  }
+}
+
 // Soft breathing glow for the new-answers pill. Deliberately glow-only (no
 // transform) so it never fights the hover/active lift on the same element.
 @keyframes pill-twinkle {
@@ -2025,6 +2205,100 @@
 .solutions__add-button-icon {
   font-size: 1.1em;
   line-height: 1;
+}
+
+// Floating "+" shortcut, mirroring the main app's FAB pattern: a rounded square
+// pinned to the bottom inline-end corner (LTR → bottom-right, RTL → bottom-left,
+// clear of the start-side a11y widget and back button). Additive — the inline
+// `.solutions__add-row` button stays exactly where it is; this is the
+// thumb-reachable path once the participant has scrolled into the list.
+//
+// The wrapper re-creates `.solutions`' own centred column (same --max-width,
+// same auto margins) as a fixed strip, so the button tracks the *content*
+// column's inline-end edge rather than the far viewport edge. On phones the
+// column is the whole screen and this collapses to a plain corner FAB; on a
+// desktop window it stays tucked against the app's own edge. Measuring the
+// column this way — rather than with `50vw` arithmetic — keeps it correct when
+// a classic scrollbar takes width out of the viewport.
+.solutions__fab-wrap {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+  // Deliberately below `.modal__overlay` (100): once the add modal opens the
+  // FAB should sit behind the blurred backdrop like the rest of the page.
+  z-index: 90;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-md);
+  // The strip spans the full column width but is invisible — clicks belong to
+  // the cards underneath it, so only the button itself opts back in.
+  pointer-events: none;
+}
+
+.solutions__fab {
+  pointer-events: auto;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0;
+  // Same terracotta as the inline `.btn--primary` "add a suggestion" button.
+  color: var(--text-inverse);
+  background: var(--terra-600);
+  border: 1.5px solid var(--terra-600);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition:
+    transform var(--dur-quick) var(--ease-out),
+    background-color var(--dur-quick) var(--ease-out),
+    border-color var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+
+  &:hover {
+    background: var(--terra-700);
+    border-color: var(--terra-700);
+    box-shadow: var(--shadow-lg);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.solutions__fab-icon {
+  font-size: 2rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  // The glyph's own line box sits slightly low inside the flex centre; nudging
+  // it back up keeps the crossbars visually centred in the square.
+  margin-block-start: -0.125rem;
+}
+
+// The FAB floats over the tail of the scroll content, so reserve its full
+// footprint — button height + the gap it sits above the bottom edge + the
+// device safe area — plus a breathing gap. Without this the last suggestion
+// card (or the WizCol footer below it) ends up underneath the button once the
+// participant scrolls to the end of the list.
+.solutions--has-fab .solutions__scroll {
+  padding-bottom: calc(
+    3.5rem + var(--space-md) + var(--space-lg) + env(safe-area-inset-bottom, 0px)
+  );
 }
 
 // Discreet sign-in affordance for admins visiting anonymously — small,
@@ -2310,6 +2584,28 @@
   }
 }
 
+// Leading badge marking the card as a question: a white question mark inside
+// a round blue disc. The disc colour comes from `color` (the SVG circle is
+// filled with `currentColor`), so it follows the workspace/theme palette.
+.main-hub__question-card-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  // Nudged down so the disc centres on the first line of the title rather
+  // than the card's flex-start edge.
+  margin-top: 1px;
+  color: var(--indigo-600, #362c82);
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
 .main-hub__question-card-body {
   flex: 1 1 auto;
   min-width: 0;
@@ -2353,6 +2649,12 @@
   cursor: pointer;
   color: var(--text-muted, #78716c);
   transition: background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    display: block;
+  }
 
   &:hover,
   &:focus-visible {
@@ -2488,13 +2790,15 @@
 }
 
 // =============================================================================
-// QR share section — peer-to-peer URL sharing on the MainHub.
-// Compact card sits in the hub flow; tapping the canvas opens a fullscreen
+// QR share section — peer-to-peer URL sharing. Rendered on the MainHub (hub
+// URL) and inside a sub-question (that question's URL), so the block owns its
+// own class names rather than borrowing the host page's.
+// Compact card sits in the page flow; tapping the canvas opens a fullscreen
 // presenter overlay for projector / cross-room scanning. The QR canvas is
 // always white-bg + black-fg regardless of theme — scanners read luminance,
 // dark-mode inversion would break them.
 // =============================================================================
-.main-hub__qr {
+.qr-share {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
@@ -2515,7 +2819,7 @@
   }
 }
 
-.main-hub__qr-body {
+.qr-share__body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -2528,7 +2832,7 @@
   }
 }
 
-.main-hub__qr-label {
+.qr-share__label {
   margin: 0;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -2536,7 +2840,7 @@
   line-height: var(--line-height-snug);
 }
 
-.main-hub__qr-canvas {
+.qr-share__canvas {
   // Reset UA button defaults — without `appearance: none` Safari/Chromium
   // ship a grey "buttonface" background and platform-specific cursor that
   // override our zoom hint. We render the canvas as a plain interactive
@@ -2577,7 +2881,7 @@
   }
 }
 
-.main-hub__qr-actions {
+.qr-share__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
@@ -2588,13 +2892,13 @@
   }
 }
 
-.main-hub__qr-action {
+.qr-share__action {
   flex: 0 0 auto;
   min-height: 36px;
 }
 
 // ---- Fullscreen presenter overlay -------------------------------------------
-.main-hub__qr-presenter {
+.qr-share__presenter {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -2614,7 +2918,7 @@
   to   { opacity: 1; }
 }
 
-.main-hub__qr-presenter-title {
+.qr-share__presenter-title {
   margin: 0;
   max-width: min(80vw, 720px);
   font-family: var(--font-display);
@@ -2625,7 +2929,7 @@
   line-height: var(--line-height-snug);
 }
 
-.main-hub__qr-presenter-canvas {
+.qr-share__presenter-canvas {
   width: min(60vw, 60vh, 720px);
   height: min(60vw, 60vh, 720px);
   padding: var(--space-md);
@@ -2640,7 +2944,7 @@
   }
 }
 
-.main-hub__qr-presenter-url {
+.qr-share__presenter-url {
   margin: 0;
   max-width: min(80vw, 720px);
   padding: var(--space-sm) var(--space-md);
@@ -2658,7 +2962,7 @@
   word-break: break-all;
 }
 
-.main-hub__qr-presenter-close {
+.qr-share__presenter-close {
   position: absolute;
   top: var(--space-md);
   inset-inline-end: var(--space-md);
@@ -2688,28 +2992,28 @@
 }
 
 // ---- High-contrast (manual toggle + OS preference) -------------------------
-:root[data-high-contrast] .main-hub__qr-canvas,
-:root[data-high-contrast] .main-hub__qr-presenter-canvas {
+:root[data-high-contrast] .qr-share__canvas,
+:root[data-high-contrast] .qr-share__presenter-canvas {
   background: #ffffff;
   border: 2px solid #000000;
 }
 
 @media (forced-colors: active) {
-  .main-hub__qr-canvas,
-  .main-hub__qr-presenter-canvas {
+  .qr-share__canvas,
+  .qr-share__presenter-canvas {
     forced-color-adjust: none;     // protect QR module colors specifically
     background-color: #ffffff;     // …and force white where modules sit
     border: 2px solid CanvasText;
   }
 
-  .main-hub__qr-presenter {
+  .qr-share__presenter {
     backdrop-filter: none;
     background: Canvas;
   }
 
-  .main-hub__qr-presenter-title,
-  .main-hub__qr-presenter-url,
-  .main-hub__qr-presenter-close {
+  .qr-share__presenter-title,
+  .qr-share__presenter-url,
+  .qr-share__presenter-close {
     color: CanvasText;
     background: Canvas;
     border-color: CanvasText;
@@ -2718,13 +3022,13 @@
 
 // ---- Reduced motion --------------------------------------------------------
 @media (prefers-reduced-motion: reduce) {
-  .main-hub__qr-canvas {
+  .qr-share__canvas {
     transition: none;
 
     &:hover { transform: none; }
   }
 
-  .main-hub__qr-presenter {
+  .qr-share__presenter {
     animation: none;
     backdrop-filter: none;
   }
@@ -2803,6 +3107,130 @@
   .facilitator-toast {
     transition: opacity var(--dur-quick, 150ms) linear;
     transform: translate(-50%, 0);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Points toast — the "+1 ⭐ helper point" celebration, appended to <body>.
+// A slower, more theatrical timeline than the facilitator toast: drops in
+// from the top edge with a spring, settles and blinks its glow twice so the
+// star registers, holds, then floats back up and away. Element lifetime is
+// POINTS_TOAST_TOTAL_MS in lib/pointsToast.ts — keep in sync.
+// -----------------------------------------------------------------------------
+.points-toast {
+  position: fixed;
+  top: var(--space-lg);
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-inverse);              // on teal-600 ~7.1:1 ✓ AAA
+  background: var(--teal-600);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  max-width: min(92vw, 30rem);
+
+  // Timeline (total ~4.5s):
+  //   0s    → 0.55s  drop in from above with a spring overshoot
+  //   0.8s  → 2.6s   two slow glow blinks while settled
+  //   3.9s  → 4.5s   rise back up and fade out (forwards holds the end state)
+  animation:
+    points-toast-drop 0.55s var(--ease-spring) both,
+    points-toast-blink 0.9s ease-in-out 0.8s 2,
+    points-toast-rise 0.6s var(--ease-out) 3.9s forwards;
+
+  &__star {
+    font-size: var(--font-size-lg);
+    line-height: 1;
+    animation: points-toast-star 0.9s ease-in-out 0.8s 2;
+  }
+
+  &__text {
+    line-height: var(--line-height-normal);
+  }
+}
+
+@keyframes points-toast-drop {
+  from {
+    transform: translate(-50%, -220%);
+    opacity: 0;
+  }
+  65% {
+    transform: translate(-50%, 10%);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+// Glow-and-lift blink: box-shadow ring swells while the pill scales a touch.
+@keyframes points-toast-blink {
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    box-shadow:
+      var(--shadow-md),
+      0 0 0 0 rgba(26, 122, 108, 0.55);
+  }
+  50% {
+    transform: translate(-50%, 0) scale(1.06);
+    box-shadow:
+      var(--shadow-md),
+      0 0 0 12px rgba(26, 122, 108, 0);
+  }
+}
+
+@keyframes points-toast-star {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.35) rotate(12deg);
+  }
+}
+
+@keyframes points-toast-rise {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -220%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .points-toast {
+    // No travel, no blinking — a plain fade in and out on the same clock.
+    animation: points-toast-fade 4.5s linear both;
+
+    &__star {
+      animation: none;
+    }
+  }
+}
+
+@keyframes points-toast-fade {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
@@ -2976,7 +3404,10 @@ $facilitator-panel-width: 300px;
   flex-direction: column;
   gap: var(--space-md);
   padding: var(--space-lg) var(--space-md);
-  background: var(--bg-paper, #ffffff);
+  // `--bg-paper` is defined in _tokens.scss as an alias of `--bg-card`, so
+  // the drawer is white in light mode and a proper dark surface in dark mode
+  // (the old hardcoded #ffffff fallback kept it white on a dark page).
+  background: var(--bg-paper);
   box-shadow: var(--shadow-lg);
   transform: translateX(100%);
   transition: transform var(--dur-base, 220ms) var(--ease-out);
@@ -3043,6 +3474,16 @@ $facilitator-panel-width: 300px;
   background: var(--terra-50);
   border-radius: var(--radius-sm);
   font-style: italic;
+}
+
+// Scope notice — shown on the hub, where every settings row below writes to
+// all sub-questions at once. Louder than the plain notice (upright text, an
+// accent bar on the inline-start edge) because it changes what every control
+// underneath it means, and it stays on screen for the whole panel session.
+.facilitator-panel__notice--scope {
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+  border-inline-start: 3px solid var(--terra-500);
 }
 
 // Section grouping — wraps a logically related set of rows under an uppercase
@@ -3326,13 +3767,17 @@ $facilitator-panel-width: 300px;
   flex-shrink: 0;
 }
 
+// Text and background MUST come from the same dark-aware token pair —
+// `--text-primary` on `--bg-input` stays AA in both schemes. (Historically
+// this used then-undefined `--text-strong`/`--bg-muted`, whose hardcoded
+// light fallbacks left near-black text on a dark surface in dark mode.)
 .facilitator-panel__lang-select {
   padding: 4px 8px;
   font: inherit;
   font-size: var(--font-size-xs, 0.75rem);
-  color: var(--text-strong, #1c1917);
-  background: var(--paper, #ffffff);
-  border: 1px solid var(--bg-muted, #d6d3d1);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   max-width: 9rem;
   cursor: pointer;
@@ -3491,15 +3936,18 @@ $facilitator-panel-width: 300px;
   align-self: flex-start;
 }
 
+// Text + surface from the same dark-aware pair (`--text-primary` on
+// `--bg-input`). The old `--paper` background flips to page-black in dark
+// mode while the hardcoded dark text fallback stayed — invisible entries.
 .facilitator-panel__joinform-input,
 .facilitator-panel__joinform-select {
   width: 100%;
   padding: 6px 10px;
   font: inherit;
   font-size: var(--font-size-sm, 0.875rem);
-  color: var(--text-strong, #1c1917);
-  background: var(--paper, #ffffff);
-  border: 1px solid var(--bg-muted, #d6d3d1);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   transition: border-color var(--dur-quick, 140ms) var(--ease-out);
 
@@ -3542,8 +3990,8 @@ $facilitator-panel-width: 300px;
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid var(--bg-muted, #d6d3d1);
-  background: var(--paper, #ffffff);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-input);
   color: var(--text-muted, #78716c);
   border-radius: var(--radius-sm, 6px);
   font-size: 1rem;
@@ -3570,22 +4018,24 @@ $facilitator-panel-width: 300px;
   }
 }
 
+// Same dark-aware pairing as the inputs it sits beside; the hover tint uses
+// `--teal-50`, which dark mode redefines as a translucent teal overlay.
 .facilitator-panel__joinform-check {
   flex-shrink: 0;
   padding: 6px 10px;
   font: inherit;
   font-size: var(--font-size-xs, 0.75rem);
   white-space: nowrap;
-  color: var(--text-strong, #1c1917);
-  background: var(--paper, #ffffff);
-  border: 1px solid var(--bg-muted, #d6d3d1);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;
   transition: background var(--dur-quick, 140ms) var(--ease-out),
               border-color var(--dur-quick, 140ms) var(--ease-out);
 
   &:hover:not(:disabled) {
-    background: rgba(20, 95, 84, 0.06);
+    background: var(--teal-50);
     border-color: var(--teal-600, #145f54);
   }
 
@@ -3669,6 +4119,12 @@ $facilitator-panel-width: 300px;
   &:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
+  }
+
+  // Dark mode: the ramp shifts one step, so `--teal-700` lands at ~3:1 on
+  // the dark fill; `--teal-500` is the text-safe step there (~5:1 AA).
+  @media (prefers-color-scheme: dark) {
+    color: var(--teal-500);
   }
 }
 
@@ -3778,6 +4234,17 @@ $facilitator-panel-width: 300px;
   // baseline and look offset inside a perfectly centered button.
   margin-block-start: -2px;
   font-weight: 600;
+  // `‹` is a bidi-mirrored character: dropped into an RTL paragraph the
+  // browser renders it flipped on its own, which fought with (and cancelled
+  // out) any glyph swap done in JS. Isolate it as an LTR run so the glyph is
+  // always drawn pointing left, then flip it explicitly for RTL below.
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+// RTL reads right-to-left, so "back" points right.
+[dir='rtl'] .back-button__chevron {
+  transform: scaleX(-1);
 }
 
 // -----------------------------------------------------------------------------
@@ -3991,10 +4458,12 @@ $facilitator-panel-width: 300px;
 }
 
 // Language row label ("🌐 Language")
+// `--text-primary` flips with the dark-mode token block so the label stays
+// readable on the panel's `--bg-card` surface in both schemes.
 .a11y-widget__lang-label {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: var(--text-strong);
+  color: var(--text-primary);
   text-align: start;
 }
 
@@ -4002,14 +4471,19 @@ $facilitator-panel-width: 300px;
 // Native control gives free OS-level keyboard, type-ahead, and the mobile
 // system picker. We deliberately don't customize the dropdown arrow so the
 // element keeps platform-native affordance recognition.
+// Color/background come from the SAME dark-aware token pair (`--text-primary`
+// on `--bg-input`) so the selected language always meets AA in both schemes:
+// #1c1917 on #ffffff (~16.9:1) light, #f4ece0 on paper-deep (~12:1) dark.
+// `--bg-input` is the sanctioned input surface — one step above the card in
+// dark mode, so the control doesn't vanish into the panel.
 .a11y-widget__lang-select {
   width: 100%;
   min-height: 36px;
   padding: 6px 10px;
   font: inherit;
   font-size: var(--font-size-sm);
-  color: var(--text-strong);
-  background: var(--paper, #ffffff);
+  color: var(--text-primary);
+  background: var(--bg-input);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;
@@ -4025,10 +4499,13 @@ $facilitator-panel-width: 300px;
     border-color: var(--teal-600);
   }
 
+  // Disabled (facilitator forced a language): `--bg-subtle` is dark-aware —
+  // the previous `var(--bg-muted, #f5f5f4)` (then undefined) always painted
+  // its light fallback, making the light text invisible on it in dark mode.
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: var(--bg-muted, #f5f5f4);
+    background: var(--bg-subtle);
   }
 }
 

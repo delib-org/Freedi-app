@@ -51,6 +51,29 @@ export const getRandomColor = (existingColors: string[]): string => {
 	return color;
 };
 
+// Stable hash so an option without a stored color still gets the same
+// palette entry on every render, device and session.
+const hashToPaletteIndex = (id: string): number => {
+	let hash = 0;
+	for (let i = 0; i < id.length; i++) {
+		hash = (hash * 31 + id.charCodeAt(i)) % votingColors.length;
+	}
+
+	return hash;
+};
+
+/**
+ * Colour to paint an option with. Statements created before colours were
+ * assigned - or through a path that skips `getRandomColor` - have no `color`,
+ * which used to render the whole bar transparent. Fall back to a deterministic
+ * palette entry instead of leaving the option unpainted.
+ */
+export const getOptionColor = (option: Pick<Statement, 'color' | 'statementId'>): string => {
+	if (option.color) return option.color;
+
+	return votingColors[hashToPaletteIndex(option.statementId)];
+};
+
 export const getSiblingOptionsByParentId = (
 	parentId: string,
 	statements: Statement[],

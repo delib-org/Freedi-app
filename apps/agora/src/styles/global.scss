@@ -22,13 +22,22 @@ body {
   font-size: var(--font-size-base);
   color: var(--text-primary);
   background:
-    radial-gradient(ellipse 120% 70% at 50% -10%, var(--bg-page-high) 0%, var(--bg-page) 60%),
+    radial-gradient(
+      ellipse 120% 70% at 50% -10%,
+      var(--bg-page-high) 0%,
+      #e2f1fd 55%,
+      var(--bg-page) 100%
+    ),
     var(--bg-page);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
 
-// Living night sky: two drifting star layers behind every screen.
+::selection {
+  background: rgba(43, 111, 214, 0.25);
+}
+
+// Living day sky: drifting cloud puffs + a festival sparkle field.
 // Pure decoration — fixed, non-interactive, killed by reduced-motion.
 body::before,
 body::after {
@@ -41,27 +50,29 @@ body::after {
 }
 
 body::before {
+  // Drifting cloud puffs
   background-image:
-    radial-gradient(1.2px 1.2px at 12% 18%, rgba(244, 232, 207, 0.7) 50%, transparent 51%),
-    radial-gradient(1px 1px at 44% 8%, rgba(244, 232, 207, 0.55) 50%, transparent 51%),
-    radial-gradient(1.4px 1.4px at 71% 26%, rgba(255, 216, 130, 0.5) 50%, transparent 51%),
-    radial-gradient(1px 1px at 88% 12%, rgba(244, 232, 207, 0.5) 50%, transparent 51%),
-    radial-gradient(1px 1px at 29% 33%, rgba(244, 232, 207, 0.4) 50%, transparent 51%);
-  background-size: 520px 420px;
-  animation: sky-twinkle 7s ease-in-out infinite alternate;
+    radial-gradient(140px 56px at 15% 10%, rgba(255, 255, 255, 0.95) 40%, transparent 70%),
+    radial-gradient(190px 70px at 68% 6%, rgba(255, 255, 255, 0.85) 40%, transparent 70%),
+    radial-gradient(110px 46px at 42% 16%, rgba(255, 255, 255, 0.75) 40%, transparent 70%);
+  background-size: 1200px 760px;
+  animation: sky-twinkle 9s ease-in-out infinite alternate;
 }
 
 body::after {
+  // Festival sparkle field — all theme hues at whisper opacity
   background-image:
-    radial-gradient(1px 1px at 62% 41%, rgba(244, 232, 207, 0.35) 50%, transparent 51%),
-    radial-gradient(1.3px 1.3px at 18% 52%, rgba(255, 216, 130, 0.3) 50%, transparent 51%),
-    radial-gradient(1px 1px at 83% 57%, rgba(244, 232, 207, 0.3) 50%, transparent 51%);
+    radial-gradient(2px 2px at 12% 30%, rgba(43, 111, 214, 0.2) 50%, transparent 51%),
+    radial-gradient(2px 2px at 78% 42%, rgba(224, 119, 20, 0.2) 50%, transparent 51%),
+    radial-gradient(2px 2px at 40% 62%, rgba(138, 82, 207, 0.16) 50%, transparent 51%),
+    radial-gradient(2px 2px at 60% 22%, rgba(20, 160, 143, 0.16) 50%, transparent 51%),
+    radial-gradient(2.5px 2.5px at 25% 76%, rgba(255, 210, 63, 0.3) 50%, transparent 51%);
   background-size: 640px 560px;
-  animation: sky-twinkle 11s ease-in-out infinite alternate-reverse;
+  animation: sky-twinkle 13s ease-in-out infinite alternate-reverse;
 }
 
 @keyframes sky-twinkle {
-  from { opacity: 0.45; }
+  from { opacity: 0.55; }
   to { opacity: 1; }
 }
 
@@ -77,9 +88,11 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 400;
+  // 700, not the old 400: Suez One was a display face that read heavy at
+  // regular, Alef is a plain grotesque that would leave titles limp.
+  font-weight: 700;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 h1 { font-size: var(--font-size-3xl); }
@@ -132,26 +145,54 @@ p {
 }
 
 // --- Buttons ---
+// "Lantern, not plastic": a button has no bevel and no ledge underneath. It
+// has a body and it emits. Depth is a soft halo cast in the button's OWN hue
+// — set once per variant via --btn-glow, and the shared rule below derives
+// rest / hover / active from it. Light expands on hover, pulls in on press.
 .btn {
-  font-family: var(--font-body);
+  --btn-glow: transparent;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  // Alef for every button, not just the primary one. 700 because Alef has no
+  // 600 — the old value would have been faux-bolded.
+  font-family: var(--font-display);
   font-size: var(--font-size-base);
-  font-weight: 600;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.8em 1.6em;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  padding: 0.8em 1.7em;
   cursor: pointer;
+  box-shadow:
+    0 1px 2px rgba(37, 51, 82, 0.06),
+    0 3px 10px -3px color-mix(in srgb, var(--btn-glow) 55%, transparent);
   transition:
     transform var(--motion-fast) var(--ease-spring),
     box-shadow var(--motion-base) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
     background-color var(--motion-fast) ease;
 
-  &:active {
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 2px rgba(37, 51, 82, 0.06),
+      0 6px 18px -4px color-mix(in srgb, var(--btn-glow) 70%, transparent);
+  }
+
+  // Pressed = the light pulls in, not the body squashing onto a shelf
+  &:active:not(:disabled) {
     transform: scale(0.97);
+    box-shadow:
+      0 1px 2px rgba(37, 51, 82, 0.1),
+      0 2px 6px -2px color-mix(in srgb, var(--btn-glow) 45%, transparent);
   }
 
   &:disabled {
     opacity: 0.45;
     cursor: not-allowed;
+    box-shadow: none;
   }
 
   &:focus-visible {
@@ -160,54 +201,72 @@ p {
   }
 
   &--primary {
-    font-family: var(--font-display);
-    letter-spacing: 0.02em;
-    background: linear-gradient(180deg, var(--lantern-glow), var(--lantern));
-    color: var(--text-on-lantern);
-    border: 1px solid rgba(120, 74, 10, 0.55);
-    // Bevel: light catches the top edge, weight settles at the bottom
-    box-shadow:
-      inset 0 1px 0 rgba(255, 245, 220, 0.55),
-      inset 0 -2px 0 rgba(120, 74, 10, 0.35),
-      var(--glow-lantern);
+    --btn-glow: var(--lantern);
+
+    background: var(--lantern);
+    color: #ffffff;
 
     &:hover:not(:disabled) {
-      box-shadow:
-        inset 0 1px 0 rgba(255, 245, 220, 0.55),
-        inset 0 -2px 0 rgba(120, 74, 10, 0.35),
-        0 0 26px rgba(255, 216, 130, 0.65);
-      transform: translateY(-1px);
+      background: #3479dd;
     }
 
     &:active:not(:disabled) {
-      transform: translateY(1px) scale(0.99);
-      box-shadow:
-        inset 0 2px 3px rgba(120, 74, 10, 0.45),
-        0 0 14px rgba(255, 216, 130, 0.4);
+      background: var(--lantern-deep);
+    }
+
+    // Signature: the lantern catches the light. One sheen band crosses the
+    // pill on hover — the honest version of the old fake inset specular.
+    // Physical left/right, never inset-inline-*: the sweep is a light source,
+    // not text. Under RTL an inline anchor flips and parks the band mid-button.
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      left: 0;
+      width: 22%;
+      z-index: -1;
+      pointer-events: none;
+      background: linear-gradient(
+        105deg,
+        transparent,
+        rgba(255, 255, 255, 0.28) 50%,
+        transparent
+      );
+      transform: translateX(-220%);
+    }
+
+    &:hover:not(:disabled)::after {
+      transform: translateX(560%);
+      transition: transform var(--motion-slow) var(--ease-camera);
     }
   }
 
   &--secondary {
-    background: rgba(244, 232, 207, 0.03);
+    --btn-glow: rgba(37, 51, 82, 0.35);
+
+    background: #ffffff;
     color: var(--text-primary);
-    border: 1px solid var(--border-strong);
-    box-shadow: inset 0 1px 0 rgba(244, 232, 207, 0.06);
+    border-color: var(--border-strong);
 
     &:hover:not(:disabled) {
+      --btn-glow: var(--lantern);
+
       border-color: var(--lantern);
       color: var(--lantern-glow);
-      box-shadow:
-        inset 0 1px 0 rgba(244, 232, 207, 0.06),
-        0 0 14px rgba(255, 216, 130, 0.18);
     }
   }
 
+  // Ghost has no elevation, so it has nothing to lift — it tints instead
   &--ghost {
     background: transparent;
     color: var(--text-secondary);
+    box-shadow: none;
 
     &:hover:not(:disabled) {
+      transform: none;
       color: var(--text-primary);
+      background: rgba(37, 51, 82, 0.06);
+      box-shadow: none;
     }
   }
 
@@ -217,7 +276,18 @@ p {
 
   &--lg {
     font-size: var(--font-size-lg);
-    padding: 1em 2em;
+    padding: 1em 2.1em;
+  }
+
+  &--sm {
+    font-size: var(--font-size-sm);
+    padding: 0.45em 1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn--primary::after {
+    display: none;
   }
 }
 
@@ -240,20 +310,18 @@ p {
   &:focus {
     outline: none;
     border-color: var(--border-lantern);
-    box-shadow: 0 0 0 3px rgba(245, 185, 68, 0.18);
+    box-shadow: 0 0 0 3px rgba(43, 111, 214, 0.15);
   }
 }
 
 // --- Card: a game panel, not a web card ---
 .card {
-  background: linear-gradient(180deg, rgba(244, 232, 207, 0.03), transparent 40%), var(--bg-card);
+  background: linear-gradient(180deg, rgba(43, 111, 214, 0.04), transparent 40%), var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
-  // Parchment hairline inside the frame + depth below
   box-shadow:
-    inset 0 0 0 1px rgba(244, 232, 207, 0.04),
-    inset 0 1px 0 rgba(244, 232, 207, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
     var(--shadow-card);
   backdrop-filter: blur(6px);
 }

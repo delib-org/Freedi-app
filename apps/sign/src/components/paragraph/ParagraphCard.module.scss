@@ -77,6 +77,19 @@
   hyphens: auto;
   max-width: 100%;
 
+  // Reserve space on the first line so the absolutely-positioned heat badge
+  // (e.g. "+1.0 (5)") never overlaps/hides the text. Only present when the
+  // card renders a badge (article gets data-heat-type). Text wraps around it.
+  [data-heat-type] & {
+    &::before {
+      content: '';
+      float: inline-end;
+      width: 4.25rem;
+      height: 1.6rem;
+      // no visual — pure spacer
+    }
+  }
+
   // Inline formatting styles from Google Docs import
   strong {
     font-weight: 700;
@@ -574,6 +587,7 @@
   border-radius: var(--radius-sm);
   font-size: 0.65rem;
   font-weight: 600;
+  white-space: nowrap; // keep "+1.0 (5)" on one line so it fits the reserved strip
   color: var(--text-body);
   background: rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow-sm);

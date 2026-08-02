@@ -1,21 +1,17 @@
-import { FC, useState, useEffect, useMemo } from 'react';
+import { FC, useState, useEffect } from 'react';
 import styles from './CommunityVoiceEvaluation.module.scss';
 import { communityVoiceOptions, CommunityVoiceOption } from './CommunityVoiceEvaluationModel';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import {
-	Statement,
-	calcMeanSentiment,
-	calcLikeMindedness,
-	DEFAULT_MIN_EVALUATORS,
-} from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 
 interface CommunityVoiceEvaluationProps {
 	statement: Statement;
@@ -26,39 +22,12 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 	statement,
 	enableEvaluation = true,
 }) => {
-	const { t, learning } = useUserConfig();
+	const { learning } = useUserConfig();
 
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
-
-	const {
-		numberOfEvaluators,
-		sumEvaluations = 0,
-		sumSquaredEvaluations = 0,
-	} = statement.evaluation || {
-		numberOfEvaluators: 0,
-		sumEvaluations: 0,
-		sumSquaredEvaluations: 0,
-	};
-	const consensusDisplay = Math.round((statement.consensus || 0) * 100);
-
-	const metrics = useMemo(() => {
-		if (!numberOfEvaluators || numberOfEvaluators <= 0) return null;
-		const meanSentiment = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
-		const likeMindedness = calcLikeMindedness(
-			sumEvaluations,
-			sumSquaredEvaluations,
-			numberOfEvaluators,
-		);
-
-		return {
-			meanSentiment: Math.round(meanSentiment * 100),
-			likeMindedness: Math.round(likeMindedness * 100),
-			consensusScore: consensusDisplay,
-		};
-	}, [sumEvaluations, sumSquaredEvaluations, numberOfEvaluators, consensusDisplay]);
 
 	return (
 		<div className={styles.evaluation}>
@@ -76,38 +45,10 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 					))}
 				</div>
 			</div>
+			{/* Consensus / average / evaluators, spelled out — the same three
+			    numbers every other evaluation mode now shows. */}
 			<div className={styles['evaluation-score']}>
-				{showEvaluation && numberOfEvaluators >= DEFAULT_MIN_EVALUATORS ? (
-					<Tooltip
-						content={
-							metrics ? (
-								<>
-									<div>
-										{t('Consensus score')}: {metrics.consensusScore}
-									</div>
-									<div>
-										{t('Average score')}: {metrics.meanSentiment}%
-									</div>
-									<div>
-										{t('Like-mindedness')}: {metrics.likeMindedness}%
-									</div>
-									<div>
-										{t('Evaluators')}: {numberOfEvaluators}
-									</div>
-								</>
-							) : (
-								`${t('Evaluators')}: ${numberOfEvaluators}`
-							)
-						}
-						position="bottom"
-					>
-						<span
-							className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}
-						>
-							{consensusDisplay}
-						</span>
-					</Tooltip>
-				) : null}
+				{showEvaluation && <ResultsStrip statement={statement} />}
 			</div>
 		</div>
 	);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { logError } from '@/lib/utils/errorHandling';
+import { safeLocalStorage } from '@/lib/utils/safeStorage';
 
 const STORAGE_KEY_PREFIX = 'sign_draft_comment_';
 const DEBOUNCE_MS = 300;
@@ -19,7 +20,7 @@ interface UseCommentDraftReturn {
 }
 
 /**
- * Hook for managing comment draft persistence in localStorage.
+ * Hook for managing comment draft persistence in safeLocalStorage.
  * Auto-saves drafts with debounce as user types.
  */
 export function useCommentDraft({
@@ -37,7 +38,7 @@ export function useCommentDraft({
     if (typeof window === 'undefined') return;
 
     try {
-      const savedDraft = localStorage.getItem(storageKey);
+      const savedDraft = safeLocalStorage.getItem(storageKey);
       if (savedDraft) {
         setDraftState(savedDraft);
         setHasDraft(true);
@@ -63,10 +64,10 @@ export function useCommentDraft({
     timeoutRef.current = setTimeout(() => {
       try {
         if (value.trim()) {
-          localStorage.setItem(storageKey, value);
+          safeLocalStorage.setItem(storageKey, value);
           setHasDraft(true);
         } else {
-          localStorage.removeItem(storageKey);
+          safeLocalStorage.removeItem(storageKey);
           setHasDraft(false);
         }
       } catch (error) {
@@ -88,7 +89,7 @@ export function useCommentDraft({
     }
 
     try {
-      localStorage.removeItem(storageKey);
+      safeLocalStorage.removeItem(storageKey);
     } catch (error) {
       logError(error, {
         operation: 'useCommentDraft.clearDraft',

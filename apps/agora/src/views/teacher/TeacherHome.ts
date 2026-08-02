@@ -2,7 +2,7 @@ import m from 'mithril';
 import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import { createSession } from '../../lib/callables';
-import { db, collection, query, getDocs } from '../../lib/firebase';
+import { db, collection, query, where, getDocs, doc, setDoc, updateDoc } from '../../lib/firebase';
 import {
 	Collections,
 	AgoraDeviceMode,
@@ -11,6 +11,7 @@ import {
 	AgoraTopicStatus,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 
 export function TeacherHome(): m.Component {
@@ -20,11 +21,49 @@ export function TeacherHome(): m.Component {
 	let deviceMode: AgoraDeviceMode = AgoraDeviceMode.individual;
 	let creating = false;
 
+	async function provisionDefaultTopic(creatorId: string): Promise<AgoraTopicPackage | null> {
+		try {
+			const defaultTopic = buildDefaultFrenchRevolutionTopic(creatorId);
+			await setDoc(
+				doc(db, Collections.agoraTopicPackages, defaultTopic.topicPackageId),
+				defaultTopic,
+			);
+
+			return defaultTopic;
+		} catch (error) {
+			console.error('[Teacher] Provisioning default topic failed:', error);
+
+			return null;
+		}
+	}
+
+	/**
+	 * Heal packages provisioned before the bundled artwork existed: backfill
+	 * default scene media + character portraits where they're still missing.
+	 * Runs fire-and-forget so it never blocks the teacher home from rendering.
+	 */
+	async function healArtwork(pkg: AgoraTopicPackage): Promise<AgoraTopicPackage> {
+		const patch = backfillDefaultArtwork(pkg);
+		if (!patch) return pkg;
+		const patched = { ...pkg, ...patch, lastUpdate: Date.now() };
+		try {
+			await updateDoc(doc(db, Collections.agoraTopicPackages, pkg.topicPackageId), patch);
+		} catch (error) {
+			console.error('[Teacher] Backfilling default artwork failed:', error);
+
+			return pkg;
+		}
+
+		return patched;
+	}
+
 	async function loadTopics(): Promise<void> {
 		try {
-			await ensureUser();
-			const snapshot = await getDocs(query(collection(db, Collections.agoraTopicPackages)));
-			const loaded: AgoraTopicPackage[] = [];
+			const user = await ensureUser();
+			const snapshot = await getDocs(
+				query(collection(db, Collections.agoraTopicPackages), where('creatorId', '==', user.uid)),
+			);
+			let loaded: AgoraTopicPackage[] = [];
 			snapshot.forEach((docSnap) => {
 				try {
 					loaded.push(parse(AgoraTopicPackageSchema, docSnap.data()));
@@ -32,6 +71,21 @@ export function TeacherHome(): m.Component {
 					console.error('[Teacher] Invalid topic package:', error);
 				}
 			});
+
+			// Heal any package still missing its default scene artwork.
+			loaded = await Promise.all(loaded.map((pkg) => healArtwork(pkg)));
+
+			// A teacher signing in for the first time has no topics of their own —
+			// give them the ready-to-run French Revolution game by default. Only
+			// real (Google) teachers author packages; never provision for anon students.
+			if (loaded.length === 0 && !user.isAnonymous) {
+				const defaultTopic = await provisionDefaultTopic(user.uid);
+				if (defaultTopic) {
+					loaded.push(defaultTopic);
+					selectedTopicId = defaultTopic.topicPackageId;
+				}
+			}
+
 			topics = loaded;
 			topicsLoaded = true;
 			m.redraw();
@@ -84,9 +138,16 @@ export function TeacherHome(): m.Component {
 								'button.btn.btn--primary',
 								{
 									onclick: () => {
-										signInWithGoogle().catch((error: unknown) => {
-											console.error('[Teacher] Sign-in failed:', error);
-										});
+										signInWithGoogle()
+											.then(() => {
+												// Re-run now that we have the teacher's real uid, so a
+												// first-time teacher gets the default topic provisioned.
+												topicsLoaded = false;
+												void loadTopics();
+											})
+											.catch((error: unknown) => {
+												console.error('[Teacher] Sign-in failed:', error);
+											});
 									},
 								},
 								t('home.sign_in'),
@@ -170,7 +231,9 @@ export function TeacherHome(): m.Component {
 								{
 									class:
 										deviceMode === AgoraDeviceMode.individual ? 'btn--primary' : 'btn--secondary',
+									disabled: !selectedTopicId,
 									onclick: () => {
+										if (!selectedTopicId) return;
 										deviceMode = AgoraDeviceMode.individual;
 									},
 								},
@@ -180,7 +243,9 @@ export function TeacherHome(): m.Component {
 								'button.btn',
 								{
 									class: deviceMode === AgoraDeviceMode.team ? 'btn--primary' : 'btn--secondary',
+									disabled: !selectedTopicId,
 									onclick: () => {
+										if (!selectedTopicId) return;
 										deviceMode = AgoraDeviceMode.team;
 									},
 								},

@@ -89,9 +89,16 @@ Your spoken arguments: ${character.arguments.join(' | ')}
 Your true needs: ${(character.needs ?? []).join(' | ')}
 Your values:
 ${valueList}
-Judge the proposal ONLY as this person would — would you accept it, what would it take. Respond ONLY with JSON: {"verdictText": string, "acceptanceScore": 0-100, "advice": string[]}.
-verdictText: 2-4 sentences in language "${topic.language}", first person, in character — what works for me, what would make me accept it. Honest as the character, but warm toward the student.
-advice: 2-3 concrete, actionable improvements that would address my needs. acceptanceScore: how acceptable the proposal is to me as written.`;
+You are a tough but FAIR negotiator, not a cynic. Judge the proposal by your NEEDS, not by ideology: concrete mechanisms that protect what you need — agreed rules written together, joint committees, orderly and gradual process, guarantees, proven precedents — count far more than whose side the idea comes from. Never punish a proposal merely for belonging to the other camp; if it genuinely protects several of your needs, say so plainly and score it generously.
+Calibrate acceptanceScore on this scale:
+85-100 = addresses nearly all my needs with concrete mechanisms — I would champion it;
+70-84 = serves most of my needs, my remaining worries are fixable — I lean in favor;
+50-69 = real promise but one need I cannot ignore is unaddressed — I am torn;
+30-49 = mostly ignores my needs;
+0-29 = actively endangers what I need.
+Respond ONLY with JSON: {"verdictText": string, "acceptanceScore": 0-100, "advice": string[]}.
+verdictText: 2-4 sentences in language "${topic.language}", first person, in character — name what in the proposal already serves my needs, then what would make me fully accept it. Honest as the character, warm toward the student.
+advice: 2-3 concrete, actionable improvements that would address my needs. acceptanceScore: per the calibration above.`;
 
 	const user = `Period context:
 ${periodContext}

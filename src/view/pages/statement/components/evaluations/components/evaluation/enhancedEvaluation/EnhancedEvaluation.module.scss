@@ -1,195 +1,173 @@
+@import '../../../../../../../style/mixins';
+
+// The 5-face scale.
+//
+// Was a column (faces / results / labels) whose faces were ~1.8rem — below the
+// 44px minimum target — and which stacked its result numbers underneath,
+// doubling the height of every card footer. Now a single wrapping row, with the
+// hit target grown to 44px while the painted face stays small: the background
+// colour (set inline per face) is clipped to the content box, so the coloured
+// circle is ~28px inside a 44px tappable button.
 .evaluation {
 	display: flex;
-	gap: 0.5rem;
 	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-xs);
+	min-width: 0;
+}
 
-	.enhanced-evaluation {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
+.enhanced-evaluation {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--space-xs) var(--space-sm);
+	min-width: 0;
+}
 
-		@media screen and (max-width: 500px) {
-			display: flex;
-			flex-direction: column;
-			width: fit-content;
-			margin: auto;
-			margin-top: 1rem;
-		}
+// Faces + their end labels. Width is set by the faces, so the labels can align
+// to the ends of the scale rather than the ends of the card.
+.scale {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: stretch;
+	width: fit-content;
+	flex-shrink: 0;
+	gap: var(--space-3xs);
+}
 
-		.evaluation-thumbs {
-			display: flex;
-			flex-direction: row-reverse;
-			// direction: ltr; // Default direction
-			gap: 0.5rem;
+.evaluation-thumbs {
+	// A rating scale reads low-to-high as a number line, independent of the
+	// surrounding script.
+	display: flex;
+	flex-direction: row-reverse;
+	align-items: center;
+	gap: var(--space-3xs);
+	flex-shrink: 0;
+}
 
-			.evaluation-thumb {
-				transition: transform 0.15s ease-out, opacity 0.15s ease-out, background-color 0.1s ease-out;
-				display: flex;
-				border-radius: 3rem;
-				justify-content: center;
-				align-items: center;
-				min-width: 1.8rem;
-				min-height: 1.8rem;
-				cursor: pointer;
-				user-select: none;
-				opacity: 0.95;
-				border: none;
-				// Subtle ring so inactive thumbs clearly read as tappable.
-				box-shadow: inset 0 0 0 1px var(--evaluation-thumb-ring);
-				-webkit-tap-highlight-color: transparent;
-				transform: scale(1);
+// The button is only a hit target: transparent, no fill, no ring. Everything
+// visible lives on __face, so the target can be 44px while the face stays 32px.
+.evaluation-thumb {
+	@include hit-target;
 
-				&:active:not(:disabled) {
-					transform: scale(0.95);
-				}
+	padding: 0;
+	border: none;
+	background: none;
+	border-radius: var(--radius-pill);
+	cursor: pointer;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	transform: scale(1);
+	transition: transform var(--motion-fast) var(--motion-ease);
 
-				&:hover:not(:disabled):not(.active) {
-					opacity: 1;
-					transform: scale(1.08);
-				}
+	&:active:not(:disabled) {
+		transform: scale(0.95);
+	}
 
-				&.active {
-					transform: scale(1.2);
-					z-index: 0;
-					opacity: 1;
-					box-shadow: none;
-				}
+	&:hover:not(:disabled):not(.active) {
+		transform: scale(1.08);
+	}
 
-				&:disabled {
-					cursor: not-allowed;
-				}
+	// Selection is carried by scale (shape) as well as fill, so it survives
+	// greyscale and colour-blindness.
+	&.active {
+		transform: scale(1.15);
+		z-index: 0;
+	}
 
-				&.disabled {
-					opacity: 0.6;
-					cursor: not-allowed;
-					pointer-events: none;
-					filter: grayscale(30%);
-				}
+	// The ring follows the face, not the 44px box — otherwise it reads as a
+	// large empty circle around a small glyph.
+	&:focus-visible {
+		outline: none;
 
-				img {
-					pointer-events: none;
-				}
-
-				// Reaction mode: emoji rendered in place of the SVG thumb.
-				.evaluation-thumb__emoji {
-					pointer-events: none;
-					font-size: 1.5rem;
-					line-height: 1;
-				}
-			}
-		}
-
-		.evaluation-bar {
-			background-color: transparent;
-			width: 100%;
-			height: 0.3rem;
-			position: relative;
-			border-radius: 3px;
-			// The indicator is absolutely positioned from a measured width —
-			// clip so stale/extreme positions can never widen the card.
-			overflow: hidden;
-
-			&__indicator {
-				height: 100%;
-				position: absolute;
-				border-radius: 3px;
-				transition: right 0.3s ease, background-color 0.3s ease;
-			}
-		}
-
-		.evaluation-score {
-			display: flex;
-			gap: 0.2rem;
-			align-items: center;
-			justify-content: center;
-			color: var(--text-body);
-			color: var(--emoji-happy);
-
-			// Adding new styles for tooltips
-			.scoreValue {
-				font-weight: 500;
-				padding: 0.15rem 0.25rem;
-				border-radius: 3px;
-				transition: background-color 0.2s ease;
-				direction: ltr;
-
-				&:hover {
-					background-color: rgba(
-						0,
-						0,
-						0,
-						0.05
-					); // subtle highlight on hover
-				}
-			}
-
-			&.negative .scoreValue {
-				color: var(--emoji-thinking);
-			}
-		}
-
-		.explain {
-			justify-content: space-between;
-			color: var(--text-label);
-
-			&--ltr {
-				flex-direction: row-reverse;
-			}
-		}
-
-		.evaluation-explain {
-			display: flex;
-			justify-content: space-between;
-			font-weight: 300;
-			font-size: 0.8rem;
-			color: var(--text-caption);
-			text-align: center;
-			width: 100%;
+		.evaluation-thumb__face {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: 2px;
 		}
 	}
 
-	.total-evaluators {
-		direction: ltr;
-		opacity: 0.8;
-		transition: opacity 0.2s ease;
-		color: var(--text-label);
-
-		&:hover {
-			opacity: 1;
-		}
+	&:disabled {
+		cursor: not-allowed;
 	}
 
-	.consensus-score {
-		direction: ltr;
-		font-weight: 600;
-		font-size: 0.9rem;
-		color: var(--agree);
-		transition: opacity 0.2s ease;
-		cursor: default;
-
-		&:hover {
-			opacity: 0.8;
-		}
-
-		&--negative {
-			color: var(--reject);
-		}
+	&.disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		pointer-events: none;
+		filter: grayscale(30%);
 	}
 }
 
-.active {
-	transform: scale(1.1);
+.evaluation-thumb__face {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: var(--radius-pill);
+	pointer-events: none;
+	opacity: 0.95;
+	// Subtle ring so inactive faces clearly read as tappable.
+	box-shadow: inset 0 0 0 1px var(--evaluation-thumb-ring);
+	transition: opacity var(--motion-fast) var(--motion-ease);
+
+	img {
+		width: 22px;
+		height: 22px;
+		pointer-events: none;
+	}
+
+	// Reaction mode: emoji rendered in place of the SVG thumb.
+	.evaluation-thumb__emoji {
+		pointer-events: none;
+		font-size: 1.25rem;
+		line-height: 1;
+	}
 }
 
-// Mobile optimizations for tooltips
-@media screen and (max-width: 500px) {
-	.enhanced-evaluation {
-		.evaluation-score {
-			.scoreValue,
-			.total-evaluators {
-				// Make tap targets larger on mobile
-				padding: 0.25rem 0.3rem;
-			}
+.evaluation-thumb:hover:not(:disabled) .evaluation-thumb__face,
+.evaluation-thumb.active .evaluation-thumb__face {
+	opacity: 1;
+}
+
+// The selected face carries the full-strength fill; the ring would only muddy it.
+.evaluation-thumb.active .evaluation-thumb__face {
+	box-shadow: none;
+}
+
+// Anchored to the ends of .scale, so each label sits under the face it names.
+// The faces row is row-reverse, which puts the most negative face at the visual
+// start — matching "Disagree" first in reading order.
+.evaluation-explain {
+	display: flex;
+	justify-content: space-between;
+	font-weight: var(--font-weight-regular);
+	font-size: var(--font-size-xs);
+	line-height: 1;
+	color: var(--text-meta);
+	width: 100%;
+	box-sizing: border-box;
+
+	// Each label occupies exactly one face's box and centres inside it, so it
+	// sits under the face it names. Aligning the label edges to the row edges
+	// instead leaves them off-centre by however much the two words differ in
+	// width ("Disagree" is wider than "Agree"). Overflow is safe: the middle
+	// three faces have no labels for it to collide with.
+	> span {
+		flex: 0 0 44px;
+		text-align: center;
+		white-space: nowrap;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.evaluation-thumb {
+		transition: none;
+
+		&:hover:not(:disabled):not(.active),
+		&:active:not(:disabled) {
+			transform: none;
 		}
 	}
 }

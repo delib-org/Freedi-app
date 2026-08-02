@@ -2,6 +2,7 @@
  * Visitor ID utilities for anonymous user tracking
  * Uses localStorage to persist a unique visitor ID across sessions
  */
+import { safeLocalStorage } from './safeStorage';
 
 const STORAGE_KEY = 'freedi_visitor_id';
 
@@ -12,11 +13,11 @@ const STORAGE_KEY = 'freedi_visitor_id';
 export function getVisitorId(): string {
 	if (typeof window === 'undefined') return '';
 
-	let visitorId = localStorage.getItem(STORAGE_KEY);
+	let visitorId = safeLocalStorage.getItem(STORAGE_KEY);
 
 	if (!visitorId) {
 		visitorId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-		localStorage.setItem(STORAGE_KEY, visitorId);
+		safeLocalStorage.setItem(STORAGE_KEY, visitorId);
 	}
 
 	return visitorId;

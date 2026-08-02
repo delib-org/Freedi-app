@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { logError } from '@/lib/utils/errorHandling';
+import { safeLocalStorage } from '@/lib/utils/safeStorage';
 
 const STORAGE_KEY_PREFIX = 'sign_draft_suggestion_';
 const DEBOUNCE_MS = 300;
@@ -26,7 +27,7 @@ interface UseSuggestionDraftReturn {
 }
 
 /**
- * Hook for managing suggestion draft persistence in localStorage.
+ * Hook for managing suggestion draft persistence in safeLocalStorage.
  * Auto-saves drafts with debounce as user types.
  */
 export function useSuggestionDraft({
@@ -45,7 +46,7 @@ export function useSuggestionDraft({
     if (typeof window === 'undefined') return;
 
     try {
-      const savedDraft = localStorage.getItem(storageKey);
+      const savedDraft = safeLocalStorage.getItem(storageKey);
       if (savedDraft) {
         const parsed: SuggestionDraft = JSON.parse(savedDraft);
         setSuggestedContentState(parsed.suggestedContent || '');
@@ -75,10 +76,10 @@ export function useSuggestionDraft({
             suggestedContent: content,
             reasoning: reason,
           };
-          localStorage.setItem(storageKey, JSON.stringify(draft));
+          safeLocalStorage.setItem(storageKey, JSON.stringify(draft));
           setHasDraft(true);
         } else {
-          localStorage.removeItem(storageKey);
+          safeLocalStorage.removeItem(storageKey);
           setHasDraft(false);
         }
       } catch (error) {
@@ -113,7 +114,7 @@ export function useSuggestionDraft({
     }
 
     try {
-      localStorage.removeItem(storageKey);
+      safeLocalStorage.removeItem(storageKey);
     } catch (error) {
       logError(error, {
         operation: 'useSuggestionDraft.clearDraft',

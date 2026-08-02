@@ -6,6 +6,7 @@ import { useDemographicStore } from '@/store/demographicStore';
 import { DemographicAnswer } from '@/types/demographics';
 import DemographicQuestionInput from './DemographicQuestionInput';
 import styles from './DemographicSurveyModal.module.scss';
+import { safeLocalStorage } from '@/lib/utils/safeStorage';
 
 interface DemographicSurveyModalProps {
   documentId: string;
@@ -23,7 +24,7 @@ type PresetCache = Record<string, string | string[]>;
 function readPresetCache(): PresetCache {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = window.localStorage.getItem(PRESET_CACHE_KEY);
+    const raw = safeLocalStorage.getItem(PRESET_CACHE_KEY);
 
     return raw ? (JSON.parse(raw) as PresetCache) : {};
   } catch {
@@ -34,7 +35,7 @@ function readPresetCache(): PresetCache {
 function writePresetCache(values: PresetCache): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(PRESET_CACHE_KEY, JSON.stringify(values));
+    safeLocalStorage.setItem(PRESET_CACHE_KEY, JSON.stringify(values));
   } catch {
     // Ignore quota / private-mode errors — caching is best-effort.
   }

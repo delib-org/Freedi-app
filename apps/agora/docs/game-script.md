@@ -1,5 +1,10 @@
 # Agora — Session Script
 
+> **Continuing work in a new chat?** Read `apps/agora/docs/HANDOFF.md` first —
+> it carries the current implementation state, how to run everything, and
+> what's next. This file is the *pedagogical script*: what each beat teaches
+> and why, grounded in *On Deliberation*.
+
 **A 45-minute classroom deliberation, staged as a rescue mission through time.**
 Grounded in *On Deliberation* (Tal Yaron) — every beat below cites the principle it teaches.
 Running example: the French Revolution fixture (הרוזן דה-לה-רוש ↔ קמיל דופון).
@@ -173,16 +178,23 @@ could do together.** Which need of the Count does it serve? Which need of Camill
 answers erase the diversity of independent estimates." The required phrasing makes
 proposals owned and addressed to joint action.
 
-### Phase 2 · Rate
-Students rate a sample of others' proposals (own excluded).
+### Step 2 · Rate (implemented — five levels, attention-fair)
+Students rate up to 3 proposals per lap (own excluded) on the MC-style scale:
+😠 ממש לא בעד (−1) · 🙁 לא בעד (−0.5) · 😐 נמנעים (0) · 🙂 בעד (+0.5) ·
+😍 מאוד בעד (+1). Candidates are served **least-rated first** with a
+per-student ordering, so attention spreads instead of piling on the earliest
+proposal ("early proposals win by timing, not merit" — countered).
 
 🎙 "You are not voting for a winner. You are telling France what it could live with."
 
 👩‍🏫 Teacher card: *"Criticism is addressed to the proposal, never the proposer.
 'This plan underestimates the bread problem' keeps us working on the plan."*
 
-### Phase 3 · Improve — *criticism as service*
-Two tabs (existing): help others / my proposal.
+### Step 3 · Help — *criticism as service* (implemented)
+One suggestion per lap for a classmate's proposal (targets with the fewest
+open suggestions come first), or skip. Accepting pays the suggester (points +
+credit) and fires the **glitter celebration** quoting their improvement — the
+loudest moment in the game belongs to making someone else's idea better.
 
 🎙 "Pick a lantern and make it burn brighter. Your job is not to attack it —
 **it is to make it the best version of itself.**"
@@ -204,12 +216,16 @@ The AI answers **in character** (verdict, 0–100 acceptance, concrete advice ke
 that character's needs), and its rating enters the *real* evaluation pipeline as
 3 synthetic raters in the character's camp — so winning over the *other* side's
 character visibly blends your lantern's colors, exactly like cross-camp classmates
-would. Two asks per character per round ("improve first, then ask again") — feedback
-→ revise → verify, the theory's improvement loop in miniature.
+would. Five asks per character per session ("improve first, then ask again") —
+feedback → revise → verify, the theory's improvement loop in miniature. A verdict
+older than the proposal's latest edit is **visibly stale** ("הנוסח השתנה") and
+re-asking becomes the primary action; improving your own proposal keeps you on
+this screen so the advisors can see the new text immediately.
 
-### Rounds repeat (propose → rate → improve), fuse-countdown per phase.
-Between rounds, a one-screen **round result**: the leading lanterns, the camp-blend of
-each, and one narrator line tracking convergence — "telling motion from progress."
+### Laps repeat (mine → rate → help) × 5, self-paced, fuse for the whole square.
+*(Proposed, not yet built)*: between laps, a one-screen **lap result**: the leading
+lanterns, the camp-blend of each, and one narrator line tracking convergence —
+"telling motion from progress."
 
 > **Obstacle events (discuss, v2):** at round 2, inject a bias event the class must
 > survive — e.g. a demagogue NPC posts an anchoring proposal with fake early support
@@ -258,12 +274,21 @@ collected.)
 | 1 | **Interactive needs check**: student states each character's needs; AI-in-character confirms ("you have understood me") | New stage or upgrade of `needsQuestion` scene + a grader like `agoraGradeValueIdentification` | Theory-of-mind discipline, ch. 9 |
 | 2 | Deadlock beat between perspectives and needs (one narrator screen) | Tiny — one scene kind or scripted interstitial | Contest framing pitfall |
 | 3 | Proposal phrasing scaffold: "a solution I propose, that we could do together" + needs-of-both prompt | Tiny — ProposalWrite copy + coach prompt | Owned proposals, ch. 9 |
-| 4 | Lanterns hidden during propose phase (round 1 at minimum) | Small — Deliberation view | Independent-first / anti-cascade |
+| 4 | ✅ EFFECTIVELY DONE — the personal cycle writes first, rates after; others' texts aren't visible while writing | Shipped via cycles | Independent-first / anti-cascade |
 | 5 | ✅ DONE — Third ending: **honest disagreement** (mapped divergence ≠ collapse) + AI debrief + in-character proposal review | Shipped | "Honest disagreement is itself an achievement" |
 | 6 | Teacher cards: per-stage suggested spoken lines on the teacher screen | Small — content + TeacherSession UI | Facilitation is a craft; culture beats rules |
 | 7 | Narrator layer: the 🎙 lines above as scene/interstitial copy in the topic package | Content — extend fixture + generator prompt | Curiosity as pedagogy |
 | 8 | (v2) Evidence cards in the explainer, referenced by the coach | Medium | Grounding → forecasting |
 | 9 | (v2) Bias obstacle events deck (anchoring demagogue, cascade, groupthink) | Medium | Ch. 4 five biases |
+
+**Shipped beyond this table** (see `HANDOFF.md` for commits): needs board
+side-by-side + one-tap recall everywhere; value-identification stage removed
+(cognitive load); character names on the positioning scale; auto-start of the
+deliberation square; personal 5-lap cycles; five-level rating; glitter
+celebrations for improvements; my-proposal workshop redesign (hero lantern,
+"what does the square say", character chips); game-feel pass (world strip on
+every screen, HUD lantern pips, star field, beveled gold buttons); stale
+verdict marking; join code always on the teacher board.
 
 ## Open design questions (to discuss)
 

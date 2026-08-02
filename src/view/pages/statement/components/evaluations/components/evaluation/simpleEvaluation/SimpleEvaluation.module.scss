@@ -1,20 +1,26 @@
+// One row: [agree N] [disagree N]   consensus · average · voters
+//
+// Previously a column — thumbs on one line, ResultsStrip on the next — with the
+// two counts rendered as bare spans flanking the pair. That produced the
+// "0 😞 😊 0" reading and roughly doubled the height of every card's footer.
 .simpleEvaluation {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    color: var(--text);
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-sm);
+    min-width: 0;
+    color: var(--text-body);
 
     .evaluationBox {
         display: flex;
         align-items: center;
-
-        .thumbIcon {
-            padding: 0.5rem;
-        }
+        gap: var(--space-3xs);
+        flex-shrink: 0;
     }
 
-    .totalEvaluations {
-        direction: ltr;
+    .results {
+        margin: 0;
+        min-width: 0;
     }
 }

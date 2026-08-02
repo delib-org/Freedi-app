@@ -35,6 +35,9 @@ import {
 	ReconcileJoinSheetResult,
 	getAllOptions,
 	deleteAllOptions,
+	getSubQuestions,
+	setSettingOnQuestions,
+	type ManualOrderSettings,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 import { ManualReorder, ManualReorderMode } from '@/components/ManualReorder';
@@ -182,6 +185,8 @@ function close(): void {
 	// flash a stale "x appended" line from a previous session.
 	reconcileResult = null;
 	reconcileError = null;
+	// Workspace-wide edits have to be re-confirmed next time the panel opens.
+	workspaceApplyConfirmed = false;
 	m.redraw();
 }
 
@@ -191,6 +196,76 @@ function ensureEscListener(): void {
 	window.addEventListener('keydown', (e: KeyboardEvent) => {
 		if (e.key === 'Escape' && isOpen) close();
 	});
+}
+
+// --- Settings scope ---------------------------------------------------------
+// The per-question rows in this panel write to whichever question the admin is
+// standing in. On the hub route (`/m/:mid`, no `qid`) there is no single
+// question in scope, so those same rows act on the *whole workspace*: the patch
+// fans out to every sub-question at once, behind a confirmation.
+//
+// Scope is derived from the route, never from `getQuestion()`. The store keeps
+// the last visited question cached after the admin navigates back to the hub,
+// so reading the question directly would let hub-level edits land silently on
+// whichever sub-question happened to be visited last.
+
+function isWorkspaceScope(): boolean {
+	return !m.route.param('qid');
+}
+
+// Confirmation for workspace-wide edits is asked once per panel session: what
+// the admin confirms is *what the panel is editing*, not each individual flip.
+// A prompt on every toggle would fire mid-drag on the threshold slider and
+// train facilitators to dismiss it blind. A persistent banner keeps the scope
+// visible for as long as the confirmation holds; closing the panel — or
+// stepping into a single question — resets it so the next session asks again.
+let workspaceApplyConfirmed = false;
+
+/** The question the per-question rows read their displayed values from. In
+ *  workspace scope no single question owns the answer, so the first
+ *  sub-question stands in as the starting point for the edit — the scope notice
+ *  at the top of the panel tells the admin the flip lands on all of them.
+ *  Returns null when there is nothing editable at all (empty hub, or a question
+ *  that failed to load). */
+function getScopeReference(): Statement | null {
+	if (!isWorkspaceScope()) return getQuestion();
+
+	return getSubQuestions()[0] ?? null;
+}
+
+/** Resolve the question ids the current scope writes to, asking the admin to
+ *  confirm first when the change sweeps the whole workspace. Returns an empty
+ *  array when there is nothing to write or the admin backed out, so callers
+ *  bail before touching local state.
+ *
+ *  Synchronous on purpose: the confirmation has to resolve before any
+ *  optimistic mutation, and `window.confirm` is what the rest of this panel
+ *  already uses for "are you sure" gates. */
+function resolveScopeTargets(): string[] {
+	if (!isWorkspaceScope()) {
+		const q = getQuestion();
+
+		return q ? [q.statementId] : [];
+	}
+	const subs = getSubQuestions();
+	if (subs.length === 0) return [];
+	if (!workspaceApplyConfirmed) {
+		if (!window.confirm(t('facilitator.scope.confirm', { count: subs.length }))) return [];
+		workspaceApplyConfirmed = true;
+	}
+
+	return subs.map((s) => s.statementId);
+}
+
+/** Write a *minimal* settings patch to everything the current scope covers.
+ *  Minimal matters: Firestore deep-merges nested maps, so
+ *  `{ statementSettings: { hasChat: false } }` touches only that key. Spreading
+ *  the reference question's settings into a workspace-wide write would copy one
+ *  question's join form and sort order onto all the others. */
+async function writeScopeSetting(patch: Partial<Statement>): Promise<void> {
+	const ids = resolveScopeTargets();
+	if (ids.length === 0) return;
+	await setSettingOnQuestions(ids, patch);
 }
 
 function isThresholdOn(question: Statement): boolean {
@@ -212,13 +287,20 @@ function getThresholdValue(question: Statement): number {
 
 /** Build a complete `ResultsSettings` patch by filling in any required fields
  *  the existing question may be missing. `resultsBy` is the only non-optional
- *  field on the schema, so we fall back to the schema-default `consensus`. */
+ *  field on the schema, so we fall back to the schema-default `consensus`.
+ *
+ *  In workspace scope the base settings are deliberately *not* carried over:
+ *  the patch lands on every sub-question, so copying the reference question's
+ *  `numberOfResults` / `deep` / … onto its siblings would silently rewrite
+ *  fields the admin never touched. Only the keys being edited travel. */
 function buildResultsSettingsPatch(
 	base: ResultsSettings | undefined,
 	patch: Partial<ResultsSettings>,
 ): ResultsSettings {
+	const carried = isWorkspaceScope() ? {} : (base ?? {});
+
 	return {
-		...(base ?? {}),
+		...carried,
 		resultsBy: base?.resultsBy ?? ResultsBy.consensus,
 		...patch,
 	};
@@ -226,13 +308,13 @@ function buildResultsSettingsPatch(
 
 async function flipThreshold(question: Statement): Promise<void> {
 	if (isThresholdOn(question)) {
-		await setQuestionSetting(question.statementId, {
+		await writeScopeSetting({
 			resultsSettings: buildResultsSettingsPatch(question.resultsSettings, {
 				cutoffBy: CutoffBy.topOptions,
 			}),
 		});
 	} else {
-		await setQuestionSetting(question.statementId, {
+		await writeScopeSetting({
 			resultsSettings: buildResultsSettingsPatch(question.resultsSettings, {
 				cutoffBy: CutoffBy.aboveThreshold,
 				cutoffNumber: getThresholdValue(question),
@@ -241,13 +323,13 @@ async function flipThreshold(question: Statement): Promise<void> {
 	}
 }
 
-function writeThresholdValue(questionId: string, value: number): void {
+function writeThresholdValue(value: number): void {
 	if (sliderWriteTimer !== null) window.clearTimeout(sliderWriteTimer);
 	sliderWriteTimer = window.setTimeout(() => {
 		sliderWriteTimer = null;
-		const q = getQuestion();
-		void setQuestionSetting(questionId, {
-			resultsSettings: buildResultsSettingsPatch(q?.resultsSettings, {
+		const reference = getScopeReference();
+		void writeScopeSetting({
+			resultsSettings: buildResultsSettingsPatch(reference?.resultsSettings, {
 				cutoffBy: CutoffBy.aboveThreshold,
 				cutoffNumber: value,
 			}),
@@ -283,6 +365,10 @@ function getQuestionStatus(question: Statement): QuestionStatus {
 }
 
 async function setQuestionStatus(question: Statement, value: QuestionStatus): Promise<void> {
+	// Resolve (and confirm) the scope before touching local state, so backing
+	// out of a workspace-wide change leaves the control where it was.
+	const ids = resolveScopeTargets();
+	if (ids.length === 0) return;
 	// Optimistic local update so the segmented control reflects the change
 	// before the snapshot lands; the listener overwrites with the same value
 	// once Firestore confirms.
@@ -292,11 +378,8 @@ async function setQuestionStatus(question: Statement, value: QuestionStatus): Pr
 		question.statementSettings = { questionStatus: value };
 	}
 	m.redraw();
-	await setQuestionSetting(question.statementId, {
-		statementSettings: {
-			...question.statementSettings,
-			questionStatus: value,
-		},
+	await setSettingOnQuestions(ids, {
+		statementSettings: { questionStatus: value },
 	});
 }
 
@@ -361,9 +444,8 @@ function renderQuestionStatusSegmented(question: Statement | null): m.Vnode | nu
 
 async function flipAllowNewOptions(question: Statement): Promise<void> {
 	const next = !(question.statementSettings?.enableAddEvaluationOption ?? false);
-	await setQuestionSetting(question.statementId, {
+	await writeScopeSetting({
 		statementSettings: {
-			...question.statementSettings,
 			enableAddEvaluationOption: next,
 			enableAddVotingOption: next,
 		},
@@ -372,35 +454,39 @@ async function flipAllowNewOptions(question: Statement): Promise<void> {
 
 async function flipAllowChat(question: Statement): Promise<void> {
 	const next = !(question.statementSettings?.hasChat ?? true);
-	await setQuestionSetting(question.statementId, {
-		statementSettings: {
-			...question.statementSettings,
-			hasChat: next,
-		},
-	});
+	await writeScopeSetting({ statementSettings: { hasChat: next } });
 }
 
 async function flipShowResults(question: Statement): Promise<void> {
 	const next = !(question.statementSettings?.showResults ?? false);
-	await setQuestionSetting(question.statementId, {
-		statementSettings: {
-			...question.statementSettings,
-			showResults: next,
-		},
-	});
+	await writeScopeSetting({ statementSettings: { showResults: next } });
 }
 
-/** Hub-scoped: writes to the *main* statement so the QR appears for every
- *  participant viewing the hub, regardless of which sub-question they then
- *  drill into. The toggle works from anywhere in the join app — admin doesn't
- *  have to navigate back to the hub to flip it. */
-async function flipShowQR(main: Statement): Promise<void> {
-	const next = !(main.statementSettings?.showQR ?? false);
-	await setMainStatementSetting(main.statementId, {
-		statementSettings: {
-			...main.statementSettings,
-			showQR: next,
-		},
+/** QR sharing follows the scope the admin is standing in.
+ *
+ *  On the hub the toggle writes to the *main* statement, so the QR that appears
+ *  encodes the workspace URL — scan it and you land on the hub. Inside a
+ *  sub-question it writes to that question, and the QR encodes that question's
+ *  own URL, so a facilitator can put one specific question on the projector and
+ *  have latecomers land straight in it.
+ *
+ *  Both live on the same `statementSettings.showQR` field, just on different
+ *  docs — nothing to migrate, and the two QRs are independent: turning one on
+ *  never disturbs the other. */
+async function flipShowQR(target: Statement, scope: 'hub' | 'question'): Promise<void> {
+	const next = !(target.statementSettings?.showQR ?? false);
+	if (scope === 'hub') {
+		await setMainStatementSetting(target.statementId, {
+			statementSettings: { showQR: next },
+		});
+
+		return;
+	}
+	// Question scope deliberately writes to this one question only: a QR is
+	// a pointer to a specific place, so fanning it across every sub-question
+	// would produce QRs that all point somewhere the admin never chose.
+	await setQuestionSetting(target.statementId, {
+		statementSettings: { showQR: next },
 	});
 }
 
@@ -411,10 +497,7 @@ async function flipShowQR(main: Statement): Promise<void> {
 async function flipAllowParticipantNavigation(main: Statement): Promise<void> {
 	const next = !(main.statementSettings?.allowParticipantNavigation ?? false);
 	await setMainStatementSetting(main.statementId, {
-		statementSettings: {
-			...main.statementSettings,
-			allowParticipantNavigation: next,
-		},
+		statementSettings: { allowParticipantNavigation: next },
 	});
 }
 
@@ -433,8 +516,29 @@ const SORT_OPTIONS: Array<{ value: SortType | string; icon: string; labelKey: st
 	{ value: 'manual', icon: '✋', labelKey: 'facilitator.sort.manual' },
 ];
 
+// `manualOptionOrder` isn't declared on the shared StatementSettings schema (the
+// join app is its only writer), so it's read through the narrow
+// `ManualOrderSettings` shape exported by the store rather than an `any` cast.
 function isManualSort(question: Statement | null): boolean {
-	return (question?.statementSettings as any)?.manualOptionOrder ? true : false;
+	const settings = question?.statementSettings as ManualOrderSettings | undefined;
+
+	return settings?.manualOptionOrder ? true : false;
+}
+
+/** Workspace-wide sort change. Mirrors `setSortType` (fresh seed for random,
+ *  manual order cleared) but writes the same minimal patch to every
+ *  sub-question — picking a shared sort for the room is exactly the case where
+ *  clearing each question's hand-placed order is the intent. */
+async function setSortTypeForScope(value: SortType): Promise<void> {
+	const patch: {
+		defaultSortType: SortType;
+		randomSortSeed?: number;
+	} & ManualOrderSettings = {
+		defaultSortType: value,
+		manualOptionOrder: null,
+	};
+	if (value === SortType.random) patch.randomSortSeed = Date.now();
+	await writeScopeSetting({ statementSettings: patch });
 }
 
 function renderSortSegmented(question: Statement | null): m.Vnode {
@@ -447,6 +551,12 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 	);
 	const active: SortType | string = isManual ? 'manual' : supported ? current : SortType.accepted;
 	const disabled = !question;
+	// Manual order is a hand-placed list of *this* question's option ids, so it
+	// has no workspace-wide meaning — the segment is dropped on the hub rather
+	// than opening a reorder modal for a question the admin isn't standing in.
+	const options = isWorkspaceScope()
+		? SORT_OPTIONS.filter((o) => o.value !== 'manual')
+		: SORT_OPTIONS;
 
 	return m('.facilitator-panel__row', [
 		m('.facilitator-panel__row-main', [
@@ -457,7 +567,7 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 			m(
 				'.facilitator-panel__segmented',
 				{ role: 'radiogroup', 'aria-label': t('facilitator.sort.label') },
-				SORT_OPTIONS.map((opt) => {
+				options.map((opt) => {
 					const isActive = active === opt.value;
 					const label = t(opt.labelKey);
 
@@ -477,6 +587,8 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 										if (opt.value === 'manual') {
 											manualReorderMode = 'options';
 											m.redraw();
+										} else if (isWorkspaceScope()) {
+											void setSortTypeForScope(opt.value as SortType);
 										} else {
 											void setSortType(question.statementId, opt.value as SortType);
 										}
@@ -499,6 +611,11 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
  *  hide the row but reveal results to discuss them. */
 async function flipShowEvaluation(question: Statement): Promise<void> {
 	const next = !(question.statementSettings?.showEvaluation ?? false);
+	if (isWorkspaceScope()) {
+		await writeScopeSetting({ statementSettings: { showEvaluation: next } });
+
+		return;
+	}
 	await setEvaluationEnabled(question.statementId, next);
 }
 
@@ -509,12 +626,7 @@ async function flipShowEvaluation(question: Statement): Promise<void> {
  *  showEvaluation toggle above; the two combine independently. */
 async function flipShowJoining(question: Statement): Promise<void> {
 	const next = !(question.statementSettings?.showJoining ?? true);
-	await setQuestionSetting(question.statementId, {
-		statementSettings: {
-			...question.statementSettings,
-			showJoining: next,
-		},
-	});
+	await writeScopeSetting({ statementSettings: { showJoining: next } });
 }
 
 // --- Activation threshold (min organizers / activists / max-joins-per-user) -
@@ -547,6 +659,10 @@ async function setActivationThreshold(
 		maxJoinsPerUser: number;
 	}>,
 ): Promise<void> {
+	// Resolve (and confirm) scope before the optimistic update, so cancelling a
+	// workspace-wide change doesn't leave the inputs showing a value nobody saved.
+	const ids = resolveScopeTargets();
+	if (ids.length === 0) return;
 	const current = getActivationThreshold(question);
 	const next = { ...current, ...patch };
 	// Optimistic local update so the inputs/help line reflect the change before
@@ -558,11 +674,8 @@ async function setActivationThreshold(
 		question.statementSettings = { activationThreshold: next };
 	}
 	m.redraw();
-	await setQuestionSetting(question.statementId, {
-		statementSettings: {
-			...question.statementSettings,
-			activationThreshold: next,
-		},
+	await setSettingOnQuestions(ids, {
+		statementSettings: { activationThreshold: next },
 	});
 }
 
@@ -907,9 +1020,15 @@ function getJoinFormConfig(question: Statement): JoinFormConfig {
 }
 
 async function persistJoinForm(question: Statement, next: JoinFormConfig): Promise<void> {
+	// In workspace scope the whole form travels, not just the flag that changed:
+	// enabling a form without its fields would hand participants an empty modal.
+	// So "configure the join form on the hub" means "every sub-question uses
+	// this form" — which is what the scope notice and confirmation promise.
+	const ids = resolveScopeTargets();
+	if (ids.length === 0) return;
 	// Optimistic local update so the panel UI reflects the change before the
-	// snapshot lands; setQuestionSetting writes to Firestore and the listener
-	// will overwrite (with the same value) on confirmation.
+	// snapshot lands; the write below hits Firestore and the listener will
+	// overwrite (with the same value) on confirmation.
 	if (question.statementSettings) {
 		question.statementSettings.joinForm = next;
 	} else {
@@ -921,7 +1040,7 @@ async function persistJoinForm(question: Statement, next: JoinFormConfig): Promi
 	const safeConfig = Object.fromEntries(
 		Object.entries(next).filter(([, v]) => v !== undefined),
 	) as JoinFormConfig;
-	await setQuestionSetting(question.statementId, {
+	await setSettingOnQuestions(ids, {
 		statementSettings: { joinForm: safeConfig },
 	});
 }
@@ -1030,6 +1149,9 @@ let resetInProgress = false;
 function renderResetJoiningSection(question: Statement | null): m.Vnode | null {
 	if (!question) return null;
 	if (!isAdmin()) return null;
+	// Destructive and per-question by nature: never offered from the hub, where
+	// there is no single question the admin could mean.
+	if (isWorkspaceScope()) return null;
 
 	return m('.facilitator-panel__row', [
 		m('.facilitator-panel__row-main', [
@@ -1096,6 +1218,7 @@ let deleteAllInProgress = false;
 function renderDeleteAllOptionsSection(question: Statement | null): m.Vnode | null {
 	if (!question) return null;
 	if (!isAdmin()) return null;
+	if (isWorkspaceScope()) return null;
 
 	// Counts the raw subscription set (not `getVisibleOptions`) so hidden and
 	// organizer-authored options are included — they get deleted too.
@@ -1181,6 +1304,9 @@ function renderDeleteAllOptionsSection(question: Statement | null): m.Vnode | nu
 function renderDelegatesSection(question: Statement | null): m.Vnode | null {
 	if (!question) return null;
 	if (!isAdmin()) return null;
+	// Delegates are granted per question and the invite listeners are keyed by
+	// questionId, so the section only makes sense inside one.
+	if (isWorkspaceScope()) return null;
 
 	const questionId = question.statementId;
 	const now = Date.now();
@@ -1407,11 +1533,7 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 												},
 											},
 											[
-												m(
-													'span.facilitator-panel__action-icon',
-													{ 'aria-hidden': 'true' },
-													'🔄',
-												),
+												m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🔄'),
 												m(
 													'span.facilitator-panel__action-label',
 													reconcileInProgress
@@ -1421,10 +1543,7 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 											],
 										),
 									]),
-									m(
-										'.facilitator-panel__row-help',
-										t('facilitator.reconcileSheet.help'),
-									),
+									m('.facilitator-panel__row-help', t('facilitator.reconcileSheet.help')),
 									reconcileResult
 										? m(
 												`.facilitator-panel__joinform-check-status${reconcileResult.errors === 0 ? '.facilitator-panel__joinform-check-status--ok' : '.facilitator-panel__joinform-check-status--fail'}`,
@@ -1597,10 +1716,21 @@ export const FacilitatorPanel: m.Component = {
 	view() {
 		if (!isAdmin()) return null;
 
-		const question = getQuestion();
+		const workspaceScope = isWorkspaceScope();
+		// Stepping into a single question ends any standing workspace-wide
+		// confirmation, so returning to the hub asks again before the next
+		// broadcast edit.
+		if (!workspaceScope) workspaceApplyConfirmed = false;
+		// `question` drives every per-question row. On the hub it's the first
+		// sub-question, standing in as the starting point for a change that lands
+		// on all of them (see the scope helpers above).
+		const question = getScopeReference();
 		const hasQuestion = question !== null;
+		const subQuestionCount = workspaceScope ? getSubQuestions().length : 0;
 		const mainId = m.route.param('mid');
-		const canLead = hasQuestion && Boolean(mainId);
+		// Follow Me points participants at one specific question, so it stays
+		// disabled on the hub even though the settings rows below are live.
+		const canLead = !workspaceScope && hasQuestion && Boolean(mainId);
 		const followMeOn = canLead ? isFollowMeOn(question!) : false;
 		const thresholdOn = hasQuestion ? isThresholdOn(question!) : false;
 		const thresholdVal = hasQuestion ? getThresholdValue(question!) : DEFAULT_THRESHOLD;
@@ -1616,15 +1746,20 @@ export const FacilitatorPanel: m.Component = {
 		// hasn't yet been touched by the facilitator should still surface
 		// joining as the primary participant action.
 		const showJoiningOn = hasQuestion ? (question!.statementSettings?.showJoining ?? true) : true;
-		// QR sharing is hub-scoped: the toggle writes to the *main* statement so
-		// every participant on the hub sees the same QR. It's only meaningful
-		// when there's a main statement in scope — i.e. on facilitated routes
-		// (`/m/:mid…`). Legacy non-facilitated routes (`/q/:qid`) don't carry a
-		// mid, so we hide the row entirely there rather than render a perpetually
-		// disabled toggle that confuses admins.
 		const main = getMainStatement();
-		const canFlipShowQR = main !== null && Boolean(mainId);
-		const showQROn = canFlipShowQR ? (main!.statementSettings?.showQR ?? false) : false;
+		// QR sharing follows the admin's location. On the hub the toggle writes to
+		// the main statement and the QR encodes the workspace URL; inside a
+		// sub-question it writes to that question and the QR encodes that
+		// question's URL, so scanning it drops you straight into the question on
+		// the projector. The two are separate flags on separate docs — flipping
+		// one never touches the other.
+		const qrScope: 'hub' | 'question' = workspaceScope ? 'hub' : 'question';
+		// Hub scope needs a loaded main statement on a facilitated route; question
+		// scope only needs the question, so the row also works on the legacy
+		// non-facilitated `/q/:qid` link.
+		const qrTarget = workspaceScope ? (mainId ? main : null) : question;
+		const canFlipShowQR = qrTarget !== null;
+		const showQROn = canFlipShowQR ? (qrTarget.statementSettings?.showQR ?? false) : false;
 		// Free navigation is hub-scoped for the same reason as the QR: it's a
 		// property of the room, not of one question. Hidden on legacy
 		// non-facilitated routes (`/q/:qid`) where there's no hub to navigate.
@@ -1704,6 +1839,16 @@ export const FacilitatorPanel: m.Component = {
 						),
 					]),
 					!hasQuestion ? m('.facilitator-panel__notice', t('facilitator.panel.no_question')) : null,
+					// Scope notice: on the hub every settings row below writes to all
+					// sub-questions at once. Say so up front and keep saying it —
+					// the confirmation is asked once, but the consequence lasts for
+					// the whole panel session.
+					workspaceScope && subQuestionCount > 0
+						? m(
+								'.facilitator-panel__notice.facilitator-panel__notice--scope',
+								t('facilitator.scope.notice', { count: subQuestionCount }),
+							)
+						: null,
 
 					// ── Live Action ──────────────────────────────────────────
 					// What the facilitator does in the moment. No section title
@@ -1754,10 +1899,12 @@ export const FacilitatorPanel: m.Component = {
 										label: t('facilitator.toggle.showQR'),
 										on: showQROn,
 										onflip: () => {
-											if (!canFlipShowQR) return;
-											void flipShowQR(main!);
+											void flipShowQR(qrTarget, qrScope);
 										},
-										help: t('facilitator.toggle.showQR.help'),
+										help:
+											qrScope === 'question'
+												? t('facilitator.toggle.showQR.help.question')
+												: t('facilitator.toggle.showQR.help'),
 									})
 								: null,
 							// Free navigation — the counterpart to Follow Me. Sits next
@@ -1801,7 +1948,10 @@ export const FacilitatorPanel: m.Component = {
 						titleKey: 'facilitator.section.display',
 						children: [
 							renderSortSegmented(question),
-							isManualSort(question) && hasQuestion
+							// Both reorder shortcuts open a modal over one question's own
+							// list, so they're question-scoped only — on the hub there is
+							// no list to drag.
+							isManualSort(question) && hasQuestion && !workspaceScope
 								? m('.facilitator-panel__row', [
 										m('.facilitator-panel__row-main', [
 											m(
@@ -1834,7 +1984,7 @@ export const FacilitatorPanel: m.Component = {
 							// `manualOrganizerOrder`. Only rendered when there's at least
 							// one organizer suggestion to reorder — otherwise the button
 							// would be a dead-end for admins.
-							hasQuestion && getOrganizerSuggestions().length > 1
+							hasQuestion && !workspaceScope && getOrganizerSuggestions().length > 1
 								? m('.facilitator-panel__row', [
 										m('.facilitator-panel__row-main', [
 											m(
@@ -1902,7 +2052,7 @@ export const FacilitatorPanel: m.Component = {
 												if (question!.resultsSettings) {
 													question!.resultsSettings.cutoffNumber = v;
 												}
-												writeThresholdValue(question!.statementId, v);
+												writeThresholdValue(v);
 												m.redraw();
 											},
 										}),
@@ -2008,7 +2158,7 @@ export const FacilitatorPanel: m.Component = {
 					}),
 				],
 			),
-			manualReorderMode !== null && hasQuestion
+			manualReorderMode !== null && hasQuestion && !workspaceScope
 				? m(ManualReorder, {
 						questionId: question!.statementId,
 						mode: manualReorderMode,

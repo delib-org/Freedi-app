@@ -18,6 +18,7 @@ import TypeSuggestionBanner from '@/view/pages/statement/components/chat/compone
 import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import { getCreatorDisplayName } from '@/helpers/getCreatorDisplayName';
+import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import styles from './TreeMessageNode.module.scss';
 
 interface TreeMessageNodeProps {
@@ -245,19 +246,21 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					/>
 				) : (
 					<div className={styles['tree-message-node__text']}>
-						{statement.statement}
+						<RichHtmlContent content={statement.statement} />
 						{statement.paragraphs && statement.paragraphs.length > 0 && (
 							<div className={styles['tree-message-node__paragraphs']}>
 								{[...statement.paragraphs]
 									.sort((a, b) => a.order - b.order)
 									.map((p) => (
-										<p key={p.paragraphId}>{p.content}</p>
+										<p key={p.paragraphId}>
+											<RichHtmlContent content={p.content} />
+										</p>
 									))}
 							</div>
 						)}
 						{!statement.paragraphs?.length && statement.description && (
 							<div className={styles['tree-message-node__description']}>
-								{statement.description}
+								<RichHtmlContent content={statement.description} />
 							</div>
 						)}
 					</div>

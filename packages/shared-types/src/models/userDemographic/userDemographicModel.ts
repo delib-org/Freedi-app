@@ -23,6 +23,12 @@ export enum UserDemographicQuestionType {
 export enum DemographicQuestionScope {
     group = 'group',
     statement = 'statement',
+    /**
+     * Question attached to a single Sign document. The Sign app has written this
+     * value since its demographics feature shipped; it belongs in the enum so the
+     * main app can validate those documents instead of throwing a ValiError.
+     */
+    sign = 'sign',
 }
 
 export const DemographicQuestionScopeSchema = enum_(DemographicQuestionScope);
@@ -58,7 +64,7 @@ export const UserDemographicQuestionSchema = object({
     required: optional(boolean()),
     userQuestionId: optional(string()),
     topParentId: optional(string()),  // Group identifier
-    scope: optional(DemographicQuestionScopeSchema),  // 'group' | 'statement'
+    scope: optional(DemographicQuestionScopeSchema),  // 'group' | 'statement' | 'sign'
     allowOther: optional(boolean()),
     otherText: optional(string()),
     min: optional(number()),

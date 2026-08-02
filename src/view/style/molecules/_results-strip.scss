@@ -1,0 +1,73 @@
+// ResultsStrip — the three at-a-glance numbers shown on a suggestion once the
+// admin turns "Show results" on: consensus, average and evaluator count.
+// Mirrors the Join app's card results strip so a participant reading the same
+// question in either app sees the same three numbers, labelled the same way.
+// SCSS-first BEM, design tokens only.
+
+@use '../mixins' as *;
+
+.results-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.25rem;
+
+  &__item {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.9rem;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid var(--border-light, rgba(0, 0, 0, 0.08));
+    border-radius: 0.5rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.03));
+    color: var(--text-body);
+    line-height: 1.1;
+    cursor: default;
+
+    &--primary {
+      border-color: var(--btn-primary);
+      background: var(--card-default, #fff);
+    }
+
+    // Negative consensus / average read as a caution, not as an achievement.
+    &--negative {
+      color: var(--reject);
+    }
+  }
+
+  &__value {
+    // Numbers always read left-to-right, including inside an RTL card.
+    direction: ltr;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__item--primary &__value {
+    font-size: 1rem;
+  }
+
+  &__label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-secondary, #777);
+    white-space: nowrap;
+  }
+
+  @media screen and (max-width: 600px) {
+    gap: 0.2rem;
+
+    &__item {
+      min-width: 2.5rem;
+      padding: 0.1rem 0.3rem;
+    }
+
+    &__label {
+      font-size: 0.55rem;
+    }
+  }
+}

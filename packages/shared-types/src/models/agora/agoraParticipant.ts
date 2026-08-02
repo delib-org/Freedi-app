@@ -8,7 +8,7 @@ import {
 	enum_,
 	InferOutput,
 } from 'valibot';
-import { AgoraCamp } from './agoraEnums';
+import { AgoraCamp, AgoraStage } from './agoraEnums';
 
 export const AgoraValueScoreSchema = object({
 	characterId: string(),
@@ -42,6 +42,17 @@ export const AgoraParticipantSchema = object({
 	teamMemberCount: optional(number()),
 	/** Synthetic AI rater identity (in-character reviews) — excluded from counts, points and coverage */
 	isAI: optional(boolean()),
+	/**
+	 * Self-paced progress inside the current scene stage, written by the
+	 * student's client — the teacher's "who finished, can I advance?" signal
+	 */
+	stageProgress: optional(
+		object({
+			stage: enum_(AgoraStage),
+			scenesDone: number(),
+			scenesTotal: number(),
+		}),
+	),
 	/** 0 (fully left camp) … 100 (fully right camp) */
 	campPosition: optional(number()),
 	camp: optional(enum_(AgoraCamp)),

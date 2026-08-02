@@ -28,5 +28,23 @@
     --cluster-topic-bg: var(--cluster-topic-bg-high-contrast);
     --cluster-topic-accent: var(--cluster-topic-accent-high-contrast);
     --cluster-pill-bg: var(--cluster-pill-bg-high-contrast);
+
+    // --- Statement list / suggestion cards ---
+    // Scoped deliberately to the tokens the statement screen consumes. A much
+    // larger `*-contrast` family exists in _variables.scss but is unreferenced
+    // by any media query; wiring all of it up blind is how high-contrast
+    // regressions ship, so it is left for its own change.
+    --text-meta: var(--text-caption-contrast);
+    // Hairlines have to become visible structure once the tints are gone.
+    --border-light: #6d7ea6;
+    // Status washes collapse to the plain surface: at high contrast the card's
+    // status must be carried by its border and its text label, not a 7% tint
+    // that reduces the contrast of everything sitting on top of it.
+    --wash-approve: var(--card-default);
+    --wash-warning: var(--card-default);
+    --wash-primary: var(--card-default);
+    --wash-neutral: var(--card-default);
+    // The status rule compensates by getting wider.
+    --rule-width: 5px;
   }
 }

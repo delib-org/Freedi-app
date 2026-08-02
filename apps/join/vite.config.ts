@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import { localePreload } from './vite-plugin-locale-preload';
 
 export default defineConfig({
   test: {
@@ -25,6 +26,7 @@ export default defineConfig({
   },
 
   plugins: [
+    localePreload(),
     VitePWA({
       registerType: 'autoUpdate',
       // Registered manually in src/index.ts via `virtual:pwa-register` so we can
@@ -38,13 +40,44 @@ export default defineConfig({
         'icons/apple-touch-icon.png',
       ],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Deliberately narrow. The previous pattern also matched `png`, which
+        // pulled the 512×512 logos and the full PWA icon set into the
+        // install-time precache — ~1.5 MB fetched the moment the page loaded,
+        // in direct competition with the first Firestore read on a slow
+        // connection. Images are still cached, just on first real use, by the
+        // `image-cache` runtime rule below.
+        globPatterns: ['**/*.{js,css,html,woff2}'],
+        globIgnores: [
+          '**/*.map',
+          'wizcol-logo-*',
+          // Locale chunks other than the visitor's own, plus the deferred
+          // error-reporting SDK. Precaching all seven languages would put
+          // ~45 kB of dictionaries nobody will read back into the
+          // install-time burst we just removed. They're hashed and immutable,
+          // so the runtime rule below caches whichever ones actually get used.
+          'assets/{ar,de,es,fa,he,nl}-*.js',
+          'assets/sentryClient-*.js',
+        ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/__\//],
         runtimeCaching: [
+          {
+            // The hashed chunks kept out of the precache above — locale
+            // dictionaries and the Sentry SDK. Filenames carry a content hash
+            // and are served immutable, so CacheFirst is safe: a new build
+            // produces a new URL rather than a stale hit.
+            urlPattern: ({ url, sameOrigin }) =>
+              Boolean(sameOrigin) && /^\/assets\/.*\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'deferred-chunks',
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
             handler: 'NetworkFirst',
@@ -63,23 +96,9 @@ export default defineConfig({
             urlPattern: /^https:\/\/securetoken\.googleapis\.com\/.*/i,
             handler: 'NetworkOnly',
           },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
+          // The fonts.googleapis.com / fonts.gstatic.com rules that used to sit
+          // here are gone: Assistant is self-hosted now (src/styles/_fonts.scss)
+          // and its woff2 files are covered by the precache glob.
           {
             urlPattern: ({ request }) => request.destination === 'image',
             handler: 'CacheFirst',

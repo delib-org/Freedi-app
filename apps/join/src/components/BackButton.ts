@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { isAdmin } from '@/lib/admin';
-import { t, isRTL } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 
 export interface BackButtonAttrs {
 	/** Mithril route to navigate to when pressed (e.g. `/m/abc` for the hub). */
@@ -18,15 +18,16 @@ export interface BackButtonAttrs {
  * facilitated mode are driven by `powerFollowMe` and shouldn't be steering
  * themselves away from the facilitator.
  *
- * The chevron glyph is direction-aware (`‹` in LTR, `›` in RTL) so it
- * always points "back" along the reading axis without per-language
- * overrides on the SVG side.
+ * The chevron is always the `‹` glyph; pointing it along the reading axis is
+ * done in CSS (`.back-button__chevron` isolates it from bidi mirroring and
+ * flips it under `[dir='rtl']`). Swapping the glyph here instead does NOT
+ * work: `‹`/`›` are bidi-mirrored characters, so a `›` written into an RTL
+ * paragraph is rendered mirrored and points left again.
  */
 export const BackButton: m.Component<BackButtonAttrs> = {
 	view(vnode) {
 		const { to, allowParticipants } = vnode.attrs;
 		if (!isAdmin() && !allowParticipants) return null;
-		const glyph = isRTL() ? '›' : '‹';
 
 		return m(
 			'button.back-button',
@@ -39,7 +40,7 @@ export const BackButton: m.Component<BackButtonAttrs> = {
 					m.route.set(to);
 				},
 			},
-			m('span.back-button__chevron', { 'aria-hidden': 'true' }, glyph),
+			m('span.back-button__chevron', { 'aria-hidden': 'true' }, '‹'),
 		);
 	},
 };

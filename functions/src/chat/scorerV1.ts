@@ -135,4 +135,3 @@ function parseJson(text: string): RawVerdict | null {
 }
 
 registerScorer(evidenceScorerV1);
-

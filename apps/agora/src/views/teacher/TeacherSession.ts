@@ -8,17 +8,17 @@ import {
 	listenToDeliberation,
 	stopDeliberationListeners,
 } from '../../lib/proposals';
-import { lanternsFromState } from '../Deliberation';
 import { Results } from '../Results';
+import { TeacherInstructions } from './TeacherInstructions';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
-import { EraMap } from '../../components/EraMap';
 import { QRShare } from '../../components/QRShare';
-import { AgoraStage } from '@freedi/shared-types';
+import { AgoraParticipant, AgoraStage } from '@freedi/shared-types';
+import { AgoraProposal } from '../../lib/proposals';
 
 /**
- * Teacher live panel — projector-friendly: join code + QR + the era map
- * filling with travelers, and the "open the time tunnel" control.
+ * Teacher live panel — projector-friendly: class progress, stage
+ * instructions, join code + QR, and the "open the time tunnel" control.
  */
 // valueIdentification removed from the flow (cognitive load) — enum kept
 // for legacy sessions; see fn_agoraAdvanceStage STAGE_ORDER
@@ -32,6 +32,82 @@ const STAGE_ORDER: AgoraStage[] = [
 	AgoraStage.results,
 	AgoraStage.ended,
 ];
+
+/** Stages where students move through self-paced sub-steps the teacher can't see on the projector */
+const PROGRESS_STAGES = new Set<AgoraStage>([
+	AgoraStage.framing,
+	AgoraStage.perspectives,
+	AgoraStage.needs,
+	AgoraStage.positioning,
+	AgoraStage.deliberation,
+]);
+
+/** One student's progress within the current stage: done flag + a compact label */
+function participantProgress(
+	participant: AgoraParticipant,
+	stage: AgoraStage,
+	proposals: readonly AgoraProposal[],
+): { done: boolean; label: string } {
+	if (stage === AgoraStage.positioning) {
+		const done = participant.campPosition !== undefined;
+
+		return { done, label: done ? '✓' : '—' };
+	}
+	if (stage === AgoraStage.deliberation) {
+		const done = proposals.some((proposal) => proposal.creatorId === participant.userId);
+
+		return { done, label: done ? '✓' : '—' };
+	}
+	const progress = participant.stageProgress;
+	// Progress from an earlier stage says nothing about this one
+	if (!progress || progress.stage !== stage) return { done: false, label: '—' };
+	const done = progress.scenesDone >= progress.scenesTotal;
+
+	return { done, label: done ? '✓' : `${progress.scenesDone}/${progress.scenesTotal}` };
+}
+
+/** Who finished the current stage's self-paced steps — the "can I advance?" card */
+function classProgressCard(
+	stage: AgoraStage,
+	participants: readonly AgoraParticipant[],
+	proposals: readonly AgoraProposal[],
+): m.Children {
+	if (!PROGRESS_STAGES.has(stage) || participants.length === 0) return null;
+	const entries = participants.map((participant) => ({
+		participant,
+		...participantProgress(participant, stage, proposals),
+	}));
+	const doneCount = entries.filter((entry) => entry.done).length;
+	const countKey =
+		stage === AgoraStage.positioning ? 'teacher.positioned_count' : 'teacher.finished_count';
+
+	return m('.card.class-progress', [
+		m('.class-progress__head', [
+			m('p.teacher__section-title', t('teacher.class_progress')),
+			m(
+				'span.class-progress__count',
+				{ class: doneCount === entries.length ? 'class-progress__count--all' : undefined },
+				t(countKey, { n: doneCount, total: entries.length }),
+			),
+		]),
+		m(
+			'.class-progress__chips',
+			entries.map((entry) =>
+				m(
+					'span.class-progress__chip',
+					{
+						key: entry.participant.participantId,
+						class: entry.done ? 'class-progress__chip--done' : undefined,
+					},
+					[
+						m('span.class-progress__name', entry.participant.anonName),
+						m('span.class-progress__state', entry.label),
+					],
+				),
+			),
+		),
+	]);
+}
 
 export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
@@ -103,7 +179,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const inDeliberation = session.stage === AgoraStage.deliberation;
 			if (inDeliberation && userId) listenToDeliberation(sessionId, userId);
-			const { proposals, scores } = getDeliberationState();
+			const { proposals } = getDeliberationState();
 
 			// Results/ended: the teacher projects the same transformed map + score
 			if (session.stage === AgoraStage.results || session.stage === AgoraStage.ended) {
@@ -134,12 +210,16 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				]);
 			}
 
+			// The instruction text students read for the current stage —
+			// projected so the teacher can read along and lead a discussion
+			const topic = getTopicPackage(session.topicPackageId);
+			if (!topic) loadTopicPackage(session.topicPackageId);
+
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-					m(EraMap, {
-						participants,
-						lanterns: inDeliberation ? lanternsFromState(proposals, scores, userId) : [],
-					}),
+					classProgressCard(session.stage, participants, proposals),
+
+					topic ? m(TeacherInstructions, { stage: session.stage, topic }) : null,
 
 					// Students cycle propose→rate→help on their own; the teacher's
 					// deliberation panel just shows progress (no round buttons)

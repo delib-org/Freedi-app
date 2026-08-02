@@ -185,9 +185,7 @@ export interface ReconcileJoinSheetResult {
  * re-check, so facilitators who can see the button (gated by `isAdmin()`
  * in the panel) get the server's actual permission decision.
  */
-export async function reconcileJoinSheet(
-	questionId: string,
-): Promise<ReconcileJoinSheetResult> {
+export async function reconcileJoinSheet(questionId: string): Promise<ReconcileJoinSheetResult> {
 	const call = httpsCallable<{ questionId: string }, ReconcileJoinSheetResult>(
 		functions,
 		'fn_reconcileJoinSheet',

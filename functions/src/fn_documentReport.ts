@@ -9,11 +9,7 @@
 
 import { Request, Response } from 'firebase-functions/v1';
 import { getFirestore } from 'firebase-admin/firestore';
-import {
-	Collections,
-	DOCUMENT_REPORT_VERSION,
-	NARRATIVE_SECTION_IDS,
-} from '@freedi/shared-types';
+import { Collections, DOCUMENT_REPORT_VERSION, NARRATIVE_SECTION_IDS } from '@freedi/shared-types';
 import type {
 	DocumentReport,
 	DocumentReportNarrative,
@@ -53,7 +49,7 @@ function parseSections(rawText: string): NarrativeSection[] {
 				typeof section.id === 'string' &&
 				validIds.has(section.id) &&
 				typeof section.title === 'string' &&
-				typeof section.body === 'string'
+				typeof section.body === 'string',
 		)
 		.map((section) => ({
 			id: section.id as NarrativeSectionId,
@@ -69,7 +65,7 @@ function parseSections(rawText: string): NarrativeSection[] {
 	const byId = new Map(sections.map((s) => [s.id, s]));
 
 	return NARRATIVE_SECTION_IDS.filter((id) => byId.has(id)).map(
-		(id) => byId.get(id) as NarrativeSection
+		(id) => byId.get(id) as NarrativeSection,
 	);
 }
 

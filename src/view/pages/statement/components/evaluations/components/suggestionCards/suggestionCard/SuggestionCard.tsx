@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Sparkles } from 'lucide-react';
+import clsx from 'clsx';
 import { logError } from '@/utils/errorHandling';
 
 // Third Party
@@ -10,7 +11,6 @@ import StatementChatMore from '../../../../chat/components/statementChatMore/Sta
 import CreateStatementModal from '../../../../createStatementModal/CreateStatementModal';
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
-import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
@@ -20,9 +20,8 @@ import {
 } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import useStatementColor, { StyleProps } from '@/controllers/hooks/useStatementColor';
 import EditableStatement from '@/view/components/edit/EditableStatement';
-import IconButton from '@/view/components/iconButton/IconButton';
+import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
@@ -52,7 +51,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 			operation: 'suggestionCard.SuggestionCard.unknown',
 		});
 
-	const { t, dir } = useTranslation();
+	const { t } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
 	const { isAuthorized, isAdmin } = useAuthorization(parentStatement?.statementId);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
@@ -69,6 +68,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// Use Refs
 	const elementRef = useRef<HTMLDivElement>(null);
 	const textContainerRef = useRef<HTMLDivElement>(null);
+	const descriptionRef = useRef<HTMLParagraphElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Early return if statement is not defined
@@ -107,9 +107,9 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 
 	// Removed sortSubStatements call - sorting is handled at parent level in SuggestionCards
 
-	const statementColor: StyleProps = useStatementColor({
-		statement,
-	});
+	// Statement-type colour used to paint this card's left border and text.
+	// Dropped: on a list where every card is the same type it encoded nothing,
+	// and it competed with the status rule for the same edge.
 
 	// Check if text is clamped and add overflow class
 	useEffect(() => {
@@ -123,8 +123,13 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					if (isExpanded) {
 						textElement.classList.add(styles.hasOverflow);
 					} else {
-						// Only show when actually overflowing
-						const isOverflowing = textContainer.scrollHeight > textContainer.clientHeight;
+						// Only show when actually overflowing. The description is
+						// clamped independently of the title, so a short title with a
+						// long body still needs the expand affordance.
+						const description = descriptionRef.current;
+						const isOverflowing =
+							textContainer.scrollHeight > textContainer.clientHeight ||
+							(!!description && description.scrollHeight > description.clientHeight);
 						if (isOverflowing) {
 							textElement.classList.add(styles.hasOverflow);
 						} else {
@@ -139,7 +144,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 		const timeoutId = setTimeout(checkOverflow, 50);
 
 		return () => clearTimeout(timeoutId);
-	}, [statement?.statement, isExpanded]);
+	}, [statement?.statement, statement?.description, isExpanded]);
 
 	async function handleSetOption() {
 		try {
@@ -218,50 +223,91 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 	// Check if statement is the voting winner (from voting screen)
 	const isVotingWinner = parentStatement?.topVotedOption?.statementId === statement.statementId;
 
-	// Border: Green if in results (evaluation winner), otherwise use statement type color (yellow for options)
-	const selectedOptionIndicator = `8px solid ${isInResults ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
-
 	function handleToggleHide(e: React.MouseEvent) {
 		e.stopPropagation();
 		toggleStatementHide(statement.statementId);
 	}
+
+	// Status is resolved to a single winner here rather than letting every
+	// condition paint independently. See the channel table in the stylesheet:
+	// hidden outranks voting winner outranks results winner outranks the join
+	// warning, and only the top one claims the card's rule and wash.
+	const showVotingWinner = showEvaluation && isVotingWinner;
+	const statusModifier = statement.hide
+		? styles['statement-evaluation-card--hidden']
+		: showVotingWinner
+			? styles['statement-evaluation-card--voted']
+			: showEvaluation && isInResults
+				? styles['statement-evaluation-card--winner']
+				: isBelowMinimum
+					? styles['statement-evaluation-card--below-minimum']
+					: '';
+
+	const cardClassName = clsx(
+		styles['statement-evaluation-card'],
+		statusModifier,
+		statementAge < 10000 && styles['statement-evaluation-card--new'],
+		isCardMenuOpen && styles['statement-evaluation-card--menu-open'],
+	);
+
+	// Legacy inline paragraphs are rendered by EditableStatement; newer
+	// statements keep their body in child paragraph statements and expose only
+	// this cached preview.
+	const descriptionPreview = hasParagraphsContent(statement.paragraphs)
+		? ''
+		: (statement.description ?? '').trim();
+
+	const showBadgeRow = statement.hide || showVotingWinner;
+	const showJoinRow = Boolean(enableJoining);
+	const showMetaRow =
+		(memberOfClusters && memberOfClusters.length > 0) ||
+		(showBadges ?? false) ||
+		(!image && isAdmin);
 
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
 			onClick={handleCardAreaClick}
 			onPointerDown={handleCardPointerDown}
-			className={`
-				${styles['statement-evaluation-card']}
-				${statementAge < 10000 ? styles['statement-evaluation-card--new'] : ''}
-				${showBadges && !isAnchored ? styles['statement-evaluation-card--community'] : ''}
-				${statement.hide ? styles['statement-evaluation-card--hidden'] : ''}
-				${showEvaluation && isVotingWinner ? styles['statement-evaluation-card--hasVotingBadge'] : ''}
-				${isBelowMinimum ? styles['statement-evaluation-card--below-minimum'] : ''}
-				${isAboveMinimum ? styles['statement-evaluation-card--above-minimum'] : ''}
-				${exceedsMaximum ? styles['statement-evaluation-card--exceeds-maximum'] : ''}
-			`.trim()}
+			className={cardClassName}
 			style={{
-				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
-				color: statementColor.color,
-				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
 				pointerEvents: statement.hide && !isAuthorized ? 'none' : 'auto',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
 		>
-			{/* Hidden badge - visible when card is hidden, clickable for admins */}
-			{statement.hide && (
-				<button
-					type="button"
-					className={`${styles.hiddenBadge} ${isAuthorized ? styles['hiddenBadge--clickable'] : ''}`}
-					onClick={isAuthorized ? handleToggleHide : undefined}
-					title={isAuthorized ? t('Click to unhide') : t('Hidden from participants')}
-					aria-label={isAuthorized ? t('Unhide this card') : t('This card is hidden')}
-				>
-					<EyeCrossIcon />
-					<span>{t('Hidden')}</span>
-				</button>
+			{/* Status badges (channel C3). In-flow, so an absent badge costs no
+			    reserved space — the old floating pills hung off the card's top
+			    edge and forced a margin + !important padding to make room. */}
+			{showBadgeRow && (
+				<div className={styles.badgeRow}>
+					{statement.hide && (
+						<button
+							type="button"
+							className={clsx(
+								styles.statusBadge,
+								styles['statusBadge--hidden'],
+								isAuthorized && styles['statusBadge--clickable'],
+							)}
+							onClick={isAuthorized ? handleToggleHide : undefined}
+							title={isAuthorized ? t('Click to unhide') : t('Hidden from participants')}
+							aria-label={isAuthorized ? t('Unhide this card') : t('This card is hidden')}
+						>
+							<EyeCrossIcon />
+							<span>{t('Hidden')}</span>
+						</button>
+					)}
+
+					{showVotingWinner && (
+						<span
+							className={clsx(styles.statusBadge, styles['statusBadge--winner'])}
+							title={t('Selected as the winning option')}
+						>
+							<CheckIcon />
+							<span>{t('Selected')}</span>
+						</span>
+					)}
+				</div>
 			)}
 
 			{/* Quick unhide button - appears on hover for admins on hidden cards */}
@@ -277,17 +323,6 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 				</button>
 			)}
 
-			{/* Voting winner badge - compact pill with checkmark */}
-			{showEvaluation && isVotingWinner && (
-				<div
-					className={styles.votingWinnerBadge}
-					title={t('Selected as the winning option')}
-					aria-label={t('Selected as the winning option')}
-				>
-					<CheckIcon />
-					<span>{t('Selected')}</span>
-				</div>
-			)}
 			{/* Image - Display image at the top of card */}
 			{image && (
 				<StatementImage
@@ -303,7 +338,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 					fileInputRef={fileInputRef}
 				/>
 			)}
-			<div className={styles.main}>
+			<div className={styles.body}>
 				<div className={styles.info}>
 					<div className={styles.text}>
 						<div
@@ -326,6 +361,21 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 							/>
 						</div>
 
+						{/* Body preview. The rich body lives in child paragraph
+						    statements; `description` is the cached ~200-char preview
+						    of them, which is what a card should read rather than
+						    querying the children. Only rendered when there are no
+						    legacy `paragraphs` — EditableStatement already renders
+						    those above, and showing both would duplicate the text. */}
+						{descriptionPreview && (
+							<p
+								ref={descriptionRef}
+								className={`${styles.description} ${isExpanded ? styles.descriptionExpanded : ''}`}
+							>
+								{descriptionPreview}
+							</p>
+						)}
+
 						<button
 							type="button"
 							onClick={() => setIsExpanded(!isExpanded)}
@@ -333,6 +383,25 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 						>
 							{isExpanded ? t('Show less') : t('Show more')}
 						</button>
+					</div>
+					<div className={styles.menu}>
+						<SolutionMenu
+							statement={statement}
+							isAuthorized={isAuthorized}
+							isAdmin={isAdmin}
+							isCardMenuOpen={isCardMenuOpen}
+							setIsCardMenuOpen={setIsCardMenuOpen}
+							isEdit={isEdit}
+							setIsEdit={setIsEdit}
+							handleSetOption={handleSetOption}
+							onIntegrate={() => setShowIntegrationModal(true)}
+						/>
+					</div>
+				</div>
+
+				{/* Meta row (channel C4): identity facts, not lifecycle status. */}
+				{showMetaRow && (
+					<div className={styles.meta}>
 						{memberOfClusters && memberOfClusters.length > 0 && (
 							<div className={styles.memberRefs}>
 								{memberOfClusters.map((cluster) => (
@@ -350,90 +419,73 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement, memberOfCluster
 								))}
 							</div>
 						)}
-						<div className={styles.buttonContainer}>
-							{/* Show Add Image button if no image and user is admin of parent statement */}
-							{!image && isAdmin && (
-								<button
-									onClick={() => setShowImageUpload(true)}
-									className="btn btn--small btn--secondary"
-								>
-									{t('Add Image')}
-								</button>
-							)}
-							{enableJoining && (
-								<>
-									<Joined statement={statement} />
-									{/* Room Badge - shows user's assigned room for this option */}
-									<RoomBadge statementId={statement.statementId} />
-									{/* Join count indicator — activists only */}
-									{(minJoinMembers !== undefined || maxJoinMembers !== undefined) && (
-										<span
-											className={`
-												${styles.joinIndicator}
-												${isBelowMinimum ? styles['joinIndicator--warning'] : ''}
-												${isAboveMinimum ? styles['joinIndicator--success'] : ''}
-												${exceedsMaximum ? styles['joinIndicator--exceeds'] : ''}
-											`.trim()}
-										>
-											{joinedCount}
-											{maxJoinMembers !== undefined && `/${maxJoinMembers}`} {t('members')}
-										</span>
-									)}
-									<JoinButtons statement={statement} parentStatement={parentStatement} />
-								</>
-							)}
-						</div>
+						{/* Badge for anchored/community statements */}
+						{showBadges && (
+							<div className={styles['badge-element']}>
+								{isAnchored ? (
+									<AnchoredBadge
+										customIcon={anchorIcon}
+										customDescription={anchorDescription}
+										customLabel={anchorLabel}
+									/>
+								) : (
+									<CommunityBadge />
+								)}
+							</div>
+						)}
+						{/* Admin-only, rare: kept off the footer so it never competes
+						    with the evaluation control for the primary action slot. */}
+						{!image && isAdmin && (
+							<button
+								onClick={() => setShowImageUpload(true)}
+								className="btn btn--small btn--secondary"
+							>
+								{t('Add Image')}
+							</button>
+						)}
 					</div>
-					<div className={styles.more}>
-						<SolutionMenu
-							statement={statement}
-							isAuthorized={isAuthorized}
-							isAdmin={isAdmin}
-							isCardMenuOpen={isCardMenuOpen}
-							setIsCardMenuOpen={setIsCardMenuOpen}
-							isEdit={isEdit}
-							setIsEdit={setIsEdit}
-							handleSetOption={handleSetOption}
-							onIntegrate={() => setShowIntegrationModal(true)}
-						/>
+				)}
+
+				{/* Joining is a primary action and gets its own row. */}
+				{showJoinRow && (
+					<div className={styles.joinRow}>
+						<Joined statement={statement} />
+						{/* Room Badge - shows user's assigned room for this option */}
+						<RoomBadge statementId={statement.statementId} />
+						{/* Join count indicator — activists only */}
+						{(minJoinMembers !== undefined || maxJoinMembers !== undefined) && (
+							<span
+								className={clsx(
+									styles.joinIndicator,
+									isBelowMinimum && styles['joinIndicator--warning'],
+									isAboveMinimum && styles['joinIndicator--success'],
+									exceedsMaximum && styles['joinIndicator--exceeds'],
+								)}
+							>
+								<span className={styles.joinCount}>
+									{joinedCount}
+									{maxJoinMembers !== undefined && `/${maxJoinMembers}`}
+								</span>{' '}
+								{t('members')}
+							</span>
+						)}
+						<JoinButtons statement={statement} parentStatement={parentStatement} />
 					</div>
-				</div>
+				)}
 
 				<div className={styles.actions}>
-					{hasChildren && (
-						<div className={`${styles.chat} ${styles['chat-more-element']}`}>
-							<StatementChatMore statement={statement} />
+					<div className={styles.actionsStart}>
+						<div className={styles['evolution-element']}>
+							<Evaluation statement={statement} />
 						</div>
-					)}
-					<div className={styles['evolution-element']}>
-						<Evaluation statement={statement} />
 					</div>
-					{/* Badge for anchored/community statements */}
-					{showBadges && (
-						<div className={styles['badge-element']}>
-							{isAnchored ? (
-								<AnchoredBadge
-									customIcon={anchorIcon}
-									customDescription={anchorDescription}
-									customLabel={anchorLabel}
-								/>
-							) : (
-								<CommunityBadge />
-							)}
-						</div>
-					)}
-					{hasChildren && (
-						<IconButton
-							className={`${styles['add-sub-question-button']} ${styles['more-question']}`}
-							style={{ display: 'none', cursor: 'default' }} // changed to display none for it to not take dom space
-							onClick={
-								() => {} //delete the brackets and uncomment the line below for functionality
-								//	setShouldShowAddSubQuestionModal(true)
-							}
-						>
-							<AddQuestionIcon />
-						</IconButton>
-					)}
+					<div className={styles.actionsEnd}>
+						{hasChildren && (
+							<div className={styles.chat}>
+								<StatementChatMore statement={statement} />
+							</div>
+						)}
+					</div>
 				</div>
 				{shouldShowAddSubQuestionModal && (
 					<CreateStatementModal

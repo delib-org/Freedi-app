@@ -142,7 +142,10 @@
   --accent: #7cacf8;
 
   // --- SIZES ---
-  --padding: 1rem;
+  // Aliased to the spacing scale below (identical computed value, 1rem) so the
+  // grid has a single source of truth. Forward reference is fine: var() in a
+  // custom property resolves at computed-value time, not parse order.
+  --padding: var(--space-md);
 
   // Bottom clearance for pages that scroll under a floating bottom nav
   // (.page__footer, .tree-view__bottom-nav, ChatInput, StatementBottomNav).
@@ -271,6 +274,10 @@
 
   // Card
   --card-default: #ffffff;
+  // Surface elevated ABOVE cards (hover cards, popovers). Same as card in
+  // light mode (separation comes from border + shadow); a lighter step of
+  // the elevation ladder in dark mode so it reads as a distinct surface.
+  --card-raised: #ffffff;
   --card-needs-surface: #c7e5e0;
   --card-needs-top: #93cdc2;
   --card-suggestion-added: #fdffe0;
@@ -365,6 +372,15 @@
   --header-chosen-contrast: #24ffd7;
   --header-not-chosen-contrast: #ffd324;
   --header-group-contrast: #8a62d8;
+
+  // Header contrast inks — icon/text colors paired with the header ACCENT
+  // background above (which can be any lightness: option yellow, question
+  // blue, group purple...). useStatementColor picks the ink by measuring the
+  // accent's luminance, so these are theme-INDEPENDENT (they pair with the
+  // header bar, not the page background) and are intentionally not overridden
+  // in _variables-dark.scss.
+  --header-ink-on-light: #2a3346; // dark ink for light header accents
+  --header-ink-on-dark: #ffffff; // light ink for dark header accents
 
   // Icons
   --icons-blue: #5f88e5;
@@ -714,8 +730,84 @@
   --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
 
   // --- ELEVATION TOKENS ---
+  --elevation-0: none;
   --elevation-1: 0 1px 2px var(--shadow);
   --elevation-2: 0 2px 6px var(--shadow);
+  --elevation-3: 0 8px 24px var(--shadow);
+  --elevation-4: 0 20px 50px color-mix(in srgb, var(--text-title) 20%, transparent);
+
+  // --- SCALE TOKENS ---
+  // The palette above was always rich; the *scales* were not — only --padding
+  // and --radius existed, so components hardcoded their own rem values and no
+  // two agreed. A single card mixed 0.3/0.35/0.375/0.4/0.5/0.625/0.75rem.
+  // These are additive: nothing above is renamed, so adoption is per-file.
+  // Rule when converting a hardcoded value: snap to the nearer step; on a tie
+  // snap down (density bias).
+
+  // Spacing — 8px grid with a 4px half-step
+  --space-3xs: 0.125rem; // 2px
+  --space-2xs: 0.25rem; // 4px
+  --space-xs: 0.5rem; // 8px
+  --space-sm: 0.75rem; // 12px
+  --space-md: 1rem; // 16px
+  --space-lg: 1.5rem; // 24px
+  --space-xl: 2rem; // 32px
+  --space-2xl: 3rem; // 48px
+
+  // Radius
+  --radius-xs: 4px; // inputs inside cards, tags
+  --radius-sm: 8px; // chips, menu panels
+  --radius-md: 12px; // suggestion cards, toolbar
+  --radius-lg: 16px; // modals, sheets
+  --radius-pill: 999px; // pills, buttons, badges
+
+  // Type scale. Distinct from the legacy --h1..--p family above, which is
+  // bound to bare element selectors in _typography.scss; these are for
+  // component-level type where an element tag would be the wrong lever.
+  --font-size-2xs: 0.6875rem; // 11px — overlines only, always >= 600 weight
+  --font-size-xs: 0.75rem; // 12px
+  --font-size-sm: 0.875rem; // 14px
+  --font-size-md: 1rem; // 16px
+  --font-size-lg: 1.125rem; // 18px
+  --font-size-xl: 1.375rem; // 22px
+  --font-size-2xl: 1.75rem; // 28px
+
+  // Font weights. NB: the legacy --weight-medium above is 400, which is
+  // "regular", not medium. It is left alone for existing consumers; new work
+  // uses this family.
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25; // titles
+  --line-height-snug: 1.4; // card text
+  --line-height-normal: 1.55; // long-form
+  --letter-spacing-caps: 0.04em; // uppercase labels only
+
+  // Hairlines & status rules
+  --hairline-width: 1px;
+  --hairline: 1px solid var(--border-light);
+  --rule-width: 3px; // status accent on a card's inline-start edge
+  --divider: 1px solid color-mix(in srgb, var(--border-light) 60%, transparent);
+
+  // Status washes. Mixed against --card-default rather than transparent so a
+  // washed card still reads as a card in dark mode, where the surface is dark
+  // and a transparent tint would sit on the page colour instead.
+  --wash-approve: color-mix(in srgb, var(--approve) 7%, var(--card-default));
+  --wash-warning: color-mix(in srgb, var(--warning) 7%, var(--card-default));
+  --wash-primary: color-mix(in srgb, var(--btn-primary) 7%, var(--card-default));
+  --wash-neutral: color-mix(in srgb, var(--lighter) 7%, var(--card-default));
+
+  // Ink variants. --approve and --warning are surface colours: white text on
+  // --approve (#57c6b2) is 2.75:1, below even the 3:1 non-text floor. These are
+  // the darkened twins to use whenever the colour has to carry text.
+  --approve-ink: #3a7e71; // 4.8:1 with white
+  --warning-ink: #9a4d00; // 5.6:1 on white
+
+  // Meta text. --text-caption (#7484a9) is 3.7:1 on white and fails AA at the
+  // 12px used by card meta rows; this is its accessible replacement.
+  --text-meta: #62719a; // 4.8:1 on white
 
   // --- LEGACY / ORPHAN TOKEN ALIASES ---
   // These token names are referenced across the codebase with hardcoded

@@ -73,6 +73,21 @@
   // it was undefined, the `#fff` fallback always won and cards stayed white.
   --surface-card: var(--bg-card);
   --surface-input: var(--bg-input);
+  // Same trick for the token names referenced across the facilitator panel
+  // and other legacy BEM blocks (--bg-paper, --bg-muted, --text-strong,
+  // --text-body, --border, --agree, --disagree). While these were undefined,
+  // every usage's hardcoded light-scheme fallback won — permanently, even in
+  // dark mode — so the panel stayed white and controls painted near-black
+  // text onto dark-aware surfaces (invisible language selector). Aliases
+  // resolve at paint time, so dark mode and the playful themes pick up their
+  // own values here with no extra per-scheme overrides.
+  --bg-paper: var(--bg-card);          // drawer / side-panel surface
+  --bg-muted: var(--paper-deep);       // neutral fill — segmented/toggle tracks, chips
+  --text-strong: var(--text-primary);
+  --text-body: var(--text-secondary);
+  --border: var(--border-light);       // hairline dividers
+  --agree: var(--teal-500);            // text-safe success (AA on cards/inputs)
+  --disagree: var(--danger);
 
   // ---- TEXT ALIASES ----
   --text-primary: var(--ink);
@@ -84,6 +99,11 @@
   --border-light: var(--paper-line);
   --border-medium: #b9a98c;    // 3.2:1 on paper, AA non-text ✓
   --border-strong: var(--ink);
+
+  // Card edge. In light mode the drop shadow already separates a card from the
+  // page, so cards keep an invisible border and rely on elevation; the dark and
+  // high-contrast schemes override this with a real colour.
+  --border-card: transparent;
 
   // ---- SPACING (8-pt) ----
   --space-xs: 4px;
@@ -225,15 +245,19 @@
 // =============================================================================
 @media (prefers-color-scheme: dark) {
   :root {
+    // Surface ramp. Black shadows are invisible on a near-black page, so in
+    // dark mode a card's edge has to come from the surface step + a visible
+    // hairline — not from elevation. The steps below are deliberately wider
+    // than the light-mode ones for that reason.
     --paper: #13100e;
-    --paper-soft: #221d18;       // card resting — ~6% lightness step above paper
-    --paper-deep: #312a23;       // input bg / hovered card — another ~6% step
-    --paper-line: #3a322b;
-    --paper-elevated: #3d342c;   // pressed / focused input
+    --paper-soft: #262019;       // card resting — clear step off the page
+    --paper-deep: #332c25;       // input bg / hovered card — another step up
+    --paper-line: #4a4038;       // hairline — must read against BOTH page and card
+    --paper-elevated: #423931;   // pressed / focused input
 
-    --ink: #f4ece0;               // ~15:1 on paper ✓ AAA
-    --ink-muted: #c9bfb0;         // ~8:1 ✓ AAA
-    --ink-soft: #8f857a;          // ~4.8:1 ✓ AA — safe inside cards/inputs
+    --ink: #f4ece0;               // ~13:1 on cards ✓ AAA
+    --ink-muted: #c9bfb0;         // ~7:1 ✓ AAA
+    --ink-soft: #9e9488;          // 5.4:1 on cards, 4.6:1 on inputs ✓ AA
     --ink-faint: #6c6459;         // page-bg only; never use inside cards/inputs
 
     // Desaturated terracotta — lower chroma so the brand doesn't "burn" the eye
@@ -250,6 +274,10 @@
     --indigo-500: #9a8fe5;        // lifted ~6:1 ✓ AA
     --indigo-600: #7c70d4;
     --indigo-700: #5e52b8;
+
+    // Lifted danger — the light-scheme #9a2a1e sinks to ~1.8:1 against the
+    // near-black surfaces. ~5.5:1 on paper, ~4.8:1 on inputs ✓ AA.
+    --danger: #e57666;
 
     // Tint backgrounds (the *-50 / *-100 shades) — replace with translucent
     // overlays that automatically inherit whatever surface they sit on.
@@ -285,8 +313,15 @@
     --text-muted: var(--ink-soft);
 
     --border-light: var(--paper-line);
-    --border-medium: #58493c;
+    --border-medium: #6b5f55;     // 3:1 against the page ✓ AA non-text
     --border-strong: var(--ink);
+
+    // Card edge. Light mode leans on shadows for the card/page boundary; dark
+    // mode can't, so cards opt into this instead of `transparent`. Uses the
+    // `--border-medium` step, not `--paper-line`: a solution card is a
+    // `role="button"`, so its boundary owes 3:1 under WCAG 1.4.11, and the
+    // hairline step only reaches ~1.9:1 on a near-black page.
+    --border-card: var(--border-medium);
 
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
@@ -604,6 +639,7 @@
   --border-light: var(--paper-line);
   --border-medium: #000000;
   --border-strong: #000000;
+  --border-card: #000000;
 
   --focus-ring-color: #000000;
   --focus-ring-width: 4px;

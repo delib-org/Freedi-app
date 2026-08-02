@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './ExplanationVideoOverlay.module.scss';
+import { safeSessionStorage } from '@/lib/utils/safeStorage';
 
 interface ExplanationVideoOverlayProps {
   videoUrl: string;
@@ -48,12 +49,12 @@ export default function ExplanationVideoOverlay({
 
   const hasDismissed = useCallback(() => {
     if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem(getStorageKey()) === 'true';
+    return safeSessionStorage.getItem(getStorageKey()) === 'true';
   }, [getStorageKey]);
 
   const markAsDismissed = useCallback(() => {
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem(getStorageKey(), 'true');
+      safeSessionStorage.setItem(getStorageKey(), 'true');
     }
   }, [getStorageKey]);
 

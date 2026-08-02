@@ -1,17 +1,53 @@
+// =============================================================================
+// Suggestion card
+//
+// Anatomy (top to bottom): optional status badge row → optional image →
+// statement text (clamped, expandable) → meta row (identity facts) → a fixed
+// 44px footer holding the evaluation cluster and card actions.
+//
+// STATUS COLOUR SYSTEM
+// A card can be several things at once (results winner, voting winner, hidden,
+// community, below/above join minimum, brand new). Previously each of those
+// painted whatever it liked — an 8px border, a background tint, a floating
+// pill, a dashed outline — so a card could fire five signals simultaneously
+// and none of them read. There are now five channels and each state may claim
+// at most one of each, in this priority order:
+//
+//   C1  start rule    3px border-inline-start   lifecycle status, one only
+//   C2  surface wash  background tint           reinforces C1, never a 2nd message
+//   C3  badge         one floating pill         the single most important state
+//   C4  meta dots     dot + label in meta row   identity facts (community, room)
+//   C5  motion        entrance animation        "new", no colour at all
+//
+// A lower-priority state may not claim a channel a higher one already took —
+// so a hidden voting winner reads as hidden, not as both.
+//
+// The default card claims NOTHING: no coloured edge. Statement-type colour was
+// redundant encoding on a list where every card is the same type, and removing
+// it is the single biggest reduction in visual noise on the screen.
+//
+// All directional properties are logical (border-inline-start, inset-inline-end,
+// text-align: start). This screen is Hebrew-first; the old physical border-left
+// put the accent on the wrong edge in RTL.
+// =============================================================================
+
 .statement-evaluation-card {
   position: relative;
   display: flex;
-  flex-direction: row-reverse;
-  flex-wrap: wrap;
-  border-radius: 4px;
-  background-color: var(--card-default);
-  box-shadow: var(--elevation-1);
-  border-left: 8px solid var(--card-default);
-
+  flex-direction: column;
+  gap: var(--space-xs);
   width: 100%;
   box-sizing: border-box;
-  gap: 0.4rem;
-  overflow-x: hidden; // Prevent horizontal overflow on mobile
+  padding: var(--space-md);
+  background-color: var(--card-default);
+  border: var(--hairline);
+
+  // Reserved lane for the C1 status rule. Always present at full width so a
+  // card gaining or losing status does not change size and shift the list.
+  border-inline-start: var(--rule-width) solid transparent;
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-0);
+  overflow-x: hidden;
 
   // CRITICAL: Block all clicks by default to prevent accidental navigation
   pointer-events: none;
@@ -26,604 +62,537 @@
     pointer-events: auto;
   }
 
-  // Mobile: more compact layout, lighter status bar
   @media screen and (max-width: 600px) {
-    margin: 0;
-    width: 100%;
-    gap: 0.375rem;
-    border-radius: 6px;
-    border-left-width: 4px;
+    padding: var(--space-sm);
+    gap: var(--space-2xs);
   }
 
-  // Tablet
-  @media screen and (min-width: 601px) and (max-width: 768px) {
-    margin: 0rem 1%;
-    width: 98%;
-    gap: 0.3rem;
+  // --- C1 + C2: lifecycle status -------------------------------------------
+
+  // Results winner (consensus) and voting winner share the rule; only the
+  // voting winner also takes the wash, so the two stay distinguishable.
+  &--winner {
+    border-inline-start-color: var(--approve);
   }
+
+  &--voted {
+    border-inline-start-color: var(--approve);
+    background-color: var(--wash-approve);
+  }
+
+  // Below the join minimum — the one state that genuinely needs attention.
+  &--below-minimum {
+    border-inline-start-color: var(--warning);
+    background-color: var(--wash-warning);
+  }
+
+  // At/above minimum and over maximum are healthy or admin-only conditions.
+  // They report through the meta pill (C4) and claim no rule and no wash:
+  // a healthy card should be quiet.
 
   &--hidden {
-    // Isolate stacking context to prevent z-index leaking
     isolation: isolate;
+    border-style: dashed;
+    border-color: var(--lighter);
+    background-color: var(--wash-neutral);
 
-    // Dashed border to clearly indicate hidden/draft state
-    border: 2px dashed var(--icons-disabled, #adb7cd);
-    border-left-width: 8px;
-    border-left-style: dashed;
-
-    // Subtle background tint to reinforce hidden state
-    background-color: rgba(173, 183, 205, 0.08);
-
-    // Apply opacity to content areas only, not the whole card
-    .main {
-      opacity: 0.6;
+    .body {
+      opacity: 0.55;
     }
 
-    // Keep menu fully visible
-    .more {
+    // Keep the menu and the unhide affordance fully legible.
+    .menu,
+    .quickUnhideBtn {
       opacity: 1;
     }
 
-    // On hover, reduce opacity less to show it's interactive
-    &:hover .main {
+    &:hover .body {
       opacity: 0.75;
     }
   }
 
-  // Hidden badge to explicitly show the card is hidden - clickable for admins
-  .hiddenBadge {
-    position: absolute;
-    top: -0.625rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.625rem;
-    background-color: var(--icons-disabled, #adb7cd);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: 12px;
-    white-space: nowrap;
-    box-shadow: var(--elevation-1);
-    transition: transform var(--motion-fast) var(--motion-ease);
-
-    svg {
-      width: 14px;
-      height: 14px;
-      flex-shrink: 0;
-    }
-
-    // When clickable (admin), show interactive styling
-    &--clickable {
-      cursor: pointer;
-
-      &:hover {
-        background-color: var(--btn-primary);
-        transform: translateX(-50%) scale(1.05);
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      &:active {
-        transform: translateX(-50%) scale(0.98);
-      }
-    }
-  }
-
-  // Quick unhide button - appears on hover for admins
-  .quickUnhideBtn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 4;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    background-color: var(--btn-primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    opacity: 0;
-    transform: scale(0.8);
-    transition:
-      transform var(--motion-fast) var(--motion-ease),
-      opacity var(--motion-fast) var(--motion-ease);
-    box-shadow: var(--elevation-2);
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    &:hover {
-      background-color: var(--btn-primary-hover);
-      transform: scale(1.1);
-    }
-
-    &:active {
-      transform: scale(0.95);
-    }
-
-    // RTL support
-    [dir='rtl'] & {
-      right: auto;
-      left: 0.5rem;
-    }
-  }
-
-  // Show quick unhide button on card hover
-  &--hidden:hover .quickUnhideBtn {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  // Mobile: always show the button on hidden cards (no hover state)
-  @media screen and (max-width: 600px) {
-    &--hidden .quickUnhideBtn {
-      opacity: 1;
-      transform: scale(1);
-      width: 36px;
-      height: 36px;
-    }
-  }
-
-
-  // Elevated z-index when menu is open to ensure it appears above other cards
+  // Elevated z-index when menu is open so it escapes neighbouring cards.
   &--menu-open {
     z-index: 100;
     isolation: isolate;
   }
 
-  // Special border for community cards
-  &--community {
-    border-left-color: rgba(139, 92, 246, 0.7);
-  }
-
-  // Join status visual indicators
-  // Below minimum - needs more members (warning/reddish)
-  // Static state only — attention is carried by the warning border and
-  // the joinIndicator pill. The old infinite background-color pulse
-  // repainted every below-minimum card continuously on mobile.
-  &--below-minimum {
-    border-left-color: var(--warning, #f59e0b);
-    background-color: rgba(245, 158, 11, 0.05);
-  }
-
-  // At or above minimum - healthy group (greenish)
-  &--above-minimum {
-    border-left-color: var(--approve, #4fab9a);
-    background-color: rgba(79, 171, 154, 0.05);
-  }
-
-  // Exceeds maximum - needs splitting (blue/info indicator for admin)
-  &--exceeds-maximum {
-    border-left-color: var(--btn-primary, #5f88e5);
-    background-color: rgba(95, 136, 229, 0.05);
-  }
-
-  // Join indicator pill showing member count
-  .joinIndicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    background-color: var(--inputBackground);
-    color: var(--text-body);
-
-    &--warning {
-      background-color: rgba(245, 158, 11, 0.15);
-      color: var(--warning, #d97706);
-    }
-
-    &--success {
-      background-color: rgba(79, 171, 154, 0.15);
-      color: var(--approve, #059669);
-    }
-
-    &--exceeds {
-      background-color: rgba(95, 136, 229, 0.15);
-      color: var(--btn-primary, #5f88e5);
-    }
-  }
-
-  // Voting winner badge - floating pill at top corner
-  // Uses CSS logical properties for automatic RTL/LTR support
-  .votingWinnerBadge {
-    position: absolute;
-    top: -0.55rem;
-    inset-inline-end: 2.5rem; // Right in LTR, Left in RTL - offset to avoid menu icon
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.25rem 0.5rem;
-    background: var(--approve);
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 600;
-    border-radius: 12px;
-    white-space: nowrap;
-    box-shadow: var(--elevation-1);
-    transition: transform var(--motion-fast) var(--motion-ease);
-    letter-spacing: 0.02em;
-
-    // Icon styling
-    svg {
-      width: 12px;
-      height: 12px;
-      flex-shrink: 0;
-      stroke-width: 2.5;
-    }
-
-    // Subtle hover effect
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow:
-        0 4px 12px rgba(79, 171, 154, 0.45),
-        0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    // Mobile: slightly smaller
-    @media screen and (max-width: 600px) {
-      top: -0.4rem;
-      inset-inline-end: 2rem;
-      padding: 0.2rem 0.4rem;
-      font-size: 0.65rem;
-      gap: 0.2rem;
-
-      svg {
-        width: 10px;
-        height: 10px;
-      }
-    }
-  }
-
-  // Add top margin and padding when card has voting winner badge to make space
-  &--hasVotingBadge {
-    margin-top: 0.75rem;
-
-    > .main {
-      padding-top: 2rem !important;
-
-      @media screen and (max-width: 600px) {
-        padding-top: 1.5rem !important;
-      }
-    }
-  }
-
-  // Legacy selected-option - keeping for backwards compatibility but hidden
-  .selected-option {
-    display: none;
-  }
-
-  .main {
-    width: 100%;
-    padding: 0.75rem 0.75rem 0.75rem 0rem;
-    box-sizing: border-box;
-
-    // Mobile: compact padding
-    @media screen and (max-width: 600px) {
-      padding: 0.625rem 0.625rem 0.625rem 0rem;
-    }
-
-    // Tablet
-    @media screen and (min-width: 601px) and (max-width: 768px) {
-      padding: 0.75rem 0.75rem 0.75rem 0rem;
-    }
-
-    .info {
-      color: var(--text-body);
-      display: flex;
-      width: 100%;
-
-      .text {
-        flex: 1;
-        width: 100%;
-        background-color: var(--background-color-info-text);
-        padding: 0rem;
-        position: relative;
-
-        // Clearfix to contain floated images
-        &::after {
-          content: '';
-          display: table;
-          clear: both;
-        }
-
-        // Container for the clamped text
-        .textContent {
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          line-clamp: 4;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          line-height: 1.4;
-          overflow-wrap: break-word;
-          word-wrap: break-word;
-          width: 100%;
-          box-sizing: border-box;
-
-          // Mobile: show more lines since no image takes space
-          @media screen and (max-width: 600px) {
-            -webkit-line-clamp: 5;
-            line-clamp: 5;
-            line-height: 1.35;
-            font-size: 0.9375rem;
-          }
-        }
-
-        // Expanded state - remove clamp and add scroll
-        .textContentExpanded {
-          display: block;
-          -webkit-line-clamp: unset;
-          line-clamp: unset;
-          -webkit-box-orient: unset;
-          max-height: 50vh;
-          overflow-y: auto;
-          overflow-x: hidden;
-
-          // Custom scrollbar styling
-          &::-webkit-scrollbar {
-            width: 6px;
-          }
-
-          &::-webkit-scrollbar-track {
-            background: var(--inputBackground);
-            border-radius: 3px;
-          }
-
-          &::-webkit-scrollbar-thumb {
-            background: var(--shadow);
-            border-radius: 3px;
-
-            &:hover {
-              background: var(--text-body);
-            }
-          }
-        }
-
-        p {
-          margin: 3px 0px;
-        }
-
-        // Compact button container with proper spacing
-        .buttonContainer {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-top: 0.75rem;
-          align-items: center;
-          justify-content: flex-end;
-
-          // Mobile: more compact button layout
-          @media screen and (max-width: 600px) {
-            gap: 0.375rem;
-            margin-top: 0.375rem;
-
-            // Smaller buttons on mobile
-            button {
-              padding: 0.25rem 0.625rem;
-              font-size: 0.8125rem;
-            }
-          }
-
-          // Tablet
-          @media screen and (min-width: 601px) and (max-width: 768px) {
-            gap: 0.375rem;
-            margin-top: 0.5rem;
-          }
-
-          // Ensure consistent button sizing
-          button {
-            flex-shrink: 0;
-          }
-        }
-
-        .showMore {
-          display: none; // Hidden by default
-          background: none;
-          border: none;
-          color: var(--link);
-          font-size: 0.9rem;
-          padding: 0.25rem 0;
-          margin-top: 0.5rem;
-          cursor: pointer;
-          text-align: left;
-
-          &:hover {
-            text-decoration: underline;
-          }
-        }
-
-        // Show the "show more" button only when text has overflow
-        &.hasOverflow .showMore {
-          display: block;
-        }
-
-        // "Part of …" back-reference chips — link a deduplicated original back
-        // to the AI proposal(s) / cluster(s) that already represent it.
-        .memberRefs {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.35rem;
-          margin-top: 0.4rem;
-        }
-
-        .memberRef {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          max-width: 100%;
-          padding: 0.1rem 0.5rem;
-          border-radius: 999px;
-          background: color-mix(in srgb, var(--btn-primary) 10%, transparent);
-          border: 1px solid color-mix(in srgb, var(--btn-primary) 28%, transparent);
-          color: var(--btn-primary);
-          font-size: 0.72rem;
-          font-weight: 600;
-          text-decoration: none;
-          transition: background-color 120ms ease;
-
-          &:hover,
-          &:focus-visible {
-            background: color-mix(in srgb, var(--btn-primary) 18%, transparent);
-            outline: none;
-          }
-
-          &:focus-visible {
-            outline: 2px solid var(--btn-primary);
-            outline-offset: 1px;
-          }
-
-          @media (prefers-contrast: more) {
-            background: var(--card-default, #fff);
-            border-color: var(--btn-primary);
-          }
-        }
-
-        .memberRefText {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-      }
-
-      // Menu container - sits next to .text
-      .more {
-        position: relative;
-        z-index: 2;
-        flex-shrink: 0;
-      }
-    }
-
-    .actions {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
-      align-items: center;
-      margin-top: 0.5rem;
-      padding-top: 0.5rem;
-      gap: 1rem;
-      // Block ALL pointer events by default to prevent accidental navigation
-      pointer-events: none;
-
-      .add-sub-question-button svg {
-        color: #4e88c7;
-        width: 24px;
-        height: 24px;
-      }
-
-      .badge-element {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .chat {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        // ONLY the chat button container can receive clicks
-        pointer-events: auto !important;
-      }
-
-      // Mobile: compact actions bar
-      @media screen and (max-width: 600px) {
-        margin-top: 0.5rem;
-        padding-top: 0.5rem;
-        gap: 0.5rem;
-
-        .evolution-element {
-          display: flex;
-          justify-content: end;
-          padding: 3px;
-        }
-
-        .chat-more-element {
-          // Maintain touch target size for accessibility
-          min-width: 44px;
-          min-height: 44px;
-        }
-
-        .more-question {
-          display: flex;
-          justify-content: end;
-          padding: 3px;
-        }
-
-        .badge-element {
-          // Slightly smaller badges on mobile
-          transform: scale(0.9);
-        }
-      }
-
-      // Tablet
-      @media screen and (min-width: 601px) and (max-width: 768px) {
-        margin-top: 0.75rem;
-        padding-top: 0.75rem;
-        gap: 0.75rem;
-      }
-    }
-
-    &:nth-child(-1) {
-      border-left: 0.71rem solid var(--accent);
-    }
-
-    .menu-option svg {
-      color: #226cbc;
-    }
-  }
-
+  // --- C5: motion only ------------------------------------------------------
   &--new {
     animation: newCard var(--motion-base) var(--motion-ease) both;
+  }
 
-    @keyframes newCard {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
+  &:hover {
+    box-shadow: var(--elevation-1);
+  }
+}
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+@keyframes newCard {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statement-evaluation-card--new {
+    animation: none;
+  }
+}
+
+// --- C3: status badges ------------------------------------------------------
+// In-flow rather than absolutely positioned. The old floating pills hung off
+// the card's top edge, which forced a margin-top on the card and a
+// `padding-top: 2rem !important` on its body to reserve space they might not
+// need. A normal first row costs nothing when absent.
+
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  border: none;
+
+  svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    stroke-width: 2.5;
+  }
+
+  // --approve is a surface colour: white on it is 2.75:1, below even the 3:1
+  // non-text floor. --approve-ink is its readable twin.
+  &--winner {
+    background-color: var(--approve-ink);
+    color: #fff;
+  }
+
+  &--hidden {
+    background-color: var(--lighter);
+    color: #fff;
+  }
+
+  &--clickable {
+    cursor: pointer;
+    transition: transform var(--motion-fast) var(--motion-ease);
+
+    &:hover {
+      transform: scale(1.04);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.quickUnhideBtn {
+  position: absolute;
+  inset-block-start: var(--space-xs);
+  inset-inline-end: var(--space-xs);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background-color: var(--btn-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    opacity var(--motion-fast) var(--motion-ease);
+  box-shadow: var(--elevation-2);
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background-color: var(--btn-primary-hover);
+    transform: scale(1.06);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    transform: scale(1);
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.statement-evaluation-card--hidden:hover .quickUnhideBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+// Touch has no hover: on small screens the affordance is always visible.
+@media screen and (max-width: 600px) {
+  .statement-evaluation-card--hidden .quickUnhideBtn {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quickUnhideBtn {
+    transition: none;
+  }
+}
+
+// --- Body -------------------------------------------------------------------
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  min-width: 0;
+  color: var(--text-body);
+}
+
+.info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  width: 100%;
+  min-width: 0;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+
+  // Clearfix to contain floated images
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
+
+.textContent {
+  display: -webkit-box;
+  // The title shares this block with any legacy inline paragraphs, so it needs
+  // more than a title's worth of room.
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-snug);
+  color: var(--text-body);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  width: 100%;
+  box-sizing: border-box;
+
+  p {
+    margin: 0 0 var(--space-2xs);
+
+    &:last-child {
+      margin-bottom: 0;
     }
   }
 }
 
+// Expanded: drop the clamp, cap the height, scroll inside.
+.textContentExpanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--inputBackground);
+    border-radius: var(--radius-xs);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--shadow);
+    border-radius: var(--radius-xs);
+
+    &:hover {
+      background: var(--text-body);
+    }
+  }
+}
+
+// Body preview, sourced from the cached `description`. Set a step below the
+// title in size and colour so the card still reads title-first at a glance.
+.description {
+  margin: var(--space-2xs) 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  color: var(--text-meta);
+  overflow-wrap: break-word;
+  white-space: pre-line;
+}
+
+.descriptionExpanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
+}
+
+.showMore {
+  display: none; // Only shown when the text actually overflows
+  background: none;
+  border: none;
+  color: var(--link);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-2xs) 0;
+  cursor: pointer;
+  text-align: start;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.hasOverflow .showMore {
+  display: block;
+}
+
+// Menu (kebab) — top inline-end of the card.
+.menu {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+// --- C4: meta row -----------------------------------------------------------
+// Identity facts, not lifecycle status: who owns this, which room, how many
+// joined. Reads as one quiet line rather than a row of coloured chrome.
+
+.meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  // --text-caption is 3.7:1 on white and fails AA at this size.
+  color: var(--text-meta);
+}
+
+.memberRefs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.memberRef {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  max-width: 100%;
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--btn-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--btn-primary) 28%, transparent);
+  color: var(--btn-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--btn-primary) 18%, transparent);
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 1px;
+  }
+
+  @media (prefers-contrast: more) {
+    background: var(--card-default);
+    border-color: var(--btn-primary);
+  }
+}
+
+.memberRefText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Join member count. Numerals are LTR-isolated so "3/5" does not reorder
+// inside a Hebrew line, and tabular so a live count does not shift layout.
+.joinIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  background-color: var(--inputBackground);
+  color: var(--text-body);
+
+  &--warning {
+    background-color: var(--wash-warning);
+    color: var(--warning-ink);
+  }
+
+  &--success {
+    background-color: var(--wash-approve);
+    color: var(--approve-ink);
+  }
+
+  &--exceeds {
+    background-color: var(--wash-primary);
+    color: var(--btn-primary);
+  }
+}
+
+.joinCount {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+// --- Footer -----------------------------------------------------------------
+// A fixed-height strip. Previously this row was `justify-content: space-around`
+// with a 1rem gap, which flung the evaluation control and its two counts to
+// opposite ends of the card and left a large empty band in the middle — the
+// "0 😞 😊 0" effect. It is now a two-slot row: evaluation at the inline-start,
+// card actions at the inline-end.
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding-top: var(--space-xs);
+  border-top: var(--divider);
+  pointer-events: none;
+}
+
+.actionsStart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.actionsEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.evolution-element {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.badge-element {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // ONLY the chat button container can receive clicks
+  pointer-events: auto !important;
+}
+
+// Joining is a primary action and gets its own row rather than competing with
+// the evaluation control for the footer.
+.joinRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  pointer-events: auto;
+}
+
+// --- Editing ----------------------------------------------------------------
+
 .editableCard {
   width: 100%;
-  p{
-    font-size: .95rem;
+
+  p {
+    font-size: var(--font-size-md);
   }
 }
 
 .editInput {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color, #ccc);
-  border-radius: 4px;
+  padding: var(--space-xs);
+  border: var(--hairline);
+  border-radius: var(--radius-xs);
   font-size: inherit;
   font-family: inherit;
-  line-height: 1.5;
+  line-height: var(--line-height-normal);
 }
 
 .editButtons {
   display: flex;
-  gap: 0.25rem;
-  margin-top: 0.5rem;
+  gap: var(--space-2xs);
+  margin-top: var(--space-xs);
 
   button {
-    padding: 0.25rem;
+    padding: var(--space-2xs);
     border: none;
     background: none;
     cursor: pointer;
@@ -651,22 +620,21 @@
 
 .loaderOverlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9);
+  inset: 0;
+  // Theme-aware scrim: a hardcoded white overlay under var(--text-body)
+  // (light in dark mode) made the loader text unreadable on dark.
+  background-color: color-mix(in srgb, var(--card-default) 90%, transparent);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-md);
   z-index: 10;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
 
   p {
     color: var(--text-body);
-    font-size: 0.9rem;
+    font-size: var(--font-size-sm);
     margin: 0;
   }
 }
@@ -679,32 +647,31 @@
   width: 90%;
   max-width: 400px;
   background: var(--card-default);
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: var(--space-lg);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--elevation-3);
   z-index: 100;
 
   .closeUploadBtn {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    inset-block-start: var(--space-xs);
+    inset-inline-end: var(--space-xs);
     background: transparent;
     border: none;
-    font-size: 1.5rem;
+    font-size: var(--font-size-lg);
     cursor: pointer;
     color: var(--text-body);
-    padding: 0.25rem;
+    padding: var(--space-2xs);
     width: 30px;
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: background 0.2s;
+    border-radius: var(--radius-xs);
+    transition: background var(--motion-fast) var(--motion-ease);
 
     &:hover {
       background: var(--inputBackground);
     }
   }
 }
-

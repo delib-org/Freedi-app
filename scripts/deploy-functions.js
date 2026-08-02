@@ -45,11 +45,22 @@ function run(command, options = {}) {
 	});
 }
 
-function parseFunctionNames(args) {
-	return args
+/** Flags forwarded to `firebase deploy` instead of being read as function
+ *  names. `--force` is needed when a function raises the minimum bill (any
+ *  `minInstances > 0`), which the CLI otherwise refuses to do non-interactively.
+ *  Note it is scoped by `--only functions:<name>`, so it can never delete a
+ *  function outside the deploy filter. */
+const PASSTHROUGH_FLAGS = ['--force'];
+
+function parseArgs(args) {
+	const flags = args.filter((arg) => PASSTHROUGH_FLAGS.includes(arg));
+	const names = args
+		.filter((arg) => !PASSTHROUGH_FLAGS.includes(arg))
 		.flatMap((arg) => arg.split(','))
 		.map((name) => name.trim().replace(/^--/, ''))
 		.filter(Boolean);
+
+	return { names, flags };
 }
 
 function printUsage() {
@@ -66,6 +77,7 @@ Examples:
   npm run deploy:f:prod -- sendNotification          # Deploy one function
   npm run deploy:f:prod -- fn1 fn2 fn3               # Deploy multiple (space-separated)
   npm run deploy:f:test -- fn1,fn2                   # Deploy multiple (comma-separated)
+  npm run deploy:f:prod -- fn1 --force               # Required when fn1 sets minInstances > 0
 
 Note: The \`--\` separator is REQUIRED so npm forwards the function names.
 `);
@@ -88,7 +100,7 @@ function main() {
 		process.exit(1);
 	}
 
-	const functionNames = parseFunctionNames(args.slice(1));
+	const { names: functionNames, flags } = parseArgs(args.slice(1));
 	const deployOnly =
 		functionNames.length > 0
 			? functionNames.map((name) => `functions:${name}`).join(',')
@@ -115,7 +127,7 @@ function main() {
 
 	console.info('\n🚀 Deploying...');
 	try {
-		run(`firebase deploy --only ${deployOnly}`);
+		run(`firebase deploy --only ${deployOnly}${flags.length ? ` ${flags.join(' ')}` : ''}`);
 	} finally {
 		if (target.restoreDev) {
 			console.info('\n♻️  Restoring dev environment...');

@@ -1,9 +1,13 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import styles from './SubGroupCard.module.scss';
 import { Link, NavLink, useNavigate } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { EvaluationUI, Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useRouteTargets } from '@/controllers/statementRouter/useRouteTargets';
+import Menu from '@/view/components/menu/Menu';
+import MenuOption from '@/view/components/menu/MenuOption';
+import RoutePicker from '@/view/components/statementRouter/RoutePicker/RoutePicker';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { logError } from '@/utils/errorHandling';
 import { ArrowUpRight } from 'lucide-react';
@@ -16,6 +20,9 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
+	const routeTargets = useRouteTargets(statement);
+	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
+	const [showRoutePicker, setShowRoutePicker] = useState(false);
 
 	try {
 		const { results = [], topVotedOption, evaluationSettings, hide } = statement;
@@ -41,8 +48,40 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 						<div onClick={(e) => e.stopPropagation()}>
 							<StatementChatMore statement={statement} onlyCircle={true} />
 						</div>
+						{routeTargets.length > 0 && (
+							<div
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+								}}
+							>
+								<Menu
+									setIsOpen={setIsCardMenuOpen}
+									isMenuOpen={isCardMenuOpen}
+									iconColor={backgroundColor}
+									isCardMenu={true}
+									isNavMenu={false}
+								>
+									<MenuOption
+										label={t('Continue in…')}
+										icon={<ArrowUpRight size={20} />}
+										onOptionClick={() => {
+											setShowRoutePicker(true);
+											setIsCardMenuOpen(false);
+										}}
+									/>
+								</Menu>
+							</div>
+						)}
 					</div>
 				</Link>
+				{routeTargets.length > 0 && (
+					<RoutePicker
+						statement={statement}
+						isOpen={showRoutePicker}
+						onClose={() => setShowRoutePicker(false)}
+					/>
+				)}
 				{shouldSeeVoting ? (
 					<NavLink to={`/statement/${topVotedOption.statementId}/main`}>
 						{topVotedOption.statement}

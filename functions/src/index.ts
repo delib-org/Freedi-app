@@ -224,9 +224,11 @@ import { fn_createJoinDelegateInvite } from './engagement/joinDelegate/fn_create
 import { fn_acceptJoinDelegateInvite } from './engagement/joinDelegate/fn_acceptJoinDelegateInvite';
 import { fn_revokeJoinDelegate } from './engagement/joinDelegate/fn_revokeJoinDelegate';
 import { fn_onJoinDelegateInvitationCreated } from './engagement/joinDelegate/fn_onJoinDelegateInvitationCreated';
+import { fn_onCommentVerdictWritten } from './engagement/helperPoints/fn_onCommentVerdictWritten';
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
+import { serveJoinShareRoutes } from './fn_joinShareRoutes';
 import {
 	generateBulkEmbeddings,
 	getEmbeddingStatus,
@@ -798,6 +800,8 @@ exports.summarizeDiscussion = summarizeDiscussion;
 
 // Dynamic OG Tags for social media sharing
 exports.serveOgTags = serveOgTags;
+// Join app share routes (/q/**, /m/**) — per-question link previews + app shell
+exports.serveJoinShareRoutes = serveJoinShareRoutes;
 
 // Google Docs Import
 exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
@@ -898,6 +902,8 @@ exports.fn_createJoinDelegateInvite = fn_createJoinDelegateInvite;
 exports.fn_acceptJoinDelegateInvite = fn_acceptJoinDelegateInvite;
 exports.fn_revokeJoinDelegate = fn_revokeJoinDelegate;
 exports.fn_onJoinDelegateInvitationCreated = fn_onJoinDelegateInvitationCreated;
+// Peer reward: author marks a comment helpful → commenter earns 1 credit
+exports.fn_onCommentVerdictWritten = fn_onCommentVerdictWritten;
 
 // --------------------------
 // SCHEDULED FUNCTIONS
@@ -1148,6 +1154,7 @@ export {
 	agoraSetRound,
 	agoraResolveSuggestion,
 	agoraCharacterReview,
+	agoraEstimateReception,
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
 	onAgoraEvaluationWritten,

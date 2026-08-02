@@ -1,4 +1,4 @@
-import { FC, useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { FC, useEffect, useState, useCallback } from 'react';
 import { getEvaluationThumbIdByScore } from '../../../statementsEvaluationCont';
 import styles from './EnhancedEvaluation.module.scss';
 import {
@@ -10,35 +10,27 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import {
-	Statement,
-	calcMeanSentiment,
-	calcLikeMindedness,
-	DEFAULT_MIN_EVALUATORS,
-} from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
+import { ResultsStrip } from '@/view/components/atomic/molecules/ResultsStrip';
 
 interface EnhancedEvaluationProps {
 	statement: Statement;
 	enableEvaluation?: boolean;
 }
 
-const indicatorWidth = 32; // Width of the bar in pixels, used for calculations
-
 const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	statement,
 	enableEvaluation = true,
 }) => {
-	const { t, learning, dir } = useUserConfig();
-	const [barWidth, setBarWidth] = useState<number>(0);
+	const { t, learning } = useUserConfig();
 
 	// Get parent statement for settings
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
-	const evaluationBarRef = useRef<HTMLDivElement>(null);
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 
 	// Cross-app evaluation mode: reactions (positive 0..1 emoji) or the default
@@ -59,164 +51,37 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 		setOptimisticScore(score);
 	}, []);
 
-	const { consensus: _consensus } = statement;
-	const {
-		sumPro,
-		sumCon,
-		numberOfEvaluators,
-		sumEvaluations = 0,
-		sumSquaredEvaluations = 0,
-	} = statement.evaluation || {
-		sumPro: 0,
-		sumCon: 0,
-		numberOfEvaluators: 0,
-		sumEvaluations: 0,
-		sumSquaredEvaluations: 0,
-	};
-	const avg =
-		numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
-	const consensusDisplay = Math.round(_consensus * 100);
-
-	const metrics = useMemo(() => {
-		if (!numberOfEvaluators || numberOfEvaluators <= 0) return null;
-		const meanSentiment = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
-		const likeMindedness = calcLikeMindedness(
-			sumEvaluations,
-			sumSquaredEvaluations,
-			numberOfEvaluators,
-		);
-
-		return {
-			meanSentiment: Math.round(meanSentiment * 100),
-			likeMindedness: Math.round(likeMindedness * 100),
-			consensusScore: consensusDisplay,
-		};
-	}, [sumEvaluations, sumSquaredEvaluations, numberOfEvaluators, consensusDisplay]);
-
-	useEffect(() => {
-		if (evaluationBarRef.current) {
-			const width = evaluationBarRef.current.offsetWidth;
-			setBarWidth(width);
-		}
-	}, []);
-
-	function barPosition(width: number, avg: number): number {
-		// Guard: not measured yet, or too narrow to position meaningfully.
-		if (width <= indicatorWidth) return 0;
-		// Clamp to the expected score range — out-of-range aggregates would
-		// otherwise push the indicator far outside the card (x-overflow).
-		const clamped = Math.max(-1, Math.min(1, avg));
-		const normalizedPosition = ((clamped + 1) / 2) * (width - indicatorWidth);
-
-		if (dir === 'ltr') {
-			return width - indicatorWidth - normalizedPosition;
-		}
-
-		return normalizedPosition;
-	}
-
-	function barColor(avg: number): string {
-		const colors = enhancedEvaluationsThumbs.map((thumb) => thumb.colorSelected);
-		const clamped = Math.max(-1, Math.min(1, avg));
-		const index = Math.round((1 - (clamped + 1) / 2) * (colors.length - 1));
-
-		return colors[index] || colors[0];
-	}
-
 	return (
 		<div className={`${styles.evaluation}`}>
 			<div className={styles['enhanced-evaluation']}>
-				<div className={styles['evaluation-thumbs']}>
-					{thumbs.map((evaluationThumb) => (
-						<EvaluationThumb
-							key={evaluationThumb.id}
-							evaluationThumb={evaluationThumb}
-							isActive={evaluationThumb.id === activeThumbId}
-							statement={statement}
-							enableEvaluation={enableEvaluation}
-							onEvaluate={handleEvaluate}
-						/>
-					))}
-				</div>
-				{showEvaluation && (
-					<Tooltip
-						content={
-							metrics ? (
-								<>
-									<div>
-										{t('Average score')}: {metrics.meanSentiment}%
-									</div>
-									<div>
-										{t('Like-mindedness')}: {metrics.likeMindedness}%
-									</div>
-									<div>
-										{t('Evaluators')}: {numberOfEvaluators}
-									</div>
-								</>
-							) : (
-								`${t('Evaluators')}: 0`
-							)
-						}
-						position="top"
-					>
-						<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
-							<div
-								className={styles['evaluation-bar__indicator']}
-								style={{
-									width: `${indicatorWidth}px`,
-									right: `${barPosition(barWidth, avg)}px`,
-									backgroundColor: barColor(avg),
-								}}
-							></div>
-						</div>
-					</Tooltip>
-				)}
-				{learning.evaluation > 0 && (
-					<div className={styles.explain}>
-						<div className={`${styles['evaluation-explain']}`}>
+				{/* Faces and their end labels are one unit, sized to the faces. If the
+				    labels are a sibling of the row instead, they stretch to the width
+				    of the whole card and "Disagree"/"Agree" drift away from the ends
+				    of the scale they name. */}
+				<div className={styles.scale}>
+					<div className={styles['evaluation-thumbs']}>
+						{thumbs.map((evaluationThumb) => (
+							<EvaluationThumb
+								key={evaluationThumb.id}
+								evaluationThumb={evaluationThumb}
+								isActive={evaluationThumb.id === activeThumbId}
+								statement={statement}
+								enableEvaluation={enableEvaluation}
+								onEvaluate={handleEvaluate}
+							/>
+						))}
+					</div>
+					{learning.evaluation > 0 && (
+						<div className={styles['evaluation-explain']}>
 							<span>{t('Disagree')}</span>
 							<span>{t('Agree')}</span>
 						</div>
-					</div>
-				)}
+					)}
+				</div>
+				{/* The three result numbers, spelled out. They used to live only in
+				    a hover tooltip on a colour bar, so touch users never saw them. */}
+				{showEvaluation && <ResultsStrip statement={statement} />}
 			</div>
-			<div
-				className={`${styles['evaluation-score']} ${consensusDisplay < 0 ? styles.negative : ''}`}
-			>
-				{showEvaluation && numberOfEvaluators >= DEFAULT_MIN_EVALUATORS ? (
-					<Tooltip
-						content={
-							metrics ? (
-								<>
-									<div>
-										{t('Consensus score')}: {metrics.consensusScore}
-									</div>
-									<div>
-										{t('Average score')}: {metrics.meanSentiment}%
-									</div>
-									<div>
-										{t('Like-mindedness')}: {metrics.likeMindedness}%
-									</div>
-									<div>
-										{t('Evaluators')}: {numberOfEvaluators}
-									</div>
-								</>
-							) : (
-								`${t('Evaluators')}: ${numberOfEvaluators}`
-							)
-						}
-						position="bottom"
-					>
-						<span
-							className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}
-						>
-							{consensusDisplay}
-						</span>
-					</Tooltip>
-				) : null}
-			</div>
-
-			<div />
 		</div>
 	);
 };
@@ -257,24 +122,34 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	const button = (
 		<button
 			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${!enableEvaluation ? styles.disabled : ''}`}
-			style={{
-				backgroundColor: isThumbActive ? evaluationThumb.colorSelected : evaluationThumb.color,
-				...(!enableEvaluation && isThumbActive
+			style={
+				!enableEvaluation && isThumbActive
 					? { opacity: 1, filter: 'none', transform: 'scale(1.2)' }
-					: {}),
-			}}
+					: undefined
+			}
 			onClick={enableEvaluation ? handleSetEvaluation : undefined}
 			disabled={!enableEvaluation}
 			aria-disabled={!enableEvaluation}
 			aria-label={enableEvaluation ? t(evaluationThumb.alt) : t('Voting disabled - view only')}
 		>
-			{evaluationThumb.emoji ? (
-				<span className={styles['evaluation-thumb__emoji']} aria-hidden="true">
-					{evaluationThumb.emoji}
-				</span>
-			) : (
-				<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
-			)}
+			{/* The coloured disc is a child, not the button itself. The button is
+			    a transparent 44px hit target (WCAG 2.5.5); if the fill and its ring
+			    were painted on the button, growing the target would grow the face
+			    into a large hollow circle with the glyph adrift inside it. */}
+			<span
+				className={styles['evaluation-thumb__face']}
+				style={{
+					backgroundColor: isThumbActive ? evaluationThumb.colorSelected : evaluationThumb.color,
+				}}
+			>
+				{evaluationThumb.emoji ? (
+					<span className={styles['evaluation-thumb__emoji']} aria-hidden="true">
+						{evaluationThumb.emoji}
+					</span>
+				) : (
+					<img src={evaluationThumb.svg} alt={evaluationThumb.alt} />
+				)}
+			</span>
 		</button>
 	);
 

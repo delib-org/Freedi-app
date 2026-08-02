@@ -14,7 +14,7 @@ import {
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { markOpenedInJoin } from '@/lib/joinSubscriptions';
-import { t, isRTL } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
@@ -22,6 +22,7 @@ import { QRShare } from '@/components/QRShare';
 import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { createDragReorder } from '@/lib/dragReorder';
+import { BrandLogo } from '@/components/BrandLogo';
 import type { Unsubscribe } from '@/lib/firebase';
 
 function getStatementBody(s: Statement): string | null {
@@ -156,7 +157,6 @@ export const MainHub: m.Component = {
 		const subs = subQuestionReorder.applyOrder(subsRaw, (s) => s.statementId);
 		const currentIds = subs.map((s) => s.statementId);
 		const accentColor = main.color || 'var(--terra-500)';
-		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 		const admin = isAdmin();
 		// Participants can open a sub-question only when the facilitator has
 		// switched on hub navigation; otherwise the cards stay inert and
@@ -168,16 +168,7 @@ export const MainHub: m.Component = {
 			// Admin-only return path to /. The BackButton self-gates on
 			// `isAdmin()`, so participants visiting via a share link never see it.
 			m(BackButton, { to: '/' }),
-			m('.main-hub__brand', [
-				m('img.main-hub__logo', {
-					src: logoSrc,
-					alt: 'WizCol',
-					width: 64,
-					height: 64,
-					loading: 'eager',
-					decoding: 'async',
-				}),
-			]),
+			m('.main-hub__brand', [m(BrandLogo, { size: 64, className: 'main-hub__logo' })]),
 			m(EditableTitle, {
 				statementId: main.statementId,
 				value: main.statement,
@@ -295,6 +286,86 @@ async function handleCreateSubmit(e: Event, mainId: string): Promise<void> {
 	}
 }
 
+// --- Inline SVG icons --------------------------------------------------------
+// Inlined (rather than imported assets) so they inherit `currentColor` from
+// the surrounding BEM class and follow every theme without an extra request.
+
+// Leading badge on a sub-question card: a white question mark inside a filled
+// round disc. The disc takes its colour from `currentColor` (set on the
+// wrapper class) and the glyph is painted in the paper colour so it reads as
+// white on the blue disc across themes.
+const QuestionMarkIcon = () =>
+	m(
+		'svg',
+		{
+			viewBox: '0 0 24 24',
+			'aria-hidden': 'true',
+			focusable: 'false',
+		},
+		[
+			m('circle', { cx: '12', cy: '12', r: '12', fill: 'currentColor' }),
+			m('path', {
+				d: 'M9.1 9.2a3 3 0 0 1 5.83 1c0 2-3 3-3 3',
+				fill: 'none',
+				stroke: 'var(--text-inverse, #fff)',
+				'stroke-width': '2',
+				'stroke-linecap': 'round',
+				'stroke-linejoin': 'round',
+			}),
+			m('path', {
+				d: 'M12 17.2h.01',
+				fill: 'none',
+				stroke: 'var(--text-inverse, #fff)',
+				'stroke-width': '2.4',
+				'stroke-linecap': 'round',
+			}),
+		],
+	);
+
+// Hide / unhide toggle icons (admin only). Replaces the previous 🙈 / 👁️
+// emoji, which rendered as a monkey face and read as decoration rather than
+// as a control.
+const EyeIcon = () =>
+	m(
+		'svg',
+		{
+			viewBox: '0 0 24 24',
+			fill: 'none',
+			stroke: 'currentColor',
+			'stroke-width': '2',
+			'stroke-linecap': 'round',
+			'stroke-linejoin': 'round',
+			'aria-hidden': 'true',
+			focusable: 'false',
+		},
+		[
+			m('path', { d: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z' }),
+			m('circle', { cx: '12', cy: '12', r: '3' }),
+		],
+	);
+
+const EyeOffIcon = () =>
+	m(
+		'svg',
+		{
+			viewBox: '0 0 24 24',
+			fill: 'none',
+			stroke: 'currentColor',
+			'stroke-width': '2',
+			'stroke-linecap': 'round',
+			'stroke-linejoin': 'round',
+			'aria-hidden': 'true',
+			focusable: 'false',
+		},
+		[
+			m('path', {
+				d: 'M10.6 6.2A9.9 9.9 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-2.5 3.2M6.3 7.8A17 17 0 0 0 2 12s3.6 6 10 6a9.7 9.7 0 0 0 3.4-.6',
+			}),
+			m('path', { d: 'M9.9 9.9a3 3 0 0 0 4.2 4.2' }),
+			m('path', { d: 'M3 3l18 18' }),
+		],
+	);
+
 function renderQuestionCard(
 	q: Statement,
 	mainId: string,
@@ -359,6 +430,7 @@ function renderQuestionCard(
 						'⋮⋮',
 					)
 				: null,
+			m('span.main-hub__question-card-icon', { 'aria-hidden': 'true' }, QuestionMarkIcon()),
 			m('.main-hub__question-card-body', [
 				m('.main-hub__question-title', q.statement),
 				(() => {
@@ -382,7 +454,7 @@ function renderQuestionCard(
 								void setSubQuestionHidden(q.statementId, !isHidden);
 							},
 						},
-						isHidden ? '👁️' : '🙈',
+						isHidden ? EyeIcon() : EyeOffIcon(),
 					)
 				: null,
 		],

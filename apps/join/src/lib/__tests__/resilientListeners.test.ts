@@ -10,19 +10,17 @@ interface FakeListener {
 const listeners: FakeListener[] = [];
 
 vi.mock('firebase/firestore', () => ({
-	onSnapshot: vi.fn((_target: unknown, onNext: FakeListener['onNext'], onError: FakeListener['onError']) => {
-		const unsubscribe = vi.fn();
-		listeners.push({ onNext, onError, unsubscribe });
+	onSnapshot: vi.fn(
+		(_target: unknown, onNext: FakeListener['onNext'], onError: FakeListener['onError']) => {
+			const unsubscribe = vi.fn();
+			listeners.push({ onNext, onError, unsubscribe });
 
-		return unsubscribe;
-	}),
+			return unsubscribe;
+		},
+	),
 }));
 
-import {
-	resilientOnSnapshot,
-	forceResyncAllListeners,
-	_registrySize,
-} from '../resilientListeners';
+import { resilientOnSnapshot, forceResyncAllListeners, _registrySize } from '../resilientListeners';
 import type { DocumentData, Query } from 'firebase/firestore';
 
 const fakeQuery = {} as Query<DocumentData>;

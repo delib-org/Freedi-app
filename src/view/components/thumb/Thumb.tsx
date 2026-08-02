@@ -23,6 +23,10 @@ interface ThumbProps {
 	setConVote: React.Dispatch<SetStateAction<number>>;
 	setProVote: React.Dispatch<SetStateAction<number>>;
 	enableEvaluation?: boolean;
+	/** Tally for this side, rendered inside the control. Counts used to sit
+	 *  outside the pair as bare numbers, which read as "0 😞 😊 0" — a number
+	 *  with no visible owner. Passing it here binds each count to its button. */
+	count?: number;
 }
 
 const Thumb: FC<ThumbProps> = ({
@@ -32,6 +36,7 @@ const Thumb: FC<ThumbProps> = ({
 	setConVote,
 	setProVote,
 	enableEvaluation = true,
+	count,
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useTranslation();
@@ -81,17 +86,29 @@ const Thumb: FC<ThumbProps> = ({
 	const isUpVote = upDown === 'up';
 	const isActive = isUpVote ? isSmileActive : isFrownActive;
 
+	const voteLabel = isUpVote ? t('Vote up') : t('Vote down');
+
 	const button = (
 		<button
-			className={`${styles.thumb} ${isActive ? '' : styles.inactive} ${!enableEvaluation ? styles.disabled : ''}`}
+			className={`${styles.thumb} ${isActive ? styles.active : styles.inactive} ${!enableEvaluation ? styles.disabled : ''}`}
 			onClick={enableEvaluation ? () => handleVote(isUpVote) : undefined}
 			disabled={!enableEvaluation}
 			aria-disabled={!enableEvaluation}
+			aria-pressed={enableEvaluation ? isActive : undefined}
 			aria-label={
-				enableEvaluation ? (isUpVote ? 'Vote up' : 'Vote down') : t('Voting disabled - view only')
+				count !== undefined
+					? `${voteLabel} (${count})`
+					: enableEvaluation
+						? voteLabel
+						: t('Voting disabled - view only')
 			}
 		>
 			{isUpVote ? <SmileIcon /> : <FrownIcon />}
+			{count !== undefined && (
+				<span className={styles.count} aria-hidden>
+					{count}
+				</span>
+			)}
 		</button>
 	);
 

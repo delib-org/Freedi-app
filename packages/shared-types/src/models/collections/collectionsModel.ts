@@ -58,6 +58,8 @@ export enum Collections {
     evidencePosts = 'evidencePosts',
     evidenceVotes = 'evidenceVotes',
     userEvaluations = 'userEvaluations',
+    commentVerdicts = 'commentVerdicts',
+    helperPoints = 'helperPoints',
     surveys = 'surveys',
     surveyProgress = 'surveyProgress',
     adminInvitations = 'adminInvitations',
@@ -104,4 +106,8 @@ export enum Collections {
     agoraScores = 'agoraScores',
     agoraValueAnswers = 'agoraValueAnswers',
     agoraCharacterReviews = 'agoraCharacterReviews',
+
+    // Israeli Odyssey pre-election civic-voice game
+    odysseyGames = 'odysseyGames',
+    odysseyJourneys = 'odysseyJourneys',
 }

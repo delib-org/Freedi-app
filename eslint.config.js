@@ -77,6 +77,11 @@ export default [
 			'@typescript-eslint/no-explicit-any': 'error',
 			'@typescript-eslint/no-non-null-assertion': 'off',
 			'no-duplicate-case': 'error',
+			// Base `no-redeclare` doesn't understand TS function overloads or
+			// declaration merging, so it false-positives on every overload
+			// signature. The TS-aware version catches genuine redeclarations.
+			'no-redeclare': 'off',
+			'@typescript-eslint/no-redeclare': 'error',
 			'newline-before-return': 'error',
 			'import/newline-after-import': ['error', { count: 1 }],
 			'no-console': ['error', { allow: ['error', 'warn', 'info'] }],

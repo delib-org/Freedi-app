@@ -1,4 +1,6 @@
 .notificationBtn {
 	position: relative;
-	color: var(--text-negative);
+	// Inherit the header's contrast ink (set on the header bar) so the mail
+	// icon stays legible on light accents (e.g. option-yellow) too.
+	color: inherit;
 }

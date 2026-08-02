@@ -394,6 +394,7 @@ export default function ParagraphCard({
             isAnonymous={isAnonymous}
             positiveEvaluations={paragraph.positiveEvaluations}
             negativeEvaluations={paragraph.negativeEvaluations}
+            isHeader={isHeader}
           />
         </div>
       )}

@@ -1,4 +1,13 @@
 import m from 'mithril';
+// Self-hosted so the PWA precaches them: classroom devices get the real faces
+// offline, and no student's IP reaches a third-party font CDN.
+// Assistant = body. Alef = titles & buttons; it ships 400/700 only, so never
+// ask for 500/600 with --font-display or the browser fakes the bold.
+import '@fontsource/assistant/400.css';
+import '@fontsource/assistant/600.css';
+import '@fontsource/assistant/700.css';
+import '@fontsource/alef/400.css';
+import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
 import { initAuth, getUserState } from './lib/user';
@@ -14,6 +23,22 @@ import { TopicEditor } from './views/teacher/TopicEditor';
 
 initAuth();
 initI18n();
+
+// A PWA service worker left behind by a production build served on this
+// origin hijacks the dev server and pins the app to a stale precache
+// (symptom: code changes "never arrive"). Dev always evicts it.
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+	void navigator.serviceWorker.getRegistrations().then((registrations) => {
+		registrations.forEach((registration) => void registration.unregister());
+	});
+	if ('caches' in window) {
+		void caches.keys().then((keys) => {
+			keys
+				.filter((key) => key.startsWith('workbox-') || key.startsWith('agora-'))
+				.forEach((key) => void caches.delete(key));
+		});
+	}
+}
 
 // Dev-only introspection for e2e debugging
 if (import.meta.env.DEV) {

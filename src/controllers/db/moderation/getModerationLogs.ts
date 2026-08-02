@@ -5,13 +5,21 @@ import { logError } from '@/utils/errorHandling';
 
 const MODERATION_QUERY_LIMIT = 50;
 
+function isMissingIndexError(error: unknown): boolean {
+	const code = (error as { code?: string })?.code;
+	const message = error instanceof Error ? error.message : String(error);
+
+	return code === 'failed-precondition' && message.includes('requires an index');
+}
+
 /**
  * Fetches moderation logs for a specific statement (by topParentId).
  * Returns the most recent rejections first.
  */
 export async function getModerationLogs(topParentId: string): Promise<ModerationLog[]> {
+	const moderationRef = collection(DB, Collections.moderationLogs);
+
 	try {
-		const moderationRef = collection(DB, Collections.moderationLogs);
 		const q = query(
 			moderationRef,
 			where('topParentId', '==', topParentId),
@@ -20,14 +28,36 @@ export async function getModerationLogs(topParentId: string): Promise<Moderation
 		);
 
 		const snapshot = await getDocs(q);
-		const logs: ModerationLog[] = [];
 
-		snapshot.forEach((doc) => {
-			logs.push(doc.data() as ModerationLog);
-		});
-
-		return logs;
+		return snapshot.docs.map((doc) => doc.data() as ModerationLog);
 	} catch (error) {
+		// The `topParentId + createdAt` composite index may not exist yet in a
+		// given environment. Fall back to an equality-only query (which needs no
+		// composite index) and order client-side rather than showing nothing.
+		if (isMissingIndexError(error)) {
+			console.info(
+				'[moderation] Composite index missing for moderationLogs; using unordered fallback',
+			);
+
+			try {
+				const fallbackSnapshot = await getDocs(
+					query(moderationRef, where('topParentId', '==', topParentId)),
+				);
+
+				return fallbackSnapshot.docs
+					.map((doc) => doc.data() as ModerationLog)
+					.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
+					.slice(0, MODERATION_QUERY_LIMIT);
+			} catch (fallbackError) {
+				logError(fallbackError, {
+					operation: 'moderation.getModerationLogs.fallback',
+					metadata: { topParentId },
+				});
+
+				return [];
+			}
+		}
+
 		logError(error, {
 			operation: 'moderation.getModerationLogs',
 			metadata: { topParentId },
