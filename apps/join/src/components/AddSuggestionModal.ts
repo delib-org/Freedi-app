@@ -7,6 +7,9 @@ import {
 	updateBroadcastText,
 	stopBroadcast,
 	isBroadcasting,
+	getMyDraft,
+	getRecentReactions,
+	getWatcherCount,
 } from '@/lib/liveDrafts';
 
 interface AddSuggestionModalAttrs {
@@ -93,6 +96,8 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
 							])
 						: null,
 
+					renderLiveStatus(),
+
 					m('.modal__actions', [
 						m('button.btn.btn--secondary.btn--small', { onclick: onClose }, t('form.cancel')),
 						m(
@@ -109,6 +114,39 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
 		);
 	},
 };
+
+/** While broadcasting, show the writer what's coming back from the table:
+ *  how many people have the watch view open, and the reactions they send.
+ *  Nothing renders when the broadcast is off. */
+function renderLiveStatus(): m.Children {
+	if (!isBroadcasting()) return null;
+
+	const watcherCount = getWatcherCount();
+	const myDraft = getMyDraft();
+	const recentReactions = myDraft ? getRecentReactions(myDraft) : [];
+
+	const watchText =
+		watcherCount === 0
+			? t('live.status.broadcasting')
+			: watcherCount === 1
+				? t('live.watching.one')
+				: t('live.watching.many', { count: String(watcherCount) });
+
+	return m('.modal__live-status', { role: 'status', 'aria-live': 'polite' }, [
+		m('.modal__live-status-row', [
+			m('span.modal__live-status-eye', { 'aria-hidden': 'true' }, watcherCount > 0 ? '👀' : '📡'),
+			m('span.modal__live-status-text', watchText),
+		]),
+		recentReactions.length > 0
+			? m(
+					'.modal__live-status-chips',
+					recentReactions.map((r) =>
+						m('span.modal__live-status-chip', { key: r.reactorId }, `${r.emoji} ${r.displayName}`),
+					),
+				)
+			: null,
+	]);
+}
 
 async function handleSubmit(onClose: () => void, asOrganizer: boolean): Promise<void> {
 	const trimmed = text.trim();

@@ -5538,3 +5538,50 @@ $facilitator-panel-width: 300px;
     animation: none;
   }
 }
+
+// Feedback strip for the broadcaster inside the add-suggestion modal:
+// watcher count + incoming reaction chips, visible only while sharing live.
+.modal__live-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--terra-50);
+  border-radius: var(--radius-md);
+  animation: modal-fade-in var(--dur-base) var(--ease-out);
+}
+
+.modal__live-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.modal__live-status-eye {
+  font-size: var(--font-size-base);
+}
+
+.modal__live-status-text {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink-muted);
+}
+
+.modal__live-status-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.modal__live-status-chip {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--ink-muted);
+  background: var(--paper);
+  border: 1px solid var(--terra-100);
+  border-radius: var(--radius-full);
+  padding: 2px var(--space-sm);
+  animation: modal-fade-in var(--dur-base) var(--ease-out);
+}

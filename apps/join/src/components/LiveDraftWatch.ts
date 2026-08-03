@@ -1,6 +1,13 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
-import { getLiveDrafts, getRecentReactions, sendReaction, LiveDraft } from '@/lib/liveDrafts';
+import {
+	getLiveDrafts,
+	getRecentReactions,
+	sendReaction,
+	startWatching,
+	stopWatching,
+	LiveDraft,
+} from '@/lib/liveDrafts';
 
 interface LiveDraftWatchAttrs {
 	onClose: () => void;
@@ -17,6 +24,16 @@ const REACTION_EMOJI = ['👍', '❤️', '💡', '🔥'];
  *  instance stays mounted underneath with its subscriptions intact, and
  *  Mithril's component-instance reuse never gets involved. */
 export const LiveDraftWatch: m.Component<LiveDraftWatchAttrs> = {
+	// Presence bookends: while the overlay is open the viewer is counted as
+	// a watcher, so writers can see how many people are looking.
+	oncreate() {
+		void startWatching();
+	},
+
+	onremove() {
+		void stopWatching();
+	},
+
 	view(vnode) {
 		const { onClose } = vnode.attrs;
 		const drafts = getLiveDrafts({ excludeSelf: true });

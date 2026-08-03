@@ -169,6 +169,9 @@ const nl: Record<string, string> = {
 	'live.thinking': '{{name}} denkt na…',
 	'live.ended': 'Het live concept is beëindigd',
 	'live.reaction.aria': '{{emoji}} sturen naar {{name}}',
+	'live.status.broadcasting': 'Live aan het uitzenden',
+	'live.watching.one': '1 persoon kijkt mee',
+	'live.watching.many': '{{count}} mensen kijken mee',
 	'facilitator.toggle.showEvaluation': 'Beoordeling tonen',
 	'facilitator.toggle.showEvaluation.help':
 		'Open de rij met 5 gezichten op elke optiekaart zodat deelnemers kunnen stemmen.',

@@ -154,6 +154,9 @@ const fa: Record<string, string> = {
 	'live.thinking': '{{name}} در حال فکر کردن است…',
 	'live.ended': 'پیش‌نویس زنده پایان یافت',
 	'live.reaction.aria': 'ارسال {{emoji}} به {{name}}',
+	'live.status.broadcasting': 'در حال پخش زنده',
+	'live.watching.one': 'یک نفر تماشا می‌کند',
+	'live.watching.many': '{{count}} نفر تماشا می‌کنند',
 	'facilitator.toggle.showEvaluation': 'نمایش ارزیابی',
 	'facilitator.toggle.showEvaluation.help':
 		'باز کردن ردیف ۵ صورت روی هر کارت گزینه تا شرکت‌کنندگان بتوانند رأی دهند.',

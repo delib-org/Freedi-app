@@ -42,6 +42,11 @@ const STALE_MS = 120_000;
 const REACTION_FRESH_MS = 15_000;
 const REACTION_THROTTLE_MS = 1_000;
 const MAX_TEXT = 10_000;
+// Watcher presence (who has the watch overlay open) so the writer knows the
+// table is looking. Heartbeat while the overlay is open; stale after three
+// missed beats.
+const WATCHER_HEARTBEAT_MS = 30_000;
+const WATCHER_STALE_MS = 90_000;
 
 // Same palette as the Sign app's live editing sessions (apps cannot import
 // across apps, so the eight values are duplicated by design).
@@ -98,6 +103,13 @@ let myDisconnect: OnDisconnect | null = null;
 let pendingText: string | null = null;
 let lastReactionAt = 0;
 let visibilityHandler: (() => void) | null = null;
+// Watcher presence state — `watchers` maps uid → lastActive for everyone
+// with the watch overlay open on this question.
+let watchersUnsub: RtdbUnsubscribe | null = null;
+let watchers: Record<string, number> = {};
+let watching = false;
+let watchHeartbeatTimer: ReturnType<typeof setInterval> | null = null;
+let watchDisconnect: OnDisconnect | null = null;
 
 export function getUserColor(userId: string): string {
 	const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -162,16 +174,43 @@ export function initLiveDrafts(questionId: string): void {
 			console.error('[liveDrafts] listener error:', error);
 		},
 	);
+	watchersUnsub = rtdbOnValue(
+		rtdbRef(rtdb, `liveDraftWatchers/${questionId}`),
+		(snapshot) => {
+			watchers = parseWatchers(snapshot.val());
+			m.redraw();
+		},
+		(error) => {
+			console.error('[liveDrafts] watchers listener error:', error);
+		},
+	);
+}
+
+function parseWatchers(value: unknown): Record<string, number> {
+	const parsed: Record<string, number> = {};
+	if (!value || typeof value !== 'object') return parsed;
+
+	for (const [uid, raw] of Object.entries(value as Record<string, { lastActive?: unknown }>)) {
+		if (raw && typeof raw.lastActive === 'number') parsed[uid] = raw.lastActive;
+	}
+
+	return parsed;
 }
 
 export function teardownLiveDrafts(): void {
 	if (broadcasting) void stopBroadcast();
+	if (watching) void stopWatching();
 	if (unsubscribe) {
 		unsubscribe();
 		unsubscribe = null;
 	}
+	if (watchersUnsub) {
+		watchersUnsub();
+		watchersUnsub = null;
+	}
 	currentQuestionId = null;
 	drafts = {};
+	watchers = {};
 	lastReactionAt = 0;
 }
 
@@ -311,6 +350,85 @@ export function getLiveDrafts(opts?: { excludeSelf?: boolean }): LiveDraft[] {
 	return Object.values(drafts)
 		.filter((d) => d.lastUpdate > cutoff && d.userId !== selfUid)
 		.sort((a, b) => a.userId.localeCompare(b.userId));
+}
+
+/** The caller's own live draft (with incoming reactions), or null when not
+ *  broadcasting / no snapshot yet. Lets the composer show the writer what
+ *  the table is sending them. */
+export function getMyDraft(): LiveDraft | null {
+	const uid = getCreator()?.uid;
+	if (!uid) return null;
+
+	return drafts[uid] ?? null;
+}
+
+function myWatcherPath(): string | null {
+	const creator = getCreator();
+	if (!currentQuestionId || !creator) return null;
+
+	return `liveDraftWatchers/${currentQuestionId}/${creator.uid}`;
+}
+
+/** Register presence while the watch overlay is open, so writers can see
+ *  how many people are looking. Heartbeat keeps it fresh; onDisconnect and
+ *  stopWatching() clear it. */
+export async function startWatching(): Promise<void> {
+	const rtdb = getRtdb();
+	const path = myWatcherPath();
+	if (!rtdb || !path || watching) return;
+
+	const node = rtdbRef(rtdb, path);
+
+	try {
+		await rtdbSet(node, { lastActive: Date.now() });
+		watchDisconnect = rtdbOnDisconnect(node);
+		await watchDisconnect.remove();
+
+		watching = true;
+		watchHeartbeatTimer = setInterval(() => {
+			const p = myWatcherPath();
+			if (!p || !watching) return;
+			void rtdbUpdate(rtdbRef(rtdb, p), { lastActive: Date.now() }).catch((error: unknown) => {
+				console.error('[liveDrafts] watcher heartbeat failed:', error);
+			});
+		}, WATCHER_HEARTBEAT_MS);
+	} catch (error) {
+		console.error('[liveDrafts] startWatching failed:', error);
+	}
+}
+
+export async function stopWatching(): Promise<void> {
+	if (!watching) return;
+	watching = false;
+
+	if (watchHeartbeatTimer) {
+		clearInterval(watchHeartbeatTimer);
+		watchHeartbeatTimer = null;
+	}
+
+	const rtdb = getRtdb();
+	const path = myWatcherPath();
+
+	try {
+		if (watchDisconnect) {
+			await watchDisconnect.cancel();
+			watchDisconnect = null;
+		}
+		if (rtdb && path) await rtdbRemove(rtdbRef(rtdb, path));
+	} catch (error) {
+		console.error('[liveDrafts] stopWatching failed:', error);
+	}
+}
+
+/** How many *other* people currently have the watch overlay open on this
+ *  question (stale entries filtered out). */
+export function getWatcherCount(): number {
+	const cutoff = Date.now() - WATCHER_STALE_MS;
+	const selfUid = getCreator()?.uid;
+
+	return Object.entries(watchers).filter(
+		([uid, lastActive]) => lastActive > cutoff && uid !== selfUid,
+	).length;
 }
 
 /** Send (or replace) my reaction on a broadcaster's draft. */

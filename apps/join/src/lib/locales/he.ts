@@ -189,6 +189,9 @@ const he: Record<string, string> = {
 	'live.thinking': '{{name}} חושב/ת…',
 	'live.ended': 'השידור החי הסתיים',
 	'live.reaction.aria': 'שליחת {{emoji}} אל {{name}}',
+	'live.status.broadcasting': 'משדר/ת בשידור חי',
+	'live.watching.one': 'אדם אחד צופה',
+	'live.watching.many': '{{count}} אנשים צופים',
 	'facilitator.toggle.showEvaluation': 'הצגת הערכה',
 	'facilitator.toggle.showEvaluation.help':
 		'פתיחת שורת חמשת הפרצופים על כל כרטיס כדי שמשתתפים יוכלו להצביע.',
