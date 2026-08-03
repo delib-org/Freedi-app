@@ -48,6 +48,10 @@ export interface AgoraProposal {
 }
 
 export interface DeliberationState {
+	/** First statements snapshot arrived — "no proposals" is now a fact, not a gap */
+	statementsLoaded: boolean;
+	/** First evaluations snapshot arrived — myRatings counts are trustworthy */
+	evaluationsLoaded: boolean;
 	proposals: AgoraProposal[];
 	/** proposalId → improvement suggestions */
 	suggestions: Record<string, AgoraProposal[]>;
@@ -66,6 +70,8 @@ export interface DeliberationState {
 }
 
 const state: DeliberationState = {
+	statementsLoaded: false,
+	evaluationsLoaded: false,
 	proposals: [],
 	suggestions: {},
 	myRatings: {},
@@ -121,6 +127,7 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			Object.values(suggestions).forEach((list) => list.sort((a, b) => a.createdAt - b.createdAt));
 			state.proposals = proposals;
 			state.suggestions = suggestions;
+			state.statementsLoaded = true;
 			// Close the collaboration loop: tell helpers their proposal moved
 			detectHelpedImprovements(sessionId, userId);
 			m.redraw();
@@ -161,6 +168,7 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			});
 			state.myRatings = ratings;
 			state.studentEvalTimes = evalTimes;
+			state.evaluationsLoaded = true;
 			m.redraw();
 		},
 		(error) => {
@@ -216,6 +224,8 @@ export function stopDeliberationListeners(): void {
 	unsubscribers.forEach((unsubscribe) => unsubscribe());
 	unsubscribers = [];
 	listeningKey = '';
+	state.statementsLoaded = false;
+	state.evaluationsLoaded = false;
 	state.proposals = [];
 	state.suggestions = {};
 	state.myRatings = {};

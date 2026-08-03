@@ -10,6 +10,7 @@ import '@fontsource/alef/400.css';
 import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
+import './styles/chat.scss';
 import { initAuth, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { getSessionState } from './lib/session';

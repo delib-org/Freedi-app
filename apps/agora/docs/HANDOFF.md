@@ -38,31 +38,48 @@ when to advance. Participant count is students only (AI raters filtered).
 scenes (framing/perspectives/needs, self-paced, dialogue reveals) → **needs
 board** (both characters' needs side by side; reachable later via one tap
 everywhere) → positioning (slider labeled with character names + camp) →
-**deliberation: 5 self-paced laps** of *my proposal → rate 3 → help someone*
-→ results.
+**deliberation: a guided CHAT** (propose → rate classmates one at a time →
+improvement prompts → free-choice activity menu) → results.
 
-Key deliberation mechanics ("Places, not modes" redesign 2026-07-28 — the
-shared mine/help skeleton is GONE, playtests showed color alone couldn't
-separate them. Each cycle step is now a distinct PLACE with its own
-`placeBanner()` scene (mine = blue workbench 🛠️, rate = the square ⚖️,
-help = orange market stand 🤝), a `.shell--place-*` background wash, and a
-travel splash (`.delib-splash`) on step/lap changes. On "help" the
-classmate's proposal is a read-only `.stand-poster` (pinned parchment,
-orange top bar) and my input is a smaller `.advice-note` sticky note —
-no more twin textareas. A persistent `JourneyStrip` (all stages) + a
-`StageTransition` camera interstitial on teacher stage-advances complete
-the orientation layer; the ScoreHud was re-skinned to a light "Day Board").
-**Mine | Others tabs** (`delib-nav`: fixed bottom bar on
-mobile ≤700px, top tab row on desktop) let the student move freely between
-their own workshop and classmates' proposals: "Mine" during rate/help is a
-PEEK (lap progression untouched, badge shows unseen open suggestions);
-"Others" from the mine step advances to rating; after all laps it means
-"keep helping". Hidden on lap 1 until the first proposal is written.
-- **My proposal workshop** (flattened 2026-07-13, Tal's request — no tabs):
-  scoreboard panel (camp columns + bridge-power meter) → my proposal in an
-  ALWAYS-EDITABLE box inside the gold card (live text pre-filled; "Update
-  proposal" enabled only when changed, celebrates + verdicts go stale) →
-  "suggestions received" stream directly under it, newest first, with
+Key deliberation mechanics ("Chat-guided square" rebuild 2026-08-03 — the
+"places" UI (placeBanner scenes, shell washes, travel splashes, delib-nav
+tabs, the 5-lap cycle) is GONE; students still couldn't reliably separate
+"mine" from "others", so ownership is now stated CONVERSATIONALLY. A
+scripted guide persona (🦉, `chat.guide_name`, i18n templates with rotating
+phrasings — NOT AI-generated) drives `views/DeliberationChat.ts`:
+1. intro → proposal composer (needs board one tap away),
+2. thanks → deals classmates' proposals ONE AT A TIME as rate cards, each
+   verbally framed "a classmate's 📙 + number"; the student's echoed
+   words/ratings sit in blue --mine bubbles on their side,
+3. any rating below +1 (everything except 😍) → "how could it improve?"
+   quick-reply → optional improvement composer (this is now the main path
+   into helping; there is no separate help lap),
+4. after a soft goal of 3 ratings (guided opening auto-deals) → the MENU:
+   rate more (live count) / what my proposal received (badge = open
+   suggestions) / improve mine / ask the characters (stale dot) / proposals
+   I helped (change badge) — options appear conditionally, plus one nudge
+   line (priority: opening ratings → fresh feedback → unasked characters →
+   under-rated proposals → generic).
+Engine: `lib/chatFlow.ts` — pure state machine (no Mithril/Firebase; 37
+vitest tests), module singleton, sessionStorage persistence
+(`agora_{sessionId}_chatflow` + `_chatlog`, transcript stores i18n KEYS so
+a language switch re-renders the whole log; resolved variant keys replay
+the same phrasing after refresh). `state.dealtIds` guards against the
+evaluations-snapshot lag re-dealing a just-rated proposal. Bootstrap waits
+for `statementsLoaded && evaluationsLoaded` (new flags in proposals.ts);
+with no stored chat but an existing proposal → "welcome back" straight to
+the menu. Cards in the transcript persist only REFS and re-render from
+live state (old cards inert via `.chat-card--inert`, rate cards stay
+readable with the chosen emoji highlighted). Typing indicator (550ms per
+guide line, view-only, instant under reduced-motion), auto-scroll only
+when already near the bottom. `JourneyStrip` + `StageTransition` +
+`ScoreHud` unchanged (HUD step mapped from chat phase).
+- **My proposal card** (menu → improve mine): my proposal in an
+  ALWAYS-EDITABLE box (live text pre-filled; "Update
+  proposal" enabled only when changed, celebrates + verdicts go stale).
+  **My feedback card** (menu → my feedback): scoreboard panel (camp
+  columns + bridge-power meter + aggregate ratings-moved line) →
+  "suggestions received" stream, newest first, with
   "I'll implement / Thanks / No thanks" (declined — quiet, no points;
   accepting celebrates the suggester with a glitter popup; the edit box is
   right above for weaving the idea in) → ask-the-characters buttons
@@ -78,25 +95,25 @@ PEEK (lap progression untouched, badge shows unseen open suggestions);
   plus `agoraWritingAssistant` remain deployed but uncalled (keep both in
   source or deploys will demand a functions:delete).
 - **The collaboration loop (2026-07-13)**: helper B and owner A iterate.
-  B's sent suggestions live in a "Proposals I helped" section (help step +
-  done screen): live status chips (the acknowledgment), the proposal's
+  B's sent suggestions live in the "Proposals I helped" menu branch: live
+  status chips (the acknowledgment), the proposal's
   CURRENT text with an "improved since your idea" marker (compared against
   suggestion.createdAt — NOT lastUpdate, which resolution bumps), an inline
   compact re-rate scale (overwrites the evaluation; the onWrite bridging
-  trigger diffs before/after) and a FREE follow-up box (no lap advance).
-  B gets a local toast + an Others-tab badge when a helped proposal is
+  trigger diffs before/after) and a FREE follow-up box.
+  B gets a local toast + a menu badge when a helped proposal is
   edited (client-side detection, sessionStorage watermark — no backend).
   A sees an AGGREGATE-ONLY "N ratings updated since your last improvement"
   line in the scoreboard (studentEvalTimes from ONE session-wide
   evaluations listener; AI raters excluded via isAgoraAiUid; individual
   votes stay anonymous by design — Tal's decision).
 - **Rate**: five-level emoji scale (−1…+1 half steps), least-rated-first
-  candidate ordering with per-student tiebreak, 3 per lap.
-- **Help**: same skeleton — their scoreboard, NEUTRAL hero card ("Proposal
-  by <anon>" + ↻ next proposal), tabs [My suggestion | AI help | Needs];
-  suggestion tab asks "How could this proposal serve BOTH camps better?",
-  AI help = phrase-my-suggestion. One suggestion per lap,
-  fewest-open-suggestions targets first.
+  candidate ordering with per-student tiebreak (`selectCandidates` in
+  chatFlow.ts); the guided opening asks for 3, then rating continues
+  through the menu while candidates remain.
+- **Helping** now happens through the improvement prompt after a
+  below-top rating ("How could this proposal serve BOTH camps better?" +
+  don't-attack hint) and through follow-ups in the helped branch.
 - **Results**: three outcomes — success / honest disagreement (dignified
   "dusk" map + achievement framing) / collapse — plus a warm AI class
   debrief (what went well / what to try next time). Class score = 0.45
@@ -134,8 +151,10 @@ number, never names.
 ## Architecture cheat-sheet
 
 - **Client**: `apps/agora/src` — `views/GameController.ts` (student stage
-  router + world strip), `views/Deliberation.ts` (the cycle; cycle state in
-  sessionStorage `agora_{sessionId}_cycle`), `views/teacher/TeacherSession.ts`,
+  router + world strip), `views/DeliberationChat.ts` (the guided chat) +
+  `lib/chatFlow.ts` (conversation engine; state in sessionStorage
+  `agora_{sessionId}_chatflow`/`_chatlog`) + `components/ChatBubble.ts` +
+  `styles/chat.scss`, `views/teacher/TeacherSession.ts`,
   `lib/session.ts` (single session+participants listener; **filters `isAI`**),
   `lib/proposals.ts` (deliberation listeners + writes), `lib/celebration.ts`
   + `components/Celebration.ts`, `components/NeedsBoard.ts`, `components/EraMap.ts`

@@ -1,0 +1,281 @@
+/*
+ * Deliberation chat — the guided conversation that replaced the "places"
+ * UI. Ownership color law holds everywhere: blue --mine = the student's
+ * own words/proposal (📘), orange --peer = a classmate's (📙); the guide
+ * speaks from parchment. Logical properties only (Hebrew-first RTL).
+ */
+
+.chat-log {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	width: 100%;
+	max-width: 640px;
+	margin-inline: auto;
+	padding-block-end: var(--space-2xl);
+}
+
+/* ---------------------------------------------------------------- bubbles */
+
+.chat-bubble {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--space-sm);
+	max-width: 88%;
+
+	&--guide {
+		align-self: flex-start;
+	}
+
+	&--mine {
+		align-self: flex-end;
+	}
+
+	&__avatar {
+		flex: 0 0 auto;
+		width: 36px;
+		height: 36px;
+		display: grid;
+		place-items: center;
+		font-size: 1.25rem;
+		background: var(--parchment);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		box-shadow: var(--shadow-card);
+
+		&--ghost {
+			background: none;
+			border: none;
+			box-shadow: none;
+		}
+	}
+
+	&__side {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__sender {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		padding-inline-start: var(--space-sm);
+	}
+
+	&__body {
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-lg);
+		font-size: var(--font-size-base);
+		line-height: 1.45;
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+	}
+
+	&--guide &__body {
+		background: var(--parchment);
+		color: var(--text-primary);
+		border: 1px solid var(--border-subtle);
+		border-start-start-radius: var(--radius-sm);
+	}
+
+	&--mine &__body {
+		background: var(--mine);
+		color: var(--text-on-lantern);
+		border-end-end-radius: var(--radius-sm);
+		box-shadow: var(--glow-lantern);
+	}
+
+	/* The student's echoed rating: emoji + label inside their blue bubble */
+	&__rating {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+
+		.chat-bubble__rating-emoji {
+			font-size: 1.35rem;
+			line-height: 1;
+		}
+	}
+}
+
+/* typing dots */
+.chat-bubble__body--typing {
+	display: inline-flex;
+	gap: 5px;
+	padding-block: 14px;
+}
+
+.chat-typing__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: var(--radius-full);
+	background: var(--text-muted);
+	animation: chat-typing 1s ease-in-out infinite;
+
+	&:nth-child(2) {
+		animation-delay: 0.15s;
+	}
+
+	&:nth-child(3) {
+		animation-delay: 0.3s;
+	}
+}
+
+@keyframes chat-typing {
+	0%,
+	60%,
+	100% {
+		transform: translateY(0);
+		opacity: 0.45;
+	}
+
+	30% {
+		transform: translateY(-4px);
+		opacity: 1;
+	}
+}
+
+/* ------------------------------------------------------------------ cards */
+
+/* An embedded interactive card rides full-width under the guide's line */
+.chat-card {
+	align-self: stretch;
+	max-width: 100%;
+	animation: chat-card-in var(--motion-base) ease-out;
+
+	/* Frozen history: still readable, clearly not the live question */
+	&--inert {
+		opacity: 0.72;
+		pointer-events: none;
+	}
+}
+
+@keyframes chat-card-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* The composer (proposal / improvement) */
+.chat-composer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	textarea {
+		width: 100%;
+	}
+
+	&__actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--space-sm);
+	}
+
+	/* A sent composer shows the text it delivered, nothing editable */
+	&__sent {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+}
+
+/* The menu: "what would you like to do?" quick-reply buttons */
+.chat-menu {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__nudge {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		margin: 0;
+	}
+
+	&__options {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__option {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-md);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		background: var(--bg-card-solid);
+		color: var(--lantern-glow);
+		border: 1.5px solid var(--border-lantern);
+		border-radius: var(--radius-full);
+		cursor: pointer;
+		transition: background var(--motion-fast) ease;
+
+		&:hover {
+			background: var(--bg-inset);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+	}
+
+	&__badge {
+		display: inline-grid;
+		place-items: center;
+		min-width: 20px;
+		height: 20px;
+		padding-inline: 5px;
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		color: var(--text-on-lantern);
+		background: var(--peer);
+		border-radius: var(--radius-full);
+	}
+
+	&__dot {
+		width: 9px;
+		height: 9px;
+		background: var(--peer);
+		border-radius: var(--radius-full);
+	}
+}
+
+/* The improve / skip quick replies after a low rating */
+.chat-choice {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+	justify-content: flex-end;
+}
+
+/* The back-to-menu ghost row at the foot of every branch card */
+.chat-back {
+	display: flex;
+	justify-content: center;
+	margin-block-start: var(--space-sm);
+}
+
+/* The rate card lives inside a chat card but keeps its .card chrome */
+.chat-card .card {
+	margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chat-card {
+		animation: none;
+	}
+
+	.chat-typing__dot {
+		animation: none;
+	}
+}
