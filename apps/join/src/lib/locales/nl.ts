@@ -156,6 +156,19 @@ const nl: Record<string, string> = {
 	'facilitator.toggle.allowAdd': 'Nieuwe opties toestaan',
 	'facilitator.toggle.allowAdd.help':
 		'Wanneer uit, is de optielijst vergrendeld — er kunnen geen nieuwe opties worden toegevoegd.',
+	'facilitator.toggle.liveDraft': 'Live concept delen',
+	'facilitator.toggle.liveDraft.help':
+		'Deelnemers kunnen hun voorstel uitzenden terwijl ze typen, zodat de zaal kan helpen het vorm te geven.',
+	'live.share_toggle': 'Mijn concept live delen',
+	'live.share_hint': 'Wie deze vraag bekijkt, kan meekijken terwijl je schrijft en je aanmoedigen',
+	'live.banner.one': '{{name}} schrijft nu live',
+	'live.banner.many': '{{count}} mensen schrijven nu live',
+	'live.banner.watch': 'Meekijken',
+	'live.watch.title': 'Live concepten',
+	'live.watch.close': 'Sluiten',
+	'live.thinking': '{{name}} denkt na…',
+	'live.ended': 'Het live concept is beëindigd',
+	'live.reaction.aria': '{{emoji}} sturen naar {{name}}',
 	'facilitator.toggle.showEvaluation': 'Beoordeling tonen',
 	'facilitator.toggle.showEvaluation.help':
 		'Open de rij met 5 gezichten op elke optiekaart zodat deelnemers kunnen stemmen.',

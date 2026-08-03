@@ -235,6 +235,10 @@ export type RatingMode = InferOutput<typeof RatingModeSchema>;
 export const StatementSettingsSchema = object({
 	subScreens: optional(array(string())),
 	enableAddEvaluationOption: optional(boolean()),
+	// Join app: when true, a participant composing a suggestion may broadcast
+	// their draft letter-by-letter (RTDB liveDrafts/{questionId}/{uid}) to
+	// everyone viewing this sub-question. Default (undefined/false) = off.
+	enableLiveDraftBroadcast: optional(boolean()),
 	enableEvaluation: optional(boolean()), // if false, the user cannot evaluate or vote
 	enableAddNewSubQuestionsButton: optional(boolean()),
 	defaultLookForSimilarities: optional(boolean()),

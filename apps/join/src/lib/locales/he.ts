@@ -176,6 +176,19 @@ const he: Record<string, string> = {
 	'facilitator.toggle.allowAdd': 'אפשור אפשרויות חדשות',
 	'facilitator.toggle.allowAdd.help':
 		'כשכבוי, רשימת האפשרויות נעולה — לא ניתן להוסיף אפשרויות חדשות.',
+	'facilitator.toggle.liveDraft': 'שיתוף טיוטה בשידור חי',
+	'facilitator.toggle.liveDraft.help':
+		'משתתפים יכולים לשדר את ההצעה שלהם תוך כדי כתיבה, כדי שהחדר יוכל לעזור להם לעצב אותה.',
+	'live.share_toggle': 'שיתוף הטיוטה שלי בשידור חי',
+	'live.share_hint': 'מי שצופה בשאלה הזו יוכל לראות אתכם כותבים ולעודד אתכם',
+	'live.banner.one': '{{name}} כותב/ת עכשיו בשידור חי',
+	'live.banner.many': '{{count}} אנשים כותבים עכשיו בשידור חי',
+	'live.banner.watch': 'לצפייה',
+	'live.watch.title': 'טיוטות חיות',
+	'live.watch.close': 'סגירה',
+	'live.thinking': '{{name}} חושב/ת…',
+	'live.ended': 'השידור החי הסתיים',
+	'live.reaction.aria': 'שליחת {{emoji}} אל {{name}}',
 	'facilitator.toggle.showEvaluation': 'הצגת הערכה',
 	'facilitator.toggle.showEvaluation.help':
 		'פתיחת שורת חמשת הפרצופים על כל כרטיס כדי שמשתתפים יוכלו להצביע.',

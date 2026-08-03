@@ -141,6 +141,19 @@ const fa: Record<string, string> = {
 	'facilitator.toggle.allowAdd': 'اجازه گزینه‌های جدید',
 	'facilitator.toggle.allowAdd.help':
 		'وقتی خاموش است، فهرست گزینه‌ها قفل می‌شود — نمی‌توان گزینه جدیدی افزود.',
+	'facilitator.toggle.liveDraft': 'اشتراک‌گذاری زندهٔ پیش‌نویس',
+	'facilitator.toggle.liveDraft.help':
+		'شرکت‌کنندگان می‌توانند پیشنهادشان را هنگام نوشتن پخش کنند تا جمع در شکل‌دادن به آن کمک کند.',
+	'live.share_toggle': 'پیش‌نویسم را زنده به اشتراک بگذارم',
+	'live.share_hint': 'کسانی که این پرسش را می‌بینند می‌توانند نوشتن شما را تماشا و تشویق‌تان کنند',
+	'live.banner.one': '{{name}} در حال نوشتن زنده است',
+	'live.banner.many': '{{count}} نفر در حال نوشتن زنده هستند',
+	'live.banner.watch': 'تماشا',
+	'live.watch.title': 'پیش‌نویس‌های زنده',
+	'live.watch.close': 'بستن',
+	'live.thinking': '{{name}} در حال فکر کردن است…',
+	'live.ended': 'پیش‌نویس زنده پایان یافت',
+	'live.reaction.aria': 'ارسال {{emoji}} به {{name}}',
 	'facilitator.toggle.showEvaluation': 'نمایش ارزیابی',
 	'facilitator.toggle.showEvaluation.help':
 		'باز کردن ردیف ۵ صورت روی هر کارت گزینه تا شرکت‌کنندگان بتوانند رأی دهند.',

@@ -65,6 +65,61 @@
           }
         }
       }
+    },
+
+    "liveDrafts": {
+      "$questionId": {
+        ".read": "auth != null",
+        ".indexOn": ["lastUpdate"],
+
+        "$broadcasterId": {
+          ".write": "auth != null && auth.uid === $broadcasterId",
+          ".validate": "newData.hasChildren(['userId', 'displayName', 'text', 'lastUpdate', 'ttl'])",
+
+          "userId": {
+            ".validate": "newData.isString() && newData.val() === $broadcasterId"
+          },
+          "displayName": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+          },
+          "color": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 10"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length <= 10000"
+          },
+          "lastUpdate": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "ttl": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+
+          "reactions": {
+            "$reactorId": {
+              ".write": "auth != null && auth.uid === $reactorId",
+              ".validate": "newData.hasChildren(['emoji', 'displayName', 'timestamp'])",
+
+              "emoji": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 16"
+              },
+              "displayName": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+              },
+              "timestamp": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }

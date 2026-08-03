@@ -177,6 +177,19 @@ const ar: Record<string, string> = {
 	'facilitator.toggle.allowAdd': 'السماح بخيارات جديدة',
 	'facilitator.toggle.allowAdd.help':
 		'عند الإيقاف، تُقفل قائمة الخيارات — ولا يمكن إضافة خيارات جديدة.',
+	'facilitator.toggle.liveDraft': 'مشاركة المسودة مباشرة',
+	'facilitator.toggle.liveDraft.help':
+		'يمكن للمشاركين بث اقتراحهم أثناء الكتابة، حتى تساعدهم القاعة في صياغته.',
+	'live.share_toggle': 'مشاركة مسودتي مباشرة',
+	'live.share_hint': 'يمكن لمن يشاهد هذا السؤال أن يراك تكتب ويشجعك',
+	'live.banner.one': '{{name}} يكتب الآن مباشرة',
+	'live.banner.many': '{{count}} أشخاص يكتبون الآن مباشرة',
+	'live.banner.watch': 'مشاهدة',
+	'live.watch.title': 'مسودات مباشرة',
+	'live.watch.close': 'إغلاق',
+	'live.thinking': '{{name}} يفكر…',
+	'live.ended': 'انتهت المسودة المباشرة',
+	'live.reaction.aria': 'إرسال {{emoji}} إلى {{name}}',
 	'facilitator.toggle.showEvaluation': 'إظهار التقييم',
 	'facilitator.toggle.showEvaluation.help':
 		'فتح صف الوجوه الخمسة على كل بطاقة خيار حتى يتمكن المشاركون من التصويت.',

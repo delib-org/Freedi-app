@@ -5181,3 +5181,360 @@ $facilitator-panel-width: 300px;
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIVE DRAFT BROADCAST
+// A writer streams their suggestion draft letter-by-letter to the table
+// (AddSuggestionModal toggle → RTDB → LiveDraftBanner/LiveDraftWatch).
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Share-live toggle row inside the add-suggestion modal.
+.modal__live-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--dur-quick) var(--ease-out);
+
+  &:has(input:checked) {
+    border-color: var(--terra-500);
+    border-style: solid;
+    background: var(--terra-50);
+  }
+
+  input {
+    margin-top: 3px;
+    accent-color: var(--terra-600);
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.modal__live-toggle-dot {
+  display: none; // reserved for a future animated indicator
+
+  .modal__live-toggle:has(input:checked) & {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-top: 8px;
+    border-radius: var(--radius-full);
+    background: var(--terra-600);
+    flex-shrink: 0;
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+.modal__live-toggle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal__live-toggle-label {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink);
+}
+
+.modal__live-toggle-hint {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--ink-soft);
+  line-height: var(--line-height-normal);
+}
+
+// "Someone is writing live" strip on the Solutions view.
+.live-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  min-height: var(--touch-target);
+  background: var(--terra-50);
+  border: 1.5px solid var(--terra-500);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition:
+    background var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+
+  &:hover {
+    background: var(--terra-100);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    background: var(--terra-600);
+    flex-shrink: 0;
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
+
+  &__text {
+    flex: 1;
+    text-align: start;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink);
+  }
+
+  &__cta {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--terra-600);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    flex-shrink: 0;
+  }
+}
+
+// Full-screen watch overlay: one card per broadcaster, streaming text with a
+// blinking caret, quick-reaction bar underneath.
+.live-watch {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: var(--space-md);
+  animation: modal-fade-in var(--dur-base) var(--ease-out);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  &__panel {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), var(--shadow-stamp);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: modal-rise var(--dur-base) var(--ease-out);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1.5px solid var(--border-medium);
+  }
+
+  &__header-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    background: var(--terra-600);
+    flex-shrink: 0;
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
+
+  &__title {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--ink);
+    margin: 0;
+  }
+
+  &__close {
+    width: var(--touch-target);
+    height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    font-size: var(--font-size-2xl);
+    line-height: 1;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background: var(--terra-50);
+      color: var(--ink);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    }
+  }
+
+  &__cards {
+    overflow-y: auto;
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  &__card {
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    background: var(--bg-card);
+  }
+
+  &__card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+
+  &__author-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+
+  &__author {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--ink-muted);
+  }
+
+  &__text {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    margin: 0 0 var(--space-sm);
+    // Cap a very long draft; the newest text matters most, but pinning
+    // scroll would fight the reader — a generous cap with scroll suffices.
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  &__caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    margin-inline-start: 1px;
+    vertical-align: text-bottom;
+    background: var(--terra-600);
+    animation: live-caret-blink 1s step-end infinite;
+  }
+
+  &__thinking {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    font-style: italic;
+    color: var(--ink-soft);
+    margin: 0 0 var(--space-sm);
+  }
+
+  &__recent {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  &__chip {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--ink-muted);
+    background: var(--terra-50);
+    border: 1px solid var(--terra-100);
+    border-radius: var(--radius-full);
+    padding: 2px var(--space-sm);
+    animation: modal-fade-in var(--dur-base) var(--ease-out);
+  }
+
+  &__reactions {
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  &__reaction-btn {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-lg);
+    background: none;
+    border: 1.5px solid var(--border-medium);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition:
+      transform var(--dur-quick) var(--ease-out),
+      border-color var(--dur-quick) var(--ease-out);
+
+    &:hover {
+      transform: scale(1.1);
+      border-color: var(--terra-500);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    }
+  }
+
+  &__empty {
+    padding: var(--space-xl) var(--space-lg);
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink-soft);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes live-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-banner__dot,
+  .live-watch__header-dot,
+  .live-watch__caret,
+  .modal__live-toggle-dot {
+    animation: none;
+  }
+}

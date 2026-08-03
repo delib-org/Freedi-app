@@ -159,6 +159,19 @@ const es: Record<string, string> = {
 	'facilitator.toggle.allowAdd': 'Permitir nuevas opciones',
 	'facilitator.toggle.allowAdd.help':
 		'Cuando está desactivado, la lista de opciones queda bloqueada — no se pueden añadir nuevas opciones.',
+	'facilitator.toggle.liveDraft': 'Compartir borrador en vivo',
+	'facilitator.toggle.liveDraft.help':
+		'Los participantes pueden transmitir su propuesta mientras escriben, para que la sala les ayude a darle forma.',
+	'live.share_toggle': 'Compartir mi borrador en vivo',
+	'live.share_hint': 'Quienes vean esta pregunta podrán verte escribir y animarte',
+	'live.banner.one': '{{name}} está escribiendo en vivo',
+	'live.banner.many': '{{count}} personas están escribiendo en vivo',
+	'live.banner.watch': 'Ver',
+	'live.watch.title': 'Borradores en vivo',
+	'live.watch.close': 'Cerrar',
+	'live.thinking': '{{name}} está pensando…',
+	'live.ended': 'El borrador en vivo ha terminado',
+	'live.reaction.aria': 'Enviar {{emoji}} a {{name}}',
 	'facilitator.toggle.showEvaluation': 'Mostrar evaluación',
 	'facilitator.toggle.showEvaluation.help':
 		'Abrir la fila de 5 caras en cada tarjeta de opción para que los participantes puedan votar.',

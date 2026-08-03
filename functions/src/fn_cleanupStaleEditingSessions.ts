@@ -99,8 +99,69 @@ export const fn_cleanupStaleEditingSessions = onSchedule(
 		} catch (error) {
 			logger.error('[fn_cleanupStaleEditingSessions] Error', error);
 		}
+
+		// Second sweep: join-app live draft broadcasts (liveDrafts/{questionId}/
+		// {broadcasterUid}). The client's onDisconnect().remove() is the primary
+		// cleanup; this catches drafts orphaned by hard crashes or network loss
+		// where onDisconnect never fired. TTL semantics match the join client
+		// (apps/join/src/lib/liveDrafts.ts).
+		try {
+			await cleanupStaleLiveDrafts();
+		} catch (error) {
+			logger.error('[fn_cleanupStaleEditingSessions] liveDrafts sweep error', error);
+		}
 	},
 );
+
+interface LiveDraftNode {
+	ttl?: number;
+	lastUpdate?: number;
+}
+
+async function cleanupStaleLiveDrafts(): Promise<void> {
+	const now = Date.now();
+	const draftsRef = rtdb.ref('liveDrafts');
+	const snapshot = await draftsRef.once('value');
+
+	if (!snapshot.exists()) return;
+
+	const questions = snapshot.val() as Record<string, Record<string, LiveDraftNode>>;
+	let removedCount = 0;
+
+	for (const [questionId, broadcasters] of Object.entries(questions)) {
+		if (!broadcasters || typeof broadcasters !== 'object') {
+			await draftsRef.child(questionId).remove();
+			continue;
+		}
+
+		let remaining = 0;
+		for (const [broadcasterId, draft] of Object.entries(broadcasters)) {
+			const isExpired = typeof draft?.ttl === 'number' && draft.ttl < now;
+			const isVeryOld =
+				typeof draft?.lastUpdate === 'number' && now - draft.lastUpdate > SESSION_TTL_MS * 2;
+			const isMalformed = typeof draft?.ttl !== 'number' && typeof draft?.lastUpdate !== 'number';
+
+			if (isExpired || isVeryOld || isMalformed) {
+				await draftsRef.child(`${questionId}/${broadcasterId}`).remove();
+				removedCount++;
+			} else {
+				remaining++;
+			}
+		}
+
+		// Drop the question node when it ended up empty, so the tree doesn't
+		// accumulate hollow keys for long-finished sessions.
+		if (remaining === 0) {
+			await draftsRef.child(questionId).remove();
+		}
+	}
+
+	if (removedCount > 0) {
+		logger.info('[fn_cleanupStaleEditingSessions] Removed stale live drafts', {
+			removedCount,
+		});
+	}
+}
 
 interface CleanupSessionData {
 	sessionId: string;

@@ -196,6 +196,19 @@ const en: Record<string, string> = {
 	'facilitator.toggle.allowAdd': 'Allow new options',
 	'facilitator.toggle.allowAdd.help':
 		'When off, the option list is locked — no new options can be added.',
+	'facilitator.toggle.liveDraft': 'Live draft sharing',
+	'facilitator.toggle.liveDraft.help':
+		'Participants can broadcast their suggestion as they type, so the room can help them shape it.',
+	'live.share_toggle': 'Share my draft live',
+	'live.share_hint': 'People viewing this question can watch you write and cheer you on',
+	'live.banner.one': '{{name}} is writing live',
+	'live.banner.many': '{{count}} people are writing live',
+	'live.banner.watch': 'Watch',
+	'live.watch.title': 'Live drafts',
+	'live.watch.close': 'Close',
+	'live.thinking': '{{name}} is thinking…',
+	'live.ended': 'The live draft has ended',
+	'live.reaction.aria': 'Send {{emoji}} to {{name}}',
 	'facilitator.toggle.showEvaluation': 'Show evaluation',
 	'facilitator.toggle.showEvaluation.help':
 		'Open the 5-face evaluation row on every option card so participants can vote.',

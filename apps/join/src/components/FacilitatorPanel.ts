@@ -452,6 +452,11 @@ async function flipAllowNewOptions(question: Statement): Promise<void> {
 	});
 }
 
+async function flipLiveDraftBroadcast(question: Statement): Promise<void> {
+	const next = !(question.statementSettings?.enableLiveDraftBroadcast ?? false);
+	await writeScopeSetting({ statementSettings: { enableLiveDraftBroadcast: next } });
+}
+
 async function flipAllowChat(question: Statement): Promise<void> {
 	const next = !(question.statementSettings?.hasChat ?? true);
 	await writeScopeSetting({ statementSettings: { hasChat: next } });
@@ -1738,6 +1743,9 @@ export const FacilitatorPanel: m.Component = {
 			? (question!.statementSettings?.enableAddEvaluationOption ?? false)
 			: false;
 		const allowChatOn = hasQuestion ? (question!.statementSettings?.hasChat ?? true) : true;
+		const liveDraftOn = hasQuestion
+			? (question!.statementSettings?.enableLiveDraftBroadcast ?? false)
+			: false;
 		const showResultsOn = hasQuestion ? (question!.statementSettings?.showResults ?? false) : false;
 		const showEvaluationOn = hasQuestion
 			? (question!.statementSettings?.showEvaluation ?? false)
@@ -2110,6 +2118,20 @@ export const FacilitatorPanel: m.Component = {
 									void flipAllowNewOptions(question!);
 								},
 								help: t('facilitator.toggle.allowAdd.help'),
+							}),
+							// Live drafting is the natural companion of "allow add":
+							// participants may add suggestions → and may broadcast
+							// while writing so the table can help them shape it.
+							renderToggle({
+								icon: '📡',
+								label: t('facilitator.toggle.liveDraft'),
+								on: liveDraftOn,
+								disabled: !hasQuestion,
+								onflip: () => {
+									if (!hasQuestion) return;
+									void flipLiveDraftBroadcast(question!);
+								},
+								help: t('facilitator.toggle.liveDraft.help'),
 							}),
 							renderToggle({
 								icon: '💬',

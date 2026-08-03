@@ -163,6 +163,19 @@ const de: Record<string, string> = {
 	'facilitator.toggle.allowAdd': 'Neue Optionen erlauben',
 	'facilitator.toggle.allowAdd.help':
 		'Wenn aus, ist die Optionsliste gesperrt — es können keine neuen Optionen hinzugefügt werden.',
+	'facilitator.toggle.liveDraft': 'Live-Entwurf teilen',
+	'facilitator.toggle.liveDraft.help':
+		'Teilnehmende können ihren Vorschlag beim Tippen übertragen, damit der Raum beim Formulieren helfen kann.',
+	'live.share_toggle': 'Meinen Entwurf live teilen',
+	'live.share_hint': 'Wer diese Frage ansieht, kann dir beim Schreiben zusehen und dich anfeuern',
+	'live.banner.one': '{{name}} schreibt gerade live',
+	'live.banner.many': '{{count}} Personen schreiben gerade live',
+	'live.banner.watch': 'Zusehen',
+	'live.watch.title': 'Live-Entwürfe',
+	'live.watch.close': 'Schließen',
+	'live.thinking': '{{name}} denkt nach…',
+	'live.ended': 'Der Live-Entwurf ist beendet',
+	'live.reaction.aria': '{{emoji}} an {{name}} senden',
 	'facilitator.toggle.showEvaluation': 'Bewertung anzeigen',
 	'facilitator.toggle.showEvaluation.help':
 		'Die 5-Gesichter-Bewertungszeile auf jeder Optionskarte öffnen, damit Teilnehmende abstimmen können.',

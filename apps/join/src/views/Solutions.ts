@@ -28,7 +28,10 @@ import {
 } from '@/lib/helperPoints';
 import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
+import { initLiveDrafts, teardownLiveDrafts } from '@/lib/liveDrafts';
 import { SolutionCard } from '@/components/SolutionCard';
+import { LiveDraftBanner } from '@/components/LiveDraftBanner';
+import { LiveDraftWatch } from '@/components/LiveDraftWatch';
 import { JoinFormModal } from '@/components/JoinFormModal';
 import { LimitReachedModal } from '@/components/LimitReachedModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
@@ -80,6 +83,8 @@ let editingOptionId: string | null = null;
 // Captured at `onbeforeupdate` of `.solutions__list`, replayed at `onupdate`
 // to drive the FLIP reorder animation.
 let capturedListRects: Map<string, DOMRect> | null = null;
+// Full-screen live-draft watch overlay (opened from the LiveDraftBanner).
+let showLiveWatch = false;
 
 function teardownSolutionsSubscriptions(): void {
 	if (questionUnsub) {
@@ -103,6 +108,10 @@ function teardownSolutionsSubscriptions(): void {
 		joinSubmissionUnsub = null;
 	}
 	unsubscribeMyHelperPoints();
+	// Also force-stops any broadcast still running — leaving the question
+	// (follow-me, unmount) always ends the writer's live session.
+	teardownLiveDrafts();
+	showLiveWatch = false;
 }
 
 async function initSolutionsForQuestion(questionId: string): Promise<void> {
@@ -144,6 +153,7 @@ async function initSolutionsForQuestion(questionId: string): Promise<void> {
 		evaluationsUnsub = subscribeUserEvaluations(questionId);
 		joinSubmissionUnsub = subscribeUserJoinFormSubmission(questionId);
 		subscribeMyHelperPoints(questionId);
+		initLiveDrafts(questionId);
 
 		let mainId: string | undefined = m.route.param('mid');
 		if (!mainId) {
@@ -256,6 +266,7 @@ export const Solutions: m.Component = {
 		// doesn't change this — the toggle is the single source of truth for
 		// "can people add options to this question".
 		const addOptionEnabled = question.statementSettings?.enableAddEvaluationOption === true;
+		const liveDraftEnabled = question.statementSettings?.enableLiveDraftBroadcast === true;
 		const showUserAddButton = addOptionEnabled && !isAdmin();
 		// Admin always gets the participant-style add button alongside the
 		// organizer one — they can seed the crowd list "as a regular person"
@@ -427,6 +438,16 @@ export const Solutions: m.Component = {
 					: facilitated
 						? null
 						: renderAdminSignIn(question.statementId, question.creatorId),
+				// "Someone is writing live" strip — sits right above the add row /
+				// list so it reads as part of the suggestions flow. The banner
+				// renders nothing when no one else is broadcasting.
+				liveDraftEnabled
+					? m(LiveDraftBanner, {
+							onOpen: () => {
+								showLiveWatch = true;
+							},
+						})
+					: null,
 				showUserAddButton
 					? m('.solutions__add-row', [
 							m(
@@ -541,6 +562,13 @@ export const Solutions: m.Component = {
 					})
 				: null,
 			renderEditModal(),
+			showLiveWatch && liveDraftEnabled
+				? m(LiveDraftWatch, {
+						onClose: () => {
+							showLiveWatch = false;
+						},
+					})
+				: null,
 			showFab
 				? m(
 						'.solutions__fab-wrap',
