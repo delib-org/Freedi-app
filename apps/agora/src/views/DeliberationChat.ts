@@ -509,7 +509,20 @@ export function DeliberationChat(
 
 	// ---- my proposal (edit) --------------------------------------------
 
-	function myProposalCard(active: boolean): m.Children {
+	/** OPEN suggestions still waiting on my proposal (live count) */
+	function openFeedbackLeft(): number {
+		const mine = myProposal();
+		if (!mine) return 0;
+
+		return (getDeliberationState().suggestions[mine.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+		).length;
+	}
+
+	function myProposalCard(
+		card: Extract<CardRef, { type: 'my_proposal' }>,
+		active: boolean,
+	): m.Children {
 		const live = initialVnode.attrs.session;
 		const mine = myProposal();
 		if (!mine) return m('.card', m('.spinner'));
@@ -531,6 +544,15 @@ export function DeliberationChat(
 				m('span.my-lantern__title', t('delib.my_proposal')),
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
+			// The accepted suggestion, quoted right where it's needed — the
+			// student weaves it in without having to remember the wording.
+			// Peer-orange accent: the idea is a classmate's 📙 contribution.
+			card.acceptedText
+				? m('.chat-accepted', [
+						m('span.chat-accepted__label', `💡 ${t('chat.accepted_reminder')}`),
+						m('p.chat-accepted__text', card.acceptedText),
+					])
+				: null,
 			m('textarea.my-lantern__textarea', {
 				value: mineDraft,
 				rows: 4,
@@ -558,7 +580,7 @@ export function DeliberationChat(
 									// Improving your own proposal earns glitter — the
 									// behavior the game most wants to reinforce
 									celebrate({ message: t('celebrate.proposal_improved'), detail: text });
-									dispatch({ type: 'PROPOSAL_UPDATED' });
+									dispatch({ type: 'PROPOSAL_UPDATED', hasMoreFeedback: openFeedbackLeft() > 0 });
 								})
 								.catch((error: unknown) => {
 									console.error('[DelibChat] Update proposal failed:', error);
@@ -637,13 +659,30 @@ export function DeliberationChat(
 									m(
 										'button.btn.btn--primary',
 										{
-											disabled: !active,
+											disabled: !active || busy,
 											onclick: () => {
-												void resolveSuggestion(
+												// Accepting = adopting: once the resolution lands,
+												// the guide walks the owner to their own editor
+												// with the accepted idea quoted beside it
+												busy = true;
+												resolveSuggestion(
 													live.sessionId,
 													suggestion.statementId,
 													AgoraSuggestionStatus.accepted,
-												);
+												)
+													.then(() => {
+														dispatch({
+															type: 'SUGGESTION_ACCEPTED',
+															text: suggestion.statement,
+														});
+													})
+													.catch((error: unknown) => {
+														console.error('[DelibChat] Accept suggestion failed:', error);
+													})
+													.finally(() => {
+														busy = false;
+														m.redraw();
+													});
 											},
 										},
 										t('delib.will_implement'),
@@ -956,7 +995,7 @@ export function DeliberationChat(
 				case 'menu':
 					return menuCard(active);
 				case 'my_proposal':
-					return myProposalCard(active);
+					return myProposalCard(card, active);
 				case 'my_feedback':
 					return myFeedbackCard(active);
 				case 'characters':

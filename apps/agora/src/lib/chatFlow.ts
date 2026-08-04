@@ -76,7 +76,13 @@ export type CardRef =
 	| { type: 'rate'; proposalId: string }
 	| { type: 'improve_choice'; proposalId: string; done: boolean }
 	| { type: 'menu' }
-	| { type: 'my_proposal' }
+	/**
+	 * acceptedText: the improvement suggestion the student just accepted —
+	 * rendered as a quoted reminder above the editor so they don't have to
+	 * remember it. Optional: refs persisted before the field existed (and
+	 * plain menu → improve-mine visits) simply render no reminder.
+	 */
+	| { type: 'my_proposal'; acceptedText?: string }
 	| { type: 'my_feedback' }
 	| { type: 'characters' }
 	| { type: 'helped' };
@@ -103,7 +109,18 @@ export type ChatEvent =
 	| { type: 'MENU_CHOICE'; choice: MenuChoice }
 	| { type: 'BACK_TO_MENU' }
 	| { type: 'CANDIDATE_GONE' }
-	| { type: 'PROPOSAL_UPDATED' };
+	/**
+	 * The student saved an edit to their own proposal. hasMoreFeedback: OPEN
+	 * suggestions still wait on their proposal (the view counts them at save
+	 * time) — the guide's reply then points back to the menu.
+	 */
+	| { type: 'PROPOSAL_UPDATED'; hasMoreFeedback?: boolean }
+	/**
+	 * The owner accepted an improvement suggestion ("I'll implement") — the
+	 * guide takes them straight to their own proposal to weave the idea in,
+	 * carrying the accepted text so the editor can quote it.
+	 */
+	| { type: 'SUGGESTION_ACCEPTED'; text: string };
 
 export interface ChatFlowDeps {
 	/** Unrated classmate proposals in fair-attention order (live snapshot) */
@@ -252,6 +269,7 @@ const VARIANTS: Record<string, number> = {
 	'chat.top_rating_reply': 2,
 	'chat.improve_prompt': 2,
 	'chat.improve_thanks': 2,
+	'chat.accepted_go_improve': 2,
 };
 
 const TRANSCRIPT_CAP = 300;
@@ -560,7 +578,22 @@ export function dispatch(event: ChatEvent): void {
 		}
 
 		case 'PROPOSAL_UPDATED': {
-			appendBot('chat.proposal_updated_reply');
+			appendBot(
+				event.hasMoreFeedback
+					? 'chat.proposal_updated_more_feedback'
+					: 'chat.proposal_updated_reply',
+			);
+			break;
+		}
+
+		case 'SUGGESTION_ACCEPTED': {
+			// Accepting = adopting: the guide walks the owner to their own
+			// proposal right away, quoting the accepted idea next to the editor
+			append({ kind: 'user', key: 'chat.accept_echo' });
+			appendBot('chat.accepted_go_improve');
+			state.phase = 'improve_mine';
+			state.visited.improveMine = true;
+			appendActiveCard({ type: 'my_proposal', acceptedText: event.text });
 			break;
 		}
 	}

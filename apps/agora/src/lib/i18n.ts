@@ -281,6 +281,13 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.branch_helped_intro': 'הנה ההצעות שעזרתם להן 🤝 ומה קרה איתן:',
 		'chat.branch_helped_empty': 'עוד לא שלחתם הצעות שיפור לאחרים.',
 		'chat.proposal_updated_reply': 'עודכן! ההצעה המשופרת שלכם כבר בכיכר.',
+		'chat.proposal_updated_more_feedback':
+			'עודכן! ההצעה המשופרת שלכם כבר בכיכר — ויש עוד הצעות שיפור שמחכות לכם בתפריט.',
+		'chat.accept_echo': 'אשלב את הרעיון בהצעה שלי 🙌',
+		'chat.accepted_go_improve_1': 'בחירה מצוינת! הנה ההצעה שלכם 📘 — שלבו את הרעיון בנוסח.',
+		'chat.accepted_go_improve_2':
+			'איזה יופי של שיתוף פעולה! פתחתי את ההצעה שלכם 📘 — עכשיו אפשר לארוג את הרעיון פנימה.',
+		'chat.accepted_reminder': 'הרעיון שקיבלתם:',
 	},
 	en: {
 		'common.loading': 'Loading...',
@@ -568,6 +575,13 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.branch_helped_intro': 'Here are the proposals you helped 🤝 and what happened with them:',
 		'chat.branch_helped_empty': 'You have not sent improvement suggestions to others yet.',
 		'chat.proposal_updated_reply': 'Updated! Your improved proposal is already in the square.',
+		'chat.proposal_updated_more_feedback':
+			'Updated! Your improved proposal is already in the square — and more improvement suggestions are waiting for you in the menu.',
+		'chat.accept_echo': 'I will weave this idea into my proposal 🙌',
+		'chat.accepted_go_improve_1': 'Great choice! Here is your proposal 📘 — weave the idea in.',
+		'chat.accepted_go_improve_2':
+			'Lovely teamwork! I opened your proposal 📘 — now work the idea into the text.',
+		'chat.accepted_reminder': 'The idea you accepted:',
 	},
 	ar: {
 		'common.loading': 'جارٍ التحميل...',
@@ -845,6 +859,12 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.branch_helped_intro': 'هذه الاقتراحات التي ساعدتموها 🤝 وما حدث معها:',
 		'chat.branch_helped_empty': 'لم ترسلوا اقتراحات تحسين للآخرين بعد.',
 		'chat.proposal_updated_reply': 'تم التحديث! اقتراحكم المحسّن موجود الآن في الساحة.',
+		'chat.proposal_updated_more_feedback':
+			'تم التحديث! اقتراحكم المحسّن موجود الآن في الساحة — وهناك اقتراحات تحسين أخرى تنتظركم في القائمة.',
+		'chat.accept_echo': 'سأدمج هذه الفكرة في اقتراحي 🙌',
+		'chat.accepted_go_improve_1': 'اختيار ممتاز! ها هو اقتراحكم 📘 — ادمجوا الفكرة في النص.',
+		'chat.accepted_go_improve_2': 'تعاون رائع! فتحت اقتراحكم 📘 — الآن انسجوا الفكرة داخله.',
+		'chat.accepted_reminder': 'الفكرة التي قبلتموها:',
 	},
 	es: {
 		'common.loading': 'Cargando...',
@@ -1140,6 +1160,14 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.branch_helped_intro': 'Aquí están las propuestas que ayudasteis 🤝 y qué pasó con ellas:',
 		'chat.branch_helped_empty': 'Aún no habéis enviado sugerencias de mejora a otros.',
 		'chat.proposal_updated_reply': '¡Actualizado! Vuestra propuesta mejorada ya está en la plaza.',
+		'chat.proposal_updated_more_feedback':
+			'¡Actualizado! Vuestra propuesta mejorada ya está en la plaza — y hay más sugerencias de mejora esperándoos en el menú.',
+		'chat.accept_echo': 'Incorporaré esta idea a mi propuesta 🙌',
+		'chat.accepted_go_improve_1':
+			'¡Gran elección! Aquí está vuestra propuesta 📘 — integrad la idea en el texto.',
+		'chat.accepted_go_improve_2':
+			'¡Qué bonita colaboración! He abierto vuestra propuesta 📘 — ahora tejed la idea dentro.',
+		'chat.accepted_reminder': 'La idea que aceptasteis:',
 	},
 	de: {
 		'common.loading': 'Wird geladen...',
@@ -1439,6 +1467,14 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.branch_helped_empty': 'Ihr habt noch keine Verbesserungsvorschläge an andere geschickt.',
 		'chat.proposal_updated_reply':
 			'Aktualisiert! Euer verbesserter Vorschlag ist schon auf dem Platz.',
+		'chat.proposal_updated_more_feedback':
+			'Aktualisiert! Euer verbesserter Vorschlag ist schon auf dem Platz — und im Menü warten noch weitere Verbesserungsvorschläge auf euch.',
+		'chat.accept_echo': 'Ich baue diese Idee in meinen Vorschlag ein 🙌',
+		'chat.accepted_go_improve_1':
+			'Gute Wahl! Hier ist euer Vorschlag 📘 — arbeitet die Idee in den Text ein.',
+		'chat.accepted_go_improve_2':
+			'Schöne Zusammenarbeit! Ich habe euren Vorschlag 📘 geöffnet — webt die Idee jetzt hinein.',
+		'chat.accepted_reminder': 'Die Idee, die ihr angenommen habt:',
 	},
 	nl: {
 		'common.loading': 'Laden...',
@@ -1733,6 +1769,14 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Hier zijn de voorstellen die jullie hebben geholpen 🤝 en wat ermee gebeurde:',
 		'chat.branch_helped_empty': 'Jullie hebben nog geen verbetersuggesties naar anderen gestuurd.',
 		'chat.proposal_updated_reply': 'Bijgewerkt! Jullie verbeterde voorstel staat al op het plein.',
+		'chat.proposal_updated_more_feedback':
+			'Bijgewerkt! Jullie verbeterde voorstel staat al op het plein — en er wachten nog meer verbetersuggesties op jullie in het menu.',
+		'chat.accept_echo': 'Ik verwerk dit idee in mijn voorstel 🙌',
+		'chat.accepted_go_improve_1':
+			'Goede keuze! Hier is jullie voorstel 📘 — verwerk het idee in de tekst.',
+		'chat.accepted_go_improve_2':
+			'Mooi samenwerken! Ik heb jullie voorstel 📘 geopend — weef het idee er nu in.',
+		'chat.accepted_reminder': 'Het idee dat jullie hebben aangenomen:',
 	},
 };
 

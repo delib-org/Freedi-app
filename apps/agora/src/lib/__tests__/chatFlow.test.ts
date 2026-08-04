@@ -390,6 +390,93 @@ describe('menu', () => {
 	});
 });
 
+// ---------------------------------------------------------------------------
+// The accept → improve-mine flow
+// ---------------------------------------------------------------------------
+
+describe('SUGGESTION_ACCEPTED', () => {
+	function acceptFromFeedback(text = 'add a timeline'): void {
+		initChatFlow('s1', 'me', makeDeps([]));
+		bootstrap(true, 3);
+		dispatch({ type: 'MENU_CHOICE', choice: 'my_feedback' });
+		dispatch({ type: 'SUGGESTION_ACCEPTED', text });
+	}
+
+	it('echoes the accept, moves to improve_mine, and opens my_proposal with the accepted text', () => {
+		acceptFromFeedback('add a clear timeline');
+		const { state } = getChatFlow();
+		expect(state.phase).toBe('improve_mine');
+		expect(state.visited.improveMine).toBe(true);
+		expect(activeCard()?.card).toEqual({
+			type: 'my_proposal',
+			acceptedText: 'add a clear timeline',
+		});
+		// The student's own echo bubble, then the guide's walk-over line
+		const entries = getChatFlow().transcript;
+		const echo = entries.find((entry) => entry.kind === 'user' && entry.key === 'chat.accept_echo');
+		expect(echo).toBeDefined();
+		expect(lastBotKey()).toMatch(/^chat\.accepted_go_improve_[12]$/);
+	});
+
+	it('rotates the guide phrasing across accepts', () => {
+		initChatFlow('s1', 'me', makeDeps([]));
+		bootstrap(true, 3);
+		dispatch({ type: 'MENU_CHOICE', choice: 'my_feedback' });
+		dispatch({ type: 'SUGGESTION_ACCEPTED', text: 'first' });
+		const first = lastBotKey();
+		dispatch({ type: 'BACK_TO_MENU' });
+		dispatch({ type: 'MENU_CHOICE', choice: 'my_feedback' });
+		dispatch({ type: 'SUGGESTION_ACCEPTED', text: 'second' });
+		expect(lastBotKey()).not.toBe(first);
+	});
+
+	it('PROPOSAL_UPDATED after an accept points back to remaining feedback', () => {
+		acceptFromFeedback();
+		dispatch({ type: 'PROPOSAL_UPDATED', hasMoreFeedback: true });
+		expect(lastBotKey()).toBe('chat.proposal_updated_more_feedback');
+		// Still in the improve-mine branch — the menu remains one tap away
+		expect(getChatFlow().state.phase).toBe('improve_mine');
+	});
+
+	it('PROPOSAL_UPDATED without remaining feedback keeps the plain reply', () => {
+		acceptFromFeedback();
+		dispatch({ type: 'PROPOSAL_UPDATED', hasMoreFeedback: false });
+		expect(lastBotKey()).toBe('chat.proposal_updated_reply');
+	});
+
+	it('persists the acceptedText on the card ref across a reload', () => {
+		const deps = makeDeps([]);
+		initChatFlow('s1', 'me', deps);
+		bootstrap(true, 3);
+		dispatch({ type: 'MENU_CHOICE', choice: 'my_feedback' });
+		dispatch({ type: 'SUGGESTION_ACCEPTED', text: 'quoted reminder text' });
+
+		// Simulate a full page reload
+		stopChatFlow();
+		initChatFlow('s1', 'me', deps);
+		expect(isBootstrapped()).toBe(true);
+		expect(getChatFlow().state.phase).toBe('improve_mine');
+		expect(activeCard()?.card).toEqual({
+			type: 'my_proposal',
+			acceptedText: 'quoted reminder text',
+		});
+	});
+
+	it('tolerates old persisted my_proposal refs without acceptedText', () => {
+		// A pre-upgrade transcript: menu → improve_mine stored a bare ref
+		initChatFlow('s1', 'me', makeDeps([]));
+		bootstrap(true, 3);
+		dispatch({ type: 'MENU_CHOICE', choice: 'improve_mine' });
+		stopChatFlow();
+		initChatFlow('s1', 'me', makeDeps([]));
+		expect(isBootstrapped()).toBe(true);
+		expect(activeCard()?.card).toEqual({ type: 'my_proposal' });
+		// The flow keeps working on top of the old ref
+		dispatch({ type: 'PROPOSAL_UPDATED', hasMoreFeedback: true });
+		expect(lastBotKey()).toBe('chat.proposal_updated_more_feedback');
+	});
+});
+
 describe('computeMenuOptions', () => {
 	const base: MenuInput = {
 		candidatesLeft: 0,

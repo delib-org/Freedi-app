@@ -289,6 +289,37 @@
 	}
 }
 
+/* ------------------------------------------------- accepted-idea reminder */
+
+/* The improvement suggestion the owner just accepted, quoted above their
+   editor so they can weave it in without remembering it. Peer-orange
+   accent: the idea is a classmate's 📙 contribution, per the ownership law. */
+.chat-accepted {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-sm) var(--space-md);
+	background: var(--parchment);
+	border: 1px solid var(--border-subtle);
+	border-inline-start: 4px solid var(--peer);
+	border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+
+	&__label {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		color: var(--peer-glow);
+	}
+
+	&__text {
+		margin: 0;
+		font-size: var(--font-size-base);
+		font-style: italic;
+		line-height: 1.5;
+		color: var(--text-primary);
+	}
+}
+
 /* The menu: "what would you like to do?" quick-reply buttons */
 .chat-menu {
 	display: flex;
