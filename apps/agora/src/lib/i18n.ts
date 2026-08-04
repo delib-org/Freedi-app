@@ -287,7 +287,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_go_improve_1': 'בחירה מצוינת! הנה ההצעה שלכם 📘 — שלבו את הרעיון בנוסח.',
 		'chat.accepted_go_improve_2':
 			'איזה יופי של שיתוף פעולה! פתחתי את ההצעה שלכם 📘 — עכשיו אפשר לארוג את הרעיון פנימה.',
-		'chat.accepted_reminder': 'הרעיון שקיבלתם:',
+		'chat.accepted_reminder': 'רעיונות שקיבלתם:',
 	},
 	en: {
 		'common.loading': 'Loading...',
@@ -581,7 +581,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_go_improve_1': 'Great choice! Here is your proposal 📘 — weave the idea in.',
 		'chat.accepted_go_improve_2':
 			'Lovely teamwork! I opened your proposal 📘 — now work the idea into the text.',
-		'chat.accepted_reminder': 'The idea you accepted:',
+		'chat.accepted_reminder': 'Ideas you accepted:',
 	},
 	ar: {
 		'common.loading': 'جارٍ التحميل...',
@@ -864,7 +864,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accept_echo': 'سأدمج هذه الفكرة في اقتراحي 🙌',
 		'chat.accepted_go_improve_1': 'اختيار ممتاز! ها هو اقتراحكم 📘 — ادمجوا الفكرة في النص.',
 		'chat.accepted_go_improve_2': 'تعاون رائع! فتحت اقتراحكم 📘 — الآن انسجوا الفكرة داخله.',
-		'chat.accepted_reminder': 'الفكرة التي قبلتموها:',
+		'chat.accepted_reminder': 'أفكار قبلتموها:',
 	},
 	es: {
 		'common.loading': 'Cargando...',
@@ -1167,7 +1167,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'¡Gran elección! Aquí está vuestra propuesta 📘 — integrad la idea en el texto.',
 		'chat.accepted_go_improve_2':
 			'¡Qué bonita colaboración! He abierto vuestra propuesta 📘 — ahora tejed la idea dentro.',
-		'chat.accepted_reminder': 'La idea que aceptasteis:',
+		'chat.accepted_reminder': 'Ideas que aceptasteis:',
 	},
 	de: {
 		'common.loading': 'Wird geladen...',
@@ -1474,7 +1474,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Gute Wahl! Hier ist euer Vorschlag 📘 — arbeitet die Idee in den Text ein.',
 		'chat.accepted_go_improve_2':
 			'Schöne Zusammenarbeit! Ich habe euren Vorschlag 📘 geöffnet — webt die Idee jetzt hinein.',
-		'chat.accepted_reminder': 'Die Idee, die ihr angenommen habt:',
+		'chat.accepted_reminder': 'Ideen, die ihr angenommen habt:',
 	},
 	nl: {
 		'common.loading': 'Laden...',
@@ -1776,7 +1776,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Goede keuze! Hier is jullie voorstel 📘 — verwerk het idee in de tekst.',
 		'chat.accepted_go_improve_2':
 			'Mooi samenwerken! Ik heb jullie voorstel 📘 geopend — weef het idee er nu in.',
-		'chat.accepted_reminder': 'Het idee dat jullie hebben aangenomen:',
+		'chat.accepted_reminder': 'Ideeën die jullie hebben aangenomen:',
 	},
 };
 

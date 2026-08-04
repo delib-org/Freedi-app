@@ -538,19 +538,37 @@ export function DeliberationChat(
 		const text = mineDraft.trim();
 		const changed = text !== mine.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
+		// ALL the ideas the student has accepted, live — every accepted
+		// suggestion stays visible while editing, not just the latest one.
+		// The just-accepted text rides on the card ref until the resolve
+		// lands in the snapshot (dedupe by text once it does).
+		const acceptedIdeas = (getDeliberationState().suggestions[mine.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.accepted,
+		);
+		const pendingAccept =
+			card.acceptedText !== undefined &&
+			!acceptedIdeas.some((entry) => entry.statement === card.acceptedText)
+				? card.acceptedText
+				: undefined;
+
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
 				m('span.my-lantern__icon', '📘'),
 				m('span.my-lantern__title', t('delib.my_proposal')),
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
-			// The accepted suggestion, quoted right where it's needed — the
-			// student weaves it in without having to remember the wording.
-			// Peer-orange accent: the idea is a classmate's 📙 contribution.
-			card.acceptedText
+			// Accepted suggestions, quoted right where they're needed — the
+			// student weaves them in without having to remember the wording.
+			// Peer-orange accent: the ideas are classmates' 📙 contributions.
+			acceptedIdeas.length > 0 || pendingAccept
 				? m('.chat-accepted', [
 						m('span.chat-accepted__label', `💡 ${t('chat.accepted_reminder')}`),
-						m('p.chat-accepted__text', card.acceptedText),
+						// Nested array (own fragment) — keyed items must not be
+						// spread among unkeyed siblings (Mithril mixed-keys crash)
+						acceptedIdeas.map((entry) =>
+							m('p.chat-accepted__text', { key: entry.statementId }, entry.statement),
+						),
+						pendingAccept ? m('p.chat-accepted__text', pendingAccept) : null,
 					])
 				: null,
 			m('textarea.my-lantern__textarea', {
