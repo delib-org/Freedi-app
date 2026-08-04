@@ -47,9 +47,13 @@ export const agoraResolveSuggestion = onCall(
 		if (
 			resolution !== AgoraSuggestionStatus.accepted &&
 			resolution !== AgoraSuggestionStatus.thanked &&
-			resolution !== AgoraSuggestionStatus.declined
+			resolution !== AgoraSuggestionStatus.declined &&
+			resolution !== AgoraSuggestionStatus.implemented
 		) {
-			throw new HttpsError('invalid-argument', 'resolution must be accepted, thanked or declined');
+			throw new HttpsError(
+				'invalid-argument',
+				'resolution must be accepted, thanked, declined or implemented',
+			);
 		}
 
 		try {
@@ -67,7 +71,19 @@ export const agoraResolveSuggestion = onCall(
 			if (suggestion.agoraSessionId !== sessionId) {
 				throw new HttpsError('failed-precondition', 'Suggestion is not part of this session');
 			}
-			if (
+			if (resolution === AgoraSuggestionStatus.implemented) {
+				// The second mark of the lifecycle: only an ACCEPTED suggestion
+				// can be marked as woven into the text
+				if (suggestion.suggestionStatus === AgoraSuggestionStatus.implemented) {
+					return { ok: true }; // idempotent
+				}
+				if (suggestion.suggestionStatus !== AgoraSuggestionStatus.accepted) {
+					throw new HttpsError(
+						'failed-precondition',
+						'Only accepted suggestions can be marked implemented',
+					);
+				}
+			} else if (
 				suggestion.suggestionStatus &&
 				suggestion.suggestionStatus !== AgoraSuggestionStatus.open
 			) {
@@ -86,10 +102,14 @@ export const agoraResolveSuggestion = onCall(
 			}
 
 			const suggesterId = suggestion.creatorId;
+			// Points were already awarded at accept — the woven-in mark is
+			// pure attribution, not a second payday
 			const pointsAwarded =
 				resolution === AgoraSuggestionStatus.accepted
 					? AGORA_POINTS.SUGGESTION_ACCEPTED
-					: AGORA_POINTS.SUGGESTION_THANKED;
+					: resolution === AgoraSuggestionStatus.thanked
+						? AGORA_POINTS.SUGGESTION_THANKED
+						: 0;
 
 			await suggestionRef.update({
 				suggestionStatus: resolution,
@@ -116,18 +136,20 @@ export const agoraResolveSuggestion = onCall(
 						});
 					});
 				}
-				const suggesterRef = db
-					.collection(Collections.agoraParticipants)
-					.doc(createAgoraParticipantId(sessionId, suggesterId));
-				await db.runTransaction(async (transaction) => {
-					const snap = await transaction.get(suggesterRef);
-					if (!snap.exists) return;
-					const participant = snap.data() as AgoraParticipant;
-					const points = { ...participant.points };
-					points.helping += pointsAwarded;
-					points.total += pointsAwarded;
-					transaction.update(suggesterRef, { points, lastActive: Date.now() });
-				});
+				if (pointsAwarded > 0) {
+					const suggesterRef = db
+						.collection(Collections.agoraParticipants)
+						.doc(createAgoraParticipantId(sessionId, suggesterId));
+					await db.runTransaction(async (transaction) => {
+						const snap = await transaction.get(suggesterRef);
+						if (!snap.exists) return;
+						const participant = snap.data() as AgoraParticipant;
+						const points = { ...participant.points };
+						points.helping += pointsAwarded;
+						points.total += pointsAwarded;
+						transaction.update(suggesterRef, { points, lastActive: Date.now() });
+					});
+				}
 
 				const notificationId = getRandomUID();
 				await db
@@ -142,14 +164,18 @@ export const agoraResolveSuggestion = onCall(
 						text:
 							resolution === AgoraSuggestionStatus.accepted
 								? 'Your improvement suggestion was accepted!'
-								: 'You received a thank-you for your suggestion!',
+								: resolution === AgoraSuggestionStatus.implemented
+									? 'Your idea was woven into the proposal!'
+									: 'You received a thank-you for your suggestion!',
 						creatorId: uid,
 						creatorName: 'Anonymous traveler',
 						sourceApp: SourceApp.AGORA,
 						triggerType:
 							resolution === AgoraSuggestionStatus.accepted
 								? NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED
-								: NotificationTriggerType.AGORA_SUGGESTION_THANKED,
+								: resolution === AgoraSuggestionStatus.implemented
+									? NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED
+									: NotificationTriggerType.AGORA_SUGGESTION_THANKED,
 						targetPath: `/play/${sessionId}`,
 						read: false,
 						createdAt: Date.now(),

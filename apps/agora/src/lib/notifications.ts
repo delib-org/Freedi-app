@@ -115,15 +115,21 @@ export function listenToNotifications(userId: string): void {
 				};
 				if (!data.notificationId) return;
 
-				// An accepted improvement deserves glitter, not a toast: pop the
-				// celebration with the suggestion text (already in the local
-				// deliberation state) and mark the notification read.
-				if (data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED) {
+				// An accepted or woven-in improvement deserves glitter, not a
+				// toast: pop the celebration with the suggestion text (already
+				// in the local deliberation state) and mark the notification read.
+				if (
+					data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED ||
+					data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED
+				) {
 					const suggestion = Object.values(getDeliberationState().suggestions)
 						.flat()
 						.find((candidate) => candidate.statementId === data.statementId);
 					celebrate({
-						message: t('celebrate.suggestion_accepted'),
+						message:
+							data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED
+								? t('celebrate.suggestion_implemented')
+								: t('celebrate.suggestion_accepted'),
 						detail: suggestion?.statement,
 					});
 					updateDoc(doc(db, Collections.inAppNotifications, data.notificationId), {

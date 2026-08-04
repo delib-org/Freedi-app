@@ -77,4 +77,10 @@ export enum AgoraSuggestionStatus {
 	thanked = 'thanked',
 	/** Polite decline ("no thanks") — closes the suggestion; no points, no notification */
 	declined = 'declined',
+	/**
+	 * The owner edited their proposal and marked this ACCEPTED suggestion as
+	 * woven into the text — precise attribution for the suggester ("YOUR idea
+	 * is in the proposal now"). Only reachable from `accepted`.
+	 */
+	implemented = 'implemented',
 }

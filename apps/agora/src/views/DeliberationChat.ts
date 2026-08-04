@@ -83,6 +83,8 @@ export function DeliberationChat(
 	const followUpBusy: Record<string, boolean> = {};
 	/** Accepted-ideas accordion open state per my-proposal card (entry id) */
 	const acceptedDrawerOpen: Record<number, boolean> = {};
+	/** In-flight "mark as woven in" calls per suggestion id */
+	const wovenBusy: Record<string, boolean> = {};
 
 	// ---- staged reveal (typing effect): a WALL-CLOCK schedule for guide
 	// lines only. Interactive cards and the student's own entries are NEVER
@@ -541,12 +543,14 @@ export function DeliberationChat(
 		const text = mineDraft.trim();
 		const changed = text !== mine.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
-		// ALL the ideas the student has accepted, live — every accepted
-		// suggestion stays visible while editing, not just the latest one.
+		// ALL the ideas the student has accepted or already woven in, live —
+		// every one stays visible while editing, not just the latest.
 		// The just-accepted text rides on the card ref until the resolve
 		// lands in the snapshot (dedupe by text once it does).
 		const acceptedIdeas = (getDeliberationState().suggestions[mine.statementId] ?? []).filter(
-			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.accepted,
+			(entry) =>
+				entry.suggestionStatus === AgoraSuggestionStatus.accepted ||
+				entry.suggestionStatus === AgoraSuggestionStatus.implemented,
 		);
 		const pendingAccept =
 			card.acceptedText !== undefined &&
@@ -635,11 +639,45 @@ export function DeliberationChat(
 							m('.chat-drawer__inner', [
 								m('.chat-drawer__list', [
 									// Nested array (own fragment) — keyed items must not be
-									// spread among unkeyed siblings (Mithril mixed-keys crash)
+									// spread among unkeyed siblings (Mithril mixed-keys crash).
+									// The second mark of the lifecycle: accept said "I like
+									// it"; the ✓ here says "it's in the text now" — precise
+									// attribution the suggester gets notified about.
 									acceptedIdeas.map((entry) =>
-										m('p.chat-drawer__item', { key: entry.statementId }, entry.statement),
+										m('.chat-drawer__item', { key: entry.statementId }, [
+											m('p.chat-drawer__item-text', entry.statement),
+											entry.suggestionStatus === AgoraSuggestionStatus.implemented
+												? m('span.chat-drawer__done', `✓ ${t('delib.implemented')}`)
+												: m(
+														'button.chat-drawer__mark',
+														{
+															disabled: !active || wovenBusy[entry.statementId] === true,
+															onclick: () => {
+																wovenBusy[entry.statementId] = true;
+																resolveSuggestion(
+																	live.sessionId,
+																	entry.statementId,
+																	AgoraSuggestionStatus.implemented,
+																)
+																	.catch((error: unknown) => {
+																		console.error(
+																			'[DelibChat] Mark woven failed:',
+																			error,
+																		);
+																	})
+																	.finally(() => {
+																		wovenBusy[entry.statementId] = false;
+																		m.redraw();
+																	});
+															},
+														},
+														`✓ ${t('chat.mark_woven')}`,
+													),
+										]),
 									),
-									pendingAccept ? m('p.chat-drawer__item', pendingAccept) : null,
+									pendingAccept
+										? m('.chat-drawer__item', m('p.chat-drawer__item-text', pendingAccept))
+										: null,
 								]),
 							]),
 						),
@@ -743,11 +781,13 @@ export function DeliberationChat(
 							]
 						: m(
 								'span.values__score',
-								suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-									? t('delib.accepted')
-									: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
-										? t('delib.declined')
-										: t('delib.thanked'),
+								suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
+									? `✓ ${t('delib.implemented')}`
+									: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
+										? t('delib.accepted')
+										: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
+											? t('delib.declined')
+											: t('delib.thanked'),
 							),
 				]),
 			),
@@ -948,13 +988,15 @@ export function DeliberationChat(
 		const improvedSince = proposal.lastUpdate > latestInput;
 		const draft = followUpDrafts[proposal.statementId] ?? '';
 		const statusKey = (suggestion: AgoraProposal): string =>
-			suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-				? 'delib.accepted'
-				: suggestion.suggestionStatus === AgoraSuggestionStatus.thanked
-					? 'delib.thanked'
-					: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
-						? 'delib.declined'
-						: 'delib.helped_status_open';
+			suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
+				? 'delib.implemented'
+				: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
+					? 'delib.accepted'
+					: suggestion.suggestionStatus === AgoraSuggestionStatus.thanked
+						? 'delib.thanked'
+						: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
+							? 'delib.declined'
+							: 'delib.helped_status_open';
 
 		return m('.card.stack.helped__item', { key: proposal.statementId }, [
 			m('.owner-row', [

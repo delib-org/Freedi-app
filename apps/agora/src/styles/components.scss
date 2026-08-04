@@ -1087,6 +1087,14 @@
 			box-shadow: 0 0 10px rgba(23, 128, 77, 0.25);
 		}
 
+		// The strongest acknowledgment: the idea is IN the text now
+		&--implemented {
+			border-color: var(--success);
+			background: var(--success);
+			color: #ffffff;
+			box-shadow: 0 0 10px rgba(23, 128, 77, 0.35);
+		}
+
 		&--thanked {
 			border-color: var(--camp-center-glow);
 			color: var(--camp-center-glow);

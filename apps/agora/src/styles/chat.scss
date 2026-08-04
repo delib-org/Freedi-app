@@ -403,18 +403,60 @@
 	   a slim peer-orange bar marking the content as a classmate's 📙
 	   contribution — ownership color on the content, never on the control */
 	&__item {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
 		margin: 0;
 		padding-block: var(--space-sm);
 		padding-inline-start: var(--space-sm);
 		border-inline-start: 3px solid var(--peer);
-		font-size: var(--font-size-base);
-		font-style: italic;
-		line-height: 1.5;
-		color: var(--text-primary);
 
 		& + & {
 			border-block-start: 1px solid var(--border-subtle);
 		}
+	}
+
+	&__item-text {
+		flex: 1;
+		margin: 0;
+		font-size: var(--font-size-base);
+		font-style: italic;
+		line-height: 1.5;
+		color: var(--text-primary);
+	}
+
+	/* The second mark of the lifecycle: "it's in the text now" */
+	&__mark {
+		flex-shrink: 0;
+		padding: 4px var(--space-md);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		color: var(--success);
+		background: var(--bg-card-solid);
+		border: 1.5px solid var(--success);
+		border-radius: var(--radius-full);
+		cursor: pointer;
+		transition: background var(--motion-fast) ease;
+
+		&:hover:not(:disabled) {
+			background: rgba(23, 128, 77, 0.08);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+	}
+
+	&__done {
+		flex-shrink: 0;
+		padding: 4px var(--space-md);
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		color: var(--text-on-lantern);
+		background: var(--success);
+		border-radius: var(--radius-full);
 	}
 }
 
