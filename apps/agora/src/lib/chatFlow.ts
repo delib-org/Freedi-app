@@ -247,6 +247,11 @@ export function computeNudge(
 	if (input.openSuggestionsOnMine > 0) {
 		return { key: 'chat.nudge_feedback', params: { n: input.openSuggestionsOnMine } };
 	}
+	if (input.helpedChanged > 0) {
+		// A proposal this student helped just changed — invite them to see
+		// their influence and reconsider their rating (the loop closes here)
+		return { key: 'chat.nudge_helped_changed' };
+	}
 	if (!input.hasCharacterReview && !input.visited.askCharacters) {
 		return { key: 'chat.nudge_characters' };
 	}

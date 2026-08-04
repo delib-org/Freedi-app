@@ -273,6 +273,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.nudge_rate': 'כדאי לדרג עוד כמה הצעות — הכיתה צריכה את הקול שלכם.',
 		'chat.nudge_rate_under': 'יש הצעות שכמעט לא דורגו — אולי תציצו בהן?',
 		'chat.nudge_feedback': 'יש {{n}} הצעות שיפור חדשות על ההצעה שלכם!',
+		'chat.nudge_helped_changed': 'הצעה שעזרתם לה השתנתה — הציצו בשינוי, ואם הוא טוב בעיניכם עדכנו את הדירוג.',
 		'chat.nudge_characters': 'עוד לא שאלתם את בני התקופה מה דעתם על ההצעה שלכם.',
 		'chat.nudge_generic': 'אפשר לשפר את ההצעה שלכם או לעזור לאחרים.',
 		'chat.branch_feedback_intro': 'הנה מה שההצעה שלכם 📘 קיבלה עד עכשיו:',
@@ -566,6 +567,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.nudge_rate': 'It is worth rating a few more proposals — the class needs your voice.',
 		'chat.nudge_rate_under': 'Some proposals have barely been rated — maybe take a look?',
 		'chat.nudge_feedback': 'There are {{n}} new improvement suggestions on your proposal!',
+		'chat.nudge_helped_changed': 'A proposal you helped has changed — take a look, and if you like the change, update your rating.',
 		'chat.nudge_characters':
 			'You have not yet asked the people of the era what they think of your proposal.',
 		'chat.nudge_generic': 'You can improve your proposal or help others.',
@@ -851,6 +853,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.nudge_rate': 'يجدر تقييم بضعة اقتراحات أخرى — الصف يحتاج إلى صوتكم.',
 		'chat.nudge_rate_under': 'هناك اقتراحات لم تُقيَّم تقريبًا — ربما تلقون نظرة؟',
 		'chat.nudge_feedback': 'هناك {{n}} اقتراحات تحسين جديدة على اقتراحكم!',
+		'chat.nudge_helped_changed': 'اقتراح ساعدتموه تغيّر — ألقوا نظرة، وإذا أعجبكم التغيير حدّثوا تقييمكم.',
 		'chat.nudge_characters': 'لم تسألوا أهل الحقبة بعد عن رأيهم في اقتراحكم.',
 		'chat.nudge_generic': 'يمكنكم تحسين اقتراحكم أو مساعدة الآخرين.',
 		'chat.branch_feedback_intro': 'إليكم ما تلقّاه اقتراحكم 📘 حتى الآن:',
@@ -1149,6 +1152,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Vale la pena valorar algunas propuestas más — la clase necesita vuestra voz.',
 		'chat.nudge_rate_under': 'Hay propuestas casi sin valorar — ¿les echáis un vistazo?',
 		'chat.nudge_feedback': '¡Hay {{n}} sugerencias de mejora nuevas en vuestra propuesta!',
+		'chat.nudge_helped_changed': 'Una propuesta que ayudasteis ha cambiado — echad un vistazo y, si os gusta el cambio, actualizad vuestra valoración.',
 		'chat.nudge_characters':
 			'Aún no habéis preguntado a la gente de la época qué opina de vuestra propuesta.',
 		'chat.nudge_generic': 'Podéis mejorar vuestra propuesta o ayudar a otros.',
@@ -1456,6 +1460,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.nudge_rate': 'Bewertet noch ein paar Vorschläge — die Klasse braucht eure Stimme.',
 		'chat.nudge_rate_under': 'Einige Vorschläge wurden kaum bewertet — schaut sie euch doch an?',
 		'chat.nudge_feedback': 'Es gibt {{n}} neue Verbesserungsvorschläge zu eurem Vorschlag!',
+		'chat.nudge_helped_changed': 'Ein Vorschlag, dem ihr geholfen habt, hat sich geändert — schaut ihn an und aktualisiert eure Bewertung, wenn euch die Änderung gefällt.',
 		'chat.nudge_characters':
 			'Ihr habt die Menschen der Epoche noch nicht gefragt, was sie von eurem Vorschlag halten.',
 		'chat.nudge_generic': 'Ihr könnt euren Vorschlag verbessern oder anderen helfen.',
@@ -1758,6 +1763,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.nudge_rate': 'Beoordeel nog een paar voorstellen — de klas heeft jullie stem nodig.',
 		'chat.nudge_rate_under': 'Sommige voorstellen zijn nauwelijks beoordeeld — kijk er eens naar?',
 		'chat.nudge_feedback': 'Er zijn {{n}} nieuwe verbetersuggesties op jullie voorstel!',
+		'chat.nudge_helped_changed': 'Een voorstel dat jullie hebben geholpen is veranderd — kijk ernaar en werk je beoordeling bij als je de verandering goed vindt.',
 		'chat.nudge_characters':
 			'Jullie hebben de mensen van het tijdperk nog niet gevraagd wat ze van jullie voorstel vinden.',
 		'chat.nudge_generic': 'Jullie kunnen je voorstel verbeteren of anderen helpen.',

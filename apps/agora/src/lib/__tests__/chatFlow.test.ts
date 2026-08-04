@@ -547,6 +547,14 @@ describe('computeNudge', () => {
 		expect(computeNudge({ ...base, openSuggestionsOnMine: 2 })?.key).toBe('chat.nudge_feedback');
 	});
 
+	it('then a helped proposal that changed (the loop-closing invite)', () => {
+		expect(computeNudge({ ...base, helpedChanged: 1 })?.key).toBe('chat.nudge_helped_changed');
+		// Fresh feedback on my own proposal still outranks it
+		expect(computeNudge({ ...base, helpedChanged: 1, openSuggestionsOnMine: 1 })?.key).toBe(
+			'chat.nudge_feedback',
+		);
+	});
+
 	it('then unvisited characters', () => {
 		expect(computeNudge({ ...base, visited: { ...base.visited, askCharacters: false } })?.key).toBe(
 			'chat.nudge_characters',
