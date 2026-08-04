@@ -371,6 +371,20 @@ export function DeliberationChat(
 		);
 
 		return m('.card.chat-composer', [
+			// The proposal being improved, quoted in place — the card must
+			// carry its own context once the rate card scrolls away
+			target
+				? m('.chat-composer__quote', [
+						m('.owner-row', [
+							m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
+							m(
+								'span.owner-row__number',
+								t('delib.proposal_number', { n: proposalNumber(target) }),
+							),
+						]),
+						m('p.chat-composer__quote-text', target.statement),
+					])
+				: null,
 			m('p.workshop__question', t('delib.help_question')),
 			m('p.square-says__meaning', t('delib.help_dont_attack')),
 			m('textarea.text-input', {

@@ -184,6 +184,25 @@
 		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
+
+	/* The proposal being improved, quoted at the top of the composer —
+	   orange edge = a classmate's text (ownership color law) */
+	&__quote {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-inset);
+		border-inline-start: 3px solid var(--peer);
+		border-radius: var(--radius-sm);
+	}
+
+	&__quote-text {
+		margin: 0;
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		line-height: 1.45;
+	}
 }
 
 /* The menu: "what would you like to do?" quick-reply buttons */
