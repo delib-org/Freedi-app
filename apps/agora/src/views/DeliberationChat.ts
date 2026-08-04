@@ -558,8 +558,7 @@ export function DeliberationChat(
 		// the hero), but arrives OPEN right after an accept — the guide just
 		// said "weave the idea in", so hiding it then would fight the flow.
 		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
-		const drawerOpen =
-			acceptedDrawerOpen[entryId] ?? (active && card.acceptedText !== undefined);
+		const drawerOpen = acceptedDrawerOpen[entryId] ?? (active && card.acceptedText !== undefined);
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
@@ -612,7 +611,7 @@ export function DeliberationChat(
 			// proposal — the count invites a peek without stealing the stage.
 			// Peer-orange accent: the ideas are classmates' 📙 contributions.
 			ideaCount > 0
-				? m('.chat-drawer', [
+				? m('.chat-drawer', { class: drawerOpen ? 'chat-drawer--open' : undefined }, [
 						m(
 							'button.chat-drawer__head',
 							{
@@ -625,23 +624,25 @@ export function DeliberationChat(
 							[
 								m('span.chat-drawer__title', `💡 ${t('chat.accepted_reminder')}`),
 								m('span.chat-drawer__count', String(ideaCount)),
-								m(
-									'span.chat-drawer__chevron',
-									{ class: drawerOpen ? 'chat-drawer__chevron--open' : undefined },
-									'▾',
-								),
+								m('span.chat-drawer__chevron', { 'aria-hidden': 'true' }),
 							],
 						),
-						drawerOpen
-							? m('.chat-drawer__body', [
+						// The panel stays in the DOM so the 0fr→1fr grid transition
+						// can animate the expand/collapse (see chat.scss)
+						m(
+							'.chat-drawer__panel',
+							{ 'aria-hidden': String(!drawerOpen) },
+							m('.chat-drawer__inner', [
+								m('.chat-drawer__list', [
 									// Nested array (own fragment) — keyed items must not be
 									// spread among unkeyed siblings (Mithril mixed-keys crash)
 									acceptedIdeas.map((entry) =>
-										m('p.chat-accepted__text', { key: entry.statementId }, entry.statement),
+										m('p.chat-drawer__item', { key: entry.statementId }, entry.statement),
 									),
-									pendingAccept ? m('p.chat-accepted__text', pendingAccept) : null,
-								])
-							: null,
+									pendingAccept ? m('p.chat-drawer__item', pendingAccept) : null,
+								]),
+							]),
+						),
 					])
 				: null,
 			m(NeedsPeek, { topic: initialVnode.attrs.topic }),

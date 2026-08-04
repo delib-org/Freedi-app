@@ -289,19 +289,19 @@
 	}
 }
 
-/* ------------------------------------------------- accepted-idea reminder */
+/* --------------------------------------------- accepted-ideas accordion */
 
-/* The improvement suggestion the owner just accepted, quoted above their
-   editor so they can weave it in without remembering it. Peer-orange
-   accent: the idea is a classmate's 📙 contribution, per the ownership law. */
-/* Accepted improvement suggestions: a collapsed drawer beneath the
-   proposal editor — the count invites a peek, the proposal stays the hero.
-   Peer-orange accent: the ideas are classmates' 📙 contributions. */
+/* Accepted improvement suggestions, in a classic accordion beneath the
+   proposal editor. The CONTROL is deliberately neutral chrome — a tinted
+   full-width header row on a white panel with a gray chevron chip at the
+   far end — so it reads "tap me, I expand", never "alert banner". Only the
+   CONTENT carries the peer-orange accent (the ideas are classmates' 📙
+   contributions, per the ownership law): the count badge and a slim bar
+   on each idea row. */
 .chat-drawer {
-	background: var(--parchment);
+	background: var(--bg-card-solid);
 	border: 1px solid var(--border-subtle);
-	border-inline-start: 4px solid var(--peer);
-	border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+	border-radius: var(--radius-md);
 	overflow: hidden;
 
 	&__head {
@@ -309,36 +309,20 @@
 		align-items: center;
 		gap: var(--space-sm);
 		width: 100%;
-		padding: var(--space-md);
-		background: none;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-inset);
 		border: none;
 		cursor: pointer;
 		text-align: start;
 		transition: background var(--motion-fast) ease;
 
-		&:hover:not(:disabled) {
-			background: rgba(224, 119, 20, 0.08);
-		}
-
-		&[aria-expanded='true'] {
-			border-block-end: 1px solid var(--border-subtle);
+		&:hover:not(:disabled),
+		&:focus-visible {
+			background: rgba(37, 90, 150, 0.13);
 		}
 
 		&:disabled {
 			cursor: default;
-		}
-	}
-
-	/* Accordion grammar: chevron at the far end, pointing DOWN when closed
-	   (direction-free), flipping up when open */
-	&__chevron {
-		font-size: 1.1rem;
-		line-height: 1;
-		color: var(--peer-glow);
-		transition: transform var(--motion-fast) ease;
-
-		&--open {
-			transform: rotate(180deg);
 		}
 	}
 
@@ -347,7 +331,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-base);
-		color: var(--peer-glow);
+		color: var(--text-primary);
 	}
 
 	&__count {
@@ -363,34 +347,80 @@
 		border-radius: var(--radius-full);
 	}
 
-	&__body {
+	/* The tell-tale accordion affordance: a gray chevron in its own round
+	   chip at the far end. Points DOWN when closed (direction-free, so the
+	   physical borders are RTL-safe), flips up when open. */
+	&__chevron {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 28px;
+		height: 28px;
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-full);
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&::before {
+			content: '';
+			width: 8px;
+			height: 8px;
+			border-right: 2px solid var(--text-secondary);
+			border-bottom: 2px solid var(--text-secondary);
+			transform: translateY(-2px) rotate(45deg);
+		}
+	}
+
+	&--open &__chevron {
+		transform: rotate(180deg);
+	}
+
+	/* Expand/collapse via the 0fr→1fr grid-track trick: the panel is always
+	   in the DOM, so the motion itself teaches "this is an accordion" */
+	&__panel {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows var(--motion-base) var(--ease-camera);
+	}
+
+	&--open &__panel {
+		grid-template-rows: 1fr;
+	}
+
+	&__inner {
+		min-height: 0;
+		overflow: hidden;
+	}
+
+	&__list {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: rgba(255, 255, 255, 0.5);
+		padding: var(--space-xs) var(--space-md) var(--space-md);
+		border-block-start: 1px solid var(--border-subtle);
 	}
-}
 
-.chat-accepted {
-	&__text {
+	/* Each accepted idea is a list row: hairline dividers between rows, and
+	   a slim peer-orange bar marking the content as a classmate's 📙
+	   contribution — ownership color on the content, never on the control */
+	&__item {
 		margin: 0;
-		padding-block-start: var(--space-sm);
+		padding-block: var(--space-sm);
+		padding-inline-start: var(--space-sm);
+		border-inline-start: 3px solid var(--peer);
 		font-size: var(--font-size-base);
 		font-style: italic;
 		line-height: 1.5;
 		color: var(--text-primary);
-		border-block-start: 1px dashed var(--border-subtle);
 
-		&:first-child {
-			padding-block-start: 0;
-			border-block-start: none;
+		& + & {
+			border-block-start: 1px solid var(--border-subtle);
 		}
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.chat-drawer__chevron {
+	.chat-drawer__chevron,
+	.chat-drawer__panel {
 		transition: none;
 	}
 }
