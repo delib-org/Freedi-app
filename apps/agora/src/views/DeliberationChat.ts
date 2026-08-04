@@ -623,9 +623,13 @@ export function DeliberationChat(
 								},
 							},
 							[
-								m('span.chat-drawer__chevron', { class: drawerOpen ? 'chat-drawer__chevron--open' : undefined }, '▸'),
 								m('span.chat-drawer__title', `💡 ${t('chat.accepted_reminder')}`),
 								m('span.chat-drawer__count', String(ideaCount)),
+								m(
+									'span.chat-drawer__chevron',
+									{ class: drawerOpen ? 'chat-drawer__chevron--open' : undefined },
+									'▾',
+								),
 							],
 						),
 						drawerOpen
