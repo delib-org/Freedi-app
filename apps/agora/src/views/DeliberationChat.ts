@@ -23,7 +23,6 @@ import {
 	selectCandidates,
 	computeMenuOptions,
 	computeNudge,
-	totalRaters,
 	RATE_OPTIONS,
 	MenuInput,
 	TranscriptEntry,
@@ -37,7 +36,6 @@ import {
 	AgoraCharacter,
 	AgoraCharacterReview,
 	AgoraParticipant,
-	AgoraProposalScore,
 	AgoraSession,
 	AgoraStage,
 	AgoraSuggestionStatus,
@@ -58,72 +56,6 @@ export interface DeliberationChatAttrs {
 
 /** How long the guide "types" before a line appears */
 const TYPING_MS = 550;
-
-/** One camp column of the scoreboard: dot + name over a support bar + "N rated" */
-function campColumn(
-	label: string,
-	colorVar: string,
-	aggregate: { sum: number; n: number } | undefined,
-): m.Children {
-	const n = aggregate?.n ?? 0;
-	const support = n > 0 ? Math.max(0, Math.min(1, (aggregate?.sum ?? 0) / n)) : 0;
-
-	return m('.scoreboard__camp', [
-		m('.scoreboard__camp-name', [
-			m('span.camp-bar__dot', { style: { background: `var(${colorVar})` } }),
-			m('span', { style: { color: `var(${colorVar})` } }, label),
-		]),
-		m('.scoreboard__camp-track', [
-			m('.scoreboard__camp-fill', {
-				style: { width: `${support * 100}%`, background: `var(${colorVar})` },
-			}),
-		]),
-		m('span.scoreboard__camp-count', t('delib.raters_count', { n })),
-	]);
-}
-
-/** The scoreboard panel: both camps side by side + the bridge-power meter */
-function scoreboard(
-	topic: AgoraTopicPackage,
-	score: AgoraProposalScore | undefined,
-	ratingsMoved: number,
-): m.Children {
-	const raters = totalRaters(score);
-	const bridging = score?.bridgingScore ?? 0;
-
-	return m('.card.scoreboard', [
-		m('.owner-row', [m('span.owner-chip.owner-chip--mine', `📘 ${t('delib.owner_mine')}`)]),
-		m('.scoreboard__camps', [
-			campColumn(topic.positioningScale.leftLabel, '--camp-left-glow', score?.perCamp.left),
-			m('.scoreboard__divider'),
-			campColumn(topic.positioningScale.rightLabel, '--camp-right-glow', score?.perCamp.right),
-		]),
-		m('.scoreboard__bridge', [
-			m('.scoreboard__bridge-head', [
-				m('span.scoreboard__bridge-label', t('delib.bridge_power')),
-				m('span.scoreboard__bridge-value', [
-					String(bridging),
-					m('span.scoreboard__bridge-max', '/100'),
-				]),
-			]),
-			m('.scoreboard__meter', [
-				m(
-					'.scoreboard__meter-fill',
-					{ style: { width: `${bridging}%` } },
-					m('span.scoreboard__meter-spark'),
-				),
-			]),
-			m(
-				'p.scoreboard__caption',
-				raters === 0 ? t('delib.no_raters_yet') : t('delib.bridge_meaning'),
-			),
-			// Aggregate ONLY — individual ratings stay anonymous
-			ratingsMoved > 0
-				? m('p.scoreboard__updated', `📈 ${t('delib.ratings_moved', { n: ratingsMoved })}`)
-				: null,
-		]),
-	]);
-}
 
 /**
  * The deliberation square as a CONVERSATION: a scripted guide walks the
@@ -645,20 +577,18 @@ export function DeliberationChat(
 		]);
 	}
 
-	// ---- my feedback (suggestions received + scoreboard) ----------------
+	// ---- my feedback (suggestions received) ------------------------------
+	// The scoreboard (camp columns + bridge meter) was removed 2026-08-04 —
+	// a proper scoring board will come later.
 
 	function myFeedbackCard(active: boolean): m.Children {
 		const live = initialVnode.attrs.session;
 		const mine = myProposal();
 		if (!mine) return m('.card', m('.spinner'));
-		const { suggestions, studentEvalTimes, scores } = getDeliberationState();
+		const { suggestions } = getDeliberationState();
 		const mySuggestions = [...(suggestions[mine.statementId] ?? [])].reverse();
-		const ratingsMoved = (studentEvalTimes[mine.statementId] ?? []).filter(
-			(entry) => entry.evaluatorId !== userId && entry.updatedAt > mine.lastUpdate,
-		).length;
 
 		return m('.stack', [
-			scoreboard(initialVnode.attrs.topic, scores[mine.statementId], ratingsMoved),
 			mySuggestions.length === 0
 				? m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))
 				: null,
