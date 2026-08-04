@@ -294,29 +294,99 @@
 /* The improvement suggestion the owner just accepted, quoted above their
    editor so they can weave it in without remembering it. Peer-orange
    accent: the idea is a classmate's 📙 contribution, per the ownership law. */
-.chat-accepted {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-xs);
-	padding: var(--space-sm) var(--space-md);
+/* Accepted improvement suggestions: a collapsed drawer beneath the
+   proposal editor — the count invites a peek, the proposal stays the hero.
+   Peer-orange accent: the ideas are classmates' 📙 contributions. */
+.chat-drawer {
 	background: var(--parchment);
 	border: 1px solid var(--border-subtle);
 	border-inline-start: 4px solid var(--peer);
 	border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+	overflow: hidden;
 
-	&__label {
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		width: 100%;
+		padding: var(--space-sm) var(--space-md);
+		background: none;
+		border: none;
+		cursor: pointer;
+		text-align: start;
+
+		&:disabled {
+			cursor: default;
+		}
+	}
+
+	&__chevron {
+		color: var(--peer-glow);
+		transition: transform var(--motion-fast) ease;
+
+		/* Points into reading direction; rotates open in both LTR and RTL */
+		[dir='rtl'] & {
+			transform: scaleX(-1);
+		}
+
+		&--open {
+			transform: rotate(90deg);
+
+			[dir='rtl'] & {
+				transform: scaleX(-1) rotate(90deg);
+			}
+		}
+	}
+
+	&__title {
+		flex: 1;
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
 		color: var(--peer-glow);
 	}
 
+	&__count {
+		display: inline-grid;
+		place-items: center;
+		min-width: 22px;
+		height: 22px;
+		padding-inline: 6px;
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		color: var(--text-on-lantern);
+		background: var(--peer);
+		border-radius: var(--radius-full);
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: 0 var(--space-md) var(--space-md);
+	}
+}
+
+.chat-accepted {
 	&__text {
 		margin: 0;
+		padding-block-start: var(--space-sm);
 		font-size: var(--font-size-base);
 		font-style: italic;
 		line-height: 1.5;
 		color: var(--text-primary);
+		border-block-start: 1px dashed var(--border-subtle);
+
+		&:first-child {
+			padding-block-start: 0;
+			border-block-start: none;
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chat-drawer__chevron {
+		transition: none;
 	}
 }
 

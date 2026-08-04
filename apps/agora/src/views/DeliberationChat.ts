@@ -81,6 +81,8 @@ export function DeliberationChat(
 	const reviewBusy: Record<string, boolean> = {};
 	const followUpDrafts: Record<string, string> = {};
 	const followUpBusy: Record<string, boolean> = {};
+	/** Accepted-ideas accordion open state per my-proposal card (entry id) */
+	const acceptedDrawerOpen: Record<number, boolean> = {};
 
 	// ---- staged reveal (typing effect): a WALL-CLOCK schedule for guide
 	// lines only. Interactive cards and the student's own entries are NEVER
@@ -522,6 +524,7 @@ export function DeliberationChat(
 	function myProposalCard(
 		card: Extract<CardRef, { type: 'my_proposal' }>,
 		active: boolean,
+		entryId: number,
 	): m.Children {
 		const live = initialVnode.attrs.session;
 		const mine = myProposal();
@@ -551,26 +554,19 @@ export function DeliberationChat(
 				? card.acceptedText
 				: undefined;
 
+		// The accepted-ideas drawer: collapsed by default (the proposal is
+		// the hero), but arrives OPEN right after an accept — the guide just
+		// said "weave the idea in", so hiding it then would fight the flow.
+		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
+		const drawerOpen =
+			acceptedDrawerOpen[entryId] ?? (active && card.acceptedText !== undefined);
+
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
 				m('span.my-lantern__icon', '📘'),
 				m('span.my-lantern__title', t('delib.my_proposal')),
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
-			// Accepted suggestions, quoted right where they're needed — the
-			// student weaves them in without having to remember the wording.
-			// Peer-orange accent: the ideas are classmates' 📙 contributions.
-			acceptedIdeas.length > 0 || pendingAccept
-				? m('.chat-accepted', [
-						m('span.chat-accepted__label', `💡 ${t('chat.accepted_reminder')}`),
-						// Nested array (own fragment) — keyed items must not be
-						// spread among unkeyed siblings (Mithril mixed-keys crash)
-						acceptedIdeas.map((entry) =>
-							m('p.chat-accepted__text', { key: entry.statementId }, entry.statement),
-						),
-						pendingAccept ? m('p.chat-accepted__text', pendingAccept) : null,
-					])
-				: null,
 			m('textarea.my-lantern__textarea', {
 				value: mineDraft,
 				rows: 4,
@@ -612,6 +608,38 @@ export function DeliberationChat(
 					t('delib.update_proposal'),
 				),
 			]),
+			// Accepted improvement suggestions live in a drawer BENEATH the
+			// proposal — the count invites a peek without stealing the stage.
+			// Peer-orange accent: the ideas are classmates' 📙 contributions.
+			ideaCount > 0
+				? m('.chat-drawer', [
+						m(
+							'button.chat-drawer__head',
+							{
+								'aria-expanded': String(drawerOpen),
+								disabled: !active,
+								onclick: () => {
+									acceptedDrawerOpen[entryId] = !drawerOpen;
+								},
+							},
+							[
+								m('span.chat-drawer__chevron', { class: drawerOpen ? 'chat-drawer__chevron--open' : undefined }, '▸'),
+								m('span.chat-drawer__title', `💡 ${t('chat.accepted_reminder')}`),
+								m('span.chat-drawer__count', String(ideaCount)),
+							],
+						),
+						drawerOpen
+							? m('.chat-drawer__body', [
+									// Nested array (own fragment) — keyed items must not be
+									// spread among unkeyed siblings (Mithril mixed-keys crash)
+									acceptedIdeas.map((entry) =>
+										m('p.chat-accepted__text', { key: entry.statementId }, entry.statement),
+									),
+									pendingAccept ? m('p.chat-accepted__text', pendingAccept) : null,
+								])
+							: null,
+					])
+				: null,
 			m(NeedsPeek, { topic: initialVnode.attrs.topic }),
 			active ? backToMenu() : null,
 		]);
@@ -1013,7 +1041,7 @@ export function DeliberationChat(
 				case 'menu':
 					return menuCard(active);
 				case 'my_proposal':
-					return myProposalCard(card, active);
+					return myProposalCard(card, active, entry.id);
 				case 'my_feedback':
 					return myFeedbackCard(active);
 				case 'characters':
