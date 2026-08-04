@@ -184,24 +184,108 @@
 		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
+}
 
-	/* The proposal being improved, quoted at the top of the composer —
-	   orange edge = a classmate's text (ownership color law) */
-	&__quote {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-md);
-		background: var(--bg-inset);
-		border-inline-start: 3px solid var(--peer);
-		border-radius: var(--radius-sm);
+/* ---------------------------------------------------- poster + advice note */
+
+/* The improvement pair breaks the single-form anatomy on purpose: the
+   classmate's proposal is a mounted POSTER — parchment, pin, orange awning,
+   clearly NOT an input — and the student's reply is a smaller sticky NOTE
+   pinned beneath it. Two different physical objects, so "theirs vs mine"
+   reads before a single word does. (Resurrected from the places-era
+   .stand-poster / .advice-note.) */
+.chat-poster {
+	position: relative;
+	margin-block-start: var(--space-sm); /* headroom for the pin */
+	background:
+		linear-gradient(180deg, rgba(224, 119, 20, 0.08), transparent 30%),
+		var(--parchment);
+	border: 1px solid rgba(169, 126, 82, 0.5);
+	border-block-start: 10px solid var(--peer);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	padding: var(--space-md) var(--space-lg) var(--space-lg);
+
+	&__pin {
+		position: absolute;
+		inset-block-start: -7px;
+		inset-inline: 0;
+		margin-inline: auto;
+		width: 14px;
+		height: 14px;
+		border-radius: var(--radius-full);
+		background: #ffd23f;
+		border: 2px solid #b97300;
+		box-shadow: 0 2px 4px rgba(37, 51, 82, 0.3);
 	}
 
-	&__quote-text {
-		margin: 0;
-		color: var(--text-primary);
+	/* The poster carries the biggest text in the card — it is the OBJECT
+	   being improved, dominant over the note below */
+	&__text {
+		margin-block-start: var(--space-sm);
+		margin-block-end: 0;
+		color: var(--ink);
+		font-size: var(--font-size-lg);
+		line-height: 1.7;
+	}
+}
+
+/* My sticky note: deliberately narrower than the poster, nudged toward the
+   student's own side of the chat (inline-end, where their blue bubbles
+   live), question attached to IT — the input is mine, the poster is theirs.
+   Blue = mine per the ownership law; the rgba(43, 111, 214, *) tints are
+   the codebase's established --lantern rgba pattern (see .owner-chip--mine). */
+.chat-note {
+	position: relative;
+	width: 92%;
+	margin-inline-start: auto;
+	margin-block-start: var(--space-sm); /* headroom for the tape */
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	background: linear-gradient(180deg, #fff3c9, #ffedb3);
+	border: 1px solid rgba(43, 111, 214, 0.35);
+	border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-md);
+	box-shadow: 0 6px 14px rgba(37, 51, 82, 0.14);
+	transform: rotate(-0.6deg);
+
+	&__tape {
+		position: absolute;
+		inset-block-start: -9px;
+		inset-inline: 0;
+		margin-inline: auto;
+		width: 58px;
+		height: 16px;
+		background: rgba(43, 111, 214, 0.25);
+		border: 1px solid rgba(43, 111, 214, 0.4);
+		border-radius: 2px;
+		transform: rotate(-2deg);
+	}
+
+	&__label {
+		font-family: var(--font-display);
+		font-weight: 700;
 		font-size: var(--font-size-sm);
-		line-height: 1.45;
+		color: var(--mine-glow);
+	}
+
+	&__question {
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--ink);
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__input {
+		background: rgba(255, 255, 255, 0.65);
 	}
 }
 

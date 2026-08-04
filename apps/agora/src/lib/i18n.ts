@@ -255,6 +255,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.improve_prompt_2': 'לא מושלם? זו הזדמנות לעזור — מה הייתם משנים כדי לחזק אותה?',
 		'chat.improve_yes': 'אציע שיפור',
 		'chat.improve_skip': 'דילוג הפעם',
+		'chat.my_note': 'הפתק שלי',
 		'chat.improve_thanks_1': 'תודה! ההצעה שלכם נשלחה למחבר — אם היא תתקבל, תזכו בנקודות.',
 		'chat.improve_thanks_2': 'יפה! שלחתי את הרעיון שלכם. נעדכן אתכם אם הוא ייושם.',
 		'chat.opening_done': 'סיימתם את הסבב הפותח — כל הכבוד! מעכשיו אתם בוחרים מה לעשות.',
@@ -537,6 +538,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Not perfect? Here is a chance to help — what would you change to make it stronger?',
 		'chat.improve_yes': 'I will suggest an improvement',
 		'chat.improve_skip': 'Skip this time',
+		'chat.my_note': 'My note',
 		'chat.improve_thanks_1':
 			'Thank you! Your suggestion was sent to the author — if it gets accepted, you earn points.',
 		'chat.improve_thanks_2': 'Nice! I sent your idea along. We will let you know if it gets used.',
@@ -816,6 +818,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'chat.improve_prompt_2': 'ليس مثاليًا؟ هذه فرصة للمساعدة — ما الذي كنتم ستغيّرونه لتقويته؟',
 		'chat.improve_yes': 'سأقترح تحسينًا',
 		'chat.improve_skip': 'تخطٍّ هذه المرة',
+		'chat.my_note': 'الملاحظة الخاصة بي',
 		'chat.improve_thanks_1': 'شكرًا! أُرسل اقتراحكم إلى الكاتب — إذا قُبل ستحصلون على نقاط.',
 		'chat.improve_thanks_2': 'جميل! أرسلت فكرتكم. سنخبركم إذا تم تطبيقها.',
 		'chat.opening_done': 'أنهيتم الجولة الافتتاحية — أحسنتم! من الآن أنتم تختارون ماذا تفعلون.',
@@ -1104,6 +1107,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'¿No es perfecta? Es una oportunidad para ayudar — ¿qué cambiaríais para fortalecerla?',
 		'chat.improve_yes': 'Propondré una mejora',
 		'chat.improve_skip': 'Saltar esta vez',
+		'chat.my_note': 'Mi nota',
 		'chat.improve_thanks_1':
 			'¡Gracias! Vuestra sugerencia fue enviada al autor — si la acepta, ganaréis puntos.',
 		'chat.improve_thanks_2': '¡Muy bien! Envié vuestra idea. Os avisaremos si se aplica.',
@@ -1401,6 +1405,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Nicht perfekt? Das ist eine Chance zu helfen — was würdet ihr ändern, um ihn zu stärken?',
 		'chat.improve_yes': 'Ich schlage eine Verbesserung vor',
 		'chat.improve_skip': 'Diesmal überspringen',
+		'chat.my_note': 'Meine Notiz',
 		'chat.improve_thanks_1':
 			'Danke! Euer Vorschlag wurde an den Autor geschickt — wird er angenommen, gibt es Punkte.',
 		'chat.improve_thanks_2':
@@ -1695,6 +1700,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Niet perfect? Dit is een kans om te helpen — wat zouden jullie veranderen om het sterker te maken?',
 		'chat.improve_yes': 'Ik stel een verbetering voor',
 		'chat.improve_skip': 'Deze keer overslaan',
+		'chat.my_note': 'Mijn briefje',
 		'chat.improve_thanks_1':
 			'Dank je! Jullie suggestie is naar de auteur gestuurd — wordt hij aangenomen, dan verdienen jullie punten.',
 		'chat.improve_thanks_2':

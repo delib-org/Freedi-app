@@ -370,11 +370,16 @@ export function DeliberationChat(
 			(proposal) => proposal.statementId === card.proposalId,
 		);
 
+		// Two physical objects, not one form: the classmate's proposal is a
+		// mounted POSTER (parchment + pin + orange awning — clearly not an
+		// input), the student's reply is a smaller sticky NOTE beneath it.
+		// Ownership is legible before a word is read: 📙 orange = theirs,
+		// 📘 blue = mine. The card carries its own context once the rate
+		// card scrolls away.
 		return m('.card.chat-composer', [
-			// The proposal being improved, quoted in place — the card must
-			// carry its own context once the rate card scrolls away
 			target
-				? m('.chat-composer__quote', [
+				? m('.chat-poster', [
+						m('.chat-poster__pin'),
 						m('.owner-row', [
 							m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
 							m(
@@ -382,61 +387,65 @@ export function DeliberationChat(
 								t('delib.proposal_number', { n: proposalNumber(target) }),
 							),
 						]),
-						m('p.chat-composer__quote-text', target.statement),
+						m('p.chat-poster__text', target.statement),
 					])
 				: null,
-			m('p.workshop__question', t('delib.help_question')),
-			m('p.square-says__meaning', t('delib.help_dont_attack')),
-			m('textarea.text-input', {
-				value: improveDraft,
-				rows: 3,
-				placeholder: t('delib.suggest_placeholder'),
-				disabled: !active,
-				oninput: (event: InputEvent) => {
-					improveDraft = (event.target as HTMLTextAreaElement).value;
-				},
-			}),
-			m('.chat-composer__actions', [
-				m(
-					'button.btn.btn--ghost',
-					{
-						disabled: !active,
-						onclick: () => dispatch({ type: 'IMPROVEMENT_SKIPPED' }),
+			m('.chat-note', [
+				m('.chat-note__tape'),
+				m('span.chat-note__label', `📘 ${t('chat.my_note')}`),
+				m('p.chat-note__question', t('delib.help_question')),
+				m('p.chat-note__hint', t('delib.help_dont_attack')),
+				m('textarea.text-input.chat-note__input', {
+					value: improveDraft,
+					rows: 3,
+					placeholder: t('delib.suggest_placeholder'),
+					disabled: !active,
+					oninput: (event: InputEvent) => {
+						improveDraft = (event.target as HTMLTextAreaElement).value;
 					},
-					t('chat.improve_skip'),
-				),
-				m(
-					'button.btn.btn--primary',
-					{
-						disabled:
-							!active ||
-							busy ||
-							!target ||
-							improveDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-						onclick: () => {
-							if (!target) return;
-							const text = improveDraft.trim();
-							busy = true;
-							submitSuggestion(live, target, anonName, text)
-								.then(() => {
-									improveDraft = '';
-									dispatch({
-										type: 'IMPROVEMENT_SENT',
-										proposalId: target.statementId,
-										text,
-									});
-								})
-								.catch((error: unknown) => {
-									console.error('[DelibChat] Suggestion failed:', error);
-								})
-								.finally(() => {
-									busy = false;
-									m.redraw();
-								});
+				}),
+				m('.chat-composer__actions', [
+					m(
+						'button.btn.btn--ghost',
+						{
+							disabled: !active,
+							onclick: () => dispatch({ type: 'IMPROVEMENT_SKIPPED' }),
 						},
-					},
-					t('delib.send_suggestion'),
-				),
+						t('chat.improve_skip'),
+					),
+					m(
+						'button.btn.btn--primary',
+						{
+							disabled:
+								!active ||
+								busy ||
+								!target ||
+								improveDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+							onclick: () => {
+								if (!target) return;
+								const text = improveDraft.trim();
+								busy = true;
+								submitSuggestion(live, target, anonName, text)
+									.then(() => {
+										improveDraft = '';
+										dispatch({
+											type: 'IMPROVEMENT_SENT',
+											proposalId: target.statementId,
+											text,
+										});
+									})
+									.catch((error: unknown) => {
+										console.error('[DelibChat] Suggestion failed:', error);
+									})
+									.finally(() => {
+										busy = false;
+										m.redraw();
+									});
+							},
+						},
+						t('delib.send_suggestion'),
+					),
+				]),
 			]),
 		]);
 	}
