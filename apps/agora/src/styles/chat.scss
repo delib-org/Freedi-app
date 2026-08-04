@@ -404,7 +404,8 @@
 	   contribution — ownership color on the content, never on the control */
 	&__item {
 		display: flex;
-		align-items: center;
+		/* Top-align: the checkbox rides the first line of multi-line ideas */
+		align-items: flex-start;
 		gap: var(--space-sm);
 		margin: 0;
 		padding-block: var(--space-sm);
@@ -425,44 +426,79 @@
 		color: var(--text-primary);
 	}
 
-	/* The second mark of the lifecycle: "it's in the text now" */
-	&__mark {
+	/* The second mark of the lifecycle: "it's in the text now" — a checkbox
+	   at the start of each idea row. Checked = woven into the proposal. */
+	&__check {
 		flex-shrink: 0;
-		padding: 4px var(--space-md);
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-sm);
-		color: var(--success);
-		background: var(--bg-card-solid);
-		border: 1.5px solid var(--success);
-		border-radius: var(--radius-full);
+		display: inline-grid;
+		place-items: center;
+		margin-block-start: 2px; /* optical align with the first text line */
 		cursor: pointer;
-		transition: background var(--motion-fast) ease;
 
-		&:hover:not(:disabled) {
-			background: rgba(23, 128, 77, 0.08);
-		}
-
-		&:disabled {
-			opacity: 0.5;
+		&:has(.chat-drawer__check-input:disabled:not(:checked)) {
 			cursor: default;
 		}
 	}
 
-	&__done {
-		flex-shrink: 0;
-		padding: 4px var(--space-md);
-		font-size: var(--font-size-sm);
-		font-weight: 700;
-		color: var(--text-on-lantern);
+	&__check-input {
+		/* Visually hidden, still keyboard-focusable for a11y. pointer-events
+		   off so the invisible input never intercepts clicks meant for the
+		   drawn box — the wrapping label forwards them to the input anyway */
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	&__check-box {
+		width: 24px;
+		height: 24px;
+		display: grid;
+		place-items: center;
+		background: var(--bg-card-solid);
+		border: 2px solid var(--border-strong);
+		border-radius: var(--radius-sm);
+		transition:
+			background var(--motion-fast) ease,
+			border-color var(--motion-fast) ease;
+
+		&::after {
+			content: '';
+			width: 6px;
+			height: 11px;
+			margin-block-start: -2px;
+			border: solid var(--text-on-lantern);
+			border-width: 0 2.5px 2.5px 0;
+			transform: rotate(45deg) scale(0);
+			transition: transform var(--motion-fast) var(--ease-spring, ease);
+		}
+	}
+
+	&__check-input:hover:not(:disabled) + &__check-box {
+		border-color: var(--success);
+	}
+
+	&__check-input:focus-visible + &__check-box {
+		outline: 2px solid var(--lantern);
+		outline-offset: 2px;
+	}
+
+	&__check-input:checked + &__check-box {
 		background: var(--success);
-		border-radius: var(--radius-full);
+		border-color: var(--success);
+
+		&::after {
+			transform: rotate(45deg) scale(1);
+		}
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.chat-drawer__chevron,
-	.chat-drawer__panel {
+	.chat-drawer__panel,
+	.chat-drawer__check-box,
+	.chat-drawer__check-box::after {
 		transition: none;
 	}
 }

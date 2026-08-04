@@ -83,8 +83,13 @@ export function DeliberationChat(
 	const followUpBusy: Record<string, boolean> = {};
 	/** Accepted-ideas accordion open state per my-proposal card (entry id) */
 	const acceptedDrawerOpen: Record<number, boolean> = {};
-	/** In-flight "mark as woven in" calls per suggestion id */
-	const wovenBusy: Record<string, boolean> = {};
+	/**
+	 * Ideas ticked as "woven in" but NOT yet announced. The tick is a local
+	 * pending mark — only SAVING the updated proposal resolves them to
+	 * implemented and notifies the suggesters, so the announcement always
+	 * arrives together with a real change they can go see and re-rate.
+	 */
+	const wovenPending: Record<string, boolean> = {};
 
 	// ---- staged reveal (typing effect): a WALL-CLOCK schedule for guide
 	// lines only. Interactive cards and the student's own entries are NEVER
@@ -563,6 +568,9 @@ export function DeliberationChat(
 		// said "weave the idea in", so hiding it then would fight the flow.
 		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
 		const drawerOpen = acceptedDrawerOpen[entryId] ?? (active && card.acceptedText !== undefined);
+		const hasPendingWoven = acceptedIdeas.some(
+			(entry) => wovenPending[entry.statementId] === true,
+		);
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
@@ -584,7 +592,9 @@ export function DeliberationChat(
 				m(
 					'button.btn.btn--primary.my-lantern__save',
 					{
-						disabled: !active || !changed || busy,
+						// Pending woven-in ticks also arm the save button: the
+						// update is what announces them to the suggesters
+						disabled: !active || busy || (!changed && !hasPendingWoven),
 						onclick: () => {
 							busy = true;
 							submitProposal(
@@ -597,6 +607,20 @@ export function DeliberationChat(
 									// Improving your own proposal earns glitter — the
 									// behavior the game most wants to reinforce
 									celebrate({ message: t('celebrate.proposal_improved'), detail: text });
+									// NOW the ticked ideas go out: the suggesters'
+									// "woven in" notification arrives together with
+									// the change they can inspect and re-rate
+									for (const [suggestionId, pending] of Object.entries(wovenPending)) {
+										if (!pending) continue;
+										delete wovenPending[suggestionId];
+										resolveSuggestion(
+											live.sessionId,
+											suggestionId,
+											AgoraSuggestionStatus.implemented,
+										).catch((error: unknown) => {
+											console.error('[DelibChat] Mark woven failed:', error);
+										});
+									}
 									dispatch({ type: 'PROPOSAL_UPDATED', hasMoreFeedback: openFeedbackLeft() > 0 });
 								})
 								.catch((error: unknown) => {
@@ -643,38 +667,34 @@ export function DeliberationChat(
 									// The second mark of the lifecycle: accept said "I like
 									// it"; the ✓ here says "it's in the text now" — precise
 									// attribution the suggester gets notified about.
-									acceptedIdeas.map((entry) =>
-										m('.chat-drawer__item', { key: entry.statementId }, [
-											m('p.chat-drawer__item-text', entry.statement),
-											entry.suggestionStatus === AgoraSuggestionStatus.implemented
-												? m('span.chat-drawer__done', `✓ ${t('delib.implemented')}`)
-												: m(
-														'button.chat-drawer__mark',
-														{
-															disabled: !active || wovenBusy[entry.statementId] === true,
-															onclick: () => {
-																wovenBusy[entry.statementId] = true;
-																resolveSuggestion(
-																	live.sessionId,
-																	entry.statementId,
-																	AgoraSuggestionStatus.implemented,
-																)
-																	.catch((error: unknown) => {
-																		console.error(
-																			'[DelibChat] Mark woven failed:',
-																			error,
-																		);
-																	})
-																	.finally(() => {
-																		wovenBusy[entry.statementId] = false;
-																		m.redraw();
-																	});
-															},
+									acceptedIdeas.map((entry) => {
+										const woven =
+											entry.suggestionStatus === AgoraSuggestionStatus.implemented;
+										const pending = wovenPending[entry.statementId] === true;
+
+										return m('.chat-drawer__item', { key: entry.statementId }, [
+											m(
+												'label.chat-drawer__check',
+												{ title: woven ? t('delib.implemented') : t('chat.mark_woven') },
+												[
+													m('input.chat-drawer__check-input', {
+														type: 'checkbox',
+														// A tick is a PENDING mark — saving the
+														// proposal is what announces it (until then
+														// it can be freely unticked)
+														checked: woven || pending,
+														disabled: !active || woven,
+														'aria-label': t('chat.mark_woven'),
+														onchange: () => {
+															wovenPending[entry.statementId] = !pending;
 														},
-														`✓ ${t('chat.mark_woven')}`,
-													),
-										]),
-									),
+													}),
+													m('span.chat-drawer__check-box', { 'aria-hidden': 'true' }),
+												],
+											),
+											m('p.chat-drawer__item-text', entry.statement),
+										]);
+									}),
 									pendingAccept
 										? m('.chat-drawer__item', m('p.chat-drawer__item-text', pendingAccept))
 										: null,
