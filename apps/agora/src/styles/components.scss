@@ -2118,6 +2118,48 @@
 		color: var(--lantern-glow);
 		line-height: 1.4;
 	}
+
+	// The accepted card doesn't vanish — it SAILS up into the adopted-ideas
+	// drawer, so the motion itself answers "where did it go?". A small
+	// anticipation lift first, then the dive; --fly-x/y are set per-flight
+	// from the two rects (JS: flyToAcceptedDrawer).
+	&__item--flying {
+		pointer-events: none;
+		position: relative;
+		z-index: 5;
+		animation: fly-to-drawer 650ms var(--ease-camera) forwards;
+	}
+}
+
+@keyframes fly-to-drawer {
+	20% {
+		transform: translate(0, -10px) scale(1.04) rotate(1.5deg);
+		opacity: 1;
+	}
+
+	100% {
+		transform: translate(var(--fly-x, 0), var(--fly-y, -200px)) scale(0.1) rotate(-8deg);
+		opacity: 0;
+	}
+}
+
+// The landing half of the arc: the drawer visibly catches the idea
+.chat-drawer__head--landed {
+	animation: drawer-catch 500ms ease;
+}
+
+@keyframes drawer-catch {
+	35% {
+		transform: scale(1.03);
+		background: rgba(255, 210, 63, 0.3);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.workshop__item--flying,
+	.chat-drawer__head--landed {
+		animation: none;
+	}
 }
 
 // --- Character chips: compact tappable row; verdict expands beneath ---

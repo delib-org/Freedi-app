@@ -337,6 +337,50 @@ export function Deliberation(
 	 */
 	let pendingAcceptText: string | undefined;
 	/**
+	 * Suggestions mid-flight to the accepted-ideas drawer. Membership does two
+	 * jobs: it hides the card from the received list on the very click (before
+	 * the snapshot confirms), and it tells onbeforeremove THIS removal is an
+	 * acceptance — deserving the flight — and not an accordion fold.
+	 */
+	const flyingAccepted = new Set<string>();
+
+	/**
+	 * The exit animation of an accepted card: it shrinks and sails INTO the
+	 * accepted-ideas drawer, so "where did it go?" is answered by the motion
+	 * itself. Returns the promise Mithril awaits before dropping the node.
+	 */
+	function flyToAcceptedDrawer(dom: HTMLElement, suggestionId: string): Promise<void> | undefined {
+		// Membership is only READ here — it must outlive the flight, or a
+		// redraw racing the server snapshot resurrects the card mid-air.
+		// The list filter retires the id once the accepted status lands.
+		if (!flyingAccepted.has(suggestionId)) return undefined;
+		const target = document.querySelector<HTMLElement>('.chat-drawer__head');
+		if (!target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			return undefined;
+		}
+		const from = dom.getBoundingClientRect();
+		const to = target.getBoundingClientRect();
+		dom.style.setProperty('--fly-x', `${to.left + to.width / 2 - (from.left + from.width / 2)}px`);
+		dom.style.setProperty('--fly-y', `${to.top + to.height / 2 - (from.top + from.height / 2)}px`);
+		dom.classList.add('workshop__item--flying');
+
+		return new Promise((resolve) => {
+			let settled = false;
+			const done = () => {
+				if (settled) return;
+				settled = true;
+				// The drawer visibly CATCHES the idea — the landing half of the arc
+				target.classList.add('chat-drawer__head--landed');
+				window.setTimeout(() => target.classList.remove('chat-drawer__head--landed'), 700);
+				resolve();
+			};
+			dom.addEventListener('animationend', done, { once: true });
+			// If the animation never runs (styles missing, tab hidden), the
+			// card must not haunt the list as an un-removable ghost
+			window.setTimeout(done, 900);
+		});
+	}
+	/**
 	 * Mine/Others navigation (bottom tabs on mobile, top tabs on desktop).
 	 * "Mine" during rate/help is a PEEK at my workshop — the lap's guided
 	 * progression (mine → rate → help) is untouched.
@@ -784,78 +828,113 @@ export function Deliberation(
 	/** The latest comments & improvement suggestions, right under the editable text */
 	function suggestionsSection(live: AgoraSession, myProposal: AgoraProposal): m.Children {
 		const { suggestions } = getDeliberationState();
-		// Newest first — the freshest feedback sits closest to the edit box
-		const mySuggestions = [...(suggestions[myProposal.statementId] ?? [])].reverse();
+		const allSuggestions = suggestions[myProposal.statementId] ?? [];
+		// Newest first — the freshest feedback sits closest to the edit box.
+		// Accepted ideas are NOT listed here: they moved (visibly, by flight)
+		// into the adopted-ideas drawer, and a card can't live in two places.
+		const mySuggestions = [...allSuggestions].reverse().filter((entry) => {
+			const resolved =
+				entry.suggestionStatus === AgoraSuggestionStatus.accepted ||
+				entry.suggestionStatus === AgoraSuggestionStatus.implemented;
+			// The snapshot has confirmed the acceptance — the local
+			// in-flight flag has done both its jobs and can retire
+			if (resolved) flyingAccepted.delete(entry.statementId);
+
+			return !resolved && !flyingAccepted.has(entry.statementId);
+		});
 
 		return m('.stack', [
-			mySuggestions.length === 0
+			// "No feedback yet" only when there is truly none — a list whose
+			// every idea was adopted is a success, not an empty inbox
+			allSuggestions.length === 0
 				? m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))
 				: null,
 			// Nested array (own fragment) — keyed cards must not be spread
 			// among unkeyed siblings (Mithril mixed-keys crash)
 			mySuggestions.map((suggestion) =>
-				m('.card.stack.workshop__item', { key: suggestion.statementId }, [
-					suggestion.anonName
-						? m(
-								'p.workshop__from',
-								`💡 ${t('delib.suggestion_from', { name: suggestion.anonName })}`,
-							)
-						: null,
-					m('p', suggestion.statement),
-					suggestion.suggestionStatus === AgoraSuggestionStatus.open
-						? [
-								// Two doors, not three: take the idea or let it go. A
-								// middle "thanks" button only bought the student a way
-								// to answer without deciding.
-								m('.delib__actions.delib__actions--tight', [
-									m(
-										'button.btn.btn--ghost.btn--sm',
-										{
-											onclick: () => {
-												void resolveSuggestion(
-													live.sessionId,
-													suggestion.statementId,
-													AgoraSuggestionStatus.declined,
-												);
+				m(
+					'.card.stack.workshop__item',
+					{
+						key: suggestion.statementId,
+						onbeforeremove: (vnode: m.VnodeDOM) =>
+							flyToAcceptedDrawer(vnode.dom as HTMLElement, suggestion.statementId),
+					},
+					[
+						suggestion.anonName
+							? m(
+									'p.workshop__from',
+									`💡 ${t('delib.suggestion_from', { name: suggestion.anonName })}`,
+								)
+							: null,
+						m('p', suggestion.statement),
+						suggestion.suggestionStatus === AgoraSuggestionStatus.open
+							? [
+									// Two doors, not three: take the idea or let it go. A
+									// middle "thanks" button only bought the student a way
+									// to answer without deciding.
+									m('.delib__actions.delib__actions--tight', [
+										m(
+											'button.btn.btn--ghost.btn--sm',
+											{
+												onclick: () => {
+													void resolveSuggestion(
+														live.sessionId,
+														suggestion.statementId,
+														AgoraSuggestionStatus.declined,
+													);
+												},
 											},
-										},
-										t('delib.no_thanks'),
-									),
-									m(
-										'button.btn.btn--primary.btn--sm',
-										{
-											onclick: () => {
-												// The edit box is right above — accepting means:
-												// now weave the idea into your text. Open the
-												// accepted-ideas drawer so the idea is in sight
-												// while editing, not hidden one click away.
-												pendingAcceptText = suggestion.statement;
-												acceptedDrawerOpen = true;
-												void resolveSuggestion(
-													live.sessionId,
-													suggestion.statementId,
-													AgoraSuggestionStatus.accepted,
-												);
+											t('delib.no_thanks'),
+										),
+										m(
+											'button.btn.btn--primary.btn--sm',
+											{
+												onclick: () => {
+													// The edit box is right above — accepting means:
+													// now weave the idea into your text. Open the
+													// accepted-ideas drawer so the idea is in sight
+													// while editing, not hidden one click away.
+													pendingAcceptText = suggestion.statement;
+													acceptedDrawerOpen = true;
+													// Arm the flight BEFORE the redraw: this very
+													// click removes the card, and the exit hook
+													// checks the set to tell acceptance from a fold
+													flyingAccepted.add(suggestion.statementId);
+													resolveSuggestion(
+														live.sessionId,
+														suggestion.statementId,
+														AgoraSuggestionStatus.accepted,
+													).catch((error: unknown) => {
+														// The accept never landed — un-arm, so the
+														// card comes back instead of vanishing
+														flyingAccepted.delete(suggestion.statementId);
+														if (pendingAcceptText === suggestion.statement) {
+															pendingAcceptText = undefined;
+														}
+														console.error('[Delib] Accept suggestion failed:', error);
+														m.redraw();
+													});
+												},
 											},
-										},
-										t('delib.will_implement'),
-									),
-								]),
-								m('p.square-says__meaning', t('delib.accept_hint')),
-							]
-						: m(
-								'span.values__score',
-								// "Woven in" outranks "accepted" — it's the later mark
-								// of the same lifecycle, so it must be tested first
-								suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
-									? `✓ ${t('delib.implemented')}`
-									: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-										? t('delib.accepted')
-										: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
-											? t('delib.declined')
-											: t('delib.thanked'),
-							),
-				]),
+											t('delib.will_implement'),
+										),
+									]),
+									m('p.square-says__meaning', t('delib.accept_hint')),
+								]
+							: m(
+									'span.values__score',
+									// "Woven in" outranks "accepted" — it's the later mark
+									// of the same lifecycle, so it must be tested first
+									suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
+										? `✓ ${t('delib.implemented')}`
+										: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
+											? t('delib.accepted')
+											: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
+												? t('delib.declined')
+												: t('delib.thanked'),
+								),
+					],
+				),
 			),
 		]);
 	}
