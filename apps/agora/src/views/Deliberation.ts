@@ -74,86 +74,6 @@ export function lanternsFromState(
 	});
 }
 
-/** One camp column of the scoreboard: dot + name over a support bar + "N rated" */
-function campColumn(
-	label: string,
-	colorVar: string,
-	aggregate: { sum: number; n: number } | undefined,
-): m.Children {
-	const n = aggregate?.n ?? 0;
-	const support = n > 0 ? Math.max(0, Math.min(1, (aggregate?.sum ?? 0) / n)) : 0;
-
-	return m('.scoreboard__camp', [
-		m('.scoreboard__camp-name', [
-			m('span.camp-bar__dot', { style: { background: `var(${colorVar})` } }),
-			m('span', { style: { color: `var(${colorVar})` } }, label),
-		]),
-		m('.scoreboard__camp-track', [
-			m('.scoreboard__camp-fill', {
-				style: { width: `${support * 100}%`, background: `var(${colorVar})` },
-			}),
-		]),
-		m('span.scoreboard__camp-count', t('delib.raters_count', { n })),
-	]);
-}
-
-/** The scoreboard panel: both camps side by side + the bridge-power meter */
-function scoreboard(
-	topic: AgoraTopicPackage,
-	score: AgoraProposalScore | undefined,
-	own = true,
-	ratingsMoved = 0,
-	proposalN?: number,
-): m.Children {
-	const raters = totalRaters(score);
-	const bridging = score?.bridgingScore ?? 0;
-
-	return m('.card.scoreboard', [
-		// Whose numbers are these? The chip answers before a word is read
-		m('.owner-row', [
-			m(
-				'span.owner-chip',
-				{ class: own ? 'owner-chip--mine' : 'owner-chip--peer' },
-				own ? `📘 ${t('delib.owner_mine')}` : `📙 ${t('delib.owner_peer')}`,
-			),
-			!own && proposalN !== undefined
-				? m('span.owner-row__number', t('delib.proposal_number', { n: proposalN }))
-				: null,
-		]),
-		m('.scoreboard__camps', [
-			campColumn(topic.positioningScale.leftLabel, '--camp-left-glow', score?.perCamp.left),
-			m('.scoreboard__divider'),
-			campColumn(topic.positioningScale.rightLabel, '--camp-right-glow', score?.perCamp.right),
-		]),
-		m('.scoreboard__bridge', [
-			m('.scoreboard__bridge-head', [
-				m('span.scoreboard__bridge-label', t('delib.bridge_power')),
-				m('span.scoreboard__bridge-value', [
-					String(bridging),
-					m('span.scoreboard__bridge-max', '/100'),
-				]),
-			]),
-			m('.scoreboard__meter', [
-				m(
-					'.scoreboard__meter-fill',
-					{ style: { width: `${bridging}%` } },
-					m('span.scoreboard__meter-spark'),
-				),
-			]),
-			m(
-				'p.scoreboard__caption',
-				// "no one rated YOUR proposal yet" only fits the owner's screen
-				raters === 0 && own ? t('delib.no_raters_yet') : t('delib.bridge_meaning'),
-			),
-			// The loop closing: votes moved after my latest improvement.
-			// Aggregate ONLY — individual ratings stay anonymous.
-			own && ratingsMoved > 0
-				? m('p.scoreboard__updated', `📈 ${t('delib.ratings_moved', { n: ratingsMoved })}`)
-				: null,
-		]),
-	]);
-}
-
 /**
  * Each cycle step is a PLACE the student travels to, not a toggled mode —
  * playtests showed color coding alone couldn't separate "mine" from "help".
@@ -1467,13 +1387,9 @@ export function Deliberation(
 						placeBanner('help'),
 						helpTarget
 							? [
-									scoreboard(
-										topic,
-										scores[helpTarget.statementId],
-										false,
-										0,
-										proposalNumber(helpTarget),
-									),
+									// No scoreboard here on purpose: when I come to help, their
+									// numbers are noise — and judging a classmate's score is not
+									// the job. The poster and my note are the whole screen.
 									// Their proposal: mounted, framed, clearly NOT an input
 									m('.stand-poster', [
 										m('.stand-poster__pin', { 'aria-hidden': 'true' }),
