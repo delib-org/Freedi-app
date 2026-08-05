@@ -234,7 +234,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.draft': 'טיוטה',
 		'toast.suggestion_accepted': 'ההצעה שלכם לשיפור התקבלה! ‎+1 נקודה',
 		'toast.suggestion_declined': 'הרעיון לא אומץ הפעם (‎−0.25) — קורה לכולם. נסו זווית אחרת!',
-		'toast.suggestion_thanked': 'קיבלתם תודה על הצעת השיפור! +5 נקודות',
+		'toast.suggestion_thanked': 'קיבלתם תודה על הצעת השיפור! ‎+0.5 נקודה',
 		'toast.round_started': 'סבב חדש נפתח בכיכר!',
 		'hud.class_label': 'גשר הכיתה',
 		'hud.class_empty_dash_aria': 'עדיין אין ניקוד כיתתי',
@@ -565,7 +565,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'toast.suggestion_accepted': 'Your improvement was accepted! +1 point',
 		'toast.suggestion_declined':
 			'Not adopted this time (−0.25) — happens to everyone. Try another angle!',
-		'toast.suggestion_thanked': 'You got a thank-you for your suggestion! +5 points',
+		'toast.suggestion_thanked': 'You got a thank-you for your suggestion! +0.5 points',
 		'toast.round_started': 'A new round opened in the square!',
 		'hud.class_label': 'Class bridge',
 		'hud.class_empty_dash_aria': 'No class score yet',
@@ -899,7 +899,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'toast.suggestion_accepted': 'قُبل اقتراحكم للتحسين! ‎+1 نقطة',
 		'toast.suggestion_declined':
 			'لم تُعتمد الفكرة هذه المرة (‎−0.25) — يحدث للجميع. جرّبوا زاوية أخرى!',
-		'toast.suggestion_thanked': 'تلقيتم شكرًا على اقتراحكم! +5 نقاط',
+		'toast.suggestion_thanked': 'تلقيتم شكرًا على اقتراحكم! ‎+0.5 نقطة',
 		'toast.round_started': 'فُتحت جولة جديدة في الساحة!',
 		'hud.class_label': 'جسر الصف',
 		'hud.class_empty_dash_aria': 'لا توجد نقاط للصف بعد',
@@ -1237,7 +1237,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'toast.suggestion_accepted': '¡Vuestra mejora fue aceptada! +1 punto',
 		'toast.suggestion_declined':
 			'Esta vez no se adoptó (−0.25) — le pasa a todos. ¡Probad otro ángulo!',
-		'toast.suggestion_thanked': '¡Os agradecieron la sugerencia! +5 puntos',
+		'toast.suggestion_thanked': '¡Os agradecieron la sugerencia! +0.5 puntos',
 		'toast.round_started': '¡Se abrió una nueva ronda en la plaza!',
 		'hud.class_label': 'El puente de la clase',
 		'hud.class_empty_dash_aria': 'Aún no hay puntuación de clase',
@@ -1585,7 +1585,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'toast.suggestion_accepted': 'Eure Verbesserung wurde angenommen! +1 Punkt',
 		'toast.suggestion_declined':
 			'Diesmal nicht übernommen (−0.25) — passiert jedem. Versucht einen anderen Blickwinkel!',
-		'toast.suggestion_thanked': 'Ihr habt ein Dankeschön erhalten! +5 Punkte',
+		'toast.suggestion_thanked': 'Ihr habt ein Dankeschön erhalten! +0.5 Punkte',
 		'toast.round_started': 'Eine neue Runde hat auf dem Platz begonnen!',
 		'hud.class_label': 'Die Klassenbrücke',
 		'hud.class_empty_dash_aria': 'Noch keine Klassenpunktzahl',
@@ -1937,7 +1937,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'toast.suggestion_accepted': 'Je verbetering is geaccepteerd! +1 punt',
 		'toast.suggestion_declined':
 			'Deze keer niet overgenomen (−0.25) — gebeurt iedereen. Probeer een andere invalshoek!',
-		'toast.suggestion_thanked': 'Jullie kregen een bedankje voor de suggestie! +5 punten',
+		'toast.suggestion_thanked': 'Jullie kregen een bedankje voor de suggestie! +0.5 punten',
 		'toast.round_started': 'Een nieuwe ronde is geopend op het plein!',
 		'hud.class_label': 'De klassenbrug',
 		'hud.class_empty_dash_aria': 'Nog geen klassenscore',

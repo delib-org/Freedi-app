@@ -65,8 +65,12 @@ export const AGORA_POINTS = {
 	SUGGESTION_ACCEPTED: 1,
 	SUGGESTION_IMPLEMENTED: 2,
 	SUGGESTION_DECLINED: -0.25,
-	/** Legacy: the chat-flow variant still offers a "thanks" button */
-	SUGGESTION_THANKED: 5,
+	/**
+	 * Legacy: the chat-flow variant still offers a "thanks" button. Kept
+	 * BELOW accept (+1) — a polite nod must never outpay an idea that
+	 * landed in the text (was 5, which inverted the whole ladder).
+	 */
+	SUGGESTION_THANKED: 0.5,
 } as const;
 
 export const AGORA_CYCLE = {
