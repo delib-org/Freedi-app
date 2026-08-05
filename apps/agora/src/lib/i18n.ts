@@ -80,6 +80,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_rate': 'הכיכר',
 		'delib.step_help': 'הדוכן',
 		'delib.raters_count': '{{n}} דירגו',
+		'delib.raters_count_one': 'דירוג אחד',
 		'delib.bridge_power': 'כוח הגשר',
 		'delib.bridge_meaning': 'כמה ההצעה מקרבת בין שני המחנות',
 		'delib.no_raters_yet': 'עוד לא דירגו את ההצעה שלכם — המשיכו בסבב, וחזרו לבדוק בסבב הבא.',
@@ -183,6 +184,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.helped_rerate_prompt': 'אפשר לעדכן את הדירוג שלכם לאור השינוי',
 		'delib.helped_followup_placeholder': 'המשיכו את השיחה — עוד רעיון או תגובה...',
 		'delib.ratings_moved': '{{n}} דירוגים עודכנו מאז השיפור האחרון שלכם',
+		'delib.ratings_moved_one': 'דירוג אחד עודכן מאז השיפור האחרון שלכם',
 		'toast.helped_improved': 'הצעה שעזרתם לה שופרה זה עתה — הציצו שוב!',
 		'timer.left': 'זמן שנותר',
 		'teacher.round_controls': 'שליטת סבבים',
@@ -405,6 +407,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_rate': 'The square',
 		'delib.step_help': 'The stand',
 		'delib.raters_count': '{{n}} rated',
+		'delib.raters_count_one': 'One rating',
 		'delib.bridge_power': 'Bridge power',
 		'delib.bridge_meaning': 'How much your proposal brings the two camps closer',
 		'delib.no_raters_yet':
@@ -512,6 +515,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.helped_rerate_prompt': 'You can update your rating in light of the change',
 		'delib.helped_followup_placeholder': 'Continue the conversation — another idea or reply...',
 		'delib.ratings_moved': '{{n}} ratings updated since your last improvement',
+		'delib.ratings_moved_one': 'One rating updated since your last improvement',
 		'toast.helped_improved': 'A proposal you helped was just improved — take a look!',
 		'timer.left': 'Time left',
 		'teacher.round_controls': 'Round controls',
@@ -744,6 +748,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_rate': 'الساحة',
 		'delib.step_help': 'الكشك',
 		'delib.raters_count': 'قيّمه {{n}}',
+		'delib.raters_count_one': 'تقييم واحد',
 		'delib.bridge_power': 'قوة الجسر',
 		'delib.bridge_meaning': 'كم يقرّب اقتراحكم بين المعسكرين',
 		'delib.no_raters_yet': 'لم يقيّم أحد اقتراحكم بعد — تابعوا الجولة وعودوا في الجولة القادمة.',
@@ -847,6 +852,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.helped_rerate_prompt': 'يمكنكم تحديث تقييمكم في ضوء التغيير',
 		'delib.helped_followup_placeholder': 'واصلوا الحوار — فكرة أخرى أو ردّ...',
 		'delib.ratings_moved': 'تم تحديث {{n}} من التقييمات منذ تحسينكم الأخير',
+		'delib.ratings_moved_one': 'تم تحديث تقييم واحد منذ تحسينكم الأخير',
 		'toast.helped_improved': 'تحسّن للتو اقتراح ساعدتم فيه — ألقوا نظرة!',
 		'timer.left': 'الوقت المتبقي',
 		'teacher.round_controls': 'التحكم بالجولات',
@@ -1073,6 +1079,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_rate': 'La plaza',
 		'delib.step_help': 'El puesto',
 		'delib.raters_count': '{{n}} valoraron',
+		'delib.raters_count_one': 'Una valoración',
 		'delib.bridge_power': 'Fuerza del puente',
 		'delib.bridge_meaning': 'Cuánto acerca vuestra propuesta a los dos bandos',
 		'delib.no_raters_yet':
@@ -1184,6 +1191,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.helped_rerate_prompt': 'Puedes actualizar tu valoración a la luz del cambio',
 		'delib.helped_followup_placeholder': 'Continúa la conversación — otra idea o respuesta...',
 		'delib.ratings_moved': '{{n}} valoraciones actualizadas desde tu última mejora',
+		'delib.ratings_moved_one': 'Una valoración actualizada desde tu última mejora',
 		'toast.helped_improved': '¡Una propuesta que ayudaste acaba de mejorar — échale un vistazo!',
 		'timer.left': 'Tiempo restante',
 		'teacher.round_controls': 'Control de rondas',
@@ -1421,6 +1429,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_rate': 'Der Platz',
 		'delib.step_help': 'Der Stand',
 		'delib.raters_count': '{{n}} bewertet',
+		'delib.raters_count_one': 'Eine Bewertung',
 		'delib.bridge_power': 'Brückenkraft',
 		'delib.bridge_meaning': 'Wie sehr euer Vorschlag die beiden Lager einander näherbringt',
 		'delib.no_raters_yet':
@@ -1531,6 +1540,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.helped_rerate_prompt': 'Du kannst deine Bewertung angesichts der Änderung aktualisieren',
 		'delib.helped_followup_placeholder': 'Führe das Gespräch fort — noch eine Idee oder Antwort...',
 		'delib.ratings_moved': '{{n}} Bewertungen seit deiner letzten Verbesserung aktualisiert',
+		'delib.ratings_moved_one': 'Eine Bewertung seit deiner letzten Verbesserung aktualisiert',
 		'toast.helped_improved':
 			'Ein Vorschlag, dem du geholfen hast, wurde gerade verbessert — schau hin!',
 		'timer.left': 'Verbleibende Zeit',
@@ -1774,6 +1784,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.step_rate': 'Het plein',
 		'delib.step_help': 'Het kraampje',
 		'delib.raters_count': '{{n}} beoordeeld',
+		'delib.raters_count_one': 'Eén beoordeling',
 		'delib.bridge_power': 'Brugkracht',
 		'delib.bridge_meaning': 'Hoezeer jullie voorstel de twee kampen dichter bij elkaar brengt',
 		'delib.no_raters_yet':
@@ -1884,6 +1895,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.helped_rerate_prompt': 'Je kunt je beoordeling bijwerken na de wijziging',
 		'delib.helped_followup_placeholder': 'Zet het gesprek voort — nog een idee of reactie...',
 		'delib.ratings_moved': '{{n}} beoordelingen bijgewerkt sinds je laatste verbetering',
+		'delib.ratings_moved_one': 'Eén beoordeling bijgewerkt sinds je laatste verbetering',
 		'toast.helped_improved': 'Een voorstel dat je hielp is zojuist verbeterd — kijk even!',
 		'timer.left': 'Resterende tijd',
 		'teacher.round_controls': 'Rondebesturing',
@@ -2104,6 +2116,20 @@ export function t(key: string, params?: Record<string, string | number>): string
 		(acc, [param, value]) => acc.replace(`{{${param}}}`, String(value)),
 		text,
 	);
+}
+
+/**
+ * Count-aware t(): "1 ratings" reads as a bug in every language. When a
+ * `<key>_one` variant exists and n is exactly 1, use it (no {{n}} needed);
+ * otherwise fall back to the plural template with n interpolated.
+ */
+export function tCount(key: string, n: number): string {
+	const oneKey = `${key}_one`;
+	if (n === 1 && (translations[currentLang][oneKey] ?? translations.en[oneKey]) !== undefined) {
+		return t(oneKey);
+	}
+
+	return t(key, { n });
 }
 
 export function getAvailableLanguages(): Array<{ code: LangCode; name: string }> {

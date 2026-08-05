@@ -195,10 +195,10 @@ step("PHASE C: B declines → A's quiet toast, floor at 0");
 const before1 = await points('S1', s1);
 console.log('S1(A) points before decline:', before1);
 await s2.getByRole('button', { name: /^לא תודה$/ }).click();
-await s1.waitForSelector('.toast', { timeout: 15000 });
-const toastText = await s1.locator('.toast__text').first().textContent();
-console.log('A TOAST (declined):', toastText.trim());
-if (!/לא אומץ/.test(toastText)) fail('declined toast has wrong copy');
+// Other toasts (e.g. helped-improved) may share the stack — find OURS
+const declinedToast = s1.locator('.toast__text', { hasText: 'לא אומץ' });
+await declinedToast.waitFor({ timeout: 15000 });
+console.log('A TOAST (declined):', (await declinedToast.textContent()).trim());
 await shot(s1, '03-A-declined-toast');
 const afterDecline = await points('S1', s1);
 console.log('S1(A) points after decline:', afterDecline);
@@ -241,7 +241,8 @@ console.log('B re-rated: strong-for');
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
 const moved = await s1.locator('.my-lantern__moved').textContent();
 console.log('A SEES:', moved.trim());
-if (!/1/.test(moved)) fail('ratings-moved chip does not count 1');
+// n=1 → the singular copy, no digit: "דירוג אחד עודכן..."
+if (!moved.includes('דירוג אחד')) fail(`expected singular ratings-moved copy, got: ${moved}`);
 await shot(s1, '06-A-ratings-moved');
 
 console.log('\n✅ FULL CYCLE VERIFIED: adopt +1 → decline floored → woven +2 (=+3) → re-rate → aggregate chip');

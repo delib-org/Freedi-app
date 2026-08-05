@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { t } from '../lib/i18n';
+import { t, tCount } from '../lib/i18n';
 import { celebrate } from '../lib/celebration';
 import { AgoraProposal } from '../lib/proposals';
 import {
@@ -304,7 +304,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 		// after my latest improvement — worth seeing without opening the detail
 		const moved = ratingsMoved > 0;
 		const hint = moved
-			? `📈 ${t('delib.ratings_moved', { n: ratingsMoved })}`
+			? `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`
 			: !myProposal
 				? t('hud.mine_no_score')
 				: !hasScore
@@ -394,7 +394,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 					style: { width: `${support * 100}%`, background: `var(${colorVar})` },
 				}),
 			]),
-			m('span.scoreboard__camp-count', t('delib.raters_count', { n })),
+			m('span.scoreboard__camp-count', tCount('delib.raters_count', n)),
 		]);
 	}
 
@@ -412,7 +412,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 				campColumn(topic.positioningScale.rightLabel, '--camp-right-glow', myScore?.perCamp.right),
 			]),
 			ratingsMoved > 0
-				? m('p.scorehud__moved', `📈 ${t('delib.ratings_moved', { n: ratingsMoved })}`)
+				? m('p.scorehud__moved', `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`)
 				: null,
 		]);
 	}
@@ -549,7 +549,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 					]),
 					m('span.estimate__value', `${bar.bridging}/100`),
 				]),
-				m('p.chart-detail__raters', t('delib.raters_count', { n: bar.raters })),
+				m('p.chart-detail__raters', tCount('delib.raters_count', bar.raters)),
 			]),
 			m(
 				'button.btn.btn--ghost.chart-detail__close',

@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { t } from '../lib/i18n';
+import { t, tCount } from '../lib/i18n';
 import {
 	getDeliberationState,
 	listenToDeliberation,
@@ -725,7 +725,7 @@ export function Deliberation(
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
 			ratingsMoved > 0
-				? m('p.my-lantern__moved', `📈 ${t('delib.ratings_moved', { n: ratingsMoved })}`)
+				? m('p.my-lantern__moved', `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`)
 				: null,
 			// The primary zone: text + its ONE action, visually bound together
 			m('.workbench__section.workbench__section--edit', [
