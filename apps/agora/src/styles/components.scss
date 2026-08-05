@@ -591,6 +591,18 @@
 		.btn {
 			flex: 1;
 		}
+
+		// Per-item verdicts (accept / no thanks) are not page-level actions:
+		// they stay small and parked at the end, so the SUGGESTION is what
+		// the eye lands on, not a wall of buttons
+		&--tight {
+			justify-content: flex-end;
+			flex-wrap: wrap;
+
+			.btn {
+				flex: 0 0 auto;
+			}
+		}
 	}
 
 	&__coach {
@@ -1043,6 +1055,40 @@
 	display: flex;
 	align-items: center;
 	gap: var(--space-sm);
+
+	// As an accordion handle the head is a real button — full-width, so the
+	// whole strip is the hit target, but wearing no button chrome
+	&--button {
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+}
+
+// Closed, the section is just its handle — no gap under a hidden body
+.workbench__section--closed {
+	gap: 0;
+}
+
+.workbench__chevron {
+	margin-inline-start: auto;
+	flex: 0 0 auto;
+	width: 8px;
+	height: 8px;
+	border-inline-end: 2px solid var(--text-muted);
+	border-block-end: 2px solid var(--text-muted);
+	// Vertical caret, so it means the same thing in LTR and RTL:
+	// closed points down, open points up
+	transform: rotate(45deg);
+	transition: transform var(--motion-fast) ease;
+
+	&--open {
+		transform: rotate(-135deg);
+	}
 }
 
 .workbench__icon {

@@ -194,20 +194,50 @@ function workbenchSection(
 	icon: string,
 	title: string,
 	body: m.Children,
-	opts?: { count?: number; variant?: 'edit' | 'plain' },
+	opts?: {
+		count?: number;
+		variant?: 'edit' | 'plain';
+		/** Pass a toggle to make the head an accordion handle */
+		open?: boolean;
+		onToggle?: () => void;
+	},
 ): m.Children {
+	const collapsible = opts?.onToggle !== undefined;
+	const open = !collapsible || opts?.open === true;
+	const head: m.Children = [
+		m('span.workbench__icon', { 'aria-hidden': 'true' }, icon),
+		m('span.workbench__title', title),
+		opts?.count !== undefined && opts.count > 0
+			? m('span.workbench__count', String(opts.count))
+			: null,
+		collapsible
+			? m('span.workbench__chevron', {
+					class: open ? 'workbench__chevron--open' : undefined,
+					'aria-hidden': 'true',
+				})
+			: null,
+	];
+
 	return m(
 		'.workbench__section',
-		{ class: opts?.variant ? `workbench__section--${opts.variant}` : undefined },
+		{
+			class: [
+				opts?.variant ? `workbench__section--${opts.variant}` : undefined,
+				collapsible ? 'workbench__section--collapsible' : undefined,
+				collapsible && !open ? 'workbench__section--closed' : undefined,
+			]
+				.filter(Boolean)
+				.join(' '),
+		},
 		[
-			m('.workbench__head', [
-				m('span.workbench__icon', { 'aria-hidden': 'true' }, icon),
-				m('span.workbench__title', title),
-				opts?.count !== undefined && opts.count > 0
-					? m('span.workbench__count', String(opts.count))
-					: null,
-			]),
-			body,
+			collapsible
+				? m(
+						'button.workbench__head.workbench__head--button',
+						{ type: 'button', 'aria-expanded': String(open), onclick: opts?.onToggle },
+						head,
+					)
+				: m('.workbench__head', head),
+			open ? body : null,
 		],
 	);
 }
@@ -295,6 +325,12 @@ export function Deliberation(
 	const wovenPending: Record<string, boolean> = {};
 	/** The accepted-ideas drawer under the edit box (collapsed by default) */
 	let acceptedDrawerOpen = false;
+	/**
+	 * The received-improvements accordion. null = follow the feedback: fresh
+	 * suggestions open it by themselves, and once a student closes it their
+	 * choice sticks.
+	 */
+	let suggestionsToggle: boolean | null = null;
 	/**
 	 * The text just accepted, held until the resolve lands in the snapshot —
 	 * the drawer must not look empty in the moment right after "accept".
@@ -734,6 +770,10 @@ export function Deliberation(
 				suggestionsSection(live, myProposal),
 				{
 					count: openCount,
+					open: suggestionsToggle ?? openCount > 0,
+					onToggle: () => {
+						suggestionsToggle = !(suggestionsToggle ?? openCount > 0);
+					},
 				},
 			),
 			workbenchSection('🎭', t('delib.ask_elders'), askSection(live, myProposal, topic)),
@@ -764,9 +804,12 @@ export function Deliberation(
 					m('p', suggestion.statement),
 					suggestion.suggestionStatus === AgoraSuggestionStatus.open
 						? [
-								m('.delib__actions', [
+								// Two doors, not three: take the idea or let it go. A
+								// middle "thanks" button only bought the student a way
+								// to answer without deciding.
+								m('.delib__actions.delib__actions--tight', [
 									m(
-										'button.btn.btn--ghost',
+										'button.btn.btn--ghost.btn--sm',
 										{
 											onclick: () => {
 												void resolveSuggestion(
@@ -779,20 +822,7 @@ export function Deliberation(
 										t('delib.no_thanks'),
 									),
 									m(
-										'button.btn.btn--secondary',
-										{
-											onclick: () => {
-												void resolveSuggestion(
-													live.sessionId,
-													suggestion.statementId,
-													AgoraSuggestionStatus.thanked,
-												);
-											},
-										},
-										t('delib.thank'),
-									),
-									m(
-										'button.btn.btn--primary',
+										'button.btn.btn--primary.btn--sm',
 										{
 											onclick: () => {
 												// The edit box is right above — accepting means:
