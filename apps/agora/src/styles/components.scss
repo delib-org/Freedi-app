@@ -1354,6 +1354,13 @@
 		color: var(--success);
 		font-size: var(--font-size-sm);
 		font-weight: 600;
+
+		// The bridge dipped: muted amber, never danger-red — a dip is
+		// information for the next edit, not a punishment
+		&--down {
+			background: rgba(185, 115, 0, 0.12);
+			color: var(--text-primary);
+		}
 	}
 
 	&__text {

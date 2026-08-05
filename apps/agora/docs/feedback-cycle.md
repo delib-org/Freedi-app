@@ -107,7 +107,7 @@ proposal (see Future) before adding any surveillance-flavored fix.
 | 3 | Declined | B | quiet toast | "not adopted this time (−0.25) — try another angle" | nothing; deliberately low-key |
 | 4 | Woven in | B | 🎉 celebration | "your idea is in the text! (+2)" | **primary button → travel to the improved proposal, spotlight it, re-rate** |
 | 5 | Helped proposal improved | B | badge on "של אחרים" tab + ✨ marker on the helped card | aggregate | re-reading + re-rating |
-| 6 | Ratings moved after my edit | A | 📈 line on the workshop card | "N ratings updated since your improvement" — **aggregate only, never who** | keeping the improvement loop going |
+| 6 | Ratings moved after my edit | A | 📈/📉 chip on the workshop card | "N ratings updated · bridge power rose/dropped by M" — count + **direction of the aggregate bridge score** (vs a client-side snapshot taken at save), **never any individual's rating**. Dip renders muted amber, not red. | keeping the improvement loop going |
 
 Design rules:
 

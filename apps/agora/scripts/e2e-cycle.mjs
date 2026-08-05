@@ -239,6 +239,11 @@ step('PHASE E: B re-rates the improved text → A sees 📈 ratings-moved');
 await s2.locator('.helped__item .rate-scale--compact .rate-scale__option--strong-for').click();
 console.log('B re-rated: strong-for');
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
+// B moved −0.5 → +1: the cross-camp support (and so the bridge) must
+// RISE — the chip carries direction on the aggregate, not just a count
+await s1
+	.locator('.my-lantern__moved', { hasText: 'כוח הגשר עלה' })
+	.waitFor({ timeout: 15000 });
 const moved = await s1.locator('.my-lantern__moved').textContent();
 console.log('A SEES:', moved.trim());
 // n=1 → the singular copy, no digit: "דירוג אחד עודכן..."

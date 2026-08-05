@@ -717,6 +717,13 @@ export function Deliberation(
 		).filter(
 			(entry) => entry.evaluatorId !== userId && entry.updatedAt > myProposal.lastUpdate,
 		).length;
+		// Direction rides on the AGGREGATE: current bridge power vs the
+		// snapshot taken when I saved. The score consequence is game state;
+		// individual rating values stay private (see docs/feedback-cycle.md).
+		const bridgeBaseKey = `agora_${live.sessionId}_bridgebase_${myProposal.statementId}`;
+		const bridgeBase = sessionStorage.getItem(bridgeBaseKey);
+		const bridgeNow = getDeliberationState().scores[myProposal.statementId]?.bridgingScore ?? 0;
+		const bridgeDelta = bridgeBase === null ? 0 : bridgeNow - Number(bridgeBase);
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
@@ -725,7 +732,18 @@ export function Deliberation(
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
 			ratingsMoved > 0
-				? m('p.my-lantern__moved', `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`)
+				? m(
+						'p.my-lantern__moved',
+						// Down is muted amber, not danger-red: a dip is information
+						// for the next edit, never a punishment
+						{ class: bridgeDelta < 0 ? 'my-lantern__moved--down' : undefined },
+						bridgeDelta === 0
+							? `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`
+							: `${bridgeDelta > 0 ? '📈' : '📉'} ${tCount('delib.ratings_moved', ratingsMoved)} · ${t(
+									bridgeDelta > 0 ? 'delib.bridge_up' : 'delib.bridge_down',
+									{ n: Math.abs(bridgeDelta) },
+								)}`,
+					)
 				: null,
 			// The primary zone: text + its ONE action, visually bound together
 			m('.workbench__section.workbench__section--edit', [
@@ -754,6 +772,15 @@ export function Deliberation(
 									myProposal.statementId,
 								)
 									.then(() => {
+										// Baseline for the direction chip: the bridge power
+										// at the moment of THIS save — later movement is
+										// what my improvement (and its re-ratings) did
+										sessionStorage.setItem(
+											bridgeBaseKey,
+											String(
+												getDeliberationState().scores[myProposal.statementId]?.bridgingScore ?? 0,
+											),
+										);
 										// Improving your own proposal earns glitter — the
 										// behavior the game most wants to reinforce
 										celebrate({ message: t('celebrate.proposal_improved'), detail: text });
