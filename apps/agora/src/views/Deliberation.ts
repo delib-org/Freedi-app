@@ -15,7 +15,6 @@ import {
 	HelpedProposal,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
-import { ScoreHud } from '../components/ScoreHud';
 import { EraMapLantern } from '../components/EraMap';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
@@ -1056,17 +1055,9 @@ export function Deliberation(
 
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
-			const { proposals, suggestions, myRatings, studentEvalTimes, scores } =
-				getDeliberationState();
+			const { proposals, suggestions, myRatings, scores } = getDeliberationState();
 			const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
 			const anonName = myParticipant.anonName;
-			// Aggregate loop-closing signal for the owner: how many classmates
-			// (re)rated AFTER my latest improvement (AI raters already excluded)
-			const ratingsMoved = myProposal
-				? (studentEvalTimes[myProposal.statementId] ?? []).filter(
-						(entry) => entry.evaluatorId !== userId && entry.updatedAt > myProposal.lastUpdate,
-					).length
-				: 0;
 
 			// Orientation strip: lap chip + the three steps of the loop, current
 			// one lit. A dead countdown reads as "broken" — only show a live one.
@@ -1117,24 +1108,6 @@ export function Deliberation(
 					: null,
 			]);
 
-			// The game HUD: class bridge, my score, helping points, the chart.
-			// Personal points moved from the old PointsPill into the helping tile.
-			const scoreHud = m(ScoreHud, {
-				session: live,
-				topic,
-				myParticipant,
-				myProposal,
-				proposals,
-				scores,
-				userId,
-				step: peekMine ? 'mine' : cycle.step,
-				ratingsMoved,
-				onGoHelp: () => {
-					peekMine = false;
-					setCycle({ step: 'help' });
-				},
-			});
-
 			// Travel splash: covers the step/lap change so a new place never
 			// hard-cuts in. Tap anywhere to skip.
 			const splashOverlay = splash
@@ -1180,6 +1153,8 @@ export function Deliberation(
 			// The deliberation "location": the town square (agora) where ideas
 			// gather. Teacher-editable via topic artwork; hidden if absent/broken.
 			const squareUrl = topic.artwork?.locationVignetteUrls?.square;
+			// No score HUD above the work: scores belong to the results screen,
+			// not over the shoulder of a student mid-sentence.
 			const header = [
 				splashOverlay,
 				squareUrl
@@ -1192,7 +1167,6 @@ export function Deliberation(
 						})
 					: null,
 				cycleStrip,
-				scoreHud,
 			];
 
 			// ---------- STEP: MY PROPOSAL (write, later improve) ----------
