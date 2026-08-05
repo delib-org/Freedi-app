@@ -343,6 +343,12 @@ export function Deliberation(
 	 * acceptance — deserving the flight — and not an accordion fold.
 	 */
 	const flyingAccepted = new Set<string>();
+	/**
+	 * Flights currently on screen. Distinct from the set above on purpose:
+	 * the set may retire mid-flight (the snapshot confirming is what retires
+	 * it), while THIS pins the accordion open until the card actually lands.
+	 */
+	let flightsInAir = 0;
 
 	/**
 	 * The exit animation of an accepted card: it shrinks and sails INTO the
@@ -363,21 +369,24 @@ export function Deliberation(
 		dom.style.setProperty('--fly-x', `${to.left + to.width / 2 - (from.left + from.width / 2)}px`);
 		dom.style.setProperty('--fly-y', `${to.top + to.height / 2 - (from.top + from.height / 2)}px`);
 		dom.classList.add('workshop__item--flying');
+		flightsInAir++;
 
 		return new Promise((resolve) => {
 			let settled = false;
 			const done = () => {
 				if (settled) return;
 				settled = true;
+				flightsInAir--;
 				// The drawer visibly CATCHES the idea — the landing half of the arc
 				target.classList.add('chat-drawer__head--landed');
 				window.setTimeout(() => target.classList.remove('chat-drawer__head--landed'), 700);
 				resolve();
+				m.redraw();
 			};
 			dom.addEventListener('animationend', done, { once: true });
 			// If the animation never runs (styles missing, tab hidden), the
 			// card must not haunt the list as an un-removable ghost
-			window.setTimeout(done, 900);
+			window.setTimeout(done, 1600);
 		});
 	}
 	/**
@@ -814,7 +823,10 @@ export function Deliberation(
 				suggestionsSection(live, myProposal),
 				{
 					count: openCount,
-					open: suggestionsToggle ?? openCount > 0,
+					// A live flight pins the section open: accepting the LAST open
+					// suggestion drops openCount to 0 on the same redraw, and a
+					// folding accordion would swallow the card before it can fly
+					open: (suggestionsToggle ?? openCount > 0) || flyingAccepted.size > 0 || flightsInAir > 0,
 					onToggle: () => {
 						suggestionsToggle = !(suggestionsToggle ?? openCount > 0);
 					},
