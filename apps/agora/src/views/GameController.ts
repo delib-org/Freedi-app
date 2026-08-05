@@ -19,7 +19,7 @@ import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
-import { DeliberationChat } from './DeliberationChat';
+import { Deliberation } from './Deliberation';
 import { Results } from './Results';
 import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
 
@@ -199,7 +199,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.deliberation:
 						return myParticipant
-							? m(DeliberationChat, { session, myParticipant, userId, topic })
+							? m(Deliberation, { session, myParticipant, userId, topic })
 							: m(
 									'.shell',
 									m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),

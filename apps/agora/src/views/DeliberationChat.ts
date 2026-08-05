@@ -568,9 +568,7 @@ export function DeliberationChat(
 		// said "weave the idea in", so hiding it then would fight the flow.
 		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
 		const drawerOpen = acceptedDrawerOpen[entryId] ?? (active && card.acceptedText !== undefined);
-		const hasPendingWoven = acceptedIdeas.some(
-			(entry) => wovenPending[entry.statementId] === true,
-		);
+		const hasPendingWoven = acceptedIdeas.some((entry) => wovenPending[entry.statementId] === true);
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
@@ -668,8 +666,7 @@ export function DeliberationChat(
 									// it"; the ✓ here says "it's in the text now" — precise
 									// attribution the suggester gets notified about.
 									acceptedIdeas.map((entry) => {
-										const woven =
-											entry.suggestionStatus === AgoraSuggestionStatus.implemented;
+										const woven = entry.suggestionStatus === AgoraSuggestionStatus.implemented;
 										const pending = wovenPending[entry.statementId] === true;
 
 										return m('.chat-drawer__item', { key: entry.statementId }, [
