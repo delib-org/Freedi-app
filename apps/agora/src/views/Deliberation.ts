@@ -744,7 +744,10 @@ export function Deliberation(
 								},
 							},
 							[
-								m('span.chat-drawer__title', `💡 ${t('chat.accepted_reminder')}`),
+								// Its own title, not chat.accepted_reminder: the
+								// "improvements you received" section sits right below,
+								// and two identical headers would read as one thing
+								m('span.chat-drawer__title', `💡 ${t('delib.accepted_ideas')}`),
 								m('span.chat-drawer__count', String(ideaCount)),
 								m('span.chat-drawer__chevron', { 'aria-hidden': 'true' }),
 							],

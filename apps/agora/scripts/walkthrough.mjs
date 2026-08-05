@@ -371,6 +371,16 @@ const currentText = await helped.locator('.helped__current').textContent();
 if (!currentText.includes('ועדה משותפת'))
 	throw new Error('Helped section does not show the improved proposal text');
 console.log('S2 SEES ACKNOWLEDGMENT + IMPROVED TEXT ✓');
+// Frame the acknowledgment itself — the filled green "woven in" chip.
+// Outwait the travel splash (max hold 2s), or it covers the whole screen.
+// Non-fatal: a redraw can detach the node mid-scroll, and this is framing.
+await s2.waitForTimeout(2500);
+await helped
+	.locator('.helped__chip--implemented')
+	.first()
+	.scrollIntoViewIfNeeded()
+	.catch(() => {});
+await s2.waitForTimeout(400);
 await shot(s2, '08a-helped-section');
 
 // S2 changes their vote: +0.5 (for) → +1 (very much for)
