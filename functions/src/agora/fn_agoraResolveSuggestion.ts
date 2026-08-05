@@ -102,24 +102,22 @@ export const agoraResolveSuggestion = onCall(
 			}
 
 			const suggesterId = suggestion.creatorId;
-			// Points were already awarded at accept — the woven-in mark is
-			// pure attribution, not a second payday
-			const pointsAwarded =
+			// The improvement cycle's ladder (docs: apps/agora/docs/feedback-cycle.md):
+			// accept = the promise (+1), woven-in = the promise kept (+2), decline
+			// costs a quarter point — floored at zero in the transaction below
+			const pointsAwarded: number =
 				resolution === AgoraSuggestionStatus.accepted
 					? AGORA_POINTS.SUGGESTION_ACCEPTED
-					: resolution === AgoraSuggestionStatus.thanked
-						? AGORA_POINTS.SUGGESTION_THANKED
-						: 0;
+					: resolution === AgoraSuggestionStatus.implemented
+						? AGORA_POINTS.SUGGESTION_IMPLEMENTED
+						: resolution === AgoraSuggestionStatus.declined
+							? AGORA_POINTS.SUGGESTION_DECLINED
+							: AGORA_POINTS.SUGGESTION_THANKED;
 
 			await suggestionRef.update({
 				suggestionStatus: resolution,
 				lastUpdate: Date.now(),
 			});
-
-			// A polite decline closes the suggestion quietly — no points, no ping
-			if (resolution === AgoraSuggestionStatus.declined) {
-				return { ok: true };
-			}
 
 			if (suggesterId && suggesterId !== uid) {
 				// Cross-app engagement credits — non-blocking by design
@@ -136,7 +134,7 @@ export const agoraResolveSuggestion = onCall(
 						});
 					});
 				}
-				if (pointsAwarded > 0) {
+				if (pointsAwarded !== 0) {
 					const suggesterRef = db
 						.collection(Collections.agoraParticipants)
 						.doc(createAgoraParticipantId(sessionId, suggesterId));
@@ -145,8 +143,10 @@ export const agoraResolveSuggestion = onCall(
 						if (!snap.exists) return;
 						const participant = snap.data() as AgoraParticipant;
 						const points = { ...participant.points };
-						points.helping += pointsAwarded;
-						points.total += pointsAwarded;
+						// Floor at 0: a student's first rejected idea must not
+						// open the game with a minus sign
+						points.helping = Math.max(0, points.helping + pointsAwarded);
+						points.total = Math.max(0, points.total + pointsAwarded);
 						transaction.update(suggesterRef, { points, lastActive: Date.now() });
 					});
 				}
@@ -166,7 +166,9 @@ export const agoraResolveSuggestion = onCall(
 								? 'Your improvement suggestion was accepted!'
 								: resolution === AgoraSuggestionStatus.implemented
 									? 'Your idea was woven into the proposal!'
-									: 'You received a thank-you for your suggestion!',
+									: resolution === AgoraSuggestionStatus.declined
+										? 'Your suggestion was not adopted this time.'
+										: 'You received a thank-you for your suggestion!',
 						creatorId: uid,
 						creatorName: 'Anonymous traveler',
 						sourceApp: SourceApp.AGORA,
@@ -175,7 +177,9 @@ export const agoraResolveSuggestion = onCall(
 								? NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED
 								: resolution === AgoraSuggestionStatus.implemented
 									? NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED
-									: NotificationTriggerType.AGORA_SUGGESTION_THANKED,
+									: resolution === AgoraSuggestionStatus.declined
+										? NotificationTriggerType.AGORA_SUGGESTION_DECLINED
+										: NotificationTriggerType.AGORA_SUGGESTION_THANKED,
 						targetPath: `/play/${sessionId}`,
 						read: false,
 						createdAt: Date.now(),

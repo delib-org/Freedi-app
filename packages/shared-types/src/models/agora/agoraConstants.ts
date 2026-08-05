@@ -55,7 +55,17 @@ export const AGORA_POINTS = {
 	VALUE_ACCURACY_MAX: 20,
 	PROPOSAL_SUBMITTED: 5,
 	BRIDGING_BONUS: 15,
-	SUGGESTION_ACCEPTED: 10,
+	/**
+	 * The improvement cycle (docs: apps/agora/docs/feedback-cycle.md):
+	 * accept is the promise (+1), woven-in is the promise kept (+2), so a
+	 * landed idea earns +3 total — the reward leans toward ideas that end
+	 * up IN the text. Decline costs a quarter point: enough to discourage
+	 * spam, cheap enough to keep risking ideas. Balances floor at 0.
+	 */
+	SUGGESTION_ACCEPTED: 1,
+	SUGGESTION_IMPLEMENTED: 2,
+	SUGGESTION_DECLINED: -0.25,
+	/** Legacy: the chat-flow variant still offers a "thanks" button */
 	SUGGESTION_THANKED: 5,
 } as const;
 

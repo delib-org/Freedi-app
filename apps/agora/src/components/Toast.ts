@@ -7,6 +7,8 @@ function toastText(triggerType: string, fallback: string): string {
 	switch (triggerType) {
 		case 'agora_suggestion_accepted':
 			return t('toast.suggestion_accepted');
+		case 'agora_suggestion_declined':
+			return t('toast.suggestion_declined');
 		case 'agora_suggestion_thanked':
 			return t('toast.suggestion_thanked');
 		case 'agora_round_started':

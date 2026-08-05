@@ -15,6 +15,7 @@ export enum NotificationTriggerType {
 	// Agora classroom game
 	AGORA_SUGGESTION_RECEIVED = 'agora_suggestion_received',
 	AGORA_SUGGESTION_ACCEPTED = 'agora_suggestion_accepted',
+	AGORA_SUGGESTION_DECLINED = 'agora_suggestion_declined',
 	AGORA_SUGGESTION_THANKED = 'agora_suggestion_thanked',
 	AGORA_SUGGESTION_IMPLEMENTED = 'agora_suggestion_implemented',
 	AGORA_ROUND_STARTED = 'agora_round_started',

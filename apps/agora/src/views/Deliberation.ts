@@ -710,6 +710,13 @@ export function Deliberation(
 				: undefined;
 		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
 		const hasPendingWoven = acceptedIdeas.some((entry) => wovenPending[entry.statementId] === true);
+		// The cycle's return signal to the OWNER: classmates who (re)rated
+		// after my latest improvement. Aggregate count only — never who.
+		const ratingsMoved = (
+			getDeliberationState().studentEvalTimes[myProposal.statementId] ?? []
+		).filter(
+			(entry) => entry.evaluatorId !== userId && entry.updatedAt > myProposal.lastUpdate,
+		).length;
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
@@ -717,6 +724,9 @@ export function Deliberation(
 				m('span.my-lantern__title', t('delib.my_proposal')),
 				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
 			]),
+			ratingsMoved > 0
+				? m('p.my-lantern__moved', `📈 ${t('delib.ratings_moved', { n: ratingsMoved })}`)
+				: null,
 			// The primary zone: text + its ONE action, visually bound together
 			m('.workbench__section.workbench__section--edit', [
 				m('textarea.my-lantern__textarea', {

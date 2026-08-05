@@ -1343,6 +1343,19 @@
 		white-space: nowrap;
 	}
 
+	// The loop closing for the owner: classmates re-rated after my edit.
+	// Aggregate only — the count celebrates motion without naming raters.
+	// Success green, NOT a camp color — camps never lend their hue.
+	&__moved {
+		align-self: flex-start;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: rgba(23, 128, 77, 0.1);
+		color: var(--success);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+	}
+
 	&__text {
 		color: var(--text-primary);
 		font-size: var(--font-size-lg);
