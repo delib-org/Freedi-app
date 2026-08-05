@@ -986,6 +986,21 @@
 		color: var(--text-primary);
 	}
 
+	// "You're only glancing at this place" — without it the banner and the
+	// cycle strip claim two different locations at once
+	&__badge {
+		margin-inline-start: var(--space-xs);
+		padding: 1px var(--space-xs);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		color: var(--text-muted);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		vertical-align: middle;
+	}
+
 	&__sub {
 		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
@@ -1125,6 +1140,40 @@
 
 	&__input {
 		background: rgba(255, 255, 255, 0.65);
+	}
+}
+
+// --- Why is that button grey? One muted line under a disabled primary,
+// naming the condition that unlocks it. Never shown once it's armed. ---
+.action-hint {
+	margin-block-start: calc(var(--space-xs) * -1);
+	color: var(--text-muted);
+	font-size: var(--font-size-xs);
+	text-align: center;
+}
+
+// --- A way out that must NOT compete with the primary action: no button
+// chrome, no fill — the escape hatch reads as a link and sits apart. ---
+.text-link {
+	align-self: center;
+	background: none;
+	border: none;
+	padding: var(--space-xs) var(--space-sm);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	color: var(--text-secondary);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	cursor: pointer;
+	transition: color var(--motion-fast) ease;
+
+	&:hover,
+	&:focus-visible {
+		color: var(--text-primary);
+	}
+
+	&--quiet {
+		color: var(--text-muted);
 	}
 }
 

@@ -212,14 +212,21 @@ function workbenchSection(
 	);
 }
 
-/** The place header: scene strip + name + one-line "what happens here" */
-function placeBanner(kind: 'mine' | 'rate' | 'help'): m.Children {
+/**
+ * The place header: scene strip + name + one-line "what happens here".
+ * `peek` marks the state where the workshop is only being glanced at from
+ * another place — otherwise the banner flatly contradicts the cycle strip.
+ */
+function placeBanner(kind: 'mine' | 'rate' | 'help', peek = false): m.Children {
 	const place = PLACES[kind];
 
 	return m('.place-banner', { class: `place-banner--${kind}` }, [
 		m('.place-banner__scene', placeScene(kind)),
 		m('.place-banner__text', [
-			m('h2.place-banner__title', `${place.icon} ${t(place.titleKey)}`),
+			m('h2.place-banner__title', [
+				`${place.icon} ${t(place.titleKey)}`,
+				peek ? m('span.place-banner__badge', t('place.peek_badge')) : null,
+			]),
 			m('p.place-banner__sub', t(place.subKey)),
 		]),
 	]);
@@ -648,6 +655,9 @@ export function Deliberation(
 						t('delib.update_proposal'),
 					),
 				]),
+				// A greyed button with no stated reason reads as "broken" —
+				// playtests had students tapping it twice and giving up
+				!changed && !hasPendingWoven ? m('p.action-hint', t('delib.update_hint')) : null,
 			]),
 			// Accepted improvement ideas live in a drawer right BENEATH the
 			// editor — the count invites a peek without stealing the stage,
@@ -1234,10 +1244,11 @@ export function Deliberation(
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						placeBanner('mine'),
+						placeBanner('mine', minePeek),
 						editableProposalCard(live, myProposal, topic),
-						// The guided path continues only from the real step —
-						// a peek returns via the Others tab instead
+						// Every state gets ONE enabled way forward. From the real
+						// step that's the next place; from a peek it's the trip
+						// back — which used to be an unlabeled tab and nothing else
 						cycle.step === 'mine'
 							? m(
 									'button.btn.btn--primary.btn--full.btn--lg',
@@ -1248,7 +1259,15 @@ export function Deliberation(
 									},
 									t('delib.to_rating'),
 								)
-							: null,
+							: m(
+									'button.btn.btn--primary.btn--full.btn--lg',
+									{
+										onclick: () => {
+											peekMine = false;
+										},
+									},
+									cycle.step === 'help' ? t('delib.back_to_stand') : t('delib.back_to_square'),
+								),
 					]),
 				]);
 			}
@@ -1401,7 +1420,6 @@ export function Deliberation(
 											},
 										}),
 										m('.delib__actions', [
-											m('button.btn.btn--ghost', { onclick: advanceRound }, skipLabel),
 											m(
 												'button.btn.btn--primary',
 												{
@@ -1416,7 +1434,14 @@ export function Deliberation(
 												t('delib.send_suggestion'),
 											),
 										]),
+										suggestionDraft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH
+											? m('p.action-hint', t('delib.suggest_hint'))
+											: null,
 									]),
+									// Leaving the stand is NOT a sibling of Send: it abandons
+									// the whole help step (and on the last lap, the loop). A
+									// quiet link below the note, far from the primary action.
+									m('button.text-link.text-link--quiet', { onclick: advanceRound }, skipLabel),
 									m(NeedsPeek, { topic }),
 									helpedSection(live),
 								]
