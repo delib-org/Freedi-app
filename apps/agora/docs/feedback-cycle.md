@@ -134,6 +134,60 @@ Design rules:
 
 ---
 
+## Image-generation prompt (illustrating the cycle)
+
+For an image AI (DALL-E / Midjourney / Nano Banana). Design constraints
+baked in: **no readable text** (models garble it, and our UI is
+Hebrew/RTL — icons and numbers stay locale-proof), and **no teal or
+purple on characters** (camp colors are reserved in the design system).
+
+**Main prompt:**
+
+> Flat vector infographic illustration of a circular peer-feedback loop
+> between two students, for a playful classroom deliberation game. Light
+> "festival day" palette: soft sky-blue background (#F4FAFF), warm
+> parchment cards (#FFF8EA), golden-yellow accents (#FFD23F). Two
+> cartoon teenage students face each other across a circular flow of
+> arrows: Student A on the left in royal blue (#2B6FD6) beside a small
+> wooden workbench with a glowing blue lantern; Student B on the right
+> in warm orange (#E07714) beside a market stand with an orange awning.
+>
+> The loop runs clockwise through six pictogram stations connected by
+> smooth rounded arrows: (1) Student A pins a written proposal card to a
+> stand; (2) Student B inspects it with a magnifying glass and rates it
+> on a 5-emoji scale, then pins a small yellow sticky note (the
+> improvement idea) beneath it; (3) a fork in the arrow — the sticky
+> note either flies with golden sparkles into an open wooden drawer
+> labeled with a lightbulb (adopted, "+1" gold coin) or gently falls
+> aside (declined, a small pale "−¼" chip, no drama); (4) Student A
+> weaves the note into the proposal — shown as the note merging into the
+> card with a checkbox tick — and raises an updated card ("+2" gold
+> coins burst toward Student B with confetti); (5) Student B re-reads
+> the improved card and re-rates it, happy expression; (6) a small
+> rising line-chart chip with an upward arrow returns to Student A,
+> closing the circle.
+>
+> Golden confetti and sparkles only at the two celebration moments.
+> Rounded shapes, soft drop shadows, generous white space, mobile-app
+> illustration style, consistent 2px outlines, no gradients heavier than
+> subtle. NO readable text anywhere — numbers and icons only (+1, +2,
+> −¼ as coin/chip glyphs). Aspect ratio 16:9.
+
+**Negative prompt:** text, letters, words, labels, typography,
+photorealism, dark background, red angry symbols, sad crying children,
+teal or purple as character colors
+
+**Short variant** (terse-prompt models):
+
+> flat vector infographic, circular feedback loop between two cartoon
+> students — blue student with workbench lantern, orange student with
+> market stand — six icon stations: proposal card, magnifying glass +
+> emoji rating scale, sticky note flying into a drawer with gold +1 coin
+> vs falling aside with pale −¼ chip, note weaving into updated card
+> with +2 confetti burst, re-rating with happy face, rising chart
+> returning to start; festival day palette, sky blue background,
+> parchment cards, golden sparkles, rounded 2px outlines, no text, 16:9
+
 ## AI implementation prompt
 
 A self-contained prompt for building this flow (here or in a similar
