@@ -62,7 +62,14 @@ open ──accept──▶ accepted ──(owner saves an update with the tick)�
 | Suggestion **accepted**            | **+1** | The promise: your idea was taken |
 | Suggestion **woven in** (implemented) | **+2** | The payoff: the text actually changed because of you |
 | Suggestion **declined**            | **−0.25** | A light cost — discourages spam, cheap enough to keep risking ideas |
-| Suggestion thanked (chat flow only)| +5     | Legacy, unchanged |
+| Suggestion thanked (chat flow only)| +5     | Legacy, unchanged — ⚠️ see warning below |
+
+> ⚠️ **Known inversion on the chat branch**: `thanked` (+5) now outpays a
+> fully woven idea (+3). On THIS branch it never fires (the places UI
+> has no thanks button), but the chat-flow variant shares these
+> constants. Before merging or reviving the chat branch, drop
+> `SUGGESTION_THANKED` to ≤ 0.5 or remove the thanks path — a polite
+> nod must never earn more than an idea that landed in the text.
 
 Rules:
 
@@ -79,6 +86,17 @@ Rules:
   before dropping the notification (silence is worse than cost).
 - Idempotent: re-resolving an already-resolved suggestion is a no-op;
   `implemented` can only fire once per suggestion.
+- **Fractional balances are expected** (−0.25 steps → e.g. 2.75). Any
+  surface showing points must render quarters cleanly; don't `floor()`
+  for display or students will "lose" visible points.
+
+**A's side of the economy** (implicit but load-bearing): adopting costs
+A nothing and good adoptions raise A's text quality → ratings → bridging
+score → `BRIDGING_BONUS`. That asymmetry is what makes adoption feel
+safe. Its known abuse is **collusion** — A and B trading trivial
+accept-and-weave rounds for +3 each time. Not worth machinery yet in a
+supervised classroom; if it shows up, cap woven awards per helper per
+proposal (see Future) before adding any surveillance-flavored fix.
 
 ## Notifications
 
@@ -111,6 +129,7 @@ Design rules:
 | B | Celebration popups | accepted (+1), woven (+2 → travel button) |
 | B | Toast stack | declined (−0.25), helped-proposal-improved |
 | B | "הצעות שעזרתם להן" section (Others side) | current text, ✨ improved marker, re-rate scale, follow-up box |
+| B | **Results screen only** | running points totals — the ScoreHud was removed from the deliberation screens by design (2026-08-05), so during play B hears +1/+2 moments but sees no balance. Deliberate: the work surface stays score-free. |
 
 ## Edge cases
 
@@ -130,11 +149,54 @@ Design rules:
 - Owner notification "someone raised their rating after your edit" —
   needs server-side rating-delta detection in the rating function, and
   care to keep it aggregate (batch per edit, never per-rater).
-- Decay/caps if spam becomes real (max imps per proposal per lap).
+- Decay/caps if spam becomes real (max imps per proposal per lap; cap
+  woven awards per helper per proposal against collusion).
+- Fix the thanked inversion before any chat-branch merge (see ⚠️ above).
 
 ---
 
-## Image-generation prompt (illustrating the cycle)
+## AI implementation prompt
+
+A self-contained prompt for building this flow (here or in a similar
+evaluate-and-improve product). Hand it to an agent along with repo
+access:
+
+> Implement a peer-improvement feedback cycle for a proposal-evaluation
+> app with these invariants:
+>
+> 1. **Actors**: an author owns a text; helpers rate it (5-level scale,
+>    one rating per helper, updatable) and submit improvement
+>    suggestions.
+> 2. **Lifecycle**: suggestion states are `open → accepted →
+>    implemented` with a terminal `declined` branch off `open`.
+>    `implemented` may only follow `accepted`, and only as a side effect
+>    of the author saving a real text update (the "woven" tick is local
+>    and pending until that save).
+> 3. **Scores**: award points server-side in the resolve endpoint, never
+>    client-side: accept = +1, implement = +2, decline = −0.25, floored
+>    so no balance goes negative. The resolver must be the author;
+>    self-resolution awards nothing. All transitions idempotent.
+> 4. **Notifications**: on accept and implement, send the helper a
+>    celebratory notification; on decline, a quiet one. The implement
+>    notification MUST deep-link to the updated text with a re-rate
+>    control (scroll + transient highlight). Good news is loud, bad news
+>    is dismissable, and no notification is a dead end — each carries
+>    the next action of the loop.
+> 5. **Closing the loop**: after the helper re-rates, show the author an
+>    aggregate-only signal ("N ratings updated since your edit") —
+>    never reveal which helper changed what.
+> 6. **Anonymity & safety**: individual ratings are never exposed;
+>    penalties are small relative to rewards (≤ ¼ of the accept
+>    reward); all copy is warm — rejection reads as "not this time",
+>    not failure.
+>
+> Verify: unit-test the resolve endpoint (each transition, idempotency,
+> the floor, the self-dealing guard), and walk the full A→B→A cycle in
+> an emulator with two users before calling it done.
+
+---
+
+## Appendix: image-generation prompt (illustrating the cycle)
 
 For an image AI (DALL-E / Midjourney / Nano Banana). Design constraints
 baked in: **no readable text** (models garble it, and our UI is
@@ -187,42 +249,3 @@ teal or purple as character colors
 > with +2 confetti burst, re-rating with happy face, rising chart
 > returning to start; festival day palette, sky blue background,
 > parchment cards, golden sparkles, rounded 2px outlines, no text, 16:9
-
-## AI implementation prompt
-
-A self-contained prompt for building this flow (here or in a similar
-evaluate-and-improve product). Hand it to an agent along with repo
-access:
-
-> Implement a peer-improvement feedback cycle for a proposal-evaluation
-> app with these invariants:
->
-> 1. **Actors**: an author owns a text; helpers rate it (5-level scale,
->    one rating per helper, updatable) and submit improvement
->    suggestions.
-> 2. **Lifecycle**: suggestion states are `open → accepted →
->    implemented` with a terminal `declined` branch off `open`.
->    `implemented` may only follow `accepted`, and only as a side effect
->    of the author saving a real text update (the "woven" tick is local
->    and pending until that save).
-> 3. **Scores**: award points server-side in the resolve endpoint, never
->    client-side: accept = +1, implement = +2, decline = −0.25, floored
->    so no balance goes negative. The resolver must be the author;
->    self-resolution awards nothing. All transitions idempotent.
-> 4. **Notifications**: on accept and implement, send the helper a
->    celebratory notification; on decline, a quiet one. The implement
->    notification MUST deep-link to the updated text with a re-rate
->    control (scroll + transient highlight). Good news is loud, bad news
->    is dismissable, and no notification is a dead end — each carries
->    the next action of the loop.
-> 5. **Closing the loop**: after the helper re-rates, show the author an
->    aggregate-only signal ("N ratings updated since your edit") —
->    never reveal which helper changed what.
-> 6. **Anonymity & safety**: individual ratings are never exposed;
->    penalties are small relative to rewards (≤ ¼ of the accept
->    reward); all copy is warm — rejection reads as "not this time",
->    not failure.
->
-> Verify: unit-test the resolve endpoint (each transition, idempotency,
-> the floor, the self-dealing guard), and walk the full A→B→A cycle in
-> an emulator with two users before calling it done.
