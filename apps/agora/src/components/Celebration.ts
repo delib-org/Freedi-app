@@ -38,8 +38,24 @@ export const CelebrationOverlay: m.Component = {
 					m('.celebration__hooray', t('celebrate.hooray')),
 					m('p.celebration__message', payload.message),
 					payload.detail ? m('.celebration__detail', payload.detail) : null,
+					// With a continuation, IT is the star and plain-close steps
+					// back: the popup invites the loop's next move, not a shrug
+					payload.action
+						? m(
+								'button.btn.btn--primary.btn--full',
+								{
+									onclick: () => {
+										payload.action?.run();
+										dismissCelebration();
+									},
+								},
+								payload.action.label,
+							)
+						: null,
 					m(
-						'button.btn.btn--primary.btn--full',
+						payload.action
+							? 'button.btn.btn--ghost.btn--full'
+							: 'button.btn.btn--primary.btn--full',
 						{ onclick: dismissCelebration },
 						t('celebrate.close'),
 					),

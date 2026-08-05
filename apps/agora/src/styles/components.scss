@@ -1610,6 +1610,12 @@
 		// Peer orange, not a camp color — ownership and camps never share a hue
 		background: rgba(224, 119, 20, 0.05);
 		border-inline-start: 3px solid var(--peer);
+
+		// The card the "woven in" celebration steered to: a golden pulse says
+		// "THIS one changed — re-read it", then fades back into the list
+		&--spotlight {
+			animation: helped-spotlight 2.4s ease;
+		}
 	}
 
 	&__suggestion {
@@ -2180,9 +2186,23 @@
 	}
 }
 
+@keyframes helped-spotlight {
+	0%,
+	55% {
+		box-shadow:
+			0 0 0 3px var(--lantern),
+			0 8px 28px rgba(255, 210, 63, 0.45);
+	}
+
+	100% {
+		box-shadow: none;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.workshop__item--flying,
-	.chat-drawer__head--landed {
+	.chat-drawer__head--landed,
+	.helped__item--spotlight {
 		animation: none;
 	}
 }

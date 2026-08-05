@@ -15,6 +15,7 @@ import {
 	HelpedProposal,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
+import { registerHelpedNavigator, unregisterHelpedNavigator } from '../lib/helpedFocus';
 import { EraMapLantern } from '../components/EraMap';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
@@ -395,6 +396,35 @@ export function Deliberation(
 	 * progression (mine → rate → help) is untouched.
 	 */
 	let peekMine = false;
+	/**
+	 * A helped proposal the "woven in" celebration pointed at: the next render
+	 * of its card scrolls to it and spotlights it, then the intent is spent.
+	 */
+	let focusHelpedId: string | null = null;
+
+	/**
+	 * Travel to a helped proposal so its improved text can be re-read and
+	 * re-rated. Same semantics as tapping the Others tab: from the real mine
+	 * step the lap continues to the square (helpedSection lives on the whole
+	 * Others side); from anywhere else, only the peek flag drops.
+	 */
+	function goToHelped(proposalId: string): void {
+		focusHelpedId = proposalId;
+		peekMine = false;
+		if (cycle.step === 'mine') setCycle({ step: 'rate', rated: 0 });
+		m.redraw();
+	}
+
+	registerHelpedNavigator(goToHelped);
+
+	/** Scroll to + flash the celebrated card, once, when it appears */
+	function spotlightHelped(dom: Element, proposalId: string): void {
+		if (focusHelpedId !== proposalId) return;
+		focusHelpedId = null;
+		dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		dom.classList.add('helped__item--spotlight');
+		window.setTimeout(() => dom.classList.remove('helped__item--spotlight'), 2400);
+	}
 
 	const cycleKey = `agora_${session.sessionId}_cycle`;
 	let cycle: CycleState = { round: 1, step: 'mine', rated: 0 };
@@ -1107,63 +1137,71 @@ export function Deliberation(
 							? 'delib.declined'
 							: 'delib.helped_status_open';
 
-		return m('.card.stack.helped__item', { key: proposal.statementId }, [
-			// The proposal itself comes first — that's what I'm evaluating
-			m('.owner-row', [
-				m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
-				m('span.owner-row__number', t('delib.proposal_number', { n: proposalNumber(proposal) })),
-			]),
-			m('p.helped__current', proposal.statement),
-			improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
-			m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
-			reRateScale(live, proposal),
-			// My improvement ideas + live status chips — the acknowledgment —
-			// sit beneath the evaluation, with the follow-up box continuing them.
-			// Nested array (own fragment): keyed children must not be spread
-			// among unkeyed siblings (Mithril mixed-keys crash)
-			m('p.teacher__section-title', t('delib.helped_your_ideas')),
-			mySuggestions.map((suggestion) =>
-				m('.helped__suggestion', { key: suggestion.statementId }, [
-					m('p.helped__suggestion-text', suggestion.statement),
-					m(
-						'span.helped__chip',
-						{ class: `helped__chip--${suggestion.suggestionStatus ?? 'open'}` },
-						t(statusKey(suggestion)),
-					),
+		return m(
+			'.card.stack.helped__item',
+			{
+				key: proposal.statementId,
+				oncreate: (cardVnode: m.VnodeDOM) => spotlightHelped(cardVnode.dom, proposal.statementId),
+				onupdate: (cardVnode: m.VnodeDOM) => spotlightHelped(cardVnode.dom, proposal.statementId),
+			},
+			[
+				// The proposal itself comes first — that's what I'm evaluating
+				m('.owner-row', [
+					m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
+					m('span.owner-row__number', t('delib.proposal_number', { n: proposalNumber(proposal) })),
 				]),
-			),
-			m('textarea.text-input.helped__followup', {
-				value: draft,
-				rows: 2,
-				placeholder: t('delib.helped_followup_placeholder'),
-				oninput: (event: InputEvent) => {
-					followUpDrafts[proposal.statementId] = (event.target as HTMLTextAreaElement).value;
-				},
-			}),
-			m(
-				'button.btn.btn--secondary',
-				{
-					disabled:
-						followUpBusy[proposal.statementId] === true ||
-						draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-					onclick: () => {
-						const text = draft.trim();
-						followUpBusy[proposal.statementId] = true;
-						followUpDrafts[proposal.statementId] = '';
-						// A free follow-up: continues the conversation, no lap advance
-						submitSuggestion(live, proposal, initialVnode.attrs.myParticipant.anonName, text)
-							.catch((error: unknown) => {
-								console.error('[Delib] Follow-up failed:', error);
-							})
-							.finally(() => {
-								followUpBusy[proposal.statementId] = false;
-								m.redraw();
-							});
+				m('p.helped__current', proposal.statement),
+				improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
+				m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
+				reRateScale(live, proposal),
+				// My improvement ideas + live status chips — the acknowledgment —
+				// sit beneath the evaluation, with the follow-up box continuing them.
+				// Nested array (own fragment): keyed children must not be spread
+				// among unkeyed siblings (Mithril mixed-keys crash)
+				m('p.teacher__section-title', t('delib.helped_your_ideas')),
+				mySuggestions.map((suggestion) =>
+					m('.helped__suggestion', { key: suggestion.statementId }, [
+						m('p.helped__suggestion-text', suggestion.statement),
+						m(
+							'span.helped__chip',
+							{ class: `helped__chip--${suggestion.suggestionStatus ?? 'open'}` },
+							t(statusKey(suggestion)),
+						),
+					]),
+				),
+				m('textarea.text-input.helped__followup', {
+					value: draft,
+					rows: 2,
+					placeholder: t('delib.helped_followup_placeholder'),
+					oninput: (event: InputEvent) => {
+						followUpDrafts[proposal.statementId] = (event.target as HTMLTextAreaElement).value;
 					},
-				},
-				t('delib.send_suggestion'),
-			),
-		]);
+				}),
+				m(
+					'button.btn.btn--secondary',
+					{
+						disabled:
+							followUpBusy[proposal.statementId] === true ||
+							draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+						onclick: () => {
+							const text = draft.trim();
+							followUpBusy[proposal.statementId] = true;
+							followUpDrafts[proposal.statementId] = '';
+							// A free follow-up: continues the conversation, no lap advance
+							submitSuggestion(live, proposal, initialVnode.attrs.myParticipant.anonName, text)
+								.catch((error: unknown) => {
+									console.error('[Delib] Follow-up failed:', error);
+								})
+								.finally(() => {
+									followUpBusy[proposal.statementId] = false;
+									m.redraw();
+								});
+						},
+					},
+					t('delib.send_suggestion'),
+				),
+			],
+		);
 	}
 
 	/** "Proposals I helped" — hidden until I've actually helped something */
@@ -1182,6 +1220,7 @@ export function Deliberation(
 		onremove() {
 			window.clearTimeout(splashTimer);
 			stopDeliberationListeners();
+			unregisterHelpedNavigator(goToHelped);
 		},
 
 		view(vnode) {

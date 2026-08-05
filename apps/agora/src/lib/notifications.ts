@@ -3,6 +3,7 @@ import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe }
 import { Collections, NotificationTriggerType, SourceApp } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
+import { requestHelpedFocus } from './helpedFocus';
 import { getDeliberationState } from './proposals';
 
 export interface AgoraToast {
@@ -112,6 +113,7 @@ export function listenToNotifications(userId: string): void {
 					triggerType?: string;
 					text?: string;
 					statementId?: string;
+					parentId?: string;
 				};
 				if (!data.notificationId) return;
 
@@ -125,12 +127,26 @@ export function listenToNotifications(userId: string): void {
 					const suggestion = Object.values(getDeliberationState().suggestions)
 						.flat()
 						.find((candidate) => candidate.statementId === data.statementId);
+					const implemented =
+						data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED;
+					// "Woven in" means the TEXT CHANGED — the improvement loop
+					// closes only if the suggester re-reads and re-rates it. The
+					// celebration carries that next step; parentId is the proposal.
+					const proposalId = data.parentId;
 					celebrate({
-						message:
-							data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED
-								? t('celebrate.suggestion_implemented')
-								: t('celebrate.suggestion_accepted'),
+						message: implemented
+							? t('celebrate.suggestion_implemented')
+							: t('celebrate.suggestion_accepted'),
 						detail: suggestion?.statement,
+						action:
+							implemented && proposalId
+								? {
+										label: t('celebrate.see_improved'),
+										run: () => {
+											requestHelpedFocus(proposalId);
+										},
+									}
+								: undefined,
 					});
 					updateDoc(doc(db, Collections.inAppNotifications, data.notificationId), {
 						read: true,
