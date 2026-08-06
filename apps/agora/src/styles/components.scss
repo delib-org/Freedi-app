@@ -1224,7 +1224,8 @@
 // (orange awning). Peripheral vision alone should answer "where am I?". ---
 .place-banner {
 	--place-accent: var(--lantern);
-	--place-accent-soft: rgba(43, 111, 214, 0.12);
+	// Strong enough to stay the loudest thing on a now-tinted page
+	--place-accent-soft: rgba(43, 111, 214, 0.2);
 
 	position: relative;
 	overflow: hidden;
@@ -1245,7 +1246,7 @@
 
 	&--help {
 		--place-accent: var(--peer);
-		--place-accent-soft: rgba(224, 119, 20, 0.14);
+		--place-accent-soft: rgba(224, 119, 20, 0.22);
 	}
 
 	&__scene {
@@ -1756,9 +1757,11 @@
 		gap: 0;
 		padding: var(--space-sm) var(--space-md)
 			calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
+		// The bar belongs to the room it sits in — a white slab at the bottom
+		// of a tinted screen would read as "the page ends here"
 		background: rgba(255, 255, 255, 0.94);
 		backdrop-filter: blur(8px);
-		// The bar's top edge is the persistent mode beacon (gold/silver)
+		// The bar's top edge is the persistent mode beacon
 		border-block-start: 2px solid var(--mode-accent, var(--border-lantern));
 		border-start-start-radius: var(--radius-md);
 		border-start-end-radius: var(--radius-md);
@@ -1788,6 +1791,16 @@
 @media (max-width: 700px) {
 	.shell--delib .shell__content {
 		padding-block-end: 96px;
+	}
+
+	// The bar takes the colour of the room, so the wash reaches the very
+	// bottom of the screen instead of stopping at a white slab
+	.shell--mode-mine .delib-nav {
+		background: color-mix(in srgb, var(--wash-mine-low) 94%, transparent);
+	}
+
+	.shell--mode-peer .delib-nav {
+		background: color-mix(in srgb, var(--wash-peer-low) 94%, transparent);
 	}
 }
 
@@ -1822,28 +1835,82 @@
 	pointer-events: none;
 }
 
-// --- Place washes: a full-column tint per deliberation place, so even
-// peripheral vision separates "my workshop" from "visiting a stand" ---
-.shell--place-mine {
-	background: linear-gradient(
-		180deg,
-		rgba(43, 111, 214, 0.06),
-		rgba(255, 248, 234, 0.5) 30%,
-		transparent 70%
-	);
-}
-
-.shell--place-square {
-	background: linear-gradient(180deg, rgba(111, 127, 179, 0.08), transparent 60%);
-}
-
+// --- Place washes: the WHOLE room is repainted, not the column ---
+// A tint on the 720px column left the margins sky-white, and both places
+// still read as "the same near-white page". These wash the entire viewport
+// so ownership is answered before a single word is read: cool blue = my
+// workbench, warm amber = a classmate's stall, cool grey = the square.
+// A fixed ::after (not a body background) keeps it off the Mithril tree and
+// dodges iOS's broken background-attachment: fixed.
+.shell--place-mine,
+.shell--place-square,
 .shell--place-visit {
+	background: none;
+
+	&::after {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		animation: stage-transition-in var(--motion-slow) var(--ease-camera) both;
+	}
+}
+
+.shell--place-mine::after {
 	background: linear-gradient(
 		180deg,
-		rgba(224, 119, 20, 0.1),
-		rgba(255, 243, 201, 0.35) 30%,
-		transparent 70%
+		var(--wash-mine-high) 0%,
+		var(--wash-mine-mid) 30%,
+		var(--wash-mine-low) 100%
 	);
+}
+
+.shell--place-visit::after {
+	background: linear-gradient(
+		180deg,
+		var(--wash-peer-high) 0%,
+		var(--wash-peer-mid) 30%,
+		var(--wash-peer-low) 100%
+	);
+}
+
+.shell--place-square::after {
+	background: linear-gradient(
+		180deg,
+		var(--wash-square-high) 0%,
+		var(--wash-square-mid) 30%,
+		var(--wash-square-low) 100%
+	);
+}
+
+// The wash is decoration, not information: high-contrast users get a flat
+// quiet tint and a fatter mode strip, forced-colours users get neither.
+@media (prefers-contrast: more) {
+	.shell--place-mine::after {
+		background: var(--wash-mine-low);
+	}
+
+	.shell--place-visit::after {
+		background: var(--wash-peer-low);
+	}
+
+	.shell--place-square::after {
+		background: var(--wash-square-low);
+	}
+
+	.shell--mode-mine::before,
+	.shell--mode-peer::before {
+		height: 6px;
+	}
+}
+
+@media (forced-colors: active) {
+	.shell--place-mine::after,
+	.shell--place-square::after,
+	.shell--place-visit::after {
+		display: none;
+	}
 }
 
 // --- Owner chip: whose proposal is on the table (📘 mine / 📙 a classmate's) ---

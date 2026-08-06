@@ -34,6 +34,22 @@
   --peer-glow: #9c5300; // text-safe emphasis (5.75:1 on white)
   --peer-deep: #8a4a02; // borders/pressed
 
+  // --- Place washes: the ROOM you are standing in ---
+  // Not an accent — the whole viewport. A student glancing at a classmate's
+  // screen from across the room reads temperature before anything else:
+  // cool blue = my workbench, warm amber = someone else's stall.
+  --wash-mine-high: #b7d3f5;
+  --wash-mine-mid: #d8e7fa;
+  --wash-mine-low: #edf5fe;
+  --wash-peer-high: #f8cf9d;
+  --wash-peer-mid: #fbe4c6;
+  --wash-peer-low: #fdf4e8;
+  // The square is other people's ground too, so it stays on the warm side of
+  // the line — lighter and sandier than a stall, never cool like my bench.
+  --wash-square-high: #f7e3c8;
+  --wash-square-mid: #fbf0dc;
+  --wash-square-low: #fefaf2;
+
   // --- Camps (core game semantics — never blue/orange) ---
   --camp-left: #8a52cf;   // royal purple
   --camp-left-glow: #6a34ab;
