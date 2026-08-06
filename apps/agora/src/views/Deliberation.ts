@@ -15,7 +15,12 @@ import {
 	HelpedProposal,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
-import { registerHelpedNavigator, unregisterHelpedNavigator } from '../lib/helpedFocus';
+import {
+	registerHelpedNavigator,
+	unregisterHelpedNavigator,
+	registerMineNavigator,
+	unregisterMineNavigator,
+} from '../lib/helpedFocus';
 import { EraMapLantern } from '../components/EraMap';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
@@ -336,6 +341,8 @@ export function Deliberation(
 	const wovenPending: Record<string, boolean> = {};
 	/** The accepted-ideas drawer under the edit box (collapsed by default) */
 	let acceptedDrawerOpen = false;
+	/** The woven-in archive: history, so it opens only when asked for */
+	let archiveOpen = false;
 	/**
 	 * The received-improvements accordion. null = follow the feedback: fresh
 	 * suggestions open it by themselves, and once a student closes it their
@@ -426,6 +433,18 @@ export function Deliberation(
 	}
 
 	registerHelpedNavigator(goToHelped);
+
+	/**
+	 * "Feedback is waiting" → stand in my workshop with the received drawer
+	 * open. From the square or a stand that's the peek; the lap is untouched.
+	 */
+	function goToMine(): void {
+		suggestionsToggle = true;
+		peekMine = cycle.step === 'rate' || cycle.step === 'help';
+		m.redraw();
+	}
+
+	registerMineNavigator(goToMine);
 
 	/** Scroll to + flash the celebrated card, once, when it appears */
 	function spotlightHelped(dom: Element, proposalId: string): void {
@@ -705,17 +724,21 @@ export function Deliberation(
 			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
 		).length;
 
-		// ALL the ideas I've accepted or already woven in, live — every one
-		// stays visible while editing, not just the latest. The just-accepted
-		// text rides along until the resolve lands (dedupe by text once it does).
-		const acceptedIdeas = (getDeliberationState().suggestions[myProposal.statementId] ?? []).filter(
-			(entry) =>
-				entry.suggestionStatus === AgoraSuggestionStatus.accepted ||
-				entry.suggestionStatus === AgoraSuggestionStatus.implemented,
+		// The tray is a WORKBENCH, not a history: it holds only ideas still
+		// waiting to be woven in. Once an idea is in the text its job here is
+		// done — it moves to the archive below, so a long game can't bury
+		// today's two open ideas under twenty finished ones.
+		const allAdopted = getDeliberationState().suggestions[myProposal.statementId] ?? [];
+		const acceptedIdeas = allAdopted.filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.accepted,
+		);
+		const archivedIdeas = allAdopted.filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.implemented,
 		);
 		const pendingAccept =
 			pendingAcceptText !== undefined &&
-			!acceptedIdeas.some((entry) => entry.statement === pendingAcceptText)
+			!acceptedIdeas.some((entry) => entry.statement === pendingAcceptText) &&
+			!archivedIdeas.some((entry) => entry.statement === pendingAcceptText)
 				? pendingAcceptText
 				: undefined;
 		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
@@ -860,29 +883,23 @@ export function Deliberation(
 									// it"; the ✓ here says "it's in the text now" — precise
 									// attribution the suggester gets notified about.
 									acceptedIdeas.map((entry) => {
-										const woven = entry.suggestionStatus === AgoraSuggestionStatus.implemented;
 										const pending = wovenPending[entry.statementId] === true;
 
 										return m('.chat-drawer__item', { key: entry.statementId }, [
-											m(
-												'label.chat-drawer__check',
-												{ title: woven ? t('delib.implemented') : t('chat.mark_woven') },
-												[
-													m('input.chat-drawer__check-input', {
-														type: 'checkbox',
-														// A tick is a PENDING mark — saving the
-														// proposal is what announces it (until then
-														// it can be freely unticked)
-														checked: woven || pending,
-														disabled: woven,
-														'aria-label': t('chat.mark_woven'),
-														onchange: () => {
-															wovenPending[entry.statementId] = !pending;
-														},
-													}),
-													m('span.chat-drawer__check-box', { 'aria-hidden': 'true' }),
-												],
-											),
+											m('label.chat-drawer__check', { title: t('chat.mark_woven') }, [
+												m('input.chat-drawer__check-input', {
+													type: 'checkbox',
+													// A tick is a PENDING mark — saving the
+													// proposal is what announces it (until then
+													// it can be freely unticked)
+													checked: pending,
+													'aria-label': t('chat.mark_woven'),
+													onchange: () => {
+														wovenPending[entry.statementId] = !pending;
+													},
+												}),
+												m('span.chat-drawer__check-box', { 'aria-hidden': 'true' }),
+											]),
 											m('p.chat-drawer__item-text', entry.statement),
 										]);
 									}),
@@ -892,6 +909,47 @@ export function Deliberation(
 								]),
 							]),
 						),
+					])
+				: null,
+			// The archive: every idea that MADE IT into the text. Not a drawer
+			// like the tray above — a button, because this is history you go
+			// look at, not work waiting on you. Hidden until there is one.
+			archivedIdeas.length > 0
+				? m('.archive', [
+						m(
+							'button.btn.btn--ghost.btn--sm.archive__toggle',
+							{
+								'aria-expanded': String(archiveOpen),
+								onclick: () => {
+									archiveOpen = !archiveOpen;
+								},
+							},
+							[
+								`📦 ${t('delib.archive_open')}`,
+								m('span.archive__count', String(archivedIdeas.length)),
+							],
+						),
+						archiveOpen
+							? m('.archive__list', [
+									m('p.archive__hint', t('delib.archive_hint')),
+									archivedIdeas.map((entry) =>
+										m('.archive__item', { key: entry.statementId }, [
+											m('span.archive__mark', { 'aria-hidden': 'true' }, '✓'),
+											m('.archive__body', [
+												m('p.archive__text', entry.statement),
+												// The suggester is named here on purpose: this is
+												// the credit ledger of who improved my proposal
+												entry.anonName
+													? m(
+															'p.archive__from',
+															t('delib.suggestion_from', { name: entry.anonName }),
+														)
+													: null,
+											]),
+										]),
+									),
+								])
+							: null,
 					])
 				: null,
 			workbenchSection(
@@ -1280,6 +1338,7 @@ export function Deliberation(
 			window.clearTimeout(rateAckTimer);
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
+			unregisterMineNavigator(goToMine);
 		},
 
 		view(vnode) {

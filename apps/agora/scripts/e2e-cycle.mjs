@@ -223,6 +223,10 @@ if (afterDecline.helping !== expected1) fail(`expected ${expected1} helping, got
 
 // ---------- Phase D: A weaves + saves → B +2, travel to re-rate ----------
 step('PHASE D: A ticks woven + saves → B +2 and travels to re-rate');
+// Before weaving: the idea waits in the tray, the archive doesn't exist yet
+const trayBefore = await s1.locator('.chat-drawer__item').count();
+if (trayBefore !== 1) fail(`tray should hold 1 pending idea, has ${trayBefore}`);
+if ((await s1.locator('.archive').count()) !== 0) fail('archive shown before anything was woven');
 // Custom checkbox: the styled span covers the input — click the label
 await s1.locator('label.chat-drawer__check').first().click();
 const ticked = await s1.locator('.chat-drawer__check-input').first().isChecked();
@@ -257,6 +261,22 @@ if (!chip.includes('שולב')) fail(`expected woven-in chip, got: ${chip}`);
 const afterWoven = await points('S2', s2);
 console.log('S2(B) points after woven:', afterWoven);
 if (afterWoven.helping !== before2.helping + 3) fail(`expected +3 total helping, got ${JSON.stringify(afterWoven)}`);
+
+// The woven idea LEAVES the working tray and lands in the archive —
+// the tray is a workbench, the archive is the record
+await s1.locator('.archive__toggle').waitFor({ timeout: 15000 });
+const trayAfter = await s1.locator('.chat-drawer__item').count();
+if (trayAfter !== 0) fail(`tray should be empty after weaving, has ${trayAfter}`);
+const archiveCount = await s1.locator('.archive__count').textContent();
+if (archiveCount.trim() !== '1') fail(`archive count = ${archiveCount}, expected 1`);
+console.log('A ARCHIVE: tray emptied, archive badge =', archiveCount.trim());
+// The button opens the record, with credit to the classmate who offered it
+await s1.locator('.archive__toggle').click();
+await s1.locator('.archive__item').first().waitFor({ timeout: 5000 });
+console.log('A ARCHIVE ENTRY:', (await s1.locator('.archive__text').first().textContent()).trim().slice(0, 40));
+const credit = await s1.locator('.archive__from').first().textContent();
+console.log('A ARCHIVE CREDIT:', credit.trim());
+await shot(s1, '08-A-archive-open');
 
 // ---------- Phase E: B re-rates → A sees the aggregate 📈 chip ----------
 step('PHASE E: B re-rates the improved text → A sees 📈 ratings-moved');

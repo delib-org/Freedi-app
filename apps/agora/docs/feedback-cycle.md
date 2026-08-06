@@ -124,7 +124,8 @@ Design rules:
 | Actor | Surface | What it shows |
 |-------|---------|---------------|
 | A | Workshop card → received accordion | open imps, two buttons (adopt / no-thanks) |
-| A | Adoption tray (accepted-ideas drawer) | every adopted imp + "שילבתי בנוסח" tick |
+| A | Adoption tray (accepted-ideas drawer) | imps still **waiting** to be woven + the "שילבתי בנוסח" tick. A workbench, not a history — it empties as ideas land in the text |
+| A | Archive button (📦 "רעיונות ששולבו בנוסח") | every imp that MADE IT into the text, with credit to the classmate who offered it. Appears only once something has been woven; opens on demand |
 | A | Workshop card footer | 📈 ratings-moved line (aggregate) |
 | B | Celebration popups | accepted (+1), woven (+2 → travel button) |
 | B | Toast stack | declined (−0.25), helped-proposal-improved |
@@ -144,6 +145,7 @@ topic package. It covers every row of both tables above:
 | #2 accepted | B's celebration names +1; `helping` 0 → 1 |
 | #3 declined | A's quiet toast; floor holds (0 stays 0) **and** a real balance loses exactly a quarter (1 → 0.75) |
 | #4 woven in | B's celebration names +2 (total 3); travel button lands B on the proposal with the spotlight |
+| #4 archive | the woven idea leaves A's tray (0 left) and lands in the archive (badge 1), listed with its suggester's name |
 | #5 improved | ✨ marker + "שולב בנוסח" chip on B's helped card |
 | #6 ratings moved | A's chip counts 1 (singular copy) and names the direction ("bridge power rose by N") |
 

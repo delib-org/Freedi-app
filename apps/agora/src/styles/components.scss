@@ -1820,6 +1820,116 @@
 	text-align: center;
 }
 
+// --- The archive: ideas that MADE IT into the text. History, not work —
+// so it's a quiet button, not another drawer competing with the tray ---
+.archive {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__toggle {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__count {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		border-radius: var(--radius-full);
+		background: var(--success);
+		color: #ffffff;
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		animation: archive-open var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__hint {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__item {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		padding-block-end: var(--space-sm);
+		border-block-end: 1px solid var(--border-subtle);
+
+		&:last-child {
+			padding-block-end: 0;
+			border-block-end: none;
+		}
+	}
+
+	// Settled, not celebratory: the ✓ is a record, the glitter already happened
+	&__mark {
+		flex-shrink: 0;
+		width: 20px;
+		height: 20px;
+		border-radius: var(--radius-full);
+		background: rgba(23, 128, 77, 0.12);
+		color: var(--success);
+		font-size: 12px;
+		font-weight: 700;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__text {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		line-height: 1.5;
+	}
+
+	// Credit where it's due: who improved my proposal
+	&__from {
+		color: var(--peer-glow);
+		font-size: var(--font-size-xs);
+	}
+}
+
+@keyframes archive-open {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.archive__list {
+		animation: none;
+	}
+}
+
 // --- Camp meter rows (label + track + value). Born as the reception
 // forecast (feature removed 2026-07-28 — duplicated the character reviews);
 // the __row/__label/__track/__fill/__value pieces live on in the ScoreHud
