@@ -62,14 +62,13 @@ open ──accept──▶ accepted ──(owner saves an update with the tick)�
 | Suggestion **accepted**            | **+1** | The promise: your idea was taken |
 | Suggestion **woven in** (implemented) | **+2** | The payoff: the text actually changed because of you |
 | Suggestion **declined**            | **−0.25** | A light cost — discourages spam, cheap enough to keep risking ideas |
-| Suggestion thanked (chat flow only)| +5     | Legacy, unchanged — ⚠️ see warning below |
+| Suggestion thanked (chat flow only)| +0.5   | Legacy; kept below accept (+1) — a polite nod never outpays a landed idea |
 
-> ⚠️ **Known inversion on the chat branch**: `thanked` (+5) now outpays a
-> fully woven idea (+3). On THIS branch it never fires (the places UI
-> has no thanks button), but the chat-flow variant shares these
-> constants. Before merging or reviving the chat branch, drop
-> `SUGGESTION_THANKED` to ≤ 0.5 or remove the thanks path — a polite
-> nod must never earn more than an idea that landed in the text.
+> The old inversion (`thanked` at +5 outpaying a fully woven idea at +3)
+> is fixed in `agoraConstants.ts` — `SUGGESTION_THANKED` is 0.5. On THIS
+> branch it never fires anyway (the places UI has no thanks button); the
+> chat-flow variant shares the constant and now sits correctly at the
+> bottom of the ladder.
 
 Rules:
 
@@ -186,7 +185,6 @@ not left looking live.
   care to keep it aggregate (batch per edit, never per-rater).
 - Decay/caps if spam becomes real (max imps per proposal per lap; cap
   woven awards per helper per proposal against collusion).
-- Fix the thanked inversion before any chat-branch merge (see ⚠️ above).
 
 ---
 
