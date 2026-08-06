@@ -1716,8 +1716,8 @@
 		// The Others tab wears the classmate orange, never MY blue.
 		// Deepened fill so white text stays AA — still unambiguously orange.
 		&--peer.delib-nav__item--active {
-			background: #b05e0d;
-			border-color: #b05e0d;
+			background: var(--peer-strong);
+			border-color: var(--peer-strong);
 			color: #ffffff;
 			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--peer) 60%, transparent);
 		}
@@ -1780,8 +1780,8 @@
 			}
 
 			&--peer.delib-nav__item--active {
-				background: #b05e0d;
-				border-color: #b05e0d;
+				background: var(--peer-strong);
+				border-color: var(--peer-strong);
 			}
 		}
 	}
@@ -1815,6 +1815,31 @@
 .shell--mode-peer {
 	--mode-accent: var(--peer);
 	--mode-accent-glow: var(--peer-glow);
+
+	// The way forward wears the colour of the room it is in. A blue button in
+	// an amber room says "mine" at the exact moment the student is acting on
+	// someone else's proposal.
+	// Fill is --peer-strong, not --peer: white on #e07714 is 3.08:1, and a
+	// button label is not large text.
+	.btn--primary {
+		--btn-glow: var(--peer);
+
+		background: var(--peer-strong);
+
+		&:hover:not(:disabled) {
+			// Deeper, not lighter — lighter would drop the label under AA.
+			// The lift comes from the halo, which the base .btn rule expands.
+			background: #a85a0c;
+		}
+
+		&:active:not(:disabled) {
+			background: var(--peer-deep);
+		}
+	}
+
+	.btn:focus-visible {
+		outline-color: var(--peer-glow);
+	}
 }
 
 .shell--mode-mine::before,
