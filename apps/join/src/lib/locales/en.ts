@@ -201,6 +201,7 @@ const en: Record<string, string> = {
 		'Participants can broadcast their suggestion as they type, so the room can help them shape it.',
 	'live.share_toggle': 'Share my draft live',
 	'live.share_hint': 'People viewing this question can watch you write and cheer you on',
+	'live.badge': 'LIVE',
 	'live.banner.one': '{{name}} is writing live',
 	'live.banner.many': '{{count}} people are writing live',
 	'live.banner.watch': 'Watch',

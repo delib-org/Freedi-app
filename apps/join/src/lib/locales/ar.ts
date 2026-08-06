@@ -182,6 +182,7 @@ const ar: Record<string, string> = {
 		'يمكن للمشاركين بث اقتراحهم أثناء الكتابة، حتى تساعدهم القاعة في صياغته.',
 	'live.share_toggle': 'مشاركة مسودتي مباشرة',
 	'live.share_hint': 'يمكن لمن يشاهد هذا السؤال أن يراك تكتب ويشجعك',
+	'live.badge': 'مباشر',
 	'live.banner.one': '{{name}} يكتب الآن مباشرة',
 	'live.banner.many': '{{count}} أشخاص يكتبون الآن مباشرة',
 	'live.banner.watch': 'مشاهدة',

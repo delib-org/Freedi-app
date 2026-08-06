@@ -168,6 +168,7 @@ const de: Record<string, string> = {
 		'Teilnehmende können ihren Vorschlag beim Tippen übertragen, damit der Raum beim Formulieren helfen kann.',
 	'live.share_toggle': 'Meinen Entwurf live teilen',
 	'live.share_hint': 'Wer diese Frage ansieht, kann dir beim Schreiben zusehen und dich anfeuern',
+	'live.badge': 'LIVE',
 	'live.banner.one': '{{name}} schreibt gerade live',
 	'live.banner.many': '{{count}} Personen schreiben gerade live',
 	'live.banner.watch': 'Zusehen',

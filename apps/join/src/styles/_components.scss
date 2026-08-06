@@ -5250,8 +5250,12 @@ $facilitator-panel-width: 300px;
   line-height: var(--line-height-normal);
 }
 
-// "Someone is writing live" strip on the Solutions view.
+// "Someone is writing live" strip on the Solutions view. Dressed as an on-air
+// indicator — LIVE badge, pulsing dot and a ring radiating off both the badge
+// and the strip itself — so it registers in peripheral vision while people are
+// talking to each other rather than watching the screen.
 .live-banner {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-sm);
@@ -5266,11 +5270,14 @@ $facilitator-panel-width: 300px;
   cursor: pointer;
   transition:
     background var(--dur-quick) var(--ease-out),
-    box-shadow var(--dur-quick) var(--ease-out);
+    transform var(--dur-quick) var(--ease-out);
+  animation:
+    live-banner-in var(--dur-base) var(--ease-out),
+    live-banner-glow 2.4s ease-out infinite;
 
   &:hover {
     background: var(--terra-100);
-    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
 
   &:focus-visible {
@@ -5278,11 +5285,33 @@ $facilitator-panel-width: 300px;
     outline-offset: 2px;
   }
 
-  &__dot {
-    width: 10px;
-    height: 10px;
+  // The badge's ring grows and fades on the same 2.4s beat as the strip's own
+  // glow, so the two pulses read as one heartbeat, not competing animations.
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 4px var(--space-sm);
     border-radius: var(--radius-full);
     background: var(--terra-600);
+    color: var(--paper);
+    animation: live-badge-ring 2.4s ease-out infinite;
+  }
+
+  &__badge-label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: currentColor;
     flex-shrink: 0;
     animation: live-pulse 1.6s ease-in-out infinite;
   }
@@ -5341,13 +5370,32 @@ $facilitator-panel-width: 300px;
     border-bottom: 1.5px solid var(--border-medium);
   }
 
+  // Same on-air tell as the banner, so the overlay reads as a continuation
+  // of the strip that was tapped to open it.
   &__header-dot {
+    position: relative;
     width: 10px;
     height: 10px;
     border-radius: var(--radius-full);
     background: var(--terra-600);
+    color: var(--terra-600);
     flex-shrink: 0;
+    margin-inline-end: var(--space-xs);
     animation: live-pulse 1.6s ease-in-out infinite;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-full);
+      border: 1.5px solid currentColor;
+      animation: live-ring 1.8s var(--ease-out) infinite;
+    }
+
+    &::after {
+      animation-delay: 0.9s;
+    }
   }
 
   &__title {
@@ -5530,11 +5578,70 @@ $facilitator-panel-width: 300px;
   }
 }
 
+// Ring radiating out of the LIVE badge — spread up, alpha down.
+@keyframes live-badge-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--terra-500) 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 9px color-mix(in srgb, var(--terra-500) 0%, transparent);
+  }
+}
+
+// Broadcast rings radiating out of a live dot.
+@keyframes live-ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+
+@keyframes live-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Ring that grows out of the strip's edge and fades — spread up, alpha down.
+@keyframes live-banner-glow {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--terra-500) 45%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--terra-500) 0%, transparent);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .live-banner,
+  .live-banner__badge,
   .live-banner__dot,
   .live-watch__header-dot,
+  .live-watch__header-dot::before,
+  .live-watch__header-dot::after,
   .live-watch__caret,
   .modal__live-toggle-dot {
     animation: none;
+  }
+
+  // Motion is off, so hold the pulses as static rings — the strip must still
+  // stand out from the suggestion list.
+  .live-banner {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--terra-500) 25%, transparent);
+  }
+
+  .live-banner__badge {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--terra-500) 30%, transparent);
   }
 }
