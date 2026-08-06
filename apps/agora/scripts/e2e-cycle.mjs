@@ -238,6 +238,13 @@ if (afterWoven.helping !== before2.helping + 3) fail(`expected +3 total helping,
 step('PHASE E: B re-rates the improved text → A sees 📈 ratings-moved');
 await s2.locator('.helped__item .rate-scale--compact .rate-scale__option--strong-for').click();
 console.log('B re-rated: strong-for');
+// Selection grammar: chosen card ringed + ✓ badge, siblings receded
+await s2.locator('.rate-scale__option--selected .rate-scale__check').waitFor({ timeout: 10000 });
+const hasSel = await s2.locator('.rate-scale--has-selection').count();
+if (hasSel === 0) fail('rate scale group missing has-selection state');
+console.log('B SELECTION: ring + check badge visible, siblings receded');
+await s2.waitForTimeout(700); // let the pulse settle for the screenshot
+await shot(s2, '07-B-rerate-selected');
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
 // B moved −0.5 → +1: the cross-camp support (and so the bridge) must
 // RISE — the chip carries direction on the aggregate, not just a count

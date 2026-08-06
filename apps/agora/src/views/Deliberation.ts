@@ -1133,14 +1133,24 @@ export function Deliberation(
 	function reRateScale(live: AgoraSession, proposal: AgoraProposal): m.Children {
 		const current = getDeliberationState().myRatings[proposal.statementId]?.value;
 
+		// Join-app selection grammar: once a vote exists the group knows it
+		// (siblings recede), the chosen card wears ring + scale + ✓ badge —
+		// three redundant cues, so "where did I press?" never needs hunting
 		return m(
 			'.rate-scale.rate-scale--compact',
-			RATE_OPTIONS.map((option) =>
-				m(
+			{
+				class: current !== undefined ? 'rate-scale--has-selection' : undefined,
+				role: 'radiogroup',
+			},
+			RATE_OPTIONS.map((option) => {
+				const active = current === option.value;
+
+				return m(
 					`button.rate-scale__option.rate-scale__option--${option.variant}`,
 					{
-						class: current === option.value ? 'rate-scale__option--selected' : undefined,
-						'aria-pressed': String(current === option.value),
+						class: active ? 'rate-scale__option--selected' : undefined,
+						role: 'radio',
+						'aria-checked': String(active),
 						onclick: () => {
 							void rateProposal(live, proposal.statementId, option.value);
 						},
@@ -1148,9 +1158,10 @@ export function Deliberation(
 					[
 						m('span.rate-scale__emoji', option.emoji),
 						m('span.rate-scale__label', t(option.labelKey)),
+						active ? m('span.rate-scale__check', { 'aria-hidden': 'true' }, '✓') : null,
 					],
-				),
-			),
+				);
+			}),
 		);
 	}
 
