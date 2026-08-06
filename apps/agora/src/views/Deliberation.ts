@@ -285,6 +285,9 @@ const RATE_OPTIONS: ReadonlyArray<{
 
 type CycleStep = 'mine' | 'rate' | 'help' | 'done';
 
+/** How long a pressed rating stays visibly selected before the square moves on */
+const RATE_ACK_MS = 700;
+
 interface CycleState {
 	round: number;
 	step: CycleStep;
@@ -308,6 +311,13 @@ export function Deliberation(
 	/** Reception forecast for the CURRENT draft text (stale once the text changes) */
 	let suggestionDraft = '';
 	let helpSkips = 0;
+	/**
+	 * The just-pressed rating in the square, held for one acknowledgment
+	 * beat (ring + ✓ + receding siblings) before the next proposal swaps
+	 * in — the instant swap read as "nothing happened" when pressed.
+	 */
+	let justRated: { statementId: string; value: AgoraRating } | null = null;
+	let rateAckTimer = 0;
 	/** The always-editable box on the mine screen + the proposal text it was seeded from */
 	let mineDraft = '';
 	let mineDraftBase = '';
@@ -1267,6 +1277,7 @@ export function Deliberation(
 	return {
 		onremove() {
 			window.clearTimeout(splashTimer);
+			window.clearTimeout(rateAckTimer);
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
 		},
@@ -1494,7 +1505,13 @@ export function Deliberation(
 							totalRaters(scores[a.statementId]) - totalRaters(scores[b.statementId]) ||
 							studentOrder(a.statementId) - studentOrder(b.statementId),
 					);
-				const current = candidates[0];
+				// During the acknowledgment beat the just-rated proposal stays
+				// pinned on screen — the snapshot already dropped it from
+				// candidates, and an instant swap would eat the feedback
+				const pinned = justRated;
+				const current = pinned
+					? proposals.find((proposal) => proposal.statementId === pinned.statementId)
+					: candidates[0];
 				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
 
 				return m('.shell.shell--delib.shell--mode-peer.shell--place-square', [
@@ -1520,21 +1537,45 @@ export function Deliberation(
 									m('p.scene__text', current.statement),
 									m(
 										'.rate-scale',
-										RATE_OPTIONS.map((option) =>
-											m(
+										{
+											class: pinned ? 'rate-scale--has-selection' : undefined,
+											role: 'radiogroup',
+										},
+										RATE_OPTIONS.map((option) => {
+											const active = pinned?.value === option.value;
+
+											return m(
 												`button.rate-scale__option.rate-scale__option--${option.variant}`,
 												{
+													class: active ? 'rate-scale__option--selected' : undefined,
+													role: 'radio',
+													'aria-checked': String(active),
+													disabled: pinned !== null ? true : undefined,
 													onclick: () => {
+														if (justRated) return;
+														// The beat: show the press (ring, ✓, receding
+														// siblings), THEN move the square along
+														justRated = {
+															statementId: current.statementId,
+															value: option.value,
+														};
 														void rateProposal(live, current.statementId, option.value);
-														setCycle({ rated: cycle.rated + 1 });
+														rateAckTimer = window.setTimeout(() => {
+															justRated = null;
+															setCycle({ rated: cycle.rated + 1 });
+															m.redraw();
+														}, RATE_ACK_MS);
 													},
 												},
 												[
 													m('span.rate-scale__emoji', option.emoji),
 													m('span.rate-scale__label', t(option.labelKey)),
+													active
+														? m('span.rate-scale__check', { 'aria-hidden': 'true' }, '✓')
+														: null,
 												],
-											),
-										),
+											);
+										}),
 									),
 								])
 							: m('.text-center.stack', [

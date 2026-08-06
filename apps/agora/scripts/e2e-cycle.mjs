@@ -127,7 +127,9 @@ for (const [page, label, option] of [
 ]) {
 	await page.waitForSelector('.rate-scale', { timeout: 15000 });
 	await page.locator(option).click();
-	console.log(`${label} rated the other's proposal`);
+	// The acknowledgment beat: the press is SEEN (ring + ✓) before the swap
+	await page.locator('.rate-scale__option--selected .rate-scale__check').waitFor({ timeout: 5000 });
+	console.log(`${label} rated the other's proposal (ack beat shown)`);
 }
 for (const page of [s1, s2]) {
 	await page.getByRole('button', { name: /המשיכו לעזרה/i }).click({ timeout: 10000 });
