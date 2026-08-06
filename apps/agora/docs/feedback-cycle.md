@@ -102,7 +102,7 @@ proposal (see Future) before adding any surveillance-flavored fix.
 
 | # | Trigger | Recipient | Form | Content | Leads to |
 |---|---------|-----------|------|---------|----------|
-| 1 | Suggestion received | A | badge on "שלי" tab + count on the received-accordion | red count | opening the accordion |
+| 1 | Suggestion received | A | **actionable toast** (peer-orange) + badge on "שלי" tab + count on the received-accordion | "you got an improvement — open the workshop" | tapping the toast stands you in the workshop with the drawer open |
 | 2 | Accepted | B | 🎉 celebration (glitter) | "your idea was accepted! (+1)" | close — text hasn't changed yet |
 | 3 | Declined | B | quiet toast | "not adopted this time (−0.25) — try another angle" | nothing; deliberately low-key |
 | 4 | Woven in | B | 🎉 celebration | "your idea is in the text! (+2)" | **primary button → travel to the improved proposal, spotlight it, re-rate** |
@@ -130,6 +130,39 @@ Design rules:
 | B | Toast stack | declined (−0.25), helped-proposal-improved |
 | B | "הצעות שעזרתם להן" section (Others side) | current text, ✨ improved marker, re-rate scale, follow-up box |
 | B | **Results screen only** | running points totals — the ScoreHud was removed from the deliberation screens by design (2026-08-05), so during play B hears +1/+2 moments but sees no balance. Deliberate: the work surface stays score-free. |
+
+## Verification
+
+`apps/agora/scripts/e2e-cycle.mjs` walks the whole cycle with a **teacher
+and two students** against the emulator and asserts points in Firestore,
+not just pixels. Run it with emulators + `npx vite --port 3009` + a seeded
+topic package. It covers every row of both tables above:
+
+| Checked | How |
+|---|---|
+| #1 received | actionable toast reaches A the moment B sends; accordion count = 1 |
+| #2 accepted | B's celebration names +1; `helping` 0 → 1 |
+| #3 declined | A's quiet toast; floor holds (0 stays 0) **and** a real balance loses exactly a quarter (1 → 0.75) |
+| #4 woven in | B's celebration names +2 (total 3); travel button lands B on the proposal with the spotlight |
+| #5 improved | ✨ marker + "שולב בנוסח" chip on B's helped card |
+| #6 ratings moved | A's chip counts 1 (singular copy) and names the direction ("bridge power rose by N") |
+
+**Not covered by this script**, and why:
+
+- `BRIDGING_BONUS` (+15 to the author): needs `bridgingScore ≥ 60`, which
+  the confidence factor (`MIN_CROSS_RATERS: 3`) puts out of reach with two
+  students — a single cross-camp rater caps the score around 22. Needs a
+  4+ student run.
+- `SUGGESTION_THANKED` (+0.5): the places UI has no thanks button by
+  design; only the chat-flow variant can reach it.
+
+⚠️ **`AGORA_POINTS.PROPOSAL_SUBMITTED` (5) is dead** — defined, exported,
+and awarded by nothing anywhere in the codebase (the `PROPOSAL_SUBMITTED`
+hits in `chatFlow.ts` are an unrelated action-type string). Submitting a
+proposal therefore earns zero. Per "A's side of the economy" above, A's
+intended motivation is the bridging bonus, so this may simply be a
+leftover — but it should either be awarded on first submission or deleted,
+not left looking live.
 
 ## Edge cases
 

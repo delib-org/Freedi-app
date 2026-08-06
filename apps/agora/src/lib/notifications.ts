@@ -102,18 +102,21 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
  */
 export function detectReceivedSuggestions(sessionId: string, userId: string): void {
 	const key = `agora_${sessionId}_received_toastmark`;
-	let seen: string[] = [];
-	try {
-		seen = JSON.parse(sessionStorage.getItem(key) ?? '[]') as string[];
-	} catch {
-		// Corrupt storage — start over
-	}
-
 	const { proposals, suggestions } = getDeliberationState();
 	const mineIds = proposals
 		.filter((proposal) => proposal.creatorId === userId)
 		.map((proposal) => proposal.statementId);
+	// No proposal of mine yet — nothing can arrive, and writing a watermark
+	// now would make the FIRST real suggestion look like replayed history
 	if (mineIds.length === 0) return;
+
+	const stored = sessionStorage.getItem(key);
+	let seen: string[] = [];
+	try {
+		seen = JSON.parse(stored ?? '[]') as string[];
+	} catch {
+		// Corrupt storage — start over
+	}
 
 	const incoming = mineIds
 		.flatMap((id) => suggestions[id] ?? [])
@@ -121,11 +124,12 @@ export function detectReceivedSuggestions(sessionId: string, userId: string): vo
 		.map((suggestion) => suggestion.statementId);
 	const seenSet = new Set(seen);
 	const fresh = incoming.filter((id) => !seenSet.has(id));
-	if (fresh.length === 0) return;
 
-	const firstSighting = seen.length === 0 && sessionStorage.getItem(key) === null;
+	// The watermark is written on EVERY pass, including the empty one right
+	// after I propose. Writing it only when suggestions exist made the first
+	// arrival its own "first sighting" — and therefore silent, forever.
 	sessionStorage.setItem(key, JSON.stringify(incoming));
-	if (!firstSighting) pushLocalToast('agora_suggestion_received');
+	if (stored !== null && fresh.length > 0) pushLocalToast('agora_suggestion_received');
 }
 
 /** Listen to this user's unread agora notifications and surface them as toasts */

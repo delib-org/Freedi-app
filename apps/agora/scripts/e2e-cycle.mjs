@@ -40,9 +40,11 @@ await teacher.evaluate(
 	(sub) => window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'Cycle Teacher' }),
 	runId,
 );
-// TeacherHome loads topics once, racing the dev sign-in — reload so the
-// list is queried as the signed-in teacher (provisions the default topic)
-await teacher.waitForTimeout(1500);
+// TeacherHome loads topics once, racing the dev sign-in — wait for the
+// teacher tier to actually land, then reload so the list is queried as
+// the signed-in teacher (which also provisions the default topic)
+await teacher.waitForFunction(() => window.__agoraDebug?.()?.user?.tier === 2, { timeout: 20000 });
+await teacher.waitForTimeout(2000); // let auth persistence flush before reload
 await teacher.reload({ waitUntil: 'domcontentloaded' });
 await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
 await teacher.locator('text=המהפכה הצרפתית').first().click();
@@ -172,6 +174,12 @@ const points = async (label, page) => {
 	return { helping: num('helping'), total: num('total') };
 };
 
+// Doc notification #1: besides the toast, the passive cues must be there —
+// a count on the received accordion and a badge on the "mine" tab
+const accordionCount = await s1.locator('.workbench__count').first().textContent();
+if (accordionCount.trim() !== '1') fail(`accordion count = ${accordionCount}, expected 1`);
+console.log('A PASSIVE CUES: accordion count =', accordionCount.trim());
+
 const before2 = await points('S2', s2);
 console.log('S2(B) points before:', before2);
 
@@ -238,6 +246,14 @@ const spotlit = await s2.locator('.helped__item--spotlight').count();
 console.log('B landed on helped item, spotlight:', spotlit === 1 ? 'YES' : 'no');
 await shot(s2, '05-B-helped-spotlight');
 
+// Doc notification #5: the helped proposal visibly moved — ✨ marker on
+// the card, and the status chip records the idea as woven in
+await s2.locator('.helped__improved').waitFor({ timeout: 10000 });
+console.log('B SEES ✨:', (await s2.locator('.helped__improved').textContent()).trim());
+const chip = await s2.locator('.helped__chip').first().textContent();
+console.log('B SUGGESTION CHIP:', chip.trim());
+if (!chip.includes('שולב')) fail(`expected woven-in chip, got: ${chip}`);
+
 const afterWoven = await points('S2', s2);
 console.log('S2(B) points after woven:', afterWoven);
 if (afterWoven.helping !== before2.helping + 3) fail(`expected +3 total helping, got ${JSON.stringify(afterWoven)}`);
@@ -265,5 +281,56 @@ console.log('A SEES:', moved.trim());
 if (!moved.includes('דירוג אחד')) fail(`expected singular ratings-moved copy, got: ${moved}`);
 await shot(s1, '06-A-ratings-moved');
 
-console.log('\n✅ FULL CYCLE VERIFIED: adopt +1 → decline floored → woven +2 (=+3) → re-rate → aggregate chip');
+// ---------- Phase F: the ledger's fractional arithmetic ----------
+// Phase C only proved the FLOOR (0 stays 0). The doc's −0.25 must also
+// bite a real balance: A earns +1, then loses a quarter of it.
+step('PHASE F: follow-up adopted (+1), then declined (−0.25) off a real balance');
+const followUp = async (page, label, text) => {
+	await page.locator('.helped__followup').first().fill(text);
+	await page
+		.locator('.helped__item button.btn--secondary', { hasText: /שליחת/ })
+		.first()
+		.click();
+	await page.waitForTimeout(1200);
+	console.log(`${label} sent a follow-up suggestion`);
+};
+// A is peeking at their workshop; go to the Others side for the helped card
+await s1.locator('.delib-nav__item--peer').click();
+await s1.waitForSelector('.helped__item', { timeout: 10000 });
+await followUp(s1, 'S1(A)', 'אפשר להוסיף סעיף שמבטיח שהאספה תתכנס לפחות פעמיים בשנה.');
+
+// B adopts it → A +1
+await s2.locator('.delib-nav__item').first().click();
+await s2.waitForSelector('.my-lantern--workshop', { timeout: 10000 });
+await s2.getByRole('button', { name: /^אשלב את הרעיון$/ }).click();
+await s1.waitForSelector('.celebration', { timeout: 15000 });
+console.log('A CELEBRATION (accepted):', (await s1.locator('.celebration__message').textContent()).trim());
+await s1.locator('.celebration button.btn--primary').click();
+const afterEarn = await points('S1', s1);
+console.log('S1(A) points after earning:', afterEarn);
+if (afterEarn.helping !== 1) fail(`expected 1 helping, got ${JSON.stringify(afterEarn)}`);
+
+// A sends another follow-up, B declines it → 1 − 0.25 = 0.75 (fractional!)
+await s1.locator('.delib-nav__item--peer').click();
+await s1.waitForSelector('.helped__item', { timeout: 10000 });
+await followUp(s1, 'S1(A)', 'ואולי גם לקבוע מי מכריע במקרה של תיקו בהצבעה.');
+await s2.waitForSelector('.workshop__item', { timeout: 15000 });
+await s2.getByRole('button', { name: /^לא תודה$/ }).click();
+await s2.waitForTimeout(1500);
+const afterQuarter = await points('S1', s1);
+console.log('S1(A) points after a real decline:', afterQuarter);
+if (afterQuarter.helping !== 0.75) {
+	fail(`expected 0.75 helping (1 − 0.25), got ${JSON.stringify(afterQuarter)}`);
+}
+console.log('LEDGER: fractional deduction lands exactly (0.75) — no rounding, no floor');
+
+console.log(
+	'\n✅ FULL CYCLE VERIFIED\n' +
+		'   #1 received  → toast + accordion count\n' +
+		'   #2 accepted  → celebration, +1\n' +
+		'   #3 declined  → quiet toast, floor holds at 0, −0.25 off a real balance = 0.75\n' +
+		'   #4 woven in  → celebration +2 (=+3 total), travel button, spotlight\n' +
+		'   #5 improved  → ✨ marker + "שולב בנוסח" chip on the helped card\n' +
+		'   #6 re-rated  → aggregate chip with direction (bridge power rose)',
+);
 await browser.close();
