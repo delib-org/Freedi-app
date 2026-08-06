@@ -455,57 +455,58 @@
 		z-index: var(--z-map);
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-end;
 		gap: 0;
 		overflow: hidden;
-		background: #05070d;
+		background: #000;
 		cursor: pointer;
 		-webkit-tap-highlight-color: transparent;
-		padding:
-			calc(var(--space-2xl) + env(safe-area-inset-top))
-			max(var(--space-md), env(safe-area-inset-right))
-			max(var(--space-lg), env(safe-area-inset-bottom))
-			max(var(--space-md), env(safe-area-inset-left));
+		padding: 0;
 		animation: none;
 
+		// The picture takes every pixel the copy does not: as dialogue lines
+		// pile up it gets smaller, never hidden behind them.
 		.scene__media {
-			position: absolute;
-			inset: 0;
+			position: relative;
+			flex: 1 1 auto;
+			// Never squeeze so flat that a width-fitted picture starts shrinking
+			// away from the screen edges — the copy scrolls instead.
+			min-height: min(75vw, 46dvh);
 		}
 
+		// Fit the WHOLE frame to the width and let black fill the rest, the way
+		// a story feed shows a landscape photo. Cover would crop a 16:9 scene
+		// down to its middle quarter on a phone — the character standing at
+		// the edge of the illustration would simply be gone.
 		.scene__backdrop,
 		.scene__video {
 			position: absolute;
 			inset: 0;
 			width: 100%;
 			height: 100%;
-			object-fit: cover;
+			object-fit: contain;
+			// Sits directly on top of the copy, so the black it doesn't use
+			// gathers in one band at the top instead of splitting the screen.
+			object-position: 50% 100%;
+			background: #000;
 			border: none;
 			border-radius: 0;
 			box-shadow: none;
 			animation: scene-fade-in var(--motion-slow) var(--ease-camera) both;
 		}
 
-		// Slow push-in keeps a still frame alive without asking anything of the
-		// student — the same trick a documentary uses on a photograph.
-		.scene__backdrop {
-			animation:
-				scene-fade-in var(--motion-slow) var(--ease-camera) both,
-				scene-ken-burns 24s var(--ease-camera) both;
-		}
-
-		// Darkening only where the copy lands (top bars + bottom captions)
+		// Darkening only where the copy lands — the picture itself keeps its
+		// own light, and a tall image that reaches the captions still reads.
 		.scene__scrim {
 			position: absolute;
 			inset: 0;
 			pointer-events: none;
 			background: linear-gradient(
 				to bottom,
-				rgba(0, 0, 0, 0.55) 0%,
-				rgba(0, 0, 0, 0) 26%,
-				rgba(0, 0, 0, 0) 40%,
-				rgba(0, 0, 0, 0.5) 78%,
-				rgba(0, 0, 0, 0.72) 100%
+				rgba(0, 0, 0, 0.5) 0%,
+				rgba(0, 0, 0, 0) 20%,
+				rgba(0, 0, 0, 0) 55%,
+				rgba(0, 0, 0, 0.45) 82%,
+				rgba(0, 0, 0, 0.7) 100%
 			);
 		}
 
@@ -552,15 +553,18 @@
 			}
 		}
 
-		// The copy column — bottom-anchored, scrolls on its own if a scene is long
+		// The copy column — sits under the picture, scrolls on its own so a
+		// long scene never squeezes the picture out of existence
 		.scene__caption {
 			position: relative;
 			display: flex;
 			flex-direction: column;
 			align-items: flex-start;
 			gap: var(--space-sm);
-			max-height: 62dvh;
+			max-height: 55dvh;
 			overflow-y: auto;
+			padding-inline: max(var(--space-md), env(safe-area-inset-left))
+				max(var(--space-md), env(safe-area-inset-right));
 			scrollbar-width: none;
 			animation: scene-caption-rise var(--motion-slow) var(--ease-camera) both;
 
@@ -583,6 +587,11 @@
 		}
 
 		.scene__title {
+			position: relative;
+			align-self: flex-start;
+			margin-bottom: var(--space-sm);
+			margin-inline: max(var(--space-md), env(safe-area-inset-left))
+				max(var(--space-md), env(safe-area-inset-right));
 			text-align: start;
 			font-size: clamp(1.4rem, 6.5vw, 2rem);
 			max-width: 100%;
@@ -639,6 +648,9 @@
 		.scene__actions {
 			position: relative;
 			margin-top: var(--space-md);
+			padding-inline: max(var(--space-md), env(safe-area-inset-left))
+				max(var(--space-md), env(safe-area-inset-right));
+			padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
 		}
 
 		// Glass button: a white secondary button would punch a hole in the frame
@@ -664,13 +676,16 @@
 // runs the full width of a laptop is unreadable — hold it to a column.
 @media (min-width: 720px) {
 	.scene--immersive {
-		padding-inline: var(--space-xl);
-
 		.scene__caption,
 		.scene__actions {
 			width: 100%;
 			max-width: 620px;
 			margin-inline: auto;
+		}
+
+		// Line the title up with the start edge of that centred column
+		.scene__title {
+			margin-inline: max(var(--space-md), calc((100% - 620px) / 2)) var(--space-md);
 		}
 	}
 }
@@ -683,11 +698,6 @@
 @keyframes scene-caption-rise {
 	from { opacity: 0; transform: translateY(16px); }
 	to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scene-ken-burns {
-	from { transform: scale(1); }
-	to { transform: scale(1.12); }
 }
 
 @media (prefers-reduced-motion: reduce) {

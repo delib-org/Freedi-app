@@ -121,6 +121,10 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 								)
 							: null,
 
+						// The title lives outside the scrolling column so a long
+						// scene never scrolls away where the student is
+						m('h2.scene__title', scene.title),
+
 						m(
 							'.scene__caption',
 							{
@@ -134,7 +138,6 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 								},
 							},
 							[
-								m('h2.scene__title', scene.title),
 								scene.text ? m('p.scene__text', scene.text) : null,
 								hasDialogue ? m('.scene__dialogue', dialogueLines()) : null,
 								// A video scene may carry extra stills — keep them reachable
