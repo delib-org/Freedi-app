@@ -7,8 +7,15 @@ const SHOTS = 'walkthrough-shots';
 const step = (msg) => console.log(`\n=== ${msg}`);
 
 const browser = await chromium.launch();
+// AGORA_VIEWPORT=mobile → a phone-sized run. The deliberation screens stack
+// two fixed bars at the bottom (the proposal dock on the Mine|Others nav),
+// and that geometry only exists below the 700px breakpoint.
+const VIEWPORT =
+	process.env.AGORA_VIEWPORT === 'mobile'
+		? { width: 390, height: 844 }
+		: { width: 1280, height: 800 };
 const mkPage = async (label) => {
-	const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+	const ctx = await browser.newContext({ viewport: VIEWPORT });
 	const page = await ctx.newPage();
 	// AGORA_LANG=he node scripts/walkthrough.mjs → run the whole game in that
 	// language (RTL check); default follows the browser locale (en)

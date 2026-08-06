@@ -1755,6 +1755,10 @@
 		z-index: var(--z-header);
 		justify-content: space-around;
 		gap: 0;
+		// The dock parks flush on this bar's top edge, so the two fixed
+		// strips must agree on one height or they drift apart
+		box-sizing: border-box;
+		min-height: calc(var(--delib-nav-h) + env(safe-area-inset-bottom, 0px));
 		padding: var(--space-sm) var(--space-md)
 			calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
 		// The bar belongs to the room it sits in — a white slab at the bottom
@@ -1793,6 +1797,14 @@
 		padding-block-end: 96px;
 	}
 
+	// ...and clear of the proposal dock stacked on top of it, when there is
+	// a proposal to dock
+	.shell--delib.shell--docked .shell__content {
+		padding-block-end: calc(
+			var(--delib-nav-h) + var(--dock-bar-h) + var(--space-lg) + env(safe-area-inset-bottom, 0px)
+		);
+	}
+
 	// The bar takes the colour of the room, so the wash reaches the very
 	// bottom of the screen instead of stopping at a white slab
 	.shell--mode-mine .delib-nav {
@@ -1801,6 +1813,290 @@
 
 	.shell--mode-peer .delib-nav {
 		background: color-mix(in srgb, var(--wash-peer-low) 94%, transparent);
+	}
+}
+
+/* --- The proposal dock: my notebook, carried between places ---
+   My workshop used to be a room I travelled to (and, on the mine step, a
+   wall of card that filled the screen whether or not it had anything to
+   say). It is now a bar docked at the bottom of EVERY place: collapsed it
+   shows one line — what needs me, or a peek of my own text — and tapping
+   it lifts the whole workshop over the room I'm standing in.
+
+   The control is neutral chrome with a chevron chip, exactly like
+   .chat-drawer, because students already learned that affordance one
+   screen down. The only ownership colour is the blue 📘 ribbon: this is
+   MINE, sitting at the bottom of a stall that isn't. */
+.proposal-dock {
+	position: fixed;
+	inset-inline: 0;
+	// Parks on the Mine|Others bar's top edge. The nav owns the safe-area
+	// inset — padding it here too would double the gap on notched phones.
+	inset-block-end: calc(var(--delib-nav-h) + env(safe-area-inset-bottom, 0px));
+	// Under the nav, above the scrim: the tabs stay reachable with the
+	// sheet up, so "Others" is always one tap away
+	z-index: calc(var(--z-header) - 1);
+	max-width: 720px;
+	margin-inline: auto;
+	background: var(--bg-card-solid);
+	border-block-start: 1px solid var(--border-subtle);
+	border-start-start-radius: var(--radius-md);
+	border-start-end-radius: var(--radius-md);
+	box-shadow: 0 -4px 20px rgba(37, 51, 82, 0.18);
+	overflow: hidden;
+
+	&__bar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		width: 100%;
+		min-height: var(--dock-bar-h);
+		padding: var(--space-sm) var(--space-md);
+		background: transparent;
+		border: none;
+		// The one ownership cue on the chrome: blue = my work
+		border-inline-start: 3px solid var(--mine);
+		cursor: pointer;
+		text-align: start;
+		transition: background var(--motion-fast) ease;
+
+		&:hover,
+		&:focus-visible {
+			background: rgba(37, 90, 150, 0.13);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: -2px;
+		}
+	}
+
+	&__icon {
+		font-size: 1.3rem;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+
+	/* min-width:0 is what lets the sub line actually ellipsize inside flex */
+	&__text {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+	}
+
+	/* One line, always. A visibly truncated peek of my own text is the
+	   second "there is more under here" cue, after the chevron. */
+	&__sub {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+
+		/* Something is waiting on me — not muted background information */
+		&--alert {
+			color: var(--text-primary);
+			font-weight: 600;
+		}
+	}
+
+	/* Warning copy stays --text-primary; only the dot wears the amber */
+	&__dot {
+		display: inline-block;
+		width: 7px;
+		height: 7px;
+		margin-inline-end: 6px;
+		background: var(--warning);
+		border-radius: var(--radius-full);
+	}
+
+	&__badge {
+		flex-shrink: 0;
+		display: inline-grid;
+		place-items: center;
+		min-width: 20px;
+		height: 20px;
+		padding-inline: 5px;
+		// A notification badge must not wear a camp colour
+		background: var(--danger);
+		color: #ffffff;
+		border-radius: var(--radius-full);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	/* The same chevron chip as the accepted-ideas drawer, but pointing UP
+	   when closed — this accordion opens upward. Vertical either way, so
+	   the physical border trick stays RTL-safe. */
+	&__chevron {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 28px;
+		height: 28px;
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-full);
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&::before {
+			content: '';
+			width: 8px;
+			height: 8px;
+			border-right: 2px solid var(--text-secondary);
+			border-bottom: 2px solid var(--text-secondary);
+			transform: translateY(2px) rotate(-135deg);
+		}
+	}
+
+	&--open &__chevron {
+		transform: rotate(180deg);
+	}
+
+	/* The 0fr→1fr grid-track trick, as on .chat-drawer: the panel never
+	   leaves the DOM, so an unsaved draft survives every fold and the
+	   motion itself teaches "this is an accordion". */
+	&__panel {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows var(--motion-base) var(--ease-camera);
+	}
+
+	&--open &__panel {
+		grid-template-rows: 1fr;
+	}
+
+	&__inner {
+		min-height: 0;
+		overflow-y: auto;
+		// dvh tracks the mobile keyboard and the collapsing URL bar
+		max-height: calc(85dvh - var(--delib-nav-h) - var(--dock-bar-h));
+		// The room behind must not scroll when the sheet hits its end
+		overscroll-behavior: contain;
+		padding: 0 var(--space-md) var(--space-md);
+	}
+
+	/* Inside the sheet the dock IS the frame — a card border here would
+	   draw a second box around the same thing, and the bar overhead
+	   already says "📘 My proposal", so the card's own title would be the
+	   same words twice, six pixels apart. The editable hint stays: it is
+	   the one line of the header that tells you something. */
+	.my-lantern--workshop {
+		border: none;
+		box-shadow: none;
+		padding-inline: 0;
+		background: transparent;
+	}
+
+	.my-lantern__icon,
+	.my-lantern__title {
+		display: none;
+	}
+
+	/* The one-time "your text lives here now" reveal. It is a PEEK: a slice
+	   of the workshop, no scrim, the square still live behind it, gone on
+	   its own after a beat. A full modal sheet here would mean every
+	   student dismisses a card before they can rate anything. */
+	&--intro &__inner {
+		max-height: 38dvh;
+	}
+
+	&__scrim {
+		position: fixed;
+		inset: 0;
+		z-index: calc(var(--z-header) - 2);
+		background: var(--bg-overlay);
+		animation: dock-scrim-in var(--motion-fast) ease;
+	}
+}
+
+@keyframes dock-scrim-in {
+	from {
+		opacity: 0;
+	}
+}
+
+/* "The way forward wears the colour of the room" is the rule for the room.
+   The notebook is not the room: it is MINE wherever I happen to be standing,
+   and its one action edits my own proposal. An orange Update button here
+   would say "someone else's" at the exact moment I act on my own text.
+   Nested under the mode class on purpose — it has to out-specify it. */
+.shell--mode-peer .proposal-dock {
+	.btn--primary {
+		--btn-glow: var(--lantern-glow);
+
+		background: var(--mine);
+
+		&:hover:not(:disabled) {
+			background: var(--lantern-glow);
+		}
+
+		&:active:not(:disabled) {
+			background: var(--lantern-deep);
+		}
+	}
+
+	.btn:focus-visible {
+		outline-color: var(--lantern-glow);
+	}
+}
+
+@media (max-width: 700px) {
+	.proposal-dock {
+		// Full-bleed on phones: the 720px column has no margins to respect
+		// down here, and the bar reads as chrome, not as content
+		border-start-start-radius: 0;
+		border-start-end-radius: 0;
+	}
+
+	.proposal-dock--open {
+		border-start-start-radius: var(--radius-md);
+		border-start-end-radius: var(--radius-md);
+	}
+
+	// The nav's rounded top corners were the screen's top edge of chrome.
+	// With the dock parked on them they'd read as two notches under a
+	// square bar — the dock is the top edge now.
+	.shell--docked .delib-nav {
+		border-start-start-radius: 0;
+		border-start-end-radius: 0;
+	}
+}
+
+@media (min-width: 701px) {
+	.proposal-dock {
+		// Desktop keeps the nav inline at the top, so the dock is the only
+		// fixed thing at the bottom
+		inset-block-end: 0;
+
+		&__inner {
+			max-height: 70vh;
+		}
+	}
+
+	.shell--docked .shell__content {
+		padding-block-end: calc(var(--dock-bar-h) + var(--space-lg));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.proposal-dock__chevron,
+	.proposal-dock__panel {
+		transition: none;
+	}
+
+	.proposal-dock__scrim {
+		animation: none;
 	}
 }
 

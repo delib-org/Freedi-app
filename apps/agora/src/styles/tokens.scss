@@ -123,4 +123,19 @@
   --z-header: 50;
   --z-toast: 90;
   --z-modal: 100;
+
+  // --- Fixed deliberation chrome ---
+  // Two fixed strips stack at the bottom of every deliberation screen (the
+  // Mine|Others bar, and the proposal dock parked on its top edge). They
+  // have to agree on their heights, and the page has to know the total to
+  // keep its last button clear of both.
+  //
+  // 68px is the nav's measured natural height (8px padding + a 2-line
+  // icon/label item + 8px), enforced as a min-height below so the dock's
+  // offset and the bar itself can never drift apart. A translation long
+  // enough to exceed it would show a hairline seam, nothing worse.
+  --delib-nav-h: 68px;
+  // Measured: title + the contextual sub line + padding. Over-estimating is
+  // the safe direction — it only ever adds clearance under the page content.
+  --dock-bar-h: 76px;
 }

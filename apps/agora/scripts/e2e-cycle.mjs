@@ -182,6 +182,24 @@ const waitForPoints = async (label, page, predicate, what, timeoutMs = 30000) =>
 	}
 };
 
+// The workshop is no longer a screen — it is a notebook docked at the
+// bottom of every place, collapsed until something needs it. Anything that
+// touches the proposal, its feedback or its trays has to lift the sheet
+// first, exactly as a student does.
+const openDock = async (page) => {
+	await page.waitForSelector('.proposal-dock__bar', { timeout: 15000 });
+	const isOpen = () => page.locator('.proposal-dock--open').count().then((n) => n > 0);
+	if (!(await isOpen())) await page.locator('.proposal-dock__bar').click();
+	await page.waitForSelector('.proposal-dock--open .my-lantern--workshop', { timeout: 10000 });
+};
+// Folding it again hands the room back: the scrim behind an open sheet is
+// what makes it modal, and the page under it is not clickable.
+const closeDock = async (page) => {
+	if ((await page.locator('.proposal-dock--open').count()) === 0) return;
+	await page.locator('.proposal-dock__bar').click();
+	await page.locator('.proposal-dock__scrim').waitFor({ state: 'detached', timeout: 5000 });
+};
+
 // ---------- Phase A: propose (the cold-start credit) ----------
 step('PHASE A: proposals — the first draft finally earns something');
 const propose = async (page, label, text) => {
@@ -268,12 +286,18 @@ eq('received toast is a real button', toastTag, 'BUTTON');
 await shot(s1, '01-A-received-toast');
 await suggest(s1, 'S1(A)', 'אולי להבטיח ייצוג מסוים לאצולה באספה כדי שירגישו שותפים.');
 
-// Both land on lap 2 "mine" — received accordions auto-open (openCount > 0)
-await s1.waitForSelector('.my-lantern--workshop', { timeout: 15000 });
-await s2.waitForSelector('.my-lantern--workshop', { timeout: 15000 });
+// Feedback NEVER opens the dock by itself — it waits with a count, and the
+// student decides when to look. Assert the quiet state before lifting it.
+const dockBadge = await s1.locator('.proposal-dock__badge').textContent();
+eq('A dock badge while collapsed', dockBadge.trim(), '1');
+eq('feedback did not force the sheet open', await s1.locator('.proposal-dock--open').count(), 0);
+console.log('   ✓ A DOCK SUB:', (await s1.locator('.proposal-dock__sub').textContent()).trim());
+await shot(s1, '01b-A-dock-collapsed-with-news');
 
-// Doc notification #1: besides the toast, the passive cues must be there —
-// a count on the received accordion and a badge on the "mine" tab
+// Now open it, as a student would. Inside, the received accordion is the
+// one that auto-opens (openCount > 0).
+await openDock(s1);
+await openDock(s2);
 const accordionCount = await s1.locator('.workbench__count').first().textContent();
 eq('A accordion count', accordionCount.trim(), '1');
 
@@ -348,15 +372,19 @@ eq('A total unchanged by decline', afterDecline.total, before1.total);
 // The workshop is a to-do list, not a museum of refusals. With no open
 // feedback left the received section collapses on its own (losses are
 // whispered), so open it to read the quiet record it kept.
+await openDock(s2);
 const receivedHead = s2.locator('button.workbench__head', { hasText: 'הצעות שיפור' }).first();
 if ((await receivedHead.getAttribute('aria-expanded')) === 'false') await receivedHead.click();
 await s2.waitForSelector('.workshop__declined-note', { timeout: 10000 });
 console.log('   ✓ B WORKSHOP:', (await s2.locator('.workshop__declined-note').textContent()).trim());
 const declinedCards = await s2.locator('.workshop__item').count();
 eq('declined card retired from the received list', declinedCards, 0);
+// Hand the room back before B is asked to act in it again
+await closeDock(s2);
 
 // ---------- Phase D: A weaves + saves → B +2, A +1 for the integration ----------
 step('PHASE D: A ticks woven + saves → B +2, A +1 integration credit');
+await openDock(s1);
 const trayBefore = await s1.locator('.chat-drawer__item').count();
 eq('tray holds the pending idea', trayBefore, 1);
 if ((await s1.locator('.archive').count()) !== 0) fail('archive shown before anything was woven');
@@ -421,6 +449,7 @@ console.log('S1(A) points after weaving:', afterWeave1);
 eq('A integration credit', afterWeave1.proposals, beforeWeave1.proposals + 1);
 
 // The woven idea LEAVES the working tray and lands in the archive
+await openDock(s1);
 await s1.locator('.archive__toggle').waitFor({ timeout: 15000 });
 eq('tray emptied after weaving', await s1.locator('.chat-drawer__item').count(), 0);
 eq('archive badge', (await s1.locator('.archive__count').textContent()).trim(), '1');
@@ -457,19 +486,32 @@ const afterBridge1 = await waitForPoints(
 console.log('S1(A) points after bridging:', afterBridge1);
 eq('A bridging bonus', afterBridge1.proposals, afterWeave1.proposals + 15);
 
-// A's aggregate return signal, measured against a SERVER-stamped baseline
+// A's aggregate return signal, measured against a SERVER-stamped baseline.
+// It reaches the owner through the collapsed bar first — the sub line is
+// the whole point of docking the notebook rather than hiding it.
+await openDock(s1);
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
 await s1.locator('.my-lantern__moved', { hasText: 'כוח הגשר עלה' }).waitFor({ timeout: 15000 });
 const moved = await s1.locator('.my-lantern__moved').textContent();
 console.log('A SEES:', moved.trim());
 if (!moved.includes('דירוג אחד')) fail(`expected singular ratings-moved copy, got: ${moved}`);
+await closeDock(s1);
+const movedSub = await s1.locator('.proposal-dock__sub').textContent();
+console.log('A SEES ON THE BAR:', movedSub.trim());
+if (!movedSub.includes('דירוג')) fail(`ratings-moved never reached the dock bar: ${movedSub}`);
+await shot(s1, '10a-A-dock-ratings-moved');
 // The baseline used to live in sessionStorage — one refresh erased the
 // direction and left a bare count. It must now survive a reload.
 await s1.reload({ waitUntil: 'domcontentloaded' });
-await s1.waitForSelector('.my-lantern--workshop', { timeout: 20000 });
+// A reload lands on a COLLAPSED dock: open is never persisted, because
+// collapsed-by-default is the feature
+await s1.waitForSelector('.proposal-dock__bar', { timeout: 20000 });
+eq('dock starts collapsed after a reload', await s1.locator('.proposal-dock--open').count(), 0);
+await openDock(s1);
 await s1.locator('.my-lantern__moved', { hasText: 'כוח הגשר עלה' }).waitFor({ timeout: 20000 });
 console.log('   ✓ direction SURVIVED a full page reload (server-stamped baseline)');
 await shot(s1, '10-A-ratings-moved');
+await closeDock(s1);
 
 // ---------- Phase F: the structural spam guard ----------
 step('PHASE F: open-ideas cap replaces the points penalty');
