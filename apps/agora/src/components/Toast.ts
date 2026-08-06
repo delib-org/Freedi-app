@@ -1,10 +1,13 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { getToasts, dismissToast } from '../lib/notifications';
+import { requestMineFocus } from '../lib/helpedFocus';
 
 /** Maps notification trigger types to localized toast lines */
 function toastText(triggerType: string, fallback: string): string {
 	switch (triggerType) {
+		case 'agora_suggestion_received':
+			return t('toast.suggestion_received');
 		case 'agora_suggestion_accepted':
 			return t('toast.suggestion_accepted');
 		case 'agora_suggestion_declined':
@@ -33,7 +36,13 @@ export const ToastStack: m.Component = {
 					'.toast',
 					{
 						key: toast.notificationId,
-						onclick: () => dismissToast(toast.notificationId),
+						// "Feedback is waiting in your workshop" must TAKE you there —
+						// a toast that only points is half a notification
+						class: toast.triggerType === 'agora_suggestion_received' ? 'toast--action' : undefined,
+						onclick: () => {
+							if (toast.triggerType === 'agora_suggestion_received') requestMineFocus();
+							dismissToast(toast.notificationId);
+						},
 						role: 'status',
 					},
 					[m('span.toast__glow'), m('span.toast__text', toastText(toast.triggerType, toast.text))],

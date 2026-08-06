@@ -3062,6 +3062,21 @@
 		color: var(--text-primary);
 		font-size: var(--font-size-sm);
 	}
+
+	// A toast that TAKES you somewhere wears the invitation: peer orange
+	// (the feedback came from a classmate) and a lift on hover
+	&--action {
+		border-color: var(--peer);
+		box-shadow: 0 6px 18px rgba(224, 119, 20, 0.28);
+
+		&:hover {
+			transform: translateY(-2px);
+		}
+
+		.toast__glow {
+			background: radial-gradient(circle, #fff 0%, var(--peer-glow) 50%, transparent 75%);
+		}
+	}
 }
 
 @keyframes toast-in {

@@ -26,7 +26,7 @@ import {
 import { parse } from 'valibot';
 import { getUserState } from './user';
 import { getSessionState } from './session';
-import { detectHelpedImprovements } from './notifications';
+import { detectHelpedImprovements, detectReceivedSuggestions } from './notifications';
 
 // Flow-app precedent: improvement suggestions are statements with this raw
 // type tag (not a StatementType enum member).
@@ -130,6 +130,8 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			state.statementsLoaded = true;
 			// Close the collaboration loop: tell helpers their proposal moved
 			detectHelpedImprovements(sessionId, userId);
+			// ...and the mirror: a classmate left feedback on MY proposal
+			detectReceivedSuggestions(sessionId, userId);
 			m.redraw();
 		},
 		(error) => {

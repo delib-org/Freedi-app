@@ -92,6 +92,42 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
 	if (toastDue) pushLocalToast('agora_helped_improved');
 }
 
+/**
+ * The OTHER half of the loop: a classmate left an improvement on MY
+ * proposal. Without this the arrival is silent — the workshop lives one
+ * tab away, so a student mid-square never learns feedback is waiting
+ * (the tab badge alone loses to a screen you aren't looking at).
+ * Same watermark discipline as above: first sighting is silent, so a
+ * fresh tab doesn't replay every suggestion already received.
+ */
+export function detectReceivedSuggestions(sessionId: string, userId: string): void {
+	const key = `agora_${sessionId}_received_toastmark`;
+	let seen: string[] = [];
+	try {
+		seen = JSON.parse(sessionStorage.getItem(key) ?? '[]') as string[];
+	} catch {
+		// Corrupt storage — start over
+	}
+
+	const { proposals, suggestions } = getDeliberationState();
+	const mineIds = proposals
+		.filter((proposal) => proposal.creatorId === userId)
+		.map((proposal) => proposal.statementId);
+	if (mineIds.length === 0) return;
+
+	const incoming = mineIds
+		.flatMap((id) => suggestions[id] ?? [])
+		.filter((suggestion) => suggestion.creatorId !== userId)
+		.map((suggestion) => suggestion.statementId);
+	const seenSet = new Set(seen);
+	const fresh = incoming.filter((id) => !seenSet.has(id));
+	if (fresh.length === 0) return;
+
+	const firstSighting = seen.length === 0 && sessionStorage.getItem(key) === null;
+	sessionStorage.setItem(key, JSON.stringify(incoming));
+	if (!firstSighting) pushLocalToast('agora_suggestion_received');
+}
+
 /** Listen to this user's unread agora notifications and surface them as toasts */
 export function listenToNotifications(userId: string): void {
 	if (listeningUserId === userId) return;

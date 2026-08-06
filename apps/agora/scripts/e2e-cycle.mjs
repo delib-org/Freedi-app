@@ -144,6 +144,12 @@ const suggest = async (page, label, text) => {
 };
 // B suggests on A's proposal; A suggests on B's (each helps the only other)
 await suggest(s2, 'S2(B)', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר של האצולה.');
+// The owner must LEARN feedback arrived, without wandering into the
+// workshop: an actionable toast, not just a tab badge
+const receivedToast = s1.locator('.toast--action', { hasText: 'קיבלתם הצעת שיפור' });
+await receivedToast.waitFor({ timeout: 15000 });
+console.log('S1(A) TOAST (received):', (await receivedToast.textContent()).trim());
+await shot(s1, '00-A-received-toast');
 await suggest(s1, 'S1(A)', 'אולי להבטיח ייצוג מסוים לאצולה באספה כדי שירגישו שותפים.');
 
 // Both land on lap 2 "mine" — received accordions auto-open (openCount > 0)

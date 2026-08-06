@@ -22,3 +22,22 @@ export function unregisterHelpedNavigator(navigate: (proposalId: string) => void
 export function requestHelpedFocus(proposalId: string): void {
 	if (navigator) navigator(proposalId);
 }
+
+/**
+ * The mirror bridge: "take me to my workshop, feedback is waiting". The
+ * received-improvements toast needs it — a notification that only says
+ * where to go, without taking you, is half a notification.
+ */
+let mineNavigator: (() => void) | null = null;
+
+export function registerMineNavigator(navigate: () => void): void {
+	mineNavigator = navigate;
+}
+
+export function unregisterMineNavigator(navigate: () => void): void {
+	if (mineNavigator === navigate) mineNavigator = null;
+}
+
+export function requestMineFocus(): void {
+	if (mineNavigator) mineNavigator();
+}

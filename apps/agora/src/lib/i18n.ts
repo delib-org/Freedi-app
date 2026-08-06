@@ -236,6 +236,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'המסע מוכן לכיתה',
 		'editor.ready': 'מוכן',
 		'editor.draft': 'טיוטה',
+		'toast.suggestion_received': 'קיבלתם הצעת שיפור על ההצעה שלכם! היכנסו ל“בית המלאכה” לראות',
 		'toast.suggestion_accepted': 'ההצעה שלכם לשיפור התקבלה! ‎+1 נקודה',
 		'toast.suggestion_declined': 'הרעיון לא אומץ הפעם (‎−0.25) — קורה לכולם. נסו זווית אחרת!',
 		'toast.suggestion_thanked': 'קיבלתם תודה על הצעת השיפור! ‎+0.5 נקודה',
@@ -570,6 +571,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'Journey is ready for class',
 		'editor.ready': 'Ready',
 		'editor.draft': 'Draft',
+		'toast.suggestion_received':
+			'You received an improvement on your proposal! Open “The workshop” to see it',
 		'toast.suggestion_accepted': 'Your improvement was accepted! +1 point',
 		'toast.suggestion_declined':
 			'Not adopted this time (−0.25) — happens to everyone. Try another angle!',
@@ -908,6 +911,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'الرحلة جاهزة للصف',
 		'editor.ready': 'جاهزة',
 		'editor.draft': 'مسودة',
+		'toast.suggestion_received': 'تلقيتم اقتراح تحسين على اقتراحكم! ادخلوا إلى «الورشة» لرؤيته',
 		'toast.suggestion_accepted': 'قُبل اقتراحكم للتحسين! ‎+1 نقطة',
 		'toast.suggestion_declined':
 			'لم تُعتمد الفكرة هذه المرة (‎−0.25) — يحدث للجميع. جرّبوا زاوية أخرى!',
@@ -1250,6 +1254,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'El viaje está listo para la clase',
 		'editor.ready': 'Listo',
 		'editor.draft': 'Borrador',
+		'toast.suggestion_received':
+			'¡Recibisteis una mejora para vuestra propuesta! Entrad en «El taller» para verla',
 		'toast.suggestion_accepted': '¡Vuestra mejora fue aceptada! +1 punto',
 		'toast.suggestion_declined':
 			'Esta vez no se adoptó (−0.25) — le pasa a todos. ¡Probad otro ángulo!',
@@ -1602,6 +1608,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'Reise ist bereit für die Klasse',
 		'editor.ready': 'Bereit',
 		'editor.draft': 'Entwurf',
+		'toast.suggestion_received':
+			'Ihr habt einen Verbesserungsvorschlag erhalten! Schaut in „Die Werkstatt“',
 		'toast.suggestion_accepted': 'Eure Verbesserung wurde angenommen! +1 Punkt',
 		'toast.suggestion_declined':
 			'Diesmal nicht übernommen (−0.25) — passiert jedem. Versucht einen anderen Blickwinkel!',
@@ -1958,6 +1966,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'editor.mark_ready': 'De reis is klaar voor de klas',
 		'editor.ready': 'Klaar',
 		'editor.draft': 'Concept',
+		'toast.suggestion_received':
+			'Je hebt een verbetering op je voorstel gekregen! Ga naar “De werkplaats”',
 		'toast.suggestion_accepted': 'Je verbetering is geaccepteerd! +1 punt',
 		'toast.suggestion_declined':
 			'Deze keer niet overgenomen (−0.25) — gebeurt iedereen. Probeer een andere invalshoek!',
