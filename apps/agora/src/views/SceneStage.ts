@@ -40,19 +40,19 @@ export function SceneStage(): m.Component<SceneStageAttrs> {
 
 			const scene = scenes[index];
 
-			return m('.shell', [
-				m('.shell__content', { style: { justifyContent: 'center' } }, [
-					m(VideoScene, {
-						scene,
-						doneLabel: t('scene.continue'),
-						onDone: () => {
-							sessionStorage.setItem(storageKey, String(index + 1));
-							onProgress?.(Math.min(index + 1, scenes.length), scenes.length);
-							m.redraw();
-						},
-					}),
-				]),
-			]);
+			// Narrative scenes take the whole screen — no shell, no page chrome:
+			// the picture IS the screen and the copy floats on it.
+			return m(VideoScene, {
+				scene,
+				immersive: true,
+				progress: { index: index + 1, total: scenes.length },
+				doneLabel: t('scene.continue'),
+				onDone: () => {
+					sessionStorage.setItem(storageKey, String(index + 1));
+					onProgress?.(Math.min(index + 1, scenes.length), scenes.length);
+					m.redraw();
+				},
+			});
 		},
 	};
 }

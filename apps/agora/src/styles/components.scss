@@ -444,6 +444,261 @@
 		background: radial-gradient(circle, var(--lantern-glow) 0%, transparent 70%);
 		animation: era-map-marker-pulse 2.6s ease-in-out infinite;
 	}
+
+	// --- Immersive (full-bleed) scene: the picture IS the screen ---
+	// Phone-first. The image/video covers the viewport edge to edge and the
+	// copy floats on it in dark chips — every caption carries its own 50%
+	// black so the text stays readable over ANY frame behind it.
+	&--immersive {
+		position: fixed;
+		inset: 0;
+		z-index: var(--z-map);
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		gap: 0;
+		overflow: hidden;
+		background: #05070d;
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+		padding:
+			calc(var(--space-2xl) + env(safe-area-inset-top))
+			max(var(--space-md), env(safe-area-inset-right))
+			max(var(--space-lg), env(safe-area-inset-bottom))
+			max(var(--space-md), env(safe-area-inset-left));
+		animation: none;
+
+		.scene__media {
+			position: absolute;
+			inset: 0;
+		}
+
+		.scene__backdrop,
+		.scene__video {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			border: none;
+			border-radius: 0;
+			box-shadow: none;
+			animation: scene-fade-in var(--motion-slow) var(--ease-camera) both;
+		}
+
+		// Slow push-in keeps a still frame alive without asking anything of the
+		// student — the same trick a documentary uses on a photograph.
+		.scene__backdrop {
+			animation:
+				scene-fade-in var(--motion-slow) var(--ease-camera) both,
+				scene-ken-burns 24s var(--ease-camera) both;
+		}
+
+		// Darkening only where the copy lands (top bars + bottom captions)
+		.scene__scrim {
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			background: linear-gradient(
+				to bottom,
+				rgba(0, 0, 0, 0.55) 0%,
+				rgba(0, 0, 0, 0) 26%,
+				rgba(0, 0, 0, 0) 40%,
+				rgba(0, 0, 0, 0.5) 78%,
+				rgba(0, 0, 0, 0.72) 100%
+			);
+		}
+
+		// Story bars: which scene of this stage you are on
+		.scene__bars {
+			position: absolute;
+			top: max(var(--space-sm), env(safe-area-inset-top));
+			inset-inline: var(--space-md);
+			display: flex;
+			gap: 4px;
+		}
+
+		.scene__bar {
+			flex: 1;
+			height: 3px;
+			border-radius: 2px;
+			background: rgba(255, 255, 255, 0.3);
+
+			&--done {
+				background: rgba(255, 255, 255, 0.95);
+			}
+		}
+
+		.scene__sound {
+			position: absolute;
+			top: calc(max(var(--space-sm), env(safe-area-inset-top)) + var(--space-lg));
+			inset-inline-end: var(--space-md);
+			width: 40px;
+			height: 40px;
+			display: grid;
+			place-items: center;
+			font-size: 1.1rem;
+			line-height: 1;
+			color: #fff;
+			background: rgba(0, 0, 0, 0.5);
+			border: 1px solid rgba(255, 255, 255, 0.28);
+			border-radius: var(--radius-full);
+			backdrop-filter: blur(6px);
+			cursor: pointer;
+
+			&:focus-visible {
+				outline: 2px solid #fff;
+				outline-offset: 2px;
+			}
+		}
+
+		// The copy column — bottom-anchored, scrolls on its own if a scene is long
+		.scene__caption {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-sm);
+			max-height: 62dvh;
+			overflow-y: auto;
+			scrollbar-width: none;
+			animation: scene-caption-rise var(--motion-slow) var(--ease-camera) both;
+
+			&::-webkit-scrollbar {
+				display: none;
+			}
+		}
+
+		// Every text block is its own 50%-black chip — readable over any frame
+		.scene__title,
+		.scene__text,
+		.scene__line {
+			color: #fff;
+			background: rgba(0, 0, 0, 0.5);
+			border: none;
+			border-radius: var(--radius-md);
+			padding: var(--space-sm) var(--space-md);
+			backdrop-filter: blur(8px);
+			text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+		}
+
+		.scene__title {
+			text-align: start;
+			font-size: clamp(1.4rem, 6.5vw, 2rem);
+			max-width: 100%;
+
+			// The gold rule belongs on paper, not over a photograph
+			&::after {
+				display: none;
+			}
+		}
+
+		.scene__text {
+			align-self: stretch;
+			font-size: var(--font-size-base);
+			line-height: 1.55;
+		}
+
+		.scene__dialogue {
+			align-self: stretch;
+			gap: var(--space-sm);
+		}
+
+		.scene__line {
+			border-inline-start: 3px solid var(--lantern-glow);
+			animation: scene-caption-rise var(--motion-base) var(--ease-camera) both;
+		}
+
+		.scene__speaker {
+			color: #ffd23f;
+		}
+
+		.scene__quote {
+			color: #fff;
+		}
+
+		// Extra stills on a video scene stay reachable as a small filmstrip
+		.scene__strip {
+			align-self: stretch;
+			display: flex;
+			gap: var(--space-xs);
+			overflow-x: auto;
+			scrollbar-width: none;
+
+			&::-webkit-scrollbar {
+				display: none;
+			}
+		}
+
+		.scene__thumb {
+			height: 64px;
+			border-radius: var(--radius-sm);
+			border: 1px solid rgba(255, 255, 255, 0.3);
+		}
+
+		.scene__actions {
+			position: relative;
+			margin-top: var(--space-md);
+		}
+
+		// Glass button: a white secondary button would punch a hole in the frame
+		.scene__reveal {
+			&,
+			&:hover:not(:disabled) {
+				color: #fff;
+				background: rgba(0, 0, 0, 0.5);
+				border-color: rgba(255, 255, 255, 0.35);
+				backdrop-filter: blur(8px);
+				box-shadow: none;
+			}
+
+			&:hover:not(:disabled) {
+				background: rgba(0, 0, 0, 0.65);
+				border-color: rgba(255, 255, 255, 0.6);
+			}
+		}
+	}
+}
+
+// Tablet and up: the media still covers the screen, but a caption line that
+// runs the full width of a laptop is unreadable — hold it to a column.
+@media (min-width: 720px) {
+	.scene--immersive {
+		padding-inline: var(--space-xl);
+
+		.scene__caption,
+		.scene__actions {
+			width: 100%;
+			max-width: 620px;
+			margin-inline: auto;
+		}
+	}
+}
+
+@keyframes scene-fade-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes scene-caption-rise {
+	from { opacity: 0; transform: translateY(16px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scene-ken-burns {
+	from { transform: scale(1); }
+	to { transform: scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.scene--immersive .scene__backdrop {
+		animation: scene-fade-in var(--motion-base) linear both;
+	}
+
+	.scene--immersive .scene__caption,
+	.scene--immersive .scene__line {
+		animation: none;
+	}
 }
 
 @keyframes scene-enter {
@@ -756,6 +1011,13 @@
 
 // --- Journey strip: the whole journey as stations, the current one lit.
 // Persistent on every stage — the game's "you are here". ---
+// Exception: a full-bleed narrative scene owns the whole screen. Dark chrome
+// over a photograph is unreadable anyway, and the scene's own story bars say
+// where you are. The strip returns the moment the scene run ends.
+.game:has(.scene--immersive) .journey-strip {
+	display: none;
+}
+
 .journey-strip {
 	position: relative;
 	z-index: var(--z-content);
