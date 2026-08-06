@@ -164,6 +164,7 @@ const es: Record<string, string> = {
 		'Los participantes pueden transmitir su propuesta mientras escriben, para que la sala les ayude a darle forma.',
 	'live.share_toggle': 'Compartir mi borrador en vivo',
 	'live.share_hint': 'Quienes vean esta pregunta podrán verte escribir y animarte',
+	'live.cheers': 'Te están animando',
 	'live.badge': 'EN VIVO',
 	'live.banner.one': '{{name}} está escribiendo en vivo',
 	'live.banner.many': '{{count}} personas están escribiendo en vivo',

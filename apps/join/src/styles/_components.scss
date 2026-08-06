@@ -5250,6 +5250,107 @@ $facilitator-panel-width: 300px;
   line-height: var(--line-height-normal);
 }
 
+// Cheers landing on the writer's own draft. Sits between the share-live toggle
+// and the actions, so it appears in the writer's line of sight without pushing
+// the textarea around — the strip only exists while cheers are fresh.
+.modal__cheers {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--terra-50);
+  animation: cheers-strip-in var(--dur-base) var(--ease-out);
+}
+
+.modal__cheers-label {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--terra-600);
+  flex-shrink: 0;
+}
+
+.modal__cheers-list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.modal__cheer {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: var(--paper);
+  border: 1px solid var(--terra-100);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--ink);
+  // Lands with a bounce, then keeps a slow bob so a cheer that arrived while
+  // the writer was looking at the keyboard is still moving when they look up.
+  animation:
+    cheer-land var(--dur-slow) var(--ease-out) backwards,
+    cheer-bob 2.2s ease-in-out var(--dur-slow) infinite;
+}
+
+.modal__cheer-emoji {
+  font-size: var(--font-size-base);
+  line-height: 1;
+}
+
+.modal__cheer-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+@keyframes cheers-strip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Overshoot on the way in — a cheer should feel like it arrives, not fade in.
+@keyframes cheer-land {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) translateY(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes cheer-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal__cheers,
+  .modal__cheer {
+    animation: none;
+  }
+}
+
 // "Someone is writing live" strip on the Solutions view. Dressed as an on-air
 // indicator — LIVE badge, pulsing dot and a ring radiating off both the badge
 // and the strip itself — so it registers in peripheral vision while people are

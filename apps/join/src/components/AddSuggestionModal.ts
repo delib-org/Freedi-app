@@ -7,6 +7,7 @@ import {
 	updateBroadcastText,
 	stopBroadcast,
 	isBroadcasting,
+	getMyRecentReactions,
 } from '@/lib/liveDrafts';
 
 interface AddSuggestionModalAttrs {
@@ -93,6 +94,8 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
 							])
 						: null,
 
+					renderCheers(),
+
 					m('.modal__actions', [
 						m('button.btn.btn--secondary.btn--small', { onclick: onClose }, t('form.cancel')),
 						m(
@@ -109,6 +112,33 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
 		);
 	},
 };
+
+/** The cheers the table is sending back, shown to the writer as they type.
+ *  Reactions were previously visible only to other watchers — the one person
+ *  being cheered saw nothing.
+ *
+ *  Keyed by reactor *and* timestamp on purpose: a reactor swapping 👍 for 🔥
+ *  keeps the same uid, and a stable key would reuse the DOM node and swallow
+ *  the pop-in animation. A fresh key means every cheer lands visibly. */
+function renderCheers(): m.Children {
+	if (!isBroadcasting()) return null;
+
+	const cheers = getMyRecentReactions();
+	if (cheers.length === 0) return null;
+
+	return m('.modal__cheers', { role: 'status', 'aria-live': 'polite' }, [
+		m('span.modal__cheers-label', t('live.cheers')),
+		m(
+			'.modal__cheers-list',
+			cheers.map((cheer) =>
+				m('span.modal__cheer', { key: `${cheer.reactorId}:${cheer.timestamp}` }, [
+					m('span.modal__cheer-emoji', cheer.emoji),
+					m('span.modal__cheer-name', cheer.displayName),
+				]),
+			),
+		),
+	]);
+}
 
 async function handleSubmit(onClose: () => void, asOrganizer: boolean): Promise<void> {
 	const trimmed = text.trim();

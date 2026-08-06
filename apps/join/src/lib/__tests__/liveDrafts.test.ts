@@ -67,6 +67,7 @@ vi.mock('@/lib/store', () => ({
 	getCreator: () => mockCreator,
 }));
 
+import m from 'mithril';
 import {
 	initLiveDrafts,
 	teardownLiveDrafts,
@@ -77,6 +78,7 @@ import {
 	getLiveDrafts,
 	sendReaction,
 	getRecentReactions,
+	getMyRecentReactions,
 	getUserColor,
 	LiveDraft,
 } from '../liveDrafts';
@@ -303,6 +305,56 @@ describe('liveDrafts', () => {
 			};
 
 			expect(getRecentReactions(draft).map((r) => r.reactorId)).toEqual(['a']);
+		});
+
+		it('getMyRecentReactions surfaces cheers landing on my own draft', () => {
+			initLiveDrafts('q1');
+			pushSnapshot({
+				'me-uid': draftNode({
+					userId: 'me-uid',
+					reactions: {
+						'watcher-1': { emoji: '❤️', displayName: 'Yossi', timestamp: Date.now() },
+					},
+				}),
+				'other-uid': draftNode({
+					reactions: {
+						'watcher-1': { emoji: '🔥', displayName: 'Yossi', timestamp: Date.now() },
+					},
+				}),
+			});
+
+			expect(getMyRecentReactions()).toEqual([
+				{ reactorId: 'watcher-1', emoji: '❤️', displayName: 'Yossi', timestamp: Date.now() },
+			]);
+		});
+
+		it('schedules a redraw so a stale cheer clears itself', async () => {
+			initLiveDrafts('q1');
+			pushSnapshot({
+				'me-uid': draftNode({
+					userId: 'me-uid',
+					reactions: {
+						'watcher-1': { emoji: '❤️', displayName: 'Yossi', timestamp: Date.now() },
+					},
+				}),
+			});
+			expect(getMyRecentReactions()).toHaveLength(1);
+
+			// Nothing arrives from RTDB to clear a cheer, so without the scheduled
+			// expiry redraw the chip would sit on screen until the next snapshot.
+			const redrawsBefore = vi.mocked(m.redraw).mock.calls.length;
+			await vi.advanceTimersByTimeAsync(16_000);
+
+			expect(vi.mocked(m.redraw).mock.calls.length).toBeGreaterThan(redrawsBefore);
+			expect(getMyRecentReactions()).toHaveLength(0);
+		});
+
+		it('getMyRecentReactions is empty without a signed-in creator', () => {
+			initLiveDrafts('q1');
+			pushSnapshot({ 'me-uid': draftNode({ userId: 'me-uid' }) });
+			mockCreator = null;
+
+			expect(getMyRecentReactions()).toEqual([]);
 		});
 	});
 

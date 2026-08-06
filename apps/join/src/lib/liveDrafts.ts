@@ -98,6 +98,7 @@ let myDisconnect: OnDisconnect | null = null;
 let pendingText: string | null = null;
 let lastReactionAt = 0;
 let visibilityHandler: (() => void) | null = null;
+let reactionExpiryTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function getUserColor(userId: string): string {
 	const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -156,6 +157,7 @@ export function initLiveDrafts(questionId: string): void {
 		rtdbRef(rtdb, `liveDrafts/${questionId}`),
 		(snapshot) => {
 			drafts = parseDrafts(snapshot.val());
+			scheduleReactionExpiry();
 			m.redraw();
 		},
 		(error) => {
@@ -170,9 +172,43 @@ export function teardownLiveDrafts(): void {
 		unsubscribe();
 		unsubscribe = null;
 	}
+	if (reactionExpiryTimer) {
+		clearTimeout(reactionExpiryTimer);
+		reactionExpiryTimer = null;
+	}
 	currentQuestionId = null;
 	drafts = {};
 	lastReactionAt = 0;
+}
+
+/** RTDB only pushes when a reaction *arrives*; nothing tells us when one goes
+ *  stale. Wake up exactly once, at the moment the next fresh reaction expires,
+ *  so cheer chips clear themselves instead of sticking around forever — and so
+ *  we don't poll a timer for the 99% of the time nobody is reacting. */
+function scheduleReactionExpiry(): void {
+	if (reactionExpiryTimer) {
+		clearTimeout(reactionExpiryTimer);
+		reactionExpiryTimer = null;
+	}
+
+	const now = Date.now();
+	let soonest = Infinity;
+	for (const draft of Object.values(drafts)) {
+		for (const reaction of draft.reactions) {
+			const expiresAt = reaction.timestamp + REACTION_FRESH_MS;
+			if (expiresAt > now && expiresAt < soonest) soonest = expiresAt;
+		}
+	}
+	if (soonest === Infinity) return;
+
+	reactionExpiryTimer = setTimeout(
+		() => {
+			reactionExpiryTimer = null;
+			m.redraw();
+			scheduleReactionExpiry();
+		},
+		soonest - now + 50,
+	);
 }
 
 function myDraftPath(): string | null {
@@ -340,4 +376,16 @@ export function getRecentReactions(draft: LiveDraft): LiveReaction[] {
 	const cutoff = Date.now() - REACTION_FRESH_MS;
 
 	return draft.reactions.filter((r) => r.timestamp > cutoff);
+}
+
+/** Cheers landing on *my* draft while I write. The watcher listens to the whole
+ *  question, so a broadcaster already holds their own node — this just picks it
+ *  out, letting the composer show the writer what the table is sending back. */
+export function getMyRecentReactions(): LiveReaction[] {
+	const uid = getCreator()?.uid;
+	if (!uid) return [];
+
+	const mine = drafts[uid];
+
+	return mine ? getRecentReactions(mine) : [];
 }

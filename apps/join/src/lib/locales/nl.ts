@@ -161,6 +161,7 @@ const nl: Record<string, string> = {
 		'Deelnemers kunnen hun voorstel uitzenden terwijl ze typen, zodat de zaal kan helpen het vorm te geven.',
 	'live.share_toggle': 'Mijn concept live delen',
 	'live.share_hint': 'Wie deze vraag bekijkt, kan meekijken terwijl je schrijft en je aanmoedigen',
+	'live.cheers': 'Ze moedigen je aan',
 	'live.badge': 'LIVE',
 	'live.banner.one': '{{name}} schrijft nu live',
 	'live.banner.many': '{{count}} mensen schrijven nu live',
