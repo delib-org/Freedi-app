@@ -19,6 +19,7 @@ export {
 	AGORA_AI_REVIEW,
 	AGORA_OUTCOME,
 	AGORA_CYCLE,
+	AGORA_ANTI_GAMING,
 } from './agoraConstants';
 
 export type {
@@ -95,7 +96,12 @@ export {
 } from './agoraValueAnswer';
 
 export type { BridgingInput } from './agoraBridging';
-export { deriveCamp, calcBridgingScore } from './agoraBridging';
+export {
+	deriveCamp,
+	calcBridgingScore,
+	bridgingTierFor,
+	bridgingPayout,
+} from './agoraBridging';
 
 export type { AgoraCharacterReview } from './agoraCharacterReview';
 export {

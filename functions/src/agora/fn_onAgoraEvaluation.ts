@@ -9,9 +9,15 @@ import {
 	Evaluation,
 	AGORA_BRIDGING,
 	AGORA_POINTS,
+	NotificationTriggerType,
+	StatementType,
+	bridgingPayout,
+	bridgingTierFor,
 	calcBridgingScore,
 	createAgoraParticipantId,
 	functionConfig,
+	getRandomUID,
+	isAgoraAiUid,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
@@ -21,6 +27,80 @@ interface CampDelta {
 	sum: number;
 	n: number;
 	positiveN: number;
+}
+
+/**
+ * How many STUDENTS sit in the camps that count as "other" for this author.
+ * Without it the confidence ramp always divides by MIN_CROSS_RATERS, which
+ * makes the bridging credit arithmetically unreachable in a small class —
+ * with two students there is at most one cross-camp rater, so confidence
+ * caps at 1/3 forever. Read outside the transaction: a slightly stale count
+ * only nudges a ramp, and it keeps the hot path to a single query.
+ */
+interface CampCounts {
+	left: number;
+	right: number;
+	center: number;
+}
+
+async function readCampCounts(sessionId: string): Promise<CampCounts> {
+	const snapshot = await db
+		.collection(Collections.agoraParticipants)
+		.where('sessionId', '==', sessionId)
+		.get();
+
+	const counts: CampCounts = { left: 0, right: 0, center: 0 };
+	snapshot.forEach((docSnap) => {
+		const participant = docSnap.data() as AgoraParticipant;
+		if (participant.isAI) return; // synthetic raters never size the pool
+		if (participant.camp === AgoraCamp.left) counts.left++;
+		else if (participant.camp === AgoraCamp.right) counts.right++;
+		else if (participant.camp === AgoraCamp.center) counts.center++;
+	});
+
+	return counts;
+}
+
+/**
+ * Mirrors calcBridgingScore's blend: for a wing author the other wing is
+ * "other" and the center counts at half weight; a center author faces both
+ * wings.
+ */
+function crossCampPoolFor(authorCamp: AgoraCamp, counts: CampCounts): number {
+	if (authorCamp === AgoraCamp.center) return counts.left + counts.right;
+
+	const otherWing = authorCamp === AgoraCamp.left ? counts.right : counts.left;
+
+	return otherWing + counts.center * AGORA_BRIDGING.CENTER_CAMP_WEIGHT;
+}
+
+/**
+ * Credit the evaluator for doing the work the whole game depends on.
+ * Value-blind (identical for "strongly against" and "strongly for") and
+ * first-rating-only, so there is no incentive to rate in any direction or
+ * to toggle a rating for points.
+ */
+async function creditRatingEffort(sessionId: string, evaluatorId: string): Promise<void> {
+	if (isAgoraAiUid(evaluatorId)) return;
+	const raterRef = db
+		.collection(Collections.agoraParticipants)
+		.doc(createAgoraParticipantId(sessionId, evaluatorId));
+
+	await db.runTransaction(async (transaction) => {
+		const snap = await transaction.get(raterRef);
+		if (!snap.exists) return;
+		const participant = snap.data() as AgoraParticipant;
+		const credited = participant.creditedRatings ?? 0;
+		if (credited >= AGORA_POINTS.RATING_CREDIT_MAX_RATINGS) return;
+		const points = { ...participant.points };
+		points.rating = (points.rating ?? 0) + AGORA_POINTS.RATING_CREDIT;
+		points.total += AGORA_POINTS.RATING_CREDIT;
+		transaction.update(raterRef, {
+			points,
+			creditedRatings: credited + 1,
+			lastActive: Date.now(),
+		});
+	});
 }
 
 function applyDelta(aggregate: AgoraCampAggregate, delta: CampDelta): AgoraCampAggregate {
@@ -60,6 +140,17 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			const evaluatorCamp = (evaluatorSnap.data() as AgoraParticipant | undefined)?.camp;
 			if (!evaluatorCamp) return; // not positioned yet — rating doesn't count for bridging
 
+			// A brand-new rating (not an edit of one) earns the evaluation
+			// credit — non-blocking, and never fatal to the bridging update
+			if (!before && after) {
+				await creditRatingEffort(sessionId, evaluatorId).catch((creditError: unknown) => {
+					logError(creditError, {
+						operation: 'agora.onEvaluationWritten.creditRating',
+						userId: evaluatorId,
+					});
+				});
+			}
+
 			const beforeValue = before?.evaluation ?? null;
 			const afterValue = after?.evaluation ?? null;
 			const delta: CampDelta = {
@@ -72,6 +163,7 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			if (delta.sum === 0 && delta.n === 0 && delta.positiveN === 0) return;
 
 			const scoreRef = db.collection(Collections.agoraScores).doc(statementId);
+			const campCounts = await readCampCounts(sessionId);
 
 			const authorToCredit = await db.runTransaction(async (transaction) => {
 				const scoreSnap = await transaction.get(scoreRef);
@@ -113,24 +205,30 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				score.bridgingScore = calcBridgingScore({
 					authorCamp: score.authorCamp,
 					perCamp: score.perCamp,
+					crossCampPool: crossCampPoolFor(score.authorCamp, campCounts),
 				});
 				score.lastUpdate = Date.now();
 
-				let creditAuthor = false;
-				if (
-					score.bridgingScore >= AGORA_BRIDGING.CREDIT_THRESHOLD &&
-					!score.bridgingCreditAwardedAt
-				) {
-					score.bridgingCreditAwardedAt = Date.now();
-					creditAuthor = true;
+				// The ladder is graduated and MONOTONIC: a later dip never claws a
+				// tier back, so an author is never punished for a proposal that
+				// moved. Sessions predating the tiers read their old boolean guard
+				// as "tier 2 already paid".
+				const alreadyAwarded = score.bridgingTierAwarded ?? (score.bridgingCreditAwardedAt ? 2 : 0);
+				const reachedTier = bridgingTierFor(score.bridgingScore);
+				const bonus = bridgingPayout(reachedTier) - bridgingPayout(alreadyAwarded);
+				if (reachedTier > alreadyAwarded) {
+					score.bridgingTierAwarded = reachedTier;
+					if (reachedTier >= 2 && !score.bridgingCreditAwardedAt) {
+						score.bridgingCreditAwardedAt = Date.now();
+					}
 				}
 
 				transaction.set(scoreRef, score);
 
-				return creditAuthor ? score : null;
+				return reachedTier > alreadyAwarded ? { score, tier: reachedTier, bonus } : null;
 			});
 
-			// Bridging bonus for the author — once per proposal
+			// Bridging bonus for the author — once per tier, per proposal
 			if (authorToCredit) {
 				const proposalSnap = await db.collection(Collections.statements).doc(statementId).get();
 				const creatorId = proposalSnap.data()?.creatorId as string | undefined;
@@ -155,10 +253,39 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 						if (!authorSnap.exists) return;
 						const participant = authorSnap.data() as AgoraParticipant;
 						const points = { ...participant.points };
-						points.proposals += AGORA_POINTS.BRIDGING_BONUS;
-						points.total += AGORA_POINTS.BRIDGING_BONUS;
+						points.proposals += authorToCredit.bonus;
+						points.total += authorToCredit.bonus;
 						transaction.update(authorRef, { points, lastActive: Date.now() });
 					});
+
+					// The author's biggest reward used to be paid in total silence —
+					// a student could bridge the camps and never learn it happened.
+					// Aggregate by construction: the trigger is a threshold on the
+					// bridging score, so no individual's rating is ever revealed.
+					const notificationId = getRandomUID();
+					await db
+						.collection(Collections.inAppNotifications)
+						.doc(notificationId)
+						.set({
+							notificationId,
+							userId: creatorId,
+							parentId: statementId,
+							statementId,
+							statementType: StatementType.option,
+							text:
+								authorToCredit.tier >= 2
+									? 'Your proposal bridged the camps!'
+									: 'Your proposal reached across the camps!',
+							creatorId,
+							creatorName: 'The square',
+							sourceApp: SourceApp.AGORA,
+							triggerType: NotificationTriggerType.AGORA_BRIDGING_ACHIEVED,
+							targetPath: `/play/${sessionId}`,
+							pointsAwarded: authorToCredit.bonus,
+							bridgingTier: authorToCredit.tier,
+							read: false,
+							createdAt: Date.now(),
+						});
 				}
 			}
 		} catch (error) {

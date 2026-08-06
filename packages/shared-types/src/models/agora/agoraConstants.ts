@@ -13,8 +13,19 @@ export const AGORA_BRIDGING = {
 	CENTER_CAMP_WEIGHT: 0.5,
 	/** Cross-camp confidence saturates after this many cross-camp raters */
 	MIN_CROSS_RATERS: 3,
-	/** bridgingScore >= this awards the bridging credit (once per proposal) */
+	/**
+	 * bridgingScore >= this awards the FULL bridging credit (tier 2).
+	 * Kept as the historical name so existing reads stay correct.
+	 */
 	CREDIT_THRESHOLD: 60,
+	/**
+	 * First rung of the bridging ladder. A cliff at 60 means most authors
+	 * never feel the mechanic at all, so the credit is graduated: 40 is the
+	 * "you reached across" moment, 60 the full bridge. 40 is self-guarding —
+	 * own-camp support alone maxes the score at 35 (SAME_CAMP_WEIGHT × 100),
+	 * so tier 1 is geometrically unreachable without cross-camp support.
+	 */
+	CREDIT_THRESHOLD_TIER_1: 40,
 } as const;
 
 export const AGORA_CAMP_BOUNDS = {
@@ -53,24 +64,78 @@ export const AGORA_SESSION = {
 
 export const AGORA_POINTS = {
 	VALUE_ACCURACY_MAX: 20,
-	PROPOSAL_SUBMITTED: 5,
-	BRIDGING_BONUS: 15,
+	/**
+	 * Awarded ONCE, on the student's first proposal (server-side, from the
+	 * statement-created trigger). Writing the first draft is the steepest
+	 * step of the funnel and used to earn nothing at all. Deliberately below
+	 * a landed idea (+3): showing up must never outpay helping someone.
+	 */
+	PROPOSAL_SUBMITTED: 3,
 	/**
 	 * The improvement cycle (docs: apps/agora/docs/feedback-cycle.md):
 	 * accept is the promise (+1), woven-in is the promise kept (+2), so a
 	 * landed idea earns +3 total — the reward leans toward ideas that end
-	 * up IN the text. Decline costs a quarter point: enough to discourage
-	 * spam, cheap enough to keep risking ideas. Balances floor at 0.
+	 * up IN the text. Balances floor at 0.
 	 */
 	SUGGESTION_ACCEPTED: 1,
 	SUGGESTION_IMPLEMENTED: 2,
-	SUGGESTION_DECLINED: -0.25,
+	/**
+	 * Declining costs the helper NOTHING. A penalty here was regressive: the
+	 * floor at 0 exempted the spammer with an empty balance and taxed only
+	 * the productive helper who had points to lose. Spam is bounded
+	 * structurally instead — see MAX_OPEN_SUGGESTIONS_PER_HELPER below.
+	 * The quiet toast stays: silence is worse than cost.
+	 */
+	SUGGESTION_DECLINED: 0,
 	/**
 	 * Legacy: the chat-flow variant still offers a "thanks" button. Kept
 	 * BELOW accept (+1) — a polite nod must never outpay an idea that
 	 * landed in the text (was 5, which inverted the whole ladder).
 	 */
 	SUGGESTION_THANKED: 0.5,
+	/**
+	 * The author's side of the cycle. Weaving someone's idea into the text
+	 * is real editorial labor and used to be unpaid. Credited per DISTINCT
+	 * helper so integrating many voices beats trading rounds with one buddy —
+	 * the incentive is bridging-shaped by construction.
+	 */
+	WEAVE_CREDIT_PER_HELPER: 1,
+	MAX_WEAVE_CREDITS_PER_PROPOSAL: 3,
+	/**
+	 * Evaluating classmates' proposals is the commons the whole game runs on
+	 * (bridging confidence, rater coverage) and earned nothing. Value-blind —
+	 * the credit is identical for "strongly against" and "strongly for", so
+	 * there is no incentive to rate in any direction. First rating of a given
+	 * proposal only; the deterministic evaluation id dedupes re-rating.
+	 */
+	RATING_CREDIT: 0.5,
+	/** Credited ratings per student (≈ ROUNDS × RATINGS_PER_ROUND) */
+	RATING_CREDIT_MAX_RATINGS: 15,
+	/**
+	 * The bridging ladder, graduated. Total still 15 for a full bridge;
+	 * tier 1 turns a cliff most authors never reach into a gradient.
+	 */
+	BRIDGING_BONUS_TIER_1: 5,
+	BRIDGING_BONUS_TIER_2: 10,
+	/** Full-bridge total, kept for reporting/back-compat reads */
+	BRIDGING_BONUS: 15,
+} as const;
+
+export const AGORA_ANTI_GAMING = {
+	/**
+	 * Open (unresolved) suggestions one helper may have on one proposal.
+	 * This is the real spam guard — it binds on the spammer regardless of
+	 * balance, unlike a points penalty. Resolved ideas free the slot, so a
+	 * genuinely helpful student is never blocked for long.
+	 */
+	MAX_OPEN_SUGGESTIONS_PER_HELPER: 2,
+	/**
+	 * Woven awards one helper can earn on ONE proposal. Bounds the
+	 * accept-and-weave collusion loop (A and B trading +3 rounds forever)
+	 * without any surveillance: past the cap the celebration still fires —
+	 * recognition is decoupled from currency — but the points do not.
+	 */
+	MAX_WOVEN_AWARDS_PER_HELPER_PER_PROPOSAL: 2,
 } as const;
 
 export const AGORA_CYCLE = {

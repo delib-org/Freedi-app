@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { getToasts, dismissToast } from '../lib/notifications';
+import { getToasts, dismissToast, holdToast, releaseToast } from '../lib/notifications';
 import { requestMineFocus } from '../lib/helpedFocus';
 
 /** Maps notification trigger types to localized toast lines */
@@ -18,6 +18,8 @@ function toastText(triggerType: string, fallback: string): string {
 			return t('toast.round_started');
 		case 'agora_helped_improved':
 			return t('toast.helped_improved');
+		case 'agora_class_record':
+			return t('toast.class_record');
 		default:
 			return fallback;
 	}
@@ -31,23 +33,33 @@ export const ToastStack: m.Component = {
 
 		return m(
 			'.toast-stack',
-			toasts.map((toast) =>
-				m(
-					'.toast',
+			toasts.map((toast) => {
+				// "Feedback is waiting in your workshop" must TAKE you there — a
+				// toast that only points is half a notification. An actionable
+				// toast is therefore a real button: focusable, Enter/Space work,
+				// and hovering or focusing it holds the auto-dismiss so a
+				// keyboard or switch user can actually reach the action in time.
+				const actionable = toast.triggerType === 'agora_suggestion_received';
+				const label = toastText(toast.triggerType, toast.text);
+
+				return m(
+					actionable ? 'button.toast.toast--action' : '.toast',
 					{
 						key: toast.notificationId,
-						// "Feedback is waiting in your workshop" must TAKE you there —
-						// a toast that only points is half a notification
-						class: toast.triggerType === 'agora_suggestion_received' ? 'toast--action' : undefined,
 						onclick: () => {
-							if (toast.triggerType === 'agora_suggestion_received') requestMineFocus();
+							if (actionable) requestMineFocus();
 							dismissToast(toast.notificationId);
 						},
-						role: 'status',
+						onmouseenter: actionable ? () => holdToast(toast.notificationId) : undefined,
+						onmouseleave: actionable ? () => releaseToast(toast.notificationId) : undefined,
+						onfocus: actionable ? () => holdToast(toast.notificationId) : undefined,
+						onblur: actionable ? () => releaseToast(toast.notificationId) : undefined,
+						role: actionable ? undefined : 'status',
+						'aria-label': actionable ? label : undefined,
 					},
-					[m('span.toast__glow'), m('span.toast__text', toastText(toast.triggerType, toast.text))],
-				),
-			),
+					[m('span.toast__glow', { 'aria-hidden': 'true' }), m('span.toast__text', label)],
+				);
+			}),
 		);
 	},
 };

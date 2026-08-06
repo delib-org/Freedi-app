@@ -8,5 +8,6 @@ export { agoraResolveSuggestion } from './fn_agoraResolveSuggestion';
 export { agoraCharacterReview } from './fn_agoraCharacterReview';
 export { agoraEstimateReception } from './fn_agoraEstimateReception';
 export { onAgoraEvaluationWritten } from './fn_onAgoraEvaluation';
+export { onAgoraProposalWritten } from './fn_onAgoraProposal';
 export { agoraGenerateTopicPackage } from './fn_agoraGenerateTopicPackage';
 export { agoraSessionSweep } from './fn_agoraSessionSweep';

@@ -27,7 +27,7 @@ sequenceDiagram
         S-->>B: 🎉 celebration "your idea was accepted!" — +1 point
     else A rejects
         A->>S: 3'. decline
-        S-->>B: quiet toast "not adopted this time" — −0.25 points (floored at 0)
+        S-->>B: quiet toast "not adopted this time" — no points cost
     end
 
     A->>S: 4. edits the text, ticks the woven imps, submits the update
@@ -55,81 +55,120 @@ open ──accept──▶ accepted ──(owner saves an update with the tick)�
 - `thanked` is a legacy path (still used by the chat-flow variant); the
   places UI offers only adopt / decline — two doors, no polite limbo.
 
-## Points (helper B's "helping" score)
+## Points
+
+Both actors earn. Helper B climbs the accept → weave ladder; author A is
+paid for showing up, for the editorial work of integrating others, and
+for actually reaching across the camps.
+
+### Helper B (the `helping` score)
 
 | Event                              | Points | Rationale |
 |------------------------------------|-------:|-----------|
 | Suggestion **accepted**            | **+1** | The promise: your idea was taken |
 | Suggestion **woven in** (implemented) | **+2** | The payoff: the text actually changed because of you |
-| Suggestion **declined**            | **−0.25** | A light cost — discourages spam, cheap enough to keep risking ideas |
+| Suggestion **declined**            | **0**  | Free. See "why declining is free" below |
 | Suggestion thanked (chat flow only)| +0.5   | Legacy; kept below accept (+1) — a polite nod never outpays a landed idea |
 
-> The old inversion (`thanked` at +5 outpaying a fully woven idea at +3)
-> is fixed in `agoraConstants.ts` — `SUGGESTION_THANKED` is 0.5. On THIS
-> branch it never fires anyway (the places UI has no thanks button); the
-> chat-flow variant shares the constant and now sits correctly at the
-> bottom of the ladder.
+### Author A (the `proposals` score) and everyone (`rating`)
+
+| Event | Points | Rationale |
+|-------|-------:|-----------|
+| **First proposal submitted** | **+3** | The steepest step of the funnel used to earn nothing at all. Below a landed idea (+3 total) on purpose: showing up must never outpay helping |
+| **Weaving a classmate in** | **+1 per distinct helper**, max 3/proposal | Integration is real editorial labor. Per-*distinct*-helper, so weaving many voices beats trading rounds with one buddy — the incentive is bridging-shaped by construction |
+| **Rating a proposal** (anyone) | **+0.5**, first rating only, max 15 credited | Evaluation is the commons the whole game runs on (bridging confidence, rater coverage) and earned nothing. Value-blind, so there is no incentive to rate in any direction |
+| **Bridging tier 1** (score ≥ 40) | **+5** | "You reached across." Geometrically unreachable without cross-camp support: own-camp support alone caps the score at 35 |
+| **Bridging tier 2** (score ≥ 60) | **+10 more** | The full bridge. Total is still 15 — the old cliff, now a gradient |
 
 Rules:
 
-- Points are awarded **server-side only** (`fn_agoraResolveSuggestion`) —
-  the owner resolves, the server validates ownership, so B's score can't
-  be spoofed by B.
+- Points are awarded **server-side only** — `fn_agoraResolveSuggestion`
+  for the ladder, `fn_onAgoraEvaluation` for rating + bridging,
+  `fn_onAgoraProposal` for the first-proposal credit. The owner resolves,
+  the server validates ownership, so B's score can't be spoofed by B.
 - A fully successful idea earns **+3 total** (1 on adopt, 2 on weave):
-  the reward leans toward *ideas that actually land in text*, not ideas
-  that merely get a nod.
-- **Floor at 0**: `helping` and `total` never go negative. A student's
-  first rejected idea must not open the game with a minus sign.
-- The −0.25 penalty is deliberately fractional: four rejections cost one
-  acceptance. Watch playtests — if students stop suggesting, drop it to 0
-  before dropping the notification (silence is worse than cost).
-- Idempotent: re-resolving an already-resolved suggestion is a no-op;
-  `implemented` can only fire once per suggestion.
-- **Fractional balances are expected** (−0.25 steps → e.g. 2.75). Any
-  surface showing points must render quarters cleanly; don't `floor()`
-  for display or students will "lose" visible points.
+  the reward leans toward *ideas that actually land in text*.
+- **Floor at 0**: `helping` and `total` never go negative.
+- Idempotent throughout: re-resolving is a no-op, `implemented` fires
+  once per suggestion, the first-proposal credit is guarded by
+  `firstProposalAwardedAt`, and each bridging tier pays once
+  (`bridgingTierAwarded`, monotonic — a later dip never claws it back).
+- **Fractional balances are expected** (+0.5 rating steps, and −0.25
+  history). Any surface showing points must render quarters cleanly;
+  don't `floor()` for display or students will "lose" visible points.
+- Celebration copy takes its number from the **notification's
+  `pointsAwarded` field**, never from a hardcoded string — so a retune
+  can't make the copy lie, and a weave past the collusion cap honestly
+  celebrates with no points attached.
 
-**A's side of the economy** (implicit but load-bearing): adopting costs
-A nothing and good adoptions raise A's text quality → ratings → bridging
-score → `BRIDGING_BONUS`. That asymmetry is what makes adoption feel
-safe. Its known abuse is **collusion** — A and B trading trivial
-accept-and-weave rounds for +3 each time. Not worth machinery yet in a
-supervised classroom; if it shows up, cap woven awards per helper per
-proposal (see Future) before adding any surveillance-flavored fix.
+**Why declining is free.** It used to cost −0.25. That penalty was
+regressive: the floor at 0 meant a zero-balance spammer paid *nothing*
+per decline while the productive helper with points to lose paid full
+price — it bound on exactly the students it was never meant to deter.
+Spam is now bounded structurally instead: **max 2 open (unresolved)
+suggestions per helper per proposal**, stated in the UI rather than
+enforced silently. Resolving any of them frees the slot at once. The
+quiet toast stays — silence is worse than cost.
+
+**Anti-collusion.** A and B trading trivial accept-and-weave rounds is
+capped at **2 paid woven awards per (helper, proposal)**. Past the cap
+the weave still *celebrates* — recognition is decoupled from currency —
+but pays nothing. Combined with A's 3-distinct-helper weave cap, a fully
+colluding pair is bounded, and the cheapest way to keep earning is to
+involve someone new.
+
+**Small classes.** The bridging confidence ramp divides by
+`min(MIN_CROSS_RATERS, actual cross-camp students)` instead of a fixed 3.
+With two students there is at most one possible cross-camp rater, so the
+old fixed denominator capped confidence at 1/3 and the bridging credit
+was *arithmetically unreachable*. The denominator never exceeds
+`MIN_CROSS_RATERS`, so a full class still has to earn three raters.
 
 ## Notifications
 
 | # | Trigger | Recipient | Form | Content | Leads to |
 |---|---------|-----------|------|---------|----------|
 | 1 | Suggestion received | A | **actionable toast** (peer-orange) + badge on "שלי" tab + count on the received-accordion | "you got an improvement — open the workshop" | tapping the toast stands you in the workshop with the drawer open |
-| 2 | Accepted | B | 🎉 celebration (glitter) | "your idea was accepted! (+1)" | close — text hasn't changed yet |
-| 3 | Declined | B | quiet toast | "not adopted this time (−0.25) — try another angle" | nothing; deliberately low-key |
-| 4 | Woven in | B | 🎉 celebration | "your idea is in the text! (+2)" | **primary button → travel to the improved proposal, spotlight it, re-rate** |
-| 5 | Helped proposal improved | B | badge on "של אחרים" tab + ✨ marker on the helped card | aggregate | re-reading + re-rating |
-| 6 | Ratings moved after my edit | A | 📈/📉 chip on the workshop card | "N ratings updated · bridge power rose/dropped by M" — count + **direction of the aggregate bridge score** (vs a client-side snapshot taken at save), **never any individual's rating**. Dip renders muted amber, not red. | keeping the improvement loop going |
+| 2 | Accepted | B | 🎉 celebration (glitter) | "your idea was accepted! (+1)" + **hint**: "when it lands in the text you get +2 and an invitation to re-rate" | no button by design (the text hasn't changed yet) — the hint is what keeps it from being a dead end |
+| 3 | Declined | B | quiet toast | "not adopted this time — try another angle" (no number: declining is free) | nothing; deliberately low-key |
+| 4 | Woven in | B | 🎉 celebration | "your idea is in the text! (+2)" — or, past the collusion cap, the same celebration with no number | **primary button → travel to the improved proposal, spotlight it, re-rate** |
+| 5 | Helped proposal improved | B | badge on "של אחרים" tab + ✨ marker on the helped card | aggregate | re-reading + re-rating. The marker **clears once B re-rates**, and the press is answered with a one-shot "your rating was updated" line |
+| 6 | Ratings moved after my edit | A | 📈/📉 chip on the workshop card | "N ratings updated · bridge power rose/dropped by M" — count + **direction of the aggregate bridge score**, **never any individual's rating**. Dip renders muted amber, not red. | keeping the improvement loop going |
+| 7 | First proposal credited | A | 🎉 celebration | "your proposal is on the square! (+3)" | no button — you are already standing in the workshop |
+| 8 | Bridging achieved | A | 🎉 celebration | "your proposal reached across / bridged the camps! (+5 / +10)" — aggregate by construction (a threshold on the score, no rater identity) | **button → back to my proposal** |
+| 9 | Class bridge record | everyone | local toast | "✨ new class record — the strongest bridge on the square just grew" | nothing; the one *collective* moment in a game full of personal ones |
 
 Design rules:
 
 - **Celebrate the wins, whisper the losses.** Accept/woven get glitter;
   decline gets a dismissable toast. Never a modal for bad news.
-- **Every good-news notification carries the next move.** The woven-in
-  celebration's primary button IS step 5 of the cycle.
+- **Every good-news notification carries the next move** — a button when
+  there is somewhere to go, a hint line when there isn't.
 - **Aggregates protect anonymity.** A never learns *who* re-rated or
   what any individual changed — only that N ratings moved. Individual
   ratings stay private; the classroom must stay safe.
+- **The celebration is a real dialog**: `role="alertdialog"`, focus moved
+  onto the primary action, Escape closes. The actionable toast is a real
+  `<button>` whose auto-dismiss pauses on hover/focus and runs 12s rather
+  than 6. A reward nobody can perceive or reach is a reward not given.
+- **Timestamps come from the score doc, not the statement.** The shared
+  evaluation pipeline writes its aggregates back onto the proposal, so
+  `statement.lastUpdate` moves every time anyone rates. Both the
+  ratings-moved chip and the ✨ marker read `agoraScores.lastEditAt`,
+  stamped server-side only on a real text change.
 
 ## Where each actor sees the cycle
 
 | Actor | Surface | What it shows |
 |-------|---------|---------------|
-| A | Workshop card → received accordion | open imps, two buttons (adopt / no-thanks) |
-| A | Adoption tray (accepted-ideas drawer) | imps still **waiting** to be woven + the "שילבתי בנוסח" tick. A workbench, not a history — it empties as ideas land in the text |
+| A | Workshop card → received accordion | open imps, two buttons (adopt / no-thanks). **Declined imps retire** into one muted "n ideas were not adopted" line — the workshop is a to-do list, not a museum of refusals |
+| A | Adoption tray (accepted-ideas drawer) | imps still **waiting** to be woven + the "שילבתי בנוסח" tick. A workbench, not a history — it empties as ideas land in the text. On the **first accept of a session** a one-off coach mark spells out accept → tick → save |
 | A | Archive button (📦 "רעיונות ששולבו בנוסח") | every imp that MADE IT into the text, with credit to the classmate who offered it. Appears only once something has been woven; opens on demand |
-| A | Workshop card footer | 📈 ratings-moved line (aggregate) |
-| B | Celebration popups | accepted (+1), woven (+2 → travel button) |
-| B | Toast stack | declined (−0.25), helped-proposal-improved |
-| B | "הצעות שעזרתם להן" section (Others side) | current text, ✨ improved marker, re-rate scale, follow-up box |
-| B | **Results screen only** | running points totals — the ScoreHud was removed from the deliberation screens by design (2026-08-05), so during play B hears +1/+2 moments but sees no balance. Deliberate: the work surface stays score-free. |
+| A | Workshop card footer | 📈 ratings-moved line (aggregate), measured against the server-stamped baseline so it survives a refresh |
+| B | Celebration popups | accepted (+1, with the "+2 next" hint), woven (+2 → travel button) |
+| B | Toast stack | declined (free), helped-proposal-improved, class bridge record |
+| B | "הצעות שעזרתם להן" section (Others side) | current text, ✨ improved marker (clears once re-rated), re-rate scale + its acknowledgment, follow-up box (disabled at 2 open ideas, with the reason stated) |
+| both | **Results screen only** | "המסע שלי" — a private recap: total, the helping / rating / proposals / values breakdown, and narrative lines ("N classmates' ideas are in your text"). Framed as *my contribution to the class score*; no ranking, no peer comparison. The ScoreHud stays off the deliberation screens (2026-08-05): during play you hear +1/+2 moments, you never see a balance. |
 
 ## Verification
 
@@ -140,30 +179,36 @@ topic package. It covers every row of both tables above:
 
 | Checked | How |
 |---|---|
-| #1 received | actionable toast reaches A the moment B sends; accordion count = 1 |
-| #2 accepted | B's celebration names +1; `helping` 0 → 1 |
-| #3 declined | A's quiet toast; floor holds (0 stays 0) **and** a real balance loses exactly a quarter (1 → 0.75) |
-| #4 woven in | B's celebration names +2 (total 3); travel button lands B on the proposal with the spotlight |
+| #1 received | actionable toast reaches A the moment B sends (and is a real `<button>`); accordion count = 1 |
+| #2 accepted | B's celebration names +1, carries the "+2 next" hint, is an `alertdialog` with focus moved, and closes on Escape; `helping` 0 → 1 |
+| #3 declined | A's quiet toast names **no** number; A's balance is untouched; the card retires and the muted count line appears |
+| #4 woven in | B's celebration names +2 (total 3); travel button lands B on the proposal with the spotlight; **A earns the +1 integration credit** |
 | #4 archive | the woven idea leaves A's tray (0 left) and lands in the archive (badge 1), listed with its suggester's name |
-| #5 improved | ✨ marker + "שולב בנוסח" chip on B's helped card |
-| #6 ratings moved | A's chip counts 1 (singular copy) and names the direction ("bridge power rose by N") |
+| #5 improved | ✨ marker + "שולב בנוסח" chip on B's helped card; the marker **clears** and the ack line appears once B re-rates |
+| #6 ratings moved | A's chip counts 1 (singular copy), names the direction, and **survives a full page reload** |
+| first proposal | both students' `proposals` = 3 and the credit is announced |
+| rating credit | `rating` = 0.5 after the first rating |
+| bridging ladder | the credit pays out **in a two-student class** — the case that was arithmetically impossible before |
+| open-ideas cap | a third unresolved idea on one proposal is blocked, with the reason shown |
+| personal recap | the on-screen total matches Firestore exactly, quarters intact, with narrative lines |
+
+Unit tests: `packages/shared-types/src/__tests__/agoraBridging.test.ts`
+covers the confidence ramp, the small-class pool, and the tier ladder;
+`apps/agora/src/lib/__tests__/points.test.ts` covers quarter-exact
+rendering (the pill used to oscillate forever on a fractional total).
 
 **Not covered by this script**, and why:
 
-- `BRIDGING_BONUS` (+15 to the author): needs `bridgingScore ≥ 60`, which
-  the confidence factor (`MIN_CROSS_RATERS: 3`) puts out of reach with two
-  students — a single cross-camp rater caps the score around 22. Needs a
-  4+ student run.
+- **Bridging tier 1 in isolation**: the two-student run jumps from 0
+  straight to tier 2 (both rungs pay at once, +15). The rung-by-rung
+  climb is covered by unit tests, not the walkthrough.
+- **The collusion cap**: needs a third and fourth weave between the same
+  pair. Unit-level logic is in `readWeaveLedger`; a longer run would be
+  needed to see it on screen.
+- **The class bridge-record toast**: fires on a ≥5-point jump in the
+  class maximum, which the scripted run reaches only once and racily.
 - `SUGGESTION_THANKED` (+0.5): the places UI has no thanks button by
   design; only the chat-flow variant can reach it.
-
-⚠️ **`AGORA_POINTS.PROPOSAL_SUBMITTED` (5) is dead** — defined, exported,
-and awarded by nothing anywhere in the codebase (the `PROPOSAL_SUBMITTED`
-hits in `chatFlow.ts` are an unrelated action-type string). Submitting a
-proposal therefore earns zero. Per "A's side of the economy" above, A's
-intended motivation is the bridging bonus, so this may simply be a
-leftover — but it should either be awarded on first submission or deleted,
-not left looking live.
 
 ## Edge cases
 
@@ -177,6 +222,15 @@ not left looking live.
   participant doc is gone; notification still writes (harmless).
 - **Multiple imps woven in one save**: each resolves separately; B gets
   +2 per imp; the save announces them together.
+- **Weaving past the collusion cap**: the third+ woven idea from the same
+  helper on the same proposal still fires the celebration, still lands in
+  the archive with credit — it just pays 0, and the copy says so by
+  omitting the number rather than naming a fake one.
+- **Saving without editing the text**: allowed (a tick-only save is how
+  pending woven marks go out), but it does **not** re-stamp the
+  ratings-moved baseline. Only a real text change does.
+- **A student who never proposes**: still earns the rating credit, so
+  participation is never zero for someone who showed up and evaluated.
 
 ## Future (deliberately not in this iteration)
 
@@ -206,9 +260,17 @@ access:
 >    of the author saving a real text update (the "woven" tick is local
 >    and pending until that save).
 > 3. **Scores**: award points server-side in the resolve endpoint, never
->    client-side: accept = +1, implement = +2, decline = −0.25, floored
->    so no balance goes negative. The resolver must be the author;
->    self-resolution awards nothing. All transitions idempotent.
+>    client-side: accept = +1, implement = +2, decline = 0, floored so no
+>    balance goes negative. The resolver must be the author;
+>    self-resolution awards nothing. All transitions idempotent. Do NOT
+>    make declining cost points: with a floor at zero the penalty is
+>    regressive — it is free for the spammer with an empty balance and
+>    expensive only for the productive helper. Bound spam structurally
+>    instead (a cap on OPEN suggestions per helper per target), and cap
+>    paid rewards per (helper, target) pair against collusion. Pay the
+>    author too: for their first submission, and per DISTINCT helper they
+>    integrate — the distinctness is what makes the mechanic reward
+>    breadth of collaboration instead of a two-person trading loop.
 > 4. **Notifications**: on accept and implement, send the helper a
 >    celebratory notification; on decline, a quiet one. The implement
 >    notification MUST deep-link to the updated text with a re-rate
@@ -217,7 +279,11 @@ access:
 >    the next action of the loop.
 > 5. **Closing the loop**: after the helper re-rates, show the author an
 >    aggregate-only signal ("N ratings updated since your edit") —
->    never reveal which helper changed what.
+>    never reveal which helper changed what. Measure it against a
+>    SERVER-stamped record of when the author last edited: any timestamp
+>    the rating pipeline itself touches (a lastUpdate bumped by
+>    evaluation rollups) will race the signal out of existence, and a
+>    client-side snapshot evaporates on refresh.
 > 6. **Anonymity & safety**: individual ratings are never exposed;
 >    penalties are small relative to rewards (≤ ¼ of the accept
 >    reward); all copy is warm — rejection reads as "not this time",

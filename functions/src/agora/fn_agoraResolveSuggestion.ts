@@ -4,6 +4,7 @@ import {
 	Collections,
 	AgoraParticipant,
 	AgoraSuggestionStatus,
+	AGORA_ANTI_GAMING,
 	AGORA_POINTS,
 	NotificationTriggerType,
 	SourceApp,
@@ -24,6 +25,46 @@ interface Request {
 
 interface Result {
 	ok: boolean;
+}
+
+interface WeaveLedger {
+	/** Pay the helper for this weave, or only celebrate it (collusion cap) */
+	awardHelper: boolean;
+	/** Pay the author their integration credit (a helper not yet woven here) */
+	awardAuthor: boolean;
+}
+
+/**
+ * Who has already been woven into this proposal, and how often. Read BEFORE
+ * the status update so the suggestion being resolved is not counted as its
+ * own precedent.
+ *
+ * Queried by parentId alone (a single-field index every project has) and
+ * filtered in memory: suggestions per proposal are bounded by the open-idea
+ * cap times the class size, so this stays a handful of docs.
+ */
+async function readWeaveLedger(proposalId: string, suggesterId: string): Promise<WeaveLedger> {
+	const siblings = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', proposalId)
+		.get();
+
+	let wovenByThisHelper = 0;
+	const distinctHelpers = new Set<string>();
+	siblings.forEach((docSnap) => {
+		const data = docSnap.data() as { suggestionStatus?: string; creatorId?: string };
+		if (data.suggestionStatus !== AgoraSuggestionStatus.implemented || !data.creatorId) return;
+		distinctHelpers.add(data.creatorId);
+		if (data.creatorId === suggesterId) wovenByThisHelper++;
+	});
+
+	return {
+		awardHelper:
+			wovenByThisHelper < AGORA_ANTI_GAMING.MAX_WOVEN_AWARDS_PER_HELPER_PER_PROPOSAL,
+		awardAuthor:
+			!distinctHelpers.has(suggesterId) &&
+			distinctHelpers.size < AGORA_POINTS.MAX_WEAVE_CREDITS_PER_PROPOSAL,
+	};
 }
 
 /**
@@ -102,14 +143,25 @@ export const agoraResolveSuggestion = onCall(
 			}
 
 			const suggesterId = suggestion.creatorId;
+			const proposalId = suggestion.parentId ?? '';
+			// Read the weave ledger BEFORE stamping the new status, so this very
+			// suggestion cannot count as its own precedent
+			const ledger: WeaveLedger =
+				resolution === AgoraSuggestionStatus.implemented && suggesterId && suggesterId !== uid
+					? await readWeaveLedger(proposalId, suggesterId)
+					: { awardHelper: true, awardAuthor: false };
+
 			// The improvement cycle's ladder (docs: apps/agora/docs/feedback-cycle.md):
 			// accept = the promise (+1), woven-in = the promise kept (+2), decline
-			// costs a quarter point — floored at zero in the transaction below
+			// is free. Past the collusion cap the weave still CELEBRATES but pays
+			// nothing — recognition is decoupled from currency on purpose.
 			const pointsAwarded: number =
 				resolution === AgoraSuggestionStatus.accepted
 					? AGORA_POINTS.SUGGESTION_ACCEPTED
 					: resolution === AgoraSuggestionStatus.implemented
-						? AGORA_POINTS.SUGGESTION_IMPLEMENTED
+						? ledger.awardHelper
+							? AGORA_POINTS.SUGGESTION_IMPLEMENTED
+							: 0
 						: resolution === AgoraSuggestionStatus.declined
 							? AGORA_POINTS.SUGGESTION_DECLINED
 							: AGORA_POINTS.SUGGESTION_THANKED;
@@ -119,9 +171,33 @@ export const agoraResolveSuggestion = onCall(
 				lastUpdate: Date.now(),
 			});
 
+			// The author's side of the economy: weaving a classmate's idea into
+			// your text is real editorial work. Credited once per DISTINCT
+			// helper, so integrating many voices beats trading rounds with one.
+			if (ledger.awardAuthor) {
+				const authorRef = db
+					.collection(Collections.agoraParticipants)
+					.doc(createAgoraParticipantId(sessionId, uid));
+				await db.runTransaction(async (transaction) => {
+					const snap = await transaction.get(authorRef);
+					if (!snap.exists) return;
+					const participant = snap.data() as AgoraParticipant;
+					const points = { ...participant.points };
+					points.proposals += AGORA_POINTS.WEAVE_CREDIT_PER_HELPER;
+					points.total += AGORA_POINTS.WEAVE_CREDIT_PER_HELPER;
+					transaction.update(authorRef, { points, lastActive: Date.now() });
+				});
+			}
+
 			if (suggesterId && suggesterId !== uid) {
-				// Cross-app engagement credits — non-blocking by design
-				if (resolution === AgoraSuggestionStatus.accepted) {
+				// Cross-app engagement credits — non-blocking by design.
+				// BOTH rungs count: the promise (accepted) and the promise kept
+				// (implemented). Crediting only the former made the cross-app
+				// engagement system blind to the cycle's biggest moment.
+				if (
+					resolution === AgoraSuggestionStatus.accepted ||
+					resolution === AgoraSuggestionStatus.implemented
+				) {
 					awardCredit({
 						userId: suggesterId,
 						action: CreditAction.SUGGESTION_ACCEPTED,
@@ -172,6 +248,11 @@ export const agoraResolveSuggestion = onCall(
 						creatorId: uid,
 						creatorName: 'Anonymous traveler',
 						sourceApp: SourceApp.AGORA,
+						// The client renders the number from HERE rather than from a
+						// hardcoded string, so a retune of AGORA_POINTS can never make
+						// the celebration lie — and a weave past the collusion cap
+						// honestly celebrates with no points attached.
+						pointsAwarded,
 						triggerType:
 							resolution === AgoraSuggestionStatus.accepted
 								? NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED

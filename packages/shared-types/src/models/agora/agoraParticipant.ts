@@ -23,6 +23,12 @@ export const AgoraPointsSchema = object({
 	valueAccuracy: number(),
 	proposals: number(),
 	helping: number(),
+	/**
+	 * Credit for evaluating classmates' proposals. Optional because
+	 * participants created before the rating credit existed have no such
+	 * field — read it as `?? 0`, never assume it is present.
+	 */
+	rating: optional(number()),
 	total: number(),
 });
 
@@ -58,6 +64,13 @@ export const AgoraParticipantSchema = object({
 	camp: optional(enum_(AgoraCamp)),
 	valueScores: optional(array(AgoraValueScoreSchema)),
 	points: AgoraPointsSchema,
+	/**
+	 * Set when the one-time first-proposal credit was granted — the
+	 * idempotency guard for a trigger that fires on every statement write.
+	 */
+	firstProposalAwardedAt: optional(number()),
+	/** How many of this student's ratings have been credited (cap guard) */
+	creditedRatings: optional(number()),
 	joinedAt: number(),
 	lastActive: number(),
 });

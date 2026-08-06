@@ -10,6 +10,7 @@ import {
 import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
+import { stopDeliberationListeners } from '../lib/proposals';
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
@@ -72,6 +73,9 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			stopListening();
 			stopValueAnswerListeners();
 			stopNotifications();
+			// The results recap re-attaches these after the deliberation view
+			// drops them, so leaving the game is what finally closes them
+			stopDeliberationListeners();
 		},
 
 		view() {
@@ -207,7 +211,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 					case AgoraStage.results:
 					case AgoraStage.ended:
-						return m(Results, { session, topic });
+						// myParticipant carries the student's own ledger — the game
+						// announces every +1 and +2 during play and this is the only
+						// screen allowed to total them up
+						return m(Results, { session, topic, myParticipant });
 
 					default:
 						return m('.shell', [

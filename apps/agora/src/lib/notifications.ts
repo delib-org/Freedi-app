@@ -1,9 +1,10 @@
 import m from 'mithril';
 import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe } from './firebase';
 import { Collections, NotificationTriggerType, SourceApp } from '@freedi/shared-types';
+import { AGORA_POINTS } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
-import { requestHelpedFocus } from './helpedFocus';
+import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
 import { getDeliberationState } from './proposals';
 
 export interface AgoraToast {
@@ -21,6 +22,10 @@ export function getToasts(): readonly AgoraToast[] {
 }
 
 export function dismissToast(notificationId: string): void {
+	const timer = timers.get(notificationId);
+	if (timer) clearTimeout(timer);
+	timers.delete(notificationId);
+	held.delete(notificationId);
 	const index = toasts.findIndex((toast) => toast.notificationId === notificationId);
 	if (index >= 0) toasts.splice(index, 1);
 	// Local toasts have no Firestore doc behind them
@@ -36,6 +41,46 @@ export function dismissToast(notificationId: string): void {
 }
 
 const TOAST_AUTO_DISMISS_MS = 6000;
+/**
+ * An actionable toast IS the loop's next step, so it gets a longer leash.
+ * Six seconds is enough to read a line, not to tab to it and press it.
+ */
+const TOAST_ACTION_DISMISS_MS = 12000;
+
+const timers = new Map<string, ReturnType<typeof setTimeout>>();
+/** Toasts the pointer or keyboard focus is currently resting on */
+const held = new Set<string>();
+
+const ACTIONABLE_TRIGGERS: ReadonlySet<string> = new Set(['agora_suggestion_received']);
+
+function armDismiss(notificationId: string, triggerType: string): void {
+	const existing = timers.get(notificationId);
+	if (existing) clearTimeout(existing);
+	timers.set(
+		notificationId,
+		setTimeout(
+			() => {
+				timers.delete(notificationId);
+				// Hovered or focused right now: the countdown is spent, but taking
+				// the toast away under the user's cursor would be worse
+				if (held.has(notificationId)) return;
+				dismissToast(notificationId);
+			},
+			ACTIONABLE_TRIGGERS.has(triggerType) ? TOAST_ACTION_DISMISS_MS : TOAST_AUTO_DISMISS_MS,
+		),
+	);
+}
+
+/** Pointer/focus entered an actionable toast — freeze its auto-dismiss */
+export function holdToast(notificationId: string): void {
+	held.add(notificationId);
+}
+
+/** Pointer/focus left — dismiss now if the countdown already elapsed */
+export function releaseToast(notificationId: string): void {
+	held.delete(notificationId);
+	if (!timers.has(notificationId)) dismissToast(notificationId);
+}
 
 let localToastCounter = 0;
 
@@ -47,7 +92,7 @@ export function pushLocalToast(triggerType: string): void {
 		text: '',
 	};
 	toasts.push(toast);
-	setTimeout(() => dismissToast(toast.notificationId), TOAST_AUTO_DISMISS_MS);
+	armDismiss(toast.notificationId, triggerType);
 	m.redraw();
 }
 
@@ -154,8 +199,20 @@ export function listenToNotifications(userId: string): void {
 					text?: string;
 					statementId?: string;
 					parentId?: string;
+					pointsAwarded?: number;
+					bridgingTier?: number;
 				};
 				if (!data.notificationId) return;
+
+				const notificationId = data.notificationId;
+				const markRead = (): void => {
+					updateDoc(doc(db, Collections.inAppNotifications, notificationId), {
+						read: true,
+						readAt: Date.now(),
+					}).catch((error: unknown) => {
+						console.error('[Notifications] Marking read failed:', error);
+					});
+				};
 
 				// An accepted or woven-in improvement deserves glitter, not a
 				// toast: pop the celebration with the suggestion text (already
@@ -173,11 +230,23 @@ export function listenToNotifications(userId: string): void {
 					// closes only if the suggester re-reads and re-rates it. The
 					// celebration carries that next step; parentId is the proposal.
 					const proposalId = data.parentId;
+					// The number comes from the SERVER, never from a hardcoded
+					// string: past the collusion cap a weave is celebrated with no
+					// points attached, and retuning AGORA_POINTS can't make copy lie.
+					const awarded = data.pointsAwarded ?? 0;
 					celebrate({
 						message: implemented
-							? t('celebrate.suggestion_implemented')
-							: t('celebrate.suggestion_accepted'),
+							? awarded > 0
+								? t('celebrate.suggestion_implemented', { n: awarded })
+								: t('celebrate.suggestion_implemented_capped')
+							: t('celebrate.suggestion_accepted', { n: awarded }),
 						detail: suggestion?.statement,
+						// Accept is the promise, not the payoff. Saying what comes
+						// next turns the wait for "+2" into anticipation instead of
+						// an invisible state — and teaches the ladder when it lands.
+						hint: implemented
+							? undefined
+							: t('celebrate.accepted_hint', { n: AGORA_POINTS.SUGGESTION_IMPLEMENTED }),
 						action:
 							implemented && proposalId
 								? {
@@ -188,12 +257,42 @@ export function listenToNotifications(userId: string): void {
 									}
 								: undefined,
 					});
-					updateDoc(doc(db, Collections.inAppNotifications, data.notificationId), {
-						read: true,
-						readAt: Date.now(),
-					}).catch((error: unknown) => {
-						console.error('[Notifications] Marking read failed:', error);
+					markRead();
+
+					return;
+				}
+
+				// The AUTHOR's own rewards. Both used to be paid in total silence:
+				// a student could bridge the two camps, or write the opening draft
+				// the whole lesson runs on, and never learn anything happened.
+				if (
+					data.triggerType === NotificationTriggerType.AGORA_BRIDGING_ACHIEVED ||
+					data.triggerType === NotificationTriggerType.AGORA_PROPOSAL_CREDITED
+				) {
+					const bridging = data.triggerType === NotificationTriggerType.AGORA_BRIDGING_ACHIEVED;
+					const awarded = data.pointsAwarded ?? 0;
+					celebrate({
+						message: bridging
+							? (data.bridgingTier ?? 1) >= 2
+								? t('celebrate.bridging_full', { n: awarded })
+								: t('celebrate.bridging_reached', { n: awarded })
+							: t('celebrate.proposal_credited', { n: awarded }),
+						hint: bridging ? t('celebrate.bridging_hint') : t('celebrate.proposal_credited_hint'),
+						// Bridging arrives while you are off rating classmates, so it
+						// offers the trip back to your proposal. The first-proposal
+						// credit fires the instant you submit — you are already
+						// standing in the workshop, so a "go to your workshop" button
+						// would just be a second close button wearing a costume.
+						action: bridging
+							? {
+									label: t('celebrate.see_my_proposal'),
+									run: () => {
+										requestMineFocus();
+									},
+								}
+							: undefined,
 					});
+					markRead();
 
 					return;
 				}
@@ -205,7 +304,7 @@ export function listenToNotifications(userId: string): void {
 					text: data.text ?? '',
 				};
 				toasts.push(toast);
-				setTimeout(() => dismissToast(toast.notificationId), TOAST_AUTO_DISMISS_MS);
+				armDismiss(toast.notificationId, toast.triggerType);
 			});
 			m.redraw();
 		},
@@ -220,4 +319,39 @@ export function stopNotifications(): void {
 	unsubscribe = null;
 	listeningUserId = '';
 	toasts.length = 0;
+	timers.forEach((timer) => clearTimeout(timer));
+	timers.clear();
+	held.clear();
 }
+
+/**
+ * The COLLECTIVE moment. Every other celebration in the game is personal;
+ * this one fires for the whole class when the strongest bridge on the square
+ * beats its own record — the shared outcome the class score is actually
+ * built on (it averages everyone's points), which no student ever sees
+ * happen live.
+ *
+ * Watermarked in sessionStorage like the other detectors: the first sighting
+ * is silent, so opening a tab mid-lesson doesn't replay the whole climb.
+ * Only real jumps announce themselves, so it stays an event, not a ticker.
+ */
+export function detectClassBridgeRecord(sessionId: string, classMax: number): void {
+	if (classMax <= 0) return;
+	const key = `agora_${sessionId}_bridgerecord`;
+	const stored = sessionStorage.getItem(key);
+	if (stored === null) {
+		sessionStorage.setItem(key, String(classMax));
+
+		return;
+	}
+	const previous = Number(stored);
+	if (classMax <= previous + CLASS_RECORD_MIN_JUMP) return;
+	sessionStorage.setItem(key, String(classMax));
+	pushLocalToast('agora_class_record');
+}
+
+/**
+ * A record has to MEAN something. One point of drift on a fresh rating
+ * would otherwise toast the whole class every few seconds.
+ */
+const CLASS_RECORD_MIN_JUMP = 5;

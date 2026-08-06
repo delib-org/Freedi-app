@@ -10,6 +10,7 @@ import {
 	resolveSuggestion,
 	askCharacterReview,
 	getHelpedProposals,
+	openSuggestionsBy,
 	AgoraProposal,
 	AgoraRating,
 	HelpedProposal,
@@ -33,6 +34,7 @@ import {
 	AgoraSuggestionStatus,
 	AgoraTopicPackage,
 	AGORA_AI_REVIEW,
+	AGORA_ANTI_GAMING,
 	AGORA_CYCLE,
 	AGORA_LIMITS,
 	createAgoraCharacterReviewId,
@@ -341,6 +343,14 @@ export function Deliberation(
 	const wovenPending: Record<string, boolean> = {};
 	/** The accepted-ideas drawer under the edit box (collapsed by default) */
 	let acceptedDrawerOpen = false;
+	/**
+	 * The accept → tick → save chain is the least self-evident mechanic in
+	 * the game: nothing ever told students the tick is PENDING until they
+	 * save, so "I accepted it, why didn't they get their points?" was a real
+	 * dead end. Shown once, on the first accept of the session.
+	 */
+	const weaveCoachKey = `agora_${session.sessionId}_weavecoach`;
+	let showWeaveCoach = false;
 	/** The woven-in archive: history, so it opens only when asked for */
 	let archiveOpen = false;
 	/**
@@ -743,20 +753,28 @@ export function Deliberation(
 				: undefined;
 		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
 		const hasPendingWoven = acceptedIdeas.some((entry) => wovenPending[entry.statementId] === true);
+		const myScoreDoc = getDeliberationState().scores[myProposal.statementId];
 		// The cycle's return signal to the OWNER: classmates who (re)rated
 		// after my latest improvement. Aggregate count only — never who.
+		//
+		// Measured against the server-stamped time of MY last edit, not the
+		// statement's lastUpdate: the shared evaluation pipeline writes its
+		// aggregates back onto the proposal doc, so every rating bumped
+		// lastUpdate past its own timestamp and the signal raced itself out
+		// of existence.
+		const editedAt = myScoreDoc?.lastEditAt ?? myProposal.lastUpdate;
 		const ratingsMoved = (
 			getDeliberationState().studentEvalTimes[myProposal.statementId] ?? []
-		).filter(
-			(entry) => entry.evaluatorId !== userId && entry.updatedAt > myProposal.lastUpdate,
-		).length;
-		// Direction rides on the AGGREGATE: current bridge power vs the
-		// snapshot taken when I saved. The score consequence is game state;
+		).filter((entry) => entry.evaluatorId !== userId && entry.updatedAt > editedAt).length;
+		// Direction rides on the AGGREGATE: current bridge power vs where it
+		// stood when I last saved. The score consequence is game state;
 		// individual rating values stay private (see docs/feedback-cycle.md).
-		const bridgeBaseKey = `agora_${live.sessionId}_bridgebase_${myProposal.statementId}`;
-		const bridgeBase = sessionStorage.getItem(bridgeBaseKey);
-		const bridgeNow = getDeliberationState().scores[myProposal.statementId]?.bridgingScore ?? 0;
-		const bridgeDelta = bridgeBase === null ? 0 : bridgeNow - Number(bridgeBase);
+		// The baseline is stamped SERVER-side at save time — it used to live in
+		// sessionStorage, so one refresh silently erased the direction and left
+		// the student a bare count with nothing to learn from.
+		const bridgeNow = myScoreDoc?.bridgingScore ?? 0;
+		const bridgeBase = myScoreDoc?.bridgingAtLastEdit;
+		const bridgeDelta = bridgeBase === undefined ? 0 : bridgeNow - bridgeBase;
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
@@ -805,15 +823,9 @@ export function Deliberation(
 									myProposal.statementId,
 								)
 									.then(() => {
-										// Baseline for the direction chip: the bridge power
-										// at the moment of THIS save — later movement is
-										// what my improvement (and its re-ratings) did
-										sessionStorage.setItem(
-											bridgeBaseKey,
-											String(
-												getDeliberationState().scores[myProposal.statementId]?.bridgingScore ?? 0,
-											),
-										);
+										// The baseline for the direction chip is stamped by the
+										// server on this same save (onAgoraProposalWritten), so
+										// it survives a refresh and a device switch.
 										// Improving your own proposal earns glitter — the
 										// behavior the game most wants to reinforce
 										celebrate({ message: t('celebrate.proposal_improved'), detail: text });
@@ -876,6 +888,21 @@ export function Deliberation(
 							'.chat-drawer__panel',
 							{ 'aria-hidden': String(!acceptedDrawerOpen) },
 							m('.chat-drawer__inner', [
+								// The contract, stated once, exactly where the work happens
+								showWeaveCoach
+									? m('.weave-coach', [
+											m('p.weave-coach__text', t('delib.weave_coach')),
+											m(
+												'button.btn.btn--ghost.btn--sm',
+												{
+													onclick: () => {
+														showWeaveCoach = false;
+													},
+												},
+												t('delib.weave_coach_got_it'),
+											),
+										])
+									: null,
 								m('.chat-drawer__list', [
 									// Nested array (own fragment) — keyed items must not be
 									// spread among unkeyed siblings (Mithril mixed-keys crash).
@@ -979,6 +1006,7 @@ export function Deliberation(
 		// Newest first — the freshest feedback sits closest to the edit box.
 		// Accepted ideas are NOT listed here: they moved (visibly, by flight)
 		// into the adopted-ideas drawer, and a card can't live in two places.
+		let declinedCount = 0;
 		const mySuggestions = [...allSuggestions].reverse().filter((entry) => {
 			const resolved =
 				entry.suggestionStatus === AgoraSuggestionStatus.accepted ||
@@ -986,6 +1014,16 @@ export function Deliberation(
 			// The snapshot has confirmed the acceptance — the local
 			// in-flight flag has done both its jobs and can retire
 			if (resolved) flyingAccepted.delete(entry.statementId);
+			// Declined ideas retire too. Left in place they turned the workshop
+			// into a growing pile of things you said no to, burying the open
+			// feedback that actually needs a decision — and the tray is meant to
+			// be a to-do list, not a museum of refusals. Nothing is lost: the
+			// suggester's own card carries the canonical status.
+			if (entry.suggestionStatus === AgoraSuggestionStatus.declined) {
+				declinedCount++;
+
+				return false;
+			}
 
 			return !resolved && !flyingAccepted.has(entry.statementId);
 		});
@@ -995,6 +1033,11 @@ export function Deliberation(
 			// every idea was adopted is a success, not an empty inbox
 			allSuggestions.length === 0
 				? m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))
+				: null,
+			// Retired declines collapse to one muted line — the record stays
+			// honest without the workshop wearing every "no" as a card
+			declinedCount > 0
+				? m('p.workshop__declined-note', tCount('delib.declined_count', declinedCount))
 				: null,
 			// Nested array (own fragment) — keyed cards must not be spread
 			// among unkeyed siblings (Mithril mixed-keys crash)
@@ -1043,6 +1086,10 @@ export function Deliberation(
 													// while editing, not hidden one click away.
 													pendingAcceptText = suggestion.statement;
 													acceptedDrawerOpen = true;
+													if (!sessionStorage.getItem(weaveCoachKey)) {
+														sessionStorage.setItem(weaveCoachKey, '1');
+														showWeaveCoach = true;
+													}
 													// Arm the flight BEFORE the redraw: this very
 													// click removes the card, and the exit hook
 													// checks the set to tell acceptance from a fold
@@ -1197,6 +1244,23 @@ export function Deliberation(
 		if (changed) sessionStorage.setItem(helpedSeenKey, JSON.stringify(seen));
 	}
 
+	/**
+	 * Re-rating is step 5 — the move that closes the whole cycle — and it was
+	 * the one handoff with no feedback at all: the press changed a ring and
+	 * nothing else. proposalId → the transient "counted" acknowledgment.
+	 */
+	const reRateAcked: Record<string, boolean> = {};
+	const reRateAckTimers: Record<string, number> = {};
+
+	function ackReRate(proposalId: string): void {
+		reRateAcked[proposalId] = true;
+		window.clearTimeout(reRateAckTimers[proposalId]);
+		reRateAckTimers[proposalId] = window.setTimeout(() => {
+			delete reRateAcked[proposalId];
+			m.redraw();
+		}, 2600);
+	}
+
 	/** Compact five-level scale for CHANGING my vote — never touches cycle state */
 	function reRateScale(live: AgoraSession, proposal: AgoraProposal): m.Children {
 		const current = getDeliberationState().myRatings[proposal.statementId]?.value;
@@ -1221,6 +1285,7 @@ export function Deliberation(
 						'aria-checked': String(active),
 						onclick: () => {
 							void rateProposal(live, proposal.statementId, option.value);
+							ackReRate(proposal.statementId);
 						},
 					},
 					[
@@ -1239,7 +1304,24 @@ export function Deliberation(
 		// createdAt, NOT lastUpdate: resolving a suggestion bumps its lastUpdate,
 		// which would wrongly hide the marker when the owner edited first
 		const latestInput = Math.max(...mySuggestions.map((suggestion) => suggestion.createdAt));
-		const improvedSince = proposal.lastUpdate > latestInput;
+		// "Take another look" must stop nagging the student who already did.
+		// The marker used to depend only on the proposal's timestamp, so it
+		// stayed lit forever after a re-rate — the loop's last step gave no
+		// sign it had registered.
+		//
+		// The author's real edit time comes from the score doc: the statement's
+		// own lastUpdate is bumped by the evaluation pipeline's aggregate
+		// writes, which would flag a proposal as "improved" when nobody
+		// touched a word of it.
+		const editedAt =
+			getDeliberationState().scores[proposal.statementId]?.lastEditAt ?? proposal.lastUpdate;
+		const myRating = getDeliberationState().myRatings[proposal.statementId];
+		const reRatedSinceUpdate = myRating !== undefined && myRating.updatedAt > editedAt;
+		const improvedSince = editedAt > latestInput && !reRatedSinceUpdate;
+		const acked = reRateAcked[proposal.statementId] === true;
+		const atSuggestionCap =
+			openSuggestionsBy(proposal.statementId, userId) >=
+			AGORA_ANTI_GAMING.MAX_OPEN_SUGGESTIONS_PER_HELPER;
 		const draft = followUpDrafts[proposal.statementId] ?? '';
 		// "Woven in" is the strongest acknowledgment — check it before accepted
 		const statusKey = (suggestion: AgoraProposal): string =>
@@ -1268,7 +1350,11 @@ export function Deliberation(
 				]),
 				m('p.helped__current', proposal.statement),
 				improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
-				m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
+				// The cycle's final beat: the press is answered in words, once,
+				// then the prompt returns
+				acked
+					? m('p.helped__rerate-ack', { role: 'status' }, `✓ ${t('delib.rerate_ack')}`)
+					: m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
 				reRateScale(live, proposal),
 				// My improvement ideas + live status chips — the acknowledgment —
 				// sit beneath the evaluation, with the follow-up box continuing them.
@@ -1293,11 +1379,16 @@ export function Deliberation(
 						followUpDrafts[proposal.statementId] = (event.target as HTMLTextAreaElement).value;
 					},
 				}),
+				// The spam guard, stated plainly rather than enforced silently:
+				// two unresolved ideas at a time on one proposal. Resolving any
+				// of them frees the slot immediately.
+				atSuggestionCap ? m('p.action-hint', t('delib.open_ideas_cap')) : null,
 				m(
 					'button.btn.btn--secondary',
 					{
 						disabled:
 							followUpBusy[proposal.statementId] === true ||
+							atSuggestionCap ||
 							draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
 						onclick: () => {
 							const text = draft.trim();
@@ -1336,6 +1427,7 @@ export function Deliberation(
 		onremove() {
 			window.clearTimeout(splashTimer);
 			window.clearTimeout(rateAckTimer);
+			Object.values(reRateAckTimers).forEach((timer) => window.clearTimeout(timer));
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
 			unregisterMineNavigator(goToMine);

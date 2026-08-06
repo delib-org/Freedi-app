@@ -2655,6 +2655,14 @@
 		text-align: start;
 		font-style: italic;
 	}
+
+	// What happens next, for the celebration that has no button. Quieter
+	// than the message, louder than nothing — the accept moment used to end
+	// on a shrug and this is where the +1 → +2 ladder gets taught.
+	&__hint {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
 }
 
 @keyframes celebration-fade-in {
@@ -3174,13 +3182,24 @@
 	}
 
 	// A toast that TAKES you somewhere wears the invitation: peer orange
-	// (the feedback came from a classmate) and a lift on hover
+	// (the feedback came from a classmate) and a lift on hover. It is a real
+	// <button>, so the browser's own button styling has to be undone here
+	// and the focus ring made unmistakable — this is the loop's step 1 and
+	// keyboard users must be able to find and press it.
 	&--action {
 		border-color: var(--peer);
 		box-shadow: 0 6px 18px rgba(224, 119, 20, 0.28);
+		font: inherit;
+		text-align: start;
+		width: 100%;
 
 		&:hover {
 			transform: translateY(-2px);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--peer);
+			outline-offset: 2px;
 		}
 
 		.toast__glow {
@@ -4214,4 +4233,83 @@
 	.support-chart__title {
 		letter-spacing: normal;
 	}
+}
+
+// ============================================================================
+// The improvement cycle's quieter moments (docs/feedback-cycle.md)
+// ============================================================================
+
+// Declines retire from the workshop into one muted line. The record stays
+// honest; the workbench stops accumulating a pile of every "no" as a card.
+.workshop__declined-note {
+	color: var(--text-muted);
+	font-size: var(--font-size-sm);
+	text-align: center;
+	font-style: italic;
+}
+
+// The accept → tick → save contract, stated once, where the work happens
+.weave-coach {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-sm);
+	background: var(--bg-inset);
+	border-inline-start: 3px solid var(--lantern-glow);
+	border-radius: var(--radius-md);
+	padding: var(--space-sm) var(--space-md);
+
+	&__text {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		text-align: start;
+	}
+}
+
+// Step 5 answered in words: the re-rate that closes the cycle gets its beat
+.helped__rerate-ack {
+	color: var(--agree, var(--lantern-glow));
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	animation: toast-in var(--motion-base) var(--ease-spring) both;
+}
+
+// --- The personal ledger on the results screen ---
+// The game announces every +1 and +2 during play; this is the only surface
+// allowed to total them. Framed as a contribution, never as a ranking.
+.results__mine {
+	text-align: center;
+
+	.results__total--mine {
+		color: var(--lantern-glow);
+	}
+}
+
+.results__story {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	text-align: start;
+
+	li {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		padding-inline-start: 1.4em;
+		position: relative;
+
+		&::before {
+			content: '✦';
+			position: absolute;
+			inset-inline-start: 0;
+			color: var(--lantern-glow);
+		}
+	}
+}
+
+.results__mine-note {
+	color: var(--text-muted);
+	font-size: var(--font-size-xs);
 }

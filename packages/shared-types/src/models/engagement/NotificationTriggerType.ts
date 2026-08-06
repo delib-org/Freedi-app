@@ -19,4 +19,8 @@ export enum NotificationTriggerType {
 	AGORA_SUGGESTION_THANKED = 'agora_suggestion_thanked',
 	AGORA_SUGGESTION_IMPLEMENTED = 'agora_suggestion_implemented',
 	AGORA_ROUND_STARTED = 'agora_round_started',
+	/** The author's proposal reached across the camps (bridging tier 1 or 2) */
+	AGORA_BRIDGING_ACHIEVED = 'agora_bridging_achieved',
+	/** The author's first proposal landed — the cold-start credit */
+	AGORA_PROPOSAL_CREDITED = 'agora_proposal_credited',
 }

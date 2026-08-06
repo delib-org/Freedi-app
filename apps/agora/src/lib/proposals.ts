@@ -20,6 +20,7 @@ import {
 	AgoraProposalScoreSchema,
 	AgoraSession,
 	AgoraSuggestionStatus,
+	AGORA_ANTI_GAMING,
 	Evaluation,
 	StatementType,
 	isAgoraAiUid,
@@ -27,7 +28,11 @@ import {
 import { parse } from 'valibot';
 import { getUserState } from './user';
 import { getSessionState } from './session';
-import { detectHelpedImprovements, detectReceivedSuggestions } from './notifications';
+import {
+	detectClassBridgeRecord,
+	detectHelpedImprovements,
+	detectReceivedSuggestions,
+} from './notifications';
 import { agoraCreator, buildProposalStatement, buildSuggestionStatement } from './statementDocs';
 
 /** Minimal client view of a proposal/suggestion statement */
@@ -189,6 +194,13 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 				}
 			});
 			state.scores = scores;
+			// The class's shared outcome, announced when it actually moves —
+			// the only collective celebration in a game full of personal ones
+			let classMax = 0;
+			for (const score of Object.values(scores)) {
+				if (score.bridgingScore > classMax) classMax = score.bridgingScore;
+			}
+			detectClassBridgeRecord(sessionId, classMax);
 			m.redraw();
 		},
 		(error) => {
@@ -306,6 +318,22 @@ export async function rateProposal(
 	await setDoc(doc(db, Collections.evaluations, evaluationId), evaluation);
 }
 
+/**
+ * How many unresolved ideas I still have waiting on this proposal. This is
+ * the game's spam guard: bounding OPEN ideas binds on the spammer directly,
+ * unlike a points penalty, which the floor at zero made free for exactly the
+ * students it was meant to deter. Resolved ideas free the slot immediately,
+ * so a genuinely helpful classmate is never blocked for long.
+ */
+export function openSuggestionsBy(proposalId: string, userId: string): number {
+	return (state.suggestions[proposalId] ?? []).filter(
+		(suggestion) =>
+			suggestion.creatorId === userId &&
+			(suggestion.suggestionStatus === undefined ||
+				suggestion.suggestionStatus === AgoraSuggestionStatus.open),
+	).length;
+}
+
 /** Send an improvement suggestion on someone else's proposal */
 export async function submitSuggestion(
 	session: AgoraSession,
@@ -315,6 +343,12 @@ export async function submitSuggestion(
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
+	if (
+		openSuggestionsBy(proposal.statementId, user.uid) >=
+		AGORA_ANTI_GAMING.MAX_OPEN_SUGGESTIONS_PER_HELPER
+	) {
+		throw new Error('Too many open suggestions on this proposal');
+	}
 	const newRef = doc(collection(db, Collections.statements));
 
 	await setDoc(

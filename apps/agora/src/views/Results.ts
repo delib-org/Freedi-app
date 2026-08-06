@@ -1,17 +1,106 @@
 import m from 'mithril';
-import { t } from '../lib/i18n';
+import { t, tCount } from '../lib/i18n';
 import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
+import { formatPoints } from '../components/PointsPill';
+import { getDeliberationState, listenToDeliberation } from '../lib/proposals';
 import {
+	AgoraParticipant,
 	AgoraSceneKind,
 	AgoraSession,
 	AgoraSessionOutcome,
+	AgoraSuggestionStatus,
 	AgoraTopicPackage,
 } from '@freedi/shared-types';
 
 export interface ResultsAttrs {
 	session: AgoraSession;
 	topic: AgoraTopicPackage;
+	/** The student's own ledger — absent for spectators and old callers */
+	myParticipant?: AgoraParticipant | null;
+}
+
+interface MyStory {
+	ideasWoven: number;
+	ideasAdopted: number;
+	classmatesHelped: number;
+	voicesWovenIn: number;
+}
+
+/**
+ * What the student actually DID, counted from the suggestions still in the
+ * local deliberation state. Numbers alone ("helping: 5") mean nothing to a
+ * teenager; "three classmates' ideas are in your text" is the sentence that
+ * lands, and it is the one the collaborative design wants remembered.
+ */
+function readMyStory(userId: string): MyStory {
+	const { proposals, suggestions } = getDeliberationState();
+	const mine = new Set(
+		proposals.filter((proposal) => proposal.creatorId === userId).map((p) => p.statementId),
+	);
+	const all = Object.values(suggestions).flat();
+
+	const authored = all.filter((suggestion) => suggestion.creatorId === userId);
+	const received = all.filter(
+		(suggestion) => mine.has(suggestion.parentId) && suggestion.creatorId !== userId,
+	);
+
+	return {
+		ideasWoven: authored.filter((s) => s.suggestionStatus === AgoraSuggestionStatus.implemented)
+			.length,
+		ideasAdopted: authored.filter((s) => s.suggestionStatus === AgoraSuggestionStatus.accepted)
+			.length,
+		classmatesHelped: new Set(authored.map((s) => s.parentId)).size,
+		voicesWovenIn: new Set(
+			received
+				.filter((s) => s.suggestionStatus === AgoraSuggestionStatus.implemented)
+				.map((s) => s.creatorId),
+		).size,
+	};
+}
+
+/**
+ * The student's private ledger. The game shouts "+1!" and "+2!" all lesson
+ * and then, until now, never showed anyone their own total — announced points
+ * with no accounting read as play money and quietly devalue every
+ * celebration. Deliberately framed as a contribution to the CLASS score
+ * (which averages everyone's points), and deliberately shows only your own
+ * numbers: no ranking, no comparison, nothing to lose by reading it.
+ */
+function myJourneyCard(participant: AgoraParticipant): m.Children {
+	const points = participant.points;
+	const story = readMyStory(participant.userId);
+	const parts: Array<{ value: number; label: string }> = [
+		{ value: points.helping, label: t('results.my_helping') },
+		{ value: points.rating ?? 0, label: t('results.my_rating') },
+		{ value: points.proposals, label: t('results.my_proposals') },
+		{ value: points.valueAccuracy, label: t('results.my_values') },
+	];
+
+	return m('.card.results__mine', [
+		m('p.teacher__section-title', t('results.my_journey')),
+		m('.results__total.results__total--mine', formatPoints(points.total)),
+		m('p.results__outcome-label', t('results.my_total_label')),
+		m(
+			'.results__breakdown',
+			parts.map((part, index) =>
+				m('.results__part', { key: index }, [
+					m('span.results__part-value', formatPoints(part.value)),
+					m('span.results__part-label', part.label),
+				]),
+			),
+		),
+		// The sentences that carry the collaboration message home
+		m('ul.results__story', [
+			story.ideasWoven > 0 ? m('li', tCount('results.story_woven', story.ideasWoven)) : null,
+			story.ideasAdopted > 0 ? m('li', tCount('results.story_adopted', story.ideasAdopted)) : null,
+			story.classmatesHelped > 0
+				? m('li', tCount('results.story_helped', story.classmatesHelped))
+				: null,
+			story.voicesWovenIn > 0 ? m('li', tCount('results.story_voices', story.voicesWovenIn)) : null,
+		]),
+		m('p.results__mine-note', t('results.my_contribution_note')),
+	]);
 }
 
 function metricBar(
@@ -55,8 +144,14 @@ function metricBar(
  */
 export const Results: m.Component<ResultsAttrs> = {
 	view(vnode) {
-		const { session, topic } = vnode.attrs;
+		const { session, topic, myParticipant } = vnode.attrs;
 		const score = session.classScore;
+
+		// The deliberation view tears its listeners down on unmount, so by the
+		// time we get here the suggestions that make up "your journey" are
+		// gone. Re-attach (idempotent per session+user) — the recap is the one
+		// screen allowed to total the lesson up, and it must not be blank.
+		if (myParticipant) listenToDeliberation(session.sessionId, myParticipant.userId);
 
 		if (!score) {
 			return m('.shell.shell--wide', [
@@ -112,6 +207,10 @@ export const Results: m.Component<ResultsAttrs> = {
 					participants: [],
 					mood,
 				}),
+
+				// Mine first: the student reads their own story, then sees the
+				// class outcome their points fed into
+				myParticipant ? myJourneyCard(myParticipant) : null,
 
 				m('.card.results__score-panel', [
 					m('p.teacher__section-title', t('results.class_score')),

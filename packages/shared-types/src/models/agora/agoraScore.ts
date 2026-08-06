@@ -55,6 +55,22 @@ export const AgoraProposalScoreSchema = object({
 	bridgingScore: number(),
 	/** Set once the bridging credit was awarded (idempotency guard) */
 	bridgingCreditAwardedAt: optional(number()),
+	/**
+	 * Highest bridging tier already paid out: 0/absent = none, 1 = reached
+	 * across (CREDIT_THRESHOLD_TIER_1), 2 = full bridge (CREDIT_THRESHOLD).
+	 * Monotonic — a later dip never claws a tier back, so the author is
+	 * never punished for a proposal that moved.
+	 */
+	bridgingTierAwarded: optional(number()),
+	/**
+	 * Bridging score captured the moment the author last edited the text.
+	 * The owner's "ratings moved / bridge power rose" chip is measured
+	 * against THIS, server-side, so the signal survives a refresh or a
+	 * device switch (it used to live in sessionStorage and evaporated).
+	 */
+	bridgingAtLastEdit: optional(number()),
+	/** When the author last saved a text change (pairs with the baseline) */
+	lastEditAt: optional(number()),
 	plausibility: optional(AgoraPlausibilitySchema),
 	lastUpdate: number(),
 });

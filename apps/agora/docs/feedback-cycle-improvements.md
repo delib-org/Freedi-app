@@ -4,8 +4,23 @@ Synthesis of two independent reviews of the improvement feedback cycle
 (`feedback-cycle.md`): a UX review of how the loop *feels* to both
 actors, and a gamification review of the reward *economy*. Both were
 grounded in the code on `feat/agora-places-improved`, not just the doc.
-Status: **proposed — pending Tal's decision**. Nothing below is
-implemented yet except the doc fix (thanked row corrected to +0.5).
+Status: **IMPLEMENTED and verified** (2026-08-06). All three phases
+shipped and proven end-to-end with a teacher and two students against the
+emulator — see `feedback-cycle.md` for the current spec (this file is
+kept as the reasoning record) and `scripts/e2e-cycle.mjs` for the proof.
+
+Two extra defects surfaced during implementation and were fixed:
+
+- **`PointsPill` never terminated.** Integer stepping toward a fractional
+  target overshot every tick and the exact-equality exit was unreachable,
+  so the interval ran forever and the number oscillated. Now steps in
+  quarters and clamps on overshoot, with unit tests.
+- **The ratings-moved signal raced itself out of existence.** It compared
+  rating times against `statement.lastUpdate`, which the shared
+  evaluation pipeline bumps every time anyone rates — so the author's
+  return signal could never fire. Both it and the ✨ "improved" marker now
+  read `agoraScores.lastEditAt`, stamped server-side only on a real text
+  change.
 
 ## Shared diagnosis
 

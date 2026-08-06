@@ -1158,4 +1158,5 @@ export {
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
 	onAgoraEvaluationWritten,
+	onAgoraProposalWritten,
 } from './agora';
