@@ -207,19 +207,19 @@ const suggest = async (page, label, text) => {
 };
 await shot(s2, '05b-workshop-help');
 
-// Mine | Others tabs: peek at my workshop mid-help, then return to helping
-await s1.waitForSelector('.delib-nav', { timeout: 10000 });
-await s1.locator('.delib-nav__item').first().click();
-await s1.waitForSelector('.my-lantern', { timeout: 5000 });
-console.log('S1 NAV: peeked at Mine during help');
+// My workshop is the dock, not a tab: lift it mid-help, then fold it back
+await s1.waitForSelector('.proposal-dock__bar', { timeout: 10000 });
+await s1.locator('.proposal-dock__bar').click();
+await s1.waitForSelector('.proposal-dock--open .my-lantern', { timeout: 5000 });
+console.log('S1 DOCK: lifted the notebook during help');
 console.log(
 	'S1 NAV CLASSES:',
 	await s1.locator('.delib-nav__item').evaluateAll((els) => els.map((e) => e.className))
 );
-await shot(s1, '05c-nav-peek-mine');
-await s1.locator('.delib-nav__item').last().click();
+await shot(s1, '05c-dock-open-during-help');
+await s1.locator('.proposal-dock__bar').click();
 await s1.waitForSelector('textarea.text-input', { timeout: 5000 });
-console.log('S1 NAV: back to Others');
+console.log('S1 DOCK: folded, back at the stand');
 
 await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');

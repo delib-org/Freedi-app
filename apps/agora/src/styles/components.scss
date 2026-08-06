@@ -1721,6 +1721,15 @@
 			color: #ffffff;
 			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--peer) 60%, transparent);
 		}
+
+		// Results belongs to nobody in particular — it is the whole class
+		// seen from above. Neutral slate, so it can't be misread as a camp.
+		&--results.delib-nav__item--active {
+			background: var(--text-secondary);
+			border-color: var(--text-secondary);
+			color: #ffffff;
+			box-shadow: 0 3px 10px -3px rgba(37, 51, 82, 0.5);
+		}
 	}
 
 	&__icon {
@@ -2023,6 +2032,39 @@
 @keyframes dock-scrim-in {
 	from {
 		opacity: 0;
+	}
+}
+
+/* The Results tab's placeholder. Deliberately plain and clearly unfinished:
+   a tab that quietly leads to an empty screen reads as a bug, one that says
+   "not ready yet" reads as a promise. */
+.results-soon {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xl) var(--space-md);
+	text-align: center;
+	background: var(--bg-card-solid);
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--radius-md);
+
+	&__icon {
+		font-size: 2.5rem;
+		line-height: 1;
+		opacity: 0.75;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--text-primary);
+	}
+
+	&__body {
+		max-width: 42ch;
+		font-size: var(--font-size-base);
+		color: var(--text-muted);
 	}
 }
 

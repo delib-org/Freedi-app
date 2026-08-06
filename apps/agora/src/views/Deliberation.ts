@@ -461,6 +461,12 @@ export function Deliberation(
 	/** Mirror of the unsaved edit box, so a refresh can't eat a draft */
 	const mineDraftKey = `agora_${session.sessionId}_mine_draft`;
 	/**
+	 * The results tab: a second screen you can stand on, NOT a cycle step —
+	 * looking at the class picture must not move your lap along. Deliberately
+	 * in memory only: a refresh puts you back where the work is.
+	 */
+	let showResults = false;
+	/**
 	 * A helped proposal the "woven in" celebration pointed at: the next render
 	 * of its card scrolls to it and spotlights it, then the intent is spent.
 	 */
@@ -641,40 +647,30 @@ export function Deliberation(
 	}
 
 	/**
-	 * The Mine | Others tabs. Mobile: fixed bottom bar; desktop: tab row
+	 * The Others | Results tabs. Mobile: fixed bottom bar; desktop: tab row
 	 * under the HUD (CSS switches placement on one element). Hidden until
 	 * the student has a proposal — lap 1 starts with writing.
+	 *
+	 * There is no "Mine" tab: my proposal is not a place any more, it is the
+	 * dock sitting right above this bar, and one thing should have exactly
+	 * one way in. What the bar switches between is the two screens I can
+	 * stand on — the classmates' side, and the class picture.
 	 */
 	function delibNav(myProposal: AgoraProposal | undefined): m.Children {
 		if (!myProposal) return null;
-		// "Mine" is the notebook, and the notebook is now the dock — so the
-		// tab is a second handle for the same sheet, not a place to travel
-		// to. It carries no badge of its own: the dock bar sits right above
-		// it wearing the count, and two red dots for one fact is noise.
-		const mineActive = cycle.step === 'mine' || cycle.step === 'done' || dockOpen;
 
 		return m('nav.delib-nav', [
 			m(
-				'button.delib-nav__item',
-				{
-					class: mineActive ? 'delib-nav__item--active' : undefined,
-					'aria-expanded': String(dockOpen),
-					'aria-controls': DOCK_PANEL_ID,
-					onclick: () => {
-						toggleDock();
-						m.redraw();
-					},
-				},
-				[m('span.delib-nav__icon', '📘'), m('span.delib-nav__label', t('delib.nav_mine'))],
-			),
-			m(
 				'button.delib-nav__item.delib-nav__item--peer',
 				{
-					class: mineActive ? undefined : 'delib-nav__item--active',
-					'aria-selected': String(!mineActive),
+					class: showResults ? undefined : 'delib-nav__item--active',
+					'aria-selected': String(!showResults),
 					onclick: () => {
 						closeDock();
-						if (cycle.step === 'mine') {
+						if (showResults) {
+							showResults = false;
+							m.redraw();
+						} else if (cycle.step === 'mine') {
 							setCycle({ step: 'rate', rated: 0 });
 						} else if (cycle.step === 'done') {
 							// After the laps, "Others" means: keep helping
@@ -687,11 +683,25 @@ export function Deliberation(
 				[
 					m('span.delib-nav__icon', '👥'),
 					m('span.delib-nav__label', t('delib.nav_others')),
-					// Proposals I helped moved while I was away — come see
-					mineActive && helpedChangedCount() > 0
+					// Proposals I helped moved while I was away — come see.
+					// Only meaningful when I'm not already looking at them.
+					(showResults || cycle.step === 'mine') && helpedChangedCount() > 0
 						? m('span.delib-nav__badge', String(helpedChangedCount()))
 						: null,
 				],
+			),
+			m(
+				'button.delib-nav__item.delib-nav__item--results',
+				{
+					class: showResults ? 'delib-nav__item--active' : undefined,
+					'aria-selected': String(showResults),
+					onclick: () => {
+						closeDock();
+						showResults = true;
+						m.redraw();
+					},
+				},
+				[m('span.delib-nav__icon', '📊'), m('span.delib-nav__label', t('delib.nav_results'))],
 			),
 		]);
 	}
@@ -1840,6 +1850,35 @@ export function Deliberation(
 					},
 					reducedMotion ? 2000 : 3200,
 				);
+			}
+
+			// ---------- TAB: RESULTS (a screen, not a step) ----------
+			// Placeholder for now: the class picture that belongs here is not
+			// designed yet, and a tab that leads nowhere is worse than one
+			// that says so. Standing here does NOT advance the lap.
+			if (showResults && myProposal) {
+				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
+					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
+						header,
+						delibNav(myProposal),
+						m('.results-soon', [
+							m('span.results-soon__icon', { 'aria-hidden': 'true' }, '📊'),
+							m('h2.results-soon__title', t('delib.results_title')),
+							m('p.results-soon__body', t('delib.results_soon')),
+						]),
+						m(
+							'button.btn.btn--primary.btn--full.btn--lg',
+							{
+								onclick: () => {
+									showResults = false;
+								},
+							},
+							cycle.step === 'help' ? t('delib.back_to_stand') : t('delib.back_to_square'),
+						),
+					]),
+					scrim,
+					dock,
+				]);
 			}
 
 			// ---------- STEP: MY PROPOSAL (write, later improve) ----------
