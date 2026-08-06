@@ -22,6 +22,7 @@ import {
 	EvidenceStatus,
 	Visibility,
 } from '../TypeEnums';
+import { AgoraSuggestionStatus } from '../agora/agoraEnums';
 import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
@@ -342,6 +343,14 @@ export const StatementSchema = object({
 	leadingOptionId: optional(string()),
 	convergenceIndex: optional(number()), // [0,1]
 	lastActivityAt: optional(number()),
+	// ===== Agora classroom game (apps/agora) =====
+	// Set on the proposals (options) and peer suggestions written during a live
+	// session. `agoraSessionId` is the only handle Agora has on its own
+	// statements — every client listener and server aggregate queries on it, so
+	// it has to survive a schema parse round-trip.
+	agoraSessionId: optional(string()),
+	anonName: optional(string()), // pseudonym shown to classmates; the real identity stays in creator.uid
+	suggestionStatus: optional(enum_(AgoraSuggestionStatus)), // lifecycle of a `suggestion` statement
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

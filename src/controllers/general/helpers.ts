@@ -140,6 +140,12 @@ export const TYPE_RESTRICTIONS: Record<
 		disallowedChildren: [StatementType.option, StatementType.synthesis],
 		reason: 'Synthesis options cannot contain other options',
 	},
+	// A peer suggestion is feedback ON an option — a terminal node. Chatter
+	// about it (comments) is fine; nesting proposals inside it is not.
+	[StatementType.suggestion]: {
+		disallowedChildren: [StatementType.option, StatementType.suggestion],
+		reason: 'Suggestions cannot contain options or further suggestions',
+	},
 };
 
 export function isStatementTypeAllowedAsChildren(

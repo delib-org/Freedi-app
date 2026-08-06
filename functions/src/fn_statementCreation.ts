@@ -13,6 +13,7 @@ import {
 	createSubscription,
 	getStatementSubscriptionId,
 	SimpleStatement,
+	SourceApp,
 	statementToSimpleStatement,
 	getRandomUID,
 } from '@freedi/shared-types';
@@ -495,6 +496,12 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
  */
 async function splitStatementIntoParagraphs(statement: Statement): Promise<void> {
 	try {
+		// Agora proposals are short free-text answers typed into a textarea during
+		// a live lesson, and the game renders `statement` verbatim — it never reads
+		// paragraph children. Splitting one would visibly delete every line after
+		// the first from the student's screen moments after they submitted it.
+		if (statement.sourceApp === SourceApp.AGORA) return;
+
 		const text = statement.statement;
 
 		// Only split if there are newlines

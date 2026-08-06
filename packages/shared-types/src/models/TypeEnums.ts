@@ -21,6 +21,14 @@ export enum StatementType {
 	 * sign of its contribution to the parent's score.
 	 */
 	evidence = 'evidence',
+	/**
+	 * Peer improvement suggestion on a parent option — "here is how I'd make
+	 * your proposal better". The parent's author accepts or declines it; the
+	 * lifecycle lives in `suggestionStatus`. Used by the Agora and Flow apps.
+	 * Distinct from `comment` (free chatter, no lifecycle) and from the Sign
+	 * app's document suggestions (options carrying `doc` metadata).
+	 */
+	suggestion = 'suggestion',
 }
 
 /**

@@ -20,6 +20,7 @@ import {
 	AgoraProposalScoreSchema,
 	AgoraSession,
 	AgoraSuggestionStatus,
+	Evaluation,
 	StatementType,
 	isAgoraAiUid,
 } from '@freedi/shared-types';
@@ -27,12 +28,9 @@ import { parse } from 'valibot';
 import { getUserState } from './user';
 import { getSessionState } from './session';
 import { detectHelpedImprovements, detectReceivedSuggestions } from './notifications';
+import { agoraCreator, buildProposalStatement, buildSuggestionStatement } from './statementDocs';
 
-// Flow-app precedent: improvement suggestions are statements with this raw
-// type tag (not a StatementType enum member).
-const SUGGESTION_TYPE = 'suggestion';
-
-/** Minimal client view of a proposal/suggestion statement (flow-style raw doc) */
+/** Minimal client view of a proposal/suggestion statement */
 export interface AgoraProposal {
 	statementId: string;
 	statement: string;
@@ -119,7 +117,7 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 				const item = toProposal(docSnap.data() as Record<string, unknown>);
 				if (item.statementType === StatementType.option) {
 					proposals.push(item);
-				} else if (item.statementType === SUGGESTION_TYPE) {
+				} else if (item.statementType === StatementType.suggestion) {
 					(suggestions[item.parentId] ??= []).push(item);
 				}
 			});
@@ -264,33 +262,18 @@ export async function submitProposal(
 ): Promise<void> {
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
-	const now = Date.now();
 
 	if (existingProposalId) {
 		await updateDoc(doc(db, Collections.statements, existingProposalId), {
 			statement: text,
-			lastUpdate: now,
+			lastUpdate: Date.now(),
 		});
 
 		return;
 	}
 
 	const newRef = doc(collection(db, Collections.statements));
-	await setDoc(newRef, {
-		statementId: newRef.id,
-		statement: text,
-		statementType: StatementType.option,
-		parentId: session.challengeQuestionId,
-		topParentId: session.rootStatementId,
-		parents: [session.rootStatementId, session.challengeQuestionId],
-		creatorId: user.uid,
-		anonName,
-		agoraSessionId: session.sessionId,
-		consensus: 0,
-		randomSeed: Math.random(),
-		createdAt: now,
-		lastUpdate: now,
-	});
+	await setDoc(newRef, buildProposalStatement(session, newRef.id, user.uid, anonName, text));
 }
 
 /** Five-level rating scale, MC-style: -1 … +1 in half steps */
@@ -305,8 +288,9 @@ export async function rateProposal(
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
 	const evaluationId = `${user.uid}--${statementId}`;
-
-	await setDoc(doc(db, Collections.evaluations, evaluationId), {
+	// Typed as Evaluation so the shared pipeline's required fields are a compile
+	// error to omit, not a trigger that silently fails at parse time.
+	const evaluation: Evaluation = {
 		evaluationId,
 		parentId: session.challengeQuestionId,
 		statementId,
@@ -314,14 +298,12 @@ export async function rateProposal(
 		evaluation: value,
 		// The shared pipeline (statement.evaluation stats) requires an evaluator
 		// object; anonName keeps students anonymous to each other
-		evaluator: {
-			uid: user.uid,
-			displayName: getSessionState().myParticipant?.anonName ?? 'traveler',
-			isAnonymous: true,
-		},
+		evaluator: agoraCreator(user.uid, getSessionState().myParticipant?.anonName ?? 'traveler'),
 		agoraSessionId: session.sessionId,
 		updatedAt: Date.now(),
-	});
+	};
+
+	await setDoc(doc(db, Collections.evaluations, evaluationId), evaluation);
 }
 
 /** Send an improvement suggestion on someone else's proposal */
@@ -334,23 +316,11 @@ export async function submitSuggestion(
 	const { user } = getUserState();
 	if (!user) throw new Error('Not authenticated');
 	const newRef = doc(collection(db, Collections.statements));
-	const now = Date.now();
 
-	await setDoc(newRef, {
-		statementId: newRef.id,
-		statement: text,
-		statementType: SUGGESTION_TYPE,
-		parentId: proposal.statementId,
-		topParentId: session.rootStatementId,
-		parents: [session.rootStatementId, session.challengeQuestionId, proposal.statementId],
-		creatorId: user.uid,
-		anonName,
-		agoraSessionId: session.sessionId,
-		suggestionStatus: AgoraSuggestionStatus.open,
-		consensus: 0,
-		createdAt: now,
-		lastUpdate: now,
-	});
+	await setDoc(
+		newRef,
+		buildSuggestionStatement(session, proposal.statementId, newRef.id, user.uid, anonName, text),
+	);
 }
 
 export async function resolveSuggestion(

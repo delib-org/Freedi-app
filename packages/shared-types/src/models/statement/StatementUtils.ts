@@ -8,6 +8,7 @@ import { Role } from '../user/UserSettings';
 import { Paragraph, ParagraphType, ListType } from '../paragraph/paragraphModel';
 import { StatementSettings } from './StatementSettings';
 import { SourceApp } from '../engagement/SourceApp';
+import { AgoraSuggestionStatus } from '../agora/agoraEnums';
 
 /**
  * Default statement settings used when creating new statements
@@ -70,6 +71,12 @@ export interface CreateStatementParams {
 	reasoning?: string;
 	/** Which app created this statement */
 	sourceApp?: SourceApp;
+	/** Agora: the classroom session this statement was written in */
+	agoraSessionId?: string;
+	/** Agora: pseudonym shown to classmates instead of the account name */
+	anonName?: string;
+	/** Agora: lifecycle of a `suggestion` statement */
+	suggestionStatus?: AgoraSuggestionStatus;
 }
 
 /**
@@ -153,6 +160,9 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 			...(params.sourceApp && { sourceApp: params.sourceApp }),
 			...(params.forceShow !== undefined && { forceShow: params.forceShow }),
 			...(params.creatorRole && { creatorRole: params.creatorRole }),
+			...(params.agoraSessionId && { agoraSessionId: params.agoraSessionId }),
+			...(params.anonName && { anonName: params.anonName }),
+			...(params.suggestionStatus && { suggestionStatus: params.suggestionStatus }),
 		};
 
 		// Validate against schema

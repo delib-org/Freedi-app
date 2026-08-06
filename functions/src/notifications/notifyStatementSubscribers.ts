@@ -18,6 +18,8 @@
  * INSTANT path (defaults: not muted, INSTANT, all channels on).
  */
 import {
+	APP_DEEP_LINKS,
+	buildDeepLink,
 	Collections,
 	NotificationChannel,
 	NotificationFrequency,
@@ -127,6 +129,13 @@ function resolveTargetPath(opts: NotifyOptions, statement: Statement): string {
 	if (opts.targetPath) return opts.targetPath;
 	const app = opts.sourceApp ?? statement.sourceApp ?? SourceApp.MAIN;
 	if (app === SourceApp.CHAT) return `/q/${statement.parentId}`;
+	// Agora statements only make sense inside their live session — the main-app
+	// statement route would show a classroom proposal with no game around it.
+	if (app === SourceApp.AGORA && statement.agoraSessionId) {
+		return buildDeepLink(SourceApp.AGORA, APP_DEEP_LINKS[SourceApp.AGORA].session, {
+			sessionId: statement.agoraSessionId,
+		});
+	}
 
 	return `/statement/${statement.parentId}?focusId=${statement.statementId}`;
 }

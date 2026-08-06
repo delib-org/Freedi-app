@@ -14,6 +14,7 @@ import {
 	AgoraStage,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
+	SourceApp,
 	AGORA_AI_REVIEW,
 	AGORA_SESSION,
 	createAgoraAiRaterUid,
@@ -127,6 +128,8 @@ export const agoraCreateSession = onCall(
 				topParentId: 'top',
 				creatorId: uid,
 				creator,
+				sourceApp: SourceApp.AGORA,
+				agoraSessionId: sessionId,
 			});
 			if (!rootStatement) {
 				throw new HttpsError('internal', 'Failed to build root statement');
@@ -139,6 +142,8 @@ export const agoraCreateSession = onCall(
 				topParentId: rootStatement.statementId,
 				creatorId: uid,
 				creator,
+				sourceApp: SourceApp.AGORA,
+				agoraSessionId: sessionId,
 			});
 			if (!challengeStatement) {
 				throw new HttpsError('internal', 'Failed to build challenge statement');
