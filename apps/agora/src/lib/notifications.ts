@@ -1,16 +1,11 @@
 import m from 'mithril';
 import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe } from './firebase';
-import {
-	AgoraMessageKind,
-	Collections,
-	NotificationTriggerType,
-	SourceApp,
-} from '@freedi/shared-types';
+import { Collections, NotificationTriggerType, SourceApp } from '@freedi/shared-types';
 import { AGORA_POINTS } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
 import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
-import { getDeliberationState } from './proposals';
+import { getDeliberationState, isSuggestionKind, isSystemKind } from './proposals';
 
 export interface AgoraToast {
 	notificationId: string;
@@ -168,10 +163,15 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
 		const ownerSide = mineIds.has(proposalId);
 		for (const message of messages) {
 			if (message.creatorId === userId) continue;
+			// The system's own lines are not somebody talking: an edit already
+			// has its own "the proposal you helped moved" toast, and an award
+			// arrives as a celebration. Toasting them here would double-announce
+			// both, in the vaguest possible words ("new message").
+			if (isSystemKind(message)) continue;
 			const inMyThread = (message.agoraThreadUserId ?? message.creatorId) === userId;
 			if (!ownerSide && !inMyThread) continue;
 			incoming.push(message.statementId);
-			if (ownerSide && message.agoraMessageKind !== AgoraMessageKind.chat) {
+			if (ownerSide && isSuggestionKind(message)) {
 				anySuggestionForMe = true;
 			}
 		}
@@ -194,8 +194,7 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
 		anySuggestionForMe &&
 		[...mineIds].some((proposalId) =>
 			(suggestions[proposalId] ?? []).some(
-				(message) =>
-					freshSet.has(message.statementId) && message.agoraMessageKind !== AgoraMessageKind.chat,
+				(message) => freshSet.has(message.statementId) && isSuggestionKind(message),
 			),
 		);
 

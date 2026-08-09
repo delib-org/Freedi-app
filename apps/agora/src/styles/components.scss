@@ -2012,6 +2012,89 @@
 		color: var(--text-muted);
 		text-align: center;
 	}
+}
+
+// --- What HAPPENED, as opposed to what someone said: the proposal changed,
+// or points landed. Centred, unattributed and quieter than any bubble, so
+// it never reads as a classmate speaking. ---
+.chat-system {
+	align-self: center;
+	max-width: 92%;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-md);
+	background: var(--bg-inset);
+	border: 1px dashed var(--border-subtle);
+	font-size: var(--font-size-sm);
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__icon {
+		flex: 0 0 auto;
+	}
+
+	&__text {
+		color: var(--text-secondary);
+		font-weight: 600;
+	}
+
+	&__time {
+		margin-inline-start: auto;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		font-variant-numeric: tabular-nums;
+	}
+
+	// The diff itself: read straight through, the marks doing the talking
+	&__diff {
+		color: var(--text-primary);
+		line-height: 1.6;
+		overflow-wrap: anywhere;
+	}
+
+	&__ins {
+		background: rgba(23, 128, 77, 0.16);
+		border-radius: 3px;
+		box-shadow: 0 0 0 1px rgba(23, 128, 77, 0.25);
+	}
+
+	&__del {
+		background: rgba(214, 69, 69, 0.12);
+		border-radius: 3px;
+		color: var(--text-muted);
+		text-decoration: line-through;
+	}
+
+	// Points are good news — the one system line allowed a little warmth
+	&--award {
+		flex-direction: row;
+		align-items: center;
+		gap: var(--space-xs);
+		border-style: solid;
+		border-color: rgba(255, 210, 63, 0.55);
+		background: rgba(255, 210, 63, 0.14);
+
+		.chat-system__text {
+			color: var(--text-primary);
+			font-weight: 700;
+		}
+	}
+
+	@media (prefers-contrast: more) {
+		&__ins {
+			box-shadow: 0 0 0 2px var(--success);
+		}
+
+		&__del {
+			box-shadow: 0 0 0 2px var(--danger);
+		}
+	}
 
 	&__composer {
 		display: flex;

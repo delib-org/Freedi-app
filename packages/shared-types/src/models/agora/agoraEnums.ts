@@ -81,6 +81,18 @@ export enum AgoraMessageKind {
 	suggestion = 'suggestion',
 	/** Plain conversation — no status, no points */
 	chat = 'chat',
+	/**
+	 * The author changed the proposal. Written server-side, carries the text
+	 * as it stood before (`agoraPreviousText`) so every conversation on the
+	 * proposal can show WHAT changed, not just that something did.
+	 */
+	edit = 'edit',
+	/**
+	 * Points landed for a helper (`agoraPointsAwarded`). Said in the very
+	 * conversation that earned them, so the reward is never something the
+	 * student has to go somewhere else to discover.
+	 */
+	award = 'award',
 }
 
 export enum AgoraSuggestionStatus {

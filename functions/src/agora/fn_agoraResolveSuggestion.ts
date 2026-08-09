@@ -69,6 +69,40 @@ async function readWeaveLedger(proposalId: string, suggesterId: string): Promise
 }
 
 /**
+ * Say the reward inside the conversation that earned it. The celebration
+ * pops once and is gone; a student who was on another screen used to have
+ * no way of learning what a thank-you was worth. This line stays in the
+ * thread, next to the idea it paid for.
+ */
+async function announceAward(
+	sessionId: string,
+	suggestion: { parentId?: string; creatorId?: string; agoraThreadUserId?: string },
+	points: number,
+	/** The author who resolved — the line is THEIR doing, so the helper reads it as incoming */
+	resolvedBy: string,
+): Promise<void> {
+	const messageId = getRandomUID();
+	await db
+		.collection(Collections.statements)
+		.doc(messageId)
+		.set({
+			statementId: messageId,
+			statement: '',
+			agoraPointsAwarded: points,
+			statementType: StatementType.suggestion,
+			agoraMessageKind: AgoraMessageKind.award,
+			// The helper's thread — the conversation whose work was paid
+			agoraThreadUserId: suggestion.agoraThreadUserId ?? suggestion.creatorId ?? '',
+			parentId: suggestion.parentId ?? '',
+			creatorId: resolvedBy,
+			agoraSessionId: sessionId,
+			consensus: 0,
+			createdAt: Date.now(),
+			lastUpdate: Date.now(),
+		});
+}
+
+/**
  * The proposal author accepts or thanks an improvement suggestion.
  * Server-side so the suggester's helping points can't be spoofed:
  * validates the caller authored the parent proposal, stamps the status,
@@ -110,6 +144,7 @@ export const agoraResolveSuggestion = onCall(
 				agoraSessionId?: string;
 				suggestionStatus?: string;
 				agoraMessageKind?: string;
+				agoraThreadUserId?: string;
 			};
 			if (suggestion.agoraSessionId !== sessionId) {
 				throw new HttpsError('failed-precondition', 'Suggestion is not part of this session');
@@ -235,6 +270,10 @@ export const agoraResolveSuggestion = onCall(
 						points.total = Math.max(0, points.total + pointsAwarded);
 						transaction.update(suggesterRef, { points, lastActive: Date.now() });
 					});
+				}
+
+				if (pointsAwarded > 0) {
+					await announceAward(sessionId, suggestion, pointsAwarded, uid);
 				}
 
 				const notificationId = getRandomUID();

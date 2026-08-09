@@ -81,6 +81,10 @@ export interface CreateStatementParams {
 	agoraMessageKind?: AgoraMessageKind;
 	/** Agora: the helper uid keying the proposal↔helper thread */
 	agoraThreadUserId?: string;
+	/** Agora: on an `edit` message, the proposal text before the change */
+	agoraPreviousText?: string;
+	/** Agora: on an `award` message, the points it paid */
+	agoraPointsAwarded?: number;
 }
 
 /**
@@ -169,6 +173,12 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 			...(params.suggestionStatus && { suggestionStatus: params.suggestionStatus }),
 			...(params.agoraMessageKind && { agoraMessageKind: params.agoraMessageKind }),
 			...(params.agoraThreadUserId && { agoraThreadUserId: params.agoraThreadUserId }),
+			...(params.agoraPreviousText !== undefined && {
+				agoraPreviousText: params.agoraPreviousText,
+			}),
+			...(params.agoraPointsAwarded !== undefined && {
+				agoraPointsAwarded: params.agoraPointsAwarded,
+			}),
 		};
 
 		// Validate against schema

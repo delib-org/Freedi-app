@@ -4,12 +4,14 @@ import {
 	AgoraProposal,
 	getThreadMessages,
 	isSuggestionKind,
+	isSystemKind,
 	openSuggestionsBy,
 	resolveSuggestion,
 	submitProposal,
 	submitThreadMessage,
 } from '../lib/proposals';
 import { celebrate } from '../lib/celebration';
+import { diffWords } from '../lib/textDiff';
 import { markThreadSeen } from '../lib/seenState';
 import {
 	AgoraMessageKind,
@@ -72,6 +74,22 @@ export interface ThreadEntryOptions {
 }
 
 /**
+ * What the indicator quotes. A system line has no words of its own — an
+ * edit's `statement` is the whole new proposal, which would read as if
+ * somebody had pasted it into the chat.
+ */
+function lastLine(message: AgoraProposal): string {
+	if (message.agoraMessageKind === AgoraMessageKind.award) {
+		return `🏅 +${message.agoraPointsAwarded ?? 0}`;
+	}
+	if (message.agoraMessageKind === AgoraMessageKind.edit) {
+		return `✏️ ${t('delib.edit_line')}`;
+	}
+
+	return message.statement;
+}
+
+/**
  * The one-line indicator that replaces the inline thread on a card: bubble,
  * last message, its time, unread count. Nothing else — the conversation
  * itself lives on its own page.
@@ -98,7 +116,7 @@ export function threadEntry(options: ThreadEntryOptions): m.Children {
 				m(
 					'span.chat-entry__last',
 					{ class: last ? undefined : 'chat-entry__last--empty' },
-					last ? last.statement : t('delib.chat_start'),
+					last ? lastLine(last) : t('delib.chat_start'),
 				),
 			]),
 			m('span.chat-entry__meta', [
@@ -264,6 +282,51 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		]);
 	}
 
+	/**
+	 * The system's own lines, centred and unattributed so they never read as
+	 * something a classmate said: what the author changed (Wikipedia-style,
+	 * old wording struck through beside the new), and what a thank-you paid.
+	 */
+	function systemLine(message: AgoraProposal): m.Children {
+		if (message.agoraMessageKind === AgoraMessageKind.award) {
+			const points = message.agoraPointsAwarded ?? 0;
+
+			return m('.chat-system.chat-system--award', { key: message.statementId }, [
+				m('span.chat-system__icon', { 'aria-hidden': 'true' }, '🏅'),
+				m('span.chat-system__text', t('delib.award_line', { n: points })),
+				m('span.chat-system__time', formatMessageTime(message.createdAt)),
+			]);
+		}
+
+		const previous = message.agoraPreviousText ?? '';
+		const parts = diffWords(previous, message.statement);
+
+		return m('.chat-system.chat-system--edit', { key: message.statementId }, [
+			m('.chat-system__head', [
+				m('span.chat-system__icon', { 'aria-hidden': 'true' }, '✏️'),
+				m('span.chat-system__text', t('delib.edit_line')),
+				m('span.chat-system__time', formatMessageTime(message.createdAt)),
+			]),
+			// One paragraph, read straight through: untouched words plain,
+			// what went in highlighted, what came out struck through
+			m(
+				'p.chat-system__diff',
+				parts.map((part, index) =>
+					part.op === 'same'
+						? part.text
+						: m(
+								`span.chat-system__${part.op === 'added' ? 'ins' : 'del'}`,
+								{
+									key: index,
+									'aria-label': t(part.op === 'added' ? 'delib.diff_added' : 'delib.diff_removed'),
+								},
+								part.text,
+							),
+				),
+			),
+		]);
+	}
+
 	/** The lifecycle chip a resolved improvement idea wears */
 	function statusChip(message: AgoraProposal): m.Children {
 		if (!isSuggestionKind(message)) return null;
@@ -349,6 +412,8 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 						messages.length === 0
 							? m('p.chat-page__empty', t('delib.chat_empty'))
 							: messages.map((message) => {
+									// What HAPPENED, as opposed to what someone said
+									if (isSystemKind(message)) return systemLine(message);
 									const mine = message.creatorId === userId;
 									const decidable =
 										role === 'owner' &&

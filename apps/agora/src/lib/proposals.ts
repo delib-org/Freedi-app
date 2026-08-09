@@ -53,6 +53,10 @@ export interface AgoraProposal {
 	agoraMessageKind?: AgoraMessageKind;
 	/** The helper uid keying the thread; absent on legacy docs — fall back to creatorId */
 	agoraThreadUserId?: string;
+	/** `edit` messages: the proposal text before the change, for the diff */
+	agoraPreviousText?: string;
+	/** `award` messages: what this moment paid the helper */
+	agoraPointsAwarded?: number;
 	consensus?: number;
 	evaluation?: { agreement?: number; agreementIndex?: number; numberOfEvaluators?: number };
 }
@@ -112,6 +116,10 @@ function toProposal(data: Record<string, unknown>): AgoraProposal {
 		agoraMessageKind: data.agoraMessageKind as AgoraMessageKind | undefined,
 		agoraThreadUserId:
 			typeof data.agoraThreadUserId === 'string' ? data.agoraThreadUserId : undefined,
+		agoraPreviousText:
+			typeof data.agoraPreviousText === 'string' ? data.agoraPreviousText : undefined,
+		agoraPointsAwarded:
+			typeof data.agoraPointsAwarded === 'number' ? data.agoraPointsAwarded : undefined,
 		consensus: typeof data.consensus === 'number' ? data.consensus : undefined,
 		evaluation: data.evaluation as AgoraProposal['evaluation'],
 	};
@@ -259,10 +267,35 @@ export function stopDeliberationListeners(): void {
 
 /**
  * Is this thread message an improvement suggestion (as opposed to plain
- * chat)? Absent kind = suggestion: every pre-thread doc was one.
+ * chat, or one of the system lines)? Absent kind = suggestion: every
+ * pre-thread doc was one.
+ *
+ * Stated as an allow-list on purpose. It used to read "not chat", which
+ * silently swept every kind added later — edit and award notices — into the
+ * improvement economy: they would have occupied open-idea slots and asked
+ * the author for a decision.
  */
 export function isSuggestionKind(message: AgoraProposal): boolean {
-	return message.agoraMessageKind !== AgoraMessageKind.chat;
+	return (
+		message.agoraMessageKind === undefined ||
+		message.agoraMessageKind === AgoraMessageKind.suggestion
+	);
+}
+
+/** A line the SYSTEM wrote — the proposal changed, or points landed */
+export function isSystemKind(message: AgoraProposal): boolean {
+	return (
+		message.agoraMessageKind === AgoraMessageKind.edit ||
+		message.agoraMessageKind === AgoraMessageKind.award
+	);
+}
+
+/**
+ * An edit notice belongs to EVERY conversation about the proposal, so it
+ * carries no thread uid. Everything else belongs to exactly one.
+ */
+function isProposalWideNotice(message: AgoraProposal): boolean {
+	return message.agoraMessageKind === AgoraMessageKind.edit;
 }
 
 /** The helper uid a thread message belongs to (legacy docs: the author) */
@@ -299,7 +332,7 @@ export function getHelpedProposals(userId: string): HelpedProposal[] {
  */
 export function getThreadMessages(proposalId: string, helperUid: string): AgoraProposal[] {
 	return (state.suggestions[proposalId] ?? []).filter(
-		(message) => threadUserIdOf(message) === helperUid,
+		(message) => isProposalWideNotice(message) || threadUserIdOf(message) === helperUid,
 	);
 }
 
@@ -307,6 +340,9 @@ export function getThreadMessages(proposalId: string, helperUid: string): AgoraP
 export function getOwnerThreads(proposalId: string): Map<string, AgoraProposal[]> {
 	const threads = new Map<string, AgoraProposal[]>();
 	for (const message of state.suggestions[proposalId] ?? []) {
+		// An edit notice has no owner — counting it would conjure a phantom
+		// conversation with whoever wrote the proposal
+		if (isProposalWideNotice(message)) continue;
 		const helperUid = threadUserIdOf(message);
 		const list = threads.get(helperUid);
 		if (list) {

@@ -357,6 +357,8 @@ export const StatementSchema = object({
 	agoraMessageKind: optional(enum_(AgoraMessageKind)),
 	agoraThreadUserId: optional(string()), // the HELPER uid keying the thread (owner replies carry the helper's uid)
 	statusChangedAt: optional(number()), // when suggestionStatus last changed (resolution bumps lastUpdate, so it can't time this)
+	agoraPreviousText: optional(string()), // `edit` messages: the proposal text before the change, for the diff
+	agoraPointsAwarded: optional(number()), // `award` messages: what this moment paid the helper
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

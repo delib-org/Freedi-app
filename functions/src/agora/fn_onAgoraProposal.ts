@@ -2,6 +2,7 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { db } from '../db';
 import {
 	Collections,
+	AgoraMessageKind,
 	AgoraParticipant,
 	AGORA_POINTS,
 	NotificationTriggerType,
@@ -19,6 +20,52 @@ interface ProposalDoc {
 	statementType?: string;
 	creatorId?: string;
 	agoraSessionId?: string;
+	anonName?: string;
+	parentId?: string;
+	topParentId?: string;
+	parents?: string[];
+	creator?: unknown;
+}
+
+/**
+ * Announce a real text change inside every conversation about the proposal.
+ * Wikipedia's habit: a page that changed says what changed, in place, so a
+ * helper never has to remember the old wording to see whether their idea
+ * landed. The previous text rides along and the client renders the diff.
+ *
+ * Server-side because only the trigger holds both versions — and because a
+ * client-written record of "what the text used to say" would be a record
+ * anyone could write.
+ */
+async function announceEdit(
+	sessionId: string,
+	proposalId: string,
+	proposal: ProposalDoc,
+	previousText: string,
+): Promise<void> {
+	const messageId = getRandomUID();
+	await db
+		.collection(Collections.statements)
+		.doc(messageId)
+		.set({
+			statementId: messageId,
+			statement: proposal.statement ?? '',
+			agoraPreviousText: previousText,
+			statementType: StatementType.suggestion,
+			agoraMessageKind: AgoraMessageKind.edit,
+			// Deliberately NO agoraThreadUserId: an edit belongs to every
+			// conversation on this proposal, not to one helper's thread
+			parentId: proposalId,
+			topParentId: proposal.topParentId ?? '',
+			parents: proposal.parents ?? [],
+			creatorId: proposal.creatorId ?? '',
+			creator: proposal.creator ?? null,
+			anonName: proposal.anonName ?? '',
+			agoraSessionId: sessionId,
+			consensus: 0,
+			createdAt: Date.now(),
+			lastUpdate: Date.now(),
+		});
 }
 
 /**
@@ -128,6 +175,7 @@ export const onAgoraProposalWritten = onDocumentWritten(
 			// A real text change — not a status bump or an evaluation rollup
 			if (before && after && before.statement !== after.statement) {
 				await stampEditBaseline(statementId);
+				await announceEdit(sessionId, statementId, after, before.statement ?? '');
 			}
 		} catch (error) {
 			logError(error, {
