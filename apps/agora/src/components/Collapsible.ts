@@ -13,12 +13,40 @@ function reducedMotion(): boolean {
 }
 
 /**
+ * Is this fold (if there is one) mid-motion right now? Strictly `running` —
+ * a finished animation lingers on the element, and treating that as "in
+ * motion" would silence every later fold inside an already-open section.
+ */
+function isFolding(panel: Element | null | undefined): boolean {
+	return (
+		panel !== null &&
+		panel !== undefined &&
+		panel.getAnimations().some((animation) => animation.playState === 'running')
+	);
+}
+
+/**
  * Unfold or fold a panel by animating its own height. The panel is measured
  * live (scrollHeight on the way in, offsetHeight on the way out) so nothing
  * has to declare a height up front — a thread grows with every message.
  */
 function slide(panel: HTMLElement, opening: boolean): Animation | null {
 	if (reducedMotion() || typeof panel.animate !== 'function') return null;
+	// One fold at a time on any path down the tree. A section that unfolds
+	// with an already-open conversation inside it used to play BOTH folds —
+	// the section grew, and then its content grew again inside it, which
+	// reads as the accordion opening twice. The outermost fold wins: it
+	// carries everything under it, so the nested ones stand down.
+	//
+	// Both directions of the race are covered — Mithril fires a child's
+	// oncreate before its parent's, so the parent cancels what the child
+	// already started (before measuring, or it would measure a panel
+	// collapsed to nothing), and a child created under a fold already in
+	// motion sees it above and skips.
+	for (const nested of panel.querySelectorAll<HTMLElement>('.collapsible')) {
+		for (const running of nested.getAnimations()) running.cancel();
+	}
+	if (isFolding(panel.parentElement?.closest('.collapsible'))) return null;
 
 	const shut: Keyframe = { height: '0px', opacity: 0 };
 	const grown: Keyframe = {
