@@ -306,7 +306,9 @@ await s2.locator('.chat-page .thread__msg--peer', { hasText: 'מי אוכף' }).
 console.log('   ✓ B reads the owner reply inside the conversation');
 await shot(s2, '07-B-chat-page');
 
-// B replies back — their idea is still open, so the box is plain chat
+// B writes back. Their first idea was ANSWERED (thanked) in phase 3, so the
+// box offers the next idea rather than plain chat — that is the one-open-idea
+// rule doing its job, and A's notebook should say an idea is waiting.
 await s2.locator('.chat-page__input').fill('האספה תמנה ועדה מפקחת, נוסיף את זה.');
 await s2.locator('.chat-page__send').click();
 await s2.waitForTimeout(800);
@@ -315,34 +317,57 @@ await s2.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await s2.waitForTimeout(600);
 eq('unread chip cleared by reading', await s2.locator('.stall__chip--unread').count(), 0);
 
-// A's dock badge counts the unread chat reply
+// A's dock counts what is waiting and says what KIND it is — an idea
+// outranks a message in the one line the collapsed bar gets
 const dockBadge = s1.locator('.proposal-dock__badge');
 await dockBadge.waitFor({ timeout: 15000 });
-eq('A dock badge shows the unread reply', (await dockBadge.textContent()).trim(), '1');
+eq('A dock badge shows what is waiting', (await dockBadge.textContent()).trim(), '1');
 const dockSub = (await s1.locator('.proposal-dock__sub').textContent()).trim();
 console.log('   ✓ A DOCK SUB:', dockSub);
-if (!dockSub.includes('הודעה')) fail(`dock sub does not announce the message: ${dockSub}`);
+if (!dockSub.includes('שיפור') && !dockSub.includes('הודעה')) {
+	fail(`dock sub announces neither an idea nor a message: ${dockSub}`);
+}
 await shot(s1, '08-A-dock-unread');
-// ...and reading it inside the conversation clears the badge
+// A reads it inside the conversation...
 await openDock(s1);
 await openInbox(s1);
 await s1.locator('.proposal-dock--open .chat-entry').first().click();
 await s1.locator('.chat-page .thread__msg--peer', { hasText: 'ועדה מפקחת' }).waitFor({ timeout: 10000 });
-await s1.waitForTimeout(600);
+await s1.waitForTimeout(800);
+// Back out to where the notebook exists at all — the conversation is a
+// sub-page, so the dock is not on screen while you are standing in it
+await s1.locator('.chat-page__back').click();
+await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
+await closeDock(s1);
+// The badge does NOT clear, because the notebook counts WORK, not unread
+// lines: an open idea keeps asking until it is answered, and reading a
+// request is not answering it.
+eq(
+	'an unanswered idea keeps the badge lit after reading',
+	(await s1.locator('.proposal-dock__badge').textContent()).trim(),
+	'1',
+);
+// Answering it is what clears the notebook
+await openInbox(s1);
+await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.waitForSelector('.chat-page', { timeout: 10000 });
+await s1.getByRole('button', { name: /^לא תודה$/ }).click();
+await s1.locator('.thread__msg .helped__chip--declined').waitFor({ timeout: 10000 });
 await s1.locator('.chat-page__back').click();
 await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await closeDock(s1);
 await s1
 	.locator('.proposal-dock__badge')
-	.waitFor({ state: 'detached', timeout: 5000 })
-	.catch(() => fail('A dock badge did not clear after reading the thread'));
-console.log('   ✓ A badge cleared after reading');
+	.waitFor({ state: 'detached', timeout: 8000 })
+	.catch(() => fail('A dock badge did not clear after the idea was answered'));
+console.log('   ✓ A badge cleared once the idea was answered');
 
 console.log(
 	'\n✅ CHANGE-AWARENESS VERIFIED\n' +
 		'   · NEW chip on unseen proposals; engagement clears it; survives reload (Firestore seen-state)\n' +
 		'   · owner edit → EDITED chip + re-rate invitation; re-rate clears; survives reload\n' +
 		'   · thanked idea + a real edit → personal IMPROVED-WITH-YOUR-IDEA chip\n' +
-		'   · owner chat reply → toast + unread chip + dock badge; reading clears everywhere',
+		'   · owner chat reply → toast + unread chip; reading clears it\n' +
+		'   · the notebook badge counts WORK: reading an idea does not clear it, answering does',
 );
 await browser.close();
