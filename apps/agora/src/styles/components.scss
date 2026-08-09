@@ -1404,13 +1404,13 @@
 // proposal text itself acting as the handle. One screen answers "who can I
 // help?" and "what did they write?" at once — the old one-poster carousel
 // made that a sequence of taps, and stacked four instruction lines on top. ---
-.help-stall-list {
+.stall-list {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-sm);
 }
 
-.help-stall {
+.stall {
 	background: var(--parchment);
 	border: 1px solid rgba(169, 126, 82, 0.4);
 	// The peer border, quoted from the poster it replaces: "this is theirs"
@@ -1418,7 +1418,12 @@
 	border-block-start: 4px solid var(--peer);
 	border-radius: var(--radius-md);
 	overflow: hidden;
-	transition: box-shadow var(--motion-fast) ease;
+	// transform is the FLIP move: out on the square the list re-sorts itself
+	// as classmates improve their proposals, and a row that teleports makes
+	// the reader lose their place. The JS hands the transition back here.
+	transition:
+		box-shadow var(--motion-fast) ease,
+		transform var(--motion-base) var(--ease-camera);
 
 	&--open {
 		box-shadow: var(--shadow-card);
@@ -1492,6 +1497,13 @@
 			font-weight: 700;
 		}
 
+		// The face I already gave this one — my own answer, read back to me
+		&--rated {
+			background: rgba(43, 111, 214, 0.12);
+			color: var(--mine-glow);
+			font-weight: 700;
+		}
+
 		// The one chip that asks for something back
 		&--improved {
 			background: rgba(255, 210, 63, 0.35);
@@ -1550,6 +1562,19 @@
 		box-shadow: none;
 		padding: 0;
 	}
+}
+
+// --- How far along this lap's ratings are, as a counter rather than a
+// sentence: the place banner right above already says what the square is for.
+.rate-progress {
+	align-self: center;
+	padding: 2px var(--space-sm);
+	border-radius: var(--radius-full);
+	background: var(--bg-inset);
+	color: var(--text-secondary);
+	font-size: var(--font-size-sm);
+	font-weight: 700;
+	text-align: center;
 }
 
 // --- One received improvement: the idea, then a single footer line

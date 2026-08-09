@@ -244,9 +244,12 @@ for (const [page, label, option] of [
 	[s2, 'S2', '.rate-scale__option--against'],
 ]) {
 	await clearCelebration(page);
-	await page.waitForSelector('.rate-scale', { timeout: 15000 });
-	await page.locator(option).click();
-	// The acknowledgment beat: the press is SEEN (ring + ✓) before the swap
+	// The square is a folded row of the whole class now: open a stall, then weigh it
+	await page.waitForSelector('.stall__head', { timeout: 15000 });
+	await page.locator('.stall:not(.stall--open) .stall__head').first().click();
+	await page.waitForSelector('.stall--open .rate-scale', { timeout: 10000 });
+	await page.locator(`.stall--open ${option}`).click();
+	// The acknowledgment beat: the press is SEEN (ring + ✓) before the fold
 	await page.locator('.rate-scale__option--selected .rate-scale__check').waitFor({ timeout: 5000 });
 	console.log(`${label} rated the other's proposal (ack beat shown)`);
 }
@@ -268,11 +271,11 @@ for (const page of [s1, s2]) {
 const suggest = async (page, label, text) => {
 	await clearCelebration(page);
 	// The classmates' stalls are a folded row now: open one, then write in it
-	await page.waitForSelector('.help-stall__head', { timeout: 15000 });
-	await page.locator('.help-stall:not(.help-stall--open) .help-stall__head').first().click();
-	await page.waitForSelector('.help-stall--open .help-stall__input', { timeout: 10000 });
-	await page.locator('.help-stall--open .help-stall__input').fill(text);
-	await page.locator('.help-stall--open button.btn--primary', { hasText: /שליחת/i }).click();
+	await page.waitForSelector('.stall__head', { timeout: 15000 });
+	await page.locator('.stall:not(.stall--open) .stall__head').first().click();
+	await page.waitForSelector('.stall--open .stall__input', { timeout: 10000 });
+	await page.locator('.stall--open .stall__input').fill(text);
+	await page.locator('.stall--open button.btn--primary', { hasText: /שליחת/i }).click();
 	await page.waitForTimeout(800);
 	console.log(`${label} sent a suggestion`);
 };

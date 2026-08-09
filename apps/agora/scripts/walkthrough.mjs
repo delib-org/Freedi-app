@@ -176,16 +176,20 @@ await s1.locator('.needs-peek__toggle').click();
 await propose(s1, 'S1', 'נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, וזכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן.');
 await propose(s2, 'S2', 'נקים אספה לאומית שבה לעם רוב קולות, נבטל את הפטור ממס של האצולה, אך נבטיח לאצילים שמירה על ביטחונם האישי ורכושם הבסיסי.');
 
-// Both auto-advanced to step "rate" — five-level scale, cross-camp ratings
-await s1.waitForSelector('.rate-scale', { timeout: 15000 });
-const scaleCount = await s1.locator('.rate-scale__option').count();
-if (scaleCount !== 5) throw new Error(`Expected 5 rating levels, got ${scaleCount}`);
+// Both auto-advanced to step "rate": the whole square as a folded row,
+// freshest proposal on top. Open a stall to weigh it.
+const weigh = async (page, label, option) => {
+	await page.waitForSelector('.stall__head', { timeout: 15000 });
+	await page.locator('.stall:not(.stall--open) .stall__head').first().click();
+	await page.waitForSelector('.stall--open .rate-scale', { timeout: 10000 });
+	const scaleCount = await page.locator('.stall--open .rate-scale__option').count();
+	if (scaleCount !== 5) throw new Error(`Expected 5 rating levels, got ${scaleCount}`);
+	await page.locator(`.stall--open ${option}`).click();
+	console.log(`${label} rated: ${option}`);
+};
 await shot(s1, '06-rate-step');
-await s1.locator('.rate-scale__option--strong-for').click(); // +1
-console.log('S1 rated: very much for (+1)');
-await s2.waitForSelector('.rate-scale', { timeout: 15000 });
-await s2.locator('.rate-scale__option--for').click(); // +0.5 — fractional value through the pipeline
-console.log('S2 rated: for (+0.5)');
+await weigh(s1, 'S1', '.rate-scale__option--strong-for'); // +1
+await weigh(s2, 'S2', '.rate-scale__option--for'); // +0.5 — fractional through the pipeline
 
 // Candidates exhausted → continue to helping
 for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
@@ -197,13 +201,13 @@ for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
 // open a classmate's stall and write in it. Sending no longer ends the lap:
 // the row stays, so several classmates can be helped in one visit.
 const suggest = async (page, label, text) => {
-	await page.waitForSelector('.help-stall__head', { timeout: 15000 });
-	console.log(`${label} STALLS:`, await page.locator('.help-stall').count());
-	await page.locator('.help-stall:not(.help-stall--open) .help-stall__head').first().click();
-	await page.waitForSelector('.help-stall--open .help-stall__input', { timeout: 10000 });
-	await page.locator('.help-stall--open .help-stall__input').fill(text);
+	await page.waitForSelector('.stall__head', { timeout: 15000 });
+	console.log(`${label} STALLS:`, await page.locator('.stall').count());
+	await page.locator('.stall:not(.stall--open) .stall__head').first().click();
+	await page.waitForSelector('.stall--open .stall__input', { timeout: 10000 });
+	await page.locator('.stall--open .stall__input').fill(text);
 	// .btn--primary only: the loose regex also matches the Hebrew tab label
-	await page.locator('.help-stall--open button.btn--primary', { hasText: /Send|שליחת/i }).click();
+	await page.locator('.stall--open button.btn--primary', { hasText: /Send|שליחת/i }).click();
 	await page.waitForTimeout(800);
 	console.log(`${label} sent suggestion`);
 };

@@ -287,12 +287,6 @@ function placeBanner(kind: 'mine' | 'rate' | 'help'): m.Children {
 	]);
 }
 
-function totalRaters(score: AgoraProposalScore | undefined): number {
-	if (!score) return 0;
-
-	return score.perCamp.left.n + score.perCamp.right.n + score.perCamp.center.n;
-}
-
 /** The five-level rating scale, MC-style, ordered strongest-against → strongest-for */
 const RATE_OPTIONS: ReadonlyArray<{
 	value: AgoraRating;
@@ -355,11 +349,10 @@ export function Deliberation(
 	let stallOrder: string[] = [];
 	let stallOrderRound = 0;
 	/**
-	 * The just-pressed rating in the square, held for one acknowledgment
-	 * beat (ring + ✓ + receding siblings) before the next proposal swaps
-	 * in — the instant swap read as "nothing happened" when pressed.
+	 * The press has to be seen before the square moves on: the stall holds
+	 * its ring + ✓ for one beat, THEN folds. An instant fold read as
+	 * "nothing happened" when pressed.
 	 */
-	let justRated: { statementId: string; value: AgoraRating } | null = null;
 	let rateAckTimer = 0;
 	/**
 	 * The always-editable box in the workshop + the proposal text it was
@@ -661,6 +654,12 @@ export function Deliberation(
 			// Walking into a new place folds the notebook: the room you just
 			// arrived in is what you came to look at
 			closeDock();
+			// ...and folds whatever stall was left open in the room behind me,
+			// so the next room's list opens the same way every time. The
+			// square's pending fold beat has to be called off with it, or it
+			// lands a second later and shuts a stall I just opened HERE.
+			openStallId = '';
+			window.clearTimeout(rateAckTimer);
 		}
 		cycle = { ...cycle, ...patch };
 		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
@@ -1607,8 +1606,16 @@ export function Deliberation(
 		}, 2600);
 	}
 
-	/** Compact five-level scale for CHANGING my vote — never touches cycle state */
-	function reRateScale(live: AgoraSession, proposal: AgoraProposal): m.Children {
+	/**
+	 * The compact five-level scale. `onFirstVote` fires only when this is the
+	 * first time I weigh THIS proposal — out on the square that is what counts
+	 * toward the lap; everywhere else the scale stays free of cycle state.
+	 */
+	function reRateScale(
+		live: AgoraSession,
+		proposal: AgoraProposal,
+		opts?: { onFirstVote?: () => void },
+	): m.Children {
 		const current = getDeliberationState().myRatings[proposal.statementId]?.value;
 
 		// Join-app selection grammar: once a vote exists the group knows it
@@ -1630,8 +1637,10 @@ export function Deliberation(
 						role: 'radio',
 						'aria-checked': String(active),
 						onclick: () => {
+							const first = getDeliberationState().myRatings[proposal.statementId] === undefined;
 							void rateProposal(live, proposal.statementId, option.value);
 							ackReRate(proposal.statementId);
+							if (first) opts?.onFirstVote?.();
 						},
 					},
 					[
@@ -1823,120 +1832,218 @@ export function Deliberation(
 			.filter((proposal): proposal is AgoraProposal => proposal !== undefined);
 	}
 
+	/** proposalId → where its row last sat in the list, for the FLIP move */
+	const rowOffsets = new Map<string, number>();
+
+	function rememberRow(dom: HTMLElement, id: string): void {
+		rowOffsets.set(id, dom.offsetTop);
+	}
+
 	/**
-	 * One stall. Folded, the classmate's proposal IS the handle — no chip, no
-	 * label, no title competing with it. Unfolded, it is either the box for my
-	 * idea or, if I already left one, the whole collaboration loop.
+	 * The square re-sorts itself as classmates improve their proposals, so a
+	 * row can change place under a reading finger. FLIP: put it back where the
+	 * eye left it, then let it slide to its new home — the movement is the
+	 * message ("this one just changed"), and a row that teleports instead just
+	 * makes the reader lose their place.
+	 *
+	 * offsetTop, not getBoundingClientRect: scrolling must not read as motion.
 	 */
-	function stallRow(
+	function flipRow(dom: HTMLElement, id: string): void {
+		const now = dom.offsetTop;
+		const before = rowOffsets.get(id);
+		rowOffsets.set(id, now);
+		if (before === undefined || reducedMotion) return;
+		const delta = before - now;
+		if (Math.abs(delta) < 2) return;
+		// Frame 1: no transition, sitting at the old place
+		dom.style.transition = 'none';
+		dom.style.transform = `translateY(${delta}px)`;
+		requestAnimationFrame(() => {
+			// Frame 2: hand the transition back to the stylesheet and let go
+			dom.style.transition = '';
+			dom.style.transform = '';
+		});
+	}
+
+	/**
+	 * One stall — the row both rooms of the square are built from. Folded, the
+	 * classmate's proposal IS the handle: no chip, no label, no title competing
+	 * with it. What unfolds is the room's own business — a rating scale out on
+	 * the square, an improvement box at someone's stand.
+	 */
+	function stallRow(opts: {
+		proposal: AgoraProposal;
+		open: boolean;
+		onToggle: () => void;
+		chip?: m.Children;
+		body: m.Children;
+		/** Live-sorted lists slide a row to its new place instead of teleporting */
+		flip?: boolean;
+	}): m.Children {
+		const { proposal, open } = opts;
+		const number = proposalNumber(proposal);
+
+		return m(
+			'.stall',
+			{
+				key: proposal.statementId,
+				class: open ? 'stall--open' : undefined,
+				oncreate: opts.flip
+					? (vnode: m.VnodeDOM) => rememberRow(vnode.dom as HTMLElement, proposal.statementId)
+					: undefined,
+				onupdate: opts.flip
+					? (vnode: m.VnodeDOM) => flipRow(vnode.dom as HTMLElement, proposal.statementId)
+					: undefined,
+			},
+			[
+				m('button.stall__head', { 'aria-expanded': String(open), onclick: opts.onToggle }, [
+					m(
+						'span.stall__num',
+						{ 'aria-label': t('delib.proposal_number', { n: number }) },
+						String(number),
+					),
+					m('span.stall__preview', proposal.statement),
+					opts.chip,
+					m('span.stall__chevron', {
+						class: open ? 'stall__chevron--open' : undefined,
+						'aria-hidden': 'true',
+					}),
+				]),
+				open ? m('.stall__body', [m('p.stall__text', proposal.statement), opts.body]) : null,
+			],
+		);
+	}
+
+	/**
+	 * The square, live-ordered: the proposal whose text changed most recently
+	 * sits at the top, so a classmate who just improved theirs gets read again.
+	 *
+	 * The author's real edit time comes from the score doc — the statement's
+	 * own lastUpdate is bumped by the evaluation pipeline's aggregate writes,
+	 * so ordering on it would reshuffle the whole square every time anybody
+	 * anywhere pressed a rating.
+	 */
+	function squareOrder(
+		proposals: readonly AgoraProposal[],
+		scores: Readonly<Record<string, AgoraProposalScore>>,
+	): AgoraProposal[] {
+		const editedAt = (proposal: AgoraProposal): number =>
+			scores[proposal.statementId]?.lastEditAt ?? proposal.lastUpdate;
+
+		return proposals
+			.filter((proposal) => proposal.creatorId !== userId)
+			.slice()
+			.sort(
+				(a, b) =>
+					editedAt(b) - editedAt(a) || studentOrder(a.statementId) - studentOrder(b.statementId),
+			);
+	}
+
+	/** What a stall holds out on the square: the five-level scale, mine to change */
+	function rateStallBody(live: AgoraSession, proposal: AgoraProposal): m.Children {
+		return reRateScale(live, proposal, {
+			// Only a FIRST vote moves the lap along; changing my mind about a
+			// proposal I already weighed is free, and must not buy a lap step
+			onFirstVote: () => {
+				setCycle({ rated: cycle.rated + 1 });
+				window.clearTimeout(rateAckTimer);
+				// Hold the press on screen (ring + ✓ + receding siblings), THEN
+				// fold the stall — an instant fold read as "nothing happened"
+				rateAckTimer = window.setTimeout(() => {
+					openStallId = '';
+					m.redraw();
+				}, RATE_ACK_MS);
+			},
+		});
+	}
+
+	/** The chip a square stall wears: the face I already gave it */
+	function rateStallChip(proposal: AgoraProposal): m.Children {
+		const mine = getDeliberationState().myRatings[proposal.statementId];
+		if (mine === undefined) return null;
+		const option = RATE_OPTIONS.find((entry) => entry.value === mine.value);
+		if (!option) return null;
+
+		return m(
+			'span.stall__chip.stall__chip--rated',
+			{ 'aria-label': t(option.labelKey) },
+			`${option.emoji} ✓`,
+		);
+	}
+
+	/** What a stall holds when I came to HELP: my idea, or the loop I started */
+	function helpStallBody(
 		live: AgoraSession,
 		proposal: AgoraProposal,
 		helped: HelpedProposal | undefined,
 	): m.Children {
-		const open = openStallId === proposal.statementId;
 		const draft = helpDrafts[proposal.statementId] ?? '';
+
+		return helped
+			? // Keyed child (helpedItem) in its own container: Mithril
+				// refuses keyed and unkeyed siblings in one list
+				m('.stall__helped', [helpedItem(live, helped, { bare: true })])
+			: m('.stall__compose', [
+					m('textarea.text-input.stall__input', {
+						value: draft,
+						rows: 3,
+						placeholder: t('delib.help_placeholder'),
+						oninput: (event: InputEvent) => {
+							helpDrafts[proposal.statementId] = (event.target as HTMLTextAreaElement).value;
+						},
+					}),
+					m(
+						'button.btn.btn--primary.btn--full',
+						{
+							disabled: sentAckId !== '' || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+							onclick: () => {
+								if (sentAckId !== '') return;
+								const text = draft.trim();
+								helpDrafts[proposal.statementId] = '';
+								helpedThisLap.add(proposal.statementId);
+								void submitSuggestion(
+									live,
+									proposal,
+									initialVnode.attrs.myParticipant.anonName,
+									text,
+								);
+								// The beat: the stall folds with a "sent" mark on it,
+								// and the row stays — helping one classmate is not a
+								// reason to be thrown out of the market
+								sentAckId = proposal.statementId;
+								openStallId = '';
+								window.clearTimeout(sentAckTimer);
+								sentAckTimer = window.setTimeout(() => {
+									sentAckId = '';
+									m.redraw();
+								}, SENT_ACK_MS);
+							},
+						},
+						t('delib.send_suggestion'),
+					),
+					// Only once they've started writing: on an empty box the
+					// placeholder is already saying it
+					draft.length > 0 && draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH
+						? m('p.action-hint', t('delib.suggest_hint'))
+						: null,
+				]);
+	}
+
+	/** The chip a help stall wears: sent just now, improved since, or visited */
+	function helpStallChip(proposal: AgoraProposal, helped: HelpedProposal | undefined): m.Children {
 		const justSent = sentAckId === proposal.statementId;
-		const number = proposalNumber(proposal);
-		const chip = justSent
-			? m(
-					'span.help-stall__chip.help-stall__chip--sent',
-					{ role: 'status' },
-					`✓ ${t('delib.sent_ack')}`,
-				)
+
+		return justSent
+			? m('span.stall__chip.stall__chip--sent', { role: 'status' }, `✓ ${t('delib.sent_ack')}`)
 			: helped && helpedImprovedSince(helped)
 				? m(
-						'span.help-stall__chip.help-stall__chip--improved',
+						'span.stall__chip.stall__chip--improved',
 						{ 'aria-label': t('delib.helped_improved_marker') },
 						`✨ ${t('delib.improved_chip')}`,
 					)
 				: helped
-					? m('span.help-stall__chip', `🤝 ${t('delib.helped_chip')}`)
+					? m('span.stall__chip', `🤝 ${t('delib.helped_chip')}`)
 					: null;
-
-		return m(
-			'.help-stall',
-			{ key: proposal.statementId, class: open ? 'help-stall--open' : undefined },
-			[
-				m(
-					'button.help-stall__head',
-					{
-						'aria-expanded': String(open),
-						onclick: () => {
-							openStallId = open ? '' : proposal.statementId;
-						},
-					},
-					[
-						m(
-							'span.help-stall__num',
-							{ 'aria-label': t('delib.proposal_number', { n: number }) },
-							String(number),
-						),
-						m('span.help-stall__preview', proposal.statement),
-						chip,
-						m('span.help-stall__chevron', {
-							class: open ? 'help-stall__chevron--open' : undefined,
-							'aria-hidden': 'true',
-						}),
-					],
-				),
-				open
-					? m('.help-stall__body', [
-							m('p.help-stall__text', proposal.statement),
-							helped
-								? // Keyed child (helpedItem) in its own container: Mithril
-									// refuses keyed and unkeyed siblings in one list
-									m('.help-stall__helped', [helpedItem(live, helped, { bare: true })])
-								: m('.help-stall__compose', [
-										m('textarea.text-input.help-stall__input', {
-											value: draft,
-											rows: 3,
-											placeholder: t('delib.help_placeholder'),
-											oninput: (event: InputEvent) => {
-												helpDrafts[proposal.statementId] = (
-													event.target as HTMLTextAreaElement
-												).value;
-											},
-										}),
-										m(
-											'button.btn.btn--primary.btn--full',
-											{
-												disabled:
-													sentAckId !== '' || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-												onclick: () => {
-													if (sentAckId !== '') return;
-													const text = draft.trim();
-													helpDrafts[proposal.statementId] = '';
-													helpedThisLap.add(proposal.statementId);
-													void submitSuggestion(
-														live,
-														proposal,
-														initialVnode.attrs.myParticipant.anonName,
-														text,
-													);
-													// The beat: the stall folds with a "sent" mark on it,
-													// and the row stays — helping one classmate is not a
-													// reason to be thrown out of the market
-													sentAckId = proposal.statementId;
-													openStallId = '';
-													window.clearTimeout(sentAckTimer);
-													sentAckTimer = window.setTimeout(() => {
-														sentAckId = '';
-														m.redraw();
-													}, SENT_ACK_MS);
-												},
-											},
-											t('delib.send_suggestion'),
-										),
-										// Only once they've started writing: on an empty box the
-										// placeholder is already saying it
-										draft.length > 0 && draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH
-											? m('p.action-hint', t('delib.suggest_hint'))
-											: null,
-									]),
-						])
-					: null,
-			],
-		);
 	}
 
 	/** "Proposals I helped" — hidden until I've actually helped something */
@@ -2217,106 +2324,72 @@ export function Deliberation(
 
 			// ---------- STEP: RATE OTHERS (peer mode — silver accent) ----------
 			if (cycle.step === 'rate') {
-				// Fair attention: least-rated proposals first; deterministic
-				// per-student tiebreak fans classmates out over different lanterns
-				const candidates = proposals
-					.filter(
-						(proposal) =>
-							proposal.creatorId !== userId && myRatings[proposal.statementId] === undefined,
-					)
-					.sort(
-						(a, b) =>
-							totalRaters(scores[a.statementId]) - totalRaters(scores[b.statementId]) ||
-							studentOrder(a.statementId) - studentOrder(b.statementId),
-					);
-				// During the acknowledgment beat the just-rated proposal stays
-				// pinned on screen — the snapshot already dropped it from
-				// candidates, and an instant swap would eat the feedback
-				const pinned = justRated;
-				const current = pinned
-					? proposals.find((proposal) => proposal.statementId === pinned.statementId)
-					: candidates[0];
+				// The whole square at once, freshest first. One proposal at a time
+				// behind a "next" beat hid the class from the class: you could see
+				// only what you had been handed, never what anyone else wrote.
+				const square = squareOrder(proposals, scores);
 				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
+				const allWeighed =
+					square.length > 0 &&
+					square.every((proposal) => myRatings[proposal.statementId] !== undefined);
+				// The lap asks for a few ratings first — but a student who has
+				// already weighed every proposal there is must never be stuck
+				const canMoveOn = quotaDone || allWeighed;
+				const onward = m(
+					'button.btn.btn--primary.btn--full',
+					{
+						onclick: () => {
+							setCycle({ step: 'help' });
+						},
+					},
+					t('delib.to_helping'),
+				);
 
 				return m(`.shell.shell--delib.shell--mode-peer.shell--place-square${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
 						placeBanner('rate'),
-						m(
-							'p.home-explanation',
-							`${t('delib.rate_hint')} (${Math.min(cycle.rated + 1, AGORA_CYCLE.RATINGS_PER_ROUND)}/${AGORA_CYCLE.RATINGS_PER_ROUND})`,
-						),
-						m(NeedsPeek, { topic }),
-						current && !quotaDone
-							? m('.card.stack.delib__rate-card', [
-									// Whose proposal am I rating? A classmate's — say so
-									m('.owner-row', [
-										m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
-										m(
-											'span.owner-row__number',
-											t('delib.proposal_number', { n: proposalNumber(current) }),
-										),
-									]),
-									m('p.scene__text', current.statement),
+						square.length > 0
+							? [
+									// The goal as a counter rather than a sentence — the
+									// banner above already said what this place is for
 									m(
-										'.rate-scale',
+										'p.rate-progress',
 										{
-											class: pinned ? 'rate-scale--has-selection' : undefined,
-											role: 'radiogroup',
+											'aria-label': t('delib.rate_progress', {
+												n: cycle.rated,
+												total: AGORA_CYCLE.RATINGS_PER_ROUND,
+											}),
 										},
-										RATE_OPTIONS.map((option) => {
-											const active = pinned?.value === option.value;
-
-											return m(
-												`button.rate-scale__option.rate-scale__option--${option.variant}`,
-												{
-													class: active ? 'rate-scale__option--selected' : undefined,
-													role: 'radio',
-													'aria-checked': String(active),
-													disabled: pinned !== null ? true : undefined,
-													onclick: () => {
-														if (justRated) return;
-														// The beat: show the press (ring, ✓, receding
-														// siblings), THEN move the square along
-														justRated = {
-															statementId: current.statementId,
-															value: option.value,
-														};
-														void rateProposal(live, current.statementId, option.value);
-														rateAckTimer = window.setTimeout(() => {
-															justRated = null;
-															setCycle({ rated: cycle.rated + 1 });
-															m.redraw();
-														}, RATE_ACK_MS);
-													},
-												},
-												[
-													m('span.rate-scale__emoji', option.emoji),
-													m('span.rate-scale__label', t(option.labelKey)),
-													active
-														? m('span.rate-scale__check', { 'aria-hidden': 'true' }, '✓')
-														: null,
-												],
-											);
-										}),
+										`⚖️ ${cycle.rated}/${AGORA_CYCLE.RATINGS_PER_ROUND}`,
 									),
-								])
-							: m('.text-center.stack', [
-									m('.scene__waiting-glow'),
-									m('h3', quotaDone ? t('delib.rate_done') : t('delib.nothing_to_rate')),
-								]),
-						current && !quotaDone
-							? null
-							: m(
-									'button.btn.btn--primary.btn--full',
-									{
-										onclick: () => {
-											setCycle({ step: 'help' });
-										},
-									},
-									t('delib.to_helping'),
-								),
+									m(
+										'.stall-list',
+										square.map((proposal) =>
+											stallRow({
+												proposal,
+												flip: true,
+												open: openStallId === proposal.statementId,
+												onToggle: () => {
+													openStallId =
+														openStallId === proposal.statementId ? '' : proposal.statementId;
+												},
+												chip: rateStallChip(proposal),
+												body: rateStallBody(live, proposal),
+											}),
+										),
+									),
+									canMoveOn ? onward : null,
+									m(NeedsPeek, { topic }),
+								]
+							: [
+									m('.text-center.stack', [
+										m('.scene__waiting-glow'),
+										m('h3', t('delib.nothing_to_rate')),
+									]),
+									onward,
+								],
 						// The collaboration loop stays in reach on the whole Others
 						// side — one tap on the Others tab and it's visible
 						helpedSection(live),
@@ -2367,10 +2440,21 @@ export function Deliberation(
 						stalls.length > 0
 							? [
 									m(
-										'.help-stall-list',
-										stalls.map((proposal) =>
-											stallRow(live, proposal, helpedById.get(proposal.statementId)),
-										),
+										'.stall-list',
+										stalls.map((proposal) => {
+											const helped = helpedById.get(proposal.statementId);
+
+											return stallRow({
+												proposal,
+												open: openStallId === proposal.statementId,
+												onToggle: () => {
+													openStallId =
+														openStallId === proposal.statementId ? '' : proposal.statementId;
+												},
+												chip: helpStallChip(proposal, helped),
+												body: helpStallBody(live, proposal, helped),
+											});
+										}),
 									),
 									forward,
 									m(NeedsPeek, { topic }),
