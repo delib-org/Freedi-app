@@ -6,20 +6,18 @@ import {
 	stopDeliberationListeners,
 	submitProposal,
 	rateProposal,
-	submitThreadMessage,
-	resolveSuggestion,
 	askCharacterReview,
 	getHelpedProposals,
 	getOwnerThreads,
 	getThreadMessages,
 	isSuggestionKind,
-	openSuggestionsBy,
 	AgoraProposal,
 	AgoraRating,
 	HelpedProposal,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { Collapsible } from '../components/Collapsible';
+import { ThreadChat, threadEntry } from './ThreadChat';
 import {
 	registerHelpedNavigator,
 	unregisterHelpedNavigator,
@@ -34,7 +32,6 @@ import {
 	isEditedSinceSeen,
 	isNewToMe,
 	markProposalSeen,
-	markThreadSeen,
 	seedSeenBaselineIfNeeded,
 	seenEditWatermark,
 	threadUnreadCount,
@@ -42,14 +39,12 @@ import {
 import {
 	AgoraCharacter,
 	AgoraCharacterReview,
-	AgoraMessageKind,
 	AgoraParticipant,
 	AgoraProposalScore,
 	AgoraSession,
 	AgoraSuggestionStatus,
 	AgoraTopicPackage,
 	AGORA_AI_REVIEW,
-	AGORA_ANTI_GAMING,
 	AGORA_CYCLE,
 	AGORA_LIMITS,
 	createAgoraCharacterReviewId,
@@ -369,33 +364,8 @@ export function Deliberation(
 	let openCharacterId = '';
 	/** characterId → in-flight review request */
 	const reviewBusy: Record<string, boolean> = {};
-	/** threadKey → in-progress message draft (one conversation, one box) */
-	const threadDrafts: Record<string, string> = {};
-	const threadBusy: Record<string, boolean> = {};
-	/** threadKey → the helper wants THIS message to be an improvement idea */
-	const threadMarkSuggestion: Record<string, boolean> = {};
-	/** Which owner-side thread is unfolded in the workshop (one at a time) */
-	let openThreadKey = '';
-	/**
-	 * suggestionId → ticked-but-not-yet-announced "woven in" mark. A tick is
-	 * LOCAL and freely untickable; only saving the proposal resolves it, so the
-	 * suggester's announcement always arrives together with a real change.
-	 */
-	const wovenPending: Record<string, boolean> = {};
-	/** The accepted-ideas drawer under the edit box (collapsed by default) */
-	let acceptedDrawerOpen = false;
 	/** The elders' chips: an optional helper, so it starts folded */
 	let charactersOpen = false;
-	/**
-	 * The accept → tick → save chain is the least self-evident mechanic in
-	 * the game: nothing ever told students the tick is PENDING until they
-	 * save, so "I accepted it, why didn't they get their points?" was a real
-	 * dead end. Shown once, on the first accept of the session.
-	 */
-	const weaveCoachKey = `agora_${session.sessionId}_weavecoach`;
-	let showWeaveCoach = false;
-	/** The woven-in archive: history, so it opens only when asked for */
-	let archiveOpen = false;
 	/**
 	 * The received-improvements accordion. null = follow the feedback: fresh
 	 * suggestions open it by themselves, and once a student closes it their
@@ -403,21 +373,46 @@ export function Deliberation(
 	 */
 	let suggestionsToggle: boolean | null = null;
 	/**
-	 * The text just accepted, held until the resolve lands in the snapshot —
-	 * the drawer must not look empty in the moment right after "accept".
+	 * The conversation I am standing IN, or null for "somewhere in the game".
+	 * A thread is a sub-page like every other Freedi chat — the cards carry
+	 * only an indicator, and opening one takes the whole screen.
 	 */
-	let pendingAcceptText: string | undefined;
+	let chatOpen: { proposalId: string; helperUid: string; role: 'helper' | 'owner' } | null = null;
+
 	/**
-	 * The accepted card no longer leaves its thread (a conversation with a
-	 * hole in it reads as deleted history) — so the drawer announces the
-	 * arrival itself: its head flashes "caught it" the moment accept lands.
+	 * Entering a conversation pushes a history entry (the URL is unchanged, so
+	 * Mithril's router stays put) — the phone's back gesture then leaves the
+	 * chat instead of leaving the game.
 	 */
-	function flashAcceptedDrawer(): void {
-		const target = document.querySelector<HTMLElement>('.chat-drawer__head');
-		if (!target) return;
-		target.classList.add('chat-drawer__head--landed');
-		window.setTimeout(() => target.classList.remove('chat-drawer__head--landed'), 700);
+	function openChat(proposalId: string, helperUid: string, role: 'helper' | 'owner'): void {
+		chatOpen = { proposalId, helperUid, role };
+		try {
+			window.history.pushState({ agoraChat: true }, '');
+		} catch {
+			// No history access (rare sandboxes) — the back button still works
+		}
+		m.redraw();
 	}
+
+	function closeChat(fromPopState: boolean): void {
+		if (!chatOpen) return;
+		chatOpen = null;
+		if (!fromPopState) {
+			try {
+				const state = window.history.state as { agoraChat?: boolean } | null;
+				if (state?.agoraChat === true) window.history.back();
+			} catch {
+				// Nothing to unwind
+			}
+		}
+		m.redraw();
+	}
+
+	function onPopState(): void {
+		if (chatOpen) closeChat(true);
+	}
+
+	window.addEventListener('popstate', onPopState);
 	/**
 	 * The proposal dock: my workshop is no longer a screen you travel to, it
 	 * is a notebook docked at the bottom of every place. Collapsed it shows a
@@ -849,25 +844,6 @@ export function Deliberation(
 			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
 		).length;
 
-		// The tray is a WORKBENCH, not a history: it holds only ideas still
-		// waiting to be woven in. Once an idea is in the text its job here is
-		// done — it moves to the archive below, so a long game can't bury
-		// today's two open ideas under twenty finished ones.
-		const allAdopted = getDeliberationState().suggestions[myProposal.statementId] ?? [];
-		const acceptedIdeas = allAdopted.filter(
-			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.accepted,
-		);
-		const archivedIdeas = allAdopted.filter(
-			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.implemented,
-		);
-		const pendingAccept =
-			pendingAcceptText !== undefined &&
-			!acceptedIdeas.some((entry) => entry.statement === pendingAcceptText) &&
-			!archivedIdeas.some((entry) => entry.statement === pendingAcceptText)
-				? pendingAcceptText
-				: undefined;
-		const ideaCount = acceptedIdeas.length + (pendingAccept ? 1 : 0);
-		const hasPendingWoven = acceptedIdeas.some((entry) => wovenPending[entry.statementId] === true);
 		const myScoreDoc = getDeliberationState().scores[myProposal.statementId];
 		// The cycle's return signal to the OWNER: classmates who (re)rated
 		// after my latest improvement. Aggregate count only — never who.
@@ -926,9 +902,7 @@ export function Deliberation(
 					m(
 						'button.btn.btn--primary.my-lantern__save',
 						{
-							// Pending woven-in ticks also arm the save button: the
-							// update is what announces them to the suggesters
-							disabled: (!changed && !hasPendingWoven) || submitting,
+							disabled: !changed || submitting,
 							onclick: () => {
 								submitting = true;
 								submitProposal(
@@ -946,20 +920,6 @@ export function Deliberation(
 										// Improving your own proposal earns glitter — the
 										// behavior the game most wants to reinforce
 										celebrate({ message: t('celebrate.proposal_improved'), detail: text });
-										// NOW the ticked ideas go out: the suggesters'
-										// "woven in" notification arrives together with
-										// the change they can inspect and re-rate
-										for (const [suggestionId, pending] of Object.entries(wovenPending)) {
-											if (!pending) continue;
-											delete wovenPending[suggestionId];
-											resolveSuggestion(
-												live.sessionId,
-												suggestionId,
-												AgoraSuggestionStatus.implemented,
-											).catch((error: unknown) => {
-												console.error('[Delib] Mark woven failed:', error);
-											});
-										}
 									})
 									.catch((error: unknown) => {
 										console.error('[Delib] Update proposal failed:', error);
@@ -976,105 +936,20 @@ export function Deliberation(
 						// up) — but "✓ saved" is a true status, and the first
 						// keystroke flips it to the live action, which teaches the
 						// rule at the exact moment it starts to matter.
-						changed || hasPendingWoven
-							? t('delib.update_proposal')
-							: `✓ ${t('delib.update_saved')}`,
+						changed ? t('delib.update_proposal') : `✓ ${t('delib.update_saved')}`,
 					),
 				]),
 			]),
-			// Accepted improvement ideas live in a drawer right BENEATH the
-			// editor — the count invites a peek without stealing the stage,
-			// and a tick marks an idea as woven into the text above.
-			ideaCount > 0
-				? m('.chat-drawer', { class: acceptedDrawerOpen ? 'chat-drawer--open' : undefined }, [
-						m(
-							'button.chat-drawer__head',
-							{
-								'aria-expanded': String(acceptedDrawerOpen),
-								onclick: () => {
-									acceptedDrawerOpen = !acceptedDrawerOpen;
-								},
-							},
-							[
-								// Its own title, not chat.accepted_reminder: the
-								// "improvements you received" section sits right below,
-								// and two identical headers would read as one thing
-								m('span.chat-drawer__title', `💡 ${t('delib.accepted_ideas')}`),
-								m('span.chat-drawer__count', String(ideaCount)),
-								m('span.chat-drawer__chevron', { 'aria-hidden': 'true' }),
-							],
-						),
-						// The panel stays in the DOM so the 0fr→1fr grid transition
-						// can animate the expand/collapse (see chat.scss)
-						m(
-							'.chat-drawer__panel',
-							{ 'aria-hidden': String(!acceptedDrawerOpen) },
-							m('.chat-drawer__inner', [
-								// The contract, stated once, exactly where the work happens
-								showWeaveCoach
-									? m('.weave-coach', [
-											m('p.weave-coach__text', t('delib.weave_coach')),
-											m(
-												'button.btn.btn--ghost.btn--sm',
-												{
-													onclick: () => {
-														showWeaveCoach = false;
-													},
-												},
-												t('delib.weave_coach_got_it'),
-											),
-										])
-									: null,
-								m('.chat-drawer__list', [
-									// Nested array (own fragment) — keyed items must not be
-									// spread among unkeyed siblings (Mithril mixed-keys crash).
-									// The second mark of the lifecycle: accept said "I like
-									// it"; the ✓ here says "it's in the text now" — precise
-									// attribution the suggester gets notified about.
-									acceptedIdeas.map((entry) => {
-										const pending = wovenPending[entry.statementId] === true;
-
-										return m('.chat-drawer__item', { key: entry.statementId }, [
-											m('label.chat-drawer__check', { title: t('chat.mark_woven') }, [
-												m('input.chat-drawer__check-input', {
-													type: 'checkbox',
-													// A tick is a PENDING mark — saving the
-													// proposal is what announces it (until then
-													// it can be freely unticked)
-													checked: pending,
-													'aria-label': t('chat.mark_woven'),
-													onchange: () => {
-														wovenPending[entry.statementId] = !pending;
-													},
-												}),
-												m('span.chat-drawer__check-box', { 'aria-hidden': 'true' }),
-											]),
-											m('p.chat-drawer__item-text', entry.statement),
-										]);
-									}),
-									pendingAccept
-										? m('.chat-drawer__item', m('p.chat-drawer__item-text', pendingAccept))
-										: null,
-								]),
-							]),
-						),
-					])
-				: null,
-			workbenchSection(
-				'💡',
-				t('delib.suggestions_received'),
-				suggestionsSection(live, myProposal),
-				{
-					headId: DOCK_FEEDBACK_HEAD_ID,
-					// Waiting decisions AND unread replies — everything in the
-					// section that still wants the owner's eyes
-					count: openCount + ownerThreadUnread(myProposal),
-					open: suggestionsToggle ?? (openCount > 0 || ownerThreadUnread(myProposal) > 0),
-					onToggle: () => {
-						suggestionsToggle = !(suggestionsToggle ?? openCount > 0);
-					},
+			workbenchSection('💡', t('delib.suggestions_received'), suggestionsSection(myProposal), {
+				headId: DOCK_FEEDBACK_HEAD_ID,
+				// Waiting decisions AND unread replies — everything in the
+				// section that still wants the owner's eyes
+				count: openCount + ownerThreadUnread(myProposal),
+				open: suggestionsToggle ?? (openCount > 0 || ownerThreadUnread(myProposal) > 0),
+				onToggle: () => {
+					suggestionsToggle = !(suggestionsToggle ?? openCount > 0);
 				},
-			),
+			}),
 			// The elders are an optional helper, not the loop — folded away until
 			// asked for, so the sheet's resting state is my text and my feedback
 			workbenchSection('🎭', t('delib.ask_elders'), askSection(live, myProposal, topic), {
@@ -1084,49 +959,6 @@ export function Deliberation(
 				},
 			}),
 			m('.workbench__section.workbench__section--plain', m(NeedsPeek, { topic })),
-			// The archive: every idea that MADE IT into the text. Not a drawer
-			// like the tray above — a button, because this is history you go
-			// look at, not work waiting on you. Hidden until there is one.
-			archivedIdeas.length > 0
-				? m('.archive', [
-						m(
-							'button.btn.btn--ghost.btn--sm.archive__toggle',
-							{
-								'aria-expanded': String(archiveOpen),
-								onclick: () => {
-									archiveOpen = !archiveOpen;
-								},
-							},
-							[
-								`📦 ${t('delib.archive_open')}`,
-								m('span.archive__count', String(archivedIdeas.length)),
-							],
-						),
-						archiveOpen
-							? m(
-									Collapsible,
-									m('.archive__list', [
-										archivedIdeas.map((entry) =>
-											m('.archive__item', { key: entry.statementId }, [
-												m('span.archive__mark', { 'aria-hidden': 'true' }, '✓'),
-												m('.archive__body', [
-													m('p.archive__text', entry.statement),
-													// The suggester is named here on purpose: this is
-													// the credit ledger of who improved my proposal
-													entry.anonName
-														? m(
-																'p.archive__from',
-																t('delib.suggestion_from', { name: entry.anonName }),
-															)
-														: null,
-												]),
-											]),
-										),
-									]),
-								)
-							: null,
-					])
-				: null,
 		]);
 	}
 
@@ -1312,235 +1144,13 @@ export function Deliberation(
 		return unread;
 	}
 
-	/** The lifecycle chip a suggestion-kind message wears inside a thread */
-	function threadStatusChip(message: AgoraProposal): m.Children {
-		if (!isSuggestionKind(message)) return null;
-		const status = message.suggestionStatus ?? AgoraSuggestionStatus.open;
-		const key =
-			status === AgoraSuggestionStatus.implemented
-				? 'delib.implemented'
-				: status === AgoraSuggestionStatus.accepted
-					? 'delib.accepted'
-					: status === AgoraSuggestionStatus.declined
-						? 'delib.declined'
-						: status === AgoraSuggestionStatus.thanked
-							? 'delib.thanked'
-							: 'delib.helped_status_open';
-
-		return m('span.helped__chip', { class: `helped__chip--${status}` }, t(key));
-	}
-
-	/** The owner's two doors on an open improvement idea, inline in the thread */
-	function suggestionDecision(live: AgoraSession, message: AgoraProposal): m.Children {
-		return m('.delib__actions.delib__actions--tight', [
-			m(
-				'button.btn.btn--ghost.btn--sm',
-				{
-					onclick: () => {
-						void resolveSuggestion(
-							live.sessionId,
-							message.statementId,
-							AgoraSuggestionStatus.declined,
-						);
-					},
-				},
-				t('delib.no_thanks'),
-			),
-			m(
-				'button.btn.btn--primary.btn--sm',
-				{
-					onclick: () => {
-						// The edit box is right above — accepting means: now weave
-						// the idea into your text. Open the accepted-ideas drawer so
-						// the idea is in sight while editing, not one click away.
-						pendingAcceptText = message.statement;
-						acceptedDrawerOpen = true;
-						// The conversation stays on screen: with no open idea left
-						// the section would auto-fold, yanking the thread out from
-						// under the finger that just pressed accept
-						suggestionsToggle = true;
-						if (!sessionStorage.getItem(weaveCoachKey)) {
-							sessionStorage.setItem(weaveCoachKey, '1');
-							showWeaveCoach = true;
-						}
-						resolveSuggestion(live.sessionId, message.statementId, AgoraSuggestionStatus.accepted)
-							.then(() => {
-								// The message stays in its conversation (a thread with a
-								// hole reads as deleted history) — the drawer's head
-								// flashes "caught it" instead of catching a flying card
-								flashAcceptedDrawer();
-							})
-							.catch((error: unknown) => {
-								if (pendingAcceptText === message.statement) {
-									pendingAcceptText = undefined;
-								}
-								console.error('[Delib] Accept suggestion failed:', error);
-								m.redraw();
-							});
-					},
-				},
-				t('delib.will_implement'),
-			),
-		]);
-	}
-
 	/**
-	 * One proposal↔helper conversation, same list on both sides. The role
-	 * decides the powers: the owner decides on ideas and replies in plain
-	 * chat; the helper writes, and can mark a message AS an improvement idea
-	 * (which is what enters the accept→weave economy — plain chat never does).
+	 * The owner's inbox: one INDICATOR per helper conversation, under the
+	 * editable text. The conversation itself is a page you travel to (see
+	 * ThreadChat) — a card carries only the bubble, the last thing said, when
+	 * it was said, and what is still unread.
 	 */
-	function threadView(
-		live: AgoraSession,
-		proposal: AgoraProposal,
-		helperUid: string,
-		role: 'helper' | 'owner',
-	): m.Children {
-		const threadKey = createAgoraThreadKey(proposal.statementId, helperUid);
-		const messages = getThreadMessages(proposal.statementId, helperUid);
-		// Reading the conversation IS seeing it — but only when it is truly on
-		// screen: the owner's copy also renders inside the folded (inert) dock
-		const onScreen = role === 'helper' || dockOpen;
-		if (onScreen && document.visibilityState === 'visible') {
-			const newest = messages.reduce(
-				(max, message) => (message.creatorId !== userId ? Math.max(max, message.createdAt) : max),
-				0,
-			);
-			if (newest > 0) markThreadSeen(threadKey, newest);
-		}
-		const draft = threadDrafts[threadKey] ?? '';
-		const busy = threadBusy[threadKey] === true;
-		const atCap =
-			openSuggestionsBy(proposal.statementId, userId) >=
-			AGORA_ANTI_GAMING.MAX_OPEN_SUGGESTIONS_PER_HELPER;
-		// The helper's first message is an improvement idea by default (that IS
-		// the help step); afterwards the box is conversation unless marked
-		const hasMyIdea = messages.some(
-			(message) => message.creatorId === userId && isSuggestionKind(message),
-		);
-		const markAsIdea = role === 'helper' && (threadMarkSuggestion[threadKey] ?? !hasMyIdea);
-		const kind = markAsIdea ? AgoraMessageKind.suggestion : AgoraMessageKind.chat;
-		const sendBlocked = kind === AgoraMessageKind.suggestion && atCap;
-
-		return m('.thread', [
-			messages.length > 0
-				? m(
-						'.thread__list',
-						messages.map((message) => {
-							const mine = message.creatorId === userId;
-							const decidable =
-								role === 'owner' &&
-								!mine &&
-								isSuggestionKind(message) &&
-								(message.suggestionStatus ?? AgoraSuggestionStatus.open) ===
-									AgoraSuggestionStatus.open;
-
-							return m(
-								'.thread__msg',
-								{
-									key: message.statementId,
-									class: [
-										mine ? 'thread__msg--mine' : 'thread__msg--peer',
-										isSuggestionKind(message) ? 'thread__msg--suggestion' : undefined,
-									]
-										.filter(Boolean)
-										.join(' '),
-								},
-								[
-									!mine && message.anonName ? m('span.thread__who', message.anonName) : null,
-									isSuggestionKind(message)
-										? m('span.thread__tag', `💡 ${t('delib.thread_suggestion_tag')}`)
-										: null,
-									m('p.thread__text', message.statement),
-									decidable ? suggestionDecision(live, message) : threadStatusChip(message),
-								],
-							);
-						}),
-					)
-				: null,
-			m('.thread__composer', [
-				m('textarea.text-input.thread__input', {
-					value: draft,
-					rows: 2,
-					placeholder: t(
-						role === 'owner' ? 'delib.thread_reply_placeholder' : 'delib.thread_placeholder',
-					),
-					oninput: (event: InputEvent) => {
-						threadDrafts[threadKey] = (event.target as HTMLTextAreaElement).value;
-					},
-				}),
-				role === 'helper'
-					? m('label.thread__kind-toggle', [
-							m('input.thread__kind-check', {
-								type: 'checkbox',
-								checked: markAsIdea,
-								onchange: () => {
-									threadMarkSuggestion[threadKey] = !markAsIdea;
-								},
-							}),
-							m('span', `💡 ${t('delib.thread_mark_suggestion')}`),
-						])
-					: null,
-				// The spam guard, stated plainly rather than enforced silently:
-				// two unresolved ideas at a time; resolving any frees the slot
-				sendBlocked ? m('p.action-hint', t('delib.open_ideas_cap')) : null,
-				m(
-					// An improvement idea is the loop's headline action; a plain
-					// reply is a reply. `thread__send` is the stable hook either way.
-					`button.btn.thread__send.btn--sm.${
-						kind === AgoraMessageKind.suggestion ? 'btn--primary' : 'btn--secondary'
-					}`,
-					{
-						disabled: busy || sendBlocked || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-						onclick: () => {
-							const text = draft.trim();
-							threadBusy[threadKey] = true;
-							threadDrafts[threadKey] = '';
-							if (kind === AgoraMessageKind.suggestion) {
-								// An in-thread idea counts as helping this lap, exactly
-								// like one sent from the stall's first compose box
-								helpedThisLap.add(proposal.statementId);
-								threadMarkSuggestion[threadKey] = false;
-								// The row says "sent ✓" for a beat. The stall stays OPEN
-								// (it used to fold): the idea appears in the conversation
-								// right below, and folding would hide the answer arriving.
-								if (role === 'helper') {
-									sentAckId = proposal.statementId;
-									window.clearTimeout(sentAckTimer);
-									sentAckTimer = window.setTimeout(() => {
-										sentAckId = '';
-										m.redraw();
-									}, SENT_ACK_MS);
-								}
-							}
-							submitThreadMessage(
-								live,
-								proposal,
-								initialVnode.attrs.myParticipant.anonName,
-								text,
-								kind,
-								helperUid,
-							)
-								.catch((error: unknown) => {
-									console.error('[Delib] Thread message failed:', error);
-								})
-								.finally(() => {
-									threadBusy[threadKey] = false;
-									m.redraw();
-								});
-						},
-					},
-					t(kind === AgoraMessageKind.suggestion ? 'delib.send_suggestion' : 'delib.thread_send'),
-				),
-			]),
-		]);
-	}
-
-	/**
-	 * The owner's inbox: one conversation per helper, under the editable
-	 * text. A lone conversation skips the accordion ceremony and just shows.
-	 */
-	function suggestionsSection(live: AgoraSession, myProposal: AgoraProposal): m.Children {
+	function suggestionsSection(myProposal: AgoraProposal): m.Children {
 		const threads = [...getOwnerThreads(myProposal.statementId).entries()];
 		if (threads.length === 0) {
 			return m('.stack', [m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))]);
@@ -1552,63 +1162,30 @@ export function Deliberation(
 		const isOpenIdea = (message: AgoraProposal): boolean =>
 			isSuggestionKind(message) &&
 			(message.suggestionStatus ?? AgoraSuggestionStatus.open) === AgoraSuggestionStatus.open;
-		const anyOpenIdea = threads.some(([, messages]) => messages.some(isOpenIdea));
-		const soleKey =
-			threads.length === 1 ? createAgoraThreadKey(myProposal.statementId, threads[0][0]) : '';
 
-		return m('.stack', [
-			// What "accept" commits you to, said ONCE above the threads. It
-			// retires on the first accept, where the weave coach mark takes
-			// over the same contract — both hang off weaveCoachKey.
-			anyOpenIdea && !sessionStorage.getItem(weaveCoachKey)
-				? m('p.square-says__meaning', t('delib.accept_hint'))
-				: null,
-			// Nested array (own fragment) — keyed items must not be spread
-			// among unkeyed siblings (Mithril mixed-keys crash)
+		return m(
+			'.chat-entry-list',
 			threads.map(([helperUid, messages]) => {
 				const threadKey = createAgoraThreadKey(myProposal.statementId, helperUid);
-				const open = soleKey === threadKey || openThreadKey === threadKey;
-				const unread = threadUnreadCount(
-					threadKey,
-					messages.filter((message) => !isSuggestionKind(message)),
-					userId,
-				);
-				const openIdeas = messages.filter(isOpenIdea).length;
 				const name = messages.find((message) => message.creatorId === helperUid)?.anonName ?? '';
 
-				return m('.thread-inbox__item', { key: threadKey }, [
-					m(
-						'button.thread-inbox__head',
-						{
-							'aria-expanded': String(open),
-							onclick: () => {
-								openThreadKey = open ? '' : threadKey;
-							},
+				return m('.chat-entry-list__item', { key: threadKey }, [
+					threadEntry({
+						label: name || t('delib.chat_with_author'),
+						messages,
+						unread: threadUnreadCount(
+							threadKey,
+							messages.filter((message) => !isSuggestionKind(message)),
+							userId,
+						),
+						openIdeas: messages.filter(isOpenIdea).length,
+						onOpen: () => {
+							openChat(myProposal.statementId, helperUid, 'owner');
 						},
-						[
-							m('span.thread-inbox__from', `💡 ${name}`),
-							openIdeas > 0
-								? m('span.thread-inbox__ideas', tCount('delib.thread_open_ideas', openIdeas))
-								: null,
-							unread > 0
-								? m(
-										'span.thread-inbox__unread',
-										{ 'aria-label': tCount('delib.thread_unread', unread) },
-										String(unread),
-									)
-								: null,
-							m('span.workbench__chevron', {
-								class: open ? 'workbench__chevron--open' : undefined,
-								'aria-hidden': 'true',
-							}),
-						],
-					),
-					// Wrapped so the swap between two helpers is a handoff: the one
-					// you left folds away while the one you tapped unfolds
-					open ? m(Collapsible, threadView(live, myProposal, helperUid, 'owner')) : null,
+					}),
 				]);
 			}),
-		]);
+		);
 	}
 
 	/** The era's AI helpers: ask each character what's wrong and how to improve */
@@ -1702,7 +1279,15 @@ export function Deliberation(
 		let mineAt = 0;
 		for (const suggestion of state.suggestions[id] ?? []) {
 			if (suggestion.creatorId !== userId) continue;
-			if (suggestion.suggestionStatus !== AgoraSuggestionStatus.implemented) continue;
+			// The author's acknowledgment of MY idea. A thank-you is that mark
+			// now (the accept → woven-in lifecycle retired with the tray);
+			// `implemented` stays readable so older sessions keep their history.
+			if (
+				suggestion.suggestionStatus !== AgoraSuggestionStatus.thanked &&
+				suggestion.suggestionStatus !== AgoraSuggestionStatus.implemented
+			) {
+				continue;
+			}
 			mineAt = Math.max(mineAt, suggestion.statusChangedAt ?? suggestion.lastUpdate);
 		}
 
@@ -1911,15 +1496,23 @@ export function Deliberation(
 							// Only a FIRST vote moves the lap along; changing my mind
 							// about a proposal I already weighed is free, and must not
 							// buy a lap step. The stall no longer folds itself after the
-							// press — the conversation with the author lives in this same
-							// card now, and folding it would hide what I came to do next.
+							// press — the way into the conversation with the author lives
+							// in this same card, and folding it would hide the next step.
 							onFirstVote: () => {
 								setCycle({ rated: cycle.rated + 1 });
 							},
 						}
 					: undefined,
 			),
-			threadView(live, proposal, userId, 'helper'),
+			// The conversation is one line here, and a whole page one tap away
+			threadEntry({
+				label: t('delib.chat_with_author'),
+				messages: getThreadMessages(proposal.statementId, userId),
+				unread: myThreadUnread(proposal),
+				onOpen: () => {
+					openChat(proposal.statementId, userId, 'helper');
+				},
+			}),
 		];
 	}
 
@@ -2167,6 +1760,7 @@ export function Deliberation(
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
 			unregisterMineNavigator(goToMine);
+			window.removeEventListener('popstate', onPopState);
 		},
 
 		view(vnode) {
@@ -2177,6 +1771,44 @@ export function Deliberation(
 			seedSeenBaselineIfNeeded();
 			const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
 			const anonName = myParticipant.anonName;
+
+			// ---------- SUB-PAGE: one conversation, full screen ----------
+			// A chat is a place of its own in every Freedi app, and this one is
+			// no different: the game waits behind it, and back returns to the
+			// exact card the conversation was opened from.
+			if (chatOpen) {
+				const chatProposal = proposals.find(
+					(proposal) => proposal.statementId === chatOpen?.proposalId,
+				);
+				if (!chatProposal) {
+					// The proposal vanished under us (session reset) — nothing to talk about
+					chatOpen = null;
+				} else {
+					return m(ThreadChat, {
+						session: live,
+						proposal: chatProposal,
+						helperUid: chatOpen.helperUid,
+						role: chatOpen.role,
+						userId,
+						anonName,
+						proposalNumber: proposalNumber(chatProposal),
+						onBack: () => {
+							closeChat(false);
+						},
+						onSuggestionSent: (proposalId: string) => {
+							// An idea sent from the conversation counts as helping this
+							// lap, exactly like one sent from the stall itself
+							helpedThisLap.add(proposalId);
+							sentAckId = proposalId;
+							window.clearTimeout(sentAckTimer);
+							sentAckTimer = window.setTimeout(() => {
+								sentAckId = '';
+								m.redraw();
+							}, SENT_ACK_MS);
+						},
+					});
+				}
+			}
 
 			// Orientation strip: lap chip + the three steps of the loop, current
 			// one lit. A dead countdown reads as "broken" — only show a live one.

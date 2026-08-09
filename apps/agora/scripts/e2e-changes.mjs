@@ -2,8 +2,9 @@
  * NEW chip on an unseen proposal → clears on open (and stays cleared after a
  * RELOAD — the seen-state lives on the Firestore participant doc, not in the
  * tab) → owner edits → EDITED chip + re-rate invitation → re-rate clears →
- * owner weaves my idea → IMPROVED-WITH-YOUR-IDEA chip → owner replies in the
- * thread → unread chip + Others badge → reading clears them.
+ * owner thanks my idea and improves the text → IMPROVED-WITH-YOUR-IDEA chip
+ * → owner replies in the conversation sub-page → unread chip + Others badge
+ * → reading clears them.
  * Run: node scripts/e2e-changes.mjs (needs emulators + vite on 3009 + seed) */
 import { chromium } from '@playwright/test';
 
@@ -138,6 +139,15 @@ const closeDock = async (page) => {
 	await page.locator('.proposal-dock__bar').click();
 	await page.locator('.proposal-dock__scrim').waitFor({ state: 'detached', timeout: 5000 });
 };
+// The received-improvements accordion folds itself once nothing is waiting
+// (it is a to-do list) — a conversation you want to re-read is one tap in.
+const openInbox = async (page) => {
+	await openDock(page);
+	const head = page.locator('.proposal-dock--open button.workbench__head').first();
+	if ((await head.getAttribute('aria-expanded')) === 'false') await head.click();
+	await page.waitForSelector('.proposal-dock--open .chat-entry', { timeout: 10000 });
+};
+
 // The seen-state flush is debounced 2.5s — anything asserting durability
 // across a reload must let it land first
 const letSeenFlush = (page) => page.waitForTimeout(3500);
@@ -206,24 +216,32 @@ await s2.waitForSelector('.stall__head', { timeout: 20000 });
 await s2.waitForTimeout(1500);
 eq('EDITED stayed cleared after a RELOAD', await s2.locator('.stall__chip--edited').count(), 0);
 
-// ---------- Phase 3: my idea woven in → IMPROVED-WITH-YOUR-IDEA chip ----------
-step('PHASE 3: A weaves B’s idea → B sees the personal IMPROVED chip');
-// B moves to the market and suggests on A's stall
+// ---------- Phase 3: my idea acknowledged → IMPROVED-WITH-YOUR-IDEA chip ----------
+step('PHASE 3: A thanks B’s idea and improves the text → B sees the personal IMPROVED chip');
+// B moves to the market and suggests inside A's conversation
 await s2.getByRole('button', { name: /המשיכו לעזרה/i }).click({ timeout: 10000 });
 await s2.waitForSelector('.stall__head', { timeout: 15000 });
 await ensureOpen(s2, s2.locator('.stall').first());
-await s2.waitForSelector('.stall--open .thread__input', { timeout: 10000 });
-await s2.locator('.stall--open .thread__input').fill('כדאי לקבוע לוח זמנים לביטול זכויות היתר.');
-await s2.locator('.stall--open .thread__composer .thread__send').first().click();
+await s2.waitForSelector('.stall--open .chat-entry', { timeout: 10000 });
+await s2.locator('.stall--open .chat-entry').first().click();
+await s2.waitForSelector('.chat-page__input', { timeout: 10000 });
+await s2.locator('.chat-page__input').fill('כדאי לקבוע לוח זמנים לביטול זכויות היתר.');
+await s2.locator('.chat-page__send').click();
 await s2.waitForTimeout(1000);
+await s2.locator('.chat-page__back').click();
+await s2.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await letSeenFlush(s2);
 
-// A accepts, ticks, saves — the weave
+// A opens the conversation, says thank you, then improves the text
 await clearCelebration(s1);
 await openDock(s1);
-await s1.getByRole('button', { name: /^אשלב את הרעיון$/ }).click();
-await s1.locator('.thread__msg .helped__chip--accepted').waitFor({ timeout: 10000 });
-await s1.locator('label.chat-drawer__check').first().click();
+await openInbox(s1);
+await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.waitForSelector('.chat-page', { timeout: 10000 });
+await s1.locator('.thread__msg .btn--primary').first().click();
+await s1.locator('.thread__msg .helped__chip--thanked').waitFor({ timeout: 10000 });
+await s1.locator('.chat-page__back').click();
+await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await s1
 	.locator('textarea.my-lantern__textarea')
 	.fill(
@@ -241,20 +259,24 @@ await improvedChip.waitFor({ timeout: 20000 });
 console.log('   ✓ B sees IMPROVED-WITH-YOUR-IDEA chip:', (await improvedChip.textContent()).trim());
 await shot(s2, '05-B-improved-mine-chip');
 
-// ---------- Phase 4: the thread — owner replies, unread travels, reading clears ----------
-step('PHASE 4: A replies in the thread → B gets unread chip + badge; reading clears');
+// ---------- Phase 4: the conversation — owner replies, unread travels, reading clears ----------
+step('PHASE 4: A replies in the conversation → B gets unread chip + badge; reading clears');
 // B looks away first: a reply landing on a card you are already reading is
 // READ, not unread — the badge only has a job when the row is folded
 const bOpenHead = s2.locator('.stall--open .stall__head');
 if (await bOpenHead.count()) await bOpenHead.first().click();
 await s2.waitForTimeout(600);
 await openDock(s1);
-// The sole thread is auto-open; the owner composer is plain chat
-await s1.locator('.thread__composer .thread__input').fill('תודה! תוכלו לחדד מי אוכף את לוח הזמנים?');
-await s1.locator('.thread__composer .thread__send').click();
+await openInbox(s1);
+await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.waitForSelector('.chat-page__input', { timeout: 10000 });
+await s1.locator('.chat-page__input').fill('תודה! תוכלו לחדד מי אוכף את לוח הזמנים?');
+await s1.locator('.chat-page__send').click();
 await s1.waitForTimeout(800);
+await s1.locator('.chat-page__back').click();
+await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await closeDock(s1);
-console.log('   ✓ A sent a chat reply in the thread');
+console.log('   ✓ A sent a chat reply in the conversation');
 
 // B: toast + unread chip on the stall + Others-side attention
 const threadToast = s2.locator('.toast__text', { hasText: 'הודעה חדשה' });
@@ -272,19 +294,23 @@ try {
 console.log('   ✓ B unread chip:', (await unreadChip.textContent()).trim());
 await shot(s2, '06-B-unread-chip');
 
-// Open the stall: the reply renders as the owner's bubble, and reading clears
+// Open the stall, then the conversation: the reply renders as the owner's
+// bubble, and reading it clears the unread state
 const unreadStall = s2.locator('.stall', { has: s2.locator('.stall__chip--unread') }).first();
 await ensureOpen(s2, unreadStall);
-await s2.locator('.stall--open .thread__msg--peer', { hasText: 'מי אוכף' }).waitFor({ timeout: 10000 });
-console.log('   ✓ B reads the owner reply inside the thread');
-await shot(s2, '07-B-thread-open');
+await s2.locator('.stall--open .chat-entry').first().click();
+await s2.locator('.chat-page .thread__msg--peer', { hasText: 'מי אוכף' }).waitFor({ timeout: 10000 });
+console.log('   ✓ B reads the owner reply inside the conversation');
+await shot(s2, '07-B-chat-page');
+
+// B replies back — their idea is still open, so the box is plain chat
+await s2.locator('.chat-page__input').fill('האספה תמנה ועדה מפקחת, נוסיף את זה.');
+await s2.locator('.chat-page__send').click();
+await s2.waitForTimeout(800);
+await s2.locator('.chat-page__back').click();
+await s2.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await s2.waitForTimeout(600);
 eq('unread chip cleared by reading', await s2.locator('.stall__chip--unread').count(), 0);
-
-// B replies back in chat (toggle off — hasMyIdea keeps it off by default)
-await s2.locator('.stall--open .thread__composer .thread__input').fill('האספה תמנה ועדה מפקחת, נוסיף את זה.');
-await s2.locator('.stall--open .thread__composer .thread__send').click();
-await s2.waitForTimeout(800);
 
 // A's dock badge counts the unread chat reply
 const dockBadge = s1.locator('.proposal-dock__badge');
@@ -294,10 +320,14 @@ const dockSub = (await s1.locator('.proposal-dock__sub').textContent()).trim();
 console.log('   ✓ A DOCK SUB:', dockSub);
 if (!dockSub.includes('הודעה')) fail(`dock sub does not announce the message: ${dockSub}`);
 await shot(s1, '08-A-dock-unread');
-// ...and reading it in the open thread clears the badge
+// ...and reading it inside the conversation clears the badge
 await openDock(s1);
-await s1.locator('.thread__msg--peer', { hasText: 'ועדה מפקחת' }).waitFor({ timeout: 10000 });
+await openInbox(s1);
+await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.locator('.chat-page .thread__msg--peer', { hasText: 'ועדה מפקחת' }).waitFor({ timeout: 10000 });
 await s1.waitForTimeout(600);
+await s1.locator('.chat-page__back').click();
+await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await closeDock(s1);
 await s1
 	.locator('.proposal-dock__badge')
@@ -309,7 +339,7 @@ console.log(
 	'\n✅ CHANGE-AWARENESS VERIFIED\n' +
 		'   · NEW chip on unseen proposals; engagement clears it; survives reload (Firestore seen-state)\n' +
 		'   · owner edit → EDITED chip + re-rate invitation; re-rate clears; survives reload\n' +
-		'   · woven idea → personal IMPROVED-WITH-YOUR-IDEA chip\n' +
+		'   · thanked idea + a real edit → personal IMPROVED-WITH-YOUR-IDEA chip\n' +
 		'   · owner chat reply → toast + unread chip + dock badge; reading clears everywhere',
 );
 await browser.close();

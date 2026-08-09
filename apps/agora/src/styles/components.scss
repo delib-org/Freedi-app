@@ -1762,13 +1762,12 @@
 		background: var(--bg-card-solid);
 	}
 
-	&__kind-toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-xs);
-		font-size: var(--font-size-sm);
-		color: var(--text-secondary);
-		cursor: pointer;
+	// The clock on a message, quiet and at the end of the bubble
+	&__time {
+		align-self: flex-end;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		font-variant-numeric: tabular-nums;
 	}
 
 	.helped__chip {
@@ -1780,65 +1779,207 @@
 	}
 }
 
-// --- The owner's inbox: one row per helper conversation, unread count in
-// notification red (never a camp color), unfolding to the thread itself. ---
-.thread-inbox__item {
-	border: 1px solid rgba(169, 126, 82, 0.35);
-	border-radius: var(--radius-md);
-	overflow: hidden;
+// --- The conversation INDICATOR, the only thing a card carries now: a
+// bubble, the last thing said, when it was said, and what is unread. The
+// conversation itself is a page (.chat-page) — same grammar as the option
+// chat in Join and the statement chat in the main app. ---
+.chat-entry-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
 }
 
-.thread-inbox__head {
+.chat-entry {
 	display: flex;
 	align-items: center;
 	gap: var(--space-sm);
 	width: 100%;
 	padding: var(--space-sm) var(--space-md);
-	background: none;
-	border: none;
+	background: var(--bg-inset);
+	border: 1px solid rgba(169, 126, 82, 0.35);
+	border-radius: var(--radius-md);
 	font: inherit;
 	text-align: start;
 	cursor: pointer;
+	transition: border-color var(--motion-base) ease;
 
-	.workbench__chevron {
-		margin-inline-start: auto;
+	&:hover,
+	&:focus-visible {
+		border-color: var(--peer-glow);
+	}
+
+	// Something is waiting in there — the row itself says so, not only the count
+	&--unread {
+		border-color: var(--danger);
+		background: rgba(214, 69, 69, 0.06);
+	}
+
+	&__icon {
+		flex: 0 0 auto;
+		font-size: 1.1rem;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+		flex: 1 1 auto;
+	}
+
+	&__label {
+		font-weight: 700;
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+	}
+
+	// One line of the last message — the preview, never the conversation
+	&__last {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+
+		&--empty {
+			color: var(--text-muted);
+			font-style: italic;
+		}
+	}
+
+	&__meta {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__time {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__ideas {
+		padding: 1px var(--space-xs);
+		border-radius: var(--radius-full);
+		background: rgba(255, 210, 63, 0.35);
+		color: var(--ink);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	// Notification red, never a camp color
+	&__unread {
+		min-width: 18px;
+		padding: 1px 5px;
+		border-radius: var(--radius-full);
+		background: var(--danger);
+		color: #fff;
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		text-align: center;
 	}
 }
 
-.thread-inbox__from {
-	font-weight: 700;
-	color: var(--text-primary);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
+// --- The conversation as a PAGE: a bar you come back from, the proposal it
+// is about, the messages, and one box at the bottom. Nothing of the game
+// rides along — this is a place you stand in, not a fold in a card. ---
+.chat-page {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	width: 100%;
+	max-width: 640px;
+	margin-inline: auto;
 
-.thread-inbox__ideas {
-	flex: 0 0 auto;
-	padding: 1px var(--space-xs);
-	border-radius: var(--radius-full);
-	background: rgba(255, 210, 63, 0.35);
-	color: var(--ink);
-	font-size: var(--font-size-xs);
-	font-weight: 700;
-}
+	&__bar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		border-block-end: 1px solid var(--border-subtle);
+	}
 
-.thread-inbox__unread {
-	flex: 0 0 auto;
-	min-width: 18px;
-	padding: 1px 5px;
-	border-radius: var(--radius-full);
-	background: var(--danger);
-	color: #fff;
-	font-size: var(--font-size-xs);
-	font-weight: 700;
-	text-align: center;
-}
+	&__back {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border: none;
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		color: var(--text-primary);
+		font-size: 1.2rem;
+		cursor: pointer;
 
-// The thread sits one level down now — inside the fold wrapper that animates
-// its height — so this reaches through .collapsible
-.thread-inbox__item .thread {
-	padding: 0 var(--space-md) var(--space-md);
+		&:hover,
+		&:focus-visible {
+			background: var(--bg-card-solid);
+		}
+	}
+
+	&__who {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	&__title {
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+
+	&__sub {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	// What the conversation is ABOUT, always in sight above it
+	&__proposal {
+		margin: var(--space-sm) var(--space-md) 0;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-inset);
+		border-inline-start: 3px solid var(--peer);
+		border-radius: var(--radius-md);
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		line-height: 1.5;
+		max-height: 6.5em;
+		overflow-y: auto;
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		padding: var(--space-md);
+	}
+
+	&__empty {
+		margin: auto;
+		color: var(--text-muted);
+		text-align: center;
+	}
+
+	&__composer {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-md) var(--space-md);
+		border-block-start: 1px solid var(--border-subtle);
+		background: var(--bg-card-solid);
+	}
+
+	&__send {
+		align-self: flex-end;
+	}
 }
 
 // --- Why is that button grey? One muted line under a disabled primary,
@@ -2915,100 +3056,6 @@
 	font-size: var(--font-size-sm);
 	text-align: center;
 }
-
-// --- The archive: ideas that MADE IT into the text. History, not work —
-// so it's a quiet button, not another drawer competing with the tray ---
-.archive {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-sm);
-
-	&__toggle {
-		align-self: flex-start;
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
-	&__count {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 18px;
-		height: 18px;
-		padding: 0 5px;
-		border-radius: var(--radius-full);
-		background: var(--success);
-		color: #ffffff;
-		font-size: var(--font-size-xs);
-		font-weight: 700;
-	}
-
-	&__list {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: var(--bg-inset);
-		border: 1px solid var(--border-subtle);
-		border-radius: var(--radius-md);
-	}
-
-	&__hint {
-		color: var(--text-muted);
-		font-size: var(--font-size-xs);
-	}
-
-	&__item {
-		display: flex;
-		align-items: flex-start;
-		gap: var(--space-sm);
-		padding-block-end: var(--space-sm);
-		border-block-end: 1px solid var(--border-subtle);
-
-		&:last-child {
-			padding-block-end: 0;
-			border-block-end: none;
-		}
-	}
-
-	// Settled, not celebratory: the ✓ is a record, the glitter already happened
-	&__mark {
-		flex-shrink: 0;
-		width: 20px;
-		height: 20px;
-		border-radius: var(--radius-full);
-		background: rgba(23, 128, 77, 0.12);
-		color: var(--success);
-		font-size: 12px;
-		font-weight: 700;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	&__body {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		min-width: 0;
-	}
-
-	&__text {
-		color: var(--text-secondary);
-		font-size: var(--font-size-sm);
-		line-height: 1.5;
-	}
-
-	// Credit where it's due: who improved my proposal
-	&__from {
-		color: var(--peer-glow);
-		font-size: var(--font-size-xs);
-	}
-}
-
-// (archive-open retired: the archive is a .collapsible now, so it unfolds
-// AND folds away from one place — see components/Collapsible.ts)
 
 // --- Camp meter rows (label + track + value). Born as the reception
 // forecast (feature removed 2026-07-28 — duplicated the character reviews);
@@ -5327,24 +5374,6 @@
 	font-size: var(--font-size-sm);
 	text-align: center;
 	font-style: italic;
-}
-
-// The accept → tick → save contract, stated once, where the work happens
-.weave-coach {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: var(--space-sm);
-	background: var(--bg-inset);
-	border-inline-start: 3px solid var(--lantern-glow);
-	border-radius: var(--radius-md);
-	padding: var(--space-sm) var(--space-md);
-
-	&__text {
-		color: var(--text-secondary);
-		font-size: var(--font-size-sm);
-		text-align: start;
-	}
 }
 
 // Step 5 answered in words: the re-rate that closes the cycle gets its beat

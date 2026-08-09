@@ -1,8 +1,8 @@
 /* The improvement feedback cycle, end to end (docs/feedback-cycle.md):
- * A proposes (+3) → B rates (+0.5) + suggests → A adopts (B +1) / declines
- * (free) → A weaves + saves (B +2, A +1 for the integration work) → B
- * re-rates → A sees the aggregate chip, the bridging ladder pays out, and
- * both students read their own ledger on the results screen.
+ * A proposes (+3) → B rates (+0.5) + suggests in the conversation → A says
+ * thank you (B +1) / no thanks (free) → A improves the text → B re-rates →
+ * A sees the aggregate chip, the bridging ladder pays out, and both students
+ * read their own ledger on the results screen.
  * Verifies POINTS in Firestore, not just pixels.
  * Run: node scripts/e2e-cycle.mjs (needs emulators + vite on 3009 + seed) */
 import { chromium } from '@playwright/test';
@@ -200,6 +200,15 @@ const closeDock = async (page) => {
 	await page.locator('.proposal-dock__scrim').waitFor({ state: 'detached', timeout: 5000 });
 };
 
+// The received-improvements accordion folds itself once nothing is waiting
+// (it is a to-do list) — a conversation you want to re-read is one tap in.
+const openInbox = async (page) => {
+	await openDock(page);
+	const head = page.locator('.proposal-dock--open button.workbench__head').first();
+	if ((await head.getAttribute('aria-expanded')) === 'false') await head.click();
+	await page.waitForSelector('.proposal-dock--open .chat-entry', { timeout: 10000 });
+};
+
 // ---------- Phase A: propose (the cold-start credit) ----------
 step('PHASE A: proposals — the first draft finally earns something');
 const propose = async (page, label, text) => {
@@ -268,15 +277,32 @@ for (const page of [s1, s2]) {
 	await page.getByRole('button', { name: /המשיכו לעזרה/i }).click({ timeout: 10000 });
 }
 
+// A conversation is a SUB-PAGE now (like Join's option chat): the card
+// carries only an indicator, and writing means travelling into the chat and
+// coming back out again.
+const openThreadFromStall = async (page) => {
+	await page.waitForSelector('.stall--open .chat-entry', { timeout: 10000 });
+	await page.locator('.stall--open .chat-entry').first().click();
+	await page.waitForSelector('.chat-page__input', { timeout: 10000 });
+};
+const sendInChat = async (page, text) => {
+	await page.locator('.chat-page__input').fill(text);
+	await page.locator('.chat-page__send').click();
+	await page.waitForTimeout(800);
+};
+const leaveChat = async (page) => {
+	await page.locator('.chat-page__back').click();
+	await page.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
+};
 const suggest = async (page, label, text) => {
 	await clearCelebration(page);
-	// The classmates' stalls are a folded row now: open one, then write in it
+	// The classmates' stalls are a folded row now: open one, then step into
+	// its conversation
 	await page.waitForSelector('.stall__head', { timeout: 15000 });
 	await page.locator('.stall:not(.stall--open) .stall__head').first().click();
-	await page.waitForSelector('.stall--open .thread__input', { timeout: 10000 });
-	await page.locator('.stall--open .thread__input').fill(text);
-	await page.locator('.stall--open .thread__composer .thread__send').first().click();
-	await page.waitForTimeout(800);
+	await openThreadFromStall(page);
+	await sendInChat(page, text);
+	await leaveChat(page);
 	console.log(`${label} sent a suggestion`);
 };
 // B suggests on A's proposal; A suggests on B's (each helps the only other)
@@ -310,68 +336,73 @@ eq('A accordion count', accordionCount.trim(), '1');
 const before2 = await points('S2', s2);
 console.log('S2(B) points before adoption:', before2);
 
-// ---------- Phase B: A adopts B's imp → B +1, and the ladder is explained ----------
-step("PHASE B: A adopts → flight to tray, B's celebration +1, the coach mark");
+// ---------- Phase B: A thanks B's idea → B +1 ----------
+step("PHASE B: A opens the conversation and says thank you → B's celebration +1");
 await clearCelebration(s1);
-await s1.getByRole('button', { name: /^אשלב את הרעיון$/ }).click();
+// The owner's inbox is a list of INDICATORS; the decision lives inside the
+// conversation, exactly where the idea was said
+await openInbox(s1);
+await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.waitForSelector('.chat-page', { timeout: 10000 });
+await shot(s1, '02-A-thread-page');
+await s1.locator('.thread__msg .btn--primary').first().click();
 // The message STAYS in its conversation (a thread with a hole reads as
-// deleted history) — but its decision buttons retire and the accepted chip
-// takes their place, and the idea lands in the adoption tray
+// deleted history) — its decision buttons retire and the thanked chip takes
+// their place
 try {
-	await s1.locator('.thread__msg .helped__chip--accepted').waitFor({ timeout: 10000 });
+	await s1.locator('.thread__msg .helped__chip--thanked').waitFor({ timeout: 10000 });
 } catch (error) {
-	await shot(s1, 'DEBUG-A-after-accept');
+	await shot(s1, 'DEBUG-A-after-thanks');
 	const html = await s1
-		.locator('.my-lantern--workshop')
+		.locator('.chat-page')
 		.first()
 		.innerHTML()
-		.catch(() => '(no workshop)');
-	console.log('DEBUG workshop HTML:', html.slice(0, 3000));
+		.catch(() => '(no chat page)');
+	console.log('DEBUG chat page HTML:', html.slice(0, 3000));
 	throw error;
 }
-const decisionLeft = await s1.getByRole('button', { name: /^אשלב את הרעיון$/ }).count();
-eq('adopted imp no longer asks for a decision', decisionLeft, 0);
-await s1.waitForSelector('.chat-drawer', { timeout: 5000 });
-// The accept → tick → save contract is the least self-evident mechanic in
-// the game; on the first accept it is spelled out where the work happens
-await s1.locator('.weave-coach').waitFor({ timeout: 5000 });
-console.log('   ✓ A COACH MARK:', (await s1.locator('.weave-coach__text').textContent()).trim().slice(0, 60), '…');
-await shot(s1, '02-A-tray-and-coach');
+eq(
+	'thanked idea no longer asks for a decision',
+	await s1.getByRole('button', { name: /^לא תודה$/ }).count(),
+	0,
+);
+await shot(s1, '02b-A-thanked');
+await leaveChat(s1);
 
 await s2.waitForSelector('.celebration', { timeout: 15000 });
-const acceptMsg = await s2.locator('.celebration__message').textContent();
-console.log('B CELEBRATION (accepted):', acceptMsg.trim());
-if (!acceptMsg.includes('+1')) fail('accepted celebration does not name +1');
-// The one good-news moment with no action button must still say what's next
-const hint = await s2.locator('.celebration__hint').textContent();
-console.log('   ✓ B ACCEPTED HINT:', hint.trim());
-if (!hint.includes('+2')) fail(`accepted hint does not teach the +2 rung: ${hint}`);
+const thankMsg = await s2.locator('.celebration__message').textContent();
+console.log('B CELEBRATION (thanked):', thankMsg.trim());
+if (!thankMsg.includes('+1')) fail('thank-you celebration does not name +1');
 // Accessibility: it is a real dialog and focus is on the action
 const dialogRole = await s2.locator('.celebration__card').getAttribute('role');
 eq('celebration role', dialogRole, 'alertdialog');
 const focused = await s2.evaluate(() => document.activeElement?.className ?? '');
 if (!focused.includes('btn')) fail(`celebration did not move focus to a button (got "${focused}")`);
 console.log('   ✓ celebration moved focus to its primary action');
-await shot(s2, '03-B-celebration-accepted');
+await shot(s2, '03-B-celebration-thanked');
 // Escape must close it — a modal you can only dismiss with a mouse is a trap
 await s2.keyboard.press('Escape');
 await s2.locator('.celebration').waitFor({ state: 'detached', timeout: 5000 });
 console.log('   ✓ Escape dismissed the celebration');
 
-const afterAccept = await waitForPoints(
+const afterThanks = await waitForPoints(
 	'S2',
 	s2,
 	(p) => p.helping >= before2.helping + 1,
-	'the accept credit',
+	'the thank-you credit',
 );
-console.log('S2(B) points after accept:', afterAccept);
-eq('B helping after accept', afterAccept.helping, before2.helping + 1);
+console.log('S2(B) points after the thank-you:', afterThanks);
+eq('B helping after the thank-you', afterThanks.helping, before2.helping + 1);
 
 // ---------- Phase C: B declines A's imp → free, and the card retires ----------
 step('PHASE C: B declines → quiet toast, NO points cost, card retires');
 const before1 = await points('S1', s1);
 console.log('S1(A) points before decline:', before1);
 await clearCelebration(s2);
+// Same door as the thank-you: the decision is taken inside the conversation
+await openInbox(s2);
+await s2.locator('.proposal-dock--open .chat-entry').first().click();
+await s2.waitForSelector('.chat-page', { timeout: 10000 });
 await s2.getByRole('button', { name: /^לא תודה$/ }).click();
 // Other toasts (e.g. helped-improved) may share the stack — find OURS
 const declinedToast = s1.locator('.toast__text', { hasText: 'לא אומץ' });
@@ -389,12 +420,9 @@ eq('A helping unchanged by decline', afterDecline.helping, before1.helping);
 eq('A total unchanged by decline', afterDecline.total, before1.total);
 // The conversation keeps its record: the declined message stays in the
 // thread wearing a muted status chip, and no decision buttons remain.
-await openDock(s2);
-const receivedHead = s2.locator('button.workbench__head', { hasText: 'הצעות שיפור' }).first();
-if ((await receivedHead.getAttribute('aria-expanded')) === 'false') await receivedHead.click();
 await s2.waitForSelector('.thread__msg .helped__chip--declined', { timeout: 10000 });
 console.log(
-	'   ✓ B WORKSHOP declined chip:',
+	'   ✓ B CHAT declined chip:',
 	(await s2.locator('.thread__msg .helped__chip--declined').textContent()).trim(),
 );
 eq(
@@ -403,83 +431,44 @@ eq(
 	0,
 );
 // Hand the room back before B is asked to act in it again
+await leaveChat(s2);
 await closeDock(s2);
 
-// ---------- Phase D: A weaves + saves → B +2, A +1 for the integration ----------
-step('PHASE D: A ticks woven + saves → B +2, A +1 integration credit');
+// ---------- Phase D: A improves the text → B is invited back ----------
+step('PHASE D: A rewrites the proposal with the idea in it → B sees ✨');
 await openDock(s1);
-const trayBefore = await s1.locator('.chat-drawer__item').count();
-eq('tray holds the pending idea', trayBefore, 1);
-if ((await s1.locator('.archive').count()) !== 0) fail('archive shown before anything was woven');
-// Custom checkbox: the styled span covers the input — click the label
-await s1.locator('label.chat-drawer__check').first().click();
-const ticked = await s1.locator('.chat-drawer__check-input').first().isChecked();
-if (!ticked) fail('woven tick did not register');
-// Actually WEAVE it — that is what the tick claims and what the coach mark
-// instructs. The server stamps the "bridge power before my edit" baseline
-// on a real text change, so a tick-only save must not reset it.
+// The server stamps the "bridge power before my edit" baseline on a real
+// text change, which is what the direction chip in Phase E reads
 await s1
 	.locator('textarea.my-lantern__textarea')
 	.fill(
 		'נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, ' +
 			'ולצד זה ייקבע לוח זמנים ברור לביטול זכויות היתר של האצולה.',
 	);
-const beforeWeave1 = await points('S1', s1);
 await s1.getByRole('button', { name: /^עדכון ההצעה$/ }).click();
 // A gets their own "proposal improved" glitter — dismiss it
 await s1.waitForSelector('.celebration', { timeout: 10000 });
 await s1.locator('.celebration button.btn--primary').click();
+await closeDock(s1);
 
-await s2.waitForSelector('.celebration', { timeout: 15000 });
-const wovenMsg = await s2.locator('.celebration__message').textContent();
-console.log('B CELEBRATION (woven):', wovenMsg.trim());
-if (!wovenMsg.includes('+2')) fail('woven celebration does not name +2');
-const buttons = await s2.locator('.celebration button').count();
-if (buttons < 2) fail('woven celebration missing the travel button');
-await shot(s2, '05-B-celebration-woven');
-// Primary = the continuation: travel to the improved proposal
-await s2.locator('.celebration button.btn--primary').click();
-await s2.waitForSelector('.stall--open', { timeout: 10000 });
-const spotlit = await s2.locator('.stall--spotlight').count();
-console.log('B landed on helped item, spotlight:', spotlit === 1 ? 'YES' : 'no');
-await shot(s2, '06-B-helped-spotlight');
-
-// Doc notification #5: the helped proposal visibly moved — ✨ marker on
-// the card, and the status chip records the idea as woven in
-await s2.locator('.helped__improved').waitFor({ timeout: 10000 });
-console.log('B SEES ✨:', (await s2.locator('.helped__improved').textContent()).trim());
-const chip = await s2.locator('.helped__chip').first().textContent();
-if (!chip.includes('שולב')) fail(`expected woven-in chip, got: ${chip}`);
-console.log('   ✓ B SUGGESTION CHIP:', chip.trim());
-
-const afterWoven = await waitForPoints(
-	'S2',
-	s2,
-	(p) => p.helping >= before2.helping + 3,
-	'the woven credit',
+// The helped proposal visibly moved — B is told, on the card they helped
+await clearCelebration(s2);
+await s2.locator('.delib-nav__item--peer').click();
+await s2.waitForSelector('.stall__head', { timeout: 15000 });
+if ((await s2.locator('.stall--open').count()) === 0) {
+	await s2.locator('.stall:not(.stall--open) .stall__head').first().click();
+}
+// The card B helped now invites them back — and because A said thank you,
+// the invitation is the PERSONAL one ("your idea is in there")
+const reinvite = s2.locator('.stall--open .stall__reinvite');
+await reinvite.waitFor({ timeout: 20000 });
+console.log('B SEES ✨:', (await reinvite.textContent()).trim());
+eq(
+	'the re-invitation is the personal one',
+	await s2.locator('.stall__reinvite--mine').count(),
+	1,
 );
-console.log('S2(B) points after woven:', afterWoven);
-eq('B helping total for a landed idea', afterWoven.helping, before2.helping + 3);
-// The AUTHOR's side of the economy: weaving a classmate's idea is real
-// editorial labor and used to be entirely unpaid
-const afterWeave1 = await waitForPoints(
-	'S1',
-	s1,
-	(p) => p.proposals >= beforeWeave1.proposals + 1,
-	"the author's integration credit",
-);
-console.log('S1(A) points after weaving:', afterWeave1);
-eq('A integration credit', afterWeave1.proposals, beforeWeave1.proposals + 1);
-
-// The woven idea LEAVES the working tray and lands in the archive
-await openDock(s1);
-await s1.locator('.archive__toggle').waitFor({ timeout: 15000 });
-eq('tray emptied after weaving', await s1.locator('.chat-drawer__item').count(), 0);
-eq('archive badge', (await s1.locator('.archive__count').textContent()).trim(), '1');
-await s1.locator('.archive__toggle').click();
-await s1.locator('.archive__item').first().waitFor({ timeout: 5000 });
-console.log('A ARCHIVE CREDIT:', (await s1.locator('.archive__from').first().textContent()).trim());
-await shot(s1, '07-A-archive-open');
+await shot(s2, '06-B-helped-improved');
 
 // ---------- Phase E: B re-rates → ack, marker clears, bridge pays out ----------
 step('PHASE E: B re-rates → the loop closes, and the bridging ladder pays');
@@ -489,7 +478,7 @@ console.log('B re-rated: strong-for');
 await s2.locator('.helped__rerate-ack').waitFor({ timeout: 5000 });
 console.log('   ✓ B RE-RATE ACK:', (await s2.locator('.helped__rerate-ack').textContent()).trim());
 // ...and the "take another look" marker stops nagging someone who just did
-await s2.locator('.helped__improved').waitFor({ state: 'detached', timeout: 10000 });
+await s2.locator('.stall__reinvite').waitFor({ state: 'detached', timeout: 10000 });
 console.log('   ✓ ✨ marker cleared once B re-rated (no more stale nagging)');
 await shot(s2, '08-B-rerate-acked');
 
@@ -503,11 +492,11 @@ await s1.locator('.celebration button.btn--ghost').click();
 const afterBridge1 = await waitForPoints(
 	'S1',
 	s1,
-	(p) => p.proposals >= afterWeave1.proposals + 15,
+	(p) => p.proposals >= before1.proposals + 15,
 	'the bridging bonus',
 );
 console.log('S1(A) points after bridging:', afterBridge1);
-eq('A bridging bonus', afterBridge1.proposals, afterWeave1.proposals + 15);
+eq('A bridging bonus', afterBridge1.proposals, before1.proposals + 15);
 
 // A's aggregate return signal, measured against a SERVER-stamped baseline.
 // It reaches the owner through the collapsed bar first — the sub line is
@@ -536,47 +525,33 @@ console.log('   ✓ direction SURVIVED a full page reload (server-stamped baseli
 await shot(s1, '10-A-ratings-moved');
 await closeDock(s1);
 
-// ---------- Phase F: the structural spam guard ----------
-step('PHASE F: open-ideas cap replaces the points penalty');
+// ---------- Phase F: one open idea at a time, no toggle to get wrong ----------
+step('PHASE F: the conversation decides — idea while the desk is clear, chat while it is not');
 await s2.locator('.delib-nav__item--peer').click();
 await s2.waitForSelector('.stall--open', { timeout: 10000 });
-// Follow-ups are thread messages now. Plain chat is uncapped conversation;
-// only messages MARKED as improvement ideas occupy an open-idea slot — so
-// the cap test must tick the mark-as-idea toggle each time.
-const followUpIdea = async (page, text) => {
-	const toggle = page.locator('.stall--open .thread__kind-toggle input').first();
-	if (!(await toggle.isChecked())) await toggle.click();
-	await page.locator('.stall--open .thread__input').first().fill(text);
-	await page.locator('.stall--open .thread__composer .thread__send').first().click();
-	await page.waitForTimeout(1200);
-};
-await followUpIdea(s2, 'אפשר להוסיף סעיף שמבטיח שהאספה תתכנס לפחות פעמיים בשנה.');
-await followUpIdea(s2, 'ואולי גם לקבוע מי מכריע במקרה של תיקו בהצבעה.');
-// Two unresolved ideas on one proposal is the ceiling — and it is STATED,
-// not enforced silently
-const capToggle = s2.locator('.stall--open .thread__kind-toggle input').first();
-if (!(await capToggle.isChecked())) await capToggle.click();
-await s2.locator('.stall--open .thread__input').first().fill('ניסיון לשלוח רעיון שלישי בזמן ששניים ממתינים.');
-await s2.locator('.stall--open .action-hint').waitFor({ timeout: 10000 });
-console.log('   ✓ B CAP HINT:', (await s2.locator('.stall--open .action-hint').first().textContent()).trim());
-const sendDisabled = await s2
-	.locator('.stall--open .thread__composer .thread__send')
-	.first()
-	.isDisabled();
-eq('third open idea blocked', sendDisabled, true);
-// ...and unticking the idea mark turns the same box back into free chat
-await capToggle.click();
-// The hint retires with the mark — wait for the redraw before reading the button
+await openThreadFromStall(s2);
+// B's first idea was answered (thanked) in Phase B, so the box offers the
+// NEXT idea — helping stays earnable lap after lap
+const sendLabel = () => s2.locator('.chat-page__send').textContent();
+if (!(await sendLabel()).includes('שיפור')) {
+	fail(`expected the box to offer an idea after the last one was answered: ${await sendLabel()}`);
+}
+console.log('   ✓ B BOX OFFERS AN IDEA:', (await sendLabel()).trim());
+await sendInChat(s2, 'אפשר להוסיף סעיף שמבטיח שהאספה תתכנס לפחות פעמיים בשנה.');
+// ...and while that one waits on the author, the same box is plain talk —
+// a conversation can never pile unanswered work on someone's desk
+await s2.locator('.chat-page__send.btn--secondary').waitFor({ timeout: 10000 });
+console.log('   ✓ B BOX IS NOW CHAT:', (await sendLabel()).trim());
+await s2.locator('.chat-page__input').fill('ואם זה מסובך מדי, אפשר גם רק פעם בשנה.');
+// Mithril redraws on the next frame — poll for the armed button rather than
+// reading the attribute in the same tick as the keystroke
 await s2
-	.locator('.stall--open .action-hint')
-	.first()
-	.waitFor({ state: 'detached', timeout: 5000 });
-const chatSendDisabled = await s2
-	.locator('.stall--open .thread__composer .thread__send')
-	.first()
-	.isDisabled();
-eq('plain chat is never capped', chatSendDisabled, false);
-await shot(s2, '11-B-open-ideas-cap');
+	.locator('.chat-page__send:not([disabled])')
+	.waitFor({ timeout: 5000 })
+	.catch(() => fail('plain chat was blocked — the box must never cap conversation'));
+console.log('   ✓ plain chat is never blocked');
+await shot(s2, '11-B-one-open-idea');
+await leaveChat(s2);
 
 // ---------- Phase G: the ledger the economy was missing ----------
 step('PHASE G: results — every student finally sees their own total');
@@ -608,17 +583,17 @@ await shot(s2, '13-B-results-recap');
 console.log(
 	'\n✅ FULL CYCLE VERIFIED (all three phases)\n' +
 		'   Phase 1 (UX)\n' +
-		'     · accepted celebration teaches the +2 rung (hint) and is a real dialog\n' +
+		'     · the conversation is a sub-page: card indicator in, back button out\n' +
+		'     · thank-you celebration is a real dialog\n' +
 		'       (alertdialog role, focus moved, Escape closes)\n' +
 		'     · actionable toast is a <button> — keyboard-reachable\n' +
-		'     · declined cards retire to one muted line; the workshop stays a to-do list\n' +
+		'     · declined ideas retire to one muted line inside their conversation\n' +
 		'     · re-rate is acknowledged and clears the stale ✨ marker\n' +
-		'     · first-accept coach mark explains accept → tick → save\n' +
 		'   Phase 2 (economy)\n' +
 		'     · first proposal credited (+3) and announced\n' +
 		'     · rating the commons credited (+0.5)\n' +
-		'     · decline costs nothing; an open-ideas cap guards spam instead\n' +
-		'     · author earns the integration credit (+1) for weaving a classmate in\n' +
+		'     · a thank-you pays the helper (+1); no thanks costs nothing\n' +
+		'     · one open idea per conversation — the box switches to chat by itself\n' +
 		'     · graduated bridging ladder paid out in a TWO-student class\n' +
 		'   Phase 3 (surfaces)\n' +
 		'     · ratings-moved direction survives a reload (server-stamped baseline)\n' +

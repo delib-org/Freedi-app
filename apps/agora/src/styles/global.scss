@@ -146,6 +146,25 @@ p {
     max-width: 1080px;
   }
 
+  // A conversation is a PLACE, not a panel: it covers the game chrome
+  // (journey strip, dock, place banner) the way a chat screen covers the
+  // list it was opened from. Composer on the bottom edge, only the message
+  // list scrolls — the way every chat behaves. Below the toast/celebration
+  // layer, so a reward still arrives on top of a conversation.
+  &--chat {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-header);
+    height: 100dvh;
+    max-height: 100dvh;
+    max-width: none;
+    padding: 0;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, var(--bg-page-high) 0%, #e2f1fd 55%, var(--bg-page) 100%),
+      var(--bg-page);
+  }
+
   &__content {
     flex: 1;
     display: flex;

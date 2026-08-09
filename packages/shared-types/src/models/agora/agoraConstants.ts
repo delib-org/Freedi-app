@@ -88,11 +88,15 @@ export const AGORA_POINTS = {
 	 */
 	SUGGESTION_DECLINED: 0,
 	/**
-	 * Legacy: the chat-flow variant still offers a "thanks" button. Kept
-	 * BELOW accept (+1) — a polite nod must never outpay an idea that
-	 * landed in the text (was 5, which inverted the whole ladder).
+	 * The author's ONE positive answer to an improvement idea, since the
+	 * places UI retired the accept → weave chain (2026-08-09): saying thank
+	 * you is what pays the classmate who helped. Priced at the old accept
+	 * rung (+1) rather than the old polite-nod rate (0.5) — it now carries
+	 * the whole helping side of the economy. Bounded by construction: only a
+	 * helper's FIRST message on a proposal is suggestion-kind, so one
+	 * classmate's proposal can thank one helper exactly once.
 	 */
-	SUGGESTION_THANKED: 0.5,
+	SUGGESTION_THANKED: 1,
 	/**
 	 * The author's side of the cycle. Weaving someone's idea into the text
 	 * is real editorial labor and used to be unpaid. Credited per DISTINCT

@@ -247,16 +247,20 @@ export function listenToNotifications(userId: string): void {
 					});
 				};
 
-				// An accepted or woven-in improvement deserves glitter, not a
-				// toast: pop the celebration with the suggestion text (already
-				// in the local deliberation state) and mark the notification read.
+				// A thank-you, an accepted or a woven-in improvement deserves
+				// glitter, not a toast: pop the celebration with the suggestion
+				// text (already in the local deliberation state) and mark the
+				// notification read. The thank-you is the whole positive answer
+				// the places UI offers now, so it is a reward moment like the rest.
 				if (
+					data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_THANKED ||
 					data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED ||
 					data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED
 				) {
 					const suggestion = Object.values(getDeliberationState().suggestions)
 						.flat()
 						.find((candidate) => candidate.statementId === data.statementId);
+					const thanked = data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_THANKED;
 					const implemented =
 						data.triggerType === NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED;
 					// "Woven in" means the TEXT CHANGED — the improvement loop
@@ -268,18 +272,22 @@ export function listenToNotifications(userId: string): void {
 					// points attached, and retuning AGORA_POINTS can't make copy lie.
 					const awarded = data.pointsAwarded ?? 0;
 					celebrate({
-						message: implemented
-							? awarded > 0
-								? t('celebrate.suggestion_implemented', { n: awarded })
-								: t('celebrate.suggestion_implemented_capped')
-							: t('celebrate.suggestion_accepted', { n: awarded }),
+						message: thanked
+							? t('celebrate.suggestion_thanked', { n: awarded })
+							: implemented
+								? awarded > 0
+									? t('celebrate.suggestion_implemented', { n: awarded })
+									: t('celebrate.suggestion_implemented_capped')
+								: t('celebrate.suggestion_accepted', { n: awarded }),
 						detail: suggestion?.statement,
 						// Accept is the promise, not the payoff. Saying what comes
 						// next turns the wait for "+2" into anticipation instead of
 						// an invisible state — and teaches the ladder when it lands.
-						hint: implemented
-							? undefined
-							: t('celebrate.accepted_hint', { n: AGORA_POINTS.SUGGESTION_IMPLEMENTED }),
+						// A thank-you IS the payoff — it promises nothing further.
+						hint:
+							implemented || thanked
+								? undefined
+								: t('celebrate.accepted_hint', { n: AGORA_POINTS.SUGGESTION_IMPLEMENTED }),
 						action:
 							implemented && proposalId
 								? {
