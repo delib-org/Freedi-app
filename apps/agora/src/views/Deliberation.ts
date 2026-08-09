@@ -197,6 +197,14 @@ function placeScene(kind: 'mine' | 'rate' | 'help'): m.Children {
 const DOCK_PANEL_ID = 'proposal-dock-panel';
 
 /**
+ * The received-feedback handle, named so the "feedback is waiting" toast can
+ * aim at THIS accordion. It used to be found by position ("the first
+ * collapsible section"), which quietly became ambiguous the moment a second
+ * section learned to fold.
+ */
+const DOCK_FEEDBACK_HEAD_ID = 'dock-feedback-head';
+
+/**
  * One labeled drawer of the workshop card. The board reads as a stack of
  * these: every part gets an icon chip + a real title, so the eye can tell
  * where one tool ends and the next begins (was: bare hairline dividers).
@@ -211,6 +219,8 @@ function workbenchSection(
 		/** Pass a toggle to make the head an accordion handle */
 		open?: boolean;
 		onToggle?: () => void;
+		/** Names the handle so a deep link can aim at THIS one by id */
+		headId?: string;
 	},
 ): m.Children {
 	const collapsible = opts?.onToggle !== undefined;
@@ -244,7 +254,12 @@ function workbenchSection(
 			collapsible
 				? m(
 						'button.workbench__head.workbench__head--button',
-						{ type: 'button', 'aria-expanded': String(open), onclick: opts?.onToggle },
+						{
+							type: 'button',
+							id: opts?.headId,
+							'aria-expanded': String(open),
+							onclick: opts?.onToggle,
+						},
 						head,
 					)
 				: m('.workbench__head', head),
@@ -369,6 +384,8 @@ export function Deliberation(
 	const wovenPending: Record<string, boolean> = {};
 	/** The accepted-ideas drawer under the edit box (collapsed by default) */
 	let acceptedDrawerOpen = false;
+	/** The elders' chips: an optional helper, so it starts folded */
+	let charactersOpen = false;
 	/**
 	 * The accept → tick → save chain is the least self-evident mechanic in
 	 * the game: nothing ever told students the tick is PENDING until they
@@ -531,7 +548,7 @@ export function Deliberation(
 		dockOpen = true;
 		// The toast promised feedback — land the reader on it, not on the
 		// edit box (whose focus would summon the keyboard over the answer)
-		focusOnOpen = '.workbench__section--collapsible .workbench__head--button';
+		focusOnOpen = `#${DOCK_FEEDBACK_HEAD_ID}`;
 		m.redraw();
 	}
 
@@ -918,12 +935,10 @@ export function Deliberation(
 		const bridgeBase = myScoreDoc?.bridgingAtLastEdit;
 		const bridgeDelta = bridgeBase === undefined ? 0 : bridgeNow - bridgeBase;
 
+		// No header: the sheet's own bar already says "my proposal", and a live
+		// textarea is its own invitation to type — the "you can edit anytime"
+		// line was standing prose about an affordance you can see
 		return m('.card.my-lantern.my-lantern--workshop', [
-			m('.my-lantern__header', [
-				m('span.my-lantern__icon', '📘'),
-				m('span.my-lantern__title', t('delib.my_proposal')),
-				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
-			]),
 			ratingsMoved > 0
 				? m(
 						'p.my-lantern__moved',
@@ -945,6 +960,7 @@ export function Deliberation(
 					rows: 4,
 					maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
 					placeholder: t('delib.placeholder'),
+					'aria-label': t('delib.my_proposal'),
 					oninput: (event: InputEvent) => {
 						mineDraft = (event.target as HTMLTextAreaElement).value;
 						rememberMineDraft();
@@ -998,12 +1014,17 @@ export function Deliberation(
 									});
 							},
 						},
-						t('delib.update_proposal'),
+						// The button states its own condition instead of apologising
+						// in a line underneath. A greyed button with no reason reads
+						// as "broken" (playtests: students tapped it twice and gave
+						// up) — but "✓ saved" is a true status, and the first
+						// keystroke flips it to the live action, which teaches the
+						// rule at the exact moment it starts to matter.
+						changed || hasPendingWoven
+							? t('delib.update_proposal')
+							: `✓ ${t('delib.update_saved')}`,
 					),
 				]),
-				// A greyed button with no stated reason reads as "broken" —
-				// playtests had students tapping it twice and giving up
-				!changed && !hasPendingWoven ? m('p.action-hint', t('delib.update_hint')) : null,
 			]),
 			// Accepted improvement ideas live in a drawer right BENEATH the
 			// editor — the count invites a peek without stealing the stage,
@@ -1083,6 +1104,31 @@ export function Deliberation(
 						),
 					])
 				: null,
+			workbenchSection(
+				'💡',
+				t('delib.suggestions_received'),
+				suggestionsSection(live, myProposal),
+				{
+					headId: DOCK_FEEDBACK_HEAD_ID,
+					count: openCount,
+					// A live flight pins the section open: accepting the LAST open
+					// suggestion drops openCount to 0 on the same redraw, and a
+					// folding accordion would swallow the card before it can fly
+					open: (suggestionsToggle ?? openCount > 0) || flyingAccepted.size > 0 || flightsInAir > 0,
+					onToggle: () => {
+						suggestionsToggle = !(suggestionsToggle ?? openCount > 0);
+					},
+				},
+			),
+			// The elders are an optional helper, not the loop — folded away until
+			// asked for, so the sheet's resting state is my text and my feedback
+			workbenchSection('🎭', t('delib.ask_elders'), askSection(live, myProposal, topic), {
+				open: charactersOpen,
+				onToggle: () => {
+					charactersOpen = !charactersOpen;
+				},
+			}),
+			m('.workbench__section.workbench__section--plain', m(NeedsPeek, { topic })),
 			// The archive: every idea that MADE IT into the text. Not a drawer
 			// like the tray above — a button, because this is history you go
 			// look at, not work waiting on you. Hidden until there is one.
@@ -1103,7 +1149,6 @@ export function Deliberation(
 						),
 						archiveOpen
 							? m('.archive__list', [
-									m('p.archive__hint', t('delib.archive_hint')),
 									archivedIdeas.map((entry) =>
 										m('.archive__item', { key: entry.statementId }, [
 											m('span.archive__mark', { 'aria-hidden': 'true' }, '✓'),
@@ -1124,23 +1169,6 @@ export function Deliberation(
 							: null,
 					])
 				: null,
-			workbenchSection(
-				'💡',
-				t('delib.suggestions_received'),
-				suggestionsSection(live, myProposal),
-				{
-					count: openCount,
-					// A live flight pins the section open: accepting the LAST open
-					// suggestion drops openCount to 0 on the same redraw, and a
-					// folding accordion would swallow the card before it can fly
-					open: (suggestionsToggle ?? openCount > 0) || flyingAccepted.size > 0 || flightsInAir > 0,
-					onToggle: () => {
-						suggestionsToggle = !(suggestionsToggle ?? openCount > 0);
-					},
-				},
-			),
-			workbenchSection('🎭', t('delib.ask_elders'), askSection(live, myProposal, topic)),
-			m('.workbench__section.workbench__section--plain', m(NeedsPeek, { topic })),
 		]);
 	}
 
@@ -1334,6 +1362,13 @@ export function Deliberation(
 			allSuggestions.length === 0
 				? m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))
 				: null,
+			// What "accept" commits you to, said ONCE above the cards instead of
+			// under every one of them. It retires on the first accept, where the
+			// weave coach mark takes over the same contract in full — both hang
+			// off weaveCoachKey, so the handoff needs no extra state.
+			mySuggestions.length > 0 && !sessionStorage.getItem(weaveCoachKey)
+				? m('p.square-says__meaning', t('delib.accept_hint'))
+				: null,
 			// Retired declines collapse to one muted line — the record stays
 			// honest without the workshop wearing every "no" as a card
 			declinedCount > 0
@@ -1413,7 +1448,6 @@ export function Deliberation(
 											t('delib.will_implement'),
 										),
 									]),
-									m('p.square-says__meaning', t('delib.accept_hint')),
 								]
 							: m(
 									'span.values__score',
