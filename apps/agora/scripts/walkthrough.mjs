@@ -193,15 +193,17 @@ for (const [page, label] of [[s1, 'S1'], [s2, 'S2']]) {
 	console.log(`${label} → help step`);
 }
 
-// Step "help": each writes a suggestion for the other → advances to lap 2.
-// A distinct PLACE now: their proposal is a mounted stand-poster, my advice
-// a smaller sticky note beneath it (no shared skeleton with "mine")
+// Step "help": the whole class's stalls, folded into one readable row —
+// open a classmate's stall and write in it. Sending no longer ends the lap:
+// the row stays, so several classmates can be helped in one visit.
 const suggest = async (page, label, text) => {
-	await page.waitForSelector('.advice-note textarea.text-input', { timeout: 15000 });
-	console.log(`${label} HELP POSTER:`, (await page.locator('.stand-poster .owner-row__number').textContent()).slice(0, 50));
-	await page.locator('.advice-note textarea.text-input').fill(text);
+	await page.waitForSelector('.help-stall__head', { timeout: 15000 });
+	console.log(`${label} STALLS:`, await page.locator('.help-stall').count());
+	await page.locator('.help-stall:not(.help-stall--open) .help-stall__head').first().click();
+	await page.waitForSelector('.help-stall--open .help-stall__input', { timeout: 10000 });
+	await page.locator('.help-stall--open .help-stall__input').fill(text);
 	// .btn--primary only: the loose regex also matches the Hebrew tab label
-	await page.locator('button.btn--primary', { hasText: /Send|שליחת/i }).click();
+	await page.locator('.help-stall--open button.btn--primary', { hasText: /Send|שליחת/i }).click();
 	await page.waitForTimeout(800);
 	console.log(`${label} sent suggestion`);
 };
@@ -223,6 +225,16 @@ console.log('S1 DOCK: folded, back at the stand');
 
 await suggest(s2, 'S2', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר, כדי ששני הצדדים יידעו למה לצפות.');
 await suggest(s1, 'S1', 'אולי כדאי להבטיח גם ייצוג לאצולה באספה, כדי שגם הם ירגישו שותפים.');
+
+// Helping one classmate no longer throws you out of the market — the lap
+// ends when the student says so
+for (const [page, label] of [
+	[s2, 'S2'],
+	[s1, 'S1'],
+]) {
+	await page.getByRole('button', { name: /next lap|לסבב הבא/i }).click({ timeout: 10000 });
+	console.log(`${label} → lap 2`);
+}
 
 // Lap 2, step "mine": the workshop skeleton — ScoreHUD, hero card, tabbed
 // work area with the received suggestion in the Feedback tab

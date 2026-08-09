@@ -1399,66 +1399,155 @@
 	font-weight: 700;
 }
 
-// --- Visiting: their proposal as a mounted POSTER — framed parchment with a
-// pin, clearly not an input. The anatomy twin of "mine" is broken on purpose. ---
-.stand-poster {
-	position: relative;
-	background: linear-gradient(180deg, rgba(224, 119, 20, 0.08), transparent 30%), var(--parchment);
-	border: 1px solid rgba(169, 126, 82, 0.5);
-	border-block-start: 10px solid var(--peer);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-card);
-	padding: var(--space-lg);
+// --- The market row: every classmate's stall folded into one line, the
+// proposal text itself acting as the handle. One screen answers "who can I
+// help?" and "what did they write?" at once — the old one-poster carousel
+// made that a sequence of taps, and stacked four instruction lines on top. ---
+.help-stall-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
 
-	&__pin {
-		position: absolute;
-		inset-block-start: -7px;
-		inset-inline-start: 50%;
-		transform: translateX(-50%);
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: #ffd23f;
-		border: 2px solid #b97300;
-		box-shadow: 0 2px 4px rgba(37, 51, 82, 0.3);
+.help-stall {
+	background: var(--parchment);
+	border: 1px solid rgba(169, 126, 82, 0.4);
+	// The peer border, quoted from the poster it replaces: "this is theirs"
+	// stays answered pre-verbally, so no row needs an owner chip
+	border-block-start: 4px solid var(--peer);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	transition: box-shadow var(--motion-fast) ease;
+
+	&--open {
+		box-shadow: var(--shadow-card);
+		border-block-start-width: 10px;
 	}
 
-	&__next {
+	// The whole strip is the hit target, wearing no button chrome
+	&__head {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		width: 100%;
+		padding: var(--space-md);
+		background: none;
+		border: none;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+
+	// A bare numeral: proposals are known by number, never by author name
+	&__num {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 24px;
+		height: 24px;
+		border-radius: var(--radius-full);
+		background: rgba(224, 119, 20, 0.16);
+		color: var(--peer-glow);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	// Two lines of their proposal is the row's label — the full text waits
+	// inside, so scanning the row costs no scrolling
+	&__preview {
+		flex: 1 1 auto;
+		min-width: 0;
+		color: var(--ink);
+		line-height: 1.5;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	&--open &__preview {
+		// Open, the body shows the whole text — a clamped echo above it reads
+		// as a duplicate
+		display: none;
+	}
+
+	&__chip {
+		flex: 0 0 auto;
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px var(--space-xs);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+
+		&--sent {
+			background: rgba(23, 128, 77, 0.16);
+			color: var(--success);
+			font-weight: 700;
+		}
+
+		// The one chip that asks for something back
+		&--improved {
+			background: rgba(255, 210, 63, 0.35);
+			color: var(--peer-glow);
+			font-weight: 700;
+		}
+	}
+
+	// Vertical caret — closed points down, open points up. PHYSICAL borders on
+	// purpose: with logical ones the corner flips in RTL and the caret ends up
+	// pointing sideways, which reads as "go there", not "unfold".
+	&__chevron {
+		flex: 0 0 auto;
+		align-self: center;
 		margin-inline-start: auto;
+		width: 8px;
+		height: 8px;
+		border-right: 2px solid var(--text-muted);
+		border-bottom: 2px solid var(--text-muted);
+		transform: rotate(45deg);
+		transition: transform var(--motion-fast) ease;
+
+		&--open {
+			transform: rotate(-135deg);
+		}
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding: 0 var(--space-md) var(--space-md);
 	}
 
 	&__text {
-		margin-block-start: var(--space-md);
 		color: var(--ink);
 		font-size: var(--font-size-lg);
 		line-height: 1.7;
 	}
-}
 
-// --- My advice note: a sticky note, deliberately SMALLER than the poster —
-// the input is mine, the poster is theirs ---
-.advice-note {
-	width: 92%;
-	margin-inline-start: auto;
-	background: linear-gradient(180deg, #fff3c9, #ffedb3);
-	border: 1px solid rgba(185, 115, 0, 0.4);
-	border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-md);
-	box-shadow: 0 6px 14px rgba(37, 51, 82, 0.14);
-	padding: var(--space-md);
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-sm);
-	transform: rotate(-0.6deg);
-
-	&__label {
-		font-family: var(--font-display);
-		font-weight: 700;
-		color: var(--peer-glow);
-		font-size: var(--font-size-sm);
+	&__compose {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
 	}
 
 	&__input {
-		background: rgba(255, 255, 255, 0.65);
+		background: var(--bg-card-solid);
+	}
+
+	// The helped loop lives inside the stall now, so its card must not draw a
+	// second frame around the one it is already sitting in
+	&__helped .helped__item {
+		background: transparent;
+		border: none;
+		box-shadow: none;
+		padding: 0;
 	}
 }
 

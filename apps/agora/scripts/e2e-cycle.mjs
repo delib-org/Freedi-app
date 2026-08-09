@@ -267,9 +267,12 @@ for (const page of [s1, s2]) {
 
 const suggest = async (page, label, text) => {
 	await clearCelebration(page);
-	await page.waitForSelector('.advice-note textarea.text-input', { timeout: 15000 });
-	await page.locator('.advice-note textarea.text-input').fill(text);
-	await page.locator('button.btn--primary', { hasText: /שליחת/i }).click();
+	// The classmates' stalls are a folded row now: open one, then write in it
+	await page.waitForSelector('.help-stall__head', { timeout: 15000 });
+	await page.locator('.help-stall:not(.help-stall--open) .help-stall__head').first().click();
+	await page.waitForSelector('.help-stall--open .help-stall__input', { timeout: 10000 });
+	await page.locator('.help-stall--open .help-stall__input').fill(text);
+	await page.locator('.help-stall--open button.btn--primary', { hasText: /שליחת/i }).click();
 	await page.waitForTimeout(800);
 	console.log(`${label} sent a suggestion`);
 };
