@@ -1963,13 +1963,24 @@ export function Deliberation(
 			}
 		}
 
-		return stallOrder
+		const ordered = stallOrder
 			.map((id) => byId.get(id))
 			.filter((proposal): proposal is AgoraProposal => proposal !== undefined);
+
+		// Did the ROW ORDER change, or did rows merely move because something
+		// folded? Only the first is a FLIP (see flipRow).
+		const key = ordered.map((proposal) => proposal.statementId).join('|');
+		stallsResorted = stallOrderKey !== '' && key !== stallOrderKey;
+		stallOrderKey = key;
+
+		return ordered;
 	}
 
 	/** proposalId → where its row last sat in the list, for the FLIP move */
 	const rowOffsets = new Map<string, number>();
+	/** The row order the square last rendered, and whether it just changed */
+	let stallOrderKey = '';
+	let stallsResorted = false;
 
 	function rememberRow(dom: HTMLElement, id: string): void {
 		rowOffsets.set(id, dom.offsetTop);
@@ -1983,12 +1994,18 @@ export function Deliberation(
 	 * makes the reader lose their place.
 	 *
 	 * offsetTop, not getBoundingClientRect: scrolling must not read as motion.
+	 *
+	 * ONLY when the order actually changed. Rows also move when a stall folds
+	 * open above them, and treating that as a re-sort was violent: every row
+	 * below the one you tapped was yanked back by the height of the body that
+	 * was still growing, which flung a card up over the banner and read as
+	 * the page jumping. The fold animates that displacement by itself.
 	 */
 	function flipRow(dom: HTMLElement, id: string): void {
 		const now = dom.offsetTop;
 		const before = rowOffsets.get(id);
 		rowOffsets.set(id, now);
-		if (before === undefined || reducedMotion) return;
+		if (before === undefined || reducedMotion || !stallsResorted) return;
 		const delta = before - now;
 		if (Math.abs(delta) < 2) return;
 		// Frame 1: no transition, sitting at the old place
