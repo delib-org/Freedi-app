@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
+import { Collapsible } from './Collapsible';
 import type { AgoraCharacter, AgoraTopicPackage } from '@freedi/shared-types';
 
 export interface NeedsBoardAttrs {
@@ -60,7 +61,7 @@ export function NeedsPeek(): m.Component<NeedsBoardAttrs> {
 					},
 					open ? t('needs.hide_board') : t('needs.show_board'),
 				),
-				open ? m(NeedsBoard, { topic: vnode.attrs.topic }) : null,
+				open ? m(Collapsible, m(NeedsBoard, { topic: vnode.attrs.topic })) : null,
 			]);
 		},
 	};

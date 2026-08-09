@@ -6,7 +6,6 @@ import {
 	stopDeliberationListeners,
 	submitProposal,
 	rateProposal,
-	submitSuggestion,
 	submitThreadMessage,
 	resolveSuggestion,
 	askCharacterReview,
@@ -20,6 +19,7 @@ import {
 	HelpedProposal,
 } from '../lib/proposals';
 import { CountdownTimer } from '../components/CountdownTimer';
+import { Collapsible } from '../components/Collapsible';
 import {
 	registerHelpedNavigator,
 	unregisterHelpedNavigator,
@@ -279,7 +279,8 @@ function workbenchSection(
 						head,
 					)
 				: m('.workbench__head', head),
-			open ? body : null,
+			// Sections unfold and fold away — the sheet never reflows in a jump
+			open ? (collapsible ? m(Collapsible, body) : body) : null,
 		],
 	);
 }
@@ -319,9 +320,6 @@ const RATE_OPTIONS: ReadonlyArray<{
 
 type CycleStep = 'mine' | 'rate' | 'help' | 'done';
 
-/** How long a pressed rating stays visibly selected before the square moves on */
-const RATE_ACK_MS = 700;
-
 /** How long a sent suggestion is announced on its stall before the row settles */
 const SENT_ACK_MS = 1400;
 
@@ -345,11 +343,6 @@ export function Deliberation(
 	const { session, userId } = initialVnode.attrs;
 	let draft = '';
 	let submitting = false;
-	/**
-	 * The classmates' stalls are a LIST now, not a carousel: one draft per
-	 * proposal, so folding a stall never eats what was typed in it.
-	 */
-	const helpDrafts: Record<string, string> = {};
 	/** Which stall on the row is unfolded — one at a time, one task at a time */
 	let openStallId = '';
 	/** The stall that just took a suggestion, held for one acknowledgment beat */
@@ -364,12 +357,6 @@ export function Deliberation(
 	 */
 	let stallOrder: string[] = [];
 	let stallOrderRound = 0;
-	/**
-	 * The press has to be seen before the square moves on: the stall holds
-	 * its ring + ✓ for one beat, THEN folds. An instant fold read as
-	 * "nothing happened" when pressed.
-	 */
-	let rateAckTimer = 0;
 	/**
 	 * The always-editable box in the workshop + the proposal text it was
 	 * seeded from. Restored from sessionStorage below: the box now lives
@@ -573,8 +560,8 @@ export function Deliberation(
 		if (focusHelpedId !== proposalId) return;
 		focusHelpedId = null;
 		dom.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		dom.classList.add('helped__item--spotlight');
-		window.setTimeout(() => dom.classList.remove('helped__item--spotlight'), 2400);
+		dom.classList.add('stall--spotlight');
+		window.setTimeout(() => dom.classList.remove('stall--spotlight'), 2400);
 	}
 
 	const cycleKey = `agora_${session.sessionId}_cycle`;
@@ -628,11 +615,8 @@ export function Deliberation(
 			// arrived in is what you came to look at
 			closeDock();
 			// ...and folds whatever stall was left open in the room behind me,
-			// so the next room's list opens the same way every time. The
-			// square's pending fold beat has to be called off with it, or it
-			// lands a second later and shuts a stall I just opened HERE.
+			// so the next room's list opens the same way every time
 			openStallId = '';
-			window.clearTimeout(rateAckTimer);
 		}
 		cycle = { ...cycle, ...patch };
 		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
@@ -1119,24 +1103,27 @@ export function Deliberation(
 							],
 						),
 						archiveOpen
-							? m('.archive__list', [
-									archivedIdeas.map((entry) =>
-										m('.archive__item', { key: entry.statementId }, [
-											m('span.archive__mark', { 'aria-hidden': 'true' }, '✓'),
-											m('.archive__body', [
-												m('p.archive__text', entry.statement),
-												// The suggester is named here on purpose: this is
-												// the credit ledger of who improved my proposal
-												entry.anonName
-													? m(
-															'p.archive__from',
-															t('delib.suggestion_from', { name: entry.anonName }),
-														)
-													: null,
+							? m(
+									Collapsible,
+									m('.archive__list', [
+										archivedIdeas.map((entry) =>
+											m('.archive__item', { key: entry.statementId }, [
+												m('span.archive__mark', { 'aria-hidden': 'true' }, '✓'),
+												m('.archive__body', [
+													m('p.archive__text', entry.statement),
+													// The suggester is named here on purpose: this is
+													// the credit ledger of who improved my proposal
+													entry.anonName
+														? m(
+																'p.archive__from',
+																t('delib.suggestion_from', { name: entry.anonName }),
+															)
+														: null,
+												]),
 											]),
-										]),
-									),
-								])
+										),
+									]),
+								)
 							: null,
 					])
 				: null,
@@ -1498,7 +1485,11 @@ export function Deliberation(
 				// two unresolved ideas at a time; resolving any frees the slot
 				sendBlocked ? m('p.action-hint', t('delib.open_ideas_cap')) : null,
 				m(
-					'button.btn.btn--secondary.btn--sm',
+					// An improvement idea is the loop's headline action; a plain
+					// reply is a reply. `thread__send` is the stable hook either way.
+					`button.btn.thread__send.btn--sm.${
+						kind === AgoraMessageKind.suggestion ? 'btn--primary' : 'btn--secondary'
+					}`,
 					{
 						disabled: busy || sendBlocked || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
 						onclick: () => {
@@ -1510,6 +1501,17 @@ export function Deliberation(
 								// like one sent from the stall's first compose box
 								helpedThisLap.add(proposal.statementId);
 								threadMarkSuggestion[threadKey] = false;
+								// The row says "sent ✓" for a beat. The stall stays OPEN
+								// (it used to fold): the idea appears in the conversation
+								// right below, and folding would hide the answer arriving.
+								if (role === 'helper') {
+									sentAckId = proposal.statementId;
+									window.clearTimeout(sentAckTimer);
+									sentAckTimer = window.setTimeout(() => {
+										sentAckId = '';
+										m.redraw();
+									}, SENT_ACK_MS);
+								}
 							}
 							submitThreadMessage(
 								live,
@@ -1601,7 +1603,9 @@ export function Deliberation(
 							}),
 						],
 					),
-					open ? threadView(live, myProposal, helperUid, 'owner') : null,
+					// Wrapped so the swap between two helpers is a handoff: the one
+					// you left folds away while the one you tapped unfolds
+					open ? m(Collapsible, threadView(live, myProposal, helperUid, 'owner')) : null,
 				]);
 			}),
 		]);
@@ -1663,14 +1667,19 @@ export function Deliberation(
 					);
 				}),
 			),
+			// Same handoff as the conversations: the elder you left folds away
+			// while the one you tapped unfolds
 			openCharacter
-				? characterReviewCard(
-						live,
-						openCharacter,
-						myProposal,
-						getDeliberationState().characterReviews[
-							createAgoraCharacterReviewId(myProposal.statementId, openCharacter.characterId)
-						],
+				? m(
+						Collapsible,
+						characterReviewCard(
+							live,
+							openCharacter,
+							myProposal,
+							getDeliberationState().characterReviews[
+								createAgoraCharacterReviewId(myProposal.statementId, openCharacter.characterId)
+							],
+						),
 					)
 				: null,
 		]);
@@ -1832,8 +1841,11 @@ export function Deliberation(
 	 * own lastUpdate is bumped by the evaluation pipeline's aggregate writes,
 	 * which would flag a proposal as "improved" when nobody touched a word.
 	 */
-	function helpedImprovedSince(entry: HelpedProposal): boolean {
-		const { proposal, mySuggestions } = entry;
+	function helpedImprovedSince(proposal: AgoraProposal): boolean {
+		const mySuggestions = getThreadMessages(proposal.statementId, userId).filter(
+			(message) => message.creatorId === userId && isSuggestionKind(message),
+		);
+		if (mySuggestions.length === 0) return false;
 		// createdAt, NOT lastUpdate: resolving a suggestion bumps its lastUpdate,
 		// which would wrongly hide the marker when the owner edited first
 		const latestInput = Math.max(...mySuggestions.map((suggestion) => suggestion.createdAt));
@@ -1850,48 +1862,65 @@ export function Deliberation(
 	 * follow-up. `bare` drops the heading and the proposal text for the callers
 	 * that already show them (the stalls row shows both in its handle).
 	 */
-	function helpedItem(
+	/**
+	 * ONE card per classmate, everywhere. Unfolded, a stall answers all three
+	 * questions a student has about someone else's proposal without leaving
+	 * it: does it need weighing again (the invitation + the scale), what did
+	 * I offer and what became of it (the thread's status chips), and can I
+	 * say something to the author (the same thread's box).
+	 *
+	 * It used to be two places on one screen — a folded row up top and a
+	 * second "proposals you helped" section repeating the same proposal as a
+	 * full card below. One proposal cannot live in two lists: whichever one
+	 * you were looking at, the other held half the story.
+	 */
+	function stallBody(
 		live: AgoraSession,
-		entry: HelpedProposal,
-		opts?: { bare?: boolean },
+		proposal: AgoraProposal,
+		opts?: { countsTowardLap?: boolean },
 	): m.Children {
-		const { proposal } = entry;
-		const improvedSince = helpedImprovedSince(entry);
+		const myRating = getDeliberationState().myRatings[proposal.statementId];
+		const { editAt, mineAt } = changeStamps(proposal);
+		// The text moved after I weighed it — my rating is about an older
+		// version, and the scale below is how to say so. Self-clearing: a
+		// re-rate advances updatedAt past the edit.
+		const changedSinceRating = myRating !== undefined && editAt > myRating.updatedAt;
+		const mineSinceRating = myRating !== undefined && mineAt > myRating.updatedAt;
 		const acked = reRateAcked[proposal.statementId] === true;
 
-		return m(
-			'.card.stack.helped__item',
-			{
-				key: proposal.statementId,
-				oncreate: (cardVnode: m.VnodeDOM) => spotlightHelped(cardVnode.dom, proposal.statementId),
-				onupdate: (cardVnode: m.VnodeDOM) => spotlightHelped(cardVnode.dom, proposal.statementId),
-			},
-			[
-				// The proposal itself comes first — that's what I'm evaluating
-				opts?.bare === true
-					? null
-					: m('.owner-row', [
-							m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
-							m(
-								'span.owner-row__number',
-								t('delib.proposal_number', { n: proposalNumber(proposal) }),
-							),
-						]),
-				opts?.bare === true ? null : m('p.helped__current', proposal.statement),
-				improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
-				// The cycle's final beat: the press is answered in words, once,
-				// then the prompt returns
-				acked
-					? m('p.helped__rerate-ack', { role: 'status' }, `✓ ${t('delib.rerate_ack')}`)
-					: m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
-				reRateScale(live, proposal),
-				// The whole conversation with this owner — my ideas with their
-				// live status, their replies, and the box that continues it —
-				// sits beneath the evaluation.
-				m('p.teacher__section-title', t('delib.helped_your_ideas')),
-				threadView(live, proposal, userId, 'helper'),
-			],
-		);
+		return [
+			changedSinceRating
+				? m(
+						'p.stall__reinvite',
+						{ class: mineSinceRating ? 'stall__reinvite--mine' : undefined },
+						mineSinceRating
+							? `✨ ${t('delib.reinvite_improved')}`
+							: `✏️ ${t('delib.reinvite_prompt')}`,
+					)
+				: helpedImprovedSince(proposal)
+					? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`)
+					: null,
+			// The cycle's final beat: the press is answered in words, once,
+			// then the prompt returns
+			acked ? m('p.helped__rerate-ack', { role: 'status' }, `✓ ${t('delib.rerate_ack')}`) : null,
+			reRateScale(
+				live,
+				proposal,
+				opts?.countsTowardLap === true
+					? {
+							// Only a FIRST vote moves the lap along; changing my mind
+							// about a proposal I already weighed is free, and must not
+							// buy a lap step. The stall no longer folds itself after the
+							// press — the conversation with the author lives in this same
+							// card now, and folding it would hide what I came to do next.
+							onFirstVote: () => {
+								setCycle({ rated: cycle.rated + 1 });
+							},
+						}
+					: undefined,
+			),
+			threadView(live, proposal, userId, 'helper'),
+		];
 	}
 
 	/**
@@ -2002,12 +2031,14 @@ export function Deliberation(
 			{
 				key: proposal.statementId,
 				class: open ? 'stall--open' : undefined,
-				oncreate: opts.flip
-					? (vnode: m.VnodeDOM) => rememberRow(vnode.dom as HTMLElement, proposal.statementId)
-					: undefined,
-				onupdate: opts.flip
-					? (vnode: m.VnodeDOM) => flipRow(vnode.dom as HTMLElement, proposal.statementId)
-					: undefined,
+				oncreate: (vnode: m.VnodeDOM) => {
+					if (opts.flip) rememberRow(vnode.dom as HTMLElement, proposal.statementId);
+					spotlightHelped(vnode.dom as HTMLElement, proposal.statementId);
+				},
+				onupdate: (vnode: m.VnodeDOM) => {
+					if (opts.flip) flipRow(vnode.dom as HTMLElement, proposal.statementId);
+					spotlightHelped(vnode.dom as HTMLElement, proposal.statementId);
+				},
 			},
 			[
 				m('button.stall__head', { 'aria-expanded': String(open), onclick: opts.onToggle }, [
@@ -2023,7 +2054,11 @@ export function Deliberation(
 						'aria-hidden': 'true',
 					}),
 				]),
-				open ? m('.stall__body', [m('p.stall__text', proposal.statement), opts.body()]) : null,
+				// A row on the square unfolds in place: the rows below it slide
+				// down with the growth instead of being teleported
+				open
+					? m(Collapsible, m('.stall__body', [m('p.stall__text', proposal.statement), opts.body()]))
+					: null,
 			],
 		);
 	}
@@ -2053,45 +2088,6 @@ export function Deliberation(
 			);
 	}
 
-	/** What a stall holds out on the square: the five-level scale, mine to change */
-	function rateStallBody(live: AgoraSession, proposal: AgoraProposal): m.Children {
-		const myRating = getDeliberationState().myRatings[proposal.statementId];
-		const { editAt, mineAt } = changeStamps(proposal);
-		// The text moved after I weighed it — my rating is about an older
-		// version, and the scale below is the way to say so. Self-clearing:
-		// a re-rate advances updatedAt past the edit (same rule as the
-		// helped-section marker).
-		const changedSinceRating = myRating !== undefined && editAt > myRating.updatedAt;
-		const mineSinceRating = myRating !== undefined && mineAt > myRating.updatedAt;
-		const reinvite = changedSinceRating
-			? m(
-					'p.stall__reinvite',
-					{ class: mineSinceRating ? 'stall__reinvite--mine' : undefined },
-					mineSinceRating
-						? `✨ ${t('delib.reinvite_improved')}`
-						: `✏️ ${t('delib.reinvite_prompt')}`,
-				)
-			: null;
-
-		return [
-			reinvite,
-			reRateScale(live, proposal, {
-				// Only a FIRST vote moves the lap along; changing my mind about a
-				// proposal I already weighed is free, and must not buy a lap step
-				onFirstVote: () => {
-					setCycle({ rated: cycle.rated + 1 });
-					window.clearTimeout(rateAckTimer);
-					// Hold the press on screen (ring + ✓ + receding siblings), THEN
-					// fold the stall — an instant fold read as "nothing happened"
-					rateAckTimer = window.setTimeout(() => {
-						openStallId = '';
-						m.redraw();
-					}, RATE_ACK_MS);
-				},
-			}),
-		];
-	}
-
 	/** The chip a square stall wears: the face I already gave it */
 	function rateStallChip(proposal: AgoraProposal): m.Children {
 		const mine = getDeliberationState().myRatings[proposal.statementId];
@@ -2104,64 +2100,6 @@ export function Deliberation(
 			{ 'aria-label': t(option.labelKey) },
 			`${option.emoji} ✓`,
 		);
-	}
-
-	/** What a stall holds when I came to HELP: my idea, or the loop I started */
-	function helpStallBody(
-		live: AgoraSession,
-		proposal: AgoraProposal,
-		helped: HelpedProposal | undefined,
-	): m.Children {
-		const draft = helpDrafts[proposal.statementId] ?? '';
-
-		return helped
-			? // Keyed child (helpedItem) in its own container: Mithril
-				// refuses keyed and unkeyed siblings in one list
-				m('.stall__helped', [helpedItem(live, helped, { bare: true })])
-			: m('.stall__compose', [
-					m('textarea.text-input.stall__input', {
-						value: draft,
-						rows: 3,
-						placeholder: t('delib.help_placeholder'),
-						oninput: (event: InputEvent) => {
-							helpDrafts[proposal.statementId] = (event.target as HTMLTextAreaElement).value;
-						},
-					}),
-					m(
-						'button.btn.btn--primary.btn--full',
-						{
-							disabled: sentAckId !== '' || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-							onclick: () => {
-								if (sentAckId !== '') return;
-								const text = draft.trim();
-								helpDrafts[proposal.statementId] = '';
-								helpedThisLap.add(proposal.statementId);
-								void submitSuggestion(
-									live,
-									proposal,
-									initialVnode.attrs.myParticipant.anonName,
-									text,
-								);
-								// The beat: the stall folds with a "sent" mark on it,
-								// and the row stays — helping one classmate is not a
-								// reason to be thrown out of the market
-								sentAckId = proposal.statementId;
-								openStallId = '';
-								window.clearTimeout(sentAckTimer);
-								sentAckTimer = window.setTimeout(() => {
-									sentAckId = '';
-									m.redraw();
-								}, SENT_ACK_MS);
-							},
-						},
-						t('delib.send_suggestion'),
-					),
-					// Only once they've started writing: on an empty box the
-					// placeholder is already saying it
-					draft.length > 0 && draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH
-						? m('p.action-hint', t('delib.suggest_hint'))
-						: null,
-				]);
 	}
 
 	/** Unread replies waiting in MY thread at this classmate's stall */
@@ -2202,21 +2140,9 @@ export function Deliberation(
 		return helped ? m('span.stall__chip', `🤝 ${t('delib.helped_chip')}`) : null;
 	}
 
-	/** "Proposals I helped" — hidden until I've actually helped something */
-	function helpedSection(live: AgoraSession): m.Children {
-		const entries = getHelpedProposals(userId);
-		if (entries.length === 0) return null;
-
-		return m('.stack', [
-			m('p.teacher__section-title', t('delib.helped_title')),
-			entries.map((entry) => helpedItem(live, entry)),
-		]);
-	}
-
 	return {
 		onremove() {
 			window.clearTimeout(splashTimer);
-			window.clearTimeout(rateAckTimer);
 			window.clearTimeout(sentAckTimer);
 			window.clearTimeout(dockIntroTimer);
 			Object.values(reRateAckTimers).forEach((timer) => window.clearTimeout(timer));
@@ -2487,6 +2413,14 @@ export function Deliberation(
 				// behind a "next" beat hid the class from the class: you could see
 				// only what you had been handed, never what anyone else wrote.
 				const square = squareOrder(proposals, scores);
+				// A deep link from the "woven in" celebration points at a card:
+				// unfold it, or what it promised stays inside a folded handle
+				if (
+					focusHelpedId !== null &&
+					square.some((proposal) => proposal.statementId === focusHelpedId)
+				) {
+					openStallId = focusHelpedId;
+				}
 				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
 				const allWeighed =
 					square.length > 0 &&
@@ -2538,7 +2472,7 @@ export function Deliberation(
 													if (opening) ackProposalSeen(proposal);
 												},
 												chips: [changeChip(proposal), rateStallChip(proposal)],
-												body: () => rateStallBody(live, proposal),
+												body: () => stallBody(live, proposal, { countsTowardLap: true }),
 											}),
 										),
 									),
@@ -2552,9 +2486,6 @@ export function Deliberation(
 									]),
 									onward,
 								],
-						// The collaboration loop stays in reach on the whole Others
-						// side — one tap on the Others tab and it's visible
-						helpedSection(live),
 					]),
 					scrim,
 					dock,
@@ -2564,12 +2495,11 @@ export function Deliberation(
 			// ---------- STEP: HELP SOMEONE ----------
 			if (cycle.step === 'help') {
 				const stalls = orderedStalls(proposals, suggestions);
-				const helpedEntries = getHelpedProposals(userId);
 				const helpedById = new Map(
-					helpedEntries.map((entry) => [entry.proposal.statementId, entry]),
+					getHelpedProposals(userId).map((entry) => [entry.proposal.statementId, entry]),
 				);
 				// The badge clears per card as each stall is opened or re-rated —
-				// standing in the market alone doesn't count as reading the news
+				// standing in the market alone doesn't count as reading the news.
 				// A deep link from the "woven in" toast points at a stall: open it,
 				// or the card it promised is folded away inside a handle
 				if (focusHelpedId !== null && helpedById.has(focusHelpedId)) {
@@ -2614,7 +2544,7 @@ export function Deliberation(
 													if (opening) ackProposalSeen(proposal);
 												},
 												chips: [helpStallChip(proposal, helped), changeChip(proposal)],
-												body: () => helpStallBody(live, proposal, helped),
+												body: () => stallBody(live, proposal),
 											});
 										}),
 									),
@@ -2636,7 +2566,25 @@ export function Deliberation(
 					delibNav(myProposal),
 					m('h3.text-center', t('delib.cycle_done_title')),
 					m('p.home-explanation', t('delib.cycle_done_hint')),
-					helpedSection(live),
+					// The same one card per classmate as everywhere else — the laps
+					// are over, but re-reading, re-weighing and answering the
+					// author are not, and they live in the row they always did
+					m(
+						'.stall-list',
+						squareOrder(proposals, scores).map((proposal) =>
+							stallRow({
+								proposal,
+								open: openStallId === proposal.statementId,
+								onToggle: () => {
+									const opening = openStallId !== proposal.statementId;
+									openStallId = opening ? proposal.statementId : '';
+									if (opening) ackProposalSeen(proposal);
+								},
+								chips: [changeChip(proposal), rateStallChip(proposal)],
+								body: () => stallBody(live, proposal),
+							}),
+						),
+					),
 					m(
 						'button.btn.btn--secondary.btn--full',
 						{

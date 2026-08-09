@@ -332,6 +332,14 @@
   gap: var(--space-md);
 }
 
+// The fold every accordion body is wrapped in: it grows out of nothing and
+// shrinks back into it instead of blinking. The height itself is animated in
+// JS (components/Collapsible.ts) — this only keeps the wrapper honest as a
+// flex item, where the automatic minimum size would otherwise pin it open.
+.collapsible {
+  min-height: 0;
+}
+
 .spinner {
   width: 28px;
   height: 28px;
@@ -1425,6 +1433,12 @@
 		box-shadow var(--motion-fast) ease,
 		transform var(--motion-base) var(--ease-camera);
 
+	// The row the "woven in" celebration steered to: a golden pulse says
+	// "THIS one changed — re-read it", then fades back into the list
+	&--spotlight {
+		animation: helped-spotlight 2.4s ease;
+	}
+
 	&--open {
 		box-shadow: var(--shadow-card);
 		border-block-start-width: 10px;
@@ -1821,7 +1835,9 @@
 	text-align: center;
 }
 
-.thread-inbox__item > .thread {
+// The thread sits one level down now — inside the fold wrapper that animates
+// its height — so this reaches through .collapsible
+.thread-inbox__item .thread {
 	padding: 0 var(--space-md) var(--space-md);
 }
 
@@ -2936,7 +2952,6 @@
 		background: var(--bg-inset);
 		border: 1px solid var(--border-subtle);
 		border-radius: var(--radius-md);
-		animation: archive-open var(--motion-base) var(--ease-camera) both;
 	}
 
 	&__hint {
@@ -2992,23 +3007,8 @@
 	}
 }
 
-@keyframes archive-open {
-	from {
-		opacity: 0;
-		transform: translateY(-6px);
-	}
-
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.archive__list {
-		animation: none;
-	}
-}
+// (archive-open retired: the archive is a .collapsible now, so it unfolds
+// AND folds away from one place — see components/Collapsible.ts)
 
 // --- Camp meter rows (label + track + value). Born as the reception
 // forecast (feature removed 2026-07-28 — duplicated the character reviews);
@@ -3507,7 +3507,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.workshop__item--flying,
 	.chat-drawer__head--landed,
-	.helped__item--spotlight {
+	.stall--spotlight {
 		animation: none;
 	}
 }
@@ -4806,10 +4806,11 @@
 	}
 
 	// --- my per-camp breakdown (internals re-skin via the token shadows) ---
+	// The reveal keyframe retired here: the breakdown is wrapped in a
+	// .collapsible, which folds it open AND shut from one place
 	&__detail {
 		position: relative;
 		padding-block-start: var(--space-md);
-		animation: scorehud-reveal var(--motion-base) var(--ease-camera) both;
 	}
 
 	&__camps {

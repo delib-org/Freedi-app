@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t, tCount } from '../lib/i18n';
 import { celebrate } from '../lib/celebration';
+import { Collapsible } from './Collapsible';
 import { AgoraProposal } from '../lib/proposals';
 import {
 	AgoraParticipant,
@@ -405,16 +406,25 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 	): m.Children {
 		if (!detailOpen) return null;
 
-		return m('.scorehud__detail.scorehud__detail--open', { role: 'region' }, [
-			m('.scorehud__camps', [
-				campColumn(topic.positioningScale.leftLabel, '--camp-left-glow', myScore?.perCamp.left),
-				m('.scoreboard__divider'),
-				campColumn(topic.positioningScale.rightLabel, '--camp-right-glow', myScore?.perCamp.right),
+		// The breakdown folds both ways now — the tile above it is a handle,
+		// and a handle that only animates one direction reads as broken
+		return m(
+			Collapsible,
+			m('.scorehud__detail.scorehud__detail--open', { role: 'region' }, [
+				m('.scorehud__camps', [
+					campColumn(topic.positioningScale.leftLabel, '--camp-left-glow', myScore?.perCamp.left),
+					m('.scoreboard__divider'),
+					campColumn(
+						topic.positioningScale.rightLabel,
+						'--camp-right-glow',
+						myScore?.perCamp.right,
+					),
+				]),
+				ratingsMoved > 0
+					? m('p.scorehud__moved', `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`)
+					: null,
 			]),
-			ratingsMoved > 0
-				? m('p.scorehud__moved', `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`)
-				: null,
-		]);
+		);
 	}
 
 	// ---------- the square: variable-width support chart ----------

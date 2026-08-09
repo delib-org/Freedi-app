@@ -273,9 +273,9 @@ const suggest = async (page, label, text) => {
 	// The classmates' stalls are a folded row now: open one, then write in it
 	await page.waitForSelector('.stall__head', { timeout: 15000 });
 	await page.locator('.stall:not(.stall--open) .stall__head').first().click();
-	await page.waitForSelector('.stall--open .stall__input', { timeout: 10000 });
-	await page.locator('.stall--open .stall__input').fill(text);
-	await page.locator('.stall--open button.btn--primary', { hasText: /שליחת/i }).click();
+	await page.waitForSelector('.stall--open .thread__input', { timeout: 10000 });
+	await page.locator('.stall--open .thread__input').fill(text);
+	await page.locator('.stall--open .thread__composer .thread__send').first().click();
 	await page.waitForTimeout(800);
 	console.log(`${label} sent a suggestion`);
 };
@@ -439,8 +439,8 @@ if (buttons < 2) fail('woven celebration missing the travel button');
 await shot(s2, '05-B-celebration-woven');
 // Primary = the continuation: travel to the improved proposal
 await s2.locator('.celebration button.btn--primary').click();
-await s2.waitForSelector('.helped__item', { timeout: 10000 });
-const spotlit = await s2.locator('.helped__item--spotlight').count();
+await s2.waitForSelector('.stall--open', { timeout: 10000 });
+const spotlit = await s2.locator('.stall--spotlight').count();
 console.log('B landed on helped item, spotlight:', spotlit === 1 ? 'YES' : 'no');
 await shot(s2, '06-B-helped-spotlight');
 
@@ -483,7 +483,7 @@ await shot(s1, '07-A-archive-open');
 
 // ---------- Phase E: B re-rates → ack, marker clears, bridge pays out ----------
 step('PHASE E: B re-rates → the loop closes, and the bridging ladder pays');
-await s2.locator('.helped__item .rate-scale--compact .rate-scale__option--strong-for').click();
+await s2.locator('.stall--open .rate-scale--compact .rate-scale__option--strong-for').click();
 console.log('B re-rated: strong-for');
 // Step 5 was the one handoff with NO feedback at all — now it answers
 await s2.locator('.helped__rerate-ack').waitFor({ timeout: 5000 });
@@ -539,28 +539,28 @@ await closeDock(s1);
 // ---------- Phase F: the structural spam guard ----------
 step('PHASE F: open-ideas cap replaces the points penalty');
 await s2.locator('.delib-nav__item--peer').click();
-await s2.waitForSelector('.helped__item', { timeout: 10000 });
+await s2.waitForSelector('.stall--open', { timeout: 10000 });
 // Follow-ups are thread messages now. Plain chat is uncapped conversation;
 // only messages MARKED as improvement ideas occupy an open-idea slot — so
 // the cap test must tick the mark-as-idea toggle each time.
 const followUpIdea = async (page, text) => {
-	const toggle = page.locator('.helped__item .thread__kind-toggle input').first();
+	const toggle = page.locator('.stall--open .thread__kind-toggle input').first();
 	if (!(await toggle.isChecked())) await toggle.click();
-	await page.locator('.helped__item .thread__input').first().fill(text);
-	await page.locator('.helped__item .thread__composer button.btn--secondary').first().click();
+	await page.locator('.stall--open .thread__input').first().fill(text);
+	await page.locator('.stall--open .thread__composer .thread__send').first().click();
 	await page.waitForTimeout(1200);
 };
 await followUpIdea(s2, 'אפשר להוסיף סעיף שמבטיח שהאספה תתכנס לפחות פעמיים בשנה.');
 await followUpIdea(s2, 'ואולי גם לקבוע מי מכריע במקרה של תיקו בהצבעה.');
 // Two unresolved ideas on one proposal is the ceiling — and it is STATED,
 // not enforced silently
-const capToggle = s2.locator('.helped__item .thread__kind-toggle input').first();
+const capToggle = s2.locator('.stall--open .thread__kind-toggle input').first();
 if (!(await capToggle.isChecked())) await capToggle.click();
-await s2.locator('.helped__item .thread__input').first().fill('ניסיון לשלוח רעיון שלישי בזמן ששניים ממתינים.');
-await s2.locator('.helped__item .action-hint').waitFor({ timeout: 10000 });
-console.log('   ✓ B CAP HINT:', (await s2.locator('.helped__item .action-hint').first().textContent()).trim());
+await s2.locator('.stall--open .thread__input').first().fill('ניסיון לשלוח רעיון שלישי בזמן ששניים ממתינים.');
+await s2.locator('.stall--open .action-hint').waitFor({ timeout: 10000 });
+console.log('   ✓ B CAP HINT:', (await s2.locator('.stall--open .action-hint').first().textContent()).trim());
 const sendDisabled = await s2
-	.locator('.helped__item .thread__composer button.btn--secondary')
+	.locator('.stall--open .thread__composer .thread__send')
 	.first()
 	.isDisabled();
 eq('third open idea blocked', sendDisabled, true);
@@ -568,11 +568,11 @@ eq('third open idea blocked', sendDisabled, true);
 await capToggle.click();
 // The hint retires with the mark — wait for the redraw before reading the button
 await s2
-	.locator('.helped__item .action-hint')
+	.locator('.stall--open .action-hint')
 	.first()
 	.waitFor({ state: 'detached', timeout: 5000 });
 const chatSendDisabled = await s2
-	.locator('.helped__item .thread__composer button.btn--secondary')
+	.locator('.stall--open .thread__composer .thread__send')
 	.first()
 	.isDisabled();
 eq('plain chat is never capped', chatSendDisabled, false);

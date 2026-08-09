@@ -142,6 +142,14 @@ const closeDock = async (page) => {
 // across a reload must let it land first
 const letSeenFlush = (page) => page.waitForTimeout(3500);
 
+// A stall no longer folds itself after a rating (one card holds the whole
+// conversation), so "open it" must not blindly toggle a row that is already open
+const ensureOpen = async (page, row) => {
+	const cls = (await row.getAttribute('class')) ?? '';
+	if (!cls.includes('stall--open')) await row.locator('.stall__head').click();
+	await page.waitForTimeout(500);
+};
+
 // ---------- Phase 1: NEW chip, cleared by engagement, durable across reload ----------
 step('PHASE 1: NEW chip on the square — clears on open, stays cleared after reload');
 await s2.waitForSelector('.stall__head', { timeout: 15000 });
@@ -160,7 +168,7 @@ eq('NEW stayed cleared after a RELOAD (Firestore seen-state)', await s2.locator(
 await shot(s2, '02-B-new-cleared-after-reload');
 
 // B rates A's proposal (first vote advances the lap; also acks seen)
-await s2.locator('.stall:not(.stall--open) .stall__head').first().click();
+await ensureOpen(s2, s2.locator('.stall').first());
 await s2.waitForSelector('.stall--open .rate-scale', { timeout: 10000 });
 await s2.locator('.stall--open .rate-scale__option--against').click();
 await s2.locator('.rate-scale__option--selected .rate-scale__check').waitFor({ timeout: 5000 });
@@ -184,7 +192,7 @@ await shot(s2, '03-B-edited-chip');
 // Opening the stall shows the invitation — the folded chip and the unfolded
 // body tell the same story
 const editedStall = s2.locator('.stall', { has: s2.locator('.stall__chip--edited') }).first();
-await editedStall.locator('.stall__head').click();
+await ensureOpen(s2, editedStall);
 await s2.locator('.stall--open .stall__reinvite').waitFor({ timeout: 5000 });
 console.log('   ✓ B REINVITE:', (await s2.locator('.stall--open .stall__reinvite').textContent()).trim());
 await shot(s2, '04-B-reinvite');
@@ -203,10 +211,10 @@ step('PHASE 3: A weaves B’s idea → B sees the personal IMPROVED chip');
 // B moves to the market and suggests on A's stall
 await s2.getByRole('button', { name: /המשיכו לעזרה/i }).click({ timeout: 10000 });
 await s2.waitForSelector('.stall__head', { timeout: 15000 });
-await s2.locator('.stall:not(.stall--open) .stall__head').first().click();
-await s2.waitForSelector('.stall--open .stall__input', { timeout: 10000 });
-await s2.locator('.stall--open .stall__input').fill('כדאי לקבוע לוח זמנים לביטול זכויות היתר.');
-await s2.locator('.stall--open button.btn--primary', { hasText: /שליחת/i }).click();
+await ensureOpen(s2, s2.locator('.stall').first());
+await s2.waitForSelector('.stall--open .thread__input', { timeout: 10000 });
+await s2.locator('.stall--open .thread__input').fill('כדאי לקבוע לוח זמנים לביטול זכויות היתר.');
+await s2.locator('.stall--open .thread__composer .thread__send').first().click();
 await s2.waitForTimeout(1000);
 await letSeenFlush(s2);
 
@@ -235,10 +243,15 @@ await shot(s2, '05-B-improved-mine-chip');
 
 // ---------- Phase 4: the thread — owner replies, unread travels, reading clears ----------
 step('PHASE 4: A replies in the thread → B gets unread chip + badge; reading clears');
+// B looks away first: a reply landing on a card you are already reading is
+// READ, not unread — the badge only has a job when the row is folded
+const bOpenHead = s2.locator('.stall--open .stall__head');
+if (await bOpenHead.count()) await bOpenHead.first().click();
+await s2.waitForTimeout(600);
 await openDock(s1);
 // The sole thread is auto-open; the owner composer is plain chat
 await s1.locator('.thread__composer .thread__input').fill('תודה! תוכלו לחדד מי אוכף את לוח הזמנים?');
-await s1.locator('.thread__composer button.btn--secondary').click();
+await s1.locator('.thread__composer .thread__send').click();
 await s1.waitForTimeout(800);
 await closeDock(s1);
 console.log('   ✓ A sent a chat reply in the thread');
@@ -261,7 +274,7 @@ await shot(s2, '06-B-unread-chip');
 
 // Open the stall: the reply renders as the owner's bubble, and reading clears
 const unreadStall = s2.locator('.stall', { has: s2.locator('.stall__chip--unread') }).first();
-await unreadStall.locator('.stall__head').click();
+await ensureOpen(s2, unreadStall);
 await s2.locator('.stall--open .thread__msg--peer', { hasText: 'מי אוכף' }).waitFor({ timeout: 10000 });
 console.log('   ✓ B reads the owner reply inside the thread');
 await shot(s2, '07-B-thread-open');
@@ -270,7 +283,7 @@ eq('unread chip cleared by reading', await s2.locator('.stall__chip--unread').co
 
 // B replies back in chat (toggle off — hasMyIdea keeps it off by default)
 await s2.locator('.stall--open .thread__composer .thread__input').fill('האספה תמנה ועדה מפקחת, נוסיף את זה.');
-await s2.locator('.stall--open .thread__composer button.btn--secondary').click();
+await s2.locator('.stall--open .thread__composer .thread__send').click();
 await s2.waitForTimeout(800);
 
 // A's dock badge counts the unread chat reply
