@@ -87,7 +87,8 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				listenToNotifications(userId);
 			}
 
-			const { session, participants, myParticipant, loading, error } = getSessionState();
+			const { session, participants, myParticipant, participantsLoaded, loading, error } =
+				getSessionState();
 
 			if (loading || (!session && !error)) {
 				return m(
@@ -143,6 +144,41 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				);
 			}
 
+			/**
+			 * The seat is per BROWSER: a student is known by the anonymous login
+			 * stored in this profile, so a cleared browser, a private window or a
+			 * link opened on another device arrives with no seat in this session.
+			 * That used to render a spinner that never resolved — a dead end with
+			 * nothing to read and nothing to press. Say what happened, and hand
+			 * back the one door that works: the join code.
+			 */
+			const notEnrolled = (): m.Children =>
+				m(
+					'.shell',
+					m(
+						'.shell__content.text-center',
+						{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
+						[
+							m('h2', t('game.no_seat_title')),
+							m('p.lobby__status', t('game.no_seat_body')),
+							m(
+								'button.btn.btn--primary.btn--lg',
+								{ onclick: () => m.route.set(`/join/${session.code}`) },
+								t('game.no_seat_action', { code: session.code }),
+							),
+						],
+					),
+				);
+
+			/** Waiting on the roster is a spinner; a roster without me is a message */
+			const noSeatYet = (): m.Children =>
+				participantsLoaded
+					? notEnrolled()
+					: m(
+							'.shell',
+							m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
+						);
+
 			const scenesOf = (...kinds: AgoraSceneKind[]) =>
 				kinds
 					.map((kind) => topic.scenes.find((scene) => scene.kind === kind))
@@ -194,20 +230,12 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						return m(ValueIdentification, { sessionId, userId, topic });
 
 					case AgoraStage.positioning:
-						return myParticipant
-							? m(Positioning, { topic, myParticipant })
-							: m(
-									'.shell',
-									m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
-								);
+						return myParticipant ? m(Positioning, { topic, myParticipant }) : noSeatYet();
 
 					case AgoraStage.deliberation:
 						return myParticipant
 							? m(Deliberation, { session, myParticipant, userId, topic })
-							: m(
-									'.shell',
-									m('.shell__content', { style: { justifyContent: 'center' } }, m('.spinner')),
-								);
+							: noSeatYet();
 
 					case AgoraStage.results:
 					case AgoraStage.ended:

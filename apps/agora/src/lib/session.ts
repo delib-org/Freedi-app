@@ -15,6 +15,13 @@ export interface SessionState {
 	session: AgoraSession | null;
 	participants: AgoraParticipant[];
 	myParticipant: AgoraParticipant | null;
+	/**
+	 * First participants snapshot arrived — only then does a missing
+	 * `myParticipant` mean "this browser never joined" rather than "the
+	 * roster is still loading". Without it the game can't tell a slow
+	 * network from a student who isn't enrolled, and spins on both.
+	 */
+	participantsLoaded: boolean;
 	loading: boolean;
 	error: string | null;
 }
@@ -23,6 +30,7 @@ const state: SessionState = {
 	session: null,
 	participants: [],
 	myParticipant: null,
+	participantsLoaded: false,
 	loading: false,
 	error: null,
 };
@@ -98,6 +106,7 @@ export function listenToSession(sessionId: string, userId: string): void {
 					(participant) =>
 						participant.participantId === createAgoraParticipantId(sessionId, userId),
 				) ?? null;
+			state.participantsLoaded = true;
 			m.redraw();
 		},
 		(error) => {
@@ -145,6 +154,7 @@ export function stopListening(): void {
 	state.session = null;
 	state.participants = [];
 	state.myParticipant = null;
+	state.participantsLoaded = false;
 	state.loading = false;
 	state.error = null;
 }
