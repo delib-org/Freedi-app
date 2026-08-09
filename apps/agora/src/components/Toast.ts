@@ -18,6 +18,8 @@ function toastText(triggerType: string, fallback: string): string {
 			return t('toast.round_started');
 		case 'agora_helped_improved':
 			return t('toast.helped_improved');
+		case 'agora_thread_message':
+			return t('toast.thread_message');
 		case 'agora_class_record':
 			return t('toast.class_record');
 		default:

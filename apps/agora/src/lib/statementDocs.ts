@@ -8,6 +8,7 @@
  * builders exist to prevent.
  */
 import {
+	AgoraMessageKind,
 	AgoraSession,
 	AgoraSuggestionStatus,
 	SourceApp,
@@ -60,14 +61,23 @@ export function buildProposalStatement(
 	return statement;
 }
 
-/** A peer improvement suggestion, parented on the proposal it is about. */
-export function buildSuggestionStatement(
+/**
+ * One message in a proposal↔helper thread, parented on the proposal. A
+ * `suggestion`-kind message is an improvement idea — it carries
+ * `suggestionStatus: open` and enters the accept/weave economy. A `chat`-kind
+ * message is plain conversation: no status, no points, invisible to the weave
+ * ledger. `threadUserId` is always the HELPER's uid, on both sides — it is the
+ * thread's identity, so the owner's replies land in the right conversation.
+ */
+export function buildThreadMessageStatement(
 	session: AgoraSession,
 	proposalId: string,
 	statementId: string,
 	uid: string,
 	anonName: string,
 	text: string,
+	kind: AgoraMessageKind,
+	threadUserId: string,
 ): Statement {
 	const statement = createStatementObject({
 		statementId,
@@ -81,9 +91,34 @@ export function buildSuggestionStatement(
 		sourceApp: SourceApp.AGORA,
 		agoraSessionId: session.sessionId,
 		anonName,
-		suggestionStatus: AgoraSuggestionStatus.open,
+		agoraMessageKind: kind,
+		agoraThreadUserId: threadUserId,
+		...(kind === AgoraMessageKind.suggestion
+			? { suggestionStatus: AgoraSuggestionStatus.open }
+			: {}),
 	});
-	if (!statement) throw new Error('Failed to build suggestion statement');
+	if (!statement) throw new Error('Failed to build thread message statement');
 
 	return statement;
+}
+
+/** A peer improvement suggestion, parented on the proposal it is about. */
+export function buildSuggestionStatement(
+	session: AgoraSession,
+	proposalId: string,
+	statementId: string,
+	uid: string,
+	anonName: string,
+	text: string,
+): Statement {
+	return buildThreadMessageStatement(
+		session,
+		proposalId,
+		statementId,
+		uid,
+		anonName,
+		text,
+		AgoraMessageKind.suggestion,
+		uid,
+	);
 }

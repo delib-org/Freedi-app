@@ -7,9 +7,13 @@ import {
 	submitProposal,
 	rateProposal,
 	submitSuggestion,
+	submitThreadMessage,
 	resolveSuggestion,
 	askCharacterReview,
 	getHelpedProposals,
+	getOwnerThreads,
+	getThreadMessages,
+	isSuggestionKind,
 	openSuggestionsBy,
 	AgoraProposal,
 	AgoraRating,
@@ -26,8 +30,19 @@ import { EraMapLantern } from '../components/EraMap';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
 import {
+	flushSeenState,
+	isEditedSinceSeen,
+	isNewToMe,
+	markProposalSeen,
+	markThreadSeen,
+	seedSeenBaselineIfNeeded,
+	seenEditWatermark,
+	threadUnreadCount,
+} from '../lib/seenState';
+import {
 	AgoraCharacter,
 	AgoraCharacterReview,
+	AgoraMessageKind,
 	AgoraParticipant,
 	AgoraProposalScore,
 	AgoraSession,
@@ -38,6 +53,7 @@ import {
 	AGORA_CYCLE,
 	AGORA_LIMITS,
 	createAgoraCharacterReviewId,
+	createAgoraThreadKey,
 } from '@freedi/shared-types';
 
 export interface DeliberationAttrs {
@@ -366,9 +382,13 @@ export function Deliberation(
 	let openCharacterId = '';
 	/** characterId → in-flight review request */
 	const reviewBusy: Record<string, boolean> = {};
-	/** proposalId → follow-up comment draft (the collaboration loop; per-proposal) */
-	const followUpDrafts: Record<string, string> = {};
-	const followUpBusy: Record<string, boolean> = {};
+	/** threadKey → in-progress message draft (one conversation, one box) */
+	const threadDrafts: Record<string, string> = {};
+	const threadBusy: Record<string, boolean> = {};
+	/** threadKey → the helper wants THIS message to be an improvement idea */
+	const threadMarkSuggestion: Record<string, boolean> = {};
+	/** Which owner-side thread is unfolded in the workshop (one at a time) */
+	let openThreadKey = '';
 	/**
 	 * suggestionId → ticked-but-not-yet-announced "woven in" mark. A tick is
 	 * LOCAL and freely untickable; only saving the proposal resolves it, so the
@@ -401,57 +421,15 @@ export function Deliberation(
 	 */
 	let pendingAcceptText: string | undefined;
 	/**
-	 * Suggestions mid-flight to the accepted-ideas drawer. Membership does two
-	 * jobs: it hides the card from the received list on the very click (before
-	 * the snapshot confirms), and it tells onbeforeremove THIS removal is an
-	 * acceptance — deserving the flight — and not an accordion fold.
+	 * The accepted card no longer leaves its thread (a conversation with a
+	 * hole in it reads as deleted history) — so the drawer announces the
+	 * arrival itself: its head flashes "caught it" the moment accept lands.
 	 */
-	const flyingAccepted = new Set<string>();
-	/**
-	 * Flights currently on screen. Distinct from the set above on purpose:
-	 * the set may retire mid-flight (the snapshot confirming is what retires
-	 * it), while THIS pins the accordion open until the card actually lands.
-	 */
-	let flightsInAir = 0;
-
-	/**
-	 * The exit animation of an accepted card: it shrinks and sails INTO the
-	 * accepted-ideas drawer, so "where did it go?" is answered by the motion
-	 * itself. Returns the promise Mithril awaits before dropping the node.
-	 */
-	function flyToAcceptedDrawer(dom: HTMLElement, suggestionId: string): Promise<void> | undefined {
-		// Membership is only READ here — it must outlive the flight, or a
-		// redraw racing the server snapshot resurrects the card mid-air.
-		// The list filter retires the id once the accepted status lands.
-		if (!flyingAccepted.has(suggestionId)) return undefined;
+	function flashAcceptedDrawer(): void {
 		const target = document.querySelector<HTMLElement>('.chat-drawer__head');
-		if (!target || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			return undefined;
-		}
-		const from = dom.getBoundingClientRect();
-		const to = target.getBoundingClientRect();
-		dom.style.setProperty('--fly-x', `${to.left + to.width / 2 - (from.left + from.width / 2)}px`);
-		dom.style.setProperty('--fly-y', `${to.top + to.height / 2 - (from.top + from.height / 2)}px`);
-		dom.classList.add('workshop__item--flying');
-		flightsInAir++;
-
-		return new Promise((resolve) => {
-			let settled = false;
-			const done = () => {
-				if (settled) return;
-				settled = true;
-				flightsInAir--;
-				// The drawer visibly CATCHES the idea — the landing half of the arc
-				target.classList.add('chat-drawer__head--landed');
-				window.setTimeout(() => target.classList.remove('chat-drawer__head--landed'), 700);
-				resolve();
-				m.redraw();
-			};
-			dom.addEventListener('animationend', done, { once: true });
-			// If the animation never runs (styles missing, tab hidden), the
-			// card must not haunt the list as an un-removable ghost
-			window.setTimeout(done, 1600);
-		});
+		if (!target) return;
+		target.classList.add('chat-drawer__head--landed');
+		window.setTimeout(() => target.classList.remove('chat-drawer__head--landed'), 700);
 	}
 	/**
 	 * The proposal dock: my workshop is no longer a screen you travel to, it
@@ -545,13 +523,8 @@ export function Deliberation(
 		m.redraw();
 	}
 
-	/**
-	 * Fold the notebook. Refused while an accepted idea is mid-flight to the
-	 * adopted-ideas drawer — the sheet closing would swallow the card before
-	 * it can land (same reasoning as the accordion pin below).
-	 */
+	/** Fold the notebook. */
 	function closeDock(): boolean {
-		if (flightsInAir > 0 || flyingAccepted.size > 0) return false;
 		endDockIntro(false);
 		dockOpen = false;
 
@@ -722,8 +695,8 @@ export function Deliberation(
 					m('span.delib-nav__label', t('delib.nav_others')),
 					// Proposals I helped moved while I was away — come see.
 					// Only meaningful when I'm not already looking at them.
-					(showResults || cycle.step === 'mine') && helpedChangedCount() > 0
-						? m('span.delib-nav__badge', String(helpedChangedCount()))
+					(showResults || cycle.step === 'mine') && attentionCount() > 0
+						? m('span.delib-nav__badge', String(attentionCount()))
 						: null,
 				],
 			),
@@ -1109,11 +1082,10 @@ export function Deliberation(
 				suggestionsSection(live, myProposal),
 				{
 					headId: DOCK_FEEDBACK_HEAD_ID,
-					count: openCount,
-					// A live flight pins the section open: accepting the LAST open
-					// suggestion drops openCount to 0 on the same redraw, and a
-					// folding accordion would swallow the card before it can fly
-					open: (suggestionsToggle ?? openCount > 0) || flyingAccepted.size > 0 || flightsInAir > 0,
+					// Waiting decisions AND unread replies — everything in the
+					// section that still wants the owner's eyes
+					count: openCount + ownerThreadUnread(myProposal),
+					open: suggestionsToggle ?? (openCount > 0 || ownerThreadUnread(myProposal) > 0),
 					onToggle: () => {
 						suggestionsToggle = !(suggestionsToggle ?? openCount > 0);
 					},
@@ -1203,6 +1175,8 @@ export function Deliberation(
 			mineDraft.trim() !== myProposal.statement &&
 			mineDraftBase === myProposal.statement;
 
+		const threadUnread = ownerThreadUnread(myProposal);
+
 		// ONE line, strict priority: what needs me outranks what happened to
 		// me, which outranks the text itself. It doubles as the live region,
 		// so a screen reader hears arriving feedback without focus moving.
@@ -1210,6 +1184,9 @@ export function Deliberation(
 		let subClass: string | undefined;
 		if (openCount > 0) {
 			sub = `💡 ${tCount('delib.dock_new_ideas', openCount)}`;
+			subClass = 'proposal-dock__sub--alert';
+		} else if (threadUnread > 0) {
+			sub = `💬 ${tCount('delib.thread_unread', threadUnread)}`;
 			subClass = 'proposal-dock__sub--alert';
 		} else if (unsaved) {
 			sub = [m('span.proposal-dock__dot', { 'aria-hidden': 'true' }), t('delib.dock_unsaved')];
@@ -1256,8 +1233,12 @@ export function Deliberation(
 						]),
 						// The count is decoration: the sub line above already
 						// says the same thing in words
-						openCount > 0
-							? m('span.proposal-dock__badge', { 'aria-hidden': 'true' }, String(openCount))
+						openCount + threadUnread > 0
+							? m(
+									'span.proposal-dock__badge',
+									{ 'aria-hidden': 'true' },
+									String(openCount + threadUnread),
+								)
 							: null,
 						m('span.proposal-dock__chevron', { 'aria-hidden': 'true' }),
 						// Named for the screen reader, since the visible label
@@ -1326,155 +1307,303 @@ export function Deliberation(
 		});
 	}
 
-	/** The latest comments & improvement suggestions, right under the editable text */
+	/**
+	 * Unread CHAT across every conversation on MY proposal. Suggestion-kind
+	 * messages are deliberately excluded: the open-ideas count already speaks
+	 * for them, and one new idea must never count as two alerts.
+	 */
+	function ownerThreadUnread(myProposal: AgoraProposal): number {
+		let unread = 0;
+		for (const [helperUid, messages] of getOwnerThreads(myProposal.statementId)) {
+			unread += threadUnreadCount(
+				createAgoraThreadKey(myProposal.statementId, helperUid),
+				messages.filter((message) => !isSuggestionKind(message)),
+				userId,
+			);
+		}
+
+		return unread;
+	}
+
+	/** The lifecycle chip a suggestion-kind message wears inside a thread */
+	function threadStatusChip(message: AgoraProposal): m.Children {
+		if (!isSuggestionKind(message)) return null;
+		const status = message.suggestionStatus ?? AgoraSuggestionStatus.open;
+		const key =
+			status === AgoraSuggestionStatus.implemented
+				? 'delib.implemented'
+				: status === AgoraSuggestionStatus.accepted
+					? 'delib.accepted'
+					: status === AgoraSuggestionStatus.declined
+						? 'delib.declined'
+						: status === AgoraSuggestionStatus.thanked
+							? 'delib.thanked'
+							: 'delib.helped_status_open';
+
+		return m('span.helped__chip', { class: `helped__chip--${status}` }, t(key));
+	}
+
+	/** The owner's two doors on an open improvement idea, inline in the thread */
+	function suggestionDecision(live: AgoraSession, message: AgoraProposal): m.Children {
+		return m('.delib__actions.delib__actions--tight', [
+			m(
+				'button.btn.btn--ghost.btn--sm',
+				{
+					onclick: () => {
+						void resolveSuggestion(
+							live.sessionId,
+							message.statementId,
+							AgoraSuggestionStatus.declined,
+						);
+					},
+				},
+				t('delib.no_thanks'),
+			),
+			m(
+				'button.btn.btn--primary.btn--sm',
+				{
+					onclick: () => {
+						// The edit box is right above — accepting means: now weave
+						// the idea into your text. Open the accepted-ideas drawer so
+						// the idea is in sight while editing, not one click away.
+						pendingAcceptText = message.statement;
+						acceptedDrawerOpen = true;
+						// The conversation stays on screen: with no open idea left
+						// the section would auto-fold, yanking the thread out from
+						// under the finger that just pressed accept
+						suggestionsToggle = true;
+						if (!sessionStorage.getItem(weaveCoachKey)) {
+							sessionStorage.setItem(weaveCoachKey, '1');
+							showWeaveCoach = true;
+						}
+						resolveSuggestion(live.sessionId, message.statementId, AgoraSuggestionStatus.accepted)
+							.then(() => {
+								// The message stays in its conversation (a thread with a
+								// hole reads as deleted history) — the drawer's head
+								// flashes "caught it" instead of catching a flying card
+								flashAcceptedDrawer();
+							})
+							.catch((error: unknown) => {
+								if (pendingAcceptText === message.statement) {
+									pendingAcceptText = undefined;
+								}
+								console.error('[Delib] Accept suggestion failed:', error);
+								m.redraw();
+							});
+					},
+				},
+				t('delib.will_implement'),
+			),
+		]);
+	}
+
+	/**
+	 * One proposal↔helper conversation, same list on both sides. The role
+	 * decides the powers: the owner decides on ideas and replies in plain
+	 * chat; the helper writes, and can mark a message AS an improvement idea
+	 * (which is what enters the accept→weave economy — plain chat never does).
+	 */
+	function threadView(
+		live: AgoraSession,
+		proposal: AgoraProposal,
+		helperUid: string,
+		role: 'helper' | 'owner',
+	): m.Children {
+		const threadKey = createAgoraThreadKey(proposal.statementId, helperUid);
+		const messages = getThreadMessages(proposal.statementId, helperUid);
+		// Reading the conversation IS seeing it — but only when it is truly on
+		// screen: the owner's copy also renders inside the folded (inert) dock
+		const onScreen = role === 'helper' || dockOpen;
+		if (onScreen && document.visibilityState === 'visible') {
+			const newest = messages.reduce(
+				(max, message) => (message.creatorId !== userId ? Math.max(max, message.createdAt) : max),
+				0,
+			);
+			if (newest > 0) markThreadSeen(threadKey, newest);
+		}
+		const draft = threadDrafts[threadKey] ?? '';
+		const busy = threadBusy[threadKey] === true;
+		const atCap =
+			openSuggestionsBy(proposal.statementId, userId) >=
+			AGORA_ANTI_GAMING.MAX_OPEN_SUGGESTIONS_PER_HELPER;
+		// The helper's first message is an improvement idea by default (that IS
+		// the help step); afterwards the box is conversation unless marked
+		const hasMyIdea = messages.some(
+			(message) => message.creatorId === userId && isSuggestionKind(message),
+		);
+		const markAsIdea = role === 'helper' && (threadMarkSuggestion[threadKey] ?? !hasMyIdea);
+		const kind = markAsIdea ? AgoraMessageKind.suggestion : AgoraMessageKind.chat;
+		const sendBlocked = kind === AgoraMessageKind.suggestion && atCap;
+
+		return m('.thread', [
+			messages.length > 0
+				? m(
+						'.thread__list',
+						messages.map((message) => {
+							const mine = message.creatorId === userId;
+							const decidable =
+								role === 'owner' &&
+								!mine &&
+								isSuggestionKind(message) &&
+								(message.suggestionStatus ?? AgoraSuggestionStatus.open) ===
+									AgoraSuggestionStatus.open;
+
+							return m(
+								'.thread__msg',
+								{
+									key: message.statementId,
+									class: [
+										mine ? 'thread__msg--mine' : 'thread__msg--peer',
+										isSuggestionKind(message) ? 'thread__msg--suggestion' : undefined,
+									]
+										.filter(Boolean)
+										.join(' '),
+								},
+								[
+									!mine && message.anonName ? m('span.thread__who', message.anonName) : null,
+									isSuggestionKind(message)
+										? m('span.thread__tag', `💡 ${t('delib.thread_suggestion_tag')}`)
+										: null,
+									m('p.thread__text', message.statement),
+									decidable ? suggestionDecision(live, message) : threadStatusChip(message),
+								],
+							);
+						}),
+					)
+				: null,
+			m('.thread__composer', [
+				m('textarea.text-input.thread__input', {
+					value: draft,
+					rows: 2,
+					placeholder: t(
+						role === 'owner' ? 'delib.thread_reply_placeholder' : 'delib.thread_placeholder',
+					),
+					oninput: (event: InputEvent) => {
+						threadDrafts[threadKey] = (event.target as HTMLTextAreaElement).value;
+					},
+				}),
+				role === 'helper'
+					? m('label.thread__kind-toggle', [
+							m('input.thread__kind-check', {
+								type: 'checkbox',
+								checked: markAsIdea,
+								onchange: () => {
+									threadMarkSuggestion[threadKey] = !markAsIdea;
+								},
+							}),
+							m('span', `💡 ${t('delib.thread_mark_suggestion')}`),
+						])
+					: null,
+				// The spam guard, stated plainly rather than enforced silently:
+				// two unresolved ideas at a time; resolving any frees the slot
+				sendBlocked ? m('p.action-hint', t('delib.open_ideas_cap')) : null,
+				m(
+					'button.btn.btn--secondary.btn--sm',
+					{
+						disabled: busy || sendBlocked || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
+						onclick: () => {
+							const text = draft.trim();
+							threadBusy[threadKey] = true;
+							threadDrafts[threadKey] = '';
+							if (kind === AgoraMessageKind.suggestion) {
+								// An in-thread idea counts as helping this lap, exactly
+								// like one sent from the stall's first compose box
+								helpedThisLap.add(proposal.statementId);
+								threadMarkSuggestion[threadKey] = false;
+							}
+							submitThreadMessage(
+								live,
+								proposal,
+								initialVnode.attrs.myParticipant.anonName,
+								text,
+								kind,
+								helperUid,
+							)
+								.catch((error: unknown) => {
+									console.error('[Delib] Thread message failed:', error);
+								})
+								.finally(() => {
+									threadBusy[threadKey] = false;
+									m.redraw();
+								});
+						},
+					},
+					t(kind === AgoraMessageKind.suggestion ? 'delib.send_suggestion' : 'delib.thread_send'),
+				),
+			]),
+		]);
+	}
+
+	/**
+	 * The owner's inbox: one conversation per helper, under the editable
+	 * text. A lone conversation skips the accordion ceremony and just shows.
+	 */
 	function suggestionsSection(live: AgoraSession, myProposal: AgoraProposal): m.Children {
-		const { suggestions } = getDeliberationState();
-		const allSuggestions = suggestions[myProposal.statementId] ?? [];
-		// Newest first — the freshest feedback sits closest to the edit box.
-		// Accepted ideas are NOT listed here: they moved (visibly, by flight)
-		// into the adopted-ideas drawer, and a card can't live in two places.
-		let declinedCount = 0;
-		const mySuggestions = [...allSuggestions].reverse().filter((entry) => {
-			const resolved =
-				entry.suggestionStatus === AgoraSuggestionStatus.accepted ||
-				entry.suggestionStatus === AgoraSuggestionStatus.implemented;
-			// The snapshot has confirmed the acceptance — the local
-			// in-flight flag has done both its jobs and can retire
-			if (resolved) flyingAccepted.delete(entry.statementId);
-			// Declined ideas retire too. Left in place they turned the workshop
-			// into a growing pile of things you said no to, burying the open
-			// feedback that actually needs a decision — and the tray is meant to
-			// be a to-do list, not a museum of refusals. Nothing is lost: the
-			// suggester's own card carries the canonical status.
-			if (entry.suggestionStatus === AgoraSuggestionStatus.declined) {
-				declinedCount++;
-
-				return false;
-			}
-
-			return !resolved && !flyingAccepted.has(entry.statementId);
-		});
+		const threads = [...getOwnerThreads(myProposal.statementId).entries()];
+		if (threads.length === 0) {
+			return m('.stack', [m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))]);
+		}
+		// Freshest conversation first
+		const lastAt = (messages: AgoraProposal[]): number =>
+			messages[messages.length - 1]?.createdAt ?? 0;
+		threads.sort((a, b) => lastAt(b[1]) - lastAt(a[1]));
+		const isOpenIdea = (message: AgoraProposal): boolean =>
+			isSuggestionKind(message) &&
+			(message.suggestionStatus ?? AgoraSuggestionStatus.open) === AgoraSuggestionStatus.open;
+		const anyOpenIdea = threads.some(([, messages]) => messages.some(isOpenIdea));
+		const soleKey =
+			threads.length === 1 ? createAgoraThreadKey(myProposal.statementId, threads[0][0]) : '';
 
 		return m('.stack', [
-			// "No feedback yet" only when there is truly none — a list whose
-			// every idea was adopted is a success, not an empty inbox
-			allSuggestions.length === 0
-				? m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))
-				: null,
-			// What "accept" commits you to, said ONCE above the cards instead of
-			// under every one of them. It retires on the first accept, where the
-			// weave coach mark takes over the same contract in full — both hang
-			// off weaveCoachKey, so the handoff needs no extra state.
-			mySuggestions.length > 0 && !sessionStorage.getItem(weaveCoachKey)
+			// What "accept" commits you to, said ONCE above the threads. It
+			// retires on the first accept, where the weave coach mark takes
+			// over the same contract — both hang off weaveCoachKey.
+			anyOpenIdea && !sessionStorage.getItem(weaveCoachKey)
 				? m('p.square-says__meaning', t('delib.accept_hint'))
 				: null,
-			// Retired declines collapse to one muted line — the record stays
-			// honest without the workshop wearing every "no" as a card
-			declinedCount > 0
-				? m('p.workshop__declined-note', tCount('delib.declined_count', declinedCount))
-				: null,
-			// Nested array (own fragment) — keyed cards must not be spread
+			// Nested array (own fragment) — keyed items must not be spread
 			// among unkeyed siblings (Mithril mixed-keys crash)
-			mySuggestions.map((suggestion) =>
-				m(
-					'.card.stack.workshop__item',
-					{
-						key: suggestion.statementId,
-						onbeforeremove: (vnode: m.VnodeDOM) =>
-							flyToAcceptedDrawer(vnode.dom as HTMLElement, suggestion.statementId),
-					},
-					[
-						// The idea leads; who sent it and what to do about it share the
-						// footer line beneath it. Three stacked rows for one sentence
-						// of feedback made a two-idea inbox taller than the screen.
-						m('p.workshop__text', suggestion.statement),
-						m('.workshop__foot', [
-							// The name alone: the section above is already titled
-							// "improvements you received", so spelling out "improvement
-							// idea from" on every card is the same sentence again — and
-							// it is what pushed the buttons onto a second line
-							suggestion.anonName
+			threads.map(([helperUid, messages]) => {
+				const threadKey = createAgoraThreadKey(myProposal.statementId, helperUid);
+				const open = soleKey === threadKey || openThreadKey === threadKey;
+				const unread = threadUnreadCount(
+					threadKey,
+					messages.filter((message) => !isSuggestionKind(message)),
+					userId,
+				);
+				const openIdeas = messages.filter(isOpenIdea).length;
+				const name = messages.find((message) => message.creatorId === helperUid)?.anonName ?? '';
+
+				return m('.thread-inbox__item', { key: threadKey }, [
+					m(
+						'button.thread-inbox__head',
+						{
+							'aria-expanded': String(open),
+							onclick: () => {
+								openThreadKey = open ? '' : threadKey;
+							},
+						},
+						[
+							m('span.thread-inbox__from', `💡 ${name}`),
+							openIdeas > 0
+								? m('span.thread-inbox__ideas', tCount('delib.thread_open_ideas', openIdeas))
+								: null,
+							unread > 0
 								? m(
-										'span.workshop__from',
-										{
-											'aria-label': t('delib.suggestion_from', {
-												name: suggestion.anonName,
-											}),
-										},
-										`💡 ${suggestion.anonName}`,
+										'span.thread-inbox__unread',
+										{ 'aria-label': tCount('delib.thread_unread', unread) },
+										String(unread),
 									)
 								: null,
-							suggestion.suggestionStatus === AgoraSuggestionStatus.open
-								? // Two doors, not three: take the idea or let it go. A
-									// middle "thanks" button only bought the student a way
-									// to answer without deciding.
-									m('.delib__actions.delib__actions--tight', [
-										m(
-											'button.btn.btn--ghost.btn--sm',
-											{
-												onclick: () => {
-													void resolveSuggestion(
-														live.sessionId,
-														suggestion.statementId,
-														AgoraSuggestionStatus.declined,
-													);
-												},
-											},
-											t('delib.no_thanks'),
-										),
-										m(
-											'button.btn.btn--primary.btn--sm',
-											{
-												onclick: () => {
-													// The edit box is right above — accepting means:
-													// now weave the idea into your text. Open the
-													// accepted-ideas drawer so the idea is in sight
-													// while editing, not hidden one click away.
-													pendingAcceptText = suggestion.statement;
-													acceptedDrawerOpen = true;
-													if (!sessionStorage.getItem(weaveCoachKey)) {
-														sessionStorage.setItem(weaveCoachKey, '1');
-														showWeaveCoach = true;
-													}
-													// Arm the flight BEFORE the redraw: this very
-													// click removes the card, and the exit hook
-													// checks the set to tell acceptance from a fold
-													flyingAccepted.add(suggestion.statementId);
-													resolveSuggestion(
-														live.sessionId,
-														suggestion.statementId,
-														AgoraSuggestionStatus.accepted,
-													).catch((error: unknown) => {
-														// The accept never landed — un-arm, so the
-														// card comes back instead of vanishing
-														flyingAccepted.delete(suggestion.statementId);
-														if (pendingAcceptText === suggestion.statement) {
-															pendingAcceptText = undefined;
-														}
-														console.error('[Delib] Accept suggestion failed:', error);
-														m.redraw();
-													});
-												},
-											},
-											t('delib.will_implement'),
-										),
-									])
-								: m(
-										'span.values__score',
-										// "Woven in" outranks "accepted" — it's the later mark
-										// of the same lifecycle, so it must be tested first
-										suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
-											? `✓ ${t('delib.implemented')}`
-											: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-												? t('delib.accepted')
-												: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
-													? t('delib.declined')
-													: t('delib.thanked'),
-									),
-						]),
-					],
-				),
-			),
+							m('span.workbench__chevron', {
+								class: open ? 'workbench__chevron--open' : undefined,
+								'aria-hidden': 'true',
+							}),
+						],
+					),
+					open ? threadView(live, myProposal, helperUid, 'owner') : null,
+				]);
+			}),
 		]);
 	}
 
@@ -1549,44 +1678,81 @@ export function Deliberation(
 
 	// ---------- The collaboration loop: "proposals I helped" ----------
 
-	/** sessionStorage map: helped proposalId → lastUpdate already SEEN in the section */
-	const helpedSeenKey = `agora_${session.sessionId}_helped_seen`;
-
-	function readHelpedSeen(): Record<string, number> {
-		try {
-			return JSON.parse(sessionStorage.getItem(helpedSeenKey) ?? '{}') as Record<string, number>;
-		} catch {
-			return {};
+	/**
+	 * The two change clocks of a classmate's proposal. `editAt` is the owner's
+	 * real edit time (agoraScores.lastEditAt — the statement's own lastUpdate is
+	 * bumped by every rating anyone gives). `mineAt` is when one of MY ideas was
+	 * last woven into the text — the resolve callable stamps statusChangedAt a
+	 * beat after the save, so acknowledging only editAt would leave the personal
+	 * chip lit forever.
+	 */
+	function changeStamps(proposal: AgoraProposal): { editAt: number; mineAt: number } {
+		const state = getDeliberationState();
+		const id = proposal.statementId;
+		const editAt = state.scores[id]?.lastEditAt ?? 0;
+		let mineAt = 0;
+		for (const suggestion of state.suggestions[id] ?? []) {
+			if (suggestion.creatorId !== userId) continue;
+			if (suggestion.suggestionStatus !== AgoraSuggestionStatus.implemented) continue;
+			mineAt = Math.max(mineAt, suggestion.statusChangedAt ?? suggestion.lastUpdate);
 		}
+
+		return { editAt, mineAt };
 	}
 
-	/** Helped proposals that moved since I last looked — feeds the Others badge */
-	function helpedChangedCount(): number {
-		const seen = readHelpedSeen();
+	/** Opening or rating a card acknowledges everything it currently signals */
+	function ackProposalSeen(proposal: AgoraProposal): void {
+		const { editAt, mineAt } = changeStamps(proposal);
+		markProposalSeen(proposal.statementId, Math.max(editAt, mineAt));
+	}
 
-		return getHelpedProposals(userId).filter(({ proposal, mySuggestions }) => {
-			// Never-seen baseline = my latest input there, so the badge only
-			// lights for REAL changes after my suggestion, not for the
-			// suggestion itself
-			const baseline =
-				seen[proposal.statementId] ??
-				Math.max(...mySuggestions.map((suggestion) => suggestion.createdAt));
+	/**
+	 * The ONE status chip a classmate's card wears, strictest precedence first:
+	 * my idea landed in their text (personal, celebratory) > the owner edited
+	 * (generic) > I've never looked at it at all. NEW can't co-occur with the
+	 * others — they require a seen watermark, NEW requires its absence.
+	 */
+	function changeChip(proposal: AgoraProposal): m.Children {
+		const { editAt, mineAt } = changeStamps(proposal);
+		const watermark = seenEditWatermark(proposal.statementId);
+		if (watermark !== undefined && mineAt > watermark) {
+			return m(
+				'span.stall__chip.stall__chip--improved-mine',
+				{ 'aria-label': t('delib.chip_improved_mine') },
+				`✨ ${t('delib.chip_improved_mine')}`,
+			);
+		}
+		if (isEditedSinceSeen(proposal.statementId, editAt)) {
+			return m('span.stall__chip.stall__chip--edited', `✏️ ${t('delib.chip_edited')}`);
+		}
+		if (isNewToMe(proposal.statementId)) {
+			return m('span.stall__chip.stall__chip--new', `🌱 ${t('delib.chip_new')}`);
+		}
 
-			return proposal.lastUpdate > baseline;
+		return null;
+	}
+
+	/**
+	 * What still wants my eyes on the Others side — feeds the nav badge.
+	 * Scoped to proposals I HELPED (my loops, not the whole square's churn),
+	 * and cleared by engagement — opening or re-rating the card — not by mere
+	 * rendering: the badge is an invitation to look, and a glance at the list
+	 * is not a look at the change.
+	 */
+	function attentionCount(): number {
+		const changed = getHelpedProposals(userId).filter(({ proposal }) => {
+			const { editAt, mineAt } = changeStamps(proposal);
+			const watermark = seenEditWatermark(proposal.statementId);
+			if (watermark !== undefined && mineAt > watermark) return true;
+
+			return isEditedSinceSeen(proposal.statementId, editAt);
 		}).length;
-	}
+		// ...plus stalls where the owner wrote back into my conversation
+		const unreadThreads = getDeliberationState().proposals.filter(
+			(proposal) => proposal.creatorId !== userId && myThreadUnread(proposal) > 0,
+		).length;
 
-	/** Rendering the section counts as seeing it (equality-guarded — no storage thrash) */
-	function markHelpedSeen(entries: readonly HelpedProposal[]): void {
-		const seen = readHelpedSeen();
-		let changed = false;
-		for (const { proposal } of entries) {
-			if (seen[proposal.statementId] !== proposal.lastUpdate) {
-				seen[proposal.statementId] = proposal.lastUpdate;
-				changed = true;
-			}
-		}
-		if (changed) sessionStorage.setItem(helpedSeenKey, JSON.stringify(seen));
+		return changed + unreadThreads;
 	}
 
 	/**
@@ -1639,6 +1805,8 @@ export function Deliberation(
 						onclick: () => {
 							const first = getDeliberationState().myRatings[proposal.statementId] === undefined;
 							void rateProposal(live, proposal.statementId, option.value);
+							// Weighing the text IS reading it — the change chips clear
+							ackProposalSeen(proposal);
 							ackReRate(proposal.statementId);
 							if (first) opts?.onFirstVote?.();
 						},
@@ -1687,24 +1855,9 @@ export function Deliberation(
 		entry: HelpedProposal,
 		opts?: { bare?: boolean },
 	): m.Children {
-		const { proposal, mySuggestions } = entry;
+		const { proposal } = entry;
 		const improvedSince = helpedImprovedSince(entry);
 		const acked = reRateAcked[proposal.statementId] === true;
-		const atSuggestionCap =
-			openSuggestionsBy(proposal.statementId, userId) >=
-			AGORA_ANTI_GAMING.MAX_OPEN_SUGGESTIONS_PER_HELPER;
-		const draft = followUpDrafts[proposal.statementId] ?? '';
-		// "Woven in" is the strongest acknowledgment — check it before accepted
-		const statusKey = (suggestion: AgoraProposal): string =>
-			suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
-				? 'delib.implemented'
-				: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-					? 'delib.accepted'
-					: suggestion.suggestionStatus === AgoraSuggestionStatus.thanked
-						? 'delib.thanked'
-						: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
-							? 'delib.declined'
-							: 'delib.helped_status_open';
 
 		return m(
 			'.card.stack.helped__item',
@@ -1732,57 +1885,11 @@ export function Deliberation(
 					? m('p.helped__rerate-ack', { role: 'status' }, `✓ ${t('delib.rerate_ack')}`)
 					: m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
 				reRateScale(live, proposal),
-				// My improvement ideas + live status chips — the acknowledgment —
-				// sit beneath the evaluation, with the follow-up box continuing them.
-				// Nested array (own fragment): keyed children must not be spread
-				// among unkeyed siblings (Mithril mixed-keys crash)
+				// The whole conversation with this owner — my ideas with their
+				// live status, their replies, and the box that continues it —
+				// sits beneath the evaluation.
 				m('p.teacher__section-title', t('delib.helped_your_ideas')),
-				mySuggestions.map((suggestion) =>
-					m('.helped__suggestion', { key: suggestion.statementId }, [
-						m('p.helped__suggestion-text', suggestion.statement),
-						m(
-							'span.helped__chip',
-							{ class: `helped__chip--${suggestion.suggestionStatus ?? 'open'}` },
-							t(statusKey(suggestion)),
-						),
-					]),
-				),
-				m('textarea.text-input.helped__followup', {
-					value: draft,
-					rows: 2,
-					placeholder: t('delib.helped_followup_placeholder'),
-					oninput: (event: InputEvent) => {
-						followUpDrafts[proposal.statementId] = (event.target as HTMLTextAreaElement).value;
-					},
-				}),
-				// The spam guard, stated plainly rather than enforced silently:
-				// two unresolved ideas at a time on one proposal. Resolving any
-				// of them frees the slot immediately.
-				atSuggestionCap ? m('p.action-hint', t('delib.open_ideas_cap')) : null,
-				m(
-					'button.btn.btn--secondary',
-					{
-						disabled:
-							followUpBusy[proposal.statementId] === true ||
-							atSuggestionCap ||
-							draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
-						onclick: () => {
-							const text = draft.trim();
-							followUpBusy[proposal.statementId] = true;
-							followUpDrafts[proposal.statementId] = '';
-							// A free follow-up: continues the conversation, no lap advance
-							submitSuggestion(live, proposal, initialVnode.attrs.myParticipant.anonName, text)
-								.catch((error: unknown) => {
-									console.error('[Delib] Follow-up failed:', error);
-								})
-								.finally(() => {
-									followUpBusy[proposal.statementId] = false;
-									m.redraw();
-								});
-						},
-					},
-					t('delib.send_suggestion'),
-				),
+				threadView(live, proposal, userId, 'helper'),
 			],
 		);
 	}
@@ -1875,13 +1982,20 @@ export function Deliberation(
 		proposal: AgoraProposal;
 		open: boolean;
 		onToggle: () => void;
-		chip?: m.Children;
-		body: m.Children;
+		/** At most two render: one change-status chip + one room-specific chip */
+		chips?: m.Children[];
+		/**
+		 * A THUNK, called only when the stall is open: the body carries live
+		 * side effects (the thread marks itself read on render), and a folded
+		 * stall must not read its own mail.
+		 */
+		body: () => m.Children;
 		/** Live-sorted lists slide a row to its new place instead of teleporting */
 		flip?: boolean;
 	}): m.Children {
 		const { proposal, open } = opts;
 		const number = proposalNumber(proposal);
+		const chips = (opts.chips ?? []).filter((chip) => chip !== null && chip !== undefined);
 
 		return m(
 			'.stall',
@@ -1903,13 +2017,13 @@ export function Deliberation(
 						String(number),
 					),
 					m('span.stall__preview', proposal.statement),
-					opts.chip,
+					chips.length > 0 ? m('span.stall__chips', chips) : null,
 					m('span.stall__chevron', {
 						class: open ? 'stall__chevron--open' : undefined,
 						'aria-hidden': 'true',
 					}),
 				]),
-				open ? m('.stall__body', [m('p.stall__text', proposal.statement), opts.body]) : null,
+				open ? m('.stall__body', [m('p.stall__text', proposal.statement), opts.body()]) : null,
 			],
 		);
 	}
@@ -1941,20 +2055,41 @@ export function Deliberation(
 
 	/** What a stall holds out on the square: the five-level scale, mine to change */
 	function rateStallBody(live: AgoraSession, proposal: AgoraProposal): m.Children {
-		return reRateScale(live, proposal, {
-			// Only a FIRST vote moves the lap along; changing my mind about a
-			// proposal I already weighed is free, and must not buy a lap step
-			onFirstVote: () => {
-				setCycle({ rated: cycle.rated + 1 });
-				window.clearTimeout(rateAckTimer);
-				// Hold the press on screen (ring + ✓ + receding siblings), THEN
-				// fold the stall — an instant fold read as "nothing happened"
-				rateAckTimer = window.setTimeout(() => {
-					openStallId = '';
-					m.redraw();
-				}, RATE_ACK_MS);
-			},
-		});
+		const myRating = getDeliberationState().myRatings[proposal.statementId];
+		const { editAt, mineAt } = changeStamps(proposal);
+		// The text moved after I weighed it — my rating is about an older
+		// version, and the scale below is the way to say so. Self-clearing:
+		// a re-rate advances updatedAt past the edit (same rule as the
+		// helped-section marker).
+		const changedSinceRating = myRating !== undefined && editAt > myRating.updatedAt;
+		const mineSinceRating = myRating !== undefined && mineAt > myRating.updatedAt;
+		const reinvite = changedSinceRating
+			? m(
+					'p.stall__reinvite',
+					{ class: mineSinceRating ? 'stall__reinvite--mine' : undefined },
+					mineSinceRating
+						? `✨ ${t('delib.reinvite_improved')}`
+						: `✏️ ${t('delib.reinvite_prompt')}`,
+				)
+			: null;
+
+		return [
+			reinvite,
+			reRateScale(live, proposal, {
+				// Only a FIRST vote moves the lap along; changing my mind about a
+				// proposal I already weighed is free, and must not buy a lap step
+				onFirstVote: () => {
+					setCycle({ rated: cycle.rated + 1 });
+					window.clearTimeout(rateAckTimer);
+					// Hold the press on screen (ring + ✓ + receding siblings), THEN
+					// fold the stall — an instant fold read as "nothing happened"
+					rateAckTimer = window.setTimeout(() => {
+						openStallId = '';
+						m.redraw();
+					}, RATE_ACK_MS);
+				},
+			}),
+		];
 	}
 
 	/** The chip a square stall wears: the face I already gave it */
@@ -2029,28 +2164,48 @@ export function Deliberation(
 				]);
 	}
 
-	/** The chip a help stall wears: sent just now, improved since, or visited */
-	function helpStallChip(proposal: AgoraProposal, helped: HelpedProposal | undefined): m.Children {
-		const justSent = sentAckId === proposal.statementId;
+	/** Unread replies waiting in MY thread at this classmate's stall */
+	function myThreadUnread(proposal: AgoraProposal): number {
+		return threadUnreadCount(
+			createAgoraThreadKey(proposal.statementId, userId),
+			// Chat only, same as the owner side: an idea's news travels through
+			// its status chip, not through an unread count
+			getThreadMessages(proposal.statementId, userId).filter(
+				(message) => !isSuggestionKind(message),
+			),
+			userId,
+		);
+	}
 
-		return justSent
-			? m('span.stall__chip.stall__chip--sent', { role: 'status' }, `✓ ${t('delib.sent_ack')}`)
-			: helped && helpedImprovedSince(helped)
-				? m(
-						'span.stall__chip.stall__chip--improved',
-						{ 'aria-label': t('delib.helped_improved_marker') },
-						`✨ ${t('delib.improved_chip')}`,
-					)
-				: helped
-					? m('span.stall__chip', `🤝 ${t('delib.helped_chip')}`)
-					: null;
+	/**
+	 * The market-room chip: sent just now, an unread reply, or a stall I
+	 * already helped — one story at a time, strongest first. The "improved
+	 * since" news moved to changeChip, which rides alongside.
+	 */
+	function helpStallChip(proposal: AgoraProposal, helped: HelpedProposal | undefined): m.Children {
+		if (sentAckId === proposal.statementId) {
+			return m(
+				'span.stall__chip.stall__chip--sent',
+				{ role: 'status' },
+				`✓ ${t('delib.sent_ack')}`,
+			);
+		}
+		const unread = myThreadUnread(proposal);
+		if (unread > 0) {
+			return m(
+				'span.stall__chip.stall__chip--unread',
+				{ 'aria-label': tCount('delib.thread_unread', unread) },
+				`💬 ${unread}`,
+			);
+		}
+
+		return helped ? m('span.stall__chip', `🤝 ${t('delib.helped_chip')}`) : null;
 	}
 
 	/** "Proposals I helped" — hidden until I've actually helped something */
 	function helpedSection(live: AgoraSession): m.Children {
 		const entries = getHelpedProposals(userId);
 		if (entries.length === 0) return null;
-		markHelpedSeen(entries);
 
 		return m('.stack', [
 			m('p.teacher__section-title', t('delib.helped_title')),
@@ -2065,6 +2220,7 @@ export function Deliberation(
 			window.clearTimeout(sentAckTimer);
 			window.clearTimeout(dockIntroTimer);
 			Object.values(reRateAckTimers).forEach((timer) => window.clearTimeout(timer));
+			void flushSeenState();
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
 			unregisterMineNavigator(goToMine);
@@ -2073,6 +2229,9 @@ export function Deliberation(
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
 			const { proposals, suggestions, myRatings, scores } = getDeliberationState();
+			// Mid-session rollout guard: already-rated proposals get watermarks
+			// once, so the square doesn't shout NEW at everything (no-op after)
+			seedSeenBaselineIfNeeded();
 			const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
 			const anonName = myParticipant.anonName;
 
@@ -2372,11 +2531,14 @@ export function Deliberation(
 												flip: true,
 												open: openStallId === proposal.statementId,
 												onToggle: () => {
-													openStallId =
-														openStallId === proposal.statementId ? '' : proposal.statementId;
+													const opening = openStallId !== proposal.statementId;
+													openStallId = opening ? proposal.statementId : '';
+													// Unfolding the card is engaging with the change —
+													// the NEW/EDITED chip has delivered its message
+													if (opening) ackProposalSeen(proposal);
 												},
-												chip: rateStallChip(proposal),
-												body: rateStallBody(live, proposal),
+												chips: [changeChip(proposal), rateStallChip(proposal)],
+												body: () => rateStallBody(live, proposal),
 											}),
 										),
 									),
@@ -2406,9 +2568,8 @@ export function Deliberation(
 				const helpedById = new Map(
 					helpedEntries.map((entry) => [entry.proposal.statementId, entry]),
 				);
-				// The stalls I visited live IN the row now, so this screen is where
-				// their news is read — and the "come and look" badge clears here
-				if (helpedEntries.length > 0) markHelpedSeen(helpedEntries);
+				// The badge clears per card as each stall is opened or re-rated —
+				// standing in the market alone doesn't count as reading the news
 				// A deep link from the "woven in" toast points at a stall: open it,
 				// or the card it promised is folded away inside a handle
 				if (focusHelpedId !== null && helpedById.has(focusHelpedId)) {
@@ -2448,11 +2609,12 @@ export function Deliberation(
 												proposal,
 												open: openStallId === proposal.statementId,
 												onToggle: () => {
-													openStallId =
-														openStallId === proposal.statementId ? '' : proposal.statementId;
+													const opening = openStallId !== proposal.statementId;
+													openStallId = opening ? proposal.statementId : '';
+													if (opening) ackProposalSeen(proposal);
 												},
-												chip: helpStallChip(proposal, helped),
-												body: helpStallBody(live, proposal, helped),
+												chips: [helpStallChip(proposal, helped), changeChip(proposal)],
+												body: () => helpStallBody(live, proposal, helped),
 											});
 										}),
 									),

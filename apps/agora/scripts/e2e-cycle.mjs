@@ -314,11 +314,23 @@ console.log('S2(B) points before adoption:', before2);
 step("PHASE B: A adopts → flight to tray, B's celebration +1, the coach mark");
 await clearCelebration(s1);
 await s1.getByRole('button', { name: /^אשלב את הרעיון$/ }).click();
-// The card flies to the adoption tray; then it must be OUT of the received
-// list and IN the drawer
-await s1.waitForTimeout(1800);
-const stillListed = await s1.locator('.workshop__item').count();
-eq('adopted imp left the received list', stillListed, 0);
+// The message STAYS in its conversation (a thread with a hole reads as
+// deleted history) — but its decision buttons retire and the accepted chip
+// takes their place, and the idea lands in the adoption tray
+try {
+	await s1.locator('.thread__msg .helped__chip--accepted').waitFor({ timeout: 10000 });
+} catch (error) {
+	await shot(s1, 'DEBUG-A-after-accept');
+	const html = await s1
+		.locator('.my-lantern--workshop')
+		.first()
+		.innerHTML()
+		.catch(() => '(no workshop)');
+	console.log('DEBUG workshop HTML:', html.slice(0, 3000));
+	throw error;
+}
+const decisionLeft = await s1.getByRole('button', { name: /^אשלב את הרעיון$/ }).count();
+eq('adopted imp no longer asks for a decision', decisionLeft, 0);
 await s1.waitForSelector('.chat-drawer', { timeout: 5000 });
 // The accept → tick → save contract is the least self-evident mechanic in
 // the game; on the first accept it is spelled out where the work happens
@@ -375,16 +387,21 @@ const afterDecline = await points('S1', s1);
 console.log('S1(A) points after decline:', afterDecline);
 eq('A helping unchanged by decline', afterDecline.helping, before1.helping);
 eq('A total unchanged by decline', afterDecline.total, before1.total);
-// The workshop is a to-do list, not a museum of refusals. With no open
-// feedback left the received section collapses on its own (losses are
-// whispered), so open it to read the quiet record it kept.
+// The conversation keeps its record: the declined message stays in the
+// thread wearing a muted status chip, and no decision buttons remain.
 await openDock(s2);
 const receivedHead = s2.locator('button.workbench__head', { hasText: 'הצעות שיפור' }).first();
 if ((await receivedHead.getAttribute('aria-expanded')) === 'false') await receivedHead.click();
-await s2.waitForSelector('.workshop__declined-note', { timeout: 10000 });
-console.log('   ✓ B WORKSHOP:', (await s2.locator('.workshop__declined-note').textContent()).trim());
-const declinedCards = await s2.locator('.workshop__item').count();
-eq('declined card retired from the received list', declinedCards, 0);
+await s2.waitForSelector('.thread__msg .helped__chip--declined', { timeout: 10000 });
+console.log(
+	'   ✓ B WORKSHOP declined chip:',
+	(await s2.locator('.thread__msg .helped__chip--declined').textContent()).trim(),
+);
+eq(
+	'declined imp no longer asks for a decision',
+	await s2.getByRole('button', { name: /^לא תודה$/ }).count(),
+	0,
+);
 // Hand the room back before B is asked to act in it again
 await closeDock(s2);
 
@@ -523,23 +540,42 @@ await closeDock(s1);
 step('PHASE F: open-ideas cap replaces the points penalty');
 await s2.locator('.delib-nav__item--peer').click();
 await s2.waitForSelector('.helped__item', { timeout: 10000 });
-const followUp = async (page, text) => {
-	await page.locator('.helped__followup').first().fill(text);
-	await page.locator('.helped__item button.btn--secondary', { hasText: /שליחת/ }).first().click();
+// Follow-ups are thread messages now. Plain chat is uncapped conversation;
+// only messages MARKED as improvement ideas occupy an open-idea slot — so
+// the cap test must tick the mark-as-idea toggle each time.
+const followUpIdea = async (page, text) => {
+	const toggle = page.locator('.helped__item .thread__kind-toggle input').first();
+	if (!(await toggle.isChecked())) await toggle.click();
+	await page.locator('.helped__item .thread__input').first().fill(text);
+	await page.locator('.helped__item .thread__composer button.btn--secondary').first().click();
 	await page.waitForTimeout(1200);
 };
-await followUp(s2, 'אפשר להוסיף סעיף שמבטיח שהאספה תתכנס לפחות פעמיים בשנה.');
-await followUp(s2, 'ואולי גם לקבוע מי מכריע במקרה של תיקו בהצבעה.');
+await followUpIdea(s2, 'אפשר להוסיף סעיף שמבטיח שהאספה תתכנס לפחות פעמיים בשנה.');
+await followUpIdea(s2, 'ואולי גם לקבוע מי מכריע במקרה של תיקו בהצבעה.');
 // Two unresolved ideas on one proposal is the ceiling — and it is STATED,
 // not enforced silently
+const capToggle = s2.locator('.helped__item .thread__kind-toggle input').first();
+if (!(await capToggle.isChecked())) await capToggle.click();
+await s2.locator('.helped__item .thread__input').first().fill('ניסיון לשלוח רעיון שלישי בזמן ששניים ממתינים.');
 await s2.locator('.helped__item .action-hint').waitFor({ timeout: 10000 });
 console.log('   ✓ B CAP HINT:', (await s2.locator('.helped__item .action-hint').first().textContent()).trim());
-await s2.locator('.helped__followup').first().fill('ניסיון לשלוח רעיון שלישי בזמן ששניים ממתינים.');
 const sendDisabled = await s2
-	.locator('.helped__item button.btn--secondary', { hasText: /שליחת/ })
+	.locator('.helped__item .thread__composer button.btn--secondary')
 	.first()
 	.isDisabled();
 eq('third open idea blocked', sendDisabled, true);
+// ...and unticking the idea mark turns the same box back into free chat
+await capToggle.click();
+// The hint retires with the mark — wait for the redraw before reading the button
+await s2
+	.locator('.helped__item .action-hint')
+	.first()
+	.waitFor({ state: 'detached', timeout: 5000 });
+const chatSendDisabled = await s2
+	.locator('.helped__item .thread__composer button.btn--secondary')
+	.first()
+	.isDisabled();
+eq('plain chat is never capped', chatSendDisabled, false);
 await shot(s2, '11-B-open-ideas-cap');
 
 // ---------- Phase G: the ledger the economy was missing ----------

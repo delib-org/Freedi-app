@@ -1478,8 +1478,20 @@
 		display: none;
 	}
 
-	&__chip {
+	// Two stories can be true of one row at once (changed + already rated) —
+	// the chips share one slot so neither ever pushes the handle onto a new line
+	&__chips {
 		flex: 0 0 auto;
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+	}
+
+	&__chip {
+		flex: 0 1 auto;
+		min-width: 0;
 		align-self: center;
 		display: inline-flex;
 		align-items: center;
@@ -1504,10 +1516,34 @@
 			font-weight: 700;
 		}
 
-		// The one chip that asks for something back
-		&--improved {
+		// A reply is waiting in my conversation here — a true notification
+		// count, so it wears the notification color, never a camp one
+		&--unread {
+			background: var(--danger);
+			color: #fff;
+			font-weight: 700;
+		}
+
+		// Never looked at this one — a quiet invitation, not an alarm
+		&--new {
+			background: rgba(224, 119, 20, 0.12);
+			color: var(--peer-glow);
+			border: 1px dashed rgba(224, 119, 20, 0.5);
+		}
+
+		// The owner changed the text since I last engaged with it — the chip
+		// that asks for a re-read (and a re-rate, the body will say)
+		&--edited {
 			background: rgba(255, 210, 63, 0.35);
 			color: var(--peer-glow);
+			font-weight: 700;
+		}
+
+		// MY idea is in their text now — personal and celebratory, so it wears
+		// the one color that always means mine (blue, per DESIGN.md)
+		&--improved-mine {
+			background: rgba(43, 111, 214, 0.14);
+			color: var(--mine-glow);
 			font-weight: 700;
 		}
 	}
@@ -1542,6 +1578,23 @@
 		color: var(--ink);
 		font-size: var(--font-size-lg);
 		line-height: 1.7;
+	}
+
+	// "The text changed since you weighed it" — the unfolded body's echo of
+	// the EDITED chip, sitting right above the scale that answers it
+	&__reinvite {
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-sm);
+		background: rgba(255, 210, 63, 0.25);
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+
+		// ...and the celebratory version: the change includes MY woven-in idea
+		&--mine {
+			background: rgba(43, 111, 214, 0.12);
+			color: var(--mine-glow);
+			font-weight: 700;
+		}
 	}
 
 	&__compose {
@@ -1619,6 +1672,157 @@
 	.delib__actions {
 		flex: 0 0 auto;
 	}
+}
+
+// --- One proposal↔helper conversation: the helper's ideas (with their
+// lifecycle chips) and the owner's replies as a small two-sided thread.
+// Blue = mine, orange = theirs — the app's one immutable color rule. ---
+.thread {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__msg {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		max-width: 88%;
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-md);
+		background: var(--bg-inset);
+
+		&--mine {
+			align-self: flex-end;
+			background: rgba(43, 111, 214, 0.1);
+			border-inline-end: 3px solid var(--mine);
+		}
+
+		&--peer {
+			align-self: flex-start;
+			background: rgba(224, 119, 20, 0.08);
+			border-inline-start: 3px solid var(--peer);
+		}
+
+		// An improvement idea is WORK, not talk — it wears a tag and, later,
+		// its lifecycle chip, so the two kinds of message never blur
+		&--suggestion {
+			border-radius: var(--radius-sm);
+		}
+	}
+
+	&__who {
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		color: var(--peer-glow);
+	}
+
+	&__tag {
+		align-self: flex-start;
+		padding: 1px var(--space-xs);
+		border-radius: var(--radius-full);
+		background: rgba(255, 210, 63, 0.35);
+		color: var(--ink);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	&__text {
+		color: var(--text-primary);
+		line-height: 1.55;
+		overflow-wrap: anywhere;
+	}
+
+	&__composer {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__input {
+		background: var(--bg-card-solid);
+	}
+
+	&__kind-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		cursor: pointer;
+	}
+
+	.helped__chip {
+		align-self: flex-start;
+	}
+
+	.delib__actions {
+		justify-content: flex-end;
+	}
+}
+
+// --- The owner's inbox: one row per helper conversation, unread count in
+// notification red (never a camp color), unfolding to the thread itself. ---
+.thread-inbox__item {
+	border: 1px solid rgba(169, 126, 82, 0.35);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+}
+
+.thread-inbox__head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	width: 100%;
+	padding: var(--space-sm) var(--space-md);
+	background: none;
+	border: none;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+
+	.workbench__chevron {
+		margin-inline-start: auto;
+	}
+}
+
+.thread-inbox__from {
+	font-weight: 700;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.thread-inbox__ideas {
+	flex: 0 0 auto;
+	padding: 1px var(--space-xs);
+	border-radius: var(--radius-full);
+	background: rgba(255, 210, 63, 0.35);
+	color: var(--ink);
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+}
+
+.thread-inbox__unread {
+	flex: 0 0 auto;
+	min-width: 18px;
+	padding: 1px 5px;
+	border-radius: var(--radius-full);
+	background: var(--danger);
+	color: #fff;
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+	text-align: center;
+}
+
+.thread-inbox__item > .thread {
+	padding: 0 var(--space-md) var(--space-md);
 }
 
 // --- Why is that button grey? One muted line under a disabled primary,

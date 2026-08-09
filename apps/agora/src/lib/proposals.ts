@@ -16,6 +16,7 @@ import {
 	Collections,
 	AgoraCharacterReview,
 	AgoraCharacterReviewSchema,
+	AgoraMessageKind,
 	AgoraProposalScore,
 	AgoraProposalScoreSchema,
 	AgoraSession,
@@ -31,9 +32,9 @@ import { getSessionState } from './session';
 import {
 	detectClassBridgeRecord,
 	detectHelpedImprovements,
-	detectReceivedSuggestions,
+	detectThreadMessages,
 } from './notifications';
-import { agoraCreator, buildProposalStatement, buildSuggestionStatement } from './statementDocs';
+import { agoraCreator, buildProposalStatement, buildThreadMessageStatement } from './statementDocs';
 
 /** Minimal client view of a proposal/suggestion statement */
 export interface AgoraProposal {
@@ -46,6 +47,12 @@ export interface AgoraProposal {
 	createdAt: number;
 	lastUpdate: number;
 	suggestionStatus?: AgoraSuggestionStatus;
+	/** When suggestionStatus last changed (server-stamped by the resolve callable) */
+	statusChangedAt?: number;
+	/** Thread-message discriminator; absent on legacy docs — treat as suggestion */
+	agoraMessageKind?: AgoraMessageKind;
+	/** The helper uid keying the thread; absent on legacy docs — fall back to creatorId */
+	agoraThreadUserId?: string;
 	consensus?: number;
 	evaluation?: { agreement?: number; agreementIndex?: number; numberOfEvaluators?: number };
 }
@@ -101,6 +108,10 @@ function toProposal(data: Record<string, unknown>): AgoraProposal {
 		createdAt: Number(data.createdAt ?? 0),
 		lastUpdate: Number(data.lastUpdate ?? data.createdAt ?? 0),
 		suggestionStatus: data.suggestionStatus as AgoraSuggestionStatus | undefined,
+		statusChangedAt: typeof data.statusChangedAt === 'number' ? data.statusChangedAt : undefined,
+		agoraMessageKind: data.agoraMessageKind as AgoraMessageKind | undefined,
+		agoraThreadUserId:
+			typeof data.agoraThreadUserId === 'string' ? data.agoraThreadUserId : undefined,
 		consensus: typeof data.consensus === 'number' ? data.consensus : undefined,
 		evaluation: data.evaluation as AgoraProposal['evaluation'],
 	};
@@ -133,8 +144,8 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			state.statementsLoaded = true;
 			// Close the collaboration loop: tell helpers their proposal moved
 			detectHelpedImprovements(sessionId, userId);
-			// ...and the mirror: a classmate left feedback on MY proposal
-			detectReceivedSuggestions(sessionId, userId);
+			// ...and the mirror: a message arrived in a thread I'm part of
+			detectThreadMessages(sessionId, userId);
 			m.redraw();
 		},
 		(error) => {
@@ -246,23 +257,66 @@ export function stopDeliberationListeners(): void {
 	state.characterReviews = {};
 }
 
+/**
+ * Is this thread message an improvement suggestion (as opposed to plain
+ * chat)? Absent kind = suggestion: every pre-thread doc was one.
+ */
+export function isSuggestionKind(message: AgoraProposal): boolean {
+	return message.agoraMessageKind !== AgoraMessageKind.chat;
+}
+
+/** The helper uid a thread message belongs to (legacy docs: the author) */
+export function threadUserIdOf(message: AgoraProposal): string {
+	return message.agoraThreadUserId ?? message.creatorId;
+}
+
 /** A helped proposal: someone else's proposal I sent at least one suggestion on */
 export interface HelpedProposal {
 	proposal: AgoraProposal;
 	mySuggestions: AgoraProposal[];
 }
 
-/** Proposals I contributed suggestions to — the "collaboration loop" roster */
+/**
+ * Proposals I contributed suggestions to — the "collaboration loop" roster.
+ * Suggestion-kind messages only: chatting at a stall is not yet helping it.
+ */
 export function getHelpedProposals(userId: string): HelpedProposal[] {
 	return state.proposals
 		.filter((proposal) => proposal.creatorId !== userId)
 		.map((proposal) => ({
 			proposal,
 			mySuggestions: (state.suggestions[proposal.statementId] ?? []).filter(
-				(suggestion) => suggestion.creatorId === userId,
+				(suggestion) => suggestion.creatorId === userId && isSuggestionKind(suggestion),
 			),
 		}))
 		.filter((entry) => entry.mySuggestions.length > 0);
+}
+
+/**
+ * One proposal↔helper conversation, chronological. The owner and the helper
+ * see the same list; every other student's thread on the same proposal is a
+ * different helperUid.
+ */
+export function getThreadMessages(proposalId: string, helperUid: string): AgoraProposal[] {
+	return (state.suggestions[proposalId] ?? []).filter(
+		(message) => threadUserIdOf(message) === helperUid,
+	);
+}
+
+/** All threads on my proposal, keyed by helper uid — the owner's inbox */
+export function getOwnerThreads(proposalId: string): Map<string, AgoraProposal[]> {
+	const threads = new Map<string, AgoraProposal[]>();
+	for (const message of state.suggestions[proposalId] ?? []) {
+		const helperUid = threadUserIdOf(message);
+		const list = threads.get(helperUid);
+		if (list) {
+			list.push(message);
+		} else {
+			threads.set(helperUid, [message]);
+		}
+	}
+
+	return threads;
 }
 
 /** Create the student's proposal, or update it on later rounds */
@@ -329,9 +383,53 @@ export function openSuggestionsBy(proposalId: string, userId: string): number {
 	return (state.suggestions[proposalId] ?? []).filter(
 		(suggestion) =>
 			suggestion.creatorId === userId &&
+			// Plain chat never occupies an idea slot — the cap guards unresolved
+			// WORK on the owner's desk, and a chat message asks nothing of them
+			isSuggestionKind(suggestion) &&
 			(suggestion.suggestionStatus === undefined ||
 				suggestion.suggestionStatus === AgoraSuggestionStatus.open),
 	).length;
+}
+
+/**
+ * Send one thread message on a proposal. A suggestion-kind message is an
+ * improvement idea (capped, enters the accept/weave economy); a chat-kind
+ * message is free conversation. The owner replies into the HELPER's thread —
+ * `helperUid` names the conversation, defaulting to the sender (the helper
+ * case).
+ */
+export async function submitThreadMessage(
+	session: AgoraSession,
+	proposal: AgoraProposal,
+	anonName: string,
+	text: string,
+	kind: AgoraMessageKind,
+	helperUid?: string,
+): Promise<void> {
+	const { user } = getUserState();
+	if (!user) throw new Error('Not authenticated');
+	if (
+		kind === AgoraMessageKind.suggestion &&
+		openSuggestionsBy(proposal.statementId, user.uid) >=
+			AGORA_ANTI_GAMING.MAX_OPEN_SUGGESTIONS_PER_HELPER
+	) {
+		throw new Error('Too many open suggestions on this proposal');
+	}
+	const newRef = doc(collection(db, Collections.statements));
+
+	await setDoc(
+		newRef,
+		buildThreadMessageStatement(
+			session,
+			proposal.statementId,
+			newRef.id,
+			user.uid,
+			anonName,
+			text,
+			kind,
+			helperUid ?? user.uid,
+		),
+	);
 }
 
 /** Send an improvement suggestion on someone else's proposal */
@@ -341,20 +439,7 @@ export async function submitSuggestion(
 	anonName: string,
 	text: string,
 ): Promise<void> {
-	const { user } = getUserState();
-	if (!user) throw new Error('Not authenticated');
-	if (
-		openSuggestionsBy(proposal.statementId, user.uid) >=
-		AGORA_ANTI_GAMING.MAX_OPEN_SUGGESTIONS_PER_HELPER
-	) {
-		throw new Error('Too many open suggestions on this proposal');
-	}
-	const newRef = doc(collection(db, Collections.statements));
-
-	await setDoc(
-		newRef,
-		buildSuggestionStatement(session, proposal.statementId, newRef.id, user.uid, anonName, text),
-	);
+	await submitThreadMessage(session, proposal, anonName, text, AgoraMessageKind.suggestion);
 }
 
 export async function resolveSuggestion(

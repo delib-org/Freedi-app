@@ -2,6 +2,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import { db } from '../db';
 import {
 	Collections,
+	AgoraMessageKind,
 	AgoraParticipant,
 	AgoraSuggestionStatus,
 	AGORA_ANTI_GAMING,
@@ -108,9 +109,15 @@ export const agoraResolveSuggestion = onCall(
 				creatorId?: string;
 				agoraSessionId?: string;
 				suggestionStatus?: string;
+				agoraMessageKind?: string;
 			};
 			if (suggestion.agoraSessionId !== sessionId) {
 				throw new HttpsError('failed-precondition', 'Suggestion is not part of this session');
+			}
+			// Plain chat has no lifecycle: only suggestion-kind messages (or
+			// legacy docs, which predate the discriminator) can be resolved
+			if (suggestion.agoraMessageKind === AgoraMessageKind.chat) {
+				throw new HttpsError('failed-precondition', 'Chat messages have no status to resolve');
 			}
 			if (resolution === AgoraSuggestionStatus.implemented) {
 				// The second mark of the lifecycle: only an ACCEPTED suggestion
@@ -168,6 +175,9 @@ export const agoraResolveSuggestion = onCall(
 
 			await suggestionRef.update({
 				suggestionStatus: resolution,
+				// The precise clock of the transition: lastUpdate can't time it,
+				// because this very write bumps it
+				statusChangedAt: Date.now(),
 				lastUpdate: Date.now(),
 			});
 

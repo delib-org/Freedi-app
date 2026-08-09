@@ -6,6 +6,7 @@ export {
 	AgoraSessionStatus,
 	AgoraTopicStatus,
 	AgoraSceneKind,
+	AgoraMessageKind,
 	AgoraSuggestionStatus,
 	AgoraSessionOutcome,
 } from './agoraEnums';
@@ -74,6 +75,7 @@ export {
 	AgoraPointsSchema,
 	AgoraParticipantSchema,
 	createAgoraParticipantId,
+	createAgoraThreadKey,
 } from './agoraParticipant';
 
 export type {

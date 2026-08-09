@@ -64,8 +64,10 @@ service cloud.firestore {
 
     // Participants: created via callable only (anon names are server-issued).
     // Reads are open to the class — docs contain only anonymous data.
-    // A participant may update their own doc (camp positioning, lastActive)
-    // but never their points (function-written).
+    // A participant may update their own doc (camp positioning, lastActive,
+    // seen/seenThreads watermarks) but never their points or the credit
+    // idempotency guards (function-written; a client that could reset
+    // creditedRatings or firstProposalAwardedAt could replay credits).
     match /agoraParticipants/{participantId} {
       allow read: if isAuthenticated();
       allow create, delete: if false;
@@ -74,7 +76,13 @@ service cloud.firestore {
                        request.resource.data.userId == resource.data.userId &&
                        request.resource.data.sessionId == resource.data.sessionId &&
                        request.resource.data.anonName == resource.data.anonName &&
-                       request.resource.data.points == resource.data.points;
+                       request.resource.data.points == resource.data.points &&
+                       request.resource.data.get('creditedRatings', -1) ==
+                         resource.data.get('creditedRatings', -1) &&
+                       request.resource.data.get('firstProposalAwardedAt', -1) ==
+                         resource.data.get('firstProposalAwardedAt', -1) &&
+                       request.resource.data.get('isAI', false) ==
+                         resource.data.get('isAI', false);
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.

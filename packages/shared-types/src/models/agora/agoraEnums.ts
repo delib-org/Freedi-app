@@ -71,6 +71,18 @@ export enum AgoraSessionOutcome {
 	collapse = 'collapse',
 }
 
+/**
+ * What a thread message on a proposal IS. Absent on legacy docs — every
+ * reader must treat `undefined` as `suggestion` (all pre-thread messages
+ * were improvement suggestions).
+ */
+export enum AgoraMessageKind {
+	/** An improvement idea — carries `suggestionStatus` and the accept/weave economy */
+	suggestion = 'suggestion',
+	/** Plain conversation — no status, no points */
+	chat = 'chat',
+}
+
 export enum AgoraSuggestionStatus {
 	open = 'open',
 	accepted = 'accepted',

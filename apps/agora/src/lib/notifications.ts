@@ -1,6 +1,11 @@
 import m from 'mithril';
 import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe } from './firebase';
-import { Collections, NotificationTriggerType, SourceApp } from '@freedi/shared-types';
+import {
+	AgoraMessageKind,
+	Collections,
+	NotificationTriggerType,
+	SourceApp,
+} from '@freedi/shared-types';
 import { AGORA_POINTS } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
@@ -138,22 +143,42 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
 }
 
 /**
- * The OTHER half of the loop: a classmate left an improvement on MY
- * proposal. Without this the arrival is silent — the workshop lives one
- * tab away, so a student mid-square never learns feedback is waiting
- * (the tab badge alone loses to a screen you aren't looking at).
- * Same watermark discipline as above: first sighting is silent, so a
- * fresh tab doesn't replay every suggestion already received.
+ * The OTHER half of the loop, both directions of it: a classmate left an
+ * improvement (or a chat message) on MY proposal, or an owner replied in a
+ * thread I started at their stall. Without this the arrival is silent — the
+ * conversation lives one tab away, so a student mid-square never learns
+ * someone is talking to them.
+ * Same watermark discipline as above: first sighting is silent, so a fresh
+ * tab doesn't replay every message already received.
  */
-export function detectReceivedSuggestions(sessionId: string, userId: string): void {
+export function detectThreadMessages(sessionId: string, userId: string): void {
 	const key = `agora_${sessionId}_received_toastmark`;
 	const { proposals, suggestions } = getDeliberationState();
-	const mineIds = proposals
-		.filter((proposal) => proposal.creatorId === userId)
-		.map((proposal) => proposal.statementId);
-	// No proposal of mine yet — nothing can arrive, and writing a watermark
-	// now would make the FIRST real suggestion look like replayed history
-	if (mineIds.length === 0) return;
+	const mineIds = new Set(
+		proposals
+			.filter((proposal) => proposal.creatorId === userId)
+			.map((proposal) => proposal.statementId),
+	);
+
+	// Every message addressed to me: anything on my proposals, plus replies
+	// landing in a thread keyed by MY uid at a classmate's stall
+	let anySuggestionForMe = false;
+	const incoming: string[] = [];
+	for (const [proposalId, messages] of Object.entries(suggestions)) {
+		const ownerSide = mineIds.has(proposalId);
+		for (const message of messages) {
+			if (message.creatorId === userId) continue;
+			const inMyThread = (message.agoraThreadUserId ?? message.creatorId) === userId;
+			if (!ownerSide && !inMyThread) continue;
+			incoming.push(message.statementId);
+			if (ownerSide && message.agoraMessageKind !== AgoraMessageKind.chat) {
+				anySuggestionForMe = true;
+			}
+		}
+	}
+	// Nothing can have arrived yet — and writing a watermark now would make
+	// the FIRST real message look like replayed history
+	if (mineIds.size === 0 && incoming.length === 0) return;
 
 	const stored = sessionStorage.getItem(key);
 	let seen: string[] = [];
@@ -162,19 +187,27 @@ export function detectReceivedSuggestions(sessionId: string, userId: string): vo
 	} catch {
 		// Corrupt storage — start over
 	}
-
-	const incoming = mineIds
-		.flatMap((id) => suggestions[id] ?? [])
-		.filter((suggestion) => suggestion.creatorId !== userId)
-		.map((suggestion) => suggestion.statementId);
 	const seenSet = new Set(seen);
 	const fresh = incoming.filter((id) => !seenSet.has(id));
+	const freshSet = new Set(fresh);
+	const freshSuggestionForMe =
+		anySuggestionForMe &&
+		[...mineIds].some((proposalId) =>
+			(suggestions[proposalId] ?? []).some(
+				(message) =>
+					freshSet.has(message.statementId) && message.agoraMessageKind !== AgoraMessageKind.chat,
+			),
+		);
 
 	// The watermark is written on EVERY pass, including the empty one right
-	// after I propose. Writing it only when suggestions exist made the first
+	// after I propose. Writing it only when messages exist made the first
 	// arrival its own "first sighting" — and therefore silent, forever.
 	sessionStorage.setItem(key, JSON.stringify(incoming));
-	if (stored !== null && fresh.length > 0) pushLocalToast('agora_suggestion_received');
+	if (stored === null || fresh.length === 0) return;
+	// One toast per pass: an improvement idea on my proposal is the loop's
+	// actionable moment (the toast walks you to the workshop); everything
+	// else is conversation
+	pushLocalToast(freshSuggestionForMe ? 'agora_suggestion_received' : 'agora_thread_message');
 }
 
 /** Listen to this user's unread agora notifications and surface them as toasts */

@@ -8,7 +8,7 @@ import { Role } from '../user/UserSettings';
 import { Paragraph, ParagraphType, ListType } from '../paragraph/paragraphModel';
 import { StatementSettings } from './StatementSettings';
 import { SourceApp } from '../engagement/SourceApp';
-import { AgoraSuggestionStatus } from '../agora/agoraEnums';
+import { AgoraMessageKind, AgoraSuggestionStatus } from '../agora/agoraEnums';
 
 /**
  * Default statement settings used when creating new statements
@@ -77,6 +77,10 @@ export interface CreateStatementParams {
 	anonName?: string;
 	/** Agora: lifecycle of a `suggestion` statement */
 	suggestionStatus?: AgoraSuggestionStatus;
+	/** Agora: what a thread message is — improvement suggestion or plain chat */
+	agoraMessageKind?: AgoraMessageKind;
+	/** Agora: the helper uid keying the proposal↔helper thread */
+	agoraThreadUserId?: string;
 }
 
 /**
@@ -163,6 +167,8 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 			...(params.agoraSessionId && { agoraSessionId: params.agoraSessionId }),
 			...(params.anonName && { anonName: params.anonName }),
 			...(params.suggestionStatus && { suggestionStatus: params.suggestionStatus }),
+			...(params.agoraMessageKind && { agoraMessageKind: params.agoraMessageKind }),
+			...(params.agoraThreadUserId && { agoraThreadUserId: params.agoraThreadUserId }),
 		};
 
 		// Validate against schema

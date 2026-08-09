@@ -6,6 +6,7 @@ import {
 	array,
 	boolean,
 	enum_,
+	record,
 	InferOutput,
 } from 'valibot';
 import { AgoraCamp, AgoraStage } from './agoraEnums';
@@ -71,6 +72,25 @@ export const AgoraParticipantSchema = object({
 	firstProposalAwardedAt: optional(number()),
 	/** How many of this student's ratings have been credited (cap guard) */
 	creditedRatings: optional(number()),
+	/**
+	 * Durable per-proposal "what I've acknowledged" watermarks (change-awareness
+	 * chips survive refresh and device switch). Keyed by proposal statementId.
+	 * Written by the student's client only, debounced, monotonic max-merge —
+	 * a stale device must never move a watermark backwards.
+	 */
+	seen: optional(
+		record(
+			string(),
+			object({
+				/** Presence of the entry = the proposal is no longer NEW to me */
+				firstSeenAt: number(),
+				/** The latest agoraScores.lastEditAt I have acknowledged */
+				seenEditAt: number(),
+			}),
+		),
+	),
+	/** `${proposalId}--${helperUid}` → createdAt of the newest thread message read */
+	seenThreads: optional(record(string(), number())),
 	joinedAt: number(),
 	lastActive: number(),
 });
@@ -79,4 +99,12 @@ export type AgoraParticipant = InferOutput<typeof AgoraParticipantSchema>;
 
 export function createAgoraParticipantId(sessionId: string, userId: string): string {
 	return `${sessionId}--${userId}`;
+}
+
+/**
+ * Key of a proposal↔helper thread in `seenThreads`. The helper uid is the
+ * thread identity on both sides — owner replies use the helper's uid too.
+ */
+export function createAgoraThreadKey(proposalId: string, helperUid: string): string {
+	return `${proposalId}--${helperUid}`;
 }
