@@ -120,6 +120,24 @@
           }
         }
       }
+    },
+
+    "liveDraftWatchers": {
+      "$questionId": {
+        ".read": "auth != null",
+
+        "$watcherId": {
+          ".write": "auth != null && auth.uid === $watcherId",
+          ".validate": "newData.hasChildren(['lastActive'])",
+
+          "lastActive": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }
