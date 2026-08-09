@@ -25,6 +25,9 @@ const mkPage = async (label) => {
 	const page = await ctx.newPage();
 	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
 	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
+	page.on('console', (m) => {
+		if (m.type() === 'error') console.log(`[${label} CONSOLE]`, m.text().slice(0, 160));
+	});
 	return page;
 };
 const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });

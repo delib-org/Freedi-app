@@ -25,6 +25,11 @@ const mkPage = async (label) => {
 	const page = await ctx.newPage();
 	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
 	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
+	// A Mithril render that throws surfaces here, not as a pageerror — and a
+	// blank screen with no output is the worst possible failure report
+	page.on('console', (m) => {
+		if (m.type() === 'error') console.log(`[${label} CONSOLE]`, m.text().slice(0, 160));
+	});
 	return page;
 };
 const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
@@ -283,7 +288,22 @@ for (const page of [s1, s2]) {
 const openThreadFromStall = async (page) => {
 	await page.waitForSelector('.stall--open .chat-entry', { timeout: 10000 });
 	await page.locator('.stall--open .chat-entry').first().click();
-	await page.waitForSelector('.chat-page__input', { timeout: 10000 });
+	try {
+		await page.waitForSelector('.chat-page__input', { timeout: 10000 });
+	} catch (error) {
+		await shot(page, 'DEBUG-no-chat-page');
+		console.log('DEBUG chat-page count:', await page.locator('.chat-page').count());
+		console.log('DEBUG entries:', await page.locator('.stall--open .chat-entry').count());
+		console.log(
+			'DEBUG shell classes:',
+			await page.locator('.shell').first().getAttribute('class').catch(() => '(none)'),
+		);
+		console.log(
+			'DEBUG body head:',
+			(await page.locator('body').innerText()).slice(0, 400).replace(/\n/g, ' | '),
+		);
+		throw error;
+	}
 };
 const sendInChat = async (page, text) => {
 	await page.locator('.chat-page__input').fill(text);

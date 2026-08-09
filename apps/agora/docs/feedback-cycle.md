@@ -37,6 +37,29 @@ sequenceDiagram
     S-->>A: 6. "📈 N ratings updated since your improvement" (aggregate)
 ```
 
+**What the conversation records.** Two things happen *to* a proposal
+rather than being said about it, and both are written into the thread as
+system lines — centred, unattributed, quieter than any bubble:
+
+- **✏️ the author changed the text.** Wikipedia's habit: the line shows
+  *what* changed, word by word — removed wording struck through, added
+  wording highlighted, untouched words plain (`lib/textDiff.ts`, a plain
+  word-level LCS; character diffs on Hebrew were unreadable). Written by
+  `onAgoraProposalWritten`, the only place holding both versions — and a
+  client-written record of "what it used to say" would be one anyone
+  could write. It carries **no thread uid**: an edit belongs to every
+  conversation about that proposal, not to one helper.
+- **🏅 what a thank-you paid.** Written by `agoraResolveSuggestion`
+  beside the idea that earned it, so the number can never drift from the
+  transaction that produced it. Authored by the *resolver*, so it reads
+  as incoming news for the helper and not for the author.
+
+Neither is a message: `isSuggestionKind` is an allow-list
+(`undefined || suggestion`), so system lines never occupy an open-idea
+slot, never ask the author for a decision, and never fire the "somebody
+is talking to you" toast — the edit already has its own toast, and the
+award arrives as a celebration.
+
 **Where this happens.** The conversation is a **sub-page**, not a fold
 inside a card — the same shape Join gives an option's chat and the main
 app gives a statement's chat. A card carries only the indicator every

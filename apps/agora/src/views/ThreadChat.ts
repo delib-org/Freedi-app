@@ -287,13 +287,18 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * something a classmate said: what the author changed (Wikipedia-style,
 	 * old wording struck through beside the new), and what a thank-you paid.
 	 */
-	function systemLine(message: AgoraProposal): m.Children {
+	function systemLine(message: AgoraProposal, role: 'helper' | 'owner'): m.Children {
 		if (message.agoraMessageKind === AgoraMessageKind.award) {
 			const points = message.agoraPointsAwarded ?? 0;
 
 			return m('.chat-system.chat-system--award', { key: message.statementId }, [
 				m('span.chat-system__icon', { 'aria-hidden': 'true' }, '🏅'),
-				m('span.chat-system__text', t('delib.award_line', { n: points })),
+				// BOTH sides read this line: "your idea earned you" is only true
+				// for the helper — the author gave the points, they didn't get them
+				m(
+					'span.chat-system__text',
+					tCount(role === 'owner' ? 'delib.award_line_owner' : 'delib.award_line', points),
+				),
 				m('span.chat-system__time', formatMessageTime(message.createdAt)),
 			]);
 		}
@@ -309,15 +314,17 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			]),
 			// One paragraph, read straight through: untouched words plain,
 			// what went in highlighted, what came out struck through
+			// NO keys on these spans: they sit among plain strings (the untouched
+			// runs), and Mithril forbids mixing keyed and unkeyed children in one
+			// array — it throws mid-redraw and takes the whole screen with it.
 			m(
 				'p.chat-system__diff',
-				parts.map((part, index) =>
+				parts.map((part) =>
 					part.op === 'same'
 						? part.text
 						: m(
 								`span.chat-system__${part.op === 'added' ? 'ins' : 'del'}`,
 								{
-									key: index,
 									'aria-label': t(part.op === 'added' ? 'delib.diff_added' : 'delib.diff_removed'),
 								},
 								part.text,
@@ -413,7 +420,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							? m('p.chat-page__empty', t('delib.chat_empty'))
 							: messages.map((message) => {
 									// What HAPPENED, as opposed to what someone said
-									if (isSystemKind(message)) return systemLine(message);
+									if (isSystemKind(message)) return systemLine(message, role);
 									const mine = message.creatorId === userId;
 									const decidable =
 										role === 'owner' &&
