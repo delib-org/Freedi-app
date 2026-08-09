@@ -39,6 +39,7 @@ const delibState: {
 	scores: {},
 };
 
+vi.mock('mithril', () => ({ default: { redraw: () => {} } }));
 vi.mock('../firebase', () => ({
 	db: {},
 	doc: (_db: unknown, collectionName: string, id: string) => ({ collectionName, id }),

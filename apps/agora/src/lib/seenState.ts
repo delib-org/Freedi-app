@@ -1,3 +1,4 @@
+import m from 'mithril';
 import { db, doc, updateDoc } from './firebase';
 import { Collections, createAgoraParticipantId } from '@freedi/shared-types';
 import { getSessionState } from './session';
@@ -26,6 +27,7 @@ let pendingSeen: Record<string, SeenEntry> = {};
 let pendingThreads: Record<string, number> = {};
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let baselineSeededFor = '';
+let redrawQueued = false;
 
 /** Rebind to the active session/user; a switch drops stale pending state */
 function ensureBound(): { sessionId: string; userId: string } | null {
@@ -112,7 +114,7 @@ export function markProposalSeen(proposalId: string, editAt: number | undefined)
 		firstSeenAt: current?.firstSeenAt ?? Date.now(),
 		seenEditAt: targetEditAt,
 	};
-	scheduleFlush();
+	onMarked();
 }
 
 /** Acknowledge a thread up to the newest message the student has read */
@@ -120,7 +122,7 @@ export function markThreadSeen(threadKey: string, newestCreatedAt: number): void
 	if (!ensureBound()) return;
 	if (effectiveThreadSeen(threadKey) >= newestCreatedAt) return;
 	pendingThreads[threadKey] = newestCreatedAt;
-	scheduleFlush();
+	onMarked();
 }
 
 /** Messages addressed to me that arrived after my thread watermark */
@@ -159,6 +161,25 @@ export function seedSeenBaselineIfNeeded(): void {
 		};
 	}
 	if (Object.keys(pendingSeen).length > 0) scheduleFlush();
+}
+
+/**
+ * A mark both persists and CHANGES WHAT IS ON SCREEN, so it has to ask for a
+ * repaint. A thread marks itself read while rendering, and the row's unread
+ * chip was already built one line earlier in the same pass — without this the
+ * chip only cleared when some unrelated snapshot happened to redraw, which is
+ * a badge that clears "eventually". Deferred to a macrotask: redrawing from
+ * inside a render is what Mithril forbids. Terminates because the second pass
+ * finds the watermark already advanced and marks nothing.
+ */
+function onMarked(): void {
+	scheduleFlush();
+	if (redrawQueued) return;
+	redrawQueued = true;
+	setTimeout(() => {
+		redrawQueued = false;
+		m.redraw();
+	}, 0);
 }
 
 function scheduleFlush(): void {
