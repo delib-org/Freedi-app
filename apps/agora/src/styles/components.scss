@@ -1940,16 +1940,61 @@
 
 	// What the conversation is ABOUT, always in sight above it
 	&__proposal {
+		display: block;
+		width: calc(100% - 2 * var(--space-md));
 		margin: var(--space-sm) var(--space-md) 0;
 		padding: var(--space-sm) var(--space-md);
 		background: var(--bg-inset);
+		border: none;
 		border-inline-start: 3px solid var(--peer);
 		border-radius: var(--radius-md);
 		color: var(--text-secondary);
+		font: inherit;
 		font-size: var(--font-size-sm);
 		line-height: 1.5;
+		text-align: start;
 		max-height: 6.5em;
 		overflow-y: auto;
+
+		// Mine to change: the text itself is the control, the way it is
+		// everywhere else in Freedi. The pencil is the only chrome.
+		&--editable {
+			display: flex;
+			align-items: flex-start;
+			gap: var(--space-sm);
+			cursor: pointer;
+			border-inline-start-color: var(--mine);
+			transition: background var(--motion-base) ease;
+
+			&:hover,
+			&:focus-visible {
+				background: var(--bg-card-solid);
+			}
+		}
+	}
+
+	&__proposal-text {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	&__proposal-pencil {
+		flex: 0 0 auto;
+		color: var(--mine);
+		font-size: var(--font-size-sm);
+		opacity: 0.7;
+	}
+
+	// ...and the box it turns into
+	&__edit {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin: var(--space-sm) var(--space-md) 0;
+	}
+
+	&__edit-input {
+		background: var(--bg-card-solid);
 	}
 
 	&__list {

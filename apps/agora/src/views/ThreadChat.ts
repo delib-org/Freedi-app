@@ -6,8 +6,10 @@ import {
 	isSuggestionKind,
 	openSuggestionsBy,
 	resolveSuggestion,
+	submitProposal,
 	submitThreadMessage,
 } from '../lib/proposals';
+import { celebrate } from '../lib/celebration';
 import { markThreadSeen } from '../lib/seenState';
 import {
 	AgoraMessageKind,
@@ -122,12 +124,103 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	/** Message count the scroller last saw — a new message pins it to the bottom */
 	let seenCount = -1;
 	let listEl: HTMLElement | null = null;
+	/**
+	 * The proposal quoted at the top is EDITABLE by the person who wrote it —
+	 * the answer to an idea is often "you're right", and the text you would
+	 * change is right there. Same gesture as every other Freedi surface: tap
+	 * the text, it becomes a box.
+	 */
+	let editing = false;
+	let editDraft = '';
+	let savingEdit = false;
 
 	function stickToBottom(dom: HTMLElement, count: number): void {
 		listEl = dom;
 		if (count === seenCount) return;
 		seenCount = count;
 		dom.scrollTop = dom.scrollHeight;
+	}
+
+	/** The quoted proposal: a plain line, or the box it becomes when tapped */
+	function proposalQuote(
+		session: AgoraSession,
+		proposal: AgoraProposal,
+		anonName: string,
+		canEdit: boolean,
+	): m.Children {
+		if (!canEdit) return m('p.chat-page__proposal', proposal.statement);
+
+		if (!editing) {
+			return m(
+				'button.chat-page__proposal.chat-page__proposal--editable',
+				{
+					type: 'button',
+					title: t('delib.tap_to_edit'),
+					'aria-label': t('delib.tap_to_edit'),
+					onclick: () => {
+						editing = true;
+						editDraft = proposal.statement;
+					},
+				},
+				[
+					m('span.chat-page__proposal-text', proposal.statement),
+					m('span.chat-page__proposal-pencil', { 'aria-hidden': 'true' }, '✎'),
+				],
+			);
+		}
+
+		const text = editDraft.trim();
+		const changed = text !== proposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+
+		return m('.chat-page__edit', [
+			m('textarea.text-input.chat-page__edit-input', {
+				value: editDraft,
+				rows: 3,
+				maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
+				'aria-label': t('delib.my_proposal'),
+				oncreate: (node: m.VnodeDOM) => {
+					(node.dom as HTMLTextAreaElement).focus();
+				},
+				oninput: (event: InputEvent) => {
+					editDraft = (event.target as HTMLTextAreaElement).value;
+				},
+			}),
+			m('.delib__actions.delib__actions--tight', [
+				m(
+					'button.btn.btn--ghost.btn--sm',
+					{
+						onclick: () => {
+							editing = false;
+						},
+					},
+					t('common.cancel'),
+				),
+				m(
+					'button.btn.btn--primary.btn--sm',
+					{
+						disabled: !changed || savingEdit,
+						onclick: () => {
+							savingEdit = true;
+							submitProposal(session, anonName, text, proposal.statementId)
+								.then(() => {
+									editing = false;
+									// The same glitter the workshop gives: improving your
+									// own proposal is the behaviour the game most wants
+									celebrate({ message: t('celebrate.proposal_improved'), detail: text });
+								})
+								.catch((error: unknown) => {
+									console.error('[Chat] Update proposal failed:', error);
+								})
+								.finally(() => {
+									savingEdit = false;
+									m.redraw();
+								});
+						},
+					},
+					t('delib.update_proposal'),
+				),
+			]),
+		]);
 	}
 
 	/**
@@ -240,7 +333,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							m('span.chat-page__sub', t('delib.proposal_number', { n: proposalNumber })),
 						]),
 					]),
-					m('p.chat-page__proposal', proposal.statement),
+					// The proposal this conversation is about — and, for the person
+					// who wrote it, the place to change it
+					proposalQuote(session, proposal, anonName, proposal.creatorId === userId),
 					m(
 						'.chat-page__list',
 						{
