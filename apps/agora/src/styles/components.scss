@@ -1552,6 +1552,50 @@
 	}
 }
 
+// --- One received improvement: the idea, then a single footer line
+// carrying who sent it and what to do about it. The inbox lives inside a
+// sheet on a phone, so every card that costs three rows for one sentence
+// pushes the second idea off the screen. ---
+.workshop__item {
+	// Lighter than a page card: this is an item in a list, not a panel
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	backdrop-filter: none;
+	box-shadow: none;
+}
+
+.workshop__text {
+	color: var(--text-primary);
+	line-height: 1.55;
+}
+
+.workshop__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--space-xs) var(--space-sm);
+
+	// Attribution is metadata, not a heading: it shares the row with the
+	// buttons and gives way to them when the line has to wrap
+	.workshop__from {
+		flex: 1 1 auto;
+		min-width: 0;
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		// A long code name gives way rather than shoving the buttons down
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.delib__actions {
+		flex: 0 0 auto;
+	}
+}
+
 // --- Why is that button grey? One muted line under a disabled primary,
 // naming the condition that unlocks it. Never shown once it's armed. ---
 .action-hint {

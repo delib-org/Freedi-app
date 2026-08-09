@@ -1385,16 +1385,28 @@ export function Deliberation(
 							flyToAcceptedDrawer(vnode.dom as HTMLElement, suggestion.statementId),
 					},
 					[
-						suggestion.anonName
-							? m(
-									'p.workshop__from',
-									`💡 ${t('delib.suggestion_from', { name: suggestion.anonName })}`,
-								)
-							: null,
-						m('p', suggestion.statement),
-						suggestion.suggestionStatus === AgoraSuggestionStatus.open
-							? [
-									// Two doors, not three: take the idea or let it go. A
+						// The idea leads; who sent it and what to do about it share the
+						// footer line beneath it. Three stacked rows for one sentence
+						// of feedback made a two-idea inbox taller than the screen.
+						m('p.workshop__text', suggestion.statement),
+						m('.workshop__foot', [
+							// The name alone: the section above is already titled
+							// "improvements you received", so spelling out "improvement
+							// idea from" on every card is the same sentence again — and
+							// it is what pushed the buttons onto a second line
+							suggestion.anonName
+								? m(
+										'span.workshop__from',
+										{
+											'aria-label': t('delib.suggestion_from', {
+												name: suggestion.anonName,
+											}),
+										},
+										`💡 ${suggestion.anonName}`,
+									)
+								: null,
+							suggestion.suggestionStatus === AgoraSuggestionStatus.open
+								? // Two doors, not three: take the idea or let it go. A
 									// middle "thanks" button only bought the student a way
 									// to answer without deciding.
 									m('.delib__actions.delib__actions--tight', [
@@ -1447,20 +1459,20 @@ export function Deliberation(
 											},
 											t('delib.will_implement'),
 										),
-									]),
-								]
-							: m(
-									'span.values__score',
-									// "Woven in" outranks "accepted" — it's the later mark
-									// of the same lifecycle, so it must be tested first
-									suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
-										? `✓ ${t('delib.implemented')}`
-										: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
-											? t('delib.accepted')
-											: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
-												? t('delib.declined')
-												: t('delib.thanked'),
-								),
+									])
+								: m(
+										'span.values__score',
+										// "Woven in" outranks "accepted" — it's the later mark
+										// of the same lifecycle, so it must be tested first
+										suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
+											? `✓ ${t('delib.implemented')}`
+											: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
+												? t('delib.accepted')
+												: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
+													? t('delib.declined')
+													: t('delib.thanked'),
+									),
+						]),
 					],
 				),
 			),
