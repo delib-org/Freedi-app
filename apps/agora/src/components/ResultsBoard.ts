@@ -85,8 +85,8 @@ const NUDGE_X = 7;
 const NUDGE_TRIES = 6;
 /** Keep whole points inside the plot box, whatever their value */
 const EDGE_PAD = 8;
-/** The callout must not hang off the plot */
-const CALLOUT_PAD = 26;
+/** Gap between a point's edge and its callout, in px */
+const CALLOUT_GAP_PX = 10;
 /** A proposal is "backed by both sides" inside this band around centre */
 const BRIDGE_BAND = 0.28;
 
@@ -313,7 +313,7 @@ export function ResultsBoard(
 	}
 
 	function buildHelpers(attrs: ResultsBoardAttrs): HelperRow[] {
-		return attrs.participants
+		const rows = attrs.participants
 			.map((participant) => ({
 				participant,
 				points: participant.points.helping,
@@ -323,6 +323,19 @@ export function ResultsBoard(
 			.filter((row) => row.points > 0)
 			.sort((a, b) => b.points - a.points)
 			.map((row, index) => ({ ...row, rank: index + 1 }));
+
+		// "Where am I?" has to have an answer even when the answer is "nowhere
+		// yet". A student who helped nobody was silently absent from the list,
+		// which reads as a missing row rather than as a score of zero — so they
+		// get a rank-less row of their own at the end.
+		if (!rows.some((row) => row.isMine)) {
+			const me = attrs.participants.find((participant) => participant.userId === attrs.userId);
+			if (me) {
+				rows.push({ participant: me, points: me.points.helping, rank: 0, isMine: true });
+			}
+		}
+
+		return rows;
 	}
 
 	// ---------- the map ----------
@@ -342,19 +355,51 @@ export function ResultsBoard(
 		});
 	}
 
+	/** The short line tying a callout back to the point it belongs to */
+	function stem(point: BoardPoint): m.Children {
+		const above = point.y < 50;
+		const offset = `${point.size / 2}px`;
+
+		return m('.board__callout-stem', {
+			style: {
+				insetInlineStart: `${point.x}%`,
+				height: `${CALLOUT_GAP_PX}px`,
+				...(above
+					? { insetBlockEnd: `calc(${point.y}% + ${offset})` }
+					: { insetBlockStart: `calc(${100 - point.y}% + ${offset})` }),
+			},
+		});
+	}
+
 	/**
 	 * The callout the sketch asks for: the statement, and its score, on the spot.
-	 * It parks at whichever end of the field the point is NOT at, so opening a
-	 * proposal never hides the part of the map it is being compared against.
+	 *
+	 * It hangs off the point itself — above one sitting low on the field, below
+	 * one sitting high, always by the same short gap, with a stem drawn back to
+	 * the point. Parking it at the far end of the plot instead kept the field
+	 * clear and cost the only thing that matters here: which point is being
+	 * talked about.
+	 *
+	 * The horizontal clamp is CSS rather than arithmetic, because only the
+	 * browser knows how wide the card actually came out — `clamp()` mixing
+	 * percentages and rems keeps the card on the point wherever there is room,
+	 * and inside the plot where there is not.
 	 */
 	function callout(point: BoardPoint): m.Children {
-		const below = point.y >= 50;
+		const above = point.y < 50;
+		const gap = point.size / 2 + CALLOUT_GAP_PX;
+		const inlineStart = `clamp(var(--callout-half), ${point.x}%, calc(100% - var(--callout-half)))`;
 
 		return m(
 			'.board__callout',
 			{
-				class: below ? 'board__callout--below' : undefined,
-				style: { insetInlineStart: `${clamp(point.x, CALLOUT_PAD, 100 - CALLOUT_PAD)}%` },
+				class: above ? 'board__callout--above' : 'board__callout--below',
+				style: {
+					insetInlineStart: inlineStart,
+					...(above
+						? { insetBlockEnd: `calc(${point.y}% + ${gap}px)` }
+						: { insetBlockStart: `calc(${100 - point.y}% + ${gap}px)` }),
+				},
 				'aria-live': 'polite',
 			},
 			[
@@ -435,6 +480,7 @@ export function ResultsBoard(
 					placed.length === 0
 						? m('p.board__plot-empty', t('picture.empty'))
 						: placed.map((point) => mapPoint(point, topic)),
+					selected ? stem(selected) : null,
 					selected ? callout(selected) : null,
 				]),
 			]),
@@ -734,7 +780,7 @@ export function ResultsBoard(
 						class: row.isMine ? 'board__helper-row--mine' : undefined,
 					},
 					[
-						m('span.board__helper-row-rank', rankBadge(row.rank)),
+						m('span.board__helper-row-rank', row.rank > 0 ? rankBadge(row.rank) : '—'),
 						m(
 							'span.board__helper-row-name',
 							row.isMine ? m('span.board__you', t('board.you')) : row.participant.anonName,
@@ -753,15 +799,16 @@ export function ResultsBoard(
 	}
 
 	function helpersPodium(helpers: HelperRow[]): m.Children {
-		if (helpers.length === 0) {
+		if (helpers.every((row) => row.rank === 0)) {
 			return m('.board__helpers', [
 				m('p.board__eyebrow', `🤝 ${t('board.helpers_title')}`),
 				m('p.board__helpers-empty', t('board.helpers_empty')),
 			]);
 		}
 
-		const podium = helpers.slice(0, PODIUM_SIZE);
-		const mine = helpers.find((row) => row.isMine);
+		const ranked = helpers.filter((row) => row.rank > 0);
+		const podium = ranked.slice(0, PODIUM_SIZE);
+		const mine = ranked.find((row) => row.isMine);
 		const mineOffPodium = mine && mine.rank > PODIUM_SIZE ? mine : undefined;
 
 		return m('.board__helpers', [
@@ -777,7 +824,7 @@ export function ResultsBoard(
 						'p.board__helpers-mine',
 						t('board.helpers_my_rank', {
 							rank: mineOffPodium.rank,
-							total: helpers.length,
+							total: ranked.length,
 							n: mineOffPodium.points,
 						}),
 					)

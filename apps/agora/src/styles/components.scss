@@ -6069,28 +6069,36 @@
 	}
 
 	// --- the callout the sketch asks for ----------------------------------------------
+	// The card hangs off its own point (see callout() for the geometry). Half
+	// its own width is published as a custom property so the inline clamp can
+	// keep it on the point wherever there is room and inside the plot where
+	// there is not.
 	&__callout {
-		position: absolute;
-		inset-block-start: var(--space-sm);
+		--callout-half: min(35%, 10rem);
 
-		// A point high on the field gets its callout at the bottom, and the
-		// other way round — the card must never sit on top of its own point
-		&--below {
-			inset-block-start: auto;
-			inset-block-end: var(--space-sm);
-		}
-		transform: translateX(-50%);
+		position: absolute;
 		z-index: 4;
+		transform: translateX(-50%);
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-xs);
-		width: min(80%, 22rem);
+		width: min(70%, 20rem);
+		max-height: 46%;
+		overflow-y: auto;
 		padding: var(--space-sm);
 		background: var(--parchment);
 		border: 2px solid var(--ink);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-card);
 		animation: board-callout-in var(--motion-base) var(--ease-spring) both;
+	}
+
+	&__callout-stem {
+		position: absolute;
+		z-index: 3;
+		width: 2px;
+		transform: translateX(-50%);
+		background: var(--ink);
 	}
 
 	&__callout-text {
@@ -6570,7 +6578,8 @@
 		}
 	}
 
-	.board__callout {
+	.board__callout,
+	.board__callout-stem {
 		transform: translateX(50%);
 	}
 
