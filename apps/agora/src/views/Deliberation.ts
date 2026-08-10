@@ -15,6 +15,7 @@ import {
 	AgoraRating,
 	HelpedProposal,
 } from '../lib/proposals';
+import { orderSquare, studentOrder as studentOrderFor } from '../lib/squareOrder';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { Collapsible } from '../components/Collapsible';
 import { ThreadChat, threadEntry } from './ThreadChat';
@@ -697,13 +698,7 @@ export function Deliberation(
 
 	/** Deterministic per-student ordering so classmates fan out over different proposals */
 	function studentOrder(id: string): number {
-		const seed = `${userId}--${id}`;
-		let hash = 0;
-		for (let index = 0; index < seed.length; index++) {
-			hash = (hash * 31 + seed.charCodeAt(index)) | 0;
-		}
-
-		return hash;
+		return studentOrderFor(userId, id);
 	}
 
 	listenToDeliberation(session.sessionId, userId);
@@ -1680,28 +1675,15 @@ export function Deliberation(
 	}
 
 	/**
-	 * The square, live-ordered: the proposal whose text changed most recently
-	 * sits at the top, so a classmate who just improved theirs gets read again.
-	 *
-	 * The author's real edit time comes from the score doc — the statement's
-	 * own lastUpdate is bumped by the evaluation pipeline's aggregate writes,
-	 * so ordering on it would reshuffle the whole square every time anybody
-	 * anywhere pressed a rating.
+	 * The square, live-ordered by the author's own hand: posted, or rewritten.
+	 * A classmate who just improved theirs rises and gets read again; nobody
+	 * moves because somebody pressed a face. See lib/squareOrder.
 	 */
 	function squareOrder(
 		proposals: readonly AgoraProposal[],
 		scores: Readonly<Record<string, AgoraProposalScore>>,
 	): AgoraProposal[] {
-		const editedAt = (proposal: AgoraProposal): number =>
-			scores[proposal.statementId]?.lastEditAt ?? proposal.lastUpdate;
-
-		return proposals
-			.filter((proposal) => proposal.creatorId !== userId)
-			.slice()
-			.sort(
-				(a, b) =>
-					editedAt(b) - editedAt(a) || studentOrder(a.statementId) - studentOrder(b.statementId),
-			);
+		return orderSquare(proposals, scores, userId);
 	}
 
 	/** The chip a square stall wears: the face I already gave it */

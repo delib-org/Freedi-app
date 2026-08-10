@@ -2,8 +2,11 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { db } from '../db';
 import {
 	Collections,
+	AgoraCamp,
+	AgoraCampAggregate,
 	AgoraMessageKind,
 	AgoraParticipant,
+	AgoraProposalScore,
 	AGORA_POINTS,
 	NotificationTriggerType,
 	SourceApp,
@@ -128,23 +131,67 @@ async function creditFirstProposal(
 }
 
 /**
- * Stamp the bridging score as it stood the moment the author last edited.
- * The owner's "N ratings moved · bridge power rose" chip is measured against
- * this baseline. It used to live in sessionStorage, so one refresh — or
+ * Stamp the moment the author last rewrote their text, plus the bridging
+ * score as it stood right then.
+ *
+ * `lastEditAt` is the ONLY trustworthy edit clock in the game: the statement's
+ * own lastUpdate is bumped by the evaluation pipeline, so the square orders
+ * itself and lights its EDITED chips off this field. It is therefore stamped
+ * on every real text change — including the first one, before anybody has
+ * rated. That case used to return early (no score doc, so nothing to write),
+ * which left an early edit invisible: the proposal sat wherever its creation
+ * time put it and wore no chip.
+ *
+ * The baseline is what the owner's "N ratings moved · bridge power rose" chip
+ * is measured against. It used to live in sessionStorage, so one refresh — or
  * picking the phone back up — silently erased the direction the whole
  * improvement loop is supposed to report.
  */
-async function stampEditBaseline(statementId: string): Promise<void> {
+async function stampEditBaseline(
+	sessionId: string,
+	statementId: string,
+	creatorId: string,
+): Promise<void> {
 	const scoreRef = db.collection(Collections.agoraScores).doc(statementId);
 	await db.runTransaction(async (transaction) => {
 		const snap = await transaction.get(scoreRef);
-		// No score doc yet means nobody has rated this proposal, so the
-		// baseline is a plain zero — and the chip has nothing to report anyway
-		if (!snap.exists) return;
-		transaction.update(scoreRef, {
-			bridgingAtLastEdit: (snap.data()?.bridgingScore as number | undefined) ?? 0,
+		if (snap.exists) {
+			transaction.update(scoreRef, {
+				bridgingAtLastEdit: (snap.data()?.bridgingScore as number | undefined) ?? 0,
+				lastEditAt: Date.now(),
+				lastUpdate: Date.now(),
+			});
+
+			return;
+		}
+
+		// Nobody has rated yet, so there is no score doc and no baseline worth
+		// reporting — but the edit clock still has to exist. Seed a whole,
+		// schema-valid doc (the client parses these strictly and drops partials)
+		// with zeroed aggregates; the evaluation trigger fills them in later.
+		const authorSnap = await transaction.get(
+			db
+				.collection(Collections.agoraParticipants)
+				.doc(createAgoraParticipantId(sessionId, creatorId)),
+		);
+		const authorCamp =
+			(authorSnap.data() as AgoraParticipant | undefined)?.camp ?? AgoraCamp.center;
+		const emptyAggregate = (): AgoraCampAggregate => ({ sum: 0, n: 0, positiveN: 0 });
+		const score: AgoraProposalScore = {
+			statementId,
+			sessionId,
+			authorCamp,
+			perCamp: {
+				left: emptyAggregate(),
+				right: emptyAggregate(),
+				center: emptyAggregate(),
+			},
+			bridgingScore: 0,
+			bridgingAtLastEdit: 0,
 			lastEditAt: Date.now(),
-		});
+			lastUpdate: Date.now(),
+		};
+		transaction.set(scoreRef, score);
 	});
 }
 
@@ -174,7 +221,7 @@ export const onAgoraProposalWritten = onDocumentWritten(
 
 			// A real text change — not a status bump or an evaluation rollup
 			if (before && after && before.statement !== after.statement) {
-				await stampEditBaseline(statementId);
+				await stampEditBaseline(sessionId, statementId, after.creatorId ?? '');
 				await announceEdit(sessionId, statementId, after, before.statement ?? '');
 			}
 		} catch (error) {
