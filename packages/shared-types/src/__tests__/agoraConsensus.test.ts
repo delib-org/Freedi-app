@@ -5,6 +5,7 @@ import {
 	calcAgoraClassConsensus,
 	consensusCeiling,
 	distMoments,
+	eligiblePoolFor,
 	emptyDist,
 	normalizedConsensus,
 } from '../models/agora/agoraConsensus';
@@ -15,6 +16,7 @@ import {
 	type AgoraRatingDist,
 } from '../models/agora/agoraScore';
 import { calcAgreement } from '../utils/consensusCalculation';
+import type { AgoraCamp } from '../models/agora/agoraEnums';
 
 const NO_ONE = { left: 0, right: 0, center: 0 };
 
@@ -247,5 +249,50 @@ describe('schema compatibility with existing sessions', () => {
 			lastUpdate: 1_700_000_000_000,
 		};
 		expect(() => parse(AgoraProposalScoreSchema, modern)).not.toThrow();
+	});
+});
+
+describe('eligiblePoolFor', () => {
+	const CLASS = { left: 4, right: 3, center: 2 };
+
+	it('removes the author from their own camp', () => {
+		// The square never serves anyone their own text, so counting the author
+		// would leave a fully-participating class permanently one rating short
+		// of a census — and recognising a census is the whole point.
+		expect(
+			eligiblePoolFor({ authorCamp: 'left' as AgoraCamp, authorPositioned: true }, CLASS),
+		).toEqual({ left: 3, right: 3, center: 2 });
+	});
+
+	it('removes nobody when the author never positioned', () => {
+		expect(
+			eligiblePoolFor({ authorCamp: 'left' as AgoraCamp, authorPositioned: false }, CLASS),
+		).toEqual(CLASS);
+	});
+
+	it('treats a legacy score doc as unpositioned', () => {
+		// authorPositioned is absent on docs written before it existed. Reading
+		// it as false makes the pool one seat too large, which understates the
+		// consensus — the safe direction, since too small an N inflates it.
+		expect(eligiblePoolFor({ authorCamp: 'right' as AgoraCamp }, CLASS)).toEqual(CLASS);
+	});
+
+	it('never drives a camp below zero', () => {
+		expect(
+			eligiblePoolFor(
+				{ authorCamp: 'center' as AgoraCamp, authorPositioned: true },
+				{ left: 1, right: 1, center: 0 },
+			),
+		).toEqual({ left: 1, right: 1, center: 0 });
+	});
+
+	it('leaves the other camps untouched', () => {
+		const result = eligiblePoolFor(
+			{ authorCamp: 'center' as AgoraCamp, authorPositioned: true },
+			CLASS,
+		);
+		expect(result.left).toBe(CLASS.left);
+		expect(result.right).toBe(CLASS.right);
+		expect(result.center).toBe(CLASS.center - 1);
 	});
 });

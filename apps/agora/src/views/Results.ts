@@ -4,6 +4,8 @@ import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
 import { getDeliberationState, listenToDeliberation } from '../lib/proposals';
+import { getCampCensus } from '../lib/session';
+import { ClassPicture } from '../components/ClassPicture';
 import {
 	AgoraParticipant,
 	AgoraSceneKind,
@@ -216,6 +218,18 @@ export const Results: m.Component<ResultsAttrs> = {
 					m('p.teacher__section-title', t('results.class_score')),
 					m('.results__total', { class: totalClass }, `${score.total}/100`),
 					m('p.results__outcome-label', outcomeLabel),
+					// The class score depends on how much of the class actually
+					// rated the leading proposal, so the coverage is published
+					// with it rather than left implicit in the number.
+					score.leadCoverage
+						? m(
+								'p.results__coverage',
+								t('picture.coverage', {
+									n: String(score.leadCoverage.rated),
+									total: String(score.leadCoverage.eligible),
+								}),
+							)
+						: null,
 					m('.results__breakdown', [
 						m('.results__part', [
 							m('span.results__part-value', String(score.maxConsensus)),
@@ -230,6 +244,21 @@ export const Results: m.Component<ResultsAttrs> = {
 							m('span.results__part-label', t('results.plausibility')),
 						]),
 					]),
+				]),
+
+				// The whole lesson exists to produce a shared proposal, and until
+				// now this screen never showed which one won or what it said.
+				// The camp split rides along with it: the crown is whole-class
+				// consensus, which a large camp can win on its own, so a
+				// majority-only winner has to be visible as one.
+				m('.card.stack', [
+					m(ClassPicture, {
+						proposals: getDeliberationState().proposals,
+						scores: getDeliberationState().scores,
+						census: getCampCensus(),
+						userId: myParticipant?.userId,
+						leadStatementId: score.leadStatementId,
+					}),
 				]),
 
 				m('.card.stack', [

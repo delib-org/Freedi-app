@@ -18,6 +18,7 @@ import {
 	agoraRatingBucket,
 	calcAgoraClassConsensus,
 	calcBridgingScore,
+	eligiblePoolFor,
 	emptyDist,
 	createAgoraParticipantId,
 	functionConfig,
@@ -138,27 +139,6 @@ function applyDelta(aggregate: AgoraCampAggregate, delta: CampDelta): AgoraCampA
 
 function emptyAggregate(): AgoraCampAggregate {
 	return { sum: 0, n: 0, positiveN: 0, studentDist: emptyDist() };
-}
-
-/**
- * Who COULD have rated this proposal: positioned students, minus the author.
- * The square never serves anyone their own text, so counting the author would
- * make a full class look permanently one rating short of a census.
- *
- * AI raters are already absent — readCampCounts drops them — which is also why
- * they must stay out of the student histogram: numerator and denominator have
- * to be defined over the same set of people.
- */
-export function eligiblePoolFor(
-	score: Pick<AgoraProposalScore, 'authorCamp' | 'authorPositioned'>,
-	census: CampCounts,
-): CampCounts {
-	if (!score.authorPositioned) return census;
-
-	return {
-		...census,
-		[score.authorCamp]: Math.max(0, census[score.authorCamp] - 1),
-	};
 }
 
 /**

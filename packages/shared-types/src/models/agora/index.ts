@@ -92,13 +92,14 @@ export {
 	AgoraRatingDistSchema,
 } from './agoraScore';
 
-export type { AgoraClassConsensusInput } from './agoraConsensus';
+export type { AgoraClassConsensusInput, AgoraCampCensus } from './agoraConsensus';
 export {
 	addDist,
 	agoraRatingBucket,
 	calcAgoraClassConsensus,
 	consensusCeiling,
 	distMoments,
+	eligiblePoolFor,
 	emptyDist,
 	normalizedConsensus,
 } from './agoraConsensus';

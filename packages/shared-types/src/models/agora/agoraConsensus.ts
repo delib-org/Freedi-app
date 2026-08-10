@@ -17,6 +17,7 @@
  */
 
 import { calcAgreement, calcLikeMindedness } from '../../utils/consensusCalculation';
+import type { AgoraCamp } from './agoraEnums';
 import { AGORA_RATING_LEVELS } from './agoraScore';
 import type { AgoraCampAggregate, AgoraClassConsensus, AgoraRatingDist } from './agoraScore';
 
@@ -113,6 +114,36 @@ export function normalizedConsensus(consensus: number, n: number, populationSize
 	if (ceiling <= 0) return 0;
 
 	return Math.min(1, Math.max(0, consensus) / ceiling);
+}
+
+/** Positioned, non-AI students per camp */
+export interface AgoraCampCensus {
+	left: number;
+	right: number;
+	center: number;
+}
+
+/**
+ * Who COULD have rated this proposal: positioned students, minus the author.
+ * The square never serves anyone their own text, so counting the author would
+ * leave a fully-participating class permanently one rating short of a census —
+ * and recognising a census is the whole point of the correction.
+ *
+ * Shared rather than duplicated: the trigger sizes the pool when it stores a
+ * score, and the results screen sizes it again to show a live reading before
+ * the trigger lands. Two copies of this rule would mean the number a student
+ * watches and the number that gets stored can quietly disagree.
+ */
+export function eligiblePoolFor(
+	score: { authorCamp: AgoraCamp; authorPositioned?: boolean },
+	census: AgoraCampCensus,
+): AgoraCampCensus {
+	if (!score.authorPositioned) return census;
+
+	return {
+		...census,
+		[score.authorCamp]: Math.max(0, census[score.authorCamp] - 1),
+	};
 }
 
 export interface AgoraClassConsensusInput {

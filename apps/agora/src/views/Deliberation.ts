@@ -26,6 +26,8 @@ import {
 	unregisterMineNavigator,
 } from '../lib/helpedFocus';
 import { EraMapLantern } from '../components/EraMap';
+import { ClassPicture } from '../components/ClassPicture';
+import { getCampCensus } from '../lib/session';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
 import {
@@ -1932,19 +1934,21 @@ export function Deliberation(
 			}
 
 			// ---------- TAB: RESULTS (a screen, not a step) ----------
-			// Placeholder for now: the class picture that belongs here is not
-			// designed yet, and a tab that leads nowhere is worse than one
-			// that says so. Standing here does NOT advance the lap.
+			// The class picture: where the class stands on each proposal, how
+			// sure that is, and the spread behind the number. Live — it moves as
+			// classmates rate. Standing here does NOT advance the lap.
 			if (showResults && myProposal) {
 				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						m('.results-soon', [
-							m('span.results-soon__icon', { 'aria-hidden': 'true' }, '📊'),
-							m('h2.results-soon__title', t('delib.results_title')),
-							m('p.results-soon__body', t('delib.results_soon')),
-						]),
+						m('h2.results-soon__title', t('delib.results_title')),
+						m(ClassPicture, {
+							proposals: getDeliberationState().proposals,
+							scores: getDeliberationState().scores,
+							census: getCampCensus(),
+							userId,
+						}),
 						m(
 							'button.btn.btn--primary.btn--full.btn--lg',
 							{

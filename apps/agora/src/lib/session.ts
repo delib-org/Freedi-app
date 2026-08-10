@@ -7,6 +7,7 @@ import {
 	AgoraSessionSchema,
 	AgoraParticipantSchema,
 	AgoraStage,
+	AgoraCamp,
 	createAgoraParticipantId,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
@@ -40,6 +41,27 @@ let listeningSessionId: string | null = null;
 
 export function getSessionState(): Readonly<SessionState> {
 	return state;
+}
+
+/**
+ * Positioned students per camp — the finite population the class consensus
+ * divides by. AI raters are already dropped at ingestion, so this is the class
+ * and nothing else.
+ *
+ * The client needs this so the results tab moves the instant a classmate rates,
+ * instead of waiting for the trigger to write the score back. It feeds the same
+ * shared calcAgoraClassConsensus the server uses, so the live number and the
+ * stored one cannot disagree on anything but freshness.
+ */
+export function getCampCensus(): { left: number; right: number; center: number } {
+	const census = { left: 0, right: 0, center: 0 };
+	for (const participant of state.participants) {
+		if (participant.camp === AgoraCamp.left) census.left++;
+		else if (participant.camp === AgoraCamp.right) census.right++;
+		else if (participant.camp === AgoraCamp.center) census.center++;
+	}
+
+	return census;
 }
 
 /**
