@@ -589,39 +589,12 @@ export async function getCommentsForStatements(
   }
 }
 
-/**
- * Update statement consensus based on all evaluations
- * @param statementId - Statement to update
- */
-export async function updateStatementConsensus(
-  statementId: string
-): Promise<void> {
-  const db = getFirestoreAdmin();
-
-  // Get all evaluations for this statement
-  const evaluationsSnapshot = await db
-    .collection(Collections.evaluations)
-    .where('statementId', '==', statementId)
-    .get();
-
-  if (evaluationsSnapshot.empty) {
-    return;
-  }
-
-  const evaluations = evaluationsSnapshot.docs.map(
-    (doc) => (doc.data() as Evaluation).evaluation
-  );
-
-  // Calculate average consensus
-  const consensus =
-    evaluations.reduce((sum, val) => sum + val, 0) / evaluations.length;
-
-  // Update statement
-  await db
-    .collection(Collections.statements)
-    .doc(statementId)
-    .update({
-      consensus,
-      lastUpdate: Date.now(),
-    });
-}
+// updateStatementConsensus used to live here. It recomputed `consensus` as a
+// plain arithmetic mean of every evaluation — no confidence penalty at all —
+// and wrote it straight onto the statement, racing the onCreateEvaluation
+// trigger that had just written the real WizCol score for the same vote.
+// Whichever landed last won, so a statement's consensus depended on timing.
+//
+// Deleted: the trigger already owns the field, computes it from the maintained
+// aggregates, and now applies the finite-population correction when the
+// stakeholder count is known. Nothing in this app should write `consensus`.

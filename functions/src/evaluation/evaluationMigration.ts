@@ -8,9 +8,8 @@
  */
 
 import { logger } from 'firebase-functions/v1';
-import { Collections, Evaluation } from '@freedi/shared-types';
+import { Collections, Evaluation, calcAgreement } from '@freedi/shared-types';
 import { db } from '../index';
-import { FLOOR_STD_DEV } from './agreementCalculation';
 import { updateParentTotalEvaluators } from './updateChosenOptions';
 
 // ============================================================================
@@ -170,13 +169,14 @@ export async function migrateEvaluationsToNewStatement(
 			`Created ${result.migratedCount} new evaluations for target statement ${targetStatementId}`,
 		);
 
-		// 4. Calculate agreement (consensus) using Mean - SEM with floor
+		// 4. Calculate agreement (consensus) with the canonical WizCol formula.
+		// This used to be a private copy of a much older one (no t-multiplier,
+		// a hard 0.5 uncertainty floor instead of the Bayesian prior), and it
+		// runs on every integration — so ordinary operation was quietly
+		// rewriting integrated statements with a formula the rest of the app
+		// had already left behind.
 		const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
-		const agreement = calcMigrationAgreement(
-			sumEvaluations,
-			sumSquaredEvaluations,
-			numberOfEvaluators,
-		);
+		const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
 
 		result.newEvaluationMetrics = {
 			sumEvaluations,
@@ -221,46 +221,8 @@ export async function migrateEvaluationsToNewStatement(
 	}
 }
 
-// ============================================================================
-// MIGRATION-SPECIFIC CALCULATION HELPERS
-// ============================================================================
-
-/**
- * Calculate consensus score for migration using Mean - SEM with uncertainty floor.
- */
-function calcMigrationAgreement(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number,
-): number {
-	if (numberOfEvaluators === 0) return 0;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	const sem = calcMigrationStandardError(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
-
-	// Proportional penalty bounded by available range to -1
-	const availableRange = mean + 1;
-	const penalty = Math.min(sem, availableRange);
-	const agreement = mean - penalty;
-
-	return agreement;
-}
-
-/**
- * Calculate Standard Error of the Mean with uncertainty floor for migration.
- */
-function calcMigrationStandardError(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number,
-): number {
-	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
-	const safeVariance = Math.max(0, variance);
-	const observedStdDev = Math.sqrt(safeVariance);
-	const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-
-	return adjustedStdDev / Math.sqrt(numberOfEvaluators);
-}
+// Migration-specific consensus helpers used to live here. They were a copy of
+// a superseded formula, so integration silently disagreed with every other
+// write path. Deleted in favour of calcAgreement from @freedi/shared-types —
+// if this file ever needs the population-aware variant, pass the stakeholder
+// count as the fourth argument rather than reintroducing a local copy.

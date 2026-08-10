@@ -1,11 +1,14 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 import { db } from './index';
-import { Collections, Evaluation, StatementEvaluation, functionConfig } from '@freedi/shared-types';
+import {
+	Collections,
+	Evaluation,
+	StatementEvaluation,
+	functionConfig,
+	calcAgreement,
+} from '@freedi/shared-types';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
-
-// Uncertainty floor for Mean - SEM calculation
-const FLOOR_STD_DEV = 0.5;
 
 interface FixClusterRequest {
 	clusterId: string;
@@ -38,31 +41,8 @@ interface FixClusterResult {
 	}>;
 }
 
-/**
- * Calculate agreement using Mean - SEM with uncertainty floor
- */
-function calcAgreement(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number,
-): number {
-	if (numberOfEvaluators === 0) return 0;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	let sem = FLOOR_STD_DEV;
-
-	if (numberOfEvaluators > 1) {
-		const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
-		const observedStdDev = Math.sqrt(Math.max(0, variance));
-		const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-		sem = adjustedStdDev / Math.sqrt(numberOfEvaluators);
-	}
-
-	const availableRange = mean + 1;
-	const penalty = Math.min(sem, availableRange);
-
-	return mean - penalty;
-}
+// calcAgreement was a local copy of a superseded formula, byte-identical to
+// the one in fn_recalculateEvaluations. Both now import the canonical one.
 
 /**
  * Fix cluster integration by setting proper fields and recalculating evaluations.

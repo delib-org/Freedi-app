@@ -56,9 +56,12 @@ async function handleExistingSolution(
 
   batch.set(evaluationRef, evaluation);
 
+  // `consensus` is a score in [-1, 1], not a counter — it used to be
+  // incremented here alongside the evaluation count, which corrupted the field
+  // by one per vote. The onCreateEvaluation trigger owns it and computes it
+  // properly from the stored aggregates.
   batch.update(statementRef, {
     evaluations: FieldValue.increment(1),
-    consensus: FieldValue.increment(1),
     lastUpdate: Date.now(),
   });
 

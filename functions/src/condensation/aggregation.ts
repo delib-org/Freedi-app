@@ -16,6 +16,7 @@ import {
 	calcMeanSentiment,
 	calcSmoothedSEM,
 	DEFAULT_SAMPLING_QUALITY,
+	BAYESIAN_PRIOR_K,
 } from '@freedi/shared-types';
 
 // Lazy init to avoid calling getFirestore() before initializeApp()
@@ -193,7 +194,10 @@ export function computeClusterEvaluationFromRawEvals(
 		numberOfEvaluators,
 	);
 	const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
-	const standardDeviation = sem * Math.sqrt(numberOfEvaluators + 2);
+	// Invert SEM* = σ̂*/√(n+k) to recover σ̂*. The k here MUST be the same prior
+	// the SEM was built with — it was hardcoded as 2, which would have silently
+	// desynced the moment BAYESIAN_PRIOR_K changed.
+	const standardDeviation = sem * Math.sqrt(numberOfEvaluators + BAYESIAN_PRIOR_K);
 
 	const targetPopulation = options.targetPopulation ?? 0;
 	const samplingQuality = options.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;

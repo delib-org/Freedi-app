@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, Evaluation } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { updateStatementConsensus } from '@/lib/firebase/queries';
 import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
@@ -156,10 +155,10 @@ export async function POST(
       newValue: String(evaluation),
     });
 
-    // Update statement consensus (async, don't wait)
-    updateStatementConsensus(statementId).catch((error) => {
-      logger.error('Failed to update consensus:', error);
-    });
+    // Consensus is deliberately NOT written here. The onCreateEvaluation /
+    // onUpdateEvaluation trigger recomputes it from the maintained aggregates
+    // as soon as the evaluation doc lands; the fire-and-forget call that used
+    // to sit here overwrote that with a plain average and raced it.
 
     return NextResponse.json({
       success: true,

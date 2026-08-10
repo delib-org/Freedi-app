@@ -9,12 +9,10 @@ import {
 	StatementType,
 	StatementEvaluation,
 	functionConfig,
+	calcAgreement,
 } from '@freedi/shared-types';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 import type { PopperHebbianScore } from '@freedi/shared-types';
-
-// Uncertainty floor for Mean - SEM calculation
-const FLOOR_STD_DEV = 0.5;
 
 interface RecalculateRequest {
 	statementId: string; // Parent statement ID (the question)
@@ -48,31 +46,10 @@ interface RecalculateResult {
 	errors: string[];
 }
 
-/**
- * Calculate agreement using Mean - SEM with uncertainty floor
- */
-function calcAgreement(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number,
-): number {
-	if (numberOfEvaluators === 0) return 0;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	let sem = FLOOR_STD_DEV;
-
-	if (numberOfEvaluators > 1) {
-		const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
-		const observedStdDev = Math.sqrt(Math.max(0, variance));
-		const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-		sem = adjustedStdDev / Math.sqrt(numberOfEvaluators);
-	}
-
-	const availableRange = mean + 1;
-	const penalty = Math.min(sem, availableRange);
-
-	return mean - penalty;
-}
+// calcAgreement was a local copy of a superseded formula (no t-multiplier, a
+// hard 0.5 uncertainty floor). A "recalculate" tool that writes different
+// numbers from the live trigger is worse than no tool, so it now imports the
+// canonical one from @freedi/shared-types.
 
 /**
  * Bulk recompute: fetch every evaluation under the parent in ONE query,

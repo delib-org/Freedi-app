@@ -1,8 +1,12 @@
 import { db } from '../index';
-import { Collections, Statement, Evaluation, StatementType } from '@freedi/shared-types';
+import {
+	Collections,
+	Statement,
+	Evaluation,
+	StatementType,
+	calcAgreement,
+} from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
-
-const FLOOR_STD_DEV = 0.5;
 
 /**
  * Recalculate all evaluation metrics for options under a parent statement
@@ -111,37 +115,7 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 	}
 }
 
-/**
- * Calculate consensus score using Mean - SEM with uncertainty floor
- */
-function calcAgreement(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number,
-): number {
-	if (numberOfEvaluators === 0) return 0;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	const sem = calcStandardError(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
-
-	return mean - sem;
-}
-
-/**
- * Calculate Standard Error of the Mean with uncertainty floor
- */
-function calcStandardError(
-	sumEvaluations: number,
-	sumSquaredEvaluations: number,
-	numberOfEvaluators: number,
-): number {
-	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
-
-	const mean = sumEvaluations / numberOfEvaluators;
-	const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
-	const safeVariance = Math.max(0, variance);
-	const observedStdDev = Math.sqrt(safeVariance);
-	const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-
-	return adjustedStdDev / Math.sqrt(numberOfEvaluators);
-}
+// The local calcAgreement/calcStandardError were a superseded formula AND had
+// dropped the `Math.min(penalty, mean + 1)` bound the others kept, so this
+// admin endpoint could write consensus values below -1. Both replaced by the
+// canonical calcAgreement, which is bounded by construction.

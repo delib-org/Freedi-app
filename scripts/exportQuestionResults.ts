@@ -48,99 +48,26 @@ import type {
   TopicAgreement,
   TopicBlock,
 } from "../packages/shared-types/src/models/results-export/ResultsExport";
+import {
+  calcAgreement,
+  calcAgreementIndex,
+  calcLikeMindedness,
+  calcMeanSentiment,
+} from "../packages/shared-types/src/utils/consensusCalculation";
 
 // ----------------------------------------------------------------------
-// WizCol consensus math (mirrored from
-// packages/shared-types/src/utils/consensusCalculation.ts).
-// Keep in sync if the canonical formula changes.
+// WizCol consensus math — IMPORTED, not mirrored.
+//
+// This block used to be a hand-copied duplicate carrying a "keep in sync if
+// the canonical formula changes" comment, which is a promise no file can keep.
+// Importing from source means an export can never quietly disagree with what
+// the app showed the people who voted.
+//
+// If this export ever needs the finite-population correction, pass the
+// stakeholder count as the fourth argument to calcAgreement.
 // ----------------------------------------------------------------------
 
 const RESULTS_EXPORT_SCHEMA_VERSION = "1.0.0";
-const BAYESIAN_PRIOR_K = 2;
-const Z_ALPHA_005 = 1.645;
-const T_CRITICAL_TABLE: Record<number, number> = {
-  1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015,
-  6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812,
-  11: 1.796, 12: 1.782, 13: 1.771, 14: 1.761, 15: 1.753,
-  16: 1.746, 17: 1.740, 18: 1.734, 19: 1.729, 20: 1.725,
-  25: 1.708, 30: 1.697, 40: 1.684, 50: 1.676, 60: 1.671,
-  80: 1.664, 100: 1.660, 120: 1.658,
-};
-const DF_KEYS = Object.keys(T_CRITICAL_TABLE).map(Number).sort((a, b) => a - b);
-
-function tCritical(df: number): number {
-  if (df <= 0 || df >= 120) return Z_ALPHA_005;
-  if (T_CRITICAL_TABLE[df] !== undefined) return T_CRITICAL_TABLE[df];
-  let lower = DF_KEYS[0];
-  let upper = DF_KEYS[DF_KEYS.length - 1];
-  for (let i = 0; i < DF_KEYS.length - 1; i++) {
-    if (DF_KEYS[i] <= df && DF_KEYS[i + 1] >= df) {
-      lower = DF_KEYS[i];
-      upper = DF_KEYS[i + 1];
-      break;
-    }
-  }
-  const fraction = (df - lower) / (upper - lower);
-  return T_CRITICAL_TABLE[lower] + fraction * (T_CRITICAL_TABLE[upper] - T_CRITICAL_TABLE[lower]);
-}
-
-function calcSmoothedSEM(
-  _sumEvaluations: number,
-  sumSquaredEvaluations: number,
-  numberOfEvaluators: number,
-): number {
-  const n = numberOfEvaluators;
-  if (n <= 0) return 1;
-  const k = BAYESIAN_PRIOR_K;
-  const denomDf = n + k - 1;
-  const variance = sumSquaredEvaluations / denomDf;
-  const stdDev = Math.sqrt(Math.max(0, variance));
-  return stdDev / Math.sqrt(n + k);
-}
-
-function calcAgreement(
-  sumEvaluations: number,
-  sumSquaredEvaluations: number,
-  numberOfEvaluators: number,
-): number {
-  if (numberOfEvaluators === 0) return 0;
-  const n = numberOfEvaluators;
-  const k = BAYESIAN_PRIOR_K;
-  const mean = sumEvaluations / n;
-  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n);
-  const t = tCritical(n + k - 1);
-  const penalty = t * sem;
-  const availableRange = mean + 1;
-  return mean - Math.min(penalty, availableRange);
-}
-
-function calcAgreementIndex(
-  sumEvaluations: number,
-  sumSquaredEvaluations: number,
-  numberOfEvaluators: number,
-): number {
-  if (numberOfEvaluators <= 0) return 0;
-  const n = numberOfEvaluators;
-  const k = BAYESIAN_PRIOR_K;
-  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n);
-  const t = tCritical(n + k - 1);
-  return Math.max(0, Math.min(1, 1 - t * sem));
-}
-
-function calcLikeMindedness(
-  sumEvaluations: number,
-  sumSquaredEvaluations: number,
-  numberOfEvaluators: number,
-): number {
-  if (numberOfEvaluators <= 0) return 0;
-  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
-  return Math.max(0, Math.min(1, 1 - sem));
-}
-
-function calcMeanSentiment(sumEvaluations: number, numberOfEvaluators: number): number {
-  if (numberOfEvaluators <= 0) return 0;
-  return sumEvaluations / numberOfEvaluators;
-}
 
 // ----------------------------------------------------------------------
 // CLI args
