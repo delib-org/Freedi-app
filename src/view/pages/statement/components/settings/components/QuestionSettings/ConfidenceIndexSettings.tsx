@@ -1,6 +1,13 @@
 import { FC, useState, useCallback } from 'react';
-import { Statement, DEFAULT_SAMPLING_QUALITY } from '@freedi/shared-types';
+import {
+	Statement,
+	DEFAULT_SAMPLING_QUALITY,
+	resolveStakeholderCount,
+	type StakeholderSource,
+} from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 import {
 	setConfidenceIndexSettings,
 	requestRecalculateIndices,
@@ -20,13 +27,33 @@ const SAMPLING_QUALITY_PRESETS = [
 	{ label: 'Fully self-selected', value: DEFAULT_SAMPLING_QUALITY },
 ] as const;
 
+/** Where an inherited count came from, phrased for the person reading it */
+const SOURCE_LABEL: Record<StakeholderSource, string> = {
+	self: 'Set here',
+	parent: 'Inherited from the parent question',
+	top: 'Inherited from the group',
+	topMembers: "Using the group's member count",
+	parentMembers: "Using the parent question's member count",
+};
+
 const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
-	const currentN = statement.evaluationSettings?.targetPopulation;
+
+	// A deliberation declares its stakeholders once, on the group, and every
+	// question beneath inherits it. Showing what WOULD apply is the difference
+	// between an empty field that means "unset" and one that means "unset here,
+	// and here is what you get instead".
+	const parentStatement = useAppSelector(statementSelector(statement.parentId));
+	const topStatement = useAppSelector(statementSelector(statement.topParentId));
+
+	const declaredHere = statement.evaluationSettings?.targetPopulation;
+	const inherited = resolveStakeholderCount(undefined, parentStatement, topStatement);
+	const effective = resolveStakeholderCount(statement, parentStatement, topStatement);
+
 	const currentQ = statement.evaluationSettings?.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;
 
 	const [targetPopulation, setTargetPopulation] = useState<string>(
-		currentN ? String(currentN) : '',
+		declaredHere ? String(declaredHere) : '',
 	);
 	const [samplingQuality, setSamplingQuality] = useState<number>(currentQ);
 	const [isRecalculating, setIsRecalculating] = useState(false);
@@ -74,21 +101,39 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 	return (
 		<>
 			<p className={styles.confidenceIndex__description}>
-				{t('Set target population to enable confidence index')}
+				{t(
+					'How many people have a stake in this decision — including those the process never reached. Once all of them have evaluated, the score stops hedging and reports what they actually think.',
+				)}
 			</p>
 
 			<div className={styles.confidenceIndex}>
 				<div className={styles.confidenceIndex__field}>
-					<label>{t('Target Population Size')}</label>
+					<label>{t('Number of stakeholders')}</label>
 					<input
 						type="number"
 						min="1"
-						placeholder={t('How many people are in the target community?')}
+						placeholder={
+							inherited.count !== undefined
+								? `${inherited.count} (${t(SOURCE_LABEL[inherited.source as StakeholderSource])})`
+								: t('How many people have standing in this decision?')
+						}
 						value={targetPopulation}
 						onChange={(e) => setTargetPopulation(e.target.value)}
 						onBlur={handleTargetPopulationBlur}
 						data-cy="target-population-input"
 					/>
+					<span className={styles.confidenceIndex__inheritedNote} data-cy="stakeholder-source-note">
+						{effective.count === undefined
+							? t('Not set anywhere — scores stay uncorrected for an unbounded population')
+							: `${t(SOURCE_LABEL[effective.source as StakeholderSource])}: ${effective.count}`}
+					</span>
+					{effective.inferred && (
+						<span className={styles.confidenceIndex__inheritedNote}>
+							{t(
+								'Inferred from who subscribed, which may not be who has standing. Set a number to be explicit.',
+							)}
+						</span>
+					)}
 				</div>
 
 				<div className={styles.confidenceIndex__field}>

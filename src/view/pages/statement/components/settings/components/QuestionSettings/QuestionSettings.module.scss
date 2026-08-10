@@ -503,6 +503,14 @@
 			margin-bottom: 1rem;
 		}
 
+		// What the stakeholder count actually resolves to, and where it came
+		// from. An empty input needs to say whether it means "nothing applies"
+		// or "the group's number applies".
+		&__inheritedNote {
+			font-size: 0.75rem;
+			color: var(--text-tertiary);
+		}
+
 		&__field {
 			display: flex;
 			flex-direction: column;

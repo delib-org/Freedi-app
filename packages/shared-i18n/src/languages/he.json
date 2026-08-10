@@ -3754,5 +3754,17 @@
   "Turn off crowd consensus": "לכבות מצב הסכמת קהל",
   "You are offline": "אתם במצב לא מקוון",
   "Marking…": "מסמן…",
-  "Popup blocked": "החלון החדש נחסם"
+  "Popup blocked": "החלון החדש נחסם",
+  "Number of stakeholders": "מספר בעלי העניין",
+  "How many people have standing in this decision?": "לכמה אנשים יש מעמד בהחלטה הזו?",
+  "How many people have a stake in this decision — including those the process never reached. Once all of them have evaluated, the score stops hedging and reports what they actually think.": "לכמה אנשים יש עניין בהחלטה הזו — כולל אלה שהתהליך לא הגיע אליהם. אחרי שכולם העריכו, הציון מפסיק לגדר את עצמו ומדווח מה הם באמת חושבים.",
+  "Not set anywhere — scores stay uncorrected for an unbounded population": "לא הוגדר בשום מקום — הציונים נשארים ללא תיקון, עבור אוכלוסייה בלתי מוגבלת",
+  "Inferred from who subscribed, which may not be who has standing. Set a number to be explicit.": "נגזר ממי שנרשם, שאינו בהכרח מי שיש לו מעמד. הגדירו מספר כדי להיות מפורשים.",
+  "Set here": "הוגדר כאן",
+  "Inherited from the parent question": "בירושה מהשאלה שמעל",
+  "Inherited from the group": "בירושה מהקבוצה",
+  "Using the group's member count": "לפי מספר חברי הקבוצה",
+  "Using the parent question's member count": "לפי מספר החברים בשאלה שמעל",
+  "Of stakeholders": "מתוך בעלי העניין",
+  "of stakeholders": "מבעלי העניין"
 }

@@ -1,4 +1,4 @@
-import { setDoc, updateDoc } from 'firebase/firestore';
+import { deleteField, setDoc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { number, parse } from 'valibot';
 import {
@@ -239,10 +239,15 @@ export async function setConfidenceIndexSettings(
 	try {
 		const statementRef = createStatementRef(statementId);
 
-		const updateData: Record<string, number | null> = {};
+		const updateData: Record<string, number | ReturnType<typeof deleteField>> = {};
 		if (settings.targetPopulation !== undefined) {
+			// Clearing REMOVES the field rather than writing null. A null fails
+			// the `optional(number())` schema on the way back in, and — more
+			// importantly — an explicit null on a question would shadow the
+			// stakeholder count declared on the group above it, silently
+			// disabling inheritance for everything beneath.
 			updateData['evaluationSettings.targetPopulation'] =
-				settings.targetPopulation > 0 ? settings.targetPopulation : null;
+				settings.targetPopulation > 0 ? settings.targetPopulation : deleteField();
 		}
 		if (settings.samplingQuality !== undefined) {
 			updateData['evaluationSettings.samplingQuality'] = settings.samplingQuality;

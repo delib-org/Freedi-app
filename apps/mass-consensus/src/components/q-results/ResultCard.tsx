@@ -26,6 +26,10 @@ export default function ResultCard({ statement, isUserStatement, totalParticipan
 
   // Calculate metrics
   const participants = statement.evaluation?.numberOfEvaluators || 0;
+  // N as it was when this score was computed, denormalised onto the evaluation
+  // by the trigger. Absent for open deliberations and for anything scored
+  // before stakeholder counts existed.
+  const stakeholderCount = statement.evaluation?.stakeholderCount;
   const supportCount = statement.evaluation?.sumPro || 0;
   const againstCount = Math.abs(statement.evaluation?.sumCon || 0);
 
@@ -95,9 +99,15 @@ export default function ResultCard({ statement, isUserStatement, totalParticipan
 
           {/* Right side - Badges */}
           <div className={styles.badges}>
-            {/* Participants badge */}
+            {/* Participants badge. When a stakeholder count is known the
+                consensus score above was finite-population corrected against
+                it, so the count is shown as "50 / 500" rather than a bare
+                tally — the score depends on that denominator, and a reader
+                cannot weigh the claim without seeing it. */}
             <div className={clsx(styles.badge, styles['badge--participants'])}>
-              <span className={styles.badge__label}>{t('Voted')}</span>
+              <span className={styles.badge__label}>
+                {stakeholderCount !== undefined ? t('Of stakeholders') : t('Voted')}
+              </span>
               <span className={styles.badge__value}>
                 <span
                   className={styles.badge__background}
@@ -106,7 +116,11 @@ export default function ResultCard({ statement, isUserStatement, totalParticipan
                     opacity: participationOpacity,
                   }}
                 />
-                <span className={styles.badge__number}>{participants}</span>
+                <span className={styles.badge__number}>
+                  {stakeholderCount !== undefined
+                    ? `${participants} / ${stakeholderCount}`
+                    : participants}
+                </span>
               </span>
             </div>
 

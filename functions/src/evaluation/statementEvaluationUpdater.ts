@@ -200,8 +200,7 @@ async function readStakeholderAncestors(
 	};
 
 	const parent = await scopeFor(parentId);
-	const top =
-		topParentId && topParentId !== parentId ? await scopeFor(topParentId) : parent;
+	const top = topParentId && topParentId !== parentId ? await scopeFor(topParentId) : parent;
 
 	return { parent, top };
 }
@@ -340,11 +339,8 @@ async function updateStatementInTransaction(
 			ancestors.top,
 		);
 		const samplingQuality =
-			resolveSamplingQuality(
-				statementData as StakeholderScope,
-				ancestors.parent,
-				ancestors.top,
-			) ?? DEFAULT_SAMPLING_QUALITY;
+			resolveSamplingQuality(statementData as StakeholderScope, ancestors.parent, ancestors.top) ??
+			DEFAULT_SAMPLING_QUALITY;
 
 		const { agreement, evaluation } = calculateEvaluation(
 			statement,
@@ -391,6 +387,13 @@ async function updateStatementInTransaction(
 			...(confidenceIndex !== undefined && {
 				'evaluation.confidenceIndex': confidenceIndex,
 			}),
+			// Travels with the score it produced, so every surface can publish
+			// "50 of 500" without walking the tree. Explicitly DELETED when no
+			// population resolves: a stale count left behind after an admin
+			// clears the setting would keep claiming a coverage the current
+			// score was never computed against.
+			'evaluation.stakeholderCount':
+				stakeholderCount !== undefined ? stakeholderCount : FieldValue.delete(),
 			'evaluation.evaluationRandomNumber': evaluation.evaluationRandomNumber,
 			'evaluation.viewed': evaluation.viewed,
 			proSum: FieldValue.increment(proConDiff.proDiff),

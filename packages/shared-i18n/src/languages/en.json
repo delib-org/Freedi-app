@@ -3715,5 +3715,17 @@
   "Turn off crowd consensus": "Turn off crowd consensus",
   "You are offline": "You are offline",
   "Marking…": "Marking…",
-  "Popup blocked": "Popup blocked"
+  "Popup blocked": "Popup blocked",
+  "Number of stakeholders": "Number of stakeholders",
+  "How many people have standing in this decision?": "How many people have standing in this decision?",
+  "How many people have a stake in this decision — including those the process never reached. Once all of them have evaluated, the score stops hedging and reports what they actually think.": "How many people have a stake in this decision — including those the process never reached. Once all of them have evaluated, the score stops hedging and reports what they actually think.",
+  "Not set anywhere — scores stay uncorrected for an unbounded population": "Not set anywhere — scores stay uncorrected for an unbounded population",
+  "Inferred from who subscribed, which may not be who has standing. Set a number to be explicit.": "Inferred from who subscribed, which may not be who has standing. Set a number to be explicit.",
+  "Set here": "Set here",
+  "Inherited from the parent question": "Inherited from the parent question",
+  "Inherited from the group": "Inherited from the group",
+  "Using the group's member count": "Using the group's member count",
+  "Using the parent question's member count": "Using the parent question's member count",
+  "Of stakeholders": "Of stakeholders",
+  "of stakeholders": "of stakeholders"
 }

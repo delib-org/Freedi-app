@@ -1,6 +1,11 @@
 import React from 'react';
 import clsx from 'clsx';
-import { Statement, calcMeanSentiment, DEFAULT_MIN_EVALUATORS } from '@freedi/shared-types';
+import {
+	Statement,
+	calcMeanSentiment,
+	DEFAULT_MIN_EVALUATORS,
+	stakeholderCoverage,
+} from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
 export type ResultsMetric = 'consensus' | 'average' | 'evaluators';
@@ -47,6 +52,18 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 	const consensusPct = Math.round((statement.consensus ?? 0) * 100);
 	const showConsensus = numberOfEvaluators >= minEvaluators;
 
+	// When the stakeholder count is known, the consensus shown above was
+	// finite-population corrected against it — so the evaluator count stops
+	// being a bare tally and becomes the claim that makes the score readable.
+	// "50" says nothing; "50 / 500" says how much weight it deserves.
+	const stakeholders = statement.evaluation?.stakeholderCount;
+	const coverage = stakeholderCoverage(numberOfEvaluators, stakeholders);
+	const coveragePct = coverage !== undefined ? Math.round(coverage * 100) : undefined;
+	const evaluatorsValue =
+		stakeholders !== undefined
+			? `${numberOfEvaluators} / ${stakeholders}`
+			: `${numberOfEvaluators}`;
+
 	const item = (
 		metric: ResultsMetric,
 		label: string,
@@ -79,7 +96,14 @@ const ResultsStrip: React.FC<ResultsStripProps> = ({
 					consensusPct < 0,
 				)}
 			{item('average', t('Average'), t('Average score'), `${averagePct}%`, averagePct < 0)}
-			{item('evaluators', t('Evaluators'), t('Evaluators'), `${numberOfEvaluators}`)}
+			{item(
+				'evaluators',
+				coveragePct !== undefined ? t('Of stakeholders') : t('Evaluators'),
+				coveragePct !== undefined
+					? `${t('Evaluators')} (${coveragePct}% ${t('of stakeholders')})`
+					: t('Evaluators'),
+				evaluatorsValue,
+			)}
 		</div>
 	);
 };

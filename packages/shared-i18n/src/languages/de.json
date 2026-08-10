@@ -3010,5 +3010,17 @@
   "Turn off crowd consensus": "Crowd-Konsens ausschalten",
   "You are offline": "Sie sind offline",
   "Marking…": "Wird markiert…",
-  "Popup blocked": "Pop-up blockiert"
+  "Popup blocked": "Pop-up blockiert",
+  "Number of stakeholders": "Anzahl der Betroffenen",
+  "How many people have standing in this decision?": "Wie viele Menschen sind von dieser Entscheidung betroffen?",
+  "How many people have a stake in this decision — including those the process never reached. Once all of them have evaluated, the score stops hedging and reports what they actually think.": "Wie viele Menschen ein berechtigtes Interesse an dieser Entscheidung haben — auch jene, die der Prozess nie erreicht hat. Sobald alle bewertet haben, hört die Bewertung auf abzusichern und gibt wieder, was sie tatsächlich denken.",
+  "Not set anywhere — scores stay uncorrected for an unbounded population": "Nirgends festgelegt — die Werte bleiben unkorrigiert für eine unbegrenzte Grundgesamtheit",
+  "Inferred from who subscribed, which may not be who has standing. Set a number to be explicit.": "Abgeleitet davon, wer sich angemeldet hat — nicht zwingend dieselben Menschen, die betroffen sind. Geben Sie eine Zahl an, um eindeutig zu sein.",
+  "Set here": "Hier festgelegt",
+  "Inherited from the parent question": "Von der übergeordneten Frage geerbt",
+  "Inherited from the group": "Von der Gruppe geerbt",
+  "Using the group's member count": "Anhand der Mitgliederzahl der Gruppe",
+  "Using the parent question's member count": "Anhand der Mitgliederzahl der übergeordneten Frage",
+  "Of stakeholders": "Von den Betroffenen",
+  "of stakeholders": "der Betroffenen"
 }

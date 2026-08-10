@@ -3131,5 +3131,17 @@
   "Turn off crowd consensus": "إيقاف وضع توافق الجمهور",
   "You are offline": "أنتم غير متصلين بالإنترنت",
   "Marking…": "جارٍ التحديد…",
-  "Popup blocked": "تم حظر النافذة المنبثقة"
+  "Popup blocked": "تم حظر النافذة المنبثقة",
+  "Number of stakeholders": "عدد أصحاب المصلحة",
+  "How many people have standing in this decision?": "كم عدد الأشخاص الذين لهم صفة في هذا القرار؟",
+  "How many people have a stake in this decision — including those the process never reached. Once all of them have evaluated, the score stops hedging and reports what they actually think.": "كم عدد الأشخاص الذين لهم مصلحة في هذا القرار — بمن فيهم من لم تصل إليهم العملية. بعد أن يقيّم جميعهم، تتوقف النتيجة عن التحوّط وتُبلّغ عمّا يفكرون فيه فعلًا.",
+  "Not set anywhere — scores stay uncorrected for an unbounded population": "غير محدد في أي مستوى — تبقى النتائج دون تصحيح لأن عدد السكان غير محدود",
+  "Inferred from who subscribed, which may not be who has standing. Set a number to be explicit.": "مستنتج ممّن اشترك، وقد لا يكون هو من له صفة. حدّد رقمًا لتكون صريحًا.",
+  "Set here": "محدد هنا",
+  "Inherited from the parent question": "موروث من السؤال الأصل",
+  "Inherited from the group": "موروث من المجموعة",
+  "Using the group's member count": "باستخدام عدد أعضاء المجموعة",
+  "Using the parent question's member count": "باستخدام عدد أعضاء السؤال الأصل",
+  "Of stakeholders": "من أصحاب المصلحة",
+  "of stakeholders": "من أصحاب المصلحة"
 }

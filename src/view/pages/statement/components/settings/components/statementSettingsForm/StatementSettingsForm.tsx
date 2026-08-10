@@ -256,12 +256,13 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 									settings={settings}
 									handleSettingChange={handlers.handleSettingChange}
 								/>
-								{isQuestion && (
-									<>
-										<AnchoredSettings statement={settingsStatement} />
-										<ConfidenceIndexSettings statement={settingsStatement} />
-									</>
-								)}
+								{isQuestion && <AnchoredSettings statement={settingsStatement} />}
+								{/* Deliberately NOT gated to questions: a settlement
+								    declares its stakeholders once on the group and every
+								    question beneath inherits it. Gating this was why the
+								    number had to be re-entered on every question, and why
+								    setting it on a group did nothing at all. */}
+								<ConfidenceIndexSettings statement={settingsStatement} />
 							</div>
 						</SettingsSection>
 

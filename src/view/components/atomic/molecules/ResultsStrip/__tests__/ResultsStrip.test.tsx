@@ -20,6 +20,7 @@ interface EvaluationOverrides {
 	sumPro?: number;
 	sumCon?: number;
 	sumEvaluations?: number;
+	stakeholderCount?: number;
 }
 
 function makeStatement(consensus: number, evaluation: EvaluationOverrides | undefined): Statement {
@@ -105,5 +106,39 @@ describe('ResultsStrip', () => {
 		const primary = container.querySelector('.results-strip__item--primary');
 		expect(primary).toHaveTextContent('60%');
 		expect(primary).toHaveTextContent('Average');
+	});
+});
+
+describe('ResultsStrip - stakeholder coverage', () => {
+	it('shows a bare evaluator count when no stakeholder set is known', () => {
+		// Open participation: there is no denominator, and inventing one would
+		// be worse than omitting it.
+		render(<ResultsStrip statement={makeStatement(0.4, { numberOfEvaluators: 50 })} />);
+
+		expect(screen.getByText('50')).toBeInTheDocument();
+		expect(screen.queryByText(/\//)).not.toBeInTheDocument();
+	});
+
+	it('publishes the denominator the corrected score was computed against', () => {
+		// The consensus above was finite-population corrected against 500, and
+		// a smaller N would have raised it — so the reader has to see the 500.
+		render(
+			<ResultsStrip
+				statement={makeStatement(0.42, { numberOfEvaluators: 50, stakeholderCount: 500 })}
+			/>,
+		);
+
+		expect(screen.getByText('50 / 500')).toBeInTheDocument();
+		expect(screen.getByText('Of stakeholders')).toBeInTheDocument();
+	});
+
+	it('shows a census as everyone having spoken', () => {
+		render(
+			<ResultsStrip
+				statement={makeStatement(0.6, { numberOfEvaluators: 500, stakeholderCount: 500 })}
+			/>,
+		);
+
+		expect(screen.getByText('500 / 500')).toBeInTheDocument();
 	});
 });

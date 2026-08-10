@@ -3010,5 +3010,17 @@
   "Turn off crowd consensus": "Crowd-consensus uitschakelen",
   "You are offline": "U bent offline",
   "Marking…": "Markeren…",
-  "Popup blocked": "Pop-up geblokkeerd"
+  "Popup blocked": "Pop-up geblokkeerd",
+  "Number of stakeholders": "Aantal belanghebbenden",
+  "How many people have standing in this decision?": "Hoeveel mensen hebben een belang bij deze beslissing?",
+  "How many people have a stake in this decision — including those the process never reached. Once all of them have evaluated, the score stops hedging and reports what they actually think.": "Hoeveel mensen een belang hebben bij deze beslissing — ook degenen die het proces nooit heeft bereikt. Zodra zij allemaal hebben beoordeeld, houdt de score op met een slag om de arm en geeft weer wat zij werkelijk vinden.",
+  "Not set anywhere — scores stay uncorrected for an unbounded population": "Nergens ingesteld — scores blijven ongecorrigeerd voor een onbegrensde populatie",
+  "Inferred from who subscribed, which may not be who has standing. Set a number to be explicit.": "Afgeleid van wie zich heeft aangemeld, wat niet hetzelfde hoeft te zijn als wie belanghebbend is. Vul een getal in om expliciet te zijn.",
+  "Set here": "Hier ingesteld",
+  "Inherited from the parent question": "Overgenomen van de bovenliggende vraag",
+  "Inherited from the group": "Overgenomen van de groep",
+  "Using the group's member count": "Op basis van het aantal groepsleden",
+  "Using the parent question's member count": "Op basis van het aantal leden van de bovenliggende vraag",
+  "Of stakeholders": "Van de belanghebbenden",
+  "of stakeholders": "van de belanghebbenden"
 }

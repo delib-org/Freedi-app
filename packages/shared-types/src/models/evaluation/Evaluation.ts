@@ -73,6 +73,17 @@ export const StatementEvaluationSchema = object({
 	agreementIndex: optional(number()), // 1 - t·SEM*, range [0,1] — confidence-adjusted agreement
 	likeMindedness: optional(number()), // 1 - SEM*, range [0,1] — simple opinion similarity (user-facing)
 	confidenceIndex: optional(number()), // Gamma formula, range [0,1] — how representative the sample is
+	// N as it was resolved when this score was computed — the stakeholder count
+	// the finite-population correction divided by. Denormalised deliberately:
+	// it is declared on an ancestor, and without it here every surface that
+	// shows a corrected score would have to walk the tree to say "50 of 500".
+	//
+	// It is not an optimisation, it is an accountability record. A smaller N
+	// raises the score, so the number has to travel WITH the score it produced
+	// rather than being re-derived later from settings that may since have
+	// changed. Absent means no bounded population was known and the score is
+	// uncorrected.
+	stakeholderCount: optional(number()),
 	viewed: optional(number()), //number of users who viewed the evaluation
 	evaluationRandomNumber: optional(number()),
 	selectionFunction: optional(enum_(SelectionFunction)), // it is used for selecting in mass consensus random, voting and top suggestions
