@@ -109,14 +109,18 @@ export function ideaLandedAt(proposalId: string, helperUid: string): number {
  * the block surviving the press for a beat, which reads as "it didn't work".
  */
 const answeredEdits: Record<string, number> = {};
+/** When that press happened, for the beat before the listener echoes it back */
+const answeredAt: Record<string, number> = {};
 
-export function noteReWeighed(proposalId: string): void {
+export function noteReWeighed(proposalId: string, now = Date.now()): void {
 	answeredEdits[proposalId] = Math.max(answeredEdits[proposalId] ?? 0, editClock(proposalId));
+	answeredAt[proposalId] = now;
 }
 
 /** Session teardown, and a clean slate between tests */
 export function clearReWeighMemory(): void {
 	for (const key of Object.keys(answeredEdits)) delete answeredEdits[key];
+	for (const key of Object.keys(answeredAt)) delete answeredAt[key];
 }
 
 /** Did I answer this exact edit, by the write or by the optimistic mark? */
@@ -241,18 +245,37 @@ export function scoreMovedMoment(
 
 /**
  * The full circle, closed: an idea went out, the owner acknowledged it, the text
- * changed after that, and the helper weighed the new version.
+ * changed after that, and the helper weighed the new version. Returns WHEN it
+ * closed — the moment the helper answered the revision — or 0 if it has not.
+ *
+ * It returns a time rather than a boolean because a round trip is a thing that
+ * HAPPENED: it belongs in the conversation at its own moment, not pinned under
+ * everything else for the rest of the lesson, drifting further from the exchange
+ * it describes with every message that follows.
  *
  * Direction-blind on purpose. A round trip that only counted when the score rose
  * would be paying the helper to vote up — the exact pressure the re-weigh block
  * is built to resist.
  */
-export function roundTripClosed(proposalId: string, helperUid: string): boolean {
+export function roundTripAt(proposalId: string, helperUid: string): number {
 	const landedAt = ideaLandedAt(proposalId, helperUid);
-	if (landedAt === 0) return false;
+	if (landedAt === 0) return 0;
 
 	const editedAt = editClock(proposalId);
-	if (editedAt === 0 || editedAt < landedAt) return false;
+	if (editedAt === 0 || editedAt < landedAt) return 0;
 
-	return answeredSince(proposalId, editedAt);
+	// Both sides can date it: every student's rating TIME streams to everyone
+	// (the values never do), so the owner reads the same moment the helper does
+	let ratedAt = 0;
+	for (const entry of getDeliberationState().studentEvalTimes[proposalId] ?? []) {
+		if (entry.evaluatorId !== helperUid || entry.updatedAt <= editedAt) continue;
+		ratedAt = Math.max(ratedAt, entry.updatedAt);
+	}
+	if (ratedAt > 0) return ratedAt;
+
+	// The press just happened and the snapshot has not come back yet. Only ever
+	// true on the helper's own device, since nobody rates their own proposal.
+	if ((answeredEdits[proposalId] ?? 0) >= editedAt) return answeredAt[proposalId] ?? 0;
+
+	return 0;
 }

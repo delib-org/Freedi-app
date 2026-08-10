@@ -17,7 +17,7 @@ import { RateScale, rateOptionFor } from '../components/RateScale';
 import { requestMineFocus } from '../lib/helpedFocus';
 import {
 	reWeighMoment,
-	roundTripClosed,
+	roundTripAt,
 	scoreMovedMoment,
 	type ReWeighMoment,
 } from '../lib/improvementSignals';
@@ -371,7 +371,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * then on.
 	 */
 	function cheerRoundTrip(session: AgoraSession, proposalId: string): void {
-		if (!roundTripClosed(proposalId, currentThreadHelper)) return;
+		if (roundTripAt(proposalId, currentThreadHelper) === 0) return;
 		const key = `agora_${session.sessionId}_roundtrip_${proposalId}_${currentThreadHelper}`;
 		if (sessionStorage.getItem(key)) return;
 		try {
@@ -574,11 +574,14 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * round trip that only counted when the score rose would be paying the
 	 * helper to vote up.
 	 */
-	function roundTripBlock(): m.Children {
+	function roundTripBlock(at: number): m.Children {
 		return m('.chat-system.chat-system--moment.chat-system--roundtrip', { key: 'roundtrip' }, [
 			m('span.chat-system__icon', { 'aria-hidden': 'true' }, '🔁'),
 			m('.chat-system__body', [
-				m('p.chat-system__title', t('thread.round_trip_title')),
+				m('.chat-system__head', [
+					m('span.chat-system__title', t('thread.round_trip_title')),
+					m('span.chat-system__time', formatMessageTime(at)),
+				]),
 				m('p.chat-system__text', t('thread.round_trip_body')),
 			]),
 		]);
@@ -689,7 +692,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			currentThreadHelper = helperUid;
 			const amHelper = role === 'helper' && proposal.creatorId !== userId && helperUid === userId;
 			const moment = amHelper ? reWeighMoment(proposal.statementId, userId, proposal) : null;
-			const closed = roundTripClosed(proposal.statementId, helperUid);
+			const closedAt = roundTripAt(proposal.statementId, helperUid);
 
 			function scrollToChange(): void {
 				const newest = [...messages]
@@ -701,14 +704,24 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					?.scrollIntoView({ block: 'center', behavior: 'smooth' });
 			}
 
+			// History first, in the order it happened — the round trip is a thing
+			// that HAPPENED, so it sits at its own moment rather than under
+			// everything that came after it. The live blocks below are the
+			// opposite: current state, and they belong where the eye lands.
+			const history: Array<{ at: number; node: m.Children }> = messages.map((message) => ({
+				at: message.createdAt,
+				node: messageRow(session, message, role, userId),
+			}));
+			if (closedAt > 0) history.push({ at: closedAt, node: roundTripBlock(closedAt) });
+			history.sort((a, b) => a.at - b.at);
+
 			const listChildren = [
-				...messages.map((message) => messageRow(session, message, role, userId)),
+				...history.map((entry) => entry.node),
 				moment ? reWeighBlock(session, proposal, moment, scrollToChange) : null,
 				votedLine(),
 				proposal.creatorId === userId
 					? scoreMovedBlock(proposal, helperUid, helperName, onBack)
 					: null,
-				closed ? roundTripBlock() : null,
 			].filter(Boolean);
 
 			// A derived moment changes no message count, so it would otherwise

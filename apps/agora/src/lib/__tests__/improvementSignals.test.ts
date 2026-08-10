@@ -58,7 +58,7 @@ import {
 	noteReWeighed,
 	ratingsMovedSince,
 	reWeighMoment,
-	roundTripClosed,
+	roundTripAt,
 	scoreMovedMoment,
 } from '../improvementSignals';
 import type { AgoraProposal } from '../proposals';
@@ -348,7 +348,7 @@ describe('scoreMovedMoment', () => {
 	});
 });
 
-describe('roundTripClosed', () => {
+describe('roundTripAt', () => {
 	beforeEach(() => {
 		delibState.suggestions[PID] = [
 			message({
@@ -361,25 +361,41 @@ describe('roundTripClosed', () => {
 		delibState.scores[PID] = { bridgingScore: 50, lastEditAt: 2000 };
 	});
 
-	it('closes when the helper weighs the revision, in any direction', () => {
+	it('dates the circle by when the helper weighed the revision', () => {
+		delibState.studentEvalTimes[PID] = [{ evaluatorId: HELPER, updatedAt: 2500 }];
+		expect(roundTripAt(PID, HELPER)).toBe(2500);
+	});
+
+	it('closes in any direction — a down-vote closes it too', () => {
+		delibState.studentEvalTimes[PID] = [{ evaluatorId: HELPER, updatedAt: 2500 }];
 		delibState.myRatings[PID] = { value: -1, updatedAt: 2500 };
-		expect(roundTripClosed(PID, HELPER)).toBe(true);
+		expect(roundTripAt(PID, HELPER)).toBe(2500);
+	});
+
+	it('reads the helper, never some other classmate', () => {
+		delibState.studentEvalTimes[PID] = [{ evaluatorId: OTHER, updatedAt: 2500 }];
+		expect(roundTripAt(PID, HELPER)).toBe(0);
 	});
 
 	it('stays open until the new version is weighed', () => {
-		delibState.myRatings[PID] = { value: 1, updatedAt: 1200 };
-		expect(roundTripClosed(PID, HELPER)).toBe(false);
+		delibState.studentEvalTimes[PID] = [{ evaluatorId: HELPER, updatedAt: 1200 }];
+		expect(roundTripAt(PID, HELPER)).toBe(0);
 	});
 
 	it('stays open when the owner never acknowledged the idea', () => {
 		delibState.suggestions[PID][0].suggestionStatus = undefined;
-		delibState.myRatings[PID] = { value: 1, updatedAt: 2500 };
-		expect(roundTripClosed(PID, HELPER)).toBe(false);
+		delibState.studentEvalTimes[PID] = [{ evaluatorId: HELPER, updatedAt: 2500 }];
+		expect(roundTripAt(PID, HELPER)).toBe(0);
 	});
 
 	it('stays open when the revision predates the acknowledgment', () => {
 		delibState.scores[PID] = { bridgingScore: 50, lastEditAt: 1200 };
-		delibState.myRatings[PID] = { value: 1, updatedAt: 2500 };
-		expect(roundTripClosed(PID, HELPER)).toBe(false);
+		delibState.studentEvalTimes[PID] = [{ evaluatorId: HELPER, updatedAt: 2500 }];
+		expect(roundTripAt(PID, HELPER)).toBe(0);
+	});
+
+	it('dates it optimistically for the beat before the snapshot returns', () => {
+		noteReWeighed(PID, 4242);
+		expect(roundTripAt(PID, HELPER)).toBe(4242);
 	});
 });

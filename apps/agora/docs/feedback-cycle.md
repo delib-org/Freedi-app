@@ -170,7 +170,7 @@ was *arithmetically unreachable*. The denominator never exceeds
 | 4 | ~~Woven in~~ | B | 🎉 celebration | **Retired** with the accept → weave chain; still rendered if an old session fires one | primary button → travel to the improved proposal |
 | 5 | Helped proposal improved | B | badge on "של אחרים" tab + ✨ marker on the helped card + **the re-weigh block in the conversation** | aggregate | re-reading + re-rating. The marker **clears once B re-rates**, from either surface, and the press is answered with a one-shot "your rating was updated" line |
 | 6 | Ratings moved after my edit | A | 📈/📉 chip on the workshop card + **the credited line in the helper's thread** | "N ratings updated · bridge power rose/dropped by M" — count + **direction of the aggregate bridge score**, **never any individual's rating**. Dip renders muted amber, not red. | keeping the improvement loop going |
-| 7 | The circle closed | both | 🔁 Round Trip line in the conversation, one celebration for whoever closed it | none (0 points) | sending the next idea — the celebration's hint asks for one |
+| 7 | The circle closed | both | 🔁 Round Trip line in the conversation, **at the moment it closed** (the helper's re-rate time, which both sides can read), one celebration for whoever closed it | none (0 points) | sending the next idea — the celebration's hint asks for one |
 | 7 | First proposal credited | A | 🎉 celebration | "your proposal is on the square! (+3)" | no button — you are already standing in the workshop |
 | 8 | Bridging achieved | A | 🎉 celebration | "your proposal reached across / bridged the camps! (+5 / +10)" — aggregate by construction (a threshold on the score, no rater identity) | **button → back to my proposal** |
 | 9 | Class bridge record | everyone | local toast | "✨ new class record — the strongest bridge on the square just grew" | nothing; the one *collective* moment in a game full of personal ones |
@@ -225,7 +225,7 @@ topic package. It covers every row of both tables above:
 | #5 clears anywhere | B rates from the square, and the thread's invitation is gone — the moment is derived from state, never fired as an event |
 | #6 ratings moved | A's chip counts 1 (singular copy), names the direction, and **survives a full page reload** |
 | #6 in the thread | A's conversation with B reports the class's answer, credited to B by placement |
-| #7 round trip | the 🔁 line appears for the pair once the idea → thanks → revision → re-weigh circle closes |
+| #7 round trip | the 🔁 line appears for the pair once the idea → thanks → revision → re-weigh circle closes, dated and sorted into the conversation rather than pinned to the end |
 | first proposal | both students' `proposals` = 3 and the credit is announced |
 | rating credit | `rating` = 0.5 after the first rating |
 | bridging ladder | the credit pays out **in a two-student class** — the case that was arithmetically impossible before |
