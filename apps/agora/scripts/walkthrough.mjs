@@ -158,20 +158,39 @@ const FS = 'http://localhost:8081/v1/projects/freedi-test/databases/(default)/do
 const ownerGet = async (path) =>
 	(await fetch(`${FS}/${path}`, { headers: { Authorization: 'Bearer owner' } })).json();
 
+// A celebration is modal and waits for a human — nothing auto-dismisses it, so
+// a script that ignores it has every later click swallowed by the overlay
+const clearCelebration = async (page) => {
+	if (!(await page.locator('.celebration').count())) return;
+	await page.keyboard.press('Escape');
+	await page.waitForSelector('.celebration', { state: 'detached', timeout: 5000 });
+};
+
 const propose = async (page, label, text) => {
-	await page.waitForSelector('textarea.values__textarea', { timeout: 15000 });
-	await page.locator('textarea.values__textarea').fill(text);
+	await page.waitForSelector('textarea.write-desk__textarea', { timeout: 15000 });
+	await page.locator('textarea.write-desk__textarea').fill(text);
 	await page.locator('.delib__actions .btn--primary').click();
 	await page.waitForTimeout(1200);
+	await clearCelebration(page);
 	console.log(`${label} proposed`);
 };
-// Lap 1, step "mine": the needs board is one tap away while writing
-await s1.waitForSelector('.needs-peek__toggle', { timeout: 15000 });
+// Lap 1, step "mine": the needs board stands OPEN on the writing desk (explicit
+// call, 2026-08-10) — the two sides' needs are the raw material of the proposal,
+// so they are already on screen rather than one tap away
+// The stage splash travels over the square for a beat first: wait for the desk
+// AND for the splash to clear, or the shot is just the travel card
+await s1.waitForSelector('.write-desk', { timeout: 20000 });
+await s1.waitForSelector('.stage-transition', { state: 'detached', timeout: 20000 });
+await s1.waitForSelector('.needs-board', { timeout: 5000 });
+console.log('NEEDS BOARD open by default during propose');
+await shot(s1, '06a-needs-peek-in-propose');
+// ...and it still folds away for a student who wants the desk clear. Open, the
+// control is the small chip beside the section title; closed, it is back to
+// the ghost invitation.
+await s1.locator('.needs-peek__fold').click();
+await s1.waitForSelector('.needs-board', { state: 'detached', timeout: 5000 });
 await s1.locator('.needs-peek__toggle').click();
 await s1.waitForSelector('.needs-board', { timeout: 5000 });
-console.log('NEEDS PEEK opens during propose');
-await shot(s1, '06a-needs-peek-in-propose');
-await s1.locator('.needs-peek__toggle').click();
 
 await propose(s1, 'S1', 'נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, וזכויות היתר יבוטלו בהדרגה תוך פיצוי הוגן.');
 await propose(s2, 'S2', 'נקים אספה לאומית שבה לעם רוב קולות, נבטל את הפטור ממס של האצולה, אך נבטיח לאצילים שמירה על ביטחונם האישי ורכושם הבסיסי.');
@@ -222,6 +241,7 @@ console.log(
 	'S1 NAV CLASSES:',
 	await s1.locator('.delib-nav__item').evaluateAll((els) => els.map((e) => e.className))
 );
+await s1.waitForTimeout(900); // the sheet slides up — shoot it landed, not mid-travel
 await shot(s1, '05c-dock-open-during-help');
 await s1.locator('.proposal-dock__bar').click();
 await s1.waitForSelector('textarea.text-input', { timeout: 5000 });

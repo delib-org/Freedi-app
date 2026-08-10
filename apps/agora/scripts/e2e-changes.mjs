@@ -120,8 +120,8 @@ step('TEACHER advances → DELIBERATION');
 await advance();
 
 const propose = async (page, text) => {
-	await page.waitForSelector('textarea.values__textarea', { timeout: 15000 });
-	await page.locator('textarea.values__textarea').fill(text);
+	await page.waitForSelector('textarea.write-desk__textarea', { timeout: 15000 });
+	await page.locator('textarea.write-desk__textarea').fill(text);
 	await page.locator('.delib__actions .btn--primary').click();
 	await page.waitForTimeout(1000);
 };

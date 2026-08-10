@@ -5,6 +5,12 @@ import type { AgoraCharacter, AgoraTopicPackage } from '@freedi/shared-types';
 
 export interface NeedsBoardAttrs {
 	topic: AgoraTopicPackage;
+	/**
+	 * Drop the board's own title line. Set by NeedsPeek, which promotes the
+	 * title into a header row it shares with the fold control — one heading
+	 * for the section instead of a stray link sitting above a second heading.
+	 */
+	hideTitle?: boolean;
 }
 
 function needsColumn(character: AgoraCharacter, side: 'left' | 'right'): m.Children {
@@ -39,29 +45,53 @@ export const NeedsBoard: m.Component<NeedsBoardAttrs> = {
 		const right = byId.get(topic.positioningScale.rightCharacterId) ?? topic.characters[1];
 
 		return m('.needs-board', [
-			m('p.needs-board__title', t('needs.board_title')),
+			vnode.attrs.hideTitle ? null : m('p.needs-board__title', t('needs.board_title')),
 			m('.needs-board__columns', [needsColumn(left, 'left'), needsColumn(right, 'right')]),
 		]);
 	},
 };
 
+export interface NeedsPeekAttrs extends NeedsBoardAttrs {
+	/**
+	 * Start unfolded. The writing surfaces pass true (explicit call,
+	 * 2026-08-10): while a student writes or improves their proposal the two
+	 * sides' needs are the raw material, so they stand open on the desk
+	 * instead of hiding behind the ghost toggle. Everywhere else (rating,
+	 * helping, positioning) the board stays a folded reminder.
+	 */
+	defaultOpen?: boolean;
+}
+
 /** Collapsible needs board for the deliberation screens */
-export function NeedsPeek(): m.Component<NeedsBoardAttrs> {
-	let open = false;
+export function NeedsPeek(initialVnode: m.Vnode<NeedsPeekAttrs>): m.Component<NeedsPeekAttrs> {
+	let open = initialVnode.attrs.defaultOpen ?? false;
 
 	return {
 		view(vnode) {
-			return m('.needs-peek', [
-				m(
-					'button.btn.btn--ghost.needs-peek__toggle',
-					{
-						onclick: () => {
-							open = !open;
-						},
-					},
-					open ? t('needs.hide_board') : t('needs.show_board'),
-				),
-				open ? m(Collapsible, m(NeedsBoard, { topic: vnode.attrs.topic })) : null,
+			const toggle = () => {
+				open = !open;
+			};
+
+			// Closed, the section IS its invitation — a ghost line offering the
+			// reminder. Open, that line would be a second heading stacked above
+			// the board's own, so the title moves up into a header row and the
+			// fold control shrinks to a chip beside it.
+			return m('.needs-peek', { class: open ? 'needs-peek--open' : undefined }, [
+				open
+					? m('.needs-peek__head', [
+							m('p.needs-peek__title', t('needs.board_title')),
+							m(
+								'button.needs-peek__fold',
+								{ onclick: toggle, 'aria-expanded': 'true' },
+								t('needs.hide_short'),
+							),
+						])
+					: m(
+							'button.btn.btn--ghost.needs-peek__toggle',
+							{ onclick: toggle, 'aria-expanded': 'false' },
+							t('needs.show_board'),
+						),
+				open ? m(Collapsible, m(NeedsBoard, { topic: vnode.attrs.topic, hideTitle: true })) : null,
 			]);
 		},
 	};

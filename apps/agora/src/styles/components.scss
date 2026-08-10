@@ -1350,6 +1350,107 @@
 	}
 }
 
+// --- The first-write desk (lap 1): the screen's ONE job is the proposal, so
+// mission brief, textarea and lantern CTA are bound into a single blue-framed
+// card — the workshop's "primary zone" grammar promoted to a whole surface.
+// The needs board stands open BELOW the card (see Deliberation.ts), so the
+// raw material is in view without pushing the pen or the button down. ---
+.write-desk {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	background: var(--bg-card-solid);
+	border-color: color-mix(in srgb, var(--mine) 40%, transparent);
+	border-inline-start: 4px solid var(--mine);
+	box-shadow:
+		inset 0 0 0 1px color-mix(in srgb, var(--mine) 10%, transparent),
+		var(--shadow-card);
+
+	// The challenge pinned to the desk as a mission note from the era —
+	// parchment, not another grey sentence floating between cards
+	&__mission {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		background: var(--parchment);
+		border: 1px solid var(--parchment-dim);
+		border-radius: var(--radius-md);
+	}
+
+	&__mission-icon {
+		font-size: 1.35rem;
+		line-height: 1.3;
+	}
+
+	&__mission-text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+
+		p {
+			color: var(--ink);
+			line-height: 1.5;
+		}
+	}
+
+	&__mission-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: var(--lantern-glow);
+		text-transform: uppercase; // no-op in Hebrew/Arabic, earns its keep in LTR
+	}
+
+	&__textarea {
+		margin-block-end: 0;
+		// Room for a real paragraph without pushing the CTA off a phone screen
+		min-block-size: 7.5rem;
+	}
+
+	// The CTA earns its light the moment there is something to light: a soft
+	// lantern halo plus one spring pop when the label flips to the lit action
+	&__cta--ready {
+		box-shadow:
+			0 1px 2px rgba(37, 51, 82, 0.06),
+			var(--glow-lantern);
+		animation: write-cta-ready var(--motion-base) var(--ease-spring);
+	}
+}
+
+// A proposal button with nothing to act on yet — an empty desk, or text
+// already saved. It becomes an OUTLINE waiting to be filled rather than a
+// filled pill at 45% opacity: the generic disabled wash was the complaint that
+// started this redesign, because a big pale button reads as broken, while a
+// dashed slot reads as "this is where it happens" and keeps its label at full
+// contrast. Both writing surfaces share it so the workshop speaks one language.
+//
+// Written out to four classes on purpose: the dock repaints primary buttons
+// from `.shell--mode-peer .proposal-dock .btn--primary`, and anything shorter
+// loses to it — the saved button comes back filled, with the waiting rule's
+// text colour on top of it.
+.btn.btn--primary.write-desk__cta:disabled,
+.btn.btn--primary.my-lantern__save:disabled {
+	opacity: 1;
+	background: transparent;
+	border: 2px dashed color-mix(in srgb, var(--mine) 45%, transparent);
+	color: var(--lantern-glow);
+}
+
+@keyframes write-cta-ready {
+	from {
+		transform: scale(0.96);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.write-desk__cta--ready {
+		animation: none;
+	}
+}
+
 // Closed, the section is just its handle — no gap under a hidden body
 .workbench__section--closed {
 	gap: 0;
@@ -4049,6 +4150,56 @@
 
 	&__toggle {
 		align-self: center;
+	}
+
+	// Unfolded, the reminder stops being a link and becomes a section of the
+	// page: a titled, framed block of reference material the writer works
+	// from. (The writing desk opens it by default — see NeedsBoard.ts.)
+	&--open {
+		padding: var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+
+		// Inside the workshop sheet the section IS already the frame — a second
+		// card in a card just draws two borders around the same content
+		.workbench__section & {
+			padding: 0;
+			background: transparent;
+			border: 0;
+			border-radius: 0;
+			box-shadow: none;
+		}
+	}
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+	}
+
+	// Subordinate on purpose: the material is the point, folding it away is
+	// the escape hatch
+	&__fold {
+		flex: 0 0 auto;
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		text-decoration: underline;
+		cursor: pointer;
+
+		&:hover {
+			color: var(--lantern-glow);
+		}
 	}
 }
 

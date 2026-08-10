@@ -958,7 +958,13 @@ export function Deliberation(
 					charactersOpen = !charactersOpen;
 				},
 			}),
-			m('.workbench__section.workbench__section--plain', m(NeedsPeek, { topic })),
+			// Open by default (explicit call, 2026-08-10): improving is writing
+			// too, and the two sides' needs are its raw material. It sits last
+			// in the sheet, so standing open costs the primary zone nothing.
+			m(
+				'.workbench__section.workbench__section--plain',
+				m(NeedsPeek, { topic, defaultOpen: true }),
+			),
 		]);
 	}
 
@@ -1976,57 +1982,79 @@ export function Deliberation(
 			if (cycle.step === 'mine') {
 				const writeMode = !myProposal;
 
-				// The edit panel: textarea + needs board + AI coach + actions
-				const editPanel = [
-					m('textarea.text-input.values__textarea', {
-						value: draft,
-						rows: 6,
-						maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
-						placeholder: t('delib.placeholder'),
-						oninput: (event: InputEvent) => {
-							draft = (event.target as HTMLTextAreaElement).value;
-						},
-					}),
-					m(NeedsPeek, { topic }),
-					m('.delib__actions', [
-						m(
-							'button.btn.btn--primary',
-							{
-								disabled: submitting || draft.trim().length < AGORA_LIMITS.MIN_PROPOSAL_LENGTH,
-								onclick: () => {
-									submitting = true;
-									const text = draft.trim();
-									submitProposal(live, anonName, text)
-										.then(() => {
-											// The first write moves the lap forward
-											setCycle({ step: 'rate', rated: 0 });
-											// ...and the notebook opens itself once on arrival, so
-											// the text visibly LANDS somewhere instead of just
-											// vanishing off the screen it was typed on
-											pendingDockIntro = true;
-										})
-										.catch((error: unknown) => {
-											console.error('[Delib] Submit proposal failed:', error);
-										})
-										.finally(() => {
-											submitting = false;
-											m.redraw();
-										});
-								},
-							},
-							t('delib.submit_proposal'),
-						),
-					]),
-				];
-
-				// Lap 1: nothing exists yet — plain write screen
+				// Lap 1: nothing exists yet. The screen's ONE job is the first
+				// write, so it is built as a single writing desk: mission brief,
+				// the live textarea and the lantern CTA bound in one blue-framed
+				// card — instead of a muted hint, a bare input and a button
+				// floating apart. The needs board stands OPEN underneath (explicit
+				// call, 2026-08-10): the raw material in view while writing, but
+				// below the CTA so it never pushes the pen or the button off a
+				// phone screen.
 				if (writeMode) {
+					const ready = draft.trim().length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+
 					return m('.shell.shell--mode-mine.shell--place-mine', [
 						m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 							header,
 							placeBanner('mine'),
-							m('p.home-explanation', t('delib.propose_hint')),
-							...editPanel,
+							m('.card.write-desk', [
+								// The challenge pinned to the desk as a mission brief,
+								// visually part of the writing surface it belongs to
+								m('.write-desk__mission', [
+									m('span.write-desk__mission-icon', { 'aria-hidden': 'true' }, '🎯'),
+									m('.write-desk__mission-text', [
+										m('span.write-desk__mission-label', t('delib.mission_label')),
+										m('p', t('delib.propose_hint')),
+									]),
+								]),
+								m('textarea.my-lantern__textarea.write-desk__textarea', {
+									value: draft,
+									rows: 4,
+									maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
+									placeholder: t('delib.placeholder'),
+									'aria-label': t('delib.my_proposal'),
+									oninput: (event: InputEvent) => {
+										draft = (event.target as HTMLTextAreaElement).value;
+									},
+								}),
+								m('.delib__actions', [
+									m(
+										'button.btn.btn--primary.btn--full.btn--lg.write-desk__cta',
+										{
+											class: ready ? 'write-desk__cta--ready' : undefined,
+											disabled: submitting || !ready,
+											onclick: () => {
+												submitting = true;
+												const text = draft.trim();
+												submitProposal(live, anonName, text)
+													.then(() => {
+														// The first write moves the lap forward
+														setCycle({ step: 'rate', rated: 0 });
+														// ...and the notebook opens itself once on arrival, so
+														// the text visibly LANDS somewhere instead of just
+														// vanishing off the screen it was typed on
+														pendingDockIntro = true;
+													})
+													.catch((error: unknown) => {
+														console.error('[Delib] Submit proposal failed:', error);
+													})
+													.finally(() => {
+														submitting = false;
+														m.redraw();
+													});
+											},
+										},
+										// The button states its own condition — the same rule the
+										// update button learned in playtests (a grey button with
+										// no reason reads as "broken"). Empty desk: it says what
+										// to do; first real sentence: it flips to the lit action
+										// with a lantern halo, teaching the rule at the exact
+										// moment it starts to matter.
+										ready ? `🏮 ${t('delib.submit_proposal')}` : `✍️ ${t('delib.write_first')}`,
+									),
+								]),
+							]),
+							m(NeedsPeek, { topic, defaultOpen: true }),
 						]),
 					]);
 				}
