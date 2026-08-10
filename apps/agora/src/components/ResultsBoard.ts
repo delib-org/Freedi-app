@@ -32,17 +32,28 @@ export interface ResultsBoardAttrs {
 	leadStatementId?: string;
 }
 
-/** One line of the ladder */
-interface BoardRow {
+/** One proposal as a point on the map */
+interface BoardPoint {
 	proposal: AgoraProposal;
 	/** Absent until the first rating creates the score doc */
 	score?: AgoraProposalScore;
-	/** Absent until a classmate rates it — an unrated proposal has no standing */
+	/** Absent until a classmate rates it — an unplaced proposal has no position */
 	consensus?: AgoraClassConsensus;
-	/** C_p as a signed percent on the -100…100 board axis */
+	/** C_p as a signed percent — the vertical axis */
 	percent: number;
+	/**
+	 * Which camp backs it more, -1 (only the left camp supports it) … +1 (only
+	 * the right camp does), 0 = both sides equally — the horizontal axis.
+	 */
+	lean: number;
+	/** Plot position in percent of the plot box, already de-overlapped */
+	x: number;
+	y: number;
+	/** Point diameter in px — how much of the class rated it */
+	size: number;
 	rank: number;
 	isMine: boolean;
+	isLead: boolean;
 }
 
 interface HelperRow {
@@ -58,6 +69,21 @@ const MEDALS = ['🥇', '🥈', '🥉'] as const;
 const PODIUM_SIZE = 3;
 const COUNT_MS = 40;
 
+/** Point geometry, in percent of the plot box unless named px */
+const POINT_MIN_PX = 26;
+const POINT_MAX_PX = 52;
+/** Below this centre distance two points read as one blob and get nudged apart */
+const MIN_GAP_X = 17;
+const MIN_GAP_Y = 12;
+const NUDGE_X = 7;
+const NUDGE_TRIES = 6;
+/** Keep whole points inside the plot box, whatever their value */
+const EDGE_PAD = 8;
+/** The callout must not hang off the plot */
+const CALLOUT_PAD = 26;
+/** A proposal is "backed by both sides" inside this band around centre */
+const BRIDGE_BAND = 0.28;
+
 function reducedMotion(): boolean {
 	return (
 		typeof window.matchMedia === 'function' &&
@@ -65,10 +91,14 @@ function reducedMotion(): boolean {
 	);
 }
 
+function clamp(value: number, low: number, high: number): number {
+	return Math.max(low, Math.min(high, value));
+}
+
 /**
- * The consensus a row should show. Prefers what the server wrote; falls back to
- * recomputing from the histogram with the same shared rule the trigger uses, so
- * a board opened before the trigger lands still reads the real number.
+ * The consensus a point should show. Prefers what the server wrote; falls back
+ * to recomputing from the histogram with the same shared rule the trigger uses,
+ * so a board opened before the trigger lands still reads the real number.
  */
 function readConsensus(
 	score: AgoraProposalScore,
@@ -89,9 +119,33 @@ function classDist(score: AgoraProposalScore): AgoraRatingDist {
 	);
 }
 
-/** Signed percent → position on the -100…100 track, where 0 sits at 50% */
-function trackPercent(percent: number): number {
-	return (Math.max(-100, Math.min(100, percent)) + 100) / 2;
+/** How much positive support one camp gave: half-marks count half */
+function backing(dist?: AgoraRatingDist): number {
+	if (!dist) return 0;
+
+	return 0.5 * Math.max(0, dist[3]) + Math.max(0, dist[4]);
+}
+
+/**
+ * The horizontal axis: who is behind this proposal.
+ *
+ * Deliberately built from POSITIVE support only, not from the two camp
+ * averages. "Who supports it more" is a question about backing, and a
+ * difference of averages answers a different one — a proposal both sides
+ * dislike equally would land dead centre, in the very spot reserved for the
+ * proposals both sides are behind. Only-left-backs-it → -1, only-right → +1,
+ * equally backed → 0, and nobody-backs-it → 0 with a score low enough on the
+ * vertical axis that the centre column cannot be mistaken for a bridge.
+ *
+ * The centre camp is left out on purpose: they are the middle by definition,
+ * so their backing says nothing about which side a proposal leans toward.
+ */
+function campLean(score: AgoraProposalScore): number {
+	const left = backing(score.perCamp.left.studentDist);
+	const right = backing(score.perCamp.right.studentDist);
+	if (left + right === 0) return 0;
+
+	return (right - left) / (right + left);
 }
 
 function rankBadge(rank: number): string {
@@ -113,19 +167,21 @@ function signed(percent: number): string {
  * middle of a Hebrew line otherwise comes out as "29%+".
  */
 function isolate(text: string): string {
-	return `\u2066${text}\u2069`;
+	return `⁦${text}⁩`;
 }
 
 /**
- * The end-of-game results board.
+ * The end-of-game results board — the class, mapped.
  *
- * One question, answered in one shape: how much did the class agree with each
- * proposal? Every proposal sits on the same -100%…+100% axis, ranked by the
- * class consensus C_p (which already accounts for class size and for the
- * classmates who never rated), the winner is crowned, your own proposal is
- * marked wherever it landed, and pressing any row opens the actual arithmetic
- * behind its score. The helpers podium sits alongside it, because the lesson
- * rewards making someone else's proposal better as much as writing your own.
+ * Every rated proposal is a point on one field. Up the side: how much the class
+ * agrees with it, +100% (everyone for) down to -100% (everyone against). Across
+ * the bottom: which camp is actually behind it, one side to the other, with the
+ * middle column meaning both. That geometry makes the game's goal a PLACE — top
+ * centre, where a proposal has the whole class behind it — instead of a number
+ * students have to be told to care about. Your own point is lit up wherever it
+ * landed, and pressing any point reads out the proposal and the arithmetic
+ * behind its score. The helpers podium sits below, because the lesson pays for
+ * making someone else's proposal better as much as for writing your own.
  */
 export function ResultsBoard(
 	initialVnode: m.Vnode<ResultsBoardAttrs>,
@@ -165,9 +221,9 @@ export function ResultsBoard(
 	 * podium. Seeded from sessionStorage so a refresh stays quiet — a
 	 * celebration that repeats on every reload stops meaning anything.
 	 */
-	function cheerOnce(rows: BoardRow[]): void {
+	function cheerOnce(points: BoardPoint[]): void {
 		if (sessionStorage.getItem(cheerKey)) return;
-		const mine = rows.find((row) => row.isMine);
+		const mine = points.find((point) => point.isMine);
 		if (!mine || mine.rank > PODIUM_SIZE || mine.consensus === undefined) return;
 		sessionStorage.setItem(cheerKey, '1');
 		celebrate({
@@ -176,39 +232,78 @@ export function ResultsBoard(
 		});
 	}
 
-	function buildRows(attrs: ResultsBoardAttrs): BoardRow[] {
+	/**
+	 * Two proposals with near-identical numbers land on the same spot and read
+	 * as one point. Nudge them sideways in a fixed alternating pattern —
+	 * deterministic, so the map does not reshuffle itself on every redraw.
+	 */
+	function spread(points: BoardPoint[]): void {
+		const placed: BoardPoint[] = [];
+		for (const point of points) {
+			for (let attempt = 0; attempt < NUDGE_TRIES; attempt++) {
+				const clash = placed.some(
+					(other) =>
+						Math.abs(other.x - point.x) < MIN_GAP_X && Math.abs(other.y - point.y) < MIN_GAP_Y,
+				);
+				if (!clash) break;
+				const offset = NUDGE_X * (attempt + 1) * (attempt % 2 === 0 ? 1 : -1);
+				point.x = clamp(point.x + offset, EDGE_PAD, 100 - EDGE_PAD);
+			}
+			placed.push(point);
+		}
+	}
+
+	function buildPoints(attrs: ResultsBoardAttrs): BoardPoint[] {
 		const { proposals, scores, census, userId } = attrs;
 
-		const rows: BoardRow[] = [];
+		const points: BoardPoint[] = [];
 		for (const proposal of proposals) {
 			// A proposal nobody rated has no score doc at all, and it still belongs
-			// on the board — "every proposal" has to mean every proposal
+			// on the board — it just cannot be placed on the field yet
 			const score = scores[proposal.statementId];
 			const consensus = score ? readConsensus(score, census) : undefined;
-			rows.push({
+			const percent = consensus ? Math.round(consensus.consensus * 100) : 0;
+			const lean = score ? campLean(score) : 0;
+			const raters = consensus?.n ?? 0;
+
+			points.push({
 				proposal,
 				score,
 				consensus,
-				percent: consensus ? Math.round(consensus.consensus * 100) : 0,
+				percent,
+				lean,
+				x: clamp(((lean + 1) / 2) * 100, EDGE_PAD, 100 - EDGE_PAD),
+				y: clamp(((percent + 100) / 200) * 100, EDGE_PAD, 100 - EDGE_PAD),
+				size: clamp(POINT_MIN_PX + raters * 2.5, POINT_MIN_PX, POINT_MAX_PX),
 				rank: 0,
 				isMine: proposal.creatorId === userId,
+				isLead: false,
 			});
 		}
 
-		// Unrated proposals have no standing on the board — they queue at the
-		// bottom rather than pretending to a score of zero
-		rows.sort((a, b) => {
+		// Unrated proposals have no standing on the board — they queue at the end
+		// rather than pretending to a score of zero
+		points.sort((a, b) => {
 			if (a.consensus === undefined || b.consensus === undefined) {
 				return Number(a.consensus === undefined) - Number(b.consensus === undefined);
 			}
 
 			return b.consensus.consensus - a.consensus.consensus;
 		});
-		rows.forEach((row, index) => {
-			row.rank = index + 1;
+		points.forEach((point, index) => {
+			point.rank = index + 1;
 		});
 
-		return rows;
+		// The server names the winner once the lesson ends (by the same class
+		// consensus this map ranks on); until then it is simply whoever is on top
+		const lead =
+			points.find((point) => point.proposal.statementId === attrs.leadStatementId) ??
+			points.find((point) => point.consensus !== undefined);
+		if (lead) lead.isLead = true;
+
+		spread(points.filter((point) => point.consensus !== undefined));
+
+		return points;
 	}
 
 	function buildHelpers(attrs: ResultsBoardAttrs): HelperRow[] {
@@ -224,64 +319,145 @@ export function ResultsBoard(
 			.map((row, index) => ({ ...row, rank: index + 1 }));
 	}
 
-	// ---------- the shared -100…100 track ----------
+	// ---------- the map ----------
 
-	/** The diverging bar every row and the champion share, so lengths compare */
-	function meter(percent: number, hasScore: boolean): m.Children {
-		const zero = 50;
-		const point = trackPercent(percent);
+	function sideLabel(point: BoardPoint, topic: AgoraTopicPackage): string {
+		if (Math.abs(point.lean) <= BRIDGE_BAND) return t('board.side_both');
 
-		return m('.board__meter', [
-			m('.board__meter-zero'),
-			hasScore
-				? m('.board__meter-fill', {
-						class: percent < 0 ? 'board__meter-fill--against' : 'board__meter-fill--for',
-						style: {
-							insetInlineStart: `${Math.min(zero, point)}%`,
-							width: `${Math.abs(point - zero)}%`,
-						},
-					})
-				: null,
-		]);
+		return point.lean < 0 ? topic.positioningScale.leftLabel : topic.positioningScale.rightLabel;
 	}
 
-	function scaleLegend(): m.Children {
-		return m('.board__scale', [
-			m('span', [m('span.board__num', '-100%'), ` · ${t('board.scale_against')}`]),
-			m('span.board__scale-mid', '0'),
-			m('span', [m('span.board__num', '+100%'), ` · ${t('board.scale_for')}`]),
-		]);
+	function pointAria(point: BoardPoint, topic: AgoraTopicPackage): string {
+		return t('board.point_aria', {
+			rank: point.rank,
+			author: point.isMine ? t('board.you') : point.proposal.anonName,
+			n: point.percent,
+			side: sideLabel(point, topic),
+		});
 	}
 
-	function valueChip(row: BoardRow): m.Children {
-		if (row.consensus === undefined) {
-			return m('span.board__value.board__value--none', t('board.unrated'));
-		}
+	/**
+	 * The callout the sketch asks for: the statement, and its score, on the spot.
+	 * It parks at whichever end of the field the point is NOT at, so opening a
+	 * proposal never hides the part of the map it is being compared against.
+	 */
+	function callout(point: BoardPoint): m.Children {
+		const below = point.y >= 50;
 
-		// The isolate lives on an inner span: an element whose own direction is
-		// ltr resolves its margin-inline-start against ITSELF, which would break
-		// the "push the score to the far edge" layout on an RTL page.
 		return m(
-			'span.board__value',
-			{ class: row.percent < 0 ? 'board__value--against' : 'board__value--for' },
-			m('span.board__num', signed(row.percent)),
+			'.board__callout',
+			{
+				class: below ? 'board__callout--below' : undefined,
+				style: { insetInlineStart: `${clamp(point.x, CALLOUT_PAD, 100 - CALLOUT_PAD)}%` },
+				'aria-live': 'polite',
+			},
+			[
+				m('p.board__callout-text', point.proposal.statement),
+				m('.board__callout-foot', [
+					m(
+						'span.board__callout-score.board__num',
+						{ class: point.percent < 0 ? 'board__callout-score--against' : undefined },
+						signed(point.percent),
+					),
+					m('span.board__callout-by', point.isMine ? t('board.you') : point.proposal.anonName),
+				]),
+			],
 		);
 	}
 
-	function authorChip(row: BoardRow): m.Children {
-		return row.isMine
-			? m('span.board__you', t('board.you'))
-			: m('span.board__author', row.proposal.anonName);
+	function mapPoint(point: BoardPoint, topic: AgoraTopicPackage): m.Children {
+		const selected = openId === point.proposal.statementId;
+
+		return m(
+			'button.board__point',
+			{
+				key: point.proposal.statementId,
+				type: 'button',
+				class: [
+					point.isMine ? 'board__point--mine' : undefined,
+					point.isLead ? 'board__point--lead' : undefined,
+					selected ? 'board__point--selected' : undefined,
+					openId && !selected ? 'board__point--dimmed' : undefined,
+				]
+					.filter(Boolean)
+					.join(' '),
+				style: {
+					insetInlineStart: `${point.x}%`,
+					insetBlockEnd: `${point.y}%`,
+					width: `${point.size}px`,
+					height: `${point.size}px`,
+				},
+				'aria-label': pointAria(point, topic),
+				'aria-pressed': String(selected),
+				onclick: () => {
+					openId = selected ? '' : point.proposal.statementId;
+				},
+			},
+			[
+				point.isLead ? m('span.board__point-crown', { 'aria-hidden': 'true' }, '👑') : null,
+				m('span.board__point-rank', { 'aria-hidden': 'true' }, String(point.rank)),
+			],
+		);
+	}
+
+	function plot(points: BoardPoint[], topic: AgoraTopicPackage): m.Children {
+		const placed = points.filter((point) => point.consensus !== undefined);
+		const selected = placed.find((point) => point.proposal.statementId === openId);
+
+		return m('.board__map', [
+			m('p.board__eyebrow', t('board.map_title')),
+			m('p.board__tap-hint', t('board.map_hint')),
+
+			m('.board__plot-frame', [
+				// The vertical axis reads bottom-up: the class's agreement. The
+				// marks are pinned to the values they name — a rail that merely
+				// spaces them evenly puts 0% somewhere it never sits.
+				m('.board__axis-y', [
+					m('span.board__axis-y-title', t('board.agreement_label')),
+					m('.board__axis-y-marks', [
+						m('span.board__axis-y-mark.board__axis-y-mark--top.board__num', signed(100)),
+						m('span.board__axis-y-mark.board__axis-y-mark--zero.board__num', '0%'),
+						m('span.board__axis-y-mark.board__axis-y-mark--bottom.board__num', signed(-100)),
+					]),
+				]),
+
+				m('.board__plot', { role: 'group', 'aria-label': t('board.map_title') }, [
+					// The goal made into a place: whole-class backing, high agreement
+					m('.board__bridge-zone', [m('span.board__bridge-label', t('board.zone_bridge'))]),
+					m('.board__grid-zero'),
+					m('.board__grid-centre'),
+					placed.length === 0
+						? m('p.board__plot-empty', t('picture.empty'))
+						: placed.map((point) => mapPoint(point, topic)),
+					selected ? callout(selected) : null,
+				]),
+			]),
+
+			// The horizontal axis: who is actually behind it
+			m('.board__axis-x', [
+				m('span.board__axis-x-end', topic.positioningScale.leftLabel),
+				m('span.board__axis-x-title', t('board.axis_x_title')),
+				m('span.board__axis-x-end', topic.positioningScale.rightLabel),
+			]),
+
+			m('.board__legend', [
+				m('span.board__legend-item', [
+					m('span.board__legend-dot.board__legend-dot--mine'),
+					t('board.legend_mine'),
+				]),
+				m('span.board__legend-item', [
+					m('span.board__legend-dot.board__legend-dot--lead'),
+					t('board.legend_lead'),
+				]),
+				m('span.board__legend-item', t('board.legend_size')),
+			]),
+		]);
 	}
 
 	// ---------- the crown ----------
 
-	function champion(rows: BoardRow[], attrs: ResultsBoardAttrs): m.Children {
-		const { leadStatementId } = attrs;
-		const lead =
-			(leadStatementId
-				? rows.find((row) => row.proposal.statementId === leadStatementId)
-				: undefined) ?? rows[0];
+	function champion(points: BoardPoint[]): m.Children {
+		const lead = points.find((point) => point.isLead);
 		if (!lead || lead.consensus === undefined) return null;
 
 		countTo(lead.percent);
@@ -298,11 +474,11 @@ export function ResultsBoard(
 				signed(display),
 			),
 			m('p.board__champion-label', t('board.agreement_label')),
-			meter(display, true),
-			scaleLegend(),
 			m('p.board__champion-text', lead.proposal.statement),
 			m('.board__champion-by', [
-				authorChip(lead),
+				lead.isMine
+					? m('span.board__you', t('board.you'))
+					: m('span.board__author', lead.proposal.anonName),
 				m(
 					'span.board__coverage',
 					t('picture.coverage', {
@@ -315,12 +491,12 @@ export function ResultsBoard(
 		]);
 	}
 
-	// ---------- pressing a row: the actual score ----------
+	// ---------- pressing a point: the actual score ----------
 
 	/**
 	 * One line of the arithmetic. `numeric` lines are bidi-isolated so a signed
-	 * percent keeps its sign on the left in Hebrew and Arabic; the rank line is
-	 * a sentence and must stay in the page's own direction.
+	 * percent keeps its sign on the left in Hebrew and Arabic; sentence lines
+	 * must stay in the page's own direction.
 	 */
 	function statLine(
 		label: string,
@@ -376,7 +552,11 @@ export function ResultsBoard(
 				label: topic.positioningScale.leftLabel,
 				color: '--camp-left-glow',
 			},
-			{ key: 'center' as AgoraCamp, label: t('picture.camp_center'), color: '--camp-center-glow' },
+			{
+				key: 'center' as AgoraCamp,
+				label: t('picture.camp_center'),
+				color: '--camp-center-glow',
+			},
 			{
 				key: 'right' as AgoraCamp,
 				label: topic.positioningScale.rightLabel,
@@ -389,7 +569,7 @@ export function ResultsBoard(
 			camps.map(({ key, label, color }) => {
 				const moments = distMoments(score.perCamp[key].studentDist);
 				const mean = moments.n > 0 ? moments.sum / moments.n : 0;
-				const point = trackPercent(mean * 100);
+				const point = ((clamp(mean, -1, 1) + 1) / 2) * 100;
 
 				return m('.board__camp', { key }, [
 					m('span.board__camp-label', { style: { color: `var(${color})` } }, label),
@@ -420,28 +600,45 @@ export function ResultsBoard(
 	 * actually gave, what was held back for the classmates who never rated, and
 	 * how high this proposal could still have gone at this coverage.
 	 */
-	function detail(row: BoardRow, rows: BoardRow[], topic: AgoraTopicPackage): m.Children {
-		const consensus = row.consensus;
-		const score = row.score;
+	function detail(points: BoardPoint[], topic: AgoraTopicPackage): m.Children {
+		const point = points.find((candidate) => candidate.proposal.statementId === openId);
+		if (!point) return null;
+
+		const consensus = point.consensus;
+		const score = point.score;
 		if (!consensus || !score) {
-			return m('.board__detail', { 'aria-live': 'polite' }, [
-				m('p.board__detail-empty', t('board.unrated_detail')),
-			]);
+			return m('.board__detail', [m('p.board__detail-empty', t('board.unrated_detail'))]);
 		}
 
 		const meanPercent = Math.round(consensus.mean * 100);
-		const caution = Math.max(0, meanPercent - row.percent);
+		const caution = Math.max(0, meanPercent - point.percent);
 		const ceiling = Math.round(consensusCeiling(consensus.n, consensus.eligible) * 100);
-		const leader = rows[0];
-		const behind =
-			leader && leader.consensus ? Math.round(leader.consensus.consensus * 100) - row.percent : 0;
+		const leader = points.find((candidate) => candidate.isLead);
+		const behind = leader ? leader.percent - point.percent : 0;
 
-		return m('.board__detail', { 'aria-live': 'polite' }, [
+		return m('.board__detail', [
+			m('.board__detail-head', [
+				m('span.board__rank', rankBadge(point.rank)),
+				point.isMine
+					? m('span.board__you', t('board.you'))
+					: m('span.board__author', point.proposal.anonName),
+				m(
+					'button.board__detail-close',
+					{
+						type: 'button',
+						onclick: () => {
+							openId = '';
+						},
+					},
+					t('chart.detail_close'),
+				),
+			]),
+			m('p.board__detail-statement', point.proposal.statement),
 			m('p.board__detail-title', t('board.detail_title')),
 			m('.board__stats', [
 				statLine(t('board.detail_mean'), signed(meanPercent)),
 				statLine(t('board.detail_caution'), `−${caution}%`),
-				statLine(t('board.detail_cp'), signed(row.percent), { strong: true }),
+				statLine(t('board.detail_cp'), signed(point.percent), { strong: true }),
 				statLine(
 					t('board.detail_coverage'),
 					t('board.detail_coverage_value', {
@@ -455,10 +652,11 @@ export function ResultsBoard(
 				),
 				statLine(t('board.detail_ceiling'), `${ceiling}%`),
 				statLine(t('board.detail_split'), `${Math.round(consensus.polarization * 100)}%`),
+				statLine(t('board.detail_backing'), sideLabel(point, topic), { numeric: false }),
 				statLine(
 					t('board.detail_rank'),
 					behind > 0
-						? t('board.detail_behind', { n: behind, rank: row.rank })
+						? t('board.detail_behind', { n: behind, rank: point.rank })
 						: t('board.detail_leader'),
 					{ numeric: false },
 				),
@@ -471,58 +669,24 @@ export function ResultsBoard(
 		]);
 	}
 
-	// ---------- the ladder ----------
+	/** Proposals with no rating at all: named, so nobody's text silently vanishes */
+	function unplaced(points: BoardPoint[]): m.Children {
+		const waiting = points.filter((point) => point.consensus === undefined);
+		if (waiting.length === 0) return null;
 
-	function ladderRow(row: BoardRow, rows: BoardRow[], topic: AgoraTopicPackage): m.Children {
-		const open = openId === row.proposal.statementId;
-
-		return m('.board__entry', { key: row.proposal.statementId }, [
+		return m('.board__waiting', [
+			m('p.board__waiting-title', t('board.unrated')),
 			m(
-				'button.board__row',
-				{
-					type: 'button',
-					class: [
-						row.isMine ? 'board__row--mine' : undefined,
-						row.rank <= MEDALS.length && row.consensus ? 'board__row--medal' : undefined,
-						open ? 'board__row--open' : undefined,
-					]
-						.filter(Boolean)
-						.join(' '),
-					'aria-expanded': String(open),
-					'aria-label': t('board.row_aria', {
-						rank: row.rank,
-						n: row.percent,
-						author: row.isMine ? t('board.you') : row.proposal.anonName,
-					}),
-					onclick: () => {
-						openId = open ? '' : row.proposal.statementId;
-					},
-				},
-				[
-					m('.board__row-head', [
-						m('span.board__rank', rankBadge(row.rank)),
-						authorChip(row),
-						valueChip(row),
+				'.board__waiting-list',
+				waiting.map((point) =>
+					m('span.board__waiting-chip', { key: point.proposal.statementId }, [
+						point.isMine
+							? m('span.board__you', t('board.you'))
+							: m('span.board__author', point.proposal.anonName),
+						m('span.board__waiting-text', point.proposal.statement),
 					]),
-					m('p.board__row-text', row.proposal.statement),
-					meter(row.percent, row.consensus !== undefined),
-					m('.board__row-foot', [
-						// The value chip already says "not rated yet" — saying it twice
-						// on one row reads as two different facts
-						row.consensus
-							? m(
-									'span.board__coverage',
-									t('picture.coverage', {
-										n: String(row.consensus.n),
-										total: String(row.consensus.eligible),
-									}),
-								)
-							: m('span'),
-						m('span.board__row-cue', open ? t('board.hide_score') : t('board.show_score')),
-					]),
-				],
+				),
 			),
-			open ? detail(row, rows, topic) : null,
 		]);
 	}
 
@@ -585,20 +749,20 @@ export function ResultsBoard(
 
 		view(vnode) {
 			const attrs = vnode.attrs;
-			const rows = buildRows(attrs);
+			const points = buildPoints(attrs);
 
-			if (rows.length === 0) {
+			if (points.length === 0) {
 				return m('.board.board--empty', [
 					m('span.board__empty-icon', { 'aria-hidden': 'true' }, '📊'),
 					m('p.board__empty', t('picture.empty')),
 				]);
 			}
 
-			cheerOnce(rows);
-			const mine = rows.find((row) => row.isMine);
+			cheerOnce(points);
+			const mine = points.find((point) => point.isMine);
 
 			return m('.board', [
-				champion(rows, attrs),
+				champion(points),
 
 				mine
 					? m(
@@ -608,23 +772,15 @@ export function ResultsBoard(
 								? t('board.my_standing_unrated')
 								: t('board.my_standing', {
 										rank: mine.rank,
-										total: rows.length,
+										total: points.length,
 										n: isolate(signed(mine.percent)),
 									}),
 						)
 					: null,
 
-				m('.board__ladder', [
-					m('p.board__eyebrow', t('board.all_title')),
-					m('p.board__tap-hint', t('board.tap_hint')),
-					// The keyed rows live in their own fragment: mithril refuses a
-					// fragment where only some children carry keys
-					m(
-						'.board__ladder-list',
-						rows.map((row) => ladderRow(row, rows, attrs.topic)),
-					),
-				]),
-
+				plot(points, attrs.topic),
+				detail(points, attrs.topic),
+				unplaced(points),
 				helpersPodium(buildHelpers(attrs)),
 			]);
 		},

@@ -6037,13 +6037,15 @@
 }
 
 // ============================================================================
-// The results board — the scoreboard the whole lesson plays toward
+// The results board — the class, mapped
 // ============================================================================
-// One axis for every proposal: -100% (the whole class against) to +100% (the
-// whole class for), ranked by the class consensus. The winner is crowned, your
-// own proposal is marked wherever it landed, any row opens its own arithmetic,
-// and the classmates who spent the lesson improving OTHER people's proposals
-// get a podium of their own — the board rewards both halves of the game.
+// Two axes and a field of points. Up the side: how much the class agrees with a
+// proposal, +100% (everyone for) down to -100% (everyone against). Across the
+// bottom: which camp is actually behind it, one side to the other, with the
+// middle column meaning both. The goal of the whole game therefore becomes a
+// PLACE — top centre — rather than a number a student has to be told to care
+// about. Your own point is lit; pressing any point reads out the proposal and
+// the arithmetic behind its score.
 
 .board {
 	display: flex;
@@ -6076,65 +6078,41 @@
 		letter-spacing: 0.08em;
 	}
 
-	// --- the shared -100…100 track -------------------------------------------
-	// Every meter on this board is the same width and the same scale, so bar
-	// lengths can be compared by eye without reading a single number.
-	&__meter {
-		position: relative;
-		height: 12px;
-		border-radius: var(--radius-full);
-		background: var(--bg-inset);
-		overflow: hidden;
-
-		&--camp {
-			height: 8px;
-		}
-	}
-
-	&__meter-zero {
-		position: absolute;
-		inset-block: 0;
-		inset-inline-start: 50%;
-		width: 2px;
-		background: var(--border-strong);
-	}
-
-	&__meter-fill {
-		position: absolute;
-		inset-block: 1px;
-		border-radius: var(--radius-full);
-		transition: width var(--motion-slow) var(--ease-camera),
-			inset-inline-start var(--motion-slow) var(--ease-camera);
-
-		&--for {
-			background: linear-gradient(90deg, var(--success), #35b877);
-		}
-
-		&--against {
-			background: linear-gradient(90deg, var(--danger), #e8697a);
-		}
-	}
-
-	&__scale {
-		display: flex;
-		justify-content: space-between;
-		font-size: var(--font-size-xs);
-		color: var(--text-muted);
-	}
-
 	// Signed percents are Latin whatever the UI language is: without the
-	// isolate, "+52%" comes out as "52%+" in Hebrew and Arabic, which reads
-	// as a different number.
+	// isolate, "+52%" comes out as "52%+" in Hebrew and Arabic, which reads as
+	// a different number.
 	&__num {
 		direction: ltr;
 		unicode-bidi: isolate;
 	}
 
-	&__scale-mid {
-		opacity: 0.7;
+	&__author {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
 	}
 
-	// --- the crown ------------------------------------------------------------
+	&__you {
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--lantern);
+		color: var(--text-on-lantern);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+	}
+
+	&__coverage {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__rank {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--text-secondary);
+	}
+
+	// --- the crown -------------------------------------------------------------
 	&__champion {
 		display: flex;
 		flex-direction: column;
@@ -6193,46 +6171,6 @@
 		font-weight: 600;
 	}
 
-	// --- shared row furniture --------------------------------------------------
-	&__author {
-		font-size: var(--font-size-sm);
-		color: var(--text-muted);
-	}
-
-	&__you {
-		padding: 2px var(--space-sm);
-		border-radius: var(--radius-full);
-		background: var(--lantern);
-		color: var(--text-on-lantern);
-		font-size: var(--font-size-xs);
-		font-weight: 700;
-		letter-spacing: 0.06em;
-	}
-
-	&__coverage {
-		font-size: var(--font-size-xs);
-		color: var(--text-muted);
-	}
-
-	&__value {
-		font-family: var(--font-display);
-		font-size: var(--font-size-lg);
-		font-variant-numeric: tabular-nums;
-
-		&--for {
-			color: var(--success);
-		}
-
-		&--against {
-			color: var(--danger);
-		}
-
-		&--none {
-			font-size: var(--font-size-xs);
-			color: var(--text-muted);
-		}
-	}
-
 	// --- my standing, said in one sentence -------------------------------------
 	&__my-standing {
 		margin: 0;
@@ -6250,11 +6188,11 @@
 		}
 	}
 
-	// --- the ladder -------------------------------------------------------------
-	&__ladder {
+	// --- the map ----------------------------------------------------------------
+	&__map {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		gap: var(--space-xs);
 	}
 
 	&__tap-hint {
@@ -6262,92 +6200,307 @@
 		color: var(--text-muted);
 	}
 
-	&__ladder-list {
+	// The frame holds the y-axis rail beside the plot so the labels never
+	// overlap the field itself
+	&__plot-frame {
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-	}
-
-	&__entry {
-		display: flex;
-		flex-direction: column;
-	}
-
-	&__row {
-		display: flex;
-		flex-direction: column;
+		align-items: stretch;
 		gap: var(--space-xs);
-		width: 100%;
-		padding: var(--space-sm) var(--space-md);
-		text-align: start;
-		font: inherit;
-		color: inherit;
-		background: var(--bg-card-solid);
-		border: 1px solid var(--border-subtle);
+		margin-block-start: var(--space-xs);
+	}
+
+	// The rail: a centred vertical title, then a column whose marks are pinned
+	// to the values they name. The title is laid out as a flex item rather than
+	// positioned — its own vertical writing-mode would otherwise turn every
+	// logical inset sideways with it.
+	&__axis-y {
+		display: flex;
+		flex: 0 0 auto;
+		align-items: center;
+		gap: 2px;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__axis-y-marks {
+		position: relative;
+		flex: 0 0 auto;
+		align-self: stretch;
+		width: 3.4rem;
+	}
+
+	&__axis-y-mark {
+		position: absolute;
+		inset-inline-end: 0;
+
+		&--top {
+			inset-block-start: 0;
+		}
+
+		&--zero {
+			inset-block-start: 50%;
+			transform: translateY(-50%);
+		}
+
+		&--bottom {
+			inset-block-end: 0;
+		}
+	}
+
+	&__axis-y-title {
+		flex: 0 0 auto;
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--text-secondary);
+		white-space: nowrap;
+		max-height: 100%;
+		overflow: hidden;
+	}
+
+	&__plot {
+		position: relative;
+		flex: 1;
+		// Portrait, like the sketch: the agreement axis is the one that matters,
+		// so it gets the long side of the box
+		aspect-ratio: 4 / 5;
+		min-height: 340px;
+		max-height: 68vh;
+		background:
+			linear-gradient(180deg, rgba(23, 128, 77, 0.07), transparent 45%),
+			linear-gradient(0deg, rgba(209, 61, 78, 0.07), transparent 45%),
+			var(--bg-card-solid);
+		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	&__plot-empty {
+		position: absolute;
+		inset-inline: var(--space-md);
+		inset-block-start: 45%;
+		text-align: center;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	// The 0% line: above it the class is for, below it against
+	&__grid-zero {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 50%;
+		height: 0;
+		border-block-start: 1px dashed var(--border-strong);
+	}
+
+	// The centre column: proposals here are backed by both sides equally
+	&__grid-centre {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		width: 0;
+		border-inline-start: 1px dashed var(--border-subtle);
+	}
+
+	// The win condition drawn as a place on the field
+	&__bridge-zone {
+		position: absolute;
+		inset-inline-start: 28%;
+		width: 44%;
+		inset-block-end: 62%;
+		inset-block-start: 0;
+		background: rgba(255, 214, 122, 0.22);
+		border: 1px dashed var(--warning);
+		border-radius: var(--radius-md);
+		pointer-events: none;
+	}
+
+	&__bridge-label {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: var(--space-xs);
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		color: var(--peer-glow);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	// --- a proposal ----------------------------------------------------------------
+	&__point {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		transform: translate(-50%, 50%);
+		border-radius: 50%;
+		background: var(--bg-card-solid);
+		border: 2px solid var(--border-strong);
+		color: var(--text-secondary);
+		font: inherit;
 		cursor: pointer;
-		transition: transform var(--motion-fast) var(--ease-spring),
-			box-shadow var(--motion-fast) var(--ease-camera);
+		transition:
+			transform var(--motion-base) var(--ease-spring),
+			box-shadow var(--motion-fast) var(--ease-camera),
+			opacity var(--motion-fast) var(--ease-camera);
 
 		&:hover,
 		&:focus-visible {
-			transform: translateY(-2px);
+			transform: translate(-50%, 50%) scale(1.12);
 			box-shadow: var(--shadow-card);
 		}
 
-		// The top three carry a warm rim; the keel marks mine wherever it landed
-		&--medal {
-			border-color: var(--warning);
-		}
-
+		// Mine is the one point a student looks for first
 		&--mine {
-			border-inline-start: 4px solid var(--lantern);
-			background: var(--wash-mine-low);
+			background: var(--lantern);
+			border-color: var(--lantern-deep);
+			color: var(--text-on-lantern);
+			box-shadow: var(--glow-marker);
 		}
 
-		&--open {
-			border-end-start-radius: 0;
-			border-end-end-radius: 0;
+		&--lead {
+			border-color: var(--warning);
+			border-width: 3px;
+		}
+
+		&--selected {
+			transform: translate(-50%, 50%) scale(1.2);
+			box-shadow: var(--glow-lantern);
+			z-index: 3;
+		}
+
+		&--dimmed {
+			opacity: 0.45;
 		}
 	}
 
-	&__row-head {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	&__rank {
+	&__point-rank {
 		font-family: var(--font-display);
-		font-size: var(--font-size-lg);
-		min-width: 2.2em;
-		color: var(--text-secondary);
-	}
-
-	&__row-head &__value {
-		margin-inline-start: auto;
-	}
-
-	&__row-text {
 		font-size: var(--font-size-sm);
-		line-height: 1.45;
+		line-height: 1;
+	}
+
+	&__point-crown {
+		position: absolute;
+		inset-block-end: 100%;
+		font-size: var(--font-size-base);
+		line-height: 1;
+	}
+
+	// --- the callout the sketch asks for ----------------------------------------------
+	&__callout {
+		position: absolute;
+		inset-block-start: var(--space-sm);
+
+		// A point high on the field gets its callout at the bottom, and the
+		// other way round — the card must never sit on top of its own point
+		&--below {
+			inset-block-start: auto;
+			inset-block-end: var(--space-sm);
+		}
+		transform: translateX(-50%);
+		z-index: 4;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		width: min(80%, 22rem);
+		padding: var(--space-sm);
+		background: var(--parchment);
+		border: 2px solid var(--ink);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-card);
+		animation: board-callout-in var(--motion-base) var(--ease-spring) both;
+	}
+
+	&__callout-text {
+		font-size: var(--font-size-sm);
+		line-height: 1.4;
 		color: var(--text-primary);
 	}
 
-	&__row-foot {
+	&__callout-foot {
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		justify-content: space-between;
 		gap: var(--space-sm);
 	}
 
-	&__row-cue {
+	&__callout-score {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--success);
+		font-variant-numeric: tabular-nums;
+
+		&--against {
+			color: var(--danger);
+		}
+	}
+
+	&__callout-by {
 		font-size: var(--font-size-xs);
-		color: var(--lantern-glow);
+		color: var(--text-muted);
+	}
+
+	// --- the horizontal axis --------------------------------------------------------
+	&__axis-x {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		margin-block-start: var(--space-xs);
+		font-size: var(--font-size-xs);
+	}
+
+	&__axis-x-end {
+		flex: 0 1 auto;
+		color: var(--text-secondary);
 		font-weight: 600;
 	}
 
-	// --- the actual score, opened up ---------------------------------------------
+	&__axis-x-title {
+		flex: 0 1 auto;
+		color: var(--text-muted);
+		text-align: center;
+	}
+
+	&__legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm) var(--space-md);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__legend-dot {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		border: 2px solid var(--border-strong);
+
+		&--mine {
+			background: var(--lantern);
+			border-color: var(--lantern-deep);
+		}
+
+		&--lead {
+			border-color: var(--warning);
+			background: var(--bg-card-solid);
+		}
+	}
+
+	// --- the actual score, opened up ---------------------------------------------------
 	&__detail {
 		display: flex;
 		flex-direction: column;
@@ -6355,10 +6508,32 @@
 		padding: var(--space-md);
 		background: var(--parchment);
 		border: 1px solid var(--border-strong);
-		border-block-start: none;
-		border-end-start-radius: var(--radius-md);
-		border-end-end-radius: var(--radius-md);
-		animation: board-detail-in var(--motion-base) var(--ease-camera) both;
+		border-radius: var(--radius-md);
+		animation: board-callout-in var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__detail-head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__detail-close {
+		margin-inline-start: auto;
+		padding: 2px var(--space-sm);
+		background: transparent;
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-full);
+		color: var(--text-secondary);
+		font: inherit;
+		font-size: var(--font-size-xs);
+		cursor: pointer;
+	}
+
+	&__detail-statement {
+		font-size: var(--font-size-base);
+		line-height: 1.5;
+		color: var(--text-primary);
 	}
 
 	&__detail-title {
@@ -6485,19 +6660,72 @@
 		min-width: 7ch;
 	}
 
-	&__camp .board__meter {
-		flex: 1;
-	}
-
 	&__camp-n {
 		flex: 0 0 auto;
 		color: var(--text-muted);
 		font-size: var(--font-size-xs);
 	}
 
+	&__meter {
+		position: relative;
+		flex: 1;
+		height: 8px;
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		overflow: hidden;
+	}
+
+	&__meter-zero {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		width: 2px;
+		background: var(--border-strong);
+	}
+
+	&__meter-fill {
+		position: absolute;
+		inset-block: 1px;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-base) var(--ease-camera);
+	}
+
+	// --- proposals nobody rated -------------------------------------------------------
+	&__waiting {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__waiting-title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__waiting-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__waiting-chip {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
+		padding: var(--space-xs) var(--space-sm);
+		background: var(--bg-inset);
+		border-radius: var(--radius-md);
+		font-size: var(--font-size-sm);
+	}
+
+	&__waiting-text {
+		color: var(--text-secondary);
+	}
+
 	// --- the helpers podium -----------------------------------------------------------
-	// The other way to win the lesson: the board says so out loud, on a stage
-	// the same size as the winning proposal's.
+	// The other way to win the lesson: the board says so out loud, on a stage of
+	// its own.
 	&__helpers {
 		display: flex;
 		flex-direction: column;
@@ -6541,8 +6769,8 @@
 		border-radius: var(--radius-md);
 		border-block-end: 4px solid var(--parchment-dim);
 
-		// Gold stands tallest, then silver, then bronze — the step height IS
-		// the ranking, so the medals never have to be counted
+		// Gold stands tallest, then silver, then bronze — the step height IS the
+		// ranking, so the medals never have to be counted
 		&--1 {
 			padding-block: var(--space-md);
 			border-block-end-color: var(--warning);
@@ -6578,21 +6806,49 @@
 	}
 }
 
-@keyframes board-detail-in {
+// The plot mirrors as a whole on an RTL page — the camp named first sits on the
+// reading-start side — so the point and callout transforms have to mirror too.
+[dir='rtl'] {
+	.board__point {
+		transform: translate(50%, 50%);
+
+		&:hover,
+		&:focus-visible {
+			transform: translate(50%, 50%) scale(1.12);
+		}
+
+		&--selected {
+			transform: translate(50%, 50%) scale(1.2);
+		}
+	}
+
+	.board__callout {
+		transform: translateX(50%);
+	}
+
+	// Tracking is a Latin device — see the RTL note above.
+	.board__eyebrow,
+	.board__you,
+	.board__detail-sub,
+	.board__axis-y-title,
+	.board__bridge-label {
+		letter-spacing: normal;
+	}
+}
+
+// Opacity only: the callout already carries a centring transform, and a
+// keyframe that sets `transform` would throw it off its point mid-animation.
+@keyframes board-callout-in {
 	from {
 		opacity: 0;
-		transform: translateY(-6px);
 	}
 
 	to {
 		opacity: 1;
-		transform: none;
 	}
 }
 
-// The board's biggest moment on a wider screen: the crown grows, the ladder
-// keeps its one-column reading order (a ranking read across columns is not a
-// ranking any more).
+// On a wider screen the field gets room to breathe and the crown grows
 @media (min-width: 768px) {
 	.board__champion-score {
 		font-size: 4rem;
@@ -6601,25 +6857,22 @@
 	.board__champion-text {
 		font-size: var(--font-size-xl);
 	}
+
+	.board__plot {
+		aspect-ratio: 3 / 2;
+		max-height: none;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.board__point,
 	.board__meter-fill,
-	.board__bucket-bar,
-	.board__row {
+	.board__bucket-bar {
 		transition: none;
 	}
 
+	.board__callout,
 	.board__detail {
 		animation: none;
-	}
-}
-
-// Tracking is a Latin device — see the RTL note above.
-[dir='rtl'] {
-	.board__eyebrow,
-	.board__you,
-	.board__detail-sub {
-		letter-spacing: normal;
 	}
 }
