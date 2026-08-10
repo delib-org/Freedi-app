@@ -261,6 +261,7 @@ export const Results: m.Component<ResultsAttrs> = {
 						participants: getSessionState().participants,
 						userId: myParticipant?.userId,
 						leadStatementId: score.leadStatementId,
+						finale: true,
 					}),
 				]),
 

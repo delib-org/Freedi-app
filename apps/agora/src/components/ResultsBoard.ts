@@ -30,6 +30,12 @@ export interface ResultsBoardAttrs {
 	userId?: string;
 	/** Server-named winner; while the lesson runs, whoever is on top */
 	leadStatementId?: string;
+	/**
+	 * The end-of-lesson recap rather than the live tab. Only the finale
+	 * celebrates — a cheer spent mid-game is a cheer the ending cannot fire,
+	 * because it is deliberately allowed to happen once per session.
+	 */
+	finale?: boolean;
 }
 
 /** One proposal as a point on the map */
@@ -797,7 +803,7 @@ export function ResultsBoard(
 				]);
 			}
 
-			cheerOnce(points);
+			if (attrs.finale) cheerOnce(points);
 			const mine = points.find((point) => point.isMine);
 
 			return m('.board', [

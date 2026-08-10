@@ -26,8 +26,8 @@ import {
 	unregisterMineNavigator,
 } from '../lib/helpedFocus';
 import { EraMapLantern } from '../components/EraMap';
-import { ClassPicture } from '../components/ClassPicture';
-import { getCampCensus } from '../lib/session';
+import { ResultsBoard } from '../components/ResultsBoard';
+import { getCampCensus, getSessionState } from '../lib/session';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
 import {
@@ -1943,10 +1943,16 @@ export function Deliberation(
 						header,
 						delibNav(myProposal),
 						m('h2.results-soon__title', t('delib.results_title')),
-						m(ClassPicture, {
+						// The same board the ending shows, live: a student who has
+						// watched their point move all lesson must not be handed a
+						// different picture at the recap
+						m(ResultsBoard, {
+							sessionId: live.sessionId,
+							topic,
 							proposals: getDeliberationState().proposals,
 							scores: getDeliberationState().scores,
 							census: getCampCensus(),
+							participants: getSessionState().participants,
 							userId,
 						}),
 						m(
