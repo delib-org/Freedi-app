@@ -2213,6 +2213,18 @@
 		flex-wrap: wrap;
 	}
 
+	// The proposal as it now stands, quoted where it is being weighed
+	&__proposal {
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-card-solid);
+		border-radius: var(--radius-md);
+		border-inline-start: 3px solid var(--lantern);
+		color: var(--text-primary);
+		font-weight: 700;
+		line-height: 1.55;
+		overflow-wrap: anywhere;
+	}
+
 	&--reweigh {
 		border-color: var(--border-lantern);
 		background: var(--wash-mine-low);
@@ -2247,9 +2259,27 @@
 	}
 
 	&__bridge {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
 		font-family: var(--font-display);
 		color: var(--peer-glow);
 		font-variant-numeric: tabular-nums;
+	}
+
+	// How far it moved, said as a number rather than left to be worked out
+	// from the two ends of the range
+	&__delta {
+		padding: 1px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: rgba(23, 128, 77, 0.14);
+		color: var(--success);
+		font-size: var(--font-size-sm);
+
+		&--down {
+			background: rgba(185, 115, 0, 0.16);
+			color: var(--warning);
+		}
 	}
 
 	&__hint {

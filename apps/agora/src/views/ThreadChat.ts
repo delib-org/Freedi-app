@@ -461,6 +461,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			open
 				? [
 						m('p.chat-system__prompt', t('thread.reweigh_prompt')),
+						// The text being judged, in full, right where the judgment is
+						// asked for. "Rate the new version" is an empty instruction if
+						// the new version is a scroll away — the diff above says what
+						// CHANGED, this says what it now says.
+						m('p.chat-system__proposal', proposal.statement),
 						m(RateScale, {
 							session,
 							proposalId: proposal.statementId,
@@ -521,10 +526,9 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		if (!moment) return null;
 
 		const fell = moment.bridgeDelta < 0;
-		// A single re-rater plus a direction is one identifiable classmate's vote,
-		// so at n = 1 the line reports a state and no movement at all
-		const single = moment.reRaters === 1;
+		const moved = moment.bridgeDelta !== 0;
 		const range = `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`;
+		const delta = `⁦${moment.bridgeDelta > 0 ? '+' : '−'}${Math.abs(moment.bridgeDelta)}⁩`;
 
 		return m(
 			'.chat-system.chat-system--moment.chat-system--score',
@@ -534,22 +538,26 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					m(
 						'span.chat-system__icon',
 						{ 'aria-hidden': 'true' },
-						single ? '👀' : fell ? '📉' : '📈',
+						moved ? (fell ? '📉' : '📈') : '👀',
 					),
-					m(
-						'span.chat-system__text',
-						single
-							? t('thread.score_single', { n: moment.bridgeNow })
-							: t('thread.score_since', { n: moment.reRaters }),
-					),
+					m('span.chat-system__text', tCount('thread.score_since', moment.reRaters)),
 				]),
 				// The act, credited — but only where a credit cannot read as blame
-				!single && !fell && helperName
+				!fell && helperName
 					? m('p.chat-system__credit', t('thread.score_led', { name: helperName }))
 					: null,
-				!single && moment.bridgeDelta !== 0
-					? m('p.chat-system__bridge', t('thread.score_bridge', { range }))
-					: null,
+				// How far it moved, and which way. The number stays the CLASS's in
+				// both directions — no classmate is named anywhere near it.
+				moved
+					? m('p.chat-system__bridge', [
+							t('thread.score_bridge', { range }),
+							m(
+								'span.chat-system__delta',
+								{ class: fell ? 'chat-system__delta--down' : undefined },
+								delta,
+							),
+						])
+					: m('p.chat-system__bridge', t('thread.score_now', { n: moment.bridgeNow })),
 				fell ? m('p.chat-system__hint', t('thread.score_fell')) : null,
 				m(
 					'button.text-link',
