@@ -9,6 +9,10 @@ Author A owns a proposal. Helper B evaluates it and offers improvements.
 The cycle is designed so that *every* handoff between them is announced,
 scored, and leads somewhere — no dead ends.
 
+This file is the **spec**: what the loop does today. For *why* it does it —
+the reviews behind each round and, more usefully, what was rejected and on
+what grounds — see [`feedback-cycle-improvements.md`](./feedback-cycle-improvements.md).
+
 ## The cycle
 
 ```mermaid
@@ -31,10 +35,10 @@ sequenceDiagram
     end
 
     A->>S: 4. edits the text and saves the update
-    S-->>B: ✨ the card B helped invites them back ("your idea is in there")
+    S-->>B: ✏️ the conversation shows the diff, then asks B to weigh the new version
     B->>S: 5. re-reads and re-rates the updated proposal
-
-    S-->>A: 6. "📈 N ratings updated since your improvement" (aggregate)
+    S-->>B: 🔁 "Round Trip" — the circle is named, at the moment it closed
+    S-->>A: 6. "📈 N classmates re-rated · bridge power 50 → 62", in B's conversation
 ```
 
 **What the conversation records.** Two things happen *to* a proposal
@@ -59,6 +63,27 @@ Neither is a message: `isSuggestionKind` is an allow-list
 slot, never ask the author for a decision, and never fire the "somebody
 is talking to you" toast — the edit already has its own toast, and the
 award arrives as a celebration.
+
+**What the conversation asks for.** Three more blocks live in the thread,
+and none of them is stored: they are recomputed from live state every
+render (`lib/improvementSignals.ts`), which is why none can double-fire,
+go stale, or need a watermark — and why the whole feature needed no
+schema, rules or Cloud Function change.
+
+- **The re-weigh block** (helper side) — shown while the owner has
+  revised after my idea and I have not weighed the new version. It clears
+  the instant the rating lands, *from any surface*.
+- **The credited score line** (owner side) — shown in the ONE thread whose
+  helper the owner acknowledged most recently before saving, so a revision
+  that followed three thank-yous is not claimed three times.
+- **🔁 Round Trip** — the closed circle. Unlike the other two it is
+  *history*, so it carries the moment it closed and sorts into the
+  conversation by it, rather than sitting under everything that came
+  after. Both sides can date it: every student's rating **time** streams
+  to everyone (the values never do).
+
+The first two are current state — "what wants you now" — so they stay
+pinned at the end where the eye lands.
 
 **Where this happens.** The conversation is a **sub-page**, not a fold
 inside a card — the same shape Join gives an option's chat and the main
@@ -103,6 +128,7 @@ camps.
 | Suggestion **thanked** (🙏)         | **+1** | The author's whole positive answer, priced at the old accept rung |
 | Suggestion **declined**            | **0**  | Free. See "why declining is free" below |
 | Suggestion accepted / woven in     | +1 / +2 | **Retired** — the accept → weave chain no longer has a UI. Still paid if an old session resolves one |
+| **Re-rating a revision**, and closing a 🔁 Round Trip | **0** | Deliberate, and permanent. Re-rating moves the very number the game is scored on, so a price on it would be a price on the score. The recognition is the reward: the circle gets named, and the invitation is written to recruit a genuine re-read rather than a favour (see "asking for a re-rate without buying it") |
 
 ### Author A (the `proposals` score) and everyone (`rating`)
 
@@ -147,6 +173,33 @@ with an error. Resolving it frees the slot at once. (The server's
 `MAX_OPEN_SUGGESTIONS_PER_HELPER = 2` stays as a backstop.) The quiet
 toast stays — silence is worse than cost.
 
+**Asking for a re-rate without buying it.** Telling a helper "they used
+your idea — here is the scale" is a pull to be generous, and the number it
+pulls on is the class's win condition. Four rules hold the line, and they
+are the reason the block looks the way it does:
+
+1. **The claim stays true.** The trigger is an edit that *followed* the
+   idea, so the copy says "revised **after** your idea" — never "your idea
+   is in the text", which the system cannot know. The diff sits above it;
+   the student decides for themselves. An overclaim is falsifiable at a
+   glance here, and one false positive teaches a teenager that all of the
+   system's praise is noise.
+2. **Reading is the path to the control.** The scale does not exist in the
+   DOM until "I've read the change" is pressed. No dwell timers — one tap,
+   under a lesson countdown.
+3. **The scale arrives blank.** The face given last time is *not* marked.
+   Showing it, right where another is being asked for, is a consistency
+   anchor on the scored number. It is shown afterwards instead, as a
+   neutral "before → now".
+4. **Same is a real answer**, said out loud every time: "higher, lower or
+   the same — an honest rating is what helps the class."
+
+And on the owner's side, the credit is split in two: the **helper** led to
+the revision (an act, praiseworthy however it lands), the **class** moved
+the number (in both directions). Fusing them into "your score rose because
+of X" would denominate a classmate's goodwill in points and hand them the
+blame the next time it falls — so on a fall the helper is not named at all.
+
 **Anti-collusion.** A pair trading thank-yous earns +1 per lap at most:
 a helper can have only one open idea per conversation, and each idea
 needs the author to act before the next one can be sent. The old paid
@@ -171,9 +224,9 @@ was *arithmetically unreachable*. The denominator never exceeds
 | 5 | Helped proposal improved | B | badge on "של אחרים" tab + ✨ marker on the helped card + **the re-weigh block in the conversation** | aggregate | re-reading + re-rating. The marker **clears once B re-rates**, from either surface, and the press is answered with a one-shot "your rating was updated" line |
 | 6 | Ratings moved after my edit | A | 📈/📉 chip on the workshop card + **the credited line in the helper's thread** | "N ratings updated · bridge power rose/dropped by M" — count + **direction of the aggregate bridge score**, **never any individual's rating**. Dip renders muted amber, not red. | keeping the improvement loop going |
 | 7 | The circle closed | both | 🔁 Round Trip line in the conversation, **at the moment it closed** (the helper's re-rate time, which both sides can read), one celebration for whoever closed it | none (0 points) | sending the next idea — the celebration's hint asks for one |
-| 7 | First proposal credited | A | 🎉 celebration | "your proposal is on the square! (+3)" | no button — you are already standing in the workshop |
-| 8 | Bridging achieved | A | 🎉 celebration | "your proposal reached across / bridged the camps! (+5 / +10)" — aggregate by construction (a threshold on the score, no rater identity) | **button → back to my proposal** |
-| 9 | Class bridge record | everyone | local toast | "✨ new class record — the strongest bridge on the square just grew" | nothing; the one *collective* moment in a game full of personal ones |
+| 8 | First proposal credited | A | 🎉 celebration | "your proposal is on the square! (+3)" | no button — you are already standing in the workshop |
+| 9 | Bridging achieved | A | 🎉 celebration | "your proposal reached across / bridged the camps! (+5 / +10)" — aggregate by construction (a threshold on the score, no rater identity) | **button → back to my proposal** |
+| 10 | Class bridge record | everyone | local toast | "✨ new class record — the strongest bridge on the square just grew" | nothing; the one *collective* moment in a game full of personal ones |
 
 Design rules:
 
@@ -188,11 +241,19 @@ Design rules:
   onto the primary action, Escape closes. The actionable toast is a real
   `<button>` whose auto-dismiss pauses on hover/focus and runs 12s rather
   than 6. A reward nobody can perceive or reach is a reward not given.
-- **Timestamps come from the score doc, not the statement.** The shared
-  evaluation pipeline writes its aggregates back onto the proposal, so
-  `statement.lastUpdate` moves every time anyone rates. Both the
-  ratings-moved chip and the ✨ marker read `agoraScores.lastEditAt`,
-  stamped server-side only on a real text change.
+- **"The owner edited" comes from the score doc, and from nothing else.**
+  `statement.lastUpdate` is not an edit clock and must never be used as
+  one, not even as a fallback. The shared evaluation pipeline writes its
+  aggregates back onto the proposal doc, so it moves every time anyone
+  rates — and every child write bumps it too, including *the reader's own
+  suggestion*, which once made a helper be told the text had changed the
+  moment they finished writing to a proposal nobody had touched. The one
+  source is `agoraScores.lastEditAt`, stamped server-side only on a real
+  text change (and it seeds a whole score doc if none exists, so a genuine
+  edit always has one). No stamp therefore means *no known edit*, and
+  every dependent signal stays silent — the safe direction, since the
+  alternative is announcing a revision that never happened. One accessor,
+  `editClock()`, so this can only be got wrong once.
 
 ## Where each actor sees the cycle
 
@@ -231,6 +292,16 @@ topic package. It covers every row of both tables above:
 | bridging ladder | the credit pays out **in a two-student class** — the case that was arithmetically impossible before |
 | sub-page | the card's indicator opens the conversation; the back button returns to it; the composer offers an idea when the desk is clear and plain chat while one is waiting, never blocking conversation |
 | personal recap | the on-screen total matches Firestore exactly, quarters intact, with narrative lines |
+
+**Verification status, honestly (2026-08-10).** The round-2 rows were added
+with the suite and only partly executed: the two `#5 in the thread` rows and
+`#7 round trip` passed live against the emulator; **`#6 in the thread` has
+never run** — the emulator degraded mid-session (`agoraCreateSession`
+started returning 500) before the corrected owner-inbox path could be
+exercised. The round-2 code was also re-worked afterwards (the round trip
+became dated and sorted, the score line gained its delta), so the whole
+suite wants one clean run against a healthy emulator before it can be
+called green.
 
 Unit tests: `packages/shared-types/src/__tests__/agoraBridging.test.ts`
 covers the confidence ramp, the small-class pool, and the tier ladder;
