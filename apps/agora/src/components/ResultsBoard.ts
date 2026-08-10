@@ -709,6 +709,43 @@ export function ResultsBoard(
 		);
 	}
 
+	/**
+	 * The record under the celebration. The podium shows three; the class has
+	 * more than three people who helped, and a helper whose name never appears
+	 * anywhere has been told their help did not count. The bar is scaled to the
+	 * top helper, so the list reads as a shape before it reads as numbers.
+	 */
+	function helperList(helpers: HelperRow[]): m.Children {
+		const top = Math.max(1, helpers[0]?.points ?? 1);
+
+		return m(
+			'.board__helper-list',
+			helpers.map((row) =>
+				m(
+					'.board__helper-row',
+					{
+						key: row.participant.participantId,
+						class: row.isMine ? 'board__helper-row--mine' : undefined,
+					},
+					[
+						m('span.board__helper-row-rank', rankBadge(row.rank)),
+						m(
+							'span.board__helper-row-name',
+							row.isMine ? m('span.board__you', t('board.you')) : row.participant.anonName,
+						),
+						m('.board__helper-row-track', [
+							m('.board__helper-row-fill', { style: { width: `${(row.points / top) * 100}%` } }),
+						]),
+						m(
+							'span.board__helper-row-points.board__num',
+							t('board.helper_points', { n: row.points }),
+						),
+					],
+				),
+			),
+		);
+	}
+
 	function helpersPodium(helpers: HelperRow[]): m.Children {
 		if (helpers.length === 0) {
 			return m('.board__helpers', [
@@ -739,6 +776,8 @@ export function ResultsBoard(
 						}),
 					)
 				: null,
+			m('p.board__helpers-list-title', t('board.helpers_list_title')),
+			helperList(helpers),
 		]);
 	}
 

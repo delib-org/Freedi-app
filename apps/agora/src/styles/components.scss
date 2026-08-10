@@ -6804,6 +6804,79 @@
 		color: var(--peer-glow);
 		font-variant-numeric: tabular-nums;
 	}
+
+	// --- every helper, listed -----------------------------------------------------------
+	// The podium is the celebration; this is the record. A class has more than
+	// three people who helped, and a helper whose name appears nowhere has been
+	// told their help did not count.
+	&__helpers-list-title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		margin-block-start: var(--space-xs);
+	}
+
+	&__helper-list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__helper-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-sm);
+
+		&--mine {
+			background: var(--wash-mine-low);
+			box-shadow: inset 0 0 0 1px var(--border-lantern);
+		}
+	}
+
+	&__helper-row-rank {
+		flex: 0 0 auto;
+		min-width: 2.2em;
+		font-family: var(--font-display);
+		color: var(--text-secondary);
+	}
+
+	&__helper-row-name {
+		flex: 0 0 8.5rem;
+		color: var(--text-primary);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__helper-row-track {
+		flex: 1;
+		height: 8px;
+		min-width: 2rem;
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		overflow: hidden;
+	}
+
+	&__helper-row-fill {
+		height: 100%;
+		border-radius: var(--radius-full);
+		background: var(--peer);
+		transition: width var(--motion-base) var(--ease-camera);
+	}
+
+	&__helper-row-points {
+		flex: 0 0 auto;
+		min-width: 4.5em;
+		text-align: end;
+		font-family: var(--font-display);
+		color: var(--peer-glow);
+		font-variant-numeric: tabular-nums;
+	}
 }
 
 // The plot mirrors as a whole on an RTL page — the camp named first sits on the
@@ -6831,7 +6904,8 @@
 	.board__you,
 	.board__detail-sub,
 	.board__axis-y-title,
-	.board__bridge-label {
+	.board__bridge-label,
+	.board__helpers-list-title {
 		letter-spacing: normal;
 	}
 }
@@ -6867,7 +6941,8 @@
 @media (prefers-reduced-motion: reduce) {
 	.board__point,
 	.board__meter-fill,
-	.board__bucket-bar {
+	.board__bucket-bar,
+	.board__helper-row-fill {
 		transition: none;
 	}
 

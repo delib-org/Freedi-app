@@ -303,6 +303,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'ההצעה שלכם לא זכתה לדירוג מהכיתה הפעם.',
 		'board.helpers_title': 'העוזרים המובילים',
 		'board.helpers_sub': 'נקודות שנצברו משיפור ההצעות של אחרים',
+		'board.helpers_list_title': 'כל מי שעזר',
 		'board.helpers_empty': 'אף אחד לא צבר נקודות עזרה בסבב הזה — בשיעור הבא הפודיום פתוח לגמרי.',
 		'board.helper_points': '{{n}} נק׳',
 		'board.helpers_my_rank': 'אתם במקום {{rank}} מתוך {{total}} עוזרים, עם {{n}} נקודות',
@@ -781,6 +782,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Your proposal never got rated by the class this time.',
 		'board.helpers_title': 'Top helpers',
 		'board.helpers_sub': "Points earned by making other people's proposals better",
+		'board.helpers_list_title': 'Everyone who helped',
 		'board.helpers_empty':
 			'Nobody earned helping points this round — next lesson that podium is wide open.',
 		'board.helper_points': '{{n}} pts',
@@ -1260,6 +1262,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'لم يحصل اقتراحكم على تقييم من الصف هذه المرة.',
 		'board.helpers_title': 'أفضل المساعدين',
 		'board.helpers_sub': 'نقاط رُبحت من تحسين اقتراحات الآخرين',
+		'board.helpers_list_title': 'كل من ساعد',
 		'board.helpers_empty':
 			'لم يربح أحد نقاط مساعدة في هذه الجولة — المنصة مفتوحة تماماً في الدرس القادم.',
 		'board.helper_points': '{{n}} نقطة',
@@ -1749,6 +1752,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Esta vez la clase no llegó a valorar vuestra propuesta.',
 		'board.helpers_title': 'Quienes más ayudaron',
 		'board.helpers_sub': 'Puntos ganados por mejorar las propuestas de los demás',
+		'board.helpers_list_title': 'Todos los que ayudaron',
 		'board.helpers_empty':
 			'Nadie ganó puntos de ayuda en esta ronda: el podio está libre para la próxima clase.',
 		'board.helper_points': '{{n}} pts',
@@ -2252,6 +2256,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Euer Vorschlag wurde diesmal von der Klasse nicht bewertet.',
 		'board.helpers_title': 'Die größten Helfer',
 		'board.helpers_sub': 'Punkte dafür, die Vorschläge anderer besser gemacht zu haben',
+		'board.helpers_list_title': 'Alle, die geholfen haben',
 		'board.helpers_empty':
 			'In dieser Runde hat niemand Helferpunkte gesammelt — nächste Stunde ist das Podest frei.',
 		'board.helper_points': '{{n}} Pkt.',
@@ -2761,6 +2766,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Jullie voorstel is deze keer niet door de klas beoordeeld.',
 		'board.helpers_title': 'Beste helpers',
 		'board.helpers_sub': 'Punten verdiend door andermans voorstellen beter te maken',
+		'board.helpers_list_title': 'Iedereen die hielp',
 		'board.helpers_empty':
 			'Niemand verdiende deze ronde helperpunten — volgende les ligt het podium helemaal open.',
 		'board.helper_points': '{{n}} ptn',
