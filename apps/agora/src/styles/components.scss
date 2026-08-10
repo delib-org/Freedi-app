@@ -6035,3 +6035,591 @@
 	color: var(--text-muted);
 	text-align: center;
 }
+
+// ============================================================================
+// The results board — the scoreboard the whole lesson plays toward
+// ============================================================================
+// One axis for every proposal: -100% (the whole class against) to +100% (the
+// whole class for), ranked by the class consensus. The winner is crowned, your
+// own proposal is marked wherever it landed, any row opens its own arithmetic,
+// and the classmates who spent the lesson improving OTHER people's proposals
+// get a podium of their own — the board rewards both halves of the game.
+
+.board {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+
+	&--empty {
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-xl) var(--space-md);
+		text-align: center;
+	}
+
+	&__empty-icon {
+		font-size: 2.5rem;
+		line-height: 1;
+		opacity: 0.75;
+	}
+
+	&__empty {
+		max-width: 42ch;
+		color: var(--text-muted);
+	}
+
+	&__eyebrow {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	// --- the shared -100…100 track -------------------------------------------
+	// Every meter on this board is the same width and the same scale, so bar
+	// lengths can be compared by eye without reading a single number.
+	&__meter {
+		position: relative;
+		height: 12px;
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		overflow: hidden;
+
+		&--camp {
+			height: 8px;
+		}
+	}
+
+	&__meter-zero {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		width: 2px;
+		background: var(--border-strong);
+	}
+
+	&__meter-fill {
+		position: absolute;
+		inset-block: 1px;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera),
+			inset-inline-start var(--motion-slow) var(--ease-camera);
+
+		&--for {
+			background: linear-gradient(90deg, var(--success), #35b877);
+		}
+
+		&--against {
+			background: linear-gradient(90deg, var(--danger), #e8697a);
+		}
+	}
+
+	&__scale {
+		display: flex;
+		justify-content: space-between;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	// Signed percents are Latin whatever the UI language is: without the
+	// isolate, "+52%" comes out as "52%+" in Hebrew and Arabic, which reads
+	// as a different number.
+	&__num {
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
+
+	&__scale-mid {
+		opacity: 0.7;
+	}
+
+	// --- the crown ------------------------------------------------------------
+	&__champion {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		text-align: center;
+		background:
+			radial-gradient(120% 100% at 50% 0%, rgba(255, 214, 122, 0.35), transparent 65%),
+			var(--bg-card-solid);
+		border: 2px solid var(--warning);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+
+		&--mine {
+			border-color: var(--lantern);
+			background:
+				radial-gradient(120% 100% at 50% 0%, rgba(43, 111, 214, 0.22), transparent 65%),
+				var(--bg-card-solid);
+		}
+	}
+
+	&__champion-score {
+		font-family: var(--font-display);
+		font-size: var(--font-size-3xl);
+		line-height: 1.1;
+		color: var(--success);
+		font-variant-numeric: tabular-nums;
+
+		&--against {
+			color: var(--danger);
+		}
+	}
+
+	&__champion-label {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__champion-text {
+		font-size: var(--font-size-lg);
+		line-height: 1.5;
+		color: var(--text-primary);
+	}
+
+	&__champion-by {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__champion-mine-note {
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		font-weight: 600;
+	}
+
+	// --- shared row furniture --------------------------------------------------
+	&__author {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__you {
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--lantern);
+		color: var(--text-on-lantern);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+	}
+
+	&__coverage {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		font-variant-numeric: tabular-nums;
+
+		&--for {
+			color: var(--success);
+		}
+
+		&--against {
+			color: var(--danger);
+		}
+
+		&--none {
+			font-size: var(--font-size-xs);
+			color: var(--text-muted);
+		}
+	}
+
+	// --- my standing, said in one sentence -------------------------------------
+	&__my-standing {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		background: var(--wash-mine-low);
+		border: 1px solid var(--border-lantern);
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		text-align: center;
+
+		&--podium {
+			background: var(--wash-mine-mid);
+		}
+	}
+
+	// --- the ladder -------------------------------------------------------------
+	&__ladder {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__tap-hint {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__ladder-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__entry {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__row {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		width: 100%;
+		padding: var(--space-sm) var(--space-md);
+		text-align: start;
+		font: inherit;
+		color: inherit;
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: transform var(--motion-fast) var(--ease-spring),
+			box-shadow var(--motion-fast) var(--ease-camera);
+
+		&:hover,
+		&:focus-visible {
+			transform: translateY(-2px);
+			box-shadow: var(--shadow-card);
+		}
+
+		// The top three carry a warm rim; the keel marks mine wherever it landed
+		&--medal {
+			border-color: var(--warning);
+		}
+
+		&--mine {
+			border-inline-start: 4px solid var(--lantern);
+			background: var(--wash-mine-low);
+		}
+
+		&--open {
+			border-end-start-radius: 0;
+			border-end-end-radius: 0;
+		}
+	}
+
+	&__row-head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__rank {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		min-width: 2.2em;
+		color: var(--text-secondary);
+	}
+
+	&__row-head &__value {
+		margin-inline-start: auto;
+	}
+
+	&__row-text {
+		font-size: var(--font-size-sm);
+		line-height: 1.45;
+		color: var(--text-primary);
+	}
+
+	&__row-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__row-cue {
+		font-size: var(--font-size-xs);
+		color: var(--lantern-glow);
+		font-weight: 600;
+	}
+
+	// --- the actual score, opened up ---------------------------------------------
+	&__detail {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--parchment);
+		border: 1px solid var(--border-strong);
+		border-block-start: none;
+		border-end-start-radius: var(--radius-md);
+		border-end-end-radius: var(--radius-md);
+		animation: board-detail-in var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__detail-title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+	}
+
+	&__detail-sub {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	&__detail-empty,
+	&__detail-why {
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+		line-height: 1.5;
+	}
+
+	&__stats {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__stat {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding-block: 4px;
+		border-block-end: 1px dashed var(--border-subtle);
+		font-size: var(--font-size-sm);
+	}
+
+	&__stat-label {
+		color: var(--text-secondary);
+	}
+
+	&__stat-value {
+		font-variant-numeric: tabular-nums;
+		color: var(--text-primary);
+
+		&--strong {
+			font-family: var(--font-display);
+			font-size: var(--font-size-lg);
+			color: var(--lantern-glow);
+		}
+	}
+
+	// --- how the class voted -------------------------------------------------------
+	&__histogram {
+		display: flex;
+		align-items: flex-end;
+		gap: var(--space-xs);
+		height: 88px;
+	}
+
+	&__bucket {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		height: 100%;
+	}
+
+	&__bucket-column {
+		display: flex;
+		flex: 1;
+		align-items: flex-end;
+		width: 100%;
+	}
+
+	&__bucket-bar {
+		width: 100%;
+		min-height: 2px;
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		background: var(--text-muted);
+		transition: height var(--motion-base) var(--ease-camera);
+
+		&--against {
+			background: var(--danger);
+		}
+
+		&--neutral {
+			background: var(--text-muted);
+		}
+
+		&--for {
+			background: var(--success);
+		}
+	}
+
+	&__bucket-count {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__bucket-face {
+		font-size: var(--font-size-base);
+		line-height: 1;
+	}
+
+	&__camps {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__camp {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		font-size: var(--font-size-sm);
+	}
+
+	&__camp-label {
+		flex: 0 0 auto;
+		min-width: 7ch;
+	}
+
+	&__camp .board__meter {
+		flex: 1;
+	}
+
+	&__camp-n {
+		flex: 0 0 auto;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	// --- the helpers podium -----------------------------------------------------------
+	// The other way to win the lesson: the board says so out loud, on a stage
+	// the same size as the winning proposal's.
+	&__helpers {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--wash-peer-low);
+		border: 1px solid var(--peer);
+		border-radius: var(--radius-lg);
+	}
+
+	&__helpers-sub,
+	&__helpers-empty {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__helpers-mine {
+		font-size: var(--font-size-sm);
+		color: var(--peer-glow);
+		font-weight: 600;
+		text-align: center;
+	}
+
+	&__podium {
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		gap: var(--space-sm);
+	}
+
+	&__helper {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		max-width: 11rem;
+		padding: var(--space-sm);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		border-block-end: 4px solid var(--parchment-dim);
+
+		// Gold stands tallest, then silver, then bronze — the step height IS
+		// the ranking, so the medals never have to be counted
+		&--1 {
+			padding-block: var(--space-md);
+			border-block-end-color: var(--warning);
+		}
+
+		&--2 {
+			padding-block: var(--space-sm) var(--space-md);
+		}
+
+		&--mine {
+			border-color: var(--lantern);
+			background: var(--wash-mine-low);
+		}
+	}
+
+	&__helper-medal {
+		font-size: var(--font-size-xl);
+		line-height: 1;
+	}
+
+	&__helper-name {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		text-align: center;
+		overflow-wrap: anywhere;
+	}
+
+	&__helper-points {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--peer-glow);
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+@keyframes board-detail-in {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+// The board's biggest moment on a wider screen: the crown grows, the ladder
+// keeps its one-column reading order (a ranking read across columns is not a
+// ranking any more).
+@media (min-width: 768px) {
+	.board__champion-score {
+		font-size: 4rem;
+	}
+
+	.board__champion-text {
+		font-size: var(--font-size-xl);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.board__meter-fill,
+	.board__bucket-bar,
+	.board__row {
+		transition: none;
+	}
+
+	.board__detail {
+		animation: none;
+	}
+}
+
+// Tracking is a Latin device — see the RTL note above.
+[dir='rtl'] {
+	.board__eyebrow,
+	.board__you,
+	.board__detail-sub {
+		letter-spacing: normal;
+	}
+}

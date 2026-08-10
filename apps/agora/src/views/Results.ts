@@ -4,8 +4,8 @@ import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
 import { getDeliberationState, listenToDeliberation } from '../lib/proposals';
-import { getCampCensus } from '../lib/session';
-import { ClassPicture } from '../components/ClassPicture';
+import { getCampCensus, getSessionState } from '../lib/session';
+import { ResultsBoard } from '../components/ResultsBoard';
 import {
 	AgoraParticipant,
 	AgoraSceneKind,
@@ -246,16 +246,19 @@ export const Results: m.Component<ResultsAttrs> = {
 					]),
 				]),
 
-				// The whole lesson exists to produce a shared proposal, and until
-				// now this screen never showed which one won or what it said.
-				// The camp split rides along with it: the crown is whole-class
-				// consensus, which a large camp can win on its own, so a
-				// majority-only winner has to be visible as one.
+				// The scoreboard the lesson has been playing toward: every proposal
+				// ranked by the class consensus on one -100%…+100% axis, the winner
+				// crowned, your own marked wherever it landed, the arithmetic behind
+				// any score one press away, and the classmates who spent the lesson
+				// improving other people's proposals on a podium of their own.
 				m('.card.stack', [
-					m(ClassPicture, {
+					m(ResultsBoard, {
+						sessionId: session.sessionId,
+						topic,
 						proposals: getDeliberationState().proposals,
 						scores: getDeliberationState().scores,
 						census: getCampCensus(),
+						participants: getSessionState().participants,
 						userId: myParticipant?.userId,
 						leadStatementId: score.leadStatementId,
 					}),
