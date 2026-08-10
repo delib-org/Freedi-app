@@ -105,20 +105,18 @@ beforeEach(() => {
 });
 
 describe('editClock', () => {
-	it('falls back to the statement clock only when there is no score doc', () => {
-		expect(editClock(PID, 777)).toBe(777);
-	});
-
 	it('reads lastEditAt when the score doc has one', () => {
 		delibState.scores[PID] = { bridgingScore: 50, lastEditAt: 9000 };
-		expect(editClock(PID, 777)).toBe(9000);
+		expect(editClock(PID)).toBe(9000);
 	});
 
-	it('fails closed on a legacy score doc with no lastEditAt', () => {
-		// Falling back to the statement clock here would light every moment on
-		// every rating, since the evaluation pipeline bumps lastUpdate
+	it('knows of no edit when there is no score doc', () => {
+		expect(editClock(PID)).toBe(0);
+	});
+
+	it('knows of no edit on a legacy score doc with no lastEditAt', () => {
 		delibState.scores[PID] = { bridgingScore: 50 };
-		expect(editClock(PID, 777)).toBe(0);
+		expect(editClock(PID)).toBe(0);
 	});
 });
 
@@ -199,6 +197,19 @@ describe('reWeighMoment', () => {
 	it('stays silent when the edit came before my idea', () => {
 		delibState.scores[PID] = { bridgingScore: 50, lastEditAt: 500 };
 		expect(reWeighMoment(PID, HELPER, proposal())).toBeNull();
+	});
+
+	it('stays silent when the statement clock moved but nobody edited', () => {
+		// The proposal doc's own lastUpdate is bumped by aggregate writes and by
+		// child writes — including the reader's OWN suggestion. Trusting it
+		// announced a revision to a helper the moment they finished writing.
+		delete delibState.scores[PID];
+		expect(reWeighMoment(PID, HELPER, proposal(99999))).toBeNull();
+	});
+
+	it('stays silent on a legacy score doc that never stamped an edit', () => {
+		delibState.scores[PID] = { bridgingScore: 50 };
+		expect(reWeighMoment(PID, HELPER, proposal(99999))).toBeNull();
 	});
 
 	it('clears once I weigh the new version', () => {

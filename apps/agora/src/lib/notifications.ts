@@ -6,6 +6,7 @@ import { t } from './i18n';
 import { celebrate } from './celebration';
 import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
 import { getDeliberationState, isSuggestionKind, isSystemKind } from './proposals';
+import { editClock } from './improvementSignals';
 
 export interface AgoraToast {
 	notificationId: string;
@@ -171,13 +172,20 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
 			(suggestion) => suggestion.creatorId === userId,
 		);
 		if (mine.length === 0) continue;
+		// The owner's REAL edit time. The statement's own lastUpdate moves for
+		// reasons nobody edited anything — the evaluation pipeline writes its
+		// aggregates onto the proposal doc, and every child write (a suggestion,
+		// a chat line, this reader's own idea) bumps it — so watermarking on it
+		// announced a revision every time a classmate merely rated.
+		const editedAt = editClock(proposal.statementId);
+		if (editedAt === 0) continue;
 		const mark = marks[proposal.statementId];
 		if (mark === undefined) {
 			// First sighting: remember where we are, no toast
-			marks[proposal.statementId] = proposal.lastUpdate;
+			marks[proposal.statementId] = editedAt;
 			changed = true;
-		} else if (proposal.lastUpdate > mark) {
-			marks[proposal.statementId] = proposal.lastUpdate;
+		} else if (editedAt > mark) {
+			marks[proposal.statementId] = editedAt;
 			changed = true;
 			toastDue = true;
 		}

@@ -20,23 +20,25 @@ import {
 } from './proposals';
 
 /**
- * THE edit clock.
+ * THE edit clock: when the owner last actually rewrote the text.
  *
- * `agoraScores.lastEditAt` is the only trustworthy one: the statement's own
- * `lastUpdate` is bumped by the evaluation pipeline's aggregate writes, so a
- * proposal nobody has touched looks freshly edited every time somebody rates it.
+ * `agoraScores.lastEditAt` is the only trustworthy source, and there is
+ * deliberately NO fallback to the statement's own `lastUpdate`. That clock
+ * moves for reasons that have nothing to do with anybody editing anything —
+ * the evaluation pipeline writes its aggregates back onto the proposal doc,
+ * and a child write (a suggestion, a chat message — including the reader's
+ * OWN suggestion) bumps it too. Trusting it announced "the proposal was
+ * revised" to a helper the moment they finished writing to a proposal nobody
+ * had touched.
  *
- * The fallback is deliberately asymmetric. A missing score DOC means nobody has
- * rated yet, and the statement's clock is then the only clock there is. A score
- * doc WITHOUT the field is a legacy doc, and falling back there would light
- * every moment in this file on every rating — so it reads as "no edit known",
- * and the moments fail closed.
+ * A Cloud Function stamps `lastEditAt` on every real text change, seeding a
+ * whole score doc if none exists yet, so a genuine edit always has one. No
+ * stamp therefore means no known edit, and every moment in this file stays
+ * silent — the safe direction, since the alternative is claiming a revision
+ * that never happened.
  */
-export function editClock(proposalId: string, fallback?: number): number {
-	const score = getDeliberationState().scores[proposalId];
-	if (!score) return fallback ?? 0;
-
-	return score.lastEditAt ?? 0;
+export function editClock(proposalId: string): number {
+	return getDeliberationState().scores[proposalId]?.lastEditAt ?? 0;
 }
 
 /**
@@ -160,7 +162,7 @@ export function reWeighMoment(
 	const mySuggestionAt = latestSuggestionAt(proposalId, helperUid);
 	if (mySuggestionAt === 0) return null;
 
-	const editedAt = editClock(proposalId, proposal.lastUpdate);
+	const editedAt = editClock(proposalId);
 	if (editedAt === 0 || editedAt <= mySuggestionAt) return null;
 	if (answeredSince(proposalId, editedAt)) return null;
 

@@ -744,7 +744,7 @@ export function Deliberation(
 		const busy = reviewBusy[character.characterId] === true;
 		// The verdict was given about an OLDER text — say so, don't let it
 		// impersonate an opinion of the current proposal
-		const stale = review !== undefined && myProposal.lastUpdate > review.lastUpdate;
+		const stale = review !== undefined && editClock(myProposal.statementId) > review.lastUpdate;
 		const ask = () => {
 			askCharacter(live, character, myProposal);
 		};
@@ -1201,7 +1201,8 @@ export function Deliberation(
 							createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
 						];
 					const open = openCharacterId === character.characterId;
-					const stale = review !== undefined && myProposal.lastUpdate > review.lastUpdate;
+					const stale =
+						review !== undefined && editClock(myProposal.statementId) > review.lastUpdate;
 
 					return m(
 						'button.char-chips__chip',
