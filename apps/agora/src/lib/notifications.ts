@@ -84,8 +84,47 @@ export function releaseToast(notificationId: string): void {
 
 let localToastCounter = 0;
 
-/** Client-detected event → toast, without a backing notification doc */
-export function pushLocalToast(triggerType: string): void {
+/**
+ * A student mid-sentence is doing the single most valuable thing in the game,
+ * and a toast sliding in over the composer is how that sentence gets lost. So
+ * while a text box has focus the queue holds, and flushes the moment the
+ * student looks up.
+ *
+ * Queued, never dropped: the news is still true a few seconds later, and
+ * silently discarding it would make the signal unreliable in exactly the
+ * moments the game most wants it heard.
+ */
+const queued: string[] = [];
+
+function isTyping(): boolean {
+	const active = document.activeElement;
+	if (!active) return false;
+	const tag = active.tagName;
+
+	return (
+		tag === 'TEXTAREA' || tag === 'INPUT' || (active as HTMLElement).isContentEditable === true
+	);
+}
+
+function flushQueuedToasts(): void {
+	if (isTyping()) return;
+	while (queued.length > 0) {
+		const triggerType = queued.shift();
+		if (triggerType) showToast(triggerType);
+	}
+	m.redraw();
+}
+
+if (typeof document !== 'undefined') {
+	// `focusout` rather than `blur`: blur does not bubble, so one listener
+	// cannot cover composers that mount and unmount all game long
+	document.addEventListener('focusout', () => {
+		// A beat, so a tab BETWEEN two inputs is not read as looking up
+		setTimeout(flushQueuedToasts, 150);
+	});
+}
+
+function showToast(triggerType: string): void {
 	const toast: AgoraToast = {
 		notificationId: `local--${++localToastCounter}`,
 		triggerType,
@@ -93,6 +132,16 @@ export function pushLocalToast(triggerType: string): void {
 	};
 	toasts.push(toast);
 	armDismiss(toast.notificationId, triggerType);
+}
+
+/** Client-detected event → toast, without a backing notification doc */
+export function pushLocalToast(triggerType: string): void {
+	if (isTyping()) {
+		queued.push(triggerType);
+
+		return;
+	}
+	showToast(triggerType);
 	m.redraw();
 }
 

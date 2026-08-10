@@ -490,6 +490,32 @@ eq(
 );
 await shot(s2, '06-B-helped-improved');
 
+// ---------- Phase D2: the same invitation, inside the conversation ----------
+step('PHASE D2: the thread invites B to re-weigh — behind a read gate');
+await openThreadFromStall(s2);
+const reweigh = s2.locator('.chat-system--reweigh');
+await reweigh.waitFor({ timeout: 15000 });
+console.log('B SEES IN THE THREAD:', (await reweigh.textContent()).trim().replace(/\s+/g, ' '));
+// The diff is the evidence, and it must be ABOVE the invitation
+eq('the edit diff is in the thread', await s2.locator('.chat-system__diff').count(), 1);
+// The scale does not exist until the student says they read the change:
+// a rating asked for next to "they used your idea" is a rating bought
+eq('the scale is gated', await s2.locator('.chat-system--reweigh .rate-scale').count(), 0);
+await s2.locator('.chat-system__gate .btn--primary').click();
+await s2.locator('.chat-system--reweigh .rate-scale').waitFor({ timeout: 5000 });
+console.log('   ✓ the scale appears only after "I read the change"');
+// ...and it arrives BLANK: marking the face I gave last time, right where I
+// am asked for another, is an anchor on the number the game is scored by
+eq(
+	'the gated scale carries no previous answer',
+	await s2.locator('.chat-system--reweigh .rate-scale__option--selected').count(),
+	0,
+);
+await shot(s2, '07-B-thread-reweigh');
+// Leave without answering — Phase E answers from the square instead, which
+// is how we learn the invitation clears wherever the rating happens
+await leaveChat(s2);
+
 // ---------- Phase E: B re-rates → ack, marker clears, bridge pays out ----------
 step('PHASE E: B re-rates → the loop closes, and the bridging ladder pays');
 await s2.locator('.stall--open .rate-scale--compact .rate-scale__option--strong-for').click();
@@ -543,6 +569,43 @@ await openDock(s1);
 await s1.locator('.my-lantern__moved', { hasText: 'כוח הגשר עלה' }).waitFor({ timeout: 20000 });
 console.log('   ✓ direction SURVIVED a full page reload (server-stamped baseline)');
 await shot(s1, '10-A-ratings-moved');
+await closeDock(s1);
+
+// ---------- Phase E2: the loop's two ends meet in the conversation ----------
+step('PHASE E2: the invitation clears, the circle is named, and A is told');
+await s2.locator('.delib-nav__item--peer').click();
+await s2.waitForSelector('.stall--open', { timeout: 10000 });
+await openThreadFromStall(s2);
+// The rating happened out on the square, and the thread's invitation is
+// gone anyway: the moment is derived from state, not fired as an event
+eq(
+	'the thread invitation cleared with the square rating',
+	await s2.locator('.chat-system--reweigh').count(),
+	0,
+);
+console.log('   ✓ answering anywhere clears the invitation everywhere');
+// An idea went out, was thanked, the text changed, and it was weighed again
+const roundTrip = s2.locator('.chat-system--roundtrip');
+await roundTrip.waitFor({ timeout: 15000 });
+console.log('B SEES:', (await roundTrip.textContent()).trim().replace(/\s+/g, ' '));
+await shot(s2, '07b-B-round-trip');
+await leaveChat(s2);
+
+// A's side of the very same conversation: the class answered the revision.
+// The owner reaches a thread through the inbox, not the square.
+await clearCelebration(s1);
+await openInbox(s1);
+await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.waitForSelector('.chat-page', { timeout: 10000 });
+const scoreLine = s1.locator('.chat-system--score');
+await scoreLine.waitFor({ timeout: 15000 });
+const scoreText = (await scoreLine.textContent()).trim().replace(/\s+/g, ' ');
+console.log('A SEES IN THE THREAD:', scoreText);
+// The class owns the number, in both directions — and the helper is only
+// ever named on the ACT that led to the revision
+if (!scoreText.includes('דירג')) fail(`the score line never reported the class: ${scoreText}`);
+await shot(s1, '07c-A-thread-score-moved');
+await leaveChat(s1);
 await closeDock(s1);
 
 // ---------- Phase F: one open idea at a time, no toggle to get wrong ----------

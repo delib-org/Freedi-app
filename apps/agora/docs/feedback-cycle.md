@@ -168,8 +168,9 @@ was *arithmetically unreachable*. The denominator never exceeds
 | 2 | Thanked | B | 🎉 celebration (glitter) | "you were thanked for the idea you sent! (+1)" | no button and no hint: a thank-you is the payoff, not a promise of one |
 | 3 | Declined | B | quiet toast | "not adopted this time — try another angle" (no number: declining is free) | nothing; deliberately low-key |
 | 4 | ~~Woven in~~ | B | 🎉 celebration | **Retired** with the accept → weave chain; still rendered if an old session fires one | primary button → travel to the improved proposal |
-| 5 | Helped proposal improved | B | badge on "של אחרים" tab + ✨ marker on the helped card | aggregate | re-reading + re-rating. The marker **clears once B re-rates**, and the press is answered with a one-shot "your rating was updated" line |
-| 6 | Ratings moved after my edit | A | 📈/📉 chip on the workshop card | "N ratings updated · bridge power rose/dropped by M" — count + **direction of the aggregate bridge score**, **never any individual's rating**. Dip renders muted amber, not red. | keeping the improvement loop going |
+| 5 | Helped proposal improved | B | badge on "של אחרים" tab + ✨ marker on the helped card + **the re-weigh block in the conversation** | aggregate | re-reading + re-rating. The marker **clears once B re-rates**, from either surface, and the press is answered with a one-shot "your rating was updated" line |
+| 6 | Ratings moved after my edit | A | 📈/📉 chip on the workshop card + **the credited line in the helper's thread** | "N ratings updated · bridge power rose/dropped by M" — count + **direction of the aggregate bridge score**, **never any individual's rating**. Dip renders muted amber, not red. | keeping the improvement loop going |
+| 7 | The circle closed | both | 🔁 Round Trip line in the conversation, one celebration for whoever closed it | none (0 points) | sending the next idea — the celebration's hint asks for one |
 | 7 | First proposal credited | A | 🎉 celebration | "your proposal is on the square! (+3)" | no button — you are already standing in the workshop |
 | 8 | Bridging achieved | A | 🎉 celebration | "your proposal reached across / bridged the camps! (+5 / +10)" — aggregate by construction (a threshold on the score, no rater identity) | **button → back to my proposal** |
 | 9 | Class bridge record | everyone | local toast | "✨ new class record — the strongest bridge on the square just grew" | nothing; the one *collective* moment in a game full of personal ones |
@@ -202,7 +203,9 @@ Design rules:
 | A | Workshop card footer | 📈 ratings-moved line (aggregate), measured against the server-stamped baseline so it survives a refresh |
 | B | Celebration popups | thanked (+1) |
 | B | Toast stack | declined (free), helped-proposal-improved, class bridge record |
-| B | The classmate's card (Others side) | current text, ✨ improved marker (clears once re-rated), re-rate scale + its acknowledgment, and the conversation's indicator — one line in, a whole page out |
+| B | The classmate's card (Others side) | current text, ✨ revised marker (clears once re-rated), re-rate scale + its acknowledgment, and the conversation's indicator — one line in, a whole page out |
+| B | The conversation sub-page | the owner's edit as a word-diff, then the **re-weigh block**: a read gate, then a **blank** scale (the previous face is deliberately not shown — it would anchor the very number the game is scored on), then "higher, lower or the same". Says only "revised **after** your idea", never "your idea is in it" — the trigger is an edit that followed, and the diff is the evidence |
+| A | The helper's conversation sub-page | the **credited score line**: the helper is named on the *act* that led to the revision, the class owns the *number* in both directions. On a fall the helper is not named at all; at a single re-rater it reports a state, never a delta (one count plus one direction would expose one classmate's vote) |
 | both | **Results screen only** | "המסע שלי" — a private recap: total, the helping / rating / proposals / values breakdown, and narrative lines ("N classmates' ideas are in your text"). Framed as *my contribution to the class score*; no ranking, no peer comparison. The ScoreHud stays off the deliberation screens (2026-08-05): during play you hear +1/+2 moments, you never see a balance. |
 
 ## Verification
@@ -217,8 +220,12 @@ topic package. It covers every row of both tables above:
 | #1 received | actionable toast reaches A the moment B sends (and is a real `<button>`); accordion count = 1 |
 | #2 thanked | B's celebration names +1, is an `alertdialog` with focus moved, and closes on Escape; `helping` 0 → 1 |
 | #3 declined | A's quiet toast names **no** number; A's balance is untouched; the card retires and the muted count line appears |
-| #5 improved | after A edits, B's card shows the **personal** ✨ re-invitation ("your idea is in there"); it **clears** and the ack line appears once B re-rates |
+| #5 improved | after A edits, B's card shows the **personal** ✨ re-invitation; it **clears** and the ack line appears once B re-rates |
+| #5 in the thread | the conversation carries the same invitation with the diff above it; the scale **does not exist** until "I read the change" is pressed, and arrives with **no previous answer marked** |
+| #5 clears anywhere | B rates from the square, and the thread's invitation is gone — the moment is derived from state, never fired as an event |
 | #6 ratings moved | A's chip counts 1 (singular copy), names the direction, and **survives a full page reload** |
+| #6 in the thread | A's conversation with B reports the class's answer, credited to B by placement |
+| #7 round trip | the 🔁 line appears for the pair once the idea → thanks → revision → re-weigh circle closes |
 | first proposal | both students' `proposals` = 3 and the credit is announced |
 | rating credit | `rating` = 0.5 after the first rating |
 | bridging ladder | the credit pays out **in a two-student class** — the case that was arithmetically impossible before |

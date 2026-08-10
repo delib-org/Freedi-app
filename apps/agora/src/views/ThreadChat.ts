@@ -13,6 +13,14 @@ import {
 import { celebrate } from '../lib/celebration';
 import { diffWords } from '../lib/textDiff';
 import { markThreadSeen } from '../lib/seenState';
+import { RateScale, rateOptionFor } from '../components/RateScale';
+import { requestMineFocus } from '../lib/helpedFocus';
+import {
+	reWeighMoment,
+	roundTripClosed,
+	scoreMovedMoment,
+	type ReWeighMoment,
+} from '../lib/improvementSignals';
 import {
 	AgoraMessageKind,
 	AgoraSession,
@@ -70,6 +78,10 @@ export interface ThreadEntryOptions {
 	unread: number;
 	/** Improvement ideas still waiting on the owner's answer (owner side only) */
 	openIdeas?: number;
+	/** The owner revised after my idea and I have not weighed it (helper side) */
+	reWeigh?: boolean;
+	/** The class answered my revision (owner side) */
+	scoreMoved?: boolean;
 	onOpen: () => void;
 }
 
@@ -95,7 +107,7 @@ function lastLine(message: AgoraProposal): string {
  * itself lives on its own page.
  */
 export function threadEntry(options: ThreadEntryOptions): m.Children {
-	const { label, messages, unread, openIdeas = 0, onOpen } = options;
+	const { label, messages, unread, openIdeas = 0, reWeigh, scoreMoved, onOpen } = options;
 	const last = messages[messages.length - 1];
 
 	return m(
@@ -123,6 +135,18 @@ export function threadEntry(options: ThreadEntryOptions): m.Children {
 				last ? m('span.chat-entry__time', formatMessageTime(last.createdAt)) : null,
 				openIdeas > 0
 					? m('span.chat-entry__ideas', tCount('delib.thread_open_ideas', openIdeas))
+					: null,
+				// Marks, not counts: the unread number must keep meaning "how many
+				// things were said", or two different facts start sharing one badge
+				reWeigh
+					? m('span.chat-entry__mark', { 'aria-label': t('thread.reweigh_title') }, '✨')
+					: null,
+				scoreMoved
+					? m(
+							'span.chat-entry__mark',
+							{ 'aria-label': t('thread.score_bridge', { range: '' }) },
+							'📈',
+						)
 					: null,
 				unread > 0
 					? m(
@@ -306,32 +330,301 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		const previous = message.agoraPreviousText ?? '';
 		const parts = diffWords(previous, message.statement);
 
-		return m('.chat-system.chat-system--edit', { key: message.statementId }, [
-			m('.chat-system__head', [
-				m('span.chat-system__icon', { 'aria-hidden': 'true' }, '✏️'),
-				m('span.chat-system__text', t('delib.edit_line')),
-				m('span.chat-system__time', formatMessageTime(message.createdAt)),
-			]),
-			// One paragraph, read straight through: untouched words plain,
-			// what went in highlighted, what came out struck through
-			// NO keys on these spans: they sit among plain strings (the untouched
-			// runs), and Mithril forbids mixing keyed and unkeyed children in one
-			// array — it throws mid-redraw and takes the whole screen with it.
-			m(
-				'p.chat-system__diff',
-				parts.map((part) =>
-					part.op === 'same'
-						? part.text
-						: m(
-								`span.chat-system__${part.op === 'added' ? 'ins' : 'del'}`,
-								{
-									'aria-label': t(part.op === 'added' ? 'delib.diff_added' : 'delib.diff_removed'),
-								},
-								part.text,
-							),
+		return m(
+			'.chat-system.chat-system--edit',
+			{ key: message.statementId, id: `msg-${message.statementId}` },
+			[
+				m('.chat-system__head', [
+					m('span.chat-system__icon', { 'aria-hidden': 'true' }, '✏️'),
+					m('span.chat-system__text', t('delib.edit_line')),
+					m('span.chat-system__time', formatMessageTime(message.createdAt)),
+				]),
+				// One paragraph, read straight through: untouched words plain,
+				// what went in highlighted, what came out struck through
+				// NO keys on these spans: they sit among plain strings (the untouched
+				// runs), and Mithril forbids mixing keyed and unkeyed children in one
+				// array — it throws mid-redraw and takes the whole screen with it.
+				m(
+					'p.chat-system__diff',
+					parts.map((part) =>
+						part.op === 'same'
+							? part.text
+							: m(
+									`span.chat-system__${part.op === 'added' ? 'ins' : 'del'}`,
+									{
+										'aria-label': t(
+											part.op === 'added' ? 'delib.diff_added' : 'delib.diff_removed',
+										),
+									},
+									part.text,
+								),
+					),
 				),
+			],
+		);
+	}
+
+	/**
+	 * The circle closes on a press, so the glitter belongs to whoever pressed —
+	 * and only once. A celebration that replays on every reload stops meaning
+	 * anything, while the round trip itself is a fact about the data, true from
+	 * then on.
+	 */
+	function cheerRoundTrip(session: AgoraSession, proposalId: string): void {
+		if (!roundTripClosed(proposalId, currentThreadHelper)) return;
+		const key = `agora_${session.sessionId}_roundtrip_${proposalId}_${currentThreadHelper}`;
+		if (sessionStorage.getItem(key)) return;
+		try {
+			sessionStorage.setItem(key, '1');
+		} catch {
+			// A full or locked-down store must never cost the student the moment
+		}
+		celebrate({
+			message: `🔁 ${t('celebrate.round_trip')}`,
+			detail: t('thread.round_trip_body'),
+			hint: t('celebrate.round_trip_hint'),
+		});
+	}
+
+	/** The helper whose conversation is on screen, for the handlers above */
+	let currentThreadHelper = '';
+
+	// ---------- the two moments that close the improvement cycle ----------
+
+	/**
+	 * The read gate. The scale does not exist in the DOM until the student says
+	 * they have read the change — which is the whole point of the block, and the
+	 * one cheap thing that shifts the judgment from "be nice to them" back to
+	 * "what does the new text say". `editedAt` is the gate's key, so a later
+	 * revision closes it again.
+	 */
+	let gateOpenedFor = 0;
+	/** The press that just happened, kept alive long enough to be answered */
+	let justVoted: { before: number | undefined; after: number; at: number } | null = null;
+	let votedTimer: number | undefined;
+
+	function faceFor(value: number | undefined): string {
+		return value === undefined ? '—' : (rateOptionFor(value)?.emoji ?? '—');
+	}
+
+	/**
+	 * What a student sees after weighing a revision. The block itself vanishes
+	 * the instant the rating lands (the moment is derived), so the confirmation
+	 * has to outlive it — otherwise the one press that closes the whole cycle
+	 * gets no answer at all.
+	 */
+	function votedLine(): m.Children {
+		if (!justVoted) return null;
+
+		return m('.chat-system.chat-system--moment.chat-system--voted', { key: 'reweigh-done' }, [
+			m('span.chat-system__icon', { 'aria-hidden': 'true' }, '✓'),
+			m(
+				'span.chat-system__text',
+				justVoted.before === undefined
+					? t('delib.rerate_ack')
+					: t('thread.reweigh_before_after', {
+							before: faceFor(justVoted.before),
+							after: faceFor(justVoted.after),
+						}),
 			),
 		]);
+	}
+
+	/**
+	 * The helper's moment: the owner revised after my idea, and I have not
+	 * weighed the new version.
+	 *
+	 * Deliberately says only what is knowable — the text changed AFTER my idea,
+	 * never that my idea is in it. The diff sits above; the student judges. And
+	 * the scale arrives blank: marking the face I gave last time, right at the
+	 * moment I am being asked to give another, is an anchor, and this particular
+	 * number is the one the whole game is scored on.
+	 */
+	function reWeighBlock(
+		session: AgoraSession,
+		proposal: AgoraProposal,
+		moment: ReWeighMoment,
+		onScrollToChange: () => void,
+	): m.Children {
+		const open = gateOpenedFor === moment.editedAt;
+		const title = moment.neverRated
+			? t('thread.weigh_title')
+			: moment.credited
+				? t('thread.reweigh_title_credited')
+				: t('thread.reweigh_title');
+
+		return m('.chat-system.chat-system--moment.chat-system--reweigh', { key: 'reweigh' }, [
+			m('.chat-system__head', [
+				m('span.chat-system__icon', { 'aria-hidden': 'true' }, moment.credited ? '✨' : '✏️'),
+				m('span.chat-system__text', title),
+			]),
+			open
+				? [
+						m('p.chat-system__prompt', t('thread.reweigh_prompt')),
+						m(RateScale, {
+							session,
+							proposalId: proposal.statementId,
+							// Blank on purpose — see the note above
+							showCurrent: false,
+							onVote: (value, previous) => {
+								justVoted = { before: previous, after: value, at: Date.now() };
+								window.clearTimeout(votedTimer);
+								votedTimer = window.setTimeout(() => {
+									justVoted = null;
+									m.redraw();
+								}, 5000);
+								cheerRoundTrip(session, proposal.statementId);
+							},
+						}),
+						// Said out loud, every time: keeping or lowering a rating is a
+						// real answer, not a rudeness
+						m('p.chat-system__free', t('thread.reweigh_free')),
+					]
+				: m('.chat-system__gate', [
+						m(
+							'button.btn.btn--primary.btn--sm',
+							{
+								type: 'button',
+								onclick: () => {
+									gateOpenedFor = moment.editedAt;
+									onScrollToChange();
+								},
+							},
+							t('thread.reweigh_read'),
+						),
+						m(
+							'button.text-link',
+							{ type: 'button', onclick: onScrollToChange },
+							t('thread.reweigh_see_change'),
+						),
+					]),
+		]);
+	}
+
+	/**
+	 * The owner's moment: the class answered my revision.
+	 *
+	 * Two sentences, two attributions. The helper led to the revision — that is
+	 * an act, and it is praiseworthy however the number lands. The number itself
+	 * belongs to the class, in both directions. Fusing them ("your score rose
+	 * because of X") would denominate a classmate's goodwill in points and hand
+	 * them the blame the next time it falls, so on a drop the helper is not
+	 * named at all.
+	 */
+	function scoreMovedBlock(
+		proposal: AgoraProposal,
+		helperUid: string,
+		helperName: string,
+		onBack: () => void,
+	): m.Children {
+		const moment = scoreMovedMoment(proposal.statementId, proposal.creatorId, helperUid, proposal);
+		if (!moment) return null;
+
+		const fell = moment.bridgeDelta < 0;
+		// A single re-rater plus a direction is one identifiable classmate's vote,
+		// so at n = 1 the line reports a state and no movement at all
+		const single = moment.reRaters === 1;
+		const range = `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`;
+
+		return m(
+			'.chat-system.chat-system--moment.chat-system--score',
+			{ key: 'score', class: fell ? 'chat-system--down' : undefined },
+			[
+				m('.chat-system__head', [
+					m(
+						'span.chat-system__icon',
+						{ 'aria-hidden': 'true' },
+						single ? '👀' : fell ? '📉' : '📈',
+					),
+					m(
+						'span.chat-system__text',
+						single
+							? t('thread.score_single', { n: moment.bridgeNow })
+							: t('thread.score_since', { n: moment.reRaters }),
+					),
+				]),
+				// The act, credited — but only where a credit cannot read as blame
+				!single && !fell && helperName
+					? m('p.chat-system__credit', t('thread.score_led', { name: helperName }))
+					: null,
+				!single && moment.bridgeDelta !== 0
+					? m('p.chat-system__bridge', t('thread.score_bridge', { range }))
+					: null,
+				fell ? m('p.chat-system__hint', t('thread.score_fell')) : null,
+				m(
+					'button.text-link',
+					{
+						type: 'button',
+						onclick: () => {
+							// Close the chat FIRST, so the dock's focus request lands on
+							// the game screen rather than on a page about to unmount
+							onBack();
+							requestMineFocus();
+						},
+					},
+					t('thread.back_to_mine'),
+				),
+			],
+		);
+	}
+
+	/**
+	 * The circle, closed: an idea went out, it was acknowledged, the text came
+	 * back changed, and it was weighed again. Direction-blind on purpose — a
+	 * round trip that only counted when the score rose would be paying the
+	 * helper to vote up.
+	 */
+	function roundTripBlock(): m.Children {
+		return m('.chat-system.chat-system--moment.chat-system--roundtrip', { key: 'roundtrip' }, [
+			m('span.chat-system__icon', { 'aria-hidden': 'true' }, '🔁'),
+			m('.chat-system__body', [
+				m('p.chat-system__title', t('thread.round_trip_title')),
+				m('p.chat-system__text', t('thread.round_trip_body')),
+			]),
+		]);
+	}
+
+	/** One line of the conversation: what someone said, or what happened */
+	function messageRow(
+		session: AgoraSession,
+		message: AgoraProposal,
+		role: 'helper' | 'owner',
+		userId: string,
+	): m.Children {
+		// What HAPPENED, as opposed to what someone said
+		if (isSystemKind(message)) return systemLine(message, role);
+		const mine = message.creatorId === userId;
+		const decidable =
+			role === 'owner' &&
+			!mine &&
+			isSuggestionKind(message) &&
+			(message.suggestionStatus ?? AgoraSuggestionStatus.open) === AgoraSuggestionStatus.open;
+
+		return m(
+			'.thread__msg',
+			{
+				key: message.statementId,
+				id: `msg-${message.statementId}`,
+				class: [
+					mine ? 'thread__msg--mine' : 'thread__msg--peer',
+					isSuggestionKind(message) ? 'thread__msg--suggestion' : undefined,
+				]
+					.filter(Boolean)
+					.join(' '),
+			},
+			[
+				!mine && message.anonName ? m('span.thread__who', message.anonName) : null,
+				isSuggestionKind(message)
+					? m('span.thread__tag', `💡 ${t('delib.thread_suggestion_tag')}`)
+					: null,
+				m('p.thread__text', message.statement),
+				m('span.thread__time', formatMessageTime(message.createdAt)),
+				decidable ? decision(session, message) : statusChip(message),
+				// Said once, where the button is: a thank-you is not just
+				// politeness, it pays the classmate who helped
+				decidable ? m('p.action-hint', t('delib.thank_hint')) : null,
+			],
+		);
 	}
 
 	/** The lifecycle chip a resolved improvement idea wears */
@@ -390,6 +683,38 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 						: t('delib.chat_with_author')
 					: t('delib.chat_with_author');
 
+			// The two closing moments of the improvement cycle. `creatorId` is the
+			// truth about who is standing here — `role` is caller-supplied and can
+			// lie — and both are derived, so neither can fire twice or go stale.
+			currentThreadHelper = helperUid;
+			const amHelper = role === 'helper' && proposal.creatorId !== userId && helperUid === userId;
+			const moment = amHelper ? reWeighMoment(proposal.statementId, userId, proposal) : null;
+			const closed = roundTripClosed(proposal.statementId, helperUid);
+
+			function scrollToChange(): void {
+				const newest = [...messages]
+					.reverse()
+					.find((message) => message.agoraMessageKind === AgoraMessageKind.edit);
+				if (!newest) return;
+				document
+					.getElementById(`msg-${newest.statementId}`)
+					?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+			}
+
+			const listChildren = [
+				...messages.map((message) => messageRow(session, message, role, userId)),
+				moment ? reWeighBlock(session, proposal, moment, scrollToChange) : null,
+				votedLine(),
+				proposal.creatorId === userId
+					? scoreMovedBlock(proposal, helperUid, helperName, onBack)
+					: null,
+				closed ? roundTripBlock() : null,
+			].filter(Boolean);
+
+			// A derived moment changes no message count, so it would otherwise
+			// arrive below the fold — fold its presence into the scroll signature
+			const scrollKey = messages.length * 8 + listChildren.length;
+
 			return m('.shell.shell--chat', [
 				m('.chat-page', [
 					m('header.chat-page__bar', [
@@ -410,50 +735,15 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 						'.chat-page__list',
 						{
 							oncreate: (node: m.VnodeDOM) => {
-								stickToBottom(node.dom as HTMLElement, messages.length);
+								stickToBottom(node.dom as HTMLElement, scrollKey);
 							},
 							onupdate: (node: m.VnodeDOM) => {
-								stickToBottom(node.dom as HTMLElement, messages.length);
+								stickToBottom(node.dom as HTMLElement, scrollKey);
 							},
 						},
-						messages.length === 0
+						listChildren.length === 0
 							? m('p.chat-page__empty', t('delib.chat_empty'))
-							: messages.map((message) => {
-									// What HAPPENED, as opposed to what someone said
-									if (isSystemKind(message)) return systemLine(message, role);
-									const mine = message.creatorId === userId;
-									const decidable =
-										role === 'owner' &&
-										!mine &&
-										isSuggestionKind(message) &&
-										(message.suggestionStatus ?? AgoraSuggestionStatus.open) ===
-											AgoraSuggestionStatus.open;
-
-									return m(
-										'.thread__msg',
-										{
-											key: message.statementId,
-											class: [
-												mine ? 'thread__msg--mine' : 'thread__msg--peer',
-												isSuggestionKind(message) ? 'thread__msg--suggestion' : undefined,
-											]
-												.filter(Boolean)
-												.join(' '),
-										},
-										[
-											!mine && message.anonName ? m('span.thread__who', message.anonName) : null,
-											isSuggestionKind(message)
-												? m('span.thread__tag', `💡 ${t('delib.thread_suggestion_tag')}`)
-												: null,
-											m('p.thread__text', message.statement),
-											m('span.thread__time', formatMessageTime(message.createdAt)),
-											decidable ? decision(session, message) : statusChip(message),
-											// Said once, where the button is: a thank-you is not
-											// just politeness, it pays the classmate who helped
-											decidable ? m('p.action-hint', t('delib.thank_hint')) : null,
-										],
-									);
-								}),
+							: listChildren,
 					),
 					m('.chat-page__composer', [
 						m('textarea.text-input.chat-page__input', {

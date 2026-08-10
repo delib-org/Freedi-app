@@ -5,14 +5,12 @@ import {
 	listenToDeliberation,
 	stopDeliberationListeners,
 	submitProposal,
-	rateProposal,
 	askCharacterReview,
 	getHelpedProposals,
 	getOwnerThreads,
 	getThreadMessages,
 	isSuggestionKind,
 	AgoraProposal,
-	AgoraRating,
 	HelpedProposal,
 } from '../lib/proposals';
 import { orderSquare, studentOrder as studentOrderFor } from '../lib/squareOrder';
@@ -27,7 +25,16 @@ import {
 } from '../lib/helpedFocus';
 import { EraMapLantern } from '../components/EraMap';
 import { ResultsBoard } from '../components/ResultsBoard';
+import { RateScale, rateOptionFor } from '../components/RateScale';
 import { getCampCensus, getSessionState } from '../lib/session';
+import {
+	answerBaseline,
+	editClock,
+	ideaLandedAt,
+	ratingsMovedSince,
+	reWeighMoment,
+	scoreMovedMoment,
+} from '../lib/improvementSignals';
 import { NeedsPeek } from '../components/NeedsBoard';
 import { celebrate } from '../lib/celebration';
 import {
@@ -301,20 +308,6 @@ function placeBanner(kind: 'mine' | 'rate' | 'help'): m.Children {
 		]),
 	]);
 }
-
-/** The five-level rating scale, MC-style, ordered strongest-against → strongest-for */
-const RATE_OPTIONS: ReadonlyArray<{
-	value: AgoraRating;
-	variant: string;
-	emoji: string;
-	labelKey: string;
-}> = [
-	{ value: -1, variant: 'strong-against', emoji: '😠', labelKey: 'rate.strong_against' },
-	{ value: -0.5, variant: 'against', emoji: '🙁', labelKey: 'rate.against' },
-	{ value: 0, variant: 'abstain', emoji: '😐', labelKey: 'rate.abstain' },
-	{ value: 0.5, variant: 'for', emoji: '🙂', labelKey: 'rate.for' },
-	{ value: 1, variant: 'strong-for', emoji: '😍', labelKey: 'rate.strong_for' },
-];
 
 type CycleStep = 'mine' | 'rate' | 'help' | 'done';
 
@@ -850,10 +843,8 @@ export function Deliberation(
 		// aggregates back onto the proposal doc, so every rating bumped
 		// lastUpdate past its own timestamp and the signal raced itself out
 		// of existence.
-		const editedAt = myScoreDoc?.lastEditAt ?? myProposal.lastUpdate;
-		const ratingsMoved = (
-			getDeliberationState().studentEvalTimes[myProposal.statementId] ?? []
-		).filter((entry) => entry.evaluatorId !== userId && entry.updatedAt > editedAt).length;
+		const editedAt = answerBaseline(myProposal.statementId, myProposal.lastUpdate);
+		const ratingsMoved = ratingsMovedSince(myProposal.statementId, editedAt, userId);
 		// Direction rides on the AGGREGATE: current bridge power vs where it
 		// stood when I last saved. The score consequence is game state;
 		// individual rating values stay private (see docs/feedback-cycle.md).
@@ -987,11 +978,8 @@ export function Deliberation(
 
 		// Same measurement as the chip inside the card: classmates who
 		// (re)rated since my last save (see editableProposalCard)
-		const myScoreDoc = state.scores[myProposal.statementId];
-		const editedAt = myScoreDoc?.lastEditAt ?? myProposal.lastUpdate;
-		const ratingsMoved = (state.studentEvalTimes[myProposal.statementId] ?? []).filter(
-			(entry) => entry.evaluatorId !== userId && entry.updatedAt > editedAt,
-		).length;
+		const editedAt = answerBaseline(myProposal.statementId, myProposal.lastUpdate);
+		const ratingsMoved = ratingsMovedSince(myProposal.statementId, editedAt, userId);
 		const unsaved =
 			mineDraft.trim().length > 0 &&
 			mineDraft.trim() !== myProposal.statement &&
@@ -1182,6 +1170,8 @@ export function Deliberation(
 							userId,
 						),
 						openIdeas: messages.filter(isOpenIdea).length,
+						scoreMoved:
+							scoreMovedMoment(myProposal.statementId, userId, helperUid, myProposal) !== null,
 						onOpen: () => {
 							openChat(myProposal.statementId, helperUid, 'owner');
 						},
@@ -1276,25 +1266,10 @@ export function Deliberation(
 	 * chip lit forever.
 	 */
 	function changeStamps(proposal: AgoraProposal): { editAt: number; mineAt: number } {
-		const state = getDeliberationState();
-		const id = proposal.statementId;
-		const editAt = state.scores[id]?.lastEditAt ?? 0;
-		let mineAt = 0;
-		for (const suggestion of state.suggestions[id] ?? []) {
-			if (suggestion.creatorId !== userId) continue;
-			// The author's acknowledgment of MY idea. A thank-you is that mark
-			// now (the accept → woven-in lifecycle retired with the tray);
-			// `implemented` stays readable so older sessions keep their history.
-			if (
-				suggestion.suggestionStatus !== AgoraSuggestionStatus.thanked &&
-				suggestion.suggestionStatus !== AgoraSuggestionStatus.implemented
-			) {
-				continue;
-			}
-			mineAt = Math.max(mineAt, suggestion.statusChangedAt ?? suggestion.lastUpdate);
-		}
-
-		return { editAt, mineAt };
+		return {
+			editAt: editClock(proposal.statementId),
+			mineAt: ideaLandedAt(proposal.statementId, userId),
+		};
 	}
 
 	/** Opening or rating a card acknowledges everything it currently signals */
@@ -1338,11 +1313,15 @@ export function Deliberation(
 	 */
 	function attentionCount(): number {
 		const changed = getHelpedProposals(userId).filter(({ proposal }) => {
-			const { editAt, mineAt } = changeStamps(proposal);
+			const { mineAt } = changeStamps(proposal);
 			const watermark = seenEditWatermark(proposal.statementId);
 			if (watermark !== undefined && mineAt > watermark) return true;
 
-			return isEditedSinceSeen(proposal.statementId, editAt);
+			// The revision term is the re-weigh moment itself, REPLACING the
+			// edited-since-seen test rather than joining it — counting both would
+			// score one edit twice. It also clears later and more honestly: on the
+			// press that closes the loop, not on the glance that opened the card.
+			return reWeighMoment(proposal.statementId, userId, proposal) !== null;
 		}).length;
 		// ...plus stalls where the owner wrote back into my conversation
 		const unreadThreads = getDeliberationState().proposals.filter(
@@ -1350,72 +1329,6 @@ export function Deliberation(
 		).length;
 
 		return changed + unreadThreads;
-	}
-
-	/**
-	 * Re-rating is step 5 — the move that closes the whole cycle — and it was
-	 * the one handoff with no feedback at all: the press changed a ring and
-	 * nothing else. proposalId → the transient "counted" acknowledgment.
-	 */
-	const reRateAcked: Record<string, boolean> = {};
-	const reRateAckTimers: Record<string, number> = {};
-
-	function ackReRate(proposalId: string): void {
-		reRateAcked[proposalId] = true;
-		window.clearTimeout(reRateAckTimers[proposalId]);
-		reRateAckTimers[proposalId] = window.setTimeout(() => {
-			delete reRateAcked[proposalId];
-			m.redraw();
-		}, 2600);
-	}
-
-	/**
-	 * The compact five-level scale. `onFirstVote` fires only when this is the
-	 * first time I weigh THIS proposal — out on the square that is what counts
-	 * toward the lap; everywhere else the scale stays free of cycle state.
-	 */
-	function reRateScale(
-		live: AgoraSession,
-		proposal: AgoraProposal,
-		opts?: { onFirstVote?: () => void },
-	): m.Children {
-		const current = getDeliberationState().myRatings[proposal.statementId]?.value;
-
-		// Join-app selection grammar: once a vote exists the group knows it
-		// (siblings recede), the chosen card wears ring + scale + ✓ badge —
-		// three redundant cues, so "where did I press?" never needs hunting
-		return m(
-			'.rate-scale.rate-scale--compact',
-			{
-				class: current !== undefined ? 'rate-scale--has-selection' : undefined,
-				role: 'radiogroup',
-			},
-			RATE_OPTIONS.map((option) => {
-				const active = current === option.value;
-
-				return m(
-					`button.rate-scale__option.rate-scale__option--${option.variant}`,
-					{
-						class: active ? 'rate-scale__option--selected' : undefined,
-						role: 'radio',
-						'aria-checked': String(active),
-						onclick: () => {
-							const first = getDeliberationState().myRatings[proposal.statementId] === undefined;
-							void rateProposal(live, proposal.statementId, option.value);
-							// Weighing the text IS reading it — the change chips clear
-							ackProposalSeen(proposal);
-							ackReRate(proposal.statementId);
-							if (first) opts?.onFirstVote?.();
-						},
-					},
-					[
-						m('span.rate-scale__emoji', option.emoji),
-						m('span.rate-scale__label', t(option.labelKey)),
-						active ? m('span.rate-scale__check', { 'aria-hidden': 'true' }, '✓') : null,
-					],
-				);
-			}),
-		);
 	}
 
 	/**
@@ -1430,19 +1343,7 @@ export function Deliberation(
 	 * which would flag a proposal as "improved" when nobody touched a word.
 	 */
 	function helpedImprovedSince(proposal: AgoraProposal): boolean {
-		const mySuggestions = getThreadMessages(proposal.statementId, userId).filter(
-			(message) => message.creatorId === userId && isSuggestionKind(message),
-		);
-		if (mySuggestions.length === 0) return false;
-		// createdAt, NOT lastUpdate: resolving a suggestion bumps its lastUpdate,
-		// which would wrongly hide the marker when the owner edited first
-		const latestInput = Math.max(...mySuggestions.map((suggestion) => suggestion.createdAt));
-		const state = getDeliberationState();
-		const editedAt = state.scores[proposal.statementId]?.lastEditAt ?? proposal.lastUpdate;
-		const myRating = state.myRatings[proposal.statementId];
-		const reRatedSinceUpdate = myRating !== undefined && myRating.updatedAt > editedAt;
-
-		return editedAt > latestInput && !reRatedSinceUpdate;
+		return reWeighMoment(proposal.statementId, userId, proposal) !== null;
 	}
 
 	/**
@@ -1474,7 +1375,6 @@ export function Deliberation(
 		// re-rate advances updatedAt past the edit.
 		const changedSinceRating = myRating !== undefined && editAt > myRating.updatedAt;
 		const mineSinceRating = myRating !== undefined && mineAt > myRating.updatedAt;
-		const acked = reRateAcked[proposal.statementId] === true;
 
 		return [
 			changedSinceRating
@@ -1488,30 +1388,28 @@ export function Deliberation(
 				: helpedImprovedSince(proposal)
 					? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`)
 					: null,
-			// The cycle's final beat: the press is answered in words, once,
-			// then the prompt returns
-			acked ? m('p.helped__rerate-ack', { role: 'status' }, `✓ ${t('delib.rerate_ack')}`) : null,
-			reRateScale(
-				live,
-				proposal,
-				opts?.countsTowardLap === true
-					? {
-							// Only a FIRST vote moves the lap along; changing my mind
-							// about a proposal I already weighed is free, and must not
-							// buy a lap step. The stall no longer folds itself after the
-							// press — the way into the conversation with the author lives
-							// in this same card, and folding it would hide the next step.
-							onFirstVote: () => {
+			m(RateScale, {
+				session: live,
+				proposalId: proposal.statementId,
+				// Weighing the text IS reading it — the change chips clear
+				onVote: () => {
+					ackProposalSeen(proposal);
+				},
+				// Only a FIRST vote moves the lap along; changing my mind about a
+				// proposal I already weighed is free, and must not buy a lap step.
+				onFirstVote:
+					opts?.countsTowardLap === true
+						? () => {
 								setCycle({ rated: cycle.rated + 1 });
-							},
-						}
-					: undefined,
-			),
+							}
+						: undefined,
+			}),
 			// The conversation is one line here, and a whole page one tap away
 			threadEntry({
 				label: t('delib.chat_with_author'),
 				messages: getThreadMessages(proposal.statementId, userId),
 				unread: myThreadUnread(proposal),
+				reWeigh: reWeighMoment(proposal.statementId, userId, proposal) !== null,
 				onOpen: () => {
 					openChat(proposal.statementId, userId, 'helper');
 				},
@@ -1692,7 +1590,7 @@ export function Deliberation(
 	function rateStallChip(proposal: AgoraProposal): m.Children {
 		const mine = getDeliberationState().myRatings[proposal.statementId];
 		if (mine === undefined) return null;
-		const option = RATE_OPTIONS.find((entry) => entry.value === mine.value);
+		const option = rateOptionFor(mine.value);
 		if (!option) return null;
 
 		return m(
@@ -1745,7 +1643,6 @@ export function Deliberation(
 			window.clearTimeout(splashTimer);
 			window.clearTimeout(sentAckTimer);
 			window.clearTimeout(dockIntroTimer);
-			Object.values(reRateAckTimers).forEach((timer) => window.clearTimeout(timer));
 			void flushSeenState();
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
