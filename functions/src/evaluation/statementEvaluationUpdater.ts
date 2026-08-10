@@ -7,7 +7,7 @@
  */
 
 import { logger } from 'firebase-functions/v1';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp, type Transaction } from 'firebase-admin/firestore';
 import { number, parse } from 'valibot';
 import {
 	Collections,
@@ -17,6 +17,9 @@ import {
 	StatementEvaluation,
 	calcConfidenceIndex,
 	DEFAULT_SAMPLING_QUALITY,
+	resolveStakeholderCount,
+	resolveSamplingQuality,
+	type StakeholderScope,
 } from '@freedi/shared-types';
 import { db } from '../index';
 import { calculateConsensusValid } from '../helpers/consensusValidCalculator';
@@ -168,6 +171,41 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 	}
 }
 
+interface StakeholderAncestors {
+	parent?: StakeholderScope;
+	top?: StakeholderScope;
+}
+
+/**
+ * Fetch the parent question and top-level group, which are where a stakeholder
+ * count is actually declared — an option never carries one of its own.
+ *
+ * Both reads are skipped when the id is missing or points back at the statement
+ * itself, and the top read is skipped when it is the same document as the
+ * parent: a question sitting directly under its group is the common shape and
+ * does not deserve two reads of one doc. So the usual cost of inheritance is a
+ * single extra read per evaluation, and zero when the statement is top-level.
+ */
+async function readStakeholderAncestors(
+	transaction: Transaction,
+	statementId: string,
+	parentId?: string,
+	topParentId?: string,
+): Promise<StakeholderAncestors> {
+	const scopeFor = async (id?: string): Promise<StakeholderScope | undefined> => {
+		if (!id || id === statementId) return undefined;
+		const snapshot = await transaction.get(db.collection(Collections.statements).doc(id));
+
+		return snapshot.exists ? (snapshot.data() as StakeholderScope) : undefined;
+	};
+
+	const parent = await scopeFor(parentId);
+	const top =
+		topParentId && topParentId !== parentId ? await scopeFor(topParentId) : parent;
+
+	return { parent, top };
+}
+
 /**
  * Performs an atomic Firestore transaction to update a statement's evaluation fields.
  *
@@ -277,7 +315,36 @@ async function updateStatementInTransaction(
 			statementData.topParentId = statementData.parentId || statementId;
 		}
 
+		// Read the ancestors that may declare the stakeholder count. This must
+		// happen HERE: Firestore requires every read in a transaction to
+		// precede every write, so it cannot be done lazily at the point of use
+		// further down.
+		const ancestors = await readStakeholderAncestors(
+			transaction,
+			statementId,
+			statementData.parentId,
+			statementData.topParentId,
+		);
+
 		const statement = parse(StatementSchema, statementData) as StatementWithPopper;
+
+		// The stakeholder count is declared on the group or the question and
+		// inherited downward — never on the option being voted on. This used to
+		// read `statementData.evaluationSettings?.targetPopulation`, i.e. off
+		// the option itself, while the settings UI only ever offered the field
+		// on questions. The two never met, so the confidence index was in
+		// practice only ever written by the manual recalculation callable.
+		const { count: stakeholderCount } = resolveStakeholderCount(
+			statementData as StakeholderScope,
+			ancestors.parent,
+			ancestors.top,
+		);
+		const samplingQuality =
+			resolveSamplingQuality(
+				statementData as StakeholderScope,
+				ancestors.parent,
+				ancestors.top,
+			) ?? DEFAULT_SAMPLING_QUALITY;
 
 		const { agreement, evaluation } = calculateEvaluation(
 			statement,
@@ -285,18 +352,14 @@ async function updateStatementInTransaction(
 			evaluationDiff,
 			addEvaluator,
 			squaredEvaluationDiff,
+			stakeholderCount,
 		);
 
-		// Calculate Confidence Index if targetPopulation is configured
-		const targetPopulation = statementData.evaluationSettings?.targetPopulation;
-		const samplingQuality =
-			statementData.evaluationSettings?.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;
-
 		let confidenceIndex: number | undefined;
-		if (targetPopulation && targetPopulation > 0) {
+		if (stakeholderCount !== undefined) {
 			confidenceIndex = calcConfidenceIndex(
 				evaluation.numberOfEvaluators,
-				targetPopulation,
+				stakeholderCount,
 				samplingQuality,
 			);
 		}

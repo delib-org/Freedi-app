@@ -251,6 +251,12 @@ export const StatementSchema = object({
 		}),
 	),
 	totalEvaluators: optional(number()), // the total number of evaluators of the statement
+	// Subscriber count, written onto the statement doc by
+	// fn_subscriptions.updateStatementMemberCount. It was only ever declared on
+	// StatementMetaDataSchema, so every `parse(StatementSchema, ...)` silently
+	// stripped it — including the evaluation trigger, which now needs it as the
+	// fallback stakeholder count when no population has been declared.
+	numberOfMembers: optional(number()),
 	isInMultiStage: optional(boolean()), // if true, the statement is in a multi-stage
 	documentApproval: optional(DocumentApprovalSchema), // the approval of the statement - used for Freedi-sign.
 	documentImportance: optional(DocumentImportanceSchema), // the importance of the statement - used for Freedi-sign.

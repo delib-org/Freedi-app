@@ -90,7 +90,14 @@ export enum EvaluationUI {
 export const StatementEvaluationSettingsSchema = object({
 	maxVotesPerUser: optional(number()),
 	evaluationUI: enum_(EvaluationUI),
-	targetPopulation: optional(number()), // N: target population size for confidence index
+	// N: the number of STAKEHOLDERS — everyone with standing in this decision,
+	// whether or not the process reached them. A settlement of 500 residents
+	// has 500 stakeholders even if only 320 were invited. Declared once on a
+	// group or question and inherited by everything beneath it (see
+	// resolveStakeholderCount). Drives the finite-population correction on C_p
+	// as well as the confidence index; leaving it unset means "no bounded
+	// population" and yields the uncorrected formula.
+	targetPopulation: optional(number()),
 	samplingQuality: optional(number()), // q: sampling quality (0-1], default 0.3
 	anchored: optional(object({ //a two-phase process where users propose options, and evaluations always include admin-selected anchored options alongside randomly chosen user options
 		anchored:optional(boolean()), //if true, some statements are anchored to be represented in the evaluation.

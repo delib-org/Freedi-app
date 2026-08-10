@@ -54,13 +54,19 @@ export function calcAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
 	numberOfEvaluators: number,
+	populationSize?: number,
 ): number {
 	try {
 		parse(number(), sumEvaluations);
 		parse(number(), sumSquaredEvaluations);
 		parse(number(), numberOfEvaluators);
 
-		return sharedCalcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+		return sharedCalcAgreement(
+			sumEvaluations,
+			sumSquaredEvaluations,
+			numberOfEvaluators,
+			populationSize,
+		);
 	} catch (error) {
 		logger.error('Error calculating agreement:', error);
 
@@ -84,6 +90,10 @@ export function calcSquaredDiff(newEvaluation: number, oldEvaluation: number): n
  * @param evaluationDiff - Net evaluation change
  * @param addEvaluator - Evaluator count change (+1, -1, or 0)
  * @param squaredEvaluationDiff - Squared evaluation difference
+ * @param populationSize - N: the stakeholder count for this decision, resolved
+ *   from the statement's ancestors. Omit when no bounded stakeholder set is
+ *   known — the scores are then exactly what they were before the
+ *   finite-population correction existed.
  * @returns Object containing agreement score and updated evaluation
  */
 export function calculateEvaluation(
@@ -92,6 +102,7 @@ export function calculateEvaluation(
 	evaluationDiff: number,
 	addEvaluator: number,
 	squaredEvaluationDiff: number,
+	populationSize?: number,
 ): { agreement: number; evaluation: StatementEvaluation } {
 	const evaluation: StatementEvaluation = statement.evaluation || {
 		agreement: statement.consensus || 0,
@@ -151,11 +162,14 @@ export function calculateEvaluation(
 			? evaluation.sumEvaluations / evaluation.numberOfEvaluators
 			: 0;
 
-	// Calculate consensus using new Mean - SEM formula
+	// Consensus C_p, finite-population corrected when the stakeholder count is
+	// known: the confidence penalty shrinks as more of the people with standing
+	// weigh in, and vanishes entirely once all of them have.
 	const agreement = calcAgreement(
 		evaluation.sumEvaluations,
 		evaluation.sumSquaredEvaluations || 0,
 		evaluation.numberOfEvaluators,
+		populationSize,
 	);
 	evaluation.agreement = agreement;
 
@@ -164,9 +178,12 @@ export function calculateEvaluation(
 		evaluation.sumEvaluations,
 		evaluation.sumSquaredEvaluations || 0,
 		evaluation.numberOfEvaluators,
+		populationSize,
 	);
 
-	// Calculate Like-mindedness (simple: 1 - SEM*)
+	// Like-mindedness (simple: 1 - SEM*) takes NO population, deliberately:
+	// it measures dispersion, not sampling error. How divided a group is must
+	// not change with how many of them we heard from.
 	evaluation.likeMindedness = calcLikeMindedness(
 		evaluation.sumEvaluations,
 		evaluation.sumSquaredEvaluations || 0,

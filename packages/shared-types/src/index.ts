@@ -537,6 +537,18 @@ export {
   calcConfidenceIndex,
 } from "./utils/consensusCalculation";
 
+// Stakeholder population resolution (N for the finite-population correction)
+export {
+  resolveStakeholderCount,
+  resolveSamplingQuality,
+  stakeholderCoverage,
+} from "./utils/stakeholderPopulation";
+export type {
+  StakeholderScope,
+  StakeholderSource,
+  StakeholderResolution,
+} from "./utils/stakeholderPopulation";
+
 // Strategic Export (AI-ready report) models
 export type {
   StrategicExportRequest,
