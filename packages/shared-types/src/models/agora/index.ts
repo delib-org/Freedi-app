@@ -65,11 +65,7 @@ export {
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
 
-export type {
-	AgoraValueScore,
-	AgoraPoints,
-	AgoraParticipant,
-} from './agoraParticipant';
+export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
 export {
 	AgoraValueScoreSchema,
 	AgoraPointsSchema,
@@ -80,30 +76,38 @@ export {
 
 export type {
 	AgoraCampAggregate,
+	AgoraClassConsensus,
 	AgoraCriterionScore,
 	AgoraPlausibility,
 	AgoraProposalScore,
+	AgoraRatingDist,
 } from './agoraScore';
 export {
+	AGORA_RATING_LEVELS,
 	AgoraCampAggregateSchema,
+	AgoraClassConsensusSchema,
 	AgoraCriterionScoreSchema,
 	AgoraPlausibilitySchema,
 	AgoraProposalScoreSchema,
+	AgoraRatingDistSchema,
 } from './agoraScore';
 
-export type { AgoraValueAnswer } from './agoraValueAnswer';
+export type { AgoraClassConsensusInput } from './agoraConsensus';
 export {
-	AgoraValueAnswerSchema,
-	createAgoraValueAnswerId,
-} from './agoraValueAnswer';
+	addDist,
+	agoraRatingBucket,
+	calcAgoraClassConsensus,
+	consensusCeiling,
+	distMoments,
+	emptyDist,
+	normalizedConsensus,
+} from './agoraConsensus';
+
+export type { AgoraValueAnswer } from './agoraValueAnswer';
+export { AgoraValueAnswerSchema, createAgoraValueAnswerId } from './agoraValueAnswer';
 
 export type { BridgingInput } from './agoraBridging';
-export {
-	deriveCamp,
-	calcBridgingScore,
-	bridgingTierFor,
-	bridgingPayout,
-} from './agoraBridging';
+export { deriveCamp, calcBridgingScore, bridgingTierFor, bridgingPayout } from './agoraBridging';
 
 export type { AgoraCharacterReview } from './agoraCharacterReview';
 export {

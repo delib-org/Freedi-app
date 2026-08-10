@@ -1,11 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	optional,
-	array,
-	InferOutput,
-} from 'valibot';
+import { object, string, number, optional, array, InferOutput } from 'valibot';
 
 /**
  * A student's free-text answer identifying a character's values,
@@ -30,7 +23,7 @@ export type AgoraValueAnswer = InferOutput<typeof AgoraValueAnswerSchema>;
 export function createAgoraValueAnswerId(
 	sessionId: string,
 	userId: string,
-	characterId: string
+	characterId: string,
 ): string {
 	return `${sessionId}--${userId}--${characterId}`;
 }

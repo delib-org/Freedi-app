@@ -1,11 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	array,
-	record,
-	InferOutput,
-} from 'valibot';
+import { object, string, number, array, record, InferOutput } from 'valibot';
 import { AGORA_AI_REVIEW } from './agoraConstants';
 
 /**
@@ -34,10 +27,7 @@ export const AgoraCharacterReviewSchema = object({
 
 export type AgoraCharacterReview = InferOutput<typeof AgoraCharacterReviewSchema>;
 
-export function createAgoraCharacterReviewId(
-	statementId: string,
-	characterId: string
-): string {
+export function createAgoraCharacterReviewId(statementId: string, characterId: string): string {
 	return `${statementId}--${characterId}`;
 }
 

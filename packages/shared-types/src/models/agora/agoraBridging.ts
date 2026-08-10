@@ -94,8 +94,7 @@ export function calcBridgingScore(input: BridgingInput): number {
 		positiveN: wing.positiveN + perCamp.center.positiveN * CENTER_CAMP_WEIGHT,
 	});
 
-	const support = (agg: AgoraCampAggregate): number =>
-		agg.n > 0 ? clamp01(agg.sum / agg.n) : 0;
+	const support = (agg: AgoraCampAggregate): number => (agg.n > 0 ? clamp01(agg.sum / agg.n) : 0);
 
 	if (authorCamp === AgoraCamp.center) {
 		// Both wings are "other"; own support is the center itself
@@ -108,9 +107,7 @@ export function calcBridgingScore(input: BridgingInput): number {
 		});
 		const conf = crossCampConfidence(otherN, crossCampPool);
 
-		return Math.round(
-			100 * (SAME_CAMP_WEIGHT * own + CROSS_CAMP_WEIGHT * otherSupport * conf)
-		);
+		return Math.round(100 * (SAME_CAMP_WEIGHT * own + CROSS_CAMP_WEIGHT * otherSupport * conf));
 	}
 
 	const ownWing = authorCamp === AgoraCamp.left ? perCamp.left : perCamp.right;
@@ -120,6 +117,6 @@ export function calcBridgingScore(input: BridgingInput): number {
 	const conf = crossCampConfidence(other.n, crossCampPool);
 
 	return Math.round(
-		100 * (SAME_CAMP_WEIGHT * support(own) + CROSS_CAMP_WEIGHT * support(other) * conf)
+		100 * (SAME_CAMP_WEIGHT * support(own) + CROSS_CAMP_WEIGHT * support(other) * conf),
 	);
 }

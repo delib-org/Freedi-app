@@ -1,13 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	boolean,
-	optional,
-	array,
-	enum_,
-	InferOutput,
-} from 'valibot';
+import { object, string, number, boolean, optional, array, enum_, InferOutput } from 'valibot';
 import {
 	AgoraStage,
 	AgoraRoundPhase,
@@ -44,8 +35,29 @@ export const AgoraOutcomeStatsSchema = object({
 export type AgoraOutcomeStats = InferOutput<typeof AgoraOutcomeStatsSchema>;
 
 export const AgoraClassScoreSchema = object({
-	/** Highest agreementIndex reached by any proposal, 0-100 */
+	/**
+	 * The consensus term of the class score, 0-100 — the leading proposal's
+	 * class consensus expressed as a fraction of what a class this size could
+	 * have reached at its actual coverage. Normalised rather than raw because a
+	 * student's rating budget is fixed: coverage falls as the class grows, so
+	 * raw consensus would make the same class sentiment pass in a class of six
+	 * and be unreachable in a class of forty.
+	 *
+	 * Falls back to the bridging peak for sessions scored before class
+	 * consensus existed.
+	 */
 	maxConsensus: number(),
+	/** The proposal the class agreed on most — the one the results screen names */
+	leadStatementId: optional(string()),
+	/** That proposal's raw class consensus, -1..1. At a census this is the plain mean. */
+	leadConsensus: optional(number()),
+	/** How much of the class actually rated the leading proposal */
+	leadCoverage: optional(
+		object({
+			rated: number(),
+			eligible: number(),
+		}),
+	),
 	/** Sum of all participants' personal points */
 	personalPointsSum: number(),
 	/** Average AI plausibility score across proposals, 0-100 */

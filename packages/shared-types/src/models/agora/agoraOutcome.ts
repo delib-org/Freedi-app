@@ -25,7 +25,5 @@ export function deriveAgoraOutcome(input: AgoraOutcomeInput): AgoraSessionOutcom
 		input.crossRatedProposals >= AGORA_OUTCOME.MIN_CROSS_RATED_PROPOSALS &&
 		input.raterCoverage >= AGORA_OUTCOME.MIN_RATER_COVERAGE;
 
-	return mappedDivergence
-		? AgoraSessionOutcome.honestDisagreement
-		: AgoraSessionOutcome.collapse;
+	return mappedDivergence ? AgoraSessionOutcome.honestDisagreement : AgoraSessionOutcome.collapse;
 }

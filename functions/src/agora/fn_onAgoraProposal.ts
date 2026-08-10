@@ -4,6 +4,7 @@ import {
 	Collections,
 	AgoraCamp,
 	AgoraCampAggregate,
+	emptyDist,
 	AgoraMessageKind,
 	AgoraParticipant,
 	AgoraProposalScore,
@@ -174,13 +175,22 @@ async function stampEditBaseline(
 				.collection(Collections.agoraParticipants)
 				.doc(createAgoraParticipantId(sessionId, creatorId)),
 		);
-		const authorCamp =
-			(authorSnap.data() as AgoraParticipant | undefined)?.camp ?? AgoraCamp.center;
-		const emptyAggregate = (): AgoraCampAggregate => ({ sum: 0, n: 0, positiveN: 0 });
+		const author = authorSnap.data() as AgoraParticipant | undefined;
+		const authorCamp = author?.camp ?? AgoraCamp.center;
+		const emptyAggregate = (): AgoraCampAggregate => ({
+			sum: 0,
+			n: 0,
+			positiveN: 0,
+			studentDist: emptyDist(),
+		});
 		const score: AgoraProposalScore = {
 			statementId,
 			sessionId,
 			authorCamp,
+			// The author holds a seat in the camp census that must not count
+			// toward their own proposal's eligible rater pool — the square never
+			// serves anyone their own text.
+			authorPositioned: Boolean(author?.camp && !author.isAI),
 			perCamp: {
 				left: emptyAggregate(),
 				right: emptyAggregate(),

@@ -203,12 +203,29 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 			0,
 			...proposals.map((proposal) => scores.get(proposal.statementId)?.bridgingScore ?? 0),
 		);
-		const leadProposal = proposals.reduce<ProposalRow | undefined>((best, candidate) => {
-			const bestScore = best ? (scores.get(best.statementId)?.bridgingScore ?? 0) : -1;
-			const candidateScore = scores.get(candidate.statementId)?.bridgingScore ?? 0;
 
-			return candidateScore > bestScore ? candidate : best;
+		// The crown is the class's own consensus, not the bridging score. A
+		// proposal leads because the class agrees with it, and `normalized`
+		// rather than raw C_p is what the threshold judges: a student's rating
+		// budget is fixed, so coverage — and with it raw consensus — falls as
+		// the class grows. Without normalising, the same class sentiment would
+		// pass in a class of six and be unreachable in a class of forty.
+		const consensusOf = (statementId: string): number =>
+			scores.get(statementId)?.classConsensus?.consensus ?? Number.NEGATIVE_INFINITY;
+		const leadProposal = proposals.reduce<ProposalRow | undefined>((best, candidate) => {
+			if (!best)
+				return consensusOf(candidate.statementId) > Number.NEGATIVE_INFINITY ? candidate : best;
+
+			return consensusOf(candidate.statementId) > consensusOf(best.statementId) ? candidate : best;
 		}, undefined);
+		const leadConsensus = leadProposal
+			? scores.get(leadProposal.statementId)?.classConsensus
+			: undefined;
+		// Sessions scored before class consensus existed have no histogram, so
+		// fall back to the bridging reading rather than reporting a zero the
+		// class never earned.
+		const consensusTerm =
+			leadConsensus !== undefined ? Math.round(100 * leadConsensus.normalized) : maxBridging;
 
 		const results =
 			process.env.OPENAI_API_KEY && proposals.length > 0
@@ -279,7 +296,7 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 		});
 
 		const total = Math.round(
-			0.45 * maxBridging + 0.25 * Math.min(100, avgPoints) + 0.3 * avgPlausibility,
+			0.45 * consensusTerm + 0.25 * Math.min(100, avgPoints) + 0.3 * avgPlausibility,
 		);
 		const outcome = deriveAgoraOutcome({
 			total,
@@ -298,7 +315,12 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 				typeof results.debrief?.encouragement === 'string' ? results.debrief.encouragement : '',
 		};
 		const classScore: AgoraClassScore = {
-			maxConsensus: maxBridging,
+			maxConsensus: consensusTerm,
+			leadStatementId: leadProposal?.statementId,
+			leadConsensus: leadConsensus?.consensus,
+			leadCoverage: leadConsensus
+				? { rated: leadConsensus.n, eligible: leadConsensus.eligible }
+				: undefined,
 			personalPointsSum,
 			avgPlausibility,
 			total,
