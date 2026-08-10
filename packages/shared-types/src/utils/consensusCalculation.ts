@@ -114,6 +114,74 @@ export function tCritical(df: number): number {
 }
 
 // ============================================================================
+// FINITE POPULATION CORRECTION
+// ============================================================================
+
+/**
+ * Finite-population correction (FPC) for the standard error.
+ *
+ * SEM* asks "how far might the true opinion of the WORLD be from this sample?"
+ * — an infinite-superpopulation question. When the stakeholders are a known,
+ * finite set (a settlement's residents, a group's members, the students in a
+ * classroom) that is the wrong question: once all of them have spoken the mean
+ * is OBSERVED, not estimated, and the uncertainty penalty must be exactly zero.
+ *
+ *   fpc = √(1 − n/N),  with n/N clamped to [0, 1]
+ *
+ * - n = N  → 0. A census carries no sampling error, so C_p collapses to μ.
+ * - n ≪ N  → 1. Recovers the uncorrected formula; a small self-selected poll
+ *                stays exactly as humble as it is today.
+ * - n > N  → clamped to a census. That is the GENEROUS direction and it means
+ *                N is wrong, so callers should treat it as a data-quality
+ *                signal rather than a normal state.
+ *
+ * INTEGRITY: understating N inflates consensus. With 50 respondents, declaring
+ * N = 50 instead of N = 500 moves C_p from 0.420 to 0.600. N is a published
+ * claim about who has standing in the decision, not a private tuning dial —
+ * any surface that shows an FPC-corrected score should show n and N with it.
+ *
+ * @param numberOfEvaluators - n: how many actually evaluated
+ * @param populationSize - N: how many stakeholders exist. Omit when the
+ *   population is unbounded (open participation) — the result is then 1.
+ */
+export function finitePopulationFactor(
+  numberOfEvaluators: number,
+  populationSize?: number,
+): number {
+  if (
+    populationSize === undefined ||
+    !Number.isFinite(populationSize) ||
+    populationSize <= 0
+  ) {
+    return 1;
+  }
+
+  const coverage = Math.min(1, Math.max(0, numberOfEvaluators / populationSize));
+
+  return Math.sqrt(1 - coverage);
+}
+
+/**
+ * True when n exceeds the declared stakeholder count — more people evaluated
+ * than are supposed to exist. The correction clamps to a census (the generous
+ * direction), so this is worth surfacing rather than silently absorbing.
+ */
+export function isPopulationOversubscribed(
+  numberOfEvaluators: number,
+  populationSize?: number,
+): boolean {
+  if (
+    populationSize === undefined ||
+    !Number.isFinite(populationSize) ||
+    populationSize <= 0
+  ) {
+    return false;
+  }
+
+  return numberOfEvaluators > populationSize;
+}
+
+// ============================================================================
 // BAYESIAN-SMOOTHED SEM (SEM*)
 // ============================================================================
 
@@ -127,15 +195,21 @@ export function tCritical(df: number): number {
  *   σ̂*_p = √[ (Σe²_{i,p} + k·0²) / (n_p + k - 1) ]
  *   SEM*_p = σ̂*_p / √(n_p + k)
  *
+ * When `populationSize` is supplied the result is additionally multiplied by
+ * the finite-population correction — see {@link finitePopulationFactor}.
+ *
  * @param sumEvaluations - Sum of all evaluation values (Σe_i)
  * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
  * @param numberOfEvaluators - Number of real evaluators (n_p)
+ * @param populationSize - N: stakeholder count, when the population is finite
+ *   and known. Omitting it is bit-identical to the uncorrected formula.
  * @returns SEM*_p (Bayesian-smoothed standard error)
  */
 export function calcSmoothedSEM(
   sumEvaluations: number,
   sumSquaredEvaluations: number,
   numberOfEvaluators: number,
+  populationSize?: number,
 ): number {
   const n = numberOfEvaluators;
   const k = BAYESIAN_PRIOR_K;
@@ -156,7 +230,15 @@ export function calcSmoothedSEM(
   const smoothedStdDev = Math.sqrt(Math.max(0, smoothedVariance));
 
   // SEM* = σ̂* / √(n + k)
-  return smoothedStdDev / Math.sqrt(n + k);
+  const sem = smoothedStdDev / Math.sqrt(n + k);
+
+  // Return BEFORE any further arithmetic when no population is declared —
+  // not `sem * 1`. Every existing caller (MC, Sign, the main app, condensation)
+  // passes three arguments, and their stored scores must not shift by even one
+  // float ULP because this parameter was added.
+  if (populationSize === undefined) return sem;
+
+  return sem * finitePopulationFactor(n, populationSize);
 }
 
 /**
@@ -167,8 +249,14 @@ export function calcStandardError(
   sumEvaluations: number,
   sumSquaredEvaluations: number,
   numberOfEvaluators: number,
+  populationSize?: number,
 ): number {
-  return calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+  return calcSmoothedSEM(
+    sumEvaluations,
+    sumSquaredEvaluations,
+    numberOfEvaluators,
+    populationSize,
+  );
 }
 
 // ============================================================================
@@ -187,15 +275,25 @@ export function calcStandardError(
  * Bayesian smoothing (k=2 phantom priors) prevents small unanimous
  * samples from claiming zero variance.
  *
+ * When `populationSize` is supplied the confidence penalty additionally shrinks
+ * with coverage, reaching exactly zero at a census — see
+ * {@link finitePopulationFactor}. Note this removes SAMPLING uncertainty only,
+ * never opinion variance: a class that genuinely splits 8-for / 7-against still
+ * scores at or below zero however complete the count. Disagreement is not
+ * launderable by counting more of it.
+ *
  * @param sumEvaluations - Sum of all evaluation values
  * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
  * @param numberOfEvaluators - Number of evaluators
+ * @param populationSize - N: stakeholder count, when the population is finite
+ *   and known. Omitting it is bit-identical to the uncorrected formula.
  * @returns Consensus score C_p (confidence-adjusted)
  */
 export function calcAgreement(
   sumEvaluations: number,
   sumSquaredEvaluations: number,
   numberOfEvaluators: number,
+  populationSize?: number,
 ): number {
   if (numberOfEvaluators === 0) return 0;
 
@@ -205,8 +303,8 @@ export function calcAgreement(
   // Mean sentiment μ_p
   const mean = sumEvaluations / n;
 
-  // Bayesian-smoothed SEM*
-  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n);
+  // Bayesian-smoothed SEM*, finite-population corrected when N is known
+  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n, populationSize);
 
   // t-distribution critical value with df = n + k - 1
   const df = n + k - 1;
@@ -227,11 +325,14 @@ export function calcAgreement(
  *
  * @param positiveEvaluations - Number of +1 votes
  * @param negativeEvaluations - Number of -1 votes
+ * @param populationSize - N: stakeholder count, when known. Omitting it is
+ *   bit-identical to the uncorrected formula.
  * @returns Consensus score (confidence-adjusted)
  */
 export function calcBinaryConsensus(
   positiveEvaluations: number,
   negativeEvaluations: number,
+  populationSize?: number,
 ): number {
   const numberOfEvaluators = positiveEvaluations + negativeEvaluations;
   if (numberOfEvaluators === 0) return 0;
@@ -239,7 +340,12 @@ export function calcBinaryConsensus(
   const sumEvaluations = positiveEvaluations - negativeEvaluations;
   const sumSquaredEvaluations = positiveEvaluations + negativeEvaluations; // 1² = (-1)² = 1
 
-  return calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+  return calcAgreement(
+    sumEvaluations,
+    sumSquaredEvaluations,
+    numberOfEvaluators,
+    populationSize,
+  );
 }
 
 // ============================================================================
@@ -287,19 +393,23 @@ export const CONFIDENCE_CALIBRATION_CONSTANT = 5;
  * @param sumEvaluations - Sum of all evaluation values (Σe_i)
  * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
  * @param numberOfEvaluators - Number of evaluators (n_p)
+ * @param populationSize - N: stakeholder count, when known. At a census the
+ *   sample is perfectly reliable, so the index reaches 1. Omitting it is
+ *   bit-identical to the uncorrected formula.
  * @returns Agreement index in [0, 1]. 1 = high agreement + reliable sample
  */
 export function calcAgreementIndex(
   sumEvaluations: number,
   sumSquaredEvaluations: number,
   numberOfEvaluators: number,
+  populationSize?: number,
 ): number {
   if (numberOfEvaluators <= 0) return 0;
 
   const n = numberOfEvaluators;
   const k = BAYESIAN_PRIOR_K;
 
-  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n);
+  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n, populationSize);
   const df = n + k - 1;
   const t = tCritical(df);
 
@@ -314,6 +424,19 @@ export function calcAgreementIndex(
  * This is the user-facing metric — intuitive and easy to understand.
  * Unlike calcAgreementIndex, it does NOT apply the t-distribution penalty,
  * so it reflects raw opinion similarity without confidence adjustment.
+ *
+ * DELIBERATELY takes no `populationSize`, and this is not an oversight: the
+ * finite-population correction removes SAMPLING error, and this is not a
+ * sampling quantity. Applying the FPC would make a perfectly split group that
+ * everyone voted in report 1.0, the exact opposite of the truth. "How divided
+ * are they" must stay independent of "how many of them we heard from".
+ *
+ * CAVEAT, pre-existing: despite the name, this does not actually detect
+ * polarisation. SEM* is built from the sum of SQUARES, which discards sign, so
+ * six votes of +1 and a 3-3 split of ±1 produce the identical value. Combined
+ * with C_p reporting the plain mean at a census, that means NO metric here
+ * currently penalises a group for being divided — a divided group is visible
+ * only in the distribution of its votes, not in any single number.
  *
  * @param sumEvaluations - Sum of all evaluation values (Σe_i)
  * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)

@@ -14,6 +14,9 @@ import {
 	calcBinaryConsensus,
 	tCritical,
 	BAYESIAN_PRIOR_K,
+	calcLikeMindedness,
+	finitePopulationFactor,
+	isPopulationOversubscribed,
 } from '../utils/consensusCalculation';
 
 describe('consensusCalculation - threshold helpers', () => {
@@ -388,5 +391,245 @@ describe('calcMeanSentiment', () => {
 		expect(calcMeanSentiment(10, 5)).toBe(2);
 		expect(calcMeanSentiment(3, 3)).toBe(1);
 		expect(calcMeanSentiment(-5, 10)).toBe(-0.5);
+	});
+});
+
+// ============================================================================
+// FINITE POPULATION CORRECTION
+// ============================================================================
+
+describe('finitePopulationFactor', () => {
+	it('is inert when no population is declared', () => {
+		expect(finitePopulationFactor(10)).toBe(1);
+		expect(finitePopulationFactor(10, undefined)).toBe(1);
+	});
+
+	it('is inert for degenerate populations rather than producing NaN', () => {
+		// A zero, negative or non-finite N is bad data, not a census. Treating
+		// it as "unknown population" is the only safe reading: the alternative
+		// (coverage = n/0 = Infinity) would clamp to a census and hand a
+		// perfect score to whoever wrote the broken value.
+		for (const bad of [0, -5, NaN, Infinity, -Infinity]) {
+			expect(finitePopulationFactor(10, bad)).toBe(1);
+		}
+	});
+
+	it('is exactly zero at a census', () => {
+		expect(finitePopulationFactor(30, 30)).toBe(0);
+		expect(finitePopulationFactor(1, 1)).toBe(0);
+	});
+
+	it('clamps when more people evaluated than the population allows', () => {
+		expect(finitePopulationFactor(40, 30)).toBe(0);
+	});
+
+	it('approaches 1 as the sample becomes negligible', () => {
+		expect(finitePopulationFactor(5, 1_000_000)).toBeCloseTo(1, 5);
+	});
+
+	it('decreases monotonically as coverage rises', () => {
+		const factors = [1, 5, 10, 20, 29, 30].map((n) => finitePopulationFactor(n, 30));
+		for (let i = 1; i < factors.length; i++) {
+			expect(factors[i]).toBeLessThan(factors[i - 1]);
+		}
+	});
+});
+
+describe('isPopulationOversubscribed', () => {
+	it('is false when no population is declared or the count fits', () => {
+		expect(isPopulationOversubscribed(10)).toBe(false);
+		expect(isPopulationOversubscribed(10, 30)).toBe(false);
+		expect(isPopulationOversubscribed(30, 30)).toBe(false);
+	});
+
+	it('is true when more evaluated than exist', () => {
+		expect(isPopulationOversubscribed(31, 30)).toBe(true);
+	});
+});
+
+describe('finite-population correction - regression lock', () => {
+	// The whole point of the optional parameter: every existing caller (the
+	// evaluation trigger, condensation, strategic export, Sign, the main app)
+	// passes three arguments, and none of their stored scores may shift by so
+	// much as one float ULP because this parameter was added. `toBe` on the
+	// exact double is deliberate — `toBeCloseTo` would hide precisely the kind
+	// of drift this test exists to catch.
+	const CASES: ReadonlyArray<readonly [number, number, number]> = [
+		[5, 5, 5],
+		[6, 6, 6],
+		[3, 3, 3],
+		[-5, 2.5, 10],
+		[0, 10, 10],
+		[9, 11, 15],
+		[2, 4, 5],
+		[29, 29, 29],
+		[1, 15, 15],
+		[100, 100, 100],
+	];
+
+	it('calcAgreement is bit-identical to the pre-correction values', () => {
+		const expected = [
+			0.32960130909890284, 0.3797156470041917, 0.1742799505885788,
+			-0.747166365270868, -0.49433273054173593, 0.24887954555535818,
+			-0.1996228179526892, 0.700332691641339, -0.34335368792133497,
+			0.8364610699128561,
+		];
+		CASES.forEach(([sum, sumSq, n], index) => {
+			expect(calcAgreement(sum, sumSq, n)).toBe(expected[index]);
+		});
+	});
+
+	it('calcSmoothedSEM is bit-identical to the pre-correction values', () => {
+		const expected = [
+			0.3450327796711771, 0.32732683535398854, 0.38729833462074165,
+			0.13762047064079508, 0.27524094128159016, 0.20109991663496093,
+			0.3086066999241838, 0.1765865105236658, 0.23483410915693106,
+			0.09852336290568345,
+		];
+		CASES.forEach(([sum, sumSq, n], index) => {
+			expect(calcSmoothedSEM(sum, sumSq, n)).toBe(expected[index]);
+		});
+	});
+
+	it('passing undefined is bit-identical to omitting the argument', () => {
+		for (const [sum, sumSq, n] of CASES) {
+			expect(calcAgreement(sum, sumSq, n, undefined)).toBe(calcAgreement(sum, sumSq, n));
+			expect(calcSmoothedSEM(sum, sumSq, n, undefined)).toBe(calcSmoothedSEM(sum, sumSq, n));
+			expect(calcAgreementIndex(sum, sumSq, n, undefined)).toBe(
+				calcAgreementIndex(sum, sumSq, n),
+			);
+		}
+		expect(calcBinaryConsensus(7, 3, undefined)).toBe(calcBinaryConsensus(7, 3));
+	});
+
+	it('a degenerate population leaves every score untouched', () => {
+		for (const [sum, sumSq, n] of CASES) {
+			for (const bad of [0, -1, NaN, Infinity]) {
+				expect(calcAgreement(sum, sumSq, n, bad)).toBe(calcAgreement(sum, sumSq, n));
+			}
+		}
+	});
+
+	it('a vast population recovers the uncorrected score', () => {
+		for (const [sum, sumSq, n] of CASES) {
+			expect(calcAgreement(sum, sumSq, n, 10_000_000)).toBeCloseTo(
+				calcAgreement(sum, sumSq, n),
+				4,
+			);
+		}
+	});
+});
+
+describe('finite-population correction - census behaviour', () => {
+	it('returns exactly the mean when every stakeholder has spoken', () => {
+		// The reason the correction exists. A class of 6 where all 5 peers rate
+		// +1 scored 0.33 before this: the formula was hedging against students
+		// who do not exist.
+		expect(calcAgreement(5, 5, 5, 5)).toBe(1);
+		expect(calcAgreement(-2.5, 1.25, 5, 5)).toBe(-0.5);
+		expect(calcAgreement(2, 4, 5, 5)).toBe(calcMeanSentiment(2, 5));
+	});
+
+	it('equals the mean at census across a table of shapes', () => {
+		const cases: ReadonlyArray<readonly [number, number, number]> = [
+			[5, 5, 5],
+			[9, 11, 15],
+			[29, 29, 29],
+			[-5, 2.5, 10],
+			[1, 15, 15],
+		];
+		for (const [sum, sumSq, n] of cases) {
+			expect(calcAgreement(sum, sumSq, n, n)).toBe(calcMeanSentiment(sum, n));
+		}
+	});
+
+	it('reports a perfectly reliable sample at census', () => {
+		expect(calcAgreementIndex(5, 5, 5, 5)).toBe(1);
+	});
+
+	it('never exceeds the mean, at any population size', () => {
+		const cases: ReadonlyArray<readonly [number, number, number]> = [
+			[5, 5, 5],
+			[9, 11, 15],
+			[-5, 2.5, 10],
+			[0, 10, 10],
+		];
+		for (const [sum, sumSq, n] of cases) {
+			for (const N of [1, 2, n - 1, n, n + 1, 50, 500]) {
+				expect(calcAgreement(sum, sumSq, n, N)).toBeLessThanOrEqual(
+					calcMeanSentiment(sum, n) + Number.EPSILON,
+				);
+			}
+		}
+	});
+
+	it('stays within [-1, 1] for every population size', () => {
+		const cases: ReadonlyArray<readonly [number, number, number]> = [
+			[3, 3, 3],
+			[-3, 3, 3],
+			[0, 10, 10],
+			[1000, 1000, 1000],
+			[-1000, 1000, 1000],
+		];
+		for (const [sum, sumSq, n] of cases) {
+			for (const N of [1, n, n * 2, 1000, 100000]) {
+				const result = calcAgreement(sum, sumSq, n, N);
+				expect(result).toBeGreaterThanOrEqual(-1);
+				expect(result).toBeLessThanOrEqual(1);
+			}
+		}
+	});
+});
+
+describe('finite-population correction - monotonicity', () => {
+	it('rises with coverage when the population is fixed', () => {
+		// A class of 5 peers, unanimously in favour, as more of them weigh in.
+		const scores = [3, 4, 5].map((n) => calcAgreement(n, n, n, 5));
+		expect(scores[0]).toBeLessThan(scores[1]);
+		expect(scores[1]).toBeLessThan(scores[2]);
+		expect(scores[2]).toBe(1);
+	});
+
+	it('falls as the stakeholder population grows for a fixed sample', () => {
+		// The same three votes say less about a settlement than about a family.
+		const scores = [3, 10, 100].map((N) => calcAgreement(3, 3, 3, N));
+		expect(scores[0]).toBeGreaterThan(scores[1]);
+		expect(scores[1]).toBeGreaterThan(scores[2]);
+	});
+});
+
+describe('finite-population correction - disagreement is not launderable', () => {
+	it('gives a balanced census exactly zero, not a positive score', () => {
+		// SURPRISING BUT INTENDED. At a census the correction removes ALL
+		// sampling error by construction, so C_p reports the mean and nothing
+		// else — and the mean of a 3-for / 3-against split is 0. The penalty
+		// for a group being genuinely divided is NOT in C_p; it lives in
+		// calcLikeMindedness, which takes no population for exactly this reason.
+		expect(calcAgreement(0, 6, 6, 6)).toBe(0);
+	});
+
+	it('keeps a negatively-tilted census negative', () => {
+		expect(calcAgreement(-2, 5, 6, 6)).toBeLessThan(0);
+	});
+
+	it('keeps a split group negative while coverage is partial', () => {
+		expect(calcAgreement(0, 6, 6, 12)).toBeLessThan(0);
+		// 15 of 29 classmates, 8 for and 7 against: still negative, because
+		// half the class has not spoken and the half that did is at war.
+		expect(calcAgreement(1, 15, 15, 29)).toBeLessThan(0);
+	});
+
+	it('pins the pre-existing blind spot: no metric here detects polarisation', () => {
+		// Worth pinning precisely because it bounds what the census property
+		// above can mean. SEM* is built from the sum of SQUARES, which discards
+		// sign, so six votes of +1 and a 3-3 split of ±1 are indistinguishable
+		// to like-mindedness. C_p at a census reports the plain mean. So a
+		// divided group is penalised by NEITHER number and is visible only in
+		// the distribution of its votes.
+		//
+		// This gap predates the finite-population work and is out of scope
+		// here, but it must not be papered over: it is the reason a results
+		// screen has to show the shape of opinion, not just its centre.
+		expect(calcLikeMindedness(0, 6, 6)).toBe(calcLikeMindedness(6, 6, 6));
 	});
 });

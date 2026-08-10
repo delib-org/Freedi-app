@@ -518,6 +518,8 @@ export {
   BAYESIAN_PRIOR_K,
   CONFIDENCE_ALPHA,
   tCritical,
+  finitePopulationFactor,
+  isPopulationOversubscribed,
   calcSmoothedSEM,
   calcStandardError,
   calcAgreement,
