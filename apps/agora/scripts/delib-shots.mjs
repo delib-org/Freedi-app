@@ -207,13 +207,21 @@ if (await entry.count()) {
 	await s1.waitForTimeout(1200);
 }
 
-// --- 04: the dock open (my proposal workbench)
+// --- 04: MY screen (the workshop: what came back, the elders, the needs)
+await s1.locator('.delib-nav__item--mine').click();
+await s1.waitForTimeout(800);
+await shot(s1, '04-my-screen');
+await shotFull(s1, '04b-my-screen-full');
+
+// --- 04c: the dock open over it (the pen, reachable from every place)
 await s1.locator('.proposal-dock__bar').click();
 await s1.waitForTimeout(700);
-await shot(s1, '04-dock-open');
-await shotFull(s1, '04b-dock-open-full');
+await shot(s1, '04c-dock-open');
 await s1.keyboard.press('Escape');
 await s1.waitForTimeout(500);
+// ...and back to the square, where the lap's work is
+await s1.locator('.delib-nav__item--peer').click();
+await s1.waitForTimeout(800);
 
 // --- rate enough to move on
 const weigh = async (page, index) => {

@@ -1615,7 +1615,8 @@
 	border-radius: var(--radius-sm);
 	background: rgba(255, 210, 63, 0.3);
 	border: 1px solid rgba(185, 115, 0, 0.25);
-	font-size: 1rem;
+	// The drawing inherits this, so one chip colour dresses every tool
+	color: var(--text-primary);
 	line-height: 1;
 }
 
@@ -2683,16 +2684,13 @@
 		}
 	}
 
-	// On the arrival card the glyph rides inline with the name; the round
-	// splash still uses it as its own 3rem hero
+	// A drawn icon now, not a glyph: it rides inline with the name and takes
+	// the title's colour, the same rule every other icon in the app follows
 	&__icon {
-		font-size: 3rem;
-		line-height: 1;
-	}
-
-	&__card--place &__icon {
-		font-size: 1.4rem;
+		display: inline-flex;
+		align-items: center;
 		margin-inline-end: var(--space-xs);
+		color: var(--lantern-glow);
 		vertical-align: middle;
 	}
 
@@ -2727,7 +2725,9 @@
 	}
 
 	&__step-icon {
-		font-size: 1.2rem;
+		display: inline-flex;
+		align-items: center;
+		color: currentColor;
 	}
 }
 
@@ -2903,11 +2903,13 @@
 			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--mine) 60%, transparent);
 		}
 
-		// Both tabs light purple when active, and that is not a contradiction
-		// of "purple = mine": purple on CHROME means "this control is the one
-		// you are on". Ownership is a question about CONTENT, and content is
-		// either a purple card (mine) or a white one (theirs) — a tab bar is
-		// neither. The old rule spent two more colours to say "selected".
+		// All three tabs light purple when active, and that is not a
+		// contradiction of "purple = mine": purple on CHROME means "this
+		// control is the one you are on". Ownership is a question about
+		// CONTENT, and content is either a purple card (mine) or a white one
+		// (theirs) — a tab bar is neither. The old rule spent two more colours
+		// to say "selected".
+		&--mine.delib-nav__item--active,
 		&--peer.delib-nav__item--active,
 		&--results.delib-nav__item--active {
 			background: var(--grad-mine-text);
@@ -2968,15 +2970,26 @@
 		&__item {
 			flex-direction: column;
 			gap: 2px;
-			padding: 4px var(--space-xl);
+			// Three tabs share the width now, so the padding gives way before
+			// the labels do — a wrapped or clipped tab label reads as broken
+			padding: 4px var(--space-md);
+			min-width: 0;
 			background: transparent;
 			border-color: transparent;
 
 			&--active,
+			&--mine.delib-nav__item--active,
 			&--peer.delib-nav__item--active {
 				background: var(--grad-mine-text);
 				border-color: transparent;
 			}
+		}
+
+		&__label {
+			max-width: 100%;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 	}
 }

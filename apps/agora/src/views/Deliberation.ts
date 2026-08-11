@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { Icon, iconLabel } from '../components/Icon';
+import { Icon, iconLabel, IconName } from '../components/Icon';
 import { t, tCount } from '../lib/i18n';
 import {
 	getDeliberationState,
@@ -111,7 +111,7 @@ export function lanternsFromState(
  */
 const PLACES: Record<
 	'mine' | 'rate' | 'help',
-	{ icon: string; titleKey: string; subKey: string; shellClass: string }
+	{ icon: IconName; titleKey: string; subKey: string; shellClass: string }
 > = {
 	mine: {
 		icon: 'improve',
@@ -232,7 +232,7 @@ const DOCK_FEEDBACK_HEAD_ID = 'dock-feedback-head';
  * where one tool ends and the next begins (was: bare hairline dividers).
  */
 function workbenchSection(
-	icon: string,
+	icon: IconName,
 	title: string,
 	body: m.Children,
 	opts?: {
@@ -248,7 +248,9 @@ function workbenchSection(
 	const collapsible = opts?.onToggle !== undefined;
 	const open = !collapsible || opts?.open === true;
 	const head: m.Children = [
-		m('span.workbench__icon', { 'aria-hidden': 'true' }, icon),
+		// The drawn icon, not the icon's NAME: this chip printed the literal
+		// string "idea" from the day the emoji set became a component
+		m('span.workbench__icon', { 'aria-hidden': 'true' }, m(Icon, { name: icon, size: 20 })),
 		m('span.workbench__title', title),
 		opts?.count !== undefined && opts.count > 0
 			? m('span.workbench__count', String(opts.count))
@@ -298,6 +300,14 @@ function workbenchSection(
 // scene and the sentence — each said once, where it is actually being read.
 
 type CycleStep = 'mine' | 'rate' | 'help' | 'done';
+
+/**
+ * The three screens the tab bar switches between. Only 'others' follows the
+ * lap: 'my' (my workshop — the feedback I received, the elders, the needs)
+ * and 'results' (the class picture) are places you can stand on without the
+ * cycle moving under you.
+ */
+type DelibScreen = 'my' | 'results' | 'others';
 
 /** How long a sent suggestion is announced on its stall before the row settles */
 const SENT_ACK_MS = 1400;
@@ -434,11 +444,12 @@ export function Deliberation(
 	/** Mirror of the unsaved edit box, so a refresh can't eat a draft */
 	const mineDraftKey = `agora_${session.sessionId}_mine_draft`;
 	/**
-	 * The results tab: a second screen you can stand on, NOT a cycle step —
-	 * looking at the class picture must not move your lap along. Deliberately
-	 * in memory only: a refresh puts you back where the work is.
+	 * Which of the three screens I am standing on. My and Results are screens,
+	 * NOT cycle steps — reading my own feedback or the class picture must not
+	 * move my lap along. Deliberately in memory only: a refresh puts you back
+	 * where the work is.
 	 */
-	let showResults = false;
+	let screen: DelibScreen = 'my';
 	/**
 	 * A helped proposal the "woven in" celebration pointed at: the next render
 	 * of its card scrolls to it and spotlights it, then the intent is spent.
@@ -454,6 +465,7 @@ export function Deliberation(
 	function goToHelped(proposalId: string): void {
 		focusHelpedId = proposalId;
 		closeDock();
+		screen = 'others';
 		if (cycle.step === 'mine') setCycle({ step: 'rate', rated: 0 });
 		m.redraw();
 	}
@@ -461,11 +473,11 @@ export function Deliberation(
 	registerHelpedNavigator(goToHelped);
 
 	/**
-	 * A selector to focus after the dock has expanded and rendered, or ''.
-	 * Deep links point at what they promised; a plain tap keeps focus on the
-	 * handle, the standard disclosure behavior.
+	 * A selector to focus once the My screen has rendered, or ''. Deep links
+	 * point at what they promised; walking to the screen by hand keeps focus
+	 * where the tap left it.
 	 */
-	let focusOnOpen = '';
+	let focusOnMy = '';
 	/**
 	 * The panel is never unmounted, so its scroll position outlives a fold.
 	 * Deliberately reset on a fresh open: reopening two screens deep into
@@ -475,17 +487,16 @@ export function Deliberation(
 	let resetDockScroll = false;
 
 	/**
-	 * "Feedback is waiting" → lift the workshop over whatever place I'm
-	 * standing in, received drawer open. No step travel at all any more: the
-	 * notebook comes to me, which is the whole point of the dock.
+	 * "Feedback is waiting" → walk to my own screen with the received drawer
+	 * open. The lap does not move: My is a screen, not a step, so answering a
+	 * classmate never costs the student their place in the cycle.
 	 */
 	function goToMine(): void {
 		suggestionsToggle = true;
-		if (!dockOpen) resetDockScroll = true;
-		dockOpen = true;
-		// The toast promised feedback — land the reader on it, not on the
-		// edit box (whose focus would summon the keyboard over the answer)
-		focusOnOpen = `#${DOCK_FEEDBACK_HEAD_ID}`;
+		closeDock();
+		screen = 'my';
+		// The toast promised feedback — land the reader on it
+		focusOnMy = `#${DOCK_FEEDBACK_HEAD_ID}`;
 		m.redraw();
 	}
 
@@ -513,7 +524,7 @@ export function Deliberation(
 		}
 	}
 
-	/** Both handles (the dock bar and the Mine tab) drive this */
+	/** The dock bar's own handle — the edit box folds out from here */
 	function toggleDock(): void {
 		if (dockOpen) {
 			closeDock();
@@ -551,6 +562,11 @@ export function Deliberation(
 	} catch {
 		// Corrupt storage — start the cycle over
 	}
+
+	// A refresh puts the student back where the WORK is: the lap's own step
+	// decides the tab, so reloading mid-square returns to the square and not
+	// to a screen they have to tap their way out of
+	screen = cycle.step === 'mine' ? 'my' : 'others';
 
 	// An unsaved edit outlives the tab. The seeding rule below leaves it
 	// alone (it only re-seeds an empty or untouched box), so a restored
@@ -596,6 +612,9 @@ export function Deliberation(
 			// ...and folds whatever stall was left open in the room behind me,
 			// so the next room's list opens the same way every time
 			openStallId = '';
+			// The lap's own step decides which tab I land on: the mine step IS
+			// the My screen, everything else happens on the classmates' side
+			screen = patch.step === 'mine' ? 'my' : 'others';
 		}
 		cycle = { ...cycle, ...patch };
 		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
@@ -620,66 +639,87 @@ export function Deliberation(
 	}
 
 	/**
-	 * The Others | Results tabs. Mobile: fixed bottom bar; desktop: tab row
-	 * under the HUD (CSS switches placement on one element). Hidden until
+	 * The My | Results | Others tabs. Mobile: fixed bottom bar; desktop: tab
+	 * row under the HUD (CSS switches placement on one element). Hidden until
 	 * the student has a proposal — lap 1 starts with writing.
 	 *
-	 * There is no "Mine" tab: my proposal is not a place any more, it is the
-	 * dock sitting right above this bar, and one thing should have exactly
-	 * one way in. What the bar switches between is the two screens I can
-	 * stand on — the classmates' side, and the class picture.
+	 * My is a screen again (2026-08-11): everything the workshop holds —
+	 * received improvements, the elders, the two sides' needs — is far too
+	 * much to live inside a dock sheet lifted over another room. What stayed
+	 * in the dock is the one thing that has to be reachable from ANY place:
+	 * the box I type my proposal into.
 	 */
 	function delibNav(myProposal: AgoraProposal | undefined): m.Children {
 		if (!myProposal) return null;
 
+		const tab = (
+			id: DelibScreen,
+			modifier: string,
+			icon: IconName,
+			label: string,
+			badge: number,
+			onclick: () => void,
+		): m.Children =>
+			m(
+				`button.delib-nav__item.delib-nav__item--${modifier}`,
+				{
+					class: screen === id ? 'delib-nav__item--active' : undefined,
+					'aria-selected': String(screen === id),
+					onclick,
+				},
+				[
+					m('span.delib-nav__icon', m(Icon, { name: icon, size: 22 })),
+					m('span.delib-nav__label', label),
+					// A badge is news from a screen I'm not on; on the screen
+					// itself the content says it better than a number
+					screen !== id && badge > 0 ? m('span.delib-nav__badge', String(badge)) : null,
+				],
+			);
+
 		return m('nav.delib-nav', [
-			m(
-				'button.delib-nav__item.delib-nav__item--peer',
-				{
-					class: showResults ? undefined : 'delib-nav__item--active',
-					'aria-selected': String(!showResults),
-					onclick: () => {
-						closeDock();
-						if (showResults) {
-							showResults = false;
-							m.redraw();
-						} else if (cycle.step === 'mine') {
-							setCycle({ step: 'rate', rated: 0 });
-						} else if (cycle.step === 'done') {
-							// After the laps, "Others" means: keep helping
-							setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
-						} else {
-							m.redraw();
-						}
-					},
-				},
-				[
-					m('span.delib-nav__icon', m(Icon, { name: 'people', size: 22 })),
-					m('span.delib-nav__label', t('delib.nav_others')),
-					// Proposals I helped moved while I was away — come see.
-					// Only meaningful when I'm not already looking at them.
-					(showResults || cycle.step === 'mine') && attentionCount() > 0
-						? m('span.delib-nav__badge', String(attentionCount()))
-						: null,
-				],
-			),
-			m(
-				'button.delib-nav__item.delib-nav__item--results',
-				{
-					class: showResults ? 'delib-nav__item--active' : undefined,
-					'aria-selected': String(showResults),
-					onclick: () => {
-						closeDock();
-						showResults = true;
+			tab('my', 'mine', 'proposal', t('delib.nav_mine'), myFeedbackCount(myProposal), () => {
+				closeDock();
+				screen = 'my';
+				m.redraw();
+			}),
+			tab('results', 'results', 'chart', t('delib.nav_results'), 0, () => {
+				closeDock();
+				screen = 'results';
+				m.redraw();
+			}),
+			tab(
+				'others',
+				'peer',
+				'people',
+				t('delib.nav_others'),
+				// Proposals I helped moved while I was away — come see
+				attentionCount(),
+				() => {
+					closeDock();
+					screen = 'others';
+					if (cycle.step === 'mine') {
+						setCycle({ step: 'rate', rated: 0 });
+					} else if (cycle.step === 'done') {
+						// After the laps, "Others" means: keep helping
+						setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
+					} else {
 						m.redraw();
-					},
+					}
 				},
-				[
-					m('span.delib-nav__icon', m(Icon, { name: 'chart', size: 22 })),
-					m('span.delib-nav__label', t('delib.nav_results')),
-				],
 			),
 		]);
+	}
+
+	/**
+	 * What is waiting for me on my own screen: ideas still un-decided, plus
+	 * replies I haven't read. One number, because the tab has room for one.
+	 */
+	function myFeedbackCount(myProposal: AgoraProposal): number {
+		const openCount = (getDeliberationState().suggestions[myProposal.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+		).length;
+
+		return openCount + ownerThreadUnread(myProposal);
 	}
 
 	/** Deterministic per-student ordering so classmates fan out over different proposals */
@@ -797,17 +837,13 @@ export function Deliberation(
 	}
 
 	/**
-	 * MY whole workshop as ONE card: the always-editable proposal text, the
-	 * improvements received, the ask-the-characters helpers and the needs
-	 * reminder — everything under the same frame. No AI rewriting anywhere:
-	 * the AI only reacts. (The numbers-only reception forecast was removed
-	 * 2026-07-28 — it duplicated the in-character reviews' scores.)
+	 * The one part of the workshop that travels: the always-editable proposal
+	 * text and its single save action. It rides in the dock, so a student can
+	 * fix a sentence from the square or from a classmate's stall without
+	 * losing the room they are standing in. Everything else that used to share
+	 * this card now lives on the My screen (see myWorkshop).
 	 */
-	function editableProposalCard(
-		live: AgoraSession,
-		myProposal: AgoraProposal,
-		topic: AgoraTopicPackage,
-	): m.Children {
+	function proposalEditBox(live: AgoraSession, myProposal: AgoraProposal): m.Children {
 		// Seed / re-seed the draft when the proposal changes underneath —
 		// without clobbering what the student is currently typing
 		if (mineDraftBase !== myProposal.statement) {
@@ -820,53 +856,10 @@ export function Deliberation(
 		const changed =
 			text !== myProposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
-		// Fresh feedback count surfaces on the drawer label, not buried inside
-		const openCount = (getDeliberationState().suggestions[myProposal.statementId] ?? []).filter(
-			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
-		).length;
-
-		const myScoreDoc = getDeliberationState().scores[myProposal.statementId];
-		// The cycle's return signal to the OWNER: classmates who (re)rated
-		// after my latest improvement. Aggregate count only — never who.
-		//
-		// Measured against the server-stamped time of MY last edit, not the
-		// statement's lastUpdate: the shared evaluation pipeline writes its
-		// aggregates back onto the proposal doc, so every rating bumped
-		// lastUpdate past its own timestamp and the signal raced itself out
-		// of existence.
-		const editedAt = answerBaseline(myProposal.statementId, myProposal.lastUpdate);
-		const ratingsMoved = ratingsMovedSince(myProposal.statementId, editedAt, userId);
-		// Direction rides on the AGGREGATE: current bridge power vs where it
-		// stood when I last saved. The score consequence is game state;
-		// individual rating values stay private (see docs/feedback-cycle.md).
-		// The baseline is stamped SERVER-side at save time — it used to live in
-		// sessionStorage, so one refresh silently erased the direction and left
-		// the student a bare count with nothing to learn from.
-		const bridgeNow = myScoreDoc?.bridgingScore ?? 0;
-		const bridgeBase = myScoreDoc?.bridgingAtLastEdit;
-		const bridgeDelta = bridgeBase === undefined ? 0 : bridgeNow - bridgeBase;
-
-		// No header: the sheet's own bar already says "my proposal", and a live
+		// No header: the dock's own bar already says "my proposal", and a live
 		// textarea is its own invitation to type — the "you can edit anytime"
 		// line was standing prose about an affordance you can see
 		return m('.card.my-lantern.my-lantern--workshop', [
-			ratingsMoved > 0
-				? m(
-						'p.my-lantern__moved',
-						// Down is muted amber, not danger-red: a dip is information
-						// for the next edit, never a punishment
-						{ class: bridgeDelta < 0 ? 'my-lantern__moved--down' : undefined },
-						bridgeDelta === 0
-							? iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved))
-							: iconLabel(
-									bridgeDelta > 0 ? 'trend' : 'trend-down',
-									`${tCount('delib.ratings_moved', ratingsMoved)} · ${t(
-										bridgeDelta > 0 ? 'delib.bridge_up' : 'delib.bridge_down',
-										{ n: Math.abs(bridgeDelta) },
-									)}`,
-								),
-					)
-				: null,
 			// The primary zone: text + its ONE action, visually bound together
 			m('.workbench__section.workbench__section--edit', [
 				m('textarea.my-lantern__textarea', {
@@ -922,6 +915,67 @@ export function Deliberation(
 					),
 				]),
 			]),
+		]);
+	}
+
+	/**
+	 * MY screen: everything the workshop holds EXCEPT the edit box — how the
+	 * class received my last save, the improvements classmates sent, the
+	 * ask-the-characters helpers and the needs reminder. No AI rewriting
+	 * anywhere: the AI only reacts. (The numbers-only reception forecast was
+	 * removed 2026-07-28 — it duplicated the in-character reviews' scores.)
+	 */
+	function myWorkshop(
+		live: AgoraSession,
+		myProposal: AgoraProposal,
+		topic: AgoraTopicPackage,
+	): m.Children {
+		// Fresh feedback count surfaces on the drawer label, not buried inside
+		const openCount = (getDeliberationState().suggestions[myProposal.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+		).length;
+
+		const myScoreDoc = getDeliberationState().scores[myProposal.statementId];
+		// The cycle's return signal to the OWNER: classmates who (re)rated
+		// after my latest improvement. Aggregate count only — never who.
+		//
+		// Measured against the server-stamped time of MY last edit, not the
+		// statement's lastUpdate: the shared evaluation pipeline writes its
+		// aggregates back onto the proposal doc, so every rating bumped
+		// lastUpdate past its own timestamp and the signal raced itself out
+		// of existence.
+		const editedAt = answerBaseline(myProposal.statementId, myProposal.lastUpdate);
+		const ratingsMoved = ratingsMovedSince(myProposal.statementId, editedAt, userId);
+		// Direction rides on the AGGREGATE: current bridge power vs where it
+		// stood when I last saved. The score consequence is game state;
+		// individual rating values stay private (see docs/feedback-cycle.md).
+		// The baseline is stamped SERVER-side at save time — it used to live in
+		// sessionStorage, so one refresh silently erased the direction and left
+		// the student a bare count with nothing to learn from.
+		const bridgeNow = myScoreDoc?.bridgingScore ?? 0;
+		const bridgeBase = myScoreDoc?.bridgingAtLastEdit;
+		const bridgeDelta = bridgeBase === undefined ? 0 : bridgeNow - bridgeBase;
+
+		// The card carries no header: the tab I am standing on already says
+		// "my", and the edit box the sections orbit is one tap away in the dock
+		return m('.card.my-lantern.my-lantern--workshop', [
+			ratingsMoved > 0
+				? m(
+						'p.my-lantern__moved',
+						// Down is muted amber, not danger-red: a dip is information
+						// for the next edit, never a punishment
+						{ class: bridgeDelta < 0 ? 'my-lantern__moved--down' : undefined },
+						bridgeDelta === 0
+							? iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved))
+							: iconLabel(
+									bridgeDelta > 0 ? 'trend' : 'trend-down',
+									`${tCount('delib.ratings_moved', ratingsMoved)} · ${t(
+										bridgeDelta > 0 ? 'delib.bridge_up' : 'delib.bridge_down',
+										{ n: Math.abs(bridgeDelta) },
+									)}`,
+								),
+					)
+				: null,
 			workbenchSection('idea', t('delib.suggestions_received'), suggestionsSection(myProposal), {
 				headId: DOCK_FEEDBACK_HEAD_ID,
 				// Waiting decisions AND unread replies — everything in the
@@ -952,54 +1006,28 @@ export function Deliberation(
 
 	/**
 	 * The notebook docked at the bottom of every place: a collapsed bar that
-	 * says what my proposal needs (or shows a line of it), and the whole
-	 * workshop card sliding up over the room when it's tapped.
+	 * shows a line of my own text (or warns that an edit is unsaved), and the
+	 * edit box sliding up over the room when it's tapped.
 	 *
-	 * Collapsed is the resting state on purpose. The workshop used to fill
-	 * the mine screen whether or not anything was waiting there, which made
-	 * a lap that had nothing to do feel like a wall of work.
+	 * The dock carries ONE thing now — the box I type into. Everything that
+	 * needs reading rather than typing moved to the My screen: a sheet lifted
+	 * over another room is the wrong place to read your classmates' ideas in,
+	 * and a dock that promised feedback and opened onto a textarea was a
+	 * broken promise.
 	 */
-	function proposalDock(
-		live: AgoraSession,
-		myProposal: AgoraProposal,
-		topic: AgoraTopicPackage,
-	): m.Children {
-		const state = getDeliberationState();
-		const all = state.suggestions[myProposal.statementId] ?? [];
-		const openCount = all.filter(
-			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
-		).length;
-
-		// Same measurement as the chip inside the card: classmates who
-		// (re)rated since my last save (see editableProposalCard)
-		const editedAt = answerBaseline(myProposal.statementId, myProposal.lastUpdate);
-		const ratingsMoved = ratingsMovedSince(myProposal.statementId, editedAt, userId);
+	function proposalDock(live: AgoraSession, myProposal: AgoraProposal): m.Children {
 		const unsaved =
 			mineDraft.trim().length > 0 &&
 			mineDraft.trim() !== myProposal.statement &&
 			mineDraftBase === myProposal.statement;
 
-		const threadUnread = ownerThreadUnread(myProposal);
-
-		// ONE line, strict priority: what needs me outranks what happened to
-		// me, which outranks the text itself. It doubles as the live region,
-		// so a screen reader hears arriving feedback without focus moving.
-		let sub: m.Children;
-		let subClass: string | undefined;
-		if (openCount > 0) {
-			sub = iconLabel('idea', tCount('delib.dock_new_ideas', openCount));
-			subClass = 'proposal-dock__sub--alert';
-		} else if (threadUnread > 0) {
-			sub = iconLabel('talk', tCount('delib.thread_unread', threadUnread));
-			subClass = 'proposal-dock__sub--alert';
-		} else if (unsaved) {
-			sub = [m('span.proposal-dock__dot', { 'aria-hidden': 'true' }), t('delib.dock_unsaved')];
-			subClass = 'proposal-dock__sub--alert';
-		} else if (ratingsMoved > 0) {
-			sub = iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved));
-		} else {
-			sub = myProposal.statement;
-		}
+		// ONE line: the draft I haven't saved outranks the text I have. News
+		// that wants reading (ideas, replies) belongs to the My tab's badge —
+		// this bar only ever opens onto the pen.
+		const sub: m.Children = unsaved
+			? [m('span.proposal-dock__dot', { 'aria-hidden': 'true' }), t('delib.dock_unsaved')]
+			: myProposal.statement;
+		const subClass = unsaved ? 'proposal-dock__sub--alert' : undefined;
 
 		return m(
 			'.proposal-dock',
@@ -1039,15 +1067,6 @@ export function Deliberation(
 							m('span.proposal-dock__title', t('delib.my_proposal')),
 							m('span.proposal-dock__sub', { class: subClass, role: 'status' }, sub),
 						]),
-						// The count is decoration: the sub line above already
-						// says the same thing in words
-						openCount + threadUnread > 0
-							? m(
-									'span.proposal-dock__badge',
-									{ 'aria-hidden': 'true' },
-									String(openCount + threadUnread),
-								)
-							: null,
 						m('span.proposal-dock__chevron', { 'aria-hidden': 'true' }),
 						// Named for the screen reader, since the visible label
 						// ("My proposal") doesn't say what pressing does
@@ -1071,7 +1090,7 @@ export function Deliberation(
 							oncreate: onDockPanelRender,
 							onupdate: onDockPanelRender,
 						},
-						editableProposalCard(live, myProposal, topic),
+						proposalEditBox(live, myProposal),
 					),
 				),
 			],
@@ -1079,22 +1098,25 @@ export function Deliberation(
 	}
 
 	/**
-	 * Once the sheet has actually rendered: start it at the top on a fresh
-	 * open, and, if a deep link ("feedback is waiting") promised something,
-	 * put the cursor on that instead. A plain tap leaves focus on the
-	 * handle, as a disclosure should.
+	 * Once the sheet has actually rendered, start it at the top on a fresh
+	 * open. Focus stays on the handle that opened it, as a disclosure should.
 	 */
 	function onDockPanelRender(vnode: m.VnodeDOM): void {
-		if (!dockOpen) return;
-		const inner = vnode.dom as HTMLElement;
-		if (resetDockScroll) {
-			resetDockScroll = false;
-			inner.scrollTop = 0;
-		}
-		if (!focusOnOpen) return;
-		const target = inner.querySelector<HTMLElement>(focusOnOpen);
+		if (!dockOpen || !resetDockScroll) return;
+		resetDockScroll = false;
+		(vnode.dom as HTMLElement).scrollTop = 0;
+	}
+
+	/**
+	 * Once the My screen has rendered: if a deep link ("feedback is waiting")
+	 * promised something, put the cursor on it. Walking here by tapping the
+	 * tab promises nothing, so it moves no focus.
+	 */
+	function onMyScreenRender(vnode: m.VnodeDOM): void {
+		if (!focusOnMy) return;
+		const target = (vnode.dom as HTMLElement).querySelector<HTMLElement>(focusOnMy);
 		if (!target) return;
-		focusOnOpen = '';
+		focusOnMy = '';
 		target.focus();
 		target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
 	}
@@ -1747,7 +1769,10 @@ export function Deliberation(
 												[
 													m(
 														'span.delib-splash__step-icon',
-														PLACES[entry.id as 'mine' | 'rate' | 'help'].icon,
+														m(Icon, {
+															name: PLACES[entry.id as 'mine' | 'rate' | 'help'].icon,
+															size: 20,
+														}),
 													),
 													m('span', t(entry.labelKey)),
 												],
@@ -1767,7 +1792,7 @@ export function Deliberation(
 										m(
 											'span.delib-splash__icon',
 											{ 'aria-hidden': 'true' },
-											PLACES[splash.step].icon,
+											m(Icon, { name: PLACES[splash.step].icon, size: 28 }),
 										),
 										t(PLACES[splash.step].titleKey),
 									]),
@@ -1799,13 +1824,13 @@ export function Deliberation(
 					rated: cycle.rated,
 					ratingQuota: AGORA_CYCLE.RATINGS_PER_ROUND,
 					endsAt: live.roundEndsAt ?? undefined,
-					onResults: showResults,
+					onResults: screen === 'results',
 				}),
 			];
 
 			// The notebook rides along on every place, so the dock and the
 			// padding that keeps content clear of it are computed once here
-			const dock = myProposal ? proposalDock(live, myProposal, topic) : null;
+			const dock = myProposal ? proposalDock(live, myProposal) : null;
 			const scrim = myProposal ? dockScrim() : null;
 			const shellClass = myProposal ? '.shell--docked' : '';
 
@@ -1830,7 +1855,7 @@ export function Deliberation(
 			// The class picture: where the class stands on each proposal, how
 			// sure that is, and the spread behind the number. Live — it moves as
 			// classmates rate. Standing here does NOT advance the lap.
-			if (showResults && myProposal) {
+			if (screen === 'results' && myProposal) {
 				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
@@ -1852,7 +1877,10 @@ export function Deliberation(
 							'button.btn.btn--primary.btn--full.btn--lg',
 							{
 								onclick: () => {
-									showResults = false;
+									screen = 'others';
+									// Same rule as the Others tab: the square is a step, so
+									// walking back into it from the picture starts the ratings
+									if (cycle.step === 'mine') setCycle({ step: 'rate', rated: 0 });
 								},
 							},
 							cycle.step === 'help' ? t('delib.back_to_stand') : t('delib.back_to_square'),
@@ -1863,19 +1891,17 @@ export function Deliberation(
 				]);
 			}
 
-			// ---------- STEP: MY PROPOSAL (write, later improve) ----------
-			if (cycle.step === 'mine') {
-				const writeMode = !myProposal;
-
-				// Lap 1: nothing exists yet. The screen's ONE job is the first
-				// write, so it is built as a single writing desk: mission brief,
-				// the live textarea and the lantern CTA bound in one blue-framed
-				// card — instead of a muted hint, a bare input and a button
-				// floating apart. The needs board stands OPEN underneath (explicit
-				// call, 2026-08-10): the raw material in view while writing, but
-				// below the CTA so it never pushes the pen or the button off a
-				// phone screen.
-				if (writeMode) {
+			// ---------- STEP: THE FIRST WRITE ----------
+			// Lap 1: nothing exists yet. The screen's ONE job is the first
+			// write, so it is built as a single writing desk: mission brief,
+			// the live textarea and the lantern CTA bound in one blue-framed
+			// card — instead of a muted hint, a bare input and a button
+			// floating apart. The needs board stands OPEN underneath (explicit
+			// call, 2026-08-10): the raw material in view while writing, but
+			// below the CTA so it never pushes the pen or the button off a
+			// phone screen.
+			if (!myProposal && cycle.step === 'mine') {
+				{
 					const ready = draft.trim().length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
 					return m('.shell.shell--mode-mine.shell--place-mine', [
@@ -1948,25 +1974,41 @@ export function Deliberation(
 						]),
 					]);
 				}
+			}
 
-				// Lap 2+: the workshop itself now lives in the dock below, so
-				// standing in it is a short, honest screen — where you are, a
-				// pointer at the notebook, and the one way onward. A lap with
-				// nothing waiting can be walked through in one tap.
+			// ---------- SCREEN: MY (a screen, not a step) ----------
+			// My workshop: what the class did with my last save, the
+			// improvements classmates sent me, the elders I can ask and the two
+			// sides' needs. The pen itself is in the dock below, reachable from
+			// here and from every other room — so this screen is for reading and
+			// deciding, and the box is for writing.
+			//
+			// Standing here does NOT advance the lap; the mine STEP simply lands
+			// on it and adds the one way onward.
+			if (myProposal && (screen === 'my' || cycle.step === 'mine')) {
 				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						m('p.home-explanation', t('delib.dock_hint')),
 						m(
-							'button.btn.btn--primary.btn--full.btn--lg',
-							{
-								onclick: () => {
-									setCycle({ step: 'rate', rated: 0 });
-								},
-							},
-							t('delib.to_rating'),
+							'.my-screen',
+							{ oncreate: onMyScreenRender, onupdate: onMyScreenRender },
+							myWorkshop(live, myProposal, topic),
 						),
+						// The pen lives in the dock, and a screen full of feedback
+						// should say where to answer it
+						m('p.home-explanation', t('delib.dock_hint')),
+						cycle.step === 'mine'
+							? m(
+									'button.btn.btn--primary.btn--full.btn--lg',
+									{
+										onclick: () => {
+											setCycle({ step: 'rate', rated: 0 });
+										},
+									},
+									t('delib.to_rating'),
+								)
+							: null,
 					]),
 					scrim,
 					dock,

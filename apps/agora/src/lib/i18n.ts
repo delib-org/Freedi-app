@@ -186,7 +186,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.dock_new_ideas': '{{n}} הצעות שיפור חדשות ממתינות',
 		'delib.dock_new_ideas_one': 'הצעת שיפור חדשה ממתינה',
 		'delib.dock_unsaved': 'הטיוטה עדיין לא נשמרה',
-		'delib.dock_hint': 'ההצעה שלכם נמצאת במחברת שלמטה — הקישו עליה כדי לערוך או לקרוא משוב.',
+		'delib.dock_hint': 'ההצעה שלכם נמצאת במחברת שלמטה — הקישו עליה כדי לערוך את הטקסט.',
 		'delib.dock_open': 'פתיחת ההצעה שלי',
 		'delib.dock_close': 'סגירת ההצעה שלי',
 		'delib.suggest_placeholder': 'איך אפשר לשפר את ההצעה הזו?',
@@ -267,6 +267,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_question': 'איך ההצעה הזו יכולה לשרת טוב יותר את שני המחנות?',
 		'delib.help_dont_attack': 'חזקו את ההצעה או גשרו על פער — אל תתקפו את הכוונה שלה.',
 		'delib.no_feedback_yet': 'עוד אין משוב — דירוגים ורעיונות מהכיכר יתאספו כאן.',
+		'delib.nav_mine': 'שלי',
 		'delib.nav_results': 'תוצאות',
 		'picture.lead_title': 'ההצעה שהכיתה הכי מסכימה איתה',
 		'picture.lead_mine': 'ההצעה שלי',
@@ -689,7 +690,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.dock_new_ideas': '{{n}} new improvement ideas waiting',
 		'delib.dock_new_ideas_one': 'One new improvement idea waiting',
 		'delib.dock_unsaved': 'Draft not saved yet',
-		'delib.dock_hint': 'Your proposal is in the notebook below — tap it to edit or read feedback.',
+		'delib.dock_hint': 'Your proposal is in the notebook below — tap it to edit your text.',
 		'delib.dock_open': 'Open my proposal',
 		'delib.dock_close': 'Close my proposal',
 		'delib.suggest_placeholder': 'How could this proposal be improved?',
@@ -771,6 +772,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_dont_attack': "Strengthen it or bridge a gap — don't attack the core intent.",
 		'delib.no_feedback_yet':
 			'No feedback yet — ratings and ideas from the square will gather here.',
+		'delib.nav_mine': 'Mine',
 		'delib.nav_results': 'Results',
 		'picture.lead_title': 'What the class agrees on most',
 		'picture.lead_mine': 'My proposal',
@@ -1203,8 +1205,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.dock_new_ideas': '{{n}} اقتراحات تحسين جديدة بانتظارك',
 		'delib.dock_new_ideas_one': 'اقتراح تحسين جديد بانتظارك',
 		'delib.dock_unsaved': 'المسودة لم تُحفظ بعد',
-		'delib.dock_hint':
-			'اقتراحكم موجود في الدفتر بالأسفل — اضغطوا عليه للتعديل أو لقراءة الملاحظات.',
+		'delib.dock_hint': 'اقتراحكم موجود في الدفتر بالأسفل — اضغطوا عليه لتعديل النص.',
 		'delib.dock_open': 'فتح اقتراحي',
 		'delib.dock_close': 'إغلاق اقتراحي',
 		'delib.suggest_placeholder': 'كيف يمكن تحسين هذا الاقتراح؟',
@@ -1284,6 +1285,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_question': 'كيف يمكن لهذا الاقتراح أن يخدم كلا المعسكرين بشكل أفضل؟',
 		'delib.help_dont_attack': 'قَوِّ الاقتراح أو اردم فجوة — لا تهاجم جوهر الفكرة.',
 		'delib.no_feedback_yet': 'لا ملاحظات بعد — ستتجمع هنا التقييمات والأفكار من الساحة.',
+		'delib.nav_mine': 'اقتراحي',
 		'delib.nav_results': 'النتائج',
 		'picture.lead_title': 'ما يتفق عليه الصف أكثر',
 		'picture.lead_mine': 'اقتراحي',
@@ -1715,7 +1717,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.dock_new_ideas_one': 'Una idea de mejora nueva esperando',
 		'delib.dock_unsaved': 'El borrador aún no se ha guardado',
 		'delib.dock_hint':
-			'Vuestra propuesta está en el cuaderno de abajo: tocadlo para editarla o leer comentarios.',
+			'Vuestra propuesta está en el cuaderno de abajo: tocadlo para editar el texto.',
 		'delib.dock_open': 'Abrir mi propuesta',
 		'delib.dock_close': 'Cerrar mi propuesta',
 		'delib.suggest_placeholder': '¿Cómo se podría mejorar esta propuesta?',
@@ -1798,6 +1800,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_dont_attack': 'Fortalécela o tiende un puente — no ataques su intención.',
 		'delib.no_feedback_yet':
 			'Aún no hay comentarios — aquí se reunirán las valoraciones e ideas de la plaza.',
+		'delib.nav_mine': 'Mía',
 		'delib.nav_results': 'Resultados',
 		'picture.lead_title': 'En lo que más coincide la clase',
 		'picture.lead_mine': 'Mi propuesta',
@@ -2248,7 +2251,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.dock_new_ideas_one': 'Eine neue Verbesserungsidee wartet',
 		'delib.dock_unsaved': 'Entwurf noch nicht gespeichert',
 		'delib.dock_hint':
-			'Euer Vorschlag liegt im Heft unten — tippt darauf, um zu bearbeiten oder Rückmeldungen zu lesen.',
+			'Euer Vorschlag liegt im Heft unten — tippt darauf, um den Text zu bearbeiten.',
 		'delib.dock_open': 'Meinen Vorschlag öffnen',
 		'delib.dock_close': 'Meinen Vorschlag schließen',
 		'delib.suggest_placeholder': 'Wie könnte dieser Vorschlag verbessert werden?',
@@ -2333,6 +2336,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_dont_attack': 'Stärke ihn oder schlage eine Brücke — greife die Absicht nicht an.',
 		'delib.no_feedback_yet':
 			'Noch keine Rückmeldungen — Bewertungen und Ideen vom Platz sammeln sich hier.',
+		'delib.nav_mine': 'Meins',
 		'delib.nav_results': 'Ergebnisse',
 		'picture.lead_title': 'Worauf sich die Klasse am ehesten einigt',
 		'picture.lead_mine': 'Mein Vorschlag',
@@ -2790,7 +2794,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.dock_new_ideas_one': 'Eén nieuw verbeteridee wacht',
 		'delib.dock_unsaved': 'Concept nog niet opgeslagen',
 		'delib.dock_hint':
-			'Jullie voorstel zit in het schrift hieronder — tik erop om te bewerken of feedback te lezen.',
+			'Jullie voorstel zit in het schrift hieronder — tik erop om de tekst te bewerken.',
 		'delib.dock_open': 'Mijn voorstel openen',
 		'delib.dock_close': 'Mijn voorstel sluiten',
 		'delib.suggest_placeholder': 'Hoe kan dit voorstel verbeterd worden?',
@@ -2875,6 +2879,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.help_dont_attack': 'Versterk het of sla een brug — val de kern niet aan.',
 		'delib.no_feedback_yet':
 			'Nog geen feedback — beoordelingen en ideeën van het plein verzamelen zich hier.',
+		'delib.nav_mine': 'Mijn',
 		'delib.nav_results': 'Resultaten',
 		'picture.lead_title': 'Waar de klas het meest over eens is',
 		'picture.lead_mine': 'Mijn voorstel',

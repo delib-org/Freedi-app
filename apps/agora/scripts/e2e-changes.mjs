@@ -142,13 +142,32 @@ const closeDock = async (page) => {
 	await page.locator('.proposal-dock__bar').click();
 	await page.locator('.proposal-dock__scrim').waitFor({ state: 'detached', timeout: 5000 });
 };
+// My own screen: the workshop (what came back, the elders, the needs). The
+// dock above carries only the pen, so everything that wants READING is here.
+const goMine = async (page) => {
+	// An open dock scrims the room behind it — read the screen, not through it
+	await closeDock(page);
+	await page.waitForSelector('.delib-nav__item--mine', { timeout: 15000 });
+	if ((await page.locator('.delib-nav__item--mine.delib-nav__item--active').count()) === 0) {
+		await page.locator('.delib-nav__item--mine').click();
+	}
+	await page.waitForSelector('.my-screen .my-lantern--workshop', { timeout: 10000 });
+};
+// Back to the classmates' side — also the only place a badge ABOUT my screen
+// can be read, since a tab never badges the screen you are standing on
+const goOthers = async (page) => {
+	await closeDock(page);
+	await page.locator('.delib-nav__item--peer').click();
+	await page.waitForSelector('.stall-list', { timeout: 15000 });
+};
+const myBadge = (page) => page.locator('.delib-nav__item--mine .delib-nav__badge');
 // The received-improvements accordion folds itself once nothing is waiting
 // (it is a to-do list) — a conversation you want to re-read is one tap in.
 const openInbox = async (page) => {
-	await openDock(page);
-	const head = page.locator('.proposal-dock--open button.workbench__head').first();
+	await goMine(page);
+	const head = page.locator('.my-screen button.workbench__head').first();
 	if ((await head.getAttribute('aria-expanded')) === 'false') await head.click();
-	await page.waitForSelector('.proposal-dock--open .chat-entry', { timeout: 10000 });
+	await page.waitForSelector('.my-screen .chat-entry', { timeout: 10000 });
 };
 
 // The seen-state flush is debounced 2.5s — anything asserting durability
@@ -237,14 +256,15 @@ await letSeenFlush(s2);
 
 // A opens the conversation, says thank you, then improves the text
 await clearCelebration(s1);
-await openDock(s1);
 await openInbox(s1);
-await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.locator('.my-screen .chat-entry').first().click();
 await s1.waitForSelector('.chat-page', { timeout: 10000 });
 await s1.locator('.thread__msg .btn--primary').first().click();
 await s1.locator('.thread__msg .helped__chip--thanked').waitFor({ timeout: 10000 });
 await s1.locator('.chat-page__back').click();
 await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
+// The pen is in the dock, reachable from the screen I am standing on
+await openDock(s1);
 await s1
 	.locator('textarea.my-lantern__textarea')
 	.fill(
@@ -269,9 +289,8 @@ step('PHASE 4: A replies in the conversation → B gets unread chip + badge; rea
 const bOpenHead = s2.locator('.stall--open .stall__head');
 if (await bOpenHead.count()) await bOpenHead.first().click();
 await s2.waitForTimeout(600);
-await openDock(s1);
 await openInbox(s1);
-await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.locator('.my-screen .chat-entry').first().click();
 await s1.waitForSelector('.chat-page__input', { timeout: 10000 });
 await s1.locator('.chat-page__input').fill('תודה! תוכלו לחדד מי אוכף את לוח הזמנים?');
 await s1.locator('.chat-page__send').click();
@@ -317,49 +336,42 @@ await s2.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
 await s2.waitForTimeout(600);
 eq('unread chip cleared by reading', await s2.locator('.stall__chip--unread').count(), 0);
 
-// A's dock counts what is waiting and says what KIND it is — an idea
-// outranks a message in the one line the collapsed bar gets
-const dockBadge = s1.locator('.proposal-dock__badge');
-await dockBadge.waitFor({ timeout: 15000 });
-eq('A dock badge shows what is waiting', (await dockBadge.textContent()).trim(), '1');
-const dockSub = (await s1.locator('.proposal-dock__sub').textContent()).trim();
-console.log('   ✓ A DOCK SUB:', dockSub);
-if (!dockSub.includes('שיפור') && !dockSub.includes('הודעה')) {
-	fail(`dock sub announces neither an idea nor a message: ${dockSub}`);
-}
-await shot(s1, '08-A-dock-unread');
+// A is standing on the classmates' side, and the My tab counts what is
+// waiting back home — a badge is news from a screen you are NOT on
+await goOthers(s1);
+await myBadge(s1).waitFor({ timeout: 15000 });
+eq('A My tab badge shows what is waiting', (await myBadge(s1).textContent()).trim(), '1');
+await shot(s1, '08-A-my-badge');
 // A reads it inside the conversation...
-await openDock(s1);
 await openInbox(s1);
-await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.locator('.my-screen .chat-entry').first().click();
 await s1.locator('.chat-page .thread__msg--peer', { hasText: 'ועדה מפקחת' }).waitFor({ timeout: 10000 });
 await s1.waitForTimeout(800);
-// Back out to where the notebook exists at all — the conversation is a
-// sub-page, so the dock is not on screen while you are standing in it
+// Back out to the game — the conversation is a sub-page, so no tab bar is
+// on screen while you are standing in it
 await s1.locator('.chat-page__back').click();
 await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
-await closeDock(s1);
-// The badge does NOT clear, because the notebook counts WORK, not unread
-// lines: an open idea keeps asking until it is answered, and reading a
-// request is not answering it.
+// The badge does NOT clear, because it counts WORK, not unread lines: an
+// open idea keeps asking until it is answered, and reading a request is not
+// answering it.
+await goOthers(s1);
 eq(
 	'an unanswered idea keeps the badge lit after reading',
-	(await s1.locator('.proposal-dock__badge').textContent()).trim(),
+	(await myBadge(s1).textContent()).trim(),
 	'1',
 );
-// Answering it is what clears the notebook
+// Answering it is what clears it
 await openInbox(s1);
-await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.locator('.my-screen .chat-entry').first().click();
 await s1.waitForSelector('.chat-page', { timeout: 10000 });
 await s1.getByRole('button', { name: /^לא תודה$/ }).click();
 await s1.locator('.thread__msg .helped__chip--declined').waitFor({ timeout: 10000 });
 await s1.locator('.chat-page__back').click();
 await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
-await closeDock(s1);
-await s1
-	.locator('.proposal-dock__badge')
+await goOthers(s1);
+await myBadge(s1)
 	.waitFor({ state: 'detached', timeout: 8000 })
-	.catch(() => fail('A dock badge did not clear after the idea was answered'));
+	.catch(() => fail('A My tab badge did not clear after the idea was answered'));
 console.log('   ✓ A badge cleared once the idea was answered');
 
 console.log(
@@ -368,6 +380,6 @@ console.log(
 		'   · owner edit → EDITED chip + re-rate invitation; re-rate clears; survives reload\n' +
 		'   · thanked idea + a real edit → personal IMPROVED-WITH-YOUR-IDEA chip\n' +
 		'   · owner chat reply → toast + unread chip; reading clears it\n' +
-		'   · the notebook badge counts WORK: reading an idea does not clear it, answering does',
+		'   · the My tab badge counts WORK: reading an idea does not clear it, answering does',
 );
 await browser.close();
