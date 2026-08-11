@@ -1,3 +1,5 @@
+@use './tokens' as *;
+
 /*
  * Deliberation chat — the guided conversation that replaced the "places"
  * UI. Ownership color law holds everywhere: purple --mine = the student's
@@ -340,7 +342,7 @@
 		min-width: 22px;
 		height: 22px;
 		padding-inline: 6px;
-		font-size: var(--font-size-xs);
+		@include type-meta;
 		font-weight: 700;
 		color: var(--text-on-lantern);
 		background: var(--peer);
@@ -552,7 +554,7 @@
 		min-width: 20px;
 		height: 20px;
 		padding-inline: 5px;
-		font-size: var(--font-size-xs);
+		@include type-meta;
 		font-weight: 700;
 		color: var(--text-on-lantern);
 		background: var(--peer);

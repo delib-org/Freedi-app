@@ -1,3 +1,32 @@
+// ============================================================================
+// THE META RUNG
+//
+// 12px is legal for a MARK and illegal for a WORD, and no stylesheet can tell
+// the two apart by looking at a selector — `.board__coverage` and
+// `.board__camp-n` are the same shape of name and only one of them is a
+// sentence. So the distinction is declared, not inferred: a rule that wants
+// the 12px rung includes this mixin, which stamps --type-meta on the element.
+// scripts/type-audit.mjs reads that stamp off the RENDERED node and judges the
+// run against 12px instead of 14px.
+//
+// The effect is that shrinking something below the readable floor is not a
+// number you can quietly type — it is an opt-in with your name on it, and the
+// audit prints every one of them. Writing `font-size: var(--font-size-2xs)`
+// by hand skips the stamp and the audit fails you for it, which is the point.
+// ============================================================================
+@mixin type-meta {
+  --type-meta: 1;
+
+  font-size: var(--font-size-2xs);
+
+  // A custom property inherits. Without this reset a mark containing a nested
+  // element would hand that child the exemption too, and a real word could
+  // ride into the 12px rung on a parent's permission.
+  * {
+    --type-meta: 0;
+  }
+}
+
 @mixin ink-on-light {
   --text-primary: #2b2350;
   --text-secondary: #5f568a;
@@ -41,6 +70,9 @@
 // ============================================================================
 
 :root {
+  // Every run is a WORD until a rule says otherwise (see @mixin type-meta)
+  --type-meta: 0;
+
   // --- Page: WHITE ---
   // The page is the negative space the design is made of. A lavender page
   // tinted every card the same colour as the thing that was supposed to
@@ -153,10 +185,33 @@
   // stems. Assistant carries body copy and has the full 200–800 range.
   --font-display: 'Alef', 'Assistant', Arial, sans-serif;
   --font-body: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
+
+  // THE SCALE IS SIZED FOR A PHONE HELD AT ARM'S LENGTH, because that is the
+  // only device this game is ever played on. The old scale bottomed out at
+  // 12px and spent that rung on things a student has to READ — the words
+  // under a rating face, a chart's axis title, the hint telling you a dot is
+  // tappable. 12px is the smallest size iOS ships in a UI, and iOS spends it
+  // on timestamps and badge counts, never on a sentence.
+  //
+  // So the bottom of the scale is now two rungs with a rule between them:
+  //
+  //   --font-size-2xs  12px  A MARK, not a word: a badge count, a timestamp,
+  //                          a numeric axis tick. Never a phrase, never
+  //                          something a student has to stop and read. It is
+  //                          reachable only through @mixin type-meta, which
+  //                          records the decision where the audit can see it.
+  //   --font-size-xs   14px  The smallest READABLE rung — chips, hints,
+  //                          labels, secondary lines. This is where almost
+  //                          everything that used to be 12px belongs.
+  //
+  // scripts/type-audit.mjs measures what actually rendered at 390px and fails
+  // on any text run below its rung, the same way contrast-audit.mjs measures
+  // ink. Sizes above are unchanged: nothing here was ever too big.
+  --font-size-2xs: 0.75rem;   // 12px — marks only, via @include type-meta
+  --font-size-xs: 0.875rem;   // 14px
+  --font-size-sm: 0.9375rem;  // 15px
+  --font-size-base: 1rem;     // 16px
+  --font-size-lg: 1.125rem;   // 18px
   --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
   --font-size-3xl: 2.75rem;

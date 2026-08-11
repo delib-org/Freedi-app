@@ -7,6 +7,7 @@
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { auditPage, report } from './contrast-audit.mjs';
+import { auditType, summarise } from './type-audit.mjs';
 
 const BASE = 'http://localhost:3009';
 const SHOTS = process.argv[2] ?? 'delib-shots';
@@ -14,10 +15,13 @@ mkdirSync(SHOTS, { recursive: true });
 const step = (msg) => console.log(`\n=== ${msg}`);
 
 const browser = await chromium.launch();
+// AGORA_WIDTH overrides the phone width — 360 is the narrow-Android floor and
+// sits BELOW the app's own 380px breakpoint, so it exercises rules 390 never
+// reaches. AGORA_VIEWPORT=desktop still means the wide shot.
 const VIEWPORT =
 	process.env.AGORA_VIEWPORT === 'desktop'
 		? { width: 1280, height: 900 }
-		: { width: 390, height: 844 };
+		: { width: Number(process.env.AGORA_WIDTH) || 390, height: 844 };
 const mkPage = async (label) => {
 	const ctx = await browser.newContext({ viewport: VIEWPORT });
 	const page = await ctx.newPage();
@@ -36,8 +40,13 @@ const s2 = await mkPage('S2');
 // (mock/surfaces.html) proves the surfaces in isolation; this proves them
 // with the app's real content in them, which is where the last one hid.
 const audits = [];
+// ...and we measure the TYPE on the same pass. At 390px the question stops
+// being "can this be seen" and starts being "is it big enough to read" —
+// independent failures, so both run on every screen.
+const typeAudits = [];
 const shot = async (page, name) => {
 	audits.push(await auditPage(page, { label: name }));
+	typeAudits.push(await auditType(page, { label: name }));
 
 	return page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
 };
@@ -53,12 +62,19 @@ await teacher.goto(`${BASE}/#!/teach`, { waitUntil: 'domcontentloaded' });
 await teacher.waitForFunction(() => typeof window.__agoraDevSignIn === 'function', {
 	timeout: 20000,
 });
-await teacher.evaluate(() =>
-	window.__agoraDevSignIn({
-		sub: 'shots-teacher',
-		email: 'shots-teacher@example.com',
-		name: 'Shots Teacher',
-	}),
+// A FRESH teacher every run. Reusing one sub means the second run signs in as
+// a teacher who already owns an open session, and the home screen offers to
+// resume it instead of listing packages — which reads exactly like
+// "provisioning never landed" and is not that at all.
+const TEACHER_SUB = `shots-teacher-${Date.now().toString(36)}`;
+await teacher.evaluate(
+	(sub) =>
+		window.__agoraDevSignIn({
+			sub,
+			email: `${sub}@example.com`,
+			name: 'Shots Teacher',
+		}),
+	TEACHER_SUB,
 );
 // The teacher home loads its packages once, at init — with the anonymous
 // user this fresh context starts on. The dev sign-in that follows does not
@@ -95,6 +111,11 @@ for (const [page, label] of [
 	await page.waitForSelector('.lobby__name', { timeout: 20000 });
 	console.log(`${label} joined as`, await page.locator('.lobby__name').textContent());
 }
+// The stages BEFORE deliberation are played through blind by this driver, but
+// a student reads them on the same phone — so they are measured on the way
+// past even though the interesting screenshots are all further in.
+await shot(teacher, '00a-teacher-session');
+await shot(s1, '00b-student-lobby');
 
 const advance = async () => {
 	await teacher.locator('button.btn.btn--primary.btn--lg').first().click();
@@ -113,18 +134,55 @@ const clickThroughScenes = async (page) => {
 	}
 };
 
+// The perspectives stage does not end with its scenes: it hands the student a
+// value question PER CHARACTER, and the stage only counts as finished once
+// every one has an answer. A driver that only clicks scene buttons stalls
+// here forever waiting for a class-progress that will never fill.
+const answerValues = async (page, text) => {
+	for (let i = 0; i < 6; i++) {
+		const box = page.locator('textarea.values__textarea');
+		if (await box.count()) {
+			await box.fill(`${text} ${i + 1}`);
+			await page.locator('button.btn--primary.btn--full.btn--lg').click();
+			// Grading is a round trip; the "next character" button only appears
+			// once the answer itself has landed
+			await page.waitForTimeout(1500);
+		}
+		const next = page.locator('button.btn--secondary.btn--full');
+		if ((await next.count()) === 0) break;
+		await next.first().click();
+		await page.waitForTimeout(600);
+	}
+};
+
+const VALUE_ANSWER =
+	'הדמות מחזיקה בערך של צדק וכבוד לאדם, ומאמינה שלכל אדם מגיעה זכות להשמיע את קולו.';
+
 step('Fast-forward framing → perspectives → needs');
 for (let i = 0; i < 3; i++) {
 	await advance();
 	await s1.waitForSelector('.scene__text, .scene__title', { timeout: 20000 });
+	await shot(s1, `00c-scene-${i}`);
 	await Promise.all([clickThroughScenes(s1), clickThroughScenes(s2)]);
-	await teacher.locator('.class-progress__count--all').waitFor({ timeout: 20000 });
+	// The needs board, if these scenes ended on one
+	if (await s1.locator('.needs-board').count()) await shot(s1, `00d-needs-board-${i}`);
+	// The value question, if this stage asks one
+	if (await s1.locator('textarea.values__textarea').count()) {
+		await shot(s1, `00-values-${i}`);
+		await Promise.all([answerValues(s1, VALUE_ANSWER), answerValues(s2, VALUE_ANSWER)]);
+		await shot(s1, `00b-values-graded-${i}`);
+	}
+	await teacher
+		.locator('.class-progress__count--all')
+		.waitFor({ timeout: 20000 })
+		.catch(() => console.log(`  (stage ${i}: class progress never read all-done, continuing)`));
 }
 
 step('POSITIONING');
 await advance();
 const position = async (page, value) => {
 	await page.waitForSelector('input.camp-scale__slider', { timeout: 20000 });
+	if (page === s1) await shot(s1, '00e-positioning');
 	await page.locator('input.camp-scale__slider').evaluate((el, v) => {
 		el.value = String(v);
 		el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -179,6 +237,9 @@ await shotFull(s1, '02b-rate-square-full');
 await shotHud(s1, '02c-hud-rate');
 
 // --- 03: a stall unfolded (the rating card)
+// A celebration raised by a classmate's arrival is modal and waits for a
+// human — it will swallow this click and every one after it
+await clearCelebration(s1);
 await s1.locator('.stall__head').first().click();
 await s1.waitForTimeout(700);
 await shot(s1, '03-rate-open');
@@ -289,9 +350,26 @@ await s1.waitForTimeout(1200);
 await shot(s1, '07-results-tab');
 await shotFull(s1, '07b-results-tab-full');
 
+// --- 08: a proposal's detail panel, opened off a dot on the class map. The
+// board's smallest type lives in here (raters, callout, why) and nothing
+// above this line ever opens it.
+const dot = s1.locator('.board__dot, .board__point').first();
+if (await dot.count()) {
+	await dot.click({ force: true });
+	await s1.waitForTimeout(800);
+	await shot(s1, '08-board-detail');
+}
+
+// --- 09: the teacher's own screens, on a phone. A teacher runs the room off
+// whatever is in their pocket, so their chrome is held to the same floor.
+await shot(teacher, '09-teacher-deliberation');
+
 console.log('\nSHOTS →', SHOTS);
 
 console.log('\nContrast audit — every captured screen');
 const clean = audits.map(report).every(Boolean);
+
+console.log(`\nType audit @${VIEWPORT.width}px — every captured screen`);
+const typeClean = summarise(typeAudits);
 await browser.close();
-if (!clean) process.exitCode = 1;
+if (!clean || !typeClean) process.exitCode = 1;

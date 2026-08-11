@@ -10,12 +10,13 @@
 		"preview": "vite preview --port 3009",
 		"typecheck": "tsc --noEmit",
 		"lint": "eslint \"src/**/*.ts\"",
-		"check-all": "npm run lint && npm run typecheck && npm run build && npm run contrast",
+		"check-all": "npm run lint && npm run typecheck && npm run build && npm run contrast && npm run typesize",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"seed": "npx tsx scripts/seed.ts",
 		"seed:clear": "npx tsx scripts/seed.ts --clear",
-		"contrast": "node scripts/contrast-audit.mjs"
+		"contrast": "node scripts/contrast-audit.mjs",
+		"typesize": "node scripts/type-audit.mjs"
 	},
 	"dependencies": {
 		"@fontsource/alef": "^5.3.0",
