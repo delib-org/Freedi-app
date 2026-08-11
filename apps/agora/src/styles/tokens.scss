@@ -63,6 +63,7 @@
   --border-lantern: rgba(139, 107, 240, 0.55);
   --bg-inset: rgba(83, 60, 160, 0.07);
   --lantern-glow: var(--mine-ink);
+  --mine-glow: var(--mine-ink);
   --peer-glow: #565080;
 }
 
@@ -84,15 +85,31 @@
 // Content is never ambiguous, because a content surface is either purple
 // (mine) or white (theirs) and there is no third case.
 //
-// CONTRAST FLOOR, and it has two rungs, because full white and muted white
-// are not the same problem:
+// CONTRAST, and this is the one place the system knowingly runs a debt.
+//
+// The AA floor has two rungs, because full white and muted white are not the
+// same problem:
 //   * solid #fff text                     -> --mine-strong or darker
 //   * ANY dimmer white (a timestamp, a
-//     hint, a secondary label)            -> --mine-deep or darker, which is
-//                                            what --grad-mine-text is for
-// --mine and --mine-light are fills behind DARK text, glows, borders and
-// gradient tops — never a bed for copy. Every value below is measured, and
-// scripts/contrast-audit.mjs re-measures them against what actually renders.
+//     hint, a secondary label)            -> --mine-deep or darker
+//
+// The ramps below BREAK that floor on purpose. On 2026-08-11 the palette was
+// re-pointed at mock/delib-mock.css verbatim: the shipped ramp spent the two
+// darkest rungs of the purple family on every surface a student actually
+// reads, and two near-navy stops in a row stop reading as a hue — the screen
+// went heavy and blue. The sim spends the bright middle of the ramp there
+// instead, and that is the app's intended look. It costs fourteen text runs
+// their AA margin, the worst of them white body copy on --mine at 3.85:1.
+//
+// That trade is recorded, not hidden: scripts/contrast-audit.mjs carries an
+// ACCEPTED ledger naming all fourteen, pinned to their exact surface AND
+// their exact measured ratio. Anything not on that list still fails the
+// build, and anything on it that gets WORSE fails too. Read the ledger's
+// header before moving a purple value — it is the argument, and it is also
+// the list of what is owed.
+//
+// Every value below is measured, and the audit re-measures them against what
+// actually renders.
 // ============================================================================
 
 :root {
@@ -105,7 +122,7 @@
   // stand out, so nothing did — the screen read as one purple smear. White
   // costs nothing and gives every surface an edge for free.
   --bg-page: #ffffff;
-  --bg-page-high: #fbfaff; // barely-there top of page gradients
+  --bg-page-high: #f6f3ff; // barely-there top of page gradients
   --bg-card: rgba(255, 255, 255, 0.9);
   --bg-card-solid: #ffffff;
   --bg-overlay: rgba(43, 28, 92, 0.5);
@@ -150,9 +167,19 @@
   --mint: #56dfc0;
   --mint-deep: #22b699;
   --mint-ink: #0d3b32;    // dark label on a mint fill — 7.3:1
-  // PINK is notification counts. Nothing else.
+  // PINK is notification counts. Nothing else — and "nothing else" cuts both
+  // ways: a count is pink and NEVER --danger. An unread reply from a
+  // classmate is good news, and red said "something went wrong" about the
+  // single friendliest event in the game.
   --pink: #f56aa8;
   --gold: #ffd23f;        // laps behind you, celebration sparks
+  --amber: #ffb254;       // warm accent tiles
+
+  // The two mark tints — a row's news as a coloured disc rather than a
+  // sentence. Flat, pale, opaque: an rgba() wash over a white card is a
+  // different colour over a purple one, and these marks appear on both.
+  --mark-edited: #fff0d6; // the owner reworked the text — re-read it
+  --mark-helped: #d9f7ee; // you already helped this one — the quietest mark
 
   // --- Camps (core game semantics) ---
   // The left camp's royal purple could not survive the re-theme: purple now
@@ -283,9 +310,29 @@
   // The ramp that carries TEXT — and it carries its own sheen, because a
   // component that re-rolls the veil by hand is how the dock ended up at
   // 3.13:1 for its own title. See the contrast floor at the top of the file.
+  //
+  // It used to run --mine-deep → #4a2fae, and that was the single reason the
+  // app read as "bluish-dark" next to the design sim it came from: every
+  // surface a student actually reads — the dock, my bubble, the writing
+  // desk, the tab I am on — was painted from the two DARKEST rungs of the
+  // purple family, while the sim spends the bright middle of the ramp on
+  // exactly those surfaces. Two near-navy stops in a row stop reading as a
+  // hue at all; they read as "dark chrome", and the whole screen goes heavy.
+  // It now runs --mine → --mine-deep, which is mock/delib-mock.css `.dock`
+  // verbatim: the same ramp, one full step brighter and unmistakably violet.
   --grad-mine-text:
-    radial-gradient(120% 200% at 15% -20%, rgba(255, 255, 255, 0.14), transparent 60%),
-    linear-gradient(150deg, var(--mine-deep) 0%, #4a2fae 100%);
+    radial-gradient(120% 200% at 15% 120%, rgba(255, 255, 255, 0.28), transparent 60%),
+    linear-gradient(150deg, var(--mine) 0%, var(--mine-deep) 100%);
+  // The HERO ramp: one owned object per screen, big enough to carry the full
+  // three-stop climb the way the sim's `.mine` card does. The sheen enters
+  // from the top-OUTER corner rather than the bottom, so the lightest stop is
+  // washed lighter still and the card reads as lit rather than tinted.
+  --grad-mine-hero:
+    radial-gradient(120% 120% at 88% -20%, rgba(255, 255, 255, 0.3), transparent 55%),
+    linear-gradient(150deg, var(--mine-light) 0%, var(--mine) 45%, var(--mine-deep) 100%);
+  // The face I pressed (mock `.scale__opt--on`) — 160deg over a small square,
+  // so it needs the two brightest fills, not the ramp.
+  --grad-mine-selected: linear-gradient(160deg, var(--mine-light), var(--mine-strong));
   --grad-sheen: radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.32), transparent 60%);
 
   // --- Motion (camera-move easing; never hard cuts) ---
@@ -353,6 +400,7 @@
   --border-lantern: rgba(255, 255, 255, 0.75);
   --bg-inset: rgba(255, 255, 255, 0.18);
   --lantern-glow: #ffffff;
+  --mine-glow: #ffffff;
   --peer-glow: rgba(255, 255, 255, 0.82);
 
   color: #ffffff;

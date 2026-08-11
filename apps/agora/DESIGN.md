@@ -99,6 +99,14 @@ Aliases `--lantern` / `--lantern-glow` / `--lantern-deep` map to
 | `--mint-ink` | `#0d3b32` | dark label on mint — 7.3:1 |
 | `--pink` | `#f56aa8` | notification counts. Nothing else. |
 | `--gold` | `#ffd23f` | laps behind you, celebration sparks |
+| `--amber` | `#ffb254` | warm accent tiles |
+
+**A count is pink, and it is never `--danger`.** Every unread badge used to be
+red, which said *something went wrong* about a classmate replying to you — the
+friendliest event in the game. Pink costs the badge its AA margin (2.8:1 vs
+red's 4.67:1) and it is on the accepted ledger for that reason; the hue was
+judged worth the ratio. Red stays where it belongs: a timer running out, a
+bucket voting *against*.
 
 **Mint is rationed.** It fills a support meter, burns the current lap, and is
 the one CTA allowed *on* a purple surface — where purple-on-purple would
@@ -143,14 +151,26 @@ opacity, as texture rather than tint.
 ### Gradients — declared once
 
 ```scss
---grad-mine       // mine-light → mine → mine-deep. Decorative purple.
---grad-mine-text  // mine-strong → mine-deep. Purple that carries body copy.
---grad-sheen      // the top-right highlight every purple surface wears
+--grad-mine           // mine-light → mine → mine-deep. Decorative purple.
+--grad-mine-text      // mine → mine-deep + sheen. Chrome and bubbles: the dock,
+                      // my message, the tab I am on, a field I type into.
+--grad-mine-hero      // mine-light → mine → mine-deep + sheen. The ONE owned
+                      // object on a screen, big enough to carry the full climb.
+--grad-mine-selected  // mine-light → mine-strong. The face I pressed.
+--grad-sheen          // the top-right highlight a purple surface can wear
 ```
 
-Hand-rolling a fourth purple gradient in a component is how a re-theme rots.
-If a surface needs to hold text, it uses `--grad-mine-text` — that is the
-whole decision.
+Hand-rolling a sixth purple gradient in a component is how a re-theme rots.
+A surface that holds text uses `--grad-mine-text`; the single hero object on
+a screen uses `--grad-mine-hero` — that is the whole decision.
+
+All five are `mock/delib-mock.css` verbatim, and that is deliberate: the
+shipped ramp used to be `mine-deep → #4a2fae`, two near-navy stops in a row,
+which stopped reading as a hue at all and made every screen a student reads
+feel like dark chrome. The bright middle of the ramp belongs on exactly those
+surfaces. **It costs AA** — white body copy on `--mine` is 3.85:1 — and the
+fourteen runs that pay for it are named in the ACCEPTED ledger at the top of
+`scripts/contrast-audit.mjs`. Read that ledger before moving a purple value.
 
 ### Radius — this is most of the "game" feeling
 

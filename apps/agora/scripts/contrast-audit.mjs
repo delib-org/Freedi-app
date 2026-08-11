@@ -19,6 +19,64 @@ import { chromium } from '@playwright/test';
 const AA_NORMAL = 4.5;
 const AA_LARGE = 3.0;
 
+/* ===========================================================================
+ * THE ACCEPTED LEDGER
+ *
+ * On 2026-08-11 the palette was re-pointed at mock/delib-mock.css verbatim,
+ * because the sim's brighter violet is the look the app is meant to have and
+ * the shipped ramp — two near-navy stops in a row — read as dark chrome
+ * rather than as a colour. The sim was never audited, and the mockup's own
+ * hues do not clear AA under white text: --mine #8b6bf0 tops out at 3.85:1
+ * and the count pink #f56aa8 at 2.8:1. Tal made that trade knowingly.
+ *
+ * A gate nobody can pass stops being a gate — everyone learns to read past
+ * the red and the NEXT regression rides in behind these fourteen. So the
+ * fourteen are written down instead of the floor being lowered: each is
+ * pinned to the exact surface it sits on AND the exact ratio it measured, so
+ * a run that gets WORSE breaks the build even though it is on the list, and
+ * anything not on the list fails the way it always did.
+ *
+ * This is a ledger of debt, not a list of exemptions. Shrinking it is the
+ * work; adding to it needs the same deliberate decision that opened it.
+ * =========================================================================== */
+const ACCEPTED = [
+	// White copy on --mine #8b6bf0, the light stop of --grad-mine-text
+	['p.thread__text', 'rgb(139, 107, 240)', 3.85],
+	['span.thread__time', 'rgb(139, 107, 240)', 2.87],
+	['p.action-hint', 'rgb(139, 107, 240)', 2.87],
+	['span.proposal-dock__title', 'rgb(139, 107, 240)', 3.85],
+	['span.proposal-dock__sub', 'rgb(139, 107, 240)', 2.98],
+	['span.delib-nav__label', 'rgb(139, 107, 240)', 3.85],
+	// White copy on the hero ramp's top stops (--mine-light #a98cf7 and the
+	// sheen washing over it)
+	['p.', 'rgb(181, 156, 248)', 2.31],
+	['button.btn.btn--primary.btn--full', 'rgb(169, 140, 247)', 2.7],
+	['span.rate-scale__label', 'rgb(169, 140, 247)', 2.7],
+	// The count pink. It replaced --danger, which passed at 4.67:1 — red said
+	// "something broke" about a classmate's reply, which is the friendliest
+	// event in the game, so the hue was worth the ratio.
+	['span.proposal-dock__badge', 'rgb(245, 106, 168)', 2.8],
+	['span.delib-nav__badge', 'rgb(245, 106, 168)', 2.8],
+	['span.stall__chip.stall__chip--unread', 'rgb(245, 106, 168)', 2.8],
+];
+
+/** A failure is accepted only on the same surface, and only if it has not got worse */
+function accepted(failure) {
+	return ACCEPTED.some(
+		([selector, on, ratio]) =>
+			failure.selector === selector && failure.on === on && failure.ratio >= ratio - 0.01,
+	);
+}
+
+/** Split measured failures into the ones on the ledger and the ones that gate */
+export function triage({ label, failures }) {
+	return {
+		label,
+		known: failures.filter(accepted),
+		failures: failures.filter((f) => !accepted(f)),
+	};
+}
+
 /**
  * Measure every visible text run on the page and report the ones whose ink
  * does not survive its own background.
@@ -184,20 +242,28 @@ export async function auditPage(page, { label = 'page', min = AA_NORMAL } = {}) 
 	).then((failures) => ({ label, failures }));
 }
 
-/** Print a report; returns true if everything passed */
-export function report({ label, failures }) {
+/** Print a report; returns true if nothing NEW is unreadable */
+export function report(result) {
+	const { label, failures, known } = triage(result);
+
+	const line = (f) =>
+		console.log(
+			`      ${f.ratio}:1 (needs ${f.needs}) ${f.selector}\n` +
+				`        "${f.text}"  ${f.color} on ${f.on}`,
+		);
+
+	if (known.length > 0) {
+		console.log(`  · ${label} — ${known.length} known run(s) on the accepted ledger`);
+		for (const f of known) line(f);
+	}
+
 	if (failures.length === 0) {
 		console.log(`  ✓ ${label}`);
 
 		return true;
 	}
-	console.log(`  ✗ ${label} — ${failures.length} unreadable run(s)`);
-	for (const f of failures) {
-		console.log(
-			`      ${f.ratio}:1 (needs ${f.needs}) ${f.selector}\n` +
-				`        "${f.text}"  ${f.color} on ${f.on}`,
-		);
-	}
+	console.log(`  ✗ ${label} — ${failures.length} NEW unreadable run(s)`);
+	for (const f of failures) line(f);
 
 	return false;
 }

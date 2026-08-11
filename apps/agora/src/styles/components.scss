@@ -1510,7 +1510,10 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-md);
-	background: var(--grad-mine-text);
+	// The desk is the screen's ONE owned object, so it gets the hero ramp
+	// rather than the chrome one — the same call the sim makes for its `.mine`
+	// card. On a surface this tall the two-stop chrome ramp flattens out.
+	background: var(--grad-mine-hero);
 	border: none;
 	box-shadow: var(--shadow-mine);
 
@@ -1672,7 +1675,8 @@
 	color: var(--text-primary);
 }
 
-// New-feedback count: notification badge = danger-red (never a camp color)
+// New-feedback count: notification badge = pink (never a camp colour, and
+// never danger-red — ideas arriving for your proposal are not an error)
 .workbench__count {
 	display: inline-flex;
 	align-items: center;
@@ -1681,7 +1685,7 @@
 	height: 20px;
 	padding: 0 6px;
 	border-radius: var(--radius-full);
-	background: var(--danger);
+	background: var(--pink);
 	color: #ffffff;
 	@include type-meta;
 	font-weight: 700;
@@ -1814,9 +1818,10 @@
 		}
 
 		// A reply is waiting in my conversation here — a true notification
-		// count, so it wears the notification color, never a camp one
+		// count, so it wears the notification colour (pink), never a camp one
+		// and never danger-red
 		&--unread {
-			background: var(--danger);
+			background: var(--pink);
 			color: #fff;
 			font-weight: 700;
 		}
@@ -1831,7 +1836,7 @@
 		// The owner changed the text since I last engaged with it — the chip
 		// that asks for a re-read (and a re-rate, the body will say)
 		&--edited {
-			background: rgba(255, 210, 63, 0.35);
+			background: var(--mark-edited);
 			color: var(--peer-glow);
 			font-weight: 700;
 		}
@@ -1862,7 +1867,7 @@
 
 		// A helped stall is a quiet fact, so its mark is the quietest one
 		&--helped {
-			background: rgba(23, 128, 77, 0.14);
+			background: var(--mark-helped);
 		}
 	}
 
@@ -2236,12 +2241,12 @@
 		line-height: 1;
 	}
 
-	// Notification red, never a camp color
+	// The notification colour (pink), never a camp one and never danger-red
 	&__unread {
 		min-width: 18px;
 		padding: 1px 5px;
 		border-radius: var(--radius-full);
-		background: var(--danger);
+		background: var(--pink);
 		color: #fff;
 		@include type-meta;
 		font-weight: 700;
@@ -2990,14 +2995,17 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		// A notification badge must not wear a camp color
-		background: var(--danger);
+		// A notification badge must not wear a camp color — and it must not
+		// wear --danger either: a waiting reply is the friendliest event in
+		// the game, and red said an error had happened. Pink is the count
+		// colour, and it is the count colour's only job.
+		background: var(--pink);
 		color: #ffffff;
 		border-radius: var(--radius-full);
 		font-family: var(--font-body);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
-		box-shadow: 0 0 10px rgba(209, 61, 78, 0.35);
+		box-shadow: 0 0 10px rgba(245, 106, 168, 0.4);
 	}
 
 	@media (max-width: 700px) {
@@ -3197,8 +3205,8 @@
 		min-width: 20px;
 		height: 20px;
 		padding-inline: 5px;
-		// A notification badge must not wear a camp colour
-		background: var(--danger);
+		// A notification badge must not wear a camp colour — nor --danger
+		background: var(--pink);
 		color: #ffffff;
 		border-radius: var(--radius-full);
 		font-family: var(--font-body);
@@ -4495,7 +4503,7 @@
 // (ring+halo, scale+pulse, ✓ badge) and receding siblings — "where did I
 // press?" must survive a glance, color-blindness and reduced motion ---
 .rate-scale__option--selected {
-	background: var(--grad-mine-text);
+	background: var(--grad-mine-selected);
 	border-color: var(--mine-deep);
 	color: #ffffff;
 	transform: scale(1.12);
