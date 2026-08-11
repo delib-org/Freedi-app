@@ -280,7 +280,10 @@
 // the fields I author my own words into — a placeholder and a caret are ink
 // like any other, so they re-derive here instead of being hand-picked
 .my-lantern__textarea,
-.chat-page__input {
+.chat-page__input,
+// ...and the whole writing desk, which is one owned object rather than a
+// white card with an owned input inside it
+.write-desk {
   @include ink-on-dark;
 }
 
