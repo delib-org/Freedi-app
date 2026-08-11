@@ -21,15 +21,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--font-size-base);
   color: var(--text-primary);
-  background:
-    radial-gradient(
-      ellipse 120% 70% at 50% -10%,
-      var(--bg-page-high) 0%,
-      #e2f1fd 55%,
-      var(--bg-page) 100%
-    ),
-    var(--bg-page);
-  background-attachment: fixed;
+  background: var(--bg-page);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -39,7 +31,6 @@ body {
 
 // Living day sky: drifting cloud puffs + a festival sparkle field.
 // Pure decoration — fixed, non-interactive, killed by reduced-motion.
-body::before,
 body::after {
   content: '';
   position: fixed;
@@ -47,16 +38,6 @@ body::after {
   pointer-events: none;
   z-index: 0;
   background-repeat: repeat;
-}
-
-body::before {
-  // Drifting cloud puffs
-  background-image:
-    radial-gradient(140px 56px at 15% 10%, rgba(255, 255, 255, 0.95) 40%, transparent 70%),
-    radial-gradient(190px 70px at 68% 6%, rgba(255, 255, 255, 0.85) 40%, transparent 70%),
-    radial-gradient(110px 46px at 42% 16%, rgba(255, 255, 255, 0.75) 40%, transparent 70%);
-  background-size: 1200px 760px;
-  animation: sky-twinkle 9s ease-in-out infinite alternate;
 }
 
 body::after {

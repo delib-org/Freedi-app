@@ -22,9 +22,13 @@
 // ============================================================================
 
 :root {
-  // --- Page: a pale lavender the saturated surfaces sit on ---
-  --bg-page: #f2eefd;
-  --bg-page-high: #e6ddfb; // upper end of page gradients
+  // --- Page: WHITE ---
+  // The page is the negative space the design is made of. A lavender page
+  // tinted every card the same colour as the thing that was supposed to
+  // stand out, so nothing did — the screen read as one purple smear. White
+  // costs nothing and gives every surface an edge for free.
+  --bg-page: #ffffff;
+  --bg-page-high: #fbfaff; // barely-there top of page gradients
   --bg-card: rgba(255, 255, 255, 0.9);
   --bg-card-solid: #ffffff;
   --bg-overlay: rgba(43, 28, 92, 0.5);
@@ -88,19 +92,21 @@
   --camp-center: #7b74a8;      // the blend (centre camp)
   --camp-center-glow: #565080;
 
-  // --- Place washes: the ROOM you are standing in ---
-  // Deliberately near-identical now. The HUD's crest and name answer "where
-  // am I?" outright, so the wash is a temperature, not a label: my rooms sit
-  // a shade warmer in purple, everyone else's stay a cool neutral white.
-  --wash-mine-high: #ddd0fa;
-  --wash-mine-mid: #eee7fd;
-  --wash-mine-low: #f7f4fe;
-  --wash-peer-high: #e4e1f2;
-  --wash-peer-mid: #f2f1f9;
-  --wash-peer-low: #fbfbfe;
-  --wash-square-high: #e7e3f5;
-  --wash-square-mid: #f4f2fb;
-  --wash-square-low: #fcfbfe;
+  // --- Place washes: a breath of colour at the top of the page, nothing more
+  // The wash used to repaint the whole viewport to say which room you were
+  // standing in. The HUD's crest and name say that outright now, and a wash
+  // strong enough to be legible was also strong enough to tint every white
+  // card sitting on it. What is left is a hint at the very top that fades to
+  // white before the first card — atmosphere, not information.
+  --wash-mine-high: #f4f0ff;
+  --wash-mine-mid: #ffffff;
+  --wash-mine-low: #ffffff;
+  --wash-peer-high: #f6f5fc;
+  --wash-peer-mid: #ffffff;
+  --wash-peer-low: #ffffff;
+  --wash-square-high: #f5f3fd;
+  --wash-square-mid: #ffffff;
+  --wash-square-low: #ffffff;
 
   // --- Semantic ---
   --success: #17804d;
@@ -155,8 +161,11 @@
   // --- Elevation / glow ---
   // Shadows are purple-tinted, never grey: a neutral shadow on a lavender
   // page reads as dirt.
-  --shadow-card: 0 8px 24px -8px rgba(70, 45, 150, 0.22);
-  --shadow-raised: 0 12px 32px -10px rgba(70, 45, 150, 0.35);
+  // Stronger than they look: on a WHITE page a card has no tint to separate
+  // it from the background, so the shadow is the only thing making it an
+  // object. This is the number that decides whether the layout reads.
+  --shadow-card: 0 6px 18px -6px rgba(70, 45, 150, 0.16), 0 2px 5px -2px rgba(70, 45, 150, 0.1);
+  --shadow-raised: 0 14px 34px -10px rgba(70, 45, 150, 0.26), 0 3px 8px -3px rgba(70, 45, 150, 0.12);
   --shadow-mine: 0 14px 30px -10px rgba(99, 66, 220, 0.55);
   --glow-lantern: 0 8px 20px -6px rgba(115, 80, 227, 0.55);
   --glow-marker: 0 0 12px rgba(139, 107, 240, 0.55);

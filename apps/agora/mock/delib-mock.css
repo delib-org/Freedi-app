@@ -18,9 +18,10 @@
 	--card-edge: rgba(83, 60, 160, 0.12);
 	--tile: #f0ebfe; /* the neutral chip behind a classmate's number */
 
-	/* --- Page --- */
-	--page: #f2eefd;
-	--page-high: #e8e0fb;
+	/* --- Page: WHITE. See DESIGN.md §1 — a tinted page tints every card
+	   sitting on it, including the one that was supposed to stand out. --- */
+	--page: #ffffff;
+	--page-high: #f6f3ff;
 
 	/* --- Accents (from the reference's buttons and folder tiles) --- */
 	--mint: #56dfc0;
@@ -43,7 +44,7 @@
 	--radius-lg: 22px;
 	--radius-md: 16px;
 	--radius-sm: 10px;
-	--shadow-card: 0 8px 24px -8px rgba(70, 45, 150, 0.22);
+	--shadow-card: 0 6px 18px -6px rgba(70, 45, 150, 0.16), 0 2px 5px -2px rgba(70, 45, 150, 0.1);
 	--shadow-mine: 0 14px 30px -10px rgba(99, 66, 220, 0.55);
 
 	--font-display: 'Alef', Arial, sans-serif;
@@ -87,7 +88,7 @@ body {
 	height: 100%;
 	overflow: hidden;
 	border-radius: 36px;
-	background: linear-gradient(180deg, var(--page-high), var(--page) 40%);
+	background: linear-gradient(180deg, var(--page-high), var(--page) 18%);
 	display: flex;
 	flex-direction: column;
 }
@@ -100,12 +101,9 @@ body {
 	flex: 0 0 auto;
 	position: relative;
 	padding: 14px 16px 0;
-	background:
-		radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.35), transparent 60%),
-		linear-gradient(150deg, var(--mine-1) 0%, var(--mine-2) 45%, var(--mine-4) 100%);
-	border-end-start-radius: 26px;
-	border-end-end-radius: 26px;
-	box-shadow: var(--shadow-mine);
+	background: #ffffff;
+	border-bottom: 1px solid var(--card-edge);
+	box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
 }
 
 .hud__top {
@@ -122,9 +120,8 @@ body {
 	height: 42px;
 	border-radius: 14px; /* squircle tiles, like the reference's folder icons */
 	font-size: 1.3rem;
-	background: rgba(255, 255, 255, 0.26);
-	border: 1.5px solid rgba(255, 255, 255, 0.5);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+	background: linear-gradient(150deg, var(--mine-1), var(--mine-2) 45%, var(--mine-4));
+	box-shadow: 0 8px 20px -6px rgba(115, 80, 227, 0.55);
 }
 
 .hud__title {
@@ -133,8 +130,7 @@ body {
 	font-family: var(--font-display);
 	font-weight: 700;
 	font-size: 1.22rem;
-	color: #fff;
-	text-shadow: 0 1px 6px rgba(60, 30, 140, 0.35);
+	color: var(--ink);
 }
 
 .hud__laps {
@@ -146,16 +142,16 @@ body {
 	width: 9px;
 	height: 9px;
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.28);
+	background: var(--tile);
 }
 
 .hud__lap--done {
-	background: #fff;
+	background: var(--mine-2);
 }
 
 .hud__lap--current {
-	background: var(--mint);
-	box-shadow: 0 0 10px rgba(86, 223, 192, 0.9);
+	background: var(--mint-deep);
+	box-shadow: 0 0 10px rgba(34, 182, 153, 0.5);
 }
 
 /* The lap as a level track */
@@ -182,12 +178,12 @@ body {
 	width: 100%;
 	height: 3px;
 	border-radius: 2px;
-	background: rgba(255, 255, 255, 0.28);
+	background: var(--tile);
 }
 
 .hud__stop--done:not(:first-child)::before,
 .hud__stop--here:not(:first-child)::before {
-	background: rgba(255, 255, 255, 0.85);
+	background: var(--mine-2);
 }
 
 .hud__stop-icon {
@@ -197,25 +193,26 @@ body {
 	height: 32px;
 	border-radius: 50%;
 	font-size: 0.95rem;
-	color: #fff;
-	background: rgba(255, 255, 255, 0.2);
-	border: 2px solid rgba(255, 255, 255, 0.45);
+	color: var(--ink-3);
+	background: #ffffff;
+	border: 2px solid var(--card-edge);
 }
 
 .hud__stop--done .hud__stop-icon {
-	background: rgba(255, 255, 255, 0.85);
-	color: var(--mine-4);
+	background: var(--tile);
+	color: var(--mine-ink);
 	font-weight: 700;
-	border-color: #fff;
+	border-color: var(--mine-2);
 }
 
 .hud__stop--here .hud__stop-icon {
 	transform: scale(1.3);
-	background: #fff;
-	border-color: #fff;
+	background: linear-gradient(150deg, var(--mine-1), var(--mine-2) 45%, var(--mine-4));
+	border-color: transparent;
+	color: #fff;
 	box-shadow:
-		0 0 0 4px rgba(255, 255, 255, 0.3),
-		0 6px 14px -4px rgba(50, 20, 120, 0.5);
+		0 0 0 4px rgba(139, 107, 240, 0.18),
+		0 8px 20px -6px rgba(115, 80, 227, 0.55);
 }
 
 .hud__stop--todo .hud__stop-icon {
@@ -232,23 +229,22 @@ body {
 	width: 6px;
 	height: 6px;
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.35);
+	background: var(--tile);
 }
 
 .hud__quota-pip--done {
-	background: var(--mint);
-	box-shadow: 0 0 6px rgba(86, 223, 192, 0.9);
+	background: var(--mint-deep);
 }
 
 .hud__fuse {
-	height: 6px;
+	height: 4px;
 	margin: 0 -16px;
-	background: rgba(255, 255, 255, 0.2);
+	background: var(--tile);
 }
 
 .hud__fuse-burn {
 	height: 100%;
-	background: linear-gradient(90deg, var(--mint), #fff);
+	background: linear-gradient(90deg, var(--mint-deep), var(--mint));
 }
 
 /* ============================ Screen body ============================ */

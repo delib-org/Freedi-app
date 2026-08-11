@@ -961,8 +961,6 @@
    Everything in it is a picture except the place's name: the crest, the lap
    lanterns, the level track, the ratings you still owe, the draining fuse. --- */
 .delib-hud {
-	--hud-accent: var(--mint);
-
 	position: sticky;
 	inset-block-start: 0;
 	z-index: var(--z-header);
@@ -976,13 +974,15 @@
 	overflow: hidden;
 	border-end-start-radius: var(--radius-lg);
 	border-end-end-radius: var(--radius-lg);
-	background: var(--grad-sheen), var(--grad-mine);
-	box-shadow: var(--shadow-mine);
-
-	// The room's temperature reaches the HUD through the accent alone — the
-	// bar itself stays one colour so the frame never flickers between places.
-	// Mint is the default because mint is "you, progressing"; a place that is
-	// about somebody else borrows its camp's hue instead.
+	// WHITE, not purple. A full-width purple band at the top of every screen
+	// spent the app's one loud colour on furniture, and the dock spent it
+	// again at the bottom — by the time a student reached their own proposal,
+	// purple had stopped meaning anything. The HUD is white chrome now, and
+	// purple appears in it only where it carries state: the crest tile, the
+	// step you are standing on, and the road behind you.
+	background: var(--bg-card-solid);
+	border-block-end: 1px solid var(--border-subtle);
+	box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
 
 	// --- Row 1: crest, name, laps ---
 	&__top {
@@ -1005,9 +1005,8 @@
 		border-radius: var(--radius-tile);
 		font-size: 1.3rem;
 		line-height: 1;
-		background: rgba(255, 255, 255, 0.26);
-		border: 1.5px solid rgba(255, 255, 255, 0.5);
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+		background: var(--grad-mine);
+		box-shadow: var(--glow-lantern);
 	}
 
 	// The one piece of text in the whole HUD
@@ -1019,8 +1018,7 @@
 		font-weight: 700;
 		font-size: 1.22rem;
 		line-height: 1.2;
-		color: #ffffff;
-		text-shadow: 0 1px 6px rgba(60, 30, 140, 0.35);
+		color: var(--text-primary);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -1038,19 +1036,19 @@
 		width: 9px;
 		height: 9px;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.16);
-		border: 1px solid rgba(255, 255, 255, 0.3);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
 
 		// Laps behind you burn like little suns
 		&--done {
-			background: #ffffff;
-			border-color: #ffffff;
+			background: var(--mine);
+			border-color: var(--mine);
 		}
 
 		&--current {
-			background: var(--hud-accent);
-			border-color: var(--hud-accent);
-			box-shadow: 0 0 10px color-mix(in srgb, var(--hud-accent) 80%, transparent);
+			background: var(--mint-deep);
+			border-color: var(--mint-deep);
+			box-shadow: 0 0 10px rgba(34, 182, 153, 0.5);
 			animation: era-map-marker-pulse 1.6s ease-in-out infinite;
 		}
 	}
@@ -1078,17 +1076,17 @@
 		&:not(:first-child)::before {
 			content: '';
 			position: absolute;
-			inset-block-start: 13px;
+			inset-block-start: 14px;
 			inset-inline-end: 50%;
 			width: 100%;
-			height: 2px;
-			border-radius: 1px;
-			background: rgba(255, 255, 255, 0.18);
+			height: 3px;
+			border-radius: 2px;
+			background: var(--bg-inset);
 		}
 
 		&--done:not(:first-child)::before,
 		&--here:not(:first-child)::before {
-			background: color-mix(in srgb, var(--hud-accent) 75%, transparent);
+			background: var(--mine);
 		}
 	}
 
@@ -1102,20 +1100,19 @@
 		border-radius: 50%;
 		font-size: 0.9rem;
 		line-height: 1;
-		background: rgba(255, 255, 255, 0.2);
-		border: 2px solid rgba(255, 255, 255, 0.45);
-		color: #ffffff;
+		background: var(--bg-card-solid);
+		border: 2px solid var(--border-subtle);
+		color: var(--text-muted);
 		transition:
 			transform var(--motion-base) var(--ease-spring),
 			box-shadow var(--motion-base) ease;
 	}
 
-	// A step behind you is a white token on the track — the same "done" mark
-	// the reference stamps on a finished row
+	// A step behind you: a filled token on the road
 	&__stop--done &__stop-icon {
-		background: rgba(255, 255, 255, 0.88);
-		border-color: #ffffff;
-		color: var(--mine-deep);
+		background: var(--peer-tile);
+		border-color: var(--mine);
+		color: var(--mine-ink);
 		font-weight: 700;
 	}
 
@@ -1123,11 +1120,12 @@
 	// that moves
 	&__stop--here &__stop-icon {
 		transform: scale(1.3);
-		background: #ffffff;
-		border-color: #ffffff;
+		background: var(--grad-mine);
+		border-color: transparent;
+		color: #ffffff;
 		box-shadow:
-			0 0 0 4px rgba(255, 255, 255, 0.3),
-			0 6px 14px -4px rgba(50, 20, 120, 0.5);
+			0 0 0 4px rgba(139, 107, 240, 0.18),
+			var(--glow-lantern);
 	}
 
 	&__stop--todo &__stop-icon {
@@ -1146,31 +1144,30 @@
 		width: 6px;
 		height: 6px;
 		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.22);
+		background: var(--bg-inset);
 		transition: background var(--motion-base) ease;
 
 		&--done {
-			background: #ffd23f;
-			box-shadow: 0 0 6px rgba(255, 210, 63, 0.8);
+			background: var(--mint-deep);
 		}
 	}
 
 	// --- The fuse: scenery until it isn't ---
 	&__fuse {
 		position: relative;
-		height: 6px;
+		height: 4px;
 		margin-inline: calc(var(--space-md) * -1);
-		background: rgba(255, 255, 255, 0.12);
+		background: var(--bg-inset);
 	}
 
 	&__fuse-burn {
 		height: 100%;
-		background: linear-gradient(90deg, var(--hud-accent), #ffffff);
+		background: linear-gradient(90deg, var(--mint-deep), var(--mint));
 		transition: width 1s linear;
 	}
 
 	&__fuse--urgent &__fuse-burn {
-		background: linear-gradient(90deg, #ff8f6b, var(--danger));
+		background: var(--danger);
 	}
 
 	// Digits only in the last two minutes — a clock you can't do anything
@@ -1182,8 +1179,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
-		color: #ffd9cc;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+		color: var(--danger);
 		animation: era-map-marker-pulse 1.2s ease-in-out infinite;
 	}
 }
@@ -3309,7 +3305,7 @@
 	background: linear-gradient(
 		180deg,
 		var(--wash-mine-high) 0%,
-		var(--wash-mine-mid) 30%,
+		var(--wash-mine-mid) 18%,
 		var(--wash-mine-low) 100%
 	);
 }
@@ -3318,7 +3314,7 @@
 	background: linear-gradient(
 		180deg,
 		var(--wash-peer-high) 0%,
-		var(--wash-peer-mid) 30%,
+		var(--wash-peer-mid) 18%,
 		var(--wash-peer-low) 100%
 	);
 }
@@ -3327,7 +3323,7 @@
 	background: linear-gradient(
 		180deg,
 		var(--wash-square-high) 0%,
-		var(--wash-square-mid) 30%,
+		var(--wash-square-mid) 18%,
 		var(--wash-square-low) 100%
 	);
 }

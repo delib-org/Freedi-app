@@ -22,9 +22,22 @@ The system this replaces spent two loud hues (blue vs orange) on the same
 question and left nothing quiet to read against: every card shouted, so the
 one that mattered couldn't.
 
-**Count the purple objects on any screen. There should be exactly one, and it
-should be mine.** On the square that is the proposal dock. On my workbench it
-is my proposal card. In a rating row it is the face I pressed.
+### The page is WHITE
+
+Not off-white, not lavender. The page is the negative space the design is
+made of, and a tinted one is what killed the first attempt at this system:
+when the background is purple-ish, every white card is tinted the same
+colour as the thing that was supposed to stand out, so nothing does. The
+screen reads as one purple smear.
+
+**Count the saturated objects on any screen. There should be about three,
+and the biggest one should be mine.** On the square: the crest tile, the step
+you are on, and the dock. On the results screen: the crest, the active tab,
+and the champion card. Everything else is white on white, separated by
+shadow.
+
+If you are reaching for a tint to make something stand out, the honest fix is
+almost always more whitespace or a stronger shadow.
 
 ### Purple does two jobs, and the line is strict
 
@@ -108,12 +121,20 @@ Amber was freed the moment orange stopped meaning "a classmate's".
 
 ### Page and washes
 
-`--bg-page` `#f2eefd` — a pale lavender the saturated surfaces sit on.
 
-The place washes (`--wash-mine-*`, `--wash-peer-*`, `--wash-square-*`) are now
-deliberately near-identical. The HUD's crest and name answer "where am I?"
-outright, so the wash is a *temperature*, not a label: my rooms sit a shade
-warmer in purple, everyone else's stay a cool neutral white.
+
+`--bg-page` `#ffffff`.
+
+The place washes (`--wash-mine-*`, `--wash-peer-*`, `--wash-square-*`) used to
+repaint the whole viewport to say which room you were standing in. The HUD's
+crest and name say that outright now, and a wash strong enough to be legible
+was also strong enough to tint every white card sitting on it. What is left
+is a breath of colour at the very top that reaches white before the first
+card — atmosphere, not information.
+
+The daylight sky and its drifting clouds went with them: white shapes cut out
+of a white page are invisible at best. The sparkle field survives at whisper
+opacity, as texture rather than tint.
 
 ---
 
@@ -148,9 +169,15 @@ makes the app read as one system instead of a set of screens.
 
 ### Elevation
 
-Shadows are **purple-tinted, never grey** — a neutral shadow on a lavender
-page reads as dirt. `--shadow-card` → `--shadow-raised` → `--shadow-mine`, in
-increasing order of "this thing is lifted off the page".
+Shadows are **purple-tinted, never grey** — a neutral shadow under a purple
+system reads as dirt. `--shadow-card` → `--shadow-raised` → `--shadow-mine`,
+in increasing order of "this thing is lifted off the page".
+
+On a white page a card has no tint separating it from the background, so
+**the shadow is the only thing making it an object**. `--shadow-card` is
+therefore a two-layer shadow — a wide soft one for lift, a tight one for the
+edge — and it is the single number that decides whether a screen reads as a
+list of things or as a wall of text.
 
 ---
 
@@ -158,16 +185,24 @@ increasing order of "this thing is lifted off the page".
 
 The deliberation stage carries its own HUD and suppresses the journey strip.
 
-- **Top: the HUD** — purple, sticky, full-bleed. A crest tile, the place's
-  name (the *only* text up there), lap pips, a level track with the current
-  step lit, and a fuse that drains. See §5.
-- **Middle: the playfield** — white cards on the lavender page.
-- **Bottom: the dock** (purple, because it is my proposal) parked on **the nav**
-  (white, because it is the app's furniture and belongs to nobody).
+- **Top: the HUD** — **white**, sticky, full-bleed. A purple crest tile, the
+  place's name in dark ink (the *only* text up there), lap pips, a level
+  track whose current step is the one filled purple object, and a fuse that
+  drains. See §5.
+- **Middle: the playfield** — white cards on a white page, separated by
+  shadow and a hairline.
+- **Bottom: the dock** — purple, because it *is* my proposal — parked on
+  **the nav**, which is white because it is the app's furniture and belongs
+  to nobody.
 
-Saturated chrome framing a pale playfield is what makes a screen read as an
-app rather than a document. The dock's panel turns **back into white paper**
-the moment it opens: that is where text gets edited.
+The HUD was purple once, full-bleed, on every screen. Between it and the dock
+the app spent its one loud colour twice on furniture, and by the time a
+student reached their own proposal purple had stopped meaning anything. Now
+purple appears in the chrome **only where it carries state**: the crest, the
+step you are standing on, the road behind you, the selected tab.
+
+The dock's panel turns **back into white paper** the moment it opens: that is
+where text gets edited.
 
 ---
 
