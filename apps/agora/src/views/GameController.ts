@@ -258,7 +258,18 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			// No world strip: the map lives only where it IS the content
 			// (lobby, results) — in-game stages keep the screen for the work.
 			// The journey strip is the compact "you are here" that replaces it.
-			return m('.game', [...overlays, m(JourneyStrip, { stage: session.stage }), stageView]);
+			//
+			// Except in the deliberation, which is a whole game of its own and
+			// carries its own HUD. Stacking the journey strip on top of it put
+			// two "you are here" bars in a row, and the outer one was frozen on
+			// the same station for the entire stage — pure chrome.
+			const inDeliberation = session.stage === AgoraStage.deliberation;
+
+			return m('.game', [
+				...overlays,
+				inDeliberation ? null : m(JourneyStrip, { stage: session.stage }),
+				stageView,
+			]);
 		},
 	};
 }

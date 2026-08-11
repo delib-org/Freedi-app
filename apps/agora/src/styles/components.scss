@@ -947,83 +947,255 @@
 	}
 }
 
-// --- Cycle strip: lantern lap pips + the three loop steps, current one lit ---
-// Deliberation "location" banner — the town square where ideas gather
-.delib-banner {
-	display: block;
-	width: 100%;
-	max-height: 180px;
-	object-fit: cover;
-	border-radius: var(--radius-lg);
-	border: 1px solid var(--border-subtle);
-	box-shadow: var(--shadow-card);
-}
+/* --- The deliberation HUD: one dark bar where four light strips used to be.
+   Retired here on 2026-08-11: `.delib-banner` (a 180px decorative photograph
+   of the square, sitting above the work), `.cycle-strip` (lap pips + three
+   step chips) and `.place-banner` (scene + title + a line of prose) — plus
+   the journey strip, which the deliberation stage now suppresses. Together
+   they cost ~240px of a 844px phone screen to say "you are here" four times.
 
-.cycle-strip {
+   The HUD is the game frame: dark chrome at the top, bright playfield below.
+   That inversion is what makes it read as a game rather than a form — the
+   cards stop competing with the chrome for lightness and simply float on it.
+
+   Everything in it is a picture except the place's name: the crest, the lap
+   lanterns, the level track, the ratings you still owe, the draining fuse. --- */
+.delib-hud {
+	--hud-accent: #6aa8ff;
+
+	position: sticky;
+	inset-block-start: 0;
+	z-index: var(--z-header);
+	// Out past .shell__content's padding: the frame reaches the screen edges
+	// the way a game's HUD does, instead of floating as another card
+	margin: calc(var(--space-md) * -1) calc(var(--space-md) * -1) 0;
+	padding: var(--space-sm) var(--space-md) 0;
 	display: flex;
-	align-items: center;
+	flex-direction: column;
 	gap: var(--space-sm);
-	flex-wrap: wrap;
-	background: var(--bg-inset);
-	border: 1px solid var(--border-subtle);
-	border-radius: var(--radius-full);
-	padding: var(--space-xs) var(--space-md);
+	overflow: hidden;
+	border-end-start-radius: var(--radius-lg);
+	border-end-end-radius: var(--radius-lg);
+	background:
+		radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.16), transparent 60%),
+		linear-gradient(135deg, #1b2a5e 0%, #2a2a68 55%, #3a2a63 100%);
+	box-shadow: 0 6px 22px rgba(21, 30, 62, 0.35);
 
-	&__laps {
-		display: flex;
-		gap: 5px;
-		align-items: center;
+	// The room's temperature reaches the HUD through the accent alone — the
+	// bar itself stays one colour so the frame never flickers between places
+	&--rate {
+		--hud-accent: #b39bec;
 	}
 
-	// One lap = one lantern: lit ones are behind you, the current one burns
-	&__pip {
+	&--help {
+		--hud-accent: #ffa851;
+	}
+
+	&--results {
+		--hud-accent: #9fb4d8;
+	}
+
+	// --- Row 1: crest, name, laps ---
+	&__top {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		min-width: 0;
+	}
+
+	&__crest {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 50%;
+		font-size: 1.25rem;
+		line-height: 1;
+		background: color-mix(in srgb, var(--hud-accent) 26%, transparent);
+		border: 1.5px solid color-mix(in srgb, var(--hud-accent) 70%, transparent);
+		box-shadow: 0 0 14px -2px color-mix(in srgb, var(--hud-accent) 60%, transparent);
+	}
+
+	// The one piece of text in the whole HUD
+	&__title {
+		flex: 1 1 auto;
+		min-width: 0;
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-lg);
+		line-height: 1.2;
+		color: #ffffff;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	// Laps as lanterns — this is the entire "round 2 of 4" sentence
+	&__laps {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+
+	&__lap {
 		width: 9px;
 		height: 9px;
 		border-radius: 50%;
-		background: var(--bg-page);
-		border: 1px solid var(--lantern-deep);
+		background: rgba(255, 255, 255, 0.16);
+		border: 1px solid rgba(255, 255, 255, 0.3);
 
-		// Finished laps are little suns; the current lap wears MY blue
+		// Laps behind you burn like little suns
 		&--done {
 			background: #ffd23f;
-			border-color: #b97300;
+			border-color: #ffd23f;
+			box-shadow: 0 0 8px rgba(255, 210, 63, 0.7);
 		}
 
 		&--current {
-			background: var(--mine);
-			border-color: var(--mine);
-			box-shadow: 0 0 8px rgba(43, 111, 214, 0.6);
+			background: var(--hud-accent);
+			border-color: var(--hud-accent);
+			box-shadow: 0 0 10px color-mix(in srgb, var(--hud-accent) 80%, transparent);
 			animation: era-map-marker-pulse 1.6s ease-in-out infinite;
 		}
 	}
 
-	&__lap {
-		color: var(--text-muted);
-	}
-
-	&__steps {
+	// --- Row 2: the lap as a level track ---
+	&__path {
 		display: flex;
-		gap: var(--space-xs);
-		flex: 1;
+		align-items: flex-start;
 		justify-content: center;
+		gap: 0;
+		padding-block-end: var(--space-xs);
 	}
 
-	&__step {
-		font-size: var(--font-size-sm);
-		color: var(--text-muted);
-		padding: 2px var(--space-sm);
-		border: 1px solid transparent;
-		border-radius: var(--radius-full);
-		white-space: nowrap;
+	&__stop {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 3px;
+		padding-inline: clamp(var(--space-sm), 5vw, var(--space-xl));
 
-		&--active {
-			color: var(--lantern-glow);
-			border-color: var(--lantern-deep);
+		// The road between stops. Physical `left` on purpose: the track is a
+		// journey through the lap, and in RTL it must run right-to-left too —
+		// which it does, because the flex row itself is flipped.
+		&:not(:first-child)::before {
+			content: '';
+			position: absolute;
+			inset-block-start: 13px;
+			inset-inline-end: 50%;
+			width: 100%;
+			height: 2px;
+			border-radius: 1px;
+			background: rgba(255, 255, 255, 0.18);
 		}
+
+		&--done:not(:first-child)::before,
+		&--here:not(:first-child)::before {
+			background: color-mix(in srgb, var(--hud-accent) 75%, transparent);
+		}
+	}
+
+	&__stop-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		font-size: 0.9rem;
+		line-height: 1;
+		background: #22305f;
+		border: 1.5px solid rgba(255, 255, 255, 0.22);
+		color: #ffffff;
+		transition:
+			transform var(--motion-base) var(--ease-spring),
+			box-shadow var(--motion-base) ease;
+	}
+
+	&__stop--done &__stop-icon {
+		background: color-mix(in srgb, var(--hud-accent) 30%, #22305f);
+		border-color: color-mix(in srgb, var(--hud-accent) 70%, transparent);
+		font-weight: 700;
+	}
+
+	// Where you are standing: bigger, lit, and the only thing on the track
+	// that moves
+	&__stop--here &__stop-icon {
+		transform: scale(1.28);
+		background: var(--hud-accent);
+		border-color: #ffffff;
+		box-shadow:
+			0 0 0 3px color-mix(in srgb, var(--hud-accent) 30%, transparent),
+			0 0 16px color-mix(in srgb, var(--hud-accent) 75%, transparent);
+	}
+
+	&__stop--todo &__stop-icon {
+		opacity: 0.5;
+		filter: grayscale(0.6);
+	}
+
+	// What this lap still owes, parked under the step that asks for it
+	&__quota {
+		display: flex;
+		gap: 4px;
+		margin-block-start: 4px;
+	}
+
+	&__quota-pip {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.22);
+		transition: background var(--motion-base) ease;
 
 		&--done {
-			opacity: 0.55;
+			background: #ffd23f;
+			box-shadow: 0 0 6px rgba(255, 210, 63, 0.8);
 		}
+	}
+
+	// --- The fuse: scenery until it isn't ---
+	&__fuse {
+		position: relative;
+		height: 3px;
+		margin-inline: calc(var(--space-md) * -1);
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	&__fuse-burn {
+		height: 100%;
+		background: linear-gradient(90deg, var(--hud-accent), #ffd23f);
+		transition: width 1s linear;
+	}
+
+	&__fuse--urgent &__fuse-burn {
+		background: linear-gradient(90deg, #ff8f6b, var(--danger));
+	}
+
+	// Digits only in the last two minutes — a clock you can't do anything
+	// about is noise, a clock about to run out is the game
+	&__fuse-time {
+		position: absolute;
+		inset-block-end: 6px;
+		inset-inline-end: var(--space-md);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		color: #ffd9cc;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+		animation: era-map-marker-pulse 1.2s ease-in-out infinite;
+	}
+}
+
+@media (max-width: 380px) {
+	.delib-hud__title {
+		font-size: var(--font-size-base);
 	}
 }
 
@@ -1230,75 +1402,9 @@
 // --- Place banner: each deliberation step is a LOCATION with its own scene.
 // mine = my workbench (blue), rate = the square, help = a classmate's stand
 // (orange awning). Peripheral vision alone should answer "where am I?". ---
-.place-banner {
-	--place-accent: var(--lantern);
-	// Strong enough to stay the loudest thing on a now-tinted page
-	--place-accent-soft: rgba(43, 111, 214, 0.2);
-
-	position: relative;
-	overflow: hidden;
-	display: flex;
-	align-items: center;
-	gap: var(--space-md);
-	border: 1px solid var(--border-subtle);
-	border-inline-start: 4px solid var(--place-accent);
-	border-radius: var(--radius-lg);
-	background: linear-gradient(180deg, var(--place-accent-soft), transparent 80%), var(--bg-card);
-	padding: var(--space-sm) var(--space-md);
-	animation: scene-enter var(--motion-slow) var(--ease-camera) both;
-
-	&--rate {
-		--place-accent: var(--camp-center-glow);
-		--place-accent-soft: rgba(111, 127, 179, 0.14);
-	}
-
-	&--help {
-		--place-accent: var(--peer);
-		--place-accent-soft: rgba(224, 119, 20, 0.22);
-	}
-
-	&__scene {
-		flex: 0 0 clamp(96px, 24vw, 150px);
-
-		svg {
-			display: block;
-			width: 100%;
-			height: auto;
-		}
-	}
-
-	&__text {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		min-width: 0;
-	}
-
-	&__title {
-		font-size: var(--font-size-xl);
-		color: var(--text-primary);
-	}
-
-	// "You're only glancing at this place" — without it the banner and the
-	// cycle strip claim two different locations at once
-	&__badge {
-		margin-inline-start: var(--space-xs);
-		padding: 1px var(--space-xs);
-		border-radius: var(--radius-full);
-		background: var(--bg-inset);
-		border: 1px solid var(--border-subtle);
-		color: var(--text-muted);
-		font-family: var(--font-body);
-		font-size: var(--font-size-xs);
-		font-weight: 600;
-		vertical-align: middle;
-	}
-
-	&__sub {
-		color: var(--text-secondary);
-		font-size: var(--font-size-sm);
-	}
-}
+// `.place-banner` retired 2026-08-11 — see the .delib-hud block above. Its
+// scene lives on the arrival splash now (.delib-splash__scene), which is
+// where a picture of a room actually belongs: the moment you walk into it.
 
 // --- Workbench: the workshop card's parts as labeled drawers. Each section
 // carries an icon chip + a real title, so the board reads as distinct tools
@@ -1661,6 +1767,25 @@
 			color: var(--mine-glow);
 			font-weight: 700;
 		}
+
+		// A row's news as a MARK, not a sentence: a folded row is decided on a
+		// glance, and a round glyph carries at arm's length where two words
+		// have to be focused on. The words stay in the accessible name, the
+		// tooltip, and the unfolded body — nothing is lost, only relocated.
+		&--icon {
+			width: 26px;
+			height: 26px;
+			padding: 0;
+			justify-content: center;
+			border-radius: 50%;
+			font-size: 0.9rem;
+			line-height: 1;
+		}
+
+		// A helped stall is a quiet fact, so its mark is the quietest one
+		&--helped {
+			background: rgba(23, 128, 77, 0.14);
+		}
 	}
 
 	// Vertical caret — closed points down, open points up. PHYSICAL borders on
@@ -1732,18 +1857,8 @@
 	}
 }
 
-// --- How far along this lap's ratings are, as a counter rather than a
-// sentence: the place banner right above already says what the square is for.
-.rate-progress {
-	align-self: center;
-	padding: 2px var(--space-sm);
-	border-radius: var(--radius-full);
-	background: var(--bg-inset);
-	color: var(--text-secondary);
-	font-size: var(--font-size-sm);
-	font-weight: 700;
-	text-align: center;
-}
+// `.rate-progress` retired 2026-08-11: "⚖️ 0/3" is now three pips under the
+// scales on the HUD's level track, where the step that asks for them lives.
 
 // --- One received improvement: the idea, then a single footer line
 // carrying who sent it and what to do about it. The inbox lives inside a
@@ -2417,9 +2532,35 @@
 		animation: stage-transition-panel var(--motion-base) var(--ease-camera) both;
 	}
 
+	// The arrival card inherited the place banner's scene: this is the one
+	// moment the picture of a room is worth its pixels, because looking at it
+	// IS the whole job of the card
+	&__card--place {
+		padding-block-start: var(--space-md);
+		gap: var(--space-xs);
+	}
+
+	&__scene {
+		width: min(260px, 60vw);
+
+		svg {
+			display: block;
+			width: 100%;
+			height: auto;
+		}
+	}
+
+	// On the arrival card the glyph rides inline with the name; the round
+	// splash still uses it as its own 3rem hero
 	&__icon {
 		font-size: 3rem;
 		line-height: 1;
+	}
+
+	&__card--place &__icon {
+		font-size: 1.4rem;
+		margin-inline-end: var(--space-xs);
+		vertical-align: middle;
 	}
 
 	&__title {
@@ -2939,6 +3080,90 @@
 @keyframes dock-scrim-in {
 	from {
 		opacity: 0;
+	}
+}
+
+/* --- The bottom half of the game frame ---
+   The HUD made the top of a deliberation screen dark chrome. Leaving the
+   bottom as two white slabs would have left the screen framed on one side
+   only — and, worse, the white nav read as "the page ends here" while the
+   playfield above it was tinted. Dark top, dark bottom, bright cards
+   floating between them: that inversion is what makes the stage read as a
+   game board rather than a document.
+
+   Strictly the COLLAPSED chrome. The dock's panel is content the moment it
+   opens, so it turns back into a light sheet below. */
+.shell--delib {
+	.delib-nav,
+	.proposal-dock {
+		background:
+			radial-gradient(140% 180% at 20% 130%, rgba(255, 255, 255, 0.14), transparent 60%),
+			linear-gradient(135deg, #1b2a5e 0%, #2a2a68 55%, #3a2a63 100%);
+		border-block-start-color: rgba(255, 255, 255, 0.16);
+	}
+
+	.proposal-dock__title {
+		color: #ffffff;
+	}
+
+	.proposal-dock__sub {
+		color: rgba(255, 255, 255, 0.68);
+
+		&--alert {
+			color: #ffe9b8;
+		}
+	}
+
+	.proposal-dock__bar {
+		&:hover,
+		&:focus-visible {
+			background: rgba(255, 255, 255, 0.1);
+		}
+
+		&:focus-visible {
+			outline-color: #ffffff;
+		}
+	}
+
+	.proposal-dock__chevron {
+		background: rgba(255, 255, 255, 0.12);
+		border-color: rgba(255, 255, 255, 0.32);
+
+		&::before {
+			border-right-color: #ffffff;
+			border-bottom-color: #ffffff;
+		}
+	}
+
+	// Open, the sheet is a working surface again — text is edited in it, so
+	// it goes back to paper. Only the handle overhead stays chrome.
+	.proposal-dock__panel {
+		background: var(--bg-card-solid);
+	}
+
+	.delib-nav__item {
+		color: rgba(255, 255, 255, 0.72);
+
+		&:focus-visible {
+			outline-color: #ffffff;
+		}
+	}
+}
+
+@media (max-width: 700px) {
+	// The mobile bar's own light fills, from before the frame existed
+	.shell--delib .delib-nav__item {
+		background: transparent;
+		border-color: transparent;
+	}
+
+	// ...and the two room-tinted washes that used to reach the bottom edge.
+	// The frame is the bottom edge now; the wash stops where it starts.
+	.shell--delib.shell--mode-mine .delib-nav,
+	.shell--delib.shell--mode-peer .delib-nav {
+		background:
+			radial-gradient(140% 180% at 20% 130%, rgba(255, 255, 255, 0.14), transparent 60%),
+			linear-gradient(135deg, #1b2a5e 0%, #2a2a68 55%, #3a2a63 100%);
 	}
 }
 
@@ -4291,8 +4516,53 @@
 	flex-direction: column;
 	gap: var(--space-sm);
 
+	// Folded, the invitation leads with the two faces whose needs are under
+	// it: a sentence in the middle of a working screen is the easiest thing
+	// to scroll past, a pair of portraits is not
 	&__toggle {
 		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding-inline: var(--space-sm);
+	}
+
+	&__faces {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	&__face {
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		object-fit: cover;
+		background: var(--bg-inset);
+		border: 2px solid var(--bg-card-solid);
+		box-shadow: 0 2px 6px rgba(37, 51, 82, 0.2);
+
+		// The two sides overlap the way a party of characters does — one
+		// object saying "these two", not two saying "him" and "her"
+		&--right {
+			margin-inline-start: -12px;
+		}
+
+		&--fallback {
+			display: inline-grid;
+			place-items: center;
+			font-family: var(--font-display);
+			font-weight: 700;
+			color: var(--text-secondary);
+		}
+	}
+
+	&__face--left {
+		border-color: var(--camp-left);
+	}
+
+	&__face--right {
+		border-color: var(--camp-right);
 	}
 
 	// Unfolded, the reminder stops being a link and becomes a section of the

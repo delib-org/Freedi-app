@@ -14,7 +14,7 @@ import {
 	HelpedProposal,
 } from '../lib/proposals';
 import { orderSquare, studentOrder as studentOrderFor } from '../lib/squareOrder';
-import { CountdownTimer } from '../components/CountdownTimer';
+import { DelibHud } from '../components/DelibHud';
 import { Collapsible } from '../components/Collapsible';
 import { ThreadChat, threadEntry } from './ThreadChat';
 import {
@@ -290,24 +290,11 @@ function workbenchSection(
 	);
 }
 
-/**
- * The place header: scene strip + name + one-line "what happens here".
- * `peek` marks the state where the workshop is only being glanced at from
- * another place — otherwise the banner flatly contradicts the cycle strip.
- */
-function placeBanner(kind: 'mine' | 'rate' | 'help'): m.Children {
-	const place = PLACES[kind];
-
-	return m('.place-banner', { class: `place-banner--${kind}` }, [
-		m('.place-banner__scene', placeScene(kind)),
-		m('.place-banner__text', [
-			// The "peek" badge retired with the peek itself: my workshop is no
-			// longer a place I teleport to, it is the dock at the bottom
-			m('h2.place-banner__title', `${place.icon} ${t(place.titleKey)}`),
-			m('p.place-banner__sub', t(place.subKey)),
-		]),
-	]);
-}
+// The place banner retired here (2026-08-11). It was the fourth surface in a
+// row to answer "where am I?", and the most expensive: scene + title + a line
+// of prose, held on screen for as long as you stood in the room. The HUD
+// carries the crest and the name now, and the arrival splash carries the
+// scene and the sentence — each said once, where it is actually being read.
 
 type CycleStep = 'mine' | 'rate' | 'help' | 'done';
 
@@ -1285,21 +1272,30 @@ export function Deliberation(
 	 * (generic) > I've never looked at it at all. NEW can't co-occur with the
 	 * others — they require a seen watermark, NEW requires its absence.
 	 */
+	/**
+	 * The row's news, as a glyph rather than a sentence. A folded row has one
+	 * job — get read or skipped — and it decides that on a glance, so the chip
+	 * spends its width on a mark that carries at arm's length instead of two
+	 * words that have to be focused on. The words survive as the accessible
+	 * name and the tooltip, and the unfolded body repeats them in full.
+	 */
 	function changeChip(proposal: AgoraProposal): m.Children {
+		const mark = (variant: string, glyph: string, key: string): m.Children =>
+			m(
+				`span.stall__chip.stall__chip--icon.stall__chip--${variant}`,
+				{ 'aria-label': t(key), title: t(key) },
+				glyph,
+			);
 		const { editAt, mineAt } = changeStamps(proposal);
 		const watermark = seenEditWatermark(proposal.statementId);
 		if (watermark !== undefined && mineAt > watermark) {
-			return m(
-				'span.stall__chip.stall__chip--improved-mine',
-				{ 'aria-label': t('delib.chip_improved_mine') },
-				`✨ ${t('delib.chip_improved_mine')}`,
-			);
+			return mark('improved-mine', '✨', 'delib.chip_improved_mine');
 		}
 		if (isEditedSinceSeen(proposal.statementId, editAt)) {
-			return m('span.stall__chip.stall__chip--edited', `✏️ ${t('delib.chip_edited')}`);
+			return mark('edited', '✏️', 'delib.chip_edited');
 		}
 		if (isNewToMe(proposal.statementId)) {
-			return m('span.stall__chip.stall__chip--new', `🌱 ${t('delib.chip_new')}`);
+			return mark('new', '🌱', 'delib.chip_new');
 		}
 
 		return null;
@@ -1620,6 +1616,9 @@ export function Deliberation(
 	 * since" news moved to changeChip, which rides alongside.
 	 */
 	function helpStallChip(proposal: AgoraProposal, helped: HelpedProposal | undefined): m.Children {
+		// The one exception to the icon-only rule: a suggestion that just left
+		// my hands is the only chip that is an ANSWER to something I did, and
+		// it gets the word for the beat it is on screen
 		if (sentAckId === proposal.statementId) {
 			return m(
 				'span.stall__chip.stall__chip--sent',
@@ -1636,7 +1635,13 @@ export function Deliberation(
 			);
 		}
 
-		return helped ? m('span.stall__chip', `🤝 ${t('delib.helped_chip')}`) : null;
+		return helped
+			? m(
+					'span.stall__chip.stall__chip--icon.stall__chip--helped',
+					{ 'aria-label': t('delib.helped_chip'), title: t('delib.helped_chip') },
+					'🤝',
+				)
+			: null;
 	}
 
 	return {
@@ -1698,54 +1703,13 @@ export function Deliberation(
 				}
 			}
 
-			// Orientation strip: lap chip + the three steps of the loop, current
-			// one lit. A dead countdown reads as "broken" — only show a live one.
+			// The steps of one lap — still needed by the round splash, which is the
+			// one surface allowed to spell the loop out in words
 			const STEPS: Array<{ id: CycleStep; labelKey: string }> = [
 				{ id: 'mine', labelKey: 'delib.step_mine' },
 				{ id: 'rate', labelKey: 'delib.step_rate' },
 				{ id: 'help', labelKey: 'delib.step_help' },
 			];
-			const activeIndex = STEPS.findIndex((entry) => entry.id === cycle.step);
-			const cycleStrip = m('.cycle-strip', [
-				m(
-					'.cycle-strip__laps',
-					{ 'aria-label': t('delib.cycle_round', { n: cycle.round, total: AGORA_CYCLE.ROUNDS }) },
-					[
-						Array.from({ length: AGORA_CYCLE.ROUNDS }, (_, index) =>
-							m('span.cycle-strip__pip', {
-								class:
-									index + 1 < cycle.round
-										? 'cycle-strip__pip--done'
-										: index + 1 === cycle.round
-											? 'cycle-strip__pip--current'
-											: undefined,
-							}),
-						),
-					],
-				),
-				m(
-					'.cycle-strip__steps',
-					STEPS.map((entry, index) =>
-						m(
-							'span.cycle-strip__step',
-							{
-								class:
-									entry.id === cycle.step
-										? 'cycle-strip__step--active'
-										: activeIndex !== -1 && index < activeIndex
-											? 'cycle-strip__step--done'
-											: undefined,
-							},
-							// The step chip wears its place's icon — the same one on
-							// the banner below, so strip and screen always agree
-							`${PLACES[entry.id as 'mine' | 'rate' | 'help'].icon} ${t(entry.labelKey)}`,
-						),
-					),
-				),
-				live.roundEndsAt && live.roundEndsAt > Date.now()
-					? m(CountdownTimer, { endsAt: live.roundEndsAt })
-					: null,
-			]);
 
 			// Travel splash: covers the step/lap change so a new place never
 			// hard-cuts in. Tap anywhere to skip.
@@ -1781,31 +1745,48 @@ export function Deliberation(
 										),
 									),
 								])
-							: m('.delib-splash__card', [
-									m('span.delib-splash__icon', PLACES[splash.step].icon),
-									m('h2.delib-splash__title', t(PLACES[splash.step].titleKey)),
+							: // The place's own little scene: it used to sit on a banner
+								// occupying the top of every screen for the whole time you
+								// stood there. On the arrival card it costs nothing and does
+								// far more — the picture of the room you just walked into,
+								// which is also the last surface allowed to say in words what
+								// happens here.
+								m('.delib-splash__card.delib-splash__card--place', [
+									m('.delib-splash__scene', placeScene(splash.step)),
+									m('h2.delib-splash__title', [
+										m('span.delib-splash__icon', { 'aria-hidden': 'true' }, PLACES[splash.step].icon),
+										t(PLACES[splash.step].titleKey),
+									]),
 									m('p.delib-splash__sub', t(PLACES[splash.step].subKey)),
 								]),
 					)
 				: null;
 
-			// The deliberation "location": the town square (agora) where ideas
-			// gather. Teacher-editable via topic artwork; hidden if absent/broken.
-			const squareUrl = topic.artwork?.locationVignetteUrls?.square;
-			// No score HUD above the work: scores belong to the results screen,
-			// not over the shoulder of a student mid-sentence.
+			// ONE header for every deliberation screen. It used to be four stacked
+			// strips — the journey strip, the cycle strip, the countdown and the
+			// place banner — which between them spent a quarter of a phone screen
+			// answering "where am I?" four times before the work began. The HUD
+			// answers it once, mostly in pictures: crest, name, lap pips, a level
+			// track and a draining fuse.
+			//
+			// The square's artwork went with them. A 180px decorative photograph
+			// above the working surface is the most expensive thing on the screen
+			// and the only one that says nothing; the square still opens the stage
+			// on the travel splash, where it IS the content.
+			//
+			// No score HUD above the work either: scores belong to the results
+			// screen, not over the shoulder of a student mid-sentence.
 			const header = [
 				splashOverlay,
-				squareUrl
-					? m('img.delib-banner', {
-							src: squareUrl,
-							alt: '',
-							onerror: (event: Event) => {
-								(event.target as HTMLElement).style.display = 'none';
-							},
-						})
-					: null,
-				cycleStrip,
+				m(DelibHud, {
+					step: cycle.step,
+					round: cycle.round,
+					rounds: AGORA_CYCLE.ROUNDS,
+					rated: cycle.rated,
+					ratingQuota: AGORA_CYCLE.RATINGS_PER_ROUND,
+					endsAt: live.roundEndsAt ?? undefined,
+					onResults: showResults,
+				}),
 			];
 
 			// The notebook rides along on every place, so the dock and the
@@ -1886,16 +1867,15 @@ export function Deliberation(
 					return m('.shell.shell--mode-mine.shell--place-mine', [
 						m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 							header,
-							placeBanner('mine'),
 							m('.card.write-desk', [
 								// The challenge pinned to the desk as a mission brief,
 								// visually part of the writing surface it belongs to
-								m('.write-desk__mission', [
+								// The 🎯 is the label. "Your mission:" written above the
+								// mission itself was the icon's job done twice — it stays
+								// as the block's accessible name and nothing else.
+								m('.write-desk__mission', { 'aria-label': t('delib.mission_label') }, [
 									m('span.write-desk__mission-icon', { 'aria-hidden': 'true' }, '🎯'),
-									m('.write-desk__mission-text', [
-										m('span.write-desk__mission-label', t('delib.mission_label')),
-										m('p', t('delib.propose_hint')),
-									]),
+									m('.write-desk__mission-text', m('p', t('delib.propose_hint'))),
 								]),
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
 									value: draft,
@@ -1957,7 +1937,6 @@ export function Deliberation(
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						placeBanner('mine'),
 						m('p.home-explanation', t('delib.dock_hint')),
 						m(
 							'button.btn.btn--primary.btn--full.btn--lg',
@@ -2009,21 +1988,10 @@ export function Deliberation(
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						placeBanner('rate'),
 						square.length > 0
 							? [
-									// The goal as a counter rather than a sentence — the
-									// banner above already said what this place is for
-									m(
-										'p.rate-progress',
-										{
-											'aria-label': t('delib.rate_progress', {
-												n: cycle.rated,
-												total: AGORA_CYCLE.RATINGS_PER_ROUND,
-											}),
-										},
-										`⚖️ ${cycle.rated}/${AGORA_CYCLE.RATINGS_PER_ROUND}`,
-									),
+									// No counter and no banner: the HUD's level track carries
+									// both the place and the pips for what this lap still owes
 									m(
 										'.stall-list',
 										square.map((proposal) =>
@@ -2094,7 +2062,6 @@ export function Deliberation(
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
-						placeBanner('help'),
 						stalls.length > 0
 							? [
 									m(

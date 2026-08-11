@@ -62,6 +62,37 @@ export interface NeedsPeekAttrs extends NeedsBoardAttrs {
 	defaultOpen?: boolean;
 }
 
+/** The two faces the board is about, as a pair of overlapping portraits */
+function peekFaces(topic: AgoraTopicPackage): m.Children {
+	const byId = new Map(topic.characters.map((character) => [character.characterId, character]));
+	const pair = [
+		byId.get(topic.positioningScale.leftCharacterId) ?? topic.characters[0],
+		byId.get(topic.positioningScale.rightCharacterId) ?? topic.characters[1],
+	].filter((character): character is AgoraCharacter => character !== undefined);
+
+	return m(
+		'.needs-peek__faces',
+		{ 'aria-hidden': 'true' },
+		pair.map((character, index) =>
+			character.portraitUrl
+				? m('img.needs-peek__face', {
+						key: character.characterId,
+						class: `needs-peek__face--${index === 0 ? 'left' : 'right'}`,
+						src: character.portraitUrl,
+						alt: '',
+					})
+				: m(
+						'span.needs-peek__face.needs-peek__face--fallback',
+						{
+							key: character.characterId,
+							class: `needs-peek__face--${index === 0 ? 'left' : 'right'}`,
+						},
+						character.name.charAt(0),
+					),
+		),
+	);
+}
+
 /** Collapsible needs board for the deliberation screens */
 export function NeedsPeek(initialVnode: m.Vnode<NeedsPeekAttrs>): m.Component<NeedsPeekAttrs> {
 	let open = initialVnode.attrs.defaultOpen ?? false;
@@ -72,10 +103,13 @@ export function NeedsPeek(initialVnode: m.Vnode<NeedsPeekAttrs>): m.Component<Ne
 				open = !open;
 			};
 
-			// Closed, the section IS its invitation — a ghost line offering the
-			// reminder. Open, that line would be a second heading stacked above
-			// the board's own, so the title moves up into a header row and the
-			// fold control shrinks to a chip beside it.
+			// Closed, the section IS its invitation — but a bare sentence in the
+			// middle of a working screen is the easiest thing in the world to
+			// scroll past. It leads with the two faces instead: whose needs are
+			// under here is the actual question, and a portrait answers it
+			// before the words are read. Open, that line would be a second
+			// heading stacked above the board's own, so the title moves up into
+			// a header row and the fold control shrinks to a chip beside it.
 			return m('.needs-peek', { class: open ? 'needs-peek--open' : undefined }, [
 				open
 					? m('.needs-peek__head', [
@@ -89,7 +123,10 @@ export function NeedsPeek(initialVnode: m.Vnode<NeedsPeekAttrs>): m.Component<Ne
 					: m(
 							'button.btn.btn--ghost.needs-peek__toggle',
 							{ onclick: toggle, 'aria-expanded': 'false' },
-							t('needs.show_board'),
+							[
+								peekFaces(vnode.attrs.topic),
+								m('span.needs-peek__toggle-text', t('needs.show_board')),
+							],
 						),
 				open ? m(Collapsible, m(NeedsBoard, { topic: vnode.attrs.topic, hideTitle: true })) : null,
 			]);
