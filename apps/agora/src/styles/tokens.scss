@@ -27,6 +27,32 @@
   }
 }
 
+// ============================================================================
+// THE PROPOSAL VOICE
+//
+// A proposal is the only thing in this app a student actually wrote. Every
+// other string on the screen — the label naming it, the chip counting it, the
+// hint explaining it — is chrome the app supplied. The type was saying the
+// opposite: a proposal rendered at 15px regular under a 16px BOLD label that
+// just said "my proposal", so the app's own word outranked the student's.
+// Across the seven surfaces that show one it ranged 15px → 24px and only one
+// of them was bold, so how loud your own sentence looked depended on which
+// screen you happened to be standing on.
+//
+// One voice, everywhere: the words a person wrote are the content, set above
+// the label that names them. It applies to a CLASSMATE'S proposal too —
+// ownership is carried by COLOUR in this system (purple mine, white theirs,
+// see the top of this file) and never by size, so making theirs quieter would
+// say something the palette already says, in a way that only costs
+// legibility.
+// ============================================================================
+@mixin proposal-voice {
+  font-family: var(--font-body); // Assistant has a real 700; Alef would fake it
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  line-height: 1.6;
+}
+
 @mixin ink-on-light {
   --text-primary: #2b2350;
   --text-secondary: #5f568a;
@@ -273,7 +299,10 @@
   // have to agree on their heights, and the page has to know the total to
   // keep its last button clear of both.
   --delib-nav-h: 68px;
-  --dock-bar-h: 76px;
+  // Sized for a quiet uppercase label plus TWO lines of the proposal voice —
+  // the bar's whole job is showing the student their own sentence, and one
+  // 18px line of Hebrew on a 360px phone is about four words.
+  --dock-bar-h: 100px;
 }
 
 // ============================================================================

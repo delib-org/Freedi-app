@@ -1747,10 +1747,11 @@
 	// Two lines of their proposal is the row's label — the full text waits
 	// inside, so scanning the row costs no scrolling
 	&__preview {
+		@include proposal-voice;
+
 		flex: 1 1 auto;
 		min-width: 0;
 		color: var(--ink);
-		line-height: 1.5;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
@@ -1879,9 +1880,9 @@
 	}
 
 	&__text {
+		@include proposal-voice;
+
 		color: var(--ink);
-		font-size: var(--font-size-lg);
-		line-height: 1.7;
 	}
 
 	// "The text changed since you weighed it" — the unfolded body's echo of
@@ -2310,10 +2311,13 @@
 		border: 1px solid var(--border-subtle);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-card);
-		color: var(--text-secondary);
+		// `font: inherit` first, to strip the button UA font this is set on —
+		// then the proposal voice, or the shorthand would flatten it
 		font: inherit;
-		font-size: var(--font-size-sm);
-		line-height: 1.5;
+
+		@include proposal-voice;
+
+		color: var(--text-primary);
 		text-align: start;
 		max-height: 6.5em;
 		overflow-y: auto;
@@ -2515,12 +2519,12 @@
 
 	// The proposal as it now stands, quoted where it is being weighed
 	&__proposal {
+		@include proposal-voice;
+
 		padding: var(--space-sm) var(--space-md);
 		background: var(--peer-tile);
 		border-radius: var(--radius-md);
 		color: var(--text-primary);
-		font-weight: 700;
-		line-height: 1.55;
 		overflow-wrap: anywhere;
 	}
 
@@ -2862,6 +2866,10 @@
 	// Registered as an on-dark surface in tokens.scss, so the placeholder,
 	// the caret and the border all re-derive rather than being hand-picked.
 	&__textarea {
+		// The words being typed ARE the proposal, so the box speaks in the
+		// same voice the finished sentence will be read in everywhere else
+		@include proposal-voice;
+
 		width: 100%;
 		background: var(--grad-mine-text);
 		border: 1.5px solid transparent;
@@ -2870,14 +2878,14 @@
 		padding: var(--space-md);
 		color: #ffffff;
 		caret-color: #ffffff;
-		font-family: var(--font-body);
-		font-size: var(--font-size-lg);
-		line-height: 1.6;
 		resize: vertical;
 		margin-block-end: var(--space-md);
 
+		// The prompt is the app talking, not the student — it stays light so
+		// the box does not look like it already has bold text in it
 		&::placeholder {
 			color: var(--text-muted);
+			font-weight: 400;
 		}
 
 		&:focus {
@@ -3124,21 +3132,33 @@
 		gap: 1px;
 	}
 
+	/* The LABEL, and it now reads as one: it says "my proposal", which is a
+	   thing the app knows, not a thing the student wrote. It steps back so
+	   the sentence under it can be the loudest text in the bar. */
 	&__title {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: var(--font-size-base);
-		color: var(--text-primary);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 	}
 
-	/* One line, always. A visibly truncated peek of my own text is the
-	   second "there is more under here" cue, after the chevron. */
+	/* My own words, in the proposal voice, on the one strip of chrome that
+	   follows me through every screen of the lap.
+	   TWO lines, not one. Truncation was doing real work here — a visibly cut
+	   peek is the second "there is more under here" cue after the chevron —
+	   and a clamp still truncates, it just does it after enough words to be
+	   worth reading. --dock-bar-h pays for the extra line. */
 	&__sub {
-		font-size: var(--font-size-sm);
-		color: var(--text-muted);
-		white-space: nowrap;
+		@include proposal-voice;
+
+		color: var(--text-primary);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		overflow: hidden;
-		text-overflow: ellipsis;
 
 		/* Something is waiting on me — not muted background information */
 		&--alert {
@@ -6418,8 +6438,8 @@
 	}
 
 	&__champion-text {
-		font-size: var(--font-size-lg);
-		line-height: 1.5;
+		@include proposal-voice;
+
 		color: var(--text-primary);
 	}
 
@@ -6700,8 +6720,8 @@
 	}
 
 	&__callout-text {
-		font-size: var(--font-size-sm);
-		line-height: 1.4;
+		@include proposal-voice;
+
 		color: var(--text-primary);
 	}
 
@@ -6812,8 +6832,8 @@
 	}
 
 	&__detail-statement {
-		font-size: var(--font-size-base);
-		line-height: 1.5;
+		@include proposal-voice;
+
 		color: var(--text-primary);
 	}
 
@@ -7001,6 +7021,8 @@
 	}
 
 	&__waiting-text {
+		@include proposal-voice;
+
 		color: var(--text-secondary);
 	}
 
