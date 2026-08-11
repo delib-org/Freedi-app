@@ -1,7 +1,7 @@
 /*
  * Deliberation chat — the guided conversation that replaced the "places"
- * UI. Ownership color law holds everywhere: blue --mine = the student's
- * own words/proposal (📘), orange --peer = a classmate's (📙); the guide
+ * UI. Ownership color law holds everywhere: purple --mine = the student's
+ * own words/proposal (📘), a WHITE surface = a classmate's (📙); the guide
  * speaks from parchment. Logical properties only (Hebrew-first RTL).
  */
 
@@ -86,7 +86,7 @@
 		box-shadow: var(--glow-lantern);
 	}
 
-	/* The student's echoed rating: emoji + label inside their blue bubble */
+	/* The student's echoed rating: emoji + label inside their purple bubble */
 	&__rating {
 		display: inline-flex;
 		align-items: center;
@@ -189,7 +189,7 @@
 /* ---------------------------------------------------- poster + advice note */
 
 /* The improvement pair breaks the single-form anatomy on purpose: the
-   classmate's proposal is a mounted POSTER — parchment, pin, orange awning,
+   classmate's proposal is a mounted POSTER — white paper, pin, a hairline edge,
    clearly NOT an input — and the student's reply is a smaller sticky NOTE
    pinned beneath it. Two different physical objects, so "theirs vs mine"
    reads before a single word does. (Resurrected from the places-era
@@ -198,9 +198,9 @@
 	position: relative;
 	margin-block-start: var(--space-sm); /* headroom for the pin */
 	background:
-		linear-gradient(180deg, rgba(224, 119, 20, 0.08), transparent 30%),
+		linear-gradient(180deg, rgba(111, 103, 149, 0.08), transparent 30%),
 		var(--parchment);
-	border: 1px solid rgba(169, 126, 82, 0.5);
+	border: 1px solid rgba(83, 60, 160, 0.5);
 	border-block-start: 10px solid var(--peer);
 	border-radius: var(--radius-md);
 	box-shadow: var(--shadow-card);
@@ -216,7 +216,7 @@
 		border-radius: var(--radius-full);
 		background: #ffd23f;
 		border: 2px solid #b97300;
-		box-shadow: 0 2px 4px rgba(37, 51, 82, 0.3);
+		box-shadow: 0 2px 4px rgba(70, 45, 150, 0.3);
 	}
 
 	/* The poster carries the biggest text in the card — it is the OBJECT
@@ -231,7 +231,7 @@
 }
 
 /* My sticky note: deliberately narrower than the poster, nudged toward the
-   student's own side of the chat (inline-end, where their blue bubbles
+   student's own side of the chat (inline-end, where their purple bubbles
    live), question attached to IT — the input is mine, the poster is theirs.
    Blue = mine per the ownership law; the rgba(43, 111, 214, *) tints are
    the codebase's established --lantern rgba pattern (see .owner-chip--mine). */
@@ -245,9 +245,9 @@
 	gap: var(--space-sm);
 	padding: var(--space-md);
 	background: linear-gradient(180deg, #fff3c9, #ffedb3);
-	border: 1px solid rgba(43, 111, 214, 0.35);
+	border: 1px solid rgba(139, 107, 240, 0.35);
 	border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-md);
-	box-shadow: 0 6px 14px rgba(37, 51, 82, 0.14);
+	box-shadow: 0 6px 14px rgba(70, 45, 150, 0.14);
 	transform: rotate(-0.6deg);
 
 	&__tape {
@@ -257,8 +257,8 @@
 		margin-inline: auto;
 		width: 58px;
 		height: 16px;
-		background: rgba(43, 111, 214, 0.25);
-		border: 1px solid rgba(43, 111, 214, 0.4);
+		background: rgba(139, 107, 240, 0.25);
+		border: 1px solid rgba(139, 107, 240, 0.4);
 		border-radius: 2px;
 		transform: rotate(-2deg);
 	}
@@ -295,7 +295,7 @@
    proposal editor. The CONTROL is deliberately neutral chrome — a tinted
    full-width header row on a white panel with a gray chevron chip at the
    far end — so it reads "tap me, I expand", never "alert banner". Only the
-   CONTENT carries the peer-orange accent (the ideas are classmates' 📙
+   CONTENT carries the quiet peer stroke (the ideas are classmates' 📙
    contributions, per the ownership law): the count badge and a slim bar
    on each idea row. */
 .chat-drawer {
@@ -318,7 +318,7 @@
 
 		&:hover:not(:disabled),
 		&:focus-visible {
-			background: rgba(37, 90, 150, 0.13);
+			background: rgba(83, 60, 160, 0.13);
 		}
 
 		&:disabled {
@@ -400,7 +400,7 @@
 	}
 
 	/* Each accepted idea is a list row: hairline dividers between rows, and
-	   a slim peer-orange bar marking the content as a classmate's 📙
+	   a slim peer stroke marking the content as a classmate's 📙
 	   contribution — ownership color on the content, never on the control */
 	&__item {
 		display: flex;

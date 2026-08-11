@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Agora — deliberation design sim</title>
+		<link rel="stylesheet" href="/node_modules/@fontsource/alef/hebrew-400.css" />
+		<link rel="stylesheet" href="/node_modules/@fontsource/alef/hebrew-700.css" />
+		<link rel="stylesheet" href="/node_modules/@fontsource/assistant/hebrew-400.css" />
+		<link rel="stylesheet" href="/node_modules/@fontsource/assistant/hebrew-600.css" />
+		<link rel="stylesheet" href="/node_modules/@fontsource/assistant/hebrew-700.css" />
+		<link rel="stylesheet" href="./delib-mock.css" />
+	</head>
+	<body>
+		<!-- Two screens side by side. This file is a DESIGN SIM, not the app:
+		     it exists so the ownership palette and the screen furniture can be
+		     argued about in seconds instead of a five-minute game run. What
+		     survives here gets ported into components.scss. -->
+		<div class="stage">
+			<!-- ================= SCREEN A — the square ================= -->
+			<section class="phone" aria-label="הכיכר">
+				<div class="phone__screen">
+					<!-- HUD -->
+					<header class="hud">
+						<div class="hud__top">
+							<span class="hud__crest">⚖️</span>
+							<h1 class="hud__title">סיור בכיכר</h1>
+							<div class="hud__laps">
+								<span class="hud__lap hud__lap--current"></span>
+								<span class="hud__lap"></span>
+								<span class="hud__lap"></span>
+								<span class="hud__lap"></span>
+							</div>
+						</div>
+						<div class="hud__path">
+							<div class="hud__stop hud__stop--done"><span class="hud__stop-icon">✓</span></div>
+							<div class="hud__stop hud__stop--here">
+								<span class="hud__stop-icon">⚖️</span>
+								<div class="hud__quota">
+									<span class="hud__quota-pip hud__quota-pip--done"></span>
+									<span class="hud__quota-pip"></span>
+									<span class="hud__quota-pip"></span>
+								</div>
+							</div>
+							<div class="hud__stop hud__stop--todo"><span class="hud__stop-icon">🤝</span></div>
+						</div>
+						<div class="hud__fuse"><div class="hud__fuse-burn" style="width: 62%"></div></div>
+					</header>
+
+					<main class="screen">
+						<!-- Others: WHITE cards. The tile carries the number, so a row is
+						     identified by an object before it is read. -->
+						<article class="stall">
+							<button class="stall__head">
+								<span class="stall__tile">2</span>
+								<span class="stall__preview"
+									>נקים אספה לאומית שבה לעם רוב קולות, נבטל את הפטור ממס של האצולה, אך נבטיח
+									לאצילים שמירה על ביטחונם.</span
+								>
+								<span class="stall__marks"><span class="mark mark--new">🌱</span></span>
+								<span class="stall__chevron"></span>
+							</button>
+						</article>
+
+						<article class="stall stall--open">
+							<button class="stall__head">
+								<span class="stall__tile">4</span>
+								<span class="stall__preview">נקבע חוקה שתגן על זכויות בסיסיות…</span>
+								<span class="stall__marks"><span class="mark mark--edited">✏️</span></span>
+								<span class="stall__chevron stall__chevron--open"></span>
+							</button>
+							<div class="stall__body">
+								<p class="stall__text">
+									נקבע חוקה שתגן על זכויות בסיסיות של כולם, ונקים בית מחוקקים נבחר שבו לכל מעמד יש
+									קול — כדי שאיש לא יוכל לשלול זכויות מאיש.
+								</p>
+								<div class="scale" role="radiogroup">
+									<button class="scale__opt"><span>😠</span><small>ממש לא בעד</small></button>
+									<button class="scale__opt"><span>🙁</span><small>לא בעד</small></button>
+									<button class="scale__opt"><span>😐</span><small>נמנעים</small></button>
+									<button class="scale__opt scale__opt--on">
+										<span>🙂</span><small>בעד</small>
+									</button>
+									<button class="scale__opt"><span>😍</span><small>מאוד בעד</small></button>
+								</div>
+							</div>
+						</article>
+
+						<article class="stall">
+							<button class="stall__head">
+								<span class="stall__tile">7</span>
+								<span class="stall__preview"
+									>נחלק מחדש את האדמות אך נפצה את בעליהן, כדי שאיש לא יאבד את פרנסתו.</span
+								>
+								<span class="stall__marks"
+									><span class="mark mark--helped">🤝</span><span class="mark mark--unread">3</span></span
+								>
+								<span class="stall__chevron"></span>
+							</button>
+						</article>
+
+						<button class="needs">
+							<span class="needs__faces">
+								<span class="needs__face needs__face--left">ה</span>
+								<span class="needs__face needs__face--right">ז</span>
+							</span>
+							<span>להיזכר בצרכים של שני הצדדים</span>
+						</button>
+					</main>
+
+					<!-- MINE: purple. The dock is the one purple object on a screen
+					     full of white ones, which is the whole ownership grammar. -->
+					<div class="dock">
+						<button class="dock__bar">
+							<span class="dock__icon">📘</span>
+							<span class="dock__text">
+								<span class="dock__title">ההצעה שלי</span>
+								<span class="dock__sub dock__sub--alert">💡 2 רעיונות חדשים לשיפור</span>
+							</span>
+							<span class="dock__badge">2</span>
+							<span class="dock__chevron"></span>
+						</button>
+					</div>
+					<nav class="nav">
+						<button class="nav__item"><span>📊</span><small>תוצאות</small></button>
+						<button class="nav__item nav__item--active"><span>👥</span><small>של אחרים</small></button>
+					</nav>
+				</div>
+			</section>
+
+			<!-- ================= SCREEN B — my workbench ================= -->
+			<section class="phone" aria-label="בית המלאכה שלי">
+				<div class="phone__screen">
+					<header class="hud hud--mine">
+						<div class="hud__top">
+							<span class="hud__crest">🛠️</span>
+							<h1 class="hud__title">בית המלאכה שלי</h1>
+							<div class="hud__laps">
+								<span class="hud__lap hud__lap--done"></span>
+								<span class="hud__lap hud__lap--current"></span>
+								<span class="hud__lap"></span>
+								<span class="hud__lap"></span>
+							</div>
+						</div>
+						<div class="hud__path">
+							<div class="hud__stop hud__stop--here"><span class="hud__stop-icon">🛠️</span></div>
+							<div class="hud__stop hud__stop--todo"><span class="hud__stop-icon">⚖️</span></div>
+							<div class="hud__stop hud__stop--todo"><span class="hud__stop-icon">🤝</span></div>
+						</div>
+						<div class="hud__fuse"><div class="hud__fuse-burn" style="width: 40%"></div></div>
+					</header>
+
+					<main class="screen screen--nodock">
+						<!-- MY proposal as the hero object, the way the reference's
+						     storage card owns the top of its screen -->
+						<article class="mine">
+							<div class="mine__head">
+								<span class="mine__icon">📘</span>
+								<div class="mine__headtext">
+									<h2 class="mine__title">ההצעה שלי</h2>
+									<p class="mine__meta">גרסה 2 · שופרה על ידכם</p>
+								</div>
+							</div>
+							<p class="mine__text">
+								נכריז על מלוכה חוקתית: המלך יישאר סמל מאחד אך אספה נבחרת תחוקק ותאשר מסים, וזכויות
+								היתר יבוטלו בהדרגה תוך פיצוי הוגן.
+							</p>
+							<div class="mine__meter">
+								<div class="mine__meter-label"><span>תמיכת הכיתה</span><span>7 מתוך 12</span></div>
+								<div class="mine__meter-track"><div class="mine__meter-fill" style="width: 58%"></div></div>
+							</div>
+							<div class="mine__actions">
+								<button class="btn btn--mint">✍️ שיפור ההצעה</button>
+							</div>
+						</article>
+
+						<h3 class="section">רעיונות שקיבלתם</h3>
+
+						<!-- Others' contributions to my proposal: WHITE -->
+						<article class="sugg">
+							<div class="sugg__who"><span class="sugg__avatar">פ</span><span>פנס חכם</span></div>
+							<p class="sugg__text">כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר של האצולה.</p>
+							<div class="sugg__actions">
+								<button class="btn btn--ghost">התקבלה</button>
+								<button class="btn btn--quiet">לא הפעם</button>
+							</div>
+						</article>
+
+						<article class="sugg">
+							<div class="sugg__who"><span class="sugg__avatar">נ</span><span>נר שקט</span></div>
+							<p class="sugg__text">מה עם האיכרים? כדאי להזכיר גם אותם בהצעה.</p>
+							<div class="sugg__actions">
+								<button class="btn btn--ghost">התקבלה</button>
+								<button class="btn btn--quiet">לא הפעם</button>
+							</div>
+						</article>
+					</main>
+
+					<nav class="nav">
+						<button class="nav__item"><span>📊</span><small>תוצאות</small></button>
+						<button class="nav__item nav__item--active"><span>👥</span><small>של אחרים</small></button>
+					</nav>
+				</div>
+			</section>
+		</div>
+	</body>
+</html>

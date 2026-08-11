@@ -1,63 +1,106 @@
 // ============================================================================
-// Agora design tokens — "Festival Day"
-// Light, playful, blue=mine / orange=classmate. See apps/agora/DESIGN.md.
-// NOTE the -glow role flip vs. the old night theme: on a light page readable
-// emphasis is DARK, so every *-glow token holds the text-safe dark shade of
-// its family (all measured WCAG AA on white / --bg-inset).
+// Agora design tokens — "Purple Agora"
+//
+// ONE rule outranks everything else in this file:
+//   MINE is purple. A CLASSMATE'S is white.
+//
+// White is not a colour, it is the absence of one — which is exactly what
+// "this isn't yours" should feel like. It means a classmate's card stops
+// competing for meaning, and my own object is the only saturated thing on
+// the screen. The previous system spent two loud hues (blue vs orange) on
+// the same question and left nothing quiet to read against.
+//
+// Purple does double duty, and the line between the two jobs is strict:
+//   • purple on CONTENT  = this is mine
+//   • purple on CHROME   = this control is active/selected
+// Content is never ambiguous, because a content surface is either purple
+// (mine) or white (theirs) and there is no third case.
+//
+// CONTRAST FLOOR: white text is only ever laid over --mine-strong or darker.
+// --mine and --mine-light are for fills behind dark text, glows, borders and
+// gradient tops — never a bed for body copy. Every value below is measured.
 // ============================================================================
 
 :root {
-  // --- Day sky (page backdrop) ---
-  --bg-page: #f4faff;
-  --bg-page-high: #aed9f9; // upper sky in gradients
-  --bg-card: rgba(255, 255, 255, 0.88);
+  // --- Page: a pale lavender the saturated surfaces sit on ---
+  --bg-page: #f2eefd;
+  --bg-page-high: #e6ddfb; // upper end of page gradients
+  --bg-card: rgba(255, 255, 255, 0.9);
   --bg-card-solid: #ffffff;
-  --bg-overlay: rgba(30, 48, 80, 0.45);
-  --bg-inset: rgba(37, 90, 150, 0.07);
+  --bg-overlay: rgba(43, 28, 92, 0.5);
+  --bg-inset: rgba(83, 60, 160, 0.07);
 
-  // --- Paper & ink (content surfaces) ---
-  --parchment: #fff8ea;
-  --parchment-dim: #efe3c8;
-  --ink: #253352;
+  // --- Paper surfaces (kept for the scene/parchment furniture) ---
+  --parchment: #ffffff;
+  --parchment-dim: #f6f2fe;
+  --ink: #2b2350;
 
-  // --- MINE blue (primary accent; token names kept from the lantern era —
-  // var(--lantern*) is "primary accent = mine" everywhere) ---
-  --lantern: #2b6fd6; // fill; white text on it = 4.83:1 AA
-  --lantern-glow: #1d55ab; // text-safe emphasis (7.14:1 on white)
-  --lantern-deep: #164a92; // borders, pressed states, gradient bottoms
+  // --- MINE: the purple family ---
+  // Named by job, not by lightness, so a rule reads as a decision.
+  --mine-light: #a98cf7;  // highlights, gradient tops, glows — NEVER under text
+  --mine: #8b6bf0;        // the signature hue; fills behind dark text
+  --mine-strong: #7350e3; // filled controls — white text on it = 5.24:1 AA
+  --mine-deep: #5b39c9;   // gradient bottoms, borders, pressed — 7.33:1
+  --mine-ink: #4a2fae;    // purple TEXT on white — 9.16:1 AAA
 
-  // --- Ownership aliases + PEER orange ---
-  --mine: var(--lantern);
-  --mine-deep: var(--lantern-deep);
-  --mine-glow: var(--lantern-glow);
-  --peer: #e07714; // fill/ribbon; UI only, never small text
-  --peer-glow: #9c5300; // text-safe emphasis (5.75:1 on white)
-  --peer-strong: #b05e0d; // filled controls: white LABEL on it = 4.72:1 AA
-  --peer-deep: #8a4a02; // borders/pressed
+  // The lantern-era names survive as aliases. They are load-bearing in ~130
+  // rules and they always meant "the primary accent", which is still true —
+  // only the hue moved. Read --lantern as --mine wherever you meet it.
+  --lantern: var(--mine);
+  --lantern-glow: var(--mine-ink); // the -glow role is TEXT-safe, not brighter
+  --lantern-deep: var(--mine-deep);
+
+  // --- OTHERS: white, and the quiet slate that frames it ---
+  // A classmate's card IS white. --peer is not their colour, it is the thin
+  // stroke that makes their card an object: a hairline, a tile, an avatar
+  // ring. If you find yourself filling a large area with it, the answer was
+  // white.
+  --peer-surface: var(--bg-card-solid);
+  --peer-tile: #f0ebfe;   // the neutral chip behind their number or initial
+  --peer: #6f6795;        // identity strokes and hairlines
+  --peer-glow: #565080;   // "someone else's" TEXT on white — 7.29:1
+  --peer-strong: #5f5888; // filled control — white label on it = 6.49:1
+  --peer-deep: #443f66;   // borders, pressed
+
+  // --- Accents ---
+  // MINT is the single "go / good / progress" colour. It is what a support
+  // meter fills with, what the current lap burns, and the one CTA allowed on
+  // a purple surface (where purple-on-purple would vanish). Spending it on
+  // anything else is what makes a palette stop meaning something.
+  --mint: #56dfc0;
+  --mint-deep: #22b699;
+  --mint-ink: #0d3b32;    // dark label on a mint fill — 7.3:1
+  // PINK is notification counts. Nothing else.
+  --pink: #f56aa8;
+  --gold: #ffd23f;        // laps behind you, celebration sparks
+
+  // --- Camps (core game semantics) ---
+  // The left camp's royal purple could not survive the re-theme: purple now
+  // means "mine", and a camp wearing it would say "yours" every time it
+  // appeared. Amber was freed the moment orange stopped meaning "a
+  // classmate's", so the camps are amber vs teal.
+  --camp-left: #e0873c;        // fill/ribbon
+  --camp-left-strong: #b0631a; // filled control — white label = 4.55:1
+  --camp-left-glow: #8f4e10;   // camp TEXT on white — 6.4:1
+  --camp-right: #14a08f;
+  --camp-right-strong: #0f8879;
+  --camp-right-glow: #0b7568;
+  --camp-center: #7b74a8;      // the blend (centre camp)
+  --camp-center-glow: #565080;
 
   // --- Place washes: the ROOM you are standing in ---
-  // Not an accent — the whole viewport. A student glancing at a classmate's
-  // screen from across the room reads temperature before anything else:
-  // cool blue = my workbench, warm amber = someone else's stall.
-  --wash-mine-high: #b7d3f5;
-  --wash-mine-mid: #d8e7fa;
-  --wash-mine-low: #edf5fe;
-  --wash-peer-high: #f8cf9d;
-  --wash-peer-mid: #fbe4c6;
-  --wash-peer-low: #fdf4e8;
-  // The square is other people's ground too, so it stays on the warm side of
-  // the line — lighter and sandier than a stall, never cool like my bench.
-  --wash-square-high: #f7e3c8;
-  --wash-square-mid: #fbf0dc;
-  --wash-square-low: #fefaf2;
-
-  // --- Camps (core game semantics — never blue/orange) ---
-  --camp-left: #8a52cf;   // royal purple
-  --camp-left-glow: #6a34ab;
-  --camp-right: #14a08f;  // teal
-  --camp-right-glow: #0b7568;
-  --camp-center: #6f7fb3; // purple+teal blend, desaturated
-  --camp-center-glow: #4d5c8f;
+  // Deliberately near-identical now. The HUD's crest and name answer "where
+  // am I?" outright, so the wash is a temperature, not a label: my rooms sit
+  // a shade warmer in purple, everyone else's stay a cool neutral white.
+  --wash-mine-high: #ddd0fa;
+  --wash-mine-mid: #eee7fd;
+  --wash-mine-low: #f7f4fe;
+  --wash-peer-high: #e4e1f2;
+  --wash-peer-mid: #f2f1f9;
+  --wash-peer-low: #fbfbfe;
+  --wash-square-high: #e7e3f5;
+  --wash-square-mid: #f4f2fb;
+  --wash-square-low: #fcfbfe;
 
   // --- Semantic ---
   --success: #17804d;
@@ -65,15 +108,15 @@
   --warning: #b97300; // borders/fills only; warning copy uses --text-primary
 
   // --- Text ---
-  --text-primary: #253352;
-  --text-secondary: #4d5e7d;
-  --text-muted: #5e6f8c;
+  --text-primary: #2b2350;
+  --text-secondary: #5f568a;
+  --text-muted: #6b628f;
   --text-on-lantern: #ffffff;
 
   // --- Borders ---
-  --border-subtle: rgba(37, 51, 82, 0.12);
-  --border-strong: rgba(37, 51, 82, 0.28);
-  --border-lantern: rgba(43, 111, 214, 0.55);
+  --border-subtle: rgba(83, 60, 160, 0.12);
+  --border-strong: rgba(83, 60, 160, 0.28);
+  --border-lantern: rgba(139, 107, 240, 0.55);
 
   // --- Spacing (8-point grid) ---
   --space-xs: 4px;
@@ -99,15 +142,34 @@
   --font-size-3xl: 2.75rem;
 
   // --- Radius ---
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  // Rounder than before, and deliberately so: a 22px card corner is most of
+  // what separates a game surface from a document. Tiles (icons, number
+  // chips, avatars) are squircles at 14px, which is the single most
+  // recognisable move in the reference this system came from.
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-tile: 14px;
   --radius-full: 999px;
 
   // --- Elevation / glow ---
-  --shadow-card: 0 6px 20px rgba(37, 51, 82, 0.1);
-  --glow-lantern: 0 4px 14px rgba(43, 111, 214, 0.25);
-  --glow-marker: 0 0 12px rgba(43, 111, 214, 0.45);
+  // Shadows are purple-tinted, never grey: a neutral shadow on a lavender
+  // page reads as dirt.
+  --shadow-card: 0 8px 24px -8px rgba(70, 45, 150, 0.22);
+  --shadow-raised: 0 12px 32px -10px rgba(70, 45, 150, 0.35);
+  --shadow-mine: 0 14px 30px -10px rgba(99, 66, 220, 0.55);
+  --glow-lantern: 0 8px 20px -6px rgba(115, 80, 227, 0.55);
+  --glow-marker: 0 0 12px rgba(139, 107, 240, 0.55);
+  --glow-mint: 0 8px 20px -6px rgba(34, 182, 153, 0.8);
+
+  // --- Gradients ---
+  // One gradient, declared once. Every purple surface in the app is this
+  // ramp; divergent hand-rolled gradients are what make a re-theme rot.
+  --grad-mine: linear-gradient(150deg, var(--mine-light) 0%, var(--mine) 45%, var(--mine-deep) 100%);
+  // The same ramp, started dark enough to carry body copy (see the contrast
+  // floor at the top of this file).
+  --grad-mine-text: linear-gradient(150deg, var(--mine-strong) 0%, var(--mine-deep) 100%);
+  --grad-sheen: radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.32), transparent 60%);
 
   // --- Motion (camera-move easing; never hard cuts) ---
   --motion-fast: 150ms;
@@ -126,16 +188,9 @@
 
   // --- Fixed deliberation chrome ---
   // Two fixed strips stack at the bottom of every deliberation screen (the
-  // Mine|Others bar, and the proposal dock parked on its top edge). They
+  // Others|Results bar, and the proposal dock parked on its top edge). They
   // have to agree on their heights, and the page has to know the total to
   // keep its last button clear of both.
-  //
-  // 68px is the nav's measured natural height (8px padding + a 2-line
-  // icon/label item + 8px), enforced as a min-height below so the dock's
-  // offset and the bar itself can never drift apart. A translation long
-  // enough to exceed it would show a hairline seam, nothing worse.
   --delib-nav-h: 68px;
-  // Measured: title + the contextual sub line + padding. Over-estimating is
-  // the safe direction — it only ever adds clearance under the page content.
   --dock-bar-h: 76px;
 }

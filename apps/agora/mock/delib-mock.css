@@ -1,0 +1,774 @@
+/* Agora deliberation — design simulation.
+   Palette lifted from the Zomo reference: MINE is purple, OTHERS are white.
+   That inverts the shipped grammar (blue=mine / orange=peer, DESIGN.md), and
+   it is the stronger of the two: white is the absence of ownership, so a
+   classmate's card stops competing for meaning and my own object is the only
+   coloured thing on the screen. Nothing here is wired to the app yet. */
+
+:root {
+	/* --- MINE: the purple family --- */
+	--mine-1: #a98cf7; /* lightest — highlights, gradient tops */
+	--mine-2: #8b6bf0; /* the signature */
+	--mine-3: #7350e3; /* fills */
+	--mine-4: #5b39c9; /* gradient bottoms, pressed */
+	--mine-ink: #4a2fae; /* text-safe purple on white */
+
+	/* --- OTHERS: white, and the greys that frame it --- */
+	--card: #ffffff;
+	--card-edge: rgba(83, 60, 160, 0.12);
+	--tile: #f0ebfe; /* the neutral chip behind a classmate's number */
+
+	/* --- Page --- */
+	--page: #f2eefd;
+	--page-high: #e8e0fb;
+
+	/* --- Accents (from the reference's buttons and folder tiles) --- */
+	--mint: #56dfc0;
+	--mint-deep: #22b699;
+	--pink: #f56aa8;
+	--amber: #ffb254;
+
+	/* --- Camps ---
+	   The royal purple that used to mark the left camp cannot survive here:
+	   purple now means "mine", and a camp wearing it would say "yours" every
+	   time it appeared. Camps move to amber vs teal, which are free again now
+	   that orange has stopped meaning "a classmate's". */
+	--camp-left: #e0873c;
+	--camp-right: #14a08f;
+
+	--ink: #2b2350;
+	--ink-2: #5f568a;
+	--ink-3: #8a82ad;
+
+	--radius-lg: 22px;
+	--radius-md: 16px;
+	--radius-sm: 10px;
+	--shadow-card: 0 8px 24px -8px rgba(70, 45, 150, 0.22);
+	--shadow-mine: 0 14px 30px -10px rgba(99, 66, 220, 0.55);
+
+	--font-display: 'Alef', Arial, sans-serif;
+	--font-body: 'Assistant', Arial, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	padding: 40px 24px;
+	background: #efeafc;
+	font-family: var(--font-body);
+	color: var(--ink);
+}
+
+.stage {
+	display: flex;
+	gap: 48px;
+	justify-content: center;
+	align-items: flex-start;
+	flex-wrap: wrap;
+}
+
+/* A phone-sized window so every judgement is made at the geometry students
+   actually play on */
+.phone {
+	width: 390px;
+	height: 844px;
+	border-radius: 44px;
+	padding: 10px;
+	background: linear-gradient(160deg, #d9cdf8, #c3b1f2);
+	box-shadow: 0 30px 60px -20px rgba(70, 45, 150, 0.45);
+}
+
+.phone__screen {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	border-radius: 36px;
+	background: linear-gradient(180deg, var(--page-high), var(--page) 40%);
+	display: flex;
+	flex-direction: column;
+}
+
+/* ============================ HUD ============================
+   The one orientation surface. Purple, because it is the frame the game is
+   played inside — and because the reference proves a saturated header over a
+   pale page is what makes a screen read as an app rather than a document. */
+.hud {
+	flex: 0 0 auto;
+	position: relative;
+	padding: 14px 16px 0;
+	background:
+		radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.35), transparent 60%),
+		linear-gradient(150deg, var(--mine-1) 0%, var(--mine-2) 45%, var(--mine-4) 100%);
+	border-end-start-radius: 26px;
+	border-end-end-radius: 26px;
+	box-shadow: var(--shadow-mine);
+}
+
+.hud__top {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.hud__crest {
+	flex: 0 0 auto;
+	display: inline-grid;
+	place-items: center;
+	width: 42px;
+	height: 42px;
+	border-radius: 14px; /* squircle tiles, like the reference's folder icons */
+	font-size: 1.3rem;
+	background: rgba(255, 255, 255, 0.26);
+	border: 1.5px solid rgba(255, 255, 255, 0.5);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.hud__title {
+	flex: 1;
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 1.22rem;
+	color: #fff;
+	text-shadow: 0 1px 6px rgba(60, 30, 140, 0.35);
+}
+
+.hud__laps {
+	display: flex;
+	gap: 5px;
+}
+
+.hud__lap {
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.28);
+}
+
+.hud__lap--done {
+	background: #fff;
+}
+
+.hud__lap--current {
+	background: var(--mint);
+	box-shadow: 0 0 10px rgba(86, 223, 192, 0.9);
+}
+
+/* The lap as a level track */
+.hud__path {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 12px 0 10px;
+}
+
+.hud__stop {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-inline: 34px;
+}
+
+.hud__stop:not(:first-child)::before {
+	content: '';
+	position: absolute;
+	inset-block-start: 15px;
+	inset-inline-end: 50%;
+	width: 100%;
+	height: 3px;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.28);
+}
+
+.hud__stop--done:not(:first-child)::before,
+.hud__stop--here:not(:first-child)::before {
+	background: rgba(255, 255, 255, 0.85);
+}
+
+.hud__stop-icon {
+	display: inline-grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	font-size: 0.95rem;
+	color: #fff;
+	background: rgba(255, 255, 255, 0.2);
+	border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.hud__stop--done .hud__stop-icon {
+	background: rgba(255, 255, 255, 0.85);
+	color: var(--mine-4);
+	font-weight: 700;
+	border-color: #fff;
+}
+
+.hud__stop--here .hud__stop-icon {
+	transform: scale(1.3);
+	background: #fff;
+	border-color: #fff;
+	box-shadow:
+		0 0 0 4px rgba(255, 255, 255, 0.3),
+		0 6px 14px -4px rgba(50, 20, 120, 0.5);
+}
+
+.hud__stop--todo .hud__stop-icon {
+	opacity: 0.55;
+}
+
+.hud__quota {
+	display: flex;
+	gap: 4px;
+	margin-top: 8px;
+}
+
+.hud__quota-pip {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.35);
+}
+
+.hud__quota-pip--done {
+	background: var(--mint);
+	box-shadow: 0 0 6px rgba(86, 223, 192, 0.9);
+}
+
+.hud__fuse {
+	height: 6px;
+	margin: 0 -16px;
+	background: rgba(255, 255, 255, 0.2);
+}
+
+.hud__fuse-burn {
+	height: 100%;
+	background: linear-gradient(90deg, var(--mint), #fff);
+}
+
+/* ============================ Screen body ============================ */
+.screen {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px 16px 150px;
+}
+
+/* ---------- OTHERS: a white card ----------
+   No coloured ribbon, no owner chip. On a purple-framed screen, white IS the
+   statement "this is not yours" — one less thing to learn. */
+.stall {
+	background: var(--card);
+	border: 1px solid var(--card-edge);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	overflow: hidden;
+}
+
+.stall--open {
+	box-shadow: 0 12px 32px -10px rgba(70, 45, 150, 0.35);
+}
+
+.stall__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	padding: 14px;
+	background: none;
+	border: 0;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+/* The number as a squircle tile — the reference's whole list language */
+.stall__tile {
+	flex: 0 0 auto;
+	display: inline-grid;
+	place-items: center;
+	width: 42px;
+	height: 42px;
+	border-radius: 14px;
+	background: var(--tile);
+	color: var(--mine-ink);
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 1.05rem;
+}
+
+.stall__preview {
+	flex: 1;
+	min-width: 0;
+	font-size: 0.9rem;
+	line-height: 1.45;
+	color: var(--ink);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.stall--open .stall__preview {
+	display: none;
+}
+
+.stall__marks {
+	flex: 0 0 auto;
+	display: inline-flex;
+	gap: 4px;
+}
+
+/* News as a mark, never a sentence */
+.mark {
+	display: inline-grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	font-size: 0.8rem;
+	background: var(--tile);
+}
+
+.mark--edited {
+	background: #fff0d6;
+}
+
+.mark--helped {
+	background: #d9f7ee;
+}
+
+.mark--unread {
+	background: var(--pink);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.75rem;
+}
+
+.stall__chevron {
+	flex: 0 0 auto;
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid var(--ink-3);
+	border-bottom: 2px solid var(--ink-3);
+	transform: rotate(45deg);
+}
+
+.stall__chevron--open {
+	transform: rotate(-135deg);
+}
+
+.stall__body {
+	padding: 0 14px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.stall__text {
+	margin: 0;
+	font-size: 1rem;
+	line-height: 1.65;
+	color: var(--ink);
+}
+
+/* ---------- The scale ---------- */
+.scale {
+	display: flex;
+	gap: 6px;
+}
+
+.scale__opt {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	padding: 8px 2px;
+	background: #faf8ff;
+	border: 1.5px solid var(--card-edge);
+	border-radius: 14px;
+	cursor: pointer;
+	font: inherit;
+}
+
+.scale__opt span {
+	font-size: 1.3rem;
+	line-height: 1;
+}
+
+.scale__opt small {
+	font-size: 0.62rem;
+	color: var(--ink-2);
+	text-align: center;
+	line-height: 1.2;
+}
+
+/* My answer is mine, so the chosen face is the only purple thing in the row */
+.scale__opt--on {
+	background: linear-gradient(160deg, var(--mine-1), var(--mine-3));
+	border-color: var(--mine-4);
+	box-shadow: 0 6px 16px -6px rgba(99, 66, 220, 0.8);
+}
+
+.scale__opt--on small {
+	color: #fff;
+	font-weight: 700;
+}
+
+/* ---------- The needs reminder ---------- */
+.needs {
+	align-self: center;
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 4px;
+	padding: 8px 16px 8px 10px;
+	background: rgba(255, 255, 255, 0.7);
+	border: 1px solid var(--card-edge);
+	border-radius: 999px;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--ink-2);
+	cursor: pointer;
+}
+
+.needs__faces {
+	display: inline-flex;
+}
+
+.needs__face {
+	display: inline-grid;
+	place-items: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 0.85rem;
+	color: #fff;
+	border: 2px solid #fff;
+}
+
+.needs__face--left {
+	background: var(--camp-left);
+}
+
+.needs__face--right {
+	background: var(--camp-right);
+	margin-inline-start: -10px;
+}
+
+/* ============================ MINE ============================
+   The hero object. One purple card per screen, and it is always my own work. */
+.mine {
+	padding: 18px;
+	border-radius: var(--radius-lg);
+	color: #fff;
+	background:
+		radial-gradient(120% 120% at 88% -20%, rgba(255, 255, 255, 0.3), transparent 55%),
+		linear-gradient(150deg, var(--mine-1) 0%, var(--mine-2) 45%, var(--mine-4) 100%);
+	box-shadow: var(--shadow-mine);
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.mine__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.mine__icon {
+	display: inline-grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 14px;
+	font-size: 1.3rem;
+	background: rgba(255, 255, 255, 0.26);
+	border: 1.5px solid rgba(255, 255, 255, 0.45);
+}
+
+.mine__headtext {
+	min-width: 0;
+}
+
+.mine__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 1.15rem;
+}
+
+.mine__meta {
+	margin: 2px 0 0;
+	font-size: 0.78rem;
+	color: rgba(255, 255, 255, 0.82);
+}
+
+.mine__text {
+	margin: 0;
+	font-size: 0.95rem;
+	line-height: 1.6;
+}
+
+/* The class's support as a bar, the way the reference states storage used */
+.mine__meter {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.mine__meter-label {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.72rem;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.mine__meter-track {
+	height: 10px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.25);
+	overflow: hidden;
+}
+
+.mine__meter-fill {
+	height: 100%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, var(--mint), #a9f3e0);
+	box-shadow: 0 0 12px rgba(86, 223, 192, 0.8);
+}
+
+.mine__actions {
+	display: flex;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+	font: inherit;
+	font-family: var(--font-display);
+	font-weight: 700;
+	border: 0;
+	border-radius: 999px;
+	padding: 12px 22px;
+	cursor: pointer;
+}
+
+/* Mint is the "go" colour in the reference — reserved for the one action a
+   screen actually wants, never spent on a secondary control */
+.btn--mint {
+	flex: 1;
+	background: linear-gradient(135deg, var(--mint), var(--mint-deep));
+	color: #0d3b32;
+	box-shadow: 0 8px 20px -6px rgba(34, 182, 153, 0.8);
+}
+
+.btn--ghost {
+	background: var(--tile);
+	color: var(--mine-ink);
+	padding: 9px 18px;
+	font-size: 0.85rem;
+}
+
+.btn--quiet {
+	background: none;
+	color: var(--ink-3);
+	padding: 9px 12px;
+	font-size: 0.85rem;
+}
+
+/* ---------- A suggestion from a classmate — white again ---------- */
+.section {
+	margin: 8px 0 0;
+	font-family: var(--font-display);
+	font-size: 0.95rem;
+	color: var(--ink-2);
+}
+
+.sugg {
+	background: var(--card);
+	border: 1px solid var(--card-edge);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-card);
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.sugg__who {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.78rem;
+	color: var(--ink-2);
+}
+
+.sugg__avatar {
+	display: inline-grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: var(--tile);
+	color: var(--mine-ink);
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 0.78rem;
+}
+
+.sugg__text {
+	margin: 0;
+	font-size: 0.92rem;
+	line-height: 1.55;
+}
+
+.sugg__actions {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+/* ============================ Bottom chrome ============================ */
+.dock {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 68px;
+	background:
+		radial-gradient(120% 200% at 15% 120%, rgba(255, 255, 255, 0.28), transparent 60%),
+		linear-gradient(150deg, var(--mine-2), var(--mine-4));
+	border-start-start-radius: 20px;
+	border-start-end-radius: 20px;
+	box-shadow: 0 -8px 24px -8px rgba(70, 45, 150, 0.5);
+}
+
+.dock__bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 12px 16px;
+	background: none;
+	border: 0;
+	font: inherit;
+	text-align: start;
+	color: #fff;
+	cursor: pointer;
+}
+
+.dock__icon {
+	display: inline-grid;
+	place-items: center;
+	width: 38px;
+	height: 38px;
+	border-radius: 12px;
+	font-size: 1.15rem;
+	background: rgba(255, 255, 255, 0.24);
+	border: 1.5px solid rgba(255, 255, 255, 0.4);
+}
+
+.dock__text {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.dock__title {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 0.98rem;
+}
+
+.dock__sub {
+	font-size: 0.78rem;
+	color: rgba(255, 255, 255, 0.78);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.dock__sub--alert {
+	color: #d8fff4;
+	font-weight: 600;
+}
+
+.dock__badge {
+	display: inline-grid;
+	place-items: center;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--pink);
+	color: #fff;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+.dock__chevron {
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid #fff;
+	border-bottom: 2px solid #fff;
+	transform: rotate(-135deg);
+}
+
+/* The nav is white — it is the app's furniture, not anybody's property */
+.nav {
+	position: absolute;
+	inset-inline: 0;
+	bottom: 0;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	height: 68px;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 -4px 20px -8px rgba(70, 45, 150, 0.35);
+}
+
+.nav__item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	padding: 6px 26px;
+	background: none;
+	border: 0;
+	border-radius: 999px;
+	font: inherit;
+	color: var(--ink-3);
+	cursor: pointer;
+}
+
+.nav__item span {
+	font-size: 1.15rem;
+	line-height: 1;
+}
+
+.nav__item small {
+	font-size: 0.68rem;
+}
+
+.nav__item--active {
+	background: linear-gradient(150deg, var(--mine-2), var(--mine-4));
+	color: #fff;
+	box-shadow: 0 6px 16px -6px rgba(99, 66, 220, 0.9);
+}
+
+/* A screen with no dock must not reserve the dock's height */
+.screen--nodock {
+	padding-bottom: 86px;
+}

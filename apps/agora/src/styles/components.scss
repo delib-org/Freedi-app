@@ -889,7 +889,7 @@
 	&__rate-card {
 		animation: scene-enter var(--motion-base) var(--ease-camera) both;
 		// A classmate's proposal — carries the silver peer identity
-		border-color: rgba(224, 119, 20, 0.35);
+		border-color: rgba(111, 103, 149, 0.35);
 		border-inline-start: 3px solid var(--peer);
 	}
 
@@ -933,7 +933,7 @@
 	height: clamp(96px, 20vw, 150px);
 	overflow: hidden;
 	border-block-end: 1px solid rgba(29, 85, 171, 0.35);
-	box-shadow: 0 6px 24px rgba(37, 51, 82, 0.18);
+	box-shadow: 0 6px 24px rgba(70, 45, 150, 0.18);
 
 	.era-map {
 		height: 100%;
@@ -961,7 +961,7 @@
    Everything in it is a picture except the place's name: the crest, the lap
    lanterns, the level track, the ratings you still owe, the draining fuse. --- */
 .delib-hud {
-	--hud-accent: #6aa8ff;
+	--hud-accent: var(--mint);
 
 	position: sticky;
 	inset-block-start: 0;
@@ -976,24 +976,13 @@
 	overflow: hidden;
 	border-end-start-radius: var(--radius-lg);
 	border-end-end-radius: var(--radius-lg);
-	background:
-		radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.16), transparent 60%),
-		linear-gradient(135deg, #1b2a5e 0%, #2a2a68 55%, #3a2a63 100%);
-	box-shadow: 0 6px 22px rgba(21, 30, 62, 0.35);
+	background: var(--grad-sheen), var(--grad-mine);
+	box-shadow: var(--shadow-mine);
 
 	// The room's temperature reaches the HUD through the accent alone — the
-	// bar itself stays one colour so the frame never flickers between places
-	&--rate {
-		--hud-accent: #b39bec;
-	}
-
-	&--help {
-		--hud-accent: #ffa851;
-	}
-
-	&--results {
-		--hud-accent: #9fb4d8;
-	}
+	// bar itself stays one colour so the frame never flickers between places.
+	// Mint is the default because mint is "you, progressing"; a place that is
+	// about somebody else borrows its camp's hue instead.
 
 	// --- Row 1: crest, name, laps ---
 	&__top {
@@ -1003,19 +992,22 @@
 		min-width: 0;
 	}
 
+	// A squircle tile, not a circle: it is the same object as a classmate's
+	// number chip and a character's avatar, which is what makes the app feel
+	// like one system rather than a set of screens
 	&__crest {
 		flex: 0 0 auto;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 38px;
-		height: 38px;
-		border-radius: 50%;
-		font-size: 1.25rem;
+		width: 42px;
+		height: 42px;
+		border-radius: var(--radius-tile);
+		font-size: 1.3rem;
 		line-height: 1;
-		background: color-mix(in srgb, var(--hud-accent) 26%, transparent);
-		border: 1.5px solid color-mix(in srgb, var(--hud-accent) 70%, transparent);
-		box-shadow: 0 0 14px -2px color-mix(in srgb, var(--hud-accent) 60%, transparent);
+		background: rgba(255, 255, 255, 0.26);
+		border: 1.5px solid rgba(255, 255, 255, 0.5);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 	}
 
 	// The one piece of text in the whole HUD
@@ -1025,9 +1017,10 @@
 		margin: 0;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: var(--font-size-lg);
+		font-size: 1.22rem;
 		line-height: 1.2;
 		color: #ffffff;
+		text-shadow: 0 1px 6px rgba(60, 30, 140, 0.35);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -1050,9 +1043,8 @@
 
 		// Laps behind you burn like little suns
 		&--done {
-			background: #ffd23f;
-			border-color: #ffd23f;
-			box-shadow: 0 0 8px rgba(255, 210, 63, 0.7);
+			background: #ffffff;
+			border-color: #ffffff;
 		}
 
 		&--current {
@@ -1110,29 +1102,32 @@
 		border-radius: 50%;
 		font-size: 0.9rem;
 		line-height: 1;
-		background: #22305f;
-		border: 1.5px solid rgba(255, 255, 255, 0.22);
+		background: rgba(255, 255, 255, 0.2);
+		border: 2px solid rgba(255, 255, 255, 0.45);
 		color: #ffffff;
 		transition:
 			transform var(--motion-base) var(--ease-spring),
 			box-shadow var(--motion-base) ease;
 	}
 
+	// A step behind you is a white token on the track — the same "done" mark
+	// the reference stamps on a finished row
 	&__stop--done &__stop-icon {
-		background: color-mix(in srgb, var(--hud-accent) 30%, #22305f);
-		border-color: color-mix(in srgb, var(--hud-accent) 70%, transparent);
+		background: rgba(255, 255, 255, 0.88);
+		border-color: #ffffff;
+		color: var(--mine-deep);
 		font-weight: 700;
 	}
 
 	// Where you are standing: bigger, lit, and the only thing on the track
 	// that moves
 	&__stop--here &__stop-icon {
-		transform: scale(1.28);
-		background: var(--hud-accent);
+		transform: scale(1.3);
+		background: #ffffff;
 		border-color: #ffffff;
 		box-shadow:
-			0 0 0 3px color-mix(in srgb, var(--hud-accent) 30%, transparent),
-			0 0 16px color-mix(in srgb, var(--hud-accent) 75%, transparent);
+			0 0 0 4px rgba(255, 255, 255, 0.3),
+			0 6px 14px -4px rgba(50, 20, 120, 0.5);
 	}
 
 	&__stop--todo &__stop-icon {
@@ -1163,14 +1158,14 @@
 	// --- The fuse: scenery until it isn't ---
 	&__fuse {
 		position: relative;
-		height: 3px;
+		height: 6px;
 		margin-inline: calc(var(--space-md) * -1);
 		background: rgba(255, 255, 255, 0.12);
 	}
 
 	&__fuse-burn {
 		height: 100%;
-		background: linear-gradient(90deg, var(--hud-accent), #ffd23f);
+		background: linear-gradient(90deg, var(--hud-accent), #ffffff);
 		transition: width 1s linear;
 	}
 
@@ -1254,7 +1249,7 @@
 	}
 
 	&__station--done &__dot {
-		background: rgba(43, 111, 214, 0.12);
+		background: rgba(139, 107, 240, 0.12);
 		border-color: var(--lantern);
 		color: var(--lantern-glow);
 		font-weight: 700;
@@ -1263,7 +1258,7 @@
 	&__station--current &__dot {
 		border-color: var(--lantern);
 		box-shadow:
-			0 0 0 3px rgba(43, 111, 214, 0.2),
+			0 0 0 3px rgba(139, 107, 240, 0.2),
 			var(--glow-marker);
 		animation: era-map-marker-pulse 1.8s ease-in-out infinite;
 	}
@@ -1400,8 +1395,8 @@
 }
 
 // --- Place banner: each deliberation step is a LOCATION with its own scene.
-// mine = my workbench (blue), rate = the square, help = a classmate's stand
-// (orange awning). Peripheral vision alone should answer "where am I?". ---
+// mine = my workbench, rate = the square, help = a classmate's stand.
+// Peripheral vision alone should answer "where am I?". ---
 // `.place-banner` retired 2026-08-11 — see the .delib-hud block above. Its
 // scene lives on the arrival splash now (.delib-splash__scene), which is
 // where a picture of a room actually belongs: the moment you walk into it.
@@ -1418,12 +1413,12 @@
 	border-radius: var(--radius-md);
 	padding: var(--space-md);
 
-	// The editor is the primary zone: white, wearing the mine-blue frame —
+	// The editor is the primary zone: white, wearing the mine-purple frame —
 	// the textarea and its ONE button visibly belong to each other
 	&--edit {
 		background: var(--bg-card-solid);
-		border-color: rgba(43, 111, 214, 0.4);
-		box-shadow: inset 0 0 0 1px rgba(43, 111, 214, 0.1);
+		border-color: rgba(139, 107, 240, 0.4);
+		box-shadow: inset 0 0 0 1px rgba(139, 107, 240, 0.1);
 
 		.my-lantern__textarea {
 			margin-block-end: 0;
@@ -1457,7 +1452,7 @@
 }
 
 // --- The first-write desk (lap 1): the screen's ONE job is the proposal, so
-// mission brief, textarea and lantern CTA are bound into a single blue-framed
+// mission brief, textarea and lantern CTA are bound into a single purple-framed
 // card — the workshop's "primary zone" grammar promoted to a whole surface.
 // The needs board stands open BELOW the card (see Deliberation.ts), so the
 // raw material is in view without pushing the pen or the button down. ---
@@ -1520,7 +1515,7 @@
 	// lantern halo plus one spring pop when the label flips to the lit action
 	&__cta--ready {
 		box-shadow:
-			0 1px 2px rgba(37, 51, 82, 0.06),
+			0 1px 2px rgba(70, 45, 150, 0.06),
 			var(--glow-lantern);
 		animation: write-cta-ready var(--motion-base) var(--ease-spring);
 	}
@@ -1626,12 +1621,14 @@
 }
 
 .stall {
-	background: var(--parchment);
-	border: 1px solid rgba(169, 126, 82, 0.4);
-	// The peer border, quoted from the poster it replaces: "this is theirs"
-	// stays answered pre-verbally, so no row needs an owner chip
-	border-block-start: 4px solid var(--peer);
-	border-radius: var(--radius-md);
+	// White IS the ownership statement. The 4px orange bar this replaces was
+	// a second way of saying it, from a system where a classmate's card had
+	// to shout to be told apart from mine — it doesn't any more, because
+	// mine is the only purple thing on the screen.
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
 	overflow: hidden;
 	// transform is the FLIP move: out on the square the list re-sorts itself
 	// as classmates improve their proposals, and a row that teleports makes
@@ -1647,14 +1644,13 @@
 	}
 
 	&--open {
-		box-shadow: var(--shadow-card);
-		border-block-start-width: 10px;
+		box-shadow: var(--shadow-raised);
 	}
 
 	// The whole strip is the hit target, wearing no button chrome
 	&__head {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		gap: var(--space-sm);
 		width: 100%;
 		padding: var(--space-md);
@@ -1665,19 +1661,21 @@
 		cursor: pointer;
 	}
 
-	// A bare numeral: proposals are known by number, never by author name
+	// A numbered tile: proposals are known by number, never by author name.
+	// The squircle is the same object as the HUD crest and a character
+	// avatar, so a row is identified as an object before it is read.
 	&__num {
 		flex: 0 0 auto;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 24px;
-		height: 24px;
-		border-radius: var(--radius-full);
-		background: rgba(224, 119, 20, 0.16);
-		color: var(--peer-glow);
-		font-size: var(--font-size-xs);
+		display: inline-grid;
+		place-items: center;
+		width: 42px;
+		height: 42px;
+		border-radius: var(--radius-tile);
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+		font-family: var(--font-display);
 		font-weight: 700;
+		font-size: 1.05rem;
 	}
 
 	// Two lines of their proposal is the row's label — the full text waits
@@ -1732,7 +1730,7 @@
 
 		// The face I already gave this one — my own answer, read back to me
 		&--rated {
-			background: rgba(43, 111, 214, 0.12);
+			background: rgba(139, 107, 240, 0.12);
 			color: var(--mine-glow);
 			font-weight: 700;
 		}
@@ -1747,9 +1745,9 @@
 
 		// Never looked at this one — a quiet invitation, not an alarm
 		&--new {
-			background: rgba(224, 119, 20, 0.12);
+			background: rgba(111, 103, 149, 0.12);
 			color: var(--peer-glow);
-			border: 1px dashed rgba(224, 119, 20, 0.5);
+			border: 1px dashed rgba(111, 103, 149, 0.5);
 		}
 
 		// The owner changed the text since I last engaged with it — the chip
@@ -1761,9 +1759,9 @@
 		}
 
 		// MY idea is in their text now — personal and celebratory, so it wears
-		// the one color that always means mine (blue, per DESIGN.md)
+		// the one colour that always means mine (purple, per DESIGN.md)
 		&--improved-mine {
-			background: rgba(43, 111, 214, 0.14);
+			background: rgba(139, 107, 240, 0.14);
 			color: var(--mine-glow);
 			font-weight: 700;
 		}
@@ -1831,7 +1829,7 @@
 
 		// ...and the celebratory version: the change includes MY woven-in idea
 		&--mine {
-			background: rgba(43, 111, 214, 0.12);
+			background: rgba(139, 107, 240, 0.12);
 			color: var(--mine-glow);
 			font-weight: 700;
 		}
@@ -1906,7 +1904,7 @@
 
 // --- One proposal↔helper conversation: the helper's ideas (with their
 // lifecycle chips) and the owner's replies as a small two-sided thread.
-// Blue = mine, orange = theirs — the app's one immutable color rule. ---
+// Purple = mine, white = theirs — the app's one immutable colour rule. ---
 .thread {
 	display: flex;
 	flex-direction: column;
@@ -1929,13 +1927,13 @@
 
 		&--mine {
 			align-self: flex-end;
-			background: rgba(43, 111, 214, 0.1);
+			background: rgba(139, 107, 240, 0.1);
 			border-inline-end: 3px solid var(--mine);
 		}
 
 		&--peer {
 			align-self: flex-start;
-			background: rgba(224, 119, 20, 0.08);
+			background: rgba(111, 103, 149, 0.08);
 			border-inline-start: 3px solid var(--peer);
 		}
 
@@ -2012,7 +2010,7 @@
 	width: 100%;
 	padding: var(--space-sm) var(--space-md);
 	background: var(--bg-inset);
-	border: 1px solid rgba(169, 126, 82, 0.35);
+	border: 1px solid rgba(83, 60, 160, 0.35);
 	border-radius: var(--radius-md);
 	font: inherit;
 	text-align: start;
@@ -2602,14 +2600,14 @@
 // Ownership grammar: BLUE = MINE, ORANGE = a CLASSMATE's.
 // The border-inline-start ribbon is the scannable cue (RTL-safe).
 .my-lantern {
-	border: 1px solid rgba(43, 111, 214, 0.45);
+	border: 1px solid rgba(139, 107, 240, 0.45);
 	border-inline-start: 3px solid var(--mine);
-	box-shadow: 0 4px 16px rgba(43, 111, 214, 0.12);
+	box-shadow: 0 4px 16px rgba(139, 107, 240, 0.12);
 
 	&--theirs {
-		border-color: rgba(224, 119, 20, 0.45);
+		border-color: rgba(111, 103, 149, 0.45);
 		border-inline-start: 3px solid var(--peer);
-		box-shadow: 0 4px 16px rgba(224, 119, 20, 0.12);
+		box-shadow: 0 4px 16px rgba(111, 103, 149, 0.12);
 
 		.my-lantern__title {
 			color: var(--peer-glow);
@@ -2700,7 +2698,7 @@
 		&:focus {
 			outline: none;
 			border-color: var(--border-lantern);
-			box-shadow: 0 0 0 3px rgba(43, 111, 214, 0.18);
+			box-shadow: 0 0 0 3px rgba(139, 107, 240, 0.18);
 		}
 	}
 
@@ -2753,22 +2751,17 @@
 			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--mine) 60%, transparent);
 		}
 
-		// The Others tab wears the classmate orange, never MY blue.
-		// Deepened fill so white text stays AA — still unambiguously orange.
-		&--peer.delib-nav__item--active {
-			background: var(--peer-strong);
-			border-color: var(--peer-strong);
-			color: #ffffff;
-			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--peer) 60%, transparent);
-		}
-
-		// Results belongs to nobody in particular — it is the whole class
-		// seen from above. Neutral slate, so it can't be misread as a camp.
+		// Both tabs light purple when active, and that is not a contradiction
+		// of "purple = mine": purple on CHROME means "this control is the one
+		// you are on". Ownership is a question about CONTENT, and content is
+		// either a purple card (mine) or a white one (theirs) — a tab bar is
+		// neither. The old rule spent two more colours to say "selected".
+		&--peer.delib-nav__item--active,
 		&--results.delib-nav__item--active {
-			background: var(--text-secondary);
-			border-color: var(--text-secondary);
+			background: var(--grad-mine-text);
+			border-color: transparent;
 			color: #ffffff;
-			box-shadow: 0 3px 10px -3px rgba(37, 51, 82, 0.5);
+			box-shadow: var(--glow-lantern);
 		}
 	}
 
@@ -2818,7 +2811,7 @@
 		border-block-start: 2px solid var(--mode-accent, var(--border-lantern));
 		border-start-start-radius: var(--radius-md);
 		border-start-end-radius: var(--radius-md);
-		box-shadow: 0 -4px 20px rgba(37, 51, 82, 0.18);
+		box-shadow: 0 -4px 20px rgba(70, 45, 150, 0.18);
 
 		&__item {
 			flex-direction: column;
@@ -2827,14 +2820,10 @@
 			background: transparent;
 			border-color: transparent;
 
-			&--active {
-				background: var(--mine);
-				border-color: var(--mine);
-			}
-
+			&--active,
 			&--peer.delib-nav__item--active {
-				background: var(--peer-strong);
-				border-color: var(--peer-strong);
+				background: var(--grad-mine-text);
+				border-color: transparent;
 			}
 		}
 	}
@@ -2874,7 +2863,7 @@
 
    The control is neutral chrome with a chevron chip, exactly like
    .chat-drawer, because students already learned that affordance one
-   screen down. The only ownership colour is the blue 📘 ribbon: this is
+   screen down. The only ownership colour is the purple fill: this is
    MINE, sitting at the bottom of a stall that isn't. */
 .proposal-dock {
 	position: fixed;
@@ -2891,7 +2880,7 @@
 	border-block-start: 1px solid var(--border-subtle);
 	border-start-start-radius: var(--radius-md);
 	border-start-end-radius: var(--radius-md);
-	box-shadow: 0 -4px 20px rgba(37, 51, 82, 0.18);
+	box-shadow: 0 -4px 20px rgba(70, 45, 150, 0.18);
 	overflow: hidden;
 
 	&__bar {
@@ -2903,7 +2892,7 @@
 		padding: var(--space-sm) var(--space-md);
 		background: transparent;
 		border: none;
-		// The one ownership cue on the chrome: blue = my work
+		// The one ownership cue on the chrome: purple = my work
 		border-inline-start: 3px solid var(--mine);
 		cursor: pointer;
 		text-align: start;
@@ -2911,7 +2900,7 @@
 
 		&:hover,
 		&:focus-visible {
-			background: rgba(37, 90, 150, 0.13);
+			background: rgba(83, 60, 160, 0.13);
 		}
 
 		&:focus-visible {
@@ -3094,12 +3083,19 @@
    Strictly the COLLAPSED chrome. The dock's panel is content the moment it
    opens, so it turns back into a light sheet below. */
 .shell--delib {
-	.delib-nav,
+	// The dock is purple because it IS my proposal — the one owned object on
+	// a screen full of white ones. The nav is white: it is the app's
+	// furniture, not anybody's property.
 	.proposal-dock {
 		background:
-			radial-gradient(140% 180% at 20% 130%, rgba(255, 255, 255, 0.14), transparent 60%),
-			linear-gradient(135deg, #1b2a5e 0%, #2a2a68 55%, #3a2a63 100%);
-		border-block-start-color: rgba(255, 255, 255, 0.16);
+			radial-gradient(120% 200% at 15% 120%, rgba(255, 255, 255, 0.28), transparent 60%),
+			linear-gradient(150deg, var(--mine-strong), var(--mine-deep));
+		border-block-start-color: transparent;
+	}
+
+	.delib-nav {
+		background: rgba(255, 255, 255, 0.95);
+		border-block-start-color: var(--border-subtle);
 	}
 
 	.proposal-dock__title {
@@ -3141,29 +3137,24 @@
 		background: var(--bg-card-solid);
 	}
 
-	.delib-nav__item {
-		color: rgba(255, 255, 255, 0.72);
+	// :not(--active) so the muted colour cannot out-specify the white label
+	// the selected pill needs — it out-specified it once already and put
+	// dark purple text on a purple fill.
+	.delib-nav__item:not(.delib-nav__item--active) {
+		color: var(--text-muted);
+	}
 
-		&:focus-visible {
-			outline-color: #ffffff;
-		}
+	.delib-nav__item:focus-visible {
+		outline-color: var(--mine-deep);
 	}
 }
 
 @media (max-width: 700px) {
-	// The mobile bar's own light fills, from before the frame existed
-	.shell--delib .delib-nav__item {
-		background: transparent;
-		border-color: transparent;
-	}
-
 	// ...and the two room-tinted washes that used to reach the bottom edge.
-	// The frame is the bottom edge now; the wash stops where it starts.
+	// The nav is white in every room now; the wash stops where it starts.
 	.shell--delib.shell--mode-mine .delib-nav,
 	.shell--delib.shell--mode-peer .delib-nav {
-		background:
-			radial-gradient(140% 180% at 20% 130%, rgba(255, 255, 255, 0.14), transparent 60%),
-			linear-gradient(135deg, #1b2a5e 0%, #2a2a68 55%, #3a2a63 100%);
+		background: rgba(255, 255, 255, 0.95);
 	}
 }
 
@@ -3200,30 +3191,12 @@
 	}
 }
 
-/* "The way forward wears the colour of the room" is the rule for the room.
-   The notebook is not the room: it is MINE wherever I happen to be standing,
-   and its one action edits my own proposal. An orange Update button here
-   would say "someone else's" at the exact moment I act on my own text.
-   Nested under the mode class on purpose — it has to out-specify it. */
-.shell--mode-peer .proposal-dock {
-	.btn--primary {
-		--btn-glow: var(--lantern-glow);
-
-		background: var(--mine);
-
-		&:hover:not(:disabled) {
-			background: var(--lantern-glow);
-		}
-
-		&:active:not(:disabled) {
-			background: var(--lantern-deep);
-		}
-	}
-
-	.btn:focus-visible {
-		outline-color: var(--lantern-glow);
-	}
-}
+/* "The way forward wears the colour of the room" was a rule invented to stop
+   a blue button appearing on an orange screen. Rooms have no colour to lend
+   any more — a classmate's screen is white — so the primary action is purple
+   everywhere and this override has nothing left to override. The one place
+   purple would vanish is ON a purple surface, and there the CTA goes mint
+   (see --mint in tokens.scss). */
 
 @media (max-width: 700px) {
 	.proposal-dock {
@@ -3275,7 +3248,7 @@
 }
 
 // --- Ownership mode: whose space am I in right now? ---
-// Blue = my workshop, orange = a classmate's. The accent is
+// Purple = my workshop, white = a classmate's. The accent is
 // AMBIENT (fixed top strip + mobile-bar edge), so it survives scrolling.
 .shell--mode-mine {
 	--mode-accent: var(--lantern);
@@ -3285,31 +3258,11 @@
 .shell--mode-peer {
 	--mode-accent: var(--peer);
 	--mode-accent-glow: var(--peer-glow);
-
-	// The way forward wears the colour of the room it is in. A blue button in
-	// an amber room says "mine" at the exact moment the student is acting on
-	// someone else's proposal.
-	// Fill is --peer-strong, not --peer: white on #e07714 is 3.08:1, and a
-	// button label is not large text.
-	.btn--primary {
-		--btn-glow: var(--peer);
-
-		background: var(--peer-strong);
-
-		&:hover:not(:disabled) {
-			// Deeper, not lighter — lighter would drop the label under AA.
-			// The lift comes from the halo, which the base .btn rule expands.
-			background: #a85a0c;
-		}
-
-		&:active:not(:disabled) {
-			background: var(--peer-deep);
-		}
-	}
-
-	.btn:focus-visible {
-		outline-color: var(--peer-glow);
-	}
+	// The way forward used to wear the colour of the room, so that a blue
+	// button never appeared on an amber screen claiming "mine" while the
+	// student acted on someone else's proposal. A classmate's room is white
+	// now — it has no colour to lend and nothing to contradict — so the
+	// primary action is purple in every room (DESIGN.md §8).
 }
 
 .shell--mode-mine::before,
@@ -3333,7 +3286,7 @@
 // --- Place washes: the WHOLE room is repainted, not the column ---
 // A tint on the 720px column left the margins sky-white, and both places
 // still read as "the same near-white page". These wash the entire viewport
-// so ownership is answered before a single word is read: cool blue = my
+// so ownership is answered before a single word is read: cool purple = my
 // workbench, warm amber = a classmate's stall, cool grey = the square.
 // A fixed ::after (not a body background) keeps it off the Mithril tree and
 // dodges iOS's broken background-attachment: fixed.
@@ -3421,15 +3374,15 @@
 	animation: chip-pop var(--motion-base) var(--ease-spring) both;
 
 	&--mine {
-		border: 1px solid rgba(43, 111, 214, 0.5);
+		border: 1px solid rgba(139, 107, 240, 0.5);
 		color: var(--mine-glow);
-		background: rgba(43, 111, 214, 0.1);
+		background: rgba(139, 107, 240, 0.1);
 	}
 
 	&--peer {
-		border: 1px solid rgba(224, 119, 20, 0.55);
+		border: 1px solid rgba(111, 103, 149, 0.55);
 		color: var(--peer-glow);
-		background: rgba(224, 119, 20, 0.12);
+		background: rgba(111, 103, 149, 0.12);
 	}
 }
 
@@ -3462,7 +3415,7 @@
 .helped {
 	&__item {
 		// Peer orange, not a camp color — ownership and camps never share a hue
-		background: rgba(224, 119, 20, 0.05);
+		background: rgba(111, 103, 149, 0.05);
 		border-inline-start: 3px solid var(--peer);
 
 		// The card the "woven in" celebration steered to: a golden pulse says
@@ -3551,13 +3504,15 @@
 // (ring+halo, scale+pulse, ✓ badge) and receding siblings — "where did I
 // press?" must survive a glance, color-blindness and reduced motion ---
 .rate-scale__option--selected {
-	border-color: var(--lantern);
+	background: var(--grad-mine-text);
+	border-color: var(--mine-deep);
+	color: #ffffff;
 	transform: scale(1.12);
 	z-index: 2;
 	box-shadow:
 		0 0 0 3px var(--bg-card-solid),
-		0 0 0 6px var(--lantern),
-		0 6px 14px rgba(37, 51, 82, 0.28);
+		0 0 0 6px var(--mine),
+		0 6px 14px rgba(70, 45, 150, 0.28);
 	animation: rate-select-pulse var(--motion-slow, 380ms) var(--ease-spring) 1;
 
 	&:hover {
@@ -3599,7 +3554,7 @@
 	pointer-events: none;
 	box-shadow:
 		0 0 0 2px var(--bg-card-solid),
-		0 2px 4px rgba(37, 51, 82, 0.25);
+		0 2px 4px rgba(70, 45, 150, 0.25);
 	animation: rate-check-in var(--motion-base, 220ms) var(--ease-spring) 1;
 }
 
@@ -3695,7 +3650,7 @@
 	&__track {
 		flex: 1;
 		height: 8px;
-		background: rgba(37, 51, 82, 0.18);
+		background: rgba(70, 45, 150, 0.18);
 		border-radius: var(--radius-full);
 		overflow: hidden;
 		direction: ltr;
@@ -4059,7 +4014,7 @@
 	&__item {
 		background: var(--bg-inset);
 		// A classmate's voice inside my gold card — mark the voice, not the frame
-		border-inline-start: 2px solid rgba(224, 119, 20, 0.45);
+		border-inline-start: 2px solid rgba(111, 103, 149, 0.45);
 	}
 
 	&__from {
@@ -4185,7 +4140,7 @@
 
 		&--open {
 			border-color: var(--lantern-deep);
-			box-shadow: 0 0 14px rgba(43, 111, 214, 0.2);
+			box-shadow: 0 0 14px rgba(139, 107, 240, 0.2);
 		}
 	}
 
@@ -4222,23 +4177,23 @@
 // --- Five-level rating scale (MC-style, -1 … +1) ---
 .rate-scale {
 	display: flex;
-	gap: var(--space-sm);
+	gap: 6px;
 	justify-content: center;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 
 	&__option {
 		position: relative; // anchors the selected-state ✓ badge
-		flex: 1;
-		min-width: 64px;
+		flex: 1 1 0;
+		min-width: 0;
 		max-width: 110px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: var(--space-xs);
-		padding: var(--space-sm);
-		background: var(--bg-inset);
-		border: 1px solid transparent;
-		border-radius: var(--radius-md);
+		gap: 2px;
+		padding: var(--space-sm) 2px;
+		background: #faf8ff;
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
 		cursor: pointer;
 		color: var(--text-secondary);
 		transition:
@@ -4277,7 +4232,7 @@
 	}
 
 	&__emoji {
-		font-size: 1.6rem;
+		font-size: 1.4rem;
 		line-height: 1;
 		transition: transform var(--motion-fast) var(--ease-spring);
 	}
@@ -4287,8 +4242,11 @@
 		transform: rotate(-8deg) scale(1.15);
 	}
 
+	// Small enough that five of them fit one phone row. The face is the
+	// label here; the words are the confirmation underneath it.
 	&__label {
-		font-size: var(--font-size-sm);
+		font-size: 0.62rem;
+		line-height: 1.2;
 		text-align: center;
 	}
 
@@ -4328,7 +4286,7 @@
 		border-radius: var(--radius-lg);
 		padding: var(--space-xl);
 		text-align: center;
-		box-shadow: 0 0 60px rgba(43, 111, 214, 0.25);
+		box-shadow: 0 0 60px rgba(139, 107, 240, 0.25);
 		animation: celebration-pop var(--motion-slow) cubic-bezier(0.34, 1.56, 0.64, 1) both;
 	}
 
@@ -4353,9 +4311,9 @@
 		animation: celebration-spark 1.1s ease-out both;
 		animation-delay: calc(var(--spark-index) * 28ms);
 
-		&:nth-child(5n + 1) { --spark-color: #2b6fd6; }
-		&:nth-child(5n + 2) { --spark-color: #e07714; }
-		&:nth-child(5n + 3) { --spark-color: #8a52cf; }
+		&:nth-child(5n + 1) { --spark-color: #8b6bf0; }
+		&:nth-child(5n + 2) { --spark-color: #6f6795; }
+		&:nth-child(5n + 3) { --spark-color: #e0873c; }
 		&:nth-child(5n + 4) { --spark-color: #14a08f; }
 	}
 
@@ -4540,7 +4498,7 @@
 		object-fit: cover;
 		background: var(--bg-inset);
 		border: 2px solid var(--bg-card-solid);
-		box-shadow: 0 2px 6px rgba(37, 51, 82, 0.2);
+		box-shadow: 0 2px 6px rgba(70, 45, 150, 0.2);
 
 		// The two sides overlap the way a party of characters does — one
 		// object saying "these two", not two saying "him" and "her"
@@ -5007,7 +4965,7 @@
 	// keyboard users must be able to find and press it.
 	&--action {
 		border-color: var(--peer);
-		box-shadow: 0 6px 18px rgba(224, 119, 20, 0.28);
+		box-shadow: 0 6px 18px rgba(111, 103, 149, 0.28);
 		font: inherit;
 		text-align: start;
 		width: 100%;
@@ -5085,7 +5043,7 @@
 	--board-gold: #9c6a00;
 	--board-gold-deep: #b97300;
 	// --- chip anchors (carry white numerals — AA verified at the anchor) ---
-	--board-chip-left: #8a52cf;
+	--board-chip-left: #e0873c;
 	--board-chip-right: #0c7d6f;
 	// --- AA variants (graphics & camp text on the light board) ---
 	--board-camp-left-bright: #6a34ab;
@@ -5108,9 +5066,9 @@
 	--text-primary: var(--board-text);
 	--text-secondary: var(--board-text-dim);
 	--text-muted: var(--board-text-dim);
-	--bg-inset: rgba(37, 90, 150, 0.07);
-	--border-subtle: rgba(37, 51, 82, 0.12);
-	--border-strong: rgba(37, 51, 82, 0.3);
+	--bg-inset: rgba(83, 60, 160, 0.07);
+	--border-subtle: rgba(70, 45, 150, 0.12);
+	--border-strong: rgba(70, 45, 150, 0.3);
 	--border-lantern: rgba(185, 115, 0, 0.5);
 	--glow-lantern: 0 4px 18px rgba(185, 115, 0, 0.25);
 	--glow-marker: 0 0 12px rgba(185, 115, 0, 0.4);
@@ -5137,15 +5095,15 @@
 			border-box;
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.8),
-		inset 0 -1px 0 rgba(37, 51, 82, 0.08),
-		0 10px 28px rgba(37, 51, 82, 0.16);
+		inset 0 -1px 0 rgba(70, 45, 150, 0.08),
+		0 10px 28px rgba(70, 45, 150, 0.16);
 	color: var(--board-text);
 
 	&--goal {
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.8),
-			inset 0 -1px 0 rgba(37, 51, 82, 0.08),
-			0 10px 28px rgba(37, 51, 82, 0.16),
+			inset 0 -1px 0 rgba(70, 45, 150, 0.08),
+			0 10px 28px rgba(70, 45, 150, 0.16),
 			var(--glow-lantern);
 	}
 
@@ -5188,7 +5146,7 @@
 
 		&--left {
 			background:
-				linear-gradient(180deg, #a875e8 0%, #8a52cf 30%, #6a34ab 100%) padding-box,
+				linear-gradient(180deg, #a875e8 0%, #e0873c 30%, #6a34ab 100%) padding-box,
 				linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
 		}
 
@@ -5216,7 +5174,7 @@
 			linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.7),
-			inset 0 -6px 12px rgba(37, 51, 82, 0.08);
+			inset 0 -6px 12px rgba(70, 45, 150, 0.08);
 
 		&::before {
 			content: '';
@@ -5279,7 +5237,7 @@
 		border-radius: var(--radius-full);
 		padding: 2px;
 		box-shadow:
-			inset 0 2px 6px rgba(37, 51, 82, 0.25),
+			inset 0 2px 6px rgba(70, 45, 150, 0.25),
 			inset 0 -1px 0 rgba(255, 255, 255, 0.6);
 		// room for the goal flag + number below
 		margin-block-end: var(--space-md);
@@ -5444,7 +5402,7 @@
 		background: linear-gradient(180deg, var(--board-row-hi) 0%, var(--board-row) 60%);
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.75),
-			inset 0 -1px 0 rgba(37, 51, 82, 0.12);
+			inset 0 -1px 0 rgba(70, 45, 150, 0.12);
 		text-align: center;
 		font-family: var(--font-body);
 	}
@@ -5515,10 +5473,10 @@
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.35),
 			inset 0 -2px 3px rgba(0, 0, 0, 0.3),
-			0 2px 5px rgba(37, 51, 82, 0.3);
+			0 2px 5px rgba(70, 45, 150, 0.3);
 
 		&--left {
-			background: linear-gradient(180deg, #9c66d9, #8a52cf 40%, #7443b4);
+			background: linear-gradient(180deg, #9c66d9, #e0873c 40%, #7443b4);
 		}
 
 		&--right {
@@ -5533,7 +5491,7 @@
 		&--empty {
 			background: var(--board-row);
 			color: var(--board-text-dim);
-			box-shadow: inset 0 0 0 1px rgba(37, 51, 82, 0.18);
+			box-shadow: inset 0 0 0 1px rgba(70, 45, 150, 0.18);
 		}
 
 		&.scorehud__tile-value--ticking {
@@ -5643,7 +5601,7 @@
 		min-width: 40px;
 		background: #dce4f0;
 		border-radius: var(--radius-full);
-		box-shadow: inset 0 1px 3px rgba(37, 51, 82, 0.25);
+		box-shadow: inset 0 1px 3px rgba(70, 45, 150, 0.25);
 	}
 
 	&__strip-fill {
@@ -5685,7 +5643,7 @@
 	inset-inline: 10%;
 	inset-block-start: -1px;
 	height: 1px;
-	background: linear-gradient(90deg, transparent, rgba(37, 51, 82, 0.28) 50%, transparent);
+	background: linear-gradient(90deg, transparent, rgba(70, 45, 150, 0.28) 50%, transparent);
 	pointer-events: none;
 }
 
@@ -5830,7 +5788,7 @@
 		}
 
 		&--negative .support-chart__col {
-			box-shadow: inset 0 0 0 1px rgba(37, 51, 82, 0.25);
+			box-shadow: inset 0 0 0 1px rgba(70, 45, 150, 0.25);
 		}
 
 		// the current class-record holder wears a glowing gold cap
@@ -5856,7 +5814,7 @@
 		border-start-end-radius: 3px;
 		overflow: hidden;
 		transform-origin: bottom;
-		box-shadow: 0 1px 4px rgba(37, 51, 82, 0.18);
+		box-shadow: 0 1px 4px rgba(70, 45, 150, 0.18);
 		transition: height var(--motion-slow) var(--ease-camera);
 		animation: support-bar-grow var(--motion-slow) var(--ease-spring) both;
 
@@ -6218,7 +6176,7 @@
 		&--mine {
 			border-color: var(--lantern);
 			background:
-				radial-gradient(120% 100% at 50% 0%, rgba(43, 111, 214, 0.22), transparent 65%),
+				radial-gradient(120% 100% at 50% 0%, rgba(139, 107, 240, 0.22), transparent 65%),
 				var(--bg-card-solid);
 		}
 	}
