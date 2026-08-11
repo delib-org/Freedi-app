@@ -1098,6 +1098,8 @@
 		width: 28px;
 		height: 28px;
 		border-radius: 50%;
+		// Sizes the ICON inside the disc, not text — it tracks the 28px token
+		// it lives in, so it is deliberately off the type scale
 		font-size: 0.9rem;
 		line-height: 1;
 		background: var(--bg-card-solid);
@@ -1235,12 +1237,15 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
+		// The station numeral inside a 30px disc — a mark, and the lit label
+		// beside it is what actually names the station
+		@include type-meta;
+
 		width: 30px;
 		height: 30px;
 		border-radius: 50%;
 		background: var(--bg-card-solid);
 		border: 1.5px solid var(--border-strong);
-		font-size: 0.95rem;
 		line-height: 1;
 	}
 
@@ -1285,10 +1290,8 @@
 
 @media (max-width: 480px) {
 	.journey-strip__dot {
-		// The station numeral inside a 26px circle — a mark, and it has the
-		// lit label beside it doing the actual naming
-		@include type-meta;
-
+		// Only the disc tightens on a narrow phone; the numeral inside it is
+		// already on the meta rung and has nowhere left to go
 		width: 26px;
 		height: 26px;
 	}
@@ -1409,18 +1412,25 @@
 	flex-direction: column;
 	gap: var(--space-md);
 
-	// Whose screen this is, and the way into the text beside it
+	// The sentence gets the full width, and the way into it sits under it.
+	// Side by side, the button ate a third of the measure and squeezed a
+	// paragraph-length proposal into a six-line ribbon — the student's own
+	// words are the content here, so they are what the row is spent on.
 	&__head {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
+		flex-direction: column;
+		align-items: stretch;
 		gap: var(--space-sm);
 	}
 
+	// The proposal itself heads the screen, so it takes the proposal voice —
+	// the same 18px/700 it wears in the dock, in a stall and in a quote
 	&__title {
 		margin: 0;
-		font-family: var(--font-display);
-		font-weight: 700;
+		@include proposal-voice;
+
+		flex: 1 1 auto;
+		min-width: 0;
 		color: var(--text-primary);
 	}
 
@@ -1428,6 +1438,7 @@
 	// it is what the screen sends you to
 	&__edit {
 		flex: 0 0 auto;
+		align-self: flex-end;
 		padding: 6px var(--space-md);
 	}
 }
@@ -1843,6 +1854,8 @@
 			padding: 0;
 			justify-content: center;
 			border-radius: 50%;
+			// Sizes the ICON inside the disc, not text — off the type scale on
+			// purpose, the way .delib-hud__stop-icon is
 			font-size: 0.9rem;
 			line-height: 1;
 		}

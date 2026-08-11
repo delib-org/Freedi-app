@@ -6,17 +6,21 @@
  * check ever written and is still unreadable held at arm's length by a
  * fourteen-year-old on a bus.
  *
- * THE FLOORS, and why they are these numbers:
+ * THE FLOORS. They are the bottom two rungs of the scale in tokens.scss, and
+ * they have to be — a floor softer than the scale enforces nothing, and a
+ * floor harder than it fails the app's own tokens. Move one, move both.
  *
- *   BODY 14px    Anything a student actually reads — a sentence, a name, a
- *                button label. Material's body scale bottoms out at 14sp and
- *                Apple's HIG at 11pt (≈14.6px); below that, line length and
- *                stroke weight both start costing comprehension.
+ *   BODY 16px    Anything a student actually reads — a sentence, a name, a
+ *                label, a button. This is deliberately above the usual
+ *                advice (Material bottoms out at 14sp, Apple's HIG at 11pt):
+ *                those scales are written for apps read at a desk, and this
+ *                is a game played on a phone at arm's length in a lit
+ *                classroom. 14px passed every published guideline and was
+ *                still too small on the class map.
  *
- *   META 12px    A hard floor for genuinely secondary marks: a timestamp, a
- *                count on a chip, a unit. These are glanced at, not read, and
- *                they are allowed to be small — but not smaller than the
- *                smallest size iOS itself ships in a UI.
+ *   META 13px    A hard floor for genuinely secondary marks: a timestamp, a
+ *                count on a chip, a numeric axis tick. These are glanced at,
+ *                not read, and they are allowed to be small.
  *
  *   FIELD 16px   Any input/textarea/select. This one is not a taste
  *                judgement: Mobile Safari ZOOMS THE VIEWPORT when a field
@@ -39,8 +43,8 @@
  */
 import { chromium } from '@playwright/test';
 
-export const BODY_FLOOR = 14;
-export const META_FLOOR = 12;
+export const BODY_FLOOR = 16;
+export const META_FLOOR = 13;
 export const FIELD_FLOOR = 16;
 
 /**

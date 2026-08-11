@@ -213,32 +213,42 @@
   --font-body: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 
   // THE SCALE IS SIZED FOR A PHONE HELD AT ARM'S LENGTH, because that is the
-  // only device this game is ever played on. The old scale bottomed out at
-  // 12px and spent that rung on things a student has to READ — the words
-  // under a rating face, a chart's axis title, the hint telling you a dot is
-  // tappable. 12px is the smallest size iOS ships in a UI, and iOS spends it
-  // on timestamps and badge counts, never on a sentence.
+  // only device this game is ever played on.
   //
-  // So the bottom of the scale is now two rungs with a rule between them:
+  // The anchor is the argument. A 16px body is the WEB's default — the size a
+  // browser picks for a document you scroll and read at a desk — and every
+  // rung under it inherits that assumption. That is how a hint explaining
+  // that the dots on the class map are tappable ended up at 14px: not
+  // because anyone chose 14px for it, but because it was "one step down"
+  // from a body size borrowed from documents. This is not a document. It is
+  // a game a fourteen-year-old plays on a phone, in a lit classroom, at
+  // arm's length, and every rung has to be legible in those conditions
+  // rather than merely legal.
   //
-  //   --font-size-2xs  12px  A MARK, not a word: a badge count, a timestamp,
+  // So the anchor moves: 18px body, which is iOS's own 17pt rounded up, and
+  // the rungs below it get room to be READABLE instead of merely smaller.
+  // The top of the scale barely moves — nothing up there was ever too small.
+  //
+  //   --font-size-2xs  13px  A MARK, not a word: a badge count, a timestamp,
   //                          a numeric axis tick. Never a phrase, never
   //                          something a student has to stop and read. It is
   //                          reachable only through @mixin type-meta, which
   //                          records the decision where the audit can see it.
-  //   --font-size-xs   14px  The smallest READABLE rung — chips, hints,
-  //                          labels, secondary lines. This is where almost
-  //                          everything that used to be 12px belongs.
+  //   --font-size-xs   16px  The smallest rung a WORD may sit on — chips,
+  //                          hints, labels, legends, axis titles.
   //
-  // scripts/type-audit.mjs measures what actually rendered at 390px and fails
-  // on any text run below its rung, the same way contrast-audit.mjs measures
-  // ink. Sizes above are unchanged: nothing here was ever too big.
-  --font-size-2xs: 0.75rem;   // 12px — marks only, via @include type-meta
-  --font-size-xs: 0.875rem;   // 14px
-  --font-size-sm: 0.9375rem;  // 15px
-  --font-size-base: 1rem;     // 16px
-  --font-size-lg: 1.125rem;   // 18px
-  --font-size-xl: 1.5rem;
+  // Because base is now 18px, every text input clears Mobile Safari's 16px
+  // zoom-on-focus threshold by default rather than by luck.
+  //
+  // scripts/type-audit.mjs measures what actually rendered at phone width and
+  // fails on any text run below its rung, the same way contrast-audit.mjs
+  // measures ink. Its floors are these numbers; move one and move both.
+  --font-size-2xs: 0.8125rem; // 13px — marks only, via @include type-meta
+  --font-size-xs: 1rem;       // 16px
+  --font-size-sm: 1.0625rem;  // 17px
+  --font-size-base: 1.125rem; // 18px
+  --font-size-lg: 1.25rem;    // 20px
+  --font-size-xl: 1.625rem;   // 26px
   --font-size-2xl: 2rem;
   --font-size-3xl: 2.75rem;
 
