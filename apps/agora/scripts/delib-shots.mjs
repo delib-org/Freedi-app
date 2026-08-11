@@ -69,10 +69,12 @@ await teacher.evaluate(() =>
 // rather than betting the whole run on one timeout.
 let topicReady = false;
 for (let attempt = 0; attempt < 6 && !topicReady; attempt++) {
-	await teacher.waitForTimeout(3000);
+	// The sign-in has to settle into IndexedDB before a reload can pick it
+	// up, and provisioning is a Firestore round trip after that
+	await teacher.waitForTimeout(6000);
 	await teacher.reload({ waitUntil: 'domcontentloaded' });
 	topicReady = await teacher
-		.waitForSelector('text=המהפכה הצרפתית', { timeout: 15000 })
+		.waitForSelector('text=המהפכה הצרפתית', { timeout: 25000 })
 		.then(() => true)
 		.catch(() => false);
 }

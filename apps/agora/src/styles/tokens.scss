@@ -276,7 +276,11 @@
 .delib-nav__item--active,
 // the HUD's two filled tokens
 .delib-hud__crest,
-.delib-hud__stop--here .delib-hud__stop-icon {
+.delib-hud__stop--here .delib-hud__stop-icon,
+// the fields I author my own words into — a placeholder and a caret are ink
+// like any other, so they re-derive here instead of being hand-picked
+.my-lantern__textarea,
+.chat-page__input {
   @include ink-on-dark;
 }
 
