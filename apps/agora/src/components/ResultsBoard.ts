@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon, iconLabel, type IconName } from './Icon';
 import {
 	AGORA_RATING_LEVELS,
 	addDist,
@@ -77,8 +78,16 @@ interface HelperBand {
 }
 
 /** The five bucket faces, most against to most for */
-const BUCKET_EMOJI = ['😠', '🙁', '😐', '🙂', '😍'] as const;
-const MEDALS = ['🥇', '🥈', '🥉'] as const;
+const BUCKET_ICONS: readonly IconName[] = [
+	'face-strong-against',
+	'face-against',
+	'face-neutral',
+	'face-for',
+	'face-strong-for',
+];
+/* Rank is carried by the CSS class, not by three different drawings — one
+ * medal tinted gold/silver/bronze says the same thing and stays in family. */
+const MEDAL_RANKS = ['gold', 'silver', 'bronze'] as const;
 const PODIUM_SIZE = 3;
 const COUNT_MS = 40;
 
@@ -161,8 +170,16 @@ function campLean(score: AgoraProposalScore): number {
 	return (right - left) / (right + left);
 }
 
-function rankBadge(rank: number): string {
-	return rank <= MEDALS.length ? MEDALS[rank - 1] : `#${rank}`;
+/* Top three get the medal, tinted by rank in CSS; everyone else gets their
+ * number. One drawing plus a class beats three near-identical drawings. */
+function rankBadge(rank: number): m.Children {
+	if (rank > MEDAL_RANKS.length) return `#${rank}`;
+
+	return m(Icon, {
+		name: 'medal',
+		size: 20,
+		class: `board__medal board__medal--${MEDAL_RANKS[rank - 1]}`,
+	});
 }
 
 /**
@@ -472,7 +489,13 @@ export function ResultsBoard(
 				},
 			},
 			[
-				point.isLead ? m('span.board__point-crown', { 'aria-hidden': 'true' }, '👑') : null,
+				point.isLead
+					? m(
+							'span.board__point-crown',
+							{ 'aria-hidden': 'true' },
+							m(Icon, { name: 'crown', size: 16 }),
+						)
+					: null,
 				m('span.board__point-rank', { 'aria-hidden': 'true' }, String(point.rank)),
 			],
 		);
@@ -545,7 +568,9 @@ export function ResultsBoard(
 		return m('.board__champion', { class: lead.isMine ? 'board__champion--mine' : undefined }, [
 			m(
 				'p.board__eyebrow',
-				attrs.finale ? `🏆 ${t('board.champion_title')}` : `📣 ${t('board.champion_leading')}`,
+				attrs.finale
+					? iconLabel('trophy', t('board.champion_title'))
+					: iconLabel('megaphone', t('board.champion_leading')),
 			),
 			m(
 				'.board__champion-score.board__num',
@@ -621,7 +646,11 @@ export function ResultsBoard(
 						}),
 					]),
 					m('span.board__bucket-count', String(dist[index])),
-					m('span.board__bucket-face', { 'aria-hidden': 'true' }, BUCKET_EMOJI[index]),
+					m(
+						'span.board__bucket-face',
+						{ 'aria-hidden': 'true' },
+						m(Icon, { name: BUCKET_ICONS[index], size: 20 }),
+					),
 				]),
 			),
 		);
@@ -798,7 +827,7 @@ export function ResultsBoard(
 	 */
 	function helperBand(band: HelperBand, topLabel: string | null): m.Children {
 		return m('.board__band', { key: band.points }, [
-			topLabel ? m('p.board__band-crown', `✨ ${topLabel}`) : null,
+			topLabel ? m('p.board__band-crown', iconLabel('spark', topLabel)) : null,
 			m(
 				'.board__band-row',
 				{
@@ -811,7 +840,7 @@ export function ResultsBoard(
 					}),
 				},
 				[
-					m('span.board__band-count.board__num', `🙏 ${isolate(`×${band.points}`)}`),
+					m('span.board__band-count.board__num', iconLabel('thanks', isolate(`×${band.points}`))),
 					m(
 						'.board__band-names',
 						band.rows.map((row) => helperChip(row)),
@@ -846,11 +875,11 @@ export function ResultsBoard(
 
 		return m('.board__helpers', [
 			m('.board__helpers-head', [
-				m('p.board__eyebrow', `🤝 ${t('board.helpers_title')}`),
+				m('p.board__eyebrow', iconLabel('helped', t('board.helpers_title'))),
 				m(
 					'span.board__tally.board__num',
 					{ 'aria-label': t('board.helpers_tally_aria', { n: total }) },
-					`🙏 ${total}`,
+					iconLabel('thanks', String(total)),
 				),
 			]),
 			bands.length === 0
@@ -905,7 +934,11 @@ export function ResultsBoard(
 
 			if (points.length === 0) {
 				return m('.board.board--empty', [
-					m('span.board__empty-icon', { 'aria-hidden': 'true' }, '📊'),
+					m(
+						'span.board__empty-icon',
+						{ 'aria-hidden': 'true' },
+						m(Icon, { name: 'chart', size: 32 }),
+					),
 					m('p.board__empty', t('picture.empty')),
 				]);
 			}
@@ -919,7 +952,7 @@ export function ResultsBoard(
 				mine
 					? m(
 							'p.board__my-standing',
-							{ class: mine.rank <= MEDALS.length ? 'board__my-standing--podium' : undefined },
+							{ class: mine.rank <= MEDAL_RANKS.length ? 'board__my-standing--podium' : undefined },
 							mine.consensus === undefined
 								? // Mid-lesson "nobody has rated it YET" and end-of-lesson
 									// "nobody ever did" are different facts. Only the finale

@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon, iconLabel } from './Icon';
 import { t, tCount } from '../lib/i18n';
 import { celebrate } from '../lib/celebration';
 import { Collapsible } from './Collapsible';
@@ -237,7 +238,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 				m('.scorehud__plate', [
 					m(
 						'span.scorehud__class-label',
-						recordNow ? `✨ ${t('hud.record_broken')}` : t('hud.class_label'),
+						recordNow ? iconLabel('spark', t('hud.record_broken')) : t('hud.class_label'),
 					),
 					m(
 						'span.scorehud__class-value',
@@ -305,7 +306,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 		// after my latest improvement — worth seeing without opening the detail
 		const moved = ratingsMoved > 0;
 		const hint = moved
-			? `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`
+			? iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved))
 			: !myProposal
 				? t('hud.mine_no_score')
 				: !hasScore
@@ -421,7 +422,7 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 					),
 				]),
 				ratingsMoved > 0
-					? m('p.scorehud__moved', `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`)
+					? m('p.scorehud__moved', iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved)))
 					: null,
 			]),
 		);
@@ -541,10 +542,14 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 				m(
 					'span.owner-chip',
 					{ class: bar.isMine ? 'owner-chip--mine' : 'owner-chip--peer' },
-					bar.isMine ? `📘 ${t('delib.owner_mine')}` : `📙 ${t('delib.owner_peer')}`,
+					bar.isMine
+						? iconLabel('proposal', t('delib.owner_mine'))
+						: iconLabel('proposal', t('delib.owner_peer')),
 				),
 				m('span.owner-row__number', t('delib.proposal_number', { n: bar.number })),
-				bar.isTop ? m('span.chart-detail__crown', `🏆 ${t('hud.record_holder')}`) : null,
+				bar.isTop
+					? m('span.chart-detail__crown', iconLabel('trophy', t('hud.record_holder')))
+					: null,
 			]),
 			m('p.chart-detail__text', bar.proposal.statement),
 			m('.chart-detail__stats', [
@@ -644,7 +649,8 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 			},
 			[
 				m('span.scorehud__strip-item.scorehud__strip-item--class', [
-					'🌉 ',
+					m(Icon, { name: 'bridge', size: 16, class: 'icon--inline' }),
+					' ',
 					m('strong', hasScores ? String(state.shown) : '—'),
 					deltaChip(state),
 				]),
@@ -654,8 +660,11 @@ export function ScoreHud(initialVnode: m.Vnode<ScoreHudAttrs>): m.Component<Scor
 					}),
 					m('span.scorehud__strip-goal', { style: { insetInlineStart: `${threshold}%` } }),
 				]),
-				m('span.scorehud__strip-item', `📘 ${myScore ? myScore.bridgingScore : '—'}`),
-				m('span.scorehud__strip-item', `🤝 ${helping}`),
+				m(
+					'span.scorehud__strip-item',
+					iconLabel('proposal', String(myScore ? myScore.bridgingScore : '—')),
+				),
+				m('span.scorehud__strip-item', iconLabel('helped', String(helping))),
 				m('span.scorehud__chevron.scorehud__chevron--down'),
 			],
 		);

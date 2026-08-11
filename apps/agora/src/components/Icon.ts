@@ -52,6 +52,12 @@ export type IconName =
 	| 'people'
 	| 'sound-on'
 	| 'sound-off'
+	| 'trend'
+	| 'trend-down'
+	| 'crown'
+	| 'megaphone'
+	| 'watch'
+	| 'target'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -265,6 +271,43 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M12 16c0-2.6-2-4.4-4.6-4.4 0 2.6 2 4.4 4.6 4.4z' }],
 	],
 
+	// Ratings moved in my favour, or away from it. The pair must mirror each
+	// other exactly — they are read as a before/after, not as two icons.
+	trend: [
+		['path', { d: 'M3.5 17.5 9.5 11l3.5 3.5 7-7' }],
+		['path', { d: 'M15.6 7.5h4.4v4.4' }],
+	],
+
+	'trend-down': [
+		['path', { d: 'M3.5 6.5 9.5 13l3.5-3.5 7 7' }],
+		['path', { d: 'M15.6 16.5h4.4v-4.4' }],
+	],
+
+	// The proposal the class is currently carrying.
+	crown: [
+		['path', { d: 'M3 7.5 6.5 15h11L21 7.5l-5 3.5-4-6-4 6z' }],
+		['path', { d: 'M6.5 18.5h11' }],
+	],
+
+	// A proposal that is out in front but not finished — "leading", not "won".
+	megaphone: [
+		['path', { d: 'M3.5 9.5v5a1.5 1.5 0 0 0 1.5 1.5h2.5l8.5 4.5V5L8 9.5H5a1.5 1.5 0 0 0-1.5 0z' }],
+		['path', { d: 'M7.5 16v4.5M19.5 9.4a4 4 0 0 1 0 5.2' }],
+	],
+
+	// Nothing moved — the class looked and stayed where it was.
+	watch: [
+		['path', { d: 'M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z' }],
+		['circle', { cx: 12, cy: 12, r: 2.8 }],
+	],
+
+	// The brief: what this proposal has to achieve.
+	target: [
+		['circle', { cx: 12, cy: 12, r: 9 }],
+		['circle', { cx: 12, cy: 12, r: 5 }],
+		['circle', { cx: 12, cy: 12, r: 1.3, fill: 'currentColor' }],
+	],
+
 	/* ---- chrome ---- */
 
 	people: [
@@ -330,6 +373,18 @@ export const Icon: m.Component<IconAttrs> = {
 		);
 	},
 };
+
+/** An icon and its label as one run.
+ *
+ * The app was full of `` `📈 ${t('...')}` `` — glyph and text fused into a
+ * single string, which meant the icon inherited the text's size and colour and
+ * could never be styled apart from it. This keeps them adjacent but separate,
+ * and the `.icon--inline` baseline shift is what stops a 1em box from riding
+ * high against Hebrew text.
+ */
+export function iconLabel(name: IconName, label: m.Children, size = 16): m.Children {
+	return [m(Icon, { name, size, class: 'icon--inline' }), label];
+}
 
 /** Every name, for proof sheets and pickers. */
 export const ICON_NAMES = Object.keys(ICONS) as readonly IconName[];

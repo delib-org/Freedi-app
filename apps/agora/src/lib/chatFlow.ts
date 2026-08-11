@@ -1,3 +1,4 @@
+import type { IconName } from '../components/Icon';
 import type { AgoraProposal } from './proposals';
 import type { AgoraProposalScore } from '@freedi/shared-types';
 import { AGORA_CYCLE } from '@freedi/shared-types';
@@ -21,14 +22,19 @@ export type AgoraRatingValue = -1 | -0.5 | 0 | 0.5 | 1;
 export const RATE_OPTIONS: ReadonlyArray<{
 	value: AgoraRatingValue;
 	variant: string;
-	emoji: string;
+	icon: IconName;
 	labelKey: string;
 }> = [
-	{ value: -1, variant: 'strong-against', emoji: '😠', labelKey: 'rate.strong_against' },
-	{ value: -0.5, variant: 'against', emoji: '🙁', labelKey: 'rate.against' },
-	{ value: 0, variant: 'abstain', emoji: '😐', labelKey: 'rate.abstain' },
-	{ value: 0.5, variant: 'for', emoji: '🙂', labelKey: 'rate.for' },
-	{ value: 1, variant: 'strong-for', emoji: '😍', labelKey: 'rate.strong_for' },
+	{
+		value: -1,
+		variant: 'strong-against',
+		icon: 'face-strong-against',
+		labelKey: 'rate.strong_against',
+	},
+	{ value: -0.5, variant: 'against', icon: 'face-against', labelKey: 'rate.against' },
+	{ value: 0, variant: 'abstain', icon: 'face-neutral', labelKey: 'rate.abstain' },
+	{ value: 0.5, variant: 'for', icon: 'face-for', labelKey: 'rate.for' },
+	{ value: 1, variant: 'strong-for', icon: 'face-strong-for', labelKey: 'rate.strong_for' },
 ];
 
 export type ChatPhase =

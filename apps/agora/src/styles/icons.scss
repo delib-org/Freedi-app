@@ -1,0 +1,40 @@
+// ============================================================================
+// The drawn icon set (src/components/Icon.ts)
+//
+// These slots used to hold emoji, which sized themselves off font-size and
+// coloured themselves off the font. An SVG does neither, so the two rules
+// below put both back under the design system's control: the icon inherits
+// `color` like text (which is what makes one drawing serve both owners —
+// purple is mine, --peer is a classmate's) and takes its box from the `size`
+// attribute rather than from the type scale.
+// ============================================================================
+
+.icon {
+	// A stroke drawing does not need to be pixel-snapped, but it does need to
+	// stop the browser from smoothing 1.8px strokes into grey mush.
+	shape-rendering: geometricPrecision;
+	flex: 0 0 auto;
+}
+
+// An icon standing next to a word rather than alone in its own box. Hebrew
+// and Latin sit differently against a 1em square, and without the nudge the
+// icon rides high enough to look like a superscript.
+.icon--inline {
+	display: inline-block;
+	vertical-align: -0.18em;
+	margin-inline-end: 0.35em;
+}
+
+// Rank on the results podium: one medal, three tints. Gold/silver/bronze are
+// literal here because they are the metals, not palette roles.
+.board__medal--gold {
+	color: #e0a800;
+}
+
+.board__medal--silver {
+	color: #9aa0ad;
+}
+
+.board__medal--bronze {
+	color: #b4713a;
+}

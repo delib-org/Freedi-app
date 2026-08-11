@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon, iconLabel } from '../components/Icon';
 import { t } from '../lib/i18n';
 import {
 	getDeliberationState,
@@ -252,7 +253,10 @@ export function DeliberationChat(
 		active: boolean,
 	): m.Children {
 		if (card.done) {
-			return m('.card.chat-composer', m('p.chat-composer__sent', `✓ ${t('chat.sent')}`));
+			return m(
+				'.card.chat-composer',
+				m('p.chat-composer__sent', iconLabel('check', t('chat.sent'))),
+			);
 		}
 		const live = initialVnode.attrs.session;
 		const anonName = initialVnode.attrs.myParticipant.anonName;
@@ -303,7 +307,10 @@ export function DeliberationChat(
 		active: boolean,
 	): m.Children {
 		if (card.done) {
-			return m('.card.chat-composer', m('p.chat-composer__sent', `✓ ${t('chat.sent')}`));
+			return m(
+				'.card.chat-composer',
+				m('p.chat-composer__sent', iconLabel('check', t('chat.sent'))),
+			);
 		}
 		const live = initialVnode.attrs.session;
 		const anonName = initialVnode.attrs.myParticipant.anonName;
@@ -322,7 +329,7 @@ export function DeliberationChat(
 				? m('.chat-poster', [
 						m('.chat-poster__pin'),
 						m('.owner-row', [
-							m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
+							m('span.owner-chip.owner-chip--peer', iconLabel('proposal', t('delib.owner_peer'))),
 							m(
 								'span.owner-row__number',
 								t('delib.proposal_number', { n: proposalNumber(target) }),
@@ -333,7 +340,7 @@ export function DeliberationChat(
 				: null,
 			m('.chat-note', [
 				m('.chat-note__tape'),
-				m('span.chat-note__label', `📘 ${t('chat.my_note')}`),
+				m('span.chat-note__label', iconLabel('proposal', t('chat.my_note'))),
 				m('p.chat-note__question', t('delib.help_question')),
 				m('p.chat-note__hint', t('delib.help_dont_attack')),
 				m('textarea.text-input.chat-note__input', {
@@ -415,7 +422,7 @@ export function DeliberationChat(
 			// Whose proposal is this? A classmate's — the chip says so before
 			// a word is read, and the guide said so in the bubble above
 			m('.owner-row', [
-				m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
+				m('span.owner-chip.owner-chip--peer', iconLabel('proposal', t('delib.owner_peer'))),
 				m('span.owner-row__number', t('delib.proposal_number', { n: proposalNumber(proposal) })),
 			]),
 			m('p.scene__text', proposal.statement),
@@ -448,7 +455,7 @@ export function DeliberationChat(
 							},
 						},
 						[
-							m('span.rate-scale__emoji', option.emoji),
+							m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 30 })),
 							m('span.rate-scale__label', t(option.labelKey)),
 						],
 					),
@@ -572,9 +579,9 @@ export function DeliberationChat(
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
-				m('span.my-lantern__icon', '📘'),
+				m('span.my-lantern__icon', m(Icon, { name: 'proposal', size: 24 })),
 				m('span.my-lantern__title', t('delib.my_proposal')),
-				m('span.my-lantern__hint', `✏️ ${t('delib.always_editable')}`),
+				m('span.my-lantern__hint', iconLabel('edit', t('delib.always_editable'))),
 			]),
 			m('textarea.my-lantern__textarea', {
 				value: mineDraft,
@@ -648,7 +655,7 @@ export function DeliberationChat(
 								},
 							},
 							[
-								m('span.chat-drawer__title', `💡 ${t('chat.accepted_reminder')}`),
+								m('span.chat-drawer__title', iconLabel('idea', t('chat.accepted_reminder'))),
 								m('span.chat-drawer__count', String(ideaCount)),
 								m('span.chat-drawer__chevron', { 'aria-hidden': 'true' }),
 							],
@@ -727,7 +734,7 @@ export function DeliberationChat(
 					suggestion.anonName
 						? m(
 								'p.workshop__from',
-								`💡 ${t('delib.suggestion_from', { name: suggestion.anonName })}`,
+								iconLabel('idea', t('delib.suggestion_from', { name: suggestion.anonName })),
 							)
 						: null,
 					m('p', suggestion.statement),
@@ -799,7 +806,7 @@ export function DeliberationChat(
 						: m(
 								'span.values__score',
 								suggestion.suggestionStatus === AgoraSuggestionStatus.implemented
-									? `✓ ${t('delib.implemented')}`
+									? iconLabel('check', t('delib.implemented'))
 									: suggestion.suggestionStatus === AgoraSuggestionStatus.accepted
 										? t('delib.accepted')
 										: suggestion.suggestionStatus === AgoraSuggestionStatus.declined
@@ -989,7 +996,7 @@ export function DeliberationChat(
 						},
 					},
 					[
-						m('span.rate-scale__emoji', option.emoji),
+						m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 30 })),
 						m('span.rate-scale__label', t(option.labelKey)),
 					],
 				),
@@ -1017,11 +1024,13 @@ export function DeliberationChat(
 
 		return m('.card.stack.helped__item', { key: proposal.statementId }, [
 			m('.owner-row', [
-				m('span.owner-chip.owner-chip--peer', `📙 ${t('delib.owner_peer')}`),
+				m('span.owner-chip.owner-chip--peer', iconLabel('proposal', t('delib.owner_peer'))),
 				m('span.owner-row__number', t('delib.proposal_number', { n: proposalNumber(proposal) })),
 			]),
 			m('p.helped__current', proposal.statement),
-			improvedSince ? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`) : null,
+			improvedSince
+				? m('p.helped__improved', iconLabel('spark', t('delib.helped_improved_marker')))
+				: null,
 			m('p.square-says__meaning', t('delib.helped_rerate_prompt')),
 			reRateScale(live, proposal),
 			m('p.teacher__section-title', t('delib.helped_your_ideas')),
@@ -1142,7 +1151,10 @@ export function DeliberationChat(
 					ChatBubble,
 					{ isMine: true },
 					m('span.chat-bubble__rating', [
-						m('span.chat-bubble__rating-emoji', option?.emoji ?? ''),
+						m(
+							'span.chat-bubble__rating-emoji',
+							option ? m(Icon, { name: option.icon, size: 20 }) : null,
+						),
 						m('span', option ? t(option.labelKey) : ''),
 					]),
 				);

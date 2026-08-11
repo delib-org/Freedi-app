@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import { createSession } from '../../lib/callables';
@@ -214,7 +215,7 @@ export function TeacherHome(): m.Component {
 																	m.route.set(`/teach/topic/${topic.topicPackageId}`);
 																},
 															},
-															'✎',
+															m(Icon, { name: 'edit', size: 16 }),
 														),
 													]),
 												],

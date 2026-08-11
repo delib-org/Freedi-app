@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
 import { ensureUser } from '../../lib/user';
 import { listenToSession, stopListening, getSessionState } from '../../lib/session';
@@ -47,23 +48,28 @@ function participantProgress(
 	participant: AgoraParticipant,
 	stage: AgoraStage,
 	proposals: readonly AgoraProposal[],
-): { done: boolean; label: string } {
+): { done: boolean; label: m.Children } {
 	if (stage === AgoraStage.positioning) {
 		const done = participant.campPosition !== undefined;
 
-		return { done, label: done ? '✓' : '—' };
+		return { done, label: done ? m(Icon, { name: 'check', size: 16 }) : '—' };
 	}
 	if (stage === AgoraStage.deliberation) {
 		const done = proposals.some((proposal) => proposal.creatorId === participant.userId);
 
-		return { done, label: done ? '✓' : '—' };
+		return { done, label: done ? m(Icon, { name: 'check', size: 16 }) : '—' };
 	}
 	const progress = participant.stageProgress;
 	// Progress from an earlier stage says nothing about this one
 	if (!progress || progress.stage !== stage) return { done: false, label: '—' };
 	const done = progress.scenesDone >= progress.scenesTotal;
 
-	return { done, label: done ? '✓' : `${progress.scenesDone}/${progress.scenesTotal}` };
+	return {
+		done,
+		label: done
+			? m(Icon, { name: 'check', size: 16 })
+			: `${progress.scenesDone}/${progress.scenesTotal}`,
+	};
 }
 
 /** Who finished the current stage's self-paced steps — the "can I advance?" card */

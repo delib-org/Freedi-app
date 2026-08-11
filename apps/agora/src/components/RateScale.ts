@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon, iconLabel, type IconName } from './Icon';
 import { AgoraSession } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
 import { getDeliberationState, rateProposal, type AgoraRating } from '../lib/proposals';
@@ -12,14 +13,19 @@ import { noteReWeighed } from '../lib/improvementSignals';
 export const RATE_OPTIONS: ReadonlyArray<{
 	value: AgoraRating;
 	variant: string;
-	emoji: string;
+	icon: IconName;
 	labelKey: string;
 }> = [
-	{ value: -1, variant: 'strong-against', emoji: '😠', labelKey: 'rate.strong_against' },
-	{ value: -0.5, variant: 'against', emoji: '🙁', labelKey: 'rate.against' },
-	{ value: 0, variant: 'abstain', emoji: '😐', labelKey: 'rate.abstain' },
-	{ value: 0.5, variant: 'for', emoji: '🙂', labelKey: 'rate.for' },
-	{ value: 1, variant: 'strong-for', emoji: '😍', labelKey: 'rate.strong_for' },
+	{
+		value: -1,
+		variant: 'strong-against',
+		icon: 'face-strong-against',
+		labelKey: 'rate.strong_against',
+	},
+	{ value: -0.5, variant: 'against', icon: 'face-against', labelKey: 'rate.against' },
+	{ value: 0, variant: 'abstain', icon: 'face-neutral', labelKey: 'rate.abstain' },
+	{ value: 0.5, variant: 'for', icon: 'face-for', labelKey: 'rate.for' },
+	{ value: 1, variant: 'strong-for', icon: 'face-strong-for', labelKey: 'rate.strong_for' },
 ];
 
 /** The face for a value, for callers that report a rating rather than take one */
@@ -78,7 +84,9 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 
 			return [
 				// The cycle's final beat, answered in words, once, then it returns
-				acked ? m('p.helped__rerate-ack', { role: 'status' }, `✓ ${t('delib.rerate_ack')}`) : null,
+				acked
+					? m('p.helped__rerate-ack', { role: 'status' }, iconLabel('check', t('delib.rerate_ack')))
+					: null,
 				m(
 					'.rate-scale.rate-scale--compact',
 					{
@@ -109,9 +117,15 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 								},
 							},
 							[
-								m('span.rate-scale__emoji', option.emoji),
+								m('span.rate-scale__emoji', m(Icon, { name: option.icon, size: 30 })),
 								m('span.rate-scale__label', t(option.labelKey)),
-								active ? m('span.rate-scale__check', { 'aria-hidden': 'true' }, '✓') : null,
+								active
+									? m(
+											'span.rate-scale__check',
+											{ 'aria-hidden': 'true' },
+											m(Icon, { name: 'check', size: 14 }),
+										)
+									: null,
 							],
 						);
 					}),

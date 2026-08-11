@@ -3199,6 +3199,25 @@ export function t(key: string, params?: Record<string, string | number>): string
 }
 
 /**
+ * t() for sentences whose placeholders are not text.
+ *
+ * Icons cannot go through t(): it interpolates with String(), so a vnode
+ * would land in the sentence as "[object Object]". This splits the translated
+ * string on its {{placeholders}} and returns the pieces with each one swapped
+ * for whatever you passed — a vnode, an icon, a number. Word order stays in
+ * the translator's hands, which is the whole reason the placeholder exists.
+ */
+export function tNodes(key: string, params: Record<string, m.Children>): m.Children {
+	const text = translations[currentLang][key] ?? translations.en[key] ?? key;
+
+	return text.split(/(\{\{[a-zA-Z0-9_]+\}\})/g).map((piece) => {
+		const name = piece.match(/^\{\{([a-zA-Z0-9_]+)\}\}$/)?.[1];
+
+		return name && name in params ? params[name] : piece;
+	});
+}
+
+/**
  * Count-aware t(): "1 ratings" reads as a bug in every language. When a
  * `<key>_one` variant exists and n is exactly 1, use it (no {{n}} needed);
  * otherwise fall back to the plural template with n interpolated.

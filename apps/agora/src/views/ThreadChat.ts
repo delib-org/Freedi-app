@@ -1,5 +1,6 @@
 import m from 'mithril';
-import { t, tCount, isRTL, getLang } from '../lib/i18n';
+import { Icon, iconLabel } from '../components/Icon';
+import { t, tCount, tNodes, isRTL, getLang } from '../lib/i18n';
 import {
 	AgoraProposal,
 	getThreadMessages,
@@ -90,12 +91,12 @@ export interface ThreadEntryOptions {
  * edit's `statement` is the whole new proposal, which would read as if
  * somebody had pasted it into the chat.
  */
-function lastLine(message: AgoraProposal): string {
+function lastLine(message: AgoraProposal): m.Children {
 	if (message.agoraMessageKind === AgoraMessageKind.award) {
-		return `🏅 +${message.agoraPointsAwarded ?? 0}`;
+		return iconLabel('medal', `+${message.agoraPointsAwarded ?? 0}`);
 	}
 	if (message.agoraMessageKind === AgoraMessageKind.edit) {
-		return `✏️ ${t('delib.edit_line')}`;
+		return iconLabel('edit', t('delib.edit_line'));
 	}
 
 	return message.statement;
@@ -122,7 +123,7 @@ export function threadEntry(options: ThreadEntryOptions): m.Children {
 			},
 		},
 		[
-			m('span.chat-entry__icon', { 'aria-hidden': 'true' }, '💬'),
+			m('span.chat-entry__icon', { 'aria-hidden': 'true' }, m(Icon, { name: 'talk', size: 18 })),
 			m('span.chat-entry__body', [
 				m('span.chat-entry__label', label),
 				m(
@@ -139,13 +140,17 @@ export function threadEntry(options: ThreadEntryOptions): m.Children {
 				// Marks, not counts: the unread number must keep meaning "how many
 				// things were said", or two different facts start sharing one badge
 				reWeigh
-					? m('span.chat-entry__mark', { 'aria-label': t('thread.reweigh_title') }, '✨')
+					? m(
+							'span.chat-entry__mark',
+							{ 'aria-label': t('thread.reweigh_title') },
+							m(Icon, { name: 'spark', size: 16 }),
+						)
 					: null,
 				scoreMoved
 					? m(
 							'span.chat-entry__mark',
 							{ 'aria-label': t('thread.score_bridge', { range: '' }) },
-							'📈',
+							m(Icon, { name: 'trend', size: 16 }),
 						)
 					: null,
 				unread > 0
@@ -206,7 +211,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				},
 				[
 					m('span.chat-page__proposal-text', proposal.statement),
-					m('span.chat-page__proposal-pencil', { 'aria-hidden': 'true' }, '✎'),
+					m(
+						'span.chat-page__proposal-pencil',
+						{ 'aria-hidden': 'true' },
+						m(Icon, { name: 'edit', size: 16 }),
+					),
 				],
 			);
 		}
@@ -301,7 +310,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 						});
 					},
 				},
-				`🙏 ${t('delib.thank')}`,
+				iconLabel('thanks', t('delib.thank')),
 			),
 		]);
 	}
@@ -316,7 +325,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			const points = message.agoraPointsAwarded ?? 0;
 
 			return m('.chat-system.chat-system--award', { key: message.statementId }, [
-				m('span.chat-system__icon', { 'aria-hidden': 'true' }, '🏅'),
+				m(
+					'span.chat-system__icon',
+					{ 'aria-hidden': 'true' },
+					m(Icon, { name: 'medal', size: 18 }),
+				),
 				// BOTH sides read this line: "your idea earned you" is only true
 				// for the helper — the author gave the points, they didn't get them
 				m(
@@ -335,7 +348,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			{ key: message.statementId, id: `msg-${message.statementId}` },
 			[
 				m('.chat-system__head', [
-					m('span.chat-system__icon', { 'aria-hidden': 'true' }, '✏️'),
+					m(
+						'span.chat-system__icon',
+						{ 'aria-hidden': 'true' },
+						m(Icon, { name: 'edit', size: 18 }),
+					),
 					m('span.chat-system__text', t('delib.edit_line')),
 					m('span.chat-system__time', formatMessageTime(message.createdAt)),
 				]),
@@ -380,7 +397,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			// A full or locked-down store must never cost the student the moment
 		}
 		celebrate({
-			message: `🔁 ${t('celebrate.round_trip')}`,
+			message: t('celebrate.round_trip'),
 			detail: t('thread.round_trip_body'),
 			hint: t('celebrate.round_trip_hint'),
 		});
@@ -403,8 +420,10 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	let justVoted: { before: number | undefined; after: number; at: number } | null = null;
 	let votedTimer: number | undefined;
 
-	function faceFor(value: number | undefined): string {
-		return value === undefined ? '—' : (rateOptionFor(value)?.emoji ?? '—');
+	function faceFor(value: number | undefined): m.Children {
+		const option = value === undefined ? undefined : rateOptionFor(value);
+
+		return option ? m(Icon, { name: option.icon, size: 20 }) : '—';
 	}
 
 	/**
@@ -417,12 +436,12 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		if (!justVoted) return null;
 
 		return m('.chat-system.chat-system--moment.chat-system--voted', { key: 'reweigh-done' }, [
-			m('span.chat-system__icon', { 'aria-hidden': 'true' }, '✓'),
+			m('span.chat-system__icon', { 'aria-hidden': 'true' }, m(Icon, { name: 'check', size: 18 })),
 			m(
 				'span.chat-system__text',
 				justVoted.before === undefined
 					? t('delib.rerate_ack')
-					: t('thread.reweigh_before_after', {
+					: tNodes('thread.reweigh_before_after', {
 							before: faceFor(justVoted.before),
 							after: faceFor(justVoted.after),
 						}),
@@ -455,7 +474,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 
 		return m('.chat-system.chat-system--moment.chat-system--reweigh', { key: 'reweigh' }, [
 			m('.chat-system__head', [
-				m('span.chat-system__icon', { 'aria-hidden': 'true' }, moment.credited ? '✨' : '✏️'),
+				m(
+					'span.chat-system__icon',
+					{ 'aria-hidden': 'true' },
+					m(Icon, { name: moment.credited ? 'spark' : 'edit', size: 18 }),
+				),
 				m('span.chat-system__text', title),
 			]),
 			open
@@ -538,7 +561,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					m(
 						'span.chat-system__icon',
 						{ 'aria-hidden': 'true' },
-						moved ? (fell ? '📉' : '📈') : '👀',
+						m(Icon, { name: moved ? (fell ? 'trend-down' : 'trend') : 'watch', size: 18 }),
 					),
 					m('span.chat-system__text', tCount('thread.score_since', moment.reRaters)),
 				]),
@@ -584,7 +607,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 */
 	function roundTripBlock(at: number): m.Children {
 		return m('.chat-system.chat-system--moment.chat-system--roundtrip', { key: 'roundtrip' }, [
-			m('span.chat-system__icon', { 'aria-hidden': 'true' }, '🔁'),
+			m('span.chat-system__icon', { 'aria-hidden': 'true' }, m(Icon, { name: 'again', size: 18 })),
 			m('.chat-system__body', [
 				m('.chat-system__head', [
 					m('span.chat-system__title', t('thread.round_trip_title')),
@@ -626,7 +649,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			[
 				!mine && message.anonName ? m('span.thread__who', message.anonName) : null,
 				isSuggestionKind(message)
-					? m('span.thread__tag', `💡 ${t('delib.thread_suggestion_tag')}`)
+					? m('span.thread__tag', iconLabel('idea', t('delib.thread_suggestion_tag')))
 					: null,
 				m('p.thread__text', message.statement),
 				m('span.thread__time', formatMessageTime(message.createdAt)),

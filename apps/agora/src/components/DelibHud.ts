@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
+import { Icon, type IconName } from './Icon';
 
 export type DelibPlace = 'mine' | 'rate' | 'help';
 export type DelibStep = DelibPlace | 'done';
@@ -20,7 +21,7 @@ export interface DelibHudAttrs {
 }
 
 interface PlaceSpec {
-	icon: string;
+	icon: IconName;
 	titleKey: string;
 }
 
@@ -30,9 +31,9 @@ interface PlaceSpec {
  * than inventing a second one.
  */
 const PLACES: Record<DelibPlace, PlaceSpec> = {
-	mine: { icon: '🛠️', titleKey: 'place.mine_title' },
-	rate: { icon: '⚖️', titleKey: 'place.rate_title' },
-	help: { icon: '🤝', titleKey: 'place.help_title' },
+	mine: { icon: 'improve', titleKey: 'place.mine_title' },
+	rate: { icon: 'scales', titleKey: 'place.rate_title' },
+	help: { icon: 'helped', titleKey: 'place.help_title' },
 };
 
 const ORDER: DelibPlace[] = ['mine', 'rate', 'help'];
@@ -92,7 +93,7 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 					: place
 						? t(place.titleKey)
 						: '';
-			const crest = onResults ? '📊' : done ? '🏁' : (place?.icon ?? '🏛️');
+			const crest: IconName = onResults ? 'chart' : done ? 'flag' : (place?.icon ?? 'square');
 
 			return m(
 				'header.delib-hud',
@@ -108,7 +109,11 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 					m('.delib-hud__top', [
 						// The place as a crest, the way a game states the level you are
 						// on: one big glyph, then its name, and nothing else
-						m('span.delib-hud__crest', { 'aria-hidden': 'true' }, crest),
+						m(
+							'span.delib-hud__crest',
+							{ 'aria-hidden': 'true' },
+							m(Icon, { name: crest, size: 24 }),
+						),
 						m('h1.delib-hud__title', title),
 						// Laps as lanterns: the ones behind you burn, the one you are
 						// on pulses. This is the whole "round 2 of 4" sentence.
@@ -146,10 +151,7 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 							// The quota rides UNDER the step that owns it, so the count
 							// of ratings I still owe never needs a sentence of its own
 							const showPips =
-								id === 'rate' &&
-								state === 'here' &&
-								ratingQuota !== undefined &&
-								ratingQuota > 0;
+								id === 'rate' && state === 'here' && ratingQuota !== undefined && ratingQuota > 0;
 
 							return m(
 								'.delib-hud__stop',
@@ -162,7 +164,7 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 									m(
 										'span.delib-hud__stop-icon',
 										{ 'aria-hidden': 'true' },
-										state === 'done' ? '✓' : PLACES[id].icon,
+										m(Icon, { name: state === 'done' ? 'check' : PLACES[id].icon, size: 18 }),
 									),
 									m('span.sr-only', t(PLACES[id].titleKey)),
 									showPips

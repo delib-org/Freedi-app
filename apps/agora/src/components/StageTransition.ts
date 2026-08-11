@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon, type IconName } from './Icon';
 import { t } from '../lib/i18n';
 import { AgoraStage } from '@freedi/shared-types';
 import { EraMap } from './EraMap';
@@ -10,30 +11,34 @@ export interface StageTransitionAttrs {
 }
 
 interface TransitionMeta {
-	icon: string;
+	icon: IconName;
 	labelKey: string;
 	lineKey: string;
 }
 
 const TRANSITIONS: Partial<Record<AgoraStage, TransitionMeta>> = {
-	[AgoraStage.framing]: { icon: '🌀', labelKey: 'stage.framing', lineKey: 'transition.framing' },
+	[AgoraStage.framing]: {
+		icon: 'tunnel',
+		labelKey: 'stage.framing',
+		lineKey: 'transition.framing',
+	},
 	[AgoraStage.perspectives]: {
-		icon: '🎭',
+		icon: 'era',
 		labelKey: 'stage.perspectives',
 		lineKey: 'transition.perspectives',
 	},
-	[AgoraStage.needs]: { icon: '💭', labelKey: 'stage.needs', lineKey: 'transition.needs' },
+	[AgoraStage.needs]: { icon: 'thought', labelKey: 'stage.needs', lineKey: 'transition.needs' },
 	[AgoraStage.positioning]: {
-		icon: '🌉',
+		icon: 'bridge',
 		labelKey: 'stage.positioning',
 		lineKey: 'transition.positioning',
 	},
 	[AgoraStage.deliberation]: {
-		icon: '🏛️',
+		icon: 'square',
 		labelKey: 'stage.deliberation',
 		lineKey: 'transition.deliberation',
 	},
-	[AgoraStage.results]: { icon: '🏁', labelKey: 'stage.results', lineKey: 'transition.results' },
+	[AgoraStage.results]: { icon: 'flag', labelKey: 'stage.results', lineKey: 'transition.results' },
 };
 
 /** Stages that get a travel interstitial when the teacher advances into them */
@@ -60,7 +65,11 @@ export const StageTransition: m.Component<StageTransitionAttrs> = {
 			[
 				m('.stage-transition__map', m(EraMap, { participants: [] })),
 				m('.stage-transition__panel', [
-					m('span.stage-transition__icon', { 'aria-hidden': 'true' }, meta.icon),
+					m(
+						'span.stage-transition__icon',
+						{ 'aria-hidden': 'true' },
+						m(Icon, { name: meta.icon, size: 40 }),
+					),
 					m('h2.stage-transition__title', t(meta.labelKey)),
 					m('p.stage-transition__line', t(meta.lineKey)),
 				]),

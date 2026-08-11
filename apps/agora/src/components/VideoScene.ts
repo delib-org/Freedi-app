@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon } from './Icon';
 import { t } from '../lib/i18n';
 import type { AgoraScene } from '@freedi/shared-types';
 
@@ -117,7 +118,7 @@ export function VideoScene(): m.Component<VideoSceneAttrs> {
 											muted = !muted;
 										},
 									},
-									muted ? '🔇' : '🔊',
+									m(Icon, { name: muted ? 'sound-off' : 'sound-on', size: 20 }),
 								)
 							: null,
 

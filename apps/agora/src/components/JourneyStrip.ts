@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { AgoraStage } from '@freedi/shared-types';
+import { Icon, type IconName } from './Icon';
 
 export interface JourneyStripAttrs {
 	stage: AgoraStage;
@@ -9,7 +10,7 @@ export interface JourneyStripAttrs {
 interface JourneyStation {
 	/** Stages that light this station (retired stages fold into their neighbor) */
 	stages: AgoraStage[];
-	icon: string;
+	icon: IconName;
 	labelKey: string;
 }
 
@@ -19,16 +20,16 @@ interface JourneyStation {
  * the strip never shows an unlit hole.
  */
 const STATIONS: ReadonlyArray<JourneyStation> = [
-	{ stages: [AgoraStage.framing], icon: '🌀', labelKey: 'stage.framing' },
-	{ stages: [AgoraStage.perspectives], icon: '🎭', labelKey: 'stage.perspectives' },
+	{ stages: [AgoraStage.framing], icon: 'tunnel', labelKey: 'stage.framing' },
+	{ stages: [AgoraStage.perspectives], icon: 'era', labelKey: 'stage.perspectives' },
 	{
 		stages: [AgoraStage.needs, AgoraStage.valueIdentification],
-		icon: '💭',
+		icon: 'thought',
 		labelKey: 'stage.needs',
 	},
-	{ stages: [AgoraStage.positioning], icon: '🌉', labelKey: 'stage.positioning' },
-	{ stages: [AgoraStage.deliberation], icon: '🏛️', labelKey: 'stage.deliberation' },
-	{ stages: [AgoraStage.results, AgoraStage.ended], icon: '🏁', labelKey: 'stage.results' },
+	{ stages: [AgoraStage.positioning], icon: 'bridge', labelKey: 'stage.positioning' },
+	{ stages: [AgoraStage.deliberation], icon: 'square', labelKey: 'stage.deliberation' },
+	{ stages: [AgoraStage.results, AgoraStage.ended], icon: 'flag', labelKey: 'stage.results' },
 ];
 
 /**
@@ -60,7 +61,10 @@ export const JourneyStrip: m.Component<JourneyStripAttrs> = {
 						'aria-current': state === 'current' ? 'step' : undefined,
 					},
 					[
-						m('span.journey-strip__dot', state === 'done' ? '✓' : station.icon),
+						m(
+							'span.journey-strip__dot',
+							m(Icon, { name: state === 'done' ? 'check' : station.icon, size: 18 }),
+						),
 						// Only the current station carries its name — the strip stays
 						// compact and the label answers "where am I?" at a glance
 						state === 'current'

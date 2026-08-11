@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Icon, iconLabel } from '../components/Icon';
 import { t, tCount } from '../lib/i18n';
 import {
 	getDeliberationState,
@@ -113,19 +114,19 @@ const PLACES: Record<
 	{ icon: string; titleKey: string; subKey: string; shellClass: string }
 > = {
 	mine: {
-		icon: '🛠️',
+		icon: 'improve',
 		titleKey: 'place.mine_title',
 		subKey: 'place.mine_sub',
 		shellClass: 'shell--place-mine',
 	},
 	rate: {
-		icon: '⚖️',
+		icon: 'scales',
 		titleKey: 'place.rate_title',
 		subKey: 'place.rate_sub',
 		shellClass: 'shell--place-square',
 	},
 	help: {
-		icon: '🤝',
+		icon: 'helped',
 		titleKey: 'place.help_title',
 		subKey: 'place.help_sub',
 		shellClass: 'shell--place-visit',
@@ -653,7 +654,7 @@ export function Deliberation(
 					},
 				},
 				[
-					m('span.delib-nav__icon', '👥'),
+					m('span.delib-nav__icon', m(Icon, { name: 'people', size: 22 })),
 					m('span.delib-nav__label', t('delib.nav_others')),
 					// Proposals I helped moved while I was away — come see.
 					// Only meaningful when I'm not already looking at them.
@@ -673,7 +674,10 @@ export function Deliberation(
 						m.redraw();
 					},
 				},
-				[m('span.delib-nav__icon', '📊'), m('span.delib-nav__label', t('delib.nav_results'))],
+				[
+					m('span.delib-nav__icon', m(Icon, { name: 'chart', size: 22 })),
+					m('span.delib-nav__label', t('delib.nav_results')),
+				],
 			),
 		]);
 	}
@@ -853,11 +857,14 @@ export function Deliberation(
 						// for the next edit, never a punishment
 						{ class: bridgeDelta < 0 ? 'my-lantern__moved--down' : undefined },
 						bridgeDelta === 0
-							? `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`
-							: `${bridgeDelta > 0 ? '📈' : '📉'} ${tCount('delib.ratings_moved', ratingsMoved)} · ${t(
-									bridgeDelta > 0 ? 'delib.bridge_up' : 'delib.bridge_down',
-									{ n: Math.abs(bridgeDelta) },
-								)}`,
+							? iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved))
+							: iconLabel(
+									bridgeDelta > 0 ? 'trend' : 'trend-down',
+									`${tCount('delib.ratings_moved', ratingsMoved)} · ${t(
+										bridgeDelta > 0 ? 'delib.bridge_up' : 'delib.bridge_down',
+										{ n: Math.abs(bridgeDelta) },
+									)}`,
+								),
 					)
 				: null,
 			// The primary zone: text + its ONE action, visually bound together
@@ -911,11 +918,11 @@ export function Deliberation(
 						// up) — but "✓ saved" is a true status, and the first
 						// keystroke flips it to the live action, which teaches the
 						// rule at the exact moment it starts to matter.
-						changed ? t('delib.update_proposal') : `✓ ${t('delib.update_saved')}`,
+						changed ? t('delib.update_proposal') : iconLabel('check', t('delib.update_saved')),
 					),
 				]),
 			]),
-			workbenchSection('💡', t('delib.suggestions_received'), suggestionsSection(myProposal), {
+			workbenchSection('idea', t('delib.suggestions_received'), suggestionsSection(myProposal), {
 				headId: DOCK_FEEDBACK_HEAD_ID,
 				// Waiting decisions AND unread replies — everything in the
 				// section that still wants the owner's eyes
@@ -927,7 +934,7 @@ export function Deliberation(
 			}),
 			// The elders are an optional helper, not the loop — folded away until
 			// asked for, so the sheet's resting state is my text and my feedback
-			workbenchSection('🎭', t('delib.ask_elders'), askSection(live, myProposal, topic), {
+			workbenchSection('era', t('delib.ask_elders'), askSection(live, myProposal, topic), {
 				open: charactersOpen,
 				onToggle: () => {
 					charactersOpen = !charactersOpen;
@@ -980,16 +987,16 @@ export function Deliberation(
 		let sub: m.Children;
 		let subClass: string | undefined;
 		if (openCount > 0) {
-			sub = `💡 ${tCount('delib.dock_new_ideas', openCount)}`;
+			sub = iconLabel('idea', tCount('delib.dock_new_ideas', openCount));
 			subClass = 'proposal-dock__sub--alert';
 		} else if (threadUnread > 0) {
-			sub = `💬 ${tCount('delib.thread_unread', threadUnread)}`;
+			sub = iconLabel('talk', tCount('delib.thread_unread', threadUnread));
 			subClass = 'proposal-dock__sub--alert';
 		} else if (unsaved) {
 			sub = [m('span.proposal-dock__dot', { 'aria-hidden': 'true' }), t('delib.dock_unsaved')];
 			subClass = 'proposal-dock__sub--alert';
 		} else if (ratingsMoved > 0) {
-			sub = `📈 ${tCount('delib.ratings_moved', ratingsMoved)}`;
+			sub = iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved));
 		} else {
 			sub = myProposal.statement;
 		}
@@ -1023,7 +1030,11 @@ export function Deliberation(
 						},
 					},
 					[
-						m('span.proposal-dock__icon', { 'aria-hidden': 'true' }, '📘'),
+						m(
+							'span.proposal-dock__icon',
+							{ 'aria-hidden': 'true' },
+							m(Icon, { name: 'proposal', size: 26 }),
+						),
 						m('span.proposal-dock__text', [
 							m('span.proposal-dock__title', t('delib.my_proposal')),
 							m('span.proposal-dock__sub', { class: subClass, role: 'status' }, sub),
@@ -1289,13 +1300,13 @@ export function Deliberation(
 		const { editAt, mineAt } = changeStamps(proposal);
 		const watermark = seenEditWatermark(proposal.statementId);
 		if (watermark !== undefined && mineAt > watermark) {
-			return mark('improved-mine', '✨', 'delib.chip_improved_mine');
+			return mark('improved-mine', 'spark', 'delib.chip_improved_mine');
 		}
 		if (isEditedSinceSeen(proposal.statementId, editAt)) {
-			return mark('edited', '✏️', 'delib.chip_edited');
+			return mark('edited', 'edit', 'delib.chip_edited');
 		}
 		if (isNewToMe(proposal.statementId)) {
-			return mark('new', '🌱', 'delib.chip_new');
+			return mark('new', 'new', 'delib.chip_new');
 		}
 
 		return null;
@@ -1379,11 +1390,11 @@ export function Deliberation(
 						'p.stall__reinvite',
 						{ class: mineSinceRating ? 'stall__reinvite--mine' : undefined },
 						mineSinceRating
-							? `✨ ${t('delib.reinvite_improved')}`
-							: `✏️ ${t('delib.reinvite_prompt')}`,
+							? iconLabel('spark', t('delib.reinvite_improved'))
+							: iconLabel('edit', t('delib.reinvite_prompt')),
 					)
 				: helpedImprovedSince(proposal)
-					? m('p.helped__improved', `✨ ${t('delib.helped_improved_marker')}`)
+					? m('p.helped__improved', iconLabel('spark', t('delib.helped_improved_marker')))
 					: null,
 			m(RateScale, {
 				session: live,
@@ -1590,11 +1601,10 @@ export function Deliberation(
 		const option = rateOptionFor(mine.value);
 		if (!option) return null;
 
-		return m(
-			'span.stall__chip.stall__chip--rated',
-			{ 'aria-label': t(option.labelKey) },
-			`${option.emoji} ✓`,
-		);
+		return m('span.stall__chip.stall__chip--rated', { 'aria-label': t(option.labelKey) }, [
+			m(Icon, { name: option.icon, size: 18 }),
+			m(Icon, { name: 'check', size: 14 }),
+		]);
 	}
 
 	/** Unread replies waiting in MY thread at this classmate's stall */
@@ -1623,7 +1633,7 @@ export function Deliberation(
 			return m(
 				'span.stall__chip.stall__chip--sent',
 				{ role: 'status' },
-				`✓ ${t('delib.sent_ack')}`,
+				iconLabel('check', t('delib.sent_ack')),
 			);
 		}
 		const unread = myThreadUnread(proposal);
@@ -1631,7 +1641,7 @@ export function Deliberation(
 			return m(
 				'span.stall__chip.stall__chip--unread',
 				{ 'aria-label': tCount('delib.thread_unread', unread) },
-				`💬 ${unread}`,
+				iconLabel('talk', String(unread)),
 			);
 		}
 
@@ -1639,7 +1649,7 @@ export function Deliberation(
 			? m(
 					'span.stall__chip.stall__chip--icon.stall__chip--helped',
 					{ 'aria-label': t('delib.helped_chip'), title: t('delib.helped_chip') },
-					'🤝',
+					m(Icon, { name: 'helped', size: 18 }),
 				)
 			: null;
 	}
@@ -1754,7 +1764,11 @@ export function Deliberation(
 								m('.delib-splash__card.delib-splash__card--place', [
 									m('.delib-splash__scene', placeScene(splash.step)),
 									m('h2.delib-splash__title', [
-										m('span.delib-splash__icon', { 'aria-hidden': 'true' }, PLACES[splash.step].icon),
+										m(
+											'span.delib-splash__icon',
+											{ 'aria-hidden': 'true' },
+											PLACES[splash.step].icon,
+										),
 										t(PLACES[splash.step].titleKey),
 									]),
 									m('p.delib-splash__sub', t(PLACES[splash.step].subKey)),
@@ -1874,7 +1888,11 @@ export function Deliberation(
 								// mission itself was the icon's job done twice — it stays
 								// as the block's accessible name and nothing else.
 								m('.write-desk__mission', { 'aria-label': t('delib.mission_label') }, [
-									m('span.write-desk__mission-icon', { 'aria-hidden': 'true' }, '🎯'),
+									m(
+										'span.write-desk__mission-icon',
+										{ 'aria-hidden': 'true' },
+										m(Icon, { name: 'target', size: 20 }),
+									),
 									m('.write-desk__mission-text', m('p', t('delib.propose_hint'))),
 								]),
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
@@ -1920,7 +1938,9 @@ export function Deliberation(
 										// to do; first real sentence: it flips to the lit action
 										// with a lantern halo, teaching the rule at the exact
 										// moment it starts to matter.
-										ready ? `🏮 ${t('delib.submit_proposal')}` : `✍️ ${t('delib.write_first')}`,
+										ready
+											? iconLabel('proposal', t('delib.submit_proposal'))
+											: iconLabel('edit', t('delib.write_first')),
 									),
 								]),
 							]),
