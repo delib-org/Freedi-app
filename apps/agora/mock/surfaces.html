@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Agora — surface gauntlet</title>
+		<script type="module">
+			// The REAL stylesheets, in the real order. A gauntlet built on a copy
+			// of the CSS proves nothing about the app.
+			import '../src/styles/global.scss';
+			import '../src/styles/components.scss';
+			import '../src/styles/chat.scss';
+		</script>
+		<style>
+			body {
+				padding: 16px;
+			}
+			.gauntlet {
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+				max-width: 420px;
+				margin-inline: auto;
+			}
+			.gauntlet h2 {
+				font-size: 0.85rem;
+				color: #6b628f;
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<!--
+			The surface gauntlet: every saturated surface in the app, each loaded
+			with the components most likely to break on it — a muted hint, a
+			timestamp, an outlined chip, a hairline divider, a secondary label.
+
+			These are exactly the things that read a token defined against white.
+			scripts/contrast-audit.mjs measures what actually renders here, so a
+			surface added to the app without being added to the on-dark registry
+			in tokens.scss fails out loud instead of waiting for a screenshot.
+		-->
+		<div class="gauntlet">
+			<h2>my message bubble</h2>
+			<div class="thread">
+				<div class="thread__list">
+					<div class="thread__msg thread__msg--mine thread__msg--suggestion">
+						<span class="thread__tag">💡 רעיון לשיפור</span>
+						<p class="thread__text">צריך להוסיף לוח זמנים ברור לביטול זכויות היתר.</p>
+						<span class="thread__time">11:39</span>
+						<span class="helped__chip helped__chip--thanked">נאמרה תודה</span>
+						<p class="action-hint">תודה משלמת לחבר/ה שעזרו</p>
+					</div>
+					<div class="thread__msg thread__msg--mine">
+						<p class="thread__text">הודעה רגילה</p>
+						<span class="thread__time">11:41</span>
+						<span class="helped__chip helped__chip--open">ממתין</span>
+						<span class="helped__chip helped__chip--accepted">התקבלה</span>
+						<span class="helped__chip helped__chip--implemented">שולב בנוסח</span>
+						<span class="helped__chip helped__chip--declined">לא הפעם</span>
+					</div>
+					<div class="thread__msg thread__msg--peer">
+						<span class="thread__who">פנס חכם</span>
+						<p class="thread__text">הודעה של חבר/ה לכיתה</p>
+						<span class="thread__time">11:42</span>
+					</div>
+				</div>
+			</div>
+
+			<h2>the dock (collapsed) and the panel it opens</h2>
+			<div class="shell shell--delib" style="min-height: 0; padding: 0">
+				<div class="proposal-dock" style="position: static">
+					<button class="proposal-dock__bar">
+						<span class="proposal-dock__icon">📘</span>
+						<span class="proposal-dock__text">
+							<span class="proposal-dock__title">ההצעה שלי</span>
+							<span class="proposal-dock__sub">נכריז על מלוכה חוקתית: המלך יישאר…</span>
+						</span>
+						<span class="proposal-dock__badge">2</span>
+						<span class="proposal-dock__chevron"></span>
+					</button>
+					<div class="proposal-dock__panel" style="grid-template-rows: 1fr">
+						<div class="proposal-dock__inner">
+							<div class="workbench__section">
+								<div class="workbench__head">
+									<span class="workbench__icon">💡</span>
+									<span class="workbench__title">הצעות שיפור שקיבלתם</span>
+								</div>
+								<p class="action-hint">הפנס שלכם דולק בכיכר</p>
+								<textarea class="my-lantern__textarea" rows="2">טקסט ההצעה שלי</textarea>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<h2>the rating scale — the face I pressed</h2>
+			<div class="rate-scale rate-scale--has-selection">
+				<button class="rate-scale__option rate-scale__option--strong-against">
+					<span class="rate-scale__emoji">😠</span
+					><span class="rate-scale__label">ממש לא בעד</span>
+				</button>
+				<button class="rate-scale__option rate-scale__option--against">
+					<span class="rate-scale__emoji">🙁</span><span class="rate-scale__label">לא בעד</span>
+				</button>
+				<button class="rate-scale__option rate-scale__option--selected">
+					<span class="rate-scale__emoji">😐</span><span class="rate-scale__label">נמנעים</span>
+				</button>
+				<button class="rate-scale__option rate-scale__option--for">
+					<span class="rate-scale__emoji">🙂</span><span class="rate-scale__label">בעד</span>
+				</button>
+			</div>
+
+			<h2>the HUD</h2>
+			<header class="delib-hud" style="position: static; margin: 0">
+				<div class="delib-hud__top">
+					<span class="delib-hud__crest">⚖️</span>
+					<h1 class="delib-hud__title">סיור בכיכר</h1>
+					<div class="delib-hud__laps">
+						<span class="delib-hud__lap delib-hud__lap--done"></span>
+						<span class="delib-hud__lap delib-hud__lap--current"></span>
+						<span class="delib-hud__lap"></span>
+					</div>
+				</div>
+				<div class="delib-hud__path">
+					<div class="delib-hud__stop delib-hud__stop--done">
+						<span class="delib-hud__stop-icon">✓</span>
+					</div>
+					<div class="delib-hud__stop delib-hud__stop--here">
+						<span class="delib-hud__stop-icon">⚖️</span>
+					</div>
+					<div class="delib-hud__stop delib-hud__stop--todo">
+						<span class="delib-hud__stop-icon">🤝</span>
+					</div>
+				</div>
+				<div class="delib-hud__fuse delib-hud__fuse--urgent">
+					<div class="delib-hud__fuse-burn" style="width: 20%"></div>
+					<span class="delib-hud__fuse-time">1:12</span>
+				</div>
+			</header>
+
+			<h2>the bottom nav</h2>
+			<nav class="delib-nav" style="position: static">
+				<button class="delib-nav__item delib-nav__item--results">
+					<span class="delib-nav__icon">📊</span>
+					<span class="delib-nav__label">תוצאות</span>
+				</button>
+				<button class="delib-nav__item delib-nav__item--peer delib-nav__item--active">
+					<span class="delib-nav__icon">👥</span>
+					<span class="delib-nav__label">של אחרים</span>
+					<span class="delib-nav__badge">3</span>
+				</button>
+			</nav>
+
+			<h2>buttons, in every state a student meets</h2>
+			<div style="display: flex; flex-wrap: wrap; gap: 8px">
+				<button class="btn btn--primary">שליחה</button>
+				<button class="btn btn--primary" disabled>שליחת הצעת שיפור</button>
+				<button class="btn btn--secondary">חזרה</button>
+				<button class="btn btn--ghost">מה כל צד באמת צריך</button>
+			</div>
+
+			<h2>a classmate's card, for the white baseline</h2>
+			<div class="stall">
+				<button class="stall__head">
+					<span class="stall__num">4</span>
+					<span class="stall__preview">נקבע חוקה שתגן על זכויות בסיסיות של כולם.</span>
+					<span class="stall__chips">
+						<span class="stall__chip stall__chip--icon stall__chip--new">🌱</span>
+						<span class="stall__chip stall__chip--unread">3</span>
+					</span>
+					<span class="stall__chevron"></span>
+				</button>
+			</div>
+		</div>
+	</body>
+</html>

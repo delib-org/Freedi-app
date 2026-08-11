@@ -1179,7 +1179,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
-		color: var(--danger);
+		color: var(--danger-ink);
 		animation: era-map-marker-pulse 1.2s ease-in-out infinite;
 	}
 }
@@ -1974,8 +1974,8 @@
 	}
 
 	&__msg--mine &__tag {
-		background: rgba(255, 255, 255, 0.22);
-		color: #ffffff;
+		background: var(--bg-card-solid);
+		color: var(--mine-ink);
 	}
 
 	// The lifecycle chips are drawn for a white card — an outlined pill whose
@@ -3165,9 +3165,7 @@
 	// a screen full of white ones. The nav is white: it is the app's
 	// furniture, not anybody's property.
 	.proposal-dock {
-		background:
-			radial-gradient(120% 200% at 15% 120%, rgba(255, 255, 255, 0.28), transparent 60%),
-			linear-gradient(150deg, var(--mine-strong), var(--mine-deep));
+		background: var(--grad-mine-text);
 		border-block-start-color: transparent;
 	}
 
@@ -3180,8 +3178,11 @@
 		color: #ffffff;
 	}
 
+	// Not a hand-rolled white: the on-dark contract already defines what a
+	// muted label is on a saturated surface, and this one was picked by eye
+	// at 0.68 — which measures 4.27:1.
 	.proposal-dock__sub {
-		color: rgba(255, 255, 255, 0.68);
+		color: var(--text-muted);
 
 		&--alert {
 			color: #ffe9b8;
@@ -3578,25 +3579,6 @@
 	}
 }
 
-// --- My current vote, join-app selection grammar: three redundant cues
-// (ring+halo, scale+pulse, ✓ badge) and receding siblings — "where did I
-// press?" must survive a glance, color-blindness and reduced motion ---
-.rate-scale__option--selected {
-	background: var(--grad-mine-text);
-	border-color: var(--mine-deep);
-	color: #ffffff;
-	transform: scale(1.12);
-	z-index: 2;
-	box-shadow:
-		0 0 0 3px var(--bg-card-solid),
-		0 0 0 6px var(--mine),
-		0 6px 14px rgba(70, 45, 150, 0.28);
-	animation: rate-select-pulse var(--motion-slow, 380ms) var(--ease-spring) 1;
-
-	&:hover {
-		transform: scale(1.15);
-	}
-}
 
 // Once a vote exists, the not-chosen options step back — the contrast is
 // what makes the chosen one pop without hunting for a border
@@ -4339,6 +4321,31 @@
 		&__option:hover &__emoji {
 			transform: none;
 		}
+	}
+}
+
+// Declared AFTER the .rate-scale base block on purpose. It used to sit
+// above it, and at equal specificity the base's `background` simply won —
+// the chosen face rendered with white text on the unselected fill. Same
+// trap as .my-lantern__textarea. A modifier must never be able to lose to
+// the block it modifies.
+// --- My current vote, join-app selection grammar: three redundant cues
+// (ring+halo, scale+pulse, ✓ badge) and receding siblings — "where did I
+// press?" must survive a glance, color-blindness and reduced motion ---
+.rate-scale__option--selected {
+	background: var(--grad-mine-text);
+	border-color: var(--mine-deep);
+	color: #ffffff;
+	transform: scale(1.12);
+	z-index: 2;
+	box-shadow:
+		0 0 0 3px var(--bg-card-solid),
+		0 0 0 6px var(--mine),
+		0 6px 14px rgba(70, 45, 150, 0.28);
+	animation: rate-select-pulse var(--motion-slow, 380ms) var(--ease-spring) 1;
+
+	&:hover {
+		transform: scale(1.15);
 	}
 }
 
@@ -6222,7 +6229,9 @@
 	&__you {
 		padding: 2px var(--space-sm);
 		border-radius: var(--radius-full);
-		background: var(--lantern);
+		// --mine-strong, not --mine: a white label on the lighter hue is
+		// 3.85:1 (see the contrast floor in tokens.scss)
+		background: var(--mine-strong);
 		color: var(--text-on-lantern);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
@@ -6257,7 +6266,7 @@
 		&--mine {
 			border-color: var(--lantern);
 			background:
-				radial-gradient(120% 100% at 50% 0%, rgba(139, 107, 240, 0.22), transparent 65%),
+				radial-gradient(120% 100% at 50% 0%, rgba(139, 107, 240, 0.13), transparent 65%),
 				var(--bg-card-solid);
 		}
 	}
@@ -6486,8 +6495,10 @@
 
 		// Mine is the one point a student looks for first
 		&--mine {
-			background: var(--lantern);
-			border-color: var(--lantern-deep);
+			// --mine-strong: the marker carries a rank numeral in white, and
+			// on the lighter hue that is 3.85:1
+			background: var(--mine-strong);
+			border-color: var(--mine-deep);
 			color: var(--text-on-lantern);
 			box-shadow: var(--glow-marker);
 		}

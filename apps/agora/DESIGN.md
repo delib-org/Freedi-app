@@ -313,7 +313,78 @@ goes **mint**.
 
 ---
 
-## 11. Working on the design
+## 11. The on-dark contract (and why this bug kept coming back)
+
+Components re-derive themselves from tokens. A chip reads `--text-muted` for
+its label and `--border-subtle` for its hairline; a hint reads `--text-muted`;
+a divider reads `--border-subtle`. **Every one of those is defined against
+white.** Render that component on a saturated surface and it is dark ink on a
+dark fill.
+
+You cannot fix this by fixing the component, because the component is
+correct — the surface is what changed. And you cannot fix it by fixing the
+instance, because the next element added to that surface will have it too.
+It was found three separate times by screenshot before it was fixed once by
+rule.
+
+### The rule
+
+A surface that fills with a saturated colour re-points the ink and hairline
+tokens at their on-dark values (`ink-on-dark` in `tokens.scss`). Every
+descendant then re-derives correctly with **no rule of its own**.
+
+A light region nested inside one — a panel that opens, a white pill carrying
+a semantic colour — hands the ink back with `ink-on-light`. Same registry,
+opposite direction.
+
+**Not remapped:** `--success`, `--danger`, `--warning`, and the camps. Their
+*hue* is the message, so they cannot be flattened to white. A component that
+needs one on a dark surface puts it on a **light chip** — which is why
+`--bg-card-solid` is deliberately left out of the inversion, so a white pill
+stays white.
+
+### The registry
+
+The selector list in `tokens.scss` **is** the contract. Adding a saturated
+surface to the app means adding it to that list.
+
+### Enforcement
+
+```bash
+node scripts/contrast-audit.mjs           # the surface gauntlet
+node scripts/contrast-audit.mjs <url>     # any page
+node scripts/delib-shots.mjs <dir>        # every real screen, audited
+```
+
+`mock/surfaces.html` is the **gauntlet**: every saturated surface, each loaded
+with the components most likely to break on it — a muted hint, a timestamp, an
+outlined chip, a secondary label. It imports the real stylesheets, because a
+gauntlet built on a copy of the CSS proves nothing about the app.
+
+`scripts/contrast-audit.mjs` measures what actually rendered: it walks every
+visible text run, composites the real background behind it (ancestor fills,
+gradient stops, translucent veils over opaque bases) and fails anything under
+AA. It exits non-zero, so it can gate a commit.
+
+Both halves are needed. The gauntlet proves the surfaces in isolation; the
+screen pass proves them with the app's real content in them — and that is
+where the last five failures were hiding, on a results screen nobody had
+thought to re-check.
+
+### Two rules this turned up, worth stating on their own
+
+- **A modifier must never be able to lose to the block it modifies.**
+  `.rate-scale__option--selected` sat *above* the `.rate-scale` base block, so
+  at equal specificity the base's `background` won and the chosen face
+  rendered unselected. `.my-lantern__textarea` was the same trap. Declare
+  modifiers after their base, not before.
+- **Fill colours and text colours are different tokens.** `--danger` is a fill;
+  as text on white it is 4.19:1, which is why `--danger-ink` exists. The same
+  split is why white text goes on `--mine-strong`, never `--mine` (3.85:1).
+
+---
+
+## 12. Working on the design
 
 `mock/delib-mock.html` is a **standalone design simulation** — two phone-sized
 screens, no emulator, no game run. Iterate there first:

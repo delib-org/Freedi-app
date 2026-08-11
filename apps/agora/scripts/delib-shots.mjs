@@ -6,6 +6,7 @@
  */
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { auditPage, report } from './contrast-audit.mjs';
 
 const BASE = 'http://localhost:3009';
 const SHOTS = process.argv[2] ?? 'delib-shots';
@@ -31,7 +32,15 @@ const mkPage = async (label) => {
 const teacher = await mkPage('T');
 const s1 = await mkPage('S1');
 const s2 = await mkPage('S2');
-const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
+// Every screen we photograph, we also measure. The gauntlet
+// (mock/surfaces.html) proves the surfaces in isolation; this proves them
+// with the app's real content in them, which is where the last one hid.
+const audits = [];
+const shot = async (page, name) => {
+	audits.push(await auditPage(page, { label: name }));
+
+	return page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
+};
 const shotFull = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
 /** The HUD on its own, big — the piece that gets iterated on most */
 const shotHud = async (page, name) => {
@@ -209,6 +218,9 @@ const weigh = async (page, index) => {
 	const rows = page.locator('.stall');
 	const count = await rows.count();
 	for (let i = 0; i < count; i++) {
+		// A celebration is modal and waits for a human; the suggestion sent from
+		// the conversation page raises one that outlives that page
+		await clearCelebration(page);
 		const row = rows.nth(i);
 		// An earlier shot may have left this row unfolded — toggling blindly
 		// would close it and then find no scale to press
@@ -268,4 +280,8 @@ await shot(s1, '07-results-tab');
 await shotFull(s1, '07b-results-tab-full');
 
 console.log('\nSHOTS →', SHOTS);
+
+console.log('\nContrast audit — every captured screen');
+const clean = audits.map(report).every(Boolean);
 await browser.close();
+if (!clean) process.exitCode = 1;

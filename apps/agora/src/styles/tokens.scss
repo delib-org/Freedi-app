@@ -1,3 +1,16 @@
+@mixin ink-on-light {
+  --text-primary: #2b2350;
+  --text-secondary: #5f568a;
+  --text-muted: #6b628f;
+  --ink: #2b2350;
+  --border-subtle: rgba(83, 60, 160, 0.12);
+  --border-strong: rgba(83, 60, 160, 0.28);
+  --border-lantern: rgba(139, 107, 240, 0.55);
+  --bg-inset: rgba(83, 60, 160, 0.07);
+  --lantern-glow: var(--mine-ink);
+  --peer-glow: #565080;
+}
+
 // ============================================================================
 // Agora design tokens — "Purple Agora"
 //
@@ -16,9 +29,15 @@
 // Content is never ambiguous, because a content surface is either purple
 // (mine) or white (theirs) and there is no third case.
 //
-// CONTRAST FLOOR: white text is only ever laid over --mine-strong or darker.
-// --mine and --mine-light are for fills behind dark text, glows, borders and
-// gradient tops — never a bed for body copy. Every value below is measured.
+// CONTRAST FLOOR, and it has two rungs, because full white and muted white
+// are not the same problem:
+//   * solid #fff text                     -> --mine-strong or darker
+//   * ANY dimmer white (a timestamp, a
+//     hint, a secondary label)            -> --mine-deep or darker, which is
+//                                            what --grad-mine-text is for
+// --mine and --mine-light are fills behind DARK text, glows, borders and
+// gradient tops — never a bed for copy. Every value below is measured, and
+// scripts/contrast-audit.mjs re-measures them against what actually renders.
 // ============================================================================
 
 :root {
@@ -32,12 +51,10 @@
   --bg-card: rgba(255, 255, 255, 0.9);
   --bg-card-solid: #ffffff;
   --bg-overlay: rgba(43, 28, 92, 0.5);
-  --bg-inset: rgba(83, 60, 160, 0.07);
 
   // --- Paper surfaces (kept for the scene/parchment furniture) ---
   --parchment: #ffffff;
   --parchment-dim: #f6f2fe;
-  --ink: #2b2350;
 
   // --- MINE: the purple family ---
   // Named by job, not by lightness, so a rule reads as a decision.
@@ -51,8 +68,9 @@
   // rules and they always meant "the primary accent", which is still true —
   // only the hue moved. Read --lantern as --mine wherever you meet it.
   --lantern: var(--mine);
-  --lantern-glow: var(--mine-ink); // the -glow role is TEXT-safe, not brighter
   --lantern-deep: var(--mine-deep);
+  // --lantern-glow lives in ink-on-light: it is a TEXT colour, so a dark
+  // surface has to be able to move it
 
   // --- OTHERS: white, and the quiet slate that frames it ---
   // A classmate's card IS white. --peer is not their colour, it is the thin
@@ -62,7 +80,7 @@
   --peer-surface: var(--bg-card-solid);
   --peer-tile: #f0ebfe;   // the neutral chip behind their number or initial
   --peer: #6f6795;        // identity strokes and hairlines
-  --peer-glow: #565080;   // "someone else's" TEXT on white — 7.29:1
+  // --peer-glow lives in ink-on-light (7.29:1 on white)
   --peer-strong: #5f5888; // filled control — white label on it = 6.49:1
   --peer-deep: #443f66;   // borders, pressed
 
@@ -110,19 +128,15 @@
 
   // --- Semantic ---
   --success: #17804d;
-  --danger: #d13d4e;
+  --danger: #d13d4e;   // FILL only — as text on white it is 4.19:1
+  --danger-ink: #b3202f; // the same alarm, readable as text (5.9:1)
   --warning: #b97300; // borders/fills only; warning copy uses --text-primary
 
-  // --- Text ---
-  --text-primary: #2b2350;
-  --text-secondary: #5f568a;
-  --text-muted: #6b628f;
+  // --- Text, borders and insets ---
+  // Declared by the ink-on-light mixin at the foot of this file, so the
+  // on-dark contract can restate them without a second copy drifting.
+  @include ink-on-light;
   --text-on-lantern: #ffffff;
-
-  // --- Borders ---
-  --border-subtle: rgba(83, 60, 160, 0.12);
-  --border-strong: rgba(83, 60, 160, 0.28);
-  --border-lantern: rgba(139, 107, 240, 0.55);
 
   // --- Spacing (8-point grid) ---
   --space-xs: 4px;
@@ -175,9 +189,12 @@
   // One gradient, declared once. Every purple surface in the app is this
   // ramp; divergent hand-rolled gradients are what make a re-theme rot.
   --grad-mine: linear-gradient(150deg, var(--mine-light) 0%, var(--mine) 45%, var(--mine-deep) 100%);
-  // The same ramp, started dark enough to carry body copy (see the contrast
-  // floor at the top of this file).
-  --grad-mine-text: linear-gradient(150deg, var(--mine-strong) 0%, var(--mine-deep) 100%);
+  // The ramp that carries TEXT — and it carries its own sheen, because a
+  // component that re-rolls the veil by hand is how the dock ended up at
+  // 3.13:1 for its own title. See the contrast floor at the top of the file.
+  --grad-mine-text:
+    radial-gradient(120% 200% at 15% -20%, rgba(255, 255, 255, 0.14), transparent 60%),
+    linear-gradient(150deg, var(--mine-deep) 0%, #4a2fae 100%);
   --grad-sheen: radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.32), transparent 60%);
 
   // --- Motion (camera-move easing; never hard cuts) ---
@@ -202,4 +219,79 @@
   // keep its last button clear of both.
   --delib-nav-h: 68px;
   --dock-bar-h: 76px;
+}
+
+// ============================================================================
+// THE ON-DARK CONTRACT
+//
+// Components re-derive themselves from tokens: a chip reads --text-muted for
+// its label and --border-subtle for its hairline, a hint reads --text-muted,
+// a divider reads --border-subtle. Every one of those is DEFINED AGAINST
+// WHITE. Drop such a component onto a saturated surface — my purple message
+// bubble, the dock, a selected face — and it is dark ink on a dark fill.
+//
+// That is not a bug you can fix by fixing the component, because the NEXT
+// component added to that surface will have it too. It was found three times
+// by screenshot before it was fixed once by rule.
+//
+// So: a surface that fills with a saturated colour re-points the ink and
+// hairline tokens at their on-dark values, and every descendant re-derives
+// correctly with no rule of its own.
+//
+// NOT remapped: --success, --danger, --warning and the camp colours. Their
+// HUE is the message, so they cannot be flattened to white. A component that
+// needs one of them on a dark surface puts it on a LIGHT CHIP instead —
+// --bg-card-solid is deliberately left alone so a white pill stays white
+// (see .thread__msg--mine .helped__chip).
+//
+// The selector list below IS the contract. Adding a saturated surface to the
+// app means adding it here; scripts/contrast-audit.mjs fails the build-time
+// check if you don't.
+// ============================================================================
+
+@mixin ink-on-dark {
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.86);
+  --text-muted: rgba(255, 255, 255, 0.78);
+  --ink: #ffffff;
+  --border-subtle: rgba(255, 255, 255, 0.3);
+  --border-strong: rgba(255, 255, 255, 0.55);
+  --border-lantern: rgba(255, 255, 255, 0.75);
+  --bg-inset: rgba(255, 255, 255, 0.18);
+  --lantern-glow: #ffffff;
+  --peer-glow: rgba(255, 255, 255, 0.82);
+
+  color: #ffffff;
+}
+
+// --- The registry of saturated surfaces ---
+.on-dark,
+// my own message in a conversation
+.thread__msg--mine,
+.chat-bubble--mine,
+// the notebook carrying my proposal, collapsed
+.shell--delib .proposal-dock,
+// the face I pressed, and the tab I am on
+.rate-scale__option--selected,
+.delib-nav__item--active,
+// the HUD's two filled tokens
+.delib-hud__crest,
+.delib-hud__stop--here .delib-hud__stop-icon {
+  @include ink-on-dark;
+}
+
+// --- ...and the light regions nested inside them ---
+// A dark surface that opens into a working surface — or that carries a white
+// pill — has to hand the ink back, or the on-dark remap paints white text
+// onto white paper. Same registry, opposite direction.
+.on-light,
+.shell--delib .proposal-dock__panel,
+// :not(--implemented) — that one is a solid GREEN fill carrying white, so
+// handing it the light ink turns its label back to dark-on-dark
+.on-dark .helped__chip:not(.helped__chip--implemented),
+.thread__msg--mine .helped__chip:not(.helped__chip--implemented),
+.thread__msg--mine .thread__tag {
+  @include ink-on-light;
+
+  color: var(--text-primary);
 }

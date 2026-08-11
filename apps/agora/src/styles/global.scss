@@ -220,17 +220,20 @@ p {
   }
 
   &--primary {
-    --btn-glow: var(--lantern);
+    --btn-glow: var(--mine);
 
-    background: var(--lantern);
+    // --mine gave the white label 3.85:1 — this file's own contrast floor,
+    // broken by the file that wrote it. The glow keeps the lighter hue, so
+    // the button still reads as the signature purple.
+    background: var(--mine-strong);
     color: #ffffff;
 
     &:hover:not(:disabled) {
-      background: #3479dd;
+      background: var(--mine-deep);
     }
 
     &:active:not(:disabled) {
-      background: var(--lantern-deep);
+      background: #4a2fae;
     }
 
     // Signature: the lantern catches the light. One sheen band crosses the
