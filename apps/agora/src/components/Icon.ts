@@ -1,0 +1,338 @@
+import m from 'mithril';
+
+/* Agora's icon set.
+ *
+ * Drawn rather than rendered, and that is the whole point: the size ladder in
+ * mock/icon-proof.png shows 3D renders turning to mush below ~40px, and almost
+ * every icon slot in this app (journey stops 32px, card marks 26px, nav 24px)
+ * lives under that line. So the 3D sheet keeps the hero slots — the HUD crest,
+ * the dock, the proposal card — and everything smaller is a stroke drawing.
+ *
+ * One rule makes the ownership grammar free: every shape is `currentColor`, so
+ * the SAME object tinted purple means "mine" and tinted --peer means "a
+ * classmate's". Ownership never needs a second asset, and it can never drift
+ * out of sync with the palette. The only literal colours below are the two
+ * camps and the celebration gold, which are semantic and must not inherit.
+ *
+ * Geometry rules, so additions stay in family:
+ *   • 24x24 box, shapes inset to 2.5 so nothing touches the edge
+ *   • 1.8 stroke, round caps and joins, no fills except accents
+ *   • symmetrical wherever the meaning allows — the app is Hebrew-first and
+ *     CSS mirrors anything directional
+ */
+
+export type IconName =
+	// core game objects
+	| 'proposal'
+	| 'helped'
+	| 'thanks'
+	| 'bridge'
+	| 'square'
+	| 'talk'
+	| 'thought'
+	| 'era'
+	| 'spark'
+	// score, results, progress
+	| 'chart'
+	| 'trophy'
+	| 'medal'
+	| 'flag'
+	| 'scales'
+	| 'podium'
+	| 'tunnel'
+	// actions
+	| 'improve'
+	| 'edit'
+	| 'again'
+	| 'weave'
+	| 'idea'
+	| 'check'
+	| 'new'
+	// chrome
+	| 'people'
+	| 'sound-on'
+	| 'sound-off'
+	// the rating scale
+	| 'face-strong-against'
+	| 'face-against'
+	| 'face-neutral'
+	| 'face-for'
+	| 'face-strong-for';
+
+type Shape = readonly [tag: string, attrs: Readonly<Record<string, string | number>>];
+
+const CAMP_LEFT = 'var(--camp-left, #e0873c)';
+const CAMP_RIGHT = 'var(--camp-right, #14a08f)';
+const GOLD = 'var(--gold, #ffd23f)';
+
+/** A round face with a mouth — the five rating steps share one head so the
+ *  row reads as a scale rather than as five unrelated drawings. */
+function face(mouth: string, brow?: readonly Shape[]): readonly Shape[] {
+	return [
+		['circle', { cx: 12, cy: 12, r: 9 }],
+		['path', { d: 'M9 10.2v.6' }],
+		['path', { d: 'M15 10.2v.6' }],
+		['path', { d: mouth }],
+		...(brow ?? []),
+	];
+}
+
+const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
+	/* ---- core game objects ---- */
+
+	// A closed book stood on end. Tinted purple it is my proposal, tinted
+	// --peer it is a classmate's; the bookmark is what stops it reading as a
+	// plain rectangle at 24px.
+	proposal: [
+		['rect', { x: 5.5, y: 3.5, width: 13, height: 17, rx: 2.2 }],
+		['path', { d: 'M9 3.5v17' }],
+		['path', { d: 'M13 3.5v6l2.2-1.6L17.4 9.5v-6' }],
+	],
+
+	// "Proposals I helped": a classmate's proposal carrying my spark.
+	// Two literal attempts at a handshake failed here — anatomical fingers
+	// dissolve first, and the simplified arm-and-grip version read as horns.
+	// Composing two shapes the set has already proven beats a third try at a
+	// hard drawing, and it says the thing more precisely anyway.
+	helped: [
+		['rect', { x: 3.5, y: 5, width: 11, height: 14.5, rx: 2 }],
+		['path', { d: 'M6.6 5v14.5' }],
+		[
+			'path',
+			{
+				d: 'M18 3.2 19.1 6.6l3.4 1.1-3.4 1.1L18 12.2l-1.1-3.4-3.4-1.1 3.4-1.1z',
+				fill: GOLD,
+				stroke: GOLD,
+			},
+		],
+	],
+
+	// Two cupped hands holding a spark: the 🙏 attestation. Kept to one
+	// unbroken bowl — the thumb arcs the first version had closed up into
+	// noise at 20px.
+	thanks: [
+		['path', { d: 'M4.5 11.5v2.8a7.5 7.5 0 0 0 15 0v-2.8' }],
+		['path', { d: 'M4.5 11.5a2.1 2.1 0 0 1 4.2 0M19.5 11.5a2.1 2.1 0 0 0-4.2 0' }],
+		[
+			'path',
+			{
+				d: 'M12 2.5 13.1 6l3.4 1.1-3.4 1.1L12 11.6l-1.1-3.4L7.5 7.1 10.9 6z',
+				fill: GOLD,
+				stroke: GOLD,
+			},
+		],
+	],
+
+	// An arch between two banks. The banks carry the camp colours — the only
+	// place in the set where a hue is not inherited. The railings the first
+	// version had are gone: three extra verticals under an arch is exactly the
+	// detail that turns to grey mush at 20px.
+	bridge: [
+		['path', { d: 'M5.5 17.5a6.5 6.5 0 0 1 13 0' }],
+		['path', { d: 'M12 11v6.5' }],
+		['path', { d: 'M2.5 17.5h3.6', stroke: CAMP_LEFT }],
+		['path', { d: 'M17.9 17.5h3.6', stroke: CAMP_RIGHT }],
+		['path', { d: 'M4.3 17.5v3.4M19.7 17.5v3.4' }],
+	],
+
+	// The agora itself: pediment, columns, stylobate.
+	square: [
+		['path', { d: 'M2.5 9.5 12 4l9.5 5.5' }],
+		['path', { d: 'M3.5 20.5h17' }],
+		['path', { d: 'M6 17.8V11M10 17.8V11M14 17.8V11M18 17.8V11' }],
+		['path', { d: 'M4.5 17.8h15' }],
+	],
+
+	talk: [
+		[
+			'path',
+			{
+				d: 'M20 4.5H4a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 4 15.5h2.5v4l4.6-4H20a1.5 1.5 0 0 0 1.5-1.5V6A1.5 1.5 0 0 0 20 4.5z',
+			},
+		],
+	],
+
+	thought: [
+		['path', { d: 'M8 14.5a4 4 0 0 1-.6-7.9 4.2 4.2 0 0 1 8-1.2 3.6 3.6 0 0 1 1.1 7.05' }],
+		['path', { d: 'M8 14.5h8.5' }],
+		['circle', { cx: 7, cy: 18, r: 1.4 }],
+		['circle', { cx: 4, cy: 20.8, r: 0.9 }],
+	],
+
+	// The two masks: the people of the era you can question.
+	era: [
+		['path', { d: 'M3 5.5h8.5v6.8A4.25 4.25 0 0 1 3 12.3z' }],
+		['path', { d: 'M12.5 8.5H21v6.8a4.25 4.25 0 0 1-8.5 0z' }],
+		['path', { d: 'M5.6 8.6v.6M8.9 8.6v.6M6 13.6a2.4 2.4 0 0 0 2.5 0' }],
+		['path', { d: 'M15.1 11.6v.6M18.4 11.6v.6M15.5 17.2a2.4 2.4 0 0 1 2.5 0' }],
+	],
+
+	// A class record. Gold, always — celebration is not an ownable thing.
+	spark: [
+		[
+			'path',
+			{
+				d: 'M12 2.2c1 4.9 3.9 7.8 8.8 8.8-4.9 1-7.8 3.9-8.8 8.8-1-4.9-3.9-7.8-8.8-8.8 4.9-1 7.8-3.9 8.8-8.8z',
+				stroke: GOLD,
+			},
+		],
+	],
+
+	/* ---- score, results, progress ---- */
+
+	chart: [
+		['path', { d: 'M3.5 20.5h17' }],
+		['path', { d: 'M7 20.5v-5.5M12 20.5v-9M17 20.5v-13' }],
+	],
+
+	trophy: [
+		['path', { d: 'M7 4h10v5.5a5 5 0 0 1-10 0z' }],
+		['path', { d: 'M7 5.5H4.5v1.8A3.2 3.2 0 0 0 7 10.4M17 5.5h2.5v1.8a3.2 3.2 0 0 1-2.5 3.1' }],
+		['path', { d: 'M12 14.5v3.5M8.5 20.5h7' }],
+	],
+
+	// Circle plus a V of ribbon. Two parallel strands read as antennae.
+	medal: [
+		['circle', { cx: 12, cy: 15, r: 5.4 }],
+		['path', { d: 'M8.3 10.6 5.6 3.6h12.8l-2.7 7' }],
+	],
+
+	flag: [
+		['path', { d: 'M6 21V3.5' }],
+		['path', { d: 'M6 4.5h11.5l-2 3.4 2 3.4H6z' }],
+	],
+
+	// Level, on purpose: the scale of a deliberation that has not tipped.
+	scales: [
+		['path', { d: 'M12 4.5v16M8 20.5h8M4.5 7.5h15' }],
+		['path', { d: 'M4.5 7.5 2 13.5h5zM19.5 7.5 17 13.5h5' }],
+	],
+
+	podium: [
+		['path', { d: 'M9 9.5h6v11H9z' }],
+		['path', { d: 'M2.5 13.5H9v7H2.5zM15 12H21.5v8.5H15z' }],
+	],
+
+	// The time tunnel, head on.
+	tunnel: [
+		['circle', { cx: 12, cy: 12, r: 9 }],
+		['circle', { cx: 12, cy: 12, r: 5.4 }],
+		['circle', { cx: 12, cy: 12, r: 1.8, fill: GOLD, stroke: GOLD }],
+	],
+
+	/* ---- actions ---- */
+
+	// A wrench. The first version was a thin parallelogram that read as a
+	// blade; a wrench needs its open jaw to be legible at all.
+	improve: [
+		[
+			'path',
+			{
+				d: 'M16.4 3.2a5.4 5.4 0 0 0-4.8 8l-8 8a1.8 1.8 0 0 0 0 2.6 1.8 1.8 0 0 0 2.6 0l8-8a5.4 5.4 0 0 0 6.6-6.8l-3 3-2.6-2.6z',
+			},
+		],
+	],
+
+	edit: [
+		['path', { d: 'M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z' }],
+		['path', { d: 'M14.5 7.5l2 2' }],
+	],
+
+	again: [
+		['path', { d: 'M20.5 12a8.5 8.5 0 1 1-2.6-6.1' }],
+		['path', { d: 'M20.8 4v4.4h-4.4' }],
+	],
+
+	// Weaving a classmate's idea into my own text: two strands become one and
+	// flow on. A plain Y survives 20px where the earlier interlacing did not.
+	weave: [
+		['path', { d: 'M5.2 4.5 12 11.6l6.8-7.1' }],
+		['path', { d: 'M12 11.6v8.2' }],
+		['path', { d: 'M8.7 16.6 12 19.9l3.3-3.3' }],
+	],
+
+	idea: [
+		['path', { d: 'M9 16.5a6 6 0 1 1 6 0v1.5H9z' }],
+		['path', { d: 'M9.8 21h4.4' }],
+	],
+
+	check: [['path', { d: 'M4.5 12.5 9.5 17.5 19.5 6.5' }]],
+
+	// Something new since you last looked.
+	new: [
+		['path', { d: 'M12 21v-7.5' }],
+		['path', { d: 'M12 13.5c0-3.2 2.4-5.4 5.6-5.4 0 3.2-2.4 5.4-5.6 5.4z' }],
+		['path', { d: 'M12 16c0-2.6-2-4.4-4.6-4.4 0 2.6 2 4.4 4.6 4.4z' }],
+	],
+
+	/* ---- chrome ---- */
+
+	people: [
+		['circle', { cx: 9, cy: 8, r: 3.4 }],
+		['path', { d: 'M2.8 20.5a6.2 6.2 0 0 1 12.4 0' }],
+		['path', { d: 'M16 5.2a3.4 3.4 0 0 1 0 6.6M17.5 15.2a6.2 6.2 0 0 1 3.7 5.3' }],
+	],
+
+	'sound-on': [
+		['path', { d: 'M4 9.5h3.2L12 5.5v13L7.2 14.5H4z' }],
+		['path', { d: 'M16 9.2a4 4 0 0 1 0 5.6M18.6 6.6a7.6 7.6 0 0 1 0 10.8' }],
+	],
+
+	'sound-off': [
+		['path', { d: 'M4 9.5h3.2L12 5.5v13L7.2 14.5H4z' }],
+		['path', { d: 'M16.5 10 21 14.5M21 10l-4.5 4.5' }],
+	],
+
+	/* ---- the rating scale ---- */
+
+	'face-strong-against': face('M8.6 16.4a4.2 4.2 0 0 1 6.8 0', [
+		['path', { d: 'M6.9 8.2 9.6 9.4M17.1 8.2 14.4 9.4' }],
+	]),
+	'face-against': face('M9 16a3.6 3.6 0 0 1 6 0'),
+	'face-neutral': face('M8.8 15.6h6.4'),
+	'face-for': face('M9 15a3.6 3.6 0 0 0 6 0'),
+	'face-strong-for': face('M8.4 14.4a4.4 4.4 0 0 0 7.2 0z'),
+};
+
+export interface IconAttrs {
+	name: IconName;
+	/** Rendered box in px. Below 20 the finer icons start to close up. */
+	size?: number;
+	/** Extra class — use it to set `color`, which is what tints the icon. */
+	class?: string;
+	/** Announce the icon. Omit for decoration sitting next to a real label. */
+	label?: string;
+}
+
+/** One icon. Colour it by setting `color` on this element or an ancestor. */
+export const Icon: m.Component<IconAttrs> = {
+	view({ attrs }) {
+		const { name, size = 24, class: cls, label } = attrs;
+		const shapes = ICONS[name];
+
+		return m(
+			'svg.icon',
+			{
+				class: cls,
+				width: size,
+				height: size,
+				viewBox: '0 0 24 24',
+				fill: 'none',
+				stroke: 'currentColor',
+				'stroke-width': 1.8,
+				'stroke-linecap': 'round',
+				'stroke-linejoin': 'round',
+				role: label ? 'img' : 'presentation',
+				'aria-label': label,
+				'aria-hidden': label ? undefined : 'true',
+			},
+			shapes.map(([tag, attributes]) => m(tag, attributes)),
+		);
+	},
+};
+
+/** Every name, for proof sheets and pickers. */
+export const ICON_NAMES = Object.keys(ICONS) as readonly IconName[];
+
+/** Raw geometry, for the proof-sheet generator (scripts/icon-proof.ts). */
+export const ICON_SHAPES: Readonly<Record<IconName, readonly Shape[]>> = ICONS;

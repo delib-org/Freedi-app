@@ -768,3 +768,163 @@ body {
 .screen--nodock {
 	padding-bottom: 86px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3D ICON SHEET — trial swap (sheet 1 of docs/icon-brief.md)
+
+   One sprite, nine cells, no slicing tool required: .i3d is a square window
+   onto icons-sheet.png (1254px, 3x3). background-size:300% makes one cell
+   fill the element, and the position percentages pick the cell. Backgrounds
+   are not mirrored by dir=rtl, so this is direction-safe.
+
+   The sheet ships on an OPAQUE WHITE ground (no alpha), which decides the
+   one design question here: on a purple surface a white square would show.
+   So the tile goes WHITE and the 3D object supplies the purple. That is
+   also the right call independent of alpha — a purple glyph embossed into a
+   purple tile is exactly what made the rejected candidate set unreadable at
+   32px. The object must never wear its own background.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Doubled class on purpose: (0,2,0) specificity, so the sprite survives the
+   `background:` shorthands that existing state rules like
+   `.hud__stop--here .hud__stop-icon` fire at it. A shorthand does not just
+   repaint the colour, it resets background-size and -image too — which is
+   what blanked this on the first pass. No border-radius here: the element's
+   own rule already sets one, and `inherit` would take the PARENT's instead. */
+.i3d.i3d {
+	display: inline-block;
+	background-image: url('./icons-sheet-alpha.png');
+	background-repeat: no-repeat;
+	background-size: 300% 300%;
+}
+
+.i3d--book-mine.i3d--book-mine {
+	background-position: 0% 0%;
+}
+.i3d--book-peer.i3d--book-peer {
+	background-position: 50% 0%;
+}
+.i3d--handshake.i3d--handshake {
+	background-position: 100% 0%;
+}
+.i3d--thanks.i3d--thanks {
+	background-position: 0% 50%;
+}
+.i3d--bridge.i3d--bridge {
+	background-position: 50% 50%;
+}
+.i3d--square.i3d--square {
+	background-position: 100% 50%;
+}
+.i3d--talk.i3d--talk {
+	background-position: 0% 100%;
+}
+.i3d--era.i3d--era {
+	background-position: 50% 100%;
+}
+.i3d--spark.i3d--spark {
+	background-position: 100% 100%;
+}
+
+/* --- The tiles that hold one, on purple ground --- */
+
+/* Note the shorthand trap: `background: #fff` would reset background-image
+   and blank the sprite. Every rule below sets background-COLOR only. */
+
+.hud__crest--i3d {
+	background-color: transparent;
+	background-image: url('./icons-sheet-alpha.png');
+	box-shadow: none;
+}
+
+/* On the purple dock and the purple card the object needs NO chip at all now
+   that the ground is alpha — and it must not have one. A white chip there
+   read as a sticker stuck onto the card, louder than the icon inside it. */
+.dock__icon--i3d,
+.mine__icon--i3d {
+	background-color: transparent;
+	border-color: transparent;
+}
+
+/* The journey stops keep their white pill: it is the track's furniture, and
+   the object sits inside it rather than replacing it. */
+.hud__stop-icon--i3d,
+.hud__stop--here .hud__stop-icon--i3d,
+.hud__stop--todo .hud__stop-icon--i3d {
+	background-color: #ffffff;
+	background-image: url('./icons-sheet-alpha.png');
+}
+
+.hud__stop--here .hud__stop-icon--i3d {
+	border-color: var(--mine-2);
+}
+
+.mark--i3d {
+	background-color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   The drawn icon set (src/components/Icon.ts, inlined here by
+   scripts/icon-swap-mock.ts).
+
+   Size comes from the slot's own font-size rather than from a px value per
+   call site: every one of these boxes already declared how big its glyph
+   should be when it held an emoji, so `em` inherits that judgement instead
+   of duplicating it. Colour comes from `currentColor`, which is what makes
+   one drawing serve both owners — purple is mine, --peer is a classmate's.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ic {
+	display: block;
+	width: 1.15em;
+	height: 1.15em;
+	flex: 0 0 auto;
+}
+
+.hud__stop-icon .ic {
+	color: var(--ink-3);
+}
+
+/* The done stop's chip is pale, the here stop's is saturated — a single
+   "white on both" rule made the completed tick invisible. */
+.hud__stop--done .hud__stop-icon .ic {
+	color: var(--mine-ink);
+}
+
+.hud__stop--here .hud__stop-icon .ic {
+	color: #ffffff;
+}
+
+/* A classmate's mark is grey; the ones about MY proposal keep the purple */
+.mark .ic {
+	color: var(--peer, #6f6795);
+}
+
+.mark--helped .ic,
+.dock__sub .ic {
+	color: var(--mine-3);
+}
+
+.scale__opt .ic {
+	width: 1.5em;
+	height: 1.5em;
+	color: var(--ink-2);
+}
+
+.scale__opt--on .ic {
+	color: #ffffff;
+}
+
+.nav__item .ic {
+	color: var(--ink-2);
+}
+
+.nav__item--active .ic {
+	color: #ffffff;
+}
+
+.btn .ic,
+.dock__sub .ic {
+	display: inline-block;
+	vertical-align: -0.16em;
+}

@@ -23,7 +23,7 @@
 					<!-- HUD -->
 					<header class="hud">
 						<div class="hud__top">
-							<span class="hud__crest">⚖️</span>
+							<span class="hud__crest hud__crest--i3d i3d i3d--square"></span>
 							<h1 class="hud__title">סיור בכיכר</h1>
 							<div class="hud__laps">
 								<span class="hud__lap hud__lap--current"></span>
@@ -33,16 +33,18 @@
 							</div>
 						</div>
 						<div class="hud__path">
-							<div class="hud__stop hud__stop--done"><span class="hud__stop-icon">✓</span></div>
+							<div class="hud__stop hud__stop--done"><span class="hud__stop-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 9.5 17.5 19.5 6.5" /></svg></span></div>
 							<div class="hud__stop hud__stop--here">
-								<span class="hud__stop-icon">⚖️</span>
+								<span class="hud__stop-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 9.5 12 4l9.5 5.5" /><path d="M3.5 20.5h17" /><path d="M6 17.8V11M10 17.8V11M14 17.8V11M18 17.8V11" /><path d="M4.5 17.8h15" /></svg></span>
 								<div class="hud__quota">
 									<span class="hud__quota-pip hud__quota-pip--done"></span>
 									<span class="hud__quota-pip"></span>
 									<span class="hud__quota-pip"></span>
 								</div>
 							</div>
-							<div class="hud__stop hud__stop--todo"><span class="hud__stop-icon">🤝</span></div>
+							<div class="hud__stop hud__stop--todo">
+								<span class="hud__stop-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="11" height="14.5" rx="2" /><path d="M6.6 5v14.5" /><path d="M18 3.2 19.1 6.6l3.4 1.1-3.4 1.1L18 12.2l-1.1-3.4-3.4-1.1 3.4-1.1z" fill="var(--gold, #ffd23f)" stroke="var(--gold, #ffd23f)" /></svg></span>
+							</div>
 						</div>
 						<div class="hud__fuse"><div class="hud__fuse-burn" style="width: 62%"></div></div>
 					</header>
@@ -57,7 +59,7 @@
 									>נקים אספה לאומית שבה לעם רוב קולות, נבטל את הפטור ממס של האצולה, אך נבטיח
 									לאצילים שמירה על ביטחונם.</span
 								>
-								<span class="stall__marks"><span class="mark mark--new">🌱</span></span>
+								<span class="stall__marks"><span class="mark mark--new"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-7.5" /><path d="M12 13.5c0-3.2 2.4-5.4 5.6-5.4 0 3.2-2.4 5.4-5.6 5.4z" /><path d="M12 16c0-2.6-2-4.4-4.6-4.4 0 2.6 2 4.4 4.6 4.4z" /></svg></span></span>
 								<span class="stall__chevron"></span>
 							</button>
 						</article>
@@ -66,7 +68,7 @@
 							<button class="stall__head">
 								<span class="stall__tile">4</span>
 								<span class="stall__preview">נקבע חוקה שתגן על זכויות בסיסיות…</span>
-								<span class="stall__marks"><span class="mark mark--edited">✏️</span></span>
+								<span class="stall__marks"><span class="mark mark--edited"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" /><path d="M14.5 7.5l2 2" /></svg></span></span>
 								<span class="stall__chevron stall__chevron--open"></span>
 							</button>
 							<div class="stall__body">
@@ -75,13 +77,13 @@
 									קול — כדי שאיש לא יוכל לשלול זכויות מאיש.
 								</p>
 								<div class="scale" role="radiogroup">
-									<button class="scale__opt"><span>😠</span><small>ממש לא בעד</small></button>
-									<button class="scale__opt"><span>🙁</span><small>לא בעד</small></button>
-									<button class="scale__opt"><span>😐</span><small>נמנעים</small></button>
+									<button class="scale__opt"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 10.2v.6" /><path d="M15 10.2v.6" /><path d="M8.6 16.4a4.2 4.2 0 0 1 6.8 0" /><path d="M6.9 8.2 9.6 9.4M17.1 8.2 14.4 9.4" /></svg></span><small>ממש לא בעד</small></button>
+									<button class="scale__opt"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 10.2v.6" /><path d="M15 10.2v.6" /><path d="M9 16a3.6 3.6 0 0 1 6 0" /></svg></span><small>לא בעד</small></button>
+									<button class="scale__opt"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 10.2v.6" /><path d="M15 10.2v.6" /><path d="M8.8 15.6h6.4" /></svg></span><small>נמנעים</small></button>
 									<button class="scale__opt scale__opt--on">
-										<span>🙂</span><small>בעד</small>
+										<span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 10.2v.6" /><path d="M15 10.2v.6" /><path d="M9 15a3.6 3.6 0 0 0 6 0" /></svg></span><small>בעד</small>
 									</button>
-									<button class="scale__opt"><span>😍</span><small>מאוד בעד</small></button>
+									<button class="scale__opt"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 10.2v.6" /><path d="M15 10.2v.6" /><path d="M8.4 14.4a4.4 4.4 0 0 0 7.2 0z" /></svg></span><small>מאוד בעד</small></button>
 								</div>
 							</div>
 						</article>
@@ -93,7 +95,7 @@
 									>נחלק מחדש את האדמות אך נפצה את בעליהן, כדי שאיש לא יאבד את פרנסתו.</span
 								>
 								<span class="stall__marks"
-									><span class="mark mark--helped">🤝</span><span class="mark mark--unread">3</span></span
+									><span class="mark mark--helped"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="11" height="14.5" rx="2" /><path d="M6.6 5v14.5" /><path d="M18 3.2 19.1 6.6l3.4 1.1-3.4 1.1L18 12.2l-1.1-3.4-3.4-1.1 3.4-1.1z" fill="var(--gold, #ffd23f)" stroke="var(--gold, #ffd23f)" /></svg></span><span class="mark mark--unread">3</span></span
 								>
 								<span class="stall__chevron"></span>
 							</button>
@@ -112,18 +114,18 @@
 					     full of white ones, which is the whole ownership grammar. -->
 					<div class="dock">
 						<button class="dock__bar">
-							<span class="dock__icon">📘</span>
+							<span class="dock__icon dock__icon--i3d i3d i3d--book-mine"></span>
 							<span class="dock__text">
 								<span class="dock__title">ההצעה שלי</span>
-								<span class="dock__sub dock__sub--alert">💡 2 רעיונות חדשים לשיפור</span>
+								<span class="dock__sub dock__sub--alert"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 16.5a6 6 0 1 1 6 0v1.5H9z" /><path d="M9.8 21h4.4" /></svg> 2 רעיונות חדשים לשיפור</span>
 							</span>
 							<span class="dock__badge">2</span>
 							<span class="dock__chevron"></span>
 						</button>
 					</div>
 					<nav class="nav">
-						<button class="nav__item"><span>📊</span><small>תוצאות</small></button>
-						<button class="nav__item nav__item--active"><span>👥</span><small>של אחרים</small></button>
+						<button class="nav__item"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5h17" /><path d="M7 20.5v-5.5M12 20.5v-9M17 20.5v-13" /></svg></span><small>תוצאות</small></button>
+						<button class="nav__item nav__item--active"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.4" /><path d="M2.8 20.5a6.2 6.2 0 0 1 12.4 0" /><path d="M16 5.2a3.4 3.4 0 0 1 0 6.6M17.5 15.2a6.2 6.2 0 0 1 3.7 5.3" /></svg></span><small>של אחרים</small></button>
 					</nav>
 				</div>
 			</section>
@@ -133,7 +135,7 @@
 				<div class="phone__screen">
 					<header class="hud hud--mine">
 						<div class="hud__top">
-							<span class="hud__crest">🛠️</span>
+							<span class="hud__crest hud__crest--i3d i3d i3d--book-mine"></span>
 							<h1 class="hud__title">בית המלאכה שלי</h1>
 							<div class="hud__laps">
 								<span class="hud__lap hud__lap--done"></span>
@@ -143,9 +145,15 @@
 							</div>
 						</div>
 						<div class="hud__path">
-							<div class="hud__stop hud__stop--here"><span class="hud__stop-icon">🛠️</span></div>
-							<div class="hud__stop hud__stop--todo"><span class="hud__stop-icon">⚖️</span></div>
-							<div class="hud__stop hud__stop--todo"><span class="hud__stop-icon">🤝</span></div>
+							<div class="hud__stop hud__stop--here">
+								<span class="hud__stop-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="3.5" width="13" height="17" rx="2.2" /><path d="M9 3.5v17" /><path d="M13 3.5v6l2.2-1.6L17.4 9.5v-6" /></svg></span>
+							</div>
+							<div class="hud__stop hud__stop--todo">
+								<span class="hud__stop-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 9.5 12 4l9.5 5.5" /><path d="M3.5 20.5h17" /><path d="M6 17.8V11M10 17.8V11M14 17.8V11M18 17.8V11" /><path d="M4.5 17.8h15" /></svg></span>
+							</div>
+							<div class="hud__stop hud__stop--todo">
+								<span class="hud__stop-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="11" height="14.5" rx="2" /><path d="M6.6 5v14.5" /><path d="M18 3.2 19.1 6.6l3.4 1.1-3.4 1.1L18 12.2l-1.1-3.4-3.4-1.1 3.4-1.1z" fill="var(--gold, #ffd23f)" stroke="var(--gold, #ffd23f)" /></svg></span>
+							</div>
 						</div>
 						<div class="hud__fuse"><div class="hud__fuse-burn" style="width: 40%"></div></div>
 					</header>
@@ -155,7 +163,7 @@
 						     storage card owns the top of its screen -->
 						<article class="mine">
 							<div class="mine__head">
-								<span class="mine__icon">📘</span>
+								<span class="mine__icon mine__icon--i3d i3d i3d--book-mine"></span>
 								<div class="mine__headtext">
 									<h2 class="mine__title">ההצעה שלי</h2>
 									<p class="mine__meta">גרסה 2 · שופרה על ידכם</p>
@@ -170,7 +178,7 @@
 								<div class="mine__meter-track"><div class="mine__meter-fill" style="width: 58%"></div></div>
 							</div>
 							<div class="mine__actions">
-								<button class="btn btn--mint">✍️ שיפור ההצעה</button>
+								<button class="btn btn--mint"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.4 3.2a5.4 5.4 0 0 0-4.8 8l-8 8a1.8 1.8 0 0 0 0 2.6 1.8 1.8 0 0 0 2.6 0l8-8a5.4 5.4 0 0 0 6.6-6.8l-3 3-2.6-2.6z" /></svg> שיפור ההצעה</button>
 							</div>
 						</article>
 
@@ -197,8 +205,8 @@
 					</main>
 
 					<nav class="nav">
-						<button class="nav__item"><span>📊</span><small>תוצאות</small></button>
-						<button class="nav__item nav__item--active"><span>👥</span><small>של אחרים</small></button>
+						<button class="nav__item"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5h17" /><path d="M7 20.5v-5.5M12 20.5v-9M17 20.5v-13" /></svg></span><small>תוצאות</small></button>
+						<button class="nav__item nav__item--active"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.4" /><path d="M2.8 20.5a6.2 6.2 0 0 1 12.4 0" /><path d="M16 5.2a3.4 3.4 0 0 1 0 6.6M17.5 15.2a6.2 6.2 0 0 1 3.7 5.3" /></svg></span><small>של אחרים</small></button>
 					</nav>
 				</div>
 			</section>
