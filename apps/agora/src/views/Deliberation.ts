@@ -974,11 +974,18 @@ export function Deliberation(
 		// saying "these belong together" — which the tab I am standing on and
 		// the title below already say.
 		return [
-			// Whose screen this is, said once and plainly, with the way into the
-			// text beside it. The pen itself lives in the dock, so this is a
-			// handle for it and not a second editor.
+			// The student's own sentence at the top, in the proposal voice — this
+			// screen IS their proposal, so the words they wrote head it, not a
+			// label the app supplied. The way into the text sits beside it; the
+			// pen itself lives in the dock, so this is a handle and not a second
+			// editor.
 			m('.my-screen__head', [
-				m('h3.my-screen__title', t('delib.my_proposal')),
+				m('h3.my-screen__title', [
+					// A screen reader arrives at a bare sentence otherwise, with
+					// nothing saying whose it is
+					m('span.sr-only', `${t('delib.my_proposal')}: `),
+					myProposal.statement,
+				]),
 				m(
 					'button.btn.btn--secondary.my-screen__edit',
 					{ onclick: openEditBox },
