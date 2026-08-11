@@ -55,9 +55,19 @@ await teacher.evaluate(() =>
 // user this fresh context starts on. The dev sign-in that follows does not
 // re-run that load, so the list only fills after a reload. Always reload
 // rather than racing a 20s timeout against it.
-await teacher.waitForTimeout(4000);
-await teacher.reload({ waitUntil: 'domcontentloaded' });
-await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 40000 });
+// ...and provisioning a fresh teacher's default package is a Firestore
+// round trip that sometimes loses the race anyway. Reload until it lands
+// rather than betting the whole run on one timeout.
+let topicReady = false;
+for (let attempt = 0; attempt < 6 && !topicReady; attempt++) {
+	await teacher.waitForTimeout(3000);
+	await teacher.reload({ waitUntil: 'domcontentloaded' });
+	topicReady = await teacher
+		.waitForSelector('text=המהפכה הצרפתית', { timeout: 15000 })
+		.then(() => true)
+		.catch(() => false);
+}
+if (!topicReady) throw new Error('teacher home never listed a topic package');
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });
@@ -162,6 +172,29 @@ await s1.locator('.stall__head').first().click();
 await s1.waitForTimeout(700);
 await shot(s1, '03-rate-open');
 await shotFull(s1, '03b-rate-open-full');
+
+// --- 03c: the conversation page (ThreadChat) — a place of its own
+const entry = s1.locator('.chat-entry').first();
+if (await entry.count()) {
+	await entry.click();
+	await s1.waitForSelector('.chat-page', { timeout: 15000 }).catch(() => undefined);
+	await s1.waitForTimeout(900);
+	await shot(s1, '03c-thread-chat');
+	// ...and with something actually said in it
+	const box = s1.locator('.chat-page__composer textarea, .thread__input').first();
+	if (await box.count()) {
+		await box.fill('כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר של האצולה.');
+		const send = s1.locator('.chat-page__composer button, .delib__actions button').last();
+		if (await send.count()) {
+			await send.click();
+			await s1.waitForTimeout(1500);
+			await clearCelebration(s1);
+		}
+	}
+	await shot(s1, '03d-thread-chat-said');
+	await s1.goBack().catch(() => undefined);
+	await s1.waitForTimeout(1200);
+}
 
 // --- 04: the dock open (my proposal workbench)
 await s1.locator('.proposal-dock__bar').click();

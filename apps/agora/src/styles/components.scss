@@ -1305,7 +1305,7 @@
 		radial-gradient(
 			ellipse 120% 70% at 50% -10%,
 			var(--bg-page-high) 0%,
-			#e2f1fd 55%,
+			var(--bg-page) 55%,
 			var(--bg-page) 100%
 		),
 		var(--bg-page);
@@ -1404,9 +1404,10 @@
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-sm);
-	background: var(--bg-inset);
+	background: var(--bg-card-solid);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
 	padding: var(--space-md);
 
 	// The editor is the primary zone: white, wearing the mine-purple frame —
@@ -1418,7 +1419,6 @@
 
 		.my-lantern__textarea {
 			margin-block-end: 0;
-			background: var(--bg-inset);
 		}
 	}
 
@@ -1501,6 +1501,8 @@
 		text-transform: uppercase; // no-op in Hebrew/Arabic, earns its keep in LTR
 	}
 
+	// The desk only adjusts the shared field (.my-lantern__textarea); the
+	// field treatment itself lives there, once.
 	&__textarea {
 		margin-block-end: 0;
 		// Room for a real paragraph without pushing the CTA off a phone screen
@@ -1912,38 +1914,65 @@
 		gap: var(--space-xs);
 	}
 
+	// A conversation is where the ownership law is read fastest and most
+	// often, so it is stated here in full rather than hinted at with a 3px
+	// edge on two near-identical grey washes: MY words are a filled purple
+	// bubble, THEIRS are a white card. The tail (one squared corner on the
+	// speaker's side) is the second, redundant cue.
 	&__msg {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
 		max-width: 88%;
-		padding: var(--space-xs) var(--space-sm);
-		border-radius: var(--radius-md);
-		background: var(--bg-inset);
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-lg);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		box-shadow: var(--shadow-card);
 
 		&--mine {
 			align-self: flex-end;
-			background: rgba(139, 107, 240, 0.1);
-			border-inline-end: 3px solid var(--mine);
+			background: var(--grad-mine-text);
+			border-color: transparent;
+			box-shadow: var(--glow-lantern);
+			border-end-end-radius: var(--radius-sm);
 		}
 
 		&--peer {
 			align-self: flex-start;
-			background: rgba(111, 103, 149, 0.08);
-			border-inline-start: 3px solid var(--peer);
+			border-start-start-radius: var(--radius-sm);
 		}
 
 		// An improvement idea is WORK, not talk — it wears a tag and, later,
 		// its lifecycle chip, so the two kinds of message never blur
 		&--suggestion {
-			border-radius: var(--radius-sm);
+			border-radius: var(--radius-md);
 		}
+	}
+
+	// Everything inside my bubble is on purple, so it all has to flip
+	&__msg--mine &__text,
+	&__msg--mine &__who {
+		color: #ffffff;
+	}
+
+	&__msg--mine &__time {
+		color: rgba(255, 255, 255, 0.75);
+	}
+
+	&__msg--mine &__tag {
+		background: rgba(255, 255, 255, 0.22);
+		color: #ffffff;
 	}
 
 	&__who {
 		font-size: var(--font-size-xs);
 		font-weight: 700;
 		color: var(--peer-glow);
+	}
+
+	&__msg--peer &__text {
+		color: var(--text-primary);
 	}
 
 	&__tag {
@@ -2005,23 +2034,26 @@
 	gap: var(--space-sm);
 	width: 100%;
 	padding: var(--space-sm) var(--space-md);
-	background: var(--bg-inset);
-	border: 1px solid rgba(83, 60, 160, 0.35);
-	border-radius: var(--radius-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
 	font: inherit;
 	text-align: start;
 	cursor: pointer;
-	transition: border-color var(--motion-base) ease;
+	transition:
+		border-color var(--motion-base) ease,
+		box-shadow var(--motion-base) ease;
 
 	&:hover,
 	&:focus-visible {
-		border-color: var(--peer-glow);
+		border-color: var(--border-lantern);
+		box-shadow: var(--shadow-raised);
 	}
 
 	// Something is waiting in there — the row itself says so, not only the count
 	&--unread {
-		border-color: var(--danger);
-		background: rgba(214, 69, 69, 0.06);
+		border-color: var(--pink);
 	}
 
 	&__icon {
@@ -2112,12 +2144,18 @@
 	max-width: 640px;
 	margin-inline: auto;
 
+	// Same chrome as the deliberation HUD: white bar, dark title, and the one
+	// squircle tile. A conversation is a place you travel to, so its header
+	// has to be recognisably the same object as the header of the place you
+	// left.
 	&__bar {
 		display: flex;
 		align-items: center;
 		gap: var(--space-sm);
 		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-card-solid);
 		border-block-end: 1px solid var(--border-subtle);
+		box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
 	}
 
 	&__back {
@@ -2125,18 +2163,19 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 40px;
+		height: 40px;
 		border: none;
-		border-radius: var(--radius-full);
-		background: var(--bg-inset);
-		color: var(--text-primary);
+		border-radius: var(--radius-tile);
+		background: var(--grad-mine);
+		color: #ffffff;
 		font-size: 1.2rem;
 		cursor: pointer;
+		box-shadow: var(--glow-lantern);
+		transition: transform var(--motion-fast) var(--ease-spring);
 
-		&:hover,
-		&:focus-visible {
-			background: var(--bg-card-solid);
+		&:active {
+			transform: scale(0.94);
 		}
 	}
 
@@ -2147,7 +2186,9 @@
 	}
 
 	&__title {
+		font-family: var(--font-display);
 		font-weight: 700;
+		font-size: 1.05rem;
 		color: var(--text-primary);
 	}
 
@@ -2162,10 +2203,10 @@
 		width: calc(100% - 2 * var(--space-md));
 		margin: var(--space-sm) var(--space-md) 0;
 		padding: var(--space-sm) var(--space-md);
-		background: var(--bg-inset);
-		border: none;
-		border-inline-start: 3px solid var(--peer);
-		border-radius: var(--radius-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
 		color: var(--text-secondary);
 		font: inherit;
 		font-size: var(--font-size-sm);
@@ -2176,17 +2217,20 @@
 
 		// Mine to change: the text itself is the control, the way it is
 		// everywhere else in Freedi. The pencil is the only chrome.
+		// Mine, so it wears the one ownership cue a quoted card can carry
+		// without becoming a message: a purple edge and a purple pencil
 		&--editable {
 			display: flex;
 			align-items: flex-start;
 			gap: var(--space-sm);
 			cursor: pointer;
-			border-inline-start-color: var(--mine);
-			transition: background var(--motion-base) ease;
+			border-color: var(--border-lantern);
+			cursor: pointer;
+			transition: box-shadow var(--motion-base) ease;
 
 			&:hover,
 			&:focus-visible {
-				background: var(--bg-card-solid);
+				box-shadow: var(--shadow-raised);
 			}
 		}
 	}
@@ -2241,10 +2285,11 @@
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	padding: var(--space-xs) var(--space-sm);
-	border-radius: var(--radius-md);
-	background: var(--bg-inset);
-	border: 1px dashed var(--border-subtle);
+	padding: var(--space-xs) var(--space-md);
+	border-radius: var(--radius-full);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	box-shadow: var(--shadow-card);
 	font-size: var(--font-size-sm);
 
 	&__head {
@@ -2296,10 +2341,11 @@
 		align-self: stretch;
 		max-width: none;
 		gap: var(--space-sm);
-		padding: var(--space-sm) var(--space-md);
-		border-style: solid;
+		padding: var(--space-md);
+		border-radius: var(--radius-lg);
 		background: var(--bg-card-solid);
-		border-color: var(--border-strong);
+		border-color: var(--border-subtle);
+		box-shadow: var(--shadow-card);
 	}
 
 	&__prompt {
@@ -2325,9 +2371,8 @@
 	// The proposal as it now stands, quoted where it is being weighed
 	&__proposal {
 		padding: var(--space-sm) var(--space-md);
-		background: var(--bg-card-solid);
+		background: var(--peer-tile);
 		border-radius: var(--radius-md);
-		border-inline-start: 3px solid var(--lantern);
 		color: var(--text-primary);
 		font-weight: 700;
 		line-height: 1.55;
@@ -2336,7 +2381,6 @@
 
 	&--reweigh {
 		border-color: var(--border-lantern);
-		background: var(--wash-mine-low);
 	}
 
 	&--voted {
@@ -2354,8 +2398,7 @@
 	// The owner's news. The credit line names the classmate; the numbers stay
 	// the class's, so a fall never gets a name attached to it.
 	&--score {
-		border-color: var(--peer);
-		background: var(--wash-peer-low);
+		border-color: var(--border-strong);
 
 		&.chat-system--down {
 			border-color: var(--warning);
@@ -2401,10 +2444,8 @@
 		flex-direction: row;
 		align-items: flex-start;
 		gap: var(--space-sm);
-		border-color: var(--warning);
-		background:
-			radial-gradient(120% 140% at 0% 0%, rgba(255, 214, 122, 0.4), transparent 70%),
-			var(--bg-card-solid);
+		border-color: var(--mint-deep);
+		background: var(--bg-card-solid);
 
 		.chat-system__icon {
 			font-size: var(--font-size-xl);
@@ -2425,13 +2466,14 @@
 	}
 
 	// Points are good news — the one system line allowed a little warmth
+	// Points landing is the one system line allowed real colour, and it wears
+	// mint — the rationed "good things happened" hue (DESIGN.md §2)
 	&--award {
 		flex-direction: row;
 		align-items: center;
 		gap: var(--space-xs);
-		border-style: solid;
-		border-color: rgba(255, 210, 63, 0.55);
-		background: rgba(255, 210, 63, 0.14);
+		border-color: var(--mint-deep);
+		background: rgba(86, 223, 192, 0.16);
 
 		.chat-system__text {
 			color: var(--text-primary);
@@ -2449,13 +2491,15 @@
 		}
 	}
 
+	// The composer is a bar the page rests on, so it LIFTS rather than being
+	// ruled off with a hairline the way a document section would be
 	&__composer {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-md) var(--space-md);
-		border-block-start: 1px solid var(--border-subtle);
+		gap: var(--space-sm);
+		padding: var(--space-md);
 		background: var(--bg-card-solid);
+		box-shadow: 0 -6px 20px -10px rgba(70, 45, 150, 0.25);
 	}
 
 	&__send {
@@ -2678,11 +2722,14 @@
 	}
 
 	// The always-editable proposal box — the live text, ready to be reworked
+	// A field on a white page is white with a real edge — a tinted slab reads
+	// as "disabled" or as a quote, not as somewhere to type
 	&__textarea {
 		width: 100%;
-		background: var(--bg-inset);
-		border: 1px solid var(--border-subtle);
+		background: var(--bg-card-solid);
+		border: 1.5px solid var(--border-subtle);
 		border-radius: var(--radius-md);
+		box-shadow: inset 0 1px 3px rgba(70, 45, 150, 0.06);
 		padding: var(--space-md);
 		color: var(--text-primary);
 		font-family: var(--font-body);
@@ -3610,9 +3657,10 @@
 // the __row/__label/__track/__fill/__value pieces live on in the ScoreHud
 // chart-detail card ---
 .estimate {
-	background: var(--bg-inset);
+	background: var(--bg-card-solid);
 	border: 1px solid var(--border-subtle);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
 	padding: var(--space-md);
 	display: flex;
 	flex-direction: column;
@@ -4403,8 +4451,10 @@
 	}
 
 	&__column {
-		background: var(--bg-inset);
-		border-radius: var(--radius-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
 		padding: var(--space-md);
 		display: flex;
 		flex-direction: column;
