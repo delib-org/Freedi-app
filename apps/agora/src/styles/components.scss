@@ -1950,10 +1950,23 @@
 		}
 	}
 
-	// Everything inside my bubble is on purple, so it all has to flip
+	// Everything inside my bubble sits on purple, so white is the DEFAULT and
+	// the exceptions below opt out — the other way round means every new
+	// child element added here starts life as dark ink on a dark fill and
+	// nobody notices until a screenshot arrives.
+	&__msg--mine {
+		color: #ffffff;
+	}
+
 	&__msg--mine &__text,
 	&__msg--mine &__who {
 		color: #ffffff;
+	}
+
+	// The muted "a thank-you pays the classmate who helped" line — muted is
+	// defined against white, so on purple it has to be re-derived
+	&__msg--mine .action-hint {
+		color: rgba(255, 255, 255, 0.75);
 	}
 
 	&__msg--mine &__time {
@@ -1963,6 +1976,28 @@
 	&__msg--mine &__tag {
 		background: rgba(255, 255, 255, 0.22);
 		color: #ffffff;
+	}
+
+	// The lifecycle chips are drawn for a white card — an outlined pill whose
+	// BORDER and TEXT carry the state colour. Inside my purple bubble that
+	// left dark ink on a dark fill. They keep their colour, which is the
+	// information, and get a white pill to sit on so it can be read.
+	&__msg--mine .helped__chip {
+		background: var(--bg-card-solid);
+		border-color: transparent;
+	}
+
+	// ...except the one that was already a solid fill, which reads fine as is
+	&__msg--mine .helped__chip--implemented {
+		background: var(--success);
+		border-color: #ffffff;
+	}
+
+	// A dimmed chip on purple disappears; on its white pill it can simply be
+	// the quietest ink instead
+	&__msg--mine .helped__chip--declined {
+		opacity: 1;
+		color: var(--text-muted);
 	}
 
 	&__who {

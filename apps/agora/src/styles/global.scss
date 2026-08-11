@@ -202,8 +202,14 @@ p {
       0 2px 6px -2px color-mix(in srgb, var(--btn-glow) 45%, transparent);
   }
 
+  // 45% opacity on a purple fill gave pale-lavender text on a pale-lavender
+  // pill — a label you cannot read is worse than no label, and "disabled" is
+  // information the student still has to receive. A real greyed state says
+  // "not yet" legibly instead.
   &:disabled {
-    opacity: 0.45;
+    background: var(--bg-inset);
+    border-color: transparent;
+    color: var(--text-muted);
     cursor: not-allowed;
     box-shadow: none;
   }
