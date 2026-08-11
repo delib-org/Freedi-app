@@ -274,8 +274,9 @@ await s1.waitForTimeout(800);
 await shot(s1, '04-my-screen');
 await shotFull(s1, '04b-my-screen-full');
 
-// --- 04c: the dock open over it (the pen, reachable from every place)
-await s1.locator('.proposal-dock__bar').click();
+// --- 04c: the dock open over it (the pen, reached from the screen's own
+// edit handle — the dock bar opens the same box)
+await s1.locator('.my-screen__edit').click();
 await s1.waitForTimeout(700);
 await shot(s1, '04c-dock-open');
 await s1.keyboard.press('Escape');

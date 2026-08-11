@@ -478,6 +478,8 @@ export function Deliberation(
 	 * where the tap left it.
 	 */
 	let focusOnMy = '';
+	/** One-shot: the next dock render puts the cursor in the textarea */
+	let focusDockTextarea = false;
 	/**
 	 * The panel is never unmounted, so its scroll position outlives a fold.
 	 * Deliberately reset on a fresh open: reopening two screens deep into
@@ -522,6 +524,17 @@ export function Deliberation(
 		} catch {
 			// Nothing to do
 		}
+	}
+
+	/**
+	 * The My screen's edit handle: lift the dock and put the cursor straight
+	 * in the box. A tap that says "edit the text" has earned the keyboard —
+	 * the dock's own bar has not, so it still opens without taking focus.
+	 */
+	function openEditBox(): void {
+		if (!dockOpen) resetDockScroll = true;
+		dockOpen = true;
+		focusDockTextarea = true;
 	}
 
 	/** The dock bar's own handle — the edit box folds out from here */
@@ -956,9 +969,22 @@ export function Deliberation(
 		const bridgeBase = myScoreDoc?.bridgingAtLastEdit;
 		const bridgeDelta = bridgeBase === undefined ? 0 : bridgeNow - bridgeBase;
 
-		// The card carries no header: the tab I am standing on already says
-		// "my", and the edit box the sections orbit is one tap away in the dock
-		return m('.card.my-lantern.my-lantern--workshop', [
+		// No frame around the stack: every drawer below is already a card, and
+		// a box drawn around a column of boxes only spends a screen edge on
+		// saying "these belong together" — which the tab I am standing on and
+		// the title below already say.
+		return [
+			// Whose screen this is, said once and plainly, with the way into the
+			// text beside it. The pen itself lives in the dock, so this is a
+			// handle for it and not a second editor.
+			m('.my-screen__head', [
+				m('h3.my-screen__title', t('delib.my_proposal')),
+				m(
+					'button.btn.btn--secondary.my-screen__edit',
+					{ onclick: openEditBox },
+					iconLabel('edit', t('delib.edit_text')),
+				),
+			]),
 			ratingsMoved > 0
 				? m(
 						'p.my-lantern__moved',
@@ -1001,7 +1027,7 @@ export function Deliberation(
 				'.workbench__section.workbench__section--plain',
 				m(NeedsPeek, { topic, defaultOpen: true }),
 			),
-		]);
+		];
 	}
 
 	/**
@@ -1102,9 +1128,15 @@ export function Deliberation(
 	 * open. Focus stays on the handle that opened it, as a disclosure should.
 	 */
 	function onDockPanelRender(vnode: m.VnodeDOM): void {
-		if (!dockOpen || !resetDockScroll) return;
-		resetDockScroll = false;
-		(vnode.dom as HTMLElement).scrollTop = 0;
+		if (!dockOpen) return;
+		const inner = vnode.dom as HTMLElement;
+		if (resetDockScroll) {
+			resetDockScroll = false;
+			inner.scrollTop = 0;
+		}
+		if (!focusDockTextarea) return;
+		focusDockTextarea = false;
+		inner.querySelector<HTMLTextAreaElement>('textarea.my-lantern__textarea')?.focus();
 	}
 
 	/**
@@ -1313,11 +1345,14 @@ export function Deliberation(
 	 * name and the tooltip, and the unfolded body repeats them in full.
 	 */
 	function changeChip(proposal: AgoraProposal): m.Children {
-		const mark = (variant: string, glyph: string, key: string): m.Children =>
+		// The drawing, not its name: this disc printed the literal string
+		// "new" until the icon set became a component (same slip as the
+		// workbench chips). The words live in the label and the tooltip.
+		const mark = (variant: string, glyph: IconName, key: string): m.Children =>
 			m(
 				`span.stall__chip.stall__chip--icon.stall__chip--${variant}`,
 				{ 'aria-label': t(key), title: t(key) },
-				glyph,
+				m(Icon, { name: glyph, size: 18 }),
 			);
 		const { editAt, mineAt } = changeStamps(proposal);
 		const watermark = seenEditWatermark(proposal.statementId);
@@ -1995,9 +2030,6 @@ export function Deliberation(
 							{ oncreate: onMyScreenRender, onupdate: onMyScreenRender },
 							myWorkshop(live, myProposal, topic),
 						),
-						// The pen lives in the dock, and a screen full of feedback
-						// should say where to answer it
-						m('p.home-explanation', t('delib.dock_hint')),
 						cycle.step === 'mine'
 							? m(
 									'button.btn.btn--primary.btn--full.btn--lg',
