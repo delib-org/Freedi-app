@@ -321,6 +321,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'הציון מתחיל ממה שהכיתה נתנה, ואז שומר קצת בצד על כל חבר כיתה שלא דירג. ככל שיותר מהכיתה מדרגת, שני המספרים מתקרבים.',
 		'board.my_standing': 'ההצעה שלכם סיימה במקום {{rank}} מתוך {{total}} עם {{n}} הסכמה',
 		'board.my_standing_unrated': 'ההצעה שלכם לא זכתה לדירוג מהכיתה הפעם.',
+		'board.my_standing_waiting': 'ההצעה שלכם עוד מחכה לדירוג ראשון מהכיתה.',
 		'board.helpers_title': 'העוזרים המובילים',
 		'board.helpers_sub': 'נקודות שנצברו משיפור ההצעות של אחרים',
 		'board.helpers_list_title': 'כל מי שעזר',
@@ -820,6 +821,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'The score starts from what the class gave, then holds a little back for every classmate who never rated. The more of the class rates, the closer those two numbers get.',
 		'board.my_standing': 'Your proposal finished #{{rank}} of {{total}} with {{n}} class agreement',
 		'board.my_standing_unrated': 'Your proposal never got rated by the class this time.',
+		'board.my_standing_waiting':
+			'Your proposal is still waiting for its first rating from the class.',
 		'board.helpers_title': 'Top helpers',
 		'board.helpers_sub': "Points earned by making other people's proposals better",
 		'board.helpers_list_title': 'Everyone who helped',
@@ -1319,6 +1322,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'تبدأ النتيجة مما أعطاه الصف، ثم تحتفظ بقليل جانباً عن كل زميل لم يقيّم. كلما قيّم عدد أكبر من الصف، اقترب الرقمان.',
 		'board.my_standing': 'أنهى اقتراحكم في المركز {{rank}} من {{total}} باتفاق {{n}}',
 		'board.my_standing_unrated': 'لم يحصل اقتراحكم على تقييم من الصف هذه المرة.',
+		'board.my_standing_waiting': 'اقتراحكم ما زال ينتظر أول تقييم من الصف.',
 		'board.helpers_title': 'أفضل المساعدين',
 		'board.helpers_sub': 'نقاط رُبحت من تحسين اقتراحات الآخرين',
 		'board.helpers_list_title': 'كل من ساعد',
@@ -1830,6 +1834,7 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing':
 			'Vuestra propuesta terminó en el puesto {{rank}} de {{total}} con un {{n}} de acuerdo',
 		'board.my_standing_unrated': 'Esta vez la clase no llegó a valorar vuestra propuesta.',
+		'board.my_standing_waiting': 'Vuestra propuesta aún espera su primera valoración de la clase.',
 		'board.helpers_title': 'Quienes más ayudaron',
 		'board.helpers_sub': 'Puntos ganados por mejorar las propuestas de los demás',
 		'board.helpers_list_title': 'Todos los que ayudaron',
@@ -2356,6 +2361,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Die Punktzahl beginnt bei dem, was die Klasse gegeben hat, und hält dann für jede nicht abgegebene Bewertung ein wenig zurück. Je mehr die Klasse bewertet, desto näher rücken die beiden Zahlen zusammen.',
 		'board.my_standing': 'Euer Vorschlag wurde Platz {{rank}} von {{total}} mit {{n}} Zustimmung',
 		'board.my_standing_unrated': 'Euer Vorschlag wurde diesmal von der Klasse nicht bewertet.',
+		'board.my_standing_waiting':
+			'Euer Vorschlag wartet noch auf seine erste Bewertung aus der Klasse.',
 		'board.helpers_title': 'Die größten Helfer',
 		'board.helpers_sub': 'Punkte dafür, die Vorschläge anderer besser gemacht zu haben',
 		'board.helpers_list_title': 'Alle, die geholfen haben',
@@ -2888,6 +2895,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing':
 			'Jullie voorstel eindigde op plek {{rank}} van {{total}} met {{n}} instemming',
 		'board.my_standing_unrated': 'Jullie voorstel is deze keer niet door de klas beoordeeld.',
+		'board.my_standing_waiting':
+			'Jullie voorstel wacht nog op zijn eerste beoordeling van de klas.',
 		'board.helpers_title': 'Beste helpers',
 		'board.helpers_sub': 'Punten verdiend door andermans voorstellen beter te maken',
 		'board.helpers_list_title': 'Iedereen die hielp',

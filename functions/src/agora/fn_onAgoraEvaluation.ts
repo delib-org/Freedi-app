@@ -51,8 +51,19 @@ interface CampCounts {
 	center: number;
 }
 
+/**
+ * The class, counted two ways, because two different questions are asked of it.
+ *
+ * `counts` is POSITIONED students per camp — the bridging denominator, which is
+ * meaningless for a student whose side nobody knows.
+ * `unpositioned` is the rest of the class. They can still rate, so they are
+ * still part of the population the class consensus divides by; leaving them out
+ * made a proposal read "1 of 0 rated".
+ */
 interface CampCensus {
 	counts: CampCounts;
+	/** Class members who never placed themselves on the scale */
+	unpositioned: number;
 	/** uid → camp for positioned, non-AI students. Free from the same query. */
 	campOf: Map<string, AgoraCamp>;
 }
@@ -65,17 +76,22 @@ async function readCampCensus(sessionId: string): Promise<CampCensus> {
 
 	const counts: CampCounts = { left: 0, right: 0, center: 0 };
 	const campOf = new Map<string, AgoraCamp>();
+	let unpositioned = 0;
 	snapshot.forEach((docSnap) => {
 		const participant = docSnap.data() as AgoraParticipant;
 		if (participant.isAI) return; // synthetic raters never size the pool
 		if (participant.camp === AgoraCamp.left) counts.left++;
 		else if (participant.camp === AgoraCamp.right) counts.right++;
 		else if (participant.camp === AgoraCamp.center) counts.center++;
-		else return;
+		else {
+			unpositioned++; // a class member, but not a camp
+
+			return;
+		}
 		campOf.set(participant.userId, participant.camp);
 	});
 
-	return { counts, campOf };
+	return { counts, unpositioned, campOf };
 }
 
 /**
@@ -174,8 +190,10 @@ async function rebuildStudentDists(
 	snapshot.forEach((docSnap) => {
 		const evaluation = docSnap.data() as Evaluation;
 		if (isAgoraAiUid(evaluation.evaluatorId)) return;
-		const camp = campOf.get(evaluation.evaluatorId);
-		if (!camp) return; // unpositioned students never entered the numerator
+		// Same rule as the live path: an unpositioned student is filed under
+		// center for the histogram. The two must agree, or a rebuild would
+		// quietly drop the very ratings the live path had just counted.
+		const camp = campOf.get(evaluation.evaluatorId) ?? AgoraCamp.center;
 		dists[camp][agoraRatingBucket(evaluation.evaluation)] += 1;
 	});
 
@@ -204,11 +222,30 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				.collection(Collections.agoraParticipants)
 				.doc(createAgoraParticipantId(sessionId, evaluatorId))
 				.get();
-			const evaluatorCamp = (evaluatorSnap.data() as AgoraParticipant | undefined)?.camp;
-			if (!evaluatorCamp) return; // not positioned yet — rating doesn't count for bridging
+			const rater = evaluatorSnap.data() as AgoraParticipant | undefined;
+			/**
+			 * A student who never placed themselves on the scale still belongs to
+			 * the class, and their reading of a proposal is still the class's
+			 * opinion of it — so the rating is COUNTED, filed under center the way
+			 * an unpositioned author's proposal already is.
+			 *
+			 * What it must not do is strengthen a claim about reaching across the
+			 * camps, because nobody knows which side it came from. So only the
+			 * histogram (which the class consensus reads) is applied; the
+			 * sum/n/positiveN the bridging score reads are left alone below.
+			 *
+			 * This used to `return` outright. A class whose teacher advanced past
+			 * positioning — or a student who joined after it — had every rating
+			 * silently destroyed: no consensus, no class picture, and no credit
+			 * for the work either.
+			 */
+			const evaluatorPositioned = Boolean(rater?.camp);
+			const evaluatorCamp = rater?.camp ?? AgoraCamp.center;
 
 			// A brand-new rating (not an edit of one) earns the evaluation
-			// credit — non-blocking, and never fatal to the bridging update
+			// credit — non-blocking, and never fatal to the bridging update.
+			// Paid whether or not the rater is positioned: the credit is for the
+			// labour of weighing a classmate's text, and it is camp-blind.
 			if (!before && after) {
 				await creditRatingEffort(sessionId, evaluatorId).catch((creditError: unknown) => {
 					logError(creditError, {
@@ -230,12 +267,17 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				if (beforeValue !== null) studentDist[agoraRatingBucket(beforeValue)] -= 1;
 				if (afterValue !== null) studentDist[agoraRatingBucket(afterValue)] += 1;
 			}
+			// The bridging half is dropped for an unpositioned rater — see above.
+			// The histogram half survives, so the class consensus still counts them.
 			const delta: CampDelta = {
-				sum: (afterValue ?? 0) - (beforeValue ?? 0),
-				n: (afterValue !== null ? 1 : 0) - (beforeValue !== null ? 1 : 0),
-				positiveN:
-					(afterValue !== null && afterValue > 0 ? 1 : 0) -
-					(beforeValue !== null && beforeValue > 0 ? 1 : 0),
+				sum: evaluatorPositioned ? (afterValue ?? 0) - (beforeValue ?? 0) : 0,
+				n: evaluatorPositioned
+					? (afterValue !== null ? 1 : 0) - (beforeValue !== null ? 1 : 0)
+					: 0,
+				positiveN: evaluatorPositioned
+					? (afterValue !== null && afterValue > 0 ? 1 : 0) -
+						(beforeValue !== null && beforeValue > 0 ? 1 : 0)
+					: 0,
 				studentDist,
 			};
 			if (
@@ -248,7 +290,15 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			}
 
 			const scoreRef = db.collection(Collections.agoraScores).doc(statementId);
-			const { counts: campCounts, campOf } = await readCampCensus(sessionId);
+			const { counts: campCounts, unpositioned, campOf } = await readCampCensus(sessionId);
+			// Bridging asks about camps and gets the positioned counts only. The
+			// class consensus asks "how much of the class has spoken", so it gets
+			// the whole class — the unpositioned filed under centre, exactly where
+			// their ratings are.
+			const consensusPool: CampCounts = {
+				...campCounts,
+				center: campCounts.center + unpositioned,
+			};
 
 			const authorToCredit = await db.runTransaction(async (transaction) => {
 				const scoreSnap = await transaction.get(scoreRef);
@@ -329,7 +379,7 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				// corrected against the students who could have rated it.
 				const classConsensus = calcAgoraClassConsensus({
 					perCamp: score.perCamp,
-					eligible: eligiblePoolFor(score, campCounts),
+					eligible: eligiblePoolFor(score, consensusPool),
 				});
 				if (classConsensus) score.classConsensus = classConsensus;
 				score.lastUpdate = Date.now();

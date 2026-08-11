@@ -861,7 +861,10 @@ export function ResultsBoard(
 							'p.board__my-standing',
 							{ class: mine.rank <= MEDALS.length ? 'board__my-standing--podium' : undefined },
 							mine.consensus === undefined
-								? t('board.my_standing_unrated')
+								? // Mid-lesson "nobody has rated it YET" and end-of-lesson
+									// "nobody ever did" are different facts. Only the finale
+									// is entitled to the past tense.
+									t(attrs.finale ? 'board.my_standing_unrated' : 'board.my_standing_waiting')
 								: t('board.my_standing', {
 										rank: mine.rank,
 										total: points.length,
