@@ -6550,9 +6550,13 @@
 		color: var(--text-secondary);
 	}
 
-	// --- the helpers podium -----------------------------------------------------------
-	// The other way to win the lesson: the board says so out loud, on a stage of
-	// its own.
+	// --- helping hands -----------------------------------------------------------------
+	// Was a 🥇🥈🥉 podium over a bar chart. Helping points are small integers —
+	// one per thank-you — so ties are the ordinary case, and both devices exist
+	// to show an ORDER: the podium crowned one of two equal students gold and
+	// the other silver, and the bars, scaled to the top helper, drew every tied
+	// student at a full 100%. Now: one class total, then groups of equal
+	// standing. No rank number, no medal, no bar.
 	&__helpers {
 		display: flex;
 		flex-direction: column;
@@ -6563,146 +6567,91 @@
 		border-radius: var(--radius-lg);
 	}
 
+	&__helpers-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	// The one number in this section, and it belongs to the class
+	&__tally {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--peer-glow);
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+	}
+
 	&__helpers-sub,
 	&__helpers-empty {
 		font-size: var(--font-size-sm);
 		color: var(--text-secondary);
+		line-height: 1.45;
 	}
 
-	&__helpers-mine {
+	&__helpers-me {
+		padding-block-start: var(--space-sm);
+		border-block-start: 1px dashed var(--border-subtle);
 		font-size: var(--font-size-sm);
-		color: var(--peer-glow);
-		font-weight: 600;
-		text-align: center;
-	}
-
-	&__podium {
-		display: flex;
-		align-items: flex-end;
-		justify-content: center;
-		gap: var(--space-sm);
-	}
-
-	&__helper {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		align-items: center;
-		gap: 2px;
-		max-width: 11rem;
-		padding: var(--space-sm);
-		background: var(--bg-card-solid);
-		border: 1px solid var(--border-subtle);
-		border-radius: var(--radius-md);
-		border-block-end: 4px solid var(--parchment-dim);
-
-		// Gold stands tallest, then silver, then bronze — the step height IS the
-		// ranking, so the medals never have to be counted
-		&--1 {
-			padding-block: var(--space-md);
-			border-block-end-color: var(--warning);
-		}
-
-		&--2 {
-			padding-block: var(--space-sm) var(--space-md);
-		}
-
-		&--mine {
-			border-color: var(--lantern);
-			background: var(--wash-mine-low);
-		}
-	}
-
-	&__helper-medal {
-		font-size: var(--font-size-xl);
-		line-height: 1;
-	}
-
-	&__helper-name {
-		font-size: var(--font-size-sm);
-		color: var(--text-primary);
-		text-align: center;
-		overflow-wrap: anywhere;
-	}
-
-	&__helper-points {
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		color: var(--peer-glow);
-		font-variant-numeric: tabular-nums;
-	}
-
-	// --- every helper, listed -----------------------------------------------------------
-	// The podium is the celebration; this is the record. A class has more than
-	// three people who helped, and a helper whose name appears nowhere has been
-	// told their help did not count.
-	&__helpers-list-title {
-		font-family: var(--font-display);
-		font-size: var(--font-size-sm);
-		color: var(--text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		margin-block-start: var(--space-xs);
-	}
-
-	&__helper-list {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	&__helper-row {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-xs) var(--space-sm);
-		border-radius: var(--radius-sm);
-		font-size: var(--font-size-sm);
-
-		&--mine {
-			background: var(--wash-mine-low);
-			box-shadow: inset 0 0 0 1px var(--border-lantern);
-		}
-	}
-
-	&__helper-row-rank {
-		flex: 0 0 auto;
-		min-width: 2.2em;
-		font-family: var(--font-display);
 		color: var(--text-secondary);
 	}
 
-	&__helper-row-name {
-		flex: 0 0 8.5rem;
-		color: var(--text-primary);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+	&__bands {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
 	}
 
-	&__helper-row-track {
-		flex: 1;
-		height: 8px;
-		min-width: 2rem;
-		border-radius: var(--radius-full);
-		background: var(--bg-inset);
-		overflow: hidden;
+	&__band {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
 	}
 
-	&__helper-row-fill {
-		height: 100%;
-		border-radius: var(--radius-full);
-		background: var(--peer);
-		transition: width var(--motion-base) var(--ease-camera);
+	&__band-crown {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		color: var(--peer-glow);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 	}
 
-	&__helper-row-points {
+	&__band-row {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
+	}
+
+	&__band-count {
 		flex: 0 0 auto;
-		min-width: 4.5em;
-		text-align: end;
+		min-width: 3.5em;
 		font-family: var(--font-display);
 		color: var(--peer-glow);
 		font-variant-numeric: tabular-nums;
+	}
+
+	&__band-names {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__chip {
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+
+		// Same "mine" grammar the map point and the champion card already use
+		&--mine {
+			background: var(--wash-mine-low);
+			border-color: var(--lantern);
+			color: var(--lantern-glow);
+			font-weight: 700;
+		}
 	}
 }
 
@@ -6733,7 +6682,7 @@
 	.board__detail-sub,
 	.board__axis-y-title,
 	.board__bridge-label,
-	.board__helpers-list-title {
+	.board__band-crown {
 		letter-spacing: normal;
 	}
 }
@@ -6769,8 +6718,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.board__point,
 	.board__meter-fill,
-	.board__bucket-bar,
-	.board__helper-row-fill {
+	.board__bucket-bar {
 		transition: none;
 	}
 

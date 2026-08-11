@@ -191,8 +191,14 @@ number, never names.
 ## Gotchas (hard-won)
 
 - **Mithril keyed fragments**: never spread `...list.map(keyed)` among
-  unkeyed siblings — pass the map as a nested array. Symptom: frozen DOM /
-  silent redraw crash. Hit 3×.
+  unkeyed siblings. Symptom: the whole screen goes blank mid-redraw
+  ("In fragments, vnodes must either all have keys or none have keys"),
+  which reads as a data bug — the ClassPicture went blank for a whole
+  session this way, because the empty state has no keys and so nothing
+  fails until the FIRST row appears. Hit 4×. The reliable fix is a
+  wrapper element around the keyed children (`m('.thing-list', items.map(…))`),
+  not a nested array in place — the wrapper also gives the group somewhere
+  to hang its own spacing.
 - Stale browser tabs after code changes look like data bugs (e.g. teacher
   showing 8 participants = 6 AI raters unfiltered by old JS). Hard-refresh.
 - **PWA service worker poisoning (2026-07-13)**: a production-build SW once

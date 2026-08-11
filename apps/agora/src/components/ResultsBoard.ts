@@ -65,8 +65,15 @@ interface BoardPoint {
 interface HelperRow {
 	participant: AgoraParticipant;
 	points: number;
-	rank: number;
 	isMine: boolean;
+}
+
+/** Everyone thanked the same number of times — one row, no order within it */
+interface HelperBand {
+	points: number;
+	rows: HelperRow[];
+	/** Thank-yous exchanged in the whole class; the same on every band */
+	total: number;
 }
 
 /** The five bucket faces, most against to most for */
@@ -296,8 +303,19 @@ export function ResultsBoard(
 
 			return b.consensus.consensus - a.consensus.consensus;
 		});
+		// Standard competition ranking: two proposals the class agrees with
+		// equally are BOTH second, and nothing is third. Numbering them 2 and 3
+		// on the strength of a sort order invents a difference the class never
+		// expressed — the same lie the helpers podium used to tell.
 		points.forEach((point, index) => {
-			point.rank = index + 1;
+			const previous = points[index - 1];
+			point.rank =
+				previous !== undefined &&
+				previous.percent === point.percent &&
+				previous.consensus !== undefined &&
+				point.consensus !== undefined
+					? previous.rank
+					: index + 1;
 		});
 
 		// The server names the winner once the lesson ends (by the same class
@@ -312,30 +330,39 @@ export function ResultsBoard(
 		return points;
 	}
 
-	function buildHelpers(attrs: ResultsBoardAttrs): HelperRow[] {
-		const rows = attrs.participants
-			.map((participant) => ({
+	/**
+	 * Helpers grouped by how many thank-yous they got, most first.
+	 *
+	 * Grouped rather than ranked, because a helping point is not a score — it is
+	 * one classmate saying "your idea made my proposal better". They are small
+	 * integers, so ties are the ordinary case, not an edge case; a podium fed
+	 * tied data invents a difference that does not exist, and crowns one of two
+	 * students who did exactly the same amount of good.
+	 */
+	function buildBands(attrs: ResultsBoardAttrs): HelperBand[] {
+		const byPoints = new Map<number, HelperRow[]>();
+		let total = 0;
+		for (const participant of attrs.participants) {
+			const points = participant.points.helping;
+			if (points <= 0) continue;
+			total += points;
+			const row: HelperRow = {
 				participant,
-				points: participant.points.helping,
-				rank: 0,
+				points,
 				isMine: participant.userId === attrs.userId,
-			}))
-			.filter((row) => row.points > 0)
-			.sort((a, b) => b.points - a.points)
-			.map((row, index) => ({ ...row, rank: index + 1 }));
-
-		// "Where am I?" has to have an answer even when the answer is "nowhere
-		// yet". A student who helped nobody was silently absent from the list,
-		// which reads as a missing row rather than as a score of zero — so they
-		// get a rank-less row of their own at the end.
-		if (!rows.some((row) => row.isMine)) {
-			const me = attrs.participants.find((participant) => participant.userId === attrs.userId);
-			if (me) {
-				rows.push({ participant: me, points: me.points.helping, rank: 0, isMine: true });
-			}
+			};
+			byPoints.set(points, [...(byPoints.get(points) ?? []), row]);
 		}
 
-		return rows;
+		return [...byPoints.entries()]
+			.sort((a, b) => b[0] - a[0])
+			.map(([points, rows]) => ({
+				points,
+				total,
+				// My chip first inside its band, then roster order — stable, so the
+				// list never reshuffles itself between redraws
+				rows: [...rows].sort((a, b) => Number(b.isMine) - Number(a.isMine)),
+			}));
 	}
 
 	// ---------- the map ----------
@@ -508,7 +535,7 @@ export function ResultsBoard(
 
 	// ---------- the crown ----------
 
-	function champion(points: BoardPoint[]): m.Children {
+	function champion(points: BoardPoint[], attrs: ResultsBoardAttrs): m.Children {
 		const lead = points.find((point) => point.isLead);
 		if (!lead || lead.consensus === undefined) return null;
 
@@ -516,7 +543,10 @@ export function ResultsBoard(
 		const display = reducedMotion() ? lead.percent : shown;
 
 		return m('.board__champion', { class: lead.isMine ? 'board__champion--mine' : undefined }, [
-			m('p.board__eyebrow', `🏆 ${t('board.champion_title')}`),
+			m(
+				'p.board__eyebrow',
+				attrs.finale ? `🏆 ${t('board.champion_title')}` : `📣 ${t('board.champion_leading')}`,
+			),
 			m(
 				'.board__champion-score.board__num',
 				{
@@ -709,7 +739,10 @@ export function ResultsBoard(
 					t('board.detail_rank'),
 					behind > 0
 						? t('board.detail_behind', { n: behind, rank: point.rank })
-						: t('board.detail_leader'),
+						: // Level with the leader without BEING the leader: the old
+							// two-way branch told a joint-second proposal that nobody
+							// scored higher, which the map beside it contradicted
+							t(point.isLead ? 'board.detail_leader' : 'board.detail_tied'),
 					{ numeric: false },
 				),
 			]),
@@ -742,95 +775,122 @@ export function ResultsBoard(
 		]);
 	}
 
-	// ---------- the helpers podium ----------
+	// ---------- helping hands ----------
 
-	function helperCard(row: HelperRow): m.Children {
+	/** One classmate's name, or mine, marked the way "mine" is marked everywhere */
+	function helperChip(row: HelperRow): m.Children {
 		return m(
-			'.board__helper',
+			'span.board__chip',
 			{
 				key: row.participant.participantId,
-				class: [`board__helper--${row.rank}`, row.isMine ? 'board__helper--mine' : undefined]
-					.filter(Boolean)
-					.join(' '),
+				class: row.isMine ? 'board__chip--mine' : undefined,
 			},
-			[
-				m('span.board__helper-medal', { 'aria-hidden': 'true' }, rankBadge(row.rank)),
-				m('span.board__helper-name', row.isMine ? t('board.you') : row.participant.anonName),
-				m('span.board__helper-points', t('board.helper_points', { n: row.points })),
-			],
+			row.isMine ? t('board.you') : row.participant.anonName,
 		);
 	}
 
 	/**
-	 * The record under the celebration. The podium shows three; the class has
-	 * more than three people who helped, and a helper whose name never appears
-	 * anywhere has been told their help did not count. The bar is scaled to the
-	 * top helper, so the list reads as a shape before it reads as numbers.
+	 * Everyone thanked the same number of times, on one line.
+	 *
+	 * No rank number, no medal, no bar: all three are devices for showing an
+	 * ORDER, and inside a band there is none — these students did equally well.
+	 * The count says how much, once, at the head of the row.
 	 */
-	function helperList(helpers: HelperRow[]): m.Children {
-		const top = Math.max(1, helpers[0]?.points ?? 1);
-
-		return m(
-			'.board__helper-list',
-			helpers.map((row) =>
-				m(
-					'.board__helper-row',
-					{
-						key: row.participant.participantId,
-						class: row.isMine ? 'board__helper-row--mine' : undefined,
-					},
-					[
-						m('span.board__helper-row-rank', row.rank > 0 ? rankBadge(row.rank) : '—'),
-						m(
-							'span.board__helper-row-name',
-							row.isMine ? m('span.board__you', t('board.you')) : row.participant.anonName,
-						),
-						m('.board__helper-row-track', [
-							m('.board__helper-row-fill', { style: { width: `${(row.points / top) * 100}%` } }),
-						]),
-						m(
-							'span.board__helper-row-points.board__num',
-							t('board.helper_points', { n: row.points }),
-						),
-					],
-				),
+	function helperBand(band: HelperBand, topLabel: string | null): m.Children {
+		return m('.board__band', { key: band.points }, [
+			topLabel ? m('p.board__band-crown', `✨ ${topLabel}`) : null,
+			m(
+				'.board__band-row',
+				{
+					role: 'group',
+					'aria-label': t('board.helpers_band_aria', {
+						n: band.points,
+						names: band.rows
+							.map((row) => (row.isMine ? t('board.you') : row.participant.anonName))
+							.join(', '),
+					}),
+				},
+				[
+					m('span.board__band-count.board__num', `🙏 ${isolate(`×${band.points}`)}`),
+					m(
+						'.board__band-names',
+						band.rows.map((row) => helperChip(row)),
+					),
+				],
 			),
-		);
+		]);
 	}
 
-	function helpersPodium(helpers: HelperRow[]): m.Children {
-		if (helpers.every((row) => row.rank === 0)) {
-			return m('.board__helpers', [
-				m('p.board__eyebrow', `🤝 ${t('board.helpers_title')}`),
-				m('p.board__helpers-empty', t('board.helpers_empty')),
-			]);
-		}
-
-		const ranked = helpers.filter((row) => row.rank > 0);
-		const podium = ranked.slice(0, PODIUM_SIZE);
-		const mine = ranked.find((row) => row.isMine);
-		const mineOffPodium = mine && mine.rank > PODIUM_SIZE ? mine : undefined;
+	/**
+	 * Helping hands: what the class did for each other.
+	 *
+	 * This was a 🥇🥈🥉 podium over a bar chart, and it was quietly dishonest.
+	 * Helping points are small integers — one per thank-you — so two students on
+	 * one point each is the ORDINARY state, and the podium crowned one of them
+	 * gold and the other silver for identical work. The bars, scaled to the top
+	 * helper, then rendered every tied student at a full 100%: two maxed bars
+	 * that read as a rendering fault. And the podium and the list said the same
+	 * thing twice, one directly above the other.
+	 *
+	 * So the headline number is the CLASS's — thanks exchanged, a total nobody
+	 * can lose — and underneath, students are grouped by how often they were
+	 * thanked. The order between groups is real; inside a group there is none,
+	 * and none is shown.
+	 */
+	function helpingHands(bands: HelperBand[], attrs: ResultsBoardAttrs): m.Children {
+		const total = bands[0]?.total ?? 0;
+		const iAmListed = bands.some((band) => band.rows.some((row) => row.isMine));
+		const iAmInTheClass = attrs.participants.some(
+			(participant) => participant.userId === attrs.userId,
+		);
 
 		return m('.board__helpers', [
-			m('p.board__eyebrow', `🤝 ${t('board.helpers_title')}`),
-			m('p.board__helpers-sub', t('board.helpers_sub')),
-			// Silver-gold-bronze reading order, so the tallest step is the middle
-			m(
-				'.board__podium',
-				[podium[1], podium[0], podium[2]].filter(Boolean).map((row) => helperCard(row)),
-			),
-			mineOffPodium
+			m('.board__helpers-head', [
+				m('p.board__eyebrow', `🤝 ${t('board.helpers_title')}`),
+				m(
+					'span.board__tally.board__num',
+					{ 'aria-label': t('board.helpers_tally_aria', { n: total }) },
+					`🙏 ${total}`,
+				),
+			]),
+			bands.length === 0
 				? m(
-						'p.board__helpers-mine',
-						t('board.helpers_my_rank', {
-							rank: mineOffPodium.rank,
-							total: ranked.length,
-							n: mineOffPodium.points,
-						}),
+						'p.board__helpers-empty',
+						t(attrs.finale ? 'board.helpers_empty_finale' : 'board.helpers_empty_live'),
 					)
-				: null,
-			m('p.board__helpers-list-title', t('board.helpers_list_title')),
-			helperList(helpers),
+				: [
+						// What a point MEANS, said once. Without it the number is an
+						// abstraction; with it, it is a classmate's thank-you.
+						m('p.board__helpers-sub', t('board.helpers_sub')),
+						// The keyed bands live in their own element: mithril refuses a
+						// fragment where only SOME children carry keys, and the lines
+						// around them here are unkeyed
+						m(
+							'.board__bands',
+							bands.map((band, index) =>
+								helperBand(
+									band,
+									// The laurel names a top only when there IS one: never
+									// mid-lesson, and never when every helper is level, because
+									// among equals nobody is most.
+									attrs.finale && index === 0 && bands.length > 1
+										? band.rows.length > 1
+											? t('board.helpers_most_shared')
+											: t('board.helpers_most')
+										: null,
+								),
+							),
+						),
+						// "Where am I?" must have an answer even when the answer is
+						// "nowhere yet" — an absent name reads as a missing row, not as a
+						// zero
+						!iAmListed && iAmInTheClass
+							? m(
+									'p.board__helpers-me',
+									t(attrs.finale ? 'board.helpers_me_zero_finale' : 'board.helpers_me_zero_live'),
+								)
+							: null,
+					],
 		]);
 	}
 
@@ -854,7 +914,7 @@ export function ResultsBoard(
 			const mine = points.find((point) => point.isMine);
 
 			return m('.board', [
-				champion(points),
+				champion(points, attrs),
 
 				mine
 					? m(
@@ -876,7 +936,7 @@ export function ResultsBoard(
 				plot(points, attrs.topic),
 				detail(points, attrs.topic),
 				unplaced(points),
-				helpersPodium(buildHelpers(attrs)),
+				helpingHands(buildBands(attrs), attrs),
 			]);
 		},
 	};

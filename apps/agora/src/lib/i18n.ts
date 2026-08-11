@@ -315,6 +315,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.detail_rank': 'איפה ההצעה סיימה',
 		'board.detail_behind': 'מקום {{rank}} — {{n}} נקודות מאחורי המנצחת',
 		'board.detail_leader': 'מקום 1 — אף אחד לא קיבל יותר',
+		'board.detail_tied': 'שוות בראש — יחד עם ההצעה המובילה',
+		'board.champion_leading': 'ההצעה שמובילה כרגע',
 		'board.detail_spread': 'איך הכיתה הצביעה',
 		'board.detail_camps': 'תמיכה מכל צד',
 		'board.detail_why':
@@ -322,12 +324,18 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing': 'ההצעה שלכם סיימה במקום {{rank}} מתוך {{total}} עם {{n}} הסכמה',
 		'board.my_standing_unrated': 'ההצעה שלכם לא זכתה לדירוג מהכיתה הפעם.',
 		'board.my_standing_waiting': 'ההצעה שלכם עוד מחכה לדירוג ראשון מהכיתה.',
-		'board.helpers_title': 'העוזרים המובילים',
-		'board.helpers_sub': 'נקודות שנצברו משיפור ההצעות של אחרים',
-		'board.helpers_list_title': 'כל מי שעזר',
-		'board.helpers_empty': 'אף אחד לא צבר נקודות עזרה בסבב הזה — בשיעור הבא הפודיום פתוח לגמרי.',
-		'board.helper_points': '{{n}} נק׳',
-		'board.helpers_my_rank': 'אתם במקום {{rank}} מתוך {{total}} עוזרים, עם {{n}} נקודות',
+		'board.helpers_title': 'ידיים עוזרות',
+		'board.helpers_tally': '{{n}} תודות',
+		'board.helpers_tally_aria': '{{n}} תודות הוחלפו בכיתה',
+		'board.helpers_sub': 'כל 🙏 כאן הוא חבר כיתה שאומר: הרעיון שלכם שיפר לי את ההצעה.',
+		'board.helpers_band_aria': '{{n}} תודות: {{names}}',
+		'board.helpers_most': 'הכי הרבה תודות',
+		'board.helpers_most_shared': 'הכי הרבה תודות — במשותף',
+		'board.helpers_empty_live':
+			'עוד אין תודות. שלחו למישהו רעיון להצעה שלו — אם זה יעזור, השם שלכם ינחת כאן.',
+		'board.helpers_empty_finale': 'הפעם לא הוחלפו תודות. זה המספר הכי קל במשחק לשבור בשיעור הבא.',
+		'board.helpers_me_zero_live': 'אתם · עוד בלי תודות — הרעיון הבא שלכם יכול לנחות כאן',
+		'board.helpers_me_zero_finale': 'אתם · בלי תודות בסבב הזה',
 		'delib.results_title': 'תמונת הכיתה',
 		'delib.results_soon':
 			'כאן תופיע תמונת הכיתה — לאן הגיעו ההצעות ומה גישר בין המחנות. עוד לא מוכן.',
@@ -815,6 +823,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.detail_rank': 'Where it finished',
 		'board.detail_behind': '#{{rank}} — {{n}} points behind the winner',
 		'board.detail_leader': '#1 — nobody scored higher',
+		'board.detail_tied': 'Level at the top — tied with the leading proposal',
+		'board.champion_leading': 'Leading right now',
 		'board.detail_spread': 'How the class voted',
 		'board.detail_camps': 'Support from each side',
 		'board.detail_why':
@@ -823,13 +833,19 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Your proposal never got rated by the class this time.',
 		'board.my_standing_waiting':
 			'Your proposal is still waiting for its first rating from the class.',
-		'board.helpers_title': 'Top helpers',
-		'board.helpers_sub': "Points earned by making other people's proposals better",
-		'board.helpers_list_title': 'Everyone who helped',
-		'board.helpers_empty':
-			'Nobody earned helping points this round — next lesson that podium is wide open.',
-		'board.helper_points': '{{n}} pts',
-		'board.helpers_my_rank': 'You are helper #{{rank}} of {{total}} with {{n}} points',
+		'board.helpers_title': 'Helping hands',
+		'board.helpers_tally': '{{n}} thanks',
+		'board.helpers_tally_aria': '{{n}} thanks exchanged in this class',
+		'board.helpers_sub': 'Every 🙏 here is a classmate saying: your idea made my proposal better.',
+		'board.helpers_band_aria': '{{n}} thanks: {{names}}',
+		'board.helpers_most': 'Most thanked',
+		'board.helpers_most_shared': 'Most thanked — shared',
+		'board.helpers_empty_live':
+			'No thanks yet. Send someone an idea for their proposal — if it helps, your name lands here.',
+		'board.helpers_empty_finale':
+			'No thanks were exchanged this time. That is the easiest number in the game to beat next lesson.',
+		'board.helpers_me_zero_live': 'You · no thanks yet — your next idea could land here',
+		'board.helpers_me_zero_finale': 'You · no thanks this round',
 		'delib.results_title': 'The class picture',
 		'delib.results_soon':
 			'The class picture will appear here — where the proposals landed and what bridged the camps. Not ready yet.',
@@ -1316,6 +1332,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.detail_rank': 'أين أنهى',
 		'board.detail_behind': 'المركز {{rank}} — {{n}} نقطة خلف الفائز',
 		'board.detail_leader': 'المركز 1 — لم يحصل أحد على أكثر',
+		'board.detail_tied': 'متعادل في الصدارة — مع الاقتراح المتصدر',
+		'board.champion_leading': 'المتصدر الآن',
 		'board.detail_spread': 'كيف صوّت الصف',
 		'board.detail_camps': 'الدعم من كل جانب',
 		'board.detail_why':
@@ -1323,13 +1341,19 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing': 'أنهى اقتراحكم في المركز {{rank}} من {{total}} باتفاق {{n}}',
 		'board.my_standing_unrated': 'لم يحصل اقتراحكم على تقييم من الصف هذه المرة.',
 		'board.my_standing_waiting': 'اقتراحكم ما زال ينتظر أول تقييم من الصف.',
-		'board.helpers_title': 'أفضل المساعدين',
-		'board.helpers_sub': 'نقاط رُبحت من تحسين اقتراحات الآخرين',
-		'board.helpers_list_title': 'كل من ساعد',
-		'board.helpers_empty':
-			'لم يربح أحد نقاط مساعدة في هذه الجولة — المنصة مفتوحة تماماً في الدرس القادم.',
-		'board.helper_points': '{{n}} نقطة',
-		'board.helpers_my_rank': 'أنتم المساعد رقم {{rank}} من {{total}} بـ {{n}} نقطة',
+		'board.helpers_title': 'أيادٍ تساعد',
+		'board.helpers_tally': '{{n}} شكرًا',
+		'board.helpers_tally_aria': 'تم تبادل {{n}} شكرًا في هذا الصف',
+		'board.helpers_sub': 'كل 🙏 هنا زميل يقول: فكرتكم حسّنت اقتراحي.',
+		'board.helpers_band_aria': '{{n}} شكرًا: {{names}}',
+		'board.helpers_most': 'الأكثر شكرًا',
+		'board.helpers_most_shared': 'الأكثر شكرًا — بالتساوي',
+		'board.helpers_empty_live':
+			'لا شكر بعد. أرسلوا لأحدهم فكرة لاقتراحه — إن ساعدت، سيظهر اسمكم هنا.',
+		'board.helpers_empty_finale':
+			'لم يُتبادل أي شكر هذه المرة. هذا أسهل رقم في اللعبة يمكن تجاوزه في الدرس القادم.',
+		'board.helpers_me_zero_live': 'أنتم · لا شكر بعد — فكرتكم القادمة قد تصل إلى هنا',
+		'board.helpers_me_zero_finale': 'أنتم · بلا شكر هذه الجولة',
 		'delib.results_title': 'صورة الصف',
 		'delib.results_soon':
 			'ستظهر هنا صورة الصف — إلى أين وصلت الاقتراحات وما الذي جسر بين المعسكرات. ليست جاهزة بعد.',
@@ -1827,6 +1851,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.detail_rank': 'Dónde terminó',
 		'board.detail_behind': 'Puesto {{rank}} — {{n}} puntos por detrás de la ganadora',
 		'board.detail_leader': 'Puesto 1 — nadie sacó más',
+		'board.detail_tied': 'Empatada en cabeza — con la propuesta líder',
+		'board.champion_leading': 'A la cabeza ahora mismo',
 		'board.detail_spread': 'Cómo votó la clase',
 		'board.detail_camps': 'Apoyo de cada lado',
 		'board.detail_why':
@@ -1835,14 +1861,20 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Vuestra propuesta terminó en el puesto {{rank}} de {{total}} con un {{n}} de acuerdo',
 		'board.my_standing_unrated': 'Esta vez la clase no llegó a valorar vuestra propuesta.',
 		'board.my_standing_waiting': 'Vuestra propuesta aún espera su primera valoración de la clase.',
-		'board.helpers_title': 'Quienes más ayudaron',
-		'board.helpers_sub': 'Puntos ganados por mejorar las propuestas de los demás',
-		'board.helpers_list_title': 'Todos los que ayudaron',
-		'board.helpers_empty':
-			'Nadie ganó puntos de ayuda en esta ronda: el podio está libre para la próxima clase.',
-		'board.helper_points': '{{n}} pts',
-		'board.helpers_my_rank':
-			'Sois quien más ayudó en el puesto {{rank}} de {{total}}, con {{n}} puntos',
+		'board.helpers_title': 'Manos que ayudan',
+		'board.helpers_tally': '{{n}} gracias',
+		'board.helpers_tally_aria': '{{n}} gracias intercambiadas en esta clase',
+		'board.helpers_sub': 'Cada 🙏 es un compañero diciendo: vuestra idea mejoró mi propuesta.',
+		'board.helpers_band_aria': '{{n}} gracias: {{names}}',
+		'board.helpers_most': 'Más agradecido',
+		'board.helpers_most_shared': 'Más agradecido — compartido',
+		'board.helpers_empty_live':
+			'Aún no hay gracias. Enviad a alguien una idea para su propuesta: si ayuda, vuestro nombre aparecerá aquí.',
+		'board.helpers_empty_finale':
+			'Esta vez no se intercambiaron gracias. Es el número más fácil del juego de superar la próxima clase.',
+		'board.helpers_me_zero_live':
+			'Vosotros · aún sin gracias — vuestra próxima idea puede llegar aquí',
+		'board.helpers_me_zero_finale': 'Vosotros · sin gracias esta ronda',
 		'delib.results_title': 'La foto de la clase',
 		'delib.results_soon':
 			'Aquí aparecerá la foto de la clase: dónde han llegado las propuestas y qué ha tendido puentes entre los bandos. Aún no está lista.',
@@ -2355,6 +2387,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.detail_rank': 'Wo er gelandet ist',
 		'board.detail_behind': 'Platz {{rank}} — {{n}} Punkte hinter dem Sieger',
 		'board.detail_leader': 'Platz 1 — niemand hatte mehr',
+		'board.detail_tied': 'Gleichauf an der Spitze — mit dem führenden Vorschlag',
+		'board.champion_leading': 'Zurzeit vorn',
 		'board.detail_spread': 'Wie die Klasse abgestimmt hat',
 		'board.detail_camps': 'Zustimmung von jeder Seite',
 		'board.detail_why':
@@ -2363,13 +2397,20 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Euer Vorschlag wurde diesmal von der Klasse nicht bewertet.',
 		'board.my_standing_waiting':
 			'Euer Vorschlag wartet noch auf seine erste Bewertung aus der Klasse.',
-		'board.helpers_title': 'Die größten Helfer',
-		'board.helpers_sub': 'Punkte dafür, die Vorschläge anderer besser gemacht zu haben',
-		'board.helpers_list_title': 'Alle, die geholfen haben',
-		'board.helpers_empty':
-			'In dieser Runde hat niemand Helferpunkte gesammelt — nächste Stunde ist das Podest frei.',
-		'board.helper_points': '{{n}} Pkt.',
-		'board.helpers_my_rank': 'Ihr seid Helfer Nr. {{rank}} von {{total}} mit {{n}} Punkten',
+		'board.helpers_title': 'Helfende Hände',
+		'board.helpers_tally': '{{n}} Danke',
+		'board.helpers_tally_aria': '{{n}} Danke in dieser Klasse ausgetauscht',
+		'board.helpers_sub':
+			'Jedes 🙏 hier ist ein Mitschüler, der sagt: eure Idee hat meinen Vorschlag besser gemacht.',
+		'board.helpers_band_aria': '{{n}} Danke: {{names}}',
+		'board.helpers_most': 'Am meisten gedankt',
+		'board.helpers_most_shared': 'Am meisten gedankt — geteilt',
+		'board.helpers_empty_live':
+			'Noch kein Danke. Schickt jemandem eine Idee für seinen Vorschlag — wenn sie hilft, landet euer Name hier.',
+		'board.helpers_empty_finale':
+			'Diesmal wurde kein Danke ausgetauscht. Das ist die leichteste Zahl im Spiel, die nächste Stunde zu übertreffen.',
+		'board.helpers_me_zero_live': 'Ihr · noch kein Danke — eure nächste Idee könnte hier landen',
+		'board.helpers_me_zero_finale': 'Ihr · kein Danke in dieser Runde',
 		'delib.results_title': 'Das Klassenbild',
 		'delib.results_soon':
 			'Hier erscheint das Klassenbild — wohin die Vorschläge gekommen sind und was zwischen den Lagern Brücken gebaut hat. Noch nicht fertig.',
@@ -2888,6 +2929,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.detail_rank': 'Waar het eindigde',
 		'board.detail_behind': 'Plek {{rank}} — {{n}} punten achter de winnaar',
 		'board.detail_leader': 'Plek 1 — niemand scoorde hoger',
+		'board.detail_tied': 'Gelijk aan kop — samen met het leidende voorstel',
+		'board.champion_leading': 'Nu aan de leiding',
 		'board.detail_spread': 'Hoe de klas stemde',
 		'board.detail_camps': 'Steun van elke kant',
 		'board.detail_why':
@@ -2897,13 +2940,21 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Jullie voorstel is deze keer niet door de klas beoordeeld.',
 		'board.my_standing_waiting':
 			'Jullie voorstel wacht nog op zijn eerste beoordeling van de klas.',
-		'board.helpers_title': 'Beste helpers',
-		'board.helpers_sub': 'Punten verdiend door andermans voorstellen beter te maken',
-		'board.helpers_list_title': 'Iedereen die hielp',
-		'board.helpers_empty':
-			'Niemand verdiende deze ronde helperpunten — volgende les ligt het podium helemaal open.',
-		'board.helper_points': '{{n}} ptn',
-		'board.helpers_my_rank': 'Jullie zijn helper #{{rank}} van {{total}} met {{n}} punten',
+		'board.helpers_title': 'Helpende handen',
+		'board.helpers_tally': '{{n}} bedankjes',
+		'board.helpers_tally_aria': '{{n}} bedankjes uitgewisseld in deze klas',
+		'board.helpers_sub':
+			'Elke 🙏 hier is een klasgenoot die zegt: jullie idee maakte mijn voorstel beter.',
+		'board.helpers_band_aria': '{{n}} bedankjes: {{names}}',
+		'board.helpers_most': 'Meest bedankt',
+		'board.helpers_most_shared': 'Meest bedankt — gedeeld',
+		'board.helpers_empty_live':
+			'Nog geen bedankjes. Stuur iemand een idee voor hun voorstel — als het helpt, staat jouw naam hier.',
+		'board.helpers_empty_finale':
+			'Deze keer zijn er geen bedankjes uitgewisseld. Dat is het makkelijkste getal in het spel om volgende les te verslaan.',
+		'board.helpers_me_zero_live':
+			'Jullie · nog geen bedankjes — jullie volgende idee kan hier landen',
+		'board.helpers_me_zero_finale': 'Jullie · geen bedankjes deze ronde',
 		'delib.results_title': 'Het klassenbeeld',
 		'delib.results_soon':
 			'Hier komt het klassenbeeld — waar de voorstellen zijn beland en wat de kampen heeft verbonden. Nog niet klaar.',
