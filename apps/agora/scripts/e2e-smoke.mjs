@@ -1,4 +1,8 @@
 import { chromium } from '@playwright/test';
+import { preflight } from './lib/preflight.mjs';
+
+// Fail in seconds with a readable reason instead of minutes with a stack trace
+await preflight();
 
 const AUTH = 'http://localhost:9099/identitytoolkit.googleapis.com/v1';
 const FN = 'http://localhost:5001/freedi-test/me-west1';
@@ -61,31 +65,10 @@ for (let s = 0; s < 2; s++) {
   await page.waitForTimeout(400);
 }
 
-// Value identification: answer for both characters (real AI grading)
-await advance('valueIdentification');
-await page.waitForSelector('.values__textarea', { timeout: 8000 });
-const answers = [
-  'לדמות הזו חשובים סדר ויציבות, היא מפחדת מכאוס ואלימות. חשובה לה גם המסורת של הכנסייה והכתר, והיא מאמינה בהיררכיה — שרק בעלי ניסיון ומעמד צריכים להנהיג.',
-  'לדמות הזו חשוב השוויון בין כל בני האדם וביטול זכויות היתר. חשובה לו החירות של הפרט מול שלטון עריץ, והוא מאמין שריבונות העם היא מקור הלגיטימציה לשלטון.',
-];
-for (let a = 0; a < answers.length; a++) {
-  await page.waitForSelector('.values__textarea', { timeout: 10000 });
-  await page.locator('.values__textarea').fill(answers[a]);
-  await page.getByRole('button').filter({ hasNotText: /^$/ }).locator('visible=true').first().click();
-  // wait for grade to land (AI roundtrip)
-  try {
-    await page.waitForSelector('.values__score', { timeout: 60000 });
-    console.log('GRADE:', await page.locator('.values__score').first().textContent());
-    console.log('FEEDBACK:', (await page.locator('.values__feedback').first().textContent()).slice(0, 120));
-  } catch (e) {
-    await page.screenshot({ path: 'values-timeout.png' });
-    console.log('VALUES TIMEOUT — screenshot saved');
-    throw e;
-  }
-  // continue to next character / done
-  await page.locator('button.btn--secondary').click();
-  await page.waitForTimeout(600);
-}
+// The valueIdentification stage was removed from the flow (a heavy writing
+// task right before proposal writing — too much cognitive load). The enum
+// value survives for old sessions, but advanceStage refuses to route through
+// it, so needs → positioning is the live path.
 
 // Positioning
 await advance('positioning');
@@ -95,10 +78,23 @@ await page.locator('button.btn--primary').click();
 await page.waitForSelector('text=/.*/ >> .lobby__status', { timeout: 8000 }).catch(() => {});
 await page.waitForTimeout(1500);
 
-// Verify participant doc got camp
-const partRes = await fetch(`http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents/agoraParticipants`, { headers: { Authorization: 'Bearer owner' } });
-const parts = await partRes.json();
-const mine = (parts.documents ?? []).filter((d) => d.fields.sessionId.stringValue === sessionId);
+// Verify participant doc got camp.
+// Query server-side, never list-then-filter: the collection holds every
+// session the emulator has ever seen and the list endpoint pages, so a
+// client-side filter quietly returns [] once the emulator has been used a
+// while — a green run that checked nothing.
+const partRes = await fetch(`http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents:runQuery`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
+  body: JSON.stringify({
+    structuredQuery: {
+      from: [{ collectionId: 'agoraParticipants' }],
+      where: { fieldFilter: { field: { fieldPath: 'sessionId' }, op: 'EQUAL', value: { stringValue: sessionId } } },
+    },
+  }),
+});
+const mine = (await partRes.json()).map((row) => row.document).filter(Boolean);
+if (mine.length === 0) throw new Error(`No participant docs found for session ${sessionId}`);
 console.log('PARTICIPANT:', mine.map((d) => ({
   camp: d.fields.camp?.stringValue,
   pos: d.fields.campPosition?.integerValue ?? d.fields.campPosition?.doubleValue,

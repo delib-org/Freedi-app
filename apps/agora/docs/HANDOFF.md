@@ -176,6 +176,35 @@ number, never names.
 
 ## How to run / verify
 
+**Start here: `npm run fast`.** It builds a session that is ALREADY at the
+stage you want — bot classmates enrolled, positioned across both camps, their
+proposals posted — and prints a join URL you can open in any browser. ~4
+seconds, versus the minutes it takes to click a teacher and two students
+through framing → perspectives → needs → positioning to reach the same screen.
+
+```bash
+npm run fast                              # deliberation, 4 classmates, 3 proposals → join URL
+npm run fast -- --stage=positioning       # any stage
+npm run fast -- --open --mine --shot=x    # drive a student there, give them a proposal, screenshot
+npm run fast -- --open --keep --lang=en   # leave a real browser open to poke at
+```
+
+`--mine` matters: the classmates' side (rate / feedback / helped) is gated
+behind having written your own proposal, so without it most of the
+deliberation is unreachable. Flags: `--students`, `--proposals`, `--position`,
+`--lang`, `--mobile`, `--no-seed`.
+
+Every script here now starts with `preflight()` (`scripts/lib/preflight.mjs`),
+which checks the emulators, the functions bundle, vite and the seed BEFORE
+doing any work — and auto-seeds when the topic package is missing. A stack
+problem now fails in seconds with the command that fixes it, instead of
+surfacing minutes later as an unrelated-looking stack trace. Run it alone with
+`npm run preflight`.
+
+For the full honest path (real UI, every stage, assertions), it is still
+`node scripts/walkthrough.mjs` — fastlane skips SETUP, never the thing under
+test.
+
 1. Emulators (auth 9099, firestore 8081, functions 5001) — usually already
    running from the repo root; functions hot-reload after
    `cd functions && npm run build`. `functions/.env` HAS an OpenAI key →

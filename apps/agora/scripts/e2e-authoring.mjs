@@ -1,4 +1,8 @@
 import { chromium } from '@playwright/test';
+import { preflight } from './lib/preflight.mjs';
+
+// Fail in seconds with a readable reason instead of minutes with a stack trace
+await preflight();
 
 const browser = await chromium.launch();
 const page = await browser.newPage();

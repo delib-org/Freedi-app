@@ -1,6 +1,10 @@
 /* Full manual-style walkthrough: teacher UI + 2 student UIs through every stage.
  * Run: node scripts/walkthrough.mjs (needs emulators + vite on 3009 + seeded demo) */
 import { chromium } from '@playwright/test';
+import { preflight } from './lib/preflight.mjs';
+
+// Fail in seconds with a readable reason instead of minutes with a stack trace
+await preflight();
 
 const BASE = 'http://localhost:3009';
 const SHOTS = 'walkthrough-shots';

@@ -6,6 +6,10 @@
  * Verifies POINTS in Firestore, not just pixels.
  * Run: node scripts/e2e-cycle.mjs (needs emulators + vite on 3009 + seed) */
 import { chromium } from '@playwright/test';
+import { preflight } from './lib/preflight.mjs';
+
+// Fail in seconds with a readable reason instead of minutes with a stack trace
+await preflight();
 
 const BASE = 'http://localhost:3009';
 const FS = 'http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents';

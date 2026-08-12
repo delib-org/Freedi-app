@@ -8,6 +8,10 @@ import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { auditPage, report } from './contrast-audit.mjs';
 import { auditType, summarise } from './type-audit.mjs';
+import { preflight } from './lib/preflight.mjs';
+
+// Fail in seconds with a readable reason instead of minutes with a stack trace
+await preflight();
 
 const BASE = 'http://localhost:3009';
 const SHOTS = process.argv[2] ?? 'delib-shots';

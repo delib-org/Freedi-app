@@ -1,0 +1,226 @@
+/**
+ * Fastlane CLI — one command that lands you on the Agora screen you want.
+ *
+ *   npm run fast                                   # deliberation chat, 4 classmates, 3 proposals
+ *   npm run fast -- --stage=positioning
+ *   npm run fast -- --students=8 --proposals=6
+ *   npm run fast -- --open --mine                  # …and give them a proposal, which is what
+ *                                                  #   unlocks rating/feedback/helped screens
+ *   npm run fast -- --open --shot                  # drive a student there and screenshot it
+ *   npm run fast -- --open --keep                  # …and leave the browser open to poke at
+ *
+ * Without --open it prints a join URL: paste it into any browser (or hand it
+ * to a Playwright script) and you arrive as a student, already at that stage,
+ * with classmates and proposals waiting. With --open it drives a real student
+ * client there itself, positions them in a camp, and screenshots the result.
+ */
+import { mkdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import type { AgoraStage } from '@freedi/shared-types';
+import { preflight } from './lib/preflight.mjs';
+import { fastlane, positionStudent, proposeAs, teacherUrl } from './lib/fastlane';
+
+// See lib/fastlane.ts — the package is require-only from plain Node
+const { AgoraStage: AgoraStageEnum } = createRequire(import.meta.url)(
+	'@freedi/shared-types',
+) as typeof import('@freedi/shared-types');
+
+interface Args {
+	stage: AgoraStage;
+	students: number;
+	proposals: number;
+	lang: string;
+	position: number;
+	open: boolean;
+	shot: string | null;
+	keep: boolean;
+	/** Give the opened student a proposal of their own (unlocks the classmates' side) */
+	mine: string | null;
+	autoSeed: boolean;
+	viewport: 'desktop' | 'mobile';
+}
+
+function parseArgs(argv: string[]): Args {
+	const flag = (name: string): string | undefined => {
+		const hit = argv.find((arg) => arg === `--${name}` || arg.startsWith(`--${name}=`));
+		if (hit === undefined) return undefined;
+
+		return hit.includes('=') ? hit.slice(hit.indexOf('=') + 1) : '';
+	};
+	const num = (name: string, fallback: number): number => {
+		const raw = flag(name);
+
+		return raw === undefined || raw === '' ? fallback : Number(raw);
+	};
+
+	const stageRaw = flag('stage') ?? AgoraStageEnum.deliberation;
+	if (!Object.values(AgoraStageEnum).includes(stageRaw as AgoraStage)) {
+		throw new Error(
+			`Unknown --stage "${stageRaw}". One of: ${Object.values(AgoraStageEnum).join(', ')}`,
+		);
+	}
+
+	const shotRaw = flag('shot');
+	const mineRaw = flag('mine');
+
+	return {
+		stage: stageRaw as AgoraStage,
+		students: num('students', 4),
+		proposals: num('proposals', 3),
+		lang: flag('lang') || 'he',
+		// A student parked in a camp, not on the fence: centre positions hide
+		// the cross-camp colouring that most of these screens are about
+		position: num('position', 20),
+		open: flag('open') !== undefined,
+		shot: shotRaw === undefined ? null : shotRaw || 'fastlane',
+		keep: flag('keep') !== undefined,
+		mine: mineRaw === undefined ? null : mineRaw || '',
+		autoSeed: flag('no-seed') === undefined,
+		viewport: flag('mobile') !== undefined ? 'mobile' : 'desktop',
+	};
+}
+
+const args = parseArgs(process.argv.slice(2));
+// A join URL is useless if nothing is serving it, but a plain state build
+// (paste the URL later) does not need vite up at all.
+await preflight({
+	needs: args.open ? ['firestore', 'auth', 'functions', 'vite'] : ['firestore', 'auth', 'functions'],
+	autoSeed: args.autoSeed,
+});
+
+console.log('=== FASTLANE');
+const result = await fastlane({
+	stage: args.stage,
+	students: args.students,
+	proposals: args.proposals,
+});
+
+console.log(`
+   stage    ${result.stage}
+   session  ${result.sessionId}   code ${result.code}
+   student  ${result.joinUrl}
+   teacher  ${teacherUrl(result.sessionId)}
+`);
+
+if (!args.open) {
+	console.log('   (open the student URL in any browser — you arrive already at that stage)\n');
+	process.exit(0);
+}
+
+// --- Drive a real student client there ---------------------------------
+const { chromium } = await import('@playwright/test');
+const browser = await chromium.launch({ headless: !args.keep });
+const context = await browser.newContext({
+	viewport: args.viewport === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+});
+const page = await context.newPage();
+await page.addInitScript(
+	(lang: string) => window.localStorage.setItem('agora_lang', lang),
+	args.lang,
+);
+page.on('pageerror', (error) => console.log('[PAGEERROR]', error.message.slice(0, 200)));
+page.on('console', (message) => {
+	if (message.type() === 'error') console.log('[CONSOLE]', message.text().slice(0, 200));
+});
+
+/**
+ * "The student has arrived" per stage.
+ *
+ * Deliberation deliberately lists the roots of BOTH deliberation UIs: the chat
+ * rebuild (`.chat-log`) and the places UI (`.delib-hud`) live on different
+ * branches by design, and a setup helper that only knows the branch it was
+ * written on is a trap for whoever switches. Everything here is a container
+ * that exists before any content loads — never a card, never a copy string.
+ */
+const ARRIVED: Record<string, string> = {
+	lobby: '.lobby__name, .lobby__status',
+	framing: '.scene__title, .scene__text',
+	perspectives: '.scene__title, .scene__text',
+	needs: '.scene__title, .scene__text',
+	valueIdentification: '.scene__title, .shell__content',
+	positioning: 'input.camp-scale__slider',
+	deliberation: '.chat-log, .delib-hud, .proposal-dock__bar',
+	results: '.results__total, .shell--wide',
+	ended: '.results__total, .shell--wide',
+};
+
+/** A failed wait that leaves no artefact costs a whole second run to diagnose. */
+async function arrive(selector: string, label: string): Promise<void> {
+	try {
+		await page.waitForSelector(selector, { timeout: 30_000 });
+	} catch {
+		mkdirSync('fastlane-shots', { recursive: true });
+		await page.screenshot({ path: 'fastlane-shots/FAILED.png' });
+		const text = await page
+			.locator('body')
+			.innerText()
+			.catch(() => '(no body text)');
+		console.error(
+			`\n✗ never reached ${label} (${selector})` +
+				`\n   url:  ${page.url()}` +
+				`\n   shot: fastlane-shots/FAILED.png` +
+				`\n   page: ${text.slice(0, 300).replace(/\n+/g, ' / ')}\n`,
+		);
+		await browser.close();
+		process.exit(1);
+	}
+}
+
+await page.goto(result.joinUrl, { waitUntil: 'domcontentloaded' });
+await arrive(ARRIVED[args.stage] ?? '.shell__content', args.stage);
+
+/**
+ * The opened student joined AFTER positioning was over, so they have no camp —
+ * and an uncamped student sits outside the bridging maths the deliberation
+ * screens are built to show. Give them the seat they would have taken.
+ */
+const uid = await page.evaluate(
+	() =>
+		(
+			window as unknown as {
+				__agoraDebug?: () => { user?: { user?: { uid?: string } } };
+			}
+		).__agoraDebug?.()?.user?.user?.uid ?? null,
+);
+if (uid && args.stage === AgoraStageEnum.deliberation) {
+	await positionStudent(result.sessionId, uid, args.position);
+	console.log(`   ✓ student positioned at ${args.position}`);
+	if (args.mine !== null) {
+		await proposeAs(result.sessionId, uid, args.mine || undefined);
+		console.log('   ✓ student has a proposal (classmates\' side unlocked)');
+	}
+	// The camp write re-renders through the participants listener
+	await arrive(ARRIVED.deliberation, 'deliberation (after positioning)');
+}
+
+/**
+ * Celebrations are modal by design — they are the reward moments — so one left
+ * open sits over the screenshot and swallows the next click. Writing a proposal
+ * triggers one, and it can arrive a beat after the screen settles.
+ */
+for (let attempt = 0; attempt < 5; attempt++) {
+	if ((await page.locator('.celebration').count()) === 0) break;
+	// The LAST button is always the plain close, never the travel action
+	await page
+		.locator('.celebration button')
+		.last()
+		.click({ timeout: 5000 })
+		.catch(() => {});
+	await page.waitForTimeout(400);
+}
+
+console.log(`   ✓ student is on screen (${await page.title()})`);
+
+if (args.shot) {
+	mkdirSync('fastlane-shots', { recursive: true });
+	const path = `fastlane-shots/${args.shot}.png`;
+	await page.screenshot({ path, fullPage: false });
+	console.log(`   ✓ ${path}`);
+}
+
+if (args.keep) {
+	console.log('\n   browser left open — Ctrl-C to close\n');
+	await new Promise(() => {});
+}
+
+await browser.close();
