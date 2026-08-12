@@ -232,10 +232,28 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					case AgoraStage.positioning:
 						return myParticipant ? m(Positioning, { topic, myParticipant }) : noSeatYet();
 
-					case AgoraStage.deliberation:
-						return myParticipant
-							? m(Deliberation, { session, myParticipant, userId, topic })
-							: noSeatYet();
+					case AgoraStage.deliberation: {
+						if (!myParticipant) return noSeatYet();
+
+						/**
+						 * Nobody enters the square without a side.
+						 *
+						 * A student who joined after the class placed itself — or whose
+						 * teacher advanced straight past that stage — used to walk into
+						 * the deliberation with no camp, and the game quietly stopped
+						 * working for them: every rating they gave was dropped from the
+						 * bridging half of the score (an unknown side cannot support a
+						 * claim about reaching across the camps), so an author could be
+						 * voted up by the whole class and still read "bridge power still
+						 * 0 — it hasn't moved yet". One screen, once, and the square
+						 * measures what it says it measures.
+						 */
+						if (myParticipant.campPosition === undefined) {
+							return m(Positioning, { topic, myParticipant, catchUp: true });
+						}
+
+						return m(Deliberation, { session, myParticipant, userId, topic });
+					}
 
 					case AgoraStage.results:
 					case AgoraStage.ended:

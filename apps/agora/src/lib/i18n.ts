@@ -71,6 +71,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'values.score': 'דיוק',
 		'values.next_character': 'לדמות הבאה',
 		'positioning.title': 'איפה אתם עומדים?',
+		'positioning.catch_up':
+			'רגע לפני שנכנסים לכיכר: עוד לא סימנתם איפה אתם עומדים. בלי זה אי אפשר לדעת אם הצעה מגשרת בין המחנות.',
 		'positioning.hint': 'הזיזו את הסמן על הגשר — קרוב יותר לצד שאתם מזדהים איתו',
 		'positioning.confirm': 'זה המקום שלנו',
 		'needs.board_title': 'מה כל צד באמת צריך',
@@ -578,6 +580,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'values.score': 'Accuracy',
 		'values.next_character': 'Next character',
 		'positioning.title': 'Where do you stand?',
+		'positioning.catch_up':
+			'Before you step into the square: you have not placed yourself on the scale yet. Without it nobody can tell whether a proposal bridges the camps.',
 		'positioning.hint': 'Move the marker along the bridge — closer to the side you identify with',
 		'positioning.confirm': 'This is our spot',
 		'needs.board_title': 'What each side truly needs',
@@ -1108,6 +1112,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'values.score': 'الدقة',
 		'values.next_character': 'الشخصية التالية',
 		'positioning.title': 'أين تقفون؟',
+		'positioning.catch_up':
+			'قبل دخول الساحة: لم تحدّدوا بعد أين تقفون. بدون ذلك لا يمكن معرفة إن كان الاقتراح يجسر بين المعسكرين.',
 		'positioning.hint': 'حركوا المؤشر على الجسر — أقرب إلى الجانب الذي تتماهون معه',
 		'positioning.confirm': 'هذا مكاننا',
 		'needs.board_title': 'ما يحتاجه كل طرف حقًا',
@@ -1617,6 +1623,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'values.score': 'Precisión',
 		'values.next_character': 'Siguiente personaje',
 		'positioning.title': '¿Dónde os situáis?',
+		'positioning.catch_up':
+			'Antes de entrar en la plaza: aún no os habéis situado en la escala. Sin eso no se puede saber si una propuesta une a los dos bandos.',
 		'positioning.hint':
 			'Moved el marcador por el puente — más cerca del lado con el que os identificáis',
 		'positioning.confirm': 'Este es nuestro sitio',
@@ -2159,6 +2167,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'values.score': 'Genauigkeit',
 		'values.next_character': 'Nächste Figur',
 		'positioning.title': 'Wo steht ihr?',
+		'positioning.catch_up':
+			'Bevor ihr den Platz betretet: Ihr habt euch noch nicht auf der Skala eingeordnet. Ohne das lässt sich nicht erkennen, ob ein Vorschlag die Lager verbindet.',
 		'positioning.hint':
 			'Bewegt die Markierung auf der Brücke — näher zu der Seite, mit der ihr euch identifiziert',
 		'positioning.confirm': 'Das ist unser Platz',
@@ -2711,6 +2721,8 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'values.score': 'Nauwkeurigheid',
 		'values.next_character': 'Volgend personage',
 		'positioning.title': 'Waar staan jullie?',
+		'positioning.catch_up':
+			'Voordat jullie het plein op gaan: jullie hebben jezelf nog niet op de schaal geplaatst. Zonder dat is niet te zien of een voorstel de kampen verbindt.',
 		'positioning.hint':
 			'Verplaats de markering op de brug — dichter bij de kant waarmee jullie je identificeren',
 		'positioning.confirm': 'Dit is onze plek',

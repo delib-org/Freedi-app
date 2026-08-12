@@ -8,6 +8,12 @@ import { Collections, AgoraParticipant, AgoraTopicPackage, deriveCamp } from '@f
 export interface PositioningAttrs {
 	topic: AgoraTopicPackage;
 	myParticipant: AgoraParticipant;
+	/**
+	 * Shown as a gate on the way into the square rather than as the class's
+	 * own positioning stage — say why it is being asked for now, or it reads
+	 * as the app having lost its place.
+	 */
+	catchUp?: boolean;
 }
 
 /**
@@ -22,7 +28,7 @@ export function Positioning(): m.Component<PositioningAttrs> {
 
 	return {
 		view(vnode) {
-			const { topic, myParticipant } = vnode.attrs;
+			const { topic, myParticipant, catchUp } = vnode.attrs;
 			const scale = topic.positioningScale;
 			const confirmed = myParticipant.campPosition !== undefined;
 			// Students know the CHARACTERS, not the camp names — label the
@@ -58,6 +64,7 @@ export function Positioning(): m.Component<PositioningAttrs> {
 			return m('.shell', [
 				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-xl)' } }, [
 					m('h2.text-center', t('positioning.title')),
+					catchUp ? m('p.home-explanation', t('positioning.catch_up')) : null,
 					m('p.home-explanation', t('positioning.hint')),
 
 					m('.card.stack', [

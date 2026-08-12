@@ -167,31 +167,43 @@ async function arrive(selector: string, label: string): Promise<void> {
 }
 
 await page.goto(result.joinUrl, { waitUntil: 'domcontentloaded' });
-await arrive(ARRIVED[args.stage] ?? '.shell__content', args.stage);
 
 /**
  * The opened student joined AFTER positioning was over, so they have no camp —
  * and an uncamped student sits outside the bridging maths the deliberation
  * screens are built to show. Give them the seat they would have taken.
+ *
+ * The wait before it is the POSITIONING GATE, not the square: an uncamped
+ * student is now held on the positioning screen (see GameController), so
+ * waiting for a deliberation container here would wait for the very thing this
+ * block is about to unlock. Either root proves the seat exists, which is what
+ * the camp write needs — the participant doc is created by the join flow, and
+ * writing to it before it lands fails outright.
  */
-const uid = await page.evaluate(
-	() =>
-		(
-			window as unknown as {
-				__agoraDebug?: () => { user?: { user?: { uid?: string } } };
-			}
-		).__agoraDebug?.()?.user?.user?.uid ?? null,
-);
-if (uid && args.stage === AgoraStageEnum.deliberation) {
-	await positionStudent(result.sessionId, uid, args.position);
-	console.log(`   ✓ student positioned at ${args.position}`);
-	if (args.mine !== null) {
-		await proposeAs(result.sessionId, uid, args.mine || undefined);
-		console.log('   ✓ student has a proposal (classmates\' side unlocked)');
+if (args.stage === AgoraStageEnum.deliberation) {
+	await arrive(
+		`input.camp-scale__slider, ${ARRIVED.deliberation}`,
+		'the square (or the positioning gate in front of it)',
+	);
+	const uid = await page.evaluate(
+		() =>
+			(
+				window as unknown as {
+					__agoraDebug?: () => { user?: { user?: { uid?: string } } };
+				}
+			).__agoraDebug?.()?.user?.user?.uid ?? null,
+	);
+	if (uid) {
+		await positionStudent(result.sessionId, uid, args.position);
+		console.log(`   ✓ student positioned at ${args.position}`);
+		if (args.mine !== null) {
+			await proposeAs(result.sessionId, uid, args.mine || undefined);
+			console.log('   ✓ student has a proposal (classmates\' side unlocked)');
+		}
 	}
-	// The camp write re-renders through the participants listener
-	await arrive(ARRIVED.deliberation, 'deliberation (after positioning)');
 }
+// The camp write re-renders through the participants listener
+await arrive(ARRIVED[args.stage] ?? '.shell__content', args.stage);
 
 /**
  * Celebrations are modal by design — they are the reward moments — so one left

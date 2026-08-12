@@ -4,7 +4,6 @@ import { db } from '../db';
 import {
 	Collections,
 	AgoraCamp,
-	AgoraCampAggregate,
 	AgoraParticipant,
 	AgoraProposalScore,
 	AgoraRatingDist,
@@ -29,11 +28,16 @@ import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
 import { CreditAction, SourceApp } from '@freedi/shared-types';
 
-interface CampDelta {
+/**
+ * One camp's tallies while a proposal is being recounted. Same shape as the
+ * stored aggregate, minus the optionality — a freshly counted camp always has
+ * a histogram, and making that explicit keeps the counting loop honest.
+ */
+interface CampTally {
 	sum: number;
 	n: number;
 	positiveN: number;
-	/** Student histogram delta, index 0 = -1 … 4 = +1. All zeros for AI raters. */
+	/** Student histogram, index 0 = -1 … 4 = +1. AI raters never appear here. */
 	studentDist: AgoraRatingDist;
 }
 
@@ -64,7 +68,12 @@ interface CampCensus {
 	counts: CampCounts;
 	/** Class members who never placed themselves on the scale */
 	unpositioned: number;
-	/** uid → camp for positioned, non-AI students. Free from the same query. */
+	/**
+	 * uid → camp for everyone who HAS one, the characters' synthetic raters
+	 * included. Free from the same query, and the only thing the recount needs
+	 * to sort a proposal's evaluations into camps. AI raters are in the map but
+	 * never in `counts`: they carry a camp's weight without sizing the class.
+	 */
 	campOf: Map<string, AgoraCamp>;
 }
 
@@ -79,16 +88,12 @@ async function readCampCensus(sessionId: string): Promise<CampCensus> {
 	let unpositioned = 0;
 	snapshot.forEach((docSnap) => {
 		const participant = docSnap.data() as AgoraParticipant;
+		if (participant.camp) campOf.set(participant.userId, participant.camp);
 		if (participant.isAI) return; // synthetic raters never size the pool
 		if (participant.camp === AgoraCamp.left) counts.left++;
 		else if (participant.camp === AgoraCamp.right) counts.right++;
 		else if (participant.camp === AgoraCamp.center) counts.center++;
-		else {
-			unpositioned++; // a class member, but not a camp
-
-			return;
-		}
-		campOf.set(participant.userId, participant.camp);
+		else unpositioned++; // a class member, but not a camp
 	});
 
 	return { counts, unpositioned, campOf };
@@ -136,44 +141,72 @@ async function creditRatingEffort(sessionId: string, evaluatorId: string): Promi
 	});
 }
 
-function applyDelta(aggregate: AgoraCampAggregate, delta: CampDelta): AgoraCampAggregate {
-	const base = aggregate.studentDist ?? emptyDist();
-
-	return {
-		sum: aggregate.sum + delta.sum,
-		n: aggregate.n + delta.n,
-		positiveN: aggregate.positiveN + delta.positiveN,
-		// Counts are integers and can never be negative. A re-delivered trigger
-		// is clamped here rather than permanently poisoning the variance — the
-		// repair a running sum-of-squares could not offer, because nothing about
-		// a corrupted one looks wrong.
-		studentDist: base.map((count, index) =>
-			Math.max(0, count + delta.studentDist[index]),
-		) as AgoraRatingDist,
-	};
-}
-
-function emptyAggregate(): AgoraCampAggregate {
+function emptyTally(): CampTally {
 	return { sum: 0, n: 0, positiveN: 0, studentDist: emptyDist() };
 }
 
 /**
- * Rebuild a proposal's student histogram from the evaluations themselves.
+ * A proposal's per-camp aggregates, COUNTED FROM the evaluations rather than
+ * nudged by a delta.
  *
- * Sessions already in flight have score docs with no histogram, and a delta
- * cannot be applied to something that was never counted. Rather than a
- * migration script, the first rating after this ships rebuilds that one
- * proposal exactly — inside the same transaction, so it cannot half-happen.
+ * The delta this replaces could not survive a rater whose camp arrived late.
+ * A student who rated before placing themselves on the scale was skipped in
+ * the bridging half (their side was unknown, and an unknown side cannot
+ * support a claim about reaching across the camps) — and skipped is forever,
+ * because the edit that follows carries a delta of n = 0. The class rated, the
+ * bridging score stayed 0, and the improvement loop told the author "still 0 —
+ * it hasn't moved yet" while their classmates were voting it up. Counting the
+ * evaluations afresh each time makes that self-healing: the moment a camp is
+ * known, every rating that student ever left is in the right column.
  *
- * The triggering evaluation is ALREADY in this query result, so the caller must
- * skip the delta when it rebuilds. Applying both would count that rating twice.
+ * It is also the cheaper kind of correct. One query per rating over one
+ * proposal's evaluations is a classroom-sized read, and it retires the
+ * histogram back-fill, the double-count guard around it, and the negative-count
+ * clamp a running total needed to survive a re-delivered trigger.
+ *
+ * Two rules, unchanged from the delta path they replace:
+ *   • the characters' synthetic raters move sum/n/positiveN but never the
+ *     histogram — off-grid values (a score of 33 becomes -0.34) that no
+ *     five-level bucket can hold, from raters who are not in the class
+ *   • a student with no camp is counted in the histogram under center, so the
+ *     class consensus still hears them, and left out of sum/n/positiveN, so
+ *     bridging never claims a reach across camps nobody can locate
  */
-async function rebuildStudentDists(
+export function tallyEvaluations(
+	verdicts: Iterable<{ evaluatorId: string; value: number }>,
+	campOf: Map<string, AgoraCamp>,
+): Record<AgoraCamp, CampTally> {
+	const perCamp: Record<AgoraCamp, CampTally> = {
+		[AgoraCamp.left]: emptyTally(),
+		[AgoraCamp.right]: emptyTally(),
+		[AgoraCamp.center]: emptyTally(),
+	};
+
+	for (const { evaluatorId, value } of verdicts) {
+		if (typeof value !== 'number' || Number.isNaN(value)) continue;
+		const camp = campOf.get(evaluatorId);
+
+		if (!isAgoraAiUid(evaluatorId)) {
+			perCamp[camp ?? AgoraCamp.center].studentDist[agoraRatingBucket(value)] += 1;
+		}
+
+		if (camp === undefined) continue;
+		const tally = perCamp[camp];
+		tally.sum += value;
+		tally.n += 1;
+		if (value > 0) tally.positiveN += 1;
+	}
+
+	return perCamp;
+}
+
+/** The query half of the recount — see `tallyEvaluations` for the rules. */
+async function recountPerCamp(
 	transaction: Transaction,
 	sessionId: string,
 	statementId: string,
 	campOf: Map<string, AgoraCamp>,
-): Promise<Record<AgoraCamp, AgoraRatingDist>> {
+): Promise<Record<AgoraCamp, CampTally>> {
 	const snapshot = await transaction.get(
 		db
 			.collection(Collections.evaluations)
@@ -181,23 +214,13 @@ async function rebuildStudentDists(
 			.where('statementId', '==', statementId),
 	);
 
-	const dists: Record<AgoraCamp, AgoraRatingDist> = {
-		[AgoraCamp.left]: emptyDist(),
-		[AgoraCamp.right]: emptyDist(),
-		[AgoraCamp.center]: emptyDist(),
-	};
-
-	snapshot.forEach((docSnap) => {
+	const verdicts = snapshot.docs.map((docSnap) => {
 		const evaluation = docSnap.data() as Evaluation;
-		if (isAgoraAiUid(evaluation.evaluatorId)) return;
-		// Same rule as the live path: an unpositioned student is filed under
-		// center for the histogram. The two must agree, or a rebuild would
-		// quietly drop the very ratings the live path had just counted.
-		const camp = campOf.get(evaluation.evaluatorId) ?? AgoraCamp.center;
-		dists[camp][agoraRatingBucket(evaluation.evaluation)] += 1;
+
+		return { evaluatorId: evaluation.evaluatorId, value: evaluation.evaluation };
 	});
 
-	return dists;
+	return tallyEvaluations(verdicts, campOf);
 }
 
 /**
@@ -217,31 +240,6 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 		const { agoraSessionId: sessionId, statementId, evaluatorId } = evaluation;
 
 		try {
-			// Evaluator's camp — server-authoritative, never taken from the client
-			const evaluatorSnap = await db
-				.collection(Collections.agoraParticipants)
-				.doc(createAgoraParticipantId(sessionId, evaluatorId))
-				.get();
-			const rater = evaluatorSnap.data() as AgoraParticipant | undefined;
-			/**
-			 * A student who never placed themselves on the scale still belongs to
-			 * the class, and their reading of a proposal is still the class's
-			 * opinion of it — so the rating is COUNTED, filed under center the way
-			 * an unpositioned author's proposal already is.
-			 *
-			 * What it must not do is strengthen a claim about reaching across the
-			 * camps, because nobody knows which side it came from. So only the
-			 * histogram (which the class consensus reads) is applied; the
-			 * sum/n/positiveN the bridging score reads are left alone below.
-			 *
-			 * This used to `return` outright. A class whose teacher advanced past
-			 * positioning — or a student who joined after it — had every rating
-			 * silently destroyed: no consensus, no class picture, and no credit
-			 * for the work either.
-			 */
-			const evaluatorPositioned = Boolean(rater?.camp);
-			const evaluatorCamp = rater?.camp ?? AgoraCamp.center;
-
 			// A brand-new rating (not an edit of one) earns the evaluation
 			// credit — non-blocking, and never fatal to the bridging update.
 			// Paid whether or not the rater is positioned: the credit is for the
@@ -255,42 +253,17 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				});
 			}
 
-			const beforeValue = before?.evaluation ?? null;
-			const afterValue = after?.evaluation ?? null;
-			// The characters' synthetic raters keep moving sum/n/positiveN — the
-			// bridging score wants their weight — but never the class histogram.
-			// They are not members of the class whose population N counts, and
-			// their values are off-grid anyway (a score of 33 becomes -0.34),
-			// so no five-level histogram could hold them honestly.
-			const studentDist = emptyDist();
-			if (!isAgoraAiUid(evaluatorId)) {
-				if (beforeValue !== null) studentDist[agoraRatingBucket(beforeValue)] -= 1;
-				if (afterValue !== null) studentDist[agoraRatingBucket(afterValue)] += 1;
-			}
-			// The bridging half is dropped for an unpositioned rater — see above.
-			// The histogram half survives, so the class consensus still counts them.
-			const delta: CampDelta = {
-				sum: evaluatorPositioned ? (afterValue ?? 0) - (beforeValue ?? 0) : 0,
-				n: evaluatorPositioned
-					? (afterValue !== null ? 1 : 0) - (beforeValue !== null ? 1 : 0)
-					: 0,
-				positiveN: evaluatorPositioned
-					? (afterValue !== null && afterValue > 0 ? 1 : 0) -
-						(beforeValue !== null && beforeValue > 0 ? 1 : 0)
-					: 0,
-				studentDist,
-			};
-			if (
-				delta.sum === 0 &&
-				delta.n === 0 &&
-				delta.positiveN === 0 &&
-				studentDist.every((count) => count === 0)
-			) {
-				return;
-			}
-
 			const scoreRef = db.collection(Collections.agoraScores).doc(statementId);
-			const { counts: campCounts, unpositioned, campOf } = await readCampCensus(sessionId);
+			// Camps are server-authoritative and never taken from the client. Both
+			// reads sit OUTSIDE the transaction on purpose: the proposal doc is
+			// written by the generic evaluation pipeline on every rating, so
+			// locking it here would make two students rating the same text fight
+			// each other for no gain — a camp read a moment stale only nudges a
+			// ramp, and the next rating re-reads it anyway.
+			const [{ counts: campCounts, unpositioned, campOf }, proposalSnap] = await Promise.all([
+				readCampCensus(sessionId),
+				db.collection(Collections.statements).doc(statementId).get(),
+			]);
 			// Bridging asks about camps and gets the positioned counts only. The
 			// class consensus asks "how much of the class has spoken", so it gets
 			// the whole class — the unpositioned filed under centre, exactly where
@@ -300,75 +273,34 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 				center: campCounts.center + unpositioned,
 			};
 
+			/**
+			 * The author's side, re-read every time rather than frozen at the
+			 * moment of the proposal's first rating. An author who positions after
+			 * being rated used to keep `center` for the rest of the lesson, which
+			 * pointed the cross-camp half of their own bridging score at the wrong
+			 * wing. Positioning is one-shot in the UI, so this can only ever go
+			 * from unknown to known.
+			 */
+			const creatorId = proposalSnap.data()?.creatorId as string | undefined;
+			const authorSide = creatorId ? campOf.get(creatorId) : undefined;
+			const authorCamp = authorSide ?? AgoraCamp.center;
+			const authorPositioned = Boolean(authorSide && creatorId && !isAgoraAiUid(creatorId));
+
 			const authorToCredit = await db.runTransaction(async (transaction) => {
 				const scoreSnap = await transaction.get(scoreRef);
-				let score: AgoraProposalScore;
+				const perCamp = await recountPerCamp(transaction, sessionId, statementId, campOf);
+				const existing = scoreSnap.exists ? (scoreSnap.data() as AgoraProposalScore) : undefined;
 
-				if (scoreSnap.exists) {
-					score = scoreSnap.data() as AgoraProposalScore;
-				} else {
-					// Lazy init: resolve the proposal author's camp once
-					const proposalSnap = await transaction.get(
-						db.collection(Collections.statements).doc(statementId),
-					);
-					const creatorId = proposalSnap.data()?.creatorId as string | undefined;
-					let authorCamp = AgoraCamp.center;
-					let authorPositioned = false;
-					if (creatorId) {
-						const authorSnap = await transaction.get(
-							db
-								.collection(Collections.agoraParticipants)
-								.doc(createAgoraParticipantId(sessionId, creatorId)),
-						);
-						const author = authorSnap.data() as AgoraParticipant | undefined;
-						authorCamp = author?.camp ?? AgoraCamp.center;
-						authorPositioned = Boolean(author?.camp && !author.isAI);
-					}
-					score = {
-						statementId,
-						sessionId,
-						authorCamp,
-						authorPositioned,
-						perCamp: {
-							left: emptyAggregate(),
-							right: emptyAggregate(),
-							center: emptyAggregate(),
-						},
-						bridgingScore: 0,
-						lastUpdate: Date.now(),
-					};
-				}
-
-				// A session already in flight has a score doc with no histogram,
-				// and a delta cannot be applied to something never counted. The
-				// first rating after this ships rebuilds that one proposal from
-				// its evaluations — no migration script, no downtime.
-				//
-				// The triggering evaluation is already in that query result, so
-				// the delta MUST be skipped when we rebuild, or the rating that
-				// caused the rebuild gets counted twice.
-				const needsRebuild = !score.perCamp[evaluatorCamp].studentDist;
-				if (needsRebuild) {
-					const rebuilt = await rebuildStudentDists(transaction, sessionId, statementId, campOf);
-					for (const camp of [AgoraCamp.left, AgoraCamp.right, AgoraCamp.center]) {
-						score.perCamp[camp] = {
-							...score.perCamp[camp],
-							studentDist: rebuilt[camp],
-						};
-					}
-					// sum/n/positiveN stay on their running totals: they include the
-					// AI raters this rebuild deliberately excludes, so recomputing
-					// them from students alone would silently drop that weight out
-					// of the bridging score.
-					score.perCamp[evaluatorCamp] = {
-						...score.perCamp[evaluatorCamp],
-						sum: score.perCamp[evaluatorCamp].sum + delta.sum,
-						n: score.perCamp[evaluatorCamp].n + delta.n,
-						positiveN: score.perCamp[evaluatorCamp].positiveN + delta.positiveN,
-					};
-				} else {
-					score.perCamp[evaluatorCamp] = applyDelta(score.perCamp[evaluatorCamp], delta);
-				}
+				const score: AgoraProposalScore = {
+					...existing,
+					statementId,
+					sessionId,
+					authorCamp,
+					authorPositioned,
+					perCamp,
+					bridgingScore: existing?.bridgingScore ?? 0,
+					lastUpdate: Date.now(),
+				};
 
 				score.bridgingScore = calcBridgingScore({
 					authorCamp: score.authorCamp,
@@ -382,7 +314,6 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 					eligible: eligiblePoolFor(score, consensusPool),
 				});
 				if (classConsensus) score.classConsensus = classConsensus;
-				score.lastUpdate = Date.now();
 
 				// The ladder is graduated and MONOTONIC: a later dip never claws a
 				// tier back, so an author is never punished for a proposal that
