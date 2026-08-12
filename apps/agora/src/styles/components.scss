@@ -1352,9 +1352,13 @@
 		animation: stage-transition-panel var(--motion-slow) var(--ease-camera) 200ms both;
 	}
 
+	// Holds either register: the rendered object for the stages sheet 1
+	// covered, the drawing for the rest. The colour only reaches the drawing —
+	// a render carries its own — so the two read as the same weight.
 	&__icon {
-		font-size: 2.6rem;
+		display: flex;
 		line-height: 1;
+		color: var(--mine-strong);
 	}
 
 	&__title {
@@ -2818,7 +2822,7 @@
 	}
 
 	&__icon {
-		font-size: 1.3rem;
+		display: flex;
 		line-height: 1;
 	}
 

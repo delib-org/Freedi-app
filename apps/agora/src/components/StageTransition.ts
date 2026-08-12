@@ -1,5 +1,6 @@
 import m from 'mithril';
-import { Icon, type IconName } from './Icon';
+import { type IconName } from './Icon';
+import { HeroIcon } from './HeroIcon';
 import { t } from '../lib/i18n';
 import { AgoraStage } from '@freedi/shared-types';
 import { EraMap } from './EraMap';
@@ -65,10 +66,12 @@ export const StageTransition: m.Component<StageTransitionAttrs> = {
 			[
 				m('.stage-transition__map', m(EraMap, { participants: [] })),
 				m('.stage-transition__panel', [
+					// The one slot with room for the rendered sheet: a full-screen
+					// card, one object, nothing else competing for the eye.
 					m(
 						'span.stage-transition__icon',
 						{ 'aria-hidden': 'true' },
-						m(Icon, { name: meta.icon, size: 40 }),
+						m(HeroIcon, { name: meta.icon, size: 88 }),
 					),
 					m('h2.stage-transition__title', t(meta.labelKey)),
 					m('p.stage-transition__line', t(meta.lineKey)),

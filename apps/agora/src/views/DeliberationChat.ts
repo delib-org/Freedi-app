@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { Icon, iconLabel } from '../components/Icon';
+import { HeroIcon } from '../components/HeroIcon';
 import { t } from '../lib/i18n';
 import {
 	getDeliberationState,
@@ -420,8 +421,11 @@ export function DeliberationChat(
 
 		return m('.card.stack.delib__rate-card', [
 			// Whose proposal is this? A classmate's — the chip says so before
-			// a word is read, and the guide said so in the bubble above
+			// a word is read, and the guide said so in the bubble above. The
+			// mark says it without words at all: the same book as my own
+			// workshop card, in clear glass instead of violet.
 			m('.owner-row', [
+				m(HeroIcon, { name: 'proposal', owner: 'peer', size: 40 }),
 				m('span.owner-chip.owner-chip--peer', iconLabel('proposal', t('delib.owner_peer'))),
 				m('span.owner-row__number', t('delib.proposal_number', { n: proposalNumber(proposal) })),
 			]),
@@ -579,7 +583,11 @@ export function DeliberationChat(
 
 		return m('.card.my-lantern.my-lantern--workshop', [
 			m('.my-lantern__header', [
-				m('span.my-lantern__icon', m(Icon, { name: 'proposal', size: 24 })),
+				// The workshop's owner mark. Big enough for the rendered book,
+				// and it has to be: the classmate's proposal on the rate card
+				// carries the same object in white glass, and a pair only says
+				// "mine / theirs" if both halves are the same object.
+				m('span.my-lantern__icon', m(HeroIcon, { name: 'proposal', owner: 'mine', size: 40 })),
 				m('span.my-lantern__title', t('delib.my_proposal')),
 				m('span.my-lantern__hint', iconLabel('edit', t('delib.always_editable'))),
 			]),

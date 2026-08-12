@@ -5,8 +5,9 @@ import m from 'mithril';
  * Drawn rather than rendered, and that is the whole point: the size ladder in
  * mock/icon-proof.png shows 3D renders turning to mush below ~40px, and almost
  * every icon slot in this app (journey stops 32px, card marks 26px, nav 24px)
- * lives under that line. So the 3D sheet keeps the hero slots — the HUD crest,
- * the dock, the proposal card — and everything smaller is a stroke drawing.
+ * lives under that line. The rendered sheet keeps the few slots above it —
+ * see HeroIcon.ts, which enforces the 40px floor — and everything else is a
+ * stroke drawing.
  *
  * One rule makes the ownership grammar free: every shape is `currentColor`, so
  * the SAME object tinted purple means "mine" and tinted --peer means "a
@@ -106,39 +107,42 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		[
 			'path',
 			{
-				d: 'M18 3.2 19.1 6.6l3.4 1.1-3.4 1.1L18 12.2l-1.1-3.4-3.4-1.1 3.4-1.1z',
+				d: 'M18.3 2.5 19.35 5.45 22.3 6.5 19.35 7.55 18.3 10.5 17.25 7.55 14.3 6.5 17.25 5.45z',
 				fill: GOLD,
 				stroke: GOLD,
 			},
 		],
 	],
 
-	// Two cupped hands holding a spark: the 🙏 attestation. Kept to one
-	// unbroken bowl — the thumb arcs the first version had closed up into
-	// noise at 20px.
+	// Two open hands holding a spark: the 🙏 attestation. The single bowl this
+	// replaces was the worst icon in the set — one closed arc with two thumb
+	// bumps on its rim, which read as a cauldron with horns. Two mirrored hands
+	// that meet at the wrist cost one extra path and actually say "held".
 	thanks: [
-		['path', { d: 'M4.5 11.5v2.8a7.5 7.5 0 0 0 15 0v-2.8' }],
-		['path', { d: 'M4.5 11.5a2.1 2.1 0 0 1 4.2 0M19.5 11.5a2.1 2.1 0 0 0-4.2 0' }],
+		['path', { d: 'M9.7 15.2 9.2 11.3a1.75 1.75 0 0 0-3.45.45l.45 3.35c.45 3.3 3.2 5.4 5.8 5.4' }],
+		[
+			'path',
+			{ d: 'M14.3 15.2 14.8 11.3a1.75 1.75 0 0 1 3.45.45l-.45 3.35c-.45 3.3-3.2 5.4-5.8 5.4' },
+		],
 		[
 			'path',
 			{
-				d: 'M12 2.5 13.1 6l3.4 1.1-3.4 1.1L12 11.6l-1.1-3.4L7.5 7.1 10.9 6z',
+				d: 'M12 2.7 13.05 5.35 15.7 6.4 13.05 7.45 12 10.1 10.95 7.45 8.3 6.4 10.95 5.35z',
 				fill: GOLD,
 				stroke: GOLD,
 			},
 		],
 	],
 
-	// An arch between two banks. The banks carry the camp colours — the only
-	// place in the set where a hue is not inherited. The railings the first
-	// version had are gone: three extra verticals under an arch is exactly the
-	// detail that turns to grey mush at 20px.
+	// A span rising out of two banks. The banks carry the camp colours — the
+	// only place in the set where a hue is not inherited. Everything that made
+	// the first version unreadable is gone: the arch now *lands* on the banks
+	// instead of hovering over two detached coloured dashes, and the piers and
+	// centre post that turned to grey mush at 20px are not missed.
 	bridge: [
-		['path', { d: 'M5.5 17.5a6.5 6.5 0 0 1 13 0' }],
-		['path', { d: 'M12 11v6.5' }],
-		['path', { d: 'M2.5 17.5h3.6', stroke: CAMP_LEFT }],
-		['path', { d: 'M17.9 17.5h3.6', stroke: CAMP_RIGHT }],
-		['path', { d: 'M4.3 17.5v3.4M19.7 17.5v3.4' }],
+		['path', { d: 'M2.5 18.7h3', stroke: CAMP_LEFT }],
+		['path', { d: 'M18.5 18.7h3', stroke: CAMP_RIGHT }],
+		['path', { d: 'M5.2 18.7c0-4.1 3-7.4 6.8-7.4s6.8 3.3 6.8 7.4' }],
 	],
 
 	// The agora itself: pediment, columns, stylobate.
@@ -158,11 +162,13 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		],
 	],
 
+	// The cloud is one closed outline. Drawing the bottom as a separate line —
+	// what it used to be — left a visible notch where the right arc stopped
+	// short of it, and the overshoot past the arc read as a shelf.
 	thought: [
-		['path', { d: 'M8 14.5a4 4 0 0 1-.6-7.9 4.2 4.2 0 0 1 8-1.2 3.6 3.6 0 0 1 1.1 7.05' }],
-		['path', { d: 'M8 14.5h8.5' }],
-		['circle', { cx: 7, cy: 18, r: 1.4 }],
-		['circle', { cx: 4, cy: 20.8, r: 0.9 }],
+		['path', { d: 'M8.2 15.2a3.5 3.5 0 0 1 .1-7 4.3 4.3 0 0 1 8.2-.6 3.8 3.8 0 0 1 .3 7.6z' }],
+		['circle', { cx: 6.5, cy: 18.4, r: 1.2 }],
+		['circle', { cx: 3.6, cy: 21.1, r: 0.75 }],
 	],
 
 	// The two masks: the people of the era you can question.
@@ -197,10 +203,13 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M12 14.5v3.5M8.5 20.5h7' }],
 	],
 
-	// Circle plus a V of ribbon. Two parallel strands read as antennae.
+	// Disc above, ribbon tails below. Hanging the disc from a closed trapezoid
+	// of ribbon — the previous attempt — drew a padlock, because a shape closed
+	// across the top reads as a shackle. Tails that fall away from the disc
+	// cannot be mistaken for anything else.
 	medal: [
-		['circle', { cx: 12, cy: 15, r: 5.4 }],
-		['path', { d: 'M8.3 10.6 5.6 3.6h12.8l-2.7 7' }],
+		['circle', { cx: 12, cy: 8.8, r: 5.6 }],
+		['path', { d: 'M8.4 13.2 6.8 21.2 12 18.3l5.2 2.9-1.6-8' }],
 	],
 
 	flag: [
@@ -219,11 +228,18 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 		['path', { d: 'M2.5 13.5H9v7H2.5zM15 12H21.5v8.5H15z' }],
 	],
 
-	// The time tunnel, head on.
+	// The time tunnel, head on: a spiral falling toward a point of light.
+	// Concentric rings were the first version and they collided with `target` —
+	// two rings and a dot is a target no matter what it is called. A spiral is
+	// the same silhouette with somewhere to go.
 	tunnel: [
-		['circle', { cx: 12, cy: 12, r: 9 }],
-		['circle', { cx: 12, cy: 12, r: 5.4 }],
-		['circle', { cx: 12, cy: 12, r: 1.8, fill: GOLD, stroke: GOLD }],
+		[
+			'path',
+			{
+				d: 'M12 3A8.4 8.4 0 0 0 12 19.8 6.6 6.6 0 0 0 12 6.6 5.1 5.1 0 0 0 12 16.8 3.6 3.6 0 0 0 12 9.6',
+			},
+		],
+		['circle', { cx: 12, cy: 12, r: 1.15, fill: GOLD, stroke: GOLD }],
 	],
 
 	/* ---- actions ---- */
@@ -290,9 +306,12 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 	],
 
 	// A proposal that is out in front but not finished — "leading", not "won".
+	// The old drawing was a loudspeaker with a broken corner and one wave, so
+	// it was both malformed and indistinguishable from `sound-on`. A horn with
+	// a grip under it is a megaphone and nothing else.
 	megaphone: [
-		['path', { d: 'M3.5 9.5v5a1.5 1.5 0 0 0 1.5 1.5h2.5l8.5 4.5V5L8 9.5H5a1.5 1.5 0 0 0-1.5 0z' }],
-		['path', { d: 'M7.5 16v4.5M19.5 9.4a4 4 0 0 1 0 5.2' }],
+		['path', { d: 'M3.4 10.5 20 5.6v12.8L3.4 13.9z' }],
+		['path', { d: 'M6.4 14.7v3.7a2.4 2.4 0 0 0 4.8 0v-2.7' }],
 	],
 
 	// Nothing moved — the class looked and stayed where it was.

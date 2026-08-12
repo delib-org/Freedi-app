@@ -233,19 +233,52 @@ no point writing it until the anchor style is locked.
 
 ## 6 · After generation
 
-1. **Slice** the sheet into individual squares (any image editor; the even
-   gutters make this mechanical).
-2. **Background-remove** only the icons that sit on the lavender page.
-3. **Convert** to WebP at 256px (512px for heroes), check the size budget.
-4. **Drop** into `apps/agora/public/icons/`.
-5. Icons then replace the emoji through a single `Icon` helper — one place, so
-   a restyle later is one commit, not thirty.
+Drop the render at `mock/icons-sheet.png` and run:
+
+```bash
+node scripts/icon-slice.mjs      # → public/icons/*.webp
+npx tsx scripts/icon-proof.ts    # → mock/icon-svg-proof.html (both registers)
+```
+
+The script slices the 3×3, keys out the ground, crops each object to a common
+optical size and encodes WebP at 256 — sheet 1 lands at **83 KB for nine**,
+well inside the 600 KB budget.
+
+One thing in it is worth knowing before you generate sheet 2. The key that
+finds background — *bright, near-neutral, and connected to the border* — walks
+straight through cell 2, because a classmate's proposal IS white and the fill
+cannot tell frosted glass from the paper behind it. That cell is keyed on
+neutrality instead: the ground is pure grey, the glass carries a faint violet
+cast, and that cast is the whole margin. **Any future white-glass object needs
+the same treatment** — add it to `CELLS` with `key: 'neutral'`, or it will
+dissolve and you will get a silhouette of its own edges back.
+
+## 7 · Where the renders are actually used
+
+`src/components/HeroIcon.ts` is the entry point, and it enforces one rule:
+**below 40px it does not use a render at all**, it draws (`Icon.ts`). So a slot
+asks for a hero and gets whichever register survives at that size. Wired now:
+
+| Slot | Size | Gets a render? |
+|---|---|---|
+| Stage-transition card | 88 | for `era`, `bridge`, `square` — the other three stages want sheet 2/4 |
+| My proposal, workshop header | 40 | yes — the violet book |
+| A classmate's proposal, rate card | 40 | yes — the white book |
+
+The ownership pair is the reason those last two moved together. A violet render
+for mine and a drawing for theirs would read as a hierarchy, and ownership is
+the one thing in this app that must never imply rank.
+
+Everything else in the app is 14–32px and stays drawn — which is most of it.
+Generating sheets 2–4 does **not** change that; it only unlocks the three
+remaining stage-transition cards (`tunnel`, `thought`, `flag`) and any future
+hero slot. That is the honest size of the gap.
 
 ## Summary checklist
 
 | # | Sheet | Icons | Status |
 |---|---|---|---|
-| 1 | Core objects | 9 | ⬜ needed — **generate first, this is the anchor** |
-| 2 | Score & progress | 9 | ⬜ needed |
-| 3 | Rating faces | 5 | ⬜ needed |
-| 4 | Remainder | ~6 | ⬜ blocked on sheet 1 approval |
+| 1 | Core objects | 9 | ✅ generated, sliced, shipped to `public/icons/` |
+| 2 | Score & progress | 9 | ⬜ needed — unlocks `tunnel` + `flag` on the transition card |
+| 3 | Rating faces | 5 | ⬜ optional — the scale renders at 26px, below the floor |
+| 4 | Remainder | ~6 | ⬜ needed for `thought` on the transition card |

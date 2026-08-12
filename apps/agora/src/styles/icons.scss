@@ -16,6 +16,16 @@
 	flex: 0 0 auto;
 }
 
+// The rendered half of the set (src/components/HeroIcon.ts). It is an <img>,
+// so none of the colour above reaches it — the render carries its own violet,
+// and its own white glass for "a classmate's". The sheet was drawn
+// direction-neutral for the same reason RTL never mirrors it: these objects
+// are lit from the upper left, and a flipped highlight reads as a second sun.
+.hero-icon {
+	flex: 0 0 auto;
+	object-fit: contain;
+}
+
 // An icon standing next to a word rather than alone in its own box. Hebrew
 // and Latin sit differently against a 1em square, and without the nudge the
 // icon rides high enough to look like a superscript.

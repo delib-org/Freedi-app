@@ -51,7 +51,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // webp is in the list for the icon set only (~85 KB of UI chrome that
+        // has to be there the instant a stage turns over); the big artwork is
+        // webp too, which is what globIgnores below is keeping out.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         // Large illustrations (home hero + scene artwork) load on demand — cache
         // them at runtime rather than bloating the install precache.
         globIgnores: ['**/scenes/**', 'time-machine.webp'],
