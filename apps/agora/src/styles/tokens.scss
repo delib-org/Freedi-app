@@ -175,6 +175,31 @@
   --gold: #ffd23f;        // laps behind you, celebration sparks
   --amber: #ffb254;       // warm accent tiles
 
+  // --- The IDENTITY ramp: eight hues that mean nothing --------------------
+  //
+  // Every other colour in this file is a job. These eight are the exception,
+  // and the exception is the point: they say WHO, and who is not a quantity,
+  // a side or a state. A student's circle on the helpers scoreboard is teal
+  // for the same reason their anon name is "smart lantern" — so a class of
+  // thirty reads as thirty people instead of thirty rows.
+  //
+  // Two rules keep them from leaking into the grammar:
+  //   • they are drawn from the uid, so a hue never moves when a rank does
+  //   • NO purple. Purple is "mine", and a classmate wearing it would say
+  //     "yours" — my own circle is --mine-strong, and it is the only purple
+  //     circle on the board, which is what makes me findable in a list I do
+  //     not control the order of.
+  // Each one carries WHITE, so each one clears AA on white ink: measured at
+  // 4.84:1 (teal, the lightest) through 6.38:1 (indigo).
+  --who-1: #0f6fb5; // sky
+  --who-2: #0d8071; // teal
+  --who-3: #2b7530; // green
+  --who-4: #71741a; // olive
+  --who-5: #a05a15; // amber
+  --who-6: #c03f2a; // coral
+  --who-7: #c23a86; // pink
+  --who-8: #4a53c0; // indigo
+
   // The two mark tints — a row's news as a coloured disc rather than a
   // sentence. Flat, pale, opaque: an rgba() wash over a white card is a
   // different colour over a purple one, and these marks appear on both.
@@ -335,6 +360,17 @@
   --grad-mine-hero:
     radial-gradient(120% 120% at 88% -20%, rgba(255, 255, 255, 0.3), transparent 55%),
     linear-gradient(150deg, var(--mine-light) 0%, var(--mine) 45%, var(--mine-deep) 100%);
+  // The same purple ramp, shifted one rung down so that WHITE SURVIVES IT.
+  //
+  // --grad-mine-text opens on --mine #8b6bf0, which is 3.85:1 under white —
+  // a debt the app carries knowingly on the surfaces it was re-pointed for
+  // (see the ACCEPTED ledger in scripts/contrast-audit.mjs). New surfaces do
+  // not get to open new lines of that credit, so anything added from here on
+  // that fills with purple and carries a white label uses this instead: same
+  // hue, same 150deg, starting at --mine-strong, worst stop 5.24:1. It runs
+  // WITHOUT the sheen the text ramp carries — a 16% white veil over
+  // --mine-strong lands back on 3.85:1, which is the whole problem again.
+  --grad-mine-aa: linear-gradient(150deg, var(--mine-strong) 0%, var(--mine-deep) 100%);
   // The face I pressed (mock `.scale__opt--on`) — 160deg over a small square,
   // so it needs the two brightest fills, not the ramp.
   --grad-mine-selected: linear-gradient(160deg, var(--mine-light), var(--mine-strong));
@@ -456,6 +492,10 @@
 // the HUD's two filled tokens
 .delib-hud__crest,
 .delib-hud__stop--here .delib-hud__stop-icon,
+// the helpers scoreboard's crest, and the identity circle every classmate
+// wears on it — eight saturated fills carrying one white letter
+.helpers-board__crest-pill,
+.helpers-board__avatar,
 // the fields I author my own words into — a placeholder and a caret are ink
 // like any other, so they re-derive here instead of being hand-picked
 .my-lantern__textarea,

@@ -5062,6 +5062,318 @@
 		font-size: var(--font-size-sm);
 		color: var(--text-secondary);
 	}
+
+	// --- The recap's two halves ------------------------------------------------
+	// The lesson ends with two different answers to "how did we do", and they
+	// are not the same question: the class map answers it about the PROPOSALS,
+	// and the helpers board answers it about the PEOPLE. Stacking them made the
+	// second one the thing you reach by scrolling past the first — so they are
+	// two places now, and the switch is the door between them.
+	//
+	// Same shape as the deliberation's bottom nav: a segmented pair where the
+	// one you are on is the filled purple tile. Purple on chrome = "this
+	// control is active" (see the top of tokens.scss), never "this is mine".
+	&__switch {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-xs);
+		padding: var(--space-xs);
+		background: var(--bg-inset);
+		border-radius: var(--radius-lg);
+	}
+
+	&__switch-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		min-height: 48px;
+		padding: var(--space-sm) var(--space-sm);
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-md);
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) var(--ease-camera),
+			color var(--motion-fast) var(--ease-camera),
+			transform var(--motion-fast) var(--ease-camera);
+
+		&:active {
+			transform: scale(0.97);
+		}
+
+		// --grad-mine-aa, not --grad-mine-text: this label is a new white run on
+		// a new purple surface, and the text ramp's top stop is 3.85:1
+		&[aria-selected='true'] {
+			background: var(--grad-mine-aa);
+			color: var(--text-on-lantern);
+			box-shadow: var(--glow-lantern);
+		}
+	}
+
+	// How many thank-yous are waiting behind the door, so the helpers half is
+	// something a student chooses rather than something they discover
+	&__switch-count {
+		@include type-meta;
+
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 22px;
+		padding: 0 6px;
+		border-radius: var(--radius-full);
+		background: var(--peer-tile);
+		color: var(--peer-glow);
+		font-variant-numeric: tabular-nums;
+
+		// A white pill with purple ink, not white-on-a-white-veil: a 24% veil
+		// over the selected tile is 2.68:1, and a count is exactly the kind of
+		// 13px run that cannot afford it
+		.results__switch-btn[aria-selected='true'] & {
+			background: var(--bg-card-solid);
+			color: var(--mine-ink);
+		}
+	}
+}
+
+// --- The helpers scoreboard ----------------------------------------------------
+// The class map ranks PROPOSALS, which means a student who spent the whole
+// hour improving other people's texts appears on it only through somebody
+// else's point. This board is theirs, and it is built like the scoreboard at
+// the end of a game on purpose: a crest, three columns, a medal on the top
+// three.
+//
+// Everyone is on it, zeros included. A name missing from a list reads as an
+// absence; a name on it with a 0 reads as a starting line — and the row above
+// it says exactly what filling that 0 takes.
+.helpers-board {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	// Room for the crest, which hangs over the top edge
+	margin-block-start: 22px;
+	padding: var(--space-xl) var(--space-md) var(--space-md);
+	background:
+		radial-gradient(120% 90% at 50% 0%, var(--wash-mine-high), transparent 70%),
+		var(--bg-card-solid);
+	border: 2px solid var(--border-lantern);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+
+	// Latin numerals inside an RTL table: without the isolate a rank and a
+	// score swap ends in Hebrew and Arabic
+	&__num {
+		direction: ltr;
+		unicode-bidi: isolate;
+		font-variant-numeric: tabular-nums;
+	}
+
+	// The title, sitting ON the frame rather than inside it — the one move
+	// that makes a panel read as a trophy plate instead of a table with a
+	// heading. Centred with `inset-inline: 0` + flex rather than a translate,
+	// so it does not need a second rule in RTL.
+	&__crest {
+		position: absolute;
+		inset-block-start: -22px;
+		inset-inline: 0;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	&__crest-pill {
+		padding: var(--space-sm) var(--space-lg);
+		background: var(--grad-mine-aa);
+		border: 2px solid var(--bg-card-solid);
+		border-radius: var(--radius-full);
+		box-shadow: var(--glow-lantern);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		white-space: nowrap;
+	}
+
+	// The one number that belongs to the class rather than to anyone in it
+	&__tally {
+		font-family: var(--font-display);
+		font-size: var(--font-size-2xl);
+		line-height: 1;
+		color: var(--peer-glow);
+	}
+
+	&__sub,
+	&__empty {
+		max-width: 40ch;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		line-height: 1.45;
+		text-align: center;
+	}
+
+	// A grid, not a <table>. The reference IS a table, but a real one costs the
+	// two things this board is made of: a `tr` does not paint a box-shadow in
+	// any engine (so the ring around my own row cannot be drawn) and a `td` set
+	// to flex stops being a cell. Every row already carries its whole sentence
+	// as an aria-label, so nothing is owed to the semantics either.
+	&__table {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-sm);
+	}
+
+	// One template, shared by the key strip and every row — the columns line up
+	// because they are the same declaration, not because two numbers agree
+	&__cols,
+	&__row {
+		display: grid;
+		grid-template-columns: 3.25rem minmax(0, 1fr) 3.5rem;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__cols {
+		padding: 0 var(--space-sm) var(--space-xs);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__col {
+		color: var(--text-muted);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		text-align: start;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+
+		&--rank {
+			text-align: center;
+		}
+
+		&--score {
+			text-align: end;
+		}
+	}
+
+	&__rows {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	// The banded rows of the reference scoreboard, in this app's colours: a
+	// breath of purple wash rather than a second blue. Bands are what let a
+	// thumb track one row across three columns on a 390px screen.
+	&__row {
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-md);
+		background: var(--bg-card-solid);
+
+		&:nth-child(even) {
+			background: var(--wash-mine-high);
+		}
+
+		// The mine grammar, the same as everywhere else in the game
+		&--mine {
+			background: var(--wash-mine-high);
+			box-shadow: inset 0 0 0 2px var(--lantern);
+
+			.helpers-board__name {
+				color: var(--mine-ink);
+				font-weight: 700;
+			}
+
+			.helpers-board__score {
+				color: var(--mine-ink);
+			}
+		}
+
+		// Nobody has thanked them YET. Quieted, never hidden — the row is the
+		// invitation.
+		&--zero {
+			.helpers-board__score,
+			.helpers-board__rank-num {
+				color: var(--text-muted);
+			}
+		}
+	}
+
+	&__rank {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__rank-num {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__who {
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	// The playful half: a squircle in one of the eight identity hues, carrying
+	// the first letter of the anon name. See the ramp in tokens.scss — the hue
+	// is hashed off the uid, so it is the same circle before and after the
+	// standings move.
+	&__avatar {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-tile);
+		font-family: var(--font-display);
+		// Two letters, not one: the anon-name generator varies the adjective
+		// first, so a class of nine is nine different "lanterns" and a single
+		// initial drew nine identical circles. Two fit at the sm rung.
+		font-size: var(--font-size-sm);
+		letter-spacing: -0.02em;
+		line-height: 1;
+
+		// The one purple circle on the board. --grad-mine-selected opens on
+		// --mine-light, which is 2.7:1 under a white letter.
+		&--mine {
+			background: var(--grad-mine-aa);
+			box-shadow: var(--glow-lantern);
+		}
+
+		&--who-1 { background: var(--who-1); }
+		&--who-2 { background: var(--who-2); }
+		&--who-3 { background: var(--who-3); }
+		&--who-4 { background: var(--who-4); }
+		&--who-5 { background: var(--who-5); }
+		&--who-6 { background: var(--who-6); }
+		&--who-7 { background: var(--who-7); }
+		&--who-8 { background: var(--who-8); }
+	}
+
+	&__name {
+		min-width: 0;
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		overflow-wrap: anywhere;
+	}
+
+	&__score {
+		text-align: end;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--peer-glow);
+	}
 }
 
 // --- Health metrics ---

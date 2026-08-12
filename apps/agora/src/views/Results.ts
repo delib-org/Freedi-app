@@ -6,6 +6,8 @@ import { formatPoints } from '../components/PointsPill';
 import { getDeliberationState, listenToDeliberation } from '../lib/proposals';
 import { getCampCensus, getSessionState } from '../lib/session';
 import { ResultsBoard } from '../components/ResultsBoard';
+import { HelpersBoard } from '../components/HelpersBoard';
+import { Icon } from '../components/Icon';
 import {
 	AgoraParticipant,
 	AgoraSceneKind,
@@ -139,77 +141,116 @@ function metricBar(
 	]);
 }
 
+/** The recap's two halves — how the PROPOSALS did, and how the PEOPLE did */
+type ResultsTab = 'class' | 'helpers';
+
 /**
  * The results + ending stage: the map transforms with the simulated fate
  * of the realm, the class score breaks down, and the success/failure
  * ending scene plays.
+ *
+ * A closure, not a plain component, because the switch between the two halves
+ * is state that has to survive a redraw — and there are a lot of them here,
+ * one per rating that lands while the recap is open.
  */
-export const Results: m.Component<ResultsAttrs> = {
-	view(vnode) {
-		const { session, topic, myParticipant } = vnode.attrs;
-		const score = session.classScore;
+export const Results: m.ClosureComponent<ResultsAttrs> = () => {
+	let tab: ResultsTab = 'class';
 
-		// The deliberation view tears its listeners down on unmount, so by the
-		// time we get here the suggestions that make up "your journey" are
-		// gone. Re-attach (idempotent per session+user) — the recap is the one
-		// screen allowed to total the lesson up, and it must not be blank.
-		if (myParticipant) listenToDeliberation(session.sessionId, myParticipant.userId);
+	/**
+	 * The door between the recap's two halves.
+	 *
+	 * They answer the same question about different subjects — the class map
+	 * ranks PROPOSALS, the helpers board ranks PEOPLE — and stacking them made
+	 * the second one the thing you reach by scrolling past the first, which is
+	 * exactly the half that belongs to the students who spent the lesson
+	 * improving somebody else's text.
+	 */
+	function tabButton(kind: ResultsTab, label: string, icon: 'chart' | 'helped', count?: number) {
+		return m(
+			'button.results__switch-btn',
+			{
+				type: 'button',
+				role: 'tab',
+				'aria-selected': String(tab === kind),
+				onclick: () => {
+					tab = kind;
+				},
+			},
+			[
+				m(Icon, { name: icon, size: 18 }),
+				m('span', label),
+				count !== undefined && count > 0
+					? m('span.results__switch-count', { 'aria-hidden': 'true' }, String(count))
+					: null,
+			],
+		);
+	}
 
-		if (!score) {
-			return m('.shell.shell--wide', [
-				m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-lg)' } }, [
-					m(EraMap, { participants: [] }),
-					m('.spinner'),
-					m('p.lobby__status.lobby__waiting-dots.text-center', t('results.computing')),
-				]),
-			]);
-		}
+	return {
+		view(vnode) {
+			const { session, topic, myParticipant } = vnode.attrs;
+			const score = session.classScore;
 
-		// Sessions computed before the three-way outcome existed fall back on
-		// the boolean
-		const outcome =
-			score.outcome ?? (score.success ? AgoraSessionOutcome.success : AgoraSessionOutcome.collapse);
+			// The deliberation view tears its listeners down on unmount, so by the
+			// time we get here the suggestions that make up "your journey" are
+			// gone. Re-attach (idempotent per session+user) — the recap is the one
+			// screen allowed to total the lesson up, and it must not be blank.
+			if (myParticipant) listenToDeliberation(session.sessionId, myParticipant.userId);
 
-		const endingKind =
-			outcome === AgoraSessionOutcome.success
-				? AgoraSceneKind.successEnding
-				: outcome === AgoraSessionOutcome.honestDisagreement
-					? AgoraSceneKind.honestDisagreementEnding
-					: AgoraSceneKind.failureEnding;
-		// Old topic packages lack the honest-disagreement scene — fall back to
-		// the failure scene text while keeping the dignified framing around it
-		const endingScene =
-			topic.scenes.find((scene) => scene.kind === endingKind) ??
-			topic.scenes.find((scene) => scene.kind === AgoraSceneKind.failureEnding);
+			if (!score) {
+				return m('.shell.shell--wide', [
+					m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-lg)' } }, [
+						m(EraMap, { participants: [] }),
+						m('.spinner'),
+						m('p.lobby__status.lobby__waiting-dots.text-center', t('results.computing')),
+					]),
+				]);
+			}
 
-		const mood =
-			outcome === AgoraSessionOutcome.success
-				? ('prosperous' as const)
-				: outcome === AgoraSessionOutcome.honestDisagreement
-					? ('dusk' as const)
-					: ('ruined' as const);
-		const totalClass =
-			outcome === AgoraSessionOutcome.success
-				? 'results__total--success'
-				: outcome === AgoraSessionOutcome.honestDisagreement
-					? 'results__total--honest'
-					: 'results__total--failure';
-		const outcomeLabel =
-			outcome === AgoraSessionOutcome.success
-				? t('results.outcome_success')
-				: outcome === AgoraSessionOutcome.honestDisagreement
-					? t('results.outcome_honest')
-					: t('results.outcome_collapse');
-		const debrief = score.debrief;
-		const showFullDebrief = outcome !== AgoraSessionOutcome.success;
+			const participants = getSessionState().participants;
+			const thanks = participants.reduce((sum, participant) => sum + participant.points.helping, 0);
 
-		return m('.shell.shell--wide', [
-			m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-				m(EraMap, {
-					participants: [],
-					mood,
-				}),
+			// Sessions computed before the three-way outcome existed fall back on
+			// the boolean
+			const outcome =
+				score.outcome ??
+				(score.success ? AgoraSessionOutcome.success : AgoraSessionOutcome.collapse);
 
+			const endingKind =
+				outcome === AgoraSessionOutcome.success
+					? AgoraSceneKind.successEnding
+					: outcome === AgoraSessionOutcome.honestDisagreement
+						? AgoraSceneKind.honestDisagreementEnding
+						: AgoraSceneKind.failureEnding;
+			// Old topic packages lack the honest-disagreement scene — fall back to
+			// the failure scene text while keeping the dignified framing around it
+			const endingScene =
+				topic.scenes.find((scene) => scene.kind === endingKind) ??
+				topic.scenes.find((scene) => scene.kind === AgoraSceneKind.failureEnding);
+
+			const mood =
+				outcome === AgoraSessionOutcome.success
+					? ('prosperous' as const)
+					: outcome === AgoraSessionOutcome.honestDisagreement
+						? ('dusk' as const)
+						: ('ruined' as const);
+			const totalClass =
+				outcome === AgoraSessionOutcome.success
+					? 'results__total--success'
+					: outcome === AgoraSessionOutcome.honestDisagreement
+						? 'results__total--honest'
+						: 'results__total--failure';
+			const outcomeLabel =
+				outcome === AgoraSessionOutcome.success
+					? t('results.outcome_success')
+					: outcome === AgoraSessionOutcome.honestDisagreement
+						? t('results.outcome_honest')
+						: t('results.outcome_collapse');
+			const debrief = score.debrief;
+			const showFullDebrief = outcome !== AgoraSessionOutcome.success;
+
+			/** How the PROPOSALS did — the class map and everything hung off it */
+			const classHalf: m.Children = [
 				// Mine first: the student reads their own story, then sees the
 				// class outcome their points fed into
 				myParticipant ? myJourneyCard(myParticipant) : null,
@@ -248,9 +289,11 @@ export const Results: m.Component<ResultsAttrs> = {
 
 				// The scoreboard the lesson has been playing toward: every proposal
 				// ranked by the class consensus on one -100%…+100% axis, the winner
-				// crowned, your own marked wherever it landed, the arithmetic behind
-				// any score one press away, and the classmates who spent the lesson
-				// improving other people's proposals on a podium of their own.
+				// crowned, your own marked wherever it landed, and the arithmetic
+				// behind any score one press away. Its helping-hands section is off
+				// here — that half of the lesson has its own place now, behind the
+				// switch above, and printing it twice on one screen said the same
+				// thing quieter both times.
 				m('.card.stack', [
 					m(ResultsBoard, {
 						sessionId: session.sessionId,
@@ -258,17 +301,18 @@ export const Results: m.Component<ResultsAttrs> = {
 						proposals: getDeliberationState().proposals,
 						scores: getDeliberationState().scores,
 						census: getCampCensus(),
-						participants: getSessionState().participants,
+						participants,
 						userId: myParticipant?.userId,
 						leadStatementId: score.leadStatementId,
 						finale: true,
+						helpers: false,
 					}),
 				]),
 
 				m('.card.stack', [
 					m('p.teacher__section-title', t('results.health_title')),
 					...topic.healthMetrics.map((metric) => {
-						const outcome = score.healthMetricOutcomes.find(
+						const metricOutcome = score.healthMetricOutcomes.find(
 							(candidate) => candidate.metricId === metric.metricId,
 						);
 
@@ -277,8 +321,8 @@ export const Results: m.Component<ResultsAttrs> = {
 							metric.min,
 							metric.max,
 							metric.baseline,
-							outcome?.value ?? metric.baseline,
-							outcome?.narrative ?? '',
+							metricOutcome?.value ?? metric.baseline,
+							metricOutcome?.narrative ?? '',
 							metric.higherIsBetter ?? true,
 						);
 					}),
@@ -325,7 +369,25 @@ export const Results: m.Component<ResultsAttrs> = {
 							},
 						})
 					: null,
-			]),
-		]);
-	},
+			];
+
+			return m('.shell.shell--wide', [
+				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
+					m(EraMap, {
+						participants: [],
+						mood,
+					}),
+
+					m('.results__switch', { role: 'tablist', 'aria-label': t('results.switch_aria') }, [
+						tabButton('class', t('results.tab_class'), 'chart'),
+						tabButton('helpers', t('results.tab_helpers'), 'helped', thanks),
+					]),
+
+					tab === 'helpers'
+						? m(HelpersBoard, { participants, userId: myParticipant?.userId })
+						: classHalf,
+				]),
+			]);
+		},
+	};
 };

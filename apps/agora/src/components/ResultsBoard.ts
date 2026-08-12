@@ -37,6 +37,15 @@ export interface ResultsBoardAttrs {
 	 * because it is deliberately allowed to happen once per session.
 	 */
 	finale?: boolean;
+	/**
+	 * Draw the helping-hands section under the map. Default on, because the
+	 * live Results tab is the only place that half of the lesson appears.
+	 *
+	 * The end-of-lesson recap turns it OFF: there the helpers are a place of
+	 * their own behind the recap's switch, and a screen that says the same
+	 * thing twice says it quieter both times.
+	 */
+	helpers?: boolean;
 }
 
 /** One proposal as a point on the map */
@@ -1218,7 +1227,7 @@ export function ResultsBoard(
 
 				plot(points, attrs.topic),
 				unplaced(points),
-				helpingHands(buildBands(attrs), attrs),
+				attrs.helpers === false ? null : helpingHands(buildBands(attrs), attrs),
 				detailScreen(points, attrs.topic),
 			]);
 		},
