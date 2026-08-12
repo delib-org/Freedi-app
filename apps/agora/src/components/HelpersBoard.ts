@@ -7,6 +7,12 @@ export interface HelpersBoardAttrs {
 	/** The whole roster — AI raters are already filtered out upstream */
 	participants: readonly AgoraParticipant[];
 	userId?: string;
+	/**
+	 * The end-of-lesson recap rather than the live tab. Only the tense changes:
+	 * mid-lesson "nobody has been thanked YET" and end-of-lesson "nobody was"
+	 * are different facts, and only the finale is entitled to the past tense.
+	 */
+	finale?: boolean;
 }
 
 export interface HelperRow {
@@ -128,8 +134,10 @@ function rankCell(row: HelperRow): m.Children {
  */
 export const HelpersBoard: m.Component<HelpersBoardAttrs> = {
 	view(vnode) {
+		const { finale } = vnode.attrs;
 		const rows = buildRows(vnode.attrs);
 		const total = rows.reduce((sum, row) => sum + row.points, 0);
+		const emptyLine = t(finale ? 'board.helpers_empty_finale' : 'board.helpers_empty_live');
 
 		return m('.helpers-board', [
 			m(
@@ -145,7 +153,7 @@ export const HelpersBoard: m.Component<HelpersBoardAttrs> = {
 			m('p.helpers-board__sub', t('board.helpers_sub')),
 
 			rows.length === 0
-				? m('p.helpers-board__empty', t('board.helpers_empty_finale'))
+				? m('p.helpers-board__empty', emptyLine)
 				: m('.helpers-board__table', [
 						// Every row carries its own sentence for a screen reader, so
 						// the column strip is a sighted reader's key and nothing else
@@ -206,6 +214,11 @@ export const HelpersBoard: m.Component<HelpersBoardAttrs> = {
 							}),
 						),
 					]),
+
+			// A board of nothing but zeros is a true board and a bleak one. The
+			// line under it is the only thing on this screen that says what
+			// filling a zero actually takes.
+			rows.length > 0 && total === 0 ? m('p.helpers-board__empty', emptyLine) : null,
 		]);
 	},
 };

@@ -10,7 +10,6 @@ import {
 	emptyDist,
 	type AgoraCamp,
 	type AgoraClassConsensus,
-	type AgoraParticipant,
 	type AgoraProposalScore,
 	type AgoraRatingDist,
 	type AgoraTopicPackage,
@@ -26,8 +25,6 @@ export interface ResultsBoardAttrs {
 	scores: Readonly<Record<string, AgoraProposalScore>>;
 	/** Positioned students per camp — the finite population C_p divides by */
 	census: { left: number; right: number; center: number };
-	/** The whole roster, for the helpers podium */
-	participants: readonly AgoraParticipant[];
 	userId?: string;
 	/** Server-named winner; while the lesson runs, whoever is on top */
 	leadStatementId?: string;
@@ -37,15 +34,6 @@ export interface ResultsBoardAttrs {
 	 * because it is deliberately allowed to happen once per session.
 	 */
 	finale?: boolean;
-	/**
-	 * Draw the helping-hands section under the map. Default on, because the
-	 * live Results tab is the only place that half of the lesson appears.
-	 *
-	 * The end-of-lesson recap turns it OFF: there the helpers are a place of
-	 * their own behind the recap's switch, and a screen that says the same
-	 * thing twice says it quieter both times.
-	 */
-	helpers?: boolean;
 }
 
 /** One proposal as a point on the map */
@@ -70,20 +58,6 @@ interface BoardPoint {
 	rank: number;
 	isMine: boolean;
 	isLead: boolean;
-}
-
-interface HelperRow {
-	participant: AgoraParticipant;
-	points: number;
-	isMine: boolean;
-}
-
-/** Everyone thanked the same number of times — one row, no order within it */
-interface HelperBand {
-	points: number;
-	rows: HelperRow[];
-	/** Thank-yous exchanged in the whole class; the same on every band */
-	total: number;
 }
 
 /** The five bucket faces, most against to most for */
@@ -255,8 +229,9 @@ function isolate(text: string): string {
  * centre, where a proposal has the whole class behind it — instead of a number
  * students have to be told to care about. Your own point is lit up wherever it
  * landed, and pressing any point reads out the proposal and the arithmetic
- * behind its score. The helpers podium sits below, because the lesson pays for
- * making someone else's proposal better as much as for writing your own.
+ * behind its score. The classmates who spent the lesson improving other
+ * people's proposals have a board of their own, one press away on the switch
+ * above this one — the lesson pays for that as much as for writing your own.
  */
 export function ResultsBoard(
 	initialVnode: m.Vnode<ResultsBoardAttrs>,
@@ -385,7 +360,7 @@ export function ResultsBoard(
 		// Standard competition ranking: two proposals the class agrees with
 		// equally are BOTH second, and nothing is third. Numbering them 2 and 3
 		// on the strength of a sort order invents a difference the class never
-		// expressed — the same lie the helpers podium used to tell.
+		// expressed — the same lie a podium over tied data always tells.
 		points.forEach((point, index) => {
 			const previous = points[index - 1];
 			point.rank =
@@ -407,41 +382,6 @@ export function ResultsBoard(
 		spread(points.filter((point) => point.consensus !== undefined));
 
 		return points;
-	}
-
-	/**
-	 * Helpers grouped by how many thank-yous they got, most first.
-	 *
-	 * Grouped rather than ranked, because a helping point is not a score — it is
-	 * one classmate saying "your idea made my proposal better". They are small
-	 * integers, so ties are the ordinary case, not an edge case; a podium fed
-	 * tied data invents a difference that does not exist, and crowns one of two
-	 * students who did exactly the same amount of good.
-	 */
-	function buildBands(attrs: ResultsBoardAttrs): HelperBand[] {
-		const byPoints = new Map<number, HelperRow[]>();
-		let total = 0;
-		for (const participant of attrs.participants) {
-			const points = participant.points.helping;
-			if (points <= 0) continue;
-			total += points;
-			const row: HelperRow = {
-				participant,
-				points,
-				isMine: participant.userId === attrs.userId,
-			};
-			byPoints.set(points, [...(byPoints.get(points) ?? []), row]);
-		}
-
-		return [...byPoints.entries()]
-			.sort((a, b) => b[0] - a[0])
-			.map(([points, rows]) => ({
-				points,
-				total,
-				// My chip first inside its band, then roster order — stable, so the
-				// list never reshuffles itself between redraws
-				rows: [...rows].sort((a, b) => Number(b.isMine) - Number(a.isMine)),
-			}));
 	}
 
 	// ---------- the map ----------
@@ -1063,125 +1003,6 @@ export function ResultsBoard(
 		]);
 	}
 
-	// ---------- helping hands ----------
-
-	/** One classmate's name, or mine, marked the way "mine" is marked everywhere */
-	function helperChip(row: HelperRow): m.Children {
-		return m(
-			'span.board__chip',
-			{
-				key: row.participant.participantId,
-				class: row.isMine ? 'board__chip--mine' : undefined,
-			},
-			row.isMine ? t('board.you') : row.participant.anonName,
-		);
-	}
-
-	/**
-	 * Everyone thanked the same number of times, on one line.
-	 *
-	 * No rank number, no medal, no bar: all three are devices for showing an
-	 * ORDER, and inside a band there is none — these students did equally well.
-	 * The count says how much, once, at the head of the row.
-	 */
-	function helperBand(band: HelperBand, topLabel: string | null): m.Children {
-		return m('.board__band', { key: band.points }, [
-			topLabel ? m('p.board__band-crown', iconLabel('spark', topLabel)) : null,
-			m(
-				'.board__band-row',
-				{
-					role: 'group',
-					'aria-label': t('board.helpers_band_aria', {
-						n: band.points,
-						names: band.rows
-							.map((row) => (row.isMine ? t('board.you') : row.participant.anonName))
-							.join(', '),
-					}),
-				},
-				[
-					m('span.board__band-count.board__num', iconLabel('thanks', isolate(`×${band.points}`))),
-					m(
-						'.board__band-names',
-						band.rows.map((row) => helperChip(row)),
-					),
-				],
-			),
-		]);
-	}
-
-	/**
-	 * Helping hands: what the class did for each other.
-	 *
-	 * This was a 🥇🥈🥉 podium over a bar chart, and it was quietly dishonest.
-	 * Helping points are small integers — one per thank-you — so two students on
-	 * one point each is the ORDINARY state, and the podium crowned one of them
-	 * gold and the other silver for identical work. The bars, scaled to the top
-	 * helper, then rendered every tied student at a full 100%: two maxed bars
-	 * that read as a rendering fault. And the podium and the list said the same
-	 * thing twice, one directly above the other.
-	 *
-	 * So the headline number is the CLASS's — thanks exchanged, a total nobody
-	 * can lose — and underneath, students are grouped by how often they were
-	 * thanked. The order between groups is real; inside a group there is none,
-	 * and none is shown.
-	 */
-	function helpingHands(bands: HelperBand[], attrs: ResultsBoardAttrs): m.Children {
-		const total = bands[0]?.total ?? 0;
-		const iAmListed = bands.some((band) => band.rows.some((row) => row.isMine));
-		const iAmInTheClass = attrs.participants.some(
-			(participant) => participant.userId === attrs.userId,
-		);
-
-		return m('.board__helpers', [
-			m('.board__helpers-head', [
-				m('p.board__eyebrow', iconLabel('helped', t('board.helpers_title'))),
-				m(
-					'span.board__tally.board__num',
-					{ 'aria-label': t('board.helpers_tally_aria', { n: total }) },
-					iconLabel('thanks', String(total)),
-				),
-			]),
-			bands.length === 0
-				? m(
-						'p.board__helpers-empty',
-						t(attrs.finale ? 'board.helpers_empty_finale' : 'board.helpers_empty_live'),
-					)
-				: [
-						// What a point MEANS, said once. Without it the number is an
-						// abstraction; with it, it is a classmate's thank-you.
-						m('p.board__helpers-sub', t('board.helpers_sub')),
-						// The keyed bands live in their own element: mithril refuses a
-						// fragment where only SOME children carry keys, and the lines
-						// around them here are unkeyed
-						m(
-							'.board__bands',
-							bands.map((band, index) =>
-								helperBand(
-									band,
-									// The laurel names a top only when there IS one: never
-									// mid-lesson, and never when every helper is level, because
-									// among equals nobody is most.
-									attrs.finale && index === 0 && bands.length > 1
-										? band.rows.length > 1
-											? t('board.helpers_most_shared')
-											: t('board.helpers_most')
-										: null,
-								),
-							),
-						),
-						// "Where am I?" must have an answer even when the answer is
-						// "nowhere yet" — an absent name reads as a missing row, not as a
-						// zero
-						!iAmListed && iAmInTheClass
-							? m(
-									'p.board__helpers-me',
-									t(attrs.finale ? 'board.helpers_me_zero_finale' : 'board.helpers_me_zero_live'),
-								)
-							: null,
-					],
-		]);
-	}
-
 	return {
 		onremove() {
 			if (timer) clearInterval(timer);
@@ -1227,7 +1048,6 @@ export function ResultsBoard(
 
 				plot(points, attrs.topic),
 				unplaced(points),
-				attrs.helpers === false ? null : helpingHands(buildBands(attrs), attrs),
 				detailScreen(points, attrs.topic),
 			]);
 		},

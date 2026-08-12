@@ -333,18 +333,11 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing': 'ההצעה שלכם סיימה במקום {{rank}} מתוך {{total}} עם {{n}} הסכמה',
 		'board.my_standing_unrated': 'ההצעה שלכם לא זכתה לדירוג מהכיתה הפעם.',
 		'board.my_standing_waiting': 'ההצעה שלכם עוד מחכה לדירוג ראשון מהכיתה.',
-		'board.helpers_title': 'ידיים עוזרות',
-		'board.helpers_tally': '{{n}} תודות',
 		'board.helpers_tally_aria': '{{n}} תודות הוחלפו בכיתה',
 		'board.helpers_sub': 'כל 🙏 כאן הוא חבר כיתה שאומר: הרעיון שלכם שיפר לי את ההצעה.',
-		'board.helpers_band_aria': '{{n}} תודות: {{names}}',
-		'board.helpers_most': 'הכי הרבה תודות',
-		'board.helpers_most_shared': 'הכי הרבה תודות — במשותף',
 		'board.helpers_empty_live':
 			'עוד אין תודות. שלחו למישהו רעיון להצעה שלו — אם זה יעזור, השם שלכם ינחת כאן.',
 		'board.helpers_empty_finale': 'הפעם לא הוחלפו תודות. זה המספר הכי קל במשחק לשבור בשיעור הבא.',
-		'board.helpers_me_zero_live': 'אתם · עוד בלי תודות — הרעיון הבא שלכם יכול לנחות כאן',
-		'board.helpers_me_zero_finale': 'אתם · בלי תודות בסבב הזה',
 		'results.switch_aria': 'שתי החצאים של הסיכום',
 		'results.tab_class': 'תוצאות הכיתה',
 		'results.tab_helpers': 'העוזרים',
@@ -859,19 +852,12 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Your proposal never got rated by the class this time.',
 		'board.my_standing_waiting':
 			'Your proposal is still waiting for its first rating from the class.',
-		'board.helpers_title': 'Helping hands',
-		'board.helpers_tally': '{{n}} thanks',
 		'board.helpers_tally_aria': '{{n}} thanks exchanged in this class',
 		'board.helpers_sub': 'Every 🙏 here is a classmate saying: your idea made my proposal better.',
-		'board.helpers_band_aria': '{{n}} thanks: {{names}}',
-		'board.helpers_most': 'Most thanked',
-		'board.helpers_most_shared': 'Most thanked — shared',
 		'board.helpers_empty_live':
 			'No thanks yet. Send someone an idea for their proposal — if it helps, your name lands here.',
 		'board.helpers_empty_finale':
 			'No thanks were exchanged this time. That is the easiest number in the game to beat next lesson.',
-		'board.helpers_me_zero_live': 'You · no thanks yet — your next idea could land here',
-		'board.helpers_me_zero_finale': 'You · no thanks this round',
 		'results.switch_aria': 'The two halves of the recap',
 		'results.tab_class': 'Class result',
 		'results.tab_helpers': 'Helpers',
@@ -1383,19 +1369,12 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing': 'أنهى اقتراحكم في المركز {{rank}} من {{total}} باتفاق {{n}}',
 		'board.my_standing_unrated': 'لم يحصل اقتراحكم على تقييم من الصف هذه المرة.',
 		'board.my_standing_waiting': 'اقتراحكم ما زال ينتظر أول تقييم من الصف.',
-		'board.helpers_title': 'أيادٍ تساعد',
-		'board.helpers_tally': '{{n}} شكرًا',
 		'board.helpers_tally_aria': 'تم تبادل {{n}} شكرًا في هذا الصف',
 		'board.helpers_sub': 'كل 🙏 هنا زميل يقول: فكرتكم حسّنت اقتراحي.',
-		'board.helpers_band_aria': '{{n}} شكرًا: {{names}}',
-		'board.helpers_most': 'الأكثر شكرًا',
-		'board.helpers_most_shared': 'الأكثر شكرًا — بالتساوي',
 		'board.helpers_empty_live':
 			'لا شكر بعد. أرسلوا لأحدهم فكرة لاقتراحه — إن ساعدت، سيظهر اسمكم هنا.',
 		'board.helpers_empty_finale':
 			'لم يُتبادل أي شكر هذه المرة. هذا أسهل رقم في اللعبة يمكن تجاوزه في الدرس القادم.',
-		'board.helpers_me_zero_live': 'أنتم · لا شكر بعد — فكرتكم القادمة قد تصل إلى هنا',
-		'board.helpers_me_zero_finale': 'أنتم · بلا شكر هذه الجولة',
 		'results.switch_aria': 'نصفا الملخّص',
 		'results.tab_class': 'نتيجة الصف',
 		'results.tab_helpers': 'المساعدون',
@@ -1920,20 +1899,12 @@ const translations: Record<LangCode, Record<string, string>> = {
 			'Vuestra propuesta terminó en el puesto {{rank}} de {{total}} con un {{n}} de acuerdo',
 		'board.my_standing_unrated': 'Esta vez la clase no llegó a valorar vuestra propuesta.',
 		'board.my_standing_waiting': 'Vuestra propuesta aún espera su primera valoración de la clase.',
-		'board.helpers_title': 'Manos que ayudan',
-		'board.helpers_tally': '{{n}} gracias',
 		'board.helpers_tally_aria': '{{n}} gracias intercambiadas en esta clase',
 		'board.helpers_sub': 'Cada 🙏 es un compañero diciendo: vuestra idea mejoró mi propuesta.',
-		'board.helpers_band_aria': '{{n}} gracias: {{names}}',
-		'board.helpers_most': 'Más agradecido',
-		'board.helpers_most_shared': 'Más agradecido — compartido',
 		'board.helpers_empty_live':
 			'Aún no hay gracias. Enviad a alguien una idea para su propuesta: si ayuda, vuestro nombre aparecerá aquí.',
 		'board.helpers_empty_finale':
 			'Esta vez no se intercambiaron gracias. Es el número más fácil del juego de superar la próxima clase.',
-		'board.helpers_me_zero_live':
-			'Vosotros · aún sin gracias — vuestra próxima idea puede llegar aquí',
-		'board.helpers_me_zero_finale': 'Vosotros · sin gracias esta ronda',
 		'results.switch_aria': 'Las dos mitades del resumen',
 		'results.tab_class': 'Resultado de la clase',
 		'results.tab_helpers': 'Quienes ayudaron',
@@ -2472,20 +2443,13 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Euer Vorschlag wurde diesmal von der Klasse nicht bewertet.',
 		'board.my_standing_waiting':
 			'Euer Vorschlag wartet noch auf seine erste Bewertung aus der Klasse.',
-		'board.helpers_title': 'Helfende Hände',
-		'board.helpers_tally': '{{n}} Danke',
 		'board.helpers_tally_aria': '{{n}} Danke in dieser Klasse ausgetauscht',
 		'board.helpers_sub':
 			'Jedes 🙏 hier ist ein Mitschüler, der sagt: eure Idee hat meinen Vorschlag besser gemacht.',
-		'board.helpers_band_aria': '{{n}} Danke: {{names}}',
-		'board.helpers_most': 'Am meisten gedankt',
-		'board.helpers_most_shared': 'Am meisten gedankt — geteilt',
 		'board.helpers_empty_live':
 			'Noch kein Danke. Schickt jemandem eine Idee für seinen Vorschlag — wenn sie hilft, landet euer Name hier.',
 		'board.helpers_empty_finale':
 			'Diesmal wurde kein Danke ausgetauscht. Das ist die leichteste Zahl im Spiel, die nächste Stunde zu übertreffen.',
-		'board.helpers_me_zero_live': 'Ihr · noch kein Danke — eure nächste Idee könnte hier landen',
-		'board.helpers_me_zero_finale': 'Ihr · kein Danke in dieser Runde',
 		'results.switch_aria': 'Die zwei Hälften des Rückblicks',
 		'results.tab_class': 'Ergebnis der Klasse',
 		'results.tab_helpers': 'Helfende',
@@ -3031,21 +2995,13 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'board.my_standing_unrated': 'Jullie voorstel is deze keer niet door de klas beoordeeld.',
 		'board.my_standing_waiting':
 			'Jullie voorstel wacht nog op zijn eerste beoordeling van de klas.',
-		'board.helpers_title': 'Helpende handen',
-		'board.helpers_tally': '{{n}} bedankjes',
 		'board.helpers_tally_aria': '{{n}} bedankjes uitgewisseld in deze klas',
 		'board.helpers_sub':
 			'Elke 🙏 hier is een klasgenoot die zegt: jullie idee maakte mijn voorstel beter.',
-		'board.helpers_band_aria': '{{n}} bedankjes: {{names}}',
-		'board.helpers_most': 'Meest bedankt',
-		'board.helpers_most_shared': 'Meest bedankt — gedeeld',
 		'board.helpers_empty_live':
 			'Nog geen bedankjes. Stuur iemand een idee voor hun voorstel — als het helpt, staat jouw naam hier.',
 		'board.helpers_empty_finale':
 			'Deze keer zijn er geen bedankjes uitgewisseld. Dat is het makkelijkste getal in het spel om volgende les te verslaan.',
-		'board.helpers_me_zero_live':
-			'Jullie · nog geen bedankjes — jullie volgende idee kan hier landen',
-		'board.helpers_me_zero_finale': 'Jullie · geen bedankjes deze ronde',
 		'results.switch_aria': 'De twee helften van de terugblik',
 		'results.tab_class': 'Resultaat van de klas',
 		'results.tab_helpers': 'Helpers',

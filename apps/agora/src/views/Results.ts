@@ -7,7 +7,7 @@ import { getDeliberationState, listenToDeliberation } from '../lib/proposals';
 import { getCampCensus, getSessionState } from '../lib/session';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
-import { Icon } from '../components/Icon';
+import { countThanks, ResultsSwitch, type ResultsTab } from '../components/ResultsSwitch';
 import {
 	AgoraParticipant,
 	AgoraSceneKind,
@@ -141,9 +141,6 @@ function metricBar(
 	]);
 }
 
-/** The recap's two halves — how the PROPOSALS did, and how the PEOPLE did */
-type ResultsTab = 'class' | 'helpers';
-
 /**
  * The results + ending stage: the map transforms with the simulated fate
  * of the realm, the class score breaks down, and the success/failure
@@ -155,36 +152,6 @@ type ResultsTab = 'class' | 'helpers';
  */
 export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 	let tab: ResultsTab = 'class';
-
-	/**
-	 * The door between the recap's two halves.
-	 *
-	 * They answer the same question about different subjects — the class map
-	 * ranks PROPOSALS, the helpers board ranks PEOPLE — and stacking them made
-	 * the second one the thing you reach by scrolling past the first, which is
-	 * exactly the half that belongs to the students who spent the lesson
-	 * improving somebody else's text.
-	 */
-	function tabButton(kind: ResultsTab, label: string, icon: 'chart' | 'helped', count?: number) {
-		return m(
-			'button.results__switch-btn',
-			{
-				type: 'button',
-				role: 'tab',
-				'aria-selected': String(tab === kind),
-				onclick: () => {
-					tab = kind;
-				},
-			},
-			[
-				m(Icon, { name: icon, size: 18 }),
-				m('span', label),
-				count !== undefined && count > 0
-					? m('span.results__switch-count', { 'aria-hidden': 'true' }, String(count))
-					: null,
-			],
-		);
-	}
 
 	return {
 		view(vnode) {
@@ -208,7 +175,7 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 			}
 
 			const participants = getSessionState().participants;
-			const thanks = participants.reduce((sum, participant) => sum + participant.points.helping, 0);
+			const thanks = countThanks(participants);
 
 			// Sessions computed before the three-way outcome existed fall back on
 			// the boolean
@@ -290,10 +257,7 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 				// The scoreboard the lesson has been playing toward: every proposal
 				// ranked by the class consensus on one -100%…+100% axis, the winner
 				// crowned, your own marked wherever it landed, and the arithmetic
-				// behind any score one press away. Its helping-hands section is off
-				// here — that half of the lesson has its own place now, behind the
-				// switch above, and printing it twice on one screen said the same
-				// thing quieter both times.
+				// behind any score one press away.
 				m('.card.stack', [
 					m(ResultsBoard, {
 						sessionId: session.sessionId,
@@ -301,11 +265,9 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 						proposals: getDeliberationState().proposals,
 						scores: getDeliberationState().scores,
 						census: getCampCensus(),
-						participants,
 						userId: myParticipant?.userId,
 						leadStatementId: score.leadStatementId,
 						finale: true,
-						helpers: false,
 					}),
 				]),
 
@@ -378,13 +340,20 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 						mood,
 					}),
 
-					m('.results__switch', { role: 'tablist', 'aria-label': t('results.switch_aria') }, [
-						tabButton('class', t('results.tab_class'), 'chart'),
-						tabButton('helpers', t('results.tab_helpers'), 'helped', thanks),
-					]),
+					m(ResultsSwitch, {
+						tab,
+						thanks,
+						onTab: (next: ResultsTab) => {
+							tab = next;
+						},
+					}),
 
 					tab === 'helpers'
-						? m(HelpersBoard, { participants, userId: myParticipant?.userId })
+						? m(HelpersBoard, {
+								participants,
+								userId: myParticipant?.userId,
+								finale: true,
+							})
 						: classHalf,
 				]),
 			]);

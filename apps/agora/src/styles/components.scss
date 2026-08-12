@@ -7631,110 +7631,8 @@
 		color: var(--text-secondary);
 	}
 
-	// --- helping hands -----------------------------------------------------------------
-	// Was a 🥇🥈🥉 podium over a bar chart. Helping points are small integers —
-	// one per thank-you — so ties are the ordinary case, and both devices exist
-	// to show an ORDER: the podium crowned one of two equal students gold and
-	// the other silver, and the bars, scaled to the top helper, drew every tied
-	// student at a full 100%. Now: one class total, then groups of equal
-	// standing. No rank number, no medal, no bar.
-	&__helpers {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: var(--wash-peer-low);
-		border: 1px solid var(--peer);
-		border-radius: var(--radius-lg);
-	}
-
-	&__helpers-head {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: var(--space-sm);
-	}
-
-	// The one number in this section, and it belongs to the class
-	&__tally {
-		font-family: var(--font-display);
-		font-size: var(--font-size-xl);
-		color: var(--peer-glow);
-		font-variant-numeric: tabular-nums;
-		line-height: 1;
-	}
-
-	&__helpers-sub,
-	&__helpers-empty {
-		font-size: var(--font-size-sm);
-		color: var(--text-secondary);
-		line-height: 1.45;
-	}
-
-	&__helpers-me {
-		padding-block-start: var(--space-sm);
-		border-block-start: 1px dashed var(--border-subtle);
-		font-size: var(--font-size-sm);
-		color: var(--text-secondary);
-	}
-
-	&__bands {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-	}
-
-	&__band {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	&__band-crown {
-		font-family: var(--font-display);
-		font-size: var(--font-size-xs);
-		color: var(--peer-glow);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-	}
-
-	&__band-row {
-		display: flex;
-		align-items: baseline;
-		gap: var(--space-sm);
-	}
-
-	&__band-count {
-		flex: 0 0 auto;
-		min-width: 3.5em;
-		font-family: var(--font-display);
-		color: var(--peer-glow);
-		font-variant-numeric: tabular-nums;
-	}
-
-	&__band-names {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-xs);
-	}
-
-	&__chip {
-		padding: 2px var(--space-sm);
-		border-radius: var(--radius-full);
-		background: var(--bg-card-solid);
-		border: 1px solid var(--border-subtle);
-		font-size: var(--font-size-sm);
-		color: var(--text-primary);
-
-		// Same "mine" grammar the map point and the champion card already use
-		&--mine {
-			background: var(--wash-mine-low);
-			border-color: var(--lantern);
-			color: var(--lantern-glow);
-			font-weight: 700;
-		}
-	}
 }
+
 
 // --- the full statistics, as a place ------------------------------------------------
 // Pressing a point opens the callout ON the map; pressing the callout travels
@@ -7859,10 +7757,9 @@
 	.board__you,
 	.board__detail-sub,
 	.board__bridge-label,
-	.board__band-crown {
+	.helpers-board__col {
 		letter-spacing: normal;
 	}
-
 }
 
 // Opacity only: the callout already carries a centring transform, and a

@@ -26,6 +26,8 @@ import {
 } from '../lib/helpedFocus';
 import { EraMapLantern } from '../components/EraMap';
 import { ResultsBoard } from '../components/ResultsBoard';
+import { HelpersBoard } from '../components/HelpersBoard';
+import { countThanks, ResultsSwitch, type ResultsTab } from '../components/ResultsSwitch';
 import { RateScale, rateOptionFor } from '../components/RateScale';
 import { getCampCensus, getSessionState } from '../lib/session';
 import {
@@ -450,6 +452,12 @@ export function Deliberation(
 	 * where the work is.
 	 */
 	let screen: DelibScreen = 'my';
+	/**
+	 * Which half of the Results tab is showing — the class map or the helpers
+	 * board. In memory like `screen` itself: leaving the tab and coming back
+	 * should land on the picture, which is the half that moves.
+	 */
+	let resultsTab: ResultsTab = 'class';
 	/**
 	 * A helped proposal the "woven in" celebration pointed at: the next render
 	 * of its card scrolls to it and spotlights it, then the intent is spent.
@@ -1903,18 +1911,32 @@ export function Deliberation(
 						header,
 						delibNav(myProposal),
 						m('h2.results-soon__title', t('delib.results_title')),
-						// The same board the ending shows, live: a student who has
-						// watched their point move all lesson must not be handed a
-						// different picture at the recap
-						m(ResultsBoard, {
-							sessionId: live.sessionId,
-							topic,
-							proposals: getDeliberationState().proposals,
-							scores: getDeliberationState().scores,
-							census: getCampCensus(),
-							participants: getSessionState().participants,
-							userId,
+						// Same switch, same two halves as the recap — a student who
+						// has been moving between them all lesson must not be handed
+						// a different control at the ending
+						m(ResultsSwitch, {
+							tab: resultsTab,
+							thanks: countThanks(getSessionState().participants),
+							onTab: (next: ResultsTab) => {
+								resultsTab = next;
+							},
 						}),
+						resultsTab === 'helpers'
+							? m(HelpersBoard, {
+									participants: getSessionState().participants,
+									userId,
+								})
+							: // The same board the ending shows, live: a student who has
+								// watched their point move all lesson must not be handed a
+								// different picture at the recap
+								m(ResultsBoard, {
+									sessionId: live.sessionId,
+									topic,
+									proposals: getDeliberationState().proposals,
+									scores: getDeliberationState().scores,
+									census: getCampCensus(),
+									userId,
+								}),
 						m(
 							'button.btn.btn--primary.btn--full.btn--lg',
 							{
