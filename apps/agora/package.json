@@ -9,7 +9,7 @@
 		"build": "tsc --noEmit && vite build",
 		"preview": "vite preview --port 3009",
 		"typecheck": "tsc --noEmit",
-		"typecheck:scripts": "tsc --noEmit --strict --skipLibCheck --module esnext --moduleResolution bundler --target es2022 --lib es2022,dom scripts/fastlane.ts scripts/lib/fastlane.ts",
+		"typecheck:scripts": "tsc --noEmit --strict --skipLibCheck --module esnext --moduleResolution bundler --target es2022 --lib es2022,dom scripts/fastlane.ts scripts/lib/fastlane.ts scripts/board-shots.ts",
 		"lint": "eslint \"src/**/*.ts\"",
 		"check-all": "npm run lint && npm run typecheck && npm run typecheck:scripts && npm run build && npm run contrast && npm run typesize",
 		"test": "vitest run",

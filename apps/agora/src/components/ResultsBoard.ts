@@ -105,6 +105,8 @@ const EDGE_PAD = 8;
 const CALLOUT_GAP_PX = 10;
 /** A proposal is "backed by both sides" inside this band around centre */
 const BRIDGE_BAND = 0.28;
+/** Ties the help tile to the panel it opens */
+const HELP_ID = 'board-help-pop';
 
 /**
  * Render `content` at the end of <body>, outside every stacking context the
@@ -251,8 +253,16 @@ export function ResultsBoard(
 	initialVnode: m.Vnode<ResultsBoardAttrs>,
 ): m.Component<ResultsBoardAttrs> {
 	const cheerKey = `agora_${initialVnode.attrs.sessionId}_boardcheer`;
+	const helpKey = `agora_${initialVnode.attrs.sessionId}_boardhelp`;
 
 	let openId = '';
+	/**
+	 * The map's help, open. It starts open the FIRST time the board is shown in
+	 * a session and never auto-opens again — a one-for-one swap for the hint
+	 * paragraph that used to be printed above the field on every single visit.
+	 */
+	let helpOpen = sessionStorage.getItem(helpKey) === null;
+	if (helpOpen) sessionStorage.setItem(helpKey, '1');
 	/**
 	 * The proposal whose full arithmetic is open as a sub-screen. Separate from
 	 * `openId` on purpose: pressing a point opens the callout ON the map, and
@@ -520,7 +530,10 @@ export function ResultsBoard(
 				// The affordance said out loud: a card that merely looks pressable
 				// is a card most of the class never presses
 				m('span.board__callout-more', { 'aria-hidden': 'true' }, [
-					m('span.board__callout-more-text', t('board.callout_more')),
+					m('span.board__callout-more-text', [
+						m(Icon, { name: 'chart', size: 14 }),
+						m('span', t('board.callout_more')),
+					]),
 					m('span.board__callout-more-arrow', isRTL() ? '←' : '→'),
 				]),
 			],
@@ -568,30 +581,143 @@ export function ResultsBoard(
 		);
 	}
 
+	/**
+	 * One line of the help: a miniature of the thing on the map, then five
+	 * words. A row is a picture with a caption, not a sentence with a bullet —
+	 * which is the whole reason the paragraph could be deleted.
+	 */
+	function helpRow(swatch: m.Children, line: string): m.Children {
+		return m('.board__help-row', [
+			m('span.board__help-swatch', { 'aria-hidden': 'true' }, swatch),
+			m('span', line),
+		]);
+	}
+
+	/** Escape closes the help, the same as pressing the tile again */
+	function onHelpKey(event: KeyboardEvent): void {
+		if (event.key !== 'Escape') return;
+		helpOpen = false;
+		m.redraw();
+	}
+
+	/**
+	 * The map's instructions, folded into one tile.
+	 *
+	 * They used to be a 130-character paragraph printed above the field on every
+	 * visit — the largest block of text on a screen whose entire point is that
+	 * it can be read at a glance. Hover does not exist on a classroom phone, so
+	 * the tooltip is a DISCLOSURE a thumb can hit rather than something pointed
+	 * at, and it opens by itself the first time the board is shown in a session:
+	 * the one encoding a student cannot guess (big dot = more raters) is taught
+	 * exactly once, and never printed again.
+	 */
+	function help(): m.Children {
+		if (!helpOpen) return null;
+
+		return [
+			m('button.board__help-scrim', {
+				type: 'button',
+				tabindex: -1,
+				'aria-hidden': 'true',
+				onclick: () => {
+					helpOpen = false;
+				},
+			}),
+			m(
+				'.board__help-pop',
+				{
+					id: HELP_ID,
+					role: 'region',
+					tabindex: -1,
+					'aria-label': t('board.help_aria'),
+					oncreate: () => document.addEventListener('keydown', onHelpKey),
+					onremove: () => document.removeEventListener('keydown', onHelpKey),
+				},
+				[
+					helpRow(m('span.board__help-ramp'), t('board.help_up')),
+					helpRow(m('span.board__help-zone'), t('board.help_zone')),
+					helpRow(
+						[
+							m('span.board__help-dot.board__help-dot--sm'),
+							m('span.board__help-dot.board__help-dot--md'),
+							m('span.board__help-dot.board__help-dot--lg'),
+						],
+						t('board.help_size'),
+					),
+					helpRow(m('span.board__help-dot.board__help-dot--mine'), t('board.help_mine')),
+					helpRow(m('span.board__help-dot.board__help-dot--lead'), t('board.help_lead')),
+					helpRow(m(Icon, { name: 'chart', size: 20 }), t('board.help_tap')),
+				],
+			),
+		];
+	}
+
 	function plot(points: BoardPoint[], topic: AgoraTopicPackage): m.Children {
 		const placed = points.filter((point) => point.consensus !== undefined);
 		const selected = placed.find((point) => point.proposal.statementId === openId);
 
 		return m('.board__map', [
-			m('p.board__eyebrow', t('board.map_title')),
-			m('p.board__tap-hint', t('board.map_hint')),
+			m('.board__map-head', [
+				m('p.board__eyebrow', t('board.map_title')),
+				m(
+					'button.board__help',
+					{
+						type: 'button',
+						'aria-expanded': String(helpOpen),
+						'aria-controls': HELP_ID,
+						'aria-label': t('board.help_aria'),
+						onclick: () => {
+							helpOpen = !helpOpen;
+						},
+					},
+					m('span', { 'aria-hidden': 'true' }, '?'),
+				),
+				help(),
+			]),
 
 			m('.board__plot-frame', [
 				// The vertical axis reads bottom-up: the class's agreement. The
 				// marks are pinned to the values they name — a rail that merely
-				// spaces them evenly puts 0% somewhere it never sits.
+				// spaces them evenly puts 0% somewhere it never sits. The rotated
+				// title that used to stand beside them is gone: the field's own
+				// red→green ramp says which way is up, and these two faces are the
+				// same two the class pressed while rating.
 				m('.board__axis-y', [
-					m('span.board__axis-y-title', t('board.agreement_label')),
 					m('.board__axis-y-marks', [
-						m('span.board__axis-y-mark.board__axis-y-mark--top.board__num', signed(100)),
+						m('span.board__axis-y-mark.board__axis-y-mark--top', [
+							m(Icon, {
+								name: 'face-strong-for',
+								size: 18,
+								class: 'board__axis-y-face board__axis-y-face--top',
+							}),
+							m('span.board__num', signed(100)),
+						]),
 						m('span.board__axis-y-mark.board__axis-y-mark--zero.board__num', '0%'),
-						m('span.board__axis-y-mark.board__axis-y-mark--bottom.board__num', signed(-100)),
+						m('span.board__axis-y-mark.board__axis-y-mark--bottom', [
+							m(Icon, {
+								name: 'face-strong-against',
+								size: 18,
+								class: 'board__axis-y-face board__axis-y-face--bottom',
+							}),
+							m('span.board__num', signed(-100)),
+						]),
 					]),
 				]),
 
-				m('.board__plot', { role: 'group', 'aria-label': t('board.map_title') }, [
+				// The label the sighted paragraph used to carry now lives here, and
+				// says MORE than it ever did: both axes, in one sentence, for the
+				// one reader who cannot see the ramp
+				m('.board__plot', { role: 'group', 'aria-label': t('board.plot_aria') }, [
 					// The goal made into a place: whole-class backing, high agreement
-					m('.board__bridge-zone', [m('span.board__bridge-label', t('board.zone_bridge'))]),
+					m('.board__bridge-zone', [
+						m(
+							'.board__bridge-chip',
+							m('span.board__bridge-label', [
+								m(Icon, { name: 'trophy', size: 14 }),
+								m('span', t('board.zone_bridge')),
+							]),
+						),
+					]),
 					m('.board__grid-zero'),
 					m('.board__grid-centre'),
 					placed.length === 0
@@ -602,23 +728,17 @@ export function ResultsBoard(
 				]),
 			]),
 
-			// The horizontal axis: who is actually behind it
+			// The horizontal axis: who is actually behind it. The camp name IS the
+			// swatch, and the sentence between them is two arrows meeting at a dot,
+			// sitting under the centre column so the drawing points at the bridge.
 			m('.board__axis-x', [
-				m('span.board__axis-x-end', topic.positioningScale.leftLabel),
-				m('span.board__axis-x-title', t('board.axis_x_title')),
-				m('span.board__axis-x-end', topic.positioningScale.rightLabel),
-			]),
-
-			m('.board__legend', [
-				m('span.board__legend-item', [
-					m('span.board__legend-dot.board__legend-dot--mine'),
-					t('board.legend_mine'),
+				m('span.board__axis-x-camp.board__axis-x-camp--left', topic.positioningScale.leftLabel),
+				m('span.board__axis-x-mid', { 'aria-hidden': 'true' }, [
+					m('span', '→'),
+					m('span.board__axis-x-meet'),
+					m('span', '←'),
 				]),
-				m('span.board__legend-item', [
-					m('span.board__legend-dot.board__legend-dot--lead'),
-					t('board.legend_lead'),
-				]),
-				m('span.board__legend-item', t('board.legend_size')),
+				m('span.board__axis-x-camp.board__axis-x-camp--right', topic.positioningScale.rightLabel),
 			]),
 		]);
 	}

@@ -334,6 +334,37 @@
   // so it needs the two brightest fills, not the ramp.
   --grad-mine-selected: linear-gradient(160deg, var(--mine-light), var(--mine-strong));
   --grad-sheen: radial-gradient(120% 140% at 85% -30%, rgba(255, 255, 255, 0.32), transparent 60%);
+  // The AGREEMENT FIELD: the results map's vertical axis, painted.
+  //
+  // A point's height IS the class's verdict, and a rail of numbers beside the
+  // plot is a caption for that — one a 7th-grader reads only if told to. As a
+  // ramp the field says it without words: red at the bottom (the class is
+  // against), straw through the middle (the class is split), green at the top
+  // (the class is for). Every stop is --danger/--warning/--success at low
+  // alpha, so the map cannot drift away from the three colours the rest of the
+  // game already uses for exactly these three meanings.
+  //
+  // `to top`, not `to bottom` — a vertical ramp is direction-neutral by
+  // construction, so nothing here flips in Hebrew or Arabic.
+  //
+  // The extremes sit at 12% and the middle is PINCHED (7%, and only between
+  // 34% and 66%): at 12% over white the deepest stop is still ~94% luminance,
+  // so a white callout, a violet point and a dashed gridline all keep
+  // effectively their on-white contrast, and the mid band reads as neutral
+  // straw rather than as mustard.
+  --field-against: color-mix(in srgb, var(--danger) 12%, transparent);
+  --field-against-soft: color-mix(in srgb, var(--danger) 6%, transparent);
+  --field-mid: color-mix(in srgb, var(--warning) 7%, transparent);
+  --field-for-soft: color-mix(in srgb, var(--success) 6%, transparent);
+  --field-for: color-mix(in srgb, var(--success) 12%, transparent);
+  --grad-field: linear-gradient(
+    to top,
+    var(--field-against) 0%,
+    var(--field-against-soft) 34%,
+    var(--field-mid) 50%,
+    var(--field-for-soft) 66%,
+    var(--field-for) 100%
+  );
 
   // --- Motion (camera-move easing; never hard cuts) ---
   --motion-fast: 150ms;
