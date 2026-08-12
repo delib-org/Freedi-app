@@ -37,6 +37,36 @@ function clamp01(value: number): number {
 	return Math.min(1, Math.max(0, value));
 }
 
+/**
+ * One camp's warmth toward a proposal, 0…1, from its mean evaluation (-1…1).
+ *
+ * THE WHOLE RANGE, and that is the point. This used to be `clamp01(mean)`,
+ * which floored every negative mean at 0 and so collapsed the entire against
+ * half of the scale onto a single value. The consequence was not cosmetic: a
+ * classmate moving from "ממש לא בעד" to "נמנעים" — a real, hard-won change of
+ * mind, and the biggest one a revision can win — moved the bridging score by
+ * exactly nothing. The improvement loop then reported "עוד לא זז" to an author
+ * whose revision HAD worked, and it did so in precisely the situation where a
+ * proposal most needs rewriting. The score was blind on the half of the scale
+ * the game is about.
+ *
+ * So the mean is mapped, not clipped: -1 → 0, 0 → 0.5, +1 → 1. This is the
+ * same mapping the results board already uses to draw a camp's support meter,
+ * so the game now has ONE way of turning a camp mean into a quantity.
+ *
+ * Two properties survive the change, and both are load-bearing:
+ *   • a camp that is unanimously, maximally against still contributes 0
+ *   • a camp with NO raters contributes 0 too, not 0.5 — silence is absence
+ *     of evidence, not neutrality, and a proposal nobody looked at must not
+ *     score like one the class considered and shrugged at
+ *
+ * The thresholds move with it (see CREDIT_THRESHOLD* in agoraConstants), so
+ * the sentiment a bridging credit costs is exactly what it was.
+ */
+function warmth(mean: number): number {
+	return (Math.max(-1, Math.min(1, mean)) + 1) / 2;
+}
+
 export interface BridgingInput {
 	authorCamp: AgoraCamp;
 	perCamp: {
@@ -77,7 +107,9 @@ function crossCampConfidence(otherN: number, crossCampPool?: number): number {
  * Camp-aware bridging score, 0-100.
  *
  * bridging = 100 × (SAME_W × S_own + CROSS_W × S_other × conf)
- *   S_c  = clamp01(mean evaluation from camp c)   (evaluations are -1..1)
+ *   S_c  = warmth(mean evaluation from camp c)    (evaluations are -1..1,
+ *                                                  mapped onto 0..1; 0 if the
+ *                                                  camp never rated)
  *   conf = min(1, n_other / MIN_CROSS_RATERS)     (cross-camp confidence ramp)
  *
  * Center-camp raters count toward BOTH camps at CENTER_CAMP_WEIGHT.
@@ -94,7 +126,9 @@ export function calcBridgingScore(input: BridgingInput): number {
 		positiveN: wing.positiveN + perCamp.center.positiveN * CENTER_CAMP_WEIGHT,
 	});
 
-	const support = (agg: AgoraCampAggregate): number => (agg.n > 0 ? clamp01(agg.sum / agg.n) : 0);
+	// n === 0 is 0, NOT warmth(0): a camp that never rated has not shrugged at
+	// the proposal, it has not read it
+	const support = (agg: AgoraCampAggregate): number => (agg.n > 0 ? warmth(agg.sum / agg.n) : 0);
 
 	if (authorCamp === AgoraCamp.center) {
 		// Both wings are "other"; own support is the center itself

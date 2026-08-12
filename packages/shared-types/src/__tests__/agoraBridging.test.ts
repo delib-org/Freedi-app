@@ -87,11 +87,19 @@ describe('calcBridgingScore', () => {
 		expect(score).toBe(100);
 	});
 
-	it('clamps negative support to zero rather than going negative', () => {
+	it('floors a unanimously, maximally opposed class at zero', () => {
 		const opposed: AgoraCampAggregate = { sum: -4, n: 4, positiveN: 0 };
 		expect(
 			calcBridgingScore(input(AgoraCamp.left, { left: opposed, right: opposed }))
 		).toBe(0);
+	});
+
+	it('never goes negative, whatever the arithmetic', () => {
+		const opposed: AgoraCampAggregate = { sum: -4, n: 4, positiveN: 0 };
+		const enthusiastic: AgoraCampAggregate = { sum: 4, n: 4, positiveN: 4 };
+		expect(
+			calcBridgingScore(input(AgoraCamp.left, { left: enthusiastic, right: opposed }))
+		).toBeGreaterThanOrEqual(0);
 	});
 
 	it('counts center raters toward both camps at half weight', () => {
@@ -111,6 +119,90 @@ describe('calcBridgingScore', () => {
 			})
 		);
 		expect(score).toBe(100);
+	});
+});
+
+/**
+ * The bug these pin: `clamp01(mean)` floored every negative mean at 0, so the
+ * whole against half of the scale collapsed onto one value and a classmate
+ * warming from "strongly against" to "neutral" moved the score by nothing —
+ * in exactly the situation where a proposal most needs rewriting.
+ */
+describe('calcBridgingScore — the against half of the scale', () => {
+	const opposedCamp = (mean: number): AgoraCampAggregate => ({
+		sum: mean * 4,
+		n: 4,
+		positiveN: 0,
+	});
+
+	it('registers a cross-camp warming that never leaves the negative range', () => {
+		const before = calcBridgingScore({
+			...input(AgoraCamp.left, { left: opposedCamp(-0.5), right: opposedCamp(-1) }),
+			crossCampPool: 4,
+		});
+		const after = calcBridgingScore({
+			...input(AgoraCamp.left, { left: opposedCamp(-0.5), right: opposedCamp(-0.5) }),
+			crossCampPool: 4,
+		});
+
+		expect(after).toBeGreaterThan(before);
+	});
+
+	it('is monotone all the way up the scale, with no flat stretch', () => {
+		const at = (mean: number): number =>
+			calcBridgingScore({
+				...input(AgoraCamp.left, { left: opposedCamp(mean), right: opposedCamp(mean) }),
+				crossCampPool: 4,
+			});
+		const steps = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1].map(at);
+
+		for (let index = 1; index < steps.length; index++) {
+			expect(steps[index]).toBeGreaterThan(steps[index - 1]);
+		}
+		expect(steps[0]).toBe(0);
+		expect(steps[steps.length - 1]).toBe(100);
+	});
+
+	it('reads an indifferent class at the halfway mark — and pays it nothing', () => {
+		const shrug = calcBridgingScore({
+			...input(AgoraCamp.left, {
+				left: { sum: 0, n: 4, positiveN: 0 },
+				right: { sum: 0, n: 4, positiveN: 0 },
+			}),
+			crossCampPool: 4,
+		});
+
+		expect(shrug).toBe(50);
+		// Shrugging is not bridging: the halfway mark must sit under the ladder
+		expect(bridgingTierFor(shrug)).toBe(0);
+	});
+
+	it('treats a camp that never rated as absent, not as neutral', () => {
+		const silent = calcBridgingScore(input(AgoraCamp.left, { left: { sum: 0, n: 0, positiveN: 0 } }));
+
+		expect(silent).toBe(0);
+	});
+
+	it('keeps the credit costing the class sentiment it always cost', () => {
+		// The re-pointed thresholds are the old ones rewritten in the new units.
+		// Both camps at a mean of m scored 100m before and score 100(m+1)/2 now,
+		// so the SENTIMENT each rung costs is unchanged: tier 1 at m ≈ 0.4, tier
+		// 2 at m ≈ 0.6. (Only the rounding edge moves, by 0.005 of a mean — an
+		// integer score cannot land on a boundary more precisely than that,
+		// which was equally true of the old term.)
+		const at = (mean: number): number =>
+			calcBridgingScore({
+				...input(AgoraCamp.left, {
+					left: { sum: mean * 4, n: 4, positiveN: 4 },
+					right: { sum: mean * 4, n: 4, positiveN: 4 },
+				}),
+				crossCampPool: 4,
+			});
+
+		expect(bridgingTierFor(at(0.35))).toBe(0);
+		expect(bridgingTierFor(at(0.45))).toBe(1);
+		expect(bridgingTierFor(at(0.55))).toBe(1);
+		expect(bridgingTierFor(at(0.65))).toBe(2);
 	});
 });
 

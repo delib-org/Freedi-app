@@ -16,16 +16,29 @@ export const AGORA_BRIDGING = {
 	/**
 	 * bridgingScore >= this awards the FULL bridging credit (tier 2).
 	 * Kept as the historical name so existing reads stay correct.
+	 *
+	 * Was 60, and it means the same thing it always did. The support term
+	 * stopped clipping the against half of the scale and now MAPS it
+	 * (-1 → 0, 0 → 0.5, +1 → 1, see `warmth` in agoraBridging), so every
+	 * reading shifted up the scale and the bar had to shift with it or the
+	 * credit would have quietly become cheaper. Both camps at a mean of +0.6
+	 * scored 60 under the old term and score 80 under this one, so 80 is the
+	 * same class sentiment written in the new units.
 	 */
-	CREDIT_THRESHOLD: 60,
+	CREDIT_THRESHOLD: 80,
 	/**
-	 * First rung of the bridging ladder. A cliff at 60 means most authors
-	 * never feel the mechanic at all, so the credit is graduated: 40 is the
-	 * "you reached across" moment, 60 the full bridge. 40 is self-guarding —
-	 * own-camp support alone maxes the score at 35 (SAME_CAMP_WEIGHT × 100),
-	 * so tier 1 is geometrically unreachable without cross-camp support.
+	 * First rung of the bridging ladder. A cliff at the top means most authors
+	 * never feel the mechanic at all, so the credit is graduated: this is the
+	 * "you reached across" moment, CREDIT_THRESHOLD the full bridge. Re-pointed
+	 * from 40 by the same arithmetic — both camps at a mean of +0.4.
+	 *
+	 * Still self-guarding, and with more room than before: own-camp support
+	 * alone maxes the score at 35 (SAME_CAMP_WEIGHT × 100), so tier 1 is
+	 * geometrically unreachable without reaching across. A class that is
+	 * merely indifferent — every camp at a mean of 0 — now reads 50, which is
+	 * deliberately below this line: shrugging is not bridging.
 	 */
-	CREDIT_THRESHOLD_TIER_1: 40,
+	CREDIT_THRESHOLD_TIER_1: 70,
 } as const;
 
 export const AGORA_CAMP_BOUNDS = {
