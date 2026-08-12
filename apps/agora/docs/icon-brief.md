@@ -274,6 +274,29 @@ Generating sheets 2–4 does **not** change that; it only unlocks the three
 remaining stage-transition cards (`tunnel`, `thought`, `flag`) and any future
 hero slot. That is the honest size of the gap.
 
+### The HUD crest is the next hero slot, and it is blocked twice
+
+The crest in `DelibHud` is the most-looked-at icon in the game — it is what
+says which place you are standing in — and it is the obvious next render. It
+is 24px today, so two things have to happen together, in this order:
+
+1. **Sheet 2 has to exist.** The crest shows the place icon, and across one
+   lap that is `improve` → `scales` → `helped`, plus `chart` and `flag` on the
+   results screens. Only `helped` is in sheet 1. Growing the crest before the
+   rest are rendered would make it flip between registers as a student moves
+   through a single lap — which is worse than either register alone.
+2. **The crest has to grow to 40.** That is a real design change: the badge
+   around it goes from ~34px to ~48px in a deliberately compact bar.
+
+Then it is `m(HeroIcon, { name: crest, size: 40 })` and nothing else.
+
+Sheet 2's cell order is already wired in `scripts/icon-slice.mjs` — generate
+it from §3, save it as `mock/icons-sheet-2.png`, and run:
+
+```bash
+node scripts/icon-slice.mjs 2
+```
+
 ## Summary checklist
 
 | # | Sheet | Icons | Status |

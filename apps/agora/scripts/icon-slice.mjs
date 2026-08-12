@@ -14,28 +14,71 @@
  * levels, the frosted glass carries a faint violet cast, and that cast is the
  * only thing separating them. See KEYS below.
  *
- * Run: node scripts/icon-slice.mjs
+ * Run: node scripts/icon-slice.mjs [sheet]     # sheet 1 by default
  */
 import { chromium } from '@playwright/test';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
-const IN = 'mock/icons-sheet.png';
 const OUT_DIR = 'public/icons';
 const SIZE = 256; // ships at 256; the hero slots top out at 96 CSS px
 const PAD = 0.06; // share of the box left empty around the object
 
-/** Reading order of the sheet, and the icon name each cell ships as. */
-const CELLS = [
-	{ name: 'proposal', key: 'bright' },
-	{ name: 'proposal-peer', key: 'neutral' },
-	{ name: 'helped', key: 'bright' },
-	{ name: 'thanks', key: 'bright' },
-	{ name: 'bridge', key: 'bright' },
-	{ name: 'square', key: 'bright' },
-	{ name: 'talk', key: 'bright' },
-	{ name: 'era', key: 'bright' },
-	{ name: 'spark', key: 'bright' },
-];
+/* Reading order of each sheet, and the icon name every cell ships as. The
+ * names are IconName values (src/components/Icon.ts) so a render and its
+ * drawing are the same icon at two sizes — HeroIcon needs no mapping table,
+ * it just looks for the file.
+ *
+ * Sheet 2 is listed before it exists on purpose: the moment the render lands
+ * at mock/icons-sheet-2.png, `node scripts/icon-slice.mjs 2` ships it, and
+ * every slot already asking for a hero at 40px or more picks it up with no
+ * code change at all. The prompt that generates it is docs/icon-brief.md §3. */
+const SHEETS = {
+	1: {
+		file: 'mock/icons-sheet.png',
+		cells: [
+			{ name: 'proposal', key: 'bright' },
+			{ name: 'proposal-peer', key: 'neutral' },
+			{ name: 'helped', key: 'bright' },
+			{ name: 'thanks', key: 'bright' },
+			{ name: 'bridge', key: 'bright' },
+			{ name: 'square', key: 'bright' },
+			{ name: 'talk', key: 'bright' },
+			{ name: 'era', key: 'bright' },
+			{ name: 'spark', key: 'bright' },
+		],
+	},
+	2: {
+		file: 'mock/icons-sheet-2.png',
+		cells: [
+			{ name: 'chart', key: 'bright' },
+			{ name: 'trophy', key: 'bright' },
+			{ name: 'flag', key: 'bright' },
+			{ name: 'scales', key: 'bright' },
+			{ name: 'improve', key: 'bright' },
+			{ name: 'edit', key: 'bright' },
+			{ name: 'again', key: 'bright' },
+			{ name: 'podium', key: 'bright' },
+			{ name: 'tunnel', key: 'bright' },
+		],
+	},
+};
+
+const sheetId = process.argv[2] ?? '1';
+const sheet = SHEETS[sheetId];
+if (!sheet) {
+	console.error(`No sheet ${sheetId}. Known sheets: ${Object.keys(SHEETS).join(', ')}`);
+	process.exit(1);
+}
+if (!existsSync(sheet.file)) {
+	console.error(
+		`Sheet ${sheetId} has not been generated yet — expected ${sheet.file}.\n` +
+			`Generate it with the prompt in docs/icon-brief.md, drop the PNG there, and re-run.`,
+	);
+	process.exit(1);
+}
+
+const IN = sheet.file;
+const CELLS = sheet.cells;
 
 /* Two ways to answer "is this pixel ground?".
  *

@@ -218,9 +218,16 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 	],
 
 	// Level, on purpose: the scale of a deliberation that has not tipped.
+	//
+	// The pans used to be two triangles in one path string, and only the first
+	// carried its `z` — so the left pan closed into a solid wedge and the right
+	// one stayed an open zig-zag. Nothing about that was visible on the size
+	// ladder; at 24px it just looked busy. A pan is now its own path, hung from
+	// its own point on the beam, with a bowl across the bottom.
 	scales: [
-		['path', { d: 'M12 4.5v16M8 20.5h8M4.5 7.5h15' }],
-		['path', { d: 'M4.5 7.5 2 13.5h5zM19.5 7.5 17 13.5h5' }],
+		['path', { d: 'M12 4.4v15.4M8.4 19.8h7.2M5.4 7.4h13.2' }],
+		['path', { d: 'M2.5 13.2 5.4 7.4l2.9 5.8a3.3 3.3 0 0 1-5.8 0z' }],
+		['path', { d: 'M15.7 13.2 18.6 7.4l2.9 5.8a3.3 3.3 0 0 1-5.8 0z' }],
 	],
 
 	podium: [
