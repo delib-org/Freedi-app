@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { Icon, type IconName } from './Icon';
+import { type IconName } from './Icon';
+import { HeroIcon, hasRender } from './HeroIcon';
 
 export type DelibPlace = 'mine' | 'rate' | 'help';
 export type DelibStep = DelibPlace | 'done';
@@ -27,16 +28,37 @@ interface PlaceSpec {
 
 /**
  * The three places of one lap. The icons are the same glyphs the splashes and
- * the step chips have always used — the HUD inherits the vocabulary rather
- * than inventing a second one.
+ * the step chips use — the HUD inherits the vocabulary rather than inventing a
+ * second one, so this table and the one in views/Deliberation.ts move together.
+ *
+ * They are three OBJECTS rather than three actions now: my proposal, the
+ * square, the handshake — instead of a wrench, a scale and a handshake. Two
+ * reasons, and the second is the load-bearing one.
+ *
+ * A place is a thing you stand in, and naming it with the tool you use there
+ * was always the weaker read: "my workshop" is where my proposal is, and the
+ * square is the square. The rate stop even carried the class `--place-square`
+ * while wearing a scale.
+ *
+ * And these three exist as renders. The crest is the most-looked-at icon in
+ * the game and it wanted to be a rendered object; with a wrench and a scale in
+ * the vocabulary it could not be, because sheet 2 does not exist yet and a
+ * crest that flips register mid-lap is worse than either register alone. Three
+ * objects from sheet 1 is the whole lap rendered, today.
  */
 const PLACES: Record<DelibPlace, PlaceSpec> = {
-	mine: { icon: 'improve', titleKey: 'place.mine_title' },
-	rate: { icon: 'scales', titleKey: 'place.rate_title' },
+	mine: { icon: 'proposal', titleKey: 'place.mine_title' },
+	rate: { icon: 'square', titleKey: 'place.rate_title' },
 	help: { icon: 'helped', titleKey: 'place.help_title' },
 };
 
 const ORDER: DelibPlace[] = ['mine', 'rate', 'help'];
+
+/* Both are over HeroIcon's 24px render floor, and deliberately only just: the
+ * crest tile is 42 and the stop disc is 32, so the object fills its holder the
+ * way the design sim has it rather than floating in the middle of one. */
+const CREST_PX = 30;
+const STOP_PX = 24;
 
 /** Below this the fuse stops being scenery and starts being a number */
 const URGENT_MS = 2 * 60 * 1000;
@@ -109,10 +131,18 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 					m('.delib-hud__top', [
 						// The place as a crest, the way a game states the level you are
 						// on: one big glyph, then its name, and nothing else
+						// A rendered object supplies its own violet, so it must not be
+						// given a violet tile to sit on as well — a purple glyph
+						// embossed into a purple tile is unreadable at this size.
+						// The drawing keeps the tile; it is a white silhouette and
+						// needs the ground.
 						m(
 							'span.delib-hud__crest',
-							{ 'aria-hidden': 'true' },
-							m(Icon, { name: crest, size: 24 }),
+							{
+								'aria-hidden': 'true',
+								class: hasRender(crest, CREST_PX) ? 'delib-hud__crest--render' : undefined,
+							},
+							m(HeroIcon, { name: crest, size: CREST_PX }),
 						),
 						m('h1.delib-hud__title', title),
 						// Laps as lanterns: the ones behind you burn, the one you are
@@ -161,11 +191,21 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 									'aria-current': state === 'here' ? 'step' : undefined,
 								},
 								[
-									m(
-										'span.delib-hud__stop-icon',
-										{ 'aria-hidden': 'true' },
-										m(Icon, { name: state === 'done' ? 'check' : PLACES[id].icon, size: 18 }),
-									),
+									(() => {
+										// A finished stop is a check — a state mark, not a
+										// place — so it stays a drawing on every stop.
+										const icon: IconName = state === 'done' ? 'check' : PLACES[id].icon;
+										const rendered = hasRender(icon, STOP_PX);
+
+										return m(
+											'span.delib-hud__stop-icon',
+											{
+												'aria-hidden': 'true',
+												class: rendered ? 'delib-hud__stop-icon--render' : undefined,
+											},
+											m(HeroIcon, { name: icon, size: STOP_PX }),
+										);
+									})(),
 									m('span.sr-only', t(PLACES[id].titleKey)),
 									showPips
 										? m(

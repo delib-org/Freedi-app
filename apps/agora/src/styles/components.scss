@@ -1009,6 +1009,16 @@
 		box-shadow: var(--glow-lantern);
 	}
 
+	// Holding a rendered object instead of a drawing. The tile goes away
+	// entirely: the object already IS violet and lit, and embossing violet
+	// into violet is what made this unreadable the first time it was tried.
+	// The drawing above keeps the tile — it is a white silhouette and has
+	// nothing to be seen against without one.
+	&__crest--render {
+		background: none;
+		box-shadow: none;
+	}
+
 	// The one piece of text in the whole HUD
 	&__title {
 		flex: 1 1 auto;
@@ -1095,10 +1105,10 @@
 		align-items: center;
 		justify-content: center;
 		position: relative;
-		width: 28px;
-		height: 28px;
+		width: 32px;
+		height: 32px;
 		border-radius: 50%;
-		// Sizes the ICON inside the disc, not text — it tracks the 28px token
+		// Sizes the ICON inside the disc, not text — it tracks the 32px token
 		// it lives in, so it is deliberately off the type scale
 		font-size: 0.9rem;
 		line-height: 1;
@@ -1133,6 +1143,32 @@
 	&__stop--todo &__stop-icon {
 		opacity: 0.5;
 		filter: grayscale(0.6);
+	}
+
+	// A stop holding a rendered object rather than a drawing. The pill stays —
+	// it is the track's furniture and the object sits INSIDE it — but it can
+	// never go violet, at any state, because the object is already violet.
+	// Declared after the state rules on purpose: same specificity, later wins.
+	&__stop-icon--render {
+		background: var(--bg-card-solid);
+		color: inherit;
+	}
+
+	&__stop--here &__stop-icon--render {
+		background: var(--bg-card-solid);
+		border-color: var(--mine);
+	}
+
+	&__stop--done &__stop-icon--render {
+		background: var(--peer-tile);
+	}
+
+	// A place still ahead of you. The drawing is desaturated to say "not yet",
+	// but desaturating a lit object just makes it look muddy — a render says
+	// the same thing by standing further back.
+	&__stop--todo &__stop-icon--render {
+		opacity: 0.45;
+		filter: none;
 	}
 
 	// What this lap still owes, parked under the step that asks for it

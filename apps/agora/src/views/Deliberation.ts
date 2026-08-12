@@ -116,14 +116,18 @@ const PLACES: Record<
 	'mine' | 'rate' | 'help',
 	{ icon: IconName; titleKey: string; subKey: string; shellClass: string }
 > = {
+	// Three objects, not three tools — see the same table in DelibHud.ts for
+	// why. These two must not drift: the HUD and the arrival splash are the
+	// same place said twice, and a student who arrives at a square and then
+	// sees a scale in the HUD has been told about two different rooms.
 	mine: {
-		icon: 'improve',
+		icon: 'proposal',
 		titleKey: 'place.mine_title',
 		subKey: 'place.mine_sub',
 		shellClass: 'shell--place-mine',
 	},
 	rate: {
-		icon: 'scales',
+		icon: 'square',
 		titleKey: 'place.rate_title',
 		subKey: 'place.rate_sub',
 		shellClass: 'shell--place-square',
@@ -1847,7 +1851,7 @@ export function Deliberation(
 										m(
 											'span.delib-splash__icon',
 											{ 'aria-hidden': 'true' },
-											m(Icon, { name: PLACES[splash.step].icon, size: 28 }),
+											m(HeroIcon, { name: PLACES[splash.step].icon, size: 28 }),
 										),
 										t(PLACES[splash.step].titleKey),
 									]),
