@@ -106,6 +106,40 @@ const CALLOUT_GAP_PX = 10;
 /** A proposal is "backed by both sides" inside this band around centre */
 const BRIDGE_BAND = 0.28;
 
+/**
+ * Render `content` at the end of <body>, outside every stacking context the
+ * board happens to sit in.
+ *
+ * `.game` and `.shell` are both `position: relative; z-index: 1`, and the toast
+ * stack is a sibling of the shell at z-index 90 — so a fixed sheet INSIDE the
+ * shell paints under a toast whatever z-index it claims, and the first thing a
+ * toast covers is the sheet's own way out. A portal is the only fix that does
+ * not make every screen in the game responsible for the board's layering.
+ *
+ * The host is rendered with m.render, which does NOT wire up autoredraw, so
+ * every handler inside the portal must call m.redraw() itself.
+ */
+const Portal: m.ClosureComponent<{ content: m.Children }> = () => {
+	const host = document.createElement('div');
+
+	return {
+		oncreate(vnode) {
+			document.body.appendChild(host);
+			m.render(host, vnode.attrs.content);
+		},
+		onupdate(vnode) {
+			m.render(host, vnode.attrs.content);
+		},
+		onremove() {
+			// Render nothing first: this runs the subtree's own onremove hooks
+			// (keydown listener, focus restore) before the node disappears
+			m.render(host, []);
+			host.remove();
+		},
+		view: () => null,
+	};
+};
+
 function reducedMotion(): boolean {
 	return (
 		typeof window.matchMedia === 'function' &&
@@ -832,7 +866,7 @@ export function ResultsBoard(
 		const point = points.find((candidate) => candidate.proposal.statementId === detailId);
 		if (!point) return null;
 
-		return m(
+		const sheet = m(
 			'.board-detail',
 			{
 				role: 'dialog',
@@ -858,8 +892,10 @@ export function ResultsBoard(
 						{
 							type: 'button',
 							'aria-label': t('common.back'),
+							// Rendered through the portal, so the redraw is ours to ask for
 							onclick: () => {
 								detailId = '';
+								m.redraw();
 							},
 							oncreate: (node: m.VnodeDOM) => (node.dom as HTMLElement).focus(),
 						},
@@ -873,6 +909,8 @@ export function ResultsBoard(
 				m('.board-detail__body', detailBody(point, points, topic)),
 			],
 		);
+
+		return m(Portal, { content: sheet });
 	}
 
 	/** Proposals with no rating at all: named, so nobody's text silently vanishes */
