@@ -770,22 +770,25 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   3D ICON SHEET — trial swap (sheet 1 of docs/icon-brief.md)
+   3D ICON SHEET — sheet 1 of docs/icon-brief.md
 
-   One sprite, nine cells, no slicing tool required: .i3d is a square window
-   onto icons-sheet.png (1254px, 3x3). background-size:300% makes one cell
-   fill the element, and the position percentages pick the cell. Backgrounds
-   are not mirrored by dir=rtl, so this is direction-safe.
+   This began as one sprite windowed onto the 3x3 render, which needed no
+   slicing tool. It now points at the shipped per-icon assets instead
+   (public/icons, cut by scripts/icon-slice.mjs) — same pictures, and the
+   mock and the app can no longer drift apart, because there is one copy.
 
-   The sheet ships on an OPAQUE WHITE ground (no alpha), which decides the
-   one design question here: on a purple surface a white square would show.
-   So the tile goes WHITE and the 3D object supplies the purple. That is
-   also the right call independent of alpha — a purple glyph embossed into a
-   purple tile is exactly what made the rejected candidate set unreadable at
-   32px. The object must never wear its own background.
+   The move also fixed a broken cell. The sprite came from a whole-sheet
+   alpha pass keyed on "bright, near-neutral, connected to the border", and
+   a classmate's proposal IS a white book, so the fill walked through it and
+   left a silhouette of its own edges. The slicer keys that one cell on the
+   faint violet cast in its glass. See icon-slice.mjs.
+
+   The objects supply their own purple, so a tile behind one must never
+   supply another: a purple glyph embossed into a purple tile is exactly
+   what made the rejected candidate set unreadable at 32px.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Doubled class on purpose: (0,2,0) specificity, so the sprite survives the
+/* Doubled class on purpose: (0,2,0) specificity, so the image survives the
    `background:` shorthands that existing state rules like
    `.hud__stop--here .hud__stop-icon` fire at it. A shorthand does not just
    repaint the colour, it resets background-size and -image too — which is
@@ -793,47 +796,48 @@ body {
    own rule already sets one, and `inherit` would take the PARENT's instead. */
 .i3d.i3d {
 	display: inline-block;
-	background-image: url('./icons-sheet-alpha.png');
 	background-repeat: no-repeat;
-	background-size: 300% 300%;
+	background-position: center;
+	background-size: contain;
 }
 
 .i3d--book-mine.i3d--book-mine {
-	background-position: 0% 0%;
+	background-image: url('../public/icons/proposal.webp');
 }
 .i3d--book-peer.i3d--book-peer {
-	background-position: 50% 0%;
+	background-image: url('../public/icons/proposal-peer.webp');
 }
 .i3d--handshake.i3d--handshake {
-	background-position: 100% 0%;
+	background-image: url('../public/icons/helped.webp');
 }
 .i3d--thanks.i3d--thanks {
-	background-position: 0% 50%;
+	background-image: url('../public/icons/thanks.webp');
 }
 .i3d--bridge.i3d--bridge {
-	background-position: 50% 50%;
+	background-image: url('../public/icons/bridge.webp');
 }
 .i3d--square.i3d--square {
-	background-position: 100% 50%;
+	background-image: url('../public/icons/square.webp');
 }
 .i3d--talk.i3d--talk {
-	background-position: 0% 100%;
+	background-image: url('../public/icons/talk.webp');
 }
 .i3d--era.i3d--era {
-	background-position: 50% 100%;
+	background-image: url('../public/icons/era.webp');
 }
 .i3d--spark.i3d--spark {
-	background-position: 100% 100%;
+	background-image: url('../public/icons/spark.webp');
 }
 
 /* --- The tiles that hold one, on purple ground --- */
 
 /* Note the shorthand trap: `background: #fff` would reset background-image
-   and blank the sprite. Every rule below sets background-COLOR only. */
+   and blank the icon. Every rule below sets background-COLOR only, and none
+   of them names an image any more — the `.i3d--*` rules above own that, and
+   they are the only place a picture is chosen. */
 
 .hud__crest--i3d {
 	background-color: transparent;
-	background-image: url('./icons-sheet-alpha.png');
 	box-shadow: none;
 }
 
@@ -852,7 +856,6 @@ body {
 .hud__stop--here .hud__stop-icon--i3d,
 .hud__stop--todo .hud__stop-icon--i3d {
 	background-color: #ffffff;
-	background-image: url('./icons-sheet-alpha.png');
 }
 
 .hud__stop--here .hud__stop-icon--i3d {

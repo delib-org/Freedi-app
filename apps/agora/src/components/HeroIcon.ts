@@ -4,16 +4,21 @@ import { Icon, type IconName } from './Icon';
 /* The rendered half of the icon set.
  *
  * `Icon` is a drawing on a 24 grid and serves every slot in the app. This
- * serves the few that are big enough for the 3D sheet — the stage-transition
- * card, a proposal shown one-at-a-time. The size ladder (mock/icon-proof.png)
- * put the line at about 40px: below it a render is mush and the drawing is
- * strictly better, so BELOW is not a judgement call here, it is the rule this
- * component enforces.
+ * serves the slots the 3D sheet survives, and where that line falls was got
+ * wrong twice before it was got right.
  *
- * Two things follow from that rule. A hero slot never has to know whether an
- * asset exists — ask for a hero, get the render if there is one and the
- * drawing if there is not — and shrinking a slot can never accidentally ship a
- * mushy render.
+ * The original ladder read "mush below about 40px" and the sheet was binned
+ * on the strength of it. But that ladder was rendered at 1x, and nobody plays
+ * this at 1x: it is a phone game, so a 26px icon is 52 to 78 device pixels
+ * against a 256px asset. mock/delib-mock.html had the 3D sheet in the HUD
+ * crest and the journey stops at ~26–34px the whole time, and it looks right
+ * there, which is the evidence that settled it. The floor is 24 — measured on
+ * the ladder at 3x, and still legible at 1x from 26 up.
+ *
+ * Two things follow from having a floor at all. A slot never has to know
+ * whether an asset exists — ask for a hero, get the render if there is one and
+ * the drawing if there is not — and shrinking a slot below the floor later
+ * cannot silently ship mush.
  *
  * Ownership survives the register change. The sheet holds the book twice, once
  * violet and once as clear white glass, because MINE is purple and A
@@ -37,11 +42,11 @@ const RENDERED: ReadonlySet<IconName> = new Set<IconName>([
 ]);
 
 /** Under this, a render loses its detail and the drawing wins. */
-const FLOOR = 40;
+const FLOOR = 24;
 
 export interface HeroIconAttrs {
 	name: IconName;
-	/** Rendered box in px. Below 40 this component draws instead. */
+	/** Rendered box in px. Below 24 this component draws instead. */
 	size?: number;
 	/** Whose object this is. Only the book has both; the rest are neutral. */
 	owner?: 'mine' | 'peer';

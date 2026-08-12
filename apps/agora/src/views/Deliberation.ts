@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { Icon, iconLabel, IconName } from '../components/Icon';
+import { HeroIcon } from '../components/HeroIcon';
 import { t, tCount } from '../lib/i18n';
 import {
 	getDeliberationState,
@@ -1099,10 +1100,14 @@ export function Deliberation(
 						},
 					},
 					[
+						// The notebook on the dock is the student's own object and
+						// it is on screen for the whole lap — the one small slot
+						// where the rendered book earns its weight (delib-mock.html
+						// had it here first). 26px is over the render floor.
 						m(
 							'span.proposal-dock__icon',
 							{ 'aria-hidden': 'true' },
-							m(Icon, { name: 'proposal', size: 26 }),
+							m(HeroIcon, { name: 'proposal', owner: 'mine', size: 26 }),
 						),
 						m('span.proposal-dock__text', [
 							m('span.proposal-dock__title', t('delib.my_proposal')),

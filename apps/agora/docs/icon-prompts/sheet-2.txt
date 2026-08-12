@@ -1,0 +1,66 @@
+Sheet 2 of the Agora icon set — score, results, progress.
+
+Paste everything below the line into Gemini (AI Studio or the app), Midjourney,
+or any image model. Do NOT reword the capsule: it is what keeps this sheet in
+the same family as sheet 1, and a quietly-rephrased capsule is the cause of
+almost every "why do these look different?".
+
+If the model accepts a reference image, attach `mock/icons-sheet.png` (sheet 1)
+and add: "Match the material, lighting, camera angle, proportions and palette
+of the attached reference exactly. Change only the objects themselves."
+
+Save the result as `mock/icons-sheet-2.png`, then:
+
+    node scripts/icon-slice.mjs 2      # → public/icons/*.webp
+    npx tsx scripts/icon-proof.ts      # → mock/icon-svg-proof.html
+
+The cell order below is the order `icon-slice.mjs` expects. Do not reorder it.
+
+────────────────────────────────────────────────────────────────────────────
+
+A single 3D-rendered app icon sheet for a children's educational game, in a soft
+"glass-clay" style: chunky rounded soft-body forms with generously filleted
+edges, made of semi-translucent frosted glass over an opaque matte-clay core,
+with a faint inner glow. Glossy but not mirror-like — soft specular highlights,
+no sharp reflections, no environment reflections.
+
+Camera: straight-on front view with a slight 10-degree downward tilt,
+near-orthographic, no perspective distortion, no dramatic angle.
+Lighting: one soft broad key light from the upper left, wide gentle fill, a
+faint cool rim light on the lower right edge. Consistent across every icon.
+
+Palette — use ONLY these colors:
+  violet light  #a98cf7   violet mid  #8b6bf0
+  violet strong #7350e3   violet deep #5b39c9
+  mint accent   #56dfc0   pink accent #f56aa8   gold accent #ffd23f
+  amber camp    #e0873c   teal camp   #14a08f
+Gradients run violet-light at the top to violet-deep at the bottom.
+Accents are for a single small detail only, never the main body.
+
+Composition: a 3x3 grid of NINE separate icons on one canvas, evenly spaced with
+generous even gutters, each icon centered in its own cell at identical optical
+size, all nine sharing exactly the same material, lighting, camera angle and
+finish. Flat pure white #FFFFFF background across the whole canvas. Square 1:1,
+2048x2048.
+
+The nine icons, in reading order:
+1. A bar chart of three ascending rounded bars, violet gradient, tallest bar
+   tipped in mint #56dfc0. (results)
+2. A trophy cup with two handles, symmetrical, gold #ffd23f gradient with a
+   violet base. (winning proposal)
+3. A checkered flag furled around a rounded pole, violet gradient. (lap done)
+4. A balance scale, perfectly symmetrical and exactly level, violet gradient
+   with one amber #e0873c pan and one teal #14a08f pan. (weighing the camps)
+5. A rounded wrench and screwdriver crossed symmetrically, violet gradient.
+   (improve a proposal)
+6. A pencil standing upright at a slight tilt, violet gradient, mint #56dfc0
+   tip. (edit)
+7. A circular arrow loop, symmetrical, violet gradient. (rate again)
+8. A three-step podium seen straight on, symmetrical, violet gradient, the
+   center step topped in gold #ffd23f. (podium)
+9. A spiral vortex tunnel seen head-on, symmetrical, violet gradient
+   deepening toward the center with a small gold #ffd23f point of light at the
+   vanishing point. (time tunnel)
+
+No text, no letters, no numbers, no logos, no watermark, no UI frame, no
+border, no drop shadow, no photorealism, no cartoon outlines.

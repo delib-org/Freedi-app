@@ -256,42 +256,53 @@ dissolve and you will get a silhouette of its own edges back.
 ## 7 · Where the renders are actually used
 
 `src/components/HeroIcon.ts` is the entry point, and it enforces one rule:
-**below 40px it does not use a render at all**, it draws (`Icon.ts`). So a slot
-asks for a hero and gets whichever register survives at that size. Wired now:
+**below 24px it does not use a render at all**, it draws (`Icon.ts`). So a slot
+asks for a hero and gets whichever register survives at that size.
+
+### Where the floor came from, and why it was wrong the first time
+
+The first ladder said "mush below 40px" and the sheet was binned on it. That
+ladder was rendered at 1x — and nobody plays this at 1x. It is a phone game, so
+a 26px icon is 52–78 **device** pixels against a 256px asset, and at that
+density these hold up from about 22px. `mock/delib-mock.html` had the sheet in
+the HUD crest and the journey stops at ~26–34px the whole time and looked
+right, which is the evidence that settled it. **Judge a render at 2x/3x, never
+at 1x.** The floor is 24: comfortable on a phone, still legible on the
+teacher's desktop from 26 up.
+
+Wired now:
 
 | Slot | Size | Gets a render? |
 |---|---|---|
 | Stage-transition card | 88 | for `era`, `bridge`, `square` — the other three stages want sheet 2/4 |
+| The proposal dock (whole lap) | 26 | yes — the violet book |
 | My proposal, workshop header | 40 | yes — the violet book |
 | A classmate's proposal, rate card | 40 | yes — the white book |
 
-The ownership pair is the reason those last two moved together. A violet render
+The ownership pair is the reason the last two moved together. A violet render
 for mine and a drawing for theirs would read as a hierarchy, and ownership is
 the one thing in this app that must never imply rank.
 
-Everything else in the app is 14–32px and stays drawn — which is most of it.
-Generating sheets 2–4 does **not** change that; it only unlocks the three
-remaining stage-transition cards (`tunnel`, `thought`, `flag`) and any future
-hero slot. That is the honest size of the gap.
+### The HUD crest is the next slot, and sheet 2 is the only thing in the way
 
-### The HUD crest is the next hero slot, and it is blocked twice
+The crest in `DelibHud` is the most-looked-at icon in the game — it says which
+place you are standing in — and at 24px it is now above the floor. It is still
+drawn, for one reason: the crest shows the **place**, and across one lap that
+is `improve` → `scales` → `helped`, plus `chart` and `flag` on the results
+screens. Only `helped` is in sheet 1. Switching it today would make the crest
+flip between registers as a student walks through a single lap, which is worse
+than either register alone. Same for the journey stops, which show the same
+three icons at 18px (those want the floor lowered *and* sheet 2).
 
-The crest in `DelibHud` is the most-looked-at icon in the game — it is what
-says which place you are standing in — and it is the obvious next render. It
-is 24px today, so two things have to happen together, in this order:
+The moment sheet 2 lands it is `m(HeroIcon, { name: crest, size: 24 })` and
+nothing else.
 
-1. **Sheet 2 has to exist.** The crest shows the place icon, and across one
-   lap that is `improve` → `scales` → `helped`, plus `chart` and `flag` on the
-   results screens. Only `helped` is in sheet 1. Growing the crest before the
-   rest are rendered would make it flip between registers as a student moves
-   through a single lap — which is worse than either register alone.
-2. **The crest has to grow to 40.** That is a real design change: the badge
-   around it goes from ~34px to ~48px in a deliberately compact bar.
+### Generating sheet 2
 
-Then it is `m(HeroIcon, { name: crest, size: 40 })` and nothing else.
-
-Sheet 2's cell order is already wired in `scripts/icon-slice.mjs` — generate
-it from §3, save it as `mock/icons-sheet-2.png`, and run:
+`docs/icon-prompts/sheet-2.txt` is the whole prompt, assembled and
+paste-ready — capsule, palette, composition and the nine subjects in the cell
+order `icon-slice.mjs` expects. Save the render as `mock/icons-sheet-2.png`
+and run:
 
 ```bash
 node scripts/icon-slice.mjs 2
@@ -302,6 +313,6 @@ node scripts/icon-slice.mjs 2
 | # | Sheet | Icons | Status |
 |---|---|---|---|
 | 1 | Core objects | 9 | ✅ generated, sliced, shipped to `public/icons/` |
-| 2 | Score & progress | 9 | ⬜ needed — unlocks `tunnel` + `flag` on the transition card |
-| 3 | Rating faces | 5 | ⬜ optional — the scale renders at 26px, below the floor |
+| 2 | Score & progress | 9 | ⬜ **next** — unblocks the HUD crest, the journey stops, and `tunnel`/`flag` on the transition card. Prompt: `docs/icon-prompts/sheet-2.txt` |
+| 3 | Rating faces | 5 | ⬜ now viable — the rating options are ~26px, above the floor |
 | 4 | Remainder | ~6 | ⬜ needed for `thought` on the transition card |
