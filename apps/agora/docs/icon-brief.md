@@ -274,6 +274,9 @@ Wired now:
 
 | Slot | Size | Gets a render? |
 |---|---|---|
+| HUD crest | 30 | yes, for all three places of a lap — `chart` on the results screen still draws |
+| HUD journey stops | 24 | yes — a finished stop is a drawn `check`, which is a state mark, not a place |
+| Place arrival splash | 28 | yes |
 | Stage-transition card | 88 | for `era`, `bridge`, `square` — the other three stages want sheet 2/4 |
 | The proposal dock (whole lap) | 26 | yes — the violet book |
 | My proposal, workshop header | 40 | yes — the violet book |
@@ -283,19 +286,27 @@ The ownership pair is the reason the last two moved together. A violet render
 for mine and a drawing for theirs would read as a hierarchy, and ownership is
 the one thing in this app that must never imply rank.
 
-### The HUD crest is the next slot, and sheet 2 is the only thing in the way
+### A place is an object, which is what unblocked the crest
 
-The crest in `DelibHud` is the most-looked-at icon in the game — it says which
-place you are standing in — and at 24px it is now above the floor. It is still
-drawn, for one reason: the crest shows the **place**, and across one lap that
-is `improve` → `scales` → `helped`, plus `chart` and `flag` on the results
-screens. Only `helped` is in sheet 1. Switching it today would make the crest
-flip between registers as a student walks through a single lap, which is worse
-than either register alone. Same for the journey stops, which show the same
-three icons at 18px (those want the floor lowered *and* sheet 2).
+The crest looked like it was waiting for sheet 2, and it was not. It shows the
+**place**, and the places used to be named with the tool you use in them — a
+wrench for my workshop, a scale for the square — so two of the three had no
+render, and a crest that flips register mid-lap is worse than either register
+alone.
 
-The moment sheet 2 lands it is `m(HeroIcon, { name: crest, size: 24 })` and
-nothing else.
+Naming them as objects instead — **my book → the temple → the handshake** —
+reads better on its own terms (the rate step was already classed
+`--place-square` while wearing a scale) and happens to be three things sheet 1
+already has. One table in `DelibHud.ts`, mirrored in `views/Deliberation.ts`;
+they must not drift, because the HUD and the arrival splash are the same place
+said twice.
+
+**A render must never be given a violet tile to sit on.** It supplies its own
+violet, and embossing violet into violet is what made the first candidate set
+unreadable at 32px. So the crest drops its gradient when it holds a render,
+and the "here" stop keeps a white pill with a violet ring instead of turning
+purple. The drawing keeps the tile in both — a white silhouette needs a
+ground. Both are `--render` modifier classes, set from `hasRender()`.
 
 ### Generating sheet 2
 
@@ -313,6 +324,6 @@ node scripts/icon-slice.mjs 2
 | # | Sheet | Icons | Status |
 |---|---|---|---|
 | 1 | Core objects | 9 | ✅ generated, sliced, shipped to `public/icons/` |
-| 2 | Score & progress | 9 | ⬜ **next** — unblocks the HUD crest, the journey stops, and `tunnel`/`flag` on the transition card. Prompt: `docs/icon-prompts/sheet-2.txt` |
+| 2 | Score & progress | 9 | ⬜ **next** — the results crest (`chart`), the lap-done crest (`flag`), and `tunnel`/`flag` on the transition card. Prompt: `docs/icon-prompts/sheet-2.txt` |
 | 3 | Rating faces | 5 | ⬜ now viable — the rating options are ~26px, above the floor |
 | 4 | Remainder | ~6 | ⬜ needed for `thought` on the transition card |
