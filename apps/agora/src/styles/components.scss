@@ -3178,10 +3178,16 @@
 		}
 	}
 
+	// The one rendered object in the app that sits on a violet ground rather
+	// than a white one. It needs no chip behind it — a white chip on the dock
+	// reads as a sticker, louder than the icon inside it — but it does need
+	// the shadow: violet glass on a violet bar has nothing to sit against, and
+	// this is what puts it in front of the bar instead of in it.
 	&__icon {
-		font-size: 1.3rem;
+		display: flex;
 		line-height: 1;
 		flex-shrink: 0;
+		filter: drop-shadow(0 2px 3px rgba(38, 24, 92, 0.35));
 	}
 
 	/* min-width:0 is what lets the sub line actually ellipsize inside flex */

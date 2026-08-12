@@ -1111,7 +1111,7 @@ export function Deliberation(
 						m(
 							'span.proposal-dock__icon',
 							{ 'aria-hidden': 'true' },
-							m(HeroIcon, { name: 'proposal', owner: 'mine', size: 26 }),
+							m(HeroIcon, { name: 'proposal', owner: 'mine', size: 32 }),
 						),
 						m('span.proposal-dock__text', [
 							m('span.proposal-dock__title', t('delib.my_proposal')),
