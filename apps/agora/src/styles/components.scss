@@ -6712,6 +6712,9 @@
 	// its own width is published as a custom property so the inline clamp can
 	// keep it on the point wherever there is room and inside the plot where
 	// there is not.
+	// The card is the doorway to the full numbers, so it is a button: `font`
+	// and `text-align` first, or the UA button styles flatten the proposal
+	// voice inside it.
 	&__callout {
 		--callout-half: min(35%, 10rem);
 
@@ -6722,14 +6725,47 @@
 		flex-direction: column;
 		gap: var(--space-xs);
 		width: min(70%, 20rem);
-		max-height: 46%;
-		overflow-y: auto;
+		// max-height is inline: it is the room left on the side the card hangs
+		// off (see callout()). The card never scrolls — when it did, the way
+		// into the numbers sat below the fold of its own box and effectively
+		// did not exist.
+		overflow: hidden;
 		padding: var(--space-sm);
 		background: var(--parchment);
 		border: 2px solid var(--ink);
 		border-radius: var(--radius-md);
 		box-shadow: var(--shadow-card);
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+		appearance: none;
 		animation: board-callout-in var(--motion-base) var(--ease-spring) both;
+
+		// The centring translate is part of the geometry, so a press scales
+		// AROUND it rather than replacing it
+		&:active {
+			transform: translateX(-50%) scale(0.98);
+		}
+	}
+
+	// "There is more behind this" — the affordance said in words, because a
+	// card that only looks pressable is a card most of the class never presses
+	&__callout-more {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs);
+		margin-block-start: 2px;
+		padding-block-start: var(--space-xs);
+		border-block-start: 1px dashed var(--border-subtle);
+		color: var(--mine-strong);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	&__callout-more-arrow {
+		line-height: 1;
 	}
 
 	&__callout-stem {
@@ -6740,13 +6776,23 @@
 		background: var(--ink);
 	}
 
+	// A teaser, not the text: three lines and an ellipsis, because the whole
+	// proposal is one press away on the sub-screen. Scrolling it here cut the
+	// fourth line in half, which reads as a rendering fault rather than as
+	// "there is more".
 	&__callout-text {
 		@include proposal-voice;
 
+		flex: 0 1 auto;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
 		color: var(--text-primary);
 	}
 
 	&__callout-foot {
+		flex: 0 0 auto;
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
@@ -6823,33 +6869,36 @@
 	}
 
 	// --- the actual score, opened up ---------------------------------------------------
+	// Lives inside the .board-detail sub-screen (see below), so it carries the
+	// arithmetic and nothing of the chrome around it
 	&__detail {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: var(--parchment);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md);
 		animation: board-callout-in var(--motion-base) var(--ease-camera) both;
 	}
 
-	&__detail-head {
+	&__detail-hero {
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		gap: var(--space-sm);
 	}
 
-	&__detail-close {
-		margin-inline-start: auto;
-		padding: 2px var(--space-sm);
-		background: transparent;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-full);
-		color: var(--text-secondary);
-		font: inherit;
+	&__detail-score {
+		font-family: var(--font-display);
+		font-size: 2.75rem;
+		line-height: 1;
+		color: var(--success);
+		font-variant-numeric: tabular-nums;
+
+		&--against {
+			color: var(--danger);
+		}
+	}
+
+	&__detail-score-label {
 		font-size: var(--font-size-xs);
-		cursor: pointer;
+		color: var(--text-muted);
 	}
 
 	&__detail-statement {
@@ -7152,6 +7201,99 @@
 	}
 }
 
+// --- the full statistics, as a place ------------------------------------------------
+// Pressing a point opens the callout ON the map; pressing the callout travels
+// here. It takes the whole screen (dock included) on purpose: the numbers used
+// to unfold under the map and pushed the map itself out of view — the one thing
+// the student was reading. Chrome deliberately identical to .chat-page: in this
+// game, anything you travel to has a bar and a back tile.
+.board-detail {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-page);
+	animation: board-detail-in var(--motion-base) var(--ease-camera) both;
+
+	&__bar {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		padding-block-start: max(var(--space-sm), env(safe-area-inset-top));
+		// The bar spans the screen, but its title stands over the body column
+		// rather than out at the far edge of a laptop window
+		padding-inline: max(var(--space-md), calc((100% - 640px) / 2));
+		background: var(--bg-card-solid);
+		border-block-end: 1px solid var(--border-subtle);
+		box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
+	}
+
+	&__back {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border: none;
+		border-radius: var(--radius-tile);
+		background: var(--grad-mine);
+		color: #ffffff;
+		font-size: 1.2rem;
+		cursor: pointer;
+		box-shadow: var(--glow-lantern);
+		transition: transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.94);
+		}
+	}
+
+	&__who {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 1.05rem;
+		color: var(--text-primary);
+	}
+
+	&__sub {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		width: 100%;
+		max-width: 640px;
+		margin-inline: auto;
+		padding: var(--space-md);
+		padding-block-end: max(var(--space-xl), env(safe-area-inset-bottom));
+	}
+}
+
+@keyframes board-detail-in {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
 // The plot mirrors as a whole on an RTL page — the camp named first sits on the
 // reading-start side — so the point and callout transforms have to mirror too.
 [dir='rtl'] {
@@ -7171,6 +7313,10 @@
 	.board__callout,
 	.board__callout-stem {
 		transform: translateX(50%);
+	}
+
+	.board__callout:active {
+		transform: translateX(50%) scale(0.98);
 	}
 
 	// Tracking is a Latin device — see the RTL note above.
@@ -7220,7 +7366,8 @@
 	}
 
 	.board__callout,
-	.board__detail {
+	.board__detail,
+	.board-detail {
 		animation: none;
 	}
 }

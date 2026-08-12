@@ -15,7 +15,7 @@ import {
 	type AgoraRatingDist,
 	type AgoraTopicPackage,
 } from '@freedi/shared-types';
-import { t, tCount } from '../lib/i18n';
+import { isRTL, t, tCount } from '../lib/i18n';
 import { celebrate } from '../lib/celebration';
 import type { AgoraProposal } from '../lib/proposals';
 
@@ -219,6 +219,15 @@ export function ResultsBoard(
 	const cheerKey = `agora_${initialVnode.attrs.sessionId}_boardcheer`;
 
 	let openId = '';
+	/**
+	 * The proposal whose full arithmetic is open as a sub-screen. Separate from
+	 * `openId` on purpose: pressing a point opens the callout ON the map, and
+	 * pressing THAT travels to the numbers — two presses, two different things,
+	 * so a student poking at the map never loses the map.
+	 */
+	let detailId = '';
+	/** Where the keyboard was standing before the sub-screen took over */
+	let focusBeforeDetail: HTMLElement | null = null;
 	/** Count-up state for the champion score */
 	let shown = 0;
 	let target = 0;
@@ -424,6 +433,12 @@ export function ResultsBoard(
 	 * clear and cost the only thing that matters here: which point is being
 	 * talked about.
 	 *
+	 * It is a BUTTON, and that is the second half of the gesture: the card says
+	 * what the proposal is and what it scored, and pressing it travels to the
+	 * arithmetic behind that score. The full breakdown used to unfold under the
+	 * map, which pushed the map itself off a phone screen the moment anyone
+	 * pressed a point — the very thing they were reading.
+	 *
 	 * The horizontal clamp is CSS rather than arithmetic, because only the
 	 * browser knows how wide the card actually came out — `clamp()` mixing
 	 * percentages and rems keeps the card on the point wherever there is room,
@@ -433,18 +448,30 @@ export function ResultsBoard(
 		const above = point.y < 50;
 		const gap = point.size / 2 + CALLOUT_GAP_PX;
 		const inlineStart = `clamp(var(--callout-half), ${point.x}%, calc(100% - var(--callout-half)))`;
+		// The plot clips whatever leaves it, so the card is never allowed to be
+		// taller than the room on the side it hangs off — the side rule above
+		// always picks the roomier half, so this is at worst half the plot
+		const room = above ? 100 - point.y : point.y;
 
 		return m(
-			'.board__callout',
+			'button.board__callout',
 			{
+				type: 'button',
 				class: above ? 'board__callout--above' : 'board__callout--below',
 				style: {
 					insetInlineStart: inlineStart,
+					maxHeight: `calc(${room}% - ${gap + EDGE_PAD}px)`,
 					...(above
 						? { insetBlockEnd: `calc(${point.y}% + ${gap}px)` }
 						: { insetBlockStart: `calc(${100 - point.y}% + ${gap}px)` }),
 				},
 				'aria-live': 'polite',
+				'aria-label': t('board.callout_aria', {
+					author: point.isMine ? t('board.you') : point.proposal.anonName,
+				}),
+				onclick: () => {
+					detailId = point.proposal.statementId;
+				},
 			},
 			[
 				m('p.board__callout-text', point.proposal.statement),
@@ -455,6 +482,12 @@ export function ResultsBoard(
 						signed(point.percent),
 					),
 					m('span.board__callout-by', point.isMine ? t('board.you') : point.proposal.anonName),
+				]),
+				// The affordance said out loud: a card that merely looks pressable
+				// is a card most of the class never presses
+				m('span.board__callout-more', { 'aria-hidden': 'true' }, [
+					m('span.board__callout-more-text', t('board.callout_more')),
+					m('span.board__callout-more-arrow', isRTL() ? '←' : '→'),
 				]),
 			],
 		);
@@ -711,14 +744,15 @@ export function ResultsBoard(
 	 * actually gave, what was held back for the classmates who never rated, and
 	 * how high this proposal could still have gone at this coverage.
 	 */
-	function detail(points: BoardPoint[], topic: AgoraTopicPackage): m.Children {
-		const point = points.find((candidate) => candidate.proposal.statementId === openId);
-		if (!point) return null;
-
+	function detailBody(
+		point: BoardPoint,
+		points: BoardPoint[],
+		topic: AgoraTopicPackage,
+	): m.Children {
 		const consensus = point.consensus;
 		const score = point.score;
 		if (!consensus || !score) {
-			return m('.board__detail', [m('p.board__detail-empty', t('board.unrated_detail'))]);
+			return m('p.board__detail-empty', t('board.unrated_detail'));
 		}
 
 		const meanPercent = Math.round(consensus.mean * 100);
@@ -728,21 +762,16 @@ export function ResultsBoard(
 		const behind = leader ? leader.percent - point.percent : 0;
 
 		return m('.board__detail', [
-			m('.board__detail-head', [
+			// The headline of the sub-screen: the score this whole page is about,
+			// at the size of the thing being explained
+			m('.board__detail-hero', [
 				m('span.board__rank', rankBadge(point.rank)),
-				point.isMine
-					? m('span.board__you', t('board.you'))
-					: m('span.board__author', point.proposal.anonName),
 				m(
-					'button.board__detail-close',
-					{
-						type: 'button',
-						onclick: () => {
-							openId = '';
-						},
-					},
-					t('chart.detail_close'),
+					'span.board__detail-score.board__num',
+					{ class: point.percent < 0 ? 'board__detail-score--against' : undefined },
+					signed(point.percent),
 				),
+				m('span.board__detail-score-label', t('board.agreement_label')),
 			]),
 			m('p.board__detail-statement', point.proposal.statement),
 			m('p.board__detail-title', t('board.detail_title')),
@@ -781,6 +810,69 @@ export function ResultsBoard(
 			campSplit(score, topic),
 			m('p.board__detail-why', t('board.detail_why')),
 		]);
+	}
+
+	/** Escape leaves the sub-screen, the same as the back tile */
+	function onDetailKey(event: KeyboardEvent): void {
+		if (event.key !== 'Escape') return;
+		detailId = '';
+		m.redraw();
+	}
+
+	/**
+	 * The full statistics as a PLACE, not as a fold.
+	 *
+	 * Same chrome as every other place in the game (a bar, a back tile, a
+	 * title) so travelling here from the map feels like the trip to a thread
+	 * rather than a card growing. It covers the dock deliberately: this screen
+	 * is one proposal's numbers and nothing else, and the way back is the one
+	 * button.
+	 */
+	function detailScreen(points: BoardPoint[], topic: AgoraTopicPackage): m.Children {
+		const point = points.find((candidate) => candidate.proposal.statementId === detailId);
+		if (!point) return null;
+
+		return m(
+			'.board-detail',
+			{
+				role: 'dialog',
+				'aria-modal': 'true',
+				'aria-label': t('board.detail_screen_title'),
+				oncreate: () => {
+					focusBeforeDetail =
+						document.activeElement instanceof HTMLElement ? document.activeElement : null;
+					document.addEventListener('keydown', onDetailKey);
+				},
+				onremove: () => {
+					document.removeEventListener('keydown', onDetailKey);
+					// Back to the point that was pressed, so the keyboard resumes
+					// where it left the map
+					focusBeforeDetail?.focus();
+					focusBeforeDetail = null;
+				},
+			},
+			[
+				m('header.board-detail__bar', [
+					m(
+						'button.board-detail__back',
+						{
+							type: 'button',
+							'aria-label': t('common.back'),
+							onclick: () => {
+								detailId = '';
+							},
+							oncreate: (node: m.VnodeDOM) => (node.dom as HTMLElement).focus(),
+						},
+						m('span', { 'aria-hidden': 'true' }, isRTL() ? '→' : '←'),
+					),
+					m('.board-detail__who', [
+						m('span.board-detail__title', t('board.detail_screen_title')),
+						m('span.board-detail__sub', point.isMine ? t('board.you') : point.proposal.anonName),
+					]),
+				]),
+				m('.board-detail__body', detailBody(point, points, topic)),
+			],
+		);
 	}
 
 	/** Proposals with no rating at all: named, so nobody's text silently vanishes */
@@ -967,9 +1059,9 @@ export function ResultsBoard(
 					: null,
 
 				plot(points, attrs.topic),
-				detail(points, attrs.topic),
 				unplaced(points),
 				helpingHands(buildBands(attrs), attrs),
+				detailScreen(points, attrs.topic),
 			]);
 		},
 	};
