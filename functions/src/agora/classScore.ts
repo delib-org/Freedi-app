@@ -25,6 +25,33 @@ interface ProposalRow {
 	text: string;
 }
 
+/** What the recap says about the proposal that led, when one did */
+type LeadFields = Pick<AgoraClassScore, 'leadStatementId' | 'leadConsensus' | 'leadCoverage'>;
+
+/**
+ * The lead proposal's three optional fields — present together, or not at all.
+ *
+ * A lesson that ends without a rated proposal has no lead, and an `undefined`
+ * anywhere inside a write makes Firestore reject the whole batch. That used to
+ * sink the entire recap: no classScore was ever written, the error was logged
+ * and swallowed, and every student sat on "computing the fate of the realm"
+ * until the tab was closed. Omit the keys instead of writing them empty.
+ */
+export function leadFields(
+	leadProposal: ProposalRow | undefined,
+	leadConsensus: { consensus: number; n: number; eligible: number } | undefined,
+): LeadFields {
+	return {
+		...(leadProposal ? { leadStatementId: leadProposal.statementId } : {}),
+		...(leadConsensus
+			? {
+					leadConsensus: leadConsensus.consensus,
+					leadCoverage: { rated: leadConsensus.n, eligible: leadConsensus.eligible },
+				}
+			: {}),
+	};
+}
+
 interface PlausibilityRow {
 	statementId: string;
 	score: number;
@@ -316,11 +343,7 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 		};
 		const classScore: AgoraClassScore = {
 			maxConsensus: consensusTerm,
-			leadStatementId: leadProposal?.statementId,
-			leadConsensus: leadConsensus?.consensus,
-			leadCoverage: leadConsensus
-				? { rated: leadConsensus.n, eligible: leadConsensus.eligible }
-				: undefined,
+			...leadFields(leadProposal, leadConsensus),
 			personalPointsSum,
 			avgPlausibility,
 			total,
