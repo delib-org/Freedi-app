@@ -213,6 +213,11 @@
 
   // --- Semantic ---
   --success: #17804d;
+  // The deep rung of the green family, the way --mine-deep and --peer-deep are
+  // the deep rungs of theirs. It exists because --success is a FILL colour:
+  // drawn as a line ON a strongly green surface (the map's bridge zone) it
+  // falls to 2.9:1, while this clears 4.6:1 there and 8:1 on white.
+  --success-deep: #0d5c37;
   --danger: #d13d4e;   // FILL only — as text on white it is 4.19:1
   --danger-ink: #b3202f; // the same alarm, readable as text (5.9:1)
   --warning: #b97300; // borders/fills only; warning copy uses --text-primary
@@ -339,30 +344,31 @@
   // A point's height IS the class's verdict, and a rail of numbers beside the
   // plot is a caption for that — one a 7th-grader reads only if told to. As a
   // ramp the field says it without words: red at the bottom (the class is
-  // against), straw through the middle (the class is split), green at the top
-  // (the class is for). Every stop is --danger/--warning/--success at low
-  // alpha, so the map cannot drift away from the three colours the rest of the
-  // game already uses for exactly these three meanings.
+  // against), yellow across the middle (the class is split), green at the top
+  // (the class is for) — the traffic-light reading everyone already owns.
   //
   // `to top`, not `to bottom` — a vertical ramp is direction-neutral by
   // construction, so nothing here flips in Hebrew or Arabic.
   //
-  // The extremes sit at 12% and the middle is PINCHED (7%, and only between
-  // 34% and 66%): at 12% over white the deepest stop is still ~94% luminance,
-  // so a white callout, a violet point and a dashed gridline all keep
-  // effectively their on-white contrast, and the mid band reads as neutral
-  // straw rather than as mustard.
-  --field-against: color-mix(in srgb, var(--danger) 12%, transparent);
-  --field-against-soft: color-mix(in srgb, var(--danger) 6%, transparent);
-  --field-mid: color-mix(in srgb, var(--warning) 7%, transparent);
-  --field-for-soft: color-mix(in srgb, var(--success) 6%, transparent);
-  --field-for: color-mix(in srgb, var(--success) 12%, transparent);
+  // The middle is --gold, NOT --warning. --warning #b97300 is a brown-amber
+  // built to draw a border, and washed out to a tint it reads as beige: the
+  // first cut of this ramp had it at 7% and the 0% line came out plain white,
+  // which is a traffic light with the amber bulb missing. --gold #ffd23f is
+  // the palette's actual yellow, and it needs a HIGHER alpha than the other
+  // two to weigh the same, because it is already nearly white.
+  //
+  // 22 / 45 / 22 is the ceiling the map can carry, not a taste: at 22% over
+  // white the deepest red and green still leave every graphic on the field
+  // above the 3:1 floor (--peer point strokes 3.78:1, --success 3.62:1). The
+  // one thing that does NOT survive is muted text, so nothing on the field is
+  // allowed to be muted — see .board__plot-empty.
+  --field-against: color-mix(in srgb, var(--danger) 22%, transparent);
+  --field-mid: color-mix(in srgb, var(--gold) 45%, transparent);
+  --field-for: color-mix(in srgb, var(--success) 22%, transparent);
   --grad-field: linear-gradient(
     to top,
     var(--field-against) 0%,
-    var(--field-against-soft) 34%,
     var(--field-mid) 50%,
-    var(--field-for-soft) 66%,
     var(--field-for) 100%
   );
 

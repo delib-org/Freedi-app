@@ -137,6 +137,16 @@ if (count > 0) {
 // 4. the whole screen, the way a student meets it on a phone
 await page.screenshot({ path: `${SHOTS}/04-screen.png` });
 
+// 5. the field alone, top to bottom. The deliberation tab's two fixed bars sit
+// over the bottom of the plot — which is precisely the against half, the half
+// the red is in — so they come off for this one shot.
+const hideDock = await page.addStyleTag({
+	content: '.proposal-dock, .delib-nav { display: none !important; }',
+});
+await page.waitForTimeout(400);
+await page.locator('.board__plot-frame').screenshot({ path: `${SHOTS}/05-field.png` });
+await hideDock.evaluate((node: Element) => node.remove());
+
 /**
  * The contrast gauntlet cannot reach this screen — it lives behind a session,
  * a camp and a proposal — and the map is the one surface in the game whose

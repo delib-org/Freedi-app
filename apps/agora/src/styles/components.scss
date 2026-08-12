@@ -6613,12 +6613,14 @@
 	}
 
 	// A thumbnail of the field itself
+	// The same three colours as the field, at full strength — a swatch is small
+	// enough that the tint the field needs would read as white
 	&__help-ramp {
 		width: 1rem;
 		height: 100%;
 		border-radius: var(--radius-sm);
 		border: 1px solid var(--border-strong);
-		background: linear-gradient(to top, var(--danger), var(--warning) 50%, var(--success));
+		background: linear-gradient(to top, var(--danger), var(--gold) 50%, var(--success));
 	}
 
 	// A thumbnail of the bridge zone
@@ -6626,8 +6628,8 @@
 		width: 2.25rem;
 		height: 1.25rem;
 		border-radius: var(--radius-sm);
-		background: color-mix(in srgb, var(--success) 22%, transparent);
-		border: 2px dashed var(--success);
+		background: color-mix(in srgb, var(--success) 30%, transparent);
+		border: 2px dashed var(--success-deep);
 	}
 
 	// The dot trio that teaches "bigger = more of the class rated it"
@@ -6757,13 +6759,16 @@
 		overflow: hidden;
 	}
 
+	// The one piece of text that sits directly ON the field, so it is the one
+	// piece that cannot be muted: --text-muted measures 4.06:1 against the
+	// deepest stops of the ramp, and --text-primary measures 9.3:1.
 	&__plot-empty {
 		position: absolute;
 		inset-inline: var(--space-md);
 		inset-block-start: 45%;
 		text-align: center;
 		font-size: var(--font-size-sm);
-		color: var(--text-muted);
+		color: var(--text-primary);
 	}
 
 	// The 0% line: above it the class is for, below it against
@@ -6803,7 +6808,11 @@
 		inset-block-end: 62%;
 		inset-block-start: 0;
 		background: color-mix(in srgb, var(--success) 22%, transparent);
-		border: 2px dashed var(--success);
+		// --success-deep, not --success: the zone's own fill lands on top of the
+		// greenest part of the field, and a --success line drawn on that is
+		// 2.9:1 — a border that argues with its own background. The deep rung
+		// clears 4.6:1 there and is unmistakably the same green.
+		border: 2px dashed var(--success-deep);
 		border-radius: var(--radius-md);
 		pointer-events: none;
 	}
@@ -6829,12 +6838,12 @@
 		padding: 2px var(--space-sm);
 		border-radius: var(--radius-full);
 		background: var(--bg-card-solid);
-		border: 1px solid var(--success);
+		border: 1px solid var(--success-deep);
 		box-shadow: var(--shadow-card);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
-		color: var(--success);
+		color: var(--success-deep);
 		letter-spacing: 0.02em;
 		// A sign, so it stays on one line and is allowed to overhang the zone it
 		// names — wrapped, it grew into the field and swallowed the points below
@@ -6880,9 +6889,13 @@
 			box-shadow: var(--glow-marker);
 		}
 
+		// The crown's ring. --warning is a gold, and gold on a saturated field is
+		// 2.5:1 — so the gold carries the MEANING and a --peer keyline outside it
+		// carries the shape (3.78:1 on every stop of the ramp).
 		&--lead {
 			border-color: var(--warning);
 			border-width: 3px;
+			outline: 1px solid var(--peer);
 		}
 
 		&--selected {
