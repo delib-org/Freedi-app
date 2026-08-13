@@ -7,6 +7,7 @@ import { celebrate } from './celebration';
 import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
 import { addInboxItem, type InboxTarget } from './inbox';
 import { inBridgeZone, standings } from './boardGeometry';
+import { isAgoraTrigger } from './notificationCopy';
 import { playCheer } from './sound';
 import { getDeliberationState, isSuggestionKind, isSystemKind } from './proposals';
 import { editClock } from './improvementSignals';
@@ -393,6 +394,10 @@ export function listenToNotifications(userId: string): void {
 					createdAt?: number;
 				};
 				if (!data.notificationId) return;
+				// The shared pipeline's generic twins (statement_reply, tagged
+				// sourceApp agora) say nothing the game's own detectors have not
+				// already said better — see isAgoraTrigger
+				if (!isAgoraTrigger(data.triggerType)) return;
 
 				const notificationId = data.notificationId;
 				// Every server-sent reward or answer is filed before it is

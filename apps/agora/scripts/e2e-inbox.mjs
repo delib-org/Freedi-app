@@ -258,7 +258,19 @@ await s1.reload({ waitUntil: 'domcontentloaded' });
 await s1.waitForSelector('.inbox-button', { timeout: 25000 });
 await clearCelebration(s1);
 await openInbox(s1);
-eq('every line is still filed after a reload', await s1.locator('.inbox__row').count(), filedRows);
+// SURVIVAL, not arithmetic: fresh news can land during a reload, so the
+// honest claim is that nothing already filed was lost
+eq(
+	'the idea survived the reload',
+	await s1.locator('.inbox__row', { hasText: 'רעיון לשיפור' }).count(),
+	1,
+);
+eq(
+	'the credit survived it too',
+	await s1.locator('.inbox__row', { hasText: 'עלתה לכיכר' }).count(),
+	1,
+);
+eq('nothing already filed was lost', (await s1.locator('.inbox__row').count()) >= filedRows, true);
 eq('and it is no longer unread', await s1.locator('.inbox__row--unread').count(), 0);
 await shot(s1, '05-after-reload');
 

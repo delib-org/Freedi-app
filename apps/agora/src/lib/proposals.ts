@@ -176,7 +176,14 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			Object.values(suggestions).forEach((list) => list.sort((a, b) => a.createdAt - b.createdAt));
 			state.proposals = proposals;
 			state.suggestions = suggestions;
-			state.statementsLoaded = true;
+			// "Loaded" means the SERVER has spoken, not that a snapshot arrived.
+			// Against the emulator every snapshot is effectively a server one; on
+			// a real network the SDK answers from an empty cache first, and a
+			// student mid-lesson would be shown the writing desk — and start
+			// retyping a proposal they already have — every time the connection
+			// hiccuped. Monotonic: once the server has answered it stays true, so
+			// a later offline blip cannot un-load the game.
+			if (!snapshot.metadata.fromCache) state.statementsLoaded = true;
 			// Close the collaboration loop: tell helpers their proposal moved
 			detectHelpedImprovements(sessionId, userId);
 			// ...and the mirror: a message arrived in a thread I'm part of
@@ -409,6 +416,35 @@ export async function submitProposal(
 
 	const newRef = doc(collection(db, Collections.statements));
 	await setDoc(newRef, buildProposalStatement(session, newRef.id, user.uid, anonName, text));
+}
+
+/**
+ * The FIRST write, with a caller-supplied id.
+ *
+ * The id is the whole point: a first write that hangs can be retried (the desk
+ * offers a reload when one does), and a retry that minted a fresh id would
+ * post the proposal TWICE the moment the original turned out to have landed
+ * after all — on a real network, "stuck" and "slow" look identical from here.
+ * Writing the same id twice is one proposal, whatever the network decides.
+ */
+export async function createProposal(
+	session: AgoraSession,
+	anonName: string,
+	text: string,
+	proposalId: string,
+): Promise<void> {
+	const { user } = getUserState();
+	if (!user) throw new Error('Not authenticated');
+	await setDoc(
+		doc(db, Collections.statements, proposalId),
+		buildProposalStatement(session, proposalId, user.uid, anonName, text),
+		// MERGE, for the one case this id exists to survive: a retry landing on
+		// a doc the first attempt did create after all. A plain overwrite would
+		// take the evaluation aggregates the pipeline had already written on it
+		// down with it; merging leaves the class's ratings where they are and
+		// only restates the author's own fields.
+		{ merge: true },
+	);
 }
 
 /** Five-level rating scale, MC-style: -1 … +1 in half steps */

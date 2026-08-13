@@ -29,6 +29,21 @@ const LOOKS: Readonly<Record<string, { icon: IconName; key: string }>> = {
 	agora_climbed: { icon: 'trend', key: 'toast.climbed' },
 };
 
+/**
+ * Is this one of the game's own moments?
+ *
+ * The shared Freedi notification pipeline also writes `statement_reply` docs
+ * for agora's child statements, tagged `sourceApp: agora` — every thread
+ * message arrives twice, once as the game's own sentence and once as a
+ * generic reply carrying the raw text. The generic one has no copy here, so
+ * it filed a blank line in the post box and toasted the same message a second
+ * time. The game's detectors already describe every one of those events, and
+ * better, so the generic twin is ignored.
+ */
+export function isAgoraTrigger(trigger: string | undefined): boolean {
+	return trigger !== undefined && trigger in LOOKS;
+}
+
 export function triggerLook(trigger: string, fallback = ''): TriggerLook {
 	const look = LOOKS[trigger];
 	if (!look) return { icon: 'talk', line: fallback };

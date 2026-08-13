@@ -56,6 +56,24 @@ function ctx(): AudioContext | null {
 	}
 }
 
+/**
+ * iOS Safari — the tablet a classroom actually runs on — will only START an
+ * audio context inside a real gesture, and these sounds fire from Firestore
+ * events, which are never one. So the context is opened on the student's first
+ * tap of the lesson and kept warm; by the time a milestone lands it is ready.
+ * Costs nothing when the student never earns one, and stays silent either way
+ * if the browser still refuses.
+ */
+if (typeof document !== 'undefined') {
+	const unlock = (): void => {
+		document.removeEventListener('pointerdown', unlock);
+		document.removeEventListener('keydown', unlock);
+		if (isSoundOn()) ctx();
+	};
+	document.addEventListener('pointerdown', unlock, { once: true });
+	document.addEventListener('keydown', unlock, { once: true });
+}
+
 /** A short burst of filtered noise — one pair of hands */
 function clap(audio: AudioContext, at: number, gain: number): void {
 	const length = Math.floor(audio.sampleRate * 0.09);

@@ -6,6 +6,7 @@ import {
 	getDeliberationState,
 	listenToDeliberation,
 	stopDeliberationListeners,
+	createProposal,
 	submitProposal,
 	submitSuggestion,
 	askCharacterReview,
@@ -633,6 +634,21 @@ export function Deliberation(
 	const SLOW_SAVE_MS = 8000;
 	let firstSaveSlow = false;
 	let firstSaveTimer = 0;
+	/**
+	 * The id the first proposal is written under — DERIVED, not minted.
+	 *
+	 * On a real network "stuck" and "merely slow" are indistinguishable from
+	 * here, so the reload the desk offers can always turn out to have been
+	 * unnecessary: the write may land while the page is reloading. A fresh id
+	 * on the retry would post the proposal twice, and the square would carry a
+	 * student's text under two numbers with no way to tell which is real.
+	 *
+	 * Derived from the session and the author, so it needs no storage to
+	 * survive a reload, a cleared tab or a second device — and it turns "one
+	 * proposal per student" from a thing the code hopes for into a thing the
+	 * database cannot express otherwise.
+	 */
+	const firstProposalId = `${session.sessionId}--${userId}--proposal`;
 	/**
 	 * Which of the three screens I am standing on. My and Results are screens,
 	 * NOT cycle steps — reading my own feedback or the class picture must not
@@ -2587,7 +2603,7 @@ export function Deliberation(
 													firstSaveSlow = true;
 													m.redraw();
 												}, SLOW_SAVE_MS);
-												submitProposal(live, anonName, text)
+												createProposal(live, anonName, text, firstProposalId)
 													.then(() => {
 														window.clearTimeout(firstSaveTimer);
 														firstSaveSlow = false;
