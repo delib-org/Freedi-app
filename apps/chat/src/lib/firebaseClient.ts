@@ -4,10 +4,12 @@
  * (`onMount` in `realtime.ts`), satisfying the "no Firebase in first paint"
  * guarantee (§2 of the plan).
  *
- *  - `firestore()`        — public/unlisted: `firebase/app` + `firebase/firestore`
- *                            only (rules allow anonymous read, no auth SDK).
- *  - `firestoreAuthed()`  — private: additionally loads `firebase/auth` because
- *                            the read rule requires `request.auth.uid`.
+ *  - `firestore()`        — the bare Firestore handle, no auth SDK. Not enough
+ *                            on its own to read `/statements` any more.
+ *  - `firestoreAnon()`    — public/unlisted: signs in anonymously first, since
+ *                            reads now require `request.auth != null`.
+ *  - `firestoreAuthed()`  — private: hands back the auth instance too, for
+ *                            callers that need the identity, not just a session.
  */
 import type { FirebaseApp } from 'firebase/app';
 import type { Firestore } from 'firebase/firestore';
@@ -106,6 +108,31 @@ export async function firestoreAuthed(): Promise<{ db: Firestore; auth: Auth }> 
 	const [db, a] = await Promise.all([firestore(), auth()]);
 
 	return { db, auth: a };
+}
+
+/**
+ * Public/unlisted realtime, signed in anonymously.
+ *
+ * Public conversations used to subscribe with no auth SDK at all, because the
+ * read rule permitted it. It no longer does — a conversation being public means
+ * anyone may read it, not that no one need say who they are.
+ *
+ * The first-paint guarantee is untouched: this still runs only from `onMount`,
+ * and `firebase/auth` is still a dynamic import, so the cost lands in a
+ * post-hydration chunk rather than the initial HTML payload. A reader who
+ * already has a session (restored by `authStateReady`) keeps it; only a genuinely
+ * signed-out reader gets an anonymous credential.
+ */
+export async function firestoreAnon(): Promise<Firestore> {
+	const [db, a] = await Promise.all([firestore(), auth()]);
+	await a.authStateReady();
+
+	if (!a.currentUser) {
+		const { signInAnonymously } = await import('firebase/auth');
+		await signInAnonymously(a);
+	}
+
+	return db;
 }
 
 /**
