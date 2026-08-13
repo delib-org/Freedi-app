@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useCallback, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
 import WizColAttribution from '../shared/WizColAttribution';
@@ -51,6 +52,16 @@ interface DetailedProgress {
 export default function SurveyComplete({ survey }: SurveyCompleteProps) {
   const router = useRouter();
   const { t, tWithParams } = useTranslation();
+  const { user, isLoading: isAuthLoading } = useAuth();
+
+  // Identity must match the one the survey flow wrote with
+  // (SwipeInterfaceWrapper / SurveyEntry): the Firebase uid when signed in,
+  // the anonymous id otherwise. Reading with the anonymous id while the
+  // answers were written under a Google uid makes every count read as 0.
+  const resolveUserId = useCallback(
+    () => user?.uid || getOrCreateAnonymousUser(),
+    [user?.uid]
+  );
 
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,9 +101,11 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
 
   // Fetch detailed progress from API
   useEffect(() => {
+    if (isAuthLoading) return;
+
     const fetchDetailedProgress = async () => {
       try {
-        const userId = getOrCreateAnonymousUser();
+        const userId = resolveUserId();
         const params = new URLSearchParams({ userId });
         if (completedIndices.length > 0) {
           params.set('completedIndices', completedIndices.join(','));
@@ -122,13 +135,15 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     };
 
     fetchDetailedProgress();
-  }, [survey.surveyId, completedIndices]);
+  }, [survey.surveyId, completedIndices, isAuthLoading, resolveUserId]);
 
   // Check if user has submitted suggestions
   useEffect(() => {
+    if (isAuthLoading) return;
+
     const checkSuggestions = async () => {
       try {
-        const userId = getOrCreateAnonymousUser();
+        const userId = resolveUserId();
         const results = await Promise.all(
           survey.questionIds.map((questionId) =>
             fetch(`/api/user-solutions/${questionId}?userId=${encodeURIComponent(userId)}`)
@@ -148,7 +163,7 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     };
 
     checkSuggestions();
-  }, [survey.questionIds]);
+  }, [survey.questionIds, isAuthLoading, resolveUserId]);
 
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
