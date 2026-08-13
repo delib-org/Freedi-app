@@ -18,9 +18,44 @@ import {
 	FirestoreError,
 	DocumentData,
 } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getFirebaseAuth } from './client';
 
 /** Delay before actual Firestore unsubscribe, allowing pending watch events to drain */
 const UNSUBSCRIBE_DELAY_MS = 50;
+
+/**
+ * Defers a subscription until there is a Firebase Auth session.
+ *
+ * AuthSync deliberately delays anonymous sign-in by 2s (6s for a returning
+ * visitor with a display-name cookie) to keep it off the first-paint path,
+ * while these listeners mount immediately on render. That gap is invisible
+ * today only because /statements is publicly readable.
+ *
+ * Deferring rather than skipping matters: a listener that gives up when
+ * `currentUser` is null would leave the comment and suggestion panes
+ * permanently empty for every returning visitor, and the errors here are
+ * swallowed, so nothing would say why.
+ */
+function whenAuthed(subscribe: () => () => void): () => void {
+	const auth = getFirebaseAuth();
+	if (auth.currentUser) return subscribe();
+
+	let cancelled = false;
+	let inner: (() => void) | null = null;
+
+	const stopWaiting = onAuthStateChanged(auth, (user) => {
+		if (!user || cancelled) return;
+		stopWaiting();
+		inner = subscribe();
+	});
+
+	return () => {
+		cancelled = true;
+		stopWaiting();
+		if (inner) inner();
+	};
+}
 
 /**
  * Check if an error is a non-fatal Firestore internal assertion.
@@ -42,15 +77,17 @@ export function safeQuerySnapshot<T extends DocumentData>(
 ): () => void {
 	let active = true;
 
-	const unsubscribe = onSnapshot(
-		q,
-		(snapshot) => {
-			if (active) onNext(snapshot);
-		},
-		(error) => {
-			if (!active || isFirestoreInternalError(error)) return;
-			if (onError) onError(error);
-		}
+	const unsubscribe = whenAuthed(() =>
+		onSnapshot(
+			q,
+			(snapshot) => {
+				if (active) onNext(snapshot);
+			},
+			(error) => {
+				if (!active || isFirestoreInternalError(error)) return;
+				if (onError) onError(error);
+			}
+		)
 	);
 
 	return () => {
@@ -70,15 +107,17 @@ export function safeDocSnapshot<T extends DocumentData>(
 ): () => void {
 	let active = true;
 
-	const unsubscribe = onSnapshot(
-		ref,
-		(snapshot) => {
-			if (active) onNext(snapshot);
-		},
-		(error) => {
-			if (!active || isFirestoreInternalError(error)) return;
-			if (onError) onError(error);
-		}
+	const unsubscribe = whenAuthed(() =>
+		onSnapshot(
+			ref,
+			(snapshot) => {
+				if (active) onNext(snapshot);
+			},
+			(error) => {
+				if (!active || isFirestoreInternalError(error)) return;
+				if (onError) onError(error);
+			}
+		)
 	);
 
 	return () => {

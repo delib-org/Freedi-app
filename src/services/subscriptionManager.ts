@@ -13,6 +13,7 @@ import { Collections, Statement } from '@freedi/shared-types';
 import { store } from '@/redux/store';
 import { setStatement } from '@/redux/statements/statementsSlice';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
+import { subscribeWhenAuthenticated } from '@/controllers/utils/subscribeWhenAuthenticated';
 
 interface ActiveListener {
 	unsubscribe: Unsubscribe;
@@ -44,12 +45,14 @@ class SubscriptionManager {
 
 		// Listen to the main statement
 		const statementRef = doc(FireStore, Collections.statements, statementId);
-		const unsubscribeStatement = onSnapshot(statementRef, (snapshot) => {
-			if (snapshot.exists()) {
-				const statement = normalizeStatementData(snapshot.data()) as Statement;
-				store.dispatch(setStatement(statement));
-			}
-		});
+		const unsubscribeStatement = subscribeWhenAuthenticated(() =>
+			onSnapshot(statementRef, (snapshot) => {
+				if (snapshot.exists()) {
+					const statement = normalizeStatementData(snapshot.data()) as Statement;
+					store.dispatch(setStatement(statement));
+				}
+			}),
+		);
 
 		// Listen to sub-statements
 		const subStatementsQuery = query(
@@ -59,15 +62,17 @@ class SubscriptionManager {
 			limit(20),
 		);
 
-		const unsubscribeSubStatements = onSnapshot(subStatementsQuery, (snapshot) => {
-			snapshot.docChanges().forEach((change) => {
-				const statement = normalizeStatementData(change.doc.data()) as Statement;
+		const unsubscribeSubStatements = subscribeWhenAuthenticated(() =>
+			onSnapshot(subStatementsQuery, (snapshot) => {
+				snapshot.docChanges().forEach((change) => {
+					const statement = normalizeStatementData(change.doc.data()) as Statement;
 
-				if (change.type === 'added' || change.type === 'modified') {
-					store.dispatch(setStatement(statement));
-				}
-			});
-		});
+					if (change.type === 'added' || change.type === 'modified') {
+						store.dispatch(setStatement(statement));
+					}
+				});
+			}),
+		);
 
 		// Combine unsubscribe functions
 		const unsubscribe = () => {

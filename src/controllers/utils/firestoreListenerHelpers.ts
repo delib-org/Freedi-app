@@ -10,6 +10,7 @@ import {
 import { listenerManager } from './ListenerManager';
 import { Unsubscribe } from 'firebase/auth';
 import { logError } from '@/utils/errorHandling';
+import { subscribeWhenAuthenticated } from './subscribeWhenAuthenticated';
 
 /**
  * Creates a managed document listener that tracks document fetches
@@ -40,20 +41,22 @@ export function createManagedDocumentListener(
 	const setupFn = (onDocumentCount?: (count: number) => void) => {
 		let isFirstCall = true;
 
-		return onSnapshot(
-			docRef,
-			(snapshot) => {
-				// Track document count (1 for single document)
-				// Skip counting on first call to avoid inflated counts on listener recreation
-				if (onDocumentCount && !isFirstCall) {
-					onDocumentCount(snapshot.exists() ? 1 : 0);
-				}
-				if (isFirstCall) {
-					isFirstCall = false;
-				}
-				onNext(snapshot);
-			},
-			onError,
+		return subscribeWhenAuthenticated(() =>
+			onSnapshot(
+				docRef,
+				(snapshot) => {
+					// Track document count (1 for single document)
+					// Skip counting on first call to avoid inflated counts on listener recreation
+					if (onDocumentCount && !isFirstCall) {
+						onDocumentCount(snapshot.exists() ? 1 : 0);
+					}
+					if (isFirstCall) {
+						isFirstCall = false;
+					}
+					onNext(snapshot);
+				},
+				onError,
+			),
 		);
 	};
 
@@ -104,27 +107,29 @@ export function createManagedCollectionListener(
 	const setupFn = (onDocumentCount?: (count: number) => void) => {
 		let isFirstCall = true;
 
-		return onSnapshot(
-			queryRef,
-			(snapshot) => {
-				// Track document count
-				if (onDocumentCount) {
-					if (isFirstCall) {
-						// On first call, DON'T count existing documents to avoid inflated counts on listener recreation
-						// We only want to track NEW documents added after the listener is established
-						isFirstCall = false;
-					} else {
-						// On subsequent calls, only count NEW documents (added)
-						const changes = snapshot.docChanges();
-						const addedCount = changes.filter((change) => change.type === 'added').length;
-						if (addedCount > 0) {
-							onDocumentCount(addedCount);
+		return subscribeWhenAuthenticated(() =>
+			onSnapshot(
+				queryRef,
+				(snapshot) => {
+					// Track document count
+					if (onDocumentCount) {
+						if (isFirstCall) {
+							// On first call, DON'T count existing documents to avoid inflated counts on listener recreation
+							// We only want to track NEW documents added after the listener is established
+							isFirstCall = false;
+						} else {
+							// On subsequent calls, only count NEW documents (added)
+							const changes = snapshot.docChanges();
+							const addedCount = changes.filter((change) => change.type === 'added').length;
+							if (addedCount > 0) {
+								onDocumentCount(addedCount);
+							}
 						}
 					}
-				}
-				onNext(snapshot);
-			},
-			onError,
+					onNext(snapshot);
+				},
+				onError,
+			),
 		);
 	};
 
