@@ -1,15 +1,16 @@
 /**
  * Live updates (§3). `onMount`-only: lazily imports `firebase/firestore` and
  * opens an `onSnapshot` on `where('topParentId','==',id)`. Public/unlisted use
- * the auth-free `firestore()`; private use `firestoreAuthed()`. Patches the flat
- * statement list on added/modified/removed, resolving the "evaluating…" chip
- * live. Returns an unsubscribe.
+ * `firestoreAnon()`, private `firestoreAuthed()` — both authenticated, since
+ * reading `/statements` requires a session. Patches the flat statement list on
+ * added/modified/removed, resolving the "evaluating…" chip live. Returns an
+ * unsubscribe.
  *
  * Nothing here is in the first HTML payload — it runs only after hydration.
  */
 import { Collections, Visibility } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
-import { firestore, firestoreAuthed } from './firebaseClient';
+import { firestoreAnon, firestoreAuthed } from './firebaseClient';
 
 type GetCurrent = () => Statement[];
 type OnUpdate = (next: Statement[]) => void;
@@ -28,7 +29,7 @@ export function subscribeToConversation(
 			const db =
 				visibility === Visibility.private
 					? (await firestoreAuthed()).db
-					: await firestore();
+					: await firestoreAnon();
 
 			const { collection, query, where, onSnapshot } = await import('firebase/firestore');
 			const q = query(
