@@ -21,6 +21,16 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('share');
   const [survey, setSurvey] = useState<Survey>(initialSurvey);
+  // The edit form holds unsaved work. Unmounting it on a tab switch threw
+  // that work away without a word — a setting you toggled and then went to
+  // check somewhere else was silently back to its old value. So mount it
+  // lazily on first visit and keep it mounted, hidden, from then on.
+  const [hasOpenedEditor, setHasOpenedEditor] = useState(false);
+
+  const selectTab = (tab: Tab) => {
+    if (tab === 'edit') setHasOpenedEditor(true);
+    setActiveTab(tab);
+  };
 
   const handleStatusChange = (updatedSurvey: Survey) => {
     setSurvey(updatedSurvey);
@@ -68,25 +78,25 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
         <button
-          onClick={() => setActiveTab('share')}
+          onClick={() => selectTab('share')}
           style={tabButtonStyle(activeTab === 'share')}
         >
           {t('shareAndPreview')}
         </button>
         <button
-          onClick={() => setActiveTab('status')}
+          onClick={() => selectTab('status')}
           style={tabButtonStyle(activeTab === 'status')}
         >
           {t('status')}
         </button>
         <button
-          onClick={() => setActiveTab('edit')}
+          onClick={() => selectTab('edit')}
           style={tabButtonStyle(activeTab === 'edit')}
         >
           {t('editSurvey')}
         </button>
         <button
-          onClick={() => setActiveTab('results')}
+          onClick={() => selectTab('results')}
           style={tabButtonStyle(activeTab === 'results')}
         >
           {t('results')}
@@ -97,7 +107,11 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
       {activeTab === 'status' && (
         <SurveyStatusManager survey={survey} onStatusChange={handleStatusChange} />
       )}
-      {activeTab === 'edit' && <SurveyForm existingSurvey={survey} onSurveyUpdate={setSurvey} />}
+      {hasOpenedEditor && (
+        <div style={{ display: activeTab === 'edit' ? 'block' : 'none' }}>
+          <SurveyForm existingSurvey={survey} onSurveyUpdate={setSurvey} />
+        </div>
+      )}
       {activeTab === 'results' && <SurveyResults survey={survey} />}
     </div>
   );
