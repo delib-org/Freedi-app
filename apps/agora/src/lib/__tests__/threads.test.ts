@@ -8,7 +8,14 @@ import { AgoraMessageKind, AgoraSuggestionStatus, StatementType } from '@freedi/
  */
 
 type SnapshotCallback = (snapshot: {
-	forEach: (fn: (docSnap: { data: () => Record<string, unknown> }) => void) => void;
+	metadata: { fromCache: boolean };
+	forEach: (
+		fn: (docSnap: {
+			id: string;
+			data: () => Record<string, unknown>;
+			metadata: { hasPendingWrites: boolean };
+		}) => void,
+	) => void;
 }) => void;
 
 const snapshotCallbacks: SnapshotCallback[] = [];
@@ -22,8 +29,13 @@ vi.mock('../firebase', () => ({
 	where: () => ({}),
 	setDoc: async () => {},
 	updateDoc: async () => {},
-	onSnapshot: (_query: unknown, onNext: SnapshotCallback) => {
-		snapshotCallbacks.push(onNext);
+	// The statements listener passes (query, {includeMetadataChanges}, next,
+	// error) while the others pass (query, next, error). A mock that assumed
+	// the second argument was always the callback captured an options OBJECT
+	// for the statements listener, and every test here died on
+	// "snapshotCallbacks[0] is not a function". Accept both shapes.
+	onSnapshot: (_query: unknown, second: unknown, third: unknown) => {
+		snapshotCallbacks.push((typeof second === 'function' ? second : third) as SnapshotCallback);
 
 		return () => {};
 	},
@@ -51,9 +63,20 @@ import {
 } from '../proposals';
 
 function feedStatements(docs: Array<Record<string, unknown>>): void {
-	// The first captured callback is the statements listener
+	// The first captured callback is the statements listener. It reads snapshot
+	// and per-doc metadata to tell a server-acknowledged write from one still
+	// sitting in the local queue, so the fake snapshot has to carry it: a
+	// server answer, with nothing pending.
 	snapshotCallbacks[0]({
-		forEach: (fn) => docs.forEach((data) => fn({ data: () => data })),
+		metadata: { fromCache: false },
+		forEach: (fn) =>
+			docs.forEach((data) =>
+				fn({
+					id: String(data.statementId),
+					data: () => data,
+					metadata: { hasPendingWrites: false },
+				}),
+			),
 	});
 }
 

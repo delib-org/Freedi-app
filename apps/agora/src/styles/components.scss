@@ -1226,6 +1226,18 @@
 		font-size: var(--font-size-sm);
 		color: var(--text-primary);
 	}
+
+	// A write still in the air after eight seconds. Stated, not alarmed: the
+	// work is not lost and usually arrives, so this reads as a status line
+	// rather than an error. --text-primary for the same reason the fuse digits
+	// use it — warning copy fails AA on this ground.
+	&__stalled {
+		padding: var(--space-xs) var(--space-md);
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		color: var(--text-primary);
+		text-align: center;
+	}
 }
 
 @media (max-width: 380px) {

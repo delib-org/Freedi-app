@@ -27,6 +27,7 @@ import {
 	isAgoraAiUid,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { trackWrite, clearWriteTracking } from './confirmedWrite';
 import { getUserState } from './user';
 import { getSessionState } from './session';
 import {
@@ -292,6 +293,8 @@ export function stopDeliberationListeners(): void {
 	unsubscribers.forEach((unsubscribe) => unsubscribe());
 	unsubscribers = [];
 	listeningKey = '';
+	// A stalled write from a finished session must not haunt the next one
+	clearWriteTracking();
 	state.statementsLoaded = false;
 	state.evaluationsLoaded = false;
 	state.proposals = [];
@@ -406,16 +409,30 @@ export async function submitProposal(
 	if (!user) throw new Error('Not authenticated');
 
 	if (existingProposalId) {
-		await updateDoc(doc(db, Collections.statements, existingProposalId), {
-			statement: text,
-			lastUpdate: Date.now(),
-		});
+		await trackWrite(
+			'delib.saving_edit',
+			updateDoc(doc(db, Collections.statements, existingProposalId), {
+				statement: text,
+				lastUpdate: Date.now(),
+			}),
+		);
 
 		return;
 	}
 
-	const newRef = doc(collection(db, Collections.statements));
-	await setDoc(newRef, buildProposalStatement(session, newRef.id, user.uid, anonName, text));
+	// Deterministic, for the same reason createProposal's id is: a retry after a
+	// write that only LOOKED stuck must land on the one proposal, not mint a
+	// second. This branch used to take a random id, so the one path in the game
+	// that can duplicate a student's work was the one nobody was watching.
+	const proposalId = `${session.sessionId}--${user.uid}--proposal`;
+	await trackWrite(
+		'delib.saving_proposal',
+		setDoc(
+			doc(db, Collections.statements, proposalId),
+			buildProposalStatement(session, proposalId, user.uid, anonName, text),
+			{ merge: true },
+		),
+	);
 }
 
 /**
@@ -474,7 +491,10 @@ export async function rateProposal(
 		updatedAt: Date.now(),
 	};
 
-	await setDoc(doc(db, Collections.evaluations, evaluationId), evaluation);
+	await trackWrite(
+		'delib.saving_rating',
+		setDoc(doc(db, Collections.evaluations, evaluationId), evaluation),
+	);
 }
 
 /**
@@ -522,17 +542,20 @@ export async function submitThreadMessage(
 	}
 	const newRef = doc(collection(db, Collections.statements));
 
-	await setDoc(
-		newRef,
-		buildThreadMessageStatement(
-			session,
-			proposal.statementId,
-			newRef.id,
-			user.uid,
-			anonName,
-			text,
-			kind,
-			helperUid ?? user.uid,
+	await trackWrite(
+		'delib.saving_message',
+		setDoc(
+			newRef,
+			buildThreadMessageStatement(
+				session,
+				proposal.statementId,
+				newRef.id,
+				user.uid,
+				anonName,
+				text,
+				kind,
+				helperUid ?? user.uid,
+			),
 		),
 	);
 }

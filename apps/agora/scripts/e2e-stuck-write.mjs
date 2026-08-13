@@ -208,12 +208,53 @@ await s2.waitForSelector('.stall', { timeout: 20000 });
 eq("S2's square finally shows the classmate", await s2.locator('.stall').count(), 1);
 await shot(s2, '04-S2-square-complete');
 
+// 6. The first write was never the only one that can hang. Rating a classmate
+//    is fire-and-forget by nature — nothing gates on it, so a stalled rating
+//    used to be perfectly silent: the student presses, the ✓ appears from the
+//    local cache, and the class never receives the judgment.
+step('a stalled RATING says so too');
+// The retry just earned the first-proposal celebration, and its overlay eats
+// pointer events until dismissed.
+for (let i = 0; i < 5; i++) {
+	if ((await s1.locator('.celebration').count()) === 0) break;
+	await s1
+		.locator('.celebration button.btn')
+		.last()
+		.click({ timeout: 5000 })
+		.catch(() => {});
+	await s1.waitForTimeout(400);
+}
+
+await s1.route('**/google.firestore.v1.Firestore/Write/**', (route) => route.abort());
+await s1.route('**/Firestore/Write/**', (route) => route.abort());
+
+await s1.waitForSelector('.stall__head', { timeout: 20000 });
+await s1.locator('.stall:not(.stall--open) .stall__head').first().click();
+await s1.waitForSelector('.stall--open .rate-scale', { timeout: 15000 });
+await s1.locator('.stall--open .rate-scale__option--for').click();
+
+// The clock is 8s (SLOW_AFTER_MS in lib/confirmedWrite.ts), so give it room:
+// the point of the assertion is that the notice arrives at all, on a write
+// that produces no error of its own.
+await s1.waitForSelector('.delib-hud__stalled', { timeout: 20000 });
+const stalledText = (await s1.locator('.delib-hud__stalled').innerText()).trim();
+if (!stalledText) fail('the stalled notice rendered empty');
+console.log(`   ✓ the HUD says the rating is still in the air: "${stalledText}"`);
+await shot(s1, '05-S1-rating-stalled');
+
+// …and it clears itself once the channel comes back, without a reload
+await s1.unroute('**/google.firestore.v1.Firestore/Write/**');
+await s1.unroute('**/Firestore/Write/**');
+await s1.locator('.delib-hud__stalled').waitFor({ state: 'detached', timeout: 30000 });
+console.log('   ✓ the notice cleared itself when the write finally landed');
+
 console.log(
 	'\n✅ STUCK-WRITE GUARDS VERIFIED\n' +
 		'   · a write that never reaches the server never opens the game\n' +
 		'   · the desk holds the student, their words and the truth\n' +
 		'   · the notice arrives on a clock, because a queued write never errors\n' +
 		'   · reload drops the phantom and restores the draft\n' +
-		'   · the retry lands once, and both squares agree',
+		'   · the retry lands once, and both squares agree\n' +
+		'   · a stalled RATING is announced too, and clears itself on reconnect',
 );
 await browser.close();
