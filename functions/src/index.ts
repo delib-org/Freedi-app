@@ -1144,6 +1144,10 @@ export { backupSurveyOnRequest } from './backups/backupSurveyOnRequest';
 export { scheduledDailyBackups } from './backups/scheduledDailyBackups';
 export { backupSurveyCallable } from './backups/backupSurveyCallable';
 
+// Moderation: purging a banned member's votes deletes documents belonging to
+// someone else, so it cannot be a client write once /evaluations is owner-only.
+export { removeUserEvaluations } from './fn_removeUserEvaluations';
+
 // Agora classroom deliberative game — session lifecycle
 export {
 	agoraCreateSession,

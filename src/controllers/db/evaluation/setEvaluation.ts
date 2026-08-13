@@ -18,7 +18,7 @@ import {
 	createStatementRef,
 	getCurrentTimestamp,
 } from '@/utils/firebaseUtils';
-import { functions } from '../config';
+import { auth, functions } from '../config';
 import { logError } from '@/utils/errorHandling';
 import { logEvaluation } from '@/controllers/db/researchLogs/researchLogger';
 
@@ -32,6 +32,20 @@ export async function setEvaluationToDB(
 		parse(number(), evaluation);
 
 		if (evaluation < -1 || evaluation > 1) throw new Error('Evaluation is not in range');
+
+		// Five of the seven call sites take `creator` from Redux, which can lag the
+		// live token during an auth transition (anonymous -> Google link, or a
+		// session restored after the app has already minted an anonymous user).
+		// The security rules pin evaluatorId to request.auth.uid, so a stale
+		// creator here does not write the wrong person's vote — it is rejected.
+		// Fail here instead, where the reason is legible.
+		const signedInUid = auth.currentUser?.uid;
+		if (!signedInUid) throw new Error('Cannot evaluate without a Firebase Auth session');
+		if (signedInUid !== creator.uid) {
+			throw new Error(
+				`Evaluator identity is stale: creator ${creator.uid} but session ${signedInUid}`,
+			);
+		}
 
 		//ids
 		const parentId = statement.parentId;

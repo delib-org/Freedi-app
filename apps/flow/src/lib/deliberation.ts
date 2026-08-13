@@ -664,17 +664,30 @@ export async function syncOfflineQueue(): Promise<number> {
   const queue = getOfflineQueue();
   if (queue.length === 0) return 0;
 
+  // The queued rows carry the uid they were stamped with while offline. An
+  // anonymous session can be replaced between queueing and replay, and the
+  // security rules pin evaluatorId to the live token — so replay under the
+  // uid we have NOW, not the one we had then. The evaluationId embeds the uid
+  // too, otherwise the replay would land in the previous session's document.
+  const { user } = getUserState();
+  if (!user) return 0;
+
   let synced = 0;
   const failed: OfflineEvaluation[] = [];
 
   for (const data of queue) {
+    const rekeyed: OfflineEvaluation = {
+      ...data,
+      evaluatorId: user.uid,
+      evaluationId: `${user.uid}--${data.statementId}`,
+    };
     try {
-      const evalRef = doc(db, 'evaluations', data.evaluationId);
-      await setDoc(evalRef, data);
+      const evalRef = doc(db, 'evaluations', rekeyed.evaluationId);
+      await setDoc(evalRef, rekeyed);
       synced++;
     } catch (error) {
       console.error('[OfflineSync] Failed to sync evaluation:', error);
-      failed.push(data);
+      failed.push(rekeyed);
     }
   }
 
