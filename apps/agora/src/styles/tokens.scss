@@ -512,6 +512,14 @@
 // onto white paper. Same registry, opposite direction.
 .on-light,
 .shell--delib .proposal-dock__panel,
+// The desk's two pale panels: the stuck-write notice (which carries a real
+// .btn, and a .btn--secondary is white paper by definition) and the
+// self-check pills. Both are white islands on the one ink-on-dark surface a
+// student writes on, so both have to hand the ink back — registered here
+// rather than hand-painted, or the next control added to either arrives
+// white-on-white all over again.
+.write-desk__stuck,
+.write-desk__selfcheck-chip,
 // :not(--implemented) — that one is a solid GREEN fill carrying white, so
 // handing it the light ink turns its label back to dark-on-dark
 .on-dark .helped__chip:not(.helped__chip--implemented),

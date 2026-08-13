@@ -2103,9 +2103,7 @@
 }
 
 .write-desk__stuck-line {
-	// The desk is an ink-on-dark surface, and this pale panel needs its own
-	// dark ink — same contract as the self-check pills below
-	color: var(--mine-ink);
+	color: var(--ink);
 	font-size: var(--font-size-sm);
 	font-weight: 700;
 }
@@ -2140,10 +2138,6 @@
 	background: var(--bg-card-solid);
 	font: inherit;
 	font-size: var(--font-size-sm);
-	// The write desk is a dark hero surface (ink-on-dark remaps --ink to
-	// white), and the pill stays deliberately white — so the pill carries its
-	// OWN dark ink, the same contract as .thread__msg--mine .helped__chip
-	color: var(--mine-ink);
 	cursor: pointer;
 
 	&--on {

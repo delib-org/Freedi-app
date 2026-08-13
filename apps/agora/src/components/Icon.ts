@@ -404,7 +404,12 @@ export const Icon: m.Component<IconAttrs> = {
 				'aria-label': label,
 				'aria-hidden': label ? undefined : 'true',
 			},
-			shapes.map(([tag, attributes]) => m(tag, attributes)),
+			// A COPY per render, never the table's own object. The shapes above
+			// are module-level constants, so handing the same attrs object to
+			// Mithril on every redraw is the "Don't reuse attrs object" warning
+			// — hundreds of them per page, since every screen is full of icons,
+			// and a throw rather than a warning in Mithril's next major.
+			shapes.map(([tag, attributes]) => m(tag, { ...attributes })),
 		);
 	},
 };
