@@ -95,9 +95,21 @@ export function AuthSync() {
 				// No user signed in
 				const userId = getCookie('userId');
 
+				// A userId of the form `anon_<ts>_<rand>` was minted by middleware.ts
+				// on the very first request, before any sign-in happened. It is a
+				// server-side placeholder, NOT evidence of a Firebase session that
+				// could be restored — a real session (Google or Firebase-anonymous)
+				// writes the actual uid into this cookie.
+				//
+				// Treating the placeholder as "returning user" made every genuinely
+				// new visitor wait out the 2s restore window before signing in, which
+				// was invisible while /statements was world-readable and is not now:
+				// it is 2s of empty comment and suggestion panes on every first visit.
+				const hasRestorableSession = Boolean(userId) && !userId?.startsWith('anon_');
+
 				// SMART DETECTION: Differentiate between new visitors and returning admins
 
-				if (userId && !isInitialized.current) {
+				if (hasRestorableSession && !isInitialized.current) {
 					// Cookie exists but no user yet - this is a RETURNING USER
 					// Firebase Auth might still be restoring the session
 					// WAIT for auth to restore before creating anonymous user
@@ -133,9 +145,15 @@ export function AuthSync() {
 					}, wasAuthenticated ? 6000 : 2000);
 
 					isInitialized.current = true;
-				} else if (!userId && !isInitialized.current && !hasAttemptedAnonymousLogin.current) {
-					// NO cookie and first auth check - this is a NEW VISITOR
-					// Create anonymous user IMMEDIATELY (no need to wait)
+				} else if (
+					!hasRestorableSession &&
+					!isInitialized.current &&
+					!hasAttemptedAnonymousLogin.current
+				) {
+					// No session to restore (no cookie, or only middleware's anon_
+					// placeholder) on the first auth check — this is a NEW VISITOR.
+					// Create the anonymous user IMMEDIATELY: every Firestore read the
+					// page is about to make needs it.
 					hasAttemptedAnonymousLogin.current = true;
 					await safeAnonymousLogin('new visitor');
 					isInitialized.current = true;

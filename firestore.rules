@@ -310,7 +310,20 @@ service cloud.firestore {
                request.resource.data.get('creatorRole', null);
       }
 
-      allow read;
+      // Reading requires a session. Not because statements are secret — most
+      // are meant to be shared — but because "world readable" here included
+      // classroom writing by minors (Agora proposals live in this collection),
+      // and because an unauthenticated reader is one nobody can rate-limit,
+      // attribute or revoke. Anonymous sessions count: MC, Join, Odyssey, Agora
+      // and now Chat all obtain one before their first read.
+      //
+      // Deliberately NOT membership-scoped. Odyssey players read a whole game's
+      // tree without holding a role on it, and Join participants read questions
+      // they have not joined; gating on membership would break both.
+      //
+      // Crawler previews are unaffected — serveJoinShareRoutes and the Sign and
+      // Chat server components read through the Admin SDK, which bypasses rules.
+      allow read: if request.auth != null;
       allow create: if request.auth.uid != null && !setsCreatorRoleOnCreate();
       allow update: if request.auth.uid != null &&
                        !changesCreatorRole() &&
