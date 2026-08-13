@@ -21,7 +21,7 @@ import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { db, doc, getDoc, Unsubscribe } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
-import { getUserState, waitForAuthReady } from '@/lib/user';
+import { ensureUser, getUserState } from '@/lib/user';
 import {
 	getVerdict,
 	setVerdict,
@@ -137,6 +137,15 @@ async function initChatForOption(optionId: string): Promise<void> {
 	m.redraw();
 
 	try {
+		// Sign in BEFORE reading. This route is reached from shared links, so the
+		// visitor is routinely brand new — and `waitForAuthReady()` only waits for
+		// the first onAuthStateChanged callback, which for a first-time visitor
+		// fires with null and signs nobody in. Every read below would then go out
+		// unauthenticated, which /statements happens to allow today and will not
+		// once reads require auth.
+		await ensureUser();
+		if (currentChatOptionId !== optionId) return;
+
 		const optionDoc = await getDoc(doc(db, Collections.statements, optionId));
 		if (currentChatOptionId !== optionId) return;
 		if (optionDoc.exists()) {
@@ -161,8 +170,6 @@ async function initChatForOption(optionId: string): Promise<void> {
 			mainUnsub = subscribeMainStatement(mainId);
 		}
 
-		await waitForAuthReady();
-		if (currentChatOptionId !== optionId) return;
 		if (needsDisplayName()) {
 			showNamePrompt = true;
 		}
