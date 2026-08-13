@@ -5903,9 +5903,216 @@
 }
 
 // --- Toasts ---
+// --- The post box: the envelope in the HUD, its counter, and the sheet ---
+.inbox-button {
+	position: relative;
+	// The far end of the crest row — the corner opposite the place's name
+	margin-inline-start: auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	border: 1px solid var(--border-subtle);
+	background: rgba(255, 255, 255, 0.14);
+	color: #ffffff;
+	cursor: pointer;
+	transition: background-color var(--motion-fast) ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.24);
+	}
+
+	&__badge {
+		position: absolute;
+		inset-block-start: -4px;
+		inset-inline-end: -4px;
+		min-width: 19px;
+		height: 19px;
+		padding: 0 5px;
+		border-radius: 999px;
+		// Danger-red is the app's notification colour and never a camp hue
+		background: var(--danger);
+		color: #ffffff;
+		font-family: var(--font-display);
+		font-size: 0.72rem;
+		font-weight: 700;
+		line-height: 19px;
+		text-align: center;
+	}
+}
+
+.inbox__scrim {
+	position: fixed;
+	inset: 0;
+	z-index: calc(var(--z-toast) - 1);
+	background: var(--bg-overlay);
+}
+
+.inbox {
+	position: fixed;
+	inset-block-start: calc(var(--space-md) + 52px);
+	inset-inline-end: var(--space-md);
+	z-index: var(--z-toast);
+	width: min(92vw, 380px);
+	max-height: min(70vh, 520px);
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-raised);
+	overflow: hidden;
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__title {
+		flex: 1 1 auto;
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--ink);
+	}
+
+	&__close {
+		flex: 0 0 auto;
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 50%;
+		background: var(--bg-inset);
+		color: var(--ink);
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	&__list {
+		overflow-y: auto;
+	}
+
+	&__row {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		width: 100%;
+		padding: var(--space-md);
+		border: none;
+		border-block-end: 1px solid var(--border-subtle);
+		background: none;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+
+		&--flat {
+			cursor: default;
+		}
+
+		// Not yet looked at: a warm wash, never a red one — this is news, and
+		// most of it is good news
+		&--unread {
+			background: rgba(255, 210, 63, 0.14);
+		}
+
+		&:last-child {
+			border-block-end: none;
+		}
+	}
+
+	&__icon {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--mine-ink);
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__line {
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	// The words the event carried, one line of them
+	&__detail {
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__meta {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--danger);
+	}
+
+	&__time {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+	}
+
+	&__empty {
+		padding: var(--space-lg) var(--space-md);
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		text-align: center;
+	}
+}
+
+// The light emphasis a deep link leaves on whatever it landed on: a soft ring
+// that breathes twice and goes. Loud enough to find, quiet enough not to alarm.
+.is-emphasised {
+	animation: agora-emphasis 1.3s ease-out 2;
+	border-radius: var(--radius-md);
+}
+
+@keyframes agora-emphasis {
+	0% {
+		box-shadow: 0 0 0 0 rgba(255, 210, 63, 0.7);
+	}
+	70% {
+		box-shadow: 0 0 0 10px rgba(255, 210, 63, 0);
+	}
+	100% {
+		box-shadow: 0 0 0 0 rgba(255, 210, 63, 0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.is-emphasised {
+		animation: none;
+		box-shadow: 0 0 0 3px rgba(255, 210, 63, 0.75);
+	}
+}
+
 .toast-stack {
 	position: fixed;
-	top: var(--space-md);
+	// Clear of the HUD: a toast that lands on the crest row covers the lap
+	// pips and the post box — the two things it is telling you to go and use
+	top: calc(var(--space-md) + 64px);
 	inset-inline-end: var(--space-md);
 	display: flex;
 	flex-direction: column;

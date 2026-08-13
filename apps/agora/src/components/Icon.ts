@@ -59,6 +59,7 @@ export type IconName =
 	| 'megaphone'
 	| 'watch'
 	| 'target'
+	| 'mail'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -160,6 +161,14 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 				d: 'M20 4.5H4a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 4 15.5h2.5v4l4.6-4H20a1.5 1.5 0 0 0 1.5-1.5V6A1.5 1.5 0 0 0 20 4.5z',
 			},
 		],
+	],
+
+	// The post that gathers what the square said to me. Symmetrical, so the
+	// Hebrew-first mirror leaves it alone; the flap is a separate stroke so it
+	// reads as an envelope and not as a card with a cross through it.
+	mail: [
+		['rect', { x: 2.5, y: 5, width: 19, height: 14, rx: 2 }],
+		['path', { d: 'M3.2 6.4 12 12.6l8.8-6.2' }],
 	],
 
 	// The cloud is one closed outline. Drawing the bottom as a separate line —

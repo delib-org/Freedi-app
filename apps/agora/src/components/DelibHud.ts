@@ -2,6 +2,7 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { type IconName } from './Icon';
 import { HeroIcon, hasRender } from './HeroIcon';
+import { Inbox } from './Inbox';
 
 export type DelibPlace = 'mine' | 'rate' | 'help';
 export type DelibStep = DelibPlace | 'done';
@@ -162,6 +163,11 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 								}),
 							),
 						),
+						// The post box, at the far end of the crest row — the corner
+						// opposite the place's name, which is where a mail icon is
+						// looked for. It rides the HUD because the HUD is the one strip
+						// present in every room of the deliberation.
+						m(Inbox),
 					]),
 					// The lap as a level track. The current step is lit and enlarged,
 					// finished ones are checked, the road between them fills in.

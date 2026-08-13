@@ -1,3 +1,5 @@
+import type { InboxTarget } from './inbox';
+
 /**
  * The bridge between a "your idea was woven in" celebration and the helped
  * item it talks about. The notification layer knows the proposal id but not
@@ -59,4 +61,59 @@ export function unregisterMarketNavigator(navigate: () => void): void {
 
 export function requestMarketFocus(): void {
 	if (marketNavigator) marketNavigator();
+}
+
+/**
+ * The fourth bridge: "open THIS conversation". The inbox and the toasts point
+ * at a specific thread — a classmate's reply is not news about the game in
+ * general, it is a sentence someone wrote in one place.
+ */
+let threadNavigator: ((proposalId: string, helperUid: string) => void) | null = null;
+
+export function registerThreadNavigator(
+	navigate: (proposalId: string, helperUid: string) => void,
+): void {
+	threadNavigator = navigate;
+}
+
+export function unregisterThreadNavigator(
+	navigate: (proposalId: string, helperUid: string) => void,
+): void {
+	if (threadNavigator === navigate) threadNavigator = null;
+}
+
+/**
+ * Send the student to whatever a piece of news is ABOUT. One dispatcher, so
+ * the toast and the inbox row that carry the same target can never disagree
+ * about where it leads.
+ */
+export function requestFocus(target: InboxTarget): void {
+	switch (target.kind) {
+		case 'thread':
+			if (threadNavigator) threadNavigator(target.proposalId, target.helperUid);
+			else requestHelpedFocus(target.proposalId);
+			break;
+		case 'helped':
+			requestHelpedFocus(target.proposalId);
+			break;
+		case 'market':
+			requestMarketFocus();
+			break;
+		default:
+			requestMineFocus();
+	}
+}
+
+/**
+ * A light emphasis on whatever a deep link just landed on: a soft ring that
+ * pulses twice and leaves. Without it a student who followed a message lands
+ * on a screenful of rows with no idea which one they were promised.
+ */
+export function emphasise(element: Element | null): void {
+	if (!element) return;
+	element.classList.remove('is-emphasised');
+	// Reflow, so a second visit to the same element replays the animation
+	void (element as HTMLElement).offsetWidth;
+	element.classList.add('is-emphasised');
+	window.setTimeout(() => element.classList.remove('is-emphasised'), 2600);
 }

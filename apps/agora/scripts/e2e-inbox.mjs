@@ -1,0 +1,228 @@
+/* The post box: news outlives its toast, counts what has not been looked at,
+ * and every line leads to the place it is about — with a light emphasis on
+ * whatever it lands on. Run: node scripts/e2e-inbox.mjs */
+import { chromium } from '@playwright/test';
+import { preflight } from './lib/preflight.mjs';
+
+await preflight();
+
+const BASE = 'http://localhost:3009';
+const SHOTS = 'inbox-shots';
+const step = (msg) => console.log(`\n=== ${msg}`);
+const fail = (msg) => {
+	throw new Error(msg);
+};
+const eq = (label, actual, expected) => {
+	if (actual !== expected) fail(`${label}: expected ${expected}, got ${actual}`);
+	console.log(`   ✓ ${label} = ${actual}`);
+};
+
+const browser = await chromium.launch();
+const mkPage = async (label) => {
+	const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+	const page = await ctx.newPage();
+	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
+	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
+	page.on('console', (msg) => {
+		if (msg.type() === 'error') console.log(`[${label} CONSOLE]`, msg.text().slice(0, 160));
+	});
+	return page;
+};
+const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
+/** Press the envelope, whatever the server just popped over it */
+const openInbox = async (page) => {
+	for (let attempt = 0; attempt < 6; attempt++) {
+		await clearCelebration(page);
+		try {
+			await page.locator('.inbox-button').click({ timeout: 4000 });
+			await page.waitForSelector('.inbox', { timeout: 4000 });
+
+			return;
+		} catch {
+			// A celebration landed between the clear and the press — go again
+		}
+	}
+	fail('the post box never opened');
+};
+const clearCelebration = async (page) => {
+	for (let i = 0; i < 5; i++) {
+		if ((await page.locator('.celebration').count()) === 0) return;
+		await page.locator('.celebration button').last().click({ timeout: 5000 }).catch(() => {});
+		await page.waitForTimeout(400);
+	}
+};
+
+const teacher = await mkPage('T');
+const s1 = await mkPage('S1'); // the owner, who receives the news
+const s2 = await mkPage('S2'); // the helper, who sends it
+
+step('SETUP: session, two students, deliberation');
+await teacher.goto(`${BASE}/#!/teach`, { waitUntil: 'domcontentloaded' });
+await teacher.waitForFunction(() => typeof window.__agoraDevSignIn === 'function', {
+	timeout: 15000,
+});
+const runId = `inbox-${Date.now().toString(36)}`;
+let signedIn = false;
+for (let attempt = 1; attempt <= 5 && !signedIn; attempt++) {
+	await teacher.evaluate(
+		(sub) => window.__agoraDevSignIn({ sub, email: `${sub}@example.com`, name: 'Inbox Teacher' }),
+		runId,
+	);
+	try {
+		await teacher.waitForFunction(() => window.__agoraDebug?.()?.user?.tier === 2, {
+			timeout: 8000,
+		});
+		signedIn = true;
+	} catch {
+		console.log(`   (sign-in attempt ${attempt} lost the race — retrying)`);
+	}
+}
+if (!signedIn) fail('teacher never reached tier 2');
+await teacher.waitForTimeout(6000);
+await teacher.reload({ waitUntil: 'domcontentloaded' });
+await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
+await teacher.locator('text=המהפכה הצרפתית').first().click();
+await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
+await teacher.waitForURL(/session/, { timeout: 20000 });
+await teacher.waitForSelector('.teacher__code', { timeout: 20000 });
+const code = (await teacher.locator('.teacher__code').textContent()).replace(/\s/g, '');
+console.log('JOIN CODE:', code);
+
+for (const page of [s1, s2]) {
+	await page.goto(`${BASE}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+	await page.waitForSelector('.lobby__name', { timeout: 15000 });
+}
+const advance = async () => {
+	await teacher.locator('button.btn.btn--primary.btn--lg').first().click();
+	await teacher.waitForTimeout(1200);
+};
+const clickThroughScenes = async (page) => {
+	for (let i = 0; i < 30; i++) {
+		const btn = page.locator('.scene__actions button');
+		if ((await btn.count()) === 0) break;
+		try {
+			await btn.first().click({ timeout: 4000 });
+			await page.waitForTimeout(300);
+		} catch {
+			break;
+		}
+	}
+};
+for (const _stage of ['FRAMING', 'PERSPECTIVES', 'NEEDS']) {
+	await advance();
+	await s1.waitForSelector('.scene__text, .scene__title', { timeout: 15000 });
+	await Promise.all([clickThroughScenes(s1), clickThroughScenes(s2)]);
+}
+await advance();
+const position = async (page, value) => {
+	await page.waitForSelector('input.camp-scale__slider', { timeout: 15000 });
+	await page.locator('input.camp-scale__slider').evaluate((el, v) => {
+		el.value = String(v);
+		el.dispatchEvent(new Event('input', { bubbles: true }));
+	}, value);
+	await page.locator('button.btn--primary.btn--full.btn--lg').click();
+	await page.waitForSelector('.lobby__status', { timeout: 10000 });
+};
+await position(s1, 15);
+await position(s2, 85);
+await advance();
+
+const propose = async (page, text) => {
+	await page.waitForSelector('textarea.write-desk__textarea', { timeout: 15000 });
+	await page.locator('textarea.write-desk__textarea').fill(text);
+	await page.locator('.write-desk__cta').click();
+	await page.waitForSelector('.delib-nav', { timeout: 25000 });
+};
+// The box starts empty, and says so — checked before a single point is paid
+step('the post box: empty at first, and honest about it');
+await s1.waitForSelector('.inbox-button', { timeout: 15000 });
+eq('no badge on an empty box', await s1.locator('.inbox-button__badge').count(), 0);
+await openInbox(s1);
+console.log('   EMPTY LINE:', (await s1.locator('.inbox__empty').textContent()).trim());
+await shot(s1, '00-empty');
+await s1.keyboard.press('Escape');
+await s1.locator('.inbox').waitFor({ state: 'detached', timeout: 5000 });
+
+await propose(s1, 'נכריז על מלוכה חוקתית: המלך סמל מאחד, אספה נבחרת מחוקקת ומאשרת מסים.');
+await propose(s2, 'נקים אספה לאומית עם רוב לעם, ונבטל את פטורי המס של האצולה.');
+await clearCelebration(s1);
+await clearCelebration(s2);
+
+// ---------- The server's own reward is news too ----------
+step("the author's own credit is filed, not just flashed");
+await s1.waitForSelector('.inbox-button__badge', { timeout: 20000 });
+await openInbox(s1);
+console.log('   CREDIT LINE:', (await s1.locator('.inbox__line').first().textContent()).trim());
+eq('the proposal credit is in the box', await s1.locator('.inbox__row').count(), 1);
+await shot(s1, '01-credit-filed');
+// Closing the sheet is what marks it seen — the badge is about news, not work
+await s1.keyboard.press('Escape');
+await s1.locator('.inbox').waitFor({ state: 'detached', timeout: 5000 });
+eq('reading the list cleared the counter', await s1.locator('.inbox-button__badge').count(), 0);
+
+// ---------- News arrives ----------
+step('a classmate sends an idea → toast AND a filed message');
+await s2.locator('.delib-nav__item--peer').click();
+await s2.waitForSelector('.stall__head', { timeout: 15000 });
+await s2.locator('.stall:not(.stall--open) .stall__head').first().click();
+await s2.waitForSelector('.stall--open .chat-entry', { timeout: 10000 });
+await s2.locator('.stall--open .chat-entry').first().click();
+await s2.waitForSelector('.chat-page__input', { timeout: 10000 });
+await s2.locator('.chat-page__input').fill('כדאי לקבוע לוח זמנים ברור לביטול זכויות היתר.');
+await s2.locator('.chat-page__send').click();
+await s2.waitForTimeout(800);
+
+const badge = s1.locator('.inbox-button__badge');
+await badge.waitFor({ timeout: 20000 });
+eq('the counter shows one unread', (await badge.textContent()).trim(), '1');
+await shot(s1, '02-badge');
+
+// The toast is the interruption; the box is the record. Kill the toast and
+// prove the news is still reachable — the whole reason the box exists.
+step('the toast may go; the news does not');
+await s1.locator('.toast').first().waitFor({ timeout: 10000 });
+await s1.evaluate(() => {
+	document.querySelectorAll('.toast').forEach((toast) => toast.remove());
+});
+eq('the counter survives the toast', (await badge.textContent()).trim(), '1');
+
+await openInbox(s1);
+await s1.waitForSelector('.inbox__row', { timeout: 5000 });
+eq('the box holds both the credit and the idea', await s1.locator('.inbox__row').count(), 2);
+eq('only the new one is unread', await s1.locator('.inbox__row--unread').count(), 1);
+console.log('   NEWEST LINE:', (await s1.locator('.inbox__line').first().textContent()).trim());
+console.log('   QUOTED:', (await s1.locator('.inbox__detail').first().textContent()).trim());
+await shot(s1, '03-open-with-news');
+
+// ---------- Pressing a line goes to the conversation it is about ----------
+step('pressing the line opens the very conversation it is about');
+await s1.locator('.inbox__row').first().click();
+await s1.waitForSelector('.chat-page', { timeout: 15000 });
+const said = await s1.locator('.thread__text').first().textContent();
+console.log('   LANDED IN THE THREAD:', said.trim().slice(0, 50));
+if (!said.includes('לוח זמנים')) fail(`landed in the wrong conversation: ${said}`);
+await shot(s1, '04-landed-in-thread');
+eq('the box closed behind it', await s1.locator('.inbox').count(), 0);
+eq('the counter is cleared', await s1.locator('.inbox-button__badge').count(), 0);
+
+// ---------- A refresh keeps the record ----------
+step('the box survives a refresh — a toast never could');
+await s1.locator('.chat-page__back').click();
+await s1.locator('.chat-page').waitFor({ state: 'detached', timeout: 5000 });
+await s1.reload({ waitUntil: 'domcontentloaded' });
+await s1.waitForSelector('.inbox-button', { timeout: 25000 });
+await clearCelebration(s1);
+await openInbox(s1);
+eq('the lines are still filed after a reload', await s1.locator('.inbox__row').count(), 2);
+eq('and it is no longer unread', await s1.locator('.inbox__row--unread').count(), 0);
+await shot(s1, '05-after-reload');
+
+console.log(
+	'\n✅ INBOX VERIFIED\n' +
+		'   · an envelope in the HUD with a counter of news not yet looked at\n' +
+		'   · every toast is also filed, with the words it carried\n' +
+		'   · killing the toast costs nothing — the record stays\n' +
+		'   · a line leads to the exact conversation it is about\n' +
+		'   · reading the list clears the counter; a refresh keeps the record',
+);
+await browser.close();

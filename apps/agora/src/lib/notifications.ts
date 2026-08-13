@@ -5,6 +5,7 @@ import { AGORA_POINTS } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
 import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
+import { addInboxItem, type InboxTarget } from './inbox';
 import { getDeliberationState, isSuggestionKind, isSystemKind } from './proposals';
 import { editClock } from './improvementSignals';
 
@@ -12,6 +13,8 @@ export interface AgoraToast {
 	notificationId: string;
 	triggerType: string;
 	text: string;
+	/** What this news is ABOUT — the toast walks there when pressed */
+	target?: InboxTarget;
 }
 
 const toasts: AgoraToast[] = [];
@@ -52,14 +55,7 @@ const timers = new Map<string, ReturnType<typeof setTimeout>>();
 /** Toasts the pointer or keyboard focus is currently resting on */
 const held = new Set<string>();
 
-const ACTIONABLE_TRIGGERS: ReadonlySet<string> = new Set([
-	'agora_suggestion_received',
-	// A decline re-arms the helper's idea slot — the toast that says so
-	// carries the door back into the market, not just the words
-	'agora_suggestion_declined',
-]);
-
-function armDismiss(notificationId: string, triggerType: string): void {
+function armDismiss(notificationId: string, triggerType: string, target?: InboxTarget): void {
 	const existing = timers.get(notificationId);
 	if (existing) clearTimeout(existing);
 	timers.set(
@@ -72,7 +68,10 @@ function armDismiss(notificationId: string, triggerType: string): void {
 				if (held.has(notificationId)) return;
 				dismissToast(notificationId);
 			},
-			ACTIONABLE_TRIGGERS.has(triggerType) ? TOAST_ACTION_DISMISS_MS : TOAST_AUTO_DISMISS_MS,
+			// A toast that LEADS somewhere is the loop's next step, so it gets a
+			// longer leash. Nothing is lost when it goes either way now: every
+			// toast is also filed in the inbox, which is the whole point of it.
+			target ? TOAST_ACTION_DISMISS_MS : TOAST_AUTO_DISMISS_MS,
 		),
 	);
 }
@@ -100,7 +99,7 @@ let localToastCounter = 0;
  * silently discarding it would make the signal unreliable in exactly the
  * moments the game most wants it heard.
  */
-const queued: string[] = [];
+const queued: Array<{ trigger: string; target?: InboxTarget }> = [];
 
 function isTyping(): boolean {
 	const active = document.activeElement;
@@ -115,8 +114,8 @@ function isTyping(): boolean {
 function flushQueuedToasts(): void {
 	if (isTyping()) return;
 	while (queued.length > 0) {
-		const triggerType = queued.shift();
-		if (triggerType) showToast(triggerType);
+		const entry = queued.shift();
+		if (entry) showToast(entry.trigger, entry.target);
 	}
 	m.redraw();
 }
@@ -130,24 +129,25 @@ if (typeof document !== 'undefined') {
 	});
 }
 
-function showToast(triggerType: string): void {
+function showToast(triggerType: string, target?: InboxTarget): void {
 	const toast: AgoraToast = {
 		notificationId: `local--${++localToastCounter}`,
 		triggerType,
 		text: '',
+		target,
 	};
 	toasts.push(toast);
-	armDismiss(toast.notificationId, triggerType);
+	armDismiss(toast.notificationId, triggerType, target);
 }
 
 /** Client-detected event → toast, without a backing notification doc */
-export function pushLocalToast(triggerType: string): void {
+export function pushLocalToast(triggerType: string, target?: InboxTarget): void {
 	if (isTyping()) {
-		queued.push(triggerType);
+		queued.push({ trigger: triggerType, target });
 
 		return;
 	}
-	showToast(triggerType);
+	showToast(triggerType, target);
 	m.redraw();
 }
 
@@ -170,7 +170,7 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
 
 	const { proposals, suggestions } = getDeliberationState();
 	let changed = false;
-	let toastDue = false;
+	let toastDue: InboxTarget | null = null;
 	for (const proposal of proposals) {
 		if (proposal.creatorId === userId) continue;
 		const mine = (suggestions[proposal.statementId] ?? []).filter(
@@ -192,11 +192,19 @@ export function detectHelpedImprovements(sessionId: string, userId: string): voi
 		} else if (editedAt > mark) {
 			marks[proposal.statementId] = editedAt;
 			changed = true;
-			toastDue = true;
+			toastDue = { kind: 'helped', proposalId: proposal.statementId };
+			// The edit clock keys the item, so the same revision files once
+			addInboxItem({
+				id: `helped-${proposal.statementId}-${editedAt}`,
+				trigger: 'agora_helped_improved',
+				at: editedAt,
+				target: { kind: 'helped', proposalId: proposal.statementId },
+				detail: proposal.statement,
+			});
 		}
 	}
 	if (changed) sessionStorage.setItem(key, JSON.stringify(marks));
-	if (toastDue) pushLocalToast('agora_helped_improved');
+	if (toastDue) pushLocalToast('agora_helped_improved', toastDue);
 }
 
 /**
@@ -221,6 +229,11 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
 	// landing in a thread keyed by MY uid at a classmate's stall
 	let anySuggestionForMe = false;
 	const incoming: string[] = [];
+	/** The same messages, with where each one can be answered */
+	const arrivals = new Map<
+		string,
+		{ proposalId: string; helperUid: string; text: string; idea: boolean; at: number }
+	>();
 	for (const [proposalId, messages] of Object.entries(suggestions)) {
 		const ownerSide = mineIds.has(proposalId);
 		for (const message of messages) {
@@ -233,6 +246,15 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
 			const inMyThread = (message.agoraThreadUserId ?? message.creatorId) === userId;
 			if (!ownerSide && !inMyThread) continue;
 			incoming.push(message.statementId);
+			arrivals.set(message.statementId, {
+				proposalId,
+				// The helper's uid names the thread on BOTH sides: on my own
+				// proposal it is whoever wrote, at a classmate's stall it is me
+				helperUid: message.agoraThreadUserId ?? message.creatorId,
+				text: message.statement,
+				idea: ownerSide && isSuggestionKind(message),
+				at: message.createdAt,
+			});
 			if (ownerSide && isSuggestionKind(message)) {
 				anySuggestionForMe = true;
 			}
@@ -265,10 +287,81 @@ export function detectThreadMessages(sessionId: string, userId: string): void {
 	// arrival its own "first sighting" — and therefore silent, forever.
 	sessionStorage.setItem(key, JSON.stringify(incoming));
 	if (stored === null || fresh.length === 0) return;
+
+	// The box gets a line per MESSAGE — one row per thing somebody said, each
+	// pointing at the conversation it was said in. The toast below still fires
+	// once per pass; it is an interruption, and three of them is a pile-up.
+	for (const id of fresh) {
+		const arrival = arrivals.get(id);
+		if (!arrival) continue;
+		addInboxItem({
+			id,
+			trigger: arrival.idea ? 'agora_suggestion_received' : 'agora_thread_message',
+			at: arrival.at,
+			target: {
+				kind: 'thread',
+				proposalId: arrival.proposalId,
+				helperUid: arrival.helperUid,
+			},
+			detail: arrival.text,
+		});
+	}
+
 	// One toast per pass: an improvement idea on my proposal is the loop's
-	// actionable moment (the toast walks you to the workshop); everything
-	// else is conversation
-	pushLocalToast(freshSuggestionForMe ? 'agora_suggestion_received' : 'agora_thread_message');
+	// actionable moment; everything else is conversation. Either way it now
+	// points at the exact conversation rather than at the workshop in general
+	// — the newest arrival is the one the student is being told about.
+	const newest = fresh
+		.map((id) => arrivals.get(id))
+		.filter((arrival): arrival is NonNullable<typeof arrival> => arrival !== undefined)
+		.sort((a, b) => b.at - a.at)[0];
+	pushLocalToast(
+		freshSuggestionForMe ? 'agora_suggestion_received' : 'agora_thread_message',
+		newest
+			? { kind: 'thread', proposalId: newest.proposalId, helperUid: newest.helperUid }
+			: { kind: 'mine' },
+	);
+}
+
+/**
+ * Where a server-sent piece of news leads. The helper's rewards point back at
+ * the proposal that earned them (re-read it, weigh it again); the author's
+ * point at their own workshop; a decline points at the market, because its
+ * next step is another stall.
+ */
+function serverNewsTarget(trigger: string, proposalId?: string): InboxTarget {
+	if (trigger === NotificationTriggerType.AGORA_SUGGESTION_DECLINED) return { kind: 'market' };
+	if (
+		proposalId &&
+		(trigger === NotificationTriggerType.AGORA_SUGGESTION_THANKED ||
+			trigger === NotificationTriggerType.AGORA_SUGGESTION_ACCEPTED ||
+			trigger === NotificationTriggerType.AGORA_SUGGESTION_IMPLEMENTED)
+	) {
+		return { kind: 'helped', proposalId };
+	}
+
+	return { kind: 'mine' };
+}
+
+function fileServerNews(data: {
+	notificationId?: string;
+	triggerType?: string;
+	statementId?: string;
+	parentId?: string;
+	pointsAwarded?: number;
+	createdAt?: number;
+}): void {
+	if (!data.notificationId || !data.triggerType) return;
+	const suggestion = Object.values(getDeliberationState().suggestions)
+		.flat()
+		.find((candidate) => candidate.statementId === data.statementId);
+	addInboxItem({
+		id: data.notificationId,
+		trigger: data.triggerType,
+		at: data.createdAt ?? Date.now(),
+		target: serverNewsTarget(data.triggerType, data.parentId),
+		detail: suggestion?.statement,
+	});
 }
 
 /** Listen to this user's unread agora notifications and surface them as toasts */
@@ -295,10 +388,15 @@ export function listenToNotifications(userId: string): void {
 					parentId?: string;
 					pointsAwarded?: number;
 					bridgingTier?: number;
+					createdAt?: number;
 				};
 				if (!data.notificationId) return;
 
 				const notificationId = data.notificationId;
+				// Every server-sent reward or answer is filed before it is
+				// SHOWN: celebrations are modal and one-shot, so without this a
+				// student who pressed Escape had no way back to what happened.
+				fileServerNews(data);
 				const markRead = (): void => {
 					updateDoc(doc(db, Collections.inAppNotifications, notificationId), {
 						read: true,
@@ -438,9 +536,13 @@ export function listenToNotifications(userId: string): void {
 					notificationId: data.notificationId,
 					triggerType: data.triggerType ?? '',
 					text: data.text ?? '',
+					// The same target its inbox row got — a decline leads back to the
+					// market, everything else to my own workshop. Without this the
+					// server's toasts were the only ones that led nowhere.
+					target: serverNewsTarget(data.triggerType ?? '', data.parentId),
 				};
 				toasts.push(toast);
-				armDismiss(toast.notificationId, toast.triggerType);
+				armDismiss(toast.notificationId, toast.triggerType, toast.target);
 			});
 			m.redraw();
 		},
@@ -483,6 +585,11 @@ export function detectClassBridgeRecord(sessionId: string, classMax: number): vo
 	const previous = Number(stored);
 	if (classMax <= previous + CLASS_RECORD_MIN_JUMP) return;
 	sessionStorage.setItem(key, String(classMax));
+	// No target: a class record is the square's own news, not an errand
+	addInboxItem({
+		id: `record-${Math.round(classMax)}`,
+		trigger: 'agora_class_record',
+	});
 	pushLocalToast('agora_class_record');
 }
 

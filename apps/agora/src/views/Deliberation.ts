@@ -29,7 +29,11 @@ import {
 	unregisterMineNavigator,
 	registerMarketNavigator,
 	unregisterMarketNavigator,
+	registerThreadNavigator,
+	unregisterThreadNavigator,
+	emphasise,
 } from '../lib/helpedFocus';
+import { initInbox } from '../lib/inbox';
 import { EraMapLantern } from '../components/EraMap';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
@@ -769,6 +773,27 @@ export function Deliberation(
 
 	registerMarketNavigator(goToMarket);
 
+	/**
+	 * "Open THIS conversation" — where the inbox and the toasts point. The
+	 * thread is the same page from both sides; which side I am on is a fact
+	 * about the proposal, never something the caller has to know.
+	 */
+	function goToThread(proposalId: string, helperUid: string): void {
+		const proposal = getDeliberationState().proposals.find(
+			(candidate) => candidate.statementId === proposalId,
+		);
+		if (!proposal) return;
+		closeDock();
+		const owner = proposal.creatorId === userId;
+		screen = owner ? 'my' : 'others';
+		// Standing on a classmate's side without a lap there reads as being
+		// dropped somewhere; walk the lap the same way the tab does
+		if (!owner && cycle.step === 'mine') setCycle({ step: 'rate', rated: 0 });
+		openChat(proposalId, helperUid, owner ? 'owner' : 'helper');
+	}
+
+	registerThreadNavigator(goToThread);
+
 	/** Scroll to + flash the celebrated card, once, when it appears */
 	function spotlightHelped(dom: Element, proposalId: string): void {
 		if (focusHelpedId !== proposalId) return;
@@ -1052,6 +1077,8 @@ export function Deliberation(
 	}
 
 	listenToDeliberation(session.sessionId, userId);
+	// The post box outlives every toast in it, and a refresh with it
+	initInbox(session.sessionId);
 
 	/**
 	 * Proposals are shown by NUMBER, not by author name — evaluate the idea,
@@ -1573,6 +1600,9 @@ export function Deliberation(
 		focusOnMy = '';
 		target.focus();
 		target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+		// ...and say WHICH row was promised. Landing on a screenful of drawers
+		// with the cursor silently parked on one of them is not an answer.
+		if (!reducedMotion) emphasise(target);
 	}
 
 	/**
@@ -2202,6 +2232,7 @@ export function Deliberation(
 			unregisterHelpedNavigator(goToHelped);
 			unregisterMineNavigator(goToMine);
 			unregisterMarketNavigator(goToMarket);
+			unregisterThreadNavigator(goToThread);
 			window.removeEventListener('popstate', onPopState);
 		},
 

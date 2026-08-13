@@ -23,6 +23,29 @@ const eq = (label, actual, expected) => {
 	console.log(`   ✓ ${label} = ${actual}`);
 };
 
+/**
+ * The emulator occasionally blips under three concurrent browser contexts, and
+ * a run this long must not die on one dropped socket — the fetch is polling,
+ * so a retry is exactly as honest as the poll it sits inside.
+ */
+const ownerFetch = async (path) => {
+	let lastError;
+	for (let attempt = 0; attempt < 4; attempt++) {
+		try {
+			return await (
+				await fetch(`${FS}/${path}`, {
+					headers: { Authorization: 'Bearer owner' },
+					signal: AbortSignal.timeout(8000),
+				})
+			).json();
+		} catch (error) {
+			lastError = error;
+			await new Promise((resolve) => setTimeout(resolve, 500));
+		}
+	}
+	throw lastError;
+};
+
 const browser = await chromium.launch();
 const mkPage = async (label) => {
 	const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
@@ -158,11 +181,7 @@ const points = async (label, page) => {
 	// __agoraDebug().user is the whole UserState — the auth user nests inside
 	const uid = await uidOf(page);
 	if (!uid) fail(`${label}: no uid from __agoraDebug`);
-	const doc = await (
-		await fetch(`${FS}/agoraParticipants/${sessionId}--${uid}`, {
-			headers: { Authorization: 'Bearer owner' },
-		})
-	).json();
+	const doc = await ownerFetch(`agoraParticipants/${sessionId}--${uid}`);
 	const f = doc.fields?.points?.mapValue?.fields ?? {};
 	const num = (k) => Number(f[k]?.integerValue ?? f[k]?.doubleValue ?? 0);
 	return {
@@ -345,7 +364,7 @@ const suggest = async (page, label, text) => {
 await suggest(s2, 'S2(B)', 'כדאי להוסיף לוח זמנים ברור לביטול זכויות היתר של האצולה.');
 // The owner must LEARN feedback arrived, without wandering into the
 // workshop: an actionable toast, not just a tab badge
-const receivedToast = s1.locator('.toast--action', { hasText: 'קיבלתם הצעת שיפור' });
+const receivedToast = s1.locator('.toast--action', { hasText: 'רעיון לשיפור' });
 await receivedToast.waitFor({ timeout: 15000 });
 console.log('S1(A) TOAST (received):', (await receivedToast.textContent()).trim());
 // Accessibility: the loop's step-1 action must be reachable by keyboard
@@ -587,9 +606,7 @@ await shot(s2, '08-B-rerate-acked');
 // the ladder is honestly out of reach here. Verify the SCORE landed at 65
 // and no tier paid; the ladder's payouts live in the bridging unit tests.
 const sessionMaxBridging = async () => {
-	const list = await (
-		await fetch(`${FS}/agoraScores?pageSize=300`, { headers: { Authorization: 'Bearer owner' } })
-	).json();
+	const list = await ownerFetch('agoraScores?pageSize=300');
 
 	return Math.max(
 		0,
