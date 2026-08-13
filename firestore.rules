@@ -657,23 +657,54 @@ service cloud.firestore {
     }
 
     // Require authentication — anonymous mass-consensus users still get Firebase Auth tokens via signInAnonymously()
+    //
+    // An evaluation is a claim about who thinks what, and the server trusts it:
+    // deleting or writing one re-runs the counter and consensus recalculations,
+    // and in Agora it feeds bridgingScore, classConsensus and the class score.
+    // So the only claim a client may make is about itself. Every client in the
+    // product already writes evaluatorId = its own uid with the document keyed
+    // {uid}--{statementId} (see docs/architecture/rules-inventory.md §2); the
+    // synthetic agora-ai--* raters and every server aggregation use the Admin
+    // SDK and bypass these rules entirely.
     match /evaluations/{evluationId=**} {
+      // Cross-user reads stay open: Odyssey's opinion map reads the whole
+      // game's evaluations, and Agora derives its "who rated when" timeline
+      // the same way.
       allow read: if request.auth != null;
-      allow create: if request.resource.data.keys().hasAll(['evaluationId', 'parentId', 'statementId', 'evaluatorId', 'evaluation', 'updatedAt'])
-                    && request.resource.data.evaluationId is string
-                    && request.resource.data.parentId is string
-                    && request.resource.data.statementId is string
-                    && request.resource.data.evaluatorId is string
-                    && request.resource.data.evaluation is number
-                    && request.resource.data.updatedAt is number;
-      allow update: if request.resource.data.keys().hasAll(['evaluationId', 'parentId', 'statementId', 'evaluatorId', 'evaluation', 'updatedAt'])
-                    && request.resource.data.evaluationId is string
-                    && request.resource.data.parentId is string
-                    && request.resource.data.statementId is string
-                    && request.resource.data.evaluatorId is string
-                    && request.resource.data.evaluation is number
-                    && request.resource.data.updatedAt is number;
-      allow delete: if request.auth.uid != null; // Only authenticated users can delete
+
+      function hasEvaluationShape() {
+        return request.resource.data.keys().hasAll(['evaluationId', 'parentId', 'statementId', 'evaluatorId', 'evaluation', 'updatedAt'])
+               && request.resource.data.evaluationId is string
+               && request.resource.data.parentId is string
+               && request.resource.data.statementId is string
+               && request.resource.data.evaluatorId is string
+               && request.resource.data.evaluation is number
+               && request.resource.data.updatedAt is number;
+      }
+
+      function isOwnEvaluation() {
+        return request.auth != null &&
+               request.resource.data.evaluatorId == request.auth.uid;
+      }
+
+      allow create: if hasEvaluationShape() && isOwnEvaluation();
+
+      // On update both sides must be the caller: the existing document to stop
+      // one student overwriting another's rating, and the incoming one to stop
+      // an evaluation being reassigned to someone else. statementId and
+      // parentId are pinned so a rating cannot be moved onto a different
+      // proposal after the fact.
+      allow update: if hasEvaluationShape() && isOwnEvaluation()
+                    && resource.data.evaluatorId == request.auth.uid
+                    && request.resource.data.statementId == resource.data.statementId
+                    && request.resource.data.parentId == resource.data.parentId
+                    && request.resource.data.evaluationId == resource.data.evaluationId;
+
+      // Purging a banned member's votes deletes someone else's documents, so
+      // it runs through the removeUserEvaluations callable (Admin SDK) rather
+      // than here.
+      allow delete: if request.auth != null &&
+                       resource.data.evaluatorId == request.auth.uid;
     }
 
     // Per-(cluster, user) provenance docs. Written server-side by
