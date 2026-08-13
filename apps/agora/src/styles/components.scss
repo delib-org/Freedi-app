@@ -2087,6 +2087,29 @@
 	}
 }
 
+// --- The stuck-write notice: the desk telling the truth about a save that
+// left the device but never reached the square. Amber, like every other
+// "here is where you stand" signal in the game — never danger-red. ---
+.write-desk__stuck {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	align-items: flex-start;
+	margin-block-start: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: rgba(255, 210, 63, 0.2);
+	border: 1px solid rgba(255, 178, 44, 0.6);
+}
+
+.write-desk__stuck-line {
+	// The desk is an ink-on-dark surface, and this pale panel needs its own
+	// dark ink — same contract as the self-check pills below
+	color: var(--mine-ink);
+	font-size: var(--font-size-sm);
+	font-weight: 700;
+}
+
 // --- The write desk's self-check: two toggles the student answers alone —
 // whose need does my sentence serve? No AI, no score, nothing stored. ---
 .write-desk__selfcheck {

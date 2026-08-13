@@ -13,6 +13,7 @@ import {
 	getOwnerThreads,
 	getThreadMessages,
 	isSuggestionKind,
+	isProposalConfirmed,
 	openSuggestionsBy,
 	AgoraProposal,
 	HelpedProposal,
@@ -590,6 +591,44 @@ export function Deliberation(
 	}
 	/** Mirror of the unsaved edit box, so a refresh can't eat a draft */
 	const mineDraftKey = `agora_${session.sessionId}_mine_draft`;
+	/**
+	 * ...and the same protection for the FIRST draft, which had none: the
+	 * opening sentence is the most expensive thing a student writes all
+	 * lesson, and until now a refresh — or the reload that rescues a stuck
+	 * save — took it with them.
+	 */
+	const firstDraftKey = `agora_${session.sessionId}_first_draft`;
+	try {
+		draft = sessionStorage.getItem(firstDraftKey) ?? '';
+	} catch {
+		// Storage unavailable — the desk simply starts empty
+	}
+
+	function rememberFirstDraft(): void {
+		try {
+			sessionStorage.setItem(firstDraftKey, draft);
+		} catch {
+			// Storage full or blocked — the in-memory draft still stands
+		}
+	}
+
+	function forgetFirstDraft(): void {
+		try {
+			sessionStorage.removeItem(firstDraftKey);
+		} catch {
+			// Nothing to do
+		}
+	}
+
+	/**
+	 * How long a first write may stay in the air before the desk says so.
+	 * Firestore answers from the cache immediately and queues the write, so a
+	 * wedged connection produces no error at all — just silence, a spinner,
+	 * and a proposal only its author can see.
+	 */
+	const SLOW_SAVE_MS = 8000;
+	let firstSaveSlow = false;
+	let firstSaveTimer = 0;
 	/**
 	 * Which of the three screens I am standing on. My and Results are screens,
 	 * NOT cycle steps — reading my own feedback or the class picture must not
@@ -2157,6 +2196,7 @@ export function Deliberation(
 			window.clearTimeout(splashTimer);
 			window.clearTimeout(sentAckTimer);
 			window.clearTimeout(dockIntroTimer);
+			window.clearTimeout(firstSaveTimer);
 			void flushSeenState();
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
@@ -2172,6 +2212,15 @@ export function Deliberation(
 			// once, so the square doesn't shout NEW at everything (no-op after)
 			seedSeenBaselineIfNeeded();
 			const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
+			/**
+			 * The proposal the SQUARE has — not merely the one my cache has.
+			 * Firestore hands a write back locally before it leaves the device,
+			 * so a stuck write used to open the whole game (tabs, laps, ratings)
+			 * around a text no classmate could see. Every gate below reads this
+			 * one; `myProposal` stays for showing the author their own words.
+			 */
+			const myConfirmedProposal =
+				myProposal && isProposalConfirmed(myProposal.statementId) ? myProposal : undefined;
 			const anonName = myParticipant.anonName;
 
 			// ---------- SUB-PAGE: one conversation, full screen ----------
@@ -2312,15 +2361,15 @@ export function Deliberation(
 
 			// The notebook rides along on every place, so the dock and the
 			// padding that keeps content clear of it are computed once here
-			const dock = myProposal ? proposalDock(live, myProposal) : null;
-			const scrim = myProposal ? dockScrim() : null;
-			const shellClass = myProposal ? '.shell--docked' : '';
+			const dock = myConfirmedProposal ? proposalDock(live, myConfirmedProposal) : null;
+			const scrim = myConfirmedProposal ? dockScrim() : null;
+			const shellClass = myConfirmedProposal ? '.shell--docked' : '';
 
 			// The one-shot intro peek: fires after the travel splash clears, so
 			// the "here is where your text now lives" reveal isn't spent under
 			// a card the student can't see through — then folds itself away
 			// rather than standing between them and the square.
-			if (pendingDockIntro && myProposal && !splash) {
+			if (pendingDockIntro && myConfirmedProposal && !splash) {
 				pendingDockIntro = false;
 				dockOpen = true;
 				dockIntro = true;
@@ -2337,11 +2386,11 @@ export function Deliberation(
 			// The class picture: where the class stands on each proposal, how
 			// sure that is, and the spread behind the number. Live — it moves as
 			// classmates rate. Standing here does NOT advance the lap.
-			if (screen === 'results' && myProposal) {
+			if (screen === 'results' && myConfirmedProposal) {
 				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
-						delibNav(myProposal),
+						delibNav(myConfirmedProposal),
 						m('h2.results-soon__title', t('delib.results_title')),
 						// Same switch, same two halves as the recap — a student who
 						// has been moving between them all lesson must not be handed
@@ -2396,9 +2445,31 @@ export function Deliberation(
 			// call, 2026-08-10): the raw material in view while writing, but
 			// below the CTA so it never pushes the pen or the button off a
 			// phone screen.
-			if (!myProposal && cycle.step === 'mine') {
+			// No confirmed proposal means the desk, whatever the stored lap says.
+			// It used to also require `cycle.step === 'mine'`, which left a
+			// student whose lap had moved on (a tab press, a restored session)
+			// stranded on a square they had no standing in — and no way back.
+			if (!myConfirmedProposal) {
+				// The listeners have not spoken yet: flashing the writing desk at
+				// a student who already HAS a proposal is worse than a beat of
+				// waiting, because they start retyping it
+				if (!getDeliberationState().statementsLoaded) {
+					return m('.shell.shell--mode-mine.shell--place-mine', [
+						m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
+							header,
+							m('.text-center.stack', [
+								m('.spinner'),
+								m('p.lobby__status.lobby__waiting-dots', t('common.loading')),
+							]),
+						]),
+					]);
+				}
 				{
 					const ready = draft.trim().length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
+					// The write left this device but the square has never seen it.
+					// The desk STAYS: their words are still theirs, and the game
+					// must not deal them a lap around a proposal nobody has.
+					const inFlight = submitting || myProposal !== undefined;
 
 					return m('.shell.shell--mode-mine.shell--place-mine', [
 						m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
@@ -2423,8 +2494,13 @@ export function Deliberation(
 									maxlength: AGORA_LIMITS.MAX_PROPOSAL_LENGTH,
 									placeholder: t('delib.placeholder'),
 									'aria-label': t('delib.my_proposal'),
+									// readonly, never disabled, while the write is out: the
+									// text must stay selectable — a student watching a save
+									// hang should be able to copy their own sentence
+									readonly: inFlight ? 'readonly' : undefined,
 									oninput: (event: InputEvent) => {
 										draft = (event.target as HTMLTextAreaElement).value;
+										rememberFirstDraft();
 									},
 								}),
 								// The self-check: whose need does this serve? Two toggles
@@ -2466,13 +2542,25 @@ export function Deliberation(
 									m(
 										'button.btn.btn--primary.btn--full.btn--lg.write-desk__cta',
 										{
-											class: ready ? 'write-desk__cta--ready' : undefined,
-											disabled: submitting || !ready,
+											class: ready && !inFlight ? 'write-desk__cta--ready' : undefined,
+											disabled: inFlight || !ready,
 											onclick: () => {
 												submitting = true;
+												firstSaveSlow = false;
 												const text = draft.trim();
+												// A write that never lands never rejects either — it
+												// waits in the queue forever. Only a clock can tell
+												// the student the truth about it.
+												window.clearTimeout(firstSaveTimer);
+												firstSaveTimer = window.setTimeout(() => {
+													firstSaveSlow = true;
+													m.redraw();
+												}, SLOW_SAVE_MS);
 												submitProposal(live, anonName, text)
 													.then(() => {
+														window.clearTimeout(firstSaveTimer);
+														firstSaveSlow = false;
+														forgetFirstDraft();
 														// The first write moves the lap forward
 														setCycle({ step: 'rate', rated: 0 });
 														// ...and the notebook opens itself once on arrival, so
@@ -2481,6 +2569,10 @@ export function Deliberation(
 														pendingDockIntro = true;
 													})
 													.catch((error: unknown) => {
+														window.clearTimeout(firstSaveTimer);
+														// A rejection is the same news as a hang, and it
+														// arrives sooner: say it now rather than at 8s
+														firstSaveSlow = true;
 														console.error('[Delib] Submit proposal failed:', error);
 													})
 													.finally(() => {
@@ -2495,11 +2587,32 @@ export function Deliberation(
 										// to do; first real sentence: it flips to the lit action
 										// with a lantern halo, teaching the rule at the exact
 										// moment it starts to matter.
-										ready
-											? iconLabel('proposal', t('delib.submit_proposal'))
-											: iconLabel('edit', t('delib.write_first')),
+										inFlight
+											? iconLabel('watch', t('delib.saving'))
+											: ready
+												? iconLabel('proposal', t('delib.submit_proposal'))
+												: iconLabel('edit', t('delib.write_first')),
 									),
 								]),
+								// The stuck-write escape hatch. Reloading is the honest fix
+								// and the only safe one: the queued write lives in memory,
+								// so a fresh page drops it instead of racing a duplicate —
+								// and the draft is mirrored, so nothing is retyped.
+								firstSaveSlow
+									? m('.write-desk__stuck', { role: 'alert' }, [
+											m('p.write-desk__stuck-line', t('delib.save_stuck')),
+											m(
+												'button.btn.btn--secondary',
+												{
+													onclick: () => {
+														rememberFirstDraft();
+														window.location.reload();
+													},
+												},
+												iconLabel('again', t('delib.save_retry')),
+											),
+										])
+									: null,
 							]),
 							m(NeedsPeek, { topic, defaultOpen: true }),
 						]),
@@ -2516,15 +2629,15 @@ export function Deliberation(
 			//
 			// Standing here does NOT advance the lap; the mine STEP simply lands
 			// on it and adds the one way onward.
-			if (myProposal && (screen === 'my' || cycle.step === 'mine')) {
+			if (myConfirmedProposal && (screen === 'my' || cycle.step === 'mine')) {
 				return m(`.shell.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
-						delibNav(myProposal),
+						delibNav(myConfirmedProposal),
 						m(
 							'.my-screen',
 							{ oncreate: onMyScreenRender, onupdate: onMyScreenRender },
-							myWorkshop(live, myProposal, topic),
+							myWorkshop(live, myConfirmedProposal, topic),
 						),
 						cycle.step === 'mine'
 							? m(
@@ -2577,7 +2690,7 @@ export function Deliberation(
 				return m(`.shell.shell--delib.shell--mode-peer.shell--place-square${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
-						delibNav(myProposal),
+						delibNav(myConfirmedProposal),
 						square.length > 0
 							? [
 									// No counter and no banner: the HUD's level track carries
@@ -2651,7 +2764,7 @@ export function Deliberation(
 				return m(`.shell.shell--delib.shell--mode-peer.shell--place-visit${shellClass}`, [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
-						delibNav(myProposal),
+						delibNav(myConfirmedProposal),
 						// The market's ASK, said where the work is: the same question
 						// the improvement composer opens with, as the room's mission
 						// brief — the help place used to be a bare list of stalls.
@@ -2699,7 +2812,7 @@ export function Deliberation(
 			return m(`.shell.shell--wide.shell--delib.shell--mode-mine.shell--place-mine${shellClass}`, [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 					header,
-					delibNav(myProposal),
+					delibNav(myConfirmedProposal),
 					m('h3.text-center', t('delib.cycle_done_title')),
 					m('p.home-explanation', t('delib.cycle_done_hint')),
 					// The same one card per classmate as everywhere else — the laps

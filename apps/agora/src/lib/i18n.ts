@@ -296,6 +296,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.gap_keep': 'אהבתם? ספרו למחבר מה כדאי לשמור!',
 		'delib.gap_send': 'שליחת רעיון',
 		'delib.gap_skip': 'ממשיכים הלאה',
+		'delib.saving': 'שומרים את ההצעה…',
+		'delib.save_stuck': 'ההצעה עדיין לא הגיעה לכיכר — כנראה החיבור נתקע. הטקסט שלכם שמור כאן.',
+		'delib.save_retry': 'רענון וניסיון חוזר',
 		'delib.saved_ack': 'נשמר — הכיתה תראה שההצעה עודכנה.',
 		'delib.advice_to_pen': 'לפתוח את העט ולשפר',
 		'delib.selfcheck_ask': 'בדיקה עצמית: על צורך של מי ההצעה עונה? נסו לסמן את שניהם.',
@@ -863,6 +866,10 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.gap_keep': 'Loved it? Tell the author what to keep!',
 		'delib.gap_send': 'Send idea',
 		'delib.gap_skip': 'Keep going',
+		'delib.saving': 'Saving your proposal…',
+		'delib.save_stuck':
+			"Your proposal hasn't reached the square yet — the connection looks stuck. Your text is safe here.",
+		'delib.save_retry': 'Refresh and try again',
 		'delib.saved_ack': "Saved — the class will see it's been revised.",
 		'delib.advice_to_pen': 'Open the pen and revise',
 		'delib.selfcheck_ask': 'Self-check: whose need does this serve? Try to tick both.',
@@ -1434,6 +1441,9 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.gap_keep': 'أعجبكم؟ أخبروا الكاتب بما يستحق البقاء!',
 		'delib.gap_send': 'إرسال فكرة',
 		'delib.gap_skip': 'نتابع',
+		'delib.saving': 'نحفظ اقتراحكم…',
+		'delib.save_stuck': 'اقتراحكم لم يصل إلى الساحة بعد — يبدو أن الاتصال متعثر. نصّكم محفوظ هنا.',
+		'delib.save_retry': 'تحديث ومحاولة أخرى',
 		'delib.saved_ack': 'تم الحفظ — سيرى الصف أن الاقتراح تم تنقيحه.',
 		'delib.advice_to_pen': 'افتحوا القلم ونقّحوا',
 		'delib.selfcheck_ask': 'فحص ذاتي: حاجة مَن يلبي هذا الاقتراح؟ حاولوا تعليم الاثنين.',
@@ -2012,6 +2022,10 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.gap_keep': '¿Te encantó? ¡Dile al autor qué conservar!',
 		'delib.gap_send': 'Enviar idea',
 		'delib.gap_skip': 'Seguir adelante',
+		'delib.saving': 'Guardando tu propuesta…',
+		'delib.save_stuck':
+			'Tu propuesta aún no ha llegado a la plaza — la conexión parece atascada. Tu texto está a salvo aquí.',
+		'delib.save_retry': 'Recargar e intentar de nuevo',
 		'delib.saved_ack': 'Guardado — la clase verá que fue revisada.',
 		'delib.advice_to_pen': 'Abrir la pluma y revisar',
 		'delib.selfcheck_ask':
@@ -2613,6 +2627,10 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.gap_keep': 'Gefällt er dir? Sag der Autorin oder dem Autor, was bleiben soll!',
 		'delib.gap_send': 'Idee senden',
 		'delib.gap_skip': 'Weiter geht’s',
+		'delib.saving': 'Dein Vorschlag wird gespeichert…',
+		'delib.save_stuck':
+			'Dein Vorschlag ist noch nicht auf dem Platz angekommen — die Verbindung hängt wohl. Dein Text ist hier sicher.',
+		'delib.save_retry': 'Neu laden und erneut versuchen',
 		'delib.saved_ack': 'Gespeichert — die Klasse sieht, dass überarbeitet wurde.',
 		'delib.advice_to_pen': 'Den Stift öffnen und überarbeiten',
 		'delib.selfcheck_ask':
@@ -3219,6 +3237,10 @@ const translations: Record<LangCode, Record<string, string>> = {
 		'delib.gap_keep': 'Vond je het goed? Vertel de schrijver wat er moet blijven!',
 		'delib.gap_send': 'Idee versturen',
 		'delib.gap_skip': 'Verder gaan',
+		'delib.saving': 'Je voorstel wordt opgeslagen…',
+		'delib.save_stuck':
+			'Je voorstel is nog niet op het plein aangekomen — de verbinding lijkt vast te zitten. Je tekst staat hier veilig.',
+		'delib.save_retry': 'Vernieuwen en opnieuw proberen',
 		'delib.saved_ack': 'Opgeslagen — de klas ziet dat het herzien is.',
 		'delib.advice_to_pen': 'De pen openen en herzien',
 		'delib.selfcheck_ask': 'Zelfcheck: wiens behoefte dient dit? Probeer beide aan te vinken.',

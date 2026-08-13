@@ -97,6 +97,27 @@ const state: DeliberationState = {
 let unsubscribers: Unsubscribe[] = [];
 let listeningKey = '';
 
+/**
+ * Statement ids the SERVER has acknowledged at least once.
+ *
+ * Firestore answers a write from the local cache before it leaves the device,
+ * so a proposal appears in this client's own snapshot instantly — even when
+ * the write is stuck in the queue and no classmate will ever see it. A student
+ * on a wedged connection was therefore handed the whole game (tabs, laps,
+ * ratings) around a proposal that did not exist, while their classmates' square
+ * stayed one short. Every gate that means "my proposal is really on the square"
+ * reads THIS, not the mere presence of a doc.
+ *
+ * Monotonic on purpose: an EDIT re-raises hasPendingWrites for a moment, and a
+ * confirmation that blinks off would fold the tabs away mid-lesson.
+ */
+const serverConfirmed = new Set<string>();
+
+/** Has the server acknowledged this statement, or is it only in my cache? */
+export function isProposalConfirmed(statementId: string): boolean {
+	return serverConfirmed.has(statementId);
+}
+
 export function getDeliberationState(): Readonly<DeliberationState> {
 	return state;
 }
@@ -134,10 +155,15 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 
 	const statementsUnsub = onSnapshot(
 		query(collection(db, Collections.statements), where('agoraSessionId', '==', sessionId)),
+		// The ack is a METADATA change: the server sends back the same fields it
+		// was given, so without this flag the moment a write becomes real never
+		// reaches the client at all (see serverConfirmed).
+		{ includeMetadataChanges: true },
 		(snapshot) => {
 			const proposals: AgoraProposal[] = [];
 			const suggestions: Record<string, AgoraProposal[]> = {};
 			snapshot.forEach((docSnap) => {
+				if (!docSnap.metadata.hasPendingWrites) serverConfirmed.add(docSnap.id);
 				const item = toProposal(docSnap.data() as Record<string, unknown>);
 				if (item.statementType === StatementType.option) {
 					proposals.push(item);
@@ -263,6 +289,9 @@ export function stopDeliberationListeners(): void {
 	state.studentEvalTimes = {};
 	state.scores = {};
 	state.characterReviews = {};
+	// Confirmations belong to the listener that observed them; the next one
+	// re-earns them from its own first snapshot (server docs arrive acked).
+	serverConfirmed.clear();
 }
 
 /**
