@@ -3727,5 +3727,10 @@
   "Using the group's member count": "Using the group's member count",
   "Using the parent question's member count": "Using the parent question's member count",
   "Of stakeholders": "Of stakeholders",
-  "of stakeholders": "of stakeholders"
+  "of stakeholders": "of stakeholders",
+  "scaleDragToAnswer": "Drag the handle or tap the bar to answer",
+  "scaleNoValueSelected": "No value selected",
+  "scaleValueOfMax": "{{value}} out of {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} out of {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Please choose a value on the scale"
 }

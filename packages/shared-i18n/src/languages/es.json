@@ -3022,5 +3022,10 @@
   "Using the group's member count": "Usando el número de miembros del grupo",
   "Using the parent question's member count": "Usando el número de miembros de la pregunta superior",
   "Of stakeholders": "De las partes interesadas",
-  "of stakeholders": "de las partes interesadas"
+  "of stakeholders": "de las partes interesadas",
+  "scaleDragToAnswer": "Arrastra el control o toca la barra para responder",
+  "scaleNoValueSelected": "Ningún valor seleccionado",
+  "scaleValueOfMax": "{{value}} de {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} de {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Elige un valor en la escala"
 }

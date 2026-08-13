@@ -1161,6 +1161,14 @@
   color: var(--btn-primary, #5f88e5);
 }
 
+// Stands where the value will go, until there is a value to show
+.rangeHint {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text-muted, #718096);
+}
+
 .rangeSliderRow {
   display: flex;
   align-items: center;
@@ -1196,11 +1204,25 @@
   min-width: 0; // Allow shrinking in flexbox
   height: 8px;
   border-radius: 4px;
-  background: var(--border-light, #e2e8f0);
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
+
+  // --range-fill comes from the component (0% until answered). The gradient
+  // has to be told which way to run: a hand-drawn `to right` would fill from
+  // the wrong end once the page is in Hebrew or Arabic.
+  --range-fill-direction: to right;
+  background:
+    linear-gradient(
+      var(--range-fill-direction),
+      var(--btn-primary, #5f88e5) var(--range-fill, 0%),
+      var(--border-light, #e2e8f0) var(--range-fill, 0%)
+    );
+
+  [dir="rtl"] & {
+    --range-fill-direction: to left;
+  }
 
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -1232,6 +1254,28 @@
     &:hover {
       transform: scale(1.1);
     }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary, #5f88e5);
+    outline-offset: 4px;
+  }
+}
+
+// Nobody has answered yet: a hollow ring resting at the middle of an
+// unfilled track. Solid-at-the-minimum was being read as an answer of the
+// minimum — which is exactly the answer it then threw away.
+.rangeInputUnset {
+  &::-webkit-slider-thumb {
+    background: transparent;
+    border: 2px solid var(--btn-primary, #5f88e5);
+    box-shadow: none;
+  }
+
+  &::-moz-range-thumb {
+    background: transparent;
+    border: 2px solid var(--btn-primary, #5f88e5);
+    box-shadow: none;
   }
 }
 

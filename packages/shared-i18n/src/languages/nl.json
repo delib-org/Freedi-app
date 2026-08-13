@@ -3022,5 +3022,10 @@
   "Using the group's member count": "Op basis van het aantal groepsleden",
   "Using the parent question's member count": "Op basis van het aantal leden van de bovenliggende vraag",
   "Of stakeholders": "Van de belanghebbenden",
-  "of stakeholders": "van de belanghebbenden"
+  "of stakeholders": "van de belanghebbenden",
+  "scaleDragToAnswer": "Sleep de knop of tik op de balk om te antwoorden",
+  "scaleNoValueSelected": "Geen waarde gekozen",
+  "scaleValueOfMax": "{{value}} van {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} van {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Kies een waarde op de schaal"
 }

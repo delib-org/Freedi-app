@@ -3143,5 +3143,10 @@
   "Using the group's member count": "باستخدام عدد أعضاء المجموعة",
   "Using the parent question's member count": "باستخدام عدد أعضاء السؤال الأصل",
   "Of stakeholders": "من أصحاب المصلحة",
-  "of stakeholders": "من أصحاب المصلحة"
+  "of stakeholders": "من أصحاب المصلحة",
+  "scaleDragToAnswer": "اسحب المقبض أو انقر على الشريط للإجابة",
+  "scaleNoValueSelected": "لم يتم اختيار قيمة",
+  "scaleValueOfMax": "{{value}} من {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} من {{max}}، {{label}}",
+  "answerRequiredSelectValue": "يرجى اختيار قيمة على المقياس"
 }

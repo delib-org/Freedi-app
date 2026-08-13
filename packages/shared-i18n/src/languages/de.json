@@ -3022,5 +3022,10 @@
   "Using the group's member count": "Anhand der Mitgliederzahl der Gruppe",
   "Using the parent question's member count": "Anhand der Mitgliederzahl der übergeordneten Frage",
   "Of stakeholders": "Von den Betroffenen",
-  "of stakeholders": "der Betroffenen"
+  "of stakeholders": "der Betroffenen",
+  "scaleDragToAnswer": "Ziehen Sie den Regler oder tippen Sie auf die Leiste, um zu antworten",
+  "scaleNoValueSelected": "Kein Wert ausgewählt",
+  "scaleValueOfMax": "{{value}} von {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} von {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Bitte wählen Sie einen Wert auf der Skala"
 }

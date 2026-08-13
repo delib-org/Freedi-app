@@ -3531,5 +3531,10 @@
   "Fully self-selected": "کاملاً خودانتخابی",
   "Set target population to enable confidence index": "برای فعال‌کردن شاخص اطمینان، جمعیت هدف را تعیین کنید",
   "Of stakeholders": "از ذی‌نفعان",
-  "of stakeholders": "از ذی‌نفعان"
+  "of stakeholders": "از ذی‌نفعان",
+  "scaleDragToAnswer": "برای پاسخ، دستگیره را بکشید یا روی نوار ضربه بزنید",
+  "scaleNoValueSelected": "مقداری انتخاب نشده است",
+  "scaleValueOfMax": "{{value}} از {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} از {{max}}، {{label}}",
+  "answerRequiredSelectValue": "لطفاً مقداری را روی مقیاس انتخاب کنید"
 }

@@ -3766,5 +3766,10 @@
   "Using the group's member count": "לפי מספר חברי הקבוצה",
   "Using the parent question's member count": "לפי מספר החברים בשאלה שמעל",
   "Of stakeholders": "מתוך בעלי העניין",
-  "of stakeholders": "מבעלי העניין"
+  "of stakeholders": "מבעלי העניין",
+  "scaleDragToAnswer": "גררו את הידית או הקישו על הסרגל כדי לענות",
+  "scaleNoValueSelected": "לא נבחר ערך",
+  "scaleValueOfMax": "{{value}} מתוך {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} מתוך {{max}}, {{label}}",
+  "answerRequiredSelectValue": "אנא בחרו ערך בסולם"
 }
