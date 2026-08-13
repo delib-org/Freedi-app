@@ -39,7 +39,7 @@ const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
 const clearCelebration = async (page) => {
 	for (let i = 0; i < 5; i++) {
 		if ((await page.locator('.celebration').count()) === 0) return;
-		await page.locator('.celebration button').last().click({ timeout: 5000 }).catch(() => {});
+		await page.locator('.celebration button.btn').last().click({ timeout: 5000 }).catch(() => {});
 		await page.waitForTimeout(400);
 	}
 };

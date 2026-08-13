@@ -32,6 +32,7 @@ import { getSessionState } from './session';
 import {
 	detectClassBridgeRecord,
 	detectHelpedImprovements,
+	detectProposalMilestones,
 	detectThreadMessages,
 } from './notifications';
 import { agoraCreator, buildProposalStatement, buildThreadMessageStatement } from './statementDocs';
@@ -246,6 +247,9 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 				if (score.bridgingScore > classMax) classMax = score.bridgingScore;
 			}
 			detectClassBridgeRecord(sessionId, classMax);
+			// ...and the author's own two: standing in the bridge zone, and
+			// climbing past another proposal on the way there
+			detectProposalMilestones(sessionId, userId);
 			m.redraw();
 		},
 		(error) => {

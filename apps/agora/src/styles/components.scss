@@ -4973,6 +4973,29 @@
 		color: var(--text-muted);
 		font-size: var(--font-size-sm);
 	}
+
+	// The quiet switch, offered where the noise is. Deliberately the least
+	// loud thing on the card: it is an escape hatch, not a choice the
+	// celebration is asking anyone to make.
+	&__mute {
+		position: absolute;
+		inset-block-start: var(--space-sm);
+		inset-inline-end: var(--space-sm);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border: none;
+		border-radius: 50%;
+		background: var(--bg-inset);
+		color: var(--text-muted);
+		cursor: pointer;
+
+		&:hover {
+			color: var(--text-secondary);
+		}
+	}
 }
 
 @keyframes celebration-fade-in {
@@ -5916,13 +5939,16 @@
 	height: 38px;
 	border-radius: 50%;
 	border: 1px solid var(--border-subtle);
-	background: rgba(255, 255, 255, 0.14);
-	color: #ffffff;
+	// The HUD is WHITE chrome (see .delib-hud), so the envelope takes the
+	// app's purple ink on a pale inset — it was drawn white-on-white, which
+	// left an empty circle wearing a badge
+	background: var(--bg-inset);
+	color: var(--mine-ink);
 	cursor: pointer;
 	transition: background-color var(--motion-fast) ease;
 
 	&:hover {
-		background: rgba(255, 255, 255, 0.24);
+		background: rgba(139, 107, 240, 0.16);
 	}
 
 	&__badge {
@@ -5979,6 +6005,23 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		color: var(--ink);
+	}
+
+	&__clear {
+		flex: 0 0 auto;
+		padding: 4px var(--space-sm);
+		border: none;
+		border-radius: 999px;
+		background: none;
+		color: var(--text-secondary);
+		font: inherit;
+		font-size: var(--font-size-xs);
+		text-decoration: underline;
+		cursor: pointer;
+
+		&:hover {
+			color: var(--ink);
+		}
 	}
 
 	&__close {

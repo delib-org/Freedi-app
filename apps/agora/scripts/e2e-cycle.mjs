@@ -74,7 +74,7 @@ const clearCelebration = async (page, label = '') => {
 			.first()
 			.textContent()
 			.catch(() => '');
-		await page.locator('.celebration button').last().click({ timeout: 5000 }).catch(() => {});
+		await page.locator('.celebration button.btn').last().click({ timeout: 5000 }).catch(() => {});
 		await page.waitForTimeout(400);
 		if (label && msg) console.log(`   (${label} celebration: ${msg.trim()})`);
 	}

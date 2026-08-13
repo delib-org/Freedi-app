@@ -17,21 +17,52 @@ export interface CelebrationPayload {
 	 * dead end. Runs on click, then the popup dismisses itself.
 	 */
 	action?: { label: string; run: () => void };
+	/**
+	 * The rare moments that are heard as well as seen. Left off everywhere
+	 * else on purpose: thirty devices in one room means a sound has to earn
+	 * its place, and one that plays for everything earns nothing.
+	 */
+	sound?: 'applause';
 }
 
 let current: CelebrationPayload | null = null;
+/**
+ * Moments still waiting their turn.
+ *
+ * These used to overwrite each other — "latest wins" — which was fine while
+ * they arrived minutes apart and quietly destructive once they didn't. One
+ * rating can now land a proposal in the bridge zone AND pay its bridging tier
+ * in the same breath, and the student saw exactly one of the two, at random.
+ * A reward the game decided to give and then swallowed is worse than one it
+ * never promised.
+ */
+const pending: CelebrationPayload[] = [];
+/** A pile-up is its own punishment; past this the oldest waiting ones go */
+const MAX_PENDING = 3;
 
 export function getCelebration(): CelebrationPayload | null {
 	return current;
 }
 
-/** Fire the glitter popup — one at a time, latest wins */
+/** Fire the glitter popup — one at a time, the rest wait their turn */
 export function celebrate(payload: CelebrationPayload): void {
+	// The same moment announced twice (a re-delivered trigger, a redraw that
+	// re-ran a detector) is one moment
+	const isDuplicate = (other: CelebrationPayload | null): boolean =>
+		other !== null && other.message === payload.message && other.detail === payload.detail;
+	if (isDuplicate(current) || pending.some(isDuplicate)) return;
+
+	if (current) {
+		pending.push(payload);
+		if (pending.length > MAX_PENDING) pending.shift();
+
+		return;
+	}
 	current = payload;
 	m.redraw();
 }
 
 export function dismissCelebration(): void {
-	current = null;
+	current = pending.shift() ?? null;
 	m.redraw();
 }

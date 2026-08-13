@@ -1,6 +1,8 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { getCelebration, dismissCelebration } from '../lib/celebration';
+import { getCelebration, dismissCelebration, type CelebrationPayload } from '../lib/celebration';
+import { Icon } from './Icon';
+import { isSoundOn, playApplause, toggleSound } from '../lib/sound';
 
 const SPARK_COUNT = 18;
 
@@ -16,81 +18,119 @@ const SPARK_COUNT = 18;
  * primary action, and Escape closes. A celebration nobody can perceive or
  * dismiss without a mouse is a reward the student never receives.
  */
-export const CelebrationOverlay: m.Component = {
-	view() {
-		const payload = getCelebration();
-		if (!payload) return null;
+export function CelebrationOverlay(): m.Component {
+	/**
+	 * Which moment the card is currently showing. Celebrations queue now, so a
+	 * dismissal can swap the payload underneath a DOM node Mithril happily
+	 * reuses — `oncreate` alone would announce the first moment and stay mute
+	 * for every one behind it.
+	 */
+	let announced: CelebrationPayload | null = null;
 
-		return m(
-			'.celebration',
-			{
-				onclick: (event: MouseEvent) => {
-					if ((event.target as HTMLElement).classList.contains('celebration')) {
-						dismissCelebration();
-					}
-				},
-				onkeydown: (event: KeyboardEvent) => {
-					if (event.key === 'Escape') dismissCelebration();
-				},
-			},
-			[
-				m(
-					'.celebration__card',
-					{
-						role: 'alertdialog',
-						'aria-modal': 'true',
-						'aria-label': `${t('celebrate.hooray')} ${payload.message}`,
-						tabindex: '-1',
-						// Focus lands on the action the loop wants next (the travel
-						// button when there is one, otherwise plain close)
-						oncreate: (vnode: m.VnodeDOM) => {
-							const focusTarget =
-								vnode.dom.querySelector<HTMLElement>('button.btn--primary') ??
-								(vnode.dom as HTMLElement);
-							focusTarget.focus();
-						},
+	function announce(dom: HTMLElement, payload: CelebrationPayload): void {
+		if (announced === payload) return;
+		announced = payload;
+		// Focus lands on the action the loop wants next (the travel button when
+		// there is one, otherwise plain close)
+		(dom.querySelector<HTMLElement>('button.btn--primary') ?? dom).focus();
+		if (payload.sound === 'applause') playApplause();
+	}
+
+	return {
+		view() {
+			const payload = getCelebration();
+			if (!payload) {
+				announced = null;
+
+				return null;
+			}
+
+			return m(
+				'.celebration',
+				{
+					onclick: (event: MouseEvent) => {
+						if ((event.target as HTMLElement).classList.contains('celebration')) {
+							dismissCelebration();
+						}
 					},
-					[
-						m(
-							'.celebration__sparks',
-							{ 'aria-hidden': 'true' },
-							Array.from({ length: SPARK_COUNT }, (_, index) =>
-								m('span.celebration__spark', {
-									style: { '--spark-index': String(index) },
-								}),
-							),
-						),
-						m('.celebration__hooray', { 'aria-hidden': 'true' }, t('celebrate.hooray')),
-						m('p.celebration__message', payload.message),
-						payload.detail ? m('.celebration__detail', payload.detail) : null,
-						// The one good-news moment with no button still says where the
-						// loop goes next — the wait for "+2" becomes anticipation
-						// instead of an invisible state
-						payload.hint ? m('p.celebration__hint', payload.hint) : null,
-						// With a continuation, IT is the star and plain-close steps
-						// back: the popup invites the loop's next move, not a shrug
-						payload.action
-							? m(
-									'button.btn.btn--primary.btn--full',
-									{
-										onclick: () => {
-											payload.action?.run();
-											dismissCelebration();
+					onkeydown: (event: KeyboardEvent) => {
+						if (event.key === 'Escape') dismissCelebration();
+					},
+				},
+				[
+					m(
+						'.celebration__card',
+						{
+							role: 'alertdialog',
+							'aria-modal': 'true',
+							'aria-label': `${t('celebrate.hooray')} ${payload.message}`,
+							tabindex: '-1',
+							oncreate: (vnode: m.VnodeDOM) => {
+								announce(vnode.dom as HTMLElement, payload);
+							},
+							onupdate: (vnode: m.VnodeDOM) => {
+								announce(vnode.dom as HTMLElement, payload);
+							},
+						},
+						[
+							// The quiet switch, in the corner where mute controls live —
+							// deliberately OUT of the button flow, so the last button on
+							// the card stays the dismissal
+							payload.sound
+								? m(
+										'button.celebration__mute',
+										{
+											type: 'button',
+											'aria-pressed': String(!isSoundOn()),
+											'aria-label': t(isSoundOn() ? 'celebrate.mute' : 'celebrate.unmute'),
+											onclick: () => {
+												toggleSound();
+											},
 										},
-									},
-									payload.action.label,
-								)
-							: null,
-						m(
+										m(Icon, { name: isSoundOn() ? 'sound-on' : 'sound-off', size: 18 }),
+									)
+								: null,
+							m(
+								'.celebration__sparks',
+								{ 'aria-hidden': 'true' },
+								Array.from({ length: SPARK_COUNT }, (_, index) =>
+									m('span.celebration__spark', {
+										style: { '--spark-index': String(index) },
+									}),
+								),
+							),
+							m('.celebration__hooray', { 'aria-hidden': 'true' }, t('celebrate.hooray')),
+							m('p.celebration__message', payload.message),
+							payload.detail ? m('.celebration__detail', payload.detail) : null,
+							// The one good-news moment with no button still says where the
+							// loop goes next — the wait for "+2" becomes anticipation
+							// instead of an invisible state
+							payload.hint ? m('p.celebration__hint', payload.hint) : null,
+							// With a continuation, IT is the star and plain-close steps
+							// back: the popup invites the loop's next move, not a shrug
 							payload.action
-								? 'button.btn.btn--ghost.btn--full'
-								: 'button.btn.btn--primary.btn--full',
-							{ onclick: dismissCelebration },
-							t('celebrate.close'),
-						),
-					],
-				),
-			],
-		);
-	},
-};
+								? m(
+										'button.btn.btn--primary.btn--full',
+										{
+											onclick: () => {
+												payload.action?.run();
+												dismissCelebration();
+											},
+										},
+										payload.action.label,
+									)
+								: null,
+							m(
+								payload.action
+									? 'button.btn.btn--ghost.btn--full'
+									: 'button.btn.btn--primary.btn--full',
+								{ onclick: dismissCelebration },
+								t('celebrate.close'),
+							),
+						],
+					),
+				],
+			);
+		},
+	};
+}

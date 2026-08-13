@@ -6,6 +6,8 @@ import { t } from './i18n';
 import { celebrate } from './celebration';
 import { requestHelpedFocus, requestMineFocus } from './helpedFocus';
 import { addInboxItem, type InboxTarget } from './inbox';
+import { inBridgeZone, standings } from './boardGeometry';
+import { playCheer } from './sound';
 import { getDeliberationState, isSuggestionKind, isSystemKind } from './proposals';
 import { editClock } from './improvementSignals';
 
@@ -598,3 +600,74 @@ export function detectClassBridgeRecord(sessionId: string, classMax: number): vo
  * would otherwise toast the whole class every few seconds.
  */
 const CLASS_RECORD_MIN_JUMP = 5;
+
+/**
+ * The author's own two milestones on the class map, watched wherever they are
+ * standing — the board is a tab, and the moment a classmate's rating lands is
+ * not a moment anyone is watching a chart.
+ *
+ * Both are MONOTONIC (best-ever, not current): a proposal that later slips out
+ * of the zone or down a rank is told nothing at all. The game never uses a
+ * student's own high-water mark to point out that they have fallen.
+ */
+export function detectProposalMilestones(sessionId: string, userId: string): void {
+	const { proposals, scores } = getDeliberationState();
+	const mine = proposals.find((proposal) => proposal.creatorId === userId);
+	if (!mine) return;
+	const score = scores[mine.statementId];
+	if (!score?.classConsensus) return;
+
+	// ---- 1. The bridge zone: the goal, made into a place on the map ----
+	const zoneKey = `agora_${sessionId}_zone`;
+	if (inBridgeZone(score) && !sessionStorage.getItem(zoneKey)) {
+		sessionStorage.setItem(zoneKey, '1');
+		addInboxItem({
+			id: `zone-${mine.statementId}`,
+			trigger: 'agora_bridge_zone',
+			target: { kind: 'mine' },
+			detail: mine.statement,
+		});
+		celebrate({
+			message: t('celebrate.bridge_zone'),
+			detail: mine.statement,
+			hint: t('celebrate.bridge_zone_hint'),
+			sound: 'applause',
+		});
+	}
+
+	// ---- 2. Climbing past another proposal ----
+	// Rank alone would cheer a student for standing still while somebody
+	// else's proposal fell. The climb has to be THEIRS: the reading has to
+	// have risen too, or nothing is said.
+	const board = standings(proposals, scores);
+	const here = board.find((entry) => entry.statementId === mine.statementId);
+	if (!here) return;
+	const rankKey = `agora_${sessionId}_bestrank`;
+	const percentKey = `agora_${sessionId}_bestpercent`;
+	const bestRank = Number(sessionStorage.getItem(rankKey) ?? '0');
+	const bestPercent = Number(sessionStorage.getItem(percentKey) ?? '-101');
+	// First sighting is silent — arriving on the board is not a climb
+	if (bestRank === 0) {
+		sessionStorage.setItem(rankKey, String(here.rank));
+		sessionStorage.setItem(percentKey, String(here.percent));
+
+		return;
+	}
+	const climbed = here.rank < bestRank && here.percent > bestPercent;
+	if (here.percent > bestPercent) sessionStorage.setItem(percentKey, String(here.percent));
+	if (here.rank < bestRank) sessionStorage.setItem(rankKey, String(here.rank));
+	if (!climbed) return;
+
+	const passed = bestRank - here.rank;
+	addInboxItem({
+		id: `climb-${mine.statementId}-${here.rank}`,
+		trigger: 'agora_climbed',
+		target: { kind: 'mine' },
+		detail: mine.statement,
+	});
+	// A toast, not a modal: a climb is the smaller moment, and it happens
+	// often enough that stopping the game for it would wear out fast
+	pushLocalToast('agora_climbed', { kind: 'mine' });
+	playCheer();
+	console.info(`[Agora] proposal climbed past ${passed} to rank ${here.rank}`);
+}

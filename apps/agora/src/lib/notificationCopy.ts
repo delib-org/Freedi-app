@@ -25,6 +25,8 @@ const LOOKS: Readonly<Record<string, { icon: IconName; key: string }>> = {
 	agora_weave_credited: { icon: 'weave', key: 'toast.weave_credited' },
 	agora_bridging_achieved: { icon: 'bridge', key: 'toast.bridging_achieved' },
 	agora_proposal_credited: { icon: 'proposal', key: 'toast.proposal_credited' },
+	agora_bridge_zone: { icon: 'trophy', key: 'toast.bridge_zone' },
+	agora_climbed: { icon: 'trend', key: 'toast.climbed' },
 };
 
 export function triggerLook(trigger: string, fallback = ''): TriggerLook {

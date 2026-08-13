@@ -64,7 +64,14 @@ for (let attempt = 1; attempt <= 5 && !signedIn; attempt++) {
 if (!signedIn) fail('teacher never reached tier 2');
 await teacher.waitForTimeout(6000);
 await teacher.reload({ waitUntil: 'domcontentloaded' });
-await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
+try {
+	await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
+} catch {
+	// First load after source edits: vite may still be transforming modules.
+	// Auth persists in the context — reload and retry once (same as walkthrough).
+	await teacher.reload({ waitUntil: 'domcontentloaded' });
+	await teacher.waitForSelector('text=המהפכה הצרפתית', { timeout: 30000 });
+}
 await teacher.locator('text=המהפכה הצרפתית').first().click();
 await teacher.locator('button.btn.btn--primary.btn--full.btn--lg').last().click();
 await teacher.waitForURL(/session/, { timeout: 20000 });

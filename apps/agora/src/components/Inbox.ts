@@ -3,6 +3,7 @@ import { Icon } from './Icon';
 import { t, tCount } from '../lib/i18n';
 import { triggerLook } from '../lib/notificationCopy';
 import {
+	clearInbox,
 	getInboxItems,
 	inboxUnreadCount,
 	markAllInboxRead,
@@ -112,6 +113,21 @@ export function Inbox(): m.Component {
 							m('.inbox', { role: 'dialog', 'aria-label': t('inbox.title') }, [
 								m('.inbox__head', [
 									m('span.inbox__title', t('inbox.title')),
+									// Emptying it is the student's own business — a record of
+									// what happened TO them that they cannot put down turns
+									// into a list of chores
+									items.length > 0
+										? m(
+												'button.inbox__clear',
+												{
+													type: 'button',
+													onclick: () => {
+														clearInbox();
+													},
+												},
+												t('inbox.clear'),
+											)
+										: null,
 									m(
 										'button.inbox__close',
 										{ type: 'button', 'aria-label': t('inbox.close'), onclick: close },

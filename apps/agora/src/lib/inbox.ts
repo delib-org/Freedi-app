@@ -113,8 +113,9 @@ export function markAllInboxRead(): void {
 	}
 }
 
-/** Session over — the box belongs to the lesson that filled it */
+/** Empty it — the student's own call, and the end of a session's */
 export function clearInbox(): void {
 	items = [];
 	persist();
+	m.redraw();
 }

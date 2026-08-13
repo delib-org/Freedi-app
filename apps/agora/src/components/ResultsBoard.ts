@@ -16,6 +16,9 @@ import {
 } from '@freedi/shared-types';
 import { isRTL, t, tCount } from '../lib/i18n';
 import { celebrate } from '../lib/celebration';
+// The map's arithmetic lives beside the milestone detector that reads it, so
+// the dashed zone and the cheer for entering it can never drift apart
+import { campLean } from '../lib/boardGeometry';
 import type { AgoraProposal } from '../lib/proposals';
 
 export interface ResultsBoardAttrs {
@@ -158,35 +161,6 @@ function classDist(score: AgoraProposalScore): AgoraRatingDist {
 		(total, camp) => addDist(total, camp.studentDist ?? emptyDist()),
 		emptyDist(),
 	);
-}
-
-/** How much positive support one camp gave: half-marks count half */
-function backing(dist?: AgoraRatingDist): number {
-	if (!dist) return 0;
-
-	return 0.5 * Math.max(0, dist[3]) + Math.max(0, dist[4]);
-}
-
-/**
- * The horizontal axis: who is behind this proposal.
- *
- * Deliberately built from POSITIVE support only, not from the two camp
- * averages. "Who supports it more" is a question about backing, and a
- * difference of averages answers a different one — a proposal both sides
- * dislike equally would land dead centre, in the very spot reserved for the
- * proposals both sides are behind. Only-left-backs-it → -1, only-right → +1,
- * equally backed → 0, and nobody-backs-it → 0 with a score low enough on the
- * vertical axis that the centre column cannot be mistaken for a bridge.
- *
- * The centre camp is left out on purpose: they are the middle by definition,
- * so their backing says nothing about which side a proposal leans toward.
- */
-function campLean(score: AgoraProposalScore): number {
-	const left = backing(score.perCamp.left.studentDist);
-	const right = backing(score.perCamp.right.studentDist);
-	if (left + right === 0) return 0;
-
-	return (right - left) / (right + left);
 }
 
 /* Top three get the medal, tinted by rank in CSS; everyone else gets their
