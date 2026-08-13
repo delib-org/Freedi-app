@@ -42,6 +42,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:rules": "npm --prefix tests/rules test",
+    "test:rules:exec": "firebase emulators:exec --only firestore \"npm --prefix tests/rules test\"",
     "lint": "NODE_OPTIONS='--max-old-space-size=8192' eslint \"src/**/*.{ts,tsx}\" \"functions/src/**/*.ts\"",
     "lint:fix": "NODE_OPTIONS='--max-old-space-size=8192' eslint --fix \"src/**/*.{ts,tsx}\" \"functions/src/**/*.ts\"",
     "typecheck": "tsc",
