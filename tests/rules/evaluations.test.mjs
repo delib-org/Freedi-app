@@ -13,7 +13,7 @@ describe('/evaluations', () => {
 	let env;
 
 	before(async () => {
-		env = await makeEnv();
+		env = await makeEnv('evaluations');
 	});
 
 	after(async () => {

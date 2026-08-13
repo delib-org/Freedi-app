@@ -14,7 +14,7 @@ describe('/statements', () => {
 	let env;
 
 	before(async () => {
-		env = await makeEnv();
+		env = await makeEnv('statements');
 	});
 
 	after(async () => {

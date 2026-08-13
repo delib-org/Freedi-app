@@ -11,20 +11,36 @@ export const FIRESTORE_PORT = Number(process.env.FIRESTORE_EMULATOR_PORT ?? 8081
 /**
  * A dedicated project id keeps this harness's writes out of the emulator data
  * the app scripts (seed.ts, fastlane.ts) are using at the same time.
+ *
+ * Each test FILE gets its own project, because `node --test` runs files in
+ * parallel processes: with a shared project, one file's clearFirestore() would
+ * delete another file's fixtures mid-assertion.
  */
 export const PROJECT_ID = 'freedi-rules-test';
 
 const RULES_PATH = new URL('../../firestore.rules', import.meta.url);
 
-export async function makeEnv() {
-	return initializeTestEnvironment({
-		projectId: PROJECT_ID,
+/**
+ * Always starts from an empty database.
+ *
+ * Without the clear, documents survive between runs, and a `create` assertion
+ * silently becomes an `update` assertion the second time it runs — a create
+ * rule can then look broken (or, worse, look fine) for reasons that have
+ * nothing to do with the rule. Test state must not be a function of how many
+ * times the suite has been run.
+ */
+export async function makeEnv(suite) {
+	const env = await initializeTestEnvironment({
+		projectId: `${PROJECT_ID}-${suite}`,
 		firestore: {
 			rules: readFileSync(RULES_PATH, 'utf8'),
 			host: '127.0.0.1',
 			port: FIRESTORE_PORT,
 		},
 	});
+	await env.clearFirestore();
+
+	return env;
 }
 
 /**

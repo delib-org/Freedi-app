@@ -13,7 +13,7 @@ describe('agora collections', () => {
 	let env;
 
 	before(async () => {
-		env = await makeEnv();
+		env = await makeEnv('agora');
 	});
 
 	after(async () => {

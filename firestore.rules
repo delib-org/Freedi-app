@@ -55,11 +55,20 @@ service cloud.firestore {
     match /agoraSessions/{sessionId} {
       allow read: if isAuthenticated();
       allow create, delete: if false;
+      // classScore and participantCount are server-owned: computeSessionResults
+      // writes the first (including an LLM pass), agoraJoinSession increments
+      // the second. The teacher controls live stage/round fields, not the
+      // scoreboard — otherwise "the class score" is whatever the teacher's
+      // browser last said it was.
       allow update: if isAuthenticated() &&
                        resource.data.teacherId == request.auth.uid &&
                        request.resource.data.teacherId == resource.data.teacherId &&
                        request.resource.data.sessionId == resource.data.sessionId &&
-                       request.resource.data.code == resource.data.code;
+                       request.resource.data.code == resource.data.code &&
+                       request.resource.data.get('classScore', {}) ==
+                         resource.data.get('classScore', {}) &&
+                       request.resource.data.get('participantCount', -1) ==
+                         resource.data.get('participantCount', -1);
     }
 
     // Participants: created via callable only (anon names are server-issued).
@@ -82,7 +91,14 @@ service cloud.firestore {
                        request.resource.data.get('firstProposalAwardedAt', -1) ==
                          resource.data.get('firstProposalAwardedAt', -1) &&
                        request.resource.data.get('isAI', false) ==
-                         resource.data.get('isAI', false);
+                         resource.data.get('isAI', false) &&
+                       // Positioning is one-shot, as the UI already assumes
+                       // (Positioning.ts:33). camp is the bridging denominator
+                       // and feeds eligiblePoolFor, so a student who can move
+                       // between camps at will moves every proposal's score.
+                       (resource.data.get('camp', null) == null ||
+                        request.resource.data.get('camp', null) ==
+                          resource.data.get('camp', null));
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.
@@ -105,7 +121,11 @@ service cloud.firestore {
     match /agoraValueAnswers/{answerId} {
       allow get: if isAuthenticated() &&
                     (resource == null || resource.data.userId == request.auth.uid);
-      allow list: if isAuthenticated();
+      // No `list`. The careful per-document `get` above was undone by an
+      // unrestricted list, which handed any student the whole class's answers.
+      // The client only ever listens to its own document by deterministic id
+      // ({sessionId}--{uid}--{characterId}, apps/agora/src/lib/values.ts:38),
+      // so nothing legitimate needs to enumerate this collection.
       allow create: if isAuthenticated() &&
                        request.resource.data.userId == request.auth.uid;
       allow update, delete: if false;
@@ -310,6 +330,37 @@ service cloud.firestore {
                request.resource.data.get('creatorRole', null);
       }
 
+      // Agora's classroom content lives in this collection, discriminated by
+      // agoraSessionId. Those documents carry neither questionSettings nor
+      // statementSettings, and hasProtectedFieldChanges() above is gated on the
+      // document having BOTH keys — so they fall through every protection
+      // /statements has, and any authenticated user may rewrite a classmate's
+      // proposal. This branch closes that for Agora specifically, ahead of the
+      // wider allowlist work on the permissive branch.
+      function isAgoraStatement() {
+        return resource != null &&
+               resource.data.get('agoraSessionId', null) != null;
+      }
+
+      // The author may edit their own text. Everything the scoring model reads
+      // is server-written: suggestionStatus drives the weave-credit ledger in
+      // fn_onAgoraProposal, agoraPointsAwarded is the award itself, and
+      // agoraMessageKind distinguishes a proposal from a system notice.
+      function agoraServerFieldsUnchanged() {
+        return request.resource.data.get('suggestionStatus', '') ==
+                 resource.data.get('suggestionStatus', '') &&
+               request.resource.data.get('agoraPointsAwarded', -1) ==
+                 resource.data.get('agoraPointsAwarded', -1) &&
+               request.resource.data.get('agoraMessageKind', '') ==
+                 resource.data.get('agoraMessageKind', '') &&
+               request.resource.data.get('agoraSessionId', '') ==
+                 resource.data.get('agoraSessionId', '') &&
+               request.resource.data.get('anonName', '') ==
+                 resource.data.get('anonName', '') &&
+               request.resource.data.get('creatorId', '') ==
+                 resource.data.get('creatorId', '');
+      }
+
       // Reading requires a session. Not because statements are secret — most
       // are meant to be shared — but because "world readable" here included
       // classroom writing by minors (Agora proposals live in this collection),
@@ -324,10 +375,21 @@ service cloud.firestore {
       // Crawler previews are unaffected — serveJoinShareRoutes and the Sign and
       // Chat server components read through the Admin SDK, which bypasses rules.
       allow read: if request.auth != null;
-      allow create: if request.auth.uid != null && !setsCreatorRoleOnCreate();
+
+      // You may only create a statement as yourself. isCreator() cannot be
+      // reused here: it reads `resource`, which is null at create time.
+      // Full-document merge-overwrites of other people's statements
+      // (statementSettingsCont.ts:152, promoteOptionToSubQuestion.ts:66) are
+      // updates, not creates, so they are unaffected by this pin.
+      allow create: if request.auth.uid != null &&
+                       !setsCreatorRoleOnCreate() &&
+                       request.resource.data.creatorId == request.auth.uid;
+
       allow update: if request.auth.uid != null &&
                        !changesCreatorRole() &&
-                       isAllowedToUpdate();
+                       (isAgoraStatement()
+                          ? (isCreator() && agoraServerFieldsUnchanged())
+                          : isAllowedToUpdate());
       allow delete: if request.auth.uid != null && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
