@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { getSurveyWithQuestions, getStatementIdForSurvey } from '@/lib/firebase/surveys';
+import {
+  getSurveyWithQuestions,
+  getStatementIdForSurvey,
+  getSurveyProgress,
+} from '@/lib/firebase/surveys';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections, StatementType, UserEvaluation } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
@@ -107,13 +111,24 @@ export async function GET(request: NextRequest, context: RouteContext) {
       totalOptionsEvaluated += q.evaluatedCount;
     }
 
-    // Questions "answered" = questions the user navigated through in the
-    // MC flow (from client localStorage). Fallback: any question where the
-    // user has at least one evaluation, so the count is still reasonable
-    // if the client didn't send completedIndices (e.g. old cached page).
-    const questionsCompleted = clientCompletedIndices.length > 0
-      ? clientCompletedIndices.filter((i) => i < survey.questions.length).length
-      : questionResults.filter((q) => q.evaluatedCount > 0).length;
+    // Questions "answered" = questions the user navigated through in the MC
+    // flow. The server progress doc records those by question id, so prefer
+    // it: the client's completedIndices are indices into the whole flow
+    // (questions *and* demographic pages), which don't map back to questions.
+    // Fall back to the client indices, then to "has at least one evaluation",
+    // so an older cached page still shows something reasonable.
+    const progress = await getSurveyProgress(surveyId, userId);
+    const questionIdSet = new Set(survey.questions.map((q) => q.statementId));
+    const completedFromServer = (progress?.completedQuestionIds || []).filter(
+      (id) => questionIdSet.has(id)
+    ).length;
+
+    let questionsCompleted = completedFromServer;
+    if (questionsCompleted === 0) {
+      questionsCompleted = clientCompletedIndices.length > 0
+        ? clientCompletedIndices.filter((i) => i < survey.questions.length).length
+        : questionResults.filter((q) => q.evaluatedCount > 0).length;
+    }
 
     // Check demographic completion
     // Answers are stored in usersData collection with ID: questionId--userId
