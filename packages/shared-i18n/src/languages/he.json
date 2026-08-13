@@ -3639,5 +3639,10 @@
   "Action failed": "הפעולה נכשלה",
   "Failed to load data-management info": "טעינת מידע ניהול הנתונים נכשלה",
   "You are not permitted to contribute to this document": "אינך רשאי לתרום למסמך זה",
-  "Actions": "פעולות"
+  "Actions": "פעולות",
+  "scaleDragToAnswer": "גררו את הידית או הקישו על הסרגל כדי לענות",
+  "scaleNoValueSelected": "לא נבחר ערך",
+  "scaleValueOfMax": "{{value}} מתוך {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} מתוך {{max}}, {{label}}",
+  "answerRequiredSelectValue": "אנא בחרו ערך בסולם"
 }

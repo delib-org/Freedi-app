@@ -2892,5 +2892,10 @@
   "Action failed": "Actie mislukt",
   "Failed to load data-management info": "Kan gegevensbeheerinformatie niet laden",
   "You are not permitted to contribute to this document": "Je hebt geen toestemming om aan dit document bij te dragen",
-  "Actions": "Acties"
+  "Actions": "Acties",
+  "scaleDragToAnswer": "Sleep de knop of tik op de balk om te antwoorden",
+  "scaleNoValueSelected": "Geen waarde gekozen",
+  "scaleValueOfMax": "{{value}} van {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} van {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Kies een waarde op de schaal"
 }

@@ -2892,5 +2892,10 @@
   "Action failed": "Aktion fehlgeschlagen",
   "Failed to load data-management info": "Laden der Datenverwaltungsinformationen fehlgeschlagen",
   "You are not permitted to contribute to this document": "Sie sind nicht berechtigt, zu diesem Dokument beizutragen",
-  "Actions": "Aktionen"
+  "Actions": "Aktionen",
+  "scaleDragToAnswer": "Ziehen Sie den Regler oder tippen Sie auf die Leiste, um zu antworten",
+  "scaleNoValueSelected": "Kein Wert ausgewählt",
+  "scaleValueOfMax": "{{value}} von {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} von {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Bitte wählen Sie einen Wert auf der Skala"
 }

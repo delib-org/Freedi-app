@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type CSSProperties, type KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyDemographicPage, UserDemographicQuestion } from '@freedi/shared-types';
@@ -269,7 +269,12 @@ export default function SurveyDemographicPage({
           question.type !== UserDemographicQuestionType.checkbox &&
           !hasTextAnswer
         ) {
-          newErrors[question.userQuestionId || ''] = t('requiredField') || 'This field is required';
+          // "This field is required" under a slider reads as a riddle —
+          // there is a control sitting right there. Say what is missing.
+          newErrors[question.userQuestionId || ''] =
+            question.type === UserDemographicQuestionType.range
+              ? t('answerRequiredSelectValue') || 'Please choose a value on the scale'
+              : t('requiredField') || 'This field is required';
 
           return;
         }
@@ -448,7 +453,17 @@ export default function SurveyDemographicPage({
 
     return (
       <div key={question.userQuestionId || ''} className={styles.demographicQuestion}>
-        <label className={styles.questionLabel}>
+        <label
+          className={styles.questionLabel}
+          // The range control is the one input that carries an id, so it is
+          // the one that can be named. Without this a screen reader
+          // announces "slider, 1" and never says what is being asked.
+          htmlFor={
+            question.type === UserDemographicQuestionType.range
+              ? question.userQuestionId || undefined
+              : undefined
+          }
+        >
           <InlineMarkdown text={question.question} />
           {question.required && <span className={styles.required}>*</span>}
         </label>
@@ -595,32 +610,102 @@ export default function SurveyDemographicPage({
           </div>
         )}
 
-        {question.type === UserDemographicQuestionType.range && (
-          <div className={styles.rangeGroup}>
-            <div className={styles.rangeValueDisplay}>
-              <span className={styles.rangeValue}>
-                {answer?.answer || question.min || 1}
-              </span>
+        {question.type === UserDemographicQuestionType.range && (() => {
+          const questionId = question.userQuestionId || '';
+          const min = question.min ?? 1;
+          const max = question.max ?? 10;
+          const step = question.step ?? 1;
+          const minLabel = question.minLabel || String(min);
+          const maxLabel = question.maxLabel || String(max);
+
+          // An untouched slider must not look like an answer. It parks at
+          // the midpoint (so it can't be read as "the minimum") as a hollow
+          // ring over an unfilled track, with no numeral — the numeral is a
+          // receipt, and there is nothing to give a receipt for yet.
+          const hasAnswer = answer?.answer !== undefined && answer.answer !== '';
+          const midpoint = min + Math.round((max - min) / 2 / step) * step;
+          const value = hasAnswer ? Number(answer?.answer) : midpoint;
+          const fillPercent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+
+          const commit = (next: number) => handleNumberChange(questionId, String(next));
+
+          // The first keypress on an untouched slider would otherwise
+          // commit midpoint±step — a value nobody chose. Commit the value
+          // under the handle instead, and let every later press behave
+          // natively.
+          const handleFirstKey = (event: KeyboardEvent<HTMLInputElement>) => {
+            if (hasAnswer) return;
+            const key = event.key;
+            if (key === 'Home') {
+              event.preventDefault();
+              commit(min);
+            } else if (key === 'End') {
+              event.preventDefault();
+              commit(max);
+            } else if (
+              key === 'ArrowLeft' || key === 'ArrowRight' ||
+              key === 'ArrowUp' || key === 'ArrowDown' ||
+              key === 'PageUp' || key === 'PageDown'
+            ) {
+              event.preventDefault();
+              commit(midpoint);
+            }
+          };
+
+          const valueText = hasAnswer
+            ? (value === min || value === max
+              ? tWithParams('scaleValueOfMaxLabelled', {
+                value,
+                max,
+                label: value === min ? minLabel : maxLabel,
+              })
+              : tWithParams('scaleValueOfMax', { value, max }))
+            : t('scaleNoValueSelected');
+
+          return (
+            <div className={styles.rangeGroup}>
+              <div className={styles.rangeValueDisplay}>
+                {hasAnswer ? (
+                  <span className={styles.rangeValue}>{value}</span>
+                ) : (
+                  <span className={styles.rangeHint} id={`${questionId}-hint`}>
+                    {t('scaleDragToAnswer')}
+                  </span>
+                )}
+              </div>
+              <div className={styles.rangeSliderRow}>
+                <span className={styles.rangeMinLabel}>{minLabel}</span>
+                <input
+                  type="range"
+                  id={questionId}
+                  className={`${styles.rangeInput} ${hasAnswer ? '' : styles.rangeInputUnset}`}
+                  style={{ ['--range-fill' as string]: `${hasAnswer ? fillPercent : 0}%` } as CSSProperties}
+                  min={min}
+                  max={max}
+                  step={step}
+                  value={value}
+                  // No aria-required: the slider role does not support it.
+                  // Requiredness is carried by the * in the label and by the
+                  // error, which is wired up through aria-describedby.
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={
+                    error
+                      ? `${questionId}-error`
+                      : hasAnswer ? undefined : `${questionId}-hint`
+                  }
+                  aria-valuetext={valueText}
+                  onChange={(e) => commit(Number(e.target.value))}
+                  // A tap that lands exactly on the parked handle changes
+                  // nothing, so onChange never fires — but the participant
+                  // did answer. Commit on release either way.
+                  onPointerUp={(e) => commit(Number((e.target as HTMLInputElement).value))}
+                  onKeyDown={handleFirstKey}
+                />
+                <span className={styles.rangeMaxLabel}>{maxLabel}</span>
+              </div>
             </div>
-            <div className={styles.rangeSliderRow}>
-              <span className={styles.rangeMinLabel}>
-                {question.minLabel || question.min || 1}
-              </span>
-              <input
-                type="range"
-                className={styles.rangeInput}
-                min={question.min ?? 1}
-                max={question.max ?? 10}
-                step={question.step ?? 1}
-                value={answer?.answer || question.min || 1}
-                onChange={(e) => handleNumberChange(question.userQuestionId || '', e.target.value)}
-              />
-              <span className={styles.rangeMaxLabel}>
-                {question.maxLabel || question.max || 10}
-              </span>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {question.type === UserDemographicQuestionType.number && (
           <input
@@ -635,7 +720,15 @@ export default function SurveyDemographicPage({
           />
         )}
 
-        {error && <span className={styles.errorMessage}>{error}</span>}
+        {error && (
+          <span
+            className={styles.errorMessage}
+            id={`${question.userQuestionId || ''}-error`}
+            role="alert"
+          >
+            {error}
+          </span>
+        )}
       </div>
     );
   };

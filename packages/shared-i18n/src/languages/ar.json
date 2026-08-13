@@ -3014,5 +3014,10 @@
   "Action failed": "فشل الإجراء",
   "Failed to load data-management info": "فشل تحميل معلومات إدارة البيانات",
   "You are not permitted to contribute to this document": "غير مسموح لك بالمساهمة في هذا المستند",
-  "Actions": "إجراءات"
+  "Actions": "إجراءات",
+  "scaleDragToAnswer": "اسحب المقبض أو انقر على الشريط للإجابة",
+  "scaleNoValueSelected": "لم يتم اختيار قيمة",
+  "scaleValueOfMax": "{{value}} من {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} من {{max}}، {{label}}",
+  "answerRequiredSelectValue": "يرجى اختيار قيمة على المقياس"
 }

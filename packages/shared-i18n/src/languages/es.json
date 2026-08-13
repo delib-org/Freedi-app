@@ -2892,5 +2892,10 @@
   "Action failed": "La acción falló",
   "Failed to load data-management info": "No se pudo cargar la información de gestión de datos",
   "You are not permitted to contribute to this document": "No tienes permiso para contribuir a este documento",
-  "Actions": "Acciones"
+  "Actions": "Acciones",
+  "scaleDragToAnswer": "Arrastra el control o toca la barra para responder",
+  "scaleNoValueSelected": "Ningún valor seleccionado",
+  "scaleValueOfMax": "{{value}} de {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} de {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Elige un valor en la escala"
 }

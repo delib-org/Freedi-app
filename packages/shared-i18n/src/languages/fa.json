@@ -3391,5 +3391,10 @@
   "Action failed": "عملیات ناموفق بود",
   "Failed to load data-management info": "بارگیری اطلاعات مدیریت داده ناموفق بود",
   "You are not permitted to contribute to this document": "شما مجاز به مشارکت در این سند نیستید",
-  "Actions": "اقدامات"
+  "Actions": "اقدامات",
+  "scaleDragToAnswer": "برای پاسخ، دستگیره را بکشید یا روی نوار ضربه بزنید",
+  "scaleNoValueSelected": "مقداری انتخاب نشده است",
+  "scaleValueOfMax": "{{value}} از {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} از {{max}}، {{label}}",
+  "answerRequiredSelectValue": "لطفاً مقداری را روی مقیاس انتخاب کنید"
 }

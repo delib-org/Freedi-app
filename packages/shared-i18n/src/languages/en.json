@@ -3600,5 +3600,10 @@
   "Action failed": "Action failed",
   "Failed to load data-management info": "Failed to load data-management info",
   "You are not permitted to contribute to this document": "You are not permitted to contribute to this document",
-  "Actions": "Actions"
+  "Actions": "Actions",
+  "scaleDragToAnswer": "Drag the handle or tap the bar to answer",
+  "scaleNoValueSelected": "No value selected",
+  "scaleValueOfMax": "{{value}} out of {{max}}",
+  "scaleValueOfMaxLabelled": "{{value}} out of {{max}}, {{label}}",
+  "answerRequiredSelectValue": "Please choose a value on the scale"
 }
