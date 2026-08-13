@@ -119,18 +119,22 @@ function rankCell(row: HelperRow): m.Children {
 }
 
 /**
- * The helpers scoreboard: the whole class, ranked by the thank-yous they were
- * given for making someone else's proposal better.
+ * The recognition wall (live) and the helpers scoreboard (finale).
  *
- * The lesson's other scoreboard — the class map — ranks PROPOSALS, which means
- * the students who spent the hour improving other people's texts appear on it
- * only through someone else's point. This one is theirs. Everybody is on it,
- * including the students on zero, because a name missing from a list reads as
- * an absence rather than as a starting line.
+ * DURING PLAY this is deliberately NOT a ranking. Peers are physically in the
+ * room, handles decay into names within minutes, and a live class-wide
+ * ordering by thanks makes gratitude a visible currency with a named bottom.
+ * So mid-lesson the board is a constellation: every classmate is a circle in
+ * roster order, the ones whose idea landed are LIT, and the headline number
+ * belongs to the whole class. No ranks, no per-person counts, no zeros
+ * marked.
+ *
+ * THE FINALE keeps the ranked table with its medals — a retrospective the
+ * teacher gates by advancing the stage, which is a different social moment
+ * from a live standing hovering over the lesson.
  *
  * Every classmate wears a colour, drawn from their uid so it never moves. My
- * own circle is purple, because in this app purple is what mine looks like —
- * the standings can reorder around me and I can still find myself instantly.
+ * own circle is purple, because in this app purple is what mine looks like.
  */
 export const HelpersBoard: m.Component<HelpersBoardAttrs> = {
 	view(vnode) {
@@ -139,7 +143,7 @@ export const HelpersBoard: m.Component<HelpersBoardAttrs> = {
 		const total = rows.reduce((sum, row) => sum + row.points, 0);
 		const emptyLine = t(finale ? 'board.helpers_empty_finale' : 'board.helpers_empty_live');
 
-		return m('.helpers-board', [
+		const head = [
 			m(
 				'.helpers-board__crest',
 				m('span.helpers-board__crest-pill', iconLabel('helped', t('helpers.title'))),
@@ -151,6 +155,66 @@ export const HelpersBoard: m.Component<HelpersBoardAttrs> = {
 				iconLabel('thanks', String(total), 22),
 			),
 			m('p.helpers-board__sub', t('board.helpers_sub')),
+		];
+
+		if (!finale) {
+			// Roster order, not standings order — stable under every redraw,
+			// and it never says who "leads" at saying thank you
+			const wall = [...rows].sort((a, b) => a.participant.joinedAt - b.participant.joinedAt);
+
+			return m('.helpers-board', [
+				head,
+				wall.length === 0
+					? m('p.helpers-board__empty', emptyLine)
+					: m(
+							'ul.helpers-board__wall',
+							{ role: 'list' },
+							wall.map((row) => {
+								const name = row.isMine ? t('board.you') : row.participant.anonName;
+								const lit = row.points > 0;
+
+								return m(
+									'li.helpers-board__wall-chip',
+									{
+										key: row.participant.participantId,
+										class: [
+											lit ? 'helpers-board__wall-chip--lit' : undefined,
+											row.isMine ? 'helpers-board__wall-chip--mine' : undefined,
+										]
+											.filter(Boolean)
+											.join(' '),
+										'aria-label': lit ? t('helpers.wall_lit_aria', { name }) : name,
+									},
+									[
+										m(
+											'span.helpers-board__avatar',
+											{
+												'aria-hidden': 'true',
+												class: row.isMine
+													? 'helpers-board__avatar--mine'
+													: `helpers-board__avatar--who-${row.hue}`,
+											},
+											initialsOf(row.participant.anonName),
+										),
+										m('span.helpers-board__wall-name', name),
+										lit
+											? m(
+													'span.helpers-board__wall-mark',
+													{ 'aria-hidden': 'true' },
+													m(Icon, { name: 'thanks', size: 14 }),
+												)
+											: null,
+									],
+								);
+							}),
+						),
+				// What lighting a circle actually takes — the one instruction
+				wall.length > 0 && total === 0 ? m('p.helpers-board__empty', emptyLine) : null,
+			]);
+		}
+
+		return m('.helpers-board', [
+			head,
 
 			rows.length === 0
 				? m('p.helpers-board__empty', emptyLine)
@@ -175,12 +239,9 @@ export const HelpersBoard: m.Component<HelpersBoardAttrs> = {
 									'li.helpers-board__row',
 									{
 										key: row.participant.participantId,
-										class: [
-											row.isMine ? 'helpers-board__row--mine' : undefined,
-											row.points === 0 ? 'helpers-board__row--zero' : undefined,
-										]
-											.filter(Boolean)
-											.join(' '),
+										// No zero styling: a starting line must not be drawn
+										// as a deficit
+										class: row.isMine ? 'helpers-board__row--mine' : undefined,
 										// One sentence per row: the three cells read out as
 										// "4th", a name and "2" without it
 										'aria-label': t('helpers.row_aria', {

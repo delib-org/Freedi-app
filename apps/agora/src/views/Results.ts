@@ -3,7 +3,8 @@ import { t, tCount } from '../lib/i18n';
 import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
-import { getDeliberationState, listenToDeliberation } from '../lib/proposals';
+import { getDeliberationState, isSuggestionKind, listenToDeliberation } from '../lib/proposals';
+import { Icon, iconLabel, type IconName } from '../components/Icon';
 import { getCampCensus, getSessionState } from '../lib/session';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
@@ -25,11 +26,23 @@ export interface ResultsAttrs {
 }
 
 interface MyStory {
-	ideasWoven: number;
-	ideasAdopted: number;
+	ideasLanded: number;
 	classmatesHelped: number;
 	voicesWovenIn: number;
 }
+
+/**
+ * The statuses that mean "this idea really helped". The 🙏 thank-you is the
+ * live attestation; accepted/implemented survive only on old sessions. The
+ * old counters here read implemented/accepted EXCLUSIVELY, which nothing has
+ * written since the thank became the answer — so the story lines were
+ * permanently zero and only "you helped N proposals" ever rendered.
+ */
+const LANDED_STATUSES: ReadonlySet<string> = new Set([
+	AgoraSuggestionStatus.thanked,
+	AgoraSuggestionStatus.accepted,
+	AgoraSuggestionStatus.implemented,
+]);
 
 /**
  * What the student actually DID, counted from the suggestions still in the
@@ -50,17 +63,153 @@ function readMyStory(userId: string): MyStory {
 	);
 
 	return {
-		ideasWoven: authored.filter((s) => s.suggestionStatus === AgoraSuggestionStatus.implemented)
-			.length,
-		ideasAdopted: authored.filter((s) => s.suggestionStatus === AgoraSuggestionStatus.accepted)
-			.length,
+		ideasLanded: authored.filter((s) => LANDED_STATUSES.has(s.suggestionStatus ?? '')).length,
 		classmatesHelped: new Set(authored.map((s) => s.parentId)).size,
 		voicesWovenIn: new Set(
-			received
-				.filter((s) => s.suggestionStatus === AgoraSuggestionStatus.implemented)
-				.map((s) => s.creatorId),
+			received.filter((s) => LANDED_STATUSES.has(s.suggestionStatus ?? '')).map((s) => s.creatorId),
 		).size,
 	};
+}
+
+/**
+ * "Your proposal traveled 41 → 68": the whole revision journey as one
+ * retrospective sentence — the finale is where the per-version numbers are
+ * safe to say out loud (nothing left to fixate on mid-lesson).
+ */
+function journeyLine(userId: string): m.Children {
+	const { proposals, scores } = getDeliberationState();
+	const mine = proposals.find((proposal) => proposal.creatorId === userId);
+	if (!mine) return null;
+	const score = scores[mine.statementId];
+	const history = score?.editHistory ?? [];
+	if (history.length === 0) return null;
+	const from = Math.round(history[0].bridgingAtEdit);
+	const to = Math.round(score?.bridgingScore ?? 0);
+	if (from === to) return null;
+
+	return m(
+		'p.results__journey',
+		iconLabel(
+			'trend',
+			t('results.journey_traveled', { range: `⁦${from} → ${to}⁩`, n: history.length + 1 }),
+		),
+	);
+}
+
+/**
+ * The private forward look: one optional "what would you change next time?"
+ * box. Stored locally, shown to nobody — a reflection scaffold, not data.
+ */
+function reflectionBox(sessionId: string): m.Children {
+	const key = `agora_${sessionId}_reflection`;
+	let stored = '';
+	try {
+		stored = sessionStorage.getItem(key) ?? '';
+	} catch {
+		// Storage unavailable — the box still works for the sitting
+	}
+
+	return m('.results__reflection', [
+		m('p.results__debrief-heading', t('results.reflection_prompt')),
+		m('textarea.text-input', {
+			value: stored,
+			rows: 2,
+			placeholder: t('results.reflection_placeholder'),
+			oninput: (event: InputEvent) => {
+				try {
+					sessionStorage.setItem(key, (event.target as HTMLTextAreaElement).value);
+				} catch {
+					// Nothing to do
+				}
+			},
+		}),
+		m('p.results__mine-note', t('results.reflection_private')),
+	]);
+}
+
+interface Recognition {
+	icon: IconName;
+	titleKey: string;
+	value: string;
+}
+
+/**
+ * Plural, role-based recognitions — a portrait of the class instead of one
+ * hierarchy. Multiple students win on different dimensions, every dimension
+ * is mastery-referenced, and proposal-based ones credit the PROPOSAL by
+ * number (proposals stay anonymous; helping identities are the public ones).
+ */
+function buildRecognitions(
+	participants: readonly AgoraParticipant[],
+	userId?: string,
+): Recognition[] {
+	const { proposals, scores, suggestions } = getDeliberationState();
+	const out: Recognition[] = [];
+	const numberOf = (statementId: string): number =>
+		proposals.findIndex((proposal) => proposal.statementId === statementId) + 1;
+	const nameOf = (uid: string): string => {
+		if (uid === userId) return t('board.you');
+
+		return participants.find((participant) => participant.userId === uid)?.anonName ?? '';
+	};
+
+	// Bridge-Builder: the proposal both camps hold up highest
+	const byBridge = [...proposals].sort(
+		(a, b) =>
+			(scores[b.statementId]?.bridgingScore ?? 0) - (scores[a.statementId]?.bridgingScore ?? 0),
+	)[0];
+	if (byBridge && (scores[byBridge.statementId]?.bridgingScore ?? 0) > 0) {
+		out.push({
+			icon: 'trend',
+			titleKey: 'results.recognition_bridge',
+			value: t('results.recognition_proposal', { n: numberOf(byBridge.statementId) }),
+		});
+	}
+
+	// Craftsperson: the proposal that traveled furthest upward across drafts
+	const travel = (statementId: string): number => {
+		const score = scores[statementId];
+		const history = score?.editHistory ?? [];
+		if (history.length === 0) return 0;
+
+		return (score?.bridgingScore ?? 0) - history[0].bridgingAtEdit;
+	};
+	const byTravel = [...proposals].sort((a, b) => travel(b.statementId) - travel(a.statementId))[0];
+	if (byTravel && travel(byTravel.statementId) > 0) {
+		out.push({
+			icon: 'edit',
+			titleKey: 'results.recognition_craft',
+			value: t('results.recognition_proposal', { n: numberOf(byTravel.statementId) }),
+		});
+	}
+
+	// First Responder: the classmate whose first improvement idea came earliest
+	const ideas = Object.values(suggestions)
+		.flat()
+		.filter((entry) => isSuggestionKind(entry))
+		.sort((a, b) => a.createdAt - b.createdAt);
+	const first = ideas[0];
+	if (first && nameOf(first.creatorId)) {
+		out.push({
+			icon: 'idea',
+			titleKey: 'results.recognition_first',
+			value: nameOf(first.creatorId),
+		});
+	}
+
+	// Quiet Engine: the classmate who kept the commons running — most ratings
+	const byRatings = [...participants].sort(
+		(a, b) => (b.points.rating ?? 0) - (a.points.rating ?? 0),
+	)[0];
+	if (byRatings && (byRatings.points.rating ?? 0) > 0) {
+		out.push({
+			icon: 'square',
+			titleKey: 'results.recognition_engine',
+			value: nameOf(byRatings.userId),
+		});
+	}
+
+	return out;
 }
 
 /**
@@ -71,12 +220,13 @@ function readMyStory(userId: string): MyStory {
  * (which averages everyone's points), and deliberately shows only your own
  * numbers: no ranking, no comparison, nothing to lose by reading it.
  */
-function myJourneyCard(participant: AgoraParticipant): m.Children {
+function myJourneyCard(participant: AgoraParticipant, sessionId: string): m.Children {
 	const points = participant.points;
 	const story = readMyStory(participant.userId);
 	const parts: Array<{ value: number; label: string }> = [
 		{ value: points.helping, label: t('results.my_helping') },
 		{ value: points.rating ?? 0, label: t('results.my_rating') },
+		{ value: points.revising ?? 0, label: t('results.my_revising') },
 		{ value: points.proposals, label: t('results.my_proposals') },
 		{ value: points.valueAccuracy, label: t('results.my_values') },
 	];
@@ -94,16 +244,20 @@ function myJourneyCard(participant: AgoraParticipant): m.Children {
 				]),
 			),
 		),
+		// How far the text itself came — the retrospective is where the
+		// per-version numbers belong
+		journeyLine(participant.userId),
 		// The sentences that carry the collaboration message home
 		m('ul.results__story', [
-			story.ideasWoven > 0 ? m('li', tCount('results.story_woven', story.ideasWoven)) : null,
-			story.ideasAdopted > 0 ? m('li', tCount('results.story_adopted', story.ideasAdopted)) : null,
+			story.ideasLanded > 0 ? m('li', tCount('results.story_woven', story.ideasLanded)) : null,
 			story.classmatesHelped > 0
 				? m('li', tCount('results.story_helped', story.classmatesHelped))
 				: null,
 			story.voicesWovenIn > 0 ? m('li', tCount('results.story_voices', story.voicesWovenIn)) : null,
 		]),
 		m('p.results__mine-note', t('results.my_contribution_note')),
+		// The forward look: the one question a finale should leave behind
+		reflectionBox(sessionId),
 	]);
 }
 
@@ -217,10 +371,12 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 			const showFullDebrief = outcome !== AgoraSessionOutcome.success;
 
 			/** How the PROPOSALS did — the class map and everything hung off it */
+			const recognitions = buildRecognitions(participants, myParticipant?.userId);
+
 			const classHalf: m.Children = [
 				// Mine first: the student reads their own story, then sees the
 				// class outcome their points fed into
-				myParticipant ? myJourneyCard(myParticipant) : null,
+				myParticipant ? myJourneyCard(myParticipant, session.sessionId) : null,
 
 				m('.card.results__score-panel', [
 					m('p.teacher__section-title', t('results.class_score')),
@@ -270,6 +426,28 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 						finale: true,
 					}),
 				]),
+
+				// Plural recognitions: several ways to have mattered, so the
+				// finale reads as a portrait of the class, not one hierarchy
+				recognitions.length > 0
+					? m('.card.stack.results__recognitions', [
+							m('p.teacher__section-title', t('results.recognitions_title')),
+							// NO keys: these rows sit beside an unkeyed title in one
+							// children array, and Mithril forbids mixing (blank-screen
+							// crash); the list is short and stable, keys buy nothing
+							...recognitions.map((recognition) =>
+								m('.results__recognition', [
+									m(
+										'span.results__recognition-icon',
+										{ 'aria-hidden': 'true' },
+										m(Icon, { name: recognition.icon, size: 20 }),
+									),
+									m('span.results__recognition-title', t(recognition.titleKey)),
+									m('span.results__recognition-value', recognition.value),
+								]),
+							),
+						])
+					: null,
 
 				m('.card.stack', [
 					m('p.teacher__section-title', t('results.health_title')),

@@ -33,10 +33,6 @@ export function deriveCamp(campPosition: number): AgoraCamp {
 	return AgoraCamp.center;
 }
 
-function clamp01(value: number): number {
-	return Math.min(1, Math.max(0, value));
-}
-
 /**
  * One camp's warmth toward a proposal, 0…1, from its mean evaluation (-1…1).
  *
@@ -63,7 +59,7 @@ function clamp01(value: number): number {
  * The thresholds move with it (see CREDIT_THRESHOLD* in agoraConstants), so
  * the sentiment a bridging credit costs is exactly what it was.
  */
-function warmth(mean: number): number {
+export function warmth(mean: number): number {
 	return (Math.max(-1, Math.min(1, mean)) + 1) / 2;
 }
 

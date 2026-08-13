@@ -41,3 +41,22 @@ export function unregisterMineNavigator(navigate: () => void): void {
 export function requestMineFocus(): void {
 	if (mineNavigator) mineNavigator();
 }
+
+/**
+ * The third bridge: "your idea slot is free — another stall?". A decline
+ * re-arms the helper's idea slot, and the toast that says so must be able to
+ * WALK them back into the market instead of leaving the invitation as words.
+ */
+let marketNavigator: (() => void) | null = null;
+
+export function registerMarketNavigator(navigate: () => void): void {
+	marketNavigator = navigate;
+}
+
+export function unregisterMarketNavigator(navigate: () => void): void {
+	if (marketNavigator === navigate) marketNavigator = null;
+}
+
+export function requestMarketFocus(): void {
+	if (marketNavigator) marketNavigator();
+}

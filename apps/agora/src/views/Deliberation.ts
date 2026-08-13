@@ -7,11 +7,13 @@ import {
 	listenToDeliberation,
 	stopDeliberationListeners,
 	submitProposal,
+	submitSuggestion,
 	askCharacterReview,
 	getHelpedProposals,
 	getOwnerThreads,
 	getThreadMessages,
 	isSuggestionKind,
+	openSuggestionsBy,
 	AgoraProposal,
 	HelpedProposal,
 } from '../lib/proposals';
@@ -24,6 +26,8 @@ import {
 	unregisterHelpedNavigator,
 	registerMineNavigator,
 	unregisterMineNavigator,
+	registerMarketNavigator,
+	unregisterMarketNavigator,
 } from '../lib/helpedFocus';
 import { EraMapLantern } from '../components/EraMap';
 import { ResultsBoard } from '../components/ResultsBoard';
@@ -38,9 +42,10 @@ import {
 	ratingsMovedSince,
 	reWeighMoment,
 	scoreMovedMoment,
+	supportSinceEdit,
+	type SupportSinceEdit,
 } from '../lib/improvementSignals';
 import { NeedsPeek } from '../components/NeedsBoard';
-import { celebrate } from '../lib/celebration';
 import {
 	flushSeenState,
 	isEditedSinceSeen,
@@ -59,6 +64,7 @@ import {
 	AgoraSuggestionStatus,
 	AgoraTopicPackage,
 	AGORA_AI_REVIEW,
+	AGORA_BRIDGING,
 	AGORA_CYCLE,
 	AGORA_LIMITS,
 	createAgoraCharacterReviewId,
@@ -347,6 +353,140 @@ export function Deliberation(
 	/** Stalls I helped on this lap — the way forward earns its weight once I have */
 	const helpedThisLap = new Set<string>();
 	/**
+	 * The gap prompt: a rating is a judgment, and a judgment is the beginning
+	 * of a repair. Right after a press below the top face the stall offers —
+	 * never demands — a one-tap way to say what would make the text stronger.
+	 * An invitation, not a gate: the next rating costs exactly the same taps
+	 * whether or not it renders, so there is nothing to rate top-face to avoid.
+	 */
+	let gapPrompt: { proposalId: string; kind: 'gap' | 'keep' } | null = null;
+	let gapDraft = '';
+	let gapSending = false;
+	/** Proposals already offered a prompt this lap — one ask per stall per lap */
+	let gapOffered = new Set<string>();
+	/** Prompts shown this lap — past the cap the square goes quiet (no nagging) */
+	let gapPromptsThisLap = 0;
+	/** Invitations per lap. More is nagging, and nagging buys top-face inflation. */
+	const GAP_PROMPTS_PER_LAP = 2;
+	/**
+	 * The write desk's self-check: which character's need does my sentence
+	 * serve? Purely local, no AI, no score — a thinking scaffold the student
+	 * ticks for themselves (game-script delta #3: the needs are the raw
+	 * material of a proposal both camps can live with).
+	 */
+	const selfCheck = new Set<string>();
+
+	/**
+	 * The owner already declined an idea of mine here — the invitation must not
+	 * reopen a closed door; the thread stays available for whoever wants it.
+	 */
+	function ownerDeclinedMine(proposalId: string): boolean {
+		return (getDeliberationState().suggestions[proposalId] ?? []).some(
+			(entry) =>
+				entry.creatorId === userId && entry.suggestionStatus === AgoraSuggestionStatus.declined,
+		);
+	}
+
+	/**
+	 * Decide whether this press earns the stall an invitation. Below the top
+	 * face it asks "what would make it stronger"; on the top face it
+	 * occasionally (deterministically, no dice) asks "say what to keep" — so
+	 * the class never learns that helping is what happens to weak proposals.
+	 */
+	function maybeOfferGapPrompt(proposal: AgoraProposal, value: number): void {
+		const proposalId = proposal.statementId;
+		if (gapPromptsThisLap >= GAP_PROMPTS_PER_LAP) return;
+		if (gapOffered.has(proposalId)) return;
+		// The message this composer sends must actually BE an idea: the thread
+		// turns a first message into suggestion-kind only when no idea of mine
+		// is open here (same rule as ThreadChat's composer)
+		if (openSuggestionsBy(proposalId, userId) > 0) return;
+		if (ownerDeclinedMine(proposalId)) return;
+		const keepInvite = value >= 1 && studentOrder(proposalId) % 3 === 0;
+		if (value >= 1 && !keepInvite) return;
+
+		gapOffered.add(proposalId);
+		gapPromptsThisLap += 1;
+		gapDraft = '';
+		gapPrompt = { proposalId, kind: value >= 1 ? 'keep' : 'gap' };
+	}
+
+	/** The invitation's fold-out: insight framing, the both-camps question, a composer */
+	function gapPromptCard(live: AgoraSession, proposal: AgoraProposal): m.Children {
+		if (gapPrompt?.proposalId !== proposal.statementId) return null;
+		const keep = gapPrompt.kind === 'keep';
+		const ready = gapDraft.trim().length >= AGORA_LIMITS.MIN_ANSWER_LENGTH;
+
+		return m(
+			Collapsible,
+			m('.gap-prompt', { 'aria-live': 'polite' }, [
+				m(
+					'p.gap-prompt__insight',
+					iconLabel('idea', t(keep ? 'delib.gap_keep' : 'delib.gap_insight')),
+				),
+				keep ? null : m('p.gap-prompt__question', t('delib.help_question')),
+				keep ? null : m('p.gap-prompt__hint', t('delib.help_dont_attack')),
+				m('textarea.gap-prompt__textarea', {
+					value: gapDraft,
+					rows: 2,
+					maxlength: AGORA_LIMITS.MAX_ANSWER_LENGTH,
+					placeholder: t('delib.suggest_placeholder'),
+					'aria-label': t('delib.suggest_placeholder'),
+					oninput: (event: InputEvent) => {
+						gapDraft = (event.target as HTMLTextAreaElement).value;
+					},
+				}),
+				m('.gap-prompt__actions', [
+					m(
+						'button.btn.btn--primary',
+						{
+							disabled: !ready || gapSending,
+							onclick: () => {
+								gapSending = true;
+								submitSuggestion(
+									live,
+									proposal,
+									initialVnode.attrs.myParticipant.anonName,
+									gapDraft.trim(),
+								)
+									.then(() => {
+										// Same acknowledgment as an idea sent from the thread
+										helpedThisLap.add(proposal.statementId);
+										sentAckId = proposal.statementId;
+										window.clearTimeout(sentAckTimer);
+										sentAckTimer = window.setTimeout(() => {
+											sentAckId = '';
+											m.redraw();
+										}, SENT_ACK_MS);
+										gapPrompt = null;
+										gapDraft = '';
+									})
+									.catch((error: unknown) => {
+										console.error('[Delib] Gap-prompt suggestion failed:', error);
+									})
+									.finally(() => {
+										gapSending = false;
+										m.redraw();
+									});
+							},
+						},
+						t('delib.gap_send'),
+					),
+					m(
+						'button.text-link.text-link--quiet',
+						{
+							onclick: () => {
+								gapPrompt = null;
+								gapDraft = '';
+							},
+						},
+						t('delib.gap_skip'),
+					),
+				]),
+			]),
+		);
+	}
+	/**
 	 * The row's order, computed once per lap and then held still. The sort key
 	 * (open ideas per proposal) changes live as classmates send theirs, and a
 	 * list that reshuffles under a reading finger is worse than a stale one.
@@ -571,6 +711,25 @@ export function Deliberation(
 
 	registerMineNavigator(goToMine);
 
+	/**
+	 * "Your idea slot is free — another stall?" (the decline toast's action):
+	 * walk to the market. A deliberate tap, so moving the lap's step is fine —
+	 * the same jump the Others tab makes after the laps are done.
+	 */
+	function goToMarket(): void {
+		closeDock();
+		screen = 'others';
+		if (cycle.step === 'done') {
+			setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
+		} else if (cycle.step !== 'help') {
+			setCycle({ step: 'help' });
+		} else {
+			m.redraw();
+		}
+	}
+
+	registerMarketNavigator(goToMarket);
+
 	/** Scroll to + flash the celebrated card, once, when it appears */
 	function spotlightHelped(dom: Element, proposalId: string): void {
 		if (focusHelpedId !== proposalId) return;
@@ -613,10 +772,45 @@ export function Deliberation(
 		| null = null;
 	let splashTimer: number | undefined;
 
+	/**
+	 * The class-bridge pulse, captured at each lap turn: the strongest bridge
+	 * on the square now vs where it stood when the previous lap began. The
+	 * ONE live collective surface in the game — it lives on the lap splash (a
+	 * doorway between rooms, tap-to-skip), never over anyone's pen.
+	 */
+	let lapPulse: { from?: number; to: number } | null = null;
+
+	function captureLapPulse(): void {
+		const classMax = Math.round(
+			Math.max(
+				0,
+				...Object.values(getDeliberationState().scores).map((score) => score.bridgingScore ?? 0),
+			),
+		);
+		const pulseKey = `agora_${session.sessionId}_classpulse`;
+		const stored = sessionStorage.getItem(pulseKey);
+		lapPulse = { from: stored !== null ? Number(stored) : undefined, to: classMax };
+		try {
+			sessionStorage.setItem(pulseKey, String(classMax));
+		} catch {
+			// Storage unavailable — the pulse just restarts next lap
+		}
+	}
+
 	function showSplash(next: NonNullable<typeof splash>): void {
 		splash = next;
 		window.clearTimeout(splashTimer);
-		const hold = next.kind === 'round' ? (reducedMotion ? 1100 : 2000) : reducedMotion ? 600 : 1300;
+		// A lap-two-onward splash carries the intention beat and the class
+		// pulse — reading matter, so it stands longer (still tap-to-skip)
+		const roundHold =
+			next.kind === 'round' && next.round >= 2
+				? reducedMotion
+					? 4000
+					: 6000
+				: reducedMotion
+					? 1100
+					: 2000;
+		const hold = next.kind === 'round' ? roundHold : reducedMotion ? 600 : 1300;
 		splashTimer = window.setTimeout(() => {
 			splash = null;
 			m.redraw();
@@ -626,6 +820,65 @@ export function Deliberation(
 	function dismissSplash(): void {
 		window.clearTimeout(splashTimer);
 		splash = null;
+	}
+
+	/**
+	 * The class-bridge pulse line on the lap splash. Movement framing only —
+	 * "we moved", never "we still need N" (gap framing invites hunting for
+	 * whoever is costing the class). A down-lap says the bridge is being
+	 * tested, with no number and no culprit; the class total is never
+	 * decomposed anywhere.
+	 */
+	function splashPulseLine(): m.Children {
+		if (!lapPulse || lapPulse.to <= 0) return null;
+		const { from, to } = lapPulse;
+		if (from === undefined || from <= 0 || from === to) {
+			return m('p.delib-splash__pulse', iconLabel('chart', t('round.pulse_first', { n: to })));
+		}
+		if (to < from) {
+			return m('p.delib-splash__pulse.delib-splash__pulse--steady', t('round.pulse_down'));
+		}
+
+		return m(
+			'p.delib-splash__pulse',
+			iconLabel('trend', t('round.pulse', { range: `⁦${from} → ${to}⁩` })),
+		);
+	}
+
+	/**
+	 * The lap's opening question, asked at the door: where my bridge stands,
+	 * what is waiting in the workshop, and one button to the pen. Skippable
+	 * like the whole splash — an implementation intention, never a toll.
+	 */
+	function splashIntentionBeat(): m.Children {
+		const { proposals, suggestions, scores } = getDeliberationState();
+		const myProposal = proposals.find((proposal) => proposal.creatorId === userId);
+		if (!myProposal) return null;
+		const bridge = Math.round(scores[myProposal.statementId]?.bridgingScore ?? 0);
+		const waiting = (suggestions[myProposal.statementId] ?? []).filter(
+			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+		).length;
+
+		return m('.delib-splash__intent', [
+			m('p.delib-splash__intent-line', [
+				bridge > 0 ? t('round.intention_bridge', { n: bridge }) : null,
+				waiting > 0 ? ` ${t('round.intention_ideas', { n: waiting })}` : null,
+			]),
+			m('p.delib-splash__ask', t('round.intention_ask')),
+			m(
+				'button.btn.btn--primary',
+				{
+					onclick: (event: Event) => {
+						// The splash's own tap-anywhere dismiss must not eat this
+						event.stopPropagation();
+						dismissSplash();
+						openEditBox();
+						m.redraw();
+					},
+				},
+				t('round.intention_cta'),
+			),
+		]);
 	}
 
 	function setCycle(patch: Partial<CycleState>): void {
@@ -656,9 +909,15 @@ export function Deliberation(
 	function advanceRound(): void {
 		openStallId = '';
 		helpedThisLap.clear();
+		// A fresh lap re-arms the invitations — quietly
+		gapPrompt = null;
+		gapOffered = new Set();
+		gapPromptsThisLap = 0;
 		if (cycle.round >= AGORA_CYCLE.ROUNDS) {
 			setCycle({ step: 'done' });
 		} else {
+			// The doorway moment: how far the class moved while this lap ran
+			captureLapPulse();
 			setCycle({ round: cycle.round + 1, step: 'mine', rated: 0 });
 			draft = '';
 		}
@@ -845,14 +1104,24 @@ export function Deliberation(
 										),
 									])
 								: null,
-							m(
-								// A stale verdict makes re-asking THE next action
-								stale ? 'button.btn.btn--primary' : 'button.btn.btn--secondary',
-								{ disabled: asksLeft === 0, onclick: ask },
-								asksLeft > 0
-									? `${t('delib.ask_again')} (${t('delib.asks_left', { n: asksLeft })})`
-									: t('delib.no_asks_left'),
-							),
+							m('.delib__actions.delib__actions--tight', [
+								// Advice must open a door to the pen, or it is a dead end.
+								// On a STALE verdict revising stays primary and re-asking
+								// secondary — the old order promoted re-asking over the
+								// revision the staleness was announcing.
+								m(
+									stale ? 'button.btn.btn--primary' : 'button.btn.btn--secondary',
+									{ onclick: openEditBox },
+									iconLabel('edit', t('delib.advice_to_pen')),
+								),
+								m(
+									'button.btn.btn--secondary',
+									{ disabled: asksLeft === 0, onclick: ask },
+									asksLeft > 0
+										? `${t('delib.ask_again')} (${t('delib.asks_left', { n: asksLeft })})`
+										: t('delib.no_asks_left'),
+								),
+							]),
 						])
 					: m(
 							'button.btn.btn--secondary',
@@ -916,11 +1185,13 @@ export function Deliberation(
 										// Saved — the mirror has nothing left to protect
 										forgetMineDraft();
 										// The baseline for the direction chip is stamped by the
-										// server on this same save (onAgoraProposalWritten), so
-										// it survives a refresh and a device switch.
-										// Improving your own proposal earns glitter — the
-										// behavior the game most wants to reinforce
-										celebrate({ message: t('celebrate.proposal_improved'), detail: text });
+										// server on this same save (onAgoraProposalWritten).
+										// QUIET on purpose: the button below flips to "✓ saved",
+										// and whether this save deserved glitter is the server's
+										// call — a credited revision comes back as a
+										// notification and celebrates from there. The old
+										// same-every-save glitter taught that saving is the
+										// achievement and drowned out the real moments.
 									})
 									.catch((error: unknown) => {
 										console.error('[Delib] Update proposal failed:', error);
@@ -945,6 +1216,98 @@ export function Deliberation(
 	}
 
 	/**
+	 * The revision journey: what each past version of my text was reading when
+	 * I replaced it, ending at the live number. A MEMORY, not a chart (the
+	 * text's evolution is the headline; the numbers stay small and aggregate),
+	 * and a dip renders muted amber — information for the next edit, never a
+	 * punishment. Lives on the My screen only: the owner's reading room, where
+	 * the aggregate reception already lives.
+	 */
+	function revisionJourney(myProposal: AgoraProposal): m.Children {
+		const score = getDeliberationState().scores[myProposal.statementId];
+		const history = score?.editHistory ?? [];
+		if (history.length === 0) return null;
+		const live = Math.round(score?.bridgingScore ?? 0);
+		// Entry i is the closing score of version i+1's predecessor — see the
+		// schema note: the strip reads v1·h[0] → … → now·(live)
+		const steps = [...history.map((entry) => Math.round(entry.bridgingAtEdit)), live];
+		// A journey of zeros is a proposal nobody has rated yet — nothing to say
+		if (steps.every((value) => value === 0)) return null;
+
+		return m('.stack.journey-block', [
+			m(
+				'.journey',
+				{ role: 'img', 'aria-label': t('delib.journey_label') },
+				steps.map((value, index) => {
+					const previous = index > 0 ? steps[index - 1] : undefined;
+					const down = previous !== undefined && value < previous;
+					const now = index === steps.length - 1;
+
+					return m(
+						'span.journey__step',
+						{
+							class:
+								[down ? 'journey__step--down' : undefined, now ? 'journey__step--now' : undefined]
+									.filter(Boolean)
+									.join(' ') || undefined,
+						},
+						[
+							m(
+								'span.journey__version',
+								now ? t('delib.journey_now') : t('delib.journey_version', { n: index + 1 }),
+							),
+							m('span.journey__value', String(value)),
+						],
+					);
+				}),
+			),
+			tierDistanceLine(live),
+		]);
+	}
+
+	/**
+	 * Distance to the next rung of the bridging ladder — shown only when it is
+	 * within reach, so it reads as a map and never as a demand.
+	 */
+	function tierDistanceLine(live: number): m.Children {
+		const tier1 = AGORA_BRIDGING.CREDIT_THRESHOLD_TIER_1;
+		const tier2 = AGORA_BRIDGING.CREDIT_THRESHOLD;
+		const target = live < tier1 ? tier1 : live < tier2 ? tier2 : undefined;
+		if (target === undefined) return null;
+		const gap = target - live;
+		if (gap > 20) return null;
+
+		return m(
+			'p.journey__tier',
+			iconLabel(
+				'trend',
+				t(target === tier1 ? 'delib.tier_distance' : 'delib.tier_distance_full', { n: gap }),
+			),
+		);
+	}
+
+	/**
+	 * What the ratings that moved actually DID to the class's reading, said in
+	 * one clause after the count.
+	 *
+	 * Four different facts, and the old line could only say two of them: it rose
+	 * by this much, it fell by this much, it held still at this reading, or the
+	 * class had not spoken when I saved so there is nowhere to measure from.
+	 * Collapsing the last two into a bare count — or worse, into "moved by 0" —
+	 * is what made a student who had genuinely won a classmate over read their
+	 * own success as nothing happening.
+	 */
+	function supportClause(support: SupportSinceEdit): string {
+		if (support.now === undefined) return '';
+		if (support.delta === undefined) return ` · ${t('delib.support_now', { n: support.now })}`;
+		if (support.delta === 0) return ` · ${t('delib.support_same', { n: support.now })}`;
+
+		return ` · ${t(support.delta > 0 ? 'delib.support_up' : 'delib.support_down', {
+			n: Math.abs(support.delta),
+		})}`;
+	}
+
+	/**
 	 * MY screen: everything the workshop holds EXCEPT the edit box — how the
 	 * class received my last save, the improvements classmates sent, the
 	 * ask-the-characters helpers and the needs reminder. No AI rewriting
@@ -961,7 +1324,6 @@ export function Deliberation(
 			(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
 		).length;
 
-		const myScoreDoc = getDeliberationState().scores[myProposal.statementId];
 		// The cycle's return signal to the OWNER: classmates who (re)rated
 		// after my latest improvement. Aggregate count only — never who.
 		//
@@ -972,15 +1334,15 @@ export function Deliberation(
 		// of existence.
 		const editedAt = answerBaseline(myProposal.statementId, myProposal.lastUpdate);
 		const ratingsMoved = ratingsMovedSince(myProposal.statementId, editedAt, userId);
-		// Direction rides on the AGGREGATE: current bridge power vs where it
-		// stood when I last saved. The score consequence is game state;
-		// individual rating values stay private (see docs/feedback-cycle.md).
-		// The baseline is stamped SERVER-side at save time — it used to live in
-		// sessionStorage, so one refresh silently erased the direction and left
-		// the student a bare count with nothing to learn from.
-		const bridgeNow = myScoreDoc?.bridgingScore ?? 0;
-		const bridgeBase = myScoreDoc?.bridgingAtLastEdit;
-		const bridgeDelta = bridgeBase === undefined ? 0 : bridgeNow - bridgeBase;
+		// Direction rides on the AGGREGATE: the class's average support now vs
+		// where it stood when I last saved. The average and not the bridging
+		// score, because bridging is blended and damped enough to round a real
+		// change of mind away to zero (see agoraClassSupport) — and a count with
+		// "moved by 0" beside it teaches the opposite of what happened.
+		// Individual rating values stay private (see docs/feedback-cycle.md);
+		// the baseline is stamped SERVER-side at save time, so it survives a
+		// refresh and a device switch.
+		const support = supportSinceEdit(myProposal.statementId);
 
 		// No frame around the stack: every drawer below is already a card, and
 		// a box drawn around a column of boxes only spends a screen edge on
@@ -1010,18 +1372,15 @@ export function Deliberation(
 						'p.my-lantern__moved',
 						// Down is muted amber, not danger-red: a dip is information
 						// for the next edit, never a punishment
-						{ class: bridgeDelta < 0 ? 'my-lantern__moved--down' : undefined },
-						bridgeDelta === 0
-							? iconLabel('trend', tCount('delib.ratings_moved', ratingsMoved))
-							: iconLabel(
-									bridgeDelta > 0 ? 'trend' : 'trend-down',
-									`${tCount('delib.ratings_moved', ratingsMoved)} · ${t(
-										bridgeDelta > 0 ? 'delib.bridge_up' : 'delib.bridge_down',
-										{ n: Math.abs(bridgeDelta) },
-									)}`,
-								),
+						{ class: (support.delta ?? 0) < 0 ? 'my-lantern__moved--down' : undefined },
+						iconLabel(
+							(support.delta ?? 0) < 0 ? 'trend-down' : 'trend',
+							`${tCount('delib.ratings_moved', ratingsMoved)}${supportClause(support)}`,
+						),
 					)
 				: null,
+			// The aggregate line above, grown a memory: where each version stood
+			revisionJourney(myProposal),
 			workbenchSection('idea', t('delib.suggestions_received'), suggestionsSection(myProposal), {
 				headId: DOCK_FEEDBACK_HEAD_ID,
 				// Waiting decisions AND unread replies — everything in the
@@ -1220,7 +1579,23 @@ export function Deliberation(
 	function suggestionsSection(myProposal: AgoraProposal): m.Children {
 		const threads = [...getOwnerThreads(myProposal.statementId).entries()];
 		if (threads.length === 0) {
-			return m('.stack', [m('p.square-says__meaning.text-center', t('delib.no_feedback_yet'))]);
+			// Not waiting copy — reciprocity copy: while the class reads yours,
+			// go be the classmate you're hoping for. With the door to do it.
+			return m('.stack', [
+				m('p.square-says__meaning.text-center', t('delib.no_feedback_reciprocity')),
+				m(
+					'button.btn.btn--secondary',
+					{
+						onclick: () => {
+							closeDock();
+							screen = 'others';
+							if (cycle.step === 'mine') setCycle({ step: 'rate', rated: 0 });
+							m.redraw();
+						},
+					},
+					t('delib.no_feedback_cta'),
+				),
+			]);
 		}
 		// Freshest conversation first
 		const lastAt = (messages: AgoraProposal[]): number =>
@@ -1416,8 +1791,22 @@ export function Deliberation(
 		const unreadThreads = getDeliberationState().proposals.filter(
 			(proposal) => proposal.creatorId !== userId && myThreadUnread(proposal) > 0,
 		).length;
+		// ...plus proposals I merely RATED that were rewritten since — the
+		// classic "go look again, maybe you have something to add now" moment,
+		// which the badge used to be blind to. Helped proposals are excluded
+		// (the reWeigh term above already scores them); self-clearing, since a
+		// re-rate advances myRating.updatedAt past the edit.
+		const helpedIds = new Set(
+			getHelpedProposals(userId).map((entry) => entry.proposal.statementId),
+		);
+		const reRateDue = getDeliberationState().proposals.filter((proposal) => {
+			if (proposal.creatorId === userId || helpedIds.has(proposal.statementId)) return false;
+			const mine = getDeliberationState().myRatings[proposal.statementId];
 
-		return changed + unreadThreads;
+			return mine !== undefined && editClock(proposal.statementId) > mine.updatedAt;
+		}).length;
+
+		return changed + unreadThreads + reRateDue;
 	}
 
 	/**
@@ -1481,8 +1870,12 @@ export function Deliberation(
 				session: live,
 				proposalId: proposal.statementId,
 				// Weighing the text IS reading it — the change chips clear
-				onVote: () => {
+				onVote: (value) => {
 					ackProposalSeen(proposal);
+					// The judgment just formed is the best moment to offer the
+					// repair — see maybeOfferGapPrompt for every rule that keeps
+					// this an invitation and not homework
+					maybeOfferGapPrompt(proposal, value);
 				},
 				// Only a FIRST vote moves the lap along; changing my mind about a
 				// proposal I already weighed is free, and must not buy a lap step.
@@ -1493,6 +1886,7 @@ export function Deliberation(
 							}
 						: undefined,
 			}),
+			gapPromptCard(live, proposal),
 			// The conversation is one line here, and a whole page one tap away
 			threadEntry({
 				label: t('delib.chat_with_author'),
@@ -1702,6 +2096,29 @@ export function Deliberation(
 	}
 
 	/**
+	 * The market's private nudge: I rated this one at zero or below, sent no
+	 * idea, and nobody closed the door — I saw a gap, and the stall remembers.
+	 * My rating, my eyes only: the chip renders from MY local rating state and
+	 * nothing about it reaches the owner.
+	 */
+	function gapSeenChip(proposal: AgoraProposal): m.Children {
+		const mine = getDeliberationState().myRatings[proposal.statementId];
+		if (mine === undefined || mine.value > 0) return null;
+		if (ownerDeclinedMine(proposal.statementId)) return null;
+		// Any idea of mine here — open or resolved — means the chip's job is done
+		const offered = (getDeliberationState().suggestions[proposal.statementId] ?? []).some(
+			(entry) => entry.creatorId === userId && isSuggestionKind(entry),
+		);
+		if (offered) return null;
+
+		return m(
+			'span.stall__chip.stall__chip--icon.stall__chip--gap',
+			{ 'aria-label': t('delib.gap_chip'), title: t('delib.gap_chip') },
+			m(Icon, { name: 'idea', size: 18 }),
+		);
+	}
+
+	/**
 	 * The market-room chip: sent just now, an unread reply, or a stall I
 	 * already helped — one story at a time, strongest first. The "improved
 	 * since" news moved to changeChip, which rides alongside.
@@ -1744,6 +2161,7 @@ export function Deliberation(
 			stopDeliberationListeners();
 			unregisterHelpedNavigator(goToHelped);
 			unregisterMineNavigator(goToMine);
+			unregisterMarketNavigator(goToMarket);
 			window.removeEventListener('popstate', onPopState);
 		},
 
@@ -1838,6 +2256,11 @@ export function Deliberation(
 											),
 										),
 									),
+									// The doorway beats (lap 2+): shared fate first, then the
+									// one personal question a lap opens with. Numbers live
+									// HERE — between rooms — and nowhere over the pen.
+									splash.round >= 2 ? splashPulseLine() : null,
+									splash.round >= 2 ? splashIntentionBeat() : null,
 								])
 							: // The place's own little scene: it used to sit on a banner
 								// occupying the top of every screen for the whole time you
@@ -2004,6 +2427,41 @@ export function Deliberation(
 										draft = (event.target as HTMLTextAreaElement).value;
 									},
 								}),
+								// The self-check: whose need does this serve? Two toggles
+								// the student answers for themselves — no AI, no score,
+								// and nothing downstream reads them
+								m('.write-desk__selfcheck', [
+									m('p.write-desk__selfcheck-ask', t('delib.selfcheck_ask')),
+									m(
+										'.write-desk__selfcheck-chips',
+										topic.characters.map((character) => {
+											const checked = selfCheck.has(character.characterId);
+
+											return m(
+												'button.write-desk__selfcheck-chip',
+												{
+													type: 'button',
+													class: checked ? 'write-desk__selfcheck-chip--on' : undefined,
+													'aria-pressed': String(checked),
+													onclick: () => {
+														if (checked) selfCheck.delete(character.characterId);
+														else selfCheck.add(character.characterId);
+													},
+												},
+												[
+													checked
+														? m(
+																'span.write-desk__selfcheck-mark',
+																{ 'aria-hidden': 'true' },
+																m(Icon, { name: 'check', size: 14 }),
+															)
+														: null,
+													character.name,
+												],
+											);
+										}),
+									),
+								]),
 								m('.delib__actions', [
 									m(
 										'button.btn.btn--primary.btn--full.btn--lg.write-desk__cta',
@@ -2194,6 +2652,13 @@ export function Deliberation(
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						header,
 						delibNav(myProposal),
+						// The market's ASK, said where the work is: the same question
+						// the improvement composer opens with, as the room's mission
+						// brief — the help place used to be a bare list of stalls.
+						m('.card.market-ask', [
+							m('p.market-ask__question', iconLabel('target', t('delib.help_question'))),
+							m('p.market-ask__hint', t('delib.help_dont_attack')),
+						]),
 						stalls.length > 0
 							? [
 									m(
@@ -2209,7 +2674,12 @@ export function Deliberation(
 													openStallId = opening ? proposal.statementId : '';
 													if (opening) ackProposalSeen(proposal);
 												},
-												chips: [helpStallChip(proposal, helped), changeChip(proposal)],
+												// Change news outranks the private gap memo — a
+												// stall still wears at most two chips
+												chips: [
+													helpStallChip(proposal, helped),
+													changeChip(proposal) ?? gapSeenChip(proposal),
+												],
 												body: () => stallBody(live, proposal),
 											});
 										}),

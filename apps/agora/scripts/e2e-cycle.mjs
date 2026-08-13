@@ -169,6 +169,7 @@ const points = async (label, page) => {
 		helping: num('helping'),
 		proposals: num('proposals'),
 		rating: num('rating'),
+		revising: num('revising'),
 		total: num('total'),
 	};
 };
@@ -209,13 +210,15 @@ const closeDock = async (page) => {
 	await page.locator('.proposal-dock__scrim').waitFor({ state: 'detached', timeout: 5000 });
 };
 
-// The received-improvements accordion folds itself once nothing is waiting
-// (it is a to-do list) — a conversation you want to re-read is one tap in.
+// The received-improvements accordion lives on the MY SCREEN (the dock
+// keeps only the pen). It folds itself once nothing is waiting (it is a
+// to-do list) — a conversation you want to re-read is one tap in.
 const openInbox = async (page) => {
-	await openDock(page);
-	const head = page.locator('.proposal-dock--open button.workbench__head').first();
+	await closeDock(page);
+	await page.locator('.delib-nav__item--mine').click();
+	const head = page.locator('.my-screen button.workbench__head').first();
 	if ((await head.getAttribute('aria-expanded')) === 'false') await head.click();
-	await page.waitForSelector('.proposal-dock--open .chat-entry', { timeout: 10000 });
+	await page.waitForSelector('.my-screen .chat-entry', { timeout: 10000 });
 };
 
 // ---------- Phase A: propose (the cold-start credit) ----------
@@ -270,7 +273,16 @@ for (const [page, label, option] of [
 	// The acknowledgment beat: the press is SEEN (ring + ✓) before the fold
 	await page.locator('.rate-scale__option--selected .rate-scale__check').waitFor({ timeout: 5000 });
 	console.log(`${label} rated the other's proposal (ack beat shown)`);
+	// A below-top rating folds out the gap→composer INVITATION under the
+	// scale — the judgment just formed is the improvement funnel's mouth
+	await page.locator('.stall--open .gap-prompt').waitFor({ timeout: 5000 });
+	console.log(`${label} sees the gap invitation`);
 }
+// The invitation must never gate: S1 dismisses theirs with one tap, S2
+// leaves theirs open — and BOTH continue buttons below must work regardless
+await s1.locator('.gap-prompt .text-link').click();
+await s1.locator('.gap-prompt').waitFor({ state: 'detached', timeout: 5000 });
+console.log('   ✓ gap invitation dismissed with one tap (S1)');
 const afterRate1 = await waitForPoints(
 	'S1',
 	s1,
@@ -342,19 +354,19 @@ eq('received toast is a real button', toastTag, 'BUTTON');
 await shot(s1, '01-A-received-toast');
 await suggest(s1, 'S1(A)', 'אולי להבטיח ייצוג מסוים לאצולה באספה כדי שירגישו שותפים.');
 
-// Feedback NEVER opens the dock by itself — it waits with a count, and the
-// student decides when to look. Assert the quiet state before lifting it.
-const dockBadge = await s1.locator('.proposal-dock__badge').textContent();
-eq('A dock badge while collapsed', dockBadge.trim(), '1');
+// Feedback NEVER forces a screen change — it waits as a count on the My
+// tab (the dock keeps only the pen since b21fa1cde), and the student
+// decides when to look.
+const navBadge = s1.locator('.delib-nav__item--mine .delib-nav__badge');
+await navBadge.waitFor({ timeout: 10000 });
+eq('A My-tab badge', (await navBadge.textContent()).trim(), '1');
 eq('feedback did not force the sheet open', await s1.locator('.proposal-dock--open').count(), 0);
-console.log('   ✓ A DOCK SUB:', (await s1.locator('.proposal-dock__sub').textContent()).trim());
-await shot(s1, '01b-A-dock-collapsed-with-news');
+await shot(s1, '01b-A-mine-badge-with-news');
 
-// Now open it, as a student would. Inside, the received accordion is the
-// one that auto-opens (openCount > 0).
-await openDock(s1);
-await openDock(s2);
-const accordionCount = await s1.locator('.workbench__count').first().textContent();
+// Walk to the My screen, as a student would. There, the received accordion
+// is the one that auto-opens (openCount > 0).
+await s1.locator('.delib-nav__item--mine').click();
+const accordionCount = await s1.locator('.my-screen .workbench__count').first().textContent();
 eq('A accordion count', accordionCount.trim(), '1');
 
 const before2 = await points('S2', s2);
@@ -366,7 +378,7 @@ await clearCelebration(s1);
 // The owner's inbox is a list of INDICATORS; the decision lives inside the
 // conversation, exactly where the idea was said
 await openInbox(s1);
-await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.locator('.my-screen .chat-entry').first().click();
 await s1.waitForSelector('.chat-page', { timeout: 10000 });
 await shot(s1, '02-A-thread-page');
 await s1.locator('.thread__msg .btn--primary').first().click();
@@ -390,7 +402,17 @@ eq(
 	await s1.getByRole('button', { name: /^לא תודה$/ }).count(),
 	0,
 );
+// The thank→pen handoff: the moment 🙏 lands, the editable quote flips open
+// with the thanked idea PINNED beside it — the next natural act is weaving
+await s1.locator('.chat-page__pinned-quote').waitFor({ timeout: 5000 });
+console.log(
+	'   ✓ A thank→pen handoff — pinned idea:',
+	(await s1.locator('.chat-page__pinned-quote').textContent()).trim().slice(0, 50),
+);
+eq('the editor opened with the pin', await s1.locator('.chat-page__edit-input').count(), 1);
 await shot(s1, '02b-A-thanked');
+// Leaving without saving is allowed — the handoff is an invitation too
+await s1.locator('.chat-page__edit .btn--ghost').click();
 await leaveChat(s1);
 
 await s2.waitForSelector('.celebration', { timeout: 15000 });
@@ -425,14 +447,22 @@ console.log('S1(A) points before decline:', before1);
 await clearCelebration(s2);
 // Same door as the thank-you: the decision is taken inside the conversation
 await openInbox(s2);
-await s2.locator('.proposal-dock--open .chat-entry').first().click();
+await s2.locator('.my-screen .chat-entry').first().click();
 await s2.waitForSelector('.chat-page', { timeout: 10000 });
 await s2.getByRole('button', { name: /^לא תודה$/ }).click();
-// Other toasts (e.g. helped-improved) may share the stack — find OURS
-const declinedToast = s1.locator('.toast__text', { hasText: 'לא אומץ' });
+// Other toasts (e.g. helped-improved) may share the stack — find OURS.
+// The decline is a DOOR now, not a dead end: owner-authorship framing
+// ("they went a different direction"), and the toast itself is a button
+// that walks the freed idea slot back into the market.
+const declinedToast = s1.locator('.toast--action', { hasText: 'דוכן אחר' });
 await declinedToast.waitFor({ timeout: 15000 });
 const declinedText = (await declinedToast.textContent()).trim();
 console.log('A TOAST (declined):', declinedText);
+eq(
+	'declined toast is a real button (the re-entry ramp)',
+	await declinedToast.evaluate((el) => el.tagName),
+	'BUTTON',
+);
 // The penalty was regressive — the floor exempted spammers and taxed only
 // productive helpers — so it is gone, and the copy must not name a cost
 if (/0\.25|−|\-0/.test(declinedText)) fail(`declined toast still names a penalty: ${declinedText}`);
@@ -470,9 +500,28 @@ await s1
 			'ולצד זה ייקבע לוח זמנים ברור לביטול זכויות היתר של האצולה.',
 	);
 await s1.getByRole('button', { name: /^עדכון ההצעה$/ }).click();
-// A gets their own "proposal improved" glitter — dismiss it
-await s1.waitForSelector('.celebration', { timeout: 10000 });
-await s1.locator('.celebration button.btn--primary').click();
+// The save itself is QUIET now: the button flips to "נשמר" and no glitter
+// fires on the keystroke. Whether the save deserved a celebration is the
+// SERVER's verdict — and this one earns twice: the first credited revision
+// (+1: real text change after B's rating) and the thank-then-revise weave
+// (+1: B was thanked in Phase B). Both arrive as notifications a beat later.
+await s1.getByRole('button', { name: /נשמר/ }).waitFor({ timeout: 10000 });
+console.log('   ✓ A save acknowledged quietly (no instant glitter)');
+await s1.waitForSelector('.celebration', { timeout: 25000 });
+console.log(
+	'A CELEBRATION (server-credited):',
+	(await s1.locator('.celebration__message').textContent()).trim(),
+);
+const afterRevision = await waitForPoints(
+	'S1',
+	s1,
+	(p) => p.revising >= 1 && p.proposals >= before1.proposals + 1,
+	'the revision + weave credits',
+);
+console.log('S1(A) points after the revision:', afterRevision);
+eq('A revision credit (feedback-gated, first)', afterRevision.revising, 1);
+eq('A weave credit for the thanked idea', afterRevision.proposals, before1.proposals + 1);
+await clearCelebration(s1, 'S1(A)');
 await closeDock(s1);
 
 // The helped proposal visibly moved — B is told, on the card they helped
@@ -532,36 +581,62 @@ await s2.locator('.stall__reinvite').waitFor({ state: 'detached', timeout: 10000
 console.log('   ✓ ✨ marker cleared once B re-rated (no more stale nagging)');
 await shot(s2, '08-B-rerate-acked');
 
-// The bridging bonus: unreachable in a small class before the confidence
-// ramp learned how many cross-camp students actually exist
-const bridgeCeleb = s1.locator('.celebration__message', { hasText: 'גישרה' });
-await bridgeCeleb.waitFor({ timeout: 20000 });
-console.log('A CELEBRATION (bridging):', (await bridgeCeleb.textContent()).trim());
-await shot(s1, '09-A-bridging-celebration');
-await s1.locator('.celebration button.btn--ghost').click();
-const afterBridge1 = await waitForPoints(
-	'S1',
-	s1,
-	(p) => p.proposals >= before1.proposals + 15,
-	'the bridging bonus',
-);
-console.log('S1(A) points after bridging:', afterBridge1);
-eq('A bridging bonus', afterBridge1.proposals, before1.proposals + 15);
+// The bridging score after B's strong-for: cross-camp warmth(1)=1 at full
+// confidence → 0.65×100 = 65, and NO own-camp raters exist in a two-student
+// class — so under the re-pointed thresholds (tier 1 = 70, commit 6a1f70f5a)
+// the ladder is honestly out of reach here. Verify the SCORE landed at 65
+// and no tier paid; the ladder's payouts live in the bridging unit tests.
+const sessionMaxBridging = async () => {
+	const list = await (
+		await fetch(`${FS}/agoraScores?pageSize=300`, { headers: { Authorization: 'Bearer owner' } })
+	).json();
+
+	return Math.max(
+		0,
+		...(list.documents ?? [])
+			.filter((doc) => doc.fields?.sessionId?.stringValue === sessionId)
+			.map((doc) =>
+				Number(
+					doc.fields?.bridgingScore?.doubleValue ??
+						doc.fields?.bridgingScore?.integerValue ??
+						0,
+				),
+			),
+	);
+};
+const deadline = Date.now() + 20000;
+let bridging = 0;
+for (;;) {
+	bridging = await sessionMaxBridging();
+	if (bridging >= 65 || Date.now() > deadline) break;
+	await s1.waitForTimeout(700);
+}
+eq('A bridging score after the cross-camp strong-for', Math.round(bridging), 65);
+const afterBridge1 = await points('S1', s1);
+console.log('S1(A) points after the re-rate:', afterBridge1);
+eq('no tier paid below 70 (weave still the only proposals delta)', afterBridge1.proposals, before1.proposals + 1);
 
 // A's aggregate return signal, measured against a SERVER-stamped baseline.
-// It reaches the owner through the collapsed bar first — the sub line is
-// the whole point of docking the notebook rather than hiding it.
-await openDock(s1);
+// It lives on the My screen — the owner's reading room.
+await closeDock(s1);
+await s1.locator('.delib-nav__item--mine').click();
 await s1.waitForSelector('.my-lantern__moved', { timeout: 15000 });
-await s1.locator('.my-lantern__moved', { hasText: 'כוח הגשר עלה' }).waitFor({ timeout: 15000 });
+// The class AVERAGE, not the bridging score: bridging is blended and damped
+// enough to round a real change of mind away to zero, and "moved by 0" is the
+// one thing this line must never say to a student whose revision worked
+await s1
+	.locator('.my-lantern__moved', { hasText: 'התמיכה הממוצעת עלתה' })
+	.waitFor({ timeout: 15000 });
 const moved = await s1.locator('.my-lantern__moved').textContent();
 console.log('A SEES:', moved.trim());
 if (!moved.includes('דירוג אחד')) fail(`expected singular ratings-moved copy, got: ${moved}`);
-await closeDock(s1);
-const movedSub = await s1.locator('.proposal-dock__sub').textContent();
-console.log('A SEES ON THE BAR:', movedSub.trim());
-if (!movedSub.includes('דירוג')) fail(`ratings-moved never reached the dock bar: ${movedSub}`);
-await shot(s1, '10a-A-dock-ratings-moved');
+// The aggregate line grew a MEMORY: the revision journey strip — where each
+// past version stood, ending at the live number
+const journey = s1.locator('.journey');
+await journey.waitFor({ timeout: 15000 });
+console.log('A JOURNEY STRIP:', (await journey.innerText()).replace(/\s+/g, ' ').trim());
+eq('journey shows past version + now', await s1.locator('.journey__step').count() >= 2, true);
+await shot(s1, '10a-A-journey-strip');
 // The baseline used to live in sessionStorage — one refresh erased the
 // direction and left a bare count. It must now survive a reload.
 await s1.reload({ waitUntil: 'domcontentloaded' });
@@ -569,11 +644,13 @@ await s1.reload({ waitUntil: 'domcontentloaded' });
 // collapsed-by-default is the feature
 await s1.waitForSelector('.proposal-dock__bar', { timeout: 20000 });
 eq('dock starts collapsed after a reload', await s1.locator('.proposal-dock--open').count(), 0);
-await openDock(s1);
-await s1.locator('.my-lantern__moved', { hasText: 'כוח הגשר עלה' }).waitFor({ timeout: 20000 });
+// A reload lands wherever the WORK is; the My screen is one tap away
+await s1.locator('.delib-nav__item--mine').click();
+await s1
+	.locator('.my-lantern__moved', { hasText: 'התמיכה הממוצעת עלתה' })
+	.waitFor({ timeout: 20000 });
 console.log('   ✓ direction SURVIVED a full page reload (server-stamped baseline)');
 await shot(s1, '10-A-ratings-moved');
-await closeDock(s1);
 
 // ---------- Phase E2: the loop's two ends meet in the conversation ----------
 step('PHASE E2: the invitation clears, the circle is named, and A is told');
@@ -599,7 +676,7 @@ await leaveChat(s2);
 // The owner reaches a thread through the inbox, not the square.
 await clearCelebration(s1);
 await openInbox(s1);
-await s1.locator('.proposal-dock--open .chat-entry').first().click();
+await s1.locator('.my-screen .chat-entry').first().click();
 await s1.waitForSelector('.chat-page', { timeout: 10000 });
 const scoreLine = s1.locator('.chat-system--score');
 await scoreLine.waitFor({ timeout: 15000 });
@@ -608,6 +685,10 @@ console.log('A SEES IN THE THREAD:', scoreText);
 // The class owns the number, in both directions — and the helper is only
 // ever named on the ACT that led to the revision
 if (!scoreText.includes('דירג')) fail(`the score line never reported the class: ${scoreText}`);
+// …and it says WHAT the class did to the reading, not only that it acted
+if (!scoreText.includes('התמיכה הממוצעת')) {
+	fail(`the score line never reported the class average: ${scoreText}`);
+}
 await shot(s1, '07c-A-thread-score-moved');
 await leaveChat(s1);
 await closeDock(s1);
@@ -680,8 +761,10 @@ console.log(
 		'     · first proposal credited (+3) and announced\n' +
 		'     · rating the commons credited (+0.5)\n' +
 		'     · a thank-you pays the helper (+1); no thanks costs nothing\n' +
+		'     · first credited revision paid (+1, feedback- and delta-gated)\n' +
+		'     · thank-then-revise weave paid the author (+1 per distinct helper)\n' +
 		'     · one open idea per conversation — the box switches to chat by itself\n' +
-		'     · graduated bridging ladder paid out in a TWO-student class\n' +
+		'     · bridging pipeline verified to 65 (tier honestly out of reach for 2 students)\n' +
 		'   Phase 3 (surfaces)\n' +
 		'     · ratings-moved direction survives a reload (server-stamped baseline)\n' +
 		'     · personal recap on results matches Firestore, quarters intact',

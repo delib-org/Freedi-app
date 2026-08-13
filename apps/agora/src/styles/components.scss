@@ -1204,12 +1204,17 @@
 		transition: width 1s linear;
 	}
 
+	// Amber, not danger-red: the clock completes, it does not detonate.
+	// Time pressure is the enemy of the careful weaving the game exists for,
+	// so the last minutes shift tone the way the ratings-moved dip does —
+	// warmer, never alarming.
 	&__fuse--urgent &__fuse-burn {
-		background: var(--danger);
+		background: var(--amber);
 	}
 
 	// Digits only in the last two minutes — a clock you can't do anything
-	// about is noise, a clock about to run out is the game
+	// about is noise, a clock about to run out deserves plain digits (no
+	// pulse: a throbbing number over a student mid-sentence is a siren)
 	&__fuse-time {
 		position: absolute;
 		inset-block-end: 6px;
@@ -1217,8 +1222,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
-		color: var(--danger-ink);
-		animation: era-map-marker-pulse 1.2s ease-in-out infinite;
+		color: var(--warning);
 	}
 }
 
@@ -1909,6 +1913,13 @@
 		&--helped {
 			background: var(--mark-helped);
 		}
+
+		// The private "you saw a gap here" memo — my own rating remembering
+		// itself, visible to my eyes only, in the warm invitation tone
+		&--gap {
+			background: rgba(255, 210, 63, 0.35);
+			color: var(--ink);
+		}
 	}
 
 	// Vertical caret — closed points down, open points up. PHYSICAL borders on
@@ -2025,6 +2036,192 @@
 	.delib__actions {
 		flex: 0 0 auto;
 	}
+}
+
+// --- The gap prompt: the invitation a stall folds out right after a rating
+// below the top face. It sits UNDER the scale inside the open stall — never a
+// modal, never in the way of the next rating — and borrows the reinvite's
+// warm-paper tone: an opportunity, not an alert. ---
+.gap-prompt {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-block-start: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: rgba(255, 210, 63, 0.14);
+	border: 1px dashed rgba(255, 178, 44, 0.55);
+
+	&__insight {
+		font-weight: 700;
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	&__question {
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	&__hint {
+		color: var(--ink-soft);
+		font-size: var(--font-size-xs);
+	}
+
+	&__textarea {
+		width: 100%;
+		padding: var(--space-sm);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-sm);
+		background: var(--bg-card-solid);
+		font: inherit;
+		resize: vertical;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+	}
+}
+
+// --- The write desk's self-check: two toggles the student answers alone —
+// whose need does my sentence serve? No AI, no score, nothing stored. ---
+.write-desk__selfcheck {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	margin-block-start: var(--space-sm);
+}
+
+.write-desk__selfcheck-ask {
+	font-size: var(--font-size-sm);
+	color: var(--ink-soft);
+}
+
+.write-desk__selfcheck-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+}
+
+.write-desk__selfcheck-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-md);
+	border-radius: var(--radius-pill, 999px);
+	border: 1px solid var(--border-subtle);
+	background: var(--bg-card-solid);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	color: var(--ink);
+	cursor: pointer;
+
+	&--on {
+		border-color: rgba(20, 160, 143, 0.6);
+		background: rgba(20, 160, 143, 0.12);
+		font-weight: 700;
+	}
+}
+
+.write-desk__selfcheck-mark {
+	display: inline-flex;
+	align-items: center;
+	color: var(--success, #14a08f);
+}
+
+// --- Finale extras: the journey sentence, the private reflection box and
+// the plural recognitions strip. ---
+.results__journey {
+	font-weight: 700;
+	color: var(--ink);
+}
+
+.results__reflection {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	margin-block-start: var(--space-sm);
+	padding-block-start: var(--space-sm);
+	border-block-start: 1px dashed var(--border-subtle);
+}
+
+.results__recognitions {
+	gap: var(--space-sm);
+}
+
+.results__recognition {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+
+	&-icon {
+		display: inline-flex;
+		align-items: center;
+		color: var(--lantern-glow);
+	}
+
+	&-title {
+		flex: 1 1 auto;
+		font-size: var(--font-size-sm);
+		color: var(--ink);
+	}
+
+	&-value {
+		font-weight: 700;
+		color: var(--ink);
+		white-space: nowrap;
+	}
+}
+
+// --- The revision journey: where each past version of my proposal stood,
+// ending at the live reading. A memory, not a chart — small chips in a row,
+// dips in the same muted amber the "ratings moved" line uses. ---
+.journey-block {
+	gap: var(--space-xs);
+}
+
+.journey {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+
+	&__step {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 4px;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-pill, 999px);
+		background: var(--bg-inset, rgba(0, 0, 0, 0.05));
+		font-size: var(--font-size-xs);
+		color: var(--ink-soft);
+
+		// The version that slipped below its predecessor — information for the
+		// next edit, in the same amber the ratings-moved line dips in
+		&--down {
+			background: rgba(255, 178, 44, 0.18);
+			color: var(--ink);
+		}
+
+		// The live reading carries the weight
+		&--now {
+			background: rgba(139, 107, 240, 0.14);
+			color: var(--mine-glow, var(--mine));
+			font-weight: 700;
+		}
+	}
+
+	&__value {
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+	}
+}
+
+.journey__tier {
+	font-size: var(--font-size-xs);
+	color: var(--ink-soft);
 }
 
 // --- One proposal↔helper conversation: the helper's ideas (with their
@@ -2424,6 +2621,48 @@
 		background: var(--bg-card-solid);
 	}
 
+	// The thank→pen handoff: the idea just thanked, pinned beside the editor.
+	// A quote with a visible edge — the student weaves it in by hand.
+	&__pinned {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding: var(--space-sm);
+		border-radius: var(--radius-sm);
+		background: rgba(255, 210, 63, 0.16);
+	}
+
+	&__pinned-lead {
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		color: var(--ink);
+	}
+
+	&__pinned-quote {
+		margin: 0;
+		padding-inline-start: var(--space-sm);
+		border-inline-start: 3px solid var(--peer);
+		font-size: var(--font-size-sm);
+		color: var(--ink);
+
+		cite {
+			display: block;
+			margin-block-start: 2px;
+			font-style: normal;
+			font-size: var(--font-size-xs);
+			color: var(--ink-soft);
+		}
+	}
+
+	// The quiet answer to a save — a status line, never glitter (whether the
+	// save deserved glitter is the server's call, via the credited-revision
+	// notification)
+	&__saved-ack {
+		margin: var(--space-xs) var(--space-md) 0;
+		font-size: var(--font-size-sm);
+		color: var(--ink-soft);
+	}
+
 	&__list {
 		display: flex;
 		flex-direction: column;
@@ -2624,6 +2863,13 @@
 		font-family: var(--font-display);
 		color: var(--peer-glow);
 		font-variant-numeric: tabular-nums;
+
+		// The game's currency, second to the class's own reading: same line,
+		// quieter, so the eye lands on the average first
+		&--aside {
+			font-size: var(--font-size-sm);
+			color: var(--text-secondary);
+		}
 	}
 
 	// How far it moved, said as a number rather than left to be worked out
@@ -2825,6 +3071,59 @@
 		display: inline-flex;
 		align-items: center;
 		color: currentColor;
+	}
+
+	// The class-bridge pulse: the one live collective number in the game,
+	// spoken at the doorway between laps. Movement framing; a down-lap is a
+	// plain sentence with no number, no red, no culprit.
+	&__pulse {
+		margin-block-start: var(--space-sm);
+		font-weight: 700;
+		color: var(--text-primary);
+
+		&--steady {
+			font-weight: 400;
+			color: var(--text-secondary);
+		}
+	}
+
+	// The lap's opening question + the one button to the pen
+	&__intent {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-xs);
+	}
+
+	&__intent-line {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+
+	&__ask {
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+}
+
+// --- The market's ask: the mission brief above the stalls — the same
+// question the improvement composer opens with, said where the work is. ---
+.market-ask {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-md);
+
+	&__question {
+		font-weight: 700;
+		color: var(--ink);
+	}
+
+	&__hint {
+		color: var(--ink-soft);
+		font-size: var(--font-size-sm);
 	}
 }
 
@@ -4996,6 +5295,9 @@
 		transition: width 1s linear;
 	}
 
+	// A steady lantern-light at the bar's tip, not a burning spark — this bar
+	// is projected at the whole class, and a fizzing bomb-fuse manufactures
+	// exactly the arousal that kills reflective revision
 	&__spark {
 		position: absolute;
 		top: 50%;
@@ -5004,7 +5306,6 @@
 		height: 10px;
 		border-radius: 50%;
 		background: radial-gradient(circle, #fff 0%, var(--lantern-glow) 45%, transparent 70%);
-		animation: era-map-marker-pulse 0.8s ease-in-out infinite;
 	}
 
 	&__time {
@@ -5018,13 +5319,14 @@
 		color: var(--text-muted);
 	}
 
+	// Same rule as the student HUD: the clock completes, it does not detonate.
 	&--urgent {
 		.fuse__burn {
-			background: linear-gradient(90deg, #a5303f, var(--danger));
+			background: linear-gradient(90deg, var(--warning), var(--amber));
 		}
 
 		.fuse__time {
-			color: var(--danger);
+			color: var(--warning);
 		}
 	}
 }
@@ -5341,14 +5643,51 @@
 			}
 		}
 
-		// Nobody has thanked them YET. Quieted, never hidden — the row is the
-		// invitation.
-		&--zero {
-			.helpers-board__score,
-			.helpers-board__rank-num {
-				color: var(--text-muted);
-			}
+	}
+
+	// The live recognition wall: the class as a constellation. Everyone is a
+	// chip in roster order; a landed idea LIGHTS the chip. No ranks, no
+	// per-person numbers, and an unlit chip is a starting line, not a deficit.
+	&__wall {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-sm);
+		padding: 0;
+		margin: var(--space-md) 0 0;
+		list-style: none;
+	}
+
+	&__wall-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-pill, 999px);
+		border: 1px solid var(--border-subtle);
+		background: var(--bg-card-solid);
+		opacity: 0.62;
+
+		&--lit {
+			opacity: 1;
+			border-color: rgba(255, 210, 63, 0.7);
+			box-shadow: 0 0 10px rgba(255, 210, 63, 0.35);
 		}
+
+		&--mine {
+			border-color: rgba(139, 107, 240, 0.6);
+		}
+	}
+
+	&__wall-name {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+	}
+
+	&__wall-mark {
+		display: inline-flex;
+		align-items: center;
+		color: var(--lantern-glow);
 	}
 
 	&__rank {
@@ -6816,6 +7155,23 @@
 		color: var(--text-muted);
 	}
 
+	// The champion's meter reuses the detail screen's zero-centred bar, just
+	// taller and full-width — the number says the value, the bar says its size.
+	// Compound selector (not just the modifier alone) so this outranks the
+	// plain &__meter sizing declared further down, regardless of source order.
+	&__meter.board__meter--champion {
+		height: 10px;
+		width: 100%;
+
+		.board__meter-fill {
+			background: var(--success);
+
+			&--against {
+				background: var(--danger);
+			}
+		}
+	}
+
 	&__champion-text {
 		@include proposal-voice;
 
@@ -6828,12 +7184,6 @@
 		justify-content: center;
 		flex-wrap: wrap;
 		gap: var(--space-sm);
-	}
-
-	&__champion-mine-note {
-		font-size: var(--font-size-sm);
-		color: var(--lantern-glow);
-		font-weight: 600;
 	}
 
 	// --- my standing, said in one sentence -------------------------------------

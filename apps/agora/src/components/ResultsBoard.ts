@@ -700,6 +700,8 @@ export function ResultsBoard(
 
 		countTo(lead.percent);
 		const display = reducedMotion() ? lead.percent : shown;
+		// -100..100 onto a 0..100 track, zero-centred like the detail meter
+		const meterPoint = (clamp(display, -100, 100) + 100) / 2;
 
 		return m('.board__champion', { class: lead.isMine ? 'board__champion--mine' : undefined }, [
 			m(
@@ -716,6 +718,16 @@ export function ResultsBoard(
 				},
 				signed(display),
 			),
+			m('.board__meter.board__meter--champion', { 'aria-hidden': 'true' }, [
+				m('.board__meter-zero'),
+				m('.board__meter-fill', {
+					class: display < 0 ? 'board__meter-fill--against' : undefined,
+					style: {
+						insetInlineStart: `${Math.min(50, meterPoint)}%`,
+						width: `${Math.abs(meterPoint - 50)}%`,
+					},
+				}),
+			]),
 			m('p.board__champion-label', t('board.agreement_label')),
 			m('p.board__champion-text', lead.proposal.statement),
 			m('.board__champion-by', [
@@ -724,13 +736,19 @@ export function ResultsBoard(
 					: m('span.board__author', lead.proposal.anonName),
 				m(
 					'span.board__coverage',
-					t('picture.coverage', {
-						n: String(lead.consensus.n),
-						total: String(lead.consensus.eligible),
-					}),
+					// Sitting right next to the rank-flavoured "You" badge, a bare
+					// "2 of 3" reads as a placement — the people icon marks it as
+					// a headcount (who rated this) instead.
+					iconLabel(
+						'people',
+						t('picture.coverage', {
+							n: String(lead.consensus.n),
+							total: String(lead.consensus.eligible),
+						}),
+						14,
+					),
 				),
 			]),
-			lead.isMine ? m('p.board__champion-mine-note', t('board.champion_mine')) : null,
 		]);
 	}
 
@@ -1026,10 +1044,15 @@ export function ResultsBoard(
 			if (attrs.finale) cheerOnce(points);
 			const mine = points.find((point) => point.isMine);
 
+			// The champion card already says rank #1 and the percent in large
+			// type when it's the player's own proposal — repeating that as a
+			// sentence underneath would just be the same fact said twice.
+			const mineIsChampion = mine !== undefined && mine.isLead && mine.consensus !== undefined;
+
 			return m('.board', [
 				champion(points, attrs),
 
-				mine
+				mine && !mineIsChampion
 					? m(
 							'p.board__my-standing',
 							{ class: mine.rank <= MEDAL_RANKS.length ? 'board__my-standing--podium' : undefined },

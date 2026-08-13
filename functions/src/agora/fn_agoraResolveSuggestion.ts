@@ -216,6 +216,16 @@ export const agoraResolveSuggestion = onCall(
 				lastUpdate: Date.now(),
 			});
 
+			// A thank is feedback: it arms the author's revision credit and the
+			// thank-then-revise weave (see fn_onAgoraProposal). Stamped on the
+			// score doc because that's the doc the proposal-write trigger reads.
+			if (resolution === AgoraSuggestionStatus.thanked) {
+				await db
+					.collection(Collections.agoraScores)
+					.doc(proposalId)
+					.set({ lastThankAt: Date.now(), lastUpdate: Date.now() }, { merge: true });
+			}
+
 			// The author's side of the economy: weaving a classmate's idea into
 			// your text is real editorial work. Credited once per DISTINCT
 			// helper, so integrating many voices beats trading rounds with one.

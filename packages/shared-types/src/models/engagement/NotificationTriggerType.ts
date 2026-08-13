@@ -23,4 +23,8 @@ export enum NotificationTriggerType {
 	AGORA_BRIDGING_ACHIEVED = 'agora_bridging_achieved',
 	/** The author's first proposal landed — the cold-start credit */
 	AGORA_PROPOSAL_CREDITED = 'agora_proposal_credited',
+	/** The author revised after new feedback and earned the revision credit */
+	AGORA_REVISION_CREDITED = 'agora_revision_credited',
+	/** The author wove a distinct helper's idea into the text (weave credit paid) */
+	AGORA_WEAVE_CREDITED = 'agora_weave_credited',
 }

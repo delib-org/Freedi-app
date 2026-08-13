@@ -155,7 +155,9 @@ const goMine = async (page) => {
 	if ((await page.locator('.delib-nav__item--mine.delib-nav__item--active').count()) === 0) {
 		await page.locator('.delib-nav__item--mine').click();
 	}
-	await page.waitForSelector('.my-screen .my-lantern--workshop', { timeout: 10000 });
+	// The workshop card moved into the dock (0fef86e75) — the screen's own
+	// stable landmark is its head: my sentence + the edit handle
+	await page.waitForSelector('.my-screen .my-screen__head', { timeout: 10000 });
 };
 // Back to the classmates' side — also the only place a badge ABOUT my screen
 // can be read, since a tab never badges the screen you are standing on
@@ -217,7 +219,13 @@ await s1
 	.locator('textarea.my-lantern__textarea')
 	.fill('נכריז על מלוכה חוקתית: המלך סמל, האספה מחוקקת, וייקבע תקציב שקוף לחצר המלוכה.');
 await s1.getByRole('button', { name: /^עדכון ההצעה$/ }).click();
-await s1.waitForSelector('.celebration', { timeout: 10000 });
+// The save is quiet; the FIRST credited revision (B already rated, so the
+// feedback gate is open) celebrates from the server a beat later
+await s1.waitForSelector('.celebration', { timeout: 25000 });
+console.log(
+	'   ✓ A first-revision celebration:',
+	(await s1.locator('.celebration__message').textContent()).trim().slice(0, 60),
+);
 await clearCelebration(s1);
 await closeDock(s1);
 
@@ -275,7 +283,14 @@ await s1
 		'נכריז על מלוכה חוקתית: המלך סמל, האספה מחוקקת, תקציב שקוף לחצר — ולוח זמנים לביטול זכויות היתר.',
 	);
 await s1.getByRole('button', { name: /^עדכון ההצעה$/ }).click();
-await s1.waitForSelector('.celebration', { timeout: 10000 });
+// This save lands inside the debounce window of the Phase-2 save, so it is
+// no new revision EVENT (no second revision credit) — but B's thank just
+// re-armed the WEAVE, which pays and celebrates regardless of the debounce
+await s1.waitForSelector('.celebration', { timeout: 25000 });
+console.log(
+	'   ✓ A weave celebration:',
+	(await s1.locator('.celebration__message').textContent()).trim().slice(0, 60),
+);
 await clearCelebration(s1);
 
 // B's celebration announces it; dismiss and read the MARKET chip instead

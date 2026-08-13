@@ -92,9 +92,14 @@ export {
 	AgoraRatingDistSchema,
 } from './agoraScore';
 
-export type { AgoraClassConsensusInput, AgoraCampCensus } from './agoraConsensus';
+export type {
+	AgoraClassConsensusInput,
+	AgoraCampCensus,
+	AgoraClassSupport,
+} from './agoraConsensus';
 export {
 	addDist,
+	agoraClassSupport,
 	agoraRatingBucket,
 	calcAgoraClassConsensus,
 	consensusCeiling,
@@ -108,7 +113,13 @@ export type { AgoraValueAnswer } from './agoraValueAnswer';
 export { AgoraValueAnswerSchema, createAgoraValueAnswerId } from './agoraValueAnswer';
 
 export type { BridgingInput } from './agoraBridging';
-export { deriveCamp, calcBridgingScore, bridgingTierFor, bridgingPayout } from './agoraBridging';
+export {
+	deriveCamp,
+	calcBridgingScore,
+	bridgingTierFor,
+	bridgingPayout,
+	warmth,
+} from './agoraBridging';
 
 export type { AgoraCharacterReview } from './agoraCharacterReview';
 export {
@@ -121,3 +132,6 @@ export {
 
 export type { AgoraOutcomeInput } from './agoraOutcome';
 export { deriveAgoraOutcome } from './agoraOutcome';
+
+export type { AgoraRevisionInput, AgoraRevisionAssessment } from './agoraRevision';
+export { assessRevision, countChangedWords } from './agoraRevision';

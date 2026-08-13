@@ -180,6 +180,29 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	let editing = false;
 	let editDraft = '';
 	let savingEdit = false;
+	/**
+	 * The thank→pen handoff: the moment the owner thanks an idea, the editable
+	 * quote at the top flips open with the thanked idea PINNED beside it — the
+	 * thank-you said "this helped", and the next natural act is weaving it in.
+	 * The student weaves by hand; the AI never writes. Cleared on cancel/save.
+	 */
+	let pinnedIdea: { text: string; from: string; variant: 1 | 2 } | null = null;
+	/**
+	 * The quiet answer to a save. Whether the save deserved GLITTER is the
+	 * server's call (credited revision → notification → celebration); this
+	 * line only confirms the mechanical fact, every time, without ceremony.
+	 */
+	let savedAck = false;
+	let savedAckTimer: number | undefined;
+
+	function acknowledgeSave(): void {
+		savedAck = true;
+		window.clearTimeout(savedAckTimer);
+		savedAckTimer = window.setTimeout(() => {
+			savedAck = false;
+			m.redraw();
+		}, 4000);
+	}
 
 	function stickToBottom(dom: HTMLElement, count: number): void {
 		listEl = dom;
@@ -224,6 +247,20 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		const changed = text !== proposal.statement && text.length >= AGORA_LIMITS.MIN_PROPOSAL_LENGTH;
 
 		return m('.chat-page__edit', [
+			// The thanked idea, pinned where the weaving happens. A QUOTE, never a
+			// paste: the student rewrites their own text with it in view.
+			pinnedIdea
+				? m('.chat-page__pinned', [
+						m(
+							'p.chat-page__pinned-lead',
+							iconLabel('idea', t(`chat.accepted_go_improve_${pinnedIdea.variant}`)),
+						),
+						m('blockquote.chat-page__pinned-quote', [
+							m('p', pinnedIdea.text),
+							pinnedIdea.from ? m('cite', pinnedIdea.from) : null,
+						]),
+					])
+				: null,
 			m('textarea.text-input.chat-page__edit-input', {
 				value: editDraft,
 				rows: 3,
@@ -242,6 +279,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					{
 						onclick: () => {
 							editing = false;
+							pinnedIdea = null;
 						},
 					},
 					t('common.cancel'),
@@ -255,9 +293,13 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							submitProposal(session, anonName, text, proposal.statementId)
 								.then(() => {
 									editing = false;
-									// The same glitter the workshop gives: improving your
-									// own proposal is the behaviour the game most wants
-									celebrate({ message: t('celebrate.proposal_improved'), detail: text });
+									pinnedIdea = null;
+									// Quiet on purpose: the SERVER decides whether this save
+									// was a credited revision, and the celebration follows
+									// its notification (see lib/notifications.ts) — a
+									// same-every-save glitter taught that saving is the
+									// achievement, and drowned out the real moments.
+									acknowledgeSave();
 								})
 								.catch((error: unknown) => {
 									console.error('[Chat] Update proposal failed:', error);
@@ -280,7 +322,11 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * idea (server-side, so the points can't be spoofed) and closes the idea.
 	 * Declining is free and silent.
 	 */
-	function decision(session: AgoraSession, message: AgoraProposal): m.Children {
+	function decision(
+		session: AgoraSession,
+		proposal: AgoraProposal,
+		message: AgoraProposal,
+	): m.Children {
 		return m('.delib__actions.delib__actions--tight', [
 			m(
 				'button.btn.btn--ghost.btn--sm',
@@ -301,13 +347,22 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				'button.btn.btn--primary.btn--sm',
 				{
 					onclick: () => {
-						resolveSuggestion(
-							session.sessionId,
-							message.statementId,
-							AgoraSuggestionStatus.thanked,
-						).catch((error: unknown) => {
-							console.error('[Chat] Thank suggestion failed:', error);
-						});
+						resolveSuggestion(session.sessionId, message.statementId, AgoraSuggestionStatus.thanked)
+							.then(() => {
+								// The handoff: the idea just thanked lands pinned beside
+								// the editor, already open on the current text
+								pinnedIdea = {
+									text: message.statement,
+									from: message.anonName ?? '',
+									variant: message.statementId.charCodeAt(0) % 2 === 0 ? 1 : 2,
+								};
+								editing = true;
+								editDraft = proposal.statement;
+								m.redraw();
+							})
+							.catch((error: unknown) => {
+								console.error('[Chat] Thank suggestion failed:', error);
+							});
 					},
 				},
 				iconLabel('thanks', t('delib.thank')),
@@ -538,6 +593,12 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	 * because of X") would denominate a classmate's goodwill in points and hand
 	 * them the blame the next time it falls, so on a drop the helper is not
 	 * named at all.
+	 *
+	 * The headline number is the class AVERAGE, not the bridging score. Bridging
+	 * is blended and damped, so a classmate genuinely won over could move it by
+	 * less than a point and the author was told "it has not moved yet" — false,
+	 * and false in exactly the moment the loop exists to reward. Bridge power
+	 * still gets its line, underneath, on the laps where it does move.
 	 */
 	function scoreMovedBlock(
 		proposal: AgoraProposal,
@@ -548,10 +609,40 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 		const moment = scoreMovedMoment(proposal.statementId, proposal.creatorId, helperUid, proposal);
 		if (!moment) return null;
 
-		const fell = moment.bridgeDelta < 0;
-		const moved = moment.bridgeDelta !== 0;
-		const range = `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`;
-		const delta = `⁦${moment.bridgeDelta > 0 ? '+' : '−'}${Math.abs(moment.bridgeDelta)}⁩`;
+		const { now: supportNow, delta: supportDelta } = moment.support;
+		// Direction follows the number on show. Falling back to bridging only
+		// where the average is unknown keeps the arrow and the figure agreeing.
+		const fell = supportDelta !== undefined ? supportDelta < 0 : moment.bridgeDelta < 0;
+		const moved = supportDelta !== undefined ? supportDelta !== 0 : moment.bridgeDelta !== 0;
+		const signed = (value: number): string => `⁦${value > 0 ? '+' : '−'}${Math.abs(value)}⁩`;
+		const deltaChip = (value: number): m.Children =>
+			m(
+				'span.chat-system__delta',
+				{ class: value < 0 ? 'chat-system__delta--down' : undefined },
+				signed(value),
+			);
+
+		/**
+		 * Three different facts, never collapsed into each other: it moved this
+		 * far, it held still, or the class had not spoken when I saved and this
+		 * is simply where they stand now.
+		 */
+		const supportLine = (): m.Children => {
+			if (supportNow === undefined) {
+				return m('p.chat-system__bridge', t('thread.score_now', { n: moment.bridgeNow }));
+			}
+			if (supportDelta === undefined) {
+				return m('p.chat-system__bridge', t('thread.score_support_first', { n: supportNow }));
+			}
+			if (supportDelta === 0) {
+				return m('p.chat-system__bridge', t('thread.score_support_still', { n: supportNow }));
+			}
+
+			return m('p.chat-system__bridge', [
+				t('thread.score_support', { range: `⁦${supportNow - supportDelta} → ${supportNow}⁩` }),
+				deltaChip(supportDelta),
+			]);
+		};
 
 		return m(
 			'.chat-system.chat-system--moment.chat-system--score',
@@ -569,18 +660,19 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				!fell && helperName
 					? m('p.chat-system__credit', t('thread.score_led', { name: helperName }))
 					: null,
-				// How far it moved, and which way. The number stays the CLASS's in
-				// both directions — no classmate is named anywhere near it.
-				moved
-					? m('p.chat-system__bridge', [
-							t('thread.score_bridge', { range }),
-							m(
-								'span.chat-system__delta',
-								{ class: fell ? 'chat-system__delta--down' : undefined },
-								delta,
-							),
+				// Where the class stands, and how far it travelled. The number stays
+				// the CLASS's in both directions — no classmate is named near it.
+				supportLine(),
+				// The game's currency, second and quieter, and only when it actually
+				// moved: a line that says "still 45" every lap teaches nothing
+				supportNow !== undefined && moment.bridgeDelta !== 0
+					? m('p.chat-system__bridge.chat-system__bridge--aside', [
+							t('thread.score_bridge', {
+								range: `⁦${moment.bridgeNow - moment.bridgeDelta} → ${moment.bridgeNow}⁩`,
+							}),
+							deltaChip(moment.bridgeDelta),
 						])
-					: m('p.chat-system__bridge', t('thread.score_now', { n: moment.bridgeNow })),
+					: null,
 				fell ? m('p.chat-system__hint', t('thread.score_fell')) : null,
 				m(
 					'button.text-link',
@@ -621,6 +713,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	/** One line of the conversation: what someone said, or what happened */
 	function messageRow(
 		session: AgoraSession,
+		proposal: AgoraProposal,
 		message: AgoraProposal,
 		role: 'helper' | 'owner',
 		userId: string,
@@ -653,7 +746,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					: null,
 				m('p.thread__text', message.statement),
 				m('span.thread__time', formatMessageTime(message.createdAt)),
-				decidable ? decision(session, message) : statusChip(message),
+				decidable ? decision(session, proposal, message) : statusChip(message),
 				// Said once, where the button is: a thank-you is not just
 				// politeness, it pays the classmate who helped
 				decidable ? m('p.action-hint', t('delib.thank_hint')) : null,
@@ -681,6 +774,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	return {
 		onremove() {
 			listEl = null;
+			window.clearTimeout(savedAckTimer);
 		},
 
 		view(vnode) {
@@ -741,7 +835,7 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 			// opposite: current state, and they belong where the eye lands.
 			const history: Array<{ at: number; node: m.Children }> = messages.map((message) => ({
 				at: message.createdAt,
-				node: messageRow(session, message, role, userId),
+				node: messageRow(session, proposal, message, role, userId),
 			}));
 			if (closedAt > 0) history.push({ at: closedAt, node: roundTripBlock(closedAt) });
 			history.sort((a, b) => a.at - b.at);
@@ -775,6 +869,13 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 					// The proposal this conversation is about — and, for the person
 					// who wrote it, the place to change it
 					proposalQuote(session, proposal, anonName, proposal.creatorId === userId),
+					savedAck
+						? m(
+								'p.chat-page__saved-ack',
+								{ role: 'status' },
+								iconLabel('check', t('delib.saved_ack')),
+							)
+						: null,
 					m(
 						'.chat-page__list',
 						{

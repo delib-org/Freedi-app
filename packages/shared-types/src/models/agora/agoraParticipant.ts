@@ -30,6 +30,12 @@ export const AgoraPointsSchema = object({
 	 * field — read it as `?? 0`, never assume it is present.
 	 */
 	rating: optional(number()),
+	/**
+	 * Credit for revising your own proposal after new feedback
+	 * (AGORA_POINTS.REVISION_CREDIT, capped). Optional for the same
+	 * legacy-docs reason as `rating` — read as `?? 0`.
+	 */
+	revising: optional(number()),
 	total: number(),
 });
 

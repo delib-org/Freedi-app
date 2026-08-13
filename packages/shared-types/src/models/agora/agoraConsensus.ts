@@ -17,6 +17,7 @@
  */
 
 import { calcAgreement, calcLikeMindedness } from '../../utils/consensusCalculation';
+import { warmth } from './agoraBridging';
 import type { AgoraCamp } from './agoraEnums';
 import { AGORA_RATING_LEVELS } from './agoraScore';
 import type { AgoraCampAggregate, AgoraClassConsensus, AgoraRatingDist } from './agoraScore';
@@ -114,6 +115,54 @@ export function normalizedConsensus(consensus: number, n: number, populationSize
 	if (ceiling <= 0) return 0;
 
 	return Math.min(1, Math.max(0, consensus) / ceiling);
+}
+
+/** What the class, taken as one body, thinks of a proposal right now */
+export interface AgoraClassSupport {
+	/** Mean student rating, -1…1 */
+	mean: number;
+	/** Students behind it */
+	n: number;
+	/** The same mean on the 0-100 scale every other support figure uses */
+	percent: number;
+}
+
+/**
+ * The class's average support for a proposal, 0-100.
+ *
+ * This is the number an author's improvement loop reports, and it is
+ * deliberately NOT the bridging score. Bridging is a composite — same-camp and
+ * cross-camp support blended by weight and damped by a confidence ramp — so one
+ * classmate genuinely changing their mind can move it by less than a point and
+ * round away to nothing. An author who revised, won someone over, and was told
+ * "it has not moved yet" has been told something false about the only feedback
+ * the exercise offers. The mean carries no weights and no ramp: every change of
+ * mind shows up in it, in the direction it was made.
+ *
+ * Counted over the student histogram, so it matches the camp meters on the
+ * results board exactly, and so the characters' synthetic raters — whose
+ * off-grid values no five-level bucket can hold — never speak for the class.
+ * A student with no camp still counts: they are filed under centre in the
+ * histogram, which is precisely the population this asks about.
+ *
+ * Returns undefined when no student has rated. Absence is not zero — zero on
+ * this scale means "unanimously, maximally against".
+ */
+export function agoraClassSupport(perCamp: {
+	left: AgoraCampAggregate;
+	right: AgoraCampAggregate;
+	center: AgoraCampAggregate;
+}): AgoraClassSupport | undefined {
+	const combined = [perCamp.left, perCamp.right, perCamp.center].reduce(
+		(accumulator, camp) => addDist(accumulator, camp.studentDist ?? emptyDist()),
+		emptyDist(),
+	);
+	const { n, sum } = distMoments(combined);
+	if (n <= 0) return undefined;
+
+	const mean = sum / n;
+
+	return { mean, n, percent: Math.round(warmth(mean) * 100) };
 }
 
 /** Positioned, non-AI students per camp */

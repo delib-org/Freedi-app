@@ -11,7 +11,7 @@
  * Firestore and without a DOM.
  */
 
-import { AgoraSuggestionStatus } from '@freedi/shared-types';
+import { agoraClassSupport, AgoraSuggestionStatus } from '@freedi/shared-types';
 import {
 	getDeliberationState,
 	getOwnerThreads,
@@ -199,9 +199,44 @@ export function creditedHelperFor(proposalId: string, editedAt: number): string 
 	return bestUid;
 }
 
+export interface SupportSinceEdit {
+	/** Class average support, 0-100. Undefined until a classmate has rated. */
+	now: number | undefined;
+	/**
+	 * How far it moved since the owner's last save. Undefined when the class had
+	 * not spoken at the moment of that save, so there is nothing to move FROM —
+	 * which is a different sentence from "it did not move", and must not be
+	 * flattened into 0.
+	 */
+	delta: number | undefined;
+}
+
+/**
+ * The number the author's improvement loop reports: what the class thinks now,
+ * and how far that has travelled since they last rewrote the text.
+ *
+ * The average rather than the bridging score, on purpose — see
+ * `agoraClassSupport`. A classmate who moves from "against" to "not sure" has
+ * changed their mind, which is the biggest thing a revision can win, and the
+ * blended score can round that away to nothing. Telling an author "it has not
+ * moved" when it has is the one failure this whole loop cannot afford.
+ */
+export function supportSinceEdit(proposalId: string): SupportSinceEdit {
+	const score = getDeliberationState().scores[proposalId];
+	const now = score ? agoraClassSupport(score.perCamp)?.percent : undefined;
+	const baseline = score?.supportAtLastEdit;
+
+	return {
+		now,
+		delta: now === undefined || baseline === undefined ? undefined : now - baseline,
+	};
+}
+
 export interface ScoreMovedMoment {
 	/** Classmates who re-rated since the revision */
 	reRaters: number;
+	/** The class average, and how far it moved since the revision */
+	support: SupportSinceEdit;
 	bridgeNow: number;
 	/** 0 when the pre-edit baseline is unknown — never NaN */
 	bridgeDelta: number;
@@ -239,6 +274,7 @@ export function scoreMovedMoment(
 
 	return {
 		reRaters,
+		support: supportSinceEdit(proposalId),
 		bridgeNow,
 		bridgeDelta: baseline === undefined ? 0 : bridgeNow - baseline,
 		editedAt,

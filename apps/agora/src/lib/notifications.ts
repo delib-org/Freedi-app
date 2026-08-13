@@ -52,7 +52,12 @@ const timers = new Map<string, ReturnType<typeof setTimeout>>();
 /** Toasts the pointer or keyboard focus is currently resting on */
 const held = new Set<string>();
 
-const ACTIONABLE_TRIGGERS: ReadonlySet<string> = new Set(['agora_suggestion_received']);
+const ACTIONABLE_TRIGGERS: ReadonlySet<string> = new Set([
+	'agora_suggestion_received',
+	// A decline re-arms the helper's idea slot — the toast that says so
+	// carries the door back into the market, not just the words
+	'agora_suggestion_declined',
+]);
 
 function armDismiss(notificationId: string, triggerType: string): void {
 	const existing = timers.get(notificationId);
@@ -388,6 +393,40 @@ export function listenToNotifications(userId: string): void {
 									},
 								}
 							: undefined,
+					});
+					markRead();
+
+					return;
+				}
+
+				// The author revised after real feedback. FIRST credited revision →
+				// the full celebration (process praise for the game's hardest
+				// move); later ones → a quiet +1 toast. Ineligible saves get
+				// nothing here at all — the server only writes this notification
+				// when the revision earned it, which is what keeps the
+				// celebration channel honest.
+				if (data.triggerType === NotificationTriggerType.AGORA_REVISION_CREDITED) {
+					const awarded = data.pointsAwarded ?? 0;
+					const first = (data as { agoraFirstRevision?: boolean }).agoraFirstRevision === true;
+					if (first) {
+						celebrate({
+							message: t('celebrate.revision_first', { n: awarded }),
+							hint: t('celebrate.revision_first_hint'),
+						});
+					} else {
+						pushLocalToast('agora_revision_credited');
+					}
+					markRead();
+
+					return;
+				}
+
+				// The weave: a revision that followed a thank paid the author for
+				// the editorial labor of working a classmate's idea in. The idea
+				// is credited, never the helper's name next to a number.
+				if (data.triggerType === NotificationTriggerType.AGORA_WEAVE_CREDITED) {
+					celebrate({
+						message: t('celebrate.weave_credited', { n: data.pointsAwarded ?? 0 }),
 					});
 					markRead();
 

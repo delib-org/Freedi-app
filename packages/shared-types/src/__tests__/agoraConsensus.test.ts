@@ -1,6 +1,7 @@
 import { parse } from 'valibot';
 import {
 	addDist,
+	agoraClassSupport,
 	agoraRatingBucket,
 	calcAgoraClassConsensus,
 	consensusCeiling,
@@ -165,6 +166,50 @@ describe('calcAgoraClassConsensus', () => {
 		const partial = classOf([0, 0, 0, 0, 5], 29);
 		const census = classOf([0, 0, 0, 0, 5], 5);
 		expect(census?.polarization).toBeCloseTo(partial?.polarization ?? -1, 10);
+	});
+});
+
+describe('agoraClassSupport', () => {
+	it('maps the class mean onto the 0-100 support scale', () => {
+		// Two at +1, one at 0 → mean 2/3 → (0.667 + 1) / 2 → 83
+		expect(
+			agoraClassSupport({ left: camp([0, 0, 1, 0, 2]), right: camp(), center: camp() }),
+		).toEqual({ mean: 2 / 3, n: 3, percent: 83 });
+	});
+
+	it('reads the whole scale, including the against half', () => {
+		// The half the bridging score used to floor at zero: "strongly against"
+		// and "not sure" have to be different numbers, or a change of mind that
+		// crosses between them is invisible.
+		expect(
+			agoraClassSupport({ left: camp([2, 0, 0, 0, 0]), right: camp(), center: camp() })?.percent,
+		).toBe(0);
+		expect(
+			agoraClassSupport({ left: camp([0, 2, 0, 0, 0]), right: camp(), center: camp() })?.percent,
+		).toBe(25);
+		expect(
+			agoraClassSupport({ left: camp([0, 0, 2, 0, 0]), right: camp(), center: camp() })?.percent,
+		).toBe(50);
+	});
+
+	it('counts every camp, since the class is one body here', () => {
+		expect(
+			agoraClassSupport({
+				left: camp([0, 0, 0, 0, 1]),
+				right: camp([1, 0, 0, 0, 0]),
+				center: camp([0, 0, 1, 0, 0]),
+			}),
+		).toEqual({ mean: 0, n: 3, percent: 50 });
+	});
+
+	it('is undefined before anyone has rated — absence is not zero', () => {
+		// 0 on this scale means "unanimously, maximally against"
+		expect(agoraClassSupport({ left: camp(), right: camp(), center: camp() })).toBeUndefined();
+	});
+
+	it('survives a legacy score doc with no histograms', () => {
+		const legacy = { sum: 3, n: 3, positiveN: 3 };
+		expect(agoraClassSupport({ left: legacy, right: legacy, center: legacy })).toBeUndefined();
 	});
 });
 

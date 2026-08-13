@@ -129,6 +129,17 @@ export const AGORA_POINTS = {
 	/** Credited ratings per student (≈ ROUNDS × RATINGS_PER_ROUND) */
 	RATING_CREDIT_MAX_RATINGS: 15,
 	/**
+	 * Revising your own proposal after the class has spoken. The only verb of
+	 * the improvement loop that paid nothing — writing, rating and helping all
+	 * earn, and students read that asymmetry as "revision doesn't count".
+	 * Gated hard (see AGORA_ANTI_GAMING): the edit must follow NEW feedback
+	 * and really change the text, so the credit rewards listening, not saving.
+	 * Priced at parity with a landed idea (+1) and below the first draft.
+	 */
+	REVISION_CREDIT: 1,
+	/** Credited revisions per proposal (one proposal per student → per session) */
+	MAX_REVISION_CREDITS: 3,
+	/**
 	 * The bridging ladder, graduated. Total still 15 for a full bridge;
 	 * tier 1 turns a cliff most authors never reach into a gradient.
 	 */
@@ -153,6 +164,25 @@ export const AGORA_ANTI_GAMING = {
 	 * recognition is decoupled from currency — but the points do not.
 	 */
 	MAX_WOVEN_AWARDS_PER_HELPER_PER_PROPOSAL: 2,
+	/**
+	 * A save must change at least this many words (added + removed, vs the
+	 * previous text) to count as a revision at all. Below it the save is
+	 * cosmetic — still saved, still shown, just not an event.
+	 */
+	MIN_REVISION_DELTA_WORDS: 3,
+	/**
+	 * Saves closer together than this collapse into ONE revision event for
+	 * history and celebration purposes. A student polishing a sentence in five
+	 * quick saves made one revision, not five — and a farmer clicking save
+	 * gets nothing to farm.
+	 */
+	REVISION_DEBOUNCE_MS: 3 * 60 * 1000,
+	/**
+	 * Edit-history entries kept per proposal (the v1→vN journey). Enough for
+	 * every honest lap of a 45-minute lesson; a cap so a pathological save
+	 * loop cannot grow the score doc without bound.
+	 */
+	EDIT_HISTORY_MAX: 10,
 } as const;
 
 export const AGORA_CYCLE = {

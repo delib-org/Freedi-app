@@ -1,7 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { getToasts, dismissToast, holdToast, releaseToast } from '../lib/notifications';
-import { requestMineFocus } from '../lib/helpedFocus';
+import { requestMarketFocus, requestMineFocus } from '../lib/helpedFocus';
 
 /** Maps notification trigger types to localized toast lines */
 function toastText(triggerType: string, fallback: string): string {
@@ -22,6 +22,8 @@ function toastText(triggerType: string, fallback: string): string {
 			return t('toast.thread_message');
 		case 'agora_class_record':
 			return t('toast.class_record');
+		case 'agora_revision_credited':
+			return t('toast.revision_credited');
 		default:
 			return fallback;
 	}
@@ -41,7 +43,15 @@ export const ToastStack: m.Component = {
 				// toast is therefore a real button: focusable, Enter/Space work,
 				// and hovering or focusing it holds the auto-dismiss so a
 				// keyboard or switch user can actually reach the action in time.
-				const actionable = toast.triggerType === 'agora_suggestion_received';
+				// A decline is the same shape in the other direction: the idea
+				// slot just re-armed, and the button walks back into the market.
+				const action =
+					toast.triggerType === 'agora_suggestion_received'
+						? requestMineFocus
+						: toast.triggerType === 'agora_suggestion_declined'
+							? requestMarketFocus
+							: null;
+				const actionable = action !== null;
 				const label = toastText(toast.triggerType, toast.text);
 
 				return m(
@@ -49,7 +59,7 @@ export const ToastStack: m.Component = {
 					{
 						key: toast.notificationId,
 						onclick: () => {
-							if (actionable) requestMineFocus();
+							action?.();
 							dismissToast(toast.notificationId);
 						},
 						onmouseenter: actionable ? () => holdToast(toast.notificationId) : undefined,

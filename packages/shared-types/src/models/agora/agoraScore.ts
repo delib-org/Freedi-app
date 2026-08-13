@@ -134,8 +134,74 @@ export const AgoraProposalScoreSchema = object({
 	 * device switch (it used to live in sessionStorage and evaporated).
 	 */
 	bridgingAtLastEdit: optional(number()),
+	/**
+	 * Class average support (0-100, see `agoraClassSupport`) the moment the
+	 * author last edited — the baseline the improvement loop actually reports
+	 * against.
+	 *
+	 * Separate from `bridgingAtLastEdit` because the two answer different
+	 * questions. Bridging is the game's currency and is blended and damped, so
+	 * it can sit still through a real change of mind; the average moves with
+	 * every one of them. The author is owed the second number, and the first
+	 * stays for the score line that pays them.
+	 *
+	 * ABSENT means nobody had rated at the moment of the edit — no baseline, so
+	 * the loop reports where the class stands instead of how far it moved. It is
+	 * never written as 0 for that case: 0 here means "the class is unanimously
+	 * against", which is the opposite of "the class has not spoken".
+	 */
+	supportAtLastEdit: optional(number()),
 	/** When the author last saved a text change (pairs with the baseline) */
 	lastEditAt: optional(number()),
+	/**
+	 * The proposal's revision journey, oldest first: one entry per revision
+	 * EVENT (rapid saves are debounced into one, see
+	 * AGORA_ANTI_GAMING.REVISION_DEBOUNCE_MS), where `bridgingAtEdit` is the
+	 * bridging score the moment that edit was saved — i.e. the closing score
+	 * of the version the edit replaced. The live `bridgingScore` is always the
+	 * current version's reading, so the client renders
+	 * v1·h[0] → v2·h[1] → … → vN·(live). Capped at
+	 * AGORA_ANTI_GAMING.EDIT_HISTORY_MAX: past the cap the FIRST entry (where
+	 * the journey began) and the newest MAX−1 survive — the start and the
+	 * recent road matter, the middle doesn't.
+	 */
+	editHistory: optional(
+		array(
+			object({
+				editedAt: number(),
+				bridgingAtEdit: number(),
+			}),
+		),
+	),
+	/**
+	 * Revision-credit bookkeeping (see AGORA_POINTS.REVISION_CREDIT).
+	 * `studentRatingsAtCredit` is the student-rater tally the last time a
+	 * revision was credited — the feedback gate compares against it, so the
+	 * same ratings can never pay for two revisions. One proposal per student
+	 * makes `credited` both a per-proposal and per-session counter.
+	 */
+	revisionCredit: optional(
+		object({
+			lastCreditAt: number(),
+			studentRatingsAtCredit: number(),
+			credited: number(),
+		}),
+	),
+	/**
+	 * When the owner last thanked a helper on this proposal — the second half
+	 * of the revision-credit feedback gate (a thank IS new feedback: it means
+	 * an idea arrived and the owner engaged with it). Stamped by
+	 * agoraResolveSuggestion, read by the proposal-write trigger.
+	 */
+	lastThankAt: optional(number()),
+	/**
+	 * Helpers whose thanked idea has already paid the author's weave credit.
+	 * Since the accept→implemented chain was retired, "weaving" is attested by
+	 * the pair thank-then-revise: the first real revision AFTER a helper's
+	 * thank pays WEAVE_CREDIT_PER_HELPER, once per distinct helper, up to
+	 * MAX_WEAVE_CREDITS_PER_PROPOSAL. This list is the idempotency ledger.
+	 */
+	weaveCreditedHelpers: optional(array(string())),
 	/**
 	 * True when the author is a positioned student, and therefore holds a seat
 	 * in the camp census that must NOT count toward their own proposal's

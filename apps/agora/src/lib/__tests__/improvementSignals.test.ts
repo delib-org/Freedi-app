@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AgoraMessageKind, AgoraSuggestionStatus } from '@freedi/shared-types';
+import {
+	AgoraMessageKind,
+	AgoraSuggestionStatus,
+	agoraRatingBucket,
+	emptyDist,
+	type AgoraRatingDist,
+} from '@freedi/shared-types';
 
 /**
  * The signals are pure over the deliberation state, so the whole suite drives a
@@ -28,9 +34,64 @@ const delibState: {
 	studentEvalTimes: Record<string, Array<{ evaluatorId: string; updatedAt: number }>>;
 	scores: Record<
 		string,
-		{ bridgingScore: number; bridgingAtLastEdit?: number; lastEditAt?: number }
+		{
+			bridgingScore: number;
+			bridgingAtLastEdit?: number;
+			supportAtLastEdit?: number;
+			lastEditAt?: number;
+			perCamp?: {
+				left: { sum: number; n: number; positiveN: number; studentDist?: AgoraRatingDist };
+				right: { sum: number; n: number; positiveN: number; studentDist?: AgoraRatingDist };
+				center: { sum: number; n: number; positiveN: number; studentDist?: AgoraRatingDist };
+			};
+		}
 	>;
 } = { proposals: [], suggestions: {}, myRatings: {}, studentEvalTimes: {}, scores: {} };
+
+/**
+ * A score doc carrying real student ratings, because the class average is
+ * counted from the histogram and a doc without one cannot be asked the
+ * question. Camp doesn't matter here — the average is over the whole class —
+ * so everybody stands in the centre.
+ */
+function scoreWithRatings(
+	ratings: number[],
+	rest: {
+		bridgingScore?: number;
+		bridgingAtLastEdit?: number;
+		supportAtLastEdit?: number;
+		lastEditAt?: number;
+	} = {},
+): (typeof delibState)['scores'][string] {
+	const studentDist = emptyDist();
+	for (const value of ratings) studentDist[agoraRatingBucket(value)] += 1;
+	const empty = (): {
+		sum: number;
+		n: number;
+		positiveN: number;
+		studentDist: AgoraRatingDist;
+	} => ({
+		sum: 0,
+		n: 0,
+		positiveN: 0,
+		studentDist: emptyDist(),
+	});
+
+	return {
+		bridgingScore: 0,
+		...rest,
+		perCamp: {
+			left: empty(),
+			right: empty(),
+			center: {
+				sum: ratings.reduce((total, value) => total + value, 0),
+				n: ratings.length,
+				positiveN: ratings.filter((value) => value > 0).length,
+				studentDist,
+			},
+		},
+	};
+}
 
 vi.mock('../proposals', () => ({
 	getDeliberationState: () => delibState,
@@ -60,6 +121,7 @@ import {
 	reWeighMoment,
 	roundTripAt,
 	scoreMovedMoment,
+	supportSinceEdit,
 } from '../improvementSignals';
 import type { AgoraProposal } from '../proposals';
 
@@ -314,7 +376,13 @@ describe('scoreMovedMoment', () => {
 				statusChangedAt: 1500,
 			}),
 		];
-		delibState.scores[PID] = { bridgingScore: 62, bridgingAtLastEdit: 50, lastEditAt: 2000 };
+		// Two classmates at +0.5 → mean 0.5 → 75 on the support scale
+		delibState.scores[PID] = scoreWithRatings([0.5, 0.5], {
+			bridgingScore: 62,
+			bridgingAtLastEdit: 50,
+			supportAtLastEdit: 60,
+			lastEditAt: 2000,
+		});
 		delibState.studentEvalTimes[PID] = [
 			{ evaluatorId: HELPER, updatedAt: 3000 },
 			{ evaluatorId: OTHER, updatedAt: 3000 },
@@ -323,7 +391,42 @@ describe('scoreMovedMoment', () => {
 
 	it('reports the class answer, credited to one helper', () => {
 		const moment = scoreMovedMoment(PID, OWNER, HELPER, proposal());
-		expect(moment).toEqual({ reRaters: 2, bridgeNow: 62, bridgeDelta: 12, editedAt: 2000 });
+		expect(moment).toEqual({
+			reRaters: 2,
+			support: { now: 75, delta: 15 },
+			bridgeNow: 62,
+			bridgeDelta: 12,
+			editedAt: 2000,
+		});
+	});
+
+	/**
+	 * The bug this whole pair of baselines exists for: bridging is blended and
+	 * damped, so a real change of mind can leave it exactly where it was — and
+	 * the author used to be told "it has not moved yet".
+	 */
+	it('reports the average moving even when bridge power sits still', () => {
+		delibState.scores[PID] = scoreWithRatings([1, 1], {
+			bridgingScore: 62,
+			bridgingAtLastEdit: 62,
+			supportAtLastEdit: 75,
+			lastEditAt: 2000,
+		});
+		const moment = scoreMovedMoment(PID, OWNER, HELPER, proposal());
+		expect(moment?.bridgeDelta).toBe(0);
+		expect(moment?.support).toEqual({ now: 100, delta: 25 });
+	});
+
+	it('says where the class stands when there was nothing to move from', () => {
+		delibState.scores[PID] = scoreWithRatings([0.5, 0.5], {
+			bridgingScore: 62,
+			bridgingAtLastEdit: 50,
+			lastEditAt: 2000,
+		});
+		expect(scoreMovedMoment(PID, OWNER, HELPER, proposal())?.support).toEqual({
+			now: 75,
+			delta: undefined,
+		});
 	});
 
 	it('stays silent until somebody answers', () => {
@@ -345,17 +448,58 @@ describe('scoreMovedMoment', () => {
 	});
 
 	it('reports a fall without turning the delta into NaN', () => {
-		delibState.scores[PID] = { bridgingScore: 55, bridgingAtLastEdit: 62, lastEditAt: 2000 };
-		expect(scoreMovedMoment(PID, OWNER, HELPER, proposal())?.bridgeDelta).toBe(-7);
+		delibState.scores[PID] = scoreWithRatings([-0.5], {
+			bridgingScore: 55,
+			bridgingAtLastEdit: 62,
+			supportAtLastEdit: 60,
+			lastEditAt: 2000,
+		});
+		const moment = scoreMovedMoment(PID, OWNER, HELPER, proposal());
+		expect(moment?.bridgeDelta).toBe(-7);
+		expect(moment?.support).toEqual({ now: 25, delta: -35 });
 	});
 
 	it('shows no delta when the pre-edit baseline is unknown', () => {
-		delibState.scores[PID] = { bridgingScore: 55, lastEditAt: 2000 };
+		delibState.scores[PID] = scoreWithRatings([0], { bridgingScore: 55, lastEditAt: 2000 });
 		expect(scoreMovedMoment(PID, OWNER, HELPER, proposal())?.bridgeDelta).toBe(0);
 	});
 
 	it('never shows to anyone but the owner', () => {
 		expect(scoreMovedMoment(PID, HELPER, OTHER, proposal())).toBeNull();
+	});
+});
+
+describe('supportSinceEdit', () => {
+	it('reads the class average and how far it travelled', () => {
+		delibState.scores[PID] = scoreWithRatings([1, 0, 0.5], { supportAtLastEdit: 50 });
+		// mean = 0.5 → 75
+		expect(supportSinceEdit(PID)).toEqual({ now: 75, delta: 25 });
+	});
+
+	it('counts a fall as a fall', () => {
+		delibState.scores[PID] = scoreWithRatings([-1, -1], { supportAtLastEdit: 50 });
+		expect(supportSinceEdit(PID)).toEqual({ now: 0, delta: -50 });
+	});
+
+	/**
+	 * Zero on this scale is "unanimously against", so an absent baseline can
+	 * never be reported as a move of zero — the two would be indistinguishable.
+	 */
+	it('separates "did not move" from "nothing to move from"', () => {
+		delibState.scores[PID] = scoreWithRatings([0.5, 0.5], { supportAtLastEdit: 75 });
+		expect(supportSinceEdit(PID)).toEqual({ now: 75, delta: 0 });
+
+		delibState.scores[PID] = scoreWithRatings([0.5, 0.5]);
+		expect(supportSinceEdit(PID)).toEqual({ now: 75, delta: undefined });
+	});
+
+	it('says nothing at all before the class has rated', () => {
+		delibState.scores[PID] = scoreWithRatings([], { supportAtLastEdit: 60 });
+		expect(supportSinceEdit(PID)).toEqual({ now: undefined, delta: undefined });
+	});
+
+	it('survives a proposal with no score doc yet', () => {
+		expect(supportSinceEdit('nobody')).toEqual({ now: undefined, delta: undefined });
 	});
 });
 
