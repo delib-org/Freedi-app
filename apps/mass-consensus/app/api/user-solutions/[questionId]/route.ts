@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserSolutions } from '@/lib/firebase/queries';
+import { getUserSolutions, getQuestionFromFirebase } from '@/lib/firebase/queries';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { summarizeUserSolutions } from '@/lib/utils/userSolutionSummary';
 import { logError } from '@/lib/utils/errorHandling';
 
 /**
@@ -26,12 +27,15 @@ export async function GET(
     }
 
     const questionId = params.questionId;
-    const userSolutions = await getUserSolutions(questionId, userId);
 
-    return NextResponse.json({
-      hasSubmitted: userSolutions.length > 0,
-      solutionCount: userSolutions.length,
-    });
+    const [userSolutions, question] = await Promise.all([
+      getUserSolutions(questionId, userId),
+      getQuestionFromFirebase(questionId).catch(() => null),
+    ]);
+
+    return NextResponse.json(
+      summarizeUserSolutions(userId, question?.creatorId, userSolutions.length)
+    );
   } catch (error) {
     logError(error, {
       operation: 'api.userSolutions',
