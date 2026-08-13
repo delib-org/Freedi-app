@@ -1214,7 +1214,9 @@
 
 	// Digits only in the last two minutes — a clock you can't do anything
 	// about is noise, a clock about to run out deserves plain digits (no
-	// pulse: a throbbing number over a student mid-sentence is a siren)
+	// pulse: a throbbing number over a student mid-sentence is a siren).
+	// --text-primary, not --warning: warning copy fails AA on this ground
+	// (the token's own contract) — the amber BAR carries the tone.
 	&__fuse-time {
 		position: absolute;
 		inset-block-end: 6px;
@@ -1222,7 +1224,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
-		color: var(--warning);
+		color: var(--text-primary);
 	}
 }
 
@@ -2064,7 +2066,7 @@
 	}
 
 	&__hint {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-xs);
 	}
 
@@ -2096,7 +2098,7 @@
 
 .write-desk__selfcheck-ask {
 	font-size: var(--font-size-sm);
-	color: var(--ink-soft);
+	color: var(--text-secondary);
 }
 
 .write-desk__selfcheck-chips {
@@ -2110,17 +2112,19 @@
 	align-items: center;
 	gap: var(--space-xs);
 	padding: var(--space-xs) var(--space-md);
-	border-radius: var(--radius-pill, 999px);
-	border: 1px solid var(--border-subtle);
+	border-radius: 999px;
+	border: 1px solid transparent;
 	background: var(--bg-card-solid);
 	font: inherit;
 	font-size: var(--font-size-sm);
-	color: var(--ink);
+	// The write desk is a dark hero surface (ink-on-dark remaps --ink to
+	// white), and the pill stays deliberately white — so the pill carries its
+	// OWN dark ink, the same contract as .thread__msg--mine .helped__chip
+	color: var(--mine-ink);
 	cursor: pointer;
 
 	&--on {
-		border-color: rgba(20, 160, 143, 0.6);
-		background: rgba(20, 160, 143, 0.12);
+		border-color: rgba(20, 160, 143, 0.9);
 		font-weight: 700;
 	}
 }
@@ -2193,10 +2197,10 @@
 		align-items: baseline;
 		gap: 4px;
 		padding: 2px var(--space-sm);
-		border-radius: var(--radius-pill, 999px);
+		border-radius: 999px;
 		background: var(--bg-inset, rgba(0, 0, 0, 0.05));
 		font-size: var(--font-size-xs);
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 
 		// The version that slipped below its predecessor — information for the
 		// next edit, in the same amber the ratings-moved line dips in
@@ -2221,7 +2225,7 @@
 
 .journey__tier {
 	font-size: var(--font-size-xs);
-	color: var(--ink-soft);
+	color: var(--text-secondary);
 }
 
 // --- One proposal↔helper conversation: the helper's ideas (with their
@@ -2650,7 +2654,7 @@
 			margin-block-start: 2px;
 			font-style: normal;
 			font-size: var(--font-size-xs);
-			color: var(--ink-soft);
+			color: var(--text-secondary);
 		}
 	}
 
@@ -2660,7 +2664,7 @@
 	&__saved-ack {
 		margin: var(--space-xs) var(--space-md) 0;
 		font-size: var(--font-size-sm);
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 	}
 
 	&__list {
@@ -3122,7 +3126,7 @@
 	}
 
 	&__hint {
-		color: var(--ink-soft);
+		color: var(--text-secondary);
 		font-size: var(--font-size-sm);
 	}
 }
@@ -5663,7 +5667,7 @@
 		align-items: center;
 		gap: var(--space-xs);
 		padding: var(--space-xs) var(--space-sm);
-		border-radius: var(--radius-pill, 999px);
+		border-radius: 999px;
 		border: 1px solid var(--border-subtle);
 		background: var(--bg-card-solid);
 		opacity: 0.62;
