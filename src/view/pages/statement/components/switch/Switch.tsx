@@ -1,6 +1,7 @@
 import React, { useContext, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Role } from '@freedi/shared-types';
+import { useParams } from 'react-router';
+import { Role, Screen } from '@freedi/shared-types';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
@@ -26,6 +27,11 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	const mainRef = useRef<HTMLElement>(null);
 	useHeaderHideOnScroll(mainRef);
 
+	// The mind map is a canvas screen: it must use the full window width instead
+	// of the centered reading column `.page__main` enforces on wide screens.
+	const { screen } = useParams();
+	const isFullBleedScreen = screen === Screen.mindMap;
+
 	const subsSelect = useMemo(
 		() => statementSubsSelector(statement?.statementId),
 		[statement?.statementId],
@@ -35,7 +41,7 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	const isAdmin = role === Role.admin || role === Role.creator;
 
 	return (
-		<main ref={mainRef} className="page__main">
+		<main ref={mainRef} className={`page__main${isFullBleedScreen ? ' page__main--flush' : ''}`}>
 			<OnlineUsers statementId={statement?.statementId} />
 			{statement && <StatementBody host={statement} canEdit={isAdmin} />}
 			{allSubs.length === 0 && activeView === 'chat' && (

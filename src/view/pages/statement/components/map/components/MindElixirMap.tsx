@@ -94,21 +94,6 @@ function MindElixirMap({
 	const { mapContext, setMapContext } = useMapContext();
 	const { t } = useTranslation();
 
-	// Remove overflow clipping from ancestors so the 100vw container isn't clipped
-	useEffect(() => {
-		const pageMain = containerRef.current?.closest('.page__main') as HTMLElement | null;
-		const page = containerRef.current?.closest('.page') as HTMLElement | null;
-		const origMain = pageMain?.style.overflowX ?? '';
-		const origPage = page?.style.overflow ?? '';
-		if (pageMain) pageMain.style.overflowX = 'visible';
-		if (page) page.style.overflow = 'visible';
-
-		return () => {
-			if (pageMain) pageMain.style.overflowX = origMain;
-			if (page) page.style.overflow = origPage;
-		};
-	}, []);
-
 	// State for move modal
 	const [draggedNodeId, setDraggedNodeId] = useState('');
 	const [intersectedNodeId, setIntersectedNodeId] = useState('');

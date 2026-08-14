@@ -3,14 +3,16 @@
 @use "sass:color";
 
 // Container styling for MindElixir
+// Fills its parent. The parent is made full-bleed by the screen that hosts it
+// (`.page__main--flush` in the statement page, `.canvas` on the cluster board),
+// so no `100vw` + negative-margin break-out is needed here — that trick only
+// worked in LTR and shoved the whole map off-screen in Hebrew/Arabic.
 .mindElixirContainer {
-	width: 100vw;
+	width: 100%;
 	height: 100%;
 	flex: 1;
 	direction: ltr;
 	position: relative;
-	// Break out of centered parent to fill full viewport width
-	margin-left: calc(-50vw + 50%);
 
 	// Custom enhancements on top of MindElixir's default styles
 	:global {

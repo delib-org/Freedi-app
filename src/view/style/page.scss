@@ -176,6 +176,21 @@
 			padding-right: max(340px, calc((100vw - var(--wrapper-max-width)) / 2 - 20px));
 		}
 
+		// Canvas screens (mind map) need the whole width: the reading-column
+		// padding above would squeeze the map into ~800px on a wide screen.
+		// Direction-agnostic — no 100vw break-out, which only works in LTR.
+		// Title/description keep their own `max-width: 75ch; margin: auto`, so
+		// they stay a readable centered column even with the padding gone.
+		&--flush {
+			padding-left: 0;
+			padding-right: 0;
+
+			@media (min-width: 1441px) {
+				padding-left: 0;
+				padding-right: 0;
+			}
+		}
+
 		.statement-inner {
 			display: flex;
 			flex-direction: column;
