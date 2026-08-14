@@ -3,9 +3,9 @@
  * (Hebrew) into Firestore so a teacher can open a session immediately.
  *
  * Usage:
- *   npx tsx scripts/seed.ts           # seeds the Firestore emulator (localhost:8081)
- *   npx tsx scripts/seed.ts --prod    # seeds cloud Firestore (requires credentials)
- *   npx tsx scripts/seed.ts --clear   # clears the seeded package then re-seeds
+ *   npx tsx scripts/seed.ts                      # seeds the emulator (localhost:8081)
+ *   npx tsx scripts/seed.ts --project=wizcol-app # seeds cloud Firestore (needs credentials)
+ *   npx tsx scripts/seed.ts --clear              # clears the seeded package then re-seeds
  *
  * After running: open http://localhost:3009/#!/teach and create a session.
  */
@@ -13,14 +13,35 @@
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-const USE_EMULATOR = !process.argv.includes('--prod');
+/**
+ * `--project=<id>` names the cloud project and, by naming it, turns the
+ * emulator off. The old flag was `--prod`, which did turn the emulator off —
+ * but the project id below was hardcoded to freedi-test, so "seeding prod"
+ * wrote to freedi-test's REAL cloud database and never touched wizcol-app.
+ * A flag whose name is a lie about where the data goes is worse than no flag.
+ */
+const projectArg = process.argv.find((arg) => arg.startsWith('--project='));
+const PROJECT_ID = projectArg?.split('=')[1] || 'freedi-test';
+const USE_EMULATOR = !projectArg;
 const CLEAR_FIRST = process.argv.includes('--clear');
+
+if (process.argv.includes('--prod')) {
+	console.error(
+		'✗ --prod is gone: it silently seeded freedi-test, not production.\n' +
+			'  → use --project=wizcol-app (or whichever project you mean)',
+	);
+	process.exit(1);
+}
 
 if (USE_EMULATOR) {
 	process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8081';
 }
 
-const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: 'freedi-test' });
+console.info(
+	USE_EMULATOR ? '→ seeding the EMULATOR (localhost:8081)' : `→ seeding CLOUD project ${PROJECT_ID}`,
+);
+
+const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: PROJECT_ID });
 const db = getFirestore(app);
 
 const TOPIC_PACKAGE_ID = 'demo-french-revolution';
