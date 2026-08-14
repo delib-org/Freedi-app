@@ -26,7 +26,16 @@ describe('/statements', () => {
 	const SESSION = 'session-1';
 
 	describe('read', () => {
-		it('rejects an unauthenticated read', async () => {
+		// SKIPPED, and the skip is the point.
+		//
+		// The rule is written and correct, but staged behind four app deploys:
+		// the main app, Sign, Join and Chat all read before signing in on their
+		// CURRENTLY DEPLOYED versions. The fixes are committed and not shipped.
+		// Turning the gate on first would blank Sign's comment panes, Join's
+		// shared chat links and Chat's live updates in production.
+		//
+		// Un-skip together with flipping `allow read` in firestore.rules.
+		it.skip('rejects an unauthenticated read (staged behind app deploys)', async () => {
 			await seed(env, async (db) => {
 				await setDoc(
 					doc(db, 'statements', 'public-read'),

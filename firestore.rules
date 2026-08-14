@@ -374,7 +374,24 @@ service cloud.firestore {
       //
       // Crawler previews are unaffected — serveJoinShareRoutes and the Sign and
       // Chat server components read through the Admin SDK, which bypasses rules.
-      allow read: if request.auth != null;
+      //
+      // STAGED, NOT ABANDONED. The line below should be
+      //     allow read: if request.auth != null;
+      // and every client change needed to survive it is already committed:
+      // Join's Chat.ts signs in before reading, Sign's listeners defer until a
+      // session exists, Chat gained an anonymous-auth path, and the main app's
+      // listeners wait for auth (457151dae, 26315f2ff, fc13854a9).
+      //
+      // None of those are DEPLOYED. Turning the gate on before they ship would
+      // blank Sign's comment panes, Join's shared chat links and Chat's live
+      // updates for signed-out readers — in production. Rules are deployed from
+      // this file, so leaving it permissive here keeps prod and the repo the
+      // same thing rather than quietly different.
+      //
+      // Flip it back the moment the main app, Sign, Join and Chat are out.
+      // tests/rules/statements.test.mjs has the assertion, skipped with the
+      // same explanation, so the debt is visible on every run.
+      allow read;
 
       // You may only create a statement as yourself. isCreator() cannot be
       // reused here: it reads `resource`, which is null at create time.
