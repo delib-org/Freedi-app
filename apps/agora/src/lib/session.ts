@@ -7,8 +7,10 @@ import {
 	AgoraSessionSchema,
 	AgoraParticipantSchema,
 	AgoraStage,
-	AgoraCamp,
+	AgoraCampCensus,
+	consensusPoolFrom,
 	createAgoraParticipantId,
+	tallyAgoraCamps,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
@@ -44,24 +46,21 @@ export function getSessionState(): Readonly<SessionState> {
 }
 
 /**
- * Positioned students per camp — the finite population the class consensus
- * divides by. AI raters are already dropped at ingestion, so this is the class
- * and nothing else.
+ * The pool the class consensus divides by.
  *
- * The client needs this so the results tab moves the instant a classmate rates,
- * instead of waiting for the trigger to write the score back. It feeds the same
- * shared calcAgoraClassConsensus the server uses, so the live number and the
- * stored one cannot disagree on anything but freshness.
+ * The client computes this so the results tab moves the instant a classmate
+ * rates, instead of waiting for the trigger to write the score back. Both the
+ * counting and the folding-in of unpositioned students now come from
+ * shared-types, so the live number and the stored one cannot disagree on
+ * anything but freshness.
+ *
+ * They used to. This function counted positioned students only, while the
+ * trigger also folded the unpositioned into centre — so with even one student
+ * yet to position, the teacher's projector and the class's phones showed
+ * different consensus for the same proposal.
  */
-export function getCampCensus(): { left: number; right: number; center: number } {
-	const census = { left: 0, right: 0, center: 0 };
-	for (const participant of state.participants) {
-		if (participant.camp === AgoraCamp.left) census.left++;
-		else if (participant.camp === AgoraCamp.right) census.right++;
-		else if (participant.camp === AgoraCamp.center) census.center++;
-	}
-
-	return census;
+export function getConsensusPool(): AgoraCampCensus {
+	return consensusPoolFrom(tallyAgoraCamps(state.participants));
 }
 
 /**

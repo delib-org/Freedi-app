@@ -40,7 +40,7 @@ import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
 import { countThanks, ResultsSwitch, type ResultsTab } from '../components/ResultsSwitch';
 import { RateScale, rateOptionFor } from '../components/RateScale';
-import { getCampCensus, getSessionState } from '../lib/session';
+import { getConsensusPool, getSessionState } from '../lib/session';
 import {
 	answerBaseline,
 	editClock,
@@ -2462,7 +2462,7 @@ export function Deliberation(
 									topic,
 									proposals: getDeliberationState().proposals,
 									scores: getDeliberationState().scores,
-									census: getCampCensus(),
+									census: getConsensusPool(),
 									userId,
 								}),
 						m(

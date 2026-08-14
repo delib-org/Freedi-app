@@ -95,6 +95,8 @@ export {
 export type {
 	AgoraClassConsensusInput,
 	AgoraCampCensus,
+	AgoraCampMember,
+	AgoraCampTally,
 	AgoraClassSupport,
 } from './agoraConsensus';
 export {
@@ -103,10 +105,12 @@ export {
 	agoraRatingBucket,
 	calcAgoraClassConsensus,
 	consensusCeiling,
+	consensusPoolFrom,
 	distMoments,
 	eligiblePoolFor,
 	emptyDist,
 	normalizedConsensus,
+	tallyAgoraCamps,
 } from './agoraConsensus';
 
 export type { AgoraValueAnswer } from './agoraValueAnswer';
@@ -118,6 +122,7 @@ export {
 	calcBridgingScore,
 	bridgingTierFor,
 	bridgingPayout,
+	crossCampPoolFor,
 	warmth,
 } from './agoraBridging';
 

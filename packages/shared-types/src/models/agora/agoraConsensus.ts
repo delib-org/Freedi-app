@@ -18,7 +18,7 @@
 
 import { calcAgreement, calcLikeMindedness } from '../../utils/consensusCalculation';
 import { warmth } from './agoraBridging';
-import type { AgoraCamp } from './agoraEnums';
+import { AgoraCamp } from './agoraEnums';
 import { AGORA_RATING_LEVELS } from './agoraScore';
 import type { AgoraCampAggregate, AgoraClassConsensus, AgoraRatingDist } from './agoraScore';
 
@@ -170,6 +170,61 @@ export interface AgoraCampCensus {
 	left: number;
 	right: number;
 	center: number;
+}
+
+/** The class, counted: positioned per camp, plus those who never positioned. */
+export interface AgoraCampTally {
+	counts: AgoraCampCensus;
+	/**
+	 * Class members with no camp. They are not part of any camp, so bridging
+	 * ignores them — but their ratings still count, so consensus must not.
+	 */
+	unpositioned: number;
+}
+
+/** The one participant fields this tally needs, so both sides can pass their own shape. */
+export interface AgoraCampMember {
+	camp?: AgoraCamp;
+	isAI?: boolean;
+}
+
+/**
+ * Count the class.
+ *
+ * Shared because it was not: the trigger counted unpositioned students and the
+ * client did not, so the moment anyone in the room had not yet positioned, the
+ * teacher's projector and the students' phones showed different consensus for
+ * the same proposal. A score that disagrees with itself in front of the class
+ * discredits every other number on the screen.
+ */
+export function tallyAgoraCamps(participants: readonly AgoraCampMember[]): AgoraCampTally {
+	const counts: AgoraCampCensus = { left: 0, right: 0, center: 0 };
+	let unpositioned = 0;
+
+	for (const participant of participants) {
+		// Synthetic raters carry a camp's weight without sizing the class
+		if (participant.isAI) continue;
+		if (participant.camp === AgoraCamp.left) counts.left++;
+		else if (participant.camp === AgoraCamp.right) counts.right++;
+		else if (participant.camp === AgoraCamp.center) counts.center++;
+		else unpositioned++;
+	}
+
+	return { counts, unpositioned };
+}
+
+/**
+ * The pool the class consensus divides by.
+ *
+ * Bridging asks about camps and gets the positioned counts alone. Consensus
+ * asks "how much of the class has spoken", so it gets the whole class — the
+ * unpositioned filed under centre, exactly where their ratings are.
+ */
+export function consensusPoolFrom(tally: AgoraCampTally): AgoraCampCensus {
+	return {
+		...tally.counts,
+		center: tally.counts.center + tally.unpositioned,
+	};
 }
 
 /**

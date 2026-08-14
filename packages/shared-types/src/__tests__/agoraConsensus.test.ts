@@ -9,6 +9,8 @@ import {
 	eligiblePoolFor,
 	emptyDist,
 	normalizedConsensus,
+	consensusPoolFrom,
+	tallyAgoraCamps,
 } from '../models/agora/agoraConsensus';
 import {
 	AgoraCampAggregateSchema,
@@ -339,5 +341,47 @@ describe('eligiblePoolFor', () => {
 		expect(result.left).toBe(CLASS.left);
 		expect(result.right).toBe(CLASS.right);
 		expect(result.center).toBe(CLASS.center - 1);
+	});
+});
+
+/**
+ * The bug these cover: the client counted positioned students only while the
+ * trigger also folded the unpositioned into centre, so with even one student
+ * yet to position, the projector and the phones disagreed about the same
+ * proposal's consensus.
+ */
+describe('tallyAgoraCamps / consensusPoolFrom', () => {
+	const CLASS = [
+		{ camp: 'left' as AgoraCamp },
+		{ camp: 'left' as AgoraCamp },
+		{ camp: 'right' as AgoraCamp },
+		{ camp: 'center' as AgoraCamp },
+		{}, // joined, never positioned
+		{}, // ditto
+		{ camp: 'right' as AgoraCamp, isAI: true }, // a character's synthetic rater
+	];
+
+	it('counts positioned students per camp and leaves AI raters out', () => {
+		const { counts } = tallyAgoraCamps(CLASS);
+		expect(counts).toEqual({ left: 2, right: 1, center: 1 });
+	});
+
+	it('counts the unpositioned as class members, not as a camp', () => {
+		expect(tallyAgoraCamps(CLASS).unpositioned).toBe(2);
+	});
+
+	it('folds the unpositioned into centre for the consensus pool only', () => {
+		const tally = tallyAgoraCamps(CLASS);
+		// bridging keeps the positioned counts...
+		expect(tally.counts.center).toBe(1);
+		// ...consensus divides by the whole class
+		expect(consensusPoolFrom(tally)).toEqual({ left: 2, right: 1, center: 3 });
+	});
+
+	it('agrees with itself when everyone has positioned', () => {
+		const positioned = CLASS.filter((p) => 'camp' in p);
+		const tally = tallyAgoraCamps(positioned);
+		expect(tally.unpositioned).toBe(0);
+		expect(consensusPoolFrom(tally)).toEqual(tally.counts);
 	});
 });

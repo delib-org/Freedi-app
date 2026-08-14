@@ -8,7 +8,6 @@ import {
 	AgoraProposalScore,
 	AgoraRatingDist,
 	Evaluation,
-	AGORA_BRIDGING,
 	AGORA_POINTS,
 	NotificationTriggerType,
 	StatementType,
@@ -17,12 +16,15 @@ import {
 	agoraRatingBucket,
 	calcAgoraClassConsensus,
 	calcBridgingScore,
+	consensusPoolFrom,
+	crossCampPoolFor,
 	eligiblePoolFor,
 	emptyDist,
 	createAgoraParticipantId,
 	functionConfig,
 	getRandomUID,
 	isAgoraAiUid,
+	tallyAgoraCamps,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { awardCredit } from '../engagement/credits/creditEngine';
@@ -83,33 +85,19 @@ async function readCampCensus(sessionId: string): Promise<CampCensus> {
 		.where('sessionId', '==', sessionId)
 		.get();
 
-	const counts: CampCounts = { left: 0, right: 0, center: 0 };
+	const participants: AgoraParticipant[] = [];
 	const campOf = new Map<string, AgoraCamp>();
-	let unpositioned = 0;
 	snapshot.forEach((docSnap) => {
 		const participant = docSnap.data() as AgoraParticipant;
 		if (participant.camp) campOf.set(participant.userId, participant.camp);
-		if (participant.isAI) return; // synthetic raters never size the pool
-		if (participant.camp === AgoraCamp.left) counts.left++;
-		else if (participant.camp === AgoraCamp.right) counts.right++;
-		else if (participant.camp === AgoraCamp.center) counts.center++;
-		else unpositioned++; // a class member, but not a camp
+		participants.push(participant);
 	});
 
+	// The counting itself is shared with the client, which reads the same tally
+	// to show a live consensus before this trigger lands.
+	const { counts, unpositioned } = tallyAgoraCamps(participants);
+
 	return { counts, unpositioned, campOf };
-}
-
-/**
- * Mirrors calcBridgingScore's blend: for a wing author the other wing is
- * "other" and the center counts at half weight; a center author faces both
- * wings.
- */
-function crossCampPoolFor(authorCamp: AgoraCamp, counts: CampCounts): number {
-	if (authorCamp === AgoraCamp.center) return counts.left + counts.right;
-
-	const otherWing = authorCamp === AgoraCamp.left ? counts.right : counts.left;
-
-	return otherWing + counts.center * AGORA_BRIDGING.CENTER_CAMP_WEIGHT;
 }
 
 /**
@@ -268,10 +256,10 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			// class consensus asks "how much of the class has spoken", so it gets
 			// the whole class — the unpositioned filed under centre, exactly where
 			// their ratings are.
-			const consensusPool: CampCounts = {
-				...campCounts,
-				center: campCounts.center + unpositioned,
-			};
+			const consensusPool: CampCounts = consensusPoolFrom({
+				counts: campCounts,
+				unpositioned,
+			});
 
 			/**
 			 * The author's side, re-read every time rather than frozen at the

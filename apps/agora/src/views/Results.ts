@@ -5,7 +5,7 @@ import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
 import { getDeliberationState, isSuggestionKind, listenToDeliberation } from '../lib/proposals';
 import { Icon, iconLabel, type IconName } from '../components/Icon';
-import { getCampCensus, getSessionState } from '../lib/session';
+import { getConsensusPool, getSessionState } from '../lib/session';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
 import { countThanks, ResultsSwitch, type ResultsTab } from '../components/ResultsSwitch';
@@ -420,7 +420,7 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 						topic,
 						proposals: getDeliberationState().proposals,
 						scores: getDeliberationState().scores,
-						census: getCampCensus(),
+						census: getConsensusPool(),
 						userId: myParticipant?.userId,
 						leadStatementId: score.leadStatementId,
 						finale: true,

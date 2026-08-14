@@ -112,6 +112,27 @@ function crossCampConfidence(otherN: number, crossCampPool?: number): number {
  * A center-camp author is treated symmetrically: both wings count as
  * "other" and same-camp support comes from the center itself.
  */
+/**
+ * How many students could plausibly have rated this proposal from across the
+ * aisle — the denominator of the confidence ramp above.
+ *
+ * Lives here, beside `calcBridgingScore`, because it has to mirror that
+ * function's blend exactly: for a wing author the other wing is "other" and the
+ * centre counts at half weight; a centre author faces both wings. It used to be
+ * a hand-written copy inside the evaluation trigger, with a comment admitting
+ * as much — two statements of one rule, free to drift.
+ */
+export function crossCampPoolFor(
+	authorCamp: AgoraCamp,
+	counts: { left: number; right: number; center: number },
+): number {
+	if (authorCamp === AgoraCamp.center) return counts.left + counts.right;
+
+	const otherWing = authorCamp === AgoraCamp.left ? counts.right : counts.left;
+
+	return otherWing + counts.center * AGORA_BRIDGING.CENTER_CAMP_WEIGHT;
+}
+
 export function calcBridgingScore(input: BridgingInput): number {
 	const { authorCamp, perCamp, crossCampPool } = input;
 	const { SAME_CAMP_WEIGHT, CROSS_CAMP_WEIGHT, CENTER_CAMP_WEIGHT } = AGORA_BRIDGING;
