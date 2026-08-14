@@ -288,6 +288,39 @@ which was never created, so the mapping was corrected to match the real site.
 clone cannot deploy even after the site exists. Copy `.firebaserc.example`
 (committed, same content minus anything machine-specific) to `.firebaserc`.
 
+### Indexes are NOT deployed by any script
+
+`firestore.indexes.json` never reaches production on its own. `deploy:rules:prod`
+deploys rules and storage only, and a plain `firebase deploy --only
+firestore:indexes` would try to PRUNE the indexes that exist on wizcol-app but
+not in the repo file — several of which other apps depend on. So indexes are
+created surgically, one at a time:
+
+```bash
+gcloud firestore indexes composite create --project=wizcol-app \
+  --collection-group=agoraSessions \
+  --field-config=field-path=code,order=ascending \
+  --field-config=field-path=createdAt,order=ascending
+```
+
+Agora's five (all created 2026-08-14, after a live session failed with
+FAILED_PRECONDITION because none of them existed):
+
+| collection | fields |
+|---|---|
+| agoraSessions | code + createdAt  ← blocks agoraCreateSession |
+| agoraSessions | code + status |
+| agoraSessions | status + lessonEndsAt  ← the hourly sweep |
+| evaluations | agoraSessionId + evaluatorId |
+| statements | agoraSessionId + statementType  ← the deliberation listener |
+
+The last one backfills the whole statements collection and takes materially
+longer than the others. Check state with:
+
+```bash
+gcloud firestore indexes composite list --project=wizcol-app
+```
+
 CI (`.github/workflows/agora.yml`) deliberately does NOT deploy: it runs lint,
 typecheck, tests and build only. Deploying from CI would need a service-account
 secret in GitHub, which nobody has set up, and the e2e scripts need an emulator
