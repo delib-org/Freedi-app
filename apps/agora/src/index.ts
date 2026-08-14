@@ -12,7 +12,7 @@ import './styles/global.scss';
 import './styles/components.scss';
 import './styles/icons.scss';
 import './styles/chat.scss';
-import { initAuth, getUserState } from './lib/user';
+import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { getSessionState } from './lib/session';
 import { Home } from './views/Home';
@@ -24,6 +24,9 @@ import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
 
 initAuth();
+// A teacher whose popup was blocked came back via a full page redirect; this
+// is where that round trip is collected. No-op on every other load.
+void completeRedirectSignIn();
 initI18n();
 
 // A PWA service worker left behind by a production build served on this

@@ -5,6 +5,8 @@ import {
 	signInWithCredential,
 	GoogleAuthProvider,
 	signInWithPopup,
+	signInWithRedirect,
+	getRedirectResult,
 	linkWithPopup,
 	onAuthStateChanged,
 	User,
@@ -72,25 +74,57 @@ export async function signInWithGoogle(): Promise<void> {
 
 	const currentUser = auth.currentUser;
 
-	if (currentUser && currentUser.isAnonymous) {
-		try {
+	try {
+		if (currentUser && currentUser.isAnonymous) {
 			await linkWithPopup(currentUser, provider);
-			state.tier = 2;
-			m.redraw();
-		} catch (error: unknown) {
-			const firebaseError = error as { code?: string };
-			if (firebaseError.code === 'auth/credential-already-in-use') {
-				await signInWithPopup(auth, provider);
-				state.tier = 2;
-				m.redraw();
-			} else {
-				throw error;
-			}
+		} else {
+			await signInWithPopup(auth, provider);
 		}
-	} else {
-		await signInWithPopup(auth, provider);
 		state.tier = 2;
 		m.redraw();
+	} catch (error: unknown) {
+		const code = (error as { code?: string }).code;
+
+		// A popup may only be opened while the click that asked for it is still
+		// "live". Both remaining paths here run AFTER an await — the second
+		// attempt when an anonymous account turns out to be already linked, and
+		// any retry after a failure — so the browser has already withdrawn the
+		// user gesture and blocks them. That is what auth/popup-blocked was.
+		//
+		// Redirect needs no gesture. It costs a page load, which is why it is
+		// the fallback rather than the default, and getRedirectResult() below
+		// finishes the job when we come back.
+		if (
+			code === 'auth/credential-already-in-use' ||
+			code === 'auth/popup-blocked' ||
+			code === 'auth/cancelled-popup-request'
+		) {
+			await signInWithRedirect(auth, provider);
+
+			return;
+		}
+		// A teacher who closes the popup themselves has not failed at anything
+		if (code === 'auth/popup-closed-by-user') return;
+		throw error;
+	}
+}
+
+/**
+ * Finish a sign-in that went the redirect route. Returns true if this page load
+ * was the far side of one — harmless and cheap on every other load.
+ */
+export async function completeRedirectSignIn(): Promise<boolean> {
+	try {
+		const result = await getRedirectResult(auth);
+		if (!result) return false;
+		state.tier = 2;
+		m.redraw();
+
+		return true;
+	} catch (error: unknown) {
+		console.error('[Auth] Redirect sign-in failed:', error);
+
+		return false;
 	}
 }
 
