@@ -1,0 +1,66 @@
+{
+  "projects": {
+    "test": "freedi-test",
+    "dev": "freedi-test",
+    "prod": "synthesistalyaron",
+    "wizcol": "wizcol-app",
+    "default": "freedi-test"
+  },
+  "targets": {
+    "delib-v3-dev": {
+      "hosting": {
+        "dev": [
+          "delib-v3-dev"
+        ]
+      }
+    },
+    "freedi-test": {
+      "hosting": {
+        "test": [
+          "freedi-test"
+        ],
+        "dev": [
+          "freedi-test"
+        ]
+      }
+    },
+    "synthesistalyaron": {
+      "hosting": {
+        "prod": [
+          "synthesistalyaron"
+        ]
+      }
+    },
+    "wizcol-app": {
+      "hosting": {
+        "wizcol": [
+          "wizcol-app"
+        ],
+        "sign": [
+          "sign-wizcol"
+        ],
+        "flow": [
+          "wizcol-flow"
+        ],
+        "chat": [
+          "wizcol-chat"
+        ],
+        "admin": [
+          "wizcol-admin"
+        ],
+        "join": [
+          "wizcol-join"
+        ],
+        "studio": [
+          "wizcol-studio"
+        ],
+        "agora": [
+          "agora-wizcol"
+        ],
+        "odyssey": [
+          "wizcol-odyssey"
+        ]
+      }
+    }
+  }
+}

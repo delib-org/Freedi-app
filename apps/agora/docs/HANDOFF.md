@@ -275,8 +275,23 @@ test.
    until the Count agrees he's been understood"), teacher cards, narrator
    interstitials, evidence cards, bias-events deck, expanding-agreement
    (~80% net support) as the success verdict, two-lesson arc.
-7. Ops: agora functions/hosting not yet deployed anywhere (emulator only);
-   `wizcol-agora` hosting site must be created before first deploy.
+7. Ops: agora functions not yet deployed anywhere (emulator only).
+
+### Deploying
+
+The hosting site exists: **`agora-wizcol`** on project `wizcol-app`
+(https://agora-wizcol.web.app), created 2026-08-14. Note the order of the
+words — `.firebaserc` originally mapped the `agora` target to `wizcol-agora`,
+which was never created, so the mapping was corrected to match the real site.
+
+`.firebaserc` holds the target → site mapping and is gitignored, so a fresh
+clone cannot deploy even after the site exists. Copy `.firebaserc.example`
+(committed, same content minus anything machine-specific) to `.firebaserc`.
+
+CI (`.github/workflows/agora.yml`) deliberately does NOT deploy: it runs lint,
+typecheck, tests and build only. Deploying from CI would need a service-account
+secret in GitHub, which nobody has set up, and the e2e scripts need an emulator
+suite the workflow does not start.
 
 ## Recent commit trail (newest last)
 

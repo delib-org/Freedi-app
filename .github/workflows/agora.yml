@@ -1,0 +1,64 @@
+name: Agora
+
+# Agora had no CI at all: no lint, no typecheck, no tests, no build on any push
+# or PR. Every gate was local and human-initiated, which is how 5 broken unit
+# tests and a dead 4,000-line code path went unnoticed for weeks.
+#
+# Deliberately NOT running the e2e scripts here. They need the Firebase
+# emulator suite, a seeded topic package and a dev server on :3009 — that is a
+# separate, slower job worth adding once this one is trusted.
+
+on:
+  pull_request:
+    paths:
+      - 'apps/agora/**'
+      - 'packages/shared-types/**'
+      - '.github/workflows/agora.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/agora/**'
+      - 'packages/shared-types/**'
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      # shared-types is a file: dependency compiled to dist/. Agora's typecheck
+      # resolves against that, so a missing build fails with confusing module
+      # resolution errors rather than an honest "you did not build it".
+      - name: Build shared-types
+        working-directory: ./packages/shared-types
+        run: npm ci && npm run build
+
+      - name: Install Agora
+        working-directory: ./apps/agora
+        run: npm install
+
+      - name: Lint
+        working-directory: ./apps/agora
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: ./apps/agora
+        run: npm run typecheck
+
+      - name: Typecheck scripts
+        working-directory: ./apps/agora
+        run: npm run typecheck:scripts
+
+      # Includes the translation key-parity test — six hand-edited locales in
+      # one file, and until now nothing checked they matched.
+      - name: Unit tests
+        working-directory: ./apps/agora
+        run: npm test
+
+      - name: Build
+        working-directory: ./apps/agora
+        run: npm run build

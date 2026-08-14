@@ -183,9 +183,27 @@ export function summarise(audits) {
 	return false;
 }
 
+
+/** A readable error when the dev server is not up, instead of a Playwright stack. */
+async function assertReachable(url) {
+	try {
+		await fetch(url, { method: 'HEAD' });
+	} catch {
+		console.error(
+			`\n\u2717 Cannot reach ${url}\n` +
+				'   \u2192 fix: start the dev server first (npm run dev, port 3009)\n',
+		);
+		process.exit(1);
+	}
+}
+
 // --- standalone ---
 if (import.meta.url === `file://${process.argv[1]}`) {
 	const url = process.argv[2] ?? 'http://localhost:3009/mock/surfaces.html';
+	// Without this the failure mode is a raw Playwright navigation error, which
+	// says nothing about the actual problem: the dev server is not running.
+	// `check-all` calls this, so that error was the first thing a newcomer met.
+	await assertReachable(url);
 	const browser = await chromium.launch();
 	const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 	await page.goto(url, { waitUntil: 'load' });

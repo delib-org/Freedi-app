@@ -6,7 +6,12 @@ const DEFAULT_LANG: LangCode = 'he';
 const RTL_LANGS: ReadonlySet<string> = new Set(['he', 'ar']);
 const STORAGE_KEY = 'agora_lang';
 
-const translations: Record<LangCode, Record<string, string>> = {
+/**
+ * Exported for the key-parity test only. The locales drifted apart once
+ * already — a key added to one language and forgotten in five shows up as a
+ * raw dotted key on a student's screen, and nothing was checking.
+ */
+export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
 		'common.loading': 'טוען...',
 		'common.error': 'משהו השתבש. נסו שוב.',
