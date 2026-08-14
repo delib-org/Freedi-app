@@ -65,7 +65,7 @@
     "deploy:prod": "npm run deploy:h:prod && npm run deploy:f:prod && npm run deploy:rules:prod",
     "deploy:dev": "npm-run-all deploy:h:dev deploy:f:dev deploy:rules:dev",
     "deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test",
-    "deploy:agora": "npm run env:prod && cd apps/agora && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:agora && npm run env:dev",
+    "deploy:agora": "npm run env:prod && npm --prefix apps/agora run build && firebase use wizcol && firebase deploy --only hosting:agora-wizcol && npm run env:dev",
     "deploy:odyssey": "npm run env:prod && cd apps/odyssey && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:odyssey && npm run env:dev",
     "deploy:flow": "npm run env:prod && cd apps/flow && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:flow && npm run env:dev",
     "deploy:admin": "npm run env:prod && cd apps/admin && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:admin && npm run env:dev",
