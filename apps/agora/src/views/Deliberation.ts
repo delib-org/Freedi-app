@@ -42,6 +42,16 @@ import { countThanks, ResultsSwitch, type ResultsTab } from '../components/Resul
 import { RateScale, rateOptionFor } from '../components/RateScale';
 import { getConsensusPool, getSessionState } from '../lib/session';
 import {
+	advanceCycle,
+	applyCyclePatch,
+	restoreCycle,
+	screenForStep,
+	type CycleStep,
+	type CycleTransition,
+	type DelibScreen,
+	type DeliberationCycle,
+} from '../lib/flows/deliberationFlow';
+import {
 	answerBaseline,
 	editClock,
 	ideaLandedAt,
@@ -318,25 +328,20 @@ function workbenchSection(
 // carries the crest and the name now, and the arrival splash carries the
 // scene and the sentence — each said once, where it is actually being read.
 
-type CycleStep = 'mine' | 'rate' | 'help' | 'done';
-
 /**
- * The three screens the tab bar switches between. Only 'others' follows the
+ * The lap's rules — when it turns, which tab a step lands on, when the square
+ * is finished — live in lib/flows/deliberationFlow.ts, where they can be tested
+ * without a browser. This file keeps the moving parts: folding the notebook,
+ * the splash, the redraw.
+ *
+ * The three screens the tab bar switches between: only 'others' follows the
  * lap: 'my' (my workshop — the feedback I received, the elders, the needs)
  * and 'results' (the class picture) are places you can stand on without the
  * cycle moving under you.
  */
-type DelibScreen = 'my' | 'results' | 'others';
 
 /** How long a sent suggestion is announced on its stall before the row settles */
 const SENT_ACK_MS = 1400;
-
-interface CycleState {
-	round: number;
-	step: CycleStep;
-	/** Ratings given so far in this cycle round */
-	rated: number;
-}
 
 /**
  * The deliberation square as a PERSONAL cycle (the book's protocol, self-
@@ -820,18 +825,12 @@ export function Deliberation(
 	}
 
 	const cycleKey = `agora_${session.sessionId}_cycle`;
-	let cycle: CycleState = { round: 1, step: 'mine', rated: 0 };
-	try {
-		const stored = sessionStorage.getItem(cycleKey);
-		if (stored) cycle = { ...cycle, ...(JSON.parse(stored) as Partial<CycleState>) };
-	} catch {
-		// Corrupt storage — start the cycle over
-	}
+	let cycle: DeliberationCycle = restoreCycle(sessionStorage.getItem(cycleKey));
 
 	// A refresh puts the student back where the WORK is: the lap's own step
 	// decides the tab, so reloading mid-square returns to the square and not
 	// to a screen they have to tap their way out of
-	screen = cycle.step === 'mine' ? 'my' : 'others';
+	screen = screenForStep(cycle.step);
 
 	// An unsaved edit outlives the tab. The seeding rule below leaves it
 	// alone (it only re-seeds an empty or untouched box), so a restored
@@ -961,29 +960,25 @@ export function Deliberation(
 		]);
 	}
 
-	function setCycle(patch: Partial<CycleState>): void {
-		const roundChanged = patch.round !== undefined && patch.round !== cycle.round;
-		const stepChanged = patch.step !== undefined && patch.step !== cycle.step;
-		if (stepChanged) {
+	/** Apply a transition the flow computed: the parts that touch the DOM. */
+	function commitCycle(transition: CycleTransition): void {
+		if (transition.stepChanged) {
 			// Walking into a new place folds the notebook: the room you just
 			// arrived in is what you came to look at
 			closeDock();
 			// ...and folds whatever stall was left open in the room behind me,
 			// so the next room's list opens the same way every time
 			openStallId = '';
-			// The lap's own step decides which tab I land on: the mine step IS
-			// the My screen, everything else happens on the classmates' side
-			screen = patch.step === 'mine' ? 'my' : 'others';
+			if (transition.screen) screen = transition.screen;
 		}
-		cycle = { ...cycle, ...patch };
+		cycle = transition.cycle;
 		sessionStorage.setItem(cycleKey, JSON.stringify(cycle));
-		// A new lap outranks a step change — one splash at a time
-		if (roundChanged) {
-			showSplash({ kind: 'round', round: cycle.round });
-		} else if (stepChanged && cycle.step !== 'done') {
-			showSplash({ kind: 'step', step: cycle.step });
-		}
+		if (transition.splash) showSplash(transition.splash);
 		m.redraw();
+	}
+
+	function setCycle(patch: Partial<DeliberationCycle>): void {
+		commitCycle(applyCyclePatch(cycle, patch));
 	}
 
 	function advanceRound(): void {
@@ -993,14 +988,11 @@ export function Deliberation(
 		gapPrompt = null;
 		gapOffered = new Set();
 		gapPromptsThisLap = 0;
-		if (cycle.round >= AGORA_CYCLE.ROUNDS) {
-			setCycle({ step: 'done' });
-		} else {
-			// The doorway moment: how far the class moved while this lap ran
-			captureLapPulse();
-			setCycle({ round: cycle.round + 1, step: 'mine', rated: 0 });
-			draft = '';
-		}
+		const advance = advanceCycle(cycle, AGORA_CYCLE.ROUNDS);
+		// The doorway moment: how far the class moved while this lap ran
+		if (!advance.finished) captureLapPulse();
+		commitCycle(advance);
+		if (!advance.finished) draft = '';
 	}
 
 	/**
