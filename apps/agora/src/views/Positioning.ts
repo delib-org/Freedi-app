@@ -2,8 +2,8 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { CampScale } from '../components/CampScale';
 import { NeedsPeek } from '../components/NeedsBoard';
-import { db, doc, updateDoc } from '../lib/firebase';
-import { Collections, AgoraParticipant, AgoraTopicPackage, deriveCamp } from '@freedi/shared-types';
+import { saveCampPosition } from '../lib/teacher';
+import { AgoraParticipant, AgoraTopicPackage } from '@freedi/shared-types';
 
 export interface PositioningAttrs {
 	topic: AgoraTopicPackage;
@@ -47,11 +47,7 @@ export function Positioning(): m.Component<PositioningAttrs> {
 			function confirm(): void {
 				if (saving) return;
 				saving = true;
-				updateDoc(doc(db, Collections.agoraParticipants, myParticipant.participantId), {
-					campPosition: value,
-					camp: deriveCamp(value),
-					lastActive: Date.now(),
-				})
+				saveCampPosition(myParticipant.participantId, value)
 					.catch((error: unknown) => {
 						console.error('[Positioning] Saving position failed:', error);
 					})

@@ -2,16 +2,13 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { ensureUser } from '../lib/user';
 import { joinSession } from '../lib/callables';
-import { db, collection, query, where, limit, getDocs } from '../lib/firebase';
+import { findSessionByCode } from '../lib/teacher';
 import {
-	Collections,
 	AgoraDeviceMode,
 	AgoraSessionStatus,
 	AgoraSession,
-	AgoraSessionSchema,
 	AGORA_SESSION,
 } from '@freedi/shared-types';
-import { parse } from 'valibot';
 
 type JoinPhase = 'looking' | 'team-size' | 'joining' | 'error';
 
@@ -28,11 +25,9 @@ export function JoinSession(
 	async function lookupSession(): Promise<void> {
 		try {
 			await ensureUser();
-			const snapshot = await getDocs(
-				query(collection(db, Collections.agoraSessions), where('code', '==', code), limit(1)),
-			);
+			const found = await findSessionByCode(code);
 
-			if (snapshot.empty) {
+			if (!found) {
 				phase = 'error';
 				errorKey = 'join.invalid_code';
 				m.redraw();
@@ -40,7 +35,7 @@ export function JoinSession(
 				return;
 			}
 
-			session = parse(AgoraSessionSchema, snapshot.docs[0].data());
+			session = found;
 
 			if (session.status === AgoraSessionStatus.ended) {
 				phase = 'error';

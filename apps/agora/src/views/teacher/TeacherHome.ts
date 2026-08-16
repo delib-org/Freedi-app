@@ -3,15 +3,8 @@ import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
 import { createSession } from '../../lib/callables';
-import { db, collection, query, where, getDocs, doc, setDoc, updateDoc } from '../../lib/firebase';
-import {
-	Collections,
-	AgoraDeviceMode,
-	AgoraTopicPackage,
-	AgoraTopicPackageSchema,
-	AgoraTopicStatus,
-} from '@freedi/shared-types';
-import { parse } from 'valibot';
+import { listTopicPackages, patchTopicPackage, saveTopicPackage } from '../../lib/teacher';
+import { AgoraDeviceMode, AgoraTopicPackage, AgoraTopicStatus } from '@freedi/shared-types';
 import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 
@@ -25,10 +18,7 @@ export function TeacherHome(): m.Component {
 	async function provisionDefaultTopic(creatorId: string): Promise<AgoraTopicPackage | null> {
 		try {
 			const defaultTopic = buildDefaultFrenchRevolutionTopic(creatorId);
-			await setDoc(
-				doc(db, Collections.agoraTopicPackages, defaultTopic.topicPackageId),
-				defaultTopic,
-			);
+			await saveTopicPackage(defaultTopic);
 
 			return defaultTopic;
 		} catch (error) {
@@ -48,7 +38,7 @@ export function TeacherHome(): m.Component {
 		if (!patch) return pkg;
 		const patched = { ...pkg, ...patch, lastUpdate: Date.now() };
 		try {
-			await updateDoc(doc(db, Collections.agoraTopicPackages, pkg.topicPackageId), patch);
+			await patchTopicPackage(pkg.topicPackageId, patch);
 		} catch (error) {
 			console.error('[Teacher] Backfilling default artwork failed:', error);
 
@@ -61,17 +51,7 @@ export function TeacherHome(): m.Component {
 	async function loadTopics(): Promise<void> {
 		try {
 			const user = await ensureUser();
-			const snapshot = await getDocs(
-				query(collection(db, Collections.agoraTopicPackages), where('creatorId', '==', user.uid)),
-			);
-			let loaded: AgoraTopicPackage[] = [];
-			snapshot.forEach((docSnap) => {
-				try {
-					loaded.push(parse(AgoraTopicPackageSchema, docSnap.data()));
-				} catch (error) {
-					console.error('[Teacher] Invalid topic package:', error);
-				}
-			});
+			let loaded: AgoraTopicPackage[] = await listTopicPackages(user.uid);
 
 			// Heal any package still missing its default scene artwork.
 			loaded = await Promise.all(loaded.map((pkg) => healArtwork(pkg)));

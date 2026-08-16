@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t, getLang } from '../../lib/i18n';
-import { functions, httpsCallable } from '../../lib/firebase';
+import { generateTopicPackage } from '../../lib/callables';
 import { LanguagePicker } from '../../components/LanguagePicker';
 
 /** Teacher enters a topic; the AI drafts the full journey for review */
@@ -13,13 +13,9 @@ export function TopicWizard(): m.Component {
 		if (generating || topic.trim().length < 2) return;
 		generating = true;
 		error = false;
-		const call = httpsCallable<{ topic: string; language: string }, { topicPackageId: string }>(
-			functions,
-			'agoraGenerateTopicPackage',
-		);
-		call({ topic: topic.trim(), language: getLang() })
+		generateTopicPackage({ topic: topic.trim(), language: getLang() })
 			.then((result) => {
-				m.route.set(`/teach/topic/${result.data.topicPackageId}`);
+				m.route.set(`/teach/topic/${result.topicPackageId}`);
 			})
 			.catch((err: unknown) => {
 				console.error('[Wizard] Generation failed:', err);

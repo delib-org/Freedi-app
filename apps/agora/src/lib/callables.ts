@@ -62,3 +62,29 @@ export async function advanceStage(request: AdvanceStageRequest): Promise<Advanc
 
 	return result.data;
 }
+
+export interface GenerateTopicPackageRequest {
+	topic: string;
+	language: string;
+}
+
+export interface GenerateTopicPackageResponse {
+	topicPackageId: string;
+}
+
+/**
+ * Authoring a new topic with AI. Slow by nature — the function is allowed five
+ * minutes — so callers must keep their own "generating" state rather than
+ * assuming this returns promptly.
+ */
+export async function generateTopicPackage(
+	request: GenerateTopicPackageRequest,
+): Promise<GenerateTopicPackageResponse> {
+	const call = httpsCallable<GenerateTopicPackageRequest, GenerateTopicPackageResponse>(
+		functions,
+		'agoraGenerateTopicPackage',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
