@@ -27,6 +27,7 @@ import {
 } from '../lib/squareOrder';
 import { browserSubPageDeps, createSubPage } from '../lib/subPage';
 import { sessionDraft } from '../lib/draftStore';
+import { subscribeNotificationDetectors } from '../lib/notifications';
 
 /** Which conversation the student is standing in, when they are in one. */
 interface ChatTarget {
@@ -1049,6 +1050,7 @@ export function Deliberation(
 		return studentOrderFor(userId, id);
 	}
 
+	subscribeNotificationDetectors();
 	listenToDeliberation(session.sessionId, userId);
 	// The post box outlives every toast in it, and a refresh with it
 	initInbox(session.sessionId);

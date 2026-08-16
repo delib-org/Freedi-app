@@ -30,12 +30,7 @@ import { parse } from 'valibot';
 import { trackWrite, clearWriteTracking } from './confirmedWrite';
 import { getUserState } from './user';
 import { getSessionState } from './session';
-import {
-	detectClassBridgeRecord,
-	detectHelpedImprovements,
-	detectProposalMilestones,
-	detectThreadMessages,
-} from './notifications';
+import { emit } from './events';
 import { agoraCreator, buildProposalStatement, buildThreadMessageStatement } from './statementDocs';
 
 /** Minimal client view of a proposal/suggestion statement */
@@ -196,10 +191,9 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			// hiccuped. Monotonic: once the server has answered it stays true, so
 			// a later offline blip cannot un-load the game.
 			if (!snapshot.metadata.fromCache) state.statementsLoaded = true;
-			// Close the collaboration loop: tell helpers their proposal moved
-			detectHelpedImprovements(sessionId, userId);
-			// ...and the mirror: a message arrived in a thread I'm part of
-			detectThreadMessages(sessionId, userId);
+			// The snapshot is a fact; whether it deserves a toast is policy, and
+			// lib/notifications.ts owns that. See lib/events.ts.
+			emit('statements:changed', { sessionId, userId });
 			m.redraw();
 		},
 		(error) => {
@@ -265,10 +259,9 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			for (const score of Object.values(scores)) {
 				if (score.bridgingScore > classMax) classMax = score.bridgingScore;
 			}
-			detectClassBridgeRecord(sessionId, classMax);
-			// ...and the author's own two: standing in the bridge zone, and
-			// climbing past another proposal on the way there
-			detectProposalMilestones(sessionId, userId);
+			// The class's shared record and the author's own two milestones are
+			// both policy; lib/notifications.ts decides what they deserve.
+			emit('scores:changed', { sessionId, userId, classMax });
 			m.redraw();
 		},
 		(error) => {
@@ -306,6 +299,11 @@ export function stopDeliberationListeners(): void {
 	listeningKey = '';
 	// A stalled write from a finished session must not haunt the next one
 	clearWriteTracking();
+	// NOT the event subscribers: the detectors are stateless — they take the
+	// session from the payload — so they outlive any one set of listeners.
+	// Dropping them here meant a screen that re-attached listeners without
+	// reconstructing (Results does exactly that) ran with no detectors at all,
+	// and celebrations quietly stopped firing.
 	state.statementsLoaded = false;
 	state.evaluationsLoaded = false;
 	state.proposals = [];
