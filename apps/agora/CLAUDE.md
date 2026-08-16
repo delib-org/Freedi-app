@@ -68,8 +68,13 @@ npx tsx scripts/load-smoke.ts  # 30 students rating at once
 The e2e scripts assert Firestore state, not pixels. That is the point: a
 screenshot proves a screen rendered, not that a student was paid.
 
-`e2e-milestones.mjs` currently fails, and failed before the helper dedup —
-broken and flaky, not yet diagnosed.
+All five e2e scripts pass. `e2e-milestones.mjs` used to fail at a different
+line each run: the milestone detector treats a proposal's first sighting on the
+board as silent ("arriving is not a climb") and records the baseline rank, so on
+a fast emulator every rating landed before the first scores snapshot and there
+was no climb left to report. The app was right; the test was racing it. It now
+waits for the baseline to exist and to be below the top before forcing the
+climb.
 
 ## Deploying
 

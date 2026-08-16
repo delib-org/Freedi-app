@@ -205,6 +205,26 @@ await clearCelebration(sA);
 
 // ---------- A's proposal wins BOTH camps ----------
 step("A wins both camps → past the rival, and into the bridge zone");
+// A climb is only a climb if A's own client SAW itself lower first.
+// detectProposalMilestones treats the first sighting as silent — "arriving on
+// the board is not a climb" — and records the baseline rank. On a fast emulator
+// all three ratings can land before A's first scores snapshot, so the baseline
+// is recorded as rank 1 and no climb is ever reported. The app is right; the
+// test was racing it, which is why this script failed at a different line each
+// run. Wait for the baseline to exist and to be BELOW the top.
+await sA.waitForFunction(
+	() => {
+		for (let i = 0; i < sessionStorage.length; i++) {
+			const key = sessionStorage.key(i);
+			if (key?.endsWith('_bestrank') && Number(sessionStorage.getItem(key)) > 1) return true;
+		}
+
+		return false;
+	},
+	{ timeout: 25000 },
+);
+console.log('   A has seen itself below the rival — the climb can now be observed');
+
 await rate(sD, A_TEXT, '.rate-scale__option--strong-for');
 await rate(sC, A_TEXT, '.rate-scale__option--strong-for');
 // B changes their mind — the deterministic evaluation id overwrites in place
