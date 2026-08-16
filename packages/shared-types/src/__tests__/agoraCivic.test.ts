@@ -1,10 +1,18 @@
+import { parse } from 'valibot';
 import {
 	AGORA_CIVIC_CENTER_POSITION,
 	deriveCivicCampPosition,
 	CivicStanceEvaluation,
 } from '../models/agora/agoraCivic';
 import { deriveCamp } from '../models/agora/agoraBridging';
-import { AgoraCamp } from '../models/agora/agoraEnums';
+import {
+	AgoraCamp,
+	AgoraDeviceMode,
+	AgoraSessionMode,
+	AgoraSessionStatus,
+	AgoraStage,
+} from '../models/agora/agoraEnums';
+import { AgoraSessionSchema } from '../models/agora/agoraSession';
 import { ODYSSEY_ATTITUDES } from '../models/odyssey/odysseyGame';
 
 const LEFT = 'stance-left';
@@ -87,6 +95,50 @@ describe('deriveCivicCampPosition', () => {
 				{ statementId: RIGHT, evaluation: -5 },
 			]),
 		).toBe(0);
+	});
+
+	it('survives the schema both clients parse sessions through', () => {
+		// Not a formality. Both the join lookup and the live session listener
+		// run `parse(AgoraSessionSchema, …)`, and valibot drops keys the schema
+		// does not declare — an undeclared sessionMode would strip silently and
+		// every civic session would quietly serve the classroom track.
+		const base = {
+			sessionId: 's1',
+			code: '12345',
+			topicPackageId: 'p1',
+			teacherId: 'u1',
+			rootStatementId: 'root',
+			challengeQuestionId: 'challenge',
+			deviceMode: AgoraDeviceMode.individual,
+			teamSizeMax: 4,
+			stage: AgoraStage.deliberation,
+			roundNumber: 1,
+			participantCount: 0,
+			status: AgoraSessionStatus.open,
+			createdAt: 1,
+			lastUpdate: 1,
+		};
+
+		const civic = parse(AgoraSessionSchema, {
+			...base,
+			sessionMode: AgoraSessionMode.civic,
+			civic: {
+				odysseyGameId: 'default',
+				islandStatementId: 'island-1',
+				leftAnchorStanceId: LEFT,
+				rightAnchorStanceId: RIGHT,
+			},
+		});
+		expect(civic.sessionMode).toBe(AgoraSessionMode.civic);
+		expect(civic.civic?.islandStatementId).toBe('island-1');
+		expect(civic.civic?.leftAnchorStanceId).toBe(LEFT);
+
+		// A classroom session predates civic mode and carries neither field.
+		const classroom = parse(AgoraSessionSchema, base);
+		expect(classroom.sessionMode).toBeUndefined();
+		expect(classroom.civic).toBeUndefined();
+		// …which must never read as civic
+		expect(classroom.sessionMode === AgoraSessionMode.civic).toBe(false);
 	});
 
 	it('feeds camps the bridging score can actually cross', () => {
