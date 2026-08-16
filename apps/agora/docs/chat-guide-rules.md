@@ -1,14 +1,22 @@
-# Agora Chat Guide — Conversation Policy (canonical)
+# Agora Chat Guide — Conversation Policy (ARCHIVED)
 
-**This file is the reference for every behavior change to the deliberation
-chat guide.** It states, for every situation the conversation can be in, what
-the guide does — and, just as importantly, what it must never do. Every rule
-is tagged honestly:
+> **⚠️ This describes code that no longer exists.**
+>
+> The chat-guided deliberation was rebuilt on 2026-08-03, then reverted on
+> 2026-08-05 (`99ed4339d`) in favour of the "places" UI the game ships today.
+> `src/lib/chatFlow.ts` and `src/views/DeliberationChat.ts` were deleted on
+> 2026-08-16 once the live view had absorbed the one thing worth keeping from
+> them — an FSM in `lib/` that the view dispatches into, now
+> `src/lib/flows/deliberationFlow.ts`.
+>
+> Every `[IMPLEMENTED]` tag below was true of that code and is false of the
+> running game. Kept because the CONVERSATION POLICY — what a guide should
+> never say to a student, and why — outlived its implementation and is worth
+> reading before building anything that talks to a class again.
+>
+> For what the deliberation actually does now, see `feedback-cycle.md`.
 
-- `[IMPLEMENTED]` — the code does this today (grounded in `src/lib/chatFlow.ts`
-  reducer + `src/views/DeliberationChat.ts`; unit-proven where a test exists).
-- `[PLANNED]` — agreed policy, not yet in code. Do not describe planned
-  behavior as existing anywhere else.
+---
 
 Companion code: `src/lib/chatFlow.ts` (pure engine), `src/views/DeliberationChat.ts`
 (view + Firestore verbs), `src/lib/notifications.ts` (helper-side signals),

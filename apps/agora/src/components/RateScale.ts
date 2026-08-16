@@ -7,8 +7,6 @@ import { noteReWeighed } from '../lib/improvementSignals';
 
 /**
  * The five-level rating scale, ordered strongest-against → strongest-for.
- * (`chatFlow.ts` keeps its own copy for the orphaned chat view; this is the one
- * the running game uses.)
  */
 export const RATE_OPTIONS: ReadonlyArray<{
 	value: AgoraRating;

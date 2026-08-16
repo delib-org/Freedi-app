@@ -11,7 +11,6 @@ import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
 import './styles/icons.scss';
-import './styles/chat.scss';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { getSessionState } from './lib/session';
