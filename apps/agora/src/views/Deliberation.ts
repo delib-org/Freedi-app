@@ -19,7 +19,12 @@ import {
 	AgoraProposal,
 	HelpedProposal,
 } from '../lib/proposals';
-import { orderSquare, studentOrder as studentOrderFor } from '../lib/squareOrder';
+import {
+	mergeLateArrivals,
+	orderSquare,
+	rankStalls,
+	studentOrder as studentOrderFor,
+} from '../lib/squareOrder';
 import { DelibHud } from '../components/DelibHud';
 import { Collapsible } from '../components/Collapsible';
 import { ThreadChat, threadEntry } from './ThreadChat';
@@ -1990,31 +1995,21 @@ export function Deliberation(
 		const others = proposals.filter((proposal) => proposal.creatorId !== userId);
 		const byId = new Map(others.map((proposal) => [proposal.statementId, proposal]));
 
+		// The ranking rule lives in lib/squareOrder; the memo — one ranking per
+		// lap, so rows do not move under a reading finger — stays here, because
+		// it is about this screen's lifetime and nothing else.
 		if (stallOrderRound !== cycle.round) {
-			const openIdeas = (proposal: AgoraProposal): number =>
-				(suggestions[proposal.statementId] ?? []).filter(
-					(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
-				).length;
-			const mine = (proposal: AgoraProposal): number =>
-				(suggestions[proposal.statementId] ?? []).some((entry) => entry.creatorId === userId)
-					? 1
-					: 0;
-			stallOrder = others
-				.slice()
-				.sort(
-					(a, b) =>
-						mine(a) - mine(b) ||
-						openIdeas(a) - openIdeas(b) ||
-						studentOrder(a.statementId) - studentOrder(b.statementId),
-				)
-				.map((proposal) => proposal.statementId);
+			stallOrder = rankStalls(others, userId, {
+				openIdeas: (statementId) =>
+					(suggestions[statementId] ?? []).filter(
+						(entry) => entry.suggestionStatus === AgoraSuggestionStatus.open,
+					).length,
+				mine: (statementId) =>
+					(suggestions[statementId] ?? []).some((entry) => entry.creatorId === userId),
+			});
 			stallOrderRound = cycle.round;
 		} else {
-			// A classmate who posts mid-lap joins the end of the row rather than
-			// jumping into the middle of what I'm reading
-			for (const proposal of others) {
-				if (!stallOrder.includes(proposal.statementId)) stallOrder.push(proposal.statementId);
-			}
+			stallOrder = mergeLateArrivals(stallOrder, others);
 		}
 
 		const ordered = stallOrder

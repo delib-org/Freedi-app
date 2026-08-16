@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { orderSquare, studentOrder, type OrderableProposal } from '../squareOrder';
+import {
+	mergeLateArrivals,
+	orderSquare,
+	rankStalls,
+	studentOrder,
+	type OrderableProposal,
+	type StallRankInputs,
+} from '../squareOrder';
 
 const ME = 'me';
 
@@ -89,5 +96,82 @@ describe('studentOrder', () => {
 	it('is stable for one student and differs between students', () => {
 		expect(studentOrder('a', 'p1')).toBe(studentOrder('a', 'p1'));
 		expect(studentOrder('a', 'p1')).not.toBe(studentOrder('b', 'p1'));
+	});
+});
+
+describe('rankStalls', () => {
+	const p = (statementId: string, creatorId = 'someone'): OrderableProposal => ({
+		statementId,
+		creatorId,
+		createdAt: 0,
+	});
+	const none: StallRankInputs = { openIdeas: () => 0, mine: () => false };
+
+	it('sends me to proposals I have not helped yet', () => {
+		// A second idea on a text I already helped is worth less to the class
+		// than a first idea on one nobody has read.
+		const order = rankStalls([p('a'), p('b')], 'me', {
+			openIdeas: () => 0,
+			mine: (id) => id === 'a',
+		});
+		expect(order[order.length - 1]).toBe('a');
+	});
+
+	it('sends help where there is none', () => {
+		const order = rankStalls([p('busy'), p('quiet')], 'me', {
+			openIdeas: (id) => (id === 'busy' ? 3 : 0),
+			mine: () => false,
+		});
+		expect(order[0]).toBe('quiet');
+	});
+
+	it('prefers un-helped over merely quiet', () => {
+		// Rule 1 outranks rule 2: helping a text I already helped is the thing
+		// we most want to avoid, even if it is the emptiest.
+		const order = rankStalls([p('helped-quiet'), p('unhelped-busy')], 'me', {
+			openIdeas: (id) => (id === 'unhelped-busy' ? 5 : 0),
+			mine: (id) => id === 'helped-quiet',
+		});
+		expect(order[0]).toBe('unhelped-busy');
+	});
+
+	it('fans two equally neglected proposals across different students', () => {
+		const proposals = [p('x'), p('y'), p('z')];
+		const forAlice = rankStalls(proposals, 'alice', none);
+		const forBob = rankStalls(proposals, 'bob', none);
+		expect(forAlice.slice().sort()).toEqual(forBob.slice().sort());
+		// Same set, and the shuffle is deterministic per student
+		expect(rankStalls(proposals, 'alice', none)).toEqual(forAlice);
+	});
+
+	it('never deals me my own proposal', () => {
+		// The caller filters, but the row must not contain it either way
+		const order = rankStalls(
+			[p('mine', 'me'), p('theirs', 'them')].filter((x) => x.creatorId !== 'me'),
+			'me',
+			none,
+		);
+		expect(order).toEqual(['theirs']);
+	});
+});
+
+describe('mergeLateArrivals', () => {
+	const p = (statementId: string): OrderableProposal => ({
+		statementId,
+		creatorId: 'someone',
+		createdAt: 0,
+	});
+
+	it('puts a mid-lap joiner at the end, not into the middle of what I am reading', () => {
+		expect(mergeLateArrivals(['a', 'b'], [p('a'), p('b'), p('late')])).toEqual(['a', 'b', 'late']);
+	});
+
+	it('leaves an unchanged row alone', () => {
+		expect(mergeLateArrivals(['a', 'b'], [p('a'), p('b')])).toEqual(['a', 'b']);
+	});
+
+	it('does not resurrect a proposal that vanished from the square', () => {
+		// It stays in the order but the caller drops it when mapping to docs
+		expect(mergeLateArrivals(['a', 'gone'], [p('a')])).toEqual(['a', 'gone']);
 	});
 });
