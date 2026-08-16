@@ -11,6 +11,7 @@ import { distanceEngine, ParticipantDistance } from '../lib/distance';
 import { buildOpinionMap } from '../lib/opinionMap';
 import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
+import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
 
 /**
@@ -23,9 +24,11 @@ import { stageBus } from '../lib/stageBus';
 export default function Summary() {
 	const { user } = useUser();
 	const mode = useMode();
-	const { content, journey, attitudes, text } = useGame();
+	const { content, journey, attitudes, text, updateJourney } = useGame();
 	const [participants, setParticipants] = useState<ParticipantDistance[]>([]);
 	const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+	/** The gate being walked through — the token round trip is not instant */
+	const [enteringIslandId, setEnteringIslandId] = useState('');
 
 	const gameId = content?.game.gameId;
 	const uid = user?.uid;
@@ -144,7 +147,27 @@ export default function Summary() {
 		island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
 	);
 
-	const agoraUrl = text('agoraUrl');
+	const agoraOrigin = text('agoraOrigin');
+
+	async function enterGate(islandStatementId: string): Promise<void> {
+		if (!content || enteringIslandId) return;
+		setEnteringIslandId(islandStatementId);
+		// fire-and-go: the boat sails into the lighthouse beam, navigation is
+		// never blocked on the animation
+		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
+		try {
+			await enterIslandDeliberation({
+				islandStatementId,
+				game: content.game,
+				journey,
+				agoraOrigin,
+				updateJourney,
+			});
+		} catch (error) {
+			console.error('[Odyssey] Could not open the gate:', error);
+			setEnteringIslandId('');
+		}
+	}
 
 	return (
 		<>
@@ -290,27 +313,61 @@ export default function Summary() {
 						<OpinionMap result={opinionMap} />
 					</section>
 
-					<section className="panel fade-in text-center">
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2">🏛️ שער לאגורה</h2>
-						<p className="text-[15px] text-[#dcecf7] mt-0 mb-4">{text('agoraQuestion')}</p>
-						{agoraUrl ? (
-							<a
-								className="btn"
-								href={agoraUrl}
-								onClick={() => {
-									// fire-and-go: the boat sails into the lighthouse beam,
-									// navigation is never blocked on the animation
-									if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
-								}}
-							>
-								{text('agoraButton')}
-							</a>
+					<section className="panel fade-in">
+						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-2 text-center">
+							🏛️ שערי האגורה
+						</h2>
+						<p className="text-[15px] text-[#dcecf7] mt-0 mb-4 text-center">
+							{text('agoraQuestion')}
+						</p>
+						{visitedIslands.length > 0 ? (
+							<div className="flex flex-col gap-2.5">
+								{visitedIslands.map((island) => {
+									const state = getGateState(island.statementId, content.game, journey);
+									const entering = enteringIslandId === island.statementId;
+
+									return (
+										<div
+											key={island.statementId}
+											className="flex items-center gap-3 flex-wrap justify-between"
+										>
+											<span className="text-[15px]">
+												{state === 'visited' ? '⚑ ' : ''}
+												{island.title}
+											</span>
+											{state === 'unprovisioned' || !agoraOrigin ? (
+												<button
+													type="button"
+													className="btn"
+													disabled
+													title="הדיון על האי הזה ייפתח במסך הניהול"
+												>
+													{text('agoraButton')} (בקרוב)
+												</button>
+											) : (
+												<button
+													type="button"
+													className="btn"
+													disabled={entering}
+													onClick={() => void enterGate(island.statementId)}
+												>
+													{entering
+														? 'מפליגים…'
+														: state === 'visited'
+															? 'חזרה לדיון'
+															: text('agoraButton')}
+												</button>
+											)}
+										</div>
+									);
+								})}
+							</div>
 						) : (
-							<button type="button" className="btn" disabled title="כתובת האגורה תוגדר במסך הניהול">
-								{text('agoraButton')} (בקרוב)
-							</button>
+							<p className="m-0 opacity-80 text-[15px] text-center">
+								חקרו אי אחד לפחות, ושער הדיון עליו ייפתח כאן.
+							</p>
 						)}
-						<p className="text-[13px] opacity-70 mt-3 mb-0">
+						<p className="text-[13px] opacity-70 mt-3 mb-0 text-center">
 							אפשר גם{' '}
 							<Link className="underline" to="/map">
 								לחזור למפה

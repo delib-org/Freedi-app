@@ -3297,6 +3297,37 @@
 
 // --- Mine | Others navigation: top tab row on desktop, fixed bottom bar
 // on mobile. One element; the media query moves it. ---
+/**
+ * The civic square's one line of orientation: which island this is, and the
+ * way back to the rest of them. A classroom needs neither — it has a teacher
+ * in the room — so this renders only on the civic track.
+ */
+.delib-civic {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-md);
+	flex-wrap: wrap;
+
+	&__island {
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+
+	&__back {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		text-decoration: none;
+		border-bottom: 1px solid var(--border-subtle);
+
+		&:hover,
+		&:focus-visible {
+			color: var(--text-primary);
+		}
+	}
+}
+
 .delib-nav {
 	display: flex;
 	justify-content: center;

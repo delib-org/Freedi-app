@@ -39,6 +39,21 @@ export enum AgoraSessionStatus {
 	ended = 'ended',
 }
 
+/**
+ * Which track a session runs. Absent on every session written before civic
+ * mode existed — readers MUST treat `undefined` as `classroom`, so a teacher's
+ * lesson keeps the stage-by-stage track it has always had.
+ *
+ * `civic` is the self-serve track an Odyssey island opens onto: it starts at
+ * the deliberation stage, has no teacher to advance it and no clock to end it,
+ * and derives each participant's camp from the stances they already took in
+ * Odyssey instead of from the positioning screen.
+ */
+export enum AgoraSessionMode {
+	classroom = 'classroom',
+	civic = 'civic',
+}
+
 export enum AgoraTopicStatus {
 	draft = 'draft',
 	ready = 'ready',

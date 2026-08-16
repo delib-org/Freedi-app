@@ -1,4 +1,3 @@
-import { randomInt } from 'crypto';
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { db } from '../db';
 import {
@@ -22,6 +21,7 @@ import {
 	deriveCamp,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { generateUniqueCode } from './joinCodes';
 
 interface Request {
 	topicPackageId: string;
@@ -33,37 +33,6 @@ interface Request {
 interface Result {
 	sessionId: string;
 	code: string;
-}
-
-async function generateUniqueCode(): Promise<string> {
-	const { JOIN_CODE_LENGTH, JOIN_CODE_ALPHABET, JOIN_CODE_UNIQUE_WINDOW_MS } = AGORA_SESSION;
-	const MAX_ATTEMPTS = 10;
-	const cutoff = Date.now() - JOIN_CODE_UNIQUE_WINDOW_MS;
-
-	for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-		let code = '';
-		for (let index = 0; index < JOIN_CODE_LENGTH; index++) {
-			// randomInt is CSPRNG-backed and rejection-samples internally, so every
-			// symbol is equally likely. Math.random() is neither: it is predictable
-			// from prior output, which would let anyone who has seen a few codes
-			// guess the next class's.
-			code += JOIN_CODE_ALPHABET[randomInt(JOIN_CODE_ALPHABET.length)];
-		}
-
-		// Collide against everything minted in the window, not just sessions that
-		// are still open. A finished lesson's code has to stay taken, or a student
-		// still holding it would land in whatever class recycled it today.
-		const recent = await db
-			.collection(Collections.agoraSessions)
-			.where('code', '==', code)
-			.where('createdAt', '>=', cutoff)
-			.limit(1)
-			.get();
-
-		if (recent.empty) return code;
-	}
-
-	throw new HttpsError('resource-exhausted', 'Could not generate a unique join code');
 }
 
 /**

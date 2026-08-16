@@ -1151,6 +1151,7 @@ export { removeUserEvaluations } from './fn_removeUserEvaluations';
 // Agora classroom deliberative game — session lifecycle
 export {
 	agoraCreateSession,
+	agoraProvisionCivicSessions,
 	agoraJoinSession,
 	agoraAdvanceStage,
 	agoraGradeValueIdentification,
@@ -1164,3 +1165,6 @@ export {
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 } from './agora';
+
+// Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
+export { odysseyMintAgoraHandoff } from './odyssey';

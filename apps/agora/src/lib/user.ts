@@ -3,6 +3,7 @@ import {
 	auth,
 	signInAnonymously,
 	signInWithCredential,
+	signInWithCustomToken,
 	GoogleAuthProvider,
 	signInWithPopup,
 	signInWithRedirect,
@@ -58,6 +59,26 @@ export async function ensureUser(): Promise<User> {
 	}
 
 	const credential = await signInAnonymously(auth);
+
+	return credential.user;
+}
+
+/**
+ * Sign in as the player who just walked through an Odyssey island's gate.
+ *
+ * The token names their existing uid, so they arrive as themselves rather than
+ * as a fresh anonymous stranger — which is the whole point: the join callable
+ * reads the stances they took on that island to place them in a camp, and it
+ * can only find them under their own uid.
+ *
+ * Signing in unconditionally is correct even when someone is already signed in
+ * here: if it is the same person the exchange is identity-neutral, and if it is
+ * not, the arriving player is the one who should win.
+ */
+export async function signInWithHandoff(token: string): Promise<User> {
+	await waitForAuthReady();
+
+	const credential = await signInWithCustomToken(auth, token);
 
 	return credential.user;
 }

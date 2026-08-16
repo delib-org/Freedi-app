@@ -91,6 +91,7 @@ import {
 	AgoraParticipant,
 	AgoraProposalScore,
 	AgoraSession,
+	AgoraSessionMode,
 	AgoraSuggestionStatus,
 	AgoraTopicPackage,
 	AGORA_AI_REVIEW,
@@ -368,6 +369,22 @@ export function Deliberation(
 	initialVnode: m.Vnode<DeliberationAttrs>,
 ): m.Component<DeliberationAttrs> {
 	const { session, userId } = initialVnode.attrs;
+	/**
+	 * A civic square has no era behind it. The elders and the needs board are
+	 * both readings of two historical characters, and a civic session's "two
+	 * characters" are only the island's anchor stances wearing the schema — so
+	 * they would offer a role-play that was never played. Everything else about
+	 * the square is identical, which is the point of the shared track.
+	 */
+	const civic = session.sessionMode === AgoraSessionMode.civic;
+
+	/** Where "back to the islands" goes. Absent origin = no link rather than a broken one. */
+	function odysseyMapUrl(): string {
+		const origin = import.meta.env.VITE_ODYSSEY_ORIGIN?.replace(/\/$/, '');
+
+		return origin ? `${origin}/map` : '';
+	}
+
 	let draft = '';
 	let submitting = false;
 	/** Which stall on the row is unfolded — one at a time, one task at a time */
@@ -1432,19 +1449,23 @@ export function Deliberation(
 			}),
 			// The elders are an optional helper, not the loop — folded away until
 			// asked for, so the sheet's resting state is my text and my feedback
-			workbenchSection('era', t('delib.ask_elders'), askSection(live, myProposal, topic), {
-				open: charactersOpen,
-				onToggle: () => {
-					charactersOpen = !charactersOpen;
-				},
-			}),
+			civic
+				? null
+				: workbenchSection('era', t('delib.ask_elders'), askSection(live, myProposal, topic), {
+						open: charactersOpen,
+						onToggle: () => {
+							charactersOpen = !charactersOpen;
+						},
+					}),
 			// Open by default (explicit call, 2026-08-10): improving is writing
 			// too, and the two sides' needs are its raw material. It sits last
 			// in the sheet, so standing open costs the primary zone nothing.
-			m(
-				'.workbench__section.workbench__section--plain',
-				m(NeedsPeek, { topic, defaultOpen: true }),
-			),
+			civic
+				? null
+				: m(
+						'.workbench__section.workbench__section--plain',
+						m(NeedsPeek, { topic, defaultOpen: true }),
+					),
 		];
 	}
 
@@ -2343,6 +2364,21 @@ export function Deliberation(
 			// screen, not over the shoulder of a student mid-sentence.
 			const header = [
 				splashOverlay,
+				// A civic player came here from one island out of several, and will
+				// want to go back for the others. The classroom has a teacher and a
+				// door; this track's door is this line.
+				civic
+					? m('.delib-civic', [
+							m('span.delib-civic__island', topic.title),
+							odysseyMapUrl()
+								? m(
+										'a.delib-civic__back',
+										{ href: odysseyMapUrl() },
+										t('delib.civic_back_to_islands'),
+									)
+								: null,
+						])
+					: null,
 				m(DelibHud, {
 					step: cycle.step,
 					round: cycle.round,
@@ -2609,7 +2645,7 @@ export function Deliberation(
 										])
 									: null,
 							]),
-							m(NeedsPeek, { topic, defaultOpen: true }),
+							civic ? null : m(NeedsPeek, { topic, defaultOpen: true }),
 						]),
 					]);
 				}
@@ -2710,7 +2746,7 @@ export function Deliberation(
 										),
 									),
 									canMoveOn ? onward : null,
-									m(NeedsPeek, { topic }),
+									civic ? null : m(NeedsPeek, { topic }),
 								]
 							: [
 									m('.text-center.stack', [
@@ -2793,7 +2829,7 @@ export function Deliberation(
 										}),
 									),
 									forward,
-									m(NeedsPeek, { topic }),
+									civic ? null : m(NeedsPeek, { topic }),
 								]
 							: [m('p.text-center.lobby__status', t('delib.no_more')), forward],
 					]),

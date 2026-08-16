@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type {
 	OdysseyCompassQuestion,
 	OdysseyIsland,
+	OdysseyIslandAgoraSession,
 	OdysseyParty,
 	OdysseyValue,
 } from '@freedi/shared-types';
@@ -18,6 +19,7 @@ import {
 	saveStatementText,
 	uploadImage,
 } from '../lib/admin';
+import { provisionCivicSessions } from '../lib/callables';
 
 const TEXT_LABELS: Record<string, string> = {
 	gameTitle: 'שם המשחק',
@@ -37,7 +39,7 @@ const TEXT_LABELS: Record<string, string> = {
 	summaryIntro: 'משפט פתיחה לסיכום',
 	agoraQuestion: 'שאלת שער האגורה',
 	agoraButton: 'כיתוב כפתור האגורה',
-	agoraUrl: 'קישור לאגורה (URL)',
+	agoraOrigin: 'כתובת אפליקציית האגורה (Origin)',
 	destinationName: 'שם היעד על המפה',
 };
 
@@ -47,6 +49,7 @@ const TABS = [
 	{ key: 'values', label: '⚖️ ערכים' },
 	{ key: 'islands', label: '🏝️ איים' },
 	{ key: 'parties', label: '🚢 ספינות (מפלגות)' },
+	{ key: 'agora', label: '🏛️ אגורה' },
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
@@ -198,6 +201,18 @@ export default function Admin() {
 						<PartiesTab
 							parties={content.game.parties}
 							islands={content.islands}
+							busy={busy}
+							flash={flash}
+							gameId={gameId}
+							run={run}
+						/>
+					) : null}
+					{tab === 'agora' ? (
+						<AgoraTab
+							islands={content.islands}
+							islandsMeta={content.game.islands}
+							agoraSessions={content.game.agoraSessions ?? {}}
+							agoraOrigin={content.game.texts.agoraOrigin ?? ''}
 							busy={busy}
 							flash={flash}
 							gameId={gameId}
@@ -992,6 +1007,183 @@ function PartiesTab({
 					}
 				>
 					שמירת הספינות
+				</button>
+			</div>
+		</section>
+	);
+}
+
+/* ---------- Agora ---------- */
+
+/**
+ * Opening the deliberations. Two decisions live here: which two stances are
+ * the poles of each island — they decide which camp a player carries into the
+ * square — and the one-time act of opening the sessions themselves.
+ */
+function AgoraTab({
+	islands,
+	islandsMeta,
+	agoraSessions,
+	agoraOrigin,
+	busy,
+	flash,
+	gameId,
+	run,
+}: {
+	islands: IslandContent[];
+	islandsMeta: OdysseyIsland[];
+	agoraSessions: Record<string, OdysseyIslandAgoraSession>;
+	agoraOrigin: string;
+	busy: boolean;
+	flash(message: string): void;
+	gameId: string;
+	run(action: () => Promise<void>): Promise<void>;
+}) {
+	const [meta, setMeta] = useState<OdysseyIsland[]>(islandsMeta);
+
+	function patchIsland(statementId: string, patch: Partial<OdysseyIsland>): void {
+		setMeta((current) =>
+			current.map((island) =>
+				island.statementId === statementId ? { ...island, ...patch } : island,
+			),
+		);
+	}
+
+	const enabled = islands.filter((island) => island.enabled);
+	const missingAnchors = enabled.filter((island) => {
+		const entry = meta.find((candidate) => candidate.statementId === island.statementId);
+
+		return !entry?.leftAnchorStanceId || !entry?.rightAnchorStanceId;
+	});
+	const origin = agoraOrigin.replace(/\/$/, '');
+
+	return (
+		<section className="panel flex flex-col gap-4">
+			<div>
+				<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">שערי האגורה</h2>
+				<p className="text-[14px] opacity-80 m-0">
+					לכל אי נפתח דיון קבוע באגורה. בחרו לכל אי שני חופים מנוגדים — הם קובעים לאיזה מחנה ישובץ
+					מפליג שנכנס לדיון, ולכן חשוב לבחור חופים שבאמת חלוקים זה על זה.
+				</p>
+				{!origin ? (
+					<p className="text-[14px] text-[var(--gold-strong)] mt-2 mb-0">
+						⚠️ יש להגדיר תחילה את כתובת אפליקציית האגורה בלשונית הטקסטים.
+					</p>
+				) : null}
+			</div>
+
+			<div className="flex flex-col gap-3">
+				{enabled.map((island) => {
+					const entry = meta.find((candidate) => candidate.statementId === island.statementId);
+					const session = agoraSessions[island.statementId];
+
+					return (
+						<div
+							key={island.statementId}
+							className="border-t border-[rgba(232,185,88,0.25)] pt-3 flex flex-col gap-2"
+						>
+							<strong className="text-[var(--cream)]">{island.title}</strong>
+							<div className="flex flex-wrap gap-2">
+								<label className="flex flex-col gap-1 text-[13px] opacity-85 flex-1 min-w-[240px]">
+									חוף א׳ (קוטב אחד)
+									<select
+										className="input"
+										value={entry?.leftAnchorStanceId ?? ''}
+										onChange={(event) =>
+											patchIsland(island.statementId, {
+												leftAnchorStanceId: event.target.value || null,
+											})
+										}
+									>
+										<option value="">— לא נבחר —</option>
+										{island.stances.map((stance) => (
+											<option key={stance.statementId} value={stance.statementId}>
+												{stance.statement}
+											</option>
+										))}
+									</select>
+								</label>
+								<label className="flex flex-col gap-1 text-[13px] opacity-85 flex-1 min-w-[240px]">
+									חוף ב׳ (הקוטב הנגדי)
+									<select
+										className="input"
+										value={entry?.rightAnchorStanceId ?? ''}
+										onChange={(event) =>
+											patchIsland(island.statementId, {
+												rightAnchorStanceId: event.target.value || null,
+											})
+										}
+									>
+										<option value="">— לא נבחר —</option>
+										{island.stances.map((stance) => (
+											<option key={stance.statementId} value={stance.statementId}>
+												{stance.statement}
+											</option>
+										))}
+									</select>
+								</label>
+							</div>
+							{session ? (
+								<p className="text-[13px] opacity-75 m-0">
+									✓ דיון פתוח · קוד הצטרפות <strong>{session.code}</strong>
+									{origin ? (
+										<>
+											{' · '}
+											<a
+												className="underline"
+												href={`${origin}/#!/join/${session.code}`}
+												target="_blank"
+												rel="noreferrer"
+											>
+												פתיחת הדיון
+											</a>
+										</>
+									) : null}
+								</p>
+							) : (
+								<p className="text-[13px] opacity-60 m-0">טרם נפתח דיון לאי הזה.</p>
+							)}
+						</div>
+					);
+				})}
+			</div>
+
+			{missingAnchors.length ? (
+				<p className="text-[13px] opacity-75 m-0">
+					שימו לב: ל־{missingAnchors.length} איים עדיין אין שני חופים מנוגדים. אפשר לפתוח להם דיון,
+					אך כל המפליגים בהם ישובצו למרכז.
+				</p>
+			) : null}
+
+			<div className="flex flex-wrap gap-2">
+				<button
+					type="button"
+					className="btn"
+					disabled={busy}
+					onClick={() => void run(() => saveGamePatch(gameId, { islands: meta }))}
+				>
+					שמירת החופים המנוגדים
+				</button>
+				<button
+					type="button"
+					className="btn-outline"
+					disabled={busy || !origin}
+					onClick={() =>
+						void run(async () => {
+							// Anchors are saved first: the session carries them, and a
+							// session opened without them places everyone in the centre.
+							await saveGamePatch(gameId, { islands: meta });
+							const result = await provisionCivicSessions(gameId);
+							flash(
+								`נפתחו ${result.sessions.length} דיונים` +
+									(result.alreadyOpen.length
+										? ` · ${result.alreadyOpen.length} כבר היו פתוחים`
+										: ''),
+							);
+						})
+					}
+				>
+					🏛️ פתיחת דיוני האגורה
 				</button>
 			</div>
 		</section>

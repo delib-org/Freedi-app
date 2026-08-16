@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { ensureUser } from '../lib/user';
+import { ensureUser, signInWithHandoff } from '../lib/user';
 import { joinSession } from '../lib/callables';
 import { findSessionByCode } from '../lib/teacher';
 import {
@@ -22,9 +22,33 @@ export function JoinSession(
 	let session: AgoraSession | null = null;
 	let teamMemberCount = 2;
 
+	/**
+	 * A player arriving from an Odyssey island carries a token naming the uid
+	 * they voyaged under. Spend it before anything else, so the join callable
+	 * can find the stances that decide their camp.
+	 *
+	 * A token that has expired (they left the summary page open overnight) is
+	 * not worth turning them away for: they still get in, just as a newcomer
+	 * with no camp, which is exactly what an anonymous join has always been.
+	 */
+	async function establishIdentity(): Promise<void> {
+		const handoff = m.route.param('handoff');
+		if (handoff) {
+			try {
+				await signInWithHandoff(handoff);
+
+				return;
+			} catch (error) {
+				console.error('[Join] Handoff sign-in failed, joining as a newcomer:', error);
+			}
+		}
+
+		await ensureUser();
+	}
+
 	async function lookupSession(): Promise<void> {
 		try {
-			await ensureUser();
+			await establishIdentity();
 			const found = await findSessionByCode(code);
 
 			if (!found) {

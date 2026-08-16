@@ -87,9 +87,31 @@ export const OdysseyIslandSchema = object({
 	posY: number(),
 	sortOrder: number(),
 	enabled: boolean(),
+	/**
+	 * The two stances that act as poles when a player carries their island
+	 * position into the Agora deliberation. Supporting one and rejecting the
+	 * other puts them in a wing camp; anything mixed — or these left unset —
+	 * leaves them in the centre. Pick genuinely opposed stances: camps that all
+	 * collapse to centre make the bridging score inert.
+	 */
+	leftAnchorStanceId: optional(nullable(string())),
+	rightAnchorStanceId: optional(nullable(string())),
 });
 
 export type OdysseyIsland = InferOutput<typeof OdysseyIslandSchema>;
+
+/** The civic Agora deliberation opened for one island. */
+export const OdysseyIslandAgoraSessionSchema = object({
+	sessionId: string(),
+	/** Join code — the gate link is `${agoraOrigin}/#!/join/${code}` */
+	code: string(),
+	topicPackageId: string(),
+	createdAt: number(),
+});
+
+export type OdysseyIslandAgoraSession = InferOutput<
+	typeof OdysseyIslandAgoraSessionSchema
+>;
 
 export const OdysseyPartySchema = object({
 	partyId: string(),
@@ -115,6 +137,12 @@ export const OdysseyGameSchema = object({
 	values: array(OdysseyValueSchema),
 	islands: array(OdysseyIslandSchema),
 	parties: array(OdysseyPartySchema),
+	/**
+	 * island statementId → the civic Agora session opened for it. Kept on the
+	 * game doc so the summary and the map can show every gate's state in the
+	 * read they already do, without querying agoraSessions.
+	 */
+	agoraSessions: optional(record(string(), OdysseyIslandAgoraSessionSchema)),
 	/** Uids allowed to edit the game (besides the creator) */
 	adminUids: array(string()),
 	creatorId: string(),

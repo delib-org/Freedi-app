@@ -52,6 +52,13 @@ export const OdysseyJourneySchema = object({
 	/** island statementId → free-text depth answer */
 	depthAnswers: record(string(), string()),
 	logEntries: array(OdysseyLogEntrySchema),
+	/**
+	 * island statementId → millis of the last time the player sailed through
+	 * that island's gate into its Agora deliberation. Only ever used to mark
+	 * the gate as already visited, so the map can invite them onward to the
+	 * islands they have not deliberated yet.
+	 */
+	deliberationVisits: optional(record(string(), number())),
 	createdAt: number(),
 	lastUpdate: number(),
 });

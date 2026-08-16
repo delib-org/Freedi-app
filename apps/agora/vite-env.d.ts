@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
   readonly VITE_FIREBASE_APP_ID: string;
   readonly VITE_FIREBASE_MEASUREMENT_ID: string;
+  /** Origin of the Odyssey app, so a civic square can offer the way back to the islands */
+  readonly VITE_ODYSSEY_ORIGIN?: string;
 }
 
 interface ImportMeta {

@@ -3,6 +3,7 @@ export {
 	AgoraRoundPhase,
 	AgoraDeviceMode,
 	AgoraCamp,
+	AgoraSessionMode,
 	AgoraSessionStatus,
 	AgoraTopicStatus,
 	AgoraSceneKind,
@@ -54,6 +55,7 @@ export type {
 	AgoraHealthMetricOutcome,
 	AgoraClassScore,
 	AgoraSession,
+	AgoraCivicOrigin,
 	AgoraDebrief,
 	AgoraOutcomeStats,
 } from './agoraSession';
@@ -61,9 +63,16 @@ export {
 	AgoraHealthMetricOutcomeSchema,
 	AgoraClassScoreSchema,
 	AgoraSessionSchema,
+	AgoraCivicOriginSchema,
 	AgoraDebriefSchema,
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
+
+export type { CivicStanceEvaluation } from './agoraCivic';
+export {
+	AGORA_CIVIC_CENTER_POSITION,
+	deriveCivicCampPosition,
+} from './agoraCivic';
 
 export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
 export {

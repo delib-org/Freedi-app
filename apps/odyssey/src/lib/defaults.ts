@@ -28,7 +28,8 @@ export const DEFAULT_TEXTS: Record<string, string> = {
 	agoraQuestion:
 		'רוצה לפגוש אזרחים ששטו במסלול דומה, או אזרחים שחולקים איתך דאגה אחת למרות מסלול שונה?',
 	agoraButton: 'אל שער האגורה',
-	agoraUrl: '',
+	/** Origin of the Agora app. Each island's gate appends its own join code. */
+	agoraOrigin: '',
 	destinationName: 'חוף ההבטחה של ארץ ישנה-חדשה',
 };
 

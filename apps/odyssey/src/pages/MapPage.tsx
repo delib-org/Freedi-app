@@ -6,6 +6,7 @@ import { useGame } from '../state/GameContext';
 import { enabledIslands } from '../lib/game';
 import { islandArtUrl } from '../lib/islandArt';
 import { useMode } from '../lib/mode';
+import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
 
 /** Rough voyage length per the design doc: 3→~5min, 5→~8, 8→~12, 12→~20. */
@@ -29,8 +30,22 @@ export default function MapPage() {
 		() => new Set(journey?.selectedIslandIds ?? []),
 	);
 	const [saving, setSaving] = useState(false);
+	const [enteringIslandId, setEnteringIslandId] = useState('');
 
 	const islands = useMemo(() => (content ? enabledIslands(content) : []), [content]);
+
+	/**
+	 * Islands this player has actually taken positions on. After the voyage the
+	 * map stops being only a place to choose from and becomes the hub of the
+	 * round trip: these are the ones with a deliberation waiting.
+	 */
+	const addressedIslands = useMemo(
+		() =>
+			islands.filter((island) =>
+				island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
+			),
+		[islands, attitudes],
+	);
 
 	const toggle = useCallback((statementId: string): void => {
 		setSelected((current) => {
@@ -73,6 +88,16 @@ export default function MapPage() {
 
 	if (!content || !journey) return <NoGameYet />;
 
+	const agoraOrigin = text('agoraOrigin');
+	const gatedIslands = agoraOrigin
+		? addressedIslands
+				.map((island) => ({
+					island,
+					state: getGateState(island.statementId, content.game, journey),
+				}))
+				.filter((entry) => entry.state !== 'unprovisioned')
+		: [];
+
 	async function sail(): Promise<void> {
 		setSaving(true);
 		try {
@@ -80,6 +105,24 @@ export default function MapPage() {
 			navigate('/voyage');
 		} finally {
 			setSaving(false);
+		}
+	}
+
+	async function enterGate(islandStatementId: string): Promise<void> {
+		if (!content || enteringIslandId) return;
+		setEnteringIslandId(islandStatementId);
+		if (mode === 'game') stageBus.send({ type: 'sailToLighthouse' });
+		try {
+			await enterIslandDeliberation({
+				islandStatementId,
+				game: content.game,
+				journey,
+				agoraOrigin,
+				updateJourney,
+			});
+		} catch (error) {
+			console.error('[Odyssey] Could not open the gate:', error);
+			setEnteringIslandId('');
 		}
 	}
 
@@ -123,6 +166,42 @@ export default function MapPage() {
 							))}
 						</div>
 					)}
+
+					{gatedIslands.length > 0 ? (
+						<section className="panel fade-in">
+							<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-1">
+								🏛️ שערי הדיון שנפתחו לך
+							</h2>
+							<p className="text-[13px] opacity-75 mt-0 mb-3">
+								על האיים שכבר חקרת אפשר להיפגש עם אחרים ולחפש יחד פתרונות.
+							</p>
+							<div className="flex flex-col gap-2.5">
+								{gatedIslands.map(({ island, state }) => (
+									<div
+										key={island.statementId}
+										className="flex items-center gap-3 flex-wrap justify-between"
+									>
+										<span className="text-[15px]">
+											{state === 'visited' ? '⚑ ' : ''}
+											{island.title}
+										</span>
+										<button
+											type="button"
+											className="btn"
+											disabled={enteringIslandId === island.statementId}
+											onClick={() => void enterGate(island.statementId)}
+										>
+											{enteringIslandId === island.statementId
+												? 'מפליגים…'
+												: state === 'visited'
+													? 'חזרה לדיון'
+													: text('agoraButton')}
+										</button>
+									</div>
+								))}
+							</div>
+						</section>
+					) : null}
 
 					<div className="flex flex-col items-center gap-2 pb-4">
 						<button

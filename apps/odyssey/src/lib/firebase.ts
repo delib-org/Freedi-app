@@ -29,6 +29,12 @@ import {
 	User,
 } from 'firebase/auth';
 import {
+	getFunctions,
+	Functions,
+	connectFunctionsEmulator,
+	httpsCallable,
+} from 'firebase/functions';
+import {
 	getStorage,
 	FirebaseStorage,
 	connectStorageEmulator,
@@ -52,7 +58,11 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let db: Firestore;
 let auth: Auth;
+let functions: Functions;
 let storage: FirebaseStorage;
+
+/** Every Freedi function lives in Tel Aviv; the default region would 404. */
+const FUNCTIONS_REGION = 'me-west1';
 
 function init(): void {
 	if (getApps().length > 0) {
@@ -63,6 +73,7 @@ function init(): void {
 
 	db = getFirestore(app);
 	auth = getAuth(app);
+	functions = getFunctions(app, FUNCTIONS_REGION);
 	storage = getStorage(app);
 
 	const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
@@ -81,6 +92,11 @@ function init(): void {
 			console.error('[Firebase] Firestore emulator connection failed:', error);
 		}
 		try {
+			connectFunctionsEmulator(functions, 'localhost', 5001);
+		} catch (error) {
+			console.error('[Firebase] Functions emulator connection failed:', error);
+		}
+		try {
 			connectStorageEmulator(storage, 'localhost', 9199);
 		} catch (error) {
 			console.error('[Firebase] Storage emulator connection failed:', error);
@@ -94,6 +110,8 @@ export {
 	app,
 	db,
 	auth,
+	functions,
+	httpsCallable,
 	storage,
 	collection,
 	doc,

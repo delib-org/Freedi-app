@@ -3,9 +3,27 @@ import {
 	AgoraStage,
 	AgoraRoundPhase,
 	AgoraDeviceMode,
+	AgoraSessionMode,
 	AgoraSessionStatus,
 	AgoraSessionOutcome,
 } from './agoraEnums';
+
+/**
+ * What an Odyssey island opened this session for. Present only on civic
+ * sessions; it is the whole link back to the island, because the deliberation
+ * gets its own statement tree (Agora proposals must never surface as stances
+ * on the island's Voyage screen).
+ */
+export const AgoraCivicOriginSchema = object({
+	odysseyGameId: string(),
+	/** statementId of the island's `question` Statement in Odyssey */
+	islandStatementId: string(),
+	/** The two stances used as poles when deriving a participant's camp */
+	leftAnchorStanceId: optional(string()),
+	rightAnchorStanceId: optional(string()),
+});
+
+export type AgoraCivicOrigin = InferOutput<typeof AgoraCivicOriginSchema>;
 
 export const AgoraHealthMetricOutcomeSchema = object({
 	metricId: string(),
@@ -94,6 +112,13 @@ export const AgoraSessionSchema = object({
 	challengeQuestionId: string(),
 	deviceMode: enum_(AgoraDeviceMode),
 	teamSizeMax: number(),
+	/**
+	 * Which track this session runs. Absent on every classroom session ever
+	 * written, and `undefined` means `classroom` — see AgoraSessionMode.
+	 */
+	sessionMode: optional(enum_(AgoraSessionMode)),
+	/** Set only on civic sessions: the Odyssey island this deliberation belongs to */
+	civic: optional(AgoraCivicOriginSchema),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

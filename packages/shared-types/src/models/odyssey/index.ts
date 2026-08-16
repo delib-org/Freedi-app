@@ -3,6 +3,7 @@ export type {
 	OdysseyCompassQuestion,
 	OdysseyValue,
 	OdysseyIsland,
+	OdysseyIslandAgoraSession,
 	OdysseyParty,
 	OdysseyGame,
 } from './odysseyGame';
@@ -13,6 +14,7 @@ export {
 	OdysseyCompassQuestionSchema,
 	OdysseyValueSchema,
 	OdysseyIslandSchema,
+	OdysseyIslandAgoraSessionSchema,
 	OdysseyPartySchema,
 	OdysseyGameSchema,
 } from './odysseyGame';

@@ -342,6 +342,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'round.pulse_down': 'הגשר נבחן עכשיו — רעיונות הם מה שמזיז אותו',
 		'delib.no_feedback_yet': 'עוד אין משוב — דירוגים ורעיונות מהכיכר יתאספו כאן.',
 		'delib.nav_mine': 'שלי',
+		'delib.civic_back_to_islands': 'חזרה לאיים',
 		'delib.nav_results': 'תוצאות',
 		'picture.lead_title': 'ההצעה שהכיתה הכי מסכימה איתה',
 		'picture.lead_mine': 'ההצעה שלי',
@@ -937,6 +938,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.no_feedback_yet':
 			'No feedback yet — ratings and ideas from the square will gather here.',
 		'delib.nav_mine': 'Mine',
+		'delib.civic_back_to_islands': 'Back to the islands',
 		'delib.nav_results': 'Results',
 		'picture.lead_title': 'What the class agrees on most',
 		'picture.lead_mine': 'My proposal',
@@ -1531,6 +1533,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'round.pulse_down': 'الجسر يُختبر الآن — الأفكار هي ما يحركه',
 		'delib.no_feedback_yet': 'لا ملاحظات بعد — ستتجمع هنا التقييمات والأفكار من الساحة.',
 		'delib.nav_mine': 'اقتراحي',
+		'delib.civic_back_to_islands': 'العودة إلى الجزر',
 		'delib.nav_results': 'النتائج',
 		'picture.lead_title': 'ما يتفق عليه الصف أكثر',
 		'picture.lead_mine': 'اقتراحي',
@@ -2138,6 +2141,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.no_feedback_yet':
 			'Aún no hay comentarios — aquí se reunirán las valoraciones e ideas de la plaza.',
 		'delib.nav_mine': 'Mía',
+		'delib.civic_back_to_islands': 'Volver a las islas',
 		'delib.nav_results': 'Resultados',
 		'picture.lead_title': 'En lo que más coincide la clase',
 		'picture.lead_mine': 'Mi propuesta',
@@ -2767,6 +2771,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.no_feedback_yet':
 			'Noch keine Rückmeldungen — Bewertungen und Ideen vom Platz sammeln sich hier.',
 		'delib.nav_mine': 'Meins',
+		'delib.civic_back_to_islands': 'Zurück zu den Inseln',
 		'delib.nav_results': 'Ergebnisse',
 		'picture.lead_title': 'Worauf sich die Klasse am ehesten einigt',
 		'picture.lead_mine': 'Mein Vorschlag',
@@ -3397,6 +3402,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.no_feedback_yet':
 			'Nog geen feedback — beoordelingen en ideeën van het plein verzamelen zich hier.',
 		'delib.nav_mine': 'Mijn',
+		'delib.civic_back_to_islands': 'Terug naar de eilanden',
 		'delib.nav_results': 'Resultaten',
 		'picture.lead_title': 'Waar de klas het meest over eens is',
 		'picture.lead_mine': 'Mijn voorstel',
