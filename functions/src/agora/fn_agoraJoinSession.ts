@@ -92,28 +92,48 @@ export const agoraJoinSession = onCall(
 			const language = (topicSnap.data() as AgoraTopicPackage | undefined)?.language ?? 'en';
 
 			const now = Date.now();
-			const anonName = generateAnonName(language, session.participantCount);
+			const sessionRef = db.collection(Collections.agoraSessions).doc(session.sessionId);
 
-			const participant: AgoraParticipant = {
-				participantId,
-				sessionId: session.sessionId,
-				userId: uid,
-				anonName,
-				...(session.deviceMode === AgoraDeviceMode.team
-					? { teamMemberCount: teamMemberCount ?? 1 }
-					: {}),
-				points: { valueAccuracy: 0, proposals: 0, helping: 0, total: 0 },
-				joinedAt: now,
-				lastActive: now,
-			};
+			/**
+			 * The name and the count that produces it must be decided together.
+			 *
+			 * This used to read participantCount from the session snapshot fetched
+			 * above, then increment it in a separate batch. A class does not trickle
+			 * in — it arrives at once, on a teacher's "scan this code". Three students
+			 * joining 26ms apart all read participantCount === 0 and all became
+			 * "פנס אמיץ", and the teacher could not tell them apart for the rest of
+			 * the lesson. Observed in production, session BxDE3d1DmbLq.
+			 *
+			 * Reading the session INSIDE the transaction makes the read a conflict
+			 * point: concurrent joins serialise and retry against a fresh count, so
+			 * indices are handed out exactly once each.
+			 */
+			const anonName = await db.runTransaction(async (transaction) => {
+				const freshSession = await transaction.get(sessionRef);
+				const count = (freshSession.data() as AgoraSession | undefined)?.participantCount ?? 0;
+				const name = generateAnonName(language, count);
 
-			const batch = db.batch();
-			batch.set(participantRef, participant);
-			batch.update(db.collection(Collections.agoraSessions).doc(session.sessionId), {
-				participantCount: FieldValue.increment(1),
-				lastUpdate: now,
+				const participant: AgoraParticipant = {
+					participantId,
+					sessionId: session.sessionId,
+					userId: uid,
+					anonName: name,
+					...(session.deviceMode === AgoraDeviceMode.team
+						? { teamMemberCount: teamMemberCount ?? 1 }
+						: {}),
+					points: { valueAccuracy: 0, proposals: 0, helping: 0, total: 0 },
+					joinedAt: now,
+					lastActive: now,
+				};
+
+				transaction.set(participantRef, participant);
+				transaction.update(sessionRef, {
+					participantCount: FieldValue.increment(1),
+					lastUpdate: now,
+				});
+
+				return name;
 			});
-			await batch.commit();
 
 			return { sessionId: session.sessionId, participantId, anonName };
 		} catch (error) {
