@@ -4,32 +4,16 @@
  * Run: node scripts/e2e-milestones.mjs */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
+import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
 
 await preflight();
 
 const BASE = 'http://localhost:3009';
 const SHOTS = 'milestone-shots';
-const step = (msg) => console.log(`\n=== ${msg}`);
-const fail = (msg) => {
-	throw new Error(msg);
-};
-const eq = (label, actual, expected) => {
-	if (actual !== expected) fail(`${label}: expected ${expected}, got ${actual}`);
-	console.log(`   ✓ ${label} = ${actual}`);
-};
 
 const browser = await chromium.launch();
-const mkPage = async (label) => {
-	const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-	const page = await ctx.newPage();
-	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
-	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
-	page.on('console', (msg) => {
-		if (msg.type() === 'error') console.log(`[${label} CONSOLE]`, msg.text().slice(0, 160));
-	});
-	return page;
-};
-const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
+const shot = shotter(SHOTS);
+const page = (label) => makePage(browser, label, { height: 900 });
 /** Dismiss whatever is showing until the moment we came for is on screen */
 const waitForCelebration = async (page, text, timeoutMs = 40000) => {
 	const deadline = Date.now() + timeoutMs;
@@ -70,10 +54,10 @@ const clearCelebration = async (page) => {
 	}
 };
 
-const teacher = await mkPage('T');
+const teacher = await page('T');
 // Four students: A is the author we follow, B and C are the class that rates
 // (a bridge needs BOTH camps behind it), D writes the rival proposal
-const [sA, sB, sC, sD] = [await mkPage('A'), await mkPage('B'), await mkPage('C'), await mkPage('D')];
+const [sA, sB, sC, sD] = [await page('A'), await page('B'), await page('C'), await page('D')];
 
 step('SETUP: session, four students, deliberation');
 await teacher.goto(`${BASE}/#!/teach`, { waitUntil: 'domcontentloaded' });

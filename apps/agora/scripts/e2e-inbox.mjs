@@ -3,32 +3,16 @@
  * whatever it lands on. Run: node scripts/e2e-inbox.mjs */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
+import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
 
 await preflight();
 
 const BASE = 'http://localhost:3009';
 const SHOTS = 'inbox-shots';
-const step = (msg) => console.log(`\n=== ${msg}`);
-const fail = (msg) => {
-	throw new Error(msg);
-};
-const eq = (label, actual, expected) => {
-	if (actual !== expected) fail(`${label}: expected ${expected}, got ${actual}`);
-	console.log(`   ✓ ${label} = ${actual}`);
-};
 
 const browser = await chromium.launch();
-const mkPage = async (label) => {
-	const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-	const page = await ctx.newPage();
-	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
-	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
-	page.on('console', (msg) => {
-		if (msg.type() === 'error') console.log(`[${label} CONSOLE]`, msg.text().slice(0, 160));
-	});
-	return page;
-};
-const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
+const shot = shotter(SHOTS);
+const page = (label) => makePage(browser, label, { height: 900 });
 /** Press the envelope, whatever the server just popped over it */
 const openInbox = async (page) => {
 	for (let attempt = 0; attempt < 6; attempt++) {
@@ -52,9 +36,9 @@ const clearCelebration = async (page) => {
 	}
 };
 
-const teacher = await mkPage('T');
-const s1 = await mkPage('S1'); // the owner, who receives the news
-const s2 = await mkPage('S2'); // the helper, who sends it
+const teacher = await page('T');
+const s1 = await page('S1'); // the owner, who receives the news
+const s2 = await page('S2'); // the helper, who sends it
 
 step('SETUP: session, two students, deliberation');
 await teacher.goto(`${BASE}/#!/teach`, { waitUntil: 'domcontentloaded' });

@@ -7,6 +7,7 @@
  * Run: node scripts/e2e-cycle.mjs (needs emulators + vite on 3009 + seed) */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
+import { clearCelebration, eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
 
 // Fail in seconds with a readable reason instead of minutes with a stack trace
 await preflight();
@@ -14,14 +15,6 @@ await preflight();
 const BASE = 'http://localhost:3009';
 const FS = 'http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents';
 const SHOTS = 'cycle-shots';
-const step = (msg) => console.log(`\n=== ${msg}`);
-const fail = (msg) => {
-	throw new Error(msg);
-};
-const eq = (label, actual, expected) => {
-	if (actual !== expected) fail(`${label}: expected ${expected}, got ${actual}`);
-	console.log(`   ✓ ${label} = ${actual}`);
-};
 
 /**
  * The emulator occasionally blips under three concurrent browser contexts, and
@@ -47,42 +40,18 @@ const ownerFetch = async (path) => {
 };
 
 const browser = await chromium.launch();
-const mkPage = async (label) => {
-	const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-	const page = await ctx.newPage();
-	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
-	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
-	// A Mithril render that throws surfaces here, not as a pageerror — and a
-	// blank screen with no output is the worst possible failure report
-	page.on('console', (m) => {
-		if (m.type() === 'error') console.log(`[${label} CONSOLE]`, m.text().slice(0, 160));
-	});
-	return page;
-};
-const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
+const shot = shotter(SHOTS);
+const page = (label) => makePage(browser, label, { height: 800 });
 
 /**
  * Celebrations are modal by design (they are the reward moments), so any
  * one of them left open blocks the next click. Close whatever is showing —
  * the LAST button is always the plain close, never the travel action.
  */
-const clearCelebration = async (page, label = '') => {
-	for (let i = 0; i < 5; i++) {
-		if ((await page.locator('.celebration').count()) === 0) return;
-		const msg = await page
-			.locator('.celebration__message')
-			.first()
-			.textContent()
-			.catch(() => '');
-		await page.locator('.celebration button.btn').last().click({ timeout: 5000 }).catch(() => {});
-		await page.waitForTimeout(400);
-		if (label && msg) console.log(`   (${label} celebration: ${msg.trim()})`);
-	}
-};
 
-const teacher = await mkPage('T');
-const s1 = await mkPage('S1'); // Author A
-const s2 = await mkPage('S2'); // Helper B
+const teacher = await page('T');
+const s1 = await page('S1'); // Author A
+const s2 = await page('S2'); // Helper B
 
 // ---------- Setup: teacher session + 2 students to deliberation ----------
 step('SETUP: teacher session, students join, advance to deliberation');

@@ -10,34 +10,21 @@
  */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
+import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
 
 await preflight();
 
 const BASE = 'http://localhost:3009';
 const FS = 'http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents';
 const SHOTS = 'stuck-shots';
-const step = (msg) => console.log(`\n=== ${msg}`);
-const fail = (msg) => {
-	throw new Error(msg);
-};
-const eq = (label, actual, expected) => {
-	if (actual !== expected) fail(`${label}: expected ${expected}, got ${actual}`);
-	console.log(`   ✓ ${label} = ${actual}`);
-};
 
 const browser = await chromium.launch();
-const mkPage = async (label) => {
-	const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-	const page = await ctx.newPage();
-	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
-	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
-	return page;
-};
-const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
+const shot = shotter(SHOTS);
+const page = (label) => makePage(browser, label, { height: 900 });
 
-const teacher = await mkPage('T');
-const s1 = await mkPage('S1'); // the student whose write will hang
-const s2 = await mkPage('S2'); // the classmate whose square must stay honest
+const teacher = await page('T');
+const s1 = await page('S1'); // the student whose write will hang
+const s2 = await page('S2'); // the classmate whose square must stay honest
 
 // ---------- Setup ----------
 step('SETUP: teacher session, two students, straight to deliberation');
