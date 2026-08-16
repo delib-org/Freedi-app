@@ -347,22 +347,32 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 				'button.btn.btn--primary.btn--sm',
 				{
 					onclick: () => {
-						resolveSuggestion(session.sessionId, message.statementId, AgoraSuggestionStatus.thanked)
-							.then(() => {
-								// The handoff: the idea just thanked lands pinned beside
-								// the editor, already open on the current text
-								pinnedIdea = {
-									text: message.statement,
-									from: message.anonName ?? '',
-									variant: message.statementId.charCodeAt(0) % 2 === 0 ? 1 : 2,
-								};
-								editing = true;
-								editDraft = proposal.statement;
-								m.redraw();
-							})
-							.catch((error: unknown) => {
-								console.error('[Chat] Thank suggestion failed:', error);
-							});
+						// The handoff happens on the press, not on the round trip: the
+						// idea just thanked lands pinned beside the editor, already open
+						// on the current text. resolveSuggestion applies the decision
+						// locally too, so the whole screen moves at once and the callable
+						// catches up behind it.
+						pinnedIdea = {
+							text: message.statement,
+							from: message.anonName ?? '',
+							variant: message.statementId.charCodeAt(0) % 2 === 0 ? 1 : 2,
+						};
+						editing = true;
+						editDraft = proposal.statement;
+
+						resolveSuggestion(
+							session.sessionId,
+							message.statementId,
+							AgoraSuggestionStatus.thanked,
+						).catch((error: unknown) => {
+							// resolveSuggestion has already rolled the decision back; undo
+							// the handoff so the student is not left editing on a promise
+							// that failed.
+							pinnedIdea = null;
+							editing = false;
+							m.redraw();
+							console.error('[Chat] Thank suggestion failed:', error);
+						});
 					},
 				},
 				iconLabel('thanks', t('delib.thank')),

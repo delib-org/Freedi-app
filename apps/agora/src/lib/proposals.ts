@@ -170,6 +170,17 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 				if (item.statementType === StatementType.option) {
 					proposals.push(item);
 				} else if (item.statementType === StatementType.suggestion) {
+					// Show the decision the student just made, not the one the server
+					// has caught up to. The overlay retires itself as soon as the
+					// server agrees.
+					const optimistic = optimisticResolutions.get(item.statementId);
+					if (optimistic !== undefined) {
+						if (item.suggestionStatus === optimistic) {
+							optimisticResolutions.delete(item.statementId);
+						} else {
+							item.suggestionStatus = optimistic;
+						}
+					}
 					(suggestions[item.parentId] ??= []).push(item);
 				}
 			});
@@ -570,16 +581,64 @@ export async function submitSuggestion(
 	await submitThreadMessage(session, proposal, anonName, text, AgoraMessageKind.suggestion);
 }
 
+/**
+ * Decisions the student has made but the server has not confirmed yet.
+ *
+ * Thanking someone is a callable — a network round trip, plus a cold start on
+ * the first one of a lesson — and the chip, the points line and the editor
+ * handoff all read from the snapshot that follows it. So a thank-you sat there
+ * doing nothing for seconds, which reads as "the button is broken" and invites
+ * a second press.
+ *
+ * The decision is the student's, and it is not in doubt: what is in doubt is
+ * only how long the write takes. So it is applied locally at once and the
+ * snapshot handler retires the entry the moment the server says the same thing.
+ */
+const optimisticResolutions = new Map<string, AgoraSuggestionStatus>();
+
+/** Apply a decision locally, then send it. Rolls back if the server refuses. */
 export async function resolveSuggestion(
 	sessionId: string,
 	suggestionId: string,
 	resolution: AgoraSuggestionStatus,
 ): Promise<void> {
+	const previous = findSuggestion(suggestionId)?.suggestionStatus;
+	optimisticResolutions.set(suggestionId, resolution);
+	applyOptimisticToState(suggestionId, resolution);
+	m.redraw();
+
 	const call = httpsCallable<
 		{ sessionId: string; suggestionId: string; resolution: AgoraSuggestionStatus },
 		{ ok: boolean }
 	>(functions, 'agoraResolveSuggestion');
-	await call({ sessionId, suggestionId, resolution });
+
+	try {
+		await call({ sessionId, suggestionId, resolution });
+	} catch (error) {
+		// The optimism was wrong: put the student back where they were rather
+		// than leaving a thank-you on screen that nobody was ever paid for.
+		optimisticResolutions.delete(suggestionId);
+		applyOptimisticToState(suggestionId, previous);
+		m.redraw();
+		throw error;
+	}
+}
+
+function findSuggestion(suggestionId: string): AgoraProposal | undefined {
+	for (const list of Object.values(state.suggestions)) {
+		const hit = list.find((suggestion) => suggestion.statementId === suggestionId);
+		if (hit) return hit;
+	}
+
+	return undefined;
+}
+
+function applyOptimisticToState(
+	suggestionId: string,
+	status: AgoraSuggestionStatus | undefined,
+): void {
+	const suggestion = findSuggestion(suggestionId);
+	if (suggestion) suggestion.suggestionStatus = status;
 }
 
 export interface CharacterReviewResult {
