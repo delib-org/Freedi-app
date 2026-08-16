@@ -26,6 +26,7 @@ import {
 	studentOrder as studentOrderFor,
 } from '../lib/squareOrder';
 import { browserSubPageDeps, createSubPage } from '../lib/subPage';
+import { sessionDraft } from '../lib/draftStore';
 
 /** Which conversation the student is standing in, when they are in one. */
 interface ChatTarget {
@@ -587,35 +588,23 @@ export function Deliberation(
 		dockIntro = false;
 		if (fold) dockOpen = false;
 	}
-	/** Mirror of the unsaved edit box, so a refresh can't eat a draft */
-	const mineDraftKey = `agora_${session.sessionId}_mine_draft`;
 	/**
-	 * ...and the same protection for the FIRST draft, which had none: the
-	 * opening sentence is the most expensive thing a student writes all
-	 * lesson, and until now a refresh — or the reload that rescues a stuck
-	 * save — took it with them.
+	 * Mirror of the unsaved edit box, and the same protection for the FIRST
+	 * draft: the opening sentence is the most expensive thing a student writes
+	 * all lesson, and a refresh — or the reload that rescues a stuck save —
+	 * used to take it with them. Keys and storage failures live in
+	 * lib/draftStore; these are just the two boxes.
 	 */
-	const firstDraftKey = `agora_${session.sessionId}_first_draft`;
-	try {
-		draft = sessionStorage.getItem(firstDraftKey) ?? '';
-	} catch {
-		// Storage unavailable — the desk simply starts empty
-	}
+	const mineDraftStore = sessionDraft(session.sessionId, 'mine');
+	const firstDraftStore = sessionDraft(session.sessionId, 'first');
+	draft = firstDraftStore.read();
 
 	function rememberFirstDraft(): void {
-		try {
-			sessionStorage.setItem(firstDraftKey, draft);
-		} catch {
-			// Storage full or blocked — the in-memory draft still stands
-		}
+		firstDraftStore.write(draft);
 	}
 
 	function forgetFirstDraft(): void {
-		try {
-			sessionStorage.removeItem(firstDraftKey);
-		} catch {
-			// Nothing to do
-		}
+		firstDraftStore.forget();
 	}
 
 	/**
@@ -716,19 +705,11 @@ export function Deliberation(
 	}
 
 	function rememberMineDraft(): void {
-		try {
-			sessionStorage.setItem(mineDraftKey, mineDraft);
-		} catch {
-			// Storage full or blocked — the in-memory draft still stands
-		}
+		mineDraftStore.write(mineDraft);
 	}
 
 	function forgetMineDraft(): void {
-		try {
-			sessionStorage.removeItem(mineDraftKey);
-		} catch {
-			// Nothing to do
-		}
+		mineDraftStore.forget();
 	}
 
 	/**
@@ -823,11 +804,7 @@ export function Deliberation(
 	// An unsaved edit outlives the tab. The seeding rule below leaves it
 	// alone (it only re-seeds an empty or untouched box), so a restored
 	// draft is never clobbered by the server text.
-	try {
-		mineDraft = sessionStorage.getItem(mineDraftKey) ?? '';
-	} catch {
-		// Storage unavailable — the draft just starts from the proposal
-	}
+	mineDraft = mineDraftStore.read();
 
 	// --- Travel splashes: a short "you are moving to a new place" card on
 	// every step change, a bigger "lap N" card when a round completes. The
