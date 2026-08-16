@@ -33,12 +33,25 @@ if (process.argv.includes('--prod')) {
 	process.exit(1);
 }
 
+/**
+ * The rest of the tooling takes its emulator host from AGORA_FIRESTORE_HOST
+ * (see preflight.mjs), and this used to be the one place that did not — so a
+ * run against an isolated stack on another port reported "seeded" while the
+ * documents landed in whichever emulator happened to own 8081.
+ */
+const EMULATOR_HOST = (process.env.AGORA_FIRESTORE_HOST ?? 'localhost:8081').replace(
+	/^https?:\/\//,
+	'',
+);
+
 if (USE_EMULATOR) {
-	process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8081';
+	process.env.FIRESTORE_EMULATOR_HOST = EMULATOR_HOST;
 }
 
 console.info(
-	USE_EMULATOR ? '→ seeding the EMULATOR (localhost:8081)' : `→ seeding CLOUD project ${PROJECT_ID}`,
+	USE_EMULATOR
+		? `→ seeding the EMULATOR (${EMULATOR_HOST})`
+		: `→ seeding CLOUD project ${PROJECT_ID}`,
 );
 
 const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: PROJECT_ID });
