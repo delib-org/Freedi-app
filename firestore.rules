@@ -261,12 +261,36 @@ service cloud.firestore {
                 checkJoinDelegate('canManageParticipantSolutions'));
       }
 
+      // The `hasAll` precondition this used to carry was the bug: a document
+      // WITHOUT questionSettings/statementSettings was reported as having no
+      // protected fields at all, so the permissive branch below admitted every
+      // write to it. Questions have those keys; chat messages, paragraphs,
+      // comments, suggestions, evidence cards and cluster members do not — and
+      // Freedi is one deliberation seen through several UIs, so that was most
+      // of the content in the product. Compare with defaults instead.
       function hasProtectedFieldChanges() {
-        return resource != null && request.resource != null &&
-               resource.data.keys().hasAll(['questionSettings', 'statementSettings']) && (
-          (request.resource.data.questionSettings != resource.data.questionSettings) ||
-          (request.resource.data.statementSettings != resource.data.statementSettings)
+        return resource != null && request.resource != null && (
+          (request.resource.data.get('questionSettings', {}) !=
+             resource.data.get('questionSettings', {})) ||
+          (request.resource.data.get('statementSettings', {}) !=
+             resource.data.get('statementSettings', {}))
         );
+      }
+
+      /**
+       * What an ordinary participant may change on a statement somebody else
+       * wrote. Everything here is an act of PARTICIPATION rather than of
+       * authorship — joining an option, weighing a piece of evidence, or the
+       * clock a child write bumps on its parent.
+       *
+       * Anything outside this set requires isAuthorized(): the creator, an
+       * admin of the statement or its parents, a system admin, or a Join
+       * delegate. Editing someone's words is not participation.
+       */
+      function onlyParticipationFieldsChanged() {
+        return request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['joined', 'organizers', 'evidence',
+                           'lastUpdate', 'lastChildUpdate']);
       }
 
       // Only allow membership.access to be changed by admins or creator
@@ -303,14 +327,15 @@ service cloud.firestore {
       }
 
       function isAllowedToUpdate() {
-        // Check non-protected field changes FIRST (no get() calls needed).
-        // This allows reparenting and other non-sensitive updates without
-        // needing the user to be admin/creator of the specific statement.
-        // Only fall through to isAuthorized() if protected fields are changing
-        // OR a join-membership mutation is being attempted on a join-form
-        // question (which must use the fn_joinOption callable, not direct
-        // writes — admins bypass via isAuthorized()).
-        return (!hasProtectedFieldChanges() &&
+        // Participation first, because it needs no get() calls: joining an
+        // option and voting on evidence are the hot paths, and the whole point
+        // of the allowlist is that they do not require being anybody special.
+        //
+        // A join-membership mutation on a join-form question still has to go
+        // through the fn_joinOption callable, which enforces the per-user cap
+        // and singleJoinOnly; admins bypass that via isAuthorized().
+        return (onlyParticipationFieldsChanged() &&
+                !hasProtectedFieldChanges() &&
                 !hasUnauthorizedAccessChange() &&
                 !blocksDirectMembershipMutation()) ||
                isAuthorized();
