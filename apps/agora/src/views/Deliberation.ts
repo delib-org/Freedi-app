@@ -25,6 +25,14 @@ import {
 	rankStalls,
 	studentOrder as studentOrderFor,
 } from '../lib/squareOrder';
+import { browserSubPageDeps, createSubPage } from '../lib/subPage';
+
+/** Which conversation the student is standing in, when they are in one. */
+interface ChatTarget {
+	proposalId: string;
+	helperUid: string;
+	role: 'helper' | 'owner';
+}
 import { DelibHud } from '../components/DelibHud';
 import { Collapsible } from '../components/Collapsible';
 import { ThreadChat, threadEntry } from './ThreadChat';
@@ -534,42 +542,17 @@ export function Deliberation(
 	 * A thread is a sub-page like every other Freedi chat — the cards carry
 	 * only an indicator, and opening one takes the whole screen.
 	 */
-	let chatOpen: { proposalId: string; helperUid: string; role: 'helper' | 'owner' } | null = null;
-
 	/**
 	 * Entering a conversation pushes a history entry (the URL is unchanged, so
 	 * Mithril's router stays put) — the phone's back gesture then leaves the
-	 * chat instead of leaving the game.
+	 * chat instead of leaving the game. The ordering that makes that safe lives
+	 * in lib/subPage, where it can be tested without a browser.
 	 */
+	const chatPage = createSubPage<ChatTarget>(browserSubPageDeps(() => m.redraw()));
+
 	function openChat(proposalId: string, helperUid: string, role: 'helper' | 'owner'): void {
-		chatOpen = { proposalId, helperUid, role };
-		try {
-			window.history.pushState({ agoraChat: true }, '');
-		} catch {
-			// No history access (rare sandboxes) — the back button still works
-		}
-		m.redraw();
+		chatPage.open({ proposalId, helperUid, role });
 	}
-
-	function closeChat(fromPopState: boolean): void {
-		if (!chatOpen) return;
-		chatOpen = null;
-		if (!fromPopState) {
-			try {
-				const state = window.history.state as { agoraChat?: boolean } | null;
-				if (state?.agoraChat === true) window.history.back();
-			} catch {
-				// Nothing to unwind
-			}
-		}
-		m.redraw();
-	}
-
-	function onPopState(): void {
-		if (chatOpen) closeChat(true);
-	}
-
-	window.addEventListener('popstate', onPopState);
 	/**
 	 * The proposal dock: my workshop is no longer a screen you travel to, it
 	 * is a notebook docked at the bottom of every place. Collapsed it shows a
@@ -2236,7 +2219,7 @@ export function Deliberation(
 			unregisterMineNavigator(goToMine);
 			unregisterMarketNavigator(goToMarket);
 			unregisterThreadNavigator(goToThread);
-			window.removeEventListener('popstate', onPopState);
+			chatPage.dispose();
 		},
 
 		view(vnode) {
@@ -2261,13 +2244,14 @@ export function Deliberation(
 			// A chat is a place of its own in every Freedi app, and this one is
 			// no different: the game waits behind it, and back returns to the
 			// exact card the conversation was opened from.
+			const chatOpen = chatPage.current();
 			if (chatOpen) {
 				const chatProposal = proposals.find(
-					(proposal) => proposal.statementId === chatOpen?.proposalId,
+					(proposal) => proposal.statementId === chatOpen.proposalId,
 				);
 				if (!chatProposal) {
 					// The proposal vanished under us (session reset) — nothing to talk about
-					chatOpen = null;
+					chatPage.close();
 				} else {
 					return m(ThreadChat, {
 						session: live,
@@ -2278,7 +2262,7 @@ export function Deliberation(
 						anonName,
 						proposalNumber: proposalNumber(chatProposal),
 						onBack: () => {
-							closeChat(false);
+							chatPage.close();
 						},
 						onSuggestionSent: (proposalId: string) => {
 							// An idea sent from the conversation counts as helping this
