@@ -1,0 +1,775 @@
+// One conversation as a page, and what happened since
+//
+// Split out of the 8,474-line components.scss so a rule can be found, and so
+// dead rules can be seen. Imported by components.scss; do not import directly.
+
+// --- The conversation as a PAGE: a bar you come back from, the proposal it
+// is about, the messages, and one box at the bottom. Nothing of the game
+// rides along — this is a place you stand in, not a fold in a card. ---
+.chat-page {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	width: 100%;
+	max-width: 640px;
+	margin-inline: auto;
+
+	// Same chrome as the deliberation HUD: white bar, dark title, and the one
+	// squircle tile. A conversation is a place you travel to, so its header
+	// has to be recognisably the same object as the header of the place you
+	// left.
+	&__bar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-card-solid);
+		border-block-end: 1px solid var(--border-subtle);
+		box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
+	}
+
+	&__back {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border: none;
+		border-radius: var(--radius-tile);
+		background: var(--grad-mine);
+		color: #ffffff;
+		font-size: 1.2rem;
+		cursor: pointer;
+		box-shadow: var(--glow-lantern);
+		transition: transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.94);
+		}
+	}
+
+	&__who {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 1.05rem;
+		color: var(--text-primary);
+	}
+
+	&__sub {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	// What the conversation is ABOUT, always in sight above it
+	&__proposal {
+		display: block;
+		width: calc(100% - 2 * var(--space-md));
+		margin: var(--space-sm) var(--space-md) 0;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		// `font: inherit` first, to strip the button UA font this is set on —
+		// then the proposal voice, or the shorthand would flatten it
+		font: inherit;
+
+		@include proposal-voice;
+
+		color: var(--text-primary);
+		text-align: start;
+		max-height: 6.5em;
+		overflow-y: auto;
+
+		// Mine to change: the text itself is the control, the way it is
+		// everywhere else in Freedi. The pencil is the only chrome.
+		// Mine, so it wears the one ownership cue a quoted card can carry
+		// without becoming a message: a purple edge and a purple pencil
+		&--editable {
+			display: flex;
+			align-items: flex-start;
+			gap: var(--space-sm);
+			cursor: pointer;
+			border-color: var(--border-lantern);
+			cursor: pointer;
+			transition: box-shadow var(--motion-base) ease;
+
+			&:hover,
+			&:focus-visible {
+				box-shadow: var(--shadow-raised);
+			}
+		}
+	}
+
+	&__proposal-text {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	&__proposal-pencil {
+		flex: 0 0 auto;
+		color: var(--mine);
+		font-size: var(--font-size-sm);
+		opacity: 0.7;
+	}
+
+	// ...and the box it turns into
+	&__edit {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin: var(--space-sm) var(--space-md) 0;
+	}
+
+	&__edit-input {
+		background: var(--bg-card-solid);
+	}
+
+	// The thank→pen handoff: the idea just thanked, pinned beside the editor.
+	// A quote with a visible edge — the student weaves it in by hand.
+	&__pinned {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding: var(--space-sm);
+		border-radius: var(--radius-sm);
+		background: rgba(255, 210, 63, 0.16);
+	}
+
+	&__pinned-lead {
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		color: var(--ink);
+	}
+
+	&__pinned-quote {
+		margin: 0;
+		padding-inline-start: var(--space-sm);
+		border-inline-start: 3px solid var(--peer);
+		font-size: var(--font-size-sm);
+		color: var(--ink);
+
+		cite {
+			display: block;
+			margin-block-start: 2px;
+			font-style: normal;
+			font-size: var(--font-size-xs);
+			color: var(--text-secondary);
+		}
+	}
+
+	// The quiet answer to a save — a status line, never glitter (whether the
+	// save deserved glitter is the server's call, via the credited-revision
+	// notification)
+	&__saved-ack {
+		margin: var(--space-xs) var(--space-md) 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		padding: var(--space-md);
+	}
+
+	&__empty {
+		margin: auto;
+		color: var(--text-muted);
+		text-align: center;
+	}
+
+	// These three moved here from inside .chat-system on 2026-08-11. They
+	// had been appended to the end of that block, which follows .chat-page
+	// in the file — so they had been compiling to .chat-system__composer,
+	// .chat-system__input and .chat-system__send all along. A system notice
+	// has no composer and no send button, and .chat-page's real composer had
+	// therefore never been styled at all.
+	// The composer is a bar the page rests on, so it LIFTS rather than being
+	// ruled off with a hairline the way a document section would be
+	&__composer {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--bg-card-solid);
+		box-shadow: 0 -6px 20px -10px rgba(70, 45, 150, 0.25);
+	}
+
+	// What I am about to say is mine too, and it becomes a purple bubble the
+	// instant I press send — so it is one already
+	&__input {
+		background: var(--grad-mine-text);
+		border-color: transparent;
+		color: #ffffff;
+		caret-color: #ffffff;
+		box-shadow: var(--glow-lantern);
+
+		&::placeholder {
+			color: var(--text-muted);
+		}
+
+		&:focus {
+			border-color: #ffffff;
+			box-shadow:
+				0 0 0 3px rgba(139, 107, 240, 0.35),
+				var(--glow-lantern);
+		}
+	}
+
+	&__send {
+		align-self: flex-end;
+	}
+}
+
+// --- What HAPPENED, as opposed to what someone said: the proposal changed,
+// or points landed. Centred, unattributed and quieter than any bubble, so
+// it never reads as a classmate speaking. ---
+.chat-system {
+	align-self: center;
+	max-width: 92%;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: var(--space-xs) var(--space-md);
+	border-radius: var(--radius-full);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	box-shadow: var(--shadow-card);
+	font-size: var(--font-size-sm);
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__icon {
+		flex: 0 0 auto;
+	}
+
+	&__text {
+		color: var(--text-secondary);
+		font-weight: 600;
+	}
+
+	&__time {
+		margin-inline-start: auto;
+		color: var(--text-muted);
+		@include type-meta;
+		font-variant-numeric: tabular-nums;
+	}
+
+	// The diff itself: read straight through, the marks doing the talking
+	&__diff {
+		color: var(--text-primary);
+		line-height: 1.6;
+		overflow-wrap: anywhere;
+	}
+
+	&__ins {
+		background: rgba(23, 128, 77, 0.16);
+		border-radius: 3px;
+		box-shadow: 0 0 0 1px rgba(23, 128, 77, 0.25);
+	}
+
+	&__del {
+		background: rgba(214, 69, 69, 0.12);
+		border-radius: 3px;
+		color: var(--text-muted);
+		text-decoration: line-through;
+	}
+
+	// --- the two moments that close the improvement cycle -------------------
+	// Both are LIVE STATE pinned to the end of the conversation, not history,
+	// so they read as wider and warmer than the dashed system notices above.
+	&--moment {
+		align-self: stretch;
+		max-width: none;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		border-radius: var(--radius-lg);
+		background: var(--bg-card-solid);
+		border-color: var(--border-subtle);
+		box-shadow: var(--shadow-card);
+	}
+
+	&__prompt {
+		color: var(--text-primary);
+		line-height: 1.45;
+	}
+
+	// "Same is a real answer" — the sentence that keeps a re-rate from being a
+	// politeness tax. Never smaller than the prompt it qualifies.
+	&__free {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		line-height: 1.45;
+	}
+
+	&__gate {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+		flex-wrap: wrap;
+	}
+
+	// The proposal as it now stands, quoted where it is being weighed
+	&__proposal {
+		@include proposal-voice;
+
+		padding: var(--space-sm) var(--space-md);
+		background: var(--peer-tile);
+		border-radius: var(--radius-md);
+		color: var(--text-primary);
+		overflow-wrap: anywhere;
+	}
+
+	&--reweigh {
+		border-color: var(--border-lantern);
+	}
+
+	&--voted {
+		flex-direction: row;
+		align-items: center;
+		gap: var(--space-xs);
+		border-color: var(--success);
+		background: rgba(23, 128, 77, 0.1);
+
+		.chat-system__text {
+			color: var(--text-primary);
+		}
+	}
+
+	// The owner's news. The credit line names the classmate; the numbers stay
+	// the class's, so a fall never gets a name attached to it.
+	&--score {
+		border-color: var(--border-strong);
+
+		&.chat-system--down {
+			border-color: var(--warning);
+		}
+	}
+
+	&__credit {
+		color: var(--text-primary);
+		line-height: 1.45;
+	}
+
+	&__bridge {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
+		font-family: var(--font-display);
+		color: var(--peer-glow);
+		font-variant-numeric: tabular-nums;
+
+		// The game's currency, second to the class's own reading: same line,
+		// quieter, so the eye lands on the average first
+		&--aside {
+			font-size: var(--font-size-sm);
+			color: var(--text-secondary);
+		}
+	}
+
+	// How far it moved, said as a number rather than left to be worked out
+	// from the two ends of the range
+	&__delta {
+		padding: 1px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: rgba(23, 128, 77, 0.14);
+		color: var(--success);
+		font-size: var(--font-size-sm);
+
+		&--down {
+			background: rgba(185, 115, 0, 0.16);
+			color: var(--warning);
+		}
+	}
+
+	&__hint {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		line-height: 1.45;
+	}
+
+	&--roundtrip {
+		flex-direction: row;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		border-color: var(--mint-deep);
+		background: var(--bg-card-solid);
+
+		.chat-system__icon {
+			font-size: var(--font-size-xl);
+			line-height: 1;
+		}
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--text-primary);
+		letter-spacing: 0.04em;
+	}
+
+	// Points are good news — the one system line allowed a little warmth
+	// Points landing is the one system line allowed real colour, and it wears
+	// mint — the rationed "good things happened" hue (DESIGN.md §2)
+	&--award {
+		flex-direction: row;
+		align-items: center;
+		gap: var(--space-xs);
+		border-color: var(--mint-deep);
+		background: rgba(86, 223, 192, 0.16);
+
+		.chat-system__text {
+			color: var(--text-primary);
+			font-weight: 700;
+		}
+	}
+
+	@media (prefers-contrast: more) {
+		&__ins {
+			box-shadow: 0 0 0 2px var(--success);
+		}
+
+		&__del {
+			box-shadow: 0 0 0 2px var(--danger);
+		}
+	}
+
+}
+
+// --- Why is that button grey? One muted line under a disabled primary,
+// naming the condition that unlocks it. Never shown once it's armed. ---
+.action-hint {
+	margin-block-start: calc(var(--space-xs) * -1);
+	color: var(--text-muted);
+	font-size: var(--font-size-xs);
+	text-align: center;
+}
+
+// --- A way out that must NOT compete with the primary action: no button
+// chrome, no fill — the escape hatch reads as a link and sits apart. ---
+.text-link {
+	align-self: center;
+	background: none;
+	border: none;
+	padding: var(--space-xs) var(--space-sm);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	color: var(--text-secondary);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	cursor: pointer;
+	transition: color var(--motion-fast) ease;
+
+	&:hover,
+	&:focus-visible {
+		color: var(--text-primary);
+	}
+
+	&--quiet {
+		color: var(--text-muted);
+	}
+}
+
+// --- Travel splash: covers step/lap changes so a new place never hard-cuts
+// in. Tap anywhere to skip. ---
+.delib-splash {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--bg-overlay);
+	backdrop-filter: blur(3px);
+	animation: stage-transition-in var(--motion-base) ease both;
+	cursor: pointer;
+
+	&__card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-sm);
+		text-align: center;
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		padding: var(--space-xl) var(--space-2xl);
+		max-width: min(90vw, 420px);
+		animation: stage-transition-panel var(--motion-base) var(--ease-camera) both;
+	}
+
+	// The arrival card inherited the place banner's scene: this is the one
+	// moment the picture of a room is worth its pixels, because looking at it
+	// IS the whole job of the card
+	&__card--place {
+		padding-block-start: var(--space-md);
+		gap: var(--space-xs);
+	}
+
+	&__scene {
+		width: min(260px, 60vw);
+
+		svg {
+			display: block;
+			width: 100%;
+			height: auto;
+		}
+	}
+
+	// A drawn icon now, not a glyph: it rides inline with the name and takes
+	// the title's colour, the same rule every other icon in the app follows
+	&__icon {
+		display: inline-flex;
+		align-items: center;
+		margin-inline-end: var(--space-xs);
+		color: var(--lantern-glow);
+		vertical-align: middle;
+	}
+
+	&__title {
+		color: var(--text-primary);
+	}
+
+	&__sub {
+		color: var(--text-secondary);
+		max-width: 30ch;
+	}
+
+	&__steps {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-sm);
+	}
+
+	&__step {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		color: var(--text-muted);
+		font-family: var(--font-display);
+
+		&--first {
+			color: var(--lantern-glow);
+			font-weight: 700;
+		}
+	}
+
+	&__step-icon {
+		display: inline-flex;
+		align-items: center;
+		color: currentColor;
+	}
+
+	// The class-bridge pulse: the one live collective number in the game,
+	// spoken at the doorway between laps. Movement framing; a down-lap is a
+	// plain sentence with no number, no red, no culprit.
+	&__pulse {
+		margin-block-start: var(--space-sm);
+		font-weight: 700;
+		color: var(--text-primary);
+
+		&--steady {
+			font-weight: 400;
+			color: var(--text-secondary);
+		}
+	}
+
+	// The lap's opening question + the one button to the pen
+	&__intent {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-xs);
+	}
+
+	&__intent-line {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+
+	&__ask {
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--text-primary);
+	}
+}
+
+// --- The market's ask: the mission brief above the stalls — the same
+// question the improvement composer opens with, said where the work is. ---
+.market-ask {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	padding: var(--space-md);
+
+	&__question {
+		font-weight: 700;
+		color: var(--ink);
+	}
+
+	&__hint {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// --- My lantern: the proposal on the table as the hero object ---
+// Ownership grammar: BLUE = MINE, ORANGE = a CLASSMATE's.
+// The border-inline-start ribbon is the scannable cue (RTL-safe).
+.my-lantern {
+	border: 1px solid rgba(139, 107, 240, 0.45);
+	border-inline-start: 3px solid var(--mine);
+	box-shadow: 0 4px 16px rgba(139, 107, 240, 0.12);
+
+	&--theirs {
+		border-color: rgba(111, 103, 149, 0.45);
+		border-inline-start: 3px solid var(--peer);
+		box-shadow: 0 4px 16px rgba(111, 103, 149, 0.12);
+
+		.my-lantern__title {
+			color: var(--peer-glow);
+		}
+
+		.my-lantern__text {
+			padding-inline-start: var(--space-md);
+		}
+	}
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		margin-block-end: var(--space-sm);
+	}
+
+	&__icon {
+		display: flex;
+		line-height: 1;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+	}
+
+	&__edit {
+		margin-inline-start: auto;
+	}
+
+	// "You can edit anytime" — the editable-affordance whisper on MY card
+	&__hint {
+		margin-inline-start: auto;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+	}
+
+	// The loop closing for the owner: classmates re-rated after my edit.
+	// Aggregate only — the count celebrates motion without naming raters.
+	// Success green, NOT a camp color — camps never lend their hue.
+	&__moved {
+		align-self: flex-start;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: rgba(23, 128, 77, 0.1);
+		color: var(--success);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+
+		// The bridge dipped: muted amber, never danger-red — a dip is
+		// information for the next edit, not a punishment
+		&--down {
+			background: rgba(185, 115, 0, 0.12);
+			color: var(--text-primary);
+		}
+	}
+
+	&__text {
+		color: var(--text-primary);
+		font-size: var(--font-size-lg);
+		line-height: 1.6;
+	}
+
+	// The whole workshop under one gold frame: editor, forecast,
+	// suggestions, characters, needs — separated by faint dividers
+	&--workshop {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	// The always-editable proposal box — the live text, ready to be reworked
+	// PURPLE, because the words being typed into it are mine. The ownership
+	// law does not start applying once the text is saved: the field is the
+	// proposal, at the moment it is most obviously the student's own. A white
+	// field here was the one place on the writing desk where "this is yours"
+	// went unsaid — the whole screen exists to author one owned object, and
+	// that object was rendered as neutral paper.
+	//
+	// Registered as an on-dark surface in tokens.scss, so the placeholder,
+	// the caret and the border all re-derive rather than being hand-picked.
+	&__textarea {
+		// The words being typed ARE the proposal, so the box speaks in the
+		// same voice the finished sentence will be read in everywhere else
+		@include proposal-voice;
+
+		width: 100%;
+		background: var(--grad-mine-text);
+		border: 1.5px solid transparent;
+		border-radius: var(--radius-md);
+		box-shadow: var(--glow-lantern);
+		padding: var(--space-md);
+		color: #ffffff;
+		caret-color: #ffffff;
+		resize: vertical;
+		margin-block-end: var(--space-md);
+
+		// The prompt is the app talking, not the student — it stays light so
+		// the box does not look like it already has bold text in it
+		&::placeholder {
+			color: var(--text-muted);
+			font-weight: 400;
+		}
+
+		&:focus {
+			outline: none;
+			border-color: #ffffff;
+			box-shadow:
+				0 0 0 3px rgba(139, 107, 240, 0.35),
+				var(--glow-lantern);
+		}
+	}
+
+	// The button carries the state ("✓ saved" ↔ "update proposal") instead of
+	// an apology underneath it, so its label changes length — a fixed floor
+	// keeps the swap from twitching the layout under a reading thumb
+	&__save {
+		min-inline-size: 12rem;
+	}
+}

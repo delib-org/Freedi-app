@@ -1,0 +1,627 @@
+// World strip, journey strip, stage transitions, my screen, workbench
+//
+// Split out of the 8,474-line components.scss so a rule can be found, and so
+// dead rules can be seen. Imported by components.scss; do not import directly.
+
+// --- World strip: the era map crowns every in-game screen ---
+.world-strip {
+	height: clamp(96px, 20vw, 150px);
+	overflow: hidden;
+	border-block-end: 1px solid rgba(29, 85, 171, 0.35);
+	box-shadow: 0 6px 24px rgba(70, 45, 150, 0.18);
+
+	.era-map {
+		height: 100%;
+		border: none;
+		border-radius: 0;
+		box-shadow: none;
+
+		svg {
+			height: 100%;
+		}
+	}
+}
+
+/* --- The deliberation HUD: one dark bar where four light strips used to be.
+   Retired here on 2026-08-11: `.delib-banner` (a 180px decorative photograph
+   of the square, sitting above the work), `.cycle-strip` (lap pips + three
+   step chips) and `.place-banner` (scene + title + a line of prose) — plus
+   the journey strip, which the deliberation stage now suppresses. Together
+   they cost ~240px of a 844px phone screen to say "you are here" four times.
+
+   The HUD is the game frame: dark chrome at the top, bright playfield below.
+   That inversion is what makes it read as a game rather than a form — the
+   cards stop competing with the chrome for lightness and simply float on it.
+
+   Everything in it is a picture except the place's name: the crest, the lap
+   lanterns, the level track, the ratings you still owe, the draining fuse. --- */
+.delib-hud {
+	position: sticky;
+	inset-block-start: 0;
+	z-index: var(--z-header);
+	// Out past .shell__content's padding: the frame reaches the screen edges
+	// the way a game's HUD does, instead of floating as another card
+	margin: calc(var(--space-md) * -1) calc(var(--space-md) * -1) 0;
+	padding: var(--space-sm) var(--space-md) 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	overflow: hidden;
+	border-end-start-radius: var(--radius-lg);
+	border-end-end-radius: var(--radius-lg);
+	// WHITE, not purple. A full-width purple band at the top of every screen
+	// spent the app's one loud colour on furniture, and the dock spent it
+	// again at the bottom — by the time a student reached their own proposal,
+	// purple had stopped meaning anything. The HUD is white chrome now, and
+	// purple appears in it only where it carries state: the crest tile, the
+	// step you are standing on, and the road behind you.
+	background: var(--bg-card-solid);
+	border-block-end: 1px solid var(--border-subtle);
+	box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
+
+	// --- Row 1: crest, name, laps ---
+	&__top {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		min-width: 0;
+	}
+
+	// A squircle tile, not a circle: it is the same object as a classmate's
+	// number chip and a character's avatar, which is what makes the app feel
+	// like one system rather than a set of screens
+	&__crest {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 42px;
+		height: 42px;
+		border-radius: var(--radius-tile);
+		font-size: 1.3rem;
+		line-height: 1;
+		background: var(--grad-mine);
+		box-shadow: var(--glow-lantern);
+	}
+
+	// Holding a rendered object instead of a drawing. The tile goes away
+	// entirely: the object already IS violet and lit, and embossing violet
+	// into violet is what made this unreadable the first time it was tried.
+	// The drawing above keeps the tile — it is a white silhouette and has
+	// nothing to be seen against without one.
+	&__crest--render {
+		background: none;
+		box-shadow: none;
+	}
+
+	// The one piece of text in the whole HUD
+	&__title {
+		flex: 1 1 auto;
+		min-width: 0;
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 1.22rem;
+		line-height: 1.2;
+		color: var(--text-primary);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	// Laps as lanterns — this is the entire "round 2 of 4" sentence
+	&__laps {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+
+	&__lap {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+
+		// Laps behind you burn like little suns
+		&--done {
+			background: var(--mine);
+			border-color: var(--mine);
+		}
+
+		&--current {
+			background: var(--mint-deep);
+			border-color: var(--mint-deep);
+			box-shadow: 0 0 10px rgba(34, 182, 153, 0.5);
+			animation: era-map-marker-pulse 1.6s ease-in-out infinite;
+		}
+	}
+
+	// --- Row 2: the lap as a level track ---
+	&__path {
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		gap: 0;
+		padding-block-end: var(--space-xs);
+	}
+
+	&__stop {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 3px;
+		padding-inline: clamp(var(--space-sm), 5vw, var(--space-xl));
+
+		// The road between stops. Physical `left` on purpose: the track is a
+		// journey through the lap, and in RTL it must run right-to-left too —
+		// which it does, because the flex row itself is flipped.
+		&:not(:first-child)::before {
+			content: '';
+			position: absolute;
+			inset-block-start: 14px;
+			inset-inline-end: 50%;
+			width: 100%;
+			height: 3px;
+			border-radius: 2px;
+			background: var(--bg-inset);
+		}
+
+		&--done:not(:first-child)::before,
+		&--here:not(:first-child)::before {
+			background: var(--mine);
+		}
+	}
+
+	&__stop-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		// Sizes the ICON inside the disc, not text — it tracks the 32px token
+		// it lives in, so it is deliberately off the type scale
+		font-size: 0.9rem;
+		line-height: 1;
+		background: var(--bg-card-solid);
+		border: 2px solid var(--border-subtle);
+		color: var(--text-muted);
+		transition:
+			transform var(--motion-base) var(--ease-spring),
+			box-shadow var(--motion-base) ease;
+	}
+
+	// A step behind you: a filled token on the road
+	&__stop--done &__stop-icon {
+		background: var(--peer-tile);
+		border-color: var(--mine);
+		color: var(--mine-ink);
+		font-weight: 700;
+	}
+
+	// Where you are standing: bigger, lit, and the only thing on the track
+	// that moves
+	&__stop--here &__stop-icon {
+		transform: scale(1.3);
+		background: var(--grad-mine);
+		border-color: transparent;
+		color: #ffffff;
+		box-shadow:
+			0 0 0 4px rgba(139, 107, 240, 0.18),
+			var(--glow-lantern);
+	}
+
+	&__stop--todo &__stop-icon {
+		opacity: 0.5;
+		filter: grayscale(0.6);
+	}
+
+	// A stop holding a rendered object rather than a drawing. The pill stays —
+	// it is the track's furniture and the object sits INSIDE it — but it can
+	// never go violet, at any state, because the object is already violet.
+	// Declared after the state rules on purpose: same specificity, later wins.
+	&__stop-icon--render {
+		background: var(--bg-card-solid);
+		color: inherit;
+	}
+
+	&__stop--here &__stop-icon--render {
+		background: var(--bg-card-solid);
+		border-color: var(--mine);
+	}
+
+	&__stop--done &__stop-icon--render {
+		background: var(--peer-tile);
+	}
+
+	// A place still ahead of you. The drawing is desaturated to say "not yet",
+	// but desaturating a lit object just makes it look muddy — a render says
+	// the same thing by standing further back.
+	&__stop--todo &__stop-icon--render {
+		opacity: 0.45;
+		filter: none;
+	}
+
+	// What this lap still owes, parked under the step that asks for it
+	&__quota {
+		display: flex;
+		gap: 4px;
+		margin-block-start: 4px;
+	}
+
+	&__quota-pip {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--bg-inset);
+		transition: background var(--motion-base) ease;
+
+		&--done {
+			background: var(--mint-deep);
+		}
+	}
+
+	// --- The fuse: scenery until it isn't ---
+	&__fuse {
+		position: relative;
+		height: 4px;
+		margin-inline: calc(var(--space-md) * -1);
+		background: var(--bg-inset);
+	}
+
+	&__fuse-burn {
+		height: 100%;
+		background: linear-gradient(90deg, var(--mint-deep), var(--mint));
+		transition: width 1s linear;
+	}
+
+	// Amber, not danger-red: the clock completes, it does not detonate.
+	// Time pressure is the enemy of the careful weaving the game exists for,
+	// so the last minutes shift tone the way the ratings-moved dip does —
+	// warmer, never alarming.
+	&__fuse--urgent &__fuse-burn {
+		background: var(--amber);
+	}
+
+	// Digits only in the last two minutes — a clock you can't do anything
+	// about is noise, a clock about to run out deserves plain digits (no
+	// pulse: a throbbing number over a student mid-sentence is a siren).
+	// --text-primary, not --warning: warning copy fails AA on this ground
+	// (the token's own contract) — the amber BAR carries the tone.
+	&__fuse-time {
+		position: absolute;
+		inset-block-end: 6px;
+		inset-inline-end: var(--space-md);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+	}
+
+	// A write still in the air after eight seconds. Stated, not alarmed: the
+	// work is not lost and usually arrives, so this reads as a status line
+	// rather than an error. --text-primary for the same reason the fuse digits
+	// use it — warning copy fails AA on this ground.
+	&__stalled {
+		padding: var(--space-xs) var(--space-md);
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		color: var(--text-primary);
+		text-align: center;
+	}
+}
+
+@media (max-width: 380px) {
+	.delib-hud__title {
+		font-size: var(--font-size-base);
+	}
+}
+
+// --- Journey strip: the whole journey as stations, the current one lit.
+// Persistent on every stage — the game's "you are here". ---
+// Exception: a full-bleed narrative scene owns the whole screen. Dark chrome
+// over a photograph is unreadable anyway, and the scene's own story bars say
+// where you are. The strip returns the moment the scene run ends.
+.game:has(.scene--immersive) .journey-strip {
+	display: none;
+}
+
+.journey-strip {
+	position: relative;
+	z-index: var(--z-content);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-xs);
+	max-width: 720px;
+	margin: var(--space-sm) auto 0;
+	padding: var(--space-xs) var(--space-md);
+
+	&__station {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+
+		// The road between stations
+		&:not(:first-child)::before {
+			content: '';
+			width: clamp(8px, 3vw, 26px);
+			height: 2px;
+			border-radius: 1px;
+			background: var(--border-strong);
+			margin-inline-end: var(--space-xs);
+		}
+
+		&--done:not(:first-child)::before,
+		&--current:not(:first-child)::before {
+			background: var(--lantern);
+		}
+	}
+
+	&__dot {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		// The station numeral inside a 30px disc — a mark, and the lit label
+		// beside it is what actually names the station
+		@include type-meta;
+
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		background: var(--bg-card-solid);
+		border: 1.5px solid var(--border-strong);
+		line-height: 1;
+	}
+
+	&__station--done &__dot {
+		background: rgba(139, 107, 240, 0.12);
+		border-color: var(--lantern);
+		color: var(--lantern-glow);
+		font-weight: 700;
+	}
+
+	&__station--current &__dot {
+		border-color: var(--lantern);
+		box-shadow:
+			0 0 0 3px rgba(139, 107, 240, 0.2),
+			var(--glow-marker);
+		animation: era-map-marker-pulse 1.8s ease-in-out infinite;
+	}
+
+	&__station--pending &__dot {
+		opacity: 0.55;
+		filter: grayscale(0.7);
+	}
+
+	&__label {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+		color: var(--lantern-glow);
+		white-space: nowrap;
+	}
+
+	// Station names for screen readers only (sighted users read the lit label)
+	&__sr {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+}
+
+@media (max-width: 480px) {
+	.journey-strip__dot {
+		// Only the disc tightens on a narrow phone; the numeral inside it is
+		// already on the meta rung and has nowhere left to go
+		width: 26px;
+		height: 26px;
+	}
+}
+
+// --- Stage transition: the camera move between journey legs — the era map
+// settling from a wide shot while the destination announces itself ---
+.stage-transition {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background:
+		radial-gradient(
+			ellipse 120% 70% at 50% -10%,
+			var(--bg-page-high) 0%,
+			var(--bg-page) 55%,
+			var(--bg-page) 100%
+		),
+		var(--bg-page);
+	animation: stage-transition-in var(--motion-slow) var(--ease-camera) both;
+	transition: opacity 400ms ease;
+
+	&--leaving {
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	&__map {
+		position: absolute;
+		inset: 0;
+		opacity: 0.5;
+		animation: stage-transition-camera var(--motion-camera) var(--ease-camera) both;
+
+		.era-map,
+		.era-map svg {
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	&__panel {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-sm);
+		text-align: center;
+		padding: var(--space-lg) var(--space-xl);
+		background: var(--bg-card);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		backdrop-filter: blur(6px);
+		animation: stage-transition-panel var(--motion-slow) var(--ease-camera) 200ms both;
+	}
+
+	// Holds either register: the rendered object for the stages sheet 1
+	// covered, the drawing for the rest. The colour only reaches the drawing —
+	// a render carries its own — so the two read as the same weight.
+	&__icon {
+		display: flex;
+		line-height: 1;
+		color: var(--mine-strong);
+	}
+
+	&__title {
+		color: var(--text-primary);
+	}
+
+	&__line {
+		color: var(--text-secondary);
+		max-width: 34ch;
+	}
+}
+
+@keyframes stage-transition-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes stage-transition-camera {
+	from {
+		transform: scale(1.18) translateY(-3%);
+	}
+	to {
+		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes stage-transition-panel {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+// --- Place banner: each deliberation step is a LOCATION with its own scene.
+// mine = my workbench, rate = the square, help = a classmate's stand.
+// Peripheral vision alone should answer "where am I?". ---
+// `.place-banner` retired 2026-08-11 — see the .delib-hud block above. Its
+// scene lives on the arrival splash now (.delib-splash__scene), which is
+// where a picture of a room actually belongs: the moment you walk into it.
+
+// --- My screen: the workshop as a plain column of drawers ---
+// No frame around the stack. Every drawer below is already a card, and a box
+// drawn around a column of boxes spends a screen edge saying "these belong
+// together" — which the active tab and the title already say.
+.my-screen {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+
+	// The sentence gets the full width, and the way into it sits under it.
+	// Side by side, the button ate a third of the measure and squeezed a
+	// paragraph-length proposal into a six-line ribbon — the student's own
+	// words are the content here, so they are what the row is spent on.
+	&__head {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--space-sm);
+	}
+
+	// The proposal itself heads the screen, so it takes the proposal voice —
+	// the same 18px/700 it wears in the dock, in a stall and in a quote
+	&__title {
+		margin: 0;
+		@include proposal-voice;
+
+		flex: 1 1 auto;
+		min-width: 0;
+		color: var(--text-primary);
+	}
+
+	// A secondary button on purpose: the pen is not what this screen is FOR,
+	// it is what the screen sends you to
+	&__edit {
+		flex: 0 0 auto;
+		align-self: flex-end;
+		padding: 6px var(--space-md);
+	}
+}
+
+// --- Workbench: the workshop card's parts as labeled drawers. Each section
+// carries an icon chip + a real title, so the board reads as distinct tools
+// instead of a flat stack behind hairlines. ---
+.workbench__section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	padding: var(--space-md);
+
+	// The editor is the primary zone: white, wearing the mine-purple frame —
+	// the textarea and its ONE button visibly belong to each other
+	&--edit {
+		background: var(--bg-card-solid);
+		border-color: rgba(139, 107, 240, 0.4);
+		box-shadow: inset 0 0 0 1px rgba(139, 107, 240, 0.1);
+
+		.my-lantern__textarea {
+			margin-block-end: 0;
+		}
+	}
+
+	// Quiet footer drawer (the needs reminder brings its own toggle)
+	&--plain {
+		background: transparent;
+		border-style: dashed;
+	}
+}
+
+.workbench__head {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+
+	// As an accordion handle the head is a real button — full-width, so the
+	// whole strip is the hit target, but wearing no button chrome
+	&--button {
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+}

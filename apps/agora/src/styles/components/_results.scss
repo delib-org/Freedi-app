@@ -1,0 +1,845 @@
+// Results, helpers scoreboard, health metrics, topic editor, toasts, inbox
+//
+// Split out of the 8,474-line components.scss so a rule can be found, and so
+// dead rules can be seen. Imported by components.scss; do not import directly.
+
+// --- Results ---
+.results {
+	&__score-panel {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-md);
+	}
+
+	&__total {
+		font-family: var(--font-display);
+		font-size: 4rem;
+		line-height: 1;
+		direction: ltr;
+
+		&--success {
+			color: var(--success);
+		}
+
+		&--failure {
+			color: var(--danger);
+		}
+
+		// Honest disagreement — a dignified twilight, neither triumph nor ruin
+		&--honest {
+			color: var(--lantern-glow);
+		}
+	}
+
+	&__outcome-label {
+		font-family: var(--font-display);
+		color: var(--text-secondary);
+		text-align: center;
+	}
+
+	&__debrief-heading {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+	}
+
+	&__debrief-list {
+		margin: 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		color: var(--text-primary);
+	}
+
+	&__debrief-encouragement {
+		color: var(--text-secondary);
+		font-style: italic;
+		text-align: center;
+	}
+
+	&__breakdown {
+		display: flex;
+		gap: var(--space-xl);
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	&__part {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__part-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--lantern-glow);
+	}
+
+	&__part-label {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	// --- The recap's two halves ------------------------------------------------
+	// The lesson ends with two different answers to "how did we do", and they
+	// are not the same question: the class map answers it about the PROPOSALS,
+	// and the helpers board answers it about the PEOPLE. Stacking them made the
+	// second one the thing you reach by scrolling past the first — so they are
+	// two places now, and the switch is the door between them.
+	//
+	// Same shape as the deliberation's bottom nav: a segmented pair where the
+	// one you are on is the filled purple tile. Purple on chrome = "this
+	// control is active" (see the top of tokens.scss), never "this is mine".
+	&__switch {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-xs);
+		padding: var(--space-xs);
+		background: var(--bg-inset);
+		border-radius: var(--radius-lg);
+	}
+
+	&__switch-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		min-height: 48px;
+		padding: var(--space-sm) var(--space-sm);
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-md);
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) var(--ease-camera),
+			color var(--motion-fast) var(--ease-camera),
+			transform var(--motion-fast) var(--ease-camera);
+
+		&:active {
+			transform: scale(0.97);
+		}
+
+		// --grad-mine-aa, not --grad-mine-text: this label is a new white run on
+		// a new purple surface, and the text ramp's top stop is 3.85:1
+		&[aria-selected='true'] {
+			background: var(--grad-mine-aa);
+			color: var(--text-on-lantern);
+			box-shadow: var(--glow-lantern);
+		}
+	}
+
+	// How many thank-yous are waiting behind the door, so the helpers half is
+	// something a student chooses rather than something they discover
+	&__switch-count {
+		@include type-meta;
+
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 22px;
+		padding: 0 6px;
+		border-radius: var(--radius-full);
+		background: var(--peer-tile);
+		color: var(--peer-glow);
+		font-variant-numeric: tabular-nums;
+
+		// A white pill with purple ink, not white-on-a-white-veil: a 24% veil
+		// over the selected tile is 2.68:1, and a count is exactly the kind of
+		// 13px run that cannot afford it
+		.results__switch-btn[aria-selected='true'] & {
+			background: var(--bg-card-solid);
+			color: var(--mine-ink);
+		}
+	}
+}
+
+// --- The helpers scoreboard ----------------------------------------------------
+// The class map ranks PROPOSALS, which means a student who spent the whole
+// hour improving other people's texts appears on it only through somebody
+// else's point. This board is theirs, and it is built like the scoreboard at
+// the end of a game on purpose: a crest, three columns, a medal on the top
+// three.
+//
+// Everyone is on it, zeros included. A name missing from a list reads as an
+// absence; a name on it with a 0 reads as a starting line — and the row above
+// it says exactly what filling that 0 takes.
+.helpers-board {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	// Room for the crest, which hangs over the top edge
+	margin-block-start: 22px;
+	padding: var(--space-xl) var(--space-md) var(--space-md);
+	background:
+		radial-gradient(120% 90% at 50% 0%, var(--wash-mine-high), transparent 70%),
+		var(--bg-card-solid);
+	border: 2px solid var(--border-lantern);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+
+	// Latin numerals inside an RTL table: without the isolate a rank and a
+	// score swap ends in Hebrew and Arabic
+	&__num {
+		direction: ltr;
+		unicode-bidi: isolate;
+		font-variant-numeric: tabular-nums;
+	}
+
+	// The title, sitting ON the frame rather than inside it — the one move
+	// that makes a panel read as a trophy plate instead of a table with a
+	// heading. Centred with `inset-inline: 0` + flex rather than a translate,
+	// so it does not need a second rule in RTL.
+	&__crest {
+		position: absolute;
+		inset-block-start: -22px;
+		inset-inline: 0;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	&__crest-pill {
+		padding: var(--space-sm) var(--space-lg);
+		background: var(--grad-mine-aa);
+		border: 2px solid var(--bg-card-solid);
+		border-radius: var(--radius-full);
+		box-shadow: var(--glow-lantern);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		white-space: nowrap;
+	}
+
+	// The one number that belongs to the class rather than to anyone in it
+	&__tally {
+		font-family: var(--font-display);
+		font-size: var(--font-size-2xl);
+		line-height: 1;
+		color: var(--peer-glow);
+	}
+
+	&__sub,
+	&__empty {
+		max-width: 40ch;
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		line-height: 1.45;
+		text-align: center;
+	}
+
+	// A grid, not a <table>. The reference IS a table, but a real one costs the
+	// two things this board is made of: a `tr` does not paint a box-shadow in
+	// any engine (so the ring around my own row cannot be drawn) and a `td` set
+	// to flex stops being a cell. Every row already carries its whole sentence
+	// as an aria-label, so nothing is owed to the semantics either.
+	&__table {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-sm);
+	}
+
+	// One template, shared by the key strip and every row — the columns line up
+	// because they are the same declaration, not because two numbers agree
+	&__cols,
+	&__row {
+		display: grid;
+		grid-template-columns: 3.25rem minmax(0, 1fr) 3.5rem;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__cols {
+		padding: 0 var(--space-sm) var(--space-xs);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__col {
+		color: var(--text-muted);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		text-align: start;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+
+		&--rank {
+			text-align: center;
+		}
+
+		&--score {
+			text-align: end;
+		}
+	}
+
+	&__rows {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	// The banded rows of the reference scoreboard, in this app's colours: a
+	// breath of purple wash rather than a second blue. Bands are what let a
+	// thumb track one row across three columns on a 390px screen.
+	&__row {
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-md);
+		background: var(--bg-card-solid);
+
+		&:nth-child(even) {
+			background: var(--wash-mine-high);
+		}
+
+		// The mine grammar, the same as everywhere else in the game
+		&--mine {
+			background: var(--wash-mine-high);
+			box-shadow: inset 0 0 0 2px var(--lantern);
+
+			.helpers-board__name {
+				color: var(--mine-ink);
+				font-weight: 700;
+			}
+
+			.helpers-board__score {
+				color: var(--mine-ink);
+			}
+		}
+
+	}
+
+	// The live recognition wall: the class as a constellation. Everyone is a
+	// chip in roster order; a landed idea LIGHTS the chip. No ranks, no
+	// per-person numbers, and an unlit chip is a starting line, not a deficit.
+	&__wall {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-sm);
+		padding: 0;
+		margin: var(--space-md) 0 0;
+		list-style: none;
+	}
+
+	&__wall-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: 999px;
+		border: 1px solid var(--border-subtle);
+		background: var(--bg-card-solid);
+		opacity: 0.62;
+
+		&--lit {
+			opacity: 1;
+			border-color: rgba(255, 210, 63, 0.7);
+			box-shadow: 0 0 10px rgba(255, 210, 63, 0.35);
+		}
+
+		&--mine {
+			border-color: rgba(139, 107, 240, 0.6);
+		}
+	}
+
+	&__wall-name {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+	}
+
+	&__wall-mark {
+		display: inline-flex;
+		align-items: center;
+		color: var(--lantern-glow);
+	}
+
+	&__rank {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__rank-num {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+	}
+
+	&__who {
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	// The playful half: a squircle in one of the eight identity hues, carrying
+	// the first letter of the anon name. See the ramp in tokens.scss — the hue
+	// is hashed off the uid, so it is the same circle before and after the
+	// standings move.
+	&__avatar {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: var(--radius-tile);
+		font-family: var(--font-display);
+		// Two letters, not one: the anon-name generator varies the adjective
+		// first, so a class of nine is nine different "lanterns" and a single
+		// initial drew nine identical circles. Two fit at the sm rung.
+		font-size: var(--font-size-sm);
+		letter-spacing: -0.02em;
+		line-height: 1;
+
+		// The one purple circle on the board. --grad-mine-selected opens on
+		// --mine-light, which is 2.7:1 under a white letter.
+		&--mine {
+			background: var(--grad-mine-aa);
+			box-shadow: var(--glow-lantern);
+		}
+
+		&--who-1 { background: var(--who-1); }
+		&--who-2 { background: var(--who-2); }
+		&--who-3 { background: var(--who-3); }
+		&--who-4 { background: var(--who-4); }
+		&--who-5 { background: var(--who-5); }
+		&--who-6 { background: var(--who-6); }
+		&--who-7 { background: var(--who-7); }
+		&--who-8 { background: var(--who-8); }
+	}
+
+	&__name {
+		min-width: 0;
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		overflow-wrap: anywhere;
+	}
+
+	&__score {
+		text-align: end;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--peer-glow);
+	}
+}
+
+// --- Health metrics ---
+.metric {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+
+	&__head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+
+	&__label {
+		color: var(--text-primary);
+	}
+
+	&__delta {
+		font-family: var(--font-display);
+		direction: ltr;
+
+		&--up { color: var(--success); }
+		&--down { color: var(--danger); }
+	}
+
+	&__track {
+		position: relative;
+		height: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__fill {
+		height: 100%;
+		background: linear-gradient(90deg, var(--lantern-deep), var(--success));
+		border-radius: var(--radius-full);
+		transition: width var(--motion-camera) var(--ease-camera);
+
+		&--down {
+			background: linear-gradient(90deg, #a5303f, var(--danger));
+		}
+	}
+
+	&__baseline {
+		position: absolute;
+		top: -2px;
+		bottom: -2px;
+		width: 2px;
+		background: var(--parchment-dim);
+		opacity: 0.8;
+	}
+
+	&__narrative {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// --- Topic editor ---
+.editor {
+	&__row {
+		display: flex;
+		gap: var(--space-md);
+		align-items: center;
+
+		.text-input {
+			flex: 1;
+		}
+	}
+
+	&__field {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__file {
+		color: var(--text-secondary);
+
+		&::file-selector-button {
+			background: transparent;
+			color: var(--text-primary);
+			border: 1px solid var(--border-strong);
+			border-radius: var(--radius-md);
+			padding: 0.5em 1.2em;
+			cursor: pointer;
+			margin-inline-end: var(--space-sm);
+		}
+	}
+
+	&__image-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__image-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__image-thumb {
+		width: 96px;
+		height: 96px;
+		object-fit: cover;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-subtle);
+	}
+}
+
+// --- Toasts ---
+// --- The post box: the envelope in the HUD, its counter, and the sheet ---
+.inbox-button {
+	position: relative;
+	// The far end of the crest row — the corner opposite the place's name
+	margin-inline-start: auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	border: 1px solid var(--border-subtle);
+	// The HUD is WHITE chrome (see .delib-hud), so the envelope takes the
+	// app's purple ink on a pale inset — it was drawn white-on-white, which
+	// left an empty circle wearing a badge
+	background: var(--bg-inset);
+	color: var(--mine-ink);
+	cursor: pointer;
+	transition: background-color var(--motion-fast) ease;
+
+	&:hover {
+		background: rgba(139, 107, 240, 0.16);
+	}
+
+	&__badge {
+		position: absolute;
+		inset-block-start: -4px;
+		inset-inline-end: -4px;
+		min-width: 19px;
+		height: 19px;
+		padding: 0 5px;
+		border-radius: 999px;
+		// Danger-red is the app's notification colour and never a camp hue
+		background: var(--danger);
+		color: #ffffff;
+		font-family: var(--font-display);
+		font-size: 0.72rem;
+		font-weight: 700;
+		line-height: 19px;
+		text-align: center;
+	}
+}
+
+.inbox__scrim {
+	position: fixed;
+	inset: 0;
+	z-index: calc(var(--z-toast) - 1);
+	background: var(--bg-overlay);
+}
+
+.inbox {
+	position: fixed;
+	inset-block-start: calc(var(--space-md) + 52px);
+	inset-inline-end: var(--space-md);
+	z-index: var(--z-toast);
+	width: min(92vw, 380px);
+	max-height: min(70vh, 520px);
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-raised);
+	overflow: hidden;
+
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		border-block-end: 1px solid var(--border-subtle);
+	}
+
+	&__title {
+		flex: 1 1 auto;
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--ink);
+	}
+
+	&__clear {
+		flex: 0 0 auto;
+		padding: 4px var(--space-sm);
+		border: none;
+		border-radius: 999px;
+		background: none;
+		color: var(--text-secondary);
+		font: inherit;
+		font-size: var(--font-size-xs);
+		text-decoration: underline;
+		cursor: pointer;
+
+		&:hover {
+			color: var(--ink);
+		}
+	}
+
+	&__close {
+		flex: 0 0 auto;
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 50%;
+		background: var(--bg-inset);
+		color: var(--ink);
+		font-size: 1.1rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	&__list {
+		overflow-y: auto;
+	}
+
+	&__row {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		width: 100%;
+		padding: var(--space-md);
+		border: none;
+		border-block-end: 1px solid var(--border-subtle);
+		background: none;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+
+		&--flat {
+			cursor: default;
+		}
+
+		// Not yet looked at: a warm wash, never a red one — this is news, and
+		// most of it is good news
+		&--unread {
+			background: rgba(255, 210, 63, 0.14);
+		}
+
+		&:last-child {
+			border-block-end: none;
+		}
+	}
+
+	&__icon {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--mine-ink);
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__line {
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	// The words the event carried, one line of them
+	&__detail {
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__meta {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--danger);
+	}
+
+	&__time {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+	}
+
+	&__empty {
+		padding: var(--space-lg) var(--space-md);
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		text-align: center;
+	}
+}
+
+// The light emphasis a deep link leaves on whatever it landed on: a soft ring
+// that breathes twice and goes. Loud enough to find, quiet enough not to alarm.
+.is-emphasised {
+	animation: agora-emphasis 1.3s ease-out 2;
+	border-radius: var(--radius-md);
+}
+
+@keyframes agora-emphasis {
+	0% {
+		box-shadow: 0 0 0 0 rgba(255, 210, 63, 0.7);
+	}
+	70% {
+		box-shadow: 0 0 0 10px rgba(255, 210, 63, 0);
+	}
+	100% {
+		box-shadow: 0 0 0 0 rgba(255, 210, 63, 0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.is-emphasised {
+		animation: none;
+		box-shadow: 0 0 0 3px rgba(255, 210, 63, 0.75);
+	}
+}
+
+.toast-stack {
+	position: fixed;
+	// Clear of the HUD: a toast that lands on the crest row covers the lap
+	// pips and the post box — the two things it is telling you to go and use
+	top: calc(var(--space-md) + 64px);
+	inset-inline-end: var(--space-md);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	z-index: var(--z-toast);
+	max-width: min(90vw, 360px);
+}
+
+.toast {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-lantern);
+	border-radius: var(--radius-md);
+	padding: var(--space-sm) var(--space-md);
+	box-shadow: var(--glow-lantern);
+	cursor: pointer;
+	animation: toast-in var(--motion-base) var(--ease-spring) both;
+
+	&__glow {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		background: radial-gradient(circle, #fff 0%, var(--lantern-glow) 50%, transparent 75%);
+		animation: era-map-marker-pulse 1.6s ease-in-out infinite;
+	}
+
+	&__text {
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+	}
+
+	// A toast that TAKES you somewhere wears the invitation: peer orange
+	// (the feedback came from a classmate) and a lift on hover. It is a real
+	// <button>, so the browser's own button styling has to be undone here
+	// and the focus ring made unmistakable — this is the loop's step 1 and
+	// keyboard users must be able to find and press it.
+	&--action {
+		border-color: var(--peer);
+		box-shadow: 0 6px 18px rgba(111, 103, 149, 0.28);
+		font: inherit;
+		text-align: start;
+		width: 100%;
+
+		&:hover {
+			transform: translateY(-2px);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--peer);
+			outline-offset: 2px;
+		}
+
+		.toast__glow {
+			background: radial-gradient(circle, #fff 0%, var(--peer-glow) 50%, transparent 75%);
+		}
+	}
+}
+
+@keyframes toast-in {
+	from { opacity: 0; transform: translateY(-14px) scale(0.92); }
+	to { opacity: 1; transform: translateY(0) scale(1); }
+}

@@ -1,0 +1,2261 @@
+// Points pill, the support chart, RTL typography, the personal ledger
+//
+// Split out of the 8,474-line components.scss so a rule can be found, and so
+// dead rules can be seen. Imported by components.scss; do not import directly.
+
+// --- Points pill ---
+.points-pill {
+	display: inline-flex;
+	align-items: baseline;
+	gap: var(--space-xs);
+	background: var(--bg-inset);
+	border: 1px solid var(--border-lantern);
+	border-radius: var(--radius-full);
+	padding: 0.2em 0.9em;
+	transition: box-shadow var(--motion-base) ease;
+
+	&--ticking {
+		box-shadow: var(--glow-lantern);
+	}
+
+	&__value {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+		font-size: var(--font-size-lg);
+	}
+
+	&__label {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+}
+
+// ============================================================================
+// ScoreHUD v3 — "The Day Board Over the Square" (festival scoreboard)
+// The night board re-skinned for Festival Day: a warm-white plate with a
+// light metal bezel, sitting IN the sunny page instead of hanging over it.
+// Component-scoped palette; the --camp/--text/--bg token SHADOWS below are
+// the master lever that re-skins every descendant (chart, detail card,
+// reused .scoreboard__camp* internals) without touching their rules.
+// Global tokens untouched.
+// ============================================================================
+.scorehud {
+	// --- board surfaces (warm daylight plate) ---
+	--board-bg: #fdfbf4;
+	--board-bg-hi: #ffffff;
+	--board-row: #f1ecdd;
+	--board-row-hi: #faf7ec;
+	// --- bezel metal (light brushed metal) ---
+	--board-bezel-hi: #ffffff;
+	--board-bezel: #c3c9da;
+	--board-bezel-lo: #97a0b8;
+	// --- ink ---
+	--board-text: #253352;
+	--board-text-dim: #5e6f8c;
+	// --- gold accent: text-safe dark gold on light surfaces ---
+	--board-gold: #9c6a00;
+	--board-gold-deep: #b97300;
+	// --- chip anchors (carry white numerals — AA verified at the anchor) ---
+	--board-chip-left: #e0873c;
+	--board-chip-right: #0c7d6f;
+	// --- AA variants (graphics & camp text on the light board) ---
+	--board-camp-left-bright: #6a34ab;
+	--board-camp-right-bright: #0b7568;
+	--board-camp-center-bright: #4d5c8f;
+	--board-mine-bright: #1d55ab;
+	--board-up: #17804d;
+
+	// Scoped shadows of the global tokens every descendant consumes
+	--camp-left: var(--board-camp-left-bright);
+	--camp-right: var(--board-camp-right-bright);
+	--camp-center: var(--board-camp-center-bright);
+	--camp-left-glow: var(--board-camp-left-bright);
+	--camp-right-glow: var(--board-camp-right-bright);
+	--mine: var(--board-mine-bright);
+	--mine-glow: var(--board-mine-bright);
+	--lantern: var(--board-gold);
+	--lantern-glow: var(--board-gold);
+	--success: var(--board-up);
+	--text-primary: var(--board-text);
+	--text-secondary: var(--board-text-dim);
+	--text-muted: var(--board-text-dim);
+	--bg-inset: rgba(83, 60, 160, 0.07);
+	--border-subtle: rgba(70, 45, 150, 0.12);
+	--border-strong: rgba(70, 45, 150, 0.3);
+	--border-lantern: rgba(185, 115, 0, 0.5);
+	--glow-lantern: 0 4px 18px rgba(185, 115, 0, 0.25);
+	--glow-marker: 0 0 12px rgba(185, 115, 0, 0.4);
+
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	padding: var(--space-md);
+	border-radius: var(--radius-lg);
+	// metallic bezel: gradient border via the two-layer background-clip trick
+	border: 3px solid transparent;
+	background:
+		linear-gradient(180deg, var(--board-bg-hi) 0%, var(--board-bg) 26%, var(--board-bg) 100%)
+			padding-box,
+		linear-gradient(
+				160deg,
+				var(--board-bezel-hi) 0%,
+				var(--board-bezel) 28%,
+				var(--board-bezel-lo) 55%,
+				var(--board-bezel) 78%,
+				var(--board-bezel-hi) 100%
+			)
+			border-box;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.8),
+		inset 0 -1px 0 rgba(70, 45, 150, 0.08),
+		0 10px 28px rgba(70, 45, 150, 0.16);
+	color: var(--board-text);
+
+	&--goal {
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.8),
+			inset 0 -1px 0 rgba(70, 45, 150, 0.08),
+			0 10px 28px rgba(70, 45, 150, 0.16),
+			var(--glow-lantern);
+	}
+
+	// --- hero: banners + score plate + light-tube meter ---
+	&__class {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__header {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-sm);
+	}
+
+	// Painted-metal camp ribbons (vertical gradients — direction-free)
+	&__banner {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		padding: var(--space-xs) var(--space-sm);
+		border: 2px solid transparent;
+		border-radius: var(--radius-sm);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: #fff;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.35),
+			inset 0 -2px 4px rgba(0, 0, 0, 0.35),
+			0 3px 8px rgba(0, 0, 0, 0.4);
+
+		&--left {
+			background:
+				linear-gradient(180deg, #a875e8 0%, #e0873c 30%, #6a34ab 100%) padding-box,
+				linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
+		}
+
+		&--right {
+			background:
+				linear-gradient(180deg, #17b7a4 0%, #0c7d6f 35%, #0b5f55 100%) padding-box,
+				linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
+		}
+	}
+
+	// Glossy black score plate with inner bevel + static specular sheen
+	&__plate {
+		position: relative;
+		flex: 0 1 auto;
+		min-width: 9.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: var(--space-xs) var(--space-md);
+		border: 2px solid transparent;
+		border-radius: var(--radius-md);
+		background:
+			linear-gradient(180deg, var(--board-row-hi) 0%, var(--board-row) 55%, var(--board-bg) 100%)
+				padding-box,
+			linear-gradient(180deg, var(--board-bezel-hi), var(--board-bezel-lo)) border-box;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.7),
+			inset 0 -6px 12px rgba(70, 45, 150, 0.08);
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0 0 50% 0;
+			border-radius: inherit;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+			pointer-events: none;
+		}
+	}
+
+	&__class-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--board-text-dim);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+
+		.scorehud--record & {
+			color: var(--board-gold);
+		}
+	}
+
+	&__class-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-3xl);
+		line-height: 1;
+		color: var(--board-text);
+		font-variant-numeric: tabular-nums;
+
+		.scorehud--goal & {
+			color: var(--board-gold);
+		}
+	}
+
+	&__class-max {
+		font-size: var(--font-size-lg);
+		opacity: 0.55;
+	}
+
+	&__class-dash {
+		color: var(--board-text-dim);
+	}
+
+	&__delta {
+		display: inline-block;
+		margin-inline-start: var(--space-xs);
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		color: var(--success);
+		animation: scorehud-delta 1.2s var(--ease-camera) both;
+	}
+
+	// The meter: light trench, saturated camp gradient, gold goal flag
+	&__meter {
+		position: relative;
+		display: flex;
+		height: 16px;
+		background: #dce4f0;
+		border-radius: var(--radius-full);
+		padding: 2px;
+		box-shadow:
+			inset 0 2px 6px rgba(70, 45, 150, 0.25),
+			inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+		// room for the goal flag + number below
+		margin-block-end: var(--space-md);
+	}
+
+	&__meter-fill {
+		position: relative;
+		height: 100%;
+		min-width: 10px;
+		border-radius: var(--radius-full);
+		background: linear-gradient(
+			90deg,
+			var(--board-camp-left-bright),
+			var(--board-camp-right-bright)
+		);
+		box-shadow:
+			0 0 10px rgba(106, 52, 171, 0.3),
+			0 0 16px rgba(11, 117, 104, 0.25);
+		transition: width var(--motion-slow) var(--ease-camera);
+
+		[dir='rtl'] & {
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-right-bright),
+				var(--board-camp-left-bright)
+			);
+		}
+
+		.scorehud--goal & {
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-left-bright),
+				var(--board-camp-right-bright),
+				var(--board-gold-deep)
+			);
+			box-shadow: 0 0 14px rgba(185, 115, 0, 0.45);
+
+			[dir='rtl'] & {
+				background: linear-gradient(
+					90deg,
+					var(--board-gold-deep),
+					var(--board-camp-right-bright),
+					var(--board-camp-left-bright)
+				);
+			}
+		}
+	}
+
+	// record-broken shimmer sweeps the fill once
+	&--record &__meter-fill::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: linear-gradient(
+			105deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.65),
+			transparent 70%
+		);
+		animation: scorehud-shimmer var(--motion-camera) var(--ease-camera) both;
+	}
+
+	&__meter-spark {
+		position: absolute;
+		inset-block-start: 50%;
+		inset-inline-end: 0;
+		transform: translate(2px, -50%);
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #fff;
+		box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8);
+	}
+
+	&__meter-goalzone {
+		position: absolute;
+		inset-block: 2px;
+		inset-inline-end: 2px;
+		background: var(--lantern);
+		opacity: 0.1;
+		border-start-end-radius: var(--radius-full);
+		border-end-end-radius: var(--radius-full);
+	}
+
+	&__goal {
+		position: absolute;
+		inset-block-start: -4px;
+		inset-block-end: -4px;
+		width: 2px;
+		background: var(--board-gold-deep);
+		transform: translateX(-50%);
+
+		[dir='rtl'] & {
+			transform: translateX(50%);
+		}
+
+		.scorehud--goal & {
+			background: var(--board-gold);
+		}
+	}
+
+	&__goal-flag {
+		position: absolute;
+		inset-block-start: -6px;
+		inset-inline-start: 0;
+		width: 0;
+		height: 0;
+		border-block-start: 5px solid transparent;
+		border-block-end: 5px solid transparent;
+		border-inline-start: 9px solid var(--board-gold-deep);
+
+		.scorehud--goal & {
+			border-inline-start-color: var(--board-gold);
+			filter: drop-shadow(var(--glow-marker));
+			animation: scorehud-flag-pop var(--motion-slow) var(--ease-spring) both;
+		}
+	}
+
+	&__goal-num {
+		position: absolute;
+		inset-block-start: calc(100% + 6px);
+		inset-inline-start: 50%;
+		transform: translateX(-50%);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		color: var(--board-gold);
+		white-space: nowrap;
+
+		[dir='rtl'] & {
+			transform: translateX(50%);
+		}
+	}
+
+	&__class-hint {
+		color: var(--board-text-dim);
+		font-size: var(--font-size-sm);
+		text-align: center;
+		margin: 0;
+	}
+
+	// --- the stat board: slim rows, camp chips at the ends ---
+	&__tiles {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__tile,
+	&__row {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		min-height: 48px;
+		width: 100%;
+		padding: var(--space-xs) var(--space-sm);
+		border: none;
+		border-radius: var(--radius-sm);
+		background: linear-gradient(180deg, var(--board-row-hi) 0%, var(--board-row) 60%);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.75),
+			inset 0 -1px 0 rgba(70, 45, 150, 0.12);
+		text-align: center;
+		font-family: var(--font-body);
+	}
+
+	&__tile {
+		cursor: pointer;
+		color: var(--board-text);
+
+		&:hover {
+			filter: brightness(0.97);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__tile-mid,
+	&__row-label {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+	}
+
+	&__row-label,
+	&__tile-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--board-text);
+	}
+
+	&__tile-score {
+		font-family: var(--font-display);
+		color: var(--board-gold);
+
+		&.scorehud__tile-value--ticking {
+			text-shadow: 0 0 12px rgba(185, 115, 0, 0.35);
+		}
+	}
+
+	&__tile-hint {
+		font-size: var(--font-size-xs);
+		color: var(--board-text-dim);
+
+		&--moved {
+			color: var(--board-up);
+		}
+	}
+
+	// Glossy value chips (gradient stays within ±10% luminance of the anchor)
+	&__chip {
+		flex: 0 0 auto;
+		min-width: 46px;
+		padding: 3px 10px;
+		border-radius: 8px;
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		line-height: 1.2;
+		text-align: center;
+		color: #fff;
+		font-variant-numeric: tabular-nums;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.35),
+			inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+			0 2px 5px rgba(70, 45, 150, 0.3);
+
+		&--left {
+			background: linear-gradient(180deg, #9c66d9, #e0873c 40%, #7443b4);
+		}
+
+		&--right {
+			background: linear-gradient(180deg, #109180, #0c7d6f 40%, #0a6a5e);
+		}
+
+		&--gold {
+			background: linear-gradient(180deg, #ffd882, #f5b944 45%, #d99b23);
+			color: #5b4200;
+		}
+
+		&--empty {
+			background: var(--board-row);
+			color: var(--board-text-dim);
+			box-shadow: inset 0 0 0 1px rgba(70, 45, 150, 0.18);
+		}
+
+		&.scorehud__tile-value--ticking {
+			box-shadow:
+				inset 0 1px 0 rgba(255, 255, 255, 0.35),
+				inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+				0 0 12px rgba(185, 115, 0, 0.4);
+		}
+	}
+
+	// --- my per-camp breakdown (internals re-skin via the token shadows) ---
+	// The reveal keyframe retired here: the breakdown is wrapped in a
+	// .collapsible, which folds it open AND shut from one place
+	&__detail {
+		position: relative;
+		padding-block-start: var(--space-md);
+	}
+
+	&__camps {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-md);
+	}
+
+	&__moved {
+		margin: var(--space-sm) 0 0;
+		text-align: center;
+		color: var(--success);
+		font-size: var(--font-size-sm);
+	}
+
+	// --- expand/collapse ---
+	&__toggle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		background: none;
+		border: none;
+		padding: var(--space-xs);
+		color: var(--board-text-dim);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__chevron {
+		width: 8px;
+		height: 8px;
+		// physical borders: the caret is a rotated square corner and must not
+		// mirror in RTL (a flipped corner points sideways, not up/down)
+		border-right: 2px solid currentColor;
+		border-bottom: 2px solid currentColor;
+
+		&--down {
+			transform: rotate(45deg) translateY(-2px);
+		}
+
+		&--up {
+			transform: rotate(225deg) translateY(-2px);
+		}
+	}
+
+	// --- collapsed strip: the board in miniature (~52px) ---
+	&--collapsed {
+		flex-direction: row;
+		align-items: center;
+		gap: var(--space-sm);
+		min-height: 52px;
+		padding: var(--space-xs) var(--space-md);
+		border-width: 2px;
+		cursor: pointer;
+		width: 100%;
+		font-family: var(--font-body);
+		font-size: var(--font-size-sm);
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 2px;
+		}
+	}
+
+	&__strip-item {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 2px;
+		color: var(--board-text-dim);
+		white-space: nowrap;
+
+		strong {
+			font-family: var(--font-display);
+			font-size: var(--font-size-lg);
+			color: var(--board-gold);
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	&__strip-meter {
+		position: relative;
+		flex: 1;
+		display: flex;
+		height: 8px;
+		min-width: 40px;
+		background: #dce4f0;
+		border-radius: var(--radius-full);
+		box-shadow: inset 0 1px 3px rgba(70, 45, 150, 0.25);
+	}
+
+	&__strip-fill {
+		height: 100%;
+		min-width: 6px;
+		border-radius: var(--radius-full);
+		background: linear-gradient(
+			90deg,
+			var(--board-camp-left-bright),
+			var(--board-camp-right-bright)
+		);
+		box-shadow: 0 0 6px rgba(106, 52, 171, 0.35);
+		transition: width var(--motion-slow) var(--ease-camera);
+
+		[dir='rtl'] & {
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-right-bright),
+				var(--board-camp-left-bright)
+			);
+		}
+	}
+
+	&__strip-goal {
+		position: absolute;
+		inset-block: -2px;
+		width: 2px;
+		background: var(--board-gold);
+	}
+}
+
+// The separator streak above each board section (symmetric → RTL-free)
+.scorehud__tile::before,
+.scorehud__row::before,
+.scorehud__detail::before,
+.scorehud .support-chart::before {
+	content: '';
+	position: absolute;
+	inset-inline: 10%;
+	inset-block-start: -1px;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, rgba(70, 45, 150, 0.28) 50%, transparent);
+	pointer-events: none;
+}
+
+@keyframes scorehud-delta {
+	0% { opacity: 0; transform: translateY(0); }
+	25% { opacity: 1; }
+	100% { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes scorehud-shimmer {
+	from { transform: translateX(-100%); }
+	to { transform: translateX(100%); }
+}
+
+@keyframes scorehud-flag-pop {
+	from { transform: scale(0.6); }
+	to { transform: scale(1); }
+}
+
+@keyframes scorehud-reveal {
+	from { opacity: 0; transform: translateY(8px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+// --- The square: variable-width support chart (geometry unchanged; on the
+// board it re-skins through the .scorehud token shadows) ---
+.support-chart {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	padding-block-start: var(--space-md);
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		margin: 0;
+	}
+
+	&__legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm) var(--space-md);
+	}
+
+	&__legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+	}
+
+	&__scroll {
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		-webkit-overflow-scrolling: touch;
+		mask-image: linear-gradient(
+			to right,
+			transparent,
+			black 12px,
+			black calc(100% - 12px),
+			transparent
+		);
+		scrollbar-width: thin;
+	}
+
+	&__plot {
+		position: relative;
+		display: flex;
+		align-items: stretch;
+		justify-content: safe center;
+		gap: 3px;
+		height: 160px;
+		min-width: max-content;
+		margin-inline: auto;
+		padding-block: var(--space-sm);
+		// breathing room so edge bars clear the fade mask + axis labels
+		padding-inline: var(--space-lg);
+
+		@media (min-width: 768px) {
+			height: 200px;
+		}
+	}
+
+	&__zero {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: 50%;
+		height: 1px;
+		background: var(--border-strong);
+	}
+
+	&__axis {
+		position: absolute;
+		inset-inline-start: var(--space-xs);
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+
+		&--up {
+			inset-block-start: calc(50% - 1.4em);
+		}
+
+		&--down {
+			inset-block-start: calc(50% + 0.4em);
+		}
+	}
+
+	&__bar {
+		position: relative;
+		height: 100%;
+		padding: 0;
+		background: none;
+		border: none;
+		border-radius: 2px;
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: opacity var(--motion-fast) ease;
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 1px;
+		}
+
+		// ring the visible column, not the full-height tap target
+		&--selected .support-chart__col {
+			outline: 2px solid var(--lantern-glow);
+			outline-offset: 1px;
+		}
+
+		&--dimmed {
+			opacity: 0.55;
+		}
+
+		// net-opposition bars: same camp identity, quieted — "still gathering
+		// support", never a shaming red; inset ring keeps a visible boundary
+		&--negative .support-chart__seg {
+			opacity: 0.45;
+		}
+
+		&--negative .support-chart__col {
+			box-shadow: inset 0 0 0 1px rgba(70, 45, 150, 0.25);
+		}
+
+		// the current class-record holder wears a glowing gold cap
+		&--top .support-chart__col {
+			box-shadow:
+				0 -3px 0 0 var(--lantern),
+				0 -3px 8px rgba(185, 115, 0, 0.35);
+		}
+
+		&--top .support-chart__col--negative {
+			box-shadow:
+				0 3px 0 0 var(--lantern),
+				0 3px 8px rgba(185, 115, 0, 0.35);
+		}
+	}
+
+	&__col {
+		position: absolute;
+		inset-inline: 0;
+		display: flex;
+		gap: 2px; // surface gap between camp segments (dataviz spacer rule)
+		border-start-start-radius: 3px;
+		border-start-end-radius: 3px;
+		overflow: hidden;
+		transform-origin: bottom;
+		box-shadow: 0 1px 4px rgba(70, 45, 150, 0.18);
+		transition: height var(--motion-slow) var(--ease-camera);
+		animation: support-bar-grow var(--motion-slow) var(--ease-spring) both;
+
+		&--negative {
+			border-radius: 0;
+			border-end-start-radius: 3px;
+			border-end-end-radius: 3px;
+			transform-origin: top;
+		}
+
+		&--ghost {
+			background: var(--bg-inset);
+			box-shadow: none;
+		}
+	}
+
+	&__seg {
+		height: 100%;
+
+		&--left {
+			background: var(--camp-left);
+		}
+
+		&--center {
+			background: var(--camp-center);
+		}
+
+		&--right {
+			background: var(--camp-right);
+		}
+	}
+
+	&__keel {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		height: 4px;
+		background: var(--mine);
+		border-radius: var(--radius-full);
+		box-shadow: 0 0 10px rgba(29, 85, 171, 0.5);
+	}
+
+	&__num {
+		position: absolute;
+		inset-block-end: 6px;
+		inset-inline: 0;
+		@include type-meta;
+		color: var(--text-muted);
+		text-align: center;
+		pointer-events: none;
+	}
+
+	&__empty {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__plot--ghost {
+		justify-content: center;
+		gap: var(--space-md);
+		min-width: 0;
+	}
+
+	&__ghost {
+		position: relative;
+		align-self: flex-end;
+		width: 24px;
+		background: var(--bg-inset);
+		border: 1px dashed var(--border-subtle);
+		border-radius: 3px 3px 0 0;
+		margin-block-end: 50%;
+	}
+
+	&__empty-caption {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		font-style: italic;
+		text-align: center;
+		margin: 0;
+	}
+}
+
+@keyframes support-bar-grow {
+	from { transform: scaleY(0); }
+	to { transform: scaleY(1); }
+}
+
+// --- tap-to-detail: a dark plate in the same board language ---
+.chart-detail {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	background: linear-gradient(180deg, var(--board-row-hi), var(--board-row) 60%);
+	border: 1px solid rgba(216, 220, 237, 0.2);
+	border-radius: var(--radius-md);
+	padding: var(--space-md);
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.07),
+		0 4px 12px rgba(0, 0, 0, 0.5);
+	animation: scorehud-reveal var(--motion-base) var(--ease-camera) both;
+
+	&__crown {
+		font-size: var(--font-size-xs);
+		color: var(--lantern-glow);
+	}
+
+	&__text {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		display: -webkit-box;
+		-webkit-line-clamp: 4;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	&__stats {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__fill--negative {
+		opacity: 0.45;
+	}
+
+	&__bridge-label {
+		color: var(--lantern-glow);
+	}
+
+	&__bridge-fill {
+		background: linear-gradient(
+			90deg,
+			var(--board-camp-left-bright),
+			var(--board-camp-right-bright)
+		);
+
+		[dir='rtl'] & {
+			background: linear-gradient(
+				90deg,
+				var(--board-camp-right-bright),
+				var(--board-camp-left-bright)
+			);
+		}
+	}
+
+	&__raters {
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-align: center;
+	}
+
+	&__close {
+		align-self: center;
+	}
+}
+
+// ScoreHUD desktop: the board stays symmetric, just larger
+@media (min-width: 768px) {
+	.scorehud:not(.scorehud--collapsed) {
+		padding: var(--space-lg);
+	}
+
+	.scorehud__class-value {
+		font-size: 3.5rem;
+	}
+
+	.scorehud__banner {
+		font-size: var(--font-size-base);
+	}
+}
+
+// --- RTL typography: tracking is a Latin device ---
+// Positive letter-spacing exists to open up uppercase eyebrows and small
+// caps. Hebrew has no case at all and depends on tight letter adjacency, so
+// tracking just fragments the words; in Arabic it is worse still, because
+// spacing the letters apart severs the cursive joins. Keep the tracked look
+// for the LTR languages this app ships (en/es/de/nl) and drop it for he/ar.
+//
+// Join codes are deliberately NOT in this list. They are digits, and spacing
+// them out is exactly what makes a code readable when a student copies it off
+// the board — that holds in every script. The .home__title wordmark is also
+// exempt: "Agora" is set in Latin whatever the UI language is.
+[dir='rtl'] {
+	.lobby__name strong,
+	.teacher__section-title,
+	.estimate__title,
+	.scoreboard__bridge-label,
+	.scorehud__banner,
+	.scorehud__class-label,
+	.scorehud__tile-label,
+	.support-chart__title,
+	.chat-system__title {
+		letter-spacing: normal;
+	}
+}
+
+// ============================================================================
+// The improvement cycle's quieter moments (docs/feedback-cycle.md)
+// ============================================================================
+
+// Declines retire from the workshop into one muted line. The record stays
+// honest; the workbench stops accumulating a pile of every "no" as a card.
+.workshop__declined-note {
+	color: var(--text-muted);
+	font-size: var(--font-size-sm);
+	text-align: center;
+	font-style: italic;
+}
+
+// Step 5 answered in words: the re-rate that closes the cycle gets its beat
+.helped__rerate-ack {
+	color: var(--agree, var(--lantern-glow));
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	animation: toast-in var(--motion-base) var(--ease-spring) both;
+}
+
+// --- The personal ledger on the results screen ---
+// The game announces every +1 and +2 during play; this is the only surface
+// allowed to total them. Framed as a contribution, never as a ranking.
+.results__mine {
+	text-align: center;
+
+	.results__total--mine {
+		color: var(--lantern-glow);
+	}
+}
+
+.results__story {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	text-align: start;
+
+	li {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		padding-inline-start: 1.4em;
+		position: relative;
+
+		&::before {
+			content: '✦';
+			position: absolute;
+			inset-inline-start: 0;
+			color: var(--lantern-glow);
+		}
+	}
+}
+
+.results__mine-note {
+	color: var(--text-muted);
+	font-size: var(--font-size-xs);
+}
+
+// The class score depends on how much of the class rated the leading proposal,
+// so the coverage is published beside it instead of left implicit.
+.results__coverage {
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+	text-align: center;
+}
+
+// ============================================================================
+// The results board — the class, mapped
+// ============================================================================
+// Two axes and a field of points. Up the side: how much the class agrees with a
+// proposal, +100% (everyone for) down to -100% (everyone against). Across the
+// bottom: which camp is actually behind it, one side to the other, with the
+// middle column meaning both. The goal of the whole game therefore becomes a
+// PLACE — top centre — rather than a number a student has to be told to care
+// about. Your own point is lit; pressing any point reads out the proposal and
+// the arithmetic behind its score.
+
+.board {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+
+	&--empty {
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-xl) var(--space-md);
+		text-align: center;
+	}
+
+	&__empty-icon {
+		font-size: 2.5rem;
+		line-height: 1;
+		opacity: 0.75;
+	}
+
+	&__empty {
+		max-width: 42ch;
+		color: var(--text-muted);
+	}
+
+	&__eyebrow {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	// Signed percents are Latin whatever the UI language is: without the
+	// isolate, "+52%" comes out as "52%+" in Hebrew and Arabic, which reads as
+	// a different number.
+	&__num {
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
+
+	&__author {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__you {
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		// --mine-strong, not --mine: a white label on the lighter hue is
+		// 3.85:1 (see the contrast floor in tokens.scss)
+		background: var(--mine-strong);
+		color: var(--text-on-lantern);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+	}
+
+	&__coverage {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__rank {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--text-secondary);
+	}
+
+	// --- the crown -------------------------------------------------------------
+	&__champion {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		text-align: center;
+		background:
+			radial-gradient(120% 100% at 50% 0%, rgba(255, 214, 122, 0.35), transparent 65%),
+			var(--bg-card-solid);
+		border: 2px solid var(--warning);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+
+		&--mine {
+			border-color: var(--lantern);
+			background:
+				radial-gradient(120% 100% at 50% 0%, rgba(139, 107, 240, 0.13), transparent 65%),
+				var(--bg-card-solid);
+		}
+	}
+
+	&__champion-score {
+		font-family: var(--font-display);
+		font-size: var(--font-size-3xl);
+		line-height: 1.1;
+		color: var(--success);
+		font-variant-numeric: tabular-nums;
+
+		&--against {
+			color: var(--danger);
+		}
+	}
+
+	&__champion-label {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	// The champion's meter reuses the detail screen's zero-centred bar, just
+	// taller and full-width — the number says the value, the bar says its size.
+	// Compound selector (not just the modifier alone) so this outranks the
+	// plain &__meter sizing declared further down, regardless of source order.
+	&__meter.board__meter--champion {
+		height: 10px;
+		width: 100%;
+
+		.board__meter-fill {
+			background: var(--success);
+
+			&--against {
+				background: var(--danger);
+			}
+		}
+	}
+
+	&__champion-text {
+		@include proposal-voice;
+
+		color: var(--text-primary);
+	}
+
+	&__champion-by {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	// --- my standing, said in one sentence -------------------------------------
+	&__my-standing {
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		background: var(--wash-mine-low);
+		border: 1px solid var(--border-lantern);
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		text-align: center;
+
+		&--podium {
+			background: var(--wash-mine-mid);
+		}
+	}
+
+	// --- the map ----------------------------------------------------------------
+	&__map {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	// The title and the one way into the words that used to be printed above
+	// the map
+	&__map-head {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	// "How do I read this?" — the map's whole instruction set, folded into one
+	// tile. Hover does not exist on a classroom phone, so the tooltip is a
+	// disclosure a thumb can hit: 44px, pressed, not pointed at.
+	&__help {
+		// Above its own scrim (5) and panel (6): pressing the tile a second time
+		// must close the panel, and a scrim stretched over the tile turns the
+		// toggle into a one-way door
+		position: relative;
+		z-index: 7;
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		background: var(--bg-card-solid);
+		border: 2px solid var(--border-strong);
+		border-radius: var(--radius-tile);
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		line-height: 1;
+		cursor: pointer;
+		transition:
+			transform var(--motion-fast) var(--ease-camera),
+			border-color var(--motion-fast) var(--ease-camera);
+
+		&:hover,
+		&:focus-visible {
+			border-color: var(--mine);
+			color: var(--mine-ink);
+		}
+
+		&:active {
+			transform: scale(0.94);
+		}
+
+		&[aria-expanded='true'] {
+			background: var(--wash-mine-high);
+			border-color: var(--mine);
+			color: var(--mine-ink);
+		}
+	}
+
+	// The panel: same material as the callout, because it is the same gesture —
+	// something the map hands you when you press for more.
+	&__help-pop {
+		position: absolute;
+		z-index: 6;
+		inset-inline: 0;
+		inset-block-start: calc(100% + var(--space-xs));
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--parchment);
+		border: 2px solid var(--ink);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-raised);
+		animation: board-callout-in var(--motion-base) var(--ease-spring) both;
+
+		&:focus-visible {
+			outline: 2px solid var(--mine-deep);
+			outline-offset: 2px;
+		}
+	}
+
+	// The catcher that makes "press anywhere else" close it
+	&__help-scrim {
+		position: fixed;
+		inset: 0;
+		z-index: 5;
+		background: transparent;
+		border: 0;
+		padding: 0;
+		cursor: default;
+	}
+
+	&__help-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		font-size: var(--font-size-xs);
+		color: var(--text-primary);
+	}
+
+	// Each line is taught by its own miniature of the thing on the map, so the
+	// row is a picture with a caption rather than a sentence with a bullet
+	&__help-swatch {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		width: 3rem;
+		height: 1.75rem;
+	}
+
+	// A thumbnail of the field itself
+	// The same three colours as the field, at full strength — a swatch is small
+	// enough that the tint the field needs would read as white
+	&__help-ramp {
+		width: 1rem;
+		height: 100%;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-strong);
+		background: linear-gradient(to top, var(--danger), var(--gold) 50%, var(--success));
+	}
+
+	// A thumbnail of the bridge zone
+	&__help-zone {
+		width: 2.25rem;
+		height: 1.25rem;
+		border-radius: var(--radius-sm);
+		background: color-mix(in srgb, var(--success) 30%, transparent);
+		border: 2px dashed var(--success-deep);
+	}
+
+	// The dot trio that teaches "bigger = more of the class rated it"
+	&__help-dot {
+		border-radius: 50%;
+		background: var(--bg-card-solid);
+		border: 2px solid var(--peer);
+
+		&--sm {
+			width: 8px;
+			height: 8px;
+		}
+
+		&--md {
+			width: 13px;
+			height: 13px;
+		}
+
+		&--lg {
+			width: 18px;
+			height: 18px;
+		}
+
+		&--mine {
+			width: 18px;
+			height: 18px;
+			background: var(--mine-strong);
+			border-color: var(--mine-deep);
+		}
+
+		&--lead {
+			width: 18px;
+			height: 18px;
+			border-color: var(--warning);
+			border-width: 3px;
+		}
+	}
+
+	// The frame holds the y-axis rail beside the plot so the labels never
+	// overlap the field itself
+	&__plot-frame {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-xs);
+	}
+
+	// The rail: a centred vertical title, then a column whose marks are pinned
+	// to the values they name. The title is laid out as a flex item rather than
+	// positioned — its own vertical writing-mode would otherwise turn every
+	// logical inset sideways with it.
+	&__axis-y {
+		display: flex;
+		flex: 0 0 auto;
+		align-items: center;
+		gap: 2px;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__axis-y-marks {
+		position: relative;
+		flex: 0 0 auto;
+		align-self: stretch;
+		width: 3.4rem;
+	}
+
+	// The ticks are NUMBERS (+100% / 0% / -100%), read against the line they
+	// sit on rather than word by word — the axis TITLE beside them is the part
+	// that has to be legible on its own, and it stays on the readable rung.
+	&__axis-y-mark {
+		@include type-meta;
+
+		position: absolute;
+		inset-inline-end: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+
+		&--top {
+			inset-block-start: 0;
+		}
+
+		&--zero {
+			inset-block-start: 50%;
+			transform: translateY(-50%);
+		}
+
+		&--bottom {
+			inset-block-end: 0;
+		}
+	}
+
+	// The rotated Hebrew title that used to stand here is gone: the field's own
+	// ramp says "up = the class is for it", and these two faces — the same two
+	// the class pressed while rating — name the ends of it in the one alphabet
+	// everybody in the room already reads.
+	&__axis-y-face {
+		flex: 0 0 auto;
+		line-height: 0;
+
+		&--top {
+			color: var(--success);
+		}
+
+		&--bottom {
+			color: var(--danger);
+		}
+	}
+
+	&__plot {
+		position: relative;
+		flex: 1;
+		// Portrait, like the sketch: the agreement axis is the one that matters,
+		// so it gets the long side of the box
+		aspect-ratio: 4 / 5;
+		min-height: 340px;
+		max-height: 68vh;
+		// The field IS the vertical axis (see --grad-field). The opaque base
+		// travels inside the shorthand on purpose: a low-alpha wash over a white
+		// card is a different colour over a purple one, and this plot must stay
+		// a light field wherever it is dropped.
+		background: var(--grad-field), var(--bg-card-solid);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	// The one piece of text that sits directly ON the field, so it is the one
+	// piece that cannot be muted: --text-muted measures 4.06:1 against the
+	// deepest stops of the ramp, and --text-primary measures 9.3:1.
+	&__plot-empty {
+		position: absolute;
+		inset-inline: var(--space-md);
+		inset-block-start: 45%;
+		text-align: center;
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+	}
+
+	// The 0% line: above it the class is for, below it against
+	&__grid-zero {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 50%;
+		height: 0;
+		border-block-start: 1px dashed var(--border-strong);
+	}
+
+	// The centre column: proposals here are backed by both sides equally. It is
+	// the bridge's own spine, so it takes the strong hairline — the subtle one
+	// dissolved into the green top of the field.
+	&__grid-centre {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		width: 0;
+		border-inline-start: 1px dashed var(--border-strong);
+	}
+
+	// The win condition drawn as a place on the field.
+	//
+	// The zone sits at the height where the field is ALREADY green, so a green
+	// zone on a green ground is the whole problem. Three separators solve it
+	// without inventing a hue: the fill is roughly double the field's own
+	// saturation at that height (a visible step of the same water), the border
+	// is solid-coloured --success at 2px (~4.6:1 against the tint, and a drawn
+	// edge where the wash is weather), and the label is a WHITE chip — reversed
+	// polarity, the highest-contrast object anywhere up there. The border also
+	// survives forced-colors mode, where both washes are deleted outright.
+	&__bridge-zone {
+		position: absolute;
+		inset-inline-start: 28%;
+		width: 44%;
+		inset-block-end: 62%;
+		inset-block-start: 0;
+		background: color-mix(in srgb, var(--success) 22%, transparent);
+		// --success-deep, not --success: the zone's own fill lands on top of the
+		// greenest part of the field, and a --success line drawn on that is
+		// 2.9:1 — a border that argues with its own background. The deep rung
+		// clears 4.6:1 there and is unmistakably the same green.
+		border: 2px dashed var(--success-deep);
+		border-radius: var(--radius-md);
+		pointer-events: none;
+	}
+
+	// Straddling the zone's LOWER edge, not sitting inside its top: the top of
+	// the zone is where the best-scoring proposal lands, and a label parked
+	// there covers the one point the whole map is about. On the threshold it
+	// reads as the sign over the gate — and the points it might still meet are
+	// the ones on their way in.
+	&__bridge-chip {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		display: flex;
+		justify-content: center;
+		transform: translateY(50%);
+	}
+
+	&__bridge-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--success-deep);
+		box-shadow: var(--shadow-card);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		color: var(--success-deep);
+		letter-spacing: 0.02em;
+		// A sign, so it stays on one line and is allowed to overhang the zone it
+		// names — wrapped, it grew into the field and swallowed the points below
+		white-space: nowrap;
+	}
+
+	// --- a proposal ----------------------------------------------------------------
+	&__point {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		transform: translate(-50%, 50%);
+		border-radius: 50%;
+		background: var(--bg-card-solid);
+		// --peer, not --border-strong: the hairline token is 28% alpha, and over
+		// the tinted field a classmate's outlined point half-dissolved. This is
+		// --peer doing its charter job — the stroke that makes their thing an
+		// object (≥3.5:1 on every stop of the ramp).
+		border: 2px solid var(--peer);
+		color: var(--text-secondary);
+		font: inherit;
+		cursor: pointer;
+		transition:
+			transform var(--motion-base) var(--ease-spring),
+			box-shadow var(--motion-fast) var(--ease-camera),
+			opacity var(--motion-fast) var(--ease-camera);
+
+		&:hover,
+		&:focus-visible {
+			transform: translate(-50%, 50%) scale(1.12);
+			box-shadow: var(--shadow-card);
+		}
+
+		// Mine is the one point a student looks for first
+		&--mine {
+			// --mine-strong: the marker carries a rank numeral in white, and
+			// on the lighter hue that is 3.85:1
+			background: var(--mine-strong);
+			border-color: var(--mine-deep);
+			color: var(--text-on-lantern);
+			box-shadow: var(--glow-marker);
+		}
+
+		// The crown's ring. --warning is a gold, and gold on a saturated field is
+		// 2.5:1 — so the gold carries the MEANING and a --peer keyline outside it
+		// carries the shape (3.78:1 on every stop of the ramp).
+		&--lead {
+			border-color: var(--warning);
+			border-width: 3px;
+			outline: 1px solid var(--peer);
+		}
+
+		&--selected {
+			transform: translate(-50%, 50%) scale(1.2);
+			box-shadow: var(--glow-lantern);
+			z-index: 3;
+		}
+
+		&--dimmed {
+			opacity: 0.45;
+		}
+	}
+
+	&__point-rank {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		line-height: 1;
+	}
+
+	&__point-crown {
+		position: absolute;
+		inset-block-end: 100%;
+		font-size: var(--font-size-base);
+		line-height: 1;
+	}
+
+	// --- the callout the sketch asks for ----------------------------------------------
+	// The card hangs off its own point (see callout() for the geometry). Half
+	// its own width is published as a custom property so the inline clamp can
+	// keep it on the point wherever there is room and inside the plot where
+	// there is not.
+	// The card is the doorway to the full numbers, so it is a button: `font`
+	// and `text-align` first, or the UA button styles flatten the proposal
+	// voice inside it.
+	&__callout {
+		--callout-half: min(35%, 10rem);
+
+		position: absolute;
+		z-index: 4;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		width: min(70%, 20rem);
+		// max-height is inline: it is the room left on the side the card hangs
+		// off (see callout()). The card never scrolls — when it did, the way
+		// into the numbers sat below the fold of its own box and effectively
+		// did not exist.
+		overflow: hidden;
+		padding: var(--space-sm);
+		background: var(--parchment);
+		border: 2px solid var(--ink);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-card);
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+		appearance: none;
+		animation: board-callout-in var(--motion-base) var(--ease-spring) both;
+
+		// The centring translate is part of the geometry, so a press scales
+		// AROUND it rather than replacing it
+		&:active {
+			transform: translateX(-50%) scale(0.98);
+		}
+	}
+
+	// "There is more behind this" — the affordance said in words, because a
+	// card that only looks pressable is a card most of the class never presses
+	&__callout-more {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs);
+		margin-block-start: 2px;
+		padding-block-start: var(--space-xs);
+		border-block-start: 1px dashed var(--border-subtle);
+		color: var(--mine-strong);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	&__callout-more-text {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+	}
+
+	&__callout-more-arrow {
+		line-height: 1;
+	}
+
+	&__callout-stem {
+		position: absolute;
+		z-index: 3;
+		width: 2px;
+		transform: translateX(-50%);
+		background: var(--ink);
+	}
+
+	// A teaser, not the text: three lines and an ellipsis, because the whole
+	// proposal is one press away on the sub-screen. Scrolling it here cut the
+	// fourth line in half, which reads as a rendering fault rather than as
+	// "there is more".
+	&__callout-text {
+		@include proposal-voice;
+
+		flex: 0 1 auto;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+		color: var(--text-primary);
+	}
+
+	&__callout-foot {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__callout-score {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--success);
+		font-variant-numeric: tabular-nums;
+
+		&--against {
+			color: var(--danger);
+		}
+	}
+
+	&__callout-by {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	// --- the horizontal axis --------------------------------------------------------
+	&__axis-x {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		margin-block-start: var(--space-xs);
+		font-size: var(--font-size-xs);
+	}
+
+	// The camp name IS the swatch. Students met these two colours during
+	// positioning and meet them again in the detail screen's camp split; pinning
+	// them to the ends of the axis is the first time the map itself says which
+	// end is whose, and it costs no extra words.
+	&__axis-x-camp {
+		flex: 0 1 auto;
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-card-solid);
+		font-weight: 700;
+
+		&--left {
+			color: var(--camp-left-glow);
+			border: 1px solid var(--camp-left-glow);
+		}
+
+		&--right {
+			color: var(--camp-right-glow);
+			border: 1px solid var(--camp-right-glow);
+		}
+	}
+
+	// "← who is behind it →" as a drawing: two arrows meeting at a dot, sitting
+	// under the centre column so the graphic points at the bridge itself
+	&__axis-x-mid {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+		// The arrows point INWARD, and that is a drawing, not a sentence: left
+		// to right they read → • ←, and an RTL page reversing them would have
+		// them point away from the meeting place they name.
+		direction: ltr;
+		unicode-bidi: isolate;
+		color: var(--text-muted);
+		line-height: 1;
+	}
+
+	&__axis-x-meet {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--text-muted);
+	}
+
+	// --- the actual score, opened up ---------------------------------------------------
+	// Lives inside the .board-detail sub-screen (see below), so it carries the
+	// arithmetic and nothing of the chrome around it
+	&__detail {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		animation: board-callout-in var(--motion-base) var(--ease-camera) both;
+	}
+
+	&__detail-hero {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
+	}
+
+	&__detail-score {
+		font-family: var(--font-display);
+		font-size: 2.75rem;
+		line-height: 1;
+		color: var(--success);
+		font-variant-numeric: tabular-nums;
+
+		&--against {
+			color: var(--danger);
+		}
+	}
+
+	&__detail-score-label {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+	}
+
+	&__detail-statement {
+		@include proposal-voice;
+
+		color: var(--text-primary);
+	}
+
+	&__detail-title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-base);
+		color: var(--text-primary);
+	}
+
+	&__detail-sub {
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	&__detail-empty,
+	&__detail-why {
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+		line-height: 1.5;
+	}
+
+	&__stats {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__stat {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+		padding-block: 4px;
+		border-block-end: 1px dashed var(--border-subtle);
+		font-size: var(--font-size-sm);
+	}
+
+	&__stat-label {
+		color: var(--text-secondary);
+	}
+
+	&__stat-value {
+		font-variant-numeric: tabular-nums;
+		color: var(--text-primary);
+
+		&--strong {
+			font-family: var(--font-display);
+			font-size: var(--font-size-lg);
+			color: var(--lantern-glow);
+		}
+	}
+
+	// --- how the class voted -------------------------------------------------------
+	&__histogram {
+		display: flex;
+		align-items: flex-end;
+		gap: var(--space-xs);
+		height: 88px;
+	}
+
+	&__bucket {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		height: 100%;
+	}
+
+	&__bucket-column {
+		display: flex;
+		flex: 1;
+		align-items: flex-end;
+		width: 100%;
+	}
+
+	&__bucket-bar {
+		width: 100%;
+		min-height: 2px;
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+		background: var(--text-muted);
+		transition: height var(--motion-base) var(--ease-camera);
+
+		&--against {
+			background: var(--danger);
+		}
+
+		&--neutral {
+			background: var(--text-muted);
+		}
+
+		&--for {
+			background: var(--success);
+		}
+	}
+
+	&__bucket-count {
+		font-size: var(--font-size-sm);
+		color: var(--text-primary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__bucket-face {
+		font-size: var(--font-size-base);
+		line-height: 1;
+	}
+
+	&__camps {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__camp {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		font-size: var(--font-size-sm);
+	}
+
+	&__camp-label {
+		flex: 0 0 auto;
+		min-width: 7ch;
+	}
+
+	&__camp-n {
+		flex: 0 0 auto;
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__meter {
+		position: relative;
+		flex: 1;
+		height: 8px;
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		overflow: hidden;
+	}
+
+	&__meter-zero {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 50%;
+		width: 2px;
+		background: var(--border-strong);
+	}
+
+	&__meter-fill {
+		position: absolute;
+		inset-block: 1px;
+		border-radius: var(--radius-full);
+		transition: width var(--motion-base) var(--ease-camera);
+	}
+
+	// --- proposals nobody rated -------------------------------------------------------
+	&__waiting {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__waiting-title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__waiting-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__waiting-chip {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
+		padding: var(--space-xs) var(--space-sm);
+		background: var(--bg-inset);
+		border-radius: var(--radius-md);
+		font-size: var(--font-size-sm);
+	}
+
+	&__waiting-text {
+		@include proposal-voice;
+
+		color: var(--text-secondary);
+	}
+
+}
+
+
+// --- the full statistics, as a place ------------------------------------------------
+// Pressing a point opens the callout ON the map; pressing the callout travels
+// here. It takes the whole screen (dock included) on purpose: the numbers used
+// to unfold under the map and pushed the map itself out of view — the one thing
+// the student was reading. Chrome deliberately identical to .chat-page: in this
+// game, anything you travel to has a bar and a back tile.
+.board-detail {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-modal);
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-page);
+	animation: board-detail-in var(--motion-base) var(--ease-camera) both;
+
+	&__bar {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		padding-block-start: max(var(--space-sm), env(safe-area-inset-top));
+		// The bar spans the screen, but its title stands over the body column
+		// rather than out at the far edge of a laptop window
+		padding-inline: max(var(--space-md), calc((100% - 640px) / 2));
+		background: var(--bg-card-solid);
+		border-block-end: 1px solid var(--border-subtle);
+		box-shadow: 0 4px 16px -8px rgba(70, 45, 150, 0.2);
+	}
+
+	&__back {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border: none;
+		border-radius: var(--radius-tile);
+		background: var(--grad-mine);
+		color: #ffffff;
+		font-size: 1.2rem;
+		cursor: pointer;
+		box-shadow: var(--glow-lantern);
+		transition: transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.94);
+		}
+	}
+
+	&__who {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 1.05rem;
+		color: var(--text-primary);
+	}
+
+	&__sub {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		width: 100%;
+		max-width: 640px;
+		margin-inline: auto;
+		padding: var(--space-md);
+		padding-block-end: max(var(--space-xl), env(safe-area-inset-bottom));
+	}
+}
+
+@keyframes board-detail-in {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+// The plot mirrors as a whole on an RTL page — the camp named first sits on the
+// reading-start side — so the point and callout transforms have to mirror too.
+[dir='rtl'] {
+	.board__point {
+		transform: translate(50%, 50%);
+
+		&:hover,
+		&:focus-visible {
+			transform: translate(50%, 50%) scale(1.12);
+		}
+
+		&--selected {
+			transform: translate(50%, 50%) scale(1.2);
+		}
+	}
+
+	.board__callout,
+	.board__callout-stem {
+		transform: translateX(50%);
+	}
+
+	.board__callout:active {
+		transform: translateX(50%) scale(0.98);
+	}
+
+	// Tracking is a Latin device — see the RTL note above.
+	.board__eyebrow,
+	.board__you,
+	.board__detail-sub,
+	.board__bridge-label,
+	.helpers-board__col {
+		letter-spacing: normal;
+	}
+}
+
+// Opacity only: the callout already carries a centring transform, and a
+// keyframe that sets `transform` would throw it off its point mid-animation.
+@keyframes board-callout-in {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+// On a wider screen the field gets room to breathe and the crown grows
+@media (min-width: 768px) {
+	.board__champion-score {
+		font-size: 4rem;
+	}
+
+	.board__champion-text {
+		font-size: var(--font-size-xl);
+	}
+
+	.board__plot {
+		aspect-ratio: 3 / 2;
+		max-height: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.board__point,
+	.board__meter-fill,
+	.board__bucket-bar,
+	.board__help {
+		transition: none;
+	}
+
+	.board__callout,
+	.board__detail,
+	.board__help-pop,
+	.board-detail {
+		animation: none;
+	}
+}
