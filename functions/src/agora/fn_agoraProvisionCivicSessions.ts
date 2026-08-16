@@ -49,11 +49,16 @@ interface Result {
  */
 const MAX_ISLANDS_PER_RUN = 100;
 
-/** Fallback pole labels when an island has no anchor stances chosen yet. */
-const DEFAULT_LEFT_LABEL = 'עמדה א׳';
-const DEFAULT_RIGHT_LABEL = 'עמדה ב׳';
+/**
+ * The camp names. In a classroom these are the two sides of the era
+ * ("royalists" / "jacobins") and they label the results board's axis, so they
+ * have to stay short — a whole stance sentence would not fit under a chart.
+ * The stance text itself goes on the character instead.
+ */
+const POLE_LABEL_LEFT = 'עמדה א׳';
+const POLE_LABEL_RIGHT = 'עמדה ב׳';
 
-/** Character names are shown as chips; a whole stance sentence will not fit. */
+/** Character names sit in chips; a whole stance sentence will not fit. */
 const CHARACTER_NAME_MAX = 40;
 
 function shorten(text: string, max: number): string {
@@ -66,8 +71,14 @@ function shorten(text: string, max: number): string {
  * A civic deliberation has no historical characters to role-play — but the
  * topic-package schema is what every Agora load path reads, and it wants
  * exactly two. So the island's two anchor stances become the two "voices",
- * which is also what the camp scale is built from: the same two poles name the
- * scale and define left and right.
+ * which is also what the camp scale is built from: the same two poles define
+ * left and right.
+ *
+ * The stance text goes on the character and the short pole name on the scale,
+ * not the other way round. The scale labels are camp names — they letter the
+ * results board's axis — while the character name is what the fallback
+ * positioning screen shows as "name (camp)". Putting the stance in both would
+ * print it twice there and overflow the chart here.
  */
 function buildCivicTopicPackage(params: {
 	topicPackageId: string;
@@ -79,14 +90,14 @@ function buildCivicTopicPackage(params: {
 	now: number;
 }): AgoraTopicPackage {
 	const { topicPackageId, creatorId, island, questionText, now } = params;
-	const leftLabel = params.leftStanceText?.trim() || DEFAULT_LEFT_LABEL;
-	const rightLabel = params.rightStanceText?.trim() || DEFAULT_RIGHT_LABEL;
+	const leftStance = params.leftStanceText?.trim() || POLE_LABEL_LEFT;
+	const rightStance = params.rightStanceText?.trim() || POLE_LABEL_RIGHT;
 
-	const voice = (characterId: string, label: string): AgoraCharacter => ({
+	const voice = (characterId: string, stance: string): AgoraCharacter => ({
 		characterId,
-		name: shorten(label, CHARACTER_NAME_MAX),
+		name: shorten(stance, CHARACTER_NAME_MAX),
 		role: island.title,
-		arguments: [label],
+		arguments: [stance],
 		needs: [],
 		values: [],
 	});
@@ -99,10 +110,10 @@ function buildCivicTopicPackage(params: {
 		status: AgoraTopicStatus.ready,
 		title: island.title,
 		framingText: island.shortExplain || island.opening || island.issue,
-		characters: [voice('left', leftLabel), voice('right', rightLabel)],
+		characters: [voice('left', leftStance), voice('right', rightStance)],
 		positioningScale: {
-			leftLabel: shorten(leftLabel, CHARACTER_NAME_MAX),
-			rightLabel: shorten(rightLabel, CHARACTER_NAME_MAX),
+			leftLabel: POLE_LABEL_LEFT,
+			rightLabel: POLE_LABEL_RIGHT,
 			leftCharacterId: 'left',
 			rightCharacterId: 'right',
 		},
