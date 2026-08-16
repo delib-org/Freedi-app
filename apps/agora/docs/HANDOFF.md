@@ -288,6 +288,35 @@ which was never created, so the mapping was corrected to match the real site.
 clone cannot deploy even after the site exists. Copy `.firebaserc.example`
 (committed, same content minus anything machine-specific) to `.firebaserc`.
 
+### A hot-reloaded functions emulator stops firing triggers
+
+If Firestore triggers seem not to run — scores never appear, points never move —
+check whether the functions emulator reloaded since the last one fired:
+
+```bash
+grep -c 'Beginning execution of "me-west1-onAgoraEvaluationWritten"' <emulator log>
+grep 'Loaded functions definitions from source' <emulator log>
+```
+
+A `Loaded functions definitions from source` line AFTER the last execution means
+the emulator hot-reloaded (any `npm run build` in functions/ will do it) and
+quietly stopped dispatching background triggers. Callables keep working, which
+makes it look like an app bug rather than an environment one.
+
+The only fix is a full restart of the emulator suite. Measured either side of
+one, on identical code: 10 writes/sec with zero triggers before, 2,417
+writes/sec with every trigger firing after.
+
+### Load smoke
+
+`npx tsx scripts/load-smoke.ts [--students=30] [--proposals=10]` seeds a class,
+has every student rate every proposal at once, and waits until each score
+accounts for every rating it received. This is the "teacher says now rate them
+all" case — the one where the trigger fan-out has to keep up.
+
+Baseline 2026-08-16: 30 students, 10 proposals, 290 ratings accepted in 0.1s,
+all scores settled 21.2s after the first write, nothing mis-counted.
+
 ### Indexes are NOT deployed by any script
 
 `firestore.indexes.json` never reaches production on its own. `deploy:rules:prod`
