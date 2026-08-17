@@ -6,14 +6,15 @@
  * Verifies POINTS in Firestore, not just pixels.
  * Run: node scripts/e2e-cycle.mjs (needs emulators + vite on 3009 + seed) */
 import { chromium } from '@playwright/test';
-import { preflight } from './lib/preflight.mjs';
+import { preflight, FIRESTORE_REST, VITE_HOST } from './lib/preflight.mjs';
 import { clearCelebration, eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
 
 // Fail in seconds with a readable reason instead of minutes with a stack trace
 await preflight();
 
-const BASE = 'http://localhost:3009';
-const FS = 'http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents';
+// From preflight, never a local copy — see the note in e2e-smoke.mjs
+const BASE = VITE_HOST;
+const FS = FIRESTORE_REST;
 const SHOTS = 'cycle-shots';
 
 /**
@@ -715,7 +716,13 @@ console.log('FINAL S1(A):', finalS1);
 console.log('FINAL S2(B):', finalS2);
 
 step('TEACHER advances → RESULTS');
-await advance();
+// Deliberation now leads to the VOTING stage, and results is one stop further
+// on. This script is about the improvement economy and the ledger it pays out,
+// so it walks straight through the ballot rather than voting on it — the vote
+// itself has its own script (e2e-voting.mjs).
+await advance(); // → voting
+await teacher.waitForTimeout(1500);
+await advance(); // → results
 await teacher.waitForTimeout(3000);
 for (const [page, label, expected] of [
 	[s1, 'S1(A)', finalS1],

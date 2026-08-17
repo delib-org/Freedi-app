@@ -14,8 +14,11 @@ import {
 	AgoraTopicPackage,
 	AGORA_SESSION,
 	Evaluation,
+	Vote,
 	deriveAgoraOutcome,
 	isAgoraAiUid,
+	pickVoteWinner,
+	tallyVotes,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, TAXONOMY_MODEL } from '../config/openai-chat';
@@ -23,6 +26,78 @@ import { callLLM, extractJson, TAXONOMY_MODEL } from '../config/openai-chat';
 interface ProposalRow {
 	statementId: string;
 	text: string;
+	/** The shared consensus metric (Cp) as it stands on the statement doc */
+	consensus: number;
+}
+
+/** What the recap says about the election, when one was held */
+type VoteFields = Pick<
+	AgoraClassScore,
+	| 'voteWinnerStatementId'
+	| 'voteCounts'
+	| 'voteTotal'
+	| 'voteWinnerMetThreshold'
+	| 'winningConsensusThreshold'
+>;
+
+interface VoteOutcome extends VoteFields {
+	/** The proposal that should lead the recap, when the vote earned it that place */
+	electedProposal?: ProposalRow;
+}
+
+/**
+ * Counts the vote, if one was held.
+ *
+ * Votes are read from the votes collection rather than from the question's
+ * `selections` tallies: the tallies are maintained by a trigger, and a vote
+ * cast a moment before the teacher advanced may not have been counted there
+ * yet. Reading the source of truth errs toward counting a real vote.
+ */
+export async function computeVoteOutcome(
+	session: AgoraSession,
+	proposals: ProposalRow[],
+): Promise<VoteOutcome> {
+	const candidateIds = session.voting?.candidateIds ?? [];
+	// No ballot means no election was held — the recap must carry no vote
+	// fields at all, so a skipped stage reads differently from an empty one.
+	if (candidateIds.length === 0) return {};
+
+	const votesSnap = await db
+		.collection(Collections.votes)
+		.where('parentId', '==', session.challengeQuestionId)
+		.get();
+	const votes = votesSnap.docs.map((docSnap) => {
+		const vote = docSnap.data() as Vote;
+
+		return { statementId: String(vote.statementId), userId: String(vote.userId) };
+	});
+
+	const counts = tallyVotes(votes, candidateIds);
+	const consensusById = Object.fromEntries(
+		proposals.map((proposal) => [proposal.statementId, proposal.consensus]),
+	);
+	const threshold = session.votingSettings?.winningConsensusThreshold;
+	const { winnerStatementId, metThreshold, total } = pickVoteWinner(
+		counts,
+		consensusById,
+		threshold,
+	);
+
+	// A winner that misses the bar is still named — the class elected it, and
+	// the screen has to say what happened — but it does not take the crown.
+	const electedProposal =
+		winnerStatementId && metThreshold
+			? proposals.find((proposal) => proposal.statementId === winnerStatementId)
+			: undefined;
+
+	return {
+		...(winnerStatementId ? { voteWinnerStatementId: winnerStatementId } : {}),
+		voteCounts: counts,
+		voteTotal: total,
+		voteWinnerMetThreshold: metThreshold,
+		...(threshold !== undefined ? { winningConsensusThreshold: threshold } : {}),
+		...(electedProposal ? { electedProposal } : {}),
+	};
 }
 
 /** What the recap says about the proposal that led, when one did */
@@ -216,6 +291,7 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 		const proposals: ProposalRow[] = proposalsSnap.docs.map((docSnap) => ({
 			statementId: String(docSnap.data().statementId),
 			text: String(docSnap.data().statement ?? ''),
+			consensus: Number(docSnap.data().consensus ?? 0),
 		}));
 		const scores = new Map<string, AgoraProposalScore>(
 			scoresSnap.docs.map((docSnap) => [docSnap.id, docSnap.data() as AgoraProposalScore]),
@@ -239,12 +315,19 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 		// pass in a class of six and be unreachable in a class of forty.
 		const consensusOf = (statementId: string): number =>
 			scores.get(statementId)?.classConsensus?.consensus ?? Number.NEGATIVE_INFINITY;
-		const leadProposal = proposals.reduce<ProposalRow | undefined>((best, candidate) => {
+		const consensusLeader = proposals.reduce<ProposalRow | undefined>((best, candidate) => {
 			if (!best)
 				return consensusOf(candidate.statementId) > Number.NEGATIVE_INFINITY ? candidate : best;
 
 			return consensusOf(candidate.statementId) > consensusOf(best.statementId) ? candidate : best;
 		}, undefined);
+
+		// A class that voted has already answered "which proposal leads", and its
+		// answer outranks the consensus reading — but only if the winner cleared
+		// the bar the teacher set. Resolved BEFORE the AI call so the health
+		// metrics simulate the proposal the class actually elected.
+		const { electedProposal, ...voteFields } = await computeVoteOutcome(session, proposals);
+		const leadProposal = electedProposal ?? consensusLeader;
 		const leadConsensus = leadProposal
 			? scores.get(leadProposal.statementId)?.classConsensus
 			: undefined;
@@ -344,6 +427,7 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 		const classScore: AgoraClassScore = {
 			maxConsensus: consensusTerm,
 			...leadFields(leadProposal, leadConsensus),
+			...voteFields,
 			personalPointsSum,
 			avgPlausibility,
 			total,

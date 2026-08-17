@@ -191,5 +191,78 @@ describe('agora collections', () => {
 			const db = env.authenticatedContext(STUDENT).firestore();
 			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { stage: 'results' }));
 		});
+
+		// The teacher decides HOW the vote runs...
+		it('allows a teacher to set the voting settings', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'deliberation',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertSucceeds(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingSettings: {
+						enabled: true,
+						selection: { resultsBy: 'consensus', cutoffBy: 'topOptions', numberOfResults: 3 },
+					},
+				}),
+			);
+		});
+
+		// ...but not WHO is standing in it. The ballot is drawn up server-side
+		// when the stage opens, and a teacher who could edit it could hand the
+		// election to a proposal the class never rated highly.
+		it('rejects a teacher rewriting the server-drawn ballot', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'voting',
+					participantCount: 3,
+					voting: {
+						candidateIds: ['proposal-1', 'proposal-2'],
+						candidates: [],
+						computedAt: 1_700_000_000_000,
+					},
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					voting: {
+						candidateIds: ['teachers-favourite'],
+						candidates: [],
+						computedAt: 1_700_000_000_001,
+					},
+				}),
+			);
+		});
+
+		it('rejects a student setting the voting settings', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'deliberation',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingSettings: { winningConsensusThreshold: 0 },
+				}),
+			);
+		});
 	});
 });

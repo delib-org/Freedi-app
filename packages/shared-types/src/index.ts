@@ -399,6 +399,21 @@ export {
 // Vote models
 export type { Vote, VotingSettings } from "./models/vote/votingModel";
 export { VoteSchema, getVoteId, VotingSettingsSchema } from "./models/vote/votingModel";
+export type {
+  VotingStageSettings,
+  VotingCandidate,
+  VotingState,
+  VoteWinner,
+} from "./models/vote/votingStageSettings";
+export {
+  VotingStageSettingsSchema,
+  VotingCandidateSchema,
+  VotingStateSchema,
+  NO_VOTE,
+  resolveVotingSelection,
+  tallyVotes,
+  pickVoteWinner,
+} from "./models/vote/votingStageSettings";
 
 export type { StatementSnapShot } from "./models/statement/StatementSnapShot";
 export { statementSnapShotSchema } from "./models/statement/StatementSnapShot";

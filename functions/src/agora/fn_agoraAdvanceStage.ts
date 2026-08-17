@@ -11,6 +11,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { computeSessionResults } from './classScore';
+import { prepareVotingStage } from './votingStage';
 
 interface Request {
 	sessionId: string;
@@ -36,6 +37,7 @@ const STAGE_ORDER: AgoraStage[] = [
 	AgoraStage.needs,
 	AgoraStage.positioning,
 	AgoraStage.deliberation,
+	AgoraStage.voting,
 	AgoraStage.results,
 	AgoraStage.ended,
 ];
@@ -107,6 +109,13 @@ export const agoraAdvanceStage = onCall(
 				...roundStart,
 				lastUpdate: Date.now(),
 			});
+
+			// Entering voting: draw up the ballot. Only forward moves are legal,
+			// so a teacher who goes deliberation → results simply never holds a
+			// vote — voting is a stage the class may skip, not one it must pass.
+			if (stage === AgoraStage.voting) {
+				await prepareVotingStage(sessionId);
+			}
 
 			// Entering results: run the AI plausibility batch + health-metric
 			// simulation + class score. Students see a "computing" state until

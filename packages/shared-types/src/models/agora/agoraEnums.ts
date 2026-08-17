@@ -12,6 +12,11 @@ export enum AgoraStage {
 	valueIdentification = 'valueIdentification',
 	positioning = 'positioning',
 	deliberation = 'deliberation',
+	/**
+	 * The class elects one of the proposals deliberation produced. Optional:
+	 * a teacher may advance deliberation → results and never hold a vote.
+	 */
+	voting = 'voting',
 	results = 'results',
 	ended = 'ended',
 }

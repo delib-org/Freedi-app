@@ -14,8 +14,17 @@ import { TeacherInstructions } from './TeacherInstructions';
 import { getTopicPackage, loadTopicPackage } from '../../lib/topic';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { QRShare } from '../../components/QRShare';
-import { AgoraParticipant, AgoraStage } from '@freedi/shared-types';
+import {
+	AgoraParticipant,
+	AgoraStage,
+	VotingStageSettings,
+	AGORA_VOTING,
+	CutoffBy,
+	ResultsBy,
+} from '@freedi/shared-types';
 import { AgoraProposal } from '../../lib/proposals';
+import { setVotingSettings } from '../../lib/teacher';
+import { getVotingState, listenToVoting, stopVotingListeners, totalVotes } from '../../lib/voting';
 
 /**
  * Teacher live panel — projector-friendly: class progress, stage
@@ -30,6 +39,7 @@ const STAGE_ORDER: AgoraStage[] = [
 	AgoraStage.needs,
 	AgoraStage.positioning,
 	AgoraStage.deliberation,
+	AgoraStage.voting,
 	AgoraStage.results,
 	AgoraStage.ended,
 ];
@@ -41,6 +51,7 @@ const PROGRESS_STAGES = new Set<AgoraStage>([
 	AgoraStage.needs,
 	AgoraStage.positioning,
 	AgoraStage.deliberation,
+	AgoraStage.voting,
 ]);
 
 /** One student's progress within the current stage: done flag + a compact label */
@@ -48,7 +59,13 @@ function participantProgress(
 	participant: AgoraParticipant,
 	stage: AgoraStage,
 	proposals: readonly AgoraProposal[],
+	voterUids: ReadonlySet<string>,
 ): { done: boolean; label: m.Children } {
+	if (stage === AgoraStage.voting) {
+		const done = voterUids.has(participant.userId);
+
+		return { done, label: done ? m(Icon, { name: 'check', size: 16 }) : '—' };
+	}
 	if (stage === AgoraStage.positioning) {
 		const done = participant.campPosition !== undefined;
 
@@ -77,15 +94,20 @@ function classProgressCard(
 	stage: AgoraStage,
 	participants: readonly AgoraParticipant[],
 	proposals: readonly AgoraProposal[],
+	voterUids: ReadonlySet<string>,
 ): m.Children {
 	if (!PROGRESS_STAGES.has(stage) || participants.length === 0) return null;
 	const entries = participants.map((participant) => ({
 		participant,
-		...participantProgress(participant, stage, proposals),
+		...participantProgress(participant, stage, proposals, voterUids),
 	}));
 	const doneCount = entries.filter((entry) => entry.done).length;
 	const countKey =
-		stage === AgoraStage.positioning ? 'teacher.positioned_count' : 'teacher.finished_count';
+		stage === AgoraStage.positioning
+			? 'teacher.positioned_count'
+			: stage === AgoraStage.voting
+				? 'teacher.voted_count'
+				: 'teacher.finished_count';
 
 	return m('.card.class-progress', [
 		m('.class-progress__head', [
@@ -115,10 +137,172 @@ function classProgressCard(
 	]);
 }
 
+/**
+ * How the vote will run, set while the class is still deliberating.
+ *
+ * Defaults are live even when the teacher never opens this card: an untouched
+ * session votes on the top three by consensus, and the most-voted proposal
+ * wins outright. Every control here only narrows that.
+ */
+function votingSettingsCard(
+	sessionId: string,
+	settings: VotingStageSettings | undefined,
+	saving: boolean,
+	onSave: (next: VotingStageSettings) => void,
+): m.Children {
+	const selection = settings?.selection;
+	const enabled = settings?.enabled !== false;
+	const byThreshold = selection?.cutoffBy === CutoffBy.aboveThreshold;
+	const topX = selection?.numberOfResults ?? AGORA_VOTING.DEFAULT_TOP_X;
+	const cutoff = selection?.cutoffNumber ?? AGORA_VOTING.DEFAULT_CUTOFF_CP;
+	const winThreshold = settings?.winningConsensusThreshold;
+
+	const patch = (next: Partial<VotingStageSettings>): void =>
+		onSave({
+			enabled,
+			selection: {
+				resultsBy: ResultsBy.consensus,
+				cutoffBy: byThreshold ? CutoffBy.aboveThreshold : CutoffBy.topOptions,
+				numberOfResults: topX,
+				cutoffNumber: cutoff,
+			},
+			...(winThreshold !== undefined ? { winningConsensusThreshold: winThreshold } : {}),
+			...next,
+		});
+
+	return m('.card.stack.voting-settings', [
+		m('p.teacher__section-title', t('teacher.voting_settings')),
+
+		m('label.voting-settings__row', [
+			m('input[type=checkbox]', {
+				checked: enabled,
+				disabled: saving,
+				onchange: (event: Event) => patch({ enabled: (event.target as HTMLInputElement).checked }),
+			}),
+			m('span', t('teacher.voting_enabled')),
+		]),
+
+		enabled
+			? [
+					m('label.voting-settings__row', [
+						m('span', t('teacher.voting_mode')),
+						m(
+							'select',
+							{
+								disabled: saving,
+								onchange: (event: Event) =>
+									patch({
+										selection: {
+											resultsBy: ResultsBy.consensus,
+											cutoffBy:
+												(event.target as HTMLSelectElement).value === 'threshold'
+													? CutoffBy.aboveThreshold
+													: CutoffBy.topOptions,
+											numberOfResults: topX,
+											cutoffNumber: cutoff,
+										},
+									}),
+							},
+							[
+								m('option', { value: 'top', selected: !byThreshold }, t('teacher.voting_mode_top')),
+								m(
+									'option',
+									{ value: 'threshold', selected: byThreshold },
+									t('teacher.voting_mode_threshold'),
+								),
+							],
+						),
+					]),
+
+					byThreshold
+						? m('label.voting-settings__row', [
+								m('span', t('teacher.voting_threshold')),
+								m('input[type=number]', {
+									value: cutoff,
+									step: '0.05',
+									min: '-1',
+									max: '1',
+									disabled: saving,
+									onchange: (event: Event) =>
+										patch({
+											selection: {
+												resultsBy: ResultsBy.consensus,
+												cutoffBy: CutoffBy.aboveThreshold,
+												numberOfResults: topX,
+												cutoffNumber: Number((event.target as HTMLInputElement).value),
+											},
+										}),
+								}),
+							])
+						: m('label.voting-settings__row', [
+								m('span', t('teacher.voting_top_x')),
+								m('input[type=number]', {
+									value: topX,
+									min: String(AGORA_VOTING.MIN_TOP_X),
+									max: String(AGORA_VOTING.MAX_TOP_X),
+									disabled: saving,
+									onchange: (event: Event) =>
+										patch({
+											selection: {
+												resultsBy: ResultsBy.consensus,
+												cutoffBy: CutoffBy.topOptions,
+												numberOfResults: Number((event.target as HTMLInputElement).value),
+												cutoffNumber: cutoff,
+											},
+										}),
+								}),
+							]),
+
+					// Blank means "the most-voted proposal wins, full stop"
+					m('label.voting-settings__row', [
+						m('span', t('teacher.voting_win_threshold')),
+						m('input[type=number]', {
+							value: winThreshold ?? '',
+							step: '0.01',
+							min: '-1',
+							max: '1',
+							placeholder: '—',
+							disabled: saving,
+							onchange: (event: Event) => {
+								const raw = (event.target as HTMLInputElement).value;
+								const next: VotingStageSettings = {
+									enabled,
+									selection: {
+										resultsBy: ResultsBy.consensus,
+										cutoffBy: byThreshold ? CutoffBy.aboveThreshold : CutoffBy.topOptions,
+										numberOfResults: topX,
+										cutoffNumber: cutoff,
+									},
+									...(raw === '' ? {} : { winningConsensusThreshold: Number(raw) }),
+								};
+								onSave(next);
+							},
+						}),
+					]),
+					m('p.voting-settings__hint', t('teacher.voting_win_threshold_hint')),
+				]
+			: null,
+	]);
+}
+
 export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
 	let advancing = false;
+	let savingSettings = false;
 	let userId = '';
+
+	function saveVotingSettings(next: VotingStageSettings): void {
+		if (savingSettings) return;
+		savingSettings = true;
+		setVotingSettings(sessionId, next)
+			.catch((error: unknown) => {
+				console.error('[Teacher] Saving the voting settings failed:', error);
+			})
+			.finally(() => {
+				savingSettings = false;
+				m.redraw();
+			});
+	}
 
 	void ensureUser().then((user) => {
 		userId = user.uid;
@@ -144,6 +328,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		onremove() {
 			stopListening();
 			stopDeliberationListeners();
+			stopVotingListeners();
 		},
 
 		view() {
@@ -180,12 +365,23 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				session.stage === AgoraStage.valueIdentification
 					? STAGE_ORDER.indexOf(AgoraStage.needs)
 					: STAGE_ORDER.indexOf(session.stage);
-			const nextStage =
+			const rawNextStage =
 				stageIndex >= 0 && stageIndex < STAGE_ORDER.length - 1 ? STAGE_ORDER[stageIndex + 1] : null;
+			// A teacher who turned the vote off never sees the button for it. The
+			// server permits the jump — voting is a stage the class may skip —
+			// so this is purely which door the panel offers.
+			const nextStage =
+				rawNextStage === AgoraStage.voting && session.votingSettings?.enabled === false
+					? AgoraStage.results
+					: rawNextStage;
 
 			const inDeliberation = session.stage === AgoraStage.deliberation;
 			if (inDeliberation && userId) listenToDeliberation(sessionId, userId);
 			const { proposals } = getDeliberationState();
+
+			const inVoting = session.stage === AgoraStage.voting;
+			if (inVoting && userId) listenToVoting(sessionId, session.challengeQuestionId, userId);
+			const { voterUids } = getVotingState();
 
 			// Results/ended: the teacher projects the same transformed map + score
 			if (session.stage === AgoraStage.results || session.stage === AgoraStage.ended) {
@@ -223,9 +419,30 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-					classProgressCard(session.stage, participants, proposals),
+					classProgressCard(session.stage, participants, proposals, voterUids),
 
 					topic ? m(TeacherInstructions, { stage: session.stage, topic }) : null,
+
+					// Set while the class still deliberates — by the time the ballot
+					// is drawn up the settings have already been read.
+					inDeliberation
+						? votingSettingsCard(
+								sessionId,
+								session.votingSettings,
+								savingSettings,
+								saveVotingSettings,
+							)
+						: null,
+
+					inVoting
+						? m('.card.stack', [
+								m('p.teacher__section-title', t('voting.title')),
+								m(
+									'span.values__score',
+									`${t('teacher.votes_cast')}: ${totalVotes()}/${participants.length}`,
+								),
+							])
+						: null,
 
 					// Students cycle propose→rate→help on their own; the teacher's
 					// deliberation panel just shows progress (no round buttons)

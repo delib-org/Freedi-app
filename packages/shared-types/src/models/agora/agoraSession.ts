@@ -1,4 +1,15 @@
-import { object, string, number, boolean, optional, array, enum_, InferOutput } from 'valibot';
+import {
+	object,
+	string,
+	number,
+	boolean,
+	optional,
+	array,
+	record,
+	enum_,
+	InferOutput,
+} from 'valibot';
+import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
 import {
 	AgoraStage,
 	AgoraRoundPhase,
@@ -91,6 +102,19 @@ export const AgoraClassScoreSchema = object({
 	/** AI-written formative debrief, always warm — fuller card shown on non-success */
 	debrief: optional(AgoraDebriefSchema),
 	healthMetricOutcomes: array(AgoraHealthMetricOutcomeSchema),
+	/**
+	 * The proposal the class ELECTED, when a voting stage was held. Present
+	 * regardless of whether it cleared `winningConsensusThreshold` — the
+	 * results screen needs to name it either way.
+	 */
+	voteWinnerStatementId: optional(string()),
+	/** Votes per proposal, counted from the votes collection at results time */
+	voteCounts: optional(record(string(), number())),
+	voteTotal: optional(number()),
+	/** False when the most-voted proposal did not clear the teacher's win threshold */
+	voteWinnerMetThreshold: optional(boolean()),
+	/** The threshold that was applied, echoed so the screen can show the gap */
+	winningConsensusThreshold: optional(number()),
 	computedAt: number(),
 });
 
@@ -129,6 +153,17 @@ export const AgoraSessionSchema = object({
 	participantCount: number(),
 	status: enum_(AgoraSessionStatus),
 	classScore: optional(AgoraClassScoreSchema),
+	/**
+	 * How the vote is run. Teacher-writable (see firestore.rules); absent
+	 * means the defaults in `resolveVotingSelection`.
+	 */
+	votingSettings: optional(VotingStageSettingsSchema),
+	/**
+	 * The ballot, written server-side when the voting stage opens and frozen by
+	 * rules thereafter. Clients read candidates from HERE and never from the
+	 * parent's `results`, which later ratings keep rewriting.
+	 */
+	voting: optional(VotingStateSchema),
 	createdAt: number(),
 	lastUpdate: number(),
 });

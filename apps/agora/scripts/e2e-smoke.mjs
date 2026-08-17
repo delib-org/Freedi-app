@@ -1,11 +1,21 @@
 import { chromium } from '@playwright/test';
-import { preflight } from './lib/preflight.mjs';
+import {
+  preflight,
+  AUTH_HOST,
+  FUNCTIONS_BASE,
+  FIRESTORE_REST,
+  VITE_HOST,
+} from './lib/preflight.mjs';
 
 // Fail in seconds with a readable reason instead of minutes with a stack trace
 await preflight();
 
-const AUTH = 'http://localhost:9099/identitytoolkit.googleapis.com/v1';
-const FN = 'http://localhost:5001/freedi-test/me-west1';
+// Hosts come from preflight, never from a copy kept here: a script that
+// hardcodes the ports talks to a different emulator than the browser it is
+// driving, and the failure reads as "code not found" rather than as the
+// misconfiguration it is.
+const AUTH = `${AUTH_HOST}/identitytoolkit.googleapis.com/v1`;
+const FN = FUNCTIONS_BASE;
 
 // --- Teacher: sign in via fake Google IdP and create a session ---
 const idpRes = await fetch(`${AUTH}/accounts:signInWithIdp?key=fake`, {
@@ -37,7 +47,7 @@ const page = await browser.newPage();
 const errs = [];
 page.on('pageerror', (e) => errs.push(e.message));
 
-await page.goto(`http://localhost:3009/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
+await page.goto(`${VITE_HOST}/#!/join/${code}`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('.lobby__name', { timeout: 15000 });
 console.log('LOBBY OK — anon name:', await page.locator('.lobby__name strong').textContent());
 
@@ -83,7 +93,7 @@ await page.waitForTimeout(1500);
 // session the emulator has ever seen and the list endpoint pages, so a
 // client-side filter quietly returns [] once the emulator has been used a
 // while — a green run that checked nothing.
-const partRes = await fetch(`http://localhost:8081/v1/projects/freedi-test/databases/(default)/documents:runQuery`, {
+const partRes = await fetch(`${FIRESTORE_REST}:runQuery`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', Authorization: 'Bearer owner' },
   body: JSON.stringify({

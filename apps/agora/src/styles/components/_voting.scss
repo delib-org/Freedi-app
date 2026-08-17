@@ -1,0 +1,153 @@
+// The ballot — the voting stage's one screen
+//
+// A row per candidate: the tally is a fill BEHIND the text rather than a
+// separate chart, so the proposal and the support for it are the same object.
+// My own vote is marked in the ownership blue used everywhere else for "mine".
+
+.voting {
+	gap: var(--space-md);
+
+	&__title {
+		margin: 0;
+		text-align: center;
+	}
+
+	&__instruction,
+	&__waiting {
+		margin: 0;
+		text-align: center;
+		color: var(--text-secondary);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		inline-size: 100%;
+	}
+
+	&__option {
+		position: relative; // anchors the fill
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		inline-size: 100%;
+		padding: var(--space-md);
+		text-align: start;
+		// A button does not inherit the page's type. Without this the whole
+		// ballot renders at the browser's 13.33px default — a proposal is a
+		// sentence a student has to read before choosing it.
+		font: inherit;
+		font-size: 1rem;
+		background: var(--bg-card-solid);
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		box-shadow: var(--shadow-card);
+		cursor: pointer;
+		color: var(--text-primary);
+		transition:
+			transform var(--motion-fast, 150ms) ease,
+			border-color var(--motion-fast, 150ms) ease,
+			box-shadow var(--motion-fast, 150ms) ease;
+
+		&:hover:not(:disabled) {
+			transform: translateY(-2px);
+			border-color: var(--border-lantern);
+		}
+
+		&:disabled {
+			cursor: progress;
+		}
+
+		&--mine {
+			border-color: var(--mine);
+			box-shadow: var(--shadow-mine);
+		}
+	}
+
+	// The support fill. Logical inline-size + inset-inline-start keeps it
+	// growing from the reading edge in both LTR and Hebrew RTL.
+	&__bar {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 0;
+		background: var(--bg-inset);
+		transition: inline-size var(--motion-slow, 400ms) ease;
+		pointer-events: none;
+	}
+
+	&__option--mine &__bar {
+		background: rgba(139, 107, 240, 0.18);
+	}
+
+	&__body {
+		position: relative; // above the fill
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		flex: 1 1 auto;
+		min-inline-size: 0;
+	}
+
+	// Proposals are known by number in this game — never by their author
+	&__number {
+		flex: 0 0 auto;
+		inline-size: 28px;
+		block-size: 28px;
+		display: grid;
+		place-items: center;
+		border-radius: var(--radius-full);
+		background: var(--peer-tile);
+		color: var(--text-secondary);
+		font-weight: 700;
+	}
+
+	&__option--mine &__number {
+		background: var(--mine-strong);
+		color: var(--text-on-lantern);
+	}
+
+	&__label {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+	}
+
+	&__count {
+		position: relative;
+		flex: 0 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		line-height: 1.1;
+	}
+
+	&__votes {
+		font-weight: 700;
+		font-size: 1.15rem;
+	}
+
+	// A percentage beside the count it restates — a mark, not a word
+	&__share {
+		@include type-meta;
+
+		color: var(--text-muted);
+	}
+
+	&__total,
+	&__hint {
+		margin: 0;
+		text-align: center;
+		color: var(--text-muted);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__option:hover:not(:disabled) {
+			transform: none;
+		}
+
+		&__bar {
+			transition: none;
+		}
+	}
+}

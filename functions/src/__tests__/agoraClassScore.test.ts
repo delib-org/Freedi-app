@@ -7,7 +7,7 @@ jest.mock('../db', () => ({ db: {} }));
 import { leadFields } from '../agora/classScore';
 
 describe('agora classScore.leadFields', () => {
-	const lead = { statementId: 'proposal-1', text: 'build the aqueduct' };
+	const lead = { statementId: 'proposal-1', text: 'build the aqueduct', consensus: 0.62 };
 	const consensus = { consensus: 0.62, n: 7, eligible: 9 };
 
 	it('reports the lead proposal when the class rated one', () => {
