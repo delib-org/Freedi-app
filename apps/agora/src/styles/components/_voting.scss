@@ -151,3 +151,56 @@
 		}
 	}
 }
+
+// The teacher's card: how the vote will run, set while the class deliberates
+.voting-settings {
+	&__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-md);
+		flex-wrap: wrap;
+		cursor: pointer;
+
+		// A control under 16px takes focus on iOS and never zooms back out
+		input,
+		select {
+			font: inherit;
+			font-size: 1rem;
+			padding: var(--space-xs) var(--space-sm);
+			color: var(--text-primary);
+			background: var(--bg-card-solid);
+			border: 1.5px solid var(--border-subtle);
+			border-radius: var(--radius-sm);
+
+			&:focus-visible {
+				outline: 2px solid var(--mine-strong);
+				outline-offset: 2px;
+			}
+		}
+
+		input[type='number'] {
+			inline-size: 5.5rem;
+			text-align: center;
+		}
+
+		input[type='checkbox'] {
+			inline-size: 1.15rem;
+			block-size: 1.15rem;
+			flex: 0 0 auto;
+			accent-color: var(--mine-strong);
+			cursor: pointer;
+		}
+
+		// The toggle reads label-first; every other row is label then control
+		&:has(input[type='checkbox']) {
+			justify-content: flex-start;
+			gap: var(--space-sm);
+		}
+	}
+
+	&__hint {
+		margin: 0;
+		color: var(--text-muted);
+	}
+}
