@@ -321,7 +321,9 @@ describe('fn_joinShareRoutes', () => {
 			expect(body()).toContain(
 				'<meta property="og:description" content="• Where should the park go?&#10;• How do we fund it?">',
 			);
-			expect(body()).toContain('<meta property="og:url" content="https://wizcol-join.web.app/m/MID">');
+			expect(body()).toContain(
+				'<meta property="og:url" content="https://wizcol-join.web.app/m/MID">',
+			);
 			expect(body()).toContain(
 				'<meta property="og:image" content="https://wizcol-join.web.app/icons/icon-512.png">',
 			);

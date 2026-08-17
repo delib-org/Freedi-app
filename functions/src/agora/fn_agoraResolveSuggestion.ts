@@ -60,8 +60,7 @@ async function readWeaveLedger(proposalId: string, suggesterId: string): Promise
 	});
 
 	return {
-		awardHelper:
-			wovenByThisHelper < AGORA_ANTI_GAMING.MAX_WOVEN_AWARDS_PER_HELPER_PER_PROPOSAL,
+		awardHelper: wovenByThisHelper < AGORA_ANTI_GAMING.MAX_WOVEN_AWARDS_PER_HELPER_PER_PROPOSAL,
 		awardAuthor:
 			!distinctHelpers.has(suggesterId) &&
 			distinctHelpers.size < AGORA_POINTS.MAX_WEAVE_CREDITS_PER_PROPOSAL,

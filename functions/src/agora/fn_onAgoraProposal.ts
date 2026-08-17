@@ -259,9 +259,7 @@ async function stampEditBaseline(
 					? {
 							revisionCredit: {
 								lastCreditAt: Date.now(),
-								studentRatingsAtCredit: existing?.perCamp
-									? studentRaterCount(existing.perCamp)
-									: 0,
+								studentRatingsAtCredit: existing?.perCamp ? studentRaterCount(existing.perCamp) : 0,
 								credited: (existing?.revisionCredit?.credited ?? 0) + 1,
 							},
 						}

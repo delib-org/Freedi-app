@@ -58,6 +58,7 @@ function read(kind: StorageKind, key: string): string | null {
 
 	try {
 		const value = storage.getItem(key);
+
 		// A miss can mean the write failed (quota exceeded after a successful
 		// probe), so consult the memory mirror before reporting "not set".
 		// `removeItem` clears both, so this only shadows cross-tab deletions.

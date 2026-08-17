@@ -7,6 +7,9 @@ import { safeLocalStorage, safeSessionStorage, readJSON, writeJSON } from '../sa
 function loadModule(): typeof import('../safeStorage') {
 	let mod: typeof import('../safeStorage');
 	jest.isolateModules(() => {
+		// isolateModules only re-runs a module for a synchronous request, so this
+		// has to be a require — an import would be hoisted out of the callback.
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		mod = require('../safeStorage');
 	});
 
