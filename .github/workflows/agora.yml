@@ -19,6 +19,10 @@ on:
     paths:
       - 'apps/agora/**'
       - 'packages/shared-types/**'
+      # Symmetric with pull_request above: without this a change to the workflow
+      # cannot run the workflow, so a fix to the gate goes unverified until some
+      # unrelated agora commit happens along.
+      - '.github/workflows/agora.yml'
 
 jobs:
   checks:
