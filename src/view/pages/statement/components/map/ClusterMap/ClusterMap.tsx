@@ -94,9 +94,9 @@ const ClusterMap: FC = () => {
 	const summaryGeneratedAt = (statement as { summaryGeneratedAt?: number } | undefined)
 		?.summaryGeneratedAt;
 
-	const handleGenerateSummary = async (customPrompt: string) => {
+	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
 		if (!statementId) return;
-		const ok = await generateSummary(statementId, customPrompt || undefined);
+		const ok = await generateSummary(statementId, customPrompt || undefined, includeSubQuestions);
 		if (ok) {
 			setSummarizeModalOpen(false);
 			setShowSummary(true);

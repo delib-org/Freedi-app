@@ -6,7 +6,7 @@ import styles from './SummarizeModal.module.scss';
 interface SummarizeModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onGenerate: (customPrompt: string) => Promise<void>;
+	onGenerate: (customPrompt: string, includeSubQuestions: boolean) => Promise<void>;
 	isLoading: boolean;
 	questionTitle: string;
 }
@@ -20,9 +20,10 @@ const SummarizeModal: FC<SummarizeModalProps> = ({
 }) => {
 	const { t } = useTranslation();
 	const [customPrompt, setCustomPrompt] = useState('');
+	const [includeSubQuestions, setIncludeSubQuestions] = useState(true);
 
 	const handleGenerate = async () => {
-		await onGenerate(customPrompt);
+		await onGenerate(customPrompt, includeSubQuestions);
 		setCustomPrompt('');
 	};
 
@@ -55,6 +56,23 @@ const SummarizeModal: FC<SummarizeModalProps> = ({
 						disabled={isLoading}
 					/>
 					<p className={styles.hint}>{t('Leave empty for automatic summary of top suggestions')}</p>
+				</div>
+
+				<div className={styles.subQuestionsToggle}>
+					<label className={styles.checkboxLabel}>
+						<input
+							type="checkbox"
+							checked={includeSubQuestions}
+							onChange={(e) => setIncludeSubQuestions(e.target.checked)}
+							disabled={isLoading}
+						/>
+						<span>{t('Include answers from sub-questions')}</span>
+					</label>
+					<p className={styles.hint}>
+						{t(
+							'Builds the summary from the options that passed the cutoff of each sub-question, up to 2 levels deep',
+						)}
+					</p>
 				</div>
 
 				<div className={styles.btns}>

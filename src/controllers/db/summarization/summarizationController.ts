@@ -7,6 +7,7 @@ interface SummarizeDiscussionRequest {
 	statementId: string;
 	adminPrompt?: string;
 	language?: string;
+	includeSubQuestions?: boolean;
 }
 
 interface SummarizeDiscussionResponse {
@@ -14,7 +15,14 @@ interface SummarizeDiscussionResponse {
 	questionTitle: string;
 	totalParticipants: number;
 	solutionsCount: number;
+	subQuestionsCount: number;
 	generatedAt: number;
+}
+
+interface SummarizeDiscussionOptions {
+	language?: string;
+	/** Build the summary from answers of all sub-questions, up to 2 levels deep */
+	includeSubQuestions?: boolean;
 }
 
 /**
@@ -38,12 +46,14 @@ function isPreconditionFailure(error: unknown): boolean {
  * Request AI-generated summary for a discussion
  * @param statementId - The ID of the question statement to summarize
  * @param adminPrompt - Optional custom instructions for the AI
- * @param language - Optional language code (auto-detected if not provided)
+ * @param options - Optional language code (auto-detected if not provided) and
+ *   includeSubQuestions to build the summary from the answers of all
+ *   sub-questions up to 2 levels deep
  */
 export async function requestDiscussionSummary(
 	statementId: string,
 	adminPrompt?: string,
-	language?: string,
+	options?: SummarizeDiscussionOptions,
 ): Promise<SummarizeDiscussionResponse> {
 	try {
 		const summarizeDiscussion = httpsCallable<
@@ -54,7 +64,8 @@ export async function requestDiscussionSummary(
 		const result = await summarizeDiscussion({
 			statementId,
 			adminPrompt,
-			language,
+			language: options?.language,
+			includeSubQuestions: options?.includeSubQuestions,
 		});
 
 		logger.info('Discussion summary requested', {

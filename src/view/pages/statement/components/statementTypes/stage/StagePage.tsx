@@ -54,9 +54,9 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 		};
 	}, []);
 
-	const handleGenerateSummary = async (customPrompt: string) => {
+	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
 		if (!statement) return;
-		const success = await generateSummary(statement.statementId, customPrompt);
+		const success = await generateSummary(statement.statementId, customPrompt, includeSubQuestions);
 		if (success) {
 			setIsModalOpen(false);
 		}

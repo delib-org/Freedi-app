@@ -13,7 +13,11 @@ interface UseSummarizationResult {
 	 * can be generated — show a prompt, not a failure. 'failed' is a real error.
 	 */
 	errorKind: 'not-ready' | 'failed' | null;
-	generateSummary: (statementId: string, customPrompt?: string) => Promise<boolean>;
+	generateSummary: (
+		statementId: string,
+		customPrompt?: string,
+		includeSubQuestions?: boolean,
+	) => Promise<boolean>;
 	clearError: () => void;
 }
 
@@ -26,13 +30,17 @@ export const useSummarization = (): UseSummarizationResult => {
 	const [errorKind, setErrorKind] = useState<'not-ready' | 'failed' | null>(null);
 
 	const generateSummary = useCallback(
-		async (statementId: string, customPrompt?: string): Promise<boolean> => {
+		async (
+			statementId: string,
+			customPrompt?: string,
+			includeSubQuestions?: boolean,
+		): Promise<boolean> => {
 			try {
 				setIsGenerating(true);
 				setError(null);
 				setErrorKind(null);
 
-				await requestDiscussionSummary(statementId, customPrompt);
+				await requestDiscussionSummary(statementId, customPrompt, { includeSubQuestions });
 
 				// Summary is saved directly to Firestore by the Cloud Function
 				// The statement will be updated via the real-time listener

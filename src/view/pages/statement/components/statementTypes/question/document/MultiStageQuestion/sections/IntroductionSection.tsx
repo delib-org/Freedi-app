@@ -20,8 +20,8 @@ export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement })
 	const { isGenerating, generateSummary } = useSummarization();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
-	const handleGenerateSummary = async (customPrompt: string) => {
-		const success = await generateSummary(statement.statementId, customPrompt);
+	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
+		const success = await generateSummary(statement.statementId, customPrompt, includeSubQuestions);
 		if (success) {
 			setIsModalOpen(false);
 		}

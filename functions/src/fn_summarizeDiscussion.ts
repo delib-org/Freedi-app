@@ -1,8 +1,8 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions/v1';
-import { Statement, Collections, functionConfig } from '@freedi/shared-types';
-import { getGeminiModel } from './config/gemini';
+import { Statement, StatementType, Collections, functionConfig } from '@freedi/shared-types';
+import { getGeminiModel, getGenAI, LLM_MODEL_HEAVY } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
 import { logError } from './utils/errorHandling';
@@ -11,6 +11,12 @@ interface SummarizeDiscussionRequest {
 	statementId: string;
 	adminPrompt?: string;
 	language?: string;
+	/**
+	 * When true, the summary is built from the answers (above-cutoff options)
+	 * of the question AND all its sub-questions, up to 2 levels deep, and is
+	 * generated with the heavy reasoning model.
+	 */
+	includeSubQuestions?: boolean;
 }
 
 interface SummarizeDiscussionResponse {
@@ -18,6 +24,7 @@ interface SummarizeDiscussionResponse {
 	questionTitle: string;
 	totalParticipants: number;
 	solutionsCount: number;
+	subQuestionsCount: number;
 	generatedAt: number;
 }
 
@@ -28,6 +35,16 @@ interface SelectedSolution {
 	averageEvaluation: number;
 	numberOfEvaluators: number;
 }
+
+/** A question with its above-cutoff answers and nested sub-questions. */
+export interface QuestionNode {
+	statement: Statement;
+	solutions: SelectedSolution[];
+	children: QuestionNode[];
+}
+
+/** Sub-questions are gathered up to this many levels below the root question. */
+const MAX_SUB_QUESTION_DEPTH = 2;
 
 const LANGUAGE_NAMES: Record<string, string> = {
 	he: 'Hebrew',
@@ -61,7 +78,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		cors: [...ALLOWED_ORIGINS],
 	},
 	async (request): Promise<SummarizeDiscussionResponse> => {
-		const { statementId, adminPrompt, language } = request.data;
+		const { statementId, adminPrompt, language, includeSubQuestions } = request.data;
 		const userId = request.auth?.uid;
 
 		if (!userId) {
@@ -102,57 +119,44 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		// 3. Get total participants from parent evaluation
 		const totalParticipants = question.evaluation?.asParentTotalEvaluators || 0;
 
-		// 4. Get selected solutions (using isChosen flag set by cutoff logic)
-		// Note: Can't orderBy nested field evaluation.agreement in Firestore, so we sort in memory
-		const selectedSnapshot = await db
-			.collection(Collections.statements)
-			.where('parentId', '==', statementId)
-			.where('isChosen', '==', true)
-			.get();
+		// 4. Gather the question tree with its above-cutoff answers.
+		// Each question's answers are the child options flagged isChosen by the
+		// cutoff logic (which applies that question's own resultsSettings).
+		const maxDepth = includeSubQuestions === true ? MAX_SUB_QUESTION_DEPTH : 0;
+		const tree = await buildQuestionTree(question, 0, maxDepth);
 
-		if (selectedSnapshot.empty) {
+		const totalSolutions = countSolutions(tree);
+		const subQuestionsCount = countSubQuestions(tree);
+
+		if (totalSolutions === 0) {
 			throw new HttpsError(
 				'failed-precondition',
-				'No selected solutions to summarize. Please configure cutoff settings first.',
+				includeSubQuestions
+					? 'No selected solutions to summarize in this question or its sub-questions. Please configure cutoff settings first.'
+					: 'No selected solutions to summarize. Please configure cutoff settings first.',
 			);
 		}
 
-		const sortedDocs = selectedSnapshot.docs
-			.map((doc) => doc.data() as Statement)
-			.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0));
-
-		const selectedSolutions: SelectedSolution[] = sortedDocs.map((s) => {
-			return {
-				title: s.statement,
-				description: getParagraphsText(s.paragraphs),
-				consensus: s.consensus ?? 0,
-				averageEvaluation: s.evaluation?.averageEvaluation || 0,
-				numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0,
-			};
-		});
-
 		// 5. Detect language and build prompt
 		const detectedLang = language || detectLanguage(question.statement);
-		const prompt = buildSummaryPrompt(
-			question,
-			selectedSolutions,
-			totalParticipants,
-			adminPrompt,
-			detectedLang,
-		);
+		const useDeepSummary = maxDepth > 0 && subQuestionsCount > 0;
+		const prompt = useDeepSummary
+			? buildTreeSummaryPrompt(tree, totalParticipants, adminPrompt, detectedLang)
+			: buildSummaryPrompt(question, tree.solutions, totalParticipants, adminPrompt, detectedLang);
 
-		// 6. Call Gemini AI with retry logic for truncation
+		// 6. Call the LLM with retry logic for truncation.
+		// Deep (sub-question) summaries are an integration/synthesis task, so they
+		// run on the heavy reasoning model; flat summaries stay on the fast tier.
 		try {
-			const model = getGeminiModel();
+			const model = useDeepSummary
+				? getGenAI().getGenerativeModel({ model: LLM_MODEL_HEAVY })
+				: getGeminiModel();
 
 			// Calculate appropriate token limit based on number of solutions
 			// More solutions = need more tokens for complete summary
 			const baseTokens = 4096;
 			const tokensPerSolution = 100;
-			const maxOutputTokens = Math.min(
-				8192,
-				baseTokens + selectedSolutions.length * tokensPerSolution,
-			);
+			const maxOutputTokens = Math.min(8192, baseTokens + totalSolutions * tokensPerSolution);
 
 			let summaryText = '';
 			let attempts = 0;
@@ -217,7 +221,8 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 				summary: summaryText,
 				questionTitle: question.statement,
 				totalParticipants,
-				solutionsCount: selectedSolutions.length,
+				solutionsCount: totalSolutions,
+				subQuestionsCount,
 				generatedAt,
 			};
 		} catch (error) {
@@ -233,6 +238,178 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		}
 	},
 );
+
+/**
+ * Fetch a question's above-cutoff answers: child options flagged isChosen by
+ * the cutoff logic, sorted by consensus (can't orderBy nested fields in
+ * Firestore, so sorting happens in memory).
+ */
+async function fetchChosenSolutions(parentId: string): Promise<SelectedSolution[]> {
+	const snapshot = await getFirestore()
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('isChosen', '==', true)
+		.get();
+
+	return snapshot.docs
+		.map((doc) => doc.data() as Statement)
+		.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0))
+		.map((s) => ({
+			title: s.statement,
+			description: getParagraphsText(s.paragraphs),
+			consensus: s.consensus ?? 0,
+			averageEvaluation: s.evaluation?.averageEvaluation || 0,
+			numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0,
+		}));
+}
+
+/**
+ * Fetch a question's direct sub-questions, in their sibling order.
+ * Equality-only filters, so Firestore serves this by merging single-field indexes.
+ */
+async function fetchSubQuestions(parentId: string): Promise<Statement[]> {
+	const snapshot = await getFirestore()
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('statementType', '==', StatementType.question)
+		.get();
+
+	return snapshot.docs
+		.map((doc) => doc.data() as Statement)
+		.sort((a, b) => (a.order ?? a.createdAt ?? 0) - (b.order ?? b.createdAt ?? 0));
+}
+
+/**
+ * Recursively build the question tree with each question's above-cutoff
+ * answers, descending into sub-questions until maxDepth.
+ */
+async function buildQuestionTree(
+	statement: Statement,
+	depth: number,
+	maxDepth: number,
+): Promise<QuestionNode> {
+	const [solutions, subQuestions] = await Promise.all([
+		fetchChosenSolutions(statement.statementId),
+		depth < maxDepth ? fetchSubQuestions(statement.statementId) : Promise.resolve([]),
+	]);
+
+	const children = await Promise.all(
+		subQuestions.map((subQuestion) => buildQuestionTree(subQuestion, depth + 1, maxDepth)),
+	);
+
+	return { statement, solutions, children };
+}
+
+export function countSolutions(node: QuestionNode): number {
+	return (
+		node.solutions.length + node.children.reduce((sum, child) => sum + countSolutions(child), 0)
+	);
+}
+
+export function countSubQuestions(node: QuestionNode): number {
+	return node.children.reduce((sum, child) => sum + 1 + countSubQuestions(child), 0);
+}
+
+/**
+ * Render a sub-question node (and its nested sub-questions) as a markdown
+ * section for the deep-summary prompt. Level-1 nodes get ### headers,
+ * level-2 nodes #### headers.
+ */
+export function renderQuestionNode(node: QuestionNode, level: number): string {
+	const header = '#'.repeat(Math.min(2 + level, 4));
+	const description = getParagraphsText(node.statement.paragraphs);
+	const evaluators = node.statement.evaluation?.asParentTotalEvaluators || 0;
+
+	const solutionsText =
+		node.solutions.length > 0
+			? node.solutions
+					.map(
+						(s) =>
+							`- **${s.title}** (consensus ${s.consensus.toFixed(2)}, ${s.numberOfEvaluators} voters)${
+								s.description ? `\n  ${s.description}` : ''
+							}`,
+					)
+					.join('\n')
+			: '_No agreed answers yet — this sub-question is still open._';
+
+	const childrenText = node.children
+		.map((child) => renderQuestionNode(child, level + 1))
+		.join('\n');
+
+	return `${header} Sub-question: ${node.statement.statement}
+${description ? `${description}\n` : ''}${evaluators ? `(${evaluators} participants evaluated)\n` : ''}Agreed answers:
+${solutionsText}
+${childrenText}`;
+}
+
+/**
+ * Build the deep-summary prompt: synthesize an answer to the main question
+ * from the above-cutoff answers of the whole sub-question tree.
+ */
+export function buildTreeSummaryPrompt(
+	tree: QuestionNode,
+	totalParticipants: number,
+	adminPrompt?: string,
+	language: string = 'en',
+): string {
+	const languageName = LANGUAGE_NAMES[language] || 'English';
+	const question = tree.statement;
+	const questionContext = getParagraphsText(question.paragraphs);
+
+	const rootSolutionsText =
+		tree.solutions.length > 0
+			? `## Direct agreements on the main question
+${tree.solutions
+	.map(
+		(s) =>
+			`- **${s.title}** (consensus ${s.consensus.toFixed(2)}, ${s.numberOfEvaluators} voters)${
+				s.description ? `\n  ${s.description}` : ''
+			}`,
+	)
+	.join('\n')}
+`
+			: '';
+
+	const subQuestionsText = tree.children.map((child) => renderQuestionNode(child, 1)).join('\n');
+
+	return `You are writing an integrative summary of a group deliberation. The main question was explored through sub-questions; each question lists only the answers that passed that question's consensus cutoff — these are the group's agreed answers.
+
+## The Main Question
+"${question.statement}"
+${questionContext ? `Context: ${questionContext}` : ''}
+${totalParticipants ? `${totalParticipants} participants evaluated proposals on the main question.` : ''}
+
+${rootSolutionsText}
+## Sub-question results
+${subQuestionsText}
+
+${adminPrompt ? `## Special Focus Requested\n${adminPrompt}\n` : ''}
+
+## Your Task
+Write a clear, integrative summary in ${languageName} that:
+
+1. **Answers the main question** - Open with the overall answer that emerges when the sub-question agreements are combined. This synthesis is the heart of the summary.
+2. **Covers each sub-question** - For every sub-question that has agreed answers, state plainly what the group agreed. Group related sub-questions by theme when that reads better.
+3. **Connects the pieces** - Point out where sub-question agreements reinforce or tension with each other, and what that means for the main question.
+4. **Names what is still open** - If some sub-questions have no agreed answers yet, mention them briefly as open points.
+
+**CRITICAL FORMATTING RULES - YOU MUST FOLLOW THESE**:
+- Use proper markdown headers for ALL section titles:
+  - Use "## " (with space) for main sections (e.g., "## The Answer in Brief", "## What Was Agreed")
+  - Use "### " (with space) for subsections (one per sub-question or theme)
+- Do NOT use **bold text** for section titles - use ## or ### headers instead
+- Use bullet points (- ) for listing agreements under each section
+
+**Writing Style**:
+- Write for someone who wasn't part of the discussion - they should fully understand the decisions
+- Focus on the SUBSTANCE of what was agreed, not the process
+- Use clear, accessible language - avoid jargon
+- Be specific about what the group decided to do/believe/support
+- Aim for 300-700 words depending on how many sub-questions have agreements
+- **IMPORTANT: Complete the entire summary - do not stop mid-sentence or mid-section**
+
+Return ONLY the markdown summary text with proper ## and ### headers. Do not wrap in code blocks or JSON.`;
+}
 
 /**
  * Build the summary prompt for Gemini AI
