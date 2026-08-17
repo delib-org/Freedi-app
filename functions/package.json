@@ -16,7 +16,7 @@
 		"test:watch": "jest --watch"
 	},
 	"engines": {
-		"node": ">=20"
+		"node": ">=22"
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
