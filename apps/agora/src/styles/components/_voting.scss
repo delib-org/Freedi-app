@@ -64,6 +64,16 @@
 			border-color: var(--mine);
 			box-shadow: var(--shadow-mine);
 		}
+
+		// The teacher's projector copy: the same row, but nothing to press
+		&--static {
+			cursor: default;
+
+			&:hover {
+				transform: none;
+				border-color: var(--border-subtle);
+			}
+		}
 	}
 
 	// The support fill. Logical inline-size + inset-inline-start keeps it
@@ -141,6 +151,14 @@
 		color: var(--text-muted);
 	}
 
+	// Turnout is never hidden — it is the room's own progress, not a result
+	&__turnout {
+		margin: 0;
+		text-align: center;
+		font-weight: 700;
+		color: var(--text-secondary);
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		&__option:hover:not(:disabled) {
 			transform: none;
@@ -154,6 +172,23 @@
 
 // The teacher's card: how the vote will run, set while the class deliberates
 .voting-settings {
+	&__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-md);
+		flex-wrap: wrap;
+	}
+
+	&__turnout {
+		font-weight: 700;
+		color: var(--text-secondary);
+
+		&--all {
+			color: var(--mine-ink);
+		}
+	}
+
 	&__row {
 		display: flex;
 		align-items: center;
@@ -196,6 +231,13 @@
 		&:has(input[type='checkbox']) {
 			justify-content: flex-start;
 			gap: var(--space-sm);
+		}
+
+		// Live reorder is unavailable until the counts are shown — say so by
+		// looking unavailable, rather than by refusing a click silently
+		&:has(input:disabled) {
+			opacity: 0.55;
+			cursor: default;
 		}
 	}
 

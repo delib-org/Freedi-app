@@ -216,6 +216,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'voting.change_hint':
 			'אפשר לשנות את הקול עד סגירת ההצבעה — לחיצה נוספת על ההצעה שבחרתם מבטלת את הקול.',
 		'voting.saving_vote': 'שומר את הקול שלכם',
+		'voting.turnout': '{{n}} מתוך {{total}} כבר הצביעו',
+		'voting.results_hidden':
+			'התוצאות יתגלו כשהמורה יחליט — הצביעו לפי מה שאתם חושבים, לא לפי מי שמוביל.',
+		'teacher.show_results': 'להראות לכיתה את התוצאות',
+		'teacher.live_reorder': 'לסדר מחדש לפי מספר הקולות',
+		'teacher.results_hidden_hint':
+			'הכיתה רואה כמה הצביעו, אבל לא עבור מה. כך הקול הראשון לא גורר את השאר.',
+		'teacher.results_shown_hint': 'הכיתה רואה עכשיו את מספר הקולות של כל הצעה.',
 		'voting.teacher_hint':
 			'הכיתה מצביעה על ההצעות המובילות. כל תלמיד בוחר הצעה אחת, ואפשר לשנות עד שתסגרו את השלב.',
 		'teacher.voting_settings': 'הגדרות ההצבעה',
@@ -836,6 +844,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'voting.change_hint':
 			'You can change your vote until the teacher closes it — tapping your own choice again takes it back.',
 		'voting.saving_vote': 'saving your vote',
+		'voting.turnout': '{{n}} of {{total}} have voted',
+		'voting.results_hidden':
+			'The counts appear when your teacher shows them — vote for what you think, not for whoever is ahead.',
+		'teacher.show_results': 'Show the class the results',
+		'teacher.live_reorder': 'Reorder live by number of votes',
+		'teacher.results_hidden_hint':
+			'The class sees how many have voted, but not for what. That way the first votes do not pull the rest.',
+		'teacher.results_shown_hint': 'The class can now see the count on every proposal.',
 		'voting.teacher_hint':
 			'The class votes on the leading proposals. Each student picks one, and may change it until you close the stage.',
 		'teacher.voting_settings': 'Voting settings',
@@ -1465,6 +1481,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'voting.change_hint':
 			'يمكنكم تغيير صوتكم حتى إغلاق التصويت — والضغط مجددًا على اختياركم يسحبه.',
 		'voting.saving_vote': 'جارٍ حفظ صوتكم',
+		'voting.turnout': 'صوّت {{n}} من {{total}}',
+		'voting.results_hidden':
+			'تظهر النتائج حين يعرضها المعلّم — صوّتوا وفق ما ترونه، لا وفق من يتصدّر.',
+		'teacher.show_results': 'إظهار النتائج للصف',
+		'teacher.live_reorder': 'إعادة الترتيب حيًّا حسب عدد الأصوات',
+		'teacher.results_hidden_hint':
+			'يرى الصف كم صوّتوا، لا لمن صوّتوا. هكذا لا تجرّ الأصوات الأولى بقيّتها.',
+		'teacher.results_shown_hint': 'يرى الصف الآن عدد الأصوات لكل مقترح.',
 		'voting.teacher_hint':
 			'يصوّت الصف على المقترحات الرائدة. يختار كل طالب مقترحًا واحدًا، ويمكنه تغييره حتى تُغلقوا المرحلة.',
 		'teacher.voting_settings': 'إعدادات التصويت',
@@ -2092,6 +2116,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'voting.change_hint':
 			'Podéis cambiar el voto hasta que se cierre — al pulsar de nuevo vuestra elección, la retiráis.',
 		'voting.saving_vote': 'guardando vuestro voto',
+		'voting.turnout': '{{n}} de {{total}} ya votaron',
+		'voting.results_hidden':
+			'Los recuentos aparecen cuando el profesor los muestra — votad por lo que penséis, no por quien va en cabeza.',
+		'teacher.show_results': 'Mostrar los resultados a la clase',
+		'teacher.live_reorder': 'Reordenar en vivo por número de votos',
+		'teacher.results_hidden_hint':
+			'La clase ve cuántos han votado, pero no a qué. Así los primeros votos no arrastran al resto.',
+		'teacher.results_shown_hint': 'La clase ya ve el recuento de cada propuesta.',
 		'voting.teacher_hint':
 			'La clase vota las propuestas líderes. Cada estudiante elige una y puede cambiarla hasta que cierres la etapa.',
 		'teacher.voting_settings': 'Ajustes de la votación',
@@ -2747,6 +2779,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'voting.change_hint':
 			'Ihr könnt eure Stimme bis zum Schluss ändern — noch einmal auf eure Wahl tippen nimmt sie zurück.',
 		'voting.saving_vote': 'eure Stimme wird gespeichert',
+		'voting.turnout': '{{n}} von {{total}} haben gewählt',
+		'voting.results_hidden':
+			'Die Zahlen erscheinen, wenn eure Lehrkraft sie zeigt — stimmt für das, was ihr denkt, nicht für die Führenden.',
+		'teacher.show_results': 'Der Klasse die Ergebnisse zeigen',
+		'teacher.live_reorder': 'Live nach Stimmenzahl neu ordnen',
+		'teacher.results_hidden_hint':
+			'Die Klasse sieht, wie viele gewählt haben, aber nicht wofür. So ziehen die ersten Stimmen die übrigen nicht mit.',
+		'teacher.results_shown_hint': 'Die Klasse sieht jetzt die Stimmenzahl jedes Vorschlags.',
 		'voting.teacher_hint':
 			'Die Klasse stimmt über die führenden Vorschläge ab. Jede und jeder wählt einen und kann bis zum Schließen der Etappe wechseln.',
 		'teacher.voting_settings': 'Einstellungen der Abstimmung',
@@ -3409,6 +3449,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'voting.change_hint':
 			'Je kunt je stem wijzigen tot de stemming sluit — nogmaals op je keuze tikken trekt hem in.',
 		'voting.saving_vote': 'je stem wordt opgeslagen',
+		'voting.turnout': '{{n}} van {{total}} hebben gestemd',
+		'voting.results_hidden':
+			'De aantallen verschijnen wanneer je docent ze toont — stem op wat jij vindt, niet op wie voorligt.',
+		'teacher.show_results': 'De klas de resultaten tonen',
+		'teacher.live_reorder': 'Live herordenen op aantal stemmen',
+		'teacher.results_hidden_hint':
+			'De klas ziet hoeveel er gestemd hebben, maar niet waarop. Zo trekken de eerste stemmen de rest niet mee.',
+		'teacher.results_shown_hint': 'De klas ziet nu het aantal stemmen van elk voorstel.',
 		'voting.teacher_hint':
 			'De klas stemt over de leidende voorstellen. Elke leerling kiest er één en kan wisselen tot je de etappe sluit.',
 		'teacher.voting_settings': 'Instellingen van de stemming',
