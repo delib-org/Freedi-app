@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { on } from './events';
 import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe } from './firebase';
 import { Collections, NotificationTriggerType, SourceApp } from '@freedi/shared-types';
 import { AGORA_POINTS } from '@freedi/shared-types';
@@ -162,6 +163,40 @@ export function pushLocalToast(triggerType: string, target?: InboxTarget): void 
  * (Called from the proposals statements listener — the proposals ↔
  * notifications import cycle is call-time-only and benign.)
  */
+/**
+ * Subscribe the notification policy to the data layer's announcements.
+ *
+ * These detectors used to be CALLED from inside proposals.ts's snapshot
+ * handlers, which made a real import cycle and put the decision "does this
+ * deserve a toast" inside the function whose job was "apply this snapshot".
+ * Now the listeners announce and this file decides. Call once when the
+ * deliberation listeners are attached.
+ */
+let detectorsSubscribed = false;
+
+export function subscribeNotificationDetectors(): void {
+	// Idempotent, because the caller is a Mithril component factory and a new
+	// subscription per construction would run every detector twice — which
+	// queues the same celebration twice, and a modal celebration nobody expects
+	// blocks the next tap.
+	if (detectorsSubscribed) return;
+	detectorsSubscribed = true;
+
+	on('statements:changed', ({ sessionId, userId }) => {
+		// Close the collaboration loop: tell helpers their proposal moved
+		detectHelpedImprovements(sessionId, userId);
+		// ...and the mirror: a message arrived in a thread I'm part of
+		detectThreadMessages(sessionId, userId);
+	});
+
+	on('scores:changed', ({ sessionId, userId, classMax }) => {
+		detectClassBridgeRecord(sessionId, classMax);
+		// ...and the author's own two: standing in the bridge zone, and
+		// climbing past another proposal on the way there
+		detectProposalMilestones(sessionId, userId);
+	});
+}
+
 export function detectHelpedImprovements(sessionId: string, userId: string): void {
 	const key = `agora_${sessionId}_helped_toastmark`;
 	let marks: Record<string, number> = {};

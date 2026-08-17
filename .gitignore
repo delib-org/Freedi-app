@@ -91,6 +91,13 @@ docs/security/PENTEST_REPORT.md
 docs/security/REMEDIATION_PLAN.md
 docs/security/Freedi_Penetration_Test_Report_*.docx
 docs/security/Freedi_Penetration_Test_Report_*.pdf
-apps/agora/walkthrough-shots/
-apps/agora/fastlane-shots/
-apps/agora/helpers-shots/
+# Agora screenshot runs. ~77MB across 25 directories, and until now they were
+# ignored only by the blanket *.png rule above — so the first .webp, .jpg, .mp4
+# or .json a shot script dropped in one would have been committed silently.
+# Match the directories themselves, whatever ends up inside them.
+apps/agora/*-shots/
+apps/agora/after-*/
+apps/agora/before-shots/
+apps/agora/mobile-*/
+apps/agora/mock/*.png
+apps/agora/mock/*.webp

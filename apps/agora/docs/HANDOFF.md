@@ -1,14 +1,18 @@
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-07-14, branch `dev` (this iteration's agora work was done on
-`main-sign` and merged into `dev` at 500fa7777 — both carry it).
-Companion docs: `game-script.md` (the pedagogical
-script — what each beat teaches and why, grounded in Tal's book *On
-Deliberation*), `stitch-brief.md` (Google Stitch prompts for the workshop
-redesign, DONE), `../DESIGN.md` (⚠️ STALE: still describes the old
-Era-of-Lanterns night theme — superseded by the Festival Day theme below),
-`plans/agora-deliberative-game-plan.md` (original architecture plan).
+2026-08-16.
+
+Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
+`feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
+asserts against by name), `game-script.md` (the pedagogical script, grounded
+in Tal's *On Deliberation*), `../DESIGN.md` (Purple Agora — current, and what
+the contrast auditor enforces), `chat-guide-rules.md` (ARCHIVED: describes the
+chat deliberation, deleted 2026-08-16).
+
+**Status: live.** https://agora-wizcol.web.app on project `wizcol-app` —
+hosting, 13 functions, rules and 5 indexes deployed, demo topic seeded.
+No class has played it yet.
 
 ## What Agora is
   
@@ -41,7 +45,9 @@ everywhere) → positioning (slider labeled with character names + camp) →
 **deliberation: a guided CHAT** (propose → rate classmates one at a time →
 improvement prompts → free-choice activity menu) → results.
 
-Key deliberation mechanics ("Chat-guided square" rebuild 2026-08-03 — the
+Key deliberation mechanics (NOTE: the "chat-guided square" described below was
+REVERTED on 2026-08-05 and its code deleted on 2026-08-16 — the places UI is
+what ships. Kept for the reasoning; see feedback-cycle.md for what runs. The
 "places" UI (placeBanner scenes, shell washes, travel splashes, delib-nav
 tabs, the 5-lap cycle) is GONE; students still couldn't reliably separate
 "mine" from "others", so ownership is now stated CONVERSATIONALLY. A

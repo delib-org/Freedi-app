@@ -8,33 +8,17 @@
  * Run: node scripts/e2e-changes.mjs (needs emulators + vite on 3009 + seed) */
 import { chromium } from '@playwright/test';
 import { preflight } from './lib/preflight.mjs';
+import { eq, fail, mkPage as makePage, shotter, step } from './lib/e2e.mjs';
 
 // Fail in seconds with a readable reason instead of minutes with a stack trace
 await preflight();
 
 const BASE = 'http://localhost:3009';
 const SHOTS = 'changes-shots';
-const step = (msg) => console.log(`\n=== ${msg}`);
-const fail = (msg) => {
-	throw new Error(msg);
-};
-const eq = (label, actual, expected) => {
-	if (actual !== expected) fail(`${label}: expected ${expected}, got ${actual}`);
-	console.log(`   ✓ ${label} = ${actual}`);
-};
 
 const browser = await chromium.launch();
-const mkPage = async (label) => {
-	const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-	const page = await ctx.newPage();
-	await page.addInitScript(() => window.localStorage.setItem('agora_lang', 'he'));
-	page.on('pageerror', (e) => console.log(`[${label} PAGEERROR]`, e.message.slice(0, 160)));
-	page.on('console', (m) => {
-		if (m.type() === 'error') console.log(`[${label} CONSOLE]`, m.text().slice(0, 160));
-	});
-	return page;
-};
-const shot = (page, name) => page.screenshot({ path: `${SHOTS}/${name}.png` });
+const shot = shotter(SHOTS);
+const page = (label) => makePage(browser, label, { height: 800 });
 
 const clearCelebration = async (page) => {
 	for (let i = 0; i < 5; i++) {
@@ -44,9 +28,9 @@ const clearCelebration = async (page) => {
 	}
 };
 
-const teacher = await mkPage('T');
-const s1 = await mkPage('S1'); // Author A
-const s2 = await mkPage('S2'); // Helper B
+const teacher = await page('T');
+const s1 = await page('S1'); // Author A
+const s2 = await page('S2'); // Helper B
 
 step('SETUP: teacher session, students join, advance to deliberation');
 await teacher.goto(`${BASE}/#!/teach`, { waitUntil: 'domcontentloaded' });

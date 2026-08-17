@@ -1,0 +1,953 @@
+// Mine | Others tabs, ownership mode, place washes, the helped loop
+//
+// Split out of the 8,474-line components.scss so a rule can be found, and so
+// dead rules can be seen. Imported by components.scss; do not import directly.
+
+/**
+ * The civic square's one line of orientation: which island this is, and the
+ * way back to the rest of them. A classroom needs neither — it has a teacher
+ * in the room — so this renders only on the civic track.
+ */
+.delib-civic {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-md);
+	flex-wrap: wrap;
+
+	&__island {
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+
+	&__back {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		text-decoration: none;
+		border-bottom: 1px solid var(--border-subtle);
+
+		&:hover,
+		&:focus-visible {
+			color: var(--text-primary);
+		}
+	}
+}
+
+// --- Mine | Others navigation: top tab row on desktop, fixed bottom bar
+// on mobile. One element; the media query moves it. ---
+.delib-nav {
+	display: flex;
+	justify-content: center;
+	gap: var(--space-sm);
+
+	&__item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		position: relative;
+		padding: 6px var(--space-lg);
+		background: var(--bg-inset);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		color: var(--text-secondary);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition:
+			background var(--motion-fast) ease,
+			color var(--motion-fast) ease,
+			transform var(--motion-fast) var(--ease-spring);
+
+		&:active {
+			transform: scale(0.95);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: 2px;
+		}
+
+		&--active {
+			background: var(--mine);
+			border-color: var(--mine);
+			color: #ffffff;
+			box-shadow: 0 3px 10px -3px color-mix(in srgb, var(--mine) 60%, transparent);
+		}
+
+		// All three tabs light purple when active, and that is not a
+		// contradiction of "purple = mine": purple on CHROME means "this
+		// control is the one you are on". Ownership is a question about
+		// CONTENT, and content is either a purple card (mine) or a white one
+		// (theirs) — a tab bar is neither. The old rule spent two more colours
+		// to say "selected".
+		&--mine.delib-nav__item--active,
+		&--peer.delib-nav__item--active,
+		&--results.delib-nav__item--active {
+			background: var(--grad-mine-text);
+			border-color: transparent;
+			color: #ffffff;
+			box-shadow: var(--glow-lantern);
+		}
+	}
+
+	&__icon {
+		font-size: 1.1rem;
+		line-height: 1;
+	}
+
+	&__badge {
+		position: absolute;
+		inset-block-start: -6px;
+		inset-inline-end: -4px;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		// A notification badge must not wear a camp color — and it must not
+		// wear --danger either: a waiting reply is the friendliest event in
+		// the game, and red said an error had happened. Pink is the count
+		// colour, and it is the count colour's only job.
+		background: var(--pink);
+		color: #ffffff;
+		border-radius: var(--radius-full);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		box-shadow: 0 0 10px rgba(245, 106, 168, 0.4);
+	}
+
+	@media (max-width: 700px) {
+		position: fixed;
+		inset-inline: 0;
+		inset-block-end: 0;
+		z-index: var(--z-header);
+		justify-content: space-around;
+		gap: 0;
+		// The dock parks flush on this bar's top edge, so the two fixed
+		// strips must agree on one height or they drift apart
+		box-sizing: border-box;
+		min-height: calc(var(--delib-nav-h) + env(safe-area-inset-bottom, 0px));
+		padding: var(--space-sm) var(--space-md)
+			calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
+		// The bar belongs to the room it sits in — a white slab at the bottom
+		// of a tinted screen would read as "the page ends here"
+		background: rgba(255, 255, 255, 0.94);
+		backdrop-filter: blur(8px);
+		// The bar's top edge is the persistent mode beacon
+		border-block-start: 2px solid var(--mode-accent, var(--border-lantern));
+		border-start-start-radius: var(--radius-md);
+		border-start-end-radius: var(--radius-md);
+		box-shadow: 0 -4px 20px rgba(70, 45, 150, 0.18);
+
+		&__item {
+			flex-direction: column;
+			gap: 2px;
+			// Three tabs share the width now, so the padding gives way before
+			// the labels do — a wrapped or clipped tab label reads as broken
+			padding: 4px var(--space-md);
+			min-width: 0;
+			background: transparent;
+			border-color: transparent;
+
+			&--active,
+			&--mine.delib-nav__item--active,
+			&--peer.delib-nav__item--active {
+				background: var(--grad-mine-text);
+				border-color: transparent;
+			}
+		}
+
+		&__label {
+			max-width: 100%;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+	}
+}
+
+// Keep the last content (CTA buttons) clear of the fixed mobile bar
+@media (max-width: 700px) {
+	.shell--delib .shell__content {
+		padding-block-end: 96px;
+	}
+
+	// ...and clear of the proposal dock stacked on top of it, when there is
+	// a proposal to dock
+	.shell--delib.shell--docked .shell__content {
+		padding-block-end: calc(
+			var(--delib-nav-h) + var(--dock-bar-h) + var(--space-lg) + env(safe-area-inset-bottom, 0px)
+		);
+	}
+
+	// The bar takes the colour of the room, so the wash reaches the very
+	// bottom of the screen instead of stopping at a white slab
+	.shell--mode-mine .delib-nav {
+		background: color-mix(in srgb, var(--wash-mine-low) 94%, transparent);
+	}
+
+	.shell--mode-peer .delib-nav {
+		background: color-mix(in srgb, var(--wash-peer-low) 94%, transparent);
+	}
+}
+
+/* --- The proposal dock: my notebook, carried between places ---
+   My workshop used to be a room I travelled to (and, on the mine step, a
+   wall of card that filled the screen whether or not it had anything to
+   say). It is now a bar docked at the bottom of EVERY place: collapsed it
+   shows one line — what needs me, or a peek of my own text — and tapping
+   it lifts the whole workshop over the room I'm standing in.
+
+   The control is neutral chrome with a chevron chip, exactly like
+   .chat-drawer, because students already learned that affordance one
+   screen down. The only ownership colour is the purple fill: this is
+   MINE, sitting at the bottom of a stall that isn't. */
+.proposal-dock {
+	position: fixed;
+	inset-inline: 0;
+	// Parks on the Mine|Others bar's top edge. The nav owns the safe-area
+	// inset — padding it here too would double the gap on notched phones.
+	inset-block-end: calc(var(--delib-nav-h) + env(safe-area-inset-bottom, 0px));
+	// Under the nav, above the scrim: the tabs stay reachable with the
+	// sheet up, so "Others" is always one tap away
+	z-index: calc(var(--z-header) - 1);
+	max-width: 720px;
+	margin-inline: auto;
+	background: var(--bg-card-solid);
+	border-block-start: 1px solid var(--border-subtle);
+	border-start-start-radius: var(--radius-md);
+	border-start-end-radius: var(--radius-md);
+	box-shadow: 0 -4px 20px rgba(70, 45, 150, 0.18);
+	overflow: hidden;
+
+	&__bar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		width: 100%;
+		min-height: var(--dock-bar-h);
+		padding: var(--space-sm) var(--space-md);
+		background: transparent;
+		border: none;
+		// The one ownership cue on the chrome: purple = my work
+		border-inline-start: 3px solid var(--mine);
+		cursor: pointer;
+		text-align: start;
+		transition: background var(--motion-fast) ease;
+
+		&:hover,
+		&:focus-visible {
+			background: rgba(83, 60, 160, 0.13);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--lantern-deep);
+			outline-offset: -2px;
+		}
+	}
+
+	// The one rendered object in the app that sits on a violet ground rather
+	// than a white one. It needs no chip behind it — a white chip on the dock
+	// reads as a sticker, louder than the icon inside it — but it does need
+	// the shadow: violet glass on a violet bar has nothing to sit against, and
+	// this is what puts it in front of the bar instead of in it.
+	&__icon {
+		display: flex;
+		line-height: 1;
+		flex-shrink: 0;
+		filter: drop-shadow(0 2px 3px rgba(38, 24, 92, 0.35));
+	}
+
+	/* min-width:0 is what lets the sub line actually ellipsize inside flex */
+	&__text {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+
+	/* The LABEL, and it now reads as one: it says "my proposal", which is a
+	   thing the app knows, not a thing the student wrote. It steps back so
+	   the sentence under it can be the loudest text in the bar. */
+	&__title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	/* My own words, in the proposal voice, on the one strip of chrome that
+	   follows me through every screen of the lap.
+	   TWO lines, not one. Truncation was doing real work here — a visibly cut
+	   peek is the second "there is more under here" cue after the chevron —
+	   and a clamp still truncates, it just does it after enough words to be
+	   worth reading. --dock-bar-h pays for the extra line. */
+	&__sub {
+		@include proposal-voice;
+
+		color: var(--text-primary);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		overflow: hidden;
+
+		/* Something is waiting on me — not muted background information */
+		&--alert {
+			color: var(--text-primary);
+			font-weight: 600;
+		}
+	}
+
+	/* Warning copy stays --text-primary; only the dot wears the amber */
+	&__dot {
+		display: inline-block;
+		width: 7px;
+		height: 7px;
+		margin-inline-end: 6px;
+		background: var(--warning);
+		border-radius: var(--radius-full);
+	}
+
+	&__badge {
+		flex-shrink: 0;
+		display: inline-grid;
+		place-items: center;
+		min-width: 20px;
+		height: 20px;
+		padding-inline: 5px;
+		// A notification badge must not wear a camp colour — nor --danger
+		background: var(--pink);
+		color: #ffffff;
+		border-radius: var(--radius-full);
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	// Open, the count is said three times within one screen height: here, in
+	// the sub line's words, and on the feedback section's own chip. The badge
+	// is the peripheral-vision cue for a FOLDED sheet — it has no job once
+	// the list it points at is on screen.
+	&--open &__badge {
+		display: none;
+	}
+
+	/* The same chevron chip as the accepted-ideas drawer, but pointing UP
+	   when closed — this accordion opens upward. Vertical either way, so
+	   the physical border trick stays RTL-safe. */
+	&__chevron {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 28px;
+		height: 28px;
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-full);
+		transition: transform var(--motion-base) var(--ease-camera);
+
+		&::before {
+			content: '';
+			width: 8px;
+			height: 8px;
+			border-right: 2px solid var(--text-secondary);
+			border-bottom: 2px solid var(--text-secondary);
+			transform: translateY(2px) rotate(-135deg);
+		}
+	}
+
+	&--open &__chevron {
+		transform: rotate(180deg);
+	}
+
+	/* The 0fr→1fr grid-track trick, as on .chat-drawer: the panel never
+	   leaves the DOM, so an unsaved draft survives every fold and the
+	   motion itself teaches "this is an accordion". */
+	&__panel {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows var(--motion-base) var(--ease-camera);
+	}
+
+	&--open &__panel {
+		grid-template-rows: 1fr;
+	}
+
+	&__inner {
+		min-height: 0;
+		overflow-y: auto;
+		// dvh tracks the mobile keyboard and the collapsing URL bar
+		max-height: calc(85dvh - var(--delib-nav-h) - var(--dock-bar-h));
+		// The room behind must not scroll when the sheet hits its end
+		overscroll-behavior: contain;
+		padding: 0 var(--space-md) var(--space-md);
+	}
+
+	/* Inside the sheet the dock IS the frame — a card border here would
+	   draw a second box around the same thing, and the bar overhead
+	   already says "📘 My proposal", so the card's own title would be the
+	   same words twice, six pixels apart. The editable hint stays: it is
+	   the one line of the header that tells you something. */
+	.my-lantern--workshop {
+		border: none;
+		box-shadow: none;
+		padding-inline: 0;
+		background: transparent;
+	}
+
+	.my-lantern__icon,
+	.my-lantern__title {
+		display: none;
+	}
+
+	/* The one-time "your text lives here now" reveal. It is a PEEK: a slice
+	   of the workshop, no scrim, the square still live behind it, gone on
+	   its own after a beat. A full modal sheet here would mean every
+	   student dismisses a card before they can rate anything. */
+	&--intro &__inner {
+		max-height: 38dvh;
+	}
+
+	&__scrim {
+		position: fixed;
+		inset: 0;
+		z-index: calc(var(--z-header) - 2);
+		background: var(--bg-overlay);
+		animation: dock-scrim-in var(--motion-fast) ease;
+	}
+}
+
+@keyframes dock-scrim-in {
+	from {
+		opacity: 0;
+	}
+}
+
+/* --- The bottom half of the game frame ---
+   The HUD made the top of a deliberation screen dark chrome. Leaving the
+   bottom as two white slabs would have left the screen framed on one side
+   only — and, worse, the white nav read as "the page ends here" while the
+   playfield above it was tinted. Dark top, dark bottom, bright cards
+   floating between them: that inversion is what makes the stage read as a
+   game board rather than a document.
+
+   Strictly the COLLAPSED chrome. The dock's panel is content the moment it
+   opens, so it turns back into a light sheet below. */
+.shell--delib {
+	// The dock is purple because it IS my proposal — the one owned object on
+	// a screen full of white ones. The nav is white: it is the app's
+	// furniture, not anybody's property.
+	.proposal-dock {
+		background: var(--grad-mine-text);
+		border-block-start-color: transparent;
+	}
+
+	.delib-nav {
+		background: rgba(255, 255, 255, 0.95);
+		border-block-start-color: var(--border-subtle);
+	}
+
+	.proposal-dock__title {
+		color: #ffffff;
+	}
+
+	// Not a hand-rolled white: the on-dark contract already defines what a
+	// muted label is on a saturated surface, and this one was picked by eye
+	// at 0.68 — which measures 4.27:1.
+	.proposal-dock__sub {
+		color: var(--text-muted);
+
+		&--alert {
+			color: #ffe9b8;
+		}
+	}
+
+	.proposal-dock__bar {
+		&:hover,
+		&:focus-visible {
+			background: rgba(255, 255, 255, 0.1);
+		}
+
+		&:focus-visible {
+			outline-color: #ffffff;
+		}
+	}
+
+	.proposal-dock__chevron {
+		background: rgba(255, 255, 255, 0.12);
+		border-color: rgba(255, 255, 255, 0.32);
+
+		&::before {
+			border-right-color: #ffffff;
+			border-bottom-color: #ffffff;
+		}
+	}
+
+	// Open, the sheet is a working surface again — text is edited in it, so
+	// it goes back to paper. Only the handle overhead stays chrome.
+	.proposal-dock__panel {
+		background: var(--bg-card-solid);
+	}
+
+	// :not(--active) so the muted colour cannot out-specify the white label
+	// the selected pill needs — it out-specified it once already and put
+	// dark purple text on a purple fill.
+	.delib-nav__item:not(.delib-nav__item--active) {
+		color: var(--text-muted);
+	}
+
+	.delib-nav__item:focus-visible {
+		outline-color: var(--mine-deep);
+	}
+}
+
+@media (max-width: 700px) {
+	// ...and the two room-tinted washes that used to reach the bottom edge.
+	// The nav is white in every room now; the wash stops where it starts.
+	.shell--delib.shell--mode-mine .delib-nav,
+	.shell--delib.shell--mode-peer .delib-nav {
+		background: rgba(255, 255, 255, 0.95);
+	}
+}
+
+/* The Results tab's placeholder. Deliberately plain and clearly unfinished:
+   a tab that quietly leads to an empty screen reads as a bug, one that says
+   "not ready yet" reads as a promise. */
+.results-soon {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xl) var(--space-md);
+	text-align: center;
+	background: var(--bg-card-solid);
+	border: 1px dashed var(--border-strong);
+	border-radius: var(--radius-md);
+
+	&__icon {
+		font-size: 2.5rem;
+		line-height: 1;
+		opacity: 0.75;
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--text-primary);
+	}
+
+	&__body {
+		max-width: 42ch;
+		font-size: var(--font-size-base);
+		color: var(--text-muted);
+	}
+}
+
+/* "The way forward wears the colour of the room" was a rule invented to stop
+   a blue button appearing on an orange screen. Rooms have no colour to lend
+   any more — a classmate's screen is white — so the primary action is purple
+   everywhere and this override has nothing left to override. The one place
+   purple would vanish is ON a purple surface, and there the CTA goes mint
+   (see --mint in tokens.scss). */
+
+@media (max-width: 700px) {
+	.proposal-dock {
+		// Full-bleed on phones: the 720px column has no margins to respect
+		// down here, and the bar reads as chrome, not as content
+		border-start-start-radius: 0;
+		border-start-end-radius: 0;
+	}
+
+	.proposal-dock--open {
+		border-start-start-radius: var(--radius-md);
+		border-start-end-radius: var(--radius-md);
+	}
+
+	// The nav's rounded top corners were the screen's top edge of chrome.
+	// With the dock parked on them they'd read as two notches under a
+	// square bar — the dock is the top edge now.
+	.shell--docked .delib-nav {
+		border-start-start-radius: 0;
+		border-start-end-radius: 0;
+	}
+}
+
+@media (min-width: 701px) {
+	.proposal-dock {
+		// Desktop keeps the nav inline at the top, so the dock is the only
+		// fixed thing at the bottom
+		inset-block-end: 0;
+
+		&__inner {
+			max-height: 70vh;
+		}
+	}
+
+	.shell--docked .shell__content {
+		padding-block-end: calc(var(--dock-bar-h) + var(--space-lg));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.proposal-dock__chevron,
+	.proposal-dock__panel {
+		transition: none;
+	}
+
+	.proposal-dock__scrim {
+		animation: none;
+	}
+}
+
+// --- Ownership mode: whose space am I in right now? ---
+// Purple = my workshop, white = a classmate's. The accent is
+// AMBIENT (fixed top strip + mobile-bar edge), so it survives scrolling.
+.shell--mode-mine {
+	--mode-accent: var(--lantern);
+	--mode-accent-glow: var(--lantern-glow);
+}
+
+.shell--mode-peer {
+	--mode-accent: var(--peer);
+	--mode-accent-glow: var(--peer-glow);
+	// The way forward used to wear the colour of the room, so that a blue
+	// button never appeared on an amber screen claiming "mine" while the
+	// student acted on someone else's proposal. A classmate's room is white
+	// now — it has no colour to lend and nothing to contradict — so the
+	// primary action is purple in every room (DESIGN.md §8).
+}
+
+.shell--mode-mine::before,
+.shell--mode-peer::before {
+	content: '';
+	position: fixed;
+	inset-block-start: 0;
+	inset-inline: 0;
+	height: 3px;
+	z-index: var(--z-header);
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--mode-accent) 20%,
+		var(--mode-accent) 80%,
+		transparent
+	);
+	pointer-events: none;
+}
+
+// --- Place washes: the WHOLE room is repainted, not the column ---
+// A tint on the 720px column left the margins sky-white, and both places
+// still read as "the same near-white page". These wash the entire viewport
+// so ownership is answered before a single word is read: cool purple = my
+// workbench, warm amber = a classmate's stall, cool grey = the square.
+// A fixed ::after (not a body background) keeps it off the Mithril tree and
+// dodges iOS's broken background-attachment: fixed.
+.shell--place-mine,
+.shell--place-square,
+.shell--place-visit {
+	background: none;
+
+	&::after {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		animation: stage-transition-in var(--motion-slow) var(--ease-camera) both;
+	}
+}
+
+.shell--place-mine::after {
+	background: linear-gradient(
+		180deg,
+		var(--wash-mine-high) 0%,
+		var(--wash-mine-mid) 18%,
+		var(--wash-mine-low) 100%
+	);
+}
+
+.shell--place-visit::after {
+	background: linear-gradient(
+		180deg,
+		var(--wash-peer-high) 0%,
+		var(--wash-peer-mid) 18%,
+		var(--wash-peer-low) 100%
+	);
+}
+
+.shell--place-square::after {
+	background: linear-gradient(
+		180deg,
+		var(--wash-square-high) 0%,
+		var(--wash-square-mid) 18%,
+		var(--wash-square-low) 100%
+	);
+}
+
+// The wash is decoration, not information: high-contrast users get a flat
+// quiet tint and a fatter mode strip, forced-colours users get neither.
+@media (prefers-contrast: more) {
+	.shell--place-mine::after {
+		background: var(--wash-mine-low);
+	}
+
+	.shell--place-visit::after {
+		background: var(--wash-peer-low);
+	}
+
+	.shell--place-square::after {
+		background: var(--wash-square-low);
+	}
+
+	.shell--mode-mine::before,
+	.shell--mode-peer::before {
+		height: 6px;
+	}
+}
+
+@media (forced-colors: active) {
+	.shell--place-mine::after,
+	.shell--place-square::after,
+	.shell--place-visit::after {
+		display: none;
+	}
+}
+
+// --- Owner chip: whose proposal is on the table (📘 mine / 📙 a classmate's) ---
+.owner-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: 2px var(--space-sm);
+	border-radius: var(--radius-full);
+	font-size: var(--font-size-xs);
+	font-weight: 700;
+	white-space: nowrap;
+	animation: chip-pop var(--motion-base) var(--ease-spring) both;
+
+	&--mine {
+		border: 1px solid rgba(139, 107, 240, 0.5);
+		color: var(--mine-glow);
+		background: rgba(139, 107, 240, 0.1);
+	}
+
+	&--peer {
+		border: 1px solid rgba(111, 103, 149, 0.55);
+		color: var(--peer-glow);
+		background: rgba(111, 103, 149, 0.12);
+	}
+}
+
+@keyframes chip-pop {
+	from {
+		transform: scale(0.8);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+// Owner row: chip + proposal number heading a proposal card
+.owner-row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	flex-wrap: wrap;
+
+	&__number {
+		color: var(--peer-glow);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+}
+
+// --- The collaboration loop: "proposals I helped" ---
+.helped {
+	&__item {
+		// Peer orange, not a camp color — ownership and camps never share a hue
+		background: rgba(111, 103, 149, 0.05);
+		border-inline-start: 3px solid var(--peer);
+
+		// The card the "woven in" celebration steered to: a golden pulse says
+		// "THIS one changed — re-read it", then fades back into the list
+		&--spotlight {
+			animation: helped-spotlight 2.4s ease;
+		}
+	}
+
+	&__suggestion {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__suggestion-text {
+		color: var(--text-secondary);
+		font-style: italic;
+		flex: 1;
+	}
+
+	&__chip {
+		flex-shrink: 0;
+		padding: 2px var(--space-md);
+		border-radius: var(--radius-full);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		border: 1px solid var(--border-subtle);
+		color: var(--text-muted);
+
+		&--open {
+			border-color: var(--lantern-deep);
+			color: var(--lantern-glow);
+		}
+
+		&--accepted {
+			border-color: var(--success);
+			color: var(--success);
+			box-shadow: 0 0 10px rgba(23, 128, 77, 0.25);
+		}
+
+		// The strongest acknowledgment: the idea is IN the text now
+		&--implemented {
+			border-color: var(--success);
+			background: var(--success);
+			color: #ffffff;
+			box-shadow: 0 0 10px rgba(23, 128, 77, 0.35);
+		}
+
+		&--thanked {
+			border-color: var(--camp-center-glow);
+			color: var(--camp-center-glow);
+		}
+
+		&--declined {
+			opacity: 0.6;
+		}
+	}
+
+	&__improved {
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+	}
+
+	&__current {
+		color: var(--text-primary);
+		line-height: 1.6;
+	}
+}
+
+// Compact re-rate scale inside helped items; --selected marks my current vote
+.rate-scale--compact .rate-scale__option {
+	padding: var(--space-xs) var(--space-sm);
+
+	.rate-scale__emoji {
+		font-size: 1.1rem;
+	}
+
+	.rate-scale__label {
+		font-size: var(--font-size-xs);
+	}
+}
+
+
+// Once a vote exists, the not-chosen options step back — the contrast is
+// what makes the chosen one pop without hunting for a border
+.rate-scale--has-selection .rate-scale__option:not(.rate-scale__option--selected) {
+	filter: saturate(0.45);
+	opacity: 0.55;
+	transform: scale(0.94);
+
+	&:hover {
+		filter: saturate(0.9);
+		opacity: 0.95;
+		transform: scale(1);
+	}
+}
+
+// The ✓ badge: a real cue, not decoration — the one signal that reads
+// even in grayscale screenshots and projector washout
+.rate-scale__check {
+	position: absolute;
+	bottom: -6px;
+	inset-inline-end: -6px;
+	width: 20px;
+	height: 20px;
+	border-radius: var(--radius-full);
+	background: var(--lantern);
+	color: var(--text-on-lantern);
+	// A single ✓ glyph sized to sit inside a 20px disc — the last bare
+	// sub-floor number in the file, said as the mark it is
+	@include type-meta;
+
+	font-weight: 700;
+	line-height: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	box-shadow:
+		0 0 0 2px var(--bg-card-solid),
+		0 2px 4px rgba(70, 45, 150, 0.25);
+	animation: rate-check-in var(--motion-base, 220ms) var(--ease-spring) 1;
+}
+
+@keyframes rate-select-pulse {
+	0% {
+		transform: scale(1.12);
+	}
+
+	35% {
+		transform: scale(1.24);
+	}
+
+	100% {
+		transform: scale(1.12);
+	}
+}
+
+@keyframes rate-check-in {
+	0% {
+		transform: scale(0);
+		opacity: 0;
+	}
+
+	60% {
+		transform: scale(1.25);
+		opacity: 1;
+	}
+
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rate-scale__option--selected,
+	.rate-scale__option--selected:hover,
+	.rate-scale--has-selection .rate-scale__option:not(.rate-scale__option--selected) {
+		transform: none;
+		animation: none;
+	}
+
+	.rate-scale__check {
+		animation: none;
+	}
+}
+
+// Votes moved after my latest improvement (aggregate only)
+.scoreboard__updated {
+	color: var(--success);
+	font-size: var(--font-size-sm);
+	text-align: center;
+}

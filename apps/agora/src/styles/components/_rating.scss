@@ -1,0 +1,612 @@
+// The rating scale, celebrations, needs board, character review, fuse
+//
+// Split out of the 8,474-line components.scss so a rule can be found, and so
+// dead rules can be seen. Imported by components.scss; do not import directly.
+
+// --- Five-level rating scale (MC-style, -1 … +1) ---
+.rate-scale {
+	display: flex;
+	gap: 6px;
+	justify-content: center;
+	flex-wrap: nowrap;
+
+	&__option {
+		position: relative; // anchors the selected-state ✓ badge
+		flex: 1 1 0;
+		min-width: 0;
+		max-width: 110px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		padding: var(--space-sm) 2px;
+		background: #faf8ff;
+		border: 1.5px solid var(--border-subtle);
+		border-radius: var(--radius-tile);
+		cursor: pointer;
+		color: var(--text-secondary);
+		transition:
+			transform var(--motion-fast, 150ms) ease,
+			border-color var(--motion-fast, 150ms) ease,
+			box-shadow var(--motion-fast, 150ms) ease;
+
+		&:hover {
+			transform: translateY(-3px);
+		}
+
+		&--strong-against {
+			border-color: rgba(209, 61, 78, 0.55);
+			&:hover { box-shadow: 0 0 16px rgba(209, 61, 78, 0.4); }
+		}
+
+		&--against {
+			border-color: rgba(209, 61, 78, 0.3);
+			&:hover { box-shadow: 0 0 12px rgba(209, 61, 78, 0.25); }
+		}
+
+		&--abstain {
+			border-color: rgba(77, 94, 125, 0.3);
+			&:hover { box-shadow: 0 0 12px rgba(77, 94, 125, 0.25); }
+		}
+
+		&--for {
+			border-color: rgba(23, 128, 77, 0.3);
+			&:hover { box-shadow: 0 0 12px rgba(23, 128, 77, 0.25); }
+		}
+
+		&--strong-for {
+			border-color: rgba(23, 128, 77, 0.55);
+			&:hover { box-shadow: 0 0 16px rgba(23, 128, 77, 0.4); }
+		}
+	}
+
+	&__emoji {
+		font-size: 1.4rem;
+		line-height: 1;
+		transition: transform var(--motion-fast) var(--ease-spring);
+	}
+
+	// The emoji wiggles when you hover its option — tiny, playful, cheap
+	&__option:hover &__emoji {
+		transform: rotate(-8deg) scale(1.15);
+	}
+
+	// These are WORDS — "ממש לא בעד" is the difference between the two faces
+	// at each end, and the face alone does not carry it. 0.62rem was ~10px,
+	// the smallest type anywhere in the app, sitting under the control a
+	// student presses more often than any other. Five options still share one
+	// phone row; at 14px the label simply wraps inside its own tile, which is
+	// what the centred two-line line-height below was already built for.
+	&__label {
+		font-size: var(--font-size-xs);
+		line-height: 1.2;
+		text-align: center;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__option,
+		&__option:hover {
+			transform: none;
+			transition: none;
+		}
+
+		&__option:hover &__emoji {
+			transform: none;
+		}
+	}
+}
+
+// Declared AFTER the .rate-scale base block on purpose. It used to sit
+// above it, and at equal specificity the base's `background` simply won —
+// the chosen face rendered with white text on the unselected fill. Same
+// trap as .my-lantern__textarea. A modifier must never be able to lose to
+// the block it modifies.
+// --- My current vote, join-app selection grammar: three redundant cues
+// (ring+halo, scale+pulse, ✓ badge) and receding siblings — "where did I
+// press?" must survive a glance, color-blindness and reduced motion ---
+.rate-scale__option--selected {
+	background: var(--grad-mine-selected);
+	border-color: var(--mine-deep);
+	color: #ffffff;
+	transform: scale(1.12);
+	z-index: 2;
+	box-shadow:
+		0 0 0 3px var(--bg-card-solid),
+		0 0 0 6px var(--mine),
+		0 6px 14px rgba(70, 45, 150, 0.28);
+	animation: rate-select-pulse var(--motion-slow, 380ms) var(--ease-spring) 1;
+
+	&:hover {
+		transform: scale(1.15);
+	}
+}
+
+// --- Celebration: glitter burst + popup for improvements ---
+.celebration {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-lg);
+	background: var(--bg-overlay);
+	animation: celebration-fade-in var(--motion-slow) ease both;
+
+	&__card {
+		position: relative;
+		width: min(440px, 100%);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--lantern-deep);
+		border-radius: var(--radius-lg);
+		padding: var(--space-xl);
+		text-align: center;
+		box-shadow: 0 0 60px rgba(139, 107, 240, 0.25);
+		animation: celebration-pop var(--motion-slow) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	}
+
+	&__sparks {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		overflow: visible;
+	}
+
+	&__spark {
+		position: absolute;
+		top: 50%;
+		inset-inline-start: 50%;
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		// Festival confetti: the sparks cycle all five theme hues
+		background: radial-gradient(circle, #fff 0%, var(--spark-color, #ffd23f) 45%, transparent 75%);
+		transform: rotate(calc(var(--spark-index) * 20deg)) translateY(-30px);
+		opacity: 0;
+		animation: celebration-spark 1.1s ease-out both;
+		animation-delay: calc(var(--spark-index) * 28ms);
+
+		&:nth-child(5n + 1) { --spark-color: #8b6bf0; }
+		&:nth-child(5n + 2) { --spark-color: #6f6795; }
+		&:nth-child(5n + 3) { --spark-color: #e0873c; }
+		&:nth-child(5n + 4) { --spark-color: #14a08f; }
+	}
+
+	&__hooray {
+		font-family: var(--font-display);
+		font-size: 2.4rem;
+		line-height: 1;
+		color: var(--lantern-glow);
+	}
+
+	&__message {
+		color: var(--text-primary);
+	}
+
+	&__detail {
+		background: var(--bg-inset);
+		border-inline-start: 3px solid var(--lantern-glow);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm) var(--space-md);
+		color: var(--text-secondary);
+		text-align: start;
+		font-style: italic;
+	}
+
+	// What happens next, for the celebration that has no button. Quieter
+	// than the message, louder than nothing — the accept moment used to end
+	// on a shrug and this is where the +1 → +2 ladder gets taught.
+	&__hint {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+
+	// The quiet switch, offered where the noise is. Deliberately the least
+	// loud thing on the card: it is an escape hatch, not a choice the
+	// celebration is asking anyone to make.
+	&__mute {
+		position: absolute;
+		inset-block-start: var(--space-sm);
+		inset-inline-end: var(--space-sm);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border: none;
+		border-radius: 50%;
+		background: var(--bg-inset);
+		color: var(--text-muted);
+		cursor: pointer;
+
+		&:hover {
+			color: var(--text-secondary);
+		}
+	}
+}
+
+@keyframes celebration-fade-in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes celebration-pop {
+	from { transform: scale(0.7); opacity: 0; }
+	to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes celebration-spark {
+	0% {
+		opacity: 0;
+		transform: rotate(calc(var(--spark-index) * 20deg)) translateY(-30px) scale(0.4);
+	}
+	25% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: rotate(calc(var(--spark-index) * 20deg)) translateY(-220px) scale(1.25);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.celebration,
+	.celebration__card {
+		animation: none;
+	}
+
+	.celebration__spark {
+		display: none;
+	}
+}
+
+// --- Needs board: both sides' needs, side by side ---
+.needs-board {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	text-align: start;
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+		text-align: center;
+	}
+
+	&__columns {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-md);
+
+		@media (max-width: 560px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&__column {
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		padding: var(--space-md);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		border-block-start: 3px solid;
+
+		&--left {
+			border-color: var(--camp-left-glow);
+		}
+
+		&--right {
+			border-color: var(--camp-right-glow);
+		}
+	}
+
+	&__who {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__portrait {
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		object-fit: cover;
+
+		&--fallback {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-family: var(--font-display);
+			color: var(--lantern-glow);
+			background: var(--bg-inset);
+		}
+	}
+
+	&__names {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__role {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__list {
+		margin: 0;
+		padding-inline-start: 1.1em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+		line-height: 1.5;
+	}
+}
+
+// Collapsible needs board on the deliberation/positioning screens
+.needs-peek {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	// Folded, the invitation leads with the two faces whose needs are under
+	// it: a sentence in the middle of a working screen is the easiest thing
+	// to scroll past, a pair of portraits is not
+	&__toggle {
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding-inline: var(--space-sm);
+	}
+
+	&__faces {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	&__face {
+		width: 30px;
+		height: 30px;
+		border-radius: 50%;
+		object-fit: cover;
+		background: var(--bg-inset);
+		border: 2px solid var(--bg-card-solid);
+		box-shadow: 0 2px 6px rgba(70, 45, 150, 0.2);
+
+		// The two sides overlap the way a party of characters does — one
+		// object saying "these two", not two saying "him" and "her"
+		&--right {
+			margin-inline-start: -12px;
+		}
+
+		&--fallback {
+			display: inline-grid;
+			place-items: center;
+			font-family: var(--font-display);
+			font-weight: 700;
+			color: var(--text-secondary);
+		}
+	}
+
+	&__face--left {
+		border-color: var(--camp-left);
+	}
+
+	&__face--right {
+		border-color: var(--camp-right);
+	}
+
+	// Unfolded, the reminder stops being a link and becomes a section of the
+	// page: a titled, framed block of reference material the writer works
+	// from. (The writing desk opens it by default — see NeedsBoard.ts.)
+	&--open {
+		padding: var(--space-md);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+
+		// Inside the workshop sheet the section IS already the frame — a second
+		// card in a card just draws two borders around the same content
+		.workbench__section & {
+			padding: 0;
+			background: transparent;
+			border: 0;
+			border-radius: 0;
+			box-shadow: none;
+		}
+	}
+
+	&__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-sm);
+	}
+
+	&__title {
+		font-family: var(--font-display);
+		color: var(--lantern-glow);
+	}
+
+	// Subordinate on purpose: the material is the point, folding it away is
+	// the escape hatch
+	&__fold {
+		flex: 0 0 auto;
+		background: none;
+		border: 0;
+		padding: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+		text-decoration: underline;
+		cursor: pointer;
+
+		&:hover {
+			color: var(--lantern-glow);
+		}
+	}
+}
+
+// --- In-character proposal review ---
+.char-review {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__portrait {
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 1px solid var(--lantern-deep);
+
+		&--fallback {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-family: var(--font-display);
+			font-size: var(--font-size-lg);
+			color: var(--lantern-glow);
+			background: var(--bg-inset);
+		}
+	}
+
+	&__who {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__role {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	&__thinking {
+		color: var(--text-secondary);
+		font-style: italic;
+	}
+
+	&__stale {
+		color: var(--lantern-glow);
+		font-size: var(--font-size-sm);
+	}
+
+	&__bubble--stale {
+		opacity: 0.55;
+	}
+
+	&__bubble {
+		position: relative;
+		background: var(--bg-inset);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm) var(--space-md);
+		color: var(--text-primary);
+	}
+
+	&__meter {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__meter-track {
+		flex: 1;
+		height: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		direction: ltr;
+	}
+
+	&__meter-fill {
+		height: 100%;
+		background: linear-gradient(90deg, var(--lantern-deep), var(--lantern-glow));
+		border-radius: var(--radius-full);
+		transition: width var(--motion-slow) var(--ease-camera);
+	}
+
+	&__advice {
+		margin: 0;
+		padding-inline-start: 1.2em;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		color: var(--text-primary);
+	}
+}
+
+// --- Fuse countdown ---
+.fuse {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	min-width: 180px;
+	flex: 1;
+
+	&__track {
+		position: relative;
+		flex: 1;
+		height: 6px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		direction: ltr;
+	}
+
+	&__burn {
+		height: 100%;
+		background: linear-gradient(90deg, var(--lantern-deep), var(--lantern-glow));
+		border-radius: var(--radius-full);
+		transition: width 1s linear;
+	}
+
+	// A steady lantern-light at the bar's tip, not a burning spark — this bar
+	// is projected at the whole class, and a fizzing bomb-fuse manufactures
+	// exactly the arousal that kills reflective revision
+	&__spark {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: radial-gradient(circle, #fff 0%, var(--lantern-glow) 45%, transparent 70%);
+	}
+
+	&__time {
+		font-family: var(--font-display);
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+
+	&__label {
+		font-size: var(--font-size-sm);
+		color: var(--text-muted);
+	}
+
+	// Same rule as the student HUD: the clock completes, it does not detonate.
+	&--urgent {
+		.fuse__burn {
+			background: linear-gradient(90deg, var(--warning), var(--amber));
+		}
+
+		.fuse__time {
+			color: var(--warning);
+		}
+	}
+}

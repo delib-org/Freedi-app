@@ -1,0 +1,977 @@
+// The write desk and the market row: stalls, improvements, gap prompts
+//
+// Split out of the 8,474-line components.scss so a rule can be found, and so
+// dead rules can be seen. Imported by components.scss; do not import directly.
+
+// --- The first-write desk (lap 1): the screen's ONE job is the proposal, so
+// mission brief, textarea and lantern CTA are bound into a single purple-framed
+// card — the workshop's "primary zone" grammar promoted to a whole surface.
+// The needs board stands open BELOW the card (see Deliberation.ts), so the
+// raw material is in view without pushing the pen or the button down. ---
+// The desk is one owned object, not a white card with a purple thing in it.
+// Everything on this screen exists to author MY proposal — the brief, the
+// pen and the button are all parts of the same thing — so the whole card is
+// purple and the parts are insets within it. A white card holding a purple
+// field said "here is a form, and one of its inputs happens to be yours".
+//
+// Registered on-dark in tokens.scss, so every label, hint and hairline
+// inside re-derives instead of being repainted one at a time.
+.write-desk {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	// The desk is the screen's ONE owned object, so it gets the hero ramp
+	// rather than the chrome one — the same call the sim makes for its `.mine`
+	// card. On a surface this tall the two-stop chrome ramp flattens out.
+	background: var(--grad-mine-hero);
+	border: none;
+	box-shadow: var(--shadow-mine);
+
+	// The brief is a note pinned to the desk: a light chip on the purple, so
+	// it reads as reference material rather than as another owned surface
+	&__mission {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
+		background: rgba(255, 255, 255, 0.14);
+		border: 1px solid rgba(255, 255, 255, 0.22);
+		border-radius: var(--radius-md);
+	}
+
+	&__mission-icon {
+		font-size: 1.35rem;
+		line-height: 1.3;
+	}
+
+	&__mission-text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+
+		p {
+			color: #ffffff;
+			line-height: 1.5;
+		}
+	}
+
+	&__mission-label {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: var(--lantern-glow);
+		text-transform: uppercase; // no-op in Hebrew/Arabic, earns its keep in LTR
+	}
+
+	// On the purple desk the pen is an INSET, not another purple slab: a
+	// field lighter than its card fails white text, and a field the same
+	// colour as its card is not a field at all.
+	&__textarea {
+		margin-block-end: 0;
+		// Room for a real paragraph without pushing the CTA off a phone screen
+		min-block-size: 7.5rem;
+		background: rgba(18, 8, 56, 0.32);
+		border-color: rgba(255, 255, 255, 0.28);
+		box-shadow: inset 0 2px 6px rgba(18, 8, 56, 0.35);
+
+		&:focus {
+			border-color: #ffffff;
+			box-shadow:
+				inset 0 2px 6px rgba(18, 8, 56, 0.35),
+				0 0 0 3px rgba(255, 255, 255, 0.25);
+		}
+	}
+
+	// The CTA earns its light the moment there is something to light: a soft
+	// lantern halo plus one spring pop when the label flips to the lit action
+	&__cta--ready {
+		box-shadow:
+			0 1px 2px rgba(70, 45, 150, 0.06),
+			var(--glow-lantern);
+		animation: write-cta-ready var(--motion-base) var(--ease-spring);
+	}
+}
+
+// A proposal button with nothing to act on yet — an empty desk, or text
+// already saved. It becomes an OUTLINE waiting to be filled rather than a
+// filled pill at 45% opacity: the generic disabled wash was the complaint that
+// started this redesign, because a big pale button reads as broken, while a
+// dashed slot reads as "this is where it happens" and keeps its label at full
+// contrast. Both writing surfaces share it so the workshop speaks one language.
+//
+// Written out to four classes on purpose: the dock repaints primary buttons
+// from `.shell--mode-peer .proposal-dock .btn--primary`, and anything shorter
+// loses to it — the saved button comes back filled, with the waiting rule's
+// text colour on top of it.
+.btn.btn--primary.write-desk__cta:disabled,
+.btn.btn--primary.my-lantern__save:disabled {
+	opacity: 1;
+	background: transparent;
+	// --border-strong, not a purple mix: on the purple desk a purple dashed
+	// outline is invisible. Both this and --lantern-glow re-derive from the
+	// on-dark contract, so the rule is correct on either surface.
+	border: 2px dashed var(--border-strong);
+	color: var(--lantern-glow);
+}
+
+// The armed CTA goes MINT. It sits ON the purple desk, and purple-on-purple
+// is not a button — this is the one job mint exists for (DESIGN.md §2).
+.btn.btn--primary.write-desk__cta:not(:disabled) {
+	--btn-glow: var(--mint-deep);
+
+	background: linear-gradient(135deg, var(--mint), var(--mint-deep));
+	color: var(--mint-ink);
+
+	&:hover {
+		background: var(--mint-deep);
+	}
+}
+
+@keyframes write-cta-ready {
+	from {
+		transform: scale(0.96);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.write-desk__cta--ready {
+		animation: none;
+	}
+}
+
+// Closed, the section is just its handle — no gap under a hidden body
+.workbench__section--closed {
+	gap: 0;
+}
+
+.workbench__chevron {
+	margin-inline-start: auto;
+	flex: 0 0 auto;
+	width: 8px;
+	height: 8px;
+	// PHYSICAL borders: with logical ones the corner flips in RTL and the
+	// caret ends up pointing sideways — which reads as "go there", not
+	// "unfold". Vertical either way now: closed points down, open points up.
+	border-right: 2px solid var(--text-muted);
+	border-bottom: 2px solid var(--text-muted);
+	transform: rotate(45deg);
+	transition: transform var(--motion-fast) ease;
+
+	&--open {
+		transform: rotate(-135deg);
+	}
+}
+
+.workbench__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	flex: 0 0 auto;
+	border-radius: var(--radius-sm);
+	background: rgba(255, 210, 63, 0.3);
+	border: 1px solid rgba(185, 115, 0, 0.25);
+	// The drawing inherits this, so one chip colour dresses every tool
+	color: var(--text-primary);
+	line-height: 1;
+}
+
+.workbench__title {
+	font-family: var(--font-display);
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+// New-feedback count: notification badge = pink (never a camp colour, and
+// never danger-red — ideas arriving for your proposal are not an error)
+.workbench__count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: var(--radius-full);
+	background: var(--pink);
+	color: #ffffff;
+	@include type-meta;
+	font-weight: 700;
+}
+
+// --- The market row: every classmate's stall folded into one line, the
+// proposal text itself acting as the handle. One screen answers "who can I
+// help?" and "what did they write?" at once — the old one-poster carousel
+// made that a sequence of taps, and stacked four instruction lines on top. ---
+.stall-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.stall {
+	// White IS the ownership statement. The 4px orange bar this replaces was
+	// a second way of saying it, from a system where a classmate's card had
+	// to shout to be told apart from mine — it doesn't any more, because
+	// mine is the only purple thing on the screen.
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	overflow: hidden;
+	// transform is the FLIP move: out on the square the list re-sorts itself
+	// as classmates improve their proposals, and a row that teleports makes
+	// the reader lose their place. The JS hands the transition back here.
+	transition:
+		box-shadow var(--motion-fast) ease,
+		transform var(--motion-base) var(--ease-camera);
+
+	// The row the "woven in" celebration steered to: a golden pulse says
+	// "THIS one changed — re-read it", then fades back into the list
+	&--spotlight {
+		animation: helped-spotlight 2.4s ease;
+	}
+
+	&--open {
+		box-shadow: var(--shadow-raised);
+	}
+
+	// The whole strip is the hit target, wearing no button chrome
+	&__head {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		width: 100%;
+		padding: var(--space-md);
+		background: none;
+		border: none;
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+
+	// A numbered tile: proposals are known by number, never by author name.
+	// The squircle is the same object as the HUD crest and a character
+	// avatar, so a row is identified as an object before it is read.
+	&__num {
+		flex: 0 0 auto;
+		display: inline-grid;
+		place-items: center;
+		width: 42px;
+		height: 42px;
+		border-radius: var(--radius-tile);
+		background: var(--peer-tile);
+		color: var(--mine-ink);
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 1.05rem;
+	}
+
+	// Two lines of their proposal is the row's label — the full text waits
+	// inside, so scanning the row costs no scrolling
+	&__preview {
+		@include proposal-voice;
+
+		flex: 1 1 auto;
+		min-width: 0;
+		color: var(--ink);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	&--open &__preview {
+		// Open, the body shows the whole text — a clamped echo above it reads
+		// as a duplicate
+		display: none;
+	}
+
+	// Two stories can be true of one row at once (changed + already rated) —
+	// the chips share one slot so neither ever pushes the handle onto a new line
+	&__chips {
+		flex: 0 0 auto;
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+	}
+
+	&__chip {
+		flex: 0 1 auto;
+		min-width: 0;
+		align-self: center;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px var(--space-xs);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+		white-space: nowrap;
+
+		&--sent {
+			background: rgba(23, 128, 77, 0.16);
+			color: var(--success);
+			font-weight: 700;
+		}
+
+		// The face I already gave this one — my own answer, read back to me
+		&--rated {
+			background: rgba(139, 107, 240, 0.12);
+			color: var(--mine-glow);
+			font-weight: 700;
+		}
+
+		// A reply is waiting in my conversation here — a true notification
+		// count, so it wears the notification colour (pink), never a camp one
+		// and never danger-red
+		&--unread {
+			background: var(--pink);
+			color: #fff;
+			font-weight: 700;
+		}
+
+		// Never looked at this one — a quiet invitation, not an alarm
+		&--new {
+			background: rgba(111, 103, 149, 0.12);
+			color: var(--peer-glow);
+			border: 1px dashed rgba(111, 103, 149, 0.5);
+		}
+
+		// The owner changed the text since I last engaged with it — the chip
+		// that asks for a re-read (and a re-rate, the body will say)
+		&--edited {
+			background: var(--mark-edited);
+			color: var(--peer-glow);
+			font-weight: 700;
+		}
+
+		// MY idea is in their text now — personal and celebratory, so it wears
+		// the one colour that always means mine (purple, per DESIGN.md)
+		&--improved-mine {
+			background: rgba(139, 107, 240, 0.14);
+			color: var(--mine-glow);
+			font-weight: 700;
+		}
+
+		// A row's news as a MARK, not a sentence: a folded row is decided on a
+		// glance, and a round glyph carries at arm's length where two words
+		// have to be focused on. The words stay in the accessible name, the
+		// tooltip, and the unfolded body — nothing is lost, only relocated.
+		&--icon {
+			width: 26px;
+			height: 26px;
+			padding: 0;
+			justify-content: center;
+			border-radius: 50%;
+			// Sizes the ICON inside the disc, not text — off the type scale on
+			// purpose, the way .delib-hud__stop-icon is
+			font-size: 0.9rem;
+			line-height: 1;
+		}
+
+		// A helped stall is a quiet fact, so its mark is the quietest one
+		&--helped {
+			background: var(--mark-helped);
+		}
+
+		// The private "you saw a gap here" memo — my own rating remembering
+		// itself, visible to my eyes only, in the warm invitation tone
+		&--gap {
+			background: rgba(255, 210, 63, 0.35);
+			color: var(--ink);
+		}
+	}
+
+	// Vertical caret — closed points down, open points up. PHYSICAL borders on
+	// purpose: with logical ones the corner flips in RTL and the caret ends up
+	// pointing sideways, which reads as "go there", not "unfold".
+	&__chevron {
+		flex: 0 0 auto;
+		align-self: center;
+		margin-inline-start: auto;
+		width: 8px;
+		height: 8px;
+		border-right: 2px solid var(--text-muted);
+		border-bottom: 2px solid var(--text-muted);
+		transform: rotate(45deg);
+		transition: transform var(--motion-fast) ease;
+
+		&--open {
+			transform: rotate(-135deg);
+		}
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding: 0 var(--space-md) var(--space-md);
+	}
+
+	&__text {
+		@include proposal-voice;
+
+		color: var(--ink);
+	}
+
+	// "The text changed since you weighed it" — the unfolded body's echo of
+	// the EDITED chip, sitting right above the scale that answers it
+	&__reinvite {
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-sm);
+		background: rgba(255, 210, 63, 0.25);
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+
+		// ...and the celebratory version: the change includes MY woven-in idea
+		&--mine {
+			background: rgba(139, 107, 240, 0.12);
+			color: var(--mine-glow);
+			font-weight: 700;
+		}
+	}
+
+	&__compose {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	&__input {
+		background: var(--bg-card-solid);
+	}
+
+	// The helped loop lives inside the stall now, so its card must not draw a
+	// second frame around the one it is already sitting in
+	&__helped .helped__item {
+		background: transparent;
+		border: none;
+		box-shadow: none;
+		padding: 0;
+	}
+}
+
+// `.rate-progress` retired 2026-08-11: "⚖️ 0/3" is now three pips under the
+// scales on the HUD's level track, where the step that asks for them lives.
+
+// --- One received improvement: the idea, then a single footer line
+// carrying who sent it and what to do about it. The inbox lives inside a
+// sheet on a phone, so every card that costs three rows for one sentence
+// pushes the second idea off the screen. ---
+.workshop__item {
+	// Lighter than a page card: this is an item in a list, not a panel
+	gap: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	backdrop-filter: none;
+	box-shadow: none;
+}
+
+.workshop__text {
+	color: var(--text-primary);
+	line-height: 1.55;
+}
+
+.workshop__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: var(--space-xs) var(--space-sm);
+
+	// Attribution is metadata, not a heading: it shares the row with the
+	// buttons and gives way to them when the line has to wrap
+	.workshop__from {
+		flex: 1 1 auto;
+		min-width: 0;
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-muted);
+		// A long code name gives way rather than shoving the buttons down
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.delib__actions {
+		flex: 0 0 auto;
+	}
+}
+
+// --- The gap prompt: the invitation a stall folds out right after a rating
+// below the top face. It sits UNDER the scale inside the open stall — never a
+// modal, never in the way of the next rating — and borrows the reinvite's
+// warm-paper tone: an opportunity, not an alert. ---
+.gap-prompt {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	margin-block-start: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: rgba(255, 210, 63, 0.14);
+	border: 1px dashed rgba(255, 178, 44, 0.55);
+
+	&__insight {
+		font-weight: 700;
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	&__question {
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	&__hint {
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+	}
+
+	&__textarea {
+		width: 100%;
+		padding: var(--space-sm);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-sm);
+		background: var(--bg-card-solid);
+		font: inherit;
+		resize: vertical;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+	}
+}
+
+// --- The stuck-write notice: the desk telling the truth about a save that
+// left the device but never reached the square. Amber, like every other
+// "here is where you stand" signal in the game — never danger-red. ---
+.write-desk__stuck {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	align-items: flex-start;
+	margin-block-start: var(--space-sm);
+	padding: var(--space-md);
+	border-radius: var(--radius-md);
+	background: rgba(255, 210, 63, 0.2);
+	border: 1px solid rgba(255, 178, 44, 0.6);
+}
+
+.write-desk__stuck-line {
+	color: var(--ink);
+	font-size: var(--font-size-sm);
+	font-weight: 700;
+}
+
+// --- The write desk's self-check: two toggles the student answers alone —
+// whose need does my sentence serve? No AI, no score, nothing stored. ---
+.write-desk__selfcheck {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	margin-block-start: var(--space-sm);
+}
+
+.write-desk__selfcheck-ask {
+	font-size: var(--font-size-sm);
+	color: var(--text-secondary);
+}
+
+.write-desk__selfcheck-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-sm);
+}
+
+.write-desk__selfcheck-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-md);
+	border-radius: 999px;
+	border: 1px solid transparent;
+	background: var(--bg-card-solid);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	cursor: pointer;
+
+	&--on {
+		border-color: rgba(20, 160, 143, 0.9);
+		font-weight: 700;
+	}
+}
+
+.write-desk__selfcheck-mark {
+	display: inline-flex;
+	align-items: center;
+	color: var(--success, #14a08f);
+}
+
+// --- Finale extras: the journey sentence, the private reflection box and
+// the plural recognitions strip. ---
+.results__journey {
+	font-weight: 700;
+	color: var(--ink);
+}
+
+.results__reflection {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	margin-block-start: var(--space-sm);
+	padding-block-start: var(--space-sm);
+	border-block-start: 1px dashed var(--border-subtle);
+}
+
+.results__recognitions {
+	gap: var(--space-sm);
+}
+
+.results__recognition {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+
+	&-icon {
+		display: inline-flex;
+		align-items: center;
+		color: var(--lantern-glow);
+	}
+
+	&-title {
+		flex: 1 1 auto;
+		font-size: var(--font-size-sm);
+		color: var(--ink);
+	}
+
+	&-value {
+		font-weight: 700;
+		color: var(--ink);
+		white-space: nowrap;
+	}
+}
+
+// --- The revision journey: where each past version of my proposal stood,
+// ending at the live reading. A memory, not a chart — small chips in a row,
+// dips in the same muted amber the "ratings moved" line uses. ---
+.journey-block {
+	gap: var(--space-xs);
+}
+
+.journey {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+
+	&__step {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 4px;
+		padding: 2px var(--space-sm);
+		border-radius: 999px;
+		background: var(--bg-inset, rgba(0, 0, 0, 0.05));
+		font-size: var(--font-size-xs);
+		color: var(--text-secondary);
+
+		// The version that slipped below its predecessor — information for the
+		// next edit, in the same amber the ratings-moved line dips in
+		&--down {
+			background: rgba(255, 178, 44, 0.18);
+			color: var(--ink);
+		}
+
+		// The live reading carries the weight
+		&--now {
+			background: rgba(139, 107, 240, 0.14);
+			color: var(--mine-glow, var(--mine));
+			font-weight: 700;
+		}
+	}
+
+	&__value {
+		font-weight: 700;
+		font-size: var(--font-size-sm);
+	}
+}
+
+.journey__tier {
+	font-size: var(--font-size-xs);
+	color: var(--text-secondary);
+}
+
+// --- One proposal↔helper conversation: the helper's ideas (with their
+// lifecycle chips) and the owner's replies as a small two-sided thread.
+// Purple = mine, white = theirs — the app's one immutable colour rule. ---
+.thread {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	// A conversation is where the ownership law is read fastest and most
+	// often, so it is stated here in full rather than hinted at with a 3px
+	// edge on two near-identical grey washes: MY words are a filled purple
+	// bubble, THEIRS are a white card. The tail (one squared corner on the
+	// speaker's side) is the second, redundant cue.
+	&__msg {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		max-width: 88%;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-lg);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		box-shadow: var(--shadow-card);
+
+		&--mine {
+			align-self: flex-end;
+			background: var(--grad-mine-text);
+			border-color: transparent;
+			box-shadow: var(--glow-lantern);
+			border-end-end-radius: var(--radius-sm);
+		}
+
+		&--peer {
+			align-self: flex-start;
+			border-start-start-radius: var(--radius-sm);
+		}
+
+		// An improvement idea is WORK, not talk — it wears a tag and, later,
+		// its lifecycle chip, so the two kinds of message never blur
+		&--suggestion {
+			border-radius: var(--radius-md);
+		}
+	}
+
+	// Everything inside my bubble sits on purple, so white is the DEFAULT and
+	// the exceptions below opt out — the other way round means every new
+	// child element added here starts life as dark ink on a dark fill and
+	// nobody notices until a screenshot arrives.
+	&__msg--mine {
+		color: #ffffff;
+	}
+
+	&__msg--mine &__text,
+	&__msg--mine &__who {
+		color: #ffffff;
+	}
+
+	// The muted "a thank-you pays the classmate who helped" line — muted is
+	// defined against white, so on purple it has to be re-derived
+	&__msg--mine .action-hint {
+		color: rgba(255, 255, 255, 0.75);
+	}
+
+	&__msg--mine &__time {
+		color: rgba(255, 255, 255, 0.75);
+	}
+
+	&__msg--mine &__tag {
+		background: var(--bg-card-solid);
+		color: var(--mine-ink);
+	}
+
+	// The lifecycle chips are drawn for a white card — an outlined pill whose
+	// BORDER and TEXT carry the state colour. Inside my purple bubble that
+	// left dark ink on a dark fill. They keep their colour, which is the
+	// information, and get a white pill to sit on so it can be read.
+	&__msg--mine .helped__chip {
+		background: var(--bg-card-solid);
+		border-color: transparent;
+	}
+
+	// ...except the one that was already a solid fill, which reads fine as is
+	&__msg--mine .helped__chip--implemented {
+		background: var(--success);
+		border-color: #ffffff;
+	}
+
+	// A dimmed chip on purple disappears; on its white pill it can simply be
+	// the quietest ink instead
+	&__msg--mine .helped__chip--declined {
+		opacity: 1;
+		color: var(--text-muted);
+	}
+
+	&__who {
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		color: var(--peer-glow);
+	}
+
+	&__msg--peer &__text {
+		color: var(--text-primary);
+	}
+
+	&__tag {
+		align-self: flex-start;
+		padding: 1px var(--space-xs);
+		border-radius: var(--radius-full);
+		background: rgba(255, 210, 63, 0.35);
+		color: var(--ink);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	&__text {
+		color: var(--text-primary);
+		line-height: 1.55;
+		overflow-wrap: anywhere;
+	}
+
+	&__composer {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__input {
+		background: var(--bg-card-solid);
+	}
+
+	// The clock on a message, quiet and at the end of the bubble
+	&__time {
+		align-self: flex-end;
+		color: var(--text-muted);
+		@include type-meta;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.helped__chip {
+		align-self: flex-start;
+	}
+
+	.delib__actions {
+		justify-content: flex-end;
+	}
+}
+
+// --- The conversation INDICATOR, the only thing a card carries now: a
+// bubble, the last thing said, when it was said, and what is unread. The
+// conversation itself is a page (.chat-page) — same grammar as the option
+// chat in Join and the statement chat in the main app. ---
+.chat-entry-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.chat-entry {
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	width: 100%;
+	padding: var(--space-sm) var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	transition:
+		border-color var(--motion-base) ease,
+		box-shadow var(--motion-base) ease;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--border-lantern);
+		box-shadow: var(--shadow-raised);
+	}
+
+	// Something is waiting in there — the row itself says so, not only the count
+	&--unread {
+		border-color: var(--pink);
+	}
+
+	&__icon {
+		flex: 0 0 auto;
+		font-size: 1.1rem;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+		flex: 1 1 auto;
+	}
+
+	&__label {
+		font-weight: 700;
+		color: var(--text-primary);
+		font-size: var(--font-size-sm);
+	}
+
+	// One line of the last message — the preview, never the conversation
+	&__last {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+
+		&--empty {
+			color: var(--text-muted);
+			font-style: italic;
+		}
+	}
+
+	&__meta {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__time {
+		color: var(--text-muted);
+		@include type-meta;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__ideas {
+		padding: 1px var(--space-xs);
+		border-radius: var(--radius-full);
+		background: rgba(255, 210, 63, 0.35);
+		color: var(--ink);
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+	}
+
+	// A mark, not a count: "something happened in this conversation that wants
+	// you" is a different fact from "N things were said", and folding them into
+	// one number would lose both
+	&__mark {
+		font-size: var(--font-size-sm);
+		line-height: 1;
+	}
+
+	// The notification colour (pink), never a camp one and never danger-red
+	&__unread {
+		min-width: 18px;
+		padding: 1px 5px;
+		border-radius: var(--radius-full);
+		background: var(--pink);
+		color: #fff;
+		@include type-meta;
+		font-weight: 700;
+		text-align: center;
+	}
+}
