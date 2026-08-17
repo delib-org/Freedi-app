@@ -17,7 +17,7 @@ import {
 	type EvidenceRelation,
 	type ScoreInput,
 } from '@freedi/evidence';
-import { getGenAI } from '../config/gemini';
+import { getGenAI, GEMINI_MODEL } from '../config/gemini';
 
 const taxonomy = createTaxonomy();
 export const SCORER_VERSION = `scorer-v1-gemini-${taxonomy.version}`;
@@ -75,8 +75,10 @@ Rules:
 export const evidenceScorerV1: EvidenceScorer = {
 	version: SCORER_VERSION,
 	async score(input: ScoreInput): Promise<EvidenceVerdict> {
+		// GEMINI_MODEL resolves env override → fast OpenAI tier (the compat layer
+		// forwards to OpenAI, so a literal Gemini model id here would 404).
 		const model = getGenAI().getGenerativeModel({
-			model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+			model: GEMINI_MODEL,
 			generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
 		});
 

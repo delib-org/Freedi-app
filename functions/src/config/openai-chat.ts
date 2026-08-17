@@ -3,11 +3,11 @@ import pLimit from 'p-limit';
 import { logger } from 'firebase-functions';
 
 // Centralized model names — update here when OpenAI releases new versions.
-// Defaults chosen May 2026:
-//   - gpt-4o for taxonomy (one call per parent, capability matters)
-//   - gpt-4o-mini for normalization + naming (high volume, cheap + fast)
-export const TAXONOMY_MODEL = process.env.OPENAI_TAXONOMY_MODEL || 'gpt-4o';
-export const WORKER_MODEL = process.env.OPENAI_WORKER_MODEL || 'gpt-4o-mini';
+// Defaults chosen Aug 2026:
+//   - gpt-5.6-terra for taxonomy (one call per parent, capability matters; $2/$12 per 1M)
+//   - gpt-5.6-luna for normalization + naming (high volume, cheap + fast; $0.20/$1.20 per 1M)
+export const TAXONOMY_MODEL = process.env.OPENAI_TAXONOMY_MODEL || 'gpt-5.6-terra';
+export const WORKER_MODEL = process.env.OPENAI_WORKER_MODEL || 'gpt-5.6-luna';
 
 const DEFAULT_CONCURRENCY = 10;
 const DEFAULT_RETRIES = 3;
@@ -43,6 +43,24 @@ interface CallOptions {
 	maxTokens?: number;
 	temperature?: number;
 	jsonMode?: boolean;
+}
+
+/**
+ * GPT-5-family models (reasoning models) reject the legacy `max_tokens`
+ * parameter (use `max_completion_tokens`) and reject non-default `temperature`.
+ * GPT-4-era models keep the legacy parameters, so an env override to an older
+ * model keeps working.
+ */
+export function buildModelParams(
+	model: string,
+	opts: { maxTokens?: number; temperature?: number }
+): Record<string, number> {
+	const maxTokens = opts.maxTokens ?? 1024;
+	if (model.startsWith('gpt-5')) {
+		return { max_completion_tokens: maxTokens };
+	}
+
+	return { max_tokens: maxTokens, temperature: opts.temperature ?? 0 };
 }
 
 function isRateLimitError(error: unknown): boolean {
@@ -124,8 +142,7 @@ export async function callLLM(opts: CallOptions): Promise<string> {
 				const response = await client.chat.completions.create({
 					model: opts.model,
 					messages,
-					max_tokens: opts.maxTokens ?? 1024,
-					temperature: opts.temperature ?? 0,
+					...buildModelParams(opts.model, opts),
 					...(opts.jsonMode ? { response_format: { type: 'json_object' } } : {}),
 				});
 				const text = response.choices[0]?.message?.content;

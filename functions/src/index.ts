@@ -1105,7 +1105,7 @@ exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res:
 
 // HTTP endpoint for the new topic-cluster pipeline (admin-triggered, on-demand).
 // Replaces the scheduled sweep above. See functions/src/services/topic-cluster/.
-// Pipeline loads many statements + 1536-d embeddings + UMAP/DBSCAN + Anthropic SDK
+// Pipeline loads many statements + 1536-d embeddings + UMAP/DBSCAN + OpenAI SDK
 // in one request — needs more memory than the 256 MiB default and a longer timeout.
 exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterPipeline, {
 	memory: '1GiB',

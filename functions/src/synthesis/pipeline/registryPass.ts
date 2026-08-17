@@ -19,7 +19,7 @@ import type { SynthesisSettings } from './types';
  * Runs when `claimRegistryEnabled` and the cosine attach passes (1–2) did not
  * place the option — INCLUDING when vector search returned zero candidates,
  * which is exactly the "same meaning, distant embeddings" recall gap the
- * registry exists to close. One gpt-4o-mini call reads the question's full
+ * registry exists to close. One fast-tier LLM call reads the question's full
  * claim codebook, so recall is independent of embedding geometry.
  *
  * Young questions need no special mode: with few statements the cosine passes
@@ -97,7 +97,7 @@ export async function runRegistryPass(
 
 	// Sampled second-model audit — detached: observes the classifier, never
 	// blocks or changes the pipeline decision. A failed-closed primary is not a
-	// judgment, so there is nothing to audit (and gpt-4o budget is scarce).
+	// judgment, so there is nothing to audit (and heavy-tier budget is scarce).
 	if (Math.random() < AUDIT_SAMPLE_RATE && !classification.failedClosed) {
 		void auditClassification({
 			questionId: option.parentId,

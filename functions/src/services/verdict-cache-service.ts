@@ -8,6 +8,7 @@ import {
 } from './semantic-equivalence-service';
 import { computeTextHash, computePairKey } from '../synthesis/textHash';
 import { logError } from '../utils/errorHandling';
+import { GEMINI_MODEL } from '../config/gemini';
 
 /**
  * Firestore-backed cache for the four-way LLM-as-judge verdict used in the
@@ -39,10 +40,11 @@ export const JUDGE_PROMPT_VER = 'v1';
 
 /**
  * Identifier of the model used by `judgeSemanticEquivalence`. Cache rows
- * with a different value are treated as misses. Keep in sync with the
- * Gemini model returned by `getGeminiModel()`.
+ * with a different value are treated as misses. Derived from the same
+ * resolved model constant the judge actually calls, so a model change
+ * (code default or env override) automatically invalidates the cache.
  */
-export const JUDGE_MODEL_ID = 'gemini-2.5-flash';
+export const JUDGE_MODEL_ID = GEMINI_MODEL;
 
 const FIRESTORE_IN_LIMIT = 30;
 const READ_CONCURRENCY = 5;

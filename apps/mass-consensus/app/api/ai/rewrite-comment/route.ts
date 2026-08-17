@@ -39,10 +39,14 @@ ${suggestionText ? `Suggestion: "${suggestionText}"` : ''}
 Comment: "${originalText}"`;
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const model = process.env.OPENAI_FAST_MODEL || 'gpt-5.6-luna';
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_FAST_MODEL || 'gpt-4o-mini',
+      model,
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500,
+      // GPT-5-family models require max_completion_tokens (max_tokens is rejected)
+      ...(model.startsWith('gpt-5')
+        ? { max_completion_tokens: 500 }
+        : { max_tokens: 500 }),
     });
     const rewrittenText = (completion.choices[0]?.message?.content || originalText).trim();
 

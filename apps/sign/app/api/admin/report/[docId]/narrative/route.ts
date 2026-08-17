@@ -14,7 +14,7 @@ import { getFirebaseFunctionUrl } from '@/lib/utils/firebaseFunctions';
 import { logger } from '@/lib/utils/logger';
 
 // Next.js segment config — Vercel honors this over vercel.json globs.
-// The route waits on the generateDocumentReportAI Cloud Function (gpt-4o),
+// The route waits on the generateDocumentReportAI Cloud Function (heavy-tier LLM),
 // which takes ~30s on large documents; the platform default of 30s cuts it off.
 export const maxDuration = 60;
 

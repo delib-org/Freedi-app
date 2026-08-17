@@ -385,7 +385,7 @@ export async function runVerifyingPhase(jobId: string): Promise<void> {
 }
 
 /**
- * PHASE 4 — Anthropic proposal generation per verified cluster. Reads
+ * PHASE 4 — LLM (OpenAI) proposal generation per verified cluster. Reads
  * `verifiedClusters`, fetches the parent question for context, fans out
  * `generateSynthesizedProposal` per cluster, writes `proposals`.
  *

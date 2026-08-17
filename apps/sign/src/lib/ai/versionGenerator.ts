@@ -275,10 +275,16 @@ async function callOpenAI(
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
-	// Use GPT-4o as default - a smart model for quality analysis
-	const model = config.model || 'gpt-4o';
+	// Default: gpt-5.6-terra — capable production model for quality analysis
+	const model = config.model || 'gpt-5.6-terra';
 	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
+
+	// GPT-5-family models reject legacy `max_tokens` (use `max_completion_tokens`)
+	// and reject non-default `temperature`; GPT-4-era overrides keep the old params.
+	const tokenParams = model.startsWith('gpt-5')
+		? { max_completion_tokens: maxTokens }
+		: { max_tokens: maxTokens, temperature };
 
 	const response = await fetch('https://api.openai.com/v1/chat/completions', {
 		method: 'POST',
@@ -292,8 +298,7 @@ async function callOpenAI(
 				{ role: 'system', content: systemPrompt },
 				{ role: 'user', content: userPrompt },
 			],
-			max_tokens: maxTokens,
-			temperature,
+			...tokenParams,
 			response_format: { type: 'json_object' },
 		}),
 	});
@@ -317,7 +322,9 @@ async function callClaude(
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
-	// Use Claude 3.5 Sonnet as default - excellent for nuanced document analysis
+	// NOTE: default model was retired (Oct 2025) — this path is unusable without
+	// updating the model id (and removing `temperature`, which current Claude
+	// models reject). Kept as-is: no Anthropic key is configured for this project.
 	const model = config.model || 'claude-3-5-sonnet-20241022';
 	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
@@ -357,7 +364,8 @@ async function callGemini(
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
-	// Use Gemini 2.5 Pro as default - high-quality model for document analysis
+	// NOTE: inactive path — the project's Gemini API key was revoked; provider
+	// selection defaults to OpenAI. Default model: Gemini 2.5 Flash.
 	const model = config.model || 'gemini-2.5-flash';
 	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;

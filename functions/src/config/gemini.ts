@@ -12,10 +12,10 @@
 import { callLLM } from './openai-chat';
 
 // Model tiers. Both overridable via env vars.
-//   - gpt-4o      : heavy reasoning (version AI, integration/synthesis)
-//   - gpt-4o-mini : high-volume tasks (moderation, classification, summarization)
-export const LLM_MODEL_HEAVY = process.env.OPENAI_HEAVY_MODEL || 'gpt-4o';
-export const LLM_MODEL_FAST = process.env.OPENAI_FAST_MODEL || 'gpt-4o-mini';
+//   - gpt-5.6-terra : heavy reasoning (version AI, integration/synthesis)
+//   - gpt-5.6-luna  : high-volume tasks (moderation, classification, summarization)
+export const LLM_MODEL_HEAVY = process.env.OPENAI_HEAVY_MODEL || 'gpt-5.6-terra';
+export const LLM_MODEL_FAST = process.env.OPENAI_FAST_MODEL || 'gpt-5.6-luna';
 
 // Back-compat alias: existing callers pass `GEMINI_MODEL`; it now resolves to the
 // fast OpenAI model. `GEMINI_MODEL` (or `OPENAI_FAST_MODEL`) env still overrides.
