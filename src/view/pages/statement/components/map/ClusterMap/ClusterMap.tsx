@@ -196,7 +196,12 @@ const ClusterMap: FC = () => {
 
 			{showSummary && summary && (
 				<Modal closeModal={() => setShowSummary(false)}>
-					<SummaryDisplay summary={summary} generatedAt={summaryGeneratedAt} />
+					<SummaryDisplay
+						summary={summary}
+						generatedAt={summaryGeneratedAt}
+						statementId={statementId}
+						canEdit={isAdmin}
+					/>
 				</Modal>
 			)}
 		</div>

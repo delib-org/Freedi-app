@@ -73,6 +73,82 @@
 	white-space: nowrap;
 }
 
+.headerActions {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.editButton {
+	padding: 0.2rem 0.9rem;
+	background-color: var(--card-default, #ffffff);
+	color: var(--btn-secondary);
+	cursor: pointer;
+	border-radius: 20px;
+	border: 1px solid var(--btn-secondary);
+	font-size: 0.85rem;
+}
+
+.editArea {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.editTextarea {
+	width: 100%;
+	padding: 0.75rem;
+	border: 1px solid var(--border-primary, #c6d8f7);
+	border-radius: 8px;
+	background-color: var(--card-default, #ffffff);
+	color: var(--text-body);
+	font-family: inherit;
+	font-size: 0.9rem;
+	line-height: 1.6;
+	resize: vertical;
+
+	&:focus {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 1px;
+	}
+}
+
+.editActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+}
+
+.saveButton {
+	padding: 0.4rem 1.2rem;
+	background-color: var(--btn-primary);
+	color: var(--white);
+	cursor: pointer;
+	border-radius: 20px;
+	border: 1px solid var(--btn-primary);
+
+	&:disabled {
+		background-color: var(--btn-disabled);
+		color: var(--btn-disabled-text);
+		border-color: var(--btn-disabled);
+		cursor: not-allowed;
+	}
+}
+
+.cancelButton {
+	padding: 0.4rem 1.2rem;
+	background-color: var(--card-default, #ffffff);
+	color: var(--btn-secondary);
+	cursor: pointer;
+	border-radius: 20px;
+	border: 1px solid var(--btn-secondary);
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+}
+
 .summaryContent {
 	font-size: 0.95rem;
 	line-height: 1.7;

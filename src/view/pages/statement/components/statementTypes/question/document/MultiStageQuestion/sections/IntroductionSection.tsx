@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useSummarization } from '@/controllers/hooks/useSummarization';
+import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import newOptionGraphic from '@/assets/images/newOptionGraphic.png';
 import InfoIcon from '@/assets/icons/InfoIcon.svg?react';
 import EditableDescription from '@/view/components/edit/EditableDescription';
@@ -18,6 +19,7 @@ interface IntroductionSectionProps {
 export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement }) => {
 	const { t } = useTranslation();
 	const { isGenerating, generateSummary } = useSummarization();
+	const { isAdmin } = useEditPermission(statement);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
@@ -58,6 +60,8 @@ export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement })
 			<SummaryDisplay
 				summary={statementWithSummary.summary}
 				generatedAt={statementWithSummary.summaryGeneratedAt}
+				statementId={statement.statementId}
+				canEdit={isAdmin}
 			/>
 
 			{/* Summarize Button - admin/creator only */}

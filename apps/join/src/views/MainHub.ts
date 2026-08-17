@@ -19,6 +19,7 @@ import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { QRShare } from '@/components/QRShare';
+import { SummarySection } from '@/components/SummarySection';
 import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { createDragReorder } from '@/lib/dragReorder';
@@ -188,6 +189,7 @@ export const MainHub: m.Component = {
 							title: main.statement,
 						})
 					: null,
+				m(SummarySection, { statement: main, admin }),
 				m('h2.main-hub__questions-heading', t('mainHub.questionsHeading')),
 				admin ? renderCreateSubQuestionForm(mainId) : null,
 				subs.length === 0

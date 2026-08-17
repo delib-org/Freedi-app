@@ -2790,6 +2790,131 @@
 }
 
 // =============================================================================
+// AI summary of the hub question — built from the answers that passed each
+// sub-question's cutoff. Everyone sees the summary card; only facilitators
+// see the generate/edit controls.
+// =============================================================================
+.main-hub__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.main-hub__summary-card {
+  padding: var(--space-md);
+  background: var(--surface-card, #fff);
+  border-inline-start: 4px solid var(--q-accent, var(--terra-500));
+  border-radius: var(--radius-md);
+}
+
+.main-hub__summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--paper-line);
+}
+
+.main-hub__summary-title {
+  margin: 0;
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary);
+}
+
+.main-hub__summary-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.main-hub__summary-date {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.main-hub__summary-body {
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  line-height: var(--line-height-loose, 1.6);
+
+  .summary-md__heading {
+    margin: var(--space-md) 0 var(--space-xs);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--text-primary);
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  .summary-md__paragraph {
+    margin: 0 0 var(--space-sm);
+  }
+
+  .summary-md__list {
+    margin: 0 0 var(--space-sm);
+    padding-inline-start: var(--space-lg);
+
+    li {
+      margin-bottom: var(--space-xs);
+    }
+  }
+}
+
+.main-hub__summary-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.main-hub__summary-textarea {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font: inherit;
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md, 12px);
+  resize: vertical;
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 1px;
+    border-color: var(--focus-ring-color);
+  }
+}
+
+.main-hub__summary-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+.main-hub__summary-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.main-hub__summary-error {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--danger-700, #b91c1c);
+  background: var(--danger-50, #fef2f2);
+  border: 1px solid var(--danger-200, #fecaca);
+  border-radius: var(--radius-sm);
+}
+
+// =============================================================================
 // QR share section — peer-to-peer URL sharing. Rendered on the MainHub (hub
 // URL) and inside a sub-question (that question's URL), so the block owns its
 // own class names rather than borrowing the host page's.

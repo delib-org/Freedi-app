@@ -140,6 +140,8 @@ const QuestionsView: FC = () => {
 						<SummaryDisplay
 							summary={statementWithSummary?.summary}
 							generatedAt={statementWithSummary?.summaryGeneratedAt}
+							statementId={statement?.statementId}
+							canEdit={isAdmin}
 						/>
 
 						{statement && isAdmin && (

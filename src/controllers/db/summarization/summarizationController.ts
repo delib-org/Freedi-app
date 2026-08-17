@@ -1,5 +1,7 @@
 import { httpsCallable } from 'firebase/functions';
+import { updateDoc } from 'firebase/firestore';
 import { functions } from '../config';
+import { createStatementRef, updateTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
 
@@ -86,6 +88,29 @@ export async function requestDiscussionSummary(
 
 		logError(error, {
 			operation: 'summarizationController.requestDiscussionSummary',
+			statementId,
+		});
+		throw error;
+	}
+}
+
+/**
+ * Save an admin-edited summary on the question statement. The summary field
+ * is shared by all apps, so edits made here are visible everywhere.
+ */
+export async function updateStatementSummary(statementId: string, summary: string): Promise<void> {
+	try {
+		const statementRef = createStatementRef(statementId);
+		const { lastUpdate } = updateTimestamp();
+
+		await updateDoc(statementRef, {
+			summary,
+			summaryGeneratedAt: lastUpdate,
+			lastUpdate,
+		});
+	} catch (error) {
+		logError(error, {
+			operation: 'summarizationController.updateStatementSummary',
 			statementId,
 		});
 		throw error;

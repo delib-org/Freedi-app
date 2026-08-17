@@ -87,6 +87,8 @@ const StagePage = ({ showBottomNav = true }: Props) => {
 					<SummaryDisplay
 						summary={statementWithSummary?.summary}
 						generatedAt={statementWithSummary?.summaryGeneratedAt}
+						statementId={statement?.statementId}
+						canEdit={isAdmin}
 					/>
 
 					{/* Summarize Button - Only visible to admins */}
