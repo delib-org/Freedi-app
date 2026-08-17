@@ -37,6 +37,13 @@ jobs:
         working-directory: ./packages/shared-types
         run: npm ci && npm run build
 
+      # eslint and eslint.config.js both live at the repo root — apps/agora
+      # declares neither and finds them by walking up the directory tree, which
+      # works locally and not in a job that only installs apps/agora. The first
+      # run of this workflow died on `sh: 1: eslint: not found`.
+      - name: Install root toolchain
+        run: npm ci
+
       - name: Install Agora
         working-directory: ./apps/agora
         run: npm install
