@@ -105,7 +105,11 @@ describe('setMembership', () => {
 				Collections.statementsSubscribe,
 				mockWaitingMember.statementsSubscribeId,
 			);
-			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', { role: Role.member });
+			// The role change carries a lastUpdate stamp, as every write here does
+			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', {
+				role: Role.member,
+				lastUpdate: expect.any(Number),
+			});
 		});
 
 		it('should ban member when accept is false', async () => {
@@ -114,7 +118,10 @@ describe('setMembership', () => {
 				false,
 			);
 
-			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', { role: Role.banned });
+			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', {
+				role: Role.banned,
+				lastUpdate: expect.any(Number),
+			});
 		});
 
 		it('should delete from waiting list after approval', async () => {

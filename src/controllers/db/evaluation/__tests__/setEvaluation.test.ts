@@ -117,10 +117,23 @@ jest.mock('firebase/firestore', () => ({
 	updateDoc: (...args: unknown[]) => mockUpdateDoc(...args),
 }));
 
-// Mock Firebase config
+// Mock Firebase config.
+//
+// setEvaluationToDB pins the evaluator to the live Firebase Auth session rather
+// than trusting the `creator` argument, so the session is part of the contract
+// now: without a currentUser it writes nothing at all.
+// The session object is created inside the factory — jest hoists jest.mock above
+// everything, so a const declared out here is still in its temporal dead zone by
+// the time the factory runs. Tests reach it through the handle below.
 jest.mock('../../config', () => ({
 	FireStore: {},
+	auth: { currentUser: null },
+	functions: {},
 }));
+
+const mockAuth = require('../../config').auth as {
+	currentUser: { uid: string } | null;
+};
 
 // Mock Valibot
 jest.mock('valibot', () => ({
@@ -181,6 +194,8 @@ describe('setEvaluation', () => {
 		mockDoc.mockReturnValue('mock-ref');
 		mockSetDoc.mockResolvedValue(undefined);
 		mockUpdateDoc.mockResolvedValue(undefined);
+		// The signed-in session agrees with the evaluator unless a test says otherwise
+		mockAuth.currentUser = { uid: mockUser.uid };
 	});
 
 	describe('setEvaluationToDB', () => {
@@ -267,6 +282,32 @@ describe('setEvaluation', () => {
 				0.5,
 				'button',
 			);
+		});
+
+		it('should refuse to write when there is no auth session', async () => {
+			const { logger } = require('@/services/logger');
+			mockAuth.currentUser = null;
+
+			await setEvaluationToDB(mockStatement, mockUser, 0.5);
+
+			expect(mockSetDoc).not.toHaveBeenCalled();
+			expect(logger.error).toHaveBeenCalledWith(
+				'Failed to set evaluation',
+				expect.any(Error),
+				expect.objectContaining({ statementId: mockStatement.statementId }),
+			);
+		});
+
+		it('should refuse to write when the session is a different person', async () => {
+			// A stale `creator` from Redux during an auth transition — the rules pin
+			// evaluatorId to request.auth.uid, so this write would be rejected anyway
+			const { logger } = require('@/services/logger');
+			mockAuth.currentUser = { uid: 'someone-else' };
+
+			await setEvaluationToDB(mockStatement, mockUser, 0.5);
+
+			expect(mockSetDoc).not.toHaveBeenCalled();
+			expect(logger.error).toHaveBeenCalled();
 		});
 
 		it('should log info on successful save', async () => {

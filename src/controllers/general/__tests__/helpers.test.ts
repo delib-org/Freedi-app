@@ -1,5 +1,10 @@
 // Mock @freedi/shared-types before import to prevent valibot loading
 jest.mock('@freedi/shared-types', () => ({
+	// Must list every member of the real enum. TYPE_RESTRICTIONS is built with
+	// computed keys, so a member missing here becomes the key "undefined" — and
+	// several missing members collapse onto that one key, the last one winning.
+	// A parent with no statementType then inherits whichever restriction landed
+	// there instead of being unrestricted.
 	StatementType: {
 		statement: 'statement',
 		option: 'option',
@@ -7,6 +12,11 @@ jest.mock('@freedi/shared-types', () => ({
 		document: 'document',
 		group: 'group',
 		comment: 'comment',
+		paragraph: 'paragraph',
+		synthesis: 'synthesis',
+		evidence: 'evidence',
+		suggestion: 'suggestion',
+		standard: 'standard',
 	},
 	Role: {
 		admin: 'admin',
