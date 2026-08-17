@@ -46,10 +46,13 @@
 		box-shadow: var(--shadow-card);
 		cursor: pointer;
 		color: var(--text-primary);
+		// transform is the FLIP move: under live reorder a proposal overtaking
+		// another has to be SEEN to overtake. The JS hands the transition back
+		// here (same pairing as the square's stall rows).
 		transition:
-			transform var(--motion-fast, 150ms) ease,
-			border-color var(--motion-fast, 150ms) ease,
-			box-shadow var(--motion-fast, 150ms) ease;
+			border-color var(--motion-fast) ease,
+			box-shadow var(--motion-fast) ease,
+			transform var(--motion-base) var(--ease-camera);
 
 		&:hover:not(:disabled) {
 			transform: translateY(-2px);

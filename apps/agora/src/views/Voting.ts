@@ -38,6 +38,43 @@ export interface VotingAttrs {
 export function Voting(): m.Component<VotingAttrs> {
 	let saving = false;
 
+	const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+	/** statementId → where its row last sat, for the FLIP move */
+	const rowOffsets = new Map<string, number>();
+	/** The order last rendered, and whether this render actually changed it */
+	let orderKey = '';
+	let resorted = false;
+
+	/**
+	 * A proposal overtaking another is the whole point of live reorder, so the
+	 * overtake has to be visible: FLIP puts the row back where the eye left it
+	 * and lets it slide to its new place. A row that teleports says nothing —
+	 * the class sees a different list, not a proposal winning.
+	 *
+	 * `offsetTop`, not `getBoundingClientRect`: on a projector someone is always
+	 * scrolling, and scrolling must never read as motion.
+	 *
+	 * Only when the ORDER changed. Rows also shift when the reveal adds the
+	 * count column and every row grows — animating that displacement would fling
+	 * the whole list at the moment the teacher is trying to show it something.
+	 */
+	function flipRow(dom: HTMLElement, id: string): void {
+		const now = dom.offsetTop;
+		const before = rowOffsets.get(id);
+		rowOffsets.set(id, now);
+		if (before === undefined || reducedMotion || !resorted) return;
+		const delta = before - now;
+		if (Math.abs(delta) < 2) return;
+		// Frame 1: no transition, sitting at the old place
+		dom.style.transition = 'none';
+		dom.style.transform = `translateY(${delta}px)`;
+		requestAnimationFrame(() => {
+			// Frame 2: hand the transition back to the stylesheet and let go
+			dom.style.transition = '';
+			dom.style.transform = '';
+		});
+	}
+
 	return {
 		view(vnode) {
 			const { session, alwaysShowResults, readOnly } = vnode.attrs;
@@ -94,6 +131,12 @@ export function Voting(): m.Component<VotingAttrs> {
 				});
 			}
 
+			// Did the ORDER change this render, or did the rows merely move?
+			// Only the first is a FLIP (see flipRow).
+			const key = ordered.map((entry) => entry.candidate.statementId).join('|');
+			resorted = orderKey !== '' && key !== orderKey;
+			orderKey = key;
+
 			return m(
 				'.shell',
 				m('.shell__content.voting', [
@@ -117,6 +160,10 @@ export function Voting(): m.Component<VotingAttrs> {
 									'aria-pressed': readOnly ? undefined : mine ? 'true' : 'false',
 									disabled: readOnly ? undefined : saving,
 									onclick: readOnly ? undefined : () => vote(candidate.statementId),
+									oncreate: (node: m.VnodeDOM) =>
+										rowOffsets.set(candidate.statementId, (node.dom as HTMLElement).offsetTop),
+									onupdate: (node: m.VnodeDOM) =>
+										flipRow(node.dom as HTMLElement, candidate.statementId),
 								},
 								[
 									// The fill sits behind the text; the number beside it is
