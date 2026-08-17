@@ -11,6 +11,7 @@ import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
 import { stopDeliberationListeners } from '../lib/proposals';
+import { listenToVoting, stopVotingListeners } from '../lib/voting';
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
@@ -21,6 +22,7 @@ import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
+import { Voting } from './Voting';
 import { Results } from './Results';
 import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
 
@@ -76,6 +78,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			// The results recap re-attaches these after the deliberation view
 			// drops them, so leaving the game is what finally closes them
 			stopDeliberationListeners();
+			stopVotingListeners();
 		},
 
 		view() {
@@ -253,6 +256,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						}
 
 						return m(Deliberation, { session, myParticipant, userId, topic });
+					}
+
+					case AgoraStage.voting: {
+						if (!myParticipant) return noSeatYet();
+						listenToVoting(sessionId, session.challengeQuestionId, userId);
+
+						return m(Voting, { session, myParticipant, userId });
 					}
 
 					case AgoraStage.results:

@@ -373,10 +373,55 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 			/** How the PROPOSALS did — the class map and everything hung off it */
 			const recognitions = buildRecognitions(participants, myParticipant?.userId);
 
+			/**
+			 * What the class ELECTED, when it held a vote.
+			 *
+			 * Named whether or not it cleared the teacher's bar: a class that
+			 * voted has to be told what its vote did, and "the proposal you chose
+			 * fell short of the agreement the room required" is a lesson, where
+			 * silence is just a screen that forgot.
+			 */
+			const voteCard = ((): m.Children => {
+				const winnerId = score.voteWinnerStatementId;
+				if (!winnerId) return null;
+
+				const candidate = session.voting?.candidates.find(
+					(entry) => entry.statementId === winnerId,
+				);
+				const votes = score.voteCounts?.[winnerId] ?? 0;
+				const met = score.voteWinnerMetThreshold !== false;
+
+				return m('.card.stack.results__vote', [
+					m(
+						'p.teacher__section-title',
+						met ? t('results.vote_winner') : t('results.vote_winner_missed'),
+					),
+					candidate ? m('p.results__vote-text', candidate.statement) : null,
+					m(
+						'p.results__vote-count',
+						t('results.vote_count', {
+							n: String(votes),
+							total: String(score.voteTotal ?? 0),
+						}),
+					),
+					!met && score.winningConsensusThreshold !== undefined
+						? m(
+								'p.results__vote-gap',
+								t('results.vote_threshold_gap', {
+									cp: (candidate?.consensus ?? 0).toFixed(2),
+									threshold: score.winningConsensusThreshold.toFixed(2),
+								}),
+							)
+						: null,
+				]);
+			})();
+
 			const classHalf: m.Children = [
 				// Mine first: the student reads their own story, then sees the
 				// class outcome their points fed into
 				myParticipant ? myJourneyCard(myParticipant, session.sessionId) : null,
+
+				voteCard,
 
 				m('.card.results__score-panel', [
 					m('p.teacher__section-title', t('results.class_score')),

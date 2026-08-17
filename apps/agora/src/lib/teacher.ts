@@ -6,6 +6,8 @@ import {
 	AgoraSessionSchema,
 	AgoraTopicPackage,
 	AgoraTopicPackageSchema,
+	VotingStageSettings,
+	AGORA_VOTING,
 	deriveCamp,
 } from '@freedi/shared-types';
 import { db, doc, collection, query, where, limit, getDocs, setDoc, updateDoc } from './firebase';
@@ -71,6 +73,45 @@ export async function patchTopicPackage(
 	patch: Partial<AgoraTopicPackage>,
 ): Promise<void> {
 	await updateDoc(doc(db, Collections.agoraTopicPackages, topicPackageId), patch);
+}
+
+/**
+ * How the vote will run: which proposals reach the ballot, and what it takes
+ * to win it.
+ *
+ * The teacher owns this; the ballot itself is server-drawn and rules-frozen,
+ * so nothing here can name a candidate. `numberOfResults` is clamped before it
+ * is written — a ballot of one is not an election, and a ballot of forty is
+ * not a decision.
+ */
+export async function setVotingSettings(
+	sessionId: string,
+	settings: VotingStageSettings,
+): Promise<void> {
+	const selection = settings.selection;
+	const clamped: VotingStageSettings = {
+		...settings,
+		...(selection
+			? {
+					selection: {
+						...selection,
+						...(selection.numberOfResults !== undefined
+							? {
+									numberOfResults: Math.min(
+										AGORA_VOTING.MAX_TOP_X,
+										Math.max(AGORA_VOTING.MIN_TOP_X, Math.round(selection.numberOfResults)),
+									),
+								}
+							: {}),
+					},
+				}
+			: {}),
+	};
+
+	await updateDoc(doc(db, Collections.agoraSessions, sessionId), {
+		votingSettings: clamped,
+		lastUpdate: Date.now(),
+	});
 }
 
 /**

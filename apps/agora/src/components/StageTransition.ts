@@ -39,6 +39,7 @@ const TRANSITIONS: Partial<Record<AgoraStage, TransitionMeta>> = {
 		labelKey: 'stage.deliberation',
 		lineKey: 'transition.deliberation',
 	},
+	[AgoraStage.voting]: { icon: 'scales', labelKey: 'stage.voting', lineKey: 'transition.voting' },
 	[AgoraStage.results]: { icon: 'flag', labelKey: 'stage.results', lineKey: 'transition.results' },
 };
 

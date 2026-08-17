@@ -87,6 +87,10 @@ function stageBody(stage: AgoraStage, topic: AgoraTopicPackage): m.Children {
 		return promptCard('delib.phase_propose', 'delib.propose_hint');
 	}
 
+	if (stage === AgoraStage.voting) {
+		return promptCard('voting.title', 'voting.teacher_hint');
+	}
+
 	return null;
 }
 

@@ -68,7 +68,13 @@ service cloud.firestore {
                        request.resource.data.get('classScore', {}) ==
                          resource.data.get('classScore', {}) &&
                        request.resource.data.get('participantCount', -1) ==
-                         resource.data.get('participantCount', -1);
+                         resource.data.get('participantCount', -1) &&
+                       // The ballot is drawn up server-side when the voting
+                       // stage opens and frozen from then on. The teacher sets
+                       // votingSettings (how the vote runs); the teacher does
+                       // not get to edit who is standing in it.
+                       request.resource.data.get('voting', {}) ==
+                         resource.data.get('voting', {});
     }
 
     // Participants: created via callable only (anon names are server-issued).
@@ -908,9 +914,20 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
-    match /votes/{voteId=**} {
+    // One vote per user per question, and the doc id says whose it is:
+    // `{userId}--{parentId}`. Anyone signed in may read the tallies, but a
+    // vote can only be written into your own slot — otherwise any authenticated
+    // user could overwrite the whole class's ballot. Withdrawal writes
+    // statementId 'none' rather than deleting, so the counting trigger can
+    // decrement; the delete rule is here only for account cleanup.
+    match /votes/{voteId} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow create, update: if request.auth.uid != null &&
+                               request.resource.data.userId == request.auth.uid &&
+                               voteId == (request.auth.uid + '--' +
+                                          request.resource.data.parentId);
+      allow delete: if request.auth.uid != null &&
+                       resource.data.userId == request.auth.uid;
     }
     
     match /posts/{postId=**} {

@@ -215,6 +215,16 @@ export const AGORA_OUTCOME = {
 	MIN_RATER_COVERAGE: 0.5,
 } as const;
 
+export const AGORA_VOTING = {
+	/** Proposals that reach the ballot when the teacher changes nothing */
+	DEFAULT_TOP_X: 3,
+	/** A ballot of one is not an election */
+	MIN_TOP_X: 2,
+	MAX_TOP_X: 10,
+	/** Consensus a proposal must beat to reach the ballot in threshold mode */
+	DEFAULT_CUTOFF_CP: 0.5,
+} as const;
+
 export const AGORA_LIMITS = {
 	MIN_ANSWER_LENGTH: 10,
 	MAX_ANSWER_LENGTH: 1000,

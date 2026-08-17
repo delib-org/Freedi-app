@@ -29,6 +29,7 @@ const STATIONS: ReadonlyArray<JourneyStation> = [
 	},
 	{ stages: [AgoraStage.positioning], icon: 'bridge', labelKey: 'stage.positioning' },
 	{ stages: [AgoraStage.deliberation], icon: 'square', labelKey: 'stage.deliberation' },
+	{ stages: [AgoraStage.voting], icon: 'scales', labelKey: 'stage.voting' },
 	{ stages: [AgoraStage.results, AgoraStage.ended], icon: 'flag', labelKey: 'stage.results' },
 ];
 

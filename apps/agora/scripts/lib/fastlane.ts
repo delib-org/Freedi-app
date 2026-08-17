@@ -88,6 +88,16 @@ export interface FastlaneOptions {
 	students?: number;
 	/** How many of those bots post a proposal (capped at `students`) */
 	proposals?: number;
+	/**
+	 * Have the bots rate each other's proposals, and wait until the shared
+	 * pipeline has turned those ratings into `statement.consensus`.
+	 *
+	 * Defaults on from the voting stage onward: candidate selection ranks by
+	 * consensus, and without ratings every proposal scores zero — the ballot
+	 * would be "whichever three the query happened to return first", which
+	 * looks like working software and proves nothing.
+	 */
+	ratings?: boolean;
 	topicPackageId?: string;
 	/** Prefix for the teacher identity — a fresh one per run keeps home screens clean */
 	runId?: string;
@@ -176,6 +186,107 @@ async function signUpAnonymous(): Promise<{ uid: string; idToken: string }> {
  */
 const CAMP_POSITIONS = [12, 88, 30, 72, 50, 8, 94, 40, 60, 20];
 
+/**
+ * Ratings that produce a DETERMINISTIC consensus ordering.
+ *
+ * The first proposal is rated highest, the second next, and so on, so a test
+ * can assert "the top two reached the ballot" by name instead of by hope.
+ * Bots never rate their own proposal — the game does not let a student do it,
+ * and a self-rating would quietly skew the very number under test.
+ */
+async function seedRatings(
+	session: AgoraSession,
+	bots: FastlaneBot[],
+	posting: FastlaneBot[],
+	say: (msg: string) => void,
+): Promise<void> {
+	// Spread wide and never neutral, so the resulting consensus values are far
+	// apart: a caller taking "the top two" must not be deciding a coin flip.
+	const RATING_BY_RANK = [1, 0.5, -0.5, -1, 0.75];
+
+	const rated: string[] = [];
+	let ratingsWritten = 0;
+	for (const [rank, author] of posting.entries()) {
+		const statementId = author.proposalId;
+		if (!statementId) continue;
+		const value = RATING_BY_RANK[Math.min(rank, RATING_BY_RANK.length - 1)];
+		rated.push(statementId);
+
+		for (const rater of bots) {
+			if (rater.uid === author.uid) continue;
+			const evaluationId = `${rater.uid}--${statementId}`;
+			await db.collection(Collections.evaluations).doc(evaluationId).set({
+				evaluationId,
+				parentId: session.challengeQuestionId,
+				statementId,
+				evaluatorId: rater.uid,
+				evaluation: value,
+				// The shared pipeline throws without an evaluator object
+				evaluator: {
+					uid: rater.uid,
+					displayName: rater.anonName,
+					isAnonymous: true,
+				},
+				agoraSessionId: session.sessionId,
+				updatedAt: Date.now(),
+			});
+			ratingsWritten++;
+			// Rate one proposal at a time. The pipeline updates a statement's
+			// stats by reading, adding and writing back, so simultaneous ratings
+			// of the SAME proposal overlap and one can be lost.
+			await new Promise((resolve) => setTimeout(resolve, 120));
+		}
+	}
+
+	/**
+	 * Wait for the scores to SETTLE, not merely to exist.
+	 *
+	 * Two traps here, both learned the hard way. A fresh proposal already carries
+	 * `consensus: 0`, so "wait until it is a number" returns instantly and the
+	 * caller ranks a field of zeros. And `evaluation.numberOfEvaluators` is not
+	 * usable either: a statement created without an evaluation block (which is
+	 * every statement — `createStatementObject` writes none) sends the pipeline
+	 * down a repair path that rewrites the whole block, so the counter can read
+	 * zero long after the consensus beside it is correct.
+	 *
+	 * What can be trusted is the value going quiet. Poll until every proposal's
+	 * consensus is unchanged across consecutive reads and no two are equal, so
+	 * "the top two" is a fact rather than a tie-break nobody chose.
+	 */
+	const consensusNow = async (): Promise<number[]> => {
+		const snaps = await Promise.all(
+			rated.map((id) => db.collection(Collections.statements).doc(id).get()),
+		);
+
+		return snaps.map((snap) => (snap.data()?.consensus as number | undefined) ?? 0);
+	};
+
+	const deadline = Date.now() + 60_000;
+	let previous: number[] = [];
+	let stableFor = 0;
+	for (;;) {
+		const current = await consensusNow();
+		const unchanged =
+			previous.length === current.length && current.every((value, i) => value === previous[i]);
+		const distinct = new Set(current).size === current.length;
+		const scored = current.some((value) => value !== 0);
+		stableFor = unchanged ? stableFor + 1 : 0;
+		if (stableFor >= 2 && distinct && scored) break;
+
+		if (Date.now() > deadline) {
+			throw new Error(
+				`Consensus never settled (last: ${current.join(', ')}). ` +
+					'If every value is 0 the functions emulator stopped dispatching triggers after a ' +
+					'hot reload — restart the suite.',
+			);
+		}
+		previous = current;
+		await new Promise((resolve) => setTimeout(resolve, 500));
+	}
+
+	say(`   ✓ ${posting.length} proposals rated (${ratingsWritten} ratings), scores settled`);
+}
+
 export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneResult> {
 	const {
 		stage = AgoraStageEnum.deliberation,
@@ -185,6 +296,10 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 		runId = `fastlane-${Date.now().toString(36)}`,
 		quiet = false,
 	} = options;
+	// The stages that READ consensus get ratings unless told otherwise
+	const wantRatings =
+		options.ratings ??
+		(stage === AgoraStageEnum.voting || stage === AgoraStageEnum.results);
 
 	const say = (msg: string): void => {
 		if (!quiet) console.log(msg);
@@ -247,6 +362,10 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 		bot.proposalId = statementId;
 	}
 	if (posting.length > 0) say(`   ✓ ${posting.length} proposals posted`);
+
+	if (wantRatings && posting.length > 0) {
+		await seedRatings(session, bots, posting, say);
+	}
 
 	if (stage !== AgoraStageEnum.lobby) {
 		await callable<{ ok: boolean }>(

@@ -22,6 +22,7 @@ export {
 	AGORA_OUTCOME,
 	AGORA_CYCLE,
 	AGORA_ANTI_GAMING,
+	AGORA_VOTING,
 } from './agoraConstants';
 
 export type {
