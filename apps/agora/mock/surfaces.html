@@ -212,7 +212,12 @@
 						</span>
 					</button>
 				</div>
-				<p class="voting__turnout">21 מתוך 30 כבר הצביעו</p>
+				<div class="voting__turnout">
+					<div class="voting__turnout-track" aria-hidden="true">
+						<div class="voting__turnout-fill" style="inline-size: 70%"></div>
+					</div>
+					<p class="voting__turnout-text">21 מתוך 30 כבר הצביעו</p>
+				</div>
 				<p class="voting__hint">אפשר לשנות את הקול עד סגירת ההצבעה.</p>
 			</div>
 
@@ -232,7 +237,12 @@
 						</span>
 					</button>
 				</div>
-				<p class="voting__turnout">21 מתוך 30 כבר הצביעו</p>
+				<div class="voting__turnout">
+					<div class="voting__turnout-track" aria-hidden="true">
+						<div class="voting__turnout-fill" style="inline-size: 70%"></div>
+					</div>
+					<p class="voting__turnout-text">21 מתוך 30 כבר הצביעו</p>
+				</div>
 				<p class="voting__hint">
 					התוצאות יתגלו כשהמורה יחליט — הצביעו לפי מה שאתם חושבים, לא לפי מי שמוביל.
 				</p>
@@ -243,6 +253,7 @@
 				<div class="voting-settings__head">
 					<p class="teacher__section-title">ההצבעה של הכיתה</p>
 					<span class="voting-settings__turnout">21 מתוך 30 הצביעו</span>
+					<span class="voting-settings__turnout voting-settings__turnout--all">30 מתוך 30 הצביעו</span>
 				</div>
 				<label class="voting-settings__row">
 					<input type="checkbox" checked />

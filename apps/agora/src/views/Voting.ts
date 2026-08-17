@@ -92,17 +92,25 @@ export function Voting(): m.Component<VotingAttrs> {
 			const classSize = getSessionState().participants.length;
 			const votedCount = voterUids.size;
 
+			/**
+			 * The student's ballot IS the page, so it wears the shell. The
+			 * teacher's copy is one card among several on a page that already has
+			 * one — and `.shell` is `min-height: 100dvh`, so nesting it opened a
+			 * screen-height hole between the ballot and the join code.
+			 */
+			const frame = (children: m.Children): m.Children =>
+				readOnly
+					? m('.voting.voting--board', children)
+					: m('.shell', m('.shell__content.voting', children));
+
 			// A class that rated nothing has an empty ballot. Say so — the
 			// alternative is a screen that looks broken while the teacher works
 			// out what happened.
 			if (candidates.length === 0) {
-				return m(
-					'.shell',
-					m('.shell__content.voting', [
-						m('h2.voting__title', t('voting.title')),
-						m('p.voting__waiting', t('voting.waiting')),
-					]),
-				);
+				return frame([
+					m('h2.voting__title', t('voting.title')),
+					m('p.voting__waiting', t('voting.waiting')),
+				]);
 			}
 
 			function vote(statementId: string): void {
@@ -137,71 +145,85 @@ export function Voting(): m.Component<VotingAttrs> {
 			resorted = orderKey !== '' && key !== orderKey;
 			orderKey = key;
 
-			return m(
-				'.shell',
-				m('.shell__content.voting', [
-					m('h2.voting__title', t('voting.title')),
-					m('p.voting__instruction', t(readOnly ? 'voting.teacher_hint' : 'voting.instruction')),
+			return frame([
+				m('h2.voting__title', t('voting.title')),
+				m('p.voting__instruction', t(readOnly ? 'voting.teacher_hint' : 'voting.instruction')),
 
+				m(
+					'.voting__list',
+					ordered.map(({ candidate, index }) => {
+						const count = selections[candidate.statementId] ?? 0;
+						const mine = !readOnly && myVoteStatementId === candidate.statementId;
+						// Before the first snapshot every bar would read 0% — show
+						// no bar at all rather than a confident wrong number.
+						const share = loaded && total > 0 ? Math.round((count / total) * 100) : 0;
+
+						return m(
+							readOnly ? 'div.voting__option.voting__option--static' : 'button.voting__option',
+							{
+								key: candidate.statementId,
+								class: mine ? 'voting__option--mine' : undefined,
+								'aria-pressed': readOnly ? undefined : mine ? 'true' : 'false',
+								disabled: readOnly ? undefined : saving,
+								onclick: readOnly ? undefined : () => vote(candidate.statementId),
+								oncreate: (node: m.VnodeDOM) =>
+									rowOffsets.set(candidate.statementId, (node.dom as HTMLElement).offsetTop),
+								onupdate: (node: m.VnodeDOM) =>
+									flipRow(node.dom as HTMLElement, candidate.statementId),
+							},
+							[
+								// The fill sits behind the text; the number beside it is
+								// what a student actually reads. Only once there is
+								// something to fill: a 0% bar still paints its mint
+								// leading edge, and an empty row must be EMPTY.
+								showResults && share > 0
+									? m('span.voting__bar', {
+											style: { inlineSize: `${share}%` },
+											'aria-hidden': 'true',
+										})
+									: null,
+								m('span.voting__body', [
+									// The number is the proposal's identity on the ballot, so
+									// it stays with the proposal even when the list re-sorts.
+									m('span.voting__number', `${index + 1}`),
+									m('span.voting__label', candidate.statement),
+								]),
+								showResults
+									? m('span.voting__count', [
+											m('span.voting__votes', String(count)),
+											loaded && total > 0 ? m('span.voting__share', `${share}%`) : null,
+										])
+									: null,
+							],
+						);
+					}),
+				),
+
+				// Always: how much of the room has spoken. Never: for whom.
+				// Progress is drawn as progress everywhere in this game — a mint
+				// meter — with the sentence under it carrying the numbers.
+				m('.voting__turnout', [
+					classSize > 0
+						? m(
+								'.voting__turnout-track',
+								{ 'aria-hidden': 'true' },
+								m('.voting__turnout-fill', {
+									style: {
+										inlineSize: `${Math.round((votedCount / classSize) * 100)}%`,
+									},
+								}),
+							)
+						: null,
 					m(
-						'.voting__list',
-						ordered.map(({ candidate, index }) => {
-							const count = selections[candidate.statementId] ?? 0;
-							const mine = !readOnly && myVoteStatementId === candidate.statementId;
-							// Before the first snapshot every bar would read 0% — show
-							// no bar at all rather than a confident wrong number.
-							const share = loaded && total > 0 ? Math.round((count / total) * 100) : 0;
-
-							return m(
-								readOnly ? 'div.voting__option.voting__option--static' : 'button.voting__option',
-								{
-									key: candidate.statementId,
-									class: mine ? 'voting__option--mine' : undefined,
-									'aria-pressed': readOnly ? undefined : mine ? 'true' : 'false',
-									disabled: readOnly ? undefined : saving,
-									onclick: readOnly ? undefined : () => vote(candidate.statementId),
-									oncreate: (node: m.VnodeDOM) =>
-										rowOffsets.set(candidate.statementId, (node.dom as HTMLElement).offsetTop),
-									onupdate: (node: m.VnodeDOM) =>
-										flipRow(node.dom as HTMLElement, candidate.statementId),
-								},
-								[
-									// The fill sits behind the text; the number beside it is
-									// what a student actually reads.
-									showResults
-										? m('span.voting__bar', {
-												style: { inlineSize: `${share}%` },
-												'aria-hidden': 'true',
-											})
-										: null,
-									m('span.voting__body', [
-										// The number is the proposal's identity on the ballot, so
-										// it stays with the proposal even when the list re-sorts.
-										m('span.voting__number', `${index + 1}`),
-										m('span.voting__label', candidate.statement),
-									]),
-									showResults
-										? m('span.voting__count', [
-												m('span.voting__votes', String(count)),
-												loaded && total > 0 ? m('span.voting__share', `${share}%`) : null,
-											])
-										: null,
-								],
-							);
-						}),
-					),
-
-					// Always: how much of the room has spoken. Never: for whom.
-					m(
-						'p.voting__turnout',
+						'p.voting__turnout-text',
 						classSize > 0
 							? t('voting.turnout', { n: String(votedCount), total: String(classSize) })
 							: t('voting.total_votes', { n: String(votedCount) }),
 					),
-					!readOnly && myVoteStatementId ? m('p.voting__hint', t('voting.change_hint')) : null,
-					!showResults && !readOnly ? m('p.voting__hint', t('voting.results_hidden')) : null,
 				]),
-			);
+				!readOnly && myVoteStatementId ? m('p.voting__hint', t('voting.change_hint')) : null,
+				!showResults && !readOnly ? m('p.voting__hint', t('voting.results_hidden')) : null,
+			]);
 		},
 	};
 }
