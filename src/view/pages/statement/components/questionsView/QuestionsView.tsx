@@ -1,6 +1,6 @@
 import { FC, useContext, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Role, StatementType, QuestionType, CompoundPhase } from '@freedi/shared-types';
+import { Role, Statement, StatementType, QuestionType, CompoundPhase } from '@freedi/shared-types';
 import {
 	questionsSelector,
 	statementSubscriptionSelector,
@@ -9,6 +9,9 @@ import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import { StatementContext } from '../../StatementCont';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useSummarization } from '@/controllers/hooks/useSummarization';
+import SummaryDisplay from '../statementTypes/question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
+import SummarizeModal from '../statementTypes/question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
 import SimpleQuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
@@ -25,6 +28,21 @@ const QuestionsView: FC = () => {
 	const isAdmin = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const statementColor = useStatementColor({ statement });
 	const [menuOpen, setMenuOpen] = useState(false);
+	const { isGenerating, generateSummary } = useSummarization();
+	const [isSummarizeModalOpen, setIsSummarizeModalOpen] = useState(false);
+
+	const handleGenerateSummary = async (customPrompt: string, includeSubQuestions: boolean) => {
+		if (!statement) return;
+		const success = await generateSummary(statement.statementId, customPrompt, includeSubQuestions);
+		if (success) {
+			setIsSummarizeModalOpen(false);
+		}
+	};
+
+	// summaryGeneratedAt is written by the summarize function but not part of StatementSchema
+	const statementWithSummary = statement as
+		| (Statement & { summaryGeneratedAt?: number })
+		| undefined;
 
 	const questionsSelect = useMemo(
 		() => questionsSelector(statement?.statementId),
@@ -119,6 +137,24 @@ const QuestionsView: FC = () => {
 					</div>
 				) : (
 					<div className="wrapper">
+						<SummaryDisplay
+							summary={statementWithSummary?.summary}
+							generatedAt={statementWithSummary?.summaryGeneratedAt}
+						/>
+
+						{statement && isAdmin && (
+							<div className={styles.summarizeWrapper}>
+								<button
+									className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
+									onClick={() => setIsSummarizeModalOpen(true)}
+									disabled={isGenerating}
+									aria-label={t('Generate AI summary of the discussion')}
+								>
+									{isGenerating ? t('Generating...') : t('Summarize Discussion')}
+								</button>
+							</div>
+						)}
+
 						<div className={styles.grid}>
 							{visibleQuestions.map((question) => (
 								<SubGroupCard key={question.statementId} statement={question} />
@@ -127,6 +163,16 @@ const QuestionsView: FC = () => {
 					</div>
 				)}
 			</div>
+
+			{statement && (
+				<SummarizeModal
+					isOpen={isSummarizeModalOpen}
+					onClose={() => setIsSummarizeModalOpen(false)}
+					onGenerate={handleGenerateSummary}
+					isLoading={isGenerating}
+					questionTitle={statement.statement}
+				/>
+			)}
 
 			<div className={styles.addButtonWrapper}>
 				<div className={styles.addButtonGroup}>
