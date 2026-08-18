@@ -18,6 +18,7 @@
 		"seed:clear": "npx tsx scripts/seed.ts --clear",
 		"fast": "npx tsx scripts/fastlane.ts",
 		"preflight": "node scripts/lib/preflight.mjs",
+		"e2e:challenge": "node scripts/e2e-challenge.mjs",
 		"contrast": "node scripts/contrast-audit.mjs",
 		"typesize": "node scripts/type-audit.mjs"
 	},

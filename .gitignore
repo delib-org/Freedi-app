@@ -101,3 +101,4 @@ apps/agora/before-shots/
 apps/agora/mobile-*/
 apps/agora/mock/*.png
 apps/agora/mock/*.webp
+firebase.e2e.json

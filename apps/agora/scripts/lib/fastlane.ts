@@ -98,6 +98,12 @@ export interface FastlaneOptions {
 	 * looks like working software and proves nothing.
 	 */
 	ratings?: boolean;
+	/**
+	 * Switch the challenge round on, and — when the session lands on the voting
+	 * stage — open it, so the browser arrives on a live turn rather than on a
+	 * card inviting the teacher to start one.
+	 */
+	challenge?: boolean;
 	topicPackageId?: string;
 	/** Prefix for the teacher identity — a fresh one per run keeps home screens clean */
 	runId?: string;
@@ -367,6 +373,16 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 		await seedRatings(session, bots, posting, say);
 	}
 
+	// Written before the advance: prepareVotingStage runs inside it, and the
+	// settings a ballot is drawn under must already be there when it does.
+	if (options.challenge) {
+		await db
+			.collection(Collections.agoraSessions)
+			.doc(sessionId)
+			.update({ votingSettings: { ...(session.votingSettings ?? {}), challengeGame: true } });
+		say('   ✓ students may add options to the ballot');
+	}
+
 	if (stage !== AgoraStageEnum.lobby) {
 		await callable<{ ok: boolean }>(
 			'agoraAdvanceStage',
@@ -374,6 +390,15 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 			teacher.idToken,
 		);
 		say(`   ✓ stage → ${stage}`);
+	}
+
+	if (options.challenge && stage === AgoraStageEnum.voting) {
+		await callable<{ phase: string; turnIndex: number }>(
+			'agoraChallengeTurn',
+			{ sessionId, action: 'start' },
+			teacher.idToken,
+		);
+		say('   ✓ challenge round open, first student on deck');
 	}
 
 	return {
