@@ -104,3 +104,6 @@ apps/agora/mock/*.webp
 
 # Embedding cache for scripts/preflightCorpusCosines.ts (regenerable, ~24MB)
 scripts/.cache/
+
+# Temporary alt-port emulator config (see scripts/runAccuracyBenchmark.ts)
+firebase.altports.json
