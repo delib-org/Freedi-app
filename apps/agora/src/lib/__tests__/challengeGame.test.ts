@@ -59,12 +59,11 @@ describe('resolveChallenge', () => {
 	});
 
 	it('breaks a tie at the bottom on consensus — the less agreed option falls', () => {
-		const result = resolveChallenge(
-			{ a: 7, b: 1, c: 1, x: 4 },
-			BOARD,
-			'x',
-			{ a: 0.9, b: 0.6, c: 0.2 },
-		);
+		const result = resolveChallenge({ a: 7, b: 1, c: 1, x: 4 }, BOARD, 'x', {
+			a: 0.9,
+			b: 0.6,
+			c: 0.2,
+		});
 
 		expect(result.evictedStatementId).toBe('c');
 		expect(result.boardIds).toEqual(['a', 'b', 'x']);
@@ -72,12 +71,11 @@ describe('resolveChallenge', () => {
 
 	it('breaks a tie on statementId when votes AND consensus are equal', () => {
 		// Deterministic rather than whatever order the query returned.
-		const result = resolveChallenge(
-			{ a: 7, b: 1, c: 1, x: 4 },
-			BOARD,
-			'x',
-			{ a: 0.9, b: 0.5, c: 0.5 },
-		);
+		const result = resolveChallenge({ a: 7, b: 1, c: 1, x: 4 }, BOARD, 'x', {
+			a: 0.9,
+			b: 0.5,
+			c: 0.5,
+		});
 
 		expect(result.evictedStatementId).toBe('b');
 	});

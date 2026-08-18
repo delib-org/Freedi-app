@@ -13,6 +13,7 @@ import {
 	tallyAgoraCamps,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { emit } from './events';
 
 export interface SessionState {
 	session: AgoraSession | null;
@@ -64,6 +65,42 @@ export function getConsensusPool(): AgoraCampCensus {
 }
 
 /**
+ * The last challenge phase this client saw, so the same snapshot arriving
+ * twice — Firestore replays them freely — does not fire the same toast twice.
+ * Keyed on phase AND turn, because two students in a row can both be handed a
+ * floor that is, as a phase, identical.
+ */
+let lastChallengeKey = '';
+
+/**
+ * Announce a move in the challenge round. A snapshot arriving is a fact;
+ * whether it deserves a celebration is policy, and lives elsewhere.
+ */
+function announceChallengeMove(
+	session: AgoraSession | null,
+	sessionId: string,
+	userId: string,
+): void {
+	const game = session?.votingGame;
+	if (!game) {
+		lastChallengeKey = '';
+
+		return;
+	}
+
+	const key = `${game.phase}--${game.turnIndex}`;
+	if (key === lastChallengeKey) return;
+	lastChallengeKey = key;
+
+	emit('challenge:changed', {
+		sessionId,
+		userId,
+		phase: game.phase,
+		turnIndex: game.turnIndex,
+	});
+}
+
+/**
  * Attach realtime listeners for a session: the session doc (single source
  * of truth for stage/round) and the participants collection (lobby map
  * markers + counts). Idempotent per sessionId.
@@ -90,6 +127,7 @@ export function listenToSession(sessionId: string, userId: string): void {
 			try {
 				state.session = parse(AgoraSessionSchema, snapshot.data());
 				state.loading = false;
+				announceChallengeMove(state.session, sessionId, userId);
 			} catch (error) {
 				console.error('[Session] Invalid session doc:', error);
 				state.error = 'invalid';
@@ -172,6 +210,7 @@ export function stopListening(): void {
 	unsubscribers.forEach((unsubscribe) => unsubscribe());
 	unsubscribers = [];
 	listeningSessionId = null;
+	lastChallengeKey = '';
 	state.session = null;
 	state.participants = [];
 	state.myParticipant = null;

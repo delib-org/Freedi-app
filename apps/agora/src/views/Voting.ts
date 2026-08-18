@@ -2,7 +2,14 @@ import m from 'mithril';
 import { t } from '../lib/i18n';
 import { castVote, getVotingState, totalVotes } from '../lib/voting';
 import { getSessionState } from '../lib/session';
-import { AgoraParticipant, AgoraSession, VotingCandidate } from '@freedi/shared-types';
+import { ChallengeCards } from '../components/ChallengeCards';
+import { challengerCandidate, getGame, passTurn, pitchChallenger } from '../lib/votingGame';
+import {
+	AgoraParticipant,
+	AgoraSession,
+	ChallengePhase,
+	VotingCandidate,
+} from '@freedi/shared-types';
 
 export interface VotingAttrs {
 	session: AgoraSession;
@@ -77,13 +84,31 @@ export function Voting(): m.Component<VotingAttrs> {
 
 	return {
 		view(vnode) {
-			const { session, alwaysShowResults, readOnly } = vnode.attrs;
+			const { session, userId, alwaysShowResults, readOnly } = vnode.attrs;
 			const candidates: VotingCandidate[] = session.voting?.candidates ?? [];
 			const { selections, myVoteStatementId, voterUids, loaded } = getVotingState();
 			const total = totalVotes();
 
 			const settings = session.votingSettings;
-			const showResults = alwaysShowResults === true || settings?.showResults === true;
+			const game = getGame(session);
+			// A challenge is being judged: the board is N+1 and the newcomer is
+			// pinned on top of it.
+			const challengeLive =
+				game?.phase === ChallengePhase.vote || game?.phase === ChallengePhase.resolving;
+			const challenger = challengeLive ? challengerCandidate(session) : null;
+
+			/**
+			 * A challenge is decided blind, whatever the class setting says.
+			 *
+			 * The teacher may already have revealed the standing ballot, and
+			 * leaving it revealed here would hand the incumbents the argument the
+			 * challenger is trying to make: a student can see which option is
+			 * about to fall and vote to save it rather than for what they want.
+			 * The teacher's own board is exempt — they decide when to reveal, and
+			 * cannot decide blind.
+			 */
+			const showResults =
+				alwaysShowResults === true || (settings?.showResults === true && !challengeLive);
 			// Reordering by a hidden number would leak it, and a ballot that moves
 			// under a voter's finger loses their place.
 			const liveReorder = showResults && settings?.liveReorder === true;
@@ -103,13 +128,31 @@ export function Voting(): m.Component<VotingAttrs> {
 					? m('.voting.voting--board', children)
 					: m('.shell', m('.shell__content.voting', children));
 
+			/**
+			 * The challenge round's own cards: the desk, the wait, the curtain,
+			 * the reveal. The teacher gets none of them — their console runs the
+			 * round, and a second copy of the same state would be one more thing
+			 * to disagree with itself.
+			 */
+			const challengeCards = (): m.Children =>
+				!readOnly && game
+					? m(ChallengeCards, {
+							game,
+							userId,
+							saving,
+							onPitch: (text: string) => runTurn(() => pitchChallenger(session.sessionId, text)),
+							onPass: () => runTurn(() => passTurn(session.sessionId)),
+						})
+					: null;
+
 			// A class that rated nothing has an empty ballot. Say so — the
 			// alternative is a screen that looks broken while the teacher works
-			// out what happened.
-			if (candidates.length === 0) {
+			// out what happened. A challenge can still stand on an empty board,
+			// so the round's own cards outrank the empty notice.
+			if (candidates.length === 0 && !challenger) {
 				return frame([
 					m('h2.voting__title', t('voting.title')),
-					m('p.voting__waiting', t('voting.waiting')),
+					challengeCards() ?? m('p.voting__waiting', t('voting.waiting')),
 				]);
 			}
 
@@ -126,17 +169,42 @@ export function Voting(): m.Component<VotingAttrs> {
 					});
 			}
 
+			/** A move in the challenge round, with the same in-flight latch as a vote. */
+			function runTurn(move: () => Promise<unknown>): void {
+				if (saving) return;
+				saving = true;
+				move()
+					.catch((error: unknown) => {
+						console.error('[Voting] Challenge turn failed:', error);
+					})
+					.finally(() => {
+						saving = false;
+						m.redraw();
+					});
+			}
+
 			// The ballot's own order is the agreement order it was drawn in. Under
 			// live reorder it follows the count instead — ties keep the original
 			// order so the list cannot jitter between equal options.
-			const ordered = candidates.map((candidate, index) => ({ candidate, index }));
-			if (liveReorder) {
+			const ordered = candidates.map((candidate, index) => ({
+				candidate,
+				index,
+				pinned: false,
+			}));
+			// Reordering is suspended while a challenge stands: the pin is
+			// absolute, and nothing may sort past the option the room is judging.
+			if (liveReorder && !challengeLive) {
 				ordered.sort((a, b) => {
 					const byVotes =
 						(selections[b.candidate.statementId] ?? 0) - (selections[a.candidate.statementId] ?? 0);
 
 					return byVotes !== 0 ? byVotes : a.index - b.index;
 				});
+			}
+			if (challenger) {
+				// Numbered 0 and rendered as ★ — it has no place in the ballot's
+				// numbering until it has earned one.
+				ordered.unshift({ candidate: challenger, index: -1, pinned: true });
 			}
 
 			// Did the ORDER change this render, or did the rows merely move?
@@ -149,9 +217,11 @@ export function Voting(): m.Component<VotingAttrs> {
 				m('h2.voting__title', t('voting.title')),
 				m('p.voting__instruction', t(readOnly ? 'voting.teacher_hint' : 'voting.instruction')),
 
+				challengeCards(),
+
 				m(
 					'.voting__list',
-					ordered.map(({ candidate, index }) => {
+					ordered.map(({ candidate, index, pinned }) => {
 						const count = selections[candidate.statementId] ?? 0;
 						const mine = !readOnly && myVoteStatementId === candidate.statementId;
 						// Before the first snapshot every bar would read 0% — show
@@ -162,7 +232,10 @@ export function Voting(): m.Component<VotingAttrs> {
 							readOnly ? 'div.voting__option.voting__option--static' : 'button.voting__option',
 							{
 								key: candidate.statementId,
-								class: mine ? 'voting__option--mine' : undefined,
+								class:
+									[mine ? 'voting__option--mine' : '', pinned ? 'voting__option--challenger' : '']
+										.filter(Boolean)
+										.join(' ') || undefined,
 								'aria-pressed': readOnly ? undefined : mine ? 'true' : 'false',
 								disabled: readOnly ? undefined : saving,
 								onclick: readOnly ? undefined : () => vote(candidate.statementId),
@@ -185,7 +258,12 @@ export function Voting(): m.Component<VotingAttrs> {
 								m('span.voting__body', [
 									// The number is the proposal's identity on the ballot, so
 									// it stays with the proposal even when the list re-sorts.
-									m('span.voting__number', `${index + 1}`),
+									// A challenger has no number yet — it is standing FOR one.
+									m(
+										'span.voting__number',
+										{ class: pinned ? 'voting__number--challenger' : undefined },
+										pinned ? '★' : `${index + 1}`,
+									),
 									m('span.voting__label', candidate.statement),
 								]),
 								showResults

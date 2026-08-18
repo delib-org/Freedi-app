@@ -1,7 +1,13 @@
 import m from 'mithril';
 import { on } from './events';
 import { db, doc, collection, query, where, onSnapshot, updateDoc, Unsubscribe } from './firebase';
-import { Collections, NotificationTriggerType, SourceApp } from '@freedi/shared-types';
+import {
+	Collections,
+	NotificationTriggerType,
+	SourceApp,
+	ChallengePhase,
+	ChallengeResolvedBy,
+} from '@freedi/shared-types';
 import { AGORA_POINTS } from '@freedi/shared-types';
 import { t } from './i18n';
 import { celebrate } from './celebration';
@@ -12,6 +18,8 @@ import { isAgoraTrigger } from './notificationCopy';
 import { playCheer } from './sound';
 import { getDeliberationState, isSuggestionKind, isSystemKind } from './proposals';
 import { editClock } from './improvementSignals';
+import { getSessionState } from './session';
+import { getVotingState } from './voting';
 
 export interface AgoraToast {
 	notificationId: string;
@@ -195,6 +203,72 @@ export function subscribeNotificationDetectors(): void {
 		// climbing past another proposal on the way there
 		detectProposalMilestones(sessionId, userId);
 	});
+
+	on('challenge:changed', ({ userId, phase }) => {
+		announceChallengePhase(userId, phase);
+	});
+}
+
+/**
+ * What a move in the challenge round is worth saying, and how loudly.
+ *
+ * Being handed the floor is the one moment here that stops the screen: the
+ * student is about to speak in front of the class and the alternative is
+ * discovering it from a neighbour. Everything else is a toast, including the
+ * outcomes — the round already narrates itself on the ballot, and a modal per
+ * turn would be a modal every ninety seconds.
+ */
+function announceChallengePhase(userId: string, phase: ChallengePhase): void {
+	const game = getSessionState().session?.votingGame;
+	if (!game) return;
+
+	if (phase === ChallengePhase.floor) {
+		if (game.speakerUserId !== userId) return;
+		celebrate({
+			message: t('celebrate.your_turn'),
+			hint: t('celebrate.your_turn_hint'),
+		});
+
+		return;
+	}
+
+	if (phase === ChallengePhase.vote) {
+		pushLocalToast('agora_challenge_open');
+
+		return;
+	}
+
+	if (phase !== ChallengePhase.resolved) return;
+
+	const outcome = game.lastOutcome;
+	// A pass or a skip is not a defeat and must not be announced as one.
+	if (!outcome || outcome.by !== ChallengeResolvedBy.vote) return;
+
+	if (outcome.survived && outcome.speakerUserId === userId) {
+		celebrate({
+			message: t('celebrate.challenge_survived'),
+			detail: outcome.challengerStatement,
+			sound: 'applause',
+		});
+	} else {
+		pushLocalToast(outcome.survived ? 'agora_challenge_survived' : 'agora_challenge_failed');
+	}
+
+	// Whoever was holding the evicted option has just lost their vote. They can
+	// see the ballot lost its highlight; this says why, so it reads as a
+	// consequence rather than a glitch.
+	if (outcome.evictedStatementId && myVoteWasFor(outcome.evictedStatementId)) {
+		pushLocalToast('agora_challenge_vote_freed');
+	}
+}
+
+/**
+ * Did I hold the option that just fell? Read from the voting listener's own
+ * state rather than remembered here — it is the same fact, and two copies of
+ * it would disagree the moment a vote landed between snapshots.
+ */
+function myVoteWasFor(statementId: string): boolean {
+	return getVotingState().myVoteStatementId === statementId;
 }
 
 export function detectHelpedImprovements(sessionId: string, userId: string): void {

@@ -18,7 +18,10 @@ import { QRShare } from '../../components/QRShare';
 import {
 	AgoraParticipant,
 	AgoraStage,
+	ChallengePhase,
+	VotingGameState,
 	VotingStageSettings,
+	AGORA_CHALLENGE,
 	AGORA_VOTING,
 	CutoffBy,
 	ResultsBy,
@@ -26,6 +29,16 @@ import {
 import { AgoraProposal } from '../../lib/proposals';
 import { setVotingSettings } from '../../lib/teacher';
 import { getVotingState, listenToVoting, stopVotingListeners } from '../../lib/voting';
+import {
+	endRound,
+	getGame,
+	nextSpeaker,
+	openChallengeVote,
+	openFloor,
+	resolveChallengeTurn,
+	skipSpeaker,
+	startRound,
+} from '../../lib/votingGame';
 
 /**
  * Teacher live panel — projector-friendly: class progress, stage
@@ -157,6 +170,8 @@ function votingSettingsCard(
 	const topX = selection?.numberOfResults ?? AGORA_VOTING.DEFAULT_TOP_X;
 	const cutoff = selection?.cutoffNumber ?? AGORA_VOTING.DEFAULT_CUTOFF_CP;
 	const winThreshold = settings?.winningConsensusThreshold;
+	const challengeGame = settings?.challengeGame === true;
+	const maxTurns = settings?.challengeMaxTurns ?? AGORA_CHALLENGE.DEFAULT_MAX_TURNS;
 
 	// Spread what is already stored first, so a control added here (or set from
 	// the live panel during the vote) is never silently dropped by a save from
@@ -285,6 +300,39 @@ function votingSettingsCard(
 						}),
 					]),
 					m('p.voting-settings__hint', t('teacher.voting_win_threshold_hint')),
+
+					// Whether the ballot can still change once the vote has started.
+					// Off unless the teacher says otherwise: no class agreed in
+					// advance to have its ballot rewritten mid-election.
+					m('label.voting-settings__row', [
+						m('input[type=checkbox]', {
+							checked: challengeGame,
+							disabled: saving,
+							onchange: (event: Event) =>
+								patch({ challengeGame: (event.target as HTMLInputElement).checked }),
+						}),
+						m('span', t('teacher.challenge_game')),
+					]),
+					m('p.voting-settings__hint', t('teacher.challenge_game_hint')),
+
+					challengeGame
+						? m('label.voting-settings__row', [
+								m('span', t('teacher.challenge_max_turns')),
+								m('input[type=number]', {
+									value: maxTurns,
+									min: String(AGORA_CHALLENGE.MIN_MAX_TURNS),
+									max: String(AGORA_CHALLENGE.MAX_TURNS_CEILING),
+									disabled: saving,
+									onchange: (event: Event) =>
+										patch({
+											challengeMaxTurns: Number((event.target as HTMLInputElement).value),
+										}),
+								}),
+							])
+						: null,
+					challengeGame
+						? m('p.voting-settings__hint', t('teacher.challenge_max_turns_hint'))
+						: null,
 				]
 			: null,
 	]);
@@ -307,6 +355,7 @@ function votingLiveCard(
 	voted: number,
 	classSize: number,
 	saving: boolean,
+	challengeLive: boolean,
 	onSave: (next: VotingStageSettings) => void,
 ): m.Children {
 	const showResults = settings?.showResults === true;
@@ -328,12 +377,18 @@ function votingLiveCard(
 		m('label.voting-settings__row', [
 			m('input[type=checkbox]', {
 				checked: showResults,
-				disabled: saving,
+				// A challenge is judged blind, so this switch does nothing while one
+				// is standing. Disable it rather than let the teacher flip a
+				// control and watch the room not change.
+				disabled: saving || challengeLive,
 				onchange: (event: Event) =>
 					patch({ showResults: (event.target as HTMLInputElement).checked }),
 			}),
 			m('span', t('teacher.show_results')),
 		]),
+		challengeLive
+			? m('p.voting-settings__hint', t('teacher.results_locked_during_challenge'))
+			: null,
 
 		m('label.voting-settings__row', [
 			m('input[type=checkbox]', {
@@ -353,10 +408,169 @@ function votingLiveCard(
 	]);
 }
 
+export interface ChallengeActions {
+	start(): void;
+	openFloor(): void;
+	openVote(): void;
+	resolve(): void;
+	skip(): void;
+	next(): void;
+	end(): void;
+}
+
+/**
+ * How long the rest of the round will take, in minutes, at the pace this class
+ * has actually kept.
+ *
+ * The rotation is the whole class and a turn costs a minute or two, so a
+ * teacher who starts one without this number finds out how long it takes by
+ * running out of lesson. Measured rather than assumed: a class that is flying
+ * should not be told it is going slowly.
+ */
+function paceMinutes(game: VotingGameState): number | null {
+	const done = game.turnIndex;
+	if (done < 1) return null;
+	const remaining = Math.min(game.order.length, game.maxTurns) - done;
+	if (remaining <= 0) return 0;
+	const perTurn = (Date.now() - game.startedAt) / done;
+
+	return Math.max(1, Math.round((perTurn * remaining) / 60_000));
+}
+
+/**
+ * The round, run from one card: one primary button that says what happens
+ * next, and the ways out beside it.
+ *
+ * Skip and End sit on every phase on purpose. The failure this round is most
+ * likely to meet is a student who has left the room, and recovering from that
+ * must cost one tap rather than a decision.
+ */
+function challengeTurnCard(
+	game: VotingGameState | null,
+	saving: boolean,
+	actions: ChallengeActions,
+): m.Children {
+	if (!game || game.phase === ChallengePhase.ended) {
+		return m('.card.stack.challenge-turn', [
+			m('p.teacher__section-title', t('teacher.challenge_title')),
+			m(
+				'p.voting-settings__hint',
+				t(game ? 'teacher.challenge_over' : 'teacher.challenge_not_started'),
+			),
+			!game
+				? m(
+						'button.teacher__advance',
+						{ disabled: saving, onclick: () => actions.start() },
+						t('teacher.challenge_start'),
+					)
+				: null,
+		]);
+	}
+
+	const speaker = game.speakerAnonName ?? '';
+	const minutes = paceMinutes(game);
+	const total = Math.min(game.order.length, game.maxTurns);
+	const lastTurn = game.turnIndex + 1 >= total;
+
+	const primary = ((): { label: string; run: () => void; disabled?: boolean } => {
+		switch (game.phase) {
+			case ChallengePhase.idle:
+				return { label: t('teacher.open_floor', { name: speaker }), run: actions.openFloor };
+			case ChallengePhase.floor:
+				return {
+					label: t('teacher.open_vote'),
+					run: actions.openVote,
+					// Nothing to vote on until the student has actually sent something
+					disabled: !game.challengerStatementId,
+				};
+			case ChallengePhase.vote:
+				return { label: t('teacher.close_resolve'), run: actions.resolve };
+			default:
+				return {
+					label: t(lastTurn ? 'teacher.finish_round' : 'teacher.next_speaker'),
+					run: actions.next,
+				};
+		}
+	})();
+
+	return m('.card.stack.challenge-turn', [
+		m('.voting-settings__head', [
+			m('p.teacher__section-title', t('teacher.challenge_title')),
+			m(
+				'span.voting-settings__turnout',
+				t('teacher.challenge_pace_count', { n: game.turnIndex + 1, total }),
+			),
+		]),
+
+		m('p.challenge-turn__speaker', t('teacher.challenge_speaker', { name: speaker })),
+
+		game.phase === ChallengePhase.floor && !game.challengerStatementId
+			? m('p.voting-settings__hint', t('teacher.challenge_waiting_pitch'))
+			: null,
+
+		m(
+			'button.challenge-turn__primary',
+			{ disabled: saving || primary.disabled === true, onclick: () => primary.run() },
+			primary.label,
+		),
+
+		m('.challenge-turn__secondary', [
+			game.phase === ChallengePhase.idle || game.phase === ChallengePhase.floor
+				? m(
+						'button.challenge-turn__minor',
+						{ disabled: saving, onclick: () => actions.skip() },
+						t('teacher.skip_speaker', { name: speaker }),
+					)
+				: null,
+			m(
+				'button.challenge-turn__minor',
+				{ disabled: saving, onclick: () => actions.end() },
+				t('teacher.end_round'),
+			),
+		]),
+
+		minutes !== null
+			? m('p.voting-settings__hint', t('teacher.challenge_pace', { minutes: String(minutes) }))
+			: null,
+
+		roster(game),
+	]);
+}
+
+/** The rotation as the teacher reads it: done, now, passed, skipped, waiting. */
+function roster(game: VotingGameState): m.Children {
+	const shown = Math.min(game.order.length, game.maxTurns);
+	const passed = new Set(game.passedUserIds);
+	const skipped = new Set(game.skippedUserIds);
+
+	return m(
+		'.challenge__roster',
+		game.order.slice(0, shown).map((uid, index) => {
+			const now = index === game.turnIndex;
+			const modifier = now
+				? 'challenge__seat--now'
+				: passed.has(uid)
+					? 'challenge__seat--passed'
+					: skipped.has(uid)
+						? 'challenge__seat--skipped'
+						: index < game.turnIndex
+							? 'challenge__seat--done'
+							: '';
+
+			return m(
+				'span.challenge__seat',
+				{ key: uid, class: modifier || undefined },
+				game.orderNames[index] ?? '',
+			);
+		}),
+	);
+}
+
 export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
 	let advancing = false;
 	let savingSettings = false;
+	let challenging = false;
 	let userId = '';
 
 	function saveVotingSettings(next: VotingStageSettings): void {
@@ -378,6 +592,34 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 		// Macrotask redraw — see GameController note.
 		setTimeout(() => m.redraw(), 0);
 	});
+
+	/**
+	 * Every challenge move shares one in-flight latch, because they are one
+	 * button that changes its mind — two of them cannot be pressed at once, and
+	 * the server would refuse the second anyway.
+	 */
+	function runChallenge(move: () => Promise<unknown>): void {
+		if (challenging) return;
+		challenging = true;
+		move()
+			.catch((error: unknown) => {
+				console.error('[Teacher] Challenge turn failed:', error);
+			})
+			.finally(() => {
+				challenging = false;
+				m.redraw();
+			});
+	}
+
+	const challengeActions: ChallengeActions = {
+		start: () => runChallenge(() => startRound(sessionId)),
+		openFloor: () => runChallenge(() => openFloor(sessionId)),
+		openVote: () => runChallenge(() => openChallengeVote(sessionId)),
+		resolve: () => runChallenge(() => resolveChallengeTurn(sessionId)),
+		skip: () => runChallenge(() => skipSpeaker(sessionId)),
+		next: () => runChallenge(() => nextSpeaker(sessionId)),
+		end: () => runChallenge(() => endRound(sessionId)),
+	};
 
 	function handleAdvance(nextStage: AgoraStage): void {
 		if (advancing) return;
@@ -450,6 +692,9 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const inVoting = session.stage === AgoraStage.voting;
 			if (inVoting && userId) listenToVoting(sessionId, session.challengeQuestionId, userId);
 			const { voterUids } = getVotingState();
+			const challengePhase = getGame(session)?.phase;
+			const challengeLive =
+				challengePhase === ChallengePhase.vote || challengePhase === ChallengePhase.resolving;
 
 			// Results/ended: the teacher projects the same transformed map + score
 			if (session.stage === AgoraStage.results || session.stage === AgoraStage.ended) {
@@ -507,11 +752,17 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					// the room something they cannot see.
 					inVoting
 						? [
+								// The round runs above the ballot: what the teacher taps
+								// next, and who it is waiting on.
+								session.votingSettings?.challengeGame === true
+									? challengeTurnCard(getGame(session), challenging, challengeActions)
+									: null,
 								votingLiveCard(
 									session.votingSettings,
 									voterUids.size,
 									participants.length,
 									savingSettings,
+									challengeLive,
 									saveVotingSettings,
 								),
 								m(Voting, {

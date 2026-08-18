@@ -435,3 +435,250 @@
 		color: var(--text-muted);
 	}
 }
+
+// The challenger's row.
+//
+// It is on the ballot but not OF it: no number yet, because a number is what
+// it is competing for. A gold ring rather than a fill — the fill is reserved
+// for support (mint) and for the row that is mine (purple), and a newcomer has
+// earned neither. It is pinned, so it never animates into place; a row that
+// slid in would read as the list re-sorting rather than as someone standing up.
+.voting__option--challenger {
+	border-color: var(--gold);
+	box-shadow:
+		0 0 0 2px var(--gold),
+		var(--shadow-card);
+}
+
+.voting__number--challenger {
+	background: var(--gold);
+	color: var(--mine-ink);
+	font-size: 1.2rem;
+}
+
+// The challenge round's cards, above the ballot
+.challenge {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	inline-size: 100%;
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+	}
+
+	&__line,
+	&__rule,
+	&__hint,
+	&__blind {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	// Quieter in colour, not in size — 16px is the floor a WORD sits on, and
+	// these are sentences a student has to actually read.
+	&__blind,
+	&__hint {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	// The student's own words, quoted back at the reveal
+	&__quote {
+		@include proposal-voice;
+
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--peer-tile);
+		border-radius: var(--radius-md);
+	}
+
+	&__input {
+		inline-size: 100%;
+		min-block-size: 7rem;
+		padding: var(--space-sm);
+		font: inherit;
+		color: var(--text-body);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		resize: vertical;
+	}
+
+	// "42 / 1500" is a mark, not a word — the one rung below the floor, taken
+	// deliberately and where the audit can see the decision.
+	&__count {
+		@include type-meta;
+
+		margin: 0;
+		text-align: end;
+		color: var(--text-muted);
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__send,
+	&__pass {
+		flex: 1 1 auto;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: default;
+		}
+	}
+
+	&__send {
+		color: var(--text-on-lantern);
+		background: var(--grad-mine-aa);
+		border: 1px solid var(--mine-deep);
+	}
+
+	// Passing is a real choice, not a failure, so it is offered as one rather
+	// than hidden as an escape hatch.
+	&__pass {
+		color: var(--text-secondary);
+		background: transparent;
+		border: 1px solid var(--border-subtle);
+	}
+
+	// The rotation, as a row of names
+	&__roster {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	// A classmate's name is a word, and names are the one thing on this card
+	// nobody should have to squint at.
+	&__seat {
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-md);
+		background: var(--peer-tile);
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+
+		&--now {
+			background: var(--grad-mine-aa);
+			color: var(--text-on-lantern);
+			font-weight: 700;
+		}
+
+		&--done {
+			opacity: 0.5;
+		}
+
+		// Passed and skipped are not failures and are not marked as such —
+		// only as "their turn has been".
+		&--passed,
+		&--skipped {
+			opacity: 0.5;
+			font-style: italic;
+		}
+	}
+
+	&__outcome-title {
+		margin: 0;
+		font-family: var(--font-display);
+	}
+
+	&__evicted,
+	&__points {
+		margin: 0;
+		font-weight: 700;
+	}
+
+	// --success-deep, not --mint-deep: mint is a FILL colour and falls to
+	// 2.56:1 as text on a white card. This is the same green, said in ink.
+	&__points {
+		color: var(--success-deep);
+	}
+
+	// The reveal. Gold for a seat won, plain for one that was not — a rejected
+	// idea gets no red: it was a real contribution that the room declined, and
+	// the student has to keep taking part afterwards.
+	&__outcome--survived {
+		border-color: var(--gold);
+		box-shadow:
+			0 0 0 2px var(--gold),
+			var(--shadow-card);
+	}
+
+	&__outcome--quiet {
+		box-shadow: none;
+		background: transparent;
+	}
+
+	// A challenge is judged blind, and the card that says so looks like a
+	// curtain rather than like a missing number.
+	&__curtain {
+		background: var(--wash-mine-high);
+		border-color: var(--border-lantern);
+	}
+}
+
+// The teacher's turn console: one primary button that changes its mind, with
+// the ways out beside it.
+.challenge-turn {
+	&__speaker {
+		margin: 0;
+		font-weight: 700;
+	}
+
+	// The button that says what happens next. It carries its own type rather
+	// than borrowing `.teacher__advance`, which has no styles at all and so
+	// renders at the browser's 13px default — below the floor this app holds
+	// itself to.
+	&__primary {
+		inline-size: 100%;
+		padding: var(--space-sm) var(--space-md);
+		color: var(--text-on-lantern);
+		background: var(--grad-mine-aa);
+		border: 1px solid var(--mine-deep);
+		border-radius: var(--radius-md);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: default;
+		}
+	}
+
+	&__secondary {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__minor {
+		flex: 1 1 auto;
+		padding: var(--space-xs) var(--space-sm);
+		color: var(--text-secondary);
+		background: transparent;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		font: inherit;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: default;
+		}
+	}
+}
