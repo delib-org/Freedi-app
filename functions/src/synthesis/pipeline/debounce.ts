@@ -1,7 +1,23 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 
-const SPAWN_DEBOUNCE_MS = 15_000;
+/**
+ * How long a spawn under one parent blocks the next spawn under that same parent.
+ *
+ * The window only needs to cover the gap between a spawn committing and the new
+ * cluster becoming visible to vector search — after that, Pass 1/2 attach handles
+ * further near-duplicates on its own, which is the outcome the debounce exists to
+ * produce. Because the lock is per-PARENT rather than per-cluster, anything longer
+ * also blocks spawns of completely unrelated pairs on a busy question.
+ *
+ * Measured on the 100-statement accuracy benchmark (one statement every ~7s): at
+ * 15s, 45 spawn opportunities produced only 24 spawns and 21 debounces, capping
+ * pair recall at 40%. Deferring the debounced options to the queue barely helped
+ * (+2 pairs) because each retry batch re-armed the window and re-blocked itself.
+ *
+ * Overridable so the window can be tuned per environment without a code change.
+ */
+const SPAWN_DEBOUNCE_MS = Number(process.env.SYNTHESIS_SPAWN_DEBOUNCE_MS ?? 15_000);
 const DEBOUNCE_COLLECTION = '_liveSynthDebounce';
 
 interface DebounceState {

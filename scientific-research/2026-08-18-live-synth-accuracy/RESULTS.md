@@ -10,6 +10,9 @@ and `score100.mjs` for the implementation.
 | run | lang | lever | accuracy | F1 synth | F1 topic | pairs merged | synths | topics |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `2026-08-18-2010-en-seed42` | en | shipped defaults | **0.067** | 0.000 | 0.167 | 0/50 | 0 | 1 |
+| `he-seed42-defaults` | he | shipped defaults | **0.066** | 0.000 | 0.165 | 0/50 | 0 | 1 |
+| `en-seed42-cluster078` | en | `clusterThreshold=0.78` | **0.429** | 0.571 | 0.215 | 20/50 | 20 | 4 |
+| `en-seed42-cluster078-debouncefix` | en | + defer debounced spawns to queue | **0.442** | 0.579 | 0.237 | 22/50 | 21 | 4 |
 
 ## Finding 1 — the topic-cluster band is a black hole (shipped defaults, English)
 
@@ -46,3 +49,49 @@ justifies lowering the gate from 0.65 to 0.60 with the estimate that cross-topic
 pairs land at 0.30–0.65. Measured on a real single-question civic corpus they land
 at 0.505–0.786 (English) and 0.639–0.912 (Hebrew). The gate was tuned against a
 cosine range that the production embedding contract does not actually produce.
+
+## Finding 2 — Hebrew fails identically at defaults, which hides the language effect
+
+The Hebrew baseline scores 0.066 against English's 0.067: same single mega-cluster,
+same zero syntheses. At shipped defaults the black hole dominates so completely that
+it **masks** the large embedding-quality gap the pre-flight measured (separability
+100/100 English vs 56/100 Hebrew). The EN/HE comparison only becomes meaningful once
+synthesis actually happens, so fix the structural problem first and treat the
+language question as a second, separate measurement.
+
+## Finding 3 — raising `clusterThreshold` restores synthesis, at perfect precision
+
+Setting `clusterThreshold = 0.78` (collapsing the topic-spawn band into the synth
+band) lifts English from 0.067 to **0.429**. Every one of the 20 produced syntheses
+holds exactly 2 members, precision is **1.000**, and there are zero false merges —
+the pairs it does find are perfectly clean. Recall is the whole problem: 20/50.
+
+## Finding 4 — the spawn debounce throttles a busy question to ~1 spawn per window
+
+The recall ceiling is not the thresholds. The audit accounting is exact:
+
+```
+45 spawn attempts  =  24 spawned  +  21 debounced
+```
+
+and 45 is precisely the number of pairs the pre-flight put above 0.85. So the
+pipeline *found* almost every pair and then threw half of them away.
+
+`SPAWN_DEBOUNCE_MS` is 15s and the lock is **per parent, not per cluster**, so a
+spawn of one pair blocks the spawn of a completely unrelated pair. Its stated
+purpose — stopping a burst of near-identical options from each spawning their own
+2-member cluster — only needs to cover the moment between a spawn committing and
+the new cluster becoming visible to vector search; after that Pass 1/2 attach
+handles duplicates on its own.
+
+Worse, a debounced spawn was **silently dropped**. `runSinglePipeline` runs once per
+option create and nothing re-triggered a debounced option, so the comment's premise
+that such options "fall through to the attach path on the next tick" did not hold.
+Fixed in `deferSpawnAfterDebounce` by enqueuing the option for the queue worker.
+
+That fix is mechanically correct — the queue visibly receives ~20 deferred items —
+but only bought +2 pairs (0.429 → 0.442), because `drainSynthesisQueue` processes a
+batch in a tight loop: the first retry spawns, re-arms the 15s window, and
+re-blocks the rest of its own batch. The window length itself is the binding
+constraint, so `SPAWN_DEBOUNCE_MS` is now overridable via
+`SYNTHESIS_SPAWN_DEBOUNCE_MS` to make it measurable rather than a guess.

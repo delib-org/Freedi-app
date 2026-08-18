@@ -1,0 +1,463 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "-hPzUb3Yz-T2",
+        "title": "Increase Rush-Hour Bus Frequency to Reduce Waiting Times",
+        "members": [
+          {
+            "id": "SkuzV6E8cGAu"
+          },
+          {
+            "id": "rKnpUt8LdBrv"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "78FxxUjhqBcP",
+        "title": "Create One Unified Number for City Service Requests",
+        "members": [
+          {
+            "id": "zqoYD83HAu-r"
+          },
+          {
+            "id": "2zt-u0K5LhYZ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "C59aKkWnY4iY",
+        "title": "Assign Neighborhood Beat Officers for Consistent Community Patrols",
+        "members": [
+          {
+            "id": "snl7XPMRQ-r4"
+          },
+          {
+            "id": "Q0keIOYUJePQ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "GED8KtAJpnuY",
+        "title": "Enable All Municipal Procedures and Forms Online",
+        "members": [
+          {
+            "id": "APg0m7GIKXre"
+          },
+          {
+            "id": "eImL7m8XAZRk"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "GWz3bfks61Qd",
+        "title": "Establish Public Library Branches Across Every City Community",
+        "members": [
+          {
+            "id": "eKUjVOY3-ZRK"
+          },
+          {
+            "id": "fMvfIvu0usty"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "IDyLfWTi1Alh",
+        "title": "Provide Free Public Transit for All School-Age Children",
+        "members": [
+          {
+            "id": "H5t2aoipOxMG"
+          },
+          {
+            "id": "jIAqYGgRo0Ix"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "JRB50UeBMOdK",
+        "title": "Establish Separate Food-Scrap Collection for Citywide Composting",
+        "members": [
+          {
+            "id": "Wu4DFCzlrYJE"
+          },
+          {
+            "id": "4CNNERf7yQ-E"
+          },
+          {
+            "id": "nL3KlzBw-O39"
+          },
+          {
+            "id": "Y6d8X27GvoBc"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "KH2CQ2dA3Pnx",
+        "title": "Fund Reskilling Courses for Career-Changing Workers",
+        "members": [
+          {
+            "id": "3vPy43tAZ8U0"
+          },
+          {
+            "id": "OY9T5HrWRUpC"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "P1E9ogIP5tIi",
+        "title": "Offer Free Museum Admission One Day Each Week",
+        "members": [
+          {
+            "id": "ewkZAfQCx9fa"
+          },
+          {
+            "id": "ykp-zJuju4i8"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "T2jry2Zla5dg",
+        "title": "Establish Enclosed Off-Leash Dog Runs in Every Neighborhood",
+        "members": [
+          {
+            "id": "6Mk4FIxKzk9S"
+          },
+          {
+            "id": "SReSBVZZtB50"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "TfzjRmyqLcdq",
+        "title": "Provide Free Mental-Health Counseling and Therapy for Residents",
+        "members": [
+          {
+            "id": "rNNR1J1uC-Ej"
+          },
+          {
+            "id": "1Jyoy4Thi1ru"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "UFpfQogaTqLt",
+        "title": "Cap Classroom Sizes to Strengthen Individual Student Attention",
+        "members": [
+          {
+            "id": "5dTA-f1I4kte"
+          },
+          {
+            "id": "Ehz-vQ3jllMH"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "UkiWoIcHeslr",
+        "title": "Replace Business Licensing Red Tape With One Quick Application",
+        "members": [
+          {
+            "id": "zyoZOqOO5mZa"
+          },
+          {
+            "id": "unv69irPLeCI"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "WMWx8YNcESCR",
+        "title": "Install Surveillance Cameras at Concentrated Crime Hotspots",
+        "members": [
+          {
+            "id": "svPDSfcUEB-s"
+          },
+          {
+            "id": "ZdsG1DFu8w6m"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "YCAvhSXVRRmB",
+        "title": "Expand In-Home Care to Help Seniors Age in Place",
+        "members": [
+          {
+            "id": "6GDkj2mNr9N8"
+          },
+          {
+            "id": "qj901i75RHyS"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aXa-IVZ2BZBj",
+        "title": "Launch a Public Open-Data and Budget Portal",
+        "members": [
+          {
+            "id": "MNJZN-mEaHrM"
+          },
+          {
+            "id": "lqyBHlpE6sKc"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "dqF79XySTPu3",
+        "title": "Install School-Zone Traffic Calming with Speed Humps and Curb Extensions",
+        "members": [
+          {
+            "id": "2aFpA18DBw4z"
+          },
+          {
+            "id": "b2sZaE62hEP0"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ehCn-gVRxYwl",
+        "title": "Create Pocket Parks Within Five Minutes of Every Home",
+        "members": [
+          {
+            "id": "8PlLDiYMuZF0"
+          },
+          {
+            "id": "rMXbrAVRuleg"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ulswBvIkHsVq",
+        "title": "Prohibit Single-Use Disposable Plastics in Shops and Eateries",
+        "members": [
+          {
+            "id": "yeH1ujD0A769"
+          },
+          {
+            "id": "GGF7yeIE488x"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "wHqfpJ7586UX",
+        "title": "Operate Late-Night Weekend Bus Service After Midnight",
+        "members": [
+          {
+            "id": "ygB-eH6c87h3"
+          },
+          {
+            "id": "tMmpu7JotI7U"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "y9cROuJCksMZ",
+        "title": "Provide Low-Interest Loans to Neighborhood Small Businesses",
+        "members": [
+          {
+            "id": "xFNMQUZwt54e"
+          },
+          {
+            "id": "2V3BNHpVOI11"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "FKhYQjA4JFSK",
+        "title": "Ampliación de vivienda asequible",
+        "members": [
+          {
+            "id": "87ZPTDcdbqDH"
+          },
+          {
+            "id": "6H7N3g0yXJgX"
+          },
+          {
+            "id": "VKbkuTmcSRzi"
+          },
+          {
+            "id": "52RgRzWv841v"
+          },
+          {
+            "id": "G2tQsEzWAN43"
+          },
+          {
+            "id": "4jZ0S4n6JvNw"
+          },
+          {
+            "id": "Ulbf2Yw4Ub6b"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Xo-8p9PrkaYo",
+        "title": "Cultura y arte público",
+        "members": [
+          {
+            "id": "UICSmtVccpLV"
+          },
+          {
+            "id": "gzkeBtqWodf8"
+          },
+          {
+            "id": "Pr6nGFKylcV9"
+          },
+          {
+            "id": "mR9-IQpyZd2F"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "jkpLBD23dRGy",
+        "title": "Mejoras de calles peatonales",
+        "members": [
+          {
+            "id": "xPcW63lI1OBy"
+          },
+          {
+            "id": "YSOy743fHItj"
+          },
+          {
+            "id": "Z2hU5hhsZDq9"
+          },
+          {
+            "id": "mafZxCyl0XWN"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "sQl2m4W4Q1Jp",
+        "title": "Student support services",
+        "members": [
+          {
+            "id": "tKb0E2xYsbAR"
+          },
+          {
+            "id": "wvqpKMBGFw5j"
+          },
+          {
+            "id": "HF71bbA2ASJf"
+          },
+          {
+            "id": "CmI6KbUtdyLG"
+          },
+          {
+            "id": "8Gm8k3trslPR"
+          },
+          {
+            "id": "heWG888jsKiE"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [],
+  "sourceOptions": {
+    "visible": 100,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "spawn": 25,
+    "review-queued": 40,
+    "attach": 15
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.en.json",
+    "corpusSha": "8fdcaccc66dd",
+    "seed": 42,
+    "synthesisOverrides": {
+      "clusterThreshold": 0.78
+    },
+    "statementsFed": 100,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 2500,
+    "maxWaitMs": 20000,
+    "settleTimeouts": 0,
+    "durationMs": 786767,
+    "gitSha": "e73e8f222",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}

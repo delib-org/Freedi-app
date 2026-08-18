@@ -11,6 +11,7 @@ import { expandClusterEvidenceViaFullMembers } from './candidateExpansion';
 import { assessCohesion, passesCohesionGate, type CohesionGate } from './clusterCohesion';
 import { routeByCosine } from './bandRouter';
 import { runRegistryPass } from './registryPass';
+import { enqueueItem } from '../queue/enqueue';
 import {
 	attachOptionToCluster,
 	isCluster,
@@ -144,6 +145,40 @@ async function loadStatement(statementId: string): Promise<Statement | null> {
 
 function skipped(reason: string, startedAt: number): PipelineResult {
 	return { action: 'skipped', reason, llmCalled: false, durationMs: Date.now() - startedAt };
+}
+
+/**
+ * Defer a spawn that lost the per-parent debounce so the queue worker retries it
+ * once the window has passed.
+ *
+ * Without this the spawn opportunity is lost permanently. `runSinglePipeline` runs
+ * once per option create, and nothing else re-triggers a debounced option — so the
+ * debounce's premise that "subsequent options fall through to the attach path on
+ * the next tick" only holds when some later event happens to re-process the option.
+ * Measured on the 100-statement accuracy benchmark: 45 spawn attempts, 24 spawned,
+ * 21 debounced and silently dropped, which capped pair recall at 40% even though
+ * every pair was well within the attach band.
+ *
+ * `enqueueItem` derives a deterministic per-option id, so re-enqueuing is
+ * idempotent. Failure is non-fatal: the spawn is already lost at this point, and
+ * throwing here would fail the whole trigger.
+ */
+async function deferSpawnAfterDebounce(
+	optionId: string,
+	questionId: string,
+	startedAt: number,
+): Promise<PipelineResult> {
+	try {
+		await enqueueItem({ questionId, kind: 'process-option', optionId, forceProcess: false });
+	} catch (error) {
+		logger.warn('synthesis.pipeline.spawn: debounced retry could not be queued', {
+			optionId,
+			questionId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	return skipped('spawn-debounced', startedAt);
 }
 
 interface PipelineContext {
@@ -530,7 +565,7 @@ async function executePipeline(
 				};
 			}
 			if (clusterAttempt.debounced) {
-				return skipped('spawn-debounced', startedAt);
+				return deferSpawnAfterDebounce(option.statementId, parent.statementId, startedAt);
 			}
 
 			return skipped('spawn-failed', startedAt);
@@ -580,7 +615,7 @@ async function executePipeline(
 			return skipped('cluster-fallback-failed', startedAt);
 		}
 		if (synthAttempt.debounced) {
-			return skipped('spawn-debounced', startedAt);
+			return deferSpawnAfterDebounce(option.statementId, parent.statementId, startedAt);
 		}
 
 		return skipped('spawn-failed', startedAt);
