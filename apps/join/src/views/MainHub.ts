@@ -189,7 +189,6 @@ export const MainHub: m.Component = {
 							title: main.statement,
 						})
 					: null,
-				m(SummarySection, { statement: main, admin }),
 				m('h2.main-hub__questions-heading', t('mainHub.questionsHeading')),
 				admin ? renderCreateSubQuestionForm(mainId) : null,
 				subs.length === 0
@@ -213,6 +212,7 @@ export const MainHub: m.Component = {
 									})
 								: null,
 						],
+				m(SummarySection, { statement: main, admin }),
 				m(WizColFooter),
 			]),
 			m(FacilitatorPanel),
