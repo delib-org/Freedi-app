@@ -147,6 +147,16 @@ export const AGORA_POINTS = {
 	BRIDGING_BONUS_TIER_2: 10,
 	/** Full-bridge total, kept for reporting/back-compat reads */
 	BRIDGING_BONUS: 15,
+	/**
+	 * A challenge written during the vote survived the class re-vote and took
+	 * a seat on the ballot. Priced at parity with the first draft (+3): it is
+	 * the same act of writing, only judged in public. Passing costs nothing
+	 * and failing costs nothing — the rotation reaches everyone, so a penalty
+	 * would tax the students who tried, and pitching alone pays nothing,
+	 * because in a fixed rotation everyone pitches and a fee for showing up
+	 * is a fee nobody has to earn.
+	 */
+	CHALLENGE_SURVIVED: 3,
 } as const;
 
 export const AGORA_ANTI_GAMING = {
@@ -223,6 +233,22 @@ export const AGORA_VOTING = {
 	MAX_TOP_X: 10,
 	/** Consensus a proposal must beat to reach the ballot in threshold mode */
 	DEFAULT_CUTOFF_CP: 0.5,
+} as const;
+
+export const AGORA_CHALLENGE = {
+	/**
+	 * Turns the challenge round runs before it closes itself.
+	 *
+	 * The rotation is the whole class, in seat order — but a turn costs about
+	 * a minute and a half once the teacher has opened the floor, a student has
+	 * written something real, and thirty phones have moved a vote. A class of
+	 * twenty-five would spend the rest of the lesson on it. The round therefore
+	 * ends after this many turns unless the teacher raises it, and the teacher's
+	 * card shows what the current pace implies before the lesson runs out.
+	 */
+	DEFAULT_MAX_TURNS: 8,
+	MIN_MAX_TURNS: 1,
+	MAX_TURNS_CEILING: 40,
 } as const;
 
 export const AGORA_LIMITS = {

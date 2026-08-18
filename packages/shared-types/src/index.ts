@@ -414,6 +414,20 @@ export {
   tallyVotes,
   pickVoteWinner,
 } from "./models/vote/votingStageSettings";
+export type {
+  ChallengeOutcome,
+  VotingGameState,
+  ChallengeResolution,
+  SeatedStudent,
+} from "./models/vote/challengeGame";
+export {
+  ChallengePhase,
+  ChallengeResolvedBy,
+  ChallengeOutcomeSchema,
+  VotingGameStateSchema,
+  resolveChallenge,
+  seatOrder,
+} from "./models/vote/challengeGame";
 
 export type { StatementSnapShot } from "./models/statement/StatementSnapShot";
 export { statementSnapShotSchema } from "./models/statement/StatementSnapShot";

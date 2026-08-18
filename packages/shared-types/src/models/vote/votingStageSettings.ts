@@ -45,6 +45,21 @@ export const VotingStageSettingsSchema = object({
 	 * leak it, and a ballot that moves under a voter's finger loses their place.
 	 */
 	liveReorder: optional(boolean()),
+	/**
+	 * Whether students may put NEW options on the ballot while the vote runs,
+	 * one student at a time (the challenge round).
+	 *
+	 * `undefined` means OFF — the opposite of `enabled` above, and on purpose.
+	 * `enabled` defaults on because a session written before voting existed
+	 * should still hold a vote; this defaults off because no session ever
+	 * agreed to let its ballot be rewritten mid-election. A teacher opts in.
+	 */
+	challengeGame: optional(boolean()),
+	/**
+	 * Turns the challenge round runs before closing itself. Unset means
+	 * `AGORA_CHALLENGE.DEFAULT_MAX_TURNS`. Only read when `challengeGame`.
+	 */
+	challengeMaxTurns: optional(number()),
 });
 
 export type VotingStageSettings = InferOutput<typeof VotingStageSettingsSchema>;
