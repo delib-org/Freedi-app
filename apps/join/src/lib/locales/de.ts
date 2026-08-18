@@ -285,8 +285,15 @@ const de: Record<string, string> = {
 	'mainHub.summary.save': 'Speichern',
 	'mainHub.summary.saving': 'Speichert…',
 	'mainHub.summary.cancel': 'Abbrechen',
-	'mainHub.summary.notReady': 'Noch keine Antworten über dem Schwellenwert. Schwellenwerte festlegen und nach Bewertungen erneut versuchen.',
-	'mainHub.summary.failed': 'Zusammenfassung konnte nicht aktualisiert werden. Bitte erneut versuchen.',
+	'mainHub.summary.notReady':
+		'Noch keine Antworten über dem Schwellenwert. Schwellenwerte festlegen und nach Bewertungen erneut versuchen.',
+	'mainHub.summary.failed':
+		'Zusammenfassung konnte nicht aktualisiert werden. Bitte erneut versuchen.',
+	'mainHub.summary.noPermission':
+		'Sie haben keine Berechtigung, für diese Frage eine Zusammenfassung zu erstellen. Bitten Sie eine Administratorin oder einen Administrator der übergeordneten Gruppe, Sie hinzuzufügen.',
+	'mainHub.summary.changedElsewhere':
+		'Jemand anderes hat die Zusammenfassung aktualisiert, während Sie bearbeitet haben.',
+	'mainHub.summary.loadLatest': 'Neueste Version laden',
 	'mainHub.reorder.handle': 'Zum Neuordnen ziehen',
 	'mainHub.hidden.tag': 'Ausgeblendet',
 	'mainHub.hidden.hide': 'Vor Teilnehmenden ausblenden',

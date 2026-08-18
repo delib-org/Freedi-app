@@ -277,8 +277,14 @@ const nl: Record<string, string> = {
 	'mainHub.summary.save': 'Opslaan',
 	'mainHub.summary.saving': 'Opslaan…',
 	'mainHub.summary.cancel': 'Annuleren',
-	'mainHub.summary.notReady': 'Nog geen antwoorden boven de drempel. Stel drempels in en probeer opnieuw zodra er evaluaties zijn.',
+	'mainHub.summary.notReady':
+		'Nog geen antwoorden boven de drempel. Stel drempels in en probeer opnieuw zodra er evaluaties zijn.',
 	'mainHub.summary.failed': 'Kon de samenvatting niet bijwerken. Probeer opnieuw.',
+	'mainHub.summary.noPermission':
+		'Je hebt geen rechten om een samenvatting voor deze vraag te maken. Vraag een beheerder van de bovenliggende groep om je toe te voegen.',
+	'mainHub.summary.changedElsewhere':
+		'Iemand anders heeft de samenvatting bijgewerkt terwijl je aan het bewerken was.',
+	'mainHub.summary.loadLatest': 'Nieuwste versie laden',
 	'mainHub.reorder.handle': 'Sleep om opnieuw te ordenen',
 	'mainHub.hidden.tag': 'Verborgen',
 	'mainHub.hidden.hide': 'Verbergen voor deelnemers',

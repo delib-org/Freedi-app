@@ -345,8 +345,13 @@ const en: Record<string, string> = {
 	'mainHub.summary.save': 'Save',
 	'mainHub.summary.saving': 'Saving…',
 	'mainHub.summary.cancel': 'Cancel',
-	'mainHub.summary.notReady': 'No answers have passed the cutoff yet. Set cutoffs and try again once there are evaluations.',
+	'mainHub.summary.notReady':
+		'No answers have passed the cutoff yet. Set cutoffs and try again once there are evaluations.',
 	'mainHub.summary.failed': 'Could not update the summary. Please try again.',
+	'mainHub.summary.noPermission':
+		'You do not have permission to generate a summary for this question. Ask an admin of the parent group to add you.',
+	'mainHub.summary.changedElsewhere': 'Someone else updated the summary while you were editing.',
+	'mainHub.summary.loadLatest': 'Load latest',
 	'mainHub.reorder.handle': 'Drag to reorder',
 	'mainHub.hidden.tag': 'Hidden',
 	'mainHub.hidden.hide': 'Hide from participants',

@@ -321,8 +321,13 @@ const he: Record<string, string> = {
 	'mainHub.summary.save': 'שמירה',
 	'mainHub.summary.saving': 'שומר…',
 	'mainHub.summary.cancel': 'ביטול',
-	'mainHub.summary.notReady': 'עדיין אין תשובות שעברו את הסף. הגדירו סף ונסו שוב אחרי שיהיו הערכות.',
+	'mainHub.summary.notReady':
+		'עדיין אין תשובות שעברו את הסף. הגדירו סף ונסו שוב אחרי שיהיו הערכות.',
 	'mainHub.summary.failed': 'לא הצלחנו לעדכן את הסיכום. נסו שוב.',
+	'mainHub.summary.noPermission':
+		'אין לכם הרשאה ליצור סיכום לשאלה הזאת. בקשו ממנהל הקבוצה שמעליה להוסיף אתכם.',
+	'mainHub.summary.changedElsewhere': 'מישהו אחר עדכן את הסיכום בזמן שערכתם.',
+	'mainHub.summary.loadLatest': 'טעינת הגרסה העדכנית',
 	'mainHub.reorder.handle': 'גררו כדי לסדר מחדש',
 	'mainHub.hidden.tag': 'מוסתר',
 	'mainHub.hidden.hide': 'הסתרה מהמשתתפים',

@@ -282,8 +282,13 @@ const es: Record<string, string> = {
 	'mainHub.summary.save': 'Guardar',
 	'mainHub.summary.saving': 'Guardando…',
 	'mainHub.summary.cancel': 'Cancelar',
-	'mainHub.summary.notReady': 'Aún no hay respuestas que superen el umbral. Configura los umbrales e inténtalo de nuevo cuando haya evaluaciones.',
+	'mainHub.summary.notReady':
+		'Aún no hay respuestas que superen el umbral. Configura los umbrales e inténtalo de nuevo cuando haya evaluaciones.',
 	'mainHub.summary.failed': 'No se pudo actualizar el resumen. Inténtalo de nuevo.',
+	'mainHub.summary.noPermission':
+		'No tienes permiso para generar un resumen de esta pregunta. Pide a un administrador del grupo superior que te añada.',
+	'mainHub.summary.changedElsewhere': 'Otra persona actualizó el resumen mientras editabas.',
+	'mainHub.summary.loadLatest': 'Cargar la última versión',
 	'mainHub.reorder.handle': 'Arrastra para reordenar',
 	'mainHub.hidden.tag': 'Oculta',
 	'mainHub.hidden.hide': 'Ocultar a los participantes',

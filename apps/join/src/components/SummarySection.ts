@@ -1,10 +1,11 @@
 import m from 'mithril';
 import type { Statement } from '@freedi/shared-types';
-import { t } from '@/lib/i18n';
+import { t, getLang } from '@/lib/i18n';
 import {
 	requestHubSummary,
 	updateStatementSummary,
 	SummarizationNotReadyError,
+	SummarizationPermissionError,
 } from '@/lib/summarize';
 import { renderSummaryMarkdown } from '@/lib/summaryMarkdown';
 
@@ -17,8 +18,19 @@ interface SummarySectionAttrs {
 let generating = false;
 let editing = false;
 let draft = '';
+// The summary the draft was opened against. The hub is multi-facilitator, so
+// another admin can regenerate while this textarea is open; comparing against
+// the live value is what lets us warn before a save overwrites their run.
+let editBase = '';
 let saving = false;
 let errorKey: string | null = null;
+
+function errorKeyFor(err: unknown): string {
+	if (err instanceof SummarizationNotReadyError) return 'mainHub.summary.notReady';
+	if (err instanceof SummarizationPermissionError) return 'mainHub.summary.noPermission';
+
+	return 'mainHub.summary.failed';
+}
 
 async function generate(statementId: string): Promise<void> {
 	if (generating) return;
@@ -30,8 +42,7 @@ async function generate(statementId: string): Promise<void> {
 		// doc; the hub's live listener delivers it, so nothing to store here.
 		await requestHubSummary(statementId);
 	} catch (err) {
-		errorKey =
-			err instanceof SummarizationNotReadyError ? 'mainHub.summary.notReady' : 'mainHub.summary.failed';
+		errorKey = errorKeyFor(err);
 	} finally {
 		generating = false;
 		m.redraw();
@@ -40,6 +51,7 @@ async function generate(statementId: string): Promise<void> {
 
 function startEdit(current: string): void {
 	draft = current;
+	editBase = current;
 	editing = true;
 	errorKey = null;
 }
@@ -48,6 +60,15 @@ function cancelEdit(): void {
 	if (saving) return;
 	editing = false;
 	draft = '';
+	editBase = '';
+	errorKey = null;
+}
+
+/** Adopt a summary that landed while the draft was open. */
+function adoptLatest(latest: string): void {
+	if (saving) return;
+	draft = latest;
+	editBase = latest;
 }
 
 async function saveEdit(statementId: string): Promise<void> {
@@ -59,6 +80,7 @@ async function saveEdit(statementId: string): Promise<void> {
 		await updateStatementSummary(statementId, trimmed);
 		editing = false;
 		draft = '';
+		editBase = '';
 	} catch (err) {
 		console.error('[SummarySection] save failed:', err);
 		errorKey = 'mainHub.summary.failed';
@@ -73,6 +95,7 @@ export const SummarySection: m.Component<SummarySectionAttrs> = {
 		generating = false;
 		editing = false;
 		draft = '';
+		editBase = '';
 		saving = false;
 		errorKey = null;
 	},
@@ -98,7 +121,9 @@ export const SummarySection: m.Component<SummarySectionAttrs> = {
 									? m(
 											'span.main-hub__summary-date',
 											t('mainHub.summary.generatedAt', {
-												date: new Date(generatedAt).toLocaleDateString(),
+												// The hub can force its own language, so follow the
+												// app locale rather than the browser's.
+												date: new Date(generatedAt).toLocaleDateString(getLang()),
 											}),
 										)
 									: null,
@@ -113,6 +138,19 @@ export const SummarySection: m.Component<SummarySectionAttrs> = {
 						]),
 						editing
 							? m('.main-hub__summary-edit', [
+									summary !== editBase
+										? m('.main-hub__summary-conflict', { role: 'status' }, [
+												m('span', t('mainHub.summary.changedElsewhere')),
+												m(
+													'button.btn.btn--secondary.btn--small',
+													{
+														onclick: () => adoptLatest(summary),
+														disabled: saving,
+													},
+													t('mainHub.summary.loadLatest'),
+												),
+											])
+										: null,
 									m('textarea.main-hub__summary-textarea', {
 										value: draft,
 										rows: 14,
@@ -143,7 +181,8 @@ export const SummarySection: m.Component<SummarySectionAttrs> = {
 					])
 				: null,
 			admin && !editing
-				? m('.main-hub__summary-controls', [
+				? m(
+						'.main-hub__summary-controls',
 						m(
 							'button.btn.btn--primary.btn--small',
 							{
@@ -155,9 +194,11 @@ export const SummarySection: m.Component<SummarySectionAttrs> = {
 								? t('mainHub.summary.busy')
 								: t(summary ? 'mainHub.summary.regenerate' : 'mainHub.summary.generate'),
 						),
-						errorKey ? m('.main-hub__summary-error', { role: 'alert' }, t(errorKey)) : null,
-					])
+					)
 				: null,
+			// Section level, not inside the controls: a save that fails while the
+			// textarea is open must still be visible to the facilitator.
+			errorKey ? m('.main-hub__summary-error', { role: 'alert' }, t(errorKey)) : null,
 		]);
 	},
 };

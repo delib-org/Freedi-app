@@ -255,8 +255,13 @@ const fa: Record<string, string> = {
 	'mainHub.summary.save': 'ذخیره',
 	'mainHub.summary.saving': 'در حال ذخیره…',
 	'mainHub.summary.cancel': 'لغو',
-	'mainHub.summary.notReady': 'هنوز پاسخی از آستانه عبور نکرده است. آستانه‌ها را تنظیم کنید و پس از ارزیابی‌ها دوباره تلاش کنید.',
+	'mainHub.summary.notReady':
+		'هنوز پاسخی از آستانه عبور نکرده است. آستانه‌ها را تنظیم کنید و پس از ارزیابی‌ها دوباره تلاش کنید.',
 	'mainHub.summary.failed': 'به‌روزرسانی خلاصه ممکن نشد. دوباره تلاش کنید.',
+	'mainHub.summary.noPermission':
+		'شما اجازهٔ ساختن خلاصه برای این پرسش را ندارید. از مدیر گروه بالادست بخواهید شما را اضافه کند.',
+	'mainHub.summary.changedElsewhere': 'شخص دیگری هنگام ویرایش شما خلاصه را به‌روزرسانی کرد.',
+	'mainHub.summary.loadLatest': 'بارگذاری آخرین نسخه',
 	'mainHub.reorder.handle': 'برای مرتب‌سازی بکشید',
 	'mainHub.hidden.tag': 'پنهان',
 	'mainHub.hidden.hide': 'پنهان کردن از شرکت‌کنندگان',

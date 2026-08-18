@@ -33,17 +33,30 @@ export class SummarizationNotReadyError extends Error {
 	}
 }
 
-function isPreconditionFailure(error: unknown): boolean {
-	return (error as { code?: string })?.code === 'functions/failed-precondition';
+/**
+ * The summarize function refused this caller. Join shows the generate button to
+ * anyone `isAdmin()` accepts — the creator, or an admin subscription on this
+ * statement — and the function authorizes the same two scopes plus the top
+ * parent, so this should now only happen to someone who really isn't a
+ * facilitator here (or against a deployment that predates that alignment).
+ * Worth its own message either way: retrying will never fix it.
+ */
+export class SummarizationPermissionError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'SummarizationPermissionError';
+	}
+}
+
+function hasCode(error: unknown, code: string): boolean {
+	return (error as { code?: string })?.code === code;
 }
 
 /**
  * Generate an AI summary of the hub question, built from the answers that
  * passed the cutoff of each sub-question (up to 2 levels deep).
  */
-export async function requestHubSummary(
-	statementId: string,
-): Promise<SummarizeDiscussionResponse> {
+export async function requestHubSummary(statementId: string): Promise<SummarizeDiscussionResponse> {
 	try {
 		const summarizeDiscussion = httpsCallable<
 			SummarizeDiscussionRequest,
@@ -57,10 +70,12 @@ export async function requestHubSummary(
 
 		return result.data;
 	} catch (error) {
-		if (isPreconditionFailure(error)) {
-			const message =
-				error instanceof Error ? error.message : 'Question is not ready to summarize';
+		const message = error instanceof Error ? error.message : 'Summary request failed';
+		if (hasCode(error, 'functions/failed-precondition')) {
 			throw new SummarizationNotReadyError(message);
+		}
+		if (hasCode(error, 'functions/permission-denied')) {
+			throw new SummarizationPermissionError(message);
 		}
 		console.error('[summarize] requestHubSummary failed:', error);
 		throw error;

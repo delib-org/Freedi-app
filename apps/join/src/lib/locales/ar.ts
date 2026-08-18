@@ -293,8 +293,13 @@ const ar: Record<string, string> = {
 	'mainHub.summary.save': 'حفظ',
 	'mainHub.summary.saving': 'جارٍ الحفظ…',
 	'mainHub.summary.cancel': 'إلغاء',
-	'mainHub.summary.notReady': 'لا توجد إجابات تجاوزت الحد بعد. حدّدوا الحد وحاولوا مجددًا بعد توفر التقييمات.',
+	'mainHub.summary.notReady':
+		'لا توجد إجابات تجاوزت الحد بعد. حدّدوا الحد وحاولوا مجددًا بعد توفر التقييمات.',
 	'mainHub.summary.failed': 'تعذّر تحديث الملخص. حاولوا مرة أخرى.',
+	'mainHub.summary.noPermission':
+		'ليست لديكم صلاحية لإنشاء ملخص لهذا السؤال. اطلبوا من مدير المجموعة الأعلى إضافتكم.',
+	'mainHub.summary.changedElsewhere': 'قام شخص آخر بتحديث الملخص أثناء تحريركم له.',
+	'mainHub.summary.loadLatest': 'تحميل أحدث نسخة',
 	'mainHub.reorder.handle': 'اسحب لإعادة الترتيب',
 	'mainHub.hidden.tag': 'مخفي',
 	'mainHub.hidden.hide': 'إخفاء عن المشاركين',

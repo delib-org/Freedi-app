@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import m from 'mithril';
 import { renderSummaryMarkdown } from '../summaryMarkdown';
 
 interface VnodeLike {
 	tag?: unknown;
-	attrs?: { className?: string } | null;
+	attrs?: { className?: string; href?: string; rel?: string; target?: string } | null;
 	children?: unknown;
 	text?: unknown;
 }
@@ -63,5 +62,40 @@ describe('renderSummaryMarkdown', () => {
 
 	it('returns no blocks for empty input', () => {
 		expect(blocks('')).toHaveLength(0);
+	});
+
+	it('clamps heading levels outside ##…#### instead of printing hashes', () => {
+		const [h1, h5] = blocks('# Title\n\n##### Deepest');
+		expect(h1.tag).toBe('h3');
+		expect(textOf(h1)).toBe('Title');
+		expect(h5.tag).toBe('h5');
+		expect(textOf(h5)).toBe('Deepest');
+	});
+
+	it('renders numbered lines as an ordered list', () => {
+		const [list] = blocks('1. first\n2) second');
+		expect(list.tag).toBe('ol');
+		expect(textOf(list)).toBe('firstsecond');
+	});
+
+	it('closes the open list when the list type switches', () => {
+		const result = blocks('- bullet\n1. numbered');
+		expect(result.map((block) => block.tag)).toEqual(['ul', 'ol']);
+	});
+
+	it('renders http links as anchors with a safe rel', () => {
+		const [p] = blocks('See [the notes](https://example.com/notes) for detail.');
+		const anchor = (p.children as VnodeLike[]).find((child) => child?.tag === 'a');
+		expect(anchor?.attrs?.href).toBe('https://example.com/notes');
+		expect(anchor?.attrs?.rel).toBe('noopener noreferrer');
+		expect(textOf(anchor)).toBe('the notes');
+		expect(textOf(p)).toBe('See the notes for detail.');
+	});
+
+	it('leaves a javascript: link as inert text, never an anchor', () => {
+		const [p] = blocks('[click me](javascript:alert(1))');
+		const kids = p.children as VnodeLike[];
+		expect(kids.find((child) => child?.tag === 'a')).toBeUndefined();
+		expect(textOf(p)).toBe('[click me](javascript:alert(1))');
 	});
 });
