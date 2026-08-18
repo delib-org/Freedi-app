@@ -13,6 +13,7 @@ and `score100.mjs` for the implementation.
 | `he-seed42-defaults` | he | shipped defaults | **0.066** | 0.000 | 0.165 | 0/50 | 0 | 1 |
 | `en-seed42-cluster078` | en | `clusterThreshold=0.78` | **0.429** | 0.571 | 0.215 | 20/50 | 20 | 4 |
 | `en-seed42-cluster078-debouncefix` | en | + defer debounced spawns to queue | **0.442** | 0.579 | 0.237 | 22/50 | 21 | 4 |
+| `en-seed42-cluster078-debounce1500` | en | + `SYNTHESIS_SPAWN_DEBOUNCE_MS=1500` | **0.592** | 0.765 | 0.331 | 31/50 | 31 | 6 |
 
 ## Finding 1 — the topic-cluster band is a black hole (shipped defaults, English)
 
@@ -95,3 +96,34 @@ batch in a tight loop: the first retry spawns, re-arms the 15s window, and
 re-blocks the rest of its own batch. The window length itself is the binding
 constraint, so `SPAWN_DEBOUNCE_MS` is now overridable via
 `SYNTHESIS_SPAWN_DEBOUNCE_MS` to make it measurable rather than a guess.
+
+## Finding 5 — shortening the debounce window confirms it was the recall ceiling
+
+With `SYNTHESIS_SPAWN_DEBOUNCE_MS=1500`, English reaches **0.592**: pair recovery
+31/50, precision still **1.000**, coverage 97/100. Spawns rose from 24 to 37 and
+debounces fell to zero. Cumulatively the two structural changes take English from
+**0.067 to 0.592**, roughly a 9× improvement, without a single false merge appearing
+at any point.
+
+1.5s is a deliberately aggressive probe chosen to size the headroom, not a
+production recommendation. The right window is the time for a committed spawn to
+become visible to vector search; the principled fix is to scope the lock to the
+cluster being spawned rather than to the whole parent, which would remove the
+throughput ceiling without shortening the protection at all.
+
+## What still limits the score
+
+- **Recall, 19 pairs short.** 37 statements still end in `review-queued`, which
+  writes to `_liveSynthCandidates` for admin review and is then never revisited —
+  the same "drop the work" shape as the debounce bug, one layer further out. When a
+  statement arrives before its partner, that is the correct call at the time; the
+  gap is that nothing reconsiders it once the partner shows up.
+- **Topic level, F1 0.331.** The live pipeline never nests syntheses under topic
+  clusters — `spawnClusterFromPair` only ever attaches plain options — so the
+  10-topic layer of the ground truth cannot be fully reconstructed by design. The
+  scorer's `synths-only` self-test fixture shows the ceiling this imposes: a run
+  with 50/50 perfect syntheses and no topic nesting still scores only 0.680. Closing
+  that gap needs a new nesting pass, which is a design decision rather than a tuning
+  one.
+- **Hebrew is capped by the embedding model**, not by any of the above — see
+  README.md. `text-embedding-3-large` is the lever there.
