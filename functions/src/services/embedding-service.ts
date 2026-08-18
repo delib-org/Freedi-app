@@ -3,10 +3,26 @@ import { logger } from 'firebase-functions';
 import { notifyAIError } from './error-notification-service';
 import { generateBrief, briefEmbeddingsEnabled } from './brief-service';
 
-// OpenAI embedding configuration
-// text-embedding-3-small: Fast, cheap, good multilingual support (Hebrew, Arabic, etc.)
-// Dimensions: 1536 default, but can be reduced to 768 or 256
-const OPENAI_EMBEDDING_MODEL = 'text-embedding-3-small';
+// OpenAI embedding configuration.
+//
+// The 1536 dimension count is NOT free to change: the Firestore vector indexes in
+// firestore.indexes.json declare `"dimension": 1536`, so any model swap must keep
+// that width. OpenAI's v3 models accept an explicit `dimensions` argument and
+// truncate natively, so a larger model can still be used at 1536.
+//
+// On multilingual quality — text-embedding-3-small is markedly WORSE at Hebrew than
+// this file previously claimed. Measured on the 100-statement EN/HE accuracy
+// benchmark (scientific-research/2026-08-18-live-synth-accuracy), asking how often a
+// statement's true paraphrase is its nearest neighbour:
+//
+//                                    English      Hebrew
+//   text-embedding-3-small           100/100       56/100
+//   text-embedding-3-large @1536     100/100       88/100
+//
+// With 3-small only 79/100 Hebrew partners even fall inside the 10-neighbour window
+// the pipeline inspects, which caps Hebrew pair recall no matter how the thresholds
+// are set. Overridable so the swap can be trialled per environment before it ships.
+const OPENAI_EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small';
 const EMBEDDING_DIMENSIONS = 1536;
 
 interface EmbeddingResult {
@@ -83,6 +99,9 @@ class EmbeddingService {
 			const response = await openai.embeddings.create({
 				model: OPENAI_EMBEDDING_MODEL,
 				input: input,
+				// Pinned, not implied: the Firestore vector indexes declare 1536, and
+				// a model whose native width differs would silently break them.
+				dimensions: EMBEDDING_DIMENSIONS,
 			});
 
 			const embedding = response.data[0].embedding;
@@ -164,6 +183,7 @@ class EmbeddingService {
 				const response = await openai.embeddings.create({
 					model: OPENAI_EMBEDDING_MODEL,
 					input: inputs,
+					dimensions: EMBEDDING_DIMENSIONS,
 				});
 
 				// Add results in order

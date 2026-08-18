@@ -1,0 +1,564 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "6k4HmI9qjnB4",
+        "title": "הקימו פורטל פתוח לפרסום תקציב ונתונים עירוניים",
+        "members": [
+          {
+            "id": "2oErJtf2y1-3"
+          },
+          {
+            "id": "Fc3Fn02eij8T"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "CEmlBYMG2IZz",
+        "title": "להקים מוקד טלפוני עירוני מאוחד לכל פניות השירות",
+        "members": [
+          {
+            "id": "FsaJafW5k2BB"
+          },
+          {
+            "id": "723wbBqdnKV4"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "CkEf6qlDT-hx",
+        "title": "להקים סניפי ספרייה ציבורית נגישים בכל שכונה ורובע בעיר",
+        "members": [
+          {
+            "id": "8tK7cgDljRoE"
+          },
+          {
+            "id": "ruwRPeonxFI1"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "FnfjagjLas5-",
+        "title": "הנהיגו יום כניסה חינם שבועי למוזיאוני העיר",
+        "members": [
+          {
+            "id": "O3ThsoEmJWs0"
+          },
+          {
+            "id": "O4KzqWFeIHxs"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Fq3Xwowdxflk",
+        "title": "להפעיל שירות אוטובוסי לילה בסופי שבוע",
+        "members": [
+          {
+            "id": "dkXg-aex5UfA"
+          },
+          {
+            "id": "VcHkeZXXk0RN"
+          },
+          {
+            "id": "FjCYOfBGbJyc"
+          },
+          {
+            "id": "AszP7bFjEuSh"
+          },
+          {
+            "id": "tVvGwZ9DbuT-"
+          },
+          {
+            "id": "cgbdakZMd83i"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "LKD5Vab0Ubsm",
+        "title": "הקמת רשת אלחוטית ציבורית חינמית בכיכרות ובמרכזים הקהילתיים",
+        "members": [
+          {
+            "id": "0Ukmm-cwE8yI"
+          },
+          {
+            "id": "Cz3Lwu-nBI58"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "NzZJyFv3dSv3",
+        "title": "הפעילו באפליקציה העירונית מעקב חי אחר אוטובוסים לכל הנוסעים",
+        "members": [
+          {
+            "id": "8AOKz4Uyz0gb"
+          },
+          {
+            "id": "XwCRqflo3kKC"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "OPau1vMG6BmS",
+        "title": "להרחיב שירותי תמיכה וטיפול ביתיים לאזרחים ותיקים",
+        "members": [
+          {
+            "id": "1e3LvjDVD4uu"
+          },
+          {
+            "id": "spP4AF3EUOdQ"
+          },
+          {
+            "id": "NvWz1L11jxFV"
+          },
+          {
+            "id": "JuyhBDi6UIjn"
+          },
+          {
+            "id": "g7x1kTmsExqQ"
+          },
+          {
+            "id": "LPTRQufGy0dS"
+          },
+          {
+            "id": "ryMse3Bt3vAg"
+          },
+          {
+            "id": "a7425qSmWABf"
+          },
+          {
+            "id": "hzdUayEWazsZ"
+          },
+          {
+            "id": "aRselwHXlGhw"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "QaR2xYwhMXhE",
+        "title": "הקימו מערך נפרד לאיסוף פסולת מזון והפיכתה לקומפוסט",
+        "members": [
+          {
+            "id": "4lG8wbprRt0z"
+          },
+          {
+            "id": "9KWrrP4tys5U"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "T4jDJBHA-OIg",
+        "title": "להזמין אמנים מקומיים ליצור ציורי קיר ופסלים במרחב הציבורי",
+        "members": [
+          {
+            "id": "8ljCuFOJTWas"
+          },
+          {
+            "id": "goaZc0oOi586"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aQYpFydL0Hhv",
+        "title": "להקים מתחמי כלבים מגודרים וחופשיים בכל שכונה",
+        "members": [
+          {
+            "id": "7VKNMlzyeFvW"
+          },
+          {
+            "id": "mIaa6lX8Vg69"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "eVEAdfkgCfgC",
+        "title": "הקימו מסלול אשראי זול ונגיש לעסקים קטנים מקומיים",
+        "members": [
+          {
+            "id": "Ziv8jTKbk8Vk"
+          },
+          {
+            "id": "kXvGe0GdzxqA"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "h4pzIyf2-ARa",
+        "title": "הציבו שוטרי שכונה קבועים הבונים קשר עם התושבים",
+        "members": [
+          {
+            "id": "Vh2p6osC1fyX"
+          },
+          {
+            "id": "b6ZzyFXjmMcR"
+          },
+          {
+            "id": "lxV4iCMvG09l"
+          },
+          {
+            "id": "5Hygv-1JM9rX"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "mi-OZJvs7fSX",
+        "title": "לחייב דירות בהישג יד ובמחיר מופחת בכל בנייה חדשה",
+        "members": [
+          {
+            "id": "05yXYquE-sfA"
+          },
+          {
+            "id": "A2CCesqkF93X"
+          },
+          {
+            "id": "jIEbUqMvFEE-"
+          },
+          {
+            "id": "m5n6WAmi6-0I"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "n-Yl0O6LHOBZ",
+        "title": "הנהיגו ארוחות צהריים חמות חינם לכל התלמידים בבתי הספר",
+        "members": [
+          {
+            "id": "7t-QDuK3L-fb"
+          },
+          {
+            "id": "qDiNKzjHOquQ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "rhSNzAq9Y7gw",
+        "title": "לתקצב הוראת נגינה חינם לילדי העיר",
+        "members": [
+          {
+            "id": "7EpLRv8Qvrek"
+          },
+          {
+            "id": "GNs3q9fdGmSl"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "vDO76PZlM0eq",
+        "title": "הנגשת כל מתקני המשחק בגני השעשועים לילדים עם מוגבלויות",
+        "members": [
+          {
+            "id": "8rt3VyeDKrDX"
+          },
+          {
+            "id": "cbaQIhLmQp8L"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "wAqI8aHBuRdS",
+        "title": "לסלול שבילי אופניים מוגנים המופרדים פיזית מתנועת המכוניות",
+        "members": [
+          {
+            "id": "LKbplUbOjBgD"
+          },
+          {
+            "id": "mfxpmjuCkmG4"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ylJDtd365aNw",
+        "title": "הקמת מעונות סטודנטים מסובסדים סמוך לקמפוסים",
+        "members": [
+          {
+            "id": "4FfvmBuOY18s"
+          },
+          {
+            "id": "NrvqUJNh0VwB"
+          },
+          {
+            "id": "7RFDe7dO1MZX"
+          },
+          {
+            "id": "PY6Bc4NlnF3H"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "5g-e2W4eqxCw",
+        "title": "חיזוק מערכת החינוך העירונית",
+        "members": [
+          {
+            "id": "AgVCfBReiFZA"
+          },
+          {
+            "id": "l2eBZq9hSuCF"
+          },
+          {
+            "id": "Plk3Sq8keYhQ"
+          },
+          {
+            "id": "0EotH-Lb00OI"
+          },
+          {
+            "id": "LYiEDIXr7xAu"
+          },
+          {
+            "id": "dkHzzwHujYY4"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "68oGgkd7TrFM",
+        "title": "שיפור המרחב הציבורי ברחובות",
+        "members": [
+          {
+            "id": "UC4BIqXCUJUV"
+          },
+          {
+            "id": "IPsuLTNA2tMJ"
+          },
+          {
+            "id": "jS4xQyGseRWw"
+          },
+          {
+            "id": "E59-2poZe-Om"
+          },
+          {
+            "id": "1Gtpxw3PXYEy"
+          },
+          {
+            "id": "5CPYvyjAqkPy"
+          },
+          {
+            "id": "WWoY7ZwjTv0l"
+          },
+          {
+            "id": "Afo4tt4MBHgZ"
+          },
+          {
+            "id": "QJlF7-OjzT4k"
+          },
+          {
+            "id": "oy1vju9Bs33C"
+          },
+          {
+            "id": "URkXhfiIUTmN"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "XDHRdIY29a-0",
+        "title": "צמצום פלסטיק חד-פעמי",
+        "members": [
+          {
+            "id": "LpCuLlP4W3kI"
+          },
+          {
+            "id": "NPBjXpDVNkjN"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [
+    {
+      "id": "3NHpKlGrIJ22",
+      "title": "להקים מרפאות רפואה ראשונית ובריאות המשפחה בשכונות חסרות מענה",
+      "members": [
+        {
+          "id": "NvWz1L11jxFV"
+        },
+        {
+          "id": "JuyhBDi6UIjn"
+        }
+      ],
+      "derivedByPipeline": "synthesis",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "OPau1vMG6BmS"
+    },
+    {
+      "id": "LulHOHpiabgc",
+      "title": "לקצר את זמני ההמתנה לרופאים מומחים",
+      "members": [
+        {
+          "id": "hzdUayEWazsZ"
+        },
+        {
+          "id": "aRselwHXlGhw"
+        }
+      ],
+      "derivedByPipeline": "synthesis",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "OPau1vMG6BmS"
+    },
+    {
+      "id": "coaoP-z0dOio",
+      "title": "להעניק לתושבים טיפול וייעוץ נפשי ללא עלות",
+      "members": [
+        {
+          "id": "ryMse3Bt3vAg"
+        },
+        {
+          "id": "a7425qSmWABf"
+        }
+      ],
+      "derivedByPipeline": "synthesis",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "OPau1vMG6BmS"
+    },
+    {
+      "id": "dq4JuKRVj3VT",
+      "title": "להתקין מצלמות אבטחה באזורים שבהם מתרכזת עבריינות לשיפור ביטחון התושבים",
+      "members": [
+        {
+          "id": "lxV4iCMvG09l"
+        },
+        {
+          "id": "5Hygv-1JM9rX"
+        }
+      ],
+      "derivedByPipeline": "synthesis",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "h4pzIyf2-ARa"
+    },
+    {
+      "id": "rUCQVXLZBTFu",
+      "title": "הפעילו תוכנית עירונית לבדיקות סקר חינמיות לגילוי מוקדם של מחלות",
+      "members": [
+        {
+          "id": "g7x1kTmsExqQ"
+        },
+        {
+          "id": "LPTRQufGy0dS"
+        }
+      ],
+      "derivedByPipeline": "synthesis",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "OPau1vMG6BmS"
+    },
+    {
+      "id": "wApAKqYCXqlJ",
+      "title": "הנהיגו נסיעה חינם בתחבורה הציבורית לכל תלמידי בית הספר",
+      "members": [
+        {
+          "id": "tVvGwZ9DbuT-"
+        },
+        {
+          "id": "cgbdakZMd83i"
+        }
+      ],
+      "derivedByPipeline": "synthesis",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "Fq3Xwowdxflk"
+    }
+  ],
+  "sourceOptions": {
+    "visible": 100,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "spawn": 28,
+    "review-queued": 51,
+    "attach": 19
+  },
+  "parameters": {
+    "language": "he",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.he.json",
+    "corpusSha": "9a5191bece66",
+    "seed": 42,
+    "synthesisOverrides": {
+      "clusterThreshold": 0.84,
+      "synthLowerBound": 0.84
+    },
+    "statementsFed": 100,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 2500,
+    "maxWaitMs": 20000,
+    "settleTimeouts": 1,
+    "durationMs": 848212,
+    "gitSha": "e8e992c8a",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}

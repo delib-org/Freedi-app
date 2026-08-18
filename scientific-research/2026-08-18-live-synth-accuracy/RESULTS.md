@@ -14,6 +14,8 @@ and `score100.mjs` for the implementation.
 | `en-seed42-cluster078` | en | `clusterThreshold=0.78` | **0.429** | 0.571 | 0.215 | 20/50 | 20 | 4 |
 | `en-seed42-cluster078-debouncefix` | en | + defer debounced spawns to queue | **0.442** | 0.579 | 0.237 | 22/50 | 21 | 4 |
 | `en-seed42-cluster078-debounce1500` | en | + `SYNTHESIS_SPAWN_DEBOUNCE_MS=1500` | **0.592** | 0.765 | 0.331 | 31/50 | 31 | 6 |
+| `he-seed42-cluster078-debounce1500` | he | same fixes as the English 0.592 run | **0.066** | 0.000 | 0.166 | 0/50 | 0 | 1 |
+| `he-seed42-large-cluster084` | he | + `text-embedding-3-large`, `clusterThreshold`/`synthLowerBound=0.84` | **0.369** | 0.380 | 0.352 | 27/50 | 19 | 3 |
 
 ## Finding 1 — the topic-cluster band is a black hole (shipped defaults, English)
 
@@ -127,3 +129,43 @@ throughput ceiling without shortening the protection at all.
   one.
 - **Hebrew is capped by the embedding model**, not by any of the above — see
   README.md. `text-embedding-3-large` is the lever there.
+
+## Finding 6 — the English fixes do not transfer to Hebrew; the embedding model does
+
+Running Hebrew with exactly the settings that took English to 0.592 leaves it at
+**0.066** — still one mega-cluster, still zero syntheses. The reason is in the
+pre-flight table: Hebrew's cross-topic *median* under `text-embedding-3-small` is
+0.779, so a 0.78 gate still admits nearly every unrelated pair and the black hole
+survives. **Cosine thresholds are language-specific and an English-tuned value
+cannot be assumed to transfer.**
+
+Switching to `text-embedding-3-large` (requested at 1536 dimensions so the existing
+Firestore vector indexes stay valid) moves Hebrew to **0.369** — 27/50 pairs, up
+from 0. That is a 5.6× gain from one configuration change, and it is the only lever
+that moved Hebrew at all.
+
+Precision fell to 0.293 (65 false merges) at the `0.84` band I used, which is a
+tuning artifact rather than a model problem: Hebrew's within-pair p10 (0.814) and
+cross-topic max (0.850) still overlap under 3-large, so a single 0.84 cut both
+merges true pairs and admits some false ones. The pre-flight puts the best possible
+single cut at F1 0.774, so a better-chosen band should recover most of the lost
+precision. That tuning pass is the obvious next experiment.
+
+## Recommended changes, in order of measured value
+
+1. **Stop the topic-cluster black hole.** Highest impact by far (English
+   0.067 → 0.429). Raising `clusterThreshold` is the blunt version; the better fix
+   is to stop letting a topic cluster absorb an option whose best evidence comes
+   from a single member, since that is what lets one cluster grow without bound.
+2. **Rescope the spawn debounce** from per-parent to per-cluster (English
+   0.442 → 0.592). The 15s per-parent lock throttles a whole question to roughly one
+   spawn per window, which bites hardest exactly when a question is busiest.
+   Already landed: debounced spawns are no longer dropped, and the window is
+   overridable via `SYNTHESIS_SPAWN_DEBOUNCE_MS`.
+3. **Move Hebrew (and any non-English question) to `text-embedding-3-large`**
+   at 1536 dimensions (Hebrew 0.066 → 0.369). Embeddings are a rounding error next
+   to the synthesis LLM calls, and English improves too (pre-flight F1 0.947 → 0.990).
+4. **Revisit `review-queued` options when a later statement lands near them** —
+   currently they are written to `_liveSynthCandidates` and never reconsidered.
+5. **Add a synth → topic nesting pass.** Without it the composite cannot exceed
+   ~0.68 even with every synthesis perfect. This is a design change, not a tuning one.

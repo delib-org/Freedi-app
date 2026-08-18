@@ -129,7 +129,7 @@ interface CacheRow {
 	vector: number[];
 }
 
-function parseArgs(): { corpusPath: string; asJson: boolean; noContext: boolean; model: string } {
+function parseArgs(): { corpusPath: string; asJson: boolean; noContext: boolean; model: string; dimensions: number | null } {
 	const args = process.argv.slice(2);
 	const corpusPath = args.find((a) => !a.startsWith('--'));
 	if (!corpusPath) {
@@ -148,6 +148,12 @@ function parseArgs(): { corpusPath: string; asJson: boolean; noContext: boolean;
 		// than from the model's representation of the language itself.
 		noContext: args.includes('--no-context'),
 		model: args.find((a) => a.startsWith('--model='))?.slice('--model='.length) ?? DEFAULT_EMBEDDING_MODEL,
+		// The production vector index is fixed at 1536 dimensions
+		// (firestore.indexes.json), so a larger model is only a drop-in candidate
+		// if it is requested at 1536 dims — which OpenAI supports natively.
+		dimensions: args.some((a) => a.startsWith('--dimensions='))
+			? Number(args.find((a) => a.startsWith('--dimensions='))!.slice('--dimensions='.length))
+			: null,
 	};
 }
 
@@ -226,9 +232,13 @@ function readCache(): Map<string, number[]> {
 }
 
 /** Embeds only inputs missing from the on-disk cache, so re-runs after a text tweak are nearly free. */
-async function embedWithCache(inputs: string[], model: string): Promise<Map<string, number[]>> {
-	// Cache key includes the model so switching models does not read stale vectors.
-	const keyOf = (input: string): string => `${model}\u0000${input}`;
+async function embedWithCache(
+	inputs: string[],
+	model: string,
+	dimensions: number | null,
+): Promise<Map<string, number[]>> {
+	// Cache key includes model + dimensions so switching either does not read stale vectors.
+	const keyOf = (input: string): string => `${model}@${dimensions ?? 'native'}\u0000${input}`;
 	const rawCache = readCache();
 	const cache = new Map<string, number[]>();
 	for (const input of new Set(inputs)) {
@@ -247,7 +257,11 @@ async function embedWithCache(inputs: string[], model: string): Promise<Map<stri
 	const openai = getOpenAI();
 	for (let i = 0; i < missing.length; i += 100) {
 		const batch = missing.slice(i, i + 100);
-		const response = await openai.embeddings.create({ model, input: batch });
+		const response = await openai.embeddings.create({
+			model,
+			input: batch,
+			...(dimensions ? { dimensions } : {}),
+		});
 		batch.forEach((input, j) => {
 			const vector = response.data[j].embedding;
 			cache.set(input, vector);
@@ -385,7 +399,7 @@ interface ThresholdDiagnostic {
 }
 
 (async () => {
-	const { corpusPath, asJson, noContext, model } = parseArgs();
+	const { corpusPath, asJson, noContext, model, dimensions } = parseArgs();
 	const corpus: CorpusFile = JSON.parse(readFileSync(corpusPath, 'utf8'));
 
 	console.info(`\n=== Corpus geometry pre-flight ===`);
@@ -393,7 +407,7 @@ interface ThresholdDiagnostic {
 	console.info(`question : ${corpus.questionText}`);
 	console.info(`language : ${corpus.language ?? '(unspecified)'}`);
 	console.info(
-		`embedding: ${model}${model === DEFAULT_EMBEDDING_MODEL ? ' (production)' : ' (OVERRIDE)'}, ${noContext ? 'BARE STATEMENT (--no-context diagnostic)' : 'production "Question: …\\nAnswer: …"'}`,
+		`embedding: ${model}${dimensions ? `@${dimensions}d` : ''}${model === DEFAULT_EMBEDDING_MODEL && !dimensions ? ' (production)' : ' (OVERRIDE)'}, ${noContext ? 'BARE STATEMENT (--no-context diagnostic)' : 'production "Question: …\\nAnswer: …"'}`,
 	);
 
 	const structural = validateStructure(corpus);
@@ -407,7 +421,7 @@ interface ThresholdDiagnostic {
 		`structure: ✓ ${corpus.topics.length} topics × ${EXPECTED_SYNTHS_PER_TOPIC} synths × ${EXPECTED_PARAPHRASES_PER_SYNTH} paraphrases = ${items.length} statements\n`,
 	);
 
-	const cache = await embedWithCache(items.map((i) => i.embeddingInput), model);
+	const cache = await embedWithCache(items.map((i) => i.embeddingInput), model, dimensions);
 	const vectors = items.map((i) => cache.get(i.embeddingInput)!);
 
 	const withinPair: number[] = [];
