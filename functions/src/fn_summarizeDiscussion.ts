@@ -98,19 +98,33 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		}
 		const question = questionDoc.data() as Statement;
 
-		// 2. Check permissions: creator or admin
+		// 2. Check permissions: creator or admin.
+		//
+		// Admin is resolved against the top parent AND against the question
+		// itself. A subscription on the question alone is enough to edit that
+		// statement under the Firestore rules (and is what the Join app's own
+		// `isAdmin()` reads), so authorizing only top-parent subscriptions turned
+		// away facilitators who legitimately run a single hub question.
 		const isCreator = question.creatorId === userId;
-
-		let isAdmin = false;
 		const topParentId = question.topParentId || statementId;
-		const membersSnapshot = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', topParentId)
-			.where('userId', '==', userId)
-			.where('role', 'in', ['admin', 'creator'])
-			.limit(1)
-			.get();
-		isAdmin = !membersSnapshot.empty;
+
+		async function hasAdminSubscription(scopeId: string): Promise<boolean> {
+			const snapshot = await db
+				.collection(Collections.statementsSubscribe)
+				.where('statementId', '==', scopeId)
+				.where('userId', '==', userId)
+				.where('role', 'in', ['admin', 'creator'])
+				.limit(1)
+				.get();
+
+			return !snapshot.empty;
+		}
+
+		// The top parent is checked first — it's the common case, and for a
+		// top-level question the two scopes are the same id anyway.
+		const isAdmin =
+			(await hasAdminSubscription(topParentId)) ||
+			(topParentId !== statementId && (await hasAdminSubscription(statementId)));
 
 		if (!isCreator && !isAdmin) {
 			throw new HttpsError('permission-denied', 'Only admins can generate summaries');
