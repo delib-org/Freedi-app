@@ -513,12 +513,31 @@
 
 	// "42 / 1500" is a mark, not a word — the one rung below the floor, taken
 	// deliberately and where the audit can see the decision.
+	//
+	// Isolated because the run is all neutrals: in Hebrew it reorders to
+	// "1500 / 42", which says the student has written more than the limit
+	// allows. The same fix the board's signed percents needed.
 	&__count {
-		@include type-meta;
-
 		margin: 0;
 		text-align: end;
 		color: var(--text-muted);
+	}
+
+	// The run, not the block, carries both decisions.
+	//
+	// The isolate: `direction: ltr` on the paragraph would also flip which side
+	// `text-align: end` resolves to and move the counter to the other edge of
+	// an RTL card. Without it, "42 / 1500" reorders to "1500 / 42" in Hebrew,
+	// which tells a student they have written thirty-five times the limit.
+	//
+	// The exemption: "42 / 1500" is a mark, not a word — and type-meta clears
+	// itself on descendants precisely so a real word cannot inherit a parent's
+	// permission, which is why it has to sit here rather than one level up.
+	&__count-num {
+		@include type-meta;
+
+		direction: ltr;
+		unicode-bidi: isolate;
 	}
 
 	&__actions {

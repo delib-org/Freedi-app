@@ -151,7 +151,10 @@ export function ChallengeCards(): m.Component<ChallengeCardsAttrs> {
 							draft = (event.target as HTMLTextAreaElement).value;
 						},
 					}),
-					m('p.challenge__count', `${length} / ${AGORA_LIMITS.MAX_PROPOSAL_LENGTH}`),
+					m(
+						'p.challenge__count',
+						m('span.challenge__count-num', `${length} / ${AGORA_LIMITS.MAX_PROPOSAL_LENGTH}`),
+					),
 					m('.challenge__actions', [
 						m(
 							'button.challenge__send',
