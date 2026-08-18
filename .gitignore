@@ -101,3 +101,6 @@ apps/agora/before-shots/
 apps/agora/mobile-*/
 apps/agora/mock/*.png
 apps/agora/mock/*.webp
+
+# Embedding cache for scripts/preflightCorpusCosines.ts (regenerable, ~24MB)
+scripts/.cache/

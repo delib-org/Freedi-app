@@ -1,0 +1,408 @@
+{
+	"questionId": "accuracy100en",
+	"questionText": "What should our city do to improve residents' quality of life?",
+	"language": "en",
+	"design": "Accuracy benchmark corpus: 10 topics x 5 synth-groups x 2 near-paraphrases = 100 statements. Each paraphrase pair states the SAME action in different wording (target within-pair cosine >= 0.85, hard floor 0.78 = synthLowerBound). The 5 synth-groups inside a topic are deliberately DISTINCT actions on a shared theme (target 0.60-0.84) because generateSynthesizedProposal refuses to merge distinct actions. Topics are mutually distinct (target < 0.60 = clusterThreshold). Ground truth: 10 topic clusters, 50 synths. Frozen corpus - do not edit without re-running scripts/preflightCorpusCosines.ts.",
+	"topics": [
+		{
+			"name": "transport",
+			"synths": [
+				{
+					"name": "bus-frequency",
+					"paraphrases": [
+						"Run buses more often during rush hour so people do not wait long.",
+						"Increase the number of buses at peak times to cut down waiting."
+					]
+				},
+				{
+					"name": "protected-bike-lanes",
+					"paraphrases": [
+						"Build protected bike lanes that are separated from car traffic.",
+						"Create physically separated cycling lanes so riders are shielded from cars."
+					]
+				},
+				{
+					"name": "free-fares-youth",
+					"paraphrases": [
+						"Make public transport free for students under eighteen.",
+						"Let all school-age children ride public transit at no charge."
+					]
+				},
+				{
+					"name": "night-service",
+					"paraphrases": [
+						"Operate night buses on weekends so people can get home late.",
+						"Add late-night weekend transit service for people traveling after midnight."
+					]
+				},
+				{
+					"name": "real-time-arrivals",
+					"paraphrases": [
+						"Provide a real-time arrival app that shows exactly when the bus is coming.",
+						"Give riders live vehicle tracking in an app so they know arrival times."
+					]
+				}
+			]
+		},
+		{
+			"name": "housing",
+			"synths": [
+				{
+					"name": "affordable-quota",
+					"paraphrases": [
+						"Require developers to include affordable units in every new building.",
+						"Mandate a share of below-market apartments in all new construction."
+					]
+				},
+				{
+					"name": "public-rent-registry",
+					"paraphrases": [
+						"Create a public rent registry so tenants can compare prices.",
+						"Publish a municipal database of rents so renters can see real market rates."
+					]
+				},
+				{
+					"name": "convert-offices",
+					"paraphrases": [
+						"Convert empty office buildings into apartments.",
+						"Turn vacant commercial buildings into residential housing."
+					]
+				},
+				{
+					"name": "renovation-grants",
+					"paraphrases": [
+						"Give grants to renovate old apartments for energy efficiency.",
+						"Fund subsidies for upgrading aging flats so they use less energy."
+					]
+				},
+				{
+					"name": "student-dorms",
+					"paraphrases": [
+						"Build subsidized dormitories for students near the campuses.",
+						"Construct low-cost student housing close to the colleges."
+					]
+				}
+			]
+		},
+		{
+			"name": "parks-and-green-space",
+			"synths": [
+				{
+					"name": "neighborhood-parks",
+					"paraphrases": [
+						"Ensure a small green park sits within a five-minute walk of every home.",
+						"Create pocket parks so each resident has green space a short walk away."
+					]
+				},
+				{
+					"name": "street-trees",
+					"paraphrases": [
+						"Plant many more shade trees along the streets.",
+						"Line the sidewalks with trees so pedestrians get shade."
+					]
+				},
+				{
+					"name": "community-gardens",
+					"paraphrases": [
+						"Allocate plots for community vegetable gardens.",
+						"Give residents land where they can grow vegetables together in shared gardens."
+					]
+				},
+				{
+					"name": "accessible-playgrounds",
+					"paraphrases": [
+						"Make every playground accessible to children with disabilities.",
+						"Rebuild play areas so that kids with disabilities can use all the equipment."
+					]
+				},
+				{
+					"name": "dog-parks",
+					"paraphrases": [
+						"Create fenced dog-run areas in each district.",
+						"Set up enclosed off-leash areas for dogs in every neighborhood."
+					]
+				}
+			]
+		},
+		{
+			"name": "public-safety",
+			"synths": [
+				{
+					"name": "street-lighting",
+					"paraphrases": [
+						"Improve street lighting on dark streets and footpaths.",
+						"Install brighter lamps along poorly lit roads and walkways."
+					]
+				},
+				{
+					"name": "traffic-calming",
+					"paraphrases": [
+						"Add speed bumps and narrowed crossings near schools.",
+						"Install traffic-calming measures such as humps and curb extensions beside schools."
+					]
+				},
+				{
+					"name": "community-policing",
+					"paraphrases": [
+						"Put neighborhood officers who know the residents on regular patrol.",
+						"Assign local beat officers who build ongoing relationships with residents."
+					]
+				},
+				{
+					"name": "emergency-response-time",
+					"paraphrases": [
+						"Cut ambulance and fire response times by opening more local stations.",
+						"Reduce how long emergency services take to arrive by adding stations closer to neighborhoods."
+					]
+				},
+				{
+					"name": "cameras-at-hotspots",
+					"paraphrases": [
+						"Install security cameras at the crime hotspots.",
+						"Put surveillance cameras in the places where crime is concentrated."
+					]
+				}
+			]
+		},
+		{
+			"name": "education",
+			"synths": [
+				{
+					"name": "smaller-classes",
+					"paraphrases": [
+						"Reduce class sizes so teachers can give individual attention.",
+						"Cap the number of pupils per classroom to allow personal attention."
+					]
+				},
+				{
+					"name": "teacher-pay",
+					"paraphrases": [
+						"Raise teacher salaries to attract and keep good educators.",
+						"Increase pay for teachers so that strong educators stay in the profession."
+					]
+				},
+				{
+					"name": "homework-tutoring",
+					"paraphrases": [
+						"Provide free after-school homework tutoring for pupils who fall behind.",
+						"Offer no-cost afternoon tutoring so struggling students get help with assignments."
+					]
+				},
+				{
+					"name": "school-buildings",
+					"paraphrases": [
+						"Renovate old school buildings with modern classrooms and laboratories.",
+						"Modernize aging school facilities including their labs and classrooms."
+					]
+				},
+				{
+					"name": "school-meals",
+					"paraphrases": [
+						"Serve a free hot lunch to every pupil at school.",
+						"Provide no-cost hot meals for all students during the school day."
+					]
+				}
+			]
+		},
+		{
+			"name": "health",
+			"synths": [
+				{
+					"name": "neighborhood-clinics",
+					"paraphrases": [
+						"Open primary-care clinics in underserved neighborhoods.",
+						"Add local family-health clinics in the areas that lack them."
+					]
+				},
+				{
+					"name": "mental-health-services",
+					"paraphrases": [
+						"Provide free mental-health counseling for residents.",
+						"Offer no-cost psychological therapy services to the public."
+					]
+				},
+				{
+					"name": "specialist-wait-times",
+					"paraphrases": [
+						"Shorten the waiting times for specialist appointments.",
+						"Cut how long patients wait before they can see a specialist doctor."
+					]
+				},
+				{
+					"name": "preventive-screening",
+					"paraphrases": [
+						"Run free screening campaigns for early detection of disease.",
+						"Offer no-charge check-up programs that catch illness at an early stage."
+					]
+				},
+				{
+					"name": "elderly-home-care",
+					"paraphrases": [
+						"Expand home-care services so seniors can stay in their own homes.",
+						"Increase in-home support so older people do not have to move to institutions."
+					]
+				}
+			]
+		},
+		{
+			"name": "jobs-and-economy",
+			"synths": [
+				{
+					"name": "small-business-loans",
+					"paraphrases": [
+						"Give low-interest loans to small local businesses.",
+						"Offer cheap credit to small neighborhood businesses."
+					]
+				},
+				{
+					"name": "job-retraining",
+					"paraphrases": [
+						"Fund retraining programs for workers changing careers.",
+						"Pay for reskilling courses for people switching occupations."
+					]
+				},
+				{
+					"name": "cut-permit-bureaucracy",
+					"paraphrases": [
+						"Simplify the business licensing process down to one short form.",
+						"Cut business-permit red tape to a single quick application."
+					]
+				},
+				{
+					"name": "local-hiring",
+					"paraphrases": [
+						"Require city contractors to hire local residents.",
+						"Make municipal suppliers employ people from within the city."
+					]
+				},
+				{
+					"name": "coworking-spaces",
+					"paraphrases": [
+						"Open subsidized coworking spaces for freelancers.",
+						"Provide low-cost shared offices for independent workers."
+					]
+				}
+			]
+		},
+		{
+			"name": "culture",
+			"synths": [
+				{
+					"name": "free-museum-days",
+					"paraphrases": [
+						"Make the museums free to enter one day a week.",
+						"Offer no-charge museum admission on one day of every week."
+					]
+				},
+				{
+					"name": "neighborhood-libraries",
+					"paraphrases": [
+						"Open a public library branch in every neighborhood.",
+						"Put a local library in each district of the city."
+					]
+				},
+				{
+					"name": "street-festivals",
+					"paraphrases": [
+						"Hold regular street festivals and outdoor concerts.",
+						"Organize frequent public festivals and open-air music events."
+					]
+				},
+				{
+					"name": "public-art-commissions",
+					"paraphrases": [
+						"Commission murals and sculptures from local artists for public squares.",
+						"Pay local artists to create wall paintings and statues around the city."
+					]
+				},
+				{
+					"name": "youth-music-programs",
+					"paraphrases": [
+						"Fund free music lessons for children.",
+						"Pay for no-cost instrument instruction for kids."
+					]
+				}
+			]
+		},
+		{
+			"name": "environment-and-waste",
+			"synths": [
+				{
+					"name": "recycling-pickup",
+					"paraphrases": [
+						"Collect recycling from every doorstep once a week.",
+						"Provide weekly curbside pickup of recyclable materials."
+					]
+				},
+				{
+					"name": "solar-on-public-roofs",
+					"paraphrases": [
+						"Put solar panels on the roofs of all public buildings.",
+						"Install photovoltaic systems on top of municipal buildings."
+					]
+				},
+				{
+					"name": "ban-single-use-plastic",
+					"paraphrases": [
+						"Ban single-use plastics in shops and restaurants.",
+						"Prohibit disposable plastic items at stores and eateries."
+					]
+				},
+				{
+					"name": "compost-organic-waste",
+					"paraphrases": [
+						"Set up separate collection of kitchen food scraps for composting.",
+						"Create a dedicated food-waste stream that gets turned into compost."
+					]
+				},
+				{
+					"name": "air-quality-monitoring",
+					"paraphrases": [
+						"Install air-quality sensors across the city and publish the data.",
+						"Deploy pollution monitors citywide with public real-time readings."
+					]
+				}
+			]
+		},
+		{
+			"name": "digital-services",
+			"synths": [
+				{
+					"name": "online-permits",
+					"paraphrases": [
+						"Let residents complete all municipal forms online.",
+						"Enable every city procedure to be carried out over the internet."
+					]
+				},
+				{
+					"name": "public-wifi",
+					"paraphrases": [
+						"Provide free public wifi in the squares and community centers.",
+						"Offer no-charge wireless internet in public plazas and community centers."
+					]
+				},
+				{
+					"name": "walk-in-help-desks",
+					"paraphrases": [
+						"Open walk-in help desks where residents get assistance using the city's online services.",
+						"Staff in-person support counters that help people navigate the municipal website."
+					]
+				},
+				{
+					"name": "open-data-portal",
+					"paraphrases": [
+						"Publish the city budget and city data in an open portal.",
+						"Release municipal data and spending on a public open-data website."
+					]
+				},
+				{
+					"name": "single-service-hotline",
+					"paraphrases": [
+						"Create a single phone number for all city service requests.",
+						"Set up one unified hotline for every municipal service request."
+					]
+				}
+			]
+		}
+	]
+}
