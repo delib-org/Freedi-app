@@ -68,6 +68,10 @@ export interface ModalProps {
 
 	/** ARIA label override */
 	ariaLabel?: string;
+
+	/** Accessible label for the close button. Pass a translated string —
+	 *  the default is English, which is wrong in an RTL locale. */
+	closeButtonLabel?: string;
 }
 
 // ============================================================================
@@ -91,6 +95,7 @@ const Modal: React.FC<ModalProps> = ({
 	className,
 	id,
 	ariaLabel,
+	closeButtonLabel = 'Close modal',
 }) => {
 	const modalRef = useRef<HTMLDivElement>(null);
 	const previousActiveElement = useRef<Element | null>(null);
@@ -187,7 +192,7 @@ const Modal: React.FC<ModalProps> = ({
 								type="button"
 								className="modal__close-button"
 								onClick={onClose}
-								aria-label="Close modal"
+								aria-label={closeButtonLabel}
 							>
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
 									<line x1="18" y1="6" x2="6" y2="18" />

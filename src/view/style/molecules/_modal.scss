@@ -33,6 +33,11 @@
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(2px);
+    // The dim layer is decoration only. It covers the whole modal, so without
+    // this a click on "the background" lands here instead of on .modal — and
+    // Modal.tsx closes only when the click target IS .modal. Let clicks fall
+    // through and close-on-backdrop works in a real browser, not just in jsdom.
+    pointer-events: none;
   }
 
   &__content {

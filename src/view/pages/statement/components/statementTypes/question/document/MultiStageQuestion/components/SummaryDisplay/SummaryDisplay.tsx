@@ -1,8 +1,10 @@
-import { FC, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { updateStatementSummary } from '@/controllers/db/summarization/summarizationController';
 import { logError } from '@/utils/errorHandling';
 import Text from '@/view/components/text/Text';
+import { Modal } from '@/view/components/atomic/molecules/Modal';
+import { buildSummaryPreview } from './summaryPreview';
 import styles from './SummaryDisplay.module.scss';
 
 interface SummaryDisplayProps {
@@ -24,6 +26,10 @@ const SummaryDisplay: FC<SummaryDisplayProps> = ({
 	const [isEditing, setIsEditing] = useState(false);
 	const [draft, setDraft] = useState('');
 	const [isSaving, setIsSaving] = useState(false);
+	const [isExpanded, setIsExpanded] = useState(false);
+
+	// Hooks run before the early return, so an empty summary still calls it.
+	const preview = useMemo(() => buildSummaryPreview(summary ?? ''), [summary]);
 
 	if (!summary) return null;
 
@@ -98,9 +104,31 @@ const SummaryDisplay: FC<SummaryDisplayProps> = ({
 					</div>
 				</div>
 			) : (
-				<div className={styles.summaryContent}>
-					<Text description={summary} enableMarkdown={true} />
-				</div>
+				<>
+					{/* Collapsed by default: two lines of prose, the rest in the modal. */}
+					<p className={styles.summaryPreview}>{preview.text}</p>
+					{preview.isTruncated && (
+						<button
+							type="button"
+							className={styles.readMoreButton}
+							onClick={() => setIsExpanded(true)}
+						>
+							{t('Read more')}
+						</button>
+					)}
+					<Modal
+						isOpen={isExpanded}
+						onClose={() => setIsExpanded(false)}
+						title={t('Discussion Summary')}
+						size="large"
+						ariaLabel={t('Discussion Summary')}
+						closeButtonLabel={t('Close')}
+					>
+						<div className={styles.summaryContent}>
+							<Text description={summary} enableMarkdown={true} />
+						</div>
+					</Modal>
+				</>
 			)}
 		</div>
 	);
