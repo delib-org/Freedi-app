@@ -165,6 +165,29 @@ describe('/statements', () => {
 				updateDoc(doc(db, 'statements', 'points-target'), { agoraPointsAwarded: 999 }),
 			);
 		});
+
+		// agoraChallenge is what keeps an option written during the vote out of
+		// the deliberation-proposal lifecycle. An author who could strip it could
+		// walk their challenge back into the first-draft credit it was excluded
+		// from — so it is pinned even against the person who wrote the statement.
+		it('rejects the author clearing the challenge flag off their own option', async () => {
+			await seed(env, async (db) => {
+				await setDoc(
+					doc(db, 'statements', 'challenge-1'),
+					agoraProposalDoc({
+						statementId: 'challenge-1',
+						uid: AUTHOR,
+						sessionId: SESSION,
+						overrides: { agoraChallenge: true },
+					}),
+				);
+			});
+
+			const db = env.authenticatedContext(AUTHOR).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'statements', 'challenge-1'), { agoraChallenge: false }),
+			);
+		});
 	});
 });
 

@@ -264,5 +264,90 @@ describe('agora collections', () => {
 				}),
 			);
 		});
+
+		// Whether students may add options at all is the teacher's call...
+		it('allows a teacher to open the ballot to new options', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'deliberation',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertSucceeds(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingSettings: { enabled: true, challengeGame: true, challengeMaxTurns: 6 },
+				}),
+			);
+		});
+
+		// ...but running the round is not. A teacher who could write the turn
+		// state could name themselves the speaker, or crown a challenger the
+		// class voted down.
+		it('rejects a teacher rewriting the challenge turn state', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'voting',
+					participantCount: 3,
+					votingSettings: { challengeGame: true },
+					votingGame: {
+						order: [STUDENT],
+						orderNames: ['traveler'],
+						turnIndex: 0,
+						maxTurns: 8,
+						phase: 'vote',
+						speakerUserId: STUDENT,
+						passedUserIds: [],
+						skippedUserIds: [],
+						startedAt: 1_700_000_000_000,
+						updatedAt: 1_700_000_000_000,
+					},
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingGame: {
+						order: [TEACHER],
+						orderNames: ['teacher'],
+						turnIndex: 0,
+						maxTurns: 8,
+						phase: 'resolved',
+						speakerUserId: TEACHER,
+						passedUserIds: [],
+						skippedUserIds: [],
+						startedAt: 1_700_000_000_000,
+						updatedAt: 1_700_000_000_001,
+					},
+				}),
+			);
+		});
+
+		it('rejects a student writing the challenge turn state', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'voting',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingGame: { phase: 'vote', turnIndex: 0 },
+				}),
+			);
+		});
 	});
 });
