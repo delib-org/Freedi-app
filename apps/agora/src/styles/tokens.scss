@@ -489,6 +489,8 @@
 // the face I pressed, and the tab I am on
 .rate-scale__option--selected,
 .delib-nav__item--active,
+// the ballot row I voted for — MINE is a purple surface, not a border
+.voting__option--mine,
 // the HUD's two filled tokens
 .delib-hud__crest,
 .delib-hud__stop--here .delib-hud__stop-icon,
