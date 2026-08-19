@@ -132,12 +132,13 @@ beforeEach(() => {
 
 describe('runSinglePipeline', () => {
 	describe('cluster-membership idempotence', () => {
-		it('skips when the option is already a member of a live cluster (no double-claim)', async () => {
+		it('skips when the option is already a member of a live SYNTH (no double-claim)', async () => {
 			const option = makeOption();
 			findClustersContainingMemberMock.mockResolvedValue([
 				{
 					statementId: 'cluster-A',
 					integratedOptions: ['opt-1'],
+					derivedByPipeline: 'synthesis',
 					hide: false,
 				} as unknown as Statement,
 			]);
@@ -150,8 +151,81 @@ describe('runSinglePipeline', () => {
 
 			expect(result.action).toBe('skipped');
 			expect(result.reason).toContain('already-member-of-cluster:cluster-A');
-			// Must not run the attach/spawn passes for an already-owned option.
+			// Must not run the attach/spawn passes for an already-merged option.
 			expect(findSimilarMock).not.toHaveBeenCalled();
+			expect(attachMock).not.toHaveBeenCalled();
+			expect(spawnMock).not.toHaveBeenCalled();
+		});
+
+		it('still looks for a synthesis when the option only belongs to a TOPIC cluster', async () => {
+			// A topic cluster gives a statement a theme, not a meaning. Treating
+			// that as terminal ownership is what let the first cluster to touch a
+			// statement starve the synthesis layer — the dominant cause of missed
+			// pairs on the 100-statement accuracy benchmark.
+			const option = makeOption();
+			const parent = makeParent();
+			findClustersContainingMemberMock.mockResolvedValue([
+				{
+					statementId: 'topic-A',
+					integratedOptions: ['opt-1', 'other'],
+					derivedByPipeline: 'topic-cluster',
+					hide: false,
+				} as unknown as Statement,
+			]);
+			findSimilarMock.mockResolvedValue([
+				{
+					statement: { statementId: 'twin', integratedOptions: [] } as unknown as Statement,
+					similarity: 0.91,
+				},
+			]);
+			spawnMock.mockResolvedValue({ spawned: true, clusterId: 'new-synth' });
+
+			const result = await runSinglePipeline({
+				option,
+				parent,
+				optionId: 'opt-1',
+				source: 'onCreate',
+			});
+
+			expect(result.action).toBe('spawned');
+			expect(spawnMock).toHaveBeenCalledWith(
+				expect.objectContaining({ mode: 'synth', sibling: expect.objectContaining({ statementId: 'twin' }) }),
+			);
+		});
+
+		it('does not re-theme an option that already belongs to a TOPIC cluster', async () => {
+			// It has a theme; Pass 2, Pass 4 and Pass 5 have nothing to add, and a
+			// second theme would double-claim it.
+			const option = makeOption();
+			const parent = makeParent();
+			findClustersContainingMemberMock.mockResolvedValue([
+				{
+					statementId: 'topic-A',
+					integratedOptions: ['opt-1', 'other'],
+					derivedByPipeline: 'topic-cluster',
+					hide: false,
+				} as unknown as Statement,
+			]);
+			findSimilarMock.mockResolvedValue([
+				{
+					statement: {
+						statementId: 'topic-B',
+						integratedOptions: ['m1', 'm2'],
+						derivedByPipeline: 'topic-cluster',
+					} as unknown as Statement,
+					similarity: 0.7,
+				},
+			]);
+
+			const result = await runSinglePipeline({
+				option,
+				parent,
+				optionId: 'opt-1',
+				source: 'onCreate',
+			});
+
+			expect(result.action).toBe('skipped');
+			expect(result.reason).toContain('already-in-topic-cluster');
 			expect(attachMock).not.toHaveBeenCalled();
 			expect(spawnMock).not.toHaveBeenCalled();
 		});

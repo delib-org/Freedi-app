@@ -127,3 +127,54 @@ export function passesCohesionGate(assessment: CohesionAssessment, gate: Cohesio
 		assessment.fractionAboveFloor >= gate.quorumFraction
 	);
 }
+
+/**
+ * Topic-cluster attach gate — the same two signals, combined with AND instead
+ * of OR, and anchored on the CENTROID rather than on the best single member.
+ *
+ * Why topic attach needs its own, stricter rule. Measured on the 100-statement
+ * accuracy corpus (`scripts/preflightCorpusCosines.ts`, text-embedding-3-small
+ * with the production question prefix):
+ *
+ *   within-pair (same idea)      0.824 … 0.938   median 0.898
+ *   cross-idea, same topic       0.600 … 0.836   median 0.705
+ *   cross-topic                  0.505 … 0.786   median 0.634
+ *
+ * The last two bands overlap almost completely, so the MAX-over-members
+ * evidence score that drives attach candidacy cannot separate them at all:
+ * 80% of cross-topic pairs clear a 0.60 gate, and one member matching at 0.60
+ * is enough to pull an unrelated statement into the theme. That is exactly the
+ * black hole the benchmark measured — one topic cluster holding all 100
+ * statements and zero syntheses.
+ *
+ * The centroid does separate them, because averaging a theme's members cancels
+ * the per-pair noise that the max deliberately amplifies. Same corpus,
+ * hold-one-out over each theme, on-theme vs off-theme centroid cosine:
+ *
+ *   3 members   best cut 0.773 → F1 0.751
+ *   5 members   best cut 0.802 → F1 0.749
+ *   10 members  best cut 0.816 → F1 0.877  (P 0.943, R 0.820)
+ *
+ * The cut lands on `synthLowerBound` (0.78) across cluster sizes, which is why
+ * the caller passes that as `centroidFloor` rather than `clusterThreshold`.
+ *
+ * The AND is deliberate: with OR, the quorum term alone re-opens the hole
+ * (an off-theme newcomer clears a 0.60 per-member floor against ~80% of
+ * members). Fail-open on no member embeddings, as with the synth gate.
+ *
+ * Note this is a per-language *configuration* result, not a universal constant.
+ * The same measurement on the Hebrew corpus separates at only F1 0.31–0.41
+ * under text-embedding-3-small — no gate rescues that; it needs a better
+ * embedding model (see the study's D3).
+ */
+export function passesTopicCohesionGate(
+	assessment: CohesionAssessment,
+	gate: CohesionGate,
+): boolean {
+	if (assessment.memberCount === 0) return true;
+
+	return (
+		assessment.centroidCosine >= gate.centroidFloor &&
+		assessment.fractionAboveFloor >= gate.quorumFraction
+	);
+}

@@ -8,7 +8,7 @@ import {
 import { claimFieldsForSpawn, generateClaim } from '../../services/claim-registry-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
-import { checkAndUpdateSpawnDebounce, markSpawnedNow } from './debounce';
+import { checkAndUpdateSpawnDebounce, markSpawnedNow, spawnDebounceKey } from './debounce';
 
 function db() {
 	return getFirestore();
@@ -159,19 +159,96 @@ interface SpawnResult {
  * member of the pair. Uses single-field `array-contains` queries (auto-indexed)
  * and filters parent + visibility in memory, so no composite index is needed.
  */
-async function pairAlreadyClustered(option: Statement, sibling: Statement): Promise<boolean> {
+async function pairAlreadyClustered(
+	option: Statement,
+	sibling: Statement,
+	mode: 'synth' | 'cluster',
+): Promise<{ blocked: boolean; topicOwners: Statement[] }> {
+	const topicOwners: Statement[] = [];
 	for (const memberId of [sibling.statementId, option.statementId]) {
 		const snap = await db()
 			.collection(Collections.statements)
 			.where('integratedOptions', 'array-contains', memberId)
 			.get();
-		const hit = snap.docs
+		const owners = snap.docs
 			.map((d) => d.data() as Statement)
-			.some((c) => c.isCluster === true && c.hide !== true && c.parentId === option.parentId);
-		if (hit) return true;
+			.filter((c) => c.isCluster === true && c.hide !== true && c.parentId === option.parentId);
+		for (const owner of owners) {
+			// A SYNTH owner always blocks: the pair is already merged, or one member
+			// is, and spawning again would duplicate it.
+			if (isSynth(owner)) return { blocked: true, topicOwners: [] };
+			// A TOPIC-cluster owner blocks a second topic cluster, but must NOT block
+			// a synthesis. Topic clusters bundle distinct-but-related ideas; two of
+			// those ideas turning out to be the same idea is precisely what synthesis
+			// is for. Blocking it here is what let the first topic cluster to touch a
+			// statement become its permanent owner and starve the synthesis layer.
+			if (mode === 'cluster') return { blocked: true, topicOwners: [] };
+			if (!topicOwners.some((t) => t.statementId === owner.statementId)) {
+				topicOwners.push(owner);
+			}
+		}
 	}
 
-	return false;
+	return { blocked: false, topicOwners };
+}
+
+/**
+ * Take `memberIds` out of a topic cluster and put `replacementId` (the synthesis
+ * that now owns them) in their place, so a statement is never claimed by two
+ * clusters at once and the theme still reaches it — transitively, through the
+ * synthesis.
+ *
+ * Single ownership at the member level, nesting at the cluster level: this is the
+ * shape the scorer and the app's 3-level view both already read.
+ *
+ * Non-fatal on failure — the synthesis itself is already committed by the time
+ * this runs, and a stale membership is repaired by the recompute sweep.
+ */
+export async function rehomeMembersIntoSynth(
+	topicCluster: Statement,
+	memberIds: string[],
+	replacementId: string,
+	triggerSource: string,
+): Promise<void> {
+	const previous = topicCluster.integratedOptions ?? [];
+	const remaining = previous.filter((id) => !memberIds.includes(id));
+	const next = remaining.includes(replacementId) ? remaining : [...remaining, replacementId];
+	if (next.length === previous.length && next.every((id, i) => id === previous[i])) return;
+
+	try {
+		await db()
+			.collection(Collections.statements)
+			.doc(topicCluster.statementId)
+			.update({ integratedOptions: next, lastUpdate: Date.now() });
+	} catch (error) {
+		logger.warn('synthesis.pipeline.spawn: re-homing members into synth failed (non-fatal)', {
+			topicClusterId: topicCluster.statementId,
+			synthId: replacementId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return;
+	}
+
+	logger.info('synthesis.pipeline.nest', {
+		topicClusterId: topicCluster.statementId,
+		synthId: replacementId,
+		movedMembers: memberIds.length,
+		triggerSource,
+	});
+
+	await recordLiveSynthEvent({
+		action: 'attach',
+		clusterId: topicCluster.statementId,
+		optionId: replacementId,
+		reason: 'nest synthesis under topic cluster (members re-homed)',
+		prevState: { integratedOptions: previous },
+		newState: { integratedOptions: next },
+		triggerSource: `${triggerSource}:nest`,
+		parentStatementId: topicCluster.parentId,
+	});
+
+	await enqueueClusterRecompute(topicCluster.statementId, `${triggerSource}:nest`);
 }
 
 /**
@@ -193,8 +270,9 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		stampClaim = false,
 	} = input;
 
+	const debounceKey = spawnDebounceKey(option.parentId, option.statementId, sibling.statementId);
 	if (!bypassDebounce) {
-		const allowed = await checkAndUpdateSpawnDebounce(option.parentId);
+		const allowed = await checkAndUpdateSpawnDebounce(debounceKey);
 		if (!allowed) {
 			logger.info('synthesis.pipeline.spawn: debounced', {
 				parentId: option.parentId,
@@ -210,8 +288,12 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 	// Dedup guard: if a visible cluster already contains either member, a
 	// concurrent spawn or a prior run already covered this pair — don't create a
 	// duplicate synth (the failure that produced duplicate synths in production).
+	// A topic-cluster owner is the one case that does NOT block a synthesis: the
+	// members are re-homed into the new synth below, and the synth takes their
+	// place inside the theme.
 	// Single-field `array-contains` query (auto-indexed); parent filtered in memory.
-	if (await pairAlreadyClustered(option, sibling)) {
+	const ownership = await pairAlreadyClustered(option, sibling, mode);
+	if (ownership.blocked) {
 		logger.info('synthesis.pipeline.spawn: deduped — member already in a visible cluster', {
 			parentId: option.parentId,
 			optionId: option.statementId,
@@ -326,7 +408,19 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 	}
 
 	if (!bypassDebounce) {
-		await markSpawnedNow(option.parentId);
+		await markSpawnedNow(debounceKey);
+	}
+
+	// Nesting: any topic cluster that owned one of the two members now owns the
+	// SYNTH instead, and the members live only in the synth. The theme still
+	// reaches them, one level down.
+	for (const topicOwner of ownership.topicOwners) {
+		await rehomeMembersIntoSynth(
+			topicOwner,
+			[option.statementId, sibling.statementId],
+			clusterId,
+			triggerSource,
+		);
 	}
 
 	logger.info('synthesis.pipeline.spawn', {

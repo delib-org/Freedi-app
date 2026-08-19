@@ -8,7 +8,12 @@ import { loadSynthesisSettingsFromStatement } from './loadSynthesisSettings';
 import type { SynthesisSettings } from './types';
 import { ensureEmbedding } from './embedding';
 import { expandClusterEvidenceViaFullMembers } from './candidateExpansion';
-import { assessCohesion, passesCohesionGate, type CohesionGate } from './clusterCohesion';
+import {
+	assessCohesion,
+	passesCohesionGate,
+	passesTopicCohesionGate,
+	type CohesionGate,
+} from './clusterCohesion';
 import { routeByCosine } from './bandRouter';
 import { runRegistryPass } from './registryPass';
 import { enqueueItem } from '../queue/enqueue';
@@ -18,6 +23,7 @@ import {
 	isSynth,
 	isTopicCluster,
 	queueForReview,
+	rehomeMembersIntoSynth,
 	spawnClusterFromPair,
 	spawnSingletonClaimCluster,
 } from './clusterOps';
@@ -86,6 +92,22 @@ const NEIGHBOR_LIMIT = 10;
  * alone doesn't carry it.
  */
 const SYNTH_COHESION_QUORUM = 0.5;
+
+/**
+ * Same brake for topic-cluster attaches (Pass 2), which used to have none.
+ *
+ * "Lenient by design" turned out to mean "unbounded": with best evidence being
+ * the MAX over members, and 80% of measured cross-topic pairs clearing a 0.60
+ * gate, a single member matching at 0.60 pulled in any statement at all. The
+ * 100-statement accuracy benchmark measured the end state directly — one topic
+ * cluster holding all 100 statements, and zero syntheses, because a clustered
+ * option was then excluded from spawning.
+ *
+ * `passesTopicCohesionGate` combines the two cohesion signals with AND and
+ * anchors on the centroid; see clusterCohesion.ts for the measured separation
+ * that sets the floor at `synthLowerBound`.
+ */
+const TOPIC_COHESION_QUORUM = 0.5;
 
 export interface PipelineInput {
 	optionId: string;
@@ -239,10 +261,23 @@ async function executePipeline(
 	// this option and skip if any live (non-hidden) cluster already owns it, so
 	// the pipeline is idempotent with respect to cluster membership.
 	const owningClusters = await findClustersContainingMember(option.statementId);
-	const liveOwner = owningClusters.find((c) => c.hide !== true);
-	if (liveOwner) {
-		return skipped(`already-member-of-cluster:${liveOwner.statementId}`, startedAt);
+	const liveOwners = owningClusters.filter((c) => c.hide !== true);
+	// A SYNTH owner is terminal: the option's meaning is already merged, and
+	// re-entering the attach passes would add it to a SECOND cluster.
+	const synthOwner = liveOwners.find((c) => isSynth(c));
+	if (synthOwner) {
+		return skipped(`already-member-of-cluster:${synthOwner.statementId}`, startedAt);
 	}
+	// A TOPIC-cluster owner is NOT terminal. Topic clusters bundle
+	// distinct-but-related ideas under a theme; a statement sitting in one has
+	// not yet been merged with anything, so its twin must still be able to form
+	// a synthesis with it. Treating topic membership as terminal is what made the
+	// first cluster to touch a statement its permanent owner — measured as the
+	// dominant cause of missed pairs on the accuracy benchmark. Continue, but
+	// only down the synthesis paths: this option already has a theme, so Pass 2
+	// (topic attach), Pass 4 (review) and Pass 5 (singleton) have nothing to add.
+	const topicOwners = liveOwners.filter((c) => isTopicCluster(c));
+	const alreadyInTopic = topicOwners.length > 0;
 
 	const parent = input.parent ?? (await loadStatement(option.parentId));
 	if (!parent) return skipped('parent-not-found', startedAt);
@@ -283,6 +318,9 @@ async function executePipeline(
 
 	const candidates = neighbors.filter((n) => n.statement.statementId !== option.statementId);
 	const triggerSource = `pipeline:${input.source}`;
+	if (candidates.length === 0 && alreadyInTopic) {
+		return skipped('already-in-topic-cluster:no-synth-candidates', startedAt);
+	}
 	if (candidates.length === 0) {
 		// ★ REGISTRY PASS (zero-candidate path). Vector search found NOTHING —
 		// exactly the "same meaning, distant embeddings" recall gap. Classify
@@ -461,6 +499,18 @@ async function executePipeline(
 			return skipped('attach-already-member-or-failed', startedAt);
 		}
 
+		// The option now lives in the synth. Any theme that held it directly holds
+		// the synth instead, so it is never claimed twice and the theme still
+		// reaches it one level down.
+		for (const topicOwner of topicOwners) {
+			await rehomeMembersIntoSynth(
+				topicOwner,
+				[option.statementId],
+				synthMatch.cluster.statementId,
+				triggerSource,
+			);
+		}
+
 		return {
 			action: 'attached',
 			reason: `synth attach cosine=${synthMatch.bestSimilarity.toFixed(3)} ≥ ${settings.attachThreshold}${synthMatch.viaMember ? ' (via member)' : ''} cohesion(centroid=${cohesion.centroidCosine.toFixed(2)}, quorum=${cohesion.fractionAboveFloor.toFixed(2)})`,
@@ -472,12 +522,40 @@ async function executePipeline(
 
 	// =====================================================================
 	// PASS 2 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
-	// ≥ clusterThreshold
+	// ≥ clusterThreshold AND cohesion with the theme as a whole.
 	// =====================================================================
-	const topicMatch = Array.from(clusterEvidence.values())
-		.filter((x) => isTopicCluster(x.cluster) && x.bestSimilarity >= settings.clusterThreshold)
-		.sort((a, b) => b.bestSimilarity - a.bestSimilarity)[0];
-	if (topicMatch) {
+	// `bestSimilarity` (the MAX over members) is the candidacy signal only. On a
+	// single-question corpus the max cannot tell "same theme" from "same
+	// question" — measured, 80% of cross-topic pairs clear a 0.60 gate — so the
+	// attach itself is decided on the member CENTROID, which does separate them.
+	// Skipped entirely when the option already belongs to a theme.
+	const topicGate: CohesionGate = {
+		centroidFloor: settings.synthLowerBound,
+		memberFloor: settings.clusterThreshold,
+		quorumFraction: TOPIC_COHESION_QUORUM,
+	};
+	const topicMatches = alreadyInTopic
+		? []
+		: Array.from(clusterEvidence.values())
+				.filter((x) => isTopicCluster(x.cluster) && x.bestSimilarity >= settings.clusterThreshold)
+				.sort((a, b) => b.bestSimilarity - a.bestSimilarity);
+	for (const topicMatch of topicMatches) {
+		const memberVecs = (topicMatch.cluster.integratedOptions ?? [])
+			.map((id) => memberEmbeddings.get(id))
+			.filter((v): v is number[] => Array.isArray(v) && v.length > 0);
+		const cohesion = assessCohesion(memberVecs, embedding, topicGate.memberFloor);
+		if (!passesTopicCohesionGate(cohesion, topicGate)) {
+			logger.info('synthesis.pipeline.topicAttach.cohesionRejected', {
+				optionId: option.statementId,
+				clusterId: topicMatch.cluster.statementId,
+				bestSimilarity: Number(topicMatch.bestSimilarity.toFixed(3)),
+				centroidCosine: Number(cohesion.centroidCosine.toFixed(3)),
+				fractionAboveFloor: Number(cohesion.fractionAboveFloor.toFixed(2)),
+				memberCount: cohesion.memberCount,
+			});
+			continue;
+		}
+
 		const result = await attachOptionToCluster({
 			cluster: topicMatch.cluster,
 			option,
@@ -490,7 +568,7 @@ async function executePipeline(
 
 		return {
 			action: 'attached',
-			reason: `topic-cluster attach cosine=${topicMatch.bestSimilarity.toFixed(3)} ≥ ${settings.clusterThreshold}${topicMatch.viaMember ? ' (via member)' : ''}`,
+			reason: `topic-cluster attach cosine=${topicMatch.bestSimilarity.toFixed(3)} ≥ ${settings.clusterThreshold}${topicMatch.viaMember ? ' (via member)' : ''} cohesion(centroid=${cohesion.centroidCosine.toFixed(2)}, quorum=${cohesion.fractionAboveFloor.toFixed(2)})`,
 			clusterId: topicMatch.cluster.statementId,
 			llmCalled: false,
 			durationMs: Date.now() - startedAt,
@@ -525,10 +603,29 @@ async function executePipeline(
 		}
 	}
 
-	// Top plain option for spawn — must NOT already be a member of any
-	// cluster in candidates, or we'd create a duplicate synth sharing
-	// members with an existing one.
+	// Spawn candidacy.
+	//
+	// A sibling already inside a SYNTH is excluded: spawning from it would
+	// create a second synth sharing its member. A sibling inside a TOPIC
+	// CLUSTER is NOT excluded — it has been given a theme, not a meaning, and
+	// its twin must still be able to merge with it. When that spawn succeeds,
+	// `spawnClusterFromPair` re-homes the members into the new synth and puts
+	// the synth in their place inside the theme.
+	//
+	// Excluding topic members here was, on the accuracy benchmark, the single
+	// largest source of missed pairs: one early topic cluster starved the
+	// synthesis layer for the rest of the run.
+	const synthMemberIds = new Set<string>();
+	for (const c of candidates) {
+		if (!isCluster(c.statement) || !isSynth(c.statement)) continue;
+		for (const m of c.statement.integratedOptions ?? []) synthMemberIds.add(m);
+	}
 	const topPlainOption = candidates.find(
+		(c) => !isCluster(c.statement) && !synthMemberIds.has(c.statement.statementId),
+	);
+	// The topic route still needs a sibling free of every cluster — two themes
+	// must not claim the same statement.
+	const topFreeOption = candidates.find(
 		(c) => !isCluster(c.statement) && !memberOptionIds.has(c.statement.statementId),
 	);
 
@@ -545,10 +642,18 @@ async function executePipeline(
 		const route = routeByCosine(topPlainOption.similarity, settings);
 
 		if (route === 'spawn-topic-cluster') {
+			// This option already has a theme; a second one would double-claim it.
+			if (alreadyInTopic) {
+				return skipped('already-in-topic-cluster:sub-synth-band', startedAt);
+			}
+			// Spawning a theme needs a sibling no other cluster owns.
+			if (!topFreeOption || topFreeOption.similarity < settings.clusterThreshold) {
+				return skipped('no-unclaimed-sibling-for-topic-spawn', startedAt);
+			}
 			const clusterAttempt = await spawnClusterFromPair({
 				option,
-				sibling: topPlainOption.statement,
-				similarity: topPlainOption.similarity,
+				sibling: topFreeOption.statement,
+				similarity: topFreeOption.similarity,
 				parentStatement: parent,
 				triggerSource,
 				bypassDebounce,
@@ -592,10 +697,16 @@ async function executePipeline(
 			};
 		}
 		if (synthAttempt.cannotSynthesize) {
+			// The LLM says these are distinct ideas, so the pair becomes a theme
+			// instead. A theme needs a sibling no other cluster owns, and this
+			// option must not already have one.
+			if (alreadyInTopic || !topFreeOption || topFreeOption.similarity < settings.clusterThreshold) {
+				return skipped('cluster-fallback-no-unclaimed-sibling', startedAt);
+			}
 			const clusterFallback = await spawnClusterFromPair({
 				option,
-				sibling: topPlainOption.statement,
-				similarity: topPlainOption.similarity,
+				sibling: topFreeOption.statement,
+				similarity: topFreeOption.similarity,
 				parentStatement: parent,
 				triggerSource,
 				bypassDebounce: true,
@@ -605,7 +716,7 @@ async function executePipeline(
 			if (clusterFallback.spawned) {
 				return {
 					action: 'spawned',
-					reason: `spawn cluster (LLM refused synth) at cosine=${topPlainOption.similarity.toFixed(3)}`,
+					reason: `spawn cluster (LLM refused synth) at cosine=${topFreeOption.similarity.toFixed(3)}`,
 					clusterId: clusterFallback.clusterId,
 					llmCalled: true,
 					durationMs: Date.now() - startedAt,
@@ -625,6 +736,11 @@ async function executePipeline(
 	// PASS 4 — REVIEW: top candidate ≥ reviewLowerBound
 	// (guaranteed by vector-search filter — anything in `candidates` is above)
 	// =====================================================================
+	// An option that already sits in a theme is placed; there is nothing for an
+	// admin to review and nothing to seed.
+	if (alreadyInTopic) {
+		return skipped('already-in-topic-cluster:no-synth-match', startedAt);
+	}
 	await queueForReview({
 		option,
 		sibling: top.statement,
