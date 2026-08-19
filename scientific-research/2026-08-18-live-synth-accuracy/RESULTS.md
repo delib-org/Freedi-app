@@ -16,6 +16,43 @@ and `score100.mjs` for the implementation.
 | `en-seed42-cluster078-debounce1500` | en | + `SYNTHESIS_SPAWN_DEBOUNCE_MS=1500` | **0.592** | 0.765 | 0.331 | 31/50 | 31 | 6 |
 | `he-seed42-cluster078-debounce1500` | he | same fixes as the English 0.592 run | **0.066** | 0.000 | 0.166 | 0/50 | 0 | 1 |
 | `he-seed42-large-cluster084` | he | + `text-embedding-3-large`, `clusterThreshold`/`synthLowerBound=0.84` | **0.369** | 0.380 | 0.352 | 27/50 | 19 | 3 |
+| `en-seed42-cohesion-pairdebounce` | en | centroid topic gate + per-pair debounce, **shipped thresholds** | **0.207** | 0.077 | 0.401 | 2/50 | 2 | 14 |
+| `en-seed42-passorder` | en | + synthesis outranks theming; failed spawns re-queued | **0.711** | 0.926 | 0.388 | 50/50 | 48 | 13 |
+| `en-seed42-llm-themes` | en | + LLM theme assignment; themes born from syntheses | **0.730** | 0.895 | 0.481 | 47/50\* | 45 | 18 |
+| `en-seed42-consolidated` | en | + theme consolidation; reJudge judged on members; Pass 3b | **0.910** | **1.000** | 0.775 | **50/50** | 50 | 11 |
+
+\* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
+see Finding 8. That build's true pair recovery was 50/50.
+
+Every run from `en-seed42-cohesion-pairdebounce` onward uses **shipped thresholds**
+with no `--set` overrides, unlike the tuned runs above them. All are single-load
+emulator runs with HEAD verified before and after and `functions/lib` mtimes
+unchanged across the run; the earlier `0.691` intermediate is excluded from this
+table because a concurrent rebuild made it unattributable.
+
+## Where it ended up
+
+`en-seed42-consolidated` reproduces the corpus's synthesis ground truth exactly:
+**50 syntheses, every one holding precisely its two paraphrases**, P = R = F1 = ARI
+= 1.000, zero false merges, 100/100 coverage. The theme layer reaches F1 0.775 with
+11 headings against a true 10, and the countable cluster score moves to 0.840 after
+sitting at exactly 0.500 for three consecutive rounds.
+
+The headline arc, all at shipped thresholds: **0.067 → 0.207 → 0.711 → 0.730 →
+0.910**.
+
+Three caveats worth keeping attached to that number:
+
+- **Single seed.** Every run above uses seed 42. Arrival order decides which theme
+  gets created first and what a newcomer's neighbourhood looks like, and Finding 4
+  showed cluster-birth timing predicting the outcome in 48 of 50 pairs. Until the
+  seed sweep lands, 0.910 is seed 42's accuracy.
+- **The reJudge merge gate is unproven.** It reported zero refusals because the
+  pipeline produced no duplicate synths for it to consider. Nothing to refuse is
+  not the same as refusing nothing, and this corpus cannot tell the two apart.
+- **`attach.titleOnlyRejected` fired once in five rounds**, on a genuinely marginal
+  case (title 0.852, members 0.836, gate 0.85). Correctly calibrated, but doing
+  almost nothing; do not credit it with the precision recovery.
 
 ## Finding 1 — the topic-cluster band is a black hole (shipped defaults, English)
 
@@ -199,3 +236,96 @@ precision. That tuning pass is the obvious next experiment.
    pipeline with no audit row and no retry, which cost one pair at cosine 0.898.
 5. **Add a synth → topic nesting pass.** Without it the composite cannot exceed
    ~0.68 even with every synthesis perfect. This is a design change, not a tuning one.
+
+## Finding 6 — passes must run most-specific-first, or the general claim wins on the specific claim's evidence
+
+Cohesion-gating the topic attach (Finding 1's fix) worked exactly as intended and
+took the score to **0.207** — worse than the tuned run it replaced. The cluster half
+improved as designed; the synth half collapsed to 2 of 50 pairs, with the synthesis
+LLM consulted 4 times in a 100-statement run.
+
+The cause was pass ordering, and it was not introduced by the gate — the gate merely
+exposed it by making themes form early and cleanly. Topic attach ran before synth
+spawn, and **a theme that already holds your twin will always look cohesive to you,
+because your twin is inside its centroid.** Measured on the earlier runs: in 17 of 23
+topic attaches, the member whose cosine justified the attach *was the statement's own
+twin*. The pipeline used the twin to file the statement away from it.
+
+Saying two statements are the same idea is a stronger claim than saying they share a
+theme, so the specific claim now gets first refusal:
+
+```
+1 synth attach → 2 SYNTH SPAWN → 3 topic attach → 4 registry → 5 topic spawn → 6 review
+```
+
+A `cannotSynthesize` refusal is no longer terminal at the spawn site — "these are
+distinct ideas" is precisely the case *for* theming them. Result: **0.711**, pair
+recovery 50/50, at shipped thresholds for the first time.
+
+## Finding 7 — theme membership is not in the geometry, at any threshold or model
+
+With the synth layer solved, the theme layer was the entire remaining gap. It is not
+a tuning gap. Measured on the 50 ground-truth synthesis centroids:
+
+|  | same-theme pairs | different-theme pairs |
+| --- | --- | --- |
+| median cosine | 0.743 | 0.670 |
+
+| mechanism | best achievable F1 |
+| --- | --- |
+| best single pairwise cut, `text-embedding-3-small` | 0.480 |
+| best single pairwise cut, `text-embedding-3-large` @1536 | 0.535 |
+| global agglomerative clustering to the true k=10 | 0.432 |
+| *what the shipped greedy pipeline actually reached* | *0.388* |
+
+So the pipeline was already at ~90% of its mechanism's ceiling, a better embedding
+model buys ~0.05, and a global re-clustering sweep buys **nothing** — it scores below
+what greedy attach already achieves. The bands overlap; theme membership is a
+semantic judgement that embedding distance does not encode on a single-question
+corpus, where every statement shares the question's vocabulary.
+
+Moving the decision to an LLM took topic F1 to 0.481 and then, with consolidation,
+to **0.775**. This is the same conclusion the claim registry reached one layer down
+(95% vs embeddings' 0.5%) and the same one the cross-synth merge gate reached: cosine
+proposes, judgement disposes.
+
+Two structural consequences, both measured:
+
+- **Themes must be born from syntheses, not from pairs of raw options.** Cosine
+  cannot tell whether two raw options share a theme, so that path spawned themes it
+  could not see were redundant — one run produced "Public Service Access",
+  "Essential service accessibility", "Public access and mobility" and "Community
+  Support Services" side by side.
+- **Themes need consolidating afterwards.** They are created in arrival order, so
+  the first synthesis under a question *must* create one, which makes early headings
+  narrower than the topic they end up representing. Left alone this produced 18
+  headings for 10 topics with ten holding a single synthesis. One judge call per
+  sweep over the whole heading set brought 20 created → 11 final, and moved the
+  countable cluster score off 0.500 to **0.840**.
+
+## Finding 8 — two measurement bugs that each inverted a conclusion
+
+Both were found by auditing artifacts rather than by reading code, and each had
+already caused a wrong call to be reported.
+
+**The harness re-implemented the code under test.** `functions/scripts/runReJudgeMerge.ts`
+described itself as a "faithful re-implementation" of the scheduled cross-synth merge.
+It was faithful when written and stopped being so the moment the production sweep
+gained an LLM merge gate — the pump kept merging on cosine alone. The only symptom
+was a diagnostic counter reading 0, which is indistinguishable from a gate that ran
+and approved. A harness that re-implements the code under test measures the copy, and
+the divergence appears exactly when it matters: right after a fix lands. The pump now
+calls the production function.
+
+**Silence is not the same as done.** `waitForSettle` waits for a quiet window, but
+the functions emulator serialises trigger executions, so a spawn that is queued but
+not started writes nothing and looks identical to a finished run. A 2.5s window was
+ample when the pipeline was pure cosine; a spawn now costs 8-10s. On the `llm-themes`
+run the last three arrivals' spawns landed 3-29 seconds *after* the exporter
+snapshotted, and the run reported 47/50 for a pipeline that had achieved 50/50 — with
+three ground-truth pairs scored as failures and a fourth cluster lost entirely. The
+window is now 12s, two consecutive quiet windows are required, and the final export is
+taken twice and trusted only when unchanged.
+
+Both bugs share a shape worth naming: **a measurement that fails silently in the
+direction of looking plausible.** Neither produced an error; both produced a number.
