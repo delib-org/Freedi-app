@@ -6,6 +6,7 @@ import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
+import { consolidateThemes } from '../pipeline/consolidateThemes';
 
 /**
  * Merge gate for reJudge.
@@ -309,26 +310,59 @@ async function mergeSynths(
 	}
 }
 
-async function processParent(
+/**
+ * Exported so the emulator pump (`functions/scripts/runReJudgeMerge.ts`) can run
+ * the REAL sweep rather than a copy of it.
+ *
+ * The pump used to be a "faithful re-implementation", and it silently stopped
+ * being faithful the moment this file gained an LLM merge gate: a certified
+ * benchmark run reported zero merge refusals, which read as "the gate approved
+ * the bad merges" when in fact the gate never executed. A benchmark that
+ * re-implements the code under test measures the copy.
+ */
+export async function reJudgeProcessParent(
 	parentId: string,
 	synthDocs: Statement[],
 ): Promise<{
 	merges: number;
 }> {
-	if (synthDocs.length < 2) return { merges: 0 };
+	const questionContext = await loadQuestionContext(parentId);
+	const merges = await mergeDuplicateSynths(parentId, synthDocs, questionContext);
 
-	const synths: CandidateSynth[] = synthDocs.map((d) => ({
-		doc: d,
-		members: Array.isArray(d.integratedOptions) ? [...d.integratedOptions] : [],
-	}));
+	// Theme-level counterpart of the synth merge above: headings grow one at a
+	// time as ideas arrive, so early ones are narrower than the topic they end up
+	// representing and nothing else revisits them. Runs unconditionally — it is
+	// independent of how many syntheses exist, and gating it behind the synth
+	// merge would silently skip it on exactly the questions with few syntheses.
+	try {
+		const themeResult = await consolidateThemes(parentId, questionContext, 'reJudge');
+		if (themeResult.merges > 0) {
+			logger.info('synthesis.reJudge.themesConsolidated', {
+				parentId,
+				merges: themeResult.merges,
+				themesBefore: themeResult.themesBefore,
+				themesAfter: themeResult.themesAfter,
+			});
+		}
+	} catch (error) {
+		logger.warn('synthesis.reJudge: theme consolidation failed (non-fatal)', {
+			parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
 
-	// The question text the merge judge reasons against. Falls back to the id so
-	// a missing parent doc degrades the prompt rather than skipping the sweep.
-	let questionContext = parentId;
+	return { merges };
+}
+
+/**
+ * The question text the judges reason against. Falls back to the id so a missing
+ * parent doc degrades the prompt rather than skipping the sweep.
+ */
+async function loadQuestionContext(parentId: string): Promise<string> {
 	try {
 		const parentSnap = await db().collection(Collections.statements).doc(parentId).get();
 		const parentDoc = parentSnap.exists ? (parentSnap.data() as Statement) : null;
-		if (parentDoc?.statement) questionContext = parentDoc.statement;
+		if (parentDoc?.statement) return parentDoc.statement;
 	} catch (error) {
 		logger.warn('synthesis.reJudge: parent fetch failed, using id as context', {
 			parentId,
@@ -336,10 +370,25 @@ async function processParent(
 		});
 	}
 
+	return parentId;
+}
+
+async function mergeDuplicateSynths(
+	parentId: string,
+	synthDocs: Statement[],
+	questionContext: string,
+): Promise<number> {
+	if (synthDocs.length < 2) return 0;
+
+	const synths: CandidateSynth[] = synthDocs.map((d) => ({
+		doc: d,
+		members: Array.isArray(d.integratedOptions) ? [...d.integratedOptions] : [],
+	}));
+
 	// Batch-fetch every member's embedding across all synths in this parent.
 	const allMemberIds = new Set<string>();
 	for (const s of synths) for (const m of s.members) allMemberIds.add(m);
-	if (allMemberIds.size === 0) return { merges: 0 };
+	if (allMemberIds.size === 0) return 0;
 
 	let embeddings: Map<string, number[]> | undefined;
 	try {
@@ -351,9 +400,9 @@ async function processParent(
 			error: error instanceof Error ? error.message : String(error),
 		});
 
-		return { merges: 0 };
+		return 0;
 	}
-	if (!embeddings || typeof embeddings.get !== 'function') return { merges: 0 };
+	if (!embeddings || typeof embeddings.get !== 'function') return 0;
 
 	const threshold = REJUDGE_MERGE_THRESHOLD;
 	let merges = 0;
@@ -383,7 +432,7 @@ async function processParent(
 		merges++;
 	}
 
-	return { merges };
+	return merges;
 }
 
 export const fn_synthesisReJudge = onSchedule(
@@ -423,7 +472,7 @@ export const fn_synthesisReJudge = onSchedule(
 				if (synths.length < 2) continue;
 				parentsProcessed++;
 				try {
-					const result = await processParent(parentId, synths);
+					const result = await reJudgeProcessParent(parentId, synths);
 					totalMerges += result.merges;
 					if (result.merges > 0) {
 						logger.info('synthesis.reJudge.parent', {

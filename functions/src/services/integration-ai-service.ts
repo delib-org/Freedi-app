@@ -814,3 +814,112 @@ function getThemeAssignmentModel(): CompatGenerativeModel {
 
 	return _themeModel;
 }
+
+export interface ThemeMergeGroup {
+	/** Theme ids that name the same topic and should become one. */
+	ids: string[];
+	/** Short label for the merged topic. */
+	title: string;
+}
+
+/**
+ * Find themes that name the same topic and should be one.
+ *
+ * Themes are created in arrival order, so the first synthesis under a question
+ * necessarily creates a theme — there is nothing yet to file it under. That is
+ * correct behaviour with an unavoidable side effect: early themes are narrower
+ * than they should be, named after whatever idea happened to arrive first, and
+ * nothing ever revisits them. Measured on a 100-statement run: 18 themes for 10
+ * true topics, ten of them holding exactly one synthesis, with narrow labels
+ * like "Smaller class sizes" and "Student nutrition programs" sitting beside a
+ * broad "School facility modernization" that should have absorbed both.
+ *
+ * One call per sweep, with the whole list in view — the judgement is about the
+ * set, not about pairs, and pairwise merging would rebuild the same greedy
+ * mechanism that could not do this in the first place.
+ *
+ * Conservative by construction: returns only groups it is confident about, and
+ * an empty list is a perfectly good answer.
+ */
+export async function groupEquivalentThemes(input: {
+	themes: ThemeOption[];
+	questionContext: string;
+}): Promise<ThemeMergeGroup[]> {
+	const { themes, questionContext } = input;
+	if (themes.length < 3) return [];
+
+	const themeLines = themes
+		.map((t, i) => `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}`)
+		.join('\n');
+
+	const prompt = `You are tidying the topic headings of a community consultation.
+
+QUESTION: "${questionContext}"
+
+CURRENT TOPICS:
+${themeLines}
+
+These headings grew one at a time as ideas arrived, so some are narrower than
+they should be and several may name the same area of concern.
+
+TASK: Find groups of topics that should be ONE topic, and give each group a
+heading that covers it.
+
+Group topics that describe the same area of life or the same domain of city
+activity — a narrow heading should be absorbed into a broader one that covers it
+("Smaller class sizes" and "Student nutrition programs" both belong under
+schools). Do NOT group topics merely because both are about the city, or because
+both are broadly civic; the result must still be a heading a reader would find
+useful for browsing.
+
+Leave a topic out of every group when it genuinely stands alone. Returning no
+groups at all is a valid answer.
+
+Return JSON:
+{
+  "groups": [
+    { "ids": ["id1", "id2"], "title": "3–6 word heading for the merged topic" }
+  ]
+}`;
+
+	try {
+		const model = getThemeAssignmentModel();
+		const result = await model.generateContent(prompt);
+		const responseText = result.response
+			.text()
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
+		const parsed = JSON.parse(responseText);
+		if (!Array.isArray(parsed.groups)) return [];
+
+		const known = new Set(themes.map((t) => t.id));
+		const claimed = new Set<string>();
+		const groups: ThemeMergeGroup[] = [];
+		for (const raw of parsed.groups) {
+			if (!raw || !Array.isArray(raw.ids)) continue;
+			// Only ids that were offered, and no theme in two groups — either would
+			// produce a merge that destroys membership.
+			const ids = raw.ids.filter(
+				(id: unknown): id is string =>
+					typeof id === 'string' && known.has(id) && !claimed.has(id),
+			);
+			if (ids.length < 2) continue;
+			ids.forEach((id: string) => claimed.add(id));
+			const title =
+				typeof raw.title === 'string' && raw.title.trim()
+					? raw.title.trim()
+					: (themes.find((t) => t.id === ids[0])?.title ?? '');
+			if (!title) continue;
+			groups.push({ ids, title });
+		}
+
+		return groups;
+	} catch (error) {
+		logger.warn('groupEquivalentThemes: error, leaving themes as they are', {
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return [];
+	}
+}
