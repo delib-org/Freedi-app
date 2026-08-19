@@ -1,8 +1,65 @@
 # Plan — fix the live clustering & synthesis defects the accuracy benchmark found
 
-**Status:** benchmark built and committed on `dev`; three defects diagnosed with
-numbers; one partially fixed; nothing deployed.
+**Status:** ✅ **executed 2026-08-19.** English went **0.067 → 0.910** at shipped
+thresholds, with the synthesis layer reproducing the corpus ground truth exactly
+(50 syntheses, P = R = F1 = ARI = 1.000, zero false merges, 100/100 coverage).
+Nothing deployed. Full results and findings in
+`scientific-research/2026-08-18-live-synth-accuracy/RESULTS.md`.
+
 **Written:** 2026-08-19. Self-contained — everything needed to start from a cold context.
+
+---
+
+## Outcome against the plan
+
+| Step | Planned | What happened |
+| --- | --- | --- |
+| 1 — cohesion-gate topic attach, let clustered options pair | fixes D1 | ✅ Done, and it **regressed the score to 0.207** before it helped — see "what the plan got wrong" below. `8d1aadffc` |
+| 2 — scope the spawn debounce | fixes D2 | ✅ Done, keyed per unordered pair. `8d1aadffc`. Note the debounce has **never fired in five runs** at shipped settings. |
+| 3 — revisit set-aside statements | residual recall | ❌ **Withdrawn.** The raw data showed review-queued was not a sink: 35-36 of the 37 were rescued when their twin arrived, and it accounted for ~0 of the 19 missed pairs. Replaced by *never dropping a failed spawn*, which the same breakdown pointed at. |
+| 4 — nest syntheses under themes | fixes D4, lifts the ceiling | ✅ Done. `a75a1ff84`, then rebuilt around an LLM judge in `7462ecee3`. |
+| 5 — non-English to `text-embedding-3-large` | fixes D3 | ⏸ **Measured, not switched.** Hebrew twin visibility within `NEIGHBOR_LIMIT` goes 79/100 → **99/100**, nearest-neighbour 56 → **89**. Still needs a migration decision — the two models' vectors are not comparable. |
+| 6 — confirm across seeds {42, 7, 1234} | generalise | ⏳ In progress. Everything above is **seed 42 only**. |
+
+### What the plan got wrong, and what it could not have known
+
+- **Step 1 was correct and made things worse.** Cohesion-gating the topic attach
+  worked exactly as designed and dropped the score to 0.207, because it exposed a
+  defect the plan never names: **pass ordering**. Topic attach ran before synth
+  spawn, and a theme that already holds your twin always looks cohesive to you —
+  its centroid contains your twin. In 17 of 23 topic attaches the member whose
+  cosine justified the attach *was the statement's own twin*. Fixing the order was
+  worth more than every threshold change combined (0.207 → 0.711).
+- **Step 4's ceiling estimate was too pessimistic** — the plan put the cap at
+  ≈0.73 with perfect syntheses. Actual, with nesting plus LLM theming plus
+  consolidation: **0.910**.
+- **The plan assumed the theme layer was a tuning problem.** It is not. Measured on
+  the 50 synthesis centroids, same-theme pairs sit at median cosine 0.743 and
+  different-theme at 0.670; the best single pairwise cut reaches F1 0.480, a better
+  embedding model 0.535, and global clustering to the true k=10 scores 0.432 —
+  *below* what greedy attach already achieved. Theme membership is a judgement, not
+  a distance. That is what took topic F1 from 0.388 to 0.775.
+- **Two measurement bugs each inverted a conclusion.** The reJudge pump was a
+  hand-written copy of the code under test and silently stopped matching it; and
+  the settle detector mistook emulator silence for completion, scoring three
+  ground-truth pairs as failures that the pipeline had merged seconds after the
+  export. Both failed *in the direction of looking plausible*. See RESULTS.md
+  Finding 8.
+
+### What is left
+
+1. **Seed sweep** {7, 1234} — in flight. Until it lands, 0.910 is seed 42's number.
+2. **Hebrew** — the model switch is measured and the theme layer is now
+   language-independent (the judge reads Hebrew), so Hebrew should benefit from
+   everything above without the model change. The change is worth making anyway for
+   the synth layer; it needs a migration strategy first.
+3. **The reJudge merge gate is unproven.** Zero refusals because no duplicate
+   synths arose for it to consider. Needs a corpus that produces duplicates.
+4. **`review-queued` is still ~34 per run** and nothing drains it. It no longer
+   costs coverage, but a third of the corpus passing through an unattended queue is
+   worth a second look.
+5. **Deploy** is still a separate, explicit decision — `npm run deploy:f:test`
+   first, never straight to prod.
 
 ---
 
