@@ -1,0 +1,478 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "YpobBkTbkcLP",
+        "title": "Build Physically Protected Bike Lanes Separate From Traffic",
+        "members": [
+          {
+            "id": "PWmAd83BErx4"
+          },
+          {
+            "id": "Ulaqfgnlhyfn"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aKKUFDlF98QN",
+        "title": "Create a Public Municipal Rent Registry for Transparent Market Pricing",
+        "members": [
+          {
+            "id": "0NMPWl4t2JHb"
+          },
+          {
+            "id": "X6VSpEhk2PK-"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "1i9IeV9ebAmD",
+        "title": "Neighborhood public amenities",
+        "members": [
+          {
+            "id": "SWyCYJlPxYTd"
+          },
+          {
+            "id": "VoyQ8MzjpRUa"
+          },
+          {
+            "id": "5FULLRd5xYNi"
+          },
+          {
+            "id": "TQrFPrb55v6E"
+          },
+          {
+            "id": "V-pHZs4qZJO9"
+          },
+          {
+            "id": "T9fgENmdilYU"
+          },
+          {
+            "id": "Zg0QtMfUemFV"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "BDUYxMu8MJRq",
+        "title": "Healthcare access and prevention",
+        "members": [
+          {
+            "id": "CFHOrAy6MPIr"
+          },
+          {
+            "id": "5W8QoQ-IYLCS"
+          },
+          {
+            "id": "-Qr6qcRcPgqq"
+          },
+          {
+            "id": "WL8VA9yMFVWR"
+          },
+          {
+            "id": "4u7kFiueBq9k"
+          },
+          {
+            "id": "w7LYeZXYwLiy"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "HToymTJXh8F7",
+        "title": "Community safety and emergency response",
+        "members": [
+          {
+            "id": "f4RQ8T6pt161"
+          },
+          {
+            "id": "r53OCqhlhp-g"
+          },
+          {
+            "id": "rmH91ysZANiC"
+          },
+          {
+            "id": "gmrVRseshh-n"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "T0aI7pdICiMm",
+        "title": "Accessible public services",
+        "members": [
+          {
+            "id": "J7iPkDY6vmga"
+          },
+          {
+            "id": "bR95fFluBa4i"
+          },
+          {
+            "id": "n3363Ya0f82U"
+          },
+          {
+            "id": "V2rc0IyzRsuY"
+          },
+          {
+            "id": "-vdz5S0PyEfM"
+          },
+          {
+            "id": "JBsFSPoU7550"
+          },
+          {
+            "id": "Py6qE8aUHeQN"
+          },
+          {
+            "id": "lTwB5zEfvmfx"
+          },
+          {
+            "id": "1KWSx2B0JvX0"
+          },
+          {
+            "id": "4yrKKC6ydMoa"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "TryP9M8-Lc8e",
+        "title": "Apoyo educativo estudiantil",
+        "members": [
+          {
+            "id": "fiAaRcHeg-MF"
+          },
+          {
+            "id": "lHRg3Uth5s2H"
+          },
+          {
+            "id": "IK4zHCeKcrJS"
+          },
+          {
+            "id": "KDk5O4ZvK3b4"
+          },
+          {
+            "id": "bdRqhnbYbrpP"
+          },
+          {
+            "id": "P8xDUVOIfiWw"
+          },
+          {
+            "id": "Bw9ASV1pQAfN"
+          },
+          {
+            "id": "v-IcToGkrS4R"
+          },
+          {
+            "id": "XXpX9DA4wjGP"
+          },
+          {
+            "id": "H-TzfQJSIDIJ"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "UtVE6tG1O07s",
+        "title": "Community wellbeing and local development",
+        "members": [
+          {
+            "id": "DXRH4P5gWm-M"
+          },
+          {
+            "id": "J8GSx3VND62M"
+          },
+          {
+            "id": "1MAqxLsyYexl"
+          },
+          {
+            "id": "hCq2tMhJoUnr"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "XXX7ZOlhfKLv",
+        "title": "Municipal support services",
+        "members": [
+          {
+            "id": "gkIqo9JQFmwD"
+          },
+          {
+            "id": "rzzGRbIEoXeF"
+          },
+          {
+            "id": "BOr-RSxO-9Yw"
+          },
+          {
+            "id": "MYZ-TNR36d7Y"
+          },
+          {
+            "id": "OxA5M-pVyoJi"
+          },
+          {
+            "id": "FaKOW6POQYVK"
+          },
+          {
+            "id": "D6j3Xo2ArrIf"
+          },
+          {
+            "id": "4AUdgBeRJoVf"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "bldTqjCut5XS",
+        "title": "Community beautification and sustainability",
+        "members": [
+          {
+            "id": "2ZtpWcxskqeK"
+          },
+          {
+            "id": "vPENpW648-0K"
+          },
+          {
+            "id": "SJg-mWduaGLL"
+          },
+          {
+            "id": "mpv8rGA4xOKy"
+          },
+          {
+            "id": "zvyO7b3z8A7x"
+          },
+          {
+            "id": "RfiTK5FFCHOm"
+          },
+          {
+            "id": "gUp7HKt04A-L"
+          },
+          {
+            "id": "fEIiKLEgid9o"
+          },
+          {
+            "id": "TIWVKGYpsXF6"
+          },
+          {
+            "id": "WV2ANJEFqCtE"
+          },
+          {
+            "id": "FOWKOJCyOGRD"
+          },
+          {
+            "id": "5BFx2a9lxFb3"
+          },
+          {
+            "id": "Z7kp6nc8nud4"
+          },
+          {
+            "id": "kSByFLFWdlUQ"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "eAHhqfvi2u1C",
+        "title": "Asequibilidad de espacios culturales y laborales",
+        "members": [
+          {
+            "id": "jGhkJ3ivK3b7"
+          },
+          {
+            "id": "AoC1vbEfHMfS"
+          },
+          {
+            "id": "FALynx46lB0F"
+          },
+          {
+            "id": "8S9ow9JPoIs4"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "efvw7FWH1nMj",
+        "title": "Trámites municipales simplificados y digitales",
+        "members": [
+          {
+            "id": "BUEO17AfjCV7"
+          },
+          {
+            "id": "RsbbI7dxZdMV"
+          },
+          {
+            "id": "xNmYJKWvw81m"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "kFOCJ1rREsfC",
+        "title": "Transparencia y datos públicos",
+        "members": [
+          {
+            "id": "-UcMTtON3Efi"
+          },
+          {
+            "id": "yRLb0sive7D2"
+          },
+          {
+            "id": "bzxyS80G4QJ2"
+          },
+          {
+            "id": "RN2tHJh6Sb0Z"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "nk2BFZe8kVsF",
+        "title": "Urban sustainability and housing",
+        "members": [
+          {
+            "id": "H9qEmiN4WRqi"
+          },
+          {
+            "id": "xSNVPkNTHFdQ"
+          },
+          {
+            "id": "p5sWjTwd8rm7"
+          },
+          {
+            "id": "CaQntep7qTlx"
+          },
+          {
+            "id": "8AlH3R5mIZyz"
+          },
+          {
+            "id": "EyU3jr8ZFNPU"
+          },
+          {
+            "id": "DG-71yCMIqmm"
+          },
+          {
+            "id": "2YasNcRBoW0X"
+          },
+          {
+            "id": "oWZnMVrpZAxV"
+          },
+          {
+            "id": "-tMIMyX4oQQ4"
+          },
+          {
+            "id": "1q2xdII0m7zR"
+          },
+          {
+            "id": "9qjkma0cw-bo"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "qmuejlFSod3p",
+        "title": "Seguridad vial y pública",
+        "members": [
+          {
+            "id": "2lN4TLoRjP2a"
+          },
+          {
+            "id": "LWJSPyfguUKs"
+          },
+          {
+            "id": "xGSU9oS7vFjc"
+          },
+          {
+            "id": "vipSemt6M5h7"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "wOTdtm4FjbQy",
+        "title": "Educación pública de calidad",
+        "members": [
+          {
+            "id": "IelxQLZ2pWkx"
+          },
+          {
+            "id": "BygkxlO9kVBH"
+          },
+          {
+            "id": "xJUqryjYCdUp"
+          },
+          {
+            "id": "BsexfgHFNz4F"
+          }
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [],
+  "sourceOptions": {
+    "visible": 100,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "spawn": 16,
+    "attach": 66
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.en.json",
+    "corpusSha": "8fdcaccc66dd",
+    "seed": 42,
+    "synthesisOverrides": {},
+    "statementsFed": 100,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 2500,
+    "maxWaitMs": 20000,
+    "settleTimeouts": 0,
+    "durationMs": 768891,
+    "gitSha": "a75a1ff84",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}

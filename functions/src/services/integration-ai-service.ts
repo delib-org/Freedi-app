@@ -559,11 +559,18 @@ export async function generateTopicLabel(
 	const sample = inputs[0].statement;
 	const isHebrew = /[֐-׿]/.test(sample);
 	const isArabic = /[؀-ۿ]/.test(sample);
+	// "Same language as the input" is too weak an instruction for the fast model:
+	// on the accuracy benchmark, 8 of 10 topic labels for an all-English corpus
+	// came back in Spanish or German ("Vivienda asequible",
+	// "Kultur- und Kunstförderung"). A label in the wrong language is not just a
+	// display bug — the cluster title is embedded and used as attach evidence, so
+	// a translated title drifts away from the members it is supposed to represent.
+	// The explicit prohibition is what stops the drift.
 	const languageInstruction = isHebrew
-		? 'Write the label in Hebrew.'
+		? 'Write the title and description in Hebrew.'
 		: isArabic
-			? 'Write the label in Arabic.'
-			: 'Write the label in the same language as the input ideas.';
+			? 'Write the title and description in Arabic.'
+			: 'Write the title and description in EXACTLY the same language as the ideas listed above. Do NOT translate into any other language — if the ideas are in English, the title must be in English.';
 
 	const ideaLines = inputs
 		.slice(0, 6)

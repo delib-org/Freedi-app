@@ -49,30 +49,40 @@ import {
  * transitive bump, the pipeline would keep spawning duplicate synths that
  * share members with existing ones.
  *
- *   Pass 1 — SYNTH ATTACH: any synth with best evidence ≥ attachThreshold
- *     → attach (0 LLM).
+ * The passes run most-specific-first. Saying two statements are the SAME IDEA
+ * is a stronger claim than saying they share a theme, so every synthesis
+ * opportunity is exhausted before any theming happens. Running theming first
+ * looks harmless and is not: a theme holding your twin always looks cohesive to
+ * you, because your twin is inside its centroid, so the general claim wins using
+ * the specific claim's own evidence. Measured, that ordering merged 2 of 50
+ * ground-truth pairs.
  *
- *   Pass 2 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
- *     ≥ clusterThreshold → attach (0 LLM). Lenient: topic clusters group
- *     distinct-but-related ideas under a theme label.
+ *   Pass 1 — SYNTH ATTACH: any synth with best evidence ≥ attachThreshold,
+ *     gated on cohesion with the whole cluster → attach (0 LLM).
  *
- *   Pass 3 — SPAWN (LLM-judged): top *plain option that is NOT already a
- *     member of a candidate cluster*, at cosine ≥ clusterThreshold → call
- *     generateSynthesizedProposal:
- *       · success (proposal generated) → SPAWN SYNTH (1 LLM total)
- *       · cannotSynthesize             → fall back to generateTopicLabel
- *                                        → SPAWN TOPIC CLUSTER (2 LLM total)
- *     The cluster-fallback path bypasses the spawn-debounce window because
- *     the synth attempt already consumed it. We skip options that already
- *     belong to a cluster — they should have been picked up by Pass 1/2
- *     via transitive evidence; if they weren't, spawning from them would
- *     just create a duplicate synth.
+ *   Pass 2 — SYNTH SPAWN (LLM-judged): top plain option in the near-duplicate
+ *     band → generateSynthesizedProposal:
+ *       · success           → SPAWN SYNTH (1 LLM), then nest it under its theme
+ *       · cannotSynthesize  → fall through; "distinct ideas" is the case FOR
+ *                             theming, so the passes below handle it
+ *       · anything else     → re-queue, never drop (see deferFailedSpawn)
+ *     A sibling inside a SYNTH is excluded — spawning from it would duplicate
+ *     that synth. A sibling inside a TOPIC CLUSTER is not: it has been given a
+ *     theme, not a meaning.
  *
- *   Pass 4 — REVIEW: top candidate at cosine ≥ reviewLowerBound but no
- *     plain option above clusterThreshold → queue pair for admin review
- *     (0 LLM).
+ *   Pass 3 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
+ *     ≥ clusterThreshold AND centroid cohesion with the theme → attach (0 LLM).
  *
- *   Pass 5 — SINGLETON: no candidates above reviewLowerBound → leave
+ *   Pass 4 — REGISTRY: claim-codebook classification when cosine couldn't place
+ *     the option (claim-registry questions only).
+ *
+ *   Pass 5 — TOPIC SPAWN: two distinct-but-related ideas, neither claimed by
+ *     any cluster → generateTopicLabel → SPAWN TOPIC CLUSTER (1 LLM).
+ *
+ *   Pass 6 — REVIEW: top candidate at cosine ≥ reviewLowerBound but nothing
+ *     above clusterThreshold → queue pair for admin review (0 LLM).
+ *
+ *   Pass 7 — SINGLETON: no candidates above reviewLowerBound → leave
  *     option as-is. Single-option singletons are NOT written as clusters.
  *
  * Caller-controlled `forceProcess` skips the engagement-threshold check.
@@ -202,6 +212,38 @@ async function deferSpawnAfterDebounce(
 	}
 
 	return skipped('spawn-debounced', startedAt);
+}
+
+/**
+ * Re-queue a spawn that failed for a reason that may not recur — an LLM error, a
+ * malformed proposal, a transient write failure.
+ *
+ * Same shape of bug as the dropped debounce, one branch over: `spawnClusterFromPair`
+ * returning `spawned: false` used to end the pipeline with `skipped('spawn-failed')`,
+ * writing no audit row and scheduling no retry, so the opportunity was gone. Measured
+ * on the accuracy benchmark: one ground-truth pair at cosine 0.898 — the twin sitting
+ * at rank 1, well inside the attach band — lost with no trace of why.
+ *
+ * Idempotent via `enqueueItem`'s deterministic per-option id. A retry that fails the
+ * same way simply re-queues; the queue worker's own bounds stop it running forever.
+ */
+async function deferFailedSpawn(
+	optionId: string,
+	questionId: string,
+	startedAt: number,
+): Promise<PipelineResult> {
+	logger.warn('synthesis.pipeline.spawn: failed, re-queued for retry', { optionId, questionId });
+	try {
+		await enqueueItem({ questionId, kind: 'process-option', optionId, forceProcess: false });
+	} catch (error) {
+		logger.warn('synthesis.pipeline.spawn: failed spawn could not be re-queued', {
+			optionId,
+			questionId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
+	return skipped('spawn-failed-requeued', startedAt);
 }
 
 interface PipelineContext {
@@ -532,8 +574,101 @@ async function executePipeline(
 		};
 	}
 
+	// Spawn candidacy — computed here because PASS 2 needs it.
+	//
+	// A sibling already inside a SYNTH is excluded: spawning from it would
+	// create a second synth sharing its member. A sibling inside a TOPIC
+	// CLUSTER is NOT excluded — it has been given a theme, not a meaning, and
+	// its twin must still be able to merge with it. When that spawn succeeds,
+	// `spawnClusterFromPair` re-homes the members into the new synth and puts
+	// the synth in their place inside the theme.
+	//
+	// Excluding topic members here was, on the accuracy benchmark, the single
+	// largest source of missed pairs: one early topic cluster starved the
+	// synthesis layer for the rest of the run.
+	const synthMemberIds = new Set<string>();
+	for (const c of candidates) {
+		if (!isCluster(c.statement) || !isSynth(c.statement)) continue;
+		for (const m of c.statement.integratedOptions ?? []) synthMemberIds.add(m);
+	}
+	const topPlainOption = candidates.find(
+		(c) => !isCluster(c.statement) && !synthMemberIds.has(c.statement.statementId),
+	);
+	// Spawning a THEME still needs a sibling free of every cluster — two themes
+	// must not claim the same statement.
+	const topFreeOption = candidates.find(
+		(c) => !isCluster(c.statement) && !memberOptionIds.has(c.statement.statementId),
+	);
+
 	// =====================================================================
-	// PASS 2 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
+	// PASS 2 — SYNTH SPAWN (near-duplicate band, LLM-judged)
+	// =====================================================================
+	// This runs BEFORE the topic attach, and the order is load-bearing.
+	//
+	// Merging two statements of the same idea is a more specific claim than
+	// filing one of them under a theme, so the specific claim gets first refusal.
+	// The old order let the general claim win, and it won using the specific
+	// claim's own evidence: a theme that already holds your twin will always look
+	// cohesive to you, because your twin is in its centroid. Measured with topic
+	// attach first — in 17 of 23 topic attaches, the member whose cosine
+	// justified the attach WAS the statement's own twin. The pipeline used the
+	// twin to file the statement away from it. End state: 2 of 50 pairs merged,
+	// and the synthesis LLM consulted 4 times in a 100-statement run.
+	//
+	// A refusal (`cannotSynthesize`) is not terminal here: the LLM saying "these
+	// are distinct ideas" is exactly the case for theming them, so it falls
+	// through to the passes below rather than forcing a theme of its own.
+	if (topPlainOption && routeByCosine(topPlainOption.similarity, settings) === 'spawn-synth') {
+		const synthAttempt = await spawnClusterFromPair({
+			option,
+			sibling: topPlainOption.statement,
+			similarity: topPlainOption.similarity,
+			parentStatement: parent,
+			triggerSource,
+			bypassDebounce,
+			mode: 'synth',
+			stampClaim: settings.claimRegistryEnabled,
+		});
+		if (synthAttempt.spawned) {
+			// Put the new synthesis inside the theme it belongs to. Without this the
+			// two layers never meet: a theme holds five distinct ideas, but the
+			// moment two of them merge the merge leaves the theme behind.
+			let nestNote = '';
+			if (synthAttempt.clusterId) {
+				const nested = await nestSynthUnderTopic({
+					synthId: synthAttempt.clusterId,
+					memberIds: [option.statementId, topPlainOption.statement.statementId],
+					parent,
+					settings,
+					triggerSource,
+				});
+				nestNote = nested.nested
+					? ` (nested under ${nested.topicClusterId})`
+					: ` (unthemed: ${nested.reason})`;
+			}
+
+			return {
+				action: 'spawned',
+				reason: `spawn synth at cosine=${topPlainOption.similarity.toFixed(3)}${nestNote}`,
+				clusterId: synthAttempt.clusterId,
+				llmCalled: true,
+				durationMs: Date.now() - startedAt,
+			};
+		}
+		if (synthAttempt.debounced) {
+			return deferSpawnAfterDebounce(option.statementId, parent.statementId, startedAt);
+		}
+		if (!synthAttempt.cannotSynthesize) {
+			// Neither spawned, nor refused, nor debounced: an LLM error, a malformed
+			// response, or the dedup guard. Work must never be dropped silently here
+			// — measured cost of doing so, one ground-truth pair at cosine 0.898 lost
+			// with no audit row and no retry. Re-queue and let the worker try again.
+			return deferFailedSpawn(option.statementId, parent.statementId, startedAt);
+		}
+	}
+
+	// =====================================================================
+	// PASS 3 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
 	// ≥ clusterThreshold AND cohesion with the theme as a whole.
 	// =====================================================================
 	// `bestSimilarity` (the MAX over members) is the candidacy signal only. On a
@@ -588,7 +723,7 @@ async function executePipeline(
 	}
 
 	// =====================================================================
-	// ★ REGISTRY PASS — cosine couldn't place the option (Passes 1–2 missed);
+	// PASS 4 — ★ REGISTRY: cosine couldn't place the option (Passes 1–3 missed);
 	// classify against the full claim codebook before spawning. A match here
 	// at low/absent cosine is the Procaccia case, caught and logged.
 	// =====================================================================
@@ -615,158 +750,48 @@ async function executePipeline(
 		}
 	}
 
-	// Spawn candidacy.
-	//
-	// A sibling already inside a SYNTH is excluded: spawning from it would
-	// create a second synth sharing its member. A sibling inside a TOPIC
-	// CLUSTER is NOT excluded — it has been given a theme, not a meaning, and
-	// its twin must still be able to merge with it. When that spawn succeeds,
-	// `spawnClusterFromPair` re-homes the members into the new synth and puts
-	// the synth in their place inside the theme.
-	//
-	// Excluding topic members here was, on the accuracy benchmark, the single
-	// largest source of missed pairs: one early topic cluster starved the
-	// synthesis layer for the rest of the run.
-	const synthMemberIds = new Set<string>();
-	for (const c of candidates) {
-		if (!isCluster(c.statement) || !isSynth(c.statement)) continue;
-		for (const m of c.statement.integratedOptions ?? []) synthMemberIds.add(m);
-	}
-	const topPlainOption = candidates.find(
-		(c) => !isCluster(c.statement) && !synthMemberIds.has(c.statement.statementId),
-	);
-	// The topic route still needs a sibling free of every cluster — two themes
-	// must not claim the same statement.
-	const topFreeOption = candidates.find(
-		(c) => !isCluster(c.statement) && !memberOptionIds.has(c.statement.statementId),
-	);
-
 	// =====================================================================
-	// PASS 3 — SPAWN (band-routed): top plain option ≥ clusterThreshold
+	// PASS 5 — TOPIC SPAWN: sub-synth band, two distinct-but-related ideas
 	// =====================================================================
-	// Route by cosine band (see bandRouter.ts):
-	//   - cosine ≥ synthLowerBound → try synth (LLM unified proposal);
-	//     on cannotSynthesize fall back to topic-cluster.
-	//   - clusterThreshold ≤ cosine < synthLowerBound → spawn topic-cluster
-	//     directly (cheap generateTopicLabel; skip the wasted synth attempt
-	//     since the prompt won't refuse on non-conflicting distinct ideas).
-	if (topPlainOption && topPlainOption.similarity >= settings.clusterThreshold) {
-		const route = routeByCosine(topPlainOption.similarity, settings);
-
-		if (route === 'spawn-topic-cluster') {
-			// This option already has a theme; a second one would double-claim it.
-			if (alreadyInTopic) {
-				return skipped('already-in-topic-cluster:sub-synth-band', startedAt);
-			}
-			// Spawning a theme needs a sibling no other cluster owns.
-			if (!topFreeOption || topFreeOption.similarity < settings.clusterThreshold) {
-				return skipped('no-unclaimed-sibling-for-topic-spawn', startedAt);
-			}
-			const clusterAttempt = await spawnClusterFromPair({
-				option,
-				sibling: topFreeOption.statement,
-				similarity: topFreeOption.similarity,
-				parentStatement: parent,
-				triggerSource,
-				bypassDebounce,
-				mode: 'cluster',
-				stampClaim: settings.claimRegistryEnabled,
-			});
-			if (clusterAttempt.spawned) {
-				return {
-					action: 'spawned',
-					reason: `spawn topic-cluster at cosine=${topPlainOption.similarity.toFixed(3)} (sub-synth band)`,
-					clusterId: clusterAttempt.clusterId,
-					llmCalled: true,
-					durationMs: Date.now() - startedAt,
-				};
-			}
-			if (clusterAttempt.debounced) {
-				return deferSpawnAfterDebounce(option.statementId, parent.statementId, startedAt);
-			}
-
-			return skipped('spawn-failed', startedAt);
-		}
-
-		// route === 'spawn-synth' — try synth first, fall back to cluster.
-		const synthAttempt = await spawnClusterFromPair({
+	// Reached only when no synthesis was possible (PASS 2 found no
+	// near-duplicate, or the LLM refused the pair as distinct ideas) and no
+	// existing theme fit. Spawning a theme needs a sibling no other cluster
+	// owns, and an option that already has a theme must not gain a second.
+	if (
+		!alreadyInTopic &&
+		topFreeOption &&
+		routeByCosine(topFreeOption.similarity, settings) !== 'review' &&
+		topFreeOption.similarity >= settings.clusterThreshold
+	) {
+		const clusterAttempt = await spawnClusterFromPair({
 			option,
-			sibling: topPlainOption.statement,
-			similarity: topPlainOption.similarity,
+			sibling: topFreeOption.statement,
+			similarity: topFreeOption.similarity,
 			parentStatement: parent,
 			triggerSource,
-			bypassDebounce,
-			mode: 'synth',
+			// The synth attempt in PASS 2 already consumed the window for this pair.
+			bypassDebounce: bypassDebounce || Boolean(topPlainOption),
+			mode: 'cluster',
 			stampClaim: settings.claimRegistryEnabled,
 		});
-		if (synthAttempt.spawned) {
-			// Put the new synthesis inside the theme it belongs to. Without this the
-			// two layers never meet: a theme holds five distinct ideas, but the
-			// moment two of them merge the merge leaves the theme behind.
-			if (synthAttempt.clusterId) {
-				const nested = await nestSynthUnderTopic({
-					synthId: synthAttempt.clusterId,
-					memberIds: [option.statementId, topPlainOption.statement.statementId],
-					parent,
-					settings,
-					triggerSource,
-				});
-
-				return {
-					action: 'spawned',
-					reason: `spawn synth at cosine=${topPlainOption.similarity.toFixed(3)}${nested.nested ? ` (nested under ${nested.topicClusterId})` : ` (unthemed: ${nested.reason})`}`,
-					clusterId: synthAttempt.clusterId,
-					llmCalled: true,
-					durationMs: Date.now() - startedAt,
-				};
-			}
-
+		if (clusterAttempt.spawned) {
 			return {
 				action: 'spawned',
-				reason: `spawn synth at cosine=${topPlainOption.similarity.toFixed(3)}`,
-				clusterId: synthAttempt.clusterId,
+				reason: `spawn topic-cluster at cosine=${topFreeOption.similarity.toFixed(3)}`,
+				clusterId: clusterAttempt.clusterId,
 				llmCalled: true,
 				durationMs: Date.now() - startedAt,
 			};
 		}
-		if (synthAttempt.cannotSynthesize) {
-			// The LLM says these are distinct ideas, so the pair becomes a theme
-			// instead. A theme needs a sibling no other cluster owns, and this
-			// option must not already have one.
-			if (alreadyInTopic || !topFreeOption || topFreeOption.similarity < settings.clusterThreshold) {
-				return skipped('cluster-fallback-no-unclaimed-sibling', startedAt);
-			}
-			const clusterFallback = await spawnClusterFromPair({
-				option,
-				sibling: topFreeOption.statement,
-				similarity: topFreeOption.similarity,
-				parentStatement: parent,
-				triggerSource,
-				bypassDebounce: true,
-				mode: 'cluster',
-				stampClaim: settings.claimRegistryEnabled,
-			});
-			if (clusterFallback.spawned) {
-				return {
-					action: 'spawned',
-					reason: `spawn cluster (LLM refused synth) at cosine=${topFreeOption.similarity.toFixed(3)}`,
-					clusterId: clusterFallback.clusterId,
-					llmCalled: true,
-					durationMs: Date.now() - startedAt,
-				};
-			}
-
-			return skipped('cluster-fallback-failed', startedAt);
-		}
-		if (synthAttempt.debounced) {
+		if (clusterAttempt.debounced) {
 			return deferSpawnAfterDebounce(option.statementId, parent.statementId, startedAt);
 		}
 
-		return skipped('spawn-failed', startedAt);
+		return deferFailedSpawn(option.statementId, parent.statementId, startedAt);
 	}
 
 	// =====================================================================
-	// PASS 4 — REVIEW: top candidate ≥ reviewLowerBound
+	// PASS 6 — REVIEW: top candidate ≥ reviewLowerBound
 	// (guaranteed by vector-search filter — anything in `candidates` is above)
 	// =====================================================================
 	// An option that already sits in a theme is placed; there is nothing for an

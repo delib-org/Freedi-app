@@ -409,12 +409,29 @@ interface ExportedCluster {
 	mergedInto?: string;
 }
 
+/**
+ * One row of `_synthAuditLog`. The first study exported only per-action COUNTS,
+ * which left "which statement was set aside, and on what evidence?" unanswerable
+ * from the run folder — the emulator log is the only other copy and it is
+ * overwritten by the next run. The rows are small (a few hundred per run) and
+ * carry the cosine in `reason`, so they are written out in full.
+ */
+interface AuditRow {
+	action: string;
+	clusterId?: string;
+	optionId?: string;
+	reason?: string;
+	triggerSource?: string;
+	createdAt?: number;
+}
+
 async function exportResults(seeded: SeedItem[]): Promise<{
 	synths: ExportedCluster[];
 	topics: ExportedCluster[];
 	sourceVisible: number;
 	sourceHidden: number;
 	auditCounts: Record<string, number>;
+	auditRows: AuditRow[];
 }> {
 	const snap = await db.collection('statements').where('parentId', '==', QUESTION_ID).get();
 	const seededIds = new Set(seeded.map((s) => s.id));
@@ -464,12 +481,26 @@ async function exportResults(seeded: SeedItem[]): Promise<{
 		.where('parentStatementId', '==', QUESTION_ID)
 		.get();
 	const auditCounts: Record<string, number> = {};
+	const auditRows: AuditRow[] = [];
 	for (const doc of auditSnap.docs) {
-		const action = String(doc.data().action ?? 'unknown');
+		const data = doc.data();
+		const action = String(data.action ?? 'unknown');
 		auditCounts[action] = (auditCounts[action] ?? 0) + 1;
+		auditRows.push({
+			action,
+			clusterId: data.clusterId ? String(data.clusterId) : undefined,
+			optionId: data.optionId ? String(data.optionId) : undefined,
+			// `reason` carries the cosine and the gate that fired — the single most
+			// useful field for post-hoc diagnosis, and the one whose absence made
+			// three separate questions unanswerable in the first study.
+			reason: data.reason ? String(data.reason) : undefined,
+			triggerSource: data.triggerSource ? String(data.triggerSource) : undefined,
+			createdAt: typeof data.createdAt === 'number' ? data.createdAt : undefined,
+		});
 	}
+	auditRows.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
 
-	return { synths, topics, sourceVisible, sourceHidden, auditCounts };
+	return { synths, topics, sourceVisible, sourceHidden, auditCounts, auditRows };
 }
 
 function timestamp(): string {
@@ -550,6 +581,10 @@ function timestamp(): string {
 	const exported = await exportResults(arrival);
 	const durationMs = Date.now() - t0;
 
+	// Every decision the pipeline made, in order, with the cosine that drove it.
+	// Written separately so results.json stays readable.
+	writeFileSync(join(outDir, 'audit.json'), JSON.stringify(exported.auditRows, null, 2));
+
 	writeFileSync(
 		join(outDir, 'statements.json'),
 		JSON.stringify(
@@ -610,7 +645,10 @@ function timestamp(): string {
 						}
 					})(),
 					models: {
-						embedding: 'text-embedding-3-small',
+						// Read the override, never hardcode: a run switched to
+						// text-embedding-3-large was recorded as 3-small, which
+						// mislabels the one variable that defined it.
+						embedding: process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small',
 						heavy: process.env.OPENAI_HEAVY_MODEL || 'gpt-5.6-terra',
 						fast: process.env.OPENAI_FAST_MODEL || 'gpt-5.6-luna',
 					},

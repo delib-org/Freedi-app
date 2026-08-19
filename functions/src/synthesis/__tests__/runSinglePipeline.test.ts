@@ -563,7 +563,7 @@ describe('runSinglePipeline', () => {
 		expect(reviewMock).not.toHaveBeenCalled();
 	});
 
-	it('skips when both synth and cluster fallback fail', async () => {
+	it('re-queues rather than drops when both synth and cluster fallback fail', async () => {
 		const option = makeOption();
 		const parent = makeParent();
 		// Cosine 0.80 is in the synth-attempt band (≥ synthLowerBound 0.78
@@ -585,8 +585,55 @@ describe('runSinglePipeline', () => {
 			parent,
 		});
 		expect(result.action).toBe('skipped');
-		expect(result.reason).toBe('cluster-fallback-failed');
+		// A failed spawn is re-queued, never dropped. Dropping it cost a
+		// ground-truth pair at cosine 0.898 on the benchmark, with no audit row
+		// and no retry to show where it went.
+		expect(result.reason).toBe('spawn-failed-requeued');
 		expect(spawnMock).toHaveBeenCalledTimes(2);
+	});
+
+	it('spawns a synth with the twin rather than filing the option into the theme holding it', async () => {
+		// Pass precedence. A theme that already holds your twin will always look
+		// cohesive to you, because your twin sits in its centroid — so if topic
+		// attach runs first, the general claim wins using the specific claim's own
+		// evidence. Measured: 17 of 23 topic attaches were justified by the
+		// statement's own twin, and only 2 of 50 pairs ever merged.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				// The twin: plain, near-duplicate, but already inside a theme.
+				statement: { statementId: 'twin', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.9,
+			},
+			{
+				statement: {
+					statementId: 'theme-holding-twin',
+					integratedOptions: ['twin', 'other-idea'],
+					derivedByPipeline: 'topic-cluster',
+				} as unknown as Statement,
+				similarity: 0.62,
+			},
+		]);
+		// Cohesive with the theme — so the topic attach WOULD fire if it ran first.
+		getBatchEmbeddingsMock.mockResolvedValue(
+			new Map([
+				['twin', UNIFORM_VEC],
+				['other-idea', UNIFORM_VEC],
+			]),
+		);
+		spawnMock.mockResolvedValue({ spawned: true, clusterId: 'new-synth' });
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+
+		expect(result.action).toBe('spawned');
+		expect(spawnMock).toHaveBeenCalledWith(expect.objectContaining({ mode: 'synth' }));
+		expect(attachMock).not.toHaveBeenCalled();
 	});
 
 	it('attaches to an existing TOPIC CLUSTER when cosine in the cluster band', async () => {
