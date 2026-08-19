@@ -2,6 +2,7 @@ import {
 	assessCohesion,
 	passesCohesionGate,
 	centroidOf,
+	synthCentroidFloor,
 	type CohesionGate,
 } from '../pipeline/clusterCohesion';
 
@@ -68,18 +69,40 @@ describe('passesCohesionGate', () => {
 		expect(passesCohesionGate(a, GATE)).toBe(false);
 	});
 
-	it('passes on the centroid signal alone even if quorum is thin', () => {
-		// Two members, option sits right between them: centroid cosine high,
-		// per-member cosines moderate.
+	it('rejects on a thin quorum even when the centroid signal is strong', () => {
+		// Two members, option sitting right between them: centroid cosine high,
+		// per-member cosines moderate. Both signals are now required.
+		//
+		// This gate used to pass on EITHER signal, which made it inert in practice:
+		// with the per-member floor at `clusterThreshold`, and 80% of measured
+		// cross-topic pairs clearing that floor, the quorum arm passed
+		// unconditionally and carried the whole gate. Zero rejections in a
+		// 100-statement run, while a synth quietly merged compost collection with
+		// recycling pickup.
 		const members = [v(1, 0.5, 0), v(1, -0.5, 0)];
 		const option = v(1, 0, 0);
 		const a = assessCohesion(members, option, 0.95); // deliberately strict member floor
 		expect(a.fractionAboveFloor).toBeLessThan(0.5);
-		expect(passesCohesionGate(a, { ...GATE, memberFloor: 0.95 })).toBe(true);
+		expect(a.centroidCosine).toBeGreaterThanOrEqual(GATE.centroidFloor);
+		expect(passesCohesionGate(a, { ...GATE, memberFloor: 0.95 })).toBe(false);
 	});
 
 	it('fails open (passes) when there are no member embeddings', () => {
 		const a = assessCohesion([], v(1, 0, 0), GATE.memberFloor);
 		expect(passesCohesionGate(a, GATE)).toBe(true);
+	});
+});
+
+describe('synthCentroidFloor', () => {
+	it('lands halfway up the synth band', () => {
+		// Shipped defaults: synthLowerBound 0.78, attachThreshold 0.85 → 0.815.
+		// Measured on the accuracy corpus, that keeps all 50 genuine paraphrase
+		// attaches (within-pair min 0.824) while admitting 9 of 4900 false ones;
+		// at 0.78 it would admit 63.
+		expect(synthCentroidFloor(0.78, 0.85)).toBeCloseTo(0.815, 5);
+	});
+
+	it('tracks retuned bands rather than pinning a constant', () => {
+		expect(synthCentroidFloor(0.84, 0.9)).toBeCloseTo(0.87, 5);
 	});
 });

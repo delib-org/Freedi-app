@@ -123,9 +123,43 @@ export function passesCohesionGate(assessment: CohesionAssessment, gate: Cohesio
 	if (assessment.memberCount === 0) return true;
 
 	return (
-		assessment.centroidCosine >= gate.centroidFloor ||
+		assessment.centroidCosine >= gate.centroidFloor &&
 		assessment.fractionAboveFloor >= gate.quorumFraction
 	);
+}
+
+/**
+ * Where the synth-attach centroid floor belongs: halfway up the synth band.
+ *
+ * The gate above was originally an OR with `memberFloor = clusterThreshold`, and
+ * on a single-question corpus that made it inert — 80% of cross-topic pairs clear
+ * a 0.60 per-member floor, so the quorum arm passed unconditionally and the whole
+ * gate with it. Measured directly: zero cohesion rejections in a 100-statement
+ * run, while a 4-member synth quietly merged compost collection with recycling
+ * pickup (P=0.846 for that run).
+ *
+ * Measured separation on the accuracy corpus. GENUINE is a paraphrase joining its
+ * partner (within-pair cosine); FALSE is every non-member's cosine to a synth's
+ * member centroid, 4900 candidates:
+ *
+ *   GENUINE            min 0.824   p10 0.862   median 0.898
+ *   FALSE same-topic   median 0.723   p99 0.831   max 0.845
+ *   FALSE cross-topic  median 0.652   p99 0.760   max 0.801
+ *
+ *   floor 0.78 → 50/50 genuine kept, 63 false admitted
+ *   floor 0.82 → 50/50 genuine kept,  9 false admitted
+ *   floor 0.85 → 45/50 genuine kept,  0 false admitted
+ *
+ * Expressed as a fraction of the synth band rather than a constant so it tracks
+ * an admin who retunes the bands: at shipped defaults it lands on 0.815, in the
+ * flat part of the curve where nothing genuine is lost yet.
+ *
+ * A rejected newcomer is not lost — it spawns its own synth, and the scheduled
+ * re-judge sweep merges near-identical synths under LLM judgement, which is a
+ * better-informed decision than a blind cosine attach.
+ */
+export function synthCentroidFloor(synthLowerBound: number, attachThreshold: number): number {
+	return synthLowerBound + (attachThreshold - synthLowerBound) * 0.5;
 }
 
 /**

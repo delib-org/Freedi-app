@@ -12,6 +12,7 @@ import {
 	assessCohesion,
 	passesCohesionGate,
 	passesTopicCohesionGate,
+	synthCentroidFloor,
 	type CohesionGate,
 } from './clusterCohesion';
 import { routeByCosine } from './bandRouter';
@@ -507,9 +508,13 @@ async function executePipeline(
 	// candidacy signal. Before attaching we additionally require the newcomer
 	// to fit the cluster's centroid or a quorum of members, so a single close
 	// member can no longer drag in a far outlier (see clusterCohesion.ts).
+	// Both floors were originally set a whole band too low — the centroid at
+	// `synthLowerBound` and the per-member floor at `clusterThreshold` — and
+	// combined with OR, which made the gate inert on a single-question corpus.
+	// See `synthCentroidFloor` for the measured separation that sets them.
 	const cohesionGate: CohesionGate = {
-		centroidFloor: settings.synthLowerBound,
-		memberFloor: settings.clusterThreshold,
+		centroidFloor: synthCentroidFloor(settings.synthLowerBound, settings.attachThreshold),
+		memberFloor: settings.synthLowerBound,
 		quorumFraction: SYNTH_COHESION_QUORUM,
 	};
 	const synthMatches = Array.from(clusterEvidence.values())
