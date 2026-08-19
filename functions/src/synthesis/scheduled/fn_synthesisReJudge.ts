@@ -5,6 +5,7 @@ import { Collections, functionConfig, type Statement } from '@freedi/shared-type
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
+import { generateSynthesizedProposal } from '../../services/integration-ai-service';
 
 /**
  * Merge gate for reJudge.
@@ -20,6 +21,18 @@ import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
  * cross-member top-2 average in the 0.80-0.84 range. 0.82 captures those
  * true duplicates while leaving cross-topic pairs (typical top-2-avg ≤0.75)
  * untouched.
+ *
+ * That calibration is correct about cross-TOPIC pairs and silent about the band
+ * that actually matters: DISTINCT ideas within the SAME topic. Measured on the
+ * 100-statement accuracy corpus, seven such pairs sit at 0.823-0.855 —
+ * recycling-pickup vs compost-organic-waste at 0.855, affordable-quota vs
+ * convert-offices at 0.845 — and those two were exactly the false merges in the
+ * certified run, the entire remaining precision loss.
+ *
+ * No threshold separates them. True duplicate synths were measured at 0.80-0.84
+ * and distinct same-topic synths at 0.82-0.86: the bands overlap. Raising the
+ * number trades the bug this sweep exists to fix for the bug it causes. So the
+ * cosine stays a CANDIDACY signal and the decision moves to the LLM below.
  */
 const REJUDGE_MERGE_THRESHOLD = 0.82;
 
@@ -43,11 +56,14 @@ const REJUDGE_MERGE_THRESHOLD = 0.82;
  * merges donor into recipient. Recipient is the synth with more members;
  * ties broken by earlier `createdAt`.
  *
- * Conservative: no LLM call in the merge decision. A cosine of 0.85+ between
- * two members from different synths means those two members would attach to
- * each other if they were both plain options; that's the strongest possible
- * signal that the containing synths overlap. The recipient's title regenerates
- * after the merge via enqueueClusterRecompute.
+ * Cosine proposes, the LLM disposes. The cross-member top-2 average selects a
+ * candidate pair; `confirmMergeWithLlm` then decides, because cosine provably
+ * cannot separate "two wordings of one proposal" from "two distinct proposals
+ * about the same thing" — those bands overlap at 0.82-0.86 (see the threshold
+ * docstring above). At most MAX_MERGES_PER_PARENT judge calls per parent per
+ * sweep, on a 10-minute schedule, for an operation that is irreversible from
+ * the reader's point of view. The recipient's title regenerates after the merge
+ * via enqueueClusterRecompute.
  *
  * Bounded: at most MAX_PARENTS_PER_SWEEP per tick; at most MAX_MERGES_PER_PARENT
  * to avoid a runaway chain of merges that should be its own design decision.
@@ -91,16 +107,76 @@ interface MergeDecision {
 	bestCosine: number;
 }
 
+/** Order-independent key for a synth pair, so a rejected pair is not retried. */
+function pairKey(a: string, b: string): string {
+	return [a, b].sort().join('__');
+}
+
+/**
+ * Ask the synthesis judge whether two synths are really one proposal.
+ *
+ * Reuses `generateSynthesizedProposal` — the same prompt that decides whether a
+ * pair of raw statements may merge — with the two synth TITLES as inputs, since
+ * a synth's title IS its merged proposal. Measured behaviour on the accuracy
+ * corpus: it refused all 14 distinct pairs it was shown and refused zero true
+ * paraphrase pairs, which is exactly the discrimination cosine cannot provide.
+ *
+ * Fail-CLOSED: an LLM error means no merge. An unmerged duplicate is a visible
+ * but harmless redundancy; a wrong merge silently destroys a distinct proposal
+ * and is what this gate exists to prevent.
+ */
+async function confirmMergeWithLlm(
+	recipient: CandidateSynth,
+	donor: CandidateSynth,
+	questionContext: string,
+): Promise<boolean> {
+	try {
+		const proposal = await generateSynthesizedProposal(
+			[recipient.doc, donor.doc].map((s) => ({
+				statementId: s.statementId,
+				statement: s.statement,
+				paragraphsText: s.description ?? '',
+				numberOfEvaluators: s.evaluation?.numberOfEvaluators ?? 0,
+				consensus: s.consensus ?? 0,
+				sumEvaluations: s.evaluation?.sumEvaluations ?? 0,
+			})),
+			questionContext,
+		);
+		if (proposal.cannotSynthesize === true) {
+			logger.info('synthesis.reJudge.mergeRefused', {
+				recipientId: recipient.doc.statementId,
+				donorId: donor.doc.statementId,
+				recipientTitle: recipient.doc.statement?.substring(0, 60),
+				donorTitle: donor.doc.statement?.substring(0, 60),
+			});
+
+			return false;
+		}
+
+		return true;
+	} catch (error) {
+		logger.warn('synthesis.reJudge: merge confirmation failed, not merging', {
+			recipientId: recipient.doc.statementId,
+			donorId: donor.doc.statementId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return false;
+	}
+}
+
 function pickMergePair(
 	synths: CandidateSynth[],
 	embeddings: Map<string, number[]>,
 	threshold: number,
+	rejectedPairs: Set<string> = new Set(),
 ): MergeDecision | null {
 	let best: MergeDecision | null = null;
 	for (let i = 0; i < synths.length; i++) {
 		for (let j = i + 1; j < synths.length; j++) {
 			const a = synths[i];
 			const b = synths[j];
+			if (rejectedPairs.has(pairKey(a.doc.statementId, b.doc.statementId))) continue;
 			// Compute every cross-member cosine, then take top-2 average.
 			// A single high-cosine outlier pair is not enough — vocabulary
 			// overlap between distinct ideas can produce one lucky 0.86 pair.
@@ -209,6 +285,20 @@ async function processParent(
 		members: Array.isArray(d.integratedOptions) ? [...d.integratedOptions] : [],
 	}));
 
+	// The question text the merge judge reasons against. Falls back to the id so
+	// a missing parent doc degrades the prompt rather than skipping the sweep.
+	let questionContext = parentId;
+	try {
+		const parentSnap = await db().collection(Collections.statements).doc(parentId).get();
+		const parentDoc = parentSnap.exists ? (parentSnap.data() as Statement) : null;
+		if (parentDoc?.statement) questionContext = parentDoc.statement;
+	} catch (error) {
+		logger.warn('synthesis.reJudge: parent fetch failed, using id as context', {
+			parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
+
 	// Batch-fetch every member's embedding across all synths in this parent.
 	const allMemberIds = new Set<string>();
 	for (const s of synths) for (const m of s.members) allMemberIds.add(m);
@@ -233,11 +323,24 @@ async function processParent(
 	// Loop: find best merge pair, perform it, repeat. Each merge shrinks the
 	// synth list; recompute pairs each iteration so freshly-merged recipients
 	// can attract further donors.
+	const rejectedPairs = new Set<string>();
 	while (merges < MAX_MERGES_PER_PARENT && synths.length >= 2) {
-		const decision = pickMergePair(synths, embeddings, threshold);
+		const decision = pickMergePair(synths, embeddings, threshold, rejectedPairs);
 		if (!decision) break;
 		const recipient = synths[decision.recipientIdx];
 		const donor = synths[decision.donorIdx];
+
+		// Cosine got us a candidate; the LLM decides. Merging two clusters is
+		// expensive and effectively irreversible for the reader, and cosine
+		// provably cannot tell "two wordings of one proposal" from "two distinct
+		// proposals about the same thing" — the two bands overlap at 0.82-0.86.
+		// At most MAX_MERGES_PER_PARENT calls per parent per sweep.
+		const confirmed = await confirmMergeWithLlm(recipient, donor, questionContext);
+		if (!confirmed) {
+			rejectedPairs.add(pairKey(recipient.doc.statementId, donor.doc.statementId));
+			continue;
+		}
+
 		await mergeSynths(recipient, donor, decision.bestCosine);
 		synths.splice(decision.donorIdx, 1);
 		merges++;
