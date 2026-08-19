@@ -592,6 +592,47 @@ describe('runSinglePipeline', () => {
 		expect(spawnMock).toHaveBeenCalledTimes(2);
 	});
 
+	it('refuses a synth attach carried by the cluster title alone', async () => {
+		// The observed false-merge signature. A 6-member housing synth titled
+		// "Require Affordable Apartments in Every New Residential Development"
+		// swallowed three distinct housing ideas; a 4-member synth merged compost
+		// collection with recycling pickup. In both, the cross-idea MEMBER cosines
+		// were ≤0.836 — safely below attachThreshold — and the abstracted title
+		// carried the attach over the line on its own.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				// Title cosine clears attachThreshold...
+				statement: {
+					statementId: 'abstracted-synth',
+					integratedOptions: ['m1', 'm2'],
+					derivedByPipeline: 'synthesis',
+				} as unknown as Statement,
+				similarity: 0.88,
+			},
+		]);
+		// ...but the members sit well below it. ORTHOGONAL_VEC gives cosine 0 to
+		// the uniform option embedding, so Stage B's member evidence is far under
+		// the gate.
+		getBatchEmbeddingsMock.mockResolvedValue(
+			new Map([
+				['m1', ORTHOGONAL_VEC],
+				['m2', ORTHOGONAL_VEC],
+			]),
+		);
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+
+		expect(attachMock).not.toHaveBeenCalled();
+		expect(result.action).not.toBe('attached');
+	});
+
 	it('spawns a synth with the twin rather than filing the option into the theme holding it', async () => {
 		// Pass precedence. A theme that already holds your twin will always look
 		// cohesive to you, because your twin sits in its centroid — so if topic

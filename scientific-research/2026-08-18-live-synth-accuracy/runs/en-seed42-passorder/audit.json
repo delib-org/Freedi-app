@@ -1,0 +1,970 @@
+[
+  {
+    "action": "spawn",
+    "clusterId": "OWwkR2Vo4FI1",
+    "optionId": "cjoz4kE0C6kg",
+    "reason": "spawn synth at cosine=0.949",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "k70pMl8GnvFW",
+    "reason": "cosine=0.756",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "qCA0r1N2DiSn",
+    "reason": "cosine=0.760",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "5d0Pz1asNMy6",
+    "optionId": "HVFwBxXJo5WF",
+    "reason": "spawn synth at cosine=0.919",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "M5oOJpmbUB81",
+    "optionId": "8TAav-uvkp83",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "FCI6sBPntsCn",
+    "reason": "spawn cluster at cosine=0.624",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "J3Euj3S6S9WX",
+    "optionId": "KdAZA1ydBPzA",
+    "reason": "spawn synth at cosine=0.952",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "PXPBfgkuaBs2",
+    "optionId": "GK2IV0MX4bs3",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "jDc1msDvcxJC",
+    "optionId": "MY0m2AWuCEFB",
+    "reason": "spawn synth at cosine=0.920",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "GfsqJUVzBt6P",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "0Bx2D0s6DZzB",
+    "optionId": "qbDwRWelHOG-",
+    "reason": "spawn synth at cosine=0.802",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SRy5fZ23wCZJ",
+    "optionId": "nHhrVPhD6FNg",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "jgQ-buKCTfgH",
+    "optionId": "6Ey4PIJF54MP",
+    "reason": "spawn synth at cosine=0.892",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "PXPBfgkuaBs2",
+    "optionId": "WMRhmZwPex1m",
+    "reason": "nest synthesis under theme centroid=0.815",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "5nTJ6WkU-s2N",
+    "optionId": "hVR8naPco7pX",
+    "reason": "spawn synth at cosine=0.853",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "U0MX3VyglumL",
+    "optionId": "p5XyUx0NFGxq",
+    "reason": "spawn synth at cosine=0.918",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "zdK0A1hRhjIe",
+    "optionId": "Q2FiCIAg6Q7n",
+    "reason": "spawn synth at cosine=0.952",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "nHhrVPhD6FNg",
+    "optionId": "2cIHEUbrRQQH",
+    "reason": "spawn synth at cosine=0.915",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "q4RuKUTEBD2N",
+    "optionId": "z7RmoRoFg1vk",
+    "reason": "spawn synth at cosine=0.958",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "xvPqA7Zj7J9m",
+    "optionId": "VcW7gZEqv1Ng",
+    "reason": "spawn cluster at cosine=0.660",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "lxsi9aH-pSkz",
+    "reason": "nest synthesis under theme centroid=0.790",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "xvPqA7Zj7J9m",
+    "optionId": "dUbzFcHWvVOx",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "TI2wNElau0lI",
+    "optionId": "YrIKCStiJSpV",
+    "reason": "spawn synth at cosine=0.956",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "32yOe7aEMVQv",
+    "reason": "cosine=0.761",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "ACjmgyuOQDSK",
+    "optionId": "HSkxl-qFBZc6",
+    "reason": "spawn synth at cosine=0.907",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "SnlBVw0UNjmW",
+    "optionId": "nrBrUwrlJ4ou",
+    "reason": "spawn cluster at cosine=0.676",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SnlBVw0UNjmW",
+    "optionId": "CbbYUlYjh860",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "PXPBfgkuaBs2",
+    "optionId": "3JW4ZbTBVAmD",
+    "reason": "spawn cluster at cosine=0.664",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "vcz9IKOlQZAB",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "EAxTnaJ2hvl4",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "PXPBfgkuaBs2",
+    "optionId": "NFrgPvUWIY6a",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SRy5fZ23wCZJ",
+    "optionId": "RTyM1lc0L5rU",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "PXPBfgkuaBs2",
+    "optionId": "zt5KluTC7oMO",
+    "reason": "cosine=0.784",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "M5oOJpmbUB81",
+    "optionId": "-luqP1WPI3Dh",
+    "reason": "spawn cluster at cosine=0.703",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "LZc0AmHflMA4",
+    "reason": "cosine=0.805",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "KrmZsCfb774w",
+    "optionId": "oW5i1k1Vlv4t",
+    "reason": "spawn synth at cosine=0.915",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "zdK0A1hRhjIe",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "8TAav-uvkp83",
+    "optionId": "YTsmVN6GrTxv",
+    "reason": "spawn synth at cosine=0.891",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "ZQJUzpFza3Pw",
+    "optionId": "kyIcYtFhkizd",
+    "reason": "spawn synth at cosine=0.964",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "optionId": "-r739uHhf9mz",
+    "reason": "gray-band match (no auto-action) (cosine=0.789)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "ayNSexxOglwa",
+    "optionId": "ThHkRxE5kVry",
+    "reason": "spawn cluster at cosine=0.704",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "rBUu6wCCbHra",
+    "optionId": "W0DAWurmSPPt",
+    "reason": "spawn cluster at cosine=0.670",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "dUbzFcHWvVOx",
+    "optionId": "17YQHoKQdDaN",
+    "reason": "spawn synth at cosine=0.878",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "lxsi9aH-pSkz",
+    "optionId": "yufUftVuDn5w",
+    "reason": "spawn synth at cosine=0.890",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "njjFRKYtybBq",
+    "optionId": "GvGJRACT62Gg",
+    "reason": "spawn synth at cosine=0.917",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "0GRrlUweY8sR",
+    "reason": "cosine=0.758",
+    "triggerSource": "pipeline:queueWorker"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "4CwYIL-qBEIj",
+    "reason": "spawn cluster at cosine=0.601",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "OUV142i6dOmL",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "dIsj996Z4tnN",
+    "reason": "nest synthesis under theme centroid=0.786",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "7kSDXvjv3rfN",
+    "optionId": "mEuUNO-P8Xdn",
+    "reason": "spawn synth at cosine=0.986",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "eNDyLkjG2TVJ",
+    "reason": "cosine=0.780",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "IuDUnS6CtyEJ",
+    "optionId": "3ARqZrNPfzYC",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "ayNSexxOglwa",
+    "optionId": "uPvI1AJRSuVI",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "5d0Pz1asNMy6",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "M5oOJpmbUB81",
+    "optionId": "O6rbzQZ0NciY",
+    "reason": "cosine=0.661",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "lH8B4UTkv3N0",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "7TLwpR49Q3dE",
+    "optionId": "hOyT5AjpVNCo",
+    "reason": "spawn synth at cosine=0.934",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "ZQJUzpFza3Pw",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "IuDUnS6CtyEJ",
+    "optionId": "7kSDXvjv3rfN",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "A7DWYyoXrvhk",
+    "reason": "cosine=0.772",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "NFrgPvUWIY6a",
+    "optionId": "Xv5qAAkA-1np",
+    "reason": "spawn synth at cosine=0.912",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "IpuDMe0hG61-",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "njjFRKYtybBq",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "GK2IV0MX4bs3",
+    "optionId": "DFHjs3ng0cyK",
+    "reason": "spawn synth at cosine=0.895",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "zJJs6X7U8MXD",
+    "reason": "cosine=0.751",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SnlBVw0UNjmW",
+    "optionId": "nRwlFPkZcZ2W",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "GfsqJUVzBt6P",
+    "optionId": "qD8ZupGRWFbe",
+    "reason": "spawn synth at cosine=0.931",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "3ARqZrNPfzYC",
+    "optionId": "NM1IjxF1n5nw",
+    "reason": "spawn synth at cosine=0.816",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "sddP0vOgKiL8",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "uJKNnLfZP1Sy",
+    "optionId": "Zb7tCq34TA9K",
+    "reason": "spawn synth at cosine=0.899",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "dIsj996Z4tnN",
+    "optionId": "oqrruTRlCBfO",
+    "reason": "spawn synth at cosine=0.850",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "cq2Nl3xYrIEB",
+    "reason": "cosine=0.787",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "IuDUnS6CtyEJ",
+    "optionId": "yb14m6-kAsO-",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "yb14m6-kAsO-",
+    "optionId": "veshlN4V-Nrk",
+    "reason": "spawn synth at cosine=0.940",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "SRy5fZ23wCZJ",
+    "optionId": "P7Bq11DXalzJ",
+    "reason": "spawn cluster at cosine=0.734",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "rBUu6wCCbHra",
+    "optionId": "oEOAyiY9bG7V",
+    "reason": "cosine=0.790",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "sddP0vOgKiL8",
+    "optionId": "NgQLLFKrO8ZW",
+    "reason": "spawn synth at cosine=0.896",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "OUV142i6dOmL",
+    "optionId": "ihQvSsuNj75Q",
+    "reason": "spawn synth at cosine=0.925",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "rBUu6wCCbHra",
+    "optionId": "U0MX3VyglumL",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "AtJfnrsJq9dZ",
+    "optionId": "LFe8c98MtKzC",
+    "reason": "spawn synth at cosine=0.922",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "optionId": "Do5CnW7R-7R4",
+    "reason": "gray-band match (no auto-action) (cosine=0.753)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "q0mwiLBfTALx",
+    "optionId": "KnFR3LT1b-KB",
+    "reason": "spawn synth at cosine=0.941",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "HV3VwrznGSsz",
+    "optionId": "wrXcUAozSyiy",
+    "reason": "spawn synth at cosine=0.944",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "lH8B4UTkv3N0",
+    "optionId": "xjvT89WuJrGk",
+    "reason": "spawn synth at cosine=0.909",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "i3U9oTts8U0D",
+    "reason": "spawn cluster at cosine=0.633",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "Em3UEfIE7qPg",
+    "optionId": "gDUygrSs5O8o",
+    "reason": "spawn synth at cosine=0.937",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "J3Euj3S6S9WX",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "7TLwpR49Q3dE",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "aEzUXTOjjb70",
+    "optionId": "HiDh2tc8gpFM",
+    "reason": "spawn synth at cosine=0.971",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "M5oOJpmbUB81",
+    "optionId": "0TS5Qz9AgCoy",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "0TS5Qz9AgCoy",
+    "optionId": "jibPRpPTaZcP",
+    "reason": "spawn synth at cosine=0.884",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "IuDUnS6CtyEJ",
+    "optionId": "OWwkR2Vo4FI1",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "pa2f5gR1i3Pt",
+    "optionId": "tOw1AkU1mNq5",
+    "reason": "spawn synth at cosine=0.983",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "WMRhmZwPex1m",
+    "optionId": "zltjkYtB6B3Y",
+    "reason": "spawn synth at cosine=0.934",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "jgQ-buKCTfgH",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "295WuJqAMl3D",
+    "reason": "cosine=0.743",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "ayNSexxOglwa",
+    "optionId": "ACjmgyuOQDSK",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "pa2f5gR1i3Pt",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "IuDUnS6CtyEJ",
+    "optionId": "eJeMjY1aT34o",
+    "reason": "spawn cluster at cosine=0.653",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "TI2wNElau0lI",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "70lTXTmyUDiJ",
+    "optionId": "JPO9c2p6JHpP",
+    "reason": "spawn synth at cosine=0.909",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "uDenYLVaS373",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "kPGaALhwvykD",
+    "reason": "cosine=0.733",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "RTyM1lc0L5rU",
+    "optionId": "Q6-IkdTDkZQ9",
+    "reason": "spawn synth at cosine=0.928",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "4ZiTJiLO25jX",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "jDc1msDvcxJC",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "xZyZjsNDGAtj",
+    "reason": "spawn cluster at cosine=0.642",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "PXPBfgkuaBs2",
+    "optionId": "5nTJ6WkU-s2N",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "Em3UEfIE7qPg",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "q4RuKUTEBD2N",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "IuDUnS6CtyEJ",
+    "optionId": "7EwxTGkBjy0-",
+    "reason": "cosine=0.781",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "4ZiTJiLO25jX",
+    "optionId": "EH17kl80z0oc",
+    "reason": "spawn synth at cosine=0.919",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "y8fnYZDCBlbx",
+    "optionId": "68HlEtO1z5Wg",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "68HlEtO1z5Wg",
+    "optionId": "-IB8qDKlhAoZ",
+    "reason": "spawn synth at cosine=0.989",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "uPvI1AJRSuVI",
+    "optionId": "AtprpFWhI9On",
+    "reason": "spawn synth at cosine=0.874",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "ayNSexxOglwa",
+    "optionId": "owtPRd7JDe6o",
+    "reason": "cosine=0.813",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "uDenYLVaS373",
+    "optionId": "6pYR2NVcSoPw",
+    "reason": "spawn synth at cosine=0.925",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "PUWJqQ3R84KQ",
+    "reason": "cosine=0.823",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "optionId": "nrTCrpVzAAsZ",
+    "reason": "gray-band match (no auto-action) (cosine=0.705)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "nRwlFPkZcZ2W",
+    "optionId": "zsHZi5ctOOCH",
+    "reason": "spawn synth at cosine=0.900",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "EAxTnaJ2hvl4",
+    "optionId": "3Qb9hcC3er1o",
+    "reason": "spawn synth at cosine=0.913",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "SzcKOGjBK6fZ",
+    "optionId": "aEzUXTOjjb70",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "QrLfiFMK5yhD",
+    "reason": "cosine=0.793",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "IpuDMe0hG61-",
+    "optionId": "4mfgdqqLHWXi",
+    "reason": "spawn synth at cosine=0.952",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "CbbYUlYjh860",
+    "optionId": "CFzxTuzpHW-U",
+    "reason": "spawn synth at cosine=0.976",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "optionId": "q5ARGPT7knsL",
+    "reason": "gray-band match (no auto-action) (cosine=0.706)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "4XU6aF0D8SJa",
+    "reason": "cosine=0.789",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "IuDUnS6CtyEJ",
+    "optionId": "KKo7zMu5aWDd",
+    "reason": "cosine=0.792",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "clusterId": "vcz9IKOlQZAB",
+    "optionId": "BOAfJRJPN8Xt",
+    "reason": "spawn synth at cosine=0.964",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "e4Dm8IilO6d6",
+    "reason": "cosine=0.770",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "rBUu6wCCbHra",
+    "optionId": "AtJfnrsJq9dZ",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "review-queued",
+    "optionId": "9iQOijKcgca-",
+    "reason": "gray-band match (no auto-action) (cosine=0.728)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "M5oOJpmbUB81",
+    "optionId": "0Bx2D0s6DZzB",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "ayNSexxOglwa",
+    "optionId": "HV3VwrznGSsz",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6lSDy7wLe802",
+    "optionId": "q0mwiLBfTALx",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "oW5VMRxwIvmL",
+    "reason": "cosine=0.737",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "clusterId": "6X98gMdXV2ex",
+    "optionId": "70lTXTmyUDiJ",
+    "reason": "nest synthesis under theme centroid=0.789",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "xvPqA7Zj7J9m",
+    "optionId": "KrmZsCfb774w",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "clusterId": "rBUu6wCCbHra",
+    "optionId": "uJKNnLfZP1Sy",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  }
+]

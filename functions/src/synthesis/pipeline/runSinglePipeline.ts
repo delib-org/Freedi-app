@@ -491,6 +491,7 @@ async function executePipeline(
 	const stageBStarted = Date.now();
 	const stageB = await expandClusterEvidenceViaFullMembers(clusterEvidence, embedding);
 	const memberEmbeddings = stageB.memberEmbeddings ?? new Map<string, number[]>();
+	const memberEvidence = stageB.memberEvidence ?? new Map<string, number>();
 	if (stageB.promotions > 0) {
 		logger.debug('synthesis.pipeline.stageB.promotions', {
 			optionId: option.statementId,
@@ -521,6 +522,25 @@ async function executePipeline(
 		.filter((x) => isSynth(x.cluster) && x.bestSimilarity >= settings.attachThreshold)
 		.sort((a, b) => b.bestSimilarity - a.bestSimilarity);
 	for (const synthMatch of synthMatches) {
+		// The cluster's own TITLE cosine may not carry an attach on its own.
+		// `bestSimilarity` maxes title and member evidence so a drifting synth
+		// title cannot hide a cluster from attach — but that same max lets an
+		// abstracted title admit statements its members would have refused.
+		// Measured, both observed false merges have this signature: the
+		// cross-idea member cosines were ≤0.836, safely below attachThreshold,
+		// and the title carried them over. Fail-open when no member embeddings
+		// were available, matching the cohesion gate below.
+		const memberSimilarity = memberEvidence.get(synthMatch.cluster.statementId);
+		if (memberSimilarity !== undefined && memberSimilarity < settings.attachThreshold) {
+			logger.info('synthesis.pipeline.attach.titleOnlyRejected', {
+				optionId: option.statementId,
+				clusterId: synthMatch.cluster.statementId,
+				bestSimilarity: Number(synthMatch.bestSimilarity.toFixed(3)),
+				memberSimilarity: Number(memberSimilarity.toFixed(3)),
+				attachThreshold: settings.attachThreshold,
+			});
+			continue;
+		}
 		const memberVecs = (synthMatch.cluster.integratedOptions ?? [])
 			.map((id) => memberEmbeddings.get(id))
 			.filter((v): v is number[] => Array.isArray(v) && v.length > 0);

@@ -64,15 +64,44 @@ export async function expandClusterEvidenceViaFullMembers(
 	 * the fetch was skipped or failed.
 	 */
 	memberEmbeddings: Map<string, number[]>;
+	/**
+	 * Per cluster, the top-2-average MEMBER cosine — evidence derived only from
+	 * what the cluster actually contains, with the cluster's own title cosine
+	 * excluded.
+	 *
+	 * `bestSimilarity` deliberately maxes the two so a drifting synth title can't
+	 * hide a cluster from attach. But the same max lets the title carry an attach
+	 * on its own, and an LLM-merged title abstracts: "Require Affordable
+	 * Apartments in Every New Residential Development" sits close to every housing
+	 * proposal in the question, not just to its own members. Measured, that is how
+	 * both observed false merges happened — a 6-member housing synth swallowing
+	 * three distinct ideas, and a 4-member synth merging compost collection with
+	 * recycling pickup — in each case with cross-idea member cosines (≤0.836)
+	 * safely BELOW attachThreshold.
+	 *
+	 * Kept separate so the attach gate can require member evidence while candidate
+	 * discovery keeps using the max. Absent for a cluster whose members have no
+	 * usable embeddings, where the caller falls back to `bestSimilarity`.
+	 */
+	memberEvidence: Map<string, number>;
 }> {
-	if (evidence.size === 0) return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
+	if (evidence.size === 0) {
+		return {
+			map: evidence,
+			promotions: 0,
+			memberEmbeddings: new Map(),
+			memberEvidence: new Map(),
+		};
+	}
 
 	// Union of all member IDs across clusters in the evidence map.
 	const memberIds = new Set<string>();
 	for (const entry of evidence.values()) {
 		for (const m of entry.cluster.integratedOptions ?? []) memberIds.add(m);
 	}
-	if (memberIds.size === 0) return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
+	if (memberIds.size === 0) {
+		return { map: evidence, promotions: 0, memberEmbeddings: new Map(), memberEvidence: new Map() };
+	}
 
 	let memberEmbeddings: Map<string, number[]> | undefined;
 	try {
@@ -84,14 +113,15 @@ export async function expandClusterEvidenceViaFullMembers(
 			error: error instanceof Error ? error.message : String(error),
 		});
 
-		return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
+		return { map: evidence, promotions: 0, memberEmbeddings: new Map(), memberEvidence: new Map() };
 	}
 	if (!memberEmbeddings || typeof memberEmbeddings.get !== 'function') {
 		// Defensive: a stubbed cache (e.g. in tests) may resolve undefined.
-		return { map: evidence, promotions: 0, memberEmbeddings: new Map() };
+		return { map: evidence, promotions: 0, memberEmbeddings: new Map(), memberEvidence: new Map() };
 	}
 
 	let promotions = 0;
+	const memberEvidence = new Map<string, number>();
 	for (const [clusterId, entry] of evidence) {
 		const members = entry.cluster.integratedOptions ?? [];
 		const cosines: number[] = [];
@@ -105,6 +135,7 @@ export async function expandClusterEvidenceViaFullMembers(
 		if (cosines.length < 2) continue;
 		cosines.sort((a, b) => b - a);
 		const top2Avg = (cosines[0] + cosines[1]) / 2;
+		memberEvidence.set(clusterId, top2Avg);
 		if (top2Avg > entry.bestSimilarity) {
 			evidence.set(clusterId, {
 				cluster: entry.cluster,
@@ -115,5 +146,5 @@ export async function expandClusterEvidenceViaFullMembers(
 		}
 	}
 
-	return { map: evidence, promotions, memberEmbeddings };
+	return { map: evidence, promotions, memberEmbeddings, memberEvidence };
 }
