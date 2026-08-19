@@ -122,6 +122,9 @@ describe('synthesis settings', () => {
 				clusterThreshold: 0.75,
 				reviewLowerBound: 0.6,
 				claimRegistryEnabled: DEFAULT_SYNTHESIS_SETTINGS.claimRegistryEnabled,
+				llmThemeAssignment: DEFAULT_SYNTHESIS_SETTINGS.llmThemeAssignment,
+				createThemesFromSyntheses: DEFAULT_SYNTHESIS_SETTINGS.createThemesFromSyntheses,
+				spawnThemesFromOptionPairs: DEFAULT_SYNTHESIS_SETTINGS.spawnThemesFromOptionPairs,
 			});
 		});
 

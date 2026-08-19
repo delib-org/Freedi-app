@@ -1,15 +1,13 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, type Statement } from '@freedi/shared-types';
-import { vectorSearchService } from '../../services/vector-search-service';
-import { embeddingCache } from '../../services/embedding-cache-service';
+import { Collections, StatementType, type Statement, getRandomUID } from '@freedi/shared-types';
+import { assignToTheme, generateTopicLabel, type ThemeOption } from '../../services/integration-ai-service';
 import {
 	enqueueClusterRecompute,
 	findClustersContainingMember,
 } from '../liveSynth/clusterRecompute';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
-import { assessCohesion, centroidOf, passesTopicCohesionGate } from './clusterCohesion';
-import { isSynth, isTopicCluster } from './clusterOps';
+import { isTopicCluster } from './clusterOps';
 import type { SynthesisSettings } from './types';
 
 /**
@@ -18,37 +16,53 @@ import type { SynthesisSettings } from './types';
  * The two layers were built to compete rather than nest: `spawnClusterFromPair`
  * only ever puts plain options into `integratedOptions`, so a synthesis was
  * never placed inside a topic cluster and five distinct transport ideas were
- * never assembled under "transport". The accuracy benchmark measured the cost
- * exactly — six of ten themes scored 2/10, meaning the only grouping standing
- * for the theme was a single merged twin pair. It is what caps the headline
- * score at ~0.73 no matter how well the synthesis half performs.
+ * never assembled under "transport".
  *
  * Ownership model: a statement lives in its synthesis ONLY, and the theme
  * reaches it transitively, one level down. Single ownership at the member
  * level, nesting at the cluster level — the shape the scorer and the app's
  * 3-level view already read.
  *
- * The synthesis is matched to a theme on the centroid of its MEMBERS, not on
- * its own title embedding: an LLM-merged title abstracts and shortens, and
- * drifts away from the theme its members plainly sit in. The members are also
- * embedded synchronously on create, whereas the cluster's own embedding lands
- * asynchronously and may not exist yet at the moment of spawn.
+ * WHY THE PLACEMENT IS AN LLM CALL. With the synthesis layer solved (F1 0.926,
+ * every ground-truth pair recovered) the theme layer is the entire remaining
+ * gap, and measurement says it is not a tuning gap. On the accuracy corpus:
+ *
+ *   same-theme synth pairs      median cosine 0.743
+ *   different-theme synth pairs median cosine 0.670
+ *
+ *   best single pairwise cut, 3-small        F1 0.480
+ *   best single pairwise cut, 3-large @1536  F1 0.535
+ *   global agglomerative clustering to k=10  F1 0.432
+ *   the shipped greedy pipeline reached      F1 0.388
+ *
+ * The pipeline was already at ~90% of its mechanism's ceiling; a better
+ * embedding model buys ~0.05 and a global re-clustering sweep buys nothing.
+ * Theme membership is a semantic judgement embedding distance does not encode
+ * on a single-question corpus, so cosine is out of this decision entirely —
+ * every live theme is offered to the judge, not a cosine-filtered shortlist.
  *
  * Best-effort throughout. A synthesis with no theme is a worse result than a
  * nested one, but it is not a broken one, so every failure path here logs and
  * returns rather than throwing into the trigger.
  */
 
-const NEST_NEIGHBOR_LIMIT = 10;
-
 function db() {
 	return getFirestore();
 }
 
+/**
+ * A question's live themes are capped so one pathological question cannot send
+ * an unbounded prompt. Well past the ~10-15 a real question produces.
+ */
+const MAX_THEMES_IN_PROMPT = 60;
+
 export interface NestInput {
 	synthId: string;
-	/** Members of the synthesis, used to derive its position. */
+	/** Members of the synthesis — what the theme must NOT also claim directly. */
 	memberIds: string[];
+	/** Title of the synthesis; what the judge actually reads. */
+	synthTitle: string;
+	synthDescription?: string;
 	parent: Statement;
 	settings: SynthesisSettings;
 	triggerSource: string;
@@ -57,57 +71,124 @@ export interface NestInput {
 export interface NestResult {
 	nested: boolean;
 	topicClusterId?: string;
+	/** True when the theme was created for this synthesis. */
+	created?: boolean;
 	reason: string;
 }
 
+/** Every live topic cluster under this question. */
+async function liveThemes(parentId: string): Promise<Statement[]> {
+	const snap = await db()
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('statementType', '==', StatementType.option)
+		.get();
+
+	return snap.docs
+		.map((d) => d.data() as Statement)
+		.filter((s) => s.isCluster === true && s.hide !== true && isTopicCluster(s))
+		.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
+		.slice(0, MAX_THEMES_IN_PROMPT);
+}
+
 /**
- * Candidate themes for a synthesis: topic clusters in the synthesis's own
- * neighbourhood, plus the topic clusters that own any plain option in that
- * neighbourhood. The second half matters because a theme's title is a short
- * abstract label ("transport") whose direct cosine to a concrete proposal is
- * often well below its members' — the same title-drift that transitive
- * evidence solves for attach.
+ * Create a theme around a single synthesis.
+ *
+ * A theme born from one synthesis is the correct starting state, not a
+ * degenerate one: the judge above files later syntheses into it by name, so a
+ * theme only has to exist and be well-labelled to start collecting. Themes used
+ * to be born from a pair of raw options instead, which is what produced four
+ * near-duplicate themes ("Public Service Access", "Essential service
+ * accessibility", "Public access and mobility", "Community Support Services")
+ * in a single run — each spawned because cosine could not see it already had a
+ * home.
  */
-async function candidateTopicClusters(
-	centroid: number[],
-	parentId: string,
-	settings: SynthesisSettings,
-	excludeIds: Set<string>,
-): Promise<Map<string, Statement>> {
-	const found = new Map<string, Statement>();
-	const neighbors = await vectorSearchService.findSimilarByEmbedding(centroid, parentId, {
-		limit: NEST_NEIGHBOR_LIMIT,
-		threshold: settings.reviewLowerBound,
+async function createThemeForSynth(
+	synthId: string,
+	synthDoc: Statement,
+	parent: Statement,
+	triggerSource: string,
+): Promise<NestResult> {
+	let title: string;
+	let description: string;
+	try {
+		const label = await generateTopicLabel(
+			[synthDoc],
+			parent.statement || parent.statementId,
+		);
+		title = label.title;
+		description = label.description;
+	} catch (error) {
+		logger.warn('synthesis.nest: topic label generation failed', {
+			synthId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return { nested: false, reason: 'theme-label-failed' };
+	}
+
+	const themeId = getRandomUID();
+	const now = Date.now();
+	const theme: Partial<Statement> & Record<string, unknown> = {
+		statementId: themeId,
+		statement: title,
+		description,
+		statementType: StatementType.option,
+		parentId: parent.statementId,
+		parents: [...(parent.parents ?? []), parent.statementId],
+		topParentId: synthDoc.topParentId ?? parent.statementId,
+		creatorId: synthDoc.creatorId,
+		creator: synthDoc.creator,
+		createdAt: now,
+		lastUpdate: now,
+		consensus: 0,
+		integratedOptions: [synthId],
+		isCluster: true,
+		isSynthesis: false,
+		derivedByPipeline: 'topic-cluster',
+		synthesisMechanism: 'live-spawn',
+		liveSynthOrigin: 'spawn',
+		hide: false,
+	};
+
+	try {
+		await db().collection(Collections.statements).doc(themeId).set(theme);
+	} catch (error) {
+		logger.warn('synthesis.nest: theme write failed', {
+			synthId,
+			themeId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return { nested: false, reason: 'theme-write-failed' };
+	}
+
+	logger.info('synthesis.pipeline.nest.themeCreated', {
+		synthId,
+		topicClusterId: themeId,
+		title: title?.substring(0, 60),
+		triggerSource,
 	});
 
-	const plainNeighborIds: string[] = [];
-	for (const n of neighbors) {
-		const s = n.statement;
-		if (excludeIds.has(s.statementId)) continue;
-		if (isTopicCluster(s) && (s.integratedOptions ?? []).length > 0) {
-			found.set(s.statementId, s);
-			continue;
-		}
-		if (!isSynth(s) && (s.integratedOptions ?? []).length === 0) {
-			plainNeighborIds.push(s.statementId);
-		}
-	}
+	await recordLiveSynthEvent({
+		action: 'spawn',
+		clusterId: themeId,
+		optionId: synthId,
+		reason: 'new theme created for synthesis (no existing theme fit)',
+		prevState: { synthId },
+		newState: { clusterId: themeId, integratedOptions: [synthId] },
+		triggerSource: `${triggerSource}:themeCreate`,
+		parentStatementId: parent.statementId,
+	});
 
-	for (const neighborId of plainNeighborIds) {
-		const owners = await findClustersContainingMember(neighborId);
-		for (const owner of owners) {
-			if (owner.hide === true) continue;
-			if (!isTopicCluster(owner)) continue;
-			if (excludeIds.has(owner.statementId)) continue;
-			found.set(owner.statementId, owner);
-		}
-	}
+	await enqueueClusterRecompute(themeId, `${triggerSource}:themeCreate`);
 
-	return found;
+	return { nested: true, topicClusterId: themeId, created: true, reason: 'new-theme' };
 }
 
 export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult> {
-	const { synthId, memberIds, parent, settings, triggerSource } = input;
+	const { synthId, memberIds, synthTitle, synthDescription, parent, settings, triggerSource } =
+		input;
 
 	// Already themed? Nothing to do — and re-adding would double-claim.
 	try {
@@ -124,82 +205,50 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 		return { nested: false, reason: 'ownership-check-failed' };
 	}
 
-	let memberVectors: number[][];
+	let themes: Statement[];
 	try {
-		const fetched = await embeddingCache.getBatchEmbeddings(memberIds);
-		if (!fetched || typeof fetched.get !== 'function') {
-			return { nested: false, reason: 'no-member-embeddings' };
-		}
-		memberVectors = memberIds
-			.map((id) => fetched.get(id))
-			.filter((v): v is number[] => Array.isArray(v) && v.length > 0);
+		themes = await liveThemes(parent.statementId);
 	} catch (error) {
-		logger.warn('synthesis.nest: member embedding fetch failed', {
+		logger.warn('synthesis.nest: theme listing failed', {
 			synthId,
 			error: error instanceof Error ? error.message : String(error),
 		});
 
-		return { nested: false, reason: 'member-embedding-fetch-failed' };
-	}
-	if (memberVectors.length === 0) return { nested: false, reason: 'no-member-embeddings' };
-
-	const synthCentroid = centroidOf(memberVectors);
-	if (synthCentroid.length === 0) return { nested: false, reason: 'no-centroid' };
-
-	const exclude = new Set<string>([synthId, ...memberIds]);
-	let candidates: Map<string, Statement>;
-	try {
-		candidates = await candidateTopicClusters(synthCentroid, parent.statementId, settings, exclude);
-	} catch (error) {
-		logger.warn('synthesis.nest: candidate search failed', {
-			synthId,
-			error: error instanceof Error ? error.message : String(error),
-		});
-
-		return { nested: false, reason: 'candidate-search-failed' };
-	}
-	if (candidates.size === 0) return { nested: false, reason: 'no-candidate-themes' };
-
-	// Score every candidate theme on the same centroid gate that governs a plain
-	// option's topic attach, then take the best. Using the same gate is the point:
-	// a synthesis joins a theme on exactly the terms its members would have.
-	const gate = {
-		centroidFloor: settings.synthLowerBound,
-		memberFloor: settings.clusterThreshold,
-		quorumFraction: 0.5,
-	};
-
-	const themeMemberIds = new Set<string>();
-	for (const theme of candidates.values()) {
-		for (const m of theme.integratedOptions ?? []) themeMemberIds.add(m);
-	}
-	let themeMemberEmbeddings: Map<string, number[]>;
-	try {
-		const fetched = await embeddingCache.getBatchEmbeddings(Array.from(themeMemberIds));
-		themeMemberEmbeddings =
-			fetched && typeof fetched.get === 'function' ? fetched : new Map<string, number[]>();
-	} catch {
-		themeMemberEmbeddings = new Map<string, number[]>();
+		return { nested: false, reason: 'theme-listing-failed' };
 	}
 
-	let best: { theme: Statement; centroidCosine: number } | null = null;
-	for (const theme of candidates.values()) {
-		const vecs = (theme.integratedOptions ?? [])
-			.map((id) => themeMemberEmbeddings.get(id))
-			.filter((v): v is number[] => Array.isArray(v) && v.length > 0);
-		// Fail CLOSED here, unlike the attach gate. An attach that cannot measure
-		// cohesion falls back to a cosine the caller already checked; a nest with
-		// no measurement at all would be a guess.
-		if (vecs.length === 0) continue;
-		const cohesion = assessCohesion(vecs, synthCentroid, gate.memberFloor);
-		if (!passesTopicCohesionGate(cohesion, gate)) continue;
-		if (!best || cohesion.centroidCosine > best.centroidCosine) {
-			best = { theme, centroidCosine: cohesion.centroidCosine };
+	const options: ThemeOption[] = themes.map((t) => ({
+		id: t.statementId,
+		title: t.statement ?? '',
+		description: t.description,
+	}));
+
+	const decision = await assignToTheme({
+		proposalTitle: synthTitle,
+		proposalDescription: synthDescription,
+		themes: options,
+		questionContext: parent.statement || parent.statementId,
+	});
+
+	if (!decision.themeId) {
+		if (!settings.createThemesFromSyntheses) {
+			return { nested: false, reason: `no-theme-fit: ${decision.reason}` };
 		}
-	}
-	if (!best) return { nested: false, reason: 'no-theme-passed-cohesion' };
+		const synthSnap = await db().collection(Collections.statements).doc(synthId).get();
+		if (!synthSnap.exists) return { nested: false, reason: 'synth-not-found' };
 
-	const previous = best.theme.integratedOptions ?? [];
+		return createThemeForSynth(
+			synthId,
+			synthSnap.data() as Statement,
+			parent,
+			triggerSource,
+		);
+	}
+
+	const theme = themes.find((t) => t.statementId === decision.themeId);
+	if (!theme) return { nested: false, reason: 'chosen-theme-vanished' };
+
+	const previous = theme.integratedOptions ?? [];
 	if (previous.includes(synthId)) return { nested: false, reason: 'already-member' };
 	// Any of the synthesis's members sitting directly in the theme are replaced by
 	// the synthesis itself, so nothing is claimed twice.
@@ -208,12 +257,12 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 	try {
 		await db()
 			.collection(Collections.statements)
-			.doc(best.theme.statementId)
+			.doc(theme.statementId)
 			.update({ integratedOptions: next, lastUpdate: Date.now() });
 	} catch (error) {
 		logger.warn('synthesis.nest: theme update failed', {
 			synthId,
-			topicClusterId: best.theme.statementId,
+			topicClusterId: theme.statementId,
 			error: error instanceof Error ? error.message : String(error),
 		});
 
@@ -222,24 +271,26 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 
 	logger.info('synthesis.pipeline.nest', {
 		synthId,
-		topicClusterId: best.theme.statementId,
-		centroidCosine: Number(best.centroidCosine.toFixed(3)),
+		topicClusterId: theme.statementId,
+		themeTitle: theme.statement?.substring(0, 60),
+		reason: decision.reason,
 		themeMemberCount: next.length,
+		themesOffered: options.length,
 		triggerSource,
 	});
 
 	await recordLiveSynthEvent({
 		action: 'attach',
-		clusterId: best.theme.statementId,
+		clusterId: theme.statementId,
 		optionId: synthId,
-		reason: `nest synthesis under theme centroid=${best.centroidCosine.toFixed(3)}`,
+		reason: `nest synthesis under theme (judge: ${decision.reason})`,
 		prevState: { integratedOptions: previous },
 		newState: { integratedOptions: next },
 		triggerSource: `${triggerSource}:nest`,
 		parentStatementId: parent.statementId,
 	});
 
-	await enqueueClusterRecompute(best.theme.statementId, `${triggerSource}:nest`);
+	await enqueueClusterRecompute(theme.statementId, `${triggerSource}:nest`);
 
-	return { nested: true, topicClusterId: best.theme.statementId, reason: 'nested' };
+	return { nested: true, topicClusterId: theme.statementId, reason: 'judged' };
 }

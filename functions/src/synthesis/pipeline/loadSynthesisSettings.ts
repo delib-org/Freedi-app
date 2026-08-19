@@ -91,6 +91,18 @@ function mergeWithDefaults(
 			typeof partial.claimRegistryEnabled === 'boolean'
 				? partial.claimRegistryEnabled
 				: defaults.claimRegistryEnabled,
+		llmThemeAssignment:
+			typeof partial.llmThemeAssignment === 'boolean'
+				? partial.llmThemeAssignment
+				: defaults.llmThemeAssignment,
+		createThemesFromSyntheses:
+			typeof partial.createThemesFromSyntheses === 'boolean'
+				? partial.createThemesFromSyntheses
+				: defaults.createThemesFromSyntheses,
+		spawnThemesFromOptionPairs:
+			typeof partial.spawnThemesFromOptionPairs === 'boolean'
+				? partial.spawnThemesFromOptionPairs
+				: defaults.spawnThemesFromOptionPairs,
 	};
 }
 

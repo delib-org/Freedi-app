@@ -128,6 +128,25 @@ function makeParent(overrides: Partial<Statement> = {}): Statement {
 	} as unknown as Statement;
 }
 
+/**
+ * Parent with the legacy "themes may be born from a pair of raw options" path
+ * switched back on. It is OFF by default now — cosine cannot tell whether two
+ * raw options share a theme, and that path spawned near-duplicate themes it
+ * could not see were redundant. The tests below exercise the path itself, so
+ * they opt back into it explicitly.
+ */
+function makeParentWithOptionPairThemes(): Statement {
+	return makeParent({
+		statementSettings: {
+			synthesis: {
+				...DEFAULT_SYNTHESIS_SETTINGS,
+				enabled: true,
+				spawnThemesFromOptionPairs: true,
+			},
+		},
+	} as unknown as Partial<Statement>);
+}
+
 beforeEach(() => {
 	jest.clearAllMocks();
 	ensureEmbeddingMock.mockResolvedValue(Array(1536).fill(0.1));
@@ -137,6 +156,14 @@ beforeEach(() => {
 	findClustersContainingMemberMock.mockResolvedValue([]);
 	rehomeMock.mockResolvedValue(undefined);
 	nestMock.mockResolvedValue({ nested: false, reason: 'no-candidate-themes' });
+	// `jest.clearAllMocks()` clears recorded calls but NOT implementations set with
+	// `mockResolvedValue`, so without explicit defaults a test inherits whatever the
+	// previous one configured. That is not hypothetical: it made the pass-ordering
+	// test read "attached" in a full run and "spawned" in isolation.
+	getBatchEmbeddingsMock.mockResolvedValue(new Map<string, number[]>());
+	findSimilarMock.mockResolvedValue([]);
+	spawnMock.mockResolvedValue({ spawned: false });
+	reviewMock.mockResolvedValue(undefined);
 });
 
 describe('runSinglePipeline', () => {
@@ -534,9 +561,9 @@ describe('runSinglePipeline', () => {
 		// LLM judges directional conflict and refuses to synthesize. Instead of
 		// queuing for review (old behavior), pipeline retries the spawn in
 		// cluster mode (with bypassDebounce=true because the synth attempt
-		// already consumed the per-parent debounce window).
+		// already consumed the debounce window for this pair).
 		const option = makeOption();
-		const parent = makeParent();
+		const parent = makeParentWithOptionPairThemes();
 		findSimilarMock.mockResolvedValue([
 			{
 				statement: { statementId: 'sibling-3', integratedOptions: [] } as unknown as Statement,
@@ -565,7 +592,7 @@ describe('runSinglePipeline', () => {
 
 	it('re-queues rather than drops when both synth and cluster fallback fail', async () => {
 		const option = makeOption();
-		const parent = makeParent();
+		const parent = makeParentWithOptionPairThemes();
 		// Cosine 0.80 is in the synth-attempt band (≥ synthLowerBound 0.78
 		// and < attachThreshold 0.85), which is where the LLM is invited to
 		// merge and the cluster fallback applies when it refuses.
@@ -791,7 +818,7 @@ describe('runSinglePipeline', () => {
 		// spawn — skipping the wasted synth attempt that the synth-judge
 		// prompt would not refuse for non-conflicting distinct ideas.
 		const option = makeOption();
-		const parent = makeParent();
+		const parent = makeParentWithOptionPairThemes();
 		findSimilarMock.mockResolvedValue([
 			{
 				statement: {

@@ -78,7 +78,10 @@ import {
  *     the option (claim-registry questions only).
  *
  *   Pass 5 — TOPIC SPAWN: two distinct-but-related ideas, neither claimed by
- *     any cluster → generateTopicLabel → SPAWN TOPIC CLUSTER (1 LLM).
+ *     any cluster → generateTopicLabel → SPAWN TOPIC CLUSTER (1 LLM). OFF by
+ *     default — themes are born from syntheses now (see nestSynthesis.ts),
+ *     because cosine cannot tell whether two raw options share a theme and this
+ *     path spawned near-duplicate themes it could not see were redundant.
  *
  *   Pass 6 — REVIEW: top candidate at cosine ≥ reviewLowerBound but nothing
  *     above clusterThreshold → queue pair for admin review (0 LLM).
@@ -95,18 +98,19 @@ const NEIGHBOR_LIMIT = 10;
 
 /**
  * Snowball brake for synth attaches: a newcomer that clears `attachThreshold`
- * to one member must ALSO be cohesive with the cluster as a whole — either
- * close to the member centroid, or broadly related to a quorum of members.
- * Topic-cluster attaches (Pass 2) are intentionally lenient and not gated.
+ * to one member must ALSO be cohesive with the cluster as a whole — close to
+ * the member centroid AND broadly related to a quorum of members.
  *
  * `SYNTH_COHESION_QUORUM` is the fraction of members the option must be
- * "broadly related" to (cosine ≥ clusterThreshold) when the centroid signal
- * alone doesn't carry it.
+ * "broadly related" to. See `synthCentroidFloor` in clusterCohesion.ts for the
+ * measured separation that sets both floors, and for why the two signals are
+ * combined with AND — as an OR, with the per-member floor at `clusterThreshold`,
+ * this gate never once refused an attach in a 100-statement run.
  */
 const SYNTH_COHESION_QUORUM = 0.5;
 
 /**
- * Same brake for topic-cluster attaches (Pass 2), which used to have none.
+ * Same brake for topic-cluster attaches (Pass 3), which used to have none.
  *
  * "Lenient by design" turned out to mean "unbounded": with best evidence being
  * the MAX over members, and 80% of measured cross-topic pairs clearing a 0.60
@@ -579,11 +583,13 @@ async function executePipeline(
 			);
 		}
 		// A growing synth that never found a theme gets another chance on every
-		// attach — its centroid has just moved, and by now more themes exist.
-		if (topicOwners.length === 0) {
+		// attach — by now more themes exist for the judge to choose from.
+		if (topicOwners.length === 0 && settings.llmThemeAssignment) {
 			await nestSynthUnderTopic({
 				synthId: synthMatch.cluster.statementId,
 				memberIds: [...(synthMatch.cluster.integratedOptions ?? []), option.statementId],
+				synthTitle: synthMatch.cluster.statement ?? '',
+				synthDescription: synthMatch.cluster.description,
 				parent,
 				settings,
 				triggerSource,
@@ -659,10 +665,12 @@ async function executePipeline(
 			// two layers never meet: a theme holds five distinct ideas, but the
 			// moment two of them merge the merge leaves the theme behind.
 			let nestNote = '';
-			if (synthAttempt.clusterId) {
+			if (synthAttempt.clusterId && settings.llmThemeAssignment) {
 				const nested = await nestSynthUnderTopic({
 					synthId: synthAttempt.clusterId,
 					memberIds: [option.statementId, topPlainOption.statement.statementId],
+					synthTitle: synthAttempt.title ?? option.statement,
+					synthDescription: synthAttempt.description,
 					parent,
 					settings,
 					triggerSource,
@@ -783,6 +791,7 @@ async function executePipeline(
 	// existing theme fit. Spawning a theme needs a sibling no other cluster
 	// owns, and an option that already has a theme must not gain a second.
 	if (
+		settings.spawnThemesFromOptionPairs &&
 		!alreadyInTopic &&
 		topFreeOption &&
 		routeByCosine(topFreeOption.similarity, settings) !== 'review' &&

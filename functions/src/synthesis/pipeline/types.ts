@@ -53,6 +53,40 @@ export interface SynthesisSettings {
 	 * toggle-on flow runs a first-run backfill + catch-up enqueue.
 	 */
 	claimRegistryEnabled: boolean;
+	/**
+	 * Decide a proposal's THEME with the LLM instead of with cosine.
+	 *
+	 * Measured on the 100-statement accuracy corpus, with the synthesis layer
+	 * already solved (F1 0.926): the theme layer is the whole remaining gap and
+	 * no cosine mechanism reaches it. Best single pairwise cut 0.480 with
+	 * text-embedding-3-small and 0.535 with 3-large; global agglomerative
+	 * clustering to the true k=10 scores 0.432; the shipped greedy pipeline
+	 * already gets 0.388. Same-theme synth pairs sit at median cosine 0.743 and
+	 * different-theme pairs at 0.670 — the bands overlap, so the distinction is
+	 * simply not in the geometry.
+	 *
+	 * Costs one fast-model call per placed synthesis. Left as a switch so the
+	 * cosine path stays measurable against it rather than being deleted on the
+	 * strength of a single corpus.
+	 */
+	llmThemeAssignment: boolean;
+	/**
+	 * Let a synthesis that fits no existing theme create one, labelled from
+	 * itself. Requires `llmThemeAssignment` — without a judge to file later
+	 * syntheses into it by name, a one-member theme never grows.
+	 */
+	createThemesFromSyntheses: boolean;
+	/**
+	 * Allow a pair of raw options to spawn a theme (the historical behaviour).
+	 *
+	 * Turned OFF alongside LLM assignment. Cosine cannot tell whether two options
+	 * share a theme, so this path spawned near-duplicate themes it could not see
+	 * were redundant — one certified run produced "Public Service Access",
+	 * "Essential service accessibility", "Public access and mobility" and
+	 * "Community Support Services" side by side. With themes born from
+	 * syntheses and grown by the judge, this path is redundant.
+	 */
+	spawnThemesFromOptionPairs: boolean;
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
@@ -87,6 +121,9 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	// can run without the registry, and MC questions (enabled: true) still
 	// default to registry OFF.
 	claimRegistryEnabled: false,
+	llmThemeAssignment: true,
+	createThemesFromSyntheses: true,
+	spawnThemesFromOptionPairs: false,
 };
 
 /**

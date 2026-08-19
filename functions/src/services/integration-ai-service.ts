@@ -1,5 +1,10 @@
 import { logger } from 'firebase-functions';
-import { LLM_MODEL_HEAVY, getGenAI, type CompatGenerativeModel } from '../config/gemini';
+import {
+	LLM_MODEL_FAST,
+	LLM_MODEL_HEAVY,
+	getGenAI,
+	type CompatGenerativeModel,
+} from '../config/gemini';
 import { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { getParagraphsText } from '../helpers';
 
@@ -664,4 +669,148 @@ export function mapStatementToWithEvaluation(statement: Statement): StatementWit
 		consensus: evaluation?.agreement ?? statement.consensus ?? 0,
 		sumEvaluations: evaluation?.sumEvaluations || 0,
 	};
+}
+
+export interface ThemeOption {
+	id: string;
+	title: string;
+	description?: string;
+}
+
+export interface ThemeAssignmentResult {
+	/** Chosen theme id, or null for "none of these — it needs a new theme". */
+	themeId: string | null;
+	reason: string;
+}
+
+/**
+ * Decide which existing theme a proposal belongs to, or that it needs a new one.
+ *
+ * Why this is an LLM call and not a cosine comparison. Measured on the
+ * 100-statement accuracy corpus, with the synthesis layer already solved
+ * (F1 0.926, every ground-truth pair recovered), the theme layer is the whole
+ * remaining gap — and it is not a tuning gap:
+ *
+ *   same-theme synth pairs      median cosine 0.743
+ *   different-theme synth pairs median cosine 0.670
+ *
+ * Those bands overlap almost completely, and every cosine-shaped mechanism runs
+ * into the same wall:
+ *
+ *   best single pairwise cut, 3-small          F1 0.480
+ *   best single pairwise cut, 3-large @1536    F1 0.535
+ *   global agglomerative clustering to k=10    F1 0.432
+ *   the shipped greedy pipeline actually got   F1 0.388
+ *
+ * So the pipeline is already at ~90% of what its mechanism can reach, a better
+ * embedding model buys ~0.05, and a global re-clustering sweep buys nothing at
+ * all. Theme membership is a semantic judgement — "is a bus-frequency proposal
+ * and a bike-lane proposal the same topic?" — that embedding distance on a
+ * single-question corpus does not encode. The claim registry reached the same
+ * conclusion one layer down, where an LLM codebook scored 95% against
+ * embeddings' 0.5%.
+ *
+ * Shape of the call: the full list of live themes goes in, not a cosine-filtered
+ * shortlist. There are rarely more than a few dozen per question, and filtering
+ * by cosine first would reimpose the very geometry this call exists to escape.
+ *
+ * Uses the FAST model — this is a short classification, not a generation task.
+ *
+ * Fail-safe: on any error or unparseable answer, returns `themeId: null`, which
+ * the caller treats as "no theme yet". A missing theme is a recoverable gap; a
+ * wrong theme misfiles the proposal for every reader.
+ */
+export async function assignToTheme(input: {
+	proposalTitle: string;
+	proposalDescription?: string;
+	themes: ThemeOption[];
+	questionContext: string;
+}): Promise<ThemeAssignmentResult> {
+	const { proposalTitle, proposalDescription, themes, questionContext } = input;
+	if (themes.length === 0) return { themeId: null, reason: 'no-existing-themes' };
+
+	const themeLines = themes
+		.map((t, i) => `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}`)
+		.join('\n');
+
+	const prompt = `You are filing a community proposal under the topic it belongs to.
+
+QUESTION: "${questionContext}"
+
+EXISTING TOPICS:
+${themeLines}
+
+PROPOSAL:
+${proposalTitle}${proposalDescription ? `\n${proposalDescription}` : ''}
+
+TASK: Choose the ONE existing topic this proposal belongs under.
+
+A topic groups proposals that address the same general area of concern, even when
+they propose completely different actions. "Run buses more often" and "Add bike
+lanes" are different actions but the same topic (getting around the city). Judge
+by the area of life the proposal is about, NOT by whether the actions resemble
+each other.
+
+Answer "NONE" only when the proposal genuinely belongs to no listed topic — a new
+area of concern that none of them covers. Prefer an existing topic when one
+plausibly fits; a proliferation of near-duplicate topics is worse for the reader
+than a slightly broad one.
+
+Return JSON:
+{
+  "topicId": "the id in [brackets] of the chosen topic, or NONE",
+  "reason": "≤ 12 words"
+}`;
+
+	try {
+		const model = getThemeAssignmentModel();
+		const result = await model.generateContent(prompt);
+		const responseText = result.response
+			.text()
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
+		const parsed = JSON.parse(responseText);
+		const raw = typeof parsed.topicId === 'string' ? parsed.topicId.trim() : '';
+		const reason = typeof parsed.reason === 'string' ? parsed.reason.trim() : '';
+		if (!raw || raw.toUpperCase() === 'NONE') {
+			return { themeId: null, reason: reason || 'model chose NONE' };
+		}
+		// Only accept an id the model was actually offered — a hallucinated or
+		// reformatted id must not create a dangling membership.
+		const match = themes.find((t) => t.id === raw);
+		if (!match) {
+			logger.warn('assignToTheme: model returned an unoffered topic id', {
+				returned: raw.substring(0, 60),
+				offered: themes.length,
+			});
+
+			return { themeId: null, reason: 'unrecognised topic id' };
+		}
+
+		return { themeId: match.id, reason: reason || 'model choice' };
+	} catch (error) {
+		logger.warn('assignToTheme: error, leaving the proposal unthemed', {
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return { themeId: null, reason: 'assignment-failed' };
+	}
+}
+
+/**
+ * Fast-tier model for theme assignment. Cached like the integration model —
+ * this runs once per placed proposal, so the construction cost matters.
+ * Temperature 0: filing a proposal under a topic should be reproducible.
+ */
+let _themeModel: CompatGenerativeModel | null = null;
+
+function getThemeAssignmentModel(): CompatGenerativeModel {
+	if (_themeModel) return _themeModel;
+	_themeModel = getGenAI().getGenerativeModel({
+		model: LLM_MODEL_FAST,
+		generationConfig: { responseMimeType: 'application/json', temperature: 0 },
+	});
+
+	return _themeModel;
 }

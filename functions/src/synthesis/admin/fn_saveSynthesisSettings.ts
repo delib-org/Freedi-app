@@ -62,6 +62,14 @@ export const saveSynthesisSettings = onCall<SaveRequest>(
 			reviewLowerBound: settings.reviewLowerBound ?? DEFAULT_SYNTHESIS_SETTINGS.reviewLowerBound,
 			claimRegistryEnabled:
 				settings.claimRegistryEnabled ?? DEFAULT_SYNTHESIS_SETTINGS.claimRegistryEnabled,
+			llmThemeAssignment:
+				settings.llmThemeAssignment ?? DEFAULT_SYNTHESIS_SETTINGS.llmThemeAssignment,
+			createThemesFromSyntheses:
+				settings.createThemesFromSyntheses ??
+				DEFAULT_SYNTHESIS_SETTINGS.createThemesFromSyntheses,
+			spawnThemesFromOptionPairs:
+				settings.spawnThemesFromOptionPairs ??
+				DEFAULT_SYNTHESIS_SETTINGS.spawnThemesFromOptionPairs,
 		};
 
 		await getFirestore()

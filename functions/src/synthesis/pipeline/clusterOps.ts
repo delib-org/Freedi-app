@@ -152,6 +152,13 @@ interface SpawnResult {
 	clusterId?: string;
 	cannotSynthesize?: boolean;
 	debounced?: boolean;
+	/**
+	 * The generated title and description of the new cluster. The theme judge
+	 * reads these — a synthesis's title IS its merged proposal — and re-reading
+	 * the doc that was just written would be a wasted round trip.
+	 */
+	title?: string;
+	description?: string;
 }
 
 /**
@@ -471,7 +478,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		});
 	}
 
-	return { spawned: true, clusterId };
+	return { spawned: true, clusterId, title, description };
 }
 
 interface SingletonSpawnInput {
