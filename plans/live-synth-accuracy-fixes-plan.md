@@ -109,29 +109,24 @@ order** so the real triggers do the work.
 **Synth** — of the 50 twin pairs, how many were joined (and how many *cleanly*,
 meaning the synthesis holds that pair and nothing else).
 
-**Cluster** — currently: per theme, the largest group holding any of its 10
-statements, scored on **togetherness** (how many of the 10 are in it) and **purity**
-(how much of that group belongs to the theme), combined as a harmonic mean and
-averaged over themes.
+**Cluster** — what fraction of a theme's 10 statements ended up together in **one**
+group that actually *represents* that theme, meaning the group is majority-this-theme
+(> 50%). Averaged over the 10 themes.
 
-> Whichever formula is used, a group must be required to be *valid* and not merely
-> to *contain* the theme. The catastrophic first run put all 100 statements in one
-> cluster, so togetherness measured alone is **1.000** for every theme — a perfect
-> score for total failure. Two ways to avoid that, both verified on the real runs:
+> Two rules matter and both were chosen deliberately:
 >
-> | | mega-cluster run | best English run |
-> | --- | --- | --- |
-> | togetherness alone | 1.000 ✗ | 0.340 |
-> | togetherness × purity (current) | 0.182 | 0.458 |
-> | groups formed ÷ groups expected | 0.000 | 0.660 |
+> - **A group must be valid, not merely containing.** Scored on togetherness alone
+>   ("did the 10 end up together?"), the catastrophic run that put all 100 statements
+>   in ONE cluster scores a perfect **1.000** for every theme, since that cluster does
+>   contain all 10 of each. The majority rule makes it score **0.000** — a 100-member
+>   blob represents nothing.
+> - **Credit goes to the largest single representing group, not the union.** A theme
+>   whose 5 twin pairs merged perfectly but were never assembled under one heading
+>   scores 0.2, not 1.0. Taking the union would score it 1.0 and hide exactly the
+>   missing synth-to-theme nesting (defect D4) that this benchmark exists to expose.
 >
-> **Pending decision (Tal's preference): switch the headline to "groups formed ÷
-> groups expected"** — more interpretable, discriminates at least as well, and
-> punishes collapse harder. Purity then enters as a gate (a blob is not a valid
-> group) rather than as a multiplier. Open question to settle first: is the
-> denominator the 5 synth-groups within each theme, or the 10 themes overall?
-> Strict exact-match is *not* an option — it returns 0.000 for every run so far,
-> good and bad alike, so it cannot show progress.
+> The synth half likewise uses the **clean** join rate: a twin pair buried inside a
+> 6-member blob was not "joined correctly".
 
 Headline = `0.6 × synth + 0.4 × cluster`. The scorer also reports pairwise
 precision/recall/F1 and ARI as a secondary view.
@@ -174,15 +169,32 @@ settings), `--limit=N` (smoke test), `--min-wait-ms`, `--max-wait-ms`, `--out=DI
 
 ## 3. Results measured so far
 
-| Run | Lang | Settings | Synth | Cluster | Score |
+| Run | Lang | Settings | Synth (clean) | Cluster | Score |
 | --- | --- | --- | --- | --- | --- |
-| `2026-08-18-2010-en-seed42` | en | shipped defaults | 0/50 = 0.00 | 0.182 | **0.073** |
-| `en-seed42-cluster078` | en | `clusterThreshold=0.78` | 20/50 = 0.40 | 0.377 | **0.391** |
-| `en-seed42-cluster078-debouncefix` | en | + defer debounced spawns | 22/50 = 0.44 | 0.437 | **0.439** |
-| `en-seed42-cluster078-debounce1500` | en | + `SYNTHESIS_SPAWN_DEBOUNCE_MS=1500` | 31/50 = 0.62 | 0.435 | **0.546** |
-| `he-seed42-defaults` | he | shipped defaults | 0/50 = 0.00 | 0.181 | **0.073** |
-| `he-seed42-cluster078-debounce1500` | he | the English fixes | 0/50 = 0.00 | 0.181 | **0.072** |
-| `he-seed42-large-cluster084` | he | + `text-embedding-3-large`, bands 0.84 | 27/50 = 0.54 (only 14 clean) | 0.498 | **0.523** |
+| `2026-08-18-2010-en-seed42` | en | shipped defaults | 0/50 = 0.00 | 0.000 | **0.000** |
+| `en-seed42-cluster078` | en | `clusterThreshold=0.78` | 20/50 = 0.40 | 0.270 | **0.348** |
+| `en-seed42-cluster078-debouncefix` | en | + defer debounced spawns | 20/50 = 0.40 | 0.310 | **0.364** |
+| `en-seed42-cluster078-debounce1500` | en | + `SYNTHESIS_SPAWN_DEBOUNCE_MS=1500` | 31/50 = 0.62 | 0.340 | **0.508** |
+| `he-seed42-defaults` | he | shipped defaults | 0/50 = 0.00 | 0.000 | **0.000** |
+| `he-seed42-cluster078-debounce1500` | he | the English fixes | 0/50 = 0.00 | 0.000 | **0.000** |
+| `he-seed42-large-cluster084` | he | + `text-embedding-3-large`, bands 0.84 | 14/50 = 0.28 | 0.380 | **0.320** |
+
+Per-theme detail for the best English run shows the nesting gap directly — six of ten
+themes read `2/10`, meaning the only grouping standing for that theme is a single
+merged twin pair, with the theme's other four ideas never gathered around it:
+
+```
+housing                8/10   biggest representing group 8/10
+digital-services       6/10   biggest representing group 6/7
+culture                4/10   biggest representing group 4/4
+education              4/10   biggest representing group 4/6
+transport              2/10   biggest representing group 2/2
+jobs-and-economy       2/10   biggest representing group 2/2
+environment-and-waste  2/10   biggest representing group 2/2
+health                 2/10   biggest representing group 2/10
+public-safety          2/10   biggest representing group 2/4
+parks-and-green-space  2/10   biggest representing group 2/4
+```
 
 ### Corpus geometry (pre-flight, before any pipeline run)
 
@@ -290,8 +302,8 @@ synthesis is never placed inside a topic cluster. So five distinct transport ide
 never get assembled under "transport".
 
 **This sets the ceiling.** With all 50 pairs merged perfectly and no nesting, the
-cluster half scores ~0.20–0.33 and the headline caps at **≈0.68–0.73**. Verified
-independently by the scorer's `synths-only` fixture, which returns exactly 0.680.
+cluster half scores ~0.20–0.33 and the headline caps at **≈0.68–0.73**. With every pair merged cleanly and no nesting, the headline reaches
+0.6 x 1.00 + 0.4 x ~0.34 = **0.736** and cannot go higher.
 
 Visible per theme in the best English run — five themes read
 `2/10 together, group of 2, purity 1.00`: a perfectly clean merged pair, and nothing
@@ -428,16 +440,15 @@ the band properly. Use `preflightCorpusCosines.ts` to pick it rather than guessi
 
 ## 6. Targets
 
-> Scores in this document use the current togetherness x purity formula. If the
-> metric switches per the pending decision above, every cluster number moves and
-> the table below needs restating — the synth numbers are unaffected.
-
 | Milestone | English | Hebrew |
 | --- | --- | --- |
-| today | 0.546 | 0.523 (soft — 13 of 27 pairs polluted) |
-| after Steps 1–3 | ≥ 0.68, at **shipped** thresholds | — |
-| after Step 5 | — | ≥ 0.60 with clean-join ≥ 0.9 |
+| today | 0.508 | 0.320 |
+| after Steps 1–3 | ≥ 0.55, at **shipped** thresholds | — |
+| after Step 5 | — | ≥ 0.45 with clean-join ≥ 0.9 |
 | after Step 4 | ≥ 0.85 | ≥ 0.80 |
+
+Steps 1–3 raise the synth half; the cluster half stays near 0.34 until Step 4 nests
+syntheses under themes, which is what unlocks the 0.85 targets.
 
 A note on reading the numbers: **precision has been 1.000 for English at every
 stage** — every failure so far has been "missed a pair", never "merged the wrong

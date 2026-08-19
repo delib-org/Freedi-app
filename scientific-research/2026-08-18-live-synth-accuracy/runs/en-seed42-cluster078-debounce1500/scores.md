@@ -9,20 +9,20 @@ ACCURACY  0.592  (fair)    = 0.6·F1_synth + 0.4·F1_topic
 
 --- direct accuracy: how many did it actually get right? ---
   SYNTH   31/50 pairs joined = 0.620   (31/50 joined cleanly, i.e. the pair and nothing else = 0.620)
-  CLUSTER 0.435   = togetherness 0.340 x purity 0.752 (harmonic mean, averaged over the 10 themes)
-  COMBINED 0.546  = 0.6·synth + 0.4·cluster
+  CLUSTER 0.340   = share of each theme's statements sitting in a group that represents that theme, averaged over 10 themes
+  COMBINED 0.508  = 0.6·synth(clean) + 0.4·cluster
 
-  per theme:   of its statements, how many landed in one group, and how clean was it
-    digital-services          6/10 together, group size   7 -> purity 0.86  score 0.706
-    health                    2/10 together, group size  10 -> purity 0.20  score 0.200
-    transport                 2/10 together, group size   2 -> purity 1.00  score 0.333
-    culture                   4/10 together, group size   4 -> purity 1.00  score 0.571
-    public-safety             2/10 together, group size   4 -> purity 0.50  score 0.286
-    jobs-and-economy          2/10 together, group size   2 -> purity 1.00  score 0.333
-    housing                   8/10 together, group size  10 -> purity 0.80  score 0.800
-    environment-and-waste     2/10 together, group size   2 -> purity 1.00  score 0.333
-    education                 4/10 together, group size   6 -> purity 0.67  score 0.500
-    parks-and-green-space     2/10 together, group size   4 -> purity 0.50  score 0.286
+  per theme:   gathered into groups that stand for the theme / its statements
+    digital-services          6/10  in  2 representing group(s); biggest group touching it: 6/7  score 0.600
+    health                    2/10  in  4 representing group(s); biggest group touching it: 2/10  score 0.200
+    transport                 2/10  in  5 representing group(s); biggest group touching it: 2/2  score 0.200
+    culture                   4/10  in  3 representing group(s); biggest group touching it: 4/4  score 0.400
+    public-safety             2/10  in  4 representing group(s); biggest group touching it: 2/4  score 0.200
+    jobs-and-economy          2/10  in  5 representing group(s); biggest group touching it: 2/2  score 0.200
+    housing                   8/10  in  2 representing group(s); biggest group touching it: 8/10  score 0.800
+    environment-and-waste     2/10  in  4 representing group(s); biggest group touching it: 2/2  score 0.200
+    education                 4/10  in  3 representing group(s); biggest group touching it: 4/6  score 0.400
+    parks-and-green-space     2/10  in  4 representing group(s); biggest group touching it: 2/4  score 0.200
 
 --- synth level (did each paraphrase pair merge?) ---
   pairwise      P=1.000  R=0.620  F1=0.765   ARI=0.764
@@ -49,105 +49,103 @@ ACCURACY  0.592  (fair)    = 0.6·F1_synth + 0.4·F1_topic
   "composite": 0.5916730523627075,
   "grade": "fair",
   "direct": {
-    "composite": 0.5459495798319328,
+    "composite": 0.508,
     "synthRate": 0.62,
     "synthCleanRate": 0.62,
     "pairsJoined": 31,
     "pairsJoinedClean": 31,
     "pairsTotal": 50,
-    "clusterScore": 0.434873949579832,
-    "clusterTogetherness": 0.33999999999999997,
-    "clusterPurity": 0.7523809523809524,
+    "clusterScore": 0.33999999999999997,
     "themes": [
       {
         "theme": "digital-services",
         "statements": 10,
+        "gathered": 6,
+        "representingGroups": 2,
         "largestGroupHits": 6,
         "largestGroupSize": 7,
-        "togetherness": 0.6,
-        "purity": 0.8571428571428571,
-        "score": 0.7058823529411764
+        "score": 0.6
       },
       {
         "theme": "health",
         "statements": 10,
+        "gathered": 2,
+        "representingGroups": 4,
         "largestGroupHits": 2,
         "largestGroupSize": 10,
-        "togetherness": 0.2,
-        "purity": 0.2,
-        "score": 0.20000000000000004
+        "score": 0.2
       },
       {
         "theme": "transport",
         "statements": 10,
+        "gathered": 2,
+        "representingGroups": 5,
         "largestGroupHits": 2,
         "largestGroupSize": 2,
-        "togetherness": 0.2,
-        "purity": 1,
-        "score": 0.33333333333333337
+        "score": 0.2
       },
       {
         "theme": "culture",
         "statements": 10,
+        "gathered": 4,
+        "representingGroups": 3,
         "largestGroupHits": 4,
         "largestGroupSize": 4,
-        "togetherness": 0.4,
-        "purity": 1,
-        "score": 0.5714285714285715
+        "score": 0.4
       },
       {
         "theme": "public-safety",
         "statements": 10,
+        "gathered": 2,
+        "representingGroups": 4,
         "largestGroupHits": 2,
         "largestGroupSize": 4,
-        "togetherness": 0.2,
-        "purity": 0.5,
-        "score": 0.28571428571428575
+        "score": 0.2
       },
       {
         "theme": "jobs-and-economy",
         "statements": 10,
+        "gathered": 2,
+        "representingGroups": 5,
         "largestGroupHits": 2,
         "largestGroupSize": 2,
-        "togetherness": 0.2,
-        "purity": 1,
-        "score": 0.33333333333333337
+        "score": 0.2
       },
       {
         "theme": "housing",
         "statements": 10,
+        "gathered": 8,
+        "representingGroups": 2,
         "largestGroupHits": 8,
         "largestGroupSize": 10,
-        "togetherness": 0.8,
-        "purity": 0.8,
-        "score": 0.8000000000000002
+        "score": 0.8
       },
       {
         "theme": "environment-and-waste",
         "statements": 10,
+        "gathered": 2,
+        "representingGroups": 4,
         "largestGroupHits": 2,
         "largestGroupSize": 2,
-        "togetherness": 0.2,
-        "purity": 1,
-        "score": 0.33333333333333337
+        "score": 0.2
       },
       {
         "theme": "education",
         "statements": 10,
+        "gathered": 4,
+        "representingGroups": 3,
         "largestGroupHits": 4,
         "largestGroupSize": 6,
-        "togetherness": 0.4,
-        "purity": 0.6666666666666666,
-        "score": 0.5
+        "score": 0.4
       },
       {
         "theme": "parks-and-green-space",
         "statements": 10,
+        "gathered": 2,
+        "representingGroups": 4,
         "largestGroupHits": 2,
         "largestGroupSize": 4,
-        "togetherness": 0.2,
-        "purity": 0.5,
-        "score": 0.28571428571428575
+        "score": 0.2
       }
     ]
   },
