@@ -41,8 +41,14 @@
  *   --pump-every=N         run the queue drain every N statements (default 10)
  *   --rejudge-every=N      run the cross-synth merge every N pump cycles (default 5)
  *   --min-wait-ms=N        minimum wait after each write before settle detection (default 4000)
- *   --quiet-ms=N           unchanged-state window that counts as settled (default 2500)
- *   --max-wait-ms=N        hard cap on the per-statement wait (default 20000)
+ *   --quiet-ms=N           unchanged-state window that counts as settled (default 12000).
+ *                          Must exceed ONE WHOLE pipeline execution: the functions
+ *                          emulator serialises triggers, so a queued-but-not-started
+ *                          spawn writes nothing and is indistinguishable from a
+ *                          finished run. At 2500 with LLM theme assignment on
+ *                          (~8-10s per spawn), three pairs were scored as failures
+ *                          that the pipeline had in fact merged, 3-29s after export.
+ *   --max-wait-ms=N        hard cap on the per-statement wait (default 45000)
  *   --out=DIR              output folder (default: a timestamped run folder)
  *   --keep                 do not delete existing children first (append to a run)
  */
@@ -130,8 +136,8 @@ function parseArgs(): Options {
 		pumpEvery: num('pump-every', 10),
 		rejudgeEvery: num('rejudge-every', 5),
 		minWaitMs: num('min-wait-ms', 4000),
-		quietMs: num('quiet-ms', 2500),
-		maxWaitMs: num('max-wait-ms', 20000),
+		quietMs: num('quiet-ms', 12000),
+		maxWaitMs: num('max-wait-ms', 45000),
 		outDir: outRaw ? resolvePath(outRaw.slice('--out='.length)) : null,
 		keep: argv.includes('--keep'),
 	};
@@ -157,6 +163,14 @@ const CREATOR = {
 };
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * How many times the final export is re-taken to prove nothing is still landing,
+ * and how long to wait between takes. The wait must comfortably exceed one
+ * pipeline execution on an LLM-heavy build.
+ */
+const EXPORT_CONFIRM_ATTEMPTS = 4;
+const EXPORT_CONFIRM_WAIT_MS = 15_000;
 
 /** Deterministic PRNG so a given --seed always produces the same arrival order. */
 function mulberry32(seed: number): () => number {
@@ -353,12 +367,31 @@ async function fingerprint(): Promise<string> {
 	return `${children.size}:${clusters}:${audit.size}:${maxUpdate}`;
 }
 
-/** Wait until the pipeline stops changing anything, or the hard cap expires. */
+/**
+ * Wait until the pipeline stops changing anything, or the hard cap expires.
+ *
+ * Silence is NOT the same as done. The functions emulator serialises trigger
+ * executions, so a spawn pipeline that is queued but not yet started writes
+ * nothing and looks exactly like a finished run. That is not hypothetical: on
+ * the llm-themes run, the last three arrivals' spawns landed 3-29 seconds AFTER
+ * the exporter snapshotted, and the run folder reported 47/50 pair recovery for
+ * a pipeline that had actually achieved 50/50. Three ground-truth pairs were
+ * scored as failures because the harness stopped watching too early.
+ *
+ * A quiet window therefore has to be long enough to cover one whole pipeline
+ * execution, which on LLM-heavy builds is ~8-10s (synthesis proposal plus a
+ * theme-judge call), not the 2.5s that was enough when the pipeline was pure
+ * cosine. `CONFIRM_ROUNDS` consecutive quiet windows are then required, so a
+ * single slow execution cannot slip through the gap between two of them.
+ */
+const SETTLE_CONFIRM_ROUNDS = 2;
+
 async function waitForSettle(): Promise<{ ms: number; timedOut: boolean }> {
 	const started = Date.now();
 	await sleep(opts.minWaitMs);
 	let last = await fingerprint();
 	let stableSince = Date.now();
+	let confirmed = 0;
 	for (;;) {
 		if (Date.now() - started > opts.maxWaitMs) {
 			return { ms: Date.now() - started, timedOut: true };
@@ -368,13 +401,20 @@ async function waitForSettle(): Promise<{ ms: number; timedOut: boolean }> {
 		if (current !== last) {
 			last = current;
 			stableSince = Date.now();
+			confirmed = 0;
 			continue;
 		}
 		if (Date.now() - stableSince >= opts.quietMs) {
-			return { ms: Date.now() - started, timedOut: false };
+			confirmed++;
+			if (confirmed >= SETTLE_CONFIRM_ROUNDS) {
+				return { ms: Date.now() - started, timedOut: false };
+			}
+			stableSince = Date.now();
 		}
 	}
 }
+
+const pumpLog: string[] = [];
 
 /** Reuse the existing emulator-only pump scripts instead of duplicating their logic. */
 function pump(script: string, label: string): void {
@@ -391,6 +431,12 @@ function pump(script: string, label: string): void {
 		console.info(
 			`    pump ${label}: ${merges > 0 ? `${merges} merge(s)` : processed !== undefined ? `${processed} item(s)` : 'no-op'}`,
 		);
+		// The pumps run in their own processes, so their stdout is the ONLY record
+		// of what the scheduled layer did — the functions emulator log never sees
+		// it ("function ignored because the pubsub emulator does not exist"). It
+		// was previously discarded, which is why a run could not answer how many
+		// merges happened or why a judge refused one.
+		pumpLog.push(`===== pump ${label} @${new Date().toISOString()} =====\n${out}`);
 	} catch (error) {
 		// A failing pump must not abort a 20-minute run — record and continue.
 		const message = error instanceof Error ? error.message : String(error);
@@ -418,6 +464,8 @@ interface ExportedCluster {
  */
 interface AuditRow {
 	action: string;
+	/** Written by `recordLiveSynthEvent` as `timestamp`; the sort key. */
+	timestamp?: number;
 	clusterId?: string;
 	optionId?: string;
 	reason?: string;
@@ -488,6 +536,11 @@ async function exportResults(seeded: SeedItem[]): Promise<{
 		auditCounts[action] = (auditCounts[action] ?? 0) + 1;
 		auditRows.push({
 			action,
+			// `recordLiveSynthEvent` writes `timestamp`, not `createdAt`. Sorting on
+			// `createdAt` made every key undefined, so audit.json was in query order
+			// rather than time order — and silently, since a stable sort leaves it
+			// looking plausible.
+			timestamp: typeof data.timestamp === 'number' ? data.timestamp : undefined,
 			clusterId: data.clusterId ? String(data.clusterId) : undefined,
 			optionId: data.optionId ? String(data.optionId) : undefined,
 			// `reason` carries the cosine and the gate that fired — the single most
@@ -498,9 +551,27 @@ async function exportResults(seeded: SeedItem[]): Promise<{
 			createdAt: typeof data.createdAt === 'number' ? data.createdAt : undefined,
 		});
 	}
-	auditRows.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+	auditRows.sort((a, b) => (a.timestamp ?? a.createdAt ?? 0) - (b.timestamp ?? b.createdAt ?? 0));
 
 	return { synths, topics, sourceVisible, sourceHidden, auditCounts, auditRows };
+}
+
+/** Everything the scorer reads, reduced to one comparable string. */
+function exportFingerprint(e: {
+	synths: ExportedCluster[];
+	topics: ExportedCluster[];
+	auditRows: AuditRow[];
+}): string {
+	const shape = (rows: ExportedCluster[]): string =>
+		rows
+			.map(
+				(r) =>
+					`${r.id}:${r.hidden ? 'h' : 'v'}:${r.members.map((m) => m.id).sort().join(',')}:${(r.memberSynthIds ?? []).slice().sort().join(',')}`,
+			)
+			.sort()
+			.join('|');
+
+	return `${shape(e.synths)}##${shape(e.topics)}##${e.auditRows.length}`;
 }
 
 function timestamp(): string {
@@ -578,12 +649,34 @@ function timestamp(): string {
 	pump('scripts/runReJudgeMerge.ts', 'rejudge');
 	await waitForSettle();
 
-	const exported = await exportResults(arrival);
+	// Harvest guard. `waitForSettle` can only observe silence, and a queued-but-
+	// not-yet-started trigger is silent — so the export is taken twice and only
+	// trusted when nothing changed in between. On the llm-themes run the first
+	// snapshot missed three syntheses that were written 3-29 seconds later, and
+	// the run folder reported 47/50 for a pipeline that had achieved 50/50.
+	let exported = await exportResults(arrival);
+	for (let attempt = 1; attempt <= EXPORT_CONFIRM_ATTEMPTS; attempt++) {
+		await sleep(EXPORT_CONFIRM_WAIT_MS);
+		const again = await exportResults(arrival);
+		if (exportFingerprint(again) === exportFingerprint(exported)) {
+			exported = again;
+			break;
+		}
+		console.info(
+			`  ⟳ late writes landed after export (attempt ${attempt}) — re-harvesting: ` +
+				`synths ${exported.synths.length}→${again.synths.length}, topics ${exported.topics.length}→${again.topics.length}`,
+		);
+		exported = again;
+		if (attempt === EXPORT_CONFIRM_ATTEMPTS) {
+			console.info('  ⚠ structure still changing at the last confirm attempt — result may be short');
+		}
+	}
 	const durationMs = Date.now() - t0;
 
 	// Every decision the pipeline made, in order, with the cosine that drove it.
 	// Written separately so results.json stays readable.
 	writeFileSync(join(outDir, 'audit.json'), JSON.stringify(exported.auditRows, null, 2));
+	writeFileSync(join(outDir, 'pumps.log'), pumpLog.join('\n\n'));
 
 	writeFileSync(
 		join(outDir, 'statements.json'),
