@@ -294,3 +294,97 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 
 	return { nested: true, topicClusterId: theme.statementId, reason: 'judged' };
 }
+
+/**
+ * File a PLAIN OPTION into an existing theme, when cosine could not.
+ *
+ * The theme judge was first wired only to syntheses, and that left a hole:
+ * turning off theme-spawn-from-option-pairs removed the path that used to place
+ * an option with no twin yet, and the measured result was `review-queued`
+ * jumping from 7 to 42 in one run — a queue nothing drains.
+ *
+ * Deliberately NOT allowed to create a theme. Only a synthesis may do that. An
+ * option is one person's wording of one idea and makes a poor seed for a theme
+ * label, and letting every unplaced option mint a theme is how a question ends
+ * up with more themes than ideas. An option that fits no existing theme simply
+ * waits — for its twin, or for a theme it fits to appear.
+ */
+export async function assignOptionToTheme(input: {
+	option: Statement;
+	parent: Statement;
+	triggerSource: string;
+}): Promise<{ themeId: string | null; reason: string }> {
+	const { option, parent, triggerSource } = input;
+
+	let themes: Statement[];
+	try {
+		themes = await liveThemes(parent.statementId);
+	} catch (error) {
+		logger.warn('synthesis.nest: theme listing failed for option', {
+			optionId: option.statementId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return { themeId: null, reason: 'theme-listing-failed' };
+	}
+	if (themes.length === 0) return { themeId: null, reason: 'no-themes-yet' };
+
+	const decision = await assignToTheme({
+		proposalTitle: option.statement ?? '',
+		proposalDescription: option.description,
+		themes: themes.map((t) => ({
+			id: t.statementId,
+			title: t.statement ?? '',
+			description: t.description,
+		})),
+		questionContext: parent.statement || parent.statementId,
+	});
+	if (!decision.themeId) return { themeId: null, reason: decision.reason };
+
+	const theme = themes.find((t) => t.statementId === decision.themeId);
+	if (!theme) return { themeId: null, reason: 'chosen-theme-vanished' };
+
+	const previous = theme.integratedOptions ?? [];
+	if (previous.includes(option.statementId)) {
+		return { themeId: theme.statementId, reason: 'already-member' };
+	}
+	const next = [...previous, option.statementId];
+
+	try {
+		await db()
+			.collection(Collections.statements)
+			.doc(theme.statementId)
+			.update({ integratedOptions: next, lastUpdate: Date.now() });
+	} catch (error) {
+		logger.warn('synthesis.nest: theme update failed for option', {
+			optionId: option.statementId,
+			topicClusterId: theme.statementId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return { themeId: null, reason: 'theme-update-failed' };
+	}
+
+	logger.info('synthesis.pipeline.optionThemed', {
+		optionId: option.statementId,
+		topicClusterId: theme.statementId,
+		reason: decision.reason,
+		themesOffered: themes.length,
+		triggerSource,
+	});
+
+	await recordLiveSynthEvent({
+		action: 'attach',
+		clusterId: theme.statementId,
+		optionId: option.statementId,
+		reason: `option filed under theme (judge: ${decision.reason})`,
+		prevState: { integratedOptions: previous },
+		newState: { integratedOptions: next },
+		triggerSource: `${triggerSource}:optionTheme`,
+		parentStatementId: parent.statementId,
+	});
+
+	await enqueueClusterRecompute(theme.statementId, `${triggerSource}:optionTheme`);
+
+	return { themeId: theme.statementId, reason: 'judged' };
+}

@@ -116,26 +116,63 @@ function pairKey(a: string, b: string): string {
  * Ask the synthesis judge whether two synths are really one proposal.
  *
  * Reuses `generateSynthesizedProposal` — the same prompt that decides whether a
- * pair of raw statements may merge — with the two synth TITLES as inputs, since
- * a synth's title IS its merged proposal. Measured behaviour on the accuracy
- * corpus: it refused all 14 distinct pairs it was shown and refused zero true
- * paraphrase pairs, which is exactly the discrimination cosine cannot provide.
+ * pair of raw statements may merge — and feeds it the synths' MEMBER STATEMENTS,
+ * not their titles.
  *
- * Fail-CLOSED: an LLM error means no merge. An unmerged duplicate is a visible
- * but harmless redundancy; a wrong merge silently destroys a distinct proposal
- * and is what this gate exists to prevent.
+ * Feeding it titles was tried first and measurably failed: the gate approved
+ * both bad merges it was added to stop, refusing nothing at all in a
+ * 100-statement run. The reason is the same abstraction that makes synth titles
+ * unreliable for attach evidence. "Require Affordable Apartments in Every New
+ * Residential Development" and "Convert Vacant Offices into Housing" read as two
+ * angles on one housing proposal once both have been generalised into policy
+ * language; the members they were generated from — "Require developers to
+ * include affordable units in every new building" and "Convert empty office
+ * buildings into apartments" — plainly do not. The judge's measured strength is
+ * on concrete statements: it refused all 14 distinct raw pairs it was shown on
+ * this corpus and refused zero true paraphrase pairs.
+ *
+ * Fail-CLOSED: an LLM error, or members that cannot be read, means no merge. An
+ * unmerged duplicate is a visible but harmless redundancy; a wrong merge
+ * silently destroys a distinct proposal and is what this gate exists to prevent.
  */
+const MEMBERS_PER_SIDE_FOR_JUDGE = 2;
+
+async function loadMemberStatements(memberIds: string[]): Promise<Statement[]> {
+	const ids = memberIds.slice(0, MEMBERS_PER_SIDE_FOR_JUDGE);
+	if (ids.length === 0) return [];
+	const snaps = await Promise.all(
+		ids.map((id) => db().collection(Collections.statements).doc(id).get()),
+	);
+
+	return snaps.filter((s) => s.exists).map((s) => s.data() as Statement);
+}
+
 async function confirmMergeWithLlm(
 	recipient: CandidateSynth,
 	donor: CandidateSynth,
 	questionContext: string,
 ): Promise<boolean> {
 	try {
+		const [recipientMembers, donorMembers] = await Promise.all([
+			loadMemberStatements(recipient.members),
+			loadMemberStatements(donor.members),
+		]);
+		// Without a concrete statement from each side there is nothing to judge on,
+		// and the titles are exactly what must not decide this.
+		if (recipientMembers.length === 0 || donorMembers.length === 0) {
+			logger.info('synthesis.reJudge.mergeRefused', {
+				recipientId: recipient.doc.statementId,
+				donorId: donor.doc.statementId,
+				reason: 'members unreadable',
+			});
+
+			return false;
+		}
 		const proposal = await generateSynthesizedProposal(
-			[recipient.doc, donor.doc].map((s) => ({
+			[...recipientMembers, ...donorMembers].map((s) => ({
 				statementId: s.statementId,
 				statement: s.statement,
-				paragraphsText: s.description ?? '',
+				paragraphsText: '',
 				numberOfEvaluators: s.evaluation?.numberOfEvaluators ?? 0,
 				consensus: s.consensus ?? 0,
 				sumEvaluations: s.evaluation?.sumEvaluations ?? 0,

@@ -86,8 +86,10 @@ jest.mock('../pipeline/clusterOps', () => {
 });
 
 const nestMock = jest.fn();
+const assignOptionThemeMock = jest.fn();
 jest.mock('../pipeline/nestSynthesis', () => ({
 	nestSynthUnderTopic: nestMock,
+	assignOptionToTheme: assignOptionThemeMock,
 }));
 
 // Now import the SUT.
@@ -156,6 +158,7 @@ beforeEach(() => {
 	findClustersContainingMemberMock.mockResolvedValue([]);
 	rehomeMock.mockResolvedValue(undefined);
 	nestMock.mockResolvedValue({ nested: false, reason: 'no-candidate-themes' });
+	assignOptionThemeMock.mockResolvedValue({ themeId: null, reason: 'no-themes-yet' });
 	// `jest.clearAllMocks()` clears recorded calls but NOT implementations set with
 	// `mockResolvedValue`, so without explicit defaults a test inherits whatever the
 	// previous one configured. That is not hypothetical: it made the pass-ordering
@@ -850,6 +853,44 @@ describe('runSinglePipeline', () => {
 				sibling: expect.objectContaining({ statementId: 'sibling-plain' }),
 			}),
 		);
+	});
+
+	it('asks the theme judge for an option cosine could not place, before queueing it', async () => {
+		// Turning off theme-spawn-from-option-pairs removed the path that used to
+		// place an option with no twin yet, and `review-queued` jumped from 7 to 42
+		// in one run — a queue nothing drains. The judge gets the option first.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'some-theme',
+					integratedOptions: ['m1', 'm2'],
+					derivedByPipeline: 'topic-cluster',
+				} as unknown as Statement,
+				similarity: 0.65,
+			},
+		]);
+		// Members orthogonal to the option, so the cosine cohesion gate refuses.
+		getBatchEmbeddingsMock.mockResolvedValue(
+			new Map([
+				['m1', ORTHOGONAL_VEC],
+				['m2', ORTHOGONAL_VEC],
+			]),
+		);
+		assignOptionThemeMock.mockResolvedValue({ themeId: 'some-theme', reason: 'judged' });
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+
+		expect(assignOptionThemeMock).toHaveBeenCalled();
+		expect(result.action).toBe('attached');
+		expect(result.clusterId).toBe('some-theme');
+		expect(reviewMock).not.toHaveBeenCalled();
 	});
 
 	it('queues for review in the gray band (between reviewLowerBound and clusterThreshold)', async () => {

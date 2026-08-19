@@ -17,7 +17,7 @@ import {
 } from './clusterCohesion';
 import { routeByCosine } from './bandRouter';
 import { runRegistryPass } from './registryPass';
-import { nestSynthUnderTopic } from './nestSynthesis';
+import { assignOptionToTheme, nestSynthUnderTopic } from './nestSynthesis';
 import { enqueueItem } from '../queue/enqueue';
 import {
 	attachOptionToCluster,
@@ -73,6 +73,8 @@ import {
  *
  *   Pass 3 — TOPIC-CLUSTER ATTACH: any topic cluster with best evidence
  *     ≥ clusterThreshold AND centroid cohesion with the theme → attach (0 LLM).
+ *     Then Pass 3b — if cosine could not place it, the THEME JUDGE decides
+ *     (1 fast LLM). It may join an existing theme but never create one.
  *
  *   Pass 4 — REGISTRY: claim-codebook classification when cosine couldn't place
  *     the option (claim-registry questions only).
@@ -753,6 +755,29 @@ async function executePipeline(
 			llmCalled: false,
 			durationMs: Date.now() - startedAt,
 		};
+	}
+
+	// =====================================================================
+	// PASS 3b — THEME JUDGE for a plain option that cosine could not place
+	// =====================================================================
+	// Same reasoning as the synthesis-level judge: theme membership is a
+	// semantic call that cosine does not encode on a single-question corpus,
+	// and Pass 3 above refused 107 attaches in one run precisely because it is
+	// asking geometry a question geometry cannot answer. The judge may only file
+	// the option into an EXISTING theme — creating one is reserved for
+	// syntheses, since a single option is one person's wording and makes a poor
+	// seed for a theme label.
+	if (settings.llmThemeAssignment && !alreadyInTopic) {
+		const themed = await assignOptionToTheme({ option, parent, triggerSource });
+		if (themed.themeId) {
+			return {
+				action: 'attached',
+				reason: `option filed under theme by judge (${themed.reason})`,
+				clusterId: themed.themeId,
+				llmCalled: true,
+				durationMs: Date.now() - startedAt,
+			};
+		}
 	}
 
 	// =====================================================================
