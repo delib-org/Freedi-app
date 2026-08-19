@@ -67,6 +67,7 @@ jest.mock('../pipeline/debounce', () => ({
 const attachMock = jest.fn();
 const spawnMock = jest.fn();
 const reviewMock = jest.fn();
+const rehomeMock = jest.fn();
 jest.mock('../pipeline/clusterOps', () => {
 	const isCluster = (s: Statement) =>
 		Array.isArray(s.integratedOptions) && s.integratedOptions.length > 0;
@@ -80,8 +81,14 @@ jest.mock('../pipeline/clusterOps', () => {
 		attachOptionToCluster: attachMock,
 		spawnClusterFromPair: spawnMock,
 		queueForReview: reviewMock,
+		rehomeMembersIntoSynth: rehomeMock,
 	};
 });
+
+const nestMock = jest.fn();
+jest.mock('../pipeline/nestSynthesis', () => ({
+	nestSynthUnderTopic: nestMock,
+}));
 
 // Now import the SUT.
 import { runSinglePipeline } from '../pipeline/runSinglePipeline';
@@ -128,6 +135,8 @@ beforeEach(() => {
 	attachMock.mockResolvedValue({ attached: true, previousMemberCount: 1, newMemberCount: 2 });
 	// Default: the option is not yet a member of any cluster.
 	findClustersContainingMemberMock.mockResolvedValue([]);
+	rehomeMock.mockResolvedValue(undefined);
+	nestMock.mockResolvedValue({ nested: false, reason: 'no-candidate-themes' });
 });
 
 describe('runSinglePipeline', () => {
@@ -191,6 +200,43 @@ describe('runSinglePipeline', () => {
 			expect(spawnMock).toHaveBeenCalledWith(
 				expect.objectContaining({ mode: 'synth', sibling: expect.objectContaining({ statementId: 'twin' }) }),
 			);
+		});
+
+		it('offers a freshly spawned synthesis to a theme (nesting)', async () => {
+			// Without this the two layers never meet: a theme holds five distinct
+			// ideas, and the moment two of them merge the merge leaves the theme
+			// behind. Six of ten themes scored 2/10 on the benchmark for this
+			// reason alone, which is what caps the headline score at ~0.73.
+			const option = makeOption();
+			const parent = makeParent();
+			findSimilarMock.mockResolvedValue([
+				{
+					statement: { statementId: 'twin', integratedOptions: [] } as unknown as Statement,
+					similarity: 0.91,
+				},
+			]);
+			spawnMock.mockResolvedValue({ spawned: true, clusterId: 'new-synth' });
+			nestMock.mockResolvedValue({
+				nested: true,
+				topicClusterId: 'theme-transport',
+				reason: 'nested',
+			});
+
+			const result = await runSinglePipeline({
+				option,
+				parent,
+				optionId: 'opt-1',
+				source: 'onCreate',
+			});
+
+			expect(result.action).toBe('spawned');
+			expect(nestMock).toHaveBeenCalledWith(
+				expect.objectContaining({
+					synthId: 'new-synth',
+					memberIds: expect.arrayContaining(['opt-1', 'twin']),
+				}),
+			);
+			expect(result.reason).toContain('nested under theme-transport');
 		});
 
 		it('does not re-theme an option that already belongs to a TOPIC cluster', async () => {

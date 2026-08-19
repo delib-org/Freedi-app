@@ -16,6 +16,7 @@ import {
 } from './clusterCohesion';
 import { routeByCosine } from './bandRouter';
 import { runRegistryPass } from './registryPass';
+import { nestSynthUnderTopic } from './nestSynthesis';
 import { enqueueItem } from '../queue/enqueue';
 import {
 	attachOptionToCluster,
@@ -510,6 +511,17 @@ async function executePipeline(
 				triggerSource,
 			);
 		}
+		// A growing synth that never found a theme gets another chance on every
+		// attach — its centroid has just moved, and by now more themes exist.
+		if (topicOwners.length === 0) {
+			await nestSynthUnderTopic({
+				synthId: synthMatch.cluster.statementId,
+				memberIds: [...(synthMatch.cluster.integratedOptions ?? []), option.statementId],
+				parent,
+				settings,
+				triggerSource,
+			});
+		}
 
 		return {
 			action: 'attached',
@@ -688,6 +700,27 @@ async function executePipeline(
 			stampClaim: settings.claimRegistryEnabled,
 		});
 		if (synthAttempt.spawned) {
+			// Put the new synthesis inside the theme it belongs to. Without this the
+			// two layers never meet: a theme holds five distinct ideas, but the
+			// moment two of them merge the merge leaves the theme behind.
+			if (synthAttempt.clusterId) {
+				const nested = await nestSynthUnderTopic({
+					synthId: synthAttempt.clusterId,
+					memberIds: [option.statementId, topPlainOption.statement.statementId],
+					parent,
+					settings,
+					triggerSource,
+				});
+
+				return {
+					action: 'spawned',
+					reason: `spawn synth at cosine=${topPlainOption.similarity.toFixed(3)}${nested.nested ? ` (nested under ${nested.topicClusterId})` : ` (unthemed: ${nested.reason})`}`,
+					clusterId: synthAttempt.clusterId,
+					llmCalled: true,
+					durationMs: Date.now() - startedAt,
+				};
+			}
+
 			return {
 				action: 'spawned',
 				reason: `spawn synth at cosine=${topPlainOption.similarity.toFixed(3)}`,
