@@ -104,8 +104,19 @@ constraint, so `SPAWN_DEBOUNCE_MS` is now overridable via
 With `SYNTHESIS_SPAWN_DEBOUNCE_MS=1500`, English reaches **0.592**: pair recovery
 31/50, precision still **1.000**, coverage 97/100. Spawns rose from 24 to 37 and
 debounces fell to zero. Cumulatively the two structural changes take English from
-**0.067 to 0.592**, roughly a 9× improvement, without a single false merge appearing
-at any point.
+**0.067 to 0.592**, roughly a 9× improvement.
+
+> **Correction (2026-08-19).** An audit of the run artifacts contradicts the
+> original claim here that no false merge appeared at any point. The intermediate
+> run `en-seed42-cluster078-debouncefix` records **P=0.846 with 4 falsely merged
+> pairs**, in its own `scores.md`: one 4-member synth,
+> "Establish Separate Food-Scrap Collection for Citywide Composting", mixes
+> `compost-organic-waste` with `recycling-pickup`. The raw cross-group cosines are
+> 0.808–0.836 — all *below* `attachThreshold` 0.85 — so the attach was carried by
+> the synth's own title embedding rather than by member evidence. Precision is
+> 1.000 in the best run, but it has not been 1.000 at every stage, and the
+> mechanism that broke it (a synth title abstracting far enough to pull in a
+> neighbouring idea) is a live risk rather than a one-off.
 
 1.5s is a deliberately aggressive probe chosen to size the headroom, not a
 production recommendation. The right window is the time for a committed spawn to
@@ -115,11 +126,26 @@ throughput ceiling without shortening the protection at all.
 
 ## What still limits the score
 
-- **Recall, 19 pairs short.** 37 statements still end in `review-queued`, which
-  writes to `_liveSynthCandidates` for admin review and is then never revisited —
-  the same "drop the work" shape as the debounce bug, one layer further out. When a
-  statement arrives before its partner, that is the correct call at the time; the
-  gap is that nothing reconsiders it once the partner shows up.
+- **Recall, 19 pairs short.**
+
+  > **Correction (2026-08-19).** This was originally read as "37 statements are
+  > stranded in `review-queued` and never revisited". That mistakes an event count
+  > for a terminal state. Reconstructing roles from the memberships and arrival
+  > order (37 spawners + 37 spawn-siblings + 23 attachers + 3 unclustered, which
+  > reconciles exactly with the audit counts), **35–36 of those 37 were rescued**
+  > when their partner arrived and spawned with them. At most 1–2 ended terminally
+  > review-queued.
+  >
+  > The 19 missed pairs break down as: **17 — the twin was already inside a topic
+  > cluster** and therefore foreclosed (D1 residue; twin at rank 1, cosine
+  > 0.82–0.93 in all 17); **1 — a silent spawn failure** at cosine 0.898 that was
+  > never retried; **1 — a topic attach at 0.777 evidence preempted a synth spawn
+  > at 0.895** (pass precedence). **Zero** were below the gate, and **zero** fell
+  > outside the 10-neighbour window.
+  >
+  > So revisiting review-queued options — item 4 in the recommendations below —
+  > would have recovered roughly none of them. The sink was cluster membership,
+  > silent work-dropping, and pass ordering.
 - **Topic level, F1 0.331.** The live pipeline never nests syntheses under topic
   clusters — `spawnClusterFromPair` only ever attaches plain options — so the
   10-topic layer of the ground truth cannot be fully reconstructed by design. The
@@ -165,7 +191,11 @@ precision. That tuning pass is the obvious next experiment.
 3. **Move Hebrew (and any non-English question) to `text-embedding-3-large`**
    at 1536 dimensions (Hebrew 0.066 → 0.369). Embeddings are a rounding error next
    to the synthesis LLM calls, and English improves too (pre-flight F1 0.947 → 0.990).
-4. **Revisit `review-queued` options when a later statement lands near them** —
-   currently they are written to `_liveSynthCandidates` and never reconsidered.
+4. ~~**Revisit `review-queued` options when a later statement lands near them.**~~
+   **Withdrawn 2026-08-19** — see the correction above. Review-queued was not a
+   terminal sink; it accounted for at most 1–2 statements and ~0 of the 19 missed
+   pairs. The change that belongs in this slot instead is **never dropping a
+   failed spawn**: `spawnClusterFromPair` returning `spawned: false` ended the
+   pipeline with no audit row and no retry, which cost one pair at cosine 0.898.
 5. **Add a synth → topic nesting pass.** Without it the composite cannot exceed
    ~0.68 even with every synthesis perfect. This is a design change, not a tuning one.
