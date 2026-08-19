@@ -47,9 +47,17 @@ Three caveats worth keeping attached to that number:
   gets created first and what a newcomer's neighbourhood looks like, and Finding 4
   showed cluster-birth timing predicting the outcome in 48 of 50 pairs. Until the
   seed sweep lands, 0.910 is seed 42's accuracy.
-- **The reJudge merge gate is unproven.** It reported zero refusals because the
-  pipeline produced no duplicate synths for it to consider. Nothing to refuse is
-  not the same as refusing nothing, and this corpus cannot tell the two apart.
+- ~~**The reJudge merge gate is unproven.**~~ **Resolved by the seed-7 run.** On
+  seed 42 it reported zero refusals only because the pipeline produced no
+  duplicate synths for it to consider — nothing to refuse is not the same as
+  refusing nothing, and that run could not tell the two apart. Once `pumps.log`
+  captured the sweep's own output (Finding 8), seed 7 showed **5 refusals across
+  3 sweeps**, including *"Establish Separate Food-Scrap Collection for
+  Composting"* ↔ *"Provide Weekly Curbside Recycling Pickup"* — precisely the
+  false merge that cost precision in two earlier rounds — and *"Move All
+  Municipal Procedures Online"* ↔ *"Open In-Person Help Desks"*. The gate works,
+  and it is the reason precision holds at 1.000. Theme consolidation is visible
+  in the same log: 9→7, 14→11, 11→10.
 - **`attach.titleOnlyRejected` fired once in five rounds**, on a genuinely marginal
   case (title 0.852, members 0.836, gate 0.85). Correctly calibrated, but doing
   almost nothing; do not credit it with the precision recovery.
