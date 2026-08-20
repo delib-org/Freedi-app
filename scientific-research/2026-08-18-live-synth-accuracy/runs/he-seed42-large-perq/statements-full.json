@@ -1,0 +1,5783 @@
+[
+ {
+  "statement": "להנגיש כל גן שעשועים לילדים עם מוגבלויות.",
+  "paragraphs": [],
+  "statementId": "-1X3s26Wep5X",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253631827,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8879590415807685,
+  "embeddingCreatedAt": 1787253634174,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "8b80f8f2d33f2ca8b6b37d66c11903e17de86c6b",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253645020
+ },
+ {
+  "statement": "להקצות חלקות אדמה לגינות ירק קהילתיות.",
+  "paragraphs": [],
+  "statementId": "-zjXlbx7UgZH",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251415784,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.0739511739588985,
+  "embeddingCreatedAt": 1787251416177,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e6b85159271e86491890c572875317b9237c73ca",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251418845
+ },
+ {
+  "statementId": "0CUp2fLh55tX",
+  "statement": "להפעיל תחבורה ציבורית לילית בסופי שבוע",
+  "description": "העירייה תפעיל שירות אוטובוסים או תחבורה ציבורית בשעות הלילה המאוחרות בסופי שבוע, כדי לאפשר לאנשים ולנוסעים אחרי חצות לחזור הביתה. השירות יתמקד במתן מענה לשעות שבהן התחבורה הרגילה אינה מספקת אפשרות חזרה מאוחרת.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251268833,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787251268833,
+  "embeddingCreatedAt": 1787251272963,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ab58c60c3d1ff6cac8e448172e1dc8883aa3c0e5",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "fXnxOiO1zSOi",
+   "k6RMEYydOOAZ",
+   "V71qgFE0GKWk",
+   "TrTdrJs-qO2q"
+  ],
+  "lastUpdate": 1787253451462
+ },
+ {
+  "statement": "להקטין את מספר התלמידים בכיתה כדי שהמורים יוכלו לתת תשומת לב אישית.",
+  "paragraphs": [],
+  "statementId": "0EIz9TvKlrFK",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251549286,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.2968134228920889,
+  "embeddingCreatedAt": 1787251551559,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "159ffd14baaf4e51b032b13dd75750cfe836c60a",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251554008
+ },
+ {
+  "statement": "לתקצב תוכניות הכשרה מחדש לעובדים המחליפים קריירה.",
+  "paragraphs": [],
+  "statementId": "0fqyF1atyEJN",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252272150,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8346595494726339,
+  "embeddingCreatedAt": 1787252273968,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "0cc62bcefaab093a669102a0525baa6b0ee53727",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252276770
+ },
+ {
+  "statementId": "1HtszJTkd5el",
+  "statement": "להסב מבנים ריקים למגורים",
+  "description": "העירייה תפעל להסבת בנייני משרדים ומבנים מסחריים שאינם מאוכלסים לדירות מגורים. המהלך יתמקד בשימוש מחדש במבנים ריקים כדי להוסיף שטחי מגורים במקום נכסים שאינם נמצאים בשימוש.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252629995,
+  "consensus": 0,
+  "integratedOptions": [
+   "hRnInDzqILuZ",
+   "SvJ0BZlv65YL"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252629995,
+  "embeddingCreatedAt": 1787252636469,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "fa0301e234538a5b387fed43bfa680b948a06992",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252637399
+ },
+ {
+  "statement": "להזמין ציורי קיר ופסלים מאמנים מקומיים עבור הכיכרות הציבוריות.",
+  "paragraphs": [],
+  "statementId": "1PBtiFjXdgzg",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252771538,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.19457214815154011,
+  "embeddingCreatedAt": 1787252773672,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "d062e10758999e4a945a829d1ce3c697b8ee329e",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252793733
+ },
+ {
+  "statement": "להקים מכלאות פתוחות לכלבים ללא רצועה בכל שכונה.",
+  "paragraphs": [],
+  "statementId": "3GNzYtybOYIE",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252816904,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.43908086467203855,
+  "embeddingCreatedAt": 1787252818611,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ec1d3f5d3ab70ef43093f22573dfcc30512f7038",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252828591
+ },
+ {
+  "statementId": "4NiyPGBPBxTG",
+  "statement": "להקים מתחמי כלבים מגודרים ללא רצועה בכל שכונה ורובע",
+  "description": "העירייה תקים מתחמים פתוחים ומגודרים שבהם כלבים יוכלו לשהות ולרוץ ללא רצועה. המתחמים יוקמו בכל שכונה ובכל רובע, כדי לאפשר לתושבים גישה למקום ייעודי ובטוח לכלבים בקרבת אזור מגוריהם.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252828522,
+  "consensus": 0,
+  "integratedOptions": [
+   "3GNzYtybOYIE",
+   "BrLxfimhdePG"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252828522,
+  "embeddingCreatedAt": 1787252830791,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "b842f331cc34bf00006caf296fd633dbca8300be",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252831034
+ },
+ {
+  "statementId": "4ochMQJS0nvv",
+  "description": "הנגשת מידע עירוני, תקציבים ונתונים לציבור באופן פתוח וברור.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253133982,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787253134175,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "9d2929aa8ff9ba1ac51179135e59627eb78cfa0b",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "NCzmwO7diP-U",
+   "RDmVOufYBvr4",
+   "c7EynFe9CnF1",
+   "jh6rl66uzHMJ"
+  ],
+  "lastUpdate": 1787254288886,
+  "statement": "ממשל עירוני ושירות לתושבים"
+ },
+ {
+  "statementId": "55epb9Xm0QU2",
+  "statement": "לפתוח חללי עבודה משותפים מסובסדים לעצמאים",
+  "description": "העירייה תספק חללי עבודה משותפים בעלות נמוכה ובסבסוד לעצמאים, כדי לאפשר להם סביבת עבודה נגישה מחוץ לבית. המהלך יתמקד בהקמת או פתיחת משרדים משותפים המיועדים לעובדים עצמאיים, במחיר המותאם ליכולת הכלכלית שלהם.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252543196,
+  "consensus": 0,
+  "integratedOptions": [
+   "HcDs1hQfvpga",
+   "94J1unuTlzWa"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252543196,
+  "embeddingCreatedAt": 1787252550704,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "f37134df8fc215bf68b76180ecb0cab870ceb9ac",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252551098
+ },
+ {
+  "statement": "למקם מצלמות מעקב באזורים החמים מבחינת עבריינות.",
+  "paragraphs": [],
+  "statementId": "5DybAVcuuk2f",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252018840,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.4343460736287077,
+  "embeddingCreatedAt": 1787252021385,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "8c54c4e4f3c671d6c743c7288e07af66f0f5d56b",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252024112
+ },
+ {
+  "statement": "להגדיל את התמיכה בתוך הבית כדי שאנשים מבוגרים לא ייאלצו לעבור למוסדות.",
+  "paragraphs": [],
+  "statementId": "5VsSH1lbpJTk",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252337765,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9723353568143691,
+  "embeddingCreatedAt": 1787252339699,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "762f6c554152c08954010eb1ab13f5b99a946dc6",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252342644
+ },
+ {
+  "statement": "לפתוח דלפקי סיוע ללא תור שבהם התושבים יקבלו עזרה בשימוש בשירותים המקוונים של העירייה.",
+  "paragraphs": [],
+  "statementId": "5cGTNop7olIx",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253479131,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.18140659008057525,
+  "embeddingCreatedAt": 1787253480684,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "cce5f3eadbf5d602a0a07ff66e29d80cf124b6a5",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253484019
+ },
+ {
+  "statement": "להקים מרשם שכירות ציבורי כדי שהשוכרים יוכלו להשוות מחירים.",
+  "paragraphs": [],
+  "statementId": "5kTHDoe4nSQu",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252998227,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8176239942372518,
+  "embeddingCreatedAt": 1787253000362,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "055d3fe10d9292c20137e12df19cded8422cc007",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253000500
+ },
+ {
+  "statement": "ליצור גינות כיס כך שלכל תושב יהיה שטח ירוק במרחק הליכה קצר.",
+  "paragraphs": [],
+  "statementId": "6VZtVZ4sbVu8",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252856183,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6331177827354482,
+  "embeddingCreatedAt": 1787252858658,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "93613892695e5088b37caa579e03eb521b82012a",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252861285
+ },
+ {
+  "statementId": "6wm31qnVN2re",
+  "statement": "לפשט את רישוי העסקים לבקשה קצרה ומהירה אחת",
+  "description": "העירייה תפשט את הליך הוצאת רישיון העסק באמצעות בקשה מהירה אחת, המוגשת בטופס קצר ואחיד. המהלך יצמצם את הבירוקרטיה הכרוכה ברישוי עסקים ויהפוך את התהליך לברור, נגיש ויעיל יותר עבור מבקשי הרישיון.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787254035735,
+  "consensus": 0,
+  "integratedOptions": [
+   "RBoGWDH8B0oK",
+   "co8nN-7UJ-s8"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787254035735,
+  "embeddingCreatedAt": 1787254037859,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "bf6643f94392d51c867c5ca2a34501619b0ebe8d",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254038100
+ },
+ {
+  "statement": "להציע אשראי זול לעסקים שכונתיים קטנים.",
+  "paragraphs": [],
+  "statementId": "7CzV5xOrPXha",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251357762,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.4177936982963888,
+  "embeddingCreatedAt": 1787251358772,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "da7b1c784f92f8c3b974b09f55f0d9783a22f3b7",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251362319
+ },
+ {
+  "statement": "לקצר את זמני התגובה של אמבולנסים וכיבוי אש על ידי פתיחת תחנות מקומיות נוספות.",
+  "paragraphs": [],
+  "statementId": "7F0Fn8MzN8rU",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252665009,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6708513857712219,
+  "embeddingCreatedAt": 1787252666820,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "9fc68cf95b994f5a61fc4a51b8676dce9923368a",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252676215
+ },
+ {
+  "statementId": "7HIMa1uWdpMs",
+  "statement": "הנהיגו נסיעה חינם בתחבורה הציבורית לכל תלמידי בית הספר",
+  "description": "העירייה צריכה לאפשר לתלמידים בגילי בית הספר, ובפרט לכל מי שמתחת לגיל 18, לנסוע בתחבורה הציבורית ללא תשלום. המהלך יסיר את עלות הנסיעה מהתלמידים ויחול על נסיעותיהם בתחבורה הציבורית.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253337400,
+  "consensus": 0,
+  "integratedOptions": [
+   "zshAvU2MFpeM",
+   "wmIHrbGs6wdn"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253337400,
+  "embeddingCreatedAt": 1787253339728,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "53ab636d44e3a7dd7fcea248a9f023e47584ed0b",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253339938
+ },
+ {
+  "statementId": "7M9J2Txr7CrU",
+  "statement": "תאורת רחוב ובטיחות לילית",
+  "description": "שיפור התאורה במרחבים ציבוריים להגברת הבטיחות והנוחות בשעות החשכה.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251794065,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787251796072,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ce776366845ee8b2d9a3fb29e00e6659c8bf00d5",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "h5BxdnkGR6kB",
+   "8hdBhTZkLveS"
+  ],
+  "lastUpdate": 1787253423480
+ },
+ {
+  "statement": "לתת לנוסעים מעקב חי אחר הרכבים באפליקציה כדי שידעו את זמני ההגעה.",
+  "paragraphs": [],
+  "statementId": "7RTRjPwuF1Yt",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251329239,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.3381242178415196,
+  "embeddingCreatedAt": 1787251330954,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a5a3ba436df81adc77667c74819da7fac83acd75",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251332401
+ },
+ {
+  "statement": "להקים מוקד טלפוני מאוחד אחד לכל בקשת שירות עירונית.",
+  "paragraphs": [],
+  "statementId": "7rAkCrqahhc-",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250654835,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.202418515682655,
+  "embeddingCreatedAt": 1787250666683,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "72def39134728e18a63896bd745314cdfc232de5",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250678842
+ },
+ {
+  "statement": "להתקין מנורות בהירות יותר בדרכים ובמעברים המוארים בצורה גרועה.",
+  "paragraphs": [],
+  "statementId": "84-9Gar6SYwL",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251775231,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.40406734402893507,
+  "embeddingCreatedAt": 1787251777371,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ac6bb406c7e442bce2dd01e41754b029b46fee02",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251794118
+ },
+ {
+  "statement": "להגביל את מספר התלמידים בכל כיתה כדי לאפשר יחס אישי.",
+  "paragraphs": [],
+  "statementId": "87Pt5ru7s-eI",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252462471,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.37603548150885535,
+  "embeddingCreatedAt": 1787252464280,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e1751f42c871bbbc6ed96efeec4028db2e4c9d3e",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252474137
+ },
+ {
+  "statementId": "8hdBhTZkLveS",
+  "statement": "להתקין מצלמות אבטחה באזורים חמים מבחינת עבריינות",
+  "description": "העירייה תתקין מצלמות אבטחה במקומות שבהם מתרכזת הפשיעה ובאזורים החמים מבחינת עבריינות. המהלך יתמקד בהצבת אמצעי תיעוד ומעקב באותם מוקדים, כדי לחזק את המענה העירוני לעבריינות באזורים שבהם היא בולטת.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253423454,
+  "consensus": 0,
+  "integratedOptions": [
+   "cnwmQFVMHu5N",
+   "5DybAVcuuk2f"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253423454,
+  "embeddingCreatedAt": 1787253425461,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a65b1c382c75bf93c0be3246a791c600bbb736b8",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253425665
+ },
+ {
+  "statement": "לפתוח חללי עבודה משותפים מסובסדים לעצמאים.",
+  "paragraphs": [],
+  "statementId": "94J1unuTlzWa",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250851816,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9430345034852723,
+  "embeddingCreatedAt": 1787250853330,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "c2f6cc53f12a20093adbbb97b07109878a21868c",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250853398
+ },
+ {
+  "statement": "לחייב את קבלני העירייה להעסיק תושבים מקומיים.",
+  "paragraphs": [],
+  "statementId": "987Kh9jN2k9z",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253365311,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.03766478865462419,
+  "embeddingCreatedAt": 1787253366697,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "11a38f6b2c6882ae404346178b272d71fe423fe3",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253380889
+ },
+ {
+  "statementId": "ARDW1qzvF7sV",
+  "statement": "לקצר את זמני ההמתנה לרופאים מומחים",
+  "description": "העירייה תפעל לקיצור משך ההמתנה של מטופלים עד לפגישה עם רופא מומחה. המהלך יתמקד בשיפור הזמינות לתורים אצל מומחים, כך שתושבים הזקוקים לייעוץ או לטיפול מומחה יוכלו לקבלו מוקדם יותר.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252898385,
+  "consensus": 0,
+  "integratedOptions": [
+   "feg9Har2Y1jM",
+   "eu9KV44IrMWc"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252898385,
+  "embeddingCreatedAt": 1787252899048,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "c154b0b0ba40817501782c66328182557c6cadb3",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252899249
+ },
+ {
+  "statement": "להציע הוראה מתקנת ללא עלות אחר הצהריים כדי שתלמידים מתקשים יקבלו סיוע במשימות.",
+  "paragraphs": [],
+  "statementId": "BGJXhIazzJbC",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251083990,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6442920865855828,
+  "embeddingCreatedAt": 1787251085840,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "500023d67cb99efc825fb9c014236164be6d1d91",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251085950
+ },
+ {
+  "statement": "להקים איסוף נפרד של שאריות מזון מהמטבח לצורך קומפוסטציה.",
+  "paragraphs": [],
+  "statementId": "BZxkm9VPEzyJ",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251055382,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5831741624616229,
+  "embeddingCreatedAt": 1787251057099,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "8d4ce6dfb7a9d3bfe4008d5156d98f0e49c41ce3",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251059834
+ },
+ {
+  "statement": "לקיים מבצעי בדיקות סקר חינם לגילוי מוקדם של מחלות.",
+  "paragraphs": [],
+  "statementId": "BcqyM3h25jaa",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251850471,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.06770134779967818,
+  "embeddingCreatedAt": 1787251852210,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "7d9f34c3e6b5c8726d75589751b83414bfc2d7e3",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251855398
+ },
+ {
+  "statement": "ליצור גדרות כלבים מתוחמות בכל רובע.",
+  "paragraphs": [],
+  "statementId": "BrLxfimhdePG",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251198765,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.2335747622233002,
+  "embeddingCreatedAt": 1787251199022,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "3ada6af4b4acb2130123a708b5920b8fc010bc81",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251199113
+ },
+ {
+  "statement": "להקים מגורי סטודנטים בעלות נמוכה בסמוך למוסדות הלימוד.",
+  "paragraphs": [],
+  "statementId": "C6tM7XAm3Eun",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251112083,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5299144792694712,
+  "embeddingCreatedAt": 1787251113703,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e09cbba182a58d34d2aeea190f005c886ebc4feb",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251117096
+ },
+ {
+  "statement": "לוודא שפארק ירוק קטן נמצא במרחק הליכה של חמש דקות מכל בית.",
+  "paragraphs": [],
+  "statementId": "DslKH5gakzGc",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253208908,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5820311287026607,
+  "embeddingCreatedAt": 1787253211949,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "988f89dd02438512d2a0a116108487dca920b6b1",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253232014
+ },
+ {
+  "statement": "ליצור נתיבי רכיבה מופרדים פיזית כך שהרוכבים יהיו מוגנים מרכבים.",
+  "paragraphs": [],
+  "statementId": "EFxhE8L46HAO",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252742309,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6029382510033696,
+  "embeddingCreatedAt": 1787252743746,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e0cd41283e99ab52ce069f72f40323717bc62605",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252746744
+ },
+ {
+  "statement": "לפרסם את תקציב העיר ואת נתוני העיר בפורטל פתוח.",
+  "paragraphs": [],
+  "statementId": "ESKiFdl747lF",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251668684,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.4050863864986127,
+  "embeddingCreatedAt": 1787251669930,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "cbd192bceb57847c5cf313e77c38e14dbcc15926",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251673712
+ },
+ {
+  "statement": "לשתול הרבה יותר עצי צל לאורך הרחובות.",
+  "paragraphs": [],
+  "statementId": "Ed4ZhQskmiBZ",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253729424,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.39454806352514993,
+  "embeddingCreatedAt": 1787253729652,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "f4e071dcd00e0eed2af9e8eb3ec2fb8a8471cfb8",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253738127
+ },
+ {
+  "statementId": "EfUtGPXpZ5f0",
+  "statement": "לקיים מבצעי בדיקות סקר חינם לגילוי מוקדם של מחלות",
+  "description": "העירייה תקיים תוכניות ומבצעים של בדיקות סקר ללא תשלום, כדי לאתר מחלות בשלב מוקדם. המהלך יתמקד בהנגשת בדיקות גילוי מוקדם ללא עלות במסגרת יוזמה עירונית ברורה.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253519712,
+  "consensus": 0,
+  "integratedOptions": [
+   "s15w4MsDRCvH",
+   "BcqyM3h25jaa"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253519712,
+  "embeddingCreatedAt": 1787253522263,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "75aec9e80f3881d45363787bae836e1ffee016c4",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253522485
+ },
+ {
+  "statement": "להציע אינטרנט אלחוטי בלי תשלום בכיכרות הציבוריות ובמרכזים הקהילתיים.",
+  "paragraphs": [],
+  "statementId": "GBcVRsMmSIhN",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250762291,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.4242875357412541,
+  "embeddingCreatedAt": 1787250764199,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "41cd7ad6cba4fd6487218f01da7cfe7e3932f783",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250767945
+ },
+ {
+  "statement": "לבנות מחדש את מתקני המשחק כך שילדים עם מוגבלויות יוכלו להשתמש בכל המתקנים.",
+  "paragraphs": [],
+  "statementId": "GQEl6vVJesZF",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252405819,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6440988575298767,
+  "embeddingCreatedAt": 1787252408230,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "10114ab54cd615b433de2df9efa71f72ab7d3de9",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252408360
+ },
+ {
+  "statementId": "GfggNNUQdPmJ",
+  "statement": "להקים סניף ספרייה ציבורית בכל שכונה ורובע",
+  "description": "העירייה תקים סניף ספרייה ציבורית מקומית בכל שכונה ורובע, כדי להנגיש לתושבים שירותי ספרייה בקרבת מקום מגוריהם. הפריסה תבטיח שלכל אזור בעיר יהיה מענה ספרייתי מקומי וזמין.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251890274,
+  "consensus": 0,
+  "integratedOptions": [
+   "tIfsSHCxV2wg",
+   "U0TvaLNbYdG2"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787251890274,
+  "embeddingCreatedAt": 1787251892738,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a983b20dca55b8f00bd17abfdbe58dccd3204dba",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251892977
+ },
+ {
+  "statement": "להציב עמדות תמיכה פרונטליות שיעזרו לאנשים להתמצא באתר האינטרנט העירוני.",
+  "paragraphs": [],
+  "statementId": "H-2g4g9JX3V0",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253586664,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.11114437224228513,
+  "embeddingCreatedAt": 1787253588351,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "6770c7bf67fe71c2f1ddb050f2683fd71f4a0ca3",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253608407
+ },
+ {
+  "statement": "לספק משרדים משותפים בעלות נמוכה לעובדים עצמאיים.",
+  "paragraphs": [],
+  "statementId": "HcDs1hQfvpga",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252529626,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6474863637199633,
+  "embeddingCreatedAt": 1787252531331,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "8ec01a67511b088b43b90446dbda528a0cfb6836",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252548251
+ },
+ {
+  "statementId": "Hu-pjKZybb5e",
+  "statement": "קישוריות דיגיטלית ציבורית",
+  "description": "שיפור הגישה החינמית לאינטרנט ולשירותים דיגיטליים במרחבים ציבוריים וקהילתיים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252969655,
+  "consensus": 0,
+  "integratedOptions": [
+   "zslo9mGHkoPW"
+  ],
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787252972796,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "5bf27f205062877917a9c4598cc336687ec8546f",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252973102
+ },
+ {
+  "statement": "לארגן פסטיבלים ציבוריים ומופעי מוזיקה באוויר הפתוח בתכיפות.",
+  "paragraphs": [],
+  "statementId": "I1Wok4X3K-UG",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251169996,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.05658903749180055,
+  "embeddingCreatedAt": 1787251171336,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "354b4f1612358406645e6f514cf26a547d8efc06",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251174059
+ },
+ {
+  "statementId": "I75sthAVFeZl",
+  "statement": "שירות עירוני לתושבים",
+  "description": "שיפור הנגישות, המענה והטיפול בפניות תושבים מול שירותי העירייה.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251460972,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "embeddingCreatedAt": 1787251463505,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "893bdc1b9157aa02a726010782a9cdaa30e03f02",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "hide": true,
+  "mergedInto": "4ochMQJS0nvv",
+  "integratedOptions": [],
+  "lastUpdate": 1787254288887
+ },
+ {
+  "statementId": "I7KDJSSyGSt-",
+  "statement": "להקים מעונות סטודנטים מסובסדים בעלות נמוכה ליד הקמפוסים",
+  "description": "העירייה תקדם הקמת מעונות סטודנטים מסובסדים ובעלות נמוכה בקרבת הקמפוסים ומוסדות הלימוד. המהלך נועד להגדיל את היצע המגורים הנגיש לסטודנטים בסמוך למקום לימודיהם, תוך מיקוד בפתרונות דיור ייעודיים ולא יקרים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252061057,
+  "consensus": 0,
+  "integratedOptions": [
+   "fU4Z0LnluY4r",
+   "C6tM7XAm3Eun"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252061057,
+  "embeddingCreatedAt": 1787252063402,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "0e882b74aa8c58ff8116eef8a7bed70f8f78f7e0",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252063649
+ },
+ {
+  "statementId": "IShoJlhzcX8g",
+  "statement": "להעמיד שוטרי שכונה לסיורים קבועים ולבניית קשר עם התושבים",
+  "description": "העירייה תקצה שוטרי שכונה שיכירו את התושבים ויקיימו סיורים קבועים בשכונות. תפקידם יהיה ליצור נוכחות מקומית רציפה לצד קשרים מתמשכים עם התושבים, כך שהמשטרה תהיה מוכרת, נגישה ומחוברת יותר לחיי הקהילה.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252715205,
+  "consensus": 0,
+  "integratedOptions": [
+   "OyDxYGRboX-p",
+   "kcua9k-GzO-R"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252715205,
+  "embeddingCreatedAt": 1787252717295,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "5320fddc7c24447a242a780b0a8eb1847454d72f",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252717506
+ },
+ {
+  "statement": "להתקין פאנלים סולאריים על גגות כל המבנים הציבוריים.",
+  "paragraphs": [],
+  "statementId": "IsRbB2rhvTOS",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251518557,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.750157083444474,
+  "embeddingCreatedAt": 1787251520964,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "68a5ded9b3d75ceb3710dc1707863c7d5d53e1c6",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251524184
+ },
+ {
+  "statement": "לשפץ מבני בית ספר ותיקים ולהוסיף כיתות ומעבדות מודרניות.",
+  "paragraphs": [],
+  "statementId": "JPbikQUIMk7t",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253294740,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.2090526193097999,
+  "embeddingCreatedAt": 1787253297083,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "5f041ed6e54ff2b6df68ce6ae7dca4325000e3ee",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253301540
+ },
+ {
+  "statementId": "KRpOyHQUzcTV",
+  "statement": "להעניק אשראי בריבית נמוכה לעסקים שכונתיים קטנים",
+  "description": "העירייה תציע הלוואות ואשראי בריבית נמוכה לעסקים קטנים מקומיים ושכונתיים. המהלך נועד להקל על נגישותם למימון זול ולחזק את יכולתם לפעול, להתפתח ולהמשיך לשרת את הקהילה המקומית.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787254160032,
+  "consensus": 0,
+  "integratedOptions": [
+   "hRwhaaIxaB8J",
+   "7CzV5xOrPXha"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787254160032,
+  "embeddingCreatedAt": 1787254162389,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a1e6fbe096e9d2c9916b018df8f1a43f81562a8e",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254162605
+ },
+ {
+  "statementId": "LQjbfSoiPZt0",
+  "statement": "לחייב ספקים וקבלנים עירוניים להעסיק תושבים מקומיים",
+  "description": "העירייה תחייב את הקבלנים והספקים העובדים מטעמה להעסיק אנשים מתוך העיר. תנאי זה יוטמע בהתקשרויות העירוניות כדי לקדם תעסוקה מקומית ולחזק את תרומת הרכש העירוני לאיכות חיי התושבים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253378083,
+  "consensus": 0,
+  "integratedOptions": [
+   "987Kh9jN2k9z",
+   "c7X8tcytjujE"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253378083,
+  "embeddingCreatedAt": 1787253383518,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "266ab9b4b06947360c560b50f0aac8cdecbe54b8",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253383737
+ },
+ {
+  "statement": "לממן קורסי הסבה מקצועית לאנשים שמחליפים עיסוק.",
+  "paragraphs": [],
+  "statementId": "LiVWN1sSpR6C",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251743585,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5807128468246001,
+  "embeddingCreatedAt": 1787251745681,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ba1c73cc1adfe4353a3c188727d09aff6bca1b33",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251750102
+ },
+ {
+  "statementId": "MZBCv-LB9ZpZ",
+  "statement": "לאפשר ביצוע מקוון של כל ההליכים והטפסים העירוניים",
+  "description": "העירייה תאפשר לתושבים למלא ולהגיש באינטרנט את כל הטפסים העירוניים ולבצע באופן מקוון כל הליך עירוני. השירות המקוון ירכז את הפעולות העירוניות ברשת, כדי שתושבים יוכלו לטפל בענייניהם מול העירייה ללא צורך בהגעה פיזית לצורך השלמת ההליך.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253559827,
+  "consensus": 0,
+  "integratedOptions": [
+   "bY1vVKxSP1cp",
+   "n1viX6yEeR0i"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253559827,
+  "embeddingCreatedAt": 1787253561327,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "88aafc207241c5e70e038a42cb99c17ec08c0304",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253561563
+ },
+ {
+  "statementId": "MtrIK090Dcpc",
+  "statement": "הרחיבו את שירותי הטיפול והתמיכה בבית לאנשים מבוגרים",
+  "description": "העירייה תרחיב שירותי טיפול ותמיכה הניתנים בבית לאנשים מבוגרים, כדי לאפשר להם להישאר בבתיהם ולא להיאלץ לעבור למוסדות. ההצעה ממקדת את המענה בתוך הבית: חיזוק הזמינות וההיקף של שירותים המסייעים לאנשים מבוגרים בחיי היומיום, תוך שמירה על הבית כמקום המגורים. המהלך נועד לתת לאנשים מבוגרים אפשרות ממשית להמשיך לחיות בביתם באמצעות סיוע מתאים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253885922,
+  "consensus": 0,
+  "integratedOptions": [
+   "pPpmpAfSY0DD",
+   "5VsSH1lbpJTk"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253885922,
+  "embeddingCreatedAt": 1787253887204,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "c6accc6c7949b88b523362b3de135b0932a44091",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253887340
+ },
+ {
+  "statementId": "NCzmwO7diP-U",
+  "statement": "לפרסם את תקציב העיר ונתוניה בפורטל נתונים פתוח",
+  "description": "העירייה תפרסם בפורטל נתונים פתוח לציבור את תקציב העיר, נתוני העיר ונתוני ההוצאות העירוניות. הפורטל ירכז במקום ציבורי ונגיש את המידע בנושאים אלה, כדי לאפשר לתושבים לעיין בתקציב, בהוצאות ובנתונים העירוניים באופן פתוח. הפרסום יכלול את תקציב העיר לצד נתוני ההוצאות ונתוני העיר, ולא יסתמך רק על פרסומים מפוזרים או על מידע שאינו פתוח לציבור.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253129908,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253129908,
+  "embeddingCreatedAt": 1787253131310,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "6c7ed60a747879e54bfedc94bf75e0981107b3d1",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "SaRqbSOgtwXV",
+   "ESKiFdl747lF",
+   "vGSkfXV9ZwfR"
+  ],
+  "lastUpdate": 1787253151370
+ },
+ {
+  "statementId": "Neo0KiJfA8GK",
+  "statement": "שיפור התחבורה הציבורית העירונית",
+  "description": "הרחבת ושיפור שירותי התחבורה הציבורית, כולל זמינות בשעות ובימים נוספים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251272482,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787251273545,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "26a5be71084bbc49ebcc018b638ffae114eee597",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "0CUp2fLh55tX",
+   "ivupF2emgqLI",
+   "gdI8FHVZPWUD",
+   "sIGZq7ujahzl",
+   "mmecPl2HFj9X",
+   "7HIMa1uWdpMs",
+   "MZBCv-LB9ZpZ",
+   "yleYeAJlAw8D"
+  ],
+  "lastUpdate": 1787253738088
+ },
+ {
+  "statement": "להעלות את שכר המורים כדי למשוך ולשמר מחנכים טובים.",
+  "paragraphs": [],
+  "statementId": "OPILCPIBleDf",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253767998,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5551769735814194,
+  "embeddingCreatedAt": 1787253769942,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "d77bee61b0e035e84754db0ded1c4f1f98492214",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253782036
+ },
+ {
+  "statementId": "OgY1P9wt7ljm",
+  "statement": "להעניק לתושבים ייעוץ וטיפול פסיכולוגי ללא עלות",
+  "description": "העירייה תציע לתושבים שירותי ייעוץ נפשי וטיפול פסיכולוגי ללא עלות, כדי לאפשר קבלת סיוע מקצועי בתחום בריאות הנפש ללא חסם כלכלי. השירות יתמקד במתן מענה פסיכולוגי נגיש לציבור התושבים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787250919432,
+  "consensus": 0,
+  "integratedOptions": [
+   "tb5DO3aWsrIV",
+   "sp0QFyVGE6qk"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787250919432,
+  "embeddingCreatedAt": 1787250924748,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a4df32e77b49aaf048a4c9028fc941f4646d9e0d",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250925163
+ },
+ {
+  "statement": "להוסיף פסי האטה ומעברי חצייה מוצרים בקרבת בתי הספר.",
+  "paragraphs": [],
+  "statementId": "OlEJQbzMoCNj",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252243396,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.3264341303798728,
+  "embeddingCreatedAt": 1787252245129,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "f88598d0b6ce1ea28017a6cf7d8e6178d0707eb2",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252247713
+ },
+ {
+  "statement": "להעמיד שוטרי שכונה שמכירים את התושבים בסיור קבוע.",
+  "paragraphs": [],
+  "statementId": "OyDxYGRboX-p",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252703658,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.12749473022095215,
+  "embeddingCreatedAt": 1787252705716,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "0c5119e8049f785222829ae4e9a5fe6dba9a71c8",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252715257
+ },
+ {
+  "statement": "להפחית את הזמן שלוקח לשירותי החירום להגיע באמצעות הוספת תחנות קרובות יותר לשכונות.",
+  "paragraphs": [],
+  "statementId": "QtHXujI-lh8w",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251387279,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.008728772360897308,
+  "embeddingCreatedAt": 1787251388625,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "5e6b7e96673549fb25cf6d1cc43fedca884b43e3",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251388733
+ },
+ {
+  "statement": "לפשט את הליך רישוי העסקים לטופס קצר אחד.",
+  "paragraphs": [],
+  "statementId": "RBoGWDH8B0oK",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787254024719,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.22541662536897533,
+  "embeddingCreatedAt": 1787254026881,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "8851c15f85aa183f37e87b70015402dc19211b73",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254035778
+ },
+ {
+  "statement": "להתקין חיישני איכות אוויר בכל העיר ולפרסם את הנתונים.",
+  "paragraphs": [],
+  "statementId": "RDmVOufYBvr4",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253178240,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.26051081501737783,
+  "embeddingCreatedAt": 1787253180647,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "76138c3866a86b7245fdc74a73f973a7f259e817",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253183483
+ },
+ {
+  "statementId": "RlIASP2rDZ0l",
+  "statement": "בריאות נפשית קהילתית",
+  "description": "שירותים ותמיכה נפשית נגישים לתושבים לשיפור רווחתם ואיכות חייהם.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787250922860,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787250925029,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "4cbb9f54f69845a959275d3396b53321723adac9",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "OgY1P9wt7ljm",
+   "7CzV5xOrPXha",
+   "-zjXlbx7UgZH",
+   "LiVWN1sSpR6C",
+   "GfggNNUQdPmJ",
+   "bRiYwqHlGsUe",
+   "I7KDJSSyGSt-",
+   "hAshMdEEalrB",
+   "OlEJQbzMoCNj",
+   "0fqyF1atyEJN",
+   "pyppxDDWXAt3",
+   "u6rJtq29xKjQ",
+   "iLmEiqHDE4U8",
+   "IShoJlhzcX8g",
+   "4NiyPGBPBxTG",
+   "ARDW1qzvF7sV",
+   "XmTVhbYBW9yW",
+   "JPbikQUIMk7t",
+   "EfUtGPXpZ5f0",
+   "jyz-ZXvmPFXP",
+   "bly0jlFaZiN4",
+   "MtrIK090Dcpc",
+   "q9p5780sVwpA",
+   "XNeBJsqQoPVN",
+   "on7-1fWx12vX",
+   "spuxCbtDYU-g"
+  ],
+  "lastUpdate": 1787254162467
+ },
+ {
+  "statement": "לשחרר נתונים עירוניים ונתוני הוצאות באתר נתונים פתוחים לציבור.",
+  "paragraphs": [],
+  "statementId": "SaRqbSOgtwXV",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253104009,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.37912576185431535,
+  "embeddingCreatedAt": 1787253105891,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "d5cf378ed9406cecb92d3737f7adbf5682bfe2da",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253125947
+ },
+ {
+  "statement": "לקיים פסטיבלי רחוב והופעות בחוץ באופן קבוע.",
+  "paragraphs": [],
+  "statementId": "SeVp6zI7YJcZ",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251947488,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.14660432903115672,
+  "embeddingCreatedAt": 1787251949479,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "1c3e5d6d6d0ec24547d68ee4e0a8556c70de8faf",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251960314
+ },
+ {
+  "statement": "להפוך מבנים מסחריים לא מאוכלסים לשטחי מגורים.",
+  "paragraphs": [],
+  "statementId": "SvJ0BZlv65YL",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250950337,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8607263055153958,
+  "embeddingCreatedAt": 1787250952648,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "bc3ebff2b93b6f998004e33b7a3c4d6ee1602351",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250957530
+ },
+ {
+  "statement": "להוסיף מרפאות בריאות המשפחה מקומיות באזורים שחסרות בהם.",
+  "paragraphs": [],
+  "statementId": "T2SFaKS876bF",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252308374,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.3112708579401493,
+  "embeddingCreatedAt": 1787252310283,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ee64261a25dc22811ad59c9cb768653e83ca637a",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252313031
+ },
+ {
+  "statement": "להציב מערכות פוטו-וולטאיות על גגות המבנים העירוניים.",
+  "paragraphs": [],
+  "statementId": "TXcHB29xNkJg",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787254062976,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.650167232802233,
+  "embeddingCreatedAt": 1787254065395,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "7b40d6c408088fbf0451a08c01983ff70f892c0e",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254075037
+ },
+ {
+  "statement": "לחייב את היזמים לכלול דירות בהישג יד בכל בניין חדש.",
+  "paragraphs": [],
+  "statementId": "TkSjbIUUtunn",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252367123,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.07256639858309444,
+  "embeddingCreatedAt": 1787252368573,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "7e500cf0a8a36bebae75951b7e9b3f73835e7b0c",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252379011
+ },
+ {
+  "statement": "להפעיל אוטובוסים בתדירות גבוהה יותר בשעות העומס כדי שאנשים לא יחכו זמן רב.",
+  "paragraphs": [],
+  "statementId": "TrTdrJs-qO2q",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253449964,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.023150241809947847,
+  "embeddingCreatedAt": 1787253451339,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "4aea7eccc7bbf53a376331f4717ea229af0a89ac",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253451502
+ },
+ {
+  "statement": "לפתוח סניף ספרייה ציבורית בכל שכונה.",
+  "paragraphs": [],
+  "statementId": "U0TvaLNbYdG2",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251300851,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8556709441202941,
+  "embeddingCreatedAt": 1787251301078,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "b64a649bffb3f51af62968a2e204175639817933",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251304036
+ },
+ {
+  "statement": "לקבוע מכסה של דירות במחיר מופחת בכל הבנייה החדשה.",
+  "paragraphs": [],
+  "statementId": "UmIhXSc1JjOQ",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251227134,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9369905671791707,
+  "embeddingCreatedAt": 1787251229176,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "dcfdc93ec8377a0e539dcce3e64b065aa76518be",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251232745
+ },
+ {
+  "statement": "להגדיל את מספר האוטובוסים בשעות השיא כדי לקצר את זמן ההמתנה.",
+  "paragraphs": [],
+  "statementId": "V71qgFE0GKWk",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253029548,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9030542561709947,
+  "embeddingCreatedAt": 1787253031438,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "b25f798151e00ad72c900affa62f9d16a6084fd7",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253031576
+ },
+ {
+  "statement": "לספק אפליקציה עם זמני הגעה בזמן אמת שמראה בדיוק מתי האוטובוס מגיע.",
+  "paragraphs": [],
+  "statementId": "VrlVzCsSWQwm",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251623323,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.7620120771268157,
+  "embeddingCreatedAt": 1787251626483,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "65301ea60693ccedfb0d8993164654d77cf620fd",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251646550
+ },
+ {
+  "statement": "לשתול שדרות עצים על המדרכות כדי שההולכים ייהנו מצל.",
+  "paragraphs": [],
+  "statementId": "Wfx8Gvw-W0Nz",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251714193,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8525227588049538,
+  "embeddingCreatedAt": 1787251716029,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "1bed4d208cd9f9bcd2a8c5caa9d479abfe139ffd",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251718690
+ },
+ {
+  "statementId": "XNeBJsqQoPVN",
+  "statement": "להעניק מענקים וסבסוד לשדרוג דירות ותיקות להתייעלות אנרגטית",
+  "description": "העירייה תתקצב מענקים וסבסוד לשיפוץ ולשדרוג דירות ותיקות, במטרה להפחית את צריכת האנרגיה שלהן. התמיכה תכוון לעבודות שיפור בדירות מיושנות אשר תורמות להתייעלות אנרגטית, וכך תסייע לדיירים לצמצם את צריכת האנרגיה בבית.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253997667,
+  "consensus": 0,
+  "integratedOptions": [
+   "ooo3C-xiIpZg",
+   "b6KEH9b12cS4"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253997667,
+  "embeddingCreatedAt": 1787253999618,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "2c5b5afafa8436c606b3def35e67d3dadd2ef593",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253999836
+ },
+ {
+  "statementId": "XmTVhbYBW9yW",
+  "statement": "להקים גינות כיס ופארקים ירוקים קטנים במרחק הליכה",
+  "description": "העירייה תקדם הקמה של גינות כיס ופארקים ירוקים קטנים, כדי שלכל תושב תהיה גישה לשטח ירוק בהליכה קצרה. התכנון יתבסס על יעד ברור: פארק ירוק קטן במרחק הליכה של עד חמש דקות מכל בית. כך ייווצר מענה מקומי ונגיש לצורך בשטחים ירוקים בקרבת מקום המגורים, באמצעות הרחבת רשת הגינות והפארקים הקטנים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253233600,
+  "consensus": 0,
+  "integratedOptions": [
+   "DslKH5gakzGc",
+   "6VZtVZ4sbVu8"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253233600,
+  "embeddingCreatedAt": 1787253235024,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "514d6afbf8858845976dc1d9e751b4b9190e6708",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253235134
+ },
+ {
+  "statement": "להגדיל את התגמול למורים כך שמחנכים מצוינים יישארו במקצוע.",
+  "paragraphs": [],
+  "statementId": "YuYo7hwMyG47",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251141259,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.18245413270557465,
+  "embeddingCreatedAt": 1787251143084,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "5c637d5ad136d45686339f1da4a9e347bd6bd63f",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251145605
+ },
+ {
+  "statement": "לתקצב סבסוד לשדרוג דירות מיושנות כך שיצרכו פחות אנרגיה.",
+  "paragraphs": [],
+  "statementId": "b6KEH9b12cS4",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252501250,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.4796255653368009,
+  "embeddingCreatedAt": 1787252503077,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "cdb332b49a3ffd517aed88b415db43f444aac2a6",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252503214
+ },
+ {
+  "statementId": "bRiYwqHlGsUe",
+  "statement": "לקיים פסטיבלי רחוב ומופעי מוזיקה באוויר הפתוח בקביעות",
+  "description": "העירייה תקיים באופן קבוע פסטיבלי רחוב ומופעי מוזיקה באוויר הפתוח, כדי להרחיב את היצע הפעילויות הציבוריות במרחב העירוני. התוכנית תתמקד בארגון תכוף ומתמשך של אירועים פתוחים לקהל, ולא באירועים חד-פעמיים בלבד.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251960244,
+  "consensus": 0,
+  "integratedOptions": [
+   "SeVp6zI7YJcZ",
+   "I1Wok4X3K-UG"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787251960244,
+  "embeddingCreatedAt": 1787251961859,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "4a91a14d5aee697246da8826e966891c6f32c1e3",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251962089
+ },
+ {
+  "statementId": "bTt8IyRaJJcn",
+  "statement": "הפעילו איסוף שבועי של חומרי מיחזור מהמדרכה בכל בית",
+  "description": "העירייה תפעיל שירות קבוע לאיסוף שבועי של חומרים למיחזור מהמדרכה, כך שכל בית יוכל להעמיד את החומרים לאיסוף סמוך לביתו. השירות יתמקד באיסוף ישיר מבתי התושבים במקום להסתמך רק על הגעה עצמאית לנקודות מיחזור. מטרת המהלך היא להפוך את המיחזור לפעולה שבועית נגישה, ברורה ונוחה במסגרת שגרת הבית, באמצעות מסלול איסוף קבוע שמגיע אל בתי התושבים עצמם באופן ישיר ועקבי.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253113959,
+  "consensus": 0,
+  "integratedOptions": [
+   "ojaNFhs217l8",
+   "eZKwZ745HU1B"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253113959,
+  "embeddingCreatedAt": 1787253129136,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "3b46413887c78c07ef769db8d33d2fb42a1a1c51",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253129350
+ },
+ {
+  "statement": "לאפשר לתושבים למלא את כל הטפסים העירוניים באינטרנט.",
+  "paragraphs": [],
+  "statementId": "bY1vVKxSP1cp",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253547184,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.49866302324046274,
+  "embeddingCreatedAt": 1787253549055,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "d678e52f7b5e1cea2a460b2da29bc670fcfc4ee6",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253559873
+ },
+ {
+  "statementId": "bly0jlFaZiN4",
+  "statement": "להגדיל את שכר המורים כדי לשמר מחנכים מצוינים",
+  "description": "העירייה צריכה לפעול להגדלת התגמול והשכר למורים, כדי למשוך מחנכים טובים למקצוע ולסייע בשימורם לאורך זמן. חיזוק התגמול יבטא את חשיבות עבודת ההוראה ויתמוך ביציבות של צוותי החינוך.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253781987,
+  "consensus": 0,
+  "integratedOptions": [
+   "OPILCPIBleDf",
+   "YuYo7hwMyG47"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253781987,
+  "embeddingCreatedAt": 1787253784804,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "0056b77f00f1a9af6ea4d9b851892dbae0043743",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253785006
+ },
+ {
+  "statementId": "c7EynFe9CnF1",
+  "statement": "להקים דלפקי סיוע פרונטליים ללא תור לשירותים מקוונים",
+  "description": "העירייה תקים עמדות תמיכה ודלפקי סיוע פרונטליים, שאליהם יוכלו התושבים לפנות ללא תור לקבלת עזרה בשימוש באתר האינטרנט העירוני ובשירותים המקוונים של העירייה. הדלפקים יסייעו לאנשים להתמצא באתר, להבין כיצד להשתמש בשירותים הדיגיטליים ולבצע את הפעולות הנדרשות בהם בעזרת תמיכה אנושית פנים אל פנים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253610242,
+  "consensus": 0,
+  "integratedOptions": [
+   "H-2g4g9JX3V0",
+   "5cGTNop7olIx"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253610242,
+  "embeddingCreatedAt": 1787253612999,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a6b3a3734730644a8c0a78f04b458650c9742084",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253613101
+ },
+ {
+  "statement": "לדרוש מהספקים העירוניים להעסיק אנשים מתוך העיר.",
+  "paragraphs": [],
+  "statementId": "c7X8tcytjujE",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250880572,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.27018426115980865,
+  "embeddingCreatedAt": 1787250882716,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "17bc1e5d85a2045211a75cbc9ece4c1eb52b3657",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250882808
+ },
+ {
+  "statement": "לספק רשת אלחוטית ציבורית חינם בכיכרות ובמרכזים הקהילתיים.",
+  "paragraphs": [],
+  "statementId": "c9c35S3LgdFv",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252954249,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8484265148535952,
+  "embeddingCreatedAt": 1787252955689,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "f653159b0cb6c835fe4430bc2b5995ce0a038e68",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252969686
+ },
+ {
+  "statement": "ליצור מספר טלפון אחד לכל פניות השירות בעיר.",
+  "paragraphs": [],
+  "statementId": "cI41678JUmi5",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251444321,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9085416262666319,
+  "embeddingCreatedAt": 1787251446190,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "67b129519b410389d52b63e12f147ed83dc26d75",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251461025
+ },
+ {
+  "statement": "להתקין מצלמות אבטחה במקומות שבהם מתרכזת הפשיעה.",
+  "paragraphs": [],
+  "statementId": "cnwmQFVMHu5N",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253411548,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9788946072417435,
+  "embeddingCreatedAt": 1787253413701,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "744fbb2e932c4cf2764d959e0df48b712ebddf3c",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253423525
+ },
+ {
+  "statement": "לצמצם את הבירוקרטיה בהוצאת רישיון עסק לבקשה מהירה אחת.",
+  "paragraphs": [],
+  "statementId": "co8nN-7UJ-s8",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253671957,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5703289343286357,
+  "embeddingCreatedAt": 1787253673985,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "7b50a60a2de0045819ece4385d07c62649daf06d",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253676991
+ },
+ {
+  "statement": "לשלם לאמנים מקומיים כדי שייצרו ציורי קיר ופסלים ברחבי העיר.",
+  "paragraphs": [],
+  "statementId": "eJOyspbMb3Ys",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251016362,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6962080466140008,
+  "embeddingCreatedAt": 1787251019008,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "6ce7f36753a3e789a371e64050bf9314c15e2300",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251030609
+ },
+ {
+  "statement": "לפרוס מנטרי זיהום בכל רחבי העיר עם קריאות פומביות בזמן אמת.",
+  "paragraphs": [],
+  "statementId": "eSXNLhbdTuwo",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251820403,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.28262200122978687,
+  "embeddingCreatedAt": 1787251822698,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "2cf3d44bac94403c94df6266fbc0730cd8fbb1a9",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251825163
+ },
+ {
+  "statement": "לספק איסוף שבועי של חומרים למיחזור מהמדרכה.",
+  "paragraphs": [],
+  "statementId": "eZKwZ745HU1B",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251918356,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.007702687004867315,
+  "embeddingCreatedAt": 1787251920120,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "6bbe90df5011f142541929733492171da989317b",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251922689
+ },
+ {
+  "statement": "להפחית את משך הזמן שמטופלים מחכים עד שהם יכולים לפגוש רופא מומחה.",
+  "paragraphs": [],
+  "statementId": "eu9KV44IrMWc",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252088112,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5363261256629674,
+  "embeddingCreatedAt": 1787252092450,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "66975921674048b163c45d2fdbdfdf1afedf1cfd",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252092580
+ },
+ {
+  "statement": "לבנות מעונות מסובסדים לסטודנטים בקרבת הקמפוסים.",
+  "paragraphs": [],
+  "statementId": "fU4Z0LnluY4r",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252048562,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6681135820605872,
+  "embeddingCreatedAt": 1787252050669,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e1af3d33d2f050228802a61f5340ab7f7beab325",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252061118
+ },
+ {
+  "statement": "להפעיל אוטובוסי לילה בסופי שבוע כדי שאנשים יוכלו לחזור הביתה בשעה מאוחרת.",
+  "paragraphs": [],
+  "statementId": "fXnxOiO1zSOi",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251257491,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6045903166926148,
+  "embeddingCreatedAt": 1787251258817,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "4afbe0568799643cc07d31fb6a7cac67715daebb",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251272532
+ },
+ {
+  "statement": "לקצר את זמני ההמתנה לתורים אצל רופאים מומחים.",
+  "paragraphs": [],
+  "statementId": "feg9Har2Y1jM",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252886022,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.7421155124874275,
+  "embeddingCreatedAt": 1787252888983,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "f752af4dffced54cd8bdf2927a27e63764bf5035",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252898451
+ },
+ {
+  "statement": "לאסור פלסטיק חד-פעמי בחנויות ובמסעדות.",
+  "paragraphs": [],
+  "statementId": "fj0H9LvwzPRn",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252146422,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9872912367958822,
+  "embeddingCreatedAt": 1787252146646,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "87cffe163c1234246c4ae43bdf74067ae07ab554",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252152942
+ },
+ {
+  "statement": "לפתוח מרפאות רפואה ראשונית בשכונות שאינן מקבלות מענה.",
+  "paragraphs": [],
+  "statementId": "g-kDN-0lGslD",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253938846,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.34445593493682103,
+  "embeddingCreatedAt": 1787253940371,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "b4ca018a72fbb99c832d345cfc577c2931854e1d",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253960434
+ },
+ {
+  "statementId": "gdI8FHVZPWUD",
+  "statement": "להקים תחנות חירום מקומיות נוספות בקרבת השכונות",
+  "description": "העירייה תפעל להוספת תחנות מקומיות של אמבולנסים וכיבוי אש בקרבת השכונות, כדי לקצר את זמני ההגעה של שירותי החירום. המהלך יתמקד בשיפור הנגישות המבצעית של צוותי ההצלה לתושבים בעת אירועי חירום.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252676155,
+  "consensus": 0,
+  "integratedOptions": [
+   "7F0Fn8MzN8rU",
+   "QtHXujI-lh8w"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252676155,
+  "embeddingCreatedAt": 1787252678734,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "3c20d6fef52ef64c200a9d81b4a3fc27f9f406fe",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252678963
+ },
+ {
+  "statement": "לאסור כלים פלסטיים מתכלים בבתי מסחר ובבתי אוכל.",
+  "paragraphs": [],
+  "statementId": "gxhfuyZ9Bexj",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250985680,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.714565865124106,
+  "embeddingCreatedAt": 1787250990360,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "024d55a1d447c6e136d7e3b44e5135e6fb08a902",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250991791
+ },
+ {
+  "statementId": "h5BxdnkGR6kB",
+  "statement": "שדרגו את תאורת הרחוב בדרכים ובמעברים חשוכים",
+  "description": "העירייה תשפר את תאורת הרחוב בדרכים, ברחובות, בשבילים ובמעברים המוארים בצורה גרועה באמצעות התקנת מנורות בהירות יותר. המהלך נועד לצמצם אזורים חשוכים במרחב הציבורי ולשפר את איכות החיים של התושבים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251787880,
+  "consensus": 0,
+  "integratedOptions": [
+   "84-9Gar6SYwL",
+   "p4OBSzmyQrns"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787251787880,
+  "embeddingCreatedAt": 1787251795790,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "4c5a0e04c557b49bcb77319ae17436d72eca6000",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251796215
+ },
+ {
+  "statementId": "hAshMdEEalrB",
+  "statement": "להגיש ארוחות צהריים חמות חינם לכל תלמיד בבית הספר",
+  "description": "העירייה תפעל להבטיח שכל תלמיד בבית הספר יקבל ארוחת צהריים חמה ללא עלות במהלך יום הלימודים. המהלך נועד להפוך ארוחה חמה לחלק זמין ושוויוני משגרת בית הספר, בלי תלות ביכולת התשלום של התלמידים או משפחותיהם.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252216227,
+  "consensus": 0,
+  "integratedOptions": [
+   "mNrGjsQ0ORMi",
+   "wFtQr9eeze4w"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252216227,
+  "embeddingCreatedAt": 1787252218826,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a3a3f2c5d292f2b73d1296bbf079de3b9fff188d",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252219043
+ },
+ {
+  "statement": "להסב בנייני משרדים ריקים לדירות מגורים.",
+  "paragraphs": [],
+  "statementId": "hRnInDzqILuZ",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252620238,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.1563413097115247,
+  "embeddingCreatedAt": 1787252620477,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "7034749c79d97f7cc11272c1cac6c52fb05bd1de",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252633852
+ },
+ {
+  "statement": "להעניק הלוואות בריבית נמוכה לעסקים קטנים מקומיים.",
+  "paragraphs": [],
+  "statementId": "hRwhaaIxaB8J",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787254147723,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5256028596006974,
+  "embeddingCreatedAt": 1787254149814,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "5fc45a0b7f1d4b05c828127834d9d5ac9d01eda1",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254160075
+ },
+ {
+  "statementId": "hhFIh7MwYXGf",
+  "statement": "תקצבו הוראת נגינה חינם לילדים",
+  "description": "העירייה תתקצב שיעורי מוזיקה והוראת נגינה בכלים ללא עלות עבור ילדים. המהלך יאפשר לילדים ללמוד לנגן בלי שמחיר השיעורים יהווה חסם להשתתפות.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253820640,
+  "consensus": 0,
+  "integratedOptions": [
+   "rrC8l7vkuy6w",
+   "uyu6ktNl1lZs"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253820640,
+  "embeddingCreatedAt": 1787253823441,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "60aaa054b5b8ed0ff304df49f2104e4a50a650d8",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253823648
+ },
+ {
+  "statementId": "htTzXsf07Wxh",
+  "statement": "הזמינו אמנים מקומיים ליצור ציורי קיר ופסלים בכיכרות הציבוריות",
+  "description": "העירייה תזמין אמנים מקומיים ותשלם להם על יצירת ציורי קיר ופסלים בכיכרות הציבוריות. המהלך ייצור הזדמנויות עבודה בתשלום לאמנים מקומיים ויוסיף יצירות אמנות למרחבים אלה. היישום יתמקד בהזמנה ובתשלום עבור שני סוגי היצירה המוצעים, בלי להרחיב את ההצעה לסוגי אמנות, לאתרים או לקבוצות אחרים שלא הוגדרו. בהתאם לרעיון שהוצע, העירייה תעשה זאת באמצעות הזמנת עבודות ותשלום עבורן.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252813783,
+  "consensus": 0,
+  "integratedOptions": [
+   "1PBtiFjXdgzg",
+   "eJOyspbMb3Ys"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252813783,
+  "embeddingCreatedAt": 1787252815463,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e26783c0141fd2221f55da8a2e01b1c5b6728405",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252815515
+ },
+ {
+  "statementId": "iLmEiqHDE4U8",
+  "statement": "הגבילו את מספר התלמידים בכל כיתה למתן יחס אישי",
+  "description": "העירייה תפעל להקטנת מספר התלמידים בכל כיתה, כדי לאפשר למורים להעניק לכל תלמיד ותלמידה יותר תשומת לב ויחס אישי. צמצום גודל הכיתות יעמיד את התנאים הנדרשים להוראה קשובה יותר לצרכים האישיים של התלמידים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252474082,
+  "consensus": 0,
+  "integratedOptions": [
+   "87Pt5ru7s-eI",
+   "0EIz9TvKlrFK"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252474082,
+  "embeddingCreatedAt": 1787252476223,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "6d9f03277d8bb07b32beb6ba615f9a551bc5e16e",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252476463
+ },
+ {
+  "statementId": "ivupF2emgqLI",
+  "statement": "הפעילו אפליקציה למעקב חי אחר זמני הגעת האוטובוסים",
+  "description": "העירייה תספק אפליקציה שתאפשר לנוסעים לעקוב בזמן אמת אחר הרכבים ולראות מתי האוטובוס צפוי להגיע. במקום להסתמך על הערכות כלליות, המשתמשים יקבלו מידע חי שיבהיר את זמן ההגעה המדויק ככל האפשר. המהלך מתמקד בהצגת מעקב חי וזמני הגעה באפליקציה, כדי שנוסעים ידעו בדיוק מתי האוטובוס מגיע ויוכלו להיערך להמתנה בכל בדיקה של האפליקציה ולפני היציאה לתחנה או ההחלטה אם להמתין.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251682747,
+  "consensus": 0,
+  "integratedOptions": [
+   "VrlVzCsSWQwm",
+   "7RTRjPwuF1Yt"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787251682747,
+  "embeddingCreatedAt": 1787251688853,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "1cc6d52ab32e38a7c829a317f580bf6ad15916ee",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251688978
+ },
+ {
+  "statementId": "j4EkgqYdo7p4",
+  "statement": "דיור עירוני במבנים קיימים",
+  "description": "רעיונות להגדלת היצע הדיור באמצעות שימוש מחדש במבנים ריקים בעיר.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252633819,
+  "consensus": 0,
+  "integratedOptions": [
+   "1HtszJTkd5el"
+  ],
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787252637083,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "d06d0cf3cf65370e400ea6a5328099791ba0d830",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252637756
+ },
+ {
+  "statementId": "jh6rl66uzHMJ",
+  "statement": "להקים מוקד טלפוני מאוחד לכל פניות השירות העירוניות",
+  "description": "העירייה תקים מספר טלפון ומוקד טלפוני מאוחד שירכז את כל פניות ובקשות השירות העירוניות. המוקד יספק לתושבים כתובת טלפונית אחת וברורה לפנייה בנושאי שירות, במקום צורך לאתר ערוצים או מספרים נפרדים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251456188,
+  "consensus": 0,
+  "integratedOptions": [
+   "cI41678JUmi5",
+   "7rAkCrqahhc-"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787251456188,
+  "embeddingCreatedAt": 1787251463275,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "de7a3b1ce32bd44d185c71bad09d9c66e224f975",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251463646
+ },
+ {
+  "statementId": "jyz-ZXvmPFXP",
+  "statement": "הנגשת כל מתקני המשחק בגני השעשועים לילדים עם מוגבלויות",
+  "description": "העירייה תתאים את מתקני המשחק בגני השעשועים כך שילדים עם מוגבלויות יוכלו להשתמש בכל המתקנים. במסגרת זו יש להנגיש את הגנים ואת מתקני המשחק עצמם, ולבנות מחדש מתקנים שאינם מאפשרים שימוש מלא ונגיש.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253644952,
+  "consensus": 0,
+  "integratedOptions": [
+   "-1X3s26Wep5X",
+   "GQEl6vVJesZF"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253644952,
+  "embeddingCreatedAt": 1787253647380,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "7bd0134bf874cc3f8f8652d274de17bc45123a3c",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253647577
+ },
+ {
+  "statement": "להוסיף שירות תחבורה בשעות הלילה המאוחרות בסופי שבוע עבור נוסעים אחרי חצות.",
+  "paragraphs": [],
+  "statementId": "k6RMEYydOOAZ",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250733766,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.7089364363853714,
+  "embeddingCreatedAt": 1787250735988,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e765d21c8ac5ef389d6d2b739dbfb84b16179dbd",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250736070
+ },
+ {
+  "statement": "להקצות שוטרים מקומיים שבונים קשרים מתמשכים עם התושבים.",
+  "paragraphs": [],
+  "statementId": "kcua9k-GzO-R",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251488884,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.059887835300615366,
+  "embeddingCreatedAt": 1787251490151,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "146c9f1315c6393d6ec7cbd0d668cb3d67e7a80b",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251493429
+ },
+ {
+  "statement": "להציע כניסה למוזיאונים בלי תשלום ביום אחד בכל שבוע.",
+  "paragraphs": [],
+  "statementId": "mKY2MhlMtmT8",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252574672,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.026375019066901872,
+  "embeddingCreatedAt": 1787252576353,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "854fe95e211557e9aa86ca2bb1d8a4bf82d0c99b",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252596417
+ },
+ {
+  "statement": "להגיש ארוחת צהריים חמה חינם לכל תלמיד בבית הספר.",
+  "paragraphs": [],
+  "statementId": "mNrGjsQ0ORMi",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252205411,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.09428580398346198,
+  "embeddingCreatedAt": 1787252207116,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "f440443b0d26dd4a0298554fcab21c6ec8cf6a37",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252216301
+ },
+ {
+  "statementId": "mkcL6QK34P90",
+  "statement": "נגישות חינמית לתרבות",
+  "description": "הרחבת הגישה של תושבים למוסדות, אירועים ופעילויות תרבות באמצעות הטבות וכניסה חופשית.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252632970,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787252636845,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "a757219f03366d54e43a2e057c67870fbfb5b756",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "rZz0V7kpLMJT",
+   "htTzXsf07Wxh",
+   "hhFIh7MwYXGf"
+  ],
+  "lastUpdate": 1787253822984
+ },
+ {
+  "statementId": "mmecPl2HFj9X",
+  "statement": "לסלול שבילי אופניים מוגנים ומופרדים מתנועת המכוניות",
+  "description": "העירייה צריכה לסלול נתיבי רכיבה המופרדים פיזית מתנועת המכוניות, כדי להגן על רוכבי האופניים מרכבים. שבילים מוגנים יאפשרו רכיבה בטוחה יותר באמצעות הפרדה ברורה בין מרחב הרכיבה לבין נתיבי הנסיעה של כלי רכב.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253267379,
+  "consensus": 0,
+  "integratedOptions": [
+   "pvX6HoPlJwcx",
+   "EFxhE8L46HAO"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253267379,
+  "embeddingCreatedAt": 1787253269442,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "abecc974f3266d00a06fbc90a9d7b29dd4187359",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253269677
+ },
+ {
+  "statement": "לאפשר לבצע כל הליך עירוני באופן מקוון ברשת.",
+  "paragraphs": [],
+  "statementId": "n1viX6yEeR0i",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252177284,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9246897365909952,
+  "embeddingCreatedAt": 1787252178657,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "f3a792bb0a90f4fdc7bf314000dfb52f1261cd5f",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252181149
+ },
+ {
+  "statement": "לאסוף מיחזור מפתח כל בית פעם בשבוע.",
+  "paragraphs": [],
+  "statementId": "ojaNFhs217l8",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253058590,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.47888601938884445,
+  "embeddingCreatedAt": 1787253058819,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "00568ff9f6ce438f678ddc05f039e651c25705fd",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253078874
+ },
+ {
+  "statementId": "on7-1fWx12vX",
+  "statement": "להתקין מערכות פוטו־וולטאיות על גגות המבנים הציבוריים",
+  "description": "העירייה תתקין מערכות פוטו־וולטאיות, כלומר פאנלים סולאריים לייצור חשמל, על גגות המבנים הציבוריים והעירוניים. המהלך ימנף את שטחי הגג הקיימים לטובת הפקת אנרגיה סולארית במבני הציבור.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787254074967,
+  "consensus": 0,
+  "integratedOptions": [
+   "TXcHB29xNkJg",
+   "IsRbB2rhvTOS"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787254074967,
+  "embeddingCreatedAt": 1787254077556,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "828cd9c558cadb338daeb0a9567c76397b36f445",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254077762
+ },
+ {
+  "statement": "להעניק מענקים לשיפוץ דירות ותיקות לצורך התייעלות באנרגיה.",
+  "paragraphs": [],
+  "statementId": "ooo3C-xiIpZg",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253984313,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.542497923828527,
+  "embeddingCreatedAt": 1787253986366,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "4e9437452be577f73b993bf6838fbb9dc99b38fd",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253997717
+ },
+ {
+  "statement": "לשפר את תאורת הרחוב ברחובות ובשבילים החשוכים.",
+  "paragraphs": [],
+  "statementId": "p4OBSzmyQrns",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250821538,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.1860087192874853,
+  "embeddingCreatedAt": 1787250824588,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "86c02e2189558011849f2644c1c8e9e0bd94e16c",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250826980
+ },
+ {
+  "statementId": "pNEkedhNYMmX",
+  "statement": "להקצות חלקות לגינות ירק קהילתיות לגידול משותף של תושבים",
+  "description": "העירייה תקצה חלקות אדמה ושטחים מתאימים להקמת גינות ירק קהילתיות, שבהן תושבים יוכלו לגדל ירקות יחד. ההצעה מתמקדת בהעמדת מקום ייעודי לגידול משותף, כדי לאפשר לתושבים לפעול בגינות קהילתיות ולא רק באופן פרטי. מימושה צריך לשמור על מטרת הליבה: חלקות זמינות לגינות ירק המיועדות לעבודה משותפת של תושבים ולהשתתפות קהילתית סביב הגידול. הפעולה המבוקשת היא הקצאת הקרקע עצמה לצורך זה.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253943919,
+  "consensus": 0,
+  "integratedOptions": [
+   "upADpwnR-yDy",
+   "-zjXlbx7UgZH"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253943919,
+  "embeddingCreatedAt": 1787253965888,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "8bba2e2046970d256a8eb07c1be2d81b3edff1ab",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253966104
+ },
+ {
+  "statement": "להרחיב את שירותי הטיפול בבית כדי שקשישים יוכלו להישאר בבתיהם.",
+  "paragraphs": [],
+  "statementId": "pPpmpAfSY0DD",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253847918,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.981419083250971,
+  "embeddingCreatedAt": 1787253852394,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "0211eda7297fd57c46e350eda4001aefc19831d9",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253872464
+ },
+ {
+  "statement": "לסלול שבילי אופניים מוגנים המופרדים מתנועת המכוניות.",
+  "paragraphs": [],
+  "statementId": "pvX6HoPlJwcx",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253254304,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5867818808457319,
+  "embeddingCreatedAt": 1787253256415,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "2135dc5df97fb52d8e5092ea452e11529b4d850e",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253267442
+ },
+ {
+  "statementId": "pyppxDDWXAt3",
+  "statement": "לחייב שילוב דירות בהישג יד בכל בניין חדש",
+  "description": "העירייה תחייב יזמים להקצות מכסה של דירות בהישג יד, במחיר מופחת, בכל בניין חדש. דרישה זו תוטמע במסגרת אישורי הבנייה החדשה, כך שפיתוח חדש יכלול גם אפשרויות דיור נגישות יותר לתושבים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252378960,
+  "consensus": 0,
+  "integratedOptions": [
+   "TkSjbIUUtunn",
+   "UmIhXSc1JjOQ"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252378960,
+  "embeddingCreatedAt": 1787252381033,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "13f22bf0887d5ec6d74a4eaaffe3988f362f6593",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252381247
+ },
+ {
+  "statement": "ליצור זרם מוקדש של פסולת מזון שיהפוך לקומפוסט.",
+  "paragraphs": [],
+  "statementId": "q0ebrEf5aIlA",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251578995,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.24931784507876253,
+  "embeddingCreatedAt": 1787251581032,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "2816b3f253484e53531b518b2a8f0dc91a4ec841",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251594446
+ },
+ {
+  "statementId": "q9p5780sVwpA",
+  "statement": "פתחו מרפאות רפואה ראשונית ובריאות המשפחה בשכונות חסרות מענה",
+  "description": "העירייה תפתח מרפאות מקומיות לרפואה ראשונית ולבריאות המשפחה בשכונות ובאזורים שבהם חסר כיום מענה. מטרת המהלך היא להעמיד שירותי רפואה ראשונית ובריאות המשפחה קרוב יותר למי שמתגוררים במקומות אלה. יש למקד את פתיחת המרפאות באותן שכונות ואזורים חסרי מענה, כך שהפעולה תיתן פתרון ישיר לפער השירות הקיים ולא תסתפק בהרחבה כללית של שירותים במקומות אחרים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253966366,
+  "consensus": 0,
+  "integratedOptions": [
+   "g-kDN-0lGslD",
+   "T2SFaKS876bF"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253966366,
+  "embeddingCreatedAt": 1787253969603,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "2fec9a505524c6e8271bc8f75ebd11c6bf2c12ad",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253969734
+ },
+ {
+  "statementId": "rZz0V7kpLMJT",
+  "statement": "קבעו יום אחד שבועי של כניסה חינם למוזיאונים",
+  "description": "העירייה צריכה להנהיג יום אחד בכל שבוע שבו הכניסה למוזיאונים תהיה ללא תשלום. המדיניות תעניק לתושבים הזדמנות קבועה לבקר במוזיאונים בלי מחסום של דמי כניסה, ותהפוך את הנגישות לתרבות לחלק צפוי משגרת השבוע. ההצעה מתמקדת בפעולה ברורה אחת: קביעת יום שבועי חינמי, והיא מאפשרת לציבור לדעת מראש מתי ניתן לבקר ללא תשלום.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252627753,
+  "consensus": 0,
+  "integratedOptions": [
+   "mKY2MhlMtmT8",
+   "sSjthtjvzEPL"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252627753,
+  "embeddingCreatedAt": 1787252636243,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "978a44a37191a942c9d688ffdc9dee72dc19ceaf",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252637227
+ },
+ {
+  "statement": "לממן הוראת נגינה בכלים ללא עלות עבור ילדים.",
+  "paragraphs": [],
+  "statementId": "rrC8l7vkuy6w",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253809396,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.9157888728932342,
+  "embeddingCreatedAt": 1787253811785,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "aaaad934ffdeff97750017e5e33da61c8ac32799",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253823038
+ },
+ {
+  "statement": "להציע תוכניות בדיקות ללא תשלום שמאתרות מחלות בשלב מוקדם.",
+  "paragraphs": [],
+  "statementId": "s15w4MsDRCvH",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253509432,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.7250526430937738,
+  "embeddingCreatedAt": 1787253511669,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "7ce49baf42239328735d84b853223a122591bf49",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253519783
+ },
+ {
+  "statementId": "sHu6txNS1NeR",
+  "statement": "להקים איסוף נפרד של שאריות מזון לקומפוסטציה",
+  "description": "העירייה תקים זרם ייעודי לאיסוף נפרד של שאריות מזון מהמטבח, כדי להעביר אותן לקומפוסטציה במקום להשליכן עם יתר הפסולת. המהלך יהפוך פסולת מזון לקומפוסט וייצור מסלול ברור ונפרד לטיפול בה.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251589619,
+  "consensus": 0,
+  "integratedOptions": [
+   "q0ebrEf5aIlA",
+   "BZxkm9VPEzyJ"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787251589619,
+  "embeddingCreatedAt": 1787251595995,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "0b5ee840097641935844989719698e2d4030ff35",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251596427
+ },
+ {
+  "statement": "להתקין אמצעי מיתון תנועה כמו במפרים והרחבות מדרכה ליד בתי הספר.",
+  "paragraphs": [],
+  "statementId": "sIGZq7ujahzl",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252924307,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5916044562949325,
+  "embeddingCreatedAt": 1787252926319,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "efd88c1c05e0434a9edb1fa7c678025b9b72dcc7",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252929267
+ },
+ {
+  "statement": "לאפשר כניסה חינם למוזיאונים ביום אחד בשבוע.",
+  "paragraphs": [],
+  "statementId": "sSjthtjvzEPL",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250792881,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5919911294996865,
+  "embeddingCreatedAt": 1787250795823,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "42208dea966ea2e18efb07789aba716aaad36fe1",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250795910
+ },
+ {
+  "statement": "להציע שירותי טיפול פסיכולוגי ללא עלות לציבור.",
+  "paragraphs": [],
+  "statementId": "sp0QFyVGE6qk",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250700099,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.25421172063101793,
+  "embeddingCreatedAt": 1787250702877,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ba53e489282c6a76600e5468063bae3dd702ee4a",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250709036
+ },
+ {
+  "statementId": "spuxCbtDYU-g",
+  "statement": "הפעילו שיעורי עזר והוראה מתקנת חינם אחר הצהריים לתלמידים מתקשים",
+  "description": "העירייה תציע לתלמידים המתקשים או נשארים מאחור סיוע לימודי חינם אחר הצהריים, שיתמקד במשימות ובשיעורי הבית. השירות ישלב שיעורי עזר והוראה מתקנת, כדי לאפשר לתלמידים לקבל תמיכה מעשית לאחר יום הלימודים. המהלך יעניק מענה נגיש וללא עלות לקשיים בלימודים ובביצוע משימות, ויסייע לתלמידים הזקוקים לכך להתקדם בלי שהעלות תהווה מחסום לקבלת עזרה, במסגרת זמינה בפועל.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787254162459,
+  "consensus": 0,
+  "integratedOptions": [
+   "wxeGsiOkdKKg",
+   "BGJXhIazzJbC"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787254162459,
+  "embeddingCreatedAt": 1787254164975,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "94a6dfd9901521fcc7be6330b2949785515d7a0a",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254165201
+ },
+ {
+  "statement": "למקם ספרייה מקומית בכל רובע בעיר.",
+  "paragraphs": [],
+  "statementId": "tIfsSHCxV2wg",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251880606,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.5033858719535127,
+  "embeddingCreatedAt": 1787251880852,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "67d3a36c83a97cbd8602d78873e7382f083007a9",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251890343
+ },
+ {
+  "statement": "לספק ייעוץ נפשי חינם לתושבים.",
+  "paragraphs": [],
+  "statementId": "tb5DO3aWsrIV",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787250909393,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.03569739953372664,
+  "embeddingCreatedAt": 1787250909657,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "ffa64c504ed2c684ee3581c4be89751fb6098b71",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787250922909
+ },
+ {
+  "statement": "למודרניזציה של מתקני בית הספר המיושנים כולל המעבדות והכיתות.",
+  "paragraphs": [],
+  "statementId": "u6rJtq29xKjQ",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252434159,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.20643781131557182,
+  "embeddingCreatedAt": 1787252435977,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "0da3070b559621856b9f055fc7bece92f68af095",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252436110
+ },
+ {
+  "statement": "לתת לתושבים שטח שבו יוכלו לגדל ירקות יחד בגינות שיתופיות.",
+  "paragraphs": [],
+  "statementId": "upADpwnR-yDy",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253893336,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.017454713711341885,
+  "embeddingCreatedAt": 1787253896414,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "484eccceb89a2a0e105ccdce036494deb1c88f96",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253916470
+ },
+ {
+  "statement": "לתקצב שיעורי מוזיקה חינם לילדים.",
+  "paragraphs": [],
+  "statementId": "uyu6ktNl1lZs",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253701215,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8918026962885746,
+  "embeddingCreatedAt": 1787253701436,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "005415e623caf84739c9964edfe7b08d3265666d",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253701559
+ },
+ {
+  "statement": "לפרסם מסד נתונים עירוני של דמי שכירות כדי שהשוכרים יראו את מחירי השוק האמיתיים.",
+  "paragraphs": [],
+  "statementId": "vGSkfXV9ZwfR",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253149234,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.4223177856686642,
+  "embeddingCreatedAt": 1787253151268,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "b9fe9b4cbbdcfc572765588c293ee721db467c76",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253151406
+ },
+ {
+  "statementId": "vjPKcCXc917Z",
+  "statement": "ניהול פסולת וקיימות עירונית",
+  "description": "יוזמות עירוניות לצמצום פסולת, מיחזור וטיפול סביבתי אחראי במשאבים.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787251594405,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787251596275,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "e5919ff2d5b12960f0a331f767db982cb60ad3b9",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "sHu6txNS1NeR",
+   "fj0H9LvwzPRn",
+   "bTt8IyRaJJcn"
+  ],
+  "lastUpdate": 1787253113972
+ },
+ {
+  "statement": "לספק ארוחות חמות ללא עלות לכל התלמידים במהלך יום הלימודים.",
+  "paragraphs": [],
+  "statementId": "wFtQr9eeze4w",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787252116715,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.6095647440427241,
+  "embeddingCreatedAt": 1787252118918,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "86a89dfbf84d2fccec97252ec4f97bcba412dc48",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252122148
+ },
+ {
+  "statementId": "wO1ShUHdXMVs",
+  "statement": "תמיכה בעסקים ועצמאים",
+  "description": "יוזמות עירוניות לחיזוק עצמאים ועסקים מקומיים באמצעות תשתיות, שירותים והזדמנויות עבודה.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252548222,
+  "consensus": 0,
+  "isCluster": true,
+  "isSynthesis": false,
+  "derivedByPipeline": "topic-cluster",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "embeddingCreatedAt": 1787252550967,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "4bc3cba4066d9a85e4d46c42fbe043916765f6e6",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "integratedOptions": [
+   "55epb9Xm0QU2",
+   "LQjbfSoiPZt0",
+   "6wm31qnVN2re"
+  ],
+  "lastUpdate": 1787254035745
+ },
+ {
+  "statement": "לאפשר לכל הילדים בגילי בית הספר לנסוע בתחבורה הציבורית בלי תשלום.",
+  "paragraphs": [],
+  "statementId": "wmIHrbGs6wdn",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787251988140,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.358162252781389,
+  "embeddingCreatedAt": 1787251990983,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "24c3fac3bc35f8ad6bfc80b568679d8169df81a8",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787251993946
+ },
+ {
+  "statement": "לספק שיעורי עזר חינם בשיעורי הבית אחרי הלימודים לתלמידים שנשארים מאחור.",
+  "paragraphs": [],
+  "statementId": "wxeGsiOkdKKg",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787254102440,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.8362536989568541,
+  "embeddingCreatedAt": 1787254104610,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "3340817623a1ee0039fb0dfc11530a104066b289",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787254124687
+ },
+ {
+  "statementId": "yleYeAJlAw8D",
+  "statement": "לשתול שדרות עצי צל לאורך המדרכות והרחובות",
+  "description": "העירייה תרחיב את נטיעת עצי הצל לאורך הרחובות ועל המדרכות, כדי להעניק להולכי הרגל צל נעים. הפעולה תתמקד ביצירת שדרות עצים במרחב הרחוב, כך שהצל יהיה חלק רציף ונגיש מההליכה היומיומית.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787253738074,
+  "consensus": 0,
+  "integratedOptions": [
+   "Ed4ZhQskmiBZ",
+   "Wfx8Gvw-W0Nz"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787253738074,
+  "embeddingCreatedAt": 1787253740731,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "22182ee061f3a0f805b6583a0927d8c924b234c4",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253740962
+ },
+ {
+  "statement": "להנהיג תחבורה ציבורית חינם לתלמידים מתחת לגיל שמונה עשרה.",
+  "paragraphs": [],
+  "statementId": "zshAvU2MFpeM",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "createdAt": 1787253326626,
+  "consensus": 0,
+  "stageSelectionType": "consensus",
+  "statementSettings": {
+   "enableAddEvaluationOption": true,
+   "enableAddVotingOption": true,
+   "showEvaluation": true,
+   "enableSimilaritiesSearch": true,
+   "enableNavigationalElements": true
+  },
+  "hide": false,
+  "randomSeed": 0.21825307296707286,
+  "embeddingCreatedAt": 1787253328672,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "70301a22fc83f687dd6012750556e4386adc183a",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787253337471
+ },
+ {
+  "statementId": "zslo9mGHkoPW",
+  "statement": "להקים רשת אלחוטית ציבורית חינמית בכיכרות ובמרכזים הקהילתיים",
+  "description": "העירייה תספק גישה חינמית לאינטרנט אלחוטי בכיכרות הציבוריות ובמרכזים הקהילתיים. המהלך יאפשר לתושבים להתחבר לרשת במרחבים אלה ללא תשלום ויחזק את השימושיות של המרחב הציבורי והקהילתי.",
+  "statementType": "option",
+  "parentId": "accuracy100he",
+  "parents": [
+   "accuracy100he"
+  ],
+  "topParentId": "accuracy100he",
+  "creatorId": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+  "creator": {
+   "displayName": "Accuracy Benchmark Harness",
+   "email": "accuracy.benchmark@example.com",
+   "photoURL": null,
+   "uid": "dDKeLPe8IC6EOttQ5Ih6Y9ZXcXfY",
+   "isAnonymous": false
+  },
+  "createdAt": 1787252964882,
+  "consensus": 0,
+  "integratedOptions": [
+   "c9c35S3LgdFv",
+   "GBcVRsMmSIhN"
+  ],
+  "isCluster": true,
+  "isSynthesis": true,
+  "derivedByPipeline": "synthesis",
+  "synthesisMechanism": "live-spawn",
+  "liveSynthOrigin": "spawn",
+  "hide": false,
+  "lastTitleRegeneratedMembers": 2,
+  "lastTitleRegeneratedAt": 1787252964882,
+  "embeddingCreatedAt": 1787252972555,
+  "embeddingContext": "מה על העירייה שלנו לעשות כדי לשפר את איכות החיים של התושבים?",
+  "textHash": "2553c522cad0fa3d236a67cd8997612ac26f2366",
+  "embeddingModel": "text-embedding-3-large",
+  "numberOfMembers": 1,
+  "lastUpdate": 1787252972923
+ }
+]

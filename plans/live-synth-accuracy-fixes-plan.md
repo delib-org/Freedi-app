@@ -74,11 +74,21 @@ Nothing deployed. Full results and findings in
    **degrades rather than corrupts**, and `vectorSearch.incompatibleModel` says
    by how much.
 
-   **DECIDED (Tal, 2026-08-20): re-embed per question.** No global swap, no
-   automatic backfill — at deploy time Tal names specific questions (in Hebrew)
-   and each is moved to `text-embedding-3-large` individually. What that needs
-   built: the per-question embedding-model field, and a re-embed flow for a
-   named question (`reEmbedQuestion` already does the heavy lifting). The
+   **DECIDED (Tal, 2026-08-20): re-embed per question — and the machinery is
+   now BUILT and validated live** (`5a8d37692`, Finding 17). The pin lives at
+   `statementSettings.synthesis.embeddingModel`; everything that generates or
+   compares vectors resolves per question; `reEmbedQuestion(embeddingModel)`
+   is the one-call migration flow for a named question. Validated by
+   `he-seed42-large-perq`: question pinned to 3-large with the global still
+   3-small, stamps confirmed mid-run, no re-embed loop. **Hebrew score
+   0.651** — best ever (0.066 → 0.369 → 0.651) but under the English band,
+   and the run showed why: the cosine BANDS are calibrated to 3-small
+   geometry, and Hebrew 3-large cross-topic cosines run straight through the
+   topic band, rebuilding a 45-member black-hole theme via the judge-free
+   cosine attach path (25 of its 45 members entered there). Before pinning
+   real questions: (a) route cosine topic-attaches through the filing judge —
+   also Finding 16's next target — and/or (b) re-measure bands for 3-large
+   Hebrew (re-run synthAttachGate / centroidGate on 3-large embeddings). The
    original decision table, for the record:
 
    | rollout | what it needs | trade |

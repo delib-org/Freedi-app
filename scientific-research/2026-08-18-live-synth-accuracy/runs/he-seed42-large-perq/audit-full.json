@@ -1,0 +1,8007 @@
+[
+ {
+  "eventId": "9lqLkRrBRBIlzBGw7Z21",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Oj7xt7mqTEYW",
+  "reason": "gray-band match (no auto-action) (cosine=0.660)",
+  "newState": {
+   "siblingId": "CH-2vxqrLrvm",
+   "similarity": 0.6601738261295875
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245254135
+ },
+ {
+  "eventId": "D0jUaIh3OoNKfGaHGHFm",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "0J8gfw-ic1ln",
+  "reason": "gray-band match (no auto-action) (cosine=0.649)",
+  "newState": {
+   "siblingId": "CH-2vxqrLrvm",
+   "similarity": 0.6490727895469844
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245256276
+ },
+ {
+  "eventId": "1ykZqmcDOj7GiBIHWceD",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "etVI8E0tK1vk",
+  "reason": "gray-band match (no auto-action) (cosine=0.676)",
+  "newState": {
+   "siblingId": "Oj7xt7mqTEYW",
+   "similarity": 0.6761189510950147
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245290447
+ },
+ {
+  "eventId": "F1dqeTHgCj5XwI1bKah2",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "tsC6ibIwtYcO",
+  "reason": "gray-band match (no auto-action) (cosine=0.681)",
+  "newState": {
+   "siblingId": "Oj7xt7mqTEYW",
+   "similarity": 0.6812184308791723
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245316872
+ },
+ {
+  "eventId": "q1FYqOTvswpvZCAbWSvS",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "ipQ3Gfw7lBEU",
+  "reason": "gray-band match (no auto-action) (cosine=0.727)",
+  "newState": {
+   "siblingId": "0J8gfw-ic1ln",
+   "similarity": 0.7274322656370761
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245345035
+ },
+ {
+  "eventId": "ka7g5HpnOctld2un6Cuf",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "5pGxaFw3olxO",
+  "reason": "gray-band match (no auto-action) (cosine=0.693)",
+  "newState": {
+   "siblingId": "etVI8E0tK1vk",
+   "similarity": 0.6927073854901374
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245374090
+ },
+ {
+  "eventId": "Z8ZxNe2iinISs20eOqXK",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "V1IJRKi-T4xu",
+  "reason": "gray-band match (no auto-action) (cosine=0.704)",
+  "newState": {
+   "siblingId": "CH-2vxqrLrvm",
+   "similarity": 0.7039952213663762
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245403300
+ },
+ {
+  "eventId": "zcKMazU6lcqeartLcxpM",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "k5EUTbDBWN3z",
+  "optionId": "FQq9A3QQKeOJ",
+  "reason": "spawn synth at cosine=0.907",
+  "prevState": {
+   "sourceOptionId": "FQq9A3QQKeOJ",
+   "siblingId": "Oj7xt7mqTEYW"
+  },
+  "newState": {
+   "clusterId": "k5EUTbDBWN3z",
+   "integratedOptions": [
+    "FQq9A3QQKeOJ",
+    "Oj7xt7mqTEYW"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245436139
+ },
+ {
+  "eventId": "8W4DTYFRUYEbyux2CIiN",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "DH5V5arOwtIK",
+  "optionId": "k5EUTbDBWN3z",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "k5EUTbDBWN3z"
+  },
+  "newState": {
+   "clusterId": "DH5V5arOwtIK",
+   "integratedOptions": [
+    "k5EUTbDBWN3z"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245437686
+ },
+ {
+  "eventId": "uUcPzaBvMIQIiDRmKihF",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "PLlJfmwNcq7V",
+  "reason": "gray-band match (no auto-action) (cosine=0.719)",
+  "newState": {
+   "siblingId": "ipQ3Gfw7lBEU",
+   "similarity": 0.7190162830894758
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245468883
+ },
+ {
+  "eventId": "9yGliO3itOkpolmYCGJf",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "WnIJmLjkHaiT",
+  "reason": "gray-band match (no auto-action) (cosine=0.663)",
+  "newState": {
+   "siblingId": "V1IJRKi-T4xu",
+   "similarity": 0.6633871129990007
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245500957
+ },
+ {
+  "eventId": "AxOorHeVir6Agbx6uRbJ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "0SLuAQzEoNjA",
+  "reason": "gray-band match (no auto-action) (cosine=0.728)",
+  "newState": {
+   "siblingId": "tsC6ibIwtYcO",
+   "similarity": 0.7281020329507839
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245530256
+ },
+ {
+  "eventId": "7j0DFqofKtqw7GRJG8i1",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "fmOXiRwCLWzA",
+  "reason": "gray-band match (no auto-action) (cosine=0.724)",
+  "newState": {
+   "siblingId": "WnIJmLjkHaiT",
+   "similarity": 0.7237408303838151
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245566069
+ },
+ {
+  "eventId": "8bF0QAfVovWD6yaAALnc",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "jex5G6jqwdBU",
+  "reason": "gray-band match (no auto-action) (cosine=0.743)",
+  "newState": {
+   "siblingId": "FQq9A3QQKeOJ",
+   "similarity": 0.7434553899069314
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245597898
+ },
+ {
+  "eventId": "KuvphZnK7E5GRZrQLo42",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "L0wPoaa9hDTT",
+  "reason": "gray-band match (no auto-action) (cosine=0.776)",
+  "newState": {
+   "siblingId": "PLlJfmwNcq7V",
+   "similarity": 0.7761749451760294
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245634831
+ },
+ {
+  "eventId": "orO1HQu3SPXUMoVx63tg",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "XfXZef7E1GC6",
+  "reason": "gray-band match (no auto-action) (cosine=0.700)",
+  "newState": {
+   "siblingId": "jex5G6jqwdBU",
+   "similarity": 0.6996625817219724
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245663958
+ },
+ {
+  "eventId": "jPCKJwgXOyftkiuaupwL",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "yZwg1j22n8Fk",
+  "reason": "gray-band match (no auto-action) (cosine=0.779)",
+  "newState": {
+   "siblingId": "0SLuAQzEoNjA",
+   "similarity": 0.7786560408967578
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245693233
+ },
+ {
+  "eventId": "k0v6SoEjHp4lfFrYZHoC",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "F8iZPkikzmIy",
+  "reason": "gray-band match (no auto-action) (cosine=0.705)",
+  "newState": {
+   "siblingId": "0SLuAQzEoNjA",
+   "similarity": 0.7051917730344351
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245723785
+ },
+ {
+  "eventId": "lh5EpFjXAYJHf91zOPas",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "HIa6Zd-7S-Tw",
+  "reason": "gray-band match (no auto-action) (cosine=0.813)",
+  "newState": {
+   "siblingId": "L0wPoaa9hDTT",
+   "similarity": 0.8126156684154764
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245754167
+ },
+ {
+  "eventId": "JtUmMkHT8T7vhzm8TWVf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ZS0C4Qr0g4YR",
+  "optionId": "jAqlYQwdiFsc",
+  "reason": "spawn synth at cosine=0.923",
+  "prevState": {
+   "sourceOptionId": "jAqlYQwdiFsc",
+   "siblingId": "0J8gfw-ic1ln"
+  },
+  "newState": {
+   "clusterId": "ZS0C4Qr0g4YR",
+   "integratedOptions": [
+    "jAqlYQwdiFsc",
+    "0J8gfw-ic1ln"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245786020
+ },
+ {
+  "eventId": "Bjzj1ljmCDiPGWCMweLC",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "vVjox6IYU50Y",
+  "optionId": "ZS0C4Qr0g4YR",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "ZS0C4Qr0g4YR"
+  },
+  "newState": {
+   "clusterId": "vVjox6IYU50Y",
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245788979
+ },
+ {
+  "eventId": "i3FerItGdFGBFX7ZSNs7",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "tthXBOB2D-mL",
+  "reason": "gray-band match (no auto-action) (cosine=0.731)",
+  "newState": {
+   "siblingId": "etVI8E0tK1vk",
+   "similarity": 0.7312233739049441
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245822273
+ },
+ {
+  "eventId": "QfTE1LGDz1j5jpL3UunZ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "upKeGb1suXlZ",
+  "reason": "gray-band match (no auto-action) (cosine=0.798)",
+  "newState": {
+   "siblingId": "vVjox6IYU50Y",
+   "similarity": 0.7983689328010382
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245854095
+ },
+ {
+  "eventId": "t4JL9bjp73BXarhhv1FJ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "0JPtekfFjXt2",
+  "reason": "gray-band match (no auto-action) (cosine=0.725)",
+  "newState": {
+   "siblingId": "PLlJfmwNcq7V",
+   "similarity": 0.7254630879388593
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245882677
+ },
+ {
+  "eventId": "gErHO0CAiNDGSjehn2ox",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "uNSFK4289yuS",
+  "reason": "gray-band match (no auto-action) (cosine=0.734)",
+  "newState": {
+   "siblingId": "CH-2vxqrLrvm",
+   "similarity": 0.7338779292181254
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245912014
+ },
+ {
+  "eventId": "thnh8QDBxR8qFPt4uM0O",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "PHbGZQk9IoMJ",
+  "reason": "gray-band match (no auto-action) (cosine=0.757)",
+  "newState": {
+   "siblingId": "fmOXiRwCLWzA",
+   "similarity": 0.7566597199330446
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245940690
+ },
+ {
+  "eventId": "vtQVsFazYBSeMyCx8fAl",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ITowaWRe7w4J",
+  "optionId": "jGqmNP5rp5NT",
+  "reason": "spawn synth at cosine=0.905",
+  "prevState": {
+   "sourceOptionId": "jGqmNP5rp5NT",
+   "siblingId": "CH-2vxqrLrvm"
+  },
+  "newState": {
+   "clusterId": "ITowaWRe7w4J",
+   "integratedOptions": [
+    "jGqmNP5rp5NT",
+    "CH-2vxqrLrvm"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245972169
+ },
+ {
+  "eventId": "1XuyoQKyGbquMzOLWgKY",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "DP6xjV0HiCt8",
+  "optionId": "ITowaWRe7w4J",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "ITowaWRe7w4J"
+  },
+  "newState": {
+   "clusterId": "DP6xjV0HiCt8",
+   "integratedOptions": [
+    "ITowaWRe7w4J"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787245975555
+ },
+ {
+  "eventId": "KKFS9r71ppoFqLm1wLfs",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "3zLlNyAerTc4",
+  "reason": "gray-band match (no auto-action) (cosine=0.712)",
+  "newState": {
+   "siblingId": "uNSFK4289yuS",
+   "similarity": 0.7119374291835869
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246007634
+ },
+ {
+  "eventId": "43bbaZRQIkJd2ZQwuy9k",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "FvNaGfPPtG-3",
+  "reason": "gray-band match (no auto-action) (cosine=0.723)",
+  "newState": {
+   "siblingId": "PLlJfmwNcq7V",
+   "similarity": 0.7226615428448923
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246036861
+ },
+ {
+  "eventId": "NNSPqv1oY8vbPewCOJbz",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "5utnv9-mejMl",
+  "reason": "gray-band match (no auto-action) (cosine=0.763)",
+  "newState": {
+   "siblingId": "XfXZef7E1GC6",
+   "similarity": 0.7625692629789941
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246065883
+ },
+ {
+  "eventId": "qvdYafTr2yXHmQlRoZV4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "h4579YQj2eJ4",
+  "optionId": "B1Nrh9a9bX8T",
+  "reason": "spawn synth at cosine=0.943",
+  "prevState": {
+   "sourceOptionId": "B1Nrh9a9bX8T",
+   "siblingId": "fmOXiRwCLWzA"
+  },
+  "newState": {
+   "clusterId": "h4579YQj2eJ4",
+   "integratedOptions": [
+    "B1Nrh9a9bX8T",
+    "fmOXiRwCLWzA"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246096967
+ },
+ {
+  "eventId": "UM6M2F9dNYtoHk3NqJlW",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "7NKoV5kO4Zai",
+  "optionId": "h4579YQj2eJ4",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "h4579YQj2eJ4"
+  },
+  "newState": {
+   "clusterId": "7NKoV5kO4Zai",
+   "integratedOptions": [
+    "h4579YQj2eJ4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246102278
+ },
+ {
+  "eventId": "j3dtxvgebgYfKqxa4rPf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "gqqEIOh7Gzjb",
+  "optionId": "6g8npVsUsBLc",
+  "reason": "spawn synth at cosine=0.911",
+  "prevState": {
+   "sourceOptionId": "6g8npVsUsBLc",
+   "siblingId": "upKeGb1suXlZ"
+  },
+  "newState": {
+   "clusterId": "gqqEIOh7Gzjb",
+   "integratedOptions": [
+    "6g8npVsUsBLc",
+    "upKeGb1suXlZ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246138841
+ },
+ {
+  "eventId": "ZsJO4XEuMhyashNQ5wJP",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vVjox6IYU50Y",
+  "optionId": "gqqEIOh7Gzjb",
+  "reason": "nest synthesis under theme (judge: Both proposals improve residents’ ability to use and navigate city bus service.)",
+  "prevState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246143446
+ },
+ {
+  "eventId": "Pbg249z3UiLaJOlbGT7n",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "q7eu27jRCk4N",
+  "reason": "gray-band match (no auto-action) (cosine=0.758)",
+  "newState": {
+   "siblingId": "DP6xjV0HiCt8",
+   "similarity": 0.7577901871406825
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246175148
+ },
+ {
+  "eventId": "zjjJWxjZmjncdfjqlFen",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "oWavnz0tzlsv",
+  "reason": "gray-band match (no auto-action) (cosine=0.805)",
+  "newState": {
+   "siblingId": "ipQ3Gfw7lBEU",
+   "similarity": 0.8050368145130559
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246208052
+ },
+ {
+  "eventId": "j9Ynm1pxCDRmllclMnvF",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "9eXtaWkWQP3o",
+  "reason": "gray-band match (no auto-action) (cosine=0.737)",
+  "newState": {
+   "siblingId": "V1IJRKi-T4xu",
+   "similarity": 0.7366908613254536
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246236328
+ },
+ {
+  "eventId": "U8GCRhb6FWaorTe335OP",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "tJ1OxBjOPqVi",
+  "optionId": "L6VFiIwdXZaP",
+  "reason": "spawn synth at cosine=0.942",
+  "prevState": {
+   "sourceOptionId": "L6VFiIwdXZaP",
+   "siblingId": "ipQ3Gfw7lBEU"
+  },
+  "newState": {
+   "clusterId": "tJ1OxBjOPqVi",
+   "integratedOptions": [
+    "L6VFiIwdXZaP",
+    "ipQ3Gfw7lBEU"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246267621
+ },
+ {
+  "eventId": "EZFY2gBmuAbfJZ5k8KYF",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Faf5shBkRJFi",
+  "optionId": "tJ1OxBjOPqVi",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "tJ1OxBjOPqVi"
+  },
+  "newState": {
+   "clusterId": "Faf5shBkRJFi",
+   "integratedOptions": [
+    "tJ1OxBjOPqVi"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246271227
+ },
+ {
+  "eventId": "XmTRqPCx6gXhFEGblsGd",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "no7CMEidk1SB",
+  "reason": "gray-band match (no auto-action) (cosine=0.727)",
+  "newState": {
+   "siblingId": "q7eu27jRCk4N",
+   "similarity": 0.726685919511669
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246302800
+ },
+ {
+  "eventId": "IJg90f2y1Sl7kz54mPL3",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "oXXlC6ZmyJze",
+  "reason": "gray-band match (no auto-action) (cosine=0.744)",
+  "newState": {
+   "siblingId": "FQq9A3QQKeOJ",
+   "similarity": 0.7439785396332994
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246338253
+ },
+ {
+  "eventId": "fYjFNzUkypMnGQObiNmD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "rLWoUUr0y0Ek",
+  "optionId": "Fh8CFxBiVAxq",
+  "reason": "spawn synth at cosine=0.936",
+  "prevState": {
+   "sourceOptionId": "Fh8CFxBiVAxq",
+   "siblingId": "tthXBOB2D-mL"
+  },
+  "newState": {
+   "clusterId": "rLWoUUr0y0Ek",
+   "integratedOptions": [
+    "Fh8CFxBiVAxq",
+    "tthXBOB2D-mL"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246369828
+ },
+ {
+  "eventId": "66HGwdaYQKDA4A448Pw8",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "rLWoUUr0y0Ek",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "rLWoUUr0y0Ek"
+  },
+  "newState": {
+   "clusterId": "oED5mYjRhowu",
+   "integratedOptions": [
+    "rLWoUUr0y0Ek"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246373043
+ },
+ {
+  "eventId": "fMwO5KmOGVUMnkAYT4z8",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "7NKoV5kO4Zai",
+  "optionId": "-KDCyoQf1n0e",
+  "reason": "cosine=0.815",
+  "prevState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4",
+    "-KDCyoQf1n0e"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246401629
+ },
+ {
+  "eventId": "dFqZfKBPcRvJos9vUb1F",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "1zDqH46QPeb2",
+  "optionId": "9j7wq1jSFJah",
+  "reason": "spawn synth at cosine=0.943",
+  "prevState": {
+   "sourceOptionId": "9j7wq1jSFJah",
+   "siblingId": "yZwg1j22n8Fk"
+  },
+  "newState": {
+   "clusterId": "1zDqH46QPeb2",
+   "integratedOptions": [
+    "9j7wq1jSFJah",
+    "yZwg1j22n8Fk"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246434211
+ },
+ {
+  "eventId": "mRkpOmxGk82cHaPq087S",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "p67v6XH0n4ZD",
+  "optionId": "1zDqH46QPeb2",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "1zDqH46QPeb2"
+  },
+  "newState": {
+   "clusterId": "p67v6XH0n4ZD",
+   "integratedOptions": [
+    "1zDqH46QPeb2"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246437957
+ },
+ {
+  "eventId": "PSjDL3KbTHLyvk0QUCcu",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Zr-e2U7iYIgx",
+  "reason": "gray-band match (no auto-action) (cosine=0.761)",
+  "newState": {
+   "siblingId": "vVjox6IYU50Y",
+   "similarity": 0.7614391850052573
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246476407
+ },
+ {
+  "eventId": "TMVEfPK6RlgcqQZPn8tG",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Faf5shBkRJFi",
+  "optionId": "Tw57Zwc3mop5",
+  "reason": "option filed under theme (judge: Surveillance cameras and improved lighting both enhance safety in crime-prone public areas.)",
+  "prevState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246505936
+ },
+ {
+  "eventId": "ZnEAHGKs7LQXXfjBoAVf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "1hAyJqfYhQKQ",
+  "optionId": "meQNMO8B-1mJ",
+  "reason": "spawn synth at cosine=0.913",
+  "prevState": {
+   "sourceOptionId": "meQNMO8B-1mJ",
+   "siblingId": "L0wPoaa9hDTT"
+  },
+  "newState": {
+   "clusterId": "1hAyJqfYhQKQ",
+   "integratedOptions": [
+    "meQNMO8B-1mJ",
+    "L0wPoaa9hDTT"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246544147
+ },
+ {
+  "eventId": "4bhT0YJhwCHKxwd5xTXC",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "q-EPu0I9RTHh",
+  "optionId": "1hAyJqfYhQKQ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "1hAyJqfYhQKQ"
+  },
+  "newState": {
+   "clusterId": "q-EPu0I9RTHh",
+   "integratedOptions": [
+    "1hAyJqfYhQKQ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246547021
+ },
+ {
+  "eventId": "1PVwBND8rE5PyiAqwL46",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "2JLZbYn52B3D",
+  "reason": "gray-band match (no auto-action) (cosine=0.709)",
+  "newState": {
+   "siblingId": "oXXlC6ZmyJze",
+   "similarity": 0.7094308225404166
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246577637
+ },
+ {
+  "eventId": "ZTbncKIBBQZTlEeM846g",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "hURvRfcI3suT",
+  "reason": "gray-band match (no auto-action) (cosine=0.798)",
+  "newState": {
+   "siblingId": "jex5G6jqwdBU",
+   "similarity": 0.79838142670397
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246615045
+ },
+ {
+  "eventId": "ZY0CdSdlCCjNSaA4znKb",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "8tWk7XwsqZNQ",
+  "optionId": "aogukqJj2TtE",
+  "reason": "spawn synth at cosine=0.915",
+  "prevState": {
+   "sourceOptionId": "aogukqJj2TtE",
+   "siblingId": "WnIJmLjkHaiT"
+  },
+  "newState": {
+   "clusterId": "8tWk7XwsqZNQ",
+   "integratedOptions": [
+    "aogukqJj2TtE",
+    "WnIJmLjkHaiT"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246645931
+ },
+ {
+  "eventId": "Xzn2w8LLgQ7Lb6qk8xv9",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "7NKoV5kO4Zai",
+  "optionId": "8tWk7XwsqZNQ",
+  "reason": "nest synthesis under theme (judge: It addresses reducing disposable waste, aligning with composting and recyclable-material collection.)",
+  "prevState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4",
+    "-KDCyoQf1n0e"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4",
+    "-KDCyoQf1n0e",
+    "8tWk7XwsqZNQ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246650273
+ },
+ {
+  "eventId": "jsDwAWp6wLdmIVAkk5Vd",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "DP6xjV0HiCt8",
+  "optionId": "Tomi8lRp8CZu",
+  "reason": "option filed under theme (judge: Expands online access to municipal services and procedures.)",
+  "prevState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "Tomi8lRp8CZu"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246683592
+ },
+ {
+  "eventId": "uFaKbn2X6P7EYU1Rin2V",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "CVNGEHKTG-uJ",
+  "optionId": "OgdcEJqTDjez",
+  "reason": "spawn synth at cosine=0.909",
+  "prevState": {
+   "sourceOptionId": "OgdcEJqTDjez",
+   "siblingId": "hURvRfcI3suT"
+  },
+  "newState": {
+   "clusterId": "CVNGEHKTG-uJ",
+   "integratedOptions": [
+    "OgdcEJqTDjez",
+    "hURvRfcI3suT"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246714703
+ },
+ {
+  "eventId": "cGyroRYu5zcYL017lJGG",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "5K8EZJsn3F9r",
+  "optionId": "CVNGEHKTG-uJ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "CVNGEHKTG-uJ"
+  },
+  "newState": {
+   "clusterId": "5K8EZJsn3F9r",
+   "integratedOptions": [
+    "CVNGEHKTG-uJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246719101
+ },
+ {
+  "eventId": "s4v6UG1P3qbG8EmhJvWo",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Faf5shBkRJFi",
+  "optionId": "G0kmig0NFloZ",
+  "reason": "option filed under theme (judge: Traffic-calming measures improve pedestrian safety near schools, matching the topic’s public safety focus.)",
+  "prevState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5",
+    "G0kmig0NFloZ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246750861
+ },
+ {
+  "eventId": "55zNTobqLQeTZhid7wAD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "8O3L7CYkfmmG",
+  "optionId": "-T1HXlkmjF5l",
+  "reason": "spawn synth at cosine=0.918",
+  "prevState": {
+   "sourceOptionId": "-T1HXlkmjF5l",
+   "siblingId": "9eXtaWkWQP3o"
+  },
+  "newState": {
+   "clusterId": "8O3L7CYkfmmG",
+   "integratedOptions": [
+    "-T1HXlkmjF5l",
+    "9eXtaWkWQP3o"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246782507
+ },
+ {
+  "eventId": "IS7QgdJkQTUAXKAGCEgt",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "xk4qvf3T2hA1",
+  "optionId": "8O3L7CYkfmmG",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "8O3L7CYkfmmG"
+  },
+  "newState": {
+   "clusterId": "xk4qvf3T2hA1",
+   "integratedOptions": [
+    "8O3L7CYkfmmG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246786071
+ },
+ {
+  "eventId": "BuuHCz0ZwueN5m5eTmpw",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "oED5mYjRhowu",
+  "reason": "themes consolidated into \"Community and Cultural Amenities\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2"
+   ],
+   "absorbed": [
+    "p67v6XH0n4ZD"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246833583
+ },
+ {
+  "eventId": "7Kyjso173UrslDAm1KPm",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "LWJ7ObBBVwjr",
+  "reason": "gray-band match (no auto-action) (cosine=0.753)",
+  "newState": {
+   "siblingId": "DH5V5arOwtIK",
+   "similarity": 0.7533468776545438
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246837480
+ },
+ {
+  "eventId": "LAkeZSR4YS1ayUteXurz",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "izxP7NQKT6RA",
+  "reason": "gray-band match (no auto-action) (cosine=0.774)",
+  "newState": {
+   "siblingId": "DH5V5arOwtIK",
+   "similarity": 0.7740936876111085
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246866474
+ },
+ {
+  "eventId": "46fc3OVCfMMagjYLoojX",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "uH0gTC2YwPNi",
+  "optionId": "7JPqsNxUNyWN",
+  "reason": "spawn synth at cosine=0.896",
+  "prevState": {
+   "sourceOptionId": "7JPqsNxUNyWN",
+   "siblingId": "HIa6Zd-7S-Tw"
+  },
+  "newState": {
+   "clusterId": "uH0gTC2YwPNi",
+   "integratedOptions": [
+    "7JPqsNxUNyWN",
+    "HIa6Zd-7S-Tw"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246898138
+ },
+ {
+  "eventId": "mmwVCSwfVfIiZlOsQvEb",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ld5g4anEDIAl",
+  "optionId": "uH0gTC2YwPNi",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "uH0gTC2YwPNi"
+  },
+  "newState": {
+   "clusterId": "ld5g4anEDIAl",
+   "integratedOptions": [
+    "uH0gTC2YwPNi"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246901161
+ },
+ {
+  "eventId": "QFxjMTWr9cBEx4cxEMRu",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "aNIRVlPV5JFZ",
+  "reason": "option filed under theme (judge: Accessible playgrounds are community amenities improving inclusive public recreation.)",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246940628
+ },
+ {
+  "eventId": "5gfRMJnIZIhCtuJ8NtDs",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "yYtlJ3TAZWZb",
+  "reason": "gray-band match (no auto-action) (cosine=0.763)",
+  "newState": {
+   "siblingId": "5utnv9-mejMl",
+   "similarity": 0.762505192733115
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787246970503
+ },
+ {
+  "eventId": "DxlvN6GUr0dhGUBjdGpz",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "m9xttjo-ElWy",
+  "optionId": "hLIa34GRv9-8",
+  "reason": "spawn synth at cosine=0.962",
+  "prevState": {
+   "sourceOptionId": "hLIa34GRv9-8",
+   "siblingId": "5utnv9-mejMl"
+  },
+  "newState": {
+   "clusterId": "m9xttjo-ElWy",
+   "integratedOptions": [
+    "hLIa34GRv9-8",
+    "5utnv9-mejMl"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247001289
+ },
+ {
+  "eventId": "d3eArJ71qAtjwgDF4n9t",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "OVpTnQtIu9QZ",
+  "optionId": "m9xttjo-ElWy",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "m9xttjo-ElWy"
+  },
+  "newState": {
+   "clusterId": "OVpTnQtIu9QZ",
+   "integratedOptions": [
+    "m9xttjo-ElWy"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247006815
+ },
+ {
+  "eventId": "1qRCF7xJsyT8efWbhbuL",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ld5g4anEDIAl",
+  "optionId": "V4B7iumCvOcP",
+  "reason": "cosine=0.795",
+  "prevState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247036325
+ },
+ {
+  "eventId": "FaaynbJz8FIUG50n7jBv",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "s1Tnxtzlwaat",
+  "optionId": "wELpWvHKQPgz",
+  "reason": "spawn synth at cosine=0.916",
+  "prevState": {
+   "sourceOptionId": "wELpWvHKQPgz",
+   "siblingId": "5pGxaFw3olxO"
+  },
+  "newState": {
+   "clusterId": "s1Tnxtzlwaat",
+   "integratedOptions": [
+    "wELpWvHKQPgz",
+    "5pGxaFw3olxO"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247069944
+ },
+ {
+  "eventId": "zFYmEN6ojKPCjWlB9xPM",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "RAYliKOeywBp",
+  "optionId": "s1Tnxtzlwaat",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "s1Tnxtzlwaat"
+  },
+  "newState": {
+   "clusterId": "RAYliKOeywBp",
+   "integratedOptions": [
+    "s1Tnxtzlwaat"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247073843
+ },
+ {
+  "eventId": "wYfcHHRv3pcbO6dlzvoe",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "P-fKDubSZNRS",
+  "optionId": "k7ORxpMKtWY0",
+  "reason": "spawn synth at cosine=0.989",
+  "prevState": {
+   "sourceOptionId": "k7ORxpMKtWY0",
+   "siblingId": "tsC6ibIwtYcO"
+  },
+  "newState": {
+   "clusterId": "P-fKDubSZNRS",
+   "integratedOptions": [
+    "k7ORxpMKtWY0",
+    "tsC6ibIwtYcO"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247107452
+ },
+ {
+  "eventId": "K6PTqYi3X3ykjBIjX3jt",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "P-fKDubSZNRS",
+  "reason": "nest synthesis under theme (judge: Expands access to cultural amenities, alongside libraries, festivals, and inclusive community recreation.)",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247110884
+ },
+ {
+  "eventId": "bcIew64ifjMxoOWpHShG",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Yb2ef9uzahpF",
+  "optionId": "E1048q5c91ZY",
+  "reason": "spawn synth at cosine=0.944",
+  "prevState": {
+   "sourceOptionId": "E1048q5c91ZY",
+   "siblingId": "PLlJfmwNcq7V"
+  },
+  "newState": {
+   "clusterId": "Yb2ef9uzahpF",
+   "integratedOptions": [
+    "E1048q5c91ZY",
+    "PLlJfmwNcq7V"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247144870
+ },
+ {
+  "eventId": "RaSv2YKUVrB8v1HVibwG",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ld5g4anEDIAl",
+  "optionId": "Yb2ef9uzahpF",
+  "reason": "nest synthesis under theme (judge: Expands residential supply through adaptive reuse, fitting the affordable housing development focus.)",
+  "prevState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP",
+    "Yb2ef9uzahpF"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247147569
+ },
+ {
+  "eventId": "jLOAQsoQ0ftGrqWrktlR",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "s-lhqScjVBgJ",
+  "optionId": "wIFJ6yjypekz",
+  "reason": "spawn synth at cosine=0.909",
+  "prevState": {
+   "sourceOptionId": "wIFJ6yjypekz",
+   "siblingId": "uNSFK4289yuS"
+  },
+  "newState": {
+   "clusterId": "s-lhqScjVBgJ",
+   "integratedOptions": [
+    "wIFJ6yjypekz",
+    "uNSFK4289yuS"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247184033
+ },
+ {
+  "eventId": "F8fGnLshmreySxOCgHbl",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Z5nhS-I5xXmc",
+  "optionId": "s-lhqScjVBgJ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "s-lhqScjVBgJ"
+  },
+  "newState": {
+   "clusterId": "Z5nhS-I5xXmc",
+   "integratedOptions": [
+    "s-lhqScjVBgJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247187673
+ },
+ {
+  "eventId": "UkYGEmNIknW5r3geo7Xa",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ZJabn6N4QkbZ",
+  "optionId": "E76aJR-NWIHo",
+  "reason": "spawn synth at cosine=0.886",
+  "prevState": {
+   "sourceOptionId": "E76aJR-NWIHo",
+   "siblingId": "3zLlNyAerTc4"
+  },
+  "newState": {
+   "clusterId": "ZJabn6N4QkbZ",
+   "integratedOptions": [
+    "E76aJR-NWIHo",
+    "3zLlNyAerTc4"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247231272
+ },
+ {
+  "eventId": "QOgtd2T9fxR7NgdAirEw",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Faf5shBkRJFi",
+  "optionId": "ZJabn6N4QkbZ",
+  "reason": "nest synthesis under theme (judge: Neighborhood beat patrols improve community safety alongside lighting, cameras, and traffic-calming measures.)",
+  "prevState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5",
+    "G0kmig0NFloZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5",
+    "G0kmig0NFloZ",
+    "ZJabn6N4QkbZ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247233441
+ },
+ {
+  "eventId": "6JUfIFDOwKhNRBA0Uwz7",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vVjox6IYU50Y",
+  "optionId": "MfSOJZwOgpkf",
+  "reason": "option filed under theme (judge: Cycling lanes improve transportation options and safe movement around the city.)",
+  "prevState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "MfSOJZwOgpkf"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247268434
+ },
+ {
+  "eventId": "OKe2G3LSZIYSChsg1erN",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "PdLwEpx7CZV7",
+  "optionId": "v9OLnzpKxhh4",
+  "reason": "spawn synth at cosine=0.953",
+  "prevState": {
+   "sourceOptionId": "v9OLnzpKxhh4",
+   "siblingId": "0SLuAQzEoNjA"
+  },
+  "newState": {
+   "clusterId": "PdLwEpx7CZV7",
+   "integratedOptions": [
+    "v9OLnzpKxhh4",
+    "0SLuAQzEoNjA"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247314207
+ },
+ {
+  "eventId": "b2kyfpLCsVueAJ0pkl1t",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "PdLwEpx7CZV7",
+  "reason": "nest synthesis under theme (judge: Public art enhances shared cultural amenities and public spaces, like festivals and museums.)",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247316403
+ },
+ {
+  "eventId": "gFfYoc3AYxCKgPztmlbq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "PxAGuYFUCmc0",
+  "optionId": "FUdWawGoCV8i",
+  "reason": "spawn synth at cosine=0.895",
+  "prevState": {
+   "sourceOptionId": "FUdWawGoCV8i",
+   "siblingId": "F8iZPkikzmIy"
+  },
+  "newState": {
+   "clusterId": "PxAGuYFUCmc0",
+   "integratedOptions": [
+    "FUdWawGoCV8i",
+    "F8iZPkikzmIy"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247346954
+ },
+ {
+  "eventId": "wiPfFIX1Wvohd7oIxEpU",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "PxAGuYFUCmc0",
+  "reason": "nest synthesis under theme (judge: Creates neighborhood recreational amenities for residents and their pets.)",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247349626
+ },
+ {
+  "eventId": "ILPSvxEcRqq2EHD8dCOA",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "GqLMBWd4Xtrl",
+  "reason": "cosine=0.772",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "GqLMBWd4Xtrl"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247378815
+ },
+ {
+  "eventId": "Azi6wHseyPF5mVtmgv7v",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ccR-vwVSdbUH",
+  "optionId": "D1QGMf2xJ0wq",
+  "reason": "spawn synth at cosine=0.942",
+  "prevState": {
+   "sourceOptionId": "D1QGMf2xJ0wq",
+   "siblingId": "2JLZbYn52B3D"
+  },
+  "newState": {
+   "clusterId": "ccR-vwVSdbUH",
+   "integratedOptions": [
+    "D1QGMf2xJ0wq",
+    "2JLZbYn52B3D"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247414266
+ },
+ {
+  "eventId": "VxziWJuFDmYGYQg7FSnw",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "DK9cITq2Fvmu",
+  "optionId": "ccR-vwVSdbUH",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "ccR-vwVSdbUH"
+  },
+  "newState": {
+   "clusterId": "DK9cITq2Fvmu",
+   "integratedOptions": [
+    "ccR-vwVSdbUH"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247417627
+ },
+ {
+  "eventId": "pxlZheWQweufCT10qDVw",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Faf5shBkRJFi",
+  "optionId": "BfprubXRHfbl",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5",
+    "G0kmig0NFloZ",
+    "ZJabn6N4QkbZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5",
+    "ZJabn6N4QkbZ",
+    "BfprubXRHfbl"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247465562
+ },
+ {
+  "eventId": "8MLpoSggplKFH83zBY42",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "BfprubXRHfbl",
+  "optionId": "mQOMXkg5zywe",
+  "reason": "spawn synth at cosine=0.896",
+  "prevState": {
+   "sourceOptionId": "mQOMXkg5zywe",
+   "siblingId": "G0kmig0NFloZ"
+  },
+  "newState": {
+   "clusterId": "BfprubXRHfbl",
+   "integratedOptions": [
+    "mQOMXkg5zywe",
+    "G0kmig0NFloZ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247465564
+ },
+ {
+  "eventId": "coG1yIhu1P7XUXDI869D",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "RfHOzAy8bdmx",
+  "optionId": "JVySu8cLkbNq",
+  "reason": "spawn synth at cosine=0.974",
+  "prevState": {
+   "sourceOptionId": "JVySu8cLkbNq",
+   "siblingId": "etVI8E0tK1vk"
+  },
+  "newState": {
+   "clusterId": "RfHOzAy8bdmx",
+   "integratedOptions": [
+    "JVySu8cLkbNq",
+    "etVI8E0tK1vk"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247497080
+ },
+ {
+  "eventId": "nRG4mtkJMWZxcgmfgvGw",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "FH4k6SS6UC1q",
+  "optionId": "RfHOzAy8bdmx",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "RfHOzAy8bdmx"
+  },
+  "newState": {
+   "clusterId": "FH4k6SS6UC1q",
+   "integratedOptions": [
+    "RfHOzAy8bdmx"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247501131
+ },
+ {
+  "eventId": "BYXmZAU3fMlQnQQi7XC5",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ld5g4anEDIAl",
+  "optionId": "F8VCRW-uqHew",
+  "reason": "option filed under theme (judge: Rent transparency supports affordable housing access and helps tenants compare housing costs.)",
+  "prevState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP",
+    "Yb2ef9uzahpF"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP",
+    "Yb2ef9uzahpF",
+    "F8VCRW-uqHew"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247535913
+ },
+ {
+  "eventId": "1BC26WKcockhbH0OcGi2",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vVjox6IYU50Y",
+  "optionId": "QHfm8lwuFlhw",
+  "reason": "cosine=0.790",
+  "prevState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "MfSOJZwOgpkf"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "MfSOJZwOgpkf",
+    "QHfm8lwuFlhw"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247566068
+ },
+ {
+  "eventId": "dKvejXcON3s1lpts77t7",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "7NKoV5kO4Zai",
+  "optionId": "FzMZOTxE0Tel",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4",
+    "-KDCyoQf1n0e",
+    "8tWk7XwsqZNQ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4",
+    "8tWk7XwsqZNQ",
+    "FzMZOTxE0Tel"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247598833
+ },
+ {
+  "eventId": "LezZMNiaOv2H5MejAceV",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "FzMZOTxE0Tel",
+  "optionId": "1L-4iHJt7K62",
+  "reason": "spawn synth at cosine=0.908",
+  "prevState": {
+   "sourceOptionId": "1L-4iHJt7K62",
+   "siblingId": "-KDCyoQf1n0e"
+  },
+  "newState": {
+   "clusterId": "FzMZOTxE0Tel",
+   "integratedOptions": [
+    "1L-4iHJt7K62",
+    "-KDCyoQf1n0e"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247598835
+ },
+ {
+  "eventId": "ImqH7ReGPq2zqEPUN8P2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "mtfqqxnXNBvZ",
+  "optionId": "PbGC78fsZrAb",
+  "reason": "spawn synth at cosine=0.917",
+  "prevState": {
+   "sourceOptionId": "PbGC78fsZrAb",
+   "siblingId": "q7eu27jRCk4N"
+  },
+  "newState": {
+   "clusterId": "mtfqqxnXNBvZ",
+   "integratedOptions": [
+    "PbGC78fsZrAb",
+    "q7eu27jRCk4N"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247632672
+ },
+ {
+  "eventId": "1X5rj0vinGqQICf7sS9P",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "CHjakVgYspBy",
+  "optionId": "mtfqqxnXNBvZ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "mtfqqxnXNBvZ"
+  },
+  "newState": {
+   "clusterId": "CHjakVgYspBy",
+   "integratedOptions": [
+    "mtfqqxnXNBvZ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247636586
+ },
+ {
+  "eventId": "a5zUheABq1M8iR7oZBdq",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ld5g4anEDIAl",
+  "optionId": "sSmUOx3uis3d",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP",
+    "Yb2ef9uzahpF",
+    "F8VCRW-uqHew"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP",
+    "Yb2ef9uzahpF",
+    "sSmUOx3uis3d"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247670302
+ },
+ {
+  "eventId": "dC6LouUW33UdNjYJCafy",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "sSmUOx3uis3d",
+  "optionId": "J3YQDpH0m6Hl",
+  "reason": "spawn synth at cosine=0.862",
+  "prevState": {
+   "sourceOptionId": "J3YQDpH0m6Hl",
+   "siblingId": "F8VCRW-uqHew"
+  },
+  "newState": {
+   "clusterId": "sSmUOx3uis3d",
+   "integratedOptions": [
+    "J3YQDpH0m6Hl",
+    "F8VCRW-uqHew"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247670304
+ },
+ {
+  "eventId": "qD9DgaPcaE1Dxqtedj9t",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "B6GnVH8FghMf",
+  "optionId": "RcMBZmOuYjVA",
+  "reason": "spawn synth at cosine=0.912",
+  "prevState": {
+   "sourceOptionId": "RcMBZmOuYjVA",
+   "siblingId": "no7CMEidk1SB"
+  },
+  "newState": {
+   "clusterId": "B6GnVH8FghMf",
+   "integratedOptions": [
+    "RcMBZmOuYjVA",
+    "no7CMEidk1SB"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247702558
+ },
+ {
+  "eventId": "Jmvwdpp4aeHAixYDNecu",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pqzMDkAMWsRA",
+  "optionId": "B6GnVH8FghMf",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "B6GnVH8FghMf"
+  },
+  "newState": {
+   "clusterId": "pqzMDkAMWsRA",
+   "integratedOptions": [
+    "B6GnVH8FghMf"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247709513
+ },
+ {
+  "eventId": "8skxFY6vJ2V748q7py1G",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "MIxO6rsXBlSr",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "GqLMBWd4Xtrl"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "MIxO6rsXBlSr"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247743565
+ },
+ {
+  "eventId": "HRskkZSl9gfxppNHwNfy",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MIxO6rsXBlSr",
+  "optionId": "A6rgfF2vro8-",
+  "reason": "spawn synth at cosine=0.894",
+  "prevState": {
+   "sourceOptionId": "A6rgfF2vro8-",
+   "siblingId": "GqLMBWd4Xtrl"
+  },
+  "newState": {
+   "clusterId": "MIxO6rsXBlSr",
+   "integratedOptions": [
+    "A6rgfF2vro8-",
+    "GqLMBWd4Xtrl"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247743567
+ },
+ {
+  "eventId": "VYw2fekWsWYOyDPR9W94",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vVjox6IYU50Y",
+  "optionId": "pZPgBWNN3YWh",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "MfSOJZwOgpkf",
+    "QHfm8lwuFlhw"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "QHfm8lwuFlhw",
+    "pZPgBWNN3YWh"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247776295
+ },
+ {
+  "eventId": "27Qi1eYXoEb09HgOJjYb",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pZPgBWNN3YWh",
+  "optionId": "f4uPC3QeDAE5",
+  "reason": "spawn synth at cosine=0.946",
+  "prevState": {
+   "sourceOptionId": "f4uPC3QeDAE5",
+   "siblingId": "MfSOJZwOgpkf"
+  },
+  "newState": {
+   "clusterId": "pZPgBWNN3YWh",
+   "integratedOptions": [
+    "f4uPC3QeDAE5",
+    "MfSOJZwOgpkf"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247776297
+ },
+ {
+  "eventId": "PXwHRqlvSOvzZe5ZaoF8",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Fac6eeMd7Dp7",
+  "optionId": "grpgZz8aoOpO",
+  "reason": "spawn synth at cosine=0.923",
+  "prevState": {
+   "sourceOptionId": "grpgZz8aoOpO",
+   "siblingId": "yYtlJ3TAZWZb"
+  },
+  "newState": {
+   "clusterId": "Fac6eeMd7Dp7",
+   "integratedOptions": [
+    "grpgZz8aoOpO",
+    "yYtlJ3TAZWZb"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247810346
+ },
+ {
+  "eventId": "IZIO0jW2fhyMBtgddA4S",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "tzW1l4z7i0hm",
+  "optionId": "Fac6eeMd7Dp7",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "Fac6eeMd7Dp7"
+  },
+  "newState": {
+   "clusterId": "tzW1l4z7i0hm",
+   "integratedOptions": [
+    "Fac6eeMd7Dp7"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247817903
+ },
+ {
+  "eventId": "UQpqt0gDSHHiRRAn5zXl",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vVjox6IYU50Y",
+  "optionId": "OQib1JjP5q2a",
+  "reason": "cosine=0.753",
+  "prevState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "QHfm8lwuFlhw",
+    "pZPgBWNN3YWh"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "QHfm8lwuFlhw",
+    "pZPgBWNN3YWh",
+    "OQib1JjP5q2a"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247850194
+ },
+ {
+  "eventId": "7VpRuo7MiMLfNmcpv14e",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "QsAiNmsoo8E4",
+  "optionId": "6CiAO4PO5m41",
+  "reason": "spawn synth at cosine=0.893",
+  "prevState": {
+   "sourceOptionId": "6CiAO4PO5m41",
+   "siblingId": "V1IJRKi-T4xu"
+  },
+  "newState": {
+   "clusterId": "QsAiNmsoo8E4",
+   "integratedOptions": [
+    "6CiAO4PO5m41",
+    "V1IJRKi-T4xu"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247880646
+ },
+ {
+  "eventId": "WmfSyo0r20p8rzpKXm92",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "zJG-bCxr8r2W",
+  "optionId": "QsAiNmsoo8E4",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "QsAiNmsoo8E4"
+  },
+  "newState": {
+   "clusterId": "zJG-bCxr8r2W",
+   "integratedOptions": [
+    "QsAiNmsoo8E4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247885054
+ },
+ {
+  "eventId": "R670GXyVEIkHgvWDHChU",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Faf5shBkRJFi",
+  "optionId": "IFgy1twx-pyj",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "Tw57Zwc3mop5",
+    "ZJabn6N4QkbZ",
+    "BfprubXRHfbl"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "tJ1OxBjOPqVi",
+    "ZJabn6N4QkbZ",
+    "BfprubXRHfbl",
+    "IFgy1twx-pyj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247920754
+ },
+ {
+  "eventId": "Uk1JAn0TkeqbRQkC2KcH",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "IFgy1twx-pyj",
+  "optionId": "pgjH2AFFc1v2",
+  "reason": "spawn synth at cosine=0.992",
+  "prevState": {
+   "sourceOptionId": "pgjH2AFFc1v2",
+   "siblingId": "Tw57Zwc3mop5"
+  },
+  "newState": {
+   "clusterId": "IFgy1twx-pyj",
+   "integratedOptions": [
+    "pgjH2AFFc1v2",
+    "Tw57Zwc3mop5"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247920758
+ },
+ {
+  "eventId": "xU1GAQgz2MXGlxUWkoSq",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vVjox6IYU50Y",
+  "optionId": "wr7cysfr7Mxw",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "QHfm8lwuFlhw",
+    "pZPgBWNN3YWh",
+    "OQib1JjP5q2a"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZS0C4Qr0g4YR",
+    "gqqEIOh7Gzjb",
+    "pZPgBWNN3YWh",
+    "OQib1JjP5q2a",
+    "wr7cysfr7Mxw"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247953399
+ },
+ {
+  "eventId": "BJgE0iBLdxaF9hvfQy8M",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "wr7cysfr7Mxw",
+  "optionId": "xkOAZ8ivsBgm",
+  "reason": "spawn synth at cosine=0.892",
+  "prevState": {
+   "sourceOptionId": "xkOAZ8ivsBgm",
+   "siblingId": "QHfm8lwuFlhw"
+  },
+  "newState": {
+   "clusterId": "wr7cysfr7Mxw",
+   "integratedOptions": [
+    "xkOAZ8ivsBgm",
+    "QHfm8lwuFlhw"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247953400
+ },
+ {
+  "eventId": "7Np9WFzsUid4jUVVfeCw",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "DP6xjV0HiCt8",
+  "optionId": "LCJud9Yq0vjm",
+  "reason": "cosine=0.801",
+  "prevState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "Tomi8lRp8CZu"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "Tomi8lRp8CZu",
+    "LCJud9Yq0vjm"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787247985345
+ },
+ {
+  "eventId": "cxWHSfDWesu63UTMvVVo",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "JqSkYOZ7EvNT",
+  "optionId": "uSoWv6za4zC9",
+  "reason": "spawn synth at cosine=0.909",
+  "prevState": {
+   "sourceOptionId": "uSoWv6za4zC9",
+   "siblingId": "oXXlC6ZmyJze"
+  },
+  "newState": {
+   "clusterId": "JqSkYOZ7EvNT",
+   "integratedOptions": [
+    "uSoWv6za4zC9",
+    "oXXlC6ZmyJze"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248017797
+ },
+ {
+  "eventId": "3X0014cgY3bNCNxzbRPl",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "LoqIHPPfyXdL",
+  "optionId": "JqSkYOZ7EvNT",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "JqSkYOZ7EvNT"
+  },
+  "newState": {
+   "clusterId": "LoqIHPPfyXdL",
+   "integratedOptions": [
+    "JqSkYOZ7EvNT"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248022469
+ },
+ {
+  "eventId": "VlxVJdKj04ZzxCX4nLrt",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "DP6xjV0HiCt8",
+  "optionId": "VwpcXXlAo95B",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "Tomi8lRp8CZu",
+    "LCJud9Yq0vjm"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "LCJud9Yq0vjm",
+    "VwpcXXlAo95B"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248055838
+ },
+ {
+  "eventId": "atY14vXwAbohytfBykVd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "VwpcXXlAo95B",
+  "optionId": "9YIRwySUDcuG",
+  "reason": "spawn synth at cosine=0.907",
+  "prevState": {
+   "sourceOptionId": "9YIRwySUDcuG",
+   "siblingId": "Tomi8lRp8CZu"
+  },
+  "newState": {
+   "clusterId": "VwpcXXlAo95B",
+   "integratedOptions": [
+    "9YIRwySUDcuG",
+    "Tomi8lRp8CZu"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248055840
+ },
+ {
+  "eventId": "852uEMoQWr5KMfarcWHT",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "DP6xjV0HiCt8",
+  "optionId": "--sILhzR2G66",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "LCJud9Yq0vjm",
+    "VwpcXXlAo95B"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "VwpcXXlAo95B",
+    "--sILhzR2G66"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248088938
+ },
+ {
+  "eventId": "eihJs1PEJP3Ktruhiblv",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "--sILhzR2G66",
+  "optionId": "ZT7ZLp-vpUYh",
+  "reason": "spawn synth at cosine=0.850",
+  "prevState": {
+   "sourceOptionId": "ZT7ZLp-vpUYh",
+   "siblingId": "LCJud9Yq0vjm"
+  },
+  "newState": {
+   "clusterId": "--sILhzR2G66",
+   "integratedOptions": [
+    "ZT7ZLp-vpUYh",
+    "LCJud9Yq0vjm"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248088940
+ },
+ {
+  "eventId": "jcMENn8YadwiHCb4R5cB",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "MDpH2HkokNKT",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "aNIRVlPV5JFZ",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "MIxO6rsXBlSr"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "MIxO6rsXBlSr",
+    "MDpH2HkokNKT"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248122933
+ },
+ {
+  "eventId": "Xe7QfC4OuDyhUGrRa6zY",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MDpH2HkokNKT",
+  "optionId": "BAd0Jc5VKepb",
+  "reason": "spawn synth at cosine=0.981",
+  "prevState": {
+   "sourceOptionId": "BAd0Jc5VKepb",
+   "siblingId": "aNIRVlPV5JFZ"
+  },
+  "newState": {
+   "clusterId": "MDpH2HkokNKT",
+   "integratedOptions": [
+    "BAd0Jc5VKepb",
+    "aNIRVlPV5JFZ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248122934
+ },
+ {
+  "eventId": "4BXM8J8V687pnyeY42l4",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "DP6xjV0HiCt8",
+  "optionId": "bJD261jUY22F",
+  "reason": "cosine=0.730",
+  "prevState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "VwpcXXlAo95B",
+    "--sILhzR2G66"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "VwpcXXlAo95B",
+    "--sILhzR2G66",
+    "bJD261jUY22F"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248152436
+ },
+ {
+  "eventId": "UfRAyUoA5pHevnSGRF8L",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "FfqZT3D1W0-W",
+  "reason": "cosine=0.742",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "MIxO6rsXBlSr",
+    "MDpH2HkokNKT"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "MIxO6rsXBlSr",
+    "MDpH2HkokNKT",
+    "FfqZT3D1W0-W"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248178917
+ },
+ {
+  "eventId": "D8KZ3VYJN30o1X5g1xzQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Poz9-GLHIBdA",
+  "optionId": "m7fcEk939gHm",
+  "reason": "spawn synth at cosine=0.931",
+  "prevState": {
+   "sourceOptionId": "m7fcEk939gHm",
+   "siblingId": "oWavnz0tzlsv"
+  },
+  "newState": {
+   "clusterId": "Poz9-GLHIBdA",
+   "integratedOptions": [
+    "m7fcEk939gHm",
+    "oWavnz0tzlsv"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248216326
+ },
+ {
+  "eventId": "Jj9CBJclsC5S7rnA20Z1",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "l5kvsicbYusF",
+  "optionId": "Poz9-GLHIBdA",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "Poz9-GLHIBdA"
+  },
+  "newState": {
+   "clusterId": "l5kvsicbYusF",
+   "integratedOptions": [
+    "Poz9-GLHIBdA"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248222069
+ },
+ {
+  "eventId": "IjXjKKpeQdzW1wHm0uMt",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "UxIuhmA5xUiM",
+  "optionId": "dfqe-xfqO4f1",
+  "reason": "spawn synth at cosine=0.986",
+  "prevState": {
+   "sourceOptionId": "dfqe-xfqO4f1",
+   "siblingId": "XfXZef7E1GC6"
+  },
+  "newState": {
+   "clusterId": "UxIuhmA5xUiM",
+   "integratedOptions": [
+    "dfqe-xfqO4f1",
+    "XfXZef7E1GC6"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248257096
+ },
+ {
+  "eventId": "vF0VTByJXr8hZYKT2VqX",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "OVpTnQtIu9QZ",
+  "optionId": "UxIuhmA5xUiM",
+  "reason": "nest synthesis under theme (judge: Both proposals address school education quality and strengthening classroom instruction.)",
+  "prevState": {
+   "integratedOptions": [
+    "m9xttjo-ElWy"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "m9xttjo-ElWy",
+    "UxIuhmA5xUiM"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248260307
+ },
+ {
+  "eventId": "FUzAMZxiQsJ982sr4w78",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "oED5mYjRhowu",
+  "optionId": "vcM9llHxndqG",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "MIxO6rsXBlSr",
+    "MDpH2HkokNKT",
+    "FfqZT3D1W0-W"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rLWoUUr0y0Ek",
+    "1zDqH46QPeb2",
+    "P-fKDubSZNRS",
+    "PdLwEpx7CZV7",
+    "PxAGuYFUCmc0",
+    "MIxO6rsXBlSr",
+    "MDpH2HkokNKT",
+    "vcM9llHxndqG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248294715
+ },
+ {
+  "eventId": "5vShpBUfi3cb4QgMWBdi",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "vcM9llHxndqG",
+  "optionId": "MY4EGGvPKoFr",
+  "reason": "spawn synth at cosine=0.947",
+  "prevState": {
+   "sourceOptionId": "MY4EGGvPKoFr",
+   "siblingId": "FfqZT3D1W0-W"
+  },
+  "newState": {
+   "clusterId": "vcM9llHxndqG",
+   "integratedOptions": [
+    "MY4EGGvPKoFr",
+    "FfqZT3D1W0-W"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248294716
+ },
+ {
+  "eventId": "mW6ZEx1CPGNeF5MPzS5a",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "hFVaFLZ2RZ-0",
+  "optionId": "EcqaxywG0DuZ",
+  "reason": "spawn synth at cosine=0.925",
+  "prevState": {
+   "sourceOptionId": "EcqaxywG0DuZ",
+   "siblingId": "izxP7NQKT6RA"
+  },
+  "newState": {
+   "clusterId": "hFVaFLZ2RZ-0",
+   "integratedOptions": [
+    "EcqaxywG0DuZ",
+    "izxP7NQKT6RA"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248329623
+ },
+ {
+  "eventId": "vwky9DsEjO78QEB9Bet2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "TtTncBIcEtkI",
+  "optionId": "hFVaFLZ2RZ-0",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "hFVaFLZ2RZ-0"
+  },
+  "newState": {
+   "clusterId": "TtTncBIcEtkI",
+   "integratedOptions": [
+    "hFVaFLZ2RZ-0"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248334143
+ },
+ {
+  "eventId": "APTP0FlUWPWfhzxYik96",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "itMXRhib7OIa",
+  "optionId": "01wIjY3CiCNi",
+  "reason": "spawn synth at cosine=0.915",
+  "prevState": {
+   "sourceOptionId": "01wIjY3CiCNi",
+   "siblingId": "PHbGZQk9IoMJ"
+  },
+  "newState": {
+   "clusterId": "itMXRhib7OIa",
+   "integratedOptions": [
+    "01wIjY3CiCNi",
+    "PHbGZQk9IoMJ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248367698
+ },
+ {
+  "eventId": "ANutkouVWXIUG0VcG5MY",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "8aoziUwzgBTW",
+  "optionId": "itMXRhib7OIa",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "itMXRhib7OIa"
+  },
+  "newState": {
+   "clusterId": "8aoziUwzgBTW",
+   "integratedOptions": [
+    "itMXRhib7OIa"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248372174
+ },
+ {
+  "eventId": "366LlSPDpyYIqDAR75GH",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "rJ2bPps-mrLY",
+  "optionId": "i-VfLmPSoCrP",
+  "reason": "spawn synth at cosine=0.863",
+  "prevState": {
+   "sourceOptionId": "i-VfLmPSoCrP",
+   "siblingId": "LWJ7ObBBVwjr"
+  },
+  "newState": {
+   "clusterId": "rJ2bPps-mrLY",
+   "integratedOptions": [
+    "i-VfLmPSoCrP",
+    "LWJ7ObBBVwjr"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248406189
+ },
+ {
+  "eventId": "ip0itisuT2LGDVAuSw1G",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "LoqIHPPfyXdL",
+  "optionId": "rJ2bPps-mrLY",
+  "reason": "nest synthesis under theme (judge: Expands neighborhood access to routine primary and preventive healthcare services.)",
+  "prevState": {
+   "integratedOptions": [
+    "JqSkYOZ7EvNT"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "JqSkYOZ7EvNT",
+    "rJ2bPps-mrLY"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248408372
+ },
+ {
+  "eventId": "bLAOomLCY7vwgM42nCJn",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ld5g4anEDIAl",
+  "optionId": "QSLdDQoMRM23",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "V4B7iumCvOcP",
+    "Yb2ef9uzahpF",
+    "sSmUOx3uis3d"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "Yb2ef9uzahpF",
+    "sSmUOx3uis3d",
+    "QSLdDQoMRM23"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248442487
+ },
+ {
+  "eventId": "0b6P0q9oIqeyffan2QOo",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "QSLdDQoMRM23",
+  "optionId": "K6H7l5vSWvNF",
+  "reason": "spawn synth at cosine=0.880",
+  "prevState": {
+   "sourceOptionId": "K6H7l5vSWvNF",
+   "siblingId": "V4B7iumCvOcP"
+  },
+  "newState": {
+   "clusterId": "QSLdDQoMRM23",
+   "integratedOptions": [
+    "K6H7l5vSWvNF",
+    "V4B7iumCvOcP"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248442489
+ },
+ {
+  "eventId": "KpSefdAmWuxsYwX4rlHa",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "DP6xjV0HiCt8",
+  "optionId": "sUu-03J4qdPp",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "VwpcXXlAo95B",
+    "--sILhzR2G66",
+    "bJD261jUY22F"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "VwpcXXlAo95B",
+    "--sILhzR2G66",
+    "sUu-03J4qdPp"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248476382
+ },
+ {
+  "eventId": "KixiUyjIcdkMEXw5NWyC",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "sUu-03J4qdPp",
+  "optionId": "wci-S9oPqHss",
+  "reason": "spawn synth at cosine=0.890",
+  "prevState": {
+   "sourceOptionId": "wci-S9oPqHss",
+   "siblingId": "bJD261jUY22F"
+  },
+  "newState": {
+   "clusterId": "sUu-03J4qdPp",
+   "integratedOptions": [
+    "wci-S9oPqHss",
+    "bJD261jUY22F"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248476384
+ },
+ {
+  "eventId": "4CvPyPi2ZaNLgxV6mtQQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "4Y-KKgDEZGcT",
+  "optionId": "uqOTm-FrkF8f",
+  "reason": "spawn synth at cosine=0.975",
+  "prevState": {
+   "sourceOptionId": "uqOTm-FrkF8f",
+   "siblingId": "FvNaGfPPtG-3"
+  },
+  "newState": {
+   "clusterId": "4Y-KKgDEZGcT",
+   "integratedOptions": [
+    "uqOTm-FrkF8f",
+    "FvNaGfPPtG-3"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248509655
+ },
+ {
+  "eventId": "VxHMRlM5Htn4aVlQKAqK",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "jVa68VmkyCS0",
+  "optionId": "4Y-KKgDEZGcT",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "4Y-KKgDEZGcT"
+  },
+  "newState": {
+   "clusterId": "jVa68VmkyCS0",
+   "integratedOptions": [
+    "4Y-KKgDEZGcT"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248513749
+ },
+ {
+  "eventId": "RyiYZiaHLMkz1GCV0De8",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "BLcTPLUpyZmn",
+  "optionId": "1HVfiCHKDohY",
+  "reason": "spawn synth at cosine=0.940",
+  "prevState": {
+   "sourceOptionId": "1HVfiCHKDohY",
+   "siblingId": "jex5G6jqwdBU"
+  },
+  "newState": {
+   "clusterId": "BLcTPLUpyZmn",
+   "integratedOptions": [
+    "1HVfiCHKDohY",
+    "jex5G6jqwdBU"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248546499
+ },
+ {
+  "eventId": "jl6kz235WvMWDPiIBxMe",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "SEe5Wq8uo9l-",
+  "optionId": "BLcTPLUpyZmn",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "BLcTPLUpyZmn"
+  },
+  "newState": {
+   "clusterId": "SEe5Wq8uo9l-",
+   "integratedOptions": [
+    "BLcTPLUpyZmn"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248550425
+ },
+ {
+  "eventId": "yVavYx8MivxQPZlSUSHJ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "t5fRBGGfTsOQ",
+  "optionId": "YnFhuXdN2bw1",
+  "reason": "spawn synth at cosine=0.985",
+  "prevState": {
+   "sourceOptionId": "YnFhuXdN2bw1",
+   "siblingId": "0JPtekfFjXt2"
+  },
+  "newState": {
+   "clusterId": "t5fRBGGfTsOQ",
+   "integratedOptions": [
+    "YnFhuXdN2bw1",
+    "0JPtekfFjXt2"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248583585
+ },
+ {
+  "eventId": "Dmo1QL3uBwZS9LA156a4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MEbdgtdcYImq",
+  "optionId": "t5fRBGGfTsOQ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "t5fRBGGfTsOQ"
+  },
+  "newState": {
+   "clusterId": "MEbdgtdcYImq",
+   "integratedOptions": [
+    "t5fRBGGfTsOQ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248588742
+ },
+ {
+  "eventId": "fvsyrJF3lzkBLk1qJ6pq",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "OVpTnQtIu9QZ",
+  "reason": "themes consolidated into \"Schools and student support\" (3 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "m9xttjo-ElWy",
+    "UxIuhmA5xUiM"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "m9xttjo-ElWy",
+    "UxIuhmA5xUiM",
+    "CVNGEHKTG-uJ",
+    "BLcTPLUpyZmn",
+    "Fac6eeMd7Dp7"
+   ],
+   "absorbed": [
+    "5K8EZJsn3F9r",
+    "SEe5Wq8uo9l-",
+    "tzW1l4z7i0hm"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248636164
+ },
+ {
+  "eventId": "7sVcxJWoFBegokAyYUQU",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "LoqIHPPfyXdL",
+  "reason": "themes consolidated into \"Health and care services\" (3 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "JqSkYOZ7EvNT",
+    "rJ2bPps-mrLY"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "JqSkYOZ7EvNT",
+    "rJ2bPps-mrLY",
+    "k5EUTbDBWN3z",
+    "ccR-vwVSdbUH",
+    "hFVaFLZ2RZ-0"
+   ],
+   "absorbed": [
+    "DH5V5arOwtIK",
+    "DK9cITq2Fvmu",
+    "TtTncBIcEtkI"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248636215
+ },
+ {
+  "eventId": "tvRCMl3J964sPsdfy43M",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "ld5g4anEDIAl",
+  "reason": "themes consolidated into \"Affordable housing\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "Yb2ef9uzahpF",
+    "sSmUOx3uis3d",
+    "QSLdDQoMRM23"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "uH0gTC2YwPNi",
+    "Yb2ef9uzahpF",
+    "sSmUOx3uis3d",
+    "QSLdDQoMRM23",
+    "1hAyJqfYhQKQ"
+   ],
+   "absorbed": [
+    "q-EPu0I9RTHh"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248636233
+ },
+ {
+  "eventId": "MSCQnkUAc2auwAbLZCkr",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "xk4qvf3T2hA1",
+  "reason": "themes consolidated into \"Employment and local economy\" (3 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "8O3L7CYkfmmG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "8O3L7CYkfmmG",
+    "t5fRBGGfTsOQ",
+    "s1Tnxtzlwaat",
+    "QsAiNmsoo8E4"
+   ],
+   "absorbed": [
+    "MEbdgtdcYImq",
+    "RAYliKOeywBp",
+    "zJG-bCxr8r2W"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248636257
+ },
+ {
+  "eventId": "GEna5BbHHdW18Wyn9wwA",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "DP6xjV0HiCt8",
+  "reason": "themes consolidated into \"Accessible and transparent government\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "VwpcXXlAo95B",
+    "--sILhzR2G66",
+    "sUu-03J4qdPp"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ITowaWRe7w4J",
+    "VwpcXXlAo95B",
+    "--sILhzR2G66",
+    "sUu-03J4qdPp",
+    "mtfqqxnXNBvZ"
+   ],
+   "absorbed": [
+    "CHjakVgYspBy"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248636292
+ },
+ {
+  "eventId": "fClXutFHNHaM0kkinrXJ",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "7NKoV5kO4Zai",
+  "reason": "themes consolidated into \"Urban Food Sustainability\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4",
+    "8tWk7XwsqZNQ",
+    "FzMZOTxE0Tel"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "h4579YQj2eJ4",
+    "8tWk7XwsqZNQ",
+    "FzMZOTxE0Tel",
+    "itMXRhib7OIa"
+   ],
+   "absorbed": [
+    "8aoziUwzgBTW"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787248652952
+ },
+ {
+  "eventId": "4ExCVQXpFI54M2qAZEWD",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "sp0QFyVGE6qk",
+  "reason": "gray-band match (no auto-action) (cosine=0.781)",
+  "newState": {
+   "siblingId": "7rAkCrqahhc-",
+   "similarity": 0.7811070648538955
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250708992
+ },
+ {
+  "eventId": "YblF9YpnjPC7SKfIP7hv",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "k6RMEYydOOAZ",
+  "reason": "gray-band match (no auto-action) (cosine=0.748)",
+  "newState": {
+   "siblingId": "sp0QFyVGE6qk",
+   "similarity": 0.748421523809587
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250736050
+ },
+ {
+  "eventId": "eMb3ePEZpVYHCQ9oPZ92",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "GBcVRsMmSIhN",
+  "reason": "gray-band match (no auto-action) (cosine=0.802)",
+  "newState": {
+   "siblingId": "7rAkCrqahhc-",
+   "similarity": 0.8021823369169337
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250767919
+ },
+ {
+  "eventId": "W1VIlNcINviJE95rcHdJ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "sSjthtjvzEPL",
+  "reason": "gray-band match (no auto-action) (cosine=0.769)",
+  "newState": {
+   "siblingId": "k6RMEYydOOAZ",
+   "similarity": 0.7688395335125733
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250795890
+ },
+ {
+  "eventId": "xzABcFge5BvikE9PVEvi",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "p4OBSzmyQrns",
+  "reason": "gray-band match (no auto-action) (cosine=0.815)",
+  "newState": {
+   "siblingId": "k6RMEYydOOAZ",
+   "similarity": 0.8154812842564844
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250826959
+ },
+ {
+  "eventId": "JZ7I70kiWH6q0QNkdbvC",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "94J1unuTlzWa",
+  "reason": "gray-band match (no auto-action) (cosine=0.760)",
+  "newState": {
+   "siblingId": "k6RMEYydOOAZ",
+   "similarity": 0.7604303352311894
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250853384
+ },
+ {
+  "eventId": "mStdMOoxnq0E2mAYGY4c",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "c7X8tcytjujE",
+  "reason": "gray-band match (no auto-action) (cosine=0.749)",
+  "newState": {
+   "siblingId": "p4OBSzmyQrns",
+   "similarity": 0.7489005563435531
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250882782
+ },
+ {
+  "eventId": "Ki1VAvqARbEHQKCGGucI",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "OgY1P9wt7ljm",
+  "optionId": "tb5DO3aWsrIV",
+  "reason": "spawn synth at cosine=0.900",
+  "prevState": {
+   "sourceOptionId": "tb5DO3aWsrIV",
+   "siblingId": "sp0QFyVGE6qk"
+  },
+  "newState": {
+   "clusterId": "OgY1P9wt7ljm",
+   "integratedOptions": [
+    "tb5DO3aWsrIV",
+    "sp0QFyVGE6qk"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250919454
+ },
+ {
+  "eventId": "VVXvwfGJlzp1MtxDAuVD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "OgY1P9wt7ljm",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "OgY1P9wt7ljm"
+  },
+  "newState": {
+   "clusterId": "RlIASP2rDZ0l",
+   "integratedOptions": [
+    "OgY1P9wt7ljm"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250922881
+ },
+ {
+  "eventId": "kmwsuerSIi4CcZVfOUpj",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "SvJ0BZlv65YL",
+  "reason": "gray-band match (no auto-action) (cosine=0.785)",
+  "newState": {
+   "siblingId": "RlIASP2rDZ0l",
+   "similarity": 0.7851041987753946
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250957504
+ },
+ {
+  "eventId": "3so8WNfCVPa83n0iLf9m",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "gxhfuyZ9Bexj",
+  "reason": "gray-band match (no auto-action) (cosine=0.712)",
+  "newState": {
+   "siblingId": "SvJ0BZlv65YL",
+   "similarity": 0.7118917928850039
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787250991762
+ },
+ {
+  "eventId": "xufsd8yxmfeHZqYAT8Ts",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "eJOyspbMb3Ys",
+  "reason": "gray-band match (no auto-action) (cosine=0.795)",
+  "newState": {
+   "siblingId": "RlIASP2rDZ0l",
+   "similarity": 0.7948668923847413
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251030583
+ },
+ {
+  "eventId": "GO82CfNVylp3nLIwa4gZ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "BZxkm9VPEzyJ",
+  "reason": "gray-band match (no auto-action) (cosine=0.750)",
+  "newState": {
+   "siblingId": "SvJ0BZlv65YL",
+   "similarity": 0.7495778913061366
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251059806
+ },
+ {
+  "eventId": "wqivJa0nLXfVSz1pXPOZ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "BGJXhIazzJbC",
+  "reason": "cosine=0.766",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251085925
+ },
+ {
+  "eventId": "N1AgFjRgOzGag2TUdSEp",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "C6tM7XAm3Eun",
+  "reason": "cosine=0.823",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251117073
+ },
+ {
+  "eventId": "4jlsBSq3zYywOCz8V8rc",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "YuYo7hwMyG47",
+  "reason": "cosine=0.838",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251145582
+ },
+ {
+  "eventId": "4GMztPEDkdbObBiE88xi",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "I1Wok4X3K-UG",
+  "reason": "cosine=0.803",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251174040
+ },
+ {
+  "eventId": "J5xQ3HU1DBqMm4sOFJOq",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "BrLxfimhdePG",
+  "reason": "cosine=0.781",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251199093
+ },
+ {
+  "eventId": "AHESBCDOjAsb86tGdPTE",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "UmIhXSc1JjOQ",
+  "reason": "cosine=0.772",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251232720
+ },
+ {
+  "eventId": "Ljk9F7ufAJFiTCcu33Ag",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "0CUp2fLh55tX",
+  "optionId": "fXnxOiO1zSOi",
+  "reason": "spawn synth at cosine=0.886",
+  "prevState": {
+   "sourceOptionId": "fXnxOiO1zSOi",
+   "siblingId": "k6RMEYydOOAZ"
+  },
+  "newState": {
+   "clusterId": "0CUp2fLh55tX",
+   "integratedOptions": [
+    "fXnxOiO1zSOi",
+    "k6RMEYydOOAZ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251268858
+ },
+ {
+  "eventId": "mdg7L7Bgk4wzzDQn1SfB",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "0CUp2fLh55tX",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "0CUp2fLh55tX"
+  },
+  "newState": {
+   "clusterId": "Neo0KiJfA8GK",
+   "integratedOptions": [
+    "0CUp2fLh55tX"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251272507
+ },
+ {
+  "eventId": "FoRncYDa2L4ndL0lIQLX",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "U0TvaLNbYdG2",
+  "reason": "cosine=0.798",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251304011
+ },
+ {
+  "eventId": "B98mnaSzlLD6pzzux0UZ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "7RTRjPwuF1Yt",
+  "reason": "option filed under theme (judge: מעקב חי באפליקציה משפר את זמינות ונוחות התחבורה הציבורית)",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "7RTRjPwuF1Yt"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251332383
+ },
+ {
+  "eventId": "KDTVrva13NKqhaY5TOsN",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "7CzV5xOrPXha",
+  "reason": "cosine=0.800",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251362289
+ },
+ {
+  "eventId": "mnnus7ZpQgYeojHHT8mI",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "QtHXujI-lh8w",
+  "reason": "cosine=0.766",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "7RTRjPwuF1Yt"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "7RTRjPwuF1Yt",
+    "QtHXujI-lh8w"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251388714
+ },
+ {
+  "eventId": "J5FQ7iY3iRysMTWyujMs",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "-zjXlbx7UgZH",
+  "reason": "cosine=0.824",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251418822
+ },
+ {
+  "eventId": "43w37BFPcG2CJtDzlZYb",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "jh6rl66uzHMJ",
+  "optionId": "cI41678JUmi5",
+  "reason": "spawn synth at cosine=0.920",
+  "prevState": {
+   "sourceOptionId": "cI41678JUmi5",
+   "siblingId": "7rAkCrqahhc-"
+  },
+  "newState": {
+   "clusterId": "jh6rl66uzHMJ",
+   "integratedOptions": [
+    "cI41678JUmi5",
+    "7rAkCrqahhc-"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251456214
+ },
+ {
+  "eventId": "7kSF93HzqSfVrpdAoFWv",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "I75sthAVFeZl",
+  "optionId": "jh6rl66uzHMJ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "jh6rl66uzHMJ"
+  },
+  "newState": {
+   "clusterId": "I75sthAVFeZl",
+   "integratedOptions": [
+    "jh6rl66uzHMJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251460987
+ },
+ {
+  "eventId": "Fjk5jEZO8i6oIvSoa8Af",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "kcua9k-GzO-R",
+  "reason": "cosine=0.837",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251493407
+ },
+ {
+  "eventId": "ToF2dqQCIYTjAg8KBUJU",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "IsRbB2rhvTOS",
+  "reason": "cosine=0.827",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251524161
+ },
+ {
+  "eventId": "9Q7rmvmRSvHJeL8zNW2E",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "0EIz9TvKlrFK",
+  "reason": "cosine=0.859",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251553989
+ },
+ {
+  "eventId": "2jdrF6SibBTEmwTMhxAQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "sHu6txNS1NeR",
+  "optionId": "q0ebrEf5aIlA",
+  "reason": "spawn synth at cosine=0.841",
+  "prevState": {
+   "sourceOptionId": "q0ebrEf5aIlA",
+   "siblingId": "BZxkm9VPEzyJ"
+  },
+  "newState": {
+   "clusterId": "sHu6txNS1NeR",
+   "integratedOptions": [
+    "q0ebrEf5aIlA",
+    "BZxkm9VPEzyJ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251589636
+ },
+ {
+  "eventId": "4sl9gVihTvAqkCSaPpHP",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "vjPKcCXc917Z",
+  "optionId": "sHu6txNS1NeR",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "sHu6txNS1NeR"
+  },
+  "newState": {
+   "clusterId": "vjPKcCXc917Z",
+   "integratedOptions": [
+    "sHu6txNS1NeR"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251594422
+ },
+ {
+  "eventId": "yPESqzLdWZrXAhpeOLSo",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "ESKiFdl747lF",
+  "reason": "cosine=0.825",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "7RTRjPwuF1Yt",
+    "QtHXujI-lh8w"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "7RTRjPwuF1Yt",
+    "QtHXujI-lh8w",
+    "ESKiFdl747lF"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251673689
+ },
+ {
+  "eventId": "UTaBPDu0Tc4Q8cLFy643",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "ivupF2emgqLI",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "7RTRjPwuF1Yt",
+    "QtHXujI-lh8w"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251682790
+ },
+ {
+  "eventId": "cUbdwBdFKMd87jFQPsHq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ivupF2emgqLI",
+  "optionId": "VrlVzCsSWQwm",
+  "reason": "spawn synth at cosine=0.878",
+  "prevState": {
+   "sourceOptionId": "VrlVzCsSWQwm",
+   "siblingId": "7RTRjPwuF1Yt"
+  },
+  "newState": {
+   "clusterId": "ivupF2emgqLI",
+   "integratedOptions": [
+    "VrlVzCsSWQwm",
+    "7RTRjPwuF1Yt"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251682792
+ },
+ {
+  "eventId": "Af8esldLTt7tK9C0ZoiC",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "Wfx8Gvw-W0Nz",
+  "reason": "cosine=0.836",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251718670
+ },
+ {
+  "eventId": "XBJZ8CuzeKAzTXoz6KKG",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "LiVWN1sSpR6C",
+  "reason": "cosine=0.804",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251750081
+ },
+ {
+  "eventId": "hd3gmxEhxN4q8jVFAp41",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "h5BxdnkGR6kB",
+  "optionId": "84-9Gar6SYwL",
+  "reason": "spawn synth at cosine=0.963",
+  "prevState": {
+   "sourceOptionId": "84-9Gar6SYwL",
+   "siblingId": "p4OBSzmyQrns"
+  },
+  "newState": {
+   "clusterId": "h5BxdnkGR6kB",
+   "integratedOptions": [
+    "84-9Gar6SYwL",
+    "p4OBSzmyQrns"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251787905
+ },
+ {
+  "eventId": "4hYBSLTCneku2ODv1s7u",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "7M9J2Txr7CrU",
+  "optionId": "h5BxdnkGR6kB",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "h5BxdnkGR6kB"
+  },
+  "newState": {
+   "clusterId": "7M9J2Txr7CrU",
+   "integratedOptions": [
+    "h5BxdnkGR6kB"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251794091
+ },
+ {
+  "eventId": "v81MfeawfgH8erINzcpK",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "eSXNLhbdTuwo",
+  "reason": "gray-band match (no auto-action) (cosine=0.736)",
+  "newState": {
+   "siblingId": "ESKiFdl747lF",
+   "similarity": 0.7361518074012299
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251825146
+ },
+ {
+  "eventId": "9hd2xcawVbRXubaCXuzL",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "BcqyM3h25jaa",
+  "reason": "cosine=0.808",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251855371
+ },
+ {
+  "eventId": "CcZM6S2jAYJSBjWHHTLF",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "GfggNNUQdPmJ",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "U0TvaLNbYdG2",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251890314
+ },
+ {
+  "eventId": "9Vh1HQSpjkg0Kvvdw2yX",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "GfggNNUQdPmJ",
+  "optionId": "tIfsSHCxV2wg",
+  "reason": "spawn synth at cosine=0.926",
+  "prevState": {
+   "sourceOptionId": "tIfsSHCxV2wg",
+   "siblingId": "U0TvaLNbYdG2"
+  },
+  "newState": {
+   "clusterId": "GfggNNUQdPmJ",
+   "integratedOptions": [
+    "tIfsSHCxV2wg",
+    "U0TvaLNbYdG2"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251890317
+ },
+ {
+  "eventId": "TZwywltLoQvKjAn3djrJ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vjPKcCXc917Z",
+  "optionId": "eZKwZ745HU1B",
+  "reason": "cosine=0.870",
+  "prevState": {
+   "integratedOptions": [
+    "sHu6txNS1NeR"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "sHu6txNS1NeR",
+    "eZKwZ745HU1B"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251922662
+ },
+ {
+  "eventId": "QcmSvc1xTYtiTsOmKdcB",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "bRiYwqHlGsUe",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "I1Wok4X3K-UG",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251960285
+ },
+ {
+  "eventId": "4U5h6FjXxYGIXBEMRywI",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "bRiYwqHlGsUe",
+  "optionId": "SeVp6zI7YJcZ",
+  "reason": "spawn synth at cosine=0.922",
+  "prevState": {
+   "sourceOptionId": "SeVp6zI7YJcZ",
+   "siblingId": "I1Wok4X3K-UG"
+  },
+  "newState": {
+   "clusterId": "bRiYwqHlGsUe",
+   "integratedOptions": [
+    "SeVp6zI7YJcZ",
+    "I1Wok4X3K-UG"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251960288
+ },
+ {
+  "eventId": "wjeqGFaxoVhaYS9kzcZE",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "wmIHrbGs6wdn",
+  "reason": "cosine=0.852",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787251993929
+ },
+ {
+  "eventId": "vP5TO9m7ZMZLIzkHydGv",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "7M9J2Txr7CrU",
+  "optionId": "5DybAVcuuk2f",
+  "reason": "cosine=0.826",
+  "prevState": {
+   "integratedOptions": [
+    "h5BxdnkGR6kB"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "h5BxdnkGR6kB",
+    "5DybAVcuuk2f"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252024086
+ },
+ {
+  "eventId": "a6GFvV9UeHtkiPTTDhxy",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "I7KDJSSyGSt-",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "C6tM7XAm3Eun",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252061090
+ },
+ {
+  "eventId": "ZLwOEzop0KivOkRxJCBq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "I7KDJSSyGSt-",
+  "optionId": "fU4Z0LnluY4r",
+  "reason": "spawn synth at cosine=0.905",
+  "prevState": {
+   "sourceOptionId": "fU4Z0LnluY4r",
+   "siblingId": "C6tM7XAm3Eun"
+  },
+  "newState": {
+   "clusterId": "I7KDJSSyGSt-",
+   "integratedOptions": [
+    "fU4Z0LnluY4r",
+    "C6tM7XAm3Eun"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252061092
+ },
+ {
+  "eventId": "rqn2pLWn9dLEuXV1uWZ0",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "eu9KV44IrMWc",
+  "reason": "cosine=0.801",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252092556
+ },
+ {
+  "eventId": "tNrhISJZJhm3MRcDZAbJ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "wFtQr9eeze4w",
+  "reason": "cosine=0.810",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "wFtQr9eeze4w"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252122125
+ },
+ {
+  "eventId": "hYGlN9eCsbmEJo0yR06s",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vjPKcCXc917Z",
+  "optionId": "fj0H9LvwzPRn",
+  "reason": "option filed under theme (judge: איסור פלסטיק חד־פעמי מצמצם פסולת ומקדם קיימות עירונית)",
+  "prevState": {
+   "integratedOptions": [
+    "sHu6txNS1NeR",
+    "eZKwZ745HU1B"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "sHu6txNS1NeR",
+    "eZKwZ745HU1B",
+    "fj0H9LvwzPRn"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252152922
+ },
+ {
+  "eventId": "Y37NSJJQJfKEJVF7VNZ0",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "n1viX6yEeR0i",
+  "reason": "cosine=0.851",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252181128
+ },
+ {
+  "eventId": "AbHw0ANXOjnHs0BeQtNL",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "hAshMdEEalrB",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "wFtQr9eeze4w"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252216271
+ },
+ {
+  "eventId": "0gIaTO8eZqapwndc7Bn7",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "hAshMdEEalrB",
+  "optionId": "mNrGjsQ0ORMi",
+  "reason": "spawn synth at cosine=0.964",
+  "prevState": {
+   "sourceOptionId": "mNrGjsQ0ORMi",
+   "siblingId": "wFtQr9eeze4w"
+  },
+  "newState": {
+   "clusterId": "hAshMdEEalrB",
+   "integratedOptions": [
+    "mNrGjsQ0ORMi",
+    "wFtQr9eeze4w"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252216274
+ },
+ {
+  "eventId": "lCWAKVRY9fKtDnuKzsFk",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "OlEJQbzMoCNj",
+  "reason": "cosine=0.819",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252247688
+ },
+ {
+  "eventId": "57G8DUE82ZZAYjCehdPg",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "0fqyF1atyEJN",
+  "reason": "cosine=0.869",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252276750
+ },
+ {
+  "eventId": "VwiEU7ulFReVtkjLIZLi",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "T2SFaKS876bF",
+  "reason": "cosine=0.825",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252313010
+ },
+ {
+  "eventId": "DzyC1lPNxOooutJ5SCKN",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "5VsSH1lbpJTk",
+  "reason": "cosine=0.827",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252342614
+ },
+ {
+  "eventId": "teqh6vyXVj5Ze9GxN3eF",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "pyppxDDWXAt3",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "UmIhXSc1JjOQ",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252378982
+ },
+ {
+  "eventId": "y8V3RKi9R88ByGZAT1Q9",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pyppxDDWXAt3",
+  "optionId": "TkSjbIUUtunn",
+  "reason": "spawn synth at cosine=0.843",
+  "prevState": {
+   "sourceOptionId": "TkSjbIUUtunn",
+   "siblingId": "UmIhXSc1JjOQ"
+  },
+  "newState": {
+   "clusterId": "pyppxDDWXAt3",
+   "integratedOptions": [
+    "TkSjbIUUtunn",
+    "UmIhXSc1JjOQ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252378984
+ },
+ {
+  "eventId": "EggcPpeRwCNZrRRNbUXv",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "GQEl6vVJesZF",
+  "reason": "cosine=0.764",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252408342
+ },
+ {
+  "eventId": "17bcJ3L8l2NLyVBd8kla",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "u6rJtq29xKjQ",
+  "reason": "cosine=0.774",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252436090
+ },
+ {
+  "eventId": "OWvhPdbRsPnSfG6EAKbv",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "iLmEiqHDE4U8",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "0EIz9TvKlrFK",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252474109
+ },
+ {
+  "eventId": "MREpEVqNxtzOCBSvfVvh",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "iLmEiqHDE4U8",
+  "optionId": "87Pt5ru7s-eI",
+  "reason": "spawn synth at cosine=0.968",
+  "prevState": {
+   "sourceOptionId": "87Pt5ru7s-eI",
+   "siblingId": "0EIz9TvKlrFK"
+  },
+  "newState": {
+   "clusterId": "iLmEiqHDE4U8",
+   "integratedOptions": [
+    "87Pt5ru7s-eI",
+    "0EIz9TvKlrFK"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252474111
+ },
+ {
+  "eventId": "f2KAw6BAuoLNriaV2Kyq",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "b6KEH9b12cS4",
+  "reason": "cosine=0.789",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252503194
+ },
+ {
+  "eventId": "2OATkyFOMDvZZm0eRS1Q",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "55epb9Xm0QU2",
+  "optionId": "HcDs1hQfvpga",
+  "reason": "spawn synth at cosine=0.845",
+  "prevState": {
+   "sourceOptionId": "HcDs1hQfvpga",
+   "siblingId": "94J1unuTlzWa"
+  },
+  "newState": {
+   "clusterId": "55epb9Xm0QU2",
+   "integratedOptions": [
+    "HcDs1hQfvpga",
+    "94J1unuTlzWa"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252543207
+ },
+ {
+  "eventId": "xwPsrVsuSJfmwZ2DfbJQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "wO1ShUHdXMVs",
+  "optionId": "55epb9Xm0QU2",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "55epb9Xm0QU2"
+  },
+  "newState": {
+   "clusterId": "wO1ShUHdXMVs",
+   "integratedOptions": [
+    "55epb9Xm0QU2"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252548233
+ },
+ {
+  "eventId": "3oMCduFm2yvv91wI5TBy",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "rZz0V7kpLMJT",
+  "optionId": "mKY2MhlMtmT8",
+  "reason": "spawn synth at cosine=0.986",
+  "prevState": {
+   "sourceOptionId": "mKY2MhlMtmT8",
+   "siblingId": "sSjthtjvzEPL"
+  },
+  "newState": {
+   "clusterId": "rZz0V7kpLMJT",
+   "integratedOptions": [
+    "mKY2MhlMtmT8",
+    "sSjthtjvzEPL"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252627767
+ },
+ {
+  "eventId": "GlWILOjn7B44ApX4aam6",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "1HtszJTkd5el",
+  "optionId": "hRnInDzqILuZ",
+  "reason": "spawn synth at cosine=0.813",
+  "prevState": {
+   "sourceOptionId": "hRnInDzqILuZ",
+   "siblingId": "SvJ0BZlv65YL"
+  },
+  "newState": {
+   "clusterId": "1HtszJTkd5el",
+   "integratedOptions": [
+    "hRnInDzqILuZ",
+    "SvJ0BZlv65YL"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252630010
+ },
+ {
+  "eventId": "iiItNrG5aJBsZmvFKNtx",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "mkcL6QK34P90",
+  "optionId": "rZz0V7kpLMJT",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "rZz0V7kpLMJT"
+  },
+  "newState": {
+   "clusterId": "mkcL6QK34P90",
+   "integratedOptions": [
+    "rZz0V7kpLMJT"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252632993
+ },
+ {
+  "eventId": "G7w9iiwA0B7z2KdM7ODf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "j4EkgqYdo7p4",
+  "optionId": "1HtszJTkd5el",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "1HtszJTkd5el"
+  },
+  "newState": {
+   "clusterId": "j4EkgqYdo7p4",
+   "integratedOptions": [
+    "1HtszJTkd5el"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252633829
+ },
+ {
+  "eventId": "0ak9Hp3IExlWaCVdNRqA",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "gdI8FHVZPWUD",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "QtHXujI-lh8w",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252676186
+ },
+ {
+  "eventId": "40vbauFMkste9TsHqIOw",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "gdI8FHVZPWUD",
+  "optionId": "7F0Fn8MzN8rU",
+  "reason": "spawn synth at cosine=0.810",
+  "prevState": {
+   "sourceOptionId": "7F0Fn8MzN8rU",
+   "siblingId": "QtHXujI-lh8w"
+  },
+  "newState": {
+   "clusterId": "gdI8FHVZPWUD",
+   "integratedOptions": [
+    "7F0Fn8MzN8rU",
+    "QtHXujI-lh8w"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252676188
+ },
+ {
+  "eventId": "t8tdS1ll7yscdV24mfya",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "IShoJlhzcX8g",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "kcua9k-GzO-R",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252715231
+ },
+ {
+  "eventId": "A9xmurMstaVTAHKIyBJO",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "IShoJlhzcX8g",
+  "optionId": "OyDxYGRboX-p",
+  "reason": "spawn synth at cosine=0.866",
+  "prevState": {
+   "sourceOptionId": "OyDxYGRboX-p",
+   "siblingId": "kcua9k-GzO-R"
+  },
+  "newState": {
+   "clusterId": "IShoJlhzcX8g",
+   "integratedOptions": [
+    "OyDxYGRboX-p",
+    "kcua9k-GzO-R"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252715233
+ },
+ {
+  "eventId": "7XRuIWIwVBjtc55905t4",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "EFxhE8L46HAO",
+  "reason": "cosine=0.857",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "EFxhE8L46HAO"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252746723
+ },
+ {
+  "eventId": "J6RvzNLiEd0ELMJUcRmc",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "htTzXsf07Wxh",
+  "optionId": "1PBtiFjXdgzg",
+  "reason": "spawn synth at cosine=0.935",
+  "prevState": {
+   "sourceOptionId": "1PBtiFjXdgzg",
+   "siblingId": "eJOyspbMb3Ys"
+  },
+  "newState": {
+   "clusterId": "htTzXsf07Wxh",
+   "integratedOptions": [
+    "1PBtiFjXdgzg",
+    "eJOyspbMb3Ys"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252813805
+ },
+ {
+  "eventId": "RQuaKPKWGGkKDWdovA21",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "mkcL6QK34P90",
+  "optionId": "htTzXsf07Wxh",
+  "reason": "nest synthesis under theme (judge: עוסק בהרחבת התרבות הציבורית באמצעות יצירות אמנות במרחבים עירוניים.)",
+  "prevState": {
+   "integratedOptions": [
+    "rZz0V7kpLMJT"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rZz0V7kpLMJT",
+    "htTzXsf07Wxh"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252816129
+ },
+ {
+  "eventId": "NM3vjXxUkzYU2XNmlxGX",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "4NiyPGBPBxTG",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "BrLxfimhdePG",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252828562
+ },
+ {
+  "eventId": "xuIf0rNvcRKNwfNF3fP4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "4NiyPGBPBxTG",
+  "optionId": "3GNzYtybOYIE",
+  "reason": "spawn synth at cosine=0.862",
+  "prevState": {
+   "sourceOptionId": "3GNzYtybOYIE",
+   "siblingId": "BrLxfimhdePG"
+  },
+  "newState": {
+   "clusterId": "4NiyPGBPBxTG",
+   "integratedOptions": [
+    "3GNzYtybOYIE",
+    "BrLxfimhdePG"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252828565
+ },
+ {
+  "eventId": "YfZSrtinTspqlxfLw69m",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "6VZtVZ4sbVu8",
+  "reason": "cosine=0.877",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "6VZtVZ4sbVu8"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252861263
+ },
+ {
+  "eventId": "1xxjJBxFNqSNsr8IQetj",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "ARDW1qzvF7sV",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "eu9KV44IrMWc",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "6VZtVZ4sbVu8"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "6VZtVZ4sbVu8",
+    "ARDW1qzvF7sV"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252898425
+ },
+ {
+  "eventId": "rqggpi5dXYhxDp8fl5oG",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ARDW1qzvF7sV",
+  "optionId": "feg9Har2Y1jM",
+  "reason": "spawn synth at cosine=0.935",
+  "prevState": {
+   "sourceOptionId": "feg9Har2Y1jM",
+   "siblingId": "eu9KV44IrMWc"
+  },
+  "newState": {
+   "clusterId": "ARDW1qzvF7sV",
+   "integratedOptions": [
+    "feg9Har2Y1jM",
+    "eu9KV44IrMWc"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252898427
+ },
+ {
+  "eventId": "5ud7sl5gGGoS1cuJYkgN",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "sIGZq7ujahzl",
+  "reason": "cosine=0.871",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "EFxhE8L46HAO"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "EFxhE8L46HAO",
+    "sIGZq7ujahzl"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252929247
+ },
+ {
+  "eventId": "9SbcgGujkRXMAer9UD8o",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "zslo9mGHkoPW",
+  "optionId": "c9c35S3LgdFv",
+  "reason": "spawn synth at cosine=0.946",
+  "prevState": {
+   "sourceOptionId": "c9c35S3LgdFv",
+   "siblingId": "GBcVRsMmSIhN"
+  },
+  "newState": {
+   "clusterId": "zslo9mGHkoPW",
+   "integratedOptions": [
+    "c9c35S3LgdFv",
+    "GBcVRsMmSIhN"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252964900
+ },
+ {
+  "eventId": "KUSZ64juiXgTGJPbTHan",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Hu-pjKZybb5e",
+  "optionId": "zslo9mGHkoPW",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "zslo9mGHkoPW"
+  },
+  "newState": {
+   "clusterId": "Hu-pjKZybb5e",
+   "integratedOptions": [
+    "zslo9mGHkoPW"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787252969667
+ },
+ {
+  "eventId": "HNstBy78e2zMHlfgyeJF",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "0CUp2fLh55tX",
+  "optionId": "V71qgFE0GKWk",
+  "reason": "cosine=0.890",
+  "prevState": {
+   "integratedOptions": [
+    "fXnxOiO1zSOi",
+    "k6RMEYydOOAZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "fXnxOiO1zSOi",
+    "k6RMEYydOOAZ",
+    "V71qgFE0GKWk"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253031551
+ },
+ {
+  "eventId": "061Zgcefjm7ws60yoD6X",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "vjPKcCXc917Z",
+  "optionId": "bTt8IyRaJJcn",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "sHu6txNS1NeR",
+    "eZKwZ745HU1B",
+    "fj0H9LvwzPRn"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "sHu6txNS1NeR",
+    "fj0H9LvwzPRn",
+    "bTt8IyRaJJcn"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253113984
+ },
+ {
+  "eventId": "0Hv6erDQeAYtPjjjJViz",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "bTt8IyRaJJcn",
+  "optionId": "ojaNFhs217l8",
+  "reason": "spawn synth at cosine=0.919",
+  "prevState": {
+   "sourceOptionId": "ojaNFhs217l8",
+   "siblingId": "eZKwZ745HU1B"
+  },
+  "newState": {
+   "clusterId": "bTt8IyRaJJcn",
+   "integratedOptions": [
+    "ojaNFhs217l8",
+    "eZKwZ745HU1B"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253113985
+ },
+ {
+  "eventId": "WREWHLeIRYr8w1podcXA",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "NCzmwO7diP-U",
+  "optionId": "SaRqbSOgtwXV",
+  "reason": "spawn synth at cosine=0.928",
+  "prevState": {
+   "sourceOptionId": "SaRqbSOgtwXV",
+   "siblingId": "ESKiFdl747lF"
+  },
+  "newState": {
+   "clusterId": "NCzmwO7diP-U",
+   "integratedOptions": [
+    "SaRqbSOgtwXV",
+    "ESKiFdl747lF"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253129934
+ },
+ {
+  "eventId": "mIUGwHd0cOPP3Ekh6e7K",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "4ochMQJS0nvv",
+  "optionId": "NCzmwO7diP-U",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "NCzmwO7diP-U"
+  },
+  "newState": {
+   "clusterId": "4ochMQJS0nvv",
+   "integratedOptions": [
+    "NCzmwO7diP-U"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253133990
+ },
+ {
+  "eventId": "sfQxe37J1exA2AfWRavS",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "NCzmwO7diP-U",
+  "optionId": "vGSkfXV9ZwfR",
+  "reason": "cosine=0.859",
+  "prevState": {
+   "integratedOptions": [
+    "SaRqbSOgtwXV",
+    "ESKiFdl747lF"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "SaRqbSOgtwXV",
+    "ESKiFdl747lF",
+    "vGSkfXV9ZwfR"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253151383
+ },
+ {
+  "eventId": "AewdaFG31Dh7ufJZduGD",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4ochMQJS0nvv",
+  "optionId": "RDmVOufYBvr4",
+  "reason": "cosine=0.824",
+  "prevState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U",
+    "RDmVOufYBvr4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253183465
+ },
+ {
+  "eventId": "2smYmUNFUjMpuBXlTrtk",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "XmTVhbYBW9yW",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "6VZtVZ4sbVu8",
+    "ARDW1qzvF7sV"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253233643
+ },
+ {
+  "eventId": "awZ1Manex5o1pOvg6wuO",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "XmTVhbYBW9yW",
+  "optionId": "DslKH5gakzGc",
+  "reason": "spawn synth at cosine=0.871",
+  "prevState": {
+   "sourceOptionId": "DslKH5gakzGc",
+   "siblingId": "6VZtVZ4sbVu8"
+  },
+  "newState": {
+   "clusterId": "XmTVhbYBW9yW",
+   "integratedOptions": [
+    "DslKH5gakzGc",
+    "6VZtVZ4sbVu8"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253233654
+ },
+ {
+  "eventId": "nxzIHgCx1IfZWaQVKEOg",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "mmecPl2HFj9X",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "EFxhE8L46HAO",
+    "sIGZq7ujahzl"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "sIGZq7ujahzl",
+    "mmecPl2HFj9X"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253267415
+ },
+ {
+  "eventId": "PMjxnWk1tWhs7Dx7bb7R",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "mmecPl2HFj9X",
+  "optionId": "pvX6HoPlJwcx",
+  "reason": "spawn synth at cosine=0.889",
+  "prevState": {
+   "sourceOptionId": "pvX6HoPlJwcx",
+   "siblingId": "EFxhE8L46HAO"
+  },
+  "newState": {
+   "clusterId": "mmecPl2HFj9X",
+   "integratedOptions": [
+    "pvX6HoPlJwcx",
+    "EFxhE8L46HAO"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253267417
+ },
+ {
+  "eventId": "goH08nooXTX5ZbOhttOA",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "JPbikQUIMk7t",
+  "reason": "cosine=0.861",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253301519
+ },
+ {
+  "eventId": "Zaeckyd8dAaERgimaAdi",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "7HIMa1uWdpMs",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "wmIHrbGs6wdn",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "sIGZq7ujahzl",
+    "mmecPl2HFj9X"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "sIGZq7ujahzl",
+    "mmecPl2HFj9X",
+    "7HIMa1uWdpMs"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253337441
+ },
+ {
+  "eventId": "NNbpJcgZrlNjaHVhvAao",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "7HIMa1uWdpMs",
+  "optionId": "zshAvU2MFpeM",
+  "reason": "spawn synth at cosine=0.893",
+  "prevState": {
+   "sourceOptionId": "zshAvU2MFpeM",
+   "siblingId": "wmIHrbGs6wdn"
+  },
+  "newState": {
+   "clusterId": "7HIMa1uWdpMs",
+   "integratedOptions": [
+    "zshAvU2MFpeM",
+    "wmIHrbGs6wdn"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253337443
+ },
+ {
+  "eventId": "ezSIPeUZiwSWo2HB4Bol",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "LQjbfSoiPZt0",
+  "optionId": "987Kh9jN2k9z",
+  "reason": "spawn synth at cosine=0.850",
+  "prevState": {
+   "sourceOptionId": "987Kh9jN2k9z",
+   "siblingId": "c7X8tcytjujE"
+  },
+  "newState": {
+   "clusterId": "LQjbfSoiPZt0",
+   "integratedOptions": [
+    "987Kh9jN2k9z",
+    "c7X8tcytjujE"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253378097
+ },
+ {
+  "eventId": "WUQKuJf7BUVKKjhBfRQX",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "wO1ShUHdXMVs",
+  "optionId": "LQjbfSoiPZt0",
+  "reason": "nest synthesis under theme (judge: קידום תעסוקה מקומית וחיזוק עסקים ועצמאים באמצעות התקשרויות עירוניות)",
+  "prevState": {
+   "integratedOptions": [
+    "55epb9Xm0QU2"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "55epb9Xm0QU2",
+    "LQjbfSoiPZt0"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253380869
+ },
+ {
+  "eventId": "ihxjhEAg5FlymxnekgNi",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "7M9J2Txr7CrU",
+  "optionId": "8hdBhTZkLveS",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "h5BxdnkGR6kB",
+    "5DybAVcuuk2f"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "h5BxdnkGR6kB",
+    "8hdBhTZkLveS"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253423495
+ },
+ {
+  "eventId": "fWsBSyWO9VSC0nfThry2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "8hdBhTZkLveS",
+  "optionId": "cnwmQFVMHu5N",
+  "reason": "spawn synth at cosine=0.903",
+  "prevState": {
+   "sourceOptionId": "cnwmQFVMHu5N",
+   "siblingId": "5DybAVcuuk2f"
+  },
+  "newState": {
+   "clusterId": "8hdBhTZkLveS",
+   "integratedOptions": [
+    "cnwmQFVMHu5N",
+    "5DybAVcuuk2f"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253423497
+ },
+ {
+  "eventId": "CHs4q0YYhPsdl65BjFBW",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "0CUp2fLh55tX",
+  "optionId": "TrTdrJs-qO2q",
+  "reason": "cosine=0.959",
+  "prevState": {
+   "integratedOptions": [
+    "fXnxOiO1zSOi",
+    "k6RMEYydOOAZ",
+    "V71qgFE0GKWk"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "fXnxOiO1zSOi",
+    "k6RMEYydOOAZ",
+    "V71qgFE0GKWk",
+    "TrTdrJs-qO2q"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253451473
+ },
+ {
+  "eventId": "5FNXHVS2OhXjofIgKSOo",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4ochMQJS0nvv",
+  "optionId": "5cGTNop7olIx",
+  "reason": "cosine=0.856",
+  "prevState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U",
+    "RDmVOufYBvr4"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U",
+    "RDmVOufYBvr4",
+    "5cGTNop7olIx"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253483999
+ },
+ {
+  "eventId": "oDUUfbjIDZujI8Huef1m",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "EfUtGPXpZ5f0",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "BcqyM3h25jaa",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253519755
+ },
+ {
+  "eventId": "HhfdKpDSqxSkZjfbWci2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "EfUtGPXpZ5f0",
+  "optionId": "s15w4MsDRCvH",
+  "reason": "spawn synth at cosine=0.957",
+  "prevState": {
+   "sourceOptionId": "s15w4MsDRCvH",
+   "siblingId": "BcqyM3h25jaa"
+  },
+  "newState": {
+   "clusterId": "EfUtGPXpZ5f0",
+   "integratedOptions": [
+    "s15w4MsDRCvH",
+    "BcqyM3h25jaa"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253519757
+ },
+ {
+  "eventId": "ZRhG2WXpggY8BHrJCArt",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "MZBCv-LB9ZpZ",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "n1viX6yEeR0i",
+    "gdI8FHVZPWUD",
+    "sIGZq7ujahzl",
+    "mmecPl2HFj9X",
+    "7HIMa1uWdpMs"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "gdI8FHVZPWUD",
+    "sIGZq7ujahzl",
+    "mmecPl2HFj9X",
+    "7HIMa1uWdpMs",
+    "MZBCv-LB9ZpZ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253559846
+ },
+ {
+  "eventId": "Tg2VysONr9T7VU6RvwfD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MZBCv-LB9ZpZ",
+  "optionId": "bY1vVKxSP1cp",
+  "reason": "spawn synth at cosine=0.841",
+  "prevState": {
+   "sourceOptionId": "bY1vVKxSP1cp",
+   "siblingId": "n1viX6yEeR0i"
+  },
+  "newState": {
+   "clusterId": "MZBCv-LB9ZpZ",
+   "integratedOptions": [
+    "bY1vVKxSP1cp",
+    "n1viX6yEeR0i"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253559848
+ },
+ {
+  "eventId": "ZuOpUPegjzHxOAwQEkRa",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4ochMQJS0nvv",
+  "optionId": "c7EynFe9CnF1",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U",
+    "RDmVOufYBvr4",
+    "5cGTNop7olIx"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U",
+    "RDmVOufYBvr4",
+    "c7EynFe9CnF1"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253610266
+ },
+ {
+  "eventId": "QQtLHt4PVN4mWlj6s6Sw",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "c7EynFe9CnF1",
+  "optionId": "H-2g4g9JX3V0",
+  "reason": "spawn synth at cosine=0.789",
+  "prevState": {
+   "sourceOptionId": "H-2g4g9JX3V0",
+   "siblingId": "5cGTNop7olIx"
+  },
+  "newState": {
+   "clusterId": "c7EynFe9CnF1",
+   "integratedOptions": [
+    "H-2g4g9JX3V0",
+    "5cGTNop7olIx"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253610268
+ },
+ {
+  "eventId": "cFI8tf4sg3RGdepc387m",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "jyz-ZXvmPFXP",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "GQEl6vVJesZF",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253644993
+ },
+ {
+  "eventId": "cjVWbHEeeq9wXXag6epK",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "jyz-ZXvmPFXP",
+  "optionId": "-1X3s26Wep5X",
+  "reason": "spawn synth at cosine=0.866",
+  "prevState": {
+   "sourceOptionId": "-1X3s26Wep5X",
+   "siblingId": "GQEl6vVJesZF"
+  },
+  "newState": {
+   "clusterId": "jyz-ZXvmPFXP",
+   "integratedOptions": [
+    "-1X3s26Wep5X",
+    "GQEl6vVJesZF"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253644995
+ },
+ {
+  "eventId": "pP2fGVrvl5R0s2HCyYLp",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "wO1ShUHdXMVs",
+  "optionId": "co8nN-7UJ-s8",
+  "reason": "cosine=0.851",
+  "prevState": {
+   "integratedOptions": [
+    "55epb9Xm0QU2",
+    "LQjbfSoiPZt0"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "55epb9Xm0QU2",
+    "LQjbfSoiPZt0",
+    "co8nN-7UJ-s8"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253676966
+ },
+ {
+  "eventId": "vPhPk7hMztEWLdRYuxl0",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Neo0KiJfA8GK",
+  "optionId": "yleYeAJlAw8D",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "Wfx8Gvw-W0Nz",
+    "gdI8FHVZPWUD",
+    "sIGZq7ujahzl",
+    "mmecPl2HFj9X",
+    "7HIMa1uWdpMs",
+    "MZBCv-LB9ZpZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0CUp2fLh55tX",
+    "ivupF2emgqLI",
+    "gdI8FHVZPWUD",
+    "sIGZq7ujahzl",
+    "mmecPl2HFj9X",
+    "7HIMa1uWdpMs",
+    "MZBCv-LB9ZpZ",
+    "yleYeAJlAw8D"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253738100
+ },
+ {
+  "eventId": "7C9kTdS8foBFg6C2cpYO",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "yleYeAJlAw8D",
+  "optionId": "Ed4ZhQskmiBZ",
+  "reason": "spawn synth at cosine=0.875",
+  "prevState": {
+   "sourceOptionId": "Ed4ZhQskmiBZ",
+   "siblingId": "Wfx8Gvw-W0Nz"
+  },
+  "newState": {
+   "clusterId": "yleYeAJlAw8D",
+   "integratedOptions": [
+    "Ed4ZhQskmiBZ",
+    "Wfx8Gvw-W0Nz"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253738102
+ },
+ {
+  "eventId": "BmTEHNo34fNafcX8w8i6",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "bly0jlFaZiN4",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "YuYo7hwMyG47",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253782012
+ },
+ {
+  "eventId": "b0lz5QY1hiLiB0XUuqQn",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "bly0jlFaZiN4",
+  "optionId": "OPILCPIBleDf",
+  "reason": "spawn synth at cosine=0.962",
+  "prevState": {
+   "sourceOptionId": "OPILCPIBleDf",
+   "siblingId": "YuYo7hwMyG47"
+  },
+  "newState": {
+   "clusterId": "bly0jlFaZiN4",
+   "integratedOptions": [
+    "OPILCPIBleDf",
+    "YuYo7hwMyG47"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253782014
+ },
+ {
+  "eventId": "ugU547miC0a1CtAM6l7J",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "hhFIh7MwYXGf",
+  "optionId": "rrC8l7vkuy6w",
+  "reason": "spawn synth at cosine=0.918",
+  "prevState": {
+   "sourceOptionId": "rrC8l7vkuy6w",
+   "siblingId": "uyu6ktNl1lZs"
+  },
+  "newState": {
+   "clusterId": "hhFIh7MwYXGf",
+   "integratedOptions": [
+    "rrC8l7vkuy6w",
+    "uyu6ktNl1lZs"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253820667
+ },
+ {
+  "eventId": "awbgW0OcNRV73Ni157Qf",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "mkcL6QK34P90",
+  "optionId": "hhFIh7MwYXGf",
+  "reason": "nest synthesis under theme (judge: הרחבת נגישות חינמית לפעילויות תרבות וחינוך מוזיקלי לילדים)",
+  "prevState": {
+   "integratedOptions": [
+    "rZz0V7kpLMJT",
+    "htTzXsf07Wxh"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rZz0V7kpLMJT",
+    "htTzXsf07Wxh",
+    "hhFIh7MwYXGf"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253823013
+ },
+ {
+  "eventId": "0DXDj7uTPOAK5T9Qur4c",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "MtrIK090Dcpc",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "5VsSH1lbpJTk",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253885941
+ },
+ {
+  "eventId": "60OLCTxMWShI0rzYtra2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MtrIK090Dcpc",
+  "optionId": "pPpmpAfSY0DD",
+  "reason": "spawn synth at cosine=0.915",
+  "prevState": {
+   "sourceOptionId": "pPpmpAfSY0DD",
+   "siblingId": "5VsSH1lbpJTk"
+  },
+  "newState": {
+   "clusterId": "MtrIK090Dcpc",
+   "integratedOptions": [
+    "pPpmpAfSY0DD",
+    "5VsSH1lbpJTk"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253885943
+ },
+ {
+  "eventId": "2Efv8nxPFvy0WiNZqzv3",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "pNEkedhNYMmX",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "pNEkedhNYMmX"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253943955
+ },
+ {
+  "eventId": "HC7UuhkAdaGGu8USWuj6",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pNEkedhNYMmX",
+  "optionId": "upADpwnR-yDy",
+  "reason": "spawn synth at cosine=0.931",
+  "prevState": {
+   "sourceOptionId": "upADpwnR-yDy",
+   "siblingId": "-zjXlbx7UgZH"
+  },
+  "newState": {
+   "clusterId": "pNEkedhNYMmX",
+   "integratedOptions": [
+    "upADpwnR-yDy",
+    "-zjXlbx7UgZH"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253943957
+ },
+ {
+  "eventId": "FSKIohSU79W033eOqGi0",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "q9p5780sVwpA",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "T2SFaKS876bF",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253966383
+ },
+ {
+  "eventId": "7McHorkRkNu7xA3jUwi4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "q9p5780sVwpA",
+  "optionId": "g-kDN-0lGslD",
+  "reason": "spawn synth at cosine=0.911",
+  "prevState": {
+   "sourceOptionId": "g-kDN-0lGslD",
+   "siblingId": "T2SFaKS876bF"
+  },
+  "newState": {
+   "clusterId": "q9p5780sVwpA",
+   "integratedOptions": [
+    "g-kDN-0lGslD",
+    "T2SFaKS876bF"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253966386
+ },
+ {
+  "eventId": "HmFh4gpbeLiiOgLHXpkm",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "XNeBJsqQoPVN",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "b6KEH9b12cS4",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA",
+    "XNeBJsqQoPVN"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253997689
+ },
+ {
+  "eventId": "jAc7gL9QMGM6keEiw0Wm",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "XNeBJsqQoPVN",
+  "optionId": "ooo3C-xiIpZg",
+  "reason": "spawn synth at cosine=0.839",
+  "prevState": {
+   "sourceOptionId": "ooo3C-xiIpZg",
+   "siblingId": "b6KEH9b12cS4"
+  },
+  "newState": {
+   "clusterId": "XNeBJsqQoPVN",
+   "integratedOptions": [
+    "ooo3C-xiIpZg",
+    "b6KEH9b12cS4"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787253997690
+ },
+ {
+  "eventId": "1i1eGOgk9O7ZqWRKpLyj",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "wO1ShUHdXMVs",
+  "optionId": "6wm31qnVN2re",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "55epb9Xm0QU2",
+    "LQjbfSoiPZt0",
+    "co8nN-7UJ-s8"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "55epb9Xm0QU2",
+    "LQjbfSoiPZt0",
+    "6wm31qnVN2re"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254035755
+ },
+ {
+  "eventId": "LMckRn5w8isRVzrkcr4h",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "6wm31qnVN2re",
+  "optionId": "RBoGWDH8B0oK",
+  "reason": "spawn synth at cosine=0.937",
+  "prevState": {
+   "sourceOptionId": "RBoGWDH8B0oK",
+   "siblingId": "co8nN-7UJ-s8"
+  },
+  "newState": {
+   "clusterId": "6wm31qnVN2re",
+   "integratedOptions": [
+    "RBoGWDH8B0oK",
+    "co8nN-7UJ-s8"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254035756
+ },
+ {
+  "eventId": "6pr5VqL4slPGu3skTqRB",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "on7-1fWx12vX",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "IsRbB2rhvTOS",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA",
+    "XNeBJsqQoPVN"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA",
+    "XNeBJsqQoPVN",
+    "on7-1fWx12vX"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254075006
+ },
+ {
+  "eventId": "S1sUUdIDNL5b7skUWUcN",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "on7-1fWx12vX",
+  "optionId": "TXcHB29xNkJg",
+  "reason": "spawn synth at cosine=0.839",
+  "prevState": {
+   "sourceOptionId": "TXcHB29xNkJg",
+   "siblingId": "IsRbB2rhvTOS"
+  },
+  "newState": {
+   "clusterId": "on7-1fWx12vX",
+   "integratedOptions": [
+    "TXcHB29xNkJg",
+    "IsRbB2rhvTOS"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254075008
+ },
+ {
+  "eventId": "ZeGkja1HWZCFJ2qF2AC5",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "KRpOyHQUzcTV",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA",
+    "XNeBJsqQoPVN",
+    "on7-1fWx12vX"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "-zjXlbx7UgZH",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA",
+    "XNeBJsqQoPVN",
+    "on7-1fWx12vX",
+    "KRpOyHQUzcTV"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254160051
+ },
+ {
+  "eventId": "MgbvTRmXWkfTRzjc0b5X",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "KRpOyHQUzcTV",
+  "optionId": "hRwhaaIxaB8J",
+  "reason": "spawn synth at cosine=0.847",
+  "prevState": {
+   "sourceOptionId": "hRwhaaIxaB8J",
+   "siblingId": "7CzV5xOrPXha"
+  },
+  "newState": {
+   "clusterId": "KRpOyHQUzcTV",
+   "integratedOptions": [
+    "hRwhaaIxaB8J",
+    "7CzV5xOrPXha"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254160053
+ },
+ {
+  "eventId": "GrXi8vmloeYASTggNiSO",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RlIASP2rDZ0l",
+  "optionId": "spuxCbtDYU-g",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "BGJXhIazzJbC",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA",
+    "XNeBJsqQoPVN",
+    "on7-1fWx12vX"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "OgY1P9wt7ljm",
+    "7CzV5xOrPXha",
+    "-zjXlbx7UgZH",
+    "LiVWN1sSpR6C",
+    "GfggNNUQdPmJ",
+    "bRiYwqHlGsUe",
+    "I7KDJSSyGSt-",
+    "hAshMdEEalrB",
+    "OlEJQbzMoCNj",
+    "0fqyF1atyEJN",
+    "pyppxDDWXAt3",
+    "u6rJtq29xKjQ",
+    "iLmEiqHDE4U8",
+    "IShoJlhzcX8g",
+    "4NiyPGBPBxTG",
+    "ARDW1qzvF7sV",
+    "XmTVhbYBW9yW",
+    "JPbikQUIMk7t",
+    "EfUtGPXpZ5f0",
+    "jyz-ZXvmPFXP",
+    "bly0jlFaZiN4",
+    "MtrIK090Dcpc",
+    "q9p5780sVwpA",
+    "XNeBJsqQoPVN",
+    "on7-1fWx12vX",
+    "spuxCbtDYU-g"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254162476
+ },
+ {
+  "eventId": "2DxNzYDtP8JWEVAhU3xn",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "spuxCbtDYU-g",
+  "optionId": "wxeGsiOkdKKg",
+  "reason": "spawn synth at cosine=0.849",
+  "prevState": {
+   "sourceOptionId": "wxeGsiOkdKKg",
+   "siblingId": "BGJXhIazzJbC"
+  },
+  "newState": {
+   "clusterId": "spuxCbtDYU-g",
+   "integratedOptions": [
+    "wxeGsiOkdKKg",
+    "BGJXhIazzJbC"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254162478
+ },
+ {
+  "eventId": "ngAs3gzMSUk9sybm7uzv",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "4ochMQJS0nvv",
+  "reason": "themes consolidated into \"ממשל עירוני ושירות לתושבים\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U",
+    "RDmVOufYBvr4",
+    "c7EynFe9CnF1"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "NCzmwO7diP-U",
+    "RDmVOufYBvr4",
+    "c7EynFe9CnF1",
+    "jh6rl66uzHMJ"
+   ],
+   "absorbed": [
+    "I75sthAVFeZl"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787254288927
+ }
+]

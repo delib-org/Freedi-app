@@ -25,6 +25,7 @@ and `score100.mjs` for the implementation.
 | `en-seed1234-consolidated` | en | same build, seed 1234 | **0.884** | **1.000** | 0.711 | **50/50** | 50 | 17 |
 | `en-seed42-memberjudge` | en | + consolidation judged on members; judge-once; scope rule | **0.865** | 0.990 | 0.678 | 49/50 | 49 | **10** |
 | `en-seed42-filingfix` | en | consolidation reverted; filing judge sees contents + unsure→NONE | **0.902** | 0.990 | 0.770 | 49/50 | 49 | 14 |
+| `he-seed42-large-perq` | he | per-question pin → `text-embedding-3-large` (global still 3-small) | **0.651** | 0.880 | 0.307 | 44/50 | 43 | 9 |
 
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
@@ -329,6 +330,62 @@ service request access" took business licensing, the corpus's own ambiguity
 gone, and it survives where the adjacency is real rather than a title
 illusion. The cosine topic-attach path, which bypasses the judge entirely, now
 contributes ~29% of misfiles and is the next cheapest target.
+
+## Finding 17 — the per-question model machinery works live; Hebrew's remaining gap is band calibration, and the cosine attach path is its amplifier
+
+`he-seed42-large-perq` is the first Hebrew run on the modern pipeline, and the
+validation run for the per-question embedding-model machinery (`5a8d37692`):
+the question pinned to `text-embedding-3-large` via
+`--set embeddingModel=...` while the global default stayed `3-small` — exactly
+production shape for the decided rollout. Build certified (fingerprint
+`95217308…` identical before/after, no mid-run rebuild).
+
+**The machinery is proven.** Verified mid-run from the emulator: vectors under
+the pinned question stamped `text-embedding-3-large` with the global env
+untouched; pin applied by the harness through the ordinary settings block;
+resolution, generation, guard and vector search all agreed. No re-embed loop,
+no cross-model comparisons.
+
+**The score: 0.651** — the best Hebrew number ever measured (0.066 at
+defaults; 0.369 with 3-large + hand-tuned bands on the OLD pipeline), but far
+under the English band (0.884–0.910). The decomposition says precisely where
+the gap lives:
+
+| layer | English (filingfix) | Hebrew (this run) |
+| --- | --- | --- |
+| synth F1 | 0.990, 0 false merges | 0.880, **6 false merges** |
+| topic F1 | 0.770 | **0.307** |
+| coverage | 99/100 | 97/100 |
+
+The topic collapse has one dominant cause: **a 45-member mega-theme**
+("בריאות נפשית קהילתית" — community mental health) holding statements from all
+eight other topics. Its audit trail shows how it grew: **25 judge-free cosine
+topic-attaches** plus 20 nest attaches once it had mass. The mechanism is the
+original Finding 1 black hole reborn through band mis-calibration: the topic
+band (0.60–0.78) was tuned for 3-small geometry, but Hebrew 3-large cross-topic
+cosines run right through it (cross-pair median 0.702 per `heSynth.mjs`), so
+the cosine gate admits cross-topic statements wholesale and the first
+centrally-placed theme accretes everything the judge never sees. The 6 false
+synth merges (4 within-topic near-misses like bus-frequency ↔ night-service)
+are the same story one band up — attach at 0.85 means something different in
+3-large Hebrew space.
+
+Two remediation leads, in order of likely value:
+
+1. **Route cosine topic-attaches through the filing judge** — the same
+   confirm-before-attach the nest path got in Finding 15. This one change
+   addresses BOTH Finding 16's English residue (~29% of misfiles) and the
+   mega-theme here: 25 of its 45 members entered through the unjudged path.
+2. **Re-calibrate the bands per embedding model** — the constants are
+   geometry-specific and now the geometry is per-question. The bands likely
+   want to live beside the pin (a per-model band set), measured the way the
+   3-small bands were (`synthAttachGate.mjs` / `centroidGate.mjs` re-run on
+   3-large Hebrew embeddings).
+
+Nothing about this run indicts the migration machinery — the pin did exactly
+what it was built to do. What it exposed is that "switch the model" was never
+the whole Hebrew story: the thresholds around the model are calibrated to a
+geometry, and moving one without the other re-opens an old failure mode.
 
 ## Finding 10 — consolidation under-merged because the judge could not see, and the cap was never the constraint
 
