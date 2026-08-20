@@ -55,7 +55,7 @@ import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
 import { countThanks, ResultsSwitch, type ResultsTab } from '../components/ResultsSwitch';
 import { RateScale, rateOptionFor } from '../components/RateScale';
-import { getConsensusPool, getSessionState } from '../lib/session';
+import { getConsensusPool, getSessionFlow, getSessionState } from '../lib/session';
 import {
 	advanceCycle,
 	applyCyclePatch,
@@ -97,7 +97,6 @@ import {
 	AgoraTopicPackage,
 	AGORA_AI_REVIEW,
 	AGORA_BRIDGING,
-	AGORA_CYCLE,
 	AGORA_LIMITS,
 	createAgoraCharacterReviewId,
 	createAgoraThreadKey,
@@ -363,7 +362,7 @@ const SENT_ACK_MS = 1400;
  * The deliberation square as a PERSONAL cycle (the book's protocol, self-
  * paced): my proposal (write, then improve on later laps) → evaluate a few
  * classmates' proposals → help someone with a suggestion — repeated for
- * AGORA_CYCLE.ROUNDS laps. No teacher-synchronized phases; the teacher only
+ * as many laps as the session's flow asks for. No teacher-synchronized phases; the teacher only
  * decides when the square closes (advance to results).
  */
 export function Deliberation(
@@ -371,11 +370,16 @@ export function Deliberation(
 ): m.Component<DeliberationAttrs> {
 	const { session, userId } = initialVnode.attrs;
 	/**
-	 * A civic square has no era behind it. The elders and the needs board are
-	 * both readings of two historical characters, and a civic session's "two
-	 * characters" are only the island's anchor stances wearing the schema — so
-	 * they would offer a role-play that was never played. Everything else about
-	 * the square is identical, which is the point of the shared track.
+	 * `civic` is now only about WHERE this square came from — an Odyssey island,
+	 * which is what earns the island header and the way back to the map.
+	 *
+	 * What the square SHOWS is a separate question, and it is the organizer's
+	 * to answer. It used to be read off the mode: a civic session hid the elders
+	 * and the needs board, because its "two characters" are the island's anchor
+	 * stances wearing the schema and would have offered a role-play that was
+	 * never played. That is still the default — it is what `resolveSessionFlow`
+	 * folds for a civic session — but an event can now ask for them back, or
+	 * drop the stances that made them two-sided in the first place.
 	 */
 	const civic = session.sessionMode === AgoraSessionMode.civic;
 
@@ -771,7 +775,7 @@ export function Deliberation(
 		closeDock();
 		screen = 'others';
 		if (cycle.step === 'done') {
-			setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
+			setCycle({ round: getSessionFlow().rounds, step: 'help' });
 		} else if (cycle.step !== 'help') {
 			setCycle({ step: 'help' });
 		} else {
@@ -971,7 +975,7 @@ export function Deliberation(
 		gapPrompt = null;
 		gapOffered = new Set();
 		gapPromptsThisLap = 0;
-		const advance = advanceCycle(cycle, AGORA_CYCLE.ROUNDS);
+		const advance = advanceCycle(cycle, getSessionFlow().rounds);
 		// The doorway moment: how far the class moved while this lap ran
 		if (!advance.finished) captureLapPulse();
 		commitCycle(advance);
@@ -1041,7 +1045,7 @@ export function Deliberation(
 						setCycle({ step: 'rate', rated: 0 });
 					} else if (cycle.step === 'done') {
 						// After the laps, "Others" means: keep helping
-						setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
+						setCycle({ round: getSessionFlow().rounds, step: 'help' });
 					} else {
 						m.redraw();
 					}
@@ -1451,7 +1455,7 @@ export function Deliberation(
 			}),
 			// The elders are an optional helper, not the loop — folded away until
 			// asked for, so the sheet's resting state is my text and my feedback
-			civic
+			!getSessionFlow().elders
 				? null
 				: workbenchSection('era', t('delib.ask_elders'), askSection(live, myProposal, topic), {
 						open: charactersOpen,
@@ -1462,7 +1466,7 @@ export function Deliberation(
 			// Open by default (explicit call, 2026-08-10): improving is writing
 			// too, and the two sides' needs are its raw material. It sits last
 			// in the sheet, so standing open costs the primary zone nothing.
-			civic
+			!getSessionFlow().needs
 				? null
 				: m(
 						'.workbench__section.workbench__section--plain',
@@ -2224,6 +2228,9 @@ export function Deliberation(
 
 		view(vnode) {
 			const { session: live, myParticipant, topic } = vnode.attrs;
+			// Read fresh each render: an organizer may re-script a running event,
+			// and the lap count has to follow without a reload.
+			const flow = getSessionFlow();
 			const { proposals, suggestions, myRatings, scores } = getDeliberationState();
 			// Mid-session rollout guard: already-rated proposals get watermarks
 			// once, so the square doesn't shout NEW at everything (no-op after)
@@ -2302,7 +2309,7 @@ export function Deliberation(
 							? m('.delib-splash__card', [
 									m(
 										'h2.delib-splash__title',
-										t('round.splash_title', { n: splash.round, total: AGORA_CYCLE.ROUNDS }),
+										t('round.splash_title', { n: splash.round, total: flow.rounds }),
 									),
 									m(
 										'.delib-splash__steps',
@@ -2384,9 +2391,9 @@ export function Deliberation(
 				m(DelibHud, {
 					step: cycle.step,
 					round: cycle.round,
-					rounds: AGORA_CYCLE.ROUNDS,
+					rounds: flow.rounds,
 					rated: cycle.rated,
-					ratingQuota: AGORA_CYCLE.RATINGS_PER_ROUND,
+					ratingQuota: flow.ratingsPerRound,
 					endsAt: live.roundEndsAt ?? undefined,
 					onResults: screen === 'results',
 				}),
@@ -2538,39 +2545,46 @@ export function Deliberation(
 								}),
 								// The self-check: whose need does this serve? Two toggles
 								// the student answers for themselves — no AI, no score,
-								// and nothing downstream reads them
-								m('.write-desk__selfcheck', [
-									m('p.write-desk__selfcheck-ask', t('delib.selfcheck_ask')),
-									m(
-										'.write-desk__selfcheck-chips',
-										topic.characters.map((character) => {
-											const checked = selfCheck.has(character.characterId);
+								// and nothing downstream reads them.
+								//
+								// The two names ARE the two sides, so an event that runs
+								// without sides has nothing to ask here: the chips would
+								// name stances nobody has been sorted by and invite the
+								// writer to take one.
+								!flow.stances
+									? null
+									: m('.write-desk__selfcheck', [
+											m('p.write-desk__selfcheck-ask', t('delib.selfcheck_ask')),
+											m(
+												'.write-desk__selfcheck-chips',
+												topic.characters.map((character) => {
+													const checked = selfCheck.has(character.characterId);
 
-											return m(
-												'button.write-desk__selfcheck-chip',
-												{
-													type: 'button',
-													class: checked ? 'write-desk__selfcheck-chip--on' : undefined,
-													'aria-pressed': String(checked),
-													onclick: () => {
-														if (checked) selfCheck.delete(character.characterId);
-														else selfCheck.add(character.characterId);
-													},
-												},
-												[
-													checked
-														? m(
-																'span.write-desk__selfcheck-mark',
-																{ 'aria-hidden': 'true' },
-																m(Icon, { name: 'check', size: 14 }),
-															)
-														: null,
-													character.name,
-												],
-											);
-										}),
-									),
-								]),
+													return m(
+														'button.write-desk__selfcheck-chip',
+														{
+															type: 'button',
+															class: checked ? 'write-desk__selfcheck-chip--on' : undefined,
+															'aria-pressed': String(checked),
+															onclick: () => {
+																if (checked) selfCheck.delete(character.characterId);
+																else selfCheck.add(character.characterId);
+															},
+														},
+														[
+															checked
+																? m(
+																		'span.write-desk__selfcheck-mark',
+																		{ 'aria-hidden': 'true' },
+																		m(Icon, { name: 'check', size: 14 }),
+																	)
+																: null,
+															character.name,
+														],
+													);
+												}),
+											),
+										]),
 								m('.delib__actions', [
 									m(
 										'button.btn.btn--primary.btn--full.btn--lg.write-desk__cta',
@@ -2647,7 +2661,7 @@ export function Deliberation(
 										])
 									: null,
 							]),
-							civic ? null : m(NeedsPeek, { topic, defaultOpen: true }),
+							flow.needs ? m(NeedsPeek, { topic, defaultOpen: true }) : null,
 						]),
 					]);
 				}
@@ -2703,7 +2717,7 @@ export function Deliberation(
 				) {
 					openStallId = focusHelpedId;
 				}
-				const quotaDone = cycle.rated >= AGORA_CYCLE.RATINGS_PER_ROUND;
+				const quotaDone = cycle.rated >= flow.ratingsPerRound;
 				const allWeighed =
 					square.length > 0 &&
 					square.every((proposal) => myRatings[proposal.statementId] !== undefined);
@@ -2748,7 +2762,7 @@ export function Deliberation(
 										),
 									),
 									canMoveOn ? onward : null,
-									civic ? null : m(NeedsPeek, { topic }),
+									flow.needs ? m(NeedsPeek, { topic }) : null,
 								]
 							: [
 									m('.text-center.stack', [
@@ -2776,7 +2790,7 @@ export function Deliberation(
 				if (focusHelpedId !== null && helpedById.has(focusHelpedId)) {
 					openStallId = focusHelpedId;
 				}
-				const lastLap = cycle.round >= AGORA_CYCLE.ROUNDS;
+				const lastLap = cycle.round >= flow.rounds;
 				const helpedNow = helpedThisLap.size > 0;
 				const forwardLabel = lastLap
 					? t('delib.finish_cycles')
@@ -2831,7 +2845,7 @@ export function Deliberation(
 										}),
 									),
 									forward,
-									civic ? null : m(NeedsPeek, { topic }),
+									flow.needs ? m(NeedsPeek, { topic }) : null,
 								]
 							: [m('p.text-center.lobby__status', t('delib.no_more')), forward],
 					]),
@@ -2871,7 +2885,7 @@ export function Deliberation(
 						'button.btn.btn--secondary.btn--full',
 						{
 							onclick: () => {
-								setCycle({ round: AGORA_CYCLE.ROUNDS, step: 'help' });
+								setCycle({ round: getSessionFlow().rounds, step: 'help' });
 							},
 						},
 						t('delib.keep_helping'),

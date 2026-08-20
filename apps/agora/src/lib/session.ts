@@ -7,11 +7,15 @@ import {
 	AgoraSessionSchema,
 	AgoraParticipantSchema,
 	AgoraStage,
+	AgoraSessionMode,
 	AgoraCampCensus,
+	ResolvedSessionFlow,
 	consensusPoolFrom,
 	createAgoraParticipantId,
+	resolveSessionFlow,
 	tallyAgoraCamps,
 } from '@freedi/shared-types';
+import { AGORA_THEME_COLOR, ODYSSEY_THEME, ODYSSEY_THEME_COLOR } from './theme';
 import { parse } from 'valibot';
 
 export interface SessionState {
@@ -43,6 +47,62 @@ let listeningSessionId: string | null = null;
 
 export function getSessionState(): Readonly<SessionState> {
 	return state;
+}
+
+/**
+ * Which beats this session runs.
+ *
+ * Every view asks here rather than testing `sessionMode === civic` where it
+ * stands. Those tests were the same question asked in eight places, and once
+ * an organizer can answer it differently per event, eight copies of the
+ * question is eight chances to disagree about one room.
+ *
+ * Memoised on the session object identity — the snapshot handler replaces it
+ * on every write, so this recomputes exactly when the session changes and not
+ * once per render.
+ */
+let flowCacheKey: AgoraSession | null = null;
+let flowCache: ResolvedSessionFlow = resolveSessionFlow({});
+
+export function getSessionFlow(): ResolvedSessionFlow {
+	if (state.session !== flowCacheKey) {
+		flowCacheKey = state.session;
+		flowCache = resolveSessionFlow(state.session ?? {});
+	}
+
+	return flowCache;
+}
+
+/**
+ * Dress the app in the colours of the place the player came from.
+ *
+ * A civic square was opened from an Odyssey island and is usually reached by
+ * walking out of one, so arriving in a different palette reads as a different
+ * product rather than the next room of the same one. The attribute goes on the
+ * document element, next to `dir` and `lang`, because the theme is a property
+ * of the whole page and not of any one view.
+ *
+ * The join route sets this from the gate's own URL before the session has
+ * loaded; this call is the correction, and it runs on every snapshot so a
+ * session that is re-scripted mid-event repaints with it.
+ */
+export function applySessionTheme(session: AgoraSession | null): void {
+	if (typeof document === 'undefined') return;
+	const odyssey = session?.sessionMode === AgoraSessionMode.civic;
+
+	if (odyssey) {
+		document.documentElement.dataset.sessionTheme = ODYSSEY_THEME;
+	} else if (session) {
+		// Only a session we have actually read may take the theme OFF — absent
+		// state must leave the join route's guess alone, or every civic square
+		// flashes purple before its own colours arrive.
+		delete document.documentElement.dataset.sessionTheme;
+	}
+
+	const meta = document.querySelector('meta[name="theme-color"]');
+	if (meta && session) {
+		meta.setAttribute('content', odyssey ? ODYSSEY_THEME_COLOR : AGORA_THEME_COLOR);
+	}
 }
 
 /**
@@ -89,6 +149,7 @@ export function listenToSession(sessionId: string, userId: string): void {
 			}
 			try {
 				state.session = parse(AgoraSessionSchema, snapshot.data());
+				applySessionTheme(state.session);
 				state.loading = false;
 			} catch (error) {
 				console.error('[Session] Invalid session doc:', error);

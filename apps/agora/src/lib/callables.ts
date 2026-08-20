@@ -88,3 +88,34 @@ export async function generateTopicPackage(
 
 	return result.data;
 }
+
+export interface RerateStancesRequest {
+	sessionId: string;
+	/** stance statementId → attitude on the standard -1..1 scale */
+	ratings: Record<string, number>;
+}
+
+export interface RerateStancesResponse {
+	before: number | null;
+	after: number | null;
+	score: number | null;
+	participants: number;
+}
+
+/**
+ * The closing question of a camp-less event: where do you stand now?
+ *
+ * Writes the answers back onto the island's own evaluations — the same
+ * documents Odyssey's sea reads — and returns the room's convergence as it
+ * stands including this person, so the screen can show it immediately rather
+ * than waiting for the session snapshot to come back round.
+ */
+export async function rerateStances(request: RerateStancesRequest): Promise<RerateStancesResponse> {
+	const call = httpsCallable<RerateStancesRequest, RerateStancesResponse>(
+		functions,
+		'agoraRerateStances',
+	);
+	const result = await call(request);
+
+	return result.data;
+}

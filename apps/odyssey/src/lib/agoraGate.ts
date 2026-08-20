@@ -74,6 +74,12 @@ export async function enterIslandDeliberation(params: {
 
 	// Agora runs Mithril's hash router, so the `#!` is not decoration —
 	// without it the link lands on Agora's home screen instead of the join.
-	const query = handoff ? `?handoff=${encodeURIComponent(handoff)}` : '';
-	window.location.href = `${origin}/#!/join/${session.code}${query}`;
+	//
+	// `theme` travels with the code because Agora cannot know which world a
+	// session belongs to until its document loads, and that is one round trip
+	// after the page first paints — long enough to show the wrong colours and
+	// then change them under the player who just walked through a gate.
+	const query = new URLSearchParams({ theme: 'odyssey' });
+	if (handoff) query.set('handoff', handoff);
+	window.location.href = `${origin}/#!/join/${session.code}?${query.toString()}`;
 }

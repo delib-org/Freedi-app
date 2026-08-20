@@ -1,11 +1,12 @@
 import m from 'mithril';
 import { t, tCount } from '../lib/i18n';
+import { ConvergenceResults } from './ConvergenceResults';
 import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
 import { getDeliberationState, isSuggestionKind, listenToDeliberation } from '../lib/proposals';
 import { Icon, iconLabel, type IconName } from '../components/Icon';
-import { getConsensusPool, getSessionState } from '../lib/session';
+import { getConsensusPool, getSessionFlow, getSessionState } from '../lib/session';
 import { ResultsBoard } from '../components/ResultsBoard';
 import { HelpersBoard } from '../components/HelpersBoard';
 import { countThanks, ResultsSwitch, type ResultsTab } from '../components/ResultsSwitch';
@@ -317,6 +318,17 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 			// gone. Re-attach (idempotent per session+user) — the recap is the one
 			// screen allowed to total the lesson up, and it must not be blank.
 			if (myParticipant) listenToDeliberation(session.sessionId, myParticipant.userId);
+
+			/**
+			 * An event without camps has no bridging score to wait for, and would
+			 * otherwise sit on "computing" forever. What it has instead is the
+			 * distance the room closed — which climbs as people answer the closing
+			 * question, so this screen is live rather than final.
+			 */
+			const flow = getSessionFlow();
+			if (flow.scoreMode === 'convergence') {
+				return m(ConvergenceResults, { session, myParticipant });
+			}
 
 			if (!score) {
 				return m('.shell.shell--wide', [

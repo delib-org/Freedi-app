@@ -5,6 +5,7 @@ import {
 	listenToSession,
 	stopListening,
 	getSessionState,
+	getSessionFlow,
 	reportStageProgress,
 } from '../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../lib/topic';
@@ -24,6 +25,7 @@ import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
 import { Voting } from './Voting';
 import { Results } from './Results';
+import { ReRate } from './ReRate';
 import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
 
 /**
@@ -31,6 +33,59 @@ import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
  * stage (single source of truth). Scene stages are student-paced within
  * the teacher-controlled session stage.
  */
+/**
+ * Whether this person has already walked through the event's opening.
+ *
+ * Per session and per device, in sessionStorage rather than on the
+ * participant document: it is a "have I read this" mark, not a fact about the
+ * deliberation, and paying a Firestore write for it would put the opening
+ * screen behind a round trip.
+ */
+function framingKey(sessionId: string): string {
+	return `agora_${sessionId}_framing_done`;
+}
+
+/**
+ * The same "already done" mark for the closing re-rate.
+ *
+ * The participant document is the real record — the callable stamps
+ * `reratedAt` — but that stamp arrives a round trip after the button, and
+ * without a local mark the screen re-asks the question it just accepted.
+ */
+function rerateDone(sessionId: string): boolean {
+	try {
+		return sessionStorage.getItem(`agora_${sessionId}_rerated`) === '1';
+	} catch {
+		return false;
+	}
+}
+
+function markRerateDone(sessionId: string): void {
+	try {
+		sessionStorage.setItem(`agora_${sessionId}_rerated`, '1');
+	} catch {
+		// Storage refused: the participant doc's stamp still ends the loop.
+	}
+	m.redraw();
+}
+
+function framingSeen(sessionId: string): boolean {
+	try {
+		return sessionStorage.getItem(framingKey(sessionId)) === '1';
+	} catch {
+		return false;
+	}
+}
+
+function markFramingSeen(sessionId: string): void {
+	try {
+		sessionStorage.setItem(framingKey(sessionId), '1');
+	} catch {
+		// Storage refused: the opening simply shows again on the next load.
+	}
+	m.redraw();
+}
+
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
 	let userId = '';
@@ -92,6 +147,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 
 			const { session, participants, myParticipant, participantsLoaded, loading, error } =
 				getSessionState();
+			const flow = getSessionFlow();
 
 			if (loading || (!session && !error)) {
 				return m(
@@ -239,6 +295,24 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						if (!myParticipant) return noSeatYet();
 
 						/**
+						 * The opening beat, when the event asked for one.
+						 *
+						 * A civic square is drop-in — people arrive all afternoon, and
+						 * there is no teacher walking the room from one stage to the
+						 * next. So framing cannot be a stage of the session: making it
+						 * one would strand everybody who arrived after it ended. It is
+						 * a screen each person passes once, remembered per session on
+						 * their own device.
+						 */
+						if (flow.framing && !framingSeen(sessionId)) {
+							return m(SceneStage, {
+								scenes: scenesOf(AgoraSceneKind.intro),
+								storageKey: `agora_${sessionId}_framing`,
+								onFinish: () => markFramingSeen(sessionId),
+							});
+						}
+
+						/**
 						 * Nobody enters the square without a side.
 						 *
 						 * A student who joined after the class placed itself — or whose
@@ -251,7 +325,11 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						 * 0 — it hasn't moved yet". One screen, once, and the square
 						 * measures what it says it measures.
 						 */
-						if (myParticipant.campPosition === undefined) {
+						//
+						// Unless the event runs without sides at all, in which case
+						// there is nothing to catch up on and the screen would be
+						// asking a question the organizer deliberately removed.
+						if (flow.stances && myParticipant.campPosition === undefined) {
 							return m(Positioning, { topic, myParticipant, catchUp: true });
 						}
 
@@ -266,11 +344,37 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					}
 
 					case AgoraStage.results:
-					case AgoraStage.ended:
+					case AgoraStage.ended: {
+						/**
+						 * The closing question, for an event scored on whether the room
+						 * came together.
+						 *
+						 * It has to be asked before the results, because the results ARE
+						 * the answer: the score is the distance between where people
+						 * started and where they ended, and there is no second chance to
+						 * collect the second half. Asked once per person — a participant
+						 * who has already answered goes straight through, and so does
+						 * anyone who arrived without a starting position to compare
+						 * against.
+						 */
+						if (
+							flow.scoreMode === 'convergence' &&
+							myParticipant &&
+							myParticipant.stanceBaseline &&
+							!myParticipant.reratedAt &&
+							!rerateDone(sessionId)
+						) {
+							return m(ReRate, {
+								session,
+								onDone: () => markRerateDone(sessionId),
+							});
+						}
+
 						// myParticipant carries the student's own ledger — the game
 						// announces every +1 and +2 during play and this is the only
 						// screen allowed to total them up
 						return m(Results, { session, topic, myParticipant });
+					}
 
 					default:
 						return m('.shell', [

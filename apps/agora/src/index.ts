@@ -14,6 +14,7 @@ import './styles/icons.scss';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { getSessionState } from './lib/session';
+import { applyRememberedTheme } from './lib/theme';
 import { Home } from './views/Home';
 import { JoinSession } from './views/JoinSession';
 import { GameController } from './views/GameController';
@@ -21,6 +22,11 @@ import { TeacherHome } from './views/teacher/TeacherHome';
 import { TeacherSession } from './views/teacher/TeacherSession';
 import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
+
+// Before anything paints: a civic square remembered from an earlier load
+// wears its colours from the first frame rather than flashing the classroom
+// palette while its session document is still in flight.
+applyRememberedTheme();
 
 initAuth();
 // A teacher whose popup was blocked came back via a full page redirect; this

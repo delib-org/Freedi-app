@@ -3,6 +3,7 @@ import { t } from '../lib/i18n';
 import { ensureUser, signInWithHandoff } from '../lib/user';
 import { joinSession } from '../lib/callables';
 import { findSessionByCode } from '../lib/teacher';
+import { ODYSSEY_THEME, rememberSessionTheme } from '../lib/theme';
 import {
 	AgoraDeviceMode,
 	AgoraSessionStatus,
@@ -32,6 +33,15 @@ export function JoinSession(
 	 * with no camp, which is exactly what an anonymous join has always been.
 	 */
 	async function establishIdentity(): Promise<void> {
+		// The gate says which world this code belongs to, and it says so a whole
+		// round trip before the session document could. Recording it here is what
+		// lets the square be the right colour on its first frame.
+		const theme = m.route.param('theme');
+		if (theme === 'odyssey') {
+			rememberSessionTheme(ODYSSEY_THEME);
+			document.documentElement.dataset.sessionTheme = ODYSSEY_THEME;
+		}
+
 		const handoff = m.route.param('handoff');
 		if (handoff) {
 			try {
