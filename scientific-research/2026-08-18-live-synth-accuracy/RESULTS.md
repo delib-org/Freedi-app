@@ -24,6 +24,7 @@ and `score100.mjs` for the implementation.
 | `en-seed7-consolidated` | en | same build, seed 7 | **0.905** | **1.000** | 0.763 | **50/50** | 50 | 10 |
 | `en-seed1234-consolidated` | en | same build, seed 1234 | **0.884** | **1.000** | 0.711 | **50/50** | 50 | 17 |
 | `en-seed42-memberjudge` | en | + consolidation judged on members; judge-once; scope rule | **0.865** | 0.990 | 0.678 | 49/50 | 49 | **10** |
+| `en-seed42-filingfix` | en | consolidation reverted; filing judge sees contents + unsure→NONE | **0.902** | 0.990 | 0.770 | 49/50 | 49 | 14 |
 
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
@@ -278,6 +279,56 @@ warning about exactly that gap. The fix is measured, ported, and verified — an
 it is not *believed* until a live full-corpus run confirms it. Also still open:
 the ~8 cosine topic-attaches per run bypass this judge entirely (1 of 8
 misfiled live).
+
+## Finding 16 — the filing fix survives its live run: permanent misfiles halve, composite back in band
+
+`en-seed42-filingfix` is the full-corpus confirmation for Finding 15: shipped
+defaults, seed 42, HEAD `d576f27f4`, build certified (lib fingerprint
+`f4e8894f…` byte-identical before and after, newest `lib` mtime predates the
+run start, so no mid-run reload). Three statements hit the 45s settle cap —
+noted, same shape as prior certified runs.
+
+| | baseline | `memberjudge` | **`filingfix`** |
+| --- | --- | --- | --- |
+| accuracy | 0.910 | 0.865 | **0.902** |
+| synth F1 | 1.000 | 0.990 | 0.990 (49/50, P=1.000, 0 false merges) |
+| topic F1 | 0.775 | 0.678 | **0.770** |
+| themes (true 10) | 11 | 10 | 14 |
+| mixed headings / foreign statements | 3 / 12 | 2 / 20 | 3 / 10 |
+
+**The primary metric — the one the fix targeted — moved live.** Scored by the
+same certified reconstruction (fingerprint EXACT MATCH, at the second of two
+back-to-back sweeps' listing instants):
+
+```
+                      memberjudge     filingfix
+judged decisions           58             54
+misfiles (permanent)       12              5      rate 20.7% → 9.3%
+over-NONEs (reversible)    10             17
+```
+
+Per-decision *accuracy* is flat (62.1% → 59.3%) — by design. The fix does not
+make the judge smarter; it moves its errors from the permanent kind to the
+reversible kind. The reversible kind then actually got repaired: the sweep
+merged 13 donor headings, 12 same-topic, 1 adjacent miss (community gardens
+[parks] into "Urban Food Sustainability" [environment]) — and the judge-once
+fingerprint was exercised live, matching the reconstruction exactly.
+
+The composite lands at 0.902, inside the certified band (0.884–0.910) — which
+is the honest claim: **on a single run the composite cannot resolve the fix's
+effect; what is resolved is the error composition** (misfiles halved, end-state
+foreign statements 10 vs baseline's 12, spread over 14 slightly-duplicated
+headings instead of 11).
+
+**What the residue teaches.** All 5 judged misfiles (plus 2 of 8 cosine
+attaches) went to two headings: "Community and Cultural Amenities" took five
+parks proposals — contents shown and contents genuinely adjacent (festivals and
+community events DO neighbour playgrounds and pocket parks) — and "Municipal
+service request access" took business licensing, the corpus's own ambiguity
+(licensing IS a municipal procedure). The attractor mechanism is weakened, not
+gone, and it survives where the adjacency is real rather than a title
+illusion. The cosine topic-attach path, which bypasses the judge entirely, now
+contributes ~29% of misfiles and is the next cheapest target.
 
 ## Finding 10 — consolidation under-merged because the judge could not see, and the cap was never the constraint
 

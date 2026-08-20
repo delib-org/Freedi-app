@@ -228,16 +228,29 @@ for (const s of sweeps) {
 	console.log(`  sweep at ${new Date(s.start).toISOString().slice(11, 19)}: ${themesAt(s.start - 1).length} visible themes`);
 }
 if (sweepState[0]) {
-	const at = sweepState[0].judgedAt;
-	const fp = themesAt(at)
-		.map((t) => `${t.id}:${t.memberIds.length}`)
-		.sort()
-		.join('|');
-	const ok = fp === sweepState[0].fingerprint;
-	console.log(`  fingerprint @judgedAt: ${ok ? 'EXACT MATCH' : 'MISMATCH'}`);
-	if (!ok) {
+	// The recorded fingerprint is of the theme set the sweep LISTED — i.e. the
+	// state just before that sweep's merges — while judgedAt is stamped after
+	// they were applied. When the final sweep proposed no merges the two
+	// instants coincide; when it did, the pre-merge instant is the honest one.
+	// Candidates: judgedAt itself, and the instant before EVERY merge event —
+	// two sweeps can run back-to-back (the pump and the schedule), in which case
+	// the recorded fingerprint is the second sweep's listing, an instant that
+	// sits between the first sweep's merges and its own.
+	const candidates = [
+		{ label: '@judgedAt', at: sweepState[0].judgedAt },
+		...mergeTs.map((ts) => ({ label: `@pre-merge ${new Date(ts).toISOString().slice(11, 19)}`, at: ts - 1 })),
+	];
+	const fpAt = (at) =>
+		themesAt(at)
+			.map((t) => `${t.id}:${t.memberIds.length}`)
+			.sort()
+			.join('|');
+	const hit = candidates.find((c) => fpAt(c.at) === sweepState[0].fingerprint);
+	if (hit) console.log(`  fingerprint: EXACT MATCH (${hit.label})`);
+	else {
+		console.log('  fingerprint: MISMATCH at every candidate instant');
 		console.log(`    live : ${sweepState[0].fingerprint}`);
-		console.log(`    built: ${fp}`);
+		for (const c of candidates) console.log(`    built ${c.label}: ${fpAt(c.at)}`);
 	}
 }
 

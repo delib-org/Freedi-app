@@ -1,0 +1,1199 @@
+[
+  {
+    "action": "review-queued",
+    "timestamp": 1787245254135,
+    "optionId": "Oj7xt7mqTEYW",
+    "reason": "gray-band match (no auto-action) (cosine=0.660)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245256276,
+    "optionId": "0J8gfw-ic1ln",
+    "reason": "gray-band match (no auto-action) (cosine=0.649)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245290447,
+    "optionId": "etVI8E0tK1vk",
+    "reason": "gray-band match (no auto-action) (cosine=0.676)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245316872,
+    "optionId": "tsC6ibIwtYcO",
+    "reason": "gray-band match (no auto-action) (cosine=0.681)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245345035,
+    "optionId": "ipQ3Gfw7lBEU",
+    "reason": "gray-band match (no auto-action) (cosine=0.727)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245374090,
+    "optionId": "5pGxaFw3olxO",
+    "reason": "gray-band match (no auto-action) (cosine=0.693)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245403300,
+    "optionId": "V1IJRKi-T4xu",
+    "reason": "gray-band match (no auto-action) (cosine=0.704)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787245436139,
+    "clusterId": "k5EUTbDBWN3z",
+    "optionId": "FQq9A3QQKeOJ",
+    "reason": "spawn synth at cosine=0.907",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787245437686,
+    "clusterId": "DH5V5arOwtIK",
+    "optionId": "k5EUTbDBWN3z",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245468883,
+    "optionId": "PLlJfmwNcq7V",
+    "reason": "gray-band match (no auto-action) (cosine=0.719)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245500957,
+    "optionId": "WnIJmLjkHaiT",
+    "reason": "gray-band match (no auto-action) (cosine=0.663)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245530256,
+    "optionId": "0SLuAQzEoNjA",
+    "reason": "gray-band match (no auto-action) (cosine=0.728)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245566069,
+    "optionId": "fmOXiRwCLWzA",
+    "reason": "gray-band match (no auto-action) (cosine=0.724)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245597898,
+    "optionId": "jex5G6jqwdBU",
+    "reason": "gray-band match (no auto-action) (cosine=0.743)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245634831,
+    "optionId": "L0wPoaa9hDTT",
+    "reason": "gray-band match (no auto-action) (cosine=0.776)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245663958,
+    "optionId": "XfXZef7E1GC6",
+    "reason": "gray-band match (no auto-action) (cosine=0.700)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245693233,
+    "optionId": "yZwg1j22n8Fk",
+    "reason": "gray-band match (no auto-action) (cosine=0.779)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245723785,
+    "optionId": "F8iZPkikzmIy",
+    "reason": "gray-band match (no auto-action) (cosine=0.705)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245754167,
+    "optionId": "HIa6Zd-7S-Tw",
+    "reason": "gray-band match (no auto-action) (cosine=0.813)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787245786020,
+    "clusterId": "ZS0C4Qr0g4YR",
+    "optionId": "jAqlYQwdiFsc",
+    "reason": "spawn synth at cosine=0.923",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787245788979,
+    "clusterId": "vVjox6IYU50Y",
+    "optionId": "ZS0C4Qr0g4YR",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245822273,
+    "optionId": "tthXBOB2D-mL",
+    "reason": "gray-band match (no auto-action) (cosine=0.731)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245854095,
+    "optionId": "upKeGb1suXlZ",
+    "reason": "gray-band match (no auto-action) (cosine=0.798)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245882677,
+    "optionId": "0JPtekfFjXt2",
+    "reason": "gray-band match (no auto-action) (cosine=0.725)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245912014,
+    "optionId": "uNSFK4289yuS",
+    "reason": "gray-band match (no auto-action) (cosine=0.734)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787245940690,
+    "optionId": "PHbGZQk9IoMJ",
+    "reason": "gray-band match (no auto-action) (cosine=0.757)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787245972169,
+    "clusterId": "ITowaWRe7w4J",
+    "optionId": "jGqmNP5rp5NT",
+    "reason": "spawn synth at cosine=0.905",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787245975555,
+    "clusterId": "DP6xjV0HiCt8",
+    "optionId": "ITowaWRe7w4J",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246007634,
+    "optionId": "3zLlNyAerTc4",
+    "reason": "gray-band match (no auto-action) (cosine=0.712)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246036861,
+    "optionId": "FvNaGfPPtG-3",
+    "reason": "gray-band match (no auto-action) (cosine=0.723)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246065883,
+    "optionId": "5utnv9-mejMl",
+    "reason": "gray-band match (no auto-action) (cosine=0.763)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246096967,
+    "clusterId": "h4579YQj2eJ4",
+    "optionId": "B1Nrh9a9bX8T",
+    "reason": "spawn synth at cosine=0.943",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246102278,
+    "clusterId": "7NKoV5kO4Zai",
+    "optionId": "h4579YQj2eJ4",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246138841,
+    "clusterId": "gqqEIOh7Gzjb",
+    "optionId": "6g8npVsUsBLc",
+    "reason": "spawn synth at cosine=0.911",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787246143446,
+    "clusterId": "vVjox6IYU50Y",
+    "optionId": "gqqEIOh7Gzjb",
+    "reason": "nest synthesis under theme (judge: Both proposals improve residents’ ability to use and navigate city bus service.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246175148,
+    "optionId": "q7eu27jRCk4N",
+    "reason": "gray-band match (no auto-action) (cosine=0.758)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246208052,
+    "optionId": "oWavnz0tzlsv",
+    "reason": "gray-band match (no auto-action) (cosine=0.805)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246236328,
+    "optionId": "9eXtaWkWQP3o",
+    "reason": "gray-band match (no auto-action) (cosine=0.737)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246267621,
+    "clusterId": "tJ1OxBjOPqVi",
+    "optionId": "L6VFiIwdXZaP",
+    "reason": "spawn synth at cosine=0.942",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246271227,
+    "clusterId": "Faf5shBkRJFi",
+    "optionId": "tJ1OxBjOPqVi",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246302800,
+    "optionId": "no7CMEidk1SB",
+    "reason": "gray-band match (no auto-action) (cosine=0.727)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246338253,
+    "optionId": "oXXlC6ZmyJze",
+    "reason": "gray-band match (no auto-action) (cosine=0.744)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246369828,
+    "clusterId": "rLWoUUr0y0Ek",
+    "optionId": "Fh8CFxBiVAxq",
+    "reason": "spawn synth at cosine=0.936",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246373043,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "rLWoUUr0y0Ek",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787246401629,
+    "clusterId": "7NKoV5kO4Zai",
+    "optionId": "-KDCyoQf1n0e",
+    "reason": "cosine=0.815",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246434211,
+    "clusterId": "1zDqH46QPeb2",
+    "optionId": "9j7wq1jSFJah",
+    "reason": "spawn synth at cosine=0.943",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246437957,
+    "clusterId": "p67v6XH0n4ZD",
+    "optionId": "1zDqH46QPeb2",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246476407,
+    "optionId": "Zr-e2U7iYIgx",
+    "reason": "gray-band match (no auto-action) (cosine=0.761)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787246505936,
+    "clusterId": "Faf5shBkRJFi",
+    "optionId": "Tw57Zwc3mop5",
+    "reason": "option filed under theme (judge: Surveillance cameras and improved lighting both enhance safety in crime-prone public areas.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246544147,
+    "clusterId": "1hAyJqfYhQKQ",
+    "optionId": "meQNMO8B-1mJ",
+    "reason": "spawn synth at cosine=0.913",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246547021,
+    "clusterId": "q-EPu0I9RTHh",
+    "optionId": "1hAyJqfYhQKQ",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246577637,
+    "optionId": "2JLZbYn52B3D",
+    "reason": "gray-band match (no auto-action) (cosine=0.709)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246615045,
+    "optionId": "hURvRfcI3suT",
+    "reason": "gray-band match (no auto-action) (cosine=0.798)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246645931,
+    "clusterId": "8tWk7XwsqZNQ",
+    "optionId": "aogukqJj2TtE",
+    "reason": "spawn synth at cosine=0.915",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787246650273,
+    "clusterId": "7NKoV5kO4Zai",
+    "optionId": "8tWk7XwsqZNQ",
+    "reason": "nest synthesis under theme (judge: It addresses reducing disposable waste, aligning with composting and recyclable-material collection.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787246683592,
+    "clusterId": "DP6xjV0HiCt8",
+    "optionId": "Tomi8lRp8CZu",
+    "reason": "option filed under theme (judge: Expands online access to municipal services and procedures.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246714703,
+    "clusterId": "CVNGEHKTG-uJ",
+    "optionId": "OgdcEJqTDjez",
+    "reason": "spawn synth at cosine=0.909",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246719101,
+    "clusterId": "5K8EZJsn3F9r",
+    "optionId": "CVNGEHKTG-uJ",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787246750861,
+    "clusterId": "Faf5shBkRJFi",
+    "optionId": "G0kmig0NFloZ",
+    "reason": "option filed under theme (judge: Traffic-calming measures improve pedestrian safety near schools, matching the topic’s public safety focus.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246782507,
+    "clusterId": "8O3L7CYkfmmG",
+    "optionId": "-T1HXlkmjF5l",
+    "reason": "spawn synth at cosine=0.918",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246786071,
+    "clusterId": "xk4qvf3T2hA1",
+    "optionId": "8O3L7CYkfmmG",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787246833583,
+    "clusterId": "oED5mYjRhowu",
+    "reason": "themes consolidated into \"Community and Cultural Amenities\" (1 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246837480,
+    "optionId": "LWJ7ObBBVwjr",
+    "reason": "gray-band match (no auto-action) (cosine=0.753)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246866474,
+    "optionId": "izxP7NQKT6RA",
+    "reason": "gray-band match (no auto-action) (cosine=0.774)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246898138,
+    "clusterId": "uH0gTC2YwPNi",
+    "optionId": "7JPqsNxUNyWN",
+    "reason": "spawn synth at cosine=0.896",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787246901161,
+    "clusterId": "ld5g4anEDIAl",
+    "optionId": "uH0gTC2YwPNi",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787246940628,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "aNIRVlPV5JFZ",
+    "reason": "option filed under theme (judge: Accessible playgrounds are community amenities improving inclusive public recreation.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787246970503,
+    "optionId": "yYtlJ3TAZWZb",
+    "reason": "gray-band match (no auto-action) (cosine=0.763)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247001289,
+    "clusterId": "m9xttjo-ElWy",
+    "optionId": "hLIa34GRv9-8",
+    "reason": "spawn synth at cosine=0.962",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247006815,
+    "clusterId": "OVpTnQtIu9QZ",
+    "optionId": "m9xttjo-ElWy",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247036325,
+    "clusterId": "ld5g4anEDIAl",
+    "optionId": "V4B7iumCvOcP",
+    "reason": "cosine=0.795",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247069944,
+    "clusterId": "s1Tnxtzlwaat",
+    "optionId": "wELpWvHKQPgz",
+    "reason": "spawn synth at cosine=0.916",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247073843,
+    "clusterId": "RAYliKOeywBp",
+    "optionId": "s1Tnxtzlwaat",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247107452,
+    "clusterId": "P-fKDubSZNRS",
+    "optionId": "k7ORxpMKtWY0",
+    "reason": "spawn synth at cosine=0.989",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247110884,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "P-fKDubSZNRS",
+    "reason": "nest synthesis under theme (judge: Expands access to cultural amenities, alongside libraries, festivals, and inclusive community recreation.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247144870,
+    "clusterId": "Yb2ef9uzahpF",
+    "optionId": "E1048q5c91ZY",
+    "reason": "spawn synth at cosine=0.944",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247147569,
+    "clusterId": "ld5g4anEDIAl",
+    "optionId": "Yb2ef9uzahpF",
+    "reason": "nest synthesis under theme (judge: Expands residential supply through adaptive reuse, fitting the affordable housing development focus.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247184033,
+    "clusterId": "s-lhqScjVBgJ",
+    "optionId": "wIFJ6yjypekz",
+    "reason": "spawn synth at cosine=0.909",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247187673,
+    "clusterId": "Z5nhS-I5xXmc",
+    "optionId": "s-lhqScjVBgJ",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247231272,
+    "clusterId": "ZJabn6N4QkbZ",
+    "optionId": "E76aJR-NWIHo",
+    "reason": "spawn synth at cosine=0.886",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247233441,
+    "clusterId": "Faf5shBkRJFi",
+    "optionId": "ZJabn6N4QkbZ",
+    "reason": "nest synthesis under theme (judge: Neighborhood beat patrols improve community safety alongside lighting, cameras, and traffic-calming measures.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247268434,
+    "clusterId": "vVjox6IYU50Y",
+    "optionId": "MfSOJZwOgpkf",
+    "reason": "option filed under theme (judge: Cycling lanes improve transportation options and safe movement around the city.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247314207,
+    "clusterId": "PdLwEpx7CZV7",
+    "optionId": "v9OLnzpKxhh4",
+    "reason": "spawn synth at cosine=0.953",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247316403,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "PdLwEpx7CZV7",
+    "reason": "nest synthesis under theme (judge: Public art enhances shared cultural amenities and public spaces, like festivals and museums.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247346954,
+    "clusterId": "PxAGuYFUCmc0",
+    "optionId": "FUdWawGoCV8i",
+    "reason": "spawn synth at cosine=0.895",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247349626,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "PxAGuYFUCmc0",
+    "reason": "nest synthesis under theme (judge: Creates neighborhood recreational amenities for residents and their pets.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247378815,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "GqLMBWd4Xtrl",
+    "reason": "cosine=0.772",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247414266,
+    "clusterId": "ccR-vwVSdbUH",
+    "optionId": "D1QGMf2xJ0wq",
+    "reason": "spawn synth at cosine=0.942",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247417627,
+    "clusterId": "DK9cITq2Fvmu",
+    "optionId": "ccR-vwVSdbUH",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247465562,
+    "clusterId": "Faf5shBkRJFi",
+    "optionId": "BfprubXRHfbl",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247465564,
+    "clusterId": "BfprubXRHfbl",
+    "optionId": "mQOMXkg5zywe",
+    "reason": "spawn synth at cosine=0.896",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247497080,
+    "clusterId": "RfHOzAy8bdmx",
+    "optionId": "JVySu8cLkbNq",
+    "reason": "spawn synth at cosine=0.974",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247501131,
+    "clusterId": "FH4k6SS6UC1q",
+    "optionId": "RfHOzAy8bdmx",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247535913,
+    "clusterId": "ld5g4anEDIAl",
+    "optionId": "F8VCRW-uqHew",
+    "reason": "option filed under theme (judge: Rent transparency supports affordable housing access and helps tenants compare housing costs.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247566068,
+    "clusterId": "vVjox6IYU50Y",
+    "optionId": "QHfm8lwuFlhw",
+    "reason": "cosine=0.790",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247598833,
+    "clusterId": "7NKoV5kO4Zai",
+    "optionId": "FzMZOTxE0Tel",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247598835,
+    "clusterId": "FzMZOTxE0Tel",
+    "optionId": "1L-4iHJt7K62",
+    "reason": "spawn synth at cosine=0.908",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247632672,
+    "clusterId": "mtfqqxnXNBvZ",
+    "optionId": "PbGC78fsZrAb",
+    "reason": "spawn synth at cosine=0.917",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247636586,
+    "clusterId": "CHjakVgYspBy",
+    "optionId": "mtfqqxnXNBvZ",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247670302,
+    "clusterId": "ld5g4anEDIAl",
+    "optionId": "sSmUOx3uis3d",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247670304,
+    "clusterId": "sSmUOx3uis3d",
+    "optionId": "J3YQDpH0m6Hl",
+    "reason": "spawn synth at cosine=0.862",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247702558,
+    "clusterId": "B6GnVH8FghMf",
+    "optionId": "RcMBZmOuYjVA",
+    "reason": "spawn synth at cosine=0.912",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247709513,
+    "clusterId": "pqzMDkAMWsRA",
+    "optionId": "B6GnVH8FghMf",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247743565,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "MIxO6rsXBlSr",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247743567,
+    "clusterId": "MIxO6rsXBlSr",
+    "optionId": "A6rgfF2vro8-",
+    "reason": "spawn synth at cosine=0.894",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247776295,
+    "clusterId": "vVjox6IYU50Y",
+    "optionId": "pZPgBWNN3YWh",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247776297,
+    "clusterId": "pZPgBWNN3YWh",
+    "optionId": "f4uPC3QeDAE5",
+    "reason": "spawn synth at cosine=0.946",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247810346,
+    "clusterId": "Fac6eeMd7Dp7",
+    "optionId": "grpgZz8aoOpO",
+    "reason": "spawn synth at cosine=0.923",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247817903,
+    "clusterId": "tzW1l4z7i0hm",
+    "optionId": "Fac6eeMd7Dp7",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247850194,
+    "clusterId": "vVjox6IYU50Y",
+    "optionId": "OQib1JjP5q2a",
+    "reason": "cosine=0.753",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247880646,
+    "clusterId": "QsAiNmsoo8E4",
+    "optionId": "6CiAO4PO5m41",
+    "reason": "spawn synth at cosine=0.893",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247885054,
+    "clusterId": "zJG-bCxr8r2W",
+    "optionId": "QsAiNmsoo8E4",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247920754,
+    "clusterId": "Faf5shBkRJFi",
+    "optionId": "IFgy1twx-pyj",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247920758,
+    "clusterId": "IFgy1twx-pyj",
+    "optionId": "pgjH2AFFc1v2",
+    "reason": "spawn synth at cosine=0.992",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247953399,
+    "clusterId": "vVjox6IYU50Y",
+    "optionId": "wr7cysfr7Mxw",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787247953400,
+    "clusterId": "wr7cysfr7Mxw",
+    "optionId": "xkOAZ8ivsBgm",
+    "reason": "spawn synth at cosine=0.892",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787247985345,
+    "clusterId": "DP6xjV0HiCt8",
+    "optionId": "LCJud9Yq0vjm",
+    "reason": "cosine=0.801",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248017797,
+    "clusterId": "JqSkYOZ7EvNT",
+    "optionId": "uSoWv6za4zC9",
+    "reason": "spawn synth at cosine=0.909",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248022469,
+    "clusterId": "LoqIHPPfyXdL",
+    "optionId": "JqSkYOZ7EvNT",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248055838,
+    "clusterId": "DP6xjV0HiCt8",
+    "optionId": "VwpcXXlAo95B",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248055840,
+    "clusterId": "VwpcXXlAo95B",
+    "optionId": "9YIRwySUDcuG",
+    "reason": "spawn synth at cosine=0.907",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248088938,
+    "clusterId": "DP6xjV0HiCt8",
+    "optionId": "--sILhzR2G66",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248088940,
+    "clusterId": "--sILhzR2G66",
+    "optionId": "ZT7ZLp-vpUYh",
+    "reason": "spawn synth at cosine=0.850",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248122933,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "MDpH2HkokNKT",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248122934,
+    "clusterId": "MDpH2HkokNKT",
+    "optionId": "BAd0Jc5VKepb",
+    "reason": "spawn synth at cosine=0.981",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248152436,
+    "clusterId": "DP6xjV0HiCt8",
+    "optionId": "bJD261jUY22F",
+    "reason": "cosine=0.730",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248178917,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "FfqZT3D1W0-W",
+    "reason": "cosine=0.742",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248216326,
+    "clusterId": "Poz9-GLHIBdA",
+    "optionId": "m7fcEk939gHm",
+    "reason": "spawn synth at cosine=0.931",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248222069,
+    "clusterId": "l5kvsicbYusF",
+    "optionId": "Poz9-GLHIBdA",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248257096,
+    "clusterId": "UxIuhmA5xUiM",
+    "optionId": "dfqe-xfqO4f1",
+    "reason": "spawn synth at cosine=0.986",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248260307,
+    "clusterId": "OVpTnQtIu9QZ",
+    "optionId": "UxIuhmA5xUiM",
+    "reason": "nest synthesis under theme (judge: Both proposals address school education quality and strengthening classroom instruction.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248294715,
+    "clusterId": "oED5mYjRhowu",
+    "optionId": "vcM9llHxndqG",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248294716,
+    "clusterId": "vcM9llHxndqG",
+    "optionId": "MY4EGGvPKoFr",
+    "reason": "spawn synth at cosine=0.947",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248329623,
+    "clusterId": "hFVaFLZ2RZ-0",
+    "optionId": "EcqaxywG0DuZ",
+    "reason": "spawn synth at cosine=0.925",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248334143,
+    "clusterId": "TtTncBIcEtkI",
+    "optionId": "hFVaFLZ2RZ-0",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248367698,
+    "clusterId": "itMXRhib7OIa",
+    "optionId": "01wIjY3CiCNi",
+    "reason": "spawn synth at cosine=0.915",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248372174,
+    "clusterId": "8aoziUwzgBTW",
+    "optionId": "itMXRhib7OIa",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248406189,
+    "clusterId": "rJ2bPps-mrLY",
+    "optionId": "i-VfLmPSoCrP",
+    "reason": "spawn synth at cosine=0.863",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248408372,
+    "clusterId": "LoqIHPPfyXdL",
+    "optionId": "rJ2bPps-mrLY",
+    "reason": "nest synthesis under theme (judge: Expands neighborhood access to routine primary and preventive healthcare services.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248442487,
+    "clusterId": "ld5g4anEDIAl",
+    "optionId": "QSLdDQoMRM23",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248442489,
+    "clusterId": "QSLdDQoMRM23",
+    "optionId": "K6H7l5vSWvNF",
+    "reason": "spawn synth at cosine=0.880",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787248476382,
+    "clusterId": "DP6xjV0HiCt8",
+    "optionId": "sUu-03J4qdPp",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248476384,
+    "clusterId": "sUu-03J4qdPp",
+    "optionId": "wci-S9oPqHss",
+    "reason": "spawn synth at cosine=0.890",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248509655,
+    "clusterId": "4Y-KKgDEZGcT",
+    "optionId": "uqOTm-FrkF8f",
+    "reason": "spawn synth at cosine=0.975",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248513749,
+    "clusterId": "jVa68VmkyCS0",
+    "optionId": "4Y-KKgDEZGcT",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248546499,
+    "clusterId": "BLcTPLUpyZmn",
+    "optionId": "1HVfiCHKDohY",
+    "reason": "spawn synth at cosine=0.940",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248550425,
+    "clusterId": "SEe5Wq8uo9l-",
+    "optionId": "BLcTPLUpyZmn",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248583585,
+    "clusterId": "t5fRBGGfTsOQ",
+    "optionId": "YnFhuXdN2bw1",
+    "reason": "spawn synth at cosine=0.985",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787248588742,
+    "clusterId": "MEbdgtdcYImq",
+    "optionId": "t5fRBGGfTsOQ",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787248636164,
+    "clusterId": "OVpTnQtIu9QZ",
+    "reason": "themes consolidated into \"Schools and student support\" (3 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787248636215,
+    "clusterId": "LoqIHPPfyXdL",
+    "reason": "themes consolidated into \"Health and care services\" (3 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787248636233,
+    "clusterId": "ld5g4anEDIAl",
+    "reason": "themes consolidated into \"Affordable housing\" (1 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787248636257,
+    "clusterId": "xk4qvf3T2hA1",
+    "reason": "themes consolidated into \"Employment and local economy\" (3 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787248636292,
+    "clusterId": "DP6xjV0HiCt8",
+    "reason": "themes consolidated into \"Accessible and transparent government\" (1 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787248652952,
+    "clusterId": "7NKoV5kO4Zai",
+    "reason": "themes consolidated into \"Urban Food Sustainability\" (1 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  }
+]

@@ -129,9 +129,11 @@ Nothing deployed. Full results and findings in
    error now that the consolidation sweep (measured 6/6 clean merges) merges
    duplicate themes, while a misfile is permanent. F2 is ported into
    `assignToTheme` + both `nestSynthesis.ts` call sites and re-verified through
-   the compiled path. **Needs a live full-corpus run before it is believed** —
-   the offline bench scores per-decision accuracy on historical states, and
-   Finding 13 is the standing warning about state drift.
+   the compiled path. **Confirmed by a live full-corpus run**
+   (`en-seed42-filingfix`, build-certified): composite back in band at
+   **0.902**, topic F1 0.770, and the primary metric moved — permanent
+   misfiles 12 → 5 (20.7% → 9.3%), with the extra over-NONEs actually
+   repaired by the sweep live (12/13 donors merged same-topic). Finding 16.
 
    *Kept from the earlier attempt:* the judge-once fingerprint on the
    consolidation sweep. *Still open in this area:* the ~8 per run cosine
