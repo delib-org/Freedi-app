@@ -114,26 +114,28 @@ beforeEach(() => {
 });
 
 describe('consolidateThemes — what the judge is shown', () => {
-	it('passes the proposals filed under each heading, not just the heading', async () => {
+	it('offers every visible theme, by heading', async () => {
 		await consolidateThemes(PARENT, 'How do we improve the city?', 'test');
 
 		expect(groupEquivalentThemesMock).toHaveBeenCalledTimes(1);
-		const { themes } = groupEquivalentThemesMock.mock.calls[0][0];
-		const recycling = themes.find((t: { id: string }) => t.id === 't1');
-		expect(recycling.contents).toEqual(['Collect food scraps for composting']);
-		const air = themes.find((t: { id: string }) => t.id === 't2');
-		expect(air.contents).toEqual(['Install air sensors near schools']);
+		const { themes, questionContext } = groupEquivalentThemesMock.mock.calls[0][0];
+		expect(themes.map((t: { id: string }) => t.id).sort()).toEqual(['t1', 't2', 't3']);
+		expect(themes.find((t: { id: string }) => t.id === 't1').title).toBe(
+			'Household recycling services',
+		);
+		expect(questionContext).toBe('How do we improve the city?');
 	});
 
-	it('omits members whose documents are missing rather than emitting blanks', async () => {
-		statementDocs.set('t1', theme('t1', 'Household recycling services', ['s1', 'gone']));
-
+	/**
+	 * Showing the judge the member proposals was tried and reverted: it merged
+	 * more but less accurately, taking seed 42 from 0.910 to 0.865 by producing a
+	 * catch-all heading. RESULTS.md Finding 13.
+	 */
+	it('does NOT send member proposals — that variant was measured and reverted', async () => {
 		await consolidateThemes(PARENT, 'q', 'test');
 
 		const { themes } = groupEquivalentThemesMock.mock.calls[0][0];
-		expect(themes.find((t: { id: string }) => t.id === 't1').contents).toEqual([
-			'Collect food scraps for composting',
-		]);
+		for (const t of themes) expect(t.contents).toBeUndefined();
 	});
 });
 

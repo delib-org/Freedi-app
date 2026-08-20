@@ -148,19 +148,15 @@ export async function consolidateThemes(
 	triggerSource: string,
 ): Promise<ConsolidateResult> {
 	let themes: Statement[];
-	// Titles of everything under the question, so a heading can be shown with the
-	// proposals filed under it. Built from the SAME snapshot the themes come from
-	// — the members are ordinary option documents, so this costs no extra reads.
-	let titleById: Map<string, string>;
 	try {
 		const snap = await db()
 			.collection(Collections.statements)
 			.where('parentId', '==', parentId)
 			.where('statementType', '==', StatementType.option)
 			.get();
-		const all = snap.docs.map((d) => d.data() as Statement);
-		titleById = new Map(all.map((s) => [s.statementId, s.statement ?? '']));
-		themes = all.filter((s) => s.isCluster === true && s.hide !== true && isTopicCluster(s));
+		themes = snap.docs
+			.map((d) => d.data() as Statement)
+			.filter((s) => s.isCluster === true && s.hide !== true && isTopicCluster(s));
 	} catch (error) {
 		logger.warn('synthesis.consolidateThemes: theme listing failed', {
 			parentId,
@@ -184,9 +180,6 @@ export async function consolidateThemes(
 		id: t.statementId,
 		title: t.statement ?? '',
 		description: t.description,
-		contents: (t.integratedOptions ?? [])
-			.map((id) => titleById.get(id))
-			.filter((title): title is string => Boolean(title)),
 	}));
 	const groups = await groupEquivalentThemes({ themes: options, questionContext });
 	if (groups.length === 0) {
