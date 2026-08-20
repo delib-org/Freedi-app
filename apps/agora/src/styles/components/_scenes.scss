@@ -183,7 +183,7 @@
 			background: rgba(255, 255, 255, 0.3);
 
 			&--done {
-				background: rgba(255, 255, 255, 0.95);
+				background: var(--surface-veil);
 			}
 		}
 

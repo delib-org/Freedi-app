@@ -1,0 +1,131 @@
+// ============================================================================
+// Event screens — the closing question and what it measures
+//
+// Both belong to a session with no camps, and both are read once, at the end,
+// on a phone held by someone who has been deliberating for half an hour. So
+// they are plain: one column, generous spacing, and nothing competing with the
+// thing being asked or the number being reported.
+// ============================================================================
+
+.rerate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+  }
+
+  &__lead {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+
+  &__stances {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  &__stance {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding-block-end: var(--space-md);
+    border-block-end: 1px solid var(--border-subtle);
+
+    &:last-child {
+      border-block-end: none;
+      padding-block-end: 0;
+    }
+  }
+
+  &__stance-text {
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--text-primary);
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--danger-ink);
+  }
+
+  &__note {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    text-align: center;
+  }
+}
+
+.convergence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  text-align: center;
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+  }
+
+  // The one number the screen exists for. Colour carries the direction, and
+  // the wording carries it too — a room that moved apart must be legible to
+  // someone who cannot tell these hues apart.
+  &__headline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    line-height: 1.3;
+
+    &--closer {
+      color: var(--success);
+    }
+
+    &--apart {
+      color: var(--danger-ink);
+    }
+
+    &--pending {
+      color: var(--text-muted);
+    }
+  }
+
+  &__means {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-xl);
+  }
+
+  &__mean {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__mean-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+
+  &__mean-value {
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  &__counted {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+}

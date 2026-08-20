@@ -134,7 +134,7 @@
 			calc(var(--space-sm) + env(safe-area-inset-bottom, 0px));
 		// The bar belongs to the room it sits in — a white slab at the bottom
 		// of a tinted screen would read as "the page ends here"
-		background: rgba(255, 255, 255, 0.94);
+		background: var(--surface-veil);
 		backdrop-filter: blur(8px);
 		// The bar's top edge is the persistent mode beacon
 		border-block-start: 2px solid var(--mode-accent, var(--border-lantern));
@@ -450,7 +450,7 @@
 	}
 
 	.delib-nav {
-		background: rgba(255, 255, 255, 0.95);
+		background: var(--surface-veil);
 		border-block-start-color: var(--border-subtle);
 	}
 
@@ -513,7 +513,7 @@
 	// The nav is white in every room now; the wash stops where it starts.
 	.shell--delib.shell--mode-mine .delib-nav,
 	.shell--delib.shell--mode-peer .delib-nav {
-		background: rgba(255, 255, 255, 0.95);
+		background: var(--surface-veil);
 	}
 }
 

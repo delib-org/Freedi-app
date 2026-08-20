@@ -20,7 +20,7 @@
 		align-items: center;
 		gap: 2px;
 		padding: var(--space-sm) 2px;
-		background: #faf8ff;
+		background: var(--surface-tint);
 		border: 1.5px solid var(--border-subtle);
 		border-radius: var(--radius-tile);
 		cursor: pointer;
@@ -163,7 +163,7 @@
 		height: 8px;
 		border-radius: 50%;
 		// Festival confetti: the sparks cycle all five theme hues
-		background: radial-gradient(circle, #fff 0%, var(--spark-color, #ffd23f) 45%, transparent 75%);
+		background: radial-gradient(circle, var(--surface-flare) 0%, var(--spark-color, #ffd23f) 45%, transparent 75%);
 		transform: rotate(calc(var(--spark-index) * 20deg)) translateY(-30px);
 		opacity: 0;
 		animation: celebration-spark 1.1s ease-out both;
@@ -585,7 +585,7 @@
 		width: 10px;
 		height: 10px;
 		border-radius: 50%;
-		background: radial-gradient(circle, #fff 0%, var(--lantern-glow) 45%, transparent 70%);
+		background: radial-gradient(circle, var(--surface-flare) 0%, var(--lantern-glow) 45%, transparent 70%);
 	}
 
 	&__time {

@@ -1,0 +1,249 @@
+@use 'tokens' as *;
+
+// ============================================================================
+// The Odyssey theme — what a civic square wears
+//
+// A civic session is not a different product. It is the next room of a voyage
+// the player was already walking through: they marked positions on an island,
+// walked through a gate, and arrived here. Arriving in Agora's white-and-purple
+// classroom palette read as leaving one app and entering another, which is
+// exactly the seam the whole handoff exists to hide.
+//
+// So the square wears the sea it came from: Odyssey's navy page, gold frames,
+// cream text and cyan highlights (apps/odyssey/src/styles.css).
+//
+// HOW THIS WORKS, and why it is only a token block:
+// every colour in this app is a custom property on :root, so re-pointing the
+// properties repaints the whole app without touching a single component rule.
+// The attribute is set on the document element by lib/session.ts (and, one
+// round trip earlier, by the join route reading the gate's own URL).
+//
+// THE INK CONTRACT INVERTS HERE. In the light theme the page is white, the
+// default ink is dark, and a handful of saturated surfaces opt into
+// `ink-on-dark`. On navy that is upside down: the DEFAULT is light ink, and
+// the surfaces that used to be the exception are now simply the same as
+// everything else. The `.on-light` registry — white islands sitting on those
+// saturated surfaces — is the part that genuinely has to change, because a
+// white island on a navy page is no longer white. It is handled at the bottom
+// of this file.
+//
+// Kept deliberately: Assistant/Alef (Odyssey's Arial would undo the Hebrew
+// type work), the 18px base (below 16px iOS zooms every input on focus), and
+// every reduced-motion guard.
+// ============================================================================
+
+:root[data-session-theme='civic'] {
+  // --- Page: the sea ---
+  --bg-page: #06182c;
+  --bg-page-high: #0b2540;
+  --bg-card: rgba(15, 48, 73, 0.96);
+  --bg-card-solid: #0f3049;
+  --bg-overlay: rgba(2, 10, 20, 0.7);
+
+  // Parchment is furniture in the scene screens; on navy it is a lit panel
+  // rather than paper, or the framing scene arrives as a white sheet nailed
+  // to the sky.
+  --parchment: #0f3049;
+  --parchment-dim: #0b2540;
+
+  // --- MINE: gold instead of purple ---
+  // Odyssey frames what the player owns in gold, but look at HOW: its panels
+  // are dark with a gold hairline, and the only true gold FILL in the whole
+  // app is the primary button — which carries near-black text.
+  //
+  // That distinction is load-bearing here. `--mine` is a fill that white text
+  // sits on (tokens.scss hands every mine-filled surface white ink), so
+  // pointing it at bright gold would put white on #d8aa4b at 1.8:1. The deep
+  // golds below keep white legible, and the bright end of the family stays
+  // where it belongs: highlights, hairlines, and text on the navy page.
+  --mine-light: #e8b958;  // highlights and hairlines — NEVER under text
+  // Deep enough that even a 75%-alpha timestamp clears AA on it — the light
+  // theme accepts those runs at 2.9:1 as a known trade, and there was no
+  // reason to inherit the debt when the palette was being rebuilt anyway.
+  --mine: #5c4313;        // fills behind white text — 9.3:1
+  --mine-strong: #6b4d16; // filled controls — white label 7.8:1
+  --mine-deep: #42300d;   // borders, gradient bottoms, pressed
+  --mine-ink: #f3cf7e;    // gold TEXT on the navy page — 8.9:1
+
+  // --- OTHERS: a lit panel, edged in cyan ---
+  // The light theme says a classmate's card IS white. Navy's equivalent of
+  // "plain paper" is the panel, and cyan is the stroke that makes it an
+  // object — Odyssey uses exactly that for its own chips and inputs.
+  --peer-surface: #0f3049;
+  --peer-tile: #123a58;
+  --peer: #5edfff;
+  --peer-strong: #3fa9cc;
+  --peer-deep: #9fd7ff;
+
+  // --- Accents ---
+  // Odyssey's own attitude colours: they already read on this page, and a
+  // player has just spent a voyage learning what they mean.
+  --mint: #35d68d;        // meters and progress fills, never under text
+  --mint-deep: #22b699;
+  --mint-ink: #04231a;    // dark label ON a mint fill
+  // A count sits on this in white, so it is the deep end of Odyssey's rose
+  // rather than the bright one it uses for "oppose".
+  --pink: #c2384e;
+  --gold: #e8c860;
+  --amber: #ffd9a0;
+
+  // --- Camps ---
+  // Kept far apart in hue, and both lifted for a dark ground: the light
+  // theme's teal disappears against navy.
+  --camp-left: #ffb254;
+  --camp-left-strong: #e8912b;
+  --camp-left-glow: #ffd9a0;
+  --camp-right: #5edfff;
+  --camp-right-strong: #3fa9cc;
+  --camp-right-glow: #bfe6ff;
+  --camp-center: #9fb4c8;
+  --camp-center-glow: #d5ecf7;
+
+  // --- Semantic ---
+  // These are fills in the light theme and read as text here too, so they
+  // move to Odyssey's brighter attitude set rather than its darker one.
+  // --success and --danger are FILLS that carry white labels; the bright
+  // attitude colours Odyssey uses are the TEXT end of the same hues.
+  --success: #1f7d55;
+  --success-deep: #145c3f;
+  --danger: #b5344a;
+  --danger-ink: #ffb3bb;  // the same alarm, as text on navy
+  --warning: #8a6420;
+
+  // --- Opaque surfaces ---
+  // The whites that used to be hardcoded in the partials. On navy a card is a
+  // lit panel and a floating bar is a darker veil; the spark keeps its white
+  // core, because a spark IS a light.
+  --surface-raised: #0f3049;
+  --surface-veil: rgba(11, 37, 64, 0.94);
+  --surface-tint: #0e2a41;
+  --surface-flare: #fff3d1;
+
+  // --- Marks ---
+  --mark-edited: rgba(232, 200, 96, 0.22);
+  --mark-helped: rgba(53, 214, 141, 0.22);
+
+  // --- Depth ---
+  // Purple-tinted shadows turn to grey dirt on navy. Odyssey's own panel
+  // shadow is a plain deep black plus a gold inner hairline.
+  --shadow-card: 0 12px 35px rgba(0, 0, 0, 0.35);
+  --shadow-raised: 0 16px 44px rgba(0, 0, 0, 0.45);
+  --shadow-mine: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --glow-lantern: 0 0 18px rgba(232, 185, 88, 0.45);
+  --glow-marker: 0 0 14px rgba(94, 223, 255, 0.45);
+  --glow-mint: 0 0 16px rgba(53, 214, 141, 0.4);
+
+  // --- Washes ---
+  // Near-white in the light theme; near-navy here, or every tinted band
+  // becomes a bright slab.
+  --wash-mine-high: #12314b;
+  --wash-mine-mid: #0e2a41;
+  --wash-mine-low: #0a2137;
+  --wash-peer-high: #102f47;
+  --wash-peer-mid: #0d2740;
+  --wash-peer-low: #091f34;
+  --wash-square-high: #0f2c44;
+  --wash-square-mid: #0b243a;
+  --wash-square-low: #081d31;
+
+  // --- Gradients ---
+  // Every one of these is a real surface with white copy on it — the dock
+  // title, the nav's active tab, the pressed face, the recap's crest. A ramp
+  // is only as readable as its palest stop, so they stay in the deep half of
+  // the gold family. Bright gold belongs on hairlines and on the navy page,
+  // never under a word.
+  --grad-mine: linear-gradient(180deg, #6b4d16, #42300d);
+  --grad-mine-text: linear-gradient(180deg, #6b4d16, #4d370f);
+  --grad-mine-hero: linear-gradient(180deg, #123a58, #06182c);
+  --grad-mine-aa: linear-gradient(180deg, #5c4313, #42300d);
+  --grad-mine-selected: linear-gradient(180deg, #6b4d16, #42300d);
+  --grad-sheen: linear-gradient(180deg, rgba(255, 243, 209, 0.14), transparent);
+
+  // The default ink for the whole page, since the page is now dark.
+  @include ink-on-dark;
+
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+// The sea, rather than a festival sky. Odyssey layers a photographic ocean
+// under a navy wash; a CSS gradient carries the same weight here without
+// shipping an image into a stylesheet, and keeps the animated twinkle that
+// the reduced-motion rule in global.scss already knows how to switch off.
+:root[data-session-theme='civic'] body::after {
+  background-image:
+    radial-gradient(2px 2px at 12% 30%, rgba(94, 223, 255, 0.24) 50%, transparent 51%),
+    radial-gradient(2px 2px at 78% 42%, rgba(232, 185, 88, 0.22) 50%, transparent 51%),
+    radial-gradient(2px 2px at 40% 62%, rgba(191, 230, 255, 0.18) 50%, transparent 51%),
+    radial-gradient(2px 2px at 60% 22%, rgba(255, 243, 209, 0.2) 50%, transparent 51%),
+    radial-gradient(2.5px 2.5px at 25% 76%, rgba(232, 200, 96, 0.3) 50%, transparent 51%);
+}
+
+// A vignette, which is how Odyssey seats its content on the sea. Purely
+// decorative and behind everything, so it never intercepts a press.
+:root[data-session-theme='civic'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 10, 20, 0.55));
+}
+
+// ============================================================================
+// The one half of the ink contract that does invert
+//
+// `.on-light` exists so a WHITE island sitting on a saturated surface hands
+// the dark ink back. On navy there are no white islands: those same elements
+// are panels on a dark page like everything else, so handing them dark ink
+// paints near-black text onto a dark panel.
+//
+// Nothing else needed inverting. Because the mine family stays in the deep
+// half of the gold ramp, every mine-filled surface still carries white exactly
+// as the light theme's purple does — the registry in tokens.scss works
+// unchanged, which is the whole reason to define a theme in tokens.
+//
+// The list mirrors tokens.scss: when a surface is added there, it belongs here.
+// ============================================================================
+:root[data-session-theme='civic'] {
+  .on-light,
+  .shell--delib .proposal-dock__panel,
+  .write-desk__stuck,
+  .write-desk__selfcheck-chip,
+  .on-dark .helped__chip:not(.helped__chip--implemented),
+  .thread__msg--mine .helped__chip:not(.helped__chip--implemented),
+  .thread__msg--mine .thread__tag {
+    @include ink-on-dark;
+
+    color: var(--text-primary);
+  }
+}
+
+// ============================================================================
+// The fields a player writes their own words into
+//
+// Everywhere else, "mine" being a filled surface is the point — it is how
+// ownership reads at a glance. A textarea is the exception: it is the largest
+// owned object on the screen and it holds a paragraph of the player's own
+// text, so a filled ramp behind it stops being a signal and becomes a slab.
+//
+// Odyssey's own inputs are the sea itself, edged in gold. That is both more
+// legible under a long run of Hebrew and the gesture the player has already
+// learned on the islands, so the box they write a proposal in looks like the
+// box they wrote their island notes in.
+// ============================================================================
+:root[data-session-theme='civic'] {
+  .my-lantern__textarea,
+  .chat-page__input,
+  .text-input {
+    background: rgba(4, 18, 34, 0.85);
+    background-image: none;
+    border: 1px solid var(--mine-light);
+  }
+
+  .my-lantern__textarea::placeholder,
+  .chat-page__input::placeholder,
+  .text-input::placeholder {
+    color: rgba(255, 243, 209, 0.55);
+  }
+}

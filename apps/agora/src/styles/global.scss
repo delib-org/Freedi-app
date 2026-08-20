@@ -266,7 +266,7 @@ p {
   &--secondary {
     --btn-glow: rgba(70, 45, 150, 0.35);
 
-    background: #ffffff;
+    background: var(--surface-raised);
     color: var(--text-primary);
     border-color: var(--border-strong);
 

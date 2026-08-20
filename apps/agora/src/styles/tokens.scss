@@ -131,6 +131,16 @@
   --parchment: #ffffff;
   --parchment-dim: #f6f2fe;
 
+  // --- Opaque surfaces, named so a theme can move them ---
+  // These were hardcoded whites in the component partials, which is invisible
+  // to a palette change: a theme can re-point every token in this file and
+  // still leave a white slab in the middle of a navy page. Anything that
+  // paints a surface goes through one of these.
+  --surface-raised: #ffffff;             // a solid card/sheet
+  --surface-veil: rgba(255, 255, 255, 0.94);  // a bar floating over content
+  --surface-tint: #faf8ff;               // the faintest wash of a surface
+  --surface-flare: #ffffff;              // the white-hot centre of a spark
+
   // --- MINE: the purple family ---
   // Named by job, not by lightness, so a rule reads as a decision.
   --mine-light: #a98cf7;  // highlights, gradient tops, glows — NEVER under text

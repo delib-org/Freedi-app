@@ -803,7 +803,7 @@
 		height: 12px;
 		border-radius: 50%;
 		flex-shrink: 0;
-		background: radial-gradient(circle, #fff 0%, var(--lantern-glow) 50%, transparent 75%);
+		background: radial-gradient(circle, var(--surface-flare) 0%, var(--lantern-glow) 50%, transparent 75%);
 		animation: era-map-marker-pulse 1.6s ease-in-out infinite;
 	}
 
@@ -834,7 +834,7 @@
 		}
 
 		.toast__glow {
-			background: radial-gradient(circle, #fff 0%, var(--peer-glow) 50%, transparent 75%);
+			background: radial-gradient(circle, var(--surface-flare) 0%, var(--peer-glow) 50%, transparent 75%);
 		}
 	}
 }

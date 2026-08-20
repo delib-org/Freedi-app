@@ -11,6 +11,10 @@ import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
 import './styles/icons.scss';
+// Last, so the civic palette re-points tokens the components have already
+// been written against. Inert until the document element carries the
+// attribute — see lib/theme.ts.
+import './styles/theme-civic.scss';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { getSessionState } from './lib/session';

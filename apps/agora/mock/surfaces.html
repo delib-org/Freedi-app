@@ -9,6 +9,13 @@
 			// of the CSS proves nothing about the app.
 			import '../src/styles/global.scss';
 			import '../src/styles/components.scss';
+			// The civic palette, so the gauntlet can be run in either theme —
+			// `?theme=civic` paints every surface below in Odyssey's colours.
+			import '../src/styles/theme-civic.scss';
+
+			if (new URLSearchParams(location.search).get('theme') === 'civic') {
+				document.documentElement.dataset.sessionTheme = 'civic';
+			}
 		</script>
 		<style>
 			body {
@@ -25,7 +32,9 @@
 				/* The harness's own captions clear the type floor too, so a run of
 				   type-audit.mjs over this page reports only real app failures */
 				font-size: 1rem;
-				color: #6b628f;
+				/* The token, not the hex — a caption hardcoded to the light theme's
+				   muted ink reports as an app failure once the page turns navy. */
+				color: var(--text-muted);
 				margin: 0;
 			}
 		</style>
