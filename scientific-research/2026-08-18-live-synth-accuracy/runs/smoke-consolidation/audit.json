@@ -1,0 +1,153 @@
+[
+  {
+    "action": "review-queued",
+    "timestamp": 1787188460527,
+    "optionId": "JFMo-iTSIHeJ",
+    "reason": "gray-band match (no auto-action) (cosine=0.657)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188488094,
+    "optionId": "xYCuWiy7ufWK",
+    "reason": "gray-band match (no auto-action) (cosine=0.643)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188517768,
+    "optionId": "wzcUsmulJXPU",
+    "reason": "gray-band match (no auto-action) (cosine=0.665)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188545806,
+    "optionId": "uVI9sYf89dTw",
+    "reason": "gray-band match (no auto-action) (cosine=0.684)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188574262,
+    "optionId": "z9kFMdMF6DIp",
+    "reason": "gray-band match (no auto-action) (cosine=0.727)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188602810,
+    "optionId": "OM1bdkjAv0xL",
+    "reason": "gray-band match (no auto-action) (cosine=0.698)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188631988,
+    "optionId": "z1kQlDFqP-n5",
+    "reason": "gray-band match (no auto-action) (cosine=0.701)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787188665007,
+    "clusterId": "I926FFcBrdy-",
+    "optionId": "h3iiXwRWAvT1",
+    "reason": "spawn synth at cosine=0.902",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787188666122,
+    "clusterId": "dxhQvGBXBDMT",
+    "optionId": "I926FFcBrdy-",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188696683,
+    "optionId": "0qJlYV0qpXKd",
+    "reason": "gray-band match (no auto-action) (cosine=0.713)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188733226,
+    "optionId": "volyscSh3004",
+    "reason": "gray-band match (no auto-action) (cosine=0.688)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188769711,
+    "optionId": "fjLpSqJYpUtk",
+    "reason": "gray-band match (no auto-action) (cosine=0.712)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188856068,
+    "optionId": "CtN4J-8lCeNO",
+    "reason": "gray-band match (no auto-action) (cosine=0.714)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188860049,
+    "optionId": "2z6qR3a4KioC",
+    "reason": "gray-band match (no auto-action) (cosine=0.742)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188865318,
+    "optionId": "ycCv34U0eY48",
+    "reason": "gray-band match (no auto-action) (cosine=0.778)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188893710,
+    "optionId": "9MeJAuowU27E",
+    "reason": "gray-band match (no auto-action) (cosine=0.704)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188928469,
+    "optionId": "rK9qhNrYCVyU",
+    "reason": "gray-band match (no auto-action) (cosine=0.756)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188959224,
+    "optionId": "zTbcClk8IhBs",
+    "reason": "gray-band match (no auto-action) (cosine=0.697)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787188988743,
+    "optionId": "Jm2LXy81eh2d",
+    "reason": "gray-band match (no auto-action) (cosine=0.819)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787189020275,
+    "clusterId": "o1-TMLyGdG6d",
+    "optionId": "3o4W5PEdXWkL",
+    "reason": "spawn synth at cosine=0.896",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787189024721,
+    "clusterId": "0Id9KTHSsWzP",
+    "optionId": "o1-TMLyGdG6d",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  }
+]

@@ -1,0 +1,96 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "I926FFcBrdy-",
+        "title": "Provide Free Mental-Health Counseling for All Residents",
+        "description": "The city should establish no-cost mental-health counseling and psychological therapy services available to all residents. By removing financial barriers to professional support, the program would make care easier to access for people experiencing emotional distress, mental-health concerns, or a need for ongoing therapeutic guidance.",
+        "members": [
+          {
+            "id": "h3iiXwRWAvT1"
+          },
+          {
+            "id": "JFMo-iTSIHeJ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "o1-TMLyGdG6d",
+        "title": "Operate Late-Night Weekend Bus Service After Midnight",
+        "description": "The city should extend weekend bus operations into the late-night and after-midnight hours so residents can get home safely and reliably when regular service ends. Transit agencies should establish and communicate a consistent late-night weekend schedule that connects people traveling after midnight with the routes they need.",
+        "members": [
+          {
+            "id": "3o4W5PEdXWkL"
+          },
+          {
+            "id": "xYCuWiy7ufWK"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "0Id9KTHSsWzP",
+        "title": "Late-night public transit",
+        "description": "Public transportation options that improve mobility and access during late-night hours.",
+        "members": [],
+        "memberSynthIds": [
+          "o1-TMLyGdG6d"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "dxhQvGBXBDMT",
+        "title": "Community Mental Health Services",
+        "description": "Access to affordable mental-health counseling and support for all residents.",
+        "members": [],
+        "memberSynthIds": [
+          "I926FFcBrdy-"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [],
+  "sourceOptions": {
+    "visible": 20,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "review-queued": 17,
+    "spawn": 4
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.en.json",
+    "corpusSha": "8fdcaccc66dd",
+    "seed": 42,
+    "synthesisOverrides": {},
+    "statementsFed": 20,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 12000,
+    "maxWaitMs": 45000,
+    "settleTimeouts": 0,
+    "durationMs": 682103,
+    "gitSha": "c018fd495",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}

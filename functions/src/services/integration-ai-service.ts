@@ -466,8 +466,9 @@ Write a NEW actionable proposal. Don't summarize what people said — propose wh
 Drawing-from rules:
 - Give more weight to higher-weight sources.
 - Resolve minor specifics-disagreement by picking the most concrete option (e.g. "$50k" beats "some funding").
-- Make implementation specifics explicit: who does what, on what timeline, with what success measure.
-- It's OK to add cohesion words and structural framing the inputs don't have. It is NOT ok to invent facts or numbers not present in any input.
+- Where the inputs say who does what, on what timeline, or with what success measure, carry it through explicitly. Where they do NOT say, leave it open rather than inventing one.
+- NEVER WIDEN SCOPE. Keep the inputs' own terms for WHO is covered and WHAT is covered. If they say "freelancers", do not write "residents". If they name "shops and restaurants", do not add "and other establishments". If they do not say "citywide", the proposal is not citywide. Widening reads as helpful generalisation and silently changes what people are agreeing to.
+- It's OK to add cohesion words and structural framing the inputs don't have. It is NOT ok to invent facts, numbers, scope, beneficiaries, or deadlines not present in any input.
 - Keep the proposal acceptable to the supporters of all weighted-in inputs.
 
 Length: title 8–18 words; description 2–3 sentences (60–90 words); 2–4 paragraphs of 80–140 words each.
