@@ -17,7 +17,8 @@ and `score100.mjs` for the implementation.
 | `he-seed42-cluster078-debounce1500` | he | same fixes as the English 0.592 run | **0.066** | 0.000 | 0.166 | 0/50 | 0 | 1 |
 | `he-seed42-large-cluster084` | he | + `text-embedding-3-large`, `clusterThreshold`/`synthLowerBound=0.84` | **0.369** | 0.380 | 0.352 | 27/50 | 19 | 3 |
 | `en-seed42-cohesion-pairdebounce` | en | centroid topic gate + per-pair debounce, **shipped thresholds** | **0.207** | 0.077 | 0.401 | 2/50 | 2 | 14 |
-| `en-seed42-passorder` | en | + synthesis outranks theming; failed spawns re-queued | **0.711** | 0.926 | 0.388 | 50/50 | 48 | 13 |
+| `en-seed42-passorder` | en | + synthesis outranks theming; failed spawns re-queued | 0.691† | 0.862 | 0.434 | 50/50 | 47 | 12 |
+| `en-seed42-precision` | en | + member evidence required for attach; snowball brake | **0.711** | 0.926 | 0.388 | 50/50 | 48 | 13 |
 | `en-seed42-llm-themes` | en | + LLM theme assignment; themes born from syntheses | **0.730** | 0.895 | 0.481 | 47/50\* | 45 | 18 |
 | `en-seed42-consolidated` | en | + theme consolidation; reJudge judged on members; Pass 3b | **0.910** | **1.000** | 0.775 | **50/50** | 50 | 11 |
 | `en-seed7-consolidated` | en | same build, seed 7 | **0.905** | **1.000** | 0.763 | **50/50** | 50 | 10 |
@@ -26,11 +27,17 @@ and `score100.mjs` for the implementation.
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
 
+† **`en-seed42-passorder` is NOT a clean measurement — do not cite it.** A rebuild
+landed while it was feeding, and the functions emulator hot-reloaded seven times
+mid-run: 19 statements were processed on the intended build and ~77 on a later
+one. Its numbers are reported here only because the run exists and excluding it
+silently would be worse. `en-seed42-precision` is the clean measurement of that
+stage. Every other row was verified with HEAD unchanged before and after, a single
+`Loaded functions definitions from source`, and `functions/lib` mtimes byte-identical
+across the run.
+
 Every run from `en-seed42-cohesion-pairdebounce` onward uses **shipped thresholds**
-with no `--set` overrides, unlike the tuned runs above them. All are single-load
-emulator runs with HEAD verified before and after and `functions/lib` mtimes
-unchanged across the run; the earlier `0.691` intermediate is excluded from this
-table because a concurrent rebuild made it unattributable.
+with no `--set` overrides, unlike the tuned runs above them.
 
 ## Where it ended up
 
