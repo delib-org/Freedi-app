@@ -6,6 +6,11 @@ import { Collections, StatementType, functionConfig, type Statement } from '@fre
 import { ALLOWED_ORIGINS } from '../../config/cors';
 import { embeddingService } from '../../services/embedding-service';
 import { embeddingCache } from '../../services/embedding-cache-service';
+import {
+	ALLOWED_EMBEDDING_MODELS,
+	invalidateEmbeddingModelCache,
+	isAllowedEmbeddingModel,
+} from '../../services/embedding-model-resolver';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 
 /**
@@ -19,6 +24,17 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
  * fresh brief-based embedding for the whole question so a
  * subsequent re-cluster / global-cluster run sees consistent geometry.
  *
+ * IT IS ALSO THE MODEL-MIGRATION ENTRY POINT. Passing `embeddingModel` pins
+ * that model on the question (`statementSettings.synthesis.embeddingModel`)
+ * and re-embeds everything with it — the decided per-question Hebrew rollout
+ * (a named question moves to `text-embedding-3-large`, the rest of the corpus
+ * stays put). The pin is written BEFORE the re-embed starts, so statements
+ * arriving mid-migration already embed with the new model rather than adding
+ * to the stale set. Until the sweep finishes, mixed-model vectors coexist
+ * under the question; the model guard makes that degrade (stale vectors read
+ * as absent) rather than corrupt. Cluster docs' title vectors are left to the
+ * same degrade-then-heal path — the recompute sweep regenerates them.
+ *
  * Skips cluster/derived docs and hidden options — only genuine user options are
  * re-embedded. Synchronous; concurrency-capped so a few hundred options finish
  * within the 540s budget.
@@ -26,6 +42,8 @@ import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 
 interface ReEmbedRequest {
 	questionId: string;
+	/** Pin this model on the question and re-embed with it. Omit to keep the current model. */
+	embeddingModel?: string;
 }
 
 interface ReEmbedResponse {
@@ -47,12 +65,34 @@ export const reEmbedQuestion = onCall<ReEmbedRequest>(
 	async (request): Promise<ReEmbedResponse> => {
 		const uid = request.auth?.uid;
 		if (!uid) throw new HttpsError('unauthenticated', 'User must be authenticated');
-		const { questionId } = request.data;
+		const { questionId, embeddingModel } = request.data;
 		if (!questionId) throw new HttpsError('invalid-argument', 'questionId is required');
+		if (embeddingModel !== undefined && !isAllowedEmbeddingModel(embeddingModel)) {
+			throw new HttpsError(
+				'invalid-argument',
+				`embeddingModel must be one of: ${ALLOWED_EMBEDDING_MODELS.join(', ')}`,
+			);
+		}
 
 		const question = await assertSynthesisAdmin(questionId, uid);
 		const context = question.statement || '';
 		const db = getFirestore();
+
+		if (embeddingModel) {
+			// Pin first, then re-embed: a statement arriving mid-sweep resolves
+			// the NEW model and doesn't add to the stale set. Dot-path update so
+			// the rest of the synthesis settings block is untouched.
+			await db.collection(Collections.statements).doc(questionId).update({
+				'statementSettings.synthesis.embeddingModel': embeddingModel,
+				lastUpdate: Date.now(),
+			});
+			invalidateEmbeddingModelCache(questionId);
+			logger.info('reEmbedQuestion: embedding model pinned', {
+				questionId,
+				embeddingModel,
+				uid,
+			});
+		}
 
 		const snap = await db
 			.collection(Collections.statements)
@@ -76,9 +116,14 @@ export const reEmbedQuestion = onCall<ReEmbedRequest>(
 			targets.map((option) =>
 				limit(async () => {
 					try {
+						// parentId (not a hardcoded model): the freshly-written pin is
+						// what resolves, and a plain re-embed with no pin keeps using
+						// whatever the question already uses.
 						const result = await embeddingService.generateEmbeddingWithRetry(
 							option.statement,
 							context,
+							3,
+							{ parentId: questionId },
 						);
 						await embeddingCache.saveEmbedding(
 							option.statementId,
@@ -86,6 +131,7 @@ export const reEmbedQuestion = onCall<ReEmbedRequest>(
 							context,
 							option.statement,
 							result.brief,
+							result.model,
 						);
 						embedded++;
 					} catch (error) {

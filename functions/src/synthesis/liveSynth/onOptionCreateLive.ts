@@ -92,12 +92,14 @@ export async function liveSynthOnOptionCreate(rawStatement: unknown): Promise<vo
 				precomputed = hit;
 			} else {
 				const deadline = Promise.race([
-					embeddingService.generateEmbedding(statement.statement, parent.statement ?? ''),
+					embeddingService.generateEmbedding(statement.statement, parent.statement ?? '', {
+						parentId: statement.parentId,
+					}),
 					new Promise<null>((resolve) =>
 						setTimeout(() => resolve(null), EMBED_PRECOMPUTE_DEADLINE_MS),
 					),
 				]);
-				const result = (await deadline) as { embedding: number[] } | null;
+				const result = (await deadline) as { embedding: number[]; model: string } | null;
 				if (result?.embedding && result.embedding.length > 0) {
 					precomputed = result.embedding;
 					// Save it so the parallel fn_statementCreation trigger
@@ -108,6 +110,8 @@ export async function liveSynthOnOptionCreate(rawStatement: unknown): Promise<vo
 							precomputed,
 							parent.statement ?? '',
 							statement.statement,
+							undefined,
+							result?.model,
 						);
 					} catch (saveError) {
 						logger.warn('liveSynth.onOptionCreate: cache save failed (non-fatal)', {

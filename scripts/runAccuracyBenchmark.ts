@@ -239,7 +239,7 @@ function validateStructure(): void {
 }
 
 /** Coerce --set values to the type each synthesis setting expects. */
-function coerceOverrides(raw: Record<string, string>): Record<string, number | boolean> {
+function coerceOverrides(raw: Record<string, string>): Record<string, number | boolean | string> {
 	const numeric = new Set([
 		'minEvaluators',
 		'minConsensus',
@@ -249,7 +249,11 @@ function coerceOverrides(raw: Record<string, string>): Record<string, number | b
 		'reviewLowerBound',
 	]);
 	const boolean = new Set(['enabled', 'claimRegistryEnabled']);
-	const out: Record<string, number | boolean> = {};
+	// String-valued settings pass through verbatim; the pipeline's own
+	// validation (validateSynthesisSettings / the model resolver's allowlist)
+	// is the authority on values.
+	const stringly = new Set(['embeddingModel']);
+	const out: Record<string, number | boolean | string> = {};
 	for (const [key, value] of Object.entries(raw)) {
 		if (numeric.has(key)) {
 			const n = Number(value);
@@ -260,9 +264,11 @@ function coerceOverrides(raw: Record<string, string>): Record<string, number | b
 			out[key] = n;
 		} else if (boolean.has(key)) {
 			out[key] = value === 'true' || value === '1';
+		} else if (stringly.has(key)) {
+			out[key] = value;
 		} else {
 			console.error(
-				`--set ${key}: unknown synthesis setting. Known keys: ${[...numeric, ...boolean].join(', ')}`,
+				`--set ${key}: unknown synthesis setting. Known keys: ${[...numeric, ...boolean, ...stringly].join(', ')}`,
 			);
 			process.exit(1);
 		}
@@ -304,7 +310,9 @@ async function deleteExistingChildren(): Promise<number> {
 	return deleted;
 }
 
-async function ensureQuestion(settingsOverrides: Record<string, number | boolean>): Promise<void> {
+async function ensureQuestion(
+	settingsOverrides: Record<string, number | boolean | string>,
+): Promise<void> {
 	const ref = db.collection('statements').doc(QUESTION_ID);
 	const snap = await ref.get();
 	const now = Date.now();

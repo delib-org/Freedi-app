@@ -138,10 +138,19 @@ export async function generateBulkEmbeddings(request: Request, response: Respons
 							const result = await embeddingService.generateEmbeddingWithRetry(
 								data.statement,
 								context,
+								3,
+								{ parentId: data.parentId },
 							);
 
 							// text passed so textHash is written for verdict cache.
-							await embeddingCache.saveEmbedding(id, result.embedding, context, data.statement);
+							await embeddingCache.saveEmbedding(
+								id,
+								result.embedding,
+								context,
+								data.statement,
+								result.brief,
+								result.model,
+							);
 							progress.successfulEmbeddings++;
 						} catch (error) {
 							progress.failedStatements++;
@@ -283,10 +292,24 @@ export async function regenerateEmbedding(request: Request, response: Response):
 		}
 
 		// Generate new embedding
-		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
+		const result = await embeddingService.generateEmbeddingWithRetry(
+			statement.statement,
+			context,
+			3,
+			{
+				parentId: statement.parentId,
+			},
+		);
 
 		// Save to statement (text passed so textHash is written for verdict cache)
-		await embeddingCache.saveEmbedding(statementId, result.embedding, context, statement.statement);
+		await embeddingCache.saveEmbedding(
+			statementId,
+			result.embedding,
+			context,
+			statement.statement,
+			result.brief,
+			result.model,
+		);
 
 		const processingTime = Date.now() - startTime;
 

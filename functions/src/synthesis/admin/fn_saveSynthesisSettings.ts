@@ -43,7 +43,7 @@ export const saveSynthesisSettings = onCall<SaveRequest>(
 			throw new HttpsError('invalid-argument', 'settings must be an object');
 		}
 
-		await assertSynthesisAdmin(questionId, uid);
+		const question = await assertSynthesisAdmin(questionId, uid);
 
 		const validation = validateSynthesisSettings(settings);
 		if (!validation.valid) {
@@ -65,11 +65,19 @@ export const saveSynthesisSettings = onCall<SaveRequest>(
 			llmThemeAssignment:
 				settings.llmThemeAssignment ?? DEFAULT_SYNTHESIS_SETTINGS.llmThemeAssignment,
 			createThemesFromSyntheses:
-				settings.createThemesFromSyntheses ??
-				DEFAULT_SYNTHESIS_SETTINGS.createThemesFromSyntheses,
+				settings.createThemesFromSyntheses ?? DEFAULT_SYNTHESIS_SETTINGS.createThemesFromSyntheses,
 			spawnThemesFromOptionPairs:
 				settings.spawnThemesFromOptionPairs ??
 				DEFAULT_SYNTHESIS_SETTINGS.spawnThemesFromOptionPairs,
+			// Unlike the numeric knobs, an absent embeddingModel must NOT reset to
+			// the default: the pin is written by the migration flow
+			// (reEmbedQuestion), the admin settings UI does not know about it, and
+			// losing it would silently move a migrated question back to a model
+			// its stored vectors no longer match.
+			embeddingModel:
+				settings.embeddingModel ??
+				(question.statementSettings as { synthesis?: { embeddingModel?: string } } | undefined)
+					?.synthesis?.embeddingModel,
 		};
 
 		await getFirestore()

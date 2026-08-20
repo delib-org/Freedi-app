@@ -7,6 +7,11 @@
  * `synthesis` off (same pattern the live-synth featureGate uses for the
  * deprecated `liveSynthEnabled` field).
  */
+import {
+	ALLOWED_EMBEDDING_MODELS,
+	isAllowedEmbeddingModel,
+} from '../../services/embedding-model-resolver';
+
 export interface SynthesisSettings {
 	enabled: boolean;
 	/** Minimum number of evaluators an option needs before it's considered for synthesis. */
@@ -87,6 +92,18 @@ export interface SynthesisSettings {
 	 * syntheses and grown by the judge, this path is redundant.
 	 */
 	spawnThemesFromOptionPairs: boolean;
+	/**
+	 * Embedding model pinned for THIS question's statements, or undefined for
+	 * the global default. The decided Hebrew rollout (2026-08-20) is
+	 * per-question: a named question moves to `text-embedding-3-large` (much
+	 * better Hebrew geometry — twin nearest-neighbour 56/100 → 88/100) while
+	 * the rest of the corpus stays on 3-small. Everything that generates or
+	 * compares vectors under a question resolves through
+	 * services/embedding-model-resolver.ts, so a pinned question's vectors
+	 * stay comparable with each other and never with a different space.
+	 * Migration entry point: `reEmbedQuestion` with `embeddingModel` set.
+	 */
+	embeddingModel?: string;
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
@@ -124,6 +141,8 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	llmThemeAssignment: true,
 	createThemesFromSyntheses: true,
 	spawnThemesFromOptionPairs: false,
+	// No pin — the global default model. See the field's docstring.
+	embeddingModel: undefined,
 };
 
 /**
@@ -149,6 +168,10 @@ export function validateSynthesisSettings(
 	settings: Partial<SynthesisSettings>,
 ): SettingsValidationResult {
 	const errors: string[] = [];
+
+	if (settings.embeddingModel !== undefined && !isAllowedEmbeddingModel(settings.embeddingModel)) {
+		errors.push(`embeddingModel must be one of: ${ALLOWED_EMBEDDING_MODELS.join(', ')}`);
+	}
 
 	if (settings.minEvaluators !== undefined) {
 		if (!Number.isFinite(settings.minEvaluators) || settings.minEvaluators < 0) {

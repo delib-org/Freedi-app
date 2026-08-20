@@ -442,7 +442,14 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 
 		// Generate context-aware embedding
 		const startTime = Date.now();
-		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
+		const result = await embeddingService.generateEmbeddingWithRetry(
+			statement.statement,
+			context,
+			3,
+			{
+				parentId,
+			},
+		);
 
 		// Save embedding to the statement document (text passed so textHash
 		// is written for the synthesis verdict cache; brief stored for debugging).
@@ -453,6 +460,7 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 			context,
 			statement.statement,
 			result.brief,
+			result.model,
 		);
 
 		const duration = Date.now() - startTime;

@@ -1,6 +1,7 @@
 import { getFirestore, FieldValue, type Firestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { EMBEDDING_DIMENSIONS, OPENAI_EMBEDDING_MODEL } from './embedding-service';
+import { EMBEDDING_DIMENSIONS } from './embedding-service';
+import { DEFAULT_EMBEDDING_MODEL, resolveEmbeddingModel } from './embedding-model-resolver';
 import { computeTextHash } from '../synthesis/textHash';
 
 // Helper to extract array from VectorValue or return as-is if already an array
@@ -26,11 +27,18 @@ import { computeTextHash } from '../synthesis/textHash';
  * re-embed the entire corpus the moment this shipped — a large bill and a long
  * outage to fix a problem nobody has yet. Only a stamp that is present AND
  * different is a mismatch.
+ *
+ * What "the ones we are producing now" means is PER QUESTION since the model
+ * became pinnable per question (embedding-model-resolver.ts): the expected
+ * model is resolved from the statement's own parentId, so a migrated
+ * question's 3-large vectors read as present under that question while the
+ * rest of the corpus still expects 3-small. Reader call sites did not change —
+ * the doc itself says which question it belongs to.
  */
-function isCompatibleModel(storedModel: unknown): boolean {
+function isCompatibleModel(storedModel: unknown, expectedModel: string): boolean {
 	if (typeof storedModel !== 'string' || storedModel === '') return true;
 
-	return storedModel === OPENAI_EMBEDDING_MODEL;
+	return storedModel === expectedModel;
 }
 
 function extractEmbeddingArray(embedding: unknown): number[] | null {
@@ -92,11 +100,12 @@ class EmbeddingCacheService {
 			}
 
 			const data = doc.data();
-			if (!isCompatibleModel(data?.embeddingModel)) {
+			const expectedModel = await resolveEmbeddingModel(data?.parentId as string | undefined);
+			if (!isCompatibleModel(data?.embeddingModel, expectedModel)) {
 				logger.info('embeddingCache: ignoring vector from a different model', {
 					statementId,
 					storedModel: data?.embeddingModel,
-					activeModel: OPENAI_EMBEDDING_MODEL,
+					expectedModel,
 				});
 
 				return null;
@@ -138,22 +147,21 @@ class EmbeddingCacheService {
 					.get();
 
 				let incompatible = 0;
-				snapshot.docs.forEach((doc) => {
+				for (const doc of snapshot.docs) {
 					const data = doc.data();
-					if (!isCompatibleModel(data?.embeddingModel)) {
+					const expectedModel = await resolveEmbeddingModel(data?.parentId as string | undefined);
+					if (!isCompatibleModel(data?.embeddingModel, expectedModel)) {
 						incompatible++;
-
-						return;
+						continue;
 					}
 					const embedding = extractEmbeddingArray(data?.embedding);
 					if (embedding) {
 						result.set(doc.id, embedding);
 					}
-				});
+				}
 				if (incompatible > 0) {
 					logger.info('embeddingCache: ignored vectors from a different model', {
 						count: incompatible,
-						activeModel: OPENAI_EMBEDDING_MODEL,
 					});
 				}
 			}
@@ -183,6 +191,7 @@ class EmbeddingCacheService {
 		context?: string,
 		text?: string,
 		brief?: string,
+		model: string = DEFAULT_EMBEDDING_MODEL,
 	): Promise<void> {
 		if (embedding.length !== EMBEDDING_DIMENSIONS) {
 			logger.warn(
@@ -196,7 +205,7 @@ class EmbeddingCacheService {
 
 			const updatePayload: Record<string, unknown> = {
 				embedding: vectorValue,
-				embeddingModel: OPENAI_EMBEDDING_MODEL,
+				embeddingModel: model,
 				embeddingContext: context || null,
 				embeddingCreatedAt: Date.now(),
 			};
@@ -229,6 +238,7 @@ class EmbeddingCacheService {
 			context?: string;
 			text?: string;
 		}>,
+		model: string = DEFAULT_EMBEDDING_MODEL,
 	): Promise<{ success: number; failed: number }> {
 		if (embeddings.length === 0) {
 			return { success: 0, failed: 0 };
@@ -251,7 +261,7 @@ class EmbeddingCacheService {
 
 					const payload: Record<string, unknown> = {
 						embedding: vectorValue,
-						embeddingModel: OPENAI_EMBEDDING_MODEL,
+						embeddingModel: model,
 						embeddingContext: item.context || null,
 						embeddingCreatedAt: Date.now(),
 					};
@@ -322,11 +332,20 @@ class EmbeddingCacheService {
 				.get();
 
 			const results: EmbeddingWithStatement[] = [];
+			// This path fed in-memory similarity WITHOUT the model guard the other
+			// readers have — a gap found while making the model per-question.
+			const expectedModel = await resolveEmbeddingModel(parentId);
+			let incompatible = 0;
 
 			snapshot.docs.forEach((doc) => {
 				const data = doc.data();
 				// Skip hidden statements
 				if (data?.hide === true) {
+					return;
+				}
+				if (!isCompatibleModel(data?.embeddingModel, expectedModel)) {
+					incompatible++;
+
 					return;
 				}
 				const embedding = extractEmbeddingArray(data?.embedding);
@@ -338,6 +357,13 @@ class EmbeddingCacheService {
 					});
 				}
 			});
+			if (incompatible > 0) {
+				logger.info('embeddingCache: ignored vectors from a different model', {
+					parentId,
+					count: incompatible,
+					expectedModel,
+				});
+			}
 
 			logger.info(`Found ${results.length} statements with embeddings under parent ${parentId}`);
 

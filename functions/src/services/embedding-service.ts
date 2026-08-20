@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { logger } from 'firebase-functions';
 import { notifyAIError } from './error-notification-service';
 import { generateBrief, briefEmbeddingsEnabled } from './brief-service';
+import { DEFAULT_EMBEDDING_MODEL, resolveEmbeddingModel } from './embedding-model-resolver';
 
 // OpenAI embedding configuration.
 //
@@ -21,9 +22,31 @@ import { generateBrief, briefEmbeddingsEnabled } from './brief-service';
 //
 // With 3-small only 79/100 Hebrew partners even fall inside the 10-neighbour window
 // the pipeline inspects, which caps Hebrew pair recall no matter how the thresholds
-// are set. Overridable so the swap can be trialled per environment before it ships.
-const OPENAI_EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small';
+// are set.
+//
+// The model is now resolvable PER QUESTION (embedding-model-resolver.ts): callers
+// that know which question a text belongs to pass `parentId` in EmbedOptions and
+// the question's pinned model — if any — is used. The env override remains the
+// global default for questions with no pin.
+const OPENAI_EMBEDDING_MODEL = DEFAULT_EMBEDDING_MODEL;
 const EMBEDDING_DIMENSIONS = 1536;
+
+/**
+ * How the model is chosen for one embedding call, in priority order:
+ * `model` (explicit) → the question's pinned model via `parentId` → global
+ * default. Callers on statement paths should pass `parentId` — it is what
+ * keeps a migrated question's new vectors comparable with its stored ones.
+ */
+interface EmbedOptions {
+	parentId?: string | null;
+	model?: string;
+}
+
+async function chooseModel(options?: EmbedOptions): Promise<string> {
+	if (options?.model) return options.model;
+
+	return resolveEmbeddingModel(options?.parentId);
+}
 
 interface EmbeddingResult {
 	embedding: number[];
@@ -68,8 +91,13 @@ class EmbeddingService {
 	 * @param context - Optional context (e.g., parent question) for context-aware embedding
 	 * @returns EmbeddingResult with embedding vector
 	 */
-	async generateEmbedding(text: string, context?: string): Promise<EmbeddingResult> {
+	async generateEmbedding(
+		text: string,
+		context?: string,
+		options?: EmbedOptions,
+	): Promise<EmbeddingResult> {
 		const startTime = Date.now();
+		const model = await chooseModel(options);
 
 		try {
 			const openai = getOpenAI();
@@ -92,12 +120,12 @@ class EmbeddingService {
 				inputLength: input.length,
 				text: text.substring(0, 50),
 				hasContext: !!context,
-				model: OPENAI_EMBEDDING_MODEL,
+				model,
 			});
 
 			// Call OpenAI embeddings API
 			const response = await openai.embeddings.create({
-				model: OPENAI_EMBEDDING_MODEL,
+				model,
 				input: input,
 				// Pinned, not implied: the Firestore vector indexes declare 1536, and
 				// a model whose native width differs would silently break them.
@@ -113,12 +141,12 @@ class EmbeddingService {
 				dimensions: embedding.length,
 				durationMs: duration,
 				firstValues: embedding.slice(0, 5).map((v) => v.toFixed(6)),
-				model: OPENAI_EMBEDDING_MODEL,
+				model,
 			});
 
 			return {
 				embedding,
-				model: OPENAI_EMBEDDING_MODEL,
+				model,
 				dimensions: embedding.length,
 				brief: useBrief ? answerText : undefined,
 			};
@@ -133,7 +161,7 @@ class EmbeddingService {
 
 			// Notify admin of embedding errors
 			notifyAIError(errorMessage, {
-				model: OPENAI_EMBEDDING_MODEL,
+				model,
 				prompt: text.substring(0, 100),
 				functionName: 'embedding-service.generateEmbedding',
 			}).catch((notifyError) => {
@@ -159,12 +187,14 @@ class EmbeddingService {
 		texts: string[],
 		context?: string,
 		batchSize: number = 100,
+		options?: EmbedOptions,
 	): Promise<EmbeddingResult[]> {
 		if (texts.length === 0) {
 			return [];
 		}
 
 		const startTime = Date.now();
+		const model = await chooseModel(options);
 		const results: EmbeddingResult[] = [];
 		const openai = getOpenAI();
 
@@ -181,7 +211,7 @@ class EmbeddingService {
 
 			try {
 				const response = await openai.embeddings.create({
-					model: OPENAI_EMBEDDING_MODEL,
+					model,
 					input: inputs,
 					dimensions: EMBEDDING_DIMENSIONS,
 				});
@@ -190,7 +220,7 @@ class EmbeddingService {
 				for (const item of response.data) {
 					results.push({
 						embedding: item.embedding,
-						model: OPENAI_EMBEDDING_MODEL,
+						model,
 						dimensions: item.embedding.length,
 					});
 				}
@@ -199,7 +229,7 @@ class EmbeddingService {
 				// For failed batches, try individual processing
 				for (const text of batch) {
 					try {
-						const result = await this.generateEmbedding(text, context);
+						const result = await this.generateEmbedding(text, context, { model });
 						results.push(result);
 					} catch (individualError) {
 						logger.error(`Failed individual embedding:`, individualError);
@@ -298,12 +328,13 @@ class EmbeddingService {
 		text: string,
 		context?: string,
 		maxRetries: number = 3,
+		options?: EmbedOptions,
 	): Promise<EmbeddingResult> {
 		let lastError: unknown;
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
-				return await this.generateEmbedding(text, context);
+				return await this.generateEmbedding(text, context, options);
 			} catch (error) {
 				lastError = error;
 				const apiError = error as APIError;

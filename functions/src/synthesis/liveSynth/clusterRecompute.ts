@@ -274,12 +274,20 @@ async function maybeRegenerateSynthTitle(cluster: Statement, clusterId: string):
 	// Without this, the cluster keeps matching by its founding-pair
 	// embedding even though its display text has moved on.
 	try {
-		const newEmbedding = await embeddingService.generateEmbedding(proposal.title, cluster.parentId);
+		const newEmbedding = await embeddingService.generateEmbedding(
+			proposal.title,
+			cluster.parentId,
+			{
+				parentId: cluster.parentId,
+			},
+		);
 		await embeddingCache.saveEmbedding(
 			clusterId,
 			newEmbedding.embedding,
 			cluster.parentId,
 			proposal.title,
+			undefined,
+			newEmbedding.model,
 		);
 	} catch (error) {
 		logger.warn('recomputeSynthCluster: re-embed after title regen failed', {

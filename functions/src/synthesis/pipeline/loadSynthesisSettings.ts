@@ -103,6 +103,13 @@ function mergeWithDefaults(
 			typeof partial.spawnThemesFromOptionPairs === 'boolean'
 				? partial.spawnThemesFromOptionPairs
 				: defaults.spawnThemesFromOptionPairs,
+		// A pinned model must survive the merge or an admin settings save would
+		// silently un-migrate the question; validation of the value happens at
+		// write time (validateSynthesisSettings) and again in the resolver.
+		embeddingModel:
+			typeof partial.embeddingModel === 'string' && partial.embeddingModel !== ''
+				? partial.embeddingModel
+				: defaults.embeddingModel,
 	};
 }
 

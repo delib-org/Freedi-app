@@ -303,7 +303,7 @@ export async function liveSynthOnOptionUpdate(
 		// Stage 1: cheap cosine drift check. Skip LLM entirely if the
 		// embedding barely moved.
 		const newEmbedding = await embeddingService
-			.generateEmbedding(diff.newText, diff.parentId)
+			.generateEmbedding(diff.newText, diff.parentId, { parentId: diff.parentId })
 			.then((r) => r.embedding)
 			.catch((error) => {
 				logger.warn('liveSynth.update: new embedding failed; skipping invalidation', {

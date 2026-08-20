@@ -174,4 +174,34 @@ describe('synthesis settings', () => {
 			expect(result.enabled).toBe(false);
 		});
 	});
+
+	describe('embeddingModel — the per-question pin', () => {
+		it('validation rejects a model outside the allowlist', () => {
+			const bad = validateSynthesisSettings({ embeddingModel: 'text-davinci-embeddings' });
+			expect(bad.valid).toBe(false);
+			expect(bad.errors.join(' ')).toContain('embeddingModel');
+
+			expect(validateSynthesisSettings({ embeddingModel: 'text-embedding-3-large' }).valid).toBe(
+				true,
+			);
+		});
+
+		it('a pinned model survives the merge with defaults', () => {
+			const stmt = {
+				statementSettings: {
+					synthesis: { enabled: true, embeddingModel: 'text-embedding-3-large' },
+				},
+			};
+
+			expect(loadSynthesisSettingsFromStatement(stmt as never).embeddingModel).toBe(
+				'text-embedding-3-large',
+			);
+		});
+
+		it('absent pin merges to undefined — the global default applies', () => {
+			const stmt = { statementSettings: { synthesis: { enabled: true } } };
+
+			expect(loadSynthesisSettingsFromStatement(stmt as never).embeddingModel).toBeUndefined();
+		});
+	});
 });

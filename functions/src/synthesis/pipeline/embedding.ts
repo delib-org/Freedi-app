@@ -40,7 +40,9 @@ export async function ensureEmbedding(
 		hasParentText: Boolean(parentText),
 	});
 	try {
-		const result = await embeddingService.generateEmbedding(statement.statement, parentText ?? '');
+		const result = await embeddingService.generateEmbedding(statement.statement, parentText ?? '', {
+			parentId: statement.parentId,
+		});
 
 		// Persist so subsequent callers (including the upstream
 		// `generateEmbeddingForStatement` task that might still be running)
@@ -54,6 +56,8 @@ export async function ensureEmbedding(
 				result.embedding,
 				parentText ?? '',
 				statement.statement,
+				result.brief,
+				result.model,
 			);
 		} catch (saveError) {
 			logger.warn('synthesis.pipeline.ensureEmbedding: cache save failed (non-fatal)', {

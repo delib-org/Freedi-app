@@ -1,11 +1,8 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Statement } from '@freedi/shared-types';
-import {
-	embeddingService,
-	EMBEDDING_DIMENSIONS,
-	OPENAI_EMBEDDING_MODEL,
-} from './embedding-service';
+import { embeddingService, EMBEDDING_DIMENSIONS } from './embedding-service';
+import { resolveEmbeddingModel } from './embedding-model-resolver';
 import { embeddingCache } from './embedding-cache-service';
 
 interface SimilarStatement {
@@ -50,10 +47,13 @@ class VectorSearchService {
 		const { limit = DEFAULT_LIMIT, threshold = DEFAULT_THRESHOLD } = options;
 
 		try {
-			// Generate embedding for user input
+			// Generate embedding for user input — with the QUESTION's model, or the
+			// query vector would live in a different space from the stored ones on
+			// a migrated question and every neighbour would be dropped or wrong.
 			const { embedding: queryEmbedding } = await embeddingService.generateEmbedding(
 				userInput,
 				questionContext,
+				{ parentId },
 			);
 
 			logger.debug('Query embedding generated', {
@@ -101,6 +101,7 @@ class VectorSearchService {
 		options: VectorSearchOptions = {},
 	): Promise<SimilarStatement[]> {
 		const { limit = DEFAULT_LIMIT, threshold = DEFAULT_THRESHOLD, includeHidden = false } = options;
+		const activeModel = await resolveEmbeddingModel(parentId);
 
 		try {
 			// Build the base query - only filter by parentId
@@ -149,11 +150,7 @@ class VectorSearchService {
 				// stamp = legacy = compatible; see isCompatibleModel in
 				// embedding-cache-service.
 				const storedModel = rawData.embeddingModel;
-				if (
-					typeof storedModel === 'string' &&
-					storedModel !== '' &&
-					storedModel !== OPENAI_EMBEDDING_MODEL
-				) {
+				if (typeof storedModel === 'string' && storedModel !== '' && storedModel !== activeModel) {
 					incompatibleModelHits += 1;
 					continue;
 				}
@@ -197,7 +194,7 @@ class VectorSearchService {
 				logger.info('vectorSearch.incompatibleModel', {
 					parentId,
 					dropped: incompatibleModelHits,
-					activeModel: OPENAI_EMBEDDING_MODEL,
+					activeModel,
 				});
 			}
 
