@@ -1,0 +1,1090 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "114TnKFjPQoX",
+        "title": "Allocate Land for Shared Community Vegetable Gardens",
+        "description": "Allocate plots of land where residents can grow vegetables together in shared community gardens. The city should make suitable land available for communal cultivation, enabling residents to participate in gardening and food growing collectively.",
+        "members": [
+          {
+            "id": "UMvUA2hXPgrZ"
+          },
+          {
+            "id": "cA5lkLPPeD-7"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "1fn4zl3C7HQJ",
+        "title": "Publish Municipal Data and Spending Through a Public Open-Data Portal",
+        "description": "Create a public open-data portal that publishes municipal data alongside the city budget and spending information. The portal should make city financial information and other municipal data available in one accessible public location, improving transparency and enabling residents to review how the city operates and uses public funds.",
+        "members": [
+          {
+            "id": "gUJagIFhhyte"
+          },
+          {
+            "id": "SqJTPkZYxL5Z"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "2fNgNthequro",
+        "title": "Rebuild Every Playground for Full Disability Accessibility",
+        "description": "Rebuild every playground so that children with disabilities can access and use all play equipment. The city should make accessibility a required outcome of playground reconstruction, ensuring play areas are designed for children with disabilities rather than limiting them to separate or partial features.",
+        "members": [
+          {
+            "id": "J0859VMAweEY"
+          },
+          {
+            "id": "jXRKBoEyVCQ7"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "3ov5NIAhRdmC",
+        "title": "Establish a Public Library Branch in Every District and Neighborhood",
+        "description": "Create accessible public library branches throughout the city so that every district and neighborhood has a local place to borrow materials, access information, and use library services. The city should plan and open branches based on the goal of ensuring that no district or neighborhood is left without a public library presence.",
+        "members": [
+          {
+            "id": "VgRy2UYkJkcX"
+          },
+          {
+            "id": "kU1WcLWzSsJX"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "4Dqd4I7KHqVR",
+        "title": "Ban Single-Use Plastics in Shops and Restaurants",
+        "description": "Prohibit shops and restaurants from providing single-use and disposable plastic items. This action would reduce reliance on throwaway plastics in everyday retail and dining transactions by setting a clear restriction for the businesses named in the proposal.",
+        "members": [
+          {
+            "id": "PB80Cks5Xia8"
+          },
+          {
+            "id": "64bKjBqbq1O7"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "EsGWNHzOK-tM",
+        "title": "Build protected cycling lanes separated from car traffic",
+        "description": "Build physically separated cycling lanes that shield riders from car traffic. The city should prioritize protected infrastructure rather than relying on unseparated space alongside vehicles, making cycling routes safer and more comfortable for riders.",
+        "members": [
+          {
+            "id": "Ahq4GWV5QdV6"
+          },
+          {
+            "id": "vStcsRl697p5"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "F5eAeP6JHSm0",
+        "title": "Create a Public Municipal Rent Registry for Tenant Price Comparison",
+        "description": "Create a municipal database of rents that is publicly accessible, allowing renters and tenants to view and compare real market rental prices. The registry should present rent information in a clear, usable format so people seeking housing can better understand prevailing rates before making rental decisions.",
+        "members": [
+          {
+            "id": "YiP7Tt8RNaa3"
+          },
+          {
+            "id": "QSa4qsuubSiW"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "FD7M5GPYup8-",
+        "title": "Install Solar Panels on Municipal Building Roofs",
+        "description": "Install photovoltaic systems on the roofs of municipal and public buildings to generate renewable electricity from city-owned facilities. The city should make rooftop solar installation a standard improvement for these buildings, using available roof space to support cleaner energy production.",
+        "members": [
+          {
+            "id": "AAoOlA-9jxhU"
+          },
+          {
+            "id": "1DMpYMe4YpiO"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "FpSQu-NovsaP",
+        "title": "Provide Live Bus Arrival Tracking in a Rider App",
+        "description": "Provide riders with an app that uses live vehicle tracking to show exactly when the bus is coming. The app should present real-time arrival information so riders can plan around actual bus locations rather than uncertain schedules.",
+        "members": [
+          {
+            "id": "hZf1UqkEfdOd"
+          },
+          {
+            "id": "1Z7HVdRk73eg"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "GLiwLlPmaYRp",
+        "title": "Create Enclosed Off-Leash Dog Areas in Every Neighborhood",
+        "description": "Establish fenced, enclosed off-leash dog areas throughout every neighborhood so residents have designated places to exercise and socialize their dogs safely. The city should plan and deliver these dog-run spaces as a consistent neighborhood amenity, ensuring each area is clearly separated from surrounding public space.",
+        "members": [
+          {
+            "id": "vhMftOaAM6Zy"
+          },
+          {
+            "id": "4Qw-9G3IVDfm"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "HzQn9L24je6A",
+        "title": "Open More Local Emergency Stations to Cut Response Times",
+        "description": "Open additional local ambulance and fire stations closer to neighborhoods so emergency services can arrive faster. The city should use station placement to reduce the time residents wait for ambulance and fire response, focusing on bringing emergency-service access nearer to where people live.",
+        "members": [
+          {
+            "id": "UlAyL8Xa95kX"
+          },
+          {
+            "id": "Y7DSKVXb85R5"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "KdEpSBAA06e-",
+        "title": "Cap classroom sizes to enable individual student attention",
+        "description": "Set a maximum number of pupils per classroom so teachers can provide students with more individual attention. The cap should guide class organization and staffing decisions, reducing overcrowding and creating more opportunities for teachers to respond to each pupil’s needs.",
+        "members": [
+          {
+            "id": "CpKAw4aCmxTp"
+          },
+          {
+            "id": "MU5qC7ZLhGGS"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "L5mnw7uevhLY",
+        "title": "Offer Low-Interest Credit to Small Neighborhood Businesses",
+        "description": "Create a program that offers low-interest loans to small local neighborhood businesses. The program should provide affordable credit to help these businesses access financing on manageable terms, supporting their ability to operate and invest locally.",
+        "members": [
+          {
+            "id": "3XLFiLFx92gg"
+          },
+          {
+            "id": "HTA3flOkfu15"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Lwih1wVFSQD-",
+        "title": "Install surveillance cameras at crime hotspots",
+        "description": "Install surveillance cameras in locations where crime is concentrated to strengthen public safety efforts. The city should focus camera placement on identified crime hotspots, ensuring the intervention directly targets areas of greatest concern rather than applying surveillance broadly.",
+        "members": [
+          {
+            "id": "hyAo7tR5Iux4"
+          },
+          {
+            "id": "2O2yEVezJeWG"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "MFUe6jUTrG1G",
+        "title": "Increase Teacher Salaries to Retain Strong Educators",
+        "description": "Increase teacher pay to help attract qualified educators and keep strong teachers in the profession. Higher salaries should make teaching a more sustainable career and support the retention of effective educators in the city’s schools.",
+        "members": [
+          {
+            "id": "bY6PcsdmZEj9"
+          },
+          {
+            "id": "qPEeyxzAxLCV"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "MfNLGXMH-kyY",
+        "title": "Streamline Business Licensing Into One Short Application",
+        "description": "Replace fragmented business licensing and permit paperwork with a single short, quick application. The city should consolidate the information and steps currently required for business licensing into one straightforward process, reducing unnecessary administrative burden for applicants while preserving the licensing function.",
+        "members": [
+          {
+            "id": "q0uJiRzA8cnE"
+          },
+          {
+            "id": "JQ3sQNTFJt7L"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "NFQhfFY5MqiD",
+        "title": "Offer Free Museum Admission One Day Each Week",
+        "description": "Establish a weekly no-charge admission day at museums so residents can visit without paying an entry fee. Museums should designate one day every week for free entry and clearly communicate the schedule to the public, making regular cultural access more affordable and predictable.",
+        "members": [
+          {
+            "id": "rfWKR4GS-pIZ"
+          },
+          {
+            "id": "8PxTNDZkVeHf"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "NsGQKODlOnk9",
+        "title": "Provide Weekly Doorstep Recycling Collection for Every Household",
+        "description": "Establish a weekly curbside collection service for recyclable materials from every doorstep. This proposal would make recycling collection a regular, convenient municipal service so residents can set out recyclable materials for pickup each week rather than needing to transport them elsewhere.",
+        "members": [
+          {
+            "id": "vQMYVajiZ8r1"
+          },
+          {
+            "id": "vqjlDoQ6rJSF"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "OArFk0qIMJeh",
+        "title": "Provide Free Public Wi‑Fi in Squares and Community Centers",
+        "description": "Provide no-charge wireless internet access in public squares, plazas, and community centers. The city should make free public Wi‑Fi available in these shared spaces so people can connect online without charge while using community facilities and public gathering areas.",
+        "members": [
+          {
+            "id": "RFH2wA4ZepV2"
+          },
+          {
+            "id": "TzQgLykzmrbg"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "OHLu8TpXXHJv",
+        "title": "Provide Free Public Transit for All School-Age Children",
+        "description": "Make public transit free for all school-age children, including students under eighteen. The city should remove fare charges for this group so children can travel to school and other destinations without cost, reducing transportation barriers for young residents and their families.",
+        "members": [
+          {
+            "id": "WrsoMuN0taGr"
+          },
+          {
+            "id": "u02qYkYs5Ymj"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ObrnwZLqZCfA",
+        "title": "Build subsidized student dormitories near college campuses",
+        "description": "Construct low-cost, subsidized dormitories for students close to college campuses to make housing more affordable and convenient for students. The city should prioritize housing located near the campuses and designed specifically to serve students seeking lower-cost accommodation.",
+        "members": [
+          {
+            "id": "wuyzlgiJsLX2"
+          },
+          {
+            "id": "SvkRwP28tCaj"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "S13q6NZ5a7uX",
+        "title": "Fund energy-efficiency renovations for aging apartments and flats",
+        "description": "Create grants and subsidies to help renovate old apartments and upgrade aging flats so they use less energy. The program should direct public funding toward energy-efficiency improvements in existing homes, making upgrades more attainable for residents while reducing energy use.",
+        "members": [
+          {
+            "id": "ZvlxoQ9U2pej"
+          },
+          {
+            "id": "aaMU7am06QvE"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "UFVb9yyyOv4d",
+        "title": "Create Nearby Pocket Parks for Every Home",
+        "description": "Create small green pocket parks so that every home has access to a green park within a five-minute walk. The city should prioritize locating these compact public green spaces in areas where nearby park access is currently lacking, making everyday outdoor space easier to reach on foot.",
+        "members": [
+          {
+            "id": "MNUmRoEhlgla"
+          },
+          {
+            "id": "KO66qbJS2LhD"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "W8FLJNu9pE9s",
+        "title": "Organize Regular Public Street Festivals and Open-Air Concerts",
+        "description": "Establish a regular schedule of public street festivals and open-air music events to create more opportunities for people to gather, enjoy live entertainment, and take part in shared public life. The city should organize these events frequently rather than treating them as isolated occasions, combining festival activities with outdoor concerts where appropriate. The program should focus on making public celebrations and music a recurring part of community life.",
+        "members": [
+          {
+            "id": "XxkoHZ2W1Tso"
+          },
+          {
+            "id": "r4r5rEprBwLE"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ZosPjL0BBCqW",
+        "title": "Open Family Primary-Care Clinics in Underserved Neighborhoods",
+        "description": "Establish local family-health and primary-care clinics in underserved neighborhoods and areas that currently lack accessible care. The city should focus on bringing routine, family-oriented primary care closer to residents in these communities, reducing gaps in local access to essential health services.",
+        "members": [
+          {
+            "id": "WfcYIFw98YsU"
+          },
+          {
+            "id": "G8j5BZB70EF2"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aSSnFhQ1hGN-",
+        "title": "Establish Walk-In Counters for Municipal Website Assistance",
+        "description": "Establish staffed, in-person walk-in support counters where residents can receive help navigating the municipal website and using the city’s online services. These counters should provide direct, practical assistance so residents can access digital municipal information and services with support from city staff.",
+        "members": [
+          {
+            "id": "HVZYIgiG-8Vd"
+          },
+          {
+            "id": "Ztmkl5JMCX8R"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aXVx6Gb6xs5t",
+        "title": "Offer Free Early Disease Screening and Check-Up Programs",
+        "description": "Establish no-charge check-up and screening programs that help detect illnesses at an early stage. The city should make these preventive health services available without cost so residents can identify potential diseases sooner and seek appropriate follow-up care.",
+        "members": [
+          {
+            "id": "1JxOvmtI-HAd"
+          },
+          {
+            "id": "Bu68d-XkiOFO"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "elH2sSacVNBf",
+        "title": "Improve Lighting on Dark Streets and Footpaths",
+        "description": "Install brighter street lighting along poorly lit roads, dark streets, walkways, and footpaths. The city should prioritize locations where inadequate illumination affects residents’ ability to travel safely and comfortably, improving visibility across these public routes.",
+        "members": [
+          {
+            "id": "lpSKO6gYkg4E"
+          },
+          {
+            "id": "oE1WMvBGbq4l"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "fo3l96UMYk-w",
+        "title": "Require City Contractors and Suppliers to Hire Local Residents",
+        "description": "Require city contractors and municipal suppliers to employ people from within the city as part of their work for the municipality. This local-hiring requirement would connect public spending to employment opportunities for city residents and help ensure municipal contracts contribute directly to local quality of life.",
+        "members": [
+          {
+            "id": "A5v-zoOfEhpY"
+          },
+          {
+            "id": "vXNeOTHpCYLm"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "gFe4qjQoHzlP",
+        "title": "Assign Neighborhood Beat Officers for Regular Relationship-Based Patrols",
+        "description": "Assign neighborhood beat officers to conduct regular patrols and build ongoing relationships with the residents they serve. The city should structure patrol assignments around consistent local presence so officers know residents and residents know their officers, strengthening familiarity and day-to-day communication.",
+        "members": [
+          {
+            "id": "3HYPCx7Kz80h"
+          },
+          {
+            "id": "j4AF-Lq2Zvm1"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "gjt57Jv0eiNl",
+        "title": "Increase Rush-Hour Bus Frequency to Reduce Waiting",
+        "description": "Increase the number of buses operating during rush hour so passengers wait less for service. The city should prioritize more frequent peak-time departures to make bus travel more reliable when demand is highest, using additional buses to shorten intervals between arrivals.",
+        "members": [
+          {
+            "id": "kEixgqaJvPz1"
+          },
+          {
+            "id": "1kLEdnUXjFOG"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "hs9-owXMpqce",
+        "title": "Enable Residents to Complete Municipal Procedures Online",
+        "description": "Make municipal forms and procedures available online so residents can complete them through the internet rather than relying on in-person or paper-based processes. The city should ensure that online access covers both form submission and the full completion of municipal procedures.",
+        "members": [
+          {
+            "id": "9hIwkdB4C-Kt"
+          },
+          {
+            "id": "ZH-2shErLTfo"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "iQIJTR1Bebof",
+        "title": "Require Affordable Units in Every New Building",
+        "description": "Adopt a requirement that every new building include a share of affordable, below-market apartments. This policy would make affordability a standard part of new construction rather than an optional feature, helping ensure that new housing development includes homes accessible at below-market rates.",
+        "members": [
+          {
+            "id": "0rvgscM5m5xo"
+          },
+          {
+            "id": "p6jOorxzzf32"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "jjBdSgD7Jo-1",
+        "title": "Fund Reskilling Courses for Career-Changing Workers",
+        "description": "Fund retraining and reskilling courses for workers who are changing careers or switching occupations. The city should make course costs accessible so people can gain the skills needed to move into a different line of work, supporting smoother career transitions and improved quality of life.",
+        "members": [
+          {
+            "id": "n-Onpau34VU-"
+          },
+          {
+            "id": "yb8ADFnMxmrR"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "k5gU2JUfP1Qe",
+        "title": "Create One Unified Hotline for Municipal Service Requests",
+        "description": "Establish a single phone number that residents can use to submit requests for municipal services. The unified hotline should serve as one clear point of contact, replacing the need to identify and call separate city service lines. It should route each request to the appropriate municipal service for handling.",
+        "members": [
+          {
+            "id": "If01Kg7QaOuh"
+          },
+          {
+            "id": "CKZu98Aoyj6G"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "lCYN1biQ8L1J",
+        "title": "Reduce Waiting Times for Specialist Appointments",
+        "description": "Reduce the time patients wait before seeing a specialist doctor by making shorter specialist-appointment waits a clear healthcare service priority. The city should work toward improving timely access to specialist care and focus implementation on reducing delays between referral or appointment request and the specialist visit.",
+        "members": [
+          {
+            "id": "VcgjUFWGL671"
+          },
+          {
+            "id": "1VxhNpkEl7gN"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "npNo3NFT774m",
+        "title": "Expand In-Home Care Services for Older People",
+        "description": "Expand home-care and in-home support services so older people can remain in their own homes rather than having to move to institutions. The city should prioritize practical support that enables seniors to live safely and independently at home.",
+        "members": [
+          {
+            "id": "KFoClAl70mjv"
+          },
+          {
+            "id": "ysyfAPshIsyV"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "oJSSRziMgID8",
+        "title": "Commission Local Artists for Murals and Public Sculptures",
+        "description": "Commission and pay local artists to create murals, wall paintings, sculptures, and statues for public squares and other locations around the city. The city should use these commissions to bring locally made public art into shared urban spaces while supporting local artists’ work.",
+        "members": [
+          {
+            "id": "cZYfos8Hb3L9"
+          },
+          {
+            "id": "rp8KFUVSJaqF"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "phvHijCxwHgz",
+        "title": "Install Traffic-Calming Measures Beside and Near Schools",
+        "description": "Install traffic-calming measures beside and near schools to slow vehicle speeds where streets meet school locations. The measures should include speed humps or speed bumps and curb extensions or narrowed crossings, using complementary designs to make school-adjacent streets calmer and crossings more controlled. The action remains focused on these school locations rather than a broader traffic program in other locations.",
+        "members": [
+          {
+            "id": "5RNirxRW9DdF"
+          },
+          {
+            "id": "36As8mwRLYba"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "rcpIQ0QE22VV",
+        "title": "Modernize Aging School Buildings with Classrooms and Laboratories",
+        "description": "Renovate aging school facilities to provide modern classrooms and laboratories. The city should prioritize upgrades that improve the condition and functionality of old school buildings while ensuring that classroom and laboratory spaces are brought up to modern standards.",
+        "members": [
+          {
+            "id": "bJITTGg7SAjs"
+          },
+          {
+            "id": "K8QGiMaKVhgx"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "sDGze9mXAADq",
+        "title": "Install Citywide Air-Quality Sensors With Public Real-Time Data",
+        "description": "Deploy air-quality and pollution sensors across the city and make their readings publicly available in real time. The city should provide accessible public data so residents can see current local air-quality conditions and pollution levels.",
+        "members": [
+          {
+            "id": "YYz3vc1slLrR"
+          },
+          {
+            "id": "kEOUKD4yVzmD"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "t-ICyjwlby7h",
+        "title": "Provide Free Mental-Health Counseling and Psychological Therapy",
+        "description": "Provide residents with free mental-health counseling and no-cost psychological therapy services. The city should make professional support available without fees so residents can seek help for mental-health needs without financial barriers. Services should be offered as a public resource focused on accessible counseling and therapy.",
+        "members": [
+          {
+            "id": "TwG1VOijR7zP"
+          },
+          {
+            "id": "sokpFnO2nfHJ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "u1YFajIWyBmj",
+        "title": "Open Subsidized Low-Cost Shared Offices for Freelancers",
+        "description": "Open subsidized, low-cost shared office spaces for freelancers and independent workers. These coworking spaces should provide an affordable place to work outside the home, helping independent workers access shared professional workspace without bearing the full cost of a private office.",
+        "members": [
+          {
+            "id": "fAuqigECXSen"
+          },
+          {
+            "id": "6QGcWuQE705R"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "vVOQB0rAxdlz",
+        "title": "Fund No-Cost Music Instruction for Children",
+        "description": "Fund no-cost music instruction so children can access lessons without fees. The city should dedicate support to free music lessons and instrument instruction for kids, making participation available regardless of a family’s ability to pay.",
+        "members": [
+          {
+            "id": "TxDa1YMdZh5S"
+          },
+          {
+            "id": "OQwaYHFRsGMQ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "vi9LteikGHmn",
+        "title": "Create a Dedicated Food-Scraps Collection and Composting Stream",
+        "description": "Establish a separate collection stream for kitchen food scraps so they are diverted from regular waste and turned into compost. The city should provide a clear, dedicated pathway for collecting food waste and ensuring the collected material is processed as compost.",
+        "members": [
+          {
+            "id": "6U9hA46TfBl-"
+          },
+          {
+            "id": "LJj5JGo8qk9j"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "wv6o57VUqdgq",
+        "title": "Provide Free After-School Homework Tutoring for Struggling Pupils",
+        "description": "Provide no-cost afternoon and after-school tutoring for pupils who are falling behind. The tutoring should focus on helping struggling students complete assignments and receive the homework support they need to catch up.",
+        "members": [
+          {
+            "id": "ZhDJfYW6keob"
+          },
+          {
+            "id": "rJLae9ULAbbA"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "xBNrjLiXS0Pc",
+        "title": "Operate Late-Night Weekend Bus Service After Midnight",
+        "description": "Operate late-night weekend bus service so people traveling after midnight can get home safely and reliably. The city should schedule weekend night buses to provide transit options for late travel, addressing the gap in service after regular evening routes end.",
+        "members": [
+          {
+            "id": "eMrEJWh1p7yL"
+          },
+          {
+            "id": "WZ1KChODTb7H"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "zAegvaGrs3gt",
+        "title": "Provide Free Hot Lunches to Every Student",
+        "description": "Ensure that every pupil receives a no-cost hot lunch during the school day. This proposal would make free hot meals available to all students, removing cost as a barrier to receiving lunch at school and supporting students’ daily well-being.",
+        "members": [
+          {
+            "id": "5AJFfTGX0cSd"
+          },
+          {
+            "id": "KczxRog67sGj"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "zN3fORIeWM1p",
+        "title": "Plant More Shade Trees Along City Streets and Sidewalks",
+        "description": "Plant many more shade trees along streets and line sidewalks with trees to provide pedestrians with shade. The city should prioritize street and sidewalk tree planting as a practical way to make walking routes more comfortable and improve residents’ daily quality of life.",
+        "members": [
+          {
+            "id": "g98Z4JzGch0a"
+          },
+          {
+            "id": "OxBI-QfWcYVo"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "-mNcGdk2j932",
+        "title": "Dog-Friendly Public Spaces",
+        "description": "Designated neighborhood areas and amenities that support dogs, their owners, and community recreation.",
+        "members": [],
+        "memberSynthIds": [
+          "GLiwLlPmaYRp"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "4YYuQa6ThEoS",
+        "title": "Street and pathway safety",
+        "description": "Improvements that make streets and footpaths safer, more accessible, and more comfortable for residents.",
+        "members": [],
+        "memberSynthIds": [
+          "elH2sSacVNBf",
+          "gFe4qjQoHzlP",
+          "phvHijCxwHgz",
+          "UFVb9yyyOv4d",
+          "EsGWNHzOK-tM",
+          "Lwih1wVFSQD-",
+          "2fNgNthequro",
+          "zN3fORIeWM1p"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ZzdkRHJZ3igQ",
+        "title": "Municipal Service Access",
+        "description": "Improving how residents request, report, and receive city services and assistance.",
+        "members": [],
+        "memberSynthIds": [
+          "k5gU2JUfP1Qe",
+          "3ov5NIAhRdmC",
+          "HzQn9L24je6A",
+          "OArFk0qIMJeh",
+          "1fn4zl3C7HQJ",
+          "hs9-owXMpqce",
+          "aSSnFhQ1hGN-",
+          "npNo3NFT774m",
+          "MfNLGXMH-kyY"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "avjCQgC2dRD-",
+        "title": "Community Events and Festivals",
+        "description": "Public gatherings and cultural events that strengthen community connections and enhance residents' enjoyment of city life.",
+        "members": [],
+        "memberSynthIds": [
+          "W8FLJNu9pE9s",
+          "NFQhfFY5MqiD",
+          "oJSSRziMgID8",
+          "vVOQB0rAxdlz"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "c95bHITJXWMt",
+        "title": "Housing Affordability and Access",
+        "description": "Policies requiring new developments to include homes affordable to residents with lower and moderate incomes.",
+        "members": [
+          {
+            "id": "r4T5LlYVOlmr"
+          }
+        ],
+        "memberSynthIds": [
+          "iQIJTR1Bebof",
+          "F5eAeP6JHSm0",
+          "S13q6NZ5a7uX",
+          "ObrnwZLqZCfA"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "feJxIh-jclve",
+        "title": "Late-night public transit",
+        "description": "Improving overnight and late-night transit options for residents traveling outside regular service hours.",
+        "members": [],
+        "memberSynthIds": [
+          "xBNrjLiXS0Pc",
+          "FpSQu-NovsaP",
+          "OHLu8TpXXHJv",
+          "gjt57Jv0eiNl"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "fu0dOeUIv6-f",
+        "title": "Environment and Sustainability",
+        "description": "Programs and infrastructure for collecting food scraps and converting them into compost.",
+        "members": [],
+        "memberSynthIds": [
+          "vi9LteikGHmn",
+          "4Dqd4I7KHqVR",
+          "NsGQKODlOnk9",
+          "FD7M5GPYup8-",
+          "114TnKFjPQoX",
+          "sDGze9mXAADq"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "k8fSjgrhOPy5",
+        "title": "Jobs and Economic Opportunity",
+        "description": "Programs helping residents gain new skills and transition into different careers.",
+        "members": [],
+        "memberSynthIds": [
+          "jjBdSgD7Jo-1",
+          "fo3l96UMYk-w",
+          "u1YFajIWyBmj",
+          "L5mnw7uevhLY"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "rufGv6VQaIOp",
+        "title": "Schools and Student Support",
+        "description": "Policies to limit class sizes and provide students with more individualized attention.",
+        "members": [],
+        "memberSynthIds": [
+          "KdEpSBAA06e-",
+          "rcpIQ0QE22VV",
+          "MFUe6jUTrG1G",
+          "wv6o57VUqdgq",
+          "zAegvaGrs3gt"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "sH7zYXG1QFMc",
+        "title": "Healthcare Access and Support",
+        "description": "Programs that help residents detect health issues early through free screenings and regular check-ups.",
+        "members": [],
+        "memberSynthIds": [
+          "aXVx6Gb6xs5t",
+          "ZosPjL0BBCqW",
+          "t-ICyjwlby7h",
+          "lCYN1biQ8L1J"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [
+    {
+      "id": "3xOKKn5o271l",
+      "title": "Municipal renewable energy",
+      "description": "Renewable energy initiatives for city-owned buildings and operations.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "fu0dOeUIv6-f"
+    },
+    {
+      "id": "8b5fhrWKWPuc",
+      "title": "Single-use plastic reduction",
+      "description": "Policies and initiatives to reduce disposable plastic waste in shops, restaurants, and other local businesses.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "fu0dOeUIv6-f"
+    },
+    {
+      "id": "B5dSkI3AVT3N",
+      "title": "Affordable Freelancer Workspaces",
+      "description": "Accessible, low-cost shared office spaces supporting freelancers and independent workers.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "k8fSjgrhOPy5"
+    },
+    {
+      "id": "IQW6vvkBHU7y",
+      "title": "Community gardens and urban agriculture",
+      "description": "Shared spaces for residents to grow food, connect with neighbors, and improve local well-being.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "fu0dOeUIv6-f"
+    },
+    {
+      "id": "KtEg2RgC1UjJ",
+      "title": "Affordable student housing",
+      "description": "Housing options that make it easier for students to live near colleges and campuses.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "c95bHITJXWMt"
+    },
+    {
+      "id": "YcSAD9FoIP70",
+      "title": "Small business financial support",
+      "description": "Programs that improve access to affordable credit and financing for neighborhood small businesses.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "k8fSjgrhOPy5"
+    },
+    {
+      "id": "ZXlsbbx-ISmo",
+      "title": "Air quality monitoring",
+      "description": "Improving public access to real-time information about local air pollution levels.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "fu0dOeUIv6-f"
+    },
+    {
+      "id": "lTn82dpHTlyl",
+      "title": "Student Nutrition Programs",
+      "description": "Programs that provide students with free, nutritious meals during the school day.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "rufGv6VQaIOp"
+    },
+    {
+      "id": "yHxdRafSI05r",
+      "title": "Mental health support services",
+      "description": "Access to counseling, therapy, and other mental health care for residents.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "sH7zYXG1QFMc"
+    },
+    {
+      "id": "zKp9Hm2CZIZH",
+      "title": "Specialist healthcare access",
+      "description": "Access to timely specialist medical appointments and care for residents.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "sH7zYXG1QFMc"
+    }
+  ],
+  "sourceOptions": {
+    "visible": 100,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "attach": 47,
+    "spawn": 69,
+    "review-queued": 32,
+    "merge": 6
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.en.json",
+    "corpusSha": "8fdcaccc66dd",
+    "seed": 42,
+    "synthesisOverrides": {},
+    "statementsFed": 100,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 12000,
+    "maxWaitMs": 45000,
+    "settleTimeouts": 2,
+    "durationMs": 3327568,
+    "gitSha": "0583ce959",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}

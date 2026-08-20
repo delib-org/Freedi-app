@@ -23,6 +23,7 @@ and `score100.mjs` for the implementation.
 | `en-seed42-consolidated` | en | + theme consolidation; reJudge judged on members; Pass 3b | **0.910** | **1.000** | 0.775 | **50/50** | 50 | 11 |
 | `en-seed7-consolidated` | en | same build, seed 7 | **0.905** | **1.000** | 0.763 | **50/50** | 50 | 10 |
 | `en-seed1234-consolidated` | en | same build, seed 1234 | **0.884** | **1.000** | 0.711 | **50/50** | 50 | 17 |
+| `en-seed42-memberjudge` | en | + consolidation judged on members; judge-once; scope rule | **0.865** | 0.990 | 0.678 | 49/50 | 49 | **10** |
 
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
@@ -96,6 +97,76 @@ grouping correct, spread across too many names.
 
 Headline spread 0.884–0.910, mean ≈ 0.900. Quote the range, not the best number.
 
+## Finding 13 — the consolidation fix did NOT survive its live run, and the offline replay is why
+
+`en-seed42-memberjudge` is the full-corpus confirmation run for Finding 10, at
+shipped defaults, seed 42, same corpus, verified build (single source load, `lib`
+fingerprint byte-identical before and after, HEAD `0583ce959`). It is directly
+comparable to the 0.910 baseline, and it is **worse: 0.865**.
+
+| | baseline `en-seed42-consolidated` | `en-seed42-memberjudge` |
+| --- | --- | --- |
+| accuracy | **0.910** | 0.865 |
+| synth F1 | 1.000 | 0.990 (49/50, P still 1.000, 0 false merges) |
+| **topic F1** | **0.775** | **0.678** |
+| cluster (countable) | 0.840 | 0.750 |
+| themes (true 10) | 11 | **10** |
+| coverage | 100/100 | 99/100 |
+
+**The theme count was hit and it did not help, because it was reached by
+over-merging.** Two of the ten headings are impure:
+
+```
+16 | Street and pathway safety   | public-safety:8  parks-and-green-space:6  transport:2
+18 | Municipal Service Access    | digital-services:10  culture:2  public-safety:2  health:2  jobs:2
+```
+
+The second is a catch-all — a heading general enough to absorb a piece of four
+unrelated themes. Both `public-safety` and `parks-and-green-space` collapse to
+0.200 as a result, which is the whole of the drop. The other eight headings are
+clean.
+
+**Why the offline replay mispredicted it.** `themeConsolidation.mjs` replayed the
+judge against each run's **final** theme set — for seed 42, eleven already-tidy
+headings — and measured a clean 11 → 10 with zero wrong merges. Live, the sweep
+never sees that set. The pump log shows it facing **19 headings and merging 9
+donors in a single pass**, on intermediate headings holding one or two
+proposals each. A judge asked to tidy 11 settled headings and a judge asked to
+tidy 19 half-formed ones are not doing the same task, and the offline
+measurement only covered the first. **Replaying a decision on the end state does
+not predict its behaviour on the states it actually encounters.** That is the
+same shape as Finding 8's lesson, one level up: the harness was measuring
+something adjacent to the real thing and reported a number for it.
+
+The `MAX_MERGES_PER_SWEEP` half of Finding 10 still stands — the cap genuinely
+was never the constraint, and this run reached 9 merges in a sweep against a cap
+of 8, so it is now the binding constraint and is what stopped it merging further.
+
+**Status: the consolidation change is not justified by this evidence and should
+be reverted or tightened before it goes anywhere.** The judge-once fingerprint is
+not implicated in the regression and is independently justified on
+repeat-sampling grounds. One run, one seed — but it is the same seed as the
+baseline, so it is like-for-like, and the direction is the opposite of predicted.
+
+## Finding 14 — the scope fix holds in a live run, and the text layer is exact
+
+The same run is the first to export proposal bodies, so it gives the text
+measurement from a real pipeline rather than from driving the synthesis function
+directly:
+
+```
+49 syntheses scored on title+body (bodies present 49/49)
+members preserved 98/98    weakened 0    lost 0    fidelity 1.000
+blunt `fabricated`: 3/49   (it was 43/50 before the scope rule)
+```
+
+**Perfect fidelity on a live run**: every one of the 98 member statements inside
+the 49 syntheses is still recognisably asked for in the text that replaced it.
+The three remaining `fabricated` flags are all mild siting/rationale additions
+("prioritise locations where park access is lacking"), not scope widening — the
+failure mode Finding 11b identified is absent. The scope rule (`8d10ffd2f`) is
+confirmed in production shape, independently of the theming regression above.
+
 ## Finding 10 — consolidation under-merged because the judge could not see, and the cap was never the constraint
 
 Finding 9 left theme-count variance as the one clear remaining defect, and the
@@ -149,13 +220,17 @@ keyed on a fingerprint of which headings exist and how much each holds.
 Convergence is unaffected — a merge changes the set — and it removes an LLM call
 per parent per sweep on questions where nothing has happened.
 
-Both changes are in `a4674a4f5`. **Neither has been through the live benchmark
-yet**; the numbers above are an offline replay of the judge, not a pipeline run.
+Both changes are in `a4674a4f5`. **The live benchmark has now run, and it
+contradicts the prompt half of this finding — see Finding 13.** The numbers below
+are an offline replay of the judge on each run's FINAL theme set, which turned
+out not to predict its behaviour on the intermediate sets the live sweep
+actually meets. Read this finding as the diagnosis it got right (the cap was
+never the constraint) plus a fix that did not survive measurement.
 A 20-statement smoke run (`runs/smoke-consolidation`) confirmed no regression in
-the synth layer — 2 of the 2 ground-truth pairs available in that prefix were
-recovered, each holding exactly its two members — and that the exporter now
-writes proposal bodies. It did **not** exercise consolidation: 20 statements
-produced 2 themes, below `MIN_THEMES_TO_CONSOLIDATE`.
+the synth layer and that the exporter now writes proposal bodies, but did not
+exercise consolidation at all — 20 statements produced 2 themes, below
+`MIN_THEMES_TO_CONSOLIDATE`. The full-corpus run that did exercise it is
+Finding 13, and it went the other way.
 
 ## Finding 12 — the review queue never emptied, and never held anything real
 
