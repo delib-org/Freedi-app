@@ -447,6 +447,17 @@ function pump(script: string, label: string): void {
 interface ExportedCluster {
 	id: string;
 	title: string;
+	/**
+	 * The proposal body the LLM wrote — what a participant actually reads and
+	 * votes on.
+	 *
+	 * Exported because grouping accuracy is not the whole of correctness: a
+	 * synthesis can hold exactly the right two statements and still describe
+	 * only one of them, and nothing in this study could see that. Without the
+	 * text in the run folder that question is unanswerable after the fact, since
+	 * the emulator's Firestore is wiped by the next run.
+	 */
+	description?: string;
 	members: Array<{ id: string }>;
 	memberSynthIds?: string[];
 	derivedByPipeline: string;
@@ -511,6 +522,7 @@ async function exportResults(seeded: SeedItem[]): Promise<{
 		const row: ExportedCluster = {
 			id: d.statementId,
 			title: d.statement ?? '',
+			...(d.description ? { description: d.description as string } : {}),
 			members,
 			...(memberSynthIds.length > 0 ? { memberSynthIds } : {}),
 			derivedByPipeline: derived,
