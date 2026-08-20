@@ -32,15 +32,20 @@ import { isTopicCluster } from './clusterOps';
  * hidden rather than deleted, matching how the synth sweep retires a merged
  * cluster.
  *
- * Two things the seed sweep taught, both measured in
- * `scientific-research/2026-08-18-live-synth-accuracy/analysis/themeConsolidation.mjs`:
+ * What the seed sweep taught, measured in
+ * `scientific-research/2026-08-18-live-synth-accuracy/analysis/`:
  *
- *   - The judge must see the proposals under each heading, not just the
- *     heading. See `groupEquivalentThemes`.
  *   - Each distinct theme set is judged ONCE. This function is called from a
  *     10-minute schedule, so without that guard a settled question re-asks a
  *     non-deterministic model to find merges ~144 times a day, and merges are
  *     irreversible for the reader. See `alreadyJudged`.
+ *   - Showing the judge the proposals under each heading was tried, measured
+ *     offline as a win, and refuted by a live run (RESULTS.md Finding 13) —
+ *     see `groupEquivalentThemes` for the story. The deeper lesson came from
+ *     reconstructing that run's mid-run states (`analysis/themeFiling.mjs`):
+ *     this sweep's merges were CLEAN; the theme layer's real impurity enters
+ *     at FILING time (`assignToTheme`), one misfiled proposal at a time, into
+ *     headings whose broad-sounding titles act as attractors.
  */
 
 const MIN_THEMES_TO_CONSOLIDATE = 3;

@@ -167,6 +167,72 @@ The three remaining `fabricated` flags are all mild siting/rationale additions
 failure mode Finding 11b identified is absent. The scope rule (`8d10ffd2f`) is
 confirmed in production shape, independently of the theming regression above.
 
+## Finding 15 — Finding 13 blamed the wrong mechanism: theme impurity enters at FILING, in every run
+
+Finding 13's *measurement* was right (the run scored 0.865) and its
+*methodological* lesson stands (replaying on end-states predicts nothing). Its
+**causal attribution was wrong**, and the evidence that shows it came from
+rescuing the run's full audit trail out of the still-running emulator before it
+was wiped (`analysis/dumpEmulatorEvidence.mjs`): the exporter had been dropping
+`prevState`/`newState`, which carry each cluster's exact membership before and
+after every event.
+
+With those snapshots, `analysis/themeFiling.mjs` rebuilds the exact theme set at
+any instant of the run. The reconstruction is certified before it is used: the
+two consolidation sweeps see 10 and 19 visible themes (matching the pump log),
+and the state at `judgedAt` reproduces the live sweep fingerprint
+**byte-for-byte**.
+
+**Neither impure heading was made by the sweep.** "Street and pathway safety"
+and "Municipal Service Access" appear in none of the six merge events, as
+survivor or donor — and per-member tracing shows every foreign statement walked
+in through a *filing* decision:
+
+```
+02:56  "Rebuild play areas for kids with disabilities"  [parks]   → Street and pathway safety   (assignToTheme)
+03:09  "Create Nearby Pocket Parks for Every Home"      [parks]   → Street and pathway safety   (nest judge)
+02:47  "Public Library Branch in Every District"        [culture] → Municipal Service Access    (nest judge)
+03:18  "Expand In-Home Care for Older People"           [health]  → Municipal Service Access    (nest judge)
+03:20  "Streamline Business Licensing"                  [jobs]    → Municipal Service Access    (nest judge)
+03:03  "Create pocket parks …"                          [parks]   → Street and pathway safety   (cosine attach)
+```
+
+The six sweep merges themselves were **clean** — Environment, Jobs, Housing,
+Schools, Healthcare, Waste all merged same-topic donors. Scored over the whole
+run: **58 judged filing decisions, 12 misfiles, 10 over-NONEs — 62% accuracy.**
+Every misfile lands in one of two attractor headings whose broad, service-flavoured
+titles ("…Access", "…safety") invite everything near them.
+
+**And the baselines have the same disease.** Re-profiling all three certified
+runs: every one carries 3–4 mixed headings with the identical signature —
+foreign members in whole-synth pairs under an attractive title
+(seed 42: "Nighttime safety and mobility" transport:10+safety:6; seed 7:
+"Recreation and Community Life" parks:10+culture:8+housing:2; seed 1234:
+"Street lighting and safety" safety:8+parks:4). **Filing is the accuracy ceiling
+of the theme layer in every run**, and a ~0.05 swing between two single runs is
+within its dice. The memberjudge run was not made worse by the consolidation
+prompt; it drew unluckier filing dice — which means the 0.910 vs 0.865
+comparison was **confounded**, and the revert, while safe, was decided on the
+wrong evidence.
+
+Two structural facts about the filing judge (`assignToTheme`) explain the bias
+of the errors:
+
+1. **It sees titles and descriptions, never contents.** A heading's title is a
+   compression of whatever proposal arrived first; the judge cannot see that
+   "Municipal Service Access" actually holds hotline/portal/wifi proposals when
+   it files a library branch under it.
+2. **Its doubt-bias is inverted for today's pipeline.** The prompt says *"Prefer
+   an existing topic when one plausibly fits; a proliferation of near-duplicate
+   topics is worse than a slightly broad one."* That was written before the
+   consolidation sweep existed. Now a too-eager NONE self-heals — the sweep
+   merges duplicate headings — while a misfile is permanent. The cheap error has
+   switched sides, and the prompt still pays for the expensive one.
+
+`themeFiling.mjs` A/Bs the 2×2 (evidence × doubt-bias) over the same 58
+decisions against their exact reconstructed contexts. Results below when the
+sweep completes.
+
 ## Finding 10 — consolidation under-merged because the judge could not see, and the cap was never the constraint
 
 Finding 9 left theme-count variance as the one clear remaining defect, and the

@@ -1,0 +1,3490 @@
+[
+ {
+  "eventId": "B5vS9KsMNLDuw4X1WMZw",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "sokpFnO2nfHJ",
+  "reason": "gray-band match (no auto-action) (cosine=0.648)",
+  "newState": {
+   "siblingId": "CKZu98Aoyj6G",
+   "similarity": 0.6477900065486423
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787192988769
+ },
+ {
+  "eventId": "QFSSo7Ujehy5uWkV7ykI",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "WZ1KChODTb7H",
+  "reason": "gray-band match (no auto-action) (cosine=0.631)",
+  "newState": {
+   "siblingId": "CKZu98Aoyj6G",
+   "similarity": 0.6313110074728179
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193016873
+ },
+ {
+  "eventId": "48SgVGFAut61MWY5MPHy",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "TzQgLykzmrbg",
+  "reason": "gray-band match (no auto-action) (cosine=0.670)",
+  "newState": {
+   "siblingId": "sokpFnO2nfHJ",
+   "similarity": 0.6702749296198912
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193046129
+ },
+ {
+  "eventId": "GmPoSTVyy0z2ABY8Cbi8",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "8PxTNDZkVeHf",
+  "reason": "gray-band match (no auto-action) (cosine=0.677)",
+  "newState": {
+   "siblingId": "sokpFnO2nfHJ",
+   "similarity": 0.6771149358073661
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193073962
+ },
+ {
+  "eventId": "xq5OJIUUXAgluQOCBSTJ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "oE1WMvBGbq4l",
+  "reason": "gray-band match (no auto-action) (cosine=0.727)",
+  "newState": {
+   "siblingId": "WZ1KChODTb7H",
+   "similarity": 0.7274322656370761
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193102725
+ },
+ {
+  "eventId": "pu4cMtMZISNkdDUxhufp",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "6QGcWuQE705R",
+  "reason": "gray-band match (no auto-action) (cosine=0.706)",
+  "newState": {
+   "siblingId": "TzQgLykzmrbg",
+   "similarity": 0.7056665301534162
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193132068
+ },
+ {
+  "eventId": "W0OpUYYvJQO9LI0Ol37h",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "vXNeOTHpCYLm",
+  "reason": "gray-band match (no auto-action) (cosine=0.701)",
+  "newState": {
+   "siblingId": "CKZu98Aoyj6G",
+   "similarity": 0.7006186151207927
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193161724
+ },
+ {
+  "eventId": "pcVcr6aRSRLZDe0gBfmf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "t-ICyjwlby7h",
+  "optionId": "TwG1VOijR7zP",
+  "reason": "spawn synth at cosine=0.916",
+  "prevState": {
+   "sourceOptionId": "TwG1VOijR7zP",
+   "siblingId": "sokpFnO2nfHJ"
+  },
+  "newState": {
+   "clusterId": "t-ICyjwlby7h",
+   "integratedOptions": [
+    "TwG1VOijR7zP",
+    "sokpFnO2nfHJ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193193074
+ },
+ {
+  "eventId": "6SaD4OkhSf5JLaG61tZr",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "yHxdRafSI05r",
+  "optionId": "t-ICyjwlby7h",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "t-ICyjwlby7h"
+  },
+  "newState": {
+   "clusterId": "yHxdRafSI05r",
+   "integratedOptions": [
+    "t-ICyjwlby7h"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193194213
+ },
+ {
+  "eventId": "jHanRx0HrkpR6JQogNjO",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "I1YMzdsEJKBx",
+  "reason": "gray-band match (no auto-action) (cosine=0.712)",
+  "newState": {
+   "siblingId": "oE1WMvBGbq4l",
+   "similarity": 0.7121236663769945
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193225521
+ },
+ {
+  "eventId": "XzBq9VQ1yQZXm5Tfm3n9",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "64bKjBqbq1O7",
+  "reason": "gray-band match (no auto-action) (cosine=0.684)",
+  "newState": {
+   "siblingId": "vXNeOTHpCYLm",
+   "similarity": 0.6842591859650008
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193257019
+ },
+ {
+  "eventId": "dG9rx9tWVUf78EYaGada",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "rp8KFUVSJaqF",
+  "reason": "gray-band match (no auto-action) (cosine=0.709)",
+  "newState": {
+   "siblingId": "8PxTNDZkVeHf",
+   "similarity": 0.7092472020912265
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193286177
+ },
+ {
+  "eventId": "vU7NOpz1PcjQPzfwfjS3",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "LJj5JGo8qk9j",
+  "reason": "gray-band match (no auto-action) (cosine=0.695)",
+  "newState": {
+   "siblingId": "64bKjBqbq1O7",
+   "similarity": 0.6946059864267536
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193313942
+ },
+ {
+  "eventId": "7TH5UEYOuPYmbdAmkfEI",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "rJLae9ULAbbA",
+  "reason": "gray-band match (no auto-action) (cosine=0.743)",
+  "newState": {
+   "siblingId": "TwG1VOijR7zP",
+   "similarity": 0.7426653980553274
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193343492
+ },
+ {
+  "eventId": "1bsMgt7guo5kbiLdOeiJ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "SvkRwP28tCaj",
+  "reason": "gray-band match (no auto-action) (cosine=0.778)",
+  "newState": {
+   "siblingId": "I1YMzdsEJKBx",
+   "similarity": 0.7780008841619248
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193371840
+ },
+ {
+  "eventId": "oyNjcKmHNhpWP2MpDCxK",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "qPEeyxzAxLCV",
+  "reason": "gray-band match (no auto-action) (cosine=0.707)",
+  "newState": {
+   "siblingId": "rJLae9ULAbbA",
+   "similarity": 0.7071821212179968
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193400649
+ },
+ {
+  "eventId": "d68hDhlY88kTQp9SyJ7h",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "r4r5rEprBwLE",
+  "reason": "gray-band match (no auto-action) (cosine=0.781)",
+  "newState": {
+   "siblingId": "rp8KFUVSJaqF",
+   "similarity": 0.7809893636088149
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193429569
+ },
+ {
+  "eventId": "i3ZGMeT7ykhKD6fc6L72",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "4Qw-9G3IVDfm",
+  "reason": "gray-band match (no auto-action) (cosine=0.693)",
+  "newState": {
+   "siblingId": "oE1WMvBGbq4l",
+   "similarity": 0.6931571355936843
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193456888
+ },
+ {
+  "eventId": "jsLu6MQsItqQphGhMOUh",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "p6jOorxzzf32",
+  "reason": "gray-band match (no auto-action) (cosine=0.817)",
+  "newState": {
+   "siblingId": "I1YMzdsEJKBx",
+   "similarity": 0.8171291146003056
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193488372
+ },
+ {
+  "eventId": "9FZnUcXcMpSyuD4nbZMO",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "xBNrjLiXS0Pc",
+  "optionId": "eMrEJWh1p7yL",
+  "reason": "spawn synth at cosine=0.923",
+  "prevState": {
+   "sourceOptionId": "eMrEJWh1p7yL",
+   "siblingId": "WZ1KChODTb7H"
+  },
+  "newState": {
+   "clusterId": "xBNrjLiXS0Pc",
+   "integratedOptions": [
+    "eMrEJWh1p7yL",
+    "WZ1KChODTb7H"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193518147
+ },
+ {
+  "eventId": "IeRHlFzxYhcB6OFn6OAe",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "feJxIh-jclve",
+  "optionId": "xBNrjLiXS0Pc",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "xBNrjLiXS0Pc"
+  },
+  "newState": {
+   "clusterId": "feJxIh-jclve",
+   "integratedOptions": [
+    "xBNrjLiXS0Pc"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193520932
+ },
+ {
+  "eventId": "8SppKxEaMKWJ7UXPUhv2",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "kU1WcLWzSsJX",
+  "reason": "gray-band match (no auto-action) (cosine=0.725)",
+  "newState": {
+   "siblingId": "TzQgLykzmrbg",
+   "similarity": 0.7245338040962618
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193553070
+ },
+ {
+  "eventId": "t4uDkcsGHd4CCiGvN7qa",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "feJxIh-jclve",
+  "optionId": "1Z7HVdRk73eg",
+  "reason": "option filed under theme (judge: Live tracking improves riders’ ability to navigate public transit, including late-night service.)",
+  "prevState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "1Z7HVdRk73eg"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193582713
+ },
+ {
+  "eventId": "wFWFjCgVMaSM24cSx3Q1",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "HTA3flOkfu15",
+  "reason": "gray-band match (no auto-action) (cosine=0.728)",
+  "newState": {
+   "siblingId": "p6jOorxzzf32",
+   "similarity": 0.7281573648945924
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193610014
+ },
+ {
+  "eventId": "wjHfciTqbz1HJAfwZN1N",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Y7DSKVXb85R5",
+  "reason": "gray-band match (no auto-action) (cosine=0.740)",
+  "newState": {
+   "siblingId": "CKZu98Aoyj6G",
+   "similarity": 0.7404691690637641
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193638984
+ },
+ {
+  "eventId": "aRLJJYsZ6Yx2FIus6q6H",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "cA5lkLPPeD-7",
+  "reason": "gray-band match (no auto-action) (cosine=0.759)",
+  "newState": {
+   "siblingId": "LJj5JGo8qk9j",
+   "similarity": 0.7592824134346603
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193666918
+ },
+ {
+  "eventId": "YGh6Figj5094udvUOeU0",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "k5gU2JUfP1Qe",
+  "optionId": "If01Kg7QaOuh",
+  "reason": "spawn synth at cosine=0.887",
+  "prevState": {
+   "sourceOptionId": "If01Kg7QaOuh",
+   "siblingId": "CKZu98Aoyj6G"
+  },
+  "newState": {
+   "clusterId": "k5gU2JUfP1Qe",
+   "integratedOptions": [
+    "If01Kg7QaOuh",
+    "CKZu98Aoyj6G"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193697781
+ },
+ {
+  "eventId": "WHP5DLyli0zldPAIfPIL",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "k5gU2JUfP1Qe",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "k5gU2JUfP1Qe"
+  },
+  "newState": {
+   "clusterId": "ZzdkRHJZ3igQ",
+   "integratedOptions": [
+    "k5gU2JUfP1Qe"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193700881
+ },
+ {
+  "eventId": "XegVM6iw6a8KPMiTthtk",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "j4AF-Lq2Zvm1",
+  "reason": "gray-band match (no auto-action) (cosine=0.700)",
+  "newState": {
+   "siblingId": "Y7DSKVXb85R5",
+   "similarity": 0.7000386586541462
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193731523
+ },
+ {
+  "eventId": "eHU7pgFzvsUg4paH0YAF",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "1DMpYMe4YpiO",
+  "reason": "gray-band match (no auto-action) (cosine=0.716)",
+  "newState": {
+   "siblingId": "I1YMzdsEJKBx",
+   "similarity": 0.7157522263660314
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193759844
+ },
+ {
+  "eventId": "NLEKd5LoaZZYOKP0DslC",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "MU5qC7ZLhGGS",
+  "reason": "gray-band match (no auto-action) (cosine=0.816)",
+  "newState": {
+   "siblingId": "qPEeyxzAxLCV",
+   "similarity": 0.8161209114408255
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193789925
+ },
+ {
+  "eventId": "aPMEC35JIb9dxESAnr6w",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "vi9LteikGHmn",
+  "optionId": "6U9hA46TfBl-",
+  "reason": "spawn synth at cosine=0.937",
+  "prevState": {
+   "sourceOptionId": "6U9hA46TfBl-",
+   "siblingId": "LJj5JGo8qk9j"
+  },
+  "newState": {
+   "clusterId": "vi9LteikGHmn",
+   "integratedOptions": [
+    "6U9hA46TfBl-",
+    "LJj5JGo8qk9j"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193819519
+ },
+ {
+  "eventId": "R3LfMvjWCZOTijeC4qN8",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "fu0dOeUIv6-f",
+  "optionId": "vi9LteikGHmn",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "vi9LteikGHmn"
+  },
+  "newState": {
+   "clusterId": "fu0dOeUIv6-f",
+   "integratedOptions": [
+    "vi9LteikGHmn"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193822569
+ },
+ {
+  "eventId": "pxugaP5X7fpYm6nNSmnN",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "feJxIh-jclve",
+  "optionId": "FpSQu-NovsaP",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "1Z7HVdRk73eg"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193857525
+ },
+ {
+  "eventId": "7fDe81RLQa89PhEsan5t",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "FpSQu-NovsaP",
+  "optionId": "hZf1UqkEfdOd",
+  "reason": "spawn synth at cosine=0.865",
+  "prevState": {
+   "sourceOptionId": "hZf1UqkEfdOd",
+   "siblingId": "1Z7HVdRk73eg"
+  },
+  "newState": {
+   "clusterId": "FpSQu-NovsaP",
+   "integratedOptions": [
+    "hZf1UqkEfdOd",
+    "1Z7HVdRk73eg"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193857527
+ },
+ {
+  "eventId": "4NbdHIxR7afO3docWCWb",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "SqJTPkZYxL5Z",
+  "reason": "option filed under theme (judge: An open portal improves residents’ access to municipal information and services.)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193888667
+ },
+ {
+  "eventId": "pIIqJOWR0hZGG3wTBdso",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "OxBI-QfWcYVo",
+  "reason": "gray-band match (no auto-action) (cosine=0.805)",
+  "newState": {
+   "siblingId": "oE1WMvBGbq4l",
+   "similarity": 0.8050368145130559
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193918350
+ },
+ {
+  "eventId": "KUnImn0xRYuJn9uUC0BG",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "yb8ADFnMxmrR",
+  "reason": "gray-band match (no auto-action) (cosine=0.743)",
+  "newState": {
+   "siblingId": "vXNeOTHpCYLm",
+   "similarity": 0.7429971442433646
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193947239
+ },
+ {
+  "eventId": "ZU8leEHoG3tWBRZbzwGm",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "elH2sSacVNBf",
+  "optionId": "lpSKO6gYkg4E",
+  "reason": "spawn synth at cosine=0.925",
+  "prevState": {
+   "sourceOptionId": "lpSKO6gYkg4E",
+   "siblingId": "oE1WMvBGbq4l"
+  },
+  "newState": {
+   "clusterId": "elH2sSacVNBf",
+   "integratedOptions": [
+    "lpSKO6gYkg4E",
+    "oE1WMvBGbq4l"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193978486
+ },
+ {
+  "eventId": "h5nSYuFtH4XDA9Va9w7Q",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "elH2sSacVNBf",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "elH2sSacVNBf"
+  },
+  "newState": {
+   "clusterId": "4YYuQa6ThEoS",
+   "integratedOptions": [
+    "elH2sSacVNBf"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787193982620
+ },
+ {
+  "eventId": "rkSwtRHS1s0gDeHuQ9pl",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "kEOUKD4yVzmD",
+  "reason": "gray-band match (no auto-action) (cosine=0.708)",
+  "newState": {
+   "siblingId": "SqJTPkZYxL5Z",
+   "similarity": 0.7077973932392116
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194013753
+ },
+ {
+  "eventId": "r7hfomJCA4yjPCNikciV",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Bu68d-XkiOFO",
+  "reason": "gray-band match (no auto-action) (cosine=0.743)",
+  "newState": {
+   "siblingId": "TwG1VOijR7zP",
+   "similarity": 0.7431008836089847
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194042375
+ },
+ {
+  "eventId": "hPV0t7T0BMflVF1YhmmA",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "3ov5NIAhRdmC",
+  "optionId": "VgRy2UYkJkcX",
+  "reason": "spawn synth at cosine=0.936",
+  "prevState": {
+   "sourceOptionId": "VgRy2UYkJkcX",
+   "siblingId": "kU1WcLWzSsJX"
+  },
+  "newState": {
+   "clusterId": "3ov5NIAhRdmC",
+   "integratedOptions": [
+    "VgRy2UYkJkcX",
+    "kU1WcLWzSsJX"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194073489
+ },
+ {
+  "eventId": "IVONxVovG7Zx2ZTuRvum",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "3ov5NIAhRdmC",
+  "reason": "nest synthesis under theme (judge: Expands residents’ access to a public municipal service and community resources.)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194076192
+ },
+ {
+  "eventId": "cFFl6xdehKwFycnfjZ8w",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "fu0dOeUIv6-f",
+  "optionId": "vqjlDoQ6rJSF",
+  "reason": "cosine=0.811",
+  "prevState": {
+   "integratedOptions": [
+    "vi9LteikGHmn"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "vi9LteikGHmn",
+    "vqjlDoQ6rJSF"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194104776
+ },
+ {
+  "eventId": "1Mtq2JSAMkex09Xxvfpd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "W8FLJNu9pE9s",
+  "optionId": "XxkoHZ2W1Tso",
+  "reason": "spawn synth at cosine=0.943",
+  "prevState": {
+   "sourceOptionId": "XxkoHZ2W1Tso",
+   "siblingId": "r4r5rEprBwLE"
+  },
+  "newState": {
+   "clusterId": "W8FLJNu9pE9s",
+   "integratedOptions": [
+    "XxkoHZ2W1Tso",
+    "r4r5rEprBwLE"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194142537
+ },
+ {
+  "eventId": "mQI8UHbUGMF1Z6YUJ2Ek",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "avjCQgC2dRD-",
+  "optionId": "W8FLJNu9pE9s",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "W8FLJNu9pE9s"
+  },
+  "newState": {
+   "clusterId": "avjCQgC2dRD-",
+   "integratedOptions": [
+    "W8FLJNu9pE9s"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194146360
+ },
+ {
+  "eventId": "WpymAH7k3hS4voLtHl5f",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "feJxIh-jclve",
+  "optionId": "u02qYkYs5Ymj",
+  "reason": "option filed under theme (judge: Concerns public transit access and affordability for residents traveling around the city.)",
+  "prevState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP",
+    "u02qYkYs5Ymj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194180212
+ },
+ {
+  "eventId": "PTs3u4yWPmjzCf7J2hRG",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "2O2yEVezJeWG",
+  "reason": "option filed under theme (judge: Surveillance cameras aim to improve safety in streets and public pathways.)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194208405
+ },
+ {
+  "eventId": "IJRio1jGopwCyPiUuY4Y",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ObrnwZLqZCfA",
+  "optionId": "wuyzlgiJsLX2",
+  "reason": "spawn synth at cosine=0.907",
+  "prevState": {
+   "sourceOptionId": "wuyzlgiJsLX2",
+   "siblingId": "SvkRwP28tCaj"
+  },
+  "newState": {
+   "clusterId": "ObrnwZLqZCfA",
+   "integratedOptions": [
+    "wuyzlgiJsLX2",
+    "SvkRwP28tCaj"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194239800
+ },
+ {
+  "eventId": "SpjFV5sWedLvEzcNy7k5",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "KtEg2RgC1UjJ",
+  "optionId": "ObrnwZLqZCfA",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "ObrnwZLqZCfA"
+  },
+  "newState": {
+   "clusterId": "KtEg2RgC1UjJ",
+   "integratedOptions": [
+    "ObrnwZLqZCfA"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194242594
+ },
+ {
+  "eventId": "uVBIH6Y5AVuqtwnNCbmX",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "1VxhNpkEl7gN",
+  "reason": "gray-band match (no auto-action) (cosine=0.723)",
+  "newState": {
+   "siblingId": "Bu68d-XkiOFO",
+   "similarity": 0.7234911735667275
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194274248
+ },
+ {
+  "eventId": "qBwUMG93WLqwGQ1aErcI",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "KczxRog67sGj",
+  "reason": "gray-band match (no auto-action) (cosine=0.800)",
+  "newState": {
+   "siblingId": "rJLae9ULAbbA",
+   "similarity": 0.7995809209435959
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194304183
+ },
+ {
+  "eventId": "TGuJuEFp2DCRGM0eAMgP",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "4Dqd4I7KHqVR",
+  "optionId": "PB80Cks5Xia8",
+  "reason": "spawn synth at cosine=0.936",
+  "prevState": {
+   "sourceOptionId": "PB80Cks5Xia8",
+   "siblingId": "64bKjBqbq1O7"
+  },
+  "newState": {
+   "clusterId": "4Dqd4I7KHqVR",
+   "integratedOptions": [
+    "PB80Cks5Xia8",
+    "64bKjBqbq1O7"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194333953
+ },
+ {
+  "eventId": "M1gmvf2Eb08YffuiREJQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "8b5fhrWKWPuc",
+  "optionId": "4Dqd4I7KHqVR",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "4Dqd4I7KHqVR"
+  },
+  "newState": {
+   "clusterId": "8b5fhrWKWPuc",
+   "integratedOptions": [
+    "4Dqd4I7KHqVR"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194337209
+ },
+ {
+  "eventId": "SgdhhRQC3r4hyHKpeakj",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "ZH-2shErLTfo",
+  "reason": "cosine=0.763",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194365821
+ },
+ {
+  "eventId": "0ocX1uvkzBfDmERwJVpl",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "zAegvaGrs3gt",
+  "optionId": "5AJFfTGX0cSd",
+  "reason": "spawn synth at cosine=0.931",
+  "prevState": {
+   "sourceOptionId": "5AJFfTGX0cSd",
+   "siblingId": "KczxRog67sGj"
+  },
+  "newState": {
+   "clusterId": "zAegvaGrs3gt",
+   "integratedOptions": [
+    "5AJFfTGX0cSd",
+    "KczxRog67sGj"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194398170
+ },
+ {
+  "eventId": "ad2QBGbu2RzHKRlznakK",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "lTn82dpHTlyl",
+  "optionId": "zAegvaGrs3gt",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "zAegvaGrs3gt"
+  },
+  "newState": {
+   "clusterId": "lTn82dpHTlyl",
+   "integratedOptions": [
+    "zAegvaGrs3gt"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194401572
+ },
+ {
+  "eventId": "hrTIq1WtZWejyiGcWTXe",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "36As8mwRLYba",
+  "reason": "option filed under theme (judge: Speed bumps and narrowed crossings improve safety around schools and pedestrian pathways.)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194431645
+ },
+ {
+  "eventId": "bokLnrcBvfJ7YsNkaGZD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "jjBdSgD7Jo-1",
+  "optionId": "n-Onpau34VU-",
+  "reason": "spawn synth at cosine=0.908",
+  "prevState": {
+   "sourceOptionId": "n-Onpau34VU-",
+   "siblingId": "yb8ADFnMxmrR"
+  },
+  "newState": {
+   "clusterId": "jjBdSgD7Jo-1",
+   "integratedOptions": [
+    "n-Onpau34VU-",
+    "yb8ADFnMxmrR"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194461853
+ },
+ {
+  "eventId": "f21kZXQGo9JMi7jezen7",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "k8fSjgrhOPy5",
+  "optionId": "jjBdSgD7Jo-1",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "jjBdSgD7Jo-1"
+  },
+  "newState": {
+   "clusterId": "k8fSjgrhOPy5",
+   "integratedOptions": [
+    "jjBdSgD7Jo-1"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194464902
+ },
+ {
+  "eventId": "dwKzVTQ66g2KMKU3Dlxb",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "fu0dOeUIv6-f",
+  "reason": "themes consolidated into \"Waste Reduction and Recycling\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "vi9LteikGHmn",
+    "vqjlDoQ6rJSF"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "vi9LteikGHmn",
+    "vqjlDoQ6rJSF",
+    "4Dqd4I7KHqVR"
+   ],
+   "absorbed": [
+    "8b5fhrWKWPuc"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194502981
+ },
+ {
+  "eventId": "aVSEfM9FYN7pGf3gJ6gj",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "G8j5BZB70EF2",
+  "reason": "gray-band match (no auto-action) (cosine=0.762)",
+  "newState": {
+   "siblingId": "Bu68d-XkiOFO",
+   "similarity": 0.762442528589779
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194506900
+ },
+ {
+  "eventId": "NrwWqfbFkj1H8Z1KCjqf",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "ysyfAPshIsyV",
+  "reason": "option filed under theme (judge: In-home elder support is a municipal assistance service improving access to care.)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194535307
+ },
+ {
+  "eventId": "7d8TNAymwV7wTPENrdoI",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "iQIJTR1Bebof",
+  "optionId": "0rvgscM5m5xo",
+  "reason": "spawn synth at cosine=0.893",
+  "prevState": {
+   "sourceOptionId": "0rvgscM5m5xo",
+   "siblingId": "p6jOorxzzf32"
+  },
+  "newState": {
+   "clusterId": "iQIJTR1Bebof",
+   "integratedOptions": [
+    "0rvgscM5m5xo",
+    "p6jOorxzzf32"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194566566
+ },
+ {
+  "eventId": "F7YdOypjQkacZh0wue4u",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "c95bHITJXWMt",
+  "optionId": "iQIJTR1Bebof",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "iQIJTR1Bebof"
+  },
+  "newState": {
+   "clusterId": "c95bHITJXWMt",
+   "integratedOptions": [
+    "iQIJTR1Bebof"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194571203
+ },
+ {
+  "eventId": "E7DhC174EQ4j4Q0T6BRW",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "jXRKBoEyVCQ7",
+  "reason": "option filed under theme (judge: Improves accessibility and safety of public recreational spaces for residents.)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194603161
+ },
+ {
+  "eventId": "7d7wwUaXVWDc0Tf3Z3B0",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "K8QGiMaKVhgx",
+  "reason": "gray-band match (no auto-action) (cosine=0.756)",
+  "newState": {
+   "siblingId": "KtEg2RgC1UjJ",
+   "similarity": 0.7564361830720119
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194631315
+ },
+ {
+  "eventId": "kjwQ3vR5Yu6oLHULne2S",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "KdEpSBAA06e-",
+  "optionId": "CpKAw4aCmxTp",
+  "reason": "spawn synth at cosine=0.931",
+  "prevState": {
+   "sourceOptionId": "CpKAw4aCmxTp",
+   "siblingId": "MU5qC7ZLhGGS"
+  },
+  "newState": {
+   "clusterId": "KdEpSBAA06e-",
+   "integratedOptions": [
+    "CpKAw4aCmxTp",
+    "MU5qC7ZLhGGS"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194662021
+ },
+ {
+  "eventId": "L0FoYYoyQAj7G0Nr1zCq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "rufGv6VQaIOp",
+  "optionId": "KdEpSBAA06e-",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "KdEpSBAA06e-"
+  },
+  "newState": {
+   "clusterId": "rufGv6VQaIOp",
+   "integratedOptions": [
+    "KdEpSBAA06e-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194665521
+ },
+ {
+  "eventId": "T86yWNpZVUfggrMY1uvN",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "c95bHITJXWMt",
+  "optionId": "aaMU7am06QvE",
+  "reason": "cosine=0.800",
+  "prevState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194695952
+ },
+ {
+  "eventId": "vHhTYSZCcCf5AwEJIpe7",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "u1YFajIWyBmj",
+  "optionId": "fAuqigECXSen",
+  "reason": "spawn synth at cosine=0.805",
+  "prevState": {
+   "sourceOptionId": "fAuqigECXSen",
+   "siblingId": "6QGcWuQE705R"
+  },
+  "newState": {
+   "clusterId": "u1YFajIWyBmj",
+   "integratedOptions": [
+    "fAuqigECXSen",
+    "6QGcWuQE705R"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194728050
+ },
+ {
+  "eventId": "ebfdDxtk0zlFrEbLrS7I",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "B5dSkI3AVT3N",
+  "optionId": "u1YFajIWyBmj",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "u1YFajIWyBmj"
+  },
+  "newState": {
+   "clusterId": "B5dSkI3AVT3N",
+   "integratedOptions": [
+    "u1YFajIWyBmj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194731750
+ },
+ {
+  "eventId": "0wgUIjpVYlTa1PsDyKkm",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "NFQhfFY5MqiD",
+  "optionId": "rfWKR4GS-pIZ",
+  "reason": "spawn synth at cosine=0.996",
+  "prevState": {
+   "sourceOptionId": "rfWKR4GS-pIZ",
+   "siblingId": "8PxTNDZkVeHf"
+  },
+  "newState": {
+   "clusterId": "NFQhfFY5MqiD",
+   "integratedOptions": [
+    "rfWKR4GS-pIZ",
+    "8PxTNDZkVeHf"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194766027
+ },
+ {
+  "eventId": "j3OCgSpfK77srcLJHy0c",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "avjCQgC2dRD-",
+  "optionId": "NFQhfFY5MqiD",
+  "reason": "nest synthesis under theme (judge: Expands residents' access to cultural activities and community enrichment.)",
+  "prevState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s",
+    "NFQhfFY5MqiD"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194767920
+ },
+ {
+  "eventId": "Oc8o7Vo3E4OB2pUhk6lu",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "c95bHITJXWMt",
+  "optionId": "r4T5LlYVOlmr",
+  "reason": "cosine=0.793",
+  "prevState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE",
+    "r4T5LlYVOlmr"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194799013
+ },
+ {
+  "eventId": "mhrCtiCgnLYaBojIwwhJ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "HzQn9L24je6A",
+  "optionId": "UlAyL8Xa95kX",
+  "reason": "spawn synth at cosine=0.887",
+  "prevState": {
+   "sourceOptionId": "UlAyL8Xa95kX",
+   "siblingId": "Y7DSKVXb85R5"
+  },
+  "newState": {
+   "clusterId": "HzQn9L24je6A",
+   "integratedOptions": [
+    "UlAyL8Xa95kX",
+    "Y7DSKVXb85R5"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194831984
+ },
+ {
+  "eventId": "eICmlWGHe5APmANajE6q",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "HzQn9L24je6A",
+  "reason": "nest synthesis under theme (judge: Emergency response is a core municipal service whose accessibility and delivery this proposal improves.)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194834615
+ },
+ {
+  "eventId": "t0vZIjWMiIkooOcbNy2H",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "gFe4qjQoHzlP",
+  "optionId": "3HYPCx7Kz80h",
+  "reason": "spawn synth at cosine=0.877",
+  "prevState": {
+   "sourceOptionId": "3HYPCx7Kz80h",
+   "siblingId": "j4AF-Lq2Zvm1"
+  },
+  "newState": {
+   "clusterId": "gFe4qjQoHzlP",
+   "integratedOptions": [
+    "3HYPCx7Kz80h",
+    "j4AF-Lq2Zvm1"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194868563
+ },
+ {
+  "eventId": "RsFth2JLj3lTGtNxLc5t",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "gFe4qjQoHzlP",
+  "reason": "nest synthesis under theme (judge: Neighborhood patrols improve residents' safety and comfort in streets and public pathways.)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194871658
+ },
+ {
+  "eventId": "0E0XkG73nCQR2nGzizsf",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "vStcsRl697p5",
+  "reason": "option filed under theme (judge: Separated cycling lanes improve safety and comfort for people traveling by bike.)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194903103
+ },
+ {
+  "eventId": "b1L6fB4JeFQyOmB8CwG9",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "oJSSRziMgID8",
+  "optionId": "cZYfos8Hb3L9",
+  "reason": "spawn synth at cosine=0.950",
+  "prevState": {
+   "sourceOptionId": "cZYfos8Hb3L9",
+   "siblingId": "rp8KFUVSJaqF"
+  },
+  "newState": {
+   "clusterId": "oJSSRziMgID8",
+   "integratedOptions": [
+    "cZYfos8Hb3L9",
+    "rp8KFUVSJaqF"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194934345
+ },
+ {
+  "eventId": "y0pK4M68ndD58yaTPoD6",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "avjCQgC2dRD-",
+  "optionId": "oJSSRziMgID8",
+  "reason": "nest synthesis under theme (judge: Public art enhances shared spaces and supports community cultural life.)",
+  "prevState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s",
+    "NFQhfFY5MqiD"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s",
+    "NFQhfFY5MqiD",
+    "oJSSRziMgID8"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194936330
+ },
+ {
+  "eventId": "GQ5ge2juUG6mH0USSptl",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "GLiwLlPmaYRp",
+  "optionId": "vhMftOaAM6Zy",
+  "reason": "spawn synth at cosine=0.898",
+  "prevState": {
+   "sourceOptionId": "vhMftOaAM6Zy",
+   "siblingId": "4Qw-9G3IVDfm"
+  },
+  "newState": {
+   "clusterId": "GLiwLlPmaYRp",
+   "integratedOptions": [
+    "vhMftOaAM6Zy",
+    "4Qw-9G3IVDfm"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194969033
+ },
+ {
+  "eventId": "mNpcjmqKbSUtFckHdfzL",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "-mNcGdk2j932",
+  "optionId": "GLiwLlPmaYRp",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "GLiwLlPmaYRp"
+  },
+  "newState": {
+   "clusterId": "-mNcGdk2j932",
+   "integratedOptions": [
+    "GLiwLlPmaYRp"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787194973092
+ },
+ {
+  "eventId": "8CijwsoyQ3cifknvoNmM",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "KO66qbJS2LhD",
+  "reason": "cosine=0.749",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5",
+    "KO66qbJS2LhD"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195003012
+ },
+ {
+  "eventId": "ecaCQsOeIXAIUnzHT5mY",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "lCYN1biQ8L1J",
+  "optionId": "VcgjUFWGL671",
+  "reason": "spawn synth at cosine=0.951",
+  "prevState": {
+   "sourceOptionId": "VcgjUFWGL671",
+   "siblingId": "1VxhNpkEl7gN"
+  },
+  "newState": {
+   "clusterId": "lCYN1biQ8L1J",
+   "integratedOptions": [
+    "VcgjUFWGL671",
+    "1VxhNpkEl7gN"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195036557
+ },
+ {
+  "eventId": "5tpwnECrOZVAWpqUHY3d",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "zKp9Hm2CZIZH",
+  "optionId": "lCYN1biQ8L1J",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "lCYN1biQ8L1J"
+  },
+  "newState": {
+   "clusterId": "zKp9Hm2CZIZH",
+   "integratedOptions": [
+    "lCYN1biQ8L1J"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195040344
+ },
+ {
+  "eventId": "pGnnHT5Mds0bPPLo0lIp",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "phvHijCxwHgz",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "36As8mwRLYba",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5",
+    "KO66qbJS2LhD"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5",
+    "KO66qbJS2LhD",
+    "phvHijCxwHgz"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195087030
+ },
+ {
+  "eventId": "ogNbCalhazJ3xp567nAH",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "phvHijCxwHgz",
+  "optionId": "5RNirxRW9DdF",
+  "reason": "spawn synth at cosine=0.907",
+  "prevState": {
+   "sourceOptionId": "5RNirxRW9DdF",
+   "siblingId": "36As8mwRLYba"
+  },
+  "newState": {
+   "clusterId": "phvHijCxwHgz",
+   "integratedOptions": [
+    "5RNirxRW9DdF",
+    "36As8mwRLYba"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195087032
+ },
+ {
+  "eventId": "ywMmcyOJamOeE8NbjZRM",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "OArFk0qIMJeh",
+  "optionId": "RFH2wA4ZepV2",
+  "reason": "spawn synth at cosine=0.962",
+  "prevState": {
+   "sourceOptionId": "RFH2wA4ZepV2",
+   "siblingId": "TzQgLykzmrbg"
+  },
+  "newState": {
+   "clusterId": "OArFk0qIMJeh",
+   "integratedOptions": [
+    "RFH2wA4ZepV2",
+    "TzQgLykzmrbg"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195118973
+ },
+ {
+  "eventId": "z67P1liKmHoTWSXtMYEO",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "OArFk0qIMJeh",
+  "reason": "nest synthesis under theme (judge: Free Wi-Fi improves residents’ access to online city services and assistance.)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195121394
+ },
+ {
+  "eventId": "lQ0CZAGx06ibaUOm4d3x",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "c95bHITJXWMt",
+  "optionId": "QSa4qsuubSiW",
+  "reason": "option filed under theme (judge: Rent transparency supports housing affordability and helps tenants find reasonably priced homes.)",
+  "prevState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE",
+    "r4T5LlYVOlmr"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE",
+    "r4T5LlYVOlmr",
+    "QSa4qsuubSiW"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195152478
+ },
+ {
+  "eventId": "fHgsLw6rVOUycD0IXBrD",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "feJxIh-jclve",
+  "optionId": "1kLEdnUXjFOG",
+  "reason": "cosine=0.771",
+  "prevState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP",
+    "u02qYkYs5Ymj"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP",
+    "u02qYkYs5Ymj",
+    "1kLEdnUXjFOG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195182170
+ },
+ {
+  "eventId": "yt0m8RyAPOid19BgrLHa",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "fu0dOeUIv6-f",
+  "optionId": "NsGQKODlOnk9",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "vi9LteikGHmn",
+    "vqjlDoQ6rJSF",
+    "4Dqd4I7KHqVR"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "vi9LteikGHmn",
+    "4Dqd4I7KHqVR",
+    "NsGQKODlOnk9"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195214878
+ },
+ {
+  "eventId": "OvKeuCjPZTufnAtkQGSo",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "NsGQKODlOnk9",
+  "optionId": "vQMYVajiZ8r1",
+  "reason": "spawn synth at cosine=0.925",
+  "prevState": {
+   "sourceOptionId": "vQMYVajiZ8r1",
+   "siblingId": "vqjlDoQ6rJSF"
+  },
+  "newState": {
+   "clusterId": "NsGQKODlOnk9",
+   "integratedOptions": [
+    "vQMYVajiZ8r1",
+    "vqjlDoQ6rJSF"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195214880
+ },
+ {
+  "eventId": "OKedF8guNq84r1WRcZKt",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "1fn4zl3C7HQJ",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "SqJTPkZYxL5Z",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195247742
+ },
+ {
+  "eventId": "UYbDE5KeeeHkrZTShp2i",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "1fn4zl3C7HQJ",
+  "optionId": "gUJagIFhhyte",
+  "reason": "spawn synth at cosine=0.901",
+  "prevState": {
+   "sourceOptionId": "gUJagIFhhyte",
+   "siblingId": "SqJTPkZYxL5Z"
+  },
+  "newState": {
+   "clusterId": "1fn4zl3C7HQJ",
+   "integratedOptions": [
+    "gUJagIFhhyte",
+    "SqJTPkZYxL5Z"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195247745
+ },
+ {
+  "eventId": "1fbKTD4Ufsn36WfFXua7",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "c95bHITJXWMt",
+  "optionId": "F5eAeP6JHSm0",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE",
+    "r4T5LlYVOlmr",
+    "QSa4qsuubSiW"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE",
+    "r4T5LlYVOlmr",
+    "F5eAeP6JHSm0"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195281696
+ },
+ {
+  "eventId": "H9JLmA0MVeTRuLM862y2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "F5eAeP6JHSm0",
+  "optionId": "YiP7Tt8RNaa3",
+  "reason": "spawn synth at cosine=0.881",
+  "prevState": {
+   "sourceOptionId": "YiP7Tt8RNaa3",
+   "siblingId": "QSa4qsuubSiW"
+  },
+  "newState": {
+   "clusterId": "F5eAeP6JHSm0",
+   "integratedOptions": [
+    "YiP7Tt8RNaa3",
+    "QSa4qsuubSiW"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195281698
+ },
+ {
+  "eventId": "snw9dxLTzwXLnOCmc4xA",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "sDGze9mXAADq",
+  "optionId": "YYz3vc1slLrR",
+  "reason": "spawn synth at cosine=0.853",
+  "prevState": {
+   "sourceOptionId": "YYz3vc1slLrR",
+   "siblingId": "kEOUKD4yVzmD"
+  },
+  "newState": {
+   "clusterId": "sDGze9mXAADq",
+   "integratedOptions": [
+    "YYz3vc1slLrR",
+    "kEOUKD4yVzmD"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195314532
+ },
+ {
+  "eventId": "nuF1PuDrPDEL5S0p0UpW",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ZXlsbbx-ISmo",
+  "optionId": "sDGze9mXAADq",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "sDGze9mXAADq"
+  },
+  "newState": {
+   "clusterId": "ZXlsbbx-ISmo",
+   "integratedOptions": [
+    "sDGze9mXAADq"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195317777
+ },
+ {
+  "eventId": "KIV8r9emBIypt4el2QnU",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "UFVb9yyyOv4d",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5",
+    "KO66qbJS2LhD",
+    "phvHijCxwHgz"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195351265
+ },
+ {
+  "eventId": "o2oMWe3Ban47ODJxUgQt",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "UFVb9yyyOv4d",
+  "optionId": "MNUmRoEhlgla",
+  "reason": "spawn synth at cosine=0.871",
+  "prevState": {
+   "sourceOptionId": "MNUmRoEhlgla",
+   "siblingId": "KO66qbJS2LhD"
+  },
+  "newState": {
+   "clusterId": "UFVb9yyyOv4d",
+   "integratedOptions": [
+    "MNUmRoEhlgla",
+    "KO66qbJS2LhD"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195351267
+ },
+ {
+  "eventId": "8PuTa98YS2r8v3kLd2pg",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "EsGWNHzOK-tM",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "vStcsRl697p5",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d",
+    "EsGWNHzOK-tM"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195385816
+ },
+ {
+  "eventId": "gDiq7BuH27C59l5eDoFR",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "EsGWNHzOK-tM",
+  "optionId": "Ahq4GWV5QdV6",
+  "reason": "spawn synth at cosine=0.932",
+  "prevState": {
+   "sourceOptionId": "Ahq4GWV5QdV6",
+   "siblingId": "vStcsRl697p5"
+  },
+  "newState": {
+   "clusterId": "EsGWNHzOK-tM",
+   "integratedOptions": [
+    "Ahq4GWV5QdV6",
+    "vStcsRl697p5"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195385820
+ },
+ {
+  "eventId": "oMKpHKxNunzyHzrAEgT4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "rcpIQ0QE22VV",
+  "optionId": "bJITTGg7SAjs",
+  "reason": "spawn synth at cosine=0.988",
+  "prevState": {
+   "sourceOptionId": "bJITTGg7SAjs",
+   "siblingId": "K8QGiMaKVhgx"
+  },
+  "newState": {
+   "clusterId": "rcpIQ0QE22VV",
+   "integratedOptions": [
+    "bJITTGg7SAjs",
+    "K8QGiMaKVhgx"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195419099
+ },
+ {
+  "eventId": "6VjS2DKEMTIXCqm0NvzM",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "rufGv6VQaIOp",
+  "optionId": "rcpIQ0QE22VV",
+  "reason": "nest synthesis under theme (judge: Both proposals concern improving school learning environments and educational facilities.)",
+  "prevState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-",
+    "rcpIQ0QE22VV"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195422207
+ },
+ {
+  "eventId": "2FuUhlBlDj3osybuA8Pu",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "feJxIh-jclve",
+  "optionId": "OHLu8TpXXHJv",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP",
+    "u02qYkYs5Ymj",
+    "1kLEdnUXjFOG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP",
+    "1kLEdnUXjFOG",
+    "OHLu8TpXXHJv"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195456650
+ },
+ {
+  "eventId": "9GhAKmSWkBi7VUpg46ef",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "OHLu8TpXXHJv",
+  "optionId": "WrsoMuN0taGr",
+  "reason": "spawn synth at cosine=0.910",
+  "prevState": {
+   "sourceOptionId": "WrsoMuN0taGr",
+   "siblingId": "u02qYkYs5Ymj"
+  },
+  "newState": {
+   "clusterId": "OHLu8TpXXHJv",
+   "integratedOptions": [
+    "WrsoMuN0taGr",
+    "u02qYkYs5Ymj"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195456652
+ },
+ {
+  "eventId": "AbNB570Bx39o0EXicaRq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "fo3l96UMYk-w",
+  "optionId": "A5v-zoOfEhpY",
+  "reason": "spawn synth at cosine=0.899",
+  "prevState": {
+   "sourceOptionId": "A5v-zoOfEhpY",
+   "siblingId": "vXNeOTHpCYLm"
+  },
+  "newState": {
+   "clusterId": "fo3l96UMYk-w",
+   "integratedOptions": [
+    "A5v-zoOfEhpY",
+    "vXNeOTHpCYLm"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195488150
+ },
+ {
+  "eventId": "8xKRGDPOaKFxjRKoeSbU",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "k8fSjgrhOPy5",
+  "optionId": "fo3l96UMYk-w",
+  "reason": "nest synthesis under theme (judge: Connects municipal contracts to local employment and workforce opportunities.)",
+  "prevState": {
+   "integratedOptions": [
+    "jjBdSgD7Jo-1"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "jjBdSgD7Jo-1",
+    "fo3l96UMYk-w"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195490296
+ },
+ {
+  "eventId": "CmrnHtmwCJ4bh17hkNpZ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "Lwih1wVFSQD-",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "2O2yEVezJeWG",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d",
+    "EsGWNHzOK-tM"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d",
+    "EsGWNHzOK-tM",
+    "Lwih1wVFSQD-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195526084
+ },
+ {
+  "eventId": "bcbK4Pt7VyLYzmqClgec",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Lwih1wVFSQD-",
+  "optionId": "hyAo7tR5Iux4",
+  "reason": "spawn synth at cosine=0.976",
+  "prevState": {
+   "sourceOptionId": "hyAo7tR5Iux4",
+   "siblingId": "2O2yEVezJeWG"
+  },
+  "newState": {
+   "clusterId": "Lwih1wVFSQD-",
+   "integratedOptions": [
+    "hyAo7tR5Iux4",
+    "2O2yEVezJeWG"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195526085
+ },
+ {
+  "eventId": "8ko8R7kJvwP6DUc8kRXV",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "feJxIh-jclve",
+  "optionId": "gjt57Jv0eiNl",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP",
+    "1kLEdnUXjFOG",
+    "OHLu8TpXXHJv"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xBNrjLiXS0Pc",
+    "FpSQu-NovsaP",
+    "OHLu8TpXXHJv",
+    "gjt57Jv0eiNl"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195557696
+ },
+ {
+  "eventId": "6JwoC6g61FXju2Jn7JBD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "gjt57Jv0eiNl",
+  "optionId": "kEixgqaJvPz1",
+  "reason": "spawn synth at cosine=0.889",
+  "prevState": {
+   "sourceOptionId": "kEixgqaJvPz1",
+   "siblingId": "1kLEdnUXjFOG"
+  },
+  "newState": {
+   "clusterId": "gjt57Jv0eiNl",
+   "integratedOptions": [
+    "kEixgqaJvPz1",
+    "1kLEdnUXjFOG"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195557698
+ },
+ {
+  "eventId": "fYtXrRkWjCWvRP4NFig3",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "Ztmkl5JMCX8R",
+  "reason": "cosine=0.810",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "Ztmkl5JMCX8R"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195588653
+ },
+ {
+  "eventId": "7cMT3tzZAecbeZcerXiG",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "aXVx6Gb6xs5t",
+  "optionId": "1JxOvmtI-HAd",
+  "reason": "spawn synth at cosine=0.937",
+  "prevState": {
+   "sourceOptionId": "1JxOvmtI-HAd",
+   "siblingId": "Bu68d-XkiOFO"
+  },
+  "newState": {
+   "clusterId": "aXVx6Gb6xs5t",
+   "integratedOptions": [
+    "1JxOvmtI-HAd",
+    "Bu68d-XkiOFO"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195617834
+ },
+ {
+  "eventId": "PUzZmDXbfyKIQUyN4s16",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "sH7zYXG1QFMc",
+  "optionId": "aXVx6Gb6xs5t",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "aXVx6Gb6xs5t"
+  },
+  "newState": {
+   "clusterId": "sH7zYXG1QFMc",
+   "integratedOptions": [
+    "aXVx6Gb6xs5t"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195621427
+ },
+ {
+  "eventId": "D3LBF0Q59WzMrdNUp5ot",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "hs9-owXMpqce",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ZH-2shErLTfo",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "Ztmkl5JMCX8R"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "Ztmkl5JMCX8R",
+    "hs9-owXMpqce"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195652068
+ },
+ {
+  "eventId": "rruPO3feVXsgkw1geBUU",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "hs9-owXMpqce",
+  "optionId": "9hIwkdB4C-Kt",
+  "reason": "spawn synth at cosine=0.857",
+  "prevState": {
+   "sourceOptionId": "9hIwkdB4C-Kt",
+   "siblingId": "ZH-2shErLTfo"
+  },
+  "newState": {
+   "clusterId": "hs9-owXMpqce",
+   "integratedOptions": [
+    "9hIwkdB4C-Kt",
+    "ZH-2shErLTfo"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195652071
+ },
+ {
+  "eventId": "QTOFyhdNJDIHYs4KftJT",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "aSSnFhQ1hGN-",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "Ztmkl5JMCX8R",
+    "hs9-owXMpqce"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "hs9-owXMpqce",
+    "aSSnFhQ1hGN-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195684371
+ },
+ {
+  "eventId": "97glrP8SIE4xjmiQWvZT",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "aSSnFhQ1hGN-",
+  "optionId": "HVZYIgiG-8Vd",
+  "reason": "spawn synth at cosine=0.848",
+  "prevState": {
+   "sourceOptionId": "HVZYIgiG-8Vd",
+   "siblingId": "Ztmkl5JMCX8R"
+  },
+  "newState": {
+   "clusterId": "aSSnFhQ1hGN-",
+   "integratedOptions": [
+    "HVZYIgiG-8Vd",
+    "Ztmkl5JMCX8R"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195684374
+ },
+ {
+  "eventId": "PqKQNR7HGP6XbyIjcKJI",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "2fNgNthequro",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "jXRKBoEyVCQ7",
+    "gFe4qjQoHzlP",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d",
+    "EsGWNHzOK-tM",
+    "Lwih1wVFSQD-"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "gFe4qjQoHzlP",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d",
+    "EsGWNHzOK-tM",
+    "Lwih1wVFSQD-",
+    "2fNgNthequro"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195716804
+ },
+ {
+  "eventId": "43oa1J60jKGrqA9moJgn",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "2fNgNthequro",
+  "optionId": "J0859VMAweEY",
+  "reason": "spawn synth at cosine=0.953",
+  "prevState": {
+   "sourceOptionId": "J0859VMAweEY",
+   "siblingId": "jXRKBoEyVCQ7"
+  },
+  "newState": {
+   "clusterId": "2fNgNthequro",
+   "integratedOptions": [
+    "J0859VMAweEY",
+    "jXRKBoEyVCQ7"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195716807
+ },
+ {
+  "eventId": "muWT8084z5N5RBRpFzRh",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "JQ3sQNTFJt7L",
+  "reason": "option filed under theme (judge: Streamlining business permits improves residents' access to municipal services and assistance.)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "hs9-owXMpqce",
+    "aSSnFhQ1hGN-"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "hs9-owXMpqce",
+    "aSSnFhQ1hGN-",
+    "JQ3sQNTFJt7L"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195747916
+ },
+ {
+  "eventId": "SZt6POYCR6sBAQiiFLKc",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "avjCQgC2dRD-",
+  "optionId": "OQwaYHFRsGMQ",
+  "reason": "cosine=0.740",
+  "prevState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s",
+    "NFQhfFY5MqiD",
+    "oJSSRziMgID8"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s",
+    "NFQhfFY5MqiD",
+    "oJSSRziMgID8",
+    "OQwaYHFRsGMQ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195774098
+ },
+ {
+  "eventId": "ohJXVvguI6dfo7dMqt88",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "zN3fORIeWM1p",
+  "optionId": "g98Z4JzGch0a",
+  "reason": "spawn synth at cosine=0.922",
+  "prevState": {
+   "sourceOptionId": "g98Z4JzGch0a",
+   "siblingId": "OxBI-QfWcYVo"
+  },
+  "newState": {
+   "clusterId": "zN3fORIeWM1p",
+   "integratedOptions": [
+    "g98Z4JzGch0a",
+    "OxBI-QfWcYVo"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195807319
+ },
+ {
+  "eventId": "s4opAZvPm2v02MokK0b8",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4YYuQa6ThEoS",
+  "optionId": "zN3fORIeWM1p",
+  "reason": "nest synthesis under theme (judge: Improves sidewalk comfort and pedestrian conditions through street infrastructure and shade.)",
+  "prevState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "gFe4qjQoHzlP",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d",
+    "EsGWNHzOK-tM",
+    "Lwih1wVFSQD-",
+    "2fNgNthequro"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "elH2sSacVNBf",
+    "gFe4qjQoHzlP",
+    "phvHijCxwHgz",
+    "UFVb9yyyOv4d",
+    "EsGWNHzOK-tM",
+    "Lwih1wVFSQD-",
+    "2fNgNthequro",
+    "zN3fORIeWM1p"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195809052
+ },
+ {
+  "eventId": "wwZYHxvXo6IuPxmucoT2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MFUe6jUTrG1G",
+  "optionId": "bY6PcsdmZEj9",
+  "reason": "spawn synth at cosine=0.972",
+  "prevState": {
+   "sourceOptionId": "bY6PcsdmZEj9",
+   "siblingId": "qPEeyxzAxLCV"
+  },
+  "newState": {
+   "clusterId": "MFUe6jUTrG1G",
+   "integratedOptions": [
+    "bY6PcsdmZEj9",
+    "qPEeyxzAxLCV"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195844013
+ },
+ {
+  "eventId": "ns9qyboZ9bBbP2YwEUzE",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "rufGv6VQaIOp",
+  "optionId": "MFUe6jUTrG1G",
+  "reason": "nest synthesis under theme (judge: Teacher compensation supports school quality and educator retention, closely related to classroom education.)",
+  "prevState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-",
+    "rcpIQ0QE22VV"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-",
+    "rcpIQ0QE22VV",
+    "MFUe6jUTrG1G"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195847211
+ },
+ {
+  "eventId": "r3LDWh7v8dp0KVa4Ikyi",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "avjCQgC2dRD-",
+  "optionId": "vVOQB0rAxdlz",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s",
+    "NFQhfFY5MqiD",
+    "oJSSRziMgID8",
+    "OQwaYHFRsGMQ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "W8FLJNu9pE9s",
+    "NFQhfFY5MqiD",
+    "oJSSRziMgID8",
+    "vVOQB0rAxdlz"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195879067
+ },
+ {
+  "eventId": "Tg0kFMq5kX9oV73XTWF5",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "vVOQB0rAxdlz",
+  "optionId": "TxDa1YMdZh5S",
+  "reason": "spawn synth at cosine=0.957",
+  "prevState": {
+   "sourceOptionId": "TxDa1YMdZh5S",
+   "siblingId": "OQwaYHFRsGMQ"
+  },
+  "newState": {
+   "clusterId": "vVOQB0rAxdlz",
+   "integratedOptions": [
+    "TxDa1YMdZh5S",
+    "OQwaYHFRsGMQ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195879073
+ },
+ {
+  "eventId": "aYncJZcg9Ay4vg2jhBPC",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "npNo3NFT774m",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "ysyfAPshIsyV",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "hs9-owXMpqce",
+    "aSSnFhQ1hGN-",
+    "JQ3sQNTFJt7L"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "hs9-owXMpqce",
+    "aSSnFhQ1hGN-",
+    "JQ3sQNTFJt7L",
+    "npNo3NFT774m"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195911041
+ },
+ {
+  "eventId": "Neb4pEjyBVIf9a98SVJ4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "npNo3NFT774m",
+  "optionId": "KFoClAl70mjv",
+  "reason": "spawn synth at cosine=0.960",
+  "prevState": {
+   "sourceOptionId": "KFoClAl70mjv",
+   "siblingId": "ysyfAPshIsyV"
+  },
+  "newState": {
+   "clusterId": "npNo3NFT774m",
+   "integratedOptions": [
+    "KFoClAl70mjv",
+    "ysyfAPshIsyV"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195911043
+ },
+ {
+  "eventId": "3KqXxRa4xDNMzhHT0mPc",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "114TnKFjPQoX",
+  "optionId": "UMvUA2hXPgrZ",
+  "reason": "spawn synth at cosine=0.913",
+  "prevState": {
+   "sourceOptionId": "UMvUA2hXPgrZ",
+   "siblingId": "cA5lkLPPeD-7"
+  },
+  "newState": {
+   "clusterId": "114TnKFjPQoX",
+   "integratedOptions": [
+    "UMvUA2hXPgrZ",
+    "cA5lkLPPeD-7"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195941916
+ },
+ {
+  "eventId": "n7HbSpLWrd9LwOfVLWsH",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "IQW6vvkBHU7y",
+  "optionId": "114TnKFjPQoX",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "114TnKFjPQoX"
+  },
+  "newState": {
+   "clusterId": "IQW6vvkBHU7y",
+   "integratedOptions": [
+    "114TnKFjPQoX"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195945270
+ },
+ {
+  "eventId": "5YhCymK6WCSJRM7q2L6k",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ZosPjL0BBCqW",
+  "optionId": "WfcYIFw98YsU",
+  "reason": "spawn synth at cosine=0.874",
+  "prevState": {
+   "sourceOptionId": "WfcYIFw98YsU",
+   "siblingId": "G8j5BZB70EF2"
+  },
+  "newState": {
+   "clusterId": "ZosPjL0BBCqW",
+   "integratedOptions": [
+    "WfcYIFw98YsU",
+    "G8j5BZB70EF2"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195977766
+ },
+ {
+  "eventId": "UnDTj26CpG2eTLVSoiXT",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "sH7zYXG1QFMc",
+  "optionId": "ZosPjL0BBCqW",
+  "reason": "nest synthesis under theme (judge: Expands local access to routine primary and preventive healthcare services.)",
+  "prevState": {
+   "integratedOptions": [
+    "aXVx6Gb6xs5t"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aXVx6Gb6xs5t",
+    "ZosPjL0BBCqW"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787195979809
+ },
+ {
+  "eventId": "kG9xuiCRCLhHA83HwX12",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "c95bHITJXWMt",
+  "optionId": "S13q6NZ5a7uX",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "aaMU7am06QvE",
+    "r4T5LlYVOlmr",
+    "F5eAeP6JHSm0"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "r4T5LlYVOlmr",
+    "F5eAeP6JHSm0",
+    "S13q6NZ5a7uX"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196012320
+ },
+ {
+  "eventId": "RGMHOv7cuyRT2TIJ1KTd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "S13q6NZ5a7uX",
+  "optionId": "ZvlxoQ9U2pej",
+  "reason": "spawn synth at cosine=0.911",
+  "prevState": {
+   "sourceOptionId": "ZvlxoQ9U2pej",
+   "siblingId": "aaMU7am06QvE"
+  },
+  "newState": {
+   "clusterId": "S13q6NZ5a7uX",
+   "integratedOptions": [
+    "ZvlxoQ9U2pej",
+    "aaMU7am06QvE"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196012322
+ },
+ {
+  "eventId": "25fXfLxTvqad4nqwwDW2",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "ZzdkRHJZ3igQ",
+  "optionId": "MfNLGXMH-kyY",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "hs9-owXMpqce",
+    "aSSnFhQ1hGN-",
+    "JQ3sQNTFJt7L",
+    "npNo3NFT774m"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "k5gU2JUfP1Qe",
+    "3ov5NIAhRdmC",
+    "HzQn9L24je6A",
+    "OArFk0qIMJeh",
+    "1fn4zl3C7HQJ",
+    "hs9-owXMpqce",
+    "aSSnFhQ1hGN-",
+    "npNo3NFT774m",
+    "MfNLGXMH-kyY"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196045007
+ },
+ {
+  "eventId": "XNsi1Yo0Z4jNli5kGj1q",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MfNLGXMH-kyY",
+  "optionId": "q0uJiRzA8cnE",
+  "reason": "spawn synth at cosine=0.898",
+  "prevState": {
+   "sourceOptionId": "q0uJiRzA8cnE",
+   "siblingId": "JQ3sQNTFJt7L"
+  },
+  "newState": {
+   "clusterId": "MfNLGXMH-kyY",
+   "integratedOptions": [
+    "q0uJiRzA8cnE",
+    "JQ3sQNTFJt7L"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196045010
+ },
+ {
+  "eventId": "ZMgoeqiJ2YhTx52AKLgk",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "FD7M5GPYup8-",
+  "optionId": "AAoOlA-9jxhU",
+  "reason": "spawn synth at cosine=0.975",
+  "prevState": {
+   "sourceOptionId": "AAoOlA-9jxhU",
+   "siblingId": "1DMpYMe4YpiO"
+  },
+  "newState": {
+   "clusterId": "FD7M5GPYup8-",
+   "integratedOptions": [
+    "AAoOlA-9jxhU",
+    "1DMpYMe4YpiO"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196077841
+ },
+ {
+  "eventId": "G2L6MOzrtl0ju6W4wh13",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "3xOKKn5o271l",
+  "optionId": "FD7M5GPYup8-",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "FD7M5GPYup8-"
+  },
+  "newState": {
+   "clusterId": "3xOKKn5o271l",
+   "integratedOptions": [
+    "FD7M5GPYup8-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196081013
+ },
+ {
+  "eventId": "EFpOUbp2RGggaLj7rdVe",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "wv6o57VUqdgq",
+  "optionId": "ZhDJfYW6keob",
+  "reason": "spawn synth at cosine=0.940",
+  "prevState": {
+   "sourceOptionId": "ZhDJfYW6keob",
+   "siblingId": "rJLae9ULAbbA"
+  },
+  "newState": {
+   "clusterId": "wv6o57VUqdgq",
+   "integratedOptions": [
+    "ZhDJfYW6keob",
+    "rJLae9ULAbbA"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196112613
+ },
+ {
+  "eventId": "rwVzd0gtrEnf7teGtuxg",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "rufGv6VQaIOp",
+  "optionId": "wv6o57VUqdgq",
+  "reason": "nest synthesis under theme (judge: After-school tutoring supports students' academic success and individualized educational attention.)",
+  "prevState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-",
+    "rcpIQ0QE22VV",
+    "MFUe6jUTrG1G"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-",
+    "rcpIQ0QE22VV",
+    "MFUe6jUTrG1G",
+    "wv6o57VUqdgq"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196114791
+ },
+ {
+  "eventId": "UT66k2vwdToLrCz2V6Br",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "L5mnw7uevhLY",
+  "optionId": "3XLFiLFx92gg",
+  "reason": "spawn synth at cosine=0.983",
+  "prevState": {
+   "sourceOptionId": "3XLFiLFx92gg",
+   "siblingId": "HTA3flOkfu15"
+  },
+  "newState": {
+   "clusterId": "L5mnw7uevhLY",
+   "integratedOptions": [
+    "3XLFiLFx92gg",
+    "HTA3flOkfu15"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196146852
+ },
+ {
+  "eventId": "sHYnBU7xuJVGAzlB2cQs",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "YcSAD9FoIP70",
+  "optionId": "L5mnw7uevhLY",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "L5mnw7uevhLY"
+  },
+  "newState": {
+   "clusterId": "YcSAD9FoIP70",
+   "integratedOptions": [
+    "L5mnw7uevhLY"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196150349
+ },
+ {
+  "eventId": "XNGTlnUZmwmnqJJGcwh8",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "fu0dOeUIv6-f",
+  "reason": "themes consolidated into \"Environment and Sustainability\" (3 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "vi9LteikGHmn",
+    "4Dqd4I7KHqVR",
+    "NsGQKODlOnk9"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "vi9LteikGHmn",
+    "4Dqd4I7KHqVR",
+    "NsGQKODlOnk9",
+    "FD7M5GPYup8-",
+    "114TnKFjPQoX",
+    "sDGze9mXAADq"
+   ],
+   "absorbed": [
+    "3xOKKn5o271l",
+    "IQW6vvkBHU7y",
+    "ZXlsbbx-ISmo"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196201202
+ },
+ {
+  "eventId": "ecEUN9FH0x2Q1SjyF8st",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "k8fSjgrhOPy5",
+  "reason": "themes consolidated into \"Jobs and Economic Opportunity\" (2 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "jjBdSgD7Jo-1",
+    "fo3l96UMYk-w"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "jjBdSgD7Jo-1",
+    "fo3l96UMYk-w",
+    "u1YFajIWyBmj",
+    "L5mnw7uevhLY"
+   ],
+   "absorbed": [
+    "B5dSkI3AVT3N",
+    "YcSAD9FoIP70"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196201219
+ },
+ {
+  "eventId": "mNGfyvRmatuTcWXSIwd1",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "c95bHITJXWMt",
+  "reason": "themes consolidated into \"Housing Affordability and Access\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "r4T5LlYVOlmr",
+    "F5eAeP6JHSm0",
+    "S13q6NZ5a7uX"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "iQIJTR1Bebof",
+    "r4T5LlYVOlmr",
+    "F5eAeP6JHSm0",
+    "S13q6NZ5a7uX",
+    "ObrnwZLqZCfA"
+   ],
+   "absorbed": [
+    "KtEg2RgC1UjJ"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196201233
+ },
+ {
+  "eventId": "EWEFQylIpAloo164BlXx",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "rufGv6VQaIOp",
+  "reason": "themes consolidated into \"Schools and Student Support\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-",
+    "rcpIQ0QE22VV",
+    "MFUe6jUTrG1G",
+    "wv6o57VUqdgq"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KdEpSBAA06e-",
+    "rcpIQ0QE22VV",
+    "MFUe6jUTrG1G",
+    "wv6o57VUqdgq",
+    "zAegvaGrs3gt"
+   ],
+   "absorbed": [
+    "lTn82dpHTlyl"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196201261
+ },
+ {
+  "eventId": "zDfF0QJmvisjrZUG6ZrV",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "sH7zYXG1QFMc",
+  "reason": "themes consolidated into \"Healthcare Access and Support\" (2 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "aXVx6Gb6xs5t",
+    "ZosPjL0BBCqW"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aXVx6Gb6xs5t",
+    "ZosPjL0BBCqW",
+    "t-ICyjwlby7h",
+    "lCYN1biQ8L1J"
+   ],
+   "absorbed": [
+    "yHxdRafSI05r",
+    "zKp9Hm2CZIZH"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787196201273
+ }
+]
