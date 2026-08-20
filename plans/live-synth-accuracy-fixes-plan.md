@@ -61,6 +61,32 @@ Nothing deployed. Full results and findings in
    language-independent (the judge reads Hebrew), so Hebrew should benefit from
    everything above without the model change. The change is worth making anyway for
    the synth layer; it needs a migration strategy first.
+
+   **The dangerous half is now handled (`f6e16cf30`).** The hazard was never the
+   destination, it was the transition: a question holding both 3-small and
+   3-large vectors ranks neighbours on a cosine with no meaning, and does so
+   silently. Both read paths now honour the `embeddingModel` stamp that writes
+   have carried all along — a stale vector reads as absent and gets regenerated,
+   and stale neighbours are dropped from vector-search results (`findNearest`
+   scores server-side, so they cannot be excluded before the fact). A missing
+   stamp counts as compatible, so nothing re-embeds on deploy day. A switch now
+   **degrades rather than corrupts**, and `vectorSearch.incompatibleModel` says
+   by how much.
+
+   **What is left is genuinely a decision, not code.** All three rollouts want
+   the same next primitive — a per-question embedding model, so questions can
+   move one at a time — and which one is right depends on how much live Hebrew
+   data exists:
+
+   | rollout | what it needs | trade |
+   | --- | --- | --- |
+   | **Re-embed per question** (recommended) | per-question model field + admin flow; `reEmbedQuestion` already exists and does the work | fix live questions one at a time, each verifiable before the next; no flag day |
+   | New questions only | per-question model field, set at creation | safest; every Hebrew question already live keeps 56/100 twin visibility forever |
+   | Global swap + backfill | flip the env var, re-embed everything | simplest to describe; with the guard above it now degrades instead of corrupting, but recall dips across every question at once |
+
+   Cost is not a factor either way: 3-large is ~6.5× 3-small per token, which
+   puts even 100k statements well under a dollar — a rounding error against the
+   synthesis LLM calls, as the original plan noted.
 3. **The reJudge merge gate is unproven.** Zero refusals because no duplicate
    synths arose for it to consider. Needs a corpus that produces duplicates.
 4. ~~**`review-queued` is still ~34 per run** and nothing drains it.~~
