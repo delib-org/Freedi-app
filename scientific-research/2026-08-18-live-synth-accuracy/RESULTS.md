@@ -151,6 +151,31 @@ per parent per sweep on questions where nothing has happened.
 
 Both changes are in `a4674a4f5`. **Neither has been through the live benchmark
 yet**; the numbers above are an offline replay of the judge, not a pipeline run.
+A 20-statement smoke run (`runs/smoke-consolidation`) confirmed no regression in
+the synth layer — 2 of the 2 ground-truth pairs available in that prefix were
+recovered, each holding exactly its two members — and that the exporter now
+writes proposal bodies. It did **not** exercise consolidation: 20 statements
+produced 2 themes, below `MIN_THEMES_TO_CONSOLIDATE`.
+
+## Finding 12 — the review queue never emptied, and never held anything real
+
+The last worry attached to `review-queued` — "~34 per run and nothing drains it"
+— resolves in two opposite directions, both from the certified runs' artifacts.
+
+**It is not a recall problem.** Reconstructing every queued option's fate: 34, 34
+and 37 options were queued across the three seeds, and **all 105 were
+subsequently placed by the pipeline itself**. Zero were still unplaced at export.
+Queueing an option whose twin has not yet arrived is correct at that moment, and
+the twin's arrival resolves it. There is nothing here to rescue.
+
+**It is a queue problem, and worse than "nothing drains it" implied.** Because
+every queued option gets placed and the row is never touched again, the queue an
+admin opens has a **100% false-positive rate** — ~35 items per 100 statements,
+none of which need a human. That is a queue people stop reading, and the day it
+holds something real it will be ignored along with the rest. A placement now
+closes the rows that mention the option (`c018fd495`), resolved rather than
+deleted, since how often the gray band resolves itself is exactly the measurement
+that would say whether the band is set right.
 
 ## Finding 11 — the merged text loses specificity, but loses nobody
 
@@ -195,8 +220,48 @@ rather than in the grouping.
 **Read this as a bound, not a verdict.** These runs predate the exporter carrying
 `description`, so this scores the **title alone** — a summary by construction and
 the harshest possible test. Most weakenings are details a body would plausibly
-carry. Whether it does is unmeasured until a run exports bodies, which the
-exporter now does.
+carry.
+
+### Finding 11b — with the body, it does carry them; the real defect is scope
+
+The bound above was resolved rather than left standing. `analysis/synthTextAB.mjs`
+drives the **real compiled** `generateSynthesizedProposal` over the same 50
+ground-truth pairs the pipeline merged — the pipeline recovered all 50 exactly on
+every seed, so these are the same inputs — and judges the full published text.
+Importing the compiled function rather than restating its prompt is deliberate:
+Finding 8 is what happens when a harness re-implements the code under test.
+
+The body recovers essentially everything the title generalised away: **fidelity
+0.990, one weakened member in 100, zero lost.** The specificity worry raised by
+the title-only pass is largely answered.
+
+What the body introduced instead is invention, and the blunt `fabricated` signal
+was useless for seeing it — it fired on 43 of 50, because the prompt explicitly
+orders an implementation plan from one-sentence inputs. A signal that is almost
+always on cannot rank anything. Splitting it in two (`scopeInflated` vs
+`addedCommitments`, both self-tested) separated the harmless from the harmful:
+
+| | baseline | after the fix |
+| --- | --- | --- |
+| fidelity | 0.990 | **1.000** |
+| members weakened / lost | 1 / 0 | **0 / 0** |
+| **scope inflated** | **4/50** | **0/50** |
+| added commitments | 50/50 | 25/50 |
+| `fabricated` (blunt) | 43/50 | 5/50 |
+| refusals | 0 | 0 |
+
+The four were consistent in shape — "freelancers" published as "residents",
+"shops and restaurants" as "and other establishments citywide" — and the cause
+was a contradiction inside the synthesis prompt: it forbade inventing "facts or
+numbers" while ordering it to state "who does what, on what timeline, with what
+success measure". Where the inputs were silent the only way to obey was to
+invent, and invention defaults to the general case. Making that instruction
+conditional on the inputs, and giving scope its own prohibition, removed it
+entirely without the synthesis judge starting to refuse pairs it should accept
+(`8d10ffd2f`).
+
+One corpus, one sample per pair. The effects are far larger than noise, but the
+caveat at the foot of `analysis/README.md` applies here too.
 
 ## Finding 1 — the topic-cluster band is a black hole (shipped defaults, English)
 

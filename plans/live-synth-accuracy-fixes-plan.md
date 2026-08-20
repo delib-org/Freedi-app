@@ -48,11 +48,13 @@ Nothing deployed. Full results and findings in
 
 ### What is left
 
-> **Update 2026-08-20.** Items 6 and 7 are done — 6 by a route this plan got
-> wrong, 7 with a better result than feared. Both are marked below. The open work
-> is now: a live benchmark run to confirm the consolidation change end to end
-> (with bodies exported, which also completes the text measurement), Hebrew, and
-> the `review-queued` question.
+> **Update 2026-08-20.** Items 4, 6 and 7 are done — 6 by a route this plan got
+> wrong, 7 with a better result than feared and a real defect found and fixed
+> underneath it. All are marked below. **Hebrew (item 2) is the only substantive
+> item left**, and it is blocked on a rollout decision, not on code. The other
+> open thread is a full-corpus benchmark run to confirm the theme-consolidation
+> change end to end; a 20-statement smoke run showed no regression but was too
+> small to exercise consolidation at all.
 
 1. **Seed sweep** {7, 1234} — in flight. Until it lands, 0.910 is seed 42's number.
 2. **Hebrew** — the model switch is measured and the theme layer is now
@@ -61,9 +63,12 @@ Nothing deployed. Full results and findings in
    the synth layer; it needs a migration strategy first.
 3. **The reJudge merge gate is unproven.** Zero refusals because no duplicate
    synths arose for it to consider. Needs a corpus that produces duplicates.
-4. **`review-queued` is still ~34 per run** and nothing drains it. It no longer
-   costs coverage, but a third of the corpus passing through an unattended queue is
-   worth a second look.
+4. ~~**`review-queued` is still ~34 per run** and nothing drains it.~~
+   **Answered, in two opposite directions.** Not a recall problem: all 105 options
+   queued across the three certified runs were subsequently placed by the pipeline
+   itself, none left unplaced. But a real queue problem: because the rows were
+   never closed, the queue an admin opens had a **100% false-positive rate**. A
+   placement now resolves them. `c018fd495`, RESULTS.md Finding 12.
 5. **Deploy** is still a separate, explicit decision — `npm run deploy:f:test`
    first, never straight to prod.
 6. ~~**Theme-count variance is the one clear remaining defect.**~~ **Diagnosed and
@@ -88,6 +93,13 @@ Nothing deployed. Full results and findings in
    2 syntheses in 150 inflated scope. This is a **bound, not a verdict**: those
    runs predate the exporter carrying `description`, so it scores the title
    alone, which is the harshest possible test. `fb0c0cfb2`, RESULTS.md Finding 11.
+   **Then the bound was closed:** driving the real compiled synthesis function
+   over the same 50 pairs and judging the full text puts fidelity at **0.990** —
+   the body does carry what the title generalised away. The defect that remained
+   was **scope inflation**, 4 in 50, caused by the synthesis prompt forbidding
+   invention and simultaneously ordering "who does what, on what timeline" from
+   one-sentence inputs. Fixing that contradiction took scope inflation to **0/50**
+   and fidelity to **1.000**, with no new refusals. `8d10ffd2f`, Finding 11b.
 8. **Known harness flake:** on one seed-1234 attempt the emulator was killed
    mid-run and two statements were fed into a dead emulator. The attempt was
    discarded and the retry was clean, but the cause is not understood. Treat a
