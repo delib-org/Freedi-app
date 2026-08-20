@@ -96,6 +96,108 @@ grouping correct, spread across too many names.
 
 Headline spread 0.884–0.910, mean ≈ 0.900. Quote the range, not the best number.
 
+## Finding 10 — consolidation under-merged because the judge could not see, and the cap was never the constraint
+
+Finding 9 left theme-count variance as the one clear remaining defect, and the
+plan named the cause: `MAX_MERGES_PER_SWEEP = 8` in `consolidateThemes.ts`,
+with "raise the cap and run one consolidation pass at the end" as the cheap fix.
+The pump logs refute that without needing an experiment:
+
+```
+seed 7    :  9 -> 7 (2 groups)   14 -> 11 (3 groups)   11 -> 10 (1 group)
+seed 1234 :  8 -> 6 (2 groups)   19 -> 17 (2 groups)
+```
+
+The judge was never offered the chance to propose 8. Seed 1234's final sweep saw
+**19 headings and returned 2 groups**; the cap could not have bound, and raising
+it would have changed nothing. This is the fourth time in this study that a
+plausible diagnosis survived until someone read the artifacts.
+
+What actually limits the merge count is **what the judge is shown**. A heading is
+a compression of whichever proposal arrived first, so seed 1234 finished holding
+"Household recycling services", "Air quality monitoring", "Clean and efficient
+energy" and "Community gardens and urban agriculture" as four separate topics.
+As strings those share nothing; as *contents* they are plainly one area.
+
+`analysis/themeConsolidation.mjs` replays the real judge against the final theme
+sets of all three certified runs, scoring a proposed group as wrong when it spans
+two ground-truth topics. Averaged over two samples:
+
+| seed | mechanism | headings | correct merges | wrong | topics still represented |
+| --- | --- | --- | --- | --- | --- |
+| 42 | titles (shipped) | 11 → 10.5 | 0.0 | 0.5 | 9.5/10 |
+| 42 | **members** | 11 → **10.0** | 1.0 | **0.0** | **10/10** |
+| 7 | titles (shipped) | 10 → 9.0 | 0.0 | 1.0 | 9/10 |
+| 7 | **members** | 10 → 9.0 | 0.0 | 1.0 | 9/10 |
+| 1234 | titles (shipped) | 17 → 12.5 | 3.5 | 0.5 | 9.5/10 |
+| 1234 | **members** | 17 → **10.5** | **6.0** | 0.5 | **10/10** |
+
+Judging on members dominates on every seed and buys the recall without paying in
+precision. It is the same lesson the cross-synth merge gate learned one layer
+down — a generated title abstracts away exactly the detail the decision turns on.
+
+**A second defect the same measurement exposed, which nobody was looking for.**
+This sweep runs on a 10-minute schedule and asks a non-deterministic model to
+*find* groups, so a settled question puts the same question to it ~144 times a
+day, and a merge hides the donor heading irreversibly. Looping the judge on a
+static set is therefore what production actually does, and looping measurably
+degrades it: on seed 7 — whose ten headings were already exactly right — one
+sample in two proposed merging parks with culture, and the looped variants
+converge to 9. A spurious merge that any single call proposes rarely becomes a
+near-certainty across enough calls. Each distinct theme set is now judged once,
+keyed on a fingerprint of which headings exist and how much each holds.
+Convergence is unaffected — a merge changes the set — and it removes an LLM call
+per parent per sweep on questions where nothing has happened.
+
+Both changes are in `a4674a4f5`. **Neither has been through the live benchmark
+yet**; the numbers above are an offline replay of the judge, not a pipeline run.
+
+## Finding 11 — the merged text loses specificity, but loses nobody
+
+Every number above this line grades **membership** — which statements ended up
+together. That is half of being right. A synthesis also *replaces* what two
+people wrote, in the list participants read and vote on, with wording an LLM
+produced. Nothing had ever read that wording. A merge can hold exactly the right
+two statements and publish a proposal carrying only one of them, and every metric
+in this file would still read 1.000.
+
+`textFidelity.mjs` judges each member statement against the text its synthesis
+published: **preserved** (a reader would know this was asked for), **weakened**
+(the concrete ask generalised away), **lost** (a reader would have no idea), plus
+whether the merge invented a commitment nobody made.
+
+The instrument is validated first, and that is not a formality — a judge that
+answers "preserved" to everything scores a perfect run on a pipeline that
+destroyed half its input, and produces a number rather than an error, which is
+exactly the shape of both bugs in Finding 8. `textFidelity.selftest.mjs` puts it
+against five hand-written merges with known answers (faithful; one member
+dropped; both asks generalised into a heading; an invented funding mechanism;
+title-only). All five correct.
+
+| run | fidelity | preserved | weakened | lost | fabricated |
+| --- | --- | --- | --- | --- | --- |
+| seed 42 | 0.840 | 84 | 16 | **0** | 0 |
+| seed 7 | 0.870 | 87 | 13 | **0** | 1 |
+| seed 1234 | 0.920 | 92 | 8 | **0** | 1 |
+
+**Nothing was lost. Zero members dropped across 300 member statements in three
+runs** — no participant's ask vanished from the text that replaced it. That is
+the failure this measurement existed to look for, and it is not happening.
+
+What the text does lose is **specificity**: 8–16 asks per 100 arrive generalised.
+"students under eighteen" becomes "school-age"; "cut ambulance and fire response
+times by opening more local stations" becomes "open more neighborhood emergency
+response stations". And 2 syntheses in 150 **inflated scope**, inventing
+"citywide" and "residents" where the originals said neither — the same
+over-abstraction that cost precision in Finding 5, showing up in the text layer
+rather than in the grouping.
+
+**Read this as a bound, not a verdict.** These runs predate the exporter carrying
+`description`, so this scores the **title alone** — a summary by construction and
+the harshest possible test. Most weakenings are details a body would plausibly
+carry. Whether it does is unmeasured until a run exports bodies, which the
+exporter now does.
+
 ## Finding 1 — the topic-cluster band is a black hole (shipped defaults, English)
 
 The very first run produced **zero syntheses** and **one topic cluster holding all

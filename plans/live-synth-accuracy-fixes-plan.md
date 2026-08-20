@@ -48,6 +48,12 @@ Nothing deployed. Full results and findings in
 
 ### What is left
 
+> **Update 2026-08-20.** Items 6 and 7 are done — 6 by a route this plan got
+> wrong, 7 with a better result than feared. Both are marked below. The open work
+> is now: a live benchmark run to confirm the consolidation change end to end
+> (with bodies exported, which also completes the text measurement), Hebrew, and
+> the `review-queued` question.
+
 1. **Seed sweep** {7, 1234} — in flight. Until it lands, 0.910 is seed 42's number.
 2. **Hebrew** — the model switch is measured and the theme layer is now
    language-independent (the judge reads Hebrew), so Hebrew should benefit from
@@ -60,17 +66,28 @@ Nothing deployed. Full results and findings in
    worth a second look.
 5. **Deploy** is still a separate, explicit decision — `npm run deploy:f:test`
    first, never straight to prod.
-6. **Theme-count variance is the one clear remaining defect.** Seeds produced 10,
-   11 and 17 headings for a true 10 — every grouping correct, spread across too
-   many names. `consolidateThemes` is capped at `MAX_MERGES_PER_SWEEP = 8` and
-   only runs when the reJudge sweep does; seed 1234 consolidated 4 donors where
-   seed 42 consolidated 9. Raising the cap and running one consolidation pass at
-   the end is the cheap fix.
-7. **Nobody has scored the merged TEXT.** The benchmark grades which statements
-   ended up together and never reads the proposal the LLM writes for a synthesis.
-   A merge can group the right two statements and still produce wording that
-   loses what one of them meant — and that wording is what participants read.
-   This is the largest unmeasured surface in the system.
+6. ~~**Theme-count variance is the one clear remaining defect.**~~ **Diagnosed and
+   fixed — but the diagnosis in this plan was wrong.** Raising
+   `MAX_MERGES_PER_SWEEP` would have changed nothing: the pump logs show the
+   judge was offered 1–3 groups per sweep and never approached the cap of 8. The
+   real constraint was that the judge saw only the HEADINGS, and a heading is a
+   compression of whichever proposal arrived first. Showing it the proposals
+   underneath dominates on every seed (seed 1234: 17 → 10.5 headings vs 17 →
+   12.5, all ten topics still represented, no extra false merges). The same
+   measurement caught a second defect nobody was looking for: the sweep re-asks a
+   non-deterministic model to find merges every 10 minutes forever, and a
+   spurious merge that a single call proposes rarely becomes near-certain across
+   ~144 calls a day — so each distinct theme set is now judged once. `a4674a4f5`,
+   RESULTS.md Finding 10. **Not yet through a live benchmark run.**
+7. ~~**Nobody has scored the merged TEXT.**~~ **Measured — and the news is
+   good.** `textFidelity.mjs` (validated first against five known-answer fixtures
+   in `textFidelity.selftest.mjs`) judges each member statement against the text
+   its synthesis published. Across 300 member statements in three runs, **zero
+   were lost** — no participant's ask vanished from the text that replaced it.
+   What the text loses is specificity: 8–16 asks per 100 arrive generalised, and
+   2 syntheses in 150 inflated scope. This is a **bound, not a verdict**: those
+   runs predate the exporter carrying `description`, so it scores the title
+   alone, which is the harshest possible test. `fb0c0cfb2`, RESULTS.md Finding 11.
 8. **Known harness flake:** on one seed-1234 attempt the emulator was killed
    mid-run and two statements were fed into a dead emulator. The attempt was
    discarded and the retry was clean, but the cause is not understood. Treat a
