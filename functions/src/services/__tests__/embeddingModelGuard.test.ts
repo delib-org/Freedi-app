@@ -1,0 +1,86 @@
+/**
+ * The guard that makes an embedding-model switch survivable.
+ *
+ * Vectors from two different embedding models are not comparable, and the
+ * failure is silent: the cosine is a real number, nothing throws, the wrong
+ * neighbours just rank first. These tests pin the two rules that make the
+ * difference between "degrades" and "corrupts".
+ */
+const docs = new Map<string, Record<string, unknown>>();
+
+jest.mock('firebase-admin/firestore', () => ({
+	getFirestore: jest.fn(() => ({
+		collection: () => ({
+			doc: (id: string) => ({
+				get: async () => ({ exists: docs.has(id), data: () => docs.get(id) }),
+			}),
+			where: () => ({
+				get: async () => ({
+					docs: [...docs.entries()].map(([id, data]) => ({ id, data: () => data })),
+				}),
+			}),
+		}),
+	})),
+	FieldValue: { vector: jest.fn(), delete: jest.fn() },
+}));
+
+jest.mock('firebase-functions', () => ({
+	logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+}));
+
+jest.mock('../embedding-service', () => ({
+	EMBEDDING_DIMENSIONS: 1536,
+	OPENAI_EMBEDDING_MODEL: 'text-embedding-3-small',
+	embeddingService: { generateEmbedding: jest.fn() },
+}));
+
+jest.mock('../brief-service', () => ({
+	generateBrief: jest.fn(),
+	briefEmbeddingsEnabled: jest.fn(() => false),
+}));
+
+import { embeddingCache } from '../embedding-cache-service';
+
+const vector = [0.1, 0.2, 0.3];
+
+beforeEach(() => {
+	docs.clear();
+	jest.clearAllMocks();
+});
+
+describe('embedding cache — vectors from another model are not peers', () => {
+	it('returns a vector stamped with the active model', async () => {
+		docs.set('a', { embedding: vector, embeddingModel: 'text-embedding-3-small' });
+
+		expect(await embeddingCache.getEmbedding('a')).toEqual(vector);
+	});
+
+	it('reads a vector from a DIFFERENT model as absent, so it gets regenerated', async () => {
+		docs.set('a', { embedding: vector, embeddingModel: 'text-embedding-3-large' });
+
+		// Absent rather than wrong: ensureEmbedding re-embeds it, so a question
+		// heals as it is used instead of clustering on a meaningless cosine.
+		expect(await embeddingCache.getEmbedding('a')).toBeNull();
+	});
+
+	it('treats a MISSING stamp as legacy-compatible, not as stale', async () => {
+		// The field predates nothing — vectors written before it existed carry no
+		// model. Reading absence as "stale" would re-embed the whole corpus the
+		// day this shipped, to fix a problem nobody has yet.
+		docs.set('a', { embedding: vector });
+		docs.set('b', { embedding: vector, embeddingModel: '' });
+
+		expect(await embeddingCache.getEmbedding('a')).toEqual(vector);
+		expect(await embeddingCache.getEmbedding('b')).toEqual(vector);
+	});
+
+	it('filters a mixed batch down to the comparable vectors only', async () => {
+		docs.set('same', { embedding: vector, embeddingModel: 'text-embedding-3-small' });
+		docs.set('legacy', { embedding: vector });
+		docs.set('other', { embedding: vector, embeddingModel: 'text-embedding-3-large' });
+
+		const got = await embeddingCache.getBatchEmbeddings(['same', 'legacy', 'other']);
+
+		expect([...got.keys()].sort()).toEqual(['legacy', 'same']);
+	});
+});

@@ -4,6 +4,35 @@ import { EMBEDDING_DIMENSIONS, OPENAI_EMBEDDING_MODEL } from './embedding-servic
 import { computeTextHash } from '../synthesis/textHash';
 
 // Helper to extract array from VectorValue or return as-is if already an array
+/**
+ * Is this stored vector comparable with the ones we are producing now?
+ *
+ * Vectors from `text-embedding-3-small` and `text-embedding-3-large` occupy
+ * different spaces, so a cosine between them is a number with no meaning. It is
+ * not an error, it does not throw, and it does not look wrong — it just quietly
+ * ranks the wrong neighbours first. That is the single hazard blocking the
+ * Hebrew model switch, where the measured gain is large (twin visibility 79/100
+ * → 99/100, nearest-neighbour 56 → 89) and the risk has been entirely in the
+ * transition rather than the destination.
+ *
+ * Every write has stamped `embeddingModel` for some time, so honouring it costs
+ * nothing today — every vector matches and this returns true — and on the day
+ * the model changes, a stale vector reads as ABSENT rather than as a peer.
+ * `ensureEmbedding` then regenerates it, so a question heals as it is used
+ * instead of silently clustering on nonsense.
+ *
+ * A MISSING stamp is treated as compatible, deliberately. Vectors written
+ * before the field existed carry no model, and reading absence as "stale" would
+ * re-embed the entire corpus the moment this shipped — a large bill and a long
+ * outage to fix a problem nobody has yet. Only a stamp that is present AND
+ * different is a mismatch.
+ */
+function isCompatibleModel(storedModel: unknown): boolean {
+	if (typeof storedModel !== 'string' || storedModel === '') return true;
+
+	return storedModel === OPENAI_EMBEDDING_MODEL;
+}
+
 function extractEmbeddingArray(embedding: unknown): number[] | null {
 	if (!embedding) return null;
 
@@ -63,6 +92,15 @@ class EmbeddingCacheService {
 			}
 
 			const data = doc.data();
+			if (!isCompatibleModel(data?.embeddingModel)) {
+				logger.info('embeddingCache: ignoring vector from a different model', {
+					statementId,
+					storedModel: data?.embeddingModel,
+					activeModel: OPENAI_EMBEDDING_MODEL,
+				});
+
+				return null;
+			}
 			const embedding = extractEmbeddingArray(data?.embedding);
 
 			return embedding;
@@ -99,13 +137,25 @@ class EmbeddingCacheService {
 					.where('statementId', 'in', batch)
 					.get();
 
+				let incompatible = 0;
 				snapshot.docs.forEach((doc) => {
 					const data = doc.data();
+					if (!isCompatibleModel(data?.embeddingModel)) {
+						incompatible++;
+
+						return;
+					}
 					const embedding = extractEmbeddingArray(data?.embedding);
 					if (embedding) {
 						result.set(doc.id, embedding);
 					}
 				});
+				if (incompatible > 0) {
+					logger.info('embeddingCache: ignored vectors from a different model', {
+						count: incompatible,
+						activeModel: OPENAI_EMBEDDING_MODEL,
+					});
+				}
 			}
 
 			logger.info(`Retrieved ${result.size}/${statementIds.length} embeddings`);

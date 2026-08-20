@@ -1,7 +1,11 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Statement } from '@freedi/shared-types';
-import { embeddingService, EMBEDDING_DIMENSIONS } from './embedding-service';
+import {
+	embeddingService,
+	EMBEDDING_DIMENSIONS,
+	OPENAI_EMBEDDING_MODEL,
+} from './embedding-service';
 import { embeddingCache } from './embedding-cache-service';
 
 interface SimilarStatement {
@@ -121,6 +125,7 @@ class VectorSearchService {
 			// (~45k log lines for a 764-anchor synthesis run).
 			let candidatesScanned = 0;
 			let candidatesPassed = 0;
+			let incompatibleModelHits = 0;
 			let topSimilarity = -Infinity;
 			let topStatementId: string | undefined;
 
@@ -135,6 +140,23 @@ class VectorSearchService {
 				// Firestore COSINE distance = 1 - cosine_similarity, range [0, 2]
 				// Convert back: cosine_similarity = 1 - distance
 				const rawData = doc.data() as Record<string, unknown>;
+
+				// `findNearest` scores server-side against whatever vector is stored,
+				// and cannot be told to skip vectors from a different embedding model
+				// — so a mixed question would rank neighbours on a meaningless cosine.
+				// The distance is already spent by the time we see it; dropping the
+				// result is what stops it reaching a threshold comparison. Missing
+				// stamp = legacy = compatible; see isCompatibleModel in
+				// embedding-cache-service.
+				const storedModel = rawData.embeddingModel;
+				if (
+					typeof storedModel === 'string' &&
+					storedModel !== '' &&
+					storedModel !== OPENAI_EMBEDDING_MODEL
+				) {
+					incompatibleModelHits += 1;
+					continue;
+				}
 
 				const distance = typeof rawData.vectorDistance === 'number' ? rawData.vectorDistance : null;
 
@@ -168,6 +190,16 @@ class VectorSearchService {
 				topStatementId,
 				threshold,
 			});
+			// Promoted above debug: during a model migration this is the number that
+			// explains a sudden recall drop, and it must not need log-level surgery
+			// to find. Silent at zero, which is every day that is not a migration.
+			if (incompatibleModelHits > 0) {
+				logger.info('vectorSearch.incompatibleModel', {
+					parentId,
+					dropped: incompatibleModelHits,
+					activeModel: OPENAI_EMBEDDING_MODEL,
+				});
+			}
 
 			// Sort by similarity descending (should already be, but ensure)
 			return results.sort((a, b) => b.similarity - a.similarity);
