@@ -1,8 +1,6 @@
 import m from 'mithril';
 import { AgoraParticipant, AgoraSession } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
-import { getSessionState } from '../lib/session';
-import { EraMap } from '../components/EraMap';
 
 export interface ConvergenceResultsAttrs {
 	session: AgoraSession;
@@ -30,10 +28,9 @@ export function ConvergenceResults(): m.Component<ConvergenceResultsAttrs> {
 		view(vnode) {
 			const { session } = vnode.attrs;
 			const convergence = session.convergence;
-			const participants = getSessionState().participants.filter((person) => !person.isAI);
+			const counted = convergence?.participants ?? 0;
 
 			const score = convergence?.score ?? null;
-			const counted = convergence?.participants ?? 0;
 
 			// Nobody has answered the closing question yet: there is a gap to
 			// measure but nothing to measure it against.
@@ -49,7 +46,10 @@ export function ConvergenceResults(): m.Component<ConvergenceResultsAttrs> {
 
 			return m('.shell.shell--wide', [
 				m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
-					m(EraMap, { participants }),
+					// No era map. The classroom's ending shows the world the class
+					// changed; a civic square has no era behind it, and the
+					// illustration is a fantasy village painted in daylight — on the
+					// navy page it reads as a screenshot from another game.
 					m('.card.convergence', [
 						m('h1.convergence__title', t('convergence.title')),
 						m(
