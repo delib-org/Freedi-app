@@ -264,6 +264,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'place.help_sub': 'בחרו הצעה וחזקו אותה',
 		'delib.phase_propose': 'הציעו פתרון',
 		'delib.propose_hint': 'מה צריך לעשות? כתבו הצעה ששני המחנות יוכלו לחיות איתה.',
+		'delib.propose_hint_open': 'מה צריך לעשות? כתבו הצעה שכמה שיותר אנשים כאן יוכלו לחיות איתה.',
 		'delib.mission_label': 'המשימה שלכם',
 		'delib.placeholder': 'אנחנו מציעים ש...',
 		'delib.write_first': 'קודם כותבים — ואז מדליקים את הפנס',
@@ -903,6 +904,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'place.help_sub': 'Pick a proposal and make it stronger',
 		'delib.phase_propose': 'Propose a solution',
 		'delib.propose_hint': 'What should be done? Write a proposal both camps could live with.',
+		'delib.propose_hint_open':
+			'What should be done? Write a proposal as many people here as possible could live with.',
 		'delib.mission_label': 'Your mission',
 		'delib.placeholder': 'We propose that...',
 		'delib.write_first': 'Write first — then light the lantern',
@@ -1551,6 +1554,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'place.help_sub': 'اختاروا اقتراحًا وقوّوه',
 		'delib.phase_propose': 'اقترحوا حلًا',
 		'delib.propose_hint': 'ما الذي يجب فعله؟ اكتبوا اقتراحًا يمكن للمعسكرين التعايش معه.',
+		'delib.propose_hint_open':
+			'ما الذي يجب فعله؟ اكتبوا اقتراحًا يمكن لأكبر عدد ممكن من الحاضرين التعايش معه.',
 		'delib.mission_label': 'مهمتكم',
 		'delib.placeholder': 'نقترح أن...',
 		'delib.write_first': 'اكتبوا أولًا — ثم أضيئوا الفانوس',
@@ -2198,6 +2203,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.phase_propose': 'Proponed una solución',
 		'delib.propose_hint':
 			'¿Qué se debe hacer? Escribid una propuesta con la que ambos bandos puedan vivir.',
+		'delib.propose_hint_open':
+			'¿Qué se debe hacer? Escribid una propuesta con la que pueda vivir el mayor número posible de personas.',
 		'delib.mission_label': 'Vuestra misión',
 		'delib.placeholder': 'Proponemos que...',
 		'delib.write_first': 'Primero escribid — luego encended el farol',
@@ -2873,6 +2880,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.phase_propose': 'Schlagt eine Lösung vor',
 		'delib.propose_hint':
 			'Was sollte getan werden? Schreibt einen Vorschlag, mit dem beide Lager leben können.',
+		'delib.propose_hint_open':
+			'Was sollte getan werden? Schreibt einen Vorschlag, mit dem möglichst viele hier leben können.',
 		'delib.mission_label': 'Eure Mission',
 		'delib.placeholder': 'Wir schlagen vor, dass...',
 		'delib.write_first': 'Erst schreiben — dann die Laterne anzünden',
@@ -3553,6 +3562,8 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.phase_propose': 'Stel een oplossing voor',
 		'delib.propose_hint':
 			'Wat moet er gebeuren? Schrijf een voorstel waar beide kampen mee kunnen leven.',
+		'delib.propose_hint_open':
+			'Wat moet er gebeuren? Schrijf een voorstel waar zo veel mogelijk mensen hier mee kunnen leven.',
 		'delib.mission_label': 'Jullie missie',
 		'delib.placeholder': 'Wij stellen voor dat...',
 		'delib.write_first': 'Eerst schrijven — dan de lantaarn ontsteken',

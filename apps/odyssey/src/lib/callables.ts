@@ -51,3 +51,46 @@ export async function provisionCivicSessions(
 
 	return result.data;
 }
+
+export interface UpdateCivicFlowResponse {
+	updated: string[];
+	skipped: string[];
+}
+
+/**
+ * Admin action: re-point the already-open deliberations at the game's current
+ * script.
+ *
+ * Editing the script after opening the squares is the normal case, not the
+ * exception — the first thing anyone does with a new knob is try it. Opening
+ * again would not help: provisioning treats an existing session as done.
+ */
+export async function updateCivicFlow(gameId: string): Promise<UpdateCivicFlowResponse> {
+	const call = httpsCallable<{ gameId: string }, UpdateCivicFlowResponse>(
+		functions,
+		'agoraUpdateCivicFlow',
+	);
+	const result = await call({ gameId });
+
+	return result.data;
+}
+
+export interface AdvanceCivicStageRequest {
+	sessionId: string;
+	stage: string;
+}
+
+/**
+ * Move one civic deliberation to its next stage.
+ *
+ * Reuses the classroom's own stage machinery: provisioning records the game
+ * admin as the session's teacher, so the organizer already holds the only
+ * permission this needs.
+ */
+export async function advanceCivicStage(sessionId: string, stage: string): Promise<void> {
+	const call = httpsCallable<AdvanceCivicStageRequest, { ok: boolean }>(
+		functions,
+		'agoraAdvanceStage',
+	);
+	await call({ sessionId, stage });
+}

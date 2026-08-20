@@ -8,6 +8,22 @@ import {
 	ReactNode,
 } from 'react';
 import { ODYSSEY_DEFAULT_GAME_ID, OdysseyAttitudeKey, OdysseyJourney } from '@freedi/shared-types';
+
+/**
+ * Which game this browser is playing.
+ *
+ * One event is one game document — its own islands, its own script, its own
+ * squares — so an organizer running an event needs a way to point people at
+ * theirs. A query parameter is the whole mechanism: `?game=<id>`, absent means
+ * the default game, and every id the app touches (content, journey,
+ * evaluations, the admin screen) comes from here so the three can never end up
+ * reading different games.
+ */
+export function currentGameId(): string {
+	if (typeof window === 'undefined') return ODYSSEY_DEFAULT_GAME_ID;
+
+	return new URLSearchParams(window.location.search).get('game') || ODYSSEY_DEFAULT_GAME_ID;
+}
 import { GameContent, loadGame } from '../lib/game';
 import { attitudeValue, loadGameEvaluations, myAttitudes, rateStance } from '../lib/evaluations';
 import { loadJourney, saveJourney } from '../lib/journey';
@@ -53,10 +69,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
 		}
 		setLoading(true);
 		try {
+			const gameId = currentGameId();
 			const [loadedContent, loadedJourney, evaluations] = await Promise.all([
-				loadGame(ODYSSEY_DEFAULT_GAME_ID),
-				loadJourney(user.uid, ODYSSEY_DEFAULT_GAME_ID),
-				loadGameEvaluations(ODYSSEY_DEFAULT_GAME_ID),
+				loadGame(gameId),
+				loadJourney(user.uid, gameId),
+				loadGameEvaluations(gameId),
 			]);
 			setContent(loadedContent);
 			setJourney(loadedJourney);

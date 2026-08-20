@@ -1,16 +1,25 @@
 import { useState } from 'react';
 import type {
 	OdysseyCompassQuestion,
+	OdysseyGameScript,
 	OdysseyIsland,
 	OdysseyIslandAgoraSession,
 	OdysseyParty,
 	OdysseyValue,
+} from '@freedi/shared-types';
+import {
+	AgoraSessionMode,
+	ODYSSEY_EVENT_SCRIPT,
+	resolveSessionFlow,
+	scriptToFlow,
 } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import { useGame } from '../state/GameContext';
 import { toFreediUser, useUser } from '../lib/user';
 import { IslandContent, isGameAdmin } from '../lib/game';
 import { seedGame } from '../lib/seed';
+import { currentGameId } from '../state/GameContext';
+import { advanceCivicStage, updateCivicFlow } from '../lib/callables';
 import {
 	addIslandStatement,
 	addStance,
@@ -114,7 +123,10 @@ export default function Admin() {
 							disabled={busy || !user}
 							onClick={() =>
 								void run(async () => {
-									await seedGame(toFreediUser(user!));
+									// Seeds the game this URL is pointing at, not always the
+									// default one — otherwise "?game=<event>" on an empty
+									// event would silently create the shared default instead.
+									await seedGame(toFreediUser(user!), currentGameId());
 								})
 							}
 						>
@@ -213,6 +225,7 @@ export default function Admin() {
 							islandsMeta={content.game.islands}
 							agoraSessions={content.game.agoraSessions ?? {}}
 							agoraOrigin={content.game.texts.agoraOrigin ?? ''}
+							script={content.game.script}
 							busy={busy}
 							flash={flash}
 							gameId={gameId}
@@ -1013,6 +1026,274 @@ function PartiesTab({
 	);
 }
 
+/* ---------- The event script ---------- */
+
+/** One switch, with the sentence that says what turning it off actually does. */
+function ScriptToggle({
+	label,
+	hint,
+	checked,
+	onChange,
+}: {
+	label: string;
+	hint: string;
+	checked: boolean;
+	onChange(next: boolean): void;
+}) {
+	return (
+		<label className="flex items-start gap-2 cursor-pointer">
+			<input
+				type="checkbox"
+				className="mt-1"
+				checked={checked}
+				onChange={(event) => onChange(event.target.checked)}
+			/>
+			<span className="flex flex-col">
+				<span className="text-[14px] text-[var(--cream)]">{label}</span>
+				<span className="text-[12px] opacity-70">{hint}</span>
+			</span>
+		</label>
+	);
+}
+
+/**
+ * The script of the event: which beats the Agora deliberation runs.
+ *
+ * Everything here is a default the organizer may override, so an empty script
+ * is a real answer and not an unfinished form — it means "run the square the
+ * way civic squares have always run". The presets exist because the two shapes
+ * anyone actually asks for are "as it was" and "no sides at all", and building
+ * the second one switch at a time invites getting it half-done.
+ */
+function ScriptSection({
+	script,
+	hasOpenSessions,
+	busy,
+	flash,
+	gameId,
+	run,
+}: {
+	script: OdysseyGameScript | undefined;
+	hasOpenSessions: boolean;
+	busy: boolean;
+	flash(message: string): void;
+	gameId: string;
+	run(action: () => Promise<void>): Promise<void>;
+}) {
+	const [draft, setDraft] = useState<OdysseyGameScript>(script ?? {});
+	const resolved = resolveSessionFlow({
+		sessionMode: AgoraSessionMode.civic,
+		flow: scriptToFlow(draft),
+	});
+
+	function patch(next: Partial<OdysseyGameScript>): void {
+		setDraft((current) => ({ ...current, ...next }));
+	}
+
+	/** Saving also re-points anything already open, or the knob is a lie. */
+	async function save(next: OdysseyGameScript): Promise<void> {
+		await saveGamePatch(gameId, { script: next });
+		if (!hasOpenSessions) {
+			flash('התסריט נשמר');
+
+			return;
+		}
+		const result = await updateCivicFlow(gameId);
+		flash(`התסריט נשמר · ${result.updated.length} דיונים עודכנו`);
+	}
+
+	return (
+		<section className="panel flex flex-col gap-4">
+			<div>
+				<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">תסריט האירוע</h2>
+				<p className="text-[14px] opacity-80 m-0">
+					מה עובר משתתף בדיון. שינוי כאן חל גם על דיונים שכבר נפתחו — קוד ההצטרפות וההצעות שנכתבו
+					נשמרים.
+				</p>
+			</div>
+
+			<div className="flex flex-col gap-3">
+				<ScriptToggle
+					label="עמדות ומחנות"
+					hint={
+						resolved.stances
+							? 'המשתתפים משובצים לשני מחנות לפי העמדות שסימנו באי, והציון נמדד בגישור ביניהם.'
+							: 'בלי מחנות. במקום ציון גישור, נמדד כמה הדעות בחדר התקרבו זו לזו במהלך הדיון.'
+					}
+					checked={resolved.stances}
+					onChange={(next) => patch({ stancesEnabled: next })}
+				/>
+				<ScriptToggle
+					label="לוח הצרכים"
+					hint="מציג את הצרכים שמאחורי שתי העמדות במהלך הכתיבה."
+					checked={resolved.needs}
+					onChange={(next) => patch({ needsEnabled: next })}
+				/>
+				<ScriptToggle
+					label="שאלת הדמויות"
+					hint="מאפשר לבקש חוות דעת מנומקת בשם כל אחת משתי העמדות."
+					checked={resolved.elders}
+					onChange={(next) => patch({ eldersEnabled: next })}
+				/>
+				<ScriptToggle
+					label="מסך פתיחה"
+					hint="מסך קצר בתחילת הדיון, בנוי מהטקסט של האי עצמו."
+					checked={resolved.framing}
+					onChange={(next) => patch({ framingEnabled: next })}
+				/>
+				<ScriptToggle
+					label="הצבעה בסיום"
+					hint="הדיון נחתם בהצבעה על ההצעות לפני מסך התוצאות."
+					checked={resolved.voting}
+					onChange={(next) => patch({ votingEnabled: next })}
+				/>
+
+				<div className="flex flex-wrap gap-4">
+					<label className="flex flex-col gap-1">
+						<span className="text-[13px] opacity-80">מספר סבבים</span>
+						<input
+							type="number"
+							min={1}
+							max={9}
+							className="w-20"
+							value={resolved.rounds}
+							onChange={(event) => patch({ rounds: Number(event.target.value) })}
+						/>
+					</label>
+					<label className="flex flex-col gap-1">
+						<span className="text-[13px] opacity-80">דירוגים בכל סבב</span>
+						<input
+							type="number"
+							min={1}
+							max={9}
+							className="w-20"
+							value={resolved.ratingsPerRound}
+							onChange={(event) => patch({ ratingsPerRound: Number(event.target.value) })}
+						/>
+					</label>
+				</div>
+			</div>
+
+			<div className="flex flex-wrap gap-2">
+				<button
+					type="button"
+					className="btn"
+					disabled={busy}
+					onClick={() => void run(() => save(draft))}
+				>
+					שמירת התסריט
+				</button>
+				<button
+					type="button"
+					className="btn-outline"
+					disabled={busy}
+					onClick={() => {
+						setDraft(ODYSSEY_EVENT_SCRIPT);
+						void run(() => save(ODYSSEY_EVENT_SCRIPT));
+					}}
+				>
+					מצב אירוע
+				</button>
+				<button
+					type="button"
+					className="btn-outline"
+					disabled={busy}
+					onClick={() => {
+						setDraft({});
+						void run(() => save({}));
+					}}
+				>
+					חזרה לברירת המחדל
+				</button>
+			</div>
+		</section>
+	);
+}
+
+/**
+ * Closing the event.
+ *
+ * A civic square has no bell and no teacher, which is exactly what lets people
+ * wander in all afternoon — but an event that is scored on how far the room
+ * moved has to end somewhere, because the closing question cannot be asked of
+ * a deliberation that is still running. The organizer is already the session's
+ * teacher (provisioning records them as one), so this reuses the classroom's
+ * own stage machinery rather than inventing a second way to advance a session.
+ */
+function ConductorSection({
+	islands,
+	agoraSessions,
+	votingEnabled,
+	busy,
+	flash,
+	run,
+}: {
+	islands: IslandContent[];
+	agoraSessions: Record<string, OdysseyIslandAgoraSession>;
+	votingEnabled: boolean;
+	busy: boolean;
+	flash(message: string): void;
+	run(action: () => Promise<void>): Promise<void>;
+}) {
+	const open = islands
+		.map((island) => ({ island, session: agoraSessions[island.statementId] }))
+		.filter((entry): entry is { island: IslandContent; session: OdysseyIslandAgoraSession } =>
+			Boolean(entry.session),
+		);
+
+	if (!open.length) return null;
+
+	async function advance(sessionId: string, stage: string, label: string): Promise<void> {
+		await advanceCivicStage(sessionId, stage);
+		flash(`${label} · הדיון עודכן`);
+	}
+
+	return (
+		<section className="panel flex flex-col gap-4">
+			<div>
+				<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">ניהול האירוע</h2>
+				<p className="text-[14px] opacity-80 m-0">
+					דיון נשאר פתוח כל עוד לא נסגר. סגירה מעבירה את המשתתפים לשאלת הסיום ולתוצאות — ואי אפשר
+					לחזור אחורה.
+				</p>
+			</div>
+
+			<div className="flex flex-col gap-2">
+				{open.map(({ island, session }) => (
+					<div
+						key={island.statementId}
+						className="flex flex-wrap items-center gap-2 justify-between"
+					>
+						<span className="text-[14px] text-[var(--cream)]">
+							{island.title} · קוד {session.code}
+						</span>
+						<span className="flex gap-2">
+							{votingEnabled ? (
+								<button
+									type="button"
+									className="btn-outline"
+									disabled={busy}
+									onClick={() => void run(() => advance(session.sessionId, 'voting', island.title))}
+								>
+									להצבעה
+								</button>
+							) : null}
+							<button
+								type="button"
+								className="btn-outline"
+								disabled={busy}
+								onClick={() => void run(() => advance(session.sessionId, 'results', island.title))}
+							>
+								לתוצאות
+							</button>
+						</span>
+					</div>
+				))}
+			</div>
+		</section>
+	);
+}
+
 /* ---------- Agora ---------- */
 
 /**
@@ -1025,6 +1306,7 @@ function AgoraTab({
 	islandsMeta,
 	agoraSessions,
 	agoraOrigin,
+	script,
 	busy,
 	flash,
 	gameId,
@@ -1034,6 +1316,7 @@ function AgoraTab({
 	islandsMeta: OdysseyIsland[];
 	agoraSessions: Record<string, OdysseyIslandAgoraSession>;
 	agoraOrigin: string;
+	script: OdysseyGameScript | undefined;
 	busy: boolean;
 	flash(message: string): void;
 	gameId: string;
@@ -1058,134 +1341,157 @@ function AgoraTab({
 	const origin = agoraOrigin.replace(/\/$/, '');
 
 	return (
-		<section className="panel flex flex-col gap-4">
-			<div>
-				<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">שערי האגורה</h2>
-				<p className="text-[14px] opacity-80 m-0">
-					לכל אי נפתח דיון קבוע באגורה. בחרו לכל אי שני חופים מנוגדים — הם קובעים לאיזה מחנה ישובץ
-					מפליג שנכנס לדיון, ולכן חשוב לבחור חופים שבאמת חלוקים זה על זה.
-				</p>
-				{!origin ? (
-					<p className="text-[14px] text-[var(--gold-strong)] mt-2 mb-0">
-						⚠️ יש להגדיר תחילה את כתובת אפליקציית האגורה בלשונית הטקסטים.
+		<>
+			<ScriptSection
+				script={script}
+				hasOpenSessions={Object.keys(agoraSessions).length > 0}
+				busy={busy}
+				flash={flash}
+				gameId={gameId}
+				run={run}
+			/>
+			<section className="panel flex flex-col gap-4">
+				<div>
+					<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-1">שערי האגורה</h2>
+					<p className="text-[14px] opacity-80 m-0">
+						לכל אי נפתח דיון קבוע באגורה. בחרו לכל אי שני חופים מנוגדים — הם קובעים לאיזה מחנה ישובץ
+						מפליג שנכנס לדיון, ולכן חשוב לבחור חופים שבאמת חלוקים זה על זה.
+					</p>
+					{!origin ? (
+						<p className="text-[14px] text-[var(--gold-strong)] mt-2 mb-0">
+							⚠️ יש להגדיר תחילה את כתובת אפליקציית האגורה בלשונית הטקסטים.
+						</p>
+					) : null}
+				</div>
+
+				<div className="flex flex-col gap-3">
+					{enabled.map((island) => {
+						const entry = meta.find((candidate) => candidate.statementId === island.statementId);
+						const session = agoraSessions[island.statementId];
+
+						return (
+							<div
+								key={island.statementId}
+								className="border-t border-[rgba(232,185,88,0.25)] pt-3 flex flex-col gap-2"
+							>
+								<strong className="text-[var(--cream)]">{island.title}</strong>
+								<div className="flex flex-wrap gap-2">
+									<label className="flex flex-col gap-1 text-[13px] opacity-85 flex-1 min-w-[240px]">
+										חוף א׳ (קוטב אחד)
+										<select
+											className="input"
+											value={entry?.leftAnchorStanceId ?? ''}
+											onChange={(event) =>
+												patchIsland(island.statementId, {
+													leftAnchorStanceId: event.target.value || null,
+												})
+											}
+										>
+											<option value="">— לא נבחר —</option>
+											{island.stances.map((stance) => (
+												<option key={stance.statementId} value={stance.statementId}>
+													{stance.statement}
+												</option>
+											))}
+										</select>
+									</label>
+									<label className="flex flex-col gap-1 text-[13px] opacity-85 flex-1 min-w-[240px]">
+										חוף ב׳ (הקוטב הנגדי)
+										<select
+											className="input"
+											value={entry?.rightAnchorStanceId ?? ''}
+											onChange={(event) =>
+												patchIsland(island.statementId, {
+													rightAnchorStanceId: event.target.value || null,
+												})
+											}
+										>
+											<option value="">— לא נבחר —</option>
+											{island.stances.map((stance) => (
+												<option key={stance.statementId} value={stance.statementId}>
+													{stance.statement}
+												</option>
+											))}
+										</select>
+									</label>
+								</div>
+								{session ? (
+									<p className="text-[13px] opacity-75 m-0">
+										✓ דיון פתוח · קוד הצטרפות <strong>{session.code}</strong>
+										{origin ? (
+											<>
+												{' · '}
+												<a
+													className="underline"
+													href={`${origin}/#!/join/${session.code}`}
+													target="_blank"
+													rel="noreferrer"
+												>
+													פתיחת הדיון
+												</a>
+											</>
+										) : null}
+									</p>
+								) : (
+									<p className="text-[13px] opacity-60 m-0">טרם נפתח דיון לאי הזה.</p>
+								)}
+							</div>
+						);
+					})}
+				</div>
+
+				{missingAnchors.length ? (
+					<p className="text-[13px] opacity-75 m-0">
+						שימו לב: ל־{missingAnchors.length} איים עדיין אין שני חופים מנוגדים. אפשר לפתוח להם
+						דיון, אך כל המפליגים בהם ישובצו למרכז.
 					</p>
 				) : null}
-			</div>
 
-			<div className="flex flex-col gap-3">
-				{enabled.map((island) => {
-					const entry = meta.find((candidate) => candidate.statementId === island.statementId);
-					const session = agoraSessions[island.statementId];
-
-					return (
-						<div
-							key={island.statementId}
-							className="border-t border-[rgba(232,185,88,0.25)] pt-3 flex flex-col gap-2"
-						>
-							<strong className="text-[var(--cream)]">{island.title}</strong>
-							<div className="flex flex-wrap gap-2">
-								<label className="flex flex-col gap-1 text-[13px] opacity-85 flex-1 min-w-[240px]">
-									חוף א׳ (קוטב אחד)
-									<select
-										className="input"
-										value={entry?.leftAnchorStanceId ?? ''}
-										onChange={(event) =>
-											patchIsland(island.statementId, {
-												leftAnchorStanceId: event.target.value || null,
-											})
-										}
-									>
-										<option value="">— לא נבחר —</option>
-										{island.stances.map((stance) => (
-											<option key={stance.statementId} value={stance.statementId}>
-												{stance.statement}
-											</option>
-										))}
-									</select>
-								</label>
-								<label className="flex flex-col gap-1 text-[13px] opacity-85 flex-1 min-w-[240px]">
-									חוף ב׳ (הקוטב הנגדי)
-									<select
-										className="input"
-										value={entry?.rightAnchorStanceId ?? ''}
-										onChange={(event) =>
-											patchIsland(island.statementId, {
-												rightAnchorStanceId: event.target.value || null,
-											})
-										}
-									>
-										<option value="">— לא נבחר —</option>
-										{island.stances.map((stance) => (
-											<option key={stance.statementId} value={stance.statementId}>
-												{stance.statement}
-											</option>
-										))}
-									</select>
-								</label>
-							</div>
-							{session ? (
-								<p className="text-[13px] opacity-75 m-0">
-									✓ דיון פתוח · קוד הצטרפות <strong>{session.code}</strong>
-									{origin ? (
-										<>
-											{' · '}
-											<a
-												className="underline"
-												href={`${origin}/#!/join/${session.code}`}
-												target="_blank"
-												rel="noreferrer"
-											>
-												פתיחת הדיון
-											</a>
-										</>
-									) : null}
-								</p>
-							) : (
-								<p className="text-[13px] opacity-60 m-0">טרם נפתח דיון לאי הזה.</p>
-							)}
-						</div>
-					);
-				})}
-			</div>
-
-			{missingAnchors.length ? (
-				<p className="text-[13px] opacity-75 m-0">
-					שימו לב: ל־{missingAnchors.length} איים עדיין אין שני חופים מנוגדים. אפשר לפתוח להם דיון,
-					אך כל המפליגים בהם ישובצו למרכז.
-				</p>
-			) : null}
-
-			<div className="flex flex-wrap gap-2">
-				<button
-					type="button"
-					className="btn"
-					disabled={busy}
-					onClick={() => void run(() => saveGamePatch(gameId, { islands: meta }))}
-				>
-					שמירת החופים המנוגדים
-				</button>
-				<button
-					type="button"
-					className="btn-outline"
-					disabled={busy || !origin}
-					onClick={() =>
-						void run(async () => {
-							// Anchors are saved first: the session carries them, and a
-							// session opened without them places everyone in the centre.
-							await saveGamePatch(gameId, { islands: meta });
-							const result = await provisionCivicSessions(gameId);
-							flash(
-								`נפתחו ${result.sessions.length} דיונים` +
-									(result.alreadyOpen.length
-										? ` · ${result.alreadyOpen.length} כבר היו פתוחים`
-										: ''),
-							);
-						})
-					}
-				>
-					🏛️ פתיחת דיוני האגורה
-				</button>
-			</div>
-		</section>
+				<div className="flex flex-wrap gap-2">
+					<button
+						type="button"
+						className="btn"
+						disabled={busy}
+						onClick={() => void run(() => saveGamePatch(gameId, { islands: meta }))}
+					>
+						שמירת החופים המנוגדים
+					</button>
+					<button
+						type="button"
+						className="btn-outline"
+						disabled={busy || !origin}
+						onClick={() =>
+							void run(async () => {
+								// Anchors are saved first: the session carries them, and a
+								// session opened without them places everyone in the centre.
+								await saveGamePatch(gameId, { islands: meta });
+								const result = await provisionCivicSessions(gameId);
+								flash(
+									`נפתחו ${result.sessions.length} דיונים` +
+										(result.alreadyOpen.length
+											? ` · ${result.alreadyOpen.length} כבר היו פתוחים`
+											: ''),
+								);
+							})
+						}
+					>
+						🏛️ פתיחת דיוני האגורה
+					</button>
+				</div>
+			</section>
+			<ConductorSection
+				islands={enabled}
+				agoraSessions={agoraSessions}
+				votingEnabled={
+					resolveSessionFlow({
+						sessionMode: AgoraSessionMode.civic,
+						flow: scriptToFlow(script),
+					}).voting
+				}
+				busy={busy}
+				flash={flash}
+				run={run}
+			/>
+		</>
 	);
 }

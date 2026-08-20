@@ -69,6 +69,21 @@ let auth: Auth;
 let functions: Functions;
 let storage: FirebaseStorage;
 
+/**
+ * Emulator ports.
+ *
+ * Hardcoded for years, which was fine until two checkouts wanted emulators at
+ * once: only one process can own a port, so the second worktree's app silently
+ * talked to the first worktree's functions and new callables came back 404.
+ * The defaults are the ports everything already uses — the overrides exist so
+ * a second stack can be run alongside without editing this file.
+ */
+const emulatorPort = (name: string, fallback: number): number => {
+	const configured = import.meta.env[`VITE_EMULATOR_${name}_PORT`];
+
+	return configured ? Number(configured) : fallback;
+};
+
 function init(): void {
 	if (getApps().length > 0) {
 		app = getApp();
@@ -85,24 +100,24 @@ function init(): void {
 
 	if (isLocalhost) {
 		try {
-			connectAuthEmulator(auth, 'http://localhost:9099', {
+			connectAuthEmulator(auth, `http://localhost:${emulatorPort('AUTH', 9099)}`, {
 				disableWarnings: true,
 			});
 		} catch (error) {
 			console.error('[Firebase] Auth emulator connection failed:', error);
 		}
 		try {
-			connectFirestoreEmulator(db, 'localhost', 8081);
+			connectFirestoreEmulator(db, 'localhost', emulatorPort('FIRESTORE', 8081));
 		} catch (error) {
 			console.error('[Firebase] Firestore emulator connection failed:', error);
 		}
 		try {
-			connectFunctionsEmulator(functions, 'localhost', 5001);
+			connectFunctionsEmulator(functions, 'localhost', emulatorPort('FUNCTIONS', 5001));
 		} catch (error) {
 			console.error('[Firebase] Functions emulator connection failed:', error);
 		}
 		try {
-			connectStorageEmulator(storage, 'localhost', 9199);
+			connectStorageEmulator(storage, 'localhost', emulatorPort('STORAGE', 9199));
 		} catch (error) {
 			console.error('[Firebase] Storage emulator connection failed:', error);
 		}
