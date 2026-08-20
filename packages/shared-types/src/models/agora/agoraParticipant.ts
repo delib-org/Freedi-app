@@ -69,6 +69,17 @@ export const AgoraParticipantSchema = object({
 	/** 0 (fully left camp) … 100 (fully right camp) */
 	campPosition: optional(number()),
 	camp: optional(enum_(AgoraCamp)),
+	/**
+	 * The island stances as this person rated them ON ARRIVAL — the "before"
+	 * half of a convergence score. Snapshotted at join because the ratings
+	 * themselves live at deterministic `${uid}--${stanceId}` evaluation ids: a
+	 * later re-rate overwrites the original, and without a copy the room's
+	 * starting disagreement would be unrecoverable the moment it changed.
+	 * Server-written (see firestore.rules).
+	 */
+	stanceBaseline: optional(record(string(), number())),
+	/** When this person re-rated the island's stances at the end. Server-written. */
+	reratedAt: optional(number()),
 	valueScores: optional(array(AgoraValueScoreSchema)),
 	points: AgoraPointsSchema,
 	/**

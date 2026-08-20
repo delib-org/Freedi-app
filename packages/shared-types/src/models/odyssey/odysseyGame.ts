@@ -9,6 +9,7 @@ import {
 	record,
 	InferOutput,
 } from 'valibot';
+import { OdysseyGameScriptSchema } from './odysseyGameScript';
 
 /**
  * Israeli Odyssey (אודיסיאה ישראלית) — a pre-election civic-voice game and a
@@ -143,6 +144,12 @@ export const OdysseyGameSchema = object({
 	 * read they already do, without querying agoraSessions.
 	 */
 	agoraSessions: optional(record(string(), OdysseyIslandAgoraSessionSchema)),
+	/**
+	 * Which beats this event's Agora deliberations run. Absent means the
+	 * legacy civic shape. Projected onto each session when it is provisioned —
+	 * Agora reads the session, never this document.
+	 */
+	script: optional(OdysseyGameScriptSchema),
 	/** Uids allowed to edit the game (besides the creator) */
 	adminUids: array(string()),
 	creatorId: string(),

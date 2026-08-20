@@ -4,12 +4,14 @@ import {
 	number,
 	boolean,
 	optional,
+	nullable,
 	array,
 	record,
 	enum_,
 	InferOutput,
 } from 'valibot';
 import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
+import { AgoraSessionFlowSchema } from './sessionFlow';
 import {
 	AgoraStage,
 	AgoraRoundPhase,
@@ -121,6 +123,29 @@ export const AgoraClassScoreSchema = object({
 export type AgoraClassScore = InferOutput<typeof AgoraClassScoreSchema>;
 
 /**
+ * What a camp-less session earns instead of a bridging score: whether the
+ * deliberation moved the room's opinions closer together.
+ *
+ * Both means are kept, not just the headline percent, because "we closed 30%
+ * of the distance" says nothing about whether the room started far apart. A
+ * null mean is an honest "not enough people re-rated to say" — never a zero,
+ * which would read as perfect agreement.
+ */
+export const AgoraConvergenceSchema = object({
+	/** Mean pairwise opinion distance when people arrived, 0..1 */
+	before: nullable(number()),
+	/** The same mean after the deliberation */
+	after: nullable(number()),
+	/** Percent of the gap that closed; negative means the room moved apart */
+	score: nullable(number()),
+	/** People counted in BOTH means — the comparison is never asymmetric */
+	participants: number(),
+	computedAt: number(),
+});
+
+export type AgoraConvergence = InferOutput<typeof AgoraConvergenceSchema>;
+
+/**
  * A live classroom session. The session doc is the single source of truth
  * for stage/round state — every participant holds one onSnapshot on it.
  */
@@ -143,6 +168,12 @@ export const AgoraSessionSchema = object({
 	sessionMode: optional(enum_(AgoraSessionMode)),
 	/** Set only on civic sessions: the Odyssey island this deliberation belongs to */
 	civic: optional(AgoraCivicOriginSchema),
+	/**
+	 * Which beats this session runs — the organizer's script, snapshotted at
+	 * provision time. Server-owned (see firestore.rules); absent means the
+	 * legacy defaults in `resolveSessionFlow`.
+	 */
+	flow: optional(AgoraSessionFlowSchema),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),
@@ -153,6 +184,12 @@ export const AgoraSessionSchema = object({
 	participantCount: number(),
 	status: enum_(AgoraSessionStatus),
 	classScore: optional(AgoraClassScoreSchema),
+	/**
+	 * The camp-less alternative to `classScore`, written server-side as
+	 * re-rates arrive. Which of the two a session earns is decided by
+	 * `resolveSessionFlow(session).scoreMode`.
+	 */
+	convergence: optional(AgoraConvergenceSchema),
 	/**
 	 * How the vote is run. Teacher-writable (see firestore.rules); absent
 	 * means the defaults in `resolveVotingSelection`.

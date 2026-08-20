@@ -564,6 +564,21 @@ export type {
   StakeholderResolution,
 } from "./utils/stakeholderPopulation";
 
+// Opinion distance — Odyssey's sea and a civic event's convergence score
+export {
+  MIN_SHARED_STANCES,
+  CONVERGENCE_MIN_SHARED_CAP,
+  opinionDistance,
+  convergenceMeans,
+  convergenceScore,
+} from "./utils/opinionDistance";
+export type {
+  AttitudeMap,
+  OpinionDistanceResult,
+  ConvergenceInput,
+  ConvergenceMeans,
+} from "./utils/opinionDistance";
+
 // Strategic Export (AI-ready report) models
 export type {
   StrategicExportRequest,

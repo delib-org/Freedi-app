@@ -1,19 +1,18 @@
-import type { Evaluation, OdysseyParty } from '@freedi/shared-types';
+import type { AttitudeMap, Evaluation, OdysseyParty } from '@freedi/shared-types';
+import { opinionDistance } from '@freedi/shared-types';
 import type { IslandContent } from './game';
 
 /**
  * ==========================  DISTANCE ENGINE  ==========================
- * The real opinion-distance method, implementing §1 of
- * `apps/agora/docs/opinion-distance-and-map.md`:
+ * The sea's reaction: how far each party and each fellow player sails from
+ * your route.
  *
- *   d(a, b) = mean( |eₐ(s) − e_b(s)| )   over stances BOTH sides evaluated
- *
- * The raw metric lives in [0, 2] (0 = identical evaluations, 2 = always
- * opposed). The engine exposes it normalized to [0, 1] so screens keep the
- * "0 = sails exactly your route, 1 = opposite route" contract.
- *
- * Minimum-overlap rule (doc §1): with only 1–2 shared stances the number
- * is noise, so the distance stays null until enough stances are shared.
+ * The metric itself — `opinionDistance`, doc §1 of
+ * `apps/agora/docs/opinion-distance-and-map.md` — now lives in shared-types,
+ * because a civic Agora event scores itself on the same arithmetic and two
+ * copies could disagree about the same room. This module keeps what is
+ * genuinely Odyssey's: parties as virtual users, and the two engine shapes
+ * the screens consume.
  *
  * Parties participate as VIRTUAL USERS: a party "evaluates" the stance it
  * declared on an island with +1 (support) and that island's other stances
@@ -22,11 +21,8 @@ import type { IslandContent } from './game';
  * =======================================================================
  */
 
-/** stance statementId → evaluation value (-1..1) */
-export type AttitudeMap = Record<string, number>;
-
-/** Doc §1: below ~5 shared stances a pair distance is noise. */
-export const MIN_SHARED_STANCES = 5;
+export type { AttitudeMap, OpinionDistanceResult } from '@freedi/shared-types';
+export { MIN_SHARED_STANCES, opinionDistance } from '@freedi/shared-types';
 
 /** A party declares a full route, and the sea must react from the first
  *  island — so one shared island is enough to place its ship. */
@@ -57,33 +53,6 @@ export interface DistanceEngine {
 
 function round2(value: number): number {
 	return Math.round(value * 100) / 100;
-}
-
-export interface OpinionDistanceResult {
-	/** Normalized 0..1 (doc metric / 2); null under the min-overlap rule. */
-	distance: number | null;
-	sharedStances: number;
-}
-
-/** The doc §1 metric between two attitude maps. */
-export function opinionDistance(
-	a: AttitudeMap,
-	b: AttitudeMap,
-	minShared: number = MIN_SHARED_STANCES,
-): OpinionDistanceResult {
-	let sum = 0;
-	let shared = 0;
-	for (const [stanceId, aValue] of Object.entries(a)) {
-		const bValue = b[stanceId];
-		if (bValue === undefined) continue;
-		sum += Math.abs(aValue - bValue);
-		shared += 1;
-	}
-
-	return {
-		distance: shared >= Math.max(1, minShared) ? round2(sum / shared / 2) : null,
-		sharedStances: shared,
-	};
 }
 
 /** A party's route as a virtual attitude map: +1 on its declared stance per

@@ -55,6 +55,7 @@ export {
 export type {
 	AgoraHealthMetricOutcome,
 	AgoraClassScore,
+	AgoraConvergence,
 	AgoraSession,
 	AgoraCivicOrigin,
 	AgoraDebrief,
@@ -63,11 +64,15 @@ export type {
 export {
 	AgoraHealthMetricOutcomeSchema,
 	AgoraClassScoreSchema,
+	AgoraConvergenceSchema,
 	AgoraSessionSchema,
 	AgoraCivicOriginSchema,
 	AgoraDebriefSchema,
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
+
+export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
+export { AgoraSessionFlowSchema, resolveSessionFlow, scriptToFlow } from './sessionFlow';
 
 export type { CivicStanceEvaluation } from './agoraCivic';
 export {

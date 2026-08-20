@@ -19,6 +19,9 @@ export {
 	OdysseyGameSchema,
 } from './odysseyGame';
 
+export type { OdysseyGameScript } from './odysseyGameScript';
+export { OdysseyGameScriptSchema, ODYSSEY_EVENT_SCRIPT } from './odysseyGameScript';
+
 export type {
 	OdysseyCompassAnswer,
 	OdysseyLogEntry,
