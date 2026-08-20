@@ -60,6 +60,27 @@ Nothing deployed. Full results and findings in
    worth a second look.
 5. **Deploy** is still a separate, explicit decision — `npm run deploy:f:test`
    first, never straight to prod.
+6. **Theme-count variance is the one clear remaining defect.** Seeds produced 10,
+   11 and 17 headings for a true 10 — every grouping correct, spread across too
+   many names. `consolidateThemes` is capped at `MAX_MERGES_PER_SWEEP = 8` and
+   only runs when the reJudge sweep does; seed 1234 consolidated 4 donors where
+   seed 42 consolidated 9. Raising the cap and running one consolidation pass at
+   the end is the cheap fix.
+7. **Nobody has scored the merged TEXT.** The benchmark grades which statements
+   ended up together and never reads the proposal the LLM writes for a synthesis.
+   A merge can group the right two statements and still produce wording that
+   loses what one of them meant — and that wording is what participants read.
+   This is the largest unmeasured surface in the system.
+8. **Known harness flake:** on one seed-1234 attempt the emulator was killed
+   mid-run and two statements were fed into a dead emulator. The attempt was
+   discarded and the retry was clean, but the cause is not understood. Treat a
+   run that ends abnormally as suspect until it is.
+
+## Reproducing the numbers
+
+The measured constants in the pipeline are justified by the offline scripts in
+`scientific-research/2026-08-18-live-synth-accuracy/analysis/` — no emulator
+needed. See that folder's README for which script produced which constant.
 
 ---
 
