@@ -255,6 +255,10 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
     filename: '.env.local',
     // Map generic vars to Vite-prefixed vars (client-only app)
     mapping: {
+      // A civic square was opened from an Odyssey island, so it owes the
+      // player the way back to the map. Unset = no link rather than a broken
+      // one, which is why this is mapped and not hardcoded.
+      'ODYSSEY_APP_URL': 'VITE_ODYSSEY_ORIGIN',
       'FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
       'FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
       'FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',

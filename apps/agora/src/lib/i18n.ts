@@ -244,7 +244,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'place.help_title': 'הדוכנים של הכיתה',
 		'place.help_sub': 'בחרו הצעה וחזקו אותה',
 		'delib.phase_propose': 'הציעו פתרון',
-		'delib.propose_hint': 'מה צריך לעשות? כתבו הצעה שגם מלוכנים וגם יעקובינים יוכלו לחיות איתה.',
+		'delib.propose_hint': 'מה צריך לעשות? כתבו הצעה ששני המחנות יוכלו לחיות איתה.',
 		'delib.mission_label': 'המשימה שלכם',
 		'delib.placeholder': 'אנחנו מציעים ש...',
 		'delib.write_first': 'קודם כותבים — ואז מדליקים את הפנס',
