@@ -1152,6 +1152,8 @@ export { removeUserEvaluations } from './fn_removeUserEvaluations';
 export {
 	agoraCreateSession,
 	agoraProvisionCivicSessions,
+	agoraUpdateCivicFlow,
+	agoraRerateStances,
 	agoraJoinSession,
 	agoraAdvanceStage,
 	agoraGradeValueIdentification,

@@ -20,8 +20,14 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { preflight, AUTH_HOST, FIRESTORE_HOST, FUNCTIONS_BASE } from './lib/preflight.mjs';
 
 const require = createRequire(import.meta.url);
-const { Collections, AgoraCamp, AgoraStage, AgoraSessionMode, createAgoraParticipantId } =
-	require('@freedi/shared-types');
+const {
+	Collections,
+	AgoraCamp,
+	AgoraStage,
+	AgoraSessionMode,
+	ODYSSEY_EVENT_SCRIPT,
+	createAgoraParticipantId,
+} = require('@freedi/shared-types');
 
 const IDENTITY = `${AUTH_HOST}/identitytoolkit.googleapis.com/v1`;
 
@@ -114,7 +120,7 @@ function statement(statementId, text, parentId, topParentId, type) {
 	};
 }
 
-async function seedOdysseyGame(adminUid) {
+async function seedOdysseyGame(adminUid, script) {
 	const root = `${RUN}-root`;
 	await db
 		.collection(Collections.statements)
@@ -138,6 +144,7 @@ async function seedOdysseyGame(adminUid) {
 		.doc(GAME_ID)
 		.set({
 			gameId: GAME_ID,
+			...(script ? { script } : {}),
 			rootStatementId: root,
 			texts: {},
 			compassQuestions: [],

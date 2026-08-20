@@ -17,6 +17,8 @@ import {
 	deriveCamp,
 	deriveCivicCampPosition,
 	functionConfig,
+	resolveSessionFlow,
+	AttitudeMap,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { generateAnonName } from './anonNames';
@@ -59,6 +61,49 @@ async function deriveCivicStanding(
 	const campPosition = deriveCivicCampPosition(stances, leftAnchorStanceId, rightAnchorStanceId);
 
 	return { campPosition, camp: deriveCamp(campPosition) };
+}
+
+/**
+ * This player's island stances exactly as they stand on arrival.
+ *
+ * A convergence score compares the room before the deliberation with the room
+ * after it, and the "before" is only recoverable if it is copied now: the
+ * ratings live at deterministic `${uid}--${stanceId}` ids, so the closing
+ * re-rate overwrites the very documents the starting picture was made of.
+ *
+ * Reads every stance of the island, not just the two anchors — a camp-less
+ * event has no anchors to speak of, and the whole island is what people are
+ * actually being measured on.
+ */
+async function readStanceBaseline(
+	session: AgoraSession,
+	uid: string,
+): Promise<AttitudeMap | undefined> {
+	const islandStatementId = session.civic?.islandStatementId;
+	if (!islandStatementId) return undefined;
+
+	const stanceSnaps = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', islandStatementId)
+		.get();
+	const stanceIds = stanceSnaps.docs.map((doc) => doc.id);
+	if (!stanceIds.length) return undefined;
+
+	const evalSnaps = await db.getAll(
+		...stanceIds.map((stanceId) =>
+			db.collection(Collections.evaluations).doc(`${uid}--${stanceId}`),
+		),
+	);
+
+	const baseline: AttitudeMap = {};
+	for (const snap of evalSnaps) {
+		const data = snap.data() as Evaluation | undefined;
+		if (data && typeof data.evaluation === 'number') {
+			baseline[data.statementId] = data.evaluation;
+		}
+	}
+
+	return Object.keys(baseline).length ? baseline : undefined;
 }
 
 interface Request {
@@ -140,11 +185,24 @@ export const agoraJoinSession = onCall(
 			const now = Date.now();
 			const sessionRef = db.collection(Collections.agoraSessions).doc(session.sessionId);
 
-			// Read before the transaction: it touches only this player's own
-			// evaluation docs, nothing the transaction contends on.
+			const flow = resolveSessionFlow(session);
+			const civic = session.sessionMode === AgoraSessionMode.civic;
+
+			// Read before the transaction: both touch only this player's own
+			// documents, nothing the transaction contends on.
+			//
+			// An event that runs without stances gets no camp at all — not a
+			// centred one. A centre position is a real answer ("I hold both sides
+			// equally"), and writing it for someone who was never asked would put
+			// a claim in their mouth.
 			const civicStanding =
-				session.sessionMode === AgoraSessionMode.civic
-					? await deriveCivicStanding(session, uid)
+				civic && flow.stances ? await deriveCivicStanding(session, uid) : undefined;
+			// Only ever on a first join — a rejoin returned above, which is what
+			// keeps someone's starting position from being re-read after they
+			// have already moved.
+			const stanceBaseline =
+				civic && flow.scoreMode === 'convergence'
+					? await readStanceBaseline(session, uid)
 					: undefined;
 
 			/**
@@ -179,6 +237,7 @@ export const agoraJoinSession = onCall(
 					...(civicStanding
 						? { campPosition: civicStanding.campPosition, camp: civicStanding.camp }
 						: {}),
+					...(stanceBaseline ? { stanceBaseline } : {}),
 					points: { valueAccuracy: 0, proposals: 0, helping: 0, total: 0 },
 					joinedAt: now,
 					lastActive: now,

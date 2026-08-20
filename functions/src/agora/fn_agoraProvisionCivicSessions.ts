@@ -8,7 +8,9 @@ import {
 	functionConfig,
 	getRandomUID,
 	AgoraCharacter,
+	AgoraScene,
 	AgoraDeviceMode,
+	AgoraSceneKind,
 	AgoraSession,
 	AgoraSessionMode,
 	AgoraSessionStatus,
@@ -20,6 +22,8 @@ import {
 	OdysseyIslandAgoraSession,
 	SourceApp,
 	AGORA_SESSION,
+	resolveSessionFlow,
+	scriptToFlow,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
@@ -80,6 +84,28 @@ function shorten(text: string, max: number): string {
  * positioning screen shows as "name (camp)". Putting the stance in both would
  * print it twice there and overflow the chart here.
  */
+/**
+ * The opening beat, when an event asks for one.
+ *
+ * A classroom package earns its framing from an AI-written era; a civic island
+ * already carries the words a person needs before they start writing — the
+ * opening line, the issue, the plain-language explanation. Building the scene
+ * from those rather than generating anything keeps the organizer's own text on
+ * the screen, and keeps this function free of an API call.
+ */
+export function buildCivicFramingScene(island: OdysseyIsland, questionText: string): AgoraScene {
+	const body = [island.opening, island.shortExplain].map((part) => part?.trim()).filter(Boolean);
+
+	return {
+		sceneId: 'civic-framing',
+		kind: AgoraSceneKind.intro,
+		title: island.title,
+		text: body.length ? body.join('\n\n') : island.issue || questionText,
+		imageUrls: island.imageUrl ? [island.imageUrl] : [],
+		dialogue: [],
+	};
+}
+
 function buildCivicTopicPackage(params: {
 	topicPackageId: string;
 	creatorId: string;
@@ -87,9 +113,10 @@ function buildCivicTopicPackage(params: {
 	questionText: string;
 	leftStanceText?: string;
 	rightStanceText?: string;
+	framing: boolean;
 	now: number;
 }): AgoraTopicPackage {
-	const { topicPackageId, creatorId, island, questionText, now } = params;
+	const { topicPackageId, creatorId, island, questionText, framing, now } = params;
 	const leftStance = params.leftStanceText?.trim() || POLE_LABEL_LEFT;
 	const rightStance = params.rightStanceText?.trim() || POLE_LABEL_RIGHT;
 
@@ -142,7 +169,7 @@ function buildCivicTopicPackage(params: {
 			],
 		},
 		healthMetrics: [],
-		scenes: [],
+		scenes: framing ? [buildCivicFramingScene(island, questionText)] : [],
 		createdAt: now,
 		lastUpdate: now,
 	};
@@ -185,6 +212,12 @@ export const agoraProvisionCivicSessions = onCall(
 			if (!isAdmin) {
 				throw new HttpsError('permission-denied', 'Only game admins can open deliberations');
 			}
+
+			// The organizer's script, projected once for the whole run. Resolving
+			// it here too means the flags that steer provisioning (framing) read
+			// from exactly the same fold the client will apply later.
+			const flow = scriptToFlow(game.script);
+			const resolved = resolveSessionFlow({ sessionMode: AgoraSessionMode.civic, flow });
 
 			const openAlready = game.agoraSessions ?? {};
 			const requested = islandStatementIds?.length
@@ -253,6 +286,7 @@ export const agoraProvisionCivicSessions = onCall(
 					rightStanceText: island.rightAnchorStanceId
 						? statementText.get(island.rightAnchorStanceId)
 						: undefined,
+					framing: resolved.framing,
 					now,
 				});
 
@@ -300,6 +334,7 @@ export const agoraProvisionCivicSessions = onCall(
 					deviceMode: AgoraDeviceMode.individual,
 					teamSizeMax: AGORA_SESSION.TEAM_SIZE_MAX,
 					sessionMode: AgoraSessionMode.civic,
+					...(flow ? { flow } : {}),
 					civic: {
 						odysseyGameId: gameId,
 						islandStatementId: island.statementId,

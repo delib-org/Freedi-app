@@ -8,6 +8,7 @@ import {
 	AgoraStage,
 	AGORA_CYCLE,
 	functionConfig,
+	resolveSessionFlow,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { computeSessionResults } from './classScore';
@@ -79,6 +80,15 @@ export const agoraAdvanceStage = onCall(
 				throw new HttpsError('permission-denied', 'Only the session teacher can advance stages');
 			}
 
+			const flow = resolveSessionFlow(session);
+			// An event whose script holds no vote must not be walked into one:
+			// the ballot would be drawn up, the room would be asked to elect
+			// something, and the results screen would report an election the
+			// organizer deliberately left out.
+			if (stage === AgoraStage.voting && !flow.voting) {
+				throw new HttpsError('failed-precondition', 'This session runs without a voting stage');
+			}
+
 			const fromIndex =
 				STAGE_ORDER.indexOf(session.stage) !== -1
 					? STAGE_ORDER.indexOf(session.stage)
@@ -120,8 +130,26 @@ export const agoraAdvanceStage = onCall(
 			// Entering results: run the AI plausibility batch + health-metric
 			// simulation + class score. Students see a "computing" state until
 			// session.classScore lands via their listener.
+			//
+			// A camp-less room is scored on convergence instead, and that score
+			// cannot be computed here — it needs the closing ratings, which people
+			// have not given yet. So the field is opened empty and filled in by
+			// `agoraRerateStances` as they arrive, which is also what lets the
+			// screen climb while the room is still answering.
 			if (stage === AgoraStage.results) {
-				await computeSessionResults(sessionId);
+				if (flow.scoreMode === 'convergence') {
+					await sessionRef.update({
+						convergence: {
+							before: null,
+							after: null,
+							score: null,
+							participants: 0,
+							computedAt: Date.now(),
+						},
+					});
+				} else {
+					await computeSessionResults(sessionId);
+				}
 			}
 
 			return { ok: true };

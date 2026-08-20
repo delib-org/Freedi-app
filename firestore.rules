@@ -74,7 +74,16 @@ service cloud.firestore {
                        // votingSettings (how the vote runs); the teacher does
                        // not get to edit who is standing in it.
                        request.resource.data.get('voting', {}) ==
-                         resource.data.get('voting', {});
+                         resource.data.get('voting', {}) &&
+                       // The script is the organizer's, and it is written by
+                       // callables (provisioning stamps it, agoraUpdateCivicFlow
+                       // patches it). A teacher client that could edit `flow`
+                       // could switch a running event off camps — or off the
+                       // score it is being measured by — from the browser.
+                       request.resource.data.get('flow', {}) ==
+                         resource.data.get('flow', {}) &&
+                       request.resource.data.get('convergence', {}) ==
+                         resource.data.get('convergence', {});
     }
 
     // Participants: created via callable only (anon names are server-issued).
@@ -104,7 +113,16 @@ service cloud.firestore {
                        // between camps at will moves every proposal's score.
                        (resource.data.get('camp', null) == null ||
                         request.resource.data.get('camp', null) ==
-                          resource.data.get('camp', null));
+                          resource.data.get('camp', null)) &&
+                       // The two halves of a convergence score. The baseline is
+                       // this person's opinion as it stood on arrival and the
+                       // stamp is the claim that they answered again — a client
+                       // that could write either could report whatever movement
+                       // it liked.
+                       request.resource.data.get('stanceBaseline', {}) ==
+                         resource.data.get('stanceBaseline', {}) &&
+                       request.resource.data.get('reratedAt', -1) ==
+                         resource.data.get('reratedAt', -1);
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.

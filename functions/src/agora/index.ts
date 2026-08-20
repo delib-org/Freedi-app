@@ -1,5 +1,7 @@
 export { agoraCreateSession } from './fn_agoraCreateSession';
 export { agoraProvisionCivicSessions } from './fn_agoraProvisionCivicSessions';
+export { agoraUpdateCivicFlow } from './fn_agoraUpdateCivicFlow';
+export { agoraRerateStances } from './fn_agoraRerateStances';
 export { agoraJoinSession } from './fn_agoraJoinSession';
 export { agoraAdvanceStage } from './fn_agoraAdvanceStage';
 export { agoraGradeValueIdentification } from './fn_agoraGradeValueIdentification';
