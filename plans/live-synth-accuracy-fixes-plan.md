@@ -48,13 +48,14 @@ Nothing deployed. Full results and findings in
 
 ### What is left
 
-> **Update 2026-08-20.** Items 4, 6 and 7 are done — 6 by a route this plan got
-> wrong, 7 with a better result than feared and a real defect found and fixed
-> underneath it. All are marked below. **Hebrew (item 2) is the only substantive
-> item left**, and it is blocked on a rollout decision, not on code. The other
-> open thread is a full-corpus benchmark run to confirm the theme-consolidation
-> change end to end; a 20-statement smoke run showed no regression but was too
-> small to exercise consolidation at all.
+> **Update 2026-08-20.** Items 4 and 7 are done. Item 6 is NOT — its fix was
+> built, measured on a full-corpus run, and **reverted for regressing**
+> (0.910 -> 0.865); what survives is a much sharper account of why, in item 6
+> below. Item 2 (Hebrew) had its central hazard removed and is now blocked only
+> on a rollout decision, not on code.
+>
+> Best measured state remains the seed sweep: **0.884-0.910, mean ~0.900**, at
+> shipped defaults.
 
 1. **Seed sweep** {7, 1234} — in flight. Until it lands, 0.910 is seed 42's number.
 2. **Hebrew** — the model switch is measured and the theme layer is now
@@ -97,19 +98,28 @@ Nothing deployed. Full results and findings in
    placement now resolves them. `c018fd495`, RESULTS.md Finding 12.
 5. **Deploy** is still a separate, explicit decision — `npm run deploy:f:test`
    first, never straight to prod.
-6. ~~**Theme-count variance is the one clear remaining defect.**~~ **Diagnosed and
-   fixed — but the diagnosis in this plan was wrong.** Raising
-   `MAX_MERGES_PER_SWEEP` would have changed nothing: the pump logs show the
-   judge was offered 1–3 groups per sweep and never approached the cap of 8. The
-   real constraint was that the judge saw only the HEADINGS, and a heading is a
-   compression of whichever proposal arrived first. Showing it the proposals
-   underneath dominates on every seed (seed 1234: 17 → 10.5 headings vs 17 →
-   12.5, all ten topics still represented, no extra false merges). The same
-   measurement caught a second defect nobody was looking for: the sweep re-asks a
-   non-deterministic model to find merges every 10 minutes forever, and a
-   spurious merge that a single call proposes rarely becomes near-certain across
-   ~144 calls a day — so each distinct theme set is now judged once. `a4674a4f5`,
-   RESULTS.md Finding 10. **Not yet through a live benchmark run.**
+6. **Theme-count variance is STILL the one clear remaining defect.** The plan's
+   diagnosis was wrong, and so was the fix — in different ways.
+
+   *Wrong diagnosis:* raising `MAX_MERGES_PER_SWEEP` would have changed nothing.
+   The pump logs show the judge being offered 1-3 groups per sweep, never
+   approaching the cap of 8. That part is settled (RESULTS.md Finding 10).
+
+   *Wrong fix:* showing the judge the proposals under each heading looked
+   dominant offline on all three seeds, and **lost its live run** - seed 42
+   0.910 -> 0.865, topic F1 0.775 -> 0.678. It hit the right heading count by
+   over-merging into a catch-all. Reverted in `5f001e2a2`; RESULTS.md Finding 13.
+
+   *The real lever, for whoever picks this up:* the offline replay ran the judge
+   on each run's FINAL theme set (11 tidy headings) while the live sweep faces
+   ~19 half-formed ones and merges 9 donors in a single pass. Any future attempt
+   must be measured against THAT, not against the end state. And the target is
+   accuracy, not volume - the failure mode is a heading that spans many topics,
+   not one that stays too narrow.
+
+   *Kept from the attempt:* each distinct theme set is judged once, since this
+   sweep re-asks a non-deterministic model every 10 minutes forever and merges
+   are irreversible. Not implicated in the regression.
 7. ~~**Nobody has scored the merged TEXT.**~~ **Measured — and the news is
    good.** `textFidelity.mjs` (validated first against five known-answer fixtures
    in `textFidelity.selftest.mjs`) judges each member statement against the text
