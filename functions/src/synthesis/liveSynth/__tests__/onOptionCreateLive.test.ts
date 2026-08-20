@@ -257,22 +257,16 @@ describe('liveSynthOnOptionCreate', () => {
 		);
 	});
 
-	it('does NOT spawn a duplicate when the sibling is already in a visible cluster (dedup)', async () => {
+	/**
+	 * The dedup guard distinguishes what OWNS the sibling, and the distinction is
+	 * the whole of fix D1: a topic cluster that happened to touch a statement
+	 * first used to become its permanent owner, which starved the synthesis
+	 * layer for the rest of a question (measured: 17 of 19 missed ground-truth
+	 * pairs). So both cases get their own test.
+	 */
+	const siblingOwnedBy = (owner: Record<string, unknown>) => {
 		const fs = setupFirestoreMockForGet();
-		// The dedup guard finds an existing visible cluster containing the sibling.
-		fs.dedupGet.mockResolvedValue({
-			docs: [
-				{
-					data: () => ({
-						statementId: 'existing-cluster',
-						isCluster: true,
-						hide: false,
-						parentId: 'q1',
-						integratedOptions: ['sibling-opt', 'someone-else'],
-					}),
-				},
-			],
-		});
+		fs.dedupGet.mockResolvedValue({ docs: [{ data: () => owner }] });
 		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
 		mockFindSimilarByEmbedding.mockResolvedValue([
 			{
@@ -286,13 +280,48 @@ describe('liveSynthOnOptionCreate', () => {
 				similarity: 0.93,
 			},
 		]);
+	};
+
+	it('does NOT spawn a duplicate when the sibling is already inside a SYNTH', async () => {
+		siblingOwnedBy({
+			statementId: 'existing-synth',
+			isCluster: true,
+			hide: false,
+			parentId: 'q1',
+			derivedByPipeline: 'synthesis',
+			integratedOptions: ['sibling-opt', 'someone-else'],
+		});
 
 		await liveSynthOnOptionCreate(makeOption());
 
-		// No proposal generated and no spawn — the pair was already covered.
+		// The pair is already merged, or one member is; spawning again duplicates it.
 		expect(mockGenerateSynthesizedProposal).not.toHaveBeenCalled();
 		const spawnAudit = mockRecordLiveSynthEvent.mock.calls.find((c) => c[0]?.action === 'spawn');
 		expect(spawnAudit).toBeUndefined();
+	});
+
+	it('DOES still spawn a synth when the sibling only belongs to a topic cluster', async () => {
+		siblingOwnedBy({
+			statementId: 'existing-theme',
+			isCluster: true,
+			hide: false,
+			parentId: 'q1',
+			derivedByPipeline: 'topic-cluster',
+			integratedOptions: ['sibling-opt', 'someone-else'],
+		});
+		mockGenerateSynthesizedProposal.mockResolvedValue({
+			title: 'Merged proposal',
+			description: 'the two wordings, combined',
+			paragraphs: [],
+		});
+
+		await liveSynthOnOptionCreate(makeOption());
+
+		// A theme gave the sibling a heading, not a meaning. Two ideas under one
+		// theme turning out to be the same idea is exactly what synthesis is for.
+		expect(mockGenerateSynthesizedProposal).toHaveBeenCalledTimes(1);
+		const spawnAudit = mockRecordLiveSynthEvent.mock.calls.find((c) => c[0]?.action === 'spawn');
+		expect(spawnAudit).toBeDefined();
 	});
 
 	it('queues for review when top hit is in the gray band [reviewLowerBound, clusterThreshold) — no LLM call', async () => {
@@ -334,10 +363,14 @@ describe('liveSynthOnOptionCreate', () => {
 		expect(mockRecordLiveSynthEvent).not.toHaveBeenCalled();
 	});
 
-	it('falls back to topic-cluster spawn when synth LLM proposes cannotSynthesize=true', async () => {
-		// New behavior: when generateSynthesizedProposal refuses (directional
-		// conflict, etc.), the pipeline retries the spawn in cluster mode
-		// (generateTopicLabel) instead of queuing for review.
+	it('does not spawn a theme at the spawn site when the synth LLM refuses the pair', async () => {
+		// A refusal used to retry the same spawn in cluster mode, producing a
+		// theme from a pair of raw options. That path is off by default now
+		// (`spawnThemesFromOptionPairs`): cosine cannot tell whether two raw
+		// options share a theme, and this is what spawned near-duplicate themes
+		// nothing could see were redundant. "These are distinct ideas" is still
+		// the case FOR theming, so the refusal falls through to the theme-attach
+		// and registry passes rather than forcing a heading of its own.
 		setupFirestoreMockForGet({
 			exists: true,
 			data: {
@@ -373,16 +406,9 @@ describe('liveSynthOnOptionCreate', () => {
 		await liveSynthOnOptionCreate(makeOption());
 
 		expect(mockGenerateSynthesizedProposal).toHaveBeenCalledTimes(1);
-		expect(mockGenerateTopicLabel).toHaveBeenCalledTimes(1);
-		const spawnAudit = mockRecordLiveSynthEvent.mock.calls.find(
-			(c) => c[0]?.action === 'spawn' && c[0]?.newState?.mode === 'cluster',
-		);
-		expect(spawnAudit).toBeDefined();
-		expect(mockEnqueueClusterRecompute).toHaveBeenCalledWith(
-			expect.any(String),
-			'pipeline:onCreate:spawn',
-			'user1',
-		);
+		expect(mockGenerateTopicLabel).not.toHaveBeenCalled();
+		const spawnAudit = mockRecordLiveSynthEvent.mock.calls.find((c) => c[0]?.action === 'spawn');
+		expect(spawnAudit).toBeUndefined();
 	});
 
 	it('Ship 3b.5: gates OFF when parent is non-MC and has no override', async () => {
