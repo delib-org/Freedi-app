@@ -15,7 +15,7 @@
  *
  *   node textFidelity.selftest.mjs
  */
-import { buildPrompt, judge, loadEnv, JUDGE_MODEL } from './textFidelity.mjs';
+import { buildPrompt, buildScopePrompt, judge, loadEnv, JUDGE_MODEL } from './textFidelity.mjs';
 
 loadEnv();
 
@@ -124,9 +124,87 @@ for (const c of CASES) {
 	console.log();
 }
 
+/* ------------------------------------------------------------------ *
+ * The scope/commitment discriminator, used when there is a body.
+ *
+ * The point of these fixtures is that the two must come apart: a body that
+ * elaborates faithfully must NOT read as scope inflation, or the signal is just
+ * `fabricated` again under a new name.
+ * ------------------------------------------------------------------ */
+const SCOPE_CASES = [
+	{
+		name: 'widened beneficiary: underserved neighborhoods -> citywide',
+		members: [
+			'Open primary-care clinics in underserved neighborhoods.',
+			'Set up local clinics where residents have no nearby doctor.',
+		],
+		title: 'Open Primary-Care Clinics Citywide',
+		description: 'Open a primary-care clinic in every neighborhood across the entire city.',
+		expect: { scopeInflated: true },
+	},
+	{
+		name: 'faithful elaboration: implementation added, scope unchanged',
+		members: [
+			'Add protected bike lanes on the main avenues.',
+			'Build separated cycling lanes along major roads.',
+		],
+		title: 'Build Protected Bike Lanes on Major Roads',
+		description:
+			'Install physically separated cycling lanes along the city’s main avenues and major roads. The transport department should coordinate delivery and report on progress each quarter.',
+		// Departments and reporting are added, but nobody's coverage widened.
+		expect: { scopeInflated: false, addedCommitments: true },
+	},
+	{
+		name: 'same scope, different words',
+		members: [
+			'Make public transport free for students under eighteen.',
+			'Let under-18s ride city buses at no charge.',
+		],
+		title: 'Provide Free Public Transit for Under-18s',
+		description: 'Public transport is free for all riders under the age of eighteen.',
+		expect: { scopeInflated: false },
+	},
+];
+
+for (const c of SCOPE_CASES) {
+	const result = await judge(
+		buildScopePrompt({
+			question: QUESTION,
+			members: c.members,
+			title: c.title,
+			description: c.description,
+		}),
+	);
+	const scopeOk = Boolean(result.scopeInflated) === c.expect.scopeInflated;
+	const commitOk =
+		c.expect.addedCommitments === undefined ||
+		Boolean(result.addedCommitments) === c.expect.addedCommitments;
+	const pass = scopeOk && commitOk;
+	if (!pass) failures++;
+
+	console.log(`${pass ? 'PASS' : 'FAIL'}  [scope] ${c.name}`);
+	console.log(
+		`      expected scopeInflated=${c.expect.scopeInflated}` +
+			(c.expect.addedCommitments === undefined
+				? ''
+				: ` addedCommitments=${c.expect.addedCommitments}`),
+	);
+	console.log(
+		`      got      scopeInflated=${Boolean(result.scopeInflated)}` +
+			` addedCommitments=${Boolean(result.addedCommitments)}`,
+	);
+	if (!pass) {
+		if (result.scopeDetail) console.log(`        scope: ${result.scopeDetail}`);
+		if (result.commitmentDetail) console.log(`        added: ${result.commitmentDetail}`);
+	}
+	console.log();
+}
+
+const total = CASES.length + SCOPE_CASES.length;
 if (failures > 0) {
-	console.log(`${failures}/${CASES.length} fixtures failed — do NOT score a run with this judge.`);
+	console.log(`${failures}/${total} fixtures failed — do NOT score a run with this judge.`);
 	process.exit(1);
 }
-console.log(`all ${CASES.length} fixtures correct — the judge detects loss, generalisation and`);
-console.log('fabrication, and does not cry wolf on a genuinely faithful merge.');
+console.log(`all ${total} fixtures correct — the judge detects loss, generalisation, fabrication`);
+console.log('and scope inflation, and does not cry wolf on a genuinely faithful merge or on a');
+console.log('body that merely elaborates.');

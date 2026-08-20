@@ -123,7 +123,13 @@ function setupFirestoreMockForGet(
 			data: () => data,
 		}),
 	};
+	// The review queue writes one row per (parent, unordered pair) under a
+	// deterministic id, so re-queueing the same pair updates rather than piling
+	// up a second identical ask. `resolveReviewCandidates` then closes the row
+	// once the pipeline places the option, so the collection also answers
+	// `where(...).get()`.
 	const reviewAdd = jest.fn().mockResolvedValue(undefined);
+	const reviewQuery = jest.fn().mockResolvedValue({ docs: [] });
 	const clusterUpdate = jest.fn().mockResolvedValue(undefined);
 	const clusterSet = jest.fn().mockResolvedValue(undefined);
 	const docMock = jest.fn((id: string) => {
@@ -139,16 +145,29 @@ function setupFirestoreMockForGet(
 	const whereMock = jest.fn(() => ({ get: dedupGet }));
 	const collMock = jest.fn((name: string) => {
 		if (name === '_liveSynthDebounce') return { doc: docMock };
-		if (name === '_liveSynthCandidates') return { add: reviewAdd };
+		if (name === '_liveSynthCandidates') {
+			return {
+				doc: () => ({ set: reviewAdd }),
+				where: () => ({ where: () => ({ get: reviewQuery }) }),
+			};
+		}
 
 		return { doc: docMock, where: whereMock };
 	});
-	mockGetFirestore.mockReturnValue({ collection: collMock });
+	const batchUpdate = jest.fn();
+	const batchCommit = jest.fn().mockResolvedValue(undefined);
+	mockGetFirestore.mockReturnValue({
+		collection: collMock,
+		batch: () => ({ update: batchUpdate, set: jest.fn(), commit: batchCommit }),
+	});
 
 	return {
 		debounceDoc,
 		parentDoc,
 		reviewAdd,
+		reviewQuery,
+		batchUpdate,
+		batchCommit,
 		clusterUpdate,
 		clusterSet,
 		collMock,
@@ -349,6 +368,37 @@ describe('liveSynthOnOptionCreate', () => {
 			(c) => c[0]?.action === 'review-queued',
 		);
 		expect(reviewAudit).toBeDefined();
+	});
+
+	it('closes the review row once the option is placed, so the queue can empty', async () => {
+		// Measured on three certified 100-statement runs: 105 options were queued
+		// for review and every one was later placed by the pipeline itself. Rows
+		// used to stay open forever, so the queue an admin sees was 100% stale.
+		const fs = setupFirestoreMockForGet();
+		const staleRow = { id: 'row1', ref: { id: 'row1' }, get: () => false };
+		fs.reviewQuery.mockResolvedValue({ docs: [staleRow] });
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
+		mockFindSimilarByEmbedding.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'cluster1',
+					statement: 'an existing synthesis',
+					integratedOptions: ['a', 'b'],
+					derivedByPipeline: 'synthesis',
+					statementType: 'option',
+					parentId: 'q1',
+				},
+				similarity: 0.95,
+			},
+		]);
+
+		await liveSynthOnOptionCreate(makeOption());
+
+		expect(fs.batchUpdate).toHaveBeenCalledWith(
+			staleRow.ref,
+			expect.objectContaining({ resolved: true }),
+		);
+		expect(fs.batchCommit).toHaveBeenCalled();
 	});
 
 	it('takes no action when no neighbors match', async () => {

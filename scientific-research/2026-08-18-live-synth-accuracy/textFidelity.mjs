@@ -116,6 +116,64 @@ Return JSON:
 }`;
 }
 
+/**
+ * A sharper question than `fabricated`, for when there is a BODY to judge.
+ *
+ * `fabricated` asks "does this commit to anything no original asked for". On a
+ * title that is a good question and fires rarely. On a body it saturates: the
+ * synthesis prompt explicitly orders an implementation plan — "who does what, on
+ * what timeline, with what success measure", 2–4 paragraphs of 80–140 words —
+ * from inputs that are often a single sentence each. Measured, it flags 3 of 3.
+ * A signal that is always on cannot rank anything, and would make a real
+ * regression invisible.
+ *
+ * So the two things it was conflating are asked separately, because they are not
+ * equally bad:
+ *
+ *   scopeInflated    — the text widened WHO or WHAT is covered. "in underserved
+ *                      neighborhoods" becomes "citywide"; "workers" becomes
+ *                      "residents". This changes what people are voting on, and
+ *                      it is the failure mode this pipeline is known to have —
+ *                      over-abstraction is what cost precision in Finding 5.
+ *   addedCommitments — launch dates, reporting duties, named departments the
+ *                      inputs never mentioned. Expected, since the prompt asks
+ *                      for them; worth counting, not alarming on.
+ */
+export function buildScopePrompt({ question, members, title, description }) {
+	const memberLines = members.map((m, i) => `${i + 1}. "${m}"`).join('\n');
+
+	return `Residents answered this question with their own proposals:
+
+QUESTION: "${question}"
+
+ORIGINAL PROPOSALS:
+${memberLines}
+
+THESE WERE MERGED AND PUBLISHED AS:
+TITLE: ${title}
+BODY: ${description?.trim() || '(none)'}
+
+Answer two separate questions about the published text.
+
+1. SCOPE. Does it widen WHO is covered or WHAT is covered, beyond what the
+   originals asked for? Examples of widening: originals say "in underserved
+   neighborhoods", text says "citywide"; originals say "workers", text says
+   "all residents"; originals say "route 5", text says "the whole network".
+   Restating the same scope in different words is NOT widening. Narrowing is
+   also not widening — report it only under question 2 if relevant.
+
+2. ADDED COMMITMENTS. Does it commit to mechanisms, timelines, budgets, named
+   departments, reporting or monitoring duties that no original mentioned?
+
+Return JSON:
+{
+  "scopeInflated": true|false,
+  "scopeDetail": "the original wording -> the published wording, or empty",
+  "addedCommitments": true|false,
+  "commitmentDetail": "briefly what was added, or empty"
+}`;
+}
+
 const cache = new Map();
 mkdirSync(resolve(REPO, 'scripts/.cache'), { recursive: true });
 if (existsSync(CACHE_FILE)) {
