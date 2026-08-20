@@ -675,6 +675,12 @@ export interface ThemeOption {
 	id: string;
 	title: string;
 	description?: string;
+	/**
+	 * Titles of the proposals filed under this heading. Supplied by
+	 * `consolidateThemes`; see `groupEquivalentThemes` for why the judgement is
+	 * made on these rather than on the heading.
+	 */
+	contents?: string[];
 }
 
 export interface ThemeAssignmentResult {
@@ -822,6 +828,9 @@ export interface ThemeMergeGroup {
 	title: string;
 }
 
+/** How many member proposals to show per heading before summarising the rest. */
+const CONTENTS_SHOWN_PER_THEME = 4;
+
 /**
  * Find themes that name the same topic and should be one.
  *
@@ -838,8 +847,25 @@ export interface ThemeMergeGroup {
  * set, not about pairs, and pairwise merging would rebuild the same greedy
  * mechanism that could not do this in the first place.
  *
+ * **The judgement is made on the proposals under each heading, not on the
+ * heading.** This prompt was first written with headings alone and measurably
+ * under-merged: replayed against the three certified seed runs
+ * (`analysis/themeConsolidation.mjs`), it left seed 1234 at 12.5 headings for 10
+ * true topics, proposing 3.5 of the 7 available merges. The reason is that a
+ * heading is a compression of its first proposal: "Household recycling
+ * services" and "Air quality monitoring" share no words and are plainly one
+ * topic only once you can see what is filed under them. Passing the member
+ * proposals took the same seed to 10.5 headings with 6 merges, kept all 10 true
+ * topics represented on every seed, and did not raise the false-merge rate.
+ *
+ * This is the same conclusion the cross-synth merge gate reached one layer down
+ * (`fn_synthesisReJudge.ts`): judge on members, because a generated title
+ * abstracts away exactly the detail the decision turns on.
+ *
  * Conservative by construction: returns only groups it is confident about, and
- * an empty list is a perfectly good answer.
+ * an empty list is a perfectly good answer. That matters more than it looks —
+ * a merge hides the donor heading and is irreversible from a reader's point of
+ * view, so an unmerged duplicate is much the cheaper error.
  */
 export async function groupEquivalentThemes(input: {
 	themes: ThemeOption[];
@@ -849,28 +875,47 @@ export async function groupEquivalentThemes(input: {
 	if (themes.length < 3) return [];
 
 	const themeLines = themes
-		.map((t, i) => `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}`)
+		.map((t, i) => {
+			const head = `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}`;
+			const contents = t.contents ?? [];
+			if (contents.length === 0) return head;
+			const shown = contents
+				.slice(0, CONTENTS_SHOWN_PER_THEME)
+				.map((c) => `     - ${c}`)
+				.join('\n');
+			const rest =
+				contents.length > CONTENTS_SHOWN_PER_THEME
+					? `\n     - (+${contents.length - CONTENTS_SHOWN_PER_THEME} more)`
+					: '';
+
+			return `${head}  (${contents.length} proposal${contents.length === 1 ? '' : 's'})\n${shown}${rest}`;
+		})
 		.join('\n');
 
 	const prompt = `You are tidying the topic headings of a community consultation.
 
 QUESTION: "${questionContext}"
 
-CURRENT TOPICS:
+CURRENT TOPICS, each with the proposals filed under it:
 ${themeLines}
 
-These headings grew one at a time as ideas arrived, so some are narrower than
-they should be and several may name the same area of concern.
+These headings grew one at a time as ideas arrived. A heading was written when
+its first proposal arrived, so it describes THAT proposal rather than the topic
+it has come to stand for. Judge by the proposals underneath, not by how similar
+the headings sound: two headings that share no words can still be one topic.
 
 TASK: Find groups of topics that should be ONE topic, and give each group a
 heading that covers it.
 
-Group topics that describe the same area of life or the same domain of city
-activity — a narrow heading should be absorbed into a broader one that covers it
-("Smaller class sizes" and "Student nutrition programs" both belong under
-schools). Do NOT group topics merely because both are about the city, or because
-both are broadly civic; the result must still be a heading a reader would find
-useful for browsing.
+Group topics whose proposals a resident would expect to browse together — the
+same area of life or the same domain of city activity ("Smaller class sizes" and
+"Student nutrition programs" both belong under schools; "Household recycling"
+and "Air quality monitoring" both belong under the environment). A heading
+holding a single proposal is usually a heading written too early, so look hard
+for where it belongs before leaving it alone. Do NOT group topics merely because
+both are about the city, or because both are broadly civic; the result must
+still be a heading a reader would find useful for browsing, and two genuinely
+different concerns must stay apart.
 
 Leave a topic out of every group when it genuinely stands alone. Returning no
 groups at all is a valid answer.
@@ -901,8 +946,7 @@ Return JSON:
 			// Only ids that were offered, and no theme in two groups — either would
 			// produce a merge that destroys membership.
 			const ids = raw.ids.filter(
-				(id: unknown): id is string =>
-					typeof id === 'string' && known.has(id) && !claimed.has(id),
+				(id: unknown): id is string => typeof id === 'string' && known.has(id) && !claimed.has(id),
 			);
 			if (ids.length < 2) continue;
 			ids.forEach((id: string) => claimed.add(id));
