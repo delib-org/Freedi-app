@@ -74,10 +74,12 @@ Nothing deployed. Full results and findings in
    **degrades rather than corrupts**, and `vectorSearch.incompatibleModel` says
    by how much.
 
-   **What is left is genuinely a decision, not code.** All three rollouts want
-   the same next primitive — a per-question embedding model, so questions can
-   move one at a time — and which one is right depends on how much live Hebrew
-   data exists:
+   **DECIDED (Tal, 2026-08-20): re-embed per question.** No global swap, no
+   automatic backfill — at deploy time Tal names specific questions (in Hebrew)
+   and each is moved to `text-embedding-3-large` individually. What that needs
+   built: the per-question embedding-model field, and a re-embed flow for a
+   named question (`reEmbedQuestion` already does the heavy lifting). The
+   original decision table, for the record:
 
    | rollout | what it needs | trade |
    | --- | --- | --- |
@@ -98,28 +100,44 @@ Nothing deployed. Full results and findings in
    placement now resolves them. `c018fd495`, RESULTS.md Finding 12.
 5. **Deploy** is still a separate, explicit decision — `npm run deploy:f:test`
    first, never straight to prod.
-6. **Theme-count variance is STILL the one clear remaining defect.** The plan's
-   diagnosis was wrong, and so was the fix — in different ways.
+6. **The theme layer's defect turned out to be FILING, not consolidation — and
+   it has a measured fix awaiting live confirmation.** Three rounds of being
+   wrong, each caught by better evidence:
 
-   *Wrong diagnosis:* raising `MAX_MERGES_PER_SWEEP` would have changed nothing.
-   The pump logs show the judge being offered 1-3 groups per sweep, never
-   approaching the cap of 8. That part is settled (RESULTS.md Finding 10).
+   *Wrong diagnosis #1:* raising `MAX_MERGES_PER_SWEEP` would have changed
+   nothing. The judge was offered 1-3 groups per sweep, never near the cap of 8
+   (RESULTS.md Finding 10).
 
-   *Wrong fix:* showing the judge the proposals under each heading looked
-   dominant offline on all three seeds, and **lost its live run** - seed 42
-   0.910 -> 0.865, topic F1 0.775 -> 0.678. It hit the right heading count by
-   over-merging into a catch-all. Reverted in `5f001e2a2`; RESULTS.md Finding 13.
+   *Wrong fix:* showing the CONSOLIDATION judge the proposals under each heading
+   looked dominant offline and lost its live run, 0.910 -> 0.865. Reverted in
+   `5f001e2a2`; Finding 13.
 
-   *The real lever, for whoever picks this up:* the offline replay ran the judge
-   on each run's FINAL theme set (11 tidy headings) while the live sweep faces
-   ~19 half-formed ones and merges 9 donors in a single pass. Any future attempt
-   must be measured against THAT, not against the end state. And the target is
-   accuracy, not volume - the failure mode is a heading that spans many topics,
-   not one that stays too narrow.
+   *Wrong diagnosis #2 — Finding 13's own attribution.* Rescuing the run's full
+   audit trail from the emulator (`analysis/dumpEmulatorEvidence.mjs`) and
+   rebuilding the exact mid-run theme sets (certified byte-for-byte against the
+   live sweep fingerprint) showed the sweep's merges were CLEAN. Every foreign
+   member of the two impure headings entered through **`assignToTheme` filing**
+   (plus one cosine attach), drawn into broad-titled attractor headings. All
+   three baselines carry the same 3-4 polluted headings, so the 0.910-vs-0.865
+   delta was filing dice, not the consolidation prompt. Live filing accuracy:
+   **62%**. Finding 15.
 
-   *Kept from the attempt:* each distinct theme set is judged once, since this
-   sweep re-asks a non-deterministic model every 10 minutes forever and merges
-   are irreversible. Not implicated in the regression.
+   *The measured fix (`analysis/themeFiling.mjs`, 2x2 + iterations over the 58
+   real decisions):* contents and caution only work TOGETHER. Contents alone:
+   misfiles 28 -> 37. Caution alone: over-NONEs 31 -> 90. Together (F2):
+   **misfiles 28 -> 17**, over-NONEs 31 -> 48 — and an over-NONE is the cheap
+   error now that the consolidation sweep (measured 6/6 clean merges) merges
+   duplicate themes, while a misfile is permanent. F2 is ported into
+   `assignToTheme` + both `nestSynthesis.ts` call sites and re-verified through
+   the compiled path. **Needs a live full-corpus run before it is believed** —
+   the offline bench scores per-decision accuracy on historical states, and
+   Finding 13 is the standing warning about state drift.
+
+   *Kept from the earlier attempt:* the judge-once fingerprint on the
+   consolidation sweep. *Still open in this area:* the ~8 per run cosine
+   topic-attaches bypass the judge entirely (1 of 8 misfiled live); and theme
+   COUNT variance (10-17 headings across seeds) remains, now correctly framed
+   as an under-merge/count problem separate from purity.
 7. ~~**Nobody has scored the merged TEXT.**~~ **Measured — and the news is
    good.** `textFidelity.mjs` (validated first against five known-answer fixtures
    in `textFidelity.selftest.mjs`) judges each member statement against the text

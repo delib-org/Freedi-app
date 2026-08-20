@@ -676,7 +676,18 @@ export interface ThemeOption {
 	id: string;
 	title: string;
 	description?: string;
+	/**
+	 * Titles of the proposals currently filed under this theme. Read by
+	 * `assignToTheme` (the filing judge) — measured to be what lets it refuse an
+	 * attractor heading; see that function's docstring. Ignored by
+	 * `groupEquivalentThemes`, where the same evidence was measured making
+	 * merges WORSE (RESULTS.md Finding 13).
+	 */
+	contents?: string[];
 }
+
+/** Proposals shown per theme when contents are rendered into a prompt. */
+const CONTENTS_SHOWN_PER_THEME = 4;
 
 export interface ThemeAssignmentResult {
 	/** Chosen theme id, or null for "none of these — it needs a new theme". */
@@ -715,6 +726,33 @@ export interface ThemeAssignmentResult {
  * shortlist. There are rarely more than a few dozen per question, and filtering
  * by cosine first would reimpose the very geometry this call exists to escape.
  *
+ * THIS CALL IS WHERE THEME IMPURITY ENTERS — measured, not suspected. Replaying
+ * every filing decision of a certified run against its exact mid-run theme sets
+ * (`analysis/themeFiling.mjs`, reconstruction certified byte-for-byte against
+ * the live sweep fingerprint), the shipped titles-only prompt misfiled 28 of
+ * 174 decision-samples — every one into a broad-titled attractor heading
+ * ("Municipal Service Access" swallowed a library branch, in-home care and
+ * business licensing; "Street and pathway safety" swallowed playgrounds and
+ * shade trees). All three certified baseline runs carry 3–4 such polluted
+ * headings; filing, not consolidation, is the theme layer's accuracy ceiling
+ * (RESULTS.md Finding 15).
+ *
+ * Two measured levers, which only work TOGETHER:
+ *
+ *   - `contents`: the judge sees what each theme actually holds. Alone (with
+ *     the old "prefer an existing topic" bias) it made misfiling WORSE, 28→37 —
+ *     evidence under an eager instruction produces confident mistakes, the
+ *     same shape as Finding 13 one layer up.
+ *   - the when-unsure-NONE bias below. Alone (titles-only) the judge has
+ *     nothing to aim its caution with and refused half of everything
+ *     (15 misfiles but 90 over-NONEs, 39.7% accuracy).
+ *   - Together: misfiles 28 → **17** (the survivors sit near the corpus's own
+ *     ambiguity line), over-NONEs 31 → 48 — and an over-NONE is the cheap,
+ *     self-healing error: it spawns a duplicate theme the consolidation sweep
+ *     merges (measured 6/6 clean), while a misfile is permanent for every
+ *     reader. When the shipped bias was written that sweep did not exist, so
+ *     the prompt was protecting against what is now the cheap error.
+ *
  * Uses the FAST model — this is a short classification, not a generation task.
  *
  * Fail-safe: on any error or unparseable answer, returns `themeId: null`, which
@@ -731,14 +769,28 @@ export async function assignToTheme(input: {
 	if (themes.length === 0) return { themeId: null, reason: 'no-existing-themes' };
 
 	const themeLines = themes
-		.map((t, i) => `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}`)
+		.map((t, i) => {
+			const head = `${i + 1}. [${t.id}] ${t.title}${t.description ? ` — ${t.description}` : ''}`;
+			const contents = t.contents ?? [];
+			if (contents.length === 0) return head;
+			const shown = contents
+				.slice(0, CONTENTS_SHOWN_PER_THEME)
+				.map((c) => `     - ${c}`)
+				.join('\n');
+			const rest =
+				contents.length > CONTENTS_SHOWN_PER_THEME
+					? `\n     - (+${contents.length - CONTENTS_SHOWN_PER_THEME} more)`
+					: '';
+
+			return `${head}  (${contents.length} proposal${contents.length === 1 ? '' : 's'})\n${shown}${rest}`;
+		})
 		.join('\n');
 
 	const prompt = `You are filing a community proposal under the topic it belongs to.
 
 QUESTION: "${questionContext}"
 
-EXISTING TOPICS:
+EXISTING TOPICS, each with the proposals filed under it:
 ${themeLines}
 
 PROPOSAL:
@@ -749,13 +801,16 @@ TASK: Choose the ONE existing topic this proposal belongs under.
 A topic groups proposals that address the same general area of concern, even when
 they propose completely different actions. "Run buses more often" and "Add bike
 lanes" are different actions but the same topic (getting around the city). Judge
-by the area of life the proposal is about, NOT by whether the actions resemble
-each other.
+by what is actually filed under a topic, not by how its title sounds — a title
+is a compression of whatever arrived first, and may read broader or narrower
+than the topic's real contents.
 
-Answer "NONE" only when the proposal genuinely belongs to no listed topic — a new
-area of concern that none of them covers. Prefer an existing topic when one
-plausibly fits; a proliferation of near-duplicate topics is worse for the reader
-than a slightly broad one.
+File the proposal under a topic only when it clearly belongs to the same area of
+concern as what that topic already holds. When unsure, answer "NONE": a topic
+created too eagerly is cheap, because a later tidy-up sweep merges duplicate
+topics — but a proposal filed under the wrong topic stays there for every
+reader. Do not choose a topic just because its title sounds broad enough to
+cover anything.
 
 Return JSON:
 {

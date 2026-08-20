@@ -57,6 +57,11 @@ const VARIANT_FILTER = (args.find((a) => a.startsWith('--variants=')) ?? '')
 	?.split(',')
 	.filter(Boolean);
 const MODEL = process.env.OPENAI_FAST_MODEL || 'gpt-5.6-luna';
+// Names the current functions/lib build in the compiled-path cache key. The
+// local-prompt variants key on their full prompt text, but the compiled call's
+// prompt lives inside the build — without a label, re-running after a rebuild
+// would silently replay the OLD build's cached answers.
+const LABEL = (args.find((a) => a.startsWith('--label=')) ?? '--label=ships').split('=')[1];
 const CONTENTS_SHOWN = 4;
 
 loadEnv();
@@ -323,7 +328,46 @@ topics — but a proposal filed under the wrong topic stays there for every
 reader. Do not choose a topic just because its title sounds broad enough to
 cover anything.`;
 
-function buildPrompt({ withContents, flippedBias }, d) {
+/**
+ * F5: F2's veto economics verbatim, plus ONE narrow carve-out for the
+ * granularity refusals that dominated F2's over-NONEs (a class-size proposal
+ * refused a home under "Student Nutrition Programs" — same area of life,
+ * narrower title). F4 proved the carve-out must not become a general duty to
+ * file: its "choose it even if the fit is imperfect" took misfiles straight
+ * back up (17 → 30).
+ */
+const F5_BIAS = `File the proposal under a topic only when it clearly belongs to the same area of
+concern as what that topic already holds. When unsure, answer "NONE": a topic
+created too eagerly is cheap, because a later tidy-up sweep merges duplicate
+topics — but a proposal filed under the wrong topic stays there for every
+reader. Do not choose a topic just because its title sounds broad enough to
+cover anything.
+
+One narrowness exception: a topic whose proposals are clearly in the same area
+of life as this proposal IS its home, even when the topic's title is narrower
+than the proposal (a class-size proposal belongs with a school-meals topic —
+both are about schools). "NONE" is for a different area of life, not for a
+different sub-topic within the same area.`;
+
+/**
+ * F4: the F2 rule, aimed. F2's blanket "when unsure, NONE" cut misfiles 28→17
+ * but doubled over-NONEs (31→48) — it licenses refusal on mere hesitation. This
+ * makes the veto conditional on an actual area-CONFLICT with what the topic
+ * holds, and states the positive duty to file when a same-area topic exists.
+ */
+const TARGETED_BIAS = `Match the proposal to the topic whose EXISTING PROPOSALS are about the same
+area of concern. If such a topic exists, choose it — do not answer "NONE" merely
+because the fit is imperfect or the topic's title is narrower than the proposal.
+Titles lag their contents; a topic IS what it holds.
+
+Answer "NONE" only when every listed topic's proposals are about a DIFFERENT
+area of concern than this proposal — when filing it would make the chosen topic
+less coherent for a reader browsing it. A "NONE" is cheap: a duplicate topic
+gets merged by a later tidy-up sweep. A proposal filed under the wrong topic
+stays there for every reader. Never file under a topic just because its title
+sounds broad enough to cover anything.`;
+
+function buildPrompt({ withContents, variantBias }, d) {
 	const contextHeader = withContents
 		? 'EXISTING TOPICS, each with the proposals filed under it:'
 		: 'EXISTING TOPICS:';
@@ -354,7 +398,7 @@ TASK: Choose the ONE existing topic this proposal belongs under.
 
 ${judgeLine}
 
-${flippedBias ? FLIPPED_BIAS : SHIPPED_BIAS}
+${variantBias === 'targeted' ? TARGETED_BIAS : variantBias === 'f5' ? F5_BIAS : variantBias === 'flipped' ? FLIPPED_BIAS : SHIPPED_BIAS}
 
 Return JSON:
 {
@@ -418,12 +462,19 @@ async function callModel(prompt, attempt) {
 
 /** F0 through the compiled artifact. Repeat-cached by wrapping in the same cache. */
 async function callCompiled(d, attempt) {
-	const key = `compiled::${MODEL}::${attempt}::${d.proposalId}::${d.ts}`;
+	const key = `compiled::${LABEL}::${MODEL}::${attempt}::${d.proposalId}::${d.ts}`;
 	if (cache.has(key)) return cache.get(key);
 	const res = await compiled.assignToTheme({
 		proposalTitle: d.title,
 		proposalDescription: d.description,
-		themes: d.context.map((t) => ({ id: t.id, title: t.title, description: t.description })),
+		// Full member-title lists — the compiled function applies its own
+		// CONTENTS_SHOWN_PER_THEME cap, exactly as live callers do.
+		themes: d.context.map((t) => ({
+			id: t.id,
+			title: t.title,
+			description: t.description,
+			contents: t.memberIds.map(titleOf).filter(Boolean),
+		})),
 		questionContext: QUESTION,
 	});
 	const value = res.themeId ?? null;
@@ -435,9 +486,11 @@ async function callCompiled(d, attempt) {
 
 const VARIANTS = [
 	{ name: 'F0 titles, prefer-file (ships, compiled)', compiled: true },
-	{ name: 'F1 contents, prefer-file', withContents: true, flippedBias: false },
-	{ name: 'F2 contents, unsure->NONE', withContents: true, flippedBias: true },
-	{ name: 'F3 titles, unsure->NONE', withContents: false, flippedBias: true },
+	{ name: 'F1 contents, prefer-file', withContents: true, variantBias: 'shipped' },
+	{ name: 'F2 contents, unsure->NONE', withContents: true, variantBias: 'flipped' },
+	{ name: 'F3 titles, unsure->NONE', withContents: false, variantBias: 'flipped' },
+	{ name: 'F4 contents, conflict->NONE', withContents: true, variantBias: 'targeted' },
+	{ name: 'F5 contents, NONE+narrowness-exception', withContents: true, variantBias: 'f5' },
 ].filter((v) => !VARIANT_FILTER?.length || VARIANT_FILTER.includes(v.name.split(' ')[0]));
 
 console.log(`\n=== replaying ${judged.length} judged decisions × ${VARIANTS.length} variants × ${REPEATS} repeats (${MODEL})`);
@@ -445,6 +498,7 @@ const results = [];
 for (const variant of VARIANTS) {
 	const rows = [];
 	const misfiles = new Map();
+	const overNones = new Map();
 	for (let attempt = 0; attempt < REPEATS; attempt++) {
 		for (const d of judged) {
 			const choice = variant.compiled
@@ -458,6 +512,10 @@ for (const variant of VARIANTS) {
 				const chosen = d.context.find((t) => t.id === clean);
 				const label = `"${d.title.slice(0, 45)}" [${d.truth}] -> "${chosen?.title.slice(0, 40)}" [${chosen?.truth}]`;
 				misfiles.set(label, (misfiles.get(label) ?? 0) + 1);
+			} else if (v === 'over-none') {
+				const should = d.context.find((t) => d.correctIds.includes(t.id));
+				const label = `"${d.title.slice(0, 45)}" [${d.truth}] had home "${should?.title.slice(0, 40)}"`;
+				overNones.set(label, (overNones.get(label) ?? 0) + 1);
 			}
 		}
 	}
@@ -467,6 +525,9 @@ for (const variant of VARIANTS) {
 	console.log(`    accuracy ${(t.accuracy * 100).toFixed(1)}%   file-ok ${t['correct-file']}  none-ok ${t['correct-none']}  MISFILE ${t.misfile}  over-none ${t['over-none']}   (n=${t['correct-file'] + t['correct-none'] + t.misfile + t['over-none']})`);
 	for (const [label, n] of [...misfiles.entries()].sort((a, b) => b[1] - a[1])) {
 		console.log(`      misfile ×${n}  ${label}`);
+	}
+	for (const [label, n] of [...overNones.entries()].sort((a, b) => b[1] - a[1])) {
+		console.log(`      over-none ×${n}  ${label}`);
 	}
 }
 

@@ -230,8 +230,54 @@ of the errors:
    switched sides, and the prompt still pays for the expensive one.
 
 `themeFiling.mjs` A/Bs the 2×2 (evidence × doubt-bias) over the same 58
-decisions against their exact reconstructed contexts. Results below when the
-sweep completes.
+decisions against their exact reconstructed contexts, 3 repeats each
+(`gpt-5.6-luna`, the live model). F0 is the compiled shipped function — and it
+reproduces the live misfiles nearly deterministically (most at 3-of-3 repeats,
+all into the same two attractors), so the failure is a stable model behaviour,
+not sampling noise:
+
+| variant | accuracy | misfiles | over-NONEs |
+| --- | --- | --- | --- |
+| F0 titles, prefer-file (ships, compiled) | 66.1% | 28 | 31 |
+| F1 contents, prefer-file | 64.4% | **37** | 25 |
+| F2 contents, unsure→NONE | 62.6% | **17** | 48 |
+| F3 titles, unsure→NONE | 39.7% | 15 | **90** |
+| F4 contents, conflict→NONE | 70.1% | 30 | 22 |
+| F5 contents, NONE + narrowness-exception | 71.8% | 23 | 26 |
+
+**The factors only work together.** Contents under the shipped "prefer an
+existing topic" bias made misfiling WORSE (28 → 37) — the same shape as Finding
+13 one layer up: evidence plus eagerness yields confident mistakes. Caution
+without contents (F3) has nothing to aim with and refuses half of everything.
+Together (F2) the permanent error drops 40%, and the survivors sit near the
+corpus's own ambiguity line ("Streamline Business Licensing" *is* a municipal
+procedure).
+
+**Decision rule, registered before F5's numbers landed:** minimise
+3·misfiles + over-NONEs (a misfile pollutes a heading permanently; an
+over-NONE spawns a duplicate theme with a measured repair channel — the sweep's
+merges ran 6/6 clean), with a hard cap misfiles ≤ 19 because that 3:1 weight is
+an estimate and the cap keeps an uncertain weight from trading away the
+irreversible error. F4 and F5 raised accuracy by re-licensing misfiles (30 and
+23) and fail the cap; F2 ships. F4/F5 are kept in the bench as evidence that
+per-decision *accuracy* is the wrong objective for this call.
+
+**Ported and re-verified through the compiled artifact** (`assignToTheme` +
+both `nestSynthesis.ts` call sites, contents built from the same snapshot at
+zero extra reads): 18 misfiles / 46 over-NONEs / 63.2% vs the benched 17 / 48 /
+62.6% — a statistical match, so the port measures as the thing that won. An
+instructive harness bug on the way: the first verification pass fed the new
+prompt with `contents` accidentally stripped and scored 20 / **71** — an
+unplanned ablation confirming that the caution bias without the evidence
+collapses into refusal, through the real compiled path.
+
+**Limit, stated plainly: this bench scores per-decision accuracy on the
+historical states of ONE run.** A changed filing policy changes which themes
+exist downstream of each decision, and Finding 13 is this study's standing
+warning about exactly that gap. The fix is measured, ported, and verified — and
+it is not *believed* until a live full-corpus run confirms it. Also still open:
+the ~8 cosine topic-attaches per run bypass this judge entirely (1 of 8
+misfiled live).
 
 ## Finding 10 — consolidation under-merged because the judge could not see, and the cap was never the constraint
 

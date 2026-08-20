@@ -1,7 +1,11 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, StatementType, type Statement, getRandomUID } from '@freedi/shared-types';
-import { assignToTheme, generateTopicLabel, type ThemeOption } from '../../services/integration-ai-service';
+import {
+	assignToTheme,
+	generateTopicLabel,
+	type ThemeOption,
+} from '../../services/integration-ai-service';
 import {
 	enqueueClusterRecompute,
 	findClustersContainingMember,
@@ -76,19 +80,48 @@ export interface NestResult {
 	reason: string;
 }
 
-/** Every live topic cluster under this question. */
-async function liveThemes(parentId: string): Promise<Statement[]> {
+/**
+ * Every live topic cluster under this question, plus the titles of everything
+ * under the question — so each theme can be shown to the filing judge WITH the
+ * proposals filed under it. Built from one snapshot: the members are ordinary
+ * option documents, so the titles cost no extra reads.
+ *
+ * The contents are load-bearing, not decoration. Measured over a certified
+ * run's exact mid-run states (`analysis/themeFiling.mjs`): with titles alone
+ * the judge filed a library branch under "Municipal Service Access" and a
+ * playground rebuild under "Street and pathway safety" — a title is a
+ * compression of whatever proposal arrived first, and broad-sounding titles
+ * act as attractors. See `assignToTheme` for the numbers.
+ */
+async function liveThemes(
+	parentId: string,
+): Promise<{ themes: Statement[]; titleById: Map<string, string> }> {
 	const snap = await db()
 		.collection(Collections.statements)
 		.where('parentId', '==', parentId)
 		.where('statementType', '==', StatementType.option)
 		.get();
 
-	return snap.docs
-		.map((d) => d.data() as Statement)
+	const all = snap.docs.map((d) => d.data() as Statement);
+	const titleById = new Map(all.map((s) => [s.statementId, s.statement ?? '']));
+	const themes = all
 		.filter((s) => s.isCluster === true && s.hide !== true && isTopicCluster(s))
 		.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
 		.slice(0, MAX_THEMES_IN_PROMPT);
+
+	return { themes, titleById };
+}
+
+/** A theme as the filing judge sees it: heading, description, and contents. */
+function toThemeOption(theme: Statement, titleById: Map<string, string>): ThemeOption {
+	return {
+		id: theme.statementId,
+		title: theme.statement ?? '',
+		description: theme.description,
+		contents: (theme.integratedOptions ?? [])
+			.map((id) => titleById.get(id))
+			.filter((title): title is string => Boolean(title)),
+	};
 }
 
 /**
@@ -112,10 +145,7 @@ async function createThemeForSynth(
 	let title: string;
 	let description: string;
 	try {
-		const label = await generateTopicLabel(
-			[synthDoc],
-			parent.statement || parent.statementId,
-		);
+		const label = await generateTopicLabel([synthDoc], parent.statement || parent.statementId);
 		title = label.title;
 		description = label.description;
 	} catch (error) {
@@ -206,8 +236,9 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 	}
 
 	let themes: Statement[];
+	let titleById: Map<string, string>;
 	try {
-		themes = await liveThemes(parent.statementId);
+		({ themes, titleById } = await liveThemes(parent.statementId));
 	} catch (error) {
 		logger.warn('synthesis.nest: theme listing failed', {
 			synthId,
@@ -217,11 +248,7 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 		return { nested: false, reason: 'theme-listing-failed' };
 	}
 
-	const options: ThemeOption[] = themes.map((t) => ({
-		id: t.statementId,
-		title: t.statement ?? '',
-		description: t.description,
-	}));
+	const options: ThemeOption[] = themes.map((t) => toThemeOption(t, titleById));
 
 	const decision = await assignToTheme({
 		proposalTitle: synthTitle,
@@ -237,12 +264,7 @@ export async function nestSynthUnderTopic(input: NestInput): Promise<NestResult>
 		const synthSnap = await db().collection(Collections.statements).doc(synthId).get();
 		if (!synthSnap.exists) return { nested: false, reason: 'synth-not-found' };
 
-		return createThemeForSynth(
-			synthId,
-			synthSnap.data() as Statement,
-			parent,
-			triggerSource,
-		);
+		return createThemeForSynth(synthId, synthSnap.data() as Statement, parent, triggerSource);
 	}
 
 	const theme = themes.find((t) => t.statementId === decision.themeId);
@@ -317,8 +339,9 @@ export async function assignOptionToTheme(input: {
 	const { option, parent, triggerSource } = input;
 
 	let themes: Statement[];
+	let titleById: Map<string, string>;
 	try {
-		themes = await liveThemes(parent.statementId);
+		({ themes, titleById } = await liveThemes(parent.statementId));
 	} catch (error) {
 		logger.warn('synthesis.nest: theme listing failed for option', {
 			optionId: option.statementId,
@@ -332,11 +355,7 @@ export async function assignOptionToTheme(input: {
 	const decision = await assignToTheme({
 		proposalTitle: option.statement ?? '',
 		proposalDescription: option.description,
-		themes: themes.map((t) => ({
-			id: t.statementId,
-			title: t.statement ?? '',
-			description: t.description,
-		})),
+		themes: themes.map((t) => toThemeOption(t, titleById)),
 		questionContext: parent.statement || parent.statementId,
 	});
 	if (!decision.themeId) return { themeId: null, reason: decision.reason };
