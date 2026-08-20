@@ -20,6 +20,8 @@ and `score100.mjs` for the implementation.
 | `en-seed42-passorder` | en | + synthesis outranks theming; failed spawns re-queued | **0.711** | 0.926 | 0.388 | 50/50 | 48 | 13 |
 | `en-seed42-llm-themes` | en | + LLM theme assignment; themes born from syntheses | **0.730** | 0.895 | 0.481 | 47/50\* | 45 | 18 |
 | `en-seed42-consolidated` | en | + theme consolidation; reJudge judged on members; Pass 3b | **0.910** | **1.000** | 0.775 | **50/50** | 50 | 11 |
+| `en-seed7-consolidated` | en | same build, seed 7 | **0.905** | **1.000** | 0.763 | **50/50** | 50 | 10 |
+| `en-seed1234-consolidated` | en | same build, seed 1234 | **0.884** | **1.000** | 0.711 | **50/50** | 50 | 17 |
 
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
@@ -43,10 +45,7 @@ The headline arc, all at shipped thresholds: **0.067 → 0.207 → 0.711 → 0.7
 
 Three caveats worth keeping attached to that number:
 
-- **Single seed.** Every run above uses seed 42. Arrival order decides which theme
-  gets created first and what a newcomer's neighbourhood looks like, and Finding 4
-  showed cluster-birth timing predicting the outcome in 48 of 50 pairs. Until the
-  seed sweep lands, 0.910 is seed 42's accuracy.
+- ~~**Single seed.**~~ **Resolved — the sweep landed.** See below.
 - ~~**The reJudge merge gate is unproven.**~~ **Resolved by the seed-7 run.** On
   seed 42 it reported zero refusals only because the pipeline produced no
   duplicate synths for it to consider — nothing to refuse is not the same as
@@ -61,6 +60,34 @@ Three caveats worth keeping attached to that number:
 - **`attach.titleOnlyRejected` fired once in five rounds**, on a genuinely marginal
   case (title 0.852, members 0.836, gate 0.85). Correctly calibrated, but doing
   almost nothing; do not credit it with the precision recovery.
+
+## Finding 9 — the seed sweep: the synthesis layer generalises, the theme layer varies
+
+Arrival order decides which theme is created first and what a newcomer's
+neighbourhood looks like, so a single seed can flatter a change. All three seeds,
+same build (`c9ee88713`), shipped defaults, no overrides:
+
+| seed | accuracy | synth F1 | pairs (clean) | false merges | topic F1 | cluster | themes (true 10) | coverage |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 42 | **0.910** | 1.000 | 50/50 | 0 | 0.775 | 0.840 | 11 | 100/100 |
+| 7 | **0.905** | 1.000 | 50/50 | 0 | 0.763 | 0.760 | **10** | 100/100 |
+| 1234 | **0.884** | 1.000 | 50/50 | 0 | 0.711 | 0.760 | 17 | 100/100 |
+
+**The synthesis layer is order-independent and exact.** Across three arrival
+orders: 150/150 ground-truth pairs merged, every one cleanly, **zero false merges
+in 450 statements**, coverage 100/100 every time. P = R = F1 = ARI = 1.000 on all
+three seeds. That is not a tuned result; it is the corpus's ground truth
+reproduced.
+
+**The theme layer is order-sensitive and is where the remaining variance lives.**
+Topic F1 ranges 0.711–0.775 and the heading count 10–17. The mechanism is visible
+in the audit: seed 42 consolidated 9 donor themes away, seed 1234 only 4. Themes
+are created in arrival order, so an unlucky order creates more of them, and
+consolidation is bounded (`MAX_MERGES_PER_SWEEP = 8`) and only runs when the
+reJudge sweep does. Seed 1234 finished with 17 headings for 10 topics — every
+grouping correct, spread across too many names.
+
+Headline spread 0.884–0.910, mean ≈ 0.900. Quote the range, not the best number.
 
 ## Finding 1 — the topic-cluster band is a black hole (shipped defaults, English)
 
