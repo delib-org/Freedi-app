@@ -86,6 +86,11 @@ jest.mock('../pipeline/clusterOps', () => {
 });
 
 const nestMock = jest.fn();
+const semanticJudgeMock = jest.fn();
+jest.mock('../../services/semantic-equivalence-service', () => ({
+	judgeSemanticEquivalence: (...args: unknown[]) => semanticJudgeMock(...args),
+}));
+
 const assignOptionThemeMock = jest.fn();
 jest.mock('../pipeline/nestSynthesis', () => ({
 	nestSynthUnderTopic: nestMock,
@@ -159,6 +164,9 @@ beforeEach(() => {
 	rehomeMock.mockResolvedValue(undefined);
 	nestMock.mockResolvedValue({ nested: false, reason: 'no-candidate-themes' });
 	assignOptionThemeMock.mockResolvedValue({ themeId: null, reason: 'no-themes-yet' });
+	semanticJudgeMock.mockImplementation(async (pairs: Array<{ pairId: string }>) =>
+		pairs.map((p) => ({ pairId: p.pairId, verdict: 'same' })),
+	);
 	// `jest.clearAllMocks()` clears recorded calls but NOT implementations set with
 	// `mockResolvedValue`, so without explicit defaults a test inherits whatever the
 	// previous one configured. That is not hypothetical: it made the pass-ordering
@@ -480,6 +488,38 @@ describe('runSinglePipeline', () => {
 		expect(result.action).toBe('attached');
 		expect(result.clusterId).toBe('synth-7');
 		expect(attachMock).toHaveBeenCalled();
+	});
+
+	it('a synth attach needs the semantic judge to say SAME — geometry alone cannot attach', async () => {
+		// 4 of 6 false merges on he-seed42-large-formulation were night-bus
+		// statements attaching to a peak-frequency synth at cosine 0.899-0.944:
+		// in compressed space, distinct ideas clear every geometric gate. Attach
+		// was the last placement acting on geometry alone.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'synth-bus',
+					statement: 'Run buses more frequently at peak hours',
+					integratedOptions: ['m1', 'm2'],
+					derivedByPipeline: 'synthesis',
+					isCluster: true,
+				} as unknown as Statement,
+				similarity: 0.94,
+			},
+		]);
+		semanticJudgeMock.mockResolvedValue([{ pairId: 'x', verdict: 'related' }]);
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+
+		expect(attachMock).not.toHaveBeenCalled();
+		expect(result.action).not.toBe('attached');
 	});
 
 	it('a refused pairing is not terminal — the next in-band candidate gets a turn', async () => {

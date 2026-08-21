@@ -33,6 +33,12 @@ jest.mock('../../../services/vector-search-service', () => ({
 
 const mockGenerateSynthesizedProposal = jest.fn();
 const mockGenerateTopicLabel = jest.fn();
+jest.mock('../../../services/semantic-equivalence-service', () => ({
+	judgeSemanticEquivalence: jest.fn(async (pairs: Array<{ pairId: string }>) =>
+		pairs.map((p) => ({ pairId: p.pairId, verdict: 'same' })),
+	),
+}));
+
 jest.mock('../../../services/integration-ai-service', () => ({
 	generateSynthesizedProposal: (...args: unknown[]) => mockGenerateSynthesizedProposal(...args),
 	generateTopicLabel: (...args: unknown[]) => mockGenerateTopicLabel(...args),

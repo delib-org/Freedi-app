@@ -2,6 +2,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, StatementType, type Statement } from '@freedi/shared-types';
 import { vectorSearchService } from '../../services/vector-search-service';
+import { judgeSemanticEquivalence } from '../../services/semantic-equivalence-service';
 import { findClustersContainingMember } from '../liveSynth/clusterRecompute';
 import { noteStatementProcessed, runConsolidation } from '../consolidation/consolidateClaims';
 import { loadSynthesisSettingsFromStatement } from './loadSynthesisSettings';
@@ -584,6 +585,35 @@ async function executePipeline(
 				centroidCosine: Number(cohesion.centroidCosine.toFixed(3)),
 				fractionAboveFloor: Number(cohesion.fractionAboveFloor.toFixed(2)),
 				memberCount: cohesion.memberCount,
+			});
+			continue;
+		}
+
+		// Cosine proposes; the judge disposes — HERE TOO. This was the last
+		// placement that acted on geometry alone, and on Hebrew 3-large it is
+		// where 4 of 6 false merges entered: night-bus statements attached to a
+		// peak-frequency synth at cosine 0.899–0.944, ABOVE every gate, because
+		// in that space distinct transport ideas are geometrically
+		// indistinguishable from paraphrases (twins span 0.73–0.97; no
+		// threshold separates). The semantic judge is the reJudge gate's
+		// primitive — verdict-cached, so a re-run is free — and only 'same'
+		// attaches. Fail-CLOSED on any other verdict or error: an unmerged
+		// duplicate self-heals (the option spawns its own synth and the reJudge
+		// sweep merges true duplicates, measured clean), while a wrong attach
+		// puts a member in the wrong merged proposal for every reader.
+		const attachVerdict = await judgeSemanticEquivalence([
+			{
+				pairId: `${option.statementId}|${synthMatch.cluster.statementId}`,
+				textA: option.statement ?? '',
+				textB: synthMatch.cluster.statement ?? '',
+			},
+		]).catch(() => []);
+		if (attachVerdict[0]?.verdict !== 'same') {
+			logger.info('synthesis.pipeline.attach.judgeRefused', {
+				optionId: option.statementId,
+				clusterId: synthMatch.cluster.statementId,
+				bestSimilarity: Number(synthMatch.bestSimilarity.toFixed(3)),
+				verdict: attachVerdict[0]?.verdict ?? 'judge-error',
 			});
 			continue;
 		}
