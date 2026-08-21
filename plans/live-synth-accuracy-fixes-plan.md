@@ -85,11 +85,17 @@ Nothing deployed. Full results and findings in
    and the run showed why: the cosine BANDS are calibrated to 3-small
    geometry, and Hebrew 3-large cross-topic cosines run straight through the
    topic band, rebuilding a 45-member black-hole theme via the judge-free
-   cosine attach path (25 of its 45 members entered there). Before pinning
-   real questions: (a) route cosine topic-attaches through the filing judge —
-   also Finding 16's next target — and/or (b) re-measure bands for 3-large
-   Hebrew (re-run synthAttachGate / centroidGate on 3-large embeddings). The
-   original decision table, for the record:
+   cosine attach path (25 of its 45 members entered there). Both remediations were
+   then built and measured — and the arc continued (Finding 18): judged topic
+   attach + per-model bands (0.878), spawn retry + window 15 (0.856),
+   formulation≠intervention in the spawn judge (0.777 — correct offline, masked
+   live), and finally the semantic-judge gate on Pass 1 synth attach:
+   **Hebrew 0.932, the highest certified run in the study either language**,
+   synth precision 1.000, zero false merges, 10 themes for a true 10. The law
+   that got it there: geometry proposes, judgement disposes, no exceptions.
+   Composite carries one run's filing luck (HE spread 0.78–0.93); pending: the
+   `en-seed42-alljudged` English regression run for the shared pipeline
+   changes. The original decision table, for the record:
 
    | rollout | what it needs | trade |
    | --- | --- | --- |
