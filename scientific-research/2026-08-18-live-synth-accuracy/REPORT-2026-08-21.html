@@ -1,0 +1,336 @@
+<meta charset="utf-8">
+<title>Live Synthesis Accuracy Report</title>
+<style>
+  @page { size: A4; margin: 22mm 20mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #1a1a1a; background: #fff;
+    max-width: 172mm; margin: 0 auto;
+    font-size: 10.5pt; line-height: 1.55;
+  }
+  h1 { font-size: 19pt; line-height: 1.25; margin: 0 0 4pt; }
+  .subtitle { font-size: 11.5pt; color: #444; margin-bottom: 2pt; }
+  .meta { font-size: 9pt; color: #666; margin-bottom: 18pt; border-bottom: 1px solid #999; padding-bottom: 10pt;}
+  h2 { font-size: 13pt; margin: 20pt 0 6pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; }
+  h3 { font-size: 11pt; margin: 14pt 0 4pt; }
+  p { margin: 6pt 0; text-align: justify; }
+  .abstract { background: #f4f4f2; padding: 10pt 14pt; font-size: 9.8pt; margin: 12pt 0; }
+  .abstract b { font-variant: small-caps; }
+  table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 8pt 0; font-family: Helvetica, Arial, sans-serif; }
+  th, td { border: 1px solid #bbb; padding: 3pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #ececea; font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .hl { background: #e8f0e4; font-weight: 600; }
+  .bad { background: #f6e8e6; }
+  code { font-family: Menlo, monospace; font-size: 8.6pt; background: #f2f2f0; padding: 0 2pt; }
+  .principle { border-left: 3px solid #333; padding: 6pt 12pt; margin: 10pt 0; font-style: italic; background:#fafaf8; }
+  .caption { font-size: 8.6pt; color: #555; margin: 2pt 0 10pt; font-family: Helvetica, Arial, sans-serif; }
+  .footnote { font-size: 8.6pt; color: #555; }
+  ol.compact li, ul.compact li { margin: 3pt 0; }
+  .pagebreak { page-break-before: always; }
+  svg text { font-family: Helvetica, Arial, sans-serif; }
+  .twocol td:first-child { white-space: nowrap; }
+</style>
+
+<h1>Judged Placement in a Live Deliberation-Synthesis Pipeline</h1>
+<div class="subtitle">How Hebrew clustering accuracy rose from 0.066 to 0.932, what each fix was, and what it costs in latency and money</div>
+<div class="meta">
+  Freedi live-synthesis research series &nbsp;·&nbsp; 2026-08-21 &nbsp;·&nbsp;
+  Study root: <code>scientific-research/2026-08-18-live-synth-accuracy/</code> &nbsp;·&nbsp;
+  Prepared by Claude (Anthropic) for Tal Yaron &nbsp;·&nbsp; All runs certified against build fingerprints; nothing in this report is deployed.
+</div>
+
+<div class="abstract">
+<b>Abstract.</b> Freedi's live synthesis pipeline clusters community proposals in real time: near-duplicate
+statements are merged into a single synthesized proposal, and syntheses are filed under topic headings.
+A 100-statement benchmark with known ground truth (10 topics × 5 ideas × 2 paraphrases) scores the pipeline
+as 0.6·F1<sub>synth</sub> + 0.4·F1<sub>topic</sub>. This report covers the third phase of the study
+(2026-08-20 → 08-21): diagnosing why the theme layer stalled below its ceiling in English, building
+per-question embedding-model migration for Hebrew, and closing the gap Hebrew's harder vector geometry opened.
+The result is <b>English 0.902</b> (best certified band 0.884–0.910) and <b>Hebrew 0.932</b> — the highest
+score of any certified run in the study, with synthesis precision 1.000 and zero false merges. Every gain
+traces to one law applied repeatedly: <i>embedding distance may propose; only an LLM judge may decide.</i>
+The changes leave per-statement wall-clock time unchanged in English (33.8&nbsp;s → 33.8&nbsp;s under identical
+harness pacing) and add roughly one fast-tier LLM call per statement, an increase of ≈8–15% in per-statement
+LLM cost, concentrated in the cheap model tier. Migrating one Hebrew question is a single administrative call.
+</div>
+
+<h2>1&nbsp;&nbsp;Background</h2>
+<p>
+The pipeline under test is <code>runSinglePipeline</code>, fired for every created option
+(<code>liveSynthOnOptionCreate</code>). It decides, per statement: attach to an existing synthesis, spawn a new
+synthesis with a partner, file under a topic heading, queue for review, or wait. Earlier phases of this study
+took English from 0.067 (a single topic cluster swallowed all 100 statements) to a certified band of
+0.884–0.910 across three arrival-order seeds, with the synthesis layer exact (150/150 pairs, zero false
+merges). Hebrew, at that point, scored 0.066 at defaults and 0.369 with a hand-tuned configuration —
+the embedding model (<code>text-embedding-3-small</code>) simply cannot see Hebrew paraphrases
+(true twin is nearest neighbour: EN 100/100, HE 56/100).
+</p>
+<p>
+Two work orders drove this phase: (a) continue improving theming, and (b) execute the decided Hebrew rollout —
+per-question migration to <code>text-embedding-3-large</code> — and push Hebrew toward ≈0.9.
+</p>
+
+<h2>2&nbsp;&nbsp;Methods</h2>
+<h3>2.1&nbsp;&nbsp;The benchmark and its certification protocol</h3>
+<p>
+Each run feeds 100 statements (frozen corpus, seeded shuffle) one at a time into Firebase emulators running the
+compiled functions build, waits for the pipeline to settle per statement, and exports the resulting cluster
+structure plus a full audit trail. A run is <i>certified</i> only if: the scorer's self-test passes; the
+<code>functions/lib</code> build fingerprint (SHA over all compiled files) is byte-identical before and after;
+and no rebuild occurred during the run window (newest artifact mtime precedes run start). Uncertified runs are
+reported but never cited.
+</p>
+<h3>2.2&nbsp;&nbsp;Instruments built for this phase</h3>
+<table class="twocol">
+<tr><th>Instrument</th><th>What it measures</th></tr>
+<tr><td><code>dumpEmulatorEvidence.mjs</code></td><td>Rescues the full audit log (with before/after membership snapshots the exporter drops) and all statement documents from a live emulator.</td></tr>
+<tr><td><code>themeFiling.mjs</code></td><td>Reconstructs the exact theme set at every filing decision of a run (certified byte-for-byte against the live sweep fingerprint) and re-asks each decision under prompt variants. The instrument behind Findings 15–16.</td></tr>
+<tr><td><code>heBands.mjs</code></td><td>The three cosine distributions (twin / same-topic / cross-topic) of the Hebrew corpus under 3-large embeddings, with operating characteristics per candidate threshold.</td></tr>
+<tr><td><code>spawnJudgeAB.mjs</code></td><td>A/B bench for the synthesis judge itself: 50 true twins (must merge) + 10 hardest same-topic negatives (must refuse), per language, driven through the <i>compiled</i> function.</td></tr>
+</table>
+<h3>2.3&nbsp;&nbsp;Discipline</h3>
+<p>
+Three rules were enforced throughout, each purchased by an earlier mistake in this study. (1)&nbsp;<i>Never
+re-implement code under test</i> — every offline A/B drives the compiled artifact (Finding 8). (2)&nbsp;<i>Replay
+on the states the system actually meets</i>, not on tidy end states (Finding 13, which mispredicted a live
+regression from an end-state replay). (3)&nbsp;<i>Pre-register decision criteria</i> before results arrive —
+the filing-prompt selection rule and the spawn-judge fix criteria were both fixed in writing before the deciding
+measurements ran.
+</p>
+
+<h2>3&nbsp;&nbsp;What was fixed</h2>
+<p>Eight interventions shipped in this phase, each measured individually. Commits in parentheses.</p>
+<ol class="compact">
+<li><b>Filing diagnosis and fix</b> (<code>df336521c</code>, <code>d576f27f4</code>). Rebuilding a regressed run's
+exact mid-run states proved theme impurity enters at <i>filing</i> (the judge that picks a heading for each new
+proposal), not at the consolidation sweep previously blamed — live filing accuracy was 62%, with every misfile
+landing in a broad-titled "attractor" heading. The fix: the filing judge now sees each heading's actual
+<i>contents</i>, and its doubt-bias is flipped to "when unsure, answer NONE" (a needless new heading self-heals —
+the consolidation sweep merges duplicates, measured 12/13 clean — while a misfile is permanent). Only the
+combination works: contents alone made misfiling <i>worse</i> (28→37 per 174 replayed decisions); together, 28→17.
+Live confirmation: misfiles 12→5, English composite back in band at 0.902.</li>
+<li><b>Per-question embedding model</b> (<code>5a8d37692</code>). A question can pin
+<code>text-embedding-3-large</code> while the rest of the corpus stays on 3-small. Generation, the cache's
+compatibility guard, and vector search all resolve the model per question; mixed-model cosines (numbers with no
+meaning) are structurally impossible. Migration is one call: <code>reEmbedQuestion({questionId, embeddingModel})</code>.</li>
+<li><b>Per-model cosine bands</b> (<code>e3a240562</code>). The pipeline's thresholds are calibrated to a
+geometry, not to the pipeline. Measured on Hebrew 3-large: 4,421 of 4,500 cross-topic pairs cleared the old
+topic band, and 234 wrong pairs sat inside the old spawn band. A pinned question now gets bands measured for its
+space (attach 0.86 / spawn 0.80 / candidacy 0.75), written automatically at migration.</li>
+<li><b>Topic attach is judged</b> (<code>e3a240562</code>). The one placement path that attached by cosine alone
+(it built a 45-member cross-topic mega-theme in Hebrew, 25 of 45 members entering unjudged) is disabled whenever
+LLM theme assignment is on; the filing judge decides every placement.</li>
+<li><b>Spawn retry over a shortlist</b> (<code>bfff1c00b</code>). A merge-refusal is a verdict on one pair, not
+on the statement: the judge now sees up to 3 in-band partner candidates. In compressed Hebrew space the true twin
+ranked below a wrong neighbour, and the right pair was never previously offered.</li>
+<li><b>Wider neighbour window</b> (<code>bfff1c00b</code>). 10→15, because ~60 cluster-title vectors crowd a
+10-wide window when the whole space packs into 0.64–0.94 (a true twin ranked #10 behind four theme titles).</li>
+<li><b>Formulation ≠ intervention</b> (<code>97e3b57dc</code>). The synthesis judge refused Hebrew paraphrases
+over phrasing deltas ("pocket parks" vs "small green parks"; "per district" vs "per neighbourhood"). The prompt
+now distinguishes formulation differences (merge; keep the most concrete specifics) from intervention differences
+(refuse), with the observed false-merge pair (peak-hour buses vs night buses) as the negative example.
+Pre-registered A/B through the compiled function: English exactly unchanged (50/50 merges, 10/10 refusals);
+Hebrew wrong refusals 5→1, no new false merges; text-safety re-verified (scope inflation still 0/50).</li>
+<li><b>Synthesis attach is judged</b> (<code>f85df7f12</code>). The last geometry-only placement: attaching a
+statement to an existing synthesis now requires the semantic-equivalence judge's verdict <code>same</code>
+(verdict-cached; fail-closed). Motivated by four false merges that entered at cosine 0.899–0.944 — above every
+geometric gate.</li>
+</ol>
+
+<div class="principle">
+The unifying law: <b>geometry proposes, judgement disposes — with no exceptions.</b> In English 3-small space,
+geometry was nearly sufficient and the judge-free shortcuts were safe by luck of the geometry. Hebrew 3-large
+compresses the space until distinct ideas are geometrically indistinguishable from paraphrases (twins span
+0.73–0.97; cross-topic pairs reach 0.85). Every failure in this phase, in both languages, was a place where a
+cosine acted without judgement; every fix put a judge in front of one.
+</div>
+
+<h2 class="pagebreak">4&nbsp;&nbsp;Results</h2>
+<h3>4.1&nbsp;&nbsp;Score trajectories</h3>
+
+<svg viewBox="0 0 640 260" width="100%" style="max-width:640px">
+  <rect x="0" y="0" width="640" height="260" fill="#fbfbfa"/>
+  <!-- axes -->
+  <line x1="60" y1="20" x2="60" y2="220" stroke="#888"/>
+  <line x1="60" y1="220" x2="620" y2="220" stroke="#888"/>
+  <!-- y grid -->
+  <g font-size="10" fill="#666">
+    <line x1="58" y1="40" x2="620" y2="40" stroke="#e0e0dc"/><text x="30" y="44">1.0</text>
+    <line x1="58" y1="76" x2="620" y2="76" stroke="#e0e0dc"/><text x="30" y="80">0.8</text>
+    <line x1="58" y1="112" x2="620" y2="112" stroke="#e0e0dc"/><text x="30" y="116">0.6</text>
+    <line x1="58" y1="148" x2="620" y2="148" stroke="#e0e0dc"/><text x="30" y="152">0.4</text>
+    <line x1="58" y1="184" x2="620" y2="184" stroke="#e0e0dc"/><text x="30" y="188">0.2</text>
+    <text x="30" y="224">0.0</text>
+  </g>
+  <!-- EN band 0.884-0.910 -->
+  <rect x="60" y="56.2" width="560" height="4.7" fill="#c9d8ef" opacity="0.8"/>
+  <text x="66" y="70" font-size="9" fill="#5b7db1">English certified band</text>
+  <!-- Hebrew arc points: x positions across 7 milestones -->
+  <!-- y = 220 - score*180 -->
+  <g stroke="#a33f2e" stroke-width="2" fill="none">
+    <polyline points="90,208.1 170,153.6 250,102.8 330,62.0 410,65.9 490,80.1 570,52.2"/>
+  </g>
+  <g fill="#a33f2e">
+    <circle cx="90" cy="208.1" r="3.5"/><circle cx="170" cy="153.6" r="3.5"/><circle cx="250" cy="102.8" r="3.5"/>
+    <circle cx="330" cy="62.0" r="3.5"/><circle cx="410" cy="65.9" r="3.5"/><circle cx="490" cy="80.1" r="3.5"/>
+    <circle cx="570" cy="52.2" r="4.5"/>
+  </g>
+  <g font-size="9.5" fill="#a33f2e">
+    <text x="78" y="200">0.066</text><text x="158" y="146">0.369</text><text x="238" y="96">0.651</text>
+    <text x="318" y="55">0.878</text><text x="398" y="82">0.856</text><text x="478" y="96">0.777</text>
+    <text x="548" y="44" font-weight="bold">0.932</text>
+  </g>
+  <!-- x labels -->
+  <g font-size="8.5" fill="#555">
+    <text x="66" y="236">defaults</text>
+    <text x="140" y="236">old tuned</text>
+    <text x="222" y="236">pin only</text>
+    <text x="296" y="236">judged filing</text>
+    <text x="386" y="236">+retry</text>
+    <text x="462" y="236">+formulation</text>
+    <text x="540" y="236">all judged</text>
+  </g>
+  <text x="64" y="34" font-size="11" fill="#a33f2e" font-weight="bold">Hebrew composite, certified runs (seed 42)</text>
+</svg>
+<div class="caption">Figure 1 — the Hebrew arc. Shaded band: the certified English range (0.884–0.910). The two dips
+are runs whose per-mechanism changes were correct (verified offline) but whose composite was dominated by the
+then-unjudged attach path and theme-filing variance; see §4.3.</div>
+
+<h3>4.2&nbsp;&nbsp;Certified runs of this phase</h3>
+<table>
+<tr><th>Run</th><th>Lang</th><th>Lever (cumulative)</th><th class="num">Accuracy</th><th class="num">F1 synth</th><th class="num">False merges</th><th class="num">F1 topic</th><th class="num">Themes (true 10)</th></tr>
+<tr><td><code>en-seed42-memberjudge</code></td><td>en</td><td>consolidation-on-contents (reverted)</td><td class="num bad">0.865</td><td class="num">0.990</td><td class="num">0</td><td class="num">0.678</td><td class="num">10</td></tr>
+<tr><td><code>en-seed42-filingfix</code></td><td>en</td><td>judged filing (contents + NONE-bias)</td><td class="num hl">0.902</td><td class="num">0.990</td><td class="num">0</td><td class="num">0.770</td><td class="num">14</td></tr>
+<tr><td><code>he-seed42-large-perq</code></td><td>he</td><td>3-large pin only</td><td class="num bad">0.651</td><td class="num">0.880</td><td class="num">6</td><td class="num">0.307</td><td class="num">9</td></tr>
+<tr><td><code>he-seed42-large-judged</code></td><td>he</td><td>+ judged topic attach, per-model bands</td><td class="num">0.878</td><td class="num">0.887</td><td class="num">4</td><td class="num">0.865</td><td class="num">11</td></tr>
+<tr><td><code>he-seed42-large-recall</code></td><td>he</td><td>+ spawn retry ×3, window 15</td><td class="num">0.856</td><td class="num">0.882</td><td class="num">2</td><td class="num">0.816</td><td class="num">12</td></tr>
+<tr><td><code>he-seed42-large-formulation</code></td><td>he</td><td>+ formulation ≠ intervention</td><td class="num">0.777</td><td class="num">0.857</td><td class="num">6</td><td class="num">0.658</td><td class="num">11</td></tr>
+<tr><td><code>he-seed42-large-judgedattach</code></td><td>he</td><td>+ judged synth attach</td><td class="num hl"><b>0.932</b></td><td class="num"><b>0.947</b></td><td class="num"><b>0</b></td><td class="num"><b>0.910</b></td><td class="num"><b>10</b></td></tr>
+<tr><td><code>en-seed42-alljudged</code></td><td>en</td><td>regression: full all-judged build</td><td class="num">0.878</td><td class="num">0.990</td><td class="num">0</td><td class="num">0.710</td><td class="num">14</td></tr>
+</table>
+<div class="caption">Table 1 — certified runs, 2026-08-20 → 08-21. Full per-run diagnostics in
+<code>RESULTS.md</code> (Findings 15–19) and each run folder.</div>
+
+<h3>4.3&nbsp;&nbsp;Reading the dips honestly</h3>
+<p>
+Runs 3 and 4 of the Hebrew arc scored <i>below</i> run 2 despite each shipping a correct, offline-verified
+improvement. The mechanism-level signals moved as predicted (spawn precision 0.915→0.953→...; wrong refusals
+5→1 offline), but the composite is 40% theme-filing, whose run-to-run variance (±0.05, driven by which heading
+titles the LLM happens to generate early) swamps a two-pair synthesis improvement. Meanwhile the then-unjudged
+attach path injected new false merges at cosine 0.899–0.944. Once that last path was judged, everything the
+earlier fixes had bought became visible at once: 0.932, synthesis precision 1.000. One attribution correction
+from the post-run audit: the winning run never actually exercised the new attach gate live (judged spawns formed
+the correct syntheses early, so no wrong attach was ever proposed) — the zero false merges belong to the
+ensemble; the gate stands as unit-tested insurance.
+</p>
+
+<h3>4.4&nbsp;&nbsp;The English regression check</h3>
+<p>
+The all-judged build was re-run on English (no pin, 3-small, same seed): the synthesis layer is byte-identical to
+the certified best — F1 0.990, precision 1.000, zero false merges, 100/100 coverage — and the composite (0.878)
+differs from 0.902 only through topic filing drawing 0.710 from its known envelope (0.678–0.775 across certified
+runs; an untouched build drew 0.711 on seed 1234). The added judging cost English nothing in accuracy, and
+§5 shows it cost nothing measurable in time.
+</p>
+
+<h2 class="pagebreak">5&nbsp;&nbsp;Effect on speed</h2>
+<p>
+All pipeline work is asynchronous background processing triggered on statement creation — no user-facing request
+waits on it. The relevant quantity is time-to-settle per statement: how long until a new statement is fully
+merged, filed, and all downstream recomputation is quiet. The benchmark harness measures exactly this (its
+per-statement wait has a fixed floor of ≈28&nbsp;s from settle-detection windows; active pipeline time is the
+excess above the floor).
+</p>
+<table>
+<tr><th>Run</th><th>Build</th><th class="num">Mean / statement</th><th class="num">Median</th><th class="num">≈ Active pipeline time</th><th class="num">Hit 45 s cap</th></tr>
+<tr><td><code>en-seed42-filingfix</code></td><td>pre-judging changes</td><td class="num">33.8 s</td><td class="num">33.3 s</td><td class="num">≈ 6 s</td><td class="num">3/100</td></tr>
+<tr><td><code>en-seed42-alljudged</code></td><td>all-judged</td><td class="num">33.8 s</td><td class="num">33.3 s</td><td class="num">≈ 6 s</td><td class="num">2/100</td></tr>
+<tr><td><code>he-seed42-large-judged</code></td><td>judged filing/topics</td><td class="num">35.4 s</td><td class="num">32.6 s</td><td class="num">≈ 7 s</td><td class="num">11/100</td></tr>
+<tr><td><code>he-seed42-large-judgedattach</code></td><td>all-judged</td><td class="num">36.2 s</td><td class="num">35.3 s</td><td class="num">≈ 8 s</td><td class="num">19/100</td></tr>
+</table>
+<div class="caption">Table 2 — per-statement wall time under identical harness pacing. English is unchanged to the
+first decimal. Hebrew runs ≈2 s/statement slower than English, reflecting more LLM consultations per statement in
+the compressed geometry (more spawn attempts, more judge calls), and more statements still working at the harness's
+45 s certification cap — a benchmark-pacing artifact, not a production concern, since production has no per-statement
+deadline.</div>
+<p>
+Two design choices bound the added latency. The spawn retry only spends extra time <i>after a refusal</i>, which in
+well-separated (English) geometry is precisely when there is nothing to find. The attach judge and the cross-synth
+re-judge share a verdict cache keyed on text, so repeated encounters of the same pair are free.
+</p>
+
+<h2>6&nbsp;&nbsp;Effect on cost</h2>
+<h3>6.1&nbsp;&nbsp;Call inventory per 100 statements (measured, final builds)</h3>
+<table>
+<tr><th>Call type</th><th>Tier</th><th class="num">EN (alljudged)</th><th class="num">HE (judgedattach)</th><th>Introduced / changed by</th></tr>
+<tr><td>Embedding (statement)</td><td>embedding</td><td class="num">≈100</td><td class="num">≈100</td><td>unchanged (model per pin)</td></tr>
+<tr><td>Synthesis spawn attempts</td><td>heavy</td><td class="num">≈49–55</td><td class="num">≈45–90</td><td>retry adds attempts only on refusal (cap 3)</td></tr>
+<tr><td>Theme filing decisions</td><td>fast</td><td class="num">≈99</td><td class="num">≈97</td><td>existed; prompts now carry heading contents (+≈0.5–1k tokens/call)</td></tr>
+<tr><td>Topic label generation</td><td>fast</td><td class="num">28</td><td class="num">17</td><td>unchanged</td></tr>
+<tr><td>Consolidation sweep</td><td>fast</td><td class="num">≈3–6</td><td class="num">≈3–6</td><td>judge-once fingerprint <i>removed</i> ~144 calls/day per settled question</td></tr>
+<tr><td>Attach semantic verdicts</td><td>fast, cached</td><td class="num">0–10</td><td class="num">0–10</td><td>new gate; fires only when geometry proposes an attach</td></tr>
+</table>
+<div class="caption">Table 3 — LLM call inventory. Counts derived from certified run audit trails
+(placements, spawns, review queue) plus mechanism bounds; heavy-tier ranges reflect unlogged refused attempts,
+bounded by the retry cap.</div>
+
+<h3>6.2&nbsp;&nbsp;What the changes add, and what they remove</h3>
+<ul class="compact">
+<li><b>Net LLM cost: ≈ +8–15% per statement, all in the fast tier.</b> The additions are: contents in filing
+prompts (larger fast-tier prompts), ~8–12 filing calls replacing what used to be free cosine attaches, occasional
+retry spawns, and the cached attach verdicts. The heavy tier — which dominates spend because synthesis calls
+generate full multi-paragraph proposals — is essentially unchanged in English and rises only with contested
+pairings in Hebrew.</li>
+<li><b>One structural saving:</b> the consolidation sweep's judge-once fingerprint. Before it, every settled
+question re-asked the theme-merge judge every 10 minutes forever (≈144 calls/day/question doing nothing);
+now a theme set is judged once per actual change. On a deployment with many settled questions this saving alone
+plausibly exceeds everything the judging additions cost.</li>
+<li><b>Embedding-model migration is a rounding error.</b> <code>text-embedding-3-large</code> costs ≈6.5× 3-small
+per token ($0.13 vs $0.02 per 1M tokens); at &lt;100 tokens per statement, re-embedding even 100,000 statements
+costs on the order of one dollar. The +5 neighbour window adds ≈15 Firestore document reads per statement
+(≈$0.05 per 10,000 statements).</li>
+<li><b>Caching does real work:</b> the attach gate reuses the reJudge sweep's verdict cache (keyed on text
+pair), and the model resolver caches per-question pins for 5 minutes, so per-question model resolution costs
+approximately one document read per question per 5 minutes per instance.</li>
+</ul>
+
+<h2>7&nbsp;&nbsp;Threats to validity</h2>
+<ul class="compact">
+<li><b>One corpus, one shape.</b> A single civic question, exactly two paraphrases per idea, no off-topic or
+adversarial submissions. Every constant is calibrated against this geometry; the study's own README warns to
+re-measure before trusting the numbers in a different setting.</li>
+<li><b>Composite variance.</b> Theme filing contributes ±0.05 run-to-run in both languages (heading titles are
+generated, and early titles steer later filings). 0.932 carries one run's filing fortune; the defensible claim
+is "reliably ≈0.9". A three-seed Hebrew sweep, as was done for English, is the natural next certification.</li>
+<li><b>The winning run did not exercise the attach gate live</b> (no wrong attach was proposed). Its refusal
+behaviour is pinned by unit tests, not yet by a live incident.</li>
+<li><b>Settle-cap censoring.</b> 2–19 statements per run hit the harness's 45 s wait cap while the pipeline was
+still working; late results are captured by the final settle pass but per-statement attribution near the cap is
+imprecise.</li>
+</ul>
+
+<h2>8&nbsp;&nbsp;Deployment guidance</h2>
+<ol class="compact">
+<li>Nothing in this report is deployed. Deploy order: <code>npm run deploy:f:test</code> first, then production,
+as a separate explicit decision.</li>
+<li>Migrating a named Hebrew question is one call —
+<code>reEmbedQuestion({questionId, embeddingModel: 'text-embedding-3-large'})</code> — which pins the model,
+writes the measured bands for that geometry, and re-embeds every option. Statements arriving mid-migration
+already use the new model; the compatibility guard makes the transition degrade rather than corrupt.</li>
+<li>Questions not migrated are byte-for-byte unaffected: the English regression run is the evidence.</li>
+<li>The first live migration should be watched via <code>vectorSearch.incompatibleModel</code> (drop counts
+during transition) and <code>attach.judgeRefused</code> (the insurance gate's first live exercises).</li>
+</ol>
+
+<h2>9&nbsp;&nbsp;Provenance</h2>
+<p class="footnote">
+Findings 15–19 with full diagnostics: <code>RESULTS.md</code>. Run artifacts (inputs, results, audit trails,
+scores): <code>runs/&lt;run-name&gt;/</code>. Analysis instruments: <code>analysis/</code>. Key commits:
+<code>df336521c</code>, <code>d576f27f4</code> (filing), <code>5a8d37692</code> (per-question model),
+<code>e3a240562</code> (judged topic attach + bands), <code>bfff1c00b</code> (retry + window),
+<code>97e3b57dc</code> (formulation clause), <code>f85df7f12</code> (judged synth attach),
+<code>1b2263865</code> (English regression + attribution correction). All builds certified by
+<code>functions/lib</code> fingerprint; all tests green at each commit (636+ tests, 52 suites).
+</p>
