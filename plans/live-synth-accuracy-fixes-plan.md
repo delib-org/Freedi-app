@@ -93,9 +93,12 @@ Nothing deployed. Full results and findings in
    **Hebrew 0.932, the highest certified run in the study either language**,
    synth precision 1.000, zero false merges, 10 themes for a true 10. The law
    that got it there: geometry proposes, judgement disposes, no exceptions.
-   Composite carries one run's filing luck (HE spread 0.78–0.93); pending: the
-   `en-seed42-alljudged` English regression run for the shared pipeline
-   changes. The original decision table, for the record:
+   Composite carries one run's filing luck (HE spread 0.78–0.93). The
+   `en-seed42-alljudged` English regression run LANDED (Finding 19): synth
+   layer identical to the certified best (F1 0.990, P=1.000, 0 false merges),
+   composite 0.878 on topic-filing dice alone. The all-judged build is
+   consistent in both languages; theme-filing variance is the dominant
+   residual everywhere. The original decision table, for the record:
 
    | rollout | what it needs | trade |
    | --- | --- | --- |
