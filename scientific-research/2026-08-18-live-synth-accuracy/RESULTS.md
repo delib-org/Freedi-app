@@ -30,6 +30,7 @@ and `score100.mjs` for the implementation.
 | `he-seed42-large-recall` | he | + spawn retries 3 in-band candidates; NEIGHBOR_LIMIT 15 | **0.856** | 0.882 | 0.816 | 41/50 | 41 | 12 |
 | `he-seed42-large-formulation` | he | + spawn judge: formulation ≠ intervention | **0.777** | 0.857 | 0.658 | 42/50 | 41 | 11 |
 | `he-seed42-large-judgedattach` | he | + Pass 1 attach requires the semantic judge's 'same' | **0.932** | **0.947** | **0.910** | 45/50 | 45 | **10** |
+| `en-seed42-alljudged` | en | regression run: same all-judged build, no pin | **0.878** | 0.990 | 0.710 | 49/50 | 49 | 14 |
 
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
@@ -328,17 +329,43 @@ because an unmerged duplicate self-heals via the reJudge sweep while a wrong
 attach is permanent.
 
 **Honesty about variance:** HE runs 2–4 spanned 0.777–0.878 largely on theme
-filing luck. Run 5's synth-layer numbers are causally attributable (P=1.000 is
-the gate, not the dice), but 0.932 as a composite carries one run's filing
-fortune; quote "≈0.9, spread comparable to English's" until a seed sweep says
-otherwise. The three statements that hit the 45s settle cap each run remain a
-known harness limitation.
+filing luck, and 0.932 as a composite carries one run's filing fortune; quote
+"≈0.9, spread comparable to English's" until a seed sweep says otherwise. One
+attribution correction found in the post-run audit: **Pass 1 produced ZERO
+attaches in run 5** — the attach judge was never exercised live in this run
+(unit-tested only). The zero false merges are attributable to the ensemble:
+judged spawns formed the correct synths early, so no wrong attach was ever
+proposed; the attach gate stands as insurance for the runs where one is. The
+three statements that hit the 45s settle cap each run remain a known harness
+limitation.
 
 **Cost note:** the judged attach adds one verdict-cached fast-model call per
 attach candidate that passes the geometric gates — a handful per hundred
 statements — and the English regression run below is the check that judging
 what geometry used to decide does not tax the language where geometry was
 sufficient.
+
+## Finding 19 — the English regression run: synth layer identical, topic layer rolls its usual dice
+
+`en-seed42-alljudged` runs the full all-judged build (judged Pass 3, spawn
+retry ×3, window 15, formulation clause, judged Pass 1) on English at the
+global 3-small model — the check that judging what geometry used to decide does
+not tax the language where geometry was sufficient. Build certified.
+
+**The synth layer is byte-for-byte the certified best:** F1 0.990, 49/50 pairs
+clean, precision 1.000, zero false merges, coverage 100/100 — identical to
+`en-seed42-filingfix`. The attach judge refused nothing (zero `judgeRefused`
+events), the retry and window changes added no false merges, and the
+formulation clause changed no English verdict (as the offline A/B predicted:
+50/50 → 50/50).
+
+**The composite reads 0.878** — below the 0.884–0.910 band — and the entire
+delta is topic F1 drawing 0.710 from its known filing-variance envelope
+(0.678–0.775 across certified runs; seed 1234 drew 0.711 on the untouched
+build). Fourteen headings for a true ten, no new failure signature, no
+polluted mega-theme. The honest statement: the all-judged build leaves English
+where it was — an exact synthesis layer over a theme layer whose run-to-run
+spread is now the dominant residual, in both languages.
 
 ## Finding 16 — the filing fix survives its live run: permanent misfiles halve, composite back in band
 

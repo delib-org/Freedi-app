@@ -1,0 +1,6575 @@
+[
+ {
+  "eventId": "AfFulJVcd1UFIsGpASoV",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "oxgkbWJK0W9p",
+  "reason": "gray-band match (no auto-action) (cosine=0.739)",
+  "newState": {
+   "siblingId": "ziKfwAwEZ0ku",
+   "similarity": 0.7390058191929938
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787310911504
+ },
+ {
+  "eventId": "AWI1OsQLxk6aVw5gnkFW",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "vgMZHKdNv3Zv",
+  "reason": "gray-band match (no auto-action) (cosine=0.745)",
+  "newState": {
+   "siblingId": "oxgkbWJK0W9p",
+   "similarity": 0.7446969569682803
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787310913993
+ },
+ {
+  "eventId": "3QFDe4XriN87Y3muzWD6",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "tZp5UZQyoHmC",
+  "reason": "gray-band match (no auto-action) (cosine=0.768)",
+  "newState": {
+   "siblingId": "oxgkbWJK0W9p",
+   "similarity": 0.7677109957338053
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787310941982
+ },
+ {
+  "eventId": "YoYbGJ5OFi7tVoqOeB7N",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "oLhuuKardwec",
+  "reason": "gray-band match (no auto-action) (cosine=0.778)",
+  "newState": {
+   "siblingId": "oxgkbWJK0W9p",
+   "similarity": 0.7775384539240024
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787310970314
+ },
+ {
+  "eventId": "3eNLEgVVZn5Dwkd2mCw7",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "OPL9DLpjnYu5",
+  "reason": "gray-band match (no auto-action) (cosine=0.815)",
+  "newState": {
+   "siblingId": "vgMZHKdNv3Zv",
+   "similarity": 0.8154812842564844
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311001738
+ },
+ {
+  "eventId": "Drr2UshGkNlmfsPrRgN6",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "E4WZ876-2DaR",
+  "reason": "gray-band match (no auto-action) (cosine=0.730)",
+  "newState": {
+   "siblingId": "vgMZHKdNv3Zv",
+   "similarity": 0.7304145698187432
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311028317
+ },
+ {
+  "eventId": "NguVmHkbfeclpRf631pQ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "ypFkHm0VvgxL",
+  "reason": "gray-band match (no auto-action) (cosine=0.807)",
+  "newState": {
+   "siblingId": "OPL9DLpjnYu5",
+   "similarity": 0.8068076779549068
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311060047
+ },
+ {
+  "eventId": "fIYVTB8ee1rRgZUiy0EL",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "RJkrl3Xt8zJ9",
+  "optionId": "4gMOhn-tMSEK",
+  "reason": "spawn synth at cosine=0.926",
+  "prevState": {
+   "sourceOptionId": "4gMOhn-tMSEK",
+   "siblingId": "oxgkbWJK0W9p"
+  },
+  "newState": {
+   "clusterId": "RJkrl3Xt8zJ9",
+   "integratedOptions": [
+    "4gMOhn-tMSEK",
+    "oxgkbWJK0W9p"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311110569
+ },
+ {
+  "eventId": "VKCEZ1IyZTSrFOSQhbcR",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "nGWfTHp8MN2c",
+  "optionId": "RJkrl3Xt8zJ9",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "RJkrl3Xt8zJ9"
+  },
+  "newState": {
+   "clusterId": "nGWfTHp8MN2c",
+   "integratedOptions": [
+    "RJkrl3Xt8zJ9"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311113172
+ },
+ {
+  "eventId": "MOa9wAczuJV71hvAfWWg",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "xHoGQGneiIcV",
+  "reason": "gray-band match (no auto-action) (cosine=0.791)",
+  "newState": {
+   "siblingId": "ypFkHm0VvgxL",
+   "similarity": 0.7911935199605116
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311133864
+ },
+ {
+  "eventId": "S9rGxSO6y8Yjksl4DmrY",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "J-dEWR4teK5Z",
+  "reason": "gray-band match (no auto-action) (cosine=0.701)",
+  "newState": {
+   "siblingId": "xHoGQGneiIcV",
+   "similarity": 0.7010137683362616
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311165907
+ },
+ {
+  "eventId": "uj03mNNbp3t7DL1dZBhi",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "O5uaT1gRJ0jN",
+  "reason": "gray-band match (no auto-action) (cosine=0.817)",
+  "newState": {
+   "siblingId": "ypFkHm0VvgxL",
+   "similarity": 0.8170374006913752
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311196002
+ },
+ {
+  "eventId": "SYEX5rToPkYGa2aj0SCN",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "mfy4cqxPAeU0",
+  "reason": "gray-band match (no auto-action) (cosine=0.733)",
+  "newState": {
+   "siblingId": "vgMZHKdNv3Zv",
+   "similarity": 0.7325739601298095
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311224163
+ },
+ {
+  "eventId": "27qoDwPUtM9L5E5HdUlx",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "FQSBMwW9z4WW",
+  "reason": "gray-band match (no auto-action) (cosine=0.804)",
+  "newState": {
+   "siblingId": "4gMOhn-tMSEK",
+   "similarity": 0.8036653377088291
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311253051
+ },
+ {
+  "eventId": "CEOA3dthBCnTlcunSXkO",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "e-OZPVurMABv",
+  "reason": "gray-band match (no auto-action) (cosine=0.803)",
+  "newState": {
+   "siblingId": "nGWfTHp8MN2c",
+   "similarity": 0.8030620818474484
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311283442
+ },
+ {
+  "eventId": "A7vPGxGs2PFkH5SNiPyu",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "yXHIOaPFJgQU",
+  "reason": "gray-band match (no auto-action) (cosine=0.826)",
+  "newState": {
+   "siblingId": "ypFkHm0VvgxL",
+   "similarity": 0.8260262347124753
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311318367
+ },
+ {
+  "eventId": "k9Ml4Jw6ptPtiwAZTm48",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "ERAlrCTigMp0",
+  "reason": "gray-band match (no auto-action) (cosine=0.783)",
+  "newState": {
+   "siblingId": "vgMZHKdNv3Zv",
+   "similarity": 0.7830646320576541
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311346623
+ },
+ {
+  "eventId": "VFsJqh0443LhezF4hjii",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "hSswtNAI9sYU",
+  "reason": "gray-band match (no auto-action) (cosine=0.778)",
+  "newState": {
+   "siblingId": "OPL9DLpjnYu5",
+   "similarity": 0.7781522950266705
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311373479
+ },
+ {
+  "eventId": "gW4EeXcA15AecX1daPRG",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Sbl0drhJnJN3",
+  "reason": "gray-band match (no auto-action) (cosine=0.809)",
+  "newState": {
+   "siblingId": "e-OZPVurMABv",
+   "similarity": 0.8091083417836846
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311407971
+ },
+ {
+  "eventId": "RyIB3dwOorVPSW9plRWW",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "xoenmI80FD1p",
+  "optionId": "kAYF2Rf2XXIE",
+  "reason": "spawn synth at cosine=0.866",
+  "prevState": {
+   "sourceOptionId": "kAYF2Rf2XXIE",
+   "siblingId": "vgMZHKdNv3Zv"
+  },
+  "newState": {
+   "clusterId": "xoenmI80FD1p",
+   "integratedOptions": [
+    "kAYF2Rf2XXIE",
+    "vgMZHKdNv3Zv"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311453493
+ },
+ {
+  "eventId": "ArYIhQk1MymBDOd9mNjr",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "xoenmI80FD1p",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "xoenmI80FD1p"
+  },
+  "newState": {
+   "clusterId": "TlgDCLPmhaGJ",
+   "integratedOptions": [
+    "xoenmI80FD1p"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311456663
+ },
+ {
+  "eventId": "4vhgZGp2MBkzr6Zy2JRY",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "7zvqBwZ8gLjy",
+  "reason": "gray-band match (no auto-action) (cosine=0.798)",
+  "newState": {
+   "siblingId": "nGWfTHp8MN2c",
+   "similarity": 0.798103011171653
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311483464
+ },
+ {
+  "eventId": "EpaM4ikWURP5qp3Q9n8t",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "6PcwZPyUcNOX",
+  "reason": "gray-band match (no auto-action) (cosine=0.747)",
+  "newState": {
+   "siblingId": "TlgDCLPmhaGJ",
+   "similarity": 0.7468028868073002
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311515102
+ },
+ {
+  "eventId": "murvqcD0S75nZe7Yqb9G",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "cHt1oAChD1iD",
+  "reason": "gray-band match (no auto-action) (cosine=0.800)",
+  "newState": {
+   "siblingId": "e-OZPVurMABv",
+   "similarity": 0.799900976815734
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311541699
+ },
+ {
+  "eventId": "3SVngjopgOacNrsaQx6c",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "-ugJkJhKv51S",
+  "reason": "gray-band match (no auto-action) (cosine=0.754)",
+  "newState": {
+   "siblingId": "ziKfwAwEZ0ku",
+   "similarity": 0.7544925090263461
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311572037
+ },
+ {
+  "eventId": "gSprY90r1LJ5VUNRoOHz",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "zfm3D-IzNkdp",
+  "reason": "gray-band match (no auto-action) (cosine=0.820)",
+  "newState": {
+   "siblingId": "hSswtNAI9sYU",
+   "similarity": 0.8201784995115602
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311604368
+ },
+ {
+  "eventId": "zmmlylwvdcW9GxijsVS7",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ZAc04h-0Md8v",
+  "optionId": "VKW2ZudnwJdF",
+  "reason": "spawn synth at cosine=0.899",
+  "prevState": {
+   "sourceOptionId": "VKW2ZudnwJdF",
+   "siblingId": "ziKfwAwEZ0ku"
+  },
+  "newState": {
+   "clusterId": "ZAc04h-0Md8v",
+   "integratedOptions": [
+    "VKW2ZudnwJdF",
+    "ziKfwAwEZ0ku"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311638820
+ },
+ {
+  "eventId": "Gjd4emf17CRmUrjVjxfN",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "ZAc04h-0Md8v",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "ZAc04h-0Md8v"
+  },
+  "newState": {
+   "clusterId": "4dBA44as8I3P",
+   "integratedOptions": [
+    "ZAc04h-0Md8v"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311643132
+ },
+ {
+  "eventId": "jLW5BI1pNZJvl36jtlIz",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "mvz-2UcGVsLO",
+  "reason": "gray-band match (no auto-action) (cosine=0.805)",
+  "newState": {
+   "siblingId": "ypFkHm0VvgxL",
+   "similarity": 0.8049848742753788
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311677825
+ },
+ {
+  "eventId": "0JKqlTXcQMOaKzBOX0LX",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Zr215xdXZ6Zg",
+  "reason": "gray-band match (no auto-action) (cosine=0.814)",
+  "newState": {
+   "siblingId": "OPL9DLpjnYu5",
+   "similarity": 0.8138225022426528
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311709829
+ },
+ {
+  "eventId": "DGqpJDCUrT39narqwkTj",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "BRXt1J1huSVJ",
+  "reason": "gray-band match (no auto-action) (cosine=0.823)",
+  "newState": {
+   "siblingId": "yXHIOaPFJgQU",
+   "similarity": 0.8233739882019567
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311743724
+ },
+ {
+  "eventId": "uAk6ppJncbWznBszrD4i",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "i01wtcPKGzk-",
+  "optionId": "-Og940EgDY1I",
+  "reason": "spawn synth at cosine=0.921",
+  "prevState": {
+   "sourceOptionId": "-Og940EgDY1I",
+   "siblingId": "mfy4cqxPAeU0"
+  },
+  "newState": {
+   "clusterId": "i01wtcPKGzk-",
+   "integratedOptions": [
+    "-Og940EgDY1I",
+    "mfy4cqxPAeU0"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311778576
+ },
+ {
+  "eventId": "mVqbfJd5ZnmjT6cDhnBr",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "i01wtcPKGzk-",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "i01wtcPKGzk-"
+  },
+  "newState": {
+   "clusterId": "hr5jwUz6mktf",
+   "integratedOptions": [
+    "i01wtcPKGzk-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311783570
+ },
+ {
+  "eventId": "9Npi201MuG7AA2Vur5Vd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "WQC25nrpYBxx",
+  "optionId": "5Ahvj-98qchS",
+  "reason": "spawn synth at cosine=0.875",
+  "prevState": {
+   "sourceOptionId": "5Ahvj-98qchS",
+   "siblingId": "6PcwZPyUcNOX"
+  },
+  "newState": {
+   "clusterId": "WQC25nrpYBxx",
+   "integratedOptions": [
+    "5Ahvj-98qchS",
+    "6PcwZPyUcNOX"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311829007
+ },
+ {
+  "eventId": "aAhcGMBesQPXwLVmyljg",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "WQC25nrpYBxx",
+  "reason": "nest synthesis under theme (judge: הצעה לשיפור המידע והנגישות לנוסעי התחבורה הציבורית בעיר)",
+  "prevState": {
+   "integratedOptions": [
+    "xoenmI80FD1p"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311833320
+ },
+ {
+  "eventId": "DDIUAGvynA8q3Ogz9e1M",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "QYttugqqDp11",
+  "reason": "gray-band match (no auto-action) (cosine=0.790)",
+  "newState": {
+   "siblingId": "hr5jwUz6mktf",
+   "similarity": 0.7902940510111816
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311864788
+ },
+ {
+  "eventId": "VHVwaQKMFhiPmpapHTSA",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "KvNU4QHKfE3w",
+  "reason": "gray-band match (no auto-action) (cosine=0.844)",
+  "newState": {
+   "siblingId": "OPL9DLpjnYu5",
+   "similarity": 0.8435000485753233
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311900594
+ },
+ {
+  "eventId": "dySuaRs1dJMqKAHvxDT3",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "J9eH7jurCLMu",
+  "reason": "gray-band match (no auto-action) (cosine=0.776)",
+  "newState": {
+   "siblingId": "4gMOhn-tMSEK",
+   "similarity": 0.7760330343966215
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311931185
+ },
+ {
+  "eventId": "iCsYxQnrp3yNOTCFSKfq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "-lmNJpTt4AAC",
+  "optionId": "mCbvcsXwzmWA",
+  "reason": "spawn synth at cosine=0.951",
+  "prevState": {
+   "sourceOptionId": "mCbvcsXwzmWA",
+   "siblingId": "OPL9DLpjnYu5"
+  },
+  "newState": {
+   "clusterId": "-lmNJpTt4AAC",
+   "integratedOptions": [
+    "mCbvcsXwzmWA",
+    "OPL9DLpjnYu5"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311976245
+ },
+ {
+  "eventId": "8iCUP5cDR0WkgzYilrkU",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Hwx4ZGvCgAst",
+  "optionId": "-lmNJpTt4AAC",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "-lmNJpTt4AAC"
+  },
+  "newState": {
+   "clusterId": "Hwx4ZGvCgAst",
+   "integratedOptions": [
+    "-lmNJpTt4AAC"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787311981163
+ },
+ {
+  "eventId": "bnMsxiXEsb9zKonskr2S",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "0fmTmI6EWzLO",
+  "reason": "option filed under theme (judge: ניטור זיהום הוא יוזמה סביבתית לקידום עיר נקייה ומקיימת)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312008189
+ },
+ {
+  "eventId": "PhNX8PGUItsnYH9gbRlX",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "WxNPLclHbncZ",
+  "reason": "gray-band match (no auto-action) (cosine=0.816)",
+  "newState": {
+   "siblingId": "oxgkbWJK0W9p",
+   "similarity": 0.8160140745285992
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312037568
+ },
+ {
+  "eventId": "FQJr0232ZoW1Cd9vgkCZ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "XdkFn-nTlWqs",
+  "optionId": "nRWLbvw2Iba9",
+  "reason": "spawn synth at cosine=0.926",
+  "prevState": {
+   "sourceOptionId": "nRWLbvw2Iba9",
+   "siblingId": "7zvqBwZ8gLjy"
+  },
+  "newState": {
+   "clusterId": "XdkFn-nTlWqs",
+   "integratedOptions": [
+    "nRWLbvw2Iba9",
+    "7zvqBwZ8gLjy"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312077234
+ },
+ {
+  "eventId": "rJbiURi1tKWVRTlo8jZu",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "CCjPz8Yq2sXo",
+  "optionId": "XdkFn-nTlWqs",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "XdkFn-nTlWqs"
+  },
+  "newState": {
+   "clusterId": "CCjPz8Yq2sXo",
+   "integratedOptions": [
+    "XdkFn-nTlWqs"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312081564
+ },
+ {
+  "eventId": "xKkWBbfHy37FFoZoCS87",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "wqxFAIdxZsi-",
+  "reason": "option filed under theme (judge: איסוף חומרים למיחזור קשור ישירות לניהול פסולת ומיחזור עירוני.)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "wqxFAIdxZsi-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312113509
+ },
+ {
+  "eventId": "e1soi0u0VYcxvGEeS0zA",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "b5q18ROIMx9o",
+  "optionId": "QvrBUAfSZU3i",
+  "reason": "spawn synth at cosine=0.908",
+  "prevState": {
+   "sourceOptionId": "QvrBUAfSZU3i",
+   "siblingId": "ERAlrCTigMp0"
+  },
+  "newState": {
+   "clusterId": "b5q18ROIMx9o",
+   "integratedOptions": [
+    "QvrBUAfSZU3i",
+    "ERAlrCTigMp0"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312149772
+ },
+ {
+  "eventId": "Lo0W6oIm204fQ7MEnvg4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "gQMteJ9-fL73",
+  "optionId": "b5q18ROIMx9o",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "b5q18ROIMx9o"
+  },
+  "newState": {
+   "clusterId": "gQMteJ9-fL73",
+   "integratedOptions": [
+    "b5q18ROIMx9o"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312153834
+ },
+ {
+  "eventId": "3KY7NvjN9g7Hly7WQsOn",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "9teRKQr-H7Jt",
+  "reason": "option filed under theme (judge: ההצעה עוסקת בתחבורה ציבורית, כמו שתי ההצעות הקיימות בנושא.)",
+  "prevState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312190788
+ },
+ {
+  "eventId": "fUwSGFzEx6SqPpCTjfJL",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Hwx4ZGvCgAst",
+  "optionId": "h4jhpZq5HvIB",
+  "reason": "option filed under theme (judge: מצלמות באזורים מועדים לפשיעה משפרות את הבטיחות במרחבים ציבוריים.)",
+  "prevState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312220880
+ },
+ {
+  "eventId": "pArzaFUwvdKetPeElyMK",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "tx5cWCUY3Dif",
+  "optionId": "8cGHGgE6s5B0",
+  "reason": "spawn synth at cosine=0.905",
+  "prevState": {
+   "sourceOptionId": "8cGHGgE6s5B0",
+   "siblingId": "e-OZPVurMABv"
+  },
+  "newState": {
+   "clusterId": "tx5cWCUY3Dif",
+   "integratedOptions": [
+    "8cGHGgE6s5B0",
+    "e-OZPVurMABv"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312259602
+ },
+ {
+  "eventId": "NSmDaiIfYJVz77kMuweI",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Dz47V2oBC0Wv",
+  "optionId": "tx5cWCUY3Dif",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "tx5cWCUY3Dif"
+  },
+  "newState": {
+   "clusterId": "Dz47V2oBC0Wv",
+   "integratedOptions": [
+    "tx5cWCUY3Dif"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312264511
+ },
+ {
+  "eventId": "nlKE5RGL64JWZRz2qJdj",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "sj9xDu-sDFVp",
+  "reason": "gray-band match (no auto-action) (cosine=0.824)",
+  "newState": {
+   "siblingId": "RJkrl3Xt8zJ9",
+   "similarity": 0.8240110826094705
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312303325
+ },
+ {
+  "eventId": "ODwtQ3jyDoUWweWGRE8n",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "DvOPqmqDIXkW",
+  "reason": "gray-band match (no auto-action) (cosine=0.807)",
+  "newState": {
+   "siblingId": "9teRKQr-H7Jt",
+   "similarity": 0.8069033596476184
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312334525
+ },
+ {
+  "eventId": "i9cu4rrGX2sQ6Cu6oarK",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "Fs3Ws4uJamvs",
+  "reason": "option filed under theme (judge: איסור פלסטיק חד־פעמי הוא יוזמה להפחתת פסולת ולקידום קיימות עירונית.)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "wqxFAIdxZsi-"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "wqxFAIdxZsi-",
+    "Fs3Ws4uJamvs"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312371618
+ },
+ {
+  "eventId": "UvTs5iMpaE40eyZ0jlG2",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "vaUGxOO0OI-4",
+  "reason": "option filed under theme (judge: שיפור הנגישות והטיפול בשירותים עירוניים ובפניות תושבים באופן מקוון)",
+  "prevState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312402914
+ },
+ {
+  "eventId": "gIp7qOopHHRk5WGQAJIp",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "tqUGTJOPZ3vF",
+  "optionId": "tpGVy5VFr2t0",
+  "reason": "spawn synth at cosine=0.942",
+  "prevState": {
+   "sourceOptionId": "tpGVy5VFr2t0",
+   "siblingId": "DvOPqmqDIXkW"
+  },
+  "newState": {
+   "clusterId": "tqUGTJOPZ3vF",
+   "integratedOptions": [
+    "tpGVy5VFr2t0",
+    "DvOPqmqDIXkW"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312439986
+ },
+ {
+  "eventId": "lHxqmaqb2dVzLObLE0Rg",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "QaA9sW4XhofX",
+  "optionId": "tqUGTJOPZ3vF",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "tqUGTJOPZ3vF"
+  },
+  "newState": {
+   "clusterId": "QaA9sW4XhofX",
+   "integratedOptions": [
+    "tqUGTJOPZ3vF"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312444112
+ },
+ {
+  "eventId": "7iT414CH1f6TTeUbIDw0",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Hwx4ZGvCgAst",
+  "optionId": "veCqEd-YEidS",
+  "reason": "option filed under theme (judge: שיפור בטיחות הולכי הרגל במרחב הציבורי, בדומה לתאורה ולמצלמות.)",
+  "prevState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB",
+    "veCqEd-YEidS"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312480606
+ },
+ {
+  "eventId": "FP2zK4ZFUshwzeddu7L8",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "2VGhBRcz3iIB",
+  "optionId": "JiL25v2C6H9k",
+  "reason": "spawn synth at cosine=0.838",
+  "prevState": {
+   "sourceOptionId": "JiL25v2C6H9k",
+   "siblingId": "J9eH7jurCLMu"
+  },
+  "newState": {
+   "clusterId": "2VGhBRcz3iIB",
+   "integratedOptions": [
+    "JiL25v2C6H9k",
+    "J9eH7jurCLMu"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312516926
+ },
+ {
+  "eventId": "vHwId2O4MVPiyAKRR4kG",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "s9gRpJ65bxhs",
+  "optionId": "2VGhBRcz3iIB",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "2VGhBRcz3iIB"
+  },
+  "newState": {
+   "clusterId": "s9gRpJ65bxhs",
+   "integratedOptions": [
+    "2VGhBRcz3iIB"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312521222
+ },
+ {
+  "eventId": "TUJqaZLzllWA4aqoEXaB",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "CCjPz8Yq2sXo",
+  "reason": "themes consolidated into \"תרבות, ספריות ואירועים קהילתיים\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o"
+   ],
+   "absorbed": [
+    "gQMteJ9-fL73"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312557546
+ },
+ {
+  "eventId": "8zP9zSXLLF0LDASuNDcR",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "L1f75DbzFWoj",
+  "reason": "gray-band match (no auto-action) (cosine=0.845)",
+  "newState": {
+   "siblingId": "nGWfTHp8MN2c",
+   "similarity": 0.8448816296407139
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312561751
+ },
+ {
+  "eventId": "ifv266LiUBYxvjPFIkkE",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "PTuGD8vxcm4q",
+  "reason": "gray-band match (no auto-action) (cosine=0.826)",
+  "newState": {
+   "siblingId": "xHoGQGneiIcV",
+   "similarity": 0.8259494286012825
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312597474
+ },
+ {
+  "eventId": "Ra1mYGH6uhIyrQs2Hs0f",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "m6swdKdMK-Vt",
+  "optionId": "YVxxAzvSzEGp",
+  "reason": "spawn synth at cosine=0.874",
+  "prevState": {
+   "sourceOptionId": "YVxxAzvSzEGp",
+   "siblingId": "Sbl0drhJnJN3"
+  },
+  "newState": {
+   "clusterId": "m6swdKdMK-Vt",
+   "integratedOptions": [
+    "YVxxAzvSzEGp",
+    "Sbl0drhJnJN3"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312632218
+ },
+ {
+  "eventId": "mHgtI56rBH0fHnEnyMMY",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "m8OAJh6A7QLA",
+  "optionId": "m6swdKdMK-Vt",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "m6swdKdMK-Vt"
+  },
+  "newState": {
+   "clusterId": "m8OAJh6A7QLA",
+   "integratedOptions": [
+    "m6swdKdMK-Vt"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312636729
+ },
+ {
+  "eventId": "046454A0WPslQbslg83w",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "mroR6HZSsxxN",
+  "reason": "gray-band match (no auto-action) (cosine=0.770)",
+  "newState": {
+   "siblingId": "CCjPz8Yq2sXo",
+   "similarity": 0.7695063809736424
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312669450
+ },
+ {
+  "eventId": "jkHdLjldVyZA7QdYtNsw",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "uGCw6c4HZbEQ",
+  "reason": "gray-band match (no auto-action) (cosine=0.798)",
+  "newState": {
+   "siblingId": "QaA9sW4XhofX",
+   "similarity": 0.7977387653614306
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312700147
+ },
+ {
+  "eventId": "mJMcioaJu2saYdPnCXRM",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "rn-NBXFDUfjL",
+  "optionId": "d3FZg9zcSYvn",
+  "reason": "spawn synth at cosine=0.922",
+  "prevState": {
+   "sourceOptionId": "d3FZg9zcSYvn",
+   "siblingId": "BRXt1J1huSVJ"
+  },
+  "newState": {
+   "clusterId": "rn-NBXFDUfjL",
+   "integratedOptions": [
+    "d3FZg9zcSYvn",
+    "BRXt1J1huSVJ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312760512
+ },
+ {
+  "eventId": "nHnkOPmNr5dbCkJcUuxp",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "SK1i9YnM-QIg",
+  "optionId": "rn-NBXFDUfjL",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "rn-NBXFDUfjL"
+  },
+  "newState": {
+   "clusterId": "SK1i9YnM-QIg",
+   "integratedOptions": [
+    "rn-NBXFDUfjL"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312764858
+ },
+ {
+  "eventId": "5GbiqyyNZ6FwkxSHdTBh",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "rOoZVuU7KVxg",
+  "reason": "option filed under theme (judge: קידום התייעלות אנרגטית וקיימות סביבתית בעיר)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "wqxFAIdxZsi-",
+    "Fs3Ws4uJamvs"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "wqxFAIdxZsi-",
+    "Fs3Ws4uJamvs",
+    "rOoZVuU7KVxg"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312775872
+ },
+ {
+  "eventId": "0AmaAg05Ffbo2DXw2nkJ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "cmjfKL7JZ1EC",
+  "optionId": "3mGKrsb-cEWS",
+  "reason": "spawn synth at cosine=0.842",
+  "prevState": {
+   "sourceOptionId": "3mGKrsb-cEWS",
+   "siblingId": "E4WZ876-2DaR"
+  },
+  "newState": {
+   "clusterId": "cmjfKL7JZ1EC",
+   "integratedOptions": [
+    "3mGKrsb-cEWS",
+    "E4WZ876-2DaR"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312835708
+ },
+ {
+  "eventId": "mdEZJ7XhHtzWck82Tu5h",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "keTGOorimnmD",
+  "optionId": "cmjfKL7JZ1EC",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "cmjfKL7JZ1EC"
+  },
+  "newState": {
+   "clusterId": "keTGOorimnmD",
+   "integratedOptions": [
+    "cmjfKL7JZ1EC"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312840061
+ },
+ {
+  "eventId": "04ZpigLsKme5o3sDGCU0",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "niDkSFTxUqED",
+  "optionId": "2RVrB-wiYIEe",
+  "reason": "spawn synth at cosine=0.961",
+  "prevState": {
+   "sourceOptionId": "2RVrB-wiYIEe",
+   "siblingId": "oLhuuKardwec"
+  },
+  "newState": {
+   "clusterId": "niDkSFTxUqED",
+   "integratedOptions": [
+    "2RVrB-wiYIEe",
+    "oLhuuKardwec"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312856147
+ },
+ {
+  "eventId": "PdtD3cLvvTc1R93LYC7f",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "CCjPz8Yq2sXo",
+  "optionId": "niDkSFTxUqED",
+  "reason": "nest synthesis under theme (judge: הצעה להנגשת תרבות ומוזיאונים לתושבים, בהתאם לנושא התרבות והאירועים הקהילתיים)",
+  "prevState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o",
+    "niDkSFTxUqED"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312857932
+ },
+ {
+  "eventId": "caMxxMwpsrxraMuoUhyj",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "5GovT3RAlH6J",
+  "optionId": "waraEPgCRPO8",
+  "reason": "spawn synth at cosine=0.816",
+  "prevState": {
+   "sourceOptionId": "waraEPgCRPO8",
+   "siblingId": "xHoGQGneiIcV"
+  },
+  "newState": {
+   "clusterId": "5GovT3RAlH6J",
+   "integratedOptions": [
+    "waraEPgCRPO8",
+    "xHoGQGneiIcV"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312900300
+ },
+ {
+  "eventId": "SLGyKzH4IRIlrgzKGPBX",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "m8OAJh6A7QLA",
+  "optionId": "5GovT3RAlH6J",
+  "reason": "nest synthesis under theme (judge: הסבת מבנים לדירות מגדילה את היצע הדיור ותומכת בדיור בר־השגה)",
+  "prevState": {
+   "integratedOptions": [
+    "m6swdKdMK-Vt"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "m6swdKdMK-Vt",
+    "5GovT3RAlH6J"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312903307
+ },
+ {
+  "eventId": "TT3Fkk7QCNqKhBRFqaAQ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "s3M7SxFAE0DA",
+  "reason": "gray-band match (no auto-action) (cosine=0.766)",
+  "newState": {
+   "siblingId": "-ugJkJhKv51S",
+   "similarity": 0.7662258981311261
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312938189
+ },
+ {
+  "eventId": "Pvpig1HS3AR4bgmFoZUW",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "zD5n0Z8LjeOR",
+  "optionId": "IvX6Ys0wEjgn",
+  "reason": "spawn synth at cosine=0.872",
+  "prevState": {
+   "sourceOptionId": "IvX6Ys0wEjgn",
+   "siblingId": "mvz-2UcGVsLO"
+  },
+  "newState": {
+   "clusterId": "zD5n0Z8LjeOR",
+   "integratedOptions": [
+    "IvX6Ys0wEjgn",
+    "mvz-2UcGVsLO"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312973405
+ },
+ {
+  "eventId": "20vZd8tQwG1vwTeQpMrt",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Hwx4ZGvCgAst",
+  "optionId": "zD5n0Z8LjeOR",
+  "reason": "nest synthesis under theme (judge: הצעה זו עוסקת בחיזוק הביטחון האישי והנוכחות המשטרתית במרחבים ציבוריים.)",
+  "prevState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB",
+    "veCqEd-YEidS"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB",
+    "veCqEd-YEidS",
+    "zD5n0Z8LjeOR"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787312975876
+ },
+ {
+  "eventId": "4UjRwFc0tmdRUG3AKz1B",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "TLguY47vNTWj",
+  "reason": "option filed under theme (judge: שיפור תשתיות התחבורה העירונית והבטיחות בדרכים עבור כלל המשתמשים)",
+  "prevState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt",
+    "TLguY47vNTWj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313012811
+ },
+ {
+  "eventId": "YZBgZJMND7VoPdgyL0nf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "GnG1C6NqMnVT",
+  "optionId": "NAq9Wv8oDit0",
+  "reason": "spawn synth at cosine=0.935",
+  "prevState": {
+   "sourceOptionId": "NAq9Wv8oDit0",
+   "siblingId": "O5uaT1gRJ0jN"
+  },
+  "newState": {
+   "clusterId": "GnG1C6NqMnVT",
+   "integratedOptions": [
+    "NAq9Wv8oDit0",
+    "O5uaT1gRJ0jN"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313048713
+ },
+ {
+  "eventId": "vA3P66GyFGG1cP3YUnwh",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "CCjPz8Yq2sXo",
+  "optionId": "GnG1C6NqMnVT",
+  "reason": "nest synthesis under theme (judge: אמנות במרחב הציבורי היא יוזמת תרבות וקהילה, בדומה לפסטיבלים ומופעים.)",
+  "prevState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o",
+    "niDkSFTxUqED"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o",
+    "niDkSFTxUqED",
+    "GnG1C6NqMnVT"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313051222
+ },
+ {
+  "eventId": "Zcq1pss25dnzosMWPT9D",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "U8-ZozUn2jrp",
+  "optionId": "1fcvrSrEOk-2",
+  "reason": "spawn synth at cosine=0.875",
+  "prevState": {
+   "sourceOptionId": "1fcvrSrEOk-2",
+   "siblingId": "hSswtNAI9sYU"
+  },
+  "newState": {
+   "clusterId": "U8-ZozUn2jrp",
+   "integratedOptions": [
+    "1fcvrSrEOk-2",
+    "hSswtNAI9sYU"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313091910
+ },
+ {
+  "eventId": "2sxy79MLNbHZlkX8Uvkb",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "-UMk0txFKPoS",
+  "optionId": "U8-ZozUn2jrp",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "U8-ZozUn2jrp"
+  },
+  "newState": {
+   "clusterId": "-UMk0txFKPoS",
+   "integratedOptions": [
+    "U8-ZozUn2jrp"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313095730
+ },
+ {
+  "eventId": "phSWImWk00euPBAyxWU2",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "hzjfbi9kC5PB",
+  "reason": "gray-band match (no auto-action) (cosine=0.874)",
+  "newState": {
+   "siblingId": "zfm3D-IzNkdp",
+   "similarity": 0.8743611150076993
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313136805
+ },
+ {
+  "eventId": "8fEGts3HGPOCba6YDUhQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "5TVuc6D2fMuj",
+  "optionId": "aiaEq1EgGiXa",
+  "reason": "spawn synth at cosine=0.927",
+  "prevState": {
+   "sourceOptionId": "aiaEq1EgGiXa",
+   "siblingId": "sj9xDu-sDFVp"
+  },
+  "newState": {
+   "clusterId": "5TVuc6D2fMuj",
+   "integratedOptions": [
+    "aiaEq1EgGiXa",
+    "sj9xDu-sDFVp"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313172295
+ },
+ {
+  "eventId": "vtHEChmm54l3kvIhd1pT",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "8NcIsJ6imPyc",
+  "optionId": "5TVuc6D2fMuj",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "5TVuc6D2fMuj"
+  },
+  "newState": {
+   "clusterId": "8NcIsJ6imPyc",
+   "integratedOptions": [
+    "5TVuc6D2fMuj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313176566
+ },
+ {
+  "eventId": "zRSqxmzsqCFU7K1WmGrv",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Hwx4ZGvCgAst",
+  "optionId": "i4WrWbN938qI",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB",
+    "veCqEd-YEidS",
+    "zD5n0Z8LjeOR"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB",
+    "zD5n0Z8LjeOR",
+    "i4WrWbN938qI"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313229011
+ },
+ {
+  "eventId": "iKadRKf9H5qwUYT9p2p1",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "i4WrWbN938qI",
+  "optionId": "x29T-G771dfl",
+  "reason": "spawn synth at cosine=0.832",
+  "prevState": {
+   "sourceOptionId": "x29T-G771dfl",
+   "siblingId": "veCqEd-YEidS"
+  },
+  "newState": {
+   "clusterId": "i4WrWbN938qI",
+   "integratedOptions": [
+    "x29T-G771dfl",
+    "veCqEd-YEidS"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313229068
+ },
+ {
+  "eventId": "gACECGB46vMtY6TKuw4d",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "RQw3c72niJvm",
+  "optionId": "-NmTzQ0iJCcW",
+  "reason": "spawn synth at cosine=0.926",
+  "prevState": {
+   "sourceOptionId": "-NmTzQ0iJCcW",
+   "siblingId": "tZp5UZQyoHmC"
+  },
+  "newState": {
+   "clusterId": "RQw3c72niJvm",
+   "integratedOptions": [
+    "-NmTzQ0iJCcW",
+    "tZp5UZQyoHmC"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313260701
+ },
+ {
+  "eventId": "aeVX7OfeeMg62bhxWBra",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "RQw3c72niJvm",
+  "reason": "nest synthesis under theme (judge: הנגשת שירותים דיגיטליים לתושבים באמצעות תשתית אינטרנט ציבורית)",
+  "prevState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4",
+    "RQw3c72niJvm"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313263465
+ },
+ {
+  "eventId": "jCtqlkdhyvqhouPYdtk2",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "HZO9DI4m9fTk",
+  "reason": "option filed under theme (judge: ההצעה עוסקת בשיפור תדירות וזמינות התחבורה הציבורית בעיר.)",
+  "prevState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt",
+    "TLguY47vNTWj"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt",
+    "TLguY47vNTWj",
+    "HZO9DI4m9fTk"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313328017
+ },
+ {
+  "eventId": "WMiJk4XwmIo9lrVrpCst",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "7mtrMGizJbwK",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "wqxFAIdxZsi-",
+    "Fs3Ws4uJamvs",
+    "rOoZVuU7KVxg"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "Fs3Ws4uJamvs",
+    "rOoZVuU7KVxg",
+    "7mtrMGizJbwK"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313361560
+ },
+ {
+  "eventId": "YXO47L8nyryuT2TY611u",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "7mtrMGizJbwK",
+  "optionId": "toQ1gTQoUciK",
+  "reason": "spawn synth at cosine=0.891",
+  "prevState": {
+   "sourceOptionId": "toQ1gTQoUciK",
+   "siblingId": "wqxFAIdxZsi-"
+  },
+  "newState": {
+   "clusterId": "7mtrMGizJbwK",
+   "integratedOptions": [
+    "toQ1gTQoUciK",
+    "wqxFAIdxZsi-"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313361561
+ },
+ {
+  "eventId": "qdyyPM92n3bxGqlRhSvd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "lhMphKclf3a4",
+  "optionId": "JvsGFy9TqvWc",
+  "reason": "spawn synth at cosine=0.911",
+  "prevState": {
+   "sourceOptionId": "JvsGFy9TqvWc",
+   "siblingId": "QYttugqqDp11"
+  },
+  "newState": {
+   "clusterId": "lhMphKclf3a4",
+   "integratedOptions": [
+    "JvsGFy9TqvWc",
+    "QYttugqqDp11"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313399225
+ },
+ {
+  "eventId": "JWafAAaq6iZuMy8TKVlN",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "lhMphKclf3a4",
+  "reason": "nest synthesis under theme (judge: הנגשת מידע עירוני ושירותים דיגיטליים לתושבים)",
+  "prevState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4",
+    "RQw3c72niJvm"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313402391
+ },
+ {
+  "eventId": "hWK3UInBTDuds3WApGoC",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "oZKvEnGh6LdU",
+  "optionId": "8Fw4EhQk8SLq",
+  "reason": "spawn synth at cosine=0.914",
+  "prevState": {
+   "sourceOptionId": "8Fw4EhQk8SLq",
+   "siblingId": "v31JfQUUfSA3"
+  },
+  "newState": {
+   "clusterId": "oZKvEnGh6LdU",
+   "integratedOptions": [
+    "8Fw4EhQk8SLq",
+    "v31JfQUUfSA3"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313441466
+ },
+ {
+  "eventId": "QwdrlZlLlBl5K1xxqDQJ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "m8OAJh6A7QLA",
+  "optionId": "oZKvEnGh6LdU",
+  "reason": "nest synthesis under theme (judge: שקיפות מחירי שכירות מסייעת לשוכרים ומקדמת דיור בר־השגה.)",
+  "prevState": {
+   "integratedOptions": [
+    "m6swdKdMK-Vt",
+    "5GovT3RAlH6J"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "m6swdKdMK-Vt",
+    "5GovT3RAlH6J",
+    "oZKvEnGh6LdU"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313443583
+ },
+ {
+  "eventId": "oPTbE5xyXNOVKEeC60bZ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "xj3KYb3kQoAQ",
+  "reason": "option filed under theme (judge: ניטור איכות האוויר הוא יוזמה סביבתית לקיימות עירונית ולהפחתת זיהום.)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "Fs3Ws4uJamvs",
+    "rOoZVuU7KVxg",
+    "7mtrMGizJbwK"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "Fs3Ws4uJamvs",
+    "rOoZVuU7KVxg",
+    "7mtrMGizJbwK",
+    "xj3KYb3kQoAQ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313473555
+ },
+ {
+  "eventId": "pTd3PQgHyDouKtFh5b2D",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "mVidOLgw72Kb",
+  "optionId": "YjEWdmoOZx0f",
+  "reason": "spawn synth at cosine=0.866",
+  "prevState": {
+   "sourceOptionId": "YjEWdmoOZx0f",
+   "siblingId": "hzjfbi9kC5PB"
+  },
+  "newState": {
+   "clusterId": "mVidOLgw72Kb",
+   "integratedOptions": [
+    "YjEWdmoOZx0f",
+    "hzjfbi9kC5PB"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313511463
+ },
+ {
+  "eventId": "YBf1HHhVH9FHyLoT93YB",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "RByQMV63jBsu",
+  "optionId": "mVidOLgw72Kb",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "mVidOLgw72Kb"
+  },
+  "newState": {
+   "clusterId": "RByQMV63jBsu",
+   "integratedOptions": [
+    "mVidOLgw72Kb"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313517497
+ },
+ {
+  "eventId": "POXZpzFVTklafTifXdrI",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "LMQbTQhv5vzq",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt",
+    "TLguY47vNTWj",
+    "HZO9DI4m9fTk"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt",
+    "HZO9DI4m9fTk",
+    "LMQbTQhv5vzq"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313554305
+ },
+ {
+  "eventId": "43JoY65wPBOTsfVpqpiq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "LMQbTQhv5vzq",
+  "optionId": "ae7jJc3r7MTH",
+  "reason": "spawn synth at cosine=0.893",
+  "prevState": {
+   "sourceOptionId": "ae7jJc3r7MTH",
+   "siblingId": "TLguY47vNTWj"
+  },
+  "newState": {
+   "clusterId": "LMQbTQhv5vzq",
+   "integratedOptions": [
+    "ae7jJc3r7MTH",
+    "TLguY47vNTWj"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313554306
+ },
+ {
+  "eventId": "H4yfp7rMFiwhb14at5Ip",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "N8gniQH7wf8B",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "9teRKQr-H7Jt",
+    "HZO9DI4m9fTk",
+    "LMQbTQhv5vzq"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "HZO9DI4m9fTk",
+    "LMQbTQhv5vzq",
+    "N8gniQH7wf8B"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313652887
+ },
+ {
+  "eventId": "5DsDpgHfPCUW9f7MzpMT",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "N8gniQH7wf8B",
+  "optionId": "Mny9MNmS1Ant",
+  "reason": "spawn synth at cosine=0.886",
+  "prevState": {
+   "sourceOptionId": "Mny9MNmS1Ant",
+   "siblingId": "9teRKQr-H7Jt"
+  },
+  "newState": {
+   "clusterId": "N8gniQH7wf8B",
+   "integratedOptions": [
+    "Mny9MNmS1Ant",
+    "9teRKQr-H7Jt"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313652889
+ },
+ {
+  "eventId": "FnhYAHHcUxLZp4vmH2iL",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "qwLJrPkJOswX",
+  "optionId": "7uydSp6GrOry",
+  "reason": "spawn synth at cosine=0.940",
+  "prevState": {
+   "sourceOptionId": "7uydSp6GrOry",
+   "siblingId": "ypFkHm0VvgxL"
+  },
+  "newState": {
+   "clusterId": "qwLJrPkJOswX",
+   "integratedOptions": [
+    "7uydSp6GrOry",
+    "ypFkHm0VvgxL"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313709723
+ },
+ {
+  "eventId": "dz7u2wT7oITrmEnppvCJ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "s9gRpJ65bxhs",
+  "optionId": "qwLJrPkJOswX",
+  "reason": "nest synthesis under theme (judge: יצירת הזדמנויות תעסוקה לתושבים משתייכת לתחום קידום התעסוקה העירונית)",
+  "prevState": {
+   "integratedOptions": [
+    "2VGhBRcz3iIB"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "2VGhBRcz3iIB",
+    "qwLJrPkJOswX"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313714361
+ },
+ {
+  "eventId": "lbGqyRR43SafgsYdFDQ7",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "dcu5wScuJ1vZ",
+  "optionId": "EiiaOLf0D2Jt",
+  "reason": "spawn synth at cosine=0.861",
+  "prevState": {
+   "sourceOptionId": "EiiaOLf0D2Jt",
+   "siblingId": "uGCw6c4HZbEQ"
+  },
+  "newState": {
+   "clusterId": "dcu5wScuJ1vZ",
+   "integratedOptions": [
+    "EiiaOLf0D2Jt",
+    "uGCw6c4HZbEQ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:queueWorker",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313763637
+ },
+ {
+  "eventId": "22tNA38rkuBEsP5AREld",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "SK1i9YnM-QIg",
+  "optionId": "dcu5wScuJ1vZ",
+  "reason": "nest synthesis under theme (judge: שדרוג כיתות ומעבדות משפר את תנאי הלמידה במערכת החינוך.)",
+  "prevState": {
+   "integratedOptions": [
+    "rn-NBXFDUfjL"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rn-NBXFDUfjL",
+    "dcu5wScuJ1vZ"
+   ]
+  },
+  "triggerSource": "pipeline:queueWorker:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313767141
+ },
+ {
+  "eventId": "ehDGzJtwVK1kBsJ2TXwm",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "Hwx4ZGvCgAst",
+  "optionId": "TRZri14kkkAH",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "h4jhpZq5HvIB",
+    "zD5n0Z8LjeOR",
+    "i4WrWbN938qI"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "-lmNJpTt4AAC",
+    "zD5n0Z8LjeOR",
+    "i4WrWbN938qI",
+    "TRZri14kkkAH"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313779396
+ },
+ {
+  "eventId": "9yHzM6yipt4k1nd1kKNd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "TRZri14kkkAH",
+  "optionId": "kk3rHh1LBGq7",
+  "reason": "spawn synth at cosine=0.923",
+  "prevState": {
+   "sourceOptionId": "kk3rHh1LBGq7",
+   "siblingId": "h4jhpZq5HvIB"
+  },
+  "newState": {
+   "clusterId": "TRZri14kkkAH",
+   "integratedOptions": [
+    "kk3rHh1LBGq7",
+    "h4jhpZq5HvIB"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313779398
+ },
+ {
+  "eventId": "1u4Vnb2uxvqpG5DF44Zk",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TlgDCLPmhaGJ",
+  "optionId": "TwT3Y9m12W2q",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "HZO9DI4m9fTk",
+    "LMQbTQhv5vzq",
+    "N8gniQH7wf8B"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "xoenmI80FD1p",
+    "WQC25nrpYBxx",
+    "LMQbTQhv5vzq",
+    "N8gniQH7wf8B",
+    "TwT3Y9m12W2q"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313829367
+ },
+ {
+  "eventId": "veGUvPUZctxeoxCACVQx",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "TwT3Y9m12W2q",
+  "optionId": "FHifzzMSeXkP",
+  "reason": "spawn synth at cosine=0.948",
+  "prevState": {
+   "sourceOptionId": "FHifzzMSeXkP",
+   "siblingId": "HZO9DI4m9fTk"
+  },
+  "newState": {
+   "clusterId": "TwT3Y9m12W2q",
+   "integratedOptions": [
+    "FHifzzMSeXkP",
+    "HZO9DI4m9fTk"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313829369
+ },
+ {
+  "eventId": "lcAYpn4TJUYUhjiVqFwV",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "2OXogEH8eGig",
+  "reason": "option filed under theme (judge: סיוע לתושבים בשימוש בשירותים מקוונים הוא חלק מהנגשת שירותי העירייה ופניות התושבים.)",
+  "prevState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4",
+    "2OXogEH8eGig"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313859923
+ },
+ {
+  "eventId": "fXxXyku4YivGvslfwU0e",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Dp0r3ngDXjaN",
+  "optionId": "p7ZPMxJiag4l",
+  "reason": "spawn synth at cosine=0.926",
+  "prevState": {
+   "sourceOptionId": "p7ZPMxJiag4l",
+   "siblingId": "WxNPLclHbncZ"
+  },
+  "newState": {
+   "clusterId": "Dp0r3ngDXjaN",
+   "integratedOptions": [
+    "p7ZPMxJiag4l",
+    "WxNPLclHbncZ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313925925
+ },
+ {
+  "eventId": "J3hxqv3XMp4NA9lyTKre",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "8NcIsJ6imPyc",
+  "optionId": "Dp0r3ngDXjaN",
+  "reason": "nest synthesis under theme (judge: שיפור הנגישות לשירותי רפואה באמצעות בדיקות סקר חינמיות לגילוי מוקדם)",
+  "prevState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj",
+    "Dp0r3ngDXjaN"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313928256
+ },
+ {
+  "eventId": "PxKScJiqnz9RqQF1YNvg",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "4TDJ5W62jGeV",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "vaUGxOO0OI-4",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4",
+    "2OXogEH8eGig"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4",
+    "2OXogEH8eGig",
+    "4TDJ5W62jGeV"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313940462
+ },
+ {
+  "eventId": "FDYCS7wLDpICRjbKKdYK",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "4TDJ5W62jGeV",
+  "optionId": "XluqzpNOnsp9",
+  "reason": "spawn synth at cosine=0.841",
+  "prevState": {
+   "sourceOptionId": "XluqzpNOnsp9",
+   "siblingId": "vaUGxOO0OI-4"
+  },
+  "newState": {
+   "clusterId": "4TDJ5W62jGeV",
+   "integratedOptions": [
+    "XluqzpNOnsp9",
+    "vaUGxOO0OI-4"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313940464
+ },
+ {
+  "eventId": "qlo0j8g1qoJzVbjAplRR",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "WIn2BOLQx6bJ",
+  "reason": "option filed under theme (judge: סיוע פרונטלי להתמצאות באתר העירוני משפר נגישות ושימוש בשירותים מקוונים.)",
+  "prevState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4",
+    "2OXogEH8eGig",
+    "4TDJ5W62jGeV"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4",
+    "2OXogEH8eGig",
+    "4TDJ5W62jGeV",
+    "WIn2BOLQx6bJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787313971825
+ },
+ {
+  "eventId": "vukr5pLuJLyr4gDT9MvQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "aKiENl3fsq4n",
+  "optionId": "p33T99jOVi0A",
+  "reason": "spawn synth at cosine=0.880",
+  "prevState": {
+   "sourceOptionId": "p33T99jOVi0A",
+   "siblingId": "mroR6HZSsxxN"
+  },
+  "newState": {
+   "clusterId": "aKiENl3fsq4n",
+   "integratedOptions": [
+    "p33T99jOVi0A",
+    "mroR6HZSsxxN"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314011565
+ },
+ {
+  "eventId": "eyC4Q43RCX25zaef0r8E",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RByQMV63jBsu",
+  "optionId": "aKiENl3fsq4n",
+  "reason": "nest synthesis under theme (judge: שיפור נגישות מתקני משחק הוא חלק מהנגשת מרחבי פנאי ציבוריים ופארקים.)",
+  "prevState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb",
+    "aKiENl3fsq4n"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314014643
+ },
+ {
+  "eventId": "x8SAzAAYWhept5UcripE",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "4dBA44as8I3P",
+  "optionId": "v-l52noahKJ9",
+  "reason": "option filed under theme (judge: הפחתת בירוקרטיה ברישוי עסקים היא שיפור ישיר של שירותים עירוניים לתושבים ולעסקים.)",
+  "prevState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4",
+    "2OXogEH8eGig",
+    "4TDJ5W62jGeV",
+    "WIn2BOLQx6bJ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "ZAc04h-0Md8v",
+    "RQw3c72niJvm",
+    "lhMphKclf3a4",
+    "2OXogEH8eGig",
+    "4TDJ5W62jGeV",
+    "WIn2BOLQx6bJ",
+    "v-l52noahKJ9"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314048310
+ },
+ {
+  "eventId": "DnSyUKosJfxrCi6MA4ga",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "CCjPz8Yq2sXo",
+  "optionId": "Up9Ta0yz0elp",
+  "reason": "option filed under theme (judge: שיעורי מוזיקה חינם מרחיבים את הנגישות לתרבות ולאמנות עבור ילדים)",
+  "prevState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o",
+    "niDkSFTxUqED",
+    "GnG1C6NqMnVT"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o",
+    "niDkSFTxUqED",
+    "GnG1C6NqMnVT",
+    "Up9Ta0yz0elp"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314076389
+ },
+ {
+  "eventId": "OL0v4OKqPHPamhfWKaqZ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Df2ZMwnd6pBG",
+  "optionId": "g2nskAqq41BC",
+  "reason": "spawn synth at cosine=0.875",
+  "prevState": {
+   "sourceOptionId": "g2nskAqq41BC",
+   "siblingId": "KvNU4QHKfE3w"
+  },
+  "newState": {
+   "clusterId": "Df2ZMwnd6pBG",
+   "integratedOptions": [
+    "g2nskAqq41BC",
+    "KvNU4QHKfE3w"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314112168
+ },
+ {
+  "eventId": "5wOItICTQZ8jKqdZGjQs",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RByQMV63jBsu",
+  "optionId": "Df2ZMwnd6pBG",
+  "reason": "nest synthesis under theme (judge: נטיעת עצי צל היא יוזמה להרחבת המרחבים הירוקים ולשיפור הנגישות אליהם.)",
+  "prevState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb",
+    "aKiENl3fsq4n"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb",
+    "aKiENl3fsq4n",
+    "Df2ZMwnd6pBG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314114808
+ },
+ {
+  "eventId": "xKe6bmzKhGas9Ii7XsPT",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "G0oLtzMb01iB",
+  "optionId": "pz6dLWieytqd",
+  "reason": "spawn synth at cosine=0.957",
+  "prevState": {
+   "sourceOptionId": "pz6dLWieytqd",
+   "siblingId": "yXHIOaPFJgQU"
+  },
+  "newState": {
+   "clusterId": "G0oLtzMb01iB",
+   "integratedOptions": [
+    "pz6dLWieytqd",
+    "yXHIOaPFJgQU"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314158990
+ },
+ {
+  "eventId": "SByLrs7CF37lBl3RFcHI",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "48j70A0hHgeO",
+  "optionId": "G0oLtzMb01iB",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "G0oLtzMb01iB"
+  },
+  "newState": {
+   "clusterId": "48j70A0hHgeO",
+   "integratedOptions": [
+    "G0oLtzMb01iB"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314165483
+ },
+ {
+  "eventId": "NpY9GOTixd2DrCFYQLAZ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "CCjPz8Yq2sXo",
+  "optionId": "D0jtDn8CHQTj",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o",
+    "niDkSFTxUqED",
+    "GnG1C6NqMnVT",
+    "Up9Ta0yz0elp"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "XdkFn-nTlWqs",
+    "b5q18ROIMx9o",
+    "niDkSFTxUqED",
+    "GnG1C6NqMnVT",
+    "D0jtDn8CHQTj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314199857
+ },
+ {
+  "eventId": "IDr8PquOUvALNAD8r7vg",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "D0jtDn8CHQTj",
+  "optionId": "TwkTWsus5VgE",
+  "reason": "spawn synth at cosine=0.918",
+  "prevState": {
+   "sourceOptionId": "TwkTWsus5VgE",
+   "siblingId": "Up9Ta0yz0elp"
+  },
+  "newState": {
+   "clusterId": "D0jtDn8CHQTj",
+   "integratedOptions": [
+    "TwkTWsus5VgE",
+    "Up9Ta0yz0elp"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314199858
+ },
+ {
+  "eventId": "5s1vheG4mB5Nqa4Nqj9U",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "hgBRzjXqb2iv",
+  "optionId": "ZLTkckNJBY9x",
+  "reason": "spawn synth at cosine=0.911",
+  "prevState": {
+   "sourceOptionId": "ZLTkckNJBY9x",
+   "siblingId": "PTuGD8vxcm4q"
+  },
+  "newState": {
+   "clusterId": "hgBRzjXqb2iv",
+   "integratedOptions": [
+    "ZLTkckNJBY9x",
+    "PTuGD8vxcm4q"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314240772
+ },
+ {
+  "eventId": "hSzq494y9mPzrx85Q87S",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "8NcIsJ6imPyc",
+  "optionId": "hgBRzjXqb2iv",
+  "reason": "nest synthesis under theme (judge: שירותי טיפול ביתיים משפרים את הנגישות והזמינות של שירותי בריאות לאנשים מבוגרים.)",
+  "prevState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj",
+    "Dp0r3ngDXjaN"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj",
+    "Dp0r3ngDXjaN",
+    "hgBRzjXqb2iv"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314244735
+ },
+ {
+  "eventId": "KHxb3aF4QlhROTkUC2cz",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "yVku6Iu221Qy",
+  "optionId": "eer01uwr3k-5",
+  "reason": "spawn synth at cosine=0.952",
+  "prevState": {
+   "sourceOptionId": "eer01uwr3k-5",
+   "siblingId": "zfm3D-IzNkdp"
+  },
+  "newState": {
+   "clusterId": "yVku6Iu221Qy",
+   "integratedOptions": [
+    "eer01uwr3k-5",
+    "zfm3D-IzNkdp"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314283290
+ },
+ {
+  "eventId": "0cw6Q1pO735DbxsUhMGp",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "RByQMV63jBsu",
+  "optionId": "yVku6Iu221Qy",
+  "reason": "nest synthesis under theme (judge: גינות קהילתיות הן מרחבים ירוקים נגישים לשימוש תושבים ולטיפוח קהילתי)",
+  "prevState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb",
+    "aKiENl3fsq4n",
+    "Df2ZMwnd6pBG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb",
+    "aKiENl3fsq4n",
+    "Df2ZMwnd6pBG",
+    "yVku6Iu221Qy"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314285943
+ },
+ {
+  "eventId": "VX3RXXBgv4ysvv9JAURI",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "mN76gpX9S3lr",
+  "optionId": "cQtxWfP5RQRF",
+  "reason": "spawn synth at cosine=0.911",
+  "prevState": {
+   "sourceOptionId": "cQtxWfP5RQRF",
+   "siblingId": "L1f75DbzFWoj"
+  },
+  "newState": {
+   "clusterId": "mN76gpX9S3lr",
+   "integratedOptions": [
+    "cQtxWfP5RQRF",
+    "L1f75DbzFWoj"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314324534
+ },
+ {
+  "eventId": "PJLUNbkNHTVdTCzwObLk",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "8NcIsJ6imPyc",
+  "optionId": "mN76gpX9S3lr",
+  "reason": "nest synthesis under theme (judge: הרחבת מרפאות שכונתיות משפרת את הנגישות והזמינות של שירותי בריאות.)",
+  "prevState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj",
+    "Dp0r3ngDXjaN",
+    "hgBRzjXqb2iv"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj",
+    "Dp0r3ngDXjaN",
+    "hgBRzjXqb2iv",
+    "mN76gpX9S3lr"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314326683
+ },
+ {
+  "eventId": "PriLreLmPeIQ2TSqwLmu",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "-mIN7OkVVIv8",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "Fs3Ws4uJamvs",
+    "rOoZVuU7KVxg",
+    "7mtrMGizJbwK",
+    "xj3KYb3kQoAQ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "Fs3Ws4uJamvs",
+    "7mtrMGizJbwK",
+    "xj3KYb3kQoAQ",
+    "-mIN7OkVVIv8"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314374986
+ },
+ {
+  "eventId": "gDeMiigQnXEkLIPsh6fx",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "-mIN7OkVVIv8",
+  "optionId": "h66XEWkW0LiD",
+  "reason": "spawn synth at cosine=0.856",
+  "prevState": {
+   "sourceOptionId": "h66XEWkW0LiD",
+   "siblingId": "rOoZVuU7KVxg"
+  },
+  "newState": {
+   "clusterId": "-mIN7OkVVIv8",
+   "integratedOptions": [
+    "h66XEWkW0LiD",
+    "rOoZVuU7KVxg"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314374992
+ },
+ {
+  "eventId": "gEqZQ5utt8XMMWBcV9RT",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "keTGOorimnmD",
+  "optionId": "ENRDXTKfOzUv",
+  "reason": "option filed under theme (judge: פישוט רישוי עסקים משפר את השירותים והנגישות לעסקים ולעצמאים.)",
+  "prevState": {
+   "integratedOptions": [
+    "cmjfKL7JZ1EC"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "cmjfKL7JZ1EC",
+    "ENRDXTKfOzUv"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314404885
+ },
+ {
+  "eventId": "oLCOCgV9UCYOPvKufSdH",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "flb2uziISDuX",
+  "optionId": "0QoGVgsdQLcJ",
+  "reason": "spawn synth at cosine=0.814",
+  "prevState": {
+   "sourceOptionId": "0QoGVgsdQLcJ",
+   "siblingId": "Zr215xdXZ6Zg"
+  },
+  "newState": {
+   "clusterId": "flb2uziISDuX",
+   "integratedOptions": [
+    "0QoGVgsdQLcJ",
+    "Zr215xdXZ6Zg"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314441183
+ },
+ {
+  "eventId": "sBmsji7D0QaeW6UXJ78C",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "hr5jwUz6mktf",
+  "optionId": "flb2uziISDuX",
+  "reason": "nest synthesis under theme (judge: יוזמה לקיימות עירונית ולהפחתת זיהום באמצעות אנרגיה מתחדשת במבני ציבור)",
+  "prevState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "Fs3Ws4uJamvs",
+    "7mtrMGizJbwK",
+    "xj3KYb3kQoAQ",
+    "-mIN7OkVVIv8"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "i01wtcPKGzk-",
+    "0fmTmI6EWzLO",
+    "Fs3Ws4uJamvs",
+    "7mtrMGizJbwK",
+    "xj3KYb3kQoAQ",
+    "-mIN7OkVVIv8",
+    "flb2uziISDuX"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314443707
+ },
+ {
+  "eventId": "k3xPdMKATeqeyK4B5kQ1",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "W2MBrRvF4rlS",
+  "optionId": "-x3SUJKJo0V5",
+  "reason": "spawn synth at cosine=0.849",
+  "prevState": {
+   "sourceOptionId": "-x3SUJKJo0V5",
+   "siblingId": "FQSBMwW9z4WW"
+  },
+  "newState": {
+   "clusterId": "W2MBrRvF4rlS",
+   "integratedOptions": [
+    "-x3SUJKJo0V5",
+    "FQSBMwW9z4WW"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314485581
+ },
+ {
+  "eventId": "HLPdmgh6ljmPOUGxz2jb",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "SK1i9YnM-QIg",
+  "optionId": "W2MBrRvF4rlS",
+  "reason": "nest synthesis under theme (judge: תמיכה לימודית לתלמידים שייכת לשיפור תנאי הלמידה והחינוך בבתי הספר)",
+  "prevState": {
+   "integratedOptions": [
+    "rn-NBXFDUfjL",
+    "dcu5wScuJ1vZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rn-NBXFDUfjL",
+    "dcu5wScuJ1vZ",
+    "W2MBrRvF4rlS"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314488805
+ },
+ {
+  "eventId": "msJATiEF3lo7yOW3r0ai",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "SZalOAhucDCz",
+  "optionId": "UFh9eflTswa4",
+  "reason": "spawn synth at cosine=0.847",
+  "prevState": {
+   "sourceOptionId": "UFh9eflTswa4",
+   "siblingId": "cHt1oAChD1iD"
+  },
+  "newState": {
+   "clusterId": "SZalOAhucDCz",
+   "integratedOptions": [
+    "UFh9eflTswa4",
+    "cHt1oAChD1iD"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314529889
+ },
+ {
+  "eventId": "1IMEjPYwkIQeQHhiBpPw",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "keTGOorimnmD",
+  "optionId": "SZalOAhucDCz",
+  "reason": "nest synthesis under theme (judge: הלוואות בריבית נמוכה מחזקות עסקים קטנים ומקומיים, בהתאם לתמיכה בעסקים ובעצמאים)",
+  "prevState": {
+   "integratedOptions": [
+    "cmjfKL7JZ1EC",
+    "ENRDXTKfOzUv"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "cmjfKL7JZ1EC",
+    "ENRDXTKfOzUv",
+    "SZalOAhucDCz"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314531810
+ },
+ {
+  "eventId": "v47sgcbGhVZ9quLCwbee",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "SK1i9YnM-QIg",
+  "reason": "themes consolidated into \"חינוך ורווחת תלמידים\" (2 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "rn-NBXFDUfjL",
+    "dcu5wScuJ1vZ",
+    "W2MBrRvF4rlS"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "rn-NBXFDUfjL",
+    "dcu5wScuJ1vZ",
+    "W2MBrRvF4rlS",
+    "G0oLtzMb01iB",
+    "tqUGTJOPZ3vF"
+   ],
+   "absorbed": [
+    "48j70A0hHgeO",
+    "QaA9sW4XhofX"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314676134
+ },
+ {
+  "eventId": "krwporX6jJ3RRD6Czh6L",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "8NcIsJ6imPyc",
+  "reason": "themes consolidated into \"שירותי בריאות ורווחה נפשית\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj",
+    "Dp0r3ngDXjaN",
+    "hgBRzjXqb2iv",
+    "mN76gpX9S3lr"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "5TVuc6D2fMuj",
+    "Dp0r3ngDXjaN",
+    "hgBRzjXqb2iv",
+    "mN76gpX9S3lr",
+    "RJkrl3Xt8zJ9"
+   ],
+   "absorbed": [
+    "nGWfTHp8MN2c"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314676187
+ },
+ {
+  "eventId": "SapSAQlu34YYR0RXdEjO",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "m8OAJh6A7QLA",
+  "reason": "themes consolidated into \"דיור בר־השגה לתושבים\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "m6swdKdMK-Vt",
+    "5GovT3RAlH6J",
+    "oZKvEnGh6LdU"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "m6swdKdMK-Vt",
+    "5GovT3RAlH6J",
+    "oZKvEnGh6LdU",
+    "tx5cWCUY3Dif"
+   ],
+   "absorbed": [
+    "Dz47V2oBC0Wv"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314676233
+ },
+ {
+  "eventId": "ZQuy7Kfnj0wWOqqpNkat",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "RByQMV63jBsu",
+  "reason": "themes consolidated into \"פארקים ומרחבים ירוקים\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb",
+    "aKiENl3fsq4n",
+    "Df2ZMwnd6pBG",
+    "yVku6Iu221Qy"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "mVidOLgw72Kb",
+    "aKiENl3fsq4n",
+    "Df2ZMwnd6pBG",
+    "yVku6Iu221Qy",
+    "U8-ZozUn2jrp"
+   ],
+   "absorbed": [
+    "-UMk0txFKPoS"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314676305
+ },
+ {
+  "eventId": "jr0sXFFV7ywPkwFHMdRB",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "keTGOorimnmD",
+  "reason": "themes consolidated into \"תעסוקה, עסקים וכלכלה מקומית\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "cmjfKL7JZ1EC",
+    "ENRDXTKfOzUv",
+    "SZalOAhucDCz"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "cmjfKL7JZ1EC",
+    "ENRDXTKfOzUv",
+    "SZalOAhucDCz",
+    "2VGhBRcz3iIB",
+    "qwLJrPkJOswX"
+   ],
+   "absorbed": [
+    "s9gRpJ65bxhs"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100he",
+  "timestamp": 1787314789604
+ },
+ {
+  "eventId": "ah6oBJtBcikuv96Mm7NP",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "aGfqe7pRyeLy",
+  "reason": "gray-band match (no auto-action) (cosine=0.659)",
+  "newState": {
+   "siblingId": "sUvfKB8zBzfP",
+   "similarity": 0.6594497690909698
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787314914315
+ },
+ {
+  "eventId": "xSgXfqZURqtock0lzvBP",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "rgM0QQL6VkWd",
+  "reason": "gray-band match (no auto-action) (cosine=0.637)",
+  "newState": {
+   "siblingId": "sUvfKB8zBzfP",
+   "similarity": 0.6371893225984387
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787314946415
+ },
+ {
+  "eventId": "UicP0xDEWUqmFkcpZZOS",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "59fPu18XSWsC",
+  "reason": "gray-band match (no auto-action) (cosine=0.667)",
+  "newState": {
+   "siblingId": "aGfqe7pRyeLy",
+   "similarity": 0.666602516276826
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787314974972
+ },
+ {
+  "eventId": "RK6741RU8KUHhP7bly5X",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "87zy8osD4aWn",
+  "reason": "gray-band match (no auto-action) (cosine=0.684)",
+  "newState": {
+   "siblingId": "aGfqe7pRyeLy",
+   "similarity": 0.6838043089233101
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315004605
+ },
+ {
+  "eventId": "T1aQAw8iz6mUmuhZtGIJ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "3ueqjH2nI4nS",
+  "reason": "gray-band match (no auto-action) (cosine=0.727)",
+  "newState": {
+   "siblingId": "rgM0QQL6VkWd",
+   "similarity": 0.7270543334207716
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315033125
+ },
+ {
+  "eventId": "M9nsfaTrHoFRLQlm8RKQ",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "8yDTadghJeHU",
+  "reason": "gray-band match (no auto-action) (cosine=0.700)",
+  "newState": {
+   "siblingId": "59fPu18XSWsC",
+   "similarity": 0.6996310342618965
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315063753
+ },
+ {
+  "eventId": "DVRkBuWGBM5iiyIVjY2C",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "9QCwWoXbkueR",
+  "reason": "gray-band match (no auto-action) (cosine=0.701)",
+  "newState": {
+   "siblingId": "sUvfKB8zBzfP",
+   "similarity": 0.7011567073162567
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315091120
+ },
+ {
+  "eventId": "Fo8RUHUh0eXR5chPJUXd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "xTB6uTRMIyYo",
+  "optionId": "ULJ0kn347mJv",
+  "reason": "spawn synth at cosine=0.900",
+  "prevState": {
+   "sourceOptionId": "ULJ0kn347mJv",
+   "siblingId": "aGfqe7pRyeLy"
+  },
+  "newState": {
+   "clusterId": "xTB6uTRMIyYo",
+   "integratedOptions": [
+    "ULJ0kn347mJv",
+    "aGfqe7pRyeLy"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315123502
+ },
+ {
+  "eventId": "bPTtlbx34DKfE7CnyDxD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "KESaRDu3AtNg",
+  "optionId": "xTB6uTRMIyYo",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "xTB6uTRMIyYo"
+  },
+  "newState": {
+   "clusterId": "KESaRDu3AtNg",
+   "integratedOptions": [
+    "xTB6uTRMIyYo"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315124811
+ },
+ {
+  "eventId": "zMFWzVmZMqFBCUUlVE3r",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "d-cVmVXGfuUE",
+  "reason": "gray-band match (no auto-action) (cosine=0.713)",
+  "newState": {
+   "siblingId": "9QCwWoXbkueR",
+   "similarity": 0.7133375972409511
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315157843
+ },
+ {
+  "eventId": "M2HoFemBUmvlIq7IQ3qH",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "1l5alJrDCSIY",
+  "reason": "gray-band match (no auto-action) (cosine=0.687)",
+  "newState": {
+   "siblingId": "9QCwWoXbkueR",
+   "similarity": 0.6865427317913513
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315189743
+ },
+ {
+  "eventId": "O3JKEtcIfaly4Q34ElGM",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "1JqgJUnAOL2e",
+  "reason": "gray-band match (no auto-action) (cosine=0.705)",
+  "newState": {
+   "siblingId": "87zy8osD4aWn",
+   "similarity": 0.7053458308336094
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315217919
+ },
+ {
+  "eventId": "zIp2kpybwoVlE4pUNtRR",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "hdCZ0XeMQrhC",
+  "reason": "gray-band match (no auto-action) (cosine=0.692)",
+  "newState": {
+   "siblingId": "1l5alJrDCSIY",
+   "similarity": 0.6918274371278857
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315245581
+ },
+ {
+  "eventId": "a7pujeFulsMYeA2MWIjb",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "rlGe-Kl6SaU0",
+  "reason": "gray-band match (no auto-action) (cosine=0.745)",
+  "newState": {
+   "siblingId": "aGfqe7pRyeLy",
+   "similarity": 0.7451464152809665
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315275560
+ },
+ {
+  "eventId": "acx0TCuAv5MxATjEUP6e",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "KUCUVZMRBz6c",
+  "reason": "gray-band match (no auto-action) (cosine=0.789)",
+  "newState": {
+   "siblingId": "d-cVmVXGfuUE",
+   "similarity": 0.7891180726660608
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315305732
+ },
+ {
+  "eventId": "567wzGYVqF1MvfnTI7AU",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "t8xFThuEkl5b",
+  "reason": "gray-band match (no auto-action) (cosine=0.713)",
+  "newState": {
+   "siblingId": "rlGe-Kl6SaU0",
+   "similarity": 0.7125545274043138
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315333631
+ },
+ {
+  "eventId": "l7IZTRbvBZ8qarqtPpOi",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "LMJXGxPR1jjZ",
+  "reason": "gray-band match (no auto-action) (cosine=0.768)",
+  "newState": {
+   "siblingId": "1JqgJUnAOL2e",
+   "similarity": 0.7680189688100463
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315362783
+ },
+ {
+  "eventId": "aB0rold7Isv6TMHwpue1",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "OwzoP1sJbrv3",
+  "reason": "gray-band match (no auto-action) (cosine=0.712)",
+  "newState": {
+   "siblingId": "LMJXGxPR1jjZ",
+   "similarity": 0.7124638795684001
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315390916
+ },
+ {
+  "eventId": "7whS0DZnVV0FO3UobKv0",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Z2-h43mnOW87",
+  "reason": "gray-band match (no auto-action) (cosine=0.817)",
+  "newState": {
+   "siblingId": "d-cVmVXGfuUE",
+   "similarity": 0.8171291146003056
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315423766
+ },
+ {
+  "eventId": "21o8tgp9vtL2l3a3DQ54",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "aj2RKk1lILfZ",
+  "optionId": "n1T9oIwIA8CF",
+  "reason": "spawn synth at cosine=0.929",
+  "prevState": {
+   "sourceOptionId": "n1T9oIwIA8CF",
+   "siblingId": "rgM0QQL6VkWd"
+  },
+  "newState": {
+   "clusterId": "aj2RKk1lILfZ",
+   "integratedOptions": [
+    "n1T9oIwIA8CF",
+    "rgM0QQL6VkWd"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315458425
+ },
+ {
+  "eventId": "A0aqe5fdg37szV8cpEfU",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "aj2RKk1lILfZ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "aj2RKk1lILfZ"
+  },
+  "newState": {
+   "clusterId": "1RVCZdMfl1By",
+   "integratedOptions": [
+    "aj2RKk1lILfZ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315461410
+ },
+ {
+  "eventId": "4sGL1vTqK2m5V5DSPFuH",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "OwXEr10KxA8Z",
+  "reason": "gray-band match (no auto-action) (cosine=0.731)",
+  "newState": {
+   "siblingId": "59fPu18XSWsC",
+   "similarity": 0.7312233739049441
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315496394
+ },
+ {
+  "eventId": "XuF7CY8rukpDALAffNWD",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "20a4oxirBDyg",
+  "reason": "option filed under theme (judge: Live vehicle tracking improves riders' access to and experience of late-night transit.)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "20a4oxirBDyg"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315525670
+ },
+ {
+  "eventId": "ZaQhrMyJunONAX4PAUds",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "gYygYrt9O9jG",
+  "reason": "gray-band match (no auto-action) (cosine=0.748)",
+  "newState": {
+   "siblingId": "KUCUVZMRBz6c",
+   "similarity": 0.7483421493325049
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315554326
+ },
+ {
+  "eventId": "YJH16OpUYPXWyLoXUxVY",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "Tb8wME5zszsC",
+  "reason": "gray-band match (no auto-action) (cosine=0.732)",
+  "newState": {
+   "siblingId": "sUvfKB8zBzfP",
+   "similarity": 0.7317529951313876
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315583511
+ },
+ {
+  "eventId": "bJliZyYzr40SunBlimnj",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "ldgErB82C8lA",
+  "reason": "gray-band match (no auto-action) (cosine=0.758)",
+  "newState": {
+   "siblingId": "hdCZ0XeMQrhC",
+   "similarity": 0.7583339968467727
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315611357
+ },
+ {
+  "eventId": "7KMWPXV0GeRVhQIznkVC",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "BIadV8VUny7g",
+  "optionId": "4ytEMYiuyimn",
+  "reason": "spawn synth at cosine=0.895",
+  "prevState": {
+   "sourceOptionId": "4ytEMYiuyimn",
+   "siblingId": "sUvfKB8zBzfP"
+  },
+  "newState": {
+   "clusterId": "BIadV8VUny7g",
+   "integratedOptions": [
+    "4ytEMYiuyimn",
+    "sUvfKB8zBzfP"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315643525
+ },
+ {
+  "eventId": "9Eb5Pthu2RtMBMyMWjH1",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "BUziU7cfuTYv",
+  "optionId": "BIadV8VUny7g",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "BIadV8VUny7g"
+  },
+  "newState": {
+   "clusterId": "BUziU7cfuTYv",
+   "integratedOptions": [
+    "BIadV8VUny7g"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315647311
+ },
+ {
+  "eventId": "jugONJg2Vlo7XumuCX0W",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "WYWXVLc7AEWS",
+  "reason": "gray-band match (no auto-action) (cosine=0.705)",
+  "newState": {
+   "siblingId": "Tb8wME5zszsC",
+   "similarity": 0.7053223524431068
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315680339
+ },
+ {
+  "eventId": "hNVUXHM1pgQrAp1dccVi",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "gdX8b3zkQNdT",
+  "reason": "gray-band match (no auto-action) (cosine=0.725)",
+  "newState": {
+   "siblingId": "3ueqjH2nI4nS",
+   "similarity": 0.7251074139798699
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315708898
+ },
+ {
+  "eventId": "wlv1ZJxgaD1JaUJG9rKP",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "ZITI94v1q-DU",
+  "reason": "gray-band match (no auto-action) (cosine=0.807)",
+  "newState": {
+   "siblingId": "t8xFThuEkl5b",
+   "similarity": 0.8066597998568477
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315740179
+ },
+ {
+  "eventId": "fNDe1emcNLajq4OngGC3",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "-IimTiBuz2k6",
+  "optionId": "rj1CRc8f84E5",
+  "reason": "spawn synth at cosine=0.926",
+  "prevState": {
+   "sourceOptionId": "rj1CRc8f84E5",
+   "siblingId": "hdCZ0XeMQrhC"
+  },
+  "newState": {
+   "clusterId": "-IimTiBuz2k6",
+   "integratedOptions": [
+    "rj1CRc8f84E5",
+    "hdCZ0XeMQrhC"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315771758
+ },
+ {
+  "eventId": "XGbADkjNsaYUv5kcGJ0q",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "6sUDasuO7lcd",
+  "optionId": "-IimTiBuz2k6",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "-IimTiBuz2k6"
+  },
+  "newState": {
+   "clusterId": "6sUDasuO7lcd",
+   "integratedOptions": [
+    "-IimTiBuz2k6"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315774639
+ },
+ {
+  "eventId": "lLDG4Sjqw2t0wnGk9qpR",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "vcvIZ6OrQHXY",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "20a4oxirBDyg"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315810946
+ },
+ {
+  "eventId": "qvC93b7ZpsYwkFNnb1N2",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "vcvIZ6OrQHXY",
+  "optionId": "xoiHXZHbFSle",
+  "reason": "spawn synth at cosine=0.903",
+  "prevState": {
+   "sourceOptionId": "xoiHXZHbFSle",
+   "siblingId": "20a4oxirBDyg"
+  },
+  "newState": {
+   "clusterId": "vcvIZ6OrQHXY",
+   "integratedOptions": [
+    "xoiHXZHbFSle",
+    "20a4oxirBDyg"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315810948
+ },
+ {
+  "eventId": "vk8ElaDn6C8NVIiiK1WU",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "swK2F-FSrXzO",
+  "reason": "gray-band match (no auto-action) (cosine=0.723)",
+  "newState": {
+   "siblingId": "BUziU7cfuTYv",
+   "similarity": 0.7229832761748055
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315843033
+ },
+ {
+  "eventId": "ntlBFCKsyZu1V51rtq4U",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "VpGQWeSZFEGm",
+  "reason": "gray-band match (no auto-action) (cosine=0.783)",
+  "newState": {
+   "siblingId": "3ueqjH2nI4nS",
+   "similarity": 0.7831575928607953
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315874517
+ },
+ {
+  "eventId": "HomQsK3hd4yIa2JYlDAt",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "CZBnVar1lDma",
+  "reason": "gray-band match (no auto-action) (cosine=0.722)",
+  "newState": {
+   "siblingId": "8yDTadghJeHU",
+   "similarity": 0.7218012203066103
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315903651
+ },
+ {
+  "eventId": "6U61Qg4MLxWG864WqYpF",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "GyNkka-CZjMb",
+  "optionId": "xUMRYGaq5YIO",
+  "reason": "spawn synth at cosine=0.927",
+  "prevState": {
+   "sourceOptionId": "xUMRYGaq5YIO",
+   "siblingId": "3ueqjH2nI4nS"
+  },
+  "newState": {
+   "clusterId": "GyNkka-CZjMb",
+   "integratedOptions": [
+    "xUMRYGaq5YIO",
+    "3ueqjH2nI4nS"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315934066
+ },
+ {
+  "eventId": "kzbMmxKzTniuwA8wm9D5",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "XYzbIy4wBugk",
+  "optionId": "GyNkka-CZjMb",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "GyNkka-CZjMb"
+  },
+  "newState": {
+   "clusterId": "XYzbIy4wBugk",
+   "integratedOptions": [
+    "GyNkka-CZjMb"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315941880
+ },
+ {
+  "eventId": "7j4OKegfifGukUIPh45Z",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "pplECTAS0xHI",
+  "reason": "gray-band match (no auto-action) (cosine=0.738)",
+  "newState": {
+   "siblingId": "swK2F-FSrXzO",
+   "similarity": 0.7376502790656624
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787315974190
+ },
+ {
+  "eventId": "nrrs3r8cKsKA7XYPAUM5",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "WQ2NAujrzWIN",
+  "reason": "gray-band match (no auto-action) (cosine=0.732)",
+  "newState": {
+   "siblingId": "ULJ0kn347mJv",
+   "similarity": 0.7322989260464567
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316003430
+ },
+ {
+  "eventId": "PaLrhXP99qMCGzrroBcA",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "bI7Xl9EVGe2o",
+  "optionId": "a-1eZ2WI0VoR",
+  "reason": "spawn synth at cosine=0.936",
+  "prevState": {
+   "sourceOptionId": "a-1eZ2WI0VoR",
+   "siblingId": "OwXEr10KxA8Z"
+  },
+  "newState": {
+   "clusterId": "bI7Xl9EVGe2o",
+   "integratedOptions": [
+    "a-1eZ2WI0VoR",
+    "OwXEr10KxA8Z"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316035043
+ },
+ {
+  "eventId": "pathDJSxBIJsnrbpFXQ4",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "HxQkEjN9K-L9",
+  "optionId": "bI7Xl9EVGe2o",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "bI7Xl9EVGe2o"
+  },
+  "newState": {
+   "clusterId": "HxQkEjN9K-L9",
+   "integratedOptions": [
+    "bI7Xl9EVGe2o"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316038479
+ },
+ {
+  "eventId": "XAfd79dbhaErODLKXkVB",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "BCcsCQQYoV3T",
+  "reason": "gray-band match (no auto-action) (cosine=0.836)",
+  "newState": {
+   "siblingId": "-IimTiBuz2k6",
+   "similarity": 0.8356369264911874
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316071625
+ },
+ {
+  "eventId": "ypzfy1aBYk0LIEIpz5iS",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "DN3eqvDJP4f2",
+  "optionId": "1to4IBvDWdFJ",
+  "reason": "spawn synth at cosine=0.955",
+  "prevState": {
+   "sourceOptionId": "1to4IBvDWdFJ",
+   "siblingId": "LMJXGxPR1jjZ"
+  },
+  "newState": {
+   "clusterId": "DN3eqvDJP4f2",
+   "integratedOptions": [
+    "1to4IBvDWdFJ",
+    "LMJXGxPR1jjZ"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316103235
+ },
+ {
+  "eventId": "RXdtt5Xan5Yh15URVKEg",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "Gm0U8p4A1TKQ",
+  "optionId": "DN3eqvDJP4f2",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "DN3eqvDJP4f2"
+  },
+  "newState": {
+   "clusterId": "Gm0U8p4A1TKQ",
+   "integratedOptions": [
+    "DN3eqvDJP4f2"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316107256
+ },
+ {
+  "eventId": "Vxk1G3TNzsJ8Hh5sRG84",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "iApgGefAuBfL",
+  "reason": "option filed under theme (judge: Expands public transit access for children through fare-free rides.)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316140941
+ },
+ {
+  "eventId": "VM0m5Xhzgb7WRwnkj0hj",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "XYzbIy4wBugk",
+  "optionId": "eGlLfBwdSSdG",
+  "reason": "option filed under theme (judge: Both proposals improve safety and security in public streets and pathways.)",
+  "prevState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb",
+    "eGlLfBwdSSdG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316173008
+ },
+ {
+  "eventId": "6lnyvSofky0T8zmb68RE",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "19OgyvCJf4Rm",
+  "optionId": "173yj2F2nnvL",
+  "reason": "spawn synth at cosine=0.902",
+  "prevState": {
+   "sourceOptionId": "173yj2F2nnvL",
+   "siblingId": "KUCUVZMRBz6c"
+  },
+  "newState": {
+   "clusterId": "19OgyvCJf4Rm",
+   "integratedOptions": [
+    "173yj2F2nnvL",
+    "KUCUVZMRBz6c"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316203949
+ },
+ {
+  "eventId": "G8xDvmllcxMysCnBz6Xf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "oubMshkXZ4a3",
+  "optionId": "19OgyvCJf4Rm",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "19OgyvCJf4Rm"
+  },
+  "newState": {
+   "clusterId": "oubMshkXZ4a3",
+   "integratedOptions": [
+    "19OgyvCJf4Rm"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316207525
+ },
+ {
+  "eventId": "Ei8nPohhfKIlhliZaPu4",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "-PqzepsX1afL",
+  "reason": "gray-band match (no auto-action) (cosine=0.709)",
+  "newState": {
+   "siblingId": "WQ2NAujrzWIN",
+   "similarity": 0.7089892037537122
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316239111
+ },
+ {
+  "eventId": "nOcsOs69cjBmUn9bMQXT",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "V8TMNDPAxO50",
+  "reason": "gray-band match (no auto-action) (cosine=0.825)",
+  "newState": {
+   "siblingId": "rlGe-Kl6SaU0",
+   "similarity": 0.8254967134754765
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316271429
+ },
+ {
+  "eventId": "eSgQFG9JlsEUq3xLsMrO",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "utwkBUvFW-yU",
+  "optionId": "bPVSOCUGE1l-",
+  "reason": "spawn synth at cosine=0.943",
+  "prevState": {
+   "sourceOptionId": "bPVSOCUGE1l-",
+   "siblingId": "1l5alJrDCSIY"
+  },
+  "newState": {
+   "clusterId": "utwkBUvFW-yU",
+   "integratedOptions": [
+    "bPVSOCUGE1l-",
+    "1l5alJrDCSIY"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316308037
+ },
+ {
+  "eventId": "i3lO6tYcVLq0GiEzdwqt",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "t8bZIty8pRLG",
+  "optionId": "utwkBUvFW-yU",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "utwkBUvFW-yU"
+  },
+  "newState": {
+   "clusterId": "t8bZIty8pRLG",
+   "integratedOptions": [
+    "utwkBUvFW-yU"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316313402
+ },
+ {
+  "eventId": "NOeX2ZF9fYG6D7QULsUg",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "BUziU7cfuTYv",
+  "optionId": "lowvuSfZAYaq",
+  "reason": "option filed under theme (judge: Expands residents' online access to municipal services and procedures.)",
+  "prevState": {
+   "integratedOptions": [
+    "BIadV8VUny7g"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "lowvuSfZAYaq"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316344846
+ },
+ {
+  "eventId": "17B99RpykH4flyywkTgU",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pd1PfnLcOM1T",
+  "optionId": "HRgTF2h2TMtY",
+  "reason": "spawn synth at cosine=0.923",
+  "prevState": {
+   "sourceOptionId": "HRgTF2h2TMtY",
+   "siblingId": "V8TMNDPAxO50"
+  },
+  "newState": {
+   "clusterId": "pd1PfnLcOM1T",
+   "integratedOptions": [
+    "HRgTF2h2TMtY",
+    "V8TMNDPAxO50"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316375005
+ },
+ {
+  "eventId": "BrJMrQXV26qyLqQ56IVB",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "F4X3n0keFj12",
+  "optionId": "pd1PfnLcOM1T",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "pd1PfnLcOM1T"
+  },
+  "newState": {
+   "clusterId": "F4X3n0keFj12",
+   "integratedOptions": [
+    "pd1PfnLcOM1T"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316378647
+ },
+ {
+  "eventId": "SpYStK0WoXPv5MqTlgrp",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "63BCFI-Pc0jx",
+  "reason": "gray-band match (no auto-action) (cosine=0.745)",
+  "newState": {
+   "siblingId": "xUMRYGaq5YIO",
+   "similarity": 0.7446029547993026
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316409395
+ },
+ {
+  "eventId": "jbKCdWD5cfSwQBZg4WIJ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "673JGVsIAJmR",
+  "optionId": "wsLkr67yr42R",
+  "reason": "spawn synth at cosine=0.926",
+  "prevState": {
+   "sourceOptionId": "wsLkr67yr42R",
+   "siblingId": "CZBnVar1lDma"
+  },
+  "newState": {
+   "clusterId": "673JGVsIAJmR",
+   "integratedOptions": [
+    "wsLkr67yr42R",
+    "CZBnVar1lDma"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316440463
+ },
+ {
+  "eventId": "Vxy9cFqIEWXgBBkarqyg",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "YJ0ajOczsEmq",
+  "optionId": "673JGVsIAJmR",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "673JGVsIAJmR"
+  },
+  "newState": {
+   "clusterId": "YJ0ajOczsEmq",
+   "integratedOptions": [
+    "673JGVsIAJmR"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316444344
+ },
+ {
+  "eventId": "ZtyscnCzSp0WtLri0gSB",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "6sUDasuO7lcd",
+  "reason": "themes consolidated into \"Waste Management and Reduction\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "-IimTiBuz2k6"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "-IimTiBuz2k6",
+    "utwkBUvFW-yU"
+   ],
+   "absorbed": [
+    "t8bZIty8pRLG"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316480613
+ },
+ {
+  "eventId": "wdXaLc3U2h0Taxtl2yLx",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "m9RAJ3AJ9WTp",
+  "reason": "gray-band match (no auto-action) (cosine=0.772)",
+  "newState": {
+   "siblingId": "WQ2NAujrzWIN",
+   "similarity": 0.7717277338110344
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316486340
+ },
+ {
+  "eventId": "rWQwnuHUUEbToP4kU3to",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "6H48m2OJJDp7",
+  "reason": "gray-band match (no auto-action) (cosine=0.773)",
+  "newState": {
+   "siblingId": "KESaRDu3AtNg",
+   "similarity": 0.7731826368804439
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316515393
+ },
+ {
+  "eventId": "EhXU2OOgRrXIdUizOcis",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "KJetDcYTcXg7",
+  "optionId": "GlYdOsgSIS6U",
+  "reason": "spawn synth at cosine=0.856",
+  "prevState": {
+   "sourceOptionId": "GlYdOsgSIS6U",
+   "siblingId": "Z2-h43mnOW87"
+  },
+  "newState": {
+   "clusterId": "KJetDcYTcXg7",
+   "integratedOptions": [
+    "GlYdOsgSIS6U",
+    "Z2-h43mnOW87"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316547136
+ },
+ {
+  "eventId": "Lg8QGvhdpq4G3P2AB473",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "dyZiwIsac6ye",
+  "optionId": "KJetDcYTcXg7",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "KJetDcYTcXg7"
+  },
+  "newState": {
+   "clusterId": "dyZiwIsac6ye",
+   "integratedOptions": [
+    "KJetDcYTcXg7"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316551104
+ },
+ {
+  "eventId": "3qHwnEdogcxjU5n7dQHo",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "0BEGJY4XbzOy",
+  "reason": "gray-band match (no auto-action) (cosine=0.740)",
+  "newState": {
+   "siblingId": "OwzoP1sJbrv3",
+   "similarity": 0.7395064795920382
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316583411
+ },
+ {
+  "eventId": "WHhvP3TlamYyVkckobHy",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "j0Lsrak8hQPY",
+  "reason": "gray-band match (no auto-action) (cosine=0.755)",
+  "newState": {
+   "siblingId": "F4X3n0keFj12",
+   "similarity": 0.7549981081703773
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316613038
+ },
+ {
+  "eventId": "qg0aJ7qdvomIyRZaIHIZ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pEVlkJy8z3sj",
+  "optionId": "esgCouD8NwEX",
+  "reason": "spawn synth at cosine=0.932",
+  "prevState": {
+   "sourceOptionId": "esgCouD8NwEX",
+   "siblingId": "ZITI94v1q-DU"
+  },
+  "newState": {
+   "clusterId": "pEVlkJy8z3sj",
+   "integratedOptions": [
+    "esgCouD8NwEX",
+    "ZITI94v1q-DU"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316643657
+ },
+ {
+  "eventId": "LRhDaSkxhdIfVrqWgs6o",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "1Uj3yJbMCRzC",
+  "optionId": "pEVlkJy8z3sj",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "pEVlkJy8z3sj"
+  },
+  "newState": {
+   "clusterId": "1Uj3yJbMCRzC",
+   "integratedOptions": [
+    "pEVlkJy8z3sj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316647065
+ },
+ {
+  "eventId": "ItLr8SlqdUMi8jGn9Y4X",
+  "actor": "liveSynth",
+  "action": "review-queued",
+  "clusterId": "",
+  "optionId": "JltQZedeat0f",
+  "reason": "gray-band match (no auto-action) (cosine=0.808)",
+  "newState": {
+   "siblingId": "dyZiwIsac6ye",
+   "similarity": 0.8081236707530396
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316682000
+ },
+ {
+  "eventId": "72OUHGKQzpteB3S7tV2K",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "P2qoNHCGITah",
+  "optionId": "GYu0InML3usQ",
+  "reason": "spawn synth at cosine=0.923",
+  "prevState": {
+   "sourceOptionId": "GYu0InML3usQ",
+   "siblingId": "8yDTadghJeHU"
+  },
+  "newState": {
+   "clusterId": "P2qoNHCGITah",
+   "integratedOptions": [
+    "GYu0InML3usQ",
+    "8yDTadghJeHU"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316716548
+ },
+ {
+  "eventId": "PBzNZgBakHKQSuj4Bcbv",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "wO7rYnWsdxAQ",
+  "optionId": "P2qoNHCGITah",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "P2qoNHCGITah"
+  },
+  "newState": {
+   "clusterId": "wO7rYnWsdxAQ",
+   "integratedOptions": [
+    "P2qoNHCGITah"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316720410
+ },
+ {
+  "eventId": "xVZlZZTSAPDDl0X9EGpV",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "HQcIsQnC7YqD",
+  "optionId": "-lhyQER1WVtx",
+  "reason": "spawn synth at cosine=0.997",
+  "prevState": {
+   "sourceOptionId": "-lhyQER1WVtx",
+   "siblingId": "87zy8osD4aWn"
+  },
+  "newState": {
+   "clusterId": "HQcIsQnC7YqD",
+   "integratedOptions": [
+    "-lhyQER1WVtx",
+    "87zy8osD4aWn"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316756090
+ },
+ {
+  "eventId": "3ey0lAXVqUb18y1ny8Eg",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "gk-9PO4Aemcf",
+  "optionId": "HQcIsQnC7YqD",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "HQcIsQnC7YqD"
+  },
+  "newState": {
+   "clusterId": "gk-9PO4Aemcf",
+   "integratedOptions": [
+    "HQcIsQnC7YqD"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316760779
+ },
+ {
+  "eventId": "ogJ89dDvaJIYvncEWxog",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "1jD4AWogdrdx",
+  "optionId": "7wN4pB0F3a1g",
+  "reason": "spawn synth at cosine=0.943",
+  "prevState": {
+   "sourceOptionId": "7wN4pB0F3a1g",
+   "siblingId": "d-cVmVXGfuUE"
+  },
+  "newState": {
+   "clusterId": "1jD4AWogdrdx",
+   "integratedOptions": [
+    "7wN4pB0F3a1g",
+    "d-cVmVXGfuUE"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316793959
+ },
+ {
+  "eventId": "biQDeC4EuyRyBvq3JoIL",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "dyZiwIsac6ye",
+  "optionId": "1jD4AWogdrdx",
+  "reason": "nest synthesis under theme (judge: Converts vacant properties into housing, aligning with affordable housing development efforts.)",
+  "prevState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316796617
+ },
+ {
+  "eventId": "UOoZuMqexCnHtClOSh3m",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "AwwVxShjLdsC",
+  "optionId": "icuG0JO4LJo-",
+  "reason": "spawn synth at cosine=0.909",
+  "prevState": {
+   "sourceOptionId": "icuG0JO4LJo-",
+   "siblingId": "Tb8wME5zszsC"
+  },
+  "newState": {
+   "clusterId": "AwwVxShjLdsC",
+   "integratedOptions": [
+    "icuG0JO4LJo-",
+    "Tb8wME5zszsC"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316842284
+ },
+ {
+  "eventId": "K0FiZ4ZVDZIXFDWJWiAB",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "RJmtOTXXY3uX",
+  "optionId": "AwwVxShjLdsC",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "AwwVxShjLdsC"
+  },
+  "newState": {
+   "clusterId": "RJmtOTXXY3uX",
+   "integratedOptions": [
+    "AwwVxShjLdsC"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316846354
+ },
+ {
+  "eventId": "2DEwigkasBkP91gBbF96",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "awnrDB3Il4PY",
+  "optionId": "gSjeotk3koKQ",
+  "reason": "spawn synth at cosine=0.890",
+  "prevState": {
+   "sourceOptionId": "gSjeotk3koKQ",
+   "siblingId": "WYWXVLc7AEWS"
+  },
+  "newState": {
+   "clusterId": "awnrDB3Il4PY",
+   "integratedOptions": [
+    "gSjeotk3koKQ",
+    "WYWXVLc7AEWS"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316879939
+ },
+ {
+  "eventId": "nuIYd0fLiJ2C6ZBEZBe5",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "XYzbIy4wBugk",
+  "optionId": "awnrDB3Il4PY",
+  "reason": "nest synthesis under theme (judge: Neighborhood beat patrols improve public safety alongside lighting and surveillance in crime-prone areas.)",
+  "prevState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb",
+    "eGlLfBwdSSdG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb",
+    "eGlLfBwdSSdG",
+    "awnrDB3Il4PY"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316882850
+ },
+ {
+  "eventId": "bdjeWgWbpt2VnuvLlpdB",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "AKe1AxIEqMea",
+  "reason": "option filed under theme (judge: Cycling lanes improve city transportation and residents’ ability to get around safely.)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316916236
+ },
+ {
+  "eventId": "ndO5EFOwnqsddHRKwA0X",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "0qqM5jPikoBz",
+  "optionId": "dCZS51I6LpNX",
+  "reason": "spawn synth at cosine=0.952",
+  "prevState": {
+   "sourceOptionId": "dCZS51I6LpNX",
+   "siblingId": "1JqgJUnAOL2e"
+  },
+  "newState": {
+   "clusterId": "0qqM5jPikoBz",
+   "integratedOptions": [
+    "dCZS51I6LpNX",
+    "1JqgJUnAOL2e"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316954711
+ },
+ {
+  "eventId": "JpFpCsX3prdKhtubAKVR",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "gk-9PO4Aemcf",
+  "optionId": "0qqM5jPikoBz",
+  "reason": "nest synthesis under theme (judge: Public art expands residents’ access to arts and cultural expression.)",
+  "prevState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316957735
+ },
+ {
+  "eventId": "BKdXlLAhC2hKMXDFtzVN",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "0kAqBYkp0AM3",
+  "optionId": "bkDe67tUEivz",
+  "reason": "spawn synth at cosine=0.915",
+  "prevState": {
+   "sourceOptionId": "bkDe67tUEivz",
+   "siblingId": "OwzoP1sJbrv3"
+  },
+  "newState": {
+   "clusterId": "0kAqBYkp0AM3",
+   "integratedOptions": [
+    "bkDe67tUEivz",
+    "OwzoP1sJbrv3"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316992894
+ },
+ {
+  "eventId": "MI14oi0TFSbWSfrdukOQ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "gjWBVx8QEjl5",
+  "optionId": "0kAqBYkp0AM3",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "0kAqBYkp0AM3"
+  },
+  "newState": {
+   "clusterId": "gjWBVx8QEjl5",
+   "integratedOptions": [
+    "0kAqBYkp0AM3"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787316996325
+ },
+ {
+  "eventId": "KZMB7WIhN98cTdtk2a3O",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "gjWBVx8QEjl5",
+  "optionId": "lL3oOK9D0yUj",
+  "reason": "option filed under theme (judge: Pocket parks provide neighborhood recreation and accessible green spaces, like dedicated dog parks.)",
+  "prevState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3",
+    "lL3oOK9D0yUj"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317029186
+ },
+ {
+  "eventId": "RLyZDJ2cE0eZ1xW6hsUh",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "kZ68Hui0k17H",
+  "optionId": "WB1GgOud00lO",
+  "reason": "spawn synth at cosine=0.949",
+  "prevState": {
+   "sourceOptionId": "WB1GgOud00lO",
+   "siblingId": "-PqzepsX1afL"
+  },
+  "newState": {
+   "clusterId": "kZ68Hui0k17H",
+   "integratedOptions": [
+    "WB1GgOud00lO",
+    "-PqzepsX1afL"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317061267
+ },
+ {
+  "eventId": "EZ3dfghyKH7sCdf55R3f",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "XF9LgeJj6Uv2",
+  "optionId": "kZ68Hui0k17H",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "kZ68Hui0k17H"
+  },
+  "newState": {
+   "clusterId": "XF9LgeJj6Uv2",
+   "integratedOptions": [
+    "kZ68Hui0k17H"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317064535
+ },
+ {
+  "eventId": "Q00GqJnYwlgRprwx2RkK",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "vd-oen3T42BZ",
+  "optionId": "7KasfoGimn9Y",
+  "reason": "spawn synth at cosine=0.910",
+  "prevState": {
+   "sourceOptionId": "7KasfoGimn9Y",
+   "siblingId": "63BCFI-Pc0jx"
+  },
+  "newState": {
+   "clusterId": "vd-oen3T42BZ",
+   "integratedOptions": [
+    "7KasfoGimn9Y",
+    "63BCFI-Pc0jx"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317110003
+ },
+ {
+  "eventId": "wZB9asKxzemChsl6ADcm",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "vd-oen3T42BZ",
+  "reason": "nest synthesis under theme (judge: Road-safety infrastructure aligns with this topic's existing cycling and transportation proposals.)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317113475
+ },
+ {
+  "eventId": "Wf3UOgzNVYsiomeOF565",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "mSTCzJw8EVR5",
+  "optionId": "B0mX1Gm9M2xm",
+  "reason": "spawn synth at cosine=0.979",
+  "prevState": {
+   "sourceOptionId": "B0mX1Gm9M2xm",
+   "siblingId": "59fPu18XSWsC"
+  },
+  "newState": {
+   "clusterId": "mSTCzJw8EVR5",
+   "integratedOptions": [
+    "B0mX1Gm9M2xm",
+    "59fPu18XSWsC"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317142811
+ },
+ {
+  "eventId": "nzJVPkjVDfWCLPsaEhP1",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "GikUB388ownz",
+  "optionId": "mSTCzJw8EVR5",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "mSTCzJw8EVR5"
+  },
+  "newState": {
+   "clusterId": "GikUB388ownz",
+   "integratedOptions": [
+    "mSTCzJw8EVR5"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317147690
+ },
+ {
+  "eventId": "zuSUiA2SmiDgeCUqObN7",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "dyZiwIsac6ye",
+  "optionId": "WD-679i4gL8-",
+  "reason": "option filed under theme (judge: Rent transparency supports affordable housing access and helps tenants compare housing costs.)",
+  "prevState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx",
+    "WD-679i4gL8-"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317178492
+ },
+ {
+  "eventId": "66ICbD3VuLyvsp5c89DK",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "Orjpubdpkden",
+  "reason": "option filed under theme (judge: It concerns improving public transportation frequency and access for city residents.)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ",
+    "Orjpubdpkden"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317211090
+ },
+ {
+  "eventId": "MJ7YoBY6jlEDLsC0AAEd",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "MeUazXWwnqJ6",
+  "optionId": "xtHulb6ItFqq",
+  "reason": "spawn synth at cosine=0.913",
+  "prevState": {
+   "sourceOptionId": "xtHulb6ItFqq",
+   "siblingId": "BCcsCQQYoV3T"
+  },
+  "newState": {
+   "clusterId": "MeUazXWwnqJ6",
+   "integratedOptions": [
+    "xtHulb6ItFqq",
+    "BCcsCQQYoV3T"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317243810
+ },
+ {
+  "eventId": "npGISMdJgNd8CS9JJv2q",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "6sUDasuO7lcd",
+  "optionId": "MeUazXWwnqJ6",
+  "reason": "nest synthesis under theme (judge: Recycling collection is a household waste management and reduction service.)",
+  "prevState": {
+   "integratedOptions": [
+    "-IimTiBuz2k6",
+    "utwkBUvFW-yU"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "-IimTiBuz2k6",
+    "utwkBUvFW-yU",
+    "MeUazXWwnqJ6"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317245764
+ },
+ {
+  "eventId": "ViXvTcbailpQx7TlVABa",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "eM4mHqjO0j3G",
+  "optionId": "4VGfBmyyVwcF",
+  "reason": "spawn synth at cosine=0.908",
+  "prevState": {
+   "sourceOptionId": "4VGfBmyyVwcF",
+   "siblingId": "swK2F-FSrXzO"
+  },
+  "newState": {
+   "clusterId": "eM4mHqjO0j3G",
+   "integratedOptions": [
+    "4VGfBmyyVwcF",
+    "swK2F-FSrXzO"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317279143
+ },
+ {
+  "eventId": "zEc73MoNJxFPDwA1vR36",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pslfbVnOC4fP",
+  "optionId": "eM4mHqjO0j3G",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "eM4mHqjO0j3G"
+  },
+  "newState": {
+   "clusterId": "pslfbVnOC4fP",
+   "integratedOptions": [
+    "eM4mHqjO0j3G"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317283542
+ },
+ {
+  "eventId": "SpjsSUNuOdZsSanQgFg9",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "dyZiwIsac6ye",
+  "optionId": "-Cn5oBAwRYq4",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx",
+    "WD-679i4gL8-"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx",
+    "-Cn5oBAwRYq4"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317319590
+ },
+ {
+  "eventId": "R3uvHF9G0iIoZCSshMcq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "-Cn5oBAwRYq4",
+  "optionId": "oZ-YBRaqQ4P5",
+  "reason": "spawn synth at cosine=0.855",
+  "prevState": {
+   "sourceOptionId": "oZ-YBRaqQ4P5",
+   "siblingId": "WD-679i4gL8-"
+  },
+  "newState": {
+   "clusterId": "-Cn5oBAwRYq4",
+   "integratedOptions": [
+    "oZ-YBRaqQ4P5",
+    "WD-679i4gL8-"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317319592
+ },
+ {
+  "eventId": "vCOFYyUHZAplbiLhjqOD",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "r2jjmGmAIEoo",
+  "optionId": "I0fz8llYftQk",
+  "reason": "spawn synth at cosine=0.915",
+  "prevState": {
+   "sourceOptionId": "I0fz8llYftQk",
+   "siblingId": "pplECTAS0xHI"
+  },
+  "newState": {
+   "clusterId": "r2jjmGmAIEoo",
+   "integratedOptions": [
+    "I0fz8llYftQk",
+    "pplECTAS0xHI"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317353467
+ },
+ {
+  "eventId": "yJUBSv8SKdK0SRvfUHZC",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "pslfbVnOC4fP",
+  "optionId": "r2jjmGmAIEoo",
+  "reason": "nest synthesis under theme (judge: Public real-time air-quality readings are municipal open data for residents.)",
+  "prevState": {
+   "integratedOptions": [
+    "eM4mHqjO0j3G"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "eM4mHqjO0j3G",
+    "r2jjmGmAIEoo"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317357090
+ },
+ {
+  "eventId": "Hb88VlFEiuqNLqrNrPV4",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "gjWBVx8QEjl5",
+  "optionId": "pfxClwlOQiAW",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3",
+    "lL3oOK9D0yUj"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3",
+    "pfxClwlOQiAW"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317391704
+ },
+ {
+  "eventId": "S8BFSbqleFLGGnbRNZqf",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "pfxClwlOQiAW",
+  "optionId": "ZRQ-bfMYbz76",
+  "reason": "spawn synth at cosine=0.838",
+  "prevState": {
+   "sourceOptionId": "ZRQ-bfMYbz76",
+   "siblingId": "lL3oOK9D0yUj"
+  },
+  "newState": {
+   "clusterId": "pfxClwlOQiAW",
+   "integratedOptions": [
+    "ZRQ-bfMYbz76",
+    "lL3oOK9D0yUj"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317391707
+ },
+ {
+  "eventId": "Iqt3RP4pTZ2y7HCzvi9b",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "X5PcRVl9W7sl",
+  "reason": "option filed under theme (judge: This concerns urban transportation infrastructure, matching the existing cycling-lane proposal.)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ",
+    "Orjpubdpkden"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ",
+    "Orjpubdpkden",
+    "X5PcRVl9W7sl"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317423369
+ },
+ {
+  "eventId": "NmldRcLxQHAFDWTyKSWv",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "28-3FKRdMbXd",
+  "optionId": "eBzPz6m8pDwg",
+  "reason": "spawn synth at cosine=0.923",
+  "prevState": {
+   "sourceOptionId": "eBzPz6m8pDwg",
+   "siblingId": "j0Lsrak8hQPY"
+  },
+  "newState": {
+   "clusterId": "28-3FKRdMbXd",
+   "integratedOptions": [
+    "eBzPz6m8pDwg",
+    "j0Lsrak8hQPY"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317459282
+ },
+ {
+  "eventId": "hwbvUtyaaS3ebPtHIkrJ",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "ZZfdfpsuK5zh",
+  "optionId": "28-3FKRdMbXd",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "28-3FKRdMbXd"
+  },
+  "newState": {
+   "clusterId": "ZZfdfpsuK5zh",
+   "integratedOptions": [
+    "28-3FKRdMbXd"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317463164
+ },
+ {
+  "eventId": "mUy0hgmzrTRJxNIhHsvm",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "8b5lQCo1kcx6",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "iApgGefAuBfL",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ",
+    "Orjpubdpkden",
+    "X5PcRVl9W7sl"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ",
+    "Orjpubdpkden",
+    "X5PcRVl9W7sl",
+    "8b5lQCo1kcx6"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317497319
+ },
+ {
+  "eventId": "TwHLyANHPnpduJ5Wbowj",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "8b5lQCo1kcx6",
+  "optionId": "YujHbi1MbUjN",
+  "reason": "spawn synth at cosine=0.919",
+  "prevState": {
+   "sourceOptionId": "YujHbi1MbUjN",
+   "siblingId": "iApgGefAuBfL"
+  },
+  "newState": {
+   "clusterId": "8b5lQCo1kcx6",
+   "integratedOptions": [
+    "YujHbi1MbUjN",
+    "iApgGefAuBfL"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317497320
+ },
+ {
+  "eventId": "vx45PmukLPueP5MN5ppB",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "KcItBewVbm7Q",
+  "optionId": "hZG5wvLhAB4g",
+  "reason": "spawn synth at cosine=0.905",
+  "prevState": {
+   "sourceOptionId": "hZG5wvLhAB4g",
+   "siblingId": "9QCwWoXbkueR"
+  },
+  "newState": {
+   "clusterId": "KcItBewVbm7Q",
+   "integratedOptions": [
+    "hZG5wvLhAB4g",
+    "9QCwWoXbkueR"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317531443
+ },
+ {
+  "eventId": "372tgmXTJZlm6TyxyUlb",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "c8DFND3VsPSG",
+  "optionId": "KcItBewVbm7Q",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "KcItBewVbm7Q"
+  },
+  "newState": {
+   "clusterId": "c8DFND3VsPSG",
+   "integratedOptions": [
+    "KcItBewVbm7Q"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317536152
+ },
+ {
+  "eventId": "v2eNjJynJhf6lKv3Qhwr",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "XYzbIy4wBugk",
+  "optionId": "SbmGozJvyNrK",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb",
+    "eGlLfBwdSSdG",
+    "awnrDB3Il4PY"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb",
+    "awnrDB3Il4PY",
+    "SbmGozJvyNrK"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317578033
+ },
+ {
+  "eventId": "WYMyj28WOw0Tl7pLgCPK",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "SbmGozJvyNrK",
+  "optionId": "gRGLjrUfE9YT",
+  "reason": "spawn synth at cosine=0.970",
+  "prevState": {
+   "sourceOptionId": "gRGLjrUfE9YT",
+   "siblingId": "eGlLfBwdSSdG"
+  },
+  "newState": {
+   "clusterId": "SbmGozJvyNrK",
+   "integratedOptions": [
+    "gRGLjrUfE9YT",
+    "eGlLfBwdSSdG"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317578034
+ },
+ {
+  "eventId": "36wmH3lMbavGE2Bzyj39",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "1RVCZdMfl1By",
+  "optionId": "2lnO6qTAsuVx",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ",
+    "Orjpubdpkden",
+    "X5PcRVl9W7sl",
+    "8b5lQCo1kcx6"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "aj2RKk1lILfZ",
+    "vcvIZ6OrQHXY",
+    "AKe1AxIEqMea",
+    "vd-oen3T42BZ",
+    "X5PcRVl9W7sl",
+    "8b5lQCo1kcx6",
+    "2lnO6qTAsuVx"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317611999
+ },
+ {
+  "eventId": "oZ1PlmGluRTTXW2e7GYP",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "2lnO6qTAsuVx",
+  "optionId": "GFj5oQ8DHgIz",
+  "reason": "spawn synth at cosine=0.942",
+  "prevState": {
+   "sourceOptionId": "GFj5oQ8DHgIz",
+   "siblingId": "Orjpubdpkden"
+  },
+  "newState": {
+   "clusterId": "2lnO6qTAsuVx",
+   "integratedOptions": [
+    "GFj5oQ8DHgIz",
+    "Orjpubdpkden"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317612000
+ },
+ {
+  "eventId": "FLPqVvVp9tUR1qiyZSNx",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "BUziU7cfuTYv",
+  "optionId": "DyAE7URjrjzB",
+  "reason": "option filed under theme (judge: Expands residents' access to and assistance with municipal online services.)",
+  "prevState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "lowvuSfZAYaq"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "lowvuSfZAYaq",
+    "DyAE7URjrjzB"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317646142
+ },
+ {
+  "eventId": "QcIflalxAjfUcYiKzQSp",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "LmH0XdWoBZUM",
+  "optionId": "6Dlnc-kGWMJx",
+  "reason": "spawn synth at cosine=0.965",
+  "prevState": {
+   "sourceOptionId": "6Dlnc-kGWMJx",
+   "siblingId": "WQ2NAujrzWIN"
+  },
+  "newState": {
+   "clusterId": "LmH0XdWoBZUM",
+   "integratedOptions": [
+    "6Dlnc-kGWMJx",
+    "WQ2NAujrzWIN"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317678055
+ },
+ {
+  "eventId": "l24nJGg1fgY5CBmSjZIF",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "TXtr0X4BrlyA",
+  "optionId": "LmH0XdWoBZUM",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "LmH0XdWoBZUM"
+  },
+  "newState": {
+   "clusterId": "TXtr0X4BrlyA",
+   "integratedOptions": [
+    "LmH0XdWoBZUM"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317682578
+ },
+ {
+  "eventId": "mEzGJcYQ9Eibm23hNeyQ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "BUziU7cfuTYv",
+  "optionId": "S8PBSqavNmNk",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "lowvuSfZAYaq",
+    "DyAE7URjrjzB"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "DyAE7URjrjzB",
+    "S8PBSqavNmNk"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317715485
+ },
+ {
+  "eventId": "OhxFe6E275FczExBsNC1",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "S8PBSqavNmNk",
+  "optionId": "ZQsD0sc7mJFx",
+  "reason": "spawn synth at cosine=0.930",
+  "prevState": {
+   "sourceOptionId": "ZQsD0sc7mJFx",
+   "siblingId": "lowvuSfZAYaq"
+  },
+  "newState": {
+   "clusterId": "S8PBSqavNmNk",
+   "integratedOptions": [
+    "ZQsD0sc7mJFx",
+    "lowvuSfZAYaq"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317715487
+ },
+ {
+  "eventId": "qej85wby9Vi1yjV45vjE",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "BUziU7cfuTYv",
+  "optionId": "C6IoFMlKZnXs",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "DyAE7URjrjzB",
+    "S8PBSqavNmNk"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "S8PBSqavNmNk",
+    "C6IoFMlKZnXs"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317750535
+ },
+ {
+  "eventId": "aUyQgjXYSgee2ru8UDEG",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "C6IoFMlKZnXs",
+  "optionId": "nMdas4x-ZLzS",
+  "reason": "spawn synth at cosine=0.841",
+  "prevState": {
+   "sourceOptionId": "nMdas4x-ZLzS",
+   "siblingId": "DyAE7URjrjzB"
+  },
+  "newState": {
+   "clusterId": "C6IoFMlKZnXs",
+   "integratedOptions": [
+    "nMdas4x-ZLzS",
+    "DyAE7URjrjzB"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317750536
+ },
+ {
+  "eventId": "m7v6ZUONW6ZY9lEq0CP6",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "2yAejopIZTCT",
+  "optionId": "osVaZFtnwiEj",
+  "reason": "spawn synth at cosine=0.977",
+  "prevState": {
+   "sourceOptionId": "osVaZFtnwiEj",
+   "siblingId": "0BEGJY4XbzOy"
+  },
+  "newState": {
+   "clusterId": "2yAejopIZTCT",
+   "integratedOptions": [
+    "osVaZFtnwiEj",
+    "0BEGJY4XbzOy"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317785082
+ },
+ {
+  "eventId": "yrqchmqgL9peNfMRWnPJ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "gjWBVx8QEjl5",
+  "optionId": "2yAejopIZTCT",
+  "reason": "nest synthesis under theme (judge: Playground accessibility is a neighborhood recreation and public park improvement.)",
+  "prevState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3",
+    "pfxClwlOQiAW"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3",
+    "pfxClwlOQiAW",
+    "2yAejopIZTCT"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317787843
+ },
+ {
+  "eventId": "L8WVzpBMky5QAhJkZihV",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "BUziU7cfuTYv",
+  "optionId": "lti4eXGbT7v8",
+  "reason": "option filed under theme (judge: Streamlining business permits improves access to municipal procedures and services.)",
+  "prevState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "S8PBSqavNmNk",
+    "C6IoFMlKZnXs"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "S8PBSqavNmNk",
+    "C6IoFMlKZnXs",
+    "lti4eXGbT7v8"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317819966
+ },
+ {
+  "eventId": "hfFuEai5XBdqePhUV24C",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "gk-9PO4Aemcf",
+  "optionId": "zKxAmg8mJTqG",
+  "reason": "option filed under theme (judge: Provides children affordable access to arts and cultural education.)",
+  "prevState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz",
+    "zKxAmg8mJTqG"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:optionTheme",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317849345
+ },
+ {
+  "eventId": "VBPg4T2GLLoGOdWOjdN1",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "dzkDyVLxI26O",
+  "optionId": "1nDR52hm30DR",
+  "reason": "spawn synth at cosine=0.922",
+  "prevState": {
+   "sourceOptionId": "1nDR52hm30DR",
+   "siblingId": "VpGQWeSZFEGm"
+  },
+  "newState": {
+   "clusterId": "dzkDyVLxI26O",
+   "integratedOptions": [
+    "1nDR52hm30DR",
+    "VpGQWeSZFEGm"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317881465
+ },
+ {
+  "eventId": "SaTd7dIFD40Idn0hTtoe",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "XYzbIy4wBugk",
+  "optionId": "dzkDyVLxI26O",
+  "reason": "nest synthesis under theme (judge: Improves pedestrian comfort and safety along streets and pathways.)",
+  "prevState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb",
+    "awnrDB3Il4PY",
+    "SbmGozJvyNrK"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "GyNkka-CZjMb",
+    "awnrDB3Il4PY",
+    "SbmGozJvyNrK",
+    "dzkDyVLxI26O"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317885724
+ },
+ {
+  "eventId": "2hFX96A0IkuWWdnboH0C",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "BYjTdBVwjeW8",
+  "optionId": "F7OgSs9cX38b",
+  "reason": "spawn synth at cosine=0.972",
+  "prevState": {
+   "sourceOptionId": "F7OgSs9cX38b",
+   "siblingId": "t8xFThuEkl5b"
+  },
+  "newState": {
+   "clusterId": "BYjTdBVwjeW8",
+   "integratedOptions": [
+    "F7OgSs9cX38b",
+    "t8xFThuEkl5b"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317924669
+ },
+ {
+  "eventId": "6MIc1tRJqiDyCGiLPdaU",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "OJAc4Thu6qus",
+  "optionId": "BYjTdBVwjeW8",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "BYjTdBVwjeW8"
+  },
+  "newState": {
+   "clusterId": "OJAc4Thu6qus",
+   "integratedOptions": [
+    "BYjTdBVwjeW8"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317928687
+ },
+ {
+  "eventId": "O2nW12gEdKYHVFalW7GC",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "gk-9PO4Aemcf",
+  "optionId": "TLUxpVIWHgK6",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz",
+    "zKxAmg8mJTqG"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz",
+    "TLUxpVIWHgK6"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317961889
+ },
+ {
+  "eventId": "ZVr1yelEQwSlVUtDCx96",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "TLUxpVIWHgK6",
+  "optionId": "-EPVcmVaNZbp",
+  "reason": "spawn synth at cosine=0.961",
+  "prevState": {
+   "sourceOptionId": "-EPVcmVaNZbp",
+   "siblingId": "zKxAmg8mJTqG"
+  },
+  "newState": {
+   "clusterId": "TLUxpVIWHgK6",
+   "integratedOptions": [
+    "-EPVcmVaNZbp",
+    "zKxAmg8mJTqG"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317961890
+ },
+ {
+  "eventId": "gG2fuARrR1R5CCQHEVAg",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "a7Ct67VA5hl0",
+  "optionId": "Sddb7zaCP9OE",
+  "reason": "spawn synth at cosine=0.906",
+  "prevState": {
+   "sourceOptionId": "Sddb7zaCP9OE",
+   "siblingId": "6H48m2OJJDp7"
+  },
+  "newState": {
+   "clusterId": "a7Ct67VA5hl0",
+   "integratedOptions": [
+    "Sddb7zaCP9OE",
+    "6H48m2OJJDp7"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787317996572
+ },
+ {
+  "eventId": "bDfKHh1Isml4kOyeJLXh",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "7qAaw-n42sfH",
+  "optionId": "a7Ct67VA5hl0",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "a7Ct67VA5hl0"
+  },
+  "newState": {
+   "clusterId": "7qAaw-n42sfH",
+   "integratedOptions": [
+    "a7Ct67VA5hl0"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318000605
+ },
+ {
+  "eventId": "ua0PdQ7JaXyBpIFDak1k",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "tYko8aC0vZtJ",
+  "optionId": "idCyDt2WpiQd",
+  "reason": "spawn synth at cosine=0.932",
+  "prevState": {
+   "sourceOptionId": "idCyDt2WpiQd",
+   "siblingId": "ldgErB82C8lA"
+  },
+  "newState": {
+   "clusterId": "tYko8aC0vZtJ",
+   "integratedOptions": [
+    "idCyDt2WpiQd",
+    "ldgErB82C8lA"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318033812
+ },
+ {
+  "eventId": "DgwtfkkeepKCZOsP7LEn",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "gjWBVx8QEjl5",
+  "optionId": "tYko8aC0vZtJ",
+  "reason": "nest synthesis under theme (judge: Community gardens are neighborhood recreational green spaces supporting shared community activity.)",
+  "prevState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3",
+    "pfxClwlOQiAW",
+    "2yAejopIZTCT"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "0kAqBYkp0AM3",
+    "pfxClwlOQiAW",
+    "2yAejopIZTCT",
+    "tYko8aC0vZtJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318036735
+ },
+ {
+  "eventId": "eYTgXj3SAO0uglSnDl67",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "dRQraALIoP1l",
+  "optionId": "LL3CHUrVAGgH",
+  "reason": "spawn synth at cosine=0.858",
+  "prevState": {
+   "sourceOptionId": "LL3CHUrVAGgH",
+   "siblingId": "m9RAJ3AJ9WTp"
+  },
+  "newState": {
+   "clusterId": "dRQraALIoP1l",
+   "integratedOptions": [
+    "LL3CHUrVAGgH",
+    "m9RAJ3AJ9WTp"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318070183
+ },
+ {
+  "eventId": "TbFtYfORdTrvIh9ETMDf",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "TXtr0X4BrlyA",
+  "optionId": "dRQraALIoP1l",
+  "reason": "nest synthesis under theme (judge: Expands access to routine primary and preventive healthcare in underserved neighborhoods.)",
+  "prevState": {
+   "integratedOptions": [
+    "LmH0XdWoBZUM"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "LmH0XdWoBZUM",
+    "dRQraALIoP1l"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318074315
+ },
+ {
+  "eventId": "ScOSE02h685dgXWgZn1V",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "EalXoDGlSh1p",
+  "optionId": "m4WQxYSooMxG",
+  "reason": "spawn synth at cosine=0.908",
+  "prevState": {
+   "sourceOptionId": "m4WQxYSooMxG",
+   "siblingId": "JltQZedeat0f"
+  },
+  "newState": {
+   "clusterId": "EalXoDGlSh1p",
+   "integratedOptions": [
+    "m4WQxYSooMxG",
+    "JltQZedeat0f"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318108961
+ },
+ {
+  "eventId": "JiDbphUmWqmAiyM4e74o",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "dyZiwIsac6ye",
+  "optionId": "EalXoDGlSh1p",
+  "reason": "nest synthesis under theme (judge: Public funding improves existing housing affordability and condition through energy-efficient renovations.)",
+  "prevState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx",
+    "-Cn5oBAwRYq4"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx",
+    "-Cn5oBAwRYq4",
+    "EalXoDGlSh1p"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318112137
+ },
+ {
+  "eventId": "YhqxbGz9LP4Yu7nLBnOZ",
+  "actor": "liveSynth",
+  "action": "attach",
+  "clusterId": "BUziU7cfuTYv",
+  "optionId": "I2DIxlFDkfWv",
+  "reason": "nest synthesis under topic cluster (members re-homed)",
+  "prevState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "S8PBSqavNmNk",
+    "C6IoFMlKZnXs",
+    "lti4eXGbT7v8"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "BIadV8VUny7g",
+    "S8PBSqavNmNk",
+    "C6IoFMlKZnXs",
+    "I2DIxlFDkfWv"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:nest",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318146650
+ },
+ {
+  "eventId": "KBkN4hD6O1Eg0VWH5tLx",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "I2DIxlFDkfWv",
+  "optionId": "ODHoGUGOzoLq",
+  "reason": "spawn synth at cosine=0.889",
+  "prevState": {
+   "sourceOptionId": "ODHoGUGOzoLq",
+   "siblingId": "lti4eXGbT7v8"
+  },
+  "newState": {
+   "clusterId": "I2DIxlFDkfWv",
+   "integratedOptions": [
+    "ODHoGUGOzoLq",
+    "lti4eXGbT7v8"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318146651
+ },
+ {
+  "eventId": "njRi99z83PsFDVYNKagq",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "AibJ8M82BcBJ",
+  "optionId": "C5GgErVorgH-",
+  "reason": "spawn synth at cosine=0.931",
+  "prevState": {
+   "sourceOptionId": "C5GgErVorgH-",
+   "siblingId": "gdX8b3zkQNdT"
+  },
+  "newState": {
+   "clusterId": "AibJ8M82BcBJ",
+   "integratedOptions": [
+    "C5GgErVorgH-",
+    "gdX8b3zkQNdT"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318179434
+ },
+ {
+  "eventId": "sE5zh35cy2aCtVkjemTM",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "EKnXmQEn9bzS",
+  "optionId": "AibJ8M82BcBJ",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "AibJ8M82BcBJ"
+  },
+  "newState": {
+   "clusterId": "EKnXmQEn9bzS",
+   "integratedOptions": [
+    "AibJ8M82BcBJ"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318183472
+ },
+ {
+  "eventId": "jjdCldzCyFjchgSDy9Zz",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "mQZf8J51IIxc",
+  "optionId": "E5JNY1Ie4vLg",
+  "reason": "spawn synth at cosine=0.941",
+  "prevState": {
+   "sourceOptionId": "E5JNY1Ie4vLg",
+   "siblingId": "rlGe-Kl6SaU0"
+  },
+  "newState": {
+   "clusterId": "mQZf8J51IIxc",
+   "integratedOptions": [
+    "E5JNY1Ie4vLg",
+    "rlGe-Kl6SaU0"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318217652
+ },
+ {
+  "eventId": "3Kh58s5mCiLPpBwBgi9B",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "6gfQlgItIbuR",
+  "optionId": "mQZf8J51IIxc",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "mQZf8J51IIxc"
+  },
+  "newState": {
+   "clusterId": "6gfQlgItIbuR",
+   "integratedOptions": [
+    "mQZf8J51IIxc"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318222037
+ },
+ {
+  "eventId": "mIwGowbwnqeFWVT2NVaB",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "T4HVvX8OTjr1",
+  "optionId": "dSnEvI59ZliV",
+  "reason": "spawn synth at cosine=0.956",
+  "prevState": {
+   "sourceOptionId": "dSnEvI59ZliV",
+   "siblingId": "gYygYrt9O9jG"
+  },
+  "newState": {
+   "clusterId": "T4HVvX8OTjr1",
+   "integratedOptions": [
+    "dSnEvI59ZliV",
+    "gYygYrt9O9jG"
+   ],
+   "mode": "synth"
+  },
+  "triggerSource": "pipeline:onCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318255175
+ },
+ {
+  "eventId": "M3iEZlGUVQDW3FRS0Tuc",
+  "actor": "liveSynth",
+  "action": "spawn",
+  "clusterId": "qoysdJYnOW27",
+  "optionId": "T4HVvX8OTjr1",
+  "reason": "new theme created for synthesis (no existing theme fit)",
+  "prevState": {
+   "synthId": "T4HVvX8OTjr1"
+  },
+  "newState": {
+   "clusterId": "qoysdJYnOW27",
+   "integratedOptions": [
+    "T4HVvX8OTjr1"
+   ]
+  },
+  "triggerSource": "pipeline:onCreate:themeCreate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318259416
+ },
+ {
+  "eventId": "CAKrq8POHddN7zcbhQuZ",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "F4X3n0keFj12",
+  "reason": "themes consolidated into \"School Services and Facilities\" (4 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "pd1PfnLcOM1T"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "pd1PfnLcOM1T",
+    "pEVlkJy8z3sj",
+    "mQZf8J51IIxc",
+    "BYjTdBVwjeW8",
+    "28-3FKRdMbXd"
+   ],
+   "absorbed": [
+    "1Uj3yJbMCRzC",
+    "6gfQlgItIbuR",
+    "OJAc4Thu6qus",
+    "ZZfdfpsuK5zh"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318302384
+ },
+ {
+  "eventId": "M8El7XnTRyFfHFYtL0SF",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "dyZiwIsac6ye",
+  "reason": "themes consolidated into \"Affordable Housing\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx",
+    "-Cn5oBAwRYq4",
+    "EalXoDGlSh1p"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "KJetDcYTcXg7",
+    "1jD4AWogdrdx",
+    "-Cn5oBAwRYq4",
+    "EalXoDGlSh1p",
+    "19OgyvCJf4Rm"
+   ],
+   "absorbed": [
+    "oubMshkXZ4a3"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318302443
+ },
+ {
+  "eventId": "KlDdPkailS55MCd67tLX",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "TXtr0X4BrlyA",
+  "reason": "themes consolidated into \"Healthcare Access and Support\" (2 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "LmH0XdWoBZUM",
+    "dRQraALIoP1l"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "LmH0XdWoBZUM",
+    "dRQraALIoP1l",
+    "xTB6uTRMIyYo",
+    "kZ68Hui0k17H"
+   ],
+   "absorbed": [
+    "KESaRDu3AtNg",
+    "XF9LgeJj6Uv2"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318302513
+ },
+ {
+  "eventId": "znbZV8A4oP5WWbv0LElY",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "YJ0ajOczsEmq",
+  "reason": "themes consolidated into \"Workforce Opportunities\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "673JGVsIAJmR"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "673JGVsIAJmR",
+    "KcItBewVbm7Q"
+   ],
+   "absorbed": [
+    "c8DFND3VsPSG"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318302583
+ },
+ {
+  "eventId": "33COTuTLTGBBhYz3x2nb",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "wO7rYnWsdxAQ",
+  "reason": "themes consolidated into \"Small Business Support\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "P2qoNHCGITah"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "P2qoNHCGITah",
+    "T4HVvX8OTjr1"
+   ],
+   "absorbed": [
+    "qoysdJYnOW27"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318302633
+ },
+ {
+  "eventId": "GdI7GbachTm0e9ArzlMi",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "gk-9PO4Aemcf",
+  "reason": "themes consolidated into \"Community Culture and Recreation\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz",
+    "TLUxpVIWHgK6"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz",
+    "TLUxpVIWHgK6",
+    "DN3eqvDJP4f2"
+   ],
+   "absorbed": [
+    "Gm0U8p4A1TKQ"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318302695
+ },
+ {
+  "eventId": "yfahdwkQZotbC1G2ALR4",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "gk-9PO4Aemcf",
+  "reason": "themes consolidated into \"Libraries, Culture, and Recreation\" (2 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz",
+    "TLUxpVIWHgK6",
+    "DN3eqvDJP4f2"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "HQcIsQnC7YqD",
+    "0qqM5jPikoBz",
+    "TLUxpVIWHgK6",
+    "DN3eqvDJP4f2",
+    "bI7Xl9EVGe2o",
+    "0kAqBYkp0AM3",
+    "pfxClwlOQiAW",
+    "2yAejopIZTCT",
+    "tYko8aC0vZtJ"
+   ],
+   "absorbed": [
+    "HxQkEjN9K-L9",
+    "gjWBVx8QEjl5"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318322831
+ },
+ {
+  "eventId": "VLYmp4dS7Oavmo7WiMRC",
+  "actor": "liveSynth",
+  "action": "merge",
+  "clusterId": "YJ0ajOczsEmq",
+  "reason": "themes consolidated into \"Workforce and Small Business Support\" (1 donor(s))",
+  "prevState": {
+   "integratedOptions": [
+    "673JGVsIAJmR",
+    "KcItBewVbm7Q"
+   ]
+  },
+  "newState": {
+   "integratedOptions": [
+    "673JGVsIAJmR",
+    "KcItBewVbm7Q",
+    "P2qoNHCGITah",
+    "T4HVvX8OTjr1"
+   ],
+   "absorbed": [
+    "wO7rYnWsdxAQ"
+   ]
+  },
+  "triggerSource": "reJudge:themeConsolidate",
+  "parentStatementId": "accuracy100en",
+  "timestamp": 1787318322894
+ }
+]
