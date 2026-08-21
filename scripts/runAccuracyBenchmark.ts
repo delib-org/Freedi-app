@@ -101,6 +101,12 @@ interface Options {
 	maxWaitMs: number;
 	outDir: string | null;
 	keep: boolean;
+	/** Feed in corpus order instead of the seeded shuffle — for replaying a
+	 * REAL question's statements in their original arrival order. */
+	inOrder: boolean;
+	/** Skip the 10×5×2 structure check — a real-question replay corpus is one
+	 * synth per statement and carries no ground truth. */
+	noValidate: boolean;
 }
 
 function parseArgs(): Options {
@@ -140,6 +146,8 @@ function parseArgs(): Options {
 		maxWaitMs: num('max-wait-ms', 45000),
 		outDir: outRaw ? resolvePath(outRaw.slice('--out='.length)) : null,
 		keep: argv.includes('--keep'),
+		inOrder: argv.includes('--in-order'),
+		noValidate: argv.includes('--no-validate'),
 	};
 }
 
@@ -206,17 +214,25 @@ function buildArrivalOrder(): SeedItem[] {
 			}
 		}
 	}
-	// Fisher-Yates with the seeded PRNG.
-	const rand = mulberry32(opts.seed);
-	for (let i = flat.length - 1; i > 0; i--) {
-		const j = Math.floor(rand() * (i + 1));
-		[flat[i], flat[j]] = [flat[j], flat[i]];
+	// Fisher-Yates with the seeded PRNG — unless replaying a real question,
+	// where the corpus order IS the original arrival order.
+	if (!opts.inOrder) {
+		const rand = mulberry32(opts.seed);
+		for (let i = flat.length - 1; i > 0; i--) {
+			const j = Math.floor(rand() * (i + 1));
+			[flat[i], flat[j]] = [flat[j], flat[i]];
+		}
 	}
 
 	return opts.limit === null ? flat : flat.slice(0, opts.limit);
 }
 
 function validateStructure(): void {
+	if (opts.noValidate) {
+		console.info('· corpus structure check skipped (--no-validate)');
+
+		return;
+	}
 	const problems: string[] = [];
 	if (corpus.topics.length !== 10) problems.push(`expected 10 topics, got ${corpus.topics.length}`);
 	for (const topic of corpus.topics) {

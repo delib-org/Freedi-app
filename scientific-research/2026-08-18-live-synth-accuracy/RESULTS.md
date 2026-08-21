@@ -345,6 +345,20 @@ statements — and the English regression run below is the check that judging
 what geometry used to decide does not tax the language where geometry was
 sufficient.
 
+## Case study — a real production question replayed (Bq-VQPMPiG7b)
+
+The first real-data exercise of the all-judged build: the 114 Hebrew statements
+of production question `Bq-VQPMPiG7b` (read-only export), replayed in original
+arrival order with the migration configuration (3-large pin + measured bands).
+Production today: one 59-member catch-all theme, one 24-member "synthesis", 14
+statements unplaced. Replay: **11 precise syntheses (2–8 members each), 2
+themes, 27 statements deliberately left open**. The old 24-member forum blob
+reappears as the same proposal holding exactly its 2 true paraphrases. Full
+before/after listings and the deployment-order discussion:
+`REPORT-BqVQPMPiG7b-case-study.pdf`; run artifacts in
+`runs/bq-replay-alljudged/`. Build certified. No ground truth exists for a
+real question, so this is a structural comparison, not a score.
+
 ## Finding 19 — the English regression run: synth layer identical, topic layer rolls its usual dice
 
 `en-seed42-alljudged` runs the full all-judged build (judged Pass 3, spawn

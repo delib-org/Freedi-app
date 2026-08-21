@@ -1,0 +1,809 @@
+{
+  "test": "live-synth-accuracy-he-seed42",
+  "language": "he",
+  "question": "אילו תנאים וגורמים שזיהיתם יאפשרו לרתום את כוחו של המחקר לשינוי המציאות?\nנסו להציע  פעולות, כלים, אירועים, סדירויות וכו'",
+  "questionId": "Bq-VQPMPiG7b",
+  "corpus": "/private/tmp/claude-501/-Users-talyaron-Documents-Freedi-app/859c56fb-da66-402a-a750-2b67673f5f33/scratchpad/bq-replay-corpus.json",
+  "corpusSha": "4deb0fba96f7",
+  "seed": 42,
+  "statements": [
+    {
+      "id": "8UMPeQ3U3sVy",
+      "text": "וובינרים קבועים להנגשת הידע הכי רלוונטי לנושא",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/8hojwHxeMp2w",
+      "arrivalIndex": 0
+    },
+    {
+      "id": "4vhT0YqrfQK-",
+      "text": "\"שידוכים\" בין חוקרים לארגוני חברה אזרחית ומשרדי ממשלה",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/3N06eWIiDGNf",
+      "arrivalIndex": 1
+    },
+    {
+      "id": "3LDE-6Vs74lP",
+      "text": " יצירת פורומים של חוקרים סביב מאבקים סביבתיים ורתימת המחקר הקיים בארץ ובעולם שיכול לשרת את המאבק.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/bzfzrULFydUC",
+      "arrivalIndex": 2
+    },
+    {
+      "id": "nmVtyRkEVk3f",
+      "text": "בניית בוט אמין ומבוסס מחקר שניתן להתייעץ איתו בסוגיות של מדיניות וסביבה",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/r0lk6iP-XZiv",
+      "arrivalIndex": 3
+    },
+    {
+      "id": "uJ2JIOflu7eR",
+      "text": "היכרות אישית היא המפתח, כנסים כמו זה שנותנים את הדגש על החיבור הבלתי אמצעי בין אנשים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/RhBYRFjLvNyN",
+      "arrivalIndex": 4
+    },
+    {
+      "id": "4R5C6WsQjz2Q",
+      "text": "ימי סיור ועיון סביב מאבקים סביבתיים בהובלה משותפת של אקדמיה וחברה אזרחית, הצגת נקודות המבט השונות סביב כל מאבק.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/8y62OdRXKnDL",
+      "arrivalIndex": 5
+    },
+    {
+      "id": "FPOE5sunboCR",
+      "text": "היכרות אישית עם אדם שחקר, שמבין את הנושא",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/RgvpKqcUpqn6JsKRCE8C",
+      "arrivalIndex": 6
+    },
+    {
+      "id": "Divm1vj6jauQ",
+      "text": "שאלת מחקר שנובעת מהתבוננות והבנה עמוקה של הצורך בשטח",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/Ac9A9y005ksE4QfeyIph",
+      "arrivalIndex": 7
+    },
+    {
+      "id": "2TtuOVzjlxqz",
+      "text": "גורם מחויב מוביל, המעוניין הן בידע האקדמי והן ביישום בשטח",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/A1l3M7vBWGabEV1pMeQ2",
+      "arrivalIndex": 8
+    },
+    {
+      "id": "YTBbDs1mxTGA",
+      "text": "מידע אמין: הצורך במידע אמין הוא בסיסי לכל שינוי מציאות. יש לפתח מערכות שיבטיחו את אמינות המידע המתקבל ממקורות שונים, כך שניתן יהיה להסתמך עליו בהחלטות ובפעולות שננקטות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/W0AMWn2R588ODmB5et1p",
+      "arrivalIndex": 9
+    },
+    {
+      "id": "cCGjOAM0BpuK",
+      "text": "חיבור בין מיידעים: חיבור בין מיידעים שונים יכול להוביל להבנה מעמיקה יותר של המציאות ולגילוי קשרים חדשים. יש לפתח פלטפורמות או כלים שיאפשרו שיתוף פעולה בין אנשי מקצוע שונים כדי למקסם את הפוטנציאל של המידע הקיים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/Tbe5paNchtN5isv6nguS",
+      "arrivalIndex": 10
+    },
+    {
+      "id": "ErDln6gkcwSW",
+      "text": "חיבור בין אנשים: חיבור בין אנשים הוא קריטי ליצירת שינויים משמעותיים. יש לקדם יוזמות שמפגישות בין אנשים עם רעיונות שונים, על מנת לעודד שיח פורה ושיתופי פעולה שיכולים להניב רעיונות חדשים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/brWdpd9u2oGcAoCDZaN7",
+      "arrivalIndex": 11
+    },
+    {
+      "id": "Z9d7STIMQDjT",
+      "text": "יצירת קורס אקדמי בחקלאות מחדשת. כלומר - קבלה אקדמית מובהקת של המושג הזה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/uPwJtWxGoLAaDHzK7JRa",
+      "arrivalIndex": 12
+    },
+    {
+      "id": "GmIltNOItVuK",
+      "text": "שילוב ידע ומעורבות לשינוי סביבתי",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/ZV9yNxVsWq3cmZXwp3tI",
+      "arrivalIndex": 13
+    },
+    {
+      "id": "2hG1KQ5miClK",
+      "text": "הכוח של מחקר מהשטח: הצפת אתגרים ופיתוח פתרונות",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/se14WvNEwFP6rFdTOupA",
+      "arrivalIndex": 14
+    },
+    {
+      "id": "VfGXx9S7vwzr",
+      "text": "לדעת לדבר בשפה של קהל היעד",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/sGLeBmMFov1f2qWUWXhd",
+      "arrivalIndex": 15
+    },
+    {
+      "id": "JvovTWRPZszW",
+      "text": "רתימת שותפים מחויבים עם מוטת השפעהמהשלבים הראשונים",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/6oxGbPErmwhEXbo4DC7v",
+      "arrivalIndex": 16
+    },
+    {
+      "id": "oOoI7Y1id7iT",
+      "text": "מחויבות ומקצועיות אקדמית של צוות ליישום על בסיס ידע אקדמי",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/RdBj61EtRnsQOMeJGBtz",
+      "arrivalIndex": 17
+    },
+    {
+      "id": "hRT2rGueOuPT",
+      "text": "נשמח להציע למגזין זוית כתבה על מחקר גופי מזון ברחבי העולם ובירושלים",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/7SFRG7XImHFLWvOxjIZ5",
+      "arrivalIndex": 18
+    },
+    {
+      "id": "nNllEXPaFEIv",
+      "text": "שיתוף פעולה מוצלח",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/yavu7yUXRojGIq8QYYEK",
+      "arrivalIndex": 19
+    },
+    {
+      "id": "mpSqQCw7p9MP",
+      "text": "מראש לעשות מחקר טרנסדיציפלינרי",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/D9ozD952pWJZOblrdWFM",
+      "arrivalIndex": 20
+    },
+    {
+      "id": "2c4abbr0W5F5",
+      "text": "קשור לתועלת כלכלית",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/gEJmW1M4aOhhZXZnfwqU",
+      "arrivalIndex": 21
+    },
+    {
+      "id": "RATcF-ZwXQUx",
+      "text": "הכרת הבעיות והפשטתם לשיח שיהיה נגיש, לא מאיים ונהיר  למגזרים וגופים שנים",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/jYSe0N5LfC5nAknpldb0",
+      "arrivalIndex": 22
+    },
+    {
+      "id": "i23KORDFIpWM",
+      "text": "ואקום של מידע",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/A62u8LR9O0SZ1860sUnD",
+      "arrivalIndex": 23
+    },
+    {
+      "id": "9uhLJIqEBzAb",
+      "text": "זיהוי מקורות ידע קיימים: הצעה זו מתמקדת בזיהוי מקורות ידע קיימים שיכולים לתמוך בשיתופי פעולה בין נציגי המחקר לשטח. מדובר במיפוי של מקורות מידע, מחקרים קודמים, ונתונים שיכולים לשמש כבסיס להמשך העבודה המשותפת.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/EuYnm07Iud9crhaf1c15",
+      "arrivalIndex": 24
+    },
+    {
+      "id": "SuSzMKDmCRRR",
+      "text": "יצירת שיתופי פעולה: הצעה זו עוסקת ביצירת שיתופי פעולה בין נציגי המחקר לשטח. הקשר האישי לאורך זמן בין הנציגים הוא המפתח להצלחה, ולכן יש לפתח תוכניות שמקדמות מפגשים, סדנאות ופעילויות משותפות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/sIq7B5bkhnTHXtgKk9IP",
+      "arrivalIndex": 25
+    },
+    {
+      "id": "9yL3IDbEhXaz",
+      "text": "מתן תמריצים ותמיכות מתאימים לביצוע השינוי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/kLYhjdv6OFnKcZW4XbCz",
+      "arrivalIndex": 26
+    },
+    {
+      "id": "Y1I6lLP8xam3",
+      "text": "שיתוף פעולה עם משתמשי קצה: חוקרים צריכים לעבוד עם משתמשי קצה מעולם התוכן שלהם, כמעט תמיד יש אנשים המושפעים ממושא המחקר והם צריכים להיות חלק מהתהליך.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/3ytdJmMONf26kZh11BF5",
+      "arrivalIndex": 27
+    },
+    {
+      "id": "-FIRB5S0yGct",
+      "text": "הימנעות ממגדל השן: המחקר לא יכול להיות רק במגדל השן, יש צורך לשלב את הקולות והצרכים של המשתמשים בתהליך המחקר.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/anHedsGM464FPd7z2TOM",
+      "arrivalIndex": 28
+    },
+    {
+      "id": "UZTYIfao8kLJ",
+      "text": "חיזוק המחקר היישומי: יש צורך בחיזוק של המחקר היישומי כדי להבטיח שהמחקר יוכל לתרום לשינוי מציאות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/sUTVJuN45oc9vT6Ajk9f",
+      "arrivalIndex": 29
+    },
+    {
+      "id": "5pGE4-SjglKY",
+      "text": "חיבור החינוך הסביבתי למגזר החרדי: הצעה לחבר את החינוך הסביבתי למגזר החרדי על ידי הכשרת מורים בשפה נגישה שמתאימה לעולם שלהם. המטרה היא להקל על ההבנה והקליטה של נושאים סביבתיים בקרב תלמידים מהמגזר החרדי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/cFIndgn0c6dpSvNJJB9K",
+      "arrivalIndex": 30
+    },
+    {
+      "id": "rSE1a4tZUnrw",
+      "text": "יוזמה של יער מאכל בעקבות השתלמות: הצעה להקים יער מאכל כתגובה להשתלמות שנעשתה. יער מאכל הוא מערכת אקולוגית של צמחים, אשר יכולה לשמש כמודל לחינוך סביבתי ולחיזוק הקשר בין הקהילה לסביבה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/hSyANsil9okbIbfrHFd6",
+      "arrivalIndex": 31
+    },
+    {
+      "id": "VhncijIRWDpv",
+      "text": "אינטגרציה של פעולות יישומיות לתוך המרחב האקדמי, דוגמת הרצאות רב תחומיות של אנשי מקצוע בקורסים שמיועדים לסטודנטים בתארים ראשונים או מתקדמים. כך הסטודנטים יוכלו להבין את הכוח של היכולות שרכשו בלימודים וליישמן בשטח בהמשך.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/gbihwGU97og2iTkadyve",
+      "arrivalIndex": 32
+    },
+    {
+      "id": "JL96DetYtVbz",
+      "text": "הכנסת נושא לשיח הציבורי: השיח האקדמי ומחקרים יכולים לשמש ככלים להכניס נושאים חשובים לשיח הציבורי, כמו נושא האופנה המקיימת. זה יכול להתבצע על ידי פרסום מאמרים, כנסים ודיונים ציבוריים שיביאו את הנושא לתודעה הרחבה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/co1I5OjGzXZV7XgA537N",
+      "arrivalIndex": 33
+    },
+    {
+      "id": "4YG1J3vPJYrR",
+      "text": "קשרים בין אישיים כגורם מקשר: קשרים בין אישיים הם אלו שיוצרים את הגשר בין המחקר לבין השטח. הם מאפשרים למי שעושה את המחקר להוציא את הנתונים בצורה בהירה וליצור חיבור בין אישי שיביא לשינוי במציאות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/chqVT0cacQFACKwaq4lA",
+      "arrivalIndex": 34
+    },
+    {
+      "id": "pyQdE0xOipzv",
+      "text": "אמון בנכונות: הצעה לבניית אמון בין הצדדים המעורבים במחקר, על מנת להבטיח שהמידע והנתונים שנאספים יהיו מדויקים ונכונים. זהו תנאי הכרחי לשינוי מציאותי שיתבסס על מחקר אמין.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/bZMrEPJB9j4aoXdN4skI",
+      "arrivalIndex": 35
+    },
+    {
+      "id": "ChYLe-WaXFZ1",
+      "text": "חשיבות הגורם המקשר: לעיתים מי שעושה את המחקר זקוק לגורם מקשר שיוציא את הנתונים בצורה בהירה ויעשה איתם את החיבור הבין אישי שיביא לשינוי המציאות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/KEU9Gll1zHuuHWL7OJ88",
+      "arrivalIndex": 36
+    },
+    {
+      "id": "yUe7rdkkdaRx",
+      "text": "עקשנות: הצעה להקפיד על עקביות ומחויבות לאורך תהליך המחקר, גם כאשר מתמודדים עם אתגרים או קשיים. עקשנות זו יכולה להוביל לתוצאות טובות יותר ולשינוי משמעותי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/Yos1yKK9dOcl8S70MGV7",
+      "arrivalIndex": 37
+    },
+    {
+      "id": "BH5PGDyUJNre",
+      "text": "כסף: הצעה להקצות משאבים כספיים נדרשים לצורך ביצוע המחקר, כולל מימון לציוד, צוות, והוצאות נוספות שיכולות להבטיח את הצלחתו.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/eX28SOwRHqLhb7uyn5pc",
+      "arrivalIndex": 38
+    },
+    {
+      "id": "zILydV3-ophi",
+      "text": "ללכת בשלבים: הצעה לבצע את תהליך המחקר בשלבים, מה שיאפשר ניתוח מעמיק יותר של כל שלב והבנה טובה יותר של השפעות השינויים המיועדים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/rTTuFnlSr7zaAYWbBaTI",
+      "arrivalIndex": 39
+    },
+    {
+      "id": "1QF1lQ3ax9MQ",
+      "text": "קהילה תומכת: הקמת קהילה תומכת שתספק סביבה מעודדת ומחזקת למעורבות במחקר ובשינוי המציאות. קהילה זו תוכל לכלול חברים, חוקרים, מתנדבים ואנשי מקצוע שיפעלו יחד כדי לקדם רעיונות ויוזמות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/YS7b5g98HOEBxzLgFlPI",
+      "arrivalIndex": 40
+    },
+    {
+      "id": "Jf82R2evpuLK",
+      "text": "משאבים: הקצאת משאבים נדרשים, כגון תקציבים, חומרי לימוד וכלים טכנולוגיים, כדי לתמוך במיזמים מחקריים ולסייע בהשגת מטרות השינוי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/lZQLaQMzG8rPAkj20X8l",
+      "arrivalIndex": 41
+    },
+    {
+      "id": "46t1Nq4OvQOX",
+      "text": "הרבה מתנדבים: גיוס הרבה מתנדבים שיכולים לתמוך בפרויקטים שונים, לסייע בפעילויות מחקריות ולתרום מהידע והניסיון שלהם כדי לקדם את המטרות המשותפות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/TgJgUDWFn6jS9hyf5jC3",
+      "arrivalIndex": 42
+    },
+    {
+      "id": "mcHDxbPCBCU-",
+      "text": "נוכחות חוקרים בעיר: הצעה להגדיל את נוכחותם של חוקרים בעיר על ידי כניסתם לבתי ספר. זה יאפשר לתלמידים ולתושבים להיחשף למחקר ולתהליכים מדעיים, ובכך להגביר את המודעות והעניין במחקר המתקיים באזורם.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/1URGroVJm2XZcybN311h",
+      "arrivalIndex": 43
+    },
+    {
+      "id": "CPC6x7MRX-cn",
+      "text": "שיתוף הרשות: שיתוף פעולה עם הרשות המקומית או הגורמים המוסמכים כדי להבטיח שהמיזמים המחקריים יהיו מתואמים עם הצרכים והיעדים של הקהילה, ובכך להגדיל את הסיכוי להצלחה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/vXrv4eLuB5fh72g1hVbs",
+      "arrivalIndex": 44
+    },
+    {
+      "id": "z78KFVs049zl",
+      "text": "מודעות תושבים למחקר: הצעה להעלות את המודעות של תושבים למחקר שנעשה בעיר. זה יכול לכלול פרסומים, סדנאות או אירועים קהילתיים שבהם תושבים יוכלו ללמוד על המחקרים השונים ולדון בהם.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/SpXjbBNBZYVy3mgRRqS6",
+      "arrivalIndex": 45
+    },
+    {
+      "id": "inJcK4BoteXQ",
+      "text": "הזמנת חוקרים לבעיות ספציפיות: הצעה לאפשר לתושבים להזמין חוקרים לתרום לפתרון בעיות ספציפיות באזור המגורים שלהם. לדוגמה, חוקרים יכולים לסייע באבחון של מחלת עצים, ובכך לתרום לשיפור הסביבה המקומית.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/slgNxMUNdtpedVRoVuv5",
+      "arrivalIndex": 46
+    },
+    {
+      "id": "AWlaejhIck02",
+      "text": "התעדכנות בקולות קוראים: חשוב להיות מעודכנים בקולות קוראים כדי להבין מהן ההזדמנויות החדשות והמשאבים הזמינים. זה יכול לכלול קריאה שוטפת של אתרי אינטרנט, מעקב אחרי רשתות חברתיות וקהילות מקצועיות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/EB6hNzLsxtlx05gVF6U6",
+      "arrivalIndex": 47
+    },
+    {
+      "id": "4IwTYx4688hA",
+      "text": "הבנת המקום: שכבות מידע וצרכים לשינוי מציאות",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/flpbcRzkBbDZwPRK5f2V",
+      "arrivalIndex": 48
+    },
+    {
+      "id": "CAHyGTvGQicx",
+      "text": "מוכנות לנסות דברים חדשים: כדי להניע שינוי, יש להיות מוכנים לנסות דברים חדשים. זה יכול לכלול פיתוח פרויקטים ניסיוניים, שיתוף פעולה עם שותפים חדשים או אימוץ טכנולוגיות חדשות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/n4BZvXtv4rQhRhECVV9I",
+      "arrivalIndex": 49
+    },
+    {
+      "id": "1bvZAG-AHfIt",
+      "text": "לרתום את הקהילה לפעילות בית הספר בשיעורי המדעים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/2780PaVkQ9grpE8WCJen",
+      "arrivalIndex": 50
+    },
+    {
+      "id": "mcpx7JSEDJof",
+      "text": "הכוח של סקרנות, חוצפה ותעוזה: סקרנות, חוצפה ותעוזה הם המפתח להרמת רעיונות ויצירת קשרים. תכונות אלו מאפשרות לאנשים לחשוב מחוץ לקופסה וליצור קשרים חדשים שיכולים להוביל לשיתופי פעולה פוריים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/akndv3ZKrvQVPqmIH2UI",
+      "arrivalIndex": 51
+    },
+    {
+      "id": "7FxgAQTQCv3Z",
+      "text": "פתיחות וגמישות רעיונית: פתיחות וגמישות רעיונית לשיתופי פעולה גם מתחומים רחוקים מאפשרת לאנשים להרחיב את האופקים שלהם ולמצוא פתרונות יצירתיים לבעיות שונות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/7CM2r4SHWCbeL5YbxdWr",
+      "arrivalIndex": 52
+    },
+    {
+      "id": "cAWvPLAlkWRE",
+      "text": "התרכזות בשאלות: להתרכז בשאלות ולאו דווקא בתוצר, מאפשרת גישה חקרנית שמובילה להבנה מעמיקה יותר של הנושאים הנחקרים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/lVvWW7kfdhlD2EveHXgl",
+      "arrivalIndex": 53
+    },
+    {
+      "id": "0kNhTCttvUKw",
+      "text": "שימוש במינים לא מוגנים ככלי מחקר: לא לפחד להשתמש במינים לא מוגנים ככלי מחקר להבנה של מינים בסכנה, מה שמאפשר חקר מעמיק יותר של המצב האקולוגי והבנת האתגרים הניצבים בפני המינים הללו.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/0Ix9B0JCVQr67oUpisqc",
+      "arrivalIndex": 54
+    },
+    {
+      "id": "Agea18gc8Mg3",
+      "text": "ביצוע המחקר מתוך פונקציה מחקרית ששייכת לגוף רגולטורי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/2yvyFNHTPvmmlcJzhHGH",
+      "arrivalIndex": 55
+    },
+    {
+      "id": "bftMEDcmiz9y",
+      "text": "תמריצים על פעילויות תורמות לפרסום מדע: הצעה להוסיף תמריצים עבור פעילויות שמקדמות את הפרסומים המדעיים, לכיוונים של מדיניות השפעה עליהם. הרבה אקדמאיים לא מבינים מספיק את התפקיד שלהם. תמריצים אלו יכולים לכלול מענקים, הכרה ציבורית או תמיכה בפרויקטים שמטרתם להנגיש את המדע לציבור הרחב.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/6c1L2gxhuIRo8XBFJotj",
+      "arrivalIndex": 56
+    },
+    {
+      "id": "RXDeiqcuSC4d",
+      "text": "פעילות של המדען הראשי במשרדי ממשלה: הצעה להפעיל את המדען הראשי במשרדי ממשלה כדי לקדם את השפעת המחקר על מדיניות ציבורית. זה יכול לכלול שיתוף פעולה עם משרדים שונים כדי להבטיח שהמחקר יילקח בחשבון בתהליכי קבלת החלטות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/SBHnG1UBWp3OCxMwEZgN",
+      "arrivalIndex": 57
+    },
+    {
+      "id": "eHh1Y5BPTqfu",
+      "text": "שותפויות: הקמת שותפויות עם גופים שונים יכולה להוות מנוף לשינוי משמעותי. שותפויות אלו יכולות לכלול שיתוף פעולה עם מוסדות אקדמיים, ארגונים חברתיים או עסקים, במטרה למנף את הידע והמשאבים של כל צד לטובת מטרות משותפות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/iFoxGjYYH3uwIu9vL3gB",
+      "arrivalIndex": 58
+    },
+    {
+      "id": "JEwvKq4FlN3L",
+      "text": "התמסרות ערכית: התמסרות לערכים ולמטרות מסוימות יכולה לשמש כבסיס לשינוי. כאשר אנשים מתחייבים לערכים מסוימים, הם נוטים לפעול בדרכים שמקדמות את הערכים הללו, מה שמוביל לשינויים משמעותיים בסביבתם.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/6wzXr6Olq6IRkIQt1UeO",
+      "arrivalIndex": 59
+    },
+    {
+      "id": "DWGC7QrFem7C",
+      "text": "שינויים בסביבה: הנעת שינויים בסביבה האישית או המקצועית יכולה לשנות את חיי הפרט ואת תפיסת עולמו. שינויים אלו יכולים לכלול שיפוט מחדש של מערכות יחסים, שינוי מקום עבודה או אפילו שינוי גישה כלפי בעיות קיימות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/wNYYnjU7mWDkqiLXujzr",
+      "arrivalIndex": 60
+    },
+    {
+      "id": "QWROJcHOIoX8",
+      "text": "כינוס בעלי עניין שמייצגים את מגוון הדעות: כינוס של בעלי עניין שמייצגים את מגוון הדעות, במטרה ליצור פורום שמתכנס באופן תקופתי. הכינוס נועד לייצר תרבות של דיון ויצירת הסכמות בין הדעות השונות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/vCtyf0X0rAI6MnFadROU",
+      "arrivalIndex": 61
+    },
+    {
+      "id": "Ose-OJ-abZk8",
+      "text": "לייצר תרבות של דיון ויצירת הסכמות: המטרה של הכינוס היא לייצר תרבות של דיון, שבה בעלי עניין יכולים להביע את דעותיהם ולדון בנושאים שונים, ובכך להגיע להסכמות משותפות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/10MVo8z284oSPxJfClTX",
+      "arrivalIndex": 62
+    },
+    {
+      "id": "WW5W1FS1--Gl",
+      "text": "שילוב של רגש כלפי הסביבה, יחד עם תחושת מסוגלות לחולל שינוי",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/qzR01znSkV3ACJ6zAYRL",
+      "arrivalIndex": 63
+    },
+    {
+      "id": "4PBBilOPwDvU",
+      "text": "מציאת גורם המחבר בין עולמות המדע והרגולציה לבין מי שמבצע את המשימה בשטח.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/op1YA2vpDLtM3JE0UzVN",
+      "arrivalIndex": 64
+    },
+    {
+      "id": "c7fpbWFvSqP2",
+      "text": "מאבקים סביבתיים מוצלחים הסתמכו על מינון הולם בין תוקף מדעי לתשוקה אקטיביסטית",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/cJKF90uELznCNU9cLKj2",
+      "arrivalIndex": 65
+    },
+    {
+      "id": "HrwanRa1VnyG",
+      "text": "בוגרי ממשק בנקודות מפתח במגזר הציבורי - רותמים את המחקר האקדמי לכדי יישום בעבודת הממשלה ושאר מוסדות המדינה",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/HbPeOKLtWlEQLmYox8C0",
+      "arrivalIndex": 66
+    },
+    {
+      "id": "CoSO3bjI8lfp",
+      "text": "מוטיבציה ואש פנימית: הצעה זו מדברת על החשיבות של מוטיבציה ואש פנימית כאמצעי להניע אנשים לפעולה ולגרום להם להיאבק למען שינוי. יש צורך לפתח תוכניות שיכולות לעודד אנשים למצוא את המניע הפנימי שלהם ולהשתמש בו כדי להתמודד עם אתגרים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/zj8vkuibbdLiQi8GVD7K",
+      "arrivalIndex": 67
+    },
+    {
+      "id": "NhNv2A5askQy",
+      "text": "תיווך המדע מהאקדמיה למדע אזרחי/מתנדבים: הצעה זו עוסקת בתהליך של תיווך בין המדע האקדמי לבין הציבור הרחב, כולל מתנדבים. המטרה היא לערב המון אנשים בתהליך המחקר, כך שידע מדעי יהיה נגיש יותר ויאפשר שיתוף פעולה בין חוקרים לאזרחים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/1VSzObAAFVFTQ4UuVwa4",
+      "arrivalIndex": 68
+    },
+    {
+      "id": "IxpfAyBE4VNi",
+      "text": "עבודת שטח מקדימה שמכינה את הקרקע ומדייקת את הפרוייקט",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/YKGD6SaJNUwzTOxISdp8",
+      "arrivalIndex": 69
+    },
+    {
+      "id": "lwAZ-YPyQFBA",
+      "text": "רקע מקבל - בעל סמכות או מקבל החלטות: הצורך ברקע מקבל, כלומר אדם בעל סמכות או מקבל החלטות, הוא קריטי להצלחת תהליך השינוי. בעל סמכות יכול להניע את התהליך, להקצות משאבים ולתמוך בהחלטות הנדרשות לשינוי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/PCR408yXt3sSTIizTbIU",
+      "arrivalIndex": 70
+    },
+    {
+      "id": "w0BSucZf2WVU",
+      "text": "הנעה משמעותית, סבלנות והתמדה: כדי לשנות מציאות, יש צורך בהנעה משמעותית, סבלנות והתמדה מצד מי שמעוניין לבצע את השינוי. זהו תהליך ארוך ומורכב, ולכן התמדה והנעה הם מרכיבים חיוניים להצלחה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/uiPaIDwCk73ftj86i33Q",
+      "arrivalIndex": 71
+    },
+    {
+      "id": "moZMzS9TKP27",
+      "text": "טוב שהשיח האקטיביסטי יוסב ממאבק על צדק לבחירה מושכלת בין חלופות",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/euRbAALHokTohVIco6gn",
+      "arrivalIndex": 72
+    },
+    {
+      "id": "RGpZG3tu9SzQ",
+      "text": "מחקר יכול להניע דברים גדולים",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/4Ac3ZrSOn8Nm0bEmtveG",
+      "arrivalIndex": 73
+    },
+    {
+      "id": "0lOPuJxx4ofP",
+      "text": "מפגשים פיזיים בין אנשי אקדמיה לאנשי עשייה: הצעה לקיים מפגשים פיזיים שבהם אנשי אקדמיה יפגשו עם אנשי עשייה. מפגשים אלו יכולים להוות פלטפורמה לשיתוף ידע, חוויות ורעיונות, וליצור שיתופי פעולה בין התחומים השונים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/N0uFYIordFbMs1Hz7nL5",
+      "arrivalIndex": 74
+    },
+    {
+      "id": "R2slgMvVeLLb",
+      "text": "חדרים של שיח פתוח על צרכים ורצונות: הצעה להקים חדרים או פורומים שבהם ניתן לקיים שיח פתוח על צרכים ורצונות של הקהל הרחב, אנשי אקדמיה ואנשי עשייה. שיח זה יכול להוביל להבנה טובה יותר של האתגרים והצרכים בשטח.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/ZccEfPMBA5pHNIVBmuGx",
+      "arrivalIndex": 75
+    },
+    {
+      "id": "KIzZt9Cv8AoL",
+      "text": "משאבים ואפשרויות: הצעה לספק משאבים ואפשרויות שונות שיכולות לתמוך בשיתופי פעולה בין אנשי אקדמיה לאנשי עשייה. זה יכול לכלול גישה למידע, כלים טכנולוגיים, תקציבים או סדנאות הכשרה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/GL1PA165GZKTDcbylYu6",
+      "arrivalIndex": 76
+    },
+    {
+      "id": "Mlm6eFnAKjce",
+      "text": "שימוש בסמנים לזיהוי מקורות זיהום: הצעה להשתמש בסמנים מדעיים כדי לזהות את מקורות הזיהום, דבר שיכול לשפר את היכולת להבין את הבעיה ולפעול לפתרונה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/hE45ouaJT5UMQ4jSby5Y",
+      "arrivalIndex": 77
+    },
+    {
+      "id": "rp6-S8e4Ziew",
+      "text": "כלים מדעיים לקידום פתרון: הצעה לפתח כלים מדעיים שיכולים לשמש כבסיס לקידום פתרונות או שינוי מדיניות, על מנת להתמודד עם בעיות אקוטיות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/E0fGsM464JA2SCCEefgb",
+      "arrivalIndex": 78
+    },
+    {
+      "id": "isa7d2T0b3eH",
+      "text": "צריך לעודד ולפתח מחקר שמגיע מהשטח, כלומר Bottom up, לדוגמה בהצפת אתגרים קיימים ופרסומם לקהילה האקדמי...",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/WZ3qKMi8VXbgNIQNUQjw",
+      "arrivalIndex": 79
+    },
+    {
+      "id": "8DHPTWBreIcG",
+      "text": "מנגנון מובנה של עדכון: יצירת מערכת קבועה ומובנית שתאפשר עדכון שוטף של מידע ונתונים מהשטח, כך שניתן יהיה להבטיח שהמידע יהיה עדכני ורלוונטי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/oJEjCGSPA9cDksKfL0ei",
+      "arrivalIndex": 80
+    },
+    {
+      "id": "4qa--jxCg053",
+      "text": "שיתופי פעולה בין אנשי חלום וחזון לבין אנשי ביצוע: הצעה זו מדברת על הצורך בשיתופי פעולה בין אנשים בעלי חזון ואידיאולוגיה לבין אנשי ביצוע שמבצעים את התוכניות בפועל. שיתוף פעולה זה יכול להוביל ליצירת פתרונות חדשניים ולמימוש רעיונות בצורה אפקטיבית יותר.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/eweE0hd8TdclgtTZYwLE",
+      "arrivalIndex": 81
+    },
+    {
+      "id": "NM2k2qLCLcvD",
+      "text": "הכשרה שוטפת: פיתוח תוכניות הכשרה קבועות לצוותים בשטח, כדי להבטיח שהם מעודכנים בכלים ובשיטות העבודה החדשות ביותר.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/BEpL5NbkQWZsmDIDpmbo",
+      "arrivalIndex": 82
+    },
+    {
+      "id": "SEqM-zrDfQMN",
+      "text": "הנגשת המחקר בשפה שנגישה לסוכנים הרלוונטיים: הצעה זו עוסקת בהנגשת המידע והמחקר בצורה ברורה ומובנת לסוכנים הרלוונטיים, כך שיוכלו להבין את הממצאים וליישם אותם בשטח. זהו צעד חשוב כדי להבטיח שהידע יגיע למי שצריך אותו.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/GQljwtbgC4Op39pEQ0JG",
+      "arrivalIndex": 83
+    },
+    {
+      "id": "iiuhVoWkR6yY",
+      "text": "העברת ידע מקומי ומהשטח לרשויות המקומיות: הצעה זו מתמקדת בהעברת ידע מקומי שנצבר בשטח לרשויות המקומיות, כדי שהן יוכלו להשתמש בו בקבלת החלטות ובתכנון מדיניות. זהו תהליך שיכול לשפר את הקשר בין הקהילה לרשויות ולסייע בשיפור השירותים המקומיים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/EojGT0D1RhKrTnSJ6kuT",
+      "arrivalIndex": 84
+    },
+    {
+      "id": "TB329vZng-O-",
+      "text": "קבלת פידבק מהשטח: הקמת מערכת לקבלת פידבק מהשטח באופן שוטף, שתאפשר לצוותים לשתף את החוויות והאתגרים שלהם, וכך לשפר את התהליכים והכלים הקיימים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/8mPPtSvkVFCwCWBNgobo",
+      "arrivalIndex": 85
+    },
+    {
+      "id": "ArGLq9FsN9tN",
+      "text": "שיתופי פעולה חוצי-דיסציפלינות, חוצי-קמפוסים, חוצי מעמד אקדמי וחוצי אקדמיה-מגזרים אחרים (ארגוני סביבה, ממשלה, רשויות מקומיות ועוד), שיוכוונו לאימפקט קונקרטי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/fvlfNKK6MjN1dAmyLSFq",
+      "arrivalIndex": 86
+    },
+    {
+      "id": "Gydh9Qhea4B9",
+      "text": "הנגשת הידע האקדמי לציבור הרחב: הצעה להנגיש את כל הידע האקדמי לציבור הרחב, כך שהמידע יהיה נגיש ומובן לכל, ולא רק לאקדמאים. זה יאפשר לציבור להבין את המידע וליישם אותו בחיי היומיום.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/Ha7D8xj0U8Q8JOLp5oO7",
+      "arrivalIndex": 87
+    },
+    {
+      "id": "FKMzBdFp3SX4",
+      "text": "מעורבות הציבור במהלכים אסטרטגיים: הצעה לערב את הציבור במהלכים אסטרטגיים, כך שהציבור יהיה חלק מהתהליכים וההחלטות המתקבלות, ובכך יוכל להשפיע על הכיוונים של המחקר והיישום שלו.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/Wl2LOQsQ5k1YjF7AapUv",
+      "arrivalIndex": 88
+    },
+    {
+      "id": "Vf-KfuQBvDuR",
+      "text": "הפיכת כוח המחקר לפרקטי ובר יישום: הצעה להפוך את כוחו של המחקר לפרקטי ובר יישום, כך שהידע שנצבר במחקר לא יישאר תיאורטי אלא ייושם במציאות בצורה אפקטיבית.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/zZ5Fcdz0rcxZneFtZ3yu",
+      "arrivalIndex": 89
+    },
+    {
+      "id": "7Oinyze-d4xa",
+      "text": "רצף זמן ומומנטום בין המסקנות של המחקר ליישום מסקנותיו.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/98vzHYNf2IEMMc4nyzFj",
+      "arrivalIndex": 90
+    },
+    {
+      "id": "WhkvOtCbkAKe",
+      "text": "כדי להבין מקום ולשנות בו משהו צריך להכיר אותו בכמה שכבות של מידע, גיאולוגי, בוטני, שימושים,  וגם דרך...",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/ncyx7b8BHTe4Pc9CQvXl",
+      "arrivalIndex": 91
+    },
+    {
+      "id": "aY9qPUuserW4",
+      "text": "חשיבה מערכתית ושיתופי פעולה: הצורך לחשוב בצורה מערכתית וליצור שיתופי פעולה בין גורמים שונים כדי להשיג מטרות משותפות. זה כולל דבקות במטרה, תמיכה הדדית, והתלהבות מהתחום.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/zOsoojd7pKoNDSFtaLCd",
+      "arrivalIndex": 92
+    },
+    {
+      "id": "fIXOHKMktozv",
+      "text": "העמקת ידע וטרנס דיסציפלינות: הצורך להעמיק את הידע בתחומים שונים ולחפש פתרונות בכיוונים מגוונים. זה כולל את היכולת להכיל כשלונות ולחזק שיתופי פעולה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/H6cIReV5DPIWDDbAg1g1",
+      "arrivalIndex": 93
+    },
+    {
+      "id": "RRQSCGGufl7s",
+      "text": "משאבים וחופש פעולה: הצורך במימון וחופש פעולה כדי לאפשר יישום של רעיונות ושיתופי פעולה בין מגזרים שונים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/X5B6jPPAvomFHUo464bm",
+      "arrivalIndex": 94
+    },
+    {
+      "id": "iEzATrGIDlDS",
+      "text": "חיבור בין מגזרים: הצורך לחבר בין מגזרים שונים כמו אקדמיה, חברה אזרחית וממשלה כדי לקדם שיתופי פעולה וחדשנות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/8CgEyDMDp0TrVB1wiHyo",
+      "arrivalIndex": 95
+    },
+    {
+      "id": "VpQUwWOI-f-v",
+      "text": "צניעות והרחבת זוויות הסתכלות: הצורך בצניעות בהבנת הידע הקיים והבנה שהידע לא נמצא רק אצלנו. הרחבת זוויות ההסתכלות תאפשר גישה מגוונת יותר לבעיות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/94tsVLI3kcimpvTLbSmq",
+      "arrivalIndex": 96
+    },
+    {
+      "id": "YP13g0IXEGV9",
+      "text": "מרכיבי חוסן במערכות: הצורך במגוון, יתירות, קישוריות וביזוריות כמרכיבים חיוניים לחוסן של מערכות שונות.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/rQXVxYykKmWTuEuIKHgi",
+      "arrivalIndex": 97
+    },
+    {
+      "id": "DXsfv4yU16lT",
+      "text": "אכפתיות של אנשים בשטח מהמצב: חשוב לעודד אכפתיות בקרב התושבים והקהילה המקומית לגבי המצב של נחל עין זהב. זה יכול לכלול פעילויות חינוכיות, מפגשים קהילתיים והגברת המודעות לנושא.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/pp8JzOvHPdb9j63A40sA",
+      "arrivalIndex": 98
+    },
+    {
+      "id": "IgCwtpDRK9yh",
+      "text": "תמונות והמחשה חזותית של הנושא: שימוש בתמונות ובחומרים חזותיים כדי להמחיש את המצב הקיים בנחל עין זהב. זה יכול לכלול תערוכות, מצגות או פרסומים ברשתות החברתיות כדי להציג את הבעיה בצורה ברורה ומושכת.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/YJCJl8Gc3AJ26lta9D2u",
+      "arrivalIndex": 99
+    },
+    {
+      "id": "WRXLlj4jpT6u",
+      "text": "המחשת תועלות ורווחים אישיים: הדגשת היתרונות האישיים שיכולים לצמוח מהשינוי במצב הנחל, כמו שיפור איכות החיים, שמירה על הסביבה והפחתת זיהום. זה יכול לעזור לאנשים להבין את החשיבות האישית של המאבק.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/WD5zW5cXf3oDlzYqR2Ah",
+      "arrivalIndex": 100
+    },
+    {
+      "id": "hcXuG2Ap-O7B",
+      "text": "חשיפה לתקשורת והשפעה על דעת הקהל: שימוש בתקשורת כדי לחשוף את הבעיה וליצור עניין ציבורי. התקשורת נמשכת לדרמות ולפגיעות, ולכן יש לנצל זאת כדי להעלות את המודעות ולחץ ציבורי לשינוי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/JCtnZ1FlKRJsKP49lVWY",
+      "arrivalIndex": 101
+    },
+    {
+      "id": "zbGJeUy3tPiV",
+      "text": "פישוט והנגשה של מסרים מורכבים: חשוב לפשט ולהנגיש מסרים מורכבים לקהל הרחב, תוך שמירה על מורכבות המסר כאשר יש צורך. לדוגמה, יש להסביר את השפעות השימוש במי קולחין על זיהום מי תהום בצורה ברורה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/MkaP2DHs21zEGr2mRqxZ",
+      "arrivalIndex": 102
+    },
+    {
+      "id": "kLp0RmT-jsms",
+      "text": "שיתופי פעולה: הקמה ופיתוח של שיתופי פעולה בין מוסדות אקדמיים, תעשייה וארגונים חברתיים כדי להניע פרויקטים מחקריים שיכולים לשפר את המציאות החברתית והכלכלית.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/6LCX61x9LDf1vSah2H2W",
+      "arrivalIndex": 103
+    },
+    {
+      "id": "WKLIJmIj52Es",
+      "text": "מחקר מולטידיסציפלינרי: קידום מחקר המשלב דיסציפלינות שונות כדי להבין בעיות מורכבות ולפתח פתרונות חדשניים, תוך שילוב של ידע מתחומים שונים כמו מדעי החברה, מדעים מדויקים וטכנולוגיה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/786ZEi6pL006eXzNaNu3",
+      "arrivalIndex": 104
+    },
+    {
+      "id": "nCBoYSGyWKVm",
+      "text": "מדע אזרחי- רתימת הקהל הרחב לאיסוף הידע המדעי ולהיות חלק מהידע המדעי",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/YtBnuZaL7Egb1b6786BQ",
+      "arrivalIndex": 105
+    },
+    {
+      "id": "3YmU0AE3ZXZg",
+      "text": "הקמת גוף בינתחומי של מדענים: הצעה להקים גוף שכולל מדענים ממגוון תחומים אשר יעסוק בדיון ושיח מתמיד עם מקבלי ההחלטות והממשלה. גוף זה יוכל לשמש כגשר בין המדע לבין קובעי המדיניות, במטרה להנחות את קבלת ההחלטות על סמך נתונים מדעיים עדכניים.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/BMDvjdrUDQd2NFIm7Nmq",
+      "arrivalIndex": 106
+    },
+    {
+      "id": "rOKYJ7ShEQvF",
+      "text": "רתימת דוקטרינות משפטיות להפעלת לחץ על תאגידים מזהמים: הצעה לרתום דוקטרינות משפטיות קיימות כדי להפעיל לחץ על תאגידים המזהמים את הסביבה. זה יכלול הגשת תביעות סביבתיות ואקלימיות, בין היתר לתביעת רווחי המזהמים, במטרה להרתיע אותם מפעולות מזיקות לסביבה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/CAqbOxyD7ncQ1mMRMpYO",
+      "arrivalIndex": 107
+    },
+    {
+      "id": "OlUHWZkmWRXI",
+      "text": "חיבור בין האקדמיה לקהילה סביבה (לדוגמה במרכז הקיימות של האונ׳ העברית יש עובדת שתפקידה הוא בדיוק זה - לחבר את האוניברסיטה לירושלים בנושאי סביבה).",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/KM7FGOqna7lvH4nlSLiF",
+      "arrivalIndex": 108
+    },
+    {
+      "id": "5SwFR11a5HZk",
+      "text": "תנאי: שילוב מושלם של ידע ולהט - יהיה קשה ליצור שינוי ללא שני אלה.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/eNYsMxy38Vn3dfp0zIWq",
+      "arrivalIndex": 109
+    },
+    {
+      "id": "-2WNvTQaT3-E",
+      "text": "התחלת תנועה עם רעיון: אדם או גוף עם צורך או רעיון שמתחיל לייצר תנועה של הדברים, נוגע באנשים אחרים שיש להם יכולת להפוך לחלק מהתהליך ולעזור לדבר להתרחש.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/r3FTZ1QQOe6bFUQ5qWPT",
+      "arrivalIndex": 110
+    },
+    {
+      "id": "SXBHflNhWXGN",
+      "text": "עבודה קשה להשגת תוצאות: לאחר שהתחילה התנועה, יש צורך בהרבה עבודה קשה כדי להגיע לתוצאות. זהו שלב קרדינלי בתהליך השינוי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/MvByDDBYUmnt4JqpdIHo",
+      "arrivalIndex": 111
+    },
+    {
+      "id": "glHu8EP6p1vd",
+      "text": "שימור התרומה לאורך זמן: החלק הכי קשה הוא לשמר את התרומה לאורך זמן, כדי להבטיח שהשינוי יישאר ויתמשך.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/steJdrGxdvLEYxhwLvPd",
+      "arrivalIndex": 112
+    },
+    {
+      "id": "BlH51BQ7z8Az",
+      "text": "אינרציה מובנית של פתרון מוצלח: כאשר הפתרון הוא כל כך מוצלח, במיוחד אם יש לו ערך כלכלי או שהוא נוגע ברגשות של אנשים, הוא עשוי לפתח אינרציה מובנית שתסייע בהמשך השינוי.",
+      "groundTruthTopic": "real",
+      "groundTruthSynth": "real/2TdTqMHCoAVc2cFCqLzW",
+      "arrivalIndex": 113
+    }
+  ]
+}

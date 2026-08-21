@@ -1,0 +1,1019 @@
+[
+  {
+    "action": "review-queued",
+    "timestamp": 1787325034947,
+    "optionId": "4vhT0YqrfQK-",
+    "reason": "gray-band match (no auto-action) (cosine=0.791)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325066708,
+    "optionId": "3LDE-6Vs74lP",
+    "reason": "gray-band match (no auto-action) (cosine=0.827)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325094824,
+    "optionId": "nmVtyRkEVk3f",
+    "reason": "gray-band match (no auto-action) (cosine=0.735)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325123206,
+    "optionId": "uJ2JIOflu7eR",
+    "reason": "gray-band match (no auto-action) (cosine=0.694)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325151602,
+    "optionId": "4R5C6WsQjz2Q",
+    "reason": "gray-band match (no auto-action) (cosine=0.698)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325230579,
+    "clusterId": "H3seHm1Ey32Z",
+    "optionId": "FPOE5sunboCR",
+    "reason": "spawn synth at cosine=0.803",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325234431,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "H3seHm1Ey32Z",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325271461,
+    "optionId": "2TtuOVzjlxqz",
+    "reason": "gray-band match (no auto-action) (cosine=0.870)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325299612,
+    "optionId": "YTBbDs1mxTGA",
+    "reason": "gray-band match (no auto-action) (cosine=0.743)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325338432,
+    "optionId": "Divm1vj6jauQ",
+    "reason": "gray-band match (no auto-action) (cosine=0.870)",
+    "triggerSource": "pipeline:queueWorker"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325343564,
+    "optionId": "cCGjOAM0BpuK",
+    "reason": "gray-band match (no auto-action) (cosine=0.709)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787325372740,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "ErDln6gkcwSW",
+    "reason": "option filed under theme (judge: שניהם עוסקים בחיבור אישי ובמפגשים בין אנשים לקידום שיתופי פעולה מחקריים)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325401440,
+    "optionId": "Z9d7STIMQDjT",
+    "reason": "gray-band match (no auto-action) (cosine=0.733)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325442585,
+    "optionId": "GmIltNOItVuK",
+    "reason": "gray-band match (no auto-action) (cosine=0.911)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325480988,
+    "optionId": "2hG1KQ5miClK",
+    "reason": "gray-band match (no auto-action) (cosine=0.852)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325514965,
+    "optionId": "VfGXx9S7vwzr",
+    "reason": "gray-band match (no auto-action) (cosine=0.825)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787325549317,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "JvovTWRPZszW",
+    "reason": "option filed under theme (judge: רתימת שותפים מוקדמת נשענת על קשרים אישיים ושיתופי פעולה להטמעת מחקר במציאות.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325606035,
+    "clusterId": "GuKRYnGq1BHF",
+    "optionId": "oOoI7Y1id7iT",
+    "reason": "spawn synth at cosine=0.840",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787325608932,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "GuKRYnGq1BHF",
+    "reason": "nest synthesis under theme (judge: עוסק בחיבור מתמשך בין חוקרים, אנשי מקצוע ושותפים מחויבים ליישום בשטח)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325624302,
+    "optionId": "hRT2rGueOuPT",
+    "reason": "gray-band match (no auto-action) (cosine=0.781)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325690628,
+    "clusterId": "lOyOePu9aA8F",
+    "optionId": "nNllEXPaFEIv",
+    "reason": "spawn synth at cosine=0.903",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787325693906,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "lOyOePu9aA8F",
+    "reason": "nest synthesis under theme (judge: ההצעה עוסקת בשיתוף פעולה בין בעלי ידע ומעורבות להטמעת מחקר בשטח.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325706367,
+    "optionId": "mpSqQCw7p9MP",
+    "reason": "gray-band match (no auto-action) (cosine=0.834)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325744996,
+    "optionId": "2c4abbr0W5F5",
+    "reason": "gray-band match (no auto-action) (cosine=0.891)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325786209,
+    "clusterId": "HAXXewQ6LF86",
+    "optionId": "RATcF-ZwXQUx",
+    "reason": "spawn synth at cosine=0.833",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325791685,
+    "clusterId": "Rcazn3QsG7PJ",
+    "optionId": "HAXXewQ6LF86",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325843496,
+    "clusterId": "WyjLk5LjtRi8",
+    "optionId": "i23KORDFIpWM",
+    "reason": "spawn synth at cosine=0.848",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787325845905,
+    "clusterId": "Rcazn3QsG7PJ",
+    "optionId": "WyjLk5LjtRi8",
+    "reason": "nest synthesis under theme (judge: וובינרים קבועים מנגישים ידע מחקרי לקהלי יעד ומצמצמים פערי מידע)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787325865505,
+    "optionId": "9uhLJIqEBzAb",
+    "reason": "gray-band match (no auto-action) (cosine=0.780)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787325894648,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "SuSzMKDmCRRR",
+    "reason": "option filed under theme (judge: מתמקד בבניית קשרים אישיים מתמשכים ושיתופי פעולה בין חוקרים לשטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325966501,
+    "clusterId": "HtoFP5OZXf7Y",
+    "optionId": "9yL3IDbEhXaz",
+    "reason": "spawn synth at cosine=0.868",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787325971172,
+    "clusterId": "Fv1nlPPZbraB",
+    "optionId": "HtoFP5OZXf7Y",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787325981309,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "Y1I6lLP8xam3",
+    "reason": "option filed under theme (judge: שיתוף משתמשי קצה מחזק קשרים ישירים ושותפויות בין חוקרים למושפעי המחקר)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326031133,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "jJwi6v4moEE0",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787326031137,
+    "clusterId": "jJwi6v4moEE0",
+    "optionId": "-FIRB5S0yGct",
+    "reason": "spawn synth at cosine=0.861",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787326077971,
+    "optionId": "UZTYIfao8kLJ",
+    "reason": "gray-band match (no auto-action) (cosine=0.913)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326108423,
+    "clusterId": "Rcazn3QsG7PJ",
+    "optionId": "5pGE4-SjglKY",
+    "reason": "option filed under theme (judge: מתמקד בהנגשת ידע סביבתי ובהתאמת השפה לקהל יעד ייחודי.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787326139597,
+    "optionId": "rSE1a4tZUnrw",
+    "reason": "gray-band match (no auto-action) (cosine=0.733)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326170934,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "VhncijIRWDpv",
+    "reason": "option filed under theme (judge: מחברת בין האקדמיה לאנשי מקצוע ומקדמת יישום ידע בשטח באמצעות מפגשים אישיים.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326201233,
+    "clusterId": "Rcazn3QsG7PJ",
+    "optionId": "JL96DetYtVbz",
+    "reason": "option filed under theme (judge: עוסק בהנגשת ידע מחקרי לציבור באמצעות פרסום, כנסים ודיונים ציבוריים.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326229281,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "4YG1J3vPJYrR",
+    "reason": "option filed under theme (judge: ההצעה מדגישה קשרים אישיים המחברים בין חוקרים, מחקר ויישום בשטח.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787326262930,
+    "optionId": "pyQdE0xOipzv",
+    "reason": "gray-band match (no auto-action) (cosine=0.841)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326304942,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "Vv4eXsjUeGob",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787326304944,
+    "clusterId": "Vv4eXsjUeGob",
+    "optionId": "ChYLe-WaXFZ1",
+    "reason": "spawn synth at cosine=0.821",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787326348139,
+    "optionId": "yUe7rdkkdaRx",
+    "reason": "gray-band match (no auto-action) (cosine=0.853)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326385500,
+    "clusterId": "Fv1nlPPZbraB",
+    "optionId": "BH5PGDyUJNre",
+    "reason": "option filed under theme (judge: הצעה להקצאת מימון למחקר, תואמת לתמריצים ותמיכות כלכליות למחקר)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787326423338,
+    "optionId": "zILydV3-ophi",
+    "reason": "gray-band match (no auto-action) (cosine=0.813)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326454819,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "1QF1lQ3ax9MQ",
+    "reason": "option filed under theme (judge: קהילה תומכת מחזקת קשרים, שיתופי פעולה ומעורבות בין חוקרים ושותפים)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326507241,
+    "clusterId": "Fv1nlPPZbraB",
+    "optionId": "m8lgFiPgmH-n",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787326507270,
+    "clusterId": "m8lgFiPgmH-n",
+    "optionId": "Jf82R2evpuLK",
+    "reason": "spawn synth at cosine=0.810",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326529272,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "46t1Nq4OvQOX",
+    "reason": "option filed under theme (judge: גיוס מתנדבים מחזק את הקהילה האנושית והתמיכה ההדדית בפרויקטים מחקריים)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326558895,
+    "clusterId": "Rcazn3QsG7PJ",
+    "optionId": "mcHDxbPCBCU-",
+    "reason": "option filed under theme (judge: הצעה להנגשת מחקר לקהלים דרך נוכחות חוקרים בבתי ספר וחשיפה ישירה למדע)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326590185,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "CPC6x7MRX-cn",
+    "reason": "option filed under theme (judge: שיתוף פעולה עם גורמי רשות הוא יצירת שותפויות וקשרים להטמעת מחקר במציאות.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326619018,
+    "clusterId": "Rcazn3QsG7PJ",
+    "optionId": "z78KFVs049zl",
+    "reason": "option filed under theme (judge: העלאת מודעות תושבים והנגשת מחקר באמצעות פרסומים, סדנאות ואירועים קהילתיים)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326655794,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "inJcK4BoteXQ",
+    "reason": "option filed under theme (judge: מחברת תושבים וחוקרים ישירות לפתרון בעיות מקומיות ומעודדת שיתופי פעולה מחקריים)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326685161,
+    "clusterId": "Fv1nlPPZbraB",
+    "optionId": "AWlaejhIck02",
+    "reason": "option filed under theme (judge: מעקב אחר קולות קוראים מסייע לאתר הזדמנויות מימון ומשאבים למחקר)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787326747509,
+    "clusterId": "i0tYvLJSSfSV",
+    "optionId": "4IwTYx4688hA",
+    "reason": "spawn synth at cosine=0.865",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787326753383,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "i0tYvLJSSfSV",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787326759743,
+    "optionId": "CAHyGTvGQicx",
+    "reason": "gray-band match (no auto-action) (cosine=0.806)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787326854316,
+    "clusterId": "lOyOePu9aA8F",
+    "reason": "reJudge merge at cross-member cosine=0.866",
+    "triggerSource": "reJudgeSweep"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787326903682,
+    "clusterId": "HtoFP5OZXf7Y",
+    "reason": "reJudge merge at cross-member cosine=0.839",
+    "triggerSource": "reJudgeSweep"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787326923903,
+    "clusterId": "ghKcVg7H5a3H",
+    "reason": "themes consolidated into \"קשרים ותקשורת בין מחקר לשטח\" (1 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787326931875,
+    "optionId": "1bvZAG-AHfIt",
+    "reason": "gray-band match (no auto-action) (cosine=0.853)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787326972930,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "mcpx7JSEDJof",
+    "reason": "option filed under theme (judge: עידוד סקרנות ותעוזה מסייע ביצירת קשרים ושיתופי פעולה בין מחקר לשטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327010971,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "7FxgAQTQCv3Z",
+    "reason": "option filed under theme (judge: עידוד פתיחות לשיתופי פעולה מחזק קשרים בין חוקרים ומקדם יישום מחקר.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327041579,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "cAWvPLAlkWRE",
+    "reason": "option filed under theme (judge: התמקדות בשאלות מחזקת חקירה מעמיקה והבנת המציאות והשטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327074247,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "0kNhTCttvUKw",
+    "reason": "option filed under theme (judge: בחירת מיני מחקר חלופיים היא התאמת תהליך המחקר לצורכי השטח ולמגבלותיו)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327112496,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "Agea18gc8Mg3",
+    "reason": "option filed under theme (judge: שילוב פונקציה מחקרית בגוף רגולטורי מחבר בין מחקר, מקבלי החלטות ויישום בשטח.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327148097,
+    "clusterId": "Fv1nlPPZbraB",
+    "optionId": "bftMEDcmiz9y",
+    "reason": "option filed under theme (judge: ההצעה עוסקת בתמריצים, מענקים ותמיכות לעידוד השפעה והנגשת מחקר מדעי)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327178517,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "RXDeiqcuSC4d",
+    "reason": "option filed under theme (judge: חיבור מוסדי בין מחקר למשרדי ממשלה כדי להטמיע ידע בקבלת החלטות)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327207646,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "eHh1Y5BPTqfu",
+    "reason": "option filed under theme (judge: עוסק בהקמת שותפויות ושיתופי פעולה בין מחקר, ארגונים וגורמי שטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787327243548,
+    "optionId": "JEwvKq4FlN3L",
+    "reason": "gray-band match (no auto-action) (cosine=0.849)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787327275694,
+    "optionId": "DWGC7QrFem7C",
+    "reason": "gray-band match (no auto-action) (cosine=0.786)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327306664,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "QWROJcHOIoX8",
+    "reason": "option filed under theme (judge: כינוס בעלי עניין מחזק קשרים, תקשורת ישירה ושיתופי פעולה בין מחקר לשטח.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327348807,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "3SeU51kwp1iL",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787327348809,
+    "clusterId": "3SeU51kwp1iL",
+    "optionId": "Ose-OJ-abZk8",
+    "reason": "spawn synth at cosine=0.848",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787327391854,
+    "optionId": "WW5W1FS1--Gl",
+    "reason": "gray-band match (no auto-action) (cosine=0.909)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327421855,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "4PBBilOPwDvU",
+    "reason": "option filed under theme (judge: חיבור בין מדע, רגולציה ויישום בשטח באמצעות גורם מתווך)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327467678,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "c7fpbWFvSqP2",
+    "reason": "option filed under theme (judge: מדגיש את החיבור בין תוקף מדעי, אקטיביזם ופעולה לשינוי המציאות)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327501411,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "HrwanRa1VnyG",
+    "reason": "option filed under theme (judge: חיבור בין בוגרי מחקר למגזר הציבורי לצורך תרגום ידע אקדמי ליישום)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787327531348,
+    "optionId": "CoSO3bjI8lfp",
+    "reason": "gray-band match (no auto-action) (cosine=0.727)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327561447,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "NhNv2A5askQy",
+    "reason": "option filed under theme (judge: עוסק בחיבור ותקשורת ישירה בין חוקרים, מתנדבים והציבור לקידום שיתוף פעולה מחקרי.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787327613304,
+    "clusterId": "-0oEf1qPoav1",
+    "optionId": "IxpfAyBE4VNi",
+    "reason": "spawn synth at cosine=0.818",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327615849,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "-0oEf1qPoav1",
+    "reason": "nest synthesis under theme (judge: עבודת שטח מקדימה מבססת את המחקר על צרכים, אתגרים ותנאים מקומיים)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327639370,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "lwAZ-YPyQFBA",
+    "reason": "option filed under theme (judge: שיתוף מקבלי החלטות ובעלי סמכות מחבר בין מחקר, שותפים ויישום בשטח.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787327692306,
+    "clusterId": "9fKHAY6Jrr4p",
+    "optionId": "w0BSucZf2WVU",
+    "reason": "spawn synth at cosine=0.801",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787327699305,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "9fKHAY6Jrr4p",
+    "reason": "new theme created for synthesis (no existing theme fit)",
+    "triggerSource": "pipeline:onCreate:themeCreate"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787327718659,
+    "optionId": "moZMzS9TKP27",
+    "reason": "gray-band match (no auto-action) (cosine=0.821)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327765373,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "RGpZG3tu9SzQ",
+    "reason": "option filed under theme (judge: אמירה כללית על יכולת המחקר להניע שינוי משמעותי במציאות)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327792449,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "0lOPuJxx4ofP",
+    "reason": "option filed under theme (judge: מפגשים ישירים בין אקדמיה לשטח מחזקים תקשורת, שיתוף ידע ושיתופי פעולה)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327823381,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "R2slgMvVeLLb",
+    "reason": "option filed under theme (judge: פורומים לשיח פתוח מחזקים קשר ישיר בין מחקר, אנשי עשייה והציבור)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327855513,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "KIzZt9Cv8AoL",
+    "reason": "option filed under theme (judge: משאבים והכשרות שנועדו לתמוך בשיתופי פעולה בין אקדמיה לאנשי השטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327889244,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "Mlm6eFnAKjce",
+    "reason": "option filed under theme (judge: שימוש בסמנים מדעיים משפר את הבנת הבעיה ומאפשר להתאים מחקר לפעולה בשטח.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327921103,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "rp6-S8e4Ziew",
+    "reason": "option filed under theme (judge: עוסק ביצירת תנאים וכלים מערכתיים שמאפשרים למחקר להשפיע על המציאות והמדיניות)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327963843,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "isa7d2T0b3eH",
+    "reason": "option filed under theme (judge: הצעה למחקר מלמטה למעלה, המבוסס על אתגרים וצרכים שמגיעים מהשטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787327996295,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "8DHPTWBreIcG",
+    "reason": "option filed under theme (judge: עדכון שוטף מהשטח מבטיח התאמת המחקר למציאות ולצרכים המשתנים)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328036944,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "4qa--jxCg053",
+    "reason": "option filed under theme (judge: שיתופי פעולה בין בעלי חזון לאנשי ביצוע מחזקים קשרים ומקדמים יישום בשטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328066583,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "NM2k2qLCLcvD",
+    "reason": "option filed under theme (judge: הכשרה שוטפת היא תנאי מערכתי לבניית יכולת מקצועית ולהשפעה עקבית של המחקר)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328105723,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "SEqM-zrDfQMN",
+    "reason": "option filed under theme (judge: הנגשת ידע מחקרי לסוכני השטח מחזקת את הקשר בין מחקר ליישום.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328135404,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "iiuhVoWkR6yY",
+    "reason": "option filed under theme (judge: מתמקד בהעברת ידע מהשטח לרשויות ובחיזוק הקשר בין מחקר, קהילה וקובעי מדיניות)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328200104,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "ArGLq9FsN9tN",
+    "reason": "option filed under theme (judge: שיתופי פעולה וחיבור בין חוקרים, אקדמיה, ארגונים ורשויות לקידום יישום והשפעה)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328230298,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "Gydh9Qhea4B9",
+    "reason": "option filed under theme (judge: הנגשת ידע מחזקת תקשורת בין מחקר לציבור ומאפשרת יישום במציאות)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328281387,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "nbzPaaenT7Ze",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787328281419,
+    "clusterId": "nbzPaaenT7Ze",
+    "optionId": "FKMzBdFp3SX4",
+    "reason": "spawn synth at cosine=0.843",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787328321614,
+    "clusterId": "iQv4lrjYfqI9",
+    "optionId": "Vf-KfuQBvDuR",
+    "reason": "spawn synth at cosine=0.943",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328324255,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "iQv4lrjYfqI9",
+    "reason": "nest synthesis under theme (judge: עוסק בהפיכת ידע מחקרי לכלים מעשיים ולשינוי ממשי במציאות)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328355012,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "7Oinyze-d4xa",
+    "reason": "option filed under theme (judge: מתמקד ברציפות, התמדה ומומנטום המאפשרים מעבר ממסקנות מחקר ליישום והשפעה)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328384067,
+    "clusterId": "mvZhOjaGkm0T",
+    "optionId": "WhkvOtCbkAKe",
+    "reason": "option filed under theme (judge: מדגיש הבנה רב־שכבתית ומעמיקה של השטח כבסיס למחקר ולשינוי)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328421391,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "aY9qPUuserW4",
+    "reason": "option filed under theme (judge: מתמקד בשיתופי פעולה בין גורמים שונים, בדומה להצעות לחיבור בין מחקר לשטח.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328452280,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "fIXOHKMktozv",
+    "reason": "option filed under theme (judge: עוסק בשיתופי פעולה בין תחומים ובהרחבת החיבור בין ידע למחקר ולמעשה.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328490662,
+    "clusterId": "Fv1nlPPZbraB",
+    "optionId": "RRQSCGGufl7s",
+    "reason": "option filed under theme (judge: עוסק בצורך במימון ומשאבים המאפשרים יישום רעיונות ושיתופי פעולה.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787328537280,
+    "clusterId": "vJ2h84OTWp20",
+    "optionId": "iEzATrGIDlDS",
+    "reason": "spawn synth at cosine=0.842",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328539350,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "vJ2h84OTWp20",
+    "reason": "nest synthesis under theme (judge: יצירת חיבורים יזומים בין חוקרים, ארגוני שטח וממשלה לקידום שיתופי פעולה.)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328604633,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "YP13g0IXEGV9",
+    "reason": "option filed under theme (judge: עוסק בתנאים מערכתיים המאפשרים חוסן, יציבות והשפעה מתמשכת על המציאות.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328634128,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "DXsfv4yU16lT",
+    "reason": "option filed under theme (judge: עידוד אכפתיות ומודעות קהילתית הוא תנאי ציבורי לקידום מחקר והשפעה בשטח)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328663365,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "IgCwtpDRK9yh",
+    "reason": "option filed under theme (judge: המחשה חזותית מחזקת תקשורת בין המחקר, הציבור והשטח ומקדמת הבנת הבעיה.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787328808243,
+    "clusterId": "GuKRYnGq1BHF",
+    "reason": "reJudge merge at cross-member cosine=0.854",
+    "triggerSource": "reJudgeSweep"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787328862039,
+    "clusterId": "i0tYvLJSSfSV",
+    "reason": "reJudge merge at cross-member cosine=0.843",
+    "triggerSource": "reJudgeSweep"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787328915149,
+    "clusterId": "a6dHSqDVujJO",
+    "reason": "themes consolidated into \"תנאים ותמיכות למחקר משנה מציאות\" (1 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787328915216,
+    "clusterId": "ghKcVg7H5a3H",
+    "reason": "themes consolidated into \"שותפות בין מחקר לשטח\" (1 donor(s))",
+    "triggerSource": "reJudge:themeConsolidate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787328920026,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "WRXLlj4jpT6u",
+    "reason": "option filed under theme (judge: הדגשת תועלות אישיות היא תנאי מניע ותמיכה לשינוי מבוסס מחקר)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787329019984,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "XAmwiGSEwQZ7",
+    "reason": "nest synthesis under topic cluster (members re-homed)",
+    "triggerSource": "pipeline:onCreate:nest"
+  },
+  {
+    "action": "spawn",
+    "timestamp": 1787329019986,
+    "clusterId": "XAmwiGSEwQZ7",
+    "optionId": "kLp0RmT-jsms",
+    "reason": "spawn synth at cosine=0.863",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787329053163,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "WKLIJmIj52Es",
+    "reason": "option filed under theme (judge: מחקר רב־תחומי הוא תנאי מערכתי להבנת בעיות מורכבות ולפיתוח פתרונות משפיעי־מציאות.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787329121509,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "3YmU0AE3ZXZg",
+    "reason": "option filed under theme (judge: גוף בינתחומי הוא תנאי מערכתי המגשר בין מחקר, מדיניות וקבלת החלטות.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "review-queued",
+    "timestamp": 1787329154832,
+    "optionId": "rOKYJ7ShEQvF",
+    "reason": "gray-band match (no auto-action) (cosine=0.716)",
+    "triggerSource": "pipeline:onCreate"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787329183863,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "OlUHWZkmWRXI",
+    "reason": "option filed under theme (judge: חיבור ישיר בין האקדמיה לקהילה לקידום יישום מחקר סביבתי במציאות)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787329270700,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "nCBoYSGyWKVm",
+    "reason": "option filed under theme (judge: שיתוף הציבור במחקר תואם ישירות לתנאים המאפשרים מחקר משנה מציאות.)",
+    "triggerSource": "pipeline:queueWorker:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787329290218,
+    "clusterId": "ghKcVg7H5a3H",
+    "optionId": "-2WNvTQaT3-E",
+    "reason": "option filed under theme (judge: מתמקד ביצירת חיבורים ורתימת שותפים להפיכת רעיון לתהליך מעשי.)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "attach",
+    "timestamp": 1787329319838,
+    "clusterId": "a6dHSqDVujJO",
+    "optionId": "SXBHflNhWXGN",
+    "reason": "option filed under theme (judge: מדגיש התמדה ועבודה מתמשכת כתנאי להשגת תוצאות ולשינוי המציאות באמצעות מחקר)",
+    "triggerSource": "pipeline:onCreate:optionTheme"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787329458273,
+    "clusterId": "GuKRYnGq1BHF",
+    "reason": "reJudge merge at cross-member cosine=0.918",
+    "triggerSource": "reJudgeSweep"
+  },
+  {
+    "action": "merge",
+    "timestamp": 1787329592270,
+    "clusterId": "vJ2h84OTWp20",
+    "reason": "reJudge merge at cross-member cosine=0.821",
+    "triggerSource": "reJudgeSweep"
+  }
+]
