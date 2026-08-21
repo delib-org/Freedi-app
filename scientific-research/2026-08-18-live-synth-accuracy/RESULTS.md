@@ -26,6 +26,7 @@ and `score100.mjs` for the implementation.
 | `en-seed42-memberjudge` | en | + consolidation judged on members; judge-once; scope rule | **0.865** | 0.990 | 0.678 | 49/50 | 49 | **10** |
 | `en-seed42-filingfix` | en | consolidation reverted; filing judge sees contents + unsure→NONE | **0.902** | 0.990 | 0.770 | 49/50 | 49 | 14 |
 | `he-seed42-large-perq` | he | per-question pin → `text-embedding-3-large` (global still 3-small) | **0.651** | 0.880 | 0.307 | 44/50 | 43 | 9 |
+| `he-seed42-large-judged` | he | + Pass 3 judged (no cosine attach); per-model bands (0.86/0.80/0.75) | **0.878** | 0.887 | 0.865 | 43/50 | 42 | 11 |
 
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
