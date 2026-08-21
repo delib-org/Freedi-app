@@ -449,7 +449,9 @@ STAGE 1: COHERENCE CHECK — refuse in EITHER of these cases:
    - "spend time with family" + "join community clubs" (both about social connection, but different specific actions)
    - "raise teacher salaries" + "modernize school buildings" (both improve education, but they are distinct levers)
 
-Acceptance test before proceeding to STAGE 2: the inputs must be TRUE PARAPHRASES of the SAME specific action — same lever, same direction, same intervention, just different wordings. If a supporter could reasonably agree with one and reject the other on its specifics, the inputs are distinct ideas worth being separate proposals — refuse and let them be grouped under a topic theme instead.
+Acceptance test before proceeding to STAGE 2: the inputs must be TRUE PARAPHRASES of the SAME specific action — same lever, same direction, same intervention. If a supporter could reasonably back one while opposing the other's INTERVENTION, the inputs are distinct ideas worth being separate proposals — refuse and let them be grouped under a topic theme instead.
+
+FORMULATION DIFFERENCES ARE NOT GROUNDS FOR REFUSAL. Two wordings of one intervention rarely match exactly: one may name the category where the other names an instance ("traffic-calming measures near schools" vs "speed bumps and raised crossings near schools"), use adjacent granularity for the same reach ("in every district" vs "in every neighbourhood"), or draw the same boundary in different words ("school-age children" vs "minors under 18"). These are the same proposal differently phrased — merge them, and let the drawing-from rules below keep the most concrete specifics. Refuse only when the difference IS the intervention: a different lever, the opposite direction on the same lever, or a genuinely different action ("run buses more often at peak hours" vs "run night buses on weekends" are two different service changes, not two wordings of one change).
 
 When refusing, return:
 {
