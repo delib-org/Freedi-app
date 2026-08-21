@@ -96,7 +96,32 @@ import {
  * flag; automatic triggers never pass it.
  */
 
-const NEIGHBOR_LIMIT = 10;
+/**
+ * How many neighbours the pipeline inspects. Raised 10 → 15 for the compressed
+ * geometries: under Hebrew 3-large the whole space packs into ~0.64–0.94, and
+ * a mature question's ~60 cluster docs (synth titles, theme titles) crowd the
+ * window — measured on `he-seed42-large-judged`, a true twin at cosine 0.831
+ * ranked #10 behind four theme titles and three unrelated statements, and
+ * pairs like walk-in-help-desks (0.803) fell outside the window entirely.
+ * Extra candidates only add evidence; every gate that acts on them is
+ * unchanged.
+ */
+const NEIGHBOR_LIMIT = 15;
+
+/**
+ * How many in-band plain candidates Pass 2 will offer the synthesis judge
+ * before giving up on spawning. One was enough in English 3-small space,
+ * where the twin essentially always ranks first among plain options. In
+ * compressed spaces the ranking is noisy: on `he-seed42-large-judged` the
+ * top plain candidate for a traffic-calming statement was an unrelated
+ * bus-frequency statement at 0.846 with the true twin one plain-rank below
+ * at 0.831 — the judge refused the wrong pair and the right pair was never
+ * put to it. A refusal is a verdict on ONE pair, not on the option's
+ * spawnability, so the next in-band candidate gets a turn. Bounded: extra
+ * LLM calls happen only after a refusal, which in well-separated spaces is
+ * precisely the case where there is nothing to find.
+ */
+const SPAWN_CANDIDATE_ATTEMPTS = 3;
 
 /**
  * Snowball brake for synth attaches: a newcomer that clears `attachThreshold`
@@ -648,14 +673,25 @@ async function executePipeline(
 	// twin to file the statement away from it. End state: 2 of 50 pairs merged,
 	// and the synthesis LLM consulted 4 times in a 100-statement run.
 	//
-	// A refusal (`cannotSynthesize`) is not terminal here: the LLM saying "these
-	// are distinct ideas" is exactly the case for theming them, so it falls
-	// through to the passes below rather than forcing a theme of its own.
-	if (topPlainOption && routeByCosine(topPlainOption.similarity, settings) === 'spawn-synth') {
+	// A refusal (`cannotSynthesize`) is not terminal here — for the PAIR or for
+	// the option. The LLM saying "these are distinct ideas" is a verdict on one
+	// pairing, so the next in-band plain candidate gets a turn (see
+	// SPAWN_CANDIDATE_ATTEMPTS for the measured case where the true twin sat
+	// one rank below a wrong neighbour). Only when every offered pairing is
+	// refused does the option fall through to the theming passes below.
+	const spawnCandidates = candidates
+		.filter(
+			(c) =>
+				!isCluster(c.statement) &&
+				!synthMemberIds.has(c.statement.statementId) &&
+				routeByCosine(c.similarity, settings) === 'spawn-synth',
+		)
+		.slice(0, SPAWN_CANDIDATE_ATTEMPTS);
+	for (const spawnCandidate of spawnCandidates) {
 		const synthAttempt = await spawnClusterFromPair({
 			option,
-			sibling: topPlainOption.statement,
-			similarity: topPlainOption.similarity,
+			sibling: spawnCandidate.statement,
+			similarity: spawnCandidate.similarity,
 			parentStatement: parent,
 			triggerSource,
 			bypassDebounce,
@@ -670,7 +706,7 @@ async function executePipeline(
 			if (synthAttempt.clusterId && settings.llmThemeAssignment) {
 				const nested = await nestSynthUnderTopic({
 					synthId: synthAttempt.clusterId,
-					memberIds: [option.statementId, topPlainOption.statement.statementId],
+					memberIds: [option.statementId, spawnCandidate.statement.statementId],
 					synthTitle: synthAttempt.title ?? option.statement,
 					synthDescription: synthAttempt.description,
 					parent,
@@ -684,7 +720,7 @@ async function executePipeline(
 
 			return {
 				action: 'spawned',
-				reason: `spawn synth at cosine=${topPlainOption.similarity.toFixed(3)}${nestNote}`,
+				reason: `spawn synth at cosine=${spawnCandidate.similarity.toFixed(3)}${nestNote}`,
 				clusterId: synthAttempt.clusterId,
 				llmCalled: true,
 				durationMs: Date.now() - startedAt,
@@ -700,6 +736,7 @@ async function executePipeline(
 			// with no audit row and no retry. Re-queue and let the worker try again.
 			return deferFailedSpawn(option.statementId, parent.statementId, startedAt);
 		}
+		// cannotSynthesize → this pairing is refused; offer the next candidate.
 	}
 
 	// =====================================================================

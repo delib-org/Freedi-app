@@ -482,6 +482,82 @@ describe('runSinglePipeline', () => {
 		expect(attachMock).toHaveBeenCalled();
 	});
 
+	it('a refused pairing is not terminal — the next in-band candidate gets a turn', async () => {
+		// Measured on he-seed42-large-judged: in compressed 3-large space the
+		// top plain candidate was an unrelated neighbour at 0.846 and the true
+		// twin ranked one plain-rank below at 0.831. A cannotSynthesize verdict
+		// is about ONE pair; ending Pass 2 on it lost the pair entirely.
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'wrong-neighbour',
+					integratedOptions: [],
+				} as unknown as Statement,
+				similarity: 0.86,
+			},
+			{
+				statement: { statementId: 'true-twin', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.83,
+			},
+		]);
+		spawnMock
+			.mockResolvedValueOnce({ spawned: false, cannotSynthesize: true })
+			.mockResolvedValueOnce({ spawned: true, clusterId: 'synth-with-twin' });
+
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+
+		expect(result.action).toBe('spawned');
+		expect(result.clusterId).toBe('synth-with-twin');
+		expect(spawnMock).toHaveBeenCalledTimes(2);
+		expect(spawnMock.mock.calls[0][0].sibling.statementId).toBe('wrong-neighbour');
+		expect(spawnMock.mock.calls[1][0].sibling.statementId).toBe('true-twin');
+	});
+
+	it('spawn attempts stop at the cap, and below-band candidates are never offered', async () => {
+		const option = makeOption();
+		const parent = makeParent();
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: { statementId: 's1', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.9,
+			},
+			{
+				statement: { statementId: 's2', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.85,
+			},
+			{
+				statement: { statementId: 's3', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.82,
+			},
+			{
+				statement: { statementId: 's4', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.81,
+			},
+			{
+				statement: { statementId: 'below-band', integratedOptions: [] } as unknown as Statement,
+				similarity: 0.7,
+			},
+		]);
+		spawnMock.mockResolvedValue({ spawned: false, cannotSynthesize: true });
+
+		await runSinglePipeline({ optionId: option.statementId, source: 'onCreate', option, parent });
+
+		// Cap of 3 attempts, all from the spawn band, in ranking order.
+		expect(spawnMock.mock.calls.filter((c) => c[0].mode === 'synth')).toHaveLength(3);
+		expect(spawnMock.mock.calls.map((c) => c[0].sibling.statementId).slice(0, 3)).toEqual([
+			's1',
+			's2',
+			's3',
+		]);
+	});
+
 	it('spawns a SYNTH when LLM agrees (high cosine pair)', async () => {
 		const option = makeOption();
 		const parent = makeParent();
