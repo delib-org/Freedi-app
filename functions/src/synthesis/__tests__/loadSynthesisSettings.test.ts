@@ -203,5 +203,46 @@ describe('synthesis settings', () => {
 
 			expect(loadSynthesisSettingsFromStatement(stmt as never).embeddingModel).toBeUndefined();
 		});
+
+		it('a 3-large pin swaps in the bands measured for THAT geometry', () => {
+			// The 3-small bands in 3-large Hebrew space admit 4421/4500
+			// cross-topic pairs into the topic band (analysis/heBands.mjs) —
+			// bands travel with the model or the mega-theme comes back.
+			const stmt = {
+				statementSettings: {
+					synthesis: { enabled: true, embeddingModel: 'text-embedding-3-large' },
+				},
+			};
+
+			const settings = loadSynthesisSettingsFromStatement(stmt as never);
+			expect(settings.attachThreshold).toBe(0.86);
+			expect(settings.synthLowerBound).toBe(0.8);
+			expect(settings.clusterThreshold).toBe(0.75);
+		});
+
+		it('explicitly stored band values beat the per-model defaults', () => {
+			const stmt = {
+				statementSettings: {
+					synthesis: {
+						enabled: true,
+						embeddingModel: 'text-embedding-3-large',
+						attachThreshold: 0.9,
+					},
+				},
+			};
+
+			const settings = loadSynthesisSettingsFromStatement(stmt as never);
+			expect(settings.attachThreshold).toBe(0.9);
+			expect(settings.synthLowerBound).toBe(0.8);
+		});
+
+		it('without a pin the 3-small bands stand', () => {
+			const stmt = { statementSettings: { synthesis: { enabled: true } } };
+
+			const settings = loadSynthesisSettingsFromStatement(stmt as never);
+			expect(settings.attachThreshold).toBe(0.85);
+			expect(settings.synthLowerBound).toBe(0.78);
+			expect(settings.clusterThreshold).toBe(0.6);
+		});
 	});
 });

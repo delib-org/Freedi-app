@@ -205,8 +205,20 @@ describe('liveSynthOnOptionCreate', () => {
 		expect(mockFindSimilarByEmbedding).not.toHaveBeenCalled();
 	});
 
-	it('attaches when top hit is a cluster at cosine ≥ 0.92', async () => {
-		setupFirestoreMockForGet();
+	it('attaches when top hit is a cluster at cosine ≥ 0.92 (legacy cosine mode)', async () => {
+		// The fixture cluster classifies as a TOPIC cluster (no synthesis
+		// marker), and with the filing judge on, topic placement is the
+		// judge's call, not cosine's (Findings 16/17). This test pins the
+		// legacy cosine-attach mechanics, so it runs with the judge off.
+		setupFirestoreMockForGet({
+			data: {
+				statementId: 'q1',
+				statement: 'the question',
+				statementType: 'question',
+				questionSettings: { questionType: 'mass-consensus' },
+				statementSettings: { synthesis: { enabled: true, llmThemeAssignment: false } },
+			},
+		});
 		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
 		mockFindSimilarByEmbedding.mockResolvedValue([
 			{

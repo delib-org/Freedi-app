@@ -155,6 +155,44 @@ export const MC_DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	enabled: true,
 };
 
+/**
+ * Band defaults for a question pinned to `text-embedding-3-large`.
+ *
+ * The bands are calibrated to a GEOMETRY, not to the pipeline — the 3-small
+ * numbers above mean nothing in 3-large space. Measured on the frozen Hebrew
+ * corpus with context-prefixed 3-large @1536 embeddings
+ * (`analysis/heBands.mjs`, Finding 17):
+ *
+ *   twin pairs         min 0.726  p10 0.816  med 0.875
+ *   same-topic pairs             p90 0.809  max 0.885
+ *   cross-topic pairs            p90 0.751  max 0.850
+ *
+ * At the 3-small bands this geometry is catastrophic: 4421/4500 cross-topic
+ * pairs clear the 0.60 topic band (the 45-member mega-theme of
+ * `he-seed42-large-perq`) and 234 wrong pairs sit inside the 0.78 spawn band
+ * (its 6 false merges). The values here are the measured operating points:
+ *
+ *   attach 0.86 — same-topic pairs above it drop 11 → 5 (of 400), twins
+ *     above it 34/50; attach is a precision path, the spawn band carries recall.
+ *   synth 0.80  — twin recall in-band still 47/50 (identical to 0.78) while
+ *     wrong in-band pairs drop 234 → 89. Strictly dominant over 0.78.
+ *   cluster 0.75 — cross-topic p90; candidacy only, since the filing judge
+ *     decides placement when `llmThemeAssignment` is on.
+ *
+ * Applied two ways, deliberately redundant: as merge-time defaults for a
+ * pinned question that never had bands explicitly saved, and written
+ * explicitly by `reEmbedQuestion` on pin so an admin-saved question does not
+ * keep its stale 3-small bands.
+ */
+export const LARGE_MODEL_BANDS: Pick<
+	SynthesisSettings,
+	'attachThreshold' | 'synthLowerBound' | 'clusterThreshold'
+> = {
+	attachThreshold: 0.86,
+	synthLowerBound: 0.8,
+	clusterThreshold: 0.75,
+};
+
 export interface SettingsValidationResult {
 	valid: boolean;
 	errors: string[];

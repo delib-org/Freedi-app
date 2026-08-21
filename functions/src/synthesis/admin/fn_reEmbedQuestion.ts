@@ -11,6 +11,7 @@ import {
 	invalidateEmbeddingModelCache,
 	isAllowedEmbeddingModel,
 } from '../../services/embedding-model-resolver';
+import { LARGE_MODEL_BANDS } from '../pipeline/types';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
 
 /**
@@ -82,14 +83,37 @@ export const reEmbedQuestion = onCall<ReEmbedRequest>(
 			// Pin first, then re-embed: a statement arriving mid-sweep resolves
 			// the NEW model and doesn't add to the stale set. Dot-path update so
 			// the rest of the synthesis settings block is untouched.
-			await db.collection(Collections.statements).doc(questionId).update({
-				'statementSettings.synthesis.embeddingModel': embeddingModel,
-				lastUpdate: Date.now(),
-			});
+			//
+			// The cosine bands travel WITH the model. They are calibrated to a
+			// geometry (types.ts documents both sets), and an admin-saved
+			// settings block stores explicit band values that would otherwise
+			// win the merge and leave a migrated question judging 3-large
+			// cosines by 3-small cuts — the exact mis-calibration that built
+			// the 45-member mega-theme in `he-seed42-large-perq` (Finding 17).
+			// Pinning is an explicit migration action; stale bands are wrong by
+			// construction, so they are overwritten, not respected.
+			const bandUpdate =
+				embeddingModel === 'text-embedding-3-large'
+					? Object.fromEntries(
+							Object.entries(LARGE_MODEL_BANDS).map(([k, v]) => [
+								`statementSettings.synthesis.${k}`,
+								v,
+							]),
+						)
+					: {};
+			await db
+				.collection(Collections.statements)
+				.doc(questionId)
+				.update({
+					'statementSettings.synthesis.embeddingModel': embeddingModel,
+					...bandUpdate,
+					lastUpdate: Date.now(),
+				});
 			invalidateEmbeddingModelCache(questionId);
 			logger.info('reEmbedQuestion: embedding model pinned', {
 				questionId,
 				embeddingModel,
+				bands: bandUpdate,
 				uid,
 			});
 		}

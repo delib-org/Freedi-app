@@ -3,6 +3,7 @@ import { logger } from 'firebase-functions';
 import { Collections, QuestionType, type Statement } from '@freedi/shared-types';
 import {
 	DEFAULT_SYNTHESIS_SETTINGS,
+	LARGE_MODEL_BANDS,
 	MC_DEFAULT_SYNTHESIS_SETTINGS,
 	type SynthesisSettings,
 } from './types';
@@ -141,9 +142,15 @@ export async function loadSynthesisSettings(questionId: string): Promise<Synthes
 export function loadSynthesisSettingsFromStatement(
 	statement: Statement | null | undefined,
 ): SynthesisSettings {
-	const defaults = isMassConsensus(statement)
+	const base = isMassConsensus(statement)
 		? MC_DEFAULT_SYNTHESIS_SETTINGS
 		: DEFAULT_SYNTHESIS_SETTINGS;
+	// The bands are geometry-specific: a question pinned to 3-large defaults to
+	// the bands measured for THAT space (see LARGE_MODEL_BANDS). Explicitly
+	// stored band values still win in the merge below.
+	const block = readSynthesisBlock(statement);
+	const defaults =
+		block?.embeddingModel === 'text-embedding-3-large' ? { ...base, ...LARGE_MODEL_BANDS } : base;
 
 	const explicit = readSynthesisBlock(statement);
 	if (explicit) {

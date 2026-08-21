@@ -711,16 +711,29 @@ async function executePipeline(
 	// question" — measured, 80% of cross-topic pairs clear a 0.60 gate — so the
 	// attach itself is decided on the member CENTROID, which does separate them.
 	// Skipped entirely when the option already belongs to a theme.
+	//
+	// RUNS ONLY WHEN THE FILING JUDGE IS OFF. This was the one placement path
+	// that attached without judgement, and it is measured to be the residual
+	// failure on BOTH languages: in the certified English run it carried 2 of
+	// the 7 misfiles (Finding 16), and on Hebrew under 3-large it built a
+	// 45-member cross-topic mega-theme single-handedly — 25 of its 45 members
+	// entered here, because cross-topic Hebrew cosines run straight through
+	// this band (4421 of 4500 cross-topic pairs clear 0.60; `heBands.mjs`,
+	// Finding 17). With `llmThemeAssignment` on, cosine's role in theming is
+	// candidacy only: an unplaced option falls through to Pass 3b, where the
+	// judge sees every theme WITH its contents and decides — the same
+	// cosine-proposes-judgement-disposes shape as every other placement.
 	const topicGate: CohesionGate = {
 		centroidFloor: settings.synthLowerBound,
 		memberFloor: settings.clusterThreshold,
 		quorumFraction: TOPIC_COHESION_QUORUM,
 	};
-	const topicMatches = alreadyInTopic
-		? []
-		: Array.from(clusterEvidence.values())
-				.filter((x) => isTopicCluster(x.cluster) && x.bestSimilarity >= settings.clusterThreshold)
-				.sort((a, b) => b.bestSimilarity - a.bestSimilarity);
+	const topicMatches =
+		alreadyInTopic || settings.llmThemeAssignment
+			? []
+			: Array.from(clusterEvidence.values())
+					.filter((x) => isTopicCluster(x.cluster) && x.bestSimilarity >= settings.clusterThreshold)
+					.sort((a, b) => b.bestSimilarity - a.bestSimilarity);
 	for (const topicMatch of topicMatches) {
 		const memberVecs = (topicMatch.cluster.integratedOptions ?? [])
 			.map((id) => memberEmbeddings.get(id))

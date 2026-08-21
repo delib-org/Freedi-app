@@ -228,7 +228,10 @@ describe('runSinglePipeline', () => {
 
 			expect(result.action).toBe('spawned');
 			expect(spawnMock).toHaveBeenCalledWith(
-				expect.objectContaining({ mode: 'synth', sibling: expect.objectContaining({ statementId: 'twin' }) }),
+				expect.objectContaining({
+					mode: 'synth',
+					sibling: expect.objectContaining({ statementId: 'twin' }),
+				}),
 			);
 		});
 
@@ -707,10 +710,47 @@ describe('runSinglePipeline', () => {
 		expect(attachMock).not.toHaveBeenCalled();
 	});
 
-	it('attaches to an existing TOPIC CLUSTER when cosine in the cluster band', async () => {
+	it('a topic-band cosine hit goes to the FILING JUDGE, not to a direct attach', async () => {
+		// The judge-free cosine attach was the residual misfile source on both
+		// languages (2/7 English misfiles, 25/45 members of the Hebrew
+		// mega-theme — Findings 16/17). With llmThemeAssignment on (the
+		// default), cosine is candidacy only and the judge places the option.
 		const option = makeOption();
 		const parent = makeParent();
 		// cosine 0.7 is between clusterThreshold (0.6) and attachThreshold (0.85)
+		findSimilarMock.mockResolvedValue([
+			{
+				statement: {
+					statementId: 'cluster-4',
+					integratedOptions: ['opt-c', 'opt-d'],
+					derivedByPipeline: 'topic-cluster',
+				} as unknown as Statement,
+				similarity: 0.7,
+			},
+		]);
+		assignOptionThemeMock.mockResolvedValue({ themeId: 'cluster-4', reason: 'judged' });
+		const result = await runSinglePipeline({
+			optionId: option.statementId,
+			source: 'onCreate',
+			option,
+			parent,
+		});
+		expect(result.action).toBe('attached');
+		expect(result.clusterId).toBe('cluster-4');
+		expect(result.llmCalled).toBe(true);
+		expect(assignOptionThemeMock).toHaveBeenCalled();
+		// The unjudged path must NOT fire: attachOptionToCluster is Pass 1/3
+		// plumbing, and Pass 3 is disabled under the judge.
+		expect(attachMock).not.toHaveBeenCalled();
+		expect(spawnMock).not.toHaveBeenCalled();
+	});
+
+	it('with the judge OFF, the cosine topic attach still works (legacy mode)', async () => {
+		const option = makeOption();
+		const parent = { ...makeParent() } as Statement;
+		(parent as unknown as { statementSettings: unknown }).statementSettings = {
+			synthesis: { enabled: true, llmThemeAssignment: false },
+		};
 		findSimilarMock.mockResolvedValue([
 			{
 				statement: {
@@ -731,7 +771,6 @@ describe('runSinglePipeline', () => {
 		expect(result.clusterId).toBe('cluster-4');
 		expect(result.llmCalled).toBe(false);
 		expect(attachMock).toHaveBeenCalled();
-		expect(spawnMock).not.toHaveBeenCalled();
 	});
 
 	it('attaches transitively when a candidate plain option is a member of an existing synth (cosine via member)', async () => {
