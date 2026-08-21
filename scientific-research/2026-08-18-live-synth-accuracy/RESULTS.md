@@ -27,6 +27,9 @@ and `score100.mjs` for the implementation.
 | `en-seed42-filingfix` | en | consolidation reverted; filing judge sees contents + unsure→NONE | **0.902** | 0.990 | 0.770 | 49/50 | 49 | 14 |
 | `he-seed42-large-perq` | he | per-question pin → `text-embedding-3-large` (global still 3-small) | **0.651** | 0.880 | 0.307 | 44/50 | 43 | 9 |
 | `he-seed42-large-judged` | he | + Pass 3 judged (no cosine attach); per-model bands (0.86/0.80/0.75) | **0.878** | 0.887 | 0.865 | 43/50 | 42 | 11 |
+| `he-seed42-large-recall` | he | + spawn retries 3 in-band candidates; NEIGHBOR_LIMIT 15 | **0.856** | 0.882 | 0.816 | 41/50 | 41 | 12 |
+| `he-seed42-large-formulation` | he | + spawn judge: formulation ≠ intervention | **0.777** | 0.857 | 0.658 | 42/50 | 41 | 11 |
+| `he-seed42-large-judgedattach` | he | + Pass 1 attach requires the semantic judge's 'same' | **0.932** | **0.947** | **0.910** | 45/50 | 45 | **10** |
 
 \* The `llm-themes` run's 47/50 is a **harness artifact, not a pipeline result** —
 see Finding 8. That build's true pair recovery was 50/50.
@@ -281,6 +284,61 @@ warning about exactly that gap. The fix is measured, ported, and verified — an
 it is not *believed* until a live full-corpus run confirms it. Also still open:
 the ~8 cosine topic-attaches per run bypass this judge entirely (1 of 8
 misfiled live).
+
+## Finding 18 — Hebrew reaches 0.932, and the law that got it there: geometry proposes, judgement disposes — with no exceptions
+
+The Hebrew arc, five certified runs, one seed, each changing one lever:
+
+| run | lever | accuracy | synth P / false merges | topic F1 |
+| --- | --- | --- | --- | --- |
+| `large-perq` | pin only (Finding 17) | 0.651 | 0.880 / 6 | 0.307 |
+| `large-judged` | Pass 3 judged + per-model bands | 0.878 | 0.915 / 4 | 0.865 |
+| `large-recall` | spawn retry ×3 + window 15 | 0.856 | 0.953 / 2 | 0.816 |
+| `large-formulation` | spawn judge: formulation ≠ intervention | 0.777 | 0.875 / 6 | 0.658 |
+| **`large-judgedattach`** | **Pass 1 attach requires 'same'** | **0.932** | **1.000 / 0** | **0.910** |
+
+**0.932 is the highest score of any run in this study, either language**
+(English best: 0.910). Synth precision 1.000 with zero false merges, 45/50
+pairs, ten themes for a true ten, six perfectly pure, coverage 97/100.
+
+**The mechanism, named plainly.** Every leap in that table — and both dips —
+traces to the same law. In 3-small English space, geometry was nearly
+sufficient: twins sat in a band of their own, and the judge-free shortcuts
+(cosine topic attach, cosine synth attach) were safe because nothing wrong
+could clear their gates. Hebrew 3-large compresses the space (twins 0.73–0.97,
+cross-topic up to 0.85): distinct ideas clear EVERY geometric gate — night-bus
+statements attached to a peak-frequency synth at cosine 0.899–0.944. Each fix
+was the same fix: find the next place geometry acted alone, put the judge in
+front of it. Theme filing (Finding 15), topic attach (`large-judged`), and
+finally synth attach (`large-judgedattach`) — the last judge-free placement in
+the pipeline. The dips are instructive too: `large-recall` and
+`large-formulation` were correct per-mechanism changes (offline A/B: EN 50/50
+unchanged, HE wrong refusals 5→1) whose composite effect was swamped by the
+then-unjudged attach path and theme-filing luck — single-run composites cannot
+resolve a two-pair improvement under ±0.05 filing variance, which is Finding
+13's lesson holding at run granularity.
+
+**What each kept fix contributes** (all cumulative in the final run):
+per-question pin + guard (Finding 17 machinery); per-model bands measured in
+`heBands.mjs`; judged filing everywhere; spawn retry over 3 in-band candidates
+(a refusal judges one pair, not the option); window 15 for crowded compressed
+spaces; the formulation≠intervention clause (HE twins 45→49/50 offline, EN
+untouched); and the semantic-judge gate on attach — verdict-cached, fail-closed,
+because an unmerged duplicate self-heals via the reJudge sweep while a wrong
+attach is permanent.
+
+**Honesty about variance:** HE runs 2–4 spanned 0.777–0.878 largely on theme
+filing luck. Run 5's synth-layer numbers are causally attributable (P=1.000 is
+the gate, not the dice), but 0.932 as a composite carries one run's filing
+fortune; quote "≈0.9, spread comparable to English's" until a seed sweep says
+otherwise. The three statements that hit the 45s settle cap each run remain a
+known harness limitation.
+
+**Cost note:** the judged attach adds one verdict-cached fast-model call per
+attach candidate that passes the geometric gates — a handful per hundred
+statements — and the English regression run below is the check that judging
+what geometry used to decide does not tax the language where geometry was
+sufficient.
 
 ## Finding 16 — the filing fix survives its live run: permanent misfiles halve, composite back in band
 
