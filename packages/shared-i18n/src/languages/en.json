@@ -3752,5 +3752,6 @@
   "This move is not allowed": "This move is not allowed",
   "A statement cannot be moved into itself": "A statement cannot be moved into itself",
   "The statement is already here": "The statement is already here",
-  "A statement cannot be moved into its own branch": "A statement cannot be moved into its own branch"
+  "A statement cannot be moved into its own branch": "A statement cannot be moved into its own branch",
+  "Rate this": "Rate this"
 }

@@ -315,9 +315,11 @@
 // ========================================
 .toolbar {
 	position: fixed;
-	transform: translateX(-50%);
+	// Bottom-anchored: the rating row is conditional, so a top-anchored strip
+	// would grow down over the node it belongs to.
+	transform: translate(-50%, -100%);
 	display: flex;
-	align-items: center;
+	flex-direction: column;
 	gap: 2px;
 	background: var(--card-default, #ffffff);
 	border-radius: 8px;
@@ -326,6 +328,12 @@
 	z-index: 100;
 	animation: toolbarFadeIn 0.15s ease-out;
 	white-space: nowrap;
+}
+
+.toolbarRow {
+	display: flex;
+	align-items: center;
+	gap: 2px;
 }
 
 .toolbarBtn {
@@ -370,6 +378,75 @@
 .toolbarBtnActive {
 	background: var(--btn-primary, #5f88e5);
 	color: white;
+}
+
+// Rating row — the shared 5-point evaluation scale, inline under the icons.
+.evaluationRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2px;
+	padding-top: 3px;
+	border-top: 1px solid var(--background, #eef0f3);
+}
+
+.evaluationBtn {
+	width: 32px;
+	height: 32px;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	// Unpicked faces recede so the cast vote reads at a glance.
+	opacity: 0.6;
+	filter: grayscale(0.65);
+	transition:
+		opacity 0.15s ease,
+		filter 0.15s ease,
+		transform 0.15s ease,
+		background 0.15s ease;
+
+	&:hover {
+		opacity: 1;
+		filter: none;
+		transform: scale(1.15);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 1px;
+	}
+}
+
+.evaluationBtnActive {
+	opacity: 1;
+	filter: none;
+	transform: scale(1.1);
+	background: var(--background, #eef0f3);
+	box-shadow: 0 0 0 2px var(--btn-primary, #5f88e5);
+}
+
+.evaluationEmoji {
+	font-size: 1.05rem;
+	line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.evaluationBtn {
+		transition: none;
+
+		&:hover {
+			transform: none;
+		}
+	}
+
+	.evaluationBtnActive {
+		transform: none;
+	}
 }
 
 // Type switcher popover, hanging under the node toolbar.

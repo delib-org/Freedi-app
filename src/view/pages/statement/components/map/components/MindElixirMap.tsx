@@ -43,6 +43,16 @@ import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
+import { useSelector } from 'react-redux';
+import { getEvaluationScale } from '@freedi/shared-types';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
+import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
+import { statementSelector } from '@/redux/statements/statementsSlice';
+import { findAncestorChain, resolveEvaluationSettings } from '../mapHelpers/evaluationSettings';
 
 // Zoom bounds + button step, shared by the wheel, pinch, and button handlers.
 const SCALE_MIN = 0.2;
@@ -197,7 +207,9 @@ function MindElixirMap({
 		// Use viewport coordinates directly (toolbar is position: fixed)
 		setToolbarState({
 			visible: true,
-			top: nodeRect.top - 44,
+			// Anchored by its own bottom edge (see .toolbar's translateY(-100%)) so
+			// the strip clears the node whether or not it carries the rating row.
+			top: nodeRect.top - 6,
 			left: nodeRect.left + nodeRect.width / 2,
 			statementId,
 			isRoot: !!isRoot,
@@ -1180,6 +1192,91 @@ function MindElixirMap({
 		});
 	}, [toolbarState.statementId, descendants, t, removeNodeButtons]);
 
+	// ── Node evaluation ──────────────────────────────────────────────────────
+	// The toolbar doubles as the rating surface: pick a face and the vote is
+	// written for the selected node. Which faces appear is inherited from the
+	// question the node hangs under — see resolveEvaluationSettings.
+	const { creator } = useAuthentication();
+
+	const selectedStatement = useMemo(
+		() =>
+			toolbarState.statementId ? findStatementById(descendants, toolbarState.statementId) : null,
+		[descendants, toolbarState.statementId],
+	);
+
+	// The map is rooted at the question being viewed, which is not necessarily
+	// the top question — read that one from the store so its settings still act
+	// as the global fallback for a node deep inside a sub-question.
+	const topStatementSelector = useMemo(
+		() => statementSelector(descendants.top.topParentId),
+		[descendants.top.topParentId],
+	);
+	const topStatement = useSelector(topStatementSelector);
+
+	const ancestorChain = useMemo(() => {
+		const chain = toolbarState.statementId
+			? (findAncestorChain(descendants, toolbarState.statementId) ?? [])
+			: [];
+		if (!topStatement || chain.some((a) => a.statementId === topStatement.statementId)) {
+			return chain;
+		}
+
+		return [...chain, topStatement];
+	}, [descendants, toolbarState.statementId, topStatement]);
+
+	const evaluationSettings = useMemo(
+		() => resolveEvaluationSettings(ancestorChain),
+		[ancestorChain],
+	);
+	const evaluationScale = useMemo(
+		() => getEvaluationScale(evaluationSettings.ratingMode),
+		[evaluationSettings.ratingMode],
+	);
+
+	// A halted question freezes rating here exactly as it does on the cards.
+	const { isHalted } = useIsProcessHalted(ancestorChain[0]);
+
+	// Votes are stored per parent, and only the selected node's are needed, so
+	// the listener follows the selection instead of subscribing to the whole map.
+	const evaluationParentId = selectedStatement?.parentId;
+	useEffect(() => {
+		if (!evaluationParentId || !creator?.uid) return;
+		const unsubscribe = listenToEvaluations(evaluationParentId, undefined, creator.uid);
+
+		return () => unsubscribe?.();
+	}, [evaluationParentId, creator?.uid]);
+
+	const storedEvaluationSelector = useMemo(
+		() => evaluationSelector(toolbarState.statementId),
+		[toolbarState.statementId],
+	);
+	const storedEvaluation = useAppSelector(storedEvaluationSelector);
+
+	// Shown immediately on click; the listener overwrites it once the write
+	// lands, so a rejected vote falls back to the stored value on its own.
+	const [optimisticEvaluation, setOptimisticEvaluation] = useState<number | undefined>(undefined);
+	useEffect(() => {
+		setOptimisticEvaluation(storedEvaluation);
+	}, [storedEvaluation, toolbarState.statementId]);
+
+	const handleEvaluate = useCallback(
+		(value: number) => {
+			if (!selectedStatement || !creator) return;
+			setOptimisticEvaluation(value);
+			setEvaluationToDB(selectedStatement, creator, value);
+		},
+		[selectedStatement, creator],
+	);
+
+	// The root is the question itself: nothing above it to rate it against, and
+	// no parentId to file a vote under.
+	const canEvaluateNode =
+		!toolbarState.isRoot &&
+		Boolean(selectedStatement?.parentId) &&
+		Boolean(creator) &&
+		evaluationSettings.enableEvaluation &&
+		!isHalted;
+
 	if (!data) {
 		return (
 			<div className={styles.loading}>
@@ -1205,50 +1302,12 @@ function MindElixirMap({
 					onMouseDown={(e) => e.stopPropagation()}
 					onPointerDown={(e) => e.stopPropagation()}
 				>
-					<button
-						className={styles.toolbarBtn}
-						onClick={handleToolbarLink}
-						aria-label="Open statement"
-						title={t('Open')}
-					>
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-							<polyline points="15 3 21 3 21 9" />
-							<line x1="10" y1="14" x2="21" y2="3" />
-						</svg>
-					</button>
-					<button
-						className={styles.toolbarBtn}
-						onClick={handleToolbarEdit}
-						aria-label="Edit node"
-						title={t('Edit')}
-					>
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-						</svg>
-					</button>
-					{canChangeType && (
+					<div className={styles.toolbarRow}>
 						<button
-							className={`${styles.toolbarBtn} ${typeMenuOpen ? styles.toolbarBtnActive : ''}`}
-							onClick={() => setTypeMenuOpen((open) => !open)}
-							aria-label="Change statement type"
-							aria-expanded={typeMenuOpen}
-							title={t('Change type')}
+							className={styles.toolbarBtn}
+							onClick={handleToolbarLink}
+							aria-label="Open statement"
+							title={t('Open')}
 						>
 							<svg
 								viewBox="0 0 24 24"
@@ -1258,20 +1317,36 @@ function MindElixirMap({
 								strokeLinecap="round"
 								strokeLinejoin="round"
 							>
-								<rect x="3" y="13" width="8" height="8" rx="2" />
-								<circle cx="17" cy="17" r="4" />
-								<path d="M7 3 3 9h8L7 3z" />
+								<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+								<polyline points="15 3 21 3 21 9" />
+								<line x1="10" y1="14" x2="21" y2="3" />
 							</svg>
 						</button>
-					)}
-					{!toolbarState.isRoot && (
-						<>
-							<div className={styles.toolbarDivider} />
+						<button
+							className={styles.toolbarBtn}
+							onClick={handleToolbarEdit}
+							aria-label="Edit node"
+							title={t('Edit')}
+						>
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+								<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+							</svg>
+						</button>
+						{canChangeType && (
 							<button
-								className={`${styles.toolbarBtn} ${styles.toolbarBtnDelete}`}
-								onClick={handleToolbarDelete}
-								aria-label="Delete node"
-								title={t('Delete')}
+								className={`${styles.toolbarBtn} ${typeMenuOpen ? styles.toolbarBtnActive : ''}`}
+								onClick={() => setTypeMenuOpen((open) => !open)}
+								aria-label="Change statement type"
+								aria-expanded={typeMenuOpen}
+								title={t('Change type')}
 							>
 								<svg
 									viewBox="0 0 24 24"
@@ -1281,15 +1356,62 @@ function MindElixirMap({
 									strokeLinecap="round"
 									strokeLinejoin="round"
 								>
-									<polyline points="3 6 5 6 21 6" />
-									<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-									<line x1="10" y1="11" x2="10" y2="17" />
-									<line x1="14" y1="11" x2="14" y2="17" />
+									<rect x="3" y="13" width="8" height="8" rx="2" />
+									<circle cx="17" cy="17" r="4" />
+									<path d="M7 3 3 9h8L7 3z" />
 								</svg>
 							</button>
-						</>
-					)}
+						)}
+						{!toolbarState.isRoot && (
+							<>
+								<div className={styles.toolbarDivider} />
+								<button
+									className={`${styles.toolbarBtn} ${styles.toolbarBtnDelete}`}
+									onClick={handleToolbarDelete}
+									aria-label="Delete node"
+									title={t('Delete')}
+								>
+									<svg
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<polyline points="3 6 5 6 21 6" />
+										<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+										<line x1="10" y1="11" x2="10" y2="17" />
+										<line x1="14" y1="11" x2="14" y2="17" />
+									</svg>
+								</button>
+							</>
+						)}
+					</div>
 
+					{canEvaluateNode && (
+						<div className={styles.evaluationRow} role="group" aria-label={t('Rate this')}>
+							{evaluationScale.map((entry) => {
+								const isActive = optimisticEvaluation === entry.value;
+
+								return (
+									<button
+										key={entry.value}
+										type="button"
+										className={`${styles.evaluationBtn} ${isActive ? styles.evaluationBtnActive : ''}`}
+										onClick={() => handleEvaluate(entry.value)}
+										aria-label={t(entry.labelKey)}
+										aria-pressed={isActive}
+										title={t(entry.labelKey)}
+									>
+										<span className={styles.evaluationEmoji} aria-hidden>
+											{entry.emoji}
+										</span>
+									</button>
+								);
+							})}
+						</div>
+					)}
 					{typeMenuOpen && (
 						<div className={styles.typeMenu} role="menu">
 							{typeChoices.map((choice) => (

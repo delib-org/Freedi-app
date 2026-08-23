@@ -3043,5 +3043,6 @@
   "This move is not allowed": "Deze verplaatsing is niet toegestaan",
   "A statement cannot be moved into itself": "Een stelling kan niet in zichzelf worden verplaatst",
   "The statement is already here": "De stelling staat hier al",
-  "A statement cannot be moved into its own branch": "Een stelling kan niet in haar eigen tak worden verplaatst"
+  "A statement cannot be moved into its own branch": "Een stelling kan niet in haar eigen tak worden verplaatst",
+  "Rate this": "Beoordeel dit"
 }

@@ -3791,5 +3791,6 @@
   "This move is not allowed": "העברה זו אינה מותרת",
   "A statement cannot be moved into itself": "לא ניתן להעביר הצהרה לתוך עצמה",
   "The statement is already here": "ההצהרה כבר נמצאת כאן",
-  "A statement cannot be moved into its own branch": "לא ניתן להעביר הצהרה לתוך הענף שלה"
+  "A statement cannot be moved into its own branch": "לא ניתן להעביר הצהרה לתוך הענף שלה",
+  "Rate this": "דרגו את זה"
 }

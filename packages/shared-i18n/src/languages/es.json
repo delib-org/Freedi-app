@@ -3043,5 +3043,6 @@
   "This move is not allowed": "Este movimiento no está permitido",
   "A statement cannot be moved into itself": "Una declaración no puede moverse dentro de sí misma",
   "The statement is already here": "La declaración ya está aquí",
-  "A statement cannot be moved into its own branch": "Una declaración no puede moverse dentro de su propia rama"
+  "A statement cannot be moved into its own branch": "Una declaración no puede moverse dentro de su propia rama",
+  "Rate this": "Valora esto"
 }

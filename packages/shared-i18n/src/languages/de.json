@@ -3043,5 +3043,6 @@
   "This move is not allowed": "Dieser Verschiebevorgang ist nicht zulässig",
   "A statement cannot be moved into itself": "Eine Aussage kann nicht in sich selbst verschoben werden",
   "The statement is already here": "Die Aussage befindet sich bereits hier",
-  "A statement cannot be moved into its own branch": "Eine Aussage kann nicht in ihren eigenen Zweig verschoben werden"
+  "A statement cannot be moved into its own branch": "Eine Aussage kann nicht in ihren eigenen Zweig verschoben werden",
+  "Rate this": "Das bewerten"
 }
