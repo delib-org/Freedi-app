@@ -181,12 +181,26 @@ export type SynthesisConfig = InferOutput<typeof SynthesisConfigSchema>;
  * the same map. All fields optional → the board falls back to its built-in
  * defaults (see ClusterBoard MAP_FONT_* / MAP_SYNTH_VISIBILITY_DEFAULT).
  */
+/**
+ * @deprecated Replaced by `MapDetailLevel` (`defaultDetail`). Still read for
+ * migration: 'clusters-only' → 'themes', 'all' → 'ideas', 'originals-only' → 'everything'.
+ */
 export const MapSynthVisibilitySchema = picklist([
 	'all', // clusters/synth AND ungrouped originals (default)
 	'clusters-only', // only clustered/synth groups; hide the ungrouped block
 	'originals-only', // flatten everything to originals; hide cluster grouping
 ]);
 export type MapSynthVisibility = InferOutput<typeof MapSynthVisibilitySchema>;
+
+/**
+ * How deep a map viewer looks into the topic → synth → original hierarchy.
+ * Acts as a MAXIMUM depth; individual nodes can be expanded further by the viewer.
+ * - `themes`     — topic clusters only (a table of contents).
+ * - `ideas`      — topics opened to their merged ideas (synths) + ungrouped originals. Default.
+ * - `everything` — synths opened to the original statements they were merged from.
+ */
+export const MapDetailLevelSchema = picklist(['themes', 'ideas', 'everything']);
+export type MapDetailLevel = InferOutput<typeof MapDetailLevelSchema>;
 
 // Which score the map filter keys off of. 'none' = no filtering (default).
 export const MapFilterMetricSchema = picklist([
@@ -199,7 +213,9 @@ export type MapFilterMetric = InferOutput<typeof MapFilterMetricSchema>;
 export const MapSettingsSchema = object({
 	cardFontRem: optional(number()), // sticky-note (card) text size, rem
 	clusterFontRem: optional(number()), // cluster pill + hub title size, rem
-	synthVisibility: optional(MapSynthVisibilitySchema), // which layers render
+	synthVisibility: optional(MapSynthVisibilitySchema), // @deprecated — see defaultDetail
+	defaultDetail: optional(MapDetailLevelSchema), // starting depth for participants (default 'ideas')
+	allowViewerExpand: optional(boolean()), // participants may expand nodes past the default depth (default true)
 	showProvenance: optional(boolean()), // show "made from N responses" on clusters
 	filterMetric: optional(MapFilterMetricSchema), // which score to filter by (default 'none')
 	minConsensus: optional(number()), // threshold when filterMetric === 'consensus', range [-1,1]

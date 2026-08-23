@@ -434,6 +434,17 @@
   // Shared cluster pill
   --cluster-pill-bg: rgba(255, 255, 255, 0.22);
   --cluster-pill-text: #ffffff;
+  // Silhouettes shared by both maps: a merged idea is a stack of sheets, a
+  // theme a header band, an original a plain note.
+  --cluster-stack-offset: 4px;
+  --cluster-stack-sheet: #cdeee8;
+  --cluster-stack-edge: rgba(29, 44, 80, 0.28);
+  --cluster-raw-bg: #ffffff;
+  --cluster-raw-text: #3d4d71;
+  --cluster-mine-marker: #5f88e5;
+  --cluster-dim-opacity: 0.45;
+  --cluster-selected-ring: #47b4ef;
+  --cluster-source-scale: 0.85;
 
   // Mind-map clusters high contrast
   --cluster-synth-bg-high-contrast: linear-gradient(135deg, #2f9e8b 0%, #1f7e6e 100%);
@@ -441,6 +452,10 @@
   --cluster-topic-bg-high-contrast: #4a66c4;
   --cluster-topic-accent-high-contrast: #2f4aa8;
   --cluster-pill-bg-high-contrast: rgba(0, 0, 0, 0.35);
+  --cluster-stack-sheet-high-contrast: #ffffff;
+  --cluster-stack-edge-high-contrast: #000000;
+  --cluster-mine-marker-high-contrast: #165bfa;
+  --cluster-dim-opacity-high-contrast: 0.6;
 
   // Member
   --member-awaiting: #b4e0f8;

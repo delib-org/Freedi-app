@@ -1,4 +1,4 @@
-import { useState, FC, useEffect } from 'react';
+import { useState, FC, useEffect, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import MindElixirMap from './components/MindElixirMap';
@@ -17,15 +17,11 @@ import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
-import { ALL_LAYERS_VISIBLE } from './mapHelpers/layerFilter';
-import type { LayerVisibility, MapLayer } from './mapHelpers/layerFilter';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useMapDetailLevel } from './mapHelpers/useMapDetailLevel';
+import { pathToMine } from './mapHelpers/detailLevel';
+import MapDetailControl from './components/MapDetailControl';
 import styles from './MindMap.module.scss';
-
-const LAYER_OPTIONS: { value: MapLayer; label: string }[] = [
-	{ value: 'raw', label: 'Raw' },
-	{ value: 'synth', label: 'Synths' },
-	{ value: 'clusters', label: 'Clusters' },
-];
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -58,16 +54,34 @@ const MindMap: FC = () => {
 	// Use the fixed hook
 	const { results, flat } = useMindMap();
 
-	// Layer filter (raw / synth / clusters) — each toggled independently; the map
-	// shows the union of the pressed layers. Only meaningful when the question
-	// actually has clusters or synths (i.e. the tree is not flat).
-	const [layerVisibility, setLayerVisibility] = useState<LayerVisibility>(ALL_LAYERS_VISIBLE);
-	const toggleLayer = (layer: MapLayer) =>
-		setLayerVisibility((prev) => ({ ...prev, [layer]: !prev[layer] }));
 	const hasClusters = !flat;
 
 	const role = effectiveSubscription ? effectiveSubscription.role : Role.member;
 	const _isAdmin = isAdmin(role);
+
+	// One altitude for the whole map (themes / ideas / everything), remembered
+	// per question on this device, plus the nodes the viewer opened by hand.
+	const { user } = useAuthentication();
+	const detail = useMapDetailLevel(
+		statementId,
+		statement?.statementSettings?.map,
+		user?.uid,
+		_isAdmin,
+	);
+
+	// "My ideas": where the viewer's own statements ended up in the tree.
+	const mine = useMemo(
+		() => (results ? pathToMine(results, user?.uid) : null),
+		[results, user?.uid],
+	);
+	const [locateToken, setLocateToken] = useState(0);
+	const [showBreadcrumb, setShowBreadcrumb] = useState(false);
+	const locateMine = useCallback(() => {
+		if (!mine?.firstId) return;
+		detail.expandMany(mine.ancestorIds);
+		setLocateToken((token) => token + 1);
+		setShowBreadcrumb(true);
+	}, [mine, detail.expandMany]);
 
 	const { t } = useTranslation();
 	const { mapContext, setMapContext } = useMapContext();
@@ -202,19 +216,15 @@ const MindMap: FC = () => {
 						</button>
 					</div>
 					{hasClusters && (
-						<div className={styles.layerFilter} role="group" aria-label={t('Show map layer')}>
-							{LAYER_OPTIONS.map(({ value, label }) => (
-								<button
-									key={value}
-									type="button"
-									aria-pressed={layerVisibility[value]}
-									className={`${styles.layerButton} ${layerVisibility[value] ? styles.layerButtonActive : ''}`}
-									onClick={() => toggleLayer(value)}
-								>
-									{t(label)}
-								</button>
-							))}
-						</div>
+						<MapDetailControl
+							level={detail.level}
+							onChange={detail.setLevel}
+							disabled={!detail.allowExpand}
+							mineCount={mine?.mineIds.size ?? 0}
+							onLocateMine={locateMine}
+							breadcrumb={showBreadcrumb ? (mine?.breadcrumb ?? []) : []}
+							onDismissBreadcrumb={() => setShowBreadcrumb(false)}
+						/>
 					)}
 				</div>
 				{/* Only render map when results are available */}
@@ -223,7 +233,12 @@ const MindMap: FC = () => {
 						descendants={results}
 						isAdmin={_isAdmin}
 						filterBy={filterBy}
-						layerVisibility={layerVisibility}
+						level={detail.level}
+						expandedIds={detail.expandedIds}
+						onToggleExpanded={detail.toggleExpanded}
+						markIds={mine?.synthsContainingMine}
+						locateId={mine?.firstId}
+						locateToken={locateToken}
 					/>
 				) : (
 					<div

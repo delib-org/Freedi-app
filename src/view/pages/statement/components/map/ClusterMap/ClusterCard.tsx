@@ -72,6 +72,19 @@ interface Props {
 	/** Clusters this card can be moved to (excludes its current cluster). */
 	moveTargets: { id: string; label: string }[];
 	onMove: (targetId: string) => void;
+	/**
+	 * False for an original inside a merged idea: its vote is already counted
+	 * through the merge, so the faces show but stay inert.
+	 */
+	ratable?: boolean;
+	/** Smaller note, used for the sources fanned out under a merged idea. */
+	compact?: boolean;
+	/** The viewer wrote this statement. */
+	isMine?: boolean;
+	/** Briefly ringed after "My ideas" located it. */
+	highlighted?: boolean;
+	/** A merge of one original — a plain idea that only carries an AI title. */
+	aiTitled?: boolean;
 }
 
 const ClusterCard: FC<Props> = ({
@@ -90,6 +103,11 @@ const ClusterCard: FC<Props> = ({
 	clusterId,
 	moveTargets,
 	onMove,
+	ratable = true,
+	compact = false,
+	isMine = false,
+	highlighted = false,
+	aiTitled = false,
 }) => {
 	const { t } = useTranslation();
 	const { creator } = useAuthentication();
@@ -201,8 +219,11 @@ const ClusterCard: FC<Props> = ({
 	return (
 		<div
 			ref={cardRef}
-			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''}`}
+			className={`${styles.card} ${facesOpen ? styles.cardElevated : ''} ${
+				compact ? styles.cardCompact : ''
+			} ${isMine ? styles.cardMine : ''} ${highlighted ? styles.cardHighlighted : ''}`}
 			style={{ background: color.card, color: color.text }}
+			aria-label={isMine ? t('Your idea') : undefined}
 			// Explicit note direction (not "auto") so the menu and the reserved text
 			// padding resolve on the same side — see detectTextDir. The menu and text
 			// inherit this; the footer reads naturally in the note's direction too.
@@ -212,6 +233,12 @@ const ClusterCard: FC<Props> = ({
 			draggable={canManage}
 			onDragStart={onDragStart}
 		>
+			{isMine && <span className={styles.mineDot} title={t('Your idea')} aria-hidden />}
+			{aiTitled && (
+				<span className={styles.aiTitledChip} title={t('AI-titled')}>
+					{t('AI-titled')}
+				</span>
+			)}
 			{canManage && (
 				<div className={styles.cardMenu} ref={menuRef}>
 					<button
@@ -324,10 +351,11 @@ const ClusterCard: FC<Props> = ({
 					type="button"
 					className={`${styles.evalToggle} ${hasVoted ? styles.evalToggleVoted : ''}`}
 					style={isReactions ? undefined : { backgroundColor: buttonThumb?.colorSelected }}
-					aria-label={t('Evaluate')}
-					aria-expanded={facesOpen}
-					title={t('Evaluate')}
-					onClick={() => setFacesOpen((open) => !open)}
+					aria-label={ratable ? t('Evaluate') : t('Counted into the merged idea')}
+					aria-expanded={ratable ? facesOpen : undefined}
+					title={ratable ? t('Evaluate') : t('Counted into the merged idea')}
+					disabled={!ratable}
+					onClick={ratable ? () => setFacesOpen((open) => !open) : undefined}
 				>
 					{isReactions ? (
 						<span className={styles.reactionEmoji} aria-hidden>

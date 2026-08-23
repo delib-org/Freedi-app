@@ -2,6 +2,7 @@ import {
 	CSSProperties,
 	DragEvent,
 	FC,
+	Fragment,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -10,7 +11,7 @@ import {
 	useState,
 } from 'react';
 import { arrayRemove, arrayUnion, updateDoc } from 'firebase/firestore';
-import type { MapFilterMetric, MapSynthVisibility, Results, Statement } from '@freedi/shared-types';
+import type { MapFilterMetric, Results, Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -35,7 +36,19 @@ import { focusEditField } from '../mapHelpers/focusEditField';
 import { usePanZoom } from '../hooks/usePanZoom';
 import PanZoomControls from '../components/PanZoomControls';
 import ClusterCard from './ClusterCard';
+import ClusterStack from './ClusterStack';
+import stackStyles from './ClusterStack.module.scss';
 import type { LocalMapFilter } from './mapLocalFilter';
+import {
+	applyDetailLevel,
+	buildMembershipMap,
+	countsFor,
+	isRatable,
+	type DetailResults,
+	type MinePath,
+	type NodeCounts,
+} from '../mapHelpers/detailLevel';
+import type { MapDetailState } from '../mapHelpers/useMapDetailLevel';
 import styles from './ClusterBoard.module.scss';
 
 interface Props {
@@ -47,6 +60,13 @@ interface Props {
 	 * a viewer's — or an admin's "only me" — filter affects only their own view.
 	 */
 	localFilter?: LocalMapFilter | null;
+	/** The shared altitude (themes / ideas / everything) + hand-expanded nodes. */
+	detail: MapDetailState;
+	/** Where the viewer's own statements sit in the tree (for markers). */
+	mine?: MinePath | null;
+	/** A note to ring and centre on (set by "My ideas"); token forces a re-centre. */
+	highlightId?: string | null;
+	highlightToken?: number;
 }
 
 // Card + layout geometry (px).
@@ -56,6 +76,15 @@ const COLS = 3;
 const PILL_RADIUS = 210;
 const PILL_W = 180; // approx pill footprint, for spacing pills around the ring
 const HUB = 120;
+// Sources fanned out under a merged idea are drawn at this scale (see
+// --cluster-source-scale) inside a full-width tray row.
+const SOURCE_SCALE = 0.85;
+const SOURCE = Math.round(CARD * SOURCE_SCALE);
+const SOURCE_GAP = 10;
+// Tray chrome: padding (14 + 10) + margin-top (4) + border (3) + label row (24).
+const TRAY_PAD_Y = 55;
+// A stack's sheets peek out below the card (2 × --cluster-stack-offset).
+const STACK_EXTRA = 8;
 
 const UNGROUPED_ID = '__ungrouped__';
 const UNGROUPED_COLOR: ClusterPaletteEntry = { line: '#9aa3b2', card: '#e7eaf0', text: '#3d4d71' };
@@ -69,7 +98,6 @@ const MAP_FONT_CLUSTER_DEFAULT = 1; // cluster pill + hub title
 // Sensible bounds so a stray setting can't make the board unreadable.
 const MAP_FONT_MIN = 0.6;
 const MAP_FONT_MAX = 2.2;
-const MAP_SYNTH_VISIBILITY_DEFAULT: MapSynthVisibility = 'all';
 
 // A freshly-added option starts at 0 consensus/evaluation, so an active filter
 // would hide it the instant it's created — including the card the add-flow just
@@ -151,7 +179,14 @@ interface BoardCluster {
 	id: string;
 	label: string;
 	color: ClusterPaletteEntry;
-	members: Results[];
+	/** Members to draw — empty while the container is folded at this detail level. */
+	members: DetailResults[];
+	/** What the container holds, folded or not — for its count pill. */
+	counts: NodeCounts;
+	/** Folded at the current detail level (members hidden behind the count). */
+	collapsed: boolean;
+	/** The container itself is a merged idea (its members are the originals). */
+	isSynth: boolean;
 	/** The cluster statement (isCluster option) — null for the synthetic "Ungrouped" group. */
 	clusterStatement: Statement | null;
 	/**
@@ -179,11 +214,26 @@ interface PlacedCluster extends BoardCluster {
  * every card; authors manage their own; anyone with access can add and
  * evaluate. Real-time updates flow in via ClusterMap's mind-map listener.
  */
-const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
+const ClusterBoard: FC<Props> = ({
+	results,
+	localFilter,
+	detail,
+	mine,
+	highlightId,
+	highlightToken,
+}) => {
 	const { t } = useTranslation();
 	const { user, creator } = useAuthentication();
 	const subject = results.top;
-	const children = useMemo(() => results.sub ?? [], [results.sub]);
+	const { level, expandedIds, toggleExpanded, allowExpand } = detail;
+	// The tree folded to the viewer's altitude; the board reads `collapsed` off
+	// each node instead of pruning, so folded containers still know their counts.
+	const leveled = useMemo(
+		() => applyDetailLevel(results, level, expandedIds),
+		[results, level, expandedIds],
+	);
+	const children = leveled.sub;
+	const membership = useMemo(() => buildMembershipMap(results), [results]);
 
 	const subscription = useAppSelector(
 		statementSubscriptionSelector(subject.topParentId ?? subject.statementId),
@@ -197,9 +247,8 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 	const ratingMode = subject.statementSettings?.ratingMode;
 	const canContribute = !!user;
 
-	// Admin-controlled map display (font sizes, which layers render, provenance).
+	// Admin-controlled map display (font sizes, provenance).
 	const mapSettings = subject.statementSettings?.map;
-	const synthVisibility = mapSettings?.synthVisibility ?? MAP_SYNTH_VISIBILITY_DEFAULT;
 	const showProvenance = mapSettings?.showProvenance ?? true;
 
 	// Response filter. Hides notes whose consensus / average evaluation falls
@@ -269,42 +318,17 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 		[isAdmin, user],
 	);
 
-	// Split the question's children into clusters (isCluster) and loose options
-	// (rendered in an "Ungrouped" block). resultsByParentId already nested each
-	// cluster's members under it via integratedOptions.
+	// Split the question's children into containers (themes and top-level merged
+	// ideas → a pill + grid each) and loose originals (the "Ungrouped" block).
+	// resultsByParentId already nested each cluster's members under it via
+	// integratedOptions; applyDetailLevel folded whatever the altitude hides.
 	const boardClusters = useMemo(() => {
 		const containers: BoardCluster[] = [];
-		const loose: Results[] = [];
-
-		// originals-only: ignore clustering entirely — every option (cluster
-		// members included) renders as a flat note with no pills/synth groups.
-		if (synthVisibility === 'originals-only') {
-			children.forEach((child) => {
-				if (child.top.isCluster) {
-					(child.sub ?? []).forEach((member) => loose.push(member));
-				} else {
-					loose.push(child);
-				}
-			});
-			const sourceCount = loose.length;
-			const visibleLoose = loose.filter((member) => passesFilter(member.top));
-			if (visibleLoose.length > 0) {
-				containers.push({
-					id: UNGROUPED_ID,
-					label: t('All responses'),
-					color: UNGROUPED_COLOR,
-					members: visibleLoose,
-					clusterStatement: null,
-					sourceCount,
-				});
-			}
-
-			return containers;
-		}
+		const loose: DetailResults[] = [];
 
 		children.forEach((child) => {
-			if (child.top.isCluster) {
-				const allMembers = child.sub ?? [];
+			if (child.kind !== 'raw') {
+				const allMembers = child.sub;
 				const visibleMembers = allMembers.filter((member) => passesFilter(member.top));
 				// Drop a cluster only when the filter hid ALL of its members. A
 				// genuinely empty cluster (e.g. one just created via "Add cluster",
@@ -314,7 +338,10 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 					id: child.top.statementId,
 					label: child.top.statement,
 					color: resolveClusterColor(child.top.color, child.top.statementId),
-					members: visibleMembers,
+					members: child.collapsed ? [] : visibleMembers,
+					counts: countsFor(child),
+					collapsed: child.collapsed,
+					isSynth: child.kind === 'synth',
 					clusterStatement: child.top,
 					sourceCount: allMembers.length,
 				});
@@ -323,21 +350,33 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 			}
 		});
 
-		// clusters-only: hide the synthetic "Ungrouped" block of un-clustered
-		// originals; the cluster/synth groups are all that render.
-		if (loose.length > 0 && synthVisibility !== 'clusters-only') {
+		// Ungrouped originals fold with the themes: at "themes" they are a count.
+		if (loose.length > 0) {
+			const collapsed = level === 'themes';
 			containers.push({
 				id: UNGROUPED_ID,
 				label: t('Ungrouped'),
 				color: UNGROUPED_COLOR,
-				members: loose,
+				members: collapsed ? [] : loose,
+				counts: { ideas: loose.length, merged: 0, voices: loose.length },
+				collapsed,
+				isSynth: false,
 				clusterStatement: null,
 				sourceCount: loose.length,
 			});
 		}
 
 		return containers;
-	}, [children, t, synthVisibility, passesFilter]);
+	}, [children, t, level, passesFilter]);
+
+	// A merged idea inside a container fans its originals out in a tray that
+	// takes the next full-width grid row. The grid's height therefore depends on
+	// which stacks are open — this walks the auto-placement to measure it.
+	const isOpenStack = useCallback(
+		(member: DetailResults) =>
+			member.kind === 'synth' && !member.singleSource && !member.collapsed && member.sub.length > 0,
+		[],
+	);
 
 	// Place clusters on a ring. Pills sit on an inner ring near the hub; each
 	// grid then hugs its OWN pill at a radius set by that cluster's own size, so
@@ -350,11 +389,39 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 		const sinHalf = Math.max(Math.sin(angleStep / 2), 0.001);
 
 		const blocks = boardClusters.map((cluster) => {
-			const memberCount = cluster.members.length + (canContribute ? 1 : 0);
+			const canAdd = canContribute && !cluster.isSynth && !cluster.collapsed;
+			const memberCount = cluster.members.length + (canAdd ? 1 : 0);
 			const cols = Math.max(1, Math.min(COLS, memberCount || 1));
-			const rows = Math.max(1, Math.ceil((memberCount || 1) / cols));
 			const w = cols * CARD + (cols - 1) * GAP;
-			const h = rows * CARD + (rows - 1) * GAP;
+			const perTrayRow = Math.max(1, Math.floor((w + SOURCE_GAP) / (SOURCE + SOURCE_GAP)));
+
+			// Walk the grid's auto-placement: cards fill a row; an open stack's
+			// tray spans the full width on the row after it.
+			let h = 0;
+			let col = 0;
+			let rowOpen = false;
+			let rowHasStack = false;
+			const closeRow = () => {
+				if (!rowOpen) return;
+				h += (h > 0 ? GAP : 0) + CARD + (rowHasStack ? STACK_EXTRA : 0);
+				rowOpen = false;
+				rowHasStack = false;
+				col = 0;
+			};
+			const slots: (DetailResults | null)[] = [...cluster.members, ...(canAdd ? [null] : [])];
+			for (const slot of slots) {
+				if (col === cols) closeRow();
+				col += 1;
+				rowOpen = true;
+				if (slot && slot.kind === 'synth' && !slot.singleSource) rowHasStack = true;
+				if (slot && isOpenStack(slot)) {
+					closeRow();
+					const trayRows = Math.ceil(slot.sub.length / perTrayRow);
+					h += GAP + TRAY_PAD_Y + trayRows * SOURCE + (trayRows - 1) * SOURCE_GAP;
+				}
+			}
+			closeRow();
+			if (h === 0) h = CARD;
 
 			// Bounding-circle radius of the block, for collision checks.
 			return { cols, w, h, half: Math.hypot(w, h) / 2 };
@@ -413,7 +480,7 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 				half: blocks[i].half,
 			};
 		});
-	}, [boardClusters, canContribute]);
+	}, [boardClusters, canContribute, isOpenStack]);
 
 	// Canvas big enough to hold the outermost grids; hub is centered.
 	const reach = useMemo(() => {
@@ -440,44 +507,77 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 		zoomIn,
 		zoomOut,
 		fit,
+		centerOn,
 		onPointerDown,
 	} = usePanZoom({ contentWidth: size, contentHeight: size });
 
-	// memberId → the cluster statement it currently belongs to (for moves).
+	// memberId → the cluster statement it currently belongs to (for moves). An
+	// original inside an open merged idea belongs to that merged idea.
 	const sourceClusterByMember = useMemo(() => {
 		const map = new Map<string, Statement>();
 		for (const cluster of boardClusters) {
-			if (!cluster.clusterStatement) continue;
 			for (const member of cluster.members) {
-				map.set(member.top.statementId, cluster.clusterStatement);
+				if (cluster.clusterStatement) map.set(member.top.statementId, cluster.clusterStatement);
+				if (isOpenStack(member)) {
+					for (const source of member.sub) map.set(source.top.statementId, member.top);
+				}
 			}
 		}
 
 		return map;
-	}, [boardClusters]);
+	}, [boardClusters, isOpenStack]);
 
 	const membersById = useMemo(() => {
 		const map = new Map<string, Statement>();
 		for (const cluster of boardClusters) {
 			for (const member of cluster.members) {
 				map.set(member.top.statementId, member.top);
+				if (isOpenStack(member)) {
+					for (const source of member.sub) map.set(source.top.statementId, source.top);
+				}
 			}
 		}
 
 		return map;
-	}, [boardClusters]);
+	}, [boardClusters, isOpenStack]);
 	// Keep the grace-timer callback reading the latest member statements (fresh
 	// consensus/evaluation) without re-arming the timer on every board update.
 	membersByIdRef.current = membersById;
 
+	// Drop targets: every container, plus each open merged idea (its tray).
 	const clusterById = useMemo(() => {
 		const map = new Map<string, Statement | null>();
 		for (const cluster of boardClusters) {
 			map.set(cluster.id, cluster.clusterStatement);
+			for (const member of cluster.members) {
+				if (isOpenStack(member)) map.set(member.top.statementId, member.top);
+			}
 		}
 
 		return map;
-	}, [boardClusters]);
+	}, [boardClusters, isOpenStack]);
+
+	// "My ideas": bring the located note to the centre and ring it briefly.
+	const [ringedId, setRingedId] = useState<string | null>(null);
+	useEffect(() => {
+		if (!highlightToken || !highlightId) return;
+		const canvas = canvasRef.current;
+		const el = canvas?.querySelector<HTMLElement>(`[data-flip-id="${highlightId}"]`);
+		if (!canvas || !el) return;
+		const canvasRect = canvas.getBoundingClientRect();
+		const rect = el.getBoundingClientRect();
+		const zoom = scaleRef.current || 1;
+		centerOn(
+			(rect.left - canvasRect.left + rect.width / 2) / zoom,
+			(rect.top - canvasRect.top + rect.height / 2) / zoom,
+		);
+		setRingedId(highlightId);
+		const timer = setTimeout(() => setRingedId(null), 2500);
+
+		return () => clearTimeout(timer);
+		// `layout` is a dependency so a locate that had to expand the path first
+		// re-runs once the expanded tray has been drawn.
+	}, [highlightToken, highlightId, layout, centerOn, scaleRef]);
 
 	// Keep a freshly-added option visible past an active filter, then — once the
 	// grace period ends — either stop exempting it silently (it has since cleared
@@ -864,7 +964,9 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 						return (
 							<div key={l.id}>
 								<div
-									className={styles.pill}
+									className={`${styles.pill} ${l.isSynth ? styles.pillSynth : styles.pillTopic} ${
+										l.collapsed ? styles.pillCollapsed : ''
+									}`}
 									style={{
 										left: cx + l.pill.x,
 										top: cy + l.pill.y,
@@ -896,7 +998,54 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 											}}
 										/>
 									) : (
-										l.label
+										<>
+											{l.clusterStatement && (
+												<span className={styles.pillGlyph} aria-hidden>
+													{l.isSynth ? '⧉' : '#'}
+												</span>
+											)}
+											{l.label}
+										</>
+									)}
+
+									{editingId !== l.id && (l.collapsed || l.isSynth) && (
+										<span className={styles.pillCount}>
+											{l.isSynth
+												? t('{n} voices').replace('{n}', String(l.counts.voices))
+												: [
+														l.counts.ideas > 0 &&
+															t('{n} ideas').replace('{n}', String(l.counts.ideas)),
+														l.counts.merged > 0 &&
+															t('{n} merged').replace('{n}', String(l.counts.merged)),
+													]
+														.filter(Boolean)
+														.join(' · ')}
+										</span>
+									)}
+
+									{l.clusterStatement &&
+										editingId !== l.id &&
+										mine?.synthsContainingMine.has(l.clusterStatement.statementId) && (
+											<span className={styles.pillMine} title={t('includes yours')}>
+												<span className={styles.pillMineDot} aria-hidden />
+												{t('includes yours')}
+											</span>
+										)}
+
+									{l.collapsed && allowExpand && l.clusterStatement && editingId !== l.id && (
+										<button
+											type="button"
+											className={styles.pillExpand}
+											aria-expanded={false}
+											aria-label={t('Show sources')}
+											title={t('Show sources')}
+											onClick={(e) => {
+												e.stopPropagation();
+												toggleExpanded((l.clusterStatement as Statement).statementId, true);
+											}}
+										>
+											▾
+										</button>
 									)}
 
 									{showProvenance &&
@@ -978,27 +1127,98 @@ const ClusterBoard: FC<Props> = ({ results, localFilter }) => {
 									onDragOver={(e) => e.preventDefault()}
 									onDrop={(e) => handleDrop(e, l.id)}
 								>
-									{l.members.map((member) => (
-										<ClusterCard
-											key={member.top.statementId}
-											statement={member.top}
-											color={l.color}
-											canManage={canManage(member.top)}
-											showEval={showEval}
-											ratingMode={ratingMode}
-											isEditing={editingId === member.top.statementId}
-											onRequestEdit={() => setEditingId(member.top.statementId)}
-											onSaveText={(value) => saveText(member.top, value)}
-											onCancelEdit={() => setEditingId(null)}
-											onDuplicate={() => duplicate(member.top, l)}
-											onDelete={() => remove(member.top)}
-											onDragStart={(e) => handleDragStart(e, member.top)}
-											clusterId={l.id}
-											moveTargets={moveTargets}
-											onMove={(targetId) => moveMember(member.top, targetId)}
-										/>
-									))}
-									{canContribute && (
+									{l.members.map((member, index) => {
+										const card = (
+											<ClusterCard
+												key={member.top.statementId}
+												statement={member.top}
+												color={l.color}
+												canManage={canManage(member.top)}
+												showEval={showEval}
+												ratingMode={ratingMode}
+												isEditing={editingId === member.top.statementId}
+												onRequestEdit={() => setEditingId(member.top.statementId)}
+												onSaveText={(value) => saveText(member.top, value)}
+												onCancelEdit={() => setEditingId(null)}
+												onDuplicate={() => duplicate(member.top, l)}
+												onDelete={() => remove(member.top)}
+												onDragStart={(e) => handleDragStart(e, member.top)}
+												clusterId={l.id}
+												moveTargets={moveTargets}
+												onMove={(targetId) => moveMember(member.top, targetId)}
+												ratable={isRatable(member.top, membership)}
+												isMine={mine?.mineIds.has(member.top.statementId)}
+												highlighted={ringedId === member.top.statementId}
+												aiTitled={member.singleSource}
+											/>
+										);
+										if (member.kind !== 'synth' || member.singleSource) return card;
+
+										const open = isOpenStack(member);
+										const columnCenter = (index % l.cols) * (CARD + GAP) + CARD / 2;
+
+										return (
+											<Fragment key={member.top.statementId}>
+												<ClusterStack
+													color={l.color}
+													voices={member.sub.length}
+													expanded={open}
+													canExpand={allowExpand && member.sub.length > 0}
+													onToggle={() => toggleExpanded(member.top.statementId)}
+													includesMine={mine?.synthsContainingMine.has(member.top.statementId)}
+												>
+													{card}
+												</ClusterStack>
+												{open && (
+													<div
+														className={stackStyles.tray}
+														style={
+															{
+																'--tray-line': l.color.line,
+																'--tray-card': l.color.card,
+																'--stem-x': `${columnCenter}px`,
+															} as CSSProperties
+														}
+														onDragOver={(e) => e.preventDefault()}
+														onDrop={(e) => {
+															e.stopPropagation();
+															handleDrop(e, member.top.statementId);
+														}}
+													>
+														<span className={stackStyles.stem} aria-hidden />
+														<span className={stackStyles.trayLabel} style={{ color: l.color.text }}>
+															{t('Original ideas')}
+														</span>
+														{member.sub.map((source) => (
+															<ClusterCard
+																key={source.top.statementId}
+																statement={source.top}
+																color={l.color}
+																canManage={canManage(source.top)}
+																showEval={showEval}
+																ratingMode={ratingMode}
+																isEditing={editingId === source.top.statementId}
+																onRequestEdit={() => setEditingId(source.top.statementId)}
+																onSaveText={(value) => saveText(source.top, value)}
+																onCancelEdit={() => setEditingId(null)}
+																onDuplicate={() => duplicate(source.top, l)}
+																onDelete={() => remove(source.top)}
+																onDragStart={(e) => handleDragStart(e, source.top)}
+																clusterId={member.top.statementId}
+																moveTargets={moveTargets}
+																onMove={(targetId) => moveMember(source.top, targetId)}
+																ratable={isRatable(source.top, membership)}
+																compact
+																isMine={mine?.mineIds.has(source.top.statementId)}
+																highlighted={ringedId === source.top.statementId}
+															/>
+														))}
+													</div>
+												)}
+											</Fragment>
+										);
+									})}
+									{canContribute && !l.isSynth && !l.collapsed && (
 										<button
 											type="button"
 											className={styles.addCard}

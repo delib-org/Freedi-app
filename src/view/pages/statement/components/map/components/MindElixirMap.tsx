@@ -4,7 +4,7 @@ import MindElixir from 'mind-elixir';
 import 'mind-elixir/style.css';
 import type { MindElixirInstance, NodeObj, Operation, Topic } from 'mind-elixir';
 import { useNavigate } from 'react-router';
-import { Results, Statement, StatementType } from '@freedi/shared-types';
+import { MapDetailLevel, Results, Statement, StatementType } from '@freedi/shared-types';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
@@ -15,9 +15,8 @@ import {
 import type { MapSide } from '@/controllers/db/statements/moveStatementBranch';
 import Modal from '@/view/components/modal/Modal';
 import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
-import type { ClusterKind } from '../mapHelpers/mindElixirTransform';
-import { filterResultsByLayer } from '../mapHelpers/layerFilter';
-import type { LayerVisibility } from '../mapHelpers/layerFilter';
+import type { ClusterBadge } from '../mapHelpers/mindElixirTransform';
+import { applyDetailLevel, buildMembershipMap, isRatable, kindOf } from '../mapHelpers/detailLevel';
 import {
 	createMindMapChild,
 	createMindMapSibling,
@@ -62,7 +61,17 @@ const ZOOM_BUTTON_STEP = 1.25;
 interface Props {
 	descendants: Results;
 	filterBy: FilterType;
-	layerVisibility: LayerVisibility;
+	/** How deep the map opens the topic → merged idea → original hierarchy. */
+	level: MapDetailLevel;
+	/** Nodes the viewer opened past the level by hand. */
+	expandedIds: ReadonlySet<string>;
+	/** Fired when the viewer opens/closes a node with MindElixir's own expander. */
+	onToggleExpanded: (id: string, expanded: boolean) => void;
+	/** Nodes to badge "includes yours" (merged ideas holding one of the viewer's originals). */
+	markIds?: ReadonlySet<string>;
+	/** Scroll to and select this node whenever `locateToken` changes. */
+	locateId?: string | null;
+	locateToken?: number;
 	isAdmin: boolean;
 	/**
 	 * Allow dragging/regrouping nodes even for non-admins. Used by the shareable
@@ -77,18 +86,18 @@ interface Props {
 /**
  * Filter results to show only voted/chosen options
  */
-function filterDescendants(results: Results): Results | null {
+function filterDescendants<T extends Results>(results: T): T | null {
 	const { isVoted, isChosen } = results.top;
 	if (results.top.statementType === StatementType.option) {
 		if (!(isVoted || isChosen)) return null;
 	}
 
-	const filteredSub = results.sub
+	const filteredSub = (results.sub as T[])
 		.map((subResult) => filterDescendants(subResult))
-		.filter((result): result is Results => result !== null);
+		.filter((result): result is T => result !== null);
 
 	return {
-		top: results.top,
+		...results,
 		sub: filteredSub,
 	};
 }
@@ -110,7 +119,12 @@ function MindElixirMap({
 	descendants,
 	isAdmin,
 	filterBy,
-	layerVisibility,
+	level,
+	expandedIds,
+	onToggleExpanded,
+	markIds,
+	locateId,
+	locateToken,
 	allowRegroup = false,
 	boardMode = false,
 }: Readonly<Props>) {
@@ -176,6 +190,8 @@ function MindElixirMap({
 	tRef.current = t;
 	const isAdminRef = useRef(isAdmin);
 	isAdminRef.current = isAdmin;
+	const onToggleExpandedRef = useRef(onToggleExpanded);
+	onToggleExpandedRef.current = onToggleExpanded;
 
 	// Ref to track node ID pending inline edit (set after creating a node)
 	const pendingEditNodeIdRef = useRef<string | null>(null);
@@ -362,20 +378,35 @@ function MindElixirMap({
 	// Memoize data to prevent unnecessary refresh calls that rebuild the DOM.
 	// Without memoization, toMindElixirData creates a new object every render,
 	// causing the refresh useEffect to fire and destroy any active inline edit (input-box).
-	// Translated count badges for cluster nodes ("5 merged" / "7 grouped").
-	const formatClusterTag = useCallback(
-		(kind: ClusterKind, count: number) =>
-			kind === 'synth' ? `${count} ${t('merged')}` : `${count} ${t('grouped')}`,
+	// Translated pills on cluster nodes ("5 voices", "3 ideas · 1 merged", …).
+	const formatBadge = useCallback(
+		(badge: ClusterBadge, count: number): string => {
+			const n = String(count);
+			switch (badge) {
+				case 'voices':
+					return t('{n} voices').replace('{n}', n);
+				case 'ideas':
+					return t('{n} ideas').replace('{n}', n);
+				case 'merged':
+					return t('{n} merged').replace('{n}', n);
+				case 'mine':
+					return t('includes yours');
+				case 'aiTitled':
+					return t('AI-titled');
+				case 'more':
+					return t('+{n} more').replace('{n}', n);
+			}
+		},
 		[t],
 	);
 
 	const data = useMemo(() => {
-		const byLayer = filterResultsByLayer(descendants, layerVisibility);
+		const leveled = applyDetailLevel(descendants, level, expandedIds);
 		const filtered =
-			filterBy === FilterType.questionsResults ? filterDescendants(byLayer) : byLayer;
+			filterBy === FilterType.questionsResults ? filterDescendants(leveled) : leveled;
 
-		return filtered ? toMindElixirData(filtered, [], formatClusterTag, { boardMode }) : null;
-	}, [descendants, filterBy, layerVisibility, formatClusterTag, boardMode]);
+		return filtered ? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds }) : null;
+	}, [descendants, filterBy, level, expandedIds, formatBadge, boardMode, markIds]);
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -487,6 +518,12 @@ function MindElixirMap({
 				...prev,
 				selectedId: nodeObj.id,
 			}));
+		});
+
+		// The viewer opened/closed a node with the library's own expander. Mirror
+		// it into React state, or the next refresh(data) would fold it again.
+		mind.bus.addListener('expandNode', (nodeObj: NodeObj) => {
+			onToggleExpandedRef.current(nodeObj.id, nodeObj.expanded !== false);
 		});
 
 		// MutationObserver to detect node selection and inject buttons
@@ -1012,6 +1049,35 @@ function MindElixirMap({
 		}
 	}, [data, removeNodeButtons]);
 
+	// A depth change redraws the tree; the toolbar may be pointing at a node
+	// that just folded away, so close it rather than leave it floating.
+	useEffect(() => {
+		removeNodeButtons();
+	}, [level, removeNodeButtons]);
+
+	// "My ideas": once the data holding the expanded path has been drawn, bring
+	// the viewer's statement into view and select it so the toolbar opens on it.
+	const handledLocateRef = useRef(0);
+	useEffect(() => {
+		if (!locateToken || locateToken === handledLocateRef.current) return;
+		if (!locateId || !mindRef.current) return;
+		handledLocateRef.current = locateToken;
+		const mind = mindRef.current;
+		const timer = setTimeout(() => {
+			try {
+				const tpc = mind.findEle(locateId);
+				mind.scrollIntoView(tpc);
+				mind.selectNode(tpc);
+				setMapContext((prev) => ({ ...prev, selectedId: locateId }));
+			} catch {
+				// Not in the DOM (yet) — the next data refresh re-runs this effect.
+				handledLocateRef.current = 0;
+			}
+		}, 150);
+
+		return () => clearTimeout(timer);
+	}, [locateToken, locateId, data, setMapContext]);
+
 	// Handle layout direction change
 	const handleLayoutChange = useCallback((newDirection: 'SIDE' | 'LEFT' | 'RIGHT') => {
 		if (!mindRef.current) return;
@@ -1268,14 +1334,26 @@ function MindElixirMap({
 		[selectedStatement, creator],
 	);
 
+	// Which node sits inside which merged idea / theme — decides what is ratable.
+	const membership = useMemo(() => buildMembershipMap(descendants), [descendants]);
+
 	// The root is the question itself: nothing above it to rate it against, and
 	// no parentId to file a vote under.
-	const canEvaluateNode =
+	const evaluationAllowedHere =
 		!toolbarState.isRoot &&
 		Boolean(selectedStatement?.parentId) &&
 		Boolean(creator) &&
 		evaluationSettings.enableEvaluation &&
 		!isHalted;
+	// Themes are headings, not proposals; an original inside a merged idea is
+	// already counted through the merge, so its faces show read-only.
+	const canEvaluateNode =
+		evaluationAllowedHere && !!selectedStatement && isRatable(selectedStatement, membership);
+	const countedIntoMerge =
+		evaluationAllowedHere &&
+		!!selectedStatement &&
+		kindOf(selectedStatement) === 'raw' &&
+		Boolean(membership.get(selectedStatement.statementId)?.parentSynthId);
 
 	if (!data) {
 		return (
@@ -1389,8 +1467,13 @@ function MindElixirMap({
 						)}
 					</div>
 
-					{canEvaluateNode && (
-						<div className={styles.evaluationRow} role="group" aria-label={t('Rate this')}>
+					{(canEvaluateNode || countedIntoMerge) && (
+						<div
+							className={`${styles.evaluationRow} ${countedIntoMerge ? styles.evaluationRowReadOnly : ''}`}
+							role="group"
+							aria-label={countedIntoMerge ? t('Counted into the merged idea') : t('Rate this')}
+							title={countedIntoMerge ? t('Counted into the merged idea') : undefined}
+						>
 							{evaluationFaces.map((face) => {
 								const isActive = optimisticEvaluation === face.value;
 
@@ -1401,6 +1484,7 @@ function MindElixirMap({
 										className={`${styles.evaluationBtn} ${isActive ? styles.evaluationBtnActive : ''}`}
 										style={{ backgroundColor: isActive ? face.colorSelected : face.color }}
 										onClick={() => handleEvaluate(face.value)}
+										disabled={countedIntoMerge}
 										aria-label={t(face.labelKey)}
 										aria-pressed={isActive}
 										title={t(face.labelKey)}

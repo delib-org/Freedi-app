@@ -251,6 +251,7 @@ export type {
   QuestionStatus,
   MapSettings,
   MapSynthVisibility,
+  MapDetailLevel,
   MapFilterMetric,
   RatingMode
 } from "./models/statement/StatementSettings";
@@ -274,6 +275,7 @@ export {
   QuestionStatusSchema,
   MapSettingsSchema,
   MapSynthVisibilitySchema,
+  MapDetailLevelSchema,
   MapFilterMetricSchema
 } from "./models/statement/StatementSettings";
 

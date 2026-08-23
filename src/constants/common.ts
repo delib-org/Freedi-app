@@ -129,6 +129,7 @@ export const STORAGE_KEYS = {
 	PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT: 'pwa-install-soft-prompt-dismissed-at',
 	NOTIFICATION_SOFT_PROMPT_DISMISSED_AT: 'notification-soft-prompt-dismissed-at',
 	SHOW_HIDDEN_CARDS: 'freedi_showHiddenCards',
+	MAP_DETAIL_LEVEL: 'freedi_map_detail_level',
 } as const;
 
 /**

@@ -12,13 +12,14 @@ import {
 	Statement,
 	StatementSettings,
 	MapSettings,
-	MapSynthVisibility,
+	MapDetailLevel,
 	MapFilterMetric,
 } from '@freedi/shared-types';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import type { LocalMapFilter } from './mapLocalFilter';
+import { resolveDefaultDetail } from '../mapHelpers/detailLevel';
 import styles from './MapAdminPanel.module.scss';
 
 interface MapAdminPanelProps {
@@ -62,7 +63,7 @@ const HANDLE_HEIGHT_PX = 56;
 const DRAG_THRESHOLD_PX = 4;
 const CLICK_SUPPRESS_MS = 250;
 
-const visibilityOrder: MapSynthVisibility[] = ['all', 'clusters-only', 'originals-only'];
+const detailOrder: MapDetailLevel[] = ['themes', 'ideas', 'everything'];
 
 interface DragState {
 	pointerId: number;
@@ -142,7 +143,8 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 	const map: MapSettings = settings.map ?? {};
 	const cardFont = map.cardFontRem ?? CARD_FONT_DEFAULT;
 	const clusterFont = map.clusterFontRem ?? CLUSTER_FONT_DEFAULT;
-	const synthVisibility: MapSynthVisibility = map.synthVisibility ?? 'all';
+	const defaultDetail = resolveDefaultDetail(map);
+	const allowViewerExpand = map.allowViewerExpand ?? true;
 	const showProvenance = map.showProvenance ?? true;
 	const allowViewerFilter = map.allowViewerFilter ?? false;
 
@@ -272,12 +274,8 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 		.filter(Boolean)
 		.join(' ');
 
-	const visibilityLabel = (v: MapSynthVisibility): string =>
-		v === 'all'
-			? t('Clusters + originals')
-			: v === 'clusters-only'
-				? t('Clusters only')
-				: t('Originals only');
+	const detailLabel = (v: MapDetailLevel): string =>
+		v === 'themes' ? t('Themes') : v === 'ideas' ? t('Ideas') : t('Everything');
 
 	const filterMetricLabel = (m: MapFilterMetric): string =>
 		m === 'none' ? t('None') : m === 'consensus' ? t('Consensus') : t('Average rating');
@@ -458,17 +456,17 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 							</div>
 						</section>
 
-						{/* What the map shows */}
+						{/* Detail level participants start at */}
 						<section className={styles.section}>
-							<span className={styles.sectionTitle}>{t('What the map shows')}</span>
+							<span className={styles.sectionTitle}>{t('Default detail for participants')}</span>
 							<div className={styles.row}>
 								<div
 									className={styles.segmented}
 									role="radiogroup"
-									aria-label={t('What the map shows')}
+									aria-label={t('Default detail for participants')}
 								>
-									{visibilityOrder.map((v) => {
-										const active = synthVisibility === v;
+									{detailOrder.map((v) => {
+										const active = defaultDetail === v;
 
 										return (
 											<button
@@ -477,17 +475,41 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 												role="radio"
 												aria-checked={active}
 												className={`${styles.segment} ${active ? styles.segmentActive : ''}`}
-												onClick={() => update({ synthVisibility: v })}
+												onClick={() => update({ defaultDetail: v })}
 											>
-												{visibilityLabel(v)}
+												{detailLabel(v)}
 											</button>
 										);
 									})}
 								</div>
 								<p className={styles.rowHelp}>
 									{t(
-										'Choose whether the map groups responses into clusters, or shows every response on its own.',
+										'How deep the map opens when someone first arrives: themes only, merged ideas, or every original statement.',
 									)}
+								</p>
+							</div>
+							<div className={styles.row}>
+								<div className={styles.rowMain}>
+									<span className={styles.rowLabel}>
+										<span className={styles.rowIcon} aria-hidden>
+											⧉
+										</span>
+										{t('Allow participants to expand')}
+									</span>
+									<button
+										type="button"
+										role="switch"
+										aria-checked={allowViewerExpand}
+										aria-label={t('Allow participants to expand')}
+										className={`${styles.toggle} ${allowViewerExpand ? styles.toggleOn : ''}`}
+										onClick={() => update({ allowViewerExpand: !allowViewerExpand })}
+									>
+										<span className={styles.toggleTrack} />
+										<span className={styles.toggleKnob} />
+									</button>
+								</div>
+								<p className={styles.rowHelp}>
+									{t('Let viewers open themes and merged ideas past the default depth.')}
 								</p>
 							</div>
 						</section>

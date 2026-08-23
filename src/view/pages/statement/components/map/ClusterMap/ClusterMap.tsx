@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useParams, useSearchParams } from 'react-router';
 import { StatementType } from '@freedi/shared-types';
@@ -22,6 +22,9 @@ import ClusterBoard from './ClusterBoard';
 import MapAdminPanel from './MapAdminPanel';
 import { loadLocalFilter, saveLocalFilter, type LocalMapFilter } from './mapLocalFilter';
 import { useMindMap } from '../MindMapMV';
+import { useMapDetailLevel } from '../mapHelpers/useMapDetailLevel';
+import { hasClusters, pathToMine } from '../mapHelpers/detailLevel';
+import MapDetailControl from '../components/MapDetailControl';
 import styles from './ClusterMap.module.scss';
 
 /**
@@ -58,6 +61,30 @@ const ClusterMap: FC = () => {
 	// the admin has opted in via statementSettings.map.allowViewerFilter.
 	const allowViewerFilter = statement?.statementSettings?.map?.allowViewerFilter ?? false;
 	const canFilterMap = !isEmbed && isQuestion && (isAdmin || allowViewerFilter);
+
+	// One altitude for the board (themes / ideas / everything), shared with the
+	// mind map through the same per-question, per-device memory.
+	const detail = useMapDetailLevel(
+		statementId,
+		statement?.statementSettings?.map,
+		user?.uid,
+		isAdmin,
+	);
+	const showDetailControl = !!results && hasClusters(results);
+
+	// "My ideas": where the viewer's own statements ended up on the board.
+	const mine = useMemo(
+		() => (results ? pathToMine(results, user?.uid) : null),
+		[results, user?.uid],
+	);
+	const [locateToken, setLocateToken] = useState(0);
+	const [showBreadcrumb, setShowBreadcrumb] = useState(false);
+	const locateMine = useCallback(() => {
+		if (!mine?.firstId) return;
+		detail.expandMany(mine.ancestorIds);
+		setLocateToken((token) => token + 1);
+		setShowBreadcrumb(true);
+	}, [mine, detail.expandMany]);
 
 	// Per-viewer local filter override. A viewer (and an admin who picks "only me")
 	// filters their OWN view via this, without touching the shared statementSettings
@@ -164,8 +191,28 @@ const ClusterMap: FC = () => {
 			)}
 
 			<div className={styles.canvas}>
+				{showDetailControl && (
+					<div className={styles.detailControl}>
+						<MapDetailControl
+							level={detail.level}
+							onChange={detail.setLevel}
+							disabled={!detail.allowExpand}
+							mineCount={mine?.mineIds.size ?? 0}
+							onLocateMine={locateMine}
+							breadcrumb={showBreadcrumb ? (mine?.breadcrumb ?? []) : []}
+							onDismissBreadcrumb={() => setShowBreadcrumb(false)}
+						/>
+					</div>
+				)}
 				{results ? (
-					<ClusterBoard results={results} localFilter={localFilter} />
+					<ClusterBoard
+						results={results}
+						localFilter={localFilter}
+						detail={detail}
+						mine={mine}
+						highlightId={mine?.firstId}
+						highlightToken={locateToken}
+					/>
 				) : (
 					<div className={styles.loading}>
 						<div className={styles.spinner} />

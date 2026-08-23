@@ -1,6 +1,7 @@
 import { Results, Statement, StatementType } from '@freedi/shared-types';
-import { NodeObj, MindElixirData } from 'mind-elixir';
+import { NodeObj, MindElixirData, TagObj } from 'mind-elixir';
 import { sortSiblings } from './siblingOrder';
+import { countsFor, type DetailResults } from './detailLevel';
 
 /**
  * Style configuration for MindElixir nodes based on statement type
@@ -19,14 +20,26 @@ interface MindElixirNodeStyle {
  */
 export type ClusterKind = 'synth' | 'topic';
 
-/**
- * Formats the count badge shown on a cluster node (e.g. "5 merged" / "7 grouped").
- * Injected by the caller so the wording can be translated.
- */
-export type ClusterTagFormatter = (kind: ClusterKind, count: number) => string;
+/** The little pills a node can carry; wording is injected so it can be translated. */
+export type ClusterBadge = 'voices' | 'ideas' | 'merged' | 'mine' | 'aiTitled' | 'more';
+export type ClusterBadgeFormatter = (badge: ClusterBadge, count: number) => string;
 
-const defaultClusterTagFormatter: ClusterTagFormatter = (kind, count) =>
-	kind === 'synth' ? `${count} merged` : `${count} grouped`;
+const defaultBadgeFormatter: ClusterBadgeFormatter = (badge, count) => {
+	switch (badge) {
+		case 'voices':
+			return `${count} voices`;
+		case 'ideas':
+			return `${count} ideas`;
+		case 'merged':
+			return `${count} merged`;
+		case 'mine':
+			return 'includes yours';
+		case 'aiTitled':
+			return 'AI-titled';
+		case 'more':
+			return `+${count} more`;
+	}
+};
 
 /**
  * Determine whether a statement is a cluster node and, if so, which kind.
@@ -40,9 +53,10 @@ export function getClusterKind(statement: Statement): ClusterKind | null {
 }
 
 /**
- * Inline style for a cluster node. Colors come from design tokens so light/high-contrast
- * modes are handled by the stylesheet. The decorative glow/accent bar is applied via CSS
- * (`me-tpc:has(.cluster-tag--*)`) keyed off the node's tag class.
+ * Inline style for a cluster node: background/text only. The silhouette (the
+ * stacked sheets behind a merged idea, the header band of a theme) is drawn by
+ * the stylesheet via `me-tpc:has(.cluster-tag--*)`, keyed off the tag classes
+ * set below, so it survives MindElixir rebuilding the DOM.
  */
 function getClusterStyle(kind: ClusterKind): MindElixirNodeStyle {
 	if (kind === 'synth') {
@@ -56,38 +70,55 @@ function getClusterStyle(kind: ClusterKind): MindElixirNodeStyle {
 	return {
 		background: 'var(--cluster-topic-bg)',
 		color: 'var(--cluster-topic-text)',
-		fontWeight: '600',
+		fontWeight: '700',
 	};
 }
 
+/** Optional detail-level annotations a Results node may carry (see detailLevel.ts). */
+type DetailHints = Partial<Pick<DetailResults, 'collapsed' | 'singleSource' | 'overflowCount'>>;
+
+function tag(text: string, modifier: string): TagObj {
+	return { text, className: `cluster-tag cluster-tag--${modifier}` };
+}
+
 /**
- * Attach the cluster icon, count badge, and (for topics) branch color to a node.
+ * Attach the glyph, count pills and (for topics) branch color to a cluster node.
+ * - Theme: `#`, "N ideas · M merged" (only the non-zero parts).
+ * - Merged idea: `⧉`, "N voices"; a merge of one is a plain idea with an "AI-titled" chip.
  */
 function decorateClusterNode(
 	node: FreediNodeObj,
 	kind: ClusterKind,
-	statement: Statement,
-	result: Results,
-	format: ClusterTagFormatter,
+	result: Results & DetailHints,
+	format: ClusterBadgeFormatter,
 ): void {
+	const counts = countsFor(result);
+	const tags: TagObj[] = [];
+
 	if (kind === 'synth') {
-		node.icons = ['✦'];
-		const count = statement.integratedOptions?.length ?? 0;
-		// A "merge of one" carries no information — only badge real merges.
-		if (count >= 2) {
-			node.tags = [{ text: format('synth', count), className: 'cluster-tag cluster-tag--synth' }];
+		const singleSource = result.singleSource ?? result.sub.length <= 1;
+		if (singleSource) {
+			tags.push(tag(format('aiTitled', 1), 'ai-titled'));
+		} else {
+			node.icons = ['⧉'];
+			tags.push(tag(format('voices', counts.voices), 'synth'));
 		}
-
-		return;
+	} else {
+		node.icons = ['#'];
+		const parts: string[] = [];
+		if (counts.ideas > 0) parts.push(format('ideas', counts.ideas));
+		if (counts.merged > 0) parts.push(format('merged', counts.merged));
+		// An empty theme still needs its class so the band silhouette applies.
+		tags.push(tag(parts.join(' · '), 'topic'));
+		// Tie the visible member branch to its topic header.
+		node.branchColor = '#6f8ce8';
 	}
 
-	node.icons = ['#'];
-	const count = statement.integratedOptions?.length ?? result.sub?.length ?? 0;
-	if (count >= 1) {
-		node.tags = [{ text: format('topic', count), className: 'cluster-tag cluster-tag--topic' }];
+	if (result.overflowCount) {
+		tags.push(tag(format('more', result.overflowCount), 'more'));
 	}
-	// Tie the visible member branch to its topic header.
-	node.branchColor = '#6f8ce8';
+
+	node.tags = tags;
 }
 
 /**
@@ -186,20 +217,22 @@ export interface FreediNodeObj extends NodeObj {
 export interface ToMindElixirOptions {
 	/** Apply the sticky-note cluster-board styling (per-branch colors, dark hub). */
 	boardMode?: boolean;
+	/** Nodes that hold one of the viewer's own statements — badged "includes yours". */
+	markIds?: ReadonlySet<string>;
 }
 
 export function toMindElixirData(
-	results: Results,
+	results: Results & DetailHints,
 	selectedStatementIds: string[] = [],
-	formatClusterTag: ClusterTagFormatter = defaultClusterTagFormatter,
+	formatBadge: ClusterBadgeFormatter = defaultBadgeFormatter,
 	options: ToMindElixirOptions = {},
 ): MindElixirData {
-	const { boardMode = false } = options;
+	const { boardMode = false, markIds } = options;
 
 	// depth 0 = root/subject, depth 1 = labeled branches (assigned a palette color),
 	// deeper = sticky cards inheriting their branch color.
 	function transformNode(
-		result: Results,
+		result: Results & DetailHints,
 		depth: number,
 		branch: (typeof CLUSTER_PALETTE)[number] | null,
 	): FreediNodeObj {
@@ -225,7 +258,17 @@ export function toMindElixirData(
 		};
 
 		if (clusterKind) {
-			decorateClusterNode(node, clusterKind, statement, result, formatClusterTag);
+			decorateClusterNode(node, clusterKind, result, formatBadge);
+		}
+
+		if (markIds?.has(statement.statementId)) {
+			node.tags = [...(node.tags ?? []), tag(formatBadge('mine', 1), 'mine')];
+		}
+
+		// Folded at the current detail level: MindElixir draws the expander and
+		// hides the children; opening it is reported on the bus as `expandNode`.
+		if (result.collapsed) {
+			node.expanded = false;
 		}
 
 		if (boardMode) {
@@ -242,13 +285,15 @@ export function toMindElixirData(
 
 		// Transform children recursively, honoring any drag-set sibling order.
 		if (result.sub && result.sub.length > 0) {
-			node.children = sortSiblings(result.sub, (subResult) => subResult.top).map(
-				(subResult, index) =>
-					transformNode(
-						subResult,
-						depth + 1,
-						branch ?? CLUSTER_PALETTE[index % CLUSTER_PALETTE.length],
-					),
+			node.children = sortSiblings(
+				result.sub as (Results & DetailHints)[],
+				(subResult) => subResult.top,
+			).map((subResult, index) =>
+				transformNode(
+					subResult,
+					depth + 1,
+					branch ?? CLUSTER_PALETTE[index % CLUSTER_PALETTE.length],
+				),
 			);
 		}
 

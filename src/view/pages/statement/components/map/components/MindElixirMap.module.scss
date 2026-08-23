@@ -42,50 +42,99 @@
 		}
 
 		// ========================================
-		// Cluster & synth nodes
+		// Cluster & synth nodes — the three silhouettes
 		// Background/text colors come from inline node styles (design tokens).
-		// These rules add the decorative glow / accent bar / count pill, keyed
-		// off the node's tag class so they survive MindElixir refreshes.
+		// The silhouette is keyed off the node's tag class so it survives
+		// MindElixir rebuilding the DOM on refresh:
+		//   theme       = header band (inline-start bar + bottom rule)
+		//   merged idea = a stack of sheets behind the card
+		//   original    = plain rounded note (no tag)
+		// Each kind also carries a glyph (# / ⧉), so they read without colour.
 		// ========================================
 
-		// Synth — a unified "merged voice": luminous teal halo.
+		// Merged idea — two offset sheets behind the card.
 		me-tpc:has(.cluster-tag--synth) {
-			box-shadow:
-				0 0 0 2px var(--cluster-synth-ring),
-				0 0 12px var(--cluster-synth-glow),
-				0 2px 4px rgba(0, 0, 0, 0.12);
-			transition:
-				box-shadow 0.15s ease,
-				transform 0.15s ease;
+			position: relative;
+			border-radius: 8px;
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+			transition: transform 0.15s ease;
+
+			&::before,
+			&::after {
+				content: '';
+				position: absolute;
+				inset: 0;
+				z-index: -1;
+				border-radius: inherit;
+				background: var(--cluster-stack-sheet);
+				border: 1px solid var(--cluster-stack-edge);
+				pointer-events: none;
+				transition: transform 0.15s ease;
+			}
+
+			&::before {
+				transform: translate(var(--cluster-stack-offset), var(--cluster-stack-offset));
+			}
+
+			&::after {
+				transform: translate(
+					calc(var(--cluster-stack-offset) * 2),
+					calc(var(--cluster-stack-offset) * 2)
+				);
+				opacity: 0.7;
+			}
 
 			&:hover {
 				transform: translateY(-1px);
-				box-shadow:
-					0 0 0 3px var(--cluster-synth-ring),
-					0 0 20px var(--cluster-synth-glow),
-					0 2px 4px rgba(0, 0, 0, 0.12);
+
+				&::before {
+					transform: translate(
+						calc(var(--cluster-stack-offset) + 1px),
+						calc(var(--cluster-stack-offset) + 1px)
+					);
+				}
 			}
 		}
 
-		// Topic cluster — a theme header above a visible branch: folder spine.
+		// Theme — a wide header band: spine at the start, rule underneath.
 		me-tpc:has(.cluster-tag--topic) {
-			border-left: 4px solid var(--cluster-topic-accent);
-			padding-left: 14px;
+			min-width: 180px;
+			border-radius: 6px 6px 0 0;
+			border-inline-start: 4px solid var(--cluster-topic-accent);
+			border-bottom: 2px solid var(--cluster-topic-accent);
+			padding-inline-start: 14px;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 			transition: border-color 0.15s ease;
 
 			&:hover {
-				border-left-color: var(--btn-primary);
+				border-color: var(--btn-primary);
 			}
 		}
 
-		// Cluster icon glyph (✦ / #).
+		// "Includes yours" — a marker dot on the node's start corner.
+		me-tpc:has(.cluster-tag--mine) {
+			position: relative;
+
+			.cluster-tag--mine::before {
+				content: '';
+				display: inline-block;
+				width: 8px;
+				height: 8px;
+				margin-inline-end: 4px;
+				border-radius: 50%;
+				background: var(--cluster-mine-marker);
+				box-shadow: 0 0 0 2px var(--card-default, #ffffff);
+				vertical-align: middle;
+			}
+		}
+
+		// Cluster icon glyph (⧉ / #).
 		me-tpc .icons {
 			font-weight: 700;
 			opacity: 0.95;
 		}
 
-		// Cluster count pill — translucent white, legible on both teal and indigo.
+		// Count pills — translucent, legible on both teal and indigo.
 		me-tpc .tags span.cluster-tag {
 			border-radius: 999px;
 			padding: 1px 8px;
@@ -96,7 +145,23 @@
 			letter-spacing: 0.2px;
 			background: var(--cluster-pill-bg);
 			color: var(--cluster-pill-text);
-			text-transform: lowercase;
+
+			&:empty {
+				display: none;
+			}
+		}
+
+		// A merge of one is a plain idea with a quiet chip, not a stack.
+		me-tpc .tags span.cluster-tag--ai-titled {
+			background: transparent;
+			border: 1px solid var(--cluster-pill-bg);
+			font-weight: 500;
+			opacity: 0.85;
+		}
+
+		me-tpc .tags span.cluster-tag--mine {
+			background: var(--card-default, #ffffff);
+			color: var(--cluster-mine-marker);
 		}
 
 		@media (prefers-reduced-motion: reduce) {
@@ -104,9 +169,27 @@
 			me-tpc:has(.cluster-tag--topic) {
 				transition: none;
 
+				&::before,
+				&::after {
+					transition: none;
+				}
+
 				&:hover {
 					transform: none;
 				}
+			}
+		}
+
+		// Windows High Contrast / forced colours: borders carry the silhouette.
+		@media (forced-colors: active) {
+			me-tpc:has(.cluster-tag--synth)::before,
+			me-tpc:has(.cluster-tag--synth)::after {
+				background: Canvas;
+				border-color: CanvasText;
+			}
+
+			me-tpc:has(.cluster-tag--topic) {
+				border-color: CanvasText;
 			}
 		}
 
@@ -392,6 +475,16 @@
 	gap: 2px;
 	padding-top: 3px;
 	border-top: 1px solid var(--background, #eef0f3);
+}
+
+// Faces shown for an original inside a merged idea: its vote is already
+// counted through the merge, so the row is visible but inert.
+.evaluationRowReadOnly {
+	opacity: 0.55;
+
+	.evaluationBtn {
+		cursor: not-allowed;
+	}
 }
 
 .evaluationBtn {

@@ -1,0 +1,188 @@
+// A merged idea on the cluster board: a sticky note drawn as the top sheet of a
+// stack, its "N ▾" tab, and the tray of originals that fans out beneath it.
+
+.stack {
+	position: relative;
+	// Room for the two sheets peeking out at the bottom-end corner.
+	margin-inline-end: calc(var(--cluster-stack-offset) * 2);
+	margin-bottom: calc(var(--cluster-stack-offset) * 2);
+}
+
+.sheet {
+	position: absolute;
+	inset: 0;
+	border-radius: 10px;
+	background: var(--cluster-stack-sheet);
+	border: 1px solid var(--cluster-stack-edge);
+	transform: translate(var(--cluster-stack-offset), var(--cluster-stack-offset));
+	transition:
+		transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+		opacity 240ms ease;
+	pointer-events: none;
+	z-index: 0;
+
+	[dir='rtl'] & {
+		transform: translate(calc(var(--cluster-stack-offset) * -1), var(--cluster-stack-offset));
+	}
+}
+
+.sheetBack {
+	transform: translate(calc(var(--cluster-stack-offset) * 2), calc(var(--cluster-stack-offset) * 2));
+	opacity: 0.7;
+
+	[dir='rtl'] & {
+		transform: translate(
+			calc(var(--cluster-stack-offset) * -2),
+			calc(var(--cluster-stack-offset) * 2)
+		);
+	}
+}
+
+// Open: the sheets tuck back under the note — the sources are the stack now.
+.stackOpen .sheet {
+	transform: translate(0, 0);
+	opacity: 0;
+}
+
+.stack > :global([data-flip-id]) {
+	position: relative;
+	z-index: 1;
+	// A merged idea is a proposal in its own right: heavier than an original.
+	font-weight: 600;
+	box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+}
+
+.glyph {
+	position: absolute;
+	top: 6px;
+	inset-inline-start: 8px;
+	z-index: 2;
+	font-size: 0.85rem;
+	font-weight: 700;
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+.toggle {
+	position: absolute;
+	bottom: -8px;
+	inset-inline-end: -6px;
+	z-index: 3;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	min-width: 28px;
+	height: 22px;
+	padding: 0 8px;
+	border: 2px solid var(--card-default, #ffffff);
+	border-radius: 999px;
+	color: #ffffff;
+	font-size: 0.72rem;
+	font-weight: 700;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+	transition: transform 120ms ease;
+
+	&:hover:not(:disabled) {
+		transform: scale(1.08);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: default;
+	}
+}
+
+.chevron {
+	font-size: 0.7rem;
+}
+
+.mineDot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--cluster-mine-marker);
+	box-shadow: 0 0 0 1.5px #ffffff;
+}
+
+// ---- Tray of sources (rendered by the board as a full-width grid row) ----
+
+.tray {
+	position: relative;
+	grid-column: 1 / -1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	padding: 14px 10px 10px;
+	margin-top: 4px;
+	border-radius: 12px;
+	border: 1.5px dashed var(--tray-line);
+	background: color-mix(in srgb, var(--tray-card) 45%, transparent);
+	animation: trayIn 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+// Stem from the merged idea down into its tray.
+.stem {
+	position: absolute;
+	top: -12px;
+	width: 2px;
+	height: 12px;
+	background: var(--tray-line);
+	// Centred under the column the stack sits in; the board sets --stem-x.
+	left: var(--stem-x, 60px);
+	transform: translateX(-50%);
+}
+
+.trayLabel {
+	width: 100%;
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.2px;
+	opacity: 0.75;
+	margin-bottom: -4px;
+}
+
+// The sources: the same sticky note, scaled down.
+.tray > :global([data-flip-id]) {
+	width: calc(120px * var(--cluster-source-scale));
+	height: calc(120px * var(--cluster-source-scale));
+}
+
+@keyframes trayIn {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sheet,
+	.toggle {
+		transition: none;
+	}
+
+	.tray {
+		animation: none;
+	}
+}
+
+@media (forced-colors: active) {
+	.sheet {
+		background: Canvas;
+		border-color: CanvasText;
+	}
+
+	.tray {
+		border-color: CanvasText;
+	}
+}
