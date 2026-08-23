@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
 import {
 	BOB_MS,
+	BOAT_DEPTH,
+	BOAT_DEPTH_FRONT,
 	COLOR_CREAM,
+	COLOR_LANTERN,
 	COLOR_NAVY,
 	DAYPHASE_MS,
 	PARTICLES_MAX_LIVE,
+	MY_SHIP_LABEL,
 	PENNANT_COLORS,
 	TINT_DAWN,
 	TINT_GOLDEN,
@@ -31,6 +35,7 @@ export abstract class SeaScene extends Phaser.Scene {
 	protected shade!: Phaser.GameObjects.Rectangle;
 	protected reducedMotion = false;
 	private dayPhase = 0;
+	private boatBob?: Phaser.Tweens.Tween;
 	private liveParticles = 0;
 	private resizeHandler?: () => void;
 
@@ -119,10 +124,53 @@ export abstract class SeaScene extends Phaser.Scene {
 	/**
 	 * The player's boat avatar with its value pennants flying on the mast.
 	 * Pennant count mirrors stageState (identity, not score).
+	 *
+	 * `named` is for any sea that also carries party ships: the same sprite
+	 * flies for everyone, so without a lantern halo and a name on the water the
+	 * player cannot tell which hull is theirs — and every distance the scene
+	 * draws is measured from a boat they cannot find. Depth is above every
+	 * party ship (those are depth-sorted by y, which can exceed the plain 100).
 	 */
-	protected spawnBoat(x: number, y: number, shipScale: number): Phaser.GameObjects.Container {
+	protected spawnBoat(
+		x: number,
+		y: number,
+		shipScale: number,
+		options?: { named?: boolean },
+	): Phaser.GameObjects.Container {
 		const image = this.add.image(0, 0, 'ship').setScale(shipScale);
-		const container = this.add.container(x, y, [image]).setDepth(100);
+		const container = this.add
+			.container(x, y, [image])
+			.setDepth(options?.named ? BOAT_DEPTH_FRONT : BOAT_DEPTH);
+
+		if (options?.named) {
+			const halo = this.add
+				.image(0, image.displayHeight * 0.34, 'glow')
+				.setDisplaySize(image.displayWidth * 1.9, image.displayHeight * 0.7)
+				.setTint(COLOR_LANTERN)
+				.setAlpha(0.5);
+			container.addAt(halo, 0);
+			const label = this.add
+				.text(0, image.displayHeight * 0.62, MY_SHIP_LABEL, {
+					fontFamily: 'Arial',
+					fontSize: '14px',
+					color: '#ffe9b0',
+					fontStyle: 'bold',
+					backgroundColor: 'rgba(6,26,48,0.9)',
+					padding: { x: 10, y: 4 },
+				})
+				.setOrigin(0.5);
+			container.add(label);
+			if (!this.reducedMotion) {
+				this.tweens.add({
+					targets: halo,
+					alpha: 0.75,
+					duration: 2200,
+					yoyo: true,
+					repeat: -1,
+					ease: 'Sine.inOut',
+				});
+			}
+		}
 
 		const pennantCount = Math.min(stageState.pennants, PENNANT_COLORS.length);
 		for (let i = 0; i < pennantCount; i++) {
@@ -133,19 +181,38 @@ export abstract class SeaScene extends Phaser.Scene {
 			container.add(pennant);
 		}
 
-		if (!this.reducedMotion) {
-			this.tweens.add({
-				targets: container,
-				y: y + 6,
-				angle: 1.4,
-				duration: BOB_MS,
-				yoyo: true,
-				repeat: -1,
-				ease: 'Sine.inOut',
-			});
-		}
+		this.startBoatBob(container, y);
 
 		return container;
+	}
+
+	/**
+	 * Re-berth the boat (resize, breakpoint change) WITHOUT the swell dragging
+	 * it home.
+	 *
+	 * The bobbing tween is built around the y it was spawned at, so a plain
+	 * setPosition survives exactly one frame before the loop pulls the hull
+	 * back to where it started. Harmless while every scene moved the boat by a
+	 * few pixels; not harmless once a breakpoint moves it half a screen.
+	 */
+	protected moveBoat(boat: Phaser.GameObjects.Container, x: number, y: number): void {
+		this.boatBob?.remove();
+		this.boatBob = undefined;
+		boat.setPosition(x, y).setAngle(0);
+		this.startBoatBob(boat, y);
+	}
+
+	private startBoatBob(boat: Phaser.GameObjects.Container, y: number): void {
+		if (this.reducedMotion) return;
+		this.boatBob = this.tweens.add({
+			targets: boat,
+			y: y + 6,
+			angle: 1.4,
+			duration: BOB_MS,
+			yoyo: true,
+			repeat: -1,
+			ease: 'Sine.inOut',
+		});
 	}
 
 	/** A party ship: same sprite for every party; flag color + name only. */

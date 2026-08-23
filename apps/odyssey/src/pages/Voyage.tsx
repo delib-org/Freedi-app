@@ -9,6 +9,7 @@ import { distanceEngine } from '../lib/distance';
 import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
+import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 
 /**
  * ההפלגה: one island (a `question` Statement) at a time. Each of its stances
@@ -163,10 +164,12 @@ export default function Voyage() {
 		setPhase('question');
 	}
 
-	const nearest = parties
-		.map((party) => ({ party, distance: distances[party.partyId] }))
-		.filter((entry) => entry.distance !== null && entry.distance !== undefined)
-		.sort((a, b) => (a.distance ?? 1) - (b.distance ?? 1));
+	const shipProximity: ShipProximity[] = parties.map((party) => ({
+		partyId: party.partyId,
+		name: party.name,
+		color: party.color,
+		distance: distances[party.partyId] ?? null,
+	}));
 
 	return (
 		<>
@@ -287,35 +290,24 @@ export default function Voyage() {
 								<>
 									{/* the sea itself reacts behind this window */}
 									<div className="h-[38vh]" aria-hidden="true" />
-									<div className="panel !py-2.5 text-center text-[14px] text-[#d5ecf7]">
-										{text('voyageShipsNote')}
+									<div className="panel !py-3 text-center text-[14px] text-[#d5ecf7] flex flex-col gap-2.5">
+										<p className="m-0">{text('voyageShipsNote')}</p>
+										<NearbyShips ships={shipProximity} compact />
+										<p className="m-0 text-[12px] opacity-65">
+											הספינה המוארת בחזית היא שלך. הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת
+											הצבעה.
+										</p>
 									</div>
 								</>
 							) : (
-								<div className="panel">
-									<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-2">
+								<div className="panel flex flex-col gap-3">
+									<h2 className="text-lg font-bold text-[var(--cream)] m-0">
 										הים מגיב לבחירות שלך
 									</h2>
-									{nearest.length > 0 ? (
-										<ul className="m-0 pr-5 leading-relaxed text-[15px]">
-											{nearest.slice(0, 3).map((entry) => (
-												<li key={entry.party.partyId}>
-													<strong>{entry.party.name}</strong> — שטה כעת קרוב למסלול שלך
-												</li>
-											))}
-											{nearest.length > 3 ? (
-												<li className="opacity-75">
-													הרחוקות ביותר:{' '}
-													{nearest
-														.slice(-2)
-														.map((entry) => entry.party.name)
-														.join(', ')}
-												</li>
-											) : null}
-										</ul>
-									) : (
-										<p className="m-0 opacity-80">עדיין אין מספיק נתונים על מסלולי הספינות.</p>
-									)}
+									<NearbyShips ships={shipProximity} />
+									<p className="m-0 text-[12px] opacity-65">
+										הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
+									</p>
 								</div>
 							)}
 							<div className="flex justify-center">

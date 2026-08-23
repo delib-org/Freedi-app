@@ -58,3 +58,33 @@ export const ATTITUDE_GLYPHS: Record<'support' | 'livewith' | 'oppose', string> 
 	livewith: '〜',
 	oppose: '⛵',
 };
+
+/** Hebrew-only band captions for the sea's three distance bands (§1: never
+ *  mix digits or Latin into a Phaser string). Proximity, not verdict. */
+export const PROXIMITY_BAND_LABELS: Record<'far' | 'middle' | 'near', string> = {
+	far: 'רחוקות ממסלולך',
+	middle: 'באמצע הדרך',
+	near: 'קרובות למסלולך',
+};
+
+/** The player's own ship, named on the water so it is never mistaken for a
+ *  party ship. */
+export const MY_SHIP_LABEL = 'הספינה שלך';
+
+/** The player's boat. On a sea that also carries party ships it draws above
+ *  all of them — those are depth-sorted by their y, which reaches into the
+ *  hundreds on a tall screen — so the player is never hidden by a party.
+ *  Elsewhere it keeps its original depth, under the beats that play above the
+ *  mast (the homecoming's arrival flags sit at 110). */
+export const BOAT_DEPTH = 100;
+export const BOAT_DEPTH_FRONT = 900;
+
+/** The player's boat on the voyage: sized and pinned so the hull, its halo and
+ *  its name all fit above the bottom edge on a short screen. */
+export const BOAT_SCALE = 0.13;
+export const BOAT_SCALE_NARROW = 0.09;
+export const BOAT_BOTTOM_MARGIN = 152;
+
+/** Below this canvas width the band captions are dropped: the ship spread
+ *  leaves no margin to put them in, and the panel says the same three words. */
+export const BAND_LABEL_MIN_WIDTH = 640;

@@ -64,7 +64,7 @@ export class ChartScene extends SeaScene {
 		this.drawFrame();
 		this.castle?.setPosition(this.W * 0.08, this.H * 0.12);
 		this.castleLabel?.setPosition(this.W * 0.08, this.H * 0.12 + 30);
-		this.boat?.setPosition(this.W * 0.9, this.H * 0.86);
+		if (this.boat) this.moveBoat(this.boat, this.W * 0.9, this.H * 0.86);
 		for (const node of this.nodes) {
 			const { x, y } = islandPosition(node.island.posX, node.island.posY, this.W, this.H);
 			node.container.setPosition(x, y);

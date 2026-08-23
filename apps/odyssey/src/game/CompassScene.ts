@@ -43,7 +43,7 @@ export class CompassScene extends SeaScene {
 	}
 
 	protected layout(): void {
-		this.boat?.setPosition(this.W * 0.82, this.H * 0.8);
+		if (this.boat) this.moveBoat(this.boat, this.W * 0.82, this.H * 0.8);
 		this.rose?.setPosition(this.roseX(), this.roseY());
 	}
 

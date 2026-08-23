@@ -29,7 +29,7 @@ export class HarborScene extends SeaScene {
 	}
 
 	protected layout(): void {
-		this.boat?.setPosition(this.W * 0.68, this.H * 0.78);
+		if (this.boat) this.moveBoat(this.boat, this.W * 0.68, this.H * 0.78);
 		this.anchor?.setPosition(this.W * 0.68 - 40, this.H * 0.88);
 		this.anchorLine?.setTo(this.W * 0.68 - 20, this.H * 0.8, this.W * 0.68 - 40, this.H * 0.88);
 		this.lantern?.setPosition(this.W * 0.68, this.H * 0.78 - 70);

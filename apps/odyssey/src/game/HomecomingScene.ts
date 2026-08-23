@@ -48,7 +48,7 @@ export class HomecomingScene extends SeaScene {
 	}
 
 	protected layout(): void {
-		this.boat?.setPosition(this.W * 0.16, this.H * 0.72);
+		if (this.boat) this.moveBoat(this.boat, this.W * 0.16, this.H * 0.72);
 		this.lighthouse?.setPosition(this.W * 0.06, this.H * 0.3);
 		this.beam?.setPosition(this.W * 0.06, this.H * 0.26);
 		this.positionIslands();

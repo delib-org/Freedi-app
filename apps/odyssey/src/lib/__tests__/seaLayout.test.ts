@@ -3,6 +3,8 @@ import {
 	dayPhaseForIsland,
 	islandDepth,
 	islandPosition,
+	proximityBandOf,
+	proximityBands,
 	sailorPlacement,
 	shipLayout,
 } from '../seaLayout';
@@ -109,5 +111,40 @@ describe('sailorPlacement', () => {
 	it('clamps distances outside 0..1', () => {
 		expect(sailorPlacement(5, 0, 1, W, H).y).toBeCloseTo(H * 0.2, 5);
 		expect(sailorPlacement(-1, 0, 1, W, H).y).toBeCloseTo(H * 0.7, 5);
+	});
+});
+
+describe('proximity bands', () => {
+	it('names the band a ship is actually drawn in', () => {
+		// the band a distance is labelled with must contain the y shipLayout gives it
+		for (const distance of [0, 0.2, 0.34, 0.5, 0.7, 0.95, 1]) {
+			const y = shipLayout(distance, 0, 1, W, H).y;
+			const band = proximityBands(H).find((entry) => entry.key === proximityBandOf(distance));
+			expect(band).toBeDefined();
+			expect(y).toBeGreaterThanOrEqual(band!.top);
+			expect(y).toBeLessThanOrEqual(band!.bottom);
+		}
+	});
+
+	it('puts an unknown distance where shipLayout parks it — the far band', () => {
+		expect(proximityBandOf(null)).toBe('far');
+		expect(proximityBandOf(undefined)).toBe('far');
+		expect(shipLayout(null, 0, 1, W, H).y).toBeLessThan(
+			proximityBands(H).find((band) => band.key === 'far')!.bottom,
+		);
+	});
+
+	it('stacks the bands nearest-lowest with no gap between them', () => {
+		const [far, middle, near] = proximityBands(H);
+		expect(far.key).toBe('far');
+		expect(near.key).toBe('near');
+		expect(far.bottom).toBeCloseTo(middle.top, 5);
+		expect(middle.bottom).toBeCloseTo(near.top, 5);
+		expect(near.bottom).toBeGreaterThan(middle.bottom);
+	});
+
+	it('clamps distances outside 0..1', () => {
+		expect(proximityBandOf(-3)).toBe('near');
+		expect(proximityBandOf(7)).toBe('far');
 	});
 });

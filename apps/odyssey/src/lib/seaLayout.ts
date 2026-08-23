@@ -105,3 +105,61 @@ export function sailorPlacement(
 		y: height * (0.2 + 0.5 * (1 - Math.min(1, Math.max(0, distance)))),
 	};
 }
+
+/**
+ * The sea reads as three bands of distance, and the player has to be able to
+ * tell which one a ship is in without measuring pixels.
+ *
+ * `shipLayout` already encodes proximity in y (near = low, far = horizon) —
+ * these bands are that same formula made visible, so nothing is re-ranked and
+ * nothing new is claimed. Thirds of the 0..1 distance scale, top to bottom.
+ */
+export type ProximityBandKey = 'far' | 'middle' | 'near';
+
+export interface ProximityBand {
+	key: ProximityBandKey;
+	/** screen y of the band's upper edge (the farther side) */
+	top: number;
+	/** screen y of the band's lower edge (the nearer side) */
+	bottom: number;
+}
+
+/** Distance thirds. A ship exactly on a boundary belongs to the nearer band. */
+const BAND_EDGES: Record<ProximityBandKey, [number, number]> = {
+	near: [0, 1 / 3],
+	middle: [1 / 3, 2 / 3],
+	far: [2 / 3, 1],
+};
+
+/** Where `shipLayout` puts a ship of this distance — the one source of truth. */
+function bandY(distance: number, height: number): number {
+	return height * (0.2 + 0.5 * (1 - distance));
+}
+
+/**
+ * Outer bands are stretched past their formula edge so a ship sitting on the
+ * boundary is drawn inside its own band rather than half out of the sea.
+ */
+const BAND_OVERSHOOT = 0.06;
+
+export function proximityBands(height: number): ProximityBand[] {
+	return (['far', 'middle', 'near'] as const).map((key) => {
+		const [from, to] = BAND_EDGES[key];
+
+		return {
+			key,
+			top: bandY(to, height) - (key === 'far' ? height * BAND_OVERSHOOT : 0),
+			bottom: bandY(from, height) + (key === 'near' ? height * BAND_OVERSHOOT : 0),
+		};
+	});
+}
+
+/** Which band a distance falls in. Unknown distances park in the far band,
+ *  exactly where `shipLayout` sends them (0.9). */
+export function proximityBandOf(distance: number | null | undefined): ProximityBandKey {
+	const value = clamp01(distance ?? 0.9);
+	if (value < BAND_EDGES.near[1]) return 'near';
+	if (value < BAND_EDGES.middle[1]) return 'middle';
+
+	return 'far';
+}
