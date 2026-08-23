@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
 	dayPhaseForIsland,
+	fanAngle,
 	islandDepth,
 	islandPosition,
+	partyShipPlacement,
 	proximityBandOf,
-	proximityBands,
+	rangeRings,
 	sailorPlacement,
+	seaFan,
 	shipLayout,
 } from '../seaLayout';
 
@@ -114,37 +117,74 @@ describe('sailorPlacement', () => {
 	});
 });
 
-describe('proximity bands', () => {
-	it('names the band a ship is actually drawn in', () => {
-		// the band a distance is labelled with must contain the y shipLayout gives it
-		for (const distance of [0, 0.2, 0.34, 0.5, 0.7, 0.95, 1]) {
-			const y = shipLayout(distance, 0, 1, W, H).y;
-			const band = proximityBands(H).find((entry) => entry.key === proximityBandOf(distance));
-			expect(band).toBeDefined();
-			expect(y).toBeGreaterThanOrEqual(band!.top);
-			expect(y).toBeLessThanOrEqual(band!.bottom);
-		}
-	});
-
-	it('puts an unknown distance where shipLayout parks it — the far band', () => {
-		expect(proximityBandOf(null)).toBe('far');
-		expect(proximityBandOf(undefined)).toBe('far');
-		expect(shipLayout(null, 0, 1, W, H).y).toBeLessThan(
-			proximityBands(H).find((band) => band.key === 'far')!.bottom,
+describe('the fan', () => {
+	it('places a party ship by its distance from the player, not by its lane', () => {
+		const fan = seaFan(W, H);
+		const near = partyShipPlacement(0, 0, 4, W, H);
+		const far = partyShipPlacement(1, 0, 4, W, H);
+		const reach = (p: { x: number; y: number }) =>
+			Math.hypot((p.x - fan.cx) / fan.rx, (p.y - fan.cy) / fan.ry);
+		expect(reach(near)).toBeLessThan(reach(far));
+		// same distance, different lanes → same ring
+		expect(reach(partyShipPlacement(0.5, 0, 4, W, H))).toBeCloseTo(
+			reach(partyShipPlacement(0.5, 3, 4, W, H)),
+			5,
 		);
 	});
 
-	it('stacks the bands nearest-lowest with no gap between them', () => {
-		const [far, middle, near] = proximityBands(H);
-		expect(far.key).toBe('far');
-		expect(near.key).toBe('near');
-		expect(far.bottom).toBeCloseTo(middle.top, 5);
-		expect(middle.bottom).toBeCloseTo(near.top, 5);
-		expect(near.bottom).toBeGreaterThan(middle.bottom);
+	it('fixes the lane by index, never by distance', () => {
+		expect(fanAngle(1, 3)).toBe(fanAngle(1, 3));
+		expect(fanAngle(0, 3)).toBeGreaterThan(fanAngle(2, 3));
+		// lane 0 is the rightmost: a Hebrew reader starts on the right
+		expect(partyShipPlacement(0.5, 0, 3, W, H).x).toBeGreaterThan(
+			partyShipPlacement(0.5, 2, 3, W, H).x,
+		);
+	});
+
+	it('keeps the whole fan on screen', () => {
+		for (const count of [1, 5, 12]) {
+			for (let index = 0; index < count; index++) {
+				for (const distance of [0, 0.5, 1, null]) {
+					const p = partyShipPlacement(distance, index, count, W, H);
+					expect(p.x).toBeGreaterThan(0);
+					expect(p.x).toBeLessThan(W);
+					expect(p.y).toBeGreaterThan(0);
+					expect(p.y).toBeLessThan(H);
+				}
+			}
+		}
+	});
+
+	it('parks unknown distances on the outer water, faded', () => {
+		const unknown = partyShipPlacement(null, 0, 1, W, H);
+		expect(unknown.alpha).toBe(0.45);
+		expect(unknown.scale).toBeCloseTo(0.075 + 0.11 * 0.1, 5);
+	});
+
+	it('draws a ring for each third, growing outward', () => {
+		const rings = rangeRings(W, H);
+		expect(rings).toHaveLength(3);
+		expect(rings[0].rx).toBeLessThan(rings[1].rx);
+		expect(rings[1].rx).toBeLessThan(rings[2].rx);
+		// the outermost ring is the fan itself
+		expect(rings[2].rx).toBeCloseTo(seaFan(W, H).rx, 5);
+	});
+
+	it("puts a ship of a given third inside that third's ring", () => {
+		const fan = seaFan(W, H);
+		const rings = rangeRings(W, H);
+		const ringIndex = { near: 0, middle: 1, far: 2 };
+		for (const distance of [0, 0.2, 0.34, 0.5, 0.7, 0.99]) {
+			const p = partyShipPlacement(distance, 0, 1, W, H);
+			const reach = Math.hypot((p.x - fan.cx) / fan.rx, (p.y - fan.cy) / fan.ry);
+			const ring = rings[ringIndex[proximityBandOf(distance)]];
+			expect(reach).toBeLessThanOrEqual(ring.rx / fan.rx + 1e-9);
+		}
 	});
 
 	it('clamps distances outside 0..1', () => {
 		expect(proximityBandOf(-3)).toBe('near');
 		expect(proximityBandOf(7)).toBe('far');
+		expect(proximityBandOf(null)).toBe('far');
 	});
 });

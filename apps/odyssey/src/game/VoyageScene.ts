@@ -4,19 +4,17 @@ import {
 	COLOR_CREAM,
 	COLOR_CYAN,
 	COLOR_GOLD,
-	BAND_LABEL_MIN_WIDTH,
-	BOAT_BOTTOM_MARGIN,
 	BOAT_SCALE,
 	BOAT_SCALE_NARROW,
-	COLOR_LANTERN,
-	PROXIMITY_BAND_LABELS,
+	NARROW_STAGE_WIDTH,
 	PARTICLES_SPLASH,
 	TWEEN_ISLAND_MS,
 	TWEEN_SHIP_MS,
 	TWEEN_STAMP_MS,
 } from '../lib/stageConstants';
-import { dayPhaseForIsland, proximityBands, shipLayout } from '../lib/seaLayout';
+import { dayPhaseForIsland, partyShipPlacement, rangeRings, seaFan } from '../lib/seaLayout';
 import type { StageCommand } from '../lib/stageBus';
+import { stageBus } from '../lib/stageBus';
 import { stageState } from './stageState';
 import { SeaScene, type PartyShip } from './SeaScene';
 
@@ -33,7 +31,8 @@ export class VoyageScene extends SeaScene {
 	private buoys = new Map<number, Phaser.GameObjects.Container>();
 	private ships: PartyShip[] = [];
 	private stamps: Phaser.GameObjects.Container[] = [];
-	private bands?: Phaser.GameObjects.Container;
+	private rings?: Phaser.GameObjects.Graphics;
+	private mark?: Phaser.GameObjects.Graphics;
 	private boatIsNarrow = false;
 	private currentIslandId: string | null = null;
 
@@ -47,8 +46,15 @@ export class VoyageScene extends SeaScene {
 		this.ships = [];
 		this.stamps = [];
 		this.currentIslandId = null;
-		this.drawBands();
+		this.drawRings();
 		this.boat = this.spawnPlayerBoat();
+		// Open water dismisses whatever the last tap opened — the card is an
+		// answer to a question, and tapping away is how a person stops asking.
+		this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+			if (stageState.seaTappable && this.input.hitTestPointer(pointer).length === 0) {
+				stageBus.emit({ type: 'waterTapped' });
+			}
+		});
 		this.buildShips();
 		if (stageState.voyage) this.showIsland(false);
 		for (const [stanceIndex, attitude] of Object.entries(stageState.voyageAttitudes)) {
@@ -58,19 +64,24 @@ export class VoyageScene extends SeaScene {
 	}
 
 	protected layout(): void {
-		this.drawBands();
+		this.drawRings();
 		// crossing the phone/desktop breakpoint changes the boat's size, and its
 		// halo and name are laid out from that size — cheaper and safer to build
 		// it again than to re-measure three objects
 		if (this.boat && this.boatIsNarrow !== this.narrow()) {
 			this.boat.destroy();
 			this.boat = undefined;
+			// the party names come and go with the same breakpoint
+			this.buildShips();
 		}
-		if (this.boat) this.moveBoat(this.boat, this.boatX(), this.boatY());
-		else this.boat = this.spawnPlayerBoat();
-		this.vignette?.setPosition(this.W * 0.3, this.H * 0.3);
+		if (this.boat) {
+			const fan = seaFan(this.W, this.H);
+			this.moveBoat(this.boat, fan.cx, fan.cy);
+		} else this.boat = this.spawnPlayerBoat();
+		this.vignette?.setPosition(this.vignetteX(), this.vignetteY());
 		this.applyShipLayout(false);
 		this.stamps.forEach((stamp, index) => stamp.setPosition(this.stampX(index), this.H - 30));
+		this.drawMark();
 	}
 
 	onCommand(command: StageCommand): void {
@@ -90,6 +101,9 @@ export class VoyageScene extends SeaScene {
 				break;
 			case 'updateDistances':
 				this.applyShipLayout(command.animate && !this.reducedMotion);
+				break;
+			case 'markShip':
+				this.drawMark();
 				break;
 			default:
 				break;
@@ -119,7 +133,7 @@ export class VoyageScene extends SeaScene {
 		this.buoys.clear();
 
 		const children: Phaser.GameObjects.GameObject[] = [];
-		const art = this.islandArtImage(info.imageUrl, 300);
+		const art = this.islandArtImage(info.imageUrl, this.narrow() ? 190 : 280);
 		let titleY = 92;
 		if (art) {
 			titleY = art.displayHeight / 2 + 22;
@@ -154,14 +168,14 @@ export class VoyageScene extends SeaScene {
 			children.push(jetty);
 		}
 
-		this.vignette = this.add.container(this.W * 0.3, this.H * 0.3, children).setDepth(60);
+		this.vignette = this.add.container(this.vignetteX(), this.vignetteY(), children).setDepth(60);
 		if (art) {
 			this.addIsletLife(this.vignette, art.displayWidth, art.displayHeight);
 			this.addVignetteGulls(art.displayHeight);
 			if (!this.reducedMotion) {
 				this.tweens.add({
 					targets: this.vignette,
-					y: this.H * 0.3 + 5,
+					y: this.vignetteY() + 5,
 					angle: 0.8,
 					duration: 3000,
 					yoyo: true,
@@ -175,7 +189,7 @@ export class VoyageScene extends SeaScene {
 			this.vignette.setX(-this.W * 0.2).setScale(0.4);
 			this.tweens.add({
 				targets: this.vignette,
-				x: this.W * 0.3,
+				x: this.vignetteX(),
 				scale: 1,
 				duration: TWEEN_ISLAND_MS,
 				ease: 'Sine.out',
@@ -358,107 +372,124 @@ export class VoyageScene extends SeaScene {
 	// ---------- reading the sea ----------
 
 	/**
-	 * The player rides the near corner of the frame: lower than any party ship
-	 * can be placed (`shipLayout` bottoms out at 0.7H) and outside their x
-	 * spread (0.12..0.88W), so "where am I" is answered by position before the
-	 * label is read. Pinned to the bottom edge in pixels rather than a fraction
-	 * of H — a proportion puts the hull and its name off a short screen.
+	 * The player's berth is the origin of everything else on this sea: the
+	 * range rings are drawn around it and every party ship is placed at its own
+	 * distance from it, so the nearest ship is simply the one nearest the hull.
 	 */
-	private boatX(): number {
-		return this.narrow() ? this.W - 58 : Math.min(this.W * 0.9, this.W - 90);
-	}
-
-	/**
-	 * On a phone the panel covers the lower half of the canvas, so the
-	 * bottom-of-frame berth that reads best on a desktop would hide the player
-	 * completely — and a marker nobody can see answers nothing. There, the boat
-	 * rides higher and smaller so hull, halo and name all clear the panel. It
-	 * costs the "lowest hull is yours" reading, which a phone cannot show
-	 * anyway: on that screen the whole near band is behind the panel.
-	 */
-	private boatY(): number {
-		return this.narrow() ? this.H * 0.38 : this.H - BOAT_BOTTOM_MARGIN;
-	}
-
 	private spawnPlayerBoat(): Phaser.GameObjects.Container {
 		this.boatIsNarrow = this.narrow();
+		const fan = seaFan(this.W, this.H);
+		const boat = this.spawnBoat(fan.cx, fan.cy, this.narrow() ? BOAT_SCALE_NARROW : BOAT_SCALE, {
+			named: true,
+		});
+		this.makeTappable(boat, 130, 230, () => stageBus.emit({ type: 'myShipTapped' }));
 
-		return this.spawnBoat(
-			this.boatX(),
-			this.boatY(),
-			this.narrow() ? BOAT_SCALE_NARROW : BOAT_SCALE,
-			{ named: true },
-		);
+		return boat;
 	}
 
 	private narrow(): boolean {
-		return this.W < BAND_LABEL_MIN_WIDTH;
+		return this.W < NARROW_STAGE_WIDTH;
 	}
 
 	/**
-	 * The three distance bands, drawn as water rather than as chrome: a faint
-	 * wash per band, a hairline where they meet, and a Hebrew caption on the
-	 * right margin — the lane the ship spread (0.12..0.88W) leaves empty.
-	 *
-	 * This adds no information the scene did not already contain; it only makes
-	 * the y-axis legible. Ships keep their sortOrder x and their equal
-	 * treatment (§8.2) — a band says how near, never who is better.
+	 * The island sits outside the fan, up the leading (left, in Hebrew) side —
+	 * the direction the voyage sails toward. Inside the rings it would read as
+	 * one more thing at a distance from the player, which it is not.
 	 */
-	private drawBands(): void {
-		this.bands?.destroy();
-		const parts: Phaser.GameObjects.GameObject[] = [];
+	private vignetteX(): number {
+		return this.W * (this.narrow() ? 0.3 : 0.19);
+	}
 
-		for (const band of proximityBands(this.H)) {
-			const height = band.bottom - band.top;
-			const wash = this.add
-				.rectangle(
-					0,
-					band.top,
-					this.W,
-					height,
-					band.key === 'near' ? COLOR_LANTERN : COLOR_CYAN,
-					band.key === 'near' ? 0.07 : 0.04,
-				)
-				.setOrigin(0, 0);
-			parts.push(wash);
-			// Only where two bands meet — the far band's upper edge is the horizon,
-			// and a rule drawn across the sky reads as a scratch on the lens.
-			// The boundary has to survive a photographic ocean: a soft cyan haze
-			// under a cream hairline, which reads at any water color.
-			if (band.key !== 'far') {
-				parts.push(
-					this.add.rectangle(0, band.top - 3, this.W, 7, COLOR_CYAN, 0.1).setOrigin(0, 0),
-					this.add.rectangle(0, band.top, this.W, 1, COLOR_CREAM, 0.42).setOrigin(0, 0),
-				);
-			}
-			// A phone has no free margin — the ship spread reaches within ~45px of
-			// both edges — so a caption there lands on top of a party's name. The
-			// panel below the canvas already groups the ships under these exact
-			// three headings, so on a narrow screen the words live there and the
-			// water keeps only its rules.
-			if (this.W < BAND_LABEL_MIN_WIDTH) continue;
-			parts.push(
-				this.add
-					.text(this.W - 10, band.top + height / 2, PROXIMITY_BAND_LABELS[band.key], {
-						fontFamily: 'Arial',
-						fontSize: '12px',
-						color: '#cfe6f5',
-						backgroundColor: 'rgba(6,26,48,0.7)',
-						padding: { x: 7, y: 3 },
-					})
-					.setOrigin(1, 0.5)
-					.setAlpha(0.9),
-			);
-		}
+	private vignetteY(): number {
+		return this.H * 0.28;
+	}
 
-		this.bands = this.add.container(0, 0, parts).setDepth(-18);
+	/**
+	 * Range rings: thirds of the distance scale, drawn as ellipses because that
+	 * is the shape a circle on the water takes seen from a boat sitting on it.
+	 * Deliberately unlabelled — a tap gives the number in words, and captions
+	 * across open water read as chrome.
+	 */
+	private drawRings(): void {
+		this.rings?.destroy();
+		const fan = seaFan(this.W, this.H);
+		const graphics = this.add.graphics().setDepth(-18);
+		rangeRings(this.W, this.H).forEach((ring, index) => {
+			graphics.lineStyle(index === 2 ? 1 : 1.5, COLOR_CREAM, index === 2 ? 0.14 : 0.22);
+			graphics.strokeEllipse(fan.cx, fan.cy, ring.rx * 2, ring.ry * 2);
+		});
+		this.rings = graphics;
+	}
+
+	/**
+	 * The reach between the player and the ship they just asked about.
+	 *
+	 * A card naming a party is only half an answer on a sea of twelve hulls —
+	 * the other half is which one it is. The line IS the distance the card puts
+	 * in words, drawn between the two boats it is measured across, and it lasts
+	 * exactly as long as the question does.
+	 */
+	private drawMark(): void {
+		this.mark?.destroy();
+		this.mark = undefined;
+		const marked = this.ships.find((ship) => ship.party.id === stageState.markedPartyId);
+		if (!marked || !this.boat) return;
+
+		const graphics = this.add.graphics().setDepth(80);
+		graphics.lineStyle(2, COLOR_GOLD, 0.55);
+		graphics.lineBetween(this.boat.x, this.boat.y, marked.container.x, marked.container.y);
+		graphics.lineStyle(2, COLOR_GOLD, 0.9);
+		graphics.strokeEllipse(
+			marked.container.x,
+			marked.container.y + marked.image.displayHeight * 0.34,
+			marked.image.displayWidth * 1.7,
+			marked.image.displayHeight * 0.42,
+		);
+		this.mark = graphics;
+	}
+
+	/**
+	 * Taps are live only while the sea is reacting.
+	 *
+	 * Distances are recomputed from the attitudes as they are marked, so a
+	 * tappable ship during the question would let a player check which party
+	 * an answer moves them toward before committing to it — the same nudge the
+	 * mid-evaluation indicator rule forbids. Between islands, when the marking
+	 * is done, it is just information about where they already stand.
+	 */
+	private makeTappable(
+		target: Phaser.GameObjects.Container,
+		width: number,
+		height: number,
+		onTap: () => void,
+	): void {
+		// An explicit hit area rather than one derived from setSize(): a
+		// container has no origin, so Phaser's default rectangle starts at the
+		// container's own position and runs down-right, leaving the upper half of
+		// a hull dead to the touch. Sized to the sprite plus its name, which is
+		// the thing a finger is aiming at.
+		target.setInteractive(
+			new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+			Phaser.Geom.Rectangle.Contains,
+		);
+		target.input!.cursor = 'pointer';
+		target.on('pointerdown', () => {
+			if (stageState.seaTappable) onTap();
+		});
 	}
 
 	// ---------- party ships ----------
 
 	private buildShips(): void {
 		for (const ship of this.ships) ship.container.destroy();
-		this.ships = stageState.parties.map((party) => this.spawnPartyShip(party, 0.1));
+		this.ships = stageState.parties.map((party) => {
+			const ship = this.spawnPartyShip(party, 0.1, { named: !this.narrow() });
+			this.makeTappable(ship.container, this.narrow() ? 64 : 92, this.narrow() ? 96 : 150, () =>
+				stageBus.emit({ type: 'shipTapped', partyId: party.id }),
+			);
+
+			return ship;
+		});
 		this.applyShipLayout(false);
 	}
 
@@ -466,13 +497,16 @@ export class VoyageScene extends SeaScene {
 	private applyShipLayout(animate: boolean): void {
 		const count = this.ships.length || 1;
 		this.ships.forEach((ship, index) => {
-			const placement = shipLayout(
+			const placement = partyShipPlacement(
 				stageState.distances[ship.party.id],
 				index,
 				count,
 				this.W,
 				this.H,
 			);
+			// a phone's fan is a third the width: full-size hulls would overlap
+			// into one mass, and every ship still reads as a ship at this size
+			const scale = placement.scale * (this.narrow() ? 0.7 : 1);
 			ship.container.setDepth(Math.round(placement.y));
 			if (animate) {
 				this.tweens.add({
@@ -485,14 +519,17 @@ export class VoyageScene extends SeaScene {
 				});
 				this.tweens.add({
 					targets: ship.image,
-					scale: placement.scale,
+					scale,
 					duration: TWEEN_SHIP_MS,
 					ease: 'Sine.inOut',
 				});
 			} else {
 				ship.container.setPosition(placement.x, placement.y).setAlpha(placement.alpha);
-				ship.image.setScale(placement.scale);
+				ship.image.setScale(scale);
 			}
 		});
+		// a tween would leave the reach line pointing at where a ship used to be
+		if (!animate) this.drawMark();
+		else this.time.delayedCall(TWEEN_SHIP_MS, () => this.drawMark());
 	}
 }

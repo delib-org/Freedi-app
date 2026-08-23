@@ -10,6 +10,7 @@ import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
+import ShipCard from '../components/ShipCard';
 
 /**
  * ההפלגה: one island (a `question` Statement) at a time. Each of its stances
@@ -40,6 +41,8 @@ export default function Voyage() {
 		return unanswered === -1 ? Math.max(0, selectedIslands.length - 1) : unanswered;
 	});
 	const [phase, setPhase] = useState<'question' | 'reaction'>('question');
+	/** which ship the player asked about: a partyId, 'all' for the standing, or none */
+	const [asked, setAsked] = useState<string | null>(null);
 	const [depth, setDepth] = useState('');
 	const [log, setLog] = useState('');
 	const [saving, setSaving] = useState(false);
@@ -100,6 +103,32 @@ export default function Voyage() {
 		// distances intentionally omitted: ships take a snapshot when the island
 		// changes and only move again during the reaction phase
 	}, [mode, island, index, selectedIslands.length]);
+
+	// The sea answers taps only while it is reacting. During the question the
+	// distances are still moving with every attitude marked, and letting a
+	// player check which party an answer pushes them toward before they commit
+	// to it is the mid-evaluation nudge the game refuses to make.
+	useEffect(() => {
+		if (mode !== 'game') return;
+		const reacting = phase === 'reaction';
+		stageBus.send({ type: 'setSeaTappable', enabled: reacting });
+		if (!reacting) setAsked(null);
+	}, [mode, phase, island]);
+
+	useEffect(() => {
+		if (mode !== 'game') return;
+		stageBus.send({ type: 'markShip', partyId: asked === 'all' ? null : asked });
+	}, [mode, asked]);
+
+	useEffect(() => {
+		if (mode !== 'game') return;
+
+		return stageBus.onEvent((event) => {
+			if (event.type === 'shipTapped') setAsked(event.partyId);
+			else if (event.type === 'myShipTapped') setAsked('all');
+			else if (event.type === 'waterTapped') setAsked(null);
+		});
+	}, [mode]);
 
 	if (!content || !journey) return <NoGameYet />;
 	if (selectedIslands.length === 0) {
@@ -170,6 +199,7 @@ export default function Voyage() {
 		color: party.color,
 		distance: distances[party.partyId] ?? null,
 	}));
+	const askedShip = shipProximity.find((ship) => ship.partyId === asked) ?? null;
 
 	return (
 		<>
@@ -289,15 +319,46 @@ export default function Voyage() {
 							{mode === 'game' ? (
 								<>
 									{/* the sea itself reacts behind this window */}
-									<div className="h-[38vh]" aria-hidden="true" />
-									<div className="panel !py-3 text-center text-[14px] text-[#d5ecf7] flex flex-col gap-2.5">
-										<p className="m-0">{text('voyageShipsNote')}</p>
-										<NearbyShips ships={shipProximity} compact />
-										<p className="m-0 text-[12px] opacity-65">
-											הספינה המוארת בחזית היא שלך. הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת
-											הצבעה.
-										</p>
-									</div>
+									{/* the standing is the tallest card the sea can raise; giving it
+									    the same window would push the way onward off the screen */}
+									<div className={asked === 'all' ? 'h-[34vh]' : 'h-[50vh]'} aria-hidden="true" />
+									{askedShip ? (
+										<ShipCard
+											ship={askedShip}
+											onClose={() => setAsked(null)}
+											onShowAll={() => setAsked('all')}
+										/>
+									) : asked === 'all' ? (
+										<div className="panel !py-3 flex flex-col gap-2.5">
+											<div className="flex items-center gap-2">
+												<strong className="text-[15px] text-[var(--cream)]">הספינות סביבך</strong>
+												<button
+													type="button"
+													className="mr-auto text-[13px] opacity-70 hover:opacity-100"
+													onClick={() => setAsked(null)}
+													aria-label="סגירה"
+												>
+													✕
+												</button>
+											</div>
+											<NearbyShips ships={shipProximity} compact />
+											<p className="m-0 text-[12px] opacity-60 text-center">
+												עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
+											</p>
+										</div>
+									) : (
+										<div className="panel !py-2.5 text-center text-[14px] text-[#d5ecf7] flex flex-col gap-1.5">
+											<p className="m-0">{text('voyageShipsNote')}</p>
+											<p className="m-0 text-[13px] opacity-80">
+												הספינה המוארת במרכז היא שלך. הקישו על ספינה כדי לראות כמה היא קרובה אליכם,
+												או{' '}
+												<button type="button" className="underline" onClick={() => setAsked('all')}>
+													הציגו את כל הספינות
+												</button>
+												.
+											</p>
+										</div>
+									)}
 								</>
 							) : (
 								<div className="panel flex flex-col gap-3">

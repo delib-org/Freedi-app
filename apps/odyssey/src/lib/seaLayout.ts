@@ -107,59 +107,102 @@ export function sailorPlacement(
 }
 
 /**
- * The sea reads as three bands of distance, and the player has to be able to
- * tell which one a ship is in without measuring pixels.
+ * The voyage sea is read FROM the player's own deck.
  *
- * `shipLayout` already encodes proximity in y (near = low, far = horizon) —
- * these bands are that same formula made visible, so nothing is re-ranked and
- * nothing new is claimed. Thirds of the 0..1 distance scale, top to bottom.
+ * The player's boat is anchored at the centre of the lower frame and every
+ * party ship is placed on a ring around it whose radius is that party's
+ * distance — so "which ship is nearest" is answered by looking, with no
+ * legend to learn. The rings are ellipses because that is what a circle drawn
+ * on the water looks like from a boat sitting on it: far away straight ahead
+ * climbs to the horizon, far away off the beam stays low and to the side.
+ *
+ * Which LANE a ship sails in is fixed by its sortOrder index and never by its
+ * distance (design spec §8.2) — the ring says how near, the lane says nothing
+ * at all.
  */
-export type ProximityBandKey = 'far' | 'middle' | 'near';
-
-export interface ProximityBand {
-	key: ProximityBandKey;
-	/** screen y of the band's upper edge (the farther side) */
-	top: number;
-	/** screen y of the band's lower edge (the nearer side) */
-	bottom: number;
+export interface SeaFan {
+	/** the player's berth, and the centre every ring is drawn around */
+	cx: number;
+	cy: number;
+	/** semi-axes of the outermost ring */
+	rx: number;
+	ry: number;
 }
 
-/** Distance thirds. A ship exactly on a boundary belongs to the nearer band. */
-const BAND_EDGES: Record<ProximityBandKey, [number, number]> = {
-	near: [0, 1 / 3],
-	middle: [1 / 3, 2 / 3],
-	far: [2 / 3, 1],
-};
+/** Total angular width of the fan, centred on straight ahead. */
+const FAN_SPREAD = (140 * Math.PI) / 180;
+/** The innermost ring — a distance of 0 still leaves room for a hull. */
+const NEAR_RING = 0.36;
+/** How high up the frame the farthest ring reaches, dead ahead. */
+const FAN_HORIZON = 0.2;
+/** Where the player sits. */
+const FAN_BERTH = 0.56;
 
-/** Where `shipLayout` puts a ship of this distance — the one source of truth. */
-function bandY(distance: number, height: number): number {
-	return height * (0.2 + 0.5 * (1 - distance));
+export function seaFan(width: number, height: number): SeaFan {
+	const cy = height * FAN_BERTH;
+
+	return { cx: width / 2, cy, rx: width * 0.4, ry: cy - height * FAN_HORIZON };
+}
+
+/** A ship's lane, by index only. Lane 0 is the rightmost — this is a Hebrew
+ *  game and the eye starts on the right. */
+export function fanAngle(index: number, count: number): number {
+	const safeCount = Math.max(1, count);
+
+	return FAN_SPREAD / 2 - (FAN_SPREAD * (index + 0.5)) / safeCount;
+}
+
+/** The ring a distance sits on, as a fraction of the outermost ring. */
+function ringOf(distance: number): number {
+	return NEAR_RING + (1 - NEAR_RING) * clamp01(distance);
 }
 
 /**
- * Outer bands are stretched past their formula edge so a ship sitting on the
- * boundary is drawn inside its own band rather than half out of the sea.
+ * Party-ship placement on the fan. Scale and alpha keep the original
+ * PartySea response to distance — nearer is larger and more solid — which is
+ * now telling the same story as the radius rather than a second one.
  */
-const BAND_OVERSHOOT = 0.06;
+export function partyShipPlacement(
+	distance: number | null | undefined,
+	index: number,
+	count: number,
+	width: number,
+	height: number,
+): ShipPlacement {
+	const value = distance ?? 0.9;
+	const fan = seaFan(width, height);
+	const ring = ringOf(value);
+	const angle = fanAngle(index, count);
 
-export function proximityBands(height: number): ProximityBand[] {
-	return (['far', 'middle', 'near'] as const).map((key) => {
-		const [from, to] = BAND_EDGES[key];
-
-		return {
-			key,
-			top: bandY(to, height) - (key === 'far' ? height * BAND_OVERSHOOT : 0),
-			bottom: bandY(from, height) + (key === 'near' ? height * BAND_OVERSHOOT : 0),
-		};
-	});
+	return {
+		x: fan.cx + Math.sin(angle) * fan.rx * ring,
+		y: fan.cy - Math.cos(angle) * fan.ry * ring,
+		scale: 0.075 + 0.11 * (1 - clamp01(value)),
+		alpha: distance === null || distance === undefined ? 0.45 : 0.55 + 0.45 * (1 - clamp01(value)),
+	};
 }
 
-/** Which band a distance falls in. Unknown distances park in the far band,
- *  exactly where `shipLayout` sends them (0.9). */
+/** The two rings that divide the sea into near / middle / far, as semi-axis
+ *  pairs. Drawn, not labelled — the words live in the card a tap opens. */
+export function rangeRings(width: number, height: number): { rx: number; ry: number }[] {
+	const fan = seaFan(width, height);
+
+	return [1 / 3, 2 / 3, 1].map((distance) => ({
+		rx: fan.rx * ringOf(distance),
+		ry: fan.ry * ringOf(distance),
+	}));
+}
+
+/**
+ * Which third of the sea a distance falls in. Unknown distances park in the
+ * far ring, exactly where `partyShipPlacement` sends them (0.9).
+ */
+export type ProximityBandKey = 'far' | 'middle' | 'near';
+
 export function proximityBandOf(distance: number | null | undefined): ProximityBandKey {
 	const value = clamp01(distance ?? 0.9);
-	if (value < BAND_EDGES.near[1]) return 'near';
-	if (value < BAND_EDGES.middle[1]) return 'middle';
+	if (value < 1 / 3) return 'near';
+	if (value < 2 / 3) return 'middle';
 
 	return 'far';
 }

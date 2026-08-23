@@ -26,6 +26,10 @@ export interface StageStateSnapshot {
 	voyageAttitudes: Record<number, AttitudeGlyphKey>;
 	sailors: number[];
 	stampedIslandIds: string[];
+	/** taps on the sea are live only while it is reacting, never mid-question */
+	seaTappable: boolean;
+	/** the ship the player is currently asking about */
+	markedPartyId: string | null;
 }
 
 export const stageState: StageStateSnapshot = {
@@ -40,6 +44,8 @@ export const stageState: StageStateSnapshot = {
 	voyageAttitudes: {},
 	sailors: [],
 	stampedIslandIds: [],
+	seaTappable: false,
+	markedPartyId: null,
 };
 
 /** Fold a command into the snapshot (before the active scene reacts to it). */
@@ -80,6 +86,12 @@ export function applyToStageState(command: StageCommand): void {
 			break;
 		case 'setSailors':
 			stageState.sailors = command.distances;
+			break;
+		case 'setSeaTappable':
+			stageState.seaTappable = command.enabled;
+			break;
+		case 'markShip':
+			stageState.markedPartyId = command.partyId;
 			break;
 		case 'compassComplete':
 		case 'celebrateArrival':

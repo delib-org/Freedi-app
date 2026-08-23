@@ -54,9 +54,19 @@ export type StageCommand =
 	| { type: 'islandCompleted'; islandId: string }
 	| { type: 'setSailors'; distances: number[] }
 	| { type: 'celebrateArrival'; islandCount: number }
-	| { type: 'sailToLighthouse' };
+	| { type: 'sailToLighthouse' }
+	| { type: 'setSeaTappable'; enabled: boolean }
+	| { type: 'markShip'; partyId: string | null };
 
-export type StageEvent = { type: 'ready' } | { type: 'islandTapped'; islandId: string };
+export type StageEvent =
+	| { type: 'ready' }
+	| { type: 'islandTapped'; islandId: string }
+	/** a party ship was tapped — the page answers with its distance */
+	| { type: 'shipTapped'; partyId: string }
+	/** the player tapped their own boat — the page opens the full standing */
+	| { type: 'myShipTapped' }
+	/** open water: whatever a previous tap opened should close */
+	| { type: 'waterTapped' };
 
 type CommandHandler = (command: StageCommand) => void;
 type EventHandler = (event: StageEvent) => void;

@@ -59,14 +59,6 @@ export const ATTITUDE_GLYPHS: Record<'support' | 'livewith' | 'oppose', string> 
 	oppose: '⛵',
 };
 
-/** Hebrew-only band captions for the sea's three distance bands (§1: never
- *  mix digits or Latin into a Phaser string). Proximity, not verdict. */
-export const PROXIMITY_BAND_LABELS: Record<'far' | 'middle' | 'near', string> = {
-	far: 'רחוקות ממסלולך',
-	middle: 'באמצע הדרך',
-	near: 'קרובות למסלולך',
-};
-
 /** The player's own ship, named on the water so it is never mistaken for a
  *  party ship. */
 export const MY_SHIP_LABEL = 'הספינה שלך';
@@ -79,12 +71,10 @@ export const MY_SHIP_LABEL = 'הספינה שלך';
 export const BOAT_DEPTH = 100;
 export const BOAT_DEPTH_FRONT = 900;
 
-/** The player's boat on the voyage: sized and pinned so the hull, its halo and
- *  its name all fit above the bottom edge on a short screen. */
-export const BOAT_SCALE = 0.13;
-export const BOAT_SCALE_NARROW = 0.09;
-export const BOAT_BOTTOM_MARGIN = 152;
+/** The player's boat on the voyage: larger than any party ship, and smaller on
+ *  a phone where the fan around it is tighter. */
+export const BOAT_SCALE = 0.14;
+export const BOAT_SCALE_NARROW = 0.1;
 
-/** Below this canvas width the band captions are dropped: the ship spread
- *  leaves no margin to put them in, and the panel says the same three words. */
-export const BAND_LABEL_MIN_WIDTH = 640;
+/** Phone-sized canvas: the fan is tighter and every marker on it shrinks. */
+export const NARROW_STAGE_WIDTH = 640;

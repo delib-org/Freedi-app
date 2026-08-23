@@ -57,7 +57,9 @@ export default function SeaStage() {
 		<div
 			ref={host}
 			className="sea-stage"
-			style={{ pointerEvents: scene === 'chart' ? 'auto' : 'none' }}
+			// the chart is tapped to choose islands, the voyage to ask a ship how
+			// near it is; every other sea is pure backdrop and must not eat taps
+			style={{ pointerEvents: scene === 'chart' || scene === 'voyage' ? 'auto' : 'none' }}
 			aria-hidden="true"
 		/>
 	);

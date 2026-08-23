@@ -4,6 +4,7 @@ import {
 	BOAT_DEPTH,
 	BOAT_DEPTH_FRONT,
 	COLOR_CREAM,
+	COLOR_GOLD,
 	COLOR_LANTERN,
 	COLOR_NAVY,
 	DAYPHASE_MS,
@@ -145,10 +146,19 @@ export abstract class SeaScene extends Phaser.Scene {
 		if (options?.named) {
 			const halo = this.add
 				.image(0, image.displayHeight * 0.34, 'glow')
-				.setDisplaySize(image.displayWidth * 1.9, image.displayHeight * 0.7)
+				.setDisplaySize(image.displayWidth * 2.1, image.displayHeight * 0.75)
 				.setTint(COLOR_LANTERN)
-				.setAlpha(0.5);
+				.setAlpha(0.55);
 			container.addAt(halo, 0);
+			// A ring drawn on the water around the hull, in the same hand as the
+			// range rings: it says the player is the centre those are measured
+			// from, before any word is read.
+			const berth = this.add
+				.image(0, image.displayHeight * 0.34, 'ring')
+				.setDisplaySize(image.displayWidth * 1.8, image.displayHeight * 0.5)
+				.setTint(COLOR_GOLD)
+				.setAlpha(0.75);
+			container.addAt(berth, 1);
 			const label = this.add
 				.text(0, image.displayHeight * 0.62, MY_SHIP_LABEL, {
 					fontFamily: 'Arial',
@@ -215,21 +225,37 @@ export abstract class SeaScene extends Phaser.Scene {
 		});
 	}
 
-	/** A party ship: same sprite for every party; flag color + name only. */
-	protected spawnPartyShip(party: StageParty, shipScale: number): PartyShip {
+	/**
+	 * A party ship: same sprite for every party; flag color + name only.
+	 *
+	 * `named: false` is for a sea too small to carry twelve names at once — a
+	 * phone, where the labels overlap into an unreadable stack. The flag still
+	 * tells them apart and a tap still says who it is; a name nobody can read
+	 * is not information.
+	 */
+	protected spawnPartyShip(
+		party: StageParty,
+		shipScale: number,
+		options?: { named?: boolean },
+	): PartyShip {
 		const image = this.add.image(0, 0, 'ship').setScale(shipScale);
 		const color = Phaser.Display.Color.HexStringToColor(party.color).color;
 		const flag = this.add.rectangle(0, -46, 30, 16, color).setStrokeStyle(1, 0xffffff, 0.7);
-		const label = this.add
-			.text(0, 44, party.name, {
-				fontFamily: 'Arial',
-				fontSize: '13px',
-				color: '#fff4d3',
-				backgroundColor: 'rgba(6,26,48,0.85)',
-				padding: { x: 8, y: 3 },
-			})
-			.setOrigin(0.5);
-		const container = this.add.container(0, 0, [image, flag, label]);
+		const parts: Phaser.GameObjects.GameObject[] = [image, flag];
+		if (options?.named !== false) {
+			parts.push(
+				this.add
+					.text(0, 44, party.name, {
+						fontFamily: 'Arial',
+						fontSize: '13px',
+						color: '#fff4d3',
+						backgroundColor: 'rgba(6,26,48,0.85)',
+						padding: { x: 8, y: 3 },
+					})
+					.setOrigin(0.5),
+			);
+		}
+		const container = this.add.container(0, 0, parts);
 
 		if (!this.reducedMotion) {
 			this.tweens.add({
