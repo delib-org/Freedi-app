@@ -2645,6 +2645,8 @@
   "synthesisSettingsDescription": "Live synthesis automatically merges near-duplicate options into clusters as participants vote. Enabled by default for Mass-Consensus questions.",
   "liveSynthEnabledForSurvey": "Auto-synthesis enabled for this survey",
   "liveSynthSurveyNote": "Master kill switch. When off, no question in this survey will auto-synthesize regardless of per-question setting.",
+  "synthesisPremiumModel": "Use premium AI model for proposals",
+  "synthesisPremiumModelNote": "Off (standard) by default — cheaper and merges proposals safely. Turn on for a high-stakes survey to use the premium model: tighter proposals and slightly better duplicate detection (mainly in Hebrew), at higher cost.",
   "liveSynthEnabledForQuestion": "Auto-synthesis enabled for this question",
   "synthesisDisabledTooltip": "Enable synthesis at the survey level to use this",
   "synthesisStateLive": "Live",
