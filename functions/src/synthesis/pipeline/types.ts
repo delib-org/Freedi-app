@@ -106,10 +106,12 @@ export interface SynthesisSettings {
 	embeddingModel?: string;
 	/**
 	 * Model tier for THIS question's synthesis writing (the pipeline's biggest
-	 * LLM cost). 'premium' (default) writes proposals on the heavy model;
-	 * 'standard' writes them on the fast model — much cheaper, for routine
-	 * events. Resolved by services/synthesis-model-resolver.ts. The
-	 * placement/theme judges are on the fast model regardless of tier.
+	 * LLM cost). 'standard' (the default) writes proposals on the fast model —
+	 * measured safe (no scope inflation / wrong merges / lost members in either
+	 * language); 'premium' writes them on the heavy model, for high-stakes
+	 * events where the extra Hebrew merge-recall and tighter prose are worth
+	 * ~6x the output cost. Resolved by services/synthesis-model-resolver.ts.
+	 * The placement/theme judges are on the fast model regardless of tier.
 	 */
 	modelTier?: 'premium' | 'standard';
 }
@@ -151,9 +153,11 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	spawnThemesFromOptionPairs: false,
 	// No pin — the global default model. See the field's docstring.
 	embeddingModel: undefined,
-	// Default premium: existing questions keep the heavy synthesis model until
-	// an admin marks the event 'standard'. See the field's docstring.
-	modelTier: 'premium',
+	// Default STANDARD (fast model) for synthesis — measured safe: no scope
+	// inflation, no wrong merges, no lost members in either language; only a
+	// small Hebrew merge-recall edge separates it from premium. An admin sets a
+	// high-stakes event to 'premium' explicitly. See the field's docstring.
+	modelTier: 'standard',
 };
 
 /**

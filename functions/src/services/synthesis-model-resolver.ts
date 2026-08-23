@@ -14,17 +14,18 @@ import { LLM_MODEL_FAST, LLM_MODEL_HEAVY } from '../config/gemini';
  *
  * So the tier is per-question, exactly like the embedding model
  * (embedding-model-resolver.ts):
- *   - 'premium'  → heavy model for synthesis (best quality; the default)
- *   - 'standard' → fast model for synthesis (much cheaper)
+ *   - 'standard' → fast model for synthesis (much cheaper; the default)
+ *   - 'premium'  → heavy model for synthesis (best quality; opt-in per event)
  * The theme/placement judges are already on the fast model in both tiers; only
  * the expensive synthesis writer changes.
  *
  * Storage: `statementSettings.synthesis.modelTier` on the question — the same
- * per-question settings block the pipeline already reads. Absent → 'premium',
- * so no existing question silently changes model.
+ * per-question settings block the pipeline already reads. Absent → 'standard'
+ * (the measured-safe default); an admin opts a high-stakes event up to
+ * 'premium'.
  *
- * Fail-open and TTL-cached: an unreadable question resolves to 'premium'
- * (today's behaviour), and resolutions are cached per instance for a few
+ * Fail-open and TTL-cached: an unreadable question resolves to 'standard'
+ * (the default), and resolutions are cached per instance for a few
  * minutes so threading this through the hot path costs one question read per
  * parent per TTL. A just-changed tier is seen by other warm instances within
  * the TTL — a cost/quality choice, never a correctness one.
@@ -44,14 +45,14 @@ export function synthesisModelForTier(tier: ModelTier): string {
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const cache = new Map<string, { tier: ModelTier; at: number }>();
 
-/** The synthesis model tier in force for a question. No parentId → 'premium'. */
+/** The synthesis model tier in force for a question. No parentId → 'standard'. */
 export async function resolveModelTier(parentId?: string | null): Promise<ModelTier> {
-	if (!parentId) return 'premium';
+	if (!parentId) return 'standard';
 
 	const hit = cache.get(parentId);
 	if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.tier;
 
-	let tier: ModelTier = 'premium';
+	let tier: ModelTier = 'standard';
 	try {
 		const doc = await getFirestore().collection('statements').doc(parentId).get();
 		const settings = doc.data()?.statementSettings as

@@ -260,8 +260,13 @@ describe('synthesis settings', () => {
 			expect(loadSynthesisSettingsFromStatement(stmt as never).modelTier).toBe('standard');
 		});
 
-		it('absent tier defaults to premium — no existing question changes model', () => {
+		it('absent tier defaults to standard — the measured-safe, cheaper model', () => {
 			const stmt = { statementSettings: { synthesis: { enabled: true } } };
+			expect(loadSynthesisSettingsFromStatement(stmt as never).modelTier).toBe('standard');
+		});
+
+		it('an explicit premium tier is honoured over the standard default', () => {
+			const stmt = { statementSettings: { synthesis: { enabled: true, modelTier: 'premium' } } };
 			expect(loadSynthesisSettingsFromStatement(stmt as never).modelTier).toBe('premium');
 		});
 	});

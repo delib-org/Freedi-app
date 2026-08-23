@@ -82,6 +82,10 @@ function readInitialSettings(statement: Statement): SynthesisSettings {
 			typeof raw.claimRegistryEnabled === 'boolean'
 				? raw.claimRegistryEnabled
 				: DEFAULT_SYNTHESIS_SETTINGS.claimRegistryEnabled,
+		modelTier:
+			raw.modelTier === 'premium' || raw.modelTier === 'standard'
+				? raw.modelTier
+				: DEFAULT_SYNTHESIS_SETTINGS.modelTier,
 	};
 }
 
@@ -660,6 +664,32 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							onChange={(checked) => updateField('claimRegistryEnabled', checked)}
 							label={settings.claimRegistryEnabled ? t('On') : t('Off')}
 							ariaLabel={t('Enable claim registry')}
+						/>
+					</div>
+				</section>
+
+				{/* Model tier — which AI writes the merged proposals */}
+				<section
+					className={styles.claimRegistryCard}
+					aria-labelledby="synthesis-model-tier-heading"
+				>
+					<div className={styles.claimRegistryCard__head}>
+						<div>
+							<h3 id="synthesis-model-tier-heading" className={styles.card__title}>
+								{t('Premium AI model for proposals')}
+							</h3>
+							<p className={styles.card__subtitle}>
+								{t(
+									'The standard model is used by default — it is cheaper and merges proposals safely. Turn this on for a high-stakes event to use the premium model, which writes tighter proposals and catches slightly more duplicate suggestions (mainly in Hebrew), at higher cost.',
+								)}
+							</p>
+						</div>
+						<Toggle
+							id="synthesis-model-tier"
+							checked={settings.modelTier === 'premium'}
+							onChange={(checked) => updateField('modelTier', checked ? 'premium' : 'standard')}
+							label={settings.modelTier === 'premium' ? t('Premium') : t('Standard')}
+							ariaLabel={t('Use premium AI model for proposals')}
 						/>
 					</div>
 				</section>

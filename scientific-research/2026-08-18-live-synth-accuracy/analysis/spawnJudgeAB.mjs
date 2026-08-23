@@ -38,6 +38,7 @@ const require = createRequire(import.meta.url);
 
 const args = process.argv.slice(2);
 const LABEL = (args.find((a) => a.startsWith('--label=')) ?? '--label=baseline').split('=')[1];
+const MODEL_OVERRIDE = (args.find((a) => a.startsWith('--model=')) ?? '--model=').split('=')[1] || undefined;
 const NEGATIVES = Number((args.find((a) => a.startsWith('--negatives=')) ?? '--negatives=10').split('=')[1]);
 const POS_LIMIT = Number((args.find((a) => a.startsWith('--pos-limit=')) ?? '--pos-limit=9999').split('=')[1]);
 const LANGS = ((args.find((a) => a.startsWith('--langs=')) ?? '--langs=en,he').split('=')[1] ?? '')
@@ -105,6 +106,7 @@ async function judge(lang, question, a, b) {
 			{ statementId: 'B', statement: b, numberOfEvaluators: 1, consensus: 0.5, sumEvaluations: 1 },
 		],
 		question,
+		MODEL_OVERRIDE ? { heavyModel: MODEL_OVERRIDE } : undefined,
 	);
 	const value = { merged: !res.cannotSynthesize, reason: res.cannotSynthesize ? res.reason : '' };
 	cache.set(key, value);

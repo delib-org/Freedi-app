@@ -411,13 +411,44 @@ prefix, and every call paid the cache-write premium for nothing. The rubric is n
 <i>first</i>, with the variable content appended last, making it a stable cached prefix across every synthesis
 call. This recovers the input/cache side; it cannot touch output tokens, which caching never caches.</li>
 <li><b>Per-question model tiering.</b> The synthesis writer — the single biggest cost — is now selectable per
-question via <code>statementSettings.synthesis.modelTier</code>: <b>premium</b> (heavy model, the default, so
-no existing question changes) or <b>standard</b> (fast model, ~6× cheaper per output token) for routine
-events. Resolved through a TTL-cached per-question resolver mirroring the embedding-model mechanism; the
-placement and theme judges stay on the fast model in both tiers. This is the lever on the output cost the
-caching fix cannot reach: a high-stakes consultation runs premium, a routine one runs standard, and the choice
-is one admin setting.</li>
+question via <code>statementSettings.synthesis.modelTier</code>: <b>standard</b> (fast model, the default) or
+<b>premium</b> (heavy model, ~6× the output cost) for high-stakes events. Resolved through a TTL-cached
+per-question resolver mirroring the embedding-model mechanism; the placement and theme judges stay on the fast
+model in both tiers. The admin sets it per event in both the main app (synthesis panel) and the Mass-Consensus
+survey form; in MC a survey-level choice cascades to every question. This is the lever on the output cost the
+caching fix cannot reach.</li>
 </ul>
+
+<h3>6.4&nbsp;&nbsp;Heavy vs fast model — the measurement behind the default</h3>
+<p>
+The default tier was not guessed. Both models were driven through the compiled synthesis function on the
+frozen corpus, scored on the two things that matter — the merge/refuse <i>decision</i>, and the fidelity of
+the <i>written text</i> — in both languages.
+</p>
+<table>
+<tr><th>Decision quality</th><th class="num">EN twins merged</th><th class="num">EN negatives refused</th><th class="num">HE twins merged</th><th class="num">HE negatives refused</th></tr>
+<tr><td>premium (heavy, <code>terra</code>)</td><td class="num">50/50</td><td class="num">10/10</td><td class="num hl">50/50</td><td class="num">10/10</td></tr>
+<tr><td>standard (fast, <code>luna</code>)</td><td class="num">50/50</td><td class="num">10/10</td><td class="num">47/50</td><td class="num">10/10</td></tr>
+</table>
+<table>
+<tr><th>Text fidelity (per 50 syntheses)</th><th class="num">members preserved</th><th class="num">scope inflated <i>(vote-changing)</i></th><th class="num">lost / weakened</th></tr>
+<tr><td>premium (heavy)</td><td class="num">100/100</td><td class="num hl">0</td><td class="num">0 / 0</td></tr>
+<tr><td>standard (fast)</td><td class="num">98/98</td><td class="num hl">0</td><td class="num">0 / 0</td></tr>
+</table>
+<p>
+<b>The safety-critical properties hold for both models:</b> zero scope inflation (neither silently widens who
+or what people agreed to), zero wrong merges (perfect precision), zero lost or weakened member statements. The
+fast model does not misrepresent community input. It trails the heavy model only in <b>Hebrew merge recall</b>
+(47/50 vs 50/50 — it over-refuses a few formulation-delta twins, e.g. "renovate facilities" vs "add classrooms
+and labs") and in prose economy (it pads plan detail roughly twice as often, though never as scope-widening).
+On English it is decision-for-decision identical.
+</p>
+<p>
+Hence the shipped default: <b>standard for every event</b>, because it is measured-safe and ~6× cheaper on the
+dominant cost; <b>premium is one admin toggle</b>, for high-stakes consultations or Hebrew events where the
+extra merge completeness and tighter writing justify the spend. The verdict in one line: <i>the fast model is
+safe everywhere; the heavy model is better where it counts.</i>
+</p>
 
 <h2>7&nbsp;&nbsp;Threats to validity</h2>
 <ul class="compact">

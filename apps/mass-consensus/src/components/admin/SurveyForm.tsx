@@ -577,6 +577,27 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             {t('liveSynthSurveyNote') || 'Master kill switch. When off, no question in this survey will auto-synthesize regardless of per-question setting.'}
           </p>
         </div>
+
+        <div className={styles.formGroup}>
+          <label>
+            <input
+              type="checkbox"
+              checked={
+                (settings as unknown as Record<string, unknown>)['synthesisModelTier'] === 'premium'
+              }
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  synthesisModelTier: e.target.checked ? 'premium' : 'standard',
+                } as typeof settings)
+              }
+            />
+            {' '}{t('synthesisPremiumModel') || 'Use premium AI model for proposals'}
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('synthesisPremiumModelNote') || 'Off (standard) by default — cheaper and merges proposals safely. Turn on for a high-stakes survey to use the premium model: tighter proposals and slightly better duplicate detection (mainly in Hebrew), at higher cost.'}
+          </p>
+        </div>
       </div>
 
       {/* Display Mode Toggle */}

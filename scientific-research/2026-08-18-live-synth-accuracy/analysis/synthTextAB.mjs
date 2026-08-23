@@ -37,6 +37,7 @@ const require = createRequire(import.meta.url);
 
 const args = process.argv.slice(2);
 const label = (args.find((a) => a.startsWith('--label=')) ?? '--label=baseline').split('=')[1];
+const modelOverride = (args.find((a) => a.startsWith('--model=')) ?? '--model=').split('=')[1] || undefined;
 const pairLimit = Number((args.find((a) => a.startsWith('--pairs=')) ?? '--pairs=50').split('=')[1]);
 const corpusPath =
 	args.find((a) => !a.startsWith('--')) ?? 'scripts/seedSynthBenchmark.accuracy100.en.json';
@@ -79,6 +80,7 @@ for (const pair of pairs.slice(0, pairLimit)) {
 			sumEvaluations: 4,
 		})),
 		corpus.questionText,
+		modelOverride ? { heavyModel: modelOverride } : undefined,
 	);
 
 	// A refusal on a true paraphrase pair is a synthesis-layer error, not a text

@@ -47,17 +47,20 @@ jest.mock('@/lib/utils/logger', () => ({
 function setStatementMock(
 	id: string,
 	exists: boolean,
-	currentLiveSynth: boolean | undefined = undefined
+	currentLiveSynth: boolean | undefined = undefined,
+	// Statements already carry the default tier so the liveSynth-only tests
+	// see no extra tier write; the tier-cascade test overrides this.
+	currentTier: 'standard' | 'premium' = 'standard'
 ) {
 	docGetMocks[id] = jest.fn().mockResolvedValue({
 		exists,
 		data: () => ({
 			statementId: id,
 			statement: `Q${id}`,
-			statementSettings:
-				currentLiveSynth === undefined
-					? {}
-					: { liveSynthEnabled: currentLiveSynth },
+			statementSettings: {
+				...(currentLiveSynth === undefined ? {} : { liveSynthEnabled: currentLiveSynth }),
+				synthesis: { modelTier: currentTier },
+			},
 		}),
 	});
 }
@@ -66,6 +69,7 @@ function makeSurvey(opts: {
 	liveSynthEnabled?: boolean;
 	questionIds: string[];
 	questionOverrides?: Record<string, boolean | undefined>;
+	synthesisModelTier?: 'standard' | 'premium';
 }): Survey {
 	return {
 		surveyId: 'survey_test',
@@ -77,6 +81,9 @@ function makeSurvey(opts: {
 			allowReturning: true,
 			minEvaluationsPerQuestion: 3,
 			...(opts.liveSynthEnabled === undefined ? {} : { liveSynthEnabled: opts.liveSynthEnabled }),
+			...(opts.synthesisModelTier === undefined
+				? {}
+				: { synthesisModelTier: opts.synthesisModelTier }),
 		} as Survey['settings'],
 		questionSettings: opts.questionOverrides
 			? Object.fromEntries(
@@ -180,6 +187,39 @@ describe('cascadeSynthesisToggle', () => {
 			expect.objectContaining({ id: 'q2' }),
 			{ 'statementSettings.liveSynthEnabled': false }
 		);
+	});
+
+	it('cascades a premium survey tier to every question (was standard)', async () => {
+		setStatementMock('q1', true, true, 'standard');
+		setStatementMock('q2', true, true, 'standard');
+
+		const survey = makeSurvey({
+			liveSynthEnabled: true,
+			synthesisModelTier: 'premium',
+			questionIds: ['q1', 'q2'],
+		});
+
+		await cascadeSynthesisToggle(survey);
+
+		expect(UPDATE_MOCK).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'q1' }),
+			{ 'statementSettings.synthesis.modelTier': 'premium' }
+		);
+		expect(UPDATE_MOCK).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'q2' }),
+			{ 'statementSettings.synthesis.modelTier': 'premium' }
+		);
+	});
+
+	it('unset survey tier defaults to standard and does not re-write a standard question', async () => {
+		setStatementMock('q1', true, true, 'standard');
+
+		const survey = makeSurvey({ liveSynthEnabled: true, questionIds: ['q1'] });
+
+		const result = await cascadeSynthesisToggle(survey);
+		// liveSynth already true, tier already standard → nothing to write.
+		expect(result.updated).toBe(0);
+		expect(result.skipped).toBe(1);
 	});
 
 	it('skips questions whose current Statement value already matches', async () => {

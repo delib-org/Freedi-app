@@ -19,6 +19,13 @@ export interface SynthesisSettings {
 	reviewLowerBound: number;
 	/** Stamp canonical claims on ideas + catch same-meaning rewordings. */
 	claimRegistryEnabled: boolean;
+	/**
+	 * Which AI model writes the synthesized proposals.
+	 * - 'standard' (default): the fast, cheaper model — measured safe.
+	 * - 'premium': the heavy model, for high-stakes events (slightly better
+	 *   Hebrew merge recall + tighter prose, ~6× the output cost).
+	 */
+	modelTier: 'standard' | 'premium';
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
@@ -32,6 +39,7 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	clusterThreshold: 0.6,
 	reviewLowerBound: 0.5,
 	claimRegistryEnabled: false,
+	modelTier: 'standard',
 };
 
 export type SynthesisQueueStatus =
