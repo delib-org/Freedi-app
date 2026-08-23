@@ -19,10 +19,34 @@ import { ODYSSEY_DEFAULT_GAME_ID, OdysseyAttitudeKey, OdysseyJourney } from '@fr
  * evaluations, the admin screen) comes from here so the three can never end up
  * reading different games.
  */
+const GAME_STORAGE_KEY = 'odyssey_game_id';
+
 export function currentGameId(): string {
 	if (typeof window === 'undefined') return ODYSSEY_DEFAULT_GAME_ID;
 
-	return new URLSearchParams(window.location.search).get('game') || ODYSSEY_DEFAULT_GAME_ID;
+	// The URL is the authority when it names a game, and naming one is also how
+	// you LEAVE an event: `?game=default` puts you back on the shared game.
+	const named = new URLSearchParams(window.location.search).get('game');
+	if (named) {
+		try {
+			sessionStorage.setItem(GAME_STORAGE_KEY, named);
+		} catch {
+			// Storage refused; the parameter still works for this page.
+		}
+
+		return named;
+	}
+
+	// Every in-app link is a plain path — `/compass`, `/map`, `/admin` — so the
+	// query string is gone the moment anyone clicks anything. Without a memory,
+	// opening an event and pressing "start" dropped you into the default game
+	// silently, which is the worst way for this to fail: everything works, on
+	// the wrong data.
+	try {
+		return sessionStorage.getItem(GAME_STORAGE_KEY) || ODYSSEY_DEFAULT_GAME_ID;
+	} catch {
+		return ODYSSEY_DEFAULT_GAME_ID;
+	}
 }
 import { GameContent, loadGame } from '../lib/game';
 import { attitudeValue, loadGameEvaluations, myAttitudes, rateStance } from '../lib/evaluations';

@@ -64,7 +64,6 @@ let storage: FirebaseStorage;
 /** Every Freedi function lives in Tel Aviv; the default region would 404. */
 const FUNCTIONS_REGION = 'me-west1';
 
-
 /**
  * Emulator ports.
  *

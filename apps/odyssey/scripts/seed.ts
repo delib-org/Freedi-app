@@ -31,6 +31,7 @@ const {
 	StatementType,
 	createStatementObject,
 	ODYSSEY_DEFAULT_GAME_ID,
+	ODYSSEY_EVENT_SCRIPT,
 	// eslint-disable-next-line @typescript-eslint/no-var-requires
 } = require('@freedi/shared-types');
 
@@ -44,10 +45,28 @@ const AGORA_ORIGIN = process.env.ODYSSEY_AGORA_ORIGIN ?? 'http://localhost:3009'
 const IDENTITY = `${AUTH_HOST}/identitytoolkit.googleapis.com/v1`;
 const FUNCTIONS_BASE = `${FUNCTIONS_HOST}/${PROJECT_ID}/${REGION}`;
 
-const adminEmail =
-	process.argv.includes('--admin')
-		? process.argv[process.argv.indexOf('--admin') + 1]
-		: 'tal.yaron@gmail.com';
+function arg(name: string): string | undefined {
+	const index = process.argv.indexOf(`--${name}`);
+
+	return index === -1 ? undefined : process.argv[index + 1];
+}
+
+const adminEmail = arg('admin') ?? 'tal.yaron@gmail.com';
+
+/**
+ * Which game document to build.
+ *
+ * One event is one game, so seeding a second one is how you get two events
+ * side by side — the app reaches them at `?game=<id>`.
+ */
+const gameId = arg('game') ?? ODYSSEY_DEFAULT_GAME_ID;
+
+/**
+ * The script the squares open with. `--script event` is the camp-less preset;
+ * omitted means no script at all, which is the legacy civic behaviour and the
+ * thing every change here has to leave untouched.
+ */
+const script = arg('script') === 'event' ? ODYSSEY_EVENT_SCRIPT : undefined;
 
 process.env.FIRESTORE_EMULATOR_HOST = FIRESTORE_HOST;
 const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: PROJECT_ID });
@@ -98,7 +117,7 @@ async function callable<T>(name: string, data: unknown, token: string): Promise<
 
 /** Re-running must not leave the last run's islands floating under a dead root. */
 async function clearPreviousTree(): Promise<void> {
-	const previous = await db.collection(Collections.odysseyGames).doc(ODYSSEY_DEFAULT_GAME_ID).get();
+	const previous = await db.collection(Collections.odysseyGames).doc(gameId).get();
 	if (!previous.exists) return;
 
 	const root = previous.data()?.rootStatementId;
@@ -227,7 +246,8 @@ async function main(): Promise<void> {
 	});
 
 	const game = {
-		gameId: ODYSSEY_DEFAULT_GAME_ID,
+		gameId,
+		...(script ? { script } : {}),
 		rootStatementId: root.statementId,
 		// The gate link is built from this; empty means the summary shows no way on.
 		texts: { ...DEFAULT_TEXTS, agoraOrigin: AGORA_ORIGIN },
@@ -253,7 +273,7 @@ async function main(): Promise<void> {
 		lastUpdate: now,
 	};
 
-	batch.set(db.collection(Collections.odysseyGames).doc(ODYSSEY_DEFAULT_GAME_ID), game);
+	batch.set(db.collection(Collections.odysseyGames).doc(gameId), game);
 	await batch.commit();
 	console.log(
 		`  ${islandsMeta.length} islands, ${parties.length} parties, root ${root.statementId}`,
@@ -262,14 +282,15 @@ async function main(): Promise<void> {
 	console.log('▸ opening a civic deliberation for every island');
 	const provisioned = await callable<{ sessions: { code: string; islandStatementId: string }[] }>(
 		'agoraProvisionCivicSessions',
-		{ gameId: ODYSSEY_DEFAULT_GAME_ID },
+		{ gameId },
 		admin.idToken,
 	);
 	console.log(`  ${provisioned.sessions.length} squares open`);
 
-	console.log('\n✓ seeded. Play it:');
-	console.log('    Odyssey  http://localhost:3010/');
-	console.log('    Admin    http://localhost:3010/admin');
+	const query = gameId === ODYSSEY_DEFAULT_GAME_ID ? '' : `?game=${gameId}`;
+	console.log(`\n✓ seeded "${gameId}" (${script ? 'event script' : 'classic'}). Play it:`);
+	console.log(`    Odyssey  http://localhost:3010/${query}`);
+	console.log(`    Admin    http://localhost:3010/admin${query}`);
 	console.log(`    Agora    ${AGORA_ORIGIN}/#!/join/${provisioned.sessions[0]?.code ?? '<code>'}`);
 	console.log(`    admin account in the emulator picker: ${adminEmail}\n`);
 }
