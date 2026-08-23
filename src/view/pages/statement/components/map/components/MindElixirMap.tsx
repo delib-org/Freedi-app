@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState, memo, useMemo } from '
 import MindElixir from 'mind-elixir';
 // Library CSS loads with this lazy chunk instead of the global stylesheet
 import 'mind-elixir/style.css';
-import type { MindElixirInstance, NodeObj, Operation } from 'mind-elixir';
+import type { MindElixirInstance, NodeObj, Operation, Topic } from 'mind-elixir';
 import { useNavigate } from 'react-router';
 import { Results, Statement, StatementType } from '@freedi/shared-types';
 import { useMapContext } from '@/controllers/hooks/useMap';
@@ -492,6 +492,68 @@ function MindElixirMap({
 			subtree: true,
 		});
 
+		/**
+		 * Shared landing point for every drop, whatever produced it: either
+		 * re-order silently, open the confirmation, or refuse with a reason.
+		 * `onRefuse` puts the canvas back — MindElixir's own drops need an undo,
+		 * a drop on the root never moved anything visually so it needs nothing.
+		 */
+		const applyDrop = async (
+			draggedIds: string[],
+			targetId: string,
+			dropKind: DropKind,
+			onRefuse: () => void,
+		) => {
+			const all = flattenResults(descendantsRef.current);
+			const newParent = resolveNewParent(all, targetId, dropKind);
+			const dragged = draggedIds
+				.map((id) => all.find((candidate) => candidate.statementId === id))
+				.filter((candidate): candidate is Statement => Boolean(candidate));
+
+			if (!newParent || dragged.length === 0) {
+				onRefuse();
+
+				return;
+			}
+
+			const validIds = dragged.map((node) => node.statementId);
+
+			// Reordering under the parent a node already has changes nothing
+			// structural, so it is saved straight away — asking "move here?" for
+			// a nudge between siblings would be noise.
+			const isReorderOnly = dragged.every((node) => node.parentId === newParent.statementId);
+			if (isReorderOnly) {
+				await updateSiblingOrder(
+					computeSiblingOrder(all, newParent.statementId, validIds, targetId, dropKind),
+				);
+
+				return;
+			}
+
+			const refusal = dragged
+				.map((node) => validateMove(node, newParent, collectSubtree(all, node.statementId)))
+				.find((validation) => !validation.allowed);
+
+			if (refusal) {
+				onRefuse();
+				setPendingMove(null);
+				setMoveError(refusal.reasonKey ?? 'This move is not allowed');
+			} else {
+				setMoveError(null);
+				setPendingMove({
+					draggedIds: validIds,
+					newParentId: newParent.statementId,
+					targetId,
+					kind: dropKind,
+				});
+			}
+
+			setMapContext((prev) => ({
+				...prev,
+				moveStatementModal: true,
+			}));
+		};
+
 		// Event: Operation happened (for tracking node moves and text edits)
 		mind.bus.addListener('operation', async (operation: Operation) => {
 			// Drag-and-drop. MindElixir fires `{ objs, toObj }` (plural — a drag can
@@ -508,54 +570,12 @@ function MindElixirMap({
 
 			if (canDrag && dropKind && 'objs' in operation && 'toObj' in operation) {
 				const typedOp = operation as { objs: NodeObj[]; toObj: NodeObj; name: string };
-				const all = flattenResults(descendantsRef.current);
-				const newParent = resolveNewParent(all, typedOp.toObj.id, dropKind);
-				const dragged = typedOp.objs
-					.map((obj) => all.find((candidate) => candidate.statementId === obj.id))
-					.filter((candidate): candidate is Statement => Boolean(candidate));
-
-				if (!newParent || dragged.length === 0) {
-					mind.undo();
-
-					return;
-				}
-
-				const draggedIds = dragged.map((node) => node.statementId);
-
-				// Reordering under the parent a node already has changes nothing
-				// structural, so it is saved straight away — asking "move here?" for
-				// a nudge between siblings would be noise.
-				const isReorderOnly = dragged.every((node) => node.parentId === newParent.statementId);
-				if (isReorderOnly) {
-					await updateSiblingOrder(
-						computeSiblingOrder(all, newParent.statementId, draggedIds, typedOp.toObj.id, dropKind),
-					);
-
-					return;
-				}
-
-				const refusal = dragged
-					.map((node) => validateMove(node, newParent, collectSubtree(all, node.statementId)))
-					.find((validation) => !validation.allowed);
-
-				if (refusal) {
-					mind.undo();
-					setPendingMove(null);
-					setMoveError(refusal.reasonKey ?? 'This move is not allowed');
-				} else {
-					setMoveError(null);
-					setPendingMove({
-						draggedIds,
-						newParentId: newParent.statementId,
-						targetId: typedOp.toObj.id,
-						kind: dropKind,
-					});
-				}
-
-				setMapContext((prev) => ({
-					...prev,
-					moveStatementModal: true,
-				}));
+				await applyDrop(
+					typedOp.objs.map((obj) => obj.id),
+					typedOp.toObj.id,
+					dropKind,
+					() => mind.undo(),
+				);
 			}
 
 			// Handle inline text editing
@@ -583,6 +603,80 @@ function MindElixirMap({
 				}, 50);
 			}
 		});
+
+		// ------------------------------------------------------------------
+		// Dropping onto the root ("main") node.
+		//
+		// MindElixir refuses the root as a drop target: its hit test requires
+		// `nodeObj.parent`, which the root has not got, so `meet` stays null and
+		// no operation is ever fired — dragging a node onto the subject did
+		// nothing at all. Handle exactly that gap here. This runs only when the
+		// library itself found no target, so the two never both act on one drop.
+		// ------------------------------------------------------------------
+		const ROOT_DROP_CLASS = 'mind-map-root-drop';
+		let rootDropArmed = false;
+
+		const getRootTopic = () => container.querySelector('me-root > me-tpc') as HTMLElement | null;
+
+		const setRootDropArmed = (armed: boolean) => {
+			rootDropArmed = armed;
+			getRootTopic()?.classList.toggle(ROOT_DROP_CLASS, armed);
+		};
+
+		// Mirror of MindElixir's own "can this element be met" test, so we only
+		// step in for drops it has declined.
+		const libraryWouldMeet = (element: Element | null, dragged: Topic[]): boolean => {
+			if (!element || element.tagName !== 'ME-TPC') return false;
+			const { nodeObj } = element as HTMLElement & { nodeObj?: { parent?: unknown } };
+			if (!nodeObj?.parent) return false;
+
+			return dragged.every(
+				(node) => node !== element && !node.parentElement?.parentElement?.contains(element),
+			);
+		};
+
+		const handleRootDragMove = (e: PointerEvent) => {
+			const dragged = mindRef.current?.dragged ?? [];
+			if (!canDrag || dragged.length === 0) {
+				if (rootDropArmed) setRootDropArmed(false);
+
+				return;
+			}
+
+			// Same probe offsets the library uses, so its verdict is reproduced.
+			const offset = 12 * (mindRef.current?.scaleVal ?? 1);
+			const probes = [
+				document.elementFromPoint(e.clientX, e.clientY),
+				document.elementFromPoint(e.clientX, e.clientY - offset),
+				document.elementFromPoint(e.clientX, e.clientY + offset),
+			];
+
+			const libraryHasTarget = probes.some((element) => libraryWouldMeet(element, dragged));
+			const overRoot = probes.some((element) => Boolean(element?.closest('me-root')));
+
+			setRootDropArmed(!libraryHasTarget && overRoot);
+		};
+
+		const handleRootDrop = async () => {
+			if (!rootDropArmed) return;
+			const dragged = mindRef.current?.dragged ?? [];
+			setRootDropArmed(false);
+			if (dragged.length === 0) return;
+
+			const draggedIds = dragged
+				.map((node) => node.nodeObj?.id)
+				.filter((id): id is string => Boolean(id));
+
+			// Nothing moved on the canvas, so a refusal has nothing to undo.
+			await applyDrop(draggedIds, descendantsRef.current.top.statementId, 'in', () => {});
+		};
+
+		const handleRootDragCancel = () => setRootDropArmed(false);
+
+		// Capture phase for the drop: the library's own pointerup clears `dragged`.
+		window.addEventListener('pointermove', handleRootDragMove);
+		window.addEventListener('pointerup', handleRootDrop, true);
+		window.addEventListener('pointercancel', handleRootDragCancel, true);
 
 		// Keyboard handler for Tab (child) and Enter (sibling)
 		const handleKeyDown = async (e: KeyboardEvent) => {
@@ -763,6 +857,10 @@ function MindElixirMap({
 
 		// Cleanup
 		return () => {
+			window.removeEventListener('pointermove', handleRootDragMove);
+			window.removeEventListener('pointerup', handleRootDrop, true);
+			window.removeEventListener('pointercancel', handleRootDragCancel, true);
+			setRootDropArmed(false);
 			selectionObserver.disconnect();
 			container.removeEventListener('keydown', handleKeyDown);
 			container.removeEventListener('click', handleContainerClick);

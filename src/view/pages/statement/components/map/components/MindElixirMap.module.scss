@@ -1,6 +1,6 @@
 // MindElixir Map Component Styles
 // Uses design system colors and variables
-@use "sass:color";
+@use 'sass:color';
 
 // Container styling for MindElixir
 // Fills its parent. The parent is made full-bleed by the screen that hosts it
@@ -54,7 +54,9 @@
 				0 0 0 2px var(--cluster-synth-ring),
 				0 0 12px var(--cluster-synth-glow),
 				0 2px 4px rgba(0, 0, 0, 0.12);
-			transition: box-shadow 0.15s ease, transform 0.15s ease;
+			transition:
+				box-shadow 0.15s ease,
+				transform 0.15s ease;
 
 			&:hover {
 				transform: translateY(-1px);
@@ -111,6 +113,14 @@
 		// Root node can be wider
 		me-root > me-tpc {
 			max-width: 300px;
+
+			// Armed as a drop target. MindElixir refuses to hit-test the root, so
+			// this highlight is driven by our own pointer handler — without it a
+			// drag onto the subject gives the user no feedback at all.
+			&.mind-map-root-drop {
+				outline: 3px dashed var(--btn-primary, #5f88e5);
+				outline-offset: 4px;
+			}
 		}
 
 		// Move expand/collapse button to the left side so it doesn't
@@ -149,7 +159,9 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			transition: background 0.15s ease, box-shadow 0.15s ease;
+			transition:
+				background 0.15s ease,
+				box-shadow 0.15s ease;
 			animation: mindMapBtnEnter 0.15s ease-out;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 
@@ -306,7 +318,9 @@
 	justify-content: center;
 	padding: 0;
 	color: var(--text-body, #555);
-	transition: background 0.15s ease, color 0.15s ease;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
 
 	&:hover {
 		background: var(--btn-primary, #5f88e5);
@@ -475,7 +489,9 @@
 	align-items: center;
 	justify-content: center;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
 	color: white;
 
 	&:hover {
@@ -505,7 +521,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			transform 0.2s ease,
+			color 0.2s ease;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 		color: var(--btn-primary, #5f88e5);
 
@@ -603,7 +622,9 @@
 			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 			padding: 10px 16px;
 			font-weight: 500;
-			transition: transform 0.12s ease, box-shadow 0.12s ease;
+			transition:
+				transform 0.12s ease,
+				box-shadow 0.12s ease;
 
 			&:hover {
 				transform: translateY(-2px);
