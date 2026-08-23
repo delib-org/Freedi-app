@@ -20,6 +20,13 @@ import {
 	updateMindMapNodeText,
 } from '../mapHelpers/mindMapStatements';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
+import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
+import {
+	findNodeContext,
+	getTypeChangeChoices,
+	hasAnyTypeChange,
+	TYPE_LABEL_KEYS,
+} from '../mapHelpers/statementTypeChoices';
 import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
 import styles from './MindElixirMap.module.scss';
@@ -113,6 +120,9 @@ function MindElixirMap({
 		isRoot: boolean;
 	}>({ visible: false, top: 0, left: 0, statementId: '', isRoot: false });
 
+	// Whether the "change type" popover under the node toolbar is open
+	const [typeMenuOpen, setTypeMenuOpen] = useState(false);
+
 	// Double click handler ref
 	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
 
@@ -144,6 +154,7 @@ function MindElixirMap({
 	const removeNodeButtons = useCallback(() => {
 		injectedElementsRef.current.forEach((el) => el.remove());
 		injectedElementsRef.current = [];
+		setTypeMenuOpen(false);
 		setToolbarState((prev) => (prev.visible ? { ...prev, visible: false } : prev));
 	}, []);
 
@@ -157,6 +168,8 @@ function MindElixirMap({
 		const nodeRect = tpcEl.getBoundingClientRect();
 		const statementId = nodeId.startsWith('me') ? nodeId.substring(2) : nodeId;
 		const isRoot = tpcEl.parentElement?.tagName === 'ME-ROOT';
+
+		setTypeMenuOpen(false);
 
 		// Use viewport coordinates directly (toolbar is position: fixed)
 		setToolbarState({
@@ -863,6 +876,40 @@ function MindElixirMap({
 		}
 	}, [toolbarState.statementId, removeNodeButtons]);
 
+	// Which types this node may switch to. Computed from the unfiltered tree so
+	// hidden layers still count towards the "has option children" rule.
+	const typeChoices = useMemo(() => {
+		if (!toolbarState.statementId) return [];
+		const context = findNodeContext(descendants, toolbarState.statementId);
+		if (!context) return [];
+
+		return getTypeChangeChoices(context);
+	}, [descendants, toolbarState.statementId]);
+
+	const canChangeType = isAdmin && hasAnyTypeChange(typeChoices);
+
+	const handleChangeType = useCallback(
+		async (newType: StatementType) => {
+			const statement = findStatementById(descendants, toolbarState.statementId);
+			if (!statement) return;
+
+			const result = await changeStatementType(statement, newType, isAdmin);
+			if (!result.success) {
+				logError(new Error(result.error ?? 'Type change refused'), {
+					operation: 'components.MindElixirMap.handleChangeType',
+					statementId: statement.statementId,
+					metadata: { newType },
+				});
+
+				return;
+			}
+
+			setTypeMenuOpen(false);
+			removeNodeButtons();
+		},
+		[descendants, toolbarState.statementId, isAdmin, removeNodeButtons],
+	);
+
 	const handleToolbarDelete = useCallback(() => {
 		if (!toolbarState.statementId) return;
 		const statement = findStatementById(descendants, toolbarState.statementId);
@@ -934,6 +981,28 @@ function MindElixirMap({
 							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
 						</svg>
 					</button>
+					{canChangeType && (
+						<button
+							className={`${styles.toolbarBtn} ${typeMenuOpen ? styles.toolbarBtnActive : ''}`}
+							onClick={() => setTypeMenuOpen((open) => !open)}
+							aria-label="Change statement type"
+							aria-expanded={typeMenuOpen}
+							title={t('Change type')}
+						>
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<rect x="3" y="13" width="8" height="8" rx="2" />
+								<circle cx="17" cy="17" r="4" />
+								<path d="M7 3 3 9h8L7 3z" />
+							</svg>
+						</button>
+					)}
 					{!toolbarState.isRoot && (
 						<>
 							<div className={styles.toolbarDivider} />
@@ -958,6 +1027,24 @@ function MindElixirMap({
 								</svg>
 							</button>
 						</>
+					)}
+
+					{typeMenuOpen && (
+						<div className={styles.typeMenu} role="menu">
+							{typeChoices.map((choice) => (
+								<button
+									key={choice.type}
+									role="menuitem"
+									className={`${styles.typeMenuItem} ${choice.isCurrent ? styles.typeMenuItemCurrent : ''}`}
+									disabled={!choice.allowed}
+									title={choice.reasonKey ? t(choice.reasonKey) : undefined}
+									onClick={() => handleChangeType(choice.type)}
+								>
+									<span className={styles.typeMenuSwatch} data-type={choice.type} aria-hidden />
+									{t(TYPE_LABEL_KEYS[choice.type] ?? choice.type)}
+								</button>
+							))}
+						</div>
 					)}
 				</div>
 			)}

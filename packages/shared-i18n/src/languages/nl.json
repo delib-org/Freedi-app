@@ -3031,5 +3031,12 @@
   "scaleNoValueSelected": "Geen waarde gekozen",
   "scaleValueOfMax": "{{value}} van {{max}}",
   "scaleValueOfMaxLabelled": "{{value}} van {{max}}, {{label}}",
-  "answerRequiredSelectValue": "Kies een waarde op de schaal"
+  "answerRequiredSelectValue": "Kies een waarde op de schaal",
+  "Change type": "Type wijzigen",
+  "Cannot change the type of a group": "Het type van een groep kan niet worden gewijzigd",
+  "This statement has options under it": "Onder deze stelling staan opties",
+  "Options cannot contain other options": "Opties kunnen geen andere opties bevatten",
+  "Groups cannot contain options": "Groepen kunnen geen opties bevatten",
+  "Type change not allowed": "Typewijziging niet toegestaan",
+  "Statement": "Stelling"
 }

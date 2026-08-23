@@ -3540,5 +3540,12 @@
   "scaleNoValueSelected": "مقداری انتخاب نشده است",
   "scaleValueOfMax": "{{value}} از {{max}}",
   "scaleValueOfMaxLabelled": "{{value}} از {{max}}، {{label}}",
-  "answerRequiredSelectValue": "لطفاً مقداری را روی مقیاس انتخاب کنید"
+  "answerRequiredSelectValue": "لطفاً مقداری را روی مقیاس انتخاب کنید",
+  "Change type": "تغییر نوع",
+  "Cannot change the type of a group": "نوع گروه را نمی‌توان تغییر داد",
+  "This statement has options under it": "زیر این گزاره گزینه‌هایی وجود دارد",
+  "Options cannot contain other options": "گزینه نمی‌تواند شامل گزینه‌های دیگر باشد",
+  "Groups cannot contain options": "گروه نمی‌تواند شامل گزینه باشد",
+  "Type change not allowed": "تغییر نوع مجاز نیست",
+  "Statement": "گزاره"
 }
