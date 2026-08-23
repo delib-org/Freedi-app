@@ -481,7 +481,9 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 					});
 
 					try {
-						const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+						const proposal = await generateSynthesizedProposal(llmInputs, questionContext, {
+							parentId: parentStatementId,
+						});
 
 						if (proposal.cannotSynthesize === true) {
 							const memberTexts = memberIds
@@ -699,7 +701,9 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 				});
 
 				try {
-					const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+					const proposal = await generateSynthesizedProposal(llmInputs, questionContext, {
+						parentId: parentStatementId,
+					});
 
 					if (proposal.cannotSynthesize === true) {
 						const memberTexts = memberIds
@@ -1024,7 +1028,9 @@ export const regenerateSynthesisProposal = onCall<RegenerateProposalRequest>(
 		}
 
 		const questionContext = parentStatement.statement || parentStatementId;
-		const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+		const proposal = await generateSynthesizedProposal(llmInputs, questionContext, {
+			parentId: parentStatementId,
+		});
 
 		if (proposal.cannotSynthesize === true) {
 			return {

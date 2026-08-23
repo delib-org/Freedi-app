@@ -335,6 +335,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 					sumEvaluations: s.evaluation?.sumEvaluations ?? 0,
 				})),
 				questionContext,
+				{ parentId: parentStatement.statementId },
 			);
 		} catch (error) {
 			logger.warn('synthesis.pipeline.spawn: proposal generation failed; aborting', {

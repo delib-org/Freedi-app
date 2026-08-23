@@ -199,6 +199,7 @@ async function maybeRegenerateSynthTitle(cluster: Statement, clusterId: string):
 		proposal = await generateSynthesizedProposal(
 			memberStatements.map(mapStatementToWithEvaluation),
 			questionContext,
+			{ parentId: cluster.parentId },
 		);
 	} catch (error) {
 		logger.warn('recomputeSynthCluster: title regen LLM failed; keeping current title', {

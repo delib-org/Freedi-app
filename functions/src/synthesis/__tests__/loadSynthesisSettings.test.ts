@@ -125,6 +125,8 @@ describe('synthesis settings', () => {
 				llmThemeAssignment: DEFAULT_SYNTHESIS_SETTINGS.llmThemeAssignment,
 				createThemesFromSyntheses: DEFAULT_SYNTHESIS_SETTINGS.createThemesFromSyntheses,
 				spawnThemesFromOptionPairs: DEFAULT_SYNTHESIS_SETTINGS.spawnThemesFromOptionPairs,
+				embeddingModel: DEFAULT_SYNTHESIS_SETTINGS.embeddingModel,
+				modelTier: DEFAULT_SYNTHESIS_SETTINGS.modelTier,
 			});
 		});
 
@@ -243,6 +245,24 @@ describe('synthesis settings', () => {
 			expect(settings.attachThreshold).toBe(0.85);
 			expect(settings.synthLowerBound).toBe(0.78);
 			expect(settings.clusterThreshold).toBe(0.6);
+		});
+	});
+
+	describe('modelTier — premium vs standard synthesis model', () => {
+		it('validation rejects a tier outside the allowed set', () => {
+			expect(validateSynthesisSettings({ modelTier: 'cheap' as never }).valid).toBe(false);
+			expect(validateSynthesisSettings({ modelTier: 'standard' }).valid).toBe(true);
+			expect(validateSynthesisSettings({ modelTier: 'premium' }).valid).toBe(true);
+		});
+
+		it('a standard tier survives the merge with defaults', () => {
+			const stmt = { statementSettings: { synthesis: { enabled: true, modelTier: 'standard' } } };
+			expect(loadSynthesisSettingsFromStatement(stmt as never).modelTier).toBe('standard');
+		});
+
+		it('absent tier defaults to premium — no existing question changes model', () => {
+			const stmt = { statementSettings: { synthesis: { enabled: true } } };
+			expect(loadSynthesisSettingsFromStatement(stmt as never).modelTier).toBe('premium');
 		});
 	});
 });

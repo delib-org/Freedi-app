@@ -78,6 +78,17 @@ export const saveSynthesisSettings = onCall<SaveRequest>(
 				settings.embeddingModel ??
 				(question.statementSettings as { synthesis?: { embeddingModel?: string } } | undefined)
 					?.synthesis?.embeddingModel,
+			// modelTier is a normal admin-facing toggle (unlike embeddingModel,
+			// which is migration-only): accept it from the request, falling back
+			// to the current value, then the default.
+			modelTier:
+				settings.modelTier ??
+				(
+					question.statementSettings as
+						| { synthesis?: { modelTier?: 'premium' | 'standard' } }
+						| undefined
+				)?.synthesis?.modelTier ??
+				DEFAULT_SYNTHESIS_SETTINGS.modelTier,
 		};
 
 		await getFirestore()

@@ -104,6 +104,14 @@ export interface SynthesisSettings {
 	 * Migration entry point: `reEmbedQuestion` with `embeddingModel` set.
 	 */
 	embeddingModel?: string;
+	/**
+	 * Model tier for THIS question's synthesis writing (the pipeline's biggest
+	 * LLM cost). 'premium' (default) writes proposals on the heavy model;
+	 * 'standard' writes them on the fast model — much cheaper, for routine
+	 * events. Resolved by services/synthesis-model-resolver.ts. The
+	 * placement/theme judges are on the fast model regardless of tier.
+	 */
+	modelTier?: 'premium' | 'standard';
 }
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
@@ -143,6 +151,9 @@ export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	spawnThemesFromOptionPairs: false,
 	// No pin — the global default model. See the field's docstring.
 	embeddingModel: undefined,
+	// Default premium: existing questions keep the heavy synthesis model until
+	// an admin marks the event 'standard'. See the field's docstring.
+	modelTier: 'premium',
 };
 
 /**
@@ -209,6 +220,13 @@ export function validateSynthesisSettings(
 
 	if (settings.embeddingModel !== undefined && !isAllowedEmbeddingModel(settings.embeddingModel)) {
 		errors.push(`embeddingModel must be one of: ${ALLOWED_EMBEDDING_MODELS.join(', ')}`);
+	}
+	if (
+		settings.modelTier !== undefined &&
+		settings.modelTier !== 'premium' &&
+		settings.modelTier !== 'standard'
+	) {
+		errors.push("modelTier must be 'premium' or 'standard'");
 	}
 
 	if (settings.minEvaluators !== undefined) {

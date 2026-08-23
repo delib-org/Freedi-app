@@ -179,6 +179,7 @@ async function confirmMergeWithLlm(
 				sumEvaluations: s.evaluation?.sumEvaluations ?? 0,
 			})),
 			questionContext,
+			{ parentId: recipient.doc.parentId },
 		);
 		if (proposal.cannotSynthesize === true) {
 			logger.info('synthesis.reJudge.mergeRefused', {

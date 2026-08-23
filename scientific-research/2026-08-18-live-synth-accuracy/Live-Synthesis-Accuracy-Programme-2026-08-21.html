@@ -397,6 +397,28 @@ one cache), the model resolver caches pins for 5 minutes, and the theme sweep's 
 question costs nothing until something actually changes.</li>
 </ul>
 
+<h3>6.3&nbsp;&nbsp;Two efficiency fixes surfaced by a usage audit</h3>
+<p>
+A billing-side audit of the programme's own token spend (dominated, as expected, by the heavy model writing
+synthesis proposals — ~61% of spend was heavy-model output tokens) surfaced two production optimizations, both
+now shipped.
+</p>
+<ul class="compact">
+<li><b>Prompt-caching was structurally defeated (26.7% hit rate, ~1 read per cache-write).</b> OpenAI prompt
+caching reuses a common <i>prefix</i>, but the synthesis prompt placed the per-call question and source
+proposals <i>first</i> and its ~600-token static rubric <i>last</i> — so the reusable block was never a cached
+prefix, and every call paid the cache-write premium for nothing. The rubric is now a module constant emitted
+<i>first</i>, with the variable content appended last, making it a stable cached prefix across every synthesis
+call. This recovers the input/cache side; it cannot touch output tokens, which caching never caches.</li>
+<li><b>Per-question model tiering.</b> The synthesis writer — the single biggest cost — is now selectable per
+question via <code>statementSettings.synthesis.modelTier</code>: <b>premium</b> (heavy model, the default, so
+no existing question changes) or <b>standard</b> (fast model, ~6× cheaper per output token) for routine
+events. Resolved through a TTL-cached per-question resolver mirroring the embedding-model mechanism; the
+placement and theme judges stay on the fast model in both tiers. This is the lever on the output cost the
+caching fix cannot reach: a high-stakes consultation runs premium, a routine one runs standard, and the choice
+is one admin setting.</li>
+</ul>
+
 <h2>7&nbsp;&nbsp;Threats to validity</h2>
 <ul class="compact">
 <li><b>One corpus, one shape.</b> A single civic question, exactly two paraphrases per idea, no off-topic or

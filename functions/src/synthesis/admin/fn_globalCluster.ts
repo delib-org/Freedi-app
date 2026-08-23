@@ -324,7 +324,9 @@ export const globalCluster = onCall<GlobalClusterRequest>(
 						consensus: m.statement.consensus ?? m.statement.evaluation?.agreement ?? 0,
 						sumEvaluations: m.statement.evaluation?.sumEvaluations ?? 0,
 					}));
-					const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+					const proposal = await generateSynthesizedProposal(llmInputs, questionContext, {
+						parentId: questionId,
+					});
 					if (proposal.cannotSynthesize === true) {
 						const label = await generateTopicLabel(
 							members.map((m) => m.statement),

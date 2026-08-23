@@ -111,6 +111,10 @@ function mergeWithDefaults(
 			typeof partial.embeddingModel === 'string' && partial.embeddingModel !== ''
 				? partial.embeddingModel
 				: defaults.embeddingModel,
+		modelTier:
+			partial.modelTier === 'standard' || partial.modelTier === 'premium'
+				? partial.modelTier
+				: defaults.modelTier,
 	};
 }
 

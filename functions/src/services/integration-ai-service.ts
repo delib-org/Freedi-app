@@ -7,6 +7,7 @@ import {
 } from '../config/gemini';
 import { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { getParagraphsText } from '../helpers';
+import { resolveSynthesisModel } from './synthesis-model-resolver';
 
 /**
  * Statement with evaluation data for integration
@@ -68,33 +69,32 @@ export type SynthesisGenerationResult = SynthesizedProposalResult | CannotSynthe
 /**
  * A cached singleton instance of the GenerativeModel.
  */
-let _integrationModel: CompatGenerativeModel | null = null;
+const _integrationModels = new Map<string, CompatGenerativeModel>();
 
 /**
  * Initializes and retrieves the Generative AI model for integration tasks.
  */
-async function getIntegrationModel(): Promise<CompatGenerativeModel> {
-	if (_integrationModel) {
-		return _integrationModel;
-	}
-
-	logger.info('Initializing GenerativeModel for integration...');
+async function getIntegrationModel(
+	modelName: string = LLM_MODEL_HEAVY,
+): Promise<CompatGenerativeModel> {
+	// Cached per model NAME, not as a single instance: the synthesis model is
+	// now per-question (premium → heavy, standard → fast), so a standard event
+	// and a premium event in the same instance need different cached models.
+	const cached = _integrationModels.get(modelName);
+	if (cached) return cached;
 
 	try {
 		const genAI = getGenAI();
-
-		const modelConfig = {
-			// Synthesis is reasoning-heavy — use the capable model tier.
-			model: LLM_MODEL_HEAVY,
+		const model = genAI.getGenerativeModel({
+			model: modelName,
 			generationConfig: {
 				responseMimeType: 'application/json',
 				temperature: 0.4, // Slightly higher for creative merging
 			},
-		};
+		});
+		_integrationModels.set(modelName, model);
 
-		_integrationModel = genAI.getGenerativeModel(modelConfig);
-
-		return _integrationModel;
+		return model;
 	} catch (error) {
 		logger.error('Error initializing integration model', error);
 		throw error;
@@ -386,56 +386,20 @@ function createFallbackIntegratedSuggestion(
  * The four-way verdict upstream is supposed to drop opposites before this
  * runs, but it isn't perfect. This is the second line of defense.
  */
-export async function generateSynthesizedProposal(
-	statements: StatementWithEvaluation[],
-	questionContext: string,
-): Promise<SynthesisGenerationResult> {
-	if (statements.length === 0) {
-		throw new Error('No statements provided for synthesis');
-	}
-	if (statements.length === 1) {
-		const only = statements[0];
+/**
+ * The static rubric for `generateSynthesizedProposal`, as a module constant so
+ * it is byte-identical across every call — which is the whole point.
+ *
+ * Prompt caching reuses a common PREFIX. This block (~600 tokens) used to sit
+ * AFTER the per-call question + source proposals, so the cacheable prefix
+ * diverged on the first line and the rubric was never cached (measured: 26.7%
+ * hit rate, 0.97 reads per cache-write — i.e. paying the cache-write premium
+ * for nothing). Moving it to the FRONT, with the variable content appended
+ * last, makes the rubric a stable cached prefix across all synthesis calls.
+ */
+const SYNTHESIS_RUBRIC = `You are synthesizing community proposals into a single actionable solution.
 
-		return {
-			cannotSynthesize: false,
-			title: only.statement,
-			description: only.paragraphsText?.split('\n').filter(Boolean)[0] || '',
-			paragraphs: only.paragraphsText
-				? only.paragraphsText.split(/\n{2,}/).filter((p) => p.trim().length > 0)
-				: [],
-		};
-	}
-
-	const totalEvaluators = statements.reduce((sum, s) => sum + s.numberOfEvaluators, 0);
-
-	const sampleText = statements[0].statement;
-	const isHebrew = /[֐-׿]/.test(sampleText);
-	const isArabic = /[؀-ۿ]/.test(sampleText);
-	const languageInstruction = isHebrew
-		? 'Write the entire output (title, description, paragraphs) in Hebrew.'
-		: isArabic
-			? 'Write the entire output (title, description, paragraphs) in Arabic.'
-			: 'Write the output in the same language as the input proposals.';
-
-	const sourceLines = statements.map((s) => {
-		const weight =
-			totalEvaluators > 0
-				? Math.round((s.numberOfEvaluators / totalEvaluators) * 100)
-				: Math.round(100 / statements.length);
-
-		return `[id=${s.statementId} | weight=${weight}% | n=${s.numberOfEvaluators} | consensus=${s.consensus.toFixed(2)}]
-  Title: ${s.statement}
-  ${s.paragraphsText ? `Body: ${s.paragraphsText.slice(0, 600)}` : '(no body)'}`;
-	});
-
-	const prompt = `You are synthesizing community proposals into a single actionable solution.
-
-QUESTION: "${questionContext}"
-
-You are given ${statements.length} community proposals that an upstream pipeline verified as variations of the SAME underlying idea. They have already been weighted by community support (higher weight = more attention).
-
-SOURCE PROPOSALS:
-${sourceLines.join('\n\n')}
+You will be given, at the END of this message, a QUESTION and a set of SOURCE PROPOSALS that an upstream pipeline verified as variations of the SAME underlying idea. They have already been weighted by community support (higher weight = more attention).
 
 YOUR TASK — TWO STAGES:
 
@@ -475,8 +439,6 @@ Drawing-from rules:
 
 Length: title 8–18 words; description 2–3 sentences (60–90 words); 2–4 paragraphs of 80–140 words each.
 
-${languageInstruction}
-
 Return JSON:
 {
   "cannotSynthesize": false,
@@ -485,8 +447,70 @@ Return JSON:
   "paragraphs": ["Section 1: actions/steps", "Section 2: stakeholders & responsibilities", "Section 3: constraints, timing, success measures"]
 }`;
 
+export async function generateSynthesizedProposal(
+	statements: StatementWithEvaluation[],
+	questionContext: string,
+	options?: {
+		/** Question id — resolves the per-question model tier (premium/standard). */
+		parentId?: string | null;
+		/** Explicit model name; wins over the tier resolved from parentId. */
+		heavyModel?: string;
+	},
+): Promise<SynthesisGenerationResult> {
+	if (statements.length === 0) {
+		throw new Error('No statements provided for synthesis');
+	}
+	if (statements.length === 1) {
+		const only = statements[0];
+
+		return {
+			cannotSynthesize: false,
+			title: only.statement,
+			description: only.paragraphsText?.split('\n').filter(Boolean)[0] || '',
+			paragraphs: only.paragraphsText
+				? only.paragraphsText.split(/\n{2,}/).filter((p) => p.trim().length > 0)
+				: [],
+		};
+	}
+
+	const totalEvaluators = statements.reduce((sum, s) => sum + s.numberOfEvaluators, 0);
+
+	const sampleText = statements[0].statement;
+	const isHebrew = /[֐-׿]/.test(sampleText);
+	const isArabic = /[؀-ۿ]/.test(sampleText);
+	const languageInstruction = isHebrew
+		? 'Write the entire output (title, description, paragraphs) in Hebrew.'
+		: isArabic
+			? 'Write the entire output (title, description, paragraphs) in Arabic.'
+			: 'Write the output in the same language as the input proposals.';
+
+	const sourceLines = statements.map((s) => {
+		const weight =
+			totalEvaluators > 0
+				? Math.round((s.numberOfEvaluators / totalEvaluators) * 100)
+				: Math.round(100 / statements.length);
+
+		return `[id=${s.statementId} | weight=${weight}% | n=${s.numberOfEvaluators} | consensus=${s.consensus.toFixed(2)}]
+  Title: ${s.statement}
+  ${s.paragraphsText ? `Body: ${s.paragraphsText.slice(0, 600)}` : '(no body)'}`;
+	});
+
+	// Static rubric FIRST (cacheable prefix), variable content LAST.
+	const prompt = `${SYNTHESIS_RUBRIC}
+
+────────────────────────────────────────
+QUESTION: "${questionContext}"
+
+The ${statements.length} SOURCE PROPOSALS to synthesize:
+${sourceLines.join('\n\n')}
+
+${languageInstruction}`;
+
 	try {
-		const model = await getIntegrationModel();
+		const heavyModel =
+			options?.heavyModel ??
+			(options?.parentId !== undefined ? await resolveSynthesisModel(options.parentId) : undefined);
+		const model = await getIntegrationModel(heavyModel);
 		const result = await model.generateContent(prompt);
 		let responseText = result.response.text();
 		responseText = responseText

@@ -454,7 +454,9 @@ export async function runProposingPhase(jobId: string): Promise<void> {
 					};
 				});
 				try {
-					const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+					const proposal = await generateSynthesizedProposal(llmInputs, questionContext, {
+						parentId: job.questionId,
+					});
 					if (proposal.cannotSynthesize === true) {
 						return {
 							groupId,

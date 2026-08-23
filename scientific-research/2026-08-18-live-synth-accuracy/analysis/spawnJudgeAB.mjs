@@ -39,6 +39,7 @@ const require = createRequire(import.meta.url);
 const args = process.argv.slice(2);
 const LABEL = (args.find((a) => a.startsWith('--label=')) ?? '--label=baseline').split('=')[1];
 const NEGATIVES = Number((args.find((a) => a.startsWith('--negatives=')) ?? '--negatives=10').split('=')[1]);
+const POS_LIMIT = Number((args.find((a) => a.startsWith('--pos-limit=')) ?? '--pos-limit=9999').split('=')[1]);
 const LANGS = ((args.find((a) => a.startsWith('--langs=')) ?? '--langs=en,he').split('=')[1] ?? '')
 	.split(',')
 	.filter(Boolean);
@@ -150,7 +151,7 @@ for (const lang of LANGS) {
 
 	let posMerged = 0;
 	const posRefusals = [];
-	for (const p of positives) {
+	for (const p of positives.slice(0, POS_LIMIT)) {
 		const v = await judge(lang, corpus.questionText, p.a, p.b);
 		if (v.merged) posMerged++;
 		else posRefusals.push(`${p.name}: ${v.reason}`);
@@ -164,7 +165,7 @@ for (const lang of LANGS) {
 	}
 
 	console.log(`\n=== ${lang} (${LABEL})`);
-	console.log(`  twins merged      ${posMerged}/${positives.length}`);
+	console.log(`  twins merged      ${posMerged}/${Math.min(POS_LIMIT, positives.length)}`);
 	console.log(`  negatives refused ${negRefused}/${negatives.length}`);
 	for (const r of posRefusals) console.log(`    WRONG REFUSAL  ${r}`);
 	for (const m of negMerges) console.log(`    WRONG MERGE    ${m}`);
