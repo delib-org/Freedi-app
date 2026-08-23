@@ -105,14 +105,17 @@ export const OpeningSlideEditor: React.FC<OpeningSlideEditorProps> = ({
     <div className={clsx('opening-slide-editor', className)}>
       {/* Enable/Disable Toggle */}
       <div className="opening-slide-editor__toggle">
-        <label>
-          <input
-            type="checkbox"
-            checked={showOpeningSlide}
-            onChange={(e): void => setShowOpeningSlide(e.target.checked)}
-          />
-          <span>{t('showOpeningSlide')}</span>
-        </label>
+        <div className="opening-slide-editor__switch-row">
+          <label className="opening-slide-editor__switch">
+            <input
+              type="checkbox"
+              checked={showOpeningSlide}
+              onChange={(e): void => setShowOpeningSlide(e.target.checked)}
+            />
+            <span className="opening-slide-editor__switch-slider"></span>
+          </label>
+          <span className="opening-slide-editor__switch-text">{t('showOpeningSlide')}</span>
+        </div>
         <p className="opening-slide-editor__toggle-hint">
           {showOpeningSlide
             ? t('openingSlideEnabledHint')

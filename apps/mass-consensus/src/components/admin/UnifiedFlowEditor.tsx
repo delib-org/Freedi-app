@@ -386,19 +386,22 @@ function QuestionSettingsPanel({
   return (
     <div className={styles.questionSettingsPanel}>
       <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <input
-            type="checkbox"
-            checked={
-              surveySettings.allowParticipantsToAddSuggestions
-                ? true
-                : questionSetting?.allowParticipantsToAddSuggestions ?? true
-            }
-            disabled={surveySettings.allowParticipantsToAddSuggestions}
-            onChange={(e) => handleToggle('allowParticipantsToAddSuggestions', e.target.checked)}
-          />
-          <span>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
-        </label>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={
+                surveySettings.allowParticipantsToAddSuggestions
+                  ? true
+                  : questionSetting?.allowParticipantsToAddSuggestions ?? true
+              }
+              disabled={surveySettings.allowParticipantsToAddSuggestions}
+              onChange={(e) => handleToggle('allowParticipantsToAddSuggestions', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
+        </div>
         {surveySettings.allowParticipantsToAddSuggestions && (
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
             {t('surveySettingEnabled') || '(Survey setting enabled)'}
@@ -407,14 +410,17 @@ function QuestionSettingsPanel({
       </div>
 
       <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <input
-            type="checkbox"
-            checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? true}
-            onChange={(e) => handleToggle('askUserForASolutionBeforeEvaluation', e.target.checked)}
-          />
-          <span>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
-        </label>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? true}
+              onChange={(e) => handleToggle('askUserForASolutionBeforeEvaluation', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
+        </div>
       </div>
 
       {/* Suggestion Mode override */}
@@ -447,15 +453,18 @@ function QuestionSettingsPanel({
       </div>
 
       <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <input
-            type="checkbox"
-            checked={questionSetting?.allowSkipping ?? false}
-            disabled={surveySettings.allowSkipping}
-            onChange={(e) => handleToggle('allowSkipping', e.target.checked)}
-          />
-          <span>{t('allowSkippingThisQuestion') || 'Allow skipping this question'}</span>
-        </label>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.allowSkipping ?? false}
+              disabled={surveySettings.allowSkipping}
+              onChange={(e) => handleToggle('allowSkipping', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('allowSkippingThisQuestion') || 'Allow skipping this question'}</span>
+        </div>
       </div>
 
       <div className={styles.settingRow}>
@@ -519,50 +528,59 @@ function QuestionSettingsPanel({
       </div>
 
       <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <input
-            type="checkbox"
-            checked={questionSetting?.showViewProgress ?? true}
-            onChange={(e) => handleToggle('showViewProgress', e.target.checked)}
-          />
-          <span>{t('showViewProgress') || 'Show view progress / status button'}</span>
-        </label>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.showViewProgress ?? true}
+              onChange={(e) => handleToggle('showViewProgress', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('showViewProgress') || 'Show view progress / status button'}</span>
+        </div>
       </div>
 
       <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <input
-            type="checkbox"
-            checked={questionSetting?.askUserForASolutionAfterEvaluation ?? false}
-            onChange={(e) => handleToggle('askUserForASolutionAfterEvaluation', e.target.checked)}
-          />
-          <span>{t('askForSuggestionAfterEvaluation') || 'Ask user to add an answer after completing evaluations'}</span>
-        </label>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={questionSetting?.askUserForASolutionAfterEvaluation ?? false}
+              onChange={(e) => handleToggle('askUserForASolutionAfterEvaluation', e.target.checked)}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('askForSuggestionAfterEvaluation') || 'Ask user to add an answer after completing evaluations'}</span>
+        </div>
       </div>
 
       {/* Live synthesis per-question override.
           When the survey-level toggle is off, this checkbox is disabled and
           forced to OFF — the survey kill switch wins. */}
       <div className={styles.settingRow}>
-        <label className={styles.settingLabel}>
-          <input
-            type="checkbox"
-            checked={(() => {
-              const surveyOn = readLiveSynthFromSettings(surveySettings) ?? true;
-              if (!surveyOn) return false;
-              const override = readLiveSynthFromSettings(questionSetting);
-              return override ?? true;
-            })()}
-            disabled={readLiveSynthFromSettings(surveySettings) === false}
-            onChange={(e) => {
-              onChange({
-                ...(questionSetting || {}),
-                liveSynthEnabled: e.target.checked,
-              } as QuestionOverrideSettings);
-            }}
-          />
-          <span>{t('liveSynthEnabledForQuestion') || 'Auto-synthesis enabled for this question'}</span>
-        </label>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={(() => {
+                const surveyOn = readLiveSynthFromSettings(surveySettings) ?? true;
+                if (!surveyOn) return false;
+                const override = readLiveSynthFromSettings(questionSetting);
+                return override ?? true;
+              })()}
+              disabled={readLiveSynthFromSettings(surveySettings) === false}
+              onChange={(e) => {
+                onChange({
+                  ...(questionSetting || {}),
+                  liveSynthEnabled: e.target.checked,
+                } as QuestionOverrideSettings);
+              }}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('liveSynthEnabledForQuestion') || 'Auto-synthesis enabled for this question'}</span>
+        </div>
         {readLiveSynthFromSettings(surveySettings) === false && (
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
             {t('synthesisDisabledTooltip') || 'Enable synthesis at the survey level to use this'}
@@ -615,14 +633,17 @@ function DemographicPagePanel({
       </div>
 
       <div className={styles.formGroup}>
-        <label className={styles.checkboxLabel}>
-          <input
-            type="checkbox"
-            checked={page.required}
-            onChange={(e) => onUpdate({ required: e.target.checked })}
-          />
-          <span>{t('requiredSection') || 'Required section'}</span>
-        </label>
+        <div className={styles.testModeToggle}>
+          <label className={styles.toggleSwitch}>
+            <input
+              type="checkbox"
+              checked={page.required}
+              onChange={(e) => onUpdate({ required: e.target.checked })}
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span className={styles.toggleLabel}>{t('requiredSection') || 'Required section'}</span>
+        </div>
       </div>
 
       <div className={styles.questionsSection}>

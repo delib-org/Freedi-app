@@ -181,27 +181,33 @@ export default function DemographicQuestionEditor({
 
           {/* Required toggle */}
           <div className={styles.formGroup}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={question.required}
-                onChange={(e) => onUpdate({ required: e.target.checked })}
-              />
-              <span>{t('requiredQuestion') || 'Required question'}</span>
-            </label>
+            <div className={styles.testModeToggle}>
+              <label className={styles.toggleSwitch}>
+                <input
+                  type="checkbox"
+                  checked={question.required}
+                  onChange={(e) => onUpdate({ required: e.target.checked })}
+                />
+                <span className={styles.toggleSlider}></span>
+              </label>
+              <span className={styles.toggleLabel}>{t('requiredQuestion') || 'Required question'}</span>
+            </div>
           </div>
 
           {/* Allow Other toggle - only for radio/checkbox */}
           {hasOptions && (
             <div className={styles.formGroup}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={question.allowOther ?? false}
-                  onChange={(e) => onUpdate({ allowOther: e.target.checked })}
-                />
-                <span>{t('allowOtherOption') || 'Allow "Other" option'}</span>
-              </label>
+              <div className={styles.testModeToggle}>
+                <label className={styles.toggleSwitch}>
+                  <input
+                    type="checkbox"
+                    checked={question.allowOther ?? false}
+                    onChange={(e) => onUpdate({ allowOther: e.target.checked })}
+                  />
+                  <span className={styles.toggleSlider}></span>
+                </label>
+                <span className={styles.toggleLabel}>{t('allowOtherOption') || 'Allow "Other" option'}</span>
+              </div>
             </div>
           )}
 

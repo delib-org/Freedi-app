@@ -46,15 +46,18 @@ export default function ExportModal({
         <p className={styles.exportSurveyName}>{surveyTitle}</p>
 
         <div className={styles.exportOptions}>
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={includeTestData}
-              onChange={(e) => setIncludeTestData(e.target.checked)}
-              disabled={isExporting}
-            />
-            <span>{t('includeTestData')}</span>
-          </label>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={includeTestData}
+                onChange={(e) => setIncludeTestData(e.target.checked)}
+                disabled={isExporting}
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>{t('includeTestData')}</span>
+          </div>
           <p className={styles.hint}>{t('includeTestDataHint')}</p>
         </div>
 
