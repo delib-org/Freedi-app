@@ -3547,5 +3547,10 @@
   "Options cannot contain other options": "گزینه نمی‌تواند شامل گزینه‌های دیگر باشد",
   "Groups cannot contain options": "گروه نمی‌تواند شامل گزینه باشد",
   "Type change not allowed": "تغییر نوع مجاز نیست",
-  "Statement": "گزاره"
+  "Statement": "گزاره",
+  "Are you sure you want to move statement here?": "آیا مطمئن هستید که می‌خواهید گزاره را به اینجا منتقل کنید؟",
+  "This move is not allowed": "این جابه‌جایی مجاز نیست",
+  "A statement cannot be moved into itself": "یک گزاره را نمی‌توان به درون خودش منتقل کرد",
+  "The statement is already here": "گزاره از قبل اینجاست",
+  "A statement cannot be moved into its own branch": "یک گزاره را نمی‌توان به درون شاخه‌ی خودش منتقل کرد"
 }

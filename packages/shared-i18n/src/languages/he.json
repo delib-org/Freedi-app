@@ -3786,5 +3786,10 @@
   "Options cannot contain other options": "אפשרות אינה יכולה להכיל אפשרויות נוספות",
   "Groups cannot contain options": "קבוצה אינה יכולה להכיל אפשרויות",
   "Type change not allowed": "שינוי הסוג אינו מותר",
-  "Statement": "הצהרה"
+  "Statement": "הצהרה",
+  "Are you sure you want to move statement here?": "האם להעביר את ההצהרה לכאן?",
+  "This move is not allowed": "העברה זו אינה מותרת",
+  "A statement cannot be moved into itself": "לא ניתן להעביר הצהרה לתוך עצמה",
+  "The statement is already here": "ההצהרה כבר נמצאת כאן",
+  "A statement cannot be moved into its own branch": "לא ניתן להעביר הצהרה לתוך הענף שלה"
 }

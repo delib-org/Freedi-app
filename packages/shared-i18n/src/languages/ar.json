@@ -3159,5 +3159,10 @@
   "Options cannot contain other options": "لا يمكن أن يحتوي الخيار على خيارات أخرى",
   "Groups cannot contain options": "لا يمكن أن تحتوي المجموعة على خيارات",
   "Type change not allowed": "تغيير النوع غير مسموح",
-  "Statement": "عبارة"
+  "Statement": "عبارة",
+  "Are you sure you want to move statement here?": "هل تريد نقل العبارة إلى هنا؟",
+  "This move is not allowed": "هذا النقل غير مسموح به",
+  "A statement cannot be moved into itself": "لا يمكن نقل عبارة إلى داخل نفسها",
+  "The statement is already here": "العبارة موجودة هنا بالفعل",
+  "A statement cannot be moved into its own branch": "لا يمكن نقل عبارة إلى داخل فرعها الخاص"
 }

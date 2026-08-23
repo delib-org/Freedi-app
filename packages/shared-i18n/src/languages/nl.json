@@ -3038,5 +3038,10 @@
   "Options cannot contain other options": "Opties kunnen geen andere opties bevatten",
   "Groups cannot contain options": "Groepen kunnen geen opties bevatten",
   "Type change not allowed": "Typewijziging niet toegestaan",
-  "Statement": "Stelling"
+  "Statement": "Stelling",
+  "Are you sure you want to move statement here?": "Weet je zeker dat je de stelling hierheen wilt verplaatsen?",
+  "This move is not allowed": "Deze verplaatsing is niet toegestaan",
+  "A statement cannot be moved into itself": "Een stelling kan niet in zichzelf worden verplaatst",
+  "The statement is already here": "De stelling staat hier al",
+  "A statement cannot be moved into its own branch": "Een stelling kan niet in haar eigen tak worden verplaatst"
 }

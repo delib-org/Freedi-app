@@ -3747,5 +3747,10 @@
   "Options cannot contain other options": "Options cannot contain other options",
   "Groups cannot contain options": "Groups cannot contain options",
   "Type change not allowed": "Type change not allowed",
-  "Statement": "Statement"
+  "Statement": "Statement",
+  "Are you sure you want to move statement here?": "Are you sure you want to move statement here?",
+  "This move is not allowed": "This move is not allowed",
+  "A statement cannot be moved into itself": "A statement cannot be moved into itself",
+  "The statement is already here": "The statement is already here",
+  "A statement cannot be moved into its own branch": "A statement cannot be moved into its own branch"
 }

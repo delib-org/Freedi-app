@@ -3038,5 +3038,10 @@
   "Options cannot contain other options": "Optionen können keine weiteren Optionen enthalten",
   "Groups cannot contain options": "Gruppen können keine Optionen enthalten",
   "Type change not allowed": "Typänderung nicht zulässig",
-  "Statement": "Aussage"
+  "Statement": "Aussage",
+  "Are you sure you want to move statement here?": "Möchten Sie die Aussage wirklich hierher verschieben?",
+  "This move is not allowed": "Dieser Verschiebevorgang ist nicht zulässig",
+  "A statement cannot be moved into itself": "Eine Aussage kann nicht in sich selbst verschoben werden",
+  "The statement is already here": "Die Aussage befindet sich bereits hier",
+  "A statement cannot be moved into its own branch": "Eine Aussage kann nicht in ihren eigenen Zweig verschoben werden"
 }

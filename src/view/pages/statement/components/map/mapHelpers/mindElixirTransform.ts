@@ -1,5 +1,6 @@
 import { Results, Statement, StatementType } from '@freedi/shared-types';
 import { NodeObj, MindElixirData } from 'mind-elixir';
+import { sortSiblings } from './siblingOrder';
 
 /**
  * Style configuration for MindElixir nodes based on statement type
@@ -231,14 +232,15 @@ export function toMindElixirData(
 			applyBoardStyle(node, depth, branch);
 		}
 
-		// Transform children recursively
+		// Transform children recursively, honoring any drag-set sibling order.
 		if (result.sub && result.sub.length > 0) {
-			node.children = result.sub.map((subResult, index) =>
-				transformNode(
-					subResult,
-					depth + 1,
-					branch ?? CLUSTER_PALETTE[index % CLUSTER_PALETTE.length],
-				),
+			node.children = sortSiblings(result.sub, (subResult) => subResult.top).map(
+				(subResult, index) =>
+					transformNode(
+						subResult,
+						depth + 1,
+						branch ?? CLUSTER_PALETTE[index % CLUSTER_PALETTE.length],
+					),
 			);
 		}
 

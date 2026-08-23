@@ -7,8 +7,10 @@ import { useNavigate } from 'react-router';
 import { Results, Statement, StatementType } from '@freedi/shared-types';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import { updateStatementParents } from '@/controllers/db/statements/setStatements';
+import {
+	moveStatementBranch,
+	updateSiblingOrder,
+} from '@/controllers/db/statements/moveStatementBranch';
 import Modal from '@/view/components/modal/Modal';
 import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
 import type { ClusterKind } from '../mapHelpers/mindElixirTransform';
@@ -27,6 +29,14 @@ import {
 	hasAnyTypeChange,
 	TYPE_LABEL_KEYS,
 } from '../mapHelpers/statementTypeChoices';
+import {
+	collectSubtree,
+	computeSiblingOrder,
+	flattenResults,
+	resolveNewParent,
+	validateMove,
+} from '../mapHelpers/moveBranch';
+import type { DropKind } from '../mapHelpers/moveBranch';
 import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
 import styles from './MindElixirMap.module.scss';
@@ -101,9 +111,19 @@ function MindElixirMap({
 	const { mapContext, setMapContext } = useMapContext();
 	const { t } = useTranslation();
 
-	// State for move modal
-	const [draggedNodeId, setDraggedNodeId] = useState('');
-	const [intersectedNodeId, setIntersectedNodeId] = useState('');
+	// Pending drag-and-drop move, awaiting the user's confirmation. Holds every
+	// dragged node (MindElixir supports multi-select drags) plus the resolved
+	// new parent.
+	const [pendingMove, setPendingMove] = useState<{
+		draggedIds: string[];
+		newParentId: string;
+		targetId: string;
+		kind: DropKind;
+	} | null>(null);
+
+	// Translation key explaining why a drop was refused (the drop is undone and
+	// the modal turns into an explanation instead of a confirmation).
+	const [moveError, setMoveError] = useState<string | null>(null);
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
@@ -474,19 +494,68 @@ function MindElixirMap({
 
 		// Event: Operation happened (for tracking node moves and text edits)
 		mind.bus.addListener('operation', async (operation: Operation) => {
-			if (canDrag && operation.name === 'moveNodeIn') {
-				// A node was moved - store IDs for confirmation
-				if ('obj' in operation && 'toObj' in operation) {
-					const typedOp = operation as { obj: NodeObj; toObj: NodeObj; name: string };
-					setDraggedNodeId(typedOp.obj.id);
-					setIntersectedNodeId(typedOp.toObj.id);
+			// Drag-and-drop. MindElixir fires `{ objs, toObj }` (plural — a drag can
+			// carry a multi-selection) for all three drop kinds; dropping *next to*
+			// a node re-parents to that node's parent.
+			const dropKind: DropKind | null =
+				operation.name === 'moveNodeIn'
+					? 'in'
+					: operation.name === 'moveNodeBefore'
+						? 'before'
+						: operation.name === 'moveNodeAfter'
+							? 'after'
+							: null;
 
-					// Show confirmation modal
-					setMapContext((prev) => ({
-						...prev,
-						moveStatementModal: true,
-					}));
+			if (canDrag && dropKind && 'objs' in operation && 'toObj' in operation) {
+				const typedOp = operation as { objs: NodeObj[]; toObj: NodeObj; name: string };
+				const all = flattenResults(descendantsRef.current);
+				const newParent = resolveNewParent(all, typedOp.toObj.id, dropKind);
+				const dragged = typedOp.objs
+					.map((obj) => all.find((candidate) => candidate.statementId === obj.id))
+					.filter((candidate): candidate is Statement => Boolean(candidate));
+
+				if (!newParent || dragged.length === 0) {
+					mind.undo();
+
+					return;
 				}
+
+				const draggedIds = dragged.map((node) => node.statementId);
+
+				// Reordering under the parent a node already has changes nothing
+				// structural, so it is saved straight away — asking "move here?" for
+				// a nudge between siblings would be noise.
+				const isReorderOnly = dragged.every((node) => node.parentId === newParent.statementId);
+				if (isReorderOnly) {
+					await updateSiblingOrder(
+						computeSiblingOrder(all, newParent.statementId, draggedIds, typedOp.toObj.id, dropKind),
+					);
+
+					return;
+				}
+
+				const refusal = dragged
+					.map((node) => validateMove(node, newParent, collectSubtree(all, node.statementId)))
+					.find((validation) => !validation.allowed);
+
+				if (refusal) {
+					mind.undo();
+					setPendingMove(null);
+					setMoveError(refusal.reasonKey ?? 'This move is not allowed');
+				} else {
+					setMoveError(null);
+					setPendingMove({
+						draggedIds,
+						newParentId: newParent.statementId,
+						targetId: typedOp.toObj.id,
+						kind: dropKind,
+					});
+				}
+
+				setMapContext((prev) => ({
+					...prev,
+					moveStatementModal: true,
+				}));
 			}
 
 			// Handle inline text editing
@@ -791,32 +860,65 @@ function MindElixirMap({
 		}
 	}, []);
 
-	// Handle move statement confirmation
-	const handleMoveStatement = async (move: boolean) => {
-		if (move && draggedNodeId && intersectedNodeId) {
-			const [draggedStatement, newParentStatement] = await Promise.all([
-				getStatementFromDB(draggedNodeId),
-				getStatementFromDB(intersectedNodeId),
-			]);
-
-			if (draggedStatement && newParentStatement) {
-				await updateStatementParents(draggedStatement, newParentStatement);
-			}
-		} else if (!move && mindRef.current) {
-			// Undo the move in MindElixir
-			mindRef.current.undo();
-		}
-
-		// Close modal
+	const closeMoveModal = useCallback(() => {
 		setMapContext((prev) => ({
 			...prev,
 			moveStatementModal: false,
 		}));
+		setPendingMove(null);
+		setMoveError(null);
+	}, [setMapContext]);
 
-		// Clear stored IDs
-		setDraggedNodeId('');
-		setIntersectedNodeId('');
-	};
+	// Handle move statement confirmation. The whole branch travels with the
+	// dragged node, so every descendant's ancestor chain is rewritten too.
+	const handleMoveStatement = useCallback(
+		async (move: boolean) => {
+			if (!move || !pendingMove) {
+				mindRef.current?.undo();
+				closeMoveModal();
+
+				return;
+			}
+
+			const all = flattenResults(descendants);
+			const newParent = all.find((candidate) => candidate.statementId === pendingMove.newParentId);
+
+			if (!newParent) {
+				mindRef.current?.undo();
+				closeMoveModal();
+
+				return;
+			}
+
+			const siblingOrder = computeSiblingOrder(
+				all,
+				pendingMove.newParentId,
+				pendingMove.draggedIds,
+				pendingMove.targetId,
+				pendingMove.kind,
+			);
+
+			for (const draggedId of pendingMove.draggedIds) {
+				const dragged = all.find((candidate) => candidate.statementId === draggedId);
+				if (!dragged) continue;
+
+				const result = await moveStatementBranch({
+					statement: dragged,
+					newParent,
+					subtree: collectSubtree(all, draggedId),
+					siblingOrder,
+				});
+
+				if (!result.success) {
+					mindRef.current?.undo();
+					break;
+				}
+			}
+
+			closeMoveModal();
+		},
+		[pendingMove, descendants, closeMoveModal],
+	);
 
 	// Restore state from localStorage
 	const handleRestore = useCallback(() => {
@@ -1183,21 +1285,32 @@ function MindElixirMap({
 				)}
 			</div>
 
-			{/* Move Statement Confirmation Modal */}
+			{/* Move Statement Confirmation Modal (or refusal notice) */}
 			{mapContext.moveStatementModal && (
 				<Modal>
 					<div className={styles.moveModal}>
-						<h1>{t('Are you sure you want to move statement here?')}</h1>
+						<h1>{moveError ? t(moveError) : t('Are you sure you want to move statement here?')}</h1>
 						<div className={styles.btnBox}>
-							<button onClick={() => handleMoveStatement(true)} className="btn btn--large btn--add">
-								{t('Yes')}
-							</button>
-							<button
-								onClick={() => handleMoveStatement(false)}
-								className="btn btn--large btn--disagree"
-							>
-								{t('No')}
-							</button>
+							{moveError ? (
+								<button onClick={closeMoveModal} className="btn btn--large btn--add">
+									{t('OK')}
+								</button>
+							) : (
+								<>
+									<button
+										onClick={() => handleMoveStatement(true)}
+										className="btn btn--large btn--add"
+									>
+										{t('Yes')}
+									</button>
+									<button
+										onClick={() => handleMoveStatement(false)}
+										className="btn btn--large btn--disagree"
+									>
+										{t('No')}
+									</button>
+								</>
+							)}
 						</div>
 					</div>
 				</Modal>

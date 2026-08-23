@@ -3038,5 +3038,10 @@
   "Options cannot contain other options": "Las opciones no pueden contener otras opciones",
   "Groups cannot contain options": "Los grupos no pueden contener opciones",
   "Type change not allowed": "Cambio de tipo no permitido",
-  "Statement": "Declaración"
+  "Statement": "Declaración",
+  "Are you sure you want to move statement here?": "¿Seguro que quieres mover la declaración aquí?",
+  "This move is not allowed": "Este movimiento no está permitido",
+  "A statement cannot be moved into itself": "Una declaración no puede moverse dentro de sí misma",
+  "The statement is already here": "La declaración ya está aquí",
+  "A statement cannot be moved into its own branch": "Una declaración no puede moverse dentro de su propia rama"
 }
