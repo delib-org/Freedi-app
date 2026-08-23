@@ -1,6 +1,9 @@
+import { updateDoc } from 'firebase/firestore';
 import { Statement } from '@freedi/shared-types';
 import { createStatementRef, executeBatchUpdates, updateTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+
+export type MapSide = 'left' | 'right';
 
 export interface SiblingOrderUpdate {
 	statementId: string;
@@ -23,6 +26,11 @@ interface MoveBranchParams {
 	 * the parent can leave the order alone.
 	 */
 	siblingOrder?: SiblingOrderUpdate[];
+	/**
+	 * Which side of the mind-map root the branch lands on. Only meaningful when
+	 * the new parent IS the map root; ignored otherwise.
+	 */
+	mapSide?: MapSide;
 }
 
 export interface MoveBranchResult {
@@ -44,6 +52,7 @@ export async function moveStatementBranch({
 	newParent,
 	subtree,
 	siblingOrder = [],
+	mapSide,
 }: MoveBranchParams): Promise<MoveBranchResult> {
 	try {
 		const parentChain = [...(newParent.parents ?? []), newParent.statementId];
@@ -66,6 +75,7 @@ export async function moveStatementBranch({
 					topParentId,
 					lastUpdate,
 					...(typeof movedOrder === 'number' ? { order: movedOrder } : {}),
+					...(mapSide ? { mapSide } : {}),
 				},
 			},
 			...subtree.map((descendant) => ({
@@ -132,6 +142,23 @@ export async function updateSiblingOrder(siblingOrder: SiblingOrderUpdate[]): Pr
 		logError(error, {
 			operation: 'statements.updateSiblingOrder',
 			metadata: { count: siblingOrder.length },
+		});
+	}
+}
+
+/**
+ * Move a first-level branch to the other side of the mind-map root. Nothing
+ * about the hierarchy changes — only which side of the subject it hangs from.
+ */
+export async function updateMapSide(statementId: string, mapSide: MapSide): Promise<void> {
+	try {
+		const { lastUpdate } = updateTimestamp();
+		await updateDoc(createStatementRef(statementId), { mapSide, lastUpdate });
+	} catch (error) {
+		logError(error, {
+			operation: 'statements.updateMapSide',
+			statementId,
+			metadata: { mapSide },
 		});
 	}
 }

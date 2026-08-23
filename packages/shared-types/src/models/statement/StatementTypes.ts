@@ -176,6 +176,7 @@ export const StatementSchema = object({
 	consensusValid: optional(number()), // gives a combine number of the level of consensus and its validity
 	PopperHebbianScore: optional(PopperHebbianScoreSchema), // the Popper Hebbian score of the statement
 	order: optional(number()), // the order of the statement relative to its siblings
+	mapSide: optional(picklist(['left', 'right'])), // which side of the mind-map root this branch sits on (first-level nodes only)
 	elementHight: optional(number()), // the height of the statement. It is used for animation purposes
 	top: optional(number()), // the top of the statement. It is used for animation purposes
 	suggestions: optional(number()), // the number of suggestions of the statement

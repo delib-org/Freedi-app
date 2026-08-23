@@ -232,6 +232,14 @@ export function toMindElixirData(
 			applyBoardStyle(node, depth, branch);
 		}
 
+		// First-level branches carry an explicit side so MindElixir's SIDE layout
+		// never auto-balances them across the root. Anything the user has not
+		// placed stays on the right, which is where single-direction maps have
+		// always drawn everything.
+		if (depth === 1) {
+			node.direction = statement.mapSide === 'left' ? 0 : 1;
+		}
+
 		// Transform children recursively, honoring any drag-set sibling order.
 		if (result.sub && result.sub.length > 0) {
 			node.children = sortSiblings(result.sub, (subResult) => subResult.top).map(

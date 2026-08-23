@@ -9,8 +9,10 @@ import { useMapContext } from '@/controllers/hooks/useMap';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
 	moveStatementBranch,
+	updateMapSide,
 	updateSiblingOrder,
 } from '@/controllers/db/statements/moveStatementBranch';
+import type { MapSide } from '@/controllers/db/statements/moveStatementBranch';
 import Modal from '@/view/components/modal/Modal';
 import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
 import type { ClusterKind } from '../mapHelpers/mindElixirTransform';
@@ -119,6 +121,7 @@ function MindElixirMap({
 		newParentId: string;
 		targetId: string;
 		kind: DropKind;
+		mapSide?: MapSide;
 	} | null>(null);
 
 	// Translation key explaining why a drop was refused (the drop is undone and
@@ -435,12 +438,14 @@ function MindElixirMap({
 		// Store reference
 		mindRef.current = mind;
 
-		// Use RIGHT layout for compact single-direction tree, then scale the
+		// SIDE layout, but every first-level branch carries an explicit side (see
+		// `toMindElixirData`), so a map nobody has arranged still draws entirely
+		// to the right — SIDE's auto-balancing never gets a say. Then scale the
 		// whole map to fill the available canvas (instead of just centering the
 		// root, which leaves a large tree mostly off-screen).
 		setTimeout(() => {
 			if (mindRef.current) {
-				mindRef.current.initRight();
+				mindRef.current.initSide();
 				mindRef.current.scaleFit();
 				setMapScale(mindRef.current.scaleVal);
 			}
@@ -503,6 +508,8 @@ function MindElixirMap({
 			targetId: string,
 			dropKind: DropKind,
 			onRefuse: () => void,
+			/** Only set for root drops: which side of the subject to hang from. */
+			mapSide?: MapSide,
 		) => {
 			const all = flattenResults(descendantsRef.current);
 			const newParent = resolveNewParent(all, targetId, dropKind);
@@ -523,6 +530,20 @@ function MindElixirMap({
 			// a nudge between siblings would be noise.
 			const isReorderOnly = dragged.every((node) => node.parentId === newParent.statementId);
 			if (isReorderOnly) {
+				// Dropping a branch the root already owns beside the root is not a
+				// re-parent, it is a side change — the only way to cross the subject.
+				// Leave the sibling order alone: the drop zone is the root's own band,
+				// so the pointer's height says nothing about where in the list it goes.
+				if (mapSide) {
+					await Promise.all(
+						dragged
+							.filter((node) => node.mapSide !== mapSide)
+							.map((node) => updateMapSide(node.statementId, mapSide)),
+					);
+
+					return;
+				}
+
 				await updateSiblingOrder(
 					computeSiblingOrder(all, newParent.statementId, validIds, targetId, dropKind),
 				);
@@ -545,6 +566,7 @@ function MindElixirMap({
 					newParentId: newParent.statementId,
 					targetId,
 					kind: dropKind,
+					mapSide,
 				});
 			}
 
@@ -605,22 +627,37 @@ function MindElixirMap({
 		});
 
 		// ------------------------------------------------------------------
-		// Dropping onto the root ("main") node.
+		// Dropping onto — or beside — the root ("main") node.
 		//
 		// MindElixir refuses the root as a drop target: its hit test requires
 		// `nodeObj.parent`, which the root has not got, so `meet` stays null and
 		// no operation is ever fired — dragging a node onto the subject did
 		// nothing at all. Handle exactly that gap here. This runs only when the
 		// library itself found no target, so the two never both act on one drop.
+		//
+		// The drop zone reaches past the root on both sides, and which side the
+		// pointer is on decides which side of the map the branch hangs from.
+		// That is the only way to move a branch across the root: MindElixir has
+		// no drag gesture for `direction` at all.
 		// ------------------------------------------------------------------
 		const ROOT_DROP_CLASS = 'mind-map-root-drop';
-		let rootDropArmed = false;
+		// How far beyond the root counts as "drop it on this side".
+		const ROOT_DROP_MARGIN_X = 180;
+		const ROOT_DROP_MARGIN_Y = 40;
+		let rootDropSide: MapSide | null = null;
 
 		const getRootTopic = () => container.querySelector('me-root > me-tpc') as HTMLElement | null;
 
-		const setRootDropArmed = (armed: boolean) => {
-			rootDropArmed = armed;
-			getRootTopic()?.classList.toggle(ROOT_DROP_CLASS, armed);
+		const setRootDropSide = (side: MapSide | null) => {
+			rootDropSide = side;
+			const rootTopic = getRootTopic();
+			if (!rootTopic) return;
+			rootTopic.classList.toggle(ROOT_DROP_CLASS, side !== null);
+			if (side) {
+				rootTopic.dataset.dropSide = side;
+			} else {
+				delete rootTopic.dataset.dropSide;
+			}
 		};
 
 		// Mirror of MindElixir's own "can this element be met" test, so we only
@@ -638,7 +675,7 @@ function MindElixirMap({
 		const handleRootDragMove = (e: PointerEvent) => {
 			const dragged = mindRef.current?.dragged ?? [];
 			if (!canDrag || dragged.length === 0) {
-				if (rootDropArmed) setRootDropArmed(false);
+				if (rootDropSide) setRootDropSide(null);
 
 				return;
 			}
@@ -651,16 +688,39 @@ function MindElixirMap({
 				document.elementFromPoint(e.clientX, e.clientY + offset),
 			];
 
-			const libraryHasTarget = probes.some((element) => libraryWouldMeet(element, dragged));
-			const overRoot = probes.some((element) => Boolean(element?.closest('me-root')));
+			if (probes.some((element) => libraryWouldMeet(element, dragged))) {
+				setRootDropSide(null);
 
-			setRootDropArmed(!libraryHasTarget && overRoot);
+				return;
+			}
+
+			const rootRect = getRootTopic()?.getBoundingClientRect();
+			if (!rootRect) {
+				setRootDropSide(null);
+
+				return;
+			}
+
+			const inZone =
+				e.clientX >= rootRect.left - ROOT_DROP_MARGIN_X &&
+				e.clientX <= rootRect.right + ROOT_DROP_MARGIN_X &&
+				e.clientY >= rootRect.top - ROOT_DROP_MARGIN_Y &&
+				e.clientY <= rootRect.bottom + ROOT_DROP_MARGIN_Y;
+
+			if (!inZone) {
+				setRootDropSide(null);
+
+				return;
+			}
+
+			setRootDropSide(e.clientX < rootRect.left + rootRect.width / 2 ? 'left' : 'right');
 		};
 
 		const handleRootDrop = async () => {
-			if (!rootDropArmed) return;
+			const side = rootDropSide;
+			if (!side) return;
 			const dragged = mindRef.current?.dragged ?? [];
-			setRootDropArmed(false);
+			setRootDropSide(null);
 			if (dragged.length === 0) return;
 
 			const draggedIds = dragged
@@ -668,10 +728,10 @@ function MindElixirMap({
 				.filter((id): id is string => Boolean(id));
 
 			// Nothing moved on the canvas, so a refusal has nothing to undo.
-			await applyDrop(draggedIds, descendantsRef.current.top.statementId, 'in', () => {});
+			await applyDrop(draggedIds, descendantsRef.current.top.statementId, 'in', () => {}, side);
 		};
 
-		const handleRootDragCancel = () => setRootDropArmed(false);
+		const handleRootDragCancel = () => setRootDropSide(null);
 
 		// Capture phase for the drop: the library's own pointerup clears `dragged`.
 		window.addEventListener('pointermove', handleRootDragMove);
@@ -860,7 +920,7 @@ function MindElixirMap({
 			window.removeEventListener('pointermove', handleRootDragMove);
 			window.removeEventListener('pointerup', handleRootDrop, true);
 			window.removeEventListener('pointercancel', handleRootDragCancel, true);
-			setRootDropArmed(false);
+			setRootDropSide(null);
 			selectionObserver.disconnect();
 			container.removeEventListener('keydown', handleKeyDown);
 			container.removeEventListener('click', handleContainerClick);
@@ -1005,6 +1065,7 @@ function MindElixirMap({
 					newParent,
 					subtree: collectSubtree(all, draggedId),
 					siblingOrder,
+					mapSide: pendingMove.mapSide,
 				});
 
 				if (!result.success) {
