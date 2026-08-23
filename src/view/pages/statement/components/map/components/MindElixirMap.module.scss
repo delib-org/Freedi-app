@@ -380,9 +380,13 @@
 	color: white;
 }
 
-// Rating row — the shared 5-point evaluation scale, inline under the icons.
+// Rating row — the app's 5-point face scale, inline under the icons.
 .evaluationRow {
+	// Same construct as the option cards: the faces are listed high → low and
+	// reversed here, so the row reads unhappy → happy and mirrors in RTL the way
+	// every other rating row in the app does.
 	display: flex;
+	flex-direction: row-reverse;
 	align-items: center;
 	justify-content: space-between;
 	gap: 2px;
@@ -391,28 +395,29 @@
 }
 
 .evaluationBtn {
-	width: 32px;
-	height: 32px;
+	width: 28px;
+	height: 28px;
 	border: none;
 	border-radius: 50%;
-	background: transparent;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: 0;
 	// Unpicked faces recede so the cast vote reads at a glance.
-	opacity: 0.6;
-	filter: grayscale(0.65);
+	opacity: 0.75;
 	transition:
 		opacity 0.15s ease,
-		filter 0.15s ease,
 		transform 0.15s ease,
-		background 0.15s ease;
+		box-shadow 0.15s ease;
+
+	img {
+		width: 20px;
+		height: 20px;
+	}
 
 	&:hover {
 		opacity: 1;
-		filter: none;
 		transform: scale(1.15);
 	}
 
@@ -424,14 +429,12 @@
 
 .evaluationBtnActive {
 	opacity: 1;
-	filter: none;
 	transform: scale(1.1);
-	background: var(--background, #eef0f3);
 	box-shadow: 0 0 0 2px var(--btn-primary, #5f88e5);
 }
 
 .evaluationEmoji {
-	font-size: 1.05rem;
+	font-size: 1rem;
 	line-height: 1;
 }
 

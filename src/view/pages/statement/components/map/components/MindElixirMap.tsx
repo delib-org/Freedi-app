@@ -44,7 +44,6 @@ import PanZoomControls from './PanZoomControls';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
 import { useSelector } from 'react-redux';
-import { getEvaluationScale } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
@@ -53,6 +52,7 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { findAncestorChain, resolveEvaluationSettings } from '../mapHelpers/evaluationSettings';
+import { getMapEvaluationFaces } from '../mapHelpers/mapEvaluationFaces';
 
 // Zoom bounds + button step, shared by the wheel, pinch, and button handlers.
 const SCALE_MIN = 0.2;
@@ -1228,8 +1228,8 @@ function MindElixirMap({
 		() => resolveEvaluationSettings(ancestorChain),
 		[ancestorChain],
 	);
-	const evaluationScale = useMemo(
-		() => getEvaluationScale(evaluationSettings.ratingMode),
+	const evaluationFaces = useMemo(
+		() => getMapEvaluationFaces(evaluationSettings.ratingMode),
 		[evaluationSettings.ratingMode],
 	);
 
@@ -1391,22 +1391,27 @@ function MindElixirMap({
 
 					{canEvaluateNode && (
 						<div className={styles.evaluationRow} role="group" aria-label={t('Rate this')}>
-							{evaluationScale.map((entry) => {
-								const isActive = optimisticEvaluation === entry.value;
+							{evaluationFaces.map((face) => {
+								const isActive = optimisticEvaluation === face.value;
 
 								return (
 									<button
-										key={entry.value}
+										key={face.value}
 										type="button"
 										className={`${styles.evaluationBtn} ${isActive ? styles.evaluationBtnActive : ''}`}
-										onClick={() => handleEvaluate(entry.value)}
-										aria-label={t(entry.labelKey)}
+										style={{ backgroundColor: isActive ? face.colorSelected : face.color }}
+										onClick={() => handleEvaluate(face.value)}
+										aria-label={t(face.labelKey)}
 										aria-pressed={isActive}
-										title={t(entry.labelKey)}
+										title={t(face.labelKey)}
 									>
-										<span className={styles.evaluationEmoji} aria-hidden>
-											{entry.emoji}
-										</span>
+										{face.svg ? (
+											<img src={face.svg} alt="" aria-hidden />
+										) : (
+											<span className={styles.evaluationEmoji} aria-hidden>
+												{face.emoji}
+											</span>
+										)}
 									</button>
 								);
 							})}
