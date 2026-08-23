@@ -426,32 +426,38 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         <h2 className={styles.sectionTitle}>{t('surveySettings')}</h2>
 
         <div className={styles.formGroup}>
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.allowSkipping}
-              onChange={(e) =>
-                setSettings({ ...settings, allowSkipping: e.target.checked })
-              }
-            />
-            {' '}{t('allowSkipping')}
-          </label>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={settings.allowSkipping}
+                onChange={(e) =>
+                  setSettings({ ...settings, allowSkipping: e.target.checked })
+                }
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>{t('allowSkipping')}</span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
             {t('allowSkippingNote') || 'When enabled, overrides all per-question skip settings'}
           </p>
         </div>
 
         <div className={styles.formGroup}>
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.allowReturning}
-              onChange={(e) =>
-                setSettings({ ...settings, allowReturning: e.target.checked })
-              }
-            />
-            {' '}{t('allowReturning')}
-          </label>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={settings.allowReturning}
+                onChange={(e) =>
+                  setSettings({ ...settings, allowReturning: e.target.checked })
+                }
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>{t('allowReturning')}</span>
+          </div>
         </div>
 
         <div className={styles.formGroup}>
@@ -477,17 +483,22 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         </div>
 
         <div className={styles.formGroup}>
-          <label>
-            <input
-              type="checkbox"
-              checked={settings.allowParticipantsToAddSuggestions || false}
-              onChange={(e) =>
-                setSettings({ ...settings, allowParticipantsToAddSuggestions: e.target.checked })
-              }
-            />
-            {' '}{t('allowParticipantsToAddSuggestions') || 'Allow participants to add suggestions'}
-          </label>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={settings.allowParticipantsToAddSuggestions || false}
+                onChange={(e) =>
+                  setSettings({ ...settings, allowParticipantsToAddSuggestions: e.target.checked })
+                }
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>
+              {t('allowParticipantsToAddSuggestions') || 'Allow participants to add suggestions'}
+            </span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
             {t('allowSuggestionsNote') || 'When enabled, overrides all per-question suggestion settings'}
           </p>
         </div>
@@ -661,15 +672,18 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         </p>
 
         <div className={styles.formGroup}>
-          <label>
-            <input
-              type="checkbox"
-              checked={showEmailSignup}
-              onChange={(e) => setShowEmailSignup(e.target.checked)}
-            />
-            {' '}{t('showEmailSignup')}
-          </label>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={showEmailSignup}
+                onChange={(e) => setShowEmailSignup(e.target.checked)}
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>{t('showEmailSignup')}</span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
             {t('showEmailSignupDescription')}
           </p>
         </div>
@@ -708,15 +722,18 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         )}
 
         <div className={styles.formGroup}>
-          <label>
-            <input
-              type="checkbox"
-              checked={showAllSolutionsLink}
-              onChange={(e) => setShowAllSolutionsLink(e.target.checked)}
-            />
-            {' '}{t('showAllSolutionsLink')}
-          </label>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+          <div className={styles.testModeToggle}>
+            <label className={styles.toggleSwitch}>
+              <input
+                type="checkbox"
+                checked={showAllSolutionsLink}
+                onChange={(e) => setShowAllSolutionsLink(e.target.checked)}
+              />
+              <span className={styles.toggleSlider}></span>
+            </label>
+            <span className={styles.toggleLabel}>{t('showAllSolutionsLink')}</span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
             {t('showAllSolutionsLinkDescription')}
           </p>
         </div>
@@ -757,12 +774,15 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
           {defaultLanguage && (
             <div className={styles.forceLanguageRow}>
-              <input
-                id="forceLanguage"
-                type="checkbox"
-                checked={forceLanguage}
-                onChange={(e) => setForceLanguage(e.target.checked)}
-              />
+              <label className={styles.toggleSwitch}>
+                <input
+                  id="forceLanguage"
+                  type="checkbox"
+                  checked={forceLanguage}
+                  onChange={(e) => setForceLanguage(e.target.checked)}
+                />
+                <span className={styles.toggleSlider}></span>
+              </label>
               <label htmlFor="forceLanguage" className={styles.forceLanguageLabel}>
                 <span className={styles.forceLanguageTitle}>
                   {t('forceSurveyLanguage') || 'Force survey language'}
