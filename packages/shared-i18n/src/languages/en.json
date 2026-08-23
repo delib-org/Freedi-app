@@ -3740,5 +3740,12 @@
   "scaleNoValueSelected": "No value selected",
   "scaleValueOfMax": "{{value}} out of {{max}}",
   "scaleValueOfMaxLabelled": "{{value}} out of {{max}}, {{label}}",
-  "answerRequiredSelectValue": "Please choose a value on the scale"
+  "answerRequiredSelectValue": "Please choose a value on the scale",
+  "Change type": "Change type",
+  "Cannot change the type of a group": "Cannot change the type of a group",
+  "This statement has options under it": "This statement has options under it",
+  "Options cannot contain other options": "Options cannot contain other options",
+  "Groups cannot contain options": "Groups cannot contain options",
+  "Type change not allowed": "Type change not allowed",
+  "Statement": "Statement"
 }

@@ -3152,5 +3152,12 @@
   "scaleNoValueSelected": "لم يتم اختيار قيمة",
   "scaleValueOfMax": "{{value}} من {{max}}",
   "scaleValueOfMaxLabelled": "{{value}} من {{max}}، {{label}}",
-  "answerRequiredSelectValue": "يرجى اختيار قيمة على المقياس"
+  "answerRequiredSelectValue": "يرجى اختيار قيمة على المقياس",
+  "Change type": "تغيير النوع",
+  "Cannot change the type of a group": "لا يمكن تغيير نوع المجموعة",
+  "This statement has options under it": "توجد خيارات ضمن هذه العبارة",
+  "Options cannot contain other options": "لا يمكن أن يحتوي الخيار على خيارات أخرى",
+  "Groups cannot contain options": "لا يمكن أن تحتوي المجموعة على خيارات",
+  "Type change not allowed": "تغيير النوع غير مسموح",
+  "Statement": "عبارة"
 }

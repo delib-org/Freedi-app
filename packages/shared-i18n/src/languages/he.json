@@ -3779,5 +3779,12 @@
   "scaleNoValueSelected": "לא נבחר ערך",
   "scaleValueOfMax": "{{value}} מתוך {{max}}",
   "scaleValueOfMaxLabelled": "{{value}} מתוך {{max}}, {{label}}",
-  "answerRequiredSelectValue": "אנא בחרו ערך בסולם"
+  "answerRequiredSelectValue": "אנא בחרו ערך בסולם",
+  "Change type": "שינוי סוג",
+  "Cannot change the type of a group": "לא ניתן לשנות את סוג הקבוצה",
+  "This statement has options under it": "יש אפשרויות מתחת להצהרה זו",
+  "Options cannot contain other options": "אפשרות אינה יכולה להכיל אפשרויות נוספות",
+  "Groups cannot contain options": "קבוצה אינה יכולה להכיל אפשרויות",
+  "Type change not allowed": "שינוי הסוג אינו מותר",
+  "Statement": "הצהרה"
 }

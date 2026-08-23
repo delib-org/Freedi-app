@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
-import { Role, StatementType, QuestionType, Statement } from '@freedi/shared-types';
+import { Role, StatementType, QuestionType, Screen, Statement } from '@freedi/shared-types';
 
 import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
@@ -116,6 +116,10 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 
 	const showSegmentedControl = MAIN_SCREENS.has(screen);
 
+	// The mind map is a canvas: everything but the title is vertical space the
+	// graph needs. Brief and funnel are available on the reading screens.
+	const isMapScreen = screen === Screen.mindMap;
+
 	// Nav handlers
 	function handleShare() {
 		setShowShareModal(true);
@@ -227,7 +231,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 									</button>
 									{!headerCollapsed && (
 										<div className={styles.headerCollapsible}>
-											{isQuestion && isAdmin && (
+											{isQuestion && isAdmin && !isMapScreen && (
 												<ParticipationFunnel
 													entered={participation.entered}
 													suggested={participation.suggested}
@@ -248,7 +252,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 								</>
 							) : (
 								<>
-									{statement?.brief && (
+									{statement?.brief && !isMapScreen && (
 										<StatementDescription
 											brief={statement.brief}
 											callToAction={t('Share your thoughts below')}
@@ -259,7 +263,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 									    and this was costing a full band above the fold on
 									    every visit. useParticipationStats still runs for
 									    everyone — it records the "entered" event. */}
-									{isQuestion && isAdmin && (
+									{isQuestion && isAdmin && !isMapScreen && (
 										<ParticipationFunnel
 											entered={participation.entered}
 											suggested={participation.suggested}

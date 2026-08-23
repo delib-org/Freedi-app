@@ -40,11 +40,16 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 
 	const isAdmin = role === Role.admin || role === Role.creator;
 
+	// The mind map needs every pixel of height for the canvas: the description
+	// editor, the presence row and the onboarding card pushed the graph below
+	// the fold. On that screen the title alone stays.
+	const showReadingHeader = !isFullBleedScreen;
+
 	return (
 		<main ref={mainRef} className={`page__main${isFullBleedScreen ? ' page__main--flush' : ''}`}>
-			<OnlineUsers statementId={statement?.statementId} />
-			{statement && <StatementBody host={statement} canEdit={isAdmin} />}
-			{allSubs.length === 0 && activeView === 'chat' && (
+			{showReadingHeader && <OnlineUsers statementId={statement?.statementId} />}
+			{showReadingHeader && statement && <StatementBody host={statement} canEdit={isAdmin} />}
+			{showReadingHeader && allSubs.length === 0 && activeView === 'chat' && (
 				<div className={styles.onboarding}>
 					<div className={styles.onboarding__step}>
 						<span className={styles.onboarding__icon}>

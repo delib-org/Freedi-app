@@ -3031,5 +3031,12 @@
   "scaleNoValueSelected": "Ningún valor seleccionado",
   "scaleValueOfMax": "{{value}} de {{max}}",
   "scaleValueOfMaxLabelled": "{{value}} de {{max}}, {{label}}",
-  "answerRequiredSelectValue": "Elige un valor en la escala"
+  "answerRequiredSelectValue": "Elige un valor en la escala",
+  "Change type": "Cambiar tipo",
+  "Cannot change the type of a group": "No se puede cambiar el tipo de un grupo",
+  "This statement has options under it": "Esta declaración tiene opciones debajo",
+  "Options cannot contain other options": "Las opciones no pueden contener otras opciones",
+  "Groups cannot contain options": "Los grupos no pueden contener opciones",
+  "Type change not allowed": "Cambio de tipo no permitido",
+  "Statement": "Declaración"
 }
