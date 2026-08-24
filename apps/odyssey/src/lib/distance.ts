@@ -14,10 +14,13 @@ import type { IslandContent } from './game';
  * genuinely Odyssey's: parties as virtual users, and the two engine shapes
  * the screens consume.
  *
- * Parties participate as VIRTUAL USERS: a party "evaluates" the stance it
- * declared on an island with +1 (support) and that island's other stances
- * with −1 (oppose) — its route through the same sea. The same metric then
- * applies to player↔party exactly as to player↔player.
+ * Parties participate as VIRTUAL USERS: a party carries a continuous
+ * evaluation score in −1..1 per stance (`attitudes`, estimated from its
+ * published materials) — its route through the same sea. The same metric
+ * then applies to player↔party exactly as to player↔player. Older game
+ * docs may still carry the LEGACY one-declared-stance model (`positions`);
+ * those read as +1 on the declared stance and −1 on its island siblings,
+ * per stance not covered by `attitudes`.
  * =======================================================================
  */
 

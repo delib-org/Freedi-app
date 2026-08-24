@@ -499,8 +499,10 @@ export interface GeneratedClaim {
 }
 
 const GENERATE_SYSTEM = `You write canonical claims for a public deliberation platform. Given a question and one or more statements proposing the same idea, produce:
-- "canonicalClaim": the core proposal in 5-15 words, neutral, present tense, no rhetoric.
+- "canonicalClaim": the core proposal in 5-15 words, present tense, no rhetoric.
 - "publicExplanation": 1-2 plain-language sentences explaining the proposal to the general public.
+
+THE CLAIM MUST CARRY THE AUTHOR'S STANCE. State the position's direction (for/against, allow/ban, expand/reduce) and any condition or exception that defines it. Never restate a position from its exception's point of view: "X should be illegal except in case C" must NOT become "X is permitted in case C" — the author opposes X; the exception merely limits the opposition. Acceptance test: the author would say "yes, that is my position", and someone holding the opposite position would reject the claim. If brevity conflicts with stance fidelity, keep the stance and use up to 20 words. Removing rhetoric means dropping emphasis and emotion — never dropping the direction, scope, or conditions of the position itself.
 
 Write BOTH fields in the language of the QUESTION, even when the statements are in a different language — every claim of one question must share the question's language, so the codebook stays uniform regardless of which participant spoke first.
 

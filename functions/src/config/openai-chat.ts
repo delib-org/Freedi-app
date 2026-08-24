@@ -20,6 +20,10 @@ const RETRY_BASE_DELAY_MS = 500;
 const RATE_LIMIT_RETRIES = 6;
 const RATE_LIMIT_BASE_DELAY_MS = 1000;
 const RATE_LIMIT_MAX_DELAY_MS = 20_000;
+// Extra completion budget reserved for gpt-5-family hidden reasoning on top of
+// the caller's answer-sized maxTokens. A cap, not a target — typical calls
+// spend a few hundred reasoning tokens; 2000 covers the observed hard cases.
+const REASONING_HEADROOM_TOKENS = 2000;
 
 let _client: OpenAI | null = null;
 
@@ -57,7 +61,12 @@ export function buildModelParams(
 ): Record<string, number> {
 	const maxTokens = opts.maxTokens ?? 1024;
 	if (model.startsWith('gpt-5')) {
-		return { max_completion_tokens: maxTokens };
+		// Reasoning models spend `max_completion_tokens` on hidden reasoning
+		// BEFORE emitting content, so a cap sized for the visible answer alone
+		// can be consumed entirely by reasoning, returning empty content (seen
+		// deterministically on long sensitive-topic inputs at 300 tokens).
+		// Callers state the answer budget; reasoning headroom is reserved here.
+		return { max_completion_tokens: maxTokens + REASONING_HEADROOM_TOKENS };
 	}
 
 	return { max_tokens: maxTokens, temperature: opts.temperature ?? 0 };
