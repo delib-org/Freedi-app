@@ -2536,14 +2536,24 @@ export function Deliberation(
 										{ 'aria-hidden': 'true' },
 										m(Icon, { name: 'target', size: 20 }),
 									),
-									m(
-										'.write-desk__mission-text',
+									m('.write-desk__mission-text', [
+										// The mission brief must carry the MISSION. A classroom
+										// hears the challenge in the framing scenes, but a civic
+										// square opens straight at this desk — without the
+										// island's own question here, "what should be done?"
+										// asks about nothing.
+										topic.challengeQuestion?.trim()
+											? m('p.write-desk__mission-question', topic.challengeQuestion)
+											: null,
 										// "both camps" is the whole point of the task when there
 										// are two. When the event has no sides, naming them
 										// invites the writer to pick one — so the ask becomes
 										// the plainer version of the same thing.
-										m('p', t(flow.stances ? 'delib.propose_hint' : 'delib.propose_hint_open')),
-									),
+										m(
+											'p.write-desk__mission-hint',
+											t(flow.stances ? 'delib.propose_hint' : 'delib.propose_hint_open'),
+										),
+									]),
 								]),
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
 									value: draft,
