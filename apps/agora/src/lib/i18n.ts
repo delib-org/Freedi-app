@@ -120,6 +120,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.suggestion_from': 'הצעת שיפור מ־{{name}}',
 		'delib.accept_hint': 'קבלה = אימוץ הרעיון: שלבו אותו בנוסח שלכם, והמציעים יקבלו נקודות.',
 		'delib.ask_elders': 'שאלו את בני התקופה',
+		'delib.ask_elders_council': 'מועצת הזקנים',
 		'delib.ask_me': 'שאלו אותי',
 		'delib.stale_review': 'ההצעה השתנתה מאז חוות הדעת הזו — הציגו שוב את הנוסח החדש.',
 		'delib.stale_chip': 'הנוסח השתנה',
@@ -751,6 +752,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Accept = adopt the idea: weave it into your text, and the suggester earns points.',
 		'delib.ask_elders': 'Ask the people of the era',
+		'delib.ask_elders_council': 'The council of elders',
 		'delib.ask_me': 'Ask me',
 		'delib.stale_review': 'Your proposal changed since this verdict — show them the new version.',
 		'delib.stale_chip': 'Text changed',
@@ -1410,6 +1412,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.suggestion_from': 'فكرة تحسين من {{name}}',
 		'delib.accept_hint': 'القبول = تبنّي الفكرة: ادمجوها في نصكم، ويحصل المقترح على نقاط.',
 		'delib.ask_elders': 'اسألوا أبناء الحقبة',
+		'delib.ask_elders_council': 'مجلس الحكماء',
 		'delib.ask_me': 'اسألوني',
 		'delib.stale_review': 'تغيّر اقتراحكم منذ هذا الرأي — اعرضوا النص الجديد.',
 		'delib.stale_chip': 'تغيّر النص',
@@ -2045,6 +2048,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Aceptar = adoptar la idea: integradla en vuestro texto, y quien la propuso gana puntos.',
 		'delib.ask_elders': 'Preguntad a la gente de la época',
+		'delib.ask_elders_council': 'El consejo de ancianos',
 		'delib.ask_me': 'Preguntadme',
 		'delib.stale_review':
 			'Vuestra propuesta cambió desde este veredicto — mostradles la nueva versión.',
@@ -2719,6 +2723,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Annehmen = die Idee übernehmen: arbeitet sie in euren Text ein, und wer sie vorschlug bekommt Punkte.',
 		'delib.ask_elders': 'Fragt die Menschen der Epoche',
+		'delib.ask_elders_council': 'Der Ältestenrat',
 		'delib.ask_me': 'Fragt mich',
 		'delib.stale_review':
 			'Euer Vorschlag hat sich seit diesem Urteil geändert — zeigt die neue Fassung.',
@@ -3407,6 +3412,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Accepteren = het idee overnemen: verwerk het in jullie tekst, en de indiener krijgt punten.',
 		'delib.ask_elders': 'Vraag de mensen van het tijdperk',
+		'delib.ask_elders_council': 'De raad van ouderen',
 		'delib.ask_me': 'Vraag mij',
 		'delib.stale_review': 'Jullie voorstel is veranderd sinds dit oordeel — toon de nieuwe versie.',
 		'delib.stale_chip': 'Tekst veranderd',

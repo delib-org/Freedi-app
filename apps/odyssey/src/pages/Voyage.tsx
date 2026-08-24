@@ -9,8 +9,10 @@ import { distanceEngine } from '../lib/distance';
 import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
+import { activeElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import ShipCard from '../components/ShipCard';
+import ElderRemarkCard from '../components/ElderRemarkCard';
 
 /**
  * ההפלגה: one island (a `question` Statement) at a time. Each of its stances
@@ -46,6 +48,8 @@ export default function Voyage() {
 	const [depth, setDepth] = useState('');
 	const [log, setLog] = useState('');
 	const [saving, setSaving] = useState(false);
+	/** an elder's in-character answer to this island, shown only in reaction */
+	const [remark, setRemark] = useState<ElderRemark | null>(null);
 
 	const island = useMemo(
 		() => selectedIslands[Math.min(index, Math.max(0, selectedIslands.length - 1))] ?? null,
@@ -60,31 +64,41 @@ export default function Voyage() {
 		[content],
 	);
 
-	const distances: SeaDistances = useMemo(
-		() =>
-			content
-				? Object.fromEntries(
-						distanceEngine
-							.partyDistances({ attitudes, islands: content.islands, parties })
-							.map((entry) => [entry.partyId, entry.distance]),
-					)
-				: {},
-		[content, attitudes, parties],
-	);
+	const elders = useMemo(() => activeElders(content?.game), [content]);
+
+	const distances: SeaDistances = useMemo(() => {
+		if (!content) return {};
+		const partyEntries = distanceEngine
+			.partyDistances({ attitudes, islands: content.islands, parties })
+			.map((entry): [string, number | null] => [entry.partyId, entry.distance]);
+		const elderEntries = distanceEngine
+			.elderDistances({ attitudes, islands: content.islands, elders })
+			.map((entry): [string, number | null] => [elderStageId(entry.elderId), entry.distance]);
+
+		return Object.fromEntries([...partyEntries, ...elderEntries]);
+	}, [content, attitudes, parties, elders]);
 
 	// Feed the voyage scene: parties once, then the current island vignette.
 	// Ships take their positions instantly on entry (no mid-question motion).
 	useEffect(() => {
-		if (mode !== 'game' || parties.length === 0) return;
+		if (mode !== 'game' || parties.length + elders.length === 0) return;
 		stageBus.send({
 			type: 'setParties',
-			parties: parties.map((party) => ({
-				id: party.partyId,
-				name: party.name,
-				color: party.color,
-			})),
+			parties: [
+				...parties.map((party) => ({
+					id: party.partyId,
+					name: party.name,
+					color: party.color,
+				})),
+				...elders.map((elder) => ({
+					id: elderStageId(elder.elderId),
+					name: elder.name,
+					color: elder.color,
+					isElder: true,
+				})),
+			],
 		});
-	}, [mode, parties]);
+	}, [mode, parties, elders]);
 
 	useEffect(() => {
 		if (mode !== 'game' || !island) return;
@@ -172,6 +186,7 @@ export default function Voyage() {
 			if (Object.keys(patch).length > 0) await updateJourney(patch);
 			setDepth('');
 			setLog('');
+			setRemark(pickIslandRemark(elders, island!, attitudes));
 			setPhase('reaction');
 			if (mode === 'game') {
 				// the log-stamp beat, then the sea reacts
@@ -191,14 +206,23 @@ export default function Voyage() {
 		}
 		setIndex(index + 1);
 		setPhase('question');
+		setRemark(null);
 	}
 
-	const shipProximity: ShipProximity[] = parties.map((party) => ({
-		partyId: party.partyId,
-		name: party.name,
-		color: party.color,
-		distance: distances[party.partyId] ?? null,
-	}));
+	const shipProximity: ShipProximity[] = [
+		...parties.map((party) => ({
+			partyId: party.partyId,
+			name: party.name,
+			color: party.color,
+			distance: distances[party.partyId] ?? null,
+		})),
+		...elders.map((elder) => ({
+			partyId: elderStageId(elder.elderId),
+			name: `📜 ${elder.name}`,
+			color: elder.color,
+			distance: distances[elderStageId(elder.elderId)] ?? null,
+		})),
+	];
 	const askedShip = shipProximity.find((ship) => ship.partyId === asked) ?? null;
 
 	return (
@@ -316,6 +340,7 @@ export default function Voyage() {
 						</section>
 					) : (
 						<section className="fade-in flex flex-col gap-4">
+							{remark ? <ElderRemarkCard remark={remark} /> : null}
 							{mode === 'game' ? (
 								<>
 									{/* the sea itself reacts behind this window */}

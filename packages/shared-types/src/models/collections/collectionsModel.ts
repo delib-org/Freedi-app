@@ -110,4 +110,5 @@ export enum Collections {
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',
     odysseyJourneys = 'odysseyJourneys',
+    odysseyDigestState = 'odysseyDigestState',
 }

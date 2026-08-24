@@ -1,0 +1,1093 @@
+{
+	"firestore": {
+		"rules": "firestore.rules",
+		"indexes": "firestore.indexes.json"
+	},
+	"database": {
+		"rules": "database.rules.json"
+	},
+	"functions": [
+		{
+			"runtime": "nodejs22",
+			"source": "functions",
+			"predeploy": [
+				"npm --prefix \"$RESOURCE_DIR\" run build"
+			],
+			"memory": "256MB",
+			"minInstances": 0
+		}
+	],
+	"hosting": [
+		{
+			"target": "dev",
+			"public": "dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "/assets/**",
+					"destination": "/404.html"
+				},
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "/map/**",
+					"headers": [
+						{
+							"key": "Content-Security-Policy",
+							"value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "prod",
+			"public": "dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "/assets/**",
+					"destination": "/404.html"
+				},
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "/map/**",
+					"headers": [
+						{
+							"key": "Content-Security-Policy",
+							"value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "test",
+			"public": "dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "/assets/**",
+					"destination": "/404.html"
+				},
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "/map/**",
+					"headers": [
+						{
+							"key": "Content-Security-Policy",
+							"value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "wizcol",
+			"public": "dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "/assets/**",
+					"destination": "/404.html"
+				},
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "/map/**",
+					"headers": [
+						{
+							"key": "Content-Security-Policy",
+							"value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "chat",
+			"public": "apps/chat/build/client",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "**",
+					"function": "ssrChat"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "/_app/immutable/**",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "flow",
+			"public": "apps/flow/dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "/map/**",
+					"headers": [
+						{
+							"key": "Content-Security-Policy",
+							"value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "agora",
+			"public": "apps/agora/dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif|mp4|webm)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "odyssey",
+			"public": "apps/odyssey/dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif|mp4|webm)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "admin",
+			"public": "apps/admin/dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "/map/**",
+					"headers": [
+						{
+							"key": "Content-Security-Policy",
+							"value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "join",
+			"public": "apps/join/dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "/q/**",
+					"function": {
+						"functionId": "serveJoinShareRoutes",
+						"region": "me-west1"
+					}
+				},
+				{
+					"source": "/m/**",
+					"function": {
+						"functionId": "serveJoinShareRoutes",
+						"region": "me-west1"
+					}
+				},
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(woff|woff2|ttf|eot|otf)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				},
+				{
+					"source": "/map/**",
+					"headers": [
+						{
+							"key": "Content-Security-Policy",
+							"value": "frame-ancestors 'self' https://*.wizcol.com https://*.freedi.tech"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "sign",
+			"public": "apps/sign/public",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "**",
+					"run": {
+						"serviceId": "sign-app",
+						"region": "me-west1"
+					}
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/@(sw|custom-sw|firebase-messaging-sw).js",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				},
+				{
+					"source": "/_next/static/**",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "**/*",
+					"headers": [
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Referrer-Policy",
+							"value": "strict-origin-when-cross-origin"
+						}
+					]
+				}
+			]
+		},
+		{
+			"target": "studio",
+			"public": "apps/studio/dist",
+			"ignore": [
+				"firebase.json",
+				"**/.*",
+				"**/node_modules/**"
+			],
+			"rewrites": [
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			],
+			"headers": [
+				{
+					"source": "**/*.@(js|css)",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "public, max-age=31536000, immutable"
+						}
+					]
+				},
+				{
+					"source": "index.html",
+					"headers": [
+						{
+							"key": "Cache-Control",
+							"value": "no-cache, no-store, must-revalidate"
+						}
+					]
+				}
+			]
+		}
+	],
+	"emulators": {
+		"auth": {
+			"port": 9109,
+			"host": "localhost"
+		},
+		"functions": {
+			"port": 5011,
+			"host": "localhost"
+		},
+		"firestore": {
+			"port": 8091,
+			"host": "localhost"
+		},
+		"database": {
+			"port": 9010,
+			"host": "localhost"
+		},
+		"storage": {
+			"port": 9209,
+			"host": "localhost"
+		},
+		"ui": {
+			"enabled": true,
+			"port": 5012,
+			"host": "localhost"
+		},
+		"singleProjectMode": true,
+		"hosting": {
+			"port": 5013,
+			"host": "localhost"
+		}
+	},
+	"storage": {
+		"rules": "storage.rules"
+	}
+}

@@ -1457,12 +1457,19 @@ export function Deliberation(
 			// asked for, so the sheet's resting state is my text and my feedback
 			!getSessionFlow().elders
 				? null
-				: workbenchSection('era', t('delib.ask_elders'), askSection(live, myProposal, topic), {
-						open: charactersOpen,
-						onToggle: () => {
-							charactersOpen = !charactersOpen;
+				: workbenchSection(
+						'era',
+						topic.characters.some((character) => character.isElder)
+							? t('delib.ask_elders_council')
+							: t('delib.ask_elders'),
+						askSection(live, myProposal, topic),
+						{
+							open: charactersOpen,
+							onToggle: () => {
+								charactersOpen = !charactersOpen;
+							},
 						},
-					}),
+					),
 			// Open by default (explicit call, 2026-08-10): improving is writing
 			// too, and the two sides' needs are its raw material. It sits last
 			// in the sheet, so standing open costs the primary zone nothing.
@@ -1708,14 +1715,17 @@ export function Deliberation(
 		topic: AgoraTopicPackage,
 	): m.Children {
 		const { characterReviews } = getDeliberationState();
-		const openCharacter = topic.characters.find(
-			(character) => character.characterId === openCharacterId,
-		);
+		// Odyssey elders take the panel over from the stance "voices": personas
+		// are worth asking, a stance wearing the character schema is not.
+		const askable = topic.characters.some((character) => character.isElder)
+			? topic.characters.filter((character) => character.isElder)
+			: topic.characters;
+		const openCharacter = askable.find((character) => character.characterId === openCharacterId);
 
 		return m('.stack', [
 			m(
 				'.char-chips',
-				topic.characters.map((character) => {
+				askable.map((character) => {
 					const review =
 						characterReviews[
 							createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
@@ -2564,32 +2574,36 @@ export function Deliberation(
 											m('p.write-desk__selfcheck-ask', t('delib.selfcheck_ask')),
 											m(
 												'.write-desk__selfcheck-chips',
-												topic.characters.map((character) => {
-													const checked = selfCheck.has(character.characterId);
+												// The two names ARE the two sides — elder personas
+												// are askable helpers, not sides; keep them off.
+												topic.characters
+													.filter((character) => !character.isElder)
+													.map((character) => {
+														const checked = selfCheck.has(character.characterId);
 
-													return m(
-														'button.write-desk__selfcheck-chip',
-														{
-															type: 'button',
-															class: checked ? 'write-desk__selfcheck-chip--on' : undefined,
-															'aria-pressed': String(checked),
-															onclick: () => {
-																if (checked) selfCheck.delete(character.characterId);
-																else selfCheck.add(character.characterId);
+														return m(
+															'button.write-desk__selfcheck-chip',
+															{
+																type: 'button',
+																class: checked ? 'write-desk__selfcheck-chip--on' : undefined,
+																'aria-pressed': String(checked),
+																onclick: () => {
+																	if (checked) selfCheck.delete(character.characterId);
+																	else selfCheck.add(character.characterId);
+																},
 															},
-														},
-														[
-															checked
-																? m(
-																		'span.write-desk__selfcheck-mark',
-																		{ 'aria-hidden': 'true' },
-																		m(Icon, { name: 'check', size: 14 }),
-																	)
-																: null,
-															character.name,
-														],
-													);
-												}),
+															[
+																checked
+																	? m(
+																			'span.write-desk__selfcheck-mark',
+																			{ 'aria-hidden': 'true' },
+																			m(Icon, { name: 'check', size: 14 }),
+																		)
+																	: null,
+																character.name,
+															],
+														);
+													}),
 											),
 										]),
 								m('.delib__actions', [

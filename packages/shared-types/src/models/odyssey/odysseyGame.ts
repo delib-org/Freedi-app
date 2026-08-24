@@ -10,6 +10,7 @@ import {
 	InferOutput,
 } from 'valibot';
 import { OdysseyGameScriptSchema } from './odysseyGameScript';
+import { OdysseyElderSchema } from './odysseyElder';
 
 /**
  * Israeli Odyssey (אודיסיאה ישראלית) — a pre-election civic-voice game and a
@@ -138,6 +139,11 @@ export const OdysseyGameSchema = object({
 	values: array(OdysseyValueSchema),
 	islands: array(OdysseyIslandSchema),
 	parties: array(OdysseyPartySchema),
+	/**
+	 * Historical elder personas who play alongside the user. Runtime behavior
+	 * is additionally gated on `script.eldersEnabled`.
+	 */
+	elders: optional(array(OdysseyElderSchema)),
 	/**
 	 * island statementId → the civic Agora session opened for it. Kept on the
 	 * game doc so the summary and the map can show every gate's state in the

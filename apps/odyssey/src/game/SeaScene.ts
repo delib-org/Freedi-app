@@ -245,7 +245,8 @@ export abstract class SeaScene extends Phaser.Scene {
 		if (options?.named !== false) {
 			parts.push(
 				this.add
-					.text(0, 44, party.name, {
+					// Elder ships are AI personas and must say so on the water.
+					.text(0, 44, party.isElder ? `📜 ${party.name}` : party.name, {
 						fontFamily: 'Arial',
 						fontSize: '13px',
 						color: '#fff4d3',

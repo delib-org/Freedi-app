@@ -5,7 +5,7 @@ import {
 	boolean,
 	optional,
 	array,
-	tuple,
+	tupleWithRest,
 	record,
 	enum_,
 	InferOutput,
@@ -37,6 +37,13 @@ export const AgoraCharacterSchema = object({
 	needs: optional(array(string())),
 	/** The values underlying the arguments — used as the grading answer key */
 	values: array(AgoraValueSchema),
+	/**
+	 * An Odyssey Elder persona (AI character inspired by a historical leader)
+	 * appended to a civic package. When any character carries this flag, the
+	 * ask-the-characters panel shows only the elders — the two stance "voices"
+	 * that wear the schema for the positioning scale stay off the panel.
+	 */
+	isElder: optional(boolean()),
 });
 
 export type AgoraCharacter = InferOutput<typeof AgoraCharacterSchema>;
@@ -131,7 +138,12 @@ export const AgoraTopicPackageSchema = object({
 	title: string(),
 	/** The "save the era" mission framing shown to students */
 	framingText: string(),
-	characters: tuple([AgoraCharacterSchema, AgoraCharacterSchema]),
+	/**
+	 * The first two are the era's two sides (the positioning scale's voices);
+	 * any further entries are appended personas — today the Odyssey elders,
+	 * flagged `isElder`.
+	 */
+	characters: tupleWithRest([AgoraCharacterSchema, AgoraCharacterSchema], AgoraCharacterSchema),
 	positioningScale: AgoraPositioningScaleSchema,
 	challengeQuestion: string(),
 	valueAnswerKey: array(AgoraValueAnswerKeySchema),

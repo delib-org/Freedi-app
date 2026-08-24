@@ -1,8 +1,9 @@
-import type { Evaluation, OdysseyParty } from '@freedi/shared-types';
+import type { Evaluation, OdysseyElder, OdysseyParty } from '@freedi/shared-types';
 import type { IslandContent } from './game';
 import {
 	AttitudeMap,
 	MIN_SHARED_STANCES,
+	elderAttitudes,
 	opinionDistance,
 	participantProfiles,
 	partyAttitudes,
@@ -30,7 +31,7 @@ import {
  * =======================================================================
  */
 
-export type OpinionPointKind = 'me' | 'sailor' | 'party';
+export type OpinionPointKind = 'me' | 'sailor' | 'party' | 'elder';
 
 export interface OpinionPoint {
 	id: string;
@@ -74,10 +75,12 @@ export function buildOpinionMap(input: {
 	evaluations: Evaluation[];
 	islands: IslandContent[];
 	parties: OdysseyParty[];
+	/** Elder personas as further virtual users (labeled AI, like party ships). */
+	elders?: OdysseyElder[];
 	/** Overlap threshold for a pair distance to count as known. */
 	minSharedStances?: number;
 }): OpinionMapResult | null {
-	const { uid, evaluations, islands, parties } = input;
+	const { uid, evaluations, islands, parties, elders = [] } = input;
 	const minShared = input.minSharedStances ?? MIN_SHARED_STANCES;
 
 	const entities: MapEntity[] = [];
@@ -97,6 +100,17 @@ export function buildOpinionMap(input: {
 			kind: 'party',
 			label: party.name,
 			color: party.color,
+			attitudes,
+		});
+	}
+	for (const elder of elders) {
+		const attitudes = elderAttitudes(elder, islands);
+		if (Object.keys(attitudes).length === 0) continue;
+		entities.push({
+			id: `elder--${elder.elderId}`,
+			kind: 'elder',
+			label: elder.name,
+			color: elder.color,
 			attitudes,
 		});
 	}

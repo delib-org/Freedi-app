@@ -1,7 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import type { User as FreediUser } from '@freedi/shared-types';
+import { Collections } from '@freedi/shared-types';
 import {
 	auth,
+	db,
+	doc,
+	setDoc,
 	GoogleAuthProvider,
 	signInWithPopup,
 	signOut,
@@ -30,6 +34,24 @@ function emit(): void {
 onAuthStateChanged(auth, (user: User | null) => {
 	state = { user, loading: false };
 	emit();
+	// Odyssey historically wrote no users/{uid} profile, which silently starved
+	// the notification email channel (it looks the address up there). A merge
+	// on every sign-in keeps the doc fresh without clobbering other apps'
+	// fields.
+	if (user && !user.isAnonymous) {
+		void setDoc(
+			doc(db, Collections.users, user.uid),
+			{
+				uid: user.uid,
+				displayName: user.displayName ?? user.email ?? 'מפליג/ה',
+				email: user.email ?? null,
+				lastUpdate: Date.now(),
+			},
+			{ merge: true },
+		).catch(() => {
+			// Non-blocking: the game must not care if the profile write fails.
+		});
+	}
 });
 
 export function useUser(): UserState {

@@ -6,4 +6,5 @@ export enum SourceApp {
 	CHAT = 'chat',
 	AGORA = 'agora',
 	JOIN = 'join',
+	ODYSSEY = 'odyssey',
 }

@@ -17,6 +17,7 @@ import {
 	AgoraStage,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
+	OdysseyElder,
 	OdysseyGame,
 	OdysseyIsland,
 	OdysseyIslandAgoraSession,
@@ -106,6 +107,33 @@ export function buildCivicFramingScene(island: OdysseyIsland, questionText: stri
 	};
 }
 
+/**
+ * An Odyssey elder as an askable Agora character. Its argument is the stance
+ * it declared on THIS island, so the review prompt argues the island's actual
+ * question; needs/values come from the persona. `isElder` keeps it off the
+ * positioning scale (the two stance voices stay that) and puts it on the
+ * ask-the-characters panel.
+ */
+function elderCharacter(
+	elder: OdysseyElder,
+	island: OdysseyIsland,
+	stanceText: string | undefined,
+): AgoraCharacter {
+	return {
+		characterId: `elder--${elder.elderId}`,
+		name: elder.name,
+		role: elder.role,
+		...(elder.portraitUrl ? { portraitUrl: elder.portraitUrl } : {}),
+		arguments: [
+			...(stanceText ? [stanceText] : []),
+			...(elder.challenges[island.statementId] ? [elder.challenges[island.statementId]] : []),
+		],
+		needs: elder.needs,
+		values: elder.values,
+		isElder: true,
+	};
+}
+
 function buildCivicTopicPackage(params: {
 	topicPackageId: string;
 	creatorId: string;
@@ -113,10 +141,11 @@ function buildCivicTopicPackage(params: {
 	questionText: string;
 	leftStanceText?: string;
 	rightStanceText?: string;
+	elders: AgoraCharacter[];
 	framing: boolean;
 	now: number;
 }): AgoraTopicPackage {
-	const { topicPackageId, creatorId, island, questionText, framing, now } = params;
+	const { topicPackageId, creatorId, island, questionText, elders, framing, now } = params;
 	const leftStance = params.leftStanceText?.trim() || POLE_LABEL_LEFT;
 	const rightStance = params.rightStanceText?.trim() || POLE_LABEL_RIGHT;
 
@@ -137,7 +166,7 @@ function buildCivicTopicPackage(params: {
 		status: AgoraTopicStatus.ready,
 		title: island.title,
 		framingText: island.shortExplain || island.opening || island.issue,
-		characters: [voice('left', leftStance), voice('right', rightStance)],
+		characters: [voice('left', leftStance), voice('right', rightStance), ...elders],
 		positioningScale: {
 			leftLabel: POLE_LABEL_LEFT,
 			rightLabel: POLE_LABEL_RIGHT,
@@ -239,13 +268,25 @@ export const agoraProvisionCivicSessions = onCall(
 				);
 			}
 
-			// The island's question text and its anchor stances all live on
-			// Statement docs — read them together rather than per island.
+			// The elders join the square only when the script asks for them.
+			const activeElders = resolved.elders
+				? (game.elders ?? [])
+						.filter((elder) => elder.enabled)
+						.sort((a, b) => a.sortOrder - b.sortOrder)
+				: [];
+
+			// The island's question text, its anchor stances and the elders'
+			// declared stances all live on Statement docs — read them together
+			// rather than per island.
 			const statementIds = new Set<string>();
 			for (const island of toOpen) {
 				statementIds.add(island.statementId);
 				if (island.leftAnchorStanceId) statementIds.add(island.leftAnchorStanceId);
 				if (island.rightAnchorStanceId) statementIds.add(island.rightAnchorStanceId);
+				for (const elder of activeElders) {
+					const declared = elder.positions[island.statementId];
+					if (declared) statementIds.add(declared);
+				}
 			}
 			const statementSnaps = await db.getAll(
 				...[...statementIds].map((id) => db.collection(Collections.statements).doc(id)),
@@ -286,6 +327,15 @@ export const agoraProvisionCivicSessions = onCall(
 					rightStanceText: island.rightAnchorStanceId
 						? statementText.get(island.rightAnchorStanceId)
 						: undefined,
+					elders: activeElders.map((elder) =>
+						elderCharacter(
+							elder,
+							island,
+							elder.positions[island.statementId]
+								? statementText.get(elder.positions[island.statementId])
+								: undefined,
+						),
+					),
 					framing: resolved.framing,
 					now,
 				});
