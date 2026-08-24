@@ -1,0 +1,103 @@
+{
+  "missedAttaches": [
+    {
+      "statementId": "SEqM-zrDfQMN",
+      "synthId": "HAXXewQ6LF86",
+      "confidence": "high",
+      "reason": "Making research accessible in language understandable to the relevant agents is exactly the synthesis 'make research problems accessible in the target audience's language'."
+    },
+    {
+      "statementId": "zbGJeUy3tPiV",
+      "synthId": "HAXXewQ6LF86",
+      "confidence": "high",
+      "reason": "Simplifying and making complex messages accessible to the broad audience is interchangeable with the members about simplifying problems into accessible, non-threatening discourse in the audience's language."
+    },
+    {
+      "statementId": "Gydh9Qhea4B9",
+      "synthId": "HAXXewQ6LF86",
+      "confidence": "medium",
+      "reason": "Making academic knowledge accessible and understandable to the general public is the same accessibility intervention, though aimed at the public at large rather than specific target audiences."
+    },
+    {
+      "statementId": "isa7d2T0b3eH",
+      "synthId": "i0tYvLJSSfSV",
+      "confidence": "high",
+      "reason": "Encouraging bottom-up research from the field by surfacing existing challenges to the academic community matches the member 'the power of research from the field: surfacing challenges and developing solutions' almost verbatim."
+    },
+    {
+      "statementId": "WhkvOtCbkAKe",
+      "synthId": "i0tYvLJSSfSV",
+      "confidence": "high",
+      "reason": "Knowing a place through several layers of information (geological, botanical, uses) in order to change it matches the member 'understanding the place: layers of information and needs for changing reality' almost verbatim."
+    },
+    {
+      "statementId": "4PBBilOPwDvU",
+      "synthId": "Vv4eXsjUeGob",
+      "confidence": "high",
+      "reason": "Finding the actor who connects the worlds of science and regulation with the field executors is the same proposal as installing a connecting agent between research and the field."
+    },
+    {
+      "statementId": "OlUHWZkmWRXI",
+      "synthId": "Vv4eXsjUeGob",
+      "confidence": "high",
+      "reason": "A dedicated staff role whose job is to connect the university to the city on environmental issues is the same connecting-agent intervention between research and the field/community."
+    },
+    {
+      "statementId": "KIzZt9Cv8AoL",
+      "synthId": "HtoFP5OZXf7Y",
+      "confidence": "high",
+      "reason": "Providing resources (budgets, technological tools, training) to support collaboration is interchangeable with the synthesis member on allocating budgets, materials and technological tools to support research initiatives."
+    },
+    {
+      "statementId": "RRQSCGGufl7s",
+      "synthId": "HtoFP5OZXf7Y",
+      "confidence": "medium",
+      "reason": "The core lever, allocating funding/resources to enable implementation, matches the money/resources members, though it adds a 'freedom of action' rider."
+    },
+    {
+      "statementId": "ArGLq9FsN9tN",
+      "synthId": "vJ2h84OTWp20",
+      "confidence": "high",
+      "reason": "Impact-oriented collaborations spanning academia and other sectors (environmental orgs, government, local authorities) is interchangeable with the members on connecting academia, civil society and government to promote collaboration."
+    },
+    {
+      "statementId": "CoSO3bjI8lfp",
+      "synthId": "9fKHAY6Jrr4p",
+      "confidence": "high",
+      "reason": "Motivation and inner fire as the driver for people to act and fight for change is the same claim as the member requiring significant drive from whoever seeks to make the change."
+    },
+    {
+      "statementId": "R2slgMvVeLLb",
+      "synthId": "3SeU51kwp1iL",
+      "confidence": "medium",
+      "reason": "Establishing rooms/forums for open discourse among the public, academia and practitioners is the same convene-a-stakeholder-discussion-forum intervention, though framed around needs rather than agreements."
+    }
+  ],
+  "missedSpawns": [
+    {
+      "statementIds": ["NhNv2A5askQy", "nCBoYSGyWKVm"],
+      "confidence": "high",
+      "reason": "Both propose citizen science: mediating science from academia to volunteers/the broad public so that many people take part in collecting and producing scientific knowledge."
+    },
+    {
+      "statementIds": ["mpSqQCw7p9MP", "WKLIJmIj52Es"],
+      "confidence": "high",
+      "reason": "Both propose conducting research that integrates multiple disciplines from the outset (transdisciplinary/multidisciplinary research)."
+    },
+    {
+      "statementIds": ["c7fpbWFvSqP2", "5SwFR11a5HZk"],
+      "confidence": "high",
+      "reason": "Both state the same condition: successful change requires combining scientific knowledge/validity with passion (activist fervor), and neither alone suffices."
+    },
+    {
+      "statementIds": ["SuSzMKDmCRRR", "0lOPuJxx4ofP"],
+      "confidence": "medium",
+      "reason": "Both propose organizing in-person meetings/workshops between researchers and field practitioners to build lasting collaboration."
+    },
+    {
+      "statementIds": ["8DHPTWBreIcG", "TB329vZng-O-"],
+      "confidence": "medium",
+      "reason": "Both propose a standing, structured mechanism for continuous information/feedback flow from the field to keep knowledge current and improve processes."
+    }
+  ]
+}

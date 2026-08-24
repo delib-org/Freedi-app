@@ -359,6 +359,16 @@ before/after listings and the deployment-order discussion:
 `runs/bq-replay-alljudged/`. Build certified. No ground truth exists for a
 real question, so this is a structural comparison, not a score.
 
+**Post-hoc verification audit (2026-08-24)** — blind independent judges +
+`textFidelity.mjs` over this run's output: member-level merge precision **22/34
+(65%)** with the same 11 wrong members refuted by both auditors, **11 missed
+attaches + 5 missed spawn pairs** (19 of 21 silent, not review-queued), text
+fidelity **0.647** with 2 fabricated syntheses; the 8-member synthesis
+`GuKRYnGq1BHF` is a live snowballing instance holding 6 of the 12 wrong members
+and all 3 lost voices. The structural improvement over production stands; the
+benchmark numbers do not transfer to real data. Full report:
+`runs/bq-replay-alljudged/verification/VERIFICATION.md`.
+
 ## Finding 19 — the English regression run: synth layer identical, topic layer rolls its usual dice
 
 `en-seed42-alljudged` runs the full all-judged build (judged Pass 3, spawn

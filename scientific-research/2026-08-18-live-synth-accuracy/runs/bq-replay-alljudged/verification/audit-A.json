@@ -1,0 +1,245 @@
+{
+  "synths": [
+    {
+      "synthId": "3SeU51kwp1iL",
+      "overall": "CLEAN",
+      "members": [
+        {
+          "id": "Ose-OJ-abZk8",
+          "verdict": "same",
+          "reason": "Describes the goal of the same convening (culture of discussion and reaching agreements among stakeholders) — same intervention, same lever."
+        },
+        {
+          "id": "QWROJcHOIoX8",
+          "verdict": "same",
+          "reason": "Convene a periodic forum of stakeholders representing diverse views to create discussion culture and agreements — the same proposal, essentially interchangeable with the other member."
+        }
+      ]
+    },
+    {
+      "synthId": "9fKHAY6Jrr4p",
+      "overall": "CLEAN",
+      "members": [
+        {
+          "id": "w0BSucZf2WVU",
+          "verdict": "same",
+          "reason": "Calls for meaningful motivation, patience and persistence through the long change process — same disposition-level lever as the other member."
+        },
+        {
+          "id": "yUe7rdkkdaRx",
+          "verdict": "same",
+          "reason": "'Stubbornness' — consistency and commitment through the research process despite difficulties; interchangeable with persistence/motivation statement, a supporter of one could not oppose the other."
+        }
+      ]
+    },
+    {
+      "synthId": "GuKRYnGq1BHF",
+      "overall": "CONTAMINATED",
+      "members": [
+        {
+          "id": "oOoI7Y1id7iT",
+          "verdict": "same",
+          "reason": "Committed, academically professional team responsible for implementation based on academic knowledge — same intervention as appointing a committed leading actor (team vs individual is formulation)."
+        },
+        {
+          "id": "2TtuOVzjlxqz",
+          "verdict": "same",
+          "reason": "A committed leading actor invested in both academic knowledge and field implementation — this is the core proposal."
+        },
+        {
+          "id": "Vf-KfuQBvDuR",
+          "verdict": "related",
+          "reason": "Making research practical and implementable is a goal/direction statement, not the specific lever of appointing a committed responsible actor."
+        },
+        {
+          "id": "UZTYIfao8kLJ",
+          "verdict": "related",
+          "reason": "Strengthening applied research is a different intervention (invest in a research type) from designating a committed lead actor for implementation."
+        },
+        {
+          "id": "nNllEXPaFEIv",
+          "verdict": "related",
+          "reason": "'Successful collaboration' is a vague general sentiment with no specific action; cannot be interchangeable with appointing a lead implementation actor."
+        },
+        {
+          "id": "GmIltNOItVuK",
+          "verdict": "related",
+          "reason": "'Combining knowledge and involvement for environmental change' is a general slogan, not the appoint-a-lead-actor intervention; arguably a different topic (environmental change)."
+        },
+        {
+          "id": "-FIRB5S0yGct",
+          "verdict": "related",
+          "reason": "Avoiding the ivory tower by including users' voices in the research process is a participatory-research intervention, not the appointment of a committed implementation lead."
+        },
+        {
+          "id": "Y1I6lLP8xam3",
+          "verdict": "related",
+          "reason": "Researchers co-working with end users affected by the research is a distinct intervention (end-user participation), pairing with -FIRB5S0yGct rather than with the lead-actor core."
+        }
+      ]
+    },
+    {
+      "synthId": "H3seHm1Ey32Z",
+      "overall": "CLEAN",
+      "members": [
+        {
+          "id": "FPOE5sunboCR",
+          "verdict": "same",
+          "reason": "Personal acquaintance with the person who researched and understands the topic — the same personal-connection lever."
+        },
+        {
+          "id": "uJ2JIOflu7eR",
+          "verdict": "same",
+          "reason": "Personal acquaintance as the key, via conferences emphasizing unmediated human connection — same lever and direction; a supporter of one could not oppose the other."
+        }
+      ]
+    },
+    {
+      "synthId": "HAXXewQ6LF86",
+      "overall": "CLEAN",
+      "members": [
+        {
+          "id": "RATcF-ZwXQUx",
+          "verdict": "same",
+          "reason": "Simplify the research problems into accessible, non-threatening, clear discourse for different sectors — the audience-adapted-language intervention."
+        },
+        {
+          "id": "VfGXx9S7vwzr",
+          "verdict": "same",
+          "reason": "Know how to speak the target audience's language — a shorter formulation of the identical intervention."
+        }
+      ]
+    },
+    {
+      "synthId": "HtoFP5OZXf7Y",
+      "overall": "CONTAMINATED",
+      "members": [
+        {
+          "id": "9yL3IDbEhXaz",
+          "verdict": "related",
+          "reason": "Incentives and supports to motivate carrying out the change is a motivational lever aimed at change-implementers, not the majority's allocate-money-to-the-research-itself proposal."
+        },
+        {
+          "id": "2c4abbr0W5F5",
+          "verdict": "related",
+          "reason": "'Related to economic benefit' is a fragment/general sentiment, not a concrete resource-allocation proposal."
+        },
+        {
+          "id": "Jf82R2evpuLK",
+          "verdict": "same",
+          "reason": "Allocate required resources (budgets, learning materials, tech tools) to support research ventures — the resource-allocation core."
+        },
+        {
+          "id": "BH5PGDyUJNre",
+          "verdict": "same",
+          "reason": "Allocate financial resources for conducting the research (equipment, staff, expenses) — interchangeable with the resources proposal."
+        }
+      ]
+    },
+    {
+      "synthId": "Vv4eXsjUeGob",
+      "overall": "CLEAN",
+      "members": [
+        {
+          "id": "ChYLe-WaXFZ1",
+          "verdict": "same",
+          "reason": "The researcher needs a connecting agent who presents the data clearly and makes the interpersonal connection that drives change — the core proposal."
+        },
+        {
+          "id": "4YG1J3vPJYrR",
+          "verdict": "same",
+          "reason": "Near-verbatim paraphrase: interpersonal relationships as the connecting bridge that lets the data be communicated clearly and create the change-driving connection — same mechanism and direction."
+        }
+      ]
+    },
+    {
+      "synthId": "WyjLk5LjtRi8",
+      "overall": "CONTAMINATED",
+      "members": [
+        {
+          "id": "i23KORDFIpWM",
+          "verdict": "related",
+          "reason": "'A vacuum of information' is a problem statement, not the webinar proposal — a problem merged with a solution violates the rubric."
+        },
+        {
+          "id": "8UMPeQ3U3sVy",
+          "verdict": "same",
+          "reason": "Regular webinars to make the most relevant knowledge accessible — the concrete core proposal."
+        }
+      ]
+    },
+    {
+      "synthId": "i0tYvLJSSfSV",
+      "overall": "CONTAMINATED",
+      "members": [
+        {
+          "id": "4IwTYx4688hA",
+          "verdict": "related",
+          "reason": "'Understanding the place: layers of information and needs' is a heading-like framing with no action; a general statement merged with a concrete sequencing proposal."
+        },
+        {
+          "id": "Divm1vj6jauQ",
+          "verdict": "same",
+          "reason": "Derive the research question from observation and deep understanding of the field need — the core proposal."
+        },
+        {
+          "id": "IxpfAyBE4VNi",
+          "verdict": "same",
+          "reason": "Preliminary fieldwork that prepares the ground and sharpens the project — the same field-understanding-before-research intervention; a supporter of one could not oppose the other."
+        },
+        {
+          "id": "2hG1KQ5miClK",
+          "verdict": "related",
+          "reason": "'The power of field research: surfacing challenges and developing solutions' is a general value claim praising field research, not the ground-the-question-in-field-needs proposal."
+        }
+      ]
+    },
+    {
+      "synthId": "nbzPaaenT7Ze",
+      "overall": "CONTAMINATED",
+      "members": [
+        {
+          "id": "FKMzBdFp3SX4",
+          "verdict": "same",
+          "reason": "Involve the public in strategic processes and decisions about research and its implementation — the core proposal."
+        },
+        {
+          "id": "RGpZG3tu9SzQ",
+          "verdict": "different",
+          "reason": "'Research can drive big things' is a pure general sentiment about research's potential, with no connection to public involvement in strategic decisions."
+        }
+      ]
+    },
+    {
+      "synthId": "vJ2h84OTWp20",
+      "overall": "CLEAN",
+      "members": [
+        {
+          "id": "iEzATrGIDlDS",
+          "verdict": "same",
+          "reason": "Connect academia, civil society and government to promote collaborations — the same cross-sector partnership intervention."
+        },
+        {
+          "id": "4vhT0YqrfQK-",
+          "verdict": "same",
+          "reason": "'Matchmaking' between researchers, civil-society organizations and government ministries — the core matchmaking-mechanism proposal."
+        },
+        {
+          "id": "kLp0RmT-jsms",
+          "verdict": "same",
+          "reason": "Establish cross-sector collaborations (academia, industry, social organizations) to drive research projects — same intervention; partner-list differences are formulation, not a different lever."
+        },
+        {
+          "id": "eHh1Y5BPTqfu",
+          "verdict": "same",
+          "reason": "Build partnerships with academic institutions, social organizations and businesses to leverage knowledge and resources — interchangeable cross-sector partnership proposal."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "cleanCount": 6,
+    "contaminatedCount": 5,
+    "wronglyMergedMembers": 12
+  }
+}
