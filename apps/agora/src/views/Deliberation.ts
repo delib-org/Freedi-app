@@ -1464,6 +1464,18 @@ export function Deliberation(
 							: t('delib.ask_elders'),
 						askSection(live, myProposal, topic),
 						{
+							// The badge says the council already spoke — the elders read
+							// every proposal on their own, and a folded section with no
+							// sign of life reads as an empty room.
+							count: topic.characters.filter(
+								(character) =>
+									getDeliberationState().characterReviews[
+										createAgoraCharacterReviewId(
+											myProposal.statementId,
+											character.characterId,
+										)
+									] !== undefined,
+							).length,
 							open: charactersOpen,
 							onToggle: () => {
 								charactersOpen = !charactersOpen;

@@ -249,6 +249,30 @@ async function main() {
 			agoraSessionId: sessionId,
 		});
 
+	console.log('▸ the council reads the fresh proposal UNPROMPTED (auto-review trigger)');
+	const autoReviewId = `${proposalId}--${ELDER_CHARACTER_ID}`;
+	let autoReview = null;
+	for (let attempt = 0; attempt < 30 && !autoReview; attempt++) {
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+		const snap = await db
+			.collection(Collections.agoraCharacterReviews)
+			.doc(autoReviewId)
+			.get();
+		if (snap.exists && typeof snap.data().acceptanceScore === 'number') {
+			autoReview = snap.data();
+		}
+	}
+	checkTrue(
+		'an unasked verdict appeared',
+		Boolean(autoReview),
+		'no auto review within 60s — is onAgoraProposalWritten built into the emulator?',
+	);
+	checkTrue(
+		'and it spends no ask budget',
+		Object.keys(autoReview?.asksByRound ?? {}).length === 0,
+		JSON.stringify(autoReview?.asksByRound),
+	);
+
 	console.log('▸ the elder reads the proposal');
 	const first = await callable(
 		'agoraCharacterReview',

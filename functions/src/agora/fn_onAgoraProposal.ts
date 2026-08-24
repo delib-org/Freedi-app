@@ -8,6 +8,7 @@ import {
 	AgoraMessageKind,
 	AgoraParticipant,
 	AgoraProposalScore,
+	AgoraSession,
 	AgoraSuggestionStatus,
 	agoraClassSupport,
 	assessRevision,
@@ -19,8 +20,11 @@ import {
 	createAgoraParticipantId,
 	functionConfig,
 	getRandomUID,
+	isAgoraAiUid,
+	resolveSessionFlow,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
+import { autoElderReviews } from './fn_agoraCharacterReview';
 
 interface ProposalDoc {
 	statementId?: string;
@@ -436,6 +440,33 @@ async function creditWeaves(
  * statements collection, so anything without an agoraSessionId returns
  * before touching the database.
  */
+/**
+ * The elders read every fresh proposal and every real revision on their own —
+ * presence, not an oracle behind a button. Guarded to TRUE proposals (children
+ * of the challenge question — suggestions and thread messages hang off the
+ * proposal itself), to human authors, and to sessions whose flow seats a
+ * council at all.
+ */
+async function elderCouncilReads(
+	sessionId: string,
+	statementId: string,
+	proposal: ProposalDoc,
+): Promise<void> {
+	if (!proposal.creatorId || isAgoraAiUid(proposal.creatorId)) return;
+	const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
+	if (!sessionSnap.exists) return;
+	const session = sessionSnap.data() as AgoraSession;
+	if (proposal.parentId !== session.challengeQuestionId) return;
+	if (!resolveSessionFlow(session).elders) return;
+
+	await autoElderReviews({
+		sessionId,
+		session,
+		statementId,
+		proposalText: proposal.statement ?? '',
+	});
+}
+
 export const onAgoraProposalWritten = onDocumentWritten(
 	{ document: `${Collections.statements}/{statementId}`, ...functionConfig },
 	async (event) => {
@@ -451,6 +482,7 @@ export const onAgoraProposalWritten = onDocumentWritten(
 		try {
 			if (!before && after?.creatorId) {
 				await creditFirstProposal(sessionId, after.creatorId, statementId);
+				await elderCouncilReads(sessionId, statementId, after);
 
 				return;
 			}
@@ -497,6 +529,10 @@ export const onAgoraProposalWritten = onDocumentWritten(
 						);
 					}
 				}
+
+				// The council answers the revision — each elder against their own
+				// previous verdict, so the writer watches persuasion happen.
+				await elderCouncilReads(sessionId, statementId, after);
 			}
 		} catch (error) {
 			logError(error, {

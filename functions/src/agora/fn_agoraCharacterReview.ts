@@ -160,6 +160,124 @@ The student's proposal:
 }
 
 /**
+ * Write one finished review where both the panel and the scoreboard read it:
+ * the review doc (merged, identity fields included so an auto-review may be
+ * the doc's first write) and the character's three synthetic evaluations,
+ * deterministic ids so re-reviews overwrite and never double-count.
+ */
+async function persistReviewOutcome(input: {
+	sessionId: string;
+	session: AgoraSession;
+	statementId: string;
+	character: AgoraCharacter;
+	review: Review;
+}): Promise<void> {
+	const { sessionId, session, statementId, character, review } = input;
+	const reviewId = createAgoraCharacterReviewId(statementId, character.characterId);
+	const now = Date.now();
+	const batch = db.batch();
+	batch.set(
+		db.collection(Collections.agoraCharacterReviews).doc(reviewId),
+		{
+			reviewId,
+			sessionId,
+			statementId,
+			characterId: character.characterId,
+			verdictText: review.verdictText,
+			acceptanceScore: review.acceptanceScore,
+			advice: review.advice,
+			roundNumber: session.roundNumber,
+			lastUpdate: now,
+		},
+		{ merge: true },
+	);
+
+	// The character rates through the main evaluation system as 3 raters.
+	const evaluationValue = agoraScoreToEvaluation(review.acceptanceScore);
+	for (let index = 1; index <= AGORA_AI_REVIEW.RATERS_PER_CHARACTER; index++) {
+		const aiUid = createAgoraAiRaterUid(character.characterId, index);
+		const evaluationId = `${aiUid}--${statementId}`;
+		const evaluation: Evaluation = {
+			evaluationId,
+			parentId: session.challengeQuestionId,
+			statementId,
+			evaluatorId: aiUid,
+			evaluation: evaluationValue,
+			evaluator: {
+				uid: aiUid,
+				displayName: character.name,
+				isAnonymous: true,
+			},
+			agoraSessionId: sessionId,
+			updatedAt: now,
+		};
+		batch.set(db.collection(Collections.evaluations).doc(evaluationId), evaluation);
+	}
+	await batch.commit();
+}
+
+/**
+ * The elders read a proposal WITHOUT being asked — what makes them players
+ * rather than an oracle behind a button. Runs from the proposal trigger on
+ * every fresh proposal and every real revision; each elder remembers their
+ * previous verdict, so a revision is answered as the next move of the same
+ * negotiation (±MAX_SCORE_STEP_PER_ASK, like any re-ask). Never consumes the
+ * player's ask budget. Failures are logged per elder — one silent elder must
+ * not mute the council.
+ */
+export async function autoElderReviews(input: {
+	sessionId: string;
+	session: AgoraSession;
+	statementId: string;
+	proposalText: string;
+}): Promise<void> {
+	const { sessionId, session, statementId, proposalText } = input;
+	if (!proposalText.trim()) return;
+
+	const topicSnap = await db
+		.collection(Collections.agoraTopicPackages)
+		.doc(session.topicPackageId)
+		.get();
+	if (!topicSnap.exists) return;
+	const topic = topicSnap.data() as AgoraTopicPackage;
+	const elders = topic.characters.filter((character) => character.isElder);
+	if (elders.length === 0) return;
+
+	await Promise.allSettled(
+		elders.map(async (character) => {
+			try {
+				const reviewId = createAgoraCharacterReviewId(statementId, character.characterId);
+				const existingSnap = await db
+					.collection(Collections.agoraCharacterReviews)
+					.doc(reviewId)
+					.get();
+				const existing = existingSnap.exists ? (existingSnap.data() as AgoraCharacterReview) : null;
+				const previous =
+					existing && typeof existing.acceptanceScore === 'number'
+						? {
+								acceptanceScore: existing.acceptanceScore,
+								verdictText: existing.verdictText ?? '',
+							}
+						: null;
+
+				const review = process.env.OPENAI_API_KEY
+					? await aiReview(proposalText, character, topic, previous)
+					: fixtureReview(proposalText, character, previous);
+				review.acceptanceScore = clampToStep(review.acceptanceScore, previous);
+
+				await persistReviewOutcome({ sessionId, session, statementId, character, review });
+			} catch (error) {
+				logError(error, {
+					operation: 'agora.autoElderReview',
+					statementId,
+					metadata: { sessionId, characterId: character.characterId },
+				});
+			}
+		}),
+	);
+}
+
+/**
  * In-character proposal review — "show your proposal to the Count".
  * The character replies in character (verdict + advice) AND rates the
  * proposal through the real evaluation pipeline as 3 synthetic raters
@@ -258,42 +376,13 @@ export const agoraCharacterReview = onCall(
 				: fixtureReview(proposal.statement, character, previous);
 			review.acceptanceScore = clampToStep(review.acceptanceScore, previous);
 
-			const now = Date.now();
-			const batch = db.batch();
-			batch.set(
-				reviewRef,
-				{
-					verdictText: review.verdictText,
-					acceptanceScore: review.acceptanceScore,
-					advice: review.advice,
-					roundNumber: session.roundNumber,
-					lastUpdate: now,
-				},
-				{ merge: true },
-			);
-
-			// The character rates through the main evaluation system as 3 raters.
-			const evaluationValue = agoraScoreToEvaluation(review.acceptanceScore);
-			for (let index = 1; index <= AGORA_AI_REVIEW.RATERS_PER_CHARACTER; index++) {
-				const aiUid = createAgoraAiRaterUid(characterId, index);
-				const evaluationId = `${aiUid}--${statementId}`;
-				const evaluation: Evaluation = {
-					evaluationId,
-					parentId: session.challengeQuestionId,
-					statementId,
-					evaluatorId: aiUid,
-					evaluation: evaluationValue,
-					evaluator: {
-						uid: aiUid,
-						displayName: character.name,
-						isAnonymous: true,
-					},
-					agoraSessionId: sessionId,
-					updatedAt: now,
-				};
-				batch.set(db.collection(Collections.evaluations).doc(evaluationId), evaluation);
-			}
-			await batch.commit();
+			await persistReviewOutcome({
+				sessionId,
+				session,
+				statementId,
+				character,
+				review,
+			});
 
 			return {
 				verdictText: review.verdictText,
