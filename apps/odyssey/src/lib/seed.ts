@@ -16,6 +16,7 @@ import {
 	DEFAULT_TEXTS,
 	DEFAULT_VALUES,
 } from './defaults';
+import { researchedAttitudes } from './research';
 
 /**
  * One-time game creation, run by the first admin from /admin.
@@ -101,12 +102,23 @@ export async function seedGame(
 		DEFAULT_ISLANDS.map((island, index) => [island.slug, islandsMeta[index].statementId]),
 	);
 
+	const researched = researchedAttitudes();
 	const parties: OdysseyParty[] = DEFAULT_PARTIES.map((party, index) => {
+		const partyResearch = researched[party.slug] ?? {};
 		const positions: Record<string, string> = {};
 		for (const [slug, stanceIndex] of Object.entries(party.positions)) {
+			if (partyResearch[slug]) continue; // researched islands drop the legacy entry
 			const islandId = islandIdBySlug.get(slug);
 			const stanceId = stanceIdsBySlug.get(slug)?.[stanceIndex - 1];
 			if (islandId && stanceId) positions[islandId] = stanceId;
+		}
+		const attitudes: Record<string, number> = {};
+		for (const [slug, scores] of Object.entries(partyResearch)) {
+			const stanceIds = stanceIdsBySlug.get(slug) ?? [];
+			scores.forEach((score, scoreIndex) => {
+				const stanceId = stanceIds[scoreIndex];
+				if (stanceId) attitudes[stanceId] = score;
+			});
 		}
 
 		return {
@@ -115,6 +127,7 @@ export async function seedGame(
 			color: party.color,
 			imageUrl: null,
 			description: party.description,
+			attitudes,
 			positions,
 			sortOrder: index + 1,
 			enabled: true,

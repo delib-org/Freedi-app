@@ -840,6 +840,23 @@ function IslandsTab({
 
 /* ---------- Parties ---------- */
 
+const SCORE_STEPS = [-1, -0.5, 0, 0.5, 1];
+
+function setPartyScore(
+	party: OdysseyParty,
+	stanceId: string,
+	value: number | null,
+	update: (partyId: string, patch: Partial<OdysseyParty>) => void,
+): void {
+	const attitudes = { ...(party.attitudes ?? {}) };
+	if (value === null || Number.isNaN(value)) {
+		delete attitudes[stanceId];
+	} else {
+		attitudes[stanceId] = Math.max(-1, Math.min(1, value));
+	}
+	update(party.partyId, { attitudes });
+}
+
 function PartiesTab({
 	parties,
 	islands,
@@ -865,8 +882,9 @@ function PartiesTab({
 	return (
 		<section className="flex flex-col gap-3">
 			<p className="panel !py-3 text-[13px] opacity-85 m-0">
-				מסלול הספינה של כל מפלגה = ההיגד (החוף) שאליו היא הכי קרובה בכל אי. הנתונים שנטענו הם דוגמה
-				בלבד — יש לעדכן לפי הצהרות ומצע בפועל. מהם נגזר חישוב המרחק.
+				מסלול הספינה של כל מפלגה = ציון בין ‎−1 (מתנגדת) ל‎+1 (תומכת) לכל היגד בכל אי, על בסיס
+				מצעים, הצבעות והצהרות פומביות. היגד בלי ציון נופל חזרה לעמדה המוצהרת הישנה (אם קיימת).
+				מהציונים נגזר חישוב המרחק.
 			</p>
 			{draft
 				.sort((a, b) => a.sortOrder - b.sortOrder)
@@ -941,30 +959,57 @@ function PartiesTab({
 										מוצגת במשחק
 									</label>
 
-									<p className="eyebrow m-0 mt-2">מסלול הספינה — העמדה הקרובה בכל אי</p>
+									<p className="eyebrow m-0 mt-2">
+										מסלול הספינה — ציון לכל היגד (−1 מתנגדת … +1 תומכת)
+									</p>
 									{islands.map((island) => (
-										<label key={island.statementId} className="flex items-center gap-2">
-											<span className="w-40 shrink-0 text-[14px]">{island.title}</span>
-											<select
-												value={party.positions[island.statementId] ?? ''}
-												onChange={(event) => {
-													const positions = { ...party.positions };
-													if (event.target.value) {
-														positions[island.statementId] = event.target.value;
-													} else {
-														delete positions[island.statementId];
-													}
-													update(party.partyId, { positions });
-												}}
-											>
-												<option value="">— אין נתונים —</option>
-												{island.stances.map((stance, stanceIndex) => (
-													<option key={stance.statementId} value={stance.statementId}>
-														חוף {stanceIndex + 1}: {stance.statement.slice(0, 60)}
-													</option>
-												))}
-											</select>
-										</label>
+										<div key={island.statementId} className="flex flex-col gap-1">
+											<span className="text-[14px] font-bold">{island.title}</span>
+											{island.stances.map((stance, stanceIndex) => {
+												const score = party.attitudes?.[stance.statementId];
+
+												return (
+													<div key={stance.statementId} className="flex items-center gap-2">
+														<span className="flex-1 text-[13px] opacity-85">
+															חוף {stanceIndex + 1}: {stance.statement.slice(0, 70)}
+														</span>
+														<span className="flex gap-1" role="group" aria-label="ציון מהיר">
+															{SCORE_STEPS.map((step) => (
+																<button
+																	key={step}
+																	type="button"
+																	className={`btn-outline !px-2 !py-0.5 text-[12px] ${
+																		score === step ? '!bg-[var(--cream)] !text-[#0b1f33]' : ''
+																	}`}
+																	onClick={() =>
+																		setPartyScore(party, stance.statementId, step, update)
+																	}
+																>
+																	{step > 0 ? `+${step}` : step}
+																</button>
+															))}
+														</span>
+														<input
+															type="number"
+															className="!w-20"
+															min={-1}
+															max={1}
+															step={0.05}
+															value={score ?? ''}
+															title="ציון מדויק"
+															onChange={(event) =>
+																setPartyScore(
+																	party,
+																	stance.statementId,
+																	event.target.value === '' ? null : Number(event.target.value),
+																	update,
+																)
+															}
+														/>
+													</div>
+												);
+											})}
+										</div>
 									))}
 
 									<button
@@ -997,6 +1042,7 @@ function PartiesTab({
 								color: '#28418f',
 								imageUrl: null,
 								description: '',
+								attitudes: {},
 								positions: {},
 								sortOrder: draft.length + 1,
 								enabled: true,

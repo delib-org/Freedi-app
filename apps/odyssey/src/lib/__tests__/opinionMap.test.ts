@@ -140,6 +140,48 @@ describe('buildOpinionMap', () => {
 		expect(result!.fidelity.r).toBeGreaterThan(0.99);
 	});
 
+	it('places a continuously-scored party between the poles', () => {
+		// A softened route { s1: +0.5, s2: −0.5 } sits 0.25 from hard-route dana
+		// and 0.75 from her opposite — the map must reproduce the fractions.
+		const party: OdysseyParty = {
+			partyId: 'p1',
+			name: 'מתונה',
+			color: '#00ff00',
+			imageUrl: null,
+			description: '',
+			attitudes: { s1: 0.5, s2: -0.5 },
+			positions: {},
+			sortOrder: 0,
+			enabled: true,
+		};
+		const lineUsers: Array<[string, AttitudeMap]> = [
+			['dana', { s1: 1, s2: -1 }],
+			['noa', { s1: -1, s2: 1 }],
+		];
+		const evaluations: Evaluation[] = lineUsers.flatMap(([uid, attitudes]) =>
+			Object.entries(attitudes).map(([stanceId, value]) => ({
+				evaluationId: `${uid}--${stanceId}`,
+				parentId: 'tax',
+				statementId: stanceId,
+				evaluatorId: uid,
+				evaluation: value,
+				updatedAt: 1,
+			})),
+		);
+
+		const result = buildOpinionMap({
+			uid: 'dana',
+			evaluations,
+			islands,
+			parties: [party],
+			minSharedStances: 1,
+		});
+
+		expect(result).not.toBeNull();
+		expect(distanceBetween(result!.points, 'party--p1', 'dana')).toBeCloseTo(0.25, 1);
+		expect(distanceBetween(result!.points, 'party--p1', 'noa')).toBeCloseTo(0.75, 1);
+	});
+
 	it('returns null with fewer than 3 points or no known pairs', () => {
 		expect(
 			buildOpinionMap({

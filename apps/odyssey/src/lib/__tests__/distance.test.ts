@@ -62,6 +62,14 @@ function makeParty(partyId: string, positions: Record<string, string>): OdysseyP
 	};
 }
 
+function makePartyWithAttitudes(
+	partyId: string,
+	attitudes: Record<string, number>,
+	positions?: Record<string, string>,
+): OdysseyParty {
+	return { ...makeParty(partyId, positions ?? {}), attitudes };
+}
+
 describe('opinionDistance', () => {
 	it('reproduces the doc toy example (normalized to 0..1)', () => {
 		// Raw doc distances: Dana–Eli = 1, Dana–Omer = 2 → normalized 0.5, 1.
@@ -97,16 +105,28 @@ describe('opinionDistance', () => {
 });
 
 describe('partyAttitudes', () => {
-	it('supports the declared stance and opposes its island siblings', () => {
+	it('LEGACY: supports the declared stance and opposes its island siblings', () => {
 		const islands = [makeIsland('island-1', ['s1', 's2', 's3'])];
 		const party = makeParty('p1', { 'island-1': 's2' });
 		expect(partyAttitudes(party, islands)).toEqual({ s1: -1, s2: 1, s3: -1 });
 	});
 
-	it('skips islands without a declared position', () => {
+	it('skips islands without any data', () => {
 		const islands = [makeIsland('island-1', ['s1', 's2']), makeIsland('island-2', ['s3', 's4'])];
 		const party = makeParty('p1', { 'island-1': 's1' });
 		expect(partyAttitudes(party, islands)).toEqual({ s1: 1, s2: -1 });
+	});
+
+	it('passes continuous scores through verbatim', () => {
+		const islands = [makeIsland('island-1', ['s1', 's2', 's3'])];
+		const party = makePartyWithAttitudes('p1', { s1: 0.5, s2: -0.5, s3: 0 });
+		expect(partyAttitudes(party, islands)).toEqual({ s1: 0.5, s2: -0.5, s3: 0 });
+	});
+
+	it('mixes continuous and legacy islands, continuous winning per stance', () => {
+		const islands = [makeIsland('island-1', ['s1', 's2']), makeIsland('island-2', ['s3', 's4'])];
+		const party = makePartyWithAttitudes('p1', { s1: 0.5, s2: -0.5 }, { 'island-2': 's3' });
+		expect(partyAttitudes(party, islands)).toEqual({ s1: 0.5, s2: -0.5, s3: 1, s4: -1 });
 	});
 });
 
@@ -137,6 +157,27 @@ describe('opinionDistanceEngine.partyDistances', () => {
 		const party = makeParty('p1', { 'island-2': 's3' });
 		const [result] = opinionDistanceEngine.partyDistances({
 			attitudes: { s1: 1 },
+			islands,
+			parties: [party],
+		});
+		expect(result).toEqual({ partyId: 'p1', distance: null, sharedIslands: 0 });
+	});
+
+	it('measures fractional distance to a continuously-scored party', () => {
+		// |1−0.5| + |−1−(−0.5)| over 2 shared stances → (0.5+0.5)/2/2 = 0.25.
+		const party = makePartyWithAttitudes('p1', { s1: 0.5, s2: -0.5 });
+		const [result] = opinionDistanceEngine.partyDistances({
+			attitudes: { s1: 1, s2: -1 },
+			islands,
+			parties: [party],
+		});
+		expect(result).toEqual({ partyId: 'p1', distance: 0.25, sharedIslands: 1 });
+	});
+
+	it('gates islands by scored stances when the party has no legacy positions', () => {
+		const party = makePartyWithAttitudes('p1', { s3: 1, s4: -1 });
+		const [result] = opinionDistanceEngine.partyDistances({
+			attitudes: { s1: 1, s2: -1 },
 			islands,
 			parties: [party],
 		});

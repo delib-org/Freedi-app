@@ -1,0 +1,429 @@
+{
+	"version": 1,
+	"updated": "2026-08-24",
+	"islands": {
+		"rule-of-law": {
+			"likud": [
+				{
+					"score": -0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "תוכנית לוין (ינואר 2023) שוללת במפורש ביקורת שיפוטית על חוקי יסוד ומגבילה משמעותית פסילת חוקים רגילים — היפוכו של חוף זה.",
+					"sources": [
+						{ "title": "לוין הציג את \"השלב הראשון\" במהפכה", "url": "https://www.ynet.co.il/news/article/sjczdeq5i", "quote": "פסקת התגברות ברוב של 61, שינוי דרמטי בבחירת שופטים", "date": "2023-01-04" }
+					]
+				},
+				{
+					"score": -0.4,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "הקו הרשמי דחה עצירה בריסון בלבד ובחר בחקיקה חד-צדדית, אך היו קולות מתונים בתוך הסיעה (גלנט) שלחצו לרכך את הנוסח.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "quote": "גלנט לחץ לשנות את נוסח החוק אך הצביע בעד", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": 0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "ביטול עילת הסבירות (2023) וחוק שינוי הוועדה לבחירת שופטים (2025) הם צמצום בפועל של כוח בית המשפט, בהובלת הליכוד.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" },
+						{ "title": "אושר סופית חוק הליבה של המהפכה המשפטית", "url": "https://www.ynet.co.il/news/article/h1r8cn11tye", "date": "2025-03-27" }
+					]
+				},
+				{
+					"score": 0.8,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "תוכנית לוין כוללת פסקת התגברות ב-61 ושליטה קואליציונית בוועדה לבחירת שופטים; חוק הוועדה עבר ב-2025 והקואליציה ממשיכה ב'בליץ חקיקה' ב-2026. ניכוי קל כי פסקת ההתגברות הרחבה הוקפאה בפועל.",
+					"sources": [
+						{ "title": "לוין הציג את \"השלב הראשון\" במהפכה", "url": "https://www.ynet.co.il/news/article/sjczdeq5i", "date": "2023-01-04" },
+						{ "title": "בליץ חקיקה: הקואליציה מעלה הילוך במהפכה המשפטית", "url": "https://www.mako.co.il/news-politics/2026_q1/Article-aecba4bb69e9b91027.htm", "date": "2026" }
+					]
+				}
+			],
+			"yesh-atid": [
+				{
+					"score": 0.7,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "עתרה לבג\"ץ נגד חוק הוועדה לבחירת שופטים בטענה שהוא ממוטט את 'אחד הבלמים והאיזונים האחרונים של הדמוקרטיה' — הגנה על ביקורת שיפוטית חזקה.",
+					"sources": [
+						{ "title": "בג\"ץ הוציא צו על תנאי נגד חוק הוועדה לבחירת שופטים", "url": "https://www.ynet.co.il/news/article/bjkn8dhbwl", "quote": "פוליטיקאים יבחרו שופטים לפי אידיאולוגיה ונאמנות", "date": "2025" }
+					]
+				},
+				{
+					"score": 0.2,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "לפיד הכיר בפגמי המערכת ('לא עיוור לפגמיה') ותמך בעבר בהסדרה מוסכמת, אך דחה מתווי פשרה בלי עצירת חקיקה — תמיכה חלקית בלבד בריסון מוגדר.",
+					"sources": [
+						{ "title": "לפיד: לא עיוור לפגמיה אבל נגן עליה ממבקשי רעתה", "url": "https://www.israelhayom.co.il/news/law/article/13034526" },
+						{ "title": "גנץ לא דחה על הסף את המתווה החדש; לפיד כן", "url": "https://www.kan.org.il/content/kan-news/politic/517620/" }
+					]
+				},
+				{
+					"score": -0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "החרימה את הצבעות חקיקת הצמצום והתחייבה לבטל את חוקי המהפכה בממשלה הבאה.",
+					"sources": [
+						{ "title": "אושר סופית חוק הליבה, האופוזיציה: \"נבטל אותו בממשלה הבאה\"", "url": "https://www.ynet.co.il/news/article/h1r8cn11tye", "date": "2025-03-27" }
+					]
+				},
+				{
+					"score": -1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "העתירה של יש עתיד נגד פוליטיזציה של מינוי שופטים היא התנגדות ישירה לשליטה פוליטית במינויים ולפסקת התגברות רחבה.",
+					"sources": [
+						{ "title": "בג\"ץ הוציא צו על תנאי נגד חוק הוועדה לבחירת שופטים", "url": "https://www.ynet.co.il/news/article/bjkn8dhbwl", "date": "2025" }
+					]
+				}
+			],
+			"mamlachti": [
+				{
+					"score": 0.4,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "מגן על עקרונות הדמוקרטיה ועל בית המשפט מפני חקיקה חד-צדדית, אך אינו דוגל בהרחבת כוח בית המשפט — אלא בהסדרה מוסכמת.",
+					"sources": [
+						{ "title": "גנץ: במקום הסכמות בבית הנשיא מחזירים אותנו לערוץ חד-צדדי", "url": "https://www.calcalist.co.il/local_news/article/rjd8pqhu2" }
+					]
+				},
+				{
+					"score": 0.7,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "עמדתו המוצהרת של גנץ: 'רפורמה משפטית בהסכמה רחבה — זה צורך לאומי'. שיחות בית הנשיא בהובלתו הן בדיוק מודל של ריסון וגבולות מוסכמים.",
+					"sources": [
+						{ "title": "גנץ: רפורמה משפטית בהסכמה רחבה - צורך לאומי", "url": "https://www.israelhayom.co.il/news/politics/article/19159693" },
+						{ "title": "גנץ לא דחה על הסף את המתווה החדש", "url": "https://www.kan.org.il/content/kan-news/politic/517620/" }
+					]
+				},
+				{
+					"score": -0.7,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "התנגד לצמצום חד-צדדי של כוח בית המשפט והחרים את הצבעת ביטול עילת הסבירות עם שאר האופוזיציה.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": -0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "שולל שינוי יסודי כפוי: התנה כל התקדמות בהסכמה רחבה והתנגד לשליטה פוליטית במינויים.",
+					"sources": [
+						{ "title": "גנץ מציע: פשרה בסבירות תמורת קידום בהסכמה בלבד", "url": "https://www.israelhayom.co.il/news/politics/article/14408606" }
+					]
+				}
+			],
+			"religious-zionism": [
+				{
+					"score": -1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "סמוטריץ' היה ממציעי הצעות פסקת ההתגברות עוד לפני 2023, ומציב את שינוי מערכת המשפט כתנאי — ההפך הגמור מחיזוק ביקורת על חוקי יסוד.",
+					"sources": [
+						{ "title": "פסקת התגברות — ויקיפדיה", "url": "https://he.wikipedia.org/wiki/%D7%A4%D7%A1%D7%A7%D7%AA_%D7%94%D7%AA%D7%92%D7%91%D7%A8%D7%95%D7%AA", "quote": "הצעות על ידי חברי הכנסת בצלאל סמוטריץ' וקבוצה של חברי כנסת" }
+					]
+				},
+				{
+					"score": -0.8,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "דוחה ריסון עצמי כפתרון — דורש שינוי מבני; סירב לרוץ עם מי ש'לא רוצה לתקן את מערכת המשפט'.",
+					"sources": [
+						{ "title": "הציונות הדתית (סיעה) — ויקיפדיה", "url": "https://he.wikipedia.org/wiki/%D7%94%D7%A6%D7%99%D7%95%D7%A0%D7%95%D7%AA_%D7%94%D7%93%D7%AA%D7%99%D7%AA_(%D7%A1%D7%99%D7%A2%D7%94)" }
+					]
+				},
+				{
+					"score": 0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "הצביעה בעד כל חקיקת הצמצום: ביטול עילת הסבירות ושינוי הוועדה לבחירת שופטים.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": 1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "תומכת בגרסה המקסימלית: פסקת התגברות רחבה ושליטה פוליטית במינוי שופטים, כמציעת חקיקה וכשותפה מלאה במהפכה.",
+					"sources": [
+						{ "title": "פסקת התגברות — ויקיפדיה", "url": "https://he.wikipedia.org/wiki/%D7%A4%D7%A1%D7%A7%D7%AA_%D7%94%D7%AA%D7%92%D7%91%D7%A8%D7%95%D7%AA" }
+					]
+				}
+			],
+			"shas": [
+				{
+					"score": -0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "לאחר פסילת מינוי דרעי בבג\"ץ, ש\"ס מקדמת חקיקה שתמנע מבית המשפט לבלום הכרעות קואליציוניות — כולל חוקי יסוד ('חוק דרעי 2').",
+					"sources": [
+						{ "title": "פסקת ההתגברות וחוק דרעי 2 אושרו בטרומית", "url": "https://www.ynet.co.il/news/article/s1faoqqas" }
+					]
+				},
+				{
+					"score": -0.5,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "לא הסתפקה בריסון עצמי של בית המשפט; דרעי הצהיר ב-2026 כי 'נשלים בקיץ' את חקיקת המהפכה.",
+					"sources": [
+						{ "title": "דרעי חושף את תוכניות הממשלה למהפכה המשפטית: \"נשלים בקיץ\"", "url": "https://www.mako.co.il/news-politics/2026_q1/Article-10134d4d1444d91026.htm", "date": "2026" }
+					]
+				},
+				{
+					"score": 0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "הצביעה בעד ביטול עילת הסבירות ובעד חוק הוועדה לבחירת שופטים.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": 0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "פסקת ההתגברות היא יעד מוצהר של ש\"ס — 'נקדם את פסקת ההתגברות, דרעי יהיה שר' — לצד תמיכה בשינוי הרכב ועדת השופטים.",
+					"sources": [
+						{ "title": "ח\"כ מש\"ס: נקדם את פסקת ההתגברות, דרעי יהיה שר", "url": "https://www.maariv.co.il/elections-2022/Article-955866", "date": "2022" }
+					]
+				}
+			],
+			"utj": [
+				{
+					"score": -1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "גפני ומקלב הם ממציעי פסקת ההתגברות; החשש המרכזי — פסילת חוקי גיוס ודת בידי בג\"ץ. ביקורת שיפוטית על חוקי יסוד היא האיום שמפניו המפלגה פועלת.",
+					"sources": [
+						{ "title": "פסקת התגברות — ויקיפדיה", "url": "https://he.wikipedia.org/wiki/%D7%A4%D7%A1%D7%A7%D7%AA_%D7%94%D7%AA%D7%92%D7%91%D7%A8%D7%95%D7%AA", "quote": "הצעות על ידי חברי הכנסת משה גפני ואורי מקלב" }
+					]
+				},
+				{
+					"score": -0.6,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "ריסון עצמי אינו מספק מבחינתה — הדרישה היא חסינות חקיקתית מלאה לחוקי דת וגיוס; התנתה רפורמה משפטית לפני חוק הפטור.",
+					"sources": [
+						{ "title": "פסקת התגברות — ויקיפדיה", "url": "https://he.wikipedia.org/wiki/%D7%A4%D7%A1%D7%A7%D7%AA_%D7%94%D7%AA%D7%92%D7%91%D7%A8%D7%95%D7%AA" }
+					]
+				},
+				{
+					"score": 0.8,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "הצביעה בעד ביטול עילת הסבירות ובעד חוק הוועדה לבחירת שופטים כחלק מהקואליציה.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": 0.8,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "תומכת נלהבת בפסקת התגברות רחבה; בשליטה הפוליטית במינויים תמיכתה נגררת יותר (האינטרס המרכזי הוא חסינות החקיקה הדתית).",
+					"sources": [
+						{ "title": "פסקת התגברות — ויקיפדיה", "url": "https://he.wikipedia.org/wiki/%D7%A4%D7%A1%D7%A7%D7%AA_%D7%94%D7%AA%D7%92%D7%91%D7%A8%D7%95%D7%AA" }
+					]
+				}
+			],
+			"yisrael-beiteinu": [
+				{
+					"score": -0.2,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "מאז היווסדה דוגלת בחוקה, בית משפט לחוקה ופסקת התגברות ברוב 70 — כלומר מסגור חוקתי לכוח בית המשפט, לא הרחבתו; אך התנגדה בתוקף למהפכה של 2023.",
+					"sources": [
+						{ "title": "ליברמן נגד עמיתיו באופוזיציה", "url": "https://www.ynet.co.il/news/article/sjnm6gnii", "quote": "מאז היווסדה דוגלת ישראל ביתנו בחוקה, בית משפט לחוקה ופסקת התגברות ברוב 70" }
+					]
+				},
+				{
+					"score": 0.6,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "'אנחנו תומכים בשינויים במערכת המשפט ומתנגדים להכשרת תוכנית נתניהו-לוין' — תמיכה מפורשת בתיקון מרוסן ומוגדר, בניגוד למהפכה.",
+					"sources": [
+						{ "title": "ליברמן נגד עמיתיו באופוזיציה", "url": "https://www.ynet.co.il/news/article/sjnm6gnii", "quote": "תומכים בשינויים במערכת המשפט ומתנגדים להכשרת תוכנית נתניהו-לוין" }
+					]
+				},
+				{
+					"score": -0.4,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "התנגדה לחקיקת הצמצום של 2023 ('הממשלה הכאוטית מובילה לקרע עמוק בעם'), אף שתומכת בהגבלות חוקתיות מובנות עם רף גבוה.",
+					"sources": [
+						{ "title": "פסקת ההתגברות אושרה בקריאה ראשונה", "url": "https://www.ynet.co.il/news/article/b1lxba3k2", "date": "2023" }
+					]
+				},
+				{
+					"score": -0.7,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "התנגדות חדה לשליטה פוליטית במינוי שופטים ולפסקת התגברות ברוב רגיל; ההתגברות שבמצעה מותנית ברוב מיוחד של 70.",
+					"sources": [
+						{ "title": "ליברמן נגד עמיתיו באופוזיציה", "url": "https://www.ynet.co.il/news/article/sjnm6gnii" }
+					]
+				}
+			],
+			"otzma": [
+				{
+					"score": -1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "עמדה מקסימליסטית נגד כוח בית המשפט; רצה במשותף עם הציונות הדתית על מצע שינוי מערכת המשפט והצביעה בעד כל חקיקת המהפכה.",
+					"sources": [
+						{ "title": "רשימת הציונות הדתית ועוצמה יהודית — מצע", "url": "https://www.gov.il/he/departments/general/otzmayehudit_tzyunutdatit_list18" }
+					]
+				},
+				{
+					"score": -0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "דוחה ריסון עצמי; בן גביר דחף להאצת חקיקת המהפכה גם כשהוקפאה.",
+					"sources": [
+						{ "title": "בליץ חקיקה: הקואליציה מעלה הילוך במהפכה המשפטית", "url": "https://www.mako.co.il/news-politics/2026_q1/Article-aecba4bb69e9b91027.htm", "date": "2026" }
+					]
+				},
+				{
+					"score": 1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "הצביעה בעד ביטול עילת הסבירות ובעד חוק הוועדה לבחירת שופטים, ודרשה ללכת רחוק יותר.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": 1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "תומכת בפסקת התגברות רחבה ובשליטה פוליטית מלאה במינוי שופטים.",
+					"sources": [
+						{ "title": "אושר סופית חוק הליבה של המהפכה המשפטית", "url": "https://www.ynet.co.il/news/article/h1r8cn11tye", "date": "2025-03-27" }
+					]
+				}
+			],
+			"raam": [
+				{
+					"score": 0.4,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "עבאס: הכנסת מחוקקת, הממשלה מושלת ובית המשפט מכריע במשפט — הגנה על סמכות ההכרעה השיפוטית, שהיא גם הגנה על המיעוט הערבי.",
+					"sources": [
+						{ "title": "יו\"ר רע\"ם מנסור עבאס בראיון ל-103FM", "url": "https://news.walla.co.il/item/3862509" }
+					]
+				},
+				{
+					"score": 0.5,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "עבאס הציע מתווה פשרה להרכב הוועדה לבחירת שופטים שייצג את כל חלקי החברה — גישה של תיקון מוסכם וגבולות מוגדרים.",
+					"sources": [
+						{ "title": "עבאס לא מאמין כי פני הקואליציה לפשרה", "url": "https://www.maariv.co.il/news/politics/article-990029" }
+					]
+				},
+				{
+					"score": -0.7,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "התנגדה עם כל האופוזיציה לחקיקת צמצום כוח בית המשפט והחרימה את ההצבעות.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": -0.9,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "שליטה פוליטית במינויים מאיימת ישירות על ייצוג המיעוט; הצעת הפשרה של עבאס דרשה במפורש שופט ערבי ונציגות ערבית בוועדה.",
+					"sources": [
+						{ "title": "עבאס לא מאמין כי פני הקואליציה לפשרה", "url": "https://www.maariv.co.il/news/politics/article-990029" }
+					]
+				}
+			],
+			"hadash-taal": [
+				{
+					"score": 0.5,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "מתנגדת ל'הפיכה המשטרית' ורואה בביקורת השיפוטית הגנה אחרונה למיעוט בהיעדר הגנות חוקתיות; ובה בעת ביקורתית כלפי בית המשפט שאישר חקיקה מפלה.",
+					"sources": [
+						{ "title": "לתוכנית לוין השלכות מרחיקות-לכת על החברה הערבית (המכון הישראלי לדמוקרטיה)", "url": "https://www.idi.org.il/articles/48078" }
+					]
+				},
+				{
+					"score": 0,
+					"confidence": "low",
+					"inferred": true,
+					"rationale": "אין עמדה מפורסמת על 'ריסון עצמי' של בית המשפט; הערכה מהאידאולוגיה: אמביוולנטיות — ריסון אינו האג'נדה שלה, אך גם אינה מקדשת את המצב הקיים שאישר חוקים מפלים.",
+					"sources": []
+				},
+				{
+					"score": -0.8,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "הצביעה נגד/החרימה את כל חקיקת צמצום כוח בית המשפט יחד עם האופוזיציה.",
+					"sources": [
+						{ "title": "עילת הסבירות בוטלה ברוב 64 מול אפס", "url": "https://www.ynet.co.il/news/article/skd4x0iq3", "date": "2023-07-24" }
+					]
+				},
+				{
+					"score": -1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "פסקת התגברות רחבה ושליטה פוליטית במינויים יסירו את ההגנה האחרונה על האזרחים הערבים — עמדה שהמפלגה וארגוני החברה הערבית הביעו במפורש.",
+					"sources": [
+						{ "title": "לתוכנית לוין השלכות מרחיקות-לכת על החברה הערבית (המכון הישראלי לדמוקרטיה)", "url": "https://www.idi.org.il/articles/48078" }
+					]
+				}
+			],
+			"democratic-camp": [
+				{
+					"score": 1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "מצע הדמוקרטים: עיגון חקיקתי של עצמאות מערכת המשפט וחוק יסוד שוויון; גולן — 'אני רוצה מערכת משפט עצמאית'. מחויבות לעיגון זכויות כתנאי סף לכניסה לקואליציה.",
+					"sources": [
+						{ "title": "הדמוקרטים — המכון הישראלי לדמוקרטיה", "url": "https://www.idi.org.il/policy/parties-and-elections/parties/democrats/" },
+						{ "title": "ארבע הנקודות של יאיר גולן", "url": "https://www.ynet.co.il/news/article/yokra14294373" }
+					]
+				},
+				{
+					"score": -0.2,
+					"confidence": "medium",
+					"inferred": false,
+					"rationale": "ריסון עצמי בלבד אינו התוכנית — המפלגה מקדמת 'מהפכה משפטית נגדית' של עיגון וחיזוק, לא של גבולות לבית המשפט.",
+					"sources": [
+						{ "title": "בעקבות לוין: המהפכה המשפטית שמציע השמאל", "url": "https://www.mako.co.il/news-israel-elections/2026/Article-a68e8b78a0a3e91026.htm", "date": "2026" }
+					]
+				},
+				{
+					"score": -1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "מתחייבת לבטל את חוקי המהפכה; גולן הצהיר שידרוש את תיק המשפטים בממשלה הבאה כדי להפוך את הכיוון.",
+					"sources": [
+						{ "title": "יאיר גולן אמר שידרוש את תיק המשפטים בממשלה הבאה", "url": "https://www.maariv.co.il/news/politics/article-1322554", "date": "2026" }
+					]
+				},
+				{
+					"score": -1,
+					"confidence": "high",
+					"inferred": false,
+					"rationale": "התנגדות מוחלטת לפסקת התגברות רחבה ולשליטה פוליטית במינוי שופטים — ליבת המאבק של השמאל במהפכה.",
+					"sources": [
+						{ "title": "בעקבות לוין: המהפכה המשפטית שמציע השמאל", "url": "https://www.mako.co.il/news-israel-elections/2026/Article-a68e8b78a0a3e91026.htm", "date": "2026" }
+					]
+				}
+			]
+		}
+	}
+}

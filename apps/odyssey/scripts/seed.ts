@@ -24,6 +24,7 @@ import {
 	DEFAULT_TEXTS,
 	DEFAULT_VALUES,
 } from '../src/lib/defaults';
+import { researchedAttitudes } from '../src/lib/research';
 
 const require = createRequire(import.meta.url);
 const {
@@ -225,12 +226,23 @@ async function main(): Promise<void> {
 		]),
 	);
 
+	const researched = researchedAttitudes();
 	const parties = DEFAULT_PARTIES.map((party, index) => {
+		const partyResearch = researched[party.slug] ?? {};
 		const positions: Record<string, string> = {};
 		for (const [slug, stanceIndex] of Object.entries(party.positions)) {
+			if (partyResearch[slug]) continue; // researched islands drop the legacy entry
 			const islandId = islandIdBySlug.get(slug);
 			const stanceId = stanceIdsBySlug.get(slug)?.[(stanceIndex as number) - 1];
 			if (islandId && stanceId) positions[islandId] = stanceId;
+		}
+		const attitudes: Record<string, number> = {};
+		for (const [slug, scores] of Object.entries(partyResearch)) {
+			const stanceIds = stanceIdsBySlug.get(slug) ?? [];
+			scores.forEach((score, scoreIndex) => {
+				const stanceId = stanceIds[scoreIndex];
+				if (stanceId) attitudes[stanceId] = score;
+			});
 		}
 
 		return {
@@ -239,6 +251,7 @@ async function main(): Promise<void> {
 			color: party.color,
 			imageUrl: null,
 			description: party.description,
+			attitudes,
 			positions,
 			sortOrder: index + 1,
 			enabled: true,

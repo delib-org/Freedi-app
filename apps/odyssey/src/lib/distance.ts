@@ -58,17 +58,21 @@ function round2(value: number): number {
 	return Math.round(value * 100) / 100;
 }
 
-/** A party's route as a virtual attitude map: +1 on its declared stance per
- *  island, −1 on that island's other stances. */
+/** A party's route as a virtual attitude map. An explicit continuous score
+ *  in `attitudes` wins per stance; otherwise a legacy declared stance fans
+ *  out as +1 on itself and −1 on its island siblings. */
 export function partyAttitudes(party: OdysseyParty, islands: IslandContent[]): AttitudeMap {
 	const attitudes: AttitudeMap = {};
 	for (const island of islands) {
-		const declaredStanceId = party.positions[island.statementId];
-		if (!declaredStanceId) continue;
+		const declaredStanceId = party.positions?.[island.statementId];
 		for (const stance of island.stances) {
-			attitudes[stance.statementId] = -1;
+			const score = party.attitudes?.[stance.statementId];
+			if (score !== undefined) {
+				attitudes[stance.statementId] = score;
+			} else if (declaredStanceId) {
+				attitudes[stance.statementId] = stance.statementId === declaredStanceId ? 1 : -1;
+			}
 		}
-		attitudes[declaredStanceId] = 1;
 	}
 
 	return attitudes;
@@ -109,7 +113,6 @@ function opinionPartyDistances(input: {
 		let shared = 0;
 		let sharedIslands = 0;
 		for (const island of islands) {
-			if (!party.positions[island.statementId]) continue;
 			let islandShared = 0;
 			for (const stance of island.stances) {
 				const mine = attitudes[stance.statementId];

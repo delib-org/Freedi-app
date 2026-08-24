@@ -125,6 +125,21 @@ describe('parties as virtual users', () => {
 		expect(result[0].distance).toBeNull();
 		expect(result[0].sharedIslands).toBe(0);
 	});
+
+	it('sails a continuous route: fractional scores narrow the distance', () => {
+		const continuous: OdysseyParty = {
+			...party('nuanced', {}),
+			attitudes: { s1: -0.5, s2: 0.5, s3: -0.5, s4: -0.5 },
+		};
+		// Player mirrors the hard route; the soft party sits 0.25 away, not 0 or 1.
+		const result = opinionDistanceEngine.partyDistances({
+			attitudes: { s1: -1, s2: 1, s3: -1, s4: -1 },
+			islands,
+			parties: [continuous],
+		});
+		expect(result[0].distance).toBe(0.25);
+		expect(result[0].sharedIslands).toBe(1);
+	});
 });
 
 describe('participant distances', () => {
