@@ -25,7 +25,11 @@ export default function Compass() {
 	const [ranked, setRanked] = useState<string[]>(() =>
 		Object.entries(journey?.valueRankings ?? {})
 			.sort((a, b) => a[1] - b[1])
-			.map(([valueId]) => valueId),
+			.map(([valueId]) => valueId)
+			// A ranking saved under an older, larger cap keeps its top picks and
+			// lets the rest go — returning voyagers must never be locked out by
+			// yesterday's rules.
+			.slice(0, TOP_VALUES),
 	);
 	const [saving, setSaving] = useState(false);
 
