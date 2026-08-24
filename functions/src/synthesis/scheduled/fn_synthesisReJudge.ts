@@ -1,12 +1,15 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, functionConfig, type Statement } from '@freedi/shared-types';
+import { Collections, functionConfig, StatementType, type Statement } from '@freedi/shared-types';
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
+import { judgeSemanticEquivalence } from '../../services/semantic-equivalence-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
+import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
+import { enqueueItem } from '../queue/enqueue';
 
 /**
  * Merge gate for reJudge.
@@ -135,8 +138,16 @@ function pairKey(a: string, b: string): string {
  * Fail-CLOSED: an LLM error, or members that cannot be read, means no merge. An
  * unmerged duplicate is a visible but harmless redundancy; a wrong merge
  * silently destroys a distinct proposal and is what this gate exists to prevent.
+ *
+ * The cap was 2, i.e. the FIRST two members of each side. On the Bq-VQPMPiG7b
+ * production replay that truncation was the snowball vector: a recipient that
+ * had already absorbed one merge presented its ORIGINAL pair to the judge, so
+ * each successive merge was judged against a stale sample and members drifted
+ * two hops from each other — the audited 8-member synthesis held 6 members two
+ * independent blind judges called "related, not same". The judge must see the
+ * actual sets it is merging.
  */
-const MEMBERS_PER_SIDE_FOR_JUDGE = 2;
+const MEMBERS_PER_SIDE_FOR_JUDGE = 6;
 
 async function loadMemberStatements(memberIds: string[]): Promise<Statement[]> {
 	const ids = memberIds.slice(0, MEMBERS_PER_SIDE_FOR_JUDGE);
@@ -202,6 +213,62 @@ async function confirmMergeWithLlm(
 
 		return false;
 	}
+}
+
+/**
+ * Anti-snowball transitivity guard.
+ *
+ * A merge is proposed on the CLOSEST cross-member pair (top-2 average), but the
+ * merged set is one proposal only if even its two FARTHEST members are the same
+ * proposal. Chained merges fail exactly here: A≈B and B≈C can both hold while
+ * A and C are distinct interventions, and the top-pair evidence never looks at
+ * A vs C. So before the writer is consulted, the farthest cross-member pair is
+ * put to the semantic-equivalence judge (verdict-cached, so re-sweeps are
+ * free); anything other than 'same' refuses the merge. Fail-CLOSED: no
+ * embeddings, unreadable statements, or a judge error all mean no merge.
+ */
+async function farthestPairIsSame(
+	recipient: CandidateSynth,
+	donor: CandidateSynth,
+	embeddings: Map<string, number[]>,
+): Promise<boolean> {
+	let worst: { a: string; b: string; cosine: number } | null = null;
+	for (const aId of recipient.members) {
+		const aEmb = embeddings.get(aId);
+		if (!aEmb) continue;
+		for (const bId of donor.members) {
+			const bEmb = embeddings.get(bId);
+			if (!bEmb) continue;
+			const c = cosine(aEmb, bEmb);
+			if (!worst || c < worst.cosine) worst = { a: aId, b: bId, cosine: c };
+		}
+	}
+	if (!worst) return false;
+
+	const [aSnap, bSnap] = await Promise.all([
+		db().collection(Collections.statements).doc(worst.a).get(),
+		db().collection(Collections.statements).doc(worst.b).get(),
+	]);
+	const aText = aSnap.exists ? (aSnap.data() as Statement).statement : undefined;
+	const bText = bSnap.exists ? (bSnap.data() as Statement).statement : undefined;
+	if (!aText || !bText) return false;
+
+	const verdicts = await judgeSemanticEquivalence([
+		{ pairId: `${worst.a}|${worst.b}`, textA: aText, textB: bText },
+	]).catch(() => []);
+	const verdict = verdicts[0]?.verdict;
+	if (verdict !== 'same') {
+		logger.info('synthesis.reJudge.mergeRefused.farthestPair', {
+			recipientId: recipient.doc.statementId,
+			donorId: donor.doc.statementId,
+			farthestCosine: Number(worst.cosine.toFixed(3)),
+			verdict: verdict ?? 'judge-error',
+		});
+
+		return false;
+	}
+
+	return true;
 }
 
 function pickMergePair(
@@ -327,8 +394,28 @@ export async function reJudgeProcessParent(
 ): Promise<{
 	merges: number;
 }> {
-	const questionContext = await loadQuestionContext(parentId);
+	const parentDoc = await loadParentDoc(parentId);
+	const questionContext = parentDoc?.statement ?? parentId;
 	const merges = await mergeDuplicateSynths(parentId, synthDocs, questionContext);
+
+	// Second look for statements the live pass left behind. "Topic membership is
+	// non-terminal" was a promise without a mechanism: the live pipeline runs once
+	// per option AT CREATION, so a statement whose twin (or whose synthesis)
+	// arrived later had no path back into the synth passes — measured on the
+	// Bq-VQPMPiG7b replay as 11 missed attaches and 5 missed spawn pairs, 19 of
+	// 21 of them silent. This pass re-enqueues un-synthesized options whose
+	// evidence now clears the synth band, and the queue worker re-runs the FULL
+	// judged pipeline on them (same gates, same judges, no new decision path).
+	try {
+		if (parentDoc) {
+			await revisitUnmergedOptions(parentDoc, synthDocs);
+		}
+	} catch (error) {
+		logger.warn('synthesis.reJudge: revisit pass failed (non-fatal)', {
+			parentId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+	}
 
 	// Theme-level counterpart of the synth merge above: headings grow one at a
 	// time as ideas arrive, so early ones are narrower than the topic they end up
@@ -356,22 +443,169 @@ export async function reJudgeProcessParent(
 }
 
 /**
- * The question text the judges reason against. Falls back to the id so a missing
- * parent doc degrades the prompt rather than skipping the sweep.
+ * The parent (question) doc — the judges' question context and the settings
+ * source for the revisit pass. A missing parent degrades the prompt (id used as
+ * context) rather than skipping the sweep.
  */
-async function loadQuestionContext(parentId: string): Promise<string> {
+async function loadParentDoc(parentId: string): Promise<Statement | null> {
 	try {
 		const parentSnap = await db().collection(Collections.statements).doc(parentId).get();
-		const parentDoc = parentSnap.exists ? (parentSnap.data() as Statement) : null;
-		if (parentDoc?.statement) return parentDoc.statement;
+
+		return parentSnap.exists ? (parentSnap.data() as Statement) : null;
 	} catch (error) {
 		logger.warn('synthesis.reJudge: parent fetch failed, using id as context', {
 			parentId,
 			error: error instanceof Error ? error.message : String(error),
 		});
+
+		return null;
+	}
+}
+
+/**
+ * How many left-behind options one sweep may re-enqueue per parent. The queue
+ * worker re-runs the full pipeline on each, so this bounds the sweep's LLM
+ * spend; the highest-evidence candidates go first and the rest wait for the
+ * next tick (10 minutes in production).
+ */
+const MAX_REVISITS_PER_PARENT = 10;
+const REVISIT_QUERY_LIMIT = 500;
+
+/**
+ * Re-enqueue un-synthesized options whose evidence clears the synth band.
+ *
+ * An option qualifies when (a) its top-2-average cosine against some synth's
+ * members reaches `synthLowerBound` — an attach-shaped miss — or (b) its cosine
+ * to another free option reaches `synthLowerBound` — a spawn-shaped miss. The
+ * decision stays with the live pipeline's own gates and judges; this pass only
+ * restores candidacy.
+ *
+ * A world fingerprint (synth count + total membership) is stamped on each
+ * revisited option so a stable corpus is not re-ground every 10 minutes: an
+ * option gets one fresh look per change of the synthesis landscape. The
+ * equivalence verdicts the re-run consumes are cached, so repeat looks are
+ * near-free; only genuinely new writer consultations pay.
+ */
+async function revisitUnmergedOptions(parent: Statement, synthDocs: Statement[]): Promise<number> {
+	const settings = loadSynthesisSettingsFromStatement(parent);
+	const synths: CandidateSynth[] = synthDocs.map((d) => ({
+		doc: d,
+		members: Array.isArray(d.integratedOptions) ? [...d.integratedOptions] : [],
+	}));
+	const memberIds = new Set<string>();
+	for (const s of synths) for (const m of s.members) memberIds.add(m);
+	const worldFp = `s${synths.length}m${memberIds.size}`;
+
+	const snap = await db()
+		.collection(Collections.statements)
+		.where('parentId', '==', parent.statementId)
+		.where('statementType', '==', StatementType.option)
+		.limit(REVISIT_QUERY_LIMIT)
+		.get();
+	const free = snap.docs
+		.map((d) => d.data() as Statement)
+		.filter(
+			(s) =>
+				s.isCluster !== true &&
+				s.hide !== true &&
+				(s.integratedOptions ?? []).length === 0 &&
+				!memberIds.has(s.statementId) &&
+				(s as unknown as Record<string, unknown>).synthRevisitFp !== worldFp,
+		);
+	if (free.length === 0) return 0;
+
+	const ids = [...free.map((s) => s.statementId), ...Array.from(memberIds)];
+	let embeddings: Map<string, number[]>;
+	try {
+		embeddings = await embeddingCache.getBatchEmbeddings(ids);
+	} catch (error) {
+		logger.warn('synthesis.reJudge.revisit: embedding fetch failed', {
+			parentId: parent.statementId,
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return 0;
 	}
 
-	return parentId;
+	const band = settings.synthLowerBound;
+	const scored: { optionId: string; evidence: number; kind: 'attach' | 'spawn' }[] = [];
+	for (const opt of free) {
+		const optEmb = embeddings.get(opt.statementId);
+		if (!optEmb) continue;
+		// (a) attach-shaped: top-2 average against any synth's members.
+		let bestSynthEvidence = 0;
+		for (const s of synths) {
+			const cosines: number[] = [];
+			for (const m of s.members) {
+				const mEmb = embeddings.get(m);
+				if (mEmb) cosines.push(cosine(optEmb, mEmb));
+			}
+			if (cosines.length < 2) continue;
+			cosines.sort((x, y) => y - x);
+			const top2 = (cosines[0] + cosines[1]) / 2;
+			if (top2 > bestSynthEvidence) bestSynthEvidence = top2;
+		}
+		// (b) spawn-shaped: best cosine to another free option.
+		let bestPairEvidence = 0;
+		for (const other of free) {
+			if (other.statementId === opt.statementId) continue;
+			const oEmb = embeddings.get(other.statementId);
+			if (!oEmb) continue;
+			const c = cosine(optEmb, oEmb);
+			if (c > bestPairEvidence) bestPairEvidence = c;
+		}
+		const evidence = Math.max(bestSynthEvidence, bestPairEvidence);
+		if (evidence >= band) {
+			scored.push({
+				optionId: opt.statementId,
+				evidence,
+				kind: bestSynthEvidence >= bestPairEvidence ? 'attach' : 'spawn',
+			});
+		}
+	}
+	if (scored.length === 0) return 0;
+
+	scored.sort((a, b) => b.evidence - a.evidence);
+	const picked = scored.slice(0, MAX_REVISITS_PER_PARENT);
+	let enqueued = 0;
+	for (const { optionId, evidence, kind } of picked) {
+		try {
+			await db()
+				.collection(Collections.statements)
+				.doc(optionId)
+				.update({ synthRevisitFp: worldFp });
+			await enqueueItem({
+				questionId: parent.statementId,
+				kind: 'process-option',
+				optionId,
+				forceProcess: false,
+			});
+			enqueued++;
+			await recordLiveSynthEvent({
+				action: 'revisit',
+				clusterId: '',
+				optionId,
+				reason: `revisit enqueued (${kind}-shaped evidence=${evidence.toFixed(3)} ≥ ${band}, world=${worldFp})`,
+				triggerSource: 'reJudgeSweep:revisit',
+				parentStatementId: parent.statementId,
+			});
+		} catch (error) {
+			logger.warn('synthesis.reJudge.revisit: enqueue failed', {
+				optionId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+	}
+	if (enqueued > 0) {
+		logger.info('synthesis.reJudge.revisit', {
+			parentId: parent.statementId,
+			candidates: scored.length,
+			enqueued,
+			worldFp,
+		});
+	}
+
+	return enqueued;
 }
 
 async function mergeDuplicateSynths(
@@ -422,6 +656,14 @@ async function mergeDuplicateSynths(
 		// provably cannot tell "two wordings of one proposal" from "two distinct
 		// proposals about the same thing" — the two bands overlap at 0.82-0.86.
 		// At most MAX_MERGES_PER_PARENT calls per parent per sweep.
+		// The cheap cached check runs first: the FARTHEST cross-member pair must
+		// itself be 'same', or the merged set cannot be one proposal (the
+		// transitivity failure behind the audited 8-member snowball).
+		const transitive = await farthestPairIsSame(recipient, donor, embeddings);
+		if (!transitive) {
+			rejectedPairs.add(pairKey(recipient.doc.statementId, donor.doc.statementId));
+			continue;
+		}
 		const confirmed = await confirmMergeWithLlm(recipient, donor, questionContext);
 		if (!confirmed) {
 			rejectedPairs.add(pairKey(recipient.doc.statementId, donor.doc.statementId));

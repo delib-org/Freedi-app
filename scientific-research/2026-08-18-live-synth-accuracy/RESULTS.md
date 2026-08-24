@@ -369,6 +369,20 @@ and all 3 lost voices. The structural improvement over production stands; the
 benchmark numbers do not transfer to real data. Full report:
 `runs/bq-replay-alljudged/verification/VERIFICATION.md`.
 
+**Fix round + re-replay (2026-08-24 evening)** — three fixes (anti-snowball
+merge gate with farthest-pair transitivity check, revisit pass making topic
+membership genuinely non-terminal, writer never-add-commitments /
+every-input-visible clauses) were implemented and the same 114 statements
+replayed (`runs/bq-replay-fixed`, ~95 min). Same blind battery: precision
+22/34→**32/43** with **no synthesis above 4 members** (snowball eliminated,
+sweep merges 9→2), grouped statements 34→**43**, fidelity 0.647→**0.953**
+(0 lost voices, 1 soft fabrication), and the silent-miss class abolished —
+of 15 both-judge-agreed remaining misses, 9 were revisit-judged and refused
+(visible judge decisions) and 9 awaited further sweep rounds. Residual error
+sites: the spawn writer accepting related Hebrew pairs (~9 wrong pairs of 25
+spawns) and judge refusals of true paraphrases. Full before/after:
+`runs/bq-replay-fixed/verification/VERIFICATION.md`.
+
 ## Finding 19 — the English regression run: synth layer identical, topic layer rolls its usual dice
 
 `en-seed42-alljudged` runs the full all-judged build (judged Pass 3, spawn

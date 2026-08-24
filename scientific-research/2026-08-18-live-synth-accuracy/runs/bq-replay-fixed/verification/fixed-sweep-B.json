@@ -1,0 +1,109 @@
+{
+  "missedAttaches": [
+    {
+      "statementId": "0GdG7UH25mt9",
+      "synthId": "DMkNcis6a3Hg",
+      "confidence": "high",
+      "reason": "Statement proposes knowing a place through multiple information layers (geological, botanical, uses) — the synthesis member 'הבנת המקום: שכבות מידע וצרכים לשינוי מציאות' is essentially a title of this very statement."
+    },
+    {
+      "statementId": "MUbpFp6BrePD",
+      "synthId": "I4PjKLd67SGe",
+      "confidence": "high",
+      "reason": "Making research accessible in language the relevant agents understand is interchangeable with the member 'לדעת לדבר בשפה של קהל היעד' — same lever of audience-language accessibility."
+    },
+    {
+      "statementId": "MNeYtEAcjhH8",
+      "synthId": "I4PjKLd67SGe",
+      "confidence": "high",
+      "reason": "Simplifying complex messages into accessible discourse for the broad audience matches the member about simplifying problems into accessible, clear, non-threatening discourse for different sectors."
+    },
+    {
+      "statementId": "4xYGcj3HHdeQ",
+      "synthId": "I4PjKLd67SGe",
+      "confidence": "medium",
+      "reason": "Making academic knowledge accessible and understandable to the general public is the same accessibility-of-research-language intervention, just aimed at the widest audience."
+    },
+    {
+      "statementId": "LgtpBE9it4gH",
+      "synthId": "OExsWKt4l8Oo",
+      "confidence": "high",
+      "reason": "Doing transdisciplinary research from the outset is the same proposal as the synthesis's multi/trans-disciplinary research members (one member explicitly says 'טרנס דיסציפלינות')."
+    },
+    {
+      "statementId": "7UaiNhyYlpMJ",
+      "synthId": "By2TdeBWWFHX",
+      "confidence": "high",
+      "reason": "Avoiding the ivory tower by integrating users' voices and needs into the research process is interchangeable with the member requiring end-users affected by the research to be part of the process."
+    },
+    {
+      "statementId": "Rpxl6XKkl42D",
+      "synthId": "btmeY1AIqFsE",
+      "confidence": "high",
+      "reason": "The condition of combining knowledge and passion ('ידע ולהט') is the same claim as the member about the right dosage of scientific validity and activist passion."
+    },
+    {
+      "statementId": "MXVCKJBNSUkR",
+      "synthId": "aeW0glOCO5LO",
+      "confidence": "high",
+      "reason": "Motivation and inner fire as the driver of action is the same factor as the member 'הנעה משמעותית, סבלנות והתמדה' — inner drive as the enabler of change."
+    },
+    {
+      "statementId": "ykHIVqMd9FP1",
+      "synthId": "I8XlvCYo1hY2",
+      "confidence": "high",
+      "reason": "Connecting academia, civil society and government to promote collaboration is the same cross-sector-collaboration proposal as the member listing academia–government–civil-society partnerships for impact."
+    },
+    {
+      "statementId": "TbY8ddlBfQQY",
+      "synthId": "W3hOkU1fB6qM",
+      "confidence": "high",
+      "reason": "Finding an actor who connects the science/regulation worlds with the implementers in the field is the same 'גורם מקשר' (connector figure) intervention as the synthesis members."
+    },
+    {
+      "statementId": "aoK1izWRPCYi",
+      "synthId": "YDyaUr8ykDE9",
+      "confidence": "medium",
+      "reason": "Open-discourse rooms bringing together the public, academia and practitioners is the same convene-in-person-dialogue intervention as the synthesis's physical academia–practitioner meetings."
+    },
+    {
+      "statementId": "BGeMVeF8cCrc",
+      "synthId": "ANGHwZbAxm4D",
+      "confidence": "medium",
+      "reason": "Recruiting many volunteers to assist research activities matches the member on mediating science to citizen-science/volunteers and involving masses of people in the research process."
+    },
+    {
+      "statementId": "-1iG7sKCaTr9",
+      "synthId": "ANGHwZbAxm4D",
+      "confidence": "medium",
+      "reason": "A dedicated role connecting the university to the surrounding community on environmental topics is the academia-community mediation the synthesis proposes ('תיווך בין האקדמיה לקהילה')."
+    }
+  ],
+  "missedSpawns": [
+    {
+      "statementIds": ["7UZVrgyk-ebQ", "EHyLE2-fh9zR"],
+      "confidence": "high",
+      "reason": "Both propose bottom-up research originating from the field by surfacing existing challenges ('הצפת אתגרים' appears in both) and channeling them to research/solutions."
+    },
+    {
+      "statementIds": ["pHUQNJZPDcyR", "jSmMsfAbjDHK"],
+      "confidence": "high",
+      "reason": "Both propose a standing, structured system for continuous flow of information/feedback from the field to keep knowledge current and improve processes."
+    },
+    {
+      "statementIds": ["4UaRL8Gxgu06", "TXrakZdZAYN3"],
+      "confidence": "medium",
+      "reason": "Both propose ensuring the reliability/accuracy of research information as a precondition for change — building systems/trust so collected data can be relied on."
+    },
+    {
+      "statementIds": ["MG7femGf8oQm", "PXrXa88GIjfU", "1XHun-i1r74F"],
+      "confidence": "medium",
+      "reason": "All three state the same disposition: openness, daring and willingness to try new things and new (even distant-field) collaborations as the enabler of ideas and connections."
+    },
+    {
+      "statementIds": ["S7185W3a3hpI", "EcnlwbJ1eR5o"],
+      "confidence": "medium",
+      "reason": "Both call for a committed, academically-grounded actor/team dedicated to carrying academic knowledge into field implementation."
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+ "synths": [
+  {
+   "synthId": "7SOH09HPJD-l",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "w2l5-ikf1o8U", "verdict": "same", "reason": "Proposes allocating needed resources (budgets, materials, tools) to research ventures — the resource-allocation lever."},
+    {"id": "l73ovQmKRIHY", "verdict": "same", "reason": "Proposes allocating financial resources (funding for equipment, staff, expenses) — same allocate-resources-to-research intervention; a supporter of one could not oppose the other."}
+   ]
+  },
+  {
+   "synthId": "ANGHwZbAxm4D",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "mkWwhkfsVRUi", "verdict": "same", "reason": "Citizen science: recruit the broad public into collecting and co-creating scientific knowledge."},
+    {"id": "KniywNO2qvZ4", "verdict": "same", "reason": "Mediating science from academia to citizen-science volunteers with the explicit goal of involving masses in the research process — same public-participation-in-research lever."}
+   ]
+  },
+  {
+   "synthId": "BKamVMUlCSVg",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "LgQPaeZh8f9H", "verdict": "same", "reason": "States the purpose of the same convening ('the goal of the convening is...') — a culture of discussion producing agreements; a fragment of the identical proposal, not an independent value statement."},
+    {"id": "46XG0ctXNgok", "verdict": "same", "reason": "Convene stakeholders representing the range of opinions in a periodic forum for discussion and agreement — the concrete action both members describe."}
+   ]
+  },
+  {
+   "synthId": "By2TdeBWWFHX",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "kKR06nuwqMiF", "verdict": "same", "reason": "Concrete proposal: researchers must collaborate with end users affected by the research subject."},
+    {"id": "kn4gOdd1IXuF", "verdict": "related", "reason": "'Combining knowledge and involvement for environmental change' is a vague sentiment naming no actor and no action — not interchangeable with the specific end-user-collaboration proposal."}
+   ]
+  },
+  {
+   "synthId": "DMkNcis6a3Hg",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "fBx6I8kTXL9k", "verdict": "same", "reason": "Proposes building understanding of the place through information layers and identified needs."},
+    {"id": "GlDFsnBNYHib", "verdict": "related", "reason": "'Information vacuum' is a bare problem statement, not a proposal — problem merged with solution violates the rubric."}
+   ]
+  },
+  {
+   "synthId": "EpgEM8bkwLFR",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "WTxw9ABOHWjo", "verdict": "same", "reason": "Concrete proposal: give appropriate incentives and supports for carrying out the change."},
+    {"id": "I9qPS1-wBVzj", "verdict": "related", "reason": "'Connected to economic benefit' is a fragment/sentiment about economics, not the give-incentives-and-supports intervention itself."}
+   ]
+  },
+  {
+   "synthId": "I4PjKLd67SGe",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "XFgVGHrwWWLG", "verdict": "same", "reason": "Simplify research problems into accessible, non-threatening, clear discourse tailored to different sectors and bodies."},
+    {"id": "nuoYPP2VtTH7", "verdict": "same", "reason": "'Speak the language of the target audience' is the same audience-adapted-communication lever, just terser."}
+   ]
+  },
+  {
+   "synthId": "I8XlvCYo1hY2",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "aoFXrMGDxhzL", "verdict": "same", "reason": "Core proposal: multi-axis collaborations (cross-discipline, cross-campus, cross-rank, cross-sector) aimed at concrete impact."},
+    {"id": "u4TuwLPupe16", "verdict": "related", "reason": "Cooperation with the local authority to align projects with community needs is one narrow slice — same topic (partnerships) but a much narrower, different-scope intervention; a supporter of municipal coordination need not endorse cross-campus/cross-rank academic collaboration."}
+   ]
+  },
+  {
+   "synthId": "OExsWKt4l8Oo",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "aziwuqLEUFY0", "verdict": "same", "reason": "Deepen knowledge across trans-disciplines and seek solutions in diverse directions — the cross-disciplinary-research lever."},
+    {"id": "Nyt5jqdiTeak", "verdict": "same", "reason": "Promote multidisciplinary research combining social sciences, exact sciences and technology to solve complex problems — same intervention."}
+   ]
+  },
+  {
+   "synthId": "U5o91ffQbKKX",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "V1UXqCJHmgv8", "verdict": "same", "reason": "Concrete proposal: map existing knowledge sources (prior research, data) as a base for research-field collaboration."},
+    {"id": "7DdLZn6Ibqah", "verdict": "related", "reason": "'Successful collaboration' is a two-word sentiment with no action — not the knowledge-mapping proposal."}
+   ]
+  },
+  {
+   "synthId": "VAOueHJps1lI",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "NZbSXfMHacQD", "verdict": "same", "reason": "Personal acquaintance with a person who researched and understands the topic — the direct-personal-connection lever."},
+    {"id": "vLPJFoZ2x9J2", "verdict": "same", "reason": "Same lever stated with a venue: personal acquaintance is the key, via conferences emphasizing unmediated human connection."}
+   ]
+  },
+  {
+   "synthId": "W3hOkU1fB6qM",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "Utmlupzrfhjq", "verdict": "same", "reason": "A connecting agent who presents the data clearly and makes the interpersonal connection between researcher and actors — the intermediation lever."},
+    {"id": "Gt3qjLIvBsII", "verdict": "same", "reason": "'Matchmaking' researchers with civil-society orgs and ministries is the same create-the-connector intervention; a supporter of one could not reasonably oppose the other."}
+   ]
+  },
+  {
+   "synthId": "YDyaUr8ykDE9",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "g1QBInGJXwQz", "verdict": "same", "reason": "Concrete proposal: physical meetings between academics and practitioners for knowledge sharing and collaboration."},
+    {"id": "XRRZk7Vc9yCe", "verdict": "related", "reason": "'Connecting people is critical, promote initiatives that bring people with different ideas together' is a general value statement without the specific physical academia-practitioner meeting lever — sentiment merged with a concrete proposal."}
+   ]
+  },
+  {
+   "synthId": "ZyF14AN4E-no",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "N8wfxesr0zri", "verdict": "same", "reason": "Provide funding/resources (plus freedom of action) to enable implementation and cross-sector collaborations — resource-provision lever."},
+    {"id": "KZj18lzNqaC8", "verdict": "same", "reason": "Provide resources (information access, tools, budgets, workshops) supporting academia-practitioner collaborations — same intervention."}
+   ]
+  },
+  {
+   "synthId": "acicP74AFsf6",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "Jii3gD6Fqq29", "verdict": "same", "reason": "Interpersonal relationships as the bridge between research and the field, enabling clear data transfer — the personal-relationship lever."},
+    {"id": "whxNLA4caaQY", "verdict": "same", "reason": "Build long-term personal connections between research representatives and the field via meetings and workshops — same intervention with implementation detail."}
+   ]
+  },
+  {
+   "synthId": "aeW0glOCO5LO",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "wBxGe91lJk2Y", "verdict": "same", "reason": "Meaningful motivation, patience and persistence from those driving the change — the perseverance disposition."},
+    {"id": "t-DSjKKGXfQl", "verdict": "same", "reason": "Stubbornness/consistency and commitment throughout the research despite challenges — the same perseverance disposition, interchangeable."}
+   ]
+  },
+  {
+   "synthId": "btmeY1AIqFsE",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "FYQ6qfeAHoE7", "verdict": "same", "reason": "Core claim: successful environmental struggles balanced scientific validity with activist passion — combine science with passion."},
+    {"id": "1fEWh5Glrqfd", "verdict": "related", "reason": "Combining emotion toward the environment with a sense of self-efficacy pairs different ingredients (emotion + efficacy, no scientific-validity component) — same emotional-mobilization topic but a different combination, not interchangeable."}
+   ]
+  },
+  {
+   "synthId": "lTmaZtbOX3Wr",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "-6bh8l6B010y", "verdict": "related", "reason": "'Research can drive big things' is a pure value/sentiment statement with no action — not the strengthen-applied-research proposal."},
+    {"id": "rhXCmtYhVf4-", "verdict": "same", "reason": "Core proposal: strengthen applied research so research contributes to changing reality."},
+    {"id": "nFtJII9VUzMV", "verdict": "related", "reason": "Developing scientific tools to promote solutions/policy change is a different lever (build tools) from strengthening applied research — same topic, different intervention."},
+    {"id": "aCdiCakKuJZy", "verdict": "same", "reason": "Make research's power practical and implementable so knowledge does not stay theoretical — same applied/practical-research intervention as the core."}
+   ]
+  },
+  {
+   "synthId": "tADIWotWCMwE",
+   "overall": "CLEAN",
+   "members": [
+    {"id": "JBdhf0sTIMA7", "verdict": "same", "reason": "Establish partnerships with academic institutions, social organizations and businesses to leverage joint knowledge and resources."},
+    {"id": "K3xRAXWz-QjP", "verdict": "same", "reason": "Recruit committed, influential partners from the earliest stages — the same form-cross-sector-partnerships lever with a timing emphasis, not a different intervention."},
+    {"id": "WKGWagOA-JGs", "verdict": "same", "reason": "Build collaborations between academia, industry and social organizations to drive research projects — same intervention."}
+   ]
+  },
+  {
+   "synthId": "vPS3Kf4T9bvD",
+   "overall": "CONTAMINATED",
+   "members": [
+    {"id": "9UQ48ppm4i40", "verdict": "same", "reason": "Core: systemic thinking plus collaborations among actors with commitment, mutual support and enthusiasm."},
+    {"id": "XSZVCPn6n8Uq", "verdict": "related", "reason": "Pairing visionaries/ideologues with executors is a specific, different matching intervention — the systemic-thinking member and the vision-execution-pairing member share the collaboration topic but not the same lever."}
+   ]
+  }
+ ],
+ "summary": {
+  "cleanCount": 11,
+  "contaminatedCount": 9,
+  "wronglyMergedMembers": 10
+ }
+}

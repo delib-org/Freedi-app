@@ -26,7 +26,8 @@ export type LiveSynthAction =
 	| 'unlink' // option removed from a cluster (edit invalidation)
 	| 'dissolve' // cluster deleted (member count dropped to <2)
 	| 'merge' // two synths combined into one via reJudge sweep (donor hidden)
-	| 'review-queued'; // gray-band match logged to admin review, no action taken
+	| 'review-queued' // gray-band match logged to admin review, no action taken
+	| 'revisit'; // left-behind option re-enqueued for a full pipeline re-run (reJudge sweep)
 
 export interface AuditEntry {
 	action: LiveSynthAction;
