@@ -24,9 +24,12 @@ const problems: string[] = [];
 const research = partyStanceResearch();
 
 for (const [islandSlug, parties] of Object.entries(research.islands)) {
-	const island = islandsBySlug.get(islandSlug);
+	// Default islands resolve via defaults.ts; admin-added islands via islandMeta.
+	const island = islandsBySlug.get(islandSlug) ?? research.islandMeta?.[islandSlug];
 	if (!island) {
-		problems.push(`island "${islandSlug}" does not exist in DEFAULT_ISLANDS`);
+		problems.push(
+			`island "${islandSlug}" is neither in DEFAULT_ISLANDS nor registered in islandMeta`,
+		);
 		continue;
 	}
 

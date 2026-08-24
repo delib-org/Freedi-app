@@ -39,10 +39,25 @@ export interface ResearchEntry {
 /** islandSlug → partySlug → entries aligned with the island's stances order */
 export type ResearchIslands = Record<string, Record<string, ResearchEntry[]>>;
 
+/**
+ * Registration for islands that are NOT in DEFAULT_ISLANDS (added by an admin
+ * in a live game). The validator, review renderer and live-doc patcher resolve
+ * such islands through this record instead of the defaults.
+ */
+export interface ResearchIslandMeta {
+	title: string;
+	/** The island's statementId in the live game it was created in. */
+	statementId?: string;
+	question?: string;
+	/** Statement texts in stance order — entry arrays align with this. */
+	stances: string[];
+}
+
 export interface PartyStanceResearch {
 	version: number;
 	updated: string;
 	islands: ResearchIslands;
+	islandMeta?: Record<string, ResearchIslandMeta>;
 }
 
 export function partyStanceResearch(): PartyStanceResearch {

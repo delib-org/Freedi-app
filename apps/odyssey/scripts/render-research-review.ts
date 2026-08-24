@@ -33,7 +33,17 @@ const partiesBySlug = new Map(DEFAULT_PARTIES.map((party) => [party.slug, party]
 mkdirSync(REVIEW_DIR, { recursive: true });
 
 for (const [islandSlug, parties] of Object.entries(research.islands)) {
-	const island = islandsBySlug.get(islandSlug);
+	const defaultIsland = islandsBySlug.get(islandSlug);
+	const meta = research.islandMeta?.[islandSlug];
+	const island = defaultIsland
+		? {
+				title: defaultIsland.title,
+				centralQuestion: defaultIsland.centralQuestion ?? defaultIsland.issue,
+				stances: defaultIsland.stances,
+			}
+		: meta
+			? { title: meta.title, centralQuestion: meta.question ?? meta.title, stances: meta.stances }
+			: null;
 	if (!island) {
 		console.error(`skipping unknown island "${islandSlug}"`);
 		continue;
@@ -45,7 +55,7 @@ for (const [islandSlug, parties] of Object.entries(research.islands)) {
 	lines.push(`> נוצר אוטומטית מ-\`src/data/party-stance-research.json\` (עדכון: ${research.updated}).`);
 	lines.push('> תיקונים נעשים בקובץ ה-JSON בלבד; הגיליון מתרענן בהרצת render-research-review.');
 	lines.push('');
-	lines.push(`**השאלה:** ${island.centralQuestion ?? island.issue}`);
+	lines.push(`**השאלה:** ${island.centralQuestion}`);
 	lines.push('');
 	island.stances.forEach((stance, index) => {
 		lines.push(`- **חוף ${index + 1}:** ${stance}`);

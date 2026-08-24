@@ -62,21 +62,53 @@ async function main(): Promise<void> {
 	const gameIslands = game.islands as GameIsland[];
 	const parties = game.parties as GameParty[];
 
-	// islandSlug → ordered stance statementIds of the live doc
+	// islandSlug → the matching live island + its ordered stance statementIds.
+	// Default islands are located by DEFAULT_ISLANDS position + title; admin-added
+	// islands resolve through research.islandMeta (statementId when recorded,
+	// unique title otherwise).
+	const islandMeta = research.islandMeta ?? {};
 	const stanceIdsBySlug = new Map<string, string[]>();
+	const gameIslandBySlug = new Map<string, GameIsland>();
 	for (const slug of researchedSlugs) {
 		const defaultIndex = DEFAULT_ISLANDS.findIndex((island) => island.slug === slug);
-		if (defaultIndex === -1) throw new Error(`unknown island slug "${slug}"`);
-		const defaultIsland = DEFAULT_ISLANDS[defaultIndex];
+		let gameIsland: GameIsland | undefined;
+		let expectedStances: number;
 
-		const gameIsland = gameIslands.find(
-			(island) => island.sortOrder === defaultIndex + 1 && island.title === defaultIsland.title,
-		);
-		if (!gameIsland) {
-			throw new Error(
-				`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1} — ` +
-					'the game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to guess',
+		if (defaultIndex !== -1) {
+			const defaultIsland = DEFAULT_ISLANDS[defaultIndex];
+			expectedStances = defaultIsland.stances.length;
+			gameIsland = gameIslands.find(
+				(island) => island.sortOrder === defaultIndex + 1 && island.title === defaultIsland.title,
 			);
+			if (!gameIsland) {
+				throw new Error(
+					`island "${slug}" (${defaultIsland.title}) not found at sortOrder ${defaultIndex + 1} — ` +
+						'the game doc diverged from DEFAULT_ISLANDS (reordered or renamed); refusing to guess',
+				);
+			}
+		} else {
+			const meta = islandMeta[slug];
+			if (!meta) throw new Error(`island "${slug}" is neither a default island nor in islandMeta`);
+			expectedStances = meta.stances.length;
+			gameIsland = meta.statementId
+				? gameIslands.find((island) => island.statementId === meta.statementId)
+				: undefined;
+			if (gameIsland && gameIsland.title !== meta.title) {
+				throw new Error(
+					`island "${slug}": live island ${gameIsland.statementId} is titled "${gameIsland.title}", ` +
+						`islandMeta says "${meta.title}" — refusing to guess`,
+				);
+			}
+			if (!gameIsland) {
+				const byTitle = gameIslands.filter((island) => island.title === meta.title);
+				if (byTitle.length !== 1) {
+					throw new Error(
+						`island "${slug}": ${byTitle.length} live islands titled "${meta.title}" — ` +
+							'record its statementId in islandMeta',
+					);
+				}
+				gameIsland = byTitle[0];
+			}
 		}
 
 		const stancesSnap = await db
@@ -87,11 +119,12 @@ async function main(): Promise<void> {
 			.map((docSnap) => docSnap.data() as { statementId: string; statementType: string; order?: number })
 			.filter((statement) => statement.statementType === 'option')
 			.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-		if (stances.length !== defaultIsland.stances.length) {
+		if (stances.length !== expectedStances) {
 			throw new Error(
-				`island "${slug}": live doc has ${stances.length} stances, research expects ${defaultIsland.stances.length}`,
+				`island "${slug}": live doc has ${stances.length} stances, research expects ${expectedStances}`,
 			);
 		}
+		gameIslandBySlug.set(slug, gameIsland);
 		stanceIdsBySlug.set(slug, stances.map((stance) => stance.statementId));
 	}
 
@@ -112,8 +145,7 @@ async function main(): Promise<void> {
 			party.attitudes = attitudes;
 
 			// The researched island's legacy declared stance is superseded.
-			const defaultIndex = DEFAULT_ISLANDS.findIndex((island) => island.slug === slug);
-			const gameIsland = gameIslands.find((island) => island.sortOrder === defaultIndex + 1);
+			const gameIsland = gameIslandBySlug.get(slug);
 			if (gameIsland && party.positions?.[gameIsland.statementId]) {
 				delete party.positions[gameIsland.statementId];
 			}
