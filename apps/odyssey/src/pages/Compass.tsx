@@ -225,11 +225,20 @@ export default function Compass() {
 								);
 							})}
 						</div>
-						<p className="text-[13px] opacity-75 mt-3 mb-0">
-							{ranked.length === TOP_VALUES
-								? 'נבחרו כל הערכים. לחיצה נוספת מסירה ערך.'
-								: `נבחרו ${ranked.length} מתוך ${TOP_VALUES}. לחיצה נוספת מסירה ערך.`}
-						</p>
+						{ranked.length > TOP_VALUES ? (
+							// A ranking saved before the cap dropped to 3 loads with more —
+							// say exactly what unblocks the way onward.
+							<p className="text-[13px] text-[var(--gold-strong)] mt-3 mb-0">
+								בחרתם {ranked.length} ערכים — הסירו {ranked.length - TOP_VALUES} בלחיצה עליהם כדי
+								להמשיך.
+							</p>
+						) : (
+							<p className="text-[13px] opacity-75 mt-3 mb-0">
+								{ranked.length === TOP_VALUES
+									? 'נבחרו כל הערכים. לחיצה נוספת מסירה ערך.'
+									: `נבחרו ${ranked.length} מתוך ${TOP_VALUES}. לחיצה נוספת מסירה ערך.`}
+							</p>
+						)}
 					</section>
 
 					<div className="flex flex-col items-center gap-2 pb-4">
