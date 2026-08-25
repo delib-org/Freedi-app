@@ -109,6 +109,8 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'GOOGLE_SHEETS_PRIVATE_KEY': 'GOOGLE_SHEETS_PRIVATE_KEY',
       // Synthesis feature flags — read by functions/src/synthesis/featureFlags.ts
       'SYNTHESIS_LIVE_SYNTH_ENABLED': 'SYNTHESIS_LIVE_SYNTH_ENABLED',
+      // WizCol Studio base URL — organization invite links (functions/src/organizations/orgAuth.ts)
+      'STUDIO_APP_BASE_URL': 'STUDIO_APP_BASE_URL',
     },
     extra: ''
   },
