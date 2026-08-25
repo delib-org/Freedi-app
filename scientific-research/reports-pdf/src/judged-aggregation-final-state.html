@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Judged Aggregation: The Algorithm and Its Scores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper: #FAF9F6;
+    --panel: #F1EFE9;
+    --ink: #20242C;
+    --muted: #69707C;
+    --line: #DAD7CE;
+    --teal: #0E6E63;
+    --teal-soft: #E3EEEB;
+    --brick: #A34E3E;
+    --brick-soft: #F3E7E2;
+    --code-bg: #EFEDE6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #15181E;
+      --panel: #1C2028;
+      --ink: #E3E2DB;
+      --muted: #8B93A0;
+      --line: #333945;
+      --teal: #52B8A9;
+      --teal-soft: #1B2E2B;
+      --brick: #D3907F;
+      --brick-soft: #322220;
+      --code-bg: #21252E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #15181E;
+    --panel: #1C2028;
+    --ink: #E3E2DB;
+    --muted: #8B93A0;
+    --line: #333945;
+    --teal: #52B8A9;
+    --teal-soft: #1B2E2B;
+    --brick: #D3907F;
+    --brick-soft: #322220;
+    --code-bg: #21252E;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 1.05rem;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 1.25rem;
+  }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 3.5rem 0 5rem; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+  .subtitle {
+    font-size: 1.15rem;
+    color: var(--muted);
+    font-style: italic;
+    margin: 0 0 1.5rem;
+    text-wrap: balance;
+  }
+  .byline {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 0.6rem 0;
+    margin-bottom: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 3rem 0 0.9rem;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  h2 .secnum, h3 .secnum {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 0.8em;
+    color: var(--teal);
+    margin-right: 0.55em;
+  }
+  h3 {
+    font-size: 1.12rem;
+    font-weight: 700;
+    margin: 2rem 0 0.6rem;
+    text-wrap: balance;
+  }
+  p { margin: 0 0 1rem; }
+  a { color: var(--teal); }
+  strong { font-weight: 700; }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.83em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.08em 0.35em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  pre code { white-space: pre; background: none; padding: 0; }
+
+  .abstract {
+    background: var(--panel);
+    border-left: 3px solid var(--teal);
+    padding: 1.2rem 1.4rem;
+    margin: 0 0 1rem;
+    font-size: 0.98rem;
+  }
+  .abstract p:last-child { margin-bottom: 0; }
+  .abstract .lbl {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  blockquote {
+    margin: 1.2rem 0;
+    padding: 0.2rem 0 0.2rem 1.2rem;
+    border-left: 2px solid var(--line);
+    color: var(--muted);
+    font-style: italic;
+  }
+  blockquote .src {
+    display: block;
+    font-style: normal;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    margin-top: 0.4rem;
+  }
+
+  .tablebox { overflow-x: auto; margin: 1.3rem 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-align: left;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+    padding: 0.45rem 0.8rem 0.45rem 0;
+  }
+  td {
+    border-bottom: 1px solid var(--line);
+    padding: 0.45rem 0.8rem 0.45rem 0;
+    vertical-align: top;
+  }
+  td.num, th.num { text-align: right; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.82rem; }
+  tr.hl td { background: var(--teal-soft); font-weight: 600; }
+  tr.hl-b td { background: var(--brick-soft); font-weight: 600; }
+  caption {
+    caption-side: bottom;
+    text-align: left;
+    font-size: 0.82rem;
+    color: var(--muted);
+    padding-top: 0.55rem;
+    font-style: italic;
+  }
+
+  .passes { margin: 1.4rem 0; display: flex; flex-direction: column; gap: 0.45rem; }
+  .pass {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+    align-items: baseline;
+  }
+  .pass .pnum {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--teal);
+  }
+  .pass .pbody { font-size: 0.92rem; }
+  .pass .pname { font-weight: 700; }
+  .pass .pgate {
+    display: block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+  .pass.registry { border-color: var(--teal); }
+
+  .voice-f, .voice-b {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.1em 0.5em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .voice-f { background: var(--teal-soft); color: var(--teal); }
+  .voice-b { background: var(--brick-soft); color: var(--brick); }
+
+  .footnote {
+    font-size: 0.85rem;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    margin-top: 3rem;
+    padding-top: 1rem;
+  }
+  ol.refs { font-size: 0.9rem; padding-left: 1.3rem; }
+  ol.refs li { margin-bottom: 0.6rem; }
+  ul { padding-left: 1.3rem; }
+  li { margin-bottom: 0.35rem; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+
+  @page { size: A4; margin: 18mm 16mm; }
+  @media print {
+    body { font-size: 10.2pt; padding: 0; }
+    .wrap { max-width: 100%; padding: 0; }
+    h2, h3 { break-after: avoid; }
+    .tablebox, blockquote, .pass { break-inside: avoid; }
+    a { color: var(--teal); text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Freedi Technical Report · Deliberation Systems</p>
+  <h1>Judged Aggregation: The Algorithm and Its Scores</h1>
+  <p class="subtitle">The Freedi clustering-and-synthesis pipeline in its final deployed form, its measured accuracy on four instruments, and a comparison with Blair, Procaccia &amp; Tambe's <em>"Embeddings for Preferences, Not Semantics"</em></p>
+  <div class="byline">Freedi project · 25 August 2026 · describes the pipeline as deployed to production (<span class="mono">functions/src/synthesis/</span>, wizcol-app me-west1)</div>
+
+  <div class="abstract">
+    <span class="lbl">Abstract</span>
+    <p>Freedi aggregates free-form participant statements in real time: as each statement arrives it is merged with an equivalent proposal (a <em>synthesis</em>), filed under a topical theme, or left standing as a new idea. The architecture rests on one principle: <strong>cosine similarity over text embeddings is used only as a candidate generator, never as a decision rule.</strong> Every placement that changes what the public sees is a discrete LLM judgement with a conservative bias and fail-closed error handling; scheduled sweeps supply convergence, including a transitivity-guarded merge pass and a revisit pass that guarantees every left-behind statement re-enters the judged cascade as the landscape grows.</p>
+    <p>Measured accuracy, all on the deployed configuration: on a 100-statement synthetic benchmark, composite 0.884–0.910 (EN) and ≈0.93 (HE) with synthesis-layer precision 1.000 and 150/150 ground-truth pairs recovered across three arrival orders; on a 100-statement corpus authored by a <em>different model family</em> (Gemini), synthesis F1 0.980 with zero false merges — 11 points above the best any cosine threshold can reach on that corpus (0.871); on 114 real statements from a live production question, blind-audited by independent judges, member-level merge precision 74%, text fidelity 0.953 with zero participant asks lost; and on Blair, Procaccia &amp; Tambe's own 875 hard triplets, 95.0–98.0% versus 80.0% for the paper's preference-tuned encoder and 0.5% for raw cosine. The paper and this system agree on the diagnosis — embeddings entangle the signal with a semantic nuisance — and differ on the remedy: they repair the geometry; Freedi demotes it. We present the comparison and argue the approaches are complementary.</p>
+  </div>
+
+  <h2><span class="secnum">1</span>The task</h2>
+  <p>Participants answer an open question — <em>"What should our city do to improve residents' quality of life?"</em> — with short free-form proposals, and evaluate each other's proposals on a continuous scale. Left raw, such a corpus fragments support: fifty people who want the same thing in fifty wordings look like fifty minority positions. The system therefore does three things, continuously and live, one statement at a time, in whatever order statements arrive, in English and Hebrew:</p>
+  <ul>
+    <li><strong>Synthesis</strong> — detect that two statements are <em>the same proposal</em> in different words, and replace them with one jointly-worded statement that pools their evaluations.</li>
+    <li><strong>Theming</strong> — group distinct-but-related proposals under topical headings, without pretending they agree.</li>
+    <li><strong>Standing ideas</strong> — leave everything else alone, visibly, from statement #1.</li>
+  </ul>
+  <p>Two distinctions carry the design. <em>Same topic ≠ same proposal</em>: "add speed bumps near schools" and "lower the speed limit near schools" share a goal but are different interventions; merging them misrepresents both authors. <em>Same words ≠ same stance</em>: "ban X" and "do not ban X" are lexically near-identical and preferentially opposite. §5 shows these are exactly the distinctions a generic embedding space fails to keep.</p>
+
+  <h2><span class="secnum">2</span>The governing principle</h2>
+  <p>On this task, cosine similarity over general-purpose embeddings has no decision-grade precision while retaining useful recall as a search primitive: on the hard-triplet instrument of §4.4, 100% of stance-flipped distractors clear the topical gate (≥ 0.60) and 99.1% clear the strictest merge gate (≥ 0.85) — yet nearest-neighbour search reliably surfaces the true partner among the top candidates. The doctrine, enforced at every placement site:</p>
+  <blockquote>"Geometry proposes, judgement disposes — with no exceptions."<span class="src">enforced in runSinglePipeline.ts and both scheduled sweeps</span></blockquote>
+  <p>Three safety properties recur at every judgement site. <strong>Asymmetric doubt</strong>: every judge prompt carries a tie-break pointed at the cheaper error — the equivalence judge prefers "related" over "same"; the synthesis writer refuses when in doubt; the theme judge answers NONE when unsure. <strong>Fail-closed placement, fail-open custody</strong>: an LLM error on a merge decision defaults to "different" (nothing merges); an error on re-validating an existing cluster keeps its members; outages are tracked separately from negative verdicts. <strong>Reversible-by-sweep</strong>: the live path is conservative; scheduled sweeps supply convergence, and splits are queued for human review, never automatic.</p>
+
+  <h2><span class="secnum">3</span>The algorithm</h2>
+
+  <h3>3.1 Representation and retrieval</h3>
+  <p>Statements embed under a fixed context contract (<span class="mono">"Question: &lt;parent&gt;\nAnswer: &lt;statement&gt;"</span>) with OpenAI <span class="mono">text-embedding-3-small</span> at 1536 dimensions; any question can pin <span class="mono">text-embedding-3-large</span> (Hebrew requires it), and threshold bands travel with the model — bands are calibrated to a geometry, not to a pipeline. Long statements are first distilled into a 5–15-word brief and the brief is embedded, so boilerplate cannot inflate similarity. Candidates come from Firestore's native approximate-nearest-neighbour search, top k = 15 per question.</p>
+
+  <h3>3.2 The live placement cascade</h3>
+  <p>Each new statement runs one decision tree; it takes the first pass whose gate <em>and</em> judgement both admit it.</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Pass</th><th>Action</th><th>Gate, then judge</th></tr>
+      <tr><td class="mono">P1</td><td><strong>Synthesis attach</strong> — merge into an existing synthesis</td><td>top-2 member-cosine evidence ≥ attach band ∧ centroid + member-quorum cohesion; then the four-way equivalence judge must answer "same" (fail-closed)</td></tr>
+      <tr><td class="mono">P2</td><td><strong>Synthesis spawn</strong> — pair with a free statement, write a joint proposal</td><td>pair cosine in the synth band; the writer's refusal-first rubric decides; up to 3 candidate partners are tried, because a refusal is a verdict on one pair, not on the statement</td></tr>
+      <tr><td class="mono">P3</td><td><strong>Theme filing (judged)</strong> — file under an existing theme</td><td>cosine only ranks the shortlist; the judge sees each theme's <em>contents</em>, never titles alone, and may answer NONE</td></tr>
+      <tr><td class="mono">P4</td><td><strong>Claim registry</strong> (opt-in per question)</td><td>classification against a growing codebook of canonical claims; "opposes" writes a typed counter-edge and falls through</td></tr>
+      <tr><td class="mono">P6</td><td><strong>Review queue</strong> — borderline evidence goes to humans</td><td>rows self-resolve if a later pass places the statement</td></tr>
+      <tr><td class="mono">P7</td><td><strong>Singleton</strong> — the statement stands as its own idea</td><td>—</td></tr>
+    </table>
+  </div>
+  <p>The ordering is load-bearing: synthesis passes run before theming, because a theme that already holds your twin always looks cohesive to you — your twin is inside its centroid. Synthesis membership is terminal; <strong>topic membership is not</strong> — a theme gives a statement a shelf, not a meaning, and the statement remains eligible for synthesis (§3.3 makes this a mechanism, not a promise). Cluster evidence is never the naive title cosine: it is the maximum over title and member cosines, expanded by an average-of-top-2-members step so that two independent members must agree before a wide cluster can clear a gate, and a title-only match that no member supports is rejected outright.</p>
+
+  <h3>3.3 The convergence layer</h3>
+  <p>A queue worker drains deferred work every minute. A scheduled sweep every ten minutes does three things:</p>
+  <ul>
+    <li><strong>Cross-synthesis merge, transitivity-guarded.</strong> Cosine over cross-member pairs proposes a merge candidate (top-2 average ≥ 0.82 — deliberately below decision grade, because "two wordings of one proposal" and "two distinct proposals about the same thing" provably overlap there). Two judgements then decide, both fail-closed: the <em>farthest</em> cross-member pair must itself be judged "same" — a merged set is one proposal only if its two most distant members are — and the synthesis writer, shown up to six members per side, must accept the union. A ≈ B and B ≈ C never implies A∪B∪C merges. Rejected pairs are memoised.</li>
+    <li><strong>Revisit.</strong> Any un-synthesized statement whose evidence against a synthesis's members — or against another free statement — has come to clear the synth band is re-enqueued through the full judged cascade. A world fingerprint (synthesis count + total membership) grants one fresh look per change of the landscape, so a stable corpus is not re-ground. This is what makes late-arriving twins reachable regardless of arrival order.</li>
+    <li><strong>Theme consolidation.</strong> Duplicate headings merge, judged on their members, never their titles; each claim participates in at most one merge per pass.</li>
+  </ul>
+
+  <h3>3.4 The synthesis writer</h3>
+  <p>When two statements merge, the writer first runs a refusal check with two triggers — directional conflict, and the subtler <em>distinct actions within the same theme</em> — under an explicit acceptance test: the inputs must be true paraphrases of the same specific action; if a supporter could back one while opposing the other's intervention, refuse. Formulation differences are not grounds for refusal (category-vs-instance wordings of one intervention merge). The text it then writes is bound by four fidelity rules: never widen scope; never invent facts; <strong>never add commitments</strong> — no mechanisms, criteria, or obligations no input stated; and <strong>every input must remain visible</strong> — each member's concrete ask (its named instruments, its enumerations) must survive into the body, not dissolve into an abstraction. Output language is forced to the corpus language, because cluster titles are themselves embedded and reused as attach evidence.</p>
+
+  <h2><span class="secnum">4</span>How it scores</h2>
+  <p>Four instruments, four different relationships to ground truth. All numbers are the deployed configuration.</p>
+
+  <h3>4.1 Synthetic benchmark — known structure, own authorship</h3>
+  <p>100 statements (10 topics × 5 proposals × 2 near-paraphrases) streamed one at a time in seeded-shuffled order through the real trigger path; ground truth is 50 syntheses in 10 themes; the composite is 0.6·F1<sub>synth</sub> + 0.4·F1<sub>topic</sub>, pairwise over all 4,950 pairs.</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Language</th><th class="num">Composite</th><th class="num">Synth F1</th><th class="num">Precision</th><th class="num">Pairs</th></tr>
+      <tr class="hl"><td>English (three arrival orders)</td><td class="num">0.884–0.910</td><td class="num">0.990–1.000</td><td class="num">1.000</td><td class="num">150/150, 0 false merges</td></tr>
+      <tr class="hl"><td>Hebrew (3-large pin)</td><td class="num">≈0.93</td><td class="num">0.947</td><td class="num">1.000</td><td class="num">45/50, 0 false merges</td></tr>
+      <caption>Composite carries theme-filing variance (topic F1 0.71–0.78); the synthesis layer is exact and order-independent. Text fidelity on this corpus: 1.000 (98/98 member intents preserved).</caption>
+    </table>
+  </div>
+
+  <h3>4.2 Cross-generator corpus — known structure, foreign authorship</h3>
+  <p>To rule out the pipeline being tuned to its own authors' paraphrase style, a second 100-statement corpus with the same 10×5×2 design was authored end-to-end by Gemini — a different model family from both the corpus above and the pipeline's judges. The pre-flight showed it is <em>geometrically harder</em>: within-pair cosine median 0.849 (vs 0.898), 28 of 50 pairs below the attach band, and a hard ceiling for any cosine-only decider of <strong>F1 0.871</strong> at the best possible single threshold.</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Decider on the Gemini corpus</th><th class="num">Synth F1</th><th class="num">Precision</th><th class="num">Pairs</th></tr>
+      <tr><td>Best possible single cosine threshold (oracle-tuned)</td><td class="num">0.871</td><td class="num">0.863</td><td class="num">—</td></tr>
+      <tr class="hl"><td>The judged pipeline (shipped defaults, no tuning)</td><td class="num">0.980</td><td class="num">1.000</td><td class="num">48/50, 0 false merges</td></tr>
+      <caption>Composite 0.791; the gap to §4.1 is entirely the theming layer (topic F1 0.508), stressed by Gemini's genuinely overlapping domain choices (bus lanes and bike lanes live on the same streets). One pair sat below the spawn floor and was recovered by the revisit pass; the two misses are pairs whose own authorship wobbles scope mid-pair — the judge's refusal is defensible.</caption>
+    </table>
+  </div>
+  <p>The 11-point margin over the oracle-tuned threshold is the cleanest single measurement of what judgement adds over geometry: the ceiling is computed on the same embeddings the pipeline itself uses for candidacy, so the entire margin is attributable to the decision layer.</p>
+
+  <h3>4.3 Real production data — no ground truth, blind audit</h3>
+  <p>The 114 Hebrew statements of a live production question, exported read-only and replayed in original arrival order. A real question has no answer key, so verification substituted blind independent judgement: two adversarial merge auditors from a different model family than the pipeline's judge (titles withheld, instructed to refute, the pipeline's own rubric), two independent missed-merge sweepers, only cross-judge-agreed findings counted, and a selftested text-fidelity scorer.</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Axis (both-judge-agreed)</th><th class="num">Measured</th></tr>
+      <tr><td>Statements grouped into syntheses</td><td class="num">43 of 114, in 20 syntheses, largest 4 members</td></tr>
+      <tr class="hl"><td>Member-level merge precision</td><td class="num">32/43 (74%)</td></tr>
+      <tr class="hl"><td>Text fidelity (member asks preserved)</td><td class="num">0.953 — 0 lost, 2 weakened, 1 soft fabrication</td></tr>
+      <tr><td>Missed merges</td><td class="num">12 attaches + 3 pairs — every one either judge-refused (visible, retryable) or awaiting a sweep round; none structurally silent</td></tr>
+      <caption>Refuted merges are all small related-pair slips at the spawn judge; no runaway cluster exists. The residual error concentrates at two prompt-calibration sites — the spawn writer accepting "related" Hebrew pairs, and judges refusing some true paraphrases — not at architecture gaps.</caption>
+    </table>
+  </div>
+  <p>The honest reading: real free-form data scores below the synthetic benchmarks — 74% member precision, not 100% — because real participants write related-but-distinct ideas at densities no synthetic corpus reproduces, and the judge's strictness cuts both ways. What the deployed algorithm guarantees on real data is the <em>shape</em> of its errors: merges stay small and precision-biased, every participant's ask survives into the published text, and every miss is a visible, revisitable decision rather than a silent permanent loss.</p>
+
+  <h3>4.4 Hard triplets — the shared instrument with the paper</h3>
+  <p>Blair, Procaccia &amp; Tambe released 875 hard evaluation triplets: a real participant anchor, a same-stance paraphrase (match), and a stance-flipped rewrite preserving the wording (distractor), across 11 datasets from Polis, Remesh and generative-social-choice surveys. Freedi's claim registry — the opt-in P4 layer, which reframes deduplication as classification against a codebook — was scored end-to-end on this instrument: a triplet counts only if the match attaches to the anchor's claim <em>and</em> the distractor does not.</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Condition</th><th class="num">Triplet accuracy</th></tr>
+      <tr><td>Cosine on raw text (the pipeline's own embeddings)</td><td class="num">0.5%</td></tr>
+      <tr><td>Base ST5-XL (paper)</td><td class="num">48.3%</td></tr>
+      <tr><td>DPT-tuned encoder (paper's remedy)</td><td class="num">80.0%</td></tr>
+      <tr><td>Per-topic vote-trained projection (paper's remedy)</td><td class="num">81.1%</td></tr>
+      <tr class="hl"><td>Freedi registry, raw-anchor claims (fast model)</td><td class="num">95.0%</td></tr>
+      <tr class="hl"><td>Same, current production model (150-triplet replication)</td><td class="num">96.7–98.0%</td></tr>
+      <caption>Freedi rows are end-to-end attach decisions (McNemar vs raw cosine: 827 discordant wins to 0). The robust configuration classifies against raw anchor texts; canonical rewording measurably loses stance information and is not used for matching.</caption>
+    </table>
+  </div>
+
+  <h2><span class="secnum">5</span>Comparison with Blair, Procaccia &amp; Tambe</h2>
+
+  <h3>5.1 Convergent diagnosis</h3>
+  <p>The paper demonstrates that off-the-shelf sentence embeddings encode a preference-relevant signal entangled with a semantic nuisance — wording, style, topic vocabulary — and that cosine fails exactly when the two decouple: stance-flipped rewrites sit closer to their source than genuine same-stance paraphrases do. Freedi measures the same phenomenon from inside a production system: on the paper's distractors, every stance-flip clears the pipeline's topical gate and 99.1% clear its strictest merge gate. Both parties conclude that <em>no threshold over this geometry can make the decision</em>. The diagnosis is fully shared, independently measured.</p>
+
+  <h3>5.2 Divergent remedies: repair the geometry vs demote it</h3>
+  <p>The paper repairs the space — decorrelated preference tuning of the encoder (80.0%) and per-topic vote-trained ideal-point projections (81.1%) — so that distance itself becomes preference-meaningful. Freedi keeps the stock geometry and takes the decision away from it: distance nominates candidates; a discrete LLM judgement over the actual texts decides. On the paper's own instrument the demotion strategy scores 15–18 points higher (95.0–98.0% vs 80.0–81.1%), and §4.2 quantifies the same margin on a whole-corpus task: against an <em>oracle-tuned</em> threshold on the pipeline's own embeddings, judgement wins by 11 F1 points. Two structural advantages are not expressible in any repaired metric at all: the judge returns a <em>typed</em> relation — "opposite" is recorded as a counter-edge between a statement and the claim it opposes, a fact no distance function can represent — and the refusal rubric distinguishes <em>same-topic-different-action</em>, which is a semantic judgement about interventions, not a proximity in any space.</p>
+
+  <h3>5.3 The tasks are siblings, not twins</h3>
+  <p>The comparison must be fair to the paper: its target is <em>preference prediction</em> — a geometry in which nearby users vote alike — which needs cheap distances over the whole corpus and vote data to train against. Freedi's target is <em>mergeability</em> — a per-pair decision that changes what people are agreeing to — which needs precision above all, tolerates per-decision LLM latency, and typically runs before any vote data exists (statements are judged at creation). A tuned encoder cannot cheaply produce Freedi's typed relations; Freedi's judge cannot cheaply produce the paper's global preference map. Each instrument is the wrong tool for the other's job.</p>
+
+  <h3>5.4 Complementarity</h3>
+  <p>The obvious hybrid follows from the division of labour the architecture already has. Freedi's candidate generator is exactly the component the paper improves: a preference-tuned encoder in the retrieval slot would surface better candidates — particularly in compressed geometries like Hebrew, where the current model buries true partners below rank 10 — while the judge keeps the decision. Conversely, a preference-geometry system could adopt Freedi's judgement layer for its irreversible actions (merging, canonical wording) while keeping tuned distances for its reversible ones (neighbourhood display, vote prediction). Nothing in either result set argues against the other; they price two different points on the cost–precision curve, and a production deliberation system plausibly wants both.</p>
+
+  <h2><span class="secnum">6</span>Limitations</h2>
+  <ul>
+    <li><strong>The theming layer is the weak layer, by design.</strong> Topic F1 ranges 0.51–0.78 across corpora and arrival orders, and degrades further when domains genuinely overlap. Themes are page organisation — they never change what anyone agreed to — but a reader-facing quality gap remains.</li>
+    <li><strong>Judge strictness is the accuracy frontier.</strong> On real data, both residual error classes are judge calibrations: the spawn writer accepting some related pairs, and refusals of some true paraphrases. These are prompt-level A/B targets; the architecture provides no further leverage.</li>
+    <li><strong>Hebrew requires the larger embedding model per question</strong>, with per-model bands; the migration is a one-call, per-question operation, not a flag day.</li>
+    <li><strong>Single-run numbers carry variance.</strong> Composite scores are quoted as ranges over arrival orders where measured; single-run composites cannot resolve small effects, and this report quotes ranges wherever they exist.</li>
+    <li><strong>Cost.</strong> Judgement is bought per decision: roughly 60–120 LLM calls per 100 statements, verdict-cached so repeated looks are free. The registry adds one classification per statement on opted-in questions.</li>
+  </ul>
+
+  <h2><span class="secnum">7</span>References</h2>
+  <p>Blair, Procaccia &amp; Tambe (2026), <em>Embeddings for Preferences, Not Semantics</em> — hard-triplet release and the DPT / per-topic-projection remedies. · Freedi companion reports: <em>Geometry Proposes, Judgement Disposes</em> (the design-history account this report supersedes for current-state reference, retained for the derivation of each mechanism) and <em>Judged Aggregation Under Review</em>. · Benchmark and audit artifacts: <span class="mono">scientific-research/2026-08-18-live-synth-accuracy/</span> (runs, blind-audit JSONs, scorer with selftest), <span class="mono">scripts/seedSynthBenchmark.accuracy100.{en,he,gemini.en}.json</span>, hard-triplet harness under <span class="mono">scientific-research/20206-07-16-Claim-regestry/</span>. All numbers trace to build-certified runs where noted; thresholds are shipped defaults, admin-tunable per question subject to the band invariant.</p>
+</div>
+
+</body>
+</html>
