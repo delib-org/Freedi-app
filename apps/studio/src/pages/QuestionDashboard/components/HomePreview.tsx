@@ -20,12 +20,16 @@ const HomePreview: FC<HomePreviewProps> = ({ title, activities }) => {
 			<div className={styles.phone}>
 				<div className={styles.notch} aria-hidden="true" />
 				<div className={styles.screen}>
-					<p className={styles.screenTitle}>{title || t('Untitled')}</p>
+					<p className={styles.screenTitle} dir="auto">
+						{title || t('Untitled')}
+					</p>
 					<ol className={styles.screenList}>
 						{activities.map((activity) => (
 							<li key={activity.statementId} className={styles.screenItem}>
 								<span aria-hidden="true">{activity.def.icon}</span>
-								<span className={styles.screenItemTitle}>{activity.title || t('Untitled')}</span>
+								<span className={styles.screenItemTitle} dir="auto">
+									{activity.title || t('Untitled')}
+								</span>
 							</li>
 						))}
 					</ol>

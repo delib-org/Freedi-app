@@ -96,7 +96,9 @@ export default function RunView() {
 
 			<main className={styles.main}>
 				<section className={styles.stage} aria-busy={loading || undefined}>
-					<h1 className={styles.title}>{activity?.title || t('Untitled')}</h1>
+					<h1 className={styles.title} dir="auto">
+						{activity?.title || t('Untitled')}
+					</h1>
 					{activity?.participant ? (
 						<>
 							<QRCodePanel

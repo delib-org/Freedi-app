@@ -82,7 +82,9 @@ const QuestionHeader: FC<QuestionHeaderProps> = ({
 	return (
 		<header className={styles.header}>
 			<div className={styles.titleRow}>
-				<h1 className={styles.title}>{title || t('Untitled')}</h1>
+				<h1 className={styles.title} dir="auto">
+					{title || t('Untitled')}
+				</h1>
 				<div className={styles.status}>
 					<StatusPill status={rollup.state} size="large" />
 					{rollup.state === 'open' && (

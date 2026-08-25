@@ -57,7 +57,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 	return (
 		<article className={clsx('question-card', `question-card--status-${status}`, className)}>
 			<div className="question-card__header">
-				<h3 className="question-card__title">
+				<h3 className="question-card__title" dir="auto">
 					{to ? (
 						<Link className="question-card__link" to={to}>
 							{displayTitle}

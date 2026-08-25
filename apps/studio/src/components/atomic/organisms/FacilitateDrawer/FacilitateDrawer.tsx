@@ -190,7 +190,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 							{tWithParams('{{n}} of {{total}}', { n: index + 1, total })}
 						</span>
 					</div>
-					<h2 id={titleId} ref={titleRef} className="drawer__title" tabIndex={-1}>
+					<h2 id={titleId} ref={titleRef} className="drawer__title" tabIndex={-1} dir="auto">
 						{activity.title || t('Untitled')}
 					</h2>
 					<button type="button" className="drawer__close" aria-label={t('Close')} onClick={onClose}>

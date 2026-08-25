@@ -83,7 +83,12 @@ const ActivityRow: React.FC<ActivityRowProps> = ({
 			</span>
 
 			<div className="activity-row__main" role="cell">
-				<button type="button" className="activity-row__title" onClick={() => onSelect(statementId)}>
+				<button
+					type="button"
+					className="activity-row__title"
+					dir="auto"
+					onClick={() => onSelect(statementId)}
+				>
 					{title}
 				</button>
 				<span className="activity-row__subtitle">{t(label)}</span>
