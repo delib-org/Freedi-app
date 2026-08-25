@@ -65,6 +65,9 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 		setDescription('');
 		setOpenNow(defaultOpenNow(initialType));
 		setError('');
+		// The modal instance stays mounted between opens, so a stale
+		// `submitting` from a previous create would lock the footer.
+		setSubmitting(false);
 	}, [isOpen, initialType]);
 
 	const kind = type ? KIND_BY_TYPE[type] : undefined;
@@ -93,6 +96,7 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 				description: description.trim() || undefined,
 				initialStatus: openNow ? 'live' : 'frozen',
 			});
+			setSubmitting(false);
 			onCreated(statementId, type);
 		} catch (err) {
 			logError(err, {
