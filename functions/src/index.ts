@@ -175,6 +175,9 @@ import {
 	reverseIntegrationCallable,
 } from './fn_integrateSimilarStatements';
 
+// Top Answers admin panel — on-demand recompute of statement.results / isChosen
+import { recomputeTopOptions } from './fn_recomputeTopOptions';
+
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
 import {
 	synthesizeIdeasPreview,
@@ -854,6 +857,9 @@ exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
 exports.reverseIntegration = reverseIntegrationCallable;
+
+// Top Answers admin panel
+exports.recomputeTopOptions = recomputeTopOptions;
 
 // Bulk Idea Synthesis
 exports.synthesizeIdeasPreview = synthesizeIdeasPreview;

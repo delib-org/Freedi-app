@@ -6,7 +6,6 @@ import { setDoc } from 'firebase/firestore';
 
 import { Statement, SortType, Role, StatementType } from '@freedi/shared-types';
 import { Layers, Sparkles, Lightbulb } from 'lucide-react';
-import { sortByConsensus } from '@/redux/utils/selectorFactories';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
@@ -17,6 +16,7 @@ import {
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 import SuggestionCard from './suggestionCard/SuggestionCard';
+import { applyManualOrder, sortStatements } from './suggestionOrdering';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import { useViewLayers } from '@/controllers/hooks/useViewLayers';
@@ -48,63 +48,6 @@ const getStatementId = (statement: Statement): string => statement.statementId;
 // to be trackable by eye across the whole list, not just snap.
 const REORDER_SPRING = { stiffness: 140, damping: 24 } as const;
 
-// Helper function to sort statements
-function sortStatements(
-	statements: Statement[],
-	sort: string | undefined,
-	randomSeed: number,
-	parentStatement?: Statement,
-): Statement[] {
-	const sorted = [...statements];
-
-	if (sort === 'backend-order') {
-		return sorted;
-	}
-
-	switch (sort) {
-		case SortType.accepted: {
-			const isSingleLike = parentStatement?.statementSettings?.evaluationType === 'single-like';
-			if (isSingleLike) {
-				return sorted.sort((a, b) => {
-					const aLikes = a.evaluation?.sumPro || a.pro || 0;
-					const bLikes = b.evaluation?.sumPro || b.pro || 0;
-
-					return bLikes - aLikes;
-				});
-			}
-
-			return sorted.sort(sortByConsensus);
-		}
-		case SortType.newest:
-			return sorted.sort((a, b) => b.createdAt - a.createdAt);
-		case SortType.random:
-			if (randomSeed) {
-				return sorted.sort((a, b) => {
-					const hashA = `${randomSeed}-${a.statementId}`
-						.split('')
-						.reduce(
-							(acc, char, index) => acc + ((char.charCodeAt(0) * (index + 1) * randomSeed) % 10000),
-							0,
-						);
-					const hashB = `${randomSeed}-${b.statementId}`
-						.split('')
-						.reduce(
-							(acc, char, index) => acc + ((char.charCodeAt(0) * (index + 1) * randomSeed) % 10000),
-							0,
-						);
-
-					return hashA - hashB;
-				});
-			}
-
-			return sorted.sort(() => Math.random() - 0.5);
-		case SortType.mostUpdated:
-			return sorted.sort((a, b) => b.lastUpdate - a.lastUpdate);
-		default:
-			return sorted;
-	}
-}
-
 const SuggestionCards: FC = () => {
 	const params = useParams();
 	const location = useLocation();
@@ -115,6 +58,12 @@ const SuggestionCards: FC = () => {
 	const statement = useSelector(statementSelector(statementId));
 	const defaultSort = statement?.statementSettings?.defaultSortType || SortType.newest;
 	const sort = params.sort || defaultSort;
+
+	// An admin's hand-placed order (written from the Top Answers panel or the
+	// Join facilitator panel) replaces the ranking — but only while the reader is
+	// on the question's default view. A `:sort` in the URL is the reader asking
+	// for a specific ranking, and that request wins.
+	const manualOrder = params.sort ? undefined : statement?.statementSettings?.manualOptionOrder;
 
 	const dispatch = useDispatch();
 	const isQuestion = statement?.statementType === StatementType.question;
@@ -178,12 +127,25 @@ const SuggestionCards: FC = () => {
 			return st.creatorId === creator?.uid;
 		};
 
-		return sortStatements(plan.flatRaw.filter(canSee), sort, randomSeed, statement);
-	}, [plan.flatRaw, isAdmin, showHiddenCards, creator?.uid, sort, randomSeed, statement]);
+		const visible = plan.flatRaw.filter(canSee);
+
+		return manualOrder?.length
+			? applyManualOrder(visible, manualOrder)
+			: sortStatements(visible, sort, randomSeed, statement);
+	}, [
+		plan.flatRaw,
+		isAdmin,
+		showHiddenCards,
+		creator?.uid,
+		sort,
+		randomSeed,
+		statement,
+		manualOrder,
+	]);
 
 	// Ordering *intent*: a change here (user picks a sort, re-rolls the random
 	// seed, toggles a layer) skips the throttle so the list reorders instantly.
-	const orderIntentKey = `${sort}-${randomSeed}-${effectiveLayers.raw}-${effectiveLayers.synth}-${effectiveLayers.cluster}`;
+	const orderIntentKey = `${sort}-${randomSeed}-${manualOrder?.join(',') ?? ''}-${effectiveLayers.raw}-${effectiveLayers.synth}-${effectiveLayers.cluster}`;
 
 	// Live evaluation updates can reshuffle the consensus ranking many times a
 	// second. Keying FLIP on every one of those made react-flip-toolkit measure

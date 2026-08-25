@@ -14,6 +14,7 @@ import { useHeaderHideOnScroll } from '@/controllers/hooks/useHeaderHideOnScroll
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 import StatementBody from '@/view/components/atomic/molecules/StatementBody/StatementBody';
+import TopAnswersPanel from '../topAnswers/TopAnswersPanel';
 
 interface SwitchProps {
 	activeView: string;
@@ -94,6 +95,13 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 				</div>
 			)}
 			<SwitchScreen statement={statement} role={role} activeView={activeView} />
+			{/* Admin control over which answers are marked as leading, and in what
+			    order the list reads. Mounted here rather than inside StagePage
+			    because StagePage is also rendered nested (QuestionPage,
+			    MultiStageQuestion), which would put several handles on one screen. */}
+			{isAdmin && statement && activeView === 'options' && !isFullBleedScreen && (
+				<TopAnswersPanel statement={statement} />
+			)}
 		</main>
 	);
 };

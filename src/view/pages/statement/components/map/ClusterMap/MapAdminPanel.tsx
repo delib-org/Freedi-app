@@ -6,6 +6,7 @@ import {
 	useRef,
 	useState,
 } from 'react';
+import clsx from 'clsx';
 import { setDoc } from 'firebase/firestore';
 import { Settings, X } from 'lucide-react';
 import {
@@ -20,7 +21,6 @@ import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import type { LocalMapFilter } from './mapLocalFilter';
 import { resolveDefaultDetail } from '../mapHelpers/detailLevel';
-import styles from './MapAdminPanel.module.scss';
 
 interface MapAdminPanelProps {
 	statement: Statement;
@@ -265,14 +265,12 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 	};
 
 	const positioned = handleY !== null;
-	const handleClasses = [
-		styles.handle,
-		open ? styles.handleOpen : '',
-		positioned ? styles.handlePositioned : '',
-		dragging ? styles.handleDragging : '',
-	]
-		.filter(Boolean)
-		.join(' ');
+	const handleClasses = clsx(
+		'admin-drawer__handle',
+		open && 'admin-drawer__handle--open',
+		positioned && 'admin-drawer__handle--positioned',
+		dragging && 'admin-drawer__handle--dragging',
+	);
 
 	const detailLabel = (v: MapDetailLevel): string =>
 		v === 'themes' ? t('Themes') : v === 'ideas' ? t('Ideas') : t('Everything');
@@ -288,7 +286,7 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 			: activeThreshold.toFixed(2);
 
 	return (
-		<div className={`${styles.root} ${isRtl ? styles.rtl : ''}`}>
+		<div className={clsx('admin-drawer', isRtl && 'admin-drawer--rtl')}>
 			<button
 				type="button"
 				className={handleClasses}
@@ -303,28 +301,32 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 				onPointerCancel={onHandlePointerUp}
 				onClick={onHandleClick}
 			>
-				<span className={styles.handleIcon} aria-hidden>
+				<span className="admin-drawer__handle-icon" aria-hidden>
 					<Settings size={24} />
 				</span>
 			</button>
 
 			{open && (
-				<div className={styles.backdrop} onClick={() => setOpen(false)} role="presentation" />
+				<div
+					className="admin-drawer__backdrop"
+					onClick={() => setOpen(false)}
+					role="presentation"
+				/>
 			)}
 
 			<aside
 				id="map-admin-drawer"
-				className={`${styles.panel} ${open ? styles.panelOpen : ''}`}
+				className={clsx('admin-drawer__panel', open && 'admin-drawer__panel--open')}
 				role="dialog"
 				aria-modal={open}
 				aria-hidden={!open}
 				aria-label={t('Map settings')}
 			>
-				<header className={styles.header}>
-					<h2 className={styles.title}>{t('Map settings')}</h2>
+				<header className="admin-drawer__header">
+					<h2 className="admin-drawer__title">{t('Map settings')}</h2>
 					<button
 						type="button"
-						className={styles.close}
+						className="admin-drawer__close"
 						onClick={() => setOpen(false)}
 						aria-label={t('Close')}
 					>
@@ -333,10 +335,10 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 				</header>
 
 				{/* Filter responses — shown to admins and to permitted viewers */}
-				<section className={styles.section}>
-					<span className={styles.sectionTitle}>{t('Filter responses')}</span>
-					<div className={styles.row}>
-						<div className={styles.segmented} role="radiogroup" aria-label={t('Filter by')}>
+				<section className="admin-drawer__section">
+					<span className="admin-drawer__section-title">{t('Filter responses')}</span>
+					<div className="admin-drawer__row">
+						<div className="admin-drawer__segmented" role="radiogroup" aria-label={t('Filter by')}>
 							{filterMetricOrder.map((m) => {
 								const active = filterMetric === m;
 
@@ -346,7 +348,10 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 										type="button"
 										role="radio"
 										aria-checked={active}
-										className={`${styles.segment} ${active ? styles.segmentActive : ''}`}
+										className={clsx(
+											'admin-drawer__segment',
+											active && 'admin-drawer__segment--active',
+										)}
 										onClick={() => updateFilter({ filterMetric: m })}
 									>
 										{filterMetricLabel(m)}
@@ -355,13 +360,13 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 							})}
 						</div>
 						{filterMetric !== 'none' && (
-							<div className={styles.sliderRow}>
-								<span className={styles.sliderLabel}>
+							<div className="admin-drawer__slider-row">
+								<span className="admin-drawer__slider-label">
 									{filterMetric === 'consensus' ? t('Minimum consensus') : t('Minimum rating')}
 								</span>
 								<input
 									type="range"
-									className={styles.slider}
+									className="admin-drawer__slider"
 									min={FILTER_MIN}
 									max={FILTER_MAX}
 									step={FILTER_STEP}
@@ -377,28 +382,33 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 										)
 									}
 								/>
-								<span className={styles.sliderValue}>{thresholdDisplay}</span>
+								<span className="admin-drawer__slider-value">{thresholdDisplay}</span>
 							</div>
 						)}
-						<p className={styles.rowHelp}>{t('Only show responses at or above this score')}</p>
+						<p className="admin-drawer__row-help">
+							{t('Only show responses at or above this score')}
+						</p>
 
 						{canConfigure ? (
 							<>
-								<div className={styles.rowMain}>
-									<span className={styles.rowLabel}>{t('Apply filter to everyone')}</span>
+								<div className="admin-drawer__row-main">
+									<span className="admin-drawer__row-label">{t('Apply filter to everyone')}</span>
 									<button
 										type="button"
 										role="switch"
 										aria-checked={applyToEveryone}
 										aria-label={t('Apply filter to everyone')}
-										className={`${styles.toggle} ${applyToEveryone ? styles.toggleOn : ''}`}
+										className={clsx(
+											'admin-drawer__toggle',
+											applyToEveryone && 'admin-drawer__toggle--on',
+										)}
 										onClick={() => handleApplyToEveryone(!applyToEveryone)}
 									>
-										<span className={styles.toggleTrack} />
-										<span className={styles.toggleKnob} />
+										<span className="admin-drawer__toggle-track" />
+										<span className="admin-drawer__toggle-knob" />
 									</button>
 								</div>
-								<p className={styles.rowHelp}>
+								<p className="admin-drawer__row-help">
 									{applyToEveryone
 										? t('Your filter changes what everyone sees on this map')
 										: t('Your filter changes only your own view')}
@@ -406,11 +416,13 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 							</>
 						) : (
 							<>
-								<p className={styles.rowHelp}>{t('Your filter changes only your own view')}</p>
+								<p className="admin-drawer__row-help">
+									{t('Your filter changes only your own view')}
+								</p>
 								{localFilter && (
 									<button
 										type="button"
-										className={styles.resetLink}
+										className="admin-drawer__link"
 										onClick={() => onLocalFilterChange(null)}
 									>
 										{t('Reset to shared view')}
@@ -424,13 +436,13 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 				{canConfigure && (
 					<>
 						{/* Text size */}
-						<section className={styles.section}>
-							<span className={styles.sectionTitle}>{t('Map text size')}</span>
-							<div className={styles.sliderRow}>
-								<span className={styles.sliderLabel}>{t('Cluster title size')}</span>
+						<section className="admin-drawer__section">
+							<span className="admin-drawer__section-title">{t('Map text size')}</span>
+							<div className="admin-drawer__slider-row">
+								<span className="admin-drawer__slider-label">{t('Cluster title size')}</span>
 								<input
 									type="range"
-									className={styles.slider}
+									className="admin-drawer__slider"
 									min={FONT_MIN}
 									max={FONT_MAX}
 									step={FONT_STEP}
@@ -438,13 +450,13 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 									aria-label={t('Cluster title size')}
 									onChange={(e) => update({ clusterFontRem: Number(e.target.value) })}
 								/>
-								<span className={styles.sliderValue}>{clusterFont.toFixed(2)}</span>
+								<span className="admin-drawer__slider-value">{clusterFont.toFixed(2)}</span>
 							</div>
-							<div className={styles.sliderRow}>
-								<span className={styles.sliderLabel}>{t('Response card size')}</span>
+							<div className="admin-drawer__slider-row">
+								<span className="admin-drawer__slider-label">{t('Response card size')}</span>
 								<input
 									type="range"
-									className={styles.slider}
+									className="admin-drawer__slider"
 									min={FONT_MIN}
 									max={FONT_MAX}
 									step={FONT_STEP}
@@ -452,16 +464,18 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 									aria-label={t('Response card size')}
 									onChange={(e) => update({ cardFontRem: Number(e.target.value) })}
 								/>
-								<span className={styles.sliderValue}>{cardFont.toFixed(2)}</span>
+								<span className="admin-drawer__slider-value">{cardFont.toFixed(2)}</span>
 							</div>
 						</section>
 
 						{/* Detail level participants start at */}
-						<section className={styles.section}>
-							<span className={styles.sectionTitle}>{t('Default detail for participants')}</span>
-							<div className={styles.row}>
+						<section className="admin-drawer__section">
+							<span className="admin-drawer__section-title">
+								{t('Default detail for participants')}
+							</span>
+							<div className="admin-drawer__row">
 								<div
-									className={styles.segmented}
+									className="admin-drawer__segmented"
 									role="radiogroup"
 									aria-label={t('Default detail for participants')}
 								>
@@ -474,7 +488,10 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 												type="button"
 												role="radio"
 												aria-checked={active}
-												className={`${styles.segment} ${active ? styles.segmentActive : ''}`}
+												className={clsx(
+													'admin-drawer__segment',
+													active && 'admin-drawer__segment--active',
+												)}
 												onClick={() => update({ defaultDetail: v })}
 											>
 												{detailLabel(v)}
@@ -482,16 +499,16 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 										);
 									})}
 								</div>
-								<p className={styles.rowHelp}>
+								<p className="admin-drawer__row-help">
 									{t(
 										'How deep the map opens when someone first arrives: themes only, merged ideas, or every original statement.',
 									)}
 								</p>
 							</div>
-							<div className={styles.row}>
-								<div className={styles.rowMain}>
-									<span className={styles.rowLabel}>
-										<span className={styles.rowIcon} aria-hidden>
+							<div className="admin-drawer__row">
+								<div className="admin-drawer__row-main">
+									<span className="admin-drawer__row-label">
+										<span className="admin-drawer__row-icon" aria-hidden>
 											⧉
 										</span>
 										{t('Allow participants to expand')}
@@ -501,26 +518,29 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 										role="switch"
 										aria-checked={allowViewerExpand}
 										aria-label={t('Allow participants to expand')}
-										className={`${styles.toggle} ${allowViewerExpand ? styles.toggleOn : ''}`}
+										className={clsx(
+											'admin-drawer__toggle',
+											allowViewerExpand && 'admin-drawer__toggle--on',
+										)}
 										onClick={() => update({ allowViewerExpand: !allowViewerExpand })}
 									>
-										<span className={styles.toggleTrack} />
-										<span className={styles.toggleKnob} />
+										<span className="admin-drawer__toggle-track" />
+										<span className="admin-drawer__toggle-knob" />
 									</button>
 								</div>
-								<p className={styles.rowHelp}>
+								<p className="admin-drawer__row-help">
 									{t('Let viewers open themes and merged ideas past the default depth.')}
 								</p>
 							</div>
 						</section>
 
 						{/* Provenance */}
-						<section className={styles.section}>
-							<span className={styles.sectionTitle}>{t('Cluster provenance')}</span>
-							<div className={styles.row}>
-								<div className={styles.rowMain}>
-									<span className={styles.rowLabel}>
-										<span className={styles.rowIcon} aria-hidden>
+						<section className="admin-drawer__section">
+							<span className="admin-drawer__section-title">{t('Cluster provenance')}</span>
+							<div className="admin-drawer__row">
+								<div className="admin-drawer__row-main">
+									<span className="admin-drawer__row-label">
+										<span className="admin-drawer__row-icon" aria-hidden>
 											✨
 										</span>
 										{t('Show what each cluster was made from')}
@@ -530,14 +550,17 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 										role="switch"
 										aria-checked={showProvenance}
 										aria-label={t('Show what each cluster was made from')}
-										className={`${styles.toggle} ${showProvenance ? styles.toggleOn : ''}`}
+										className={clsx(
+											'admin-drawer__toggle',
+											showProvenance && 'admin-drawer__toggle--on',
+										)}
 										onClick={() => update({ showProvenance: !showProvenance })}
 									>
-										<span className={styles.toggleTrack} />
-										<span className={styles.toggleKnob} />
+										<span className="admin-drawer__toggle-track" />
+										<span className="admin-drawer__toggle-knob" />
 									</button>
 								</div>
-								<p className={styles.rowHelp}>
+								<p className="admin-drawer__row-help">
 									{t(
 										'Display a "made from N responses" line on each cluster so people see how it was formed.',
 									)}
@@ -546,24 +569,27 @@ const MapAdminPanel: FC<MapAdminPanelProps> = ({
 						</section>
 
 						{/* Sharing — let non-admin viewers adjust the filter */}
-						<section className={styles.section}>
-							<span className={styles.sectionTitle}>{t('Sharing')}</span>
-							<div className={styles.row}>
-								<div className={styles.rowMain}>
-									<span className={styles.rowLabel}>{t('Let viewers filter the map')}</span>
+						<section className="admin-drawer__section">
+							<span className="admin-drawer__section-title">{t('Sharing')}</span>
+							<div className="admin-drawer__row">
+								<div className="admin-drawer__row-main">
+									<span className="admin-drawer__row-label">{t('Let viewers filter the map')}</span>
 									<button
 										type="button"
 										role="switch"
 										aria-checked={allowViewerFilter}
 										aria-label={t('Let viewers filter the map')}
-										className={`${styles.toggle} ${allowViewerFilter ? styles.toggleOn : ''}`}
+										className={clsx(
+											'admin-drawer__toggle',
+											allowViewerFilter && 'admin-drawer__toggle--on',
+										)}
 										onClick={() => update({ allowViewerFilter: !allowViewerFilter })}
 									>
-										<span className={styles.toggleTrack} />
-										<span className={styles.toggleKnob} />
+										<span className="admin-drawer__toggle-track" />
+										<span className="admin-drawer__toggle-knob" />
 									</button>
 								</div>
-								<p className={styles.rowHelp}>
+								<p className="admin-drawer__row-help">
 									{t('When on, anyone who can view the map can adjust the filter')}
 								</p>
 							</div>

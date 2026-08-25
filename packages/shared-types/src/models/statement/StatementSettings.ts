@@ -1,6 +1,7 @@
 import {
 	object,
 	optional,
+	nullable,
 	array,
 	string,
 	boolean,
@@ -328,6 +329,13 @@ export const StatementSettingsSchema = object({
 	// participant computes the same shuffle locally. Admin re-randomizes by
 	// pressing the Random sort button again, which writes a fresh seed.
 	randomSortSeed: optional(number()),
+	// Admin hand-placed ordering of this question's options, by statementId.
+	// When non-empty it wins over `defaultSortType`; `null` clears it and hands
+	// the list back to the sort. Written by the join app's FacilitatorPanel and
+	// by the main app's Top Answers panel — both read by both.
+	manualOptionOrder: optional(nullable(array(string()))),
+	// Same, for the join app's separate organizer-suggestions list.
+	manualOrganizerOrder: optional(nullable(array(string()))),
 	// Join app: visual style family. Each style has its own light + dark
 	// palette tuned for legibility (system prefers-color-scheme still drives
 	// light vs dark). Default = serious (current earth-tone palette).
