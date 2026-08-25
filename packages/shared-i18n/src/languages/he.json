@@ -4073,5 +4073,10 @@
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} נכנסו · {{suggested}} הציעו · {{evaluated}} דירגו",
   "{{open}} of {{total}} open": "{{open}} מתוך {{total}} פתוחות",
   "How people rate": "איך אנשים מדרגים",
-  "Five positive steps from 0 to 1 — no disagree": "חמישה שלבים חיוביים מ-0 עד 1 — בלי התנגדות"
+  "Five positive steps from 0 to 1 — no disagree": "חמישה שלבים חיוביים מ-0 עד 1 — בלי התנגדות",
+  "A new version of Studio is available.": "גרסה חדשה של הסטודיו זמינה.",
+  "Reload the page to get the latest version.": "רעננו את הדף כדי לקבל את הגרסה העדכנית.",
+  "Something went wrong": "משהו השתבש",
+  "Reload the page. If this keeps happening, tell us what you were doing.": "רעננו את הדף. אם זה חוזר על עצמו, ספרו לנו מה עשיתם.",
+  "Reload": "רענון"
 }

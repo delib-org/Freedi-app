@@ -3327,5 +3327,10 @@
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} ingestapt · {{suggested}} voorgesteld · {{evaluated}} beoordeeld",
   "{{open}} of {{total}} open": "{{open}} van {{total}} open",
   "How people rate": "Hoe mensen beoordelen",
-  "Five positive steps from 0 to 1 — no disagree": "Vijf positieve stappen van 0 tot 1 — geen oneens"
+  "Five positive steps from 0 to 1 — no disagree": "Vijf positieve stappen van 0 tot 1 — geen oneens",
+  "A new version of Studio is available.": "A new version of Studio is available.",
+  "Reload the page to get the latest version.": "Reload the page to get the latest version.",
+  "Something went wrong": "Something went wrong",
+  "Reload the page. If this keeps happening, tell us what you were doing.": "Reload the page. If this keeps happening, tell us what you were doing.",
+  "Reload": "Reload"
 }

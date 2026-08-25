@@ -64,3 +64,11 @@ textarea {
 	min-height: 100svh;
 	color: var(--text-meta);
 }
+
+// Full-page error screen rendered by AppErrorBoundary (never a blank page).
+.app-error {
+	min-height: 100svh;
+	display: grid;
+	place-items: center;
+	padding: var(--space-lg);
+}

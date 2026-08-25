@@ -3327,5 +3327,10 @@
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} beigetreten · {{suggested}} vorgeschlagen · {{evaluated}} bewertet",
   "{{open}} of {{total}} open": "{{open}} von {{total}} offen",
   "How people rate": "Wie Leute bewerten",
-  "Five positive steps from 0 to 1 — no disagree": "Fünf positive Stufen von 0 bis 1 – kein Ablehnen"
+  "Five positive steps from 0 to 1 — no disagree": "Fünf positive Stufen von 0 bis 1 – kein Ablehnen",
+  "A new version of Studio is available.": "A new version of Studio is available.",
+  "Reload the page to get the latest version.": "Reload the page to get the latest version.",
+  "Something went wrong": "Something went wrong",
+  "Reload the page. If this keeps happening, tell us what you were doing.": "Reload the page. If this keeps happening, tell us what you were doing.",
+  "Reload": "Reload"
 }

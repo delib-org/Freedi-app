@@ -1,10 +1,12 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAuth } from '@/auth/AuthContext';
 import { OrgProvider } from '@/org/OrgContext';
 import { useDocumentDirection } from '@/hooks/useDocumentDirection';
 import { ToastUndoHost } from '@/components/atomic/molecules/ToastUndo';
+import AppErrorBoundary from '@/components/AppErrorBoundary';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import Login from '@/pages/Login';
 import HomeRedirect from '@/pages/HomeRedirect';
 import OrgPicker from '@/pages/OrgPicker/OrgPicker';
@@ -16,8 +18,11 @@ import AdminOrgDetail from '@/pages/AdminOrgs/AdminOrgDetail';
 import EventDashboard from '@/pages/EventDashboard';
 
 // Heavy per-question screens load on demand.
-const QuestionDashboard = lazy(() => import('@/pages/QuestionDashboard/QuestionDashboard'));
-const RunView = lazy(() => import('@/pages/RunView/RunView'));
+const QuestionDashboard = lazyWithRetry(
+	() => import('@/pages/QuestionDashboard/QuestionDashboard'),
+	'QuestionDashboard',
+);
+const RunView = lazyWithRetry(() => import('@/pages/RunView/RunView'), 'RunView');
 
 export default function App() {
 	const { user, loading } = useAuth();
@@ -45,21 +50,23 @@ export default function App() {
 	return (
 		<OrgProvider>
 			<ToastUndoHost />
-			<Suspense fallback={fallback}>
-				<Routes>
-					<Route path="/" element={<HomeRedirect />} />
-					<Route path="/orgs" element={<OrgPicker />} />
-					<Route path="/orgs/:orgId" element={<OrgQuestions />} />
-					<Route path="/orgs/:orgId/people" element={<People />} />
-					<Route path="/orgs/:orgId/questions/:qId" element={<QuestionDashboard />} />
-					<Route path="/orgs/:orgId/questions/:qId/run/:aId" element={<RunView />} />
-					<Route path="/events/:eventId" element={<EventDashboard />} />
-					<Route path="/invite" element={<Invite />} />
-					<Route path="/admin/orgs" element={<AdminOrgs />} />
-					<Route path="/admin/orgs/:orgId" element={<AdminOrgDetail />} />
-					<Route path="*" element={<Navigate to="/" replace />} />
-				</Routes>
-			</Suspense>
+			<AppErrorBoundary>
+				<Suspense fallback={fallback}>
+					<Routes>
+						<Route path="/" element={<HomeRedirect />} />
+						<Route path="/orgs" element={<OrgPicker />} />
+						<Route path="/orgs/:orgId" element={<OrgQuestions />} />
+						<Route path="/orgs/:orgId/people" element={<People />} />
+						<Route path="/orgs/:orgId/questions/:qId" element={<QuestionDashboard />} />
+						<Route path="/orgs/:orgId/questions/:qId/run/:aId" element={<RunView />} />
+						<Route path="/events/:eventId" element={<EventDashboard />} />
+						<Route path="/invite" element={<Invite />} />
+						<Route path="/admin/orgs" element={<AdminOrgs />} />
+						<Route path="/admin/orgs/:orgId" element={<AdminOrgDetail />} />
+						<Route path="*" element={<Navigate to="/" replace />} />
+					</Routes>
+				</Suspense>
+			</AppErrorBoundary>
 		</OrgProvider>
 	);
 }

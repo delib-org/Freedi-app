@@ -3834,5 +3834,10 @@
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} وارد شدند · {{suggested}} پیشنهاد دادند · {{evaluated}} ارزیابی کردند",
   "{{open}} of {{total}} open": "{{open}} از {{total}} باز",
   "How people rate": "مردم چگونه امتیاز می‌دهند",
-  "Five positive steps from 0 to 1 — no disagree": "پنج پله مثبت از ۰ تا ۱ — بدون مخالفت"
+  "Five positive steps from 0 to 1 — no disagree": "پنج پله مثبت از ۰ تا ۱ — بدون مخالفت",
+  "A new version of Studio is available.": "A new version of Studio is available.",
+  "Reload the page to get the latest version.": "Reload the page to get the latest version.",
+  "Something went wrong": "Something went wrong",
+  "Reload the page. If this keeps happening, tell us what you were doing.": "Reload the page. If this keeps happening, tell us what you were doing.",
+  "Reload": "Reload"
 }
