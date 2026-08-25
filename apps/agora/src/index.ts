@@ -17,6 +17,7 @@ import './styles/icons.scss';
 import './styles/theme-civic.scss';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
+import { initInstallCapture } from './lib/install';
 import { getSessionState } from './lib/session';
 import { applyRememberedTheme } from './lib/theme';
 import { Home } from './views/Home';
@@ -31,6 +32,10 @@ import { TopicEditor } from './views/teacher/TopicEditor';
 // wears its colours from the first frame rather than flashing the classroom
 // palette while its session document is still in flight.
 applyRememberedTheme();
+
+// Before anything else async: the browser fires beforeinstallprompt once,
+// early, and the home-screen suggestion needs it stashed for later.
+initInstallCapture();
 
 initAuth();
 // A teacher whose popup was blocked came back via a full page redirect; this

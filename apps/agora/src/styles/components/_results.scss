@@ -868,6 +868,83 @@
 	}
 }
 
+// The home-screen suggestion: one card, low on the screen, that exists only
+// after a smart moment asked for it (news landed, or an email cadence was
+// saved) and never comes back the same sitting once answered.
+.install-hint {
+	position: fixed;
+	inset-inline: var(--space-md);
+	// Above the notebook dock, which owns the very bottom of the screen
+	inset-block-end: calc(var(--space-md) + 68px);
+	z-index: calc(var(--z-toast) - 1);
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-sm);
+	max-width: 420px;
+	margin-inline: auto;
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-raised);
+
+	&__icon {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--mine-ink);
+		margin-block-start: 2px;
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	&__title {
+		display: block;
+		font-family: var(--font-display);
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	&__text {
+		margin: 4px 0 0;
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+	}
+
+	&__actions {
+		flex: 0 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--space-xs);
+	}
+
+	&__go {
+		padding: 6px var(--space-md);
+		border: none;
+		border-radius: 999px;
+		background: var(--mine-ink);
+		color: #ffffff;
+		font: inherit;
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	&__later {
+		padding: 4px var(--space-sm);
+		border: none;
+		background: none;
+		color: var(--text-muted);
+		font: inherit;
+		font-size: var(--font-size-xs);
+		text-decoration: underline;
+		cursor: pointer;
+	}
+}
+
 .toast-stack {
 	position: fixed;
 	// Clear of the HUD: a toast that lands on the crest row covers the lap

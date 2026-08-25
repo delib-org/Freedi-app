@@ -16,6 +16,7 @@ import { listenToVoting, stopVotingListeners } from '../lib/voting';
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
+import { InstallHint } from '../components/InstallHint';
 import { JourneyStrip } from '../components/JourneyStrip';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
 import { Lobby } from './Lobby';
@@ -179,6 +180,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const overlays = [
 				m(ToastStack),
 				m(CelebrationOverlay),
+				m(InstallHint),
 				transitionStage !== null
 					? m(StageTransition, { stage: transitionStage, leaving: transitionLeaving })
 					: null,

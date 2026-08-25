@@ -183,6 +183,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'digest.saving': 'שומרים…',
 		'digest.saved': 'נשמר ✓',
 		'digest.loading': 'טוענים…',
+		'install.title': 'האגורה על מסך הבית',
+		'install.body':
+			'התקינו את האפליקציה — האייקון יראה כמה הודעות חדשות מחכות לכם, גם כשאתם רחוקים.',
+		'install.action': 'התקנה',
+		'install.how': 'איך מתקינים?',
+		'install.later': 'אולי אחר כך',
+		'install.ios_hint':
+			'באייפון או באייפד: פתחו בספארי, לחצו על כפתור השיתוף ובחרו "הוספה למסך הבית".',
 		'celebrate.revision_first': 'עדכנתם את ההצעה אחרי שהקשבתם — זה הצעד הקשה במשחק! ‎+{{n}}',
 		'celebrate.revision_first_hint': 'כל עדכון אחרי משוב אמיתי בונה את הגשר של הכיתה.',
 		'celebrate.weave_credited': 'שילבתם רעיון של חבר/ה לכיתה בנוסח שלכם! ‎+{{n}}',
@@ -834,6 +842,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'digest.saving': 'Saving…',
 		'digest.saved': 'Saved ✓',
 		'digest.loading': 'Loading…',
+		'install.title': 'Agora on your home screen',
+		'install.body':
+			'Install the app — the icon will show how many new messages are waiting for you, even while you are away.',
+		'install.action': 'Install',
+		'install.how': 'How?',
+		'install.later': 'Maybe later',
+		'install.ios_hint':
+			'On iPhone or iPad: open in Safari, tap the Share button and choose "Add to Home Screen".',
 		'celebrate.revision_first':
 			"You revised after listening — that's the hardest move in the game! +{{n}}",
 		'celebrate.revision_first_hint':
@@ -1504,6 +1520,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'digest.saving': 'جارٍ الحفظ…',
 		'digest.saved': 'تم الحفظ ✓',
 		'digest.loading': 'جارٍ التحميل…',
+		'install.title': 'الأغورا على شاشتك الرئيسية',
+		'install.body':
+			'ثبّتوا التطبيق — سيعرض الرمز عدد الرسائل الجديدة التي بانتظاركم، حتى وأنتم بعيدون.',
+		'install.action': 'تثبيت',
+		'install.how': 'كيف؟',
+		'install.later': 'ربما لاحقًا',
+		'install.ios_hint':
+			'على iPhone أو iPad: افتحوا في سفاري، اضغطوا زر المشاركة واختاروا "إضافة إلى الشاشة الرئيسية".',
 		'celebrate.revision_first': 'نقّحتم اقتراحكم بعد أن أصغيتم — هذه أصعب خطوة في اللعبة! ‎+{{n}}',
 		'celebrate.revision_first_hint': 'كل تنقيح بعد ملاحظات حقيقية يبني جسر الصف.',
 		'celebrate.weave_credited': 'نسجتم فكرة زميل/ة في نصكم! ‎+{{n}}',
@@ -2162,6 +2186,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'digest.saving': 'Guardando…',
 		'digest.saved': 'Guardado ✓',
 		'digest.loading': 'Cargando…',
+		'install.title': 'El Ágora en tu pantalla de inicio',
+		'install.body':
+			'Instala la aplicación — el icono mostrará cuántos mensajes nuevos te esperan, incluso cuando no estés.',
+		'install.action': 'Instalar',
+		'install.how': '¿Cómo?',
+		'install.later': 'Quizás luego',
+		'install.ios_hint':
+			'En iPhone o iPad: abre en Safari, toca el botón de compartir y elige "Añadir a pantalla de inicio".',
 		'celebrate.revision_first':
 			'Revisaste tu propuesta después de escuchar — ¡el movimiento más difícil del juego! +{{n}}',
 		'celebrate.revision_first_hint':
@@ -2853,6 +2885,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'digest.saving': 'Speichern…',
 		'digest.saved': 'Gespeichert ✓',
 		'digest.loading': 'Wird geladen…',
+		'install.title': 'Die Agora auf deinem Startbildschirm',
+		'install.body':
+			'Installiere die App — das Symbol zeigt, wie viele neue Nachrichten auf dich warten, auch wenn du weg bist.',
+		'install.action': 'Installieren',
+		'install.how': 'Wie?',
+		'install.later': 'Vielleicht später',
+		'install.ios_hint':
+			'Auf iPhone oder iPad: in Safari öffnen, die Teilen-Taste antippen und "Zum Home-Bildschirm" wählen.',
 		'celebrate.revision_first':
 			'Du hast nach dem Zuhören überarbeitet — der schwerste Zug im Spiel! +{{n}}',
 		'celebrate.revision_first_hint':
@@ -3554,6 +3594,14 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'digest.saving': 'Opslaan…',
 		'digest.saved': 'Opgeslagen ✓',
 		'digest.loading': 'Laden…',
+		'install.title': 'De Agora op je startscherm',
+		'install.body':
+			'Installeer de app — het icoon laat zien hoeveel nieuwe berichten er op je wachten, ook als je weg bent.',
+		'install.action': 'Installeren',
+		'install.how': 'Hoe?',
+		'install.later': 'Misschien later',
+		'install.ios_hint':
+			'Op iPhone of iPad: open in Safari, tik op de deelknop en kies "Zet op beginscherm".',
 		'celebrate.revision_first':
 			'Je herzag je voorstel na het luisteren — de moeilijkste zet in het spel! +{{n}}',
 		'celebrate.revision_first_hint':
