@@ -13,6 +13,7 @@ import {
 	EvaluationUI,
 	ResultsBy,
 	SortType,
+	RatingMode,
 	Statement,
 	evaluationType,
 } from '@freedi/shared-types';
@@ -73,35 +74,61 @@ const RANK_OPTIONS: ReadonlyArray<{ value: RankBy; icon: string; label: string }
 ];
 
 /**
- * The rating scale participants actually tap. Values, labels and tooltips are
- * the ones the full settings screen already offers (InstantSettings' rating
- * scale), so the two surfaces cannot describe the same choice differently.
+ * The rating scale participants actually tap.
+ *
+ * `evaluationType` and `ratingMode` are two fields, but to an admin they are one
+ * question — "what does someone tap on an answer?" — so both agree/disagree and
+ * the 0→1 reaction faces (the scale the join app renders) sit here as sibling
+ * choices rather than a scale plus a hidden sub-toggle. `ratingMode` only means
+ * anything on the `range` scale, which is why only those two entries carry it.
+ *
+ * Labels and tooltips are the ones the full settings screen already uses, so the
+ * two surfaces cannot describe the same choice differently.
  */
-const SCALE_OPTIONS: ReadonlyArray<{
+interface ScaleOption {
+	/** Stable segment key — `evaluationType` alone can't separate the two range variants. */
+	id: string;
 	value: evaluationType;
+	/** Only set for the `range` scale, whose two face sets are the choice. */
+	ratingMode?: RatingMode;
 	icon: string;
 	label: string;
 	hint: string;
-}> = [
+}
+
+const SCALE_OPTIONS: ReadonlyArray<ScaleOption> = [
 	{
+		id: 'agree-disagree',
 		value: evaluationType.range,
-		icon: '😀',
+		ratingMode: 'agree-disagree',
+		icon: '🎉',
 		label: 'Agree - Disagree',
 		hint: '5 faces, from strongly against to strongly for (-1 to +1)',
 	},
 	{
+		id: 'reactions',
+		value: evaluationType.range,
+		ratingMode: 'reactions',
+		icon: '🙂',
+		label: 'Emoji reactions',
+		hint: 'Five positive steps from 0 to 1 — no disagree',
+	},
+	{
+		id: 'like-dislike',
 		value: evaluationType.likeDislike,
 		icon: '👍',
 		label: 'Thumbs up or down',
 		hint: 'Simple +1 or -1',
 	},
 	{
+		id: 'single-like',
 		value: evaluationType.singleLike,
 		icon: '❤️',
 		label: 'Likes only',
 		hint: 'Positive-only, 0 or 1 — no downvotes',
 	},
 	{
+		id: 'community-voice',
 		value: evaluationType.communityVoice,
 		icon: '👥',
 		label: 'Community Voice',
@@ -167,7 +194,15 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 	const evaluationUI = statement.evaluationSettings?.evaluationUI ?? EvaluationUI.suggestions;
 	const scaleApplies = evaluationUI === EvaluationUI.suggestions;
 	const currentScale = statementSettings?.evaluationType ?? evaluationType.range;
-	const usesReactions = statementSettings?.ratingMode === 'reactions';
+	// On the `range` scale the chosen face set is what distinguishes the two
+	// segments; every other scale is identified by `evaluationType` alone.
+	const activeScaleId =
+		currentScale === evaluationType.range
+			? statementSettings?.ratingMode === 'reactions'
+				? 'reactions'
+				: 'agree-disagree'
+			: currentScale;
+	const activeScale = SCALE_OPTIONS.find((option) => option.id === activeScaleId);
 
 	const resultsBy = resultsSettings?.resultsBy ?? ResultsBy.consensus;
 	const cutoffBy = resultsSettings?.cutoffBy ?? CutoffBy.topOptions;
@@ -241,19 +276,21 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 		[isTopN, rangeConfig, statementId, resultsSettings, writeAndRecompute],
 	);
 
-	function handleScaleChange(value: evaluationType): void {
+	function handleScaleChange(option: ScaleOption): void {
 		// `setRatingScale` also refreshes the derived `enhancedEvaluation` flag,
 		// which parts of the UI still read — never write `evaluationType` alone.
-		setRatingScale(statement, value);
-	}
+		setRatingScale(statement, option.value);
 
-	function handleReactionsChange(next: boolean): void {
-		setStatementSettingToDB({
-			statement,
-			property: 'ratingMode',
-			newValue: next ? 'reactions' : 'agree-disagree',
-			settingsSection: 'statementSettings',
-		});
+		// Only the `range` scale has two face sets; leaving `ratingMode` untouched
+		// for the others keeps the admin's last choice if they come back to it.
+		if (option.ratingMode) {
+			setStatementSettingToDB({
+				statement,
+				property: 'ratingMode',
+				newValue: option.ratingMode,
+				settingsSection: 'statementSettings',
+			});
+		}
 	}
 
 	function handleRankChange(value: RankBy): void {
@@ -393,12 +430,12 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 								aria-label={t('How people rate')}
 							>
 								{SCALE_OPTIONS.map((option) => {
-									const active = currentScale === option.value;
+									const active = activeScaleId === option.id;
 									const label = t(option.label);
 
 									return (
 										<button
-											key={option.value}
+											key={option.id}
 											type="button"
 											role="radio"
 											aria-checked={active}
@@ -408,7 +445,7 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 												'admin-drawer__segment',
 												active && 'admin-drawer__segment--active',
 											)}
-											onClick={() => handleScaleChange(option.value)}
+											onClick={() => handleScaleChange(option)}
 										>
 											<span aria-hidden>{option.icon}</span>
 										</button>
@@ -418,34 +455,12 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 							<p className="admin-drawer__row-help">
 								{t('What each participant taps on a suggestion')}
 							</p>
-							<p className="admin-drawer__row-help">
-								{t(SCALE_OPTIONS.find((o) => o.value === currentScale)?.hint ?? '')}
-							</p>
-
-							{/* Only the agree/disagree scale has a second face set to swap in. */}
-							{currentScale === evaluationType.range && (
-								<>
-									<div className="admin-drawer__row-main">
-										<span className="admin-drawer__row-label">{t('Use emoji reactions')}</span>
-										<button
-											type="button"
-											role="switch"
-											aria-checked={usesReactions}
-											aria-label={t('Use emoji reactions')}
-											className={clsx(
-												'admin-drawer__toggle',
-												usesReactions && 'admin-drawer__toggle--on',
-											)}
-											onClick={() => handleReactionsChange(!usesReactions)}
-										>
-											<span className="admin-drawer__toggle-track" />
-											<span className="admin-drawer__toggle-knob" />
-										</button>
-									</div>
-									<p className="admin-drawer__row-help">
-										{t('Show playful emoji instead of agree/disagree faces')}
-									</p>
-								</>
+							{/* Name the chosen scale outright — five glyphs alone don't say
+							    which one is which, and the tooltip needs a hover to find. */}
+							{activeScale && (
+								<p className="admin-drawer__row-help">
+									<strong>{t(activeScale.label)}</strong> — {t(activeScale.hint)}
+								</p>
 							)}
 						</div>
 					) : (

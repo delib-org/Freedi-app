@@ -275,6 +275,28 @@ describe('TopAnswersPanel', () => {
 			);
 		});
 
+		it('separates the two range face sets by ratingMode, not evaluationType', () => {
+			// Both are `evaluationType.range`; only `ratingMode` tells them apart, so
+			// a segment keyed on evaluationType alone would light up both.
+			render(
+				<TopAnswersPanel
+					statement={question({
+						statementSettings: { evaluationType: evaluationType.range, ratingMode: 'reactions' },
+					})}
+				/>,
+			);
+			openPanel();
+
+			expect(screen.getByRole('radio', { name: 'Emoji reactions' })).toHaveAttribute(
+				'aria-checked',
+				'true',
+			);
+			expect(screen.getByRole('radio', { name: 'Agree - Disagree' })).toHaveAttribute(
+				'aria-checked',
+				'false',
+			);
+		});
+
 		it('writes through setRatingScale, which also refreshes the derived flag', () => {
 			// Writing `evaluationType` directly would leave the deprecated
 			// `enhancedEvaluation` flag stale, and parts of the UI still read it.
@@ -289,24 +311,19 @@ describe('TopAnswersPanel', () => {
 			);
 		});
 
-		it('offers the emoji-reaction swap only on the agree/disagree scale', () => {
-			const { unmount } = render(<TopAnswersPanel statement={question()} />);
+		it('picking the 0→1 reaction faces sets both fields', () => {
+			render(<TopAnswersPanel statement={question()} />);
 			openPanel();
-			expect(screen.getByRole('switch', { name: 'Use emoji reactions' })).toBeInTheDocument();
-			unmount();
 
-			render(
-				<TopAnswersPanel
-					statement={question({
-						statementSettings: { evaluationType: evaluationType.likeDislike },
-					})}
-				/>,
+			fireEvent.click(screen.getByRole('radio', { name: 'Emoji reactions' }));
+
+			expect(mockSetRatingScale).toHaveBeenCalledWith(expect.anything(), evaluationType.range);
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				expect.objectContaining({ property: 'ratingMode', newValue: 'reactions' }),
 			);
-			openPanel();
-			expect(screen.queryByRole('switch', { name: 'Use emoji reactions' })).not.toBeInTheDocument();
 		});
 
-		it('toggles the reaction faces on and off', () => {
+		it('picking agree/disagree writes the face set back explicitly', () => {
 			render(
 				<TopAnswersPanel
 					statement={question({ statementSettings: { ratingMode: 'reactions' } })}
@@ -314,13 +331,35 @@ describe('TopAnswersPanel', () => {
 			);
 			openPanel();
 
-			const toggle = screen.getByRole('switch', { name: 'Use emoji reactions' });
-			expect(toggle).toHaveAttribute('aria-checked', 'true');
-
-			fireEvent.click(toggle);
+			fireEvent.click(screen.getByRole('radio', { name: 'Agree - Disagree' }));
 
 			expect(mockSetSetting).toHaveBeenCalledWith(
 				expect.objectContaining({ property: 'ratingMode', newValue: 'agree-disagree' }),
+			);
+		});
+
+		it('leaves ratingMode alone on scales where it means nothing', () => {
+			// So an admin who wanders off to thumbs and back still finds their faces.
+			render(<TopAnswersPanel statement={question()} />);
+			openPanel();
+
+			fireEvent.click(screen.getByRole('radio', { name: 'Likes only' }));
+
+			expect(mockSetSetting).not.toHaveBeenCalled();
+		});
+
+		it('names the active scale in the panel rather than only in a tooltip', () => {
+			render(
+				<TopAnswersPanel
+					statement={question({ statementSettings: { ratingMode: 'reactions' } })}
+				/>,
+			);
+			openPanel();
+
+			// The name and its description share one paragraph, split by a <strong>,
+			// so match the paragraph rather than a bare text node.
+			expect(screen.getByText(/Five positive steps from 0 to 1/)).toHaveTextContent(
+				'Emoji reactions — Five positive steps from 0 to 1 — no disagree',
 			);
 		});
 
