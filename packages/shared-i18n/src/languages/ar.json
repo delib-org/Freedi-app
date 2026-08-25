@@ -3446,5 +3446,6 @@
   "What should participants do first?": "ماذا يجب أن يفعل المشاركون أولًا؟",
   "You sent an update recently. Please try again later.": "لقد أرسلت تحديثًا مؤخرًا. يرجى المحاولة لاحقًا.",
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} دخلوا · {{suggested}} اقترحوا · {{evaluated}} قيّموا",
-  "{{open}} of {{total}} open": "{{open}} من {{total}} مفتوحة"
+  "{{open}} of {{total}} open": "{{open}} من {{total}} مفتوحة",
+  "How people rate": "كيف يقيّم الناس"
 }

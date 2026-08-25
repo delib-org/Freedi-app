@@ -4033,5 +4033,6 @@
   "What should participants do first?": "What should participants do first?",
   "You sent an update recently. Please try again later.": "You sent an update recently. Please try again later.",
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated",
-  "{{open}} of {{total}} open": "{{open}} of {{total}} open"
+  "{{open}} of {{total}} open": "{{open}} of {{total}} open",
+  "How people rate": "How people rate"
 }

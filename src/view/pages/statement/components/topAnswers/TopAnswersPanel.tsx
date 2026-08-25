@@ -8,7 +8,14 @@ import {
 } from 'react';
 import clsx from 'clsx';
 import { Settings, X } from 'lucide-react';
-import { CutoffBy, ResultsBy, SortType, Statement } from '@freedi/shared-types';
+import {
+	CutoffBy,
+	EvaluationUI,
+	ResultsBy,
+	SortType,
+	Statement,
+	evaluationType,
+} from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { UI } from '@/constants/common';
 import {
@@ -26,6 +33,8 @@ import {
 	getRangeConfig,
 	toDisplayValue,
 } from '../settings/components/choseBy/resultsRangeConfig';
+import { setRatingScale } from '@/controllers/db/evaluation/setEvaluation';
+import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import ManualOrderModal from './ManualOrderModal';
 import styles from './TopAnswersPanel.module.scss';
 
@@ -61,6 +70,43 @@ const RANK_OPTIONS: ReadonlyArray<{ value: RankBy; icon: string; label: string }
 	{ value: SortType.random, icon: '🎲', label: 'Random' },
 	{ value: SortType.newest, icon: '✨', label: 'Newest first' },
 	{ value: 'manual', icon: '✋', label: 'Hand-placed order' },
+];
+
+/**
+ * The rating scale participants actually tap. Values, labels and tooltips are
+ * the ones the full settings screen already offers (InstantSettings' rating
+ * scale), so the two surfaces cannot describe the same choice differently.
+ */
+const SCALE_OPTIONS: ReadonlyArray<{
+	value: evaluationType;
+	icon: string;
+	label: string;
+	hint: string;
+}> = [
+	{
+		value: evaluationType.range,
+		icon: '😀',
+		label: 'Agree - Disagree',
+		hint: '5 faces, from strongly against to strongly for (-1 to +1)',
+	},
+	{
+		value: evaluationType.likeDislike,
+		icon: '👍',
+		label: 'Thumbs up or down',
+		hint: 'Simple +1 or -1',
+	},
+	{
+		value: evaluationType.singleLike,
+		icon: '❤️',
+		label: 'Likes only',
+		hint: 'Positive-only, 0 or 1 — no downvotes',
+	},
+	{
+		value: evaluationType.communityVoice,
+		icon: '👥',
+		label: 'Community Voice',
+		hint: 'Respectful 4-level resonance scale',
+	},
 ];
 
 const SCORE_OPTIONS: ReadonlyArray<{ value: ResultsBy; label: string }> = [
@@ -113,7 +159,16 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 	const lastDragEndRef = useRef(0);
 	const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const { statementId, resultsSettings } = statement;
+	const { statementId, resultsSettings, statementSettings } = statement;
+
+	// The rating scale only exists in suggestion mode — voting and clustering
+	// impose their own, which is why the settings screen hides the control there
+	// rather than offering a choice that would be ignored.
+	const evaluationUI = statement.evaluationSettings?.evaluationUI ?? EvaluationUI.suggestions;
+	const scaleApplies = evaluationUI === EvaluationUI.suggestions;
+	const currentScale = statementSettings?.evaluationType ?? evaluationType.range;
+	const usesReactions = statementSettings?.ratingMode === 'reactions';
+
 	const resultsBy = resultsSettings?.resultsBy ?? ResultsBy.consensus;
 	const cutoffBy = resultsSettings?.cutoffBy ?? CutoffBy.topOptions;
 	const activeRank = getActiveRankBy(statement);
@@ -185,6 +240,21 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 		},
 		[isTopN, rangeConfig, statementId, resultsSettings, writeAndRecompute],
 	);
+
+	function handleScaleChange(value: evaluationType): void {
+		// `setRatingScale` also refreshes the derived `enhancedEvaluation` flag,
+		// which parts of the UI still read — never write `evaluationType` alone.
+		setRatingScale(statement, value);
+	}
+
+	function handleReactionsChange(next: boolean): void {
+		setStatementSettingToDB({
+			statement,
+			property: 'ratingMode',
+			newValue: next ? 'reactions' : 'agree-disagree',
+			settingsSection: 'statementSettings',
+		});
+	}
 
 	function handleRankChange(value: RankBy): void {
 		if (value === 'manual') {
@@ -311,6 +381,79 @@ const TopAnswersPanel: FC<TopAnswersPanelProps> = ({ statement }) => {
 						<X size={18} />
 					</button>
 				</header>
+
+				{/* How people rate — the scale participants actually tap */}
+				<section className="admin-drawer__section">
+					<span className="admin-drawer__section-title">{t('How people rate')}</span>
+					{scaleApplies ? (
+						<div className="admin-drawer__row">
+							<div
+								className="admin-drawer__segmented"
+								role="radiogroup"
+								aria-label={t('How people rate')}
+							>
+								{SCALE_OPTIONS.map((option) => {
+									const active = currentScale === option.value;
+									const label = t(option.label);
+
+									return (
+										<button
+											key={option.value}
+											type="button"
+											role="radio"
+											aria-checked={active}
+											aria-label={label}
+											title={`${label} — ${t(option.hint)}`}
+											className={clsx(
+												'admin-drawer__segment',
+												active && 'admin-drawer__segment--active',
+											)}
+											onClick={() => handleScaleChange(option.value)}
+										>
+											<span aria-hidden>{option.icon}</span>
+										</button>
+									);
+								})}
+							</div>
+							<p className="admin-drawer__row-help">
+								{t('What each participant taps on a suggestion')}
+							</p>
+							<p className="admin-drawer__row-help">
+								{t(SCALE_OPTIONS.find((o) => o.value === currentScale)?.hint ?? '')}
+							</p>
+
+							{/* Only the agree/disagree scale has a second face set to swap in. */}
+							{currentScale === evaluationType.range && (
+								<>
+									<div className="admin-drawer__row-main">
+										<span className="admin-drawer__row-label">{t('Use emoji reactions')}</span>
+										<button
+											type="button"
+											role="switch"
+											aria-checked={usesReactions}
+											aria-label={t('Use emoji reactions')}
+											className={clsx(
+												'admin-drawer__toggle',
+												usesReactions && 'admin-drawer__toggle--on',
+											)}
+											onClick={() => handleReactionsChange(!usesReactions)}
+										>
+											<span className="admin-drawer__toggle-track" />
+											<span className="admin-drawer__toggle-knob" />
+										</button>
+									</div>
+									<p className="admin-drawer__row-help">
+										{t('Show playful emoji instead of agree/disagree faces')}
+									</p>
+								</>
+							)}
+						</div>
+					) : (
+						<p className="admin-drawer__row-help">
+							{t('Rating scale is set automatically for this mode')}
+						</p>
+					)}
+				</section>
 
 				{/* Rank by — the order the answer list is read in */}
 				<section className="admin-drawer__section">

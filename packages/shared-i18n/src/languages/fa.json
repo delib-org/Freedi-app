@@ -3832,5 +3832,6 @@
   "What should participants do first?": "شرکت‌کنندگان ابتدا چه کاری انجام دهند؟",
   "You sent an update recently. Please try again later.": "به‌تازگی به‌روزرسانی فرستاده‌اید. لطفاً بعداً تلاش کنید.",
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} وارد شدند · {{suggested}} پیشنهاد دادند · {{evaluated}} ارزیابی کردند",
-  "{{open}} of {{total}} open": "{{open}} از {{total}} باز"
+  "{{open}} of {{total}} open": "{{open}} از {{total}} باز",
+  "How people rate": "مردم چگونه امتیاز می‌دهند"
 }

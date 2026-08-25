@@ -5,7 +5,14 @@
 
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { CutoffBy, ResultsBy, SortType, Statement } from '@freedi/shared-types';
+import {
+	CutoffBy,
+	EvaluationUI,
+	ResultsBy,
+	SortType,
+	Statement,
+	evaluationType,
+} from '@freedi/shared-types';
 import TopAnswersPanel from '../TopAnswersPanel';
 import {
 	requestTopOptionsRecompute,
@@ -14,6 +21,8 @@ import {
 	setRankBy,
 	setResultsBy,
 } from '@/controllers/db/statements/setTopAnswersSettings';
+import { setRatingScale } from '@/controllers/db/evaluation/setEvaluation';
+import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 
 jest.mock('@/controllers/hooks/useTranslation', () => ({
 	useTranslation: () => ({ t: (text: string) => text, dir: 'ltr' }),
@@ -24,6 +33,14 @@ jest.mock('@/controllers/hooks/useTranslation', () => ({
 jest.mock('../ManualOrderModal', () => ({
 	__esModule: true,
 	default: () => null,
+}));
+
+jest.mock('@/controllers/db/evaluation/setEvaluation', () => ({
+	setRatingScale: jest.fn(),
+}));
+
+jest.mock('@/controllers/db/statementSettings/setStatementSettings', () => ({
+	setStatementSettingToDB: jest.fn(),
 }));
 
 jest.mock('@/controllers/db/statements/setTopAnswersSettings', () => {
@@ -44,6 +61,8 @@ const mockSetResultsBy = setResultsBy as jest.Mock;
 const mockSetCutoffMethod = setCutoffMethod as jest.Mock;
 const mockSetCutoffValue = setCutoffValue as jest.Mock;
 const mockRecompute = requestTopOptionsRecompute as jest.Mock;
+const mockSetRatingScale = setRatingScale as jest.Mock;
+const mockSetSetting = setStatementSettingToDB as jest.Mock;
 
 function question(overrides: Partial<Statement> = {}): Statement {
 	return {
@@ -227,6 +246,99 @@ describe('TopAnswersPanel', () => {
 		});
 
 		expect(mockSetCutoffValue).toHaveBeenCalledWith('q-1', expect.anything(), 0.55);
+	});
+
+	describe('rating scale', () => {
+		it('marks the scale the question currently uses', () => {
+			render(
+				<TopAnswersPanel
+					statement={question({
+						statementSettings: { evaluationType: evaluationType.singleLike },
+					})}
+				/>,
+			);
+			openPanel();
+
+			expect(screen.getByRole('radio', { name: 'Likes only' })).toHaveAttribute(
+				'aria-checked',
+				'true',
+			);
+		});
+
+		it('defaults to the agree/disagree faces when the question has never set one', () => {
+			render(<TopAnswersPanel statement={question()} />);
+			openPanel();
+
+			expect(screen.getByRole('radio', { name: 'Agree - Disagree' })).toHaveAttribute(
+				'aria-checked',
+				'true',
+			);
+		});
+
+		it('writes through setRatingScale, which also refreshes the derived flag', () => {
+			// Writing `evaluationType` directly would leave the deprecated
+			// `enhancedEvaluation` flag stale, and parts of the UI still read it.
+			render(<TopAnswersPanel statement={question()} />);
+			openPanel();
+
+			fireEvent.click(screen.getByRole('radio', { name: 'Thumbs up or down' }));
+
+			expect(mockSetRatingScale).toHaveBeenCalledWith(
+				expect.objectContaining({ statementId: 'q-1' }),
+				evaluationType.likeDislike,
+			);
+		});
+
+		it('offers the emoji-reaction swap only on the agree/disagree scale', () => {
+			const { unmount } = render(<TopAnswersPanel statement={question()} />);
+			openPanel();
+			expect(screen.getByRole('switch', { name: 'Use emoji reactions' })).toBeInTheDocument();
+			unmount();
+
+			render(
+				<TopAnswersPanel
+					statement={question({
+						statementSettings: { evaluationType: evaluationType.likeDislike },
+					})}
+				/>,
+			);
+			openPanel();
+			expect(screen.queryByRole('switch', { name: 'Use emoji reactions' })).not.toBeInTheDocument();
+		});
+
+		it('toggles the reaction faces on and off', () => {
+			render(
+				<TopAnswersPanel
+					statement={question({ statementSettings: { ratingMode: 'reactions' } })}
+				/>,
+			);
+			openPanel();
+
+			const toggle = screen.getByRole('switch', { name: 'Use emoji reactions' });
+			expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+			fireEvent.click(toggle);
+
+			expect(mockSetSetting).toHaveBeenCalledWith(
+				expect.objectContaining({ property: 'ratingMode', newValue: 'agree-disagree' }),
+			);
+		});
+
+		it('hides the choice in voting mode, where the scale is imposed', () => {
+			render(
+				<TopAnswersPanel
+					statement={question({
+						evaluationSettings: { evaluationUI: EvaluationUI.voting },
+					})}
+				/>,
+			);
+			openPanel();
+
+			expect(screen.queryByRole('radio', { name: 'Agree - Disagree' })).not.toBeInTheDocument();
+			expect(
+				screen.getByText('Rating scale is set automatically for this mode'),
+			).toBeInTheDocument();
+		});
 	});
 
 	it('closes on Escape', () => {

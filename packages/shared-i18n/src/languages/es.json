@@ -3325,5 +3325,6 @@
   "What should participants do first?": "¿Qué deberían hacer primero los participantes?",
   "You sent an update recently. Please try again later.": "Enviaste una actualización hace poco. Inténtalo más tarde.",
   "{{entered}} entered · {{suggested}} suggested · {{evaluated}} evaluated": "{{entered}} entraron · {{suggested}} sugirieron · {{evaluated}} evaluaron",
-  "{{open}} of {{total}} open": "{{open}} de {{total}} abiertas"
+  "{{open}} of {{total}} open": "{{open}} de {{total}} abiertas",
+  "How people rate": "Cómo valora la gente"
 }
