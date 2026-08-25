@@ -1470,10 +1470,7 @@ export function Deliberation(
 							count: topic.characters.filter(
 								(character) =>
 									getDeliberationState().characterReviews[
-										createAgoraCharacterReviewId(
-											myProposal.statementId,
-											character.characterId,
-										)
+										createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
 									] !== undefined,
 							).length,
 							open: charactersOpen,
@@ -2418,6 +2415,10 @@ export function Deliberation(
 					ratingQuota: flow.ratingsPerRound,
 					endsAt: live.roundEndsAt ?? undefined,
 					onResults: screen === 'results',
+					// A civic player's uid IS their Odyssey uid (the handoff token
+					// names it), so the post box can edit their voyage-story email
+					// cadence — the same doc the Odyssey settings sheet writes
+					digestUid: civic ? userId : undefined,
 				}),
 			];
 
