@@ -10,6 +10,29 @@ service cloud.firestore {
     function cleanPath(path) {
       return path.split('/').join('_');
     }
+
+    // WizCol Studio — consultant organizations. Membership lives in
+    // `organizationMembers/{orgId}--{uid}` (deterministic id, one exists()
+    // per check). These helpers are used ONLY by the org collections and by
+    // `questionProgress`; the hot `/statements` path never calls them —
+    // org-admin authority on questions is materialized as admin
+    // subscriptions by the organization callables instead.
+    function isSystemAdminUser() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
+    }
+    function isOrgMember(orgId) {
+      let memberId = cleanPath(string(orgId)) + '--' + string(request.auth.uid);
+      let memberPath = /databases/$(database)/documents/organizationMembers/$(memberId);
+      return request.auth != null && exists(memberPath);
+    }
+    function isOrgAdmin(orgId) {
+      let memberId = cleanPath(string(orgId)) + '--' + string(request.auth.uid);
+      let memberPath = /databases/$(database)/documents/organizationMembers/$(memberId);
+      return request.auth != null && exists(memberPath) &&
+             get(memberPath).data.role in ['owner', 'admin'];
+    }
     
     // All collection rules
     match /termsOfUseAcceptance/{document} {
@@ -379,6 +402,19 @@ service cloud.firestore {
                request.resource.data.get('creatorRole', null);
       }
 
+      // `organizationId` binds a top-level statement to a consultant tenant
+      // (WizCol Studio). It is set only by `fn_createOrgStatement` (Admin
+      // SDK). A client must never attach a statement to an organization it
+      // does not belong to, nor detach one — both would let it show up in
+      // (or vanish from) another consultant's console. No get() needed.
+      function setsOrganizationIdOnCreate() {
+        return request.resource.data.get('organizationId', null) != null;
+      }
+      function changesOrganizationId() {
+        return resource.data.get('organizationId', null) !=
+               request.resource.data.get('organizationId', null);
+      }
+
       // Agora's classroom content lives in this collection, discriminated by
       // agoraSessionId. Those documents carry neither questionSettings nor
       // statementSettings, and hasProtectedFieldChanges() above is gated on the
@@ -449,10 +485,12 @@ service cloud.firestore {
       // updates, not creates, so they are unaffected by this pin.
       allow create: if request.auth.uid != null &&
                        !setsCreatorRoleOnCreate() &&
+                       !setsOrganizationIdOnCreate() &&
                        request.resource.data.creatorId == request.auth.uid;
 
       allow update: if request.auth.uid != null &&
                        !changesCreatorRole() &&
+                       !changesOrganizationId() &&
                        (isAgoraStatement()
                           ? (isCreator() && agoraServerFieldsUnchanged())
                           : isAllowedToUpdate());
@@ -1380,6 +1418,74 @@ service cloud.firestore {
       );
       allow list: if request.auth != null;
       allow write: if false;
+    }
+
+    // WizCol Studio — consultant organizations. All three collections are
+    // written exclusively by the organization callables
+    // (fn_createOrganization / fn_inviteOrgMember / fn_acceptOrgInvite /
+    // fn_removeOrgMember, Admin SDK). Clients only read.
+    match /organizations/{organizationId} {
+      allow get: if isOrgMember(organizationId) || isSystemAdminUser();
+      // Only the sysadmin console lists organizations; a member reaches
+      // their own orgs through organizationMembers.
+      allow list: if isSystemAdminUser();
+      allow write: if false;
+    }
+
+    match /organizationMembers/{memberId} {
+      allow get: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        isOrgMember(resource.data.organizationId) ||
+        isSystemAdminUser()
+      );
+      // list: any signed-in user. Studio's roster query is
+      // `where organizationId == X` and a member's "my organizations" query
+      // is `where userId == me`; scoping list by resource.data would need a
+      // get() per row. Tightening this is tracked for Phase 3.
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /organizationInvitations/{invitationId} {
+      allow get: if request.auth != null && (
+        isOrgAdmin(resource.data.organizationId) ||
+        isSystemAdminUser()
+      );
+      // Safe to list: only `tokenHash` (sha256) is stored — the raw invite
+      // token never touches Firestore, so a listed row is not a credential.
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Per-question participation funnel. Counters are maintained by the
+    // progress writer in functions/src/progress/ (Admin SDK). Readable by the
+    // question's admins (direct or via the top parent) and by members of the
+    // owning organization.
+    match /questionProgress/{statementId} {
+      function isStatementAdmin(sid) {
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(sid));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      allow get: if request.auth != null && (
+        isStatementAdmin(resource.data.statementId) ||
+        isStatementAdmin(resource.data.topParentId) ||
+        (resource.data.get('organizationId', null) != null &&
+         isOrgMember(resource.data.organizationId))
+      );
+      // list: any signed-in user. A list rule cannot cheaply evaluate the
+      // per-document subscription lookups above, and the documents hold only
+      // non-sensitive aggregate counters (no user ids, no text) — the same
+      // numbers every participant already sees on the question page.
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Per-(question, user) markers behind the unique counters above. Server
+    // only: they reveal who did what and nothing reads them client-side.
+    match /questionParticipation/{participationId} {
+      allow read, write: if false;
     }
 
     // Backup requests - server-side only. Worked by the backupSurveyOnRequest

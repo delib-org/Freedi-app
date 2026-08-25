@@ -9,6 +9,7 @@ import {
   createStatementObject,
   getRandomUID,
   SourceApp,
+  statementToSimpleStatement,
 } from '@freedi/shared-types';
 import { getFirestoreAdmin, initializeFirebaseAdmin } from '@/lib/firebase/admin';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
@@ -215,11 +216,12 @@ export async function POST(request: NextRequest) {
         photoURL,
         isAnonymous: false,
       },
-      statement: {
-        statementId,
-        statement: body.title.trim(),
-        statementType: StatementType.group,
-      },
+      // Promoted query fields + full snapshot: Home lists subscriptions by
+      // `parentId == 'top'` and reads the card from `statement`.
+      parentId: groupWithMembership.parentId,
+      statementType: groupWithMembership.statementType,
+      topParentId: groupWithMembership.topParentId,
+      statement: statementToSimpleStatement(groupWithMembership),
       createdAt: now,
       lastUpdate: now,
       getInAppNotification: true,

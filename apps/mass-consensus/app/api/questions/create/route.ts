@@ -13,6 +13,7 @@ import {
   getRandomUID,
   evaluationType,
   SourceApp,
+  statementToSimpleStatement,
 } from '@freedi/shared-types';
 import { getFirestoreAdmin, initializeFirebaseAdmin } from '@/lib/firebase/admin';
 import { verifyToken, extractBearerToken, isAdminOfStatement } from '@/lib/auth/verifyAdmin';
@@ -206,11 +207,13 @@ export async function POST(request: NextRequest) {
         photoURL,
         isAnonymous: false,
       },
-      statement: {
-        statementId: questionId,
-        statement: body.statement.trim(),
-        statementType: StatementType.question,
-      },
+      // Promoted query fields + full snapshot: the main app's Home and the
+      // fn_ensureTopParentSubscription trigger read `parentId`,
+      // `statementType` and `topParentId` from the subscription itself.
+      parentId: questionWithSettings.parentId,
+      statementType: questionWithSettings.statementType,
+      topParentId: questionWithSettings.topParentId,
+      statement: statementToSimpleStatement(questionWithSettings),
       createdAt: now,
       lastUpdate: now,
       getInAppNotification: true,

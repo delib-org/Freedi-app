@@ -373,6 +373,12 @@ export const StatementSchema = object({
 	randomSeed: optional(number()), // an optional random seed for the statement
 	locked: optional(StatementLockedSchema), // generic locking: any admin can lock a statement
 	sourceApp: optional(enum_(SourceApp)), // which app created this statement: main, sign, mass-consensus, flow
+	/**
+	 * Consultant tenant (WizCol Studio). Set only by `fn_createOrgStatement`
+	 * (Admin SDK) on top-level statements; firestore.rules rejects any client
+	 * write that sets or changes it.
+	 */
+	organizationId: optional(string()),
 	versionControl: optional(
 		object({
 			// Version info

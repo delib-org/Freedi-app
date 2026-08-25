@@ -110,4 +110,13 @@ export enum Collections {
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',
     odysseyJourneys = 'odysseyJourneys',
+
+    // WizCol Studio — consultant organizations (Cloud-Function-only writes)
+    organizations = 'organizations',
+    organizationMembers = 'organizationMembers',
+    organizationInvitations = 'organizationInvitations',
+
+    // Per-question participation funnel (server-maintained counters + markers)
+    questionProgress = 'questionProgress',
+    questionParticipation = 'questionParticipation',
 }

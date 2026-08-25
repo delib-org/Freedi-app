@@ -141,6 +141,34 @@ export {
   getJoinDelegateId,
 } from "./models/joinDelegate";
 
+// WizCol Studio — consultant organizations (tenants that own top questions)
+export type {
+  Organization,
+  OrganizationMember,
+  OrganizationInvitation,
+} from "./models/organization";
+
+export {
+  OrganizationRole,
+  OrganizationStatus,
+  OrganizationInvitationStatus,
+  OrganizationSchema,
+  OrganizationMemberSchema,
+  OrganizationInvitationSchema,
+  ORG_INVITE_EXPIRY_MS,
+  ORG_ADMIN_ROLES,
+  getOrganizationMemberId,
+} from "./models/organization";
+
+// Per-question participation funnel (server-maintained)
+export type { QuestionProgress, QuestionParticipation } from "./models/progress";
+
+export {
+  QuestionProgressSchema,
+  QuestionParticipationSchema,
+  getQuestionParticipationId,
+} from "./models/progress";
+
 // MassConsensus models
 export type {
   MassConsensusMember,

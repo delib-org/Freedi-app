@@ -17,7 +17,12 @@ import type { ActivityLink, ActivityUrlResolver } from './activityUrls';
  * Event is an optional index over the existing Statement subtree.
  */
 
-/** The universal run-state vocabulary shown to facilitators. */
+/**
+ * The universal run-state vocabulary shown to facilitators.
+ *
+ * `queued` stays in the union for engines that will one day declare a
+ * not-yet-started state explicitly; no engine writes it today (see toRunState).
+ */
 export type ActivityRunState = 'queued' | 'open' | 'frozen' | 'closed';
 
 export interface DerivedActivity {
@@ -31,16 +36,25 @@ export interface DerivedActivity {
 	admin: ActivityLink | null;
 }
 
+/**
+ * Map a question's `statementSettings.questionStatus` onto the run-state pill.
+ *
+ * An UNDEFINED status means OPEN, not queued: the Join app (and every other
+ * engine) treats a question with no `questionStatus` as live — participants
+ * can suggest and evaluate the moment it exists, and the field is only
+ * written when a facilitator explicitly freezes/closes/re-opens it. Showing
+ * such a question as "Queued" would tell the facilitator it is not running
+ * while participants are already inside it.
+ */
 function toRunState(status: QuestionStatus | undefined): ActivityRunState {
 	switch (status) {
-		case 'live':
-			return 'open';
 		case 'frozen':
 			return 'frozen';
 		case 'closed':
 			return 'closed';
+		case 'live':
 		default:
-			return 'queued';
+			return 'open';
 	}
 }
 
