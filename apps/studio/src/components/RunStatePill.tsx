@@ -1,6 +1,9 @@
 import type { ActivityRunState } from '@freedi/event-core';
-import styles from './RunStatePill.module.css';
+import { useTranslation } from '@freedi/shared-i18n/react';
+import clsx from 'clsx';
+import styles from './RunStatePill.module.scss';
 
+/** English-string i18n keys per run state (translated at render time). */
 const LABELS: Record<ActivityRunState, string> = {
 	queued: 'Queued',
 	open: 'Open',
@@ -9,5 +12,7 @@ const LABELS: Record<ActivityRunState, string> = {
 };
 
 export default function RunStatePill({ state }: { state: ActivityRunState }) {
-	return <span className={`${styles.pill} ${styles[state]}`}>{LABELS[state]}</span>;
+	const { t } = useTranslation();
+
+	return <span className={clsx(styles.pill, styles[state])}>{t(LABELS[state])}</span>;
 }

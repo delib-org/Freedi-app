@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAuth } from '@/auth/AuthContext';
-import styles from './Login.module.css';
+import styles from './Login.module.scss';
 
 export default function Login() {
+	const { t } = useTranslation();
 	const { signInWithGoogle } = useAuth();
 	const [error, setError] = useState('');
 
@@ -11,7 +13,7 @@ export default function Login() {
 			setError('');
 			await signInWithGoogle();
 		} catch {
-			setError('Sign-in failed. Please try again.');
+			setError(t('Sign-in failed. Please try again.'));
 		}
 	};
 
@@ -19,9 +21,9 @@ export default function Login() {
 		<main className={styles.login}>
 			<div className={styles.card}>
 				<h1 className={styles.title}>WizCol Studio</h1>
-				<p className={styles.subtitle}>Create, manage and run your events.</p>
+				<p className={styles.subtitle}>{t('Create, manage and run your events.')}</p>
 				<button type="button" className={styles.button} onClick={handleSignIn}>
-					Sign in with Google
+					{t('Sign in with Google')}
 				</button>
 				{error && <p className={styles.error}>{error}</p>}
 			</div>

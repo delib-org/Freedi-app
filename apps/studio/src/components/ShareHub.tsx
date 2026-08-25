@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import type { DerivedActivity } from '@freedi/event-core';
+import { useTranslation } from '@freedi/shared-i18n/react';
+import clsx from 'clsx';
 import QRCodePanel from './QRCodePanel';
 import RunStatePill from './RunStatePill';
-import styles from './ShareHub.module.css';
+import styles from './ShareHub.module.scss';
 
 export default function ShareHub({ activities }: { activities: DerivedActivity[] }) {
+	const { t } = useTranslation();
 	const shareable = activities.filter((a) => a.participant);
 	const [selectedId, setSelectedId] = useState<string>(shareable[0]?.statementId ?? '');
 
 	if (shareable.length === 0) {
 		return (
 			<aside className={styles.hub}>
-				<h2 className={styles.title}>Share Hub</h2>
-				<p className={styles.empty}>No shareable activities yet.</p>
+				<h2 className={styles.title}>{t('Share Hub')}</h2>
+				<p className={styles.empty}>{t('No shareable activities yet.')}</p>
 			</aside>
 		);
 	}
@@ -21,7 +24,7 @@ export default function ShareHub({ activities }: { activities: DerivedActivity[]
 
 	return (
 		<aside className={styles.hub}>
-			<h2 className={styles.title}>Share Hub</h2>
+			<h2 className={styles.title}>{t('Share Hub')}</h2>
 			<ul className={styles.list}>
 				{shareable.map((activity) => {
 					const isSelected = activity.statementId === selected.statementId;
@@ -30,11 +33,11 @@ export default function ShareHub({ activities }: { activities: DerivedActivity[]
 						<li key={activity.statementId}>
 							<button
 								type="button"
-								className={`${styles.item} ${isSelected ? styles.selected : ''}`}
+								className={clsx(styles.item, isSelected && styles.selected)}
 								onClick={() => setSelectedId(activity.statementId)}
 							>
 								<span aria-hidden="true">{activity.def.icon}</span>
-								<span className={styles.itemTitle}>{activity.title || 'Untitled'}</span>
+								<span className={styles.itemTitle}>{activity.title || t('Untitled')}</span>
 								<RunStatePill state={activity.runState} />
 							</button>
 						</li>

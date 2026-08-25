@@ -243,8 +243,13 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'STUDIO_FIREBASE_APP_ID|FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
       'STUDIO_FIREBASE_MEASUREMENT_ID|FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
       // Deep-link base URLs for building activity links across the apps.
+      // APP_URL is the main app's public URL (same source sign maps to
+      // NEXT_PUBLIC_MAIN_APP_URL); JOIN_APP_URL is optional — studio falls
+      // back to https://wizcol-join.web.app when unset.
+      'APP_URL|VITE_MAIN_APP_URL': 'VITE_MAIN_APP_URL',
       'VITE_SIGN_APP_URL': 'VITE_SIGN_APP_URL',
       'VITE_APP_MASS_CONSENSUS_URL': 'VITE_MASS_CONSENSUS_URL',
+      'VITE_JOIN_APP_URL|JOIN_APP_URL': 'VITE_JOIN_APP_URL',
       // Emulator toggle (studio reads VITE_USE_EMULATORS === 'true').
       'USE_FIREBASE_EMULATOR': 'VITE_USE_EMULATORS',
     },

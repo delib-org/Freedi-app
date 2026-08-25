@@ -1,8 +1,8 @@
 .hub {
 	padding: 1rem;
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: var(--radius);
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-md);
 	align-self: start;
 }
 
@@ -12,7 +12,7 @@
 }
 
 .empty {
-	color: var(--text-muted);
+	color: var(--text-meta);
 	font-size: 0.875rem;
 }
 
@@ -39,8 +39,8 @@
 }
 
 .selected {
-	border-color: var(--primary);
-	background: color-mix(in srgb, var(--primary) 8%, transparent);
+	border-color: var(--btn-primary);
+	background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
 }
 
 .itemTitle {
@@ -56,5 +56,5 @@
 	display: flex;
 	justify-content: center;
 	padding-top: 0.5rem;
-	border-top: 1px solid var(--border);
+	border-top: 1px solid var(--border-light);
 }

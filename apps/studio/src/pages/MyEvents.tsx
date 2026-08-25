@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { listFacilitatorEvents, type FacilitatorEvent } from '@freedi/event-core';
+import { useTranslation } from '@freedi/shared-i18n/react';
 import { useAuth } from '@/auth/AuthContext';
 import { db } from '@/firebase';
 import NewEventModal from '@/components/NewEventModal';
-import styles from './MyEvents.module.css';
+import styles from './MyEvents.module.scss';
 
 export default function MyEvents() {
+	const { t } = useTranslation();
 	const { user } = useAuth();
 	const navigate = useNavigate();
 	const [events, setEvents] = useState<FacilitatorEvent[]>([]);
@@ -23,7 +25,7 @@ export default function MyEvents() {
 				if (active) setEvents(list);
 			})
 			.catch(() => {
-				if (active) setError('Could not load your events.');
+				if (active) setError(t('Could not load your events.'));
 			})
 			.finally(() => {
 				if (active) setLoading(false);
@@ -32,23 +34,23 @@ export default function MyEvents() {
 		return () => {
 			active = false;
 		};
-	}, [user]);
+	}, [user, t]);
 
 	return (
 		<main className={styles.page}>
 			<div className={styles.header}>
-				<h1 className={styles.title}>My Events</h1>
+				<h1 className={styles.title}>{t('My Events')}</h1>
 				<button type="button" className={styles.newBtn} onClick={() => setShowModal(true)}>
-					+ New Event
+					+ {t('New Event')}
 				</button>
 			</div>
 
-			{loading && <p className={styles.muted}>Loading your events…</p>}
+			{loading && <p className={styles.muted}>{t('Loading your events…')}</p>}
 			{error && <p className={styles.error}>{error}</p>}
 
 			{!loading && !error && events.length === 0 && (
 				<p className={styles.muted}>
-					No events yet. Click “+ New Event” to create your first one.
+					{t('No events yet. Click “+ New Event” to create your first one.')}
 				</p>
 			)}
 
@@ -56,8 +58,8 @@ export default function MyEvents() {
 				{events.map((event) => (
 					<li key={event.statementId}>
 						<Link to={`/events/${event.statementId}`} className={styles.card}>
-							<span className={styles.cardTitle}>{event.title || 'Untitled event'}</span>
-							<span className={styles.cardRole}>{event.role}</span>
+							<span className={styles.cardTitle}>{event.title || t('Untitled event')}</span>
+							<span className={styles.cardRole}>{t(event.role)}</span>
 						</Link>
 					</li>
 				))}

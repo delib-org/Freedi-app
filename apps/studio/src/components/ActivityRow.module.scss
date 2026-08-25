@@ -3,9 +3,9 @@
 	align-items: center;
 	gap: 0.75rem;
 	padding: 0.75rem 1rem;
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: var(--radius);
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-md);
 }
 
 .order {
@@ -16,8 +16,8 @@
 	place-items: center;
 	font-size: 0.8125rem;
 	font-weight: 600;
-	color: var(--text-muted);
-	background: var(--bg);
+	color: var(--text-meta);
+	background: var(--surface-background);
 	border-radius: 50%;
 }
 
@@ -43,7 +43,7 @@
 
 .type {
 	font-size: 0.8125rem;
-	color: var(--text-muted);
+	color: var(--text-meta);
 }
 
 .actions {
@@ -63,13 +63,13 @@
 }
 
 .primary {
-	color: var(--primary-contrast);
-	background: var(--primary);
-	border: 1px solid var(--primary);
+	color: var(--btn-primary-text);
+	background: var(--btn-primary);
+	border: 1px solid var(--btn-primary);
 }
 
 .secondary {
-	color: var(--primary);
+	color: var(--btn-primary);
 	background: transparent;
-	border: 1px solid var(--primary);
+	border: 1px solid var(--btn-primary);
 }

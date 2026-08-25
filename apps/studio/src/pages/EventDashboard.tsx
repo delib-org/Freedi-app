@@ -3,11 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { Collections, type Statement } from '@freedi/shared-types';
 import { deriveActivities, type DerivedActivity } from '@freedi/event-core';
+import { useTranslation } from '@freedi/shared-i18n/react';
 import { db } from '@/firebase';
 import { activityUrlResolver } from '@/config';
 import ActivityRow from '@/components/ActivityRow';
 import ShareHub from '@/components/ShareHub';
-import styles from './EventDashboard.module.css';
+import styles from './EventDashboard.module.scss';
 
 interface EventData {
 	event: Statement | null;
@@ -15,6 +16,7 @@ interface EventData {
 }
 
 export default function EventDashboard() {
+	const { t, tWithParams } = useTranslation();
 	const { eventId } = useParams<{ eventId: string }>();
 	const [data, setData] = useState<EventData>({ event: null, children: [] });
 	const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ export default function EventDashboard() {
 
 		load()
 			.catch(() => {
-				if (active) setError('Could not load this event.');
+				if (active) setError(t('Could not load this event.'));
 			})
 			.finally(() => {
 				if (active) setLoading(false);
@@ -51,44 +53,51 @@ export default function EventDashboard() {
 		return () => {
 			active = false;
 		};
-	}, [eventId]);
+	}, [eventId, t]);
 
 	const activities: DerivedActivity[] = useMemo(
 		() => deriveActivities(data.children, activityUrlResolver),
 		[data.children],
 	);
 
-	if (loading) return <main className={styles.page}>Loading…</main>;
+	const backLink = (label: string) => (
+		<Link to="/" className={styles.back}>
+			<span className={styles.backArrow} aria-hidden="true">
+				←
+			</span>
+			{label}
+		</Link>
+	);
+
+	if (loading) return <main className={styles.page}>{t('Loading…')}</main>;
 
 	if (error) {
 		return (
 			<main className={styles.page}>
 				<p className={styles.error}>{error}</p>
-				<Link to="/" className={styles.back}>
-					← Back to My Events
-				</Link>
+				{backLink(t('Back to My Events'))}
 			</main>
 		);
 	}
 
 	return (
 		<main className={styles.page}>
-			<Link to="/" className={styles.back}>
-				← My Events
-			</Link>
+			{backLink(t('My Events'))}
 
 			<header className={styles.header}>
-				<span className={styles.badge}>Event</span>
-				<h1 className={styles.title}>{data.event?.statement || 'Untitled event'}</h1>
-				<p className={styles.meta}>Activities: {activities.length}</p>
+				<span className={styles.badge}>{t('Event')}</span>
+				<h1 className={styles.title}>{data.event?.statement || t('Untitled event')}</h1>
+				<p className={styles.meta}>
+					{tWithParams('Activities: {{count}}', { count: activities.length })}
+				</p>
 			</header>
 
 			<div className={styles.layout}>
 				<section className={styles.agenda}>
-					<h2 className={styles.sectionTitle}>Agenda</h2>
+					<h2 className={styles.sectionTitle}>{t('Agenda')}</h2>
 					{activities.length === 0 ? (
 						<p className={styles.muted}>
-							This event has no activities yet. Add questions or documents to the group.
+							{t('This event has no activities yet. Add questions or documents to the group.')}
 						</p>
 					) : (
 						<ol className={styles.list}>

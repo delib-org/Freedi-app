@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { createEvent } from '@freedi/event-core';
+import { useTranslation } from '@freedi/shared-i18n/react';
 import { db } from '@/firebase';
 import { useAuth } from '@/auth/AuthContext';
-import styles from './NewEventModal.module.css';
+import styles from './NewEventModal.module.scss';
 
 interface NewEventModalProps {
 	onClose: () => void;
@@ -10,6 +11,7 @@ interface NewEventModalProps {
 }
 
 export default function NewEventModal({ onClose, onCreated }: NewEventModalProps) {
+	const { t, tWithParams } = useTranslation();
 	const { user } = useAuth();
 	const [title, setTitle] = useState('');
 	const [submitting, setSubmitting] = useState(false);
@@ -35,10 +37,11 @@ export default function NewEventModal({ onClose, onCreated }: NewEventModalProps
 		} catch (err) {
 			const e = err as { code?: string; message?: string };
 			console.error('[Studio] createEvent failed', e?.code, e?.message, err);
+			const details = `${e?.code ?? ''} ${e?.message ?? ''}`.trim();
 			setError(
-				e?.code || e?.message
-					? `Could not create the event: ${e.code ?? ''} ${e.message ?? ''}`.trim()
-					: 'Could not create the event. Please try again.',
+				details
+					? tWithParams('Could not create the event: {{details}}', { details })
+					: t('Could not create the event. Please try again.'),
 			);
 			setSubmitting(false);
 		}
@@ -49,15 +52,15 @@ export default function NewEventModal({ onClose, onCreated }: NewEventModalProps
 			className={styles.scrim}
 			role="dialog"
 			aria-modal="true"
-			aria-label="New event"
+			aria-label={t('New Event')}
 			onClick={(e) => {
 				if (e.target === e.currentTarget && !submitting) onClose();
 			}}
 		>
 			<div className={styles.modal}>
-				<h2 className={styles.title}>New Event</h2>
+				<h2 className={styles.title}>{t('New Event')}</h2>
 				<label className={styles.label} htmlFor="event-title">
-					Event name
+					{t('Event name')}
 				</label>
 				<input
 					id="event-title"
@@ -65,7 +68,7 @@ export default function NewEventModal({ onClose, onCreated }: NewEventModalProps
 					type="text"
 					value={title}
 					autoFocus
-					placeholder="e.g. Climate Town Hall — Haifa"
+					placeholder={t('e.g. Climate Town Hall — Haifa')}
 					onChange={(e) => setTitle(e.target.value)}
 					onKeyDown={(e) => {
 						if (e.key === 'Enter') handleCreate();
@@ -73,13 +76,8 @@ export default function NewEventModal({ onClose, onCreated }: NewEventModalProps
 				/>
 				{error && <p className={styles.error}>{error}</p>}
 				<div className={styles.actions}>
-					<button
-						type="button"
-						className={styles.cancel}
-						onClick={onClose}
-						disabled={submitting}
-					>
-						Cancel
+					<button type="button" className={styles.cancel} onClick={onClose} disabled={submitting}>
+						{t('Cancel')}
 					</button>
 					<button
 						type="button"
@@ -87,7 +85,7 @@ export default function NewEventModal({ onClose, onCreated }: NewEventModalProps
 						onClick={handleCreate}
 						disabled={!canSubmit}
 					>
-						{submitting ? 'Creating…' : 'Create event'}
+						{submitting ? t('Creating…') : t('Create event')}
 					</button>
 				</div>
 			</div>
