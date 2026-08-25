@@ -20,6 +20,7 @@ import { onEvaluationCreatedStats } from '../fn_adminStats';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
+import { recordParticipation } from '../progress/questionProgressWriter';
 // Ship 3a: cluster-aware polarization. The two helpers below are no-ops at
 // import time; they only do work when `synthesisFlags.clusterAwarePolarization`
 // is ON. The flag is checked inside the trigger handler, not at module load,
@@ -136,6 +137,17 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		onEvaluationCreatedStats(evaluation.updatedAt).catch((err) =>
 			logger.warn('Admin stats tracking failed:', err),
 		);
+
+		// Question progress funnel: unique evaluators + evaluation events (non-blocking)
+		if (parentId) {
+			recordParticipation({
+				statementId: parentId,
+				topParentId: statement.topParentId,
+				userId,
+				kind: 'evaluated',
+				eventCounter: 'evaluations',
+			}).catch((err) => logger.warn('Question progress tracking failed:', err));
+		}
 
 		// Check social proof milestones (non-blocking)
 		const evaluatorCount = statement.evaluation?.numberOfEvaluators ?? 0;

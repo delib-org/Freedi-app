@@ -1,7 +1,8 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from '.';
-import { Collections, Statement, StatementView } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, StatementView } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
+import { recordParticipation } from './progress/questionProgressWriter';
 
 //@ts-ignore
 export async function updateStatementWithViews(ev) {
@@ -10,6 +11,7 @@ export async function updateStatementWithViews(ev) {
 		const statementId = view.statementId;
 		if (!statementId) throw new Error('StatementId not found');
 		const statementRef = db.collection(Collections.statements).doc(statementId);
+		let viewedStatement: Statement | undefined;
 
 		//increment the view count
 		await db.runTransaction(async (t) => {
@@ -18,6 +20,7 @@ export async function updateStatementWithViews(ev) {
 				if (!statementDB.exists) throw new Error('Statement not found');
 				const statement = statementDB.data() as Statement;
 				if (!statement) throw new Error('Statement not found');
+				viewedStatement = statement;
 
 				if (!statement.viewed) statement.viewed = { individualViews: 0 };
 
@@ -30,6 +33,19 @@ export async function updateStatementWithViews(ev) {
 				});
 			}
 		});
+
+		// Question progress funnel: "entered" = first view doc for (question, user).
+		// Only questions are tracked — options/paragraphs would just burn writes.
+		const userId = view.userId ?? (ev.params?.viewId as string | undefined)?.split('--')[0];
+		if (viewedStatement?.statementType === StatementType.question && userId) {
+			await recordParticipation({
+				statementId,
+				topParentId: viewedStatement.topParentId,
+				organizationId: viewedStatement.organizationId,
+				userId,
+				kind: 'entered',
+			});
+		}
 	} catch (error) {
 		logger.error(error);
 	}
