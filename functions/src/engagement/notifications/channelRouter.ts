@@ -226,10 +226,10 @@ async function sendEmailNotification(item: NotificationQueueItem): Promise<void>
 		html: item.emailHtml,
 	});
 
+	// A failed send must FAIL the channel: swallowing it here marked the queue
+	// item "sent" and forfeited the processor's retries — observed in prod when
+	// Gmail rejected the login and the digest still read email:ok.
 	if (!sent) {
-		logger.info(`Email not sent for ${item.userId} (transporter unavailable)`, {
-			title: item.title,
-			triggerType: item.triggerType,
-		});
+		throw new Error('Email send failed (SMTP rejected or transporter unavailable)');
 	}
 }
