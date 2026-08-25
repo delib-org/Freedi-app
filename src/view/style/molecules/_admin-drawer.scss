@@ -1,0 +1,390 @@
+// Admin Drawer (molecule)
+// ---------------------------------------------------------------------------
+// The shared chrome for the app's floating admin control surfaces: a draggable
+// edge handle that slides a sectioned right-side drawer into view. Modelled on
+// the Join app's FacilitatorPanel so an admin meets the same control surface in
+// either app.
+//
+// Consumers: MapAdminPanel (cluster map) and TopAnswersPanel (answers list).
+// Both render the same markup skeleton and add only their own content rows, so
+// the two panels cannot drift apart visually.
+//
+// Structure:
+//   .admin-drawer                     root (fixed, pointer-events pass-through)
+//   .admin-drawer__handle             the edge handle
+//     --positioned / --open / --dragging
+//   .admin-drawer__backdrop
+//   .admin-drawer__panel              --open
+//   .admin-drawer__header / __title / __close
+//   .admin-drawer__section / __section-title
+//   .admin-drawer__row / __row-main / __row-label / __row-icon / __row-help
+//   .admin-drawer__toggle             --on, with __toggle-track / __toggle-knob
+//   .admin-drawer__segmented / __segment  --active
+//   .admin-drawer__slider-row / __slider-label / __slider / __slider-value
+//   .admin-drawer__link               quiet inline text button
+//
+// RTL: the app applies direction via the CSS `direction` property and does NOT
+// set a `dir` attribute, so `[dir='rtl']` never matches. Consumers add the
+// `admin-drawer--rtl` modifier on the root instead.
+
+$admin-drawer-width: 320px;
+
+.admin-drawer {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 9000;
+
+	> * {
+		pointer-events: auto;
+	}
+
+	&__handle {
+		position: fixed;
+		top: 50%;
+		inset-inline-end: 0;
+		transform: translateY(-50%);
+		z-index: 9001;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 52px;
+		height: 56px;
+		padding: 0;
+		color: #ffffff;
+		background: var(--btn-primary, #5f88e5);
+		border: 0;
+		border-start-start-radius: 14px;
+		border-end-start-radius: 14px;
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+		cursor: grab;
+		touch-action: none; // so pointermove drag tracking works on touch
+		user-select: none;
+		-webkit-user-select: none;
+		transition:
+			background 0.14s ease,
+			transform 0.22s ease,
+			box-shadow 0.14s ease;
+
+		&:hover,
+		&:focus-visible {
+			filter: brightness(1.05);
+			outline: none;
+			box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+		}
+
+		&:active {
+			cursor: grabbing;
+		}
+
+		// Once dragged, an exact top px is set inline — drop the centering translate.
+		&--positioned {
+			transform: translateY(0);
+		}
+
+		&--open {
+			transform: translateY(-50%) translateX(calc(-1 * #{$admin-drawer-width}));
+		}
+
+		&--positioned#{&}--open {
+			transform: translateY(0) translateX(calc(-1 * #{$admin-drawer-width}));
+		}
+
+		&--dragging {
+			transition: none;
+			cursor: grabbing;
+		}
+	}
+
+	&__handle-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		line-height: 1;
+	}
+
+	&__backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 9000;
+		background: rgba(15, 22, 41, 0.45);
+	}
+
+	&__panel {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		inset-inline-end: 0;
+		z-index: 9002;
+		width: $admin-drawer-width;
+		max-width: 90vw;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 1rem 0.85rem;
+		background: var(--card-default, #ffffff);
+		box-shadow: -4px 0 18px rgba(0, 0, 0, 0.2);
+		transform: translateX(100%);
+		transition: transform 0.22s ease;
+		overflow-y: auto;
+
+		&--open {
+			transform: translateX(0);
+		}
+	}
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding-bottom: 0.5rem;
+		border-bottom: 1px solid var(--border, #e4e8f0);
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-body, #3d4d71);
+	}
+
+	&__close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border: 0;
+		border-radius: 50%;
+		background: transparent;
+		color: var(--text-body, #3d4d71);
+		cursor: pointer;
+		transition: background 0.14s ease;
+
+		&:hover,
+		&:focus-visible {
+			background: var(--background, #eef0f3);
+			outline: none;
+		}
+	}
+
+	&__section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding-block-start: 0.75rem;
+		margin-block-start: 0.25rem;
+		border-block-start: 1px solid var(--border, #e4e8f0);
+
+		&:first-of-type {
+			padding-block-start: 0;
+			margin-block-start: 0;
+			border-block-start: 0;
+		}
+	}
+
+	&__section-title {
+		display: block;
+		margin-block-end: 0.25rem;
+		font-size: 0.72rem;
+		font-weight: 600;
+		color: var(--text-secondary, #8a93a6);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+	}
+
+	&__row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.5rem 0;
+	}
+
+	&__row-main {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	&__row-label {
+		flex: 1;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-body, #3d4d71);
+	}
+
+	&__row-icon {
+		display: inline-block;
+		margin-inline-end: 0.4em;
+		font-size: 1.05em;
+		line-height: 1;
+		vertical-align: -0.05em;
+	}
+
+	&__row-help {
+		font-size: 0.72rem;
+		color: var(--text-secondary, #8a93a6);
+		line-height: 1.4;
+	}
+
+	// Quiet inline text button (e.g. "Reset to shared view", "Reorder manually…").
+	&__link {
+		align-self: flex-start;
+		margin-top: 0.25rem;
+		padding: 0;
+		border: none;
+		background: none;
+		color: var(--btn-primary, #5f88e5);
+		font-size: 0.72rem;
+		font-weight: 600;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	// Toggle switch (track + knob).
+	&__toggle {
+		position: relative;
+		width: 44px;
+		height: 24px;
+		padding: 0;
+		background: transparent;
+		border: 0;
+		cursor: pointer;
+		flex-shrink: 0;
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+			border-radius: 999px;
+		}
+	}
+
+	&__toggle-track {
+		position: absolute;
+		inset: 0;
+		background: var(--border, #d6d3d1);
+		border-radius: 999px;
+		transition: background 0.14s ease;
+	}
+
+	&__toggle-knob {
+		position: absolute;
+		top: 2px;
+		inset-inline-start: 2px;
+		width: 20px;
+		height: 20px;
+		background: #ffffff;
+		border-radius: 50%;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+		transition: transform 0.14s ease;
+	}
+
+	&__toggle--on &__toggle-track {
+		background: var(--btn-primary, #5f88e5);
+	}
+
+	&__toggle--on &__toggle-knob {
+		transform: translateX(20px);
+	}
+
+	// Segmented control (radiogroup of pill buttons).
+	&__segmented {
+		display: inline-flex;
+		flex-wrap: wrap;
+		border-radius: 999px;
+		background: var(--background, #eef0f3);
+		padding: 2px;
+		gap: 2px;
+	}
+
+	&__segment {
+		appearance: none;
+		border: 0;
+		background: transparent;
+		color: var(--text-body, #3d4d71);
+		font-size: 0.75rem;
+		font-weight: 500;
+		padding: 4px 10px;
+		border-radius: 999px;
+		cursor: pointer;
+		transition:
+			background 0.14s ease,
+			color 0.14s ease;
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: default;
+		}
+
+		&--active {
+			background: var(--btn-primary, #5f88e5);
+			color: #ffffff;
+		}
+	}
+
+	// Slider row (label + range + value).
+	&__slider-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.35rem 0;
+	}
+
+	&__slider-label {
+		flex: 1;
+		font-size: 0.875rem;
+		color: var(--text-body, #3d4d71);
+	}
+
+	&__slider {
+		flex: 1;
+		accent-color: var(--btn-primary, #5f88e5);
+		cursor: pointer;
+	}
+
+	&__slider-value {
+		min-width: 3em;
+		text-align: end;
+		font-size: 0.75rem;
+		color: var(--text-secondary, #8a93a6);
+		font-variant-numeric: tabular-nums;
+	}
+
+	// --- RTL -----------------------------------------------------------------
+	// See the note at the top: driven by a class, not a `dir` attribute.
+	&--rtl &__handle--open {
+		transform: translateY(-50%) translateX(#{$admin-drawer-width});
+	}
+
+	&--rtl &__handle--positioned#{&}__handle--open {
+		transform: translateY(0) translateX(#{$admin-drawer-width});
+	}
+
+	&--rtl &__panel {
+		transform: translateX(-100%);
+
+		&--open {
+			transform: translateX(0);
+		}
+	}
+
+	&--rtl &__toggle--on &__toggle-knob {
+		transform: translateX(-20px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.admin-drawer__handle,
+	.admin-drawer__panel,
+	.admin-drawer__toggle-track,
+	.admin-drawer__toggle-knob {
+		transition: none;
+	}
+}

@@ -1,0 +1,6 @@
+// Design tokens — light base first, then the dark and high-contrast overrides.
+// Each file only declares custom properties on :root (and media/attribute
+// scoped overrides), so order = cascade precedence.
+@use './variables';
+@use './variables-dark';
+@use './variables-contrast';
