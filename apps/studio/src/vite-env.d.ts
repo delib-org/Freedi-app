@@ -12,6 +12,9 @@ interface ImportMetaEnv {
 	readonly VITE_SIGN_APP_URL: string;
 	readonly VITE_JOIN_APP_URL: string;
 	readonly VITE_USE_EMULATORS: string;
+	readonly VITE_EMULATOR_AUTH_PORT?: string;
+	readonly VITE_EMULATOR_FIRESTORE_PORT?: string;
+	readonly VITE_EMULATOR_FUNCTIONS_PORT?: string;
 }
 
 interface ImportMeta {
