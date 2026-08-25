@@ -11,11 +11,12 @@ import {
 	AgoraSessionStatus,
 	AgoraTopicPackage,
 	CivicStanceEvaluation,
+	CivicStanceMeta,
 	Evaluation,
 	AGORA_SESSION,
 	createAgoraParticipantId,
 	deriveCamp,
-	deriveCivicCampPosition,
+	deriveCivicCampPositionFromIsland,
 	functionConfig,
 	resolveSessionFlow,
 	AttitudeMap,
@@ -33,32 +34,50 @@ interface CivicStanding {
  *
  * A classroom asks the positioning question on screen; a civic participant
  * answered it on the island, one stance at a time, so asking again would be
- * asking them to repeat themselves. Reads the two anchor stances by their
- * deterministic evaluation ids — `${uid}--${stanceId}` — which is why this
- * needs no composite index and no cross-collection query.
+ * asking them to repeat themselves. Reads EVERY stance of the island: the
+ * poles when the player marked them, and otherwise the spectrum derivation —
+ * the stances are authored in order from pole to pole, so a voyager who
+ * marked only middle stances still arrives with the lean those answers
+ * express, instead of being handed the positioning bridge.
  */
 async function deriveCivicStanding(
 	session: AgoraSession,
 	uid: string,
 ): Promise<CivicStanding | undefined> {
-	const { leftAnchorStanceId, rightAnchorStanceId } = session.civic ?? {};
-	if (!leftAnchorStanceId || !rightAnchorStanceId) return undefined;
+	const { islandStatementId, leftAnchorStanceId, rightAnchorStanceId } = session.civic ?? {};
+	if (!islandStatementId || !leftAnchorStanceId || !rightAnchorStanceId) return undefined;
 
-	const snaps = await db.getAll(
-		db.collection(Collections.evaluations).doc(`${uid}--${leftAnchorStanceId}`),
-		db.collection(Collections.evaluations).doc(`${uid}--${rightAnchorStanceId}`),
+	const stanceSnaps = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', islandStatementId)
+		.get();
+	const stanceMeta: CivicStanceMeta[] = stanceSnaps.docs.map((doc) => {
+		const data = doc.data() as { order?: number };
+
+		return { statementId: doc.id, order: data.order };
+	});
+	if (!stanceMeta.length) return undefined;
+
+	const evalSnaps = await db.getAll(
+		...stanceMeta.map((stance) =>
+			db.collection(Collections.evaluations).doc(`${uid}--${stance.statementId}`),
+		),
 	);
-
-	const stances: CivicStanceEvaluation[] = [];
-	for (const snap of snaps) {
+	const evaluations: CivicStanceEvaluation[] = [];
+	for (const snap of evalSnaps) {
 		const data = snap.data() as Evaluation | undefined;
 		if (data && typeof data.evaluation === 'number') {
-			stances.push({ statementId: data.statementId, evaluation: data.evaluation });
+			evaluations.push({ statementId: data.statementId, evaluation: data.evaluation });
 		}
 	}
-	if (!stances.length) return undefined;
 
-	const campPosition = deriveCivicCampPosition(stances, leftAnchorStanceId, rightAnchorStanceId);
+	const campPosition = deriveCivicCampPositionFromIsland(
+		evaluations,
+		stanceMeta,
+		leftAnchorStanceId,
+		rightAnchorStanceId,
+	);
+	if (campPosition === null) return undefined;
 
 	return { campPosition, camp: deriveCamp(campPosition) };
 }
@@ -161,6 +180,26 @@ export const agoraJoinSession = onCall(
 			const existing = await participantRef.get();
 			if (existing.exists) {
 				const participant = existing.data() as AgoraParticipant;
+
+				// A voyager seated before the spectrum derivation existed can hold
+				// no campPosition even though their island answers lean. Heal it on
+				// rejoin, so nobody is re-asked on the bridge what the island
+				// already answered — a player who placed themselves by hand keeps
+				// their answer (campPosition is defined) and is left alone.
+				if (
+					participant.campPosition === undefined &&
+					session.sessionMode === AgoraSessionMode.civic &&
+					resolveSessionFlow(session).stances
+				) {
+					const standing = await deriveCivicStanding(session, uid);
+					if (standing) {
+						await participantRef.update({
+							campPosition: standing.campPosition,
+							camp: standing.camp,
+							lastActive: Date.now(),
+						});
+					}
+				}
 
 				return {
 					sessionId: session.sessionId,
