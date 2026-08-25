@@ -1,0 +1,11 @@
+// Shared column template for the activity board head + rows. Both blocks
+// `@use` this partial and `@extend %activity-columns` so the header and every
+// row stay aligned from one definition.
+//   order | type | title | progress | members | activity | status | actions
+
+%activity-columns {
+	display: grid;
+	grid-template-columns: 2.5rem 2.5rem 1fr 9rem 5rem 7rem 7.5rem auto;
+	align-items: center;
+	column-gap: 0.75rem;
+}

@@ -1,0 +1,115 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Nudge composer — audience + message + channels → "Send to N people".
+.nudge-composer {
+	@include card-base;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__label {
+		display: block;
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__audience {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__templates {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__template {
+		min-block-size: 2rem;
+		padding: 0.25rem var(--space-sm);
+		font-size: var(--font-size-sm);
+		color: var(--btn-primary);
+		background: var(--org-accent-wash);
+		border: 1px solid transparent;
+		border-radius: 999px;
+		cursor: pointer;
+		transition: border-color var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			border-color: var(--btn-primary);
+		}
+	}
+
+	&__message {
+		@include input-base;
+		resize: vertical;
+		min-block-size: 5rem;
+	}
+
+	&__counter {
+		@include stat-number;
+		align-self: flex-end;
+		font-size: 0.75rem;
+		color: var(--text-meta);
+	}
+
+	&__channels {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-md);
+	}
+
+	&__cooldown {
+		margin: 0;
+		padding: var(--space-xs) var(--space-sm);
+		font-size: var(--font-size-sm);
+		color: var(--warning-ink);
+		background: var(--wash-warning);
+		border-radius: var(--radius-sm);
+	}
+
+	&__error {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-error);
+	}
+
+	&__footer {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+		padding-block-start: var(--space-xs);
+	}
+
+	&__success {
+		margin: 0;
+		color: var(--approve-ink);
+		font-weight: 600;
+	}
+
+	&--sent {
+		background: var(--wash-approve);
+	}
+
+	// Inside the drawer: no card chrome.
+	&--inline {
+		padding: 0;
+		background: transparent;
+		border-radius: 0;
+		box-shadow: none;
+
+		&.nudge-composer--sent {
+			padding: var(--space-sm);
+			background: var(--wash-approve);
+			border-radius: var(--radius-sm);
+		}
+	}
+
+	@include mobile {
+		&__footer .button {
+			flex: 1 1 auto;
+		}
+	}
+}

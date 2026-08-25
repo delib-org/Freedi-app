@@ -1,3 +1,16 @@
-// Studio organisms — BEM blocks specific to Studio.
-// Add `@forward './my-block';` lines here as organisms are created.
+// Studio organisms — composite, data-bound BEM blocks.
+//
+// This index holds every block that composes atoms/molecules around live
+// data or app state (shell, drawer, share hub, roster, nudge composer …),
+// including molecule-sized ones that read from Firestore/callables. Pure
+// presentational atoms and molecules live in ../atoms and ../molecules.
 // Shared organisms live in @freedi/shared-styles and are loaded by ../index.scss.
+
+@forward './app-shell';
+@forward './org-switcher';
+@forward './drawer';
+@forward './share-hub';
+@forward './qr-panel';
+@forward './member-list';
+@forward './invite-form';
+@forward './nudge-composer';

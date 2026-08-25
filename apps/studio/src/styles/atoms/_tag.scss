@@ -1,0 +1,131 @@
+// Tag atom — small inline label for run-state, role and activity-type.
+// Status is never colour-only: StatusPill renders a glyph AND a word inside
+// the tag (see components/atomic/atoms/Tag/StatusPill.tsx).
+// Usage: <span class="tag tag--status-open"><span class="tag__glyph">●</span><span class="tag__label">Open</span></span>
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.tag {
+	--tag-dot: currentColor;
+
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	max-width: 100%;
+	padding: 0.125rem 0.625rem;
+	border: 1px solid transparent;
+	border-radius: var(--radius-pill);
+	background: var(--wash-neutral);
+	color: var(--text-meta);
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	line-height: 1.4;
+	white-space: nowrap;
+	vertical-align: middle;
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__dot {
+		flex: 0 0 auto;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--tag-dot);
+	}
+
+	&__glyph {
+		flex: 0 0 auto;
+		font-size: 0.8em;
+		line-height: 1;
+	}
+
+	&__label {
+		@include truncate;
+	}
+
+	// ---- Modifiers: run-state ----------------------------------------------
+
+	&--status-queued {
+		--tag-dot: var(--status-queued-dot);
+
+		background: var(--status-queued-wash);
+		color: var(--status-queued-ink);
+	}
+
+	&--status-open {
+		--tag-dot: var(--status-open-dot);
+
+		background: var(--status-open-wash);
+		color: var(--status-open-ink);
+	}
+
+	&--status-frozen {
+		--tag-dot: var(--status-frozen-dot);
+
+		background: var(--status-frozen-wash);
+		color: var(--status-frozen-ink);
+	}
+
+	&--status-closed {
+		--tag-dot: var(--status-closed-dot);
+
+		background: var(--status-closed-wash);
+		color: var(--status-closed-ink);
+	}
+
+	// ---- Modifiers: role ---------------------------------------------------
+
+	&--role-owner {
+		background: var(--role-owner-bg);
+		color: var(--role-owner-ink);
+	}
+
+	&--role-admin {
+		background: var(--role-admin-bg);
+		color: var(--role-admin-ink);
+	}
+
+	&--role-viewer {
+		background: var(--role-viewer-bg);
+		color: var(--role-viewer-ink);
+	}
+
+	// ---- Modifiers: activity type (12% wash of the engine accent) ----------
+
+	&--type-mc {
+		background: color-mix(in srgb, var(--activity-mc) 12%, var(--card-default));
+		color: var(--activity-mc);
+	}
+
+	&--type-join {
+		background: color-mix(in srgb, var(--activity-join) 12%, var(--card-default));
+		color: var(--activity-join);
+	}
+
+	&--type-deliberation {
+		background: color-mix(in srgb, var(--activity-deliberation) 12%, var(--card-default));
+		color: var(--activity-deliberation);
+	}
+
+	&--type-sign {
+		background: color-mix(in srgb, var(--activity-sign) 12%, var(--card-default));
+		color: var(--activity-sign);
+	}
+
+	// ---- Modifiers: shape / size -------------------------------------------
+
+	&--outline {
+		background: transparent;
+		border-color: currentColor;
+	}
+
+	&--large {
+		padding: 0.25rem 0.875rem;
+		font-size: var(--font-size-sm);
+
+		.tag__dot {
+			width: 0.625rem;
+			height: 0.625rem;
+		}
+	}
+}

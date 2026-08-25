@@ -1,0 +1,340 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Facilitate drawer — the per-activity inspector. Slides in from the inline
+// end on desktop; on mobile it is a bottom sheet (`--sheet`).
+.drawer {
+	position: fixed;
+	inset: 0;
+	z-index: var(--studio-z-drawer);
+	visibility: hidden;
+	pointer-events: none;
+	transition: visibility 0s linear 0.25s;
+
+	&__backdrop {
+		position: absolute;
+		inset: 0;
+		background: var(--surface-overlay);
+		opacity: 0;
+		transition: opacity 0.25s var(--motion-ease);
+	}
+
+	&__panel {
+		@include shadow-modal;
+		position: absolute;
+		inset-block: 0;
+		inset-inline-end: 0;
+		display: flex;
+		flex-direction: column;
+		inline-size: min(var(--studio-drawer-width), 100vw);
+		background: var(--card-default);
+		outline: none;
+		transform: translateX(100%);
+		transition: transform 0.25s var(--motion-ease);
+
+		@include rtl {
+			transform: translateX(-100%);
+		}
+	}
+
+	&__header {
+		position: sticky;
+		inset-block-start: 0;
+		z-index: 1;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas:
+			'eyebrow close'
+			'title close';
+		gap: 0.25rem var(--space-sm);
+		padding: var(--space-md) var(--space-md) var(--space-sm);
+		background: var(--card-default);
+		border-block-end: 1px solid var(--border-light);
+	}
+
+	&__eyebrow {
+		grid-area: eyebrow;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__position {
+		@include stat-number;
+	}
+
+	&__title {
+		@include truncate;
+		grid-area: title;
+		margin: 0;
+		font-size: 1.125rem;
+		outline: none;
+	}
+
+	&__close {
+		@include hit-target;
+		grid-area: close;
+		align-self: start;
+		padding: 0;
+		color: var(--text-caption);
+		background: transparent;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+
+		svg {
+			inline-size: 1.25rem;
+			block-size: 1.25rem;
+		}
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		min-block-size: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: var(--space-sm) var(--space-md) var(--space-lg);
+	}
+
+	&__run {
+		margin-block-end: var(--space-sm);
+	}
+
+	&__section {
+		padding-block: var(--space-md);
+		border-block-end: 1px solid var(--border-light);
+
+		&:last-child {
+			border-block-end: none;
+		}
+	}
+
+	&__section-title {
+		margin: 0 0 var(--space-xs);
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-meta);
+	}
+
+	&__static {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__stats {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--space-xs);
+		margin-block-end: var(--space-sm);
+	}
+
+	&__last-activity {
+		margin: var(--space-xs) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__idle {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs);
+		margin-block-start: var(--space-sm);
+		padding: var(--space-xs) var(--space-sm);
+		font-size: var(--font-size-sm);
+		background: var(--wash-neutral);
+		border-radius: var(--radius-sm);
+	}
+
+	&__toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		inline-size: 100%;
+		min-block-size: 44px;
+		padding: 0;
+		color: var(--text-title);
+		font-weight: 600;
+		text-align: start;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+
+		svg {
+			inline-size: 1rem;
+			block-size: 1rem;
+			transition: transform var(--motion-fast) var(--motion-ease);
+		}
+
+		&[aria-expanded='true'] svg {
+			transform: rotate(180deg);
+		}
+	}
+
+	&__links {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	&__link {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs);
+		min-block-size: 44px;
+		padding: var(--space-xs) 0;
+		color: var(--btn-primary);
+		font-weight: 600;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	&__caption {
+		font-size: 0.75rem;
+		font-weight: 400;
+		color: var(--text-meta);
+	}
+
+	&__menu-anchor {
+		position: relative;
+		margin-block-start: var(--space-xs);
+	}
+
+	&__menu-button {
+		@include hit-target;
+		padding: 0;
+		font-size: 1.25rem;
+		line-height: 1;
+		color: var(--text-meta);
+		background: transparent;
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+	}
+
+	&__menu {
+		@include shadow-elevated;
+		position: absolute;
+		inset-block-end: calc(100% + 0.25rem);
+		inset-inline-start: 0;
+		z-index: 2;
+		min-inline-size: 12rem;
+		padding: var(--space-xs);
+		background: var(--card-default);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-md);
+	}
+
+	&__menu-item {
+		display: block;
+		inline-size: 100%;
+		min-block-size: 40px;
+		padding: var(--space-xs) var(--space-sm);
+		color: var(--text-body);
+		text-align: start;
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		&:hover:not(:disabled) {
+			background: var(--bg-hover);
+		}
+
+		&:disabled {
+			color: var(--text-disabled, var(--text-meta));
+			cursor: not-allowed;
+		}
+
+		&--danger {
+			color: var(--text-error);
+		}
+	}
+
+	&__footer {
+		position: sticky;
+		inset-block-end: 0;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-md);
+		background: var(--card-default);
+		border-block-start: 1px solid var(--border-light);
+	}
+
+	// --- States -------------------------------------------------------------
+
+	&--open {
+		visibility: visible;
+		pointer-events: auto;
+		transition-delay: 0s;
+
+		.drawer__backdrop {
+			opacity: 1;
+		}
+
+		.drawer__panel {
+			transform: translateX(0);
+
+			@include rtl {
+				transform: translateX(0);
+			}
+		}
+	}
+
+	// Mobile bottom sheet.
+	&--sheet {
+		.drawer__panel {
+			inset-block: auto 0;
+			inset-inline: 0;
+			inline-size: 100%;
+			max-block-size: 90svh;
+			border-start-start-radius: var(--radius-lg);
+			border-start-end-radius: var(--radius-lg);
+			transform: translateY(100%);
+
+			@include rtl {
+				transform: translateY(100%);
+			}
+		}
+
+		&.drawer--open .drawer__panel {
+			transform: translateY(0);
+
+			@include rtl {
+				transform: translateY(0);
+			}
+		}
+
+		.drawer__stats {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+
+		.drawer__backdrop,
+		.drawer__panel {
+			transition: none;
+		}
+	}
+}

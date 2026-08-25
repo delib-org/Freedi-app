@@ -9,7 +9,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview --port 3008",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@freedi/event-core": "file:../../packages/event-core",

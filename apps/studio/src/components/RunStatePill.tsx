@@ -1,18 +1,13 @@
 import type { ActivityRunState } from '@freedi/event-core';
-import { useTranslation } from '@freedi/shared-i18n/react';
-import clsx from 'clsx';
-import styles from './RunStatePill.module.scss';
+import { StatusPill } from '@/components/atomic/atoms/Tag';
 
-/** English-string i18n keys per run state (translated at render time). */
-const LABELS: Record<ActivityRunState, string> = {
-	queued: 'Queued',
-	open: 'Open',
-	frozen: 'Frozen',
-	closed: 'Closed',
-};
+/**
+ * Compatibility shim — the run-state pill now lives in the atomic system as
+ * `StatusPill` (components/atomic/atoms/Tag). Existing call sites keep the
+ * `state` prop; new code should import `StatusPill` directly.
+ */
+export { StatusPill };
 
 export default function RunStatePill({ state }: { state: ActivityRunState }) {
-	const { t } = useTranslation();
-
-	return <span className={clsx(styles.pill, styles[state])}>{t(LABELS[state])}</span>;
+	return <StatusPill status={state} />;
 }

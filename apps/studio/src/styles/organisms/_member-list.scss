@@ -1,0 +1,195 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Member list — ARIA table of members and pending invitations.
+.member-list {
+	@include card-base;
+	padding: 0;
+	overflow: hidden;
+
+	&__head {
+		background: var(--wash-neutral);
+	}
+
+	&__row {
+		display: grid;
+		grid-template-columns: minmax(0, 2fr) minmax(8rem, 1fr) minmax(7rem, auto) minmax(0, auto);
+		align-items: center;
+		gap: var(--space-sm);
+		min-block-size: var(--studio-row-min-height);
+		padding: var(--space-xs) var(--space-md);
+		border-block-end: 1px solid var(--border-light);
+
+		&:last-child {
+			border-block-end: none;
+		}
+
+		&--head {
+			min-block-size: 2.5rem;
+			font-size: 0.75rem;
+			font-weight: 600;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: var(--text-meta);
+		}
+
+		// The signed-in facilitator's own row.
+		&--me {
+			background: var(--org-accent-wash);
+		}
+
+		// Invitation not yet accepted.
+		&--pending {
+			color: var(--text-meta);
+		}
+	}
+
+	&__name {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		min-inline-size: 0;
+	}
+
+	&__avatar {
+		border-color: var(--org-accent);
+		cursor: default;
+
+		&:hover {
+			opacity: 1;
+		}
+
+		&:active {
+			transform: none;
+		}
+
+		.profile-avatar__initials {
+			color: var(--org-accent);
+			background: var(--org-accent-wash);
+		}
+
+		&--pending {
+			border-style: dashed;
+			border-color: var(--text-meta);
+
+			.profile-avatar__initials {
+				color: var(--text-meta);
+				background: var(--wash-neutral);
+			}
+		}
+	}
+
+	&__identity {
+		display: flex;
+		flex-direction: column;
+		min-inline-size: 0;
+	}
+
+	&__display-name {
+		@include truncate;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__me {
+		padding: 0 0.375rem;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		color: var(--org-accent);
+		background: var(--card-default);
+		border: 1px solid var(--org-accent);
+		border-radius: 999px;
+	}
+
+	&__tag {
+		padding: 0 0.375rem;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		color: var(--text-meta);
+		border: 1px dashed var(--text-meta);
+		border-radius: 999px;
+	}
+
+	&__email,
+	&__meta {
+		@include truncate;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		text-align: start;
+	}
+
+	&__role {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__role-select {
+		@include input-base;
+		inline-size: auto;
+		padding: 0.25rem var(--space-xs);
+		font-size: var(--font-size-sm);
+	}
+
+	&__joined {
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		white-space: nowrap;
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: var(--space-xs);
+	}
+
+	&__lock {
+		display: inline-flex;
+	}
+
+	&__confirm {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__confirm-text {
+		font-size: var(--font-size-sm);
+		color: var(--text-title);
+	}
+
+	@include tablet-small {
+		&__row {
+			grid-template-columns: minmax(0, 1fr) auto;
+			grid-template-areas:
+				'name role'
+				'joined joined'
+				'actions actions';
+
+			&--head {
+				display: none;
+			}
+		}
+
+		&__name {
+			grid-area: name;
+		}
+
+		&__role {
+			grid-area: role;
+		}
+
+		&__joined {
+			grid-area: joined;
+		}
+
+		&__actions {
+			grid-area: actions;
+			justify-content: flex-start;
+		}
+	}
+}

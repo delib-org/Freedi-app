@@ -1,0 +1,100 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Invite member form — email + role + send, then the invite link.
+.invite-form {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+	grid-template-areas:
+		'email role submit'
+		'error error error'
+		'result result result';
+	align-items: end;
+	gap: var(--space-sm);
+
+	&__email {
+		grid-area: email;
+		min-inline-size: 0;
+	}
+
+	&__role {
+		grid-area: role;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	&__label {
+		font-size: var(--font-size-sm);
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__submit {
+		grid-area: submit;
+	}
+
+	&__error {
+		grid-area: error;
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-error);
+	}
+
+	&__result {
+		grid-area: result;
+		padding: var(--space-sm);
+		background: var(--wash-approve);
+		border-radius: var(--radius-sm);
+	}
+
+	&__result-title {
+		margin: 0 0 0.25rem;
+		font-weight: 600;
+		color: var(--approve-ink);
+	}
+
+	&__hint {
+		margin: 0 0 var(--space-xs);
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__link-row {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-inline-size: 0;
+	}
+
+	&__link {
+		@include stat-number;
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		padding: var(--space-xs);
+		font-size: var(--font-size-sm);
+		background: var(--card-default);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-sm);
+		overflow-wrap: anywhere;
+	}
+
+	@include tablet-small {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			'email'
+			'role'
+			'submit'
+			'error'
+			'result';
+		align-items: stretch;
+
+		&__submit .button {
+			inline-size: 100%;
+		}
+
+		&__link-row {
+			flex-direction: column;
+			align-items: stretch;
+		}
+	}
+}

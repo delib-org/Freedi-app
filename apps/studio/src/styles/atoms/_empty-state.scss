@@ -1,0 +1,93 @@
+// EmptyState atom — centred placeholder for empty lists, errors and no-results.
+// Usage: <div class="empty-state empty-state--search"> icon / title / text / action </div>
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	max-width: 32rem;
+	margin-inline: auto;
+	padding: calc(var(--padding) * 2) var(--padding);
+	text-align: center;
+	color: var(--text-body);
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__icon {
+		display: grid;
+		place-items: center;
+		width: 3.5rem;
+		height: 3.5rem;
+		margin-block-end: 0.25rem;
+		border-radius: 50%;
+		background: var(--wash-neutral);
+		color: var(--text-meta);
+		font-size: 1.5rem;
+		line-height: 1;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-lg);
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__text {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		line-height: 1.5;
+	}
+
+	&__action {
+		margin-block-start: 0.75rem;
+	}
+
+	&__secondary {
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	// ---- Modifiers ---------------------------------------------------------
+
+	&--compact {
+		gap: 0.25rem;
+		padding: var(--padding);
+
+		.empty-state__icon {
+			width: 2.5rem;
+			height: 2.5rem;
+			font-size: 1.125rem;
+		}
+
+		.empty-state__title {
+			font-size: var(--font-size-md);
+		}
+
+		.empty-state__action {
+			margin-block-start: 0.5rem;
+		}
+	}
+
+	&--error {
+		.empty-state__icon {
+			background: color-mix(in srgb, var(--text-error) 12%, var(--card-default));
+			color: var(--text-error);
+		}
+
+		.empty-state__title {
+			color: var(--text-error);
+		}
+	}
+
+	&--search {
+		.empty-state__icon {
+			background: var(--wash-primary);
+			color: var(--btn-primary);
+		}
+	}
+}

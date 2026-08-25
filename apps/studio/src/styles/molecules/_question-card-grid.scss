@@ -1,0 +1,14 @@
+// QuestionCardGrid — responsive auto-fill grid for `.question-card`s.
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.question-card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+	gap: var(--padding);
+	align-items: stretch;
+
+	@include mobile {
+		gap: 0.75rem;
+	}
+}

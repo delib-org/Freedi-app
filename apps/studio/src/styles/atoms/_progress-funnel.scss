@@ -1,0 +1,131 @@
+// ProgressFunnel atom — the participation funnel (entered ⊇ suggested ⊇
+// evaluated) as three stacked bars on one track. Each bar's width comes from
+// the `--fill` custom property (0..1) set by the React wrapper.
+// Usage: <div class="progress-funnel progress-funnel--full" role="img" aria-label="…">
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.progress-funnel {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__track {
+		position: relative;
+		height: 0.5rem;
+		overflow: hidden;
+		border-radius: var(--radius-pill);
+		background: var(--studio-progress-track);
+	}
+
+	&__bar {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-start: 0;
+		width: 100%;
+		border-radius: inherit;
+		transform: scaleX(var(--fill, 0));
+		transform-origin: left;
+		transition: transform var(--motion-base) var(--motion-ease);
+
+		@include rtl {
+			transform-origin: right;
+		}
+
+		&--entered {
+			background: var(--funnel-entered);
+		}
+
+		&--suggested {
+			background: var(--funnel-suggested);
+		}
+
+		&--evaluated {
+			background: var(--funnel-evaluated);
+		}
+	}
+
+	&__legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+	}
+
+	&__legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	&__swatch {
+		flex: 0 0 auto;
+		width: 0.625rem;
+		height: 0.625rem;
+		border-radius: var(--radius-xs);
+
+		&--entered {
+			background: var(--funnel-entered);
+		}
+
+		&--suggested {
+			background: var(--funnel-suggested);
+		}
+
+		&--evaluated {
+			background: var(--funnel-evaluated);
+		}
+	}
+
+	&__count {
+		@include stat-number;
+
+		font-weight: 600;
+		color: var(--text-body);
+	}
+
+	&__sr {
+		@include visually-hidden;
+	}
+
+	// ---- Modifiers ---------------------------------------------------------
+
+	&--mini {
+		width: 6rem;
+		gap: 0;
+
+		.progress-funnel__legend {
+			display: none;
+		}
+	}
+
+	&--full {
+		.progress-funnel__track {
+			height: 0.75rem;
+		}
+	}
+
+	&--empty {
+		.progress-funnel__track {
+			background: transparent;
+			border: 1px dashed var(--studio-progress-track);
+		}
+
+		.progress-funnel__legend {
+			color: var(--text-caption);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.progress-funnel__bar {
+			transition: none;
+		}
+	}
+}

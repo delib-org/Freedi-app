@@ -1,0 +1,135 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// QR code panel — scannable QR + link + actions, with a projector-friendly
+// full-screen presenter mode.
+.qr-panel {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+	max-inline-size: 100%;
+
+	// The QR canvas stays literally white in every theme — scanners need
+	// dark-on-white contrast. Documented exception to the no-raw-colour rule
+	// (same for __presenter-canvas).
+	&__canvas {
+		padding: var(--space-xs);
+		background: #ffffff;
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-md);
+		cursor: zoom-in;
+		line-height: 0;
+		transition: transform var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			transform: scale(1.02);
+		}
+
+		svg {
+			max-inline-size: 100%;
+			block-size: auto;
+		}
+	}
+
+	&__url {
+		@include stat-number;
+		margin: 0;
+		max-inline-size: 100%;
+		font-family: monospace;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		text-align: center;
+		word-break: break-all;
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-xs);
+	}
+
+	// --- Presenter (full-screen dialog) ---------------------------------------
+
+	&__presenter {
+		position: fixed;
+		inset: 0;
+		z-index: var(--studio-z-drawer);
+		display: grid;
+		place-items: center;
+		padding: var(--space-md);
+		background: var(--surface-overlay);
+	}
+
+	&__presenter-panel {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-lg);
+		max-inline-size: 100%;
+		outline: none;
+	}
+
+	&__presenter-close {
+		@include hit-target;
+		position: fixed;
+		inset-block-start: var(--space-md);
+		inset-inline-end: var(--space-md);
+		padding: 0;
+		color: var(--white);
+		background: color-mix(in srgb, var(--white) 12%, transparent);
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+
+		svg {
+			inline-size: 1.5rem;
+			block-size: 1.5rem;
+		}
+
+		&:hover {
+			background: color-mix(in srgb, var(--white) 24%, transparent);
+		}
+
+		&:focus-visible {
+			outline-color: var(--white);
+		}
+	}
+
+	&__presenter-title {
+		margin: 0;
+		color: var(--white);
+		font-size: var(--h2-font-size, 1.75rem);
+		text-align: center;
+	}
+
+	&__presenter-canvas {
+		padding: var(--space-lg);
+		background: #ffffff;
+		border-radius: var(--radius-lg);
+		line-height: 0;
+
+		svg {
+			inline-size: min(480px, 80vmin);
+			block-size: auto;
+		}
+	}
+
+	&__presenter-url {
+		@include stat-number;
+		margin: 0;
+		max-inline-size: 90vw;
+		color: var(--white);
+		font-family: monospace;
+		font-size: 1.125rem;
+		text-align: center;
+		word-break: break-all;
+	}
+
+	@include mobile {
+		&__presenter-canvas {
+			padding: var(--space-sm);
+		}
+	}
+}

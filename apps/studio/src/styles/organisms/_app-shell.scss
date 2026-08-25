@@ -1,0 +1,330 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// App shell — top bar, side navigation and the content column.
+//   ≤1024px  --rail        sidebar collapses to an icon rail
+//   ≤600px   --no-sidebar  navigation becomes a bottom tab bar
+.app-shell {
+	display: grid;
+	grid-template-columns: var(--studio-sidebar-width) minmax(0, 1fr);
+	grid-template-rows: var(--studio-topbar-height) minmax(0, 1fr);
+	grid-template-areas:
+		'topbar topbar'
+		'sidebar main';
+	min-block-size: 100svh;
+	background: var(--surface-background);
+
+	&__skip-link {
+		@include visually-hidden;
+		z-index: var(--studio-z-toast);
+
+		&:focus {
+			position: fixed;
+			inset-block-start: var(--space-xs);
+			inset-inline-start: var(--space-xs);
+			inline-size: auto;
+			block-size: auto;
+			margin: 0;
+			padding: var(--space-xs) var(--space-sm);
+			clip: auto;
+			white-space: normal;
+			color: var(--btn-primary-text);
+			background: var(--btn-primary);
+			border-radius: var(--radius-sm);
+		}
+	}
+
+	// --- Top bar ------------------------------------------------------------
+
+	&__topbar {
+		grid-area: topbar;
+		position: sticky;
+		inset-block-start: 0;
+		z-index: 10;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: 0 var(--space-md);
+		background: var(--card-default);
+		border-block-end: 1px solid var(--border-light);
+	}
+
+	&__brand {
+		flex-shrink: 0;
+		font-size: 1.125rem;
+		font-weight: 700;
+		color: var(--text-title);
+		text-decoration: none;
+	}
+
+	&__brand-accent {
+		color: var(--org-accent);
+	}
+
+	&__org {
+		display: flex;
+		min-inline-size: 0;
+		padding-inline-start: var(--space-xs);
+		border-inline-start: 1px solid var(--border-light);
+	}
+
+	&__breadcrumb {
+		flex: 1 1 auto;
+		min-inline-size: 0;
+	}
+
+	&__user {
+		position: relative;
+		margin-inline-start: auto;
+	}
+
+	&__user-button {
+		@include hit-target;
+		padding: 0;
+		background: transparent;
+		border: none;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	// The shared avatar assumes a coloured header; on Studio's light bar we
+	// give the initials an org-accent wash so they are legible.
+	&__avatar {
+		border-color: var(--org-accent);
+		cursor: pointer;
+
+		.profile-avatar__initials {
+			color: var(--org-accent);
+			background: var(--org-accent-wash);
+		}
+	}
+
+	&__user-menu {
+		@include shadow-elevated;
+		position: absolute;
+		inset-block-start: calc(100% + 0.25rem);
+		inset-inline-end: 0;
+		z-index: var(--studio-z-drawer);
+		min-inline-size: 14rem;
+		padding: var(--space-xs);
+		background: var(--card-default);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-md);
+	}
+
+	&__user-identity {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		padding: var(--space-xs) var(--space-sm);
+		border-block-end: 1px solid var(--border-light);
+	}
+
+	&__user-name {
+		@include truncate;
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__user-email {
+		@include truncate;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		text-align: start;
+	}
+
+	&__menu-item {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		inline-size: 100%;
+		min-block-size: 44px;
+		padding: var(--space-xs) var(--space-sm);
+		color: var(--text-body);
+		text-align: start;
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+	}
+
+	&__language {
+		color: var(--btn-primary);
+		pointer-events: none;
+	}
+
+	// --- Sidebar ------------------------------------------------------------
+
+	&__sidebar {
+		grid-area: sidebar;
+		position: sticky;
+		inset-block-start: var(--studio-topbar-height);
+		display: flex;
+		flex-direction: column;
+		block-size: calc(100svh - var(--studio-topbar-height));
+		padding: var(--space-sm) var(--space-xs);
+		background: var(--card-default);
+		border-inline-end: 1px solid var(--border-light);
+	}
+
+	&__nav {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	&__nav-item {
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		min-block-size: 44px;
+		padding: var(--space-xs) var(--space-sm);
+		color: var(--text-body);
+		text-decoration: none;
+		border-radius: var(--radius-sm);
+		transition: background-color var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+
+		// Inline-start rule marks the active item; flips with direction.
+		&--active {
+			color: var(--org-accent);
+			background: var(--org-accent-wash);
+			font-weight: 600;
+
+			&::before {
+				content: '';
+				position: absolute;
+				inset-block: 0.5rem;
+				inset-inline-start: 0;
+				inline-size: 3px;
+				border-radius: 3px;
+				background: var(--org-accent);
+			}
+		}
+	}
+
+	&__nav-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		inline-size: 1.5rem;
+		block-size: 1.5rem;
+		font-size: 1.125rem;
+	}
+
+	&__nav-label {
+		@include truncate;
+	}
+
+	&__toggle {
+		@include hit-target;
+		margin-block-start: auto;
+		align-self: flex-end;
+		padding: 0;
+		color: var(--text-meta);
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+
+		svg {
+			inline-size: 1.25rem;
+			block-size: 1.25rem;
+		}
+	}
+
+	// --- Main ---------------------------------------------------------------
+
+	&__main {
+		grid-area: main;
+		inline-size: 100%;
+		max-inline-size: var(--studio-content-max);
+		min-inline-size: 0;
+		padding: var(--space-lg) var(--space-md);
+		outline: none;
+	}
+
+	// --- Modifiers ----------------------------------------------------------
+
+	&--rail {
+		grid-template-columns: var(--studio-rail-width) minmax(0, 1fr);
+
+		.app-shell__nav-item {
+			justify-content: center;
+			padding-inline: 0;
+		}
+
+		.app-shell__nav-label {
+			@include visually-hidden;
+		}
+
+		.app-shell__toggle {
+			align-self: center;
+		}
+	}
+
+	&--no-sidebar {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			'topbar'
+			'main';
+		// Leave room for the bottom tab bar.
+		padding-block-end: calc(var(--studio-topbar-height) + env(safe-area-inset-bottom, 0px));
+
+		.app-shell__sidebar {
+			position: fixed;
+			inset-block-end: 0;
+			inset-inline: 0;
+			inset-block-start: auto;
+			z-index: 10;
+			flex-direction: row;
+			block-size: auto;
+			padding: var(--space-xs) var(--space-xs) calc(var(--space-xs) + env(safe-area-inset-bottom, 0px));
+			border-inline-end: none;
+			border-block-start: 1px solid var(--border-light);
+		}
+
+		.app-shell__nav {
+			flex-direction: row;
+			flex: 1 1 auto;
+			justify-content: space-around;
+		}
+
+		.app-shell__nav-item {
+			flex: 1 1 0;
+			flex-direction: column;
+			gap: 0.125rem;
+			padding: 0.25rem;
+			font-size: 0.6875rem;
+
+			&--active::before {
+				inset-block: auto 0;
+				inset-inline: 25%;
+				inline-size: auto;
+				block-size: 3px;
+			}
+		}
+
+		.app-shell__breadcrumb {
+			display: none;
+		}
+
+		.app-shell__main {
+			padding: var(--space-md);
+		}
+	}
+
+	@include respect-motion-preference;
+}

@@ -1,0 +1,255 @@
+// ActivityRow molecule — one activity in the board. Table row on desktop,
+// bordered card ≤1024px (grid-template-areas). Never colour-only: the status
+// cell holds a StatusPill (glyph + word); the tint only decorates.
+
+@use '@freedi/shared-styles/mixins' as *;
+@use './activity-columns';
+
+.activity-row {
+	--activity-row-accent: var(--btn-primary);
+
+	@extend %activity-columns;
+
+	min-height: var(--studio-row-min-height);
+	padding: 0.5rem 0.75rem;
+	border-block-end: 1px solid var(--border-light);
+	background: var(--card-default);
+	transition: background-color var(--motion-fast) var(--motion-ease);
+
+	&:hover {
+		background: var(--bg-hover, var(--wash-neutral));
+	}
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__order {
+		@include stat-number;
+
+		font-size: var(--font-size-xs);
+		color: var(--text-caption);
+		text-align: center;
+	}
+
+	&__type {
+		display: grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--activity-row-accent) 15%, var(--card-default));
+		color: var(--activity-row-accent);
+		font-size: 1rem;
+		line-height: 1;
+	}
+
+	&__main {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		min-width: 0;
+	}
+
+	&__title {
+		@include truncate;
+
+		display: block;
+		max-width: 100%;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		font-weight: 600;
+		color: var(--text-title);
+		text-align: start;
+		cursor: pointer;
+
+		&:hover {
+			color: var(--btn-primary);
+		}
+	}
+
+	&__subtitle {
+		@include truncate;
+
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+	}
+
+	&__progress {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		min-width: 0;
+	}
+
+	&__numbers {
+		@include stat-number;
+
+		display: flex;
+		gap: 0.5rem;
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+	}
+
+	&__members {
+		@include stat-number;
+
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+	}
+
+	&__activity {
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+		white-space: nowrap;
+	}
+
+	&__status {
+		min-width: 0;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.375rem;
+	}
+
+	&__chevron {
+		@include hit-target(2.25rem);
+
+		border: 0;
+		border-radius: 50%;
+		background: none;
+		color: var(--text-meta);
+		font-size: 1.25rem;
+		line-height: 1;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--wash-neutral);
+			color: var(--text-title);
+		}
+
+		@include rtl {
+			transform: scaleX(-1);
+		}
+	}
+
+	// ---- Modifiers ---------------------------------------------------------
+
+	&--selected {
+		background: var(--wash-primary);
+		box-shadow: inset 4px 0 0 var(--btn-primary);
+
+		@include rtl {
+			box-shadow: inset -4px 0 0 var(--btn-primary);
+		}
+	}
+
+	&--stale {
+		.activity-row__title,
+		.activity-row__members,
+		.activity-row__numbers {
+			color: var(--text-meta);
+		}
+
+		.activity-row__activity {
+			color: var(--warning-ink);
+		}
+	}
+
+	&--skeleton {
+		pointer-events: none;
+	}
+
+	&--type-mc {
+		--activity-row-accent: var(--activity-mc);
+	}
+
+	&--type-join {
+		--activity-row-accent: var(--activity-join);
+	}
+
+	&--type-deliberation {
+		--activity-row-accent: var(--activity-deliberation);
+	}
+
+	&--type-sign {
+		--activity-row-accent: var(--activity-sign);
+	}
+
+	&--status-queued .activity-row__order {
+		color: var(--status-queued-dot);
+	}
+
+	&--status-open .activity-row__order {
+		color: var(--status-open-dot);
+	}
+
+	&--status-frozen .activity-row__order {
+		color: var(--status-frozen-dot);
+	}
+
+	&--status-closed .activity-row__order {
+		color: var(--status-closed-dot);
+	}
+
+	// ---- Card layout ≤ 1024px ---------------------------------------------
+
+	@include tablet-and-below {
+		grid-template-columns: 2.5rem auto 1fr auto;
+		grid-template-areas:
+			'type title title status'
+			'type progress progress progress'
+			'type members activity actions';
+		row-gap: 0.5rem;
+		padding: 0.75rem;
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-md);
+
+		.activity-row__order {
+			display: none;
+		}
+
+		.activity-row__type {
+			grid-area: type;
+			align-self: start;
+		}
+
+		.activity-row__main {
+			grid-area: title;
+		}
+
+		.activity-row__progress {
+			grid-area: progress;
+		}
+
+		.activity-row__members {
+			grid-area: members;
+		}
+
+		.activity-row__activity {
+			grid-area: activity;
+		}
+
+		.activity-row__status {
+			grid-area: status;
+			justify-self: end;
+		}
+
+		.activity-row__actions {
+			grid-area: actions;
+		}
+
+		&.activity-row--selected {
+			border-color: var(--btn-primary);
+			box-shadow: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
