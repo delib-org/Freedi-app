@@ -1,0 +1,408 @@
+{
+"questionId": "accuracy100gemini",
+"questionText": "What should our city do to improve residents' quality of life?",
+"language": "en",
+"design": "Gemini-authored accuracy corpus: 10 topics x 5 synth-groups x 2 near-paraphrases = 100 statements. Pairs are same-action rewordings; groups within a topic are distinct interventions; topics are distinct domains.",
+"topics": [
+{
+"name": "public-transportation",
+"synths": [
+{
+"name": "frequent-peak-buses",
+"paraphrases": [
+"Run buses more often during morning and evening rush hours.",
+"Increase the frequency of transit service when people are commuting to and from work."
+]
+},
+{
+"name": "weekend-night-service",
+"paraphrases": [
+"Add late-night bus routes on Friday and Saturday.",
+"Keep public transit running after midnight on the weekends."
+]
+},
+{
+"name": "free-student-transit",
+"paraphrases": [
+"Make all city buses free for students under eighteen.",
+"Don't charge middle and high schoolers to ride the bus."
+]
+},
+{
+"name": "dedicated-bus-lanes",
+"paraphrases": [
+"Install dedicated transit corridors on all major arterial roads.",
+"Paint red bus-only lanes on the biggest avenues so they don't get stuck in traffic."
+]
+},
+{
+"name": "bus-stop-shelters",
+"paraphrases": [
+"Build roofs and benches at every bus stop in the city.",
+"Ensure waiting areas for riders have seating and protection from the rain."
+]
+}
+]
+},
+{
+"name": "housing-affordability",
+"synths": [
+{
+"name": "rent-control",
+"paraphrases": [
+"Cap the amount landlords can raise rent each year.",
+"Pass a law limiting annual rent increases for tenants."
+]
+},
+{
+"name": "missing-middle-zoning",
+"paraphrases": [
+"Change zoning laws to allow missing-middle housing everywhere.",
+"Let developers build duplexes, triplexes, and townhomes in neighborhoods that are currently just single-family."
+]
+},
+{
+"name": "vacant-property-tax",
+"paraphrases": [
+"Charge a high fee to owners who leave residential properties empty.",
+"Tax absentee landlords who keep houses vacant instead of renting them out."
+]
+},
+{
+"name": "first-time-buyer-grants",
+"paraphrases": [
+"Provide city grants to help first-time buyers with their down payments.",
+"Offer financial assistance to working families trying to purchase their first home."
+]
+},
+{
+"name": "expedite-affordable-permits",
+"paraphrases": [
+"Fast-track the permitting process for affordable housing projects.",
+"Move construction applications for low-income apartments to the very front of the line."
+]
+}
+]
+},
+{
+"name": "parks-and-recreation",
+"synths": [
+{
+"name": "enclosed-dog-parks",
+"paraphrases": [
+"Build enclosed off-leash dog areas in every neighborhood.",
+"Create fenced-in spaces where people can let their pets run freely."
+]
+},
+{
+"name": "late-park-hours",
+"paraphrases": [
+"Keep the main city parks open and lit until midnight.",
+"Extend the hours of our public green spaces so people can use them after dark."
+]
+},
+{
+"name": "vacant-lot-gardens",
+"paraphrases": [
+"Turn vacant city lots into plots where neighbors can grow their own food.",
+"Convert unused public land into community gardens for local residents."
+]
+},
+{
+"name": "downtown-splash-pads",
+"paraphrases": [
+"Install aquatic recreation features for children in the major plazas.",
+"Put in splash pads and interactive fountains downtown so kids can cool off."
+]
+},
+{
+"name": "paved-river-trails",
+"paraphrases": [
+"Pave the dirt walking paths along the river so they don't get muddy.",
+"Lay down concrete on the riverside trails to make them accessible year-round."
+]
+}
+]
+},
+{
+"name": "waste-management",
+"synths": [
+{
+"name": "curbside-compost",
+"paraphrases": [
+"Start a citywide curbside pickup program for food scraps.",
+"Collect organic waste from houses every week alongside the regular trash."
+]
+},
+{
+"name": "public-receptacles",
+"paraphrases": [
+"Place waste receptacles at high-traffic pedestrian intersections.",
+"Put trash cans and recycling bins on every busy street corner."
+]
+},
+{
+"name": "ban-single-use-plastics",
+"paraphrases": [
+"Make it illegal for stores and restaurants to hand out single-use plastics.",
+"Ban the distribution of disposable grocery bags and plastic straws at local businesses."
+]
+},
+{
+"name": "e-waste-dropoff",
+"paraphrases": [
+"Host a monthly event where people can safely get rid of old electronics.",
+"Set up a regular drop-off site for broken computers and televisions."
+]
+},
+{
+"name": "littering-fines",
+"paraphrases": [
+"Increase the financial penalties for people caught littering on the sidewalks.",
+"Hand out much bigger tickets to anyone throwing garbage on the ground."
+]
+}
+]
+},
+{
+"name": "digital-connectivity",
+"synths": [
+{
+"name": "municipal-broadband",
+"paraphrases": [
+"Create a city-owned internet service to compete with private monopolies.",
+"Build a public broadband network so we aren't forced to use the big telecom companies."
+]
+},
+{
+"name": "downtown-wifi",
+"paraphrases": [
+"Deploy outdoor public connectivity infrastructure in the commercial district.",
+"Set up free municipal Wi-Fi access points all along Main Street and the town square."
+]
+},
+{
+"name": "library-hotspots",
+"paraphrases": [
+"Allow residents to check out portable internet hotspots from the public library.",
+"Let library card holders borrow mobile routers to get online at home."
+]
+},
+{
+"name": "senior-digital-literacy",
+"paraphrases": [
+"Offer free evening classes to teach seniors how to use modern technology.",
+"Host workshops at the community center helping older folks navigate smartphones and computers."
+]
+},
+{
+"name": "unified-city-app",
+"paraphrases": [
+"Develop a single mobile app for reporting potholes and paying utility bills.",
+"Make a central smartphone program where citizens can handle all their city business at once."
+]
+}
+]
+},
+{
+"name": "public-safety",
+"synths": [
+{
+"name": "school-traffic-calming",
+"paraphrases": [
+"Implement physical traffic-calming measures in residential school zones.",
+"Install speed bumps, raised crosswalks, and narrowed lanes right next to the elementary schools."
+]
+},
+{
+"name": "led-streetlights",
+"paraphrases": [
+"Upgrade all the neighborhood streetlights to brighter LED bulbs.",
+"Replace the dim yellow street lamps with bright white lights to make sidewalks safer."
+]
+},
+{
+"name": "mental-health-response",
+"paraphrases": [
+"Send social workers instead of armed police to mental health emergency calls.",
+"Dispatch unarmed behavioral health specialists to deal with people in crisis."
+]
+},
+{
+"name": "school-crossing-guards",
+"paraphrases": [
+"Hire adults to manage traffic for children walking to every school.",
+"Pay crossing guards to stand at busy intersections near schools during drop-off and pickup."
+]
+},
+{
+"name": "garage-security-cameras",
+"paraphrases": [
+"Put security cameras in all the city-owned parking structures.",
+"Install video surveillance inside the municipal parking decks to deter break-ins."
+]
+}
+]
+},
+{
+"name": "local-economy",
+"synths": [
+{
+"name": "small-business-grants",
+"paraphrases": [
+"Give startup grants to residents opening their first storefront.",
+"Provide direct funding to locals who want to launch a brick-and-mortar business."
+]
+},
+{
+"name": "pedestrian-main-street",
+"paraphrases": [
+"Remove vehicular access from the primary downtown retail corridor.",
+"Block off Main Street to cars entirely so people can safely walk between shops and restaurants."
+]
+},
+{
+"name": "buy-local-campaign",
+"paraphrases": [
+"Fund an advertising campaign encouraging people to shop at independent local stores.",
+"Run city-sponsored ads reminding folks to spend their money at locally owned businesses."
+]
+},
+{
+"name": "streamline-licenses",
+"paraphrases": [
+"Reduce the paperwork required to get a new commercial license.",
+"Make the application process for opening a restaurant much shorter and easier."
+]
+},
+{
+"name": "food-truck-zones",
+"paraphrases": [
+"Designate specific parking areas downtown exclusively for mobile food vendors.",
+"Create a dedicated zone where food trucks can park and operate every single day."
+]
+}
+]
+},
+{
+"name": "street-maintenance",
+"synths": [
+{
+"name": "pothole-repair-guarantee",
+"paraphrases": [
+"Commit to filling reported potholes within forty-eight hours.",
+"Guarantee that road craters will be patched within two days of a resident calling them in."
+]
+},
+{
+"name": "protected-bike-lanes",
+"paraphrases": [
+"Install physical separation infrastructure between cyclists and motor vehicles.",
+"Put up concrete barriers and plastic bollards to keep cars out of the bike lanes."
+]
+},
+{
+"name": "permeable-pavement",
+"paraphrases": [
+"Require new parking lots to use surfaces that let rain soak through.",
+"Mandate permeable asphalt or paving stones for commercial lots to reduce flooding."
+]
+},
+{
+"name": "priority-snow-plowing",
+"paraphrases": [
+"Plow the streets leading to hospitals and fire stations before anything else.",
+"Clear the snow off emergency routes immediately after a storm hits."
+]
+},
+{
+"name": "repaint-crosswalks",
+"paraphrases": [
+"Repaint the faded pedestrian crosswalks at every major intersection.",
+"Put a fresh coat of white paint on all the crosswalk lines so drivers can actually see them."
+]
+}
+]
+},
+{
+"name": "energy-and-climate",
+"synths": [
+{
+"name": "municipal-solar",
+"paraphrases": [
+"Install solar panels on the roofs of all government-owned facilities.",
+"Put photovoltaic arrays on the library, city hall, and the community centers."
+]
+},
+{
+"name": "public-ev-chargers",
+"paraphrases": [
+"Expand electric vehicle charging infrastructure in public lots.",
+"Install Level 2 chargers and DC fast chargers in all the municipal parking garages."
+]
+},
+{
+"name": "tree-canopy-expansion",
+"paraphrases": [
+"Plant a thousand new native trees in low-income neighborhoods this year.",
+"Add a massive amount of shade trees to the poorest parts of the city."
+]
+},
+{
+"name": "home-insulation-subsidies",
+"paraphrases": [
+"Help homeowners pay for better weatherization and insulation.",
+"Offer rebates to residents who upgrade their windows and seal drafts in their houses."
+]
+},
+{
+"name": "ban-gas-leaf-blowers",
+"paraphrases": [
+"Make it illegal for landscaping companies to use noisy, gas-powered leaf blowers.",
+"Prohibit the use of two-stroke engine leaf blowers within city limits."
+]
+}
+]
+},
+{
+"name": "arts-and-culture",
+"synths": [
+{
+"name": "public-murals",
+"paraphrases": [
+"Commission large-scale visual artworks on blank commercial facades.",
+"Pay local painters to create huge colorful murals on the boring sides of downtown buildings."
+]
+},
+{
+"name": "street-music-festival",
+"paraphrases": [
+"Organize an annual weekend festival focused on local bands and street musicians.",
+"Host a yearly music event downtown highlighting artists who live in the city."
+]
+},
+{
+"name": "subsidized-artist-studios",
+"paraphrases": [
+"Convert empty warehouses into cheap rental studios for working artists.",
+"Turn abandoned industrial buildings into affordable workspaces for painters and sculptors."
+]
+},
+{
+"name": "free-museum-days",
+"paraphrases": [
+"Require city-funded museums to offer free admission one day a week.",
+"Make the local art and history institutions waive ticket fees every Tuesday."
+]
+},
+{
+"name": "block-party-permits",
+"paraphrases": [
+"Waive the street closure fees for neighborhoods throwing summer block parties.",
+"Stop charging residents for the permits they need to close their street for a community cookout."
+]
+}
+]
+}
+]
+}
