@@ -101,7 +101,9 @@ const SCALE_OPTIONS: ReadonlyArray<ScaleOption> = [
 		id: 'agree-disagree',
 		value: evaluationType.range,
 		ratingMode: 'agree-disagree',
-		icon: '🎉',
+		// Scales, not a party hat: this is the only signed scale, weighing for
+		// against against rather than measuring degrees of liking.
+		icon: '⚖️',
 		label: 'Agree - Disagree',
 		hint: '5 faces, from strongly against to strongly for (-1 to +1)',
 	},
