@@ -1,12 +1,13 @@
 import React, { useContext, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router';
-import { Role, Screen } from '@freedi/shared-types';
+import { Role, Screen, StatementType } from '@freedi/shared-types';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
 import SwitchScreen from './SwitchScreen';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import OnlineUsers from '../nav/online/OnlineUsers';
 
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -40,6 +41,13 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	const allSubs = useSelector(subsSelect);
 
 	const isAdmin = role === Role.admin || role === Role.creator;
+
+	// The Top Answers panel governs this statement's answers list, so it belongs
+	// wherever that list can exist — the same test that decides whether the
+	// "Solutions" tab is offered at all.
+	const canHaveAnswers = statement
+		? isStatementTypeAllowedAsChildren(statement, StatementType.option)
+		: false;
 
 	// The mind map needs every pixel of height for the canvas: the description
 	// editor, the presence row and the onboarding card pushed the graph below
@@ -98,8 +106,11 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 			{/* Admin control over which answers are marked as leading, and in what
 			    order the list reads. Mounted here rather than inside StagePage
 			    because StagePage is also rendered nested (QuestionPage,
-			    MultiStageQuestion), which would put several handles on one screen. */}
-			{isAdmin && statement && activeView === 'options' && !isFullBleedScreen && (
+			    MultiStageQuestion), which would put several handles on one screen.
+			    Like the join app's facilitator gear, it stays reachable from every
+			    tab of the question — an admin re-ranks the answers while reading the
+			    discussion, not only while standing on the answers list. */}
+			{isAdmin && statement && canHaveAnswers && !isFullBleedScreen && (
 				<TopAnswersPanel statement={statement} />
 			)}
 		</main>
