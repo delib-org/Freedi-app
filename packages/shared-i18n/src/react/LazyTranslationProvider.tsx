@@ -13,24 +13,34 @@ import {
   getRowDirection,
   type TranslationDictionary,
 } from '../core';
-import { getLanguageData } from '../languages';
+import { loadLanguageData } from '../languages/loader';
 import { TranslationContext, type TranslationContextValue } from './context';
 
-// The context itself lives in ./context so client apps can use
-// `LazyTranslationProvider` without pulling the eager language barrel.
-export { TranslationContext, type TranslationContextValue };
-
-interface TranslationProviderProps {
+interface LazyTranslationProviderProps {
   children: ReactNode;
   initialLanguage?: LanguagesEnum;
   storageKey?: string;
+  /**
+   * Dictionary for the initial language, if the app already awaited
+   * `loadLanguageData()` before mounting. Avoids a first paint with raw keys.
+   */
+  initialData?: TranslationDictionary;
 }
 
-export function TranslationProvider({
+/**
+ * Code-split twin of `TranslationProvider` for client-only apps (Vite SPAs).
+ *
+ * Only the active language's JSON is fetched — as its own chunk, via
+ * `loadLanguageData` — instead of bundling all seven dictionaries. Until a
+ * dictionary arrives, `t()` returns the key, which is the English text.
+ * SSR apps (Next.js) should keep using the eager `TranslationProvider`.
+ */
+export function LazyTranslationProvider({
   children,
   initialLanguage,
   storageKey = STORAGE_KEY,
-}: TranslationProviderProps) {
+  initialData,
+}: LazyTranslationProviderProps) {
   const [language, setLanguage] = useState<LanguagesEnum>(() => {
     if (typeof window === 'undefined') {
       return initialLanguage ?? DEFAULT_LANGUAGE;
@@ -47,16 +57,25 @@ export function TranslationProvider({
     return initialLanguage ?? DEFAULT_LANGUAGE;
   });
 
-  const [languageData, setLanguageData] = useState<TranslationDictionary>(() =>
-    getLanguageData(language)
+  const [languageData, setLanguageData] = useState<TranslationDictionary>(
+    () => initialData ?? {}
   );
 
-  // Update language data when language changes
+  // Fetch the dictionary for the active language (cached per language).
   useEffect(() => {
-    setLanguageData(getLanguageData(language));
+    let cancelled = false;
+    loadLanguageData(language)
+      .then((data) => {
+        if (!cancelled) setLanguageData(data);
+      })
+      .catch(() => {
+        // Keep whatever we have; keys fall back to English text.
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [language]);
 
-  // Save to localStorage when language changes
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, language);
@@ -65,7 +84,6 @@ export function TranslationProvider({
     }
   }, [language, storageKey]);
 
-  // Update document direction when language changes
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.body.style.direction = getDirection(language);
