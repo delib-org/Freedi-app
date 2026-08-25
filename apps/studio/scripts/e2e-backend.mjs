@@ -257,6 +257,19 @@ check('removed member demoted to member on top question', residentTopSubRemoved?
 const orgDoc = await fsGet(`organizations/${org.organizationId}`);
 check('org counters: 1 member, 1 top question', orgDoc?.memberCount === 1 && orgDoc?.questionCount === 1, JSON.stringify({ m: orgDoc?.memberCount, q: orgDoc?.questionCount }));
 
+// 10. An organization addresses many questions over time — a second top question
+const top2 = await call('fn_createOrgStatement', consultant.idToken, {
+	organizationId: org.organizationId, title: 'Where should the new sports hall be built?', kind: 'topQuestion',
+});
+const orgQuestions = await fsList('statements', (d) => d.organizationId === org.organizationId && d.parentId === 'top');
+check('org lists two independent top questions', orgQuestions.length === 2 && orgQuestions.some((d) => d.id === top2.statementId), `count=${orgQuestions.length}`);
+const orgDoc2 = await fsGet(`organizations/${org.organizationId}`);
+check('org questionCount = 2', orgDoc2?.questionCount === 2, String(orgDoc2?.questionCount));
+const top2Sub = await fsGet(`statementsSubscribe/${consultant.uid}--${top2.statementId}`);
+check('owner is admin on the second top question too', top2Sub?.role === 'admin', top2Sub?.role);
+const top2Progress = await fsGet(`questionProgress/${top2.statementId}`);
+check('second top question has its own progress doc', top2Progress?.organizationId === org.organizationId && top2Progress?.entered === 0);
+
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 console.log(JSON.stringify({ orgId: org.organizationId, topId: top.statementId, mcId: mc.statementId, joinId: join.statementId, consultant: consultant.email, sysadmin: sysadmin.email }));
