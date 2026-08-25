@@ -7,14 +7,16 @@ import { AuthProvider } from '@/auth/AuthContext';
 import App from '@/App';
 import '@/styles/index.scss';
 
+// Provider order: translations → auth → router → (inside App) OrgProvider,
+// which reads the current org from the `/orgs/:orgId` URL segment.
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 	<React.StrictMode>
 		<TranslationProvider initialLanguage={detectBrowserLanguage()} storageKey="studio-language">
-			<BrowserRouter>
-				<AuthProvider>
+			<AuthProvider>
+				<BrowserRouter>
 					<App />
-				</AuthProvider>
-			</BrowserRouter>
+				</BrowserRouter>
+			</AuthProvider>
 		</TranslationProvider>
 	</React.StrictMode>,
 );

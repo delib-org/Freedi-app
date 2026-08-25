@@ -1,0 +1,12 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Layout only.
+.invite {
+	max-inline-size: 44rem;
+}
+
+.skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}

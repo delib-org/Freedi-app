@@ -1,0 +1,79 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+.preview {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-sm);
+
+	@include tablet-and-below {
+		display: none;
+	}
+}
+
+.phone {
+	position: relative;
+	inline-size: 15rem;
+	padding: 1.25rem 0.625rem 0.875rem;
+	border-radius: 2rem;
+	background: var(--text-title);
+	@include shadow-elevated;
+}
+
+.notch {
+	position: absolute;
+	inset-block-start: 0.5rem;
+	inset-inline-start: 50%;
+	inline-size: 5rem;
+	block-size: 0.375rem;
+	border-radius: var(--radius-pill);
+	background: color-mix(in srgb, var(--card-default) 30%, transparent);
+	transform: translateX(-50%);
+}
+
+.screen {
+	min-block-size: 22rem;
+	padding: var(--space-md) var(--space-sm);
+	border-radius: 1.375rem;
+	background: var(--surface-background);
+	overflow: hidden;
+}
+
+.screenTitle {
+	margin: 0 0 var(--space-sm);
+	font-size: var(--font-size-md);
+	font-weight: 600;
+	color: var(--text-title);
+	@include line-clamp(3);
+}
+
+.screenList {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.screenItem {
+	display: flex;
+	align-items: center;
+	gap: var(--space-xs);
+	padding: var(--space-xs) var(--space-sm);
+	border-radius: var(--radius-sm);
+	background: var(--card-default);
+	font-size: var(--font-size-sm);
+	@include shadow-subtle;
+}
+
+.screenItemTitle {
+	@include truncate;
+}
+
+.caption {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-meta);
+	text-align: center;
+}

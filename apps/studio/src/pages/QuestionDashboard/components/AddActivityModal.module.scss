@@ -1,0 +1,40 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Layout of the two steps; the forward step slides in from the trailing edge.
+.step {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	min-inline-size: min(100%, 36rem);
+}
+
+.stepForward {
+	animation: slide-forward var(--motion-normal, 200ms) var(--motion-ease) both;
+
+	@include respect-motion-preference;
+}
+
+.back {
+	align-self: flex-start;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--btn-primary);
+	cursor: pointer;
+}
+
+@keyframes slide-forward {
+	from {
+		opacity: 0;
+		transform: translateX(var(--slide-from, 1.5rem));
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+[dir='rtl'] .stepForward {
+	--slide-from: -1.5rem;
+}

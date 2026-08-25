@@ -1,0 +1,35 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Layout only — visual tokens come from the shared BEM blocks.
+.page {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-lg);
+}
+
+.header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-sm) var(--space-md);
+}
+
+.title {
+	margin: 0;
+	min-inline-size: 0;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-xs);
+	margin-inline-start: auto;
+}
+
+@include mobile {
+	.page {
+		gap: var(--space-md);
+	}
+}

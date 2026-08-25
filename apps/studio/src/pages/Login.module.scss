@@ -44,3 +44,9 @@
 	color: var(--text-error);
 	font-size: 0.875rem;
 }
+
+.cardBar {
+	display: flex;
+	justify-content: flex-end;
+	margin-block-end: var(--space-xs);
+}
