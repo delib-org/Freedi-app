@@ -1,0 +1,1082 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "-0B7KoE5TVrb",
+        "title": "Provide Library Hotspot Loans for Residents’ Home Internet Access",
+        "description": "Make portable internet hotspots and mobile routers available for borrowing through the public library, so residents can get online at home. The program should let library card holders check out these devices, combining the broader goal of resident access with the specific library-based borrowing model. By treating the devices as library-loan items, the city would offer a direct way for borrowers to maintain home internet access.",
+        "members": [
+          {
+            "id": "sGx1aWBg2poZ"
+          },
+          {
+            "id": "P4sfsC2pOaYQ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "-80nWpXQob7h",
+        "title": "Increase Tickets and Financial Penalties for Throwing Garbage on Sidewalks",
+        "description": "Increase the financial penalties for people caught littering on sidewalks, using much bigger tickets for anyone throwing garbage on the ground. The city should apply this stronger penalty approach to the specific behavior of discarding garbage in public walking areas, making the consequence for sidewalk littering more substantial while preserving the proposal’s focus on people who are caught.",
+        "members": [
+          {
+            "id": "J6KU78DaQA3W"
+          },
+          {
+            "id": "X3EAAXSEgjqG"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "2kV8moiuy9c4",
+        "title": "Establish a Monthly Drop-Off Event for Safe Disposal of Old Electronics",
+        "description": "The city should set up a regular drop-off site through a monthly event where people can safely get rid of old electronics. The event should specifically accept broken computers and televisions, providing a consistent local option for disposing of these items rather than leaving them unused or improperly discarded. Its recurring schedule would make the service predictable while preserving the straightforward purpose of an electronics drop-off site.",
+        "members": [
+          {
+            "id": "hE87iGdN6Zfp"
+          },
+          {
+            "id": "nzPiQKKmtZAr"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "4V86IV1L4GQl",
+        "title": "Install Free Municipal Wi-Fi Across the Commercial District",
+        "description": "The city should deploy outdoor public connectivity infrastructure by installing free municipal Wi-Fi access points throughout the commercial district, including along Main Street and in the town square. This would create publicly available internet access in the areas identified by both proposals while preserving the specific focus on municipal Wi-Fi and outdoor connectivity.",
+        "members": [
+          {
+            "id": "KX5pRF963hLY"
+          },
+          {
+            "id": "bmxcSyYwXqgw"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "4e7r66YTTBJF",
+        "title": "Equip Every City Bus Stop With Roofs, Benches, and Rain-Protected Seating",
+        "description": "The city should improve residents’ quality of life while waiting for public transportation by equipping every bus stop in the city with a roof and a bench. These waiting areas should give riders seating and protection from the rain, ensuring that the same basic standard is available at every stop rather than only at selected locations.",
+        "members": [
+          {
+            "id": "MB9-ShzyV89I"
+          },
+          {
+            "id": "k5o4JGb5DlB9"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "4vbFByvF30nM",
+        "title": "Dispatch Unarmed Social Workers for Mental Health Emergencies Instead of Armed Police",
+        "description": "The city should send social workers and unarmed behavioral health specialists to mental health emergency calls involving people in crisis, rather than dispatching armed police. This approach would make the initial response focused on behavioral health support instead of armed law enforcement, while directly addressing residents’ quality of life during urgent mental health situations.",
+        "members": [
+          {
+            "id": "DUbRF65PbWuz"
+          },
+          {
+            "id": "abW2qHYT9Z-t"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "5WtSQRoT8YC0",
+        "title": "Convert Vacant City Lots into Community Gardens for Residents to Grow Food",
+        "description": "The city should convert unused public land—especially vacant city lots—into community gardens. These gardens should create plots for local residents and neighbors to grow their own food, turning underused public spaces into practical, shared places that improve everyday quality of life. The proposal keeps the focus on one intervention: changing the use of vacant public land into community growing space without expanding beyond that specific land-to-garden conversion.",
+        "members": [
+          {
+            "id": "YdRTxidPnPoi"
+          },
+          {
+            "id": "myKXw0IPT-nn"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "6i8ImQ0XCNl-",
+        "title": "Repaint Crosswalk Lines With Fresh White Paint to Improve Pedestrian Visibility",
+        "description": "The city should repaint faded pedestrian crosswalks with fresh white paint so drivers can see them more clearly. The work should cover crosswalk lines generally and ensure that pedestrian crossings at every major intersection are refreshed, directly addressing worn markings that make crossings less visible. Clearer markings would support safer, more comfortable movement for residents who walk and for drivers approaching intersections.",
+        "members": [
+          {
+            "id": "wo4zZ4LP3jXq"
+          },
+          {
+            "id": "s6t6xURpSWEN"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "6pGlJdjLjpTN",
+        "title": "Guarantee Reported Road Craters and Potholes Are Patched Within Forty-Eight Hours",
+        "description": "The city should guarantee that road craters and potholes reported by residents are filled or patched within forty-eight hours—equivalent to two days. This single service commitment would give residents a clear expectation after calling in a hazardous road defect and make prompt street repair a direct quality-of-life priority. It preserves both the concrete reporting process and the firm two-day repair promise.",
+        "members": [
+          {
+            "id": "bytxCOVqDsJ1"
+          },
+          {
+            "id": "Fw9W2JmyLw6-"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "7oQFpPZs2vMw",
+        "title": "Close Main Street to Cars and Create a Walkable Downtown Retail Corridor",
+        "description": "Remove vehicular access from the primary downtown retail corridor by blocking off Main Street to cars entirely. This would create a safer pedestrian environment where residents and visitors can walk between shops and restaurants without vehicle traffic.",
+        "members": [
+          {
+            "id": "9R74lEVhlO5b"
+          },
+          {
+            "id": "S7inpfEBFhp2"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "8oeQGsmBeRtB",
+        "title": "Install Splash Pads and Interactive Fountains in Major Downtown Plazas",
+        "description": "Install aquatic recreation features—specifically splash pads and interactive fountains—in the city’s major downtown plazas, giving children places to cool off and play. This combines the proposals into one focused public-space intervention: adding water-based amenities for kids in major plazas downtown. The project remains focused on children, splash pads, interactive fountains, and the identified plaza setting, without extending the request to other facilities or locations.",
+        "members": [
+          {
+            "id": "fa8Gd0MZ3gap"
+          },
+          {
+            "id": "YnO7wPrgk4Va"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "AmloOzaL8tnu",
+        "title": "Launch Weekly Citywide Curbside Collection of Organic Waste and Food Scraps",
+        "description": "The city should launch a citywide curbside pickup program that collects organic waste from houses every week alongside regular trash collection. The program should explicitly include food scraps, ensuring residents have a regular and convenient way to separate these materials from ordinary household waste. This action would make organic-waste collection part of the city’s standard residential service while preserving the requested weekly schedule and citywide reach.",
+        "members": [
+          {
+            "id": "PKl9jf62bSvZ"
+          },
+          {
+            "id": "fKpn1BMI1Cdu"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "CghgUuSUCGz8",
+        "title": "Limit Annual Rent Increases to Protect Tenants’ Housing Stability",
+        "description": "Pass a city law that caps how much landlords may raise rent for tenants each year. This measure would establish an annual limit on rent increases, combining the proposals’ shared call for legal protection against potentially excessive increases while leaving the specific cap and implementation details open.",
+        "members": [
+          {
+            "id": "valpt43boVDG"
+          },
+          {
+            "id": "Y497Ht2LyIrj"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Fn6VvhPUK7vo",
+        "title": "Require Permeable Surfaces for New Parking Lots, Including Commercial Lots",
+        "description": "Require new parking lots, including commercial lots, to use permeable asphalt or paving stones that allow rain to soak through. This targeted construction requirement would reduce the amount of stormwater running off paved surfaces and help reduce flooding, improving residents’ quality of life without changing the purpose or availability of parking. The city should make these permeable surfaces the required standard for covered new-lot construction.",
+        "members": [
+          {
+            "id": "2BEHpi9hyZ6V"
+          },
+          {
+            "id": "3kWoIQHGlD30"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "GIfO6TDj6KJs",
+        "title": "Designate Daily Downtown Parking Areas Exclusively for Mobile Food Vendors",
+        "description": "The city should create a dedicated downtown zone consisting of specific parking areas reserved exclusively for mobile food vendors. These vendors should be able to park and operate there every day, giving mobile food businesses a clearly designated and dependable place to serve residents while improving access to food and activity in the downtown area.",
+        "members": [
+          {
+            "id": "oBiRJtb55w6I"
+          },
+          {
+            "id": "eJ10pM1My9Iz"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "GJFM7TbslpTk",
+        "title": "Install Trash Cans and Recycling Bins at Every Busy, High-Traffic Pedestrian Intersection",
+        "description": "The city should place trash cans and recycling bins at every busy street corner, with particular attention to high-traffic pedestrian intersections. Providing waste receptacles where many people walk would make it easier to dispose of rubbish and recyclable materials properly, helping keep these shared public spaces cleaner and improving residents’ everyday experience. The action combines both proposals’ specific focus on convenient waste disposal in heavily used pedestrian locations.",
+        "members": [
+          {
+            "id": "9K79RlKmph9Z"
+          },
+          {
+            "id": "0PxOjWMQ6T-C"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "HzwHJUjuGDjy",
+        "title": "Allow Missing-Middle Housing Throughout Single-Family Neighborhoods",
+        "description": "Change the city’s zoning laws to allow missing-middle housing everywhere, including duplexes, triplexes, and townhomes in neighborhoods currently limited to single-family homes. This would give developers permission to build these housing forms across those neighborhoods, replacing single-family-only zoning with rules that accommodate a broader range of homes. The proposal focuses on one citywide zoning change and identifies the specific housing types that should become allowable.",
+        "members": [
+          {
+            "id": "PnVysp4ouYzm"
+          },
+          {
+            "id": "paRajzRIhQqx"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "KcTgYrVOG8GO",
+        "title": "Clear Emergency Routes to Hospitals and Fire Stations Immediately After Storms",
+        "description": "The city should clear snow from emergency routes immediately after a storm hits, prioritizing streets leading to hospitals and fire stations before any other streets. This focused response will keep essential emergency access available during severe winter weather and make snow removal reflect the urgency of protecting residents’ quality of life.",
+        "members": [
+          {
+            "id": "vXJbanRZdTvo"
+          },
+          {
+            "id": "Etf0qRJRYuC4"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Kr1l2t6wYSxJ",
+        "title": "Commission Local Painters for Large-Scale Murals on Blank Commercial Facades",
+        "description": "The city should commission and pay local painters to create large-scale visual artworks on blank commercial facades, including huge, colorful murals on the boring sides of downtown buildings. This would turn underused and visually dull building surfaces into prominent public art while directly supporting local painters. The work should remain focused on commercial facades and downtown building sides, preserving the specific locations and artistic approach identified in the proposals.",
+        "members": [
+          {
+            "id": "t4Ebl-e-ueG0"
+          },
+          {
+            "id": "BPU2jsPruYRw"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "MMMwLL9PinZ0",
+        "title": "Convert Abandoned Industrial Buildings and Empty Warehouses into Affordable Rental Studios for Working Artists",
+        "description": "The city should convert abandoned industrial buildings and empty warehouses into affordable, cheap-rental studios and workspaces for working artists, including painters and sculptors. This action would reuse vacant industrial space while giving artists places to create at lower cost. The proposal preserves both the broader focus on working artists and the specific inclusion of painters and sculptors, with the converted spaces serving as rental studios or workspaces.",
+        "members": [
+          {
+            "id": "VYs9BFyAoKps"
+          },
+          {
+            "id": "FltQeLhOR7Dw"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "MoAOr4jg3R9H",
+        "title": "Create a Central City Mobile App for Residents’ City Business",
+        "description": "Develop a single, central smartphone program where residents can handle all their city business in one place. The app should explicitly include reporting potholes and paying utility bills, while also serving as the city’s unified mobile channel for other city business covered by the program.",
+        "members": [
+          {
+            "id": "clROwDINNbiJ"
+          },
+          {
+            "id": "-5mCgczU7kPg"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "OOFmBIXfXzyH",
+        "title": "Increase Bus Frequency During Morning and Evening Work Commutes",
+        "description": "The city should run buses more often when residents are commuting to and from work. This means increasing transit service frequency during both the morning and evening rush hours, making bus travel more available during the periods when people are traveling to and from their jobs.",
+        "members": [
+          {
+            "id": "2vnlJmuWzVxn"
+          },
+          {
+            "id": "caLADbbAcgrL"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Qy1bmBhBNVlK",
+        "title": "Require City-Funded Art and History Institutions to Offer Free Admission Every Tuesday",
+        "description": "The city should require city-funded museums and local art and history institutions to waive ticket fees every Tuesday. This recurring free-admission day would make cultural and educational experiences more accessible to residents while preserving the institutions’ regular programming and operations. The policy should clearly identify the covered institutions and establish Tuesday as the consistent weekly day when visitors can enter without paying admission.",
+        "members": [
+          {
+            "id": "5Mw8DGHJSMcM"
+          },
+          {
+            "id": "aq9W6OP5CZH7"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "SFSH4G9J-Xo3",
+        "title": "Make city buses free for students under eighteen, including middle and high schoolers",
+        "description": "Make all city buses free for students under eighteen, explicitly including middle and high schoolers. The city should remove bus fares for these students so they can ride without being charged, creating one clear age-based policy that preserves both the broader under-eighteen coverage and the specific focus on middle and high school students.",
+        "members": [
+          {
+            "id": "HE8Txlnk5olf"
+          },
+          {
+            "id": "RTlVKjFK7S7t"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "T4CFrktBiDLW",
+        "title": "Build Enclosed, Fenced-In Off-Leash Dog Areas in Every Neighborhood",
+        "description": "The city should build enclosed, fenced-in off-leash dog areas in every neighborhood. These designated spaces would allow people to let their pets run freely while keeping the intervention focused on creating neighborhood dog areas rather than adding unrelated amenities or services.",
+        "members": [
+          {
+            "id": "MDaGFF7wQZJf"
+          },
+          {
+            "id": "ijcO5psaDLRE"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Td5AnZ3YtX3s",
+        "title": "Provide Rebates for Home Weatherization, Window Upgrades, Draft Sealing, and Insulation",
+        "description": "Create a city rebate program that helps residents and homeowners pay for home weatherization improvements. The program should support upgrading windows, sealing drafts in houses, and installing better insulation, combining the broader goal of affordable weatherization with concrete improvements that can make homes more comfortable and improve residents’ quality of life.",
+        "members": [
+          {
+            "id": "xyEQjUaITq6C"
+          },
+          {
+            "id": "3ZV6Z4rOJGGZ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "XnFWNCLXs3I1",
+        "title": "Make Commercial Licensing and Restaurant Opening Applications Faster and Easier",
+        "description": "The city should reduce the paperwork required to obtain a new commercial license and make the application process for opening a restaurant much shorter and easier. This proposal treats restaurant-opening applications as a concrete priority within commercial licensing, preserving both the broader request to cut licensing paperwork and the specific request to simplify and accelerate restaurant applications. The goal is a more manageable, faster path for these applicants.",
+        "members": [
+          {
+            "id": "BLuHLbyKgYZc"
+          },
+          {
+            "id": "S3i7tEVYy9d3"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aFPWvrn9Ipl-",
+        "title": "Install Physical Traffic-Calming Measures Around Elementary Schools",
+        "description": "The city should implement physical traffic-calming measures in residential school zones, placing them directly next to elementary schools. The installation should include speed bumps, raised crosswalks, and narrowed lanes, combining the broader traffic-calming approach with the specific measures identified for school-adjacent streets. This proposal focuses on built changes to slow and manage vehicle movement in the stated locations, without adding unrelated programs or expanding beyond those school-zone settings.",
+        "members": [
+          {
+            "id": "zlem33Vws2GU"
+          },
+          {
+            "id": "AV52bkvI9EQD"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "drDDOc1Y16Cl",
+        "title": "Install Security Cameras in All City-Owned Parking Structures",
+        "description": "The city should install security cameras—video surveillance—inside all city-owned parking structures, including municipal parking decks. This targeted improvement would provide a consistent camera presence in these facilities and is intended to deter break-ins, directly addressing safety and property-security concerns in the locations named by the proposals. The action should remain focused on city-owned parking structures rather than expanding to other locations or introducing unrelated quality-of-life measures.",
+        "members": [
+          {
+            "id": "fsLWLKnmKiBO"
+          },
+          {
+            "id": "lFNBgoIfRJ5R"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "eASSQ6h6Dgvr",
+        "title": "Extend Weekend Bus Service Past Midnight on Friday and Saturday",
+        "description": "The city should add late-night bus routes on Friday and Saturday, keeping public transit running after midnight on weekends. This provides a concrete expansion of weekend bus service while preserving the broader commitment to after-midnight public transit availability, improving residents’ ability to travel later on Friday and Saturday nights without widening the proposal to other days or unrelated services.",
+        "members": [
+          {
+            "id": "3huHGTz33LLB"
+          },
+          {
+            "id": "6NuP4uLHKBU-"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "jyeOttTqpjPc",
+        "title": "Fund Residents Opening Their First Brick-and-Mortar Storefronts",
+        "description": "Create a city-funded startup grant program providing direct financial support to local residents who want to launch their first brick-and-mortar business. The program should focus specifically on helping these new storefront operators move from intention to opening, strengthening opportunities for local entrepreneurship and contributing to residents’ quality of life.",
+        "members": [
+          {
+            "id": "VLdFfEI5Xg9i"
+          },
+          {
+            "id": "uTsZbBfVzUqR"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "kh3yXVoipZ3e",
+        "title": "Offer Free Evening Technology Workshops for Older Residents at Community Centers",
+        "description": "The city should provide free evening classes and workshops at community centers to help seniors and other older residents use modern technology. Sessions should focus on practical navigation of smartphones and computers, combining the shared emphasis on accessible instruction, an evening schedule, and a community-based setting. This gives older adults a clear local opportunity to build confidence with devices used in daily life, without charging them to attend.",
+        "members": [
+          {
+            "id": "Qx0mZ36TX2iu"
+          },
+          {
+            "id": "xWjvpNkUsx0g"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "lM6tL-d934f9",
+        "title": "Build a City-Owned Public Broadband Network",
+        "description": "The city should create and operate a public broadband network that provides a city-owned internet service and gives people an alternative to large private telecom companies. This network would compete with private monopolies, reducing residents’ dependence on existing big telecom providers while improving their access to internet service.",
+        "members": [
+          {
+            "id": "qmHt62QtUgM4"
+          },
+          {
+            "id": "SfF03KJxXgUI"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "m6K-jZ8r8U52",
+        "title": "Provide City Grants to Help Working Families Buy Their First Homes",
+        "description": "Create city-funded grants that provide financial assistance to working families purchasing a home for the first time. The grants should specifically help eligible first-time buyers cover their down payments, reducing the upfront financial barrier to homeownership and improving residents’ quality of life.",
+        "members": [
+          {
+            "id": "SXwO9UANqOah"
+          },
+          {
+            "id": "iA9QmTQwGPYE"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "mbJIMXmttUs1",
+        "title": "Pave Riverside Walking Paths for Year-Round, Mud-Free Access",
+        "description": "The city should pave the dirt walking paths along the river with concrete so residents can use the riverside trails year-round. This improvement would address muddy conditions on the existing paths while making the river corridor more consistently accessible for walking. The work should retain the proposal’s focus on the riverside route and deliver a clear, practical improvement to residents’ quality of life.",
+        "members": [
+          {
+            "id": "9uawOWjPQ1YG"
+          },
+          {
+            "id": "rFM5fg31oXm0"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "nK12WyG-Lca0",
+        "title": "Fund City-Sponsored Ads Promoting Independent Local Businesses",
+        "description": "The city should fund and run an advertising campaign encouraging residents to spend their money at independent local stores and other locally owned businesses. The campaign should use city-sponsored ads to remind people that choosing these businesses is a practical way to support the local economy while improving residents’ quality of life.",
+        "members": [
+          {
+            "id": "pl0LYtgqkVWo"
+          },
+          {
+            "id": "brwMTTt-uuxo"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "nvMj6pTHrlq3",
+        "title": "Keep Main City Parks and Public Green Spaces Open Until Midnight",
+        "description": "The city should extend access to its main public parks and green spaces so residents can use them after dark. These spaces should remain open and lit until midnight, creating more opportunities for people to spend time outdoors in the evening while preserving the focus on existing public green spaces.",
+        "members": [
+          {
+            "id": "2xUIOf1Vebrp"
+          },
+          {
+            "id": "xtGcaogg5x4i"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "oRqB9fXcrsJd",
+        "title": "Fast-Track Permits for Affordable Housing and Low-Income Apartment Construction",
+        "description": "The city should fast-track the permitting process for affordable housing projects, with construction applications for low-income apartments moved to the very front of the line. This would make approval processing a clear municipal priority while keeping the intervention focused on housing intended to remain affordable or serve low-income residents. The proposal addresses both the general permitting process and the specific prioritization of low-income apartment construction applications.",
+        "members": [
+          {
+            "id": "BFTlDdNCJvcV"
+          },
+          {
+            "id": "p4Ni01YRrpsA"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "qSL3WffW0VrV",
+        "title": "Upgrade All Neighborhood Streetlights to Brighter White LED Lighting for Safer Sidewalks",
+        "description": "The city should replace dim yellow neighborhood street lamps with brighter white LED bulbs across all neighborhood streetlights. This upgrade would improve nighttime visibility and make sidewalks safer for residents while preserving the proposal’s focus on neighborhood street lighting.",
+        "members": [
+          {
+            "id": "2WMOyUWsuXAh"
+          },
+          {
+            "id": "xttRr4RVQA6A"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "rLmsQqNua5Lj",
+        "title": "Waive Street-Closure Permit Fees for Neighborhood Summer Block Parties and Cookouts",
+        "description": "The city should waive the fees attached to permits that residents need to close their streets for neighborhood summer block parties and community cookouts. This would remove the direct cost of organizing these gatherings while preserving the existing street-closure permit process. The policy would apply specifically to neighborhood events described by the proposals, including summer block parties and community cookouts, without adding broader fee exemptions or new requirements.",
+        "members": [
+          {
+            "id": "gmJrBKoplzIw"
+          },
+          {
+            "id": "CPUGmeznua0G"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "t8VZ30ZITaYx",
+        "title": "Prohibit Local Businesses from Distributing Single-Use Plastic Bags and Straws",
+        "description": "Make it illegal for stores and restaurants to hand out single-use plastics, including disposable grocery bags and plastic straws, at local businesses. This citywide policy would directly prohibit the distribution of the specific disposable items named in the proposals while retaining the broader goal of ending single-use plastic handouts by stores, restaurants, and other local businesses.",
+        "members": [
+          {
+            "id": "-FA2JKGHLl1G"
+          },
+          {
+            "id": "P-e-ROWK22lt"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "tevk1PFzoNEn",
+        "title": "Impose High Vacancy Charges on Owners Who Leave Residential Properties Empty",
+        "description": "The city should impose a high fee or tax on owners who leave residential properties or houses vacant rather than renting them out. The policy should explicitly cover absentee landlords while retaining the broader focus on owners of empty residential property. By attaching a substantial financial charge to continued vacancy, the city would create a direct incentive to return unused homes to the rental market and improve residents’ quality of life through greater housing availability.",
+        "members": [
+          {
+            "id": "S2QsMDhhKsmX"
+          },
+          {
+            "id": "f3gdmCABSZs6"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "tg0QPm2rHFJh",
+        "title": "Install photovoltaic solar arrays on all government-owned facilities, including key civic buildings",
+        "description": "The city should install solar panels or photovoltaic arrays on the roofs of all government-owned facilities. This installation should explicitly include the library, city hall, and community centers, ensuring that these prominent civic buildings are covered alongside other city-owned properties.",
+        "members": [
+          {
+            "id": "71L8-GTITnxw"
+          },
+          {
+            "id": "VyaLeKHGCV65"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "uWcpmGf5mMrQ",
+        "title": "Install Dedicated Red Bus-Only Transit Corridors on Major Arterial Roads",
+        "description": "The city should install dedicated transit corridors on all major arterial roads, using clearly painted red bus-only lanes on the biggest avenues. These corridors would reserve roadway space for buses so they can avoid being stuck in traffic, making public transportation more reliable and improving residents’ quality of life without changing the proposal’s focus on major roads and the city’s biggest avenues.",
+        "members": [
+          {
+            "id": "xxtH1xc1BkXf"
+          },
+          {
+            "id": "2XQZ8JJJkoty"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "vd5hZFAaf4fg",
+        "title": "Hire and Pay Adult Crossing Guards to Manage Traffic Near Every School",
+        "description": "The city should hire and pay adult crossing guards to manage traffic for children walking to every school. Guards should be stationed at busy intersections near schools, with coverage during student drop-off and pickup, improving safety and supporting residents’ quality of life without changing the proposal’s focus on school-related pedestrian traffic.",
+        "members": [
+          {
+            "id": "wzwaTF6kTAoR"
+          },
+          {
+            "id": "qftp-wDJCTzw"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "wKw0Tbbp-p7D",
+        "title": "Plant One Thousand Native Shade Trees in the City's Poorest Neighborhoods This Year",
+        "description": "The city should plant 1,000 new native shade trees in its low-income neighborhoods this year, directing a massive increase in tree cover to the poorest parts of the city. This focused action would improve residents’ quality of life by bringing more shade and the benefits of native trees to neighborhoods identified in both proposals, while preserving the concrete target and timeframe of the more specific ask.",
+        "members": [
+          {
+            "id": "QOnsn27fgZjQ"
+          },
+          {
+            "id": "Z45KFPzoxMv1"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "wsP-YPg2DHvO",
+        "title": "Host an Annual Downtown Weekend Music Festival Featuring the City's Local Artists",
+        "description": "The city should host a yearly music event in the downtown area, structured as an annual weekend festival. The event should showcase local bands, street musicians, and artists who live in the city, creating a recurring opportunity for residents to experience and support homegrown music. This proposal combines the shared request for a regular local music celebration while retaining the specific downtown setting and weekend format.",
+        "members": [
+          {
+            "id": "lASLkDCz5lvH"
+          },
+          {
+            "id": "lZvbUa6vWrgZ"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "zDSYBYCq0jzO",
+        "title": "Install Physical Barriers to Separate Bike Lanes from Motor Vehicles",
+        "description": "Install physical separation infrastructure between bike lanes and motor vehicles, using concrete barriers and plastic bollards to keep cars out of designated cycling space. This targeted street-safety measure creates a visible, physical boundary that protects bike lanes from motor-vehicle intrusion and improves residents’ quality of life through safer, more protected cycling conditions, without expanding the proposal into a broader transportation program.",
+        "members": [
+          {
+            "id": "s9phKNYM7h9c"
+          },
+          {
+            "id": "u4xAW594nbkM"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "6aoF-dTt2iTM",
+        "title": "Neighborhood street lighting",
+        "description": "Improving street lighting to enhance sidewalk safety and residents’ sense of security.",
+        "members": [],
+        "memberSynthIds": [
+          "qSL3WffW0VrV",
+          "drDDOc1Y16Cl"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "94cL0hktmcAz",
+        "title": "Community Recreation and Public Spaces",
+        "description": "Ideas focused on improving access to public parks and green spaces for residents.",
+        "members": [],
+        "memberSynthIds": [
+          "nvMj6pTHrlq3",
+          "5WtSQRoT8YC0",
+          "8oeQGsmBeRtB",
+          "T4CFrktBiDLW",
+          "Fn6VvhPUK7vo",
+          "wKw0Tbbp-p7D",
+          "rLmsQqNua5Lj",
+          "wsP-YPg2DHvO",
+          "Kr1l2t6wYSxJ",
+          "Qy1bmBhBNVlK"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "HzbeQlDLJPHw",
+        "title": "Mental health crisis response",
+        "description": "Community-based emergency support for residents experiencing mental health crises.",
+        "members": [],
+        "memberSynthIds": [
+          "4vbFByvF30nM"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "b3MLpIDVFijA",
+        "title": "Affordable housing development",
+        "description": "Policies and projects that expand affordable housing options for low-income residents.",
+        "members": [],
+        "memberSynthIds": [
+          "oRqB9fXcrsJd",
+          "CghgUuSUCGz8",
+          "tevk1PFzoNEn",
+          "HzwHJUjuGDjy",
+          "MMMwLL9PinZ0",
+          "m6K-jZ8r8U52"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "fVG0tAvgbajl",
+        "title": "Digital city services",
+        "description": "Improving residents’ access to municipal information, requests, and services through a centralized mobile application.",
+        "members": [],
+        "memberSynthIds": [
+          "MoAOr4jg3R9H",
+          "lM6tL-d934f9",
+          "kh3yXVoipZ3e",
+          "4V86IV1L4GQl",
+          "-0B7KoE5TVrb"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "nbSLitr8IH2A",
+        "title": "Transportation and Mobility Improvements",
+        "description": "Ideas to enhance public transportation efficiency, accessibility, and reliability for residents.",
+        "members": [
+          {
+            "id": "BecYYZ4O1X0q"
+          },
+          {
+            "id": "AKk4DVF46IHC"
+          }
+        ],
+        "memberSynthIds": [
+          "uWcpmGf5mMrQ",
+          "4e7r66YTTBJF",
+          "zDSYBYCq0jzO",
+          "7oQFpPZs2vMw",
+          "SFSH4G9J-Xo3",
+          "OOFmBIXfXzyH",
+          "vd5hZFAaf4fg",
+          "aFPWvrn9Ipl-",
+          "6pGlJdjLjpTN",
+          "KcTgYrVOG8GO",
+          "mbJIMXmttUs1",
+          "6i8ImQ0XCNl-",
+          "eASSQ6h6Dgvr"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "p424z5FLzayJ",
+        "title": "Local Business Support and Regulation",
+        "description": "Policies and designated spaces that support mobile food vendors in downtown areas.",
+        "members": [],
+        "memberSynthIds": [
+          "GIfO6TDj6KJs",
+          "XnFWNCLXs3I1",
+          "nK12WyG-Lca0",
+          "jyeOttTqpjPc"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "wAZOVgtC24TR",
+        "title": "Environmental Sustainability and Resource Management",
+        "description": "Convenient trash and recycling facilities in busy pedestrian areas to improve cleanliness and reduce litter.",
+        "members": [
+          {
+            "id": "4LbdLQVC-zz6"
+          },
+          {
+            "id": "NLcqABjvudrA"
+          }
+        ],
+        "memberSynthIds": [
+          "GJFM7TbslpTk",
+          "-80nWpXQob7h",
+          "AmloOzaL8tnu",
+          "2kV8moiuy9c4",
+          "t8VZ30ZITaYx",
+          "Td5AnZ3YtX3s",
+          "tg0QPm2rHFJh"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [
+    {
+      "id": "5SX0KY6RJKxL",
+      "title": "Neighborhood Community Events",
+      "description": "Support for local gatherings and activities that strengthen neighborhood connections and residents’ quality of life.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "94cL0hktmcAz"
+    },
+    {
+      "id": "6etGpVf2oaM5",
+      "title": "Support for Local Businesses",
+      "description": "Initiatives that promote and strengthen independent local businesses to enhance the city’s economy and community life.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "p424z5FLzayJ"
+    },
+    {
+      "id": "8L-MVgJULm8B",
+      "title": "Urban Green Infrastructure",
+      "description": "Environmentally friendly parking infrastructure that reduces runoff and supports healthier urban spaces.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "94cL0hktmcAz"
+    },
+    {
+      "id": "Zfn9fJcVauBu",
+      "title": "Road maintenance and repairs",
+      "description": "Maintenance and timely repair of city roads, including potholes and other surface damage.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "nbSLitr8IH2A"
+    },
+    {
+      "id": "cxmZ-2khKLGo",
+      "title": "Public water play spaces",
+      "description": "Interactive water features in public plazas that provide recreation, cooling, and family-friendly downtown amenities.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "94cL0hktmcAz"
+    },
+    {
+      "id": "e-z0C0fJAwMu",
+      "title": "Municipal solar energy",
+      "description": "Solar power installations on government-owned buildings and civic facilities.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "jLPoea7t4fYU"
+    },
+    {
+      "id": "fvQJLx7QltmP",
+      "title": "Organic Waste Management",
+      "description": "Programs and services for collecting and responsibly processing food scraps and other organic waste.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "wAZOVgtC24TR"
+    },
+    {
+      "id": "grNg4SG6i2SV",
+      "title": "Business Licensing and Permitting",
+      "description": "Streamlining licensing and application processes for restaurants and other local businesses.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "p424z5FLzayJ"
+    },
+    {
+      "id": "jLPoea7t4fYU",
+      "title": "Renewable Energy and Efficiency",
+      "description": "Programs and incentives that help residents improve home insulation, weatherization, and energy performance.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "wAZOVgtC24TR"
+    },
+    {
+      "id": "n4ZSnGL-9tZF",
+      "title": "Walking Path Improvements",
+      "description": "Enhancements to pedestrian paths for safer, cleaner, and more accessible year-round walking.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "nbSLitr8IH2A"
+    },
+    {
+      "id": "nn5MrHTnaXj8",
+      "title": "Dog Parks & Recreation",
+      "description": "Dedicated off-leash spaces and amenities for dogs and their owners in neighborhood parks.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "94cL0hktmcAz"
+    },
+    {
+      "id": "xNEfdpSD3isL",
+      "title": "Urban tree canopy expansion",
+      "description": "Increasing tree planting and shade access, especially in underserved neighborhoods.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "8L-MVgJULm8B"
+    }
+  ],
+  "sourceOptions": {
+    "visible": 100,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "spawn": 68,
+    "review-queued": 42,
+    "attach": 49,
+    "revisit": 24,
+    "merge": 10
+  },
+  "parameters": {
+    "language": "en",
+    "corpus": "scripts/seedSynthBenchmark.accuracy100.gemini.en.json",
+    "corpusSha": "4572380cd9c1",
+    "seed": 42,
+    "synthesisOverrides": {},
+    "statementsFed": 100,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 12000,
+    "maxWaitMs": 45000,
+    "settleTimeouts": 1,
+    "durationMs": 3583747,
+    "gitSha": "230936363",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}
