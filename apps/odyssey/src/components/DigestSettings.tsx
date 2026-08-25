@@ -7,7 +7,7 @@ import {
 	saveDigestSettings,
 } from '../lib/notificationPrefs';
 
-type Cadence = 'none' | 'daily' | 'multi';
+type Cadence = 'none' | 'every' | 'daily' | 'multi';
 
 const DAILY_DEFAULT_HOUR = 19;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
@@ -33,8 +33,9 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 
 				return;
 			}
-			if (!existing.enabled || existing.hoursLocal.length === 0) setCadence('none');
-			else if (existing.hoursLocal.length === 1) setCadence('daily');
+			if (!existing.enabled) setCadence('none');
+			else if (existing.everyUpdate) setCadence('every');
+			else if (existing.hoursLocal.length <= 1) setCadence('daily');
 			else setCadence('multi');
 			if (existing.hoursLocal.length > 0) setHours(existing.hoursLocal);
 			setLoading(false);
@@ -64,10 +65,12 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 	async function save(): Promise<void> {
 		setSaving(true);
 		try {
+			const timed = cadence === 'daily' || cadence === 'multi';
 			const settings: OdysseyDigestSettings = {
-				enabled: cadence !== 'none' && hours.length > 0,
-				hoursLocal: cadence === 'none' ? [] : hours,
+				enabled: cadence === 'every' || (timed && hours.length > 0),
+				hoursLocal: timed ? hours : [],
 				timezone: DIGEST_TIMEZONE_DEFAULT,
+				everyUpdate: cadence === 'every',
 			};
 			await saveDigestSettings(uid, settings);
 			setSaved(true);
@@ -102,6 +105,7 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 						{(
 							[
 								['none', 'בלי מיילים'],
+								['every', 'כל עדכון'],
 								['daily', 'פעם ביום'],
 								['multi', 'כמה פעמים ביום'],
 							] as [Cadence, string][]
@@ -123,7 +127,13 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 						))}
 					</div>
 
-					{cadence !== 'none' ? (
+					{cadence === 'every' ? (
+						<p className="m-0 text-[13px] opacity-80">
+							ברגע שמשהו זז בים — נבדק פעם בשעה, ונשלח רק כשבאמת יש חדש.
+						</p>
+					) : null}
+
+					{cadence === 'daily' || cadence === 'multi' ? (
 						<div>
 							<p className="m-0 mb-2 text-[13px] opacity-80">
 								{cadence === 'daily'
@@ -150,7 +160,9 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 						<button
 							type="button"
 							className="btn"
-							disabled={saving || (cadence !== 'none' && hours.length === 0)}
+							disabled={
+								saving || ((cadence === 'daily' || cadence === 'multi') && hours.length === 0)
+							}
 							onClick={() => void save()}
 						>
 							{saving ? 'שומרים…' : 'שמירה'}

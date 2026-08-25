@@ -60,6 +60,7 @@ export type IconName =
 	| 'watch'
 	| 'target'
 	| 'mail'
+	| 'cog'
 	// the rating scale
 	| 'face-strong-against'
 	| 'face-against'
@@ -169,6 +170,19 @@ const ICONS: Readonly<Record<IconName, readonly Shape[]>> = {
 	mail: [
 		['rect', { x: 2.5, y: 5, width: 19, height: 14, rx: 2 }],
 		['path', { d: 'M3.2 6.4 12 12.6l8.8-6.2' }],
+	],
+
+	// Settings: a ring, its hub, and eight teeth — the plainest possible cog,
+	// because at 22px anything cleverer stops reading as one
+	cog: [
+		['circle', { cx: 12, cy: 12, r: 6.2 }],
+		['circle', { cx: 12, cy: 12, r: 2.4 }],
+		[
+			'path',
+			{
+				d: 'M12 2.6v3.2M12 18.2v3.2M21.4 12h-3.2M5.8 12H2.6M18.65 5.35l-2.26 2.26M7.61 16.39l-2.26 2.26M18.65 18.65l-2.26-2.26M7.61 7.61 5.35 5.35',
+			},
+		],
 	],
 
 	// The cloud is one closed outline. Drawing the bottom as a separate line —

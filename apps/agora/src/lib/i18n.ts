@@ -170,8 +170,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'inbox.unread_one': 'הודעה אחת שלא נקראה',
 		'inbox.unread_mark': 'לא נקרא',
 		'digest.entry': 'סיפור המסע שלכם למייל',
-		'digest.blurb': 'מה קרה בים מאז שירדתם לחוף: מפליגים חדשים, רוחות שהתהפכו, ואתגר מזקני הדור — בשעה שנוחה לכם.',
+		'digest.blurb':
+			'מה קרה בים מאז שירדתם לחוף: מפליגים חדשים, רוחות שהתהפכו, ואתגר מזקני הדור — בשעה שנוחה לכם.',
 		'digest.none': 'בלי מיילים',
+		'digest.every': 'כל עדכון',
+		'digest.every_blurb': 'ברגע שמשהו זז בים — נבדק פעם בשעה, ונשלח רק כשבאמת יש חדש.',
 		'digest.daily': 'פעם ביום',
 		'digest.multi': 'כמה פעמים ביום',
 		'digest.hour_q': 'באיזו שעה?',
@@ -817,8 +820,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'inbox.unread_one': '1 unread message',
 		'inbox.unread_mark': 'unread',
 		'digest.entry': 'Your voyage story by email',
-		'digest.blurb': 'What happened at sea since you went ashore: new sailors near you, winds that turned, and a challenge from the elders — at an hour that suits you.',
+		'digest.blurb':
+			'What happened at sea since you went ashore: new sailors near you, winds that turned, and a challenge from the elders — at an hour that suits you.',
 		'digest.none': 'No emails',
+		'digest.every': 'Every update',
+		'digest.every_blurb':
+			'The moment something moves at sea — checked hourly, sent only when there is real news.',
 		'digest.daily': 'Once a day',
 		'digest.multi': 'A few times a day',
 		'digest.hour_q': 'At what hour?',
@@ -1484,8 +1491,11 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'inbox.unread_one': 'رسالة واحدة غير مقروءة',
 		'inbox.unread_mark': 'غير مقروء',
 		'digest.entry': 'قصة رحلتكم عبر البريد الإلكتروني',
-		'digest.blurb': 'ما حدث في البحر منذ نزولكم إلى الشاطئ: بحّارة جدد قربكم، رياح تغيّرت، وتحدٍّ من الحكماء — في الساعة التي تناسبكم.',
+		'digest.blurb':
+			'ما حدث في البحر منذ نزولكم إلى الشاطئ: بحّارة جدد قربكم، رياح تغيّرت، وتحدٍّ من الحكماء — في الساعة التي تناسبكم.',
 		'digest.none': 'بلا رسائل',
+		'digest.every': 'كل تحديث',
+		'digest.every_blurb': 'حال حدوث شيء في البحر — يُفحص كل ساعة، ويُرسل فقط عند وجود جديد فعلاً.',
 		'digest.daily': 'مرة في اليوم',
 		'digest.multi': 'عدة مرات في اليوم',
 		'digest.hour_q': 'في أي ساعة؟',
@@ -2138,8 +2148,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'inbox.unread_one': '1 mensaje sin leer',
 		'inbox.unread_mark': 'sin leer',
 		'digest.entry': 'La historia de tu travesía por correo',
-		'digest.blurb': 'Qué pasó en el mar desde que bajaste a tierra: nuevos navegantes cerca, vientos que cambiaron y un reto de los sabios — a la hora que te convenga.',
+		'digest.blurb':
+			'Qué pasó en el mar desde que bajaste a tierra: nuevos navegantes cerca, vientos que cambiaron y un reto de los sabios — a la hora que te convenga.',
 		'digest.none': 'Sin correos',
+		'digest.every': 'Cada novedad',
+		'digest.every_blurb':
+			'En cuanto algo se mueva en el mar — se revisa cada hora y se envía solo cuando hay novedades de verdad.',
 		'digest.daily': 'Una vez al día',
 		'digest.multi': 'Varias veces al día',
 		'digest.hour_q': '¿A qué hora?',
@@ -2825,8 +2839,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'inbox.unread_one': '1 ungelesene Nachricht',
 		'inbox.unread_mark': 'ungelesen',
 		'digest.entry': 'Deine Reisegeschichte per E-Mail',
-		'digest.blurb': 'Was auf See geschah, seit du an Land gingst: neue Segler in deiner Nähe, gedrehte Winde und eine Aufgabe der Ältesten — zu einer Stunde, die dir passt.',
+		'digest.blurb':
+			'Was auf See geschah, seit du an Land gingst: neue Segler in deiner Nähe, gedrehte Winde und eine Aufgabe der Ältesten — zu einer Stunde, die dir passt.',
 		'digest.none': 'Keine E-Mails',
+		'digest.every': 'Jede Neuigkeit',
+		'digest.every_blurb':
+			'Sobald sich auf See etwas bewegt — stündlich geprüft, gesendet nur, wenn es wirklich Neues gibt.',
 		'digest.daily': 'Einmal am Tag',
 		'digest.multi': 'Mehrmals am Tag',
 		'digest.hour_q': 'Um wie viel Uhr?',
@@ -3522,8 +3540,12 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'inbox.unread_one': '1 ongelezen bericht',
 		'inbox.unread_mark': 'ongelezen',
 		'digest.entry': 'Je reisverhaal per e-mail',
-		'digest.blurb': 'Wat er op zee gebeurde sinds je aan land ging: nieuwe zeilers bij je in de buurt, gedraaide winden en een uitdaging van de ouderen — op een uur dat jou past.',
+		'digest.blurb':
+			'Wat er op zee gebeurde sinds je aan land ging: nieuwe zeilers bij je in de buurt, gedraaide winden en een uitdaging van de ouderen — op een uur dat jou past.',
 		'digest.none': 'Geen e-mails',
+		'digest.every': 'Elke update',
+		'digest.every_blurb':
+			'Zodra er iets beweegt op zee — elk uur gecontroleerd, alleen verzonden als er echt nieuws is.',
 		'digest.daily': 'Eén keer per dag',
 		'digest.multi': 'Een paar keer per dag',
 		'digest.hour_q': 'Om hoe laat?',

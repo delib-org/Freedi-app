@@ -61,6 +61,12 @@ export const OdysseyDigestSettingsSchema = object({
 	/** Local hours (0-23) at which to send, at most ODYSSEY_DIGEST_MAX_HOURS */
 	hoursLocal: array(number()),
 	timezone: string(), // IANA, e.g. 'Asia/Jerusalem'
+	/**
+	 * "Every update": considered on every hourly run instead of at chosen
+	 * hours. The builder still sends only when something actually moved, so
+	 * this is at most one email an hour and usually far fewer.
+	 */
+	everyUpdate: optional(boolean()),
 });
 
 export type OdysseyDigestSettings = InferOutput<typeof OdysseyDigestSettingsSchema>;

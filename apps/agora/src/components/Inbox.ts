@@ -30,7 +30,7 @@ export interface InboxAttrs {
 	digestUid?: string;
 }
 
-type DigestCadence = 'none' | 'daily' | 'multi';
+type DigestCadence = 'none' | 'every' | 'daily' | 'multi';
 
 const DIGEST_DEFAULT_HOUR = 19;
 const DIGEST_HOURS = Array.from({ length: 24 }, (_unused, hour) => hour);
@@ -45,15 +45,17 @@ const DIGEST_HOURS = Array.from({ length: 24 }, (_unused, hour) => hour);
  * still owed.
  *
  * For a civic player the sheet also carries the voyage-story email settings,
- * folded shut at its foot: the mail icon is where anyone looks for anything
- * about mail, so the cadence control lives behind it rather than on a
- * separate screen nobody would find.
+ * behind a cog in its header: the mail icon is where anyone looks for
+ * anything about mail, so the cadence control lives behind it rather than on
+ * a separate screen nobody would find. The cog swaps the sheet's body for
+ * the settings — the whole sheet, so the hour chips are in view the moment a
+ * cadence that needs them is pressed.
  */
 export function Inbox(): m.Component<InboxAttrs> {
 	let open = false;
 
-	// Voyage-story cadence editor, loaded the first time its fold is opened
-	let digestOpen = false;
+	// Voyage-story cadence editor, loaded the first time the cog is pressed
+	let settingsOpen = false;
 	let digestLoaded = false;
 	let digestLoading = false;
 	let digestSaving = false;
@@ -61,15 +63,18 @@ export function Inbox(): m.Component<InboxAttrs> {
 	let digestCadence: DigestCadence = 'none';
 	let digestHours: number[] = [DIGEST_DEFAULT_HOUR];
 
-	function openDigest(uid: string): void {
-		digestOpen = true;
+	function openSettings(uid: string): void {
+		settingsOpen = true;
 		if (digestLoaded || digestLoading) return;
 		digestLoading = true;
 		void loadDigestSettings(uid)
 			.then((existing) => {
-				if (existing && existing.enabled && existing.hoursLocal.length > 0) {
-					digestCadence = existing.hoursLocal.length === 1 ? 'daily' : 'multi';
-					digestHours = existing.hoursLocal;
+				if (existing?.enabled) {
+					if (existing.everyUpdate) digestCadence = 'every';
+					else if (existing.hoursLocal.length > 0) {
+						digestCadence = existing.hoursLocal.length === 1 ? 'daily' : 'multi';
+						digestHours = existing.hoursLocal;
+					}
 				}
 				digestLoaded = true;
 			})
@@ -95,10 +100,12 @@ export function Inbox(): m.Component<InboxAttrs> {
 
 	function saveDigest(uid: string): void {
 		digestSaving = true;
+		const timed = digestCadence === 'daily' || digestCadence === 'multi';
 		const settings: OdysseyDigestSettings = {
-			enabled: digestCadence !== 'none' && digestHours.length > 0,
-			hoursLocal: digestCadence === 'none' ? [] : digestHours,
+			enabled: digestCadence === 'every' || (timed && digestHours.length > 0),
+			hoursLocal: timed ? digestHours : [],
 			timezone: DIGEST_TIMEZONE_DEFAULT,
+			everyUpdate: digestCadence === 'every',
 		};
 		void saveDigestSettings(uid, settings)
 			.then(() => {
@@ -110,110 +117,96 @@ export function Inbox(): m.Component<InboxAttrs> {
 			});
 	}
 
-	function digestSection(uid: string): m.Children {
-		return m('.inbox__digest', [
-			m(
-				'button.inbox__digest-entry',
-				{
-					type: 'button',
-					'aria-expanded': String(digestOpen),
-					onclick: () => {
-						if (digestOpen) digestOpen = false;
-						else openDigest(uid);
-					},
-				},
-				[
-					m('span', { 'aria-hidden': 'true' }, '📬'),
-					m('span.inbox__digest-label', t('digest.entry')),
-					m('span.inbox__digest-chevron', { 'aria-hidden': 'true' }, digestOpen ? '▴' : '▾'),
-				],
-			),
-			digestOpen
-				? m('.inbox__digest-body', [
-						m('p.inbox__digest-blurb', t('digest.blurb')),
-						digestLoading
-							? m('p.inbox__digest-blurb', t('digest.loading'))
-							: [
+	function settingsBody(uid: string): m.Children {
+		const timed = digestCadence === 'daily' || digestCadence === 'multi';
+
+		return m('.inbox__digest-body', [
+			m('p.inbox__digest-blurb', t('digest.blurb')),
+			digestLoading
+				? m('p.inbox__digest-blurb', t('digest.loading'))
+				: [
+						m(
+							'.inbox__digest-cadence',
+							{ role: 'radiogroup', 'aria-label': t('digest.entry') },
+							(
+								[
+									['none', t('digest.none')],
+									['every', t('digest.every')],
+									['daily', t('digest.daily')],
+									['multi', t('digest.multi')],
+								] as [DigestCadence, string][]
+							).map(([value, label]) =>
+								m(
+									'button.inbox__digest-chip',
+									{
+										key: value,
+										type: 'button',
+										role: 'radio',
+										'aria-checked': String(digestCadence === value),
+										class: digestCadence === value ? 'inbox__digest-chip--on' : undefined,
+										onclick: () => {
+											digestSaved = false;
+											digestCadence = value;
+											// Daily means ONE hour, chosen or defaulted — never
+											// an empty picker the save button then sulks about
+											if (value === 'daily') {
+												digestHours = digestHours.slice(0, 1);
+												if (digestHours.length === 0) digestHours = [DIGEST_DEFAULT_HOUR];
+											}
+										},
+									},
+									label,
+								),
+							),
+						),
+						digestCadence === 'every' ? m('p.inbox__digest-blurb', t('digest.every_blurb')) : null,
+						timed
+							? [
 									m(
-										'.inbox__digest-cadence',
-										{ role: 'radiogroup', 'aria-label': t('digest.entry') },
-										(
-											[
-												['none', t('digest.none')],
-												['daily', t('digest.daily')],
-												['multi', t('digest.multi')],
-											] as [DigestCadence, string][]
-										).map(([value, label]) =>
+										'p.inbox__digest-blurb',
+										digestCadence === 'daily'
+											? t('digest.hour_q')
+											: t('digest.hours_q', { n: ODYSSEY_DIGEST_MAX_HOURS }),
+									),
+									m(
+										'.inbox__digest-hours',
+										DIGEST_HOURS.map((hour) =>
 											m(
-												'button.inbox__digest-chip',
+												'button.inbox__digest-chip.inbox__digest-chip--hour',
 												{
-													key: value,
+													key: hour,
 													type: 'button',
-													role: 'radio',
-													'aria-checked': String(digestCadence === value),
-													class: digestCadence === value ? 'inbox__digest-chip--on' : undefined,
-													onclick: () => {
-														digestSaved = false;
-														digestCadence = value;
-														if (value === 'daily') digestHours = digestHours.slice(0, 1);
-													},
+													'aria-pressed': String(digestHours.includes(hour)),
+													class: digestHours.includes(hour) ? 'inbox__digest-chip--on' : undefined,
+													onclick: () => toggleDigestHour(hour),
 												},
-												label,
+												`${String(hour).padStart(2, '0')}:00`,
 											),
 										),
 									),
-									digestCadence !== 'none'
-										? [
-												m(
-													'p.inbox__digest-blurb',
-													digestCadence === 'daily'
-														? t('digest.hour_q')
-														: t('digest.hours_q', { n: ODYSSEY_DIGEST_MAX_HOURS }),
-												),
-												m(
-													'.inbox__digest-hours',
-													DIGEST_HOURS.map((hour) =>
-														m(
-															'button.inbox__digest-chip.inbox__digest-chip--hour',
-															{
-																key: hour,
-																type: 'button',
-																'aria-pressed': String(digestHours.includes(hour)),
-																class: digestHours.includes(hour)
-																	? 'inbox__digest-chip--on'
-																	: undefined,
-																onclick: () => toggleDigestHour(hour),
-															},
-															`${String(hour).padStart(2, '0')}:00`,
-														),
-													),
-												),
-											]
-										: null,
-									m('.inbox__digest-actions', [
-										m(
-											'button.inbox__digest-save',
-											{
-												type: 'button',
-												disabled:
-													digestSaving || (digestCadence !== 'none' && digestHours.length === 0),
-												onclick: () => saveDigest(uid),
-											},
-											digestSaving ? t('digest.saving') : t('digest.save'),
-										),
-										digestSaved ? m('span.inbox__digest-saved', t('digest.saved')) : null,
-									]),
-								],
-					])
-				: null,
+								]
+							: null,
+						m('.inbox__digest-actions', [
+							m(
+								'button.inbox__digest-save',
+								{
+									type: 'button',
+									disabled: digestSaving || (timed && digestHours.length === 0),
+									onclick: () => saveDigest(uid),
+								},
+								digestSaving ? t('digest.saving') : t('digest.save'),
+							),
+							digestSaved ? m('span.inbox__digest-saved', t('digest.saved')) : null,
+						]),
+					],
 		]);
 	}
 
 	function close(): void {
 		if (!open) return;
 		open = false;
-		// The cadence editor folds with the sheet; what it loaded stays loaded
-		digestOpen = false;
+		// The cadence editor closes with the sheet; what it loaded stays loaded
+		settingsOpen = false;
 		digestSaved = false;
 		// Marked on the way OUT: while the sheet is open the unread marks are
 		// exactly what tells a student which lines are the new ones
@@ -300,11 +293,11 @@ export function Inbox(): m.Component<InboxAttrs> {
 							m('.inbox__scrim', { onclick: close, 'aria-hidden': 'true' }),
 							m('.inbox', { role: 'dialog', 'aria-label': t('inbox.title') }, [
 								m('.inbox__head', [
-									m('span.inbox__title', t('inbox.title')),
+									m('span.inbox__title', settingsOpen ? t('digest.entry') : t('inbox.title')),
 									// Emptying it is the student's own business — a record of
 									// what happened TO them that they cannot put down turns
 									// into a list of chores
-									items.length > 0
+									!settingsOpen && items.length > 0
 										? m(
 												'button.inbox__clear',
 												{
@@ -316,16 +309,35 @@ export function Inbox(): m.Component<InboxAttrs> {
 												t('inbox.clear'),
 											)
 										: null,
+									// The cog swaps the sheet between news and mail settings —
+									// civic players only, whose uid is their Odyssey uid
+									digestUid
+										? m(
+												'button.inbox__cog',
+												{
+													type: 'button',
+													'aria-label': t('digest.entry'),
+													'aria-pressed': String(settingsOpen),
+													class: settingsOpen ? 'inbox__cog--on' : undefined,
+													onclick: () => {
+														if (settingsOpen) settingsOpen = false;
+														else openSettings(digestUid);
+													},
+												},
+												m(Icon, { name: 'cog', size: 18 }),
+											)
+										: null,
 									m(
 										'button.inbox__close',
 										{ type: 'button', 'aria-label': t('inbox.close'), onclick: close },
 										'×',
 									),
 								]),
-								items.length === 0
-									? m('p.inbox__empty', t('inbox.empty'))
-									: m('.inbox__list', items.map(row)),
-								digestUid ? digestSection(digestUid) : null,
+								settingsOpen && digestUid
+									? settingsBody(digestUid)
+									: items.length === 0
+										? m('p.inbox__empty', t('inbox.empty'))
+										: m('.inbox__list', items.map(row)),
 							]),
 						]
 					: null,

@@ -86,11 +86,13 @@ export async function processOdysseyDigests(): Promise<{
 	for (const doc of settingsSnap.docs) {
 		const settings = doc.data() as NotificationSettings;
 		const cadence = settings.odysseyDigest;
-		if (!cadence?.enabled || cadence.hoursLocal.length === 0) continue;
+		if (!cadence?.enabled || (!cadence.everyUpdate && cadence.hoursLocal.length === 0)) continue;
 		if (settings.muted || settings.perApp?.[SourceApp.ODYSSEY]?.muted) continue;
 
+		// "Every update" rides every hourly run — the builder's nothing-changed
+		// guard is what keeps it from being every hour in practice.
 		const localHour = getHourInTimezone(cadence.timezone || 'Asia/Jerusalem');
-		if (!cadence.hoursLocal.includes(localHour)) continue;
+		if (!cadence.everyUpdate && !cadence.hoursLocal.includes(localHour)) continue;
 		usersMatched += 1;
 
 		try {
