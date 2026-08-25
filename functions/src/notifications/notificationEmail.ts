@@ -77,6 +77,9 @@ export interface NotificationEmailInput {
 	/** Pre-rendered full HTML body (e.g. the RTL Odyssey digest); when present
 	 *  it replaces the default branded template. */
 	html?: string;
+	/** One-click unsubscribe URL — emitted as List-Unsubscribe headers, which
+	 *  Gmail and friends reward with better inbox placement. */
+	unsubscribeUrl?: string;
 }
 
 /** Send one notification email. Returns true on success, false if skipped/failed. */
@@ -103,6 +106,15 @@ export async function sendNotificationEmail(input: NotificationEmailInput): Prom
 			to: input.to,
 			subject: input.subject,
 			html,
+			...(input.unsubscribeUrl
+				? {
+						headers: {
+							'List-Unsubscribe': `<${input.unsubscribeUrl}>`,
+							// RFC 8058 one-click — the endpoint accepts the POST
+							'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+						},
+					}
+				: {}),
 		});
 
 		return true;

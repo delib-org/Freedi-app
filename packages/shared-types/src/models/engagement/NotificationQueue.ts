@@ -33,6 +33,9 @@ export const NotificationQueueItemSchema = object({
 	/** Pre-rendered rich HTML for the email channel (e.g. the Odyssey digest);
 	 *  when present the email sender uses it instead of the plain-text body. */
 	emailHtml: optional(string()),
+	/** One-click unsubscribe URL for the email's List-Unsubscribe header —
+	 *  the header mail providers reward with better inbox placement. */
+	unsubscribeUrl: optional(string()),
 
 	// Routing
 	channels: array(enum_(NotificationChannel)),

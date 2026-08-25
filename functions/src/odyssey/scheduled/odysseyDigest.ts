@@ -96,10 +96,11 @@ export async function processOdysseyDigests(): Promise<{
 		usersMatched += 1;
 
 		try {
+			const unsubscribeUrl = `${UNSUBSCRIBE_BASE}/odysseyDigestUnsubscribe?userId=${encodeURIComponent(settings.userId)}&t=${odysseyUnsubscribeToken(settings.userId)}`;
 			const built = await buildOdysseyDigest({
 				userId: settings.userId,
 				appBaseUrl: ODYSSEY_BASE_URL,
-				unsubscribeUrl: `${UNSUBSCRIBE_BASE}/odysseyDigestUnsubscribe?userId=${encodeURIComponent(settings.userId)}&t=${odysseyUnsubscribeToken(settings.userId)}`,
+				unsubscribeUrl,
 			});
 			if (!built) continue;
 
@@ -111,6 +112,9 @@ export async function processOdysseyDigests(): Promise<{
 				title: built.digest.subject,
 				body: built.digest.bodyText,
 				emailHtml: built.digest.emailHtml,
+				// Also as a header (List-Unsubscribe), not only a footer link —
+				// the header is what mail providers actually read
+				unsubscribeUrl,
 				channels: [NotificationChannel.EMAIL],
 				sourceApp: SourceApp.ODYSSEY,
 				targetPath: '/map',

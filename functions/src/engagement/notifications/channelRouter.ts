@@ -224,6 +224,7 @@ async function sendEmailNotification(item: NotificationQueueItem): Promise<void>
 		targetPath: item.targetPath,
 		sourceApp: item.sourceApp,
 		html: item.emailHtml,
+		unsubscribeUrl: item.unsubscribeUrl,
 	});
 
 	// A failed send must FAIL the channel: swallowing it here marked the queue

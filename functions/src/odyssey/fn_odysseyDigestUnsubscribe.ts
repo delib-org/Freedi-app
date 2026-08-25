@@ -1,9 +1,10 @@
 /**
  * One-click unsubscribe for the Odyssey voyage-story digest — the link in
- * every digest footer. GET so it works from any mail client; the token is an
+ * every digest footer AND the target of the List-Unsubscribe header. GET for
+ * humans clicking from any mail client (RTL confirmation page); POST for the
+ * RFC 8058 one-click flow mail providers drive themselves. The token is an
  * HMAC of the uid so a guessed link can't silence someone else's digest.
- * Flips `notificationSettings/{uid}.odysseyDigest.enabled` off and answers
- * with a tiny RTL confirmation page.
+ * Flips `notificationSettings/{uid}.odysseyDigest.enabled` off.
  */
 import { onRequest } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -44,6 +45,13 @@ export const odysseyDigestUnsubscribe = onRequest(
 				.collection(Collections.notificationSettings)
 				.doc(userId)
 				.set({ odysseyDigest: { enabled: false }, lastUpdate: Date.now() }, { merge: true });
+			// The one-click POST comes from the mail provider's machinery — no
+			// human is looking, a bare 200 is the whole contract
+			if (req.method === 'POST') {
+				res.status(200).send('OK');
+
+				return;
+			}
 			res.send(PAGE('הוסרתם מרשימת התפוצה של סיפור המסע. מחכים לכם בים 🌊'));
 		} catch (error) {
 			logError(error, { operation: 'odyssey.digestUnsubscribe', userId });
