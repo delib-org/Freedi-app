@@ -1211,4 +1211,4 @@ export {
 } from './agora';
 
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
-export { odysseyMintAgoraHandoff } from './odyssey';
+export { odysseyMintAgoraHandoff, odysseyDigestUnsubscribe, sendOdysseyDigests } from './odyssey';

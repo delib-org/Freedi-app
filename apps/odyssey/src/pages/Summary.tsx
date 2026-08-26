@@ -13,6 +13,8 @@ import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
 import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
+import { activeElders, elderStageId } from '../lib/elders';
+import DigestSettings from '../components/DigestSettings';
 
 /**
  * תוצר סוף המסע: not a "which party are you" quiz result — a personal
@@ -29,6 +31,7 @@ export default function Summary() {
 	const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
 	/** The gate being walked through — the token round trip is not instant */
 	const [enteringIslandId, setEnteringIslandId] = useState('');
+	const [digestOpen, setDigestOpen] = useState(false);
 
 	const gameId = content?.game.gameId;
 	const uid = user?.uid;
@@ -54,6 +57,8 @@ export default function Summary() {
 		[content],
 	);
 
+	const elders = useMemo(() => activeElders(content?.game), [content]);
+
 	const partyDistances = useMemo(
 		() =>
 			content
@@ -62,11 +67,17 @@ export default function Summary() {
 		[content, attitudes, parties],
 	);
 
+	const elderDistances = useMemo(
+		() =>
+			content ? distanceEngine.elderDistances({ attitudes, islands: content.islands, elders }) : [],
+		[content, attitudes, elders],
+	);
+
 	const opinionMap = useMemo(() => {
 		if (!uid || !content || evaluations.length === 0) return null;
 
-		return buildOpinionMap({ uid, evaluations, islands: content.islands, parties });
-	}, [uid, content, evaluations, parties]);
+		return buildOpinionMap({ uid, evaluations, islands: content.islands, parties, elders });
+	}, [uid, content, evaluations, parties, elders]);
 
 	const sortedParticipants = useMemo(
 		() =>
@@ -102,22 +113,36 @@ export default function Summary() {
 		});
 		stageBus.send({
 			type: 'setParties',
-			parties: parties.map((party) => ({
-				id: party.partyId,
-				name: party.name,
-				color: party.color,
-			})),
+			parties: [
+				...parties.map((party) => ({
+					id: party.partyId,
+					name: party.name,
+					color: party.color,
+				})),
+				...elders.map((elder) => ({
+					id: elderStageId(elder.elderId),
+					name: elder.name,
+					color: elder.color,
+					isElder: true,
+				})),
+			],
 		});
 		stageBus.send({
 			type: 'updateDistances',
-			distances: Object.fromEntries(partyDistances.map((entry) => [entry.partyId, entry.distance])),
+			distances: Object.fromEntries([
+				...partyDistances.map((entry): [string, number | null] => [entry.partyId, entry.distance]),
+				...elderDistances.map((entry): [string, number | null] => [
+					elderStageId(entry.elderId),
+					entry.distance,
+				]),
+			]),
 			animate: false,
 		});
 		if (!celebrated.current && visitedIslandIds.length > 0) {
 			celebrated.current = true;
 			stageBus.send({ type: 'celebrateArrival', islandCount: visitedIslandIds.length });
 		}
-	}, [mode, content, attitudes, parties, partyDistances]);
+	}, [mode, content, attitudes, parties, partyDistances, elders, elderDistances]);
 
 	useEffect(() => {
 		if (mode !== 'game') return;
@@ -419,6 +444,21 @@ export default function Summary() {
 							</p>
 						)}
 					</section>
+
+					{uid ? (
+						digestOpen ? (
+							<DigestSettings uid={uid} onClose={() => setDigestOpen(false)} />
+						) : (
+							<section className="panel fade-in text-center">
+								<p className="m-0 text-[14px] text-[#dcecf7]">
+									רוצים לדעת מה קורה בים כשאתם לא כאן?{' '}
+									<button type="button" className="underline" onClick={() => setDigestOpen(true)}>
+										📬 סיפור המסע שלכם למייל
+									</button>
+								</p>
+							</section>
+						)
+					) : null}
 				</div>
 			</div>
 		</>

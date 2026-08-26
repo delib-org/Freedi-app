@@ -1457,12 +1457,28 @@ export function Deliberation(
 			// asked for, so the sheet's resting state is my text and my feedback
 			!getSessionFlow().elders
 				? null
-				: workbenchSection('era', t('delib.ask_elders'), askSection(live, myProposal, topic), {
-						open: charactersOpen,
-						onToggle: () => {
-							charactersOpen = !charactersOpen;
+				: workbenchSection(
+						'era',
+						topic.characters.some((character) => character.isElder)
+							? t('delib.ask_elders_council')
+							: t('delib.ask_elders'),
+						askSection(live, myProposal, topic),
+						{
+							// The badge says the council already spoke — the elders read
+							// every proposal on their own, and a folded section with no
+							// sign of life reads as an empty room.
+							count: topic.characters.filter(
+								(character) =>
+									getDeliberationState().characterReviews[
+										createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
+									] !== undefined,
+							).length,
+							open: charactersOpen,
+							onToggle: () => {
+								charactersOpen = !charactersOpen;
+							},
 						},
-					}),
+					),
 			// Open by default (explicit call, 2026-08-10): improving is writing
 			// too, and the two sides' needs are its raw material. It sits last
 			// in the sheet, so standing open costs the primary zone nothing.
@@ -1708,14 +1724,17 @@ export function Deliberation(
 		topic: AgoraTopicPackage,
 	): m.Children {
 		const { characterReviews } = getDeliberationState();
-		const openCharacter = topic.characters.find(
-			(character) => character.characterId === openCharacterId,
-		);
+		// Odyssey elders take the panel over from the stance "voices": personas
+		// are worth asking, a stance wearing the character schema is not.
+		const askable = topic.characters.some((character) => character.isElder)
+			? topic.characters.filter((character) => character.isElder)
+			: topic.characters;
+		const openCharacter = askable.find((character) => character.characterId === openCharacterId);
 
 		return m('.stack', [
 			m(
 				'.char-chips',
-				topic.characters.map((character) => {
+				askable.map((character) => {
 					const review =
 						characterReviews[
 							createAgoraCharacterReviewId(myProposal.statementId, character.characterId)
@@ -2396,6 +2415,10 @@ export function Deliberation(
 					ratingQuota: flow.ratingsPerRound,
 					endsAt: live.roundEndsAt ?? undefined,
 					onResults: screen === 'results',
+					// A civic player's uid IS their Odyssey uid (the handoff token
+					// names it), so the post box can edit their voyage-story email
+					// cadence — the same doc the Odyssey settings sheet writes
+					digestUid: civic ? userId : undefined,
 				}),
 			];
 
@@ -2526,14 +2549,24 @@ export function Deliberation(
 										{ 'aria-hidden': 'true' },
 										m(Icon, { name: 'target', size: 20 }),
 									),
-									m(
-										'.write-desk__mission-text',
+									m('.write-desk__mission-text', [
+										// The mission brief must carry the MISSION. A classroom
+										// hears the challenge in the framing scenes, but a civic
+										// square opens straight at this desk — without the
+										// island's own question here, "what should be done?"
+										// asks about nothing.
+										topic.challengeQuestion?.trim()
+											? m('p.write-desk__mission-question', topic.challengeQuestion)
+											: null,
 										// "both camps" is the whole point of the task when there
 										// are two. When the event has no sides, naming them
 										// invites the writer to pick one — so the ask becomes
 										// the plainer version of the same thing.
-										m('p', t(flow.stances ? 'delib.propose_hint' : 'delib.propose_hint_open')),
-									),
+										m(
+											'p.write-desk__mission-hint',
+											t(flow.stances ? 'delib.propose_hint' : 'delib.propose_hint_open'),
+										),
+									]),
 								]),
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
 									value: draft,
@@ -2564,32 +2597,36 @@ export function Deliberation(
 											m('p.write-desk__selfcheck-ask', t('delib.selfcheck_ask')),
 											m(
 												'.write-desk__selfcheck-chips',
-												topic.characters.map((character) => {
-													const checked = selfCheck.has(character.characterId);
+												// The two names ARE the two sides — elder personas
+												// are askable helpers, not sides; keep them off.
+												topic.characters
+													.filter((character) => !character.isElder)
+													.map((character) => {
+														const checked = selfCheck.has(character.characterId);
 
-													return m(
-														'button.write-desk__selfcheck-chip',
-														{
-															type: 'button',
-															class: checked ? 'write-desk__selfcheck-chip--on' : undefined,
-															'aria-pressed': String(checked),
-															onclick: () => {
-																if (checked) selfCheck.delete(character.characterId);
-																else selfCheck.add(character.characterId);
+														return m(
+															'button.write-desk__selfcheck-chip',
+															{
+																type: 'button',
+																class: checked ? 'write-desk__selfcheck-chip--on' : undefined,
+																'aria-pressed': String(checked),
+																onclick: () => {
+																	if (checked) selfCheck.delete(character.characterId);
+																	else selfCheck.add(character.characterId);
+																},
 															},
-														},
-														[
-															checked
-																? m(
-																		'span.write-desk__selfcheck-mark',
-																		{ 'aria-hidden': 'true' },
-																		m(Icon, { name: 'check', size: 14 }),
-																	)
-																: null,
-															character.name,
-														],
-													);
-												}),
+															[
+																checked
+																	? m(
+																			'span.write-desk__selfcheck-mark',
+																			{ 'aria-hidden': 'true' },
+																			m(Icon, { name: 'check', size: 14 }),
+																		)
+																	: null,
+																character.name,
+															],
+														);
+													}),
 											),
 										]),
 								m('.delib__actions', [

@@ -79,30 +79,45 @@ export default function OpinionMap({ result }: { result: OpinionMapResult | null
 						{point.kind === 'me' ? (
 							<circle cx={cx} cy={cy} r={11} fill="none" stroke="#e8b958" strokeWidth={2} />
 						) : null}
-						<circle
-							cx={cx}
-							cy={cy}
-							r={point.kind === 'party' ? 7 : point.kind === 'me' ? 6.5 : 4.5}
-							fill={
-								point.kind === 'party'
-									? (point.color ?? '#9fd7ff')
-									: point.kind === 'me'
-										? '#e8b958'
-										: '#5edfff'
-							}
-							stroke={point.kind === 'party' ? '#ffffff' : 'none'}
-							strokeWidth={point.kind === 'party' ? 1.2 : 0}
-							opacity={point.kind === 'sailor' ? 0.85 : 1}
-						/>
+						{point.kind === 'elder' ? (
+							// AI persona — a diamond, never mistakable for a sailor's dot
+							<rect
+								x={cx - 6}
+								y={cy - 6}
+								width={12}
+								height={12}
+								transform={`rotate(45 ${cx} ${cy})`}
+								fill={point.color ?? '#c9a0dc'}
+								stroke="#ffffff"
+								strokeWidth={1.2}
+							/>
+						) : null}
+						{point.kind !== 'elder' ? (
+							<circle
+								cx={cx}
+								cy={cy}
+								r={point.kind === 'party' ? 7 : point.kind === 'me' ? 6.5 : 4.5}
+								fill={
+									point.kind === 'party'
+										? (point.color ?? '#9fd7ff')
+										: point.kind === 'me'
+											? '#e8b958'
+											: '#5edfff'
+								}
+								stroke={point.kind === 'party' ? '#ffffff' : 'none'}
+								strokeWidth={point.kind === 'party' ? 1.2 : 0}
+								opacity={point.kind === 'sailor' ? 0.85 : 1}
+							/>
+						) : null}
 						<text
 							x={cx}
-							y={cy + (point.kind === 'party' ? 22 : 18)}
+							y={cy + (point.kind === 'sailor' || point.kind === 'me' ? 18 : 22)}
 							textAnchor="middle"
 							fontSize={point.kind === 'sailor' ? 11 : 13}
 							fill={point.kind === 'me' ? '#e8b958' : '#d5ecf7'}
 							fontWeight={point.kind === 'sailor' ? 400 : 700}
 						>
-							{point.label}
+							{point.kind === 'elder' ? `📜 ${point.label}` : point.label}
 						</text>
 					</g>
 				))}

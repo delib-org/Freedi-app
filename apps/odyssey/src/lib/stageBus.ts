@@ -16,6 +16,8 @@ export interface StageParty {
 	id: string;
 	name: string;
 	color: string;
+	/** AI elder persona — the stage must mark the ship as such (📜) */
+	isElder?: boolean;
 }
 
 export interface StageIsland {

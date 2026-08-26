@@ -16,6 +16,7 @@ import { listenToVoting, stopVotingListeners } from '../lib/voting';
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
+import { InstallHint } from '../components/InstallHint';
 import { JourneyStrip } from '../components/JourneyStrip';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
 import { Lobby } from './Lobby';
@@ -26,7 +27,7 @@ import { Deliberation } from './Deliberation';
 import { Voting } from './Voting';
 import { Results } from './Results';
 import { ReRate } from './ReRate';
-import { AgoraSceneKind, AgoraStage } from '@freedi/shared-types';
+import { AgoraSceneKind, AgoraSessionMode, AgoraStage } from '@freedi/shared-types';
 
 /**
  * Student game controller — routes the current view from the session doc's
@@ -179,6 +180,7 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 			const overlays = [
 				m(ToastStack),
 				m(CelebrationOverlay),
+				m(InstallHint),
 				transitionStage !== null
 					? m(StageTransition, { stage: transitionStage, leaving: transitionLeaving })
 					: null,
@@ -329,7 +331,19 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						// Unless the event runs without sides at all, in which case
 						// there is nothing to catch up on and the screen would be
 						// asking a question the organizer deliberately removed.
-						if (flow.stances && myParticipant.campPosition === undefined) {
+						//
+						// A civic square never asks either: a voyager's camp comes
+						// from their island answers (the join callable seats them in
+						// the centre when nothing is derivable), and being asked to
+						// position themselves again reads as starting the voyage
+						// over. A civic seat that still lacks a camp — created before
+						// the centre fallback, entered without passing through join —
+						// goes straight in; the next join heals the doc.
+						if (
+							flow.stances &&
+							myParticipant.campPosition === undefined &&
+							session.sessionMode !== AgoraSessionMode.civic
+						) {
 							return m(Positioning, { topic, myParticipant, catchUp: true });
 						}
 

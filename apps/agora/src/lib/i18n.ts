@@ -121,6 +121,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.suggestion_from': 'הצעת שיפור מ־{{name}}',
 		'delib.accept_hint': 'קבלה = אימוץ הרעיון: שלבו אותו בנוסח שלכם, והמציעים יקבלו נקודות.',
 		'delib.ask_elders': 'שאלו את בני התקופה',
+		'delib.ask_elders_council': 'מועצת הזקנים',
 		'delib.ask_me': 'שאלו אותי',
 		'delib.stale_review': 'ההצעה השתנתה מאז חוות הדעת הזו — הציגו שוב את הנוסח החדש.',
 		'delib.stale_chip': 'הנוסח השתנה',
@@ -169,6 +170,28 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.climbed': '📈 ההצעה שלכם עקפה הצעה אחרת — ההשקעה שלכם עובדת!',
 		'inbox.unread_one': 'הודעה אחת שלא נקראה',
 		'inbox.unread_mark': 'לא נקרא',
+		'digest.entry': 'סיפור המסע שלכם למייל',
+		'digest.blurb':
+			'מה קרה בים מאז שירדתם לחוף: מפליגים חדשים, רוחות שהתהפכו, ואתגר מזקני הדור — בשעה שנוחה לכם.',
+		'digest.none': 'בלי מיילים',
+		'digest.every': 'כל עדכון',
+		'digest.every_blurb': 'ברגע שמשהו זז בים — נבדק פעם בשעה, ונשלח רק כשבאמת יש חדש.',
+		'digest.daily': 'פעם ביום',
+		'digest.multi': 'כמה פעמים ביום',
+		'digest.hour_q': 'באיזו שעה?',
+		'digest.hours_q': 'באילו שעות? (עד {{n}})',
+		'digest.save': 'שמירה',
+		'digest.saving': 'שומרים…',
+		'digest.saved': 'נשמר ✓',
+		'digest.loading': 'טוענים…',
+		'install.title': 'האגורה על מסך הבית',
+		'install.body':
+			'התקינו את האפליקציה — האייקון יראה כמה הודעות חדשות מחכות לכם, גם כשאתם רחוקים.',
+		'install.action': 'התקנה',
+		'install.how': 'איך מתקינים?',
+		'install.later': 'אולי אחר כך',
+		'install.ios_hint':
+			'באייפון או באייפד: פתחו בספארי, לחצו על כפתור השיתוף ובחרו "הוספה למסך הבית".',
 		'celebrate.revision_first': 'עדכנתם את ההצעה אחרי שהקשבתם — זה הצעד הקשה במשחק! ‎+{{n}}',
 		'celebrate.revision_first_hint': 'כל עדכון אחרי משוב אמיתי בונה את הגשר של הכיתה.',
 		'celebrate.weave_credited': 'שילבתם רעיון של חבר/ה לכיתה בנוסח שלכם! ‎+{{n}}',
@@ -753,6 +776,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Accept = adopt the idea: weave it into your text, and the suggester earns points.',
 		'delib.ask_elders': 'Ask the people of the era',
+		'delib.ask_elders_council': 'The council of elders',
 		'delib.ask_me': 'Ask me',
 		'delib.stale_review': 'Your proposal changed since this verdict — show them the new version.',
 		'delib.stale_chip': 'Text changed',
@@ -805,6 +829,29 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.climbed': '📈 Your proposal passed another one — the work is paying off!',
 		'inbox.unread_one': '1 unread message',
 		'inbox.unread_mark': 'unread',
+		'digest.entry': 'Your voyage story by email',
+		'digest.blurb':
+			'What happened at sea since you went ashore: new sailors near you, winds that turned, and a challenge from the elders — at an hour that suits you.',
+		'digest.none': 'No emails',
+		'digest.every': 'Every update',
+		'digest.every_blurb':
+			'The moment something moves at sea — checked hourly, sent only when there is real news.',
+		'digest.daily': 'Once a day',
+		'digest.multi': 'A few times a day',
+		'digest.hour_q': 'At what hour?',
+		'digest.hours_q': 'At which hours? (up to {{n}})',
+		'digest.save': 'Save',
+		'digest.saving': 'Saving…',
+		'digest.saved': 'Saved ✓',
+		'digest.loading': 'Loading…',
+		'install.title': 'Agora on your home screen',
+		'install.body':
+			'Install the app — the icon will show how many new messages are waiting for you, even while you are away.',
+		'install.action': 'Install',
+		'install.how': 'How?',
+		'install.later': 'Maybe later',
+		'install.ios_hint':
+			'On iPhone or iPad: open in Safari, tap the Share button and choose "Add to Home Screen".',
 		'celebrate.revision_first':
 			"You revised after listening — that's the hardest move in the game! +{{n}}",
 		'celebrate.revision_first_hint':
@@ -1413,6 +1460,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.suggestion_from': 'فكرة تحسين من {{name}}',
 		'delib.accept_hint': 'القبول = تبنّي الفكرة: ادمجوها في نصكم، ويحصل المقترح على نقاط.',
 		'delib.ask_elders': 'اسألوا أبناء الحقبة',
+		'delib.ask_elders_council': 'مجلس الحكماء',
 		'delib.ask_me': 'اسألوني',
 		'delib.stale_review': 'تغيّر اقتراحكم منذ هذا الرأي — اعرضوا النص الجديد.',
 		'delib.stale_chip': 'تغيّر النص',
@@ -1461,6 +1509,28 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.climbed': '📈 تجاوز اقتراحكم اقتراحًا آخر — جهدكم يؤتي ثماره!',
 		'inbox.unread_one': 'رسالة واحدة غير مقروءة',
 		'inbox.unread_mark': 'غير مقروء',
+		'digest.entry': 'قصة رحلتكم عبر البريد الإلكتروني',
+		'digest.blurb':
+			'ما حدث في البحر منذ نزولكم إلى الشاطئ: بحّارة جدد قربكم، رياح تغيّرت، وتحدٍّ من الحكماء — في الساعة التي تناسبكم.',
+		'digest.none': 'بلا رسائل',
+		'digest.every': 'كل تحديث',
+		'digest.every_blurb': 'حال حدوث شيء في البحر — يُفحص كل ساعة، ويُرسل فقط عند وجود جديد فعلاً.',
+		'digest.daily': 'مرة في اليوم',
+		'digest.multi': 'عدة مرات في اليوم',
+		'digest.hour_q': 'في أي ساعة؟',
+		'digest.hours_q': 'في أي ساعات؟ (حتى {{n}})',
+		'digest.save': 'حفظ',
+		'digest.saving': 'جارٍ الحفظ…',
+		'digest.saved': 'تم الحفظ ✓',
+		'digest.loading': 'جارٍ التحميل…',
+		'install.title': 'الأغورا على شاشتك الرئيسية',
+		'install.body':
+			'ثبّتوا التطبيق — سيعرض الرمز عدد الرسائل الجديدة التي بانتظاركم، حتى وأنتم بعيدون.',
+		'install.action': 'تثبيت',
+		'install.how': 'كيف؟',
+		'install.later': 'ربما لاحقًا',
+		'install.ios_hint':
+			'على iPhone أو iPad: افتحوا في سفاري، اضغطوا زر المشاركة واختاروا "إضافة إلى الشاشة الرئيسية".',
 		'celebrate.revision_first': 'نقّحتم اقتراحكم بعد أن أصغيتم — هذه أصعب خطوة في اللعبة! ‎+{{n}}',
 		'celebrate.revision_first_hint': 'كل تنقيح بعد ملاحظات حقيقية يبني جسر الصف.',
 		'celebrate.weave_credited': 'نسجتم فكرة زميل/ة في نصكم! ‎+{{n}}',
@@ -2049,6 +2119,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Aceptar = adoptar la idea: integradla en vuestro texto, y quien la propuso gana puntos.',
 		'delib.ask_elders': 'Preguntad a la gente de la época',
+		'delib.ask_elders_council': 'El consejo de ancianos',
 		'delib.ask_me': 'Preguntadme',
 		'delib.stale_review':
 			'Vuestra propuesta cambió desde este veredicto — mostradles la nueva versión.',
@@ -2104,6 +2175,29 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.climbed': '📈 Tu propuesta superó a otra — ¡el trabajo da frutos!',
 		'inbox.unread_one': '1 mensaje sin leer',
 		'inbox.unread_mark': 'sin leer',
+		'digest.entry': 'La historia de tu travesía por correo',
+		'digest.blurb':
+			'Qué pasó en el mar desde que bajaste a tierra: nuevos navegantes cerca, vientos que cambiaron y un reto de los sabios — a la hora que te convenga.',
+		'digest.none': 'Sin correos',
+		'digest.every': 'Cada novedad',
+		'digest.every_blurb':
+			'En cuanto algo se mueva en el mar — se revisa cada hora y se envía solo cuando hay novedades de verdad.',
+		'digest.daily': 'Una vez al día',
+		'digest.multi': 'Varias veces al día',
+		'digest.hour_q': '¿A qué hora?',
+		'digest.hours_q': '¿A qué horas? (hasta {{n}})',
+		'digest.save': 'Guardar',
+		'digest.saving': 'Guardando…',
+		'digest.saved': 'Guardado ✓',
+		'digest.loading': 'Cargando…',
+		'install.title': 'El Ágora en tu pantalla de inicio',
+		'install.body':
+			'Instala la aplicación — el icono mostrará cuántos mensajes nuevos te esperan, incluso cuando no estés.',
+		'install.action': 'Instalar',
+		'install.how': '¿Cómo?',
+		'install.later': 'Quizás luego',
+		'install.ios_hint':
+			'En iPhone o iPad: abre en Safari, toca el botón de compartir y elige "Añadir a pantalla de inicio".',
 		'celebrate.revision_first':
 			'Revisaste tu propuesta después de escuchar — ¡el movimiento más difícil del juego! +{{n}}',
 		'celebrate.revision_first_hint':
@@ -2724,6 +2818,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Annehmen = die Idee übernehmen: arbeitet sie in euren Text ein, und wer sie vorschlug bekommt Punkte.',
 		'delib.ask_elders': 'Fragt die Menschen der Epoche',
+		'delib.ask_elders_council': 'Der Ältestenrat',
 		'delib.ask_me': 'Fragt mich',
 		'delib.stale_review':
 			'Euer Vorschlag hat sich seit diesem Urteil geändert — zeigt die neue Fassung.',
@@ -2780,6 +2875,29 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.climbed': '📈 Dein Vorschlag hat einen anderen überholt — die Arbeit zahlt sich aus!',
 		'inbox.unread_one': '1 ungelesene Nachricht',
 		'inbox.unread_mark': 'ungelesen',
+		'digest.entry': 'Deine Reisegeschichte per E-Mail',
+		'digest.blurb':
+			'Was auf See geschah, seit du an Land gingst: neue Segler in deiner Nähe, gedrehte Winde und eine Aufgabe der Ältesten — zu einer Stunde, die dir passt.',
+		'digest.none': 'Keine E-Mails',
+		'digest.every': 'Jede Neuigkeit',
+		'digest.every_blurb':
+			'Sobald sich auf See etwas bewegt — stündlich geprüft, gesendet nur, wenn es wirklich Neues gibt.',
+		'digest.daily': 'Einmal am Tag',
+		'digest.multi': 'Mehrmals am Tag',
+		'digest.hour_q': 'Um wie viel Uhr?',
+		'digest.hours_q': 'Zu welchen Stunden? (bis zu {{n}})',
+		'digest.save': 'Speichern',
+		'digest.saving': 'Speichern…',
+		'digest.saved': 'Gespeichert ✓',
+		'digest.loading': 'Wird geladen…',
+		'install.title': 'Die Agora auf deinem Startbildschirm',
+		'install.body':
+			'Installiere die App — das Symbol zeigt, wie viele neue Nachrichten auf dich warten, auch wenn du weg bist.',
+		'install.action': 'Installieren',
+		'install.how': 'Wie?',
+		'install.later': 'Vielleicht später',
+		'install.ios_hint':
+			'Auf iPhone oder iPad: in Safari öffnen, die Teilen-Taste antippen und "Zum Home-Bildschirm" wählen.',
 		'celebrate.revision_first':
 			'Du hast nach dem Zuhören überarbeitet — der schwerste Zug im Spiel! +{{n}}',
 		'celebrate.revision_first_hint':
@@ -3413,6 +3531,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'delib.accept_hint':
 			'Accepteren = het idee overnemen: verwerk het in jullie tekst, en de indiener krijgt punten.',
 		'delib.ask_elders': 'Vraag de mensen van het tijdperk',
+		'delib.ask_elders_council': 'De raad van ouderen',
 		'delib.ask_me': 'Vraag mij',
 		'delib.stale_review': 'Jullie voorstel is veranderd sinds dit oordeel — toon de nieuwe versie.',
 		'delib.stale_chip': 'Tekst veranderd',
@@ -3466,6 +3585,29 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'toast.climbed': '📈 Jouw voorstel ging een ander voorbij — je werk werpt vruchten af!',
 		'inbox.unread_one': '1 ongelezen bericht',
 		'inbox.unread_mark': 'ongelezen',
+		'digest.entry': 'Je reisverhaal per e-mail',
+		'digest.blurb':
+			'Wat er op zee gebeurde sinds je aan land ging: nieuwe zeilers bij je in de buurt, gedraaide winden en een uitdaging van de ouderen — op een uur dat jou past.',
+		'digest.none': 'Geen e-mails',
+		'digest.every': 'Elke update',
+		'digest.every_blurb':
+			'Zodra er iets beweegt op zee — elk uur gecontroleerd, alleen verzonden als er echt nieuws is.',
+		'digest.daily': 'Eén keer per dag',
+		'digest.multi': 'Een paar keer per dag',
+		'digest.hour_q': 'Om hoe laat?',
+		'digest.hours_q': 'Op welke uren? (maximaal {{n}})',
+		'digest.save': 'Opslaan',
+		'digest.saving': 'Opslaan…',
+		'digest.saved': 'Opgeslagen ✓',
+		'digest.loading': 'Laden…',
+		'install.title': 'De Agora op je startscherm',
+		'install.body':
+			'Installeer de app — het icoon laat zien hoeveel nieuwe berichten er op je wachten, ook als je weg bent.',
+		'install.action': 'Installeren',
+		'install.how': 'Hoe?',
+		'install.later': 'Misschien later',
+		'install.ios_hint':
+			'Op iPhone of iPad: open in Safari, tik op de deelknop en kies "Zet op beginscherm".',
 		'celebrate.revision_first':
 			'Je herzag je voorstel na het luisteren — de moeilijkste zet in het spel! +{{n}}',
 		'celebrate.revision_first_hint':

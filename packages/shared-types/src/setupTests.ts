@@ -51,6 +51,16 @@ jest.mock('valibot', () => {
 			...createMockSchema(),
 			schemas,
 		})),
+		// This mock is a hand-maintained allowlist, so a valibot function used
+		// for the first time anywhere in the package arrives here as `undefined`
+		// and every suite that transitively imports it dies at import time with
+		// "is not a function" — which is what agoraTopicPackage's characters
+		// tuple did to agoraCivic.test.ts. Add the function when you first use it.
+		tupleWithRest: jest.fn((schemas?: unknown[], rest?: unknown) => ({
+			...createMockSchema(),
+			schemas,
+			rest,
+		})),
 		any: jest.fn(() => createMockSchema()),
 		unknown: jest.fn(() => createMockSchema()),
 		never: jest.fn(() => createMockSchema()),

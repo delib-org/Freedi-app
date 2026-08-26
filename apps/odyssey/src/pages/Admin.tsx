@@ -1179,8 +1179,8 @@ function ScriptSection({
 					onChange={(next) => patch({ needsEnabled: next })}
 				/>
 				<ScriptToggle
-					label="שאלת הדמויות"
-					hint="מאפשר לבקש חוות דעת מנומקת בשם כל אחת משתי העמדות."
+					label="זקני הדור"
+					hint="דמויות בינה מלאכותית בהשראת מנהיגים היסטוריים מפליגות לצד המשתתפים: ספינות זקנים בים, ומועצת זקנים שמגיבה על הצעות בדיון. כיבוי מסתיר גם את שאלת הדמויות."
 					checked={resolved.elders}
 					onChange={(next) => patch({ eldersEnabled: next })}
 				/>

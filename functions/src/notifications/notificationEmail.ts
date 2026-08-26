@@ -24,6 +24,7 @@ const APP_BASE_URLS: Record<SourceApp, string> = {
 	[SourceApp.FLOW]: process.env.FLOW_APP_URL || 'https://flow.freedi.tech',
 	[SourceApp.AGORA]: process.env.AGORA_APP_URL || 'https://agora.freedi.tech',
 	[SourceApp.JOIN]: process.env.JOIN_APP_URL || 'https://join.wizcol.com',
+	[SourceApp.ODYSSEY]: process.env.ODYSSEY_APP_URL || 'https://wizcol-od.web.app',
 };
 
 /** Resolve a possibly-relative targetPath to an absolute URL for the given app. */
@@ -73,6 +74,12 @@ export interface NotificationEmailInput {
 	targetPath: string;
 	sourceApp?: SourceApp;
 	buttonText?: string;
+	/** Pre-rendered full HTML body (e.g. the RTL Odyssey digest); when present
+	 *  it replaces the default branded template. */
+	html?: string;
+	/** One-click unsubscribe URL — emitted as List-Unsubscribe headers, which
+	 *  Gmail and friends reward with better inbox placement. */
+	unsubscribeUrl?: string;
 }
 
 /** Send one notification email. Returns true on success, false if skipped/failed. */
@@ -83,13 +90,15 @@ export async function sendNotificationEmail(input: NotificationEmailInput): Prom
 	if (!transporter) return false; // credentials missing — already warned
 
 	const url = resolveAbsoluteUrl(input.sourceApp, input.targetPath);
-	const html = buildHtml({
-		title: input.subject,
-		bodyText: input.bodyText,
-		url,
-		buttonText: input.buttonText ?? 'Open discussion',
-		recipientName: input.recipientName,
-	});
+	const html =
+		input.html ??
+		buildHtml({
+			title: input.subject,
+			bodyText: input.bodyText,
+			url,
+			buttonText: input.buttonText ?? 'Open discussion',
+			recipientName: input.recipientName,
+		});
 
 	try {
 		await transporter.sendMail({
@@ -97,6 +106,15 @@ export async function sendNotificationEmail(input: NotificationEmailInput): Prom
 			to: input.to,
 			subject: input.subject,
 			html,
+			...(input.unsubscribeUrl
+				? {
+						headers: {
+							'List-Unsubscribe': `<${input.unsubscribeUrl}>`,
+							// RFC 8058 one-click — the endpoint accepts the POST
+							'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+						},
+					}
+				: {}),
 		});
 
 		return true;

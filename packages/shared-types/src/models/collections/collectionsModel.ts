@@ -119,4 +119,6 @@ export enum Collections {
     // Per-question participation funnel (server-maintained counters + markers)
     questionProgress = 'questionProgress',
     questionParticipation = 'questionParticipation',
+
+    odysseyDigestState = 'odysseyDigestState',
 }

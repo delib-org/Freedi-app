@@ -578,6 +578,15 @@
       ],
       "headers": [
         {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        },
+        {
           "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif|mp4|webm)",
           "headers": [
             {
@@ -664,6 +673,15 @@
         }
       ],
       "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache, no-store, must-revalidate"
+            }
+          ]
+        },
         {
           "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif|mp4|webm)",
           "headers": [

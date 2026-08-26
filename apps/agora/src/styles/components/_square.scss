@@ -56,6 +56,20 @@
 		}
 	}
 
+	// The island's (or era's) actual question — the mission itself, so it
+	// leads the brief in the display voice; the how-to line sits under it.
+	&__mission-question {
+		font-family: var(--font-display);
+		font-size: var(--font-size-md);
+		font-weight: 700;
+		line-height: 1.4;
+	}
+
+	&__mission-hint {
+		font-size: var(--font-size-sm);
+		opacity: 0.88;
+	}
+
 	&__mission-label {
 		font-family: var(--font-display);
 		font-size: var(--font-size-xs);
@@ -540,8 +554,15 @@
 		border: 1px solid var(--border-subtle);
 		border-radius: var(--radius-sm);
 		background: var(--bg-card-solid);
+		// The card is dark — without these the browser's default black ink wins
+		color: var(--ink);
+		caret-color: var(--ink);
 		font: inherit;
 		resize: vertical;
+
+		&::placeholder {
+			color: var(--text-muted);
+		}
 	}
 
 	&__actions {

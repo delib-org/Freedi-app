@@ -201,12 +201,15 @@ export type {
   QuietHours,
   ChannelSwitches,
   PerAppNotificationSettings,
+  OdysseyDigestSettings,
 } from "./models/notification/NotificationSettings";
 export {
   NotificationSettingsSchema,
   QuietHoursSchema,
   ChannelSwitchesSchema,
   PerAppNotificationSettingsSchema,
+  OdysseyDigestSettingsSchema,
+  ODYSSEY_DIGEST_MAX_HOURS,
   createDefaultNotificationSettings,
 } from "./models/notification/NotificationSettings";
 

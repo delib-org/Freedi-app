@@ -5,6 +5,7 @@ import {
 	OdysseyGame,
 	OdysseyIsland,
 	OdysseyParty,
+	OdysseyElder,
 	ODYSSEY_DEFAULT_GAME_ID,
 	User as FreediUser,
 } from '@freedi/shared-types';
@@ -17,6 +18,7 @@ import {
 	DEFAULT_VALUES,
 } from './defaults';
 import { researchedAttitudes } from './research';
+import { buildEldersFromDefaults } from './eldersDefaults';
 
 /**
  * One-time game creation, run by the first admin from /admin.
@@ -134,6 +136,12 @@ export async function seedGame(
 		};
 	});
 
+	const elders: OdysseyElder[] = buildEldersFromDefaults({
+		islandIdBySlug,
+		stanceIdsBySlug,
+		titleBySlug: new Map(DEFAULT_ISLANDS.map((island) => [island.slug, island.title])),
+	});
+
 	const game: OdysseyGame = {
 		gameId,
 		rootStatementId: root.statementId,
@@ -154,6 +162,7 @@ export async function seedGame(
 		})),
 		islands: islandsMeta,
 		parties,
+		elders,
 		adminUids: [creator.uid],
 		creatorId: creator.uid,
 		createdAt: now,

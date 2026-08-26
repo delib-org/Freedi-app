@@ -1,4 +1,4 @@
-import type { AttitudeMap, Evaluation, OdysseyParty } from '@freedi/shared-types';
+import type { AttitudeMap, Evaluation, OdysseyElder, OdysseyParty } from '@freedi/shared-types';
 import { opinionDistance } from '@freedi/shared-types';
 import type { IslandContent } from './game';
 
@@ -45,12 +45,23 @@ export interface ParticipantDistance {
 	sharedStances: number;
 }
 
+export interface ElderDistance {
+	elderId: string;
+	distance: number | null;
+	sharedIslands: number;
+}
+
 export interface DistanceEngine {
 	partyDistances(input: {
 		attitudes: AttitudeMap;
 		islands: IslandContent[];
 		parties: OdysseyParty[];
 	}): PartyDistance[];
+	elderDistances(input: {
+		attitudes: AttitudeMap;
+		islands: IslandContent[];
+		elders: OdysseyElder[];
+	}): ElderDistance[];
 	participantDistances(input: { uid: string; evaluations: Evaluation[] }): ParticipantDistance[];
 }
 
@@ -58,15 +69,31 @@ function round2(value: number): number {
 	return Math.round(value * 100) / 100;
 }
 
-/** A party's route as a virtual attitude map. An explicit continuous score
- *  in `attitudes` wins per stance; otherwise a legacy declared stance fans
- *  out as +1 on itself and −1 on its island siblings. */
-export function partyAttitudes(party: OdysseyParty, islands: IslandContent[]): AttitudeMap {
+/**
+ * Anything that declares a course — parties and elders share this shape, so
+ * the same virtual-user arithmetic covers both.
+ *
+ * Two ways to declare one, and they are not equivalent. `attitudes` is a
+ * researched score per stance, which is what the party research file produces
+ * and the only shape that can say "mildly against" rather than "against".
+ * `positions` is the older one-stance-per-island declaration, which fans out
+ * as +1 on the chosen stance and −1 on its siblings — a caricature of a
+ * position, but the only thing the Elders have.
+ */
+export interface RouteHolder {
+	/** island statementId → declared stance statementId */
+	positions?: Record<string, string>;
+	/** stance statementId → continuous −1..1 score. Wins where present. */
+	attitudes?: Record<string, number>;
+}
+
+/** A route holder's course as a virtual attitude map. */
+export function routeAttitudes(holder: RouteHolder, islands: IslandContent[]): AttitudeMap {
 	const attitudes: AttitudeMap = {};
 	for (const island of islands) {
-		const declaredStanceId = party.positions?.[island.statementId];
+		const declaredStanceId = holder.positions?.[island.statementId];
 		for (const stance of island.stances) {
-			const score = party.attitudes?.[stance.statementId];
+			const score = holder.attitudes?.[stance.statementId];
 			if (score !== undefined) {
 				attitudes[stance.statementId] = score;
 			} else if (declaredStanceId) {
@@ -76,6 +103,16 @@ export function partyAttitudes(party: OdysseyParty, islands: IslandContent[]): A
 	}
 
 	return attitudes;
+}
+
+/** A party's route as a virtual attitude map (kept for existing callers). */
+export function partyAttitudes(party: OdysseyParty, islands: IslandContent[]): AttitudeMap {
+	return routeAttitudes(party, islands);
+}
+
+/** An elder's declared course as a virtual attitude map. */
+export function elderAttitudes(elder: OdysseyElder, islands: IslandContent[]): AttitudeMap {
+	return routeAttitudes(elder, islands);
 }
 
 /** Everyone's evaluations grouped into per-user attitude maps. */
@@ -100,6 +137,45 @@ export function participantProfiles(evaluations: Evaluation[]): Map<string, Part
 	return profiles;
 }
 
+/** One route holder's distance from the player, the party arithmetic. */
+function routeDistance(
+	attitudes: AttitudeMap,
+	islands: IslandContent[],
+	holder: RouteHolder,
+): { distance: number | null; sharedIslands: number } {
+	const virtual = routeAttitudes(holder, islands);
+	let sum = 0;
+	let shared = 0;
+	let sharedIslands = 0;
+	for (const island of islands) {
+		// Skip an island the holder has no opinion about — but "no opinion" now
+		// means neither a declared stance NOR a researched score. Guarding on
+		// `positions` alone silently dropped every island a party had been
+		// researched for but never given a legacy one-stance declaration, which
+		// after the research pass is most of them.
+		const hasCourse =
+			holder.positions?.[island.statementId] !== undefined ||
+			island.stances.some((stance) => holder.attitudes?.[stance.statementId] !== undefined);
+		if (!hasCourse) continue;
+		let islandShared = 0;
+		for (const stance of island.stances) {
+			const mine = attitudes[stance.statementId];
+			const theirs = virtual[stance.statementId];
+			if (mine === undefined || theirs === undefined) continue;
+			sum += Math.abs(mine - theirs);
+			islandShared += 1;
+		}
+		if (islandShared > 0) sharedIslands += 1;
+		shared += islandShared;
+	}
+
+	return {
+		distance:
+			sharedIslands >= MIN_SHARED_PARTY_ISLANDS && shared > 0 ? round2(sum / shared / 2) : null,
+		sharedIslands,
+	};
+}
+
 function opinionPartyDistances(input: {
 	attitudes: AttitudeMap;
 	islands: IslandContent[];
@@ -107,31 +183,23 @@ function opinionPartyDistances(input: {
 }): PartyDistance[] {
 	const { attitudes, islands, parties } = input;
 
-	return parties.map((party) => {
-		const virtual = partyAttitudes(party, islands);
-		let sum = 0;
-		let shared = 0;
-		let sharedIslands = 0;
-		for (const island of islands) {
-			let islandShared = 0;
-			for (const stance of island.stances) {
-				const mine = attitudes[stance.statementId];
-				const theirs = virtual[stance.statementId];
-				if (mine === undefined || theirs === undefined) continue;
-				sum += Math.abs(mine - theirs);
-				islandShared += 1;
-			}
-			if (islandShared > 0) sharedIslands += 1;
-			shared += islandShared;
-		}
+	return parties.map((party) => ({
+		partyId: party.partyId,
+		...routeDistance(attitudes, islands, party),
+	}));
+}
 
-		return {
-			partyId: party.partyId,
-			distance:
-				sharedIslands >= MIN_SHARED_PARTY_ISLANDS && shared > 0 ? round2(sum / shared / 2) : null,
-			sharedIslands,
-		};
-	});
+function opinionElderDistances(input: {
+	attitudes: AttitudeMap;
+	islands: IslandContent[];
+	elders: OdysseyElder[];
+}): ElderDistance[] {
+	const { attitudes, islands, elders } = input;
+
+	return elders.map((elder) => ({
+		elderId: elder.elderId,
+		...routeDistance(attitudes, islands, elder),
+	}));
 }
 
 function opinionParticipantDistances(input: {
@@ -158,6 +226,7 @@ function opinionParticipantDistances(input: {
 
 export const opinionDistanceEngine: DistanceEngine = {
 	partyDistances: opinionPartyDistances,
+	elderDistances: opinionElderDistances,
 	participantDistances: opinionParticipantDistances,
 };
 

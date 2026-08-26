@@ -32,6 +32,10 @@ export const APP_DEEP_LINKS: Record<SourceApp, Record<string, string>> = {
 		// Opens a specific question by its statementId (join-app route `/q/:qid`).
 		question: '/q/{statementId}',
 	},
+	[SourceApp.ODYSSEY]: {
+		map: '/map',
+		summary: '/summary',
+	},
 };
 
 /**

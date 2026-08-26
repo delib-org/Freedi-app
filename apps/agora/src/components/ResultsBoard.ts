@@ -211,16 +211,15 @@ export function ResultsBoard(
 	initialVnode: m.Vnode<ResultsBoardAttrs>,
 ): m.Component<ResultsBoardAttrs> {
 	const cheerKey = `agora_${initialVnode.attrs.sessionId}_boardcheer`;
-	const helpKey = `agora_${initialVnode.attrs.sessionId}_boardhelp`;
 
 	let openId = '';
 	/**
-	 * The map's help, open. It starts open the FIRST time the board is shown in
-	 * a session and never auto-opens again — a one-for-one swap for the hint
-	 * paragraph that used to be printed above the field on every single visit.
+	 * The map's help. Closed until asked for: it used to auto-open on the first
+	 * visit, but a panel nobody requested covered the very map people came to
+	 * see — the "?" button is visible enough for the one encoding a reader
+	 * cannot guess.
 	 */
-	let helpOpen = sessionStorage.getItem(helpKey) === null;
-	if (helpOpen) sessionStorage.setItem(helpKey, '1');
+	let helpOpen = false;
 	/**
 	 * The proposal whose full arithmetic is open as a sub-screen. Separate from
 	 * `openId` on purpose: pressing a point opens the callout ON the map, and
@@ -530,9 +529,8 @@ export function ResultsBoard(
 	 * visit — the largest block of text on a screen whose entire point is that
 	 * it can be read at a glance. Hover does not exist on a classroom phone, so
 	 * the tooltip is a DISCLOSURE a thumb can hit rather than something pointed
-	 * at, and it opens by itself the first time the board is shown in a session:
-	 * the one encoding a student cannot guess (big dot = more raters) is taught
-	 * exactly once, and never printed again.
+	 * at, and it opens only when the "?" tile asks for it — never by itself,
+	 * because an uninvited panel covers the very map people came to read.
 	 */
 	function help(): m.Children {
 		if (!helpOpen) return null;

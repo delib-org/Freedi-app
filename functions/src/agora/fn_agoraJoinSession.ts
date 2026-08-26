@@ -11,11 +11,13 @@ import {
 	AgoraSessionStatus,
 	AgoraTopicPackage,
 	CivicStanceEvaluation,
+	CivicStanceMeta,
 	Evaluation,
+	AGORA_CIVIC_CENTER_POSITION,
 	AGORA_SESSION,
 	createAgoraParticipantId,
 	deriveCamp,
-	deriveCivicCampPosition,
+	deriveCivicCampPositionFromIsland,
 	functionConfig,
 	resolveSessionFlow,
 	AttitudeMap,
@@ -28,37 +30,64 @@ interface CivicStanding {
 	camp: AgoraCamp;
 }
 
+/** The seat handed to a player whose island answers carry no lean at all. */
+const CENTER_STANDING: CivicStanding = {
+	campPosition: AGORA_CIVIC_CENTER_POSITION,
+	camp: deriveCamp(AGORA_CIVIC_CENTER_POSITION),
+};
+
 /**
  * Where this player stood on the island, carried over as a camp.
  *
  * A classroom asks the positioning question on screen; a civic participant
  * answered it on the island, one stance at a time, so asking again would be
- * asking them to repeat themselves. Reads the two anchor stances by their
- * deterministic evaluation ids — `${uid}--${stanceId}` — which is why this
- * needs no composite index and no cross-collection query.
+ * asking them to repeat themselves. Reads EVERY stance of the island: the
+ * poles when the player marked them, and otherwise the spectrum derivation —
+ * the stances are authored in order from pole to pole, so a voyager who
+ * marked only middle stances still arrives with the lean those answers
+ * express, instead of being handed the positioning bridge.
+ *
+ * ALWAYS returns a standing. A voyager with no derivable lean — nothing
+ * marked, an expired handoff token, an island with no anchors — is seated in
+ * the centre rather than sent to the positioning bridge: the square is a
+ * continuation of the voyage, and the bridge screen there reads as being
+ * asked to start over.
  */
-async function deriveCivicStanding(
-	session: AgoraSession,
-	uid: string,
-): Promise<CivicStanding | undefined> {
-	const { leftAnchorStanceId, rightAnchorStanceId } = session.civic ?? {};
-	if (!leftAnchorStanceId || !rightAnchorStanceId) return undefined;
+async function deriveCivicStanding(session: AgoraSession, uid: string): Promise<CivicStanding> {
+	const { islandStatementId, leftAnchorStanceId, rightAnchorStanceId } = session.civic ?? {};
+	if (!islandStatementId || !leftAnchorStanceId || !rightAnchorStanceId) return CENTER_STANDING;
 
-	const snaps = await db.getAll(
-		db.collection(Collections.evaluations).doc(`${uid}--${leftAnchorStanceId}`),
-		db.collection(Collections.evaluations).doc(`${uid}--${rightAnchorStanceId}`),
+	const stanceSnaps = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', islandStatementId)
+		.get();
+	const stanceMeta: CivicStanceMeta[] = stanceSnaps.docs.map((doc) => {
+		const data = doc.data() as { order?: number };
+
+		return { statementId: doc.id, order: data.order };
+	});
+	if (!stanceMeta.length) return CENTER_STANDING;
+
+	const evalSnaps = await db.getAll(
+		...stanceMeta.map((stance) =>
+			db.collection(Collections.evaluations).doc(`${uid}--${stance.statementId}`),
+		),
 	);
-
-	const stances: CivicStanceEvaluation[] = [];
-	for (const snap of snaps) {
+	const evaluations: CivicStanceEvaluation[] = [];
+	for (const snap of evalSnaps) {
 		const data = snap.data() as Evaluation | undefined;
 		if (data && typeof data.evaluation === 'number') {
-			stances.push({ statementId: data.statementId, evaluation: data.evaluation });
+			evaluations.push({ statementId: data.statementId, evaluation: data.evaluation });
 		}
 	}
-	if (!stances.length) return undefined;
 
-	const campPosition = deriveCivicCampPosition(stances, leftAnchorStanceId, rightAnchorStanceId);
+	const campPosition = deriveCivicCampPositionFromIsland(
+		evaluations,
+		stanceMeta,
+		leftAnchorStanceId,
+		rightAnchorStanceId,
+	);
+	if (campPosition === null) return CENTER_STANDING;
 
 	return { campPosition, camp: deriveCamp(campPosition) };
 }
@@ -162,6 +191,24 @@ export const agoraJoinSession = onCall(
 			if (existing.exists) {
 				const participant = existing.data() as AgoraParticipant;
 
+				// A voyager seated before camp derivation existed (or before the
+				// centre fallback) can hold no campPosition. Heal it on rejoin, so
+				// nobody is re-asked on the bridge what the island already answered
+				// — a player who placed themselves by hand keeps their answer
+				// (campPosition is defined) and is left alone.
+				if (
+					participant.campPosition === undefined &&
+					session.sessionMode === AgoraSessionMode.civic &&
+					resolveSessionFlow(session).stances
+				) {
+					const standing = await deriveCivicStanding(session, uid);
+					await participantRef.update({
+						campPosition: standing.campPosition,
+						camp: standing.camp,
+						lastActive: Date.now(),
+					});
+				}
+
 				return {
 					sessionId: session.sessionId,
 					participantId,
@@ -194,7 +241,9 @@ export const agoraJoinSession = onCall(
 			// An event that runs without stances gets no camp at all — not a
 			// centred one. A centre position is a real answer ("I hold both sides
 			// equally"), and writing it for someone who was never asked would put
-			// a claim in their mouth.
+			// a claim in their mouth. A STANCE-flow civic player, though, always
+			// gets one (centre when nothing is derivable): the square never asks
+			// a voyager to position themselves again.
 			const civicStanding =
 				civic && flow.stances ? await deriveCivicStanding(session, uid) : undefined;
 			// Only ever on a first join — a rejoin returned above, which is what
