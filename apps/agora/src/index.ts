@@ -1,4 +1,6 @@
+/// <reference types="vite-plugin-pwa/client" />
 import m from 'mithril';
+import { registerSW } from 'virtual:pwa-register';
 // Self-hosted so the PWA precaches them: classroom devices get the real faces
 // offline, and no student's IP reaches a third-party font CDN.
 // Assistant = body. Alef = titles & buttons; it ships 400/700 only, so never
@@ -42,6 +44,15 @@ initAuth();
 // is where that round trip is collected. No-op on every other load.
 void completeRedirectSignIn();
 initI18n();
+
+// Register through the plugin's virtual module rather than the injected
+// script: with a plain register, a fresh deploy's worker takes control
+// silently and the WHOLE first session after every deploy still runs the
+// previous bundle (observed: an installed PWA showing yesterday's UI). The
+// virtual module reloads the page the moment a new worker takes over —
+// seconds after launch, before anyone has typed anything worth losing.
+// No-op in dev, where the killswitch below rules instead.
+registerSW({ immediate: true });
 
 // A PWA service worker left behind by a production build served on this
 // origin hijacks the dev server and pins the app to a stale precache
