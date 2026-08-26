@@ -24,7 +24,7 @@ import {
 
 export interface StudioPlanStartRequest {
 	organizationId: string;
-	topQuestionId?: string;
+	topQuestionId?: string | null;
 	language?: string;
 	timezone?: string;
 }
@@ -73,13 +73,16 @@ export const fn_studioPlanStart = onCall(
 	{ region: functionConfig.region, timeoutSeconds: 120 },
 	async (request: CallableRequest<StudioPlanStartRequest>): Promise<StudioPlanStartResult> => {
 		const caller = getCallerIdentity(request);
-		const { organizationId, topQuestionId, language, timezone } = request.data ?? {};
+		const { organizationId, language, timezone } = request.data ?? {};
 		if (!organizationId || typeof organizationId !== 'string') {
 			throw new HttpsError('invalid-argument', 'organizationId is required');
 		}
-		if (topQuestionId !== undefined && typeof topQuestionId !== 'string') {
+		// Clients send null / '' for "new question" mode.
+		const rawTop = request.data?.topQuestionId;
+		if (rawTop !== undefined && rawTop !== null && typeof rawTop !== 'string') {
 			throw new HttpsError('invalid-argument', 'Invalid topQuestionId');
 		}
+		const topQuestionId = typeof rawTop === 'string' && rawTop.trim() ? rawTop.trim() : undefined;
 
 		const access = await assertPlannerAccess(caller.uid, organizationId, topQuestionId);
 		const uiLanguage =
