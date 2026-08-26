@@ -554,8 +554,15 @@
 		border: 1px solid var(--border-subtle);
 		border-radius: var(--radius-sm);
 		background: var(--bg-card-solid);
+		// The card is dark — without these the browser's default black ink wins
+		color: var(--ink);
+		caret-color: var(--ink);
 		font: inherit;
 		resize: vertical;
+
+		&::placeholder {
+			color: var(--text-muted);
+		}
 	}
 
 	&__actions {
