@@ -98,7 +98,7 @@ export function TeacherHome(): m.Component {
 
 	return {
 		view() {
-			const { tier, loading } = getUserState();
+			const { tier, loading, signInError } = getUserState();
 
 			if (loading) {
 				return m(
@@ -115,6 +115,16 @@ export function TeacherHome(): m.Component {
 						[
 							m('h2', t('teacher.title')),
 							m('p.home-explanation', t('teacher.sign_in_required')),
+							signInError
+								? m(
+										'p.join__error',
+										t(
+											signInError === 'popup-blocked'
+												? 'teacher.sign_in_popup_blocked'
+												: 'teacher.sign_in_failed',
+										),
+									)
+								: null,
 							m(
 								'button.btn.btn--primary',
 								{

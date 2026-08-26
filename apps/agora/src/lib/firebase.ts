@@ -1,4 +1,4 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseApp, FirebaseError } from 'firebase/app';
 import {
 	getFirestore,
 	Firestore,
@@ -126,7 +126,24 @@ function init(): void {
 
 init();
 
+/**
+ * True when Firebase's redirect sign-in can actually finish on this origin.
+ *
+ * The redirect handler runs on the auth domain and leaves the credential in
+ * that domain's storage; the app then reads it back through a hidden iframe
+ * pointed at the same domain. Under third-party storage partitioning that
+ * iframe is handed a separate, empty store, so getRedirectResult() resolves
+ * to null and the teacher lands back on a signed-out page having watched
+ * Google's screen take over their tab for nothing. Only an auth domain that
+ * IS this origin escapes that — which agora-wizcol.web.app, served against
+ * wizcol-app.firebaseapp.com, is not.
+ */
+function canCompleteRedirectSignIn(): boolean {
+	return typeof window !== 'undefined' && window.location.hostname === firebaseConfig.authDomain;
+}
+
 export {
+	canCompleteRedirectSignIn,
 	app,
 	db,
 	auth,
@@ -160,4 +177,11 @@ export {
 
 export type { UploadTask };
 
-export type { User, Unsubscribe, DocumentReference, CollectionReference, QueryConstraint };
+export type {
+	User,
+	Unsubscribe,
+	DocumentReference,
+	CollectionReference,
+	QueryConstraint,
+	FirebaseError,
+};

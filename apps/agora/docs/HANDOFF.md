@@ -256,6 +256,25 @@ test.
   (needs ≥2 proposals rated by BOTH camps); fine for real classes.
 - Emulator REST list calls need `?pageSize=300` once data accumulates.
 - Dialogue scenes need the '···' reveal clicks before the continue button.
+- **`signInWithRedirect` can never finish on agora-wizcol.web.app
+  (2026-08-26)**: the redirect handler runs on `wizcol-app.firebaseapp.com`
+  and leaves the credential in THAT domain's storage; the app reads it back
+  through a hidden iframe there, which third-party storage partitioning hands
+  an empty store. `getRedirectResult()` resolves to null, so the teacher
+  watches Google's screen take over the tab and lands back signed out.
+  Reported from production as "the Google screen appeared again in the main
+  window and pressing it did nothing". Popup is unaffected (it postMessages
+  the credential home and needs no storage). Never make redirect a fallback
+  here — `canCompleteRedirectSignIn()` in `lib/firebase.ts` guards it.
+- **A returning teacher's link ALWAYS fails**: their Google identity is
+  already its own account, so `linkWithPopup` on today's anonymous visit
+  throws `auth/credential-already-in-use`. That is the normal path, not an
+  edge case. The error carries the credential (`linkWithPopup` sends
+  `returnIdpCredential: true`, so the backend answers 200 + errorMessage +
+  `oauthIdToken`), so `GoogleAuthProvider.credentialFromError()` →
+  `signInWithCredential()` finishes it with no window and no user gesture.
+  Note `linkWithCredential` does NOT send that flag, so a probe built on it
+  gets `credentialFromError() === null` and misleads.
 
 ## Next steps (agreed direction)
 

@@ -62,6 +62,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.positioned_count': '{{n}}/{{total}} מיקמו את עצמם',
 		'teacher.start_journey': 'פתיחת מנהרת הזמן',
 		'teacher.sign_in_required': 'כניסת מורים דורשת התחברות עם Google.',
+		'teacher.sign_in_popup_blocked':
+			'הדפדפן חסם את חלון ההתחברות. אפשרו חלונות קופצים לאתר הזה ונסו שוב.',
+		'teacher.sign_in_failed': 'ההתחברות לא הושלמה. נסו שוב.',
 		'scene.continue': 'המשך',
 		'scene.reveal': 'להמשך השיחה',
 		'scene.done_waiting': 'סיימתם! ממתינים לשאר הכיתה...',
@@ -715,6 +718,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.positioned_count': '{{n}}/{{total}} positioned',
 		'teacher.start_journey': 'Open the time tunnel',
 		'teacher.sign_in_required': 'Teacher entrance requires Google sign-in.',
+		'teacher.sign_in_popup_blocked':
+			'Your browser blocked the sign-in window. Allow pop-ups for this site and try again.',
+		'teacher.sign_in_failed': 'Sign-in did not complete. Please try again.',
 		'scene.continue': 'Continue',
 		'scene.reveal': 'Keep listening',
 		'scene.done_waiting': 'Done! Waiting for the rest of the class...',
@@ -1401,6 +1407,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.positioned_count': 'حدّد موقعه {{n}}/{{total}}',
 		'teacher.start_journey': 'فتح نفق الزمن',
 		'teacher.sign_in_required': 'مدخل المعلمين يتطلب تسجيل الدخول عبر Google.',
+		'teacher.sign_in_popup_blocked':
+			'حجب المتصفح نافذة تسجيل الدخول. اسمح بالنوافذ المنبثقة لهذا الموقع وحاول مرة أخرى.',
+		'teacher.sign_in_failed': 'لم يكتمل تسجيل الدخول. حاول مرة أخرى.',
 		'scene.continue': 'متابعة',
 		'scene.reveal': 'واصلوا الاستماع',
 		'scene.done_waiting': 'انتهيتم! بانتظار بقية الصف...',
@@ -2056,6 +2065,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.positioned_count': '{{n}}/{{total}} se posicionaron',
 		'teacher.start_journey': 'Abrir el túnel del tiempo',
 		'teacher.sign_in_required': 'La entrada de profesores requiere iniciar sesión con Google.',
+		'teacher.sign_in_popup_blocked':
+			'El navegador bloqueó la ventana de inicio de sesión. Permite las ventanas emergentes en este sitio e inténtalo de nuevo.',
+		'teacher.sign_in_failed': 'El inicio de sesión no se completó. Inténtalo de nuevo.',
 		'scene.continue': 'Continuar',
 		'scene.reveal': 'Seguir escuchando',
 		'scene.done_waiting': '¡Listo! Esperando al resto de la clase...',
@@ -2756,6 +2768,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.positioned_count': '{{n}}/{{total}} positioniert',
 		'teacher.start_journey': 'Zeittunnel öffnen',
 		'teacher.sign_in_required': 'Der Lehrkräfte-Eingang erfordert eine Google-Anmeldung.',
+		'teacher.sign_in_popup_blocked':
+			'Der Browser hat das Anmeldefenster blockiert. Erlaube Pop-ups für diese Seite und versuche es erneut.',
+		'teacher.sign_in_failed': 'Die Anmeldung wurde nicht abgeschlossen. Bitte versuche es erneut.',
 		'scene.continue': 'Weiter',
 		'scene.reveal': 'Weiter zuhören',
 		'scene.done_waiting': 'Fertig! Warten auf den Rest der Klasse...',
@@ -3468,6 +3483,9 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'teacher.positioned_count': '{{n}}/{{total}} gepositioneerd',
 		'teacher.start_journey': 'Open de tijdtunnel',
 		'teacher.sign_in_required': 'De docenteningang vereist inloggen met Google.',
+		'teacher.sign_in_popup_blocked':
+			'Je browser blokkeerde het inlogvenster. Sta pop-ups toe voor deze site en probeer het opnieuw.',
+		'teacher.sign_in_failed': 'Inloggen is niet voltooid. Probeer het opnieuw.',
 		'scene.continue': 'Doorgaan',
 		'scene.reveal': 'Blijf luisteren',
 		'scene.done_waiting': 'Klaar! Wachten op de rest van de klas...',
