@@ -2,28 +2,56 @@ import React, { useEffect, useRef, useCallback, useState, memo, useMemo } from '
 import MindElixir from 'mind-elixir';
 // Library CSS loads with this lazy chunk instead of the global stylesheet
 import 'mind-elixir/style.css';
-import type { MindElixirInstance, NodeObj, Operation } from 'mind-elixir';
+import type { MindElixirInstance, NodeObj, Operation, Topic } from 'mind-elixir';
 import { useNavigate } from 'react-router';
-import { Results, Statement, StatementType } from '@freedi/shared-types';
+import { MapDetailLevel, Results, Statement, StatementType } from '@freedi/shared-types';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import { updateStatementParents } from '@/controllers/db/statements/setStatements';
+import {
+	moveStatementBranch,
+	updateMapSide,
+	updateSiblingOrder,
+} from '@/controllers/db/statements/moveStatementBranch';
+import type { MapSide } from '@/controllers/db/statements/moveStatementBranch';
 import Modal from '@/view/components/modal/Modal';
 import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
-import type { ClusterKind } from '../mapHelpers/mindElixirTransform';
-import { filterResultsByLayer } from '../mapHelpers/layerFilter';
-import type { LayerVisibility } from '../mapHelpers/layerFilter';
+import type { ClusterBadge } from '../mapHelpers/mindElixirTransform';
+import { applyDetailLevel, buildMembershipMap, isRatable, kindOf } from '../mapHelpers/detailLevel';
 import {
 	createMindMapChild,
 	createMindMapSibling,
 	updateMindMapNodeText,
 } from '../mapHelpers/mindMapStatements';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
+import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
+import {
+	findNodeContext,
+	getTypeChangeChoices,
+	hasAnyTypeChange,
+	TYPE_LABEL_KEYS,
+} from '../mapHelpers/statementTypeChoices';
+import {
+	collectSubtree,
+	computeSiblingOrder,
+	flattenResults,
+	resolveNewParent,
+	validateMove,
+} from '../mapHelpers/moveBranch';
+import type { DropKind } from '../mapHelpers/moveBranch';
 import { FilterType } from '@/controllers/general/sorting';
 import PanZoomControls from './PanZoomControls';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
+import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
+import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
+import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
+import { statementSelector } from '@/redux/statements/statementsSlice';
+import { findAncestorChain, resolveEvaluationSettings } from '../mapHelpers/evaluationSettings';
+import { getMapEvaluationFaces } from '../mapHelpers/mapEvaluationFaces';
 
 // Zoom bounds + button step, shared by the wheel, pinch, and button handlers.
 const SCALE_MIN = 0.2;
@@ -33,7 +61,17 @@ const ZOOM_BUTTON_STEP = 1.25;
 interface Props {
 	descendants: Results;
 	filterBy: FilterType;
-	layerVisibility: LayerVisibility;
+	/** How deep the map opens the topic → merged idea → original hierarchy. */
+	level: MapDetailLevel;
+	/** Nodes the viewer opened past the level by hand. */
+	expandedIds: ReadonlySet<string>;
+	/** Fired when the viewer opens/closes a node with MindElixir's own expander. */
+	onToggleExpanded: (id: string, expanded: boolean) => void;
+	/** Nodes to badge "includes yours" (merged ideas holding one of the viewer's originals). */
+	markIds?: ReadonlySet<string>;
+	/** Scroll to and select this node whenever `locateToken` changes. */
+	locateId?: string | null;
+	locateToken?: number;
 	isAdmin: boolean;
 	/**
 	 * Allow dragging/regrouping nodes even for non-admins. Used by the shareable
@@ -48,18 +86,18 @@ interface Props {
 /**
  * Filter results to show only voted/chosen options
  */
-function filterDescendants(results: Results): Results | null {
+function filterDescendants<T extends Results>(results: T): T | null {
 	const { isVoted, isChosen } = results.top;
 	if (results.top.statementType === StatementType.option) {
 		if (!(isVoted || isChosen)) return null;
 	}
 
-	const filteredSub = results.sub
+	const filteredSub = (results.sub as T[])
 		.map((subResult) => filterDescendants(subResult))
-		.filter((result): result is Results => result !== null);
+		.filter((result): result is T => result !== null);
 
 	return {
-		top: results.top,
+		...results,
 		sub: filteredSub,
 	};
 }
@@ -81,7 +119,12 @@ function MindElixirMap({
 	descendants,
 	isAdmin,
 	filterBy,
-	layerVisibility,
+	level,
+	expandedIds,
+	onToggleExpanded,
+	markIds,
+	locateId,
+	locateToken,
 	allowRegroup = false,
 	boardMode = false,
 }: Readonly<Props>) {
@@ -94,9 +137,20 @@ function MindElixirMap({
 	const { mapContext, setMapContext } = useMapContext();
 	const { t } = useTranslation();
 
-	// State for move modal
-	const [draggedNodeId, setDraggedNodeId] = useState('');
-	const [intersectedNodeId, setIntersectedNodeId] = useState('');
+	// Pending drag-and-drop move, awaiting the user's confirmation. Holds every
+	// dragged node (MindElixir supports multi-select drags) plus the resolved
+	// new parent.
+	const [pendingMove, setPendingMove] = useState<{
+		draggedIds: string[];
+		newParentId: string;
+		targetId: string;
+		kind: DropKind;
+		mapSide?: MapSide;
+	} | null>(null);
+
+	// Translation key explaining why a drop was refused (the drop is undone and
+	// the modal turns into an explanation instead of a confirmation).
+	const [moveError, setMoveError] = useState<string | null>(null);
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
@@ -112,6 +166,9 @@ function MindElixirMap({
 		statementId: string;
 		isRoot: boolean;
 	}>({ visible: false, top: 0, left: 0, statementId: '', isRoot: false });
+
+	// Whether the "change type" popover under the node toolbar is open
+	const [typeMenuOpen, setTypeMenuOpen] = useState(false);
 
 	// Double click handler ref
 	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
@@ -133,6 +190,8 @@ function MindElixirMap({
 	tRef.current = t;
 	const isAdminRef = useRef(isAdmin);
 	isAdminRef.current = isAdmin;
+	const onToggleExpandedRef = useRef(onToggleExpanded);
+	onToggleExpandedRef.current = onToggleExpanded;
 
 	// Ref to track node ID pending inline edit (set after creating a node)
 	const pendingEditNodeIdRef = useRef<string | null>(null);
@@ -144,6 +203,7 @@ function MindElixirMap({
 	const removeNodeButtons = useCallback(() => {
 		injectedElementsRef.current.forEach((el) => el.remove());
 		injectedElementsRef.current = [];
+		setTypeMenuOpen(false);
 		setToolbarState((prev) => (prev.visible ? { ...prev, visible: false } : prev));
 	}, []);
 
@@ -158,10 +218,14 @@ function MindElixirMap({
 		const statementId = nodeId.startsWith('me') ? nodeId.substring(2) : nodeId;
 		const isRoot = tpcEl.parentElement?.tagName === 'ME-ROOT';
 
+		setTypeMenuOpen(false);
+
 		// Use viewport coordinates directly (toolbar is position: fixed)
 		setToolbarState({
 			visible: true,
-			top: nodeRect.top - 44,
+			// Anchored by its own bottom edge (see .toolbar's translateY(-100%)) so
+			// the strip clears the node whether or not it carries the rating row.
+			top: nodeRect.top - 6,
 			left: nodeRect.left + nodeRect.width / 2,
 			statementId,
 			isRoot: !!isRoot,
@@ -314,20 +378,35 @@ function MindElixirMap({
 	// Memoize data to prevent unnecessary refresh calls that rebuild the DOM.
 	// Without memoization, toMindElixirData creates a new object every render,
 	// causing the refresh useEffect to fire and destroy any active inline edit (input-box).
-	// Translated count badges for cluster nodes ("5 merged" / "7 grouped").
-	const formatClusterTag = useCallback(
-		(kind: ClusterKind, count: number) =>
-			kind === 'synth' ? `${count} ${t('merged')}` : `${count} ${t('grouped')}`,
+	// Translated pills on cluster nodes ("5 voices", "3 ideas · 1 merged", …).
+	const formatBadge = useCallback(
+		(badge: ClusterBadge, count: number): string => {
+			const n = String(count);
+			switch (badge) {
+				case 'voices':
+					return t('{n} voices').replace('{n}', n);
+				case 'ideas':
+					return t('{n} ideas').replace('{n}', n);
+				case 'merged':
+					return t('{n} merged').replace('{n}', n);
+				case 'mine':
+					return t('includes yours');
+				case 'aiTitled':
+					return t('AI-titled');
+				case 'more':
+					return t('+{n} more').replace('{n}', n);
+			}
+		},
 		[t],
 	);
 
 	const data = useMemo(() => {
-		const byLayer = filterResultsByLayer(descendants, layerVisibility);
+		const leveled = applyDetailLevel(descendants, level, expandedIds);
 		const filtered =
-			filterBy === FilterType.questionsResults ? filterDescendants(byLayer) : byLayer;
+			filterBy === FilterType.questionsResults ? filterDescendants(leveled) : leveled;
 
-		return filtered ? toMindElixirData(filtered, [], formatClusterTag, { boardMode }) : null;
-	}, [descendants, filterBy, layerVisibility, formatClusterTag, boardMode]);
+		return filtered ? toMindElixirData(filtered, [], formatBadge, { boardMode, markIds }) : null;
+	}, [descendants, filterBy, level, expandedIds, formatBadge, boardMode, markIds]);
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -402,12 +481,14 @@ function MindElixirMap({
 		// Store reference
 		mindRef.current = mind;
 
-		// Use RIGHT layout for compact single-direction tree, then scale the
+		// SIDE layout, but every first-level branch carries an explicit side (see
+		// `toMindElixirData`), so a map nobody has arranged still draws entirely
+		// to the right — SIDE's auto-balancing never gets a say. Then scale the
 		// whole map to fill the available canvas (instead of just centering the
 		// root, which leaves a large tree mostly off-screen).
 		setTimeout(() => {
 			if (mindRef.current) {
-				mindRef.current.initRight();
+				mindRef.current.initSide();
 				mindRef.current.scaleFit();
 				setMapScale(mindRef.current.scaleVal);
 			}
@@ -439,6 +520,12 @@ function MindElixirMap({
 			}));
 		});
 
+		// The viewer opened/closed a node with the library's own expander. Mirror
+		// it into React state, or the next refresh(data) would fold it again.
+		mind.bus.addListener('expandNode', (nodeObj: NodeObj) => {
+			onToggleExpandedRef.current(nodeObj.id, nodeObj.expanded !== false);
+		});
+
 		// MutationObserver to detect node selection and inject buttons
 		// More reliable than relying on MindElixir's event bus timing
 		const selectionObserver = new MutationObserver((mutations) => {
@@ -459,21 +546,107 @@ function MindElixirMap({
 			subtree: true,
 		});
 
+		/**
+		 * Shared landing point for every drop, whatever produced it: either
+		 * re-order silently, open the confirmation, or refuse with a reason.
+		 * `onRefuse` puts the canvas back — MindElixir's own drops need an undo,
+		 * a drop on the root never moved anything visually so it needs nothing.
+		 */
+		const applyDrop = async (
+			draggedIds: string[],
+			targetId: string,
+			dropKind: DropKind,
+			onRefuse: () => void,
+			/** Only set for root drops: which side of the subject to hang from. */
+			mapSide?: MapSide,
+		) => {
+			const all = flattenResults(descendantsRef.current);
+			const newParent = resolveNewParent(all, targetId, dropKind);
+			const dragged = draggedIds
+				.map((id) => all.find((candidate) => candidate.statementId === id))
+				.filter((candidate): candidate is Statement => Boolean(candidate));
+
+			if (!newParent || dragged.length === 0) {
+				onRefuse();
+
+				return;
+			}
+
+			const validIds = dragged.map((node) => node.statementId);
+
+			// Reordering under the parent a node already has changes nothing
+			// structural, so it is saved straight away — asking "move here?" for
+			// a nudge between siblings would be noise.
+			const isReorderOnly = dragged.every((node) => node.parentId === newParent.statementId);
+			if (isReorderOnly) {
+				// Dropping a branch the root already owns beside the root is not a
+				// re-parent, it is a side change — the only way to cross the subject.
+				// Leave the sibling order alone: the drop zone is the root's own band,
+				// so the pointer's height says nothing about where in the list it goes.
+				if (mapSide) {
+					await Promise.all(
+						dragged
+							.filter((node) => node.mapSide !== mapSide)
+							.map((node) => updateMapSide(node.statementId, mapSide)),
+					);
+
+					return;
+				}
+
+				await updateSiblingOrder(
+					computeSiblingOrder(all, newParent.statementId, validIds, targetId, dropKind),
+				);
+
+				return;
+			}
+
+			const refusal = dragged
+				.map((node) => validateMove(node, newParent, collectSubtree(all, node.statementId)))
+				.find((validation) => !validation.allowed);
+
+			if (refusal) {
+				onRefuse();
+				setPendingMove(null);
+				setMoveError(refusal.reasonKey ?? 'This move is not allowed');
+			} else {
+				setMoveError(null);
+				setPendingMove({
+					draggedIds: validIds,
+					newParentId: newParent.statementId,
+					targetId,
+					kind: dropKind,
+					mapSide,
+				});
+			}
+
+			setMapContext((prev) => ({
+				...prev,
+				moveStatementModal: true,
+			}));
+		};
+
 		// Event: Operation happened (for tracking node moves and text edits)
 		mind.bus.addListener('operation', async (operation: Operation) => {
-			if (canDrag && operation.name === 'moveNodeIn') {
-				// A node was moved - store IDs for confirmation
-				if ('obj' in operation && 'toObj' in operation) {
-					const typedOp = operation as { obj: NodeObj; toObj: NodeObj; name: string };
-					setDraggedNodeId(typedOp.obj.id);
-					setIntersectedNodeId(typedOp.toObj.id);
+			// Drag-and-drop. MindElixir fires `{ objs, toObj }` (plural — a drag can
+			// carry a multi-selection) for all three drop kinds; dropping *next to*
+			// a node re-parents to that node's parent.
+			const dropKind: DropKind | null =
+				operation.name === 'moveNodeIn'
+					? 'in'
+					: operation.name === 'moveNodeBefore'
+						? 'before'
+						: operation.name === 'moveNodeAfter'
+							? 'after'
+							: null;
 
-					// Show confirmation modal
-					setMapContext((prev) => ({
-						...prev,
-						moveStatementModal: true,
-					}));
-				}
+			if (canDrag && dropKind && 'objs' in operation && 'toObj' in operation) {
+				const typedOp = operation as { objs: NodeObj[]; toObj: NodeObj; name: string };
+				await applyDrop(
+					typedOp.objs.map((obj) => obj.id),
+					typedOp.toObj.id,
+					dropKind,
+					() => mind.undo(),
+				);
 			}
 
 			// Handle inline text editing
@@ -501,6 +674,118 @@ function MindElixirMap({
 				}, 50);
 			}
 		});
+
+		// ------------------------------------------------------------------
+		// Dropping onto — or beside — the root ("main") node.
+		//
+		// MindElixir refuses the root as a drop target: its hit test requires
+		// `nodeObj.parent`, which the root has not got, so `meet` stays null and
+		// no operation is ever fired — dragging a node onto the subject did
+		// nothing at all. Handle exactly that gap here. This runs only when the
+		// library itself found no target, so the two never both act on one drop.
+		//
+		// The drop zone reaches past the root on both sides, and which side the
+		// pointer is on decides which side of the map the branch hangs from.
+		// That is the only way to move a branch across the root: MindElixir has
+		// no drag gesture for `direction` at all.
+		// ------------------------------------------------------------------
+		const ROOT_DROP_CLASS = 'mind-map-root-drop';
+		// How far beyond the root counts as "drop it on this side".
+		const ROOT_DROP_MARGIN_X = 180;
+		const ROOT_DROP_MARGIN_Y = 40;
+		let rootDropSide: MapSide | null = null;
+
+		const getRootTopic = () => container.querySelector('me-root > me-tpc') as HTMLElement | null;
+
+		const setRootDropSide = (side: MapSide | null) => {
+			rootDropSide = side;
+			const rootTopic = getRootTopic();
+			if (!rootTopic) return;
+			rootTopic.classList.toggle(ROOT_DROP_CLASS, side !== null);
+			if (side) {
+				rootTopic.dataset.dropSide = side;
+			} else {
+				delete rootTopic.dataset.dropSide;
+			}
+		};
+
+		// Mirror of MindElixir's own "can this element be met" test, so we only
+		// step in for drops it has declined.
+		const libraryWouldMeet = (element: Element | null, dragged: Topic[]): boolean => {
+			if (!element || element.tagName !== 'ME-TPC') return false;
+			const { nodeObj } = element as HTMLElement & { nodeObj?: { parent?: unknown } };
+			if (!nodeObj?.parent) return false;
+
+			return dragged.every(
+				(node) => node !== element && !node.parentElement?.parentElement?.contains(element),
+			);
+		};
+
+		const handleRootDragMove = (e: PointerEvent) => {
+			const dragged = mindRef.current?.dragged ?? [];
+			if (!canDrag || dragged.length === 0) {
+				if (rootDropSide) setRootDropSide(null);
+
+				return;
+			}
+
+			// Same probe offsets the library uses, so its verdict is reproduced.
+			const offset = 12 * (mindRef.current?.scaleVal ?? 1);
+			const probes = [
+				document.elementFromPoint(e.clientX, e.clientY),
+				document.elementFromPoint(e.clientX, e.clientY - offset),
+				document.elementFromPoint(e.clientX, e.clientY + offset),
+			];
+
+			if (probes.some((element) => libraryWouldMeet(element, dragged))) {
+				setRootDropSide(null);
+
+				return;
+			}
+
+			const rootRect = getRootTopic()?.getBoundingClientRect();
+			if (!rootRect) {
+				setRootDropSide(null);
+
+				return;
+			}
+
+			const inZone =
+				e.clientX >= rootRect.left - ROOT_DROP_MARGIN_X &&
+				e.clientX <= rootRect.right + ROOT_DROP_MARGIN_X &&
+				e.clientY >= rootRect.top - ROOT_DROP_MARGIN_Y &&
+				e.clientY <= rootRect.bottom + ROOT_DROP_MARGIN_Y;
+
+			if (!inZone) {
+				setRootDropSide(null);
+
+				return;
+			}
+
+			setRootDropSide(e.clientX < rootRect.left + rootRect.width / 2 ? 'left' : 'right');
+		};
+
+		const handleRootDrop = async () => {
+			const side = rootDropSide;
+			if (!side) return;
+			const dragged = mindRef.current?.dragged ?? [];
+			setRootDropSide(null);
+			if (dragged.length === 0) return;
+
+			const draggedIds = dragged
+				.map((node) => node.nodeObj?.id)
+				.filter((id): id is string => Boolean(id));
+
+			// Nothing moved on the canvas, so a refusal has nothing to undo.
+			await applyDrop(draggedIds, descendantsRef.current.top.statementId, 'in', () => {}, side);
+		};
+
+		const handleRootDragCancel = () => setRootDropSide(null);
+
+		// Capture phase for the drop: the library's own pointerup clears `dragged`.
+		window.addEventListener('pointermove', handleRootDragMove);
+		window.addEventListener('pointerup', handleRootDrop, true);
+		window.addEventListener('pointercancel', handleRootDragCancel, true);
 
 		// Keyboard handler for Tab (child) and Enter (sibling)
 		const handleKeyDown = async (e: KeyboardEvent) => {
@@ -681,6 +966,10 @@ function MindElixirMap({
 
 		// Cleanup
 		return () => {
+			window.removeEventListener('pointermove', handleRootDragMove);
+			window.removeEventListener('pointerup', handleRootDrop, true);
+			window.removeEventListener('pointercancel', handleRootDragCancel, true);
+			setRootDropSide(null);
 			selectionObserver.disconnect();
 			container.removeEventListener('keydown', handleKeyDown);
 			container.removeEventListener('click', handleContainerClick);
@@ -760,6 +1049,35 @@ function MindElixirMap({
 		}
 	}, [data, removeNodeButtons]);
 
+	// A depth change redraws the tree; the toolbar may be pointing at a node
+	// that just folded away, so close it rather than leave it floating.
+	useEffect(() => {
+		removeNodeButtons();
+	}, [level, removeNodeButtons]);
+
+	// "My ideas": once the data holding the expanded path has been drawn, bring
+	// the viewer's statement into view and select it so the toolbar opens on it.
+	const handledLocateRef = useRef(0);
+	useEffect(() => {
+		if (!locateToken || locateToken === handledLocateRef.current) return;
+		if (!locateId || !mindRef.current) return;
+		handledLocateRef.current = locateToken;
+		const mind = mindRef.current;
+		const timer = setTimeout(() => {
+			try {
+				const tpc = mind.findEle(locateId);
+				mind.scrollIntoView(tpc);
+				mind.selectNode(tpc);
+				setMapContext((prev) => ({ ...prev, selectedId: locateId }));
+			} catch {
+				// Not in the DOM (yet) — the next data refresh re-runs this effect.
+				handledLocateRef.current = 0;
+			}
+		}, 150);
+
+		return () => clearTimeout(timer);
+	}, [locateToken, locateId, data, setMapContext]);
+
 	// Handle layout direction change
 	const handleLayoutChange = useCallback((newDirection: 'SIDE' | 'LEFT' | 'RIGHT') => {
 		if (!mindRef.current) return;
@@ -778,32 +1096,66 @@ function MindElixirMap({
 		}
 	}, []);
 
-	// Handle move statement confirmation
-	const handleMoveStatement = async (move: boolean) => {
-		if (move && draggedNodeId && intersectedNodeId) {
-			const [draggedStatement, newParentStatement] = await Promise.all([
-				getStatementFromDB(draggedNodeId),
-				getStatementFromDB(intersectedNodeId),
-			]);
-
-			if (draggedStatement && newParentStatement) {
-				await updateStatementParents(draggedStatement, newParentStatement);
-			}
-		} else if (!move && mindRef.current) {
-			// Undo the move in MindElixir
-			mindRef.current.undo();
-		}
-
-		// Close modal
+	const closeMoveModal = useCallback(() => {
 		setMapContext((prev) => ({
 			...prev,
 			moveStatementModal: false,
 		}));
+		setPendingMove(null);
+		setMoveError(null);
+	}, [setMapContext]);
 
-		// Clear stored IDs
-		setDraggedNodeId('');
-		setIntersectedNodeId('');
-	};
+	// Handle move statement confirmation. The whole branch travels with the
+	// dragged node, so every descendant's ancestor chain is rewritten too.
+	const handleMoveStatement = useCallback(
+		async (move: boolean) => {
+			if (!move || !pendingMove) {
+				mindRef.current?.undo();
+				closeMoveModal();
+
+				return;
+			}
+
+			const all = flattenResults(descendants);
+			const newParent = all.find((candidate) => candidate.statementId === pendingMove.newParentId);
+
+			if (!newParent) {
+				mindRef.current?.undo();
+				closeMoveModal();
+
+				return;
+			}
+
+			const siblingOrder = computeSiblingOrder(
+				all,
+				pendingMove.newParentId,
+				pendingMove.draggedIds,
+				pendingMove.targetId,
+				pendingMove.kind,
+			);
+
+			for (const draggedId of pendingMove.draggedIds) {
+				const dragged = all.find((candidate) => candidate.statementId === draggedId);
+				if (!dragged) continue;
+
+				const result = await moveStatementBranch({
+					statement: dragged,
+					newParent,
+					subtree: collectSubtree(all, draggedId),
+					siblingOrder,
+					mapSide: pendingMove.mapSide,
+				});
+
+				if (!result.success) {
+					mindRef.current?.undo();
+					break;
+				}
+			}
+
+			closeMoveModal();
+		},
+		[pendingMove, descendants, closeMoveModal],
+	);
 
 	// Restore state from localStorage
 	const handleRestore = useCallback(() => {
@@ -863,6 +1215,40 @@ function MindElixirMap({
 		}
 	}, [toolbarState.statementId, removeNodeButtons]);
 
+	// Which types this node may switch to. Computed from the unfiltered tree so
+	// hidden layers still count towards the "has option children" rule.
+	const typeChoices = useMemo(() => {
+		if (!toolbarState.statementId) return [];
+		const context = findNodeContext(descendants, toolbarState.statementId);
+		if (!context) return [];
+
+		return getTypeChangeChoices(context);
+	}, [descendants, toolbarState.statementId]);
+
+	const canChangeType = isAdmin && hasAnyTypeChange(typeChoices);
+
+	const handleChangeType = useCallback(
+		async (newType: StatementType) => {
+			const statement = findStatementById(descendants, toolbarState.statementId);
+			if (!statement) return;
+
+			const result = await changeStatementType(statement, newType, isAdmin);
+			if (!result.success) {
+				logError(new Error(result.error ?? 'Type change refused'), {
+					operation: 'components.MindElixirMap.handleChangeType',
+					statementId: statement.statementId,
+					metadata: { newType },
+				});
+
+				return;
+			}
+
+			setTypeMenuOpen(false);
+			removeNodeButtons();
+		},
+		[descendants, toolbarState.statementId, isAdmin, removeNodeButtons],
+	);
+
 	const handleToolbarDelete = useCallback(() => {
 		if (!toolbarState.statementId) return;
 		const statement = findStatementById(descendants, toolbarState.statementId);
@@ -871,6 +1257,103 @@ function MindElixirMap({
 			removeNodeButtons();
 		});
 	}, [toolbarState.statementId, descendants, t, removeNodeButtons]);
+
+	// ── Node evaluation ──────────────────────────────────────────────────────
+	// The toolbar doubles as the rating surface: pick a face and the vote is
+	// written for the selected node. Which faces appear is inherited from the
+	// question the node hangs under — see resolveEvaluationSettings.
+	const { creator } = useAuthentication();
+
+	const selectedStatement = useMemo(
+		() =>
+			toolbarState.statementId ? findStatementById(descendants, toolbarState.statementId) : null,
+		[descendants, toolbarState.statementId],
+	);
+
+	// The map is rooted at the question being viewed, which is not necessarily
+	// the top question — read that one from the store so its settings still act
+	// as the global fallback for a node deep inside a sub-question.
+	const topStatementSelector = useMemo(
+		() => statementSelector(descendants.top.topParentId),
+		[descendants.top.topParentId],
+	);
+	const topStatement = useSelector(topStatementSelector);
+
+	const ancestorChain = useMemo(() => {
+		const chain = toolbarState.statementId
+			? (findAncestorChain(descendants, toolbarState.statementId) ?? [])
+			: [];
+		if (!topStatement || chain.some((a) => a.statementId === topStatement.statementId)) {
+			return chain;
+		}
+
+		return [...chain, topStatement];
+	}, [descendants, toolbarState.statementId, topStatement]);
+
+	const evaluationSettings = useMemo(
+		() => resolveEvaluationSettings(ancestorChain),
+		[ancestorChain],
+	);
+	const evaluationFaces = useMemo(
+		() => getMapEvaluationFaces(evaluationSettings.ratingMode),
+		[evaluationSettings.ratingMode],
+	);
+
+	// A halted question freezes rating here exactly as it does on the cards.
+	const { isHalted } = useIsProcessHalted(ancestorChain[0]);
+
+	// Votes are stored per parent, and only the selected node's are needed, so
+	// the listener follows the selection instead of subscribing to the whole map.
+	const evaluationParentId = selectedStatement?.parentId;
+	useEffect(() => {
+		if (!evaluationParentId || !creator?.uid) return;
+		const unsubscribe = listenToEvaluations(evaluationParentId, undefined, creator.uid);
+
+		return () => unsubscribe?.();
+	}, [evaluationParentId, creator?.uid]);
+
+	const storedEvaluationSelector = useMemo(
+		() => evaluationSelector(toolbarState.statementId),
+		[toolbarState.statementId],
+	);
+	const storedEvaluation = useAppSelector(storedEvaluationSelector);
+
+	// Shown immediately on click; the listener overwrites it once the write
+	// lands, so a rejected vote falls back to the stored value on its own.
+	const [optimisticEvaluation, setOptimisticEvaluation] = useState<number | undefined>(undefined);
+	useEffect(() => {
+		setOptimisticEvaluation(storedEvaluation);
+	}, [storedEvaluation, toolbarState.statementId]);
+
+	const handleEvaluate = useCallback(
+		(value: number) => {
+			if (!selectedStatement || !creator) return;
+			setOptimisticEvaluation(value);
+			setEvaluationToDB(selectedStatement, creator, value);
+		},
+		[selectedStatement, creator],
+	);
+
+	// Which node sits inside which merged idea / theme — decides what is ratable.
+	const membership = useMemo(() => buildMembershipMap(descendants), [descendants]);
+
+	// The root is the question itself: nothing above it to rate it against, and
+	// no parentId to file a vote under.
+	const evaluationAllowedHere =
+		!toolbarState.isRoot &&
+		Boolean(selectedStatement?.parentId) &&
+		Boolean(creator) &&
+		evaluationSettings.enableEvaluation &&
+		!isHalted;
+	// Themes are headings, not proposals; an original inside a merged idea is
+	// already counted through the merge, so its faces show read-only.
+	const canEvaluateNode =
+		evaluationAllowedHere && !!selectedStatement && isRatable(selectedStatement, membership);
+	const countedIntoMerge =
+		evaluationAllowedHere &&
+		!!selectedStatement &&
+		kindOf(selectedStatement) === 'raw' &&
+		Boolean(membership.get(selectedStatement.statementId)?.parentSynthId);
 
 	if (!data) {
 		return (
@@ -897,51 +1380,51 @@ function MindElixirMap({
 					onMouseDown={(e) => e.stopPropagation()}
 					onPointerDown={(e) => e.stopPropagation()}
 				>
-					<button
-						className={styles.toolbarBtn}
-						onClick={handleToolbarLink}
-						aria-label="Open statement"
-						title={t('Open')}
-					>
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
+					<div className={styles.toolbarRow}>
+						<button
+							className={styles.toolbarBtn}
+							onClick={handleToolbarLink}
+							aria-label="Open statement"
+							title={t('Open')}
 						>
-							<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-							<polyline points="15 3 21 3 21 9" />
-							<line x1="10" y1="14" x2="21" y2="3" />
-						</svg>
-					</button>
-					<button
-						className={styles.toolbarBtn}
-						onClick={handleToolbarEdit}
-						aria-label="Edit node"
-						title={t('Edit')}
-					>
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+								<polyline points="15 3 21 3 21 9" />
+								<line x1="10" y1="14" x2="21" y2="3" />
+							</svg>
+						</button>
+						<button
+							className={styles.toolbarBtn}
+							onClick={handleToolbarEdit}
+							aria-label="Edit node"
+							title={t('Edit')}
 						>
-							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-						</svg>
-					</button>
-					{!toolbarState.isRoot && (
-						<>
-							<div className={styles.toolbarDivider} />
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+								<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+							</svg>
+						</button>
+						{canChangeType && (
 							<button
-								className={`${styles.toolbarBtn} ${styles.toolbarBtnDelete}`}
-								onClick={handleToolbarDelete}
-								aria-label="Delete node"
-								title={t('Delete')}
+								className={`${styles.toolbarBtn} ${typeMenuOpen ? styles.toolbarBtnActive : ''}`}
+								onClick={() => setTypeMenuOpen((open) => !open)}
+								aria-label="Change statement type"
+								aria-expanded={typeMenuOpen}
+								title={t('Change type')}
 							>
 								<svg
 									viewBox="0 0 24 24"
@@ -951,13 +1434,89 @@ function MindElixirMap({
 									strokeLinecap="round"
 									strokeLinejoin="round"
 								>
-									<polyline points="3 6 5 6 21 6" />
-									<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-									<line x1="10" y1="11" x2="10" y2="17" />
-									<line x1="14" y1="11" x2="14" y2="17" />
+									<rect x="3" y="13" width="8" height="8" rx="2" />
+									<circle cx="17" cy="17" r="4" />
+									<path d="M7 3 3 9h8L7 3z" />
 								</svg>
 							</button>
-						</>
+						)}
+						{!toolbarState.isRoot && (
+							<>
+								<div className={styles.toolbarDivider} />
+								<button
+									className={`${styles.toolbarBtn} ${styles.toolbarBtnDelete}`}
+									onClick={handleToolbarDelete}
+									aria-label="Delete node"
+									title={t('Delete')}
+								>
+									<svg
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<polyline points="3 6 5 6 21 6" />
+										<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+										<line x1="10" y1="11" x2="10" y2="17" />
+										<line x1="14" y1="11" x2="14" y2="17" />
+									</svg>
+								</button>
+							</>
+						)}
+					</div>
+
+					{(canEvaluateNode || countedIntoMerge) && (
+						<div
+							className={`${styles.evaluationRow} ${countedIntoMerge ? styles.evaluationRowReadOnly : ''}`}
+							role="group"
+							aria-label={countedIntoMerge ? t('Counted into the merged idea') : t('Rate this')}
+							title={countedIntoMerge ? t('Counted into the merged idea') : undefined}
+						>
+							{evaluationFaces.map((face) => {
+								const isActive = optimisticEvaluation === face.value;
+
+								return (
+									<button
+										key={face.value}
+										type="button"
+										className={`${styles.evaluationBtn} ${isActive ? styles.evaluationBtnActive : ''}`}
+										style={{ backgroundColor: isActive ? face.colorSelected : face.color }}
+										onClick={() => handleEvaluate(face.value)}
+										disabled={countedIntoMerge}
+										aria-label={t(face.labelKey)}
+										aria-pressed={isActive}
+										title={t(face.labelKey)}
+									>
+										{face.svg ? (
+											<img src={face.svg} alt="" aria-hidden />
+										) : (
+											<span className={styles.evaluationEmoji} aria-hidden>
+												{face.emoji}
+											</span>
+										)}
+									</button>
+								);
+							})}
+						</div>
+					)}
+					{typeMenuOpen && (
+						<div className={styles.typeMenu} role="menu">
+							{typeChoices.map((choice) => (
+								<button
+									key={choice.type}
+									role="menuitem"
+									className={`${styles.typeMenuItem} ${choice.isCurrent ? styles.typeMenuItemCurrent : ''}`}
+									disabled={!choice.allowed}
+									title={choice.reasonKey ? t(choice.reasonKey) : undefined}
+									onClick={() => handleChangeType(choice.type)}
+								>
+									<span className={styles.typeMenuSwatch} data-type={choice.type} aria-hidden />
+									{t(TYPE_LABEL_KEYS[choice.type] ?? choice.type)}
+								</button>
+							))}
+						</div>
 					)}
 				</div>
 			)}
@@ -1096,21 +1655,32 @@ function MindElixirMap({
 				)}
 			</div>
 
-			{/* Move Statement Confirmation Modal */}
+			{/* Move Statement Confirmation Modal (or refusal notice) */}
 			{mapContext.moveStatementModal && (
 				<Modal>
 					<div className={styles.moveModal}>
-						<h1>{t('Are you sure you want to move statement here?')}</h1>
+						<h1>{moveError ? t(moveError) : t('Are you sure you want to move statement here?')}</h1>
 						<div className={styles.btnBox}>
-							<button onClick={() => handleMoveStatement(true)} className="btn btn--large btn--add">
-								{t('Yes')}
-							</button>
-							<button
-								onClick={() => handleMoveStatement(false)}
-								className="btn btn--large btn--disagree"
-							>
-								{t('No')}
-							</button>
+							{moveError ? (
+								<button onClick={closeMoveModal} className="btn btn--large btn--add">
+									{t('OK')}
+								</button>
+							) : (
+								<>
+									<button
+										onClick={() => handleMoveStatement(true)}
+										className="btn btn--large btn--add"
+									>
+										{t('Yes')}
+									</button>
+									<button
+										onClick={() => handleMoveStatement(false)}
+										className="btn btn--large btn--disagree"
+									>
+										{t('No')}
+									</button>
+								</>
+							)}
 						</div>
 					</div>
 				</Modal>

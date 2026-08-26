@@ -1,5 +1,4 @@
 import React, {
-  createContext,
   useState,
   useCallback,
   useEffect,
@@ -12,24 +11,14 @@ import {
   STORAGE_KEY,
   getDirection,
   getRowDirection,
-  type Direction,
-  type RowDirection,
   type TranslationDictionary,
 } from '../core';
-import { languages, getLanguageData } from '../languages';
+import { getLanguageData } from '../languages';
+import { TranslationContext, type TranslationContextValue } from './context';
 
-export interface TranslationContextValue {
-  t: (text: string) => string;
-  tWithParams: (text: string, params: Record<string, string | number>) => string;
-  currentLanguage: LanguagesEnum;
-  changeLanguage: (newLanguage: LanguagesEnum) => void;
-  dir: Direction;
-  rowDirection: RowDirection;
-}
-
-export const TranslationContext = createContext<TranslationContextValue | undefined>(
-  undefined
-);
+// The context itself lives in ./context so client apps can use
+// `LazyTranslationProvider` without pulling the eager language barrel.
+export { TranslationContext, type TranslationContextValue };
 
 interface TranslationProviderProps {
   children: ReactNode;

@@ -1,0 +1,142 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Organization switcher — trigger + listbox popover in the top bar.
+.org-switcher {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	min-inline-size: 0;
+
+	&__trigger {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-block-size: 44px;
+		max-inline-size: 16rem;
+		padding: 0 var(--space-sm);
+		color: var(--text-title);
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		transition: background-color var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+	}
+
+	&__dot {
+		flex-shrink: 0;
+		inline-size: 0.625rem;
+		block-size: 0.625rem;
+		border-radius: 50%;
+		background: var(--org-accent);
+	}
+
+	&__name {
+		@include truncate;
+		min-inline-size: 0;
+		font-weight: 600;
+	}
+
+	&__chevron {
+		flex-shrink: 0;
+		inline-size: 1rem;
+		block-size: 1rem;
+		color: var(--text-meta);
+		transition: transform var(--motion-fast) var(--motion-ease);
+	}
+
+	&__popover {
+		@include shadow-elevated;
+		position: absolute;
+		inset-block-start: calc(100% + 0.25rem);
+		inset-inline-start: 0;
+		z-index: var(--studio-z-drawer);
+		min-inline-size: 16rem;
+		max-inline-size: min(22rem, 90vw);
+		padding: var(--space-xs);
+		background: var(--card-default);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-md);
+	}
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		max-block-size: 50vh;
+		overflow-y: auto;
+	}
+
+	&__option {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-block-size: 44px;
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+
+		&:hover,
+		&:focus-visible {
+			background: var(--bg-hover);
+		}
+
+		&:focus-visible {
+			outline-offset: -2px;
+		}
+
+		&--active {
+			background: var(--org-accent-wash);
+
+			.org-switcher__name {
+				color: var(--org-accent);
+			}
+		}
+
+		.org-switcher__name {
+			flex: 1 1 auto;
+		}
+	}
+
+	&__create {
+		display: block;
+		inline-size: 100%;
+		min-block-size: 44px;
+		margin-block-start: var(--space-xs);
+		padding: var(--space-xs) var(--space-sm);
+		color: var(--btn-primary);
+		font-weight: 600;
+		text-align: start;
+		background: transparent;
+		border: none;
+		border-block-start: 1px solid var(--border-light);
+		cursor: pointer;
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+	}
+
+	&--open {
+		.org-switcher__chevron {
+			transform: rotate(180deg);
+		}
+	}
+
+	// A single org with nothing to switch to: plain text, same footprint.
+	&--single {
+		gap: var(--space-xs);
+		min-block-size: 44px;
+		padding: 0 var(--space-sm);
+		color: var(--text-title);
+	}
+
+	@include mobile {
+		&__trigger {
+			max-inline-size: 9rem;
+		}
+	}
+}

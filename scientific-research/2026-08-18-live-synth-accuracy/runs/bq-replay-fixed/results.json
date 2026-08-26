@@ -1,0 +1,598 @@
+{
+  "synths": {
+    "items": [
+      {
+        "id": "7SOH09HPJD-l",
+        "title": "הקצו משאבים כספיים וחומריים כדי להפוך מחקר למנוע שינוי במציאות",
+        "description": "יש להעמיד לרשות מיזמים מחקריים את המשאבים הנדרשים לביצוע המחקר ולהשגת מטרות השינוי. ההקצאה תכלול תקציבים ומימון ישיר, לצד חומרי לימוד, כלים טכנולוגיים, ציוד, צוות והוצאות נוספות, כך שהמחקר יוכל להתקדם ולהשפיע בפועל על המציאות. שילוב בין משאבים כספיים לבין אמצעים חומריים ותפעוליים ייתן מענה לצרכים המעשיים של המיזמים ויתמוך בהצלחתם.",
+        "members": [
+          {
+            "id": "w2l5-ikf1o8U"
+          },
+          {
+            "id": "l73ovQmKRIHY"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ANGHwZbAxm4D",
+        "title": "רתמו את הציבור למחקר באמצעות מדע אזרחי ותיווך בין האקדמיה לקהילה",
+        "description": "יש להרחיב את השימוש במדע אזרחי, כך שהציבור הרחב ומתנדבים יוכלו להשתתף באיסוף ידע מדעי ולהיות חלק מתהליך יצירתו. במקביל, יש לתווך את המדע מן האקדמיה אל הציבור באופן שינגיש ידע מדעי, יחבר בין חוקרים לאזרחים ויאפשר שיתוף פעולה רחב בתהליך המחקר. כך יהפוך המחקר ממשאב מקצועי בלבד לכלי המערב אנשים רבים ויכול לתרום לשינוי המציאות.",
+        "members": [
+          {
+            "id": "mkWwhkfsVRUi"
+          },
+          {
+            "id": "KniywNO2qvZ4"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "BKamVMUlCSVg",
+        "title": "כנסו בעלי עניין מגוונים לדיון תקופתי וליצירת הסכמות משותפות",
+        "description": "יש ליצור פורום תקופתי שבו מתכנסים בעלי עניין המייצגים את מגוון הדעות. הפורום יאפשר למשתתפים להביע עמדות, לדון בנושאים שונים ולפתח תרבות של דיון פתוח, שבאמצעותה ניתן להגיע להסכמות משותפות בין הדעות השונות ולחזק את התנאים להפיכת ידע ומחקר להבנה משותפת ולשינוי במציאות.",
+        "members": [
+          {
+            "id": "LgQPaeZh8f9H"
+          },
+          {
+            "id": "46XG0ctXNgok"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "By2TdeBWWFHX",
+        "title": "שלבו חוקרים ומשתמשי קצה כדי להפוך ידע מחקרי לשינוי סביבתי",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש לשלב ידע מחקרי עם מעורבות של משתמשי קצה ושל אנשים המושפעים ממושא המחקר. שיתוף פעולה כזה יחבר את המחקר לצרכים ולניסיון של מי שפועלים בתוך המציאות או מושפעים ממנה, ויאפשר להשתמש בידע שנוצר לקידום שינוי סביבתי.",
+        "members": [
+          {
+            "id": "kKR06nuwqMiF"
+          },
+          {
+            "id": "kn4gOdd1IXuF"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "DMkNcis6a3Hg",
+        "title": "בנו תמונת מצב רב־שכבתית כדי לרתום מחקר לשינוי המציאות",
+        "description": "יש להתמודד עם ואקום המידע באמצעות הבנה מעמיקה של המקום, המורכבת משכבות מידע ומזיהוי הצרכים המרכזיים לשינוי המציאות. תמונת מצב כזו תאפשר להפוך את כוחו של המחקר לידע רלוונטי, מחובר להקשר המקומי ומכוון לפעולה. במקום להסתפק במידע חלקי או מנותק, יש לחבר בין הנתונים, בין מאפייני המקום ובין הצרכים העולים ממנו, כדי ליצור בסיס ברור ורלוונטי לקידום שינוי.",
+        "members": [
+          {
+            "id": "fBx6I8kTXL9k"
+          },
+          {
+            "id": "GlDFsnBNYHib"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "EpgEM8bkwLFR",
+        "title": "קשרו תמריצים ותמיכות לתועלת כלכלית כדי לאפשר שינוי",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש להעניק תמריצים ותמיכות מתאימים לביצוע השינוי, ולחבר אותם באופן ברור לתועלת כלכלית. שילוב זה יכול להפוך את ממצאי המחקר ממקור ידע בלבד למנוף מעשי, באמצעות יצירת ערך כלכלי שמחזק את הכדאיות של יישום השינוי ואת הנכונות לפעול למענו.",
+        "members": [
+          {
+            "id": "WTxw9ABOHWjo"
+          },
+          {
+            "id": "I9qPS1-wBVzj"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "I4PjKLd67SGe",
+        "title": "הנגישו את המחקר בשפת קהלי היעד ובשיח ברור ולא מאיים",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש להכיר בבעיות שהוא מציף ולהפוך את הידע ואת משמעותו לשיח נגיש, נהיר ולא מאיים. השיח צריך לדבר בשפה של קהל היעד, תוך התאמה למגזרים ולגופים שונים, כך שיוכלו להבין את הבעיה, לזהות את הרלוונטיות שלה ולראות כיצד המחקר יכול לתמוך בשינוי.",
+        "members": [
+          {
+            "id": "XFgVGHrwWWLG"
+          },
+          {
+            "id": "nuoYPP2VtTH7"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "I8XlvCYo1hY2",
+        "title": "בנו שיתופי פעולה חוצי גבולות כדי להפוך מחקר להשפעה קהילתית קונקרטית",
+        "description": "רתמו את כוחו של המחקר באמצעות שיתופי פעולה חוצי־דיסציפלינות, חוצי־קמפוסים, חוצי־מעמד אקדמי וחוצי־מגזרים. שיתופי פעולה אלה יכללו ארגוני סביבה, ממשלה, רשויות מקומיות וגורמים מוסמכים נוספים, ויתואמו עם צורכי הקהילה ויעדיה, כך שהמיזמים המחקריים יכוונו לאימפקט קונקרטי ויגדילו את הסיכוי להצלחתם.",
+        "members": [
+          {
+            "id": "aoFXrMGDxhzL"
+          },
+          {
+            "id": "u4TuwLPupe16"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "OExsWKt4l8Oo",
+        "title": "קידום מחקר רב־תחומי להבנת בעיות מורכבות ולפיתוח פתרונות חדשניים",
+        "description": "יש לקדם מחקר רב־תחומי וטרנס־דיסציפלינרי, המעמיק את הידע בתחומים שונים ומחבר בין מדעי החברה, המדעים המדויקים והטכנולוגיה. שילוב זה יאפשר להבין בעיות מורכבות, לחפש פתרונות בכיוונים מגוונים ולפתח מענים חדשניים, תוך חיזוק שיתופי הפעולה בין תחומי הידע ומתן מקום גם לניסיונות שלא הצליחו כחלק מתהליך הלמידה והמחקר.",
+        "members": [
+          {
+            "id": "aziwuqLEUFY0"
+          },
+          {
+            "id": "Nyt5jqdiTeak"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "U5o91ffQbKKX",
+        "title": "מפו והפעילו מקורות ידע קיימים לבניית שיתוף פעולה מחקרי־מעשי מוצלח",
+        "description": "יש למפות את מקורות הידע הקיימים — מידע, מחקרים קודמים ונתונים — ולבחון כיצד הם יכולים לתמוך בשיתוף פעולה מוצלח בין נציגי המחקר לבין גורמי השטח. המיפוי יספק בסיס משותף לעבודה משותפת, יסייע לחבר בין הידע שכבר נצבר לבין צורכי המציאות, ויאפשר לרתום את המחקר לשינוי מעשי במקום להתחיל את התהליך מאפס.",
+        "members": [
+          {
+            "id": "V1UXqCJHmgv8"
+          },
+          {
+            "id": "7DdLZn6Ibqah"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "VAOueHJps1lI",
+        "title": "צרו היכרות אישית וישירה בין הציבור לבין חוקרים מביני עניין",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש ליצור היכרות אישית ובלתי אמצעית עם אנשים שחקרו את הנושא ומבינים אותו לעומק. כנסים כמו זה יכולים לשמש מסגרת מרכזית לחיבור כזה, משום שהם מדגישים מפגש ישיר בין אנשים ולא רק העברת מידע. הקשר האישי יהפוך את המחקר לנגיש, מובן ורלוונטי יותר, ויחזק את האפשרות לתרגם אותו להבנה ולפעולה במציאות.",
+        "members": [
+          {
+            "id": "NZbSXfMHacQD"
+          },
+          {
+            "id": "vLPJFoZ2x9J2"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "W3hOkU1fB6qM",
+        "title": "בנו גשר בין חוקרים, ארגוני חברה אזרחית ומשרדי ממשלה לשינוי המציאות",
+        "description": "יש ליצור גורם מקשר שיחבר בין חוקרים לבין ארגוני חברה אזרחית ומשרדי ממשלה, ויאפשר להפוך ידע מחקרי לפעולה המשפיעה על המציאות. גורם זה לא יסתפק ביצירת קשרים, אלא יסייע להציג את הנתונים בצורה בהירה, לתרגם את משמעותם להקשרים מעשיים ולבנות את החיבור הבין־אישי הנדרש כדי שהמחקר יובן, יאומץ ויוכל להניע שינוי.",
+        "members": [
+          {
+            "id": "Utmlupzrfhjq"
+          },
+          {
+            "id": "Gt3qjLIvBsII"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "YDyaUr8ykDE9",
+        "title": "קיימו מפגשים פיזיים המחברים בין אנשי אקדמיה, אנשי עשייה ואנשים בעלי רעיונות שונים",
+        "description": "הצעה זו מבקשת לקדם יוזמות של מפגשים פיזיים המחברים בין אנשי אקדמיה, אנשי עשייה ואנשים בעלי רעיונות שונים. המפגשים ישמשו פלטפורמה לשיתוף ידע, חוויות ורעיונות, לעידוד שיח פורה וליצירת שיתופי פעולה בין תחומים ונקודות מבט. באמצעות חיבור ישיר בין המשתתפים, ניתן לטפח רעיונות חדשים ולחזק את התנאים שבהם המחקר, הניסיון המעשי והחשיבה המגוונת יוכלו לתרום לשינוי משמעותי במציאות.",
+        "members": [
+          {
+            "id": "g1QBInGJXwQz"
+          },
+          {
+            "id": "XRRZk7Vc9yCe"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "ZyF14AN4E-no",
+        "title": "ספקו משאבים וחופש פעולה כדי להפוך מחקר לשיתופי פעולה ולשינוי במציאות",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש לספק משאבים וחופש פעולה שיאפשרו ליישם רעיונות ולפתח שיתופי פעולה בין אנשי אקדמיה, אנשי עשייה ומגזרים שונים. התמיכה יכולה לכלול גישה למידע, כלים טכנולוגיים, תקציבים, סדנאות הכשרה ואפשרויות נוספות, כך שהשותפים יוכלו להתקדם מן הידע המחקרי אל פעולה מעשית.",
+        "members": [
+          {
+            "id": "N8wfxesr0zri"
+          },
+          {
+            "id": "KZj18lzNqaC8"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "acicP74AFsf6",
+        "title": "בנו קשרים אישיים ושיתופי פעולה מתמשכים בין המחקר לשטח",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש לבנות קשרים אישיים מתמשכים בין נציגי המחקר לבין אנשי השטח. קשרים אלה ישמשו גשר שיאפשר להציג את נתוני המחקר בצורה בהירה, ליצור חיבור בין־אישי ולחבר בין הידע המחקרי לבין העשייה בפועל. לשם כך יש לפתח תוכניות המקדמות מפגשים, סדנאות ופעילויות משותפות, כך שהקשר לאורך זמן יהפוך למפתח להצלחה ולשינוי במציאות.",
+        "members": [
+          {
+            "id": "Jii3gD6Fqq29"
+          },
+          {
+            "id": "whxNLA4caaQY"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "aeW0glOCO5LO",
+        "title": "טפחו הנעה, סבלנות, עקביות והתמדה כדי להפוך מחקר לשינוי במציאות",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש לטפח הנעה משמעותית ומחויבות מתמשכת מצד מי שמעוניינים להוביל את השינוי. מאחר שמדובר בתהליך ארוך ומורכב, נדרשים סבלנות, עקביות, התמדה ועקשנות לאורך כל תהליך המחקר, גם כאשר מתעוררים אתגרים או קשיים. שילוב גורמים אלה יסייע להתמיד בדרך, להגיע לתוצאות טובות יותר וליצור שינוי משמעותי.",
+        "members": [
+          {
+            "id": "wBxGe91lJk2Y"
+          },
+          {
+            "id": "t-DSjKKGXfQl"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "btmeY1AIqFsE",
+        "title": "חברו בין תוקף מדעי, תשוקה ורגש סביבתי לבין תחושת מסוגלות לשינוי",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש לחבר בין תוקף מדעי לבין תשוקה אקטיביסטית, רגש כלפי הסביבה ותחושת מסוגלות לחולל שינוי. השילוב צריך לשמור על מינון הולם: המחקר מעניק אמינות ובסיס לפעולה, ואילו הרגש, התשוקה והאמונה ביכולת להשפיע הופכים את הידע למניע למאבק סביבתי ולשינוי ממשי.",
+        "members": [
+          {
+            "id": "FYQ6qfeAHoE7"
+          },
+          {
+            "id": "1fEWh5Glrqfd"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "lTmaZtbOX3Wr",
+        "title": "חזקו את המחקר היישומי כדי להפוך ידע לשינוי במציאות",
+        "description": "יש לחזק את המחקר היישומי, משום שמחקר המחובר לצרכים ולמציאות יכול להניע דברים גדולים ולתרום לשינוי ממשי. חיזוק זה יאפשר למחקר לצאת מגבולות הידע התאורטי ולהפוך למשאב שמסייע להבין בעיות, לפתח פתרונות ולהשפיע על המציאות. כך יוכל המחקר למלא תפקיד מרכזי יותר בקידום שינוי, בהתאם לתנאים ולגורמים שיאפשרו לרתום את כוחו לטובת החברה.",
+        "members": [
+          {
+            "id": "-6bh8l6B010y"
+          },
+          {
+            "id": "rhXCmtYhVf4-"
+          },
+          {
+            "id": "nFtJII9VUzMV"
+          },
+          {
+            "id": "aCdiCakKuJZy"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "tADIWotWCMwE",
+        "title": "הקימו שותפויות מחויבות עם מוסדות אקדמיים, ארגונים חברתיים ועסקים כבר בשלבים הראשונים",
+        "description": "כדי לרתום את כוחו של המחקר לשינוי המציאות, יש להקים כבר בשלבים הראשונים שותפויות מחויבות עם גופים בעלי מוטת השפעה. השותפויות יכולות לחבר בין מוסדות אקדמיים, ארגונים חברתיים ועסקים, כך שכל צד יתרום את הידע והמשאבים שלו לקידום מטרות משותפות. חיבור מוקדם ורחב כזה יהפוך את המחקר למנוף פעולה משותף, יחזק את הקשר בין ידע לעשייה ויאפשר לגופים השונים לפעול יחד למען שינוי משמעותי.",
+        "members": [
+          {
+            "id": "JBdhf0sTIMA7"
+          },
+          {
+            "id": "K3xRAXWz-QjP"
+          },
+          {
+            "id": "WKGWagOA-JGs"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "vPS3Kf4T9bvD",
+        "title": "חזקו חשיבה מערכתית ושיתופי פעולה בין חזון, מחקר וביצוע",
+        "description": "רתמו את כוחו של המחקר לשינוי המציאות באמצעות חשיבה מערכתית ושיתופי פעולה בין גורמים שונים. חברו בין אנשים בעלי חלום, חזון ואידיאולוגיה לבין אנשי ביצוע המממשים תוכניות בפועל, תוך דבקות במטרה, תמיכה הדדית והתלהבות מהתחום. חיבור זה יסייע לגבש מטרות משותפות, לפתח פתרונות חדשניים ולהפוך רעיונות לתוכניות המיושמות באופן אפקטיבי.",
+        "members": [
+          {
+            "id": "9UQ48ppm4i40"
+          },
+          {
+            "id": "XSZVCPn6n8Uq"
+          }
+        ],
+        "derivedByPipeline": "synthesis",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "topicClusters": {
+    "items": [
+      {
+        "id": "Bqh-gbE3dqwe",
+        "title": "גורמים אישיים להובלת שינוי מחקרי",
+        "description": "תכונות ותנאים אישיים המסייעים לתרגם מחקר להשפעה ושינוי במציאות.",
+        "members": [
+          {
+            "id": "68UGuYXL1q3u"
+          },
+          {
+            "id": "Rpxl6XKkl42D"
+          },
+          {
+            "id": "PXrXa88GIjfU"
+          },
+          {
+            "id": "dcklBfzxSL5c"
+          },
+          {
+            "id": "YFWQEjotT8gA"
+          }
+        ],
+        "memberSynthIds": [
+          "aeW0glOCO5LO"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "Ffi48rvQC6a8",
+        "title": "הנגשת וחיבור מחקר לציבור",
+        "description": "יצירת קשר ישיר ואישי בין הציבור לחוקרים כדי לחזק את השפעת המחקר על המציאות.",
+        "members": [
+          {
+            "id": "7UaiNhyYlpMJ"
+          },
+          {
+            "id": "nIpvqn5ZBI39"
+          },
+          {
+            "id": "TXrakZdZAYN3"
+          },
+          {
+            "id": "vazeBG23WnIX"
+          },
+          {
+            "id": "BGeMVeF8cCrc"
+          },
+          {
+            "id": "mBotBj8NHctO"
+          },
+          {
+            "id": "Z4OFyljxWxZD"
+          },
+          {
+            "id": "DALWuCIy3tUd"
+          },
+          {
+            "id": "il4DJEkucOiK"
+          },
+          {
+            "id": "SI8jKZdpJenX"
+          },
+          {
+            "id": "iP7Jo76Mfkqi"
+          },
+          {
+            "id": "MG7femGf8oQm"
+          },
+          {
+            "id": "1XHun-i1r74F"
+          },
+          {
+            "id": "S5YVbRB0-b7Q"
+          },
+          {
+            "id": "H66cYrZRFRhO"
+          },
+          {
+            "id": "WA7qec0aGJvF"
+          },
+          {
+            "id": "LgtpBE9it4gH"
+          },
+          {
+            "id": "TbY8ddlBfQQY"
+          },
+          {
+            "id": "bJzaI9b04XAD"
+          },
+          {
+            "id": "lGIZyPJvfGFU"
+          },
+          {
+            "id": "08SjYZuNOvgF"
+          },
+          {
+            "id": "aoK1izWRPCYi"
+          },
+          {
+            "id": "FZDBre8dCuVV"
+          },
+          {
+            "id": "EHyLE2-fh9zR"
+          },
+          {
+            "id": "pHUQNJZPDcyR"
+          },
+          {
+            "id": "qSdAR7Aq03Nx"
+          },
+          {
+            "id": "MUbpFp6BrePD"
+          },
+          {
+            "id": "nC4VvC7CUqJh"
+          },
+          {
+            "id": "jSmMsfAbjDHK"
+          },
+          {
+            "id": "8e4gKj4COLlh"
+          },
+          {
+            "id": "0GdG7UH25mt9"
+          },
+          {
+            "id": "ykHIVqMd9FP1"
+          },
+          {
+            "id": "aTejkusEF6jt"
+          },
+          {
+            "id": "RY5vmfW97A1Z"
+          },
+          {
+            "id": "pwkp3PbWRfko"
+          },
+          {
+            "id": "TY0aPUND56yx"
+          },
+          {
+            "id": "4UaRL8Gxgu06"
+          },
+          {
+            "id": "6ihYMsnzNA5N"
+          },
+          {
+            "id": "DNl5bF0MTWdU"
+          }
+        ],
+        "memberSynthIds": [
+          "VAOueHJps1lI",
+          "U5o91ffQbKKX",
+          "By2TdeBWWFHX",
+          "acicP74AFsf6",
+          "W3hOkU1fB6qM",
+          "I4PjKLd67SGe",
+          "tADIWotWCMwE",
+          "BKamVMUlCSVg",
+          "btmeY1AIqFsE",
+          "lTmaZtbOX3Wr",
+          "YDyaUr8ykDE9",
+          "I8XlvCYo1hY2",
+          "vPS3Kf4T9bvD",
+          "ZyF14AN4E-no",
+          "ANGHwZbAxm4D",
+          "DMkNcis6a3Hg"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      },
+      {
+        "id": "psg-lMQMEkh5",
+        "title": "תנאים ליישום מחקר והשפעתו",
+        "description": "קישור תמיכות ותמריצים לתועלת כלכלית כדי לקדם יישום ממצאי מחקר ושינוי מציאות.",
+        "members": [
+          {
+            "id": "2BeJYc0nxe7I"
+          },
+          {
+            "id": "RQbJceHUiJgQ"
+          },
+          {
+            "id": "zJg6V41tY4lT"
+          },
+          {
+            "id": "xDSYczt2gyUz"
+          },
+          {
+            "id": "djm06egcqw18"
+          }
+        ],
+        "memberSynthIds": [
+          "EpgEM8bkwLFR",
+          "7SOH09HPJD-l",
+          "OExsWKt4l8Oo"
+        ],
+        "derivedByPipeline": "topic-cluster",
+        "synthesisMechanism": "live-spawn",
+        "hidden": false
+      }
+    ]
+  },
+  "hiddenClusters": [
+    {
+      "id": "jHZSTVOKo49b",
+      "title": "תנאים למינוף מחקר לשינוי",
+      "description": "גורמים, תשתיות ושיתופי פעולה המאפשרים למחקר להשפיע על המציאות ולפתור בעיות מורכבות.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "psg-lMQMEkh5"
+    },
+    {
+      "id": "mrntwH0YER1f",
+      "title": "הנגשת מחקר לקהלי יעד",
+      "description": "התאמת שפת המחקר ואופן הצגתו לקהלים שונים, באופן ברור, נגיש ולא מאיים.",
+      "members": [],
+      "derivedByPipeline": "topic-cluster",
+      "synthesisMechanism": "live-spawn",
+      "hidden": true,
+      "mergedInto": "Ffi48rvQC6a8"
+    }
+  ],
+  "sourceOptions": {
+    "visible": 114,
+    "hidden": 0
+  },
+  "auditCounts": {
+    "revisit": 50,
+    "attach": 78,
+    "spawn": 25,
+    "review-queued": 42,
+    "merge": 2
+  },
+  "parameters": {
+    "language": "he",
+    "corpus": "/private/tmp/claude-501/-Users-talyaron-Documents-Freedi-app/61a669fd-6002-4986-9d99-6705f0dc20cb/scratchpad/bq-replay-corpus.json",
+    "corpusSha": "32d42aee86c9",
+    "seed": 42,
+    "synthesisOverrides": {
+      "embeddingModel": "text-embedding-3-large"
+    },
+    "statementsFed": 114,
+    "pumpEvery": 10,
+    "rejudgeEvery": 5,
+    "minWaitMs": 4000,
+    "quietMs": 12000,
+    "maxWaitMs": 45000,
+    "settleTimeouts": 12,
+    "durationMs": 5709512,
+    "gitSha": "324bd8306",
+    "models": {
+      "embedding": "text-embedding-3-small",
+      "heavy": "gpt-5.6-terra",
+      "fast": "gpt-5.6-luna"
+    }
+  }
+}

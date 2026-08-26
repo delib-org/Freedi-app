@@ -39,6 +39,27 @@ export interface ActivityUrlResolver {
 	 * statement-addressable route or its base URL is not configured.
 	 */
 	getRouteLink: (sourceApp: SourceApp, statementId: string) => ActivityLink | null;
+	/**
+	 * Join-app hub for a TOP question (`/m/{id}`): the participant-facing
+	 * landing page listing that question's live joining sessions. Null when
+	 * `joinBaseUrl` is not configured.
+	 */
+	getJoinHubLink: (statementId: string) => ActivityLink | null;
+	/**
+	 * Links for a Mass-Consensus survey that wraps a question set up from
+	 * Studio: participants enter at `/s/{surveyId}`, admins configure it at
+	 * `/admin/surveys/{surveyId}`.
+	 */
+	getSurveyLinks: (surveyId: string) => { participant: ActivityLink; admin: ActivityLink };
+	/**
+	 * MC's "new survey" page pre-seeded with an already-created question so a
+	 * consultant can configure the full survey and be sent back to Studio.
+	 */
+	getNewSurveyLink: (params: {
+		questionId: string;
+		parentStatementId: string;
+		returnTo?: string;
+	}) => ActivityLink;
 }
 
 function trimSlash(url: string): string {
@@ -56,11 +77,19 @@ export function createActivityUrlResolver(config: EventUrlConfig): ActivityUrlRe
 			? `${main}/statement-screen/${statementId}/${screen}`
 			: `${main}/statement/${statementId}`;
 
+	// Join has a single route per question: facilitators and participants
+	// open the same `/q/{id}` page (the facilitator panel is role-gated
+	// inside the app), so participant and admin links coincide.
+	const joinQuestionLink = (statementId: string): ActivityLink | null =>
+		join ? { href: `${join}/q/${statementId}`, external: true } : null;
+
 	const getParticipantLink = (
 		type: ActivityType,
 		statementId: string,
 	): ActivityLink | null => {
 		switch (type) {
+			case ActivityType.join:
+				return joinQuestionLink(statementId);
 			case ActivityType.massConsensus:
 				return { href: `${mc}/q/${statementId}`, external: true };
 			case ActivityType.signDocument:
@@ -77,6 +106,8 @@ export function createActivityUrlResolver(config: EventUrlConfig): ActivityUrlRe
 
 	const getAdminLink = (type: ActivityType, statementId: string): ActivityLink | null => {
 		switch (type) {
+			case ActivityType.join:
+				return joinQuestionLink(statementId);
 			case ActivityType.signDocument:
 				return { href: `${sign}/doc/${statementId}/admin`, external: true };
 			case ActivityType.massConsensus:
@@ -106,5 +137,34 @@ export function createActivityUrlResolver(config: EventUrlConfig): ActivityUrlRe
 		}
 	};
 
-	return { getParticipantLink, getAdminLink, getRouteLink };
+	const getJoinHubLink = (statementId: string): ActivityLink | null =>
+		join ? { href: `${join}/m/${statementId}`, external: true } : null;
+
+	const getSurveyLinks = (surveyId: string): { participant: ActivityLink; admin: ActivityLink } => ({
+		participant: { href: `${mc}/s/${surveyId}`, external: true },
+		admin: { href: `${mc}/admin/surveys/${surveyId}`, external: true },
+	});
+
+	const getNewSurveyLink = (params: {
+		questionId: string;
+		parentStatementId: string;
+		returnTo?: string;
+	}): ActivityLink => {
+		const search = new URLSearchParams({
+			questionId: params.questionId,
+			parentStatementId: params.parentStatementId,
+		});
+		if (params.returnTo) search.set('returnTo', params.returnTo);
+
+		return { href: `${mc}/admin/surveys/new?${search.toString()}`, external: true };
+	};
+
+	return {
+		getParticipantLink,
+		getAdminLink,
+		getRouteLink,
+		getJoinHubLink,
+		getSurveyLinks,
+		getNewSurveyLink,
+	};
 }

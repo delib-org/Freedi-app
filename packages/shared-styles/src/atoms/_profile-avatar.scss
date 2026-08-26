@@ -1,0 +1,110 @@
+// Profile Avatar Atom - BEM Methodology
+// Circular profile photo with engagement level ring
+//
+// Usage: <span class="profile-avatar profile-avatar--participant">
+//          <img class="profile-avatar__image" />
+//        </span>
+
+// ============================================================================
+// PROFILE AVATAR BLOCK
+// ============================================================================
+
+.profile-avatar {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	border: 2px solid rgba(255, 255, 255, 0.4);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+	cursor: pointer;
+	transition: transform 0.1s ease, opacity 0.15s ease;
+	text-decoration: none;
+	flex-shrink: 0;
+
+	&:hover {
+		opacity: 0.85;
+	}
+
+	&:active {
+		transform: scale(0.92);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--white, #fff);
+		outline-offset: 2px;
+	}
+
+	// ============================================================================
+	// ELEMENTS
+	// ============================================================================
+
+	&__image {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	&__initials {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.25);
+		color: var(--white, #fff);
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		line-height: 1;
+	}
+
+	// ============================================================================
+	// MODIFIERS (Level ring colors)
+	// ============================================================================
+
+	&--observer {
+		border-color: rgba(255, 255, 255, 0.4);
+	}
+
+	&--participant {
+		border-color: var(--engagement-level-1, #5f88e5);
+	}
+
+	&--contributor {
+		border-color: var(--engagement-level-2, #57c6b2);
+	}
+
+	&--advocate {
+		border-color: var(--engagement-level-3, #d4a017);
+	}
+
+	&--leader {
+		border-color: var(--engagement-level-4, #7b5ea7);
+	}
+
+	// Size variants
+	&--medium {
+		width: 40px;
+		height: 40px;
+
+		.profile-avatar__initials {
+			font-size: 0.875rem;
+		}
+	}
+
+	&--large {
+		width: 56px;
+		height: 56px;
+		border-width: 3px;
+
+		.profile-avatar__initials {
+			font-size: 1.125rem;
+		}
+	}
+}

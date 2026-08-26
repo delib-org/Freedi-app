@@ -1,0 +1,175 @@
+// TypeCard molecule — one selectable activity type (button role="radio").
+// Tint comes from the engine accent (`--activity-*`) via the `--mc|--join|…`
+// modifiers; `--selected` adds a border + ✓ corner, `--disabled` greys out.
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.type-card {
+	--type-card-accent: var(--btn-primary);
+
+	@include card-base;
+
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
+	width: 100%;
+	min-height: 100%;
+	border: 2px solid transparent;
+	text-align: start;
+	color: var(--text-body);
+	font: inherit;
+	cursor: pointer;
+	transition:
+		border-color var(--motion-fast) var(--motion-ease),
+		box-shadow var(--motion-fast) var(--motion-ease),
+		transform var(--motion-fast) var(--motion-ease);
+
+	&:hover:not(.type-card--disabled) {
+		box-shadow: 0 5px 12px #41628640;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__icon {
+		display: grid;
+		place-items: center;
+		width: 3rem;
+		height: 3rem;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--type-card-accent) 15%, var(--card-default));
+		color: var(--type-card-accent);
+		font-size: 1.5rem;
+		line-height: 1;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-md);
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__engine {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.0625rem 0.5rem;
+		border-radius: var(--radius-pill);
+		background: color-mix(in srgb, var(--type-card-accent) 12%, var(--card-default));
+		color: var(--type-card-accent);
+		font-size: var(--font-size-2xs);
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	&__description {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		line-height: 1.45;
+	}
+
+	&__when {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+	}
+
+	&__when-title {
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: var(--font-size-2xs);
+	}
+
+	&__when-item {
+		display: flex;
+		gap: 0.375rem;
+		line-height: 1.4;
+
+		&::before {
+			content: '✓';
+			flex: 0 0 auto;
+			color: var(--type-card-accent);
+		}
+	}
+
+	&__badge {
+		position: absolute;
+		inset-block-start: 0.75rem;
+		inset-inline-end: 0.75rem;
+	}
+
+	&__check {
+		position: absolute;
+		inset-block-start: -0.625rem;
+		inset-inline-end: -0.625rem;
+		display: grid;
+		place-items: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 50%;
+		background: var(--type-card-accent);
+		color: var(--white);
+		font-size: 0.875rem;
+		line-height: 1;
+	}
+
+	// ---- Modifiers ---------------------------------------------------------
+
+	&--selected {
+		border-color: var(--type-card-accent);
+	}
+
+	&--disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+
+		&:active {
+			transform: none;
+		}
+	}
+
+	&--mc {
+		--type-card-accent: var(--activity-mc);
+	}
+
+	&--join {
+		--type-card-accent: var(--activity-join);
+	}
+
+	&--deliberation {
+		--type-card-accent: var(--activity-deliberation);
+	}
+
+	&--sign {
+		--type-card-accent: var(--activity-sign);
+	}
+
+	&--compact {
+		gap: 0.375rem;
+		padding: 0.75rem;
+
+		.type-card__icon {
+			width: 2.25rem;
+			height: 2.25rem;
+			font-size: 1.125rem;
+		}
+
+		.type-card__when {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}

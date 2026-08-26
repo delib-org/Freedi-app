@@ -29,6 +29,8 @@ export enum ActivityType {
 	question = "question",
 	/** A collaboratively-signed document — sign app. */
 	signDocument = "signDocument",
+	/** Live in-person joining session (organizer/participant solutions) — join app. */
+	join = "join",
 	/** Anything the registry cannot classify (rendered read-only, no engine). */
 	unknown = "unknown",
 }
@@ -104,6 +106,15 @@ export const ACTIVITY_REGISTRY: Record<ActivityType, ActivityTypeDef> = {
 		hasAdminUrl: true,
 		statusSource: "none",
 	},
+	[ActivityType.join]: {
+		type: ActivityType.join,
+		label: "Live Joining Session",
+		icon: "🤝",
+		sourceApp: SourceApp.JOIN,
+		hasParticipantUrl: true,
+		hasAdminUrl: true,
+		statusSource: "questionStatus",
+	},
 	[ActivityType.unknown]: {
 		type: ActivityType.unknown,
 		label: "Activity",
@@ -127,6 +138,14 @@ export function getActivityType(statement: Statement): ActivityType {
 	}
 
 	if (statement.statementType === StatementType.question) {
+		// The Join engine is selected by `sourceApp`, not by `questionType`:
+		// a join question keeps whatever questionType its creator chose, so
+		// this check must run BEFORE the questionType switch (join wins over
+		// massConsensus/multiStage/compound on the same document).
+		if (statement.sourceApp === SourceApp.JOIN) {
+			return ActivityType.join;
+		}
+
 		switch (statement.questionSettings?.questionType) {
 			case QuestionType.massConsensus:
 				return ActivityType.massConsensus;

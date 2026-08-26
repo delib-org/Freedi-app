@@ -1,0 +1,15 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Layout only.
+.center {
+	display: grid;
+	place-items: center;
+	min-block-size: 50vh;
+}
+
+.result {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-md);
+}

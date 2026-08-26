@@ -1,0 +1,711 @@
+{
+  "test": "live-synth-accuracy-en-seed42",
+  "language": "en",
+  "question": "What should our city do to improve residents' quality of life?",
+  "questionId": "accuracy100gemini",
+  "corpus": "scripts/seedSynthBenchmark.accuracy100.gemini.en.json",
+  "corpusSha": "4572380cd9c1",
+  "seed": 42,
+  "statements": [
+    {
+      "id": "CPUGmeznua0G",
+      "text": "Stop charging residents for the permits they need to close their street for a community cookout.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/block-party-permits",
+      "arrivalIndex": 0
+    },
+    {
+      "id": "xttRr4RVQA6A",
+      "text": "Replace the dim yellow street lamps with bright white lights to make sidewalks safer.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/led-streetlights",
+      "arrivalIndex": 1
+    },
+    {
+      "id": "2XQZ8JJJkoty",
+      "text": "Paint red bus-only lanes on the biggest avenues so they don't get stuck in traffic.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/dedicated-bus-lanes",
+      "arrivalIndex": 2
+    },
+    {
+      "id": "lZvbUa6vWrgZ",
+      "text": "Host a yearly music event downtown highlighting artists who live in the city.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/street-music-festival",
+      "arrivalIndex": 3
+    },
+    {
+      "id": "Fw9W2JmyLw6-",
+      "text": "Commit to filling reported potholes within forty-eight hours.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/pothole-repair-guarantee",
+      "arrivalIndex": 4
+    },
+    {
+      "id": "fKpn1BMI1Cdu",
+      "text": "Start a citywide curbside pickup program for food scraps.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/curbside-compost",
+      "arrivalIndex": 5
+    },
+    {
+      "id": "eJ10pM1My9Iz",
+      "text": "Designate specific parking areas downtown exclusively for mobile food vendors.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/food-truck-zones",
+      "arrivalIndex": 6
+    },
+    {
+      "id": "S3i7tEVYy9d3",
+      "text": "Make the application process for opening a restaurant much shorter and easier.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/streamline-licenses",
+      "arrivalIndex": 7
+    },
+    {
+      "id": "2WMOyUWsuXAh",
+      "text": "Upgrade all the neighborhood streetlights to brighter LED bulbs.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/led-streetlights",
+      "arrivalIndex": 8
+    },
+    {
+      "id": "f3gdmCABSZs6",
+      "text": "Tax absentee landlords who keep houses vacant instead of renting them out.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/vacant-property-tax",
+      "arrivalIndex": 9
+    },
+    {
+      "id": "Z45KFPzoxMv1",
+      "text": "Add a massive amount of shade trees to the poorest parts of the city.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/tree-canopy-expansion",
+      "arrivalIndex": 10
+    },
+    {
+      "id": "Etf0qRJRYuC4",
+      "text": "Clear the snow off emergency routes immediately after a storm hits.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/priority-snow-plowing",
+      "arrivalIndex": 11
+    },
+    {
+      "id": "3ZV6Z4rOJGGZ",
+      "text": "Help homeowners pay for better weatherization and insulation.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/home-insulation-subsidies",
+      "arrivalIndex": 12
+    },
+    {
+      "id": "P4sfsC2pOaYQ",
+      "text": "Let library card holders borrow mobile routers to get online at home.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/library-hotspots",
+      "arrivalIndex": 13
+    },
+    {
+      "id": "p4Ni01YRrpsA",
+      "text": "Move construction applications for low-income apartments to the very front of the line.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/expedite-affordable-permits",
+      "arrivalIndex": 14
+    },
+    {
+      "id": "bmxcSyYwXqgw",
+      "text": "Set up free municipal Wi-Fi access points all along Main Street and the town square.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/downtown-wifi",
+      "arrivalIndex": 15
+    },
+    {
+      "id": "3kWoIQHGlD30",
+      "text": "Mandate permeable asphalt or paving stones for commercial lots to reduce flooding.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/permeable-pavement",
+      "arrivalIndex": 16
+    },
+    {
+      "id": "rFM5fg31oXm0",
+      "text": "Pave the dirt walking paths along the river so they don't get muddy.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/paved-river-trails",
+      "arrivalIndex": 17
+    },
+    {
+      "id": "Y497Ht2LyIrj",
+      "text": "Pass a law limiting annual rent increases for tenants.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/rent-control",
+      "arrivalIndex": 18
+    },
+    {
+      "id": "xxtH1xc1BkXf",
+      "text": "Install dedicated transit corridors on all major arterial roads.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/dedicated-bus-lanes",
+      "arrivalIndex": 19
+    },
+    {
+      "id": "u4xAW594nbkM",
+      "text": "Install physical separation infrastructure between cyclists and motor vehicles.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/protected-bike-lanes",
+      "arrivalIndex": 20
+    },
+    {
+      "id": "k5o4JGb5DlB9",
+      "text": "Ensure waiting areas for riders have seating and protection from the rain.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/bus-stop-shelters",
+      "arrivalIndex": 21
+    },
+    {
+      "id": "uTsZbBfVzUqR",
+      "text": "Provide direct funding to locals who want to launch a brick-and-mortar business.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/small-business-grants",
+      "arrivalIndex": 22
+    },
+    {
+      "id": "hE87iGdN6Zfp",
+      "text": "Set up a regular drop-off site for broken computers and televisions.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/e-waste-dropoff",
+      "arrivalIndex": 23
+    },
+    {
+      "id": "myKXw0IPT-nn",
+      "text": "Turn vacant city lots into plots where neighbors can grow their own food.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/vacant-lot-gardens",
+      "arrivalIndex": 24
+    },
+    {
+      "id": "gmJrBKoplzIw",
+      "text": "Waive the street closure fees for neighborhoods throwing summer block parties.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/block-party-permits",
+      "arrivalIndex": 25
+    },
+    {
+      "id": "P-e-ROWK22lt",
+      "text": "Ban the distribution of disposable grocery bags and plastic straws at local businesses.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/ban-single-use-plastics",
+      "arrivalIndex": 26
+    },
+    {
+      "id": "BecYYZ4O1X0q",
+      "text": "Expand electric vehicle charging infrastructure in public lots.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/public-ev-chargers",
+      "arrivalIndex": 27
+    },
+    {
+      "id": "SfF03KJxXgUI",
+      "text": "Create a city-owned internet service to compete with private monopolies.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/municipal-broadband",
+      "arrivalIndex": 28
+    },
+    {
+      "id": "xyEQjUaITq6C",
+      "text": "Offer rebates to residents who upgrade their windows and seal drafts in their houses.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/home-insulation-subsidies",
+      "arrivalIndex": 29
+    },
+    {
+      "id": "MB9-ShzyV89I",
+      "text": "Build roofs and benches at every bus stop in the city.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/bus-stop-shelters",
+      "arrivalIndex": 30
+    },
+    {
+      "id": "5Mw8DGHJSMcM",
+      "text": "Require city-funded museums to offer free admission one day a week.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/free-museum-days",
+      "arrivalIndex": 31
+    },
+    {
+      "id": "xtGcaogg5x4i",
+      "text": "Extend the hours of our public green spaces so people can use them after dark.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/late-park-hours",
+      "arrivalIndex": 32
+    },
+    {
+      "id": "S7inpfEBFhp2",
+      "text": "Block off Main Street to cars entirely so people can safely walk between shops and restaurants.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/pedestrian-main-street",
+      "arrivalIndex": 33
+    },
+    {
+      "id": "PKl9jf62bSvZ",
+      "text": "Collect organic waste from houses every week alongside the regular trash.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/curbside-compost",
+      "arrivalIndex": 34
+    },
+    {
+      "id": "4LbdLQVC-zz6",
+      "text": "Prohibit the use of two-stroke engine leaf blowers within city limits.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/ban-gas-leaf-blowers",
+      "arrivalIndex": 35
+    },
+    {
+      "id": "qftp-wDJCTzw",
+      "text": "Hire adults to manage traffic for children walking to every school.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/school-crossing-guards",
+      "arrivalIndex": 36
+    },
+    {
+      "id": "s9phKNYM7h9c",
+      "text": "Put up concrete barriers and plastic bollards to keep cars out of the bike lanes.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/protected-bike-lanes",
+      "arrivalIndex": 37
+    },
+    {
+      "id": "VyaLeKHGCV65",
+      "text": "Put photovoltaic arrays on the library, city hall, and the community centers.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/municipal-solar",
+      "arrivalIndex": 38
+    },
+    {
+      "id": "2BEHpi9hyZ6V",
+      "text": "Require new parking lots to use surfaces that let rain soak through.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/permeable-pavement",
+      "arrivalIndex": 39
+    },
+    {
+      "id": "RTlVKjFK7S7t",
+      "text": "Don't charge middle and high schoolers to ride the bus.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/free-student-transit",
+      "arrivalIndex": 40
+    },
+    {
+      "id": "X3EAAXSEgjqG",
+      "text": "Hand out much bigger tickets to anyone throwing garbage on the ground.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/littering-fines",
+      "arrivalIndex": 41
+    },
+    {
+      "id": "BFTlDdNCJvcV",
+      "text": "Fast-track the permitting process for affordable housing projects.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/expedite-affordable-permits",
+      "arrivalIndex": 42
+    },
+    {
+      "id": "abW2qHYT9Z-t",
+      "text": "Dispatch unarmed behavioral health specialists to deal with people in crisis.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/mental-health-response",
+      "arrivalIndex": 43
+    },
+    {
+      "id": "-5mCgczU7kPg",
+      "text": "Make a central smartphone program where citizens can handle all their city business at once.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/unified-city-app",
+      "arrivalIndex": 44
+    },
+    {
+      "id": "QOnsn27fgZjQ",
+      "text": "Plant a thousand new native trees in low-income neighborhoods this year.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/tree-canopy-expansion",
+      "arrivalIndex": 45
+    },
+    {
+      "id": "BPU2jsPruYRw",
+      "text": "Pay local painters to create huge colorful murals on the boring sides of downtown buildings.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/public-murals",
+      "arrivalIndex": 46
+    },
+    {
+      "id": "clROwDINNbiJ",
+      "text": "Develop a single mobile app for reporting potholes and paying utility bills.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/unified-city-app",
+      "arrivalIndex": 47
+    },
+    {
+      "id": "0PxOjWMQ6T-C",
+      "text": "Place waste receptacles at high-traffic pedestrian intersections.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/public-receptacles",
+      "arrivalIndex": 48
+    },
+    {
+      "id": "9R74lEVhlO5b",
+      "text": "Remove vehicular access from the primary downtown retail corridor.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/pedestrian-main-street",
+      "arrivalIndex": 49
+    },
+    {
+      "id": "AV52bkvI9EQD",
+      "text": "Install speed bumps, raised crosswalks, and narrowed lanes right next to the elementary schools.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/school-traffic-calming",
+      "arrivalIndex": 50
+    },
+    {
+      "id": "lFNBgoIfRJ5R",
+      "text": "Install video surveillance inside the municipal parking decks to deter break-ins.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/garage-security-cameras",
+      "arrivalIndex": 51
+    },
+    {
+      "id": "valpt43boVDG",
+      "text": "Cap the amount landlords can raise rent each year.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/rent-control",
+      "arrivalIndex": 52
+    },
+    {
+      "id": "YnO7wPrgk4Va",
+      "text": "Put in splash pads and interactive fountains downtown so kids can cool off.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/downtown-splash-pads",
+      "arrivalIndex": 53
+    },
+    {
+      "id": "xWjvpNkUsx0g",
+      "text": "Host workshops at the community center helping older folks navigate smartphones and computers.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/senior-digital-literacy",
+      "arrivalIndex": 54
+    },
+    {
+      "id": "qmHt62QtUgM4",
+      "text": "Build a public broadband network so we aren't forced to use the big telecom companies.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/municipal-broadband",
+      "arrivalIndex": 55
+    },
+    {
+      "id": "iA9QmTQwGPYE",
+      "text": "Offer financial assistance to working families trying to purchase their first home.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/first-time-buyer-grants",
+      "arrivalIndex": 56
+    },
+    {
+      "id": "oBiRJtb55w6I",
+      "text": "Create a dedicated zone where food trucks can park and operate every single day.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/food-truck-zones",
+      "arrivalIndex": 57
+    },
+    {
+      "id": "bytxCOVqDsJ1",
+      "text": "Guarantee that road craters will be patched within two days of a resident calling them in.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/pothole-repair-guarantee",
+      "arrivalIndex": 58
+    },
+    {
+      "id": "S2QsMDhhKsmX",
+      "text": "Charge a high fee to owners who leave residential properties empty.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/vacant-property-tax",
+      "arrivalIndex": 59
+    },
+    {
+      "id": "nzPiQKKmtZAr",
+      "text": "Host a monthly event where people can safely get rid of old electronics.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/e-waste-dropoff",
+      "arrivalIndex": 60
+    },
+    {
+      "id": "-FA2JKGHLl1G",
+      "text": "Make it illegal for stores and restaurants to hand out single-use plastics.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/ban-single-use-plastics",
+      "arrivalIndex": 61
+    },
+    {
+      "id": "6NuP4uLHKBU-",
+      "text": "Keep public transit running after midnight on the weekends.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/weekend-night-service",
+      "arrivalIndex": 62
+    },
+    {
+      "id": "vXJbanRZdTvo",
+      "text": "Plow the streets leading to hospitals and fire stations before anything else.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/priority-snow-plowing",
+      "arrivalIndex": 63
+    },
+    {
+      "id": "9uawOWjPQ1YG",
+      "text": "Lay down concrete on the riverside trails to make them accessible year-round.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/paved-river-trails",
+      "arrivalIndex": 64
+    },
+    {
+      "id": "ijcO5psaDLRE",
+      "text": "Create fenced-in spaces where people can let their pets run freely.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/enclosed-dog-parks",
+      "arrivalIndex": 65
+    },
+    {
+      "id": "DUbRF65PbWuz",
+      "text": "Send social workers instead of armed police to mental health emergency calls.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/mental-health-response",
+      "arrivalIndex": 66
+    },
+    {
+      "id": "9K79RlKmph9Z",
+      "text": "Put trash cans and recycling bins on every busy street corner.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/public-receptacles",
+      "arrivalIndex": 67
+    },
+    {
+      "id": "lASLkDCz5lvH",
+      "text": "Organize an annual weekend festival focused on local bands and street musicians.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/street-music-festival",
+      "arrivalIndex": 68
+    },
+    {
+      "id": "paRajzRIhQqx",
+      "text": "Change zoning laws to allow missing-middle housing everywhere.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/missing-middle-zoning",
+      "arrivalIndex": 69
+    },
+    {
+      "id": "caLADbbAcgrL",
+      "text": "Increase the frequency of transit service when people are commuting to and from work.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/frequent-peak-buses",
+      "arrivalIndex": 70
+    },
+    {
+      "id": "71L8-GTITnxw",
+      "text": "Install solar panels on the roofs of all government-owned facilities.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/municipal-solar",
+      "arrivalIndex": 71
+    },
+    {
+      "id": "aq9W6OP5CZH7",
+      "text": "Make the local art and history institutions waive ticket fees every Tuesday.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/free-museum-days",
+      "arrivalIndex": 72
+    },
+    {
+      "id": "PnVysp4ouYzm",
+      "text": "Let developers build duplexes, triplexes, and townhomes in neighborhoods that are currently just single-family.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/missing-middle-zoning",
+      "arrivalIndex": 73
+    },
+    {
+      "id": "NLcqABjvudrA",
+      "text": "Make it illegal for landscaping companies to use noisy, gas-powered leaf blowers.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/ban-gas-leaf-blowers",
+      "arrivalIndex": 74
+    },
+    {
+      "id": "MDaGFF7wQZJf",
+      "text": "Build enclosed off-leash dog areas in every neighborhood.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/enclosed-dog-parks",
+      "arrivalIndex": 75
+    },
+    {
+      "id": "3huHGTz33LLB",
+      "text": "Add late-night bus routes on Friday and Saturday.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/weekend-night-service",
+      "arrivalIndex": 76
+    },
+    {
+      "id": "Qx0mZ36TX2iu",
+      "text": "Offer free evening classes to teach seniors how to use modern technology.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/senior-digital-literacy",
+      "arrivalIndex": 77
+    },
+    {
+      "id": "HE8Txlnk5olf",
+      "text": "Make all city buses free for students under eighteen.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/free-student-transit",
+      "arrivalIndex": 78
+    },
+    {
+      "id": "BLuHLbyKgYZc",
+      "text": "Reduce the paperwork required to get a new commercial license.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/streamline-licenses",
+      "arrivalIndex": 79
+    },
+    {
+      "id": "J6KU78DaQA3W",
+      "text": "Increase the financial penalties for people caught littering on the sidewalks.",
+      "groundTruthTopic": "waste-management",
+      "groundTruthSynth": "waste-management/littering-fines",
+      "arrivalIndex": 80
+    },
+    {
+      "id": "2vnlJmuWzVxn",
+      "text": "Run buses more often during morning and evening rush hours.",
+      "groundTruthTopic": "public-transportation",
+      "groundTruthSynth": "public-transportation/frequent-peak-buses",
+      "arrivalIndex": 81
+    },
+    {
+      "id": "FltQeLhOR7Dw",
+      "text": "Convert empty warehouses into cheap rental studios for working artists.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/subsidized-artist-studios",
+      "arrivalIndex": 82
+    },
+    {
+      "id": "wzwaTF6kTAoR",
+      "text": "Pay crossing guards to stand at busy intersections near schools during drop-off and pickup.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/school-crossing-guards",
+      "arrivalIndex": 83
+    },
+    {
+      "id": "t4Ebl-e-ueG0",
+      "text": "Commission large-scale visual artworks on blank commercial facades.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/public-murals",
+      "arrivalIndex": 84
+    },
+    {
+      "id": "VYs9BFyAoKps",
+      "text": "Turn abandoned industrial buildings into affordable workspaces for painters and sculptors.",
+      "groundTruthTopic": "arts-and-culture",
+      "groundTruthSynth": "arts-and-culture/subsidized-artist-studios",
+      "arrivalIndex": 85
+    },
+    {
+      "id": "fa8Gd0MZ3gap",
+      "text": "Install aquatic recreation features for children in the major plazas.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/downtown-splash-pads",
+      "arrivalIndex": 86
+    },
+    {
+      "id": "brwMTTt-uuxo",
+      "text": "Run city-sponsored ads reminding folks to spend their money at locally owned businesses.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/buy-local-campaign",
+      "arrivalIndex": 87
+    },
+    {
+      "id": "s6t6xURpSWEN",
+      "text": "Repaint the faded pedestrian crosswalks at every major intersection.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/repaint-crosswalks",
+      "arrivalIndex": 88
+    },
+    {
+      "id": "2xUIOf1Vebrp",
+      "text": "Keep the main city parks open and lit until midnight.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/late-park-hours",
+      "arrivalIndex": 89
+    },
+    {
+      "id": "KX5pRF963hLY",
+      "text": "Deploy outdoor public connectivity infrastructure in the commercial district.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/downtown-wifi",
+      "arrivalIndex": 90
+    },
+    {
+      "id": "wo4zZ4LP3jXq",
+      "text": "Put a fresh coat of white paint on all the crosswalk lines so drivers can actually see them.",
+      "groundTruthTopic": "street-maintenance",
+      "groundTruthSynth": "street-maintenance/repaint-crosswalks",
+      "arrivalIndex": 91
+    },
+    {
+      "id": "fsLWLKnmKiBO",
+      "text": "Put security cameras in all the city-owned parking structures.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/garage-security-cameras",
+      "arrivalIndex": 92
+    },
+    {
+      "id": "YdRTxidPnPoi",
+      "text": "Convert unused public land into community gardens for local residents.",
+      "groundTruthTopic": "parks-and-recreation",
+      "groundTruthSynth": "parks-and-recreation/vacant-lot-gardens",
+      "arrivalIndex": 93
+    },
+    {
+      "id": "zlem33Vws2GU",
+      "text": "Implement physical traffic-calming measures in residential school zones.",
+      "groundTruthTopic": "public-safety",
+      "groundTruthSynth": "public-safety/school-traffic-calming",
+      "arrivalIndex": 94
+    },
+    {
+      "id": "SXwO9UANqOah",
+      "text": "Provide city grants to help first-time buyers with their down payments.",
+      "groundTruthTopic": "housing-affordability",
+      "groundTruthSynth": "housing-affordability/first-time-buyer-grants",
+      "arrivalIndex": 95
+    },
+    {
+      "id": "pl0LYtgqkVWo",
+      "text": "Fund an advertising campaign encouraging people to shop at independent local stores.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/buy-local-campaign",
+      "arrivalIndex": 96
+    },
+    {
+      "id": "AKk4DVF46IHC",
+      "text": "Install Level 2 chargers and DC fast chargers in all the municipal parking garages.",
+      "groundTruthTopic": "energy-and-climate",
+      "groundTruthSynth": "energy-and-climate/public-ev-chargers",
+      "arrivalIndex": 97
+    },
+    {
+      "id": "sGx1aWBg2poZ",
+      "text": "Allow residents to check out portable internet hotspots from the public library.",
+      "groundTruthTopic": "digital-connectivity",
+      "groundTruthSynth": "digital-connectivity/library-hotspots",
+      "arrivalIndex": 98
+    },
+    {
+      "id": "VLdFfEI5Xg9i",
+      "text": "Give startup grants to residents opening their first storefront.",
+      "groundTruthTopic": "local-economy",
+      "groundTruthSynth": "local-economy/small-business-grants",
+      "arrivalIndex": 99
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+// WizCol Studio — the single global stylesheet. Imported ONCE from main.tsx.
+// Components only ever import their own *.module.scss.
+//
+// Order matters (cascade = declaration order):
+//   1. mixins            — no CSS output, just makes @include available here
+//   2. fonts             — @font-face for Open Sans + Roboto (self-hosted woff2)
+//   3. platform tokens   — light → dark → high-contrast overrides on :root
+//   4. studio tokens     — Studio-only tokens, all derived from platform tokens
+//   5. base              — box-sizing, body, focus ring, utilities
+//   6. shared atoms/molecules from @freedi/shared-styles (BEM classes)
+//   7. studio atoms/molecules/organisms (BEM classes, app-specific)
+
+// 1. Mixins
+@use '@freedi/shared-styles/mixins' as *;
+
+// 2. Fonts — plain CSS loaded through Sass; Vite rebases the relative woff2
+//    url()s to the package's fonts/ directory.
+@use '@freedi/shared-styles/fonts/fonts';
+
+// 3. Platform design tokens (light → dark → contrast)
+@use '@freedi/shared-styles/tokens/index' as platform-tokens;
+
+// 4. Studio tokens
+@use './tokens';
+
+// 5. Base
+@use './base';
+
+// 6. Shared atoms + molecules
+@use '@freedi/shared-styles/atoms/button';
+@use '@freedi/shared-styles/atoms/badge';
+@use '@freedi/shared-styles/atoms/input';
+@use '@freedi/shared-styles/atoms/checkbox';
+@use '@freedi/shared-styles/atoms/segmented-control';
+@use '@freedi/shared-styles/atoms/skeleton';
+@use '@freedi/shared-styles/atoms/participation-funnel';
+@use '@freedi/shared-styles/atoms/tooltip';
+@use '@freedi/shared-styles/atoms/profile-avatar';
+@use '@freedi/shared-styles/atoms/language-pill';
+@use '@freedi/shared-styles/molecules/card';
+@use '@freedi/shared-styles/molecules/modal';
+@use '@freedi/shared-styles/molecules/toast';
+
+// 7. Studio-specific layers
+@use './atoms';
+@use './molecules';
+@use './organisms';

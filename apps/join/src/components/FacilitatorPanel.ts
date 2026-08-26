@@ -521,13 +521,10 @@ const SORT_OPTIONS: Array<{ value: SortType | string; icon: string; labelKey: st
 	{ value: 'manual', icon: '✋', labelKey: 'facilitator.sort.manual' },
 ];
 
-// `manualOptionOrder` isn't declared on the shared StatementSettings schema (the
-// join app is its only writer), so it's read through the narrow
-// `ManualOrderSettings` shape exported by the store rather than an `any` cast.
+// `manualOptionOrder` is declared on the shared StatementSettings schema, so it
+// reads straight off the question — no cast needed.
 function isManualSort(question: Statement | null): boolean {
-	const settings = question?.statementSettings as ManualOrderSettings | undefined;
-
-	return settings?.manualOptionOrder ? true : false;
+	return question?.statementSettings?.manualOptionOrder ? true : false;
 }
 
 /** Workspace-wide sort change. Mirrors `setSortType` (fresh seed for random,

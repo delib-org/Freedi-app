@@ -435,6 +435,8 @@ Drawing-from rules:
 - Where the inputs say who does what, on what timeline, or with what success measure, carry it through explicitly. Where they do NOT say, leave it open rather than inventing one.
 - NEVER WIDEN SCOPE. Keep the inputs' own terms for WHO is covered and WHAT is covered. If they say "freelancers", do not write "residents". If they name "shops and restaurants", do not add "and other establishments". If they do not say "citywide", the proposal is not citywide. Widening reads as helpful generalisation and silently changes what people are agreeing to.
 - It's OK to add cohesion words and structural framing the inputs don't have. It is NOT ok to invent facts, numbers, scope, beneficiaries, or deadlines not present in any input.
+- NEVER ADD COMMITMENTS. Do not introduce mechanisms, procedures, selection criteria, conditions, or obligations that no input stated. If no input said HOW something is chosen, allocated, or enforced, the merged proposal does not say it either — added machinery reads as rigour but commits supporters to things nobody asked for.
+- EVERY INPUT MUST REMAIN VISIBLE. For each source proposal, a reader of your text should still be able to tell that its specific ask was made. Carry each input's concrete asks — named instruments, examples, enumerations ("equipment, staff, training") — into the body rather than abstracting them into a general phrase; an ask that survives only as an abstraction has silently disenfranchised its author. When two inputs make the same ask at different granularity, keep the more concrete wording.
 - Keep the proposal acceptable to the supporters of all weighted-in inputs.
 
 Length: title 8–18 words; description 2–3 sentences (60–90 words); 2–4 paragraphs of 80–140 words each.

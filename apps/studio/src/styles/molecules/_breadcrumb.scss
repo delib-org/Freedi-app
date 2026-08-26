@@ -1,0 +1,72 @@
+// Breadcrumb molecule — nav > ol trail. The chevron separator is a text glyph
+// mirrored under RTL so the trail always points "forward".
+// Usage: <nav class="breadcrumb"><ol class="breadcrumb__list"><li class="breadcrumb__item">…
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.breadcrumb {
+	min-width: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-meta);
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__list {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		min-width: 0;
+	}
+
+	&__link {
+		@include truncate;
+
+		max-width: 24ch;
+		padding: 0.125rem 0.25rem;
+		border-radius: var(--radius-xs);
+		color: var(--text-meta);
+		text-decoration: none;
+		transition: color var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			color: var(--btn-primary);
+			text-decoration: underline;
+		}
+	}
+
+	&__current {
+		@include truncate;
+
+		max-width: 24ch;
+		padding: 0.125rem 0.25rem;
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__separator {
+		flex: 0 0 auto;
+		color: var(--text-caption);
+		line-height: 1;
+		user-select: none;
+
+		@include rtl {
+			transform: scaleX(-1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.breadcrumb__link {
+			transition: none;
+		}
+	}
+}

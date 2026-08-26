@@ -1,0 +1,51 @@
+// ActivityBoard molecule — role="table" wrapper around `.activity-row`s.
+// Column headers are real text on desktop and visually hidden ≤1024px, where
+// rows switch to their card layout.
+
+@use '@freedi/shared-styles/mixins' as *;
+@use './activity-columns';
+
+.activity-board {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__head {
+		@extend %activity-columns;
+
+		padding: 0.375rem 0.75rem;
+		border-block-end: 1px solid var(--border-light);
+		font-size: var(--font-size-2xs);
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-meta);
+
+		@include tablet-and-below {
+			@include visually-hidden;
+		}
+	}
+
+	&__columnheader {
+		@include truncate;
+
+		min-width: 0;
+		text-align: start;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+
+		@include tablet-and-below {
+			gap: 0.75rem;
+			padding-block-start: 0.25rem;
+		}
+	}
+
+	&__empty {
+		padding: var(--padding);
+	}
+}

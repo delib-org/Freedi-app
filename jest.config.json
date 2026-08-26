@@ -10,6 +10,7 @@
 	"moduleNameMapper": {
 		"^valibot$": "<rootDir>/__mocks__/valibot.ts",
 		"^clsx$": "<rootDir>/__mocks__/clsx.ts",
+		"^lucide-react$": "<rootDir>/node_modules/lucide-react/dist/cjs/lucide-react.js",
 		"\\.svg\\?react$": "<rootDir>/src/__mocks__/svgMock.tsx",
 		"\\.(svg|png|jpg|jpeg|gif)$": "<rootDir>/src/__mocks__/fileMock.ts",
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy",

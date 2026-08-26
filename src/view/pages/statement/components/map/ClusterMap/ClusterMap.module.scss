@@ -44,6 +44,14 @@
 	min-height: 0;
 }
 
+// Detail altitude + "My ideas", floating over the board's top-end corner.
+.detailControl {
+	position: absolute;
+	top: 0.75rem;
+	inset-inline-end: 1rem;
+	z-index: 3;
+}
+
 .loading {
 	display: flex;
 	flex: 1;

@@ -1,0 +1,7 @@
+// Studio atoms — BEM blocks specific to Studio.
+// Shared atoms live in @freedi/shared-styles and are loaded by ../index.scss.
+@use './tag';
+@use './progress-funnel';
+@use './progress-stat';
+@use './progress-stat-grid';
+@use './empty-state';

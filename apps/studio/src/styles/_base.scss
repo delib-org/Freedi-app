@@ -1,0 +1,74 @@
+// Base document styles for Studio.
+// Deliberately NOT the platform reset: Studio is a normal scrolling document
+// (no `overflow: hidden` on html/body, no app-shell height locking).
+
+@use '@freedi/shared-styles/mixins' as *;
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	font-size: 16px;
+}
+
+body {
+	margin: 0;
+	font-family: 'Open Sans', 'Roboto', system-ui, sans-serif;
+	background: var(--surface-background);
+	color: var(--text-body);
+	min-height: 100svh;
+	-webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	text-align: start;
+	color: var(--text-title);
+}
+
+a {
+	color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+:focus-visible {
+	outline: 2px solid var(--btn-primary);
+	outline-offset: 2px;
+}
+
+[hidden] {
+	display: none !important;
+}
+
+.visually-hidden {
+	@include visually-hidden;
+}
+
+// Full-viewport centred placeholder while auth resolves (see App.tsx).
+.studio-loading {
+	display: grid;
+	place-items: center;
+	min-height: 100svh;
+	color: var(--text-meta);
+}
+
+// Full-page error screen rendered by AppErrorBoundary (never a blank page).
+.app-error {
+	min-height: 100svh;
+	display: grid;
+	place-items: center;
+	padding: var(--space-lg);
+}

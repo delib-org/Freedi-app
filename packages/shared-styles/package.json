@@ -1,0 +1,12 @@
+{
+  "name": "@freedi/shared-styles",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared design tokens, mixins, fonts and reusable atom/molecule SCSS for all WizCol apps",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "files": [
+    "src"
+  ]
+}

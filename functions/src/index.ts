@@ -175,6 +175,9 @@ import {
 	reverseIntegrationCallable,
 } from './fn_integrateSimilarStatements';
 
+// Top Answers admin panel — on-demand recompute of statement.results / isChosen
+import { recomputeTopOptions } from './fn_recomputeTopOptions';
+
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
 import {
 	synthesizeIdeasPreview,
@@ -225,6 +228,20 @@ import { fn_acceptJoinDelegateInvite } from './engagement/joinDelegate/fn_accept
 import { fn_revokeJoinDelegate } from './engagement/joinDelegate/fn_revokeJoinDelegate';
 import { fn_onJoinDelegateInvitationCreated } from './engagement/joinDelegate/fn_onJoinDelegateInvitationCreated';
 import { fn_onCommentVerdictWritten } from './engagement/helperPoints/fn_onCommentVerdictWritten';
+
+// ── Organizations (WizCol Studio) ──
+import { fn_createOrganization } from './organizations/fn_createOrganization';
+import { fn_inviteOrgMember } from './organizations/fn_inviteOrgMember';
+import { fn_acceptOrgInvite } from './organizations/fn_acceptOrgInvite';
+import { fn_removeOrgMember } from './organizations/fn_removeOrgMember';
+import { fn_revokeOrgInvite } from './organizations/fn_revokeOrgInvite';
+import { fn_resendOrgInvite } from './organizations/fn_resendOrgInvite';
+import { fn_createOrgStatement } from './organizations/fn_createOrgStatement';
+
+// ── Question progress, Home surfacing & nudges (WizCol Studio) ──
+import { ensureTopParentSubscription } from './fn_ensureTopParentSubscription';
+import { fn_nudgeQuestionSubscribers } from './fn_nudgeQuestionSubscribers';
+import { fn_recomputeQuestionProgress } from './progress/fn_recomputeQuestionProgress';
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
@@ -624,6 +641,19 @@ exports.updateStatementWithViews = createFirestoreFunction(
 	'updateStatementWithViews',
 );
 
+// ── Question progress, Home surfacing & nudges (WizCol Studio) ──
+// Mirror a `member` subscription onto the top parent when a user subscribes
+// to a nested statement (so the group shows on Home). Progress counters are
+// hooked inside onStatementCreated / newEvaluation / updateStatementWithViews.
+exports.ensureTopParentSubscription = createFirestoreFunction(
+	`/${Collections.statementsSubscribe}/{subscriptionId}`,
+	onDocumentCreated,
+	ensureTopParentSubscription,
+	'ensureTopParentSubscription',
+);
+exports.fn_recomputeQuestionProgress = fn_recomputeQuestionProgress;
+exports.fn_nudgeQuestionSubscribers = fn_nudgeQuestionSubscribers;
+
 exports.onStatementDeletion = createFirestoreFunction(
 	`/${Collections.statements}/{statementId}`,
 	onDocumentDeleted,
@@ -828,6 +858,9 @@ exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
 exports.reverseIntegration = reverseIntegrationCallable;
 
+// Top Answers admin panel
+exports.recomputeTopOptions = recomputeTopOptions;
+
 // Bulk Idea Synthesis
 exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
 exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
@@ -904,6 +937,15 @@ exports.fn_revokeJoinDelegate = fn_revokeJoinDelegate;
 exports.fn_onJoinDelegateInvitationCreated = fn_onJoinDelegateInvitationCreated;
 // Peer reward: author marks a comment helpful → commenter earns 1 credit
 exports.fn_onCommentVerdictWritten = fn_onCommentVerdictWritten;
+
+// ── Organizations (WizCol Studio) ──
+exports.fn_createOrganization = fn_createOrganization;
+exports.fn_inviteOrgMember = fn_inviteOrgMember;
+exports.fn_acceptOrgInvite = fn_acceptOrgInvite;
+exports.fn_removeOrgMember = fn_removeOrgMember;
+exports.fn_revokeOrgInvite = fn_revokeOrgInvite;
+exports.fn_resendOrgInvite = fn_resendOrgInvite;
+exports.fn_createOrgStatement = fn_createOrgStatement;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

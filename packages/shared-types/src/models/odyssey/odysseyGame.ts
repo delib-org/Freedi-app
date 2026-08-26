@@ -7,6 +7,9 @@ import {
 	nullable,
 	array,
 	record,
+	pipe,
+	minValue,
+	maxValue,
 	InferOutput,
 } from 'valibot';
 import { OdysseyGameScriptSchema } from './odysseyGameScript';
@@ -114,14 +117,28 @@ export type OdysseyIslandAgoraSession = InferOutput<
 	typeof OdysseyIslandAgoraSessionSchema
 >;
 
+/** A party's evaluation of a single stance, on the standard −1..1 scale. */
+export const StanceScoreSchema = pipe(number(), minValue(-1), maxValue(1));
+
 export const OdysseyPartySchema = object({
 	partyId: string(),
 	name: string(),
 	color: string(),
 	imageUrl: optional(nullable(string())),
 	description: string(),
-	/** island statementId → stance statementId the party is closest to */
-	positions: record(string(), string()),
+	/**
+	 * stance statementId → continuous score in −1..1: how strongly the party
+	 * supports (+) or opposes (−) that stance. The primary route representation,
+	 * estimated from published materials (platforms, votes, statements).
+	 */
+	attitudes: optional(record(string(), StanceScoreSchema)),
+	/**
+	 * LEGACY: island statementId → the single stance the party declared.
+	 * Fallback only — read as +1 on the declared stance, −1 on its island
+	 * siblings, per stance not already covered by `attitudes`. Kept so existing
+	 * game docs stay valid; remove once every island carries researched attitudes.
+	 */
+	positions: optional(record(string(), string())),
 	sortOrder: number(),
 	enabled: boolean(),
 });

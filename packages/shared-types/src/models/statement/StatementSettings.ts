@@ -1,6 +1,7 @@
 import {
 	object,
 	optional,
+	nullable,
 	array,
 	string,
 	boolean,
@@ -181,12 +182,26 @@ export type SynthesisConfig = InferOutput<typeof SynthesisConfigSchema>;
  * the same map. All fields optional → the board falls back to its built-in
  * defaults (see ClusterBoard MAP_FONT_* / MAP_SYNTH_VISIBILITY_DEFAULT).
  */
+/**
+ * @deprecated Replaced by `MapDetailLevel` (`defaultDetail`). Still read for
+ * migration: 'clusters-only' → 'themes', 'all' → 'ideas', 'originals-only' → 'everything'.
+ */
 export const MapSynthVisibilitySchema = picklist([
 	'all', // clusters/synth AND ungrouped originals (default)
 	'clusters-only', // only clustered/synth groups; hide the ungrouped block
 	'originals-only', // flatten everything to originals; hide cluster grouping
 ]);
 export type MapSynthVisibility = InferOutput<typeof MapSynthVisibilitySchema>;
+
+/**
+ * How deep a map viewer looks into the topic → synth → original hierarchy.
+ * Acts as a MAXIMUM depth; individual nodes can be expanded further by the viewer.
+ * - `themes`     — topic clusters only (a table of contents).
+ * - `ideas`      — topics opened to their merged ideas (synths) + ungrouped originals. Default.
+ * - `everything` — synths opened to the original statements they were merged from.
+ */
+export const MapDetailLevelSchema = picklist(['themes', 'ideas', 'everything']);
+export type MapDetailLevel = InferOutput<typeof MapDetailLevelSchema>;
 
 // Which score the map filter keys off of. 'none' = no filtering (default).
 export const MapFilterMetricSchema = picklist([
@@ -199,7 +214,9 @@ export type MapFilterMetric = InferOutput<typeof MapFilterMetricSchema>;
 export const MapSettingsSchema = object({
 	cardFontRem: optional(number()), // sticky-note (card) text size, rem
 	clusterFontRem: optional(number()), // cluster pill + hub title size, rem
-	synthVisibility: optional(MapSynthVisibilitySchema), // which layers render
+	synthVisibility: optional(MapSynthVisibilitySchema), // @deprecated — see defaultDetail
+	defaultDetail: optional(MapDetailLevelSchema), // starting depth for participants (default 'ideas')
+	allowViewerExpand: optional(boolean()), // participants may expand nodes past the default depth (default true)
 	showProvenance: optional(boolean()), // show "made from N responses" on clusters
 	filterMetric: optional(MapFilterMetricSchema), // which score to filter by (default 'none')
 	minConsensus: optional(number()), // threshold when filterMetric === 'consensus', range [-1,1]
@@ -312,6 +329,13 @@ export const StatementSettingsSchema = object({
 	// participant computes the same shuffle locally. Admin re-randomizes by
 	// pressing the Random sort button again, which writes a fresh seed.
 	randomSortSeed: optional(number()),
+	// Admin hand-placed ordering of this question's options, by statementId.
+	// When non-empty it wins over `defaultSortType`; `null` clears it and hands
+	// the list back to the sort. Written by the join app's FacilitatorPanel and
+	// by the main app's Top Answers panel — both read by both.
+	manualOptionOrder: optional(nullable(array(string()))),
+	// Same, for the join app's separate organizer-suggestions list.
+	manualOrganizerOrder: optional(nullable(array(string()))),
 	// Join app: visual style family. Each style has its own light + dark
 	// palette tuned for legibility (system prefers-color-scheme still drives
 	// light vs dark). Default = serious (current earth-tone palette).

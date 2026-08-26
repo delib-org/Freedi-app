@@ -10,62 +10,13 @@ import { CutoffBy, ResultsBy, Statement } from '@freedi/shared-types';
 import { updateResultSettingsToDB } from '@/controllers/db/statements/setResultSettings';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import SectionTitle from '../sectionTitle/SectionTitle';
+import { formatRangeValue, getRangeConfig, toDisplayValue } from './resultsRangeConfig';
 
 interface RangeProps {
 	maxValue: number;
 	minValue: number;
 	step: number;
 	value: number;
-}
-
-interface RangeConfig {
-	min: number;
-	max: number;
-	step: number;
-	suffix: string;
-	convert: (displayValue: number) => number;
-	reverse: (storedValue: number) => number;
-}
-
-function getRangeConfig(resultsBy: ResultsBy): RangeConfig {
-	switch (resultsBy) {
-		case ResultsBy.consensus:
-			return {
-				min: -100,
-				max: 100,
-				step: 5,
-				suffix: '%',
-				convert: (v: number) => v / 100,
-				reverse: (v: number) => v * 100,
-			};
-		case ResultsBy.mostLiked:
-			return {
-				min: 0,
-				max: 100,
-				step: 1,
-				suffix: '',
-				convert: (v: number) => v,
-				reverse: (v: number) => v,
-			};
-		case ResultsBy.averageLikesDislikes:
-			return {
-				min: -100,
-				max: 100,
-				step: 1,
-				suffix: '',
-				convert: (v: number) => v,
-				reverse: (v: number) => v,
-			};
-		default:
-			return {
-				min: -100,
-				max: 100,
-				step: 5,
-				suffix: '%',
-				convert: (v: number) => v / 100,
-				reverse: (v: number) => v * 100,
-			};
-	}
 }
 
 const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) => {
@@ -240,25 +191,11 @@ function AboveThresholdRange({ statement, handleRangeChange }: ComponentRangePro
 	const { resultsBy, cutoffNumber } = statement.resultsSettings;
 	const rangeConfig = getRangeConfig(resultsBy);
 
-	const getInitialDisplayValue = (): number => {
-		const storedValue = cutoffNumber ?? 0;
+	const [displayValue, setDisplayValue] = useState<number>(() =>
+		toDisplayValue(rangeConfig, resultsBy, cutoffNumber ?? 0),
+	);
 
-		if (resultsBy === ResultsBy.consensus) {
-			if (storedValue > 1 || storedValue < -1) {
-				return 0;
-			}
-
-			return rangeConfig.reverse(storedValue);
-		}
-
-		return storedValue;
-	};
-
-	const [displayValue, setDisplayValue] = useState<number>(getInitialDisplayValue());
-
-	const formatDisplayValue = (val: number): string => {
-		return rangeConfig.suffix ? `${val}${rangeConfig.suffix}` : String(val);
-	};
+	const formatDisplayValue = (val: number): string => formatRangeValue(rangeConfig, val);
 
 	return (
 		<>

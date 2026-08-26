@@ -105,7 +105,7 @@
 .pill {
 	position: absolute;
 	transform: translate(-50%, -50%);
-	max-width: 160px;
+	max-width: 180px;
 	border-radius: 999px;
 	padding: 0.4rem 0.9rem;
 	color: #ffffff;
@@ -117,6 +117,108 @@
 	z-index: 2;
 	cursor: default;
 	word-break: break-word;
+}
+
+// Theme — a header band: square-ish, spine at the start, rule underneath.
+.pillTopic {
+	border-radius: 6px 6px 2px 2px;
+	border-inline-start: 4px solid rgba(0, 0, 0, 0.25);
+	border-bottom: 3px solid rgba(0, 0, 0, 0.25);
+	text-align: start;
+	min-width: 140px;
+}
+
+// Merged idea as a container — sheets peek out behind it like a stack.
+.pillSynth {
+	border-radius: 10px;
+
+	&::before,
+	&::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		background: var(--cluster-stack-sheet);
+		border: 1px solid var(--cluster-stack-edge);
+		transform: translate(var(--cluster-stack-offset), var(--cluster-stack-offset));
+		pointer-events: none;
+	}
+
+	&::after {
+		transform: translate(
+			calc(var(--cluster-stack-offset) * 2),
+			calc(var(--cluster-stack-offset) * 2)
+		);
+		opacity: 0.7;
+	}
+}
+
+.pillCollapsed {
+	opacity: 0.95;
+}
+
+.pillGlyph {
+	display: inline-block;
+	margin-inline-end: 0.35em;
+	font-weight: 800;
+	opacity: 0.85;
+}
+
+// "3 ideas · 1 merged" / "5 voices" — what a folded container holds.
+.pillCount {
+	display: block;
+	margin-top: 3px;
+	font-size: 0.72em;
+	font-weight: 600;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--cluster-pill-bg);
+	color: var(--cluster-pill-text);
+	width: fit-content;
+	max-width: 100%;
+}
+
+.pillMine {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 3px;
+	font-size: 0.68em;
+	font-weight: 600;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--card-default, #ffffff);
+	color: var(--cluster-mine-marker);
+}
+
+.pillMineDot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--cluster-mine-marker);
+}
+
+// Opens a folded container in place.
+.pillExpand {
+	position: absolute;
+	bottom: -10px;
+	inset-inline-end: 10px;
+	width: 22px;
+	height: 22px;
+	border: 2px solid var(--card-default, #ffffff);
+	border-radius: 50%;
+	background: inherit;
+	color: inherit;
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
 }
 
 // "made from N responses" — synth provenance shown under the cluster title.
@@ -272,6 +374,70 @@
 
 	&[draggable='true'] {
 		cursor: grab;
+	}
+}
+
+// A source fanned out under a merged idea — the same note, smaller.
+.cardCompact {
+	width: calc(120px * var(--cluster-source-scale, 0.85));
+	height: calc(120px * var(--cluster-source-scale, 0.85));
+	font-size: 0.92em;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+// The viewer's own note carries a marker dot on its start corner.
+.cardMine {
+	outline: 1.5px solid var(--cluster-mine-marker);
+	outline-offset: 1px;
+}
+
+.mineDot {
+	position: absolute;
+	top: 6px;
+	inset-inline-start: 6px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--cluster-mine-marker);
+	box-shadow: 0 0 0 2px var(--card-default, #ffffff);
+	z-index: 2;
+}
+
+// Ringed for a moment after "My ideas" located it.
+.cardHighlighted {
+	outline: 3px solid var(--cluster-selected-ring);
+	outline-offset: 3px;
+	animation: cardRing 2.4s ease-out;
+}
+
+@keyframes cardRing {
+	0% {
+		box-shadow: 0 0 0 0 var(--cluster-selected-ring);
+	}
+
+	100% {
+		box-shadow: 0 0 0 18px transparent;
+	}
+}
+
+// A merge of one original: a plain note with a quiet chip.
+.aiTitledChip {
+	position: absolute;
+	top: 4px;
+	inset-inline-start: 6px;
+	font-size: 0.6rem;
+	font-weight: 600;
+	letter-spacing: 0.2px;
+	padding: 0 6px;
+	border-radius: 999px;
+	border: 1px solid currentColor;
+	opacity: 0.6;
+	z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cardHighlighted {
+		animation: none;
 	}
 }
 

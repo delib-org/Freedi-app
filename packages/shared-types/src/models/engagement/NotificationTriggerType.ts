@@ -12,6 +12,8 @@ export enum NotificationTriggerType {
 	WELCOME_BACK = 'welcome_back',
 	EVIDENCE_ADDED = 'evidence_added',
 	MENTION = 'mention',
+	/** A facilitator/consultant nudged a question's subscribers (Studio) */
+	FACILITATOR_NUDGE = 'facilitatorNudge',
 	// Agora classroom game
 	AGORA_SUGGESTION_RECEIVED = 'agora_suggestion_received',
 	AGORA_SUGGESTION_ACCEPTED = 'agora_suggestion_accepted',

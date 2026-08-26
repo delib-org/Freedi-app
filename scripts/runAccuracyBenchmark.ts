@@ -683,6 +683,13 @@ function timestamp(): string {
 	console.info('\nfinal convergence pump…');
 	pump('scripts/drainSynthesisQueue.ts', 'queue');
 	pump('scripts/runReJudgeMerge.ts', 'rejudge');
+	// The rejudge sweep's revisit pass ENQUEUES left-behind options; without a
+	// queue drain after it, those items would sit undrained forever and the run
+	// would under-report the fixed pipeline. Second round: drain the revisits,
+	// let any resulting duplicates re-merge, drain once more.
+	pump('scripts/drainSynthesisQueue.ts', 'queue');
+	pump('scripts/runReJudgeMerge.ts', 'rejudge');
+	pump('scripts/drainSynthesisQueue.ts', 'queue');
 	await waitForSettle();
 
 	// Harvest guard. `waitForSettle` can only observe silence, and a queued-but-

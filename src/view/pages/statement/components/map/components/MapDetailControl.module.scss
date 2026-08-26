@@ -1,0 +1,154 @@
+// Detail altitude control shared by the mind map and the cluster board:
+// Themes | Ideas | Everything, "My ideas", and the where-is-my-idea breadcrumb.
+
+.control {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.4rem;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.segmented {
+	display: flex;
+	gap: 2px;
+	background: var(--card-default, #ffffff);
+	padding: 4px;
+	border-radius: 20px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.segment {
+	border: none;
+	background: transparent;
+	color: var(--text-body, #3d4d71);
+	font-size: 0.78rem;
+	font-weight: 500;
+	padding: 5px 12px;
+	border-radius: 16px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+
+	&:hover:not(:disabled) {
+		background: var(--menu-active, #f2f6ff);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+}
+
+.segmentActive {
+	background: var(--btn-primary, #5f88e5);
+	color: #ffffff;
+
+	&:hover:not(:disabled) {
+		background: var(--btn-primary, #5f88e5);
+	}
+
+	&:disabled {
+		opacity: 1;
+	}
+}
+
+.mine {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	border: none;
+	background: var(--card-default, #ffffff);
+	color: var(--text-body, #3d4d71);
+	font-size: 0.78rem;
+	font-weight: 600;
+	padding: 6px 12px;
+	border-radius: 20px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+	cursor: pointer;
+	white-space: nowrap;
+
+	&:hover {
+		background: var(--menu-active, #f2f6ff);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+}
+
+.mineDot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--cluster-mine-marker);
+	box-shadow: 0 0 0 2px var(--card-default, #ffffff);
+}
+
+.breadcrumb {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+	max-width: min(90vw, 520px);
+	background: var(--card-default, #ffffff);
+	color: var(--text-body, #3d4d71);
+	font-size: 0.78rem;
+	padding: 6px 8px 6px 12px;
+	border-radius: 12px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.crumb {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.crumbSep {
+	opacity: 0.5;
+}
+
+.crumbMine {
+	font-weight: 700;
+	color: var(--cluster-mine-marker);
+}
+
+.crumbClose {
+	border: none;
+	background: transparent;
+	color: inherit;
+	font-size: 1rem;
+	line-height: 1;
+	padding: 0 4px;
+	cursor: pointer;
+	opacity: 0.6;
+
+	&:hover {
+		opacity: 1;
+	}
+}
+
+@media (max-width: 767px) {
+	.segment {
+		padding: 5px 9px;
+		font-size: 0.72rem;
+	}
+}

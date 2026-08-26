@@ -402,6 +402,69 @@ This invite expires on ${expiryStr}. Click the button below and sign in with the
 	}
 }
 
+/**
+ * Creates an email template for a WizCol Studio organization invitation.
+ * Sent by the organization callables (which hold the raw token — only its
+ * hash is stored, so this cannot be driven by a Firestore trigger).
+ * Hebrew and English variants; single CTA to `/invite?token=...`.
+ */
+export function createOrganizationInvitationEmail({
+	organizationName,
+	inviterName,
+	role,
+	inviteLink,
+	language,
+}: {
+	organizationName: string;
+	inviterName: string;
+	role: 'owner' | 'admin' | 'viewer';
+	inviteLink: string;
+	language: 'he' | 'en';
+}): string {
+	try {
+		const safeOrg = organizationName?.trim() || 'WizCol Studio';
+		const safeInviter = inviterName?.trim() || (language === 'he' ? 'מנהל/ת' : 'An administrator');
+
+		if (language === 'he') {
+			const roleHe = role === 'owner' ? 'בעלים' : role === 'admin' ? 'מנהל/ת' : 'צופה';
+			const message = `
+<div dir="rtl" style="text-align: right;">
+${safeInviter} הזמין/ה אותך להצטרף לארגון <strong>"${safeOrg}"</strong> ב-WizCol Studio בתפקיד <strong>${roleHe}</strong>.<br><br>
+כחבר/ת צוות תוכל/י ליצור שאלות, לנהל אותן ולעקוב אחר ההתקדמות של כל הדיונים של הארגון.<br><br>
+לחצ/י על הכפתור והתחבר/י עם חשבון Google שאליו נשלחה הודעה זו. הקישור תקף לשבעה ימים.
+</div>
+			`.trim();
+
+			return createBaseEmailTemplate({
+				title: `הוזמנת להצטרף ל-${safeOrg}`,
+				message,
+				buttonText: 'אישור ההזמנה',
+				buttonUrl: inviteLink,
+				showButtonLink: true,
+			});
+		}
+
+		const roleEn = role === 'owner' ? 'an owner' : role === 'admin' ? 'an admin' : 'a viewer';
+		const message = `
+${safeInviter} invited you to join <strong>"${safeOrg}"</strong> on WizCol Studio as <strong>${roleEn}</strong>.<br><br>
+As a team member you'll be able to create questions, manage them and follow the progress of every deliberation the organization runs.<br><br>
+Click the button below and sign in with the same Google account that received this email. The link is valid for seven days.
+		`.trim();
+
+		return createBaseEmailTemplate({
+			title: `You've been invited to ${safeOrg}`,
+			message,
+			buttonText: 'Accept invite',
+			buttonUrl: inviteLink,
+			showButtonLink: true,
+		});
+	} catch (error) {
+		logger.error('Error creating organization invitation email:', error);
+
+		return `<p>You've been invited to join ${organizationName} on WizCol Studio.</p><p><a href="${inviteLink}">Accept invite</a></p>`;
+	}
+}
+
 // Helper function exported for use in fn_emailNotifications
 function getBaseUrl(): string {
 	const currentDomain = process.env.DOMAIN || process.env.FUNCTION_TARGET;

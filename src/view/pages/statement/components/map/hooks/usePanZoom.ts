@@ -40,6 +40,8 @@ interface UsePanZoomResult {
 	zoomOut: () => void;
 	/** Fit the whole content within the viewport, centered. */
 	fit: () => void;
+	/** Pan so the given content point (unscaled canvas px) sits at the viewport centre. */
+	centerOn: (contentX: number, contentY: number) => void;
 	/** React pointer-down handler for drag-to-pan (mouse/pen). */
 	onPointerDown: (e: ReactPointerEvent) => void;
 }
@@ -142,6 +144,17 @@ export function usePanZoom({
 			y: (height - contentHeight * scale) / 2,
 		});
 	}, [contentWidth, contentHeight, clampScale, fitPadding]);
+
+	const centerOn = useCallback((contentX: number, contentY: number) => {
+		const vp = viewportRef.current;
+		if (!vp) return;
+		const { width, height } = vp.getBoundingClientRect();
+		setTransform((prev) => ({
+			...prev,
+			x: width / 2 - contentX * prev.scale,
+			y: height / 2 - contentY * prev.scale,
+		}));
+	}, []);
 
 	// Fit once when the viewport and content are first ready.
 	const didFitRef = useRef(false);
@@ -323,6 +336,7 @@ export function usePanZoom({
 		zoomIn,
 		zoomOut,
 		fit,
+		centerOn,
 		onPointerDown,
 	};
 }

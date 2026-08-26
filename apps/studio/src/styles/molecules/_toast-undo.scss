@@ -1,0 +1,57 @@
+// ToastUndo — Studio `--undo` modifier on the shared `.toast` block: an inline
+// Undo action plus the shared progress bar, paused while hovered / focused.
+// The shared `.toast` is `position: fixed`; inside `.toast-container` we make
+// it flow (relative) so several could stack and the progress bar has a box.
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.toast--undo {
+	position: relative;
+	overflow: hidden;
+	gap: 1rem;
+	border-inline-start: 4px solid var(--btn-primary);
+	color: var(--btn-primary);
+
+	.toast__message {
+		color: var(--text-body);
+	}
+
+	.toast__action {
+		flex: 0 0 auto;
+		min-height: 2.25rem;
+		padding: 0.25rem 0.75rem;
+		border: 1px solid currentColor;
+		border-radius: var(--radius-pill);
+		background: transparent;
+		color: var(--btn-primary);
+		font-weight: 600;
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+		transition: background-color var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			background: var(--wash-primary);
+		}
+	}
+
+	.toast__progress {
+		inset-inline: 0;
+		border-radius: 0;
+		opacity: 0.35;
+	}
+
+	&.toast--paused .toast__progress {
+		animation-play-state: paused;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.toast__action {
+			transition: none;
+		}
+	}
+}
+
+// Studio hosts its undo toast above the drawer layer.
+.toast-container--studio {
+	z-index: var(--studio-z-toast);
+}

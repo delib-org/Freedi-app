@@ -9,11 +9,16 @@
     "build": "tsc && vite build",
     "preview": "vite preview --port 3008",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@freedi/event-core": "file:../../packages/event-core",
+    "@freedi/shared-i18n": "file:../../packages/shared-i18n",
+    "@freedi/shared-styles": "file:../../packages/shared-styles",
     "@freedi/shared-types": "file:../../packages/shared-types",
+    "clsx": "^2.1.0",
     "firebase": "^11.0.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
@@ -24,6 +29,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "sass": "^1.94.2",
     "typescript": "^5.5.4",
     "vite": "^6.0.0"
   }

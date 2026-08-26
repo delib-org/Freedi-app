@@ -71,8 +71,29 @@ export async function createSurvey(
   if (data.allSolutionsLinkLabel !== undefined) {
     survey.allSolutionsLinkLabel = data.allSolutionsLinkLabel;
   }
+  if (data.parentStatementId) {
+    survey.parentStatementId = data.parentStatementId;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
+
+  // A survey set up from WizCol Studio (parentStatementId = the Studio top
+  // question) is the canonical entry point for its questions: stamp the survey
+  // id on each question so Studio's share / admin links point at the survey.
+  if (data.parentStatementId && survey.questionIds.length > 0) {
+    try {
+      const batch = db.batch();
+      survey.questionIds.forEach((questionId) => {
+        batch.update(db.collection(Collections.statements).doc(questionId), {
+          'questionSettings.massConsensusSurveyId': survey.surveyId,
+          lastUpdate: now,
+        });
+      });
+      await batch.commit();
+    } catch (error) {
+      logger.error('[createSurvey] failed to stamp massConsensusSurveyId:', survey.surveyId, error);
+    }
+  }
 
   logger.info('[createSurvey] Created survey:', survey.surveyId,
     'questionSettings:', JSON.stringify(survey.questionSettings),

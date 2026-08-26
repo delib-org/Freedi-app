@@ -56,6 +56,11 @@ export const StatementSubscriptionSchema = object({
 	// back to `openedInJoin` desc.
 	openedInJoin: optional(number()),
 	joinOrder: optional(number()),
+
+	// WizCol Studio — consultant tenant of the subscribed statement, copied
+	// onto materialized org-admin subscriptions so an org's roster can be
+	// queried without joining through /statements.
+	organizationId: optional(string()),
 });
  
 export type StatementSubscription = InferOutput<

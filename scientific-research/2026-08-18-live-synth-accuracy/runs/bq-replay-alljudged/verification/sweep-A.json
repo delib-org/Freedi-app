@@ -1,0 +1,97 @@
+{
+  "missedAttaches": [
+    {
+      "statementId": "WhkvOtCbkAKe",
+      "synthId": "i0tYvLJSSfSV",
+      "confidence": "high",
+      "reason": "It is the full-text version of the existing member 'הבנת המקום: שכבות מידע וצרכים לשינוי מציאות' — understanding a place through layers of information (geological, botanical, uses) as the basis for changing it."
+    },
+    {
+      "statementId": "isa7d2T0b3eH",
+      "synthId": "i0tYvLJSSfSV",
+      "confidence": "high",
+      "reason": "Encouraging bottom-up research that surfaces field challenges to academia is the same proposal as the member 'הכוח של מחקר מהשטח: הצפת אתגרים ופיתוח פתרונות'."
+    },
+    {
+      "statementId": "SEqM-zrDfQMN",
+      "synthId": "HAXXewQ6LF86",
+      "confidence": "high",
+      "reason": "Making research accessible in language the relevant agents understand is interchangeable with 'simplify problems into accessible discourse' and 'speak the target audience's language'."
+    },
+    {
+      "statementId": "zbGJeUy3tPiV",
+      "synthId": "HAXXewQ6LF86",
+      "confidence": "high",
+      "reason": "Simplifying and making complex messages accessible to the broad audience is the same intervention as the synthesis's simplify-into-accessible-language members."
+    },
+    {
+      "statementId": "4PBBilOPwDvU",
+      "synthId": "Vv4eXsjUeGob",
+      "confidence": "high",
+      "reason": "Finding the actor who connects the science/regulation world to the executors in the field is exactly the synthesis's 'gorem mekasher' between research and the field."
+    },
+    {
+      "statementId": "OlUHWZkmWRXI",
+      "synthId": "Vv4eXsjUeGob",
+      "confidence": "medium",
+      "reason": "A dedicated connector role between academia and the community (the Hebrew U sustainability-center example) is the same lever as appointing a connecting actor between research and the field."
+    },
+    {
+      "statementId": "KIzZt9Cv8AoL",
+      "synthId": "HtoFP5OZXf7Y",
+      "confidence": "high",
+      "reason": "Providing resources — budgets, technological tools, training — to support the work is nearly verbatim the synthesis member 'משאבים: הקצאת משאבים נדרשים, כגון תקציבים... וכלים טכנולוגיים'."
+    },
+    {
+      "statementId": "RRQSCGGufl7s",
+      "synthId": "HtoFP5OZXf7Y",
+      "confidence": "medium",
+      "reason": "The funding-and-resources core ('הצורך במימון') matches the synthesis's resources/money members; only the added 'freedom of action' aspect is new."
+    },
+    {
+      "statementId": "CoSO3bjI8lfp",
+      "synthId": "9fKHAY6Jrr4p",
+      "confidence": "high",
+      "reason": "Motivation and inner fire as the driver that moves people to act for change is interchangeable with the member 'הנעה משמעותית, סבלנות והתמדה'."
+    },
+    {
+      "statementId": "ArGLq9FsN9tN",
+      "synthId": "vJ2h84OTWp20",
+      "confidence": "medium",
+      "reason": "Impact-directed collaborations spanning academia, environmental orgs, government and local authorities is the same cross-sector-partnership proposal as the synthesis's sector-connection members."
+    },
+    {
+      "statementId": "R2slgMvVeLLb",
+      "synthId": "3SeU51kwp1iL",
+      "confidence": "medium",
+      "reason": "Rooms/forums for open discourse on needs among the public, academics and practitioners is the same intervention as a periodic multi-stakeholder discussion forum."
+    }
+  ],
+  "missedSpawns": [
+    {
+      "statementIds": ["mpSqQCw7p9MP", "WKLIJmIj52Es"],
+      "confidence": "high",
+      "reason": "Both propose conducting trans/multidisciplinary research that combines different disciplines from the outset."
+    },
+    {
+      "statementIds": ["NhNv2A5askQy", "nCBoYSGyWKVm"],
+      "confidence": "high",
+      "reason": "Both propose citizen science — involving the broad public/volunteers directly in the research process and knowledge collection."
+    },
+    {
+      "statementIds": ["SuSzMKDmCRRR", "0lOPuJxx4ofP"],
+      "confidence": "high",
+      "reason": "Both propose organizing in-person meetings/workshops between research representatives and field practitioners to build lasting personal collaboration."
+    },
+    {
+      "statementIds": ["5SwFR11a5HZk", "c7fpbWFvSqP2"],
+      "confidence": "high",
+      "reason": "Both state the same condition: successful change requires combining scientific knowledge/validity with passion."
+    },
+    {
+      "statementIds": ["8DHPTWBreIcG", "TB329vZng-O-"],
+      "confidence": "medium",
+      "reason": "Both propose a standing, structured mechanism for continuous input from the field (ongoing data updates / ongoing feedback)."
+    }
+  ]
+}

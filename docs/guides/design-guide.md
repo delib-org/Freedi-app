@@ -1022,3 +1022,16 @@ Remember: **The best interface is invisible** - it guides without commanding, su
 
 *Last Updated: October 2025*
 *Version: 2.0.0*
+## Map Node Silhouettes (mind map + cluster board)
+
+Both maps draw the topic → merged idea → original hierarchy with three silhouettes, each carrying a glyph so the kinds read without colour (WCAG 1.4.1):
+
+| Kind (participant word) | Silhouette | Glyph | Count pill |
+|---|---|---|---|
+| Theme (topic cluster) | Header band: inline-start spine + bottom rule | `#` | "N ideas · M merged" |
+| Merged idea (synth) | Stack: two offset sheets behind the card (`--cluster-stack-*`) | `⧉` | "N voices" |
+| Original idea | Plain rounded note | — | — |
+
+A merge of one is drawn as a plain idea with an "AI-titled" chip. Nodes holding the viewer's own statement get the `--cluster-mine-marker` dot and "includes yours".
+
+Depth is one **Detail** control — Themes / Ideas (default) / Everything — acting as a maximum depth, plus per-node expand. Tokens live in `_variables.scss` under "Mind-map clusters & synths"; silhouettes are keyed off `.cluster-tag--*` classes (mind map) and `ClusterStack` / `.pillTopic` / `.pillSynth` (board).

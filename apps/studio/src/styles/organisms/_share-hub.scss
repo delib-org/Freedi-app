@@ -1,0 +1,81 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Share hub — choose a shareable activity, get its QR + link.
+.share-hub {
+	@include card-base;
+	align-self: start;
+	min-inline-size: 0;
+
+	&__title {
+		margin: 0 0 var(--space-sm);
+		font-size: 1.125rem;
+	}
+
+	&__empty {
+		margin: 0;
+		color: var(--text-meta);
+		font-size: var(--font-size-sm);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		margin: 0 0 var(--space-md);
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-block-size: 2.75rem;
+		padding: var(--space-xs) 0.625rem;
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		text-align: start;
+		transition: background-color var(--motion-fast) var(--motion-ease);
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+
+		&--selected {
+			border-color: var(--org-accent);
+			background: var(--org-accent-wash);
+		}
+	}
+
+	&__item-icon {
+		flex-shrink: 0;
+	}
+
+	&__item-title {
+		@include truncate;
+		flex: 1 1 auto;
+		min-inline-size: 0;
+		font-size: var(--font-size-sm);
+	}
+
+	&__qr {
+		display: flex;
+		justify-content: center;
+		padding-block-start: var(--space-xs);
+		border-block-start: 1px solid var(--border-light);
+	}
+
+	// Inside the drawer: no card chrome, no divider above the QR.
+	&--embedded {
+		padding: 0;
+		background: transparent;
+		border-radius: 0;
+		box-shadow: none;
+
+		.share-hub__qr {
+			padding-block-start: 0;
+			border-block-start: none;
+		}
+	}
+}

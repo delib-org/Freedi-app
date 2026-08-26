@@ -1,0 +1,72 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+.followMe {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-sm);
+	padding: var(--space-xs) 0;
+	border: 0;
+	background: none;
+	color: var(--text-title);
+	font-size: var(--font-size-xl);
+	font-weight: 600;
+	cursor: pointer;
+
+	&:disabled {
+		cursor: progress;
+		opacity: 0.6;
+	}
+}
+
+.track {
+	position: relative;
+	inline-size: 3.5rem;
+	block-size: 2rem;
+	border-radius: var(--radius-pill);
+	background: var(--border-light);
+	transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.thumb {
+	position: absolute;
+	inset-block-start: 0.25rem;
+	inset-inline-start: 0.25rem;
+	inline-size: 1.5rem;
+	block-size: 1.5rem;
+	border-radius: 50%;
+	background: var(--card-default);
+	transition: transform var(--motion-fast) var(--motion-ease);
+	@include shadow-subtle;
+}
+
+.toggleOn {
+	.track {
+		background: var(--approve);
+	}
+
+	.thumb {
+		transform: translateX(1.5rem);
+
+		[dir='rtl'] & {
+			transform: translateX(-1.5rem);
+		}
+	}
+}
+
+.hint {
+	margin: 0;
+	font-size: var(--font-size-md);
+	color: var(--text-meta);
+}
+
+.error {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--reject, var(--disagree));
+}

@@ -176,6 +176,7 @@ export const StatementSchema = object({
 	consensusValid: optional(number()), // gives a combine number of the level of consensus and its validity
 	PopperHebbianScore: optional(PopperHebbianScoreSchema), // the Popper Hebbian score of the statement
 	order: optional(number()), // the order of the statement relative to its siblings
+	mapSide: optional(picklist(['left', 'right'])), // which side of the mind-map root this branch sits on (first-level nodes only)
 	elementHight: optional(number()), // the height of the statement. It is used for animation purposes
 	top: optional(number()), // the top of the statement. It is used for animation purposes
 	suggestions: optional(number()), // the number of suggestions of the statement
@@ -372,6 +373,12 @@ export const StatementSchema = object({
 	randomSeed: optional(number()), // an optional random seed for the statement
 	locked: optional(StatementLockedSchema), // generic locking: any admin can lock a statement
 	sourceApp: optional(enum_(SourceApp)), // which app created this statement: main, sign, mass-consensus, flow
+	/**
+	 * Consultant tenant (WizCol Studio). Set only by `fn_createOrgStatement`
+	 * (Admin SDK) on top-level statements; firestore.rules rejects any client
+	 * write that sets or changes it.
+	 */
+	organizationId: optional(string()),
 	versionControl: optional(
 		object({
 			// Version info

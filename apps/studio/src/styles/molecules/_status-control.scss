@@ -1,0 +1,126 @@
+// StatusControl molecule — the facilitator's Open / Freeze / Close radiogroup.
+// Geometry is the shared `.segmented-control`; Studio adds a `--status`
+// modifier so the ACTIVE segment carries its run-state wash + ink instead of
+// the primary blue, then a `.status-control` wrapper for hint + confirm panel.
+
+@use '@freedi/shared-styles/mixins' as *;
+
+.segmented-control--status {
+	background: var(--wash-neutral);
+
+	.segmented-control__segment {
+		gap: 0.5rem;
+		font-weight: 600;
+
+		&--open.segmented-control__segment--active {
+			background: var(--status-open-wash);
+			color: var(--status-open-ink);
+			box-shadow: inset 0 0 0 1px var(--status-open-dot);
+		}
+
+		&--frozen.segmented-control__segment--active {
+			background: var(--status-frozen-wash);
+			color: var(--status-frozen-ink);
+			box-shadow: inset 0 0 0 1px var(--status-frozen-dot);
+		}
+
+		&--closed.segmented-control__segment--active {
+			background: var(--status-closed-wash);
+			color: var(--status-closed-ink);
+			box-shadow: inset 0 0 0 1px var(--status-closed-dot);
+		}
+	}
+
+	.segmented-control__glyph {
+		font-size: 0.8em;
+		line-height: 1;
+	}
+}
+
+.status-control {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
+	min-width: 0;
+
+	// ---- Elements ----------------------------------------------------------
+
+	&__hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		line-height: 1.4;
+	}
+
+	&__busy {
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+	}
+
+	&__confirm {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		width: 100%;
+		max-width: 28rem;
+		padding: 0.75rem var(--padding);
+		border: 1px solid var(--status-closed-dot);
+		border-inline-start-width: 4px;
+		border-radius: var(--radius-md);
+		background: var(--card-default);
+	}
+
+	&__confirm-text {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+		line-height: 1.45;
+	}
+
+	&__confirm-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+
+	// ---- Modifiers ---------------------------------------------------------
+
+	&--busy {
+		.segmented-control--status {
+			opacity: 0.7;
+			pointer-events: none;
+		}
+	}
+
+	&--disabled {
+		.status-control__hint {
+			color: var(--text-caption);
+		}
+	}
+
+	&--compact {
+		gap: 0.25rem;
+
+		.segmented-control__segment {
+			min-height: 2.25rem;
+			padding: 0.25rem 0.625rem;
+			font-size: var(--font-size-xs);
+		}
+
+		.status-control__hint {
+			font-size: var(--font-size-xs);
+		}
+	}
+
+	@include mobile {
+		.segmented-control--status {
+			width: 100%;
+		}
+
+		.segmented-control__segment {
+			flex: 1 1 0;
+		}
+	}
+}

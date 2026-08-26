@@ -14,10 +14,13 @@ import type { IslandContent } from './game';
  * genuinely Odyssey's: parties as virtual users, and the two engine shapes
  * the screens consume.
  *
- * Parties participate as VIRTUAL USERS: a party "evaluates" the stance it
- * declared on an island with +1 (support) and that island's other stances
- * with −1 (oppose) — its route through the same sea. The same metric then
- * applies to player↔party exactly as to player↔player.
+ * Parties participate as VIRTUAL USERS: a party carries a continuous
+ * evaluation score in −1..1 per stance (`attitudes`, estimated from its
+ * published materials) — its route through the same sea. The same metric
+ * then applies to player↔party exactly as to player↔player. Older game
+ * docs may still carry the LEGACY one-declared-stance model (`positions`);
+ * those read as +1 on the declared stance and −1 on its island siblings,
+ * per stance not covered by `attitudes`.
  * =======================================================================
  */
 
@@ -55,17 +58,21 @@ function round2(value: number): number {
 	return Math.round(value * 100) / 100;
 }
 
-/** A party's route as a virtual attitude map: +1 on its declared stance per
- *  island, −1 on that island's other stances. */
+/** A party's route as a virtual attitude map. An explicit continuous score
+ *  in `attitudes` wins per stance; otherwise a legacy declared stance fans
+ *  out as +1 on itself and −1 on its island siblings. */
 export function partyAttitudes(party: OdysseyParty, islands: IslandContent[]): AttitudeMap {
 	const attitudes: AttitudeMap = {};
 	for (const island of islands) {
-		const declaredStanceId = party.positions[island.statementId];
-		if (!declaredStanceId) continue;
+		const declaredStanceId = party.positions?.[island.statementId];
 		for (const stance of island.stances) {
-			attitudes[stance.statementId] = -1;
+			const score = party.attitudes?.[stance.statementId];
+			if (score !== undefined) {
+				attitudes[stance.statementId] = score;
+			} else if (declaredStanceId) {
+				attitudes[stance.statementId] = stance.statementId === declaredStanceId ? 1 : -1;
+			}
 		}
-		attitudes[declaredStanceId] = 1;
 	}
 
 	return attitudes;
@@ -106,7 +113,6 @@ function opinionPartyDistances(input: {
 		let shared = 0;
 		let sharedIslands = 0;
 		for (const island of islands) {
-			if (!party.positions[island.statementId]) continue;
 			let islandShared = 0;
 			for (const stance of island.stances) {
 				const mine = attitudes[stance.statementId];

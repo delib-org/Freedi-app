@@ -1,0 +1,476 @@
+<title>Geometry Proposes, Judgement Disposes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper: #FAF9F6;
+    --panel: #F1EFE9;
+    --ink: #20242C;
+    --muted: #69707C;
+    --line: #DAD7CE;
+    --teal: #0E6E63;
+    --teal-soft: #E3EEEB;
+    --brick: #A34E3E;
+    --brick-soft: #F3E7E2;
+    --code-bg: #EFEDE6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #15181E;
+      --panel: #1C2028;
+      --ink: #E3E2DB;
+      --muted: #8B93A0;
+      --line: #333945;
+      --teal: #52B8A9;
+      --teal-soft: #1B2E2B;
+      --brick: #D3907F;
+      --brick-soft: #322220;
+      --code-bg: #21252E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #15181E;
+    --panel: #1C2028;
+    --ink: #E3E2DB;
+    --muted: #8B93A0;
+    --line: #333945;
+    --teal: #52B8A9;
+    --teal-soft: #1B2E2B;
+    --brick: #D3907F;
+    --brick-soft: #322220;
+    --code-bg: #21252E;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 1.05rem;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 1.25rem;
+  }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 3.5rem 0 5rem; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+    text-wrap: balance;
+  }
+  .subtitle {
+    font-size: 1.15rem;
+    color: var(--muted);
+    font-style: italic;
+    margin: 0 0 1.5rem;
+    text-wrap: balance;
+  }
+  .byline {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 0.6rem 0;
+    margin-bottom: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 3rem 0 0.9rem;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  h2 .secnum, h3 .secnum {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 500;
+    font-size: 0.8em;
+    color: var(--teal);
+    margin-right: 0.55em;
+  }
+  h3 {
+    font-size: 1.12rem;
+    font-weight: 700;
+    margin: 2rem 0 0.6rem;
+    text-wrap: balance;
+  }
+  p { margin: 0 0 1rem; }
+  a { color: var(--teal); }
+  strong { font-weight: 700; }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.83em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.08em 0.35em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  pre code { white-space: pre; background: none; padding: 0; }
+
+  .abstract {
+    background: var(--panel);
+    border-left: 3px solid var(--teal);
+    padding: 1.2rem 1.4rem;
+    margin: 0 0 1rem;
+    font-size: 0.98rem;
+  }
+  .abstract p:last-child { margin-bottom: 0; }
+  .abstract .lbl {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  blockquote {
+    margin: 1.2rem 0;
+    padding: 0.2rem 0 0.2rem 1.2rem;
+    border-left: 2px solid var(--line);
+    color: var(--muted);
+    font-style: italic;
+  }
+  blockquote .src {
+    display: block;
+    font-style: normal;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    margin-top: 0.4rem;
+  }
+
+  .tablebox { overflow-x: auto; margin: 1.3rem 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-align: left;
+    color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+    padding: 0.45rem 0.8rem 0.45rem 0;
+  }
+  td {
+    border-bottom: 1px solid var(--line);
+    padding: 0.45rem 0.8rem 0.45rem 0;
+    vertical-align: top;
+  }
+  td.num, th.num { text-align: right; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.82rem; }
+  tr.hl td { background: var(--teal-soft); font-weight: 600; }
+  tr.hl-b td { background: var(--brick-soft); font-weight: 600; }
+  caption {
+    caption-side: bottom;
+    text-align: left;
+    font-size: 0.82rem;
+    color: var(--muted);
+    padding-top: 0.55rem;
+    font-style: italic;
+  }
+
+  .passes { margin: 1.4rem 0; display: flex; flex-direction: column; gap: 0.45rem; }
+  .pass {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+    align-items: baseline;
+  }
+  .pass .pnum {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--teal);
+  }
+  .pass .pbody { font-size: 0.92rem; }
+  .pass .pname { font-weight: 700; }
+  .pass .pgate {
+    display: block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+  .pass.registry { border-color: var(--teal); }
+
+  .voice-f, .voice-b {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.1em 0.5em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .voice-f { background: var(--teal-soft); color: var(--teal); }
+  .voice-b { background: var(--brick-soft); color: var(--brick); }
+
+  .footnote {
+    font-size: 0.85rem;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    margin-top: 3rem;
+    padding-top: 1rem;
+  }
+  ol.refs { font-size: 0.9rem; padding-left: 1.3rem; }
+  ol.refs li { margin-bottom: 0.6rem; }
+  ul { padding-left: 1.3rem; }
+  li { margin-bottom: 0.35rem; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Freedi Technical Report · Deliberation Systems</p>
+  <h1>Geometry Proposes, Judgement Disposes</h1>
+  <p class="subtitle">How Freedi's live clustering-and-synthesis pipeline aggregates free-form statements — and how it relates to Blair, Procaccia &amp; Tambe's <em>"Embeddings for Preferences, Not Semantics"</em></p>
+  <div class="byline">Freedi project · August 2026 · describes the pipeline as shipped on <span class="mono">main</span> (<span class="mono">functions/src/synthesis/</span>)</div>
+
+  <div class="abstract">
+    <span class="lbl">Abstract</span>
+    <p>Freedi aggregates free-form participant statements in real time: as each statement arrives it is either merged with an equivalent proposal (a <em>synthesis</em>), filed under a topical theme, or left standing as a new idea. The architecture is built around one principle, arrived at empirically: <strong>cosine similarity over text embeddings is used only as a candidate generator, never as a decision rule.</strong> Every placement that changes what the public sees is made by a discrete LLM judgement with a conservative bias and fail-closed error handling, and an optional <em>claim registry</em> reframes deduplication as classification against a shared, growing codebook of canonical claims. On a 100-statement live benchmark this raised end-to-end accuracy from 0.067 to ≈0.90 (English) and 0.93 (Hebrew), with exact, order-independent pair recovery (150/150 pairs, 0 false merges across three arrival orders).</p>
+    <p>Blair, Procaccia &amp; Tambe (2026) diagnose the same failure from the other direction: off-the-shelf embeddings encode a preference-relevant signal entangled with a semantic <em>nuisance</em> (wording, style), and cosine fails precisely when the two decouple. Their remedy is to repair the geometry (decorrelated preference tuning; per-topic vote-trained projections). Freedi's remedy is to demote the geometry. The two are directly comparable because Freedi's registry was benchmarked on the paper's own 875 hard triplets: raw cosine 0.5%, the paper's DPT-tuned encoder 80.0%, Freedi's registry 95.0%. A replication on a fixed 150-triplet subsample with the current production model (August 2026) confirms the raw-anchor registry at 96.7–98.0% — robust across the model upgrade — while revealing that the enriched-codebook variant regressed to DPT parity (79.7%) through stance-lossy canonicalisation; a same-day fix round repaired the operational half completely and the accuracy partially (82.7%), isolating compression loss as an inherent limit of canonicalisation and raw-anchor matching as the robust configuration (§9.1b). We argue the approaches are complementary, not competing.</p>
+    <p>An addendum from the first real-data exercise (§9.3): on a live production question replayed end-to-end, the clean-corpus numbers did not transfer — a blind independent audit measured member-level merge precision 65% and text fidelity 0.647, with one 8-member synthesis exhibiting the snowballing mode this report documents. One mechanism-level fix round — a farthest-pair transitivity guard on the merge sweep, a revisit pass that makes topic membership genuinely non-terminal, and two writer fidelity clauses — re-measured at 74% precision, fidelity 0.953 with zero lost voices, no synthesis above four members, and the silent-miss class abolished.</p>
+  </div>
+
+  <h2><span class="secnum">1</span>Problem setting</h2>
+  <p>In Freedi (and its Mass-Consensus variant), participants answer an open question — <em>"What should our city do to improve residents' quality of life?"</em> — by writing short free-form proposals, and evaluate each other's proposals on a continuous scale. Left raw, such a corpus fragments support: fifty people who want the same thing in fifty wordings look like fifty minority positions. The system's job is therefore threefold, and continuous:</p>
+  <ul>
+    <li><strong>Synthesis</strong> — detect that two statements are <em>the same proposal</em> in different words, and replace them with one jointly-worded statement that pools their evaluations.</li>
+    <li><strong>Theming</strong> — group distinct-but-related proposals under topical headings, without pretending they agree.</li>
+    <li><strong>Standing ideas</strong> — leave everything else alone, visibly, from statement #1.</li>
+  </ul>
+  <p>The critical constraint is that this happens <em>live</em>, one statement at a time, in whatever order participants happen to arrive, in multiple languages (English and Hebrew in production), with no batch re-clustering step the user ever waits for. The unit operation is: <em>given one new statement and the current state of the world, decide where it belongs</em> — an online, incremental placement problem, not a one-shot clustering problem.</p>
+  <p>Two distinctions do most of the conceptual work in what follows. First, <em>same topic</em> ≠ <em>same proposal</em>: "add speed bumps near schools" and "lower the speed limit near schools" share a topic and a goal but are different interventions; merging them misrepresents both authors. Second, <em>same words</em> ≠ <em>same stance</em>: "ban X" and "do not ban X" are lexically near-identical and preferentially opposite. Any aggregation mechanism must keep both distinctions; §10 shows that these are exactly the distinctions a generic embedding space fails to keep.</p>
+
+  <h2><span class="secnum">2</span>The governing design principle</h2>
+  <p>The pipeline's architecture is a consequence of one measured fact: on this task, cosine similarity over general-purpose text embeddings has essentially <em>no</em> decision-grade precision, while retaining useful recall as a search primitive. Concretely, on the hard-triplet benchmark of §9, <strong>100.0% of stance-flipped distractors cleared the pipeline's topical gate (cosine ≥ 0.60) and 99.1% cleared its strictest merge gate (≥ 0.85)</strong>. A threshold that admits every counterfeit is not a weak classifier; it is not a classifier. At the same time, nearest-neighbour search over the same embeddings reliably <em>surfaces</em> the true partner among the top candidates (100/100 in English; §4.1).</p>
+  <p>The resulting doctrine, stated in the design documentation and enforced at every placement site in the code, is:</p>
+  <blockquote>"Cosine is a candidate generator, never a decision rule." Later generalised: "Geometry proposes, judgement disposes — with no exceptions."<span class="src">docs/clusters-and-synthesis; enforced in runSinglePipeline.ts</span></blockquote>
+  <p>Every consequential action — attaching a statement to a synthesis, spawning a new synthesis, filing under a theme, merging two clusters, rewording a claim — is made by an LLM judgement over the actual texts, with three recurring safety properties:</p>
+  <ul>
+    <li><strong>Asymmetric doubt.</strong> Each judge prompt carries an explicit tie-breaking bias pointed at the cheaper error: the equivalence judge is told <em>"when in doubt between 'same' and 'related', prefer 'related'"</em>; the synthesis writer, <em>"when in doubt, refuse"</em>; the theme judge inverts it — <em>"when unsure, answer NONE: a topic created too eagerly is cheap… a proposal filed under the wrong topic stays there for every reader."</em></li>
+    <li><strong>Fail-closed placement, fail-open custody.</strong> An LLM error or timeout on a <em>merge</em> decision defaults to "different" (the edge is dropped, nothing merges). An LLM error on a <em>re-validation</em> of an existing cluster fails open (members are kept). The invariant: an infrastructure failure may delay cleanup, but must never scatter an equivalence class — and must never silently masquerade as a burst of honest "this is new" verdicts (outages are tracked separately from negative verdicts).</li>
+    <li><strong>Reversible-by-sweep, not irreversible-by-stream.</strong> The live path is deliberately conservative; scheduled sweeps (§7) supply convergence: a re-judge pass proposes cross-cluster merges, a consolidation pass tidies themes and claims, and splits are never automatic — they are queued for human review.</li>
+  </ul>
+
+  <h2><span class="secnum">3</span>Representation layer</h2>
+  <h3>3.1 Embeddings</h3>
+  <p>Statements are embedded with OpenAI <code>text-embedding-3-small</code> by default, pinned at <strong>1536 dimensions</strong> (the dimensionality is load-bearing: the Firestore vector index declares it). Each question can pin <code>text-embedding-3-large</code> — truncated natively to 1536 — because Hebrew separability under 3-small is inadequate: with production formatting, the true paraphrase partner is the nearest neighbour for <strong>100/100 English</strong> statements but only <strong>56/100 Hebrew</strong>; under 3-large @1536, Hebrew recovers to 88–89/100. Migration is per-question rather than a flag day, since vectors from different models occupy different spaces — a cosine between them is a number with no meaning.</p>
+  <p>The embedding input follows a fixed context contract, <code>"Question: &lt;parent text&gt;\nAnswer: &lt;statement&gt;"</code>, which conditions the vector on the deliberation's subject. This has a measured side effect that shapes the whole threshold scheme: the shared prefix lifts the entire cosine floor, compressing the corpus — 80% of English and 100% of Hebrew <em>cross-topic</em> pairs sit above 0.60 similarity.</p>
+  <h3>3.2 Brief distillation</h3>
+  <p>Long statements (≥40 characters) are first distilled by a fast LLM into a 5–15-word <em>brief</em>, and the brief is what gets embedded. The motivation is again geometric hygiene: vision-statement boilerplate ("for a thriving, inclusive city we should…") makes everything look ~0.75-similar. The canonical statement text is untouched; briefs are also reused downstream as compact member representations when a whole cluster must be re-validated in one LLM call.</p>
+  <h3>3.3 Retrieval</h3>
+  <p>Placement candidates come from Firestore's native approximate-nearest-neighbour search (cosine, flat index, per-question partition), top <code>k = 15</code> — raised from 10 specifically because compressed Hebrew geometries buried true partners below rank 10.</p>
+
+  <h2><span class="secnum">4</span>The online placement algorithm</h2>
+  <p>When a statement is created, a Cloud Function trigger fires, pre-computes the embedding against a 3-second deadline (halving user-visible latency), and runs the placement pipeline. The same pipeline is entered from five sources — live creation, threshold crossings, a retry queue, admin "synthesize now", and selective re-runs — through one decision tree, which is what makes the system's behaviour analysable.</p>
+  <h3>4.1 Bands and evidence</h3>
+  <p>Cosine similarity is partitioned into calibrated bands (defaults for 3-small; a separately calibrated set ships for 3-large, because <em>bands are calibrated to a geometry, not to a pipeline</em>):</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Band</th><th class="num">3-small</th><th class="num">3-large</th><th>Role</th></tr>
+      <tr><td><code>attachThreshold</code></td><td class="num">0.85</td><td class="num">0.86</td><td>candidate may be a paraphrase of an existing synthesis</td></tr>
+      <tr><td><code>synthLowerBound</code></td><td class="num">0.78</td><td class="num">0.80</td><td>pair may warrant a new synthesis</td></tr>
+      <tr><td><code>clusterThreshold</code></td><td class="num">0.60</td><td class="num">0.75</td><td>topical relatedness (theming)</td></tr>
+      <tr><td><code>reviewLowerBound</code></td><td class="num">0.45</td><td class="num">—</td><td>ANN floor; below this, nothing is even a candidate</td></tr>
+      <caption>Threshold bands, with the enforced invariant reviewLowerBound &lt; clusterThreshold ≤ synthLowerBound ≤ attachThreshold. Crossing a band makes a statement a <em>candidate</em> for an action — never triggers the action.</caption>
+    </table>
+  </div>
+  <p>Evidence for a candidate cluster is deliberately not the naive "similarity to the cluster title." It is computed in two stages: first, the maximum over the title cosine and any member cosine (because merged synthesis titles abstract away from their members — title-only evidence spawns duplicate clusters); second, an expansion step fetches <em>all</em> member embeddings and scores the cluster by the <strong>average of its top-2 member cosines</strong> — requiring two independent members to agree, so a single high-cosine outlier cannot drag a wide cluster over a gate. Member evidence excluding the title is tracked separately, so the strictest gate can demand agreement with the cluster's <em>contents</em>, not its label.</p>
+  <h3>4.2 Cohesion gates</h3>
+  <p>Before any merge candidate reaches a judge, the receiving cluster must pass a cohesion gate combining, by conjunction, (a) similarity of the incoming statement to the cluster <em>centroid</em> and (b) a quorum — at least half the members individually above a floor. For syntheses the centroid floor sits halfway between <code>synthLowerBound</code> and <code>attachThreshold</code> (0.815 at shipped defaults), a value chosen from a measured separation over 4,900 candidates: genuine attach candidates had median centroid-cosine 0.898 (p10 = 0.862), false same-topic candidates median 0.723 (p99 = 0.831), false cross-topic median 0.652. The gate exists to stop <em>snowballing</em> — the observed failure was a "safe settlement" synthesis that absorbed belonging, beauty, growth and community options, one member riding in at cosine 0.43 to the rest.</p>
+  <h3>4.3 The pass cascade</h3>
+  <p>The placement decision is a strict cascade; a statement takes the first pass whose gate <em>and</em> judgement both admit it.</p>
+  <div class="passes">
+    <div class="pass"><span class="pnum">P1</span><div class="pbody"><span class="pname">Synthesis attach.</span> Merge into an existing synthesis. <span class="pgate">gate: top-2 member evidence ≥ 0.85 ∧ cohesion ∧ LLM verdict = "same" (fail-closed)</span></div></div>
+    <div class="pass"><span class="pnum">P2</span><div class="pbody"><span class="pname">Synthesis spawn.</span> Pair with a free statement and write a joint synthesis; up to 3 candidate partners are tried, and the writer may refuse each. <span class="pgate">gate: pair cosine ≥ 0.78 ∧ LLM coherence check passes</span></div></div>
+    <div class="pass"><span class="pnum">P3</span><div class="pbody"><span class="pname">Theme filing (judged).</span> An LLM files the statement into an existing theme, shown with each theme's <em>contents</em>, never by title alone; it may create nothing and may answer NONE. <span class="pgate">cosine only ranks the shortlist; doubt → NONE</span></div></div>
+    <div class="pass registry"><span class="pnum">P4</span><div class="pbody"><span class="pname">Claim registry (opt-in).</span> Classify the statement against the question's codebook of canonical claims (§6). <span class="pgate">attach iff "expresses" ∧ confidence ≥ 0.6; "opposes" writes a typed counter-edge and falls through</span></div></div>
+    <div class="pass"><span class="pnum">P5</span><div class="pbody"><span class="pname">Theme spawn from raw pairs.</span> Historical; disabled by default — raw-pair theme creation is what caused the black hole of §8.1. <span class="pgate">off</span></div></div>
+    <div class="pass"><span class="pnum">P6</span><div class="pbody"><span class="pname">Review queue.</span> Borderline evidence (0.45–0.60) is queued for humans; queue rows are resolved automatically if a later pass places the statement. <span class="pgate">no mutation</span></div></div>
+    <div class="pass"><span class="pnum">P7</span><div class="pbody"><span class="pname">Singleton.</span> Nothing similar exists: the statement stands as its own idea (and, with the registry on, becomes a provisional one-member claim so it is a labeled public idea from the moment it exists). <span class="pgate">—</span></div></div>
+  </div>
+  <p>The ordering is load-bearing, and was learned from a failure: theming must not outrank synthesis, because <em>a theme that already holds your twin will always look cohesive to you — your twin is inside its centroid</em>. In one measured run, 17 of 23 topical attachments were justified by a member cosine that was, in fact, the statement's own paraphrase twin: the pipeline used the twin as evidence to file the statement <em>away</em> from it, and only 2 of 50 ground-truth pairs ever merged. Two structural fixes followed: synthesis passes run first, and topic membership is <em>non-terminal</em> — a statement owned by a theme has been given "a theme, not a meaning," and remains eligible for synthesis when its twin arrives. Synthesis membership, by contrast, is terminal, and an authoritative reverse-membership query (not a field on the statement) enforces exactly-one-owner idempotence under queue replays.</p>
+  <h3>4.4 The equivalence judge</h3>
+  <p>The judge behind P1 and the merge sweeps returns a four-way verdict — <code>same | related | different | opposite</code> — defined operationally:</p>
+  <blockquote>same — A and B are paraphrases of essentially the same proposal. · related — same topic but different actions, stances, or magnitudes. · different — about different things; wording similar by coincidence. · opposite — contradictory actions on the same subject ("ban X" vs "permit X"). Use "same" ONLY when the two proposals are essentially interchangeable. When in doubt between "same" and "related", prefer "related".<span class="src">semantic-equivalence-service, verdict rubric (abridged)</span></blockquote>
+  <p>Only "same" merges. Verdicts are cached in a persistent store keyed by an order-independent hash of the pair, versioned by model and prompt, and fallback verdicts (from failures) are never cached. Note that this taxonomy is strictly richer than any similarity metric can be: "opposite" is a <em>typed relation</em>, recorded as a counter-edge between a statement and the claim it opposes — a fact a distance function cannot represent at all (§10.3).</p>
+
+  <h2><span class="secnum">5</span>Synthesis text generation</h2>
+  <p>When two statements merge, the synthesis <em>writer</em> produces the joint statement under a rubric whose first stage is a refusal check with two independent triggers: <em>directional conflict</em> (inputs pull opposite ways on the same lever) and — the subtler one — <em>distinct actions within the same theme</em> (different specific interventions that happen to address related problems). The acceptance test is explicit: the inputs must be true paraphrases of the <em>same specific action — same lever, same direction, same intervention;</em> "if a supporter could reasonably back one while opposing the other's intervention, the inputs are distinct ideas." Bias: when in doubt, refuse.</p>
+  <p>Two later amendments are worth recording because each was driven by a measured error mode:</p>
+  <ul>
+    <li><strong>The formulation clause.</strong> The refusal bias over-fired on category-vs-instance pairs ("traffic-calming measures near schools" vs "speed bumps and raised crossings near schools"). An added clause — <em>formulation differences are not grounds for refusal; refuse only when the difference IS the intervention</em> — took Hebrew twin recovery from 45/50 to 49/50 offline without moving English.</li>
+    <li><strong>The scope rule.</strong> Synthesized texts drifted toward helpful generalisation ("freelancers" → "residents"), which <em>silently changes what people are agreeing to</em>. An explicit never-widen-scope rule took scope inflation from 4/50 to 0/50; a subsequent fidelity audit over live runs measured 98/98 member intents preserved, fidelity 1.000.</li>
+  </ul>
+  <p>Merged sources are weighted by evaluator share when presented to the writer, so a heavily-evaluated statement's framing carries proportional weight. Output language is forced by Unicode-range detection on the inputs — necessary because, unforced, 8 of 10 topic labels for an all-English corpus came back in Spanish or German; and since cluster titles are themselves embedded and used as attach evidence, a wrong-language title is not a display bug but a retrieval corruption.</p>
+
+  <h2><span class="secnum">6</span>The claim registry</h2>
+  <p>The passes of §4 share a structural blind spot: the judge can only rule on pairs that cosine surfaced. Two statements with the same meaning but distant embeddings are never compared — a <em>semantic recall gap</em> that no threshold tuning can close, because the failing pair never becomes a candidate. A second, independent problem is cold start: cosine bands are density-calibrated and mean little when a question has five statements.</p>
+  <p>The registry answers both with one move: it reframes deduplication as <strong>classification against a shared, growing codebook of canonical claims</strong> — one claim per idea already seen in this question, each carrying a 5–15-word canonical wording, a public explanation, and a verbatim exemplar. Classification into a fixed set converges; free-form canonicalisation does not (two LLM calls will canonicalise the same idea two ways; two calls classifying against the same list will not invent divergent labels). The classifier sees every claim as an enriched line — canonical wording, explanation, and an exemplar quote — because bare canonical wordings alone cost 25 accuracy points (§9.1); and it carries the stance caution learned from the hard triplets: <em>shared phrasing is never evidence of a match — judge stance and meaning only.</em> Cosine still appears, but demoted from gatekeeper to <em>ranker</em>: it orders the codebook so likely matches appear early (mitigating position bias), and filters nothing.</p>
+  <p>The registry's maintenance layer treats the codebook as a scientific instrument that must not drift:</p>
+  <ul>
+    <li><strong>Consolidation.</strong> Every 15 placements, one LLM call over the whole codebook proposes merges and too-broad flags, under a conservative rubric ("same-topic-different-action is NOT a merge… no merges is a perfectly good answer"). Each claim participates in at most one merge per pass — fixed-point iteration rather than a one-shot solve. Claims are promoted from <em>provisional</em> to <em>confirmed</em> only with ≥3 members and after surviving a pass untouched.</li>
+    <li><strong>Mutation protocol with a broaden-ratchet.</strong> Any rewording of a claim is itself classified (<code>reword | broaden | narrow | different</code>, failing closed to <code>different</code>, which forces member re-validation). Because a sequence of individually-innocent broadenings can walk a claim away from its members, every claim keeps its original <em>anchor text</em>; after two unchecked broadenings the new wording is tested against the anchor directly, and members detached by any re-validation are re-enqueued as fresh arrivals.</li>
+    <li><strong>Self-audit.</strong> Every consolidation merge is, by construction, an observed false-"new" — so the running merge count is an online estimate of the registry's own recall error. Independently, 5% of classifications are re-run on the stronger model and logged (never overriding the primary decision), giving a drift estimate on the fast classifier.</li>
+    <li><strong>Scale path.</strong> Above 30 claims, classification goes hierarchical — route to at most 2 topic claims, classify within — but any "none" triggers a full flat fallback, on the principle that <em>a gate that filters can misfile; a gate with an ungated second look cannot.</em></li>
+  </ul>
+  <p>The registry is opt-in per question and ships default-off; the judged cascade of §4 is the production default.</p>
+
+  <h2><span class="secnum">7</span>Convergence layer</h2>
+  <p>The live path optimises latency and safety; scheduled functions supply eventual consistency. A queue worker drains deferred work every minute (including spawns deferred by the per-<em>pair</em> debounce — originally per-question, which silently dropped legitimate spawns; §8.2). A re-judge sweep every 10 minutes proposes cross-synthesis merges whenever cross-member top-2 evidence exceeds 0.82, each proposal confirmed or rejected by the judge, with rejected pairs memoised — the 0.82 figure sits deliberately <em>below</em> decision-grade because, as the code comments put it, cosine provably cannot tell "two wordings of one proposal" from "two distinct proposals about the same thing"; the two bands overlap exactly there. Theme consolidation merges duplicate headings judged on their <em>members</em>, never their titles. A separate bulk path exists for admin-initiated full re-synthesis (graph components over 0.92-cosine edges, medoid-based two-tier judging with auto-accept above 0.94 and auto-reject below 0.60), kept behind feature flags.</p>
+
+  <h2><span class="secnum">8</span>Documented failure modes</h2>
+  <p>The benchmark campaign (§9.2) is best read as a catalogue of characteristic failures of embedding-threshold clustering, each observed, measured, and answered structurally. Three deserve statement in general form.</p>
+  <h3>8.1 The topic-cluster black hole</h3>
+  <p>In the first instrumented run, the pipeline produced <em>zero</em> syntheses: one early topical cluster absorbed all 100 statements (audit trail: 1 spawn, 98 attaches). The mechanism is general: in a corpus whose cosine floor is lifted (here by the shared question prefix), the first cluster created above the topical threshold becomes an attractor that every subsequent statement clears, and if cluster membership is terminal, every paraphrase pair is foreclosed forever. The diagnostic lesson is about metrics: coverage was 100% while pair precision was 0.091 — <em>the one number that would have looked healthy on a dashboard is the one that hides the failure.</em> The fix was not a threshold but a structure: conjunctive cohesion gates, non-terminal topic membership, judged theme filing, and disabling raw-pair theme creation. The black hole reappeared, instructively, when the Hebrew embedding model was upgraded without recalibrating the bands — confirming that thresholds are properties of a geometry, not of a pipeline.</p>
+  <h3>8.2 Silent drops in the streaming path</h3>
+  <p>A 15-second spawn debounce keyed per question meant a spawn for one pair could suppress a spawn for an unrelated pair, capping pair recall at 40% <em>even though every pair was inside the attach band</em>; a spawn that failed after the gate left no audit row and no retry. Both are instances of the same shape — a streaming system in which a suppressed action has no custodian — and both fixes are re-enqueues: nothing may be dropped without either an audit record or a scheduled second chance.</p>
+  <h3>8.3 Measurement that fails toward plausibility</h3>
+  <p>Two harness bugs each inverted a conclusion: a test harness that <em>re-implemented</em> the production merge sweep kept measuring the copy after the production code gained an LLM gate; and a settle-detector's quiet window could not distinguish "queued" from "finished," reporting 47/50 for a run that achieved 50/50. Neither produced an error; both produced a number. The campaign's response — import production functions unmodified, certify builds byte-for-byte, mark contaminated runs "do not cite" — is a reproducibility discipline we commend to anyone benchmarking live pipelines.</p>
+
+  <h2><span class="secnum">9</span>Empirical results</h2>
+  <h3>9.1 Hard-triplet benchmark (shared instrument with the paper)</h3>
+  <p>The registry was evaluated on the <strong>875 hard evaluation triplets released by Blair, Procaccia &amp; Tambe</strong> — for each real participant anchor, a same-stance paraphrase (<em>match</em>) and a stance-flipped rewrite preserving the wording (<em>distractor</em>), spanning 11 datasets from Polis, Remesh and generative-social-choice surveys. Scoring is end-to-end and stricter than the paper's margin test: a triplet counts only if the match attaches to the anchor's claim <em>and</em> the distractor does not. The harness imports Freedi's production functions unmodified; intervals are Wilson 95%, contrasts by exact McNemar.</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Condition</th><th>Decision mechanism</th><th class="num">Triplet acc.</th></tr>
+      <tr><td>Cosine, raw text <span class="voice-f">Freedi gate</span></td><td>threshold on <span class="mono">text-embedding-3-small</span></td><td class="num">0.5%</td></tr>
+      <tr><td>Cosine, production context format</td><td>same, with the Question/Answer prefix</td><td class="num">1.8%</td></tr>
+      <tr><td>Base ST5-XL <span class="voice-b">paper</span></td><td>cosine</td><td class="num">48.3%</td></tr>
+      <tr><td>e5-large-v2 / BGE-large / all-mpnet <span class="voice-b">paper</span></td><td>cosine</td><td class="num">26.7 / 6.3 / 8.2%</td></tr>
+      <tr class="hl-b"><td>DPT-tuned ST5-XL <span class="voice-b">paper</span></td><td>cosine on preference-tuned encoder</td><td class="num">80.0%</td></tr>
+      <tr class="hl-b"><td>Per-topic projection <span class="voice-b">paper</span></td><td>vote-trained rank-20 ideal-point scorer</td><td class="num">81.1%</td></tr>
+      <tr><td>Registry, generated canonicals <span class="voice-f">Freedi</span></td><td>LLM classification vs bare codebook</td><td class="num">70.1%</td></tr>
+      <tr><td>Registry, enriched + stance caution <span class="voice-f">Freedi</span></td><td>+ explanation + exemplar per claim</td><td class="num">88.6%</td></tr>
+      <tr class="hl"><td>Registry, raw-anchor claims <span class="voice-f">Freedi</span></td><td>LLM classification, fast model</td><td class="num">95.0%</td></tr>
+      <tr><td>Same, stronger model (gpt-4o) <span class="voice-f">Freedi</span></td><td>LLM classification</td><td class="num">96.5%</td></tr>
+      <caption>Accuracy on the paper's 875 hard triplets. Paper rows are the authors' reported cosine accuracies on the same instrument; Freedi rows are end-to-end attach decisions (McNemar, registry vs raw cosine: 827 discordant wins to 0, p ≈ 10⁻²⁴⁹).</caption>
+    </table>
+  </div>
+  <p>Three honest caveats, all raised by the benchmark report itself. (1) The −24.9pp drop from raw-anchor to generated-canonical conditions localises the weak link in <em>canonicalisation</em>, not classification — which is precisely why production claims carry exemplars. (2) An embedding-gate-then-LLM-judge baseline (the standard RAG pattern) <em>ties</em> the registry at 95.0% on this corpus: on same-language rewrites the recall gap does not bite, so most of the headline gain is attributable to the judge, and the registry's marginal value is cold-start behaviour, cross-lingual recall, and the maintained codebook rather than raw triplet accuracy. (3) An adversarial probe of the recall gap found it real but narrow: zero English rewrite pairs fell below the 0.60 gate, while six Hebrew pairs fell into the 0.45–0.60 band, where the gated pipeline recovers 0/6 and the registry 6/6 — the gap is mostly a cross-lingual phenomenon.</p>
+  <h3>9.1b Pilot-150 replication on the current production model</h3>
+  <p>Because the numbers above were produced on an earlier model generation (<span class="mono">gpt-4o-mini</span>), we re-ran the registry conditions on a fixed, seeded, dataset-stratified <strong>150-triplet subsample</strong> of the 875 with the production stack as of August 2026: the upgraded worker model (<span class="mono">gpt-5.6-luna</span>), the current classification prompt including the stance caution, and canonicals regenerated by the current model. The harness, attach rule, and scoring are unchanged; old-vs-new contrasts are paired on identical triplets (exact McNemar).</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Condition (same 150 triplets)</th><th>Model</th><th class="num">Triplet acc. [95% CI]</th><th class="num">Distractor false-attach</th></tr>
+      <tr><td>Cosine, raw or ctx format <span class="voice-f">gate</span></td><td>3-small</td><td class="num">0.0% [0.0, 2.5]</td><td class="num">100% clear 0.60; 99.3% clear 0.85</td></tr>
+      <tr><td>Registry, raw anchor (archive)</td><td>gpt-4o-mini</td><td class="num">98.7% [95.3, 99.6]</td><td class="num">0.7%</td></tr>
+      <tr><td>Registry, enriched (archive)</td><td>gpt-4o-mini</td><td class="num">92.0% [86.5, 95.4]</td><td class="num">2.7%</td></tr>
+      <tr class="hl"><td>Registry, raw anchor (current)</td><td>gpt-5.6-luna</td><td class="num">96.7% [92.4, 98.6]</td><td class="num">1.3%</td></tr>
+      <tr><td>Registry, enriched (current)</td><td>gpt-5.6-luna</td><td class="num">79.7% [72.5, 85.4]<sup>†</sup></td><td class="num">10.1%</td></tr>
+      <tr class="hl"><td>Registry, raw anchor — <strong>after fixes</strong></td><td>gpt-5.6-luna</td><td class="num">98.0% [94.3, 99.3]</td><td class="num">0.7%</td></tr>
+      <tr><td>Registry, enriched — <strong>after fixes</strong></td><td>gpt-5.6-luna</td><td class="num">82.7% [75.8, 87.9]</td><td class="num">9.3%</td></tr>
+      <tr class="hl-b"><td>DPT-tuned ST5-XL <span class="voice-b">paper, full 875</span></td><td>—</td><td class="num">80.0%</td><td class="num">—</td></tr>
+      <caption>Replication on the fixed pilot-150. † n = 148: two triplets fail deterministically for an operational reason (below) and are excluded as hard errors per the harness protocol. The pilot slice is measurably easier than the full set (archived raw-anchor: 98.7% here vs 95.0% on 875), so paired old-vs-new contrasts are the valid comparison and pilot absolutes should not be read against full-875 numbers — including the paper's 80.0% — without that caveat.</caption>
+    </table>
+  </div>
+  <p>Three results. <strong>First, the raw-anchor registry is robust across model generations:</strong> 96.7% vs 98.7% on the same triplets is statistically indistinguishable (discordant 5 vs 2, p = 0.45), and remains far above the strongest repaired-geometry baseline. <strong>Second, the enriched condition regressed significantly</strong> (92.0% → 79.7%, discordant 21 vs 3, p = 2.8×10⁻⁴) — to statistical parity with DPT. Inspection decomposes the regression entirely into the canonicalisation link: every examined false-attach is a case where the new model's generated canonical <em>dropped the anchor's stance qualifier</em> (an illegal-with-life-exception anchor canonicalised as "abortion is permitted when pregnancy poses a genuine risk to the mother's life"), after which the classifier <em>correctly</em> matched the stance-flipped distractor to a stance-lossy claim; the missed matches are the reasoning model refusing over sub-distinctions ("health" vs "life") against compressed canonicals. This sharpens caveat (1) of §9.1 into a stronger claim: <strong>enriched-registry accuracy is a property of the canonicalisation model, not of the architecture, and must be regression-tested on every model upgrade.</strong> Third, an operational finding: the production classifier's 300-token completion cap predates the reasoning-model upgrade, and for <span class="mono">gpt-5.*</span> that budget includes reasoning tokens — on 2 of 150 inputs (long, sensitive-topic statements) the model deterministically exhausts it before emitting any JSON and the call fails closed. The fail-closed discipline of §2 worked as designed — nothing merged — but the cap needs raising for reasoning models.</p>
+  <p><strong>Fix round.</strong> Both defects were repaired in production code and the pilot re-run the same day. The token fix (a 2,000-token reasoning headroom reserved in the shared parameter builder for <span class="mono">gpt-5.*</span>) is a complete success: all 150 triplets complete in every condition, the deterministic empty-content failures are gone, and raw-anchor accuracy ticks up to <strong>98.0%</strong> with strictly no regressions (paired: 2 gains, 0 losses). The canonicalisation fix — the generation prompt had asked for a "neutral" claim, which the model read as <em>stance</em>-neutral; it now demands the author's stance, direction, and defining conditions, with the observed inversion as an explicit counter-example — is a partial success: the generated canonicals now carry stance correctly and match recall recovered (+3.5pp, 82.7% overall), but false-attaches barely moved. Inspection of the residue isolates two mechanisms no prompt can fix: <em>compression loss</em> — a long multi-part opinion compresses to one claim, and when the surviving point is the stance-shared one, the stance-flipped rewrite genuinely expresses it too — and a more <em>charitable reasoning-model classifier</em> that accepts partial matches where the older model answered "none". The architectural conclusion is sharper than the prompt lesson: compressive canonicalisation is inherently lossy for long opinions, so the robust configuration is to keep generated canonicals for <em>display</em> while weighting the verbatim anchor/exemplar as the operative matching text — which is exactly the configuration that scores 98.0%.</p>
+  <h3>9.2 Live end-to-end benchmark</h3>
+  <p>The full pipeline was evaluated on a synthetic-but-adversarial corpus: 100 statements = 10 topics × 5 idea-groups × 2 near-paraphrases, streamed one at a time in seeded-shuffled order through the real trigger path in the emulator. Ground truth is 50 syntheses in 10 themes. The metric is <code>0.6·F1<sub>synth</sub> + 0.4·F1<sub>topic</sub></code>, both pairwise over all 4,950 statement pairs, so under-merging and over-merging are both punished.</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Configuration (cumulative)</th><th>Lang</th><th class="num">Accuracy</th><th class="num">F1 synth</th><th class="num">Pairs</th></tr>
+      <tr><td>Shipped defaults, first instrumented run</td><td>en</td><td class="num">0.067</td><td class="num">0.000</td><td class="num">0/50</td></tr>
+      <tr><td>Same</td><td>he</td><td class="num">0.066</td><td class="num">0.000</td><td class="num">0/50</td></tr>
+      <tr><td>+ debounce fix</td><td>en</td><td class="num">0.592</td><td class="num">0.765</td><td class="num">31/50</td></tr>
+      <tr><td>+ member evidence + cohesion (snowball brake)</td><td>en</td><td class="num">0.711</td><td class="num">0.926</td><td class="num">50/50</td></tr>
+      <tr><td>+ judged theme filing</td><td>en</td><td class="num">0.730</td><td class="num">0.895</td><td class="num">47/50</td></tr>
+      <tr class="hl"><td>+ theme consolidation (final EN config)</td><td>en</td><td class="num">0.884–0.910</td><td class="num">1.000</td><td class="num">50/50</td></tr>
+      <tr><td>3-large per-question pin</td><td>he</td><td class="num">0.651</td><td class="num">0.880</td><td class="num">44/50</td></tr>
+      <tr class="hl"><td>+ judged P1 attach (final HE config)</td><td>he</td><td class="num">≈0.93</td><td class="num">0.947</td><td class="num">45/50</td></tr>
+      <caption>The accuracy arc across the fix campaign. English headline is quoted as a range over three arrival orders (seeds 42/7/1234), per the report's own rule: "quote the range, not the best number."</caption>
+    </table>
+  </div>
+  <p>The most scientifically interesting property of the final configuration is a <strong>separation of variance by layer</strong>: across three arrival orders, the synthesis layer recovered 150/150 ground-truth pairs with zero false merges in 450 placements — exact and order-independent (pairwise P = R = ARI = 1.000) — while the theming layer remains order-sensitive (topic F1 0.711–0.775, 10–17 headings). This is the intended shape: the layer that changes what people are agreeing to is deterministic-in-effect; the layer that only organises the page absorbs the stochasticity. A separate fidelity axis — does the merged text preserve what each member asked for? — measured 1.000 with zero members weakened or lost after the scope rule.</p>
+<h3>9.3 First real-data audit and fix round (production question Bq-VQPMPiG7b)</h3>
+<p>Addendum, 2026-08-24/25. Every number in §9.2 was earned on a clean synthetic corpus — exactly two paraphrases per idea, no off-topic noise — and the study's own analysis notes warned that its constants were calibrated to that geometry. The first real-data exercise tested the transfer: the 114 Hebrew statements of live production question <code>Bq-VQPMPiG7b</code>, exported read-only and replayed in their original arrival order under the migration configuration (3-large pin, measured bands). A real question has no answer key, so verification substituted <strong>blind independent judgement</strong> for ground truth: two adversarial merge auditors from a different model family than the pipeline's judge (titles and synthesis texts withheld; instructed to refute; the pipeline's own rubric), two independent missed-merge sweepers over the un-merged pool, only cross-judge-agreed findings counted, and the text-fidelity scorer of §9.2 (instrument selftest first).</p>
+<p><strong>The clean-corpus numbers did not transfer.</strong> Member-level merge precision measured 22/34 (65%) against the benchmark's 1.000; text fidelity 0.647 against 1.000, with three member voices lost outright and two syntheses committing supporters to machinery nobody asked for; and 11 missed attaches plus 5 missed spawn pairs, 19 of 21 of them <em>silent</em>. One 8-member synthesis was a live instance of the snowballing mode of §8: six of its eight members were judged "related, not same" by both auditors independently, and it contained all three lost voices — convergent evidence across two model families and two instruments. Each failure traced to a mechanism, not to bad luck: the merge sweep's judge saw only the <em>first two</em> members of each side, so a recipient that had already absorbed one merge presented a stale sample and members drifted two hops apart; nothing in the system ever re-examined a theme-filed statement, so "topic membership is non-terminal" was a promise without a mechanism; and the writer, under merge pressure, generalised asks away and invented connective commitments.</p>
+<p>Three fixes followed, each one more application of the governing law. (i) A <strong>farthest-pair transitivity guard</strong> on the merge sweep: the closest cross-member pair proposes the merge, but the merged set is one proposal only if its two <em>most distant</em> members are themselves judged "same" (verdict-cached, fail-closed) — and the confirming judge now sees up to six members per side. (ii) A <strong>revisit pass</strong>: the sweep restores candidacy for any un-synthesized option whose evidence has come to clear the synth band, re-entering it through the full judged cascade of §4 — one fresh look per change of the synthesis landscape, enforced by a world fingerprint so a stable corpus is not re-ground. (iii) Two <strong>writer clauses</strong>: never add mechanisms, criteria, or commitments no input stated; and every input's specific ask must remain recognisable in the published text. The same 114 statements were then replayed and the identical blind battery re-run.</p>
+<div class="tablebox">
+  <table>
+    <tr><th>Axis (both-judge-agreed)</th><th class="num">Baseline replay</th><th class="num">Fixed build</th></tr>
+    <tr><td>Statements grouped into syntheses</td><td class="num">34 in 11</td><td class="num">43 in 20</td></tr>
+    <tr><td>Largest synthesis</td><td class="num">8 members (6 refuted)</td><td class="num">4 members</td></tr>
+    <tr class="hl"><td>Member-level merge precision</td><td class="num">22/34 (65%)</td><td class="num">32/43 (74%)</td></tr>
+    <tr><td>Sweep merges performed</td><td class="num">9</td><td class="num">2</td></tr>
+    <tr><td>Missed merges (attach + spawn)</td><td class="num">11 + 5, 19/21 silent</td><td class="num">12 + 3, none structurally silent</td></tr>
+    <tr class="hl"><td>Text fidelity (lost / fabricated)</td><td class="num">0.647 (3 lost, 2 fabricated)</td><td class="num">0.953 (0 lost, 1 soft)</td></tr>
+    <caption>Before/after on the same real question, same arrival order, same blind instruments. Run artifacts and the full audits: <code>scientific-research/2026-08-18-live-synth-accuracy/runs/bq-replay-{alljudged,fixed}/verification/</code>.</caption>
+  </table>
+</div>
+<p>The re-audit is not a clean bill of health, and the residual profile is the finding. The snowball class is gone — no synthesis exceeded four members, and the two merges the sweep did perform survived the transitivity guard. Fidelity recovered almost entirely once the writer was forbidden to abstract and to invent. The miss class changed <em>structurally</em> rather than just numerically: of the fifteen remaining agreed misses, nine had been revisit-judged and refused — visible, retryable decisions — and six simply awaited more sweep rounds than the harness ran; the silent-permanent loss of the baseline no longer exists as a category. What remains is concentrated at two prompt-calibration sites, not architecture gaps: the spawn writer's coherence check accepted nine "related" Hebrew pairs as "same" (of 25 spawns), and the attach/spawn judges refuse some pairs the blind sweepers consider high-confidence paraphrases. Both are the same lesson as §9.1b wearing new clothes: on real corpora, the judge — not the geometry — is now the accuracy frontier, and it is measurable there only because everything else has stopped failing first.</p>
+
+
+  <h2><span class="secnum">10</span>Comparison with <em>Embeddings for Preferences, Not Semantics</em></h2>
+  <p>Blair, Procaccia &amp; Tambe (henceforth <span class="voice-b">BPT</span>) ask a prerequisite question for the whole field of text-based collective decision-making: do distances in general-purpose sentence-embedding spaces reflect <em>preferential</em> similarity — the property that a participant's agreement with a text is inversely related to their distance from it? Their answer is no, for a reason they make formal: an embedding ψ decomposes into a preference-relevant component ψ<sub>S</sub> (stance and values, living in a low-dimensional preference subspace S) and a nuisance component ψ<sub>⊥</sub> (topic, style, wording). Cosine weights both equally. On natural deliberation data the two are observationally correlated — people who share a stance often share wording — so cosine <em>appears</em> preference-aware; on their hard triplets, where a distractor shares the anchor's wording but flips its stance, the nuisance dominates and cosine collapses (base encoders rank the distractor above the true preference match 70–95% of the time). Their Theorem 1 shows that under this hard-triplet condition, Bradley–Terry risk strictly decreases as the scorer down-weights the nuisance subspace — which their two remedies then achieve: <strong>DPT</strong> (LoRA fine-tuning on synthetic counterfactual triplets; hard-triplet accuracy 48.3% → 80.0%, natural 65.2% → 68.6%) and, when votes exist, a <strong>per-topic rank-20 projection</strong> fit on participant votes (natural 77.6%, hard 81.1%, crossing DPT with ~50 labeled triplets).</p>
+  <h3>10.1 Convergent diagnosis, independently measured</h3>
+  <p>Freedi's engineering record and BPT's diagnosis agree to a remarkable degree, despite arriving from opposite directions (production incident analysis vs formal decomposition):</p>
+  <div class="tablebox">
+    <table>
+      <tr><th>Phenomenon</th><th><span class="voice-b">BPT (formal / benchmark)</span></th><th><span class="voice-f">Freedi (production / benchmark)</span></th></tr>
+      <tr><td>Cosine confuses wording with stance</td><td>distractor ranked over match 70–95%; base encoders 6–48% on hard triplets</td><td>100% of stance-flipped distractors clear the 0.60 gate; 99.1% clear 0.85; pipeline-correct = 0/875</td></tr>
+      <tr><td>Natural-data signal is a correlation artifact</td><td>Δ<sub>T</sub> (nuisance) carries the apparent preference signal; drops of ~50pp natural→hard</td><td>bands that work on natural corpora re-open the black hole the moment geometry shifts (Hebrew 3-large)</td></tr>
+      <tr><td>Shared surface form inflates similarity</td><td>nuisance = topic, style, wording</td><td>question-prefix lifts the cosine floor: 80–100% of <em>cross-topic</em> pairs above 0.60; boilerplate motivates brief distillation</td></tr>
+      <tr><td>Same topic ≠ mutually endorsable</td><td>"preferentially similar" defined as mutual endorsability, distinct from topical similarity</td><td>"same-topic-different-action is NOT a merge" — the related/same boundary is the pipeline's central discipline</td></tr>
+      <caption>Two routes to one conclusion: off-the-shelf cosine is a topicality signal wearing a preference costume.</caption>
+    </table>
+  </div>
+  <h3>10.2 Divergent remedies: repair the geometry vs demote it</h3>
+  <p><span class="voice-b">BPT</span> keep the decision rule geometric and fix the space: learn an encoder (or a projection of a frozen one) whose cosine <em>is</em> approximately the utility margin. This preserves everything that makes geometry attractive — O(1) scoring per pair after encoding, differentiability, compatibility with the facility-location and fair-clustering literature their introduction motivates, and no per-decision inference cost. <span class="voice-f">Freedi</span> keeps the off-the-shelf space and moves the decision out of geometry entirely: cosine retrieves and ranks; a discrete, calibrated, fail-closed LLM judgement decides; and the registry replaces "position in a metric space" with "membership in a named equivalence class" as the system's unit of meaning. The measurable consequence on the shared instrument: judged/classified placement reaches 95.0–96.5% where the best repaired geometry reaches 80–81%. The costs run the other way: Freedi pays 1–2 LLM calls per placement (mitigated by verdict caching, batching, and prompt-cache-aware prompt layout), gains no participant-utility estimates for unvoted statements, and inherits the judge's biases — hence the 5% shadow audit and the merge-count-as-recall-estimator, which have no analogue in a pure-geometry system but also no equivalent need there.</p>
+  <h3>10.3 The tasks are siblings, not twins</h3>
+  <p>A precise comparison must note that the two systems target different relations. BPT model <em>preferential similarity</em>: would the same participant endorse both texts? Freedi's merge relation is <em>propositional equivalence</em>: are these the same proposal? These coincide on the hard triplets (a stance-flip breaks both; a paraphrase preserves both), which is what licenses the shared benchmark — but they diverge elsewhere. Two distinct proposals can be preferentially similar (a voter who wants speed bumps likely also endorses lower limits), and Freedi must <em>not</em> merge them, only theme them: its aggregation contract is that a synthesis never changes what anyone agreed to, enforced down to the scope rule of §5. Conversely, propositional equivalence is binary and symmetric, so it can live in a discrete codebook — while preferential similarity is a graded, participant-relative quantity that genuinely wants a geometry, and BPT's ideal-point model (utility as negative squared distance in S, with the item-norm term their Table 5 shows carries real signal) is the natural home for it. One relation neither framework's geometry can carry is <em>opposition</em>: in any topical embedding "ban X" and "permit X" are near, and even in a preference space distance can encode disagreement but not the specific claim–counterclaim structure. Freedi stores it as a typed edge (<code>opposes</code> → counter-statement links on the claim); this is a symbolic representation doing work no metric can, and it is what lets the interface show an idea <em>together with</em> its organised opposition.</p>
+  <h3>10.4 Complementarity: the obvious hybrid</h3>
+  <p>Because Freedi's architecture confines geometry to candidate generation, BPT's contribution slots into it without any redesign: a preference-tuned or per-topic-projected encoder is simply a better candidate generator. The concrete predictions are testable in Freedi's own harness:</p>
+  <ul>
+    <li><strong>Recall-gap closure.</strong> The residual failures of §9.1's caveat (3) — cross-lingual paraphrase pairs falling below the ANN floor — are exactly nuisance-dominated cases; an encoder invariant to wording should lift them into the candidate window. (A caveat runs the other way: DPT is trained and evaluated in English, and Freedi's Hebrew results show geometry quality is the binding constraint per language — the counterfactual-triplet synthesis recipe would need multilingual replication.)</li>
+    <li><strong>Judge-load reduction.</strong> Freedi's bands are wide because base cosine is untrustworthy; a preference-faithful geometry with genuine separation would let auto-reject floors rise and gray zones shrink, cutting LLM calls per placement — BPT's Table 2/3 deltas suggest by a large factor.</li>
+    <li><strong>The unused vote signal.</strong> BPT's most sample-efficient result — a rank-20 projection fit on votes, crossing DPT at ~50 labeled triplets — is directly available to Freedi, which collects continuous evaluations on every statement as a first-class activity. Freedi currently uses votes for weighting synthesis inputs and for consensus display, but not for shaping its similarity geometry; a per-question projection learned online from its own evaluations is the paper's §7 applied verbatim.</li>
+    <li><strong>What flows back.</strong> Freedi's contribution to BPT-style systems is the decision layer: their discussion (generative social choice, slate selection, group composition) still needs statements deduplicated, labeled, and synthesised before geometric aggregation operates over them — and their limitations section itself warns the embedding "should not be treated as a perfect representation of any individual's considered judgment… not… a basis for binding decisions." Judged, fail-closed, audit-logged placement over a proposed geometry is one concrete architecture for that warning; the hard-triplet-condition framing (E[Δ<sub>T</sub> | 𝒢] ≤ 0) even suggests how to generate the adversarial cases such a judge should be regression-tested on.</li>
+  </ul>
+
+  <h2><span class="secnum">11</span>Limitations and open questions</h2>
+  <ul>
+    <li><strong>Benchmark corpora are partly synthetic.</strong> The live benchmark's paraphrase pairs are constructed; BPT's hard triplets are GPT-4o rewrites of real anchors. Both are adversarially valid but neither measures the natural mixture rate of hard cases in real deliberations — where BPT's natural-data numbers (65–69%) suggest most pairs are easy and the hard tail is what architecture is for.</li>
+    <li><strong>The theming layer is the open front.</strong> Synthesis is exact and order-independent; theme structure still varies with arrival order and exhibits attractor headings. The pre-registered fix (show contents, doubt→NONE, optimise a cost-weighted objective rather than raw accuracy) cut misfiling from 20.7% to 9.3%, but a principled online theming objective is unresolved — plausibly a place where a learned geometry helps more than judgement.</li>
+    <li><strong>Judge and writer share a model family.</strong> Equivalence verdicts, canonicalisation, and synthesis text all come from one vendor's models; the 5% cross-model audit estimates drift but not family-correlated bias. The registry's raw-anchor-vs-canonical gap (95.0% vs 70.1%) shows canonicalisation is the fragile link — and the pilot-150 replication (§9.1b) demonstrates the corollary: a routine model upgrade left classification intact but silently degraded canonicalisation by 12 points, so the canonicalisation link needs its own regression suite tied to model changes.</li>
+    <li><strong>Cost asymmetry is unquantified here.</strong> A rigorous comparison with pure-geometry systems should hold a token/latency budget fixed; Freedi's caching (verdict store, prompt-cache-aware layouts, brief reuse) narrows but does not eliminate the per-placement inference gap.</li>
+    <li><strong>Preference estimation is future work.</strong> Freedi does not currently estimate utilities for unvoted statements; BPT's ideal-point machinery over Freedi's evaluation data is the natural next experiment.</li>
+  </ul>
+
+  <h2><span class="secnum">12</span>References</h2>
+  <ol class="refs">
+    <li>C. Blair, A. D. Procaccia, M. Tambe. <em>Embeddings for Preferences, Not Semantics.</em> arXiv:2605.08360, 2026. Code: github.com/cartgr/Embeddings-for-Preferences; model: huggingface.co/cartgr/embeddings-for-preferences-st5-xl. Hard-triplet set (n = 875) reused in §9.1.</li>
+    <li>Freedi synthesis pipeline, production source: <span class="mono">functions/src/synthesis/</span> (placement cascade, cohesion gates, registry, consolidation, scheduled sweeps) and <span class="mono">functions/src/services/</span> (embedding, equivalence, integration, claim-registry services).</li>
+    <li>Freedi benchmark reports: hard-triplet study (<span class="mono">scientific-research/…-claim-registry/RESULTS.md</span>, incl. RECALL_GAP probe), the pilot-150 replication (<span class="mono">…/benchmark/PILOT150-RESULTS.md</span>, 2026-08-24), and the live accuracy campaign (<span class="mono">scientific-research/2026-08-18-live-synth-accuracy/RESULTS.md</span>, Findings 1–18).</li>
+    <li>S. Fish et al. <em>Generative Social Choice.</em> ICML 2025/2026 line of work — the aggregation setting both systems ultimately serve.</li>
+    <li>C. Small et al. <em>Polis: Scaling deliberation by mapping high-dimensional opinion spaces.</em> 2021 — source platform for five of the eleven BPT evaluation datasets.</li>
+  </ol>
+
+  <p class="footnote">Prepared from the production source on <span class="mono">main</span> and the project's internal benchmark reports, August 2026. All quoted prompt text is abridged from the shipped rubrics; all numbers trace to the cited benchmark runs (build-certified where noted). Threshold values are the shipped defaults and are admin-tunable per question subject to the band invariant.</p>
+</div>

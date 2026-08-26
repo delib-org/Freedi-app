@@ -1,0 +1,62 @@
+// Studio-only design tokens.
+// Every value here is DERIVED from a platform token in @freedi/shared-styles
+// (never a raw colour), so dark mode and high-contrast mode flip these for
+// free. Layout tokens are plain lengths / z-indexes.
+
+:root {
+	// --- Activity run-state (queued → open → frozen → closed) ---------------
+	// Each state has a wash (background), an ink (text on the wash) and a dot
+	// (status marker / border accent).
+	--status-queued-wash: var(--wash-neutral);
+	--status-queued-ink: var(--text-meta);
+	--status-queued-dot: var(--lighter);
+
+	--status-open-wash: var(--wash-approve);
+	--status-open-ink: var(--approve-ink);
+	--status-open-dot: var(--approve);
+
+	--status-frozen-wash: var(--wash-warning);
+	--status-frozen-ink: var(--warning-ink);
+	--status-frozen-dot: var(--warning);
+
+	--status-closed-wash: color-mix(in srgb, var(--text-title) 8%, var(--card-default));
+	--status-closed-ink: var(--text-title);
+	--status-closed-dot: var(--text-title);
+
+	// --- Participation funnel (entered ⊇ suggested ⊇ evaluated) -------------
+	// Three steps of the same hue so the funnel reads as one series.
+	--funnel-entered: color-mix(in srgb, var(--btn-primary) 30%, var(--card-default));
+	--funnel-suggested: color-mix(in srgb, var(--btn-primary) 60%, var(--card-default));
+	--funnel-evaluated: var(--btn-primary);
+	--studio-progress-track: var(--border-light);
+
+	// --- Activity-type accents (which WizCol app runs the activity) ---------
+	--activity-mc: var(--btn-primary);
+	--activity-join: var(--group);
+	--activity-deliberation: var(--question);
+	--activity-sign: var(--result);
+
+	// --- Organisation accent (consultant / org branding hook) ---------------
+	--org-accent: var(--btn-primary);
+	--org-accent-wash: color-mix(in srgb, var(--org-accent) 10%, var(--card-default));
+
+	// --- Role chips (owner / admin / viewer) --------------------------------
+	--role-owner-bg: color-mix(in srgb, var(--btn-primary) 12%, var(--card-default));
+	--role-owner-ink: var(--btn-primary);
+	--role-admin-bg: var(--wash-approve);
+	--role-admin-ink: var(--approve-ink);
+	--role-viewer-bg: var(--wash-neutral);
+	--role-viewer-ink: var(--text-meta);
+
+	// --- Layout ----------------------------------------------------------------
+	--studio-sidebar-width: 15rem; // 240px — expanded navigation
+	--studio-rail-width: 4rem; // 64px — collapsed icon rail
+	--studio-topbar-height: 3.5rem; // 56px
+	--studio-content-max: 75rem; // 1200px — main content column
+	--studio-drawer-width: 26.25rem; // 420px — side drawer / inspector
+	--studio-row-min-height: 3.5rem; // 56px — list / table rows
+
+	// --- Stacking ------------------------------------------------------------
+	--studio-z-drawer: 1000;
+	--studio-z-toast: 1100;
+}

@@ -1,0 +1,11 @@
+// Studio molecules — BEM blocks specific to Studio.
+// Shared molecules live in @freedi/shared-styles and are loaded by ../index.scss.
+@use './breadcrumb';
+@use './status-control';
+@use './toast-undo';
+@use './type-picker';
+@use './type-card';
+@use './question-card';
+@use './question-card-grid';
+@use './activity-board';
+@use './activity-row';

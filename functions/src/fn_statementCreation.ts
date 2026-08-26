@@ -23,6 +23,7 @@ import { embeddingCache } from './services/embedding-cache-service';
 import { notifyStatementSubscribers } from './notifications/notifyStatementSubscribers';
 import { trackStatementCreation } from './engagement/credits/trackEngagement';
 import { onStatementCreatedStats } from './fn_adminStats';
+import { recordSuggestionProgress } from './progress/statementCreationHook';
 import { generateDescriptionFromChildren } from './helpers';
 import {
 	computeHybridVector,
@@ -103,6 +104,13 @@ export async function onStatementCreated(
 		tasks.push(
 			splitStatementIntoParagraphs(statement).catch((err) =>
 				logger.warn('Paragraph splitting failed:', err),
+			),
+		);
+
+		// Task 10: Question progress funnel + Home activity bump (non-blocking)
+		tasks.push(
+			recordSuggestionProgress(statement).catch((err) =>
+				logger.warn('Question progress tracking failed:', err),
 			),
 		);
 

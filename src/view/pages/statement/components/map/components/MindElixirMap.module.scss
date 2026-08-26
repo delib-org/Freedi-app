@@ -1,6 +1,6 @@
 // MindElixir Map Component Styles
 // Uses design system colors and variables
-@use "sass:color";
+@use 'sass:color';
 
 // Container styling for MindElixir
 // Fills its parent. The parent is made full-bleed by the screen that hosts it
@@ -42,48 +42,99 @@
 		}
 
 		// ========================================
-		// Cluster & synth nodes
+		// Cluster & synth nodes — the three silhouettes
 		// Background/text colors come from inline node styles (design tokens).
-		// These rules add the decorative glow / accent bar / count pill, keyed
-		// off the node's tag class so they survive MindElixir refreshes.
+		// The silhouette is keyed off the node's tag class so it survives
+		// MindElixir rebuilding the DOM on refresh:
+		//   theme       = header band (inline-start bar + bottom rule)
+		//   merged idea = a stack of sheets behind the card
+		//   original    = plain rounded note (no tag)
+		// Each kind also carries a glyph (# / ⧉), so they read without colour.
 		// ========================================
 
-		// Synth — a unified "merged voice": luminous teal halo.
+		// Merged idea — two offset sheets behind the card.
 		me-tpc:has(.cluster-tag--synth) {
-			box-shadow:
-				0 0 0 2px var(--cluster-synth-ring),
-				0 0 12px var(--cluster-synth-glow),
-				0 2px 4px rgba(0, 0, 0, 0.12);
-			transition: box-shadow 0.15s ease, transform 0.15s ease;
+			position: relative;
+			border-radius: 8px;
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+			transition: transform 0.15s ease;
+
+			&::before,
+			&::after {
+				content: '';
+				position: absolute;
+				inset: 0;
+				z-index: -1;
+				border-radius: inherit;
+				background: var(--cluster-stack-sheet);
+				border: 1px solid var(--cluster-stack-edge);
+				pointer-events: none;
+				transition: transform 0.15s ease;
+			}
+
+			&::before {
+				transform: translate(var(--cluster-stack-offset), var(--cluster-stack-offset));
+			}
+
+			&::after {
+				transform: translate(
+					calc(var(--cluster-stack-offset) * 2),
+					calc(var(--cluster-stack-offset) * 2)
+				);
+				opacity: 0.7;
+			}
 
 			&:hover {
 				transform: translateY(-1px);
-				box-shadow:
-					0 0 0 3px var(--cluster-synth-ring),
-					0 0 20px var(--cluster-synth-glow),
-					0 2px 4px rgba(0, 0, 0, 0.12);
+
+				&::before {
+					transform: translate(
+						calc(var(--cluster-stack-offset) + 1px),
+						calc(var(--cluster-stack-offset) + 1px)
+					);
+				}
 			}
 		}
 
-		// Topic cluster — a theme header above a visible branch: folder spine.
+		// Theme — a wide header band: spine at the start, rule underneath.
 		me-tpc:has(.cluster-tag--topic) {
-			border-left: 4px solid var(--cluster-topic-accent);
-			padding-left: 14px;
+			min-width: 180px;
+			border-radius: 6px 6px 0 0;
+			border-inline-start: 4px solid var(--cluster-topic-accent);
+			border-bottom: 2px solid var(--cluster-topic-accent);
+			padding-inline-start: 14px;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 			transition: border-color 0.15s ease;
 
 			&:hover {
-				border-left-color: var(--btn-primary);
+				border-color: var(--btn-primary);
 			}
 		}
 
-		// Cluster icon glyph (✦ / #).
+		// "Includes yours" — a marker dot on the node's start corner.
+		me-tpc:has(.cluster-tag--mine) {
+			position: relative;
+
+			.cluster-tag--mine::before {
+				content: '';
+				display: inline-block;
+				width: 8px;
+				height: 8px;
+				margin-inline-end: 4px;
+				border-radius: 50%;
+				background: var(--cluster-mine-marker);
+				box-shadow: 0 0 0 2px var(--card-default, #ffffff);
+				vertical-align: middle;
+			}
+		}
+
+		// Cluster icon glyph (⧉ / #).
 		me-tpc .icons {
 			font-weight: 700;
 			opacity: 0.95;
 		}
 
-		// Cluster count pill — translucent white, legible on both teal and indigo.
+		// Count pills — translucent, legible on both teal and indigo.
 		me-tpc .tags span.cluster-tag {
 			border-radius: 999px;
 			padding: 1px 8px;
@@ -94,7 +145,23 @@
 			letter-spacing: 0.2px;
 			background: var(--cluster-pill-bg);
 			color: var(--cluster-pill-text);
-			text-transform: lowercase;
+
+			&:empty {
+				display: none;
+			}
+		}
+
+		// A merge of one is a plain idea with a quiet chip, not a stack.
+		me-tpc .tags span.cluster-tag--ai-titled {
+			background: transparent;
+			border: 1px solid var(--cluster-pill-bg);
+			font-weight: 500;
+			opacity: 0.85;
+		}
+
+		me-tpc .tags span.cluster-tag--mine {
+			background: var(--card-default, #ffffff);
+			color: var(--cluster-mine-marker);
 		}
 
 		@media (prefers-reduced-motion: reduce) {
@@ -102,15 +169,63 @@
 			me-tpc:has(.cluster-tag--topic) {
 				transition: none;
 
+				&::before,
+				&::after {
+					transition: none;
+				}
+
 				&:hover {
 					transform: none;
 				}
 			}
 		}
 
+		// Windows High Contrast / forced colours: borders carry the silhouette.
+		@media (forced-colors: active) {
+			me-tpc:has(.cluster-tag--synth)::before,
+			me-tpc:has(.cluster-tag--synth)::after {
+				background: Canvas;
+				border-color: CanvasText;
+			}
+
+			me-tpc:has(.cluster-tag--topic) {
+				border-color: CanvasText;
+			}
+		}
+
 		// Root node can be wider
 		me-root > me-tpc {
 			max-width: 300px;
+
+			// Armed as a drop target. MindElixir refuses to hit-test the root, so
+			// this highlight is driven by our own pointer handler — without it a
+			// drag onto the subject gives the user no feedback at all. The solid
+			// bar shows which side of the map the branch will hang from.
+			&.mind-map-root-drop {
+				// Only while armed, so the side bar below has something to anchor to.
+				position: relative;
+				outline: 3px dashed var(--btn-primary, #5f88e5);
+				outline-offset: 4px;
+
+				&[data-drop-side='left']::before,
+				&[data-drop-side='right']::before {
+					content: '';
+					position: absolute;
+					top: -4px;
+					bottom: -4px;
+					width: 6px;
+					border-radius: 3px;
+					background: var(--btn-primary, #5f88e5);
+				}
+
+				&[data-drop-side='left']::before {
+					left: -14px;
+				}
+
+				&[data-drop-side='right']::before {
+					right: -14px;
+				}
+			}
 		}
 
 		// Move expand/collapse button to the left side so it doesn't
@@ -149,7 +264,9 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			transition: background 0.15s ease, box-shadow 0.15s ease;
+			transition:
+				background 0.15s ease,
+				box-shadow 0.15s ease;
 			animation: mindMapBtnEnter 0.15s ease-out;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 
@@ -281,9 +398,11 @@
 // ========================================
 .toolbar {
 	position: fixed;
-	transform: translateX(-50%);
+	// Bottom-anchored: the rating row is conditional, so a top-anchored strip
+	// would grow down over the node it belongs to.
+	transform: translate(-50%, -100%);
 	display: flex;
-	align-items: center;
+	flex-direction: column;
 	gap: 2px;
 	background: var(--card-default, #ffffff);
 	border-radius: 8px;
@@ -292,6 +411,12 @@
 	z-index: 100;
 	animation: toolbarFadeIn 0.15s ease-out;
 	white-space: nowrap;
+}
+
+.toolbarRow {
+	display: flex;
+	align-items: center;
+	gap: 2px;
 }
 
 .toolbarBtn {
@@ -306,7 +431,9 @@
 	justify-content: center;
 	padding: 0;
 	color: var(--text-body, #555);
-	transition: background 0.15s ease, color 0.15s ease;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
 
 	&:hover {
 		background: var(--btn-primary, #5f88e5);
@@ -328,6 +455,165 @@
 	&:hover {
 		background: var(--disagree, #fe6ba2);
 		color: white;
+	}
+}
+
+.toolbarBtnActive {
+	background: var(--btn-primary, #5f88e5);
+	color: white;
+}
+
+// Rating row — the app's 5-point face scale, inline under the icons.
+.evaluationRow {
+	// Same construct as the option cards: the faces are listed high → low and
+	// reversed here, so the row reads unhappy → happy and mirrors in RTL the way
+	// every other rating row in the app does.
+	display: flex;
+	flex-direction: row-reverse;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2px;
+	padding-top: 3px;
+	border-top: 1px solid var(--background, #eef0f3);
+}
+
+// Faces shown for an original inside a merged idea: its vote is already
+// counted through the merge, so the row is visible but inert.
+.evaluationRowReadOnly {
+	opacity: 0.55;
+
+	.evaluationBtn {
+		cursor: not-allowed;
+	}
+}
+
+.evaluationBtn {
+	width: 28px;
+	height: 28px;
+	border: none;
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	// Unpicked faces recede so the cast vote reads at a glance.
+	opacity: 0.75;
+	transition:
+		opacity 0.15s ease,
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
+
+	img {
+		width: 20px;
+		height: 20px;
+	}
+
+	&:hover {
+		opacity: 1;
+		transform: scale(1.15);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 1px;
+	}
+}
+
+.evaluationBtnActive {
+	opacity: 1;
+	transform: scale(1.1);
+	box-shadow: 0 0 0 2px var(--btn-primary, #5f88e5);
+}
+
+.evaluationEmoji {
+	font-size: 1rem;
+	line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.evaluationBtn {
+		transition: none;
+
+		&:hover {
+			transform: none;
+		}
+	}
+
+	.evaluationBtnActive {
+		transform: none;
+	}
+}
+
+// Type switcher popover, hanging under the node toolbar.
+.typeMenu {
+	position: absolute;
+	top: calc(100% + 6px);
+	inset-inline-start: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 9rem;
+	padding: 4px;
+	gap: 2px;
+	background: var(--card-default, #ffffff);
+	border-radius: 8px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	animation: toolbarFadeIn 0.15s ease-out;
+}
+
+.typeMenuItem {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 0.4rem 0.5rem;
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-body, #3d4d71);
+	font-size: 0.85rem;
+	text-align: start;
+	cursor: pointer;
+	transition: background 0.15s ease;
+
+	&:hover:not(:disabled) {
+		background: var(--background, #eef0f3);
+	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: -2px;
+	}
+}
+
+.typeMenuItemCurrent {
+	font-weight: 700;
+}
+
+// Mirrors the node colors from `getStyleForType` so the menu reads as "this is
+// what the node will look like".
+.typeMenuSwatch {
+	width: 12px;
+	height: 12px;
+	border-radius: 3px;
+	flex-shrink: 0;
+	background: var(--card-default, #ffffff);
+
+	&[data-type='question'] {
+		background: #47b4ef;
+	}
+
+	&[data-type='option'] {
+		background: #ffe16a;
+	}
+
+	&[data-type='group'] {
+		background: #b9a1e8;
 	}
 }
 
@@ -381,7 +667,9 @@
 .controlsPanel {
 	position: fixed;
 	bottom: 2rem;
-	right: 2rem;
+	// Logical, not `right`: the zoom controls dock to the inline-start corner,
+	// so a physical `right` put both stacks on top of each other in RTL.
+	inset-inline-end: 2rem;
 	z-index: 100;
 }
 
@@ -396,7 +684,9 @@
 	align-items: center;
 	justify-content: center;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
 	color: white;
 
 	&:hover {
@@ -426,7 +716,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			transform 0.2s ease,
+			color 0.2s ease;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 		color: var(--btn-primary, #5f88e5);
 
@@ -490,7 +783,7 @@
 
 	.controlsPanel {
 		bottom: 1rem;
-		right: 1rem;
+		inset-inline-end: 1rem;
 	}
 
 	.mainButton {
@@ -524,7 +817,9 @@
 			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 			padding: 10px 16px;
 			font-weight: 500;
-			transition: transform 0.12s ease, box-shadow 0.12s ease;
+			transition:
+				transform 0.12s ease,
+				box-shadow 0.12s ease;
 
 			&:hover {
 				transform: translateY(-2px);

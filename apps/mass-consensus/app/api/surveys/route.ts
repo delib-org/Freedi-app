@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
       explanationPages: body.explanationPages,
       showAllSolutionsLink: body.showAllSolutionsLink,
       allSolutionsLinkLabel: body.allSolutionsLinkLabel,
+      parentStatementId: body.parentStatementId,
     });
 
     logger.info('[POST /api/surveys] Created survey:', survey.surveyId, 'questionSettings:', JSON.stringify(body.questionSettings));

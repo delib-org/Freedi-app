@@ -21,6 +21,7 @@ import {
 	Access,
 	Collections,
 	Statement,
+	StatementSettings,
 	StatementType,
 	Creator,
 	Role,
@@ -119,21 +120,20 @@ export const subscribeUserEvaluations = _subscribeUserEvaluations;
 
 let customDisplayName: string | null = null;
 
-/** Admin hand-placed ordering. Neither field is declared on the shared
- *  `StatementSettings` schema — the join app is their only writer — so they're
- *  read through this narrow shape rather than an `any` cast.
+/** Admin hand-placed ordering, now declared on the shared `StatementSettings`
+ *  schema (the main app's Top Answers panel is a second writer).
  *  `manualOptionOrder` orders the crowd list, `manualOrganizerOrder` the
  *  organizer section. `null` clears a saved order. */
-export type ManualOrderSettings = {
-	manualOptionOrder?: string[] | null;
-	manualOrganizerOrder?: string[] | null;
-};
+export type ManualOrderSettings = Pick<
+	StatementSettings,
+	'manualOptionOrder' | 'manualOrganizerOrder'
+>;
 
-/** Read the manual-order fields off a question's settings without widening to
- *  `any`. Returns an empty object when the question or its settings are absent
- *  so call sites can destructure unconditionally. */
+/** Read the manual-order fields off a question's settings. Returns an empty
+ *  object when the question or its settings are absent so call sites can
+ *  destructure unconditionally. */
 function manualOrderOf(q: Statement | null): ManualOrderSettings {
-	return (q?.statementSettings as ManualOrderSettings | undefined) ?? {};
+	return q?.statementSettings ?? {};
 }
 
 // Join-form submission cache + API moved to ./join/joinFormCache.ts. The

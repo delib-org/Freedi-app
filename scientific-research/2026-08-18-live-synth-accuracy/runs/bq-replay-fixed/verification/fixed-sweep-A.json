@@ -1,0 +1,110 @@
+{
+  "missedAttaches": [
+    {
+      "statementId": "0GdG7UH25mt9",
+      "synthId": "DMkNcis6a3Hg",
+      "confidence": "high",
+      "reason": "Statement proposes understanding a place through multiple layers of information (geological, botanical, uses) before changing it — literally the same proposal as the member 'הבנת המקום: שכבות מידע וצרכים לשינוי מציאות'."
+    },
+    {
+      "statementId": "LgtpBE9it4gH",
+      "synthId": "OExsWKt4l8Oo",
+      "confidence": "high",
+      "reason": "'Do transdisciplinary research from the outset' is the same intervention as the synthesis's multi/trans-disciplinary research members; 'from the start' is a nuance, not a different lever."
+    },
+    {
+      "statementId": "ykHIVqMd9FP1",
+      "synthId": "I8XlvCYo1hY2",
+      "confidence": "high",
+      "reason": "Connecting academia, civil society and government sectors to promote collaboration is exactly the cross-sector academia-government-NGO collaboration named in this synthesis's first member."
+    },
+    {
+      "statementId": "7UaiNhyYlpMJ",
+      "synthId": "By2TdeBWWFHX",
+      "confidence": "high",
+      "reason": "'Avoid the ivory tower — integrate users' voices and needs into the research process' is interchangeable with the member 'researchers must work with end users; those affected should be part of the process'."
+    },
+    {
+      "statementId": "MUbpFp6BrePD",
+      "synthId": "I4PjKLd67SGe",
+      "confidence": "high",
+      "reason": "Making research accessible in language understandable to the relevant agents is the same proposal as 'speak the target audience's language / simplify into accessible discourse'."
+    },
+    {
+      "statementId": "MNeYtEAcjhH8",
+      "synthId": "I4PjKLd67SGe",
+      "confidence": "high",
+      "reason": "Simplifying and making complex messages accessible to the audience is the same intervention as the member about simplifying problems into accessible, clear, non-threatening discourse."
+    },
+    {
+      "statementId": "4xYGcj3HHdeQ",
+      "synthId": "I4PjKLd67SGe",
+      "confidence": "medium",
+      "reason": "Making academic knowledge accessible and understandable to the general public is the same accessibility-of-knowledge lever, though phrased as scope (all knowledge, general public) rather than language technique."
+    },
+    {
+      "statementId": "Rpxl6XKkl42D",
+      "synthId": "btmeY1AIqFsE",
+      "confidence": "high",
+      "reason": "'A perfect combination of knowledge and passion is required for change' is interchangeable with the member 'successful environmental struggles relied on the right dosage of scientific validity and activist passion'."
+    },
+    {
+      "statementId": "BGeMVeF8cCrc",
+      "synthId": "ANGHwZbAxm4D",
+      "confidence": "high",
+      "reason": "Recruiting many volunteers to assist research activities is the same intervention as the citizen-science member that explicitly involves masses of volunteers in the research process."
+    },
+    {
+      "statementId": "TbY8ddlBfQQY",
+      "synthId": "W3hOkU1fB6qM",
+      "confidence": "high",
+      "reason": "Finding a connecting agent between the science/regulation world and field executors is the same 'gorem mekasher' bridging intervention as this synthesis's members."
+    },
+    {
+      "statementId": "TY0aPUND56yx",
+      "synthId": "W3hOkU1fB6qM",
+      "confidence": "medium",
+      "reason": "An interdisciplinary scientists' body serving as a bridge between science and policymakers matches the synthesis's bridge-between-researchers-and-government intervention, though it specifies a standing body rather than a broker."
+    },
+    {
+      "statementId": "-1iG7sKCaTr9",
+      "synthId": "W3hOkU1fB6qM",
+      "confidence": "medium",
+      "reason": "A dedicated liaison role connecting the university to its surrounding community is the same connector/matchmaker intervention, with the community as the counterpart instead of ministries."
+    },
+    {
+      "statementId": "MXVCKJBNSUkR",
+      "synthId": "aeW0glOCO5LO",
+      "confidence": "medium",
+      "reason": "Motivation and inner fire as the driver of action matches the synthesis's core member 'meaningful drive (hanaa), patience and persistence are required', though it adds a programs-to-cultivate-it wrapper."
+    },
+    {
+      "statementId": "aoK1izWRPCYi",
+      "synthId": "YDyaUr8ykDE9",
+      "confidence": "medium",
+      "reason": "Rooms/forums of open discourse among the public, academics and practitioners is essentially the same convene-people-for-dialogue intervention as the physical academia-practitioner meetings synthesis."
+    }
+  ],
+  "missedSpawns": [
+    {
+      "statementIds": ["7UZVrgyk-ebQ", "EHyLE2-fh9zR", "6ihYMsnzNA5N"],
+      "confidence": "high",
+      "reason": "All three propose research that originates bottom-up from the field — surfacing field challenges/needs and deriving the research question from them."
+    },
+    {
+      "statementIds": ["pHUQNJZPDcyR", "jSmMsfAbjDHK"],
+      "confidence": "high",
+      "reason": "Both propose establishing a standing, ongoing mechanism for continuous updates/feedback flowing from the field."
+    },
+    {
+      "statementIds": ["S5YVbRB0-b7Q", "bJzaI9b04XAD"],
+      "confidence": "medium",
+      "reason": "Both propose embedding science-fluent personnel inside government ministries (chief scientist activity / Mimshak graduates at key public-sector positions) to harness academic research into policy."
+    },
+    {
+      "statementIds": ["4UaRL8Gxgu06", "TXrakZdZAYN3"],
+      "confidence": "medium",
+      "reason": "Both propose ensuring the reliability/accuracy of research information as a precondition for change, though one stresses verification systems and the other trust-building."
+    }
+  ]
+}

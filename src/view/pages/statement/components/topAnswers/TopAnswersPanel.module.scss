@@ -1,0 +1,125 @@
+// Top Answers admin panel — panel-specific rules only. The handle, drawer,
+// sections, rows, segmented controls and sliders all come from the shared
+// `admin-drawer` molecule (src/view/style/molecules/_admin-drawer.scss).
+
+// The cluster map's admin handle sits vertically centred by default. Two panels
+// can be on screen at once only on the map screen, where this one is not
+// mounted — but offset the default anyway so a stacked pair is never possible.
+.handle:not(.admin-drawer__handle--positioned) {
+	top: calc(50% + 4.5rem);
+}
+
+// --- Manual order modal ----------------------------------------------------
+
+.modalHelp {
+	margin: 0 0 0.75rem;
+	font-size: 0.8rem;
+	line-height: 1.45;
+	color: var(--text-secondary, #8a93a6);
+}
+
+.reorderList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	max-height: 55vh;
+	overflow-y: auto;
+}
+
+.reorderItem {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.55rem 0.6rem;
+	background: var(--card-default, #ffffff);
+	border: 1px solid var(--border, #e4e8f0);
+	border-radius: 8px;
+	cursor: grab;
+	transition:
+		border-color 0.14s ease,
+		opacity 0.14s ease,
+		transform 0.14s ease;
+
+	&:active {
+		cursor: grabbing;
+	}
+}
+
+.reorderItemDragging {
+	opacity: 0.5;
+}
+
+// The drop target the dragged row would land above.
+.reorderItemOver {
+	border-color: var(--btn-primary, #5f88e5);
+	transform: translateY(1px);
+}
+
+.reorderGrip {
+	display: inline-flex;
+	align-items: center;
+	color: var(--text-secondary, #8a93a6);
+	flex-shrink: 0;
+}
+
+.reorderIndex {
+	min-width: 1.6em;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--text-secondary, #8a93a6);
+	font-variant-numeric: tabular-nums;
+	flex-shrink: 0;
+}
+
+.reorderText {
+	flex: 1;
+	font-size: 0.875rem;
+	line-height: 1.35;
+	color: var(--text-body, #3d4d71);
+	// Long answers must not stretch the row out of the modal.
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+// Keyboard equivalent of the drag, so the list is orderable without a pointer.
+.reorderNudge {
+	display: inline-flex;
+	gap: 0.15rem;
+	flex-shrink: 0;
+
+	button {
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		border: 1px solid var(--border, #e4e8f0);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--text-body, #3d4d71);
+		font-size: 0.8rem;
+		line-height: 1;
+		cursor: pointer;
+
+		&:hover:not(:disabled),
+		&:focus-visible {
+			background: var(--background, #eef0f3);
+			outline: none;
+		}
+
+		&:disabled {
+			opacity: 0.35;
+			cursor: default;
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.reorderItem {
+		transition: none;
+	}
+}
