@@ -18,6 +18,19 @@ export type GateState =
 	/** This player has already been in — the map marks it and points onward */
 	| 'visited';
 
+/**
+ * The language the voyage is being read in.
+ *
+ * Odyssey is authored in Hebrew and says so once, on `<html lang>`; reading it
+ * back from there rather than hardcoding 'he' means the day the voyage is
+ * translated, the square follows it without anyone remembering this file.
+ */
+export function voyageLang(): string {
+	const declared = document.documentElement.lang.slice(0, 2);
+
+	return declared || 'he';
+}
+
 export function getGateState(
 	islandStatementId: string,
 	game: OdysseyGame,
@@ -79,7 +92,12 @@ export async function enterIslandDeliberation(params: {
 	// session belongs to until its document loads, and that is one round trip
 	// after the page first paints — long enough to show the wrong colours and
 	// then change them under the player who just walked through a gate.
-	const query = new URLSearchParams({ theme: 'odyssey' });
+	//
+	// `lang` travels for the same reason and a sharper one: left to itself
+	// Agora asks the browser, and a Hebrew reader on an English-language
+	// browser was arriving at an English square from a Hebrew voyage. The
+	// voyage is the authority on which language this player is reading.
+	const query = new URLSearchParams({ theme: 'odyssey', lang: voyageLang() });
 	if (handoff) query.set('handoff', handoff);
 	window.location.href = `${origin}/#!/join/${session.code}?${query.toString()}`;
 }

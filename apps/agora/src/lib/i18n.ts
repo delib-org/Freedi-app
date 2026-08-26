@@ -13,6 +13,7 @@ const STORAGE_KEY = 'agora_lang';
  */
 export const translations: Record<LangCode, Record<string, string>> = {
 	he: {
+		'a11y.skip_to_content': 'דילוג לתוכן הראשי',
 		'common.loading': 'טוען...',
 		'common.error': 'משהו השתבש. נסו שוב.',
 		'common.back': 'חזרה',
@@ -642,6 +643,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'הצעות שיפור שקיבלתם',
 	},
 	en: {
+		'a11y.skip_to_content': 'Skip to main content',
 		'common.loading': 'Loading...',
 		'common.error': 'Something went wrong. Please try again.',
 		'common.back': 'Back',
@@ -1303,6 +1305,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'Improvement suggestions',
 	},
 	ar: {
+		'a11y.skip_to_content': 'تخطٍ إلى المحتوى الرئيسي',
 		'common.loading': 'جارٍ التحميل...',
 		'common.error': 'حدث خطأ ما. حاولوا مرة أخرى.',
 		'common.back': 'رجوع',
@@ -1934,6 +1937,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'اقتراحات تحسين قبلتموها',
 	},
 	es: {
+		'a11y.skip_to_content': 'Saltar al contenido principal',
 		'common.loading': 'Cargando...',
 		'common.error': 'Algo salió mal. Inténtalo de nuevo.',
 		'common.back': 'Atrás',
@@ -2609,6 +2613,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'Sugerencias de mejora',
 	},
 	de: {
+		'a11y.skip_to_content': 'Zum Hauptinhalt springen',
 		'common.loading': 'Wird geladen...',
 		'common.error': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
 		'common.back': 'Zurück',
@@ -3296,6 +3301,7 @@ export const translations: Record<LangCode, Record<string, string>> = {
 		'chat.accepted_reminder': 'Verbesserungsvorschläge',
 	},
 	nl: {
+		'a11y.skip_to_content': 'Naar hoofdinhoud springen',
 		'common.loading': 'Laden...',
 		'common.error': 'Er ging iets mis. Probeer het opnieuw.',
 		'common.back': 'Terug',
@@ -3992,9 +3998,56 @@ function isLangCode(value: string): value is LangCode {
 function applyDirection(): void {
 	document.documentElement.lang = currentLang;
 	document.documentElement.dir = isRTL() ? 'rtl' : 'ltr';
+
+	// The skip link lives in index.html, outside Mithril's root, so it is the
+	// one piece of the page no view can translate. A screen reader on a Hebrew
+	// document reading an English first link is the whole bug in miniature.
+	const skipLink = document.querySelector('.skip-link');
+	if (skipLink) skipLink.textContent = t('a11y.skip_to_content');
 }
 
+/**
+ * The language a link asked for, from either query string the URL might carry.
+ *
+ * Agora runs Mithril's hash router, so a gate link reads
+ * `/#!/join/12345?theme=odyssey&lang=he` — the parameters live inside the
+ * fragment, where `location.search` cannot see them. Both places are read
+ * because a plain `?lang=` on the origin is the obvious thing for a person to
+ * type, and it should work.
+ */
+export function langFromUrl(url: string): LangCode | null {
+	const hashQuery = url.slice(url.indexOf('#') + 1);
+	const candidates = [
+		url.includes('#') ? hashQuery.slice(hashQuery.indexOf('?') + 1) : '',
+		url.includes('?') ? url.slice(url.indexOf('?') + 1).split('#')[0] : '',
+	];
+
+	for (const query of candidates) {
+		const asked = new URLSearchParams(query).get('lang');
+		if (asked && isLangCode(asked)) return asked;
+	}
+
+	return null;
+}
+
+/**
+ * Precedence: the link, then a choice made here before, then the browser.
+ *
+ * The link comes first because a player walking through an Odyssey gate is
+ * mid-sentence in another app: the square is the next room of a voyage they
+ * are already reading in one language, and `navigator.language` — an English
+ * browser held by a Hebrew reader is the common case here — used to answer
+ * over it. Persisting what the link asked for is what makes it survive the
+ * first route change, after which the parameter is gone from the URL.
+ */
 export function initI18n(): void {
+	const asked = langFromUrl(window.location.href);
+	if (asked) {
+		setLang(asked);
+
+		return;
+	}
+
 	const stored = localStorage.getItem(STORAGE_KEY);
 	if (stored && isLangCode(stored)) {
 		currentLang = stored;

@@ -17,6 +17,7 @@ import GameChrome from '../components/GameChrome';
 import { useGame } from '../state/GameContext';
 import { toFreediUser, useUser } from '../lib/user';
 import { IslandContent, isGameAdmin } from '../lib/game';
+import { voyageLang } from '../lib/agoraGate';
 import { seedGame } from '../lib/seed';
 import { currentGameId } from '../state/GameContext';
 import { advanceCivicStage, updateCivicFlow } from '../lib/callables';
@@ -1469,7 +1470,7 @@ function AgoraTab({
 												{' · '}
 												<a
 													className="underline"
-													href={`${origin}/#!/join/${session.code}`}
+													href={`${origin}/#!/join/${session.code}?theme=odyssey&lang=${voyageLang()}`}
 													target="_blank"
 													rel="noreferrer"
 												>
