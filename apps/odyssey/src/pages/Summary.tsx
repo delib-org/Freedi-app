@@ -226,7 +226,10 @@ export default function Summary() {
 						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">🚢 הספינות באופק</h2>
 						<p className="text-[13px] opacity-75 mt-0 mb-4">
 							לכל ספינה: קרבה למסלול שלך על פי {visitedIslands.length} האיים שחקרת. אפשרות עגינה —
-							לא כרטיס הצבעה.
+							לא כרטיס הצבעה.{' '}
+							<Link className="underline" to="/parties">
+								איך נקבע מסלול של ספינה?
+							</Link>
 						</p>
 						<div className="flex flex-col gap-3">
 							{sortedParties.map(({ party, distance, sharedIslands }) => (

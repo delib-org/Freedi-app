@@ -10,6 +10,7 @@ import Voyage from './pages/Voyage';
 import Summary from './pages/Summary';
 import Admin from './pages/Admin';
 import Privacy from './pages/Privacy';
+import Parties from './pages/Parties';
 
 /** Routes that need a signed-in user (everything except the intro). */
 function Protected({ children }: { children: ReactElement }) {
@@ -61,6 +62,14 @@ export default function App() {
 						element={
 							<Protected>
 								<Voyage />
+							</Protected>
+						}
+					/>
+					<Route
+						path="/parties"
+						element={
+							<Protected>
+								<Parties />
 							</Protected>
 						}
 					/>
