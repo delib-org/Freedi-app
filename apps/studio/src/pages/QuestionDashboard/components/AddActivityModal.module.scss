@@ -38,3 +38,12 @@
 [dir='rtl'] .stepForward {
 	--slide-from: -1.5rem;
 }
+
+.note {
+	margin: 0;
+	padding: var(--space-sm) var(--space-md);
+	border-radius: var(--radius-sm);
+	background: var(--wash-primary);
+	color: var(--text-body);
+	font-size: var(--font-size-sm);
+}

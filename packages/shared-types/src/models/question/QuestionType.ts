@@ -1,4 +1,4 @@
-import { object, optional, enum_, InferOutput, array, boolean, number } from 'valibot';
+import { object, optional, enum_, InferOutput, array, boolean, number, string } from 'valibot';
 import {
 	QuestionStage,
 	QuestionStagesType,
@@ -10,6 +10,12 @@ import { CompoundSettingsSchema } from './CompoundQuestionTypes';
 export const QuestionSettingsSchema = object({
 	isTopQuestion: optional(boolean()), //used to find the top question and all here descendants.
 	questionType: optional(enum_(QuestionType)), // multi-stage, mass-consensus, compound
+	/**
+	 * The Mass-Consensus survey that wraps this question when it was set up from
+	 * WizCol Studio (written by MC's survey API). Studio's share / admin links
+	 * point at the survey (`/s/{id}`, `/admin/surveys/{id}`) when present.
+	 */
+	massConsensusSurveyId: optional(string()),
 	askUserForASolutionBeforeEvaluation: optional(boolean()), // if true, ask the user for a solution before evaluation
 	steps: optional(enum_(QuestionStagesType)),
 	stepsAllowed: optional(array(enum_(QuestionStep))),

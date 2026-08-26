@@ -3839,5 +3839,9 @@
   "Reload the page to get the latest version.": "Reload the page to get the latest version.",
   "Something went wrong": "Something went wrong",
   "Reload the page. If this keeps happening, tell us what you were doing.": "Reload the page. If this keeps happening, tell us what you were doing.",
-  "Reload": "Reload"
+  "Reload": "Reload",
+  "Next you'll set up the full survey — questions, demographics, logos — in Crowd survey, then come back here.": "Next you'll set up the full survey — questions, demographics, logos — in Crowd survey, then come back here.",
+  "Continue in Crowd survey": "Continue in Crowd survey",
+  "Set up the full survey": "Set up the full survey",
+  "Questions, demographics, logos and results are configured in Crowd survey.": "Questions, demographics, logos and results are configured in Crowd survey."
 }

@@ -34,6 +34,8 @@ export interface DerivedActivity {
 	runState: ActivityRunState;
 	participant: ActivityLink | null;
 	admin: ActivityLink | null;
+	/** Mass-Consensus survey wrapping this question (set up from Studio), if any. */
+	surveyId?: string;
 }
 
 /**
@@ -66,6 +68,12 @@ function toActivity(statement: Statement, resolver: ActivityUrlResolver): Derive
 			? toRunState(statement.statementSettings?.questionStatus)
 			: 'open';
 
+	const surveyId =
+		type === ActivityType.massConsensus
+			? statement.questionSettings?.massConsensusSurveyId
+			: undefined;
+	const surveyLinks = surveyId ? resolver.getSurveyLinks(surveyId) : null;
+
 	return {
 		statementId: statement.statementId,
 		title: statement.statement,
@@ -73,10 +81,17 @@ function toActivity(statement: Statement, resolver: ActivityUrlResolver): Derive
 		type,
 		def,
 		runState,
-		participant: def.hasParticipantUrl
+		surveyId,
+		participant: surveyLinks
+			? surveyLinks.participant
+			: def.hasParticipantUrl
 			? resolver.getParticipantLink(type, statement.statementId)
 			: null,
-		admin: def.hasAdminUrl ? resolver.getAdminLink(type, statement.statementId) : null,
+		admin: surveyLinks
+			? surveyLinks.admin
+			: def.hasAdminUrl
+				? resolver.getAdminLink(type, statement.statementId)
+				: null,
 	};
 }
 

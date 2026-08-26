@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import SurveyForm from '@/components/admin/SurveyForm';
 
 export const metadata: Metadata = {
@@ -12,7 +13,10 @@ export const metadata: Metadata = {
 export default function CreateSurveyPage() {
   return (
     <div className="page" style={{ padding: '2rem' }}>
-      <SurveyForm />
+      {/* SurveyForm reads search params (Studio pre-seeding) → needs a Suspense boundary */}
+      <Suspense fallback={null}>
+        <SurveyForm />
+      </Suspense>
     </div>
   );
 }

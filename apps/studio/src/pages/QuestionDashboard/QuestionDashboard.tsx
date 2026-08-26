@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import type { ActivityType } from '@freedi/shared-types';
+import { ActivityType } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { Button } from '@/components/atomic/atoms/Button';
 import { EmptyState } from '@/components/atomic/atoms/EmptyState';
 import { Skeleton } from '@/components/atomic/atoms/Skeleton';
 import { ActivityBoard } from '@/components/atomic/molecules/ActivityBoard';
+import { activityUrlResolver } from '@/config';
 import { archiveStatement } from '@/db/statements';
 import { useOrg } from '@/org/OrgContext';
 import { logError } from '@/utils/logError';
@@ -92,9 +93,24 @@ export default function QuestionDashboard() {
 		}
 	};
 
-	const handleCreated = (statementId: string) => {
+	const handleCreated = (statementId: string, type: ActivityType) => {
 		if (activities.length === 0) onboarding.markStep(ONBOARDING_FIRST_ACTIVITY);
 		setModal(null);
+		if (type === ActivityType.massConsensus) {
+			// The question exists under this top question; the full survey
+			// (questions, demographics, logos…) is configured in Crowd survey,
+			// which sends the consultant back to this drawer when saved.
+			const returnTo = `${window.location.origin}/orgs/${orgId}/questions/${qId}?activity=${statementId}`;
+			window.location.assign(
+				activityUrlResolver.getNewSurveyLink({
+					questionId: statementId,
+					parentStatementId: qId,
+					returnTo,
+				}).href,
+			);
+
+			return;
+		}
 		selectActivity(statementId);
 	};
 

@@ -42,6 +42,8 @@ export interface FacilitateDrawerProps {
 	onArchive: () => Promise<void> | void;
 	/** Join activities: route of the live run view (`run/:id`). */
 	runHref?: string;
+	/** MC activity without a survey yet → MC's pre-seeded "new survey" page. */
+	setupSurveyHref?: string;
 	/** Viewer mode — no status control, nudge, or agenda menu. */
 	readOnly?: boolean;
 	/** Element to return focus to on close (defaults to the previously focused one). */
@@ -74,6 +76,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 	onMove,
 	onArchive,
 	runHref,
+	setupSurveyHref,
 	readOnly = false,
 	returnFocusTo,
 	emailEnabled = true,
@@ -218,6 +221,23 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 							/>
 						</div>
 					)}
+
+					{activity.type === ActivityType.massConsensus &&
+						!activity.surveyId &&
+						setupSurveyHref &&
+						!readOnly && (
+							<div className="drawer__run">
+								<Button
+									text={t('Set up the full survey')}
+									variant="primary"
+									fullWidth
+									onClick={() => window.location.assign(setupSurveyHref)}
+								/>
+								<p className="drawer__hint">
+									{t('Questions, demographics, logos and results are configured in Crowd survey.')}
+								</p>
+							</div>
+						)}
 
 					{/* 1. Status */}
 					<section className="drawer__section" aria-labelledby={`${titleId}-status`}>

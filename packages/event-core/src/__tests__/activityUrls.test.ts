@@ -54,3 +54,31 @@ describe('createActivityUrlResolver — join links', () => {
 		});
 	});
 });
+
+describe('survey links (Studio → Mass-Consensus)', () => {
+	const resolver = createActivityUrlResolver({
+		mainAppBaseUrl: 'https://app.test',
+		massConsensusBaseUrl: 'https://mc.test/',
+		signBaseUrl: 'https://sign.test',
+	});
+
+	it('points participants at /s/{surveyId} and admins at /admin/surveys/{surveyId}', () => {
+		expect(resolver.getSurveyLinks('S1')).toEqual({
+			participant: { href: 'https://mc.test/s/S1', external: true },
+			admin: { href: 'https://mc.test/admin/surveys/S1', external: true },
+		});
+	});
+
+	it('builds the pre-seeded new-survey URL with an encoded returnTo', () => {
+		const link = resolver.getNewSurveyLink({
+			questionId: 'Q1',
+			parentStatementId: 'TOP',
+			returnTo: 'https://studio.test/orgs/o/questions/TOP?activity=Q1',
+		});
+		const url = new URL(link.href);
+		expect(url.pathname).toBe('/admin/surveys/new');
+		expect(url.searchParams.get('questionId')).toBe('Q1');
+		expect(url.searchParams.get('parentStatementId')).toBe('TOP');
+		expect(url.searchParams.get('returnTo')).toBe('https://studio.test/orgs/o/questions/TOP?activity=Q1');
+	});
+});

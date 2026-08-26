@@ -1,3 +1,4 @@
+import { activityUrlResolver } from '@/config';
 import { useCallback, type FC } from 'react';
 import { ActivityType } from '@freedi/shared-types';
 import type { ActivityRunState, DerivedActivity } from '@freedi/event-core';
@@ -64,6 +65,17 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 	const runHref =
 		activity.type === ActivityType.join ? `/orgs/${orgId}/questions/${qId}/run/${id}` : undefined;
 
+	// Crowd survey without a survey yet: send the consultant to MC's pre-seeded
+	// "new survey" page and bring them back to this drawer afterwards.
+	const setupSurveyHref =
+		activity.type === ActivityType.massConsensus && !activity.surveyId
+			? activityUrlResolver.getNewSurveyLink({
+					questionId: id,
+					parentStatementId: qId,
+					returnTo: `${window.location.origin}/orgs/${orgId}/questions/${qId}?activity=${id}`,
+				}).href
+			: undefined;
+
 	return (
 		<FacilitateDrawer
 			isOpen
@@ -78,6 +90,7 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 			onMove={handleMove}
 			onArchive={() => onArchiveRequest(id)}
 			runHref={runHref}
+			setupSurveyHref={setupSurveyHref}
 			readOnly={!canManage}
 		/>
 	);

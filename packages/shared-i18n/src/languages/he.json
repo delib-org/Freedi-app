@@ -4078,5 +4078,9 @@
   "Reload the page to get the latest version.": "רעננו את הדף כדי לקבל את הגרסה העדכנית.",
   "Something went wrong": "משהו השתבש",
   "Reload the page. If this keeps happening, tell us what you were doing.": "רעננו את הדף. אם זה חוזר על עצמו, ספרו לנו מה עשיתם.",
-  "Reload": "רענון"
+  "Reload": "רענון",
+  "Next you'll set up the full survey — questions, demographics, logos — in Crowd survey, then come back here.": "בשלב הבא תגדירו את הסקר המלא — שאלות, דמוגרפיה, לוגואים — בסקר ההמונים, ואז תחזרו לכאן.",
+  "Continue in Crowd survey": "המשך בסקר המונים",
+  "Set up the full survey": "הגדרת הסקר המלא",
+  "Questions, demographics, logos and results are configured in Crowd survey.": "שאלות, דמוגרפיה, לוגואים ותוצאות מוגדרים בסקר ההמונים."
 }

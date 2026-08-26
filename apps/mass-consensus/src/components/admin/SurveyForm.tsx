@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Statement, QuestionOverrideSettings, SurveyDemographicPage, UserDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
@@ -20,13 +20,36 @@ interface SurveyFormProps {
   onSurveyUpdate?: (survey: Survey) => void;
 }
 
+/** Hosts WizCol Studio may send us back to (open-redirect guard). */
+const RETURN_TO_HOSTS = ['studio.wizcol.com', 'wizcol-studio.web.app', 'wizcol-studio.firebaseapp.com', 'localhost'];
+
+function safeReturnTo(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    const allowed = RETURN_TO_HOSTS.some((h) => url.hostname === h);
+    if (!allowed || !['https:', 'http:'].includes(url.protocol)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Form for creating or editing a survey
  */
 export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const { refreshToken } = useAuth();
+
+  // Pre-seeded from WizCol Studio: `?questionId=` (an MC question already
+  // created under the Studio top question), `?parentStatementId=` (that top
+  // question) and `?returnTo=` (the Studio drawer to go back to after saving).
+  const seedQuestionId = searchParams?.get('questionId') ?? null;
+  const seedParentStatementId = searchParams?.get('parentStatementId') ?? null;
+  const returnTo = safeReturnTo(searchParams?.get('returnTo'));
 
   const [title, setTitle] = useState(existingSurvey?.title || '');
   const [description, setDescription] = useState(existingSurvey?.description || '');
@@ -93,6 +116,39 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
   useEffect(() => {
     loadExistingQuestions();
   }, [loadExistingQuestions]);
+
+  // Load the Studio-seeded question (create mode only) and prefill the title.
+  useEffect(() => {
+    if (isEditing || !seedQuestionId) return;
+    let cancelled = false;
+    (async () => {
+      setIsLoadingQuestions(true);
+      try {
+        const token = await refreshToken();
+        if (!token) {
+          router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+          return;
+        }
+        const response = await fetch(`/api/statements/${seedQuestionId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok || cancelled) return;
+        const data = await response.json();
+        const question = data.statement as Statement;
+        setSelectedQuestions((prev) =>
+          prev.some((q) => q.statementId === question.statementId) ? prev : [...prev, question]
+        );
+        setTitle((prev) => prev || question.statement);
+      } catch (err) {
+        logError(err, { operation: 'SurveyForm.loadSeedQuestion', statementId: seedQuestionId });
+      } finally {
+        if (!cancelled) setIsLoadingQuestions(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditing, seedQuestionId, refreshToken, router]);
 
   // Load existing demographic questions when editing a survey
   const loadDemographicQuestions = useCallback(async () => {
@@ -167,6 +223,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         customEmailDescription: customEmailDescription.trim() || undefined,
         showAllSolutionsLink: showAllSolutionsLink,
         allSolutionsLinkLabel: allSolutionsLinkLabel.trim() || undefined,
+        parentStatementId: seedParentStatementId || existingSurvey?.parentStatementId || undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -231,6 +288,12 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         }
       }
 
+      if (returnTo) {
+        const back = new URL(returnTo);
+        back.searchParams.set('surveyId', survey.surveyId);
+        window.location.assign(back.toString());
+        return;
+      }
       router.push(`/admin/surveys/${survey.surveyId}`);
     } catch (err) {
       logError(err, { operation: 'SurveyForm.handleSubmit' });

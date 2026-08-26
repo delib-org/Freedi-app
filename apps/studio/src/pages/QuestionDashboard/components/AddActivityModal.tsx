@@ -120,7 +120,7 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 			<>
 				<Button text={t('Cancel')} variant="secondary" onClick={onClose} disabled={submitting} />
 				<Button
-					text={t('Create activity')}
+					text={kind === 'massConsensus' ? t('Continue in Crowd survey') : t('Create activity')}
 					variant="primary"
 					disabled={!canCreate}
 					loading={submitting}
@@ -177,12 +177,20 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 						rows={3}
 						name="activity-description"
 					/>
-					<Checkbox
-						label={t('Open it now')}
-						hint={t('Participants can join as soon as you share the link.')}
-						checked={openNow}
-						onChange={setOpenNow}
-					/>
+					{kind === 'massConsensus' ? (
+						<p className={styles.note}>
+							{t(
+								"Next you'll set up the full survey — questions, demographics, logos — in Crowd survey, then come back here.",
+							)}
+						</p>
+					) : (
+						<Checkbox
+							label={t('Open it now')}
+							hint={t('Participants can join as soon as you share the link.')}
+							checked={openNow}
+							onChange={setOpenNow}
+						/>
+					)}
 					{error && <p role="alert">{error}</p>}
 				</form>
 			)}

@@ -20,7 +20,7 @@ function renderModal(isOpen: boolean, onCreated = vi.fn()) {
 				isOpen={isOpen}
 				orgId="org-1"
 				qId="q-1"
-				initialType={ActivityType.massConsensus}
+				initialType={ActivityType.question}
 				onClose={onClose}
 				onCreated={onCreated}
 			/>
@@ -45,9 +45,9 @@ describe('AddActivityModal', () => {
 		});
 		fireEvent.click(screen.getByRole('button', { name: /create activity/i }));
 
-		await waitFor(() => expect(onCreated).toHaveBeenCalledWith('new-1', ActivityType.massConsensus));
+		await waitFor(() => expect(onCreated).toHaveBeenCalledWith('new-1', ActivityType.question));
 		expect(createOrgStatement).toHaveBeenCalledWith(
-			expect.objectContaining({ organizationId: 'org-1', parentId: 'q-1', kind: 'massConsensus' }),
+			expect.objectContaining({ organizationId: 'org-1', parentId: 'q-1', kind: 'question' }),
 		);
 	});
 
@@ -71,7 +71,7 @@ describe('AddActivityModal', () => {
 						isOpen={open}
 						orgId="org-1"
 						qId="q-1"
-						initialType={ActivityType.massConsensus}
+						initialType={ActivityType.question}
 						onClose={vi.fn()}
 						onCreated={onCreated}
 					/>
@@ -90,5 +90,22 @@ describe('AddActivityModal', () => {
 		expect(create.hasAttribute('disabled')).toBe(false);
 		fireEvent.click(create);
 		await waitFor(() => expect(onCreated).toHaveBeenCalledTimes(2));
+	});
+
+	it('for a crowd survey, explains the hand-off to Crowd survey instead of "Open it now"', () => {
+		render(
+			<TranslationProvider initialLanguage={LanguagesEnum.en} storageKey="test-language">
+				<AddActivityModal
+					isOpen
+					orgId="org-1"
+					qId="q-1"
+					initialType={ActivityType.massConsensus}
+					onClose={vi.fn()}
+					onCreated={vi.fn()}
+				/>
+			</TranslationProvider>,
+		);
+		expect(screen.getByRole('button', { name: /continue in crowd survey/i })).toBeTruthy();
+		expect(screen.queryByLabelText(/open it now/i)).toBeNull();
 	});
 });

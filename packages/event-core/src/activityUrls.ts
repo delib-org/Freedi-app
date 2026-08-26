@@ -45,6 +45,21 @@ export interface ActivityUrlResolver {
 	 * `joinBaseUrl` is not configured.
 	 */
 	getJoinHubLink: (statementId: string) => ActivityLink | null;
+	/**
+	 * Links for a Mass-Consensus survey that wraps a question set up from
+	 * Studio: participants enter at `/s/{surveyId}`, admins configure it at
+	 * `/admin/surveys/{surveyId}`.
+	 */
+	getSurveyLinks: (surveyId: string) => { participant: ActivityLink; admin: ActivityLink };
+	/**
+	 * MC's "new survey" page pre-seeded with an already-created question so a
+	 * consultant can configure the full survey and be sent back to Studio.
+	 */
+	getNewSurveyLink: (params: {
+		questionId: string;
+		parentStatementId: string;
+		returnTo?: string;
+	}) => ActivityLink;
 }
 
 function trimSlash(url: string): string {
@@ -125,5 +140,31 @@ export function createActivityUrlResolver(config: EventUrlConfig): ActivityUrlRe
 	const getJoinHubLink = (statementId: string): ActivityLink | null =>
 		join ? { href: `${join}/m/${statementId}`, external: true } : null;
 
-	return { getParticipantLink, getAdminLink, getRouteLink, getJoinHubLink };
+	const getSurveyLinks = (surveyId: string): { participant: ActivityLink; admin: ActivityLink } => ({
+		participant: { href: `${mc}/s/${surveyId}`, external: true },
+		admin: { href: `${mc}/admin/surveys/${surveyId}`, external: true },
+	});
+
+	const getNewSurveyLink = (params: {
+		questionId: string;
+		parentStatementId: string;
+		returnTo?: string;
+	}): ActivityLink => {
+		const search = new URLSearchParams({
+			questionId: params.questionId,
+			parentStatementId: params.parentStatementId,
+		});
+		if (params.returnTo) search.set('returnTo', params.returnTo);
+
+		return { href: `${mc}/admin/surveys/new?${search.toString()}`, external: true };
+	};
+
+	return {
+		getParticipantLink,
+		getAdminLink,
+		getRouteLink,
+		getJoinHubLink,
+		getSurveyLinks,
+		getNewSurveyLink,
+	};
 }

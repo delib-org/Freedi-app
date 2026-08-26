@@ -29,10 +29,10 @@ describe('lazyWithRetry', () => {
 		});
 	});
 
-	function loadOnce<T>(component: { _payload?: unknown; _init?: (p: unknown) => T }) {
+	function loadOnce(component: unknown): Promise<unknown> {
 		// React.lazy stores the loader on the exotic component; invoke it the
 		// way React does to observe the promise without rendering.
-		const lazyComponent = component as unknown as {
+		const lazyComponent = component as {
 			_payload: { _result: () => Promise<unknown> };
 		};
 
