@@ -270,6 +270,66 @@ check('owner is admin on the second top question too', top2Sub?.role === 'admin'
 const top2Progress = await fsGet(`questionProgress/${top2.statementId}`);
 check('second top question has its own progress doc', top2Progress?.organizationId === org.organizationId && top2Progress?.entered === 0);
 
+// 11. "Start a question with AI" — fixture mode (emulator has no OPENAI_API_KEY)
+const planStart = await call('fn_studioPlanStart', consultant.idToken, {
+	organizationId: org.organizationId, language: 'he', timezone: 'Asia/Jerusalem',
+});
+check('plan start returns a Hebrew opener', !!planStart.sessionId && /ספרו/.test(planStart.message?.content ?? ''), planStart.message?.content);
+const turn1 = await call('fn_studioPlanMessage', consultant.idToken, {
+	sessionId: planStart.sessionId, message: 'אנחנו צריכים להחליט איך לחלק תקציב של מיליון שקל בין חמישה פרויקטים שכונתיים, תוך חודש',
+});
+// Fixture mode (no OPENAI_API_KEY) answers with a plan at once; the real model may ask a clarifying question first.
+check('first turn answers in Hebrew and is not ready yet', /[\u0590-\u05FF]/.test(turn1.message?.content ?? '') && turn1.readyToBuild === false, JSON.stringify({ n: turn1.plan?.activities?.length, ready: turn1.readyToBuild }));
+const turn2 = await call('fn_studioPlanMessage', consultant.idToken, { sessionId: planStart.sessionId, message: 'מעולה, בואו נבנה את זה' });
+check('second turn marks the plan ready to build', turn2.readyToBuild === true, String(turn2.readyToBuild));
+const sessionDoc = await fsGet(`studioPlanSessions/${planStart.sessionId}`);
+check('session stores messages, plan, diagnosis and language he', sessionDoc?.messages?.length === 5 && !!sessionDoc?.currentPlan && sessionDoc?.language === 'he', JSON.stringify({ m: sessionDoc?.messages?.length, lang: sessionDoc?.language }));
+const built = await call('fn_studioPlanBuild', consultant.idToken, { sessionId: planStart.sessionId });
+const finalPlan = (await fsGet(`studioPlanSessions/${planStart.sessionId}`))?.currentPlan;
+const plannedSurveys = (finalPlan?.activities ?? []).filter((a) => a.type === 'crowdSurvey').length;
+check('build returns top question + every planned activity + a survey per crowd survey', !!built.topQuestionId && Object.keys(built.activityIds).length >= (finalPlan?.activities?.length ?? 1) && built.surveyIds.length === plannedSurveys, JSON.stringify({ activities: Object.keys(built.activityIds).length, planned: finalPlan?.activities?.length, surveys: built.surveyIds.length, actions: built.scheduledActionIds.length }));
+const builtTop = await fsGet(`statements/${built.topQuestionId}`);
+check('built top question belongs to the org', builtTop?.organizationId === org.organizationId && builtTop?.parentId === 'top');
+const builtChildren = await fsList('statements', (d) => d.parentId === built.topQuestionId);
+const kindMarker = { crowdSurvey: 'mass-consensus', liveSession: 'join', discussion: 'main' };
+const plannedSorted = [...(finalPlan?.activities ?? [])].sort((a, b) => a.order - b.order);
+const childrenSorted = [...builtChildren].sort((a, b) => a.order - b.order);
+check('built activities are children in plan order with kind markers + open/frozen', plannedSorted.every((a, i) => childrenSorted[i]?.sourceApp === kindMarker[a.type] && childrenSorted[i]?.statementSettings?.questionStatus === (a.openNow ? 'live' : 'frozen')), childrenSorted.map((d) => `${d.order}:${d.sourceApp}:${d.statementSettings?.questionStatus}`).join(' '));
+if (built.surveyIds.length > 0) {
+	const builtSurvey = await fsGet(`surveys/${built.surveyIds[0]}`);
+	const surveyQuestion = builtSurvey && (await fsGet(`statements/${builtSurvey.questionIds[0]}`));
+	const expectedStatus = surveyQuestion?.statementSettings?.questionStatus === 'frozen' ? 'draft' : 'active';
+	check('survey status follows its question, parented to the top question, stamped on its question', builtSurvey?.status === expectedStatus && builtSurvey?.parentStatementId === built.topQuestionId && surveyQuestion?.questionSettings?.massConsensusSurveyId === built.surveyIds[0], JSON.stringify({ status: builtSurvey?.status, expectedStatus }));
+}
+const pendingActions = await fsList('scheduledActions', (d) => d.topParentId === built.topQuestionId && d.status === 'pending');
+check('scheduled actions are pending', pendingActions.length === built.scheduledActionIds.length, `${pendingActions.length}`);
+const builtSession = await fsGet(`studioPlanSessions/${planStart.sessionId}`);
+check('session marked built with builtStatementId', builtSession?.status === 'built' && builtSession?.builtStatementId === built.topQuestionId);
+const rebuilt = await call('fn_studioPlanBuild', consultant.idToken, { sessionId: planStart.sessionId });
+check('build is idempotent', rebuilt.topQuestionId === built.topQuestionId);
+await call('fn_studioPlanRate', consultant.idToken, { sessionId: planStart.sessionId, value: 'up', note: 'helpful' });
+const ratedSession = await fsGet(`studioPlanSessions/${planStart.sessionId}`);
+check('rating stored on the session', ratedSession?.rating?.value === 'up');
+
+// Existing-question mode reads the current activities
+const planExisting = await call('fn_studioPlanStart', consultant.idToken, {
+	organizationId: org.organizationId, topQuestionId: top.statementId, language: 'en', timezone: 'Asia/Jerusalem',
+});
+const existingIds = (planExisting.existingActivities ?? []).map((a) => a.statementId);
+const plannedExisting = (planExisting.plan?.activities ?? []).filter((a) => a.existingStatementId && a.change !== 'add').map((a) => a.existingStatementId);
+check('existing mode lists the 3 activities and never drops one from the plan', existingIds.length === 3 && existingIds.every((id) => plannedExisting.includes(id)), JSON.stringify({ n: existingIds.length, kept: plannedExisting.length, changes: planExisting.plan?.activities?.map((a) => a.change) }));
+
+// Manual scheduled action + cancel
+const manual = await call('fn_studioScheduledActionUpsert', consultant.idToken, { statementId: mc.statementId, action: 'close', runAt: Date.now() + 3600_000 });
+const cancelled = await call('fn_studioScheduledActionCancel', consultant.idToken, { scheduledActionId: manual.scheduledActionId });
+check('manual scheduled action created then cancelled', cancelled.status === 'cancelled');
+try {
+	await call('fn_studioScheduledActionUpsert', resident.idToken, { statementId: mc.statementId, action: 'close', runAt: Date.now() + 3600_000 });
+	check('non-admin cannot schedule', false);
+} catch (e) {
+	check('non-admin cannot schedule', e.code === 'PERMISSION_DENIED', e.message);
+}
+
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 console.log(JSON.stringify({ orgId: org.organizationId, topId: top.statementId, mcId: mc.statementId, joinId: join.statementId, consultant: consultant.email, sysadmin: sysadmin.email }));

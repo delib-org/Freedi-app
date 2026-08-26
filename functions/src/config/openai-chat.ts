@@ -49,6 +49,20 @@ interface CallOptions {
 	jsonMode?: boolean;
 }
 
+/** One turn of a multi-turn chat completion. */
+export interface ChatMessage {
+	role: 'system' | 'user' | 'assistant';
+	content: string;
+}
+
+export interface ChatCallOptions {
+	model: string;
+	messages: ChatMessage[];
+	maxTokens?: number;
+	temperature?: number;
+	jsonMode?: boolean;
+}
+
 /**
  * GPT-5-family models (reasoning models) reject the legacy `max_tokens`
  * parameter (use `max_completion_tokens`) and reject non-default `temperature`.
@@ -57,7 +71,7 @@ interface CallOptions {
  */
 export function buildModelParams(
 	model: string,
-	opts: { maxTokens?: number; temperature?: number }
+	opts: { maxTokens?: number; temperature?: number },
 ): Record<string, number> {
 	const maxTokens = opts.maxTokens ?? 1024;
 	if (model.startsWith('gpt-5')) {
@@ -138,19 +152,36 @@ function retryDelayMs(error: unknown, attempt: number): number {
  * attempts honoring the server's retry-after hint (jittered, capped at 20s).
  */
 export async function callLLM(opts: CallOptions): Promise<string> {
+	const messages: ChatMessage[] = [];
+	if (opts.system) messages.push({ role: 'system', content: opts.system });
+	messages.push({ role: 'user', content: opts.user });
+
+	return runChatCompletion({ ...opts, messages });
+}
+
+/**
+ * Multi-turn variant of `callLLM`: the caller supplies the whole message
+ * list (system + alternating user/assistant turns). Same limiter, retries and
+ * model-parameter handling.
+ */
+export async function callLLMChat(opts: ChatCallOptions): Promise<string> {
+	if (opts.messages.length === 0) {
+		throw new Error('callLLMChat requires at least one message');
+	}
+
+	return runChatCompletion(opts);
+}
+
+async function runChatCompletion(opts: ChatCallOptions): Promise<string> {
 	return limiter(async () => {
 		const client = getOpenAI();
 		let lastError: unknown;
 
 		for (let attempt = 1; attempt <= RATE_LIMIT_RETRIES; attempt++) {
 			try {
-				const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
-				if (opts.system) messages.push({ role: 'system', content: opts.system });
-				messages.push({ role: 'user', content: opts.user });
-
 				const response = await client.chat.completions.create({
 					model: opts.model,
-					messages,
+					messages: opts.messages,
 					...buildModelParams(opts.model, opts),
 					...(opts.jsonMode ? { response_format: { type: 'json_object' } } : {}),
 				});

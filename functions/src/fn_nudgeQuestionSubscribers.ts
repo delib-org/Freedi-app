@@ -230,15 +230,35 @@ async function sendEmails(
 	return sent;
 }
 
-export async function nudgeQuestionSubscribersForAdmin(
-	callerUid: string,
-	callerName: string,
-	rawData: Partial<NudgeRequest> | undefined,
-): Promise<NudgeResult> {
-	const { statementId, message, audience, channels } = validateRequest(rawData);
-	const { statement } = await assertStatementAdmin(callerUid, statementId, 'nudge.send');
-	const now = Date.now();
-	await assertNotRateLimited(statementId, now);
+export interface SendQuestionNudgeInput {
+	statement: Statement;
+	message: string;
+	audience: NudgeAudience;
+	channels: NudgeChannel[];
+	/** Uid recorded as the notification creator (excluded from recipients). */
+	callerUid: string;
+	callerName: string;
+	now?: number;
+	/**
+	 * Enforce the 1h/question cooldown (manual nudges). Scheduled nudges pass
+	 * `false`: they were placed deliberately, but still stamp `lastNudgeAt`
+	 * so a manual nudge right after is throttled.
+	 */
+	enforceCooldown?: boolean;
+}
+
+/**
+ * Sends a nudge to a question's subscribers. Authorization and request
+ * validation are the caller's job (`nudgeQuestionSubscribersForAdmin`, the
+ * scheduled-action executor).
+ */
+export async function sendQuestionNudge(input: SendQuestionNudgeInput): Promise<NudgeResult> {
+	const { statement, message, audience, channels, callerUid, callerName } = input;
+	const statementId = statement.statementId;
+	const now = input.now ?? Date.now();
+	if (input.enforceCooldown !== false) {
+		await assertNotRateLimited(statementId, now);
+	}
 
 	const subscribers = await loadSubscribers(statementId, callerUid);
 	const targets = await filterByAudience(statementId, subscribers, audience);
@@ -264,9 +284,29 @@ export async function nudgeQuestionSubscribersForAdmin(
 		targets: targets.length,
 		inApp,
 		email,
+		scheduled: input.enforceCooldown === false,
 	});
 
 	return { sent: targets.length, inApp, email };
+}
+
+export async function nudgeQuestionSubscribersForAdmin(
+	callerUid: string,
+	callerName: string,
+	rawData: Partial<NudgeRequest> | undefined,
+): Promise<NudgeResult> {
+	const { statementId, message, audience, channels } = validateRequest(rawData);
+	const { statement } = await assertStatementAdmin(callerUid, statementId, 'nudge.send');
+
+	return sendQuestionNudge({
+		statement,
+		message,
+		audience,
+		channels,
+		callerUid,
+		callerName,
+		enforceCooldown: true,
+	});
 }
 
 export const fn_nudgeQuestionSubscribers = onCall(

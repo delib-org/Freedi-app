@@ -120,5 +120,10 @@ export enum Collections {
     questionProgress = 'questionProgress',
     questionParticipation = 'questionParticipation',
 
+    // WizCol Studio — "Start a question with AI" (Cloud-Function-only writes)
+    studioPlanSessions = 'studioPlanSessions',
+    scheduledActions = 'scheduledActions',
+    studioRateLimits = 'studioRateLimits',
+
     odysseyDigestState = 'odysseyDigestState',
 }

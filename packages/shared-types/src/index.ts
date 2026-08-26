@@ -169,6 +169,9 @@ export {
   getQuestionParticipationId,
 } from "./models/progress";
 
+// WizCol Studio — "Start a question with AI": plan sessions, diagnosis, scheduled actions
+export * from "./models/studio";
+
 // MassConsensus models
 export type {
   MassConsensusMember,

@@ -30,6 +30,7 @@ interface Filter {
 
 export interface FakeQuery {
 	where: (field: string, op: string, value: unknown) => FakeQuery;
+	orderBy: (field: string, direction?: 'asc' | 'desc') => FakeQuery;
 	limit: (n: number) => FakeQuery;
 	get: () => Promise<{ docs: FakeSnap[]; empty: boolean; size: number }>;
 }
@@ -64,26 +65,74 @@ export interface FakeDb {
 	runTransaction: <T>(fn: (tx: FakeTx) => Promise<T>) => Promise<T>;
 }
 
+function isPlainObject(value: unknown): value is Doc {
+	return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Firestore merge semantics, close enough for tests: dotted keys address
+ * nested fields, nested plain objects deep-merge, `{ _increment }` adds.
+ */
 function applyMerge(existing: Doc | undefined, patch: Doc): Doc {
 	const next: Doc = { ...(existing ?? {}) };
-	for (const [key, value] of Object.entries(patch)) {
+	for (const [rawKey, value] of Object.entries(patch)) {
+		const path = rawKey.split('.');
+		let target = next;
+		for (let i = 0; i < path.length - 1; i++) {
+			const segment = path[i];
+			target[segment] = isPlainObject(target[segment]) ? { ...(target[segment] as Doc) } : {};
+			target = target[segment] as Doc;
+		}
+		const key = path[path.length - 1];
 		const inc = (value as { _increment?: number } | null)?._increment;
 		if (typeof inc === 'number') {
-			const prev = typeof next[key] === 'number' ? (next[key] as number) : 0;
-			next[key] = prev + inc;
+			const prev = typeof target[key] === 'number' ? (target[key] as number) : 0;
+			target[key] = prev + inc;
+		} else if (isPlainObject(value) && isPlainObject(target[key])) {
+			target[key] = applyMerge(target[key] as Doc, value);
 		} else {
-			next[key] = value;
+			target[key] = value;
 		}
 	}
 
 	return next;
 }
 
+/** Reads dotted paths (`build.completedAt`) like Firestore field paths. */
+function readPath(doc: Doc, path: string): unknown {
+	return path.split('.').reduce<unknown>((acc, key) => {
+		if (acc && typeof acc === 'object') return (acc as Record<string, unknown>)[key];
+
+		return undefined;
+	}, doc);
+}
+
+function compare(a: unknown, b: unknown): number {
+	if (typeof a === 'number' && typeof b === 'number') return a - b;
+
+	return String(a).localeCompare(String(b));
+}
+
 function matches(doc: Doc, filter: Filter): boolean {
-	const actual = doc[filter.field];
-	if (filter.op === '==') return actual === filter.value;
-	if (filter.op === 'in') return Array.isArray(filter.value) && filter.value.includes(actual);
-	throw new Error(`fakeFirestore: unsupported operator ${filter.op}`);
+	const actual = readPath(doc, filter.field);
+	switch (filter.op) {
+		case '==':
+			return actual === filter.value;
+		case '!=':
+			return actual !== filter.value;
+		case 'in':
+			return Array.isArray(filter.value) && filter.value.includes(actual);
+		case '<':
+			return actual !== undefined && compare(actual, filter.value) < 0;
+		case '<=':
+			return actual !== undefined && compare(actual, filter.value) <= 0;
+		case '>':
+			return actual !== undefined && compare(actual, filter.value) > 0;
+		case '>=':
+			return actual !== undefined && compare(actual, filter.value) >= 0;
+		default:
+			throw new Error(`fakeFirestore: unsupported operator ${filter.op}`);
+	}
 }
 
 export function createFakeDb(): FakeDb {
@@ -133,13 +182,27 @@ export function createFakeDb(): FakeDb {
 		};
 	};
 
-	const query = (collection: string, filters: Filter[], limit?: number): FakeQuery => ({
-		where: (field, op, value) => query(collection, [...filters, { field, op, value }], limit),
-		limit: (n) => query(collection, filters, n),
+	const query = (
+		collection: string,
+		filters: Filter[],
+		limit?: number,
+		order?: { field: string; direction: 'asc' | 'desc' },
+	): FakeQuery => ({
+		where: (field, op, value) =>
+			query(collection, [...filters, { field, op, value }], limit, order),
+		orderBy: (field, direction = 'asc') => query(collection, filters, limit, { field, direction }),
+		limit: (n) => query(collection, filters, n, order),
 		get: async () => {
-			let docs = [...col(collection).entries()]
-				.filter(([, doc]) => filters.every((f) => matches(doc, f)))
-				.map(([id]) => snapOf(collection, id));
+			let entries = [...col(collection).entries()].filter(([, doc]) =>
+				filters.every((f) => matches(doc, f)),
+			);
+			if (order) {
+				const sign = order.direction === 'desc' ? -1 : 1;
+				entries = entries.sort(
+					([, a], [, b]) => sign * compare(readPath(a, order.field), readPath(b, order.field)),
+				);
+			}
+			let docs = entries.map(([id]) => snapOf(collection, id));
 			if (limit !== undefined) docs = docs.slice(0, limit);
 
 			return { docs, empty: docs.length === 0, size: docs.length };

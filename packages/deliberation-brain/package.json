@@ -1,0 +1,40 @@
+{
+  "name": "@freedi/deliberation-brain",
+  "version": "1.0.0",
+  "description": "Pure, framework-agnostic deliberation-planning brain for WizCol Studio's \"Start a question with AI\": diagnosis model, playbook patterns, engine affordances, prompt rendering, dialogue policy, LLM-response normalization and plan critic",
+  "private": true,
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "valibot": "^1.0.0-rc.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.18",
+    "@freedi/shared-types": "file:../shared-types"
+  },
+  "peerDependencies": {
+    "@freedi/shared-types": "*"
+  }
+}

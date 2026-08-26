@@ -4,7 +4,7 @@
 	"scripts": {
 		"clean": "rm -rf node_modules package-lock.json && git rm -r --cache . && git reset && npm install && npm run build",
 		"lint": "eslint --ext .js,.ts . --ignore-pattern 'lib/' --ignore-pattern 'coverage/'",
-		"prebuild": "rm -f freedi-shared-types-*.tgz freedi-evidence-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && (cd ../packages/evidence && npm run build && npm pack && mv freedi-evidence-*.tgz ../../functions/) && rm -rf node_modules/@freedi package-lock.json && npm install",
+		"prebuild": "rm -f freedi-shared-types-*.tgz freedi-evidence-*.tgz freedi-deliberation-brain-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && (cd ../packages/evidence && npm run build && npm pack && mv freedi-evidence-*.tgz ../../functions/) && (cd ../packages/deliberation-brain && npm run build && npm pack && mv freedi-deliberation-brain-*.tgz ../../functions/) && rm -rf node_modules/@freedi package-lock.json && npm install",
 		"build": "tsc",
 		"dev": "tsc --watch",
 		"serve": "npm run build && firebase emulators:start --only functions",
@@ -21,6 +21,7 @@
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
 		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
+		"@freedi/deliberation-brain": "file:freedi-deliberation-brain-1.0.0.tgz",
 		"@freedi/shared-types": "file:freedi-shared-types-1.0.2.tgz",
 		"@sendgrid/mail": "^8.1.6",
 		"@sentry/sveltekit": "^10.57.0",
@@ -49,7 +50,8 @@
 	},
 	"bundledDependencies": [
 		"@freedi/shared-types",
-		"@freedi/evidence"
+		"@freedi/evidence",
+		"@freedi/deliberation-brain"
 	],
 	"private": true,
 	"overrides": {
@@ -58,6 +60,7 @@
 	},
 	"bundleDependencies": [
 		"@freedi/shared-types",
-		"@freedi/evidence"
+		"@freedi/evidence",
+		"@freedi/deliberation-brain"
 	]
 }

@@ -1488,6 +1488,34 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // "Start a question with AI" — the admin's conversation with the AI
+    // consultant and the plan. Written only by the studio callables.
+    match /studioPlanSessions/{sessionId} {
+      allow get: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        isSystemAdminUser()
+      );
+      // list must filter `createdBy == me`.
+      allow list: if request.auth != null && resource.data.createdBy == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Facilitator actions scheduled by a plan or from the dashboard
+    // (open / freeze / close / reminder), executed by the scheduler.
+    // list must filter `organizationId == X`.
+    match /scheduledActions/{scheduledActionId} {
+      allow get, list: if request.auth != null && (
+        isOrgMember(resource.data.organizationId) ||
+        isSystemAdminUser()
+      );
+      allow write: if false;
+    }
+
+    // Per-user hourly budget for AI consultant turns. Server only.
+    match /studioRateLimits/{uid} {
+      allow read, write: if false;
+    }
+
     // Backup requests - server-side only. Worked by the backupSurveyOnRequest
     // Firestore trigger and written by scheduledDailyBackups +
     // backupSurveyCallable. Clients have no business reading or writing this.

@@ -238,6 +238,19 @@ import { fn_revokeOrgInvite } from './organizations/fn_revokeOrgInvite';
 import { fn_resendOrgInvite } from './organizations/fn_resendOrgInvite';
 import { fn_createOrgStatement } from './organizations/fn_createOrgStatement';
 
+// ── "Start a question with AI" (WizCol Studio): planner, build, scheduled actions ──
+import {
+	fn_studioPlanStart,
+	fn_studioPlanMessage,
+	fn_studioPlanBuild,
+	fn_studioPlanRate,
+	fn_studioScheduledActionUpsert,
+	fn_studioScheduledActionCancel,
+	studioScheduledActionSweep,
+	studioPlanOutcomeSnapshot,
+	mirrorQuestionStatusToSurvey,
+} from './organizations/studio';
+
 // ── Question progress, Home surfacing & nudges (WizCol Studio) ──
 import { ensureTopParentSubscription } from './fn_ensureTopParentSubscription';
 import { fn_nudgeQuestionSubscribers } from './fn_nudgeQuestionSubscribers';
@@ -947,12 +960,28 @@ exports.fn_revokeOrgInvite = fn_revokeOrgInvite;
 exports.fn_resendOrgInvite = fn_resendOrgInvite;
 exports.fn_createOrgStatement = fn_createOrgStatement;
 
+// ── "Start a question with AI" (WizCol Studio) ──
+exports.fn_studioPlanStart = fn_studioPlanStart;
+exports.fn_studioPlanMessage = fn_studioPlanMessage;
+exports.fn_studioPlanBuild = fn_studioPlanBuild;
+exports.fn_studioPlanRate = fn_studioPlanRate;
+exports.fn_studioScheduledActionUpsert = fn_studioScheduledActionUpsert;
+exports.fn_studioScheduledActionCancel = fn_studioScheduledActionCancel;
+// Keeps an MC survey's status in step with its question's run state
+// (manual Open/Freeze/Close from Studio, Join, or the scheduler).
+exports.mirrorQuestionStatusToSurvey = mirrorQuestionStatusToSurvey;
+
 // --------------------------
 // SCHEDULED FUNCTIONS
 // --------------------------
 
 // Scheduled function to clean up stale FCM tokens (runs daily at 3:00 AM UTC)
 exports.cleanupStaleTokens = cleanupStaleTokens;
+
+// Studio facilitator actions (open/freeze/close/reminder) due now — every 5 min
+exports.studioScheduledActionSweep = studioScheduledActionSweep;
+// Learning loop: participation outcome 30 days after an AI-built plan — daily
+exports.studioPlanOutcomeSnapshot = studioPlanOutcomeSnapshot;
 
 // HTTP endpoint for manual token cleanup (admin auth required)
 exports.manualTokenCleanup = wrapAdminHttpFunction(async (req: Request, res: Response) => {
