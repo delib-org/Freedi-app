@@ -129,6 +129,29 @@
 		color: var(--text-meta);
 	}
 
+	// Next scheduled action for this activity, under the status control.
+	&__scheduled {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2xs) var(--space-xs);
+		margin: var(--space-xs) 0 0;
+		padding: var(--space-xs) var(--space-sm);
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+		background: var(--wash-neutral);
+		border-radius: var(--radius-sm);
+	}
+
+	&__scheduled-glyph {
+		font-size: 0.8em;
+		line-height: 1;
+	}
+
+	&__scheduled-time {
+		color: var(--text-meta);
+	}
+
 	&__stats {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -1,0 +1,261 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Plan card — the live plan beside the chat. Changed rows flash once
+// (`--changed`); an in-flight turn shimmers the whole card (`--updating`).
+.plan-card {
+	@include card-base;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	min-inline-size: 0;
+
+	&__header {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xs);
+	}
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-lg);
+	}
+
+	&__note {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__section {
+		padding-block: var(--space-sm);
+		border-block-start: 1px solid var(--border-light);
+	}
+
+	&__section-title {
+		margin: 0 0 var(--space-xs);
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-meta);
+	}
+
+	&__question {
+		margin: 0;
+		font-size: var(--font-size-md);
+		font-weight: 600;
+		color: var(--text-title);
+	}
+
+	&__description {
+		margin: var(--space-2xs) 0 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+	}
+
+	&__empty {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__activities,
+	&__schedule {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__activity {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: var(--space-xs);
+		padding: var(--space-xs);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-sm);
+		transition: background var(--motion-base) var(--motion-ease);
+
+		&--changed {
+			animation: plan-card-flash 2.5s var(--motion-ease);
+
+			@include respect-motion-preference;
+		}
+	}
+
+	&__order {
+		display: inline-grid;
+		place-items: center;
+		inline-size: 1.5rem;
+		block-size: 1.5rem;
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		color: var(--btn-primary-text);
+		background: var(--btn-primary);
+		border-radius: 50%;
+	}
+
+	&__activity-body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xs);
+		min-inline-size: 0;
+	}
+
+	&__activity-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2xs);
+	}
+
+	&__activity-title {
+		margin: 0;
+		font-weight: 600;
+		color: var(--text-title);
+		overflow-wrap: anywhere;
+	}
+
+	&__survey {
+		margin: 0;
+		padding-inline-start: var(--space-md);
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+
+		li {
+			@include line-clamp(2);
+		}
+	}
+
+	&__ask {
+		align-self: flex-start;
+		margin-block-start: var(--space-2xs);
+	}
+
+	&__action {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: var(--space-2xs) var(--space-xs);
+		padding: var(--space-xs);
+		padding-inline-start: var(--space-sm);
+		font-size: var(--font-size-sm);
+		border-inline-start: 3px solid var(--border-light);
+		border-radius: var(--radius-xs);
+
+		&--open {
+			border-inline-start-color: var(--action-open);
+		}
+
+		&--freeze {
+			border-inline-start-color: var(--action-freeze);
+		}
+
+		&--close {
+			border-inline-start-color: var(--action-close);
+		}
+
+		&--nudge {
+			border-inline-start-color: var(--action-nudge);
+		}
+
+		&--changed {
+			animation: plan-card-flash 2.5s var(--motion-ease);
+
+			@include respect-motion-preference;
+		}
+	}
+
+	&__time {
+		grid-column: 1 / -1;
+		color: var(--text-title);
+		font-weight: 600;
+	}
+
+	&__relative {
+		font-weight: 400;
+		color: var(--text-meta);
+	}
+
+	&__action-kind {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		white-space: nowrap;
+		color: var(--text-body);
+	}
+
+	&__glyph {
+		font-size: 0.8em;
+		line-height: 1;
+	}
+
+	&__target {
+		@include truncate;
+		color: var(--text-body);
+	}
+
+	&__nudge {
+		grid-column: 1 / -1;
+		margin: 0;
+		padding: var(--space-2xs) var(--space-xs);
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+		background: var(--wash-neutral);
+		border-radius: var(--radius-xs);
+	}
+
+	&__summary {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+		line-height: 1.5;
+	}
+
+	// ---- States --------------------------------------------------------------
+
+	&--updating {
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			border-radius: inherit;
+			background: linear-gradient(
+				90deg,
+				transparent 0%,
+				color-mix(in srgb, var(--card-default) 60%, transparent) 50%,
+				transparent 100%
+			);
+			background-size: 200% 100%;
+			animation: plan-card-shimmer 1.4s linear infinite;
+
+			@include respect-motion-preference;
+		}
+	}
+}
+
+@keyframes plan-card-flash {
+	0% {
+		background: var(--plan-changed-wash);
+	}
+
+	70% {
+		background: var(--plan-changed-wash);
+	}
+
+	100% {
+		background: transparent;
+	}
+}
+
+@keyframes plan-card-shimmer {
+	from {
+		background-position: 200% 0;
+	}
+
+	to {
+		background-position: -200% 0;
+	}
+}

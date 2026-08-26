@@ -1,5 +1,14 @@
 import { httpsCallable } from 'firebase/functions';
-import type { Access, QuestionStatus } from '@freedi/shared-types';
+import type {
+	Access,
+	QuestionStatus,
+	ScheduledActionStatus,
+	StudioExistingActivitySnapshot,
+	StudioPlan,
+	StudioPlanBuildResult,
+	StudioPlanMessage,
+	StudioScheduledActionKind,
+} from '@freedi/shared-types';
 import { OrganizationRole } from '@freedi/shared-types';
 import { functions } from '@/firebase';
 
@@ -115,6 +124,82 @@ export interface RecomputeQuestionProgressRequest {
 	statementId: string;
 }
 
+// --- Start a question with AI ---------------------------------------------
+
+export interface StudioPlanStartRequest {
+	organizationId: string;
+	/** Existing-question mode: plan additions to this top question. */
+	topQuestionId?: string;
+	/** Studio UI language (ISO 639-1). */
+	language: string;
+	/** IANA timezone of the admin's browser. */
+	timezone: string;
+}
+
+export interface StudioPlanStartResult {
+	sessionId: string;
+	message: StudioPlanMessage;
+	plan?: StudioPlan;
+	existingActivities?: StudioExistingActivitySnapshot[];
+}
+
+export interface StudioPlanMessageRequest {
+	sessionId: string;
+	message: string;
+}
+
+export interface StudioPlanMessageResult {
+	message: StudioPlanMessage;
+	plan?: StudioPlan;
+	planVersion: number;
+	readyToBuild: boolean;
+	/** Why the plan cannot be built yet, in the admin's language. */
+	problems?: string[];
+}
+
+export interface StudioPlanBuildRequest {
+	sessionId: string;
+}
+
+export interface StudioPlanRateRequest {
+	sessionId: string;
+	value: 'up' | 'down';
+	note?: string;
+}
+
+export interface StudioPlanRateResult {
+	ok: true;
+}
+
+export interface ScheduledNudgeInput {
+	message: string;
+	audience?: NudgeAudience;
+	channels?: NudgeChannel[];
+}
+
+export interface ScheduledActionUpsertRequest {
+	/** Omit to create. */
+	scheduledActionId?: string;
+	statementId: string;
+	action: StudioScheduledActionKind;
+	/** Epoch ms. */
+	runAt: number;
+	nudge?: ScheduledNudgeInput;
+}
+
+export interface ScheduledActionUpsertResult {
+	scheduledActionId: string;
+}
+
+export interface ScheduledActionCancelRequest {
+	scheduledActionId: string;
+}
+
+export interface ScheduledActionCancelResult {
+	scheduledActionId: string;
+	status: ScheduledActionStatus;
+}
+
 // --- Callables -------------------------------------------------------------
 
 function callable<Req, Res>(name: string): (data: Req) => Promise<Res> {
@@ -158,3 +243,29 @@ export const nudgeQuestionSubscribers = callable<NudgeRequest, NudgeResult>(
 export const recomputeQuestionProgress = callable<RecomputeQuestionProgressRequest, void>(
 	'fn_recomputeQuestionProgress',
 );
+
+export const studioPlanStart = callable<StudioPlanStartRequest, StudioPlanStartResult>(
+	'fn_studioPlanStart',
+);
+
+export const studioPlanMessage = callable<StudioPlanMessageRequest, StudioPlanMessageResult>(
+	'fn_studioPlanMessage',
+);
+
+export const studioPlanBuild = callable<StudioPlanBuildRequest, StudioPlanBuildResult>(
+	'fn_studioPlanBuild',
+);
+
+export const studioPlanRate = callable<StudioPlanRateRequest, StudioPlanRateResult>(
+	'fn_studioPlanRate',
+);
+
+export const scheduledActionUpsert = callable<
+	ScheduledActionUpsertRequest,
+	ScheduledActionUpsertResult
+>('fn_studioScheduledActionUpsert');
+
+export const scheduledActionCancel = callable<
+	ScheduledActionCancelRequest,
+	ScheduledActionCancelResult
+>('fn_studioScheduledActionCancel');

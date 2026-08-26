@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ActivityType } from '@freedi/shared-types';
+import { ActivityType, type ScheduledAction } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { Button } from '@/components/atomic/atoms/Button';
 import { EmptyState } from '@/components/atomic/atoms/EmptyState';
 import { Skeleton } from '@/components/atomic/atoms/Skeleton';
 import { ActivityBoard } from '@/components/atomic/molecules/ActivityBoard';
 import { activityUrlResolver } from '@/config';
+import { useScheduledActionsByTop } from '@/db/scheduledActions';
 import { archiveStatement } from '@/db/statements';
 import { useOrg } from '@/org/OrgContext';
 import { logError } from '@/utils/logError';
@@ -18,9 +19,12 @@ import AddActivityModal from './components/AddActivityModal';
 import ConfirmDialog from './components/ConfirmDialog';
 import DashboardDrawer from './components/DashboardDrawer';
 import EditQuestionModal from './components/EditQuestionModal';
+import EditScheduledActionModal from './components/EditScheduledActionModal';
 import EmptyActivities from './components/EmptyActivities';
 import HomePreview from './components/HomePreview';
+import PlanRatingCard, { hasRatedPlan } from './components/PlanRatingCard';
 import QuestionHeader from './components/QuestionHeader';
+import ScheduledTimeline from './components/ScheduledTimeline';
 import SendUpdateModal from './components/SendUpdateModal';
 import ShareModal from './components/ShareModal';
 import { useStatusToast } from './components/StatusToast';
@@ -48,10 +52,17 @@ export default function QuestionDashboard() {
 	const { toast, show: showToast } = useStatusToast();
 	const data = useQuestionDashboardData(qId);
 	const { question, questionLoading, activities, activitiesLoading, progressById } = data;
+	const { data: scheduled } = useScheduledActionsByTop(orgId, qId);
 
 	const [modal, setModal] = useState<DashboardModal>(null);
 	const [addType, setAddType] = useState<ActivityType | undefined>(undefined);
 	const [archiveActivityId, setArchiveActivityId] = useState<string | null>(null);
+	const [editAction, setEditAction] = useState<ScheduledAction | null>(null);
+
+	// One-time AI plan rating, right after a build (`?rate=<sessionId>`).
+	const rateSessionId = searchParams.get('rate');
+	const showRating = Boolean(rateSessionId) && !hasRatedPlan(rateSessionId ?? '');
+	const planHref = `/orgs/${orgId}/questions/${qId}/plan`;
 
 	const selectedId = searchParams.get('activity') ?? undefined;
 	const selected = activities.find((a) => a.statementId === selectedId);
@@ -72,6 +83,18 @@ export default function QuestionDashboard() {
 		},
 		[setSearchParams],
 	);
+
+	const dismissRating = useCallback(() => {
+		setSearchParams(
+			(prev) => {
+				const next = new URLSearchParams(prev);
+				next.delete('rate');
+
+				return next;
+			},
+			{ replace: true },
+		);
+	}, [setSearchParams]);
 
 	const openAdd = (type?: ActivityType) => {
 		setAddType(type);
@@ -159,6 +182,7 @@ export default function QuestionDashboard() {
 						}
 						canManage={canManage}
 						onAdd={() => openAdd()}
+						onPlanWithAI={() => navigate(planHref)}
 						onShare={() => setModal('share')}
 						onSendUpdate={() => setModal('update')}
 						onEdit={() => setModal('edit')}
@@ -171,19 +195,43 @@ export default function QuestionDashboard() {
 					</div>
 				)}
 
+				{showRating && rateSessionId && (
+					<PlanRatingCard sessionId={rateSessionId} onDone={dismissRating} />
+				)}
+
 				<div className={styles.content}>
-					<ActivityBoard
-						activities={activities}
-						progressById={progressById}
-						membersById={data.membersById}
-						lastActivityById={data.lastActivityById}
-						selectedId={selectedId}
-						loading={activitiesLoading}
-						readOnly={!canManage}
-						onSelect={(id) => selectActivity(id)}
-						onQuickAction={(id, action) => void handleQuickAction(id, action)}
-						emptyState={<EmptyActivities canManage={canManage} onPickType={openAdd} />}
-					/>
+					<div className={styles.main}>
+						<ActivityBoard
+							activities={activities}
+							progressById={progressById}
+							membersById={data.membersById}
+							lastActivityById={data.lastActivityById}
+							selectedId={selectedId}
+							loading={activitiesLoading}
+							readOnly={!canManage}
+							onSelect={(id) => selectActivity(id)}
+							onQuickAction={(id, action) => void handleQuickAction(id, action)}
+							emptyState={
+								<EmptyActivities
+									canManage={canManage}
+									onPickType={openAdd}
+									onPlanWithAI={() => navigate(planHref)}
+								/>
+							}
+						/>
+						{(activities.length > 0 || scheduled.length > 0) && (
+							<ScheduledTimeline
+								actions={scheduled}
+								activities={activities}
+								questionId={qId}
+								questionTitle={question?.statement ?? ''}
+								canManage={canManage}
+								onSelectActivity={(id) => selectActivity(id)}
+								onEdit={setEditAction}
+								onPlanWithAI={() => navigate(planHref)}
+							/>
+						)}
+					</div>
 					{activities.length > 0 && (
 						<HomePreview title={question?.statement ?? ''} activities={activities} />
 					)}
@@ -197,6 +245,7 @@ export default function QuestionDashboard() {
 					activity={selected}
 					activities={activities}
 					progressById={progressById}
+					scheduled={scheduled}
 					canManage={canManage}
 					onClose={() => selectActivity(null)}
 					onArchiveRequest={(id) => {
@@ -248,6 +297,15 @@ export default function QuestionDashboard() {
 							}}
 						/>
 					)}
+					<EditScheduledActionModal
+						isOpen={editAction !== null}
+						action={editAction}
+						onClose={() => setEditAction(null)}
+						onSaved={() => {
+							setEditAction(null);
+							showToast(t('Saved'));
+						}}
+					/>
 					<ConfirmDialog
 						isOpen={modal === 'archiveQuestion'}
 						title={t('Archive this question?')}

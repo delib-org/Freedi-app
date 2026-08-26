@@ -1,11 +1,12 @@
 import { activityUrlResolver } from '@/config';
 import { useCallback, type FC } from 'react';
-import { ActivityType } from '@freedi/shared-types';
+import { ActivityType, type ScheduledAction } from '@freedi/shared-types';
 import type { ActivityRunState, DerivedActivity } from '@freedi/event-core';
 import { FacilitateDrawer } from '@/components/atomic/organisms/FacilitateDrawer';
 import type { NudgePayload } from '@/components/atomic/molecules/NudgeComposer';
 import { nudgeQuestionSubscribers } from '@/db/orgFunctions';
 import type { ProgressMap } from '@/db/progress';
+import { nextActionFor } from '@/db/scheduledActions';
 import { reorderChildren } from '@/db/statements';
 import { useStatusWithUndo } from '../useStatusWithUndo';
 
@@ -20,6 +21,8 @@ export interface DashboardDrawerProps {
 	activity: DerivedActivity;
 	activities: DerivedActivity[];
 	progressById: ProgressMap;
+	/** Scheduled actions of the whole top question (the drawer picks its own). */
+	scheduled?: ScheduledAction[];
 	canManage: boolean;
 	onClose: () => void;
 	onArchiveRequest: (statementId: string) => void;
@@ -31,6 +34,7 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 	activity,
 	activities,
 	progressById,
+	scheduled = [],
 	canManage,
 	onClose,
 	onArchiveRequest,
@@ -62,6 +66,8 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 		[activities, index],
 	);
 
+	const nextScheduled = nextActionFor(scheduled, id);
+
 	const runHref =
 		activity.type === ActivityType.join ? `/orgs/${orgId}/questions/${qId}/run/${id}` : undefined;
 
@@ -91,6 +97,7 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 			onArchive={() => onArchiveRequest(id)}
 			runHref={runHref}
 			setupSurveyHref={setupSurveyHref}
+			nextScheduled={nextScheduled}
 			readOnly={!canManage}
 		/>
 	);

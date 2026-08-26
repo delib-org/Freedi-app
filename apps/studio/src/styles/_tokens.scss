@@ -48,6 +48,15 @@
 	--role-viewer-bg: var(--wash-neutral);
 	--role-viewer-ink: var(--text-meta);
 
+	// --- Plan with AI (chat bubbles, changed rows, scheduled-action kinds) ----
+	--plan-user-wash: var(--wash-primary);
+	--plan-assistant-wash: var(--wash-neutral);
+	--plan-changed-wash: var(--wash-warning);
+	--action-open: var(--status-open-dot);
+	--action-freeze: var(--status-frozen-dot);
+	--action-close: var(--status-closed-dot);
+	--action-nudge: var(--btn-primary);
+
 	// --- Layout ----------------------------------------------------------------
 	--studio-sidebar-width: 15rem; // 240px — expanded navigation
 	--studio-rail-width: 4rem; // 64px — collapsed icon rail

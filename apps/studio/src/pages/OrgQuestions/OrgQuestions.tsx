@@ -57,6 +57,7 @@ export default function OrgQuestions() {
 	};
 
 	const cardTo = (questionId: string) => `/orgs/${orgId}/questions/${questionId}`;
+	const startWithAI = () => navigate(`/orgs/${orgId}/plan/new`);
 
 	return (
 		<StudioPage
@@ -64,11 +65,14 @@ export default function OrgQuestions() {
 			title={t('Your questions')}
 			actions={
 				canManage && !isEmpty ? (
-					<Button
-						text={`+ ${t('New question')}`}
-						variant="primary"
-						onClick={() => setShowModal(true)}
-					/>
+					<>
+						<Button text={`✨ ${t('Start with AI')}`} variant="primary" onClick={startWithAI} />
+						<Button
+							text={`+ ${t('New question')}`}
+							variant="secondary"
+							onClick={() => setShowModal(true)}
+						/>
+					</>
 				) : undefined
 			}
 		>
@@ -90,6 +94,7 @@ export default function OrgQuestions() {
 					userName={user?.displayName?.split(' ')[0] ?? ''}
 					step={onboarding.step}
 					onStart={() => setShowModal(true)}
+					onStartWithAI={startWithAI}
 					onDismiss={onboarding.dismiss}
 				/>
 			)}
@@ -105,11 +110,18 @@ export default function OrgQuestions() {
 					}
 					action={
 						canManage ? (
-							<Button
-								text={`+ ${t('New question')}`}
-								variant="primary"
+							<Button text={`✨ ${t('Start with AI')}`} variant="primary" onClick={startWithAI} />
+						) : undefined
+					}
+					secondary={
+						canManage ? (
+							<button
+								type="button"
+								className="empty-state__link"
 								onClick={() => setShowModal(true)}
-							/>
+							>
+								{t('or write the question yourself')}
+							</button>
 						) : undefined
 					}
 				/>

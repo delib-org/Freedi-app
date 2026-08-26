@@ -14,7 +14,10 @@ export interface OnboardingCardProps {
 	userName: string;
 	/** Highest completed step (0..3). */
 	step: number;
+	/** "Write it myself" — opens the New question modal. */
 	onStart: () => void;
+	/** "Start with AI" — the consultant plans the question. */
+	onStartWithAI: () => void;
 	onDismiss: () => void;
 	className?: string;
 }
@@ -30,6 +33,7 @@ export default function OnboardingCard({
 	userName,
 	step,
 	onStart,
+	onStartWithAI,
 	onDismiss,
 	className,
 }: OnboardingCardProps) {
@@ -83,13 +87,20 @@ export default function OnboardingCard({
 								{done && <span className="visually-hidden"> ({t('Done')})</span>}
 							</span>
 							{number === 1 && !done && (
-								<Button
-									text={`${t('Start')} →`}
-									variant="primary"
-									size="small"
-									onClick={onStart}
-									className={styles.stepAction}
-								/>
+								<div className={styles.stepActions}>
+									<Button
+										text={`${t('Start with AI')} →`}
+										variant="primary"
+										size="small"
+										onClick={onStartWithAI}
+									/>
+									<Button
+										text={t('Write it myself')}
+										variant="secondary"
+										size="small"
+										onClick={onStart}
+									/>
+								</div>
 							)}
 						</li>
 					);

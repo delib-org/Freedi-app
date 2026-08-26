@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, type FC } from 'react'
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { ActivityType, type QuestionProgress } from '@freedi/shared-types';
+import { ActivityType, type QuestionProgress, type ScheduledAction } from '@freedi/shared-types';
 import type { ActivityRunState, DerivedActivity } from '@freedi/event-core';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { ActivityTypeChip } from '@/components/atomic/atoms/ActivityTypeChip';
@@ -10,11 +10,13 @@ import { Button } from '@/components/atomic/atoms/Button';
 import { ProgressFunnel } from '@/components/atomic/atoms/ProgressFunnel';
 import { ProgressStat } from '@/components/atomic/atoms/ProgressStat';
 import { StatusPill } from '@/components/atomic/atoms/StatusPill';
+import { ACTION_GLYPHS, ACTION_LABELS } from '@/components/atomic/atoms/Tag';
 import { StatusControl } from '@/components/atomic/molecules/StatusControl';
 import { ShareHub } from '@/components/atomic/molecules/ShareHub';
 import { NudgeComposer, type NudgePayload } from '@/components/atomic/molecules/NudgeComposer';
 import { useDialogMechanics } from '@/utils/dialogMechanics';
 import { formatRelativeTime } from '@/utils/relativeTime';
+import { formatDateTime, toIsoDateTime } from '@/utils/formatDateTime';
 import { logError } from '@/utils/logError';
 import { useMediaQuery, MEDIA_MOBILE } from '@/components/atomic/organisms/AppShell/useMediaQuery';
 
@@ -50,6 +52,8 @@ export interface FacilitateDrawerProps {
 	returnFocusTo?: HTMLElement | null;
 	/** Whether the org has email nudges available (default true). */
 	emailEnabled?: boolean;
+	/** The next pending scheduled action on this activity, shown under Status. */
+	nextScheduled?: ScheduledAction;
 }
 
 /** Human app name for the "opens in …" caption of the admin link. */
@@ -61,6 +65,7 @@ const APP_NAMES: Record<DerivedActivity['def']['sourceApp'], string> = {
 	flow: 'WizCol Flow',
 	chat: 'WizCol Chat',
 	agora: 'Agora',
+	odyssey: 'Odyssey',
 };
 
 const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
@@ -80,6 +85,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 	readOnly = false,
 	returnFocusTo,
 	emailEnabled = true,
+	nextScheduled,
 }) => {
 	const { t, tWithParams, currentLanguage } = useTranslation();
 	const navigate = useNavigate();
@@ -250,6 +256,21 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 							<StatusPill status={status} />
 						) : (
 							<StatusControl value={status} onChange={handleStatusChange} busy={statusBusy} />
+						)}
+						{nextScheduled && (
+							<p className="drawer__scheduled">
+								<span className="drawer__scheduled-glyph" aria-hidden="true">
+									{ACTION_GLYPHS[nextScheduled.action]}
+								</span>
+								<span>{t(ACTION_LABELS[nextScheduled.action])}</span>
+								<time
+									className="drawer__scheduled-time"
+									dateTime={toIsoDateTime(nextScheduled.runAt)}
+								>
+									{formatDateTime(nextScheduled.runAt, currentLanguage)} ·{' '}
+									{formatRelativeTime(nextScheduled.runAt, currentLanguage)}
+								</time>
+							</p>
 						)}
 					</section>
 

@@ -20,6 +20,7 @@ export interface QuestionHeaderProps {
 	lastActivityAt?: number;
 	canManage: boolean;
 	onAdd: () => void;
+	onPlanWithAI: () => void;
 	onShare: () => void;
 	onSendUpdate: () => void;
 	onEdit: () => void;
@@ -34,6 +35,7 @@ const QuestionHeader: FC<QuestionHeaderProps> = ({
 	lastActivityAt,
 	canManage,
 	onAdd,
+	onPlanWithAI,
 	onShare,
 	onSendUpdate,
 	onEdit,
@@ -110,6 +112,7 @@ const QuestionHeader: FC<QuestionHeaderProps> = ({
 			{canManage && (
 				<div className={styles.actions}>
 					<Button text={`+ ${t('Add activity')}`} variant="primary" onClick={onAdd} />
+					<Button text={`✨ ${t('Plan with AI')}`} variant="secondary" onClick={onPlanWithAI} />
 					<Button text={t('Share')} variant="secondary" onClick={onShare} />
 					<Button text={t('Send update')} variant="secondary" onClick={onSendUpdate} />
 					<div className={styles.menuAnchor} ref={menuRef}>
