@@ -30,6 +30,15 @@ export const DEFAULT_TEXTS: Record<string, string> = {
 	agoraButton: 'אל שער האגורה',
 	/** Origin of the Agora app. Each island's gate appends its own join code. */
 	agoraOrigin: '',
+	/**
+	 * Who answers for the data, and where to write. Both are shown on /privacy,
+	 * and both are blank until an operator fills them in on the admin screen —
+	 * a made-up address on a privacy page is worse than none. FILL THESE IN
+	 * BEFORE DISTRIBUTING: a political questionnaire with no one's name on it is
+	 * the reason people close the tab.
+	 */
+	privacyController: '',
+	privacyContact: '',
 	destinationName: 'חוף ההבטחה של ארץ ישנה-חדשה',
 };
 
@@ -138,8 +147,8 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 		posX: 13,
 		posY: 34,
 		stances: [
-			'ועדת חקירה ממלכתית בהקדם, גם בזמן מלחמה',
-			'ועדת חקירה ממלכתית לאחר תום המלחמה',
+			'ועדת חקירה ממלכתית בהקדם',
+			'ועדת חקירה ממלכתית רק לאחר הסדר סופי בעזה',
 			'בדיקות פנימיות בכל מערכת, ורק אחר כך הכרעה על ועדה',
 			'להתמקד כעת בניצחון ובשיקום',
 		],
@@ -153,7 +162,7 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 		opening:
 			'הגעת אל חוף סלעי. מצד אחד נשמעים קולות מן העיר: ״הרוב הכריע״. מן הצד השני עומדת שומרת השערים ואומרת: ״גם קברניט שנבחר צריך גבולות״.',
 		centralQuestion: 'איזה כוח צריך להיות לבית המשפט העליון מול הממשלה והכנסת?',
-		depthQuestion: 'מה חשוב לך במיוחד בסוגיה הזו, או איפה ההתלבטות?',
+		depthQuestion: 'מי צריך להכריע כשרוב נבחר ובית המשפט חלוקים — ומה הגבול?',
 		posX: 30,
 		posY: 26,
 		stances: [
@@ -280,8 +289,8 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 	},
 	{
 		slug: 'sabbath-rabbinate',
-		title: 'השבת והרבנות',
-		issue: 'דת ומדינה',
+		title: 'דת ומדינה',
+		issue: 'צביון המרחב הציבורי בין סמכות רבנית לחופש בחירה',
 		shortExplain:
 			'מה היחס הרצוי בין דת ומדינה: הפרדה אזרחית רחבה, חופש אזרחי מקומי לצד סמלים יהודיים, סטטוס-קוו מתוקן, או חיזוק סמכות הרבנות והזהות היהודית במרחב הציבורי.',
 		opening:
@@ -337,22 +346,33 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 		],
 	},
 	{
+		// Was 'יחסי החוץ' / 'ארה״ב, המעמד הבינלאומי ויהדות התפוצות', and it did
+		// three things wrong at once. It folded in diaspora Jewry, which is a
+		// question of Jewish identity rather than of foreign relations. Every
+		// stance was written about the United States, which quietly asserts that
+		// Europe and the region matter less — a political position, arriving as
+		// if it were the frame. And it left the reader looking for Israel's
+		// relations with the Palestinians and its neighbours, which live on
+		// 'הבית המדיני' and 'הסערה הביטחונית'. What is left is the one question
+		// those islands do not ask: what Israel's standing in the world is worth
+		// when it costs freedom of action.
 		slug: 'world-partners',
-		title: 'יחסי החוץ',
-		issue: 'ארה״ב, המעמד הבינלאומי ויהדות התפוצות',
+		title: 'ישראל בין האומות',
+		issue: 'מעמד בינלאומי, בריתות וחופש פעולה',
 		shortExplain:
-			'כמה משקל צריכה ישראל לתת לברית עם ארה״ב, למעמדה הבינלאומי ולקשר עם יהדות התפוצות: משקל מכריע, גבוה אך לא מכריע, הקשבה לצד עצמאות, או העדפת חופש פעולה גם במחיר עימות.',
+			'כמה משקל צריכה ישראל לתת למעמדה הבינלאומי ולבריתות שלה כשהם מתנגשים עם חופש הפעולה שלה: שיקול מכריע, משקל גבוה לצד פיזור הקשרים, הקשבה לצד פעולה עצמאית, או עצמאות מלאה גם במחיר בידוד.',
 		opening:
 			'קורא הכוכבים מתבונן בכוכבים ובספינות רחוקות ושואל מי שט לצידנו, מי מזהיר אותנו, ומתי ריבונות הופכת לבדידות מסוכנת.',
-		centralQuestion: 'כמה משקל לתת לברית עם ארה״ב, למעמד הבינלאומי ולקשר עם יהדות התפוצות?',
-		depthQuestion: 'מתי בעלת ברית היא עוגן ומתי היא מגבלה?',
+		centralQuestion:
+			'כמה משקל צריכה ישראל לתת למעמדה הבינלאומי ולבריתות שלה, כשהם מתנגשים עם חופש הפעולה שלה?',
+		depthQuestion: 'מתי ברית היא עוגן ומתי היא מגבלה?',
 		posX: 68,
 		posY: 76,
 		stances: [
-			'משקל מכריע לברית עם ארה״ב ולמעמד הבינלאומי',
-			'משקל גבוה, אך לא מכריע, לצד שיקולים עצמאיים',
-			'הקשבה לעולם לצד פעולה עצמאית ועקבית',
-			'העדפת חופש פעולה מלא, גם במחיר עימות',
+			'המעמד הבינלאומי והבריתות הם שיקול מכריע — כדאי לרסן צעדים שפוגעים בהם',
+			'משקל גבוה לבריתות, לצד פיזור הקשרים בין ארה״ב, אירופה ומדינות האזור',
+			'הקשבה לעולם לצד פעולה עצמאית ועקבית, לפי העניין',
+			'חופש פעולה מלא לפי שיקול ישראלי בלבד, גם במחיר בידוד בינלאומי',
 		],
 	},
 ];

@@ -4,13 +4,21 @@ import {
 	auth,
 	GoogleAuthProvider,
 	signInWithPopup,
+	signInAnonymously,
 	signOut,
 	onAuthStateChanged,
 	User,
 } from './firebase';
 
 /**
- * Google-only auth for Odyssey (the game's requirement is a Google login).
+ * Two ways aboard, and the difference matters.
+ *
+ * Google was the only door, and on a pre-election political questionnaire that
+ * is a door many people will not walk through: it asks them to attach their
+ * name to their opinions before they have been told what happens to either.
+ * An anonymous voyage costs them the ability to come back on another device —
+ * which is a price they can weigh, unlike a privacy question they cannot see.
+ *
  * A tiny external store exposed through useUser() — same spirit as agora's
  * module-singleton state, adapted to React.
  */
@@ -47,6 +55,18 @@ export async function signInWithGoogle(): Promise<void> {
 	const provider = new GoogleAuthProvider();
 	provider.setCustomParameters({ prompt: 'select_account' });
 	await signInWithPopup(auth, provider);
+}
+
+/**
+ * Board without an account.
+ *
+ * The uid is real, so everything downstream — the journey document, the
+ * ratings, the handoff token into Agora — works exactly as it does for a
+ * signed-in player. What is missing is any way to recover the seat: Firebase
+ * keeps an anonymous uid in this browser's storage and nowhere else.
+ */
+export async function signInAnonymous(): Promise<void> {
+	await signInAnonymously(auth);
 }
 
 export async function logOut(): Promise<void> {

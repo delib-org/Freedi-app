@@ -12,6 +12,16 @@ interface Props {
 	ships: ShipProximity[];
 	/** the compact chip row that sits under the sea stage */
 	compact?: boolean;
+	/**
+	 * Open this ship's card. Given, every chip becomes a button.
+	 *
+	 * Without it these were `<span>`s, and the voyage screen invited the player
+	 * to "הקישו על ספינה" a few lines above them. Tapping a hull on the Phaser
+	 * sea worked; tapping the name or the coloured dot right here did nothing,
+	 * and off the canvas — the direct-questionnaire route, and every screen
+	 * reader — there was no tappable ship anywhere on the page.
+	 */
+	onSelect?: (partyId: string) => void;
 }
 
 const BAND_TITLE: Record<ProximityBandKey, string> = {
@@ -33,7 +43,7 @@ const BAND_TITLE: Record<ProximityBandKey, string> = {
  * would be a lie about what the reader is looking for. The captions stay
  * proximity language ("עגינה זמנית") — never a recommendation.
  */
-export default function NearbyShips({ ships, compact = false }: Props) {
+export default function NearbyShips({ ships, compact = false, onSelect }: Props) {
 	const known = ships
 		.filter((ship) => ship.distance !== null)
 		.sort((a, b) => (a.distance ?? 1) - (b.distance ?? 1));
@@ -54,19 +64,34 @@ export default function NearbyShips({ ships, compact = false }: Props) {
 			{groups.map((group) => (
 				<div key={group.band} className="flex flex-wrap items-center justify-center gap-2">
 					<span className="text-[13px] opacity-70 shrink-0">{BAND_TITLE[group.band]}:</span>
-					{group.ships.map((ship) => (
-						<span
-							key={ship.partyId}
-							className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(94,223,255,0.28)] bg-[rgba(6,24,44,0.6)] px-2.5 py-1 text-[13px]"
-						>
+					{group.ships.map((ship) => {
+						const className =
+							'inline-flex items-center gap-1.5 rounded-full border border-[rgba(94,223,255,0.28)] bg-[rgba(6,24,44,0.6)] px-2.5 py-1 text-[13px]';
+						const dot = (
 							<span
 								className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
 								style={{ background: ship.color }}
 								aria-hidden="true"
 							/>
-							{ship.name}
-						</span>
-					))}
+						);
+
+						return onSelect ? (
+							<button
+								key={ship.partyId}
+								type="button"
+								className={`${className} cursor-pointer hover:border-[rgba(94,223,255,0.7)]`}
+								onClick={() => onSelect(ship.partyId)}
+							>
+								{dot}
+								{ship.name}
+							</button>
+						) : (
+							<span key={ship.partyId} className={className}>
+								{dot}
+								{ship.name}
+							</span>
+						);
+					})}
 				</div>
 			))}
 		</div>

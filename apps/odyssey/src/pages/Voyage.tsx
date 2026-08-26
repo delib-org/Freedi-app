@@ -13,6 +13,12 @@ import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import ShipCard from '../components/ShipCard';
 
 /**
+ * What the captain's log asks when an island has no question of its own.
+ * Islands carry a tailored `depthQuestion`; this is the floor.
+ */
+const DEFAULT_LOG_PROMPT = 'מה חשוב לך במיוחד בסוגיה הזו, או איפה ההתלבטות?';
+
+/**
  * ההפלגה: one island (a `question` Statement) at a time. Each of its stances
  * is an `option` Statement; marking תומך/יכול לחיות עם/מתנגד writes a
  * standard Freedi evaluation on that option. In game mode the sea stage
@@ -44,7 +50,6 @@ export default function Voyage() {
 	/** which ship the player asked about: a partyId, 'all' for the standing, or none */
 	const [asked, setAsked] = useState<string | null>(null);
 	const [depth, setDepth] = useState('');
-	const [log, setLog] = useState('');
 	const [saving, setSaving] = useState(false);
 
 	const island = useMemo(
@@ -109,10 +114,12 @@ export default function Voyage() {
 	// player check which party an answer pushes them toward before they commit
 	// to it is the mid-evaluation nudge the game refuses to make.
 	useEffect(() => {
+		// Closing the card belongs to every route, canvas or not: an open ship
+		// card carried onto the next island would answer a question about the
+		// previous one.
+		if (phase !== 'reaction') setAsked(null);
 		if (mode !== 'game') return;
-		const reacting = phase === 'reaction';
-		stageBus.send({ type: 'setSeaTappable', enabled: reacting });
-		if (!reacting) setAsked(null);
+		stageBus.send({ type: 'setSeaTappable', enabled: phase === 'reaction' });
 	}, [mode, phase, island]);
 
 	useEffect(() => {
@@ -129,6 +136,12 @@ export default function Voyage() {
 			else if (event.type === 'waterTapped') setAsked(null);
 		});
 	}, [mode]);
+
+	// Sailing back to an island shows what you wrote there, so the box is a
+	// draft you can revise rather than a slot that silently overwrites.
+	useEffect(() => {
+		setDepth(island ? (journey?.depthAnswers?.[island.statementId] ?? '') : '');
+	}, [island, journey?.depthAnswers]);
 
 	if (!content || !journey) return <NoGameYet />;
 	if (selectedIslands.length === 0) {
@@ -152,26 +165,17 @@ export default function Voyage() {
 	async function submitIsland(): Promise<void> {
 		setSaving(true);
 		try {
-			const patch: Parameters<typeof updateJourney>[0] = {};
+			// Island-keyed, so sailing back to an island shows what you wrote and
+			// replaces it rather than appending a second entry. `logEntries` is
+			// still read on the summary for journeys written before the merge.
 			if (depth.trim()) {
-				patch.depthAnswers = {
-					...journey!.depthAnswers,
-					[island!.statementId]: depth.trim(),
-				};
-			}
-			if (log.trim()) {
-				patch.logEntries = [
-					...journey!.logEntries,
-					{
-						islandStatementId: island!.statementId,
-						text: log.trim(),
-						createdAt: Date.now(),
+				await updateJourney({
+					depthAnswers: {
+						...journey!.depthAnswers,
+						[island!.statementId]: depth.trim(),
 					},
-				];
+				});
 			}
-			if (Object.keys(patch).length > 0) await updateJourney(patch);
-			setDepth('');
-			setLog('');
 			setPhase('reaction');
 			if (mode === 'game') {
 				// the log-stamp beat, then the sea reacts
@@ -274,29 +278,23 @@ export default function Voyage() {
 								})}
 							</div>
 
-							{island.depthQuestion ? (
-								<div>
-									<p className="m-0 mb-2 text-[15px]">
-										<strong>🔎 שאלת עומק:</strong> {island.depthQuestion}
-									</p>
-									<textarea
-										rows={2}
-										value={depth}
-										onChange={(event) => setDepth(event.target.value)}
-										placeholder="לא חובה — אפשר לדלג"
-									/>
-								</div>
-							) : null}
-
+							{/*
+							  One open question, not two. There used to be a "depth question"
+							  and a "captain's log" side by side, and on one island they were
+							  word-for-word the same sentence. Even where they differed, a
+							  reader could not tell which box was for what and answered
+							  whichever came first — so the pair collected less than the
+							  single box does.
+							*/}
 							<div>
 								<p className="m-0 mb-2 text-[15px]">
-									<strong>📖 יומן קברניט:</strong> מה חשוב לך במיוחד בסוגיה הזו, או איפה ההתלבטות?
+									<strong>📖 יומן קברניט:</strong> {island.depthQuestion || DEFAULT_LOG_PROMPT}
 								</p>
 								<textarea
-									rows={2}
-									value={log}
-									onChange={(event) => setLog(event.target.value)}
-									placeholder="לא חובה — הסתייגות, התלבטות או הסבר קצר"
+									rows={3}
+									value={depth}
+									onChange={(event) => setDepth(event.target.value)}
+									placeholder="לא חובה — התלבטות, הסתייגות, או כל מה שעוד יש לכם לומר על הסוגיה"
 								/>
 							</div>
 
@@ -341,7 +339,7 @@ export default function Voyage() {
 													✕
 												</button>
 											</div>
-											<NearbyShips ships={shipProximity} compact />
+											<NearbyShips ships={shipProximity} compact onSelect={setAsked} />
 											<p className="m-0 text-[12px] opacity-60 text-center">
 												עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
 											</p>
@@ -365,7 +363,17 @@ export default function Voyage() {
 									<h2 className="text-lg font-bold text-[var(--cream)] m-0">
 										הים מגיב לבחירות שלך
 									</h2>
-									<NearbyShips ships={shipProximity} />
+									<p className="m-0 text-[13px] opacity-80">
+										הקישו על ספינה כדי לראות כמה היא קרובה למסלול שלכם.
+									</p>
+									<NearbyShips ships={shipProximity} onSelect={setAsked} />
+									{askedShip ? (
+										<ShipCard
+											ship={askedShip}
+											onClose={() => setAsked(null)}
+											onShowAll={() => setAsked(null)}
+										/>
+									) : null}
 									<p className="m-0 text-[12px] opacity-65">
 										הקרבה היא עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
 									</p>

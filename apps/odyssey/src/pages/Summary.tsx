@@ -93,6 +93,7 @@ export default function Summary() {
 			islands: content.islands.map((island) => ({
 				id: island.statementId,
 				title: island.title,
+				issue: island.issue,
 				posX: island.posX,
 				posY: island.posY,
 				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),
@@ -146,6 +147,37 @@ export default function Summary() {
 	const visitedIslands = content.islands.filter((island) =>
 		island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
 	);
+
+	/**
+	 * The captain's log, in island order.
+	 *
+	 * What a player writes on an island now lands in `depthAnswers`, keyed by
+	 * island — the two open boxes were merged into one. `logEntries` is where
+	 * the second box used to write, and journeys sailed before the merge still
+	 * carry entries there, so both are read and neither is shown twice.
+	 */
+	const logbook: Array<{ islandTitle: string; text: string }> = [
+		...content.islands
+			.filter((island) => journey.depthAnswers?.[island.statementId]?.trim())
+			.map((island) => ({
+				islandTitle: island.title,
+				text: journey.depthAnswers[island.statementId],
+			})),
+		...journey.logEntries
+			// A legacy entry with no island (`islandStatementId` is nullable) has
+			// nothing newer to be superseded by, so it always survives.
+			.filter((entry) => !journey.depthAnswers?.[entry.islandStatementId ?? '']?.trim())
+			.map((entry) => ({
+				islandTitle:
+					content.islands.find((island) => island.statementId === entry.islandStatementId)?.title ??
+					'',
+				text: entry.text,
+			})),
+	];
+
+	const unvisitedCount = content.islands.filter(
+		(island) => island.enabled && !visitedIslands.includes(island),
+	).length;
 
 	const agoraOrigin = text('agoraOrigin');
 
@@ -255,21 +287,15 @@ export default function Summary() {
 								{rankedValues.join(' ← ')}
 							</p>
 						) : null}
-						{journey.logEntries.length > 0 ? (
+						{logbook.length > 0 ? (
 							<div className="mt-3 border-t border-[rgba(232,185,88,0.35)] pt-3">
 								<p className="eyebrow m-0 mb-2">יומן הקברניט</p>
-								{journey.logEntries.map((entry, index) => {
-									const island = content.islands.find(
-										(candidate) => candidate.statementId === entry.islandStatementId,
-									);
-
-									return (
-										<p key={index} className="m-0 mb-1.5 text-[14px] opacity-90">
-											{island ? <strong>{island.title}: </strong> : null}
-											{entry.text}
-										</p>
-									);
-								})}
+								{logbook.map((entry, index) => (
+									<p key={index} className="m-0 mb-1.5 text-[14px] opacity-90">
+										{entry.islandTitle ? <strong>{entry.islandTitle}: </strong> : null}
+										{entry.text}
+									</p>
+								))}
 							</div>
 						) : null}
 					</section>
@@ -311,6 +337,28 @@ export default function Summary() {
 							יותר.
 						</p>
 						<OpinionMap result={opinionMap} />
+					</section>
+
+					{/*
+					  Before the way out, the way back.
+					  This used to be one dim line under the Agora gates, and a reader
+					  who had sailed a few islands came away thinking the voyage was
+					  over — she signed in again from scratch to reach the islands she
+					  had skipped. The map is still open; that has to be said before
+					  the exit, not after it.
+					*/}
+					<section className="panel fade-in text-center">
+						<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-2">
+							🧭 המסע לא נגמר — יש עוד איים
+						</h2>
+						<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">
+							{unvisitedCount > 0
+								? `חקרתם ${visitedIslands.length} איים. עוד ${unvisitedCount} ממתינים לכם על המפה, ואפשר לחזור אליהם בכל רגע — מפת ההפלגה תתעדכן.`
+								: 'עברתם בכל האיים. אפשר לחזור למפה בכל רגע ולשנות עמדה על אי שכבר חקרתם.'}
+						</p>
+						<Link className="btn" to="/map">
+							🗺️ חזרה למפה
+						</Link>
 					</section>
 
 					<section className="panel fade-in">
@@ -367,13 +415,6 @@ export default function Summary() {
 								חקרו אי אחד לפחות, ושער הדיון עליו ייפתח כאן.
 							</p>
 						)}
-						<p className="text-[13px] opacity-70 mt-3 mb-0 text-center">
-							אפשר גם{' '}
-							<Link className="underline" to="/map">
-								לחזור למפה
-							</Link>{' '}
-							ולחקור איים נוספים — המפה תתעדכן.
-						</p>
 					</section>
 				</div>
 			</div>

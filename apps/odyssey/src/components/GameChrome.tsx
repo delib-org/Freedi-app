@@ -38,7 +38,8 @@ export default function GameChrome({ stage }: { stage?: string }) {
 							</Link>
 						) : null}
 						<span className="text-[13px] opacity-85 hidden sm:inline">
-							{user.displayName ?? user.email}
+							{/* An anonymous sailor has neither, and rendered as empty space. */}
+							{user.isAnonymous ? 'ללא חשבון' : (user.displayName ?? user.email)}
 						</span>
 						<button
 							type="button"

@@ -65,6 +65,7 @@ export default function MapPage() {
 			islands: islands.map((island) => ({
 				id: island.statementId,
 				title: island.title,
+				issue: island.issue,
 				posX: island.posX,
 				posY: island.posY,
 				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),

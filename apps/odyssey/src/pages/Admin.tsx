@@ -51,6 +51,8 @@ const TEXT_LABELS: Record<string, string> = {
 	agoraButton: 'כיתוב כפתור האגורה',
 	agoraOrigin: 'כתובת אפליקציית האגורה (Origin)',
 	destinationName: 'שם היעד על המפה',
+	privacyController: '⚠️ פרטיות: מי אחראי על המידע (מוצג במסך הפרטיות)',
+	privacyContact: '⚠️ פרטיות: כתובת מייל לפניות בנושא מידע',
 };
 
 const TABS = [

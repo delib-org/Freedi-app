@@ -10,6 +10,17 @@ import { stageBus } from '../lib/stageBus';
 const TOP_VALUES = 5;
 
 /**
+ * How many inspiration chips one wind accepts.
+ *
+ * There was no cap, and a reader wanting to keep almost everything good about
+ * the country ticked almost every chip — which is a true feeling and a useless
+ * signal. רוח הדאגה already asked for "ממה את/ה הכי חושש/ת", promising a
+ * ranking the interface did not ask for. A cap is what turns all three winds
+ * into the same honest question: not what matters, but what matters most.
+ */
+const MAX_CHIPS = 3;
+
+/**
  * ארבע רוחות המצפון: three open questions with inspiration chips, then the
  * fourth wind — ranking the top values. Personal/reflective, stored on the
  * journey doc (not statements). In game mode the compass rose on the sea
@@ -87,11 +98,16 @@ export default function Compass() {
 
 	function toggleChip(questionId: string, chip: string): void {
 		const current = answerOf(questionId);
-		setAnswer(questionId, {
-			chips: current.chips.includes(chip)
-				? current.chips.filter((item) => item !== chip)
-				: [...current.chips, chip],
-		});
+		if (current.chips.includes(chip)) {
+			setAnswer(questionId, { chips: current.chips.filter((item) => item !== chip) });
+
+			return;
+		}
+		// Journeys sailed before the cap can hold more than MAX_CHIPS. They are
+		// left alone: deselecting always works, so a player is never stuck, and
+		// nothing anyone already said is deleted on their behalf.
+		if (current.chips.length >= MAX_CHIPS) return;
+		setAnswer(questionId, { chips: [...current.chips, chip] });
 	}
 
 	function toggleValue(valueId: string): void {
@@ -147,26 +163,54 @@ export default function Compass() {
 							</p>
 							<h2 className="text-xl font-bold text-[var(--cream)] mt-1 mb-1">{question.title}</h2>
 							<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">{question.prompt}</p>
+
+							{/*
+							  Chips first, then the writing box. Side by side and unlabelled
+							  they read as two ways to answer the same question, and a reader
+							  could not tell whether picking one meant skipping the other.
+							  In this order they are one instruction: choose your few, then
+							  say the part no chip says.
+							*/}
+							{question.chips.length > 0 ? (
+								<>
+									<p className="text-[13px] opacity-75 m-0 mb-2">
+										בחרו עד {MAX_CHIPS} — מה הכי חשוב לכם:
+									</p>
+									<div className="flex flex-wrap gap-2" aria-label="כפתורי השראה">
+										{question.chips.map((chip) => {
+											const chosen = answerOf(question.questionId).chips;
+											const active = chosen.includes(chip);
+
+											return (
+												<button
+													key={chip}
+													type="button"
+													className={`chip ${active ? 'active' : ''}`}
+													aria-pressed={active}
+													disabled={!active && chosen.length >= MAX_CHIPS}
+													onClick={() => toggleChip(question.questionId, chip)}
+												>
+													{chip}
+												</button>
+											);
+										})}
+									</div>
+									<p className="text-[13px] opacity-75 mt-2 mb-3">
+										נבחרו {answerOf(question.questionId).chips.length} מתוך {MAX_CHIPS}. לחיצה נוספת
+										מסירה בחירה.
+									</p>
+								</>
+							) : null}
+
+							<p className="text-[13px] opacity-75 m-0 mb-2">
+								ובמילים שלכם — מה שאף כפתור לא אומר{question.chips.length > 0 ? ' (לא חובה)' : ''}:
+							</p>
 							<textarea
 								rows={3}
 								value={answerOf(question.questionId).answer}
 								onChange={(event) => setAnswer(question.questionId, { answer: event.target.value })}
 								placeholder="כתבו במילים שלכם…"
 							/>
-							{question.chips.length > 0 ? (
-								<div className="flex flex-wrap gap-2 mt-3" aria-label="כפתורי השראה">
-									{question.chips.map((chip) => (
-										<button
-											key={chip}
-											type="button"
-											className={`chip ${answerOf(question.questionId).chips.includes(chip) ? 'active' : ''}`}
-											onClick={() => toggleChip(question.questionId, chip)}
-										>
-											{chip}
-										</button>
-									))}
-								</div>
-							) : null}
 						</section>
 					))}
 

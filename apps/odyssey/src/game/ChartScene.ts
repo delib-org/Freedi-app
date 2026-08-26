@@ -8,6 +8,16 @@ import { SeaScene } from './SeaScene';
 interface IslandNode {
 	island: StageIsland;
 	container: Phaser.GameObjects.Container;
+	/**
+	 * Name + subtitle, deliberately NOT a child of `container`.
+	 *
+	 * As a child it inherited the perspective scale and haze, which shrank and
+	 * faded the far islands' names past reading — and worse, read as judgement:
+	 * a player took the dimmed ones for islands the game had decided were less
+	 * relevant to her. As its own object at a depth above every island it stays
+	 * one size, fully lit, and never disappears behind a nearer island's art.
+	 */
+	label: Phaser.GameObjects.Container;
 	rim: Phaser.GameObjects.Image;
 	anchor: Phaser.GameObjects.Text;
 	lantern: Phaser.GameObjects.Image | null;
@@ -106,7 +116,10 @@ export class ChartScene extends SeaScene {
 	}
 
 	private buildIslands(): void {
-		for (const node of this.nodes) node.container.destroy();
+		for (const node of this.nodes) {
+			node.container.destroy();
+			node.label.destroy();
+		}
 		this.nodes = [];
 
 		stageState.islands.forEach((island, index) => {
@@ -139,29 +152,58 @@ export class ChartScene extends SeaScene {
 			}
 
 			const anchor = this.glyph(0, -24, '⚓', 22).setAlpha(0);
-			const label = this.add
-				.text(0, labelY, island.title, {
-					fontFamily: 'Arial',
-					fontSize: '13px',
-					color: '#fff4d3',
-					backgroundColor: 'rgba(6,26,48,0.88)',
-					padding: { x: 9, y: 3 },
-				})
-				.setOrigin(0.5);
+			const depth = islandDepth(island.posY);
 			const lantern = island.visited
 				? this.add.image(0, -8, 'glow').setScale(1.1).setAlpha(0.7)
 				: null;
 
-			children.push(anchor, label);
+			// Haze paints the island itself. Its name is set separately, below,
+			// and stays out of the weather.
+			const hazeAlpha = 1 - depth.haze * 0.8;
+			for (const child of children) {
+				(child as Phaser.GameObjects.Image).setAlpha?.(hazeAlpha);
+			}
+
+			children.push(anchor);
 			if (lantern) children.push(lantern);
 			// Atmospheric perspective: near islands large and crisp, far ones
 			// smaller, hazier, drawn behind (painter's order by y).
-			const depth = islandDepth(island.posY);
 			const container = this.add
 				.container(x, y, children)
 				.setScale(depth.scale)
-				.setAlpha(1 - depth.haze * 0.8)
 				.setDepth(40 + Math.round((y / this.H) * 20));
+
+			/*
+			 * The name is not scenery — it is the whole basis for choosing, and
+			 * 'האחריות' on its own says nothing about what is being asked. The
+			 * list view carried the subtitle all along; this is that same line,
+			 * put where the choice is actually made. See IslandNode.label for why
+			 * it is not a child of the island.
+			 */
+			const title = this.add
+				.text(0, 0, island.title, {
+					fontFamily: 'Arial',
+					fontSize: '13px',
+					color: '#fff4d3',
+					backgroundColor: 'rgba(6,26,48,0.92)',
+					padding: { x: 9, y: 3 },
+					fontStyle: 'bold',
+				})
+				.setOrigin(0.5, 0);
+			const subtitle = this.add
+				.text(0, title.height + 2, island.issue, {
+					fontFamily: 'Arial',
+					fontSize: '11px',
+					color: '#cfe6f5',
+					backgroundColor: 'rgba(6,26,48,0.92)',
+					padding: { x: 7, y: 2 },
+					align: 'center',
+					wordWrap: { width: 168 },
+				})
+				.setOrigin(0.5, 0);
+			const label = this.add
+				.container(x, y + labelY * depth.scale, [title, subtitle])
+				.setDepth(120);
 			if (art) {
 				this.addIsletLife(container, art.displayWidth, art.displayHeight);
 				if (!this.reducedMotion) {
@@ -194,7 +236,7 @@ export class ChartScene extends SeaScene {
 				});
 			}
 
-			this.nodes.push({ island, container, rim, anchor, lantern, hasArt: !!art });
+			this.nodes.push({ island, container, label, rim, anchor, lantern, hasArt: !!art });
 		});
 		this.syncSelection(false);
 
