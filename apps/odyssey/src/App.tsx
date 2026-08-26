@@ -11,6 +11,7 @@ import Summary from './pages/Summary';
 import Admin from './pages/Admin';
 import Privacy from './pages/Privacy';
 import Parties from './pages/Parties';
+import Elders from './pages/Elders';
 
 /** Routes that need a signed-in user (everything except the intro). */
 function Protected({ children }: { children: ReactElement }) {
@@ -46,6 +47,14 @@ export default function App() {
 						element={
 							<Protected>
 								<Compass />
+							</Protected>
+						}
+					/>
+					<Route
+						path="/elders"
+						element={
+							<Protected>
+								<Elders />
 							</Protected>
 						}
 					/>

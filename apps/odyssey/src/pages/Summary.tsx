@@ -13,7 +13,7 @@ import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
 import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
-import { activeElders, elderStageId } from '../lib/elders';
+import { invitedElders, elderStageId } from '../lib/elders';
 import DigestSettings from '../components/DigestSettings';
 
 /**
@@ -57,7 +57,10 @@ export default function Summary() {
 		[content],
 	);
 
-	const elders = useMemo(() => activeElders(content?.game), [content]);
+	const elders = useMemo(
+		() => invitedElders(content?.game, journey?.selectedElderIds),
+		[content, journey?.selectedElderIds],
+	);
 
 	const partyDistances = useMemo(
 		() =>
@@ -384,9 +387,18 @@ export default function Summary() {
 								? `חקרתם ${visitedIslands.length} איים. עוד ${unvisitedCount} ממתינים לכם על המפה, ואפשר לחזור אליהם בכל רגע — מפת ההפלגה תתעדכן.`
 								: 'עברתם בכל האיים. אפשר לחזור למפה בכל רגע ולשנות עמדה על אי שכבר חקרתם.'}
 						</p>
-						<Link className="btn" to="/map">
-							🗺️ חזרה למפה
-						</Link>
+						<div className="flex flex-wrap justify-center gap-3">
+							<Link className="btn" to="/map">
+								🗺️ חזרה למפה
+							</Link>
+							{elders.length > 0 || (content.game.elders ?? []).length > 0 ? (
+								// The choosing screen promises "אפשר לשנות בכל שלב", so there has
+								// to be a way back to it.
+								<Link className="btn-outline" to="/elders">
+									📜 מי מפליג איתך
+								</Link>
+							) : null}
+						</div>
 					</section>
 
 					<section className="panel fade-in">

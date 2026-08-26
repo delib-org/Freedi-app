@@ -49,6 +49,15 @@ export const OdysseyJourneySchema = object({
 	valueRankings: record(string(), number()),
 	/** island statementIds the player chose on the map */
 	selectedIslandIds: array(string()),
+	/**
+	 * elderIds the player invited to sail with them.
+	 *
+	 * Absent means the player has not been asked yet — journeys begun before
+	 * the choosing screen existed, for whom every enabled elder sails, which is
+	 * how it worked then. An EMPTY array is a different thing and must not be
+	 * confused with it: that is a player who was asked and said no one.
+	 */
+	selectedElderIds: optional(array(string())),
 	/** island statementId → free-text depth answer */
 	depthAnswers: record(string(), string()),
 	logEntries: array(OdysseyLogEntrySchema),

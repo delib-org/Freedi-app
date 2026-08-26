@@ -139,7 +139,10 @@ export default function Compass() {
 				compassAnswers: answers,
 				valueRankings: Object.fromEntries(ranked.map((valueId, index) => [valueId, index + 1])),
 			});
-			navigate('/map');
+			// The Elders are asked for between calibrating the compass and
+			// choosing islands: after the player knows what the game is about,
+			// before anyone starts talking to them on the water.
+			navigate('/elders');
 		} finally {
 			setSaving(false);
 		}

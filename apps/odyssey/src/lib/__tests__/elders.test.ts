@@ -3,6 +3,7 @@ import type { OdysseyElder, OdysseyGame } from '@freedi/shared-types';
 import { opinionDistanceEngine, elderAttitudes } from '../distance';
 import {
 	activeElders,
+	invitedElders,
 	elderIdFromStageId,
 	elderStageId,
 	pickElderReaction,
@@ -127,5 +128,47 @@ describe('pickIslandRemark', () => {
 
 	it('returns null when nothing was marked', () => {
 		expect(pickIslandRemark([elder()], islands[0], {})).toBeNull();
+	});
+});
+
+describe('invitedElders', () => {
+	const game = {
+		elders: [
+			{ elderId: 'bg', enabled: true, sortOrder: 1 },
+			{ elderId: 'begin', enabled: true, sortOrder: 2 },
+			{ elderId: 'golda', enabled: true, sortOrder: 3 },
+		],
+	} as unknown as OdysseyGame;
+
+	it('sails everyone when the player was never asked', () => {
+		// Journeys begun before the choosing screen existed. `undefined` has to
+		// keep behaving exactly as it did, or a returning player suddenly loses
+		// the company they already had.
+		expect(invitedElders(game, undefined).map((elder) => elder.elderId)).toEqual([
+			'bg',
+			'begin',
+			'golda',
+		]);
+	});
+
+	it('sails no one when the player was asked and chose no one', () => {
+		// The distinction that matters: [] is an answer, not a missing answer.
+		expect(invitedElders(game, [])).toEqual([]);
+	});
+
+	it('sails only the invited', () => {
+		expect(invitedElders(game, ['begin']).map((elder) => elder.elderId)).toEqual(['begin']);
+	});
+
+	it('ignores an invitation to an elder who is switched off', () => {
+		const withDisabled = {
+			elders: [{ elderId: 'bg', enabled: false, sortOrder: 1 }],
+		} as unknown as OdysseyGame;
+		expect(invitedElders(withDisabled, ['bg'])).toEqual([]);
+	});
+
+	it('sails no one when the organizer switched the elders off entirely', () => {
+		const noElders = { ...game, script: { eldersEnabled: false } } as unknown as OdysseyGame;
+		expect(invitedElders(noElders, ['bg'])).toEqual([]);
 	});
 });

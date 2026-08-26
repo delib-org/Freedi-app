@@ -9,7 +9,7 @@ import { distanceEngine } from '../lib/distance';
 import { valueToAttitude } from '../lib/evaluations';
 import { islandArtUrl } from '../lib/islandArt';
 import { stageBus, type SeaDistances } from '../lib/stageBus';
-import { activeElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
+import { invitedElders, elderStageId, pickIslandRemark, type ElderRemark } from '../lib/elders';
 import NearbyShips, { type ShipProximity } from '../components/NearbyShips';
 import ShipCard from '../components/ShipCard';
 import ElderRemarkCard from '../components/ElderRemarkCard';
@@ -69,7 +69,10 @@ export default function Voyage() {
 		[content],
 	);
 
-	const elders = useMemo(() => activeElders(content?.game), [content]);
+	const elders = useMemo(
+		() => invitedElders(content?.game, journey?.selectedElderIds),
+		[content, journey?.selectedElderIds],
+	);
 
 	const distances: SeaDistances = useMemo(() => {
 		if (!content) return {};
@@ -213,21 +216,21 @@ export default function Voyage() {
 		setRemark(null);
 	}
 
-	const shipProximity: ShipProximity[] = [
-		...parties.map((party) => ({
-			partyId: party.partyId,
-			name: party.name,
-			color: party.color,
-			distance: distances[party.partyId] ?? null,
-		})),
-		...elders.map((elder) => ({
-			partyId: elderStageId(elder.elderId),
-			name: `📜 ${elder.name}`,
-			color: elder.color,
-			distance: distances[elderStageId(elder.elderId)] ?? null,
-		})),
-	];
-	const askedShip = shipProximity.find((ship) => ship.partyId === asked) ?? null;
+	// Two lists, never one. See NearbyShips' `caption`.
+	const shipProximity: ShipProximity[] = parties.map((party) => ({
+		partyId: party.partyId,
+		name: party.name,
+		color: party.color,
+		distance: distances[party.partyId] ?? null,
+	}));
+	const elderProximity: ShipProximity[] = elders.map((elder) => ({
+		partyId: elderStageId(elder.elderId),
+		name: `📜 ${elder.name}`,
+		color: elder.color,
+		distance: distances[elderStageId(elder.elderId)] ?? null,
+	}));
+	const askedShip =
+		[...shipProximity, ...elderProximity].find((ship) => ship.partyId === asked) ?? null;
 
 	return (
 		<>
@@ -365,6 +368,16 @@ export default function Voyage() {
 												</button>
 											</div>
 											<NearbyShips ships={shipProximity} compact onSelect={setAsked} />
+											{elderProximity.length > 0 ? (
+												<div className="border-t border-[rgba(232,185,88,0.25)] pt-2">
+													<NearbyShips
+														ships={elderProximity}
+														compact
+														onSelect={setAsked}
+														caption="📜 הזקנים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+													/>
+												</div>
+											) : null}
 											<p className="m-0 text-[12px] opacity-60 text-center">
 												עגינה זמנית — לא פסק דין ולא הוראת הצבעה.
 											</p>
@@ -392,6 +405,15 @@ export default function Voyage() {
 										הקישו על ספינה כדי לראות כמה היא קרובה למסלול שלכם.
 									</p>
 									<NearbyShips ships={shipProximity} onSelect={setAsked} />
+									{elderProximity.length > 0 ? (
+										<div className="border-t border-[rgba(232,185,88,0.25)] pt-3">
+											<NearbyShips
+												ships={elderProximity}
+												onSelect={setAsked}
+												caption="📜 הזקנים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+											/>
+										</div>
+									) : null}
 									{askedShip ? (
 										<ShipCard
 											ship={askedShip}

@@ -22,6 +22,14 @@ interface Props {
 	 * reader — there was no tappable ship anywhere on the page.
 	 */
 	onSelect?: (partyId: string) => void;
+	/**
+	 * Heading for this list. Elders are rendered as their OWN list under their
+	 * own heading rather than sorted in among the parties: a reviewer found
+	 * Golda Meir riding in the same row as the parties on a screen whose whole
+	 * job is telling you which party sails near you, and read it as a claim
+	 * that she was running.
+	 */
+	caption?: string;
 }
 
 const BAND_TITLE: Record<ProximityBandKey, string> = {
@@ -43,7 +51,7 @@ const BAND_TITLE: Record<ProximityBandKey, string> = {
  * would be a lie about what the reader is looking for. The captions stay
  * proximity language ("עגינה זמנית") — never a recommendation.
  */
-export default function NearbyShips({ ships, compact = false, onSelect }: Props) {
+export default function NearbyShips({ ships, compact = false, onSelect, caption }: Props) {
 	const known = ships
 		.filter((ship) => ship.distance !== null)
 		.sort((a, b) => (a.distance ?? 1) - (b.distance ?? 1));
@@ -61,6 +69,7 @@ export default function NearbyShips({ ships, compact = false, onSelect }: Props)
 
 	return (
 		<div className={`flex flex-col ${compact ? 'gap-1.5' : 'gap-3'}`}>
+			{caption ? <p className="text-[13px] opacity-70 m-0 text-center">{caption}</p> : null}
 			{groups.map((group) => (
 				<div key={group.band} className="flex flex-wrap items-center justify-center gap-2">
 					<span className="text-[13px] opacity-70 shrink-0">{BAND_TITLE[group.band]}:</span>

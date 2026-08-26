@@ -32,6 +32,29 @@ export function activeElders(game: OdysseyGame | null | undefined): OdysseyElder
 	return game.elders.filter((elder) => elder.enabled).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+/**
+ * The elders THIS player invited.
+ *
+ * Every enabled elder used to sail with everyone, unasked, and the first
+ * reviewer to meet them could not tell what they were: a Ben-Gurion quote
+ * appeared above island after island, and Golda's ship rode among the party
+ * ships as though she were running. Being chosen is what makes them legible —
+ * a player who picked Begin knows why Begin is talking to her.
+ *
+ * `undefined` is not `[]`. A journey begun before the choosing screen existed
+ * has no selection and keeps every elder, exactly as it did; a player who was
+ * asked and chose no one gets an empty sea, and must.
+ */
+export function invitedElders(
+	game: OdysseyGame | null | undefined,
+	selectedElderIds: string[] | undefined,
+): OdysseyElder[] {
+	const elders = activeElders(game);
+	if (selectedElderIds === undefined) return elders;
+
+	return elders.filter((elder) => selectedElderIds.includes(elder.elderId));
+}
+
 export interface ElderRemark {
 	elder: OdysseyElder;
 	line: string;
