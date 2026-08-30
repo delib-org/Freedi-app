@@ -24,14 +24,19 @@ import { ChallengeDiagnosisSchema } from './ChallengeDiagnosis';
  * app only reads them (`studioPlanSessions/{sessionId}`).
  */
 
-export const StudioActivityTypeSchema = picklist(['crowdSurvey', 'liveSession', 'discussion']);
+export const StudioActivityTypeSchema = picklist([
+	'crowdSurvey',
+	'liveSession',
+	'discussion',
+	'document',
+]);
 export type StudioActivityType = InferOutput<typeof StudioActivityTypeSchema>;
 
 /** How an activity in the plan relates to what already exists (existing-question mode). */
 export const StudioPlanChangeSchema = picklist(['add', 'keep', 'update']);
 export type StudioPlanChange = InferOutput<typeof StudioPlanChangeSchema>;
 
-export const StudioScheduledActionKindSchema = picklist(['open', 'freeze', 'close', 'nudge']);
+export const StudioScheduledActionKindSchema = picklist(['open', 'freeze', 'close', 'nudge', 'draft']);
 export type StudioScheduledActionKind = InferOutput<typeof StudioScheduledActionKindSchema>;
 
 export const StudioPlanExtraQuestionSchema = object({
@@ -55,6 +60,17 @@ export const StudioPlanSurveyConfigSchema = object({
 });
 export type StudioPlanSurveyConfig = InferOutput<typeof StudioPlanSurveyConfigSchema>;
 
+/** How the Draft tool picks the suggestions it writes from (admin's choice). */
+export const StudioDraftCutoffSchema = object({
+	/** chosen = the question's top answers (`isChosen`); topN = best N by consensus; threshold = above minConsensus. */
+	mode: picklist(['chosen', 'topN', 'threshold']),
+	n: optional(number()),
+	minConsensus: optional(number()),
+	minEvaluators: optional(number()),
+});
+export type StudioDraftCutoff = InferOutput<typeof StudioDraftCutoffSchema>;
+export const DEFAULT_DRAFT_CUTOFF: StudioDraftCutoff = { mode: 'topN', n: 20, minEvaluators: 3 };
+
 export const StudioPlanActivitySchema = object({
 	tempId: string(),
 	type: StudioActivityTypeSchema,
@@ -66,8 +82,19 @@ export const StudioPlanActivitySchema = object({
 	/** true → created `live`; false → created `frozen` until a scheduled/manual open. */
 	openNow: boolean(),
 	/** The role this activity plays in the sequence (from the playbook). */
-	role: optional(picklist(['widen', 'measure', 'converge', 'deepen', 'decide', 'ratify'])),
+	role: optional(
+		picklist(['widen', 'measure', 'converge', 'deepen', 'decide', 'ratify', 'comment', 'write']),
+	),
 	survey: optional(StudioPlanSurveyConfigSchema),
+	/**
+	 * `document` only: the activities (tempIds, or existing statementIds) whose
+	 * results the Draft tool writes this document from. The build schedules a
+	 * `draft` action for when the last source closes.
+	 */
+	draftFrom: optional(array(string())),
+	draftCutoff: optional(StudioDraftCutoffSchema),
+	/** `document` only: what the draft should be — the admin's intent for the text. */
+	draftIntent: optional(string()),
 	/** Existing-question mode: the child statement this row refers to. */
 	existingStatementId: optional(string()),
 	change: StudioPlanChangeSchema,
@@ -86,6 +113,8 @@ export const StudioPlanScheduledActionSchema = object({
 	atLocal: optional(string()),
 	/** `nudge` only. */
 	nudgeMessage: optional(string()),
+	/** `draft` only: source activities (tempIds or statementIds); defaults to the target's `draftFrom`. */
+	draftFrom: optional(array(string())),
 });
 export type StudioPlanScheduledAction = InferOutput<typeof StudioPlanScheduledActionSchema>;
 

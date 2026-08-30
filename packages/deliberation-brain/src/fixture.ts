@@ -1,12 +1,12 @@
-import type {
+import {
 	ChallengeDiagnosis,
+	DEFAULT_DRAFT_CUTOFF,
 	StudioPlan,
 	StudioPlanActivity,
-	StudioPlanScheduledAction,
 } from '@freedi/shared-types';
 import { mergeDiagnosis } from './diagnosis';
-import { instantiatePattern } from './instantiate';
-import { DEFAULT_PATTERN_ID, getPattern, widenConvergeDecide } from './patterns';
+import { finalizeActions, instantiateActivity, instantiatePattern, scheduleDraftedDocument } from './instantiate';
+import { DEFAULT_PATTERN_ID, getPattern, questionFirstAgreement } from './patterns';
 import type { BrainContext } from './types';
 
 export interface FixtureResult {
@@ -17,13 +17,16 @@ export interface FixtureResult {
 	plan: StudioPlan;
 }
 
+/** Nothing written yet, under three weeks → survey, one drafted document, decision. */
 const FIXTURE_DIAGNOSIS: ChallengeDiagnosis = {
+	hasDraft: 'nothing',
 	decisionType: 'gatherIdeas',
 	audienceSize: 'community',
 	polarization: 'low',
-	facilitationCapacity: 'canRunRoom',
-	desiredOutput: 'decision',
-	timeHorizonDays: 25,
+	facilitationCapacity: 'none',
+	decisionBody: 'voteInMain',
+	desiredOutput: 'agreedText',
+	timeHorizonDays: 20,
 	confidence: { decisionType: 0.6, audienceSize: 0.6 },
 };
 
@@ -38,15 +41,16 @@ function replyFor(ctx: BrainContext, userMessage: string, first: boolean): strin
 	const quoted = snippet(userMessage);
 	if (first) {
 		return hebrew
-			? `הבנתי: "${quoted}". הצעה ראשונית: סקר המונים לאיסוף רעיונות, מפגש חי כדי להתכנס, ודיון קצר להחלטה. כדי לדייק — כמה אנשים אתם רוצים לשתף, ומי מקבל את ההחלטה בסוף?`
-			: `Got it: "${quoted}". A first sketch: a crowd survey to gather ideas, a live session to converge, and a short discussion to decide. To sharpen it — how many people do you want to involve, and who makes the final call?`;
+			? `הבנתי: "${quoted}". הצעה ראשונית: סקר המונים לאיסוף ההצעות, טיוטה שנכתבת מההצעות המובילות ונפתחת להערות הציבור אחרי שתאשרו אותה, והצבעה להחלטה. כדי לדייק — האם כבר יש משהו כתוב, ומי מקבל את ההחלטה בסוף?`
+			: `Got it: "${quoted}". A first sketch: a crowd survey to gather suggestions, a draft written from the top suggestions and opened for public comment once you approve it, and a vote to decide. To sharpen it — is there something written already, and who makes the final call?`;
 	}
 
 	return hebrew
-		? 'עדכנתי את התוכנית לפי מה שכתבת: סקר המונים של שבועיים, מפגש חי ביום ה-16 ודיון להחלטה אחריו. שאבנה את זה?'
-		: 'I updated the plan from what you wrote: a two-week crowd survey, a live session on day 16 and a decision discussion after it. Shall I build this?';
+		? 'עדכנתי את התוכנית לפי מה שכתבת: סקר המונים של שבועיים, טיוטה שנכתבת שעה אחרי סגירתו ונפתחת להערות יומיים אחרי הבדיקה שלך, והצבעה להחלטה אחריה. שאבנה את זה?'
+		: 'I updated the plan from what you wrote: a two-week crowd survey, a draft written an hour after it closes and opened for comment two days later once you have reviewed it, and a vote to decide after that. Shall I build this?';
 }
 
+/** Keeps every existing row and adds one document drafted from the first existing activity. */
 function existingModePlan(base: StudioPlan, ctx: BrainContext): StudioPlan {
 	const rows = ctx.existingActivities ?? [];
 	const kept: StudioPlanActivity[] = rows.map((row, index) => ({
@@ -59,16 +63,22 @@ function existingModePlan(base: StudioPlan, ctx: BrainContext): StudioPlan {
 		change: 'keep',
 		existingStatementId: row.statementId,
 	}));
-	const added = base.activities.find((activity) => activity.type === 'crowdSurvey') ?? base.activities[0];
-	const addedActivity: StudioPlanActivity = { ...added, tempId: 'a1', order: kept.length, change: 'add' };
-	const scheduledActions: StudioPlanScheduledAction[] = base.scheduledActions
-		.filter((action) => action.activityTempId === added.tempId)
-		.map((action, index) => ({ ...action, tempId: `s${index + 1}`, activityTempId: 'a1' }));
+	const template = questionFirstAgreement.sequence[1];
+	const document = instantiateActivity(template, 'a1', kept.length, ctx);
+	const sources = rows.slice(0, 1).map((row) => row.statementId);
+	if (sources.length > 0) {
+		document.draftFrom = sources;
+		document.draftCutoff = { ...DEFAULT_DRAFT_CUTOFF };
+		document.openNow = false;
+	} else {
+		document.openNow = true;
+	}
+	const placed = sources.length > 0 ? scheduleDraftedDocument('a1', sources, [], template.timing, ctx) : undefined;
 
 	return {
 		mainQuestion: base.mainQuestion,
-		activities: [...kept, addedActivity],
-		scheduledActions,
+		activities: [...kept, document],
+		scheduledActions: placed ? finalizeActions(placed.actions, ctx.timezone) : [],
 		summary: base.summary,
 	};
 }
@@ -79,7 +89,7 @@ function existingModePlan(base: StudioPlan, ctx: BrainContext): StudioPlan {
  * the same plan, readyToBuild true.
  */
 export function buildFixtureResponse(ctx: BrainContext, userMessage: string): FixtureResult {
-	const pattern = (ctx.patternId ? getPattern(ctx.patternId) : undefined) ?? widenConvergeDecide;
+	const pattern = (ctx.patternId ? getPattern(ctx.patternId) : undefined) ?? questionFirstAgreement;
 	const diagnosis = mergeDiagnosis(FIXTURE_DIAGNOSIS, ctx.diagnosis);
 	const first = ctx.userTurns === 0;
 	const basePlan = instantiatePattern(pattern, { ...ctx, diagnosis });

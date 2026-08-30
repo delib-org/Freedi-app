@@ -1,0 +1,109 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Draft settings — sources (checkbox list), cutoff (radio + numbers), intent.
+// Used inside the document drawer and the scheduled-action editor.
+.draft-fields {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+
+	&__group {
+		margin: 0;
+		padding: 0;
+		border: none;
+		min-inline-size: 0;
+	}
+
+	&__legend {
+		margin: 0 0 var(--space-xs);
+		padding: 0;
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-meta);
+	}
+
+	&__empty {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__sources {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xs);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__source {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs);
+		min-block-size: 40px;
+		padding-inline: var(--space-xs);
+		border-radius: var(--radius-sm);
+
+		&:hover {
+			background: var(--bg-hover);
+		}
+	}
+
+	&__modes {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xs);
+	}
+
+	&__mode {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-block-size: 36px;
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+		cursor: pointer;
+	}
+
+	&__radio {
+		inline-size: 1.125rem;
+		block-size: 1.125rem;
+		margin: 0;
+		accent-color: var(--btn-primary);
+		cursor: pointer;
+	}
+
+	&__numbers {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+		gap: var(--space-xs);
+		margin-block-start: var(--space-xs);
+	}
+
+	&__number {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xs);
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+
+		.input__field {
+			inline-size: 100%;
+			min-block-size: 40px;
+			padding: var(--space-2xs) var(--space-xs);
+			font-size: var(--font-size-sm);
+			color: var(--text-body);
+			background: var(--card-default);
+			border: 1px solid var(--border-light);
+			border-radius: var(--radius-sm);
+		}
+	}
+
+	&--disabled {
+		opacity: 0.7;
+	}
+}

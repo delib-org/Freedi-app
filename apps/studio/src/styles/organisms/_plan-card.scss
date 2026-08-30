@@ -129,6 +129,19 @@
 		}
 	}
 
+	// Document activities: drafted-from sources, cutoff and intent.
+	&__document {
+		margin: 0;
+		padding: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+		list-style: none;
+
+		li {
+			@include line-clamp(2);
+		}
+	}
+
 	&__ask {
 		align-self: flex-start;
 		margin-block-start: var(--space-2xs);
@@ -158,6 +171,10 @@
 
 		&--nudge {
 			border-inline-start-color: var(--action-nudge);
+		}
+
+		&--draft {
+			border-inline-start-color: var(--action-draft);
 		}
 
 		&--changed {

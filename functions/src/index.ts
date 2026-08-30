@@ -246,6 +246,8 @@ import {
 	fn_studioPlanRate,
 	fn_studioScheduledActionUpsert,
 	fn_studioScheduledActionCancel,
+	fn_studioDraftFromResults,
+	fn_studioSetDocumentStatus,
 	studioScheduledActionSweep,
 	studioPlanOutcomeSnapshot,
 	mirrorQuestionStatusToSurvey,
@@ -967,6 +969,9 @@ exports.fn_studioPlanBuild = fn_studioPlanBuild;
 exports.fn_studioPlanRate = fn_studioPlanRate;
 exports.fn_studioScheduledActionUpsert = fn_studioScheduledActionUpsert;
 exports.fn_studioScheduledActionCancel = fn_studioScheduledActionCancel;
+// The Draft tool: a document written from the top suggestions of source activities
+exports.fn_studioDraftFromResults = fn_studioDraftFromResults;
+exports.fn_studioSetDocumentStatus = fn_studioSetDocumentStatus;
 // Keeps an MC survey's status in step with its question's run state
 // (manual Open/Freeze/Close from Studio, Join, or the scheduler).
 exports.mirrorQuestionStatusToSurvey = mirrorQuestionStatusToSurvey;

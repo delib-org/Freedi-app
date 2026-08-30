@@ -2,6 +2,7 @@ import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https
 import {
 	Collections,
 	ScheduledAction,
+	ScheduledDraft,
 	ScheduledNudge,
 	Statement,
 	StudioScheduledActionKind,
@@ -13,6 +14,8 @@ import { db } from '../../db';
 import type { NudgeAudience, NudgeChannel } from '../../fn_nudgeQuestionSubscribers';
 import { assertStatementAdmin } from '../../progress/assertStatementAdmin';
 import { getCallerIdentity } from '../orgInvites';
+import { isSignDocument } from './documentStatus';
+import { normalizeCutoff } from './fn_studioDraftFromResults';
 
 export interface ScheduledActionUpsertRequest {
 	scheduledActionId?: string;
@@ -20,13 +23,14 @@ export interface ScheduledActionUpsertRequest {
 	action: StudioScheduledActionKind;
 	runAt: number;
 	nudge?: { message: string; audience?: NudgeAudience; channels?: NudgeChannel[] };
+	draft?: { sourceStatementIds: string[]; cutoff?: ScheduledDraft['cutoff']; intent?: string };
 }
 
 export interface ScheduledActionUpsertResult {
 	scheduledActionId: string;
 }
 
-const ACTIONS: ReadonlySet<string> = new Set(['open', 'freeze', 'close', 'nudge']);
+const ACTIONS: ReadonlySet<string> = new Set(['open', 'freeze', 'close', 'nudge', 'draft']);
 const AUDIENCES: ReadonlySet<string> = new Set(['all', 'notSuggested', 'notEvaluated']);
 const CHANNELS: ReadonlySet<string> = new Set(['inApp', 'email']);
 /** Actions must be at least this far in the future. */
@@ -51,6 +55,20 @@ export function normalizeNudge(raw: ScheduledActionUpsertRequest['nudge']): Sche
 	}
 
 	return { message, audience, channels: [...new Set(channels)] };
+}
+
+export function normalizeDraft(raw: ScheduledActionUpsertRequest['draft']): ScheduledDraft {
+	const ids = Array.isArray(raw?.sourceStatementIds)
+		? [...new Set(raw.sourceStatementIds.filter((id) => typeof id === 'string' && id))]
+		: [];
+	if (ids.length === 0) {
+		throw new HttpsError('invalid-argument', 'A draft needs at least one source activity');
+	}
+	const draft: ScheduledDraft = { sourceStatementIds: ids, cutoff: normalizeCutoff(raw?.cutoff) };
+	const intent = typeof raw?.intent === 'string' ? raw.intent.trim() : '';
+	if (intent) draft.intent = intent.slice(0, 1000);
+
+	return draft;
 }
 
 /** The top question id and organization of a target question. */
@@ -81,7 +99,7 @@ export const fn_studioScheduledActionUpsert = onCall(
 		request: CallableRequest<ScheduledActionUpsertRequest>,
 	): Promise<ScheduledActionUpsertResult> => {
 		const caller = getCallerIdentity(request);
-		const { scheduledActionId, statementId, action, runAt, nudge } = request.data ?? {};
+		const { scheduledActionId, statementId, action, runAt, nudge, draft } = request.data ?? {};
 		if (!statementId || typeof statementId !== 'string') {
 			throw new HttpsError('invalid-argument', 'statementId is required');
 		}
@@ -93,12 +111,16 @@ export const fn_studioScheduledActionUpsert = onCall(
 			throw new HttpsError('invalid-argument', 'runAt must be in the future');
 		}
 		const nudgePayload = action === 'nudge' ? normalizeNudge(nudge) : undefined;
+		const draftPayload = action === 'draft' ? normalizeDraft(draft) : undefined;
 
 		const { statement } = await assertStatementAdmin(
 			caller.uid,
 			statementId,
 			'studio.scheduledAction.upsert',
 		);
+		if (draftPayload && !isSignDocument(statement)) {
+			throw new HttpsError('failed-precondition', 'A draft can only target a document');
+		}
 		const scope = await resolveActionScope(statement);
 
 		if (scheduledActionId) {
@@ -114,6 +136,7 @@ export const fn_studioScheduledActionUpsert = onCall(
 			}
 			const patch: Partial<ScheduledAction> = { action, runAt, lastUpdate: now };
 			if (nudgePayload) patch.nudge = nudgePayload;
+			if (draftPayload) patch.draft = draftPayload;
 			await ref.update(patch);
 
 			return { scheduledActionId };
@@ -134,6 +157,7 @@ export const fn_studioScheduledActionUpsert = onCall(
 			lastUpdate: now,
 		};
 		if (nudgePayload) doc.nudge = nudgePayload;
+		if (draftPayload) doc.draft = draftPayload;
 		await db.collection(Collections.scheduledActions).doc(id).set(doc);
 
 		return { scheduledActionId: id };

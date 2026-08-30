@@ -54,6 +54,10 @@
 			border-inline-start-color: var(--action-nudge);
 		}
 
+		&--draft {
+			border-inline-start-color: var(--action-draft);
+		}
+
 		&--past {
 			opacity: 0.8;
 		}

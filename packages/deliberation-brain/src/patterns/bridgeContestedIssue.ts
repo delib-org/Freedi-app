@@ -1,11 +1,15 @@
 import type { DeliberationPattern } from '../types';
 
-/** For contested or hostile issues: needs first, bridging proposals, then ratification. */
+/**
+ * For contested or hostile issues: needs first, a draft of bridging proposals,
+ * public comment, a room that converges on what both sides can live with,
+ * a revised draft, and ratification.
+ */
 export const bridgeContestedIssue: DeliberationPattern = {
 	patternId: 'bridgeContestedIssue',
 	name: 'Bridge a contested issue',
 	summary:
-		'Start from what each side needs rather than from positions, converge on proposals that both sides can live with in a facilitated session, then ratify.',
+		'Start from what each side needs rather than from positions, draft bridging proposals from the needs both sides rate highly, let everyone comment, converge in a facilitated session on proposals both sides can live with, revise, then ratify.',
 	applicability: [
 		{
 			field: 'polarization',
@@ -18,6 +22,12 @@ export const bridgeContestedIssue: DeliberationPattern = {
 			oneOf: ['bridgeConflict'],
 			weight: 4,
 			note: 'the goal is to bridge a conflict',
+		},
+		{
+			field: 'hasDraft',
+			oneOf: ['nothing'],
+			weight: 2,
+			note: 'nothing is written yet, so the needs are gathered first',
 		},
 		{
 			field: 'facilitationCapacity',
@@ -42,26 +52,50 @@ export const bridgeContestedIssue: DeliberationPattern = {
 			},
 		},
 		{
+			role: 'comment',
+			engine: 'document',
+			questionTemplate: 'Which of the bridging proposals on {{topic}} can you live with, and which cannot you?',
+			descriptionTemplate:
+				'These proposals were written from the needs both sides rated highly. Mark each paragraph and say what would make a proposal acceptable to you.',
+			openNow: false,
+			timing: { durationDays: 7, nudgeDaysBeforeClose: 2 },
+			draftFrom: [0],
+			draftIntentTemplate:
+				'Write bridging proposals on {{topic}} from the needs with high, low-variance agreement: each proposal names the needs it satisfies on both sides, and the gaps section lists the needs no proposal covers.',
+		},
+		{
 			role: 'converge',
 			engine: 'liveSession',
 			questionTemplate: 'Which proposals on {{topic}} meet the needs of both sides?',
 			descriptionTemplate:
-				'Facilitator note: open with the highest-scoring needs from both sides, invite proposals that satisfy several of them, and let people join the proposals they can live with.',
+				'Facilitator note: open with the proposals the comments split on, invite proposals that satisfy several needs, and let people join the proposals they can live with.',
 			openNow: false,
-			timing: { startAfterDays: 17 },
+			timing: { startAfterPrevious: 3 },
+		},
+		{
+			role: 'comment',
+			engine: 'document',
+			questionTemplate: 'Are there last corrections to the bridging agreement on {{topic}}?',
+			descriptionTemplate:
+				'The session\'s proposals were folded into this revised text. Read it in your own time and mark what you still cannot live with.',
+			openNow: false,
+			timing: { durationDays: 7, nudgeDaysBeforeClose: 2 },
+			draftFrom: [2],
+			draftIntentTemplate:
+				'Revise the bridging agreement on {{topic}} with the proposals the session converged on; keep the needs each proposal satisfies visible, and list what remains open.',
 		},
 		{
 			role: 'ratify',
 			engine: 'discussion',
-			questionTemplate: 'Do we adopt the bridging proposals on {{topic}} that came out of the session?',
+			questionTemplate: 'Do we adopt the bridging agreement on {{topic}}?',
 			descriptionTemplate:
-				'The deciding group ratifies the proposals that crossed the divide and records what remains open.',
+				'A vote in Main / the assembly: the deciding group ratifies the proposals that crossed the divide and records what remains open.',
 			openNow: false,
-			timing: { startAfterDays: 19, durationDays: 7 },
+			timing: { startAfterPrevious: 1, durationDays: 7 },
 		},
 	],
 	rationale:
-		'Asking for needs instead of positions gives both sides something to rate without capitulating. The consensus score is variance-penalized: a need cheered by one camp and rejected by the other scores low, while a need both camps rate moderately positive rises to the top — without ever sorting participants into factions. Those bridging needs are the raw material the live session turns into proposals, and ratification keeps the outcome from being read as a win for one side.',
+		'Asking for needs instead of positions gives both sides something to rate without capitulating. The consensus score is variance-penalized: a need cheered by one camp and rejected by the other scores low, while a need both camps rate moderately positive rises to the top — without ever sorting participants into factions. The Draft step turns those bridging needs into proposals the public can comment on, the room resolves the paragraphs that still split, and ratification keeps the outcome from being read as a win for one side.',
 	risks: [
 		'If the survey is framed around positions, the ranking will only mirror the split.',
 		'A facilitator who lets the session become a debate loses the convergence; the note in the description is there for that reason.',

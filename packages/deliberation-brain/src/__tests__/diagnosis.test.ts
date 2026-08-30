@@ -37,6 +37,13 @@ describe('sanitizeDiagnosis', () => {
 		).toEqual({ decisionType: 'allocate', existingOptions: ['a', 'b'], confidence: { decisionType: 1 } });
 	});
 
+	it('keeps the entry-rule fields and trims segments', () => {
+		expect(
+			sanitizeDiagnosis({ hasDraft: 'material', decisionBody: 'assembly', audienceSegments: [' members ', 'youth', 3] }),
+		).toEqual({ hasDraft: 'material', decisionBody: 'assembly', audienceSegments: ['members', 'youth'] });
+		expect(sanitizeDiagnosis({ hasDraft: 'maybe', decisionBody: 'king' })).toBeUndefined();
+	});
+
 	it('returns undefined for nothing usable', () => {
 		expect(sanitizeDiagnosis(null)).toBeUndefined();
 		expect(sanitizeDiagnosis({ nope: 1 })).toBeUndefined();
@@ -47,6 +54,8 @@ describe('missingCriticalFields', () => {
 	it('treats hardDeadline as answering the time question', () => {
 		const missing = missingCriticalFields({ hardDeadline: '2030-01-01' });
 		expect(missing).not.toContain('timeHorizonDays');
-		expect(missing[0]).toBe('decisionType');
+		expect(missing[0]).toBe('hasDraft');
+		expect(missing[1]).toBe('decisionType');
+		expect(missing).toContain('decisionBody');
 	});
 });

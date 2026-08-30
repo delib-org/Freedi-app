@@ -15,7 +15,16 @@ import {
 	string,
 } from 'valibot';
 
-export const ACTIVITY_ROLES = ['widen', 'measure', 'converge', 'deepen', 'decide', 'ratify'] as const;
+export const ACTIVITY_ROLES = [
+	'widen',
+	'measure',
+	'converge',
+	'deepen',
+	'decide',
+	'ratify',
+	'comment',
+	'write',
+] as const;
 
 /**
  * The JSON contract the LLM is asked to emit. Loose on purpose: unknown keys
@@ -37,6 +46,14 @@ export const LlmSurveySchema = looseObject({
 	extraQuestions: nullish(array(LlmExtraQuestionSchema)),
 });
 
+/** How the Draft step picks its sources; `normalizePlan` fills the default. */
+export const LlmDraftCutoffSchema = looseObject({
+	mode: picklist(['chosen', 'topN', 'threshold']),
+	n: nullish(number()),
+	minConsensus: nullish(number()),
+	minEvaluators: nullish(number()),
+});
+
 export const LlmActivitySchema = looseObject({
 	tempId: nullish(string()),
 	type: StudioActivityTypeSchema,
@@ -47,6 +64,10 @@ export const LlmActivitySchema = looseObject({
 	existingStatementId: nullish(string()),
 	role: nullish(picklist(ACTIVITY_ROLES)),
 	survey: nullish(LlmSurveySchema),
+	/** `document` only: tempIds or existing statementIds of the source activities. */
+	draftFrom: nullish(array(string())),
+	draftCutoff: nullish(LlmDraftCutoffSchema),
+	draftIntent: nullish(string()),
 });
 
 export const LlmScheduledActionSchema = looseObject({
@@ -57,6 +78,8 @@ export const LlmScheduledActionSchema = looseObject({
 	/** ISO-8601 with offset. */
 	at: string(),
 	nudgeMessage: nullish(string()),
+	/** `draft` only; defaults to the target document's `draftFrom`. */
+	draftFrom: nullish(array(string())),
 });
 
 export const LlmPlanSchema = looseObject({

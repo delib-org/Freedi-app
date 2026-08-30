@@ -249,6 +249,73 @@ describe('fn_studioPlanBuild — new question', () => {
 	});
 });
 
+describe('fn_studioPlanBuild — document + draft', () => {
+	beforeEach(() => {
+		db.reset();
+		seedOrg();
+		seedSession({
+			currentPlan: {
+				mainQuestion: { title: 'How do we live with the dogs?' },
+				activities: [
+					{
+						tempId: 'a1',
+						type: 'crowdSurvey',
+						title: 'How do we live in peace with the dogs?',
+						order: 0,
+						openNow: true,
+						change: 'add',
+					},
+					{
+						tempId: 'd1',
+						type: 'document',
+						title: 'Living with dogs — the agreement',
+						order: 1,
+						openNow: false,
+						change: 'add',
+						draftFrom: ['a1'],
+						draftCutoff: { mode: 'chosen' },
+						draftIntent: 'A short policy',
+					},
+				],
+				scheduledActions: [
+					{ tempId: 's1', activityTempId: 'a1', action: 'close', at: NOW + 10 * DAY },
+					{ tempId: 's2', activityTempId: 'd1', action: 'draft', at: NOW + 10 * DAY + 3_600_000 },
+					{ tempId: 's3', activityTempId: 'd1', action: 'open', at: NOW + 12 * DAY },
+				],
+				summary: 'Question first.',
+			},
+		});
+	});
+
+	it('creates a hidden Sign document and a draft action pointing at the survey', async () => {
+		const result = await build(makeRequest({ sessionId: SESSION }, alice));
+		const doc = db.read(Collections.statements, result.activityIds.d1) as Record<string, unknown>;
+		expect(doc.statementType).toBe('document');
+		expect(doc.isDocument).toBe(true);
+		expect(doc.sourceApp).toBe('sign');
+		expect(doc.order).toBe(1);
+		expect(doc.signSettings).toEqual({
+			isHidden: true,
+			isPublic: true,
+			isFrozen: false,
+			enableSuggestions: false,
+		});
+		const draftAction = db.read(Collections.scheduledActions, `${SESSION}--s2`) as Record<
+			string,
+			unknown
+		>;
+		expect(draftAction.action).toBe('draft');
+		expect(draftAction.statementId).toBe(result.activityIds.d1);
+		expect(draftAction.draft).toEqual({
+			sourceStatementIds: [result.activityIds.a1],
+			cutoff: { mode: 'chosen' },
+			language: 'he',
+			intent: 'A short policy',
+		});
+		expect(db.read(Collections.scheduledActions, `${SESSION}--s3`)?.action).toBe('open');
+	});
+});
+
 describe('fn_studioPlanBuild — existing question', () => {
 	const TOP = 'top-existing';
 	const EXISTING = 'child-existing';

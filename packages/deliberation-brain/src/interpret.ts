@@ -14,6 +14,7 @@ import {
 import { BaseIssue, InferOutput, getDotPath, safeParse } from 'valibot';
 import { critiquePlan } from './critic';
 import { mergeDiagnosis, sanitizeDiagnosis } from './diagnosis';
+import { applyDraftRules, normalizeCutoff, resolveSources } from './normalizeDraft';
 import { getPattern } from './patterns';
 import { LlmActivitySchema, LlmPlanResponseSchema, LlmPlanSchema, LlmSurveySchema } from './schema';
 
@@ -21,6 +22,8 @@ export interface InterpretOptions {
 	mode: 'new' | 'existing';
 	existingIds: readonly string[];
 	now: number;
+	/** IANA timezone for synthesized actions' `atLocal` (default UTC). */
+	timezone?: string;
 	previousPlan?: StudioPlan;
 	previousDiagnosis?: ChallengeDiagnosis;
 }
@@ -149,6 +152,15 @@ function normalizeActivity(
 	if (raw.role) activity.role = raw.role;
 	if (existingStatementId) activity.existingStatementId = existingStatementId;
 	if (raw.type === 'crowdSurvey' && raw.survey) activity.survey = normalizeSurvey(raw.survey, tempId);
+	if (raw.type === 'document') {
+		// Sources are resolved once every tempId is known (second pass).
+		if (raw.draftFrom) activity.draftFrom = raw.draftFrom;
+		if (raw.draftCutoff) activity.draftCutoff = normalizeCutoff(raw.draftCutoff);
+		const intent = cleanText(raw.draftIntent);
+		if (intent) activity.draftIntent = intent;
+	} else if (raw.draftFrom || raw.draftCutoff || raw.draftIntent) {
+		problems.push(`Activity ${tempId} is a ${raw.type}; only a document can be drafted from other activities. Its draft fields were dropped.`);
+	}
 
 	return activity;
 }
@@ -177,6 +189,17 @@ export function normalizePlan(
 	const activities = input.activities
 		.slice(0, STUDIO_PLAN_MAX_ACTIVITIES)
 		.map((activity, index) => normalizeActivity(activity, index, usedActivityIds, opts, problems));
+	for (const activity of activities) {
+		if (activity.draftFrom === undefined) continue;
+		activity.draftFrom = resolveSources(
+			activity.draftFrom,
+			activity.tempId,
+			activities,
+			opts.existingIds,
+			problems,
+			`Activity ${activity.tempId}`,
+		);
+	}
 
 	const rawActions = input.scheduledActions ?? [];
 	if (rawActions.length > STUDIO_PLAN_MAX_SCHEDULED_ACTIONS) {
@@ -219,8 +242,16 @@ export function normalizePlan(
 			const message = cleanText(rawAction.nudgeMessage);
 			if (message) action.nudgeMessage = message.slice(0, STUDIO_NUDGE_MESSAGE_MAX);
 		}
+		if (rawAction.action === 'draft' && rawAction.draftFrom) action.draftFrom = rawAction.draftFrom;
 		scheduledActions.push(action);
 	});
+
+	const finalActions = applyDraftRules(
+		activities,
+		scheduledActions,
+		{ existingIds: opts.existingIds, now: opts.now, timezone: opts.timezone ?? 'UTC', usedActionIds },
+		problems,
+	);
 
 	const mainDescription = cleanText(input.mainQuestion.description);
 	const candidate: StudioPlan = {
@@ -229,7 +260,7 @@ export function normalizePlan(
 			...(mainDescription ? { description: mainDescription } : {}),
 		},
 		activities,
-		scheduledActions,
+		scheduledActions: finalActions,
 		summary: cleanText(input.summary) ?? '',
 	};
 	const final = safeParse(StudioPlanSchema, candidate);

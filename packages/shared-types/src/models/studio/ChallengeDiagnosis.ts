@@ -39,7 +39,20 @@ export const DesiredOutputSchema = picklist([
 ]);
 export type DesiredOutput = InferOutput<typeof DesiredOutputSchema>;
 
+/** The playbook's entry rule: what already exists when the admin arrives. */
+export const HasDraftSchema = picklist(['text', 'material', 'nothing']);
+export type HasDraft = InferOutput<typeof HasDraftSchema>;
+
+/** Who formally decides at the end. */
+export const DecisionBodySchema = picklist(['assembly', 'council', 'leadership', 'voteInMain']);
+export type DecisionBody = InferOutput<typeof DecisionBodySchema>;
+
 export const ChallengeDiagnosisSchema = object({
+	/** text = a draft exists (→ Sign); material = results exist but no text (→ Draft); nothing (→ MC). */
+	hasDraft: optional(HasDraftSchema),
+	/** Groups with different stakes that need their own live session (e.g. members, youth). */
+	audienceSegments: optional(array(string())),
+	decisionBody: optional(DecisionBodySchema),
 	decisionType: optional(DecisionTypeSchema),
 	/** Who holds the final decision (e.g. "the city council", "the CEO"). */
 	whoDecides: optional(string()),
@@ -64,6 +77,7 @@ export type ChallengeDiagnosis = InferOutput<typeof ChallengeDiagnosisSchema>;
 
 /** Diagnosis fields the dialogue policy may ask about, in display order. */
 export const DIAGNOSIS_FIELDS = [
+	'hasDraft',
 	'decisionType',
 	'whoDecides',
 	'whoIsAffected',
@@ -74,6 +88,8 @@ export const DIAGNOSIS_FIELDS = [
 	'hardDeadline',
 	'facilitationCapacity',
 	'desiredOutput',
+	'audienceSegments',
+	'decisionBody',
 	'constraints',
 ] as const;
 

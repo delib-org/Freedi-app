@@ -32,6 +32,9 @@ function activityFingerprint(activity: StudioPlanActivity): string {
 		description: activity.description,
 		openNow: activity.openNow,
 		survey: activity.survey,
+		draftFrom: activity.draftFrom,
+		draftCutoff: activity.draftCutoff,
+		draftIntent: activity.draftIntent,
 		change: activity.change,
 		existingStatementId: activity.existingStatementId,
 	});
@@ -44,6 +47,7 @@ function actionFingerprint(action: StudioPlanScheduledAction): string {
 		action: action.action,
 		at: action.at,
 		nudgeMessage: action.nudgeMessage,
+		draftFrom: action.draftFrom,
 	});
 }
 

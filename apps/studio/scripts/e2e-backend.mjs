@@ -330,6 +330,32 @@ try {
 	check('non-admin cannot schedule', e.code === 'PERMISSION_DENIED', e.message);
 }
 
+// 12. The Draft tool: a document written from the survey's results, then opened for comment
+const docCreated = await call('fn_createOrgStatement', consultant.idToken, {
+	organizationId: org.organizationId, parentId: top.statementId, title: 'Housing agreement — draft', kind: 'document',
+});
+const docBefore = await fsGet(`statements/${docCreated.statementId}`);
+check('document child created hidden in Sign', docBefore?.statementType === 'document' && docBefore?.isDocument === true && docBefore?.sourceApp === 'sign' && docBefore?.signSettings?.isHidden === true, JSON.stringify(docBefore?.signSettings));
+try {
+	await call('fn_studioDraftFromResults', consultant.idToken, { documentId: docCreated.statementId, sourceStatementIds: [mc.statementId], cutoff: { mode: 'topN', n: 5, minEvaluators: 99 } });
+	check('draft with an impossible cutoff is rejected', false);
+} catch (e) {
+	check('draft with an impossible cutoff is rejected', e.code === 'FAILED_PRECONDITION', e.message);
+}
+const drafted = await call('fn_studioDraftFromResults', consultant.idToken, {
+	documentId: docCreated.statementId, sourceStatementIds: [mc.statementId], cutoff: { mode: 'topN', n: 5, minEvaluators: 0 }, intent: 'A short, clear agreement',
+});
+check('draft written with paragraphs', drafted.paragraphCount >= 1 && typeof drafted.signAdminUrl === 'string', JSON.stringify(drafted));
+const draftParagraphs = await fsList('statements', (d) => d.parentId === docCreated.statementId && d.statementType === 'paragraph' && !d.hide);
+check('paragraphs are official Sign paragraphs with provenance', draftParagraphs.length >= 2 && draftParagraphs.some((p) => p.draftProvenance?.sources?.length >= 1) && draftParagraphs.every((p) => p.doc?.isOfficialParagraph === true), `${draftParagraphs.length} paragraphs`);
+const opened = await call('fn_studioSetDocumentStatus', consultant.idToken, { statementId: docCreated.statementId, status: 'open' });
+const docAfter = await fsGet(`statements/${docCreated.statementId}`);
+check('document opened for comment', opened.status === 'open' && docAfter?.signSettings?.isHidden === false && docAfter?.signSettings?.enableSuggestions === true, JSON.stringify(docAfter?.signSettings));
+const draftAction = await call('fn_studioScheduledActionUpsert', consultant.idToken, {
+	statementId: docCreated.statementId, action: 'draft', runAt: Date.now() + 3600_000, draft: { sourceStatementIds: [mc.statementId], cutoff: { mode: 'chosen' } },
+});
+check('scheduled draft action stored with its payload', (await fsGet(`scheduledActions/${draftAction.scheduledActionId}`))?.draft?.sourceStatementIds?.[0] === mc.statementId);
+
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 console.log(JSON.stringify({ orgId: org.organizationId, topId: top.statementId, mcId: mc.statementId, joinId: join.statementId, consultant: consultant.email, sysadmin: sysadmin.email }));

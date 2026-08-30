@@ -16,6 +16,14 @@ jest.mock('../../../fn_nudgeQuestionSubscribers', () => ({
 	sendQuestionNudge: (input: unknown) => sendQuestionNudge(input),
 }));
 
+const runDraft = jest.fn((_input: unknown) =>
+	Promise.resolve({ documentId: 'doc-1', paragraphCount: 3, openGaps: 1, signAdminUrl: '' }),
+);
+jest.mock('../fn_studioDraftFromResults', () => ({
+	runDraft: (input: unknown) => runDraft(input),
+	normalizeCutoff: (c: unknown) => c,
+}));
+
 import * as dbModule from '../../../db';
 import { runScheduledActionSweep } from '../scheduledActionSweep';
 
@@ -117,6 +125,55 @@ describe('runScheduledActionSweep', () => {
 		expect(db.read(Collections.scheduledActions, 'fresh')?.status).toBe('running');
 		expect(db.read(Collections.scheduledActions, 'stale')?.status).toBe('done');
 		expect(result.executed).toBe(1);
+	});
+
+	it('opens a Sign document through signSettings', async () => {
+		db.seed(Collections.statements, 'doc-1', {
+			statementId: 'doc-1',
+			statement: 'Doc',
+			statementType: 'document',
+			isDocument: true,
+			parentId: TOP,
+			topParentId: TOP,
+			signSettings: { isHidden: true, isPublic: true, isFrozen: false, enableSuggestions: false },
+		});
+		seedAction('a1', { action: 'open', statementId: 'doc-1' });
+		await runScheduledActionSweep(NOW);
+		const doc = db.read(Collections.statements, 'doc-1') as Record<string, unknown>;
+		expect(doc.signSettings).toEqual({
+			isHidden: false,
+			isPublic: true,
+			isFrozen: false,
+			enableSuggestions: true,
+		});
+		expect((doc.statementSettings as { questionStatus: string }).questionStatus).toBe('live');
+	});
+
+	it('runs a scheduled draft with its payload', async () => {
+		db.seed(Collections.statements, 'doc-1', {
+			statementId: 'doc-1',
+			statement: 'Doc',
+			statementType: 'document',
+			isDocument: true,
+			parentId: TOP,
+			topParentId: TOP,
+		});
+		seedAction('a1', {
+			action: 'draft',
+			statementId: 'doc-1',
+			draft: { sourceStatementIds: [MC], cutoff: { mode: 'topN', n: 5 }, intent: 'policy' },
+		});
+		await runScheduledActionSweep(NOW);
+		expect(runDraft).toHaveBeenCalledTimes(1);
+		const input = runDraft.mock.calls[0][0] as Record<string, unknown>;
+		expect(input).toMatchObject({
+			documentId: 'doc-1',
+			sourceStatementIds: [MC],
+			cutoff: { mode: 'topN', n: 5 },
+			intent: 'policy',
+			actorUid: 'alice',
+		});
+		expect(db.read(Collections.scheduledActions, 'a1')?.status).toBe('done');
 	});
 
 	it('marks an action failed when its question is gone', async () => {

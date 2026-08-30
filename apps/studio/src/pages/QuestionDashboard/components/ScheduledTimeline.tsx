@@ -64,6 +64,11 @@ const ScheduledTimeline: FC<ScheduledTimelineProps> = ({
 			: { title: t('Untitled') };
 	};
 
+	const draftSources = (action: ScheduledAction): string[] =>
+		(action.draft?.sourceStatementIds ?? []).map(
+			(id) => activities.find((a) => a.statementId === id)?.title || t('Untitled'),
+		);
+
 	const handleCancel = async () => {
 		if (!cancelling) return;
 		await scheduledActionCancel({ scheduledActionId: cancelling.scheduledActionId });
@@ -118,6 +123,13 @@ const ScheduledTimeline: FC<ScheduledTimelineProps> = ({
 				{action.action === 'nudge' && action.nudge?.message && (
 					<p className="timeline__nudge" dir="auto">
 						{action.nudge.message}
+					</p>
+				)}
+				{action.action === 'draft' && (
+					<p className="timeline__nudge" dir="auto">
+						{draftSources(action).length > 0
+							? tWithParams('From: {{sources}}', { sources: draftSources(action).join(' · ') })
+							: t('From the planned sources')}
 					</p>
 				)}
 				{action.status === 'failed' && action.error && (

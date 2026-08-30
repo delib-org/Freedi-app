@@ -40,6 +40,17 @@ const plan: StudioPlan = {
 			openNow: false,
 			change: 'keep',
 		},
+		{
+			tempId: 'd1',
+			type: 'document',
+			title: 'The proposal',
+			order: 3,
+			openNow: false,
+			change: 'add',
+			draftFrom: ['a1', 'st-2'],
+			draftCutoff: { mode: 'topN', n: 20, minEvaluators: 3 },
+			draftIntent: 'A one-page proposal for the council.',
+		},
 	],
 	scheduledActions: [
 		{ tempId: 's1', activityTempId: 'a2', action: 'open', at: Date.now() + 86_400_000 },
@@ -50,6 +61,7 @@ const plan: StudioPlan = {
 			at: Date.now() + 172_800_000,
 			nudgeMessage: 'Last day!',
 		},
+		{ tempId: 's3', activityTempId: 'd1', action: 'draft', at: Date.now() + 259_200_000 },
 	],
 	summary: 'Widen first, then decide together.',
 };
@@ -85,6 +97,7 @@ describe('PlanCard', () => {
 		expect(screen.getByText('Discussion')).toBeTruthy();
 		expect(screen.getAllByText('Open')).toHaveLength(1);
 		expect(screen.getAllByText('Not yet open')).toHaveLength(2);
+		expect(screen.getByText('In review')).toBeTruthy();
 		expect(screen.getByText('Intro: Welcome!')).toBeTruthy();
 		expect(screen.getByText('Participants cannot add suggestions')).toBeTruthy();
 		expect(screen.getByText('Min evaluations: 5')).toBeTruthy();
@@ -98,8 +111,19 @@ describe('PlanCard', () => {
 		expect(screen.getByText('Reminder')).toBeTruthy();
 		expect(screen.getByText('Last day!')).toBeTruthy();
 		const times = container.querySelectorAll('time[datetime]');
-		expect(times.length).toBe(2);
+		expect(times.length).toBe(3);
 		expect(times[0].getAttribute('datetime')).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+	});
+
+	it('shows a document with its sources, cutoff and intent, and the draft step in the schedule', () => {
+		const { container } = renderCard();
+		expect(screen.getByText('Document')).toBeTruthy();
+		expect(screen.getByText(/Drafted from: Collect ideas · Town hall/)).toBeTruthy();
+		expect(screen.getByText('top 20 suggestions, at least 3 raters')).toBeTruthy();
+		expect(screen.getByText('Intent: A one-page proposal for the council.')).toBeTruthy();
+		expect(screen.getByText('Draft')).toBeTruthy();
+		expect(container.querySelector('.plan-card__action--draft')).toBeTruthy();
+		expect(screen.getByText('From: Collect ideas · Town hall')).toBeTruthy();
 	});
 
 	it('flags changed rows and marks the card busy while updating', () => {
@@ -112,7 +136,7 @@ describe('PlanCard', () => {
 
 	it('shows New / Updated / Unchanged tags only in existing mode', () => {
 		renderCard({ existingMode: true });
-		expect(screen.getByText('New')).toBeTruthy();
+		expect(screen.getAllByText('New')).toHaveLength(2);
 		expect(screen.getByText('Updated')).toBeTruthy();
 		expect(screen.getByText('Unchanged')).toBeTruthy();
 		cleanup();

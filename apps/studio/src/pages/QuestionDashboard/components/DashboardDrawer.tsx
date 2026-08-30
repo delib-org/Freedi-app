@@ -2,13 +2,20 @@ import { activityUrlResolver } from '@/config';
 import { useCallback, type FC } from 'react';
 import { ActivityType, type ScheduledAction } from '@freedi/shared-types';
 import type { ActivityRunState, DerivedActivity } from '@freedi/event-core';
+import { useTranslation } from '@freedi/shared-i18n/react';
 import { FacilitateDrawer } from '@/components/atomic/organisms/FacilitateDrawer';
 import type { NudgePayload } from '@/components/atomic/molecules/NudgeComposer';
-import { nudgeQuestionSubscribers } from '@/db/orgFunctions';
+import {
+	nudgeQuestionSubscribers,
+	studioSetDocumentStatus,
+	type DocumentRunStatus,
+	type StudioDraftFromResultsResult,
+} from '@/db/orgFunctions';
 import type { ProgressMap } from '@/db/progress';
 import { nextActionFor } from '@/db/scheduledActions';
 import { reorderChildren } from '@/db/statements';
 import { useStatusWithUndo } from '../useStatusWithUndo';
+import DraftFromResults from './DraftFromResults';
 
 /**
  * DashboardDrawer — wires FacilitateDrawer to the database for the activity
@@ -26,6 +33,8 @@ export interface DashboardDrawerProps {
 	canManage: boolean;
 	onClose: () => void;
 	onArchiveRequest: (statementId: string) => void;
+	/** Plain confirmation toast (e.g. after a draft is written). */
+	onToast?: (message: string) => void;
 }
 
 const DashboardDrawer: FC<DashboardDrawerProps> = ({
@@ -38,14 +47,39 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 	canManage,
 	onClose,
 	onArchiveRequest,
+	onToast,
 }) => {
+	const { tWithParams } = useTranslation();
 	const changeStatus = useStatusWithUndo();
 	const index = activities.findIndex((a) => a.statementId === activity.statementId);
 	const id = activity.statementId;
+	const isDocument = activity.type === ActivityType.signDocument;
 
 	const handleStatusChange = useCallback(
-		(next: ActivityRunState) => changeStatus(id, activity.runState, next),
-		[changeStatus, id, activity.runState],
+		async (next: ActivityRunState) => {
+			if (isDocument) {
+				// Documents keep their state in Sign (`signSettings`), written by
+				// the function — not in `questionStatus`.
+				if (next === 'queued') return;
+				await studioSetDocumentStatus({ statementId: id, status: next as DocumentRunStatus });
+
+				return;
+			}
+			await changeStatus(id, activity.runState, next);
+		},
+		[changeStatus, id, activity.runState, isDocument],
+	);
+
+	const handleDrafted = useCallback(
+		(result: StudioDraftFromResultsResult) => {
+			onToast?.(
+				tWithParams('{{count}} paragraphs written · {{gaps}} open gaps — review it in Sign', {
+					count: result.paragraphCount,
+					gaps: result.openGaps,
+				}),
+			);
+		},
+		[onToast, tWithParams],
 	);
 
 	const handleNudge = useCallback(
@@ -99,6 +133,16 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 			setupSurveyHref={setupSurveyHref}
 			nextScheduled={nextScheduled}
 			readOnly={!canManage}
+			documentTools={
+				isDocument && canManage ? (
+					<DraftFromResults
+						document={activity}
+						activities={activities}
+						editorHref={activity.admin?.href}
+						onDrafted={handleDrafted}
+					/>
+				) : undefined
+			}
 		/>
 	);
 };

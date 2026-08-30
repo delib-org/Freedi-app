@@ -1,26 +1,27 @@
 import type { ChallengeDiagnosis } from '@freedi/shared-types';
 import type { DeliberationPattern, PatternMatch, PatternPredicate } from '../types';
-import { widenConvergeDecide } from './widenConvergeDecide';
-import { quickPulse } from './quickPulse';
-import { budgetAllocation } from './budgetAllocation';
-import { policyConsultation } from './policyConsultation';
+import { questionFirstAgreement } from './questionFirstAgreement';
+import { draftFirstAgreement } from './draftFirstAgreement';
+import { materialFirstAgreement } from './materialFirstAgreement';
 import { bridgeContestedIssue } from './bridgeContestedIssue';
-import { visionStrategy } from './visionStrategy';
+import { budgetAllocation } from './budgetAllocation';
+import { quickPulse } from './quickPulse';
 
 /**
- * The playbook. Order matters: with an empty diagnosis every pattern scores 0
- * and the sort is stable, so the generic patterns come first.
+ * The playbook (PLAYBOOK.md §3). Order matters: with an empty diagnosis every
+ * pattern scores 0 and the sort is stable, so the entry-rule patterns come
+ * first (question-first is the default: nothing written yet).
  */
 export const PATTERNS: readonly DeliberationPattern[] = [
-	widenConvergeDecide,
-	quickPulse,
-	budgetAllocation,
-	policyConsultation,
+	questionFirstAgreement,
+	draftFirstAgreement,
+	materialFirstAgreement,
 	bridgeContestedIssue,
-	visionStrategy,
+	budgetAllocation,
+	quickPulse,
 ];
 
-export const DEFAULT_PATTERN_ID = widenConvergeDecide.patternId;
+export const DEFAULT_PATTERN_ID = questionFirstAgreement.patternId;
 
 export function getPattern(patternId: string): DeliberationPattern | undefined {
 	return PATTERNS.find((pattern) => pattern.patternId === patternId);
@@ -64,10 +65,10 @@ export function matchPatterns(
 }
 
 export {
-	widenConvergeDecide,
-	quickPulse,
-	budgetAllocation,
-	policyConsultation,
+	questionFirstAgreement,
+	draftFirstAgreement,
+	materialFirstAgreement,
 	bridgeContestedIssue,
-	visionStrategy,
+	budgetAllocation,
+	quickPulse,
 };

@@ -14,6 +14,8 @@ import { EmptyState } from '@/components/atomic/atoms/EmptyState';
 import { formatRelativeTime, useNowTick } from '@/hooks/useRelativeTime';
 import { formatDateTime, toIsoDateTime } from '@/utils/formatDateTime';
 import { ACTION_GLYPHS, ACTION_LABELS, toActivityType } from '../planTypes';
+import { draftSourcesOf, resolveSourceTitles } from '../planDocument';
+import PlanDocumentDetails from './PlanDocumentDetails';
 
 /**
  * PlanCard — the live plan next to the chat: main question, ordered
@@ -74,6 +76,11 @@ const PlanCard: FC<PlanCardProps> = ({
 
 		return t('Main question');
 	};
+
+	const draftSourceTitles = (action: StudioPlanScheduledAction): string[] =>
+		action.action === 'draft'
+			? resolveSourceTitles(draftSourcesOf(action, activities), activities, existingActivities)
+			: [];
 
 	const rowKey = (tempId: string) => (changed.has(tempId) ? `${tempId}:${planVersion}` : tempId);
 
@@ -139,7 +146,10 @@ const PlanCard: FC<PlanCardProps> = ({
 								<div className="plan-card__activity-body">
 									<div className="plan-card__activity-meta">
 										<ActivityTypeChip type={toActivityType(activity.type)} />
-										<StatusPill status={activity.openNow ? 'open' : 'queued'} />
+										<StatusPill
+											status={activity.openNow ? 'open' : 'queued'}
+											document={activity.type === 'document'}
+										/>
 										{existingMode && (
 											<Tag outline={activity.change === 'keep'}>
 												{t(CHANGE_LABELS[activity.change])}
@@ -184,6 +194,13 @@ const PlanCard: FC<PlanCardProps> = ({
 													</li>
 												)}
 										</ul>
+									)}
+									{activity.type === 'document' && (
+										<PlanDocumentDetails
+											activity={activity}
+											activities={activities}
+											existingActivities={existingActivities}
+										/>
 									)}
 									{onAskToChange && (
 										<Button
@@ -237,6 +254,13 @@ const PlanCard: FC<PlanCardProps> = ({
 								{action.action === 'nudge' && action.nudgeMessage && (
 									<p className="plan-card__nudge" dir="auto">
 										{action.nudgeMessage}
+									</p>
+								)}
+								{action.action === 'draft' && draftSourceTitles(action).length > 0 && (
+									<p className="plan-card__nudge" dir="auto">
+										{tWithParams('From: {{sources}}', {
+											sources: draftSourceTitles(action).join(' · '),
+										})}
 									</p>
 								)}
 							</li>

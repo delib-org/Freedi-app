@@ -227,6 +227,26 @@ describe('fn_createOrgStatement', () => {
 		expect(typeof topSub?.openedInJoin).toBe('number');
 	});
 
+	it('document child is a hidden Sign document (admin review) unless opened now', async () => {
+		seedMember('alice', OrganizationRole.admin);
+		seedTop('top1');
+		const { statementId } = await create(
+			makeRequest({ organizationId: ORG, title: 'Agreement', kind: 'document', parentId: 'top1' }, alice),
+		);
+		const doc = db.read(Collections.statements, statementId) as Record<string, unknown>;
+		expect(doc.statementType).toBe('document');
+		expect(doc.isDocument).toBe(true);
+		expect(doc.sourceApp).toBe(SourceApp.SIGN);
+		expect(doc.order).toBe(0);
+		expect(doc.signSettings).toEqual({ isHidden: true, isPublic: true, isFrozen: false, enableSuggestions: false });
+		expect(db.read(Collections.questionProgress, statementId)?.topParentId).toBe('top1');
+
+		const opened = await create(
+			makeRequest({ organizationId: ORG, title: 'Open doc', kind: 'document', parentId: 'top1', initialStatus: 'live' }, alice),
+		);
+		expect((db.read(Collections.statements, opened.statementId) as Record<string, unknown>).signSettings).toMatchObject({ isHidden: false, enableSuggestions: true });
+	});
+
 	it('plain question child uses the main app marker', async () => {
 		seedMember('alice', OrganizationRole.admin);
 		seedTop('top1');

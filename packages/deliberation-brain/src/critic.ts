@@ -17,7 +17,7 @@ export interface CriticContext {
 }
 
 /** Comfortable upper bound; more than this is a warning, > MAX is blocking. */
-export const RECOMMENDED_MAX_ACTIVITIES = 4;
+export const RECOMMENDED_MAX_ACTIVITIES = 5;
 
 const EN_QUESTION_OPENERS =
 	/^(what|how|which|where|when|who|whom|whose|why|should|could|would|do|does|did|is|are|can|will|shall)\b/i;
@@ -36,6 +36,36 @@ function label(activity: StudioPlanActivity): string {
 	return `${activity.tempId} "${activity.title}"`;
 }
 
+/** Playbook grammar checks (comment before converge, close with a decision). */
+function critiqueSequence(activities: readonly StudioPlanActivity[], problems: string[]): void {
+	const firstOpening = activities.findIndex(
+		(activity) => activity.role === 'widen' || activity.role === 'measure',
+	);
+	const firstDecide = activities.findIndex((activity) => activity.role === 'decide');
+	if (firstDecide >= 0 && firstOpening >= 0 && firstDecide < firstOpening) {
+		problems.push(
+			`Activity ${label(activities[firstDecide])} decides before any widen/measure stage; put the decision after the input stages.`,
+		);
+	}
+
+	const firstLive = activities.findIndex((activity) => activity.type === 'liveSession');
+	const firstInput = activities.findIndex(
+		(activity) => activity.type === 'document' || activity.type === 'crowdSurvey',
+	);
+	if (firstLive >= 0 && (firstInput < 0 || firstLive < firstInput)) {
+		problems.push(
+			`Activity ${label(activities[firstLive])} is a live session before any document or crowd survey; comment before converging — the room should work on gaps the public exposed, not on a blank page.`,
+		);
+	}
+
+	const last = activities[activities.length - 1];
+	if (activities.length > 1 && last && last.role !== 'decide' && last.role !== 'ratify') {
+		problems.push(
+			`The process ends with ${label(last)} (${last.role ?? 'no role'}) instead of a decision; close with a "decide" discussion — a vote in Main / the assembly.`,
+		);
+	}
+}
+
 /**
  * Deterministic hygiene rules over a normalized plan. Blocking problems mean
  * the plan must not be built as-is; the rest are advice for the next turn.
@@ -47,7 +77,7 @@ export function critiquePlan(plan: StudioPlan, ctx: CriticContext): CriticReport
 
 	// 1. Activity count.
 	if (activities.length === 0) {
-		blocking.push('The plan has no activities; a plan needs 1–4 activities.');
+		blocking.push('The plan has no activities; a plan needs 1–5 activities.');
 	} else if (activities.length > STUDIO_PLAN_MAX_ACTIVITIES) {
 		blocking.push(
 			`The plan has ${activities.length} activities; the maximum is ${STUDIO_PLAN_MAX_ACTIVITIES}.`,
@@ -84,20 +114,13 @@ export function critiquePlan(plan: StudioPlan, ctx: CriticContext): CriticReport
 		}
 	}
 
-	// 4. Role sequence: nothing is decided before something was widened or measured.
-	const firstOpening = activities.findIndex(
-		(activity) => activity.role === 'widen' || activity.role === 'measure',
-	);
-	const firstDecide = activities.findIndex((activity) => activity.role === 'decide');
-	if (firstDecide >= 0 && firstOpening >= 0 && firstDecide < firstOpening) {
-		problems.push(
-			`Activity ${label(activities[firstDecide])} decides before any widen/measure stage; put the decision after the input stages.`,
-		);
-	}
+	// 4. The playbook grammar.
+	critiqueSequence(activities, problems);
 
-	// 5–8. Scheduled actions.
+	// 5–9. Scheduled actions.
 	const byTempId = new Map(activities.map((activity) => [activity.tempId, activity]));
 	const openAt = new Map<string, number>();
+	const draftAt = new Map<string, number>();
 	for (const action of plan.scheduledActions) {
 		const targetKey = action.activityTempId ?? action.statementId ?? '';
 		if (action.at < ctx.now) {
@@ -113,6 +136,10 @@ export function critiquePlan(plan: StudioPlan, ctx: CriticContext): CriticReport
 			const previous = openAt.get(targetKey);
 			if (previous === undefined || action.at < previous) openAt.set(targetKey, action.at);
 		}
+		if (action.action === 'draft') {
+			const previous = draftAt.get(targetKey);
+			if (previous === undefined || action.at > previous) draftAt.set(targetKey, action.at);
+		}
 		if (action.action === 'nudge') {
 			const message = action.nudgeMessage?.trim() ?? '';
 			if (!message) {
@@ -123,11 +150,20 @@ export function critiquePlan(plan: StudioPlan, ctx: CriticContext): CriticReport
 		}
 	}
 	for (const action of plan.scheduledActions) {
-		if (action.action !== 'close') continue;
 		const targetKey = action.activityTempId ?? action.statementId ?? '';
-		const opensAt = openAt.get(targetKey);
-		if (opensAt !== undefined && action.at <= opensAt) {
-			problems.push(`Scheduled close (${action.tempId}) runs before the open of the same activity (${targetKey}).`);
+		if (action.action === 'close') {
+			const opensAt = openAt.get(targetKey);
+			if (opensAt !== undefined && action.at <= opensAt) {
+				problems.push(`Scheduled close (${action.tempId}) runs before the open of the same activity (${targetKey}).`);
+			}
+		}
+		if (action.action === 'open') {
+			const draftsAt = draftAt.get(targetKey);
+			if (draftsAt !== undefined && action.at <= draftsAt) {
+				blocking.push(
+					`Scheduled open (${action.tempId}) of document ${targetKey} runs before its draft step; the draft must be written and reviewed before the document opens.`,
+				);
+			}
 		}
 	}
 

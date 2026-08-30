@@ -13,9 +13,11 @@ import { commitInChunks, listOrgAdminMembers, requireOrgRole } from './orgAuth';
 import { getCallerIdentity } from './orgInvites';
 import {
 	buildChildQuestion,
+	buildDocumentChild,
 	buildTopQuestion,
 	callerHasTopSubscription,
 	childQuestionWrites,
+	documentChildWrites,
 	loadCallerUser,
 	loadOrgTopQuestion,
 	nextChildOrder,
@@ -40,7 +42,13 @@ interface CreateOrgStatementResult {
 	statementId: string;
 }
 
-const KINDS: ReadonlySet<string> = new Set(['topQuestion', 'massConsensus', 'join', 'question']);
+const KINDS: ReadonlySet<string> = new Set([
+	'topQuestion',
+	'massConsensus',
+	'join',
+	'question',
+	'document',
+]);
 const STATUSES: ReadonlySet<string> = new Set(['live', 'frozen', 'closed']);
 const ACCESS_VALUES: ReadonlySet<string> = new Set(Object.values(Access));
 
@@ -127,10 +135,32 @@ export const fn_createOrgStatement = onCall(
 			return { statementId };
 		}
 
-		// ── Sub-question under an org top question ──
-		const childKind = kind as OrgChildKind;
 		const parent = await loadOrgTopQuestion(parentId as string, organizationId);
 		const order = await nextChildOrder(parent.statementId);
+
+		if (kind === 'document') {
+			// A Sign document: created hidden (admin review) unless opened now.
+			const statement = buildDocumentChild({
+				statementId,
+				parent,
+				actor,
+				title: trimmedTitle,
+				description: trimmedDescription || undefined,
+				order,
+				openNow: questionStatus === 'live' && initialStatus !== undefined,
+			});
+			await commitInChunks(documentChildWrites({ statement, parent, organizationId, now }));
+			logger.info('[fn_createOrgStatement] Document created', {
+				organizationId,
+				statementId,
+				order,
+			});
+
+			return { statementId };
+		}
+
+		// ── Sub-question under an org top question ──
+		const childKind = kind as OrgChildKind;
 		const statement = buildChildQuestion({
 			statementId,
 			parent,

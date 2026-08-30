@@ -30,6 +30,13 @@ describe('StatusControl', () => {
 		expect(screen.getByText('Participants can take part.')).toBeTruthy();
 	});
 
+	it('uses the document vocabulary when asked', () => {
+		renderControl({ document: true, value: 'queued' });
+		expect(screen.getByRole('radiogroup', { name: /document status/i })).toBeTruthy();
+		expect(screen.getByRole('radio', { name: /open for comment/i })).toBeTruthy();
+		expect(screen.getByText(/in review — only admins can see it/i)).toBeTruthy();
+	});
+
 	it('freezes without confirmation', async () => {
 		const { onChange } = renderControl();
 		fireEvent.click(screen.getByRole('radio', { name: /freeze/i }));

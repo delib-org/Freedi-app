@@ -2,21 +2,28 @@ import {
 	AudienceSizeSchema,
 	ChallengeDiagnosis,
 	DIAGNOSIS_FIELDS,
+	DecisionBodySchema,
 	DecisionTypeSchema,
 	DesiredOutputSchema,
 	DiagnosisField,
 	FacilitationCapacitySchema,
+	HasDraftSchema,
 	PolarizationLevelSchema,
 } from '@freedi/shared-types';
 import { safeParse } from 'valibot';
 
-/** Fields the consultant must know before proposing, in priority order. */
+/**
+ * Fields the consultant must know before proposing, in priority order. The
+ * playbook's entry rule comes first: "is there something written already?"
+ */
 export const CRITICAL_FIELDS: readonly DiagnosisField[] = [
+	'hasDraft',
 	'decisionType',
 	'audienceSize',
 	'timeHorizonDays',
 	'polarization',
 	'facilitationCapacity',
+	'decisionBody',
 	'desiredOutput',
 ];
 
@@ -52,6 +59,10 @@ export function sanitizeDiagnosis(raw: unknown): ChallengeDiagnosis | undefined 
 	if (!isRecord(raw)) return undefined;
 	const out: ChallengeDiagnosis = {};
 
+	const hasDraft = safeParse(HasDraftSchema, raw.hasDraft);
+	if (hasDraft.success) out.hasDraft = hasDraft.output;
+	const decisionBody = safeParse(DecisionBodySchema, raw.decisionBody);
+	if (decisionBody.success) out.decisionBody = decisionBody.output;
 	const decisionType = safeParse(DecisionTypeSchema, raw.decisionType);
 	if (decisionType.success) out.decisionType = decisionType.output;
 	const audienceSize = safeParse(AudienceSizeSchema, raw.audienceSize);
@@ -75,6 +86,8 @@ export function sanitizeDiagnosis(raw: unknown): ChallengeDiagnosis | undefined 
 	}
 	const existingOptions = stringArray(raw.existingOptions);
 	if (existingOptions) out.existingOptions = existingOptions;
+	const audienceSegments = stringArray(raw.audienceSegments);
+	if (audienceSegments) out.audienceSegments = audienceSegments.map((segment) => segment.trim()).filter(Boolean);
 	const constraints = stringArray(raw.constraints);
 	if (constraints) out.constraints = constraints;
 	const confidence = confidenceRecord(raw.confidence);

@@ -13,6 +13,8 @@ export function toActivityType(type: StudioActivityType): ActivityType {
 			return ActivityType.massConsensus;
 		case 'liveSession':
 			return ActivityType.join;
+		case 'document':
+			return ActivityType.signDocument;
 		case 'discussion':
 		default:
 			return ActivityType.question;

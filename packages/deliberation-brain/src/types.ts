@@ -2,6 +2,7 @@ import type {
 	ChallengeDiagnosis,
 	DiagnosisField,
 	StudioActivityType,
+	StudioDraftCutoff,
 	StudioExistingActivitySnapshot,
 	StudioPlan,
 	StudioPlanSurveyConfig,
@@ -48,26 +49,69 @@ export interface EngineAffordance {
 	notFor: string;
 }
 
-export type ActivityRole = 'widen' | 'measure' | 'converge' | 'deepen' | 'decide' | 'ratify';
+/**
+ * The playbook grammar: GENERATE (widen/measure) → DRAFT (write) → COMMENT
+ * (document) → CONVERGE (live session) → DECIDE / RATIFY (a vote in Main).
+ * `write` is only used on `draft` actions / documents before review.
+ */
+export type ActivityRole =
+	| 'widen'
+	| 'measure'
+	| 'converge'
+	| 'deepen'
+	| 'decide'
+	| 'ratify'
+	| 'comment'
+	| 'write';
 
 export interface ActivityTiming {
 	/** Days after today when the activity starts (default 0). */
 	startAfterDays?: number;
+	/**
+	 * Days after the END of the previous activity in the sequence (wins over
+	 * `startAfterDays`). Lets a chain stay consistent when a drafted document's
+	 * dates are derived from its sources.
+	 */
+	startAfterPrevious?: number;
 	/** How long it stays open; a `close` action is scheduled at the end. */
 	durationDays?: number;
 	/** A `nudge` action this many days before the close. */
 	nudgeDaysBeforeClose?: number;
 }
 
+/** A step is left out of the instantiated plan when the rule matches. */
+export interface TemplateSkipRule {
+	field: DiagnosisField;
+	/** Skip when the diagnosis value is one of these. */
+	oneOf?: readonly string[];
+	/** Numeric fields only: skip when the value is below this. */
+	below?: number;
+}
+
 export interface ActivityTemplate {
 	role: ActivityRole;
 	engine: StudioActivityType;
-	/** May contain the `{{topic}}` and `{{organization}}` slots. */
+	/** May contain the `{{topic}}`, `{{organization}}` and `{{segment}}` slots. */
 	questionTemplate: string;
 	descriptionTemplate?: string;
+	/**
+	 * Drafted documents are always created hidden (the Draft step writes them,
+	 * the admin reviews, an `open` action follows); a document whose text
+	 * already exists opens now.
+	 */
 	openNow: boolean;
 	timing: ActivityTiming;
 	survey?: Partial<StudioPlanSurveyConfig>;
+	/** `document` only: indices of the source steps in the same sequence. */
+	draftFrom?: number[];
+	/** `document` only: draft from the existing activities (existing-question mode). */
+	draftFromExisting?: boolean;
+	draftCutoff?: StudioDraftCutoff;
+	/** `document` only: what the draft should be (same slots as the question). */
+	draftIntentTemplate?: string;
+	/** One copy per `audienceSegments` entry (a single copy when there are none). */
+	perSegment?: boolean;
+	skipWhen?: TemplateSkipRule;
 }
 
 /**

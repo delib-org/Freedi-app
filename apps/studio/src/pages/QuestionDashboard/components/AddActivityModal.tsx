@@ -33,11 +33,23 @@ const KIND_BY_TYPE: Partial<Record<ActivityType, OrgStatementKind>> = {
 	[ActivityType.massConsensus]: 'massConsensus',
 	[ActivityType.join]: 'join',
 	[ActivityType.question]: 'question',
+	[ActivityType.signDocument]: 'document',
 };
 
-/** Live sessions are run from the front, so they start closed to the room. */
+/**
+ * Live sessions are run from the front, so they start closed to the room.
+ * Documents are created hidden (admin review in Sign) whatever this says.
+ */
 function defaultOpenNow(type: ActivityType | undefined): boolean {
-	return type !== ActivityType.join;
+	return type !== ActivityType.join && type !== ActivityType.signDocument;
+}
+
+/** Types that continue in another app right after creation. */
+function continueLabel(kind: OrgStatementKind | undefined, t: (text: string) => string): string {
+	if (kind === 'massConsensus') return t('Continue in Crowd survey');
+	if (kind === 'document') return t('Continue in Sign');
+
+	return t('Create activity');
 }
 
 const AddActivityModal: FC<AddActivityModalProps> = ({
@@ -94,7 +106,8 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 				kind,
 				title: title.trim(),
 				description: description.trim() || undefined,
-				initialStatus: openNow ? 'live' : 'frozen',
+				// A document's run state lives in Sign (`signSettings`), not here.
+				initialStatus: kind === 'document' ? undefined : openNow ? 'live' : 'frozen',
 			});
 			setSubmitting(false);
 			onCreated(statementId, type);
@@ -120,7 +133,7 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 			<>
 				<Button text={t('Cancel')} variant="secondary" onClick={onClose} disabled={submitting} />
 				<Button
-					text={kind === 'massConsensus' ? t('Continue in Crowd survey') : t('Create activity')}
+					text={continueLabel(kind, t)}
 					variant="primary"
 					disabled={!canCreate}
 					loading={submitting}
@@ -160,7 +173,7 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 						</button>
 					)}
 					<Input
-						label={t('Question for participants')}
+						label={kind === 'document' ? t('Document title') : t('Question for participants')}
 						value={title}
 						onChange={setTitle}
 						required
@@ -182,6 +195,10 @@ const AddActivityModal: FC<AddActivityModalProps> = ({
 							{t(
 								"Next you'll set up the full survey — questions, demographics, logos — in Crowd survey, then come back here.",
 							)}
+						</p>
+					) : kind === 'document' ? (
+						<p className={styles.note}>
+							{t('Write or paste the text in Sign, then come back to open it for comment.')}
 						</p>
 					) : (
 						<Checkbox

@@ -7,3 +7,4 @@ export * from './ToastUndo';
 export * from './ActivityTypePicker';
 export * from './QuestionCard';
 export * from './ActivityBoard';
+export * from './DraftSettingsFields';

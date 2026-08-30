@@ -3,9 +3,14 @@ import { nextMove } from '../policy';
 import { makeCtx, plan } from './helpers';
 
 describe('nextMove', () => {
-	it('turn 0 with an empty diagnosis → askClarifying with the top 2 critical fields', () => {
+	it('turn 0 with an empty diagnosis → askClarifying, hasDraft (the entry rule) first', () => {
 		const move = nextMove(makeCtx({ userTurns: 0 }));
 		expect(move.move).toBe('askClarifying');
+		expect(move.askFields).toEqual(['hasDraft', 'decisionType']);
+	});
+
+	it('once hasDraft is known the next asks follow the priority order', () => {
+		const move = nextMove(makeCtx({ userTurns: 0, diagnosis: { hasDraft: 'text' } }));
 		expect(move.askFields).toEqual(['decisionType', 'audienceSize']);
 	});
 
@@ -14,6 +19,7 @@ describe('nextMove', () => {
 			makeCtx({
 				userTurns: 0,
 				diagnosis: {
+					hasDraft: 'nothing',
 					decisionType: 'gatherIdeas',
 					audienceSize: 'community',
 					confidence: { decisionType: 0.3 },
@@ -29,11 +35,13 @@ describe('nextMove', () => {
 			makeCtx({
 				userTurns: 0,
 				diagnosis: {
+					hasDraft: 'nothing',
 					decisionType: 'gatherIdeas',
 					audienceSize: 'community',
 					hardDeadline: '2030-01-01',
 					polarization: 'low',
 					facilitationCapacity: 'none',
+					decisionBody: 'voteInMain',
 					desiredOutput: 'ideas',
 				},
 			}),

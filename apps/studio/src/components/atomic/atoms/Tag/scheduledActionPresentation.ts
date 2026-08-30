@@ -3,7 +3,7 @@ import type { StudioScheduledActionKind } from '@freedi/shared-types';
 /**
  * How Studio presents a scheduled facilitator action: a glyph AND a word
  * (never colour-only), matching the status vocabulary of StatusPill
- * (● Open · ❄ Frozen · ■ Closed) plus the reminder bell.
+ * (● Open · ❄ Frozen · ■ Closed) plus the reminder bell and the draft pen.
  * Labels are English i18n keys — pass through `t()`.
  */
 export const ACTION_GLYPHS: Record<StudioScheduledActionKind, string> = {
@@ -11,6 +11,7 @@ export const ACTION_GLYPHS: Record<StudioScheduledActionKind, string> = {
 	freeze: '❄',
 	close: '■',
 	nudge: '🔔',
+	draft: '📝',
 };
 
 export const ACTION_LABELS: Record<StudioScheduledActionKind, string> = {
@@ -18,4 +19,5 @@ export const ACTION_LABELS: Record<StudioScheduledActionKind, string> = {
 	freeze: 'Freezes',
 	close: 'Closes',
 	nudge: 'Reminder',
+	draft: 'Draft',
 };

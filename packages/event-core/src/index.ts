@@ -10,8 +10,16 @@ export type {
 } from './activityUrls';
 export { createActivityUrlResolver } from './activityUrls';
 
-export type { ActivityRunState, DerivedActivity } from './deriveActivities';
-export { deriveActivities } from './deriveActivities';
+export type {
+	ActivityRunState,
+	DerivedActivity,
+	SignDocumentRunSettings,
+} from './deriveActivities';
+export {
+	deriveActivities,
+	getSignDocumentSettings,
+	toDocumentRunState,
+} from './deriveActivities';
 
 export type { RouteTarget, RouteTargetState, RouteTargetContext } from './deriveRouteTargets';
 export { deriveRouteTargets } from './deriveRouteTargets';

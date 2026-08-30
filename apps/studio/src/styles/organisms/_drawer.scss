@@ -367,4 +367,52 @@
 	font-size: var(--font-size-xs);
 	color: var(--text-meta);
 	text-align: center;
+
+	&--start {
+		margin: 0 0 var(--space-sm);
+		text-align: start;
+	}
+}
+
+// "Draft from results" — settings fields + the write button and its outcome.
+.drawer__draft {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.drawer__draft-actions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.drawer__draft-progress,
+.drawer__draft-done,
+.drawer__draft-error {
+	margin: 0;
+	padding: var(--space-xs) var(--space-sm);
+	font-size: var(--font-size-sm);
+	border-radius: var(--radius-sm);
+}
+
+.drawer__draft-progress {
+	color: var(--text-body);
+	background: var(--wash-primary);
+}
+
+.drawer__draft-done {
+	color: var(--status-open-ink);
+	background: var(--status-open-wash);
+}
+
+.drawer__draft-error {
+	color: var(--text-error);
+	background: var(--bg-error-light);
+}
+
+.drawer__draft-link {
+	color: inherit;
+	font-weight: 600;
+	text-decoration: underline;
 }

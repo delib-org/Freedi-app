@@ -5,6 +5,8 @@ export {
 	FacilitationCapacitySchema,
 	DesiredOutputSchema,
 	ChallengeDiagnosisSchema,
+	HasDraftSchema,
+	DecisionBodySchema,
 	DIAGNOSIS_FIELDS,
 } from './ChallengeDiagnosis';
 export type {
@@ -15,6 +17,8 @@ export type {
 	DesiredOutput,
 	ChallengeDiagnosis,
 	DiagnosisField,
+	HasDraft,
+	DecisionBody,
 } from './ChallengeDiagnosis';
 
 export {
@@ -23,6 +27,8 @@ export {
 	StudioScheduledActionKindSchema,
 	StudioPlanExtraQuestionSchema,
 	StudioPlanSurveyConfigSchema,
+	StudioDraftCutoffSchema,
+	DEFAULT_DRAFT_CUTOFF,
 	StudioPlanActivitySchema,
 	StudioPlanScheduledActionSchema,
 	StudioPlanSchema,
@@ -48,6 +54,7 @@ export type {
 	StudioScheduledActionKind,
 	StudioPlanExtraQuestion,
 	StudioPlanSurveyConfig,
+	StudioDraftCutoff,
 	StudioPlanActivity,
 	StudioPlanScheduledAction,
 	StudioPlan,
@@ -64,7 +71,13 @@ export type {
 export {
 	ScheduledActionStatusSchema,
 	ScheduledNudgeSchema,
+	ScheduledDraftSchema,
 	ScheduledActionSchema,
 	SCHEDULED_ACTION_STALE_CLAIM_MS,
 } from './ScheduledAction';
-export type { ScheduledActionStatus, ScheduledNudge, ScheduledAction } from './ScheduledAction';
+export type {
+	ScheduledActionStatus,
+	ScheduledNudge,
+	ScheduledDraft,
+	ScheduledAction,
+} from './ScheduledAction';

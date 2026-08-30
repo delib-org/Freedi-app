@@ -3,6 +3,7 @@ import type {
 	Access,
 	QuestionStatus,
 	ScheduledActionStatus,
+	StudioDraftCutoff,
 	StudioExistingActivitySnapshot,
 	StudioPlan,
 	StudioPlanBuildResult,
@@ -86,7 +87,12 @@ export interface RemoveOrgMemberResult {
 	demoted: number;
 }
 
-export type OrgStatementKind = 'topQuestion' | 'massConsensus' | 'join' | 'question';
+/**
+ * `document` creates a hidden Sign document under the top question
+ * (`signSettings.isHidden`): admins write / review it in Sign, then open it
+ * for comment from the dashboard.
+ */
+export type OrgStatementKind = 'topQuestion' | 'massConsensus' | 'join' | 'question' | 'document';
 
 export interface CreateOrgStatementRequest {
 	organizationId: string;
@@ -177,6 +183,13 @@ export interface ScheduledNudgeInput {
 	channels?: NudgeChannel[];
 }
 
+/** `draft` actions: write the target document from these sources at `runAt`. */
+export interface ScheduledDraftInput {
+	sourceStatementIds: string[];
+	cutoff: StudioDraftCutoff;
+	intent?: string;
+}
+
 export interface ScheduledActionUpsertRequest {
 	/** Omit to create. */
 	scheduledActionId?: string;
@@ -185,6 +198,8 @@ export interface ScheduledActionUpsertRequest {
 	/** Epoch ms. */
 	runAt: number;
 	nudge?: ScheduledNudgeInput;
+	/** `draft` only. */
+	draft?: ScheduledDraftInput;
 }
 
 export interface ScheduledActionUpsertResult {
@@ -198,6 +213,42 @@ export interface ScheduledActionCancelRequest {
 export interface ScheduledActionCancelResult {
 	scheduledActionId: string;
 	status: ScheduledActionStatus;
+}
+
+// --- Documents (Sign) -----------------------------------------------------
+
+/**
+ * Write a document from the top suggestions of its source activities. Takes
+ * 10–40 s. Fails with `failed-precondition` when nothing passes the cutoff.
+ * Replaces the AI-written paragraphs of a previous draft.
+ */
+export interface StudioDraftFromResultsRequest {
+	documentId: string;
+	/** Defaults to the document's planned `draftFrom` sources. */
+	sourceStatementIds?: string[];
+	cutoff?: StudioDraftCutoff;
+	intent?: string;
+}
+
+export interface StudioDraftFromResultsResult {
+	documentId: string;
+	paragraphCount: number;
+	/** Questions the sources left unanswered, listed at the end of the draft. */
+	openGaps: number;
+	signAdminUrl: string;
+}
+
+/** Document run state, written to `signSettings` (open for comment / frozen / closed). */
+export type DocumentRunStatus = 'open' | 'frozen' | 'closed';
+
+export interface StudioSetDocumentStatusRequest {
+	statementId: string;
+	status: DocumentRunStatus;
+}
+
+export interface StudioSetDocumentStatusResult {
+	statementId: string;
+	status: DocumentRunStatus;
 }
 
 // --- Callables -------------------------------------------------------------
@@ -264,6 +315,16 @@ export const scheduledActionUpsert = callable<
 	ScheduledActionUpsertRequest,
 	ScheduledActionUpsertResult
 >('fn_studioScheduledActionUpsert');
+
+export const studioDraftFromResults = callable<
+	StudioDraftFromResultsRequest,
+	StudioDraftFromResultsResult
+>('fn_studioDraftFromResults');
+
+export const studioSetDocumentStatus = callable<
+	StudioSetDocumentStatusRequest,
+	StudioSetDocumentStatusResult
+>('fn_studioSetDocumentStatus');
 
 export const scheduledActionCancel = callable<
 	ScheduledActionCancelRequest,

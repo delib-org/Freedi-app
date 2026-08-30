@@ -94,6 +94,33 @@ describe('ScheduledTimeline', () => {
 		expect(onSelectActivity).toHaveBeenCalledWith('act-1');
 	});
 
+	it('renders a draft action with the pen, the word Draft, its target and sources', () => {
+		const { onSelectActivity } = renderTimeline({
+			activities: [
+				...activities,
+				{ statementId: 'doc-1', title: 'The proposal' } as unknown as DerivedActivity,
+			],
+			actions: [
+				action({
+					scheduledActionId: 'sa-d',
+					statementId: 'doc-1',
+					action: 'draft',
+					draft: {
+						sourceStatementIds: ['act-1', 'act-2'],
+						cutoff: { mode: 'topN', n: 20, minEvaluators: 3 },
+					},
+				}),
+			],
+		});
+		expect(screen.getByText('Draft')).toBeTruthy();
+		expect(screen.getByText('📝')).toBeTruthy();
+		expect(screen.getByText('From: Collect ideas · Town hall')).toBeTruthy();
+		expect(document.querySelector('.timeline__item--draft')).toBeTruthy();
+		fireEvent.click(screen.getByRole('button', { name: 'The proposal' }));
+		expect(onSelectActivity).toHaveBeenCalledWith('doc-1');
+		expect(screen.getByRole('button', { name: 'Edit: Draft The proposal' })).toBeTruthy();
+	});
+
 	it('cancels a pending action after confirmation', async () => {
 		scheduledActionCancel.mockResolvedValue({ scheduledActionId: 'sa-1', status: 'cancelled' });
 		renderTimeline();

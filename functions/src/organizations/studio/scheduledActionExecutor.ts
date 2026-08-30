@@ -7,10 +7,12 @@ import {
 } from '@freedi/shared-types';
 import { db } from '../../db';
 import { sendQuestionNudge } from '../../fn_nudgeQuestionSubscribers';
+import { isSignDocument, setDocumentStatus } from './documentStatus';
+import { runDraft } from './fn_studioDraftFromResults';
 import { syncSurveyStatus } from './surveyWriter';
 
 const QUESTION_STATUS_BY_ACTION: Record<
-	Exclude<StudioScheduledActionKind, 'nudge'>,
+	Exclude<StudioScheduledActionKind, 'nudge' | 'draft'>,
 	QuestionStatus
 > = { open: 'live', freeze: 'frozen', close: 'closed' };
 
@@ -26,6 +28,25 @@ export async function executeScheduledAction(action: ScheduledAction, now: numbe
 		throw new Error(`Target question ${action.statementId} no longer exists`);
 	}
 	const statement = snap.data() as Statement;
+
+	if (action.action === 'draft') {
+		if (!action.draft || action.draft.sourceStatementIds.length === 0) {
+			throw new Error('Scheduled draft has no sources');
+		}
+		await runDraft({
+			documentId: action.statementId,
+			sourceStatementIds: action.draft.sourceStatementIds,
+			cutoff: action.draft.cutoff,
+			intent: action.draft.intent,
+			language: action.draft.language,
+			actorUid: action.createdBy,
+			actorName: 'Facilitator',
+			actorEmail: null,
+			now,
+		});
+
+		return;
+	}
 
 	if (action.action === 'nudge') {
 		if (!action.nudge?.message) {
@@ -46,6 +67,11 @@ export async function executeScheduledAction(action: ScheduledAction, now: numbe
 	}
 
 	const questionStatus = QUESTION_STATUS_BY_ACTION[action.action];
+	if (isSignDocument(statement)) {
+		await setDocumentStatus(action.statementId, questionStatus, now);
+
+		return;
+	}
 	await ref.set({ statementSettings: { questionStatus }, lastUpdate: now }, { merge: true });
 	const surveyId = statement.questionSettings?.massConsensusSurveyId;
 	if (surveyId) {

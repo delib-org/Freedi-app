@@ -4,6 +4,7 @@ import { computeProposalDiff } from '@freedi/deliberation-brain';
 import {
 	Access,
 	Collections,
+	DEFAULT_DRAFT_CUTOFF,
 	ScheduledAction,
 	Statement,
 	StatementType,
@@ -22,9 +23,11 @@ import { commitInChunks, listOrgAdminMembers } from '../orgAuth';
 import { getCallerIdentity } from '../orgInvites';
 import {
 	buildChildQuestion,
+	buildDocumentChild,
 	buildTopQuestion,
 	callerHasTopSubscription,
 	childQuestionWrites,
+	documentChildWrites,
 	loadCallerUser,
 	nextChildOrder,
 	seedProgress,
@@ -47,7 +50,7 @@ export interface StudioPlanBuildRequest {
 	access?: Access;
 }
 
-const KIND_BY_TYPE: Record<StudioPlanActivity['type'], OrgChildKind> = {
+const KIND_BY_TYPE: Record<Exclude<StudioPlanActivity['type'], 'document'>, OrgChildKind> = {
 	crowdSurvey: 'massConsensus',
 	liveSession: 'join',
 	discussion: 'question',
@@ -232,8 +235,28 @@ async function createActivities(state: BuildState, top: Statement): Promise<void
 			state.statements.set(alreadyId, await loadStatement(alreadyId));
 			continue;
 		}
-		const kind = KIND_BY_TYPE[activity.type];
 		const statementId = db.collection(Collections.statements).doc().id;
+		if (activity.type === 'document') {
+			// A Sign document, hidden until its draft is reviewed (or open now
+			// when the text already exists and the plan says so).
+			const document = buildDocumentChild({
+				statementId,
+				parent: top,
+				actor,
+				title: activity.title.trim(),
+				description: activity.description?.trim() || undefined,
+				order: nextOrder++,
+				openNow: activity.openNow && !activity.draftFrom?.length,
+			});
+			await commitInChunks(
+				documentChildWrites({ statement: document, parent: top, organizationId, now }),
+			);
+			state.statements.set(statementId, document);
+			state.build.activityIds[activity.tempId] = statementId;
+			await persistBuild(state);
+			continue;
+		}
+		const kind = KIND_BY_TYPE[activity.type];
 		let statement = buildChildQuestion({
 			statementId,
 			parent: top,
@@ -358,6 +381,24 @@ async function createScheduledActions(state: BuildState, top: Statement): Promis
 				message: item.nudgeMessage.trim(),
 				audience: 'all',
 				channels: ['inApp', 'email'],
+			};
+		}
+		if (item.action === 'draft') {
+			const activity = item.activityTempId
+				? plan.activities.find((a) => a.tempId === item.activityTempId)
+				: plan.activities.find(
+						(a) => !!item.statementId && a.existingStatementId === item.statementId,
+					);
+			const sourceRefs = item.draftFrom ?? activity?.draftFrom ?? [];
+			const sourceIds = sourceRefs
+				.map((ref) => state.build.activityIds[ref] ?? (known.has(ref) ? ref : undefined))
+				.filter((id): id is string => !!id && id !== targetId);
+			if (sourceIds.length === 0) continue;
+			doc.draft = {
+				sourceStatementIds: [...new Set(sourceIds)],
+				cutoff: activity?.draftCutoff ?? DEFAULT_DRAFT_CUTOFF,
+				language: session.language,
+				...(activity?.draftIntent?.trim() ? { intent: activity.draftIntent.trim() } : {}),
 			};
 		}
 		writes.push((batch) =>

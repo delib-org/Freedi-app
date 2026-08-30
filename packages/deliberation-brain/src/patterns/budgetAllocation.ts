@@ -1,11 +1,11 @@
 import type { DeliberationPattern } from '../types';
 
-/** Participatory budgeting: rank the funding candidates, then decide. */
+/** Participatory budgeting: rank the candidates, draft the allocation proposal, comment, decide. */
 export const budgetAllocation: DeliberationPattern = {
 	patternId: 'budgetAllocation',
 	name: 'Budget allocation',
 	summary:
-		'The crowd ranks what should be funded first (with the options already on the table as seeds), then the deciding group allocates.',
+		'The crowd ranks what should be funded first (with the options already on the table as seeds), the Draft step writes the allocation proposal from the ranking, everyone comments on it, then the deciding group allocates.',
 	applicability: [
 		{ field: 'decisionType', oneOf: ['allocate'], weight: 5, note: 'money or resources must be split' },
 		{ field: 'existingOptions', weight: 1, note: 'candidate items already exist to seed the survey' },
@@ -28,23 +28,36 @@ export const budgetAllocation: DeliberationPattern = {
 			survey: { allowParticipantsToAddSuggestions: true, minEvaluationsPerQuestion: 5 },
 		},
 		{
+			role: 'comment',
+			engine: 'document',
+			questionTemplate: 'Does the allocation proposal for {{topic}} follow what we ranked, and where should it change?',
+			descriptionTemplate:
+				'The allocation proposal was written from the ranking. Mark each line of the proposal and comment where the split should differ.',
+			openNow: false,
+			timing: { durationDays: 7, nudgeDaysBeforeClose: 2 },
+			draftFrom: [0],
+			draftIntentTemplate:
+				'Write the allocation proposal for {{topic}}: one paragraph per funded item in ranking order with the amount and the reasons given, and a gaps section for items that were ranked but not funded.',
+		},
+		{
 			role: 'decide',
 			engine: 'discussion',
-			questionTemplate: 'How do we split the budget given what the community ranked highest?',
+			questionTemplate: 'How do we split the budget given what the community ranked and commented?',
 			descriptionTemplate:
-				'The deciding group allocates amounts, starting from the ranked list and explaining any departure from it.',
+				'A vote in Main / the deciding group: allocate amounts starting from the proposal, explaining any departure from the ranking.',
 			openNow: false,
-			timing: { startAfterDays: 12, durationDays: 7 },
+			timing: { startAfterPrevious: 1, durationDays: 7 },
 		},
 	],
 	rationale:
-		'Allocation questions already have candidates; the crowd\'s job is to rank them with reasons, and the bridging score makes sure a candidate loved by one neighbourhood and hated by another does not top the list. The deciding group then has a legitimate order to allocate against.',
+		'Allocation questions already have candidates; the crowd\'s job is to rank them with reasons, and the bridging score makes sure a candidate loved by one neighbourhood and hated by another does not top the list. Writing the allocation as a document the community can comment on turns the ranking into a proposal with numbers, and the deciding group then has a legitimate order to allocate against.',
 	risks: [
 		'Seeding the survey with the existing items only — leave suggestions open so a missing need can surface.',
 		'Publish the allocation with the ranking beside it, or the process reads as consultation theatre.',
 	],
 	successSignals: [
 		'Every candidate received at least 20 ratings.',
+		'The allocation proposal\'s paragraphs carry positive mean agreement.',
 		'The final allocation follows the ranking or explains each departure.',
 	],
 	mainQuestionTemplate: 'How should {{organization}} allocate the budget for {{topic}}?',

@@ -1,5 +1,5 @@
 import { InferOutput, array, number, object, optional, picklist, string } from 'valibot';
-import { StudioScheduledActionKindSchema } from './StudioPlan';
+import { StudioDraftCutoffSchema, StudioScheduledActionKindSchema } from './StudioPlan';
 
 /**
  * A facilitator action to run at a given time on a question: open / freeze /
@@ -26,6 +26,15 @@ export const ScheduledNudgeSchema = object({
 });
 export type ScheduledNudge = InferOutput<typeof ScheduledNudgeSchema>;
 
+/** `draft` action payload: write the target document from these sources. */
+export const ScheduledDraftSchema = object({
+	sourceStatementIds: array(string()),
+	cutoff: StudioDraftCutoffSchema,
+	intent: optional(string()),
+	language: optional(string()),
+});
+export type ScheduledDraft = InferOutput<typeof ScheduledDraftSchema>;
+
 export const ScheduledActionSchema = object({
 	scheduledActionId: string(),
 	/** Target: an activity (child question) or the top question itself. */
@@ -42,6 +51,8 @@ export const ScheduledActionSchema = object({
 	sessionId: optional(string()),
 	/** `nudge` only. */
 	nudge: optional(ScheduledNudgeSchema),
+	/** `draft` only. */
+	draft: optional(ScheduledDraftSchema),
 	claimedAt: optional(number()),
 	executedAt: optional(number()),
 	error: optional(string()),

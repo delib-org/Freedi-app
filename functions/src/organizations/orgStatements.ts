@@ -25,8 +25,9 @@ import { buildAdminSubscription } from './orgAuth';
  * in chunks (`commitInChunks` in orgAuth.ts).
  */
 
-export type OrgStatementKind = 'topQuestion' | 'massConsensus' | 'join' | 'question';
-export type OrgChildKind = Exclude<OrgStatementKind, 'topQuestion'>;
+export type OrgStatementKind = 'topQuestion' | 'massConsensus' | 'join' | 'question' | 'document';
+/** Child questions (activities that are questions). Documents have their own builder. */
+export type OrgChildKind = Exclude<OrgStatementKind, 'topQuestion' | 'document'>;
 
 export type BatchWrite = (batch: WriteBatch) => void;
 
@@ -247,6 +248,76 @@ export function childQuestionWrites(input: ChildQuestionWritesInput): BatchWrite
 	}
 
 	return writes;
+}
+
+export interface BuildDocumentChildInput {
+	statementId: string;
+	parent: Statement;
+	actor: OrgStatementActor;
+	title: string;
+	description?: string;
+	order: number;
+	/** true → visible + open for comment; false → hidden in Sign (admin review). */
+	openNow: boolean;
+}
+
+/**
+ * A Sign document (activity) under an org top question. Sign reads
+ * `signSettings` (an ad-hoc map outside the Statement schema), so it is
+ * attached after `createStatementObject` validated the base object.
+ */
+export function buildDocumentChild(input: BuildDocumentChildInput): Statement {
+	const { statementId, parent, actor, title, description, order, openNow } = input;
+	const statement = createStatementObject({
+		statement: title,
+		statementType: StatementType.document,
+		parentId: parent.statementId,
+		topParentId: parent.statementId,
+		parents: [parent.statementId],
+		statementId,
+		creatorId: actor.uid,
+		creator: actor.user,
+		statementSettings: {
+			...defaultStatementSettings,
+			hasChildren: true,
+			questionStatus: openNow ? 'live' : 'frozen',
+		},
+		sourceApp: SourceApp.SIGN,
+	});
+	if (!statement) {
+		throw new HttpsError('internal', 'Failed to build the document');
+	}
+	statement.order = order;
+	statement.isDocument = true;
+	if (description) statement.description = description;
+	const withSign = statement as Statement & { signSettings: Record<string, unknown> };
+	withSign.signSettings = {
+		isHidden: !openNow,
+		isPublic: true,
+		isFrozen: false,
+		enableSuggestions: openNow,
+	};
+
+	return withSign;
+}
+
+export function documentChildWrites(input: {
+	statement: Statement;
+	parent: Statement;
+	organizationId: string;
+	now: number;
+}): BatchWrite[] {
+	const { statement, parent, organizationId, now } = input;
+
+	return [
+		(batch) =>
+			batch.set(db.collection(Collections.statements).doc(statement.statementId), statement),
+		(batch) =>
+			batch.set(
+				db.collection(Collections.questionProgress).doc(statement.statementId),
+				seedProgress(statement.statementId, parent.statementId, organizationId, now),
+			),
+	];
 }
 
 export async function callerHasTopSubscription(uid: string, topId: string): Promise<boolean> {

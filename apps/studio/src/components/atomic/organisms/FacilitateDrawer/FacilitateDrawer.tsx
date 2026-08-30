@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState, type FC } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type FC, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
@@ -54,6 +54,8 @@ export interface FacilitateDrawerProps {
 	emailEnabled?: boolean;
 	/** The next pending scheduled action on this activity, shown under Status. */
 	nextScheduled?: ScheduledAction;
+	/** Sign documents: the "Draft from results" section (data-bound, injected). */
+	documentTools?: ReactNode;
 }
 
 /** Human app name for the "opens in …" caption of the admin link. */
@@ -86,6 +88,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 	returnFocusTo,
 	emailEnabled = true,
 	nextScheduled,
+	documentTools,
 }) => {
 	const { t, tWithParams, currentLanguage } = useTranslation();
 	const navigate = useNavigate();
@@ -250,12 +253,15 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 						<h3 id={`${titleId}-status`} className="drawer__section-title">
 							{t('Status')}
 						</h3>
-						{isSignDocument ? (
-							<p className="drawer__static">{t('Documents are always open while shared')}</p>
-						) : readOnly ? (
-							<StatusPill status={status} />
+						{readOnly ? (
+							<StatusPill status={status} document={isSignDocument} />
 						) : (
-							<StatusControl value={status} onChange={handleStatusChange} busy={statusBusy} />
+							<StatusControl
+								value={status}
+								onChange={handleStatusChange}
+								busy={statusBusy}
+								document={isSignDocument}
+							/>
 						)}
 						{nextScheduled && (
 							<p className="drawer__scheduled">
@@ -273,6 +279,21 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 							</p>
 						)}
 					</section>
+
+					{/* 1b. Documents: write the text from results */}
+					{isSignDocument && documentTools && (
+						<section className="drawer__section" aria-labelledby={`${titleId}-draft`}>
+							<h3 id={`${titleId}-draft`} className="drawer__section-title">
+								{t('Draft from results')}
+							</h3>
+							<p className="drawer__hint drawer__hint--start">
+								{t(
+									'A strong model writes the text from the top suggestions of the activities you pick. You review and edit it in Sign before opening it for comment.',
+								)}
+							</p>
+							{documentTools}
+						</section>
+					)}
 
 					{/* 2. Share */}
 					<section className="drawer__section" aria-labelledby={`${titleId}-share`}>
@@ -387,7 +408,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 									target="_blank"
 									rel="noopener noreferrer"
 								>
-									{t('Advanced settings')}
+									{isSignDocument ? t('Edit the text') : t('Advanced settings')}
 									<span className="drawer__caption">
 										{t('opens in')} {appName}
 									</span>

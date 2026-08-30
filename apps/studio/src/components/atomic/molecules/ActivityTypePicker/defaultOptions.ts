@@ -29,9 +29,8 @@ export function DEFAULT_ACTIVITY_OPTIONS(t: Translate): ActivityTypeOption[] {
 		},
 		{
 			type: ActivityType.signDocument,
-			description: t('A text people read, comment on and sign.'),
-			whenToUse: [],
-			disabledReason: t('Coming soon'),
+			description: t('A text the public comments on, paragraph by paragraph.'),
+			whenToUse: [t("You already have a draft, or want one written from a survey's results.")],
 		},
 	];
 }

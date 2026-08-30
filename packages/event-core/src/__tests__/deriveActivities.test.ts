@@ -78,3 +78,83 @@ describe('deriveActivities — run state', () => {
 		expect(derived.map((a) => a.statementId)).toEqual(['a', 'b']);
 	});
 });
+
+describe('deriveActivities — Sign document run state (signSettings)', () => {
+	const document = (signSettings: unknown, id = 'doc-1') =>
+		question({
+			statementId: id,
+			statementType: StatementType.document,
+			// signSettings is not part of the Statement schema; it is an
+			// untyped map the Sign app writes.
+			...({ signSettings } as Partial<Statement>),
+		});
+
+	it('a hidden document is queued (in admin review, not yet open for comment)', () => {
+		const [activity] = deriveActivities([document({ isHidden: true })], resolver);
+		expect(activity.type).toBe(ActivityType.signDocument);
+		expect(activity.runState).toBe('queued');
+	});
+
+	it('hidden wins over frozen and closed', () => {
+		const [activity] = deriveActivities(
+			[document({ isHidden: true, isFrozen: true, enableSuggestions: false })],
+			resolver,
+		);
+		expect(activity.runState).toBe('queued');
+	});
+
+	it('a frozen document is frozen', () => {
+		const [activity] = deriveActivities([document({ isFrozen: true })], resolver);
+		expect(activity.runState).toBe('frozen');
+	});
+
+	it('suggestions disabled on a visible document means closed', () => {
+		const [activity] = deriveActivities(
+			[document({ isHidden: false, enableSuggestions: false })],
+			resolver,
+		);
+		expect(activity.runState).toBe('closed');
+	});
+
+	it('is open for comment otherwise, including with no signSettings at all', () => {
+		const derived = deriveActivities(
+			[
+				document(undefined, 'a'),
+				document({}, 'b'),
+				document({ isHidden: false, isFrozen: false, enableSuggestions: true }, 'c'),
+			],
+			resolver,
+		);
+		expect(derived.map((a) => a.runState)).toEqual(['open', 'open', 'open']);
+	});
+
+	it('ignores non-boolean values and non-object maps', () => {
+		const derived = deriveActivities(
+			[document({ isHidden: 'yes', isFrozen: 1 }, 'a'), document('hidden', 'b')],
+			resolver,
+		);
+		expect(derived.map((a) => a.runState)).toEqual(['open', 'open']);
+	});
+
+	it('does not read questionStatus for documents', () => {
+		const [activity] = deriveActivities(
+			[
+				question({
+					statementType: StatementType.document,
+					statementSettings: { questionStatus: 'closed' },
+				}),
+			],
+			resolver,
+		);
+		expect(activity.runState).toBe('open');
+	});
+
+	it('links participants to /doc/{id} and admins to the Sign editor', () => {
+		const [activity] = deriveActivities([document({ isHidden: true })], resolver);
+		expect(activity.participant).toEqual({ href: 'https://sign.test/doc/doc-1', external: true });
+		expect(activity.admin).toEqual({
+			href: 'https://sign.test/doc/doc-1/admin/editor',
+			external: true,
+		});
+	});
+});

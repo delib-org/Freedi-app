@@ -54,6 +54,7 @@ export async function runPlannerTurn(input: PlannerTurnInput): Promise<Interpret
 		now,
 		previousPlan: session.currentPlan,
 		previousDiagnosis: session.diagnosis,
+		timezone: session.timezone,
 	};
 
 	if (isFixtureMode()) {

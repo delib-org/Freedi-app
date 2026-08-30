@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { STUDIO_NUDGE_MESSAGE_MAX } from '@freedi/shared-types';
+import { DEFAULT_DRAFT_CUTOFF, STUDIO_NUDGE_MESSAGE_MAX } from '@freedi/shared-types';
 import { interpretLlmResponse, normalizePlan, PlanParseError } from '../interpret';
 import type { InterpretOptions } from '../interpret';
-import { futureIso, NOW } from './helpers';
+import { DAY_MS, futureIso, NOW } from './helpers';
 
+const HOUR_MS = 60 * 60 * 1000;
 const newOpts: InterpretOptions = { mode: 'new', existingIds: [], now: NOW };
 
 function response(overrides: Record<string, unknown> = {}): Record<string, unknown> {
 	return {
 		diagnosis: { decisionType: 'gatherIdeas', audienceSize: 'community', bogus: 'ignored', polarization: 'weird' },
-		patternId: 'widenConvergeDecide',
+		patternId: 'questionFirstAgreement',
 		missingCritical: ['timeHorizonDays', 'notAField'],
 		reply: 'Here is a plan.',
 		readyToBuild: false,
@@ -36,15 +37,48 @@ function response(overrides: Record<string, unknown> = {}): Record<string, unkno
 	};
 }
 
+/** A question-first plan: survey → document drafted from it → decide. */
+function draftPlan(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+	return {
+		mainQuestion: { title: 'How do we live with the dogs?' },
+		activities: [
+			{ tempId: 'a1', type: 'crowdSurvey', title: 'How do we live in peace with the dogs?', openNow: true, role: 'widen' },
+			{
+				tempId: 'a2',
+				type: 'document',
+				title: 'What in the proposed agreement works?',
+				openNow: false,
+				role: 'comment',
+				draftFrom: ['a1'],
+				draftIntent: 'An agreement on dogs.',
+			},
+			{ tempId: 'a3', type: 'discussion', title: 'Do we adopt the agreement?', openNow: false, role: 'decide' },
+		],
+		scheduledActions: [
+			{ tempId: 's1', target: 'a1', action: 'close', at: futureIso(14) },
+			{ tempId: 's2', target: 'a2', action: 'draft', at: futureIso(14, 21) },
+			{ tempId: 's3', target: 'a2', action: 'open', at: futureIso(16) },
+			{ tempId: 's4', target: 'a2', action: 'close', at: futureIso(26) },
+			{ tempId: 's5', target: 'a3', action: 'open', at: futureIso(27) },
+		],
+		summary: 'Question first.',
+		...overrides,
+	};
+}
+
 describe('interpretLlmResponse', () => {
 	it('turns a valid response into a plan, sanitized diagnosis and known pattern', () => {
 		const out = interpretLlmResponse(response(), newOpts);
 		expect(out.plan).toBeDefined();
 		expect(out.reply).toBe('Here is a plan.');
 		expect(out.diagnosis).toEqual({ decisionType: 'gatherIdeas', audienceSize: 'community' });
-		expect(out.patternId).toBe('widenConvergeDecide');
+		expect(out.patternId).toBe('questionFirstAgreement');
 		expect(out.missingCritical).toEqual(['timeHorizonDays']);
 		expect(out.blocking).toBe(false);
+	});
+
+	it('drops a retired pattern id', () => {
+		expect(interpretLlmResponse(response({ patternId: 'widenConvergeDecide' }), newOpts).patternId).toBeUndefined();
 	});
 
 	it('fills tempIds, order and converts ISO with offset to ms', () => {
@@ -159,12 +193,19 @@ describe('interpretLlmResponse', () => {
 		expect(out.readyToBuild).toBe(false);
 	});
 
-	it('merges the diagnosis with the previous one', () => {
-		const out = interpretLlmResponse(response({ diagnosis: { polarization: 'contested' } }), {
+	it('merges the diagnosis with the previous one, including the entry-rule fields', () => {
+		const out = interpretLlmResponse(response({ diagnosis: { polarization: 'contested', hasDraft: 'material', decisionBody: 'council', audienceSegments: ['members', ' youth '] } }), {
 			...newOpts,
 			previousDiagnosis: { decisionType: 'allocate', whoDecides: 'the council' },
 		});
-		expect(out.diagnosis).toEqual({ decisionType: 'allocate', whoDecides: 'the council', polarization: 'contested' });
+		expect(out.diagnosis).toEqual({
+			decisionType: 'allocate',
+			whoDecides: 'the council',
+			polarization: 'contested',
+			hasDraft: 'material',
+			decisionBody: 'council',
+			audienceSegments: ['members', 'youth'],
+		});
 	});
 
 	it('throws PlanParseError with readable issues on a bad shape', () => {
@@ -177,6 +218,12 @@ describe('interpretLlmResponse', () => {
 			expect(issues.some((issue) => issue.startsWith('plan.mainQuestion.title'))).toBe(true);
 			expect(issues.some((issue) => issue.startsWith('plan.activities.0.type'))).toBe(true);
 		}
+	});
+
+	it('rejects the experimental engine at the schema (closed engine set)', () => {
+		expect(() =>
+			interpretLlmResponse({ reply: 'x', plan: { mainQuestion: { title: 'Q?' }, activities: [{ type: 'agora', title: 'Q?' }] } }, newOpts),
+		).toThrow(PlanParseError);
 	});
 });
 
@@ -206,5 +253,93 @@ describe('normalizePlan', () => {
 			newOpts,
 		);
 		expect(out.plan?.activities.map((activity) => activity.tempId)).toEqual(['a1', 'a2']);
+	});
+
+	it('keeps a complete draft chain as-is, with the default cutoff', () => {
+		const out = normalizePlan(draftPlan(), newOpts);
+		const document = out.plan!.activities[1];
+		expect(document).toMatchObject({ openNow: false, draftFrom: ['a1'], draftCutoff: DEFAULT_DRAFT_CUTOFF, draftIntent: 'An agreement on dogs.' });
+		expect(out.plan!.scheduledActions.map((action) => action.action)).toEqual(['close', 'draft', 'open', 'close', 'open']);
+		expect(out.plan!.scheduledActions[1].draftFrom).toEqual(['a1']);
+		expect(out.problems).toEqual([]);
+	});
+
+	it('resolves draftFrom against plan tempIds and existing ids, dropping unknown and self', () => {
+		const plan = draftPlan();
+		(plan.activities as Array<Record<string, unknown>>)[1].draftFrom = ['a1', 'a2', 'zzz', 'st9'];
+		const out = normalizePlan(plan, { mode: 'existing', existingIds: ['st9'], now: NOW });
+		expect(out.plan!.activities[1].draftFrom).toEqual(['a1', 'st9']);
+		expect(out.problems.some((problem) => /"zzz" is not an activity/.test(problem))).toBe(true);
+	});
+
+	it('synthesizes a draft step 1h after the last source closes, plus an open 2 days later', () => {
+		const plan = draftPlan({
+			scheduledActions: [
+				{ tempId: 's1', target: 'a1', action: 'close', at: futureIso(14) },
+				{ tempId: 's2', target: 'a2', action: 'close', at: futureIso(26) },
+			],
+		});
+		const out = normalizePlan(plan, { ...newOpts, timezone: 'Asia/Jerusalem' });
+		const actions = out.plan!.scheduledActions;
+		const draft = actions.find((action) => action.action === 'draft')!;
+		const open = actions.find((action) => action.action === 'open' && action.activityTempId === 'a2')!;
+		expect(draft.at).toBe(Date.parse(futureIso(14)) + HOUR_MS);
+		expect(draft.draftFrom).toEqual(['a1']);
+		expect(draft.atLocal).toMatch(/\+0[23]:00$/);
+		expect(open.at).toBe(draft.at + 2 * DAY_MS);
+		expect(out.problems.some((problem) => /added a draft step/.test(problem))).toBe(true);
+	});
+
+	it('synthesizes the draft step for tomorrow when no source closes', () => {
+		const out = normalizePlan(draftPlan({ scheduledActions: [] }), newOpts);
+		const draft = out.plan!.scheduledActions.find((action) => action.action === 'draft')!;
+		expect(draft.at).toBe(NOW + DAY_MS);
+	});
+
+	it('a new document without sources opens now with a non-blocking note', () => {
+		const plan = draftPlan();
+		delete (plan.activities as Array<Record<string, unknown>>)[1].draftFrom;
+		const out = normalizePlan(plan, newOpts);
+		expect(out.plan!.activities[1].openNow).toBe(true);
+		expect(out.plan!.activities[1].draftFrom).toBeUndefined();
+		expect(out.problems.some((problem) => /must already have its text/.test(problem))).toBe(true);
+		expect(out.plan!.scheduledActions.some((action) => action.action === 'draft')).toBe(false);
+	});
+
+	it('a draft action must target a document; its own sources fill an empty document', () => {
+		const plan = draftPlan();
+		delete (plan.activities as Array<Record<string, unknown>>)[1].draftFrom;
+		plan.scheduledActions = [
+			{ tempId: 's1', target: 'a1', action: 'draft', at: futureIso(14) },
+			{ tempId: 's2', target: 'a2', action: 'draft', at: futureIso(14), draftFrom: ['a1'] },
+			{ tempId: 's3', target: 'a2', action: 'open', at: futureIso(16) },
+		];
+		const out = normalizePlan(plan, newOpts);
+		expect(out.problems.some((problem) => /must target a document/.test(problem))).toBe(true);
+		expect(out.plan!.scheduledActions.map((action) => action.action)).toEqual(['draft', 'open']);
+		expect(out.plan!.activities[1]).toMatchObject({ draftFrom: ['a1'], openNow: false, draftCutoff: DEFAULT_DRAFT_CUTOFF });
+	});
+
+	it('drops draft fields on a non-document and a survey on a document', () => {
+		const out = normalizePlan(
+			{
+				mainQuestion: { title: 'Q?' },
+				activities: [
+					{ tempId: 'a1', type: 'crowdSurvey', title: 'A?', draftFrom: ['a2'] },
+					{ tempId: 'a2', type: 'document', title: 'B?', survey: { intro: 'x' }, draftCutoff: { mode: 'threshold', minConsensus: 0.4 } },
+				],
+			},
+			newOpts,
+		);
+		expect(out.plan!.activities[0].draftFrom).toBeUndefined();
+		expect(out.plan!.activities[1].survey).toBeUndefined();
+		expect(out.problems.some((problem) => /only a document can be drafted/.test(problem))).toBe(true);
+	});
+
+	it('normalizes an explicit cutoff', () => {
+		const plan = draftPlan();
+		(plan.activities as Array<Record<string, unknown>>)[1].draftCutoff = { mode: 'threshold', minConsensus: 0.4, minEvaluators: 5.4 };
+		const out = normalizePlan(plan, newOpts);
+		expect(out.plan!.activities[1].draftCutoff).toEqual({ mode: 'threshold', minConsensus: 0.4, minEvaluators: 5 });
 	});
 });

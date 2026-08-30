@@ -119,6 +119,16 @@ export default function QuestionDashboard() {
 	const handleCreated = (statementId: string, type: ActivityType) => {
 		if (activities.length === 0) onboarding.markStep(ONBOARDING_FIRST_ACTIVITY);
 		setModal(null);
+		if (type === ActivityType.signDocument) {
+			// The document is created hidden; its text is written (or pasted)
+			// in Sign's editor. The admin comes back here to open it for comment.
+			const editor = activityUrlResolver.getAdminLink(ActivityType.signDocument, statementId);
+			if (editor) {
+				window.location.assign(editor.href);
+
+				return;
+			}
+		}
 		if (type === ActivityType.massConsensus) {
 			// The question exists under this top question; the full survey
 			// (questions, demographics, logos…) is configured in Crowd survey,
@@ -248,6 +258,7 @@ export default function QuestionDashboard() {
 					scheduled={scheduled}
 					canManage={canManage}
 					onClose={() => selectActivity(null)}
+					onToast={showToast}
 					onArchiveRequest={(id) => {
 						selectActivity(null);
 						setArchiveActivityId(id);
@@ -300,6 +311,7 @@ export default function QuestionDashboard() {
 					<EditScheduledActionModal
 						isOpen={editAction !== null}
 						action={editAction}
+						activities={activities}
 						onClose={() => setEditAction(null)}
 						onSaved={() => {
 							setEditAction(null);
