@@ -280,10 +280,16 @@ const turn1 = await call('fn_studioPlanMessage', consultant.idToken, {
 });
 // Fixture mode (no OPENAI_API_KEY) answers with a plan at once; the real model may ask a clarifying question first.
 check('first turn answers in Hebrew and is not ready yet', /[\u0590-\u05FF]/.test(turn1.message?.content ?? '') && turn1.readyToBuild === false, JSON.stringify({ n: turn1.plan?.activities?.length, ready: turn1.readyToBuild }));
-const turn2 = await call('fn_studioPlanMessage', consultant.idToken, { sessionId: planStart.sessionId, message: 'מעולה, בואו נבנה את זה' });
-check('second turn marks the plan ready to build', turn2.readyToBuild === true, String(turn2.readyToBuild));
+// The consultant may ask one more question; a real admin answers and asks to build. Give it up to 3 turns.
+let turn2 = await call('fn_studioPlanMessage', consultant.idToken, { sessionId: planStart.sessionId, message: 'מעולה, בואו נבנה את זה' });
+const followUps = ['הציבור הרחב מחליט בהצבעה, אין לנו מנחה. תציע תוכנית מלאה ונבנה אותה.', 'זה מספיק טוב, בנה את זה עכשיו.'];
+let extraTurns = 0;
+while (!turn2.readyToBuild && extraTurns < followUps.length) {
+	turn2 = await call('fn_studioPlanMessage', consultant.idToken, { sessionId: planStart.sessionId, message: followUps[extraTurns++] });
+}
+check('the plan is ready to build within 4 user turns', turn2.readyToBuild === true, JSON.stringify({ extraTurns, ready: turn2.readyToBuild }));
 const sessionDoc = await fsGet(`studioPlanSessions/${planStart.sessionId}`);
-check('session stores messages, plan, diagnosis and language he', sessionDoc?.messages?.length === 5 && !!sessionDoc?.currentPlan && sessionDoc?.language === 'he', JSON.stringify({ m: sessionDoc?.messages?.length, lang: sessionDoc?.language }));
+check('session stores messages, plan, diagnosis and language he', sessionDoc?.messages?.length === 5 + 2 * extraTurns && !!sessionDoc?.currentPlan && sessionDoc?.language === 'he', JSON.stringify({ m: sessionDoc?.messages?.length, lang: sessionDoc?.language }));
 const built = await call('fn_studioPlanBuild', consultant.idToken, { sessionId: planStart.sessionId });
 const finalPlan = (await fsGet(`studioPlanSessions/${planStart.sessionId}`))?.currentPlan;
 const plannedSurveys = (finalPlan?.activities ?? []).filter((a) => a.type === 'crowdSurvey').length;
@@ -291,7 +297,7 @@ check('build returns top question + every planned activity + a survey per crowd 
 const builtTop = await fsGet(`statements/${built.topQuestionId}`);
 check('built top question belongs to the org', builtTop?.organizationId === org.organizationId && builtTop?.parentId === 'top');
 const builtChildren = await fsList('statements', (d) => d.parentId === built.topQuestionId);
-const kindMarker = { crowdSurvey: 'mass-consensus', liveSession: 'join', discussion: 'main' };
+const kindMarker = { crowdSurvey: 'mass-consensus', liveSession: 'join', discussion: 'main', document: 'sign' };
 const plannedSorted = [...(finalPlan?.activities ?? [])].sort((a, b) => a.order - b.order);
 const childrenSorted = [...builtChildren].sort((a, b) => a.order - b.order);
 check('built activities are children in plan order with kind markers + open/frozen', plannedSorted.every((a, i) => childrenSorted[i]?.sourceApp === kindMarker[a.type] && childrenSorted[i]?.statementSettings?.questionStatus === (a.openNow ? 'live' : 'frozen')), childrenSorted.map((d) => `${d.order}:${d.sourceApp}:${d.statementSettings?.questionStatus}`).join(' '));

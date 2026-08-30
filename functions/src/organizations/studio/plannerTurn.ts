@@ -46,7 +46,7 @@ function parseJson(raw: string): unknown {
 export async function runPlannerTurn(input: PlannerTurnInput): Promise<InterpretedResponse> {
 	const { session, messages, now } = input;
 	const latest = messages[messages.length - 1];
-	const ctx = brainContextFor(session, { now });
+	const ctx = brainContextFor(session, { now, latestUserMessage: latest?.content });
 	const move = nextMove(ctx);
 	const interpretOpts = {
 		mode: ctx.mode,

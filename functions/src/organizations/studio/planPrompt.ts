@@ -33,7 +33,7 @@ export const EXISTING_MODE_BOOTSTRAP =
 
 export function brainContextFor(
 	session: StudioPlanSession,
-	opts: { now: number; problems?: string[] },
+	opts: { now: number; problems?: string[]; latestUserMessage?: string },
 ): BrainContext {
 	const ctx: BrainContext = {
 		mode: session.topQuestionId ? 'existing' : 'new',
@@ -48,6 +48,7 @@ export function brainContextFor(
 	if (session.currentPlan) ctx.currentPlan = session.currentPlan;
 	if (session.patternId) ctx.patternId = session.patternId;
 	if (opts.problems && opts.problems.length > 0) ctx.problems = opts.problems;
+	if (opts.latestUserMessage) ctx.latestUserMessage = opts.latestUserMessage;
 
 	return ctx;
 }

@@ -1,6 +1,7 @@
 import { DEFAULT_DRAFT_CUTOFF, DiagnosisField, STUDIO_NUDGE_MESSAGE_MAX } from '@freedi/shared-types';
 import { DRAFT_STEP_DESCRIPTION, ENGINE_AFFORDANCES, EXPERIMENTAL_ENGINES_NOTE, getAffordance } from './affordances';
 import { DRAFT_REVIEW_DAYS } from './instantiate';
+import { wantsPlanNow } from './policy';
 import { matchPatterns } from './patterns';
 import { OUTPUT_CONTRACT } from './promptContract';
 import type { ActivityTemplate, BrainContext, DeliberationPattern, NextMove } from './types';
@@ -159,15 +160,18 @@ function renderInstruction(ctx: BrainContext, move: NextMove): string {
 	const askLine = asks.length > 0 ? `Questions you may ask (max 2): ${asks.join('; ')}.` : '';
 	const candidate = matchPatterns(ctx.diagnosis, 1)[0];
 	const patternHint = candidate ? `Best-matching pattern: "${candidate.pattern.patternId}".` : '';
+	const buildAsk = wantsPlanNow(ctx.latestUserMessage)
+		? 'The admin explicitly asked for the plan / to build it: do NOT answer with questions only — return the COMPLETE plan, state your assumptions in one sentence, and set readyToBuild to true unless something is genuinely blocking. '
+		: '';
 	switch (move.move) {
 		case 'askClarifying':
 			return `Ask at most 2 short clarifying questions before proposing; a one-sentence sketch of the likely approach is welcome. Set plan to null and readyToBuild to false. ${askLine}`;
 		case 'propose':
-			return `Propose a COMPLETE plan now (state any assumptions in the reply). ${patternHint} You may end with up to 2 short questions. readyToBuild is false unless the admin explicitly asked to build. ${askLine}`;
+			return `${buildAsk}Propose a COMPLETE plan now (state any assumptions in the reply). ${patternHint} You may end with up to 2 short questions. readyToBuild is false unless the admin explicitly asked to build. ${askLine}`;
 		case 'revise':
 			return `Revise the current plan according to the admin's latest message${(ctx.problems?.length ?? 0) > 0 ? ' and fix every listed problem' : ''}. Return the COMPLETE plan with the same tempIds. readyToBuild is true only if the admin explicitly approved. ${askLine}`;
 		case 'confirm':
-			return 'The plan is stable. Summarize it in 2–3 sentences, then ask "Shall I build this?". Return the complete plan unchanged unless the admin asked for a change. readyToBuild is true only if the admin\'s message is an explicit approval.';
+			return `${buildAsk}The plan is stable. Summarize it in 2–3 sentences, then ask "Shall I build this?". Return the complete plan unchanged unless the admin asked for a change. readyToBuild is true only if the admin's message is an explicit approval.`;
 		default:
 			return '';
 	}

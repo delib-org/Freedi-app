@@ -24,6 +24,8 @@ export interface BrainContext {
 	patternId?: string;
 	/** User turns BEFORE the current one (0 on the first message). */
 	userTurns: number;
+	/** The admin's latest message (for intent detection: "build it", "propose"). */
+	latestUserMessage?: string;
 	/** Critic problems from the previous plan, to repair this turn. */
 	problems?: string[];
 }

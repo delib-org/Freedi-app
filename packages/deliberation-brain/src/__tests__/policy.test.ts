@@ -71,3 +71,22 @@ describe('nextMove', () => {
 		expect(nextMove(makeCtx({ userTurns: 1, currentPlan: plan() })).move).toBe('revise');
 	});
 });
+
+describe('build intent', () => {
+	it('proposes on the first turn when the admin asks for a plan, in Hebrew or English', () => {
+		const he = nextMove(makeCtx({ userTurns: 0, latestUserMessage: 'תציע תוכנית ונבנה אותה' }));
+		expect(he.move).toBe('propose');
+		expect(he.askFields.length).toBeLessThanOrEqual(1);
+		expect(nextMove(makeCtx({ userTurns: 0, latestUserMessage: 'ok, build it' })).move).toBe('propose');
+	});
+
+	it('confirms (ready to build) when a plan exists and the admin says build', () => {
+		const move = nextMove(makeCtx({ userTurns: 1, currentPlan: plan(), latestUserMessage: 'מעולה, בואו נבנה את זה' }));
+		expect(move.move).toBe('confirm');
+		expect(move.reason).toMatch(/readyToBuild true/);
+	});
+
+	it('proposes from the second user turn even with missing fields', () => {
+		expect(nextMove(makeCtx({ userTurns: 1, latestUserMessage: 'עוד פרטים על הבעיה' })).move).toBe('propose');
+	});
+});
