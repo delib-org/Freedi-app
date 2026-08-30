@@ -21,6 +21,7 @@ const plan: StudioPlan = {
 				allowParticipantsToAddSuggestions: false,
 				minEvaluationsPerQuestion: 5,
 				extraQuestions: [{ tempId: 'x1', title: 'Extra' }],
+				seedOptions: ['Plant more trees', 'Fix the roads', 'שיפוץ בתי הספר'],
 			},
 		},
 		{
@@ -103,6 +104,34 @@ describe('PlanCard', () => {
 		expect(screen.getByText('Min evaluations: 5')).toBeTruthy();
 		expect(screen.getByText('1 extra questions')).toBeTruthy();
 		expect(screen.getByText('Widen first, then decide together.')).toBeTruthy();
+	});
+
+	it('lists a crowd survey\'s starting suggestions collapsed, each with dir="auto"', () => {
+		const { container } = renderCard();
+		const details = container.querySelector<HTMLDetailsElement>('details.plan-card__seeds');
+		expect(details).toBeTruthy();
+		expect(details?.open).toBe(false);
+		expect(screen.getByText('Starting suggestions (3)').tagName).toBe('SUMMARY');
+		const items = container.querySelectorAll('.plan-card__seeds-list li');
+		expect(items).toHaveLength(3);
+		expect(items[2].textContent).toBe('שיפוץ בתי הספר');
+		items.forEach((item) => expect(item.getAttribute('dir')).toBe('auto'));
+		expect(screen.queryByText(/no starting suggestions/i)).toBeNull();
+	});
+
+	it('says when a crowd survey has no starting suggestions — and only for crowd surveys', () => {
+		const emptySurvey: StudioPlan = {
+			...plan,
+			scheduledActions: [],
+			activities: [
+				{ ...plan.activities[0], survey: { intro: 'Hi' } },
+				plan.activities[1],
+				plan.activities[2],
+			],
+		};
+		renderCard({ plan: emptySurvey });
+		expect(screen.getAllByText('No starting suggestions — the survey opens empty')).toHaveLength(1);
+		expect(screen.queryByText(/starting suggestions \(/i)).toBeNull();
 	});
 
 	it('renders the schedule with glyph + word, the target title and the nudge text', () => {

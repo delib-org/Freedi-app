@@ -4,6 +4,7 @@ import {
 	STUDIO_PLAN_MAX_ACTIVITIES,
 	StudioPlan,
 	StudioPlanActivity,
+	STUDIO_SEED_OPTIONS_COUNT,
 } from '@freedi/shared-types';
 
 export interface CriticReport {
@@ -82,7 +83,18 @@ export function critiquePlan(plan: StudioPlan, ctx: CriticContext): CriticReport
 		blocking.push(
 			`The plan has ${activities.length} activities; the maximum is ${STUDIO_PLAN_MAX_ACTIVITIES}.`,
 		);
-	} else if (activities.length > RECOMMENDED_MAX_ACTIVITIES) {
+	}
+	activities
+		.filter((activity) => activity.type === 'crowdSurvey' && activity.change === 'add')
+		.forEach((activity) => {
+			const seeds = activity.survey?.seedOptions?.length ?? 0;
+			if (seeds < STUDIO_SEED_OPTIONS_COUNT) {
+				problems.push(
+					`Crowd survey ${label(activity)} has ${seeds} starting suggestions; seed ${STUDIO_SEED_OPTIONS_COUNT} so the first participants have something to rate.`,
+				);
+			}
+		});
+	if (activities.length > RECOMMENDED_MAX_ACTIVITIES) {
 		problems.push(
 			`The plan has ${activities.length} activities; ${RECOMMENDED_MAX_ACTIVITIES} or fewer keeps participants engaged. Consider merging stages.`,
 		);

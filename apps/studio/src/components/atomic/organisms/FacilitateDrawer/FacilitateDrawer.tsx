@@ -56,6 +56,8 @@ export interface FacilitateDrawerProps {
 	nextScheduled?: ScheduledAction;
 	/** Sign documents: the "Draft from results" section (data-bound, injected). */
 	documentTools?: ReactNode;
+	/** Crowd surveys: the "Starting suggestions" section (data-bound, injected). */
+	surveyTools?: ReactNode;
 }
 
 /** Human app name for the "opens in …" caption of the admin link. */
@@ -89,6 +91,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 	emailEnabled = true,
 	nextScheduled,
 	documentTools,
+	surveyTools,
 }) => {
 	const { t, tWithParams, currentLanguage } = useTranslation();
 	const navigate = useNavigate();
@@ -171,6 +174,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 	if (!isOpen) return null;
 
 	const isSignDocument = activity.type === ActivityType.signDocument;
+	const isCrowdSurvey = activity.type === ActivityType.massConsensus;
 	const isJoin = activity.type === ActivityType.join;
 	const counts = {
 		entered: progress?.entered ?? 0,
@@ -292,6 +296,21 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 								)}
 							</p>
 							{documentTools}
+						</section>
+					)}
+
+					{/* 1c. Crowd surveys: starting suggestions against the cold start */}
+					{isCrowdSurvey && surveyTools && (
+						<section className="drawer__section" aria-labelledby={`${titleId}-seed`}>
+							<h3 id={`${titleId}-seed`} className="drawer__section-title">
+								{t('Starting suggestions')}
+							</h3>
+							<p className="drawer__hint drawer__hint--start">
+								{t(
+									'A few AI-written suggestions so the first participants have something to rate. They are ordinary suggestions — you can edit or remove them later in Crowd survey.',
+								)}
+							</p>
+							{surveyTools}
 						</section>
 					)}
 

@@ -3963,5 +3963,18 @@
   "{{count}} paragraphs written · {{gaps}} open gaps — review it in Sign": "{{count}} paragraphs written · {{gaps}} open gaps — review it in Sign",
   "Draft from results": "Draft from results",
   "A strong model writes the text from the top suggestions of the activities you pick. You review and edit it in Sign before opening it for comment.": "A strong model writes the text from the top suggestions of the activities you pick. You review and edit it in Sign before opening it for comment.",
-  "Edit the text": "Edit the text"
+  "Edit the text": "Edit the text",
+  "Starting suggestions ({{count}})": "Starting suggestions ({{count}})",
+  "No starting suggestions — the survey opens empty": "No starting suggestions — the survey opens empty",
+  "Starting suggestions": "Starting suggestions",
+  "A few AI-written suggestions so the first participants have something to rate. They are ordinary suggestions — you can edit or remove them later in Crowd survey.": "A few AI-written suggestions so the first participants have something to rate. They are ordinary suggestions — you can edit or remove them later in Crowd survey.",
+  "Suggestions now: {{count}}": "Suggestions now: {{count}}",
+  "What kind of suggestions? (optional)": "What kind of suggestions? (optional)",
+  "e.g. Concrete ideas a city council could act on this year.": "e.g. Concrete ideas a city council could act on this year.",
+  "Seed {{count}} suggestions": "Seed {{count}} suggestions",
+  "Writing suggestions…": "Writing suggestions…",
+  "{{created}} suggestions added ({{total}} in total)": "{{created}} suggestions added ({{total}} in total)",
+  "Only crowd surveys can be seeded": "Only crowd surveys can be seeded",
+  "The suggestions could not be written. Please try again.": "The suggestions could not be written. Please try again.",
+  "The survey already has {{count}} suggestions — pick a higher number to add more.": "The survey already has {{count}} suggestions — pick a higher number to add more."
 }

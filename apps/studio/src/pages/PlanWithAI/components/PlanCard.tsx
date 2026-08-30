@@ -16,6 +16,7 @@ import { formatDateTime, toIsoDateTime } from '@/utils/formatDateTime';
 import { ACTION_GLYPHS, ACTION_LABELS, toActivityType } from '../planTypes';
 import { draftSourcesOf, resolveSourceTitles } from '../planDocument';
 import PlanDocumentDetails from './PlanDocumentDetails';
+import PlanSeedOptions from './PlanSeedOptions';
 
 /**
  * PlanCard — the live plan next to the chat: main question, ordered
@@ -195,6 +196,7 @@ const PlanCard: FC<PlanCardProps> = ({
 												)}
 										</ul>
 									)}
+									<PlanSeedOptions activity={activity} />
 									{activity.type === 'document' && (
 										<PlanDocumentDetails
 											activity={activity}

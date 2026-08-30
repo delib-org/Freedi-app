@@ -4202,5 +4202,18 @@
   "{{count}} paragraphs written · {{gaps}} open gaps — review it in Sign": "נכתבו {{count}} פסקאות · {{gaps}} פערים פתוחים — בדקו אותה ב-Sign",
   "Draft from results": "טיוטה מהתוצאות",
   "A strong model writes the text from the top suggestions of the activities you pick. You review and edit it in Sign before opening it for comment.": "מודל חזק כותב את הטקסט מההצעות המובילות של הפעילויות שתבחרו. אתם בודקים ועורכים אותו ב-Sign לפני שפותחים אותו להערות.",
-  "Edit the text": "לערוך את הטקסט"
+  "Edit the text": "לערוך את הטקסט",
+  "Starting suggestions ({{count}})": "הצעות פתיחה ({{count}})",
+  "No starting suggestions — the survey opens empty": "אין הצעות פתיחה — הסקר נפתח ריק",
+  "Starting suggestions": "הצעות פתיחה",
+  "A few AI-written suggestions so the first participants have something to rate. They are ordinary suggestions — you can edit or remove them later in Crowd survey.": "כמה הצעות שה-AI כותב כדי שלמשתתפים הראשונים יהיה מה לדרג. אלה הצעות רגילות — אפשר לערוך או להסיר אותן אחר כך בסקר ההמונים.",
+  "Suggestions now: {{count}}": "הצעות כרגע: {{count}}",
+  "What kind of suggestions? (optional)": "אילו הצעות לכתוב? (לא חובה)",
+  "e.g. Concrete ideas a city council could act on this year.": "לדוגמה: רעיונות מעשיים שמועצת עיר יכולה ליישם השנה.",
+  "Seed {{count}} suggestions": "להוסיף {{count}} הצעות פתיחה",
+  "Writing suggestions…": "כותב הצעות…",
+  "{{created}} suggestions added ({{total}} in total)": "נוספו {{created}} הצעות ({{total}} בסך הכול)",
+  "Only crowd surveys can be seeded": "אפשר להוסיף הצעות פתיחה רק לסקר המונים",
+  "The suggestions could not be written. Please try again.": "לא הצלחנו לכתוב את ההצעות. נסו שוב.",
+  "The survey already has {{count}} suggestions — pick a higher number to add more.": "בסקר כבר יש {{count}} הצעות — בחרו מספר גבוה יותר כדי להוסיף עוד."
 }

@@ -44,6 +44,7 @@ export const LlmSurveySchema = looseObject({
 	minEvaluationsPerQuestion: nullish(number()),
 	askUserForASolutionBeforeEvaluation: nullish(boolean()),
 	extraQuestions: nullish(array(LlmExtraQuestionSchema)),
+	seedOptions: nullish(array(string())),
 });
 
 /** How the Draft step picks its sources; `normalizePlan` fills the default. */

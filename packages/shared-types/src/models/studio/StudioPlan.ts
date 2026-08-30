@@ -57,6 +57,12 @@ export const StudioPlanSurveyConfigSchema = object({
 	askUserForASolutionBeforeEvaluation: optional(boolean()),
 	/** Additional questions in the same survey (created as children of the activity). */
 	extraQuestions: optional(array(StudioPlanExtraQuestionSchema)),
+	/**
+	 * Starting suggestions the consultant seeds under the question so the first
+	 * participants have something to rate (no cold start). Participant-facing,
+	 * in the survey's language; created as ordinary options by the build.
+	 */
+	seedOptions: optional(array(string())),
 });
 export type StudioPlanSurveyConfig = InferOutput<typeof StudioPlanSurveyConfigSchema>;
 
@@ -244,5 +250,8 @@ export const STUDIO_PLAN_MAX_USER_TURNS = 40;
 export const STUDIO_PLAN_MAX_MESSAGE_CHARS = 4000;
 export const STUDIO_PLAN_MESSAGES_PER_HOUR = 30;
 export const STUDIO_NUDGE_MESSAGE_MAX = 280;
+/** Starting suggestions seeded under every crowd survey built from a plan. */
+export const STUDIO_SEED_OPTIONS_COUNT = 6;
+export const STUDIO_SEED_OPTION_MAX_CHARS = 220;
 /** Days after build when the outcome snapshot is taken. */
 export const STUDIO_PLAN_OUTCOME_DELAY_DAYS = 30;

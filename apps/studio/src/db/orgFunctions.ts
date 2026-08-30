@@ -251,6 +251,32 @@ export interface StudioSetDocumentStatusResult {
 	status: DocumentRunStatus;
 }
 
+// --- Crowd surveys: starting suggestions -----------------------------------
+
+/**
+ * Seed a crowd survey with AI-written starting suggestions so the first
+ * participants have something to rate. `count` is the target number of
+ * suggestions under the question. Fails with `failed-precondition` when the
+ * statement is not a crowd survey.
+ */
+export interface StudioSeedOptionsRequest {
+	statementId: string;
+	/** Defaults to `STUDIO_SEED_OPTIONS_COUNT`. */
+	count?: number;
+	/** What kind of suggestions to write (free text from the admin). */
+	intent?: string;
+	/** Language of the suggestions (ISO 639-1); defaults to the survey's. */
+	language?: string;
+}
+
+export interface StudioSeedOptionsResult {
+	statementId: string;
+	/** Suggestions written by this call. */
+	created: number;
+	/** Suggestions under the question after the call. */
+	total: number;
+}
+
 // --- Callables -------------------------------------------------------------
 
 function callable<Req, Res>(name: string): (data: Req) => Promise<Res> {
@@ -325,6 +351,10 @@ export const studioSetDocumentStatus = callable<
 	StudioSetDocumentStatusRequest,
 	StudioSetDocumentStatusResult
 >('fn_studioSetDocumentStatus');
+
+export const studioSeedOptions = callable<StudioSeedOptionsRequest, StudioSeedOptionsResult>(
+	'fn_studioSeedOptions',
+);
 
 export const scheduledActionCancel = callable<
 	ScheduledActionCancelRequest,

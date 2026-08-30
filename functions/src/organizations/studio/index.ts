@@ -6,6 +6,7 @@ export { fn_studioScheduledActionUpsert } from './fn_studioScheduledActionUpsert
 export { fn_studioScheduledActionCancel } from './fn_studioScheduledActionCancel';
 export { fn_studioDraftFromResults } from './fn_studioDraftFromResults';
 export { fn_studioSetDocumentStatus } from './fn_studioSetDocumentStatus';
+export { fn_studioSeedOptions } from './fn_studioSeedOptions';
 export { studioScheduledActionSweep } from './scheduledActionSweep';
 export { studioPlanOutcomeSnapshot } from './studioPlanOutcomeSnapshot';
 export { mirrorQuestionStatusToSurvey } from './mirrorQuestionStatusToSurvey';

@@ -73,6 +73,16 @@ const newPlan = {
 				allowParticipantsToAddSuggestions: true,
 				minEvaluationsPerQuestion: 4,
 				extraQuestions: [{ tempId: 'a1q1', title: 'What is missing from the list?' }],
+				seedOptions: [
+					'Fund the park first',
+					'Fund the park first',
+					'Repair the school roof',
+					' ',
+					'Open a youth club',
+					'Plant trees on Main St',
+					'Free bus on Saturdays',
+					'Fix the sidewalks',
+				],
 			},
 		},
 		{
@@ -184,6 +194,27 @@ describe('fn_studioPlanBuild — new question', () => {
 		expect(a1.questionSettings?.massConsensusSurveyId).toBe(result.surveyIds[0]);
 		expect(extra.questionSettings?.massConsensusSurveyId).toBe(result.surveyIds[0]);
 		expect((a1.statementSettings as Record<string, unknown>).liveSynthEnabled).toBe(true);
+
+		const seeds = statements().filter(
+			(s) => s.parentId === a1.statementId && s.statementType === 'option',
+		);
+		expect(seeds.map((s) => s.statement)).toEqual([
+			'Fund the park first',
+			'Repair the school roof',
+			'Open a youth club',
+			'Plant trees on Main St',
+			'Free bus on Saturdays',
+			'Fix the sidewalks',
+		]);
+		expect(
+			seeds.every(
+				(s) =>
+					s.sourceApp === 'mass-consensus' &&
+					(s as unknown as { seededBy: string }).seededBy === 'studio-ai',
+			),
+		).toBe(true);
+		expect(seeds[0].topParentId).toBe(top.statementId);
+		expect(db.read(Collections.statements, a1.statementId)?.numberOfOptions).toBe(6);
 
 		expect(result.scheduledActionIds).toEqual([
 			`${SESSION}--s1`,

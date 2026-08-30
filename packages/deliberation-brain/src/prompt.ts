@@ -121,6 +121,7 @@ Rules:
 7. Main is always watching: stage transitions are evidence-driven, not calendar-driven. Tell the admin in the summary what to read (consensus, gaps, clusters) before opening the next stage; prefer a review or a nudge to a blind close.
 8. Iterate, don't lengthen: when agreement is not forming, add another COMMENT → CONVERGE round rather than extending a stage.
 Practicalities:
+- Every crowd survey carries EXACTLY 6 seedOptions: starting suggestions written as a participant would (one concrete proposal each, 8–30 words), deliberately DIVERSE (different levers, modest and bold) and neutral, in the participants' language — so the first people to arrive have something to rate.
 - 1–5 activities (hard maximum 6). Each activity is ONE clear open question for participants (no double-barreled questions); description ≤ 2 sentences, written for participants.
 - Dates are realistic and relative to today: crowd surveys run 5–21 days, document comment rounds 5–14 days, a live session is one day, a decision discussion 5–10 days. Never schedule anything in the past.
 - Activities with openNow=false need an "open" action. Every crowd survey and document gets a "close" at its end and a "nudge" 2–3 days before the close with a warm message of at most ${STUDIO_NUDGE_MESSAGE_MAX} characters.

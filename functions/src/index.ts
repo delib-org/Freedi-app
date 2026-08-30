@@ -248,6 +248,7 @@ import {
 	fn_studioScheduledActionCancel,
 	fn_studioDraftFromResults,
 	fn_studioSetDocumentStatus,
+	fn_studioSeedOptions,
 	studioScheduledActionSweep,
 	studioPlanOutcomeSnapshot,
 	mirrorQuestionStatusToSurvey,
@@ -972,6 +973,8 @@ exports.fn_studioScheduledActionCancel = fn_studioScheduledActionCancel;
 // The Draft tool: a document written from the top suggestions of source activities
 exports.fn_studioDraftFromResults = fn_studioDraftFromResults;
 exports.fn_studioSetDocumentStatus = fn_studioSetDocumentStatus;
+// Starting suggestions for a crowd survey (no cold start)
+exports.fn_studioSeedOptions = fn_studioSeedOptions;
 // Keeps an MC survey's status in step with its question's run state
 // (manual Open/Freeze/Close from Studio, Join, or the scheduler).
 exports.mirrorQuestionStatusToSurvey = mirrorQuestionStatusToSurvey;

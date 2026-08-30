@@ -209,4 +209,18 @@ describe('looksLikeOpenQuestion', () => {
 		expect(looksLikeOpenQuestion('How should we proceed')).toBe(true);
 		expect(looksLikeOpenQuestion('Park plan')).toBe(false);
 	});
+
+	it('advises seeding a crowd survey that would open empty', () => {
+		const report = critiquePlan(
+			{
+				mainQuestion: { title: 'Q?' },
+				activities: [activity({ tempId: 'a1', role: 'widen', survey: { seedOptions: ['Only one'] } })],
+				scheduledActions: [],
+				summary: '',
+			},
+			{ now: NOW },
+		);
+		expect(report.blocking).toBe(false);
+		expect(report.problems.some((p) => /starting suggestions/.test(p))).toBe(true);
+	});
 });

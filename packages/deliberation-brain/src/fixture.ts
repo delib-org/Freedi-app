@@ -51,6 +51,22 @@ function replyFor(ctx: BrainContext, userMessage: string, first: boolean): strin
 }
 
 /** Keeps every existing row and adds one document drafted from the first existing activity. */
+function withSeedOptions(plan: StudioPlan, ctx: BrainContext): StudioPlan {
+	const hebrew = ctx.languageName === 'Hebrew';
+	const seeds = hebrew
+		? ['להקים ועדת תושבים שתלווה את התהליך', 'לפרסם את כל המידע הרלוונטי לציבור מראש', 'לקיים סיור משותף בשטח לפני ההחלטה', 'לתקצב פיילוט קטן לפני מהלך מלא', 'להגדיר מדדי הצלחה ולבדוק אותם אחרי שנה', 'לשמור על ערוץ פניות פתוח לאורך כל הדרך']
+		: ['Set up a residents committee to accompany the process', 'Publish all relevant information to the public in advance', 'Hold a joint site visit before the decision', 'Fund a small pilot before a full rollout', 'Define success measures and review them after a year', 'Keep an open channel for requests throughout'];
+
+	return {
+		...plan,
+		activities: plan.activities.map((activity) =>
+			activity.type === 'crowdSurvey'
+				? { ...activity, survey: { ...(activity.survey ?? {}), seedOptions: seeds } }
+				: activity,
+		),
+	};
+}
+
 function existingModePlan(base: StudioPlan, ctx: BrainContext): StudioPlan {
 	const rows = ctx.existingActivities ?? [];
 	const kept: StudioPlanActivity[] = rows.map((row, index) => ({
@@ -93,7 +109,8 @@ export function buildFixtureResponse(ctx: BrainContext, userMessage: string): Fi
 	const diagnosis = mergeDiagnosis(FIXTURE_DIAGNOSIS, ctx.diagnosis);
 	const first = ctx.userTurns === 0;
 	const basePlan = instantiatePattern(pattern, { ...ctx, diagnosis });
-	const plan = ctx.mode === 'existing' ? existingModePlan(basePlan, ctx) : basePlan;
+	const seeded = withSeedOptions(basePlan, ctx);
+	const plan = ctx.mode === 'existing' ? existingModePlan(seeded, ctx) : seeded;
 
 	return {
 		reply: replyFor(ctx, userMessage, first),

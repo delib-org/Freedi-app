@@ -42,6 +42,7 @@ Reply with ONE JSON object and nothing else (no markdown fences, no prose outsid
         "allowParticipantsToAddSuggestions"?: boolean,
         "minEvaluationsPerQuestion"?: number,
         "askUserForASolutionBeforeEvaluation"?: boolean,
+        "seedOptions": string[],       // EXACTLY 6 starting suggestions, participant-phrased, diverse, in the participants' language
         "extraQuestions"?: [{ "tempId"?: string, "title": string, "description"?: string }]
       }
     }],

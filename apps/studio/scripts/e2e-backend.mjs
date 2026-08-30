@@ -302,7 +302,10 @@ const plannedSorted = [...(finalPlan?.activities ?? [])].sort((a, b) => a.order 
 const childrenSorted = [...builtChildren].sort((a, b) => a.order - b.order);
 check('built activities are children in plan order with kind markers + open/frozen', plannedSorted.every((a, i) => childrenSorted[i]?.sourceApp === kindMarker[a.type] && childrenSorted[i]?.statementSettings?.questionStatus === (a.openNow ? 'live' : 'frozen')), childrenSorted.map((d) => `${d.order}:${d.sourceApp}:${d.statementSettings?.questionStatus}`).join(' '));
 if (built.surveyIds.length > 0) {
-	const builtSurvey = await fsGet(`surveys/${built.surveyIds[0]}`);
+	const builtSurveyQuestionId = builtChildren.find((d) => d.sourceApp === 'mass-consensus')?.id;
+const seededOptions = builtSurveyQuestionId ? await fsList('statements', (d) => d.parentId === builtSurveyQuestionId && d.statementType === 'option') : [];
+check('built crowd survey is seeded with starting suggestions', seededOptions.length >= 3 && seededOptions.every((o) => o.seededBy === 'studio-ai'), `${seededOptions.length} seeds`);
+const builtSurvey = await fsGet(`surveys/${built.surveyIds[0]}`);
 	const surveyQuestion = builtSurvey && (await fsGet(`statements/${builtSurvey.questionIds[0]}`));
 	const expectedStatus = surveyQuestion?.statementSettings?.questionStatus === 'frozen' ? 'draft' : 'active';
 	check('survey status follows its question, parented to the top question, stamped on its question', builtSurvey?.status === expectedStatus && builtSurvey?.parentStatementId === built.topQuestionId && surveyQuestion?.questionSettings?.massConsensusSurveyId === built.surveyIds[0], JSON.stringify({ status: builtSurvey?.status, expectedStatus }));
@@ -361,6 +364,18 @@ const draftAction = await call('fn_studioScheduledActionUpsert', consultant.idTo
 	statementId: docCreated.statementId, action: 'draft', runAt: Date.now() + 3600_000, draft: { sourceStatementIds: [mc.statementId], cutoff: { mode: 'chosen' } },
 });
 check('scheduled draft action stored with its payload', (await fsGet(`scheduledActions/${draftAction.scheduledActionId}`))?.draft?.sourceStatementIds?.[0] === mc.statementId);
+
+// 13. Seeding a hand-made crowd survey on demand (it already has 1 option → 5 more)
+const seeded = await call('fn_studioSeedOptions', consultant.idToken, { statementId: mc.statementId, count: 6, language: 'en' });
+check('fn_studioSeedOptions tops the survey up to 6', seeded.created === 5 && seeded.total === 6, JSON.stringify(seeded));
+const seededAgain = await call('fn_studioSeedOptions', consultant.idToken, { statementId: mc.statementId, count: 6 });
+check('seeding is idempotent at the target count', seededAgain.created === 0, JSON.stringify(seededAgain));
+try {
+	await call('fn_studioSeedOptions', consultant.idToken, { statementId: disc.statementId, count: 6 });
+	check('only crowd surveys can be seeded', false);
+} catch (e) {
+	check('only crowd surveys can be seeded', e.code === 'FAILED_PRECONDITION', e.message);
+}
 
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

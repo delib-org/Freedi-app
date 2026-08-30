@@ -10,12 +10,14 @@ import {
 	studioSetDocumentStatus,
 	type DocumentRunStatus,
 	type StudioDraftFromResultsResult,
+	type StudioSeedOptionsResult,
 } from '@/db/orgFunctions';
 import type { ProgressMap } from '@/db/progress';
 import { nextActionFor } from '@/db/scheduledActions';
 import { reorderChildren } from '@/db/statements';
 import { useStatusWithUndo } from '../useStatusWithUndo';
 import DraftFromResults from './DraftFromResults';
+import SeedSuggestions from './SeedSuggestions';
 
 /**
  * DashboardDrawer — wires FacilitateDrawer to the database for the activity
@@ -54,6 +56,7 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 	const index = activities.findIndex((a) => a.statementId === activity.statementId);
 	const id = activity.statementId;
 	const isDocument = activity.type === ActivityType.signDocument;
+	const isCrowdSurvey = activity.type === ActivityType.massConsensus;
 
 	const handleStatusChange = useCallback(
 		async (next: ActivityRunState) => {
@@ -76,6 +79,18 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 				tWithParams('{{count}} paragraphs written · {{gaps}} open gaps — review it in Sign', {
 					count: result.paragraphCount,
 					gaps: result.openGaps,
+				}),
+			);
+		},
+		[onToast, tWithParams],
+	);
+
+	const handleSeeded = useCallback(
+		(result: StudioSeedOptionsResult) => {
+			onToast?.(
+				tWithParams('{{created}} suggestions added ({{total}} in total)', {
+					created: result.created,
+					total: result.total,
 				}),
 			);
 		},
@@ -141,6 +156,11 @@ const DashboardDrawer: FC<DashboardDrawerProps> = ({
 						editorHref={activity.admin?.href}
 						onDrafted={handleDrafted}
 					/>
+				) : undefined
+			}
+			surveyTools={
+				isCrowdSurvey && canManage ? (
+					<SeedSuggestions survey={activity} onSeeded={handleSeeded} />
 				) : undefined
 			}
 		/>

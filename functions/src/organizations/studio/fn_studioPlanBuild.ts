@@ -38,6 +38,7 @@ import {
 	type OrgStatementActor,
 } from '../orgStatements';
 import { applyMassConsensusQuestionDefaults } from './massConsensusDefaults';
+import { buildSeedOption, cleanSeedOptions, seedOptionWrites } from './seedOptions';
 import { assertPlannerAccess, loadSessionForCaller } from './planSession';
 import {
 	buildSurveyForActivity,
@@ -304,6 +305,19 @@ async function createActivities(state: BuildState, top: Statement): Promise<void
 			);
 			state.build.activityIds[extras[index].tempId] = extra.statementId;
 		});
+		// Starting suggestions so the first participants have something to rate.
+		if (activity.type === 'crowdSurvey') {
+			const seeds = cleanSeedOptions(activity.survey?.seedOptions).map((text, index) =>
+				buildSeedOption({
+					statementId: db.collection(Collections.statements).doc().id,
+					question: statement,
+					text,
+					creator: actor.user,
+					index,
+				}),
+			);
+			writes.push(...seedOptionWrites(seeds, statementId, now));
+		}
 		await commitInChunks(writes);
 		state.statements.set(statementId, statement);
 		extraStatements.forEach((extra) => state.statements.set(extra.statementId, extra));

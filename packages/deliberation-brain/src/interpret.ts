@@ -10,6 +10,8 @@ import {
 	StudioPlanScheduledAction,
 	StudioPlanSchema,
 	StudioPlanSurveyConfig,
+	STUDIO_SEED_OPTIONS_COUNT,
+	STUDIO_SEED_OPTION_MAX_CHARS,
 } from '@freedi/shared-types';
 import { BaseIssue, InferOutput, getDotPath, safeParse } from 'valibot';
 import { critiquePlan } from './critic';
@@ -109,6 +111,19 @@ function normalizeSurvey(raw: LlmSurvey, activityTempId: string): StudioPlanSurv
 
 			return { tempId, title: question.title, ...(description ? { description } : {}) };
 		});
+	}
+
+	if (raw.seedOptions && raw.seedOptions.length > 0) {
+		const seen = new Set<string>();
+		const seeds: string[] = [];
+		for (const item of raw.seedOptions) {
+			const text = cleanText(item)?.slice(0, STUDIO_SEED_OPTION_MAX_CHARS);
+			if (!text || seen.has(text.toLowerCase())) continue;
+			seen.add(text.toLowerCase());
+			seeds.push(text);
+			if (seeds.length >= STUDIO_SEED_OPTIONS_COUNT + 2) break;
+		}
+		if (seeds.length > 0) survey.seedOptions = seeds;
 	}
 
 	return survey;

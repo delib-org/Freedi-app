@@ -25,8 +25,10 @@ export function futureIso(days: number, hour = 9): string {
 	return date.toISOString().replace('.000Z', '+00:00');
 }
 
+export const SIX_SEEDS = ['Seed one', 'Seed two', 'Seed three', 'Seed four', 'Seed five', 'Seed six'];
+
 export function activity(overrides: Partial<StudioPlanActivity> & { tempId: string }): StudioPlanActivity {
-	return {
+	const built: StudioPlanActivity = {
 		type: 'crowdSurvey',
 		title: 'What should we improve first?',
 		order: 0,
@@ -34,6 +36,12 @@ export function activity(overrides: Partial<StudioPlanActivity> & { tempId: stri
 		change: 'add',
 		...overrides,
 	};
+	// A crowd survey built from a plan is seeded; tests that want an empty one pass `survey: {}`.
+	if (built.type === 'crowdSurvey' && overrides.survey === undefined) {
+		built.survey = { seedOptions: SIX_SEEDS };
+	}
+
+	return built;
 }
 
 export function action(
