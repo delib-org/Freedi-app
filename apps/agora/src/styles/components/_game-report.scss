@@ -1,0 +1,119 @@
+// The finished-game report (/teach/report/:id) and the student's one-time
+// class-join step on the join screen.
+// Imported by components.scss; do not import directly.
+
+.report {
+	&__score-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		padding: var(--space-lg);
+	}
+
+	&__score-main {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__score-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-2xl);
+		color: var(--lantern-glow);
+	}
+
+	&__outcome {
+		text-align: center;
+		color: var(--text-secondary);
+	}
+
+	&__score-parts {
+		display: flex;
+		justify-content: space-around;
+		gap: var(--space-md);
+	}
+
+	&__debrief {
+		border-block-start: 1px solid var(--border-subtle);
+		padding-block-start: var(--space-md);
+	}
+
+	&__table {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	&__table-head,
+	&__table-row {
+		display: grid;
+		grid-template-columns: 1fr auto auto auto;
+		gap: var(--space-md);
+		align-items: center;
+		padding: var(--space-xs) var(--space-md);
+	}
+
+	&__table-head {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+
+	&__table-row {
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+	}
+
+	&__player {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
+.class-join {
+	&__alias {
+		text-align: center;
+	}
+
+	&__pin-display {
+		font-family: var(--font-display);
+		font-size: var(--font-size-2xl);
+		letter-spacing: 0.4em;
+		text-align: center;
+		color: var(--text-primary);
+		border: 1px dashed var(--border-strong);
+		border-radius: var(--radius-md);
+		padding: var(--space-md);
+	}
+
+	&__pin {
+		text-align: center;
+		letter-spacing: 0.3em;
+		font-family: var(--font-display);
+	}
+
+	&__alias-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+		gap: var(--space-sm);
+	}
+
+	&__alias-option {
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm);
+		color: var(--text-primary);
+		font-family: inherit;
+		font-size: var(--font-size-md);
+		cursor: pointer;
+		transition: border-color var(--motion-base) ease;
+
+		&:hover,
+		&:focus-visible {
+			border-color: var(--border-strong);
+		}
+	}
+}

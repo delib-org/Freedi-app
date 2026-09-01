@@ -29,6 +29,9 @@ import { TeacherHome } from './views/teacher/TeacherHome';
 import { TeacherSession } from './views/teacher/TeacherSession';
 import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
+import { StartGame } from './views/teacher/StartGame';
+import { TeacherClass } from './views/teacher/TeacherClass';
+import { GameReport } from './views/teacher/GameReport';
 
 // Before anything paints: a civic square remembered from an earlier load
 // wears its colours from the first frame rather than flashing the classroom
@@ -90,7 +93,10 @@ if (root) {
 		'/play/:id': GameController,
 		'/teach': TeacherHome,
 		'/teach/new': TopicWizard,
+		'/teach/start': StartGame,
 		'/teach/topic/:id': TopicEditor,
 		'/teach/session/:id': TeacherSession,
+		'/teach/class/:id': TeacherClass,
+		'/teach/report/:id': GameReport,
 	});
 }

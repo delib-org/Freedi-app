@@ -1247,6 +1247,7 @@ export {
 	agoraAdminOpenClass,
 	agoraJoinClass,
 	agoraTeacherRoster,
+	agoraTeacherConsole,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
 	onAgoraSessionFinished,

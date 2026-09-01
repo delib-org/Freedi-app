@@ -5,6 +5,8 @@ import {
 	optional,
 	nullable,
 	array,
+	record,
+	boolean,
 	picklist,
 	enum_,
 	InferOutput,
@@ -69,8 +71,17 @@ export const AgoraClassSchema = object({
 	schoolId: string(),
 	name: string(),
 	gradeLevel: optional(string()),
-	/** Teachers who own this class (array-contains queries; assigned via callable) */
+	/** Teachers who own this class (server-side authority checks) */
 	teacherIds: array(string()),
+	/**
+	 * The same teachers as a `{uid: true}` map — the QUERY index. A teacher's
+	 * "my classes" list runs `where('teacherMap.<uid>', '==', true)` because an
+	 * equality constraint is the one thing security rules can always prove;
+	 * proving `uid in teacherIds` from an array-contains query fails on the
+	 * SDK's listen path. Maintained by the callables in the same write as
+	 * teacherIds — single writer, cannot drift.
+	 */
+	teacherMap: record(string(), boolean()),
 	/**
 	 * Persistent 6-char join code students use ONCE to claim a roster spot.
 	 * Deliberately a different length from the 5-digit session code, so the

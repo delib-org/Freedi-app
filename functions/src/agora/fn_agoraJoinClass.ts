@@ -7,7 +7,9 @@ import {
 	getRandomUID,
 	AgoraClass,
 	AgoraClassMember,
+	AgoraSession,
 	AGORA_CLASSROOM,
+	AGORA_SESSION,
 	createAgoraClassMemberId,
 	JoinClassRequest,
 	JoinClassResponse,
@@ -32,22 +34,43 @@ export const agoraJoinClass = onCall(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const { classCode, mode, alias, memberId, pin } = request.data ?? {};
-		const normalisedCode = (classCode ?? '').replace(/\D/g, '');
-		if (normalisedCode.length !== AGORA_CLASSROOM.CLASS_CODE_LENGTH) {
-			throw new HttpsError('invalid-argument', 'classCode must be 6 digits');
-		}
+		const { classCode, sessionCode, mode, alias, memberId, pin } = request.data ?? {};
 
 		try {
-			const classSnap = await db
-				.collection(Collections.agoraClasses)
-				.where('classCode', '==', normalisedCode)
-				.limit(1)
-				.get();
-			if (classSnap.empty) {
+			// Two doors to the same class: the persistent 6-digit class code, or —
+			// the usual path — the 5-digit code of a class game the student was
+			// just refused from (the session already knows its class).
+			let agoraClass: AgoraClass | undefined;
+			const normalisedClassCode = (classCode ?? '').replace(/\D/g, '');
+			const normalisedSessionCode = (sessionCode ?? '').replace(/\D/g, '');
+			if (normalisedClassCode.length === AGORA_CLASSROOM.CLASS_CODE_LENGTH) {
+				const classSnap = await db
+					.collection(Collections.agoraClasses)
+					.where('classCode', '==', normalisedClassCode)
+					.limit(1)
+					.get();
+				agoraClass = classSnap.docs[0]?.data() as AgoraClass | undefined;
+			} else if (normalisedSessionCode.length === AGORA_SESSION.JOIN_CODE_LENGTH) {
+				const sessionSnap = await db
+					.collection(Collections.agoraSessions)
+					.where('code', '==', normalisedSessionCode)
+					.orderBy('createdAt', 'desc')
+					.limit(1)
+					.get();
+				const session = sessionSnap.docs[0]?.data() as AgoraSession | undefined;
+				if (session?.classId) {
+					const classSnap = await db
+						.collection(Collections.agoraClasses)
+						.doc(session.classId)
+						.get();
+					agoraClass = classSnap.data() as AgoraClass | undefined;
+				}
+			} else {
+				throw new HttpsError('invalid-argument', 'classCode or sessionCode is required');
+			}
+			if (!agoraClass) {
 				throw new HttpsError('not-found', 'Class not found');
 			}
-			const agoraClass = classSnap.docs[0].data() as AgoraClass;
 			if (agoraClass.status !== 'active') {
 				throw new HttpsError('failed-precondition', 'This class is archived');
 			}

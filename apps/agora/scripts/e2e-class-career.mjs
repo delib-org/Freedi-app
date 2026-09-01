@@ -167,13 +167,34 @@ for (const bot of [bot0, bot1]) {
 }
 console.log('   ✓ both members joined game 2 under the same alias');
 
-// An unrostered guest is turned away from a class game
+// An unrostered guest is turned away — and then claims a spot the way the
+// join screen does: by the GAME code (the server resolves the class), not the
+// class code the student never saw.
 const guest = await signUpAnonymous();
 const guestRefused = await callable('agoraJoinSession', { code: create2.code }, guest.idToken).then(
 	() => false,
 	(error) => /class-membership-required/.test(String(error)),
 );
-eq('unrostered guest refused', guestRefused, true);
+eq('unrostered guest refused before claiming', guestRefused, true);
+const guestClaim = await callable(
+	'agoraJoinClass',
+	{ sessionCode: create2.code, mode: 'claim', alias: `${runId}-latecomer` },
+	guest.idToken,
+);
+eq('claim via game code lands in the class', guestClaim.classId, classId);
+const guestJoin = await callable('agoraJoinSession', { code: create2.code }, guest.idToken);
+eq('latecomer joins under the claimed alias', guestJoin.anonName, `${runId}-latecomer`);
+
+const secondGuest = await signUpAnonymous();
+const secondGuestRefused = await callable(
+	'agoraJoinSession',
+	{ code: create2.code },
+	secondGuest.idToken,
+).then(
+	() => false,
+	(error) => /class-membership-required/.test(String(error)),
+);
+eq('unrostered guest refused', secondGuestRefused, true);
 
 await callable(
 	'agoraAdvanceStage',
@@ -318,7 +339,8 @@ const teacherList = await fetch(
 	},
 );
 const teacherRows = (await teacherList.json()).filter((row) => row.document);
-eq('teacher lists the roster', teacherRows.length, 3);
+// 3 game-1 bots + the latecomer who claimed via the game code
+eq('teacher lists the roster', teacherRows.length, 4);
 
 console.log(`\nOK — classroom hierarchy e2e passed (project ${PROJECT_ID})`);
 process.exit(0);

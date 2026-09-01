@@ -1,7 +1,7 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
 import { ensureUser, signInWithHandoff } from '../lib/user';
-import { joinSession } from '../lib/callables';
+import { joinClass, joinSession } from '../lib/callables';
 import { findSessionByCode } from '../lib/teacher';
 import { ODYSSEY_THEME, rememberSessionTheme } from '../lib/theme';
 import {
@@ -10,8 +10,16 @@ import {
 	AgoraSession,
 	AGORA_SESSION,
 } from '@freedi/shared-types';
+import {
+	classJoinErrorKey,
+	classJoinReduce,
+	INITIAL_CLASS_JOIN,
+	type ClassJoinEvent,
+	type ClassJoinState,
+} from '../lib/flows/classJoin';
+import { ClassJoinPanel } from '../components/ClassJoinPanel';
 
-type JoinPhase = 'looking' | 'team-size' | 'joining' | 'error';
+type JoinPhase = 'looking' | 'team-size' | 'joining' | 'class-join' | 'error';
 
 export function JoinSession(
 	initialVnode: m.Vnode<{ code: string }>,
@@ -22,6 +30,63 @@ export function JoinSession(
 	let errorKey = 'join.invalid_code';
 	let session: AgoraSession | null = null;
 	let teamMemberCount = 2;
+	let classJoin: ClassJoinState = INITIAL_CLASS_JOIN;
+
+	/** One entry point for the flow: reduce, then run whatever the step needs. */
+	function dispatchClassJoin(event: ClassJoinEvent): void {
+		const before = classJoin;
+		classJoin = classJoinReduce(before, event);
+		m.redraw();
+
+		// The student holds only the game code they just typed — the server
+		// resolves the class through the session it belongs to.
+		if (event.kind === 'choose-returning' && classJoin.step === 'busy') {
+			joinClass({ sessionCode: code, mode: 'listAliases' })
+				.then((result) =>
+					dispatchClassJoin({
+						kind: 'aliases-loaded',
+						className: result.className,
+						aliases: result.aliases ?? [],
+					}),
+				)
+				.catch((error: unknown) =>
+					dispatchClassJoin({ kind: 'failed', errorKey: classJoinErrorKey(error) }),
+				);
+		}
+		if (event.kind === 'submit' && classJoin.step === 'busy') {
+			if (classJoin.returnTo === 'claim') {
+				joinClass({ sessionCode: code, mode: 'claim', alias: pendingAlias })
+					.then((result) =>
+						dispatchClassJoin({
+							kind: 'claimed',
+							alias: result.alias ?? pendingAlias,
+							pin: result.pin ?? '',
+						}),
+					)
+					.catch((error: unknown) =>
+						dispatchClassJoin({ kind: 'failed', errorKey: classJoinErrorKey(error) }),
+					);
+			} else if (classJoin.returnTo === 'pin-entry' && classJoin.memberId) {
+				joinClass({
+					sessionCode: code,
+					mode: 'reclaim',
+					memberId: classJoin.memberId,
+					pin: pendingPin,
+				})
+					.then(() => dispatchClassJoin({ kind: 'reclaimed' }))
+					.catch((error: unknown) =>
+						dispatchClassJoin({ kind: 'failed', errorKey: classJoinErrorKey(error) }),
+					);
+			}
+		}
+		if (classJoin.step === 'done' && before.step !== 'done') {
+			// Membership settled — retry the join that sent us here
+			void performJoin();
+		}
+	}
+
+	let pendingAlias = '';
+	let pendingPin = '';
 
 	/**
 	 * A player arriving from an Odyssey island carries a token naming the uid
@@ -103,6 +168,17 @@ export function JoinSession(
 			});
 			m.route.set(`/play/${result.sessionId}`);
 		} catch (error) {
+			// A class game admits roster members only: this specific refusal is
+			// not an error, it is the door to the one-time class-join step.
+			if (/class-membership-required/.test(String(error))) {
+				phase = 'class-join';
+				classJoin = INITIAL_CLASS_JOIN;
+				pendingAlias = '';
+				pendingPin = '';
+				m.redraw();
+
+				return;
+			}
 			console.error('[Join] Join failed:', error);
 			phase = 'error';
 			errorKey = 'common.error';
@@ -149,6 +225,21 @@ export function JoinSession(
 									t('join.join_now'),
 								),
 							])
+						: null,
+
+					phase === 'class-join'
+						? m(ClassJoinPanel, {
+								state: classJoin,
+								alias: pendingAlias,
+								pin: pendingPin,
+								onAlias: (value: string) => {
+									pendingAlias = value;
+								},
+								onPin: (value: string) => {
+									pendingPin = value;
+								},
+								dispatch: dispatchClassJoin,
+							})
 						: null,
 
 					phase === 'error'

@@ -1,11 +1,25 @@
 import { functions, httpsCallable } from './firebase';
-import type { AgoraDeviceMode, AgoraStage } from '@freedi/shared-types';
+import type {
+	AgoraDeviceMode,
+	AgoraSessionFlow,
+	AgoraStage,
+	JoinClassRequest,
+	JoinClassResponse,
+	TeacherConsoleRequest,
+	TeacherConsoleResponse,
+	TeacherRosterRequest,
+	TeacherRosterResponse,
+} from '@freedi/shared-types';
 
 export interface CreateSessionRequest {
 	topicPackageId: string;
 	deviceMode: AgoraDeviceMode;
 	teamSizeMax?: number;
 	lessonLengthMs?: number;
+	/** Open the game for a class — the caller must be one of its teachers */
+	classId?: string;
+	/** Which beats this game runs; untouched knobs keep the classroom defaults */
+	flow?: AgoraSessionFlow;
 }
 
 export interface CreateSessionResponse {
@@ -83,6 +97,42 @@ export async function generateTopicPackage(
 	const call = httpsCallable<GenerateTopicPackageRequest, GenerateTopicPackageResponse>(
 		functions,
 		'agoraGenerateTopicPackage',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/**
+ * The class-roster flow: claim a spot, list aliases for the reclaim picker, or
+ * rebind after a device switch. Students never read the roster from Firestore
+ * — everything the join screen needs comes back from this callable.
+ */
+export async function joinClass(request: JoinClassRequest): Promise<JoinClassResponse> {
+	const call = httpsCallable<JoinClassRequest, JoinClassResponse>(functions, 'agoraJoinClass');
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** Every read the teacher console makes — see fn_agoraTeacherConsole. */
+export async function teacherConsole(
+	request: TeacherConsoleRequest,
+): Promise<TeacherConsoleResponse> {
+	const call = httpsCallable<TeacherConsoleRequest, TeacherConsoleResponse>(
+		functions,
+		'agoraTeacherConsole',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/** Teacher roster actions: rename an alias, remove a member, reset a binding. */
+export async function teacherRoster(request: TeacherRosterRequest): Promise<TeacherRosterResponse> {
+	const call = httpsCallable<TeacherRosterRequest, TeacherRosterResponse>(
+		functions,
+		'agoraTeacherRoster',
 	);
 	const result = await call(request);
 

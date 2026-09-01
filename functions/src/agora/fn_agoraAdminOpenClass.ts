@@ -86,6 +86,7 @@ export const agoraAdminOpenClass = onCall(
 					name: trimmed,
 					...(gradeLevel?.trim() ? { gradeLevel: gradeLevel.trim() } : {}),
 					teacherIds: teacherUid ? [teacherUid] : [],
+				teacherMap: teacherUid ? { [teacherUid]: true } : {},
 					classCode,
 					memberCount: 0,
 					status: 'active',
@@ -117,6 +118,7 @@ export const agoraAdminOpenClass = onCall(
 					const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
 					await classRef.update({
 						teacherIds: FieldValue.arrayUnion(teacherUid),
+						[`teacherMap.${teacherUid}`]: true,
 						lastUpdate: Date.now(),
 					});
 
@@ -126,6 +128,7 @@ export const agoraAdminOpenClass = onCall(
 					const teacherUid = await resolveTeacherUid(teacherEmail ?? '');
 					await classRef.update({
 						teacherIds: FieldValue.arrayRemove(teacherUid),
+						[`teacherMap.${teacherUid}`]: FieldValue.delete(),
 						lastUpdate: Date.now(),
 					});
 

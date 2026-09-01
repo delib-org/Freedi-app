@@ -45,7 +45,14 @@ export interface OpenClassResponse {
  * point: this is how an anon uid becomes (or re-becomes) a class member.
  */
 export interface JoinClassRequest {
-	classCode: string;
+	/** The persistent 6-digit class code (out-of-game claiming) */
+	classCode?: string;
+	/**
+	 * OR the 5-digit code of a class game — the usual path: a student refused
+	 * with `class-membership-required` holds only the game code, and the
+	 * session already knows which class it belongs to.
+	 */
+	sessionCode?: string;
 	mode: 'claim' | 'reclaim' | 'listAliases';
 	/** claim: the nickname the student wants */
 	alias?: string;
@@ -86,6 +93,68 @@ export interface TeacherRosterResponse {
 	/** resetBinding: the fresh PIN the teacher hands the student — shown once */
 	pin?: string;
 }
+
+/**
+ * `agoraTeacherConsole` — every read the teacher console makes, served
+ * server-side. One callable, three views, because client-side Firestore list
+ * queries scoped by document data are not reliably provable by security
+ * rules (the SDK's listen path denies them) — and because the roster should
+ * never be client-listable at all.
+ */
+export type TeacherConsoleRequest =
+	| { view: 'dashboard' }
+	| { view: 'class'; classId: string }
+	| { view: 'report'; sessionId: string };
+
+/** A roster row as the teacher sees it — no PIN hash, no uid history. */
+export interface TeacherConsoleMember {
+	memberId: string;
+	alias: string;
+	joinedAt: number;
+	lastActive: number;
+}
+
+export interface TeacherConsoleDashboard {
+	classes: Array<{
+		classId: string;
+		name: string;
+		gradeLevel?: string;
+		classCode: string;
+		memberCount: number;
+		schoolId: string;
+	}>;
+	/** classId → its aggregate doc, when one exists (JSON: plain object) */
+	aggregates: Record<string, unknown>;
+	/** This teacher's sessions, newest first (AgoraSession JSON) */
+	sessions: unknown[];
+}
+
+export interface TeacherConsoleClassDetail {
+	classId: string;
+	name: string;
+	gradeLevel?: string;
+	classCode: string;
+	schoolName: string;
+	members: TeacherConsoleMember[];
+	/** memberId → AgoraStudentAggregate JSON */
+	careers: Record<string, unknown>;
+	/** AgoraClassAggregate JSON, or null before the first game */
+	aggregate: unknown | null;
+	/** This class's sessions, newest first (AgoraSession JSON) */
+	sessions: unknown[];
+}
+
+export interface TeacherConsoleReport {
+	/** AgoraSession JSON */
+	session: unknown;
+	/** Students only (AI raters excluded), AgoraParticipant JSON */
+	participants: unknown[];
+}
+
+export type TeacherConsoleResponse =
+	| TeacherConsoleDashboard
+	| TeacherConsoleClassDetail
+	| TeacherConsoleReport;
 
 /** New optional fields `agoraCreateSession` accepts for class games. */
 export interface CreateSessionClassroomFields {

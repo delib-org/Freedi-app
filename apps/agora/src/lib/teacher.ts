@@ -2,13 +2,25 @@ import { parse } from 'valibot';
 import {
 	Collections,
 	AgoraCamp,
+	AgoraClassAggregate,
+	AgoraClassAggregateSchema,
+	AgoraParticipant,
+	AgoraParticipantSchema,
 	AgoraSession,
 	AgoraSessionSchema,
+	AgoraStudentAggregate,
+	AgoraStudentAggregateSchema,
 	AgoraTopicPackage,
 	AgoraTopicPackageSchema,
 	VotingStageSettings,
 	AGORA_VOTING,
 	deriveCamp,
+} from '@freedi/shared-types';
+import type {
+	TeacherConsoleClassDetail,
+	TeacherConsoleDashboard,
+	TeacherConsoleMember,
+	TeacherConsoleReport,
 } from '@freedi/shared-types';
 import {
 	db,
@@ -27,6 +39,7 @@ import {
 	getDownloadURL,
 } from './firebase';
 import { trackWrite } from './confirmedWrite';
+import { teacherConsole } from './callables';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -219,4 +232,125 @@ export async function saveCampPosition(
 	});
 
 	return { camp };
+}
+
+// ─── The teacher console's classroom reads ──────────────────────────────────
+// All served by the agoraTeacherConsole callable, not by client queries:
+// rules cannot reliably prove document-scoped list queries for the SDK's
+// listen path, and the roster (PIN hashes) must never be client-listable at
+// all. Wire payloads are valibot-parsed here; malformed entries are skipped —
+// one bad doc must not blank a dashboard.
+
+function parseEach<T>(rows: unknown[], parseRow: (data: unknown) => T, label: string): T[] {
+	const parsed: T[] = [];
+	for (const row of rows) {
+		try {
+			parsed.push(parseRow(row));
+		} catch (error) {
+			console.error(`[Teacher] Invalid ${label} payload:`, error);
+		}
+	}
+
+	return parsed;
+}
+
+const parseSession = (data: unknown): AgoraSession => parse(AgoraSessionSchema, data);
+const parseCareer = (data: unknown): AgoraStudentAggregate =>
+	parse(AgoraStudentAggregateSchema, data);
+const parseParticipant = (data: unknown): AgoraParticipant => parse(AgoraParticipantSchema, data);
+
+export interface TeacherDashboard {
+	classes: TeacherConsoleDashboard['classes'];
+	aggregates: Map<string, AgoraClassAggregate>;
+	sessions: AgoraSession[];
+}
+
+/** Everything the /teach dashboard shows, in one round trip. */
+export async function fetchTeacherDashboard(): Promise<TeacherDashboard> {
+	const data = (await teacherConsole({ view: 'dashboard' })) as TeacherConsoleDashboard;
+	const aggregates = new Map<string, AgoraClassAggregate>();
+	for (const [classId, aggregate] of Object.entries(data.aggregates ?? {})) {
+		try {
+			aggregates.set(classId, parse(AgoraClassAggregateSchema, aggregate));
+		} catch (error) {
+			console.error('[Teacher] Invalid class aggregate payload:', error);
+		}
+	}
+
+	return {
+		classes: data.classes ?? [],
+		aggregates,
+		sessions: parseEach(data.sessions ?? [], parseSession, 'session'),
+	};
+}
+
+export interface TeacherClassDetail {
+	classId: string;
+	name: string;
+	gradeLevel?: string;
+	classCode: string;
+	schoolName: string;
+	members: TeacherConsoleMember[];
+	careers: Map<string, AgoraStudentAggregate>;
+	aggregate: AgoraClassAggregate | null;
+	sessions: AgoraSession[];
+}
+
+/** One class: roster, careers, advancement, game history. */
+export async function fetchTeacherClass(classId: string): Promise<TeacherClassDetail | null> {
+	let data: TeacherConsoleClassDetail;
+	try {
+		data = (await teacherConsole({ view: 'class', classId })) as TeacherConsoleClassDetail;
+	} catch (error) {
+		console.error('[Teacher] Loading class failed:', error);
+
+		return null;
+	}
+	const careers = new Map<string, AgoraStudentAggregate>();
+	for (const career of parseEach(Object.values(data.careers ?? {}), parseCareer, 'career')) {
+		careers.set(career.memberId, career);
+	}
+	let aggregate: AgoraClassAggregate | null = null;
+	if (data.aggregate) {
+		try {
+			aggregate = parse(AgoraClassAggregateSchema, data.aggregate);
+		} catch (error) {
+			console.error('[Teacher] Invalid class aggregate payload:', error);
+		}
+	}
+
+	return {
+		classId: data.classId,
+		name: data.name,
+		gradeLevel: data.gradeLevel,
+		classCode: data.classCode,
+		schoolName: data.schoolName,
+		members: data.members ?? [],
+		careers,
+		aggregate,
+		sessions: parseEach(data.sessions ?? [], parseSession, 'session'),
+	};
+}
+
+export interface SessionReport {
+	session: AgoraSession;
+	/** Students only — AI raters filtered out */
+	participants: AgoraParticipant[];
+}
+
+/** One finished game, read once — the report screen holds no listeners. */
+export async function fetchSessionReport(sessionId: string): Promise<SessionReport | null> {
+	let data: TeacherConsoleReport;
+	try {
+		data = (await teacherConsole({ view: 'report', sessionId })) as TeacherConsoleReport;
+	} catch (error) {
+		console.error('[Teacher] Loading report failed:', error);
+
+		return null;
+	}
+
+	return {
+		session: parse(AgoraSessionSchema, data.session),
+		participants: parseEach(data.participants ?? [], parseParticipant, 'participant'),
+	};
 }

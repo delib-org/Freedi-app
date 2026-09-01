@@ -18,9 +18,13 @@ service cloud.firestore {
     // org-admin authority on questions is materialized as admin
     // subscriptions by the organization callables instead.
     function isSystemAdminUser() {
+      // .get with a default, not .systemAdmin: reading an absent property is an
+      // ERROR in rules, not undefined — and an error poisons any || this helper
+      // sits in, denying non-admins reads their other condition entitled them to
+      // (first seen: a teacher listing their agora classes).
       return request.auth != null &&
              exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
+             get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.get('systemAdmin', false) == true;
     }
     function isOrgMember(orgId) {
       let memberId = cleanPath(string(orgId)) + '--' + string(request.auth.uid);
@@ -219,8 +223,16 @@ service cloud.firestore {
     // also serves `list` — a teacher's array-contains query on teacherIds and
     // a sys-admin's schoolId query both satisfy it per-document.
     match /agoraClasses/{classId} {
-      allow read: if isSystemAdminUser() ||
-                     (isAuthenticated() && request.auth.uid in resource.data.teacherIds);
+      // The teacher clause reads the `teacherMap` {uid: true} index with `in`
+      // — a key check that is false, never an ERROR, for docs that lack the
+      // key. Both matter: the SDK's listen path evaluates this against real
+      // documents (where property access on an absent uid throws and poisons
+      // the whole ||), while runQuery proves it from the client's
+      // `teacherMap.<uid> == true` equality constraint. Only the callables
+      // write the map, and they only ever write `true`.
+      allow read: if (isAuthenticated() &&
+                      request.auth.uid in resource.data.get('teacherMap', {})) ||
+                     isSystemAdminUser();
       allow write: if false;
     }
 

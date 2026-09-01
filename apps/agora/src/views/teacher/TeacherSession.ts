@@ -18,6 +18,7 @@ import {
 	AgoraParticipant,
 	AgoraStage,
 	VotingStageSettings,
+	AGORA_STAGE_ORDER,
 	AGORA_VOTING,
 	CutoffBy,
 	ResultsBy,
@@ -31,19 +32,9 @@ import { getVotingState, listenToVoting, stopVotingListeners, totalVotes } from 
  * Teacher live panel — projector-friendly: class progress, stage
  * instructions, join code + QR, and the "open the time tunnel" control.
  */
-// valueIdentification removed from the flow (cognitive load) — enum kept
-// for legacy sessions; see fn_agoraAdvanceStage STAGE_ORDER
-const STAGE_ORDER: AgoraStage[] = [
-	AgoraStage.lobby,
-	AgoraStage.framing,
-	AgoraStage.perspectives,
-	AgoraStage.needs,
-	AgoraStage.positioning,
-	AgoraStage.deliberation,
-	AgoraStage.voting,
-	AgoraStage.results,
-	AgoraStage.ended,
-];
+// The shared forward-only order — the same array the advance callable walks,
+// so the button offered and the transition allowed can never drift apart.
+const STAGE_ORDER = AGORA_STAGE_ORDER;
 
 /** Stages where students move through self-paced sub-steps the teacher can't see on the projector */
 const PROGRESS_STAGES = new Set<AgoraStage>([

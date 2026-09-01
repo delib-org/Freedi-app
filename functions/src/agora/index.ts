@@ -18,4 +18,5 @@ export { agoraAdminManageSchool } from './fn_agoraAdminManageSchool';
 export { agoraAdminOpenClass } from './fn_agoraAdminOpenClass';
 export { agoraJoinClass } from './fn_agoraJoinClass';
 export { agoraTeacherRoster } from './fn_agoraTeacherRoster';
+export { agoraTeacherConsole } from './fn_agoraTeacherConsole';
 export { onAgoraSessionFinished } from './fn_onAgoraSessionFinished';

@@ -213,5 +213,11 @@ export type {
 	JoinClassResponse,
 	TeacherRosterRequest,
 	TeacherRosterResponse,
+	TeacherConsoleRequest,
+	TeacherConsoleMember,
+	TeacherConsoleDashboard,
+	TeacherConsoleClassDetail,
+	TeacherConsoleReport,
+	TeacherConsoleResponse,
 	CreateSessionClassroomFields,
 } from './agoraClassroomCallables';
