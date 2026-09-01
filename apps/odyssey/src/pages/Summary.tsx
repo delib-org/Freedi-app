@@ -398,10 +398,10 @@ export default function Summary() {
 								🗺️ חזרה למפה
 							</Link>
 							{elders.length > 0 || (content.game.elders ?? []).length > 0 ? (
-								// The choosing screen promises "אפשר לשנות בכל שלב", so there has
-								// to be a way back to it.
+								// The crew screen promises more sailors can be added later, so
+								// there has to be a way back to it.
 								<Link className="btn-outline" to="/elders">
-									📜 מי מפליג איתך
+									📜 המלחים שאיתך
 								</Link>
 							) : null}
 						</div>

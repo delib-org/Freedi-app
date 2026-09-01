@@ -377,7 +377,7 @@ export default function Voyage() {
 														ships={elderProximity}
 														compact
 														onSelect={setAsked}
-														caption="📜 הזקנים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+														caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
 													/>
 												</div>
 											) : null}
@@ -413,7 +413,7 @@ export default function Voyage() {
 											<NearbyShips
 												ships={elderProximity}
 												onSelect={setAsked}
-												caption="📜 הזקנים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
+												caption="📜 המלחים ששטים איתך — דמויות בינה מלאכותית, לא מפלגות"
 											/>
 										</div>
 									) : null}
