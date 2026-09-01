@@ -160,12 +160,15 @@ export default function Voyage() {
 		setDepth(island ? (journey?.depthAnswers?.[island.statementId] ?? '') : '');
 	}, [island, journey?.depthAnswers]);
 
-	if (!content || !journey) return <NoGameYet />;
-	if (selectedIslands.length === 0) {
-		navigate('/map');
+	// No islands chosen → back to the chart. A side effect, so it runs after
+	// render (calling navigate() during render is a React error).
+	const shouldRedirectToMap = Boolean(content && journey) && selectedIslands.length === 0;
+	useEffect(() => {
+		if (shouldRedirectToMap) navigate('/map');
+	}, [shouldRedirectToMap, navigate]);
 
-		return null;
-	}
+	if (!content || !journey) return <NoGameYet />;
+	if (shouldRedirectToMap) return null;
 	if (!island) return null;
 
 	const answeredOnIsland = island.stances.filter(

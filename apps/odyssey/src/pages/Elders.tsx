@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
@@ -30,15 +30,16 @@ export default function Elders() {
 	);
 	const [saving, setSaving] = useState(false);
 
-	if (!content || !journey) return <NoGameYet />;
-
 	// A game whose organizer switched the elders off, or never authored any,
-	// must not show an empty ceremony — it goes straight on to the map.
-	if (elders.length === 0) {
-		navigate('/map', { replace: true });
+	// must not show an empty ceremony — it goes straight on to the map. As an
+	// effect, not during render (calling navigate() mid-render is a React error).
+	const shouldRedirectToMap = Boolean(content && journey) && elders.length === 0;
+	useEffect(() => {
+		if (shouldRedirectToMap) navigate('/map', { replace: true });
+	}, [shouldRedirectToMap, navigate]);
 
-		return null;
-	}
+	if (!content || !journey) return <NoGameYet />;
+	if (shouldRedirectToMap) return null;
 
 	function toggle(elderId: string): void {
 		setChosen((current) => {

@@ -48,14 +48,20 @@ interface ProposalDoc {
  * Server-side because only the trigger holds both versions — and because a
  * client-written record of "what the text used to say" would be a record
  * anyone could write.
+ *
+ * The doc id is DERIVED from the proposal and the write that changed it
+ * (`editStamp` = the after-snapshot's updateTime), not minted fresh: a
+ * redelivered trigger then `set`s the same doc again instead of announcing
+ * the same edit twice in every thread.
  */
 async function announceEdit(
 	sessionId: string,
 	proposalId: string,
 	proposal: ProposalDoc,
 	previousText: string,
+	editStamp: number,
 ): Promise<void> {
-	const messageId = getRandomUID();
+	const messageId = `${proposalId}--edit--${editStamp}`;
 	await db
 		.collection(Collections.statements)
 		.doc(messageId)
@@ -497,7 +503,13 @@ export const onAgoraProposalWritten = onDocumentWritten(
 					before.statement ?? '',
 					after.statement ?? '',
 				);
-				await announceEdit(sessionId, statementId, after, before.statement ?? '');
+				await announceEdit(
+					sessionId,
+					statementId,
+					after,
+					before.statement ?? '',
+					event.data?.after.updateTime?.toMillis() ?? Date.now(),
+				);
 
 				if (revision.credit > 0) {
 					await notifyOwner(

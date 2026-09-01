@@ -21,6 +21,7 @@ import {
 	AGORA_VOTING,
 	CutoffBy,
 	ResultsBy,
+	sessionRunsVoting,
 } from '@freedi/shared-types';
 import { AgoraProposal } from '../../lib/proposals';
 import { setVotingSettings } from '../../lib/teacher';
@@ -288,6 +289,8 @@ function votingSettingsCard(
 export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
 	let advancing = false;
+	/** The server refused (or never received) the last advance — say so on the panel */
+	let advanceFailed = false;
 	let savingSettings = false;
 	let userId = '';
 
@@ -314,14 +317,26 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 	function handleAdvance(nextStage: AgoraStage): void {
 		if (advancing) return;
 		advancing = true;
+		advanceFailed = false;
 		advanceStage({ sessionId, stage: nextStage })
+			.then(() => {
+				advanceFailed = false;
+			})
 			.catch((error: unknown) => {
+				// A rejection swallowed into the console leaves the teacher
+				// pressing a button that does nothing — the panel must say it.
+				advanceFailed = true;
 				console.error('[Teacher] Advance stage failed:', error);
 			})
 			.finally(() => {
 				advancing = false;
 				m.redraw();
 			});
+	}
+
+	/** The visible line under the advance button when the server said no */
+	function advanceErrorLine(): m.Children {
+		return advanceFailed ? m('p.join__error', t('teacher.advance_failed')) : null;
 	}
 
 	return {
@@ -367,16 +382,26 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					: STAGE_ORDER.indexOf(session.stage);
 			const rawNextStage =
 				stageIndex >= 0 && stageIndex < STAGE_ORDER.length - 1 ? STAGE_ORDER[stageIndex + 1] : null;
-			// A teacher who turned the vote off never sees the button for it. The
-			// server permits the jump — voting is a stage the class may skip —
-			// so this is purely which door the panel offers.
+			// A session that runs no vote never sees the button for it. The same
+			// helper gates the server's advance callable, so the door the panel
+			// offers is always one the server will open — the two switches
+			// (teacher's votingSettings, organizer's flow) fold into one answer.
 			const nextStage =
-				rawNextStage === AgoraStage.voting && session.votingSettings?.enabled === false
+				rawNextStage === AgoraStage.voting && !sessionRunsVoting(session)
 					? AgoraStage.results
 					: rawNextStage;
 
 			const inDeliberation = session.stage === AgoraStage.deliberation;
-			if (inDeliberation && userId) listenToDeliberation(sessionId, userId);
+			// The results recap projects the same board and journeys, and they all
+			// read from the deliberation listeners — a teacher who opens (or
+			// refreshes) at results must not project an empty square. Results has
+			// no `myParticipant` on the teacher side, so the listener cannot be
+			// left to it.
+			const needsDeliberationData =
+				inDeliberation ||
+				session.stage === AgoraStage.results ||
+				session.stage === AgoraStage.ended;
+			if (needsDeliberationData && userId) listenToDeliberation(sessionId, userId);
 			const { proposals } = getDeliberationState();
 
 			const inVoting = session.stage === AgoraStage.voting;
@@ -398,6 +423,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				return m('.shell.shell--wide', [
 					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
 						m(Results, { session, topic }),
+						advanceErrorLine(),
 						nextStage
 							? m(
 									'button.btn.btn--secondary.btn--full',
@@ -470,6 +496,7 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							m('span.lobby__count', String(participants.length)),
 							m('p.lobby__status', ` ${t('teacher.participants')}`),
 						]),
+						advanceErrorLine(),
 						nextStage
 							? m(
 									'button.btn.btn--primary.btn--lg',

@@ -139,17 +139,34 @@ export function GameProvider({ children }: { children: ReactNode }) {
 				attitude: OdysseyAttitudeKey,
 			): Promise<void> {
 				if (!user || !content) return;
+				// Optimistic mark — but remember what stood before, so a failed
+				// write can put it back instead of leaving a lie on the screen.
+				const previous = attitudes[stanceStatementId];
 				setAttitudes((current) => ({
 					...current,
 					[stanceStatementId]: attitudeValue(attitude),
 				}));
-				await rateStance({
-					gameId: content.game.gameId,
-					islandStatementId,
-					stanceStatementId,
-					attitude,
-					user: toFreediUser(user),
-				});
+				try {
+					await rateStance({
+						gameId: content.game.gameId,
+						islandStatementId,
+						stanceStatementId,
+						attitude,
+						user: toFreediUser(user),
+					});
+				} catch (error) {
+					console.error('[Odyssey] rateStance failed — reverting local attitude:', error, {
+						stanceStatementId,
+						islandStatementId,
+					});
+					setAttitudes((current) => {
+						const next = { ...current };
+						if (previous === undefined) delete next[stanceStatementId];
+						else next[stanceStatementId] = previous;
+
+						return next;
+					});
+				}
 			},
 			reload,
 		}),

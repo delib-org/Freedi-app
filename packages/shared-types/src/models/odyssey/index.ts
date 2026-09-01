@@ -42,3 +42,5 @@ export {
 	OdysseyJourneySchema,
 	createOdysseyJourneyId,
 } from './odysseyJourney';
+
+export type { MintAgoraHandoffResponse } from './odysseyCallables';

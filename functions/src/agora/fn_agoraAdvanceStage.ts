@@ -9,19 +9,15 @@ import {
 	AGORA_CYCLE,
 	functionConfig,
 	resolveSessionFlow,
+	sessionRunsVoting,
+} from '@freedi/shared-types';
+import type {
+	AdvanceCivicStageRequest as Request,
+	AdvanceCivicStageResponse as Result,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { computeSessionResults } from './classScore';
 import { prepareVotingStage } from './votingStage';
-
-interface Request {
-	sessionId: string;
-	stage: AgoraStage;
-}
-
-interface Result {
-	ok: boolean;
-}
 
 /**
  * Forward order of the game stages — the teacher can only move forward.
@@ -81,11 +77,13 @@ export const agoraAdvanceStage = onCall(
 			}
 
 			const flow = resolveSessionFlow(session);
-			// An event whose script holds no vote must not be walked into one:
-			// the ballot would be drawn up, the room would be asked to elect
-			// something, and the results screen would report an election the
-			// organizer deliberately left out.
-			if (stage === AgoraStage.voting && !flow.voting) {
+			// A session that runs no vote must not be walked into one: the ballot
+			// would be drawn up, the room would be asked to elect something, and
+			// the results screen would report an election nobody meant to hold.
+			// `sessionRunsVoting` is the ONE answer to "does this session vote" —
+			// the teacher panel asks the same helper, so the button it offers and
+			// the gate here can never drift apart again.
+			if (stage === AgoraStage.voting && !sessionRunsVoting(session)) {
 				throw new HttpsError('failed-precondition', 'This session runs without a voting stage');
 			}
 

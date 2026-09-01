@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { getStalledWrites } from '../lib/confirmedWrite';
+import { stalledBanner } from './StalledBanner';
 import { type IconName } from './Icon';
 import { HeroIcon, hasRender } from './HeroIcon';
 import { Inbox } from './Inbox';
@@ -120,7 +120,6 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 						? t(place.titleKey)
 						: '';
 			const crest: IconName = onResults ? 'chart' : done ? 'flag' : (place?.icon ?? 'square');
-			const stalledWrites = getStalledWrites();
 
 			return m(
 				'header.delib-hud',
@@ -254,17 +253,9 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 									: null,
 							])
 						: null,
-					// A write still in the air after eight seconds. Silence is the
-					// failure mode here — Firestore queues rather than rejects — so
-					// the student is told plainly rather than left with a UI that
-					// claims their work is saved.
-					stalledWrites.length
-						? m(
-								'.delib-hud__stalled',
-								{ role: 'status' },
-								t(stalledWrites[0]?.labelKey ?? 'delib.saving_generic'),
-							)
-						: null,
+					// A write still in the air after eight seconds — the shared
+					// stalled-write line (see StalledBanner for why it exists).
+					stalledBanner(),
 				],
 			);
 		},

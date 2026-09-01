@@ -1,7 +1,6 @@
 import m from 'mithril';
-import { AgoraSession, Statement, StatementType } from '@freedi/shared-types';
-import { Collections } from '@freedi/shared-types';
-import { db, collection, query, where, getDocs } from '../lib/firebase';
+import { AgoraSession, Statement } from '@freedi/shared-types';
+import { fetchIslandStances } from '../lib/proposals';
 import { t } from '../lib/i18n';
 import { rerateStances } from '../lib/callables';
 import { RATE_OPTIONS } from '../components/RateScale';
@@ -44,13 +43,7 @@ export function ReRate(): m.Component<ReRateAttrs> {
 		}
 
 		try {
-			const snapshot = await getDocs(
-				query(collection(db, Collections.statements), where('parentId', '==', islandStatementId)),
-			);
-			stances = snapshot.docs
-				.map((doc) => doc.data() as Statement)
-				.filter((statement) => statement.statementType === StatementType.option)
-				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+			stances = await fetchIslandStances(islandStatementId);
 		} catch (loadError) {
 			console.error('[ReRate] Could not load the island stances:', loadError);
 			error = t('rerate.load_failed');

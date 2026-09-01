@@ -38,11 +38,17 @@ export default function Summary() {
 	useEffect(() => {
 		if (!gameId || !uid) return;
 		let cancelled = false;
-		void loadGameEvaluations(gameId).then((loaded: Evaluation[]) => {
-			if (cancelled) return;
-			setEvaluations(loaded);
-			setParticipants(distanceEngine.participantDistances({ uid, evaluations: loaded }));
-		});
+		loadGameEvaluations(gameId)
+			.then((loaded: Evaluation[]) => {
+				if (cancelled) return;
+				setEvaluations(loaded);
+				setParticipants(distanceEngine.participantDistances({ uid, evaluations: loaded }));
+			})
+			.catch((error: unknown) => {
+				// The page still renders (journal, gates) — but an empty ships list
+				// caused by a failed read must not fail silently.
+				console.error('[Odyssey] loading game evaluations failed:', error, { gameId, uid });
+			});
 
 		return () => {
 			cancelled = true;

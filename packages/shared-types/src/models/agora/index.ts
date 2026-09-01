@@ -72,7 +72,12 @@ export {
 } from './agoraSession';
 
 export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
-export { AgoraSessionFlowSchema, resolveSessionFlow, scriptToFlow } from './sessionFlow';
+export {
+	AgoraSessionFlowSchema,
+	resolveSessionFlow,
+	scriptToFlow,
+	sessionRunsVoting,
+} from './sessionFlow';
 
 export type { CivicStanceEvaluation, CivicStanceMeta } from './agoraCivic';
 export {
@@ -80,6 +85,16 @@ export {
 	deriveCivicCampPosition,
 	deriveCivicCampPositionFromIsland,
 } from './agoraCivic';
+
+export type {
+	ProvisionCivicSessionsRequest,
+	ProvisionedCivicSession,
+	ProvisionCivicSessionsResponse,
+	UpdateCivicFlowRequest,
+	UpdateCivicFlowResponse,
+	AdvanceCivicStageRequest,
+	AdvanceCivicStageResponse,
+} from './agoraCivicCallables';
 
 export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
 export {

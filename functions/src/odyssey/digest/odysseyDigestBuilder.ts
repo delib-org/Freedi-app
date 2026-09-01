@@ -15,9 +15,9 @@ import {
 	ODYSSEY_DEFAULT_GAME_ID,
 	ODYSSEY_GAME_FIELD,
 	opinionDistance,
+	routeAttitudes,
 	type AttitudeMap,
 	type Evaluation,
-	type OdysseyElder,
 	type OdysseyGame,
 	type OdysseyJourney,
 } from '@freedi/shared-types';
@@ -28,13 +28,30 @@ const getDb = () => getFirestore();
 /** Sailors closer than this count as "near you" (0 = same course, 1 = opposite). */
 const NEARBY_DISTANCE = 0.35;
 
-export interface OdysseyDigestState {
-	userId: string;
+/** One game's diff baseline — what the last digest for that game reported. */
+export interface OdysseyDigestGameState {
 	lastDigestAt: number;
 	/** island statementId → the top-supported stance at the last digest */
 	islandTopStances: Record<string, string>;
 	/** The elder whose challenge went out last — rotated every digest */
 	lastElderId: string;
+}
+
+export interface OdysseyDigestState {
+	userId: string;
+	/**
+	 * Flat fields: the DEFAULT game's baseline, from before per-game keying.
+	 * Still written (mirroring `games[default]`) so a rollback can read them.
+	 */
+	lastDigestAt: number;
+	islandTopStances: Record<string, string>;
+	lastElderId: string;
+	/**
+	 * Per-game baselines, keyed by gameId — an event game's digest must not
+	 * diff against (or overwrite) the default game's baseline. Wins over the
+	 * flat fields where present.
+	 */
+	games?: Record<string, OdysseyDigestGameState>;
 	lastUpdate: number;
 }
 
@@ -52,24 +69,6 @@ interface DigestSections {
 	consensusShifts: { islandTitle: string; stanceText: string }[];
 	unvisitedTitles: string[];
 	elderChallenge: { elderName: string; elderRole: string; line: string } | null;
-}
-
-/** An elder's declared course as a virtual attitude map (party arithmetic). */
-function elderAttitudes(
-	elder: OdysseyElder,
-	game: OdysseyGame,
-	stancesByIsland: Map<string, string[]>,
-): AttitudeMap {
-	const attitudes: AttitudeMap = {};
-	for (const island of game.islands) {
-		const declared = elder.positions[island.statementId];
-		const stanceIds = stancesByIsland.get(island.statementId);
-		if (!declared || !stanceIds) continue;
-		for (const stanceId of stanceIds) attitudes[stanceId] = -1;
-		attitudes[declared] = 1;
-	}
-
-	return attitudes;
 }
 
 function attitudeMapsByUser(evaluations: Evaluation[]): Map<string, AttitudeMap> {
@@ -92,6 +91,39 @@ function escapeHtml(text: string): string {
 }
 
 /**
+ * Which game to tell this user's story about.
+ *
+ * Digest opt-in is per user, not per game — so an event player who never
+ * sailed the default game must get the digest of THEIR sea, not silence.
+ * The default game wins when the user has a journey there; otherwise the
+ * game of their most recently updated journey. A user has at most a handful
+ * of journeys, so the pick happens in memory (no composite index needed).
+ */
+async function resolveDigestGameId(
+	db: FirebaseFirestore.Firestore,
+	userId: string,
+): Promise<string> {
+	const defaultJourneySnap = await db
+		.collection(Collections.odysseyJourneys)
+		.doc(createOdysseyJourneyId(userId, ODYSSEY_DEFAULT_GAME_ID))
+		.get();
+	if (defaultJourneySnap.exists) return ODYSSEY_DEFAULT_GAME_ID;
+
+	const journeysSnap = await db
+		.collection(Collections.odysseyJourneys)
+		.where('userId', '==', userId)
+		.get();
+	let latest: OdysseyJourney | null = null;
+	for (const doc of journeysSnap.docs) {
+		const journey = doc.data() as OdysseyJourney;
+		if (!journey.gameId) continue;
+		if (!latest || (journey.lastUpdate ?? 0) > (latest.lastUpdate ?? 0)) latest = journey;
+	}
+
+	return latest?.gameId ?? ODYSSEY_DEFAULT_GAME_ID;
+}
+
+/**
  * Build one user's digest, or null when nothing changed since the last one.
  * Reads game + journey + all game evaluations; updates nothing — the caller
  * persists the new state AFTER the queue item is enqueued successfully.
@@ -103,8 +135,8 @@ export async function buildOdysseyDigest(input: {
 	unsubscribeUrl: string;
 }): Promise<{ digest: OdysseyDigest; nextState: OdysseyDigestState } | null> {
 	const { userId, appBaseUrl, unsubscribeUrl } = input;
-	const gameId = input.gameId ?? ODYSSEY_DEFAULT_GAME_ID;
 	const db = getDb();
+	const gameId = input.gameId ?? (await resolveDigestGameId(db, userId));
 
 	const [gameSnap, journeySnap, stateSnap, evaluationsSnap] = await Promise.all([
 		db.collection(Collections.odysseyGames).doc(gameId).get(),
@@ -116,7 +148,18 @@ export async function buildOdysseyDigest(input: {
 	const game = gameSnap.data() as OdysseyGame;
 	const journey = journeySnap.exists ? (journeySnap.data() as OdysseyJourney) : null;
 	const state = stateSnap.exists ? (stateSnap.data() as OdysseyDigestState) : null;
-	const lastDigestAt = state?.lastDigestAt ?? 0;
+	// This game's baseline: the per-game entry, or — for the default game
+	// only — the legacy flat fields written before per-game keying existed.
+	const gameState: OdysseyDigestGameState | null =
+		state?.games?.[gameId] ??
+		(state && gameId === ODYSSEY_DEFAULT_GAME_ID
+			? {
+					lastDigestAt: state.lastDigestAt ?? 0,
+					islandTopStances: state.islandTopStances ?? {},
+					lastElderId: state.lastElderId ?? '',
+				}
+			: null);
+	const lastDigestAt = gameState?.lastDigestAt ?? 0;
 
 	const evaluations = evaluationsSnap.docs.map((doc) => doc.data() as Evaluation);
 	const byUser = attitudeMapsByUser(evaluations);
@@ -179,19 +222,22 @@ export async function buildOdysseyDigest(input: {
 	};
 
 	const stanceTextById = new Map<string, string>();
-	const consensusShifts: DigestSections['consensusShifts'] = [];
+	const shiftedStances: { islandTitle: string; stanceId: string }[] = [];
 	const nextTopStances: Record<string, string> = {};
 	for (const island of myIslands) {
 		const top = topStanceOf(island.statementId);
 		if (!top) continue;
 		nextTopStances[island.statementId] = top;
-		const previous = state?.islandTopStances?.[island.statementId];
+		const previous = gameState?.islandTopStances?.[island.statementId];
 		if (previous && previous !== top) {
-			consensusShifts.push({ islandTitle: island.title, stanceText: top });
+			shiftedStances.push({ islandTitle: island.title, stanceId: top });
 			stanceTextById.set(top, '');
 		}
 	}
 	// Fetch the shifted stances' texts (only the few that actually flipped).
+	// A stance whose Statement was deleted has no text to print — its shift
+	// line is dropped rather than mailing the reader a raw statement id.
+	const consensusShifts: DigestSections['consensusShifts'] = [];
 	if (stanceTextById.size > 0) {
 		const snaps = await db.getAll(
 			...[...stanceTextById.keys()].map((id) => db.collection(Collections.statements).doc(id)),
@@ -200,8 +246,9 @@ export async function buildOdysseyDigest(input: {
 			const text = (snap.data() as { statement?: string } | undefined)?.statement;
 			if (text) stanceTextById.set(snap.id, text);
 		}
-		for (const shift of consensusShifts) {
-			shift.stanceText = stanceTextById.get(shift.stanceText) || shift.stanceText;
+		for (const shift of shiftedStances) {
+			const stanceText = stanceTextById.get(shift.stanceId);
+			if (stanceText) consensusShifts.push({ islandTitle: shift.islandTitle, stanceText });
 		}
 	}
 
@@ -223,13 +270,23 @@ export async function buildOdysseyDigest(input: {
 					.filter((elder) => elder.enabled)
 					.sort((a, b) => a.sortOrder - b.sortOrder);
 	let elderChallenge: DigestSections['elderChallenge'] = null;
-	let nextElderId = state?.lastElderId ?? '';
+	let nextElderId = gameState?.lastElderId ?? '';
 	if (elders.length > 0) {
-		const lastIndex = elders.findIndex((elder) => elder.elderId === state?.lastElderId);
+		const lastIndex = elders.findIndex((elder) => elder.elderId === gameState?.lastElderId);
 		const elder = elders[(lastIndex + 1) % elders.length];
 		nextElderId = elder.elderId;
-		// The island where this elder most opposes the player's marked course.
-		const virtual = elderAttitudes(elder, game, stancesByIsland);
+		// The island where this elder most opposes the player's marked course —
+		// the SAME virtual-user projection the client's sea uses (shared-types
+		// `routeAttitudes`), so continuous elder attitudes are honored here too.
+		const virtual = routeAttitudes(
+			elder,
+			enabledIslands.map((island) => ({
+				statementId: island.statementId,
+				stances: (stancesByIsland.get(island.statementId) ?? []).map((stanceId) => ({
+					statementId: stanceId,
+				})),
+			})),
+		);
 		let bestIsland: string | null = null;
 		let bestGap = -Infinity;
 		for (const island of enabledIslands) {
@@ -279,13 +336,27 @@ export async function buildOdysseyDigest(input: {
 
 	const now = Date.now();
 
+	const nextGameState: OdysseyDigestGameState = {
+		lastDigestAt: now,
+		islandTopStances: { ...gameState?.islandTopStances, ...nextTopStances },
+		lastElderId: nextElderId,
+	};
+	const isDefaultGame = gameId === ODYSSEY_DEFAULT_GAME_ID;
+
 	return {
 		digest,
 		nextState: {
 			userId,
-			lastDigestAt: now,
-			islandTopStances: { ...state?.islandTopStances, ...nextTopStances },
-			lastElderId: nextElderId,
+			// The flat fields mirror the default game only; an event game's run
+			// must not overwrite the default game's baseline.
+			lastDigestAt: isDefaultGame ? now : (state?.lastDigestAt ?? 0),
+			islandTopStances: isDefaultGame
+				? nextGameState.islandTopStances
+				: (state?.islandTopStances ?? {}),
+			lastElderId: isDefaultGame ? nextElderId : (state?.lastElderId ?? ''),
+			// The caller persists this doc with a full set(): every other game's
+			// baseline must be carried forward here, not only the one just run.
+			games: { ...state?.games, [gameId]: nextGameState },
 			lastUpdate: now,
 		},
 	};

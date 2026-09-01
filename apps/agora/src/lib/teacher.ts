@@ -10,7 +10,23 @@ import {
 	AGORA_VOTING,
 	deriveCamp,
 } from '@freedi/shared-types';
-import { db, doc, collection, query, where, limit, getDocs, setDoc, updateDoc } from './firebase';
+import {
+	db,
+	doc,
+	collection,
+	query,
+	where,
+	limit,
+	getDoc,
+	getDocs,
+	setDoc,
+	updateDoc,
+	storage,
+	storageRef,
+	uploadBytesResumable,
+	getDownloadURL,
+} from './firebase';
+import { trackWrite } from './confirmedWrite';
 
 /**
  * Everything the teacher and join screens ask of Firestore.
@@ -66,6 +82,76 @@ export async function listTopicPackages(creatorId: string): Promise<AgoraTopicPa
 
 export async function saveTopicPackage(topicPackage: AgoraTopicPackage): Promise<void> {
 	await setDoc(doc(db, Collections.agoraTopicPackages, topicPackage.topicPackageId), topicPackage);
+}
+
+/** One topic package by id — the editor's load. Throws on a malformed doc. */
+export async function fetchTopicPackage(topicPackageId: string): Promise<AgoraTopicPackage | null> {
+	const snapshot = await getDoc(doc(db, Collections.agoraTopicPackages, topicPackageId));
+	if (!snapshot.exists()) return null;
+
+	return parse(AgoraTopicPackageSchema, snapshot.data());
+}
+
+/**
+ * The fields the topic editor actually edits — the ONLY ones its save may
+ * touch. The editor used to write its whole in-memory copy back, which made
+ * every save an overwrite of fields it never showed (creator, language,
+ * rubric, metrics) with whatever they were when the editor was opened.
+ */
+export type TopicEditorFields = Partial<
+	Pick<
+		AgoraTopicPackage,
+		'title' | 'framingText' | 'challengeQuestion' | 'characters' | 'scenes' | 'status'
+	>
+>;
+
+/**
+ * Save the editor's fields — under the confirmed-write clock, because a
+ * teacher polishing a package on flaky wifi was the textbook silent failure:
+ * Firestore queues, the button flashes "saved", and the package still says
+ * what it said. The stalled banner now has something to report.
+ */
+export async function saveTopicEditorFields(
+	topicPackageId: string,
+	fields: TopicEditorFields,
+): Promise<void> {
+	await trackWrite(
+		'editor.saving_package',
+		updateDoc(doc(db, Collections.agoraTopicPackages, topicPackageId), {
+			...fields,
+			lastUpdate: Date.now(),
+		}),
+	);
+}
+
+/**
+ * Upload one scene asset (video or image) into the package's storage folder.
+ * Progress arrives as whole percents; resolves with the download URL to write
+ * onto the scene. Storage lives here so no view imports firebase for it.
+ */
+export function uploadTopicAsset(
+	topicPackageId: string,
+	fileName: string,
+	file: File,
+	onProgress: (percent: number) => void,
+): Promise<string> {
+	const task = uploadBytesResumable(
+		storageRef(storage, `agora/${topicPackageId}/${fileName}`),
+		file,
+	);
+
+	return new Promise<string>((resolve, reject) => {
+		task.on(
+			'state_changed',
+			(snapshot) => {
+				onProgress(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+			},
+			reject,
+			() => {
+				getDownloadURL(task.snapshot.ref).then(resolve).catch(reject);
+			},
+		);
+	});
 }
 
 export async function patchTopicPackage(

@@ -6,7 +6,7 @@
  */
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldPath, getFirestore } from 'firebase-admin/firestore';
 import {
 	Collections,
 	NotificationChannel,
@@ -77,66 +77,79 @@ export async function processOdysseyDigests(): Promise<{
 	let digestsSent = 0;
 	let errors = 0;
 
-	const settingsSnap = await db
-		.collection(Collections.notificationSettings)
-		.where('odysseyDigest.enabled', '==', true)
-		.limit(500)
-		.get();
+	// Paginated by document id — a bare limit() would return the same first
+	// page every run, silently never reaching anyone past it.
+	const PAGE_SIZE = 500;
+	let cursor: FirebaseFirestore.QueryDocumentSnapshot | null = null;
 
-	for (const doc of settingsSnap.docs) {
-		const settings = doc.data() as NotificationSettings;
-		const cadence = settings.odysseyDigest;
-		if (!cadence?.enabled || (!cadence.everyUpdate && cadence.hoursLocal.length === 0)) continue;
-		if (settings.muted || settings.perApp?.[SourceApp.ODYSSEY]?.muted) continue;
+	for (;;) {
+		let query = db
+			.collection(Collections.notificationSettings)
+			.where('odysseyDigest.enabled', '==', true)
+			.orderBy(FieldPath.documentId())
+			.limit(PAGE_SIZE);
+		if (cursor) query = query.startAfter(cursor);
+		const settingsSnap = await query.get();
+		if (settingsSnap.empty) break;
+		cursor = settingsSnap.docs[settingsSnap.docs.length - 1];
 
-		// "Every update" rides every hourly run — the builder's nothing-changed
-		// guard is what keeps it from being every hour in practice.
-		const localHour = getHourInTimezone(cadence.timezone || 'Asia/Jerusalem');
-		if (!cadence.everyUpdate && !cadence.hoursLocal.includes(localHour)) continue;
-		usersMatched += 1;
+		for (const doc of settingsSnap.docs) {
+			const settings = doc.data() as NotificationSettings;
+			const cadence = settings.odysseyDigest;
+			if (!cadence?.enabled || (!cadence.everyUpdate && cadence.hoursLocal.length === 0)) continue;
+			if (settings.muted || settings.perApp?.[SourceApp.ODYSSEY]?.muted) continue;
 
-		try {
-			const unsubscribeUrl = `${UNSUBSCRIBE_BASE}/odysseyDigestUnsubscribe?userId=${encodeURIComponent(settings.userId)}&t=${odysseyUnsubscribeToken(settings.userId)}`;
-			const built = await buildOdysseyDigest({
-				userId: settings.userId,
-				appBaseUrl: ODYSSEY_BASE_URL,
-				unsubscribeUrl,
-			});
-			if (!built) continue;
+			// "Every update" rides every hourly run — the builder's nothing-changed
+			// guard is what keeps it from being every hour in practice.
+			const localHour = getHourInTimezone(cadence.timezone || 'Asia/Jerusalem');
+			if (!cadence.everyUpdate && !cadence.hoursLocal.includes(localHour)) continue;
+			usersMatched += 1;
 
-			const now = Date.now();
-			const queueItemId = `odyssey-digest--${settings.userId}--${now}`;
-			const item: NotificationQueueItem = {
-				queueItemId,
-				userId: settings.userId,
-				title: built.digest.subject,
-				body: built.digest.bodyText,
-				emailHtml: built.digest.emailHtml,
-				// Also as a header (List-Unsubscribe), not only a footer link —
-				// the header is what mail providers actually read
-				unsubscribeUrl,
-				channels: [NotificationChannel.EMAIL],
-				sourceApp: SourceApp.ODYSSEY,
-				targetPath: '/map',
-				deliverAt: null,
-				frequency: NotificationFrequency.DAILY,
-				triggerType: NotificationTriggerType.ODYSSEY_DIGEST,
-				status: NotificationQueueStatus.PENDING,
-				createdAt: now,
-			};
+			try {
+				const unsubscribeUrl = `${UNSUBSCRIBE_BASE}/odysseyDigestUnsubscribe?userId=${encodeURIComponent(settings.userId)}&t=${odysseyUnsubscribeToken(settings.userId)}`;
+				const built = await buildOdysseyDigest({
+					userId: settings.userId,
+					appBaseUrl: ODYSSEY_BASE_URL,
+					unsubscribeUrl,
+				});
+				if (!built) continue;
 
-			await db.collection(Collections.notificationQueue).doc(queueItemId).set(item);
-			// State advances only after the item is safely queued — a failed
-			// enqueue leaves the diff baseline where it was, so nothing is lost.
-			await db.collection(Collections.odysseyDigestState).doc(settings.userId).set(built.nextState);
-			digestsSent += 1;
-		} catch (error) {
-			errors += 1;
-			logError(error, {
-				operation: 'odyssey.processOdysseyDigests',
-				userId: settings.userId,
-			});
+				const now = Date.now();
+				const queueItemId = `odyssey-digest--${settings.userId}--${now}`;
+				const item: NotificationQueueItem = {
+					queueItemId,
+					userId: settings.userId,
+					title: built.digest.subject,
+					body: built.digest.bodyText,
+					emailHtml: built.digest.emailHtml,
+					// Also as a header (List-Unsubscribe), not only a footer link —
+					// the header is what mail providers actually read
+					unsubscribeUrl,
+					channels: [NotificationChannel.EMAIL],
+					sourceApp: SourceApp.ODYSSEY,
+					targetPath: '/map',
+					deliverAt: null,
+					frequency: NotificationFrequency.DAILY,
+					triggerType: NotificationTriggerType.ODYSSEY_DIGEST,
+					status: NotificationQueueStatus.PENDING,
+					createdAt: now,
+				};
+
+				await db.collection(Collections.notificationQueue).doc(queueItemId).set(item);
+				// State advances only after the item is safely queued — a failed
+				// enqueue leaves the diff baseline where it was, so nothing is lost.
+				await db.collection(Collections.odysseyDigestState).doc(settings.userId).set(built.nextState);
+				digestsSent += 1;
+			} catch (error) {
+				errors += 1;
+				logError(error, {
+					operation: 'odyssey.processOdysseyDigests',
+					userId: settings.userId,
+				});
+			}
 		}
+
+		if (settingsSnap.size < PAGE_SIZE) break;
 	}
 
 	return { usersMatched, digestsSent, skippedQuiet: 0, errors };

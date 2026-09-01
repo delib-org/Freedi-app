@@ -81,7 +81,7 @@ function legacyDefaults(mode: AgoraSessionMode): Omit<ResolvedSessionFlow, 'scor
  */
 export function resolveSessionFlow(session: {
 	sessionMode?: AgoraSessionMode;
-	flow?: AgoraSessionFlow;
+	flow?: AgoraSessionFlow | null;
 }): ResolvedSessionFlow {
 	const defaults = legacyDefaults(session.sessionMode ?? AgoraSessionMode.classroom);
 	const flow = session.flow;
@@ -98,6 +98,27 @@ export function resolveSessionFlow(session: {
 		framing: flow?.framing ?? defaults.framing,
 		scoreMode: stances ? 'bridging' : 'convergence',
 	};
+}
+
+/**
+ * Does this session run the voting stage at all?
+ *
+ * TWO knobs answer that question and they used to be consulted separately —
+ * the teacher panel read `votingSettings.enabled` while the advance callable
+ * read `resolveSessionFlow(session).voting` — so a session whose knobs
+ * disagreed either dead-ended the teacher's advance button or opened a ballot
+ * the teacher had switched off. One function now folds them: an explicit
+ * `enabled: false` from the teacher wins outright, otherwise the organizer's
+ * flow (or the mode's legacy default) decides.
+ */
+export function sessionRunsVoting(session: {
+	sessionMode?: AgoraSessionMode;
+	flow?: AgoraSessionFlow | null;
+	votingSettings?: { enabled?: boolean };
+}): boolean {
+	if (session.votingSettings?.enabled === false) return false;
+
+	return resolveSessionFlow(session).voting;
 }
 
 /**

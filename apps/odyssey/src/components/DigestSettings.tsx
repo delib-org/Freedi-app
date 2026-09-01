@@ -24,22 +24,27 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
+	const [error, setError] = useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
-		void loadDigestSettings(uid).then((existing) => {
-			if (cancelled || !existing) {
-				setLoading(false);
-
-				return;
-			}
-			if (!existing.enabled) setCadence('none');
-			else if (existing.everyUpdate) setCadence('every');
-			else if (existing.hoursLocal.length <= 1) setCadence('daily');
-			else setCadence('multi');
-			if (existing.hoursLocal.length > 0) setHours(existing.hoursLocal);
-			setLoading(false);
-		});
+		loadDigestSettings(uid)
+			.then((existing) => {
+				if (cancelled || !existing) return;
+				if (!existing.enabled) setCadence('none');
+				else if (existing.everyUpdate) setCadence('every');
+				else if (existing.hoursLocal.length <= 1) setCadence('daily');
+				else setCadence('multi');
+				if (existing.hoursLocal.length > 0) setHours(existing.hoursLocal);
+			})
+			.catch((loadError: unknown) => {
+				// The defaults still let the user pick a cadence — but the spinner
+				// must never survive a failed read.
+				console.error('[Odyssey] loading digest settings failed:', loadError, { uid });
+			})
+			.finally(() => {
+				if (!cancelled) setLoading(false);
+			});
 
 		return () => {
 			cancelled = true;
@@ -64,6 +69,7 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 
 	async function save(): Promise<void> {
 		setSaving(true);
+		setError(false);
 		try {
 			const timed = cadence === 'daily' || cadence === 'multi';
 			const settings: OdysseyDigestSettings = {
@@ -74,6 +80,9 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 			};
 			await saveDigestSettings(uid, settings);
 			setSaved(true);
+		} catch (saveError) {
+			console.error('[Odyssey] saving digest settings failed:', saveError, { uid });
+			setError(true);
 		} finally {
 			setSaving(false);
 		}
@@ -168,6 +177,11 @@ export default function DigestSettings({ uid, onClose }: { uid: string; onClose:
 							{saving ? 'שומרים…' : 'שמירה'}
 						</button>
 						{saved ? <span className="text-[13px] text-[var(--gold-strong)]">נשמר ✓</span> : null}
+						{error ? (
+							<span className="text-[13px] text-[var(--gold-strong)]">
+								השמירה נכשלה — נסו שוב בעוד רגע.
+							</span>
+						) : null}
 					</div>
 				</>
 			)}

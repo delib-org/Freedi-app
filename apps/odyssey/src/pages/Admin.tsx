@@ -9,6 +9,7 @@ import type {
 } from '@freedi/shared-types';
 import {
 	AgoraSessionMode,
+	AgoraStage,
 	ODYSSEY_EVENT_SCRIPT,
 	resolveSessionFlow,
 	scriptToFlow,
@@ -26,6 +27,7 @@ import {
 	addStance,
 	deleteStance,
 	saveGamePatch,
+	saveIslandAnchors,
 	saveStatementText,
 	uploadImage,
 } from '../lib/admin';
@@ -602,7 +604,7 @@ function IslandsTab({
 				כל אי הוא היגד-שאלה וכל חוף הוא היגד-אופציה במערכת ההיגדים של Freedi — עריכת הטקסטים כאן
 				מעדכנת את ההיגדים עצמם.
 			</p>
-			{meta
+			{[...meta]
 				.sort((a, b) => a.sortOrder - b.sortOrder)
 				.map((islandMeta) => {
 					const island = islands.find(
@@ -889,7 +891,7 @@ function PartiesTab({
 				מצעים, הצבעות והצהרות פומביות. היגד בלי ציון נופל חזרה לעמדה המוצהרת הישנה (אם קיימת).
 				מהציונים נגזר חישוב המרחק.
 			</p>
-			{draft
+			{[...draft]
 				.sort((a, b) => a.sortOrder - b.sortOrder)
 				.map((party) => {
 					const isOpen = open === party.partyId;
@@ -1292,7 +1294,7 @@ function ConductorSection({
 
 	if (!open.length) return null;
 
-	async function advance(sessionId: string, stage: string, label: string): Promise<void> {
+	async function advance(sessionId: string, stage: AgoraStage, label: string): Promise<void> {
 		await advanceCivicStage(sessionId, stage);
 		flash(`${label} · הדיון עודכן`);
 	}
@@ -1322,7 +1324,9 @@ function ConductorSection({
 									type="button"
 									className="btn-outline"
 									disabled={busy}
-									onClick={() => void run(() => advance(session.sessionId, 'voting', island.title))}
+									onClick={() =>
+										void run(() => advance(session.sessionId, AgoraStage.voting, island.title))
+									}
 								>
 									להצבעה
 								</button>
@@ -1331,7 +1335,9 @@ function ConductorSection({
 								type="button"
 								className="btn-outline"
 								disabled={busy}
-								onClick={() => void run(() => advance(session.sessionId, 'results', island.title))}
+								onClick={() =>
+									void run(() => advance(session.sessionId, AgoraStage.results, island.title))
+								}
 							>
 								לתוצאות
 							</button>
@@ -1377,6 +1383,27 @@ function AgoraTab({
 		setMeta((current) =>
 			current.map((island) =>
 				island.statementId === statementId ? { ...island, ...patch } : island,
+			),
+		);
+	}
+
+	/**
+	 * Persist only the anchors this tab edits. `meta` is a snapshot taken when
+	 * the tab mounted; writing the whole array back would clobber island edits
+	 * (texts, order, enabled) saved elsewhere since — so the anchors are merged
+	 * into a freshly-read islands array at save time instead.
+	 */
+	async function saveAnchors(): Promise<void> {
+		await saveIslandAnchors(
+			gameId,
+			Object.fromEntries(
+				meta.map((island) => [
+					island.statementId,
+					{
+						leftAnchorStanceId: island.leftAnchorStanceId ?? null,
+						rightAnchorStanceId: island.rightAnchorStanceId ?? null,
+					},
+				]),
 			),
 		);
 	}
@@ -1501,7 +1528,7 @@ function AgoraTab({
 						type="button"
 						className="btn"
 						disabled={busy}
-						onClick={() => void run(() => saveGamePatch(gameId, { islands: meta }))}
+						onClick={() => void run(() => saveAnchors())}
 					>
 						שמירת החופים המנוגדים
 					</button>
@@ -1513,7 +1540,7 @@ function AgoraTab({
 							void run(async () => {
 								// Anchors are saved first: the session carries them, and a
 								// session opened without them places everyone in the centre.
-								await saveGamePatch(gameId, { islands: meta });
+								await saveAnchors();
 								const result = await provisionCivicSessions(gameId);
 								flash(
 									`נפתחו ${result.sessions.length} דיונים` +

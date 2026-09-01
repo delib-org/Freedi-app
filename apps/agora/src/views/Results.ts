@@ -420,7 +420,12 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 						? m(
 								'p.results__vote-gap',
 								t('results.vote_threshold_gap', {
-									cp: (candidate?.consensus ?? 0).toFixed(2),
+									// The consensus the SERVER judged the threshold against —
+									// never the frozen ballot snapshot's number, which stopped
+									// moving when the stage opened while ratings kept arriving.
+									// The snapshot survives only as a fallback for sessions
+									// scored before the deciding value was stored.
+									cp: (score.voteConsensus?.[winnerId] ?? candidate?.consensus ?? 0).toFixed(2),
 									threshold: score.winningConsensusThreshold.toFixed(2),
 								}),
 							)

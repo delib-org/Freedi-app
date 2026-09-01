@@ -239,4 +239,104 @@ describe('buildOpinionMap', () => {
 		expect(typeof result!.fidelity.r).toBe('number');
 		expect(typeof result!.reliable).toBe('boolean');
 	});
+
+	it('never calls a map with a single known pair reliable (degenerate pearson)', () => {
+		// Only dana↔eli overlap; noa answered a disjoint stance set. One known
+		// pair means pearson has n<2 samples — r must be NaN, not a fake 1.
+		const users: Array<[string, AttitudeMap]> = [
+			['dana', { s1: 1, s2: -1 }],
+			['eli', { s1: -1, s2: 1 }],
+			['noa', { s7: 1, s8: -1 }],
+		];
+		const evaluations: Evaluation[] = users.flatMap(([uid, attitudes]) =>
+			Object.entries(attitudes).map(([stanceId, value]) => ({
+				evaluationId: `${uid}--${stanceId}`,
+				parentId: 'island',
+				statementId: stanceId,
+				evaluatorId: uid,
+				evaluation: value,
+				updatedAt: 1,
+			})),
+		);
+
+		const result = buildOpinionMap({
+			uid: 'dana',
+			evaluations,
+			islands: [],
+			parties: [],
+			minSharedStances: 1,
+		});
+
+		expect(result).not.toBeNull();
+		expect(result!.knownPairRatio).toBeCloseTo(1 / 3, 5);
+		expect(Number.isNaN(result!.fidelity.r)).toBe(true);
+		expect(result!.reliable).toBe(false);
+	});
+
+	it('never calls a zero-variance (everyone identical) map reliable', () => {
+		// Three sailors with identical answers: every known distance is 0, so
+		// pearson has no variance to correlate — r is NaN and reliable is false.
+		const users: Array<[string, AttitudeMap]> = [
+			['dana', { s1: 1, s2: -1 }],
+			['eli', { s1: 1, s2: -1 }],
+			['noa', { s1: 1, s2: -1 }],
+		];
+		const evaluations: Evaluation[] = users.flatMap(([uid, attitudes]) =>
+			Object.entries(attitudes).map(([stanceId, value]) => ({
+				evaluationId: `${uid}--${stanceId}`,
+				parentId: 'island',
+				statementId: stanceId,
+				evaluatorId: uid,
+				evaluation: value,
+				updatedAt: 1,
+			})),
+		);
+
+		const result = buildOpinionMap({
+			uid: 'dana',
+			evaluations,
+			islands: [],
+			parties: [],
+			minSharedStances: 1,
+		});
+
+		expect(result).not.toBeNull();
+		expect(result!.knownPairRatio).toBe(1);
+		expect(Number.isNaN(result!.fidelity.r)).toBe(true);
+		expect(result!.reliable).toBe(false);
+	});
+
+	it('never calls a mostly-imputed map reliable, whatever r says', () => {
+		// dana/eli/omer overlap richly (3 known pairs with varied distances) but
+		// two hermits answered disjoint stances: 3 of 10 pairs known (< 0.5).
+		const users: Array<[string, AttitudeMap]> = [
+			['dana', { s1: 1, s2: 1, s3: 1 }],
+			['eli', { s1: 1, s2: -1, s3: 1 }],
+			['omer', { s1: -1, s2: -1, s3: -1 }],
+			['hermit1', { s7: 1, s8: -1 }],
+			['hermit2', { s9: 1, s10: -1 }],
+		];
+		const evaluations: Evaluation[] = users.flatMap(([uid, attitudes]) =>
+			Object.entries(attitudes).map(([stanceId, value]) => ({
+				evaluationId: `${uid}--${stanceId}`,
+				parentId: 'island',
+				statementId: stanceId,
+				evaluatorId: uid,
+				evaluation: value,
+				updatedAt: 1,
+			})),
+		);
+
+		const result = buildOpinionMap({
+			uid: 'dana',
+			evaluations,
+			islands: [],
+			parties: [],
+			minSharedStances: 1,
+		});
+
+		expect(result).not.toBeNull();
+		expect(result!.knownPairRatio).toBeCloseTo(0.3, 5);
+		expect(result!.reliable).toBe(false);
+	});
 });

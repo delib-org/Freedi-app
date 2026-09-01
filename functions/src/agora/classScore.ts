@@ -38,6 +38,7 @@ type VoteFields = Pick<
 	| 'voteTotal'
 	| 'voteWinnerMetThreshold'
 	| 'winningConsensusThreshold'
+	| 'voteConsensus'
 >;
 
 interface VoteOutcome extends VoteFields {
@@ -83,6 +84,16 @@ export async function computeVoteOutcome(
 		threshold,
 	);
 
+	// The consensus each candidate held at THIS moment — the numbers the
+	// threshold was actually judged against. Stored so the results screen can
+	// explain the verdict with the deciding figure instead of the frozen
+	// ballot snapshot's, which stopped moving when the stage opened.
+	const voteConsensus = Object.fromEntries(
+		candidateIds
+			.filter((candidateId) => consensusById[candidateId] !== undefined)
+			.map((candidateId) => [candidateId, consensusById[candidateId]]),
+	);
+
 	// A winner that misses the bar is still named — the class elected it, and
 	// the screen has to say what happened — but it does not take the crown.
 	const electedProposal =
@@ -95,6 +106,7 @@ export async function computeVoteOutcome(
 		voteCounts: counts,
 		voteTotal: total,
 		voteWinnerMetThreshold: metThreshold,
+		voteConsensus,
 		...(threshold !== undefined ? { winningConsensusThreshold: threshold } : {}),
 		...(electedProposal ? { electedProposal } : {}),
 	};

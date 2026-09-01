@@ -32,12 +32,15 @@ export async function saveDigestSettings(
 	const ref = doc(db, Collections.notificationSettings, uid);
 	const snap = await getDoc(ref);
 	const now = Date.now();
-	const base = snap.exists()
-		? (snap.data() as NotificationSettings)
-		: createDefaultNotificationSettings(uid, now, cadence.timezone);
+	const existing = snap.exists() ? (snap.data() as NotificationSettings) : null;
 
-	const next: NotificationSettings = {
-		...base,
+	/**
+	 * `notificationSettings/{uid}` is a CROSS-APP doc; other apps and the
+	 * server (e.g. the unsubscribe endpoint) write it too. So this is a
+	 * merge-write of only the fields Odyssey owns — a full setDoc would
+	 * clobber whatever landed between our read and our write.
+	 */
+	const owned: Partial<NotificationSettings> = {
 		odysseyDigest: {
 			...cadence,
 			hoursLocal: [...new Set(cadence.hoursLocal)]
@@ -45,11 +48,10 @@ export async function saveDigestSettings(
 				.slice(0, ODYSSEY_DIGEST_MAX_HOURS),
 		},
 		perApp: {
-			...base.perApp,
 			[SourceApp.ODYSSEY]: {
 				muted: false,
 				channels: {
-					...(base.perApp?.[SourceApp.ODYSSEY]?.channels ?? {
+					...(existing?.perApp?.[SourceApp.ODYSSEY]?.channels ?? {
 						push: false,
 						inApp: true,
 						email: false,
@@ -61,5 +63,13 @@ export async function saveDigestSettings(
 		lastUpdate: now,
 	};
 
-	await setDoc(ref, next);
+	await setDoc(
+		ref,
+		existing
+			? owned
+			: // First write: the doc needs its identity and defaults too. Merge
+				// still, so a concurrent first write is folded in, not overwritten.
+				{ ...createDefaultNotificationSettings(uid, now, cadence.timezone), ...owned },
+		{ merge: true },
+	);
 }

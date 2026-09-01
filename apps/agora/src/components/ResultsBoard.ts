@@ -15,7 +15,7 @@ import {
 	type AgoraTopicPackage,
 } from '@freedi/shared-types';
 import { isRTL, t, tCount } from '../lib/i18n';
-import { celebrate } from '../lib/celebration';
+import { celebrateOnce } from '../lib/celebration';
 // The map's arithmetic lives beside the milestone detector that reads it, so
 // the dashed zone and the cheer for entering it can never drift apart
 import { campLean } from '../lib/boardGeometry';
@@ -258,15 +258,13 @@ export function ResultsBoard(
 
 	/**
 	 * One cheer, the first time a student sees their own proposal on the
-	 * podium. Seeded from sessionStorage so a refresh stays quiet — a
-	 * celebration that repeats on every reload stops meaning anything.
+	 * podium. The once-per-sitting guard (and its sessionStorage) lives in
+	 * lib/celebration.ts — components don't touch storage.
 	 */
 	function cheerOnce(points: BoardPoint[]): void {
-		if (sessionStorage.getItem(cheerKey)) return;
 		const mine = points.find((point) => point.isMine);
 		if (!mine || mine.rank > PODIUM_SIZE || mine.consensus === undefined) return;
-		sessionStorage.setItem(cheerKey, '1');
-		celebrate({
+		celebrateOnce(cheerKey, {
 			message: t('board.cheer_podium', { rank: mine.rank }),
 			detail: mine.proposal.statement,
 		});

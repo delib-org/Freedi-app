@@ -5,6 +5,7 @@ import {
 	collection,
 	query,
 	where,
+	getDocs,
 	setDoc,
 	updateDoc,
 	onSnapshot,
@@ -23,6 +24,7 @@ import {
 	AgoraSuggestionStatus,
 	AGORA_ANTI_GAMING,
 	Evaluation,
+	Statement,
 	StatementType,
 	isAgoraAiUid,
 } from '@freedi/shared-types';
@@ -567,6 +569,22 @@ export async function submitThreadMessage(
 			),
 		),
 	);
+}
+
+/**
+ * The island's stances, ordered — what the closing re-rate asks about.
+ * A one-shot read, not a listener: the island's stance list was authored
+ * before the event and does not move while people answer.
+ */
+export async function fetchIslandStances(islandStatementId: string): Promise<Statement[]> {
+	const snapshot = await getDocs(
+		query(collection(db, Collections.statements), where('parentId', '==', islandStatementId)),
+	);
+
+	return snapshot.docs
+		.map((docSnap) => docSnap.data() as Statement)
+		.filter((statement) => statement.statementType === StatementType.option)
+		.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 /** Send an improvement suggestion on someone else's proposal */

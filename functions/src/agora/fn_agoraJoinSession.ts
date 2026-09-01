@@ -267,9 +267,23 @@ export const agoraJoinSession = onCall(
 			 * Reading the session INSIDE the transaction makes the read a conflict
 			 * point: concurrent joins serialise and retry against a fresh count, so
 			 * indices are handed out exactly once each.
+			 *
+			 * The participant is re-checked INSIDE the transaction too. The
+			 * create-vs-rejoin decision above came from a plain get, so two
+			 * concurrent joins from the same student (double-tap, retried callable)
+			 * could both reach here — and an unconditional set would burn a second
+			 * anon-name index and increment the count twice for one traveler. The
+			 * loser of the race now becomes a rejoin: same doc, same name, count
+			 * untouched.
 			 */
 			const anonName = await db.runTransaction(async (transaction) => {
-				const freshSession = await transaction.get(sessionRef);
+				const [freshSession, freshParticipant] = await Promise.all([
+					transaction.get(sessionRef),
+					transaction.get(participantRef),
+				]);
+				if (freshParticipant.exists) {
+					return (freshParticipant.data() as AgoraParticipant).anonName;
+				}
 				const count = (freshSession.data() as AgoraSession | undefined)?.participantCount ?? 0;
 				const name = generateAnonName(language, count);
 

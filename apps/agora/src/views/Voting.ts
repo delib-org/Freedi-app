@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
+import { stalledBanner } from '../components/StalledBanner';
 import { castVote, getVotingState, totalVotes } from '../lib/voting';
 import { AgoraParticipant, AgoraSession, VotingCandidate } from '@freedi/shared-types';
 
@@ -62,6 +63,11 @@ export function Voting(): m.Component<VotingAttrs> {
 				m('.shell__content.voting', [
 					m('h2.voting__title', t('voting.title')),
 					m('p.voting__instruction', t('voting.instruction')),
+
+					// A ballot disabled by a vote that never lands looks broken with
+					// no explanation — this screen has no HUD, so the stalled-write
+					// line has to live here itself.
+					stalledBanner(),
 
 					m(
 						'.voting__list',

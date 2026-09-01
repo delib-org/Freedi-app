@@ -115,6 +115,15 @@ export const AgoraClassScoreSchema = object({
 	voteTotal: optional(number()),
 	/** False when the most-voted proposal did not clear the teacher's win threshold */
 	voteWinnerMetThreshold: optional(boolean()),
+	/**
+	 * The consensus each candidate held at the moment the vote was decided —
+	 * the very numbers `pickVoteWinner` judged the threshold against. The
+	 * results screen prints THESE, never the frozen ballot snapshot's values:
+	 * the ballot froze when the stage opened, ratings kept arriving, and a
+	 * verdict explained with a different number than the one that decided it
+	 * reads as a lie. Absent on sessions scored before this existed.
+	 */
+	voteConsensus: optional(record(string(), number())),
 	/** The threshold that was applied, echoed so the screen can show the gap */
 	winningConsensusThreshold: optional(number()),
 	computedAt: number(),
@@ -171,9 +180,11 @@ export const AgoraSessionSchema = object({
 	/**
 	 * Which beats this session runs — the organizer's script, snapshotted at
 	 * provision time. Server-owned (see firestore.rules); absent means the
-	 * legacy defaults in `resolveSessionFlow`.
+	 * legacy defaults in `resolveSessionFlow`. Null is tolerated because an
+	 * older agoraUpdateCivicFlow wrote `flow: null` for a cleared script —
+	 * rejecting it would brick every client on that session.
 	 */
-	flow: optional(AgoraSessionFlowSchema),
+	flow: optional(nullable(AgoraSessionFlowSchema)),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),

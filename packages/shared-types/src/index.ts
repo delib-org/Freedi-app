@@ -605,12 +605,15 @@ export {
   MIN_SHARED_STANCES,
   CONVERGENCE_MIN_SHARED_CAP,
   opinionDistance,
+  routeAttitudes,
   convergenceMeans,
   convergenceScore,
 } from "./utils/opinionDistance";
 export type {
   AttitudeMap,
   OpinionDistanceResult,
+  RouteHolder,
+  RouteIsland,
   ConvergenceInput,
   ConvergenceMeans,
 } from "./utils/opinionDistance";

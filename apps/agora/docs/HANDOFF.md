@@ -1,7 +1,7 @@
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-08-16.
+2026-09-01.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -42,8 +42,9 @@ when to advance. Participant count is students only (AI raters filtered).
 scenes (framing/perspectives/needs, self-paced, dialogue reveals) → **needs
 board** (both characters' needs side by side; reachable later via one tap
 everywhere) → positioning (slider labeled with character names + camp) →
-**deliberation: a guided CHAT** (propose → rate classmates one at a time →
-improvement prompts → free-choice activity menu) → results.
+**deliberation: the personal-lap square** (`views/Deliberation.ts` — propose →
+weigh a few classmates' → help someone, in laps; ownership said
+conversationally) → results.
 
 Key deliberation mechanics (NOTE: the "chat-guided square" described below was
 REVERTED on 2026-08-05 and its code deleted on 2026-08-16 — the places UI is
@@ -52,7 +53,7 @@ what ships. Kept for the reasoning; see feedback-cycle.md for what runs. The
 tabs, the 5-lap cycle) is GONE; students still couldn't reliably separate
 "mine" from "others", so ownership is now stated CONVERSATIONALLY. A
 scripted guide persona (🦉, `chat.guide_name`, i18n templates with rotating
-phrasings — NOT AI-generated) drives `views/DeliberationChat.ts`:
+phrasings — NOT AI-generated) drove `views/DeliberationChat.ts` (deleted):
 1. intro → proposal composer (needs board one tap away),
 2. thanks → deals classmates' proposals ONE AT A TIME as rate cards, each
    verbally framed "a classmate's 📙 + number"; the student's echoed
@@ -66,8 +67,10 @@ phrasings — NOT AI-generated) drives `views/DeliberationChat.ts`:
    I helped (change badge) — options appear conditionally, plus one nudge
    line (priority: opening ratings → fresh feedback → unasked characters →
    under-rated proposals → generic).
-Engine: `lib/chatFlow.ts` — pure state machine (no Mithril/Firebase; 37
-vitest tests), module singleton, sessionStorage persistence
+Engine was `lib/chatFlow.ts` (deleted with the view; its lesson — a pure
+state machine, no Mithril/Firestore, tested in node — survives as
+`lib/flows/deliberationFlow.ts`, which runs the shipping square's laps) —
+module singleton, sessionStorage persistence
 (`agora_{sessionId}_chatflow` + `_chatlog`, transcript stores i18n KEYS so
 a language switch re-renders the whole log; resolved variant keys replay
 the same phrasing after refresh). `state.dealtIds` guards against the
@@ -114,8 +117,8 @@ when already near the bottom. `JourneyStrip` + `StageTransition` +
   evaluations listener; AI raters excluded via isAgoraAiUid; individual
   votes stay anonymous by design — Tal's decision).
 - **Rate**: five-level emoji scale (−1…+1 half steps), least-rated-first
-  candidate ordering with per-student tiebreak (`selectCandidates` in
-  chatFlow.ts); the guided opening asks for 3, then rating continues
+  candidate ordering with per-student tiebreak (now `lib/squareOrder.ts`);
+  the guided opening asks for 3, then rating continues
   through the menu while candidates remain.
 - **Helping** now happens through the improvement prompt after a
   below-top rating ("How could this proposal serve BOTH camps better?" +
@@ -157,10 +160,10 @@ number, never names.
 ## Architecture cheat-sheet
 
 - **Client**: `apps/agora/src` — `views/GameController.ts` (student stage
-  router + world strip), `views/DeliberationChat.ts` (the guided chat) +
-  `lib/chatFlow.ts` (conversation engine; state in sessionStorage
-  `agora_{sessionId}_chatflow`/`_chatlog`) + `components/ChatBubble.ts` +
-  `styles/chat.scss`, `views/teacher/TeacherSession.ts`,
+  router + world strip), `views/Deliberation.ts` (the square: my proposal /
+  the market / helped threads) + `lib/flows/deliberationFlow.ts` (pure lap
+  state machine; cycle state in sessionStorage) + `views/ThreadChat.ts`
+  (per-helper threads), `views/teacher/TeacherSession.ts`,
   `lib/session.ts` (single session+participants listener; **filters `isAI`**),
   `lib/proposals.ts` (deliberation listeners + writes), `lib/celebration.ts`
   + `components/Celebration.ts`, `components/NeedsBoard.ts`, `components/EraMap.ts`
@@ -300,7 +303,8 @@ test.
    until the Count agrees he's been understood"), teacher cards, narrator
    interstitials, evidence cards, bias-events deck, expanding-agreement
    (~80% net support) as the success verdict, two-lesson arc.
-7. Ops: agora functions not yet deployed anywhere (emulator only).
+7. ~~Ops: agora functions not yet deployed anywhere~~ — DONE: 13 functions
+   live on `wizcol-app` (see Status at the top).
 
 ### Deploying
 

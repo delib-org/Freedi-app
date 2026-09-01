@@ -56,10 +56,13 @@ export default function OpinionMap({ result }: { result: OpinionMapResult | null
 
 	const { fidelity } = result;
 	if (!result.reliable) {
+		// r is NaN when the correlation was degenerate (too few real pairs) —
+		// there is no number to show, only the fact that the map is not drawable.
 		return (
 			<p className="m-0 opacity-80 text-[15px]">
-				⚠️ החפיפה בין המסלולים עדיין דלה מכדי לצייר מפה אמינה (r ={` ${fidelity.r.toFixed(2)}`}).
-				המפה תופיע כשיהיו יותר תשובות משותפות.
+				⚠️ החפיפה בין המסלולים עדיין דלה מכדי לצייר מפה אמינה
+				{Number.isFinite(fidelity.r) ? ` (r = ${fidelity.r.toFixed(2)})` : ''}. המפה תופיע כשיהיו
+				יותר תשובות משותפות.
 			</p>
 		);
 	}

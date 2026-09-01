@@ -1,5 +1,11 @@
-import type { AttitudeMap, Evaluation, OdysseyElder, OdysseyParty } from '@freedi/shared-types';
-import { opinionDistance } from '@freedi/shared-types';
+import type {
+	AttitudeMap,
+	Evaluation,
+	OdysseyElder,
+	OdysseyParty,
+	RouteHolder,
+} from '@freedi/shared-types';
+import { opinionDistance, routeAttitudes } from '@freedi/shared-types';
 import type { IslandContent } from './game';
 
 /**
@@ -70,40 +76,14 @@ function round2(value: number): number {
 }
 
 /**
- * Anything that declares a course — parties and elders share this shape, so
- * the same virtual-user arithmetic covers both.
- *
- * Two ways to declare one, and they are not equivalent. `attitudes` is a
- * researched score per stance, which is what the party research file produces
- * and the only shape that can say "mildly against" rather than "against".
- * `positions` is the older one-stance-per-island declaration, which fans out
- * as +1 on the chosen stance and −1 on its siblings — a caricature of a
- * position, but the only thing the Elders have.
+ * The route-holder shape and the projection itself (`routeAttitudes`) moved
+ * to shared-types, next to `opinionDistance`: the email digest builder runs
+ * the same virtual-user arithmetic server-side, and the two copies had
+ * already drifted once (the digest ignored continuous `attitudes`).
+ * Re-exported so existing callers and tests keep their import path.
  */
-export interface RouteHolder {
-	/** island statementId → declared stance statementId */
-	positions?: Record<string, string>;
-	/** stance statementId → continuous −1..1 score. Wins where present. */
-	attitudes?: Record<string, number>;
-}
-
-/** A route holder's course as a virtual attitude map. */
-export function routeAttitudes(holder: RouteHolder, islands: IslandContent[]): AttitudeMap {
-	const attitudes: AttitudeMap = {};
-	for (const island of islands) {
-		const declaredStanceId = holder.positions?.[island.statementId];
-		for (const stance of island.stances) {
-			const score = holder.attitudes?.[stance.statementId];
-			if (score !== undefined) {
-				attitudes[stance.statementId] = score;
-			} else if (declaredStanceId) {
-				attitudes[stance.statementId] = stance.statementId === declaredStanceId ? 1 : -1;
-			}
-		}
-	}
-
-	return attitudes;
-}
+export type { RouteHolder } from '@freedi/shared-types';
+export { routeAttitudes } from '@freedi/shared-types';
 
 /** A party's route as a virtual attitude map (kept for existing callers). */
 export function partyAttitudes(party: OdysseyParty, islands: IslandContent[]): AttitudeMap {

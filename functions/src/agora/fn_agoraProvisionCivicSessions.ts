@@ -26,26 +26,13 @@ import {
 	resolveSessionFlow,
 	scriptToFlow,
 } from '@freedi/shared-types';
+import type {
+	ProvisionCivicSessionsRequest as Request,
+	ProvisionCivicSessionsResponse as Result,
+	ProvisionedCivicSession as ProvisionedSession,
+} from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
-
-interface Request {
-	gameId: string;
-	/** Islands to open; omitted = every enabled island not already open */
-	islandStatementIds?: string[];
-}
-
-interface ProvisionedSession {
-	islandStatementId: string;
-	sessionId: string;
-	code: string;
-}
-
-interface Result {
-	sessions: ProvisionedSession[];
-	/** Islands skipped because a deliberation was already open for them */
-	alreadyOpen: string[];
-}
 
 /**
  * A civic session writes four docs; the game update is one more. Firestore

@@ -31,6 +31,57 @@ export const MIN_SHARED_STANCES = 5;
 /** The most a single island's convergence may demand, since it has ~4 stances. */
 export const CONVERGENCE_MIN_SHARED_CAP = 3;
 
+/**
+ * Anything that declares a course through the islands — Odyssey parties and
+ * elders share this shape, so the same virtual-user arithmetic covers both.
+ *
+ * Two ways to declare one, and they are not equivalent. `attitudes` is a
+ * researched score per stance, the only shape that can say "mildly against"
+ * rather than "against". `positions` is the older one-stance-per-island
+ * declaration, which fans out as +1 on the chosen stance and −1 on its
+ * siblings — a caricature of a position, but all some route holders carry.
+ */
+export interface RouteHolder {
+	/** island statementId → declared stance statementId */
+	positions?: Record<string, string>;
+	/** stance statementId → continuous −1..1 score. Wins where present. */
+	attitudes?: Record<string, number>;
+}
+
+/** The minimum an island must expose for a route to be projected onto it. */
+export interface RouteIsland {
+	statementId: string;
+	stances: ReadonlyArray<{ statementId: string }>;
+}
+
+/**
+ * A route holder's declared course as a virtual attitude map.
+ *
+ * Lives here, next to `opinionDistance`, because two callers need the SAME
+ * projection: the Odyssey client's sea/opinion map and the voyage-story email
+ * digest. Two copies of this arithmetic drifted once (the digest ignored
+ * continuous `attitudes`); one copy cannot.
+ */
+export function routeAttitudes(
+	holder: RouteHolder,
+	islands: ReadonlyArray<RouteIsland>,
+): AttitudeMap {
+	const attitudes: AttitudeMap = {};
+	for (const island of islands) {
+		const declaredStanceId = holder.positions?.[island.statementId];
+		for (const stance of island.stances) {
+			const score = holder.attitudes?.[stance.statementId];
+			if (score !== undefined) {
+				attitudes[stance.statementId] = score;
+			} else if (declaredStanceId) {
+				attitudes[stance.statementId] = stance.statementId === declaredStanceId ? 1 : -1;
+			}
+		}
+	}
+
+	return attitudes;
+}
+
 export interface OpinionDistanceResult {
 	/** Normalized 0..1 (doc metric / 2); null under the min-overlap rule. */
 	distance: number | null;

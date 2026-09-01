@@ -105,16 +105,34 @@ async function readCampCensus(sessionId: string): Promise<CampCensus> {
  * Value-blind (identical for "strongly against" and "strongly for") and
  * first-rating-only, so there is no incentive to rate in any direction or
  * to toggle a rating for points.
+ *
+ * Idempotent PER EVALUATION via a stamp on the evaluation doc itself, read
+ * and checked in the same transaction — the same pattern as
+ * `creditFirstProposal`'s stamp on the participant. The cap alone is not a
+ * guard: a redelivered create event used to pass `credited < cap` again and
+ * pay the same rating twice.
  */
-async function creditRatingEffort(sessionId: string, evaluatorId: string): Promise<void> {
+async function creditRatingEffort(
+	sessionId: string,
+	evaluatorId: string,
+	evaluationId: string,
+): Promise<void> {
 	if (isAgoraAiUid(evaluatorId)) return;
 	const raterRef = db
 		.collection(Collections.agoraParticipants)
 		.doc(createAgoraParticipantId(sessionId, evaluatorId));
+	const evaluationRef = db.collection(Collections.evaluations).doc(evaluationId);
 
 	await db.runTransaction(async (transaction) => {
-		const snap = await transaction.get(raterRef);
-		if (!snap.exists) return;
+		const [snap, evaluationSnap] = await Promise.all([
+			transaction.get(raterRef),
+			transaction.get(evaluationRef),
+		]);
+		if (!snap.exists || !evaluationSnap.exists) return;
+		// This very evaluation already paid — a redelivered trigger, not a new rating
+		if (evaluationSnap.data()?.agoraEffortCredited === true) return;
+		transaction.update(evaluationRef, { agoraEffortCredited: true });
+
 		const participant = snap.data() as AgoraParticipant;
 		const credited = participant.creditedRatings ?? 0;
 		if (credited >= AGORA_POINTS.RATING_CREDIT_MAX_RATINGS) return;
@@ -233,12 +251,14 @@ export const onAgoraEvaluationWritten = onDocumentWritten(
 			// Paid whether or not the rater is positioned: the credit is for the
 			// labour of weighing a classmate's text, and it is camp-blind.
 			if (!before && after) {
-				await creditRatingEffort(sessionId, evaluatorId).catch((creditError: unknown) => {
-					logError(creditError, {
-						operation: 'agora.onEvaluationWritten.creditRating',
-						userId: evaluatorId,
-					});
-				});
+				await creditRatingEffort(sessionId, evaluatorId, event.params.evaluationId).catch(
+					(creditError: unknown) => {
+						logError(creditError, {
+							operation: 'agora.onEvaluationWritten.creditRating',
+							userId: evaluatorId,
+						});
+					},
+				);
 			}
 
 			const scoreRef = db.collection(Collections.agoraScores).doc(statementId);

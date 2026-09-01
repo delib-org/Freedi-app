@@ -18,6 +18,12 @@ interface IslandNode {
 	 * one size, fully lit, and never disappears behind a nearer island's art.
 	 */
 	label: Phaser.GameObjects.Container;
+	/**
+	 * The label's fixed offset below the island's center (already
+	 * perspective-scaled at build time). Depends only on the island's art and
+	 * depth — not on the viewport — so `layout()` can reuse it on resize.
+	 */
+	labelOffsetY: number;
 	rim: Phaser.GameObjects.Image;
 	anchor: Phaser.GameObjects.Text;
 	lantern: Phaser.GameObjects.Image | null;
@@ -78,6 +84,9 @@ export class ChartScene extends SeaScene {
 		for (const node of this.nodes) {
 			const { x, y } = islandPosition(node.island.posX, node.island.posY, this.W, this.H);
 			node.container.setPosition(x, y);
+			// The name travels with its island — it is a sibling, not a child
+			// (see IslandNode.label), so it must be moved explicitly.
+			node.label.setPosition(x, y + node.labelOffsetY);
 		}
 		this.drawRoute();
 	}
@@ -236,7 +245,16 @@ export class ChartScene extends SeaScene {
 				});
 			}
 
-			this.nodes.push({ island, container, label, rim, anchor, lantern, hasArt: !!art });
+			this.nodes.push({
+				island,
+				container,
+				label,
+				labelOffsetY: labelY * depth.scale,
+				rim,
+				anchor,
+				lantern,
+				hasArt: !!art,
+			});
 		});
 		this.syncSelection(false);
 
