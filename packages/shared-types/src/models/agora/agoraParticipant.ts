@@ -51,6 +51,12 @@ export const AgoraParticipantSchema = object({
 	userId: string(),
 	/** Auto-generated anonymous display name (never a real name) */
 	anonName: string(),
+	/**
+	 * The roster spot behind this participant when the session belongs to a
+	 * class (`agoraClassMembers`' stable memberId). Server-written at join;
+	 * absent on guest games — career aggregation keys on THIS, never the uid.
+	 */
+	memberId: optional(string()),
 	/** Number of students at this device in team mode */
 	teamMemberCount: optional(number()),
 	/** Synthetic AI rater identity (in-character reviews) — excluded from counts, points and coverage */

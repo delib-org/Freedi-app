@@ -14,3 +14,8 @@ export { onAgoraEvaluationWritten } from './fn_onAgoraEvaluation';
 export { onAgoraProposalWritten } from './fn_onAgoraProposal';
 export { agoraGenerateTopicPackage } from './fn_agoraGenerateTopicPackage';
 export { agoraSessionSweep } from './fn_agoraSessionSweep';
+export { agoraAdminManageSchool } from './fn_agoraAdminManageSchool';
+export { agoraAdminOpenClass } from './fn_agoraAdminOpenClass';
+export { agoraJoinClass } from './fn_agoraJoinClass';
+export { agoraTeacherRoster } from './fn_agoraTeacherRoster';
+export { onAgoraSessionFinished } from './fn_onAgoraSessionFinished';

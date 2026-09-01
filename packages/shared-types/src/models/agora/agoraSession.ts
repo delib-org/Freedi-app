@@ -171,6 +171,19 @@ export const AgoraSessionSchema = object({
 	deviceMode: enum_(AgoraDeviceMode),
 	teamSizeMax: number(),
 	/**
+	 * The class this game belongs to (`agoraClasses`). Absent on guest games
+	 * and on every session written before the classroom hierarchy existed —
+	 * a classless session behaves exactly as sessions always have.
+	 */
+	classId: optional(string()),
+	/** Denormalized from the class at creation so aggregates never re-read it */
+	schoolId: optional(string()),
+	/**
+	 * When the finished-session aggregation trigger folded this game into the
+	 * career/class aggregate docs — its idempotency guard. Server-written.
+	 */
+	aggregatedAt: optional(number()),
+	/**
 	 * Which track this session runs. Absent on every classroom session ever
 	 * written, and `undefined` means `classroom` — see AgoraSessionMode.
 	 */

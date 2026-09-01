@@ -6,20 +6,25 @@ import {
 	createStatementObject,
 	functionConfig,
 	getRandomUID,
+	AgoraClass,
 	AgoraDeviceMode,
 	AgoraParticipant,
 	AgoraSession,
+	AgoraSessionFlow,
+	AgoraSessionFlowSchema,
 	AgoraSessionStatus,
 	AgoraStage,
 	AgoraTopicPackage,
 	AgoraTopicStatus,
 	SourceApp,
 	AGORA_AI_REVIEW,
+	AGORA_CYCLE,
 	AGORA_SESSION,
 	createAgoraAiRaterUid,
 	createAgoraParticipantId,
 	deriveCamp,
 } from '@freedi/shared-types';
+import { safeParse } from 'valibot';
 import { logError } from '../utils/errorHandling';
 import { generateUniqueCode } from './joinCodes';
 
@@ -28,6 +33,46 @@ interface Request {
 	deviceMode: AgoraDeviceMode;
 	teamSizeMax?: number;
 	lessonLengthMs?: number;
+	/** Link this game to a class — the caller must be one of its teachers */
+	classId?: string;
+	/** Which beats to run — the classroom counterpart of the civic script */
+	flow?: AgoraSessionFlow;
+}
+
+/** Sanity bounds on the teacher's flow knobs — a 40-round lesson is a typo */
+const FLOW_BOUNDS = {
+	MIN_ROUNDS: 1,
+	MAX_ROUNDS: AGORA_CYCLE.ROUNDS,
+	MIN_RATINGS_PER_ROUND: 1,
+	MAX_RATINGS_PER_ROUND: 10,
+} as const;
+
+/**
+ * Validate and clamp a teacher-supplied session flow. Only fields the teacher
+ * actually set survive (mirrors scriptToFlow's sparseness), so an untouched
+ * knob still resolves through the mode's legacy defaults.
+ */
+function sanitizeFlow(flow: AgoraSessionFlow | undefined): AgoraSessionFlow | undefined {
+	if (flow === undefined) return undefined;
+	const parsed = safeParse(AgoraSessionFlowSchema, flow);
+	if (!parsed.success) {
+		throw new HttpsError('invalid-argument', 'Invalid session flow');
+	}
+	const clean = { ...parsed.output };
+	if (clean.rounds !== undefined) {
+		clean.rounds = Math.min(
+			FLOW_BOUNDS.MAX_ROUNDS,
+			Math.max(FLOW_BOUNDS.MIN_ROUNDS, Math.round(clean.rounds)),
+		);
+	}
+	if (clean.ratingsPerRound !== undefined) {
+		clean.ratingsPerRound = Math.min(
+			FLOW_BOUNDS.MAX_RATINGS_PER_ROUND,
+			Math.max(FLOW_BOUNDS.MIN_RATINGS_PER_ROUND, Math.round(clean.ratingsPerRound)),
+		);
+	}
+
+	return Object.keys(clean).length > 0 ? clean : undefined;
 }
 
 interface Result {
@@ -51,7 +96,8 @@ export const agoraCreateSession = onCall(
 			throw new HttpsError('permission-denied', 'Teachers must sign in with a full account');
 		}
 
-		const { topicPackageId, deviceMode, teamSizeMax, lessonLengthMs } = request.data ?? {};
+		const { topicPackageId, deviceMode, teamSizeMax, lessonLengthMs, classId, flow } =
+			request.data ?? {};
 		if (!topicPackageId || typeof topicPackageId !== 'string') {
 			throw new HttpsError('invalid-argument', 'topicPackageId is required');
 		}
@@ -78,6 +124,29 @@ export const agoraCreateSession = onCall(
 			if (topic.status !== AgoraTopicStatus.ready) {
 				throw new HttpsError('failed-precondition', 'Topic package is not ready');
 			}
+
+			// A class game must be opened by one of the class's own teachers; a
+			// guest game (no classId) stays exactly what sessions have always been.
+			let schoolId: string | undefined;
+			if (classId !== undefined) {
+				if (typeof classId !== 'string' || !classId) {
+					throw new HttpsError('invalid-argument', 'classId must be a string');
+				}
+				const classSnap = await db.collection(Collections.agoraClasses).doc(classId).get();
+				const agoraClass = classSnap.data() as AgoraClass | undefined;
+				if (!agoraClass || agoraClass.status !== 'active') {
+					throw new HttpsError('failed-precondition', 'Class not found or archived');
+				}
+				if (!agoraClass.teacherIds.includes(uid)) {
+					throw new HttpsError(
+						'permission-denied',
+						'Only a teacher of this class can open a game for it',
+					);
+				}
+				schoolId = agoraClass.schoolId;
+			}
+
+			const sessionFlow = sanitizeFlow(flow);
 
 			const token = request.auth?.token as Record<string, unknown> | undefined;
 			const creator = {
@@ -130,6 +199,8 @@ export const agoraCreateSession = onCall(
 				challengeQuestionId: challengeStatement.statementId,
 				deviceMode,
 				teamSizeMax: resolvedTeamSize,
+				...(classId && schoolId ? { classId, schoolId } : {}),
+				...(sessionFlow ? { flow: sessionFlow } : {}),
 				stage: AgoraStage.lobby,
 				roundNumber: 0,
 				participantCount: 0,

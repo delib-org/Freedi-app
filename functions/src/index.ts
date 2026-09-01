@@ -1243,8 +1243,13 @@ export {
 	agoraEstimateReception,
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
+	agoraAdminManageSchool,
+	agoraAdminOpenClass,
+	agoraJoinClass,
+	agoraTeacherRoster,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
+	onAgoraSessionFinished,
 } from './agora';
 
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations

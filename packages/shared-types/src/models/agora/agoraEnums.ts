@@ -21,6 +21,23 @@ export enum AgoraStage {
 	ended = 'ended',
 }
 
+/**
+ * The forward-only order the stages run in. The advance callable and every
+ * teacher UI walk THIS array — it used to be duplicated in both and a drifted
+ * copy would let a client offer a transition the server refuses.
+ */
+export const AGORA_STAGE_ORDER: readonly AgoraStage[] = [
+	AgoraStage.lobby,
+	AgoraStage.framing,
+	AgoraStage.perspectives,
+	AgoraStage.needs,
+	AgoraStage.positioning,
+	AgoraStage.deliberation,
+	AgoraStage.voting,
+	AgoraStage.results,
+	AgoraStage.ended,
+];
+
 export enum AgoraRoundPhase {
 	propose = 'propose',
 	rate = 'rate',

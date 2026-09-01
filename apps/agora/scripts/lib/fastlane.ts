@@ -22,7 +22,7 @@
 import { createRequire } from 'node:module';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import type { AgoraCamp, AgoraSession, AgoraStage } from '@freedi/shared-types';
+import type { AgoraCamp, AgoraSession, AgoraSessionFlow, AgoraStage } from '@freedi/shared-types';
 import {
 	AUTH_HOST,
 	FIRESTORE_HOST,
@@ -57,7 +57,7 @@ const IDENTITY = `${AUTH_HOST}/identitytoolkit.googleapis.com/v1`;
 // set before the first getFirestore() — same contract as scripts/seed.ts.
 process.env.FIRESTORE_EMULATOR_HOST = FIRESTORE_HOST.replace(/^https?:\/\//, '');
 const app = getApps().length > 0 ? getApps()[0] : initializeApp({ projectId: 'freedi-test' });
-const db = getFirestore(app);
+export const db = getFirestore(app);
 
 export interface FastlaneBot {
 	uid: string;
@@ -68,6 +68,10 @@ export interface FastlaneBot {
 	camp: AgoraCamp;
 	/** Set when this bot posted a proposal */
 	proposalId?: string;
+	/** Set when this bot claimed a class-roster spot (class games) */
+	memberId?: string;
+	/** The rejoin PIN handed back at claim time (class games) */
+	pin?: string;
 }
 
 export interface FastlaneResult {
@@ -102,6 +106,16 @@ export interface FastlaneOptions {
 	/** Prefix for the teacher identity — a fresh one per run keeps home screens clean */
 	runId?: string;
 	quiet?: boolean;
+	/**
+	 * Open the game FOR a class. The teacher passed via `teacher` must be one
+	 * of the class's teacherIds, and every bot claims a roster spot with the
+	 * class code before joining (class games admit roster members only).
+	 */
+	classGame?: { classId: string; classCode: string };
+	/** Reuse an existing teacher identity instead of minting one per run */
+	teacher?: { uid: string; idToken: string };
+	/** Which beats the session runs — passed through to agoraCreateSession */
+	flow?: AgoraSessionFlow;
 }
 
 /**
@@ -124,7 +138,7 @@ interface CallableError {
 	status?: string;
 }
 
-async function callable<T>(name: string, data: unknown, token: string): Promise<T> {
+export async function callable<T>(name: string, data: unknown, token: string): Promise<T> {
 	const res = await fetch(`${FUNCTIONS_BASE}/${name}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -144,7 +158,7 @@ async function callable<T>(name: string, data: unknown, token: string): Promise<
 }
 
 /** Teacher identity via the auth emulator's fake Google IdP — no browser, no sign-in race. */
-async function signInTeacher(sub: string): Promise<{ uid: string; idToken: string }> {
+export async function signInTeacher(sub: string): Promise<{ uid: string; idToken: string }> {
 	const res = await fetch(`${IDENTITY}/accounts:signInWithIdp?key=fake`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -165,7 +179,7 @@ async function signInTeacher(sub: string): Promise<{ uid: string; idToken: strin
 }
 
 /** A bot classmate signs in exactly as a student does: anonymously. */
-async function signUpAnonymous(): Promise<{ uid: string; idToken: string }> {
+export async function signUpAnonymous(): Promise<{ uid: string; idToken: string }> {
 	const res = await fetch(`${IDENTITY}/accounts:signUp?key=fake`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -305,10 +319,15 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 		if (!quiet) console.log(msg);
 	};
 
-	const teacher = await signInTeacher(`${runId}-teacher`);
+	const teacher = options.teacher ?? (await signInTeacher(`${runId}-teacher`));
 	const { sessionId, code } = await callable<{ sessionId: string; code: string }>(
 		'agoraCreateSession',
-		{ topicPackageId, deviceMode: AgoraDeviceMode.individual },
+		{
+			topicPackageId,
+			deviceMode: AgoraDeviceMode.individual,
+			...(options.classGame ? { classId: options.classGame.classId } : {}),
+			...(options.flow ? { flow: options.flow } : {}),
+		},
 		teacher.idToken,
 	);
 	say(`   ✓ session ${sessionId} (code ${code})`);
@@ -318,6 +337,20 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 	const bots: FastlaneBot[] = [];
 	for (let index = 0; index < students; index++) {
 		const bot = await signUpAnonymous();
+		// A class game admits roster members only — each bot claims a spot
+		// exactly the way a real student's join flow does.
+		let claim: { memberId?: string; pin?: string } = {};
+		if (options.classGame) {
+			claim = await callable<{ memberId?: string; pin?: string }>(
+				'agoraJoinClass',
+				{
+					classCode: options.classGame.classCode,
+					mode: 'claim',
+					alias: `${runId}-bot-${index}`,
+				},
+				bot.idToken,
+			);
+		}
 		const joined = await callable<{ participantId: string; anonName: string }>(
 			'agoraJoinSession',
 			{ code },
@@ -338,6 +371,8 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 			anonName: joined.anonName,
 			campPosition,
 			camp,
+			...(claim.memberId ? { memberId: claim.memberId } : {}),
+			...(claim.pin ? { pin: claim.pin } : {}),
 		});
 	}
 	say(`   ✓ ${bots.length} bot classmates enrolled and positioned`);

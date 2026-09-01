@@ -1,5 +1,6 @@
 export {
 	AgoraStage,
+	AGORA_STAGE_ORDER,
 	AgoraRoundPhase,
 	AgoraDeviceMode,
 	AgoraCamp,
@@ -171,3 +172,46 @@ export { deriveAgoraOutcome } from './agoraOutcome';
 
 export type { AgoraRevisionInput, AgoraRevisionAssessment } from './agoraRevision';
 export { assessRevision, countChangedWords } from './agoraRevision';
+
+export type {
+	AgoraSchool,
+	AgoraClass,
+	AgoraClassMember,
+	AgoraStudentGameRow,
+	AgoraStudentAggregate,
+	AgoraClassGameRow,
+	AgoraOutcomeTally,
+	AgoraClassAggregate,
+	AgoraAdvancementSummary,
+} from './agoraClassroom';
+export {
+	AGORA_CLASSROOM,
+	AgoraSchoolSchema,
+	AgoraClassSchema,
+	AgoraClassMemberSchema,
+	AgoraStudentGameRowSchema,
+	AgoraStudentAggregateSchema,
+	AgoraClassGameRowSchema,
+	AgoraOutcomeTallySchema,
+	AgoraClassAggregateSchema,
+	createAgoraClassMemberId,
+	emptyAgoraPoints,
+	emptyStudentAggregate,
+	emptyClassAggregate,
+	mergeStudentGame,
+	mergeClassGame,
+	advancementSummary,
+} from './agoraClassroom';
+
+export type {
+	ManageSchoolRequest,
+	ManageSchoolResponse,
+	OpenClassRequest,
+	OpenClassResponse,
+	JoinClassRequest,
+	JoinClassAliasRow,
+	JoinClassResponse,
+	TeacherRosterRequest,
+	TeacherRosterResponse,
+	CreateSessionClassroomFields,
+} from './agoraClassroomCallables';

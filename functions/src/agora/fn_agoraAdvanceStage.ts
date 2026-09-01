@@ -7,6 +7,7 @@ import {
 	AgoraSessionStatus,
 	AgoraStage,
 	AGORA_CYCLE,
+	AGORA_STAGE_ORDER,
 	functionConfig,
 	resolveSessionFlow,
 	sessionRunsVoting,
@@ -27,17 +28,7 @@ import { prepareVotingStage } from './votingStage';
  * there may advance to positioning (it sits between needs and positioning
  * in the legacy order).
  */
-const STAGE_ORDER: AgoraStage[] = [
-	AgoraStage.lobby,
-	AgoraStage.framing,
-	AgoraStage.perspectives,
-	AgoraStage.needs,
-	AgoraStage.positioning,
-	AgoraStage.deliberation,
-	AgoraStage.voting,
-	AgoraStage.results,
-	AgoraStage.ended,
-];
+const STAGE_ORDER = AGORA_STAGE_ORDER;
 
 /** Legacy sessions stuck on the removed stage advance into this order after needs */
 const LEGACY_STAGE_POSITION: Partial<Record<AgoraStage, number>> = {
