@@ -30,6 +30,7 @@ export interface DefaultElder {
 	role: string;
 	/** Lifespan, shown under the name on the crew card */
 	years: string;
+	/** Tint behind the portrait, and the elder's ship colour on the water */
 	color: string;
 	bio: string;
 	/** What this elder negotiates for — drives review scoring and prompts */
@@ -44,6 +45,15 @@ export interface DefaultElder {
 	opposeLine: string;
 	/** island slug → standing challenge in the elder's voice (email + game) */
 	challenges: Record<string, string>;
+}
+
+/**
+ * The crew portraits, in public/assets/elders. Derived from the slug rather
+ * than listed per elder: the file is named after the elder by construction,
+ * so a new persona cannot ship pointing at someone else's face.
+ */
+export function elderPortraitUrl(slug: string): string {
+	return `/assets/elders/${slug}.webp`;
 }
 
 /**
@@ -84,7 +94,7 @@ export function buildEldersFromDefaults(input: {
 			name: elder.name,
 			role: elder.role,
 			years: elder.years,
-			portraitUrl: null,
+			portraitUrl: elderPortraitUrl(elder.slug),
 			color: elder.color,
 			bio: elder.bio,
 			needs: elder.needs,

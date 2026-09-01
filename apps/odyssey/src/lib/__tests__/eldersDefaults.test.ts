@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_ELDERS, buildEldersFromDefaults } from '../eldersDefaults';
 import { DEFAULT_ISLANDS } from '../defaults';
@@ -101,6 +102,18 @@ describe('buildEldersFromDefaults', () => {
 		);
 		expect(built.every((elder) => elder.enabled)).toBe(true);
 		expect(built[0].years).toBe('1860–1904');
+	});
+
+	it('points every elder at their own portrait file, which exists', () => {
+		for (const elder of built) {
+			expect(elder.portraitUrl).toBe(`/assets/elders/${elder.elderId}.webp`);
+			// A card falling back to the anchor medallion because a file was never
+			// added is exactly the kind of miss nobody notices in review.
+			expect(
+				existsSync(new URL(`../../../public/assets/elders/${elder.elderId}.webp`, import.meta.url)),
+				`missing portrait for ${elder.elderId}`,
+			).toBe(true);
+		}
 	});
 
 	it('resolves stance indexes to ids and names the island in every reaction', () => {

@@ -280,11 +280,27 @@ textarea:focus, input:focus, select:focus {
    a settings list. Twelve rows of bio would be a wall; twelve cards are
    a glance. */
 
+/* Two rows of six, the shape of the roster board. auto-fill was choosing
+   five and leaving an orphan pair on a third row, which reads as a mistake
+   rather than a layout. */
 .crew-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
 }
+
+@media (min-width: 480px) { .crew-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 700px) { .crew-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 920px) { .crew-grid { grid-template-columns: repeat(6, 1fr); } }
+
+/* Cards are as tall as the tallest in their row: a name that wraps to two
+   lines must not leave its neighbours short. */
+.crew-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.crew-cell > .crew-card { flex: 1; }
 
 .crew-card {
   position: relative;
@@ -366,7 +382,12 @@ textarea:focus, input:focus, select:focus {
   line-height: 1.25;
 }
 
+/* 1860–1904 is a Latin-number range inside an RTL document, and bidi
+   reorders it to 1904–1860 — a dead man born after he died. Isolating the
+   span as LTR is what keeps the dates in the order they were written. */
 .crew-years {
+  direction: ltr;
+  unicode-bidi: isolate;
   font-size: 11px;
   opacity: 0.7;
   letter-spacing: 0.04em;
@@ -376,6 +397,8 @@ textarea:focus, input:focus, select:focus {
   font-size: 12px;
   color: #cfe6f5;
   line-height: 1.35;
+  /* Push the join-the-crew line to the bottom of an equal-height card. */
+  flex: 1;
 }
 
 /* The bio lives outside the choosing button — a button may not contain a
@@ -398,10 +421,6 @@ textarea:focus, input:focus, select:focus {
   line-height: 1.45;
   color: #dcecf7;
   text-align: start;
-}
-
-@media (max-width: 420px) {
-  .crew-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 .fade-in { animation: fadeIn 0.5s ease; }

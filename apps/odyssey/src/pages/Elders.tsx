@@ -74,7 +74,7 @@ export default function Elders() {
 		<>
 			<GameChrome stage="המלחים" />
 			<div className="page">
-				<div className="w-full max-w-4xl flex flex-col gap-4 pb-4">
+				<div className="w-full max-w-5xl flex flex-col gap-4 pb-4">
 					<header className="text-center fade-in">
 						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">המלחים מחכים</h1>
 						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-1">
@@ -103,7 +103,7 @@ export default function Elders() {
 							const active = chosen.has(elder.elderId);
 
 							return (
-								<div key={elder.elderId} className="flex flex-col">
+								<div key={elder.elderId} className="crew-cell">
 									<button
 										type="button"
 										aria-pressed={active}
