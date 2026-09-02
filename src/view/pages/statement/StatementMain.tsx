@@ -84,6 +84,7 @@ const StatementMain: React.FC = () => {
 		statementId,
 		stageId: stage?.statementId,
 		screen,
+		isStatementNotFound,
 		setIsStatementNotFound,
 		setError,
 	});
