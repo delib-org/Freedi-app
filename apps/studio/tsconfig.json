@@ -17,7 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@freedi/shared-utils": ["../../packages/shared-utils/src"]
     }
   },
   "include": ["src"],

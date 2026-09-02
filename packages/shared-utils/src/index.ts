@@ -43,6 +43,14 @@ export type {
 	SentryLikeStacktrace,
 } from './sentryFilters';
 
+// Sentry init options (SDK-agnostic — each app passes these to its own Sentry)
+export { buildSentryOptions, isUsableDsn } from './sentryOptions';
+export type {
+	BuildSentryOptionsArgs,
+	FreediApp,
+	SentryOptionsLike,
+} from './sentryOptions';
+
 // Logger
 export { logger, setErrorReporter, setInfoReporter } from './logger';
 export type { ErrorReporterFn, InfoReporterFn, LogContext } from './logger';

@@ -11,6 +11,7 @@ import '@fontsource/alef/700.css';
 import './styles/global.scss';
 import './styles/components.scss';
 import './styles/icons.scss';
+import { initSentry } from './lib/sentry';
 import { initAuth, completeRedirectSignIn, getUserState } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { getSessionState } from './lib/session';
@@ -21,6 +22,10 @@ import { TeacherHome } from './views/teacher/TeacherHome';
 import { TeacherSession } from './views/teacher/TeacherSession';
 import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
+
+// Error reporting first, so anything thrown during boot is captured. A crash
+// here happens in front of a classroom, and until now nothing recorded it.
+initSentry();
 
 initAuth();
 // A teacher whose popup was blocked came back via a full page redirect; this

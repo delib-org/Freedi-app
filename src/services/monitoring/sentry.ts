@@ -16,7 +16,10 @@ import { logError } from '@/utils/errorHandling';
 const FIREBASE_CHUNK_NAMES = ['vendor-firebase'] as const;
 
 export function initSentry() {
-	const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+	// Prefer a main-app-specific DSN. The main app, sign and join were all
+	// pointed at the same Sentry project, which is why issues from
+	// /statement/:id and /login showed up filed under "wizcol-sign".
+	const sentryDsn = import.meta.env.VITE_SENTRY_DSN_MAIN || import.meta.env.VITE_SENTRY_DSN;
 
 	// Only initialize in production and if we have a valid DSN
 	if (
@@ -28,6 +31,8 @@ export function initSentry() {
 		Sentry.init({
 			dsn: sentryDsn,
 			environment: import.meta.env.VITE_ENVIRONMENT || 'production',
+			// Until each app has its own project, this tag is what separates them.
+			initialScope: { tags: { app: 'main' } },
 			integrations: [Sentry.browserTracingIntegration()],
 			// Performance Monitoring
 			tracesSampleRate: 0.1, // Capture 10% of transactions for performance monitoring

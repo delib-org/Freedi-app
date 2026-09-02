@@ -1,12 +1,16 @@
 import m from 'mithril';
 import './styles/global.scss';
 import './styles/components.scss';
+import { initSentry } from './lib/sentry';
 import { initAuth } from './lib/auth';
 import { DashboardView } from './views/DashboardView';
 import { StatementsView } from './views/StatementsView';
 import { UsersView } from './views/UsersView';
 import { AdminsView } from './views/AdminsView';
 import { ResearchView } from './views/ResearchView';
+
+// Error reporting first, so anything thrown during boot is captured.
+initSentry();
 
 // Initialize auth before mounting
 initAuth();

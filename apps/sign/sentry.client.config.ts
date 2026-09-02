@@ -16,6 +16,10 @@ import {
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
+  // The main app and join have historically reported into this same project,
+  // so tag every event with the app that produced it.
+  initialScope: { tags: { app: "sign" } },
+
   // Only send errors in production
   enabled: process.env.NODE_ENV === "production",
 
