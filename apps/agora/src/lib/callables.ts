@@ -5,6 +5,8 @@ import type {
 	AgoraSessionFlow,
 	AgoraStage,
 	AgoraStagePlan,
+	ChallengeOutcome,
+	ChallengePhase,
 	JoinClassRequest,
 	JoinClassResponse,
 	TeacherConsoleRequest,
@@ -114,6 +116,45 @@ export async function advanceStage(request: AdvanceStageRequest): Promise<Advanc
 	const call = httpsCallable<AdvanceStageRequest, AdvanceStageResponse>(
 		functions,
 		'agoraAdvanceStage',
+	);
+	const result = await call(request);
+
+	return result.data;
+}
+
+/**
+ * Every move in the challenge round. Teacher actions run the turn; `pitch` and
+ * `pass` belong to whoever holds the floor. The server decides which is which —
+ * this type only names them.
+ */
+export type ChallengeAction =
+	| 'start'
+	| 'openFloor'
+	| 'pitch'
+	| 'pass'
+	| 'openVote'
+	| 'resolve'
+	| 'skip'
+	| 'next'
+	| 'end';
+
+export interface ChallengeTurnRequest {
+	sessionId: string;
+	action: ChallengeAction;
+	/** `pitch` only */
+	text?: string;
+}
+
+export interface ChallengeTurnResponse {
+	phase: ChallengePhase;
+	turnIndex: number;
+	outcome?: ChallengeOutcome;
+}
+
+export async function challengeTurn(request: ChallengeTurnRequest): Promise<ChallengeTurnResponse> {
+	const call = httpsCallable<ChallengeTurnRequest, ChallengeTurnResponse>(
+		functions,
+		'agoraChallengeTurn',
 	);
 	const result = await call(request);
 

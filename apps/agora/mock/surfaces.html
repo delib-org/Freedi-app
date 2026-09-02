@@ -257,6 +257,97 @@
 				</p>
 			</div>
 
+			<h2>a challenge standing on the board (counts hidden, challenger pinned)</h2>
+			<div class="voting">
+				<div class="challenge challenge__curtain">
+					<h3 class="challenge__title">ההצעה של שועל כחול עומדת על הלוח</h3>
+					<p class="challenge__line">אם היא משכנעת אתכם — העבירו אליה את הקול.</p>
+					<p class="challenge__blind">
+						אף אחד לא רואה את הספירה עד שהמורה סוגר. כמה הצביעו — זה גלוי; עבור מה — לא.
+					</p>
+				</div>
+				<div class="voting__list">
+					<button class="voting__option voting__option--challenger" aria-pressed="false">
+						<span class="voting__body">
+							<span class="voting__number voting__number--challenger">★</span>
+							<span class="voting__label">כרטיס נסיעה חינם לכל תלמיד בקו העירוני</span>
+						</span>
+					</button>
+					<button class="voting__option voting__option--mine" aria-pressed="true">
+						<span class="voting__body">
+							<span class="voting__number">1</span>
+							<span class="voting__label">לחלק את אדמות הכנסייה לאריסים ולפצות את האצולה במיסוי מדורג</span>
+						</span>
+					</button>
+					<button class="voting__option" aria-pressed="false">
+						<span class="voting__body">
+							<span class="voting__number">2</span>
+							<span class="voting__label">אספה משותפת שבה לכל מעמד קול שווה</span>
+						</span>
+					</button>
+				</div>
+			</div>
+
+			<h2>the write desk, on the student who holds the floor</h2>
+			<div class="challenge challenge__desk">
+				<h3 class="challenge__title">כתבו את ההצעה שלכם</h3>
+				<p class="challenge__rule">
+					אם הכיתה תעדיף אתכם על ההצעה החלשה ביותר — ההצעה שלכם תיכנס במקומה.
+				</p>
+				<textarea class="challenge__input">כרטיס נסיעה חינם לכל תלמיד בקו העירוני</textarea>
+				<p class="challenge__count"><span class="challenge__count-num">42 / 1500</span></p>
+				<div class="challenge__actions">
+					<button class="challenge__send">להעלות ללוח</button>
+					<button class="challenge__pass">לוותר על התור</button>
+				</div>
+				<div class="challenge__roster">
+					<span class="challenge__seat challenge__seat--done">נמר זהוב</span>
+					<span class="challenge__seat challenge__seat--passed">ינשוף כסוף</span>
+					<span class="challenge__seat challenge__seat--now">שועל כחול</span>
+					<span class="challenge__seat challenge__seat--skipped">דולפין ירוק</span>
+					<span class="challenge__seat">צבי אדום</span>
+				</div>
+			</div>
+
+			<h2>the reveal — a seat won, and a seat kept</h2>
+			<div class="challenge challenge__outcome challenge__outcome--survived" role="status">
+				<h3 class="challenge__outcome-title">ההצעה של שועל כחול נכנסה ללוח</h3>
+				<p class="challenge__quote">כרטיס נסיעה חינם לכל תלמיד בקו העירוני</p>
+				<p class="challenge__line">4 קולות</p>
+				<p class="challenge__evicted">היא תפסה את מקומה של: אספה משותפת שבה לכל מעמד קול שווה</p>
+				<p class="challenge__points">⁦+3⁩ נקודות</p>
+			</div>
+			<div class="challenge challenge__outcome challenge__outcome--failed" role="status">
+				<h3 class="challenge__outcome-title">ההצעה של ינשוף כסוף לא עברה הפעם</h3>
+				<p class="challenge__quote">לבטל את שיעורי הבית בכל המקצועות</p>
+				<p class="challenge__line">1 קולות</p>
+				<p class="challenge__line">הלוח נשאר כפי שהיה.</p>
+			</div>
+			<div class="challenge challenge__outcome challenge__outcome--quiet">
+				<p class="challenge__line">דולפין ירוק ויתרו על התור.</p>
+			</div>
+
+			<h2>the teacher's turn console</h2>
+			<div class="card stack challenge-turn">
+				<div class="voting-settings__head">
+					<p class="teacher__section-title">סבב ההצעות</p>
+					<span class="voting-settings__turnout">תור 3 מתוך 8</span>
+				</div>
+				<p class="challenge-turn__speaker">על הבמה: שועל כחול</p>
+				<button class="challenge-turn__primary">לפתוח את ההצבעה</button>
+				<div class="challenge-turn__secondary">
+					<button class="challenge-turn__minor">לדלג על שועל כחול</button>
+					<button class="challenge-turn__minor">לסיים את הסבב עכשיו</button>
+				</div>
+				<p class="voting-settings__hint">בקצב הזה נשארו עוד כ־7 דקות.</p>
+				<div class="challenge__roster">
+					<span class="challenge__seat challenge__seat--done">נמר זהוב</span>
+					<span class="challenge__seat challenge__seat--passed">ינשוף כסוף</span>
+					<span class="challenge__seat challenge__seat--now">שועל כחול</span>
+					<span class="challenge__seat">צבי אדום</span>
+				</div>
+			</div>
+
 			<h2>the teacher's live controls during the vote</h2>
 			<div class="card stack voting-settings">
 				<div class="voting-settings__head">

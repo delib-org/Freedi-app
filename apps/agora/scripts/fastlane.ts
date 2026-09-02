@@ -5,6 +5,7 @@
  *   npm run fast -- --stage=positioning
  *   npm run fast -- --students=8 --proposals=6
  *   npm run fast -- --stage=deliberation --ratings   # rated, ready to open a vote
+ *   npm run fast -- --stage=voting --challenge         # a live challenge turn
  *   npm run fast -- --open --mine                  # …and give them a proposal, which is what
  *                                                  #   unlocks rating/feedback/helped screens
  *   npm run fast -- --open --shot                  # drive a student there and screenshot it
@@ -37,6 +38,7 @@ interface Args {
 	 * ask for it earlier when you want to WATCH the vote being set up.
 	 */
 	ratings: boolean | undefined;
+	challenge: boolean | undefined;
 	lang: string;
 	position: number;
 	open: boolean;
@@ -80,6 +82,7 @@ function parseArgs(argv: string[]): Args {
 		students: num('students', 4),
 		proposals: num('proposals', 3),
 		ratings: flag('ratings') !== undefined ? flag('ratings') !== 'false' : undefined,
+		challenge: flag('challenge') !== undefined ? flag('challenge') !== 'false' : undefined,
 		lang: flag('lang') || 'he',
 		// A student parked in a camp, not on the fence: centre positions hide
 		// the cross-camp colouring that most of these screens are about
@@ -137,6 +140,7 @@ const result = await fastlane({
 			}
 		: {}),
 	...(planFor(args) ? { stagePlan: planFor(args) } : {}),
+	challenge: args.challenge,
 });
 
 console.log(`

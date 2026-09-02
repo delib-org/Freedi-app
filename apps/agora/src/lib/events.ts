@@ -16,11 +16,25 @@
  * imports notifications.ts at all.
  */
 
+import type { ChallengePhase } from '@freedi/shared-types';
+
 export interface AgoraEvents {
 	/** A statements snapshot has been applied to state. */
 	'statements:changed': { sessionId: string; userId: string };
 	/** A scores snapshot has been applied; classMax is the strongest bridge now. */
 	'scores:changed': { sessionId: string; userId: string; classMax: number };
+	/**
+	 * The challenge round moved: a new phase, or a new student on the floor.
+	 * Announced rather than acted on here — whether being handed the floor
+	 * deserves a celebration or a toast is policy, and policy lives in
+	 * notifications.ts.
+	 */
+	'challenge:changed': {
+		sessionId: string;
+		userId: string;
+		phase: ChallengePhase;
+		turnIndex: number;
+	};
 }
 
 type Handler<K extends keyof AgoraEvents> = (payload: AgoraEvents[K]) => void;

@@ -355,6 +355,36 @@ test.
   `signInWithCredential()` finishes it with no window and no user gesture.
   Note `linkWithCredential` does NOT send that flag, so a probe built on it
   gets `credentialFromError() === null` and misleads.
+- **The functions emulator serves whichever worktree launched it.** Work on a
+  second tree and its new callables are simply 404 on 5001, which reads as an
+  app bug rather than as the wrong emulator. Either restart the suite from your
+  tree, or run a second one on free ports and point the scripts at it — every
+  host is env-overridable:
+
+  ```bash
+  # firebase.e2e.json = firebase.json with auth 9098 / functions 5011 /
+  # firestore 8091, no UI, no hosting/storage/database. Gitignored.
+  firebase emulators:start --only firestore,auth,functions \
+    --project freedi-test --config firebase.e2e.json
+  npx vite --port 3010
+  AGORA_AUTH_HOST=http://localhost:9098 \
+  AGORA_FIRESTORE_HOST=http://localhost:8091 \
+  AGORA_FUNCTIONS_HOST=http://localhost:5011 \
+  AGORA_VITE_HOST=http://localhost:3010 npx tsx scripts/e2e-challenge.mjs
+  ```
+
+  The contrast and type audits take the URL as argv[1] and otherwise default to
+  3009 — i.e. to the OTHER tree's mock page, which they will happily pass.
+- e2e scripts import `scripts/lib/fastlane.ts`, so they need `npx tsx`, not
+  bare `node`, whatever the older docs say.
+- A REST PATCH with no `updateMask` REPLACES the document. On a session doc
+  that wipes `teacherId` and the rules refuse it — silently, unless the script
+  reads the response.
+- Neutral runs reorder in Hebrew: "42 / 1500" becomes "1500 / 42" and "+3"
+  becomes "3+". Isolate the RUN (`direction: ltr; unicode-bidi: isolate`), not
+  the block — on the block it also flips which side `text-align: end` lands on.
+  `@include type-meta` clears itself on descendants, so if you split a mark
+  into a child span the exemption has to move down with it.
 
 ## Next steps (agreed direction)
 

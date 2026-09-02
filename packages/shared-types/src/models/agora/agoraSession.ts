@@ -12,6 +12,7 @@ import {
 	InferOutput,
 } from 'valibot';
 import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
+import { VotingGameStateSchema } from '../vote/challengeGame';
 import { AgoraSessionFlowSchema } from './sessionFlow';
 import {
 	AgoraCarriedAnswerSchema,
@@ -279,6 +280,12 @@ export const AgoraSessionSchema = object({
 	 * parent's `results`, which later ratings keep rewriting.
 	 */
 	voting: optional(VotingStateSchema),
+	/**
+	 * The challenge round's turn state, written only by `agoraChallengeTurn`
+	 * and frozen by rules like the ballot above. Absent when the teacher never
+	 * switched the round on, which is the default.
+	 */
+	votingGame: optional(VotingGameStateSchema),
 	createdAt: number(),
 	lastUpdate: number(),
 });

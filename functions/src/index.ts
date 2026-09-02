@@ -1244,6 +1244,7 @@ export {
 	agoraGradeValueIdentification,
 	agoraWritingAssistant,
 	agoraSetRound,
+	agoraChallengeTurn,
 	agoraResolveSuggestion,
 	agoraCharacterReview,
 	agoraEstimateReception,

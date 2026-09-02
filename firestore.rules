@@ -142,7 +142,16 @@ service cloud.firestore {
                        request.resource.data.get('schoolId', '') ==
                          resource.data.get('schoolId', '') &&
                        request.resource.data.get('aggregatedAt', -1) ==
-                         resource.data.get('aggregatedAt', -1);
+                         resource.data.get('aggregatedAt', -1) &&
+                       // Same reasoning, one level up: the challenge round's
+                       // turn state is the server's. A teacher who could write
+                       // it could name themselves the speaker, skip the count,
+                       // or crown a challenger the class voted down — the three
+                       // things agoraChallengeTurn exists to make impossible.
+                       // votingSettings.challengeGame (whether the round runs
+                       // at all) stays teacher-writable above.
+                       request.resource.data.get('votingGame', {}) ==
+                         resource.data.get('votingGame', {});
     }
 
     // Participants: created via callable only (anon names are server-issued).
@@ -558,7 +567,13 @@ service cloud.firestore {
                request.resource.data.get('anonName', '') ==
                  resource.data.get('anonName', '') &&
                request.resource.data.get('creatorId', '') ==
-                 resource.data.get('creatorId', '');
+                 resource.data.get('creatorId', '') &&
+               // agoraChallenge marks an option written during the vote rather
+               // than in the deliberation, and it is what keeps that option out
+               // of the proposal lifecycle. A student who could strip it could
+               // walk their challenge back into the first-draft credit.
+               request.resource.data.get('agoraChallenge', false) ==
+                 resource.data.get('agoraChallenge', false);
       }
 
       // Reading requires a session. Not because statements are secret — most

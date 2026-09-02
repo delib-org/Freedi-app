@@ -37,6 +37,7 @@ interface ProposalDoc {
 	topParentId?: string;
 	parents?: string[];
 	creator?: unknown;
+	agoraChallenge?: boolean;
 }
 
 /**
@@ -481,6 +482,12 @@ export const onAgoraProposalWritten = onDocumentWritten(
 		const proposal = after ?? before;
 		if (!proposal?.agoraSessionId) return;
 		if (proposal.statementType !== StatementType.option) return;
+		// A challenge written during the vote is an option, but it is not a
+		// deliberation proposal and must not enter this lifecycle. It would
+		// otherwise collect the first-draft credit on top of the reward the
+		// challenge round pays for surviving, and announce an edit into a
+		// square nobody is standing in. The round settles its own accounts.
+		if (proposal.agoraChallenge === true) return;
 
 		const sessionId = proposal.agoraSessionId;
 		const statementId = event.params.statementId;

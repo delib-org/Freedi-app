@@ -8,6 +8,7 @@ export { agoraUpdateStagePlan } from './fn_agoraUpdateStagePlan';
 export { agoraGradeValueIdentification } from './fn_agoraGradeValueIdentification';
 export { agoraWritingAssistant } from './fn_agoraWritingAssistant';
 export { agoraSetRound } from './fn_agoraSetRound';
+export { agoraChallengeTurn } from './fn_agoraChallengeTurn';
 export { agoraResolveSuggestion } from './fn_agoraResolveSuggestion';
 export { agoraCharacterReview } from './fn_agoraCharacterReview';
 export { agoraEstimateReception } from './fn_agoraEstimateReception';
