@@ -37,7 +37,14 @@ export type AgoraSessionFlow = InferOutput<typeof AgoraSessionFlowSchema>;
  * camp-less room is scored on `convergence` instead: whether people's stated
  * positions moved closer over the course of the deliberation.
  */
-export type AgoraScoreMode = 'bridging' | 'convergence';
+/**
+ * A camp-less room that came from an Odyssey island has stance baselines to
+ * measure against, so it is scored on `convergence`. A camp-less room with no
+ * baselines — a quick game, a classroom that switched stances off — has
+ * neither camps nor a before-picture; it is scored on `agreement`: the plain
+ * net support the room's proposals earned, and the vote if one was held.
+ */
+export type AgoraScoreMode = 'bridging' | 'convergence' | 'agreement';
 
 export interface ResolvedSessionFlow {
 	stances: boolean;
@@ -87,6 +94,8 @@ export function resolveSessionFlow(session: {
 	const flow = session.flow;
 
 	const stances = flow?.stances ?? defaults.stances;
+	const civic = (session.sessionMode ?? AgoraSessionMode.classroom) === AgoraSessionMode.civic;
+	const scoreMode: AgoraScoreMode = stances ? 'bridging' : civic ? 'convergence' : 'agreement';
 
 	return {
 		stances,
@@ -96,7 +105,7 @@ export function resolveSessionFlow(session: {
 		ratingsPerRound: flow?.ratingsPerRound ?? defaults.ratingsPerRound,
 		voting: flow?.voting ?? defaults.voting,
 		framing: flow?.framing ?? defaults.framing,
-		scoreMode: stances ? 'bridging' : 'convergence',
+		scoreMode,
 	};
 }
 

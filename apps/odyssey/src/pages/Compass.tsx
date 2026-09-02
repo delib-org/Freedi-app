@@ -10,15 +10,16 @@ import { stageBus } from '../lib/stageBus';
 const TOP_VALUES = 3;
 
 /**
- * How many inspiration chips one wind accepts.
+ * Inspiration chips are deliberately uncapped.
  *
- * There was no cap, and a reader wanting to keep almost everything good about
- * the country ticked almost every chip — which is a true feeling and a useless
- * signal. רוח הדאגה already asked for "ממה את/ה הכי חושש/ת", promising a
- * ranking the interface did not ask for. A cap is what turns all three winds
- * into the same honest question: not what matters, but what matters most.
+ * A cap of three was tried, on the theory that it forces the honest question —
+ * not what matters, but what matters most. In practice it made a player argue
+ * with the interface instead of with themselves: someone who genuinely fears
+ * four things had to pretend they feared three. The ranking that the compass
+ * really needs is asked once, properly, in רוח ההכרעה, where the order is
+ * visible and meant. The chips stay what they look like: everything that
+ * speaks to you.
  */
-const MAX_CHIPS = 3;
 
 /**
  * ארבע רוחות המצפון: three open questions with inspiration chips, then the
@@ -107,10 +108,6 @@ export default function Compass() {
 
 			return;
 		}
-		// Journeys sailed before the cap can hold more than MAX_CHIPS. They are
-		// left alone: deselecting always works, so a player is never stuck, and
-		// nothing anyone already said is deleted on their behalf.
-		if (current.chips.length >= MAX_CHIPS) return;
 		setAnswer(questionId, { chips: [...current.chips, chip] });
 	}
 
@@ -181,12 +178,11 @@ export default function Compass() {
 							{question.chips.length > 0 ? (
 								<>
 									<p className="text-[13px] opacity-75 m-0 mb-2">
-										בחרו עד {MAX_CHIPS} — מה הכי חשוב לכם:
+										בחרו כל מה שמדבר אליכם — אין הגבלה:
 									</p>
 									<div className="flex flex-wrap gap-2" aria-label="כפתורי השראה">
 										{question.chips.map((chip) => {
-											const chosen = answerOf(question.questionId).chips;
-											const active = chosen.includes(chip);
+											const active = answerOf(question.questionId).chips.includes(chip);
 
 											return (
 												<button
@@ -194,7 +190,6 @@ export default function Compass() {
 													type="button"
 													className={`chip ${active ? 'active' : ''}`}
 													aria-pressed={active}
-													disabled={!active && chosen.length >= MAX_CHIPS}
 													onClick={() => toggleChip(question.questionId, chip)}
 												>
 													{chip}
@@ -203,8 +198,11 @@ export default function Compass() {
 										})}
 									</div>
 									<p className="text-[13px] opacity-75 mt-2 mb-3">
-										נבחרו {answerOf(question.questionId).chips.length} מתוך {MAX_CHIPS}. לחיצה נוספת
-										מסירה בחירה.
+										{answerOf(question.questionId).chips.length > 0
+											? `נבחרו ${answerOf(question.questionId).chips.length} מתוך ${
+													question.chips.length
+												}. לחיצה נוספת מסירה בחירה.`
+											: 'אפשר לבחור כמה שתרצו.'}
 									</p>
 								</>
 							) : null}

@@ -19,9 +19,10 @@ import { createRequire } from 'node:module';
 import type { AgoraStage } from '@freedi/shared-types';
 import { preflight } from './lib/preflight.mjs';
 import { fastlane, positionStudent, proposeAs, teacherUrl } from './lib/fastlane';
+import type { AgoraStagePlanItem } from '@freedi/shared-types';
 
 // See lib/fastlane.ts — the package is require-only from plain Node
-const { AgoraStage: AgoraStageEnum } = createRequire(import.meta.url)(
+const { AgoraStage: AgoraStageEnum, stagePlanPreset } = createRequire(import.meta.url)(
 	'@freedi/shared-types',
 ) as typeof import('@freedi/shared-types');
 
@@ -38,6 +39,10 @@ interface Args {
 	mine: string | null;
 	autoSeed: boolean;
 	viewport: 'desktop' | 'mobile';
+	/** A quick game (no scenario) on the quick-decision plan, with names */
+	quick: boolean;
+	/** Which preset plan to send; absent = the session runs the legacy order */
+	plan: 'classic' | 'quickDecision' | null;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -77,7 +82,25 @@ function parseArgs(argv: string[]): Args {
 		mine: mineRaw === undefined ? null : mineRaw || '',
 		autoSeed: flag('no-seed') === undefined,
 		viewport: flag('mobile') !== undefined ? 'mobile' : 'desktop',
+		quick: flag('quick') !== undefined,
+		plan:
+			flag('plan') === 'classic'
+				? 'classic'
+				: flag('plan') === 'quickDecision' || flag('quick') !== undefined
+					? 'quickDecision'
+					: null,
 	};
+}
+
+/** The preset with its question filled in — a plan with an empty question is refused */
+function planFor(args: Args): AgoraStagePlanItem[] | undefined {
+	if (!args.plan) return undefined;
+
+	return stagePlanPreset(args.plan).map((item) =>
+		item.stage === AgoraStageEnum.question
+			? { ...item, title: 'מה חשוב לי בבקרים?', explanation: 'משפט אחד או שניים — מה היית רוצה שיקרה.' }
+			: item,
+	);
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -93,6 +116,18 @@ const result = await fastlane({
 	stage: args.stage,
 	students: args.students,
 	proposals: args.proposals,
+	...(args.quick
+		? {
+				quick: {
+					title: 'בקרים בבית שלנו',
+					mainQuestion: 'איך ווש יכולה לקום בזמן בבוקר?',
+					explanation: 'מחפשים פתרון שכולנו יכולים לחיות איתו.',
+				},
+				identity: 'named' as const,
+				botNames: ['אבא', 'אמא', 'ווש'],
+			}
+		: {}),
+	...(planFor(args) ? { stagePlan: planFor(args) } : {}),
 });
 
 console.log(`
@@ -139,6 +174,7 @@ const ARRIVED: Record<string, string> = {
 	needs: '.scene__title, .scene__text',
 	valueIdentification: '.scene__title, .shell__content',
 	positioning: 'input.camp-scale__slider',
+	question: '.question__ask',
 	deliberation: '.chat-log, .delib-hud, .proposal-dock__bar',
 	voting: '.voting__list, .voting__waiting',
 	results: '.results__total, .shell--wide',

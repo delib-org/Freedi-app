@@ -29,6 +29,12 @@ export const OdysseyElderSchema = object({
 	name: string(),
 	/** Short historical role line, e.g. ראש הממשלה הראשון */
 	role: string(),
+	/**
+	 * Lifespan as displayed, e.g. 1886–1973. Optional because elders authored
+	 * before the crew screen showed dates have none, and a missing date must
+	 * cost a card nothing but the line.
+	 */
+	years: optional(string()),
 	portraitUrl: optional(nullable(string())),
 	/** Ship/label tint */
 	color: string(),

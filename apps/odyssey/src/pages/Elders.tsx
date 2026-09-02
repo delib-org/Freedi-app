@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { OdysseyElder } from '@freedi/shared-types';
 import GameChrome from '../components/GameChrome';
 import NoGameYet from '../components/NoGameYet';
 import { useGame } from '../state/GameContext';
 import { activeElders } from '../lib/elders';
 
 /**
- * מי מפליג איתך: choosing the Elders.
+ * המלחים מחכים: choosing the crew.
  *
  * They used to arrive unannounced. Every enabled elder sailed with every
  * player, so the same Ben-Gurion line appeared above island after island with
@@ -19,15 +20,18 @@ import { activeElders } from '../lib/elders';
  * personas with declared positions, not candidates — spends its explanation
  * once, here, instead of failing to make it twelve times on the water.
  *
- * Choosing none is a real answer and the sea honours it.
+ * With twelve on the roster the screen is a portrait board, not a list: a
+ * list of twelve bios is a wall nobody reads, and a player who scrolls past
+ * the crew has not chosen a crew, only dismissed one. Nobody is pre-selected
+ * for the same reason — twelve voices arriving unasked is precisely the noise
+ * this screen exists to prevent. One sailor now is a real answer, so is none,
+ * and the crew can be changed at any point in the voyage.
  */
 export default function Elders() {
 	const navigate = useNavigate();
 	const { content, journey, updateJourney } = useGame();
 	const elders = activeElders(content?.game);
-	const [chosen, setChosen] = useState<Set<string>>(
-		() => new Set(journey?.selectedElderIds ?? elders.map((elder) => elder.elderId)),
-	);
+	const [chosen, setChosen] = useState<Set<string>>(() => new Set(journey?.selectedElderIds ?? []));
 	const [saving, setSaving] = useState(false);
 
 	// A game whose organizer switched the elders off, or never authored any,
@@ -61,15 +65,23 @@ export default function Elders() {
 		}
 	}
 
+	/** The three keywords under the name — the elder's own values, verbatim. */
+	function keywords(elder: OdysseyElder): string {
+		return elder.values.map((value) => value.label).join(', ');
+	}
+
 	return (
 		<>
-			<GameChrome stage="הזקנים" />
+			<GameChrome stage="המלחים" />
 			<div className="page">
-				<div className="w-full max-w-3xl flex flex-col gap-4 pb-4">
+				<div className="w-full max-w-5xl flex flex-col gap-4 pb-4">
 					<header className="text-center fade-in">
-						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">מי מפליג איתך?</h1>
-						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-0">
-							דמויות מן העבר יכולות להצטרף למסע — להעיר על עמדות שתסמנו, ולהתווכח איתכם באגורה.
+						<h1 className="text-3xl font-bold text-[var(--cream)] m-0">המלחים מחכים</h1>
+						<p className="text-[15px] text-[#cfe6f5] mt-2 mb-1">
+							כל קברניט צריך צוות על הסיפון. בחרו מי יעזור לכם במסע.
+						</p>
+						<p className="text-[14px] text-[#cfe6f5] opacity-85 m-0">
+							המלחים לא יחליטו במקומכם — הם ישאלו, יזהירו ויעזרו לכם לראות את הדרך מזוויות שונות.
 						</p>
 					</header>
 
@@ -81,40 +93,50 @@ export default function Elders() {
 							מפלגה.
 						</p>
 						<p className="text-[15px] m-0">
-							אפשר לבחור כמה שתרצו, או לא לבחור אף אחת ולהפליג לבד. אפשר לשנות בכל שלב.
+							העמדות שלהן הן <strong>שחזור משוער</strong> מתוך מה שאמרו וכתבו בחייהם, ולא ציטוט. מלח
+							ששתק בנושא מסוים — שותק גם כאן.
 						</p>
 					</section>
 
-					<div className="flex flex-col gap-2.5 fade-in">
-						{elders.map((elder) => {
+					<div className="crew-grid fade-in">
+						{elders.map((elder, index) => {
 							const active = chosen.has(elder.elderId);
 
 							return (
-								<button
-									key={elder.elderId}
-									type="button"
-									aria-pressed={active}
-									onClick={() => toggle(elder.elderId)}
-									className={`panel !py-3 !px-4 flex items-start gap-3 text-right cursor-pointer transition-[border-color] ${
-										active ? '!border-[var(--gold-strong)]' : 'opacity-70'
-									}`}
-								>
-									<span
-										className="inline-block w-3.5 h-3.5 rounded-full shrink-0 mt-1.5"
-										style={{ background: elder.color }}
-										aria-hidden="true"
-									/>
-									<span className="flex-1">
-										<span className="block">
-											<strong className="text-[var(--cream)]">📜 {elder.name}</strong>
-											<span className="opacity-80"> — {elder.role}</span>
+								<div key={elder.elderId} className="crew-cell">
+									<button
+										type="button"
+										aria-pressed={active}
+										onClick={() => toggle(elder.elderId)}
+										className={`crew-card ${active ? 'chosen' : ''}`}
+									>
+										<span className="crew-number" aria-hidden="true">
+											{index + 1}
 										</span>
-										<span className="block text-[13px] opacity-75 mt-1">{elder.bio}</span>
-									</span>
-									<span className="text-[18px] shrink-0 mt-0.5" aria-hidden="true">
-										{active ? '⚓' : '＋'}
-									</span>
-								</button>
+										<span className="crew-persona-mark" aria-hidden="true">
+											📜
+										</span>
+										<span
+											className="crew-portrait"
+											style={{ background: elder.color }}
+											aria-hidden="true"
+										>
+											{elder.portraitUrl ? <img src={elder.portraitUrl} alt="" /> : '⚓'}
+										</span>
+										<span className="crew-name">{elder.name}</span>
+										{elder.years ? <span className="crew-years">{elder.years}</span> : null}
+										<span className="crew-values">{keywords(elder)}</span>
+										<span className="text-[12px] text-[var(--gold-strong)] mt-1">
+											{active ? '⚓ על הסיפון' : '＋ לצרף לצוות'}
+										</span>
+									</button>
+									<details className="crew-bio">
+										<summary>מי זה?</summary>
+										<p>
+											{elder.role} · {elder.bio}
+										</p>
+									</details>
+								</div>
 							);
 						})}
 					</div>
@@ -127,6 +149,9 @@ export default function Elders() {
 									? 'להפליג לבד — לפתיחת המפה'
 									: `להפליג עם ${chosen.size} — לפתיחת המפה`}
 						</button>
+						<p className="text-[13px] opacity-75 m-0">
+							אפשר לבחור מלח אחד כעת, ולצרף נוספים בהמשך.
+						</p>
 					</div>
 				</div>
 			</div>

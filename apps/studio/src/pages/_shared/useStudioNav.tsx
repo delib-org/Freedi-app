@@ -34,6 +34,14 @@ const OrganizationsIcon: ReactNode = (
 	</svg>
 );
 
+const AgoraIcon: ReactNode = (
+	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+		<path d="M4 10l8-6 8 6" />
+		<path d="M5 10v9M9.5 10v9M14.5 10v9M19 10v9" />
+		<path d="M3 19h18" />
+	</svg>
+);
+
 export function useStudioNav(): AppShellNavItem[] {
 	const { t } = useTranslation();
 	const { currentOrgId, currentRole, isSystemAdmin } = useOrg();
@@ -55,6 +63,13 @@ export function useStudioNav(): AppShellNavItem[] {
 			label: t('Organizations'),
 			to: '/admin/orgs',
 			icon: OrganizationsIcon,
+			end: false,
+		});
+		items.push({
+			id: 'agora',
+			label: t('Agora classrooms'),
+			to: '/admin/agora',
+			icon: AgoraIcon,
 			end: false,
 		});
 	}

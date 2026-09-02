@@ -19,7 +19,32 @@ export enum AgoraStage {
 	voting = 'voting',
 	results = 'results',
 	ended = 'ended',
+	/**
+	 * An admin-authored question the room answers and rates before (or
+	 * between) the other beats. Only ever appears in an explicit stage plan —
+	 * a session without a plan never carries it. Its answers are Statements
+	 * under the item's own question Statement; the top ones travel into every
+	 * later stage as carried context.
+	 */
+	question = 'question',
 }
+
+/**
+ * The forward-only order the stages run in. The advance callable and every
+ * teacher UI walk THIS array — it used to be duplicated in both and a drifted
+ * copy would let a client offer a transition the server refuses.
+ */
+export const AGORA_STAGE_ORDER: readonly AgoraStage[] = [
+	AgoraStage.lobby,
+	AgoraStage.framing,
+	AgoraStage.perspectives,
+	AgoraStage.needs,
+	AgoraStage.positioning,
+	AgoraStage.deliberation,
+	AgoraStage.voting,
+	AgoraStage.results,
+	AgoraStage.ended,
+];
 
 export enum AgoraRoundPhase {
 	propose = 'propose',

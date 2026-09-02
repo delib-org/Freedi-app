@@ -8,6 +8,7 @@ import {
 	tupleWithRest,
 	record,
 	enum_,
+	picklist,
 	InferOutput,
 } from 'valibot';
 import { AgoraSceneKind, AgoraTopicStatus } from './agoraEnums';
@@ -127,9 +128,21 @@ export const AgoraValueAnswerKeySchema = object({
 
 export type AgoraValueAnswerKey = InferOutput<typeof AgoraValueAnswerKeySchema>;
 
+/**
+ * How a package came to be. A `scenario` is the authored time-tunnel package
+ * (characters, scenes, the era's health metrics). A `quick` package is the
+ * minimal shell `agoraCreateSession` writes for a game the admin started by
+ * typing a main question: two placeholder characters to satisfy the tuple,
+ * no scenes, nothing to simulate. Absent means `scenario`.
+ */
+export const AgoraTopicKindSchema = picklist(['scenario', 'quick']);
+
+export type AgoraTopicKind = InferOutput<typeof AgoraTopicKindSchema>;
+
 export const AgoraTopicPackageSchema = object({
 	topicPackageId: string(),
 	creatorId: string(),
+	kind: optional(AgoraTopicKindSchema),
 	/** The teacher's original topic prompt, e.g. "המהפכה הצרפתית" */
 	topic: string(),
 	/** BCP-47 language code the package content is written in */

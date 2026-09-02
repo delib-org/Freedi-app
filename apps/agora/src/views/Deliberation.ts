@@ -77,6 +77,8 @@ import {
 	type SupportSinceEdit,
 } from '../lib/improvementSignals';
 import { NeedsPeek } from '../components/NeedsBoard';
+import { CarriedContext } from '../components/CarriedContext';
+import { getCurrentPlanIndex } from '../lib/session';
 import {
 	flushSeenState,
 	isEditedSinceSeen,
@@ -2568,6 +2570,9 @@ export function Deliberation(
 										),
 									]),
 								]),
+								// What the room said in the question stages before this
+								// one — the brief the proposal is written against.
+								m(CarriedContext, { session: live, beforeIndex: getCurrentPlanIndex() }),
 								m('textarea.my-lantern__textarea.write-desk__textarea', {
 									value: draft,
 									rows: 4,

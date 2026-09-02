@@ -30,6 +30,9 @@ import { TeacherHome } from './views/teacher/TeacherHome';
 import { TeacherSession } from './views/teacher/TeacherSession';
 import { TopicWizard } from './views/teacher/TopicWizard';
 import { TopicEditor } from './views/teacher/TopicEditor';
+import { StartGame } from './views/teacher/StartGame';
+import { TeacherClass } from './views/teacher/TeacherClass';
+import { GameReport } from './views/teacher/GameReport';
 
 // Error reporting first, so anything thrown during boot is captured. A crash
 // here happens in front of a classroom, and until now nothing recorded it.
@@ -95,7 +98,10 @@ if (root) {
 		'/play/:id': GameController,
 		'/teach': TeacherHome,
 		'/teach/new': TopicWizard,
+		'/teach/start': StartGame,
 		'/teach/topic/:id': TopicEditor,
 		'/teach/session/:id': TeacherSession,
+		'/teach/class/:id': TeacherClass,
+		'/teach/report/:id': GameReport,
 	});
 }

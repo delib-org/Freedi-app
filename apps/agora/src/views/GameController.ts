@@ -6,34 +6,62 @@ import {
 	stopListening,
 	getSessionState,
 	getSessionFlow,
+	getStagePlan,
+	getCurrentPlanIndex,
+	getConsensusPool,
 	reportStageProgress,
 } from '../lib/session';
 import { getTopicPackage, loadTopicPackage } from '../lib/topic';
 import { stopValueAnswerListeners } from '../lib/values';
 import { listenToNotifications, stopNotifications } from '../lib/notifications';
-import { stopDeliberationListeners } from '../lib/proposals';
+import {
+	getDeliberationState,
+	listenToDeliberation,
+	stopDeliberationListeners,
+} from '../lib/proposals';
 import { listenToVoting, stopVotingListeners } from '../lib/voting';
+import {
+	INITIAL_STAGE_NAV,
+	effectiveIndex,
+	serializeStageNav,
+	stageNavReduce,
+	type StageNavEvent,
+	type StageNavState,
+} from '../lib/flows/stageNav';
 import { ToastStack } from '../components/Toast';
 import { NeedsBoard } from '../components/NeedsBoard';
 import { CelebrationOverlay } from '../components/Celebration';
 import { InstallHint } from '../components/InstallHint';
-import { JourneyStrip } from '../components/JourneyStrip';
+import { StageNav, planItemLabel } from '../components/StageNav';
+import { CarriedContext } from '../components/CarriedContext';
+import { ResultsBoard } from '../components/ResultsBoard';
 import { StageTransition, hasStageTransition } from '../components/StageTransition';
 import { Lobby } from './Lobby';
 import { SceneStage } from './SceneStage';
 import { ValueIdentification } from './ValueIdentification';
 import { Positioning } from './Positioning';
 import { Deliberation } from './Deliberation';
+import { QuestionStage } from './QuestionStage';
 import { Voting } from './Voting';
 import { Results } from './Results';
 import { ReRate } from './ReRate';
-import { AgoraSceneKind, AgoraSessionMode, AgoraStage } from '@freedi/shared-types';
+import {
+	AgoraSceneKind,
+	AgoraSessionMode,
+	AgoraStage,
+	type AgoraStagePlanItem,
+} from '@freedi/shared-types';
 
 /**
- * Student game controller — routes the current view from the session doc's
- * stage (single source of truth). Scene stages are student-paced within
- * the teacher-controlled session stage.
+ * Student game controller — renders the stage the player is looking at.
+ *
+ * The room's position comes from the session doc (single source of truth,
+ * moved only by the advance callable). The player's position is their own:
+ * `stageNav` lets them step back to any stage already opened and re-read it,
+ * and is carried forward the moment the room advances. A stage that is not
+ * the room's current one renders read-only — its outcome is already written.
  */
+
 /**
  * Whether this person has already walked through the event's opening.
  *
@@ -44,6 +72,10 @@ import { AgoraSceneKind, AgoraSessionMode, AgoraStage } from '@freedi/shared-typ
  */
 function framingKey(sessionId: string): string {
 	return `agora_${sessionId}_framing_done`;
+}
+
+function navKey(sessionId: string): string {
+	return `agora_${sessionId}_viewing`;
 }
 
 /**
@@ -87,19 +119,37 @@ function markFramingSeen(sessionId: string): void {
 	m.redraw();
 }
 
+function readStoredNav(sessionId: string): string | null {
+	try {
+		return sessionStorage.getItem(navKey(sessionId));
+	} catch {
+		return null;
+	}
+}
+
+function storeNav(sessionId: string, state: StageNavState): void {
+	try {
+		sessionStorage.setItem(navKey(sessionId), serializeStageNav(state));
+	} catch {
+		// Storage refused: a refresh lands on the current stage, which is fine.
+	}
+}
+
 export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
 	const sessionId = initialVnode.attrs.id;
 	let userId = '';
-	/** Last stage rendered — a change plays the travel interstitial */
-	let lastStage: AgoraStage | null = null;
-	let transitionStage: AgoraStage | null = null;
+	/** Last plan position rendered — a change plays the travel interstitial */
+	let lastIndex: number | null = null;
+	let transitionItem: AgoraStagePlanItem | null = null;
 	let transitionLeaving = false;
 	let transitionTimer: number | undefined;
 	let transitionLeaveTimer: number | undefined;
+	let nav: StageNavState = INITIAL_STAGE_NAV;
+	let navRestored = false;
 
-	function beginStageTransition(stage: AgoraStage): void {
+	function beginStageTransition(item: AgoraStagePlanItem): void {
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-		transitionStage = stage;
+		transitionItem = item;
 		transitionLeaving = false;
 		window.clearTimeout(transitionTimer);
 		window.clearTimeout(transitionLeaveTimer);
@@ -108,12 +158,20 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				transitionLeaving = true;
 				m.redraw();
 				transitionLeaveTimer = window.setTimeout(() => {
-					transitionStage = null;
+					transitionItem = null;
 					m.redraw();
 				}, 400);
 			},
 			reduced ? 900 : 1900,
 		);
+	}
+
+	function dispatchNav(event: StageNavEvent): void {
+		const next = stageNavReduce(nav, event, getStagePlan(), getCurrentPlanIndex());
+		if (next !== nav) {
+			nav = next;
+			storeNav(sessionId, nav);
+		}
 	}
 
 	void ensureUser().then((user) => {
@@ -157,6 +215,26 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				);
 			}
 
+			// A newer server opened a stage this bundle has never heard of. Not
+			// a broken game — a stale tab; one reload and it knows the stage.
+			if (error === 'outdated') {
+				return m(
+					'.shell',
+					m(
+						'.shell__content.text-center',
+						{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
+						[
+							m('h2', t('game.refresh_needed')),
+							m(
+								'button.btn.btn--primary.btn--lg',
+								{ onclick: () => window.location.reload() },
+								t('game.refresh_action'),
+							),
+						],
+					),
+				);
+			}
+
 			if (error || !session) {
 				return m(
 					'.shell',
@@ -167,29 +245,70 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 				);
 			}
 
-			// A stage change is a journey leg — play the travel card over the
-			// incoming stage instead of hard-cutting. Never on first render:
-			// a page refresh should land directly where the class already is.
-			if (session.stage !== lastStage) {
-				if (lastStage !== null && hasStageTransition(session.stage)) {
-					beginStageTransition(session.stage);
-				}
-				lastStage = session.stage;
+			const plan = getStagePlan();
+			const currentIndex = getCurrentPlanIndex();
+
+			if (!navRestored) {
+				navRestored = true;
+				dispatchNav({ kind: 'restore', raw: readStoredNav(sessionId) });
 			}
+
+			// A stage change is a journey leg — play the travel card over the
+			// incoming stage instead of hard-cutting, and carry the player to it
+			// wherever they were looking. Keyed on the plan POSITION, not the
+			// kind: two question stages in a row are two journeys. Never on
+			// first render: a refresh lands directly where the class already is.
+			if (currentIndex !== lastIndex) {
+				if (lastIndex !== null) {
+					dispatchNav({ kind: 'session-advanced' });
+					const item = plan[currentIndex];
+					if (item && hasStageTransition(item.stage)) beginStageTransition(item);
+				}
+				lastIndex = currentIndex;
+			}
+
+			const viewingIndex = effectiveIndex(plan, currentIndex, nav.viewingItemId);
+			const item = plan[viewingIndex] ?? plan[currentIndex];
+			const live = viewingIndex === currentIndex;
 
 			const overlays = [
 				m(ToastStack),
 				m(CelebrationOverlay),
 				m(InstallHint),
-				transitionStage !== null
-					? m(StageTransition, { stage: transitionStage, leaving: transitionLeaving })
+				transitionItem !== null
+					? m(StageTransition, {
+							stage: transitionItem.stage,
+							title:
+								transitionItem.stage === AgoraStage.question ? transitionItem.title : undefined,
+							leaving: transitionLeaving,
+						})
 					: null,
 			];
 
-			if (session.stage === AgoraStage.lobby) {
+			const stageNav = m(StageNav, {
+				plan,
+				currentIndex,
+				viewingIndex,
+				onSelect: (itemId: string) => dispatchNav({ kind: 'select', itemId }),
+				compact: item.stage === AgoraStage.deliberation && live,
+			});
+
+			const pastNotice = live
+				? null
+				: m('.stage-nav__past', [
+						m('span', t('stagenav.past')),
+						m(
+							'button.btn.btn--sm.btn--secondary',
+							{ onclick: () => dispatchNav({ kind: 'select', itemId: plan[currentIndex].itemId }) },
+							t('stagenav.back_to_current', { stage: planItemLabel(plan[currentIndex]) }),
+						),
+					]);
+
+			if (item.stage === AgoraStage.lobby) {
 				return m('.game', [
 					...overlays,
-					m(JourneyStrip, { stage: session.stage }),
+					stageNav,
+					pastNotice,
 					m(Lobby, { participants, myParticipant }),
 				]);
 			}
@@ -246,15 +365,38 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					.filter((scene) => scene !== undefined);
 
 			// Scene stages publish self-paced progress so the teacher knows
-			// who finished and when to advance
+			// who finished and when to advance — only for the stage the room is on
 			const onProgress = (scenesDone: number, scenesTotal: number) => {
-				if (userId) {
-					reportStageProgress(sessionId, userId, session.stage, scenesDone, scenesTotal);
+				if (userId && live) {
+					reportStageProgress(sessionId, userId, item.stage, scenesDone, scenesTotal);
 				}
 			};
 
+			/** A past deliberation, re-read: the board as it stood, no pen */
+			const deliberationRecord = (): m.Children => {
+				listenToDeliberation(sessionId, userId);
+				const { proposals, scores } = getDeliberationState();
+
+				return m('.shell', [
+					m('.shell__content', { style: { gap: 'var(--space-lg)' } }, [
+						m(CarriedContext, { session, beforeIndex: viewingIndex, defaultOpen: false }),
+						m('.card.stack', [
+							m(ResultsBoard, {
+								sessionId: session.sessionId,
+								topic,
+								proposals,
+								scores,
+								census: getConsensusPool(),
+								userId: myParticipant?.userId,
+								finale: false,
+							}),
+						]),
+					]),
+				]);
+			};
+
 			const stageView = ((): m.Children => {
-				switch (session.stage) {
+				switch (item.stage) {
 					case AgoraStage.framing:
 						return m(SceneStage, {
 							scenes: scenesOf(
@@ -293,8 +435,22 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 					case AgoraStage.positioning:
 						return myParticipant ? m(Positioning, { topic, myParticipant }) : noSeatYet();
 
+					case AgoraStage.question: {
+						if (!myParticipant) return noSeatYet();
+
+						return m(QuestionStage, {
+							session,
+							item,
+							planIndex: viewingIndex,
+							myParticipant,
+							userId,
+							live,
+						});
+					}
+
 					case AgoraStage.deliberation: {
 						if (!myParticipant) return noSeatYet();
+						if (!live) return deliberationRecord();
 
 						/**
 						 * The opening beat, when the event asked for one.
@@ -315,30 +471,10 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						}
 
 						/**
-						 * Nobody enters the square without a side.
-						 *
-						 * A student who joined after the class placed itself — or whose
-						 * teacher advanced straight past that stage — used to walk into
-						 * the deliberation with no camp, and the game quietly stopped
-						 * working for them: every rating they gave was dropped from the
-						 * bridging half of the score (an unknown side cannot support a
-						 * claim about reaching across the camps), so an author could be
-						 * voted up by the whole class and still read "bridge power still
-						 * 0 — it hasn't moved yet". One screen, once, and the square
-						 * measures what it says it measures.
+						 * Nobody enters the square without a side — unless the event
+						 * runs without sides at all, or is a civic square whose camps
+						 * come from the island (the join callable seats those).
 						 */
-						//
-						// Unless the event runs without sides at all, in which case
-						// there is nothing to catch up on and the screen would be
-						// asking a question the organizer deliberately removed.
-						//
-						// A civic square never asks either: a voyager's camp comes
-						// from their island answers (the join callable seats them in
-						// the centre when nothing is derivable), and being asked to
-						// position themselves again reads as starting the voyage
-						// over. A civic seat that still lacks a camp — created before
-						// the centre fallback, entered without passing through join —
-						// goes straight in; the next join heals the doc.
 						if (
 							flow.stances &&
 							myParticipant.campPosition === undefined &&
@@ -354,22 +490,15 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 						if (!myParticipant) return noSeatYet();
 						listenToVoting(sessionId, session.challengeQuestionId, userId);
 
-						return m(Voting, { session, myParticipant, userId });
+						return m(Voting, { session, myParticipant, userId, readOnly: !live });
 					}
 
 					case AgoraStage.results:
 					case AgoraStage.ended: {
 						/**
 						 * The closing question, for an event scored on whether the room
-						 * came together.
-						 *
-						 * It has to be asked before the results, because the results ARE
-						 * the answer: the score is the distance between where people
-						 * started and where they ended, and there is no second chance to
-						 * collect the second half. Asked once per person — a participant
-						 * who has already answered goes straight through, and so does
-						 * anyone who arrived without a starting position to compare
-						 * against.
+						 * came together — asked before the results, because the results
+						 * ARE the answer. Once per person.
 						 */
 						if (
 							flow.scoreMode === 'convergence' &&
@@ -395,27 +524,13 @@ export function GameController(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							m(
 								'.shell__content.text-center',
 								{ style: { justifyContent: 'center', gap: 'var(--space-lg)' } },
-								[m('h2', t('lobby.get_ready')), m('p.lobby__status', session.stage)],
+								[m('h2', t('lobby.get_ready')), m('p.lobby__status', String(item.stage))],
 							),
 						]);
 				}
 			})();
 
-			// No world strip: the map lives only where it IS the content
-			// (lobby, results) — in-game stages keep the screen for the work.
-			// The journey strip is the compact "you are here" that replaces it.
-			//
-			// Except in the deliberation, which is a whole game of its own and
-			// carries its own HUD. Stacking the journey strip on top of it put
-			// two "you are here" bars in a row, and the outer one was frozen on
-			// the same station for the entire stage — pure chrome.
-			const inDeliberation = session.stage === AgoraStage.deliberation;
-
-			return m('.game', [
-				...overlays,
-				inDeliberation ? null : m(JourneyStrip, { stage: session.stage }),
-				stageView,
-			]);
+			return m('.game', [...overlays, stageNav, pastNotice, stageView]);
 		},
 	};
 }

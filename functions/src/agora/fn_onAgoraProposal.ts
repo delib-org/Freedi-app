@@ -486,6 +486,15 @@ export const onAgoraProposalWritten = onDocumentWritten(
 		const statementId = event.params.statementId;
 
 		try {
+			// A question stage's answers are options too, under their own
+			// question Statement. They earn no first-proposal credit, no
+			// revision credit and no elder reading — that economy is the
+			// square's. (The elder branch re-reads the session; cheap, and it
+			// keeps that function self-guarding.)
+			const sessionSnap = await db.collection(Collections.agoraSessions).doc(sessionId).get();
+			const session = sessionSnap.data() as AgoraSession | undefined;
+			if (session && proposal.parentId !== session.challengeQuestionId) return;
+
 			if (!before && after?.creatorId) {
 				await creditFirstProposal(sessionId, after.creatorId, statementId);
 				await elderCouncilReads(sessionId, statementId, after);

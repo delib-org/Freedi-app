@@ -15,6 +15,8 @@ import People from '@/pages/People/People';
 import Invite from '@/pages/Invite/Invite';
 import AdminOrgs from '@/pages/AdminOrgs/AdminOrgs';
 import AdminOrgDetail from '@/pages/AdminOrgs/AdminOrgDetail';
+import AdminAgora from '@/pages/AdminAgora/AdminAgora';
+import AdminSchoolDetail from '@/pages/AdminAgora/AdminSchoolDetail';
 import EventDashboard from '@/pages/EventDashboard';
 
 // Heavy per-question screens load on demand.
@@ -66,6 +68,8 @@ export default function App() {
 						<Route path="/invite" element={<Invite />} />
 						<Route path="/admin/orgs" element={<AdminOrgs />} />
 						<Route path="/admin/orgs/:orgId" element={<AdminOrgDetail />} />
+						<Route path="/admin/agora" element={<AdminAgora />} />
+						<Route path="/admin/agora/schools/:schoolId" element={<AdminSchoolDetail />} />
 						<Route path="*" element={<Navigate to="/" replace />} />
 					</Routes>
 				</Suspense>

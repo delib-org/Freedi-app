@@ -28,7 +28,10 @@ import { logError } from '../utils/errorHandling';
  * has no leading proposals — and is written as such so the student screen can
  * say so instead of spinning.
  */
-export async function prepareVotingStage(sessionId: string): Promise<void> {
+export async function prepareVotingStage(
+	sessionId: string,
+	explicitCandidateIds?: string[],
+): Promise<void> {
 	try {
 		const sessionRef = db.collection(Collections.agoraSessions).doc(sessionId);
 		const sessionSnap = await sessionRef.get();
@@ -37,6 +40,38 @@ export async function prepareVotingStage(sessionId: string): Promise<void> {
 
 		const questionId = session.challengeQuestionId;
 		if (!questionId) return;
+
+		// The auto-open rule names the ballot itself: the proposal the room
+		// nearly all agreed on (for or against), or the two it broadly liked.
+		// The shared selector is skipped — it would answer a different question.
+		if (explicitCandidateIds && explicitCandidateIds.length > 0) {
+			const docs = await Promise.all(
+				explicitCandidateIds.map((statementId) =>
+					db.collection(Collections.statements).doc(statementId).get(),
+				),
+			);
+			const candidates: VotingCandidate[] = docs
+				.filter((docSnap) => docSnap.exists)
+				.map((docSnap) => {
+					const statement = docSnap.data() as Statement;
+
+					return {
+						statementId: statement.statementId,
+						statement: String(statement.statement ?? ''),
+						consensus: Number(statement.consensus ?? 0),
+					};
+				});
+			await sessionRef.update({
+				voting: {
+					candidateIds: candidates.map((candidate) => candidate.statementId),
+					candidates,
+					computedAt: Date.now(),
+				},
+				lastUpdate: Date.now(),
+			});
+
+			return;
+		}
 
 		// The teacher's choice, expressed in the shared vocabulary
 		const selection = resolveVotingSelection(session.votingSettings);

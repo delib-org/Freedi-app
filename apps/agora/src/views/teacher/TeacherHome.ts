@@ -2,18 +2,36 @@ import m from 'mithril';
 import { Icon } from '../../components/Icon';
 import { t } from '../../lib/i18n';
 import { getUserState, signInWithGoogle, ensureUser } from '../../lib/user';
-import { createSession } from '../../lib/callables';
-import { listTopicPackages, patchTopicPackage, saveTopicPackage } from '../../lib/teacher';
-import { AgoraDeviceMode, AgoraTopicPackage, AgoraTopicStatus } from '@freedi/shared-types';
+import {
+	fetchTeacherDashboard,
+	listTopicPackages,
+	patchTopicPackage,
+	saveTopicPackage,
+	type TeacherDashboard,
+} from '../../lib/teacher';
+import {
+	AgoraClassAggregate,
+	AgoraSession,
+	AgoraSessionStatus,
+	AgoraTopicPackage,
+	AgoraTopicStatus,
+	advancementSummary,
+} from '@freedi/shared-types';
 import { buildDefaultFrenchRevolutionTopic, backfillDefaultArtwork } from '../../lib/defaultTopic';
 import { LanguagePicker } from '../../components/LanguagePicker';
 
+/**
+ * The teacher's dashboard: my classes (with advancement), my games (live ones
+ * to run, finished ones to report on), and the scenario library. Starting a
+ * game moved to its own screen (/teach/start) — this page is for seeing where
+ * every class stands.
+ */
 export function TeacherHome(): m.Component {
 	let topics: AgoraTopicPackage[] = [];
-	let topicsLoaded = false;
-	let selectedTopicId: string | null = null;
-	let deviceMode: AgoraDeviceMode = AgoraDeviceMode.individual;
-	let creating = false;
+	let classes: TeacherDashboard['classes'] = [];
+	let sessions: AgoraSession[] = [];
+	let aggregates = new Map<string, AgoraClassAggregate>();
+	let loaded = false;
 
 	async function provisionDefaultTopic(creatorId: string): Promise<AgoraTopicPackage | null> {
 		try {
@@ -29,9 +47,8 @@ export function TeacherHome(): m.Component {
 	}
 
 	/**
-	 * Heal packages provisioned before the bundled artwork existed: backfill
-	 * default scene media + character portraits where they're still missing.
-	 * Runs fire-and-forget so it never blocks the teacher home from rendering.
+	 * Heal packages provisioned before the bundled artwork existed. Runs
+	 * fire-and-forget so it never blocks the dashboard from rendering.
 	 */
 	async function healArtwork(pkg: AgoraTopicPackage): Promise<AgoraTopicPackage> {
 		const patch = backfillDefaultArtwork(pkg);
@@ -48,53 +65,126 @@ export function TeacherHome(): m.Component {
 		return patched;
 	}
 
-	async function loadTopics(): Promise<void> {
+	async function load(): Promise<void> {
 		try {
 			const user = await ensureUser();
-			let loaded: AgoraTopicPackage[] = await listTopicPackages(user.uid);
 
-			// Heal any package still missing its default scene artwork.
-			loaded = await Promise.all(loaded.map((pkg) => healArtwork(pkg)));
-
-			// A teacher signing in for the first time has no topics of their own —
-			// give them the ready-to-run French Revolution game by default. Only
-			// real (Google) teachers author packages; never provision for anon students.
-			if (loaded.length === 0 && !user.isAnonymous) {
+			let loadedTopics = await listTopicPackages(user.uid);
+			loadedTopics = await Promise.all(loadedTopics.map((pkg) => healArtwork(pkg)));
+			if (loadedTopics.length === 0 && !user.isAnonymous) {
 				const defaultTopic = await provisionDefaultTopic(user.uid);
-				if (defaultTopic) {
-					loaded.push(defaultTopic);
-					selectedTopicId = defaultTopic.topicPackageId;
+				if (defaultTopic) loadedTopics.push(defaultTopic);
+			}
+			topics = loadedTopics;
+
+			// One round trip for classes, aggregates and recent games — fails
+			// soft: a console hiccup must not blank the scenario library. Not
+			// asked at all before the Google sign-in: the console refuses an
+			// anonymous caller, and the refusal read as an error on a page that
+			// was simply still waiting for the teacher to sign in.
+			try {
+				if (user.isAnonymous) throw new Error('anonymous');
+				const dashboard = await fetchTeacherDashboard();
+				classes = dashboard.classes;
+				sessions = dashboard.sessions;
+				aggregates = dashboard.aggregates;
+			} catch (error) {
+				if (!(error instanceof Error && error.message === 'anonymous')) {
+					console.error('[Teacher] Loading dashboard data failed:', error);
 				}
 			}
-
-			topics = loaded;
-			topicsLoaded = true;
-			m.redraw();
 		} catch (error) {
-			console.error('[Teacher] Loading topics failed:', error);
-			topicsLoaded = true;
-			m.redraw();
+			console.error('[Teacher] Loading dashboard failed:', error);
 		}
-	}
-
-	async function handleCreate(): Promise<void> {
-		if (!selectedTopicId || creating) return;
-		creating = true;
+		loaded = true;
 		m.redraw();
-		try {
-			const result = await createSession({
-				topicPackageId: selectedTopicId,
-				deviceMode,
-			});
-			m.route.set(`/teach/session/${result.sessionId}`);
-		} catch (error) {
-			console.error('[Teacher] Create session failed:', error);
-			creating = false;
-			m.redraw();
-		}
 	}
 
-	void loadTopics();
+	function sessionRow(session: AgoraSession): m.Children {
+		// A scored session is finished even while its status is still open —
+		// the sweep flips status hours later, and "Live" over a final score
+		// reads as a lie.
+		const live =
+			session.classScore === undefined &&
+			(session.status === AgoraSessionStatus.open || session.status === AgoraSessionStatus.live);
+		const className = session.classId
+			? (classes.find((agoraClass) => agoraClass.classId === session.classId)?.name ??
+				t('dashboard.class_gone'))
+			: t('startGame.guest_game');
+		const target = live
+			? `/teach/session/${session.sessionId}`
+			: `/teach/report/${session.sessionId}`;
+
+		return m(
+			'.dashboard__game-row',
+			{
+				key: session.sessionId,
+				onclick: () => m.route.set(target),
+				role: 'button',
+				tabindex: 0,
+			},
+			[
+				m('.dashboard__game-main', [
+					m('strong', className),
+					m(
+						'span.dashboard__game-date',
+						new Date(session.createdAt).toLocaleDateString(undefined, {
+							day: 'numeric',
+							month: 'short',
+						}),
+					),
+				]),
+				m('.dashboard__game-side', [
+					session.classScore
+						? m('span.dashboard__game-score', String(session.classScore.total))
+						: null,
+					m(
+						'span.dashboard__status-pill',
+						{ class: live ? 'dashboard__status-pill--live' : undefined },
+						t(live ? 'dashboard.game_live' : 'dashboard.game_done'),
+					),
+				]),
+			],
+		);
+	}
+
+	function classCard(agoraClass: TeacherDashboard['classes'][number]): m.Children {
+		const aggregate = aggregates.get(agoraClass.classId);
+		const summary = aggregate ? advancementSummary(aggregate) : null;
+
+		return m(
+			'.dashboard__class-card',
+			{
+				key: agoraClass.classId,
+				onclick: () => m.route.set(`/teach/class/${agoraClass.classId}`),
+				role: 'button',
+				tabindex: 0,
+			},
+			[
+				m('strong.dashboard__class-name', agoraClass.name),
+				m(
+					'span.dashboard__class-meta',
+					t('dashboard.members', { count: String(agoraClass.memberCount) }),
+				),
+				summary
+					? m('.dashboard__class-stats', [
+							m(
+								'span.dashboard__class-stat',
+								t('dashboard.games_played', { count: String(summary.gamesPlayed) }),
+							),
+							summary.avgClassScore !== null
+								? m(
+										'span.dashboard__class-stat',
+										t('dashboard.avg_score', { score: String(summary.avgClassScore) }),
+									)
+								: null,
+						])
+					: m('span.dashboard__class-meta', t('dashboard.no_games_yet')),
+			],
+		);
+	}
+
+	void load();
 
 	return {
 		view() {
@@ -131,10 +221,8 @@ export function TeacherHome(): m.Component {
 									onclick: () => {
 										signInWithGoogle()
 											.then(() => {
-												// Re-run now that we have the teacher's real uid, so a
-												// first-time teacher gets the default topic provisioned.
-												topicsLoaded = false;
-												void loadTopics();
+												loaded = false;
+												void load();
 											})
 											.catch((error: unknown) => {
 												console.error('[Teacher] Sign-in failed:', error);
@@ -156,100 +244,76 @@ export function TeacherHome(): m.Component {
 				]),
 
 				m('.shell__content', { style: { gap: 'var(--space-xl)' } }, [
-					m('h2', t('teacher.new_session')),
-
-					m('.stack', [
-						m('p.teacher__section-title', t('teacher.choose_topic')),
-						!topicsLoaded
-							? m('.spinner')
-							: topics.length === 0
-								? m('.stack', [
-										m('p.home-explanation', t('teacher.no_topics')),
-										m(
-											'button.btn.btn--primary.btn--full',
-											{ onclick: () => m.route.set('/teach/new') },
-											t('teacher.create_topic'),
-										),
-									])
-								: m(
-										'.stack',
-										topics.map((topic) =>
-											m(
-												'.teacher__topic-option',
-												{
-													key: topic.topicPackageId,
-													class:
-														selectedTopicId === topic.topicPackageId
-															? 'teacher__topic-option--selected'
-															: undefined,
-													onclick: () => {
-														selectedTopicId = topic.topicPackageId;
-													},
-													role: 'button',
-													tabindex: 0,
-												},
-												[
-													m('strong', topic.title),
-													m('.editor__row', [
-														m(
-															'span.values__score',
-															topic.status === AgoraTopicStatus.ready
-																? t('editor.ready')
-																: t('editor.draft'),
-														),
-														m(
-															'button.btn.btn--ghost',
-															{
-																onclick: (event: Event) => {
-																	event.stopPropagation();
-																	m.route.set(`/teach/topic/${topic.topicPackageId}`);
-																},
-															},
-															m(Icon, { name: 'edit', size: 16 }),
-														),
-													]),
-												],
-											),
-										),
-									),
-					]),
-
-					m('.stack', [
-						m('p.teacher__section-title', t('teacher.device_mode')),
-						m('.teacher__mode-row', [
-							m(
-								'button.btn',
-								{
-									class:
-										deviceMode === AgoraDeviceMode.individual ? 'btn--primary' : 'btn--secondary',
-									disabled: !selectedTopicId,
-									onclick: () => {
-										if (!selectedTopicId) return;
-										deviceMode = AgoraDeviceMode.individual;
-									},
-								},
-								t('teacher.individual'),
-							),
-							m(
-								'button.btn',
-								{
-									class: deviceMode === AgoraDeviceMode.team ? 'btn--primary' : 'btn--secondary',
-									disabled: !selectedTopicId,
-									onclick: () => {
-										if (!selectedTopicId) return;
-										deviceMode = AgoraDeviceMode.team;
-									},
-								},
-								t('teacher.team'),
-							),
-						]),
-					]),
+					m('h2', t('teacher.title')),
 
 					m(
 						'button.btn.btn--primary.btn--full.btn--lg',
-						{ disabled: !selectedTopicId || creating, onclick: () => void handleCreate() },
-						creating ? t('teacher.creating') : t('teacher.create'),
+						{ onclick: () => m.route.set('/teach/start') },
+						t('dashboard.start_game'),
 					),
+					// The quick game is the door most non-teachers are looking for —
+					// a room deciding one thing, no scenario. Behind the scenario
+					// switch on the next screen it was invisible; here it is a door.
+					m(
+						'button.btn.btn--secondary.btn--full',
+						{ onclick: () => m.route.set('/teach/start?mode=quick') },
+						t('dashboard.start_quick'),
+					),
+
+					!loaded
+						? m('.spinner')
+						: [
+								classes.length > 0
+									? m('.stack', [
+											m('p.teacher__section-title', t('dashboard.my_classes')),
+											m('.dashboard__class-grid', classes.map(classCard)),
+										])
+									: null,
+
+								sessions.length > 0
+									? m('.stack', [
+											m('p.teacher__section-title', t('dashboard.my_games')),
+											m('.stack', sessions.map(sessionRow)),
+										])
+									: null,
+
+								m('.stack', [
+									m('p.teacher__section-title', t('dashboard.scenarios')),
+									topics.length === 0
+										? m('p.home-explanation', t('teacher.no_topics'))
+										: m(
+												'.stack',
+												topics.map((topic) =>
+													m(
+														'.teacher__topic-option',
+														{
+															key: topic.topicPackageId,
+															onclick: () => m.route.set(`/teach/topic/${topic.topicPackageId}`),
+															role: 'button',
+															tabindex: 0,
+														},
+														[
+															m('strong', topic.title),
+															m('.editor__row', [
+																m(
+																	'span.values__score',
+																	topic.status === AgoraTopicStatus.ready
+																		? t('editor.ready')
+																		: t('editor.draft'),
+																),
+																m(Icon, { name: 'edit', size: 16 }),
+															]),
+														],
+													),
+												),
+											),
+									m(
+										'button.btn.btn--secondary.btn--full',
+										{ onclick: () => m.route.set('/teach/new') },
+										t('teacher.create_topic'),
+									),
+								]),
+							],
 				]),
 			]);
 		},

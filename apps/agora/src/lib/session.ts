@@ -9,14 +9,18 @@ import {
 	AgoraStage,
 	AgoraSessionMode,
 	AgoraCampCensus,
+	AgoraStagePlanItem,
+	AgoraStageState,
 	ResolvedSessionFlow,
 	consensusPoolFrom,
 	createAgoraParticipantId,
+	currentPlanIndex,
 	resolveSessionFlow,
+	resolveStagePlan,
 	tallyAgoraCamps,
 } from '@freedi/shared-types';
 import { AGORA_THEME_COLOR, ODYSSEY_THEME, ODYSSEY_THEME_COLOR } from './theme';
-import { parse } from 'valibot';
+import { parse, safeParse } from 'valibot';
 
 export interface SessionState {
 	session: AgoraSession | null;
@@ -71,6 +75,45 @@ export function getSessionFlow(): ResolvedSessionFlow {
 	}
 
 	return flowCache;
+}
+
+/**
+ * The session's stage plan, resolved — an explicit plan or the legacy order
+ * — with the position the room is at. Memoised on session identity like the
+ * flow: the plan is asked for by the navigator, the router, the transition
+ * and the teacher rail on every redraw.
+ */
+let planCacheKey: AgoraSession | null = null;
+let planCache: AgoraStagePlanItem[] = [];
+let planIndexCache = 0;
+
+function refreshPlanCache(): void {
+	if (state.session === planCacheKey) return;
+	planCacheKey = state.session;
+	planCache = state.session ? resolveStagePlan(state.session) : [];
+	planIndexCache = state.session ? currentPlanIndex(state.session) : 0;
+}
+
+export function getStagePlan(): readonly AgoraStagePlanItem[] {
+	refreshPlanCache();
+
+	return planCache;
+}
+
+export function getCurrentPlanIndex(): number {
+	refreshPlanCache();
+
+	return planIndexCache;
+}
+
+export function getCurrentPlanItem(): AgoraStagePlanItem | null {
+	refreshPlanCache();
+
+	return planCache[planIndexCache] ?? null;
+}
+
+export function getStageState(): Readonly<AgoraStageState> {
+	return state.session?.stageState ?? {};
 }
 
 /**
@@ -147,13 +190,20 @@ export function listenToSession(sessionId: string, userId: string): void {
 
 				return;
 			}
-			try {
-				state.session = parse(AgoraSessionSchema, snapshot.data());
+			const parsed = safeParse(AgoraSessionSchema, snapshot.data());
+			if (parsed.success) {
+				state.session = parsed.output;
+				state.error = null;
 				applySessionTheme(state.session);
 				state.loading = false;
-			} catch (error) {
-				console.error('[Session] Invalid session doc:', error);
-				state.error = 'invalid';
+			} else {
+				// A stage this bundle has never heard of is not a broken document
+				// — it is a newer server and an older tab. Adding a stage kind to
+				// the enum used to brick every open student tab the moment the
+				// teacher opened it; the tab now says "refresh" instead.
+				const unknownStage = parsed.issues.some((issue) => issue.path?.[0]?.key === 'stage');
+				console.error('[Session] Invalid session doc:', parsed.issues);
+				state.error = unknownStage ? 'outdated' : 'invalid';
 				state.loading = false;
 			}
 			m.redraw();

@@ -4,6 +4,7 @@ import { db } from '../db';
 import {
 	Collections,
 	AgoraCamp,
+	AgoraClassMember,
 	AgoraDeviceMode,
 	AgoraParticipant,
 	AgoraSession,
@@ -15,6 +16,7 @@ import {
 	Evaluation,
 	AGORA_CIVIC_CENTER_POSITION,
 	AGORA_SESSION,
+	createAgoraClassMemberId,
 	createAgoraParticipantId,
 	deriveCamp,
 	deriveCivicCampPositionFromIsland,
@@ -138,7 +140,12 @@ async function readStanceBaseline(
 interface Request {
 	code: string;
 	teamMemberCount?: number;
+	/** `named` sessions only: the name this person goes by */
+	displayName?: string;
 }
+
+/** Long enough for a real name, short enough to sit on a card */
+const MAX_DISPLAY_NAME = 40;
 
 interface Result {
 	sessionId: string;
@@ -159,7 +166,7 @@ export const agoraJoinSession = onCall(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const { code, teamMemberCount } = request.data ?? {};
+		const { code, teamMemberCount, displayName } = request.data ?? {};
 		if (!code || typeof code !== 'string') {
 			throw new HttpsError('invalid-argument', 'code is required');
 		}
@@ -221,6 +228,27 @@ export const agoraJoinSession = onCall(
 				if (size < AGORA_SESSION.TEAM_SIZE_MIN || size > session.teamSizeMax) {
 					throw new HttpsError('invalid-argument', 'teamMemberCount out of range');
 				}
+			}
+
+			// A class game admits roster members only. The client catches this
+			// specific code, runs the class-join flow (claim or reclaim via
+			// agoraJoinClass), and retries — a guest game (no classId) never
+			// reaches this branch. The roster alias becomes the display name: a
+			// stable pseudonym the teacher recognises across games, instead of a
+			// fresh whimsical name each session.
+			let rosterMember: AgoraClassMember | undefined;
+			if (session.classId) {
+				const memberSnap = await db
+					.collection(Collections.agoraClassMembers)
+					.where('classId', '==', session.classId)
+					.where('currentUid', '==', uid)
+					.where('status', '==', 'active')
+					.limit(1)
+					.get();
+				if (memberSnap.empty) {
+					throw new HttpsError('failed-precondition', 'class-membership-required');
+				}
+				rosterMember = memberSnap.docs[0].data() as AgoraClassMember;
 			}
 
 			const topicSnap = await db
@@ -285,13 +313,22 @@ export const agoraJoinSession = onCall(
 					return (freshParticipant.data() as AgoraParticipant).anonName;
 				}
 				const count = (freshSession.data() as AgoraSession | undefined)?.participantCount ?? 0;
-				const name = generateAnonName(language, count);
+				// In a named room the typed name IS the card name; a roster alias
+				// still wins (the teacher knows students by it), and an empty
+				// field falls back to a pseudonym rather than a blank card.
+				const typedName =
+					session.identity === 'named' && typeof displayName === 'string'
+						? displayName.trim().slice(0, MAX_DISPLAY_NAME)
+						: '';
+				const name = rosterMember?.alias ?? (typedName || generateAnonName(language, count));
 
 				const participant: AgoraParticipant = {
 					participantId,
 					sessionId: session.sessionId,
 					userId: uid,
 					anonName: name,
+					...(typedName && !rosterMember ? { displayName: typedName } : {}),
+					...(rosterMember ? { memberId: rosterMember.memberId } : {}),
 					...(session.deviceMode === AgoraDeviceMode.team
 						? { teamMemberCount: teamMemberCount ?? 1 }
 						: {}),
@@ -314,6 +351,15 @@ export const agoraJoinSession = onCall(
 
 				return name;
 			});
+
+			// The roster's "last active" column — fire-and-forget: losing it costs
+			// a timestamp, never a seat.
+			if (rosterMember) {
+				db.collection(Collections.agoraClassMembers)
+					.doc(createAgoraClassMemberId(rosterMember.classId, rosterMember.memberId))
+					.update({ lastActive: now, lastUpdate: now })
+					.catch(() => undefined);
+			}
 
 			return { sessionId: session.sessionId, participantId, anonName };
 		} catch (error) {

@@ -18,9 +18,13 @@ service cloud.firestore {
     // org-admin authority on questions is materialized as admin
     // subscriptions by the organization callables instead.
     function isSystemAdminUser() {
+      // .get with a default, not .systemAdmin: reading an absent property is an
+      // ERROR in rules, not undefined — and an error poisons any || this helper
+      // sits in, denying non-admins reads their other condition entitled them to
+      // (first seen: a teacher listing their agora classes).
       return request.auth != null &&
              exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
+             get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.get('systemAdmin', false) == true;
     }
     function isOrgMember(orgId) {
       let memberId = cleanPath(string(orgId)) + '--' + string(request.auth.uid);
@@ -80,9 +84,9 @@ service cloud.firestore {
       allow create, delete: if false;
       // classScore and participantCount are server-owned: computeSessionResults
       // writes the first (including an LLM pass), agoraJoinSession increments
-      // the second. The teacher controls live stage/round fields, not the
-      // scoreboard — otherwise "the class score" is whatever the teacher's
-      // browser last said it was.
+      // the second. The teacher's browser writes only votingSettings and
+      // lastUpdate; stage moves go through the advance callable — otherwise
+      // "the class score" is whatever the teacher's browser last said it was.
       allow update: if isAuthenticated() &&
                        resource.data.teacherId == request.auth.uid &&
                        request.resource.data.teacherId == resource.data.teacherId &&
@@ -105,8 +109,40 @@ service cloud.firestore {
                        // score it is being measured by — from the browser.
                        request.resource.data.get('flow', {}) ==
                          resource.data.get('flow', {}) &&
+                       // The stage plan, the pointer into it, its runtime
+                       // state and the room's identity mode are written by
+                       // callables (agoraCreateSession, agoraUpdateStagePlan,
+                       // advanceSession). The pointer used to be teacher-
+                       // writable and nothing wrote it from a browser; now
+                       // that `stage` and `stageIndex` must agree, a stale tab
+                       // writing one without the other would desync the room.
+                       request.resource.data.get('stage', '') ==
+                         resource.data.get('stage', '') &&
+                       request.resource.data.get('stageIndex', -1) ==
+                         resource.data.get('stageIndex', -1) &&
+                       request.resource.data.get('stagePlan', []) ==
+                         resource.data.get('stagePlan', []) &&
+                       request.resource.data.get('stageState', {}) ==
+                         resource.data.get('stageState', {}) &&
+                       request.resource.data.get('identity', '') ==
+                         resource.data.get('identity', '') &&
+                       request.resource.data.get('agreement', {}) ==
+                         resource.data.get('agreement', {}) &&
+                       request.resource.data.get('roundNumber', -1) ==
+                         resource.data.get('roundNumber', -1) &&
                        request.resource.data.get('convergence', {}) ==
-                         resource.data.get('convergence', {});
+                         resource.data.get('convergence', {}) &&
+                       // The class link and the aggregation stamp are set by
+                       // callables/triggers. A teacher client that could re-home
+                       // a session would move its scores into another class's
+                       // history; one that could clear aggregatedAt would count
+                       // the same game twice.
+                       request.resource.data.get('classId', '') ==
+                         resource.data.get('classId', '') &&
+                       request.resource.data.get('schoolId', '') ==
+                         resource.data.get('schoolId', '') &&
+                       request.resource.data.get('aggregatedAt', -1) ==
+                         resource.data.get('aggregatedAt', -1);
     }
 
     // Participants: created via callable only (anon names are server-issued).
@@ -145,7 +181,12 @@ service cloud.firestore {
                        request.resource.data.get('stanceBaseline', {}) ==
                          resource.data.get('stanceBaseline', {}) &&
                        request.resource.data.get('reratedAt', -1) ==
-                         resource.data.get('reratedAt', -1);
+                         resource.data.get('reratedAt', -1) &&
+                       // The roster identity behind this participant is bound by
+                       // agoraJoinSession. A client that could edit it would be
+                       // crediting someone else's career with this game's points.
+                       request.resource.data.get('memberId', '') ==
+                         resource.data.get('memberId', '');
     }
 
     // Proposal scores (bridging/plausibility): server-computed only.
@@ -176,6 +217,80 @@ service cloud.firestore {
       allow create: if isAuthenticated() &&
                        request.resource.data.userId == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    // === Agora classroom hierarchy (schools → classes → rosters) ===
+    // ALL writes go through callables (agoraAdminManageSchool,
+    // agoraAdminOpenClass, agoraJoinClass, agoraTeacherRoster) — no client
+    // ever writes these collections directly.
+
+    // Is the caller one of this class's assigned teachers? One get() per
+    // check, same price the org collections pay for isSystemAdminUser().
+    function isAgoraClassTeacher(classId) {
+      let classPath = /databases/$(database)/documents/agoraClasses/$(classId);
+      return request.auth != null && exists(classPath) &&
+             request.auth.uid in get(classPath).data.teacherIds;
+    }
+
+    // Schools: any signed-in user may resolve a school's name (teachers show
+    // it as a breadcrumb); only sys-admins enumerate them.
+    match /agoraSchools/{schoolId} {
+      allow get: if isAuthenticated();
+      allow list: if isSystemAdminUser();
+      allow write: if false;
+    }
+
+    // Classes: visible to their teachers and to sys-admins. The expression
+    // also serves `list` — a teacher's array-contains query on teacherIds and
+    // a sys-admin's schoolId query both satisfy it per-document.
+    match /agoraClasses/{classId} {
+      // The teacher clause reads the `teacherMap` {uid: true} index with `in`
+      // — a key check that is false, never an ERROR, for docs that lack the
+      // key. Both matter: the SDK's listen path evaluates this against real
+      // documents (where property access on an absent uid throws and poisons
+      // the whole ||), while runQuery proves it from the client's
+      // `teacherMap.<uid> == true` equality constraint. Only the callables
+      // write the map, and they only ever write `true`.
+      allow read: if (isAuthenticated() &&
+                      request.auth.uid in resource.data.get('teacherMap', {})) ||
+                     isSystemAdminUser();
+      allow write: if false;
+    }
+
+    // Roster members: teacher-of-class and sys-admin only, plus a student's
+    // own row (currentUid). Students must NEVER list a roster — aliases are
+    // class-scoped pseudonyms, and the reclaim picker goes through the
+    // agoraJoinClass callable, not through Firestore reads.
+    match /agoraClassMembers/{memberDocId} {
+      allow get: if isSystemAdminUser() ||
+                    (isAuthenticated() && resource.data.currentUid == request.auth.uid) ||
+                    isAgoraClassTeacher(resource.data.classId);
+      allow list: if isSystemAdminUser() ||
+                     isAgoraClassTeacher(resource.data.classId);
+      allow write: if false;
+    }
+
+    // Career aggregates: what the teacher console's roster table and player
+    // drilldown read. Teacher/admin-only by decision — students do not see
+    // career totals (their own included) in this phase.
+    match /agoraStudentAggregates/{memberId} {
+      allow read: if isSystemAdminUser() ||
+                     isAgoraClassTeacher(resource.data.classId);
+      allow write: if false;
+    }
+
+    // Class aggregates: the advancement summary both consoles print.
+    match /agoraClassAggregates/{classId} {
+      allow read: if isSystemAdminUser() ||
+                     isAgoraClassTeacher(resource.data.classId);
+      allow write: if false;
+    }
+
+    // Sys-admin dashboard period counters (day/month/year docs + unique-class
+    // markers). Trigger-written, admin-read.
+    match /agoraStats/{statDocId} {
+      allow read: if isSystemAdminUser();
+      allow write: if false;
     }
 
     // === Israeli Odyssey pre-election civic-voice game ===

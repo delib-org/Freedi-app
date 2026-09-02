@@ -1,7 +1,7 @@
 import { randomInt } from 'crypto';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { db } from '../db';
-import { Collections, AGORA_SESSION } from '@freedi/shared-types';
+import { Collections, AGORA_SESSION, AGORA_CLASSROOM } from '@freedi/shared-types';
 
 const MAX_ATTEMPTS = 10;
 
@@ -40,4 +40,33 @@ export async function generateUniqueCode(): Promise<string> {
 	}
 
 	throw new HttpsError('resource-exhausted', 'Could not generate a unique join code');
+}
+
+/**
+ * Mint a persistent class code no other class is using.
+ *
+ * Deliberately ONE digit longer than a session code, so the join screen can
+ * tell "join today's game" from "join your class" by length alone. Unlike
+ * session codes these live for years and are never recycled, so the collision
+ * check runs against every class ever opened, not a time window.
+ */
+export async function generateUniqueClassCode(): Promise<string> {
+	const { JOIN_CODE_ALPHABET } = AGORA_SESSION;
+
+	for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+		let code = '';
+		for (let index = 0; index < AGORA_CLASSROOM.CLASS_CODE_LENGTH; index++) {
+			code += JOIN_CODE_ALPHABET[randomInt(JOIN_CODE_ALPHABET.length)];
+		}
+
+		const existing = await db
+			.collection(Collections.agoraClasses)
+			.where('classCode', '==', code)
+			.limit(1)
+			.get();
+
+		if (existing.empty) return code;
+	}
+
+	throw new HttpsError('resource-exhausted', 'Could not generate a unique class code');
 }

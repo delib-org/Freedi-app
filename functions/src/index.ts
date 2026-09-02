@@ -1240,6 +1240,7 @@ export {
 	agoraRerateStances,
 	agoraJoinSession,
 	agoraAdvanceStage,
+	agoraUpdateStagePlan,
 	agoraGradeValueIdentification,
 	agoraWritingAssistant,
 	agoraSetRound,
@@ -1248,8 +1249,14 @@ export {
 	agoraEstimateReception,
 	agoraGenerateTopicPackage,
 	agoraSessionSweep,
+	agoraAdminManageSchool,
+	agoraAdminOpenClass,
+	agoraJoinClass,
+	agoraTeacherRoster,
+	agoraTeacherConsole,
 	onAgoraEvaluationWritten,
 	onAgoraProposalWritten,
+	onAgoraSessionFinished,
 } from './agora';
 
 // Israeli Odyssey — the voyage that opens onto the civic Agora deliberations
