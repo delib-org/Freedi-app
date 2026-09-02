@@ -16,6 +16,13 @@
 	gap: var(--space-sm);
 }
 
+.main {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xl);
+	min-inline-size: 0;
+}
+
 .content {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;

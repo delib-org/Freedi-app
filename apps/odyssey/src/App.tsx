@@ -9,6 +9,9 @@ import MapPage from './pages/MapPage';
 import Voyage from './pages/Voyage';
 import Summary from './pages/Summary';
 import Admin from './pages/Admin';
+import Privacy from './pages/Privacy';
+import Parties from './pages/Parties';
+import Elders from './pages/Elders';
 
 /** Routes that need a signed-in user (everything except the intro). */
 function Protected({ children }: { children: ReactElement }) {
@@ -36,11 +39,22 @@ export default function App() {
 				<div className="vignette" />
 				<Routes>
 					<Route path="/" element={<Intro />} />
+					{/* Deliberately outside Protected: the whole point is to be readable
+					    BEFORE deciding whether to hand over an account. */}
+					<Route path="/privacy" element={<Privacy />} />
 					<Route
 						path="/compass"
 						element={
 							<Protected>
 								<Compass />
+							</Protected>
+						}
+					/>
+					<Route
+						path="/elders"
+						element={
+							<Protected>
+								<Elders />
 							</Protected>
 						}
 					/>
@@ -57,6 +71,14 @@ export default function App() {
 						element={
 							<Protected>
 								<Voyage />
+							</Protected>
+						}
+					/>
+					<Route
+						path="/parties"
+						element={
+							<Protected>
+								<Parties />
 							</Protected>
 						}
 					/>

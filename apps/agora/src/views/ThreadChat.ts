@@ -12,6 +12,8 @@ import {
 	submitThreadMessage,
 } from '../lib/proposals';
 import { celebrate } from '../lib/celebration';
+import { SLOW_AFTER_MS } from '../lib/confirmedWrite';
+import { stalledBanner } from '../components/StalledBanner';
 import { diffWords } from '../lib/textDiff';
 import { markThreadSeen } from '../lib/seenState';
 import { RateScale, rateOptionFor } from '../components/RateScale';
@@ -168,6 +170,10 @@ export function threadEntry(options: ThreadEntryOptions): m.Children {
 export function ThreadChat(): m.Component<ThreadChatAttrs> {
 	let draft = '';
 	let busy = false;
+	/** The last send rejected — the words are still in the box, say so */
+	let sendFailed = false;
+	/** Un-pins `busy` if a send is still in the air when the stall clock fires */
+	let stallTimer: number | undefined;
 	/** Message count the scroller last saw — a new message pins it to the bottom */
 	let seenCount = -1;
 	let listEl: HTMLElement | null = null;
@@ -900,6 +906,10 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							? m('p.chat-page__empty', t('delib.chat_empty'))
 							: listChildren,
 					),
+					// A send still in the air after the stall clock — the words are
+					// safe in the box below, and this line says why nothing moved
+					stalledBanner(),
+					sendFailed ? m('p.join__error', { role: 'alert' }, t('delib.send_failed')) : null,
 					m('.chat-page__composer', [
 						m('textarea.text-input.chat-page__input', {
 							value: draft,
@@ -918,17 +928,36 @@ export function ThreadChat(): m.Component<ThreadChatAttrs> {
 							{
 								disabled: busy || draft.trim().length < AGORA_LIMITS.MIN_ANSWER_LENGTH,
 								onclick: () => {
+									// The draft is NOT cleared here. Firestore queues a write
+									// on a wedged connection and never settles the promise, so
+									// clearing first meant the student's words vanished into a
+									// send that may never land — and `busy` pinned the composer
+									// shut on top of it. The box empties only when the server
+									// confirms; a stall un-pins the button so nothing is lost
+									// and nothing is locked.
 									const text = draft.trim();
 									busy = true;
-									draft = '';
-									if (kind === AgoraMessageKind.suggestion) {
-										vnode.attrs.onSuggestionSent?.(proposal.statementId);
-									}
+									sendFailed = false;
+									window.clearTimeout(stallTimer);
+									stallTimer = window.setTimeout(() => {
+										busy = false;
+										m.redraw();
+									}, SLOW_AFTER_MS);
 									submitThreadMessage(session, proposal, anonName, text, kind, helperUid)
+										.then(() => {
+											// Confirmed — now the words may leave the box (unless
+											// the student already started typing something new)
+											if (draft.trim() === text) draft = '';
+											if (kind === AgoraMessageKind.suggestion) {
+												vnode.attrs.onSuggestionSent?.(proposal.statementId);
+											}
+										})
 										.catch((error: unknown) => {
+											sendFailed = true;
 											console.error('[Chat] Thread message failed:', error);
 										})
 										.finally(() => {
+											window.clearTimeout(stallTimer);
 											busy = false;
 											// The message I just sent is the newest thing here —
 											// follow it down rather than leaving it below the fold

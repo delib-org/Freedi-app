@@ -2,7 +2,7 @@ import { FC } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import { Statement } from '@freedi/shared-types';
 import UrlParser from '../edit/URLParse';
-import { ParagraphsDisplay } from '@/view/components/richTextEditor';
+import ParagraphsDisplay from '@/view/components/richTextEditor/ParagraphsDisplay';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import { containsRichHtml } from '@/utils/richHtml';
 import styles from './Text.module.scss';

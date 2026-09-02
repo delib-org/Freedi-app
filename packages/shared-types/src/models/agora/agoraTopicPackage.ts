@@ -5,9 +5,10 @@ import {
 	boolean,
 	optional,
 	array,
-	tuple,
+	tupleWithRest,
 	record,
 	enum_,
+	picklist,
 	InferOutput,
 } from 'valibot';
 import { AgoraSceneKind, AgoraTopicStatus } from './agoraEnums';
@@ -37,6 +38,13 @@ export const AgoraCharacterSchema = object({
 	needs: optional(array(string())),
 	/** The values underlying the arguments — used as the grading answer key */
 	values: array(AgoraValueSchema),
+	/**
+	 * An Odyssey Elder persona (AI character inspired by a historical leader)
+	 * appended to a civic package. When any character carries this flag, the
+	 * ask-the-characters panel shows only the elders — the two stance "voices"
+	 * that wear the schema for the positioning scale stay off the panel.
+	 */
+	isElder: optional(boolean()),
 });
 
 export type AgoraCharacter = InferOutput<typeof AgoraCharacterSchema>;
@@ -120,9 +128,21 @@ export const AgoraValueAnswerKeySchema = object({
 
 export type AgoraValueAnswerKey = InferOutput<typeof AgoraValueAnswerKeySchema>;
 
+/**
+ * How a package came to be. A `scenario` is the authored time-tunnel package
+ * (characters, scenes, the era's health metrics). A `quick` package is the
+ * minimal shell `agoraCreateSession` writes for a game the admin started by
+ * typing a main question: two placeholder characters to satisfy the tuple,
+ * no scenes, nothing to simulate. Absent means `scenario`.
+ */
+export const AgoraTopicKindSchema = picklist(['scenario', 'quick']);
+
+export type AgoraTopicKind = InferOutput<typeof AgoraTopicKindSchema>;
+
 export const AgoraTopicPackageSchema = object({
 	topicPackageId: string(),
 	creatorId: string(),
+	kind: optional(AgoraTopicKindSchema),
 	/** The teacher's original topic prompt, e.g. "המהפכה הצרפתית" */
 	topic: string(),
 	/** BCP-47 language code the package content is written in */
@@ -131,7 +151,12 @@ export const AgoraTopicPackageSchema = object({
 	title: string(),
 	/** The "save the era" mission framing shown to students */
 	framingText: string(),
-	characters: tuple([AgoraCharacterSchema, AgoraCharacterSchema]),
+	/**
+	 * The first two are the era's two sides (the positioning scale's voices);
+	 * any further entries are appended personas — today the Odyssey elders,
+	 * flagged `isElder`.
+	 */
+	characters: tupleWithRest([AgoraCharacterSchema, AgoraCharacterSchema], AgoraCharacterSchema),
 	positioningScale: AgoraPositioningScaleSchema,
 	challengeQuestion: string(),
 	valueAnswerKey: array(AgoraValueAnswerKeySchema),

@@ -20,10 +20,22 @@ import type { ActivityLink, ActivityUrlResolver } from './activityUrls';
 /**
  * The universal run-state vocabulary shown to facilitators.
  *
- * `queued` stays in the union for engines that will one day declare a
- * not-yet-started state explicitly; no engine writes it today (see toRunState).
+ * Questions never report `queued` (an undefined `questionStatus` is live, see
+ * toRunState); Sign documents do — a hidden document is in admin review and
+ * not yet open for comment (see toDocumentRunState).
  */
 export type ActivityRunState = 'queued' | 'open' | 'frozen' | 'closed';
+
+/**
+ * The Sign app's per-document settings, as far as the run state is concerned.
+ * A document Statement carries them as an untyped `signSettings` map (the
+ * Statement schema does not declare it), so they are read defensively.
+ */
+export interface SignDocumentRunSettings {
+	isHidden?: boolean;
+	isFrozen?: boolean;
+	enableSuggestions?: boolean;
+}
 
 export interface DerivedActivity {
 	statementId: string;
@@ -60,13 +72,58 @@ function toRunState(status: QuestionStatus | undefined): ActivityRunState {
 	}
 }
 
+function readBoolean(map: Record<string, unknown>, key: string): boolean | undefined {
+	const value = map[key];
+
+	return typeof value === 'boolean' ? value : undefined;
+}
+
+/** Typed accessor over the untyped `signSettings` map of a Sign document. */
+export function getSignDocumentSettings(statement: Statement): SignDocumentRunSettings {
+	const raw = (statement as unknown as { signSettings?: unknown }).signSettings;
+	if (typeof raw !== 'object' || raw === null) return {};
+	const map = raw as Record<string, unknown>;
+
+	return {
+		isHidden: readBoolean(map, 'isHidden'),
+		isFrozen: readBoolean(map, 'isFrozen'),
+		enableSuggestions: readBoolean(map, 'enableSuggestions'),
+	};
+}
+
+/**
+ * A Sign document's run state comes from `signSettings`, not `questionStatus`:
+ *   hidden (admin-only, in review)      → queued
+ *   frozen                              → frozen
+ *   suggestions disabled (and visible)  → closed
+ *   otherwise                           → open (for comment)
+ */
+export function toDocumentRunState(settings: SignDocumentRunSettings): ActivityRunState {
+	if (settings.isHidden === true) return 'queued';
+	if (settings.isFrozen === true) return 'frozen';
+	if (settings.enableSuggestions === false) return 'closed';
+
+	return 'open';
+}
+
+function deriveRunState(
+	statement: Statement,
+	type: ActivityType,
+	def: ActivityTypeDef,
+): ActivityRunState {
+	if (type === ActivityType.signDocument) {
+		return toDocumentRunState(getSignDocumentSettings(statement));
+	}
+
+	return def.statusSource === 'questionStatus'
+		? toRunState(statement.statementSettings?.questionStatus)
+		: 'open';
+}
+
 function toActivity(statement: Statement, resolver: ActivityUrlResolver): DerivedActivity {
 	const type = getActivityType(statement);
 	const def = getActivityDef(type);
-	const runState =
-		def.statusSource === 'questionStatus'
-			? toRunState(statement.statementSettings?.questionStatus)
-			: 'open';
+	const runState = deriveRunState(statement, type, def);
 
 	const surveyId =
 		type === ActivityType.massConsensus
@@ -85,8 +142,8 @@ function toActivity(statement: Statement, resolver: ActivityUrlResolver): Derive
 		participant: surveyLinks
 			? surveyLinks.participant
 			: def.hasParticipantUrl
-			? resolver.getParticipantLink(type, statement.statementId)
-			: null,
+				? resolver.getParticipantLink(type, statement.statementId)
+				: null,
 		admin: surveyLinks
 			? surveyLinks.admin
 			: def.hasAdminUrl

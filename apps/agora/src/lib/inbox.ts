@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { maybeSuggestInstall } from './install';
 
 /**
  * The square's post box.
@@ -52,6 +53,25 @@ function persist(): void {
 	}
 }
 
+/**
+ * Mirror the unread count onto the INSTALLED app's icon. The Badging API is
+ * a no-op in a plain tab, so this costs nothing there; on a home-screen
+ * install the icon carries the number until the next sitting clears it.
+ */
+function syncAppBadge(): void {
+	const nav = navigator as Navigator & {
+		setAppBadge?: (count: number) => Promise<void>;
+		clearAppBadge?: () => Promise<void>;
+	};
+	const count = inboxUnreadCount();
+	try {
+		if (count > 0) void nav.setAppBadge?.(count);
+		else void nav.clearAppBadge?.();
+	} catch {
+		// Badging unsupported or blocked — the in-app badge still counts
+	}
+}
+
 /** Bind the box to a session and restore what it already holds */
 export function initInbox(sessionId: string): void {
 	const key = `agora_${sessionId}_inbox`;
@@ -63,6 +83,7 @@ export function initInbox(sessionId: string): void {
 	} catch {
 		items = [];
 	}
+	syncAppBadge();
 }
 
 /**
@@ -75,6 +96,10 @@ export function addInboxItem(item: Omit<InboxItem, 'read' | 'at'> & { at?: numbe
 	items.unshift({ ...item, at: item.at ?? Date.now(), read: false });
 	if (items.length > MAX_ITEMS) items.length = MAX_ITEMS;
 	persist();
+	syncAppBadge();
+	// News just landed FOR this player — the moment the home-screen icon's
+	// badge is worth having is the moment to suggest the home screen
+	maybeSuggestInstall();
 }
 
 /** Newest first — the order a post box is read in */
@@ -91,6 +116,7 @@ export function markInboxRead(id: string): void {
 	if (!item || item.read) return;
 	item.read = true;
 	persist();
+	syncAppBadge();
 	m.redraw();
 }
 
@@ -109,6 +135,7 @@ export function markAllInboxRead(): void {
 	}
 	if (changed) {
 		persist();
+		syncAppBadge();
 		m.redraw();
 	}
 }
@@ -117,5 +144,6 @@ export function markAllInboxRead(): void {
 export function clearInbox(): void {
 	items = [];
 	persist();
+	syncAppBadge();
 	m.redraw();
 }

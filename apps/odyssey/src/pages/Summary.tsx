@@ -13,6 +13,8 @@ import { islandArtUrl } from '../lib/islandArt';
 import { loadGameEvaluations } from '../lib/evaluations';
 import { enterIslandDeliberation, getGateState } from '../lib/agoraGate';
 import { stageBus } from '../lib/stageBus';
+import { invitedElders, elderStageId } from '../lib/elders';
+import DigestSettings from '../components/DigestSettings';
 
 /**
  * תוצר סוף המסע: not a "which party are you" quiz result — a personal
@@ -29,17 +31,24 @@ export default function Summary() {
 	const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
 	/** The gate being walked through — the token round trip is not instant */
 	const [enteringIslandId, setEnteringIslandId] = useState('');
+	const [digestOpen, setDigestOpen] = useState(false);
 
 	const gameId = content?.game.gameId;
 	const uid = user?.uid;
 	useEffect(() => {
 		if (!gameId || !uid) return;
 		let cancelled = false;
-		void loadGameEvaluations(gameId).then((loaded: Evaluation[]) => {
-			if (cancelled) return;
-			setEvaluations(loaded);
-			setParticipants(distanceEngine.participantDistances({ uid, evaluations: loaded }));
-		});
+		loadGameEvaluations(gameId)
+			.then((loaded: Evaluation[]) => {
+				if (cancelled) return;
+				setEvaluations(loaded);
+				setParticipants(distanceEngine.participantDistances({ uid, evaluations: loaded }));
+			})
+			.catch((error: unknown) => {
+				// The page still renders (journal, gates) — but an empty ships list
+				// caused by a failed read must not fail silently.
+				console.error('[Odyssey] loading game evaluations failed:', error, { gameId, uid });
+			});
 
 		return () => {
 			cancelled = true;
@@ -54,6 +63,11 @@ export default function Summary() {
 		[content],
 	);
 
+	const elders = useMemo(
+		() => invitedElders(content?.game, journey?.selectedElderIds),
+		[content, journey?.selectedElderIds],
+	);
+
 	const partyDistances = useMemo(
 		() =>
 			content
@@ -62,11 +76,17 @@ export default function Summary() {
 		[content, attitudes, parties],
 	);
 
+	const elderDistances = useMemo(
+		() =>
+			content ? distanceEngine.elderDistances({ attitudes, islands: content.islands, elders }) : [],
+		[content, attitudes, elders],
+	);
+
 	const opinionMap = useMemo(() => {
 		if (!uid || !content || evaluations.length === 0) return null;
 
-		return buildOpinionMap({ uid, evaluations, islands: content.islands, parties });
-	}, [uid, content, evaluations, parties]);
+		return buildOpinionMap({ uid, evaluations, islands: content.islands, parties, elders });
+	}, [uid, content, evaluations, parties, elders]);
 
 	const sortedParticipants = useMemo(
 		() =>
@@ -93,6 +113,7 @@ export default function Summary() {
 			islands: content.islands.map((island) => ({
 				id: island.statementId,
 				title: island.title,
+				issue: island.issue,
 				posX: island.posX,
 				posY: island.posY,
 				imageUrl: island.imageUrl ?? islandArtUrl(island.sortOrder),
@@ -101,22 +122,36 @@ export default function Summary() {
 		});
 		stageBus.send({
 			type: 'setParties',
-			parties: parties.map((party) => ({
-				id: party.partyId,
-				name: party.name,
-				color: party.color,
-			})),
+			parties: [
+				...parties.map((party) => ({
+					id: party.partyId,
+					name: party.name,
+					color: party.color,
+				})),
+				...elders.map((elder) => ({
+					id: elderStageId(elder.elderId),
+					name: elder.name,
+					color: elder.color,
+					isElder: true,
+				})),
+			],
 		});
 		stageBus.send({
 			type: 'updateDistances',
-			distances: Object.fromEntries(partyDistances.map((entry) => [entry.partyId, entry.distance])),
+			distances: Object.fromEntries([
+				...partyDistances.map((entry): [string, number | null] => [entry.partyId, entry.distance]),
+				...elderDistances.map((entry): [string, number | null] => [
+					elderStageId(entry.elderId),
+					entry.distance,
+				]),
+			]),
 			animate: false,
 		});
 		if (!celebrated.current && visitedIslandIds.length > 0) {
 			celebrated.current = true;
 			stageBus.send({ type: 'celebrateArrival', islandCount: visitedIslandIds.length });
 		}
-	}, [mode, content, attitudes, parties, partyDistances]);
+	}, [mode, content, attitudes, parties, partyDistances, elders, elderDistances]);
 
 	useEffect(() => {
 		if (mode !== 'game') return;
@@ -146,6 +181,37 @@ export default function Summary() {
 	const visitedIslands = content.islands.filter((island) =>
 		island.stances.some((stance) => attitudes[stance.statementId] !== undefined),
 	);
+
+	/**
+	 * The captain's log, in island order.
+	 *
+	 * What a player writes on an island now lands in `depthAnswers`, keyed by
+	 * island — the two open boxes were merged into one. `logEntries` is where
+	 * the second box used to write, and journeys sailed before the merge still
+	 * carry entries there, so both are read and neither is shown twice.
+	 */
+	const logbook: Array<{ islandTitle: string; text: string }> = [
+		...content.islands
+			.filter((island) => journey.depthAnswers?.[island.statementId]?.trim())
+			.map((island) => ({
+				islandTitle: island.title,
+				text: journey.depthAnswers[island.statementId],
+			})),
+		...journey.logEntries
+			// A legacy entry with no island (`islandStatementId` is nullable) has
+			// nothing newer to be superseded by, so it always survives.
+			.filter((entry) => !journey.depthAnswers?.[entry.islandStatementId ?? '']?.trim())
+			.map((entry) => ({
+				islandTitle:
+					content.islands.find((island) => island.statementId === entry.islandStatementId)?.title ??
+					'',
+				text: entry.text,
+			})),
+	];
+
+	const unvisitedCount = content.islands.filter(
+		(island) => island.enabled && !visitedIslands.includes(island),
+	).length;
 
 	const agoraOrigin = text('agoraOrigin');
 
@@ -194,7 +260,10 @@ export default function Summary() {
 						<h2 className="text-xl font-bold text-[var(--cream)] mt-0 mb-3">🚢 הספינות באופק</h2>
 						<p className="text-[13px] opacity-75 mt-0 mb-4">
 							לכל ספינה: קרבה למסלול שלך על פי {visitedIslands.length} האיים שחקרת. אפשרות עגינה —
-							לא כרטיס הצבעה.
+							לא כרטיס הצבעה.{' '}
+							<Link className="underline" to="/parties">
+								איך נקבע מסלול של ספינה?
+							</Link>
 						</p>
 						<div className="flex flex-col gap-3">
 							{sortedParties.map(({ party, distance, sharedIslands }) => (
@@ -255,21 +324,15 @@ export default function Summary() {
 								{rankedValues.join(' ← ')}
 							</p>
 						) : null}
-						{journey.logEntries.length > 0 ? (
+						{logbook.length > 0 ? (
 							<div className="mt-3 border-t border-[rgba(232,185,88,0.35)] pt-3">
 								<p className="eyebrow m-0 mb-2">יומן הקברניט</p>
-								{journey.logEntries.map((entry, index) => {
-									const island = content.islands.find(
-										(candidate) => candidate.statementId === entry.islandStatementId,
-									);
-
-									return (
-										<p key={index} className="m-0 mb-1.5 text-[14px] opacity-90">
-											{island ? <strong>{island.title}: </strong> : null}
-											{entry.text}
-										</p>
-									);
-								})}
+								{logbook.map((entry, index) => (
+									<p key={index} className="m-0 mb-1.5 text-[14px] opacity-90">
+										{entry.islandTitle ? <strong>{entry.islandTitle}: </strong> : null}
+										{entry.text}
+									</p>
+								))}
 							</div>
 						) : null}
 					</section>
@@ -311,6 +374,37 @@ export default function Summary() {
 							יותר.
 						</p>
 						<OpinionMap result={opinionMap} />
+					</section>
+
+					{/*
+					  Before the way out, the way back.
+					  This used to be one dim line under the Agora gates, and a reader
+					  who had sailed a few islands came away thinking the voyage was
+					  over — she signed in again from scratch to reach the islands she
+					  had skipped. The map is still open; that has to be said before
+					  the exit, not after it.
+					*/}
+					<section className="panel fade-in text-center">
+						<h2 className="text-lg font-bold text-[var(--cream)] mt-0 mb-2">
+							🧭 המסע לא נגמר — יש עוד איים
+						</h2>
+						<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">
+							{unvisitedCount > 0
+								? `חקרתם ${visitedIslands.length} איים. עוד ${unvisitedCount} ממתינים לכם על המפה, ואפשר לחזור אליהם בכל רגע — מפת ההפלגה תתעדכן.`
+								: 'עברתם בכל האיים. אפשר לחזור למפה בכל רגע ולשנות עמדה על אי שכבר חקרתם.'}
+						</p>
+						<div className="flex flex-wrap justify-center gap-3">
+							<Link className="btn" to="/map">
+								🗺️ חזרה למפה
+							</Link>
+							{elders.length > 0 || (content.game.elders ?? []).length > 0 ? (
+								// The crew screen promises more sailors can be added later, so
+								// there has to be a way back to it.
+								<Link className="btn-outline" to="/elders">
+									📜 המלחים שאיתך
+								</Link>
+							) : null}
+						</div>
 					</section>
 
 					<section className="panel fade-in">
@@ -367,14 +461,22 @@ export default function Summary() {
 								חקרו אי אחד לפחות, ושער הדיון עליו ייפתח כאן.
 							</p>
 						)}
-						<p className="text-[13px] opacity-70 mt-3 mb-0 text-center">
-							אפשר גם{' '}
-							<Link className="underline" to="/map">
-								לחזור למפה
-							</Link>{' '}
-							ולחקור איים נוספים — המפה תתעדכן.
-						</p>
 					</section>
+
+					{uid ? (
+						digestOpen ? (
+							<DigestSettings uid={uid} onClose={() => setDigestOpen(false)} />
+						) : (
+							<section className="panel fade-in text-center">
+								<p className="m-0 text-[14px] text-[#dcecf7]">
+									רוצים לדעת מה קורה בים כשאתם לא כאן?{' '}
+									<button type="button" className="underline" onClick={() => setDigestOpen(true)}>
+										📬 סיפור המסע שלכם למייל
+									</button>
+								</p>
+							</section>
+						)
+					) : null}
 				</div>
 			</div>
 		</>

@@ -4,6 +4,8 @@
  *   npm run fast                                   # deliberation chat, 4 classmates, 3 proposals
  *   npm run fast -- --stage=positioning
  *   npm run fast -- --students=8 --proposals=6
+ *   npm run fast -- --stage=deliberation --ratings   # rated, ready to open a vote
+ *   npm run fast -- --stage=voting --challenge         # a live challenge turn
  *   npm run fast -- --open --mine                  # …and give them a proposal, which is what
  *                                                  #   unlocks rating/feedback/helped screens
  *   npm run fast -- --open --shot                  # drive a student there and screenshot it
@@ -19,9 +21,10 @@ import { createRequire } from 'node:module';
 import type { AgoraStage } from '@freedi/shared-types';
 import { preflight } from './lib/preflight.mjs';
 import { fastlane, positionStudent, proposeAs, teacherUrl } from './lib/fastlane';
+import type { AgoraStagePlanItem } from '@freedi/shared-types';
 
 // See lib/fastlane.ts — the package is require-only from plain Node
-const { AgoraStage: AgoraStageEnum } = createRequire(import.meta.url)(
+const { AgoraStage: AgoraStageEnum, stagePlanPreset } = createRequire(import.meta.url)(
 	'@freedi/shared-types',
 ) as typeof import('@freedi/shared-types');
 
@@ -29,6 +32,13 @@ interface Args {
 	stage: AgoraStage;
 	students: number;
 	proposals: number;
+	/**
+	 * Have the bots rate each other, so the proposals carry real consensus.
+	 * On by default from the voting stage onward (the ballot ranks on it);
+	 * ask for it earlier when you want to WATCH the vote being set up.
+	 */
+	ratings: boolean | undefined;
+	challenge: boolean | undefined;
 	lang: string;
 	position: number;
 	open: boolean;
@@ -38,6 +48,10 @@ interface Args {
 	mine: string | null;
 	autoSeed: boolean;
 	viewport: 'desktop' | 'mobile';
+	/** A quick game (no scenario) on the quick-decision plan, with names */
+	quick: boolean;
+	/** Which preset plan to send; absent = the session runs the legacy order */
+	plan: 'classic' | 'quickDecision' | null;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -67,6 +81,8 @@ function parseArgs(argv: string[]): Args {
 		stage: stageRaw as AgoraStage,
 		students: num('students', 4),
 		proposals: num('proposals', 3),
+		ratings: flag('ratings') !== undefined ? flag('ratings') !== 'false' : undefined,
+		challenge: flag('challenge') !== undefined ? flag('challenge') !== 'false' : undefined,
 		lang: flag('lang') || 'he',
 		// A student parked in a camp, not on the fence: centre positions hide
 		// the cross-camp colouring that most of these screens are about
@@ -77,7 +93,25 @@ function parseArgs(argv: string[]): Args {
 		mine: mineRaw === undefined ? null : mineRaw || '',
 		autoSeed: flag('no-seed') === undefined,
 		viewport: flag('mobile') !== undefined ? 'mobile' : 'desktop',
+		quick: flag('quick') !== undefined,
+		plan:
+			flag('plan') === 'classic'
+				? 'classic'
+				: flag('plan') === 'quickDecision' || flag('quick') !== undefined
+					? 'quickDecision'
+					: null,
 	};
+}
+
+/** The preset with its question filled in — a plan with an empty question is refused */
+function planFor(args: Args): AgoraStagePlanItem[] | undefined {
+	if (!args.plan) return undefined;
+
+	return stagePlanPreset(args.plan).map((item) =>
+		item.stage === AgoraStageEnum.question
+			? { ...item, title: 'מה חשוב לי בבקרים?', explanation: 'משפט אחד או שניים — מה היית רוצה שיקרה.' }
+			: item,
+	);
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -93,6 +127,20 @@ const result = await fastlane({
 	stage: args.stage,
 	students: args.students,
 	proposals: args.proposals,
+	ratings: args.ratings,
+	...(args.quick
+		? {
+				quick: {
+					title: 'בקרים בבית שלנו',
+					mainQuestion: 'איך ווש יכולה לקום בזמן בבוקר?',
+					explanation: 'מחפשים פתרון שכולנו יכולים לחיות איתו.',
+				},
+				identity: 'named' as const,
+				botNames: ['אבא', 'אמא', 'ווש'],
+			}
+		: {}),
+	...(planFor(args) ? { stagePlan: planFor(args) } : {}),
+	challenge: args.challenge,
 });
 
 console.log(`
@@ -139,6 +187,7 @@ const ARRIVED: Record<string, string> = {
 	needs: '.scene__title, .scene__text',
 	valueIdentification: '.scene__title, .shell__content',
 	positioning: 'input.camp-scale__slider',
+	question: '.question__ask',
 	deliberation: '.chat-log, .delib-hud, .proposal-dock__bar',
 	voting: '.voting__list, .voting__waiting',
 	results: '.results__total, .shell--wide',

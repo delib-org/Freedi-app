@@ -1,4 +1,5 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
+import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '../db';
 import {
 	Collections,
@@ -13,19 +14,12 @@ import {
 	resolveSessionFlow,
 	scriptToFlow,
 } from '@freedi/shared-types';
+import type {
+	UpdateCivicFlowRequest as Request,
+	UpdateCivicFlowResponse as Result,
+} from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { buildCivicFramingScene } from './fn_agoraProvisionCivicSessions';
-
-interface Request {
-	gameId: string;
-}
-
-interface Result {
-	/** Sessions whose flow now matches the game's script */
-	updated: string[];
-	/** Sessions left alone because they have already ended */
-	skipped: string[];
-}
 
 /**
  * Re-point already-open deliberations at the game's current script.
@@ -103,7 +97,9 @@ export const agoraUpdateCivicFlow = onCall(
 				batch.update(snap.ref, {
 					// A cleared script has to clear the stored flow too, or the
 					// session would keep running knobs the organizer has removed.
-					flow: flow ?? null,
+					// Deleted, not nulled: the session schema treats the field as
+					// optional, and a literal null fails parse on every client.
+					flow: flow ?? FieldValue.delete(),
 					lastUpdate: now,
 				});
 				updated.push(session.sessionId);
@@ -111,9 +107,7 @@ export const agoraUpdateCivicFlow = onCall(
 				// Framing turned on after the fact has no scene to render, because
 				// the package was built without one.
 				if (!resolved.framing) continue;
-				const island = session.civic
-					? islandsById.get(session.civic.islandStatementId)
-					: undefined;
+				const island = session.civic ? islandsById.get(session.civic.islandStatementId) : undefined;
 				if (!island) continue;
 
 				const topicRef = db.collection(Collections.agoraTopicPackages).doc(session.topicPackageId);

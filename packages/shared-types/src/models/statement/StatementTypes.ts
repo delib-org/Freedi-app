@@ -367,6 +367,13 @@ export const StatementSchema = object({
 	statusChangedAt: optional(number()), // when suggestionStatus last changed (resolution bumps lastUpdate, so it can't time this)
 	agoraPreviousText: optional(string()), // `edit` messages: the proposal text before the change, for the diff
 	agoraPointsAwarded: optional(number()), // `award` messages: what this moment paid the helper
+	// Written as a CHALLENGE during the voting stage rather than as a
+	// deliberation proposal. It skips the proposal lifecycle entirely — no
+	// first-draft credit, no edit baseline, no weave ledger — because the
+	// challenge round pays its own reward when the option survives. Set by
+	// `agoraChallengeTurn` and pinned by rules, so a client cannot strip it and
+	// re-enter the paths it excludes.
+	agoraChallenge: optional(boolean()),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
@@ -381,8 +388,13 @@ export const StatementSchema = object({
 	organizationId: optional(string()),
 	versionControl: optional(
 		object({
-			// Version info
-			currentVersion: number(), // increments on each replacement (starts at 1)
+			// Version info.
+			// Optional-with-default rather than required: several writers set only a
+			// sub-field via a dotted path (e.g. 'versionControl.finalized'), which
+			// creates the parent object without this key on a document that never
+			// had one. 1 is the correct default — currentVersion starts at 1 and
+			// increments on each replacement, so a document without it is unreplaced.
+			currentVersion: optional(number(), 1),
 			// Applied suggestion tracking
 			appliedSuggestionId: optional(string()), // last suggestion that replaced this
 			appliedAt: optional(number()),

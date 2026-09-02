@@ -192,6 +192,9 @@ const ar: Record<string, string> = {
 	'live.thinking': '{{name}} يفكر…',
 	'live.ended': 'انتهت المسودة المباشرة',
 	'live.reaction.aria': 'إرسال {{emoji}} إلى {{name}}',
+	'live.status.broadcasting': 'يتم البث مباشرة',
+	'live.watching.one': 'شخص واحد يشاهد',
+	'live.watching.many': '{{count}} أشخاص يشاهدون',
 	'facilitator.toggle.showEvaluation': 'إظهار التقييم',
 	'facilitator.toggle.showEvaluation.help':
 		'فتح صف الوجوه الخمسة على كل بطاقة خيار حتى يتمكن المشاركون من التصويت.',

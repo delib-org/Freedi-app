@@ -9,6 +9,7 @@ import {
 	db,
 	deleteDoc,
 	doc,
+	getDoc,
 	getDownloadURL,
 	setDoc,
 	storage,
@@ -25,6 +26,33 @@ export async function saveGamePatch(gameId: string, patch: Partial<OdysseyGame>)
 		...patch,
 		lastUpdate: Date.now(),
 	});
+}
+
+/** The two per-island fields the Agora tab owns. */
+export interface IslandAnchorPatch {
+	leftAnchorStanceId: string | null;
+	rightAnchorStanceId: string | null;
+}
+
+/**
+ * Persist ONLY the camp anchors, merged into a freshly-read islands array.
+ *
+ * The Agora tab snapshots the islands at mount; writing that whole snapshot
+ * back later would silently undo any island edit (text, order, enabled) made
+ * elsewhere in the meantime. So the anchors ride on the islands as they are
+ * NOW, not as they were when the tab opened.
+ */
+export async function saveIslandAnchors(
+	gameId: string,
+	anchors: Record<string, IslandAnchorPatch>,
+): Promise<void> {
+	const ref = doc(db, Collections.odysseyGames, gameId);
+	const snap = await getDoc(ref);
+	if (!snap.exists()) throw new Error(`Odyssey game ${gameId} not found`);
+	const islands = ((snap.data() as OdysseyGame).islands ?? []).map((island) =>
+		anchors[island.statementId] ? { ...island, ...anchors[island.statementId] } : island,
+	);
+	await updateDoc(ref, { islands, lastUpdate: Date.now() });
 }
 
 /** Update the text of an island question or a stance option Statement. */

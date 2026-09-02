@@ -22,18 +22,32 @@ export const STATUS_LABELS: Record<ActivityRunState, string> = {
 	closed: 'Closed',
 };
 
+/**
+ * The same four states, in a Sign document's words: a hidden document is
+ * being reviewed by its admins; an open one takes public comment.
+ */
+export const DOCUMENT_STATUS_LABELS: Record<ActivityRunState, string> = {
+	queued: 'In review',
+	open: 'Open for comment',
+	frozen: 'Frozen',
+	closed: 'Closed',
+};
+
 export interface StatusPillProps {
 	status: ActivityRunState;
+	/** Use the document vocabulary (In review / Open for comment). */
+	document?: boolean;
 	size?: TagSize;
 	className?: string;
 }
 
-const StatusPill: React.FC<StatusPillProps> = ({ status, size, className }) => {
+const StatusPill: React.FC<StatusPillProps> = ({ status, document = false, size, className }) => {
 	const { t } = useTranslation();
+	const labels = document ? DOCUMENT_STATUS_LABELS : STATUS_LABELS;
 
 	return (
 		<Tag status={status} size={size} glyph={STATUS_GLYPHS[status]} className={className}>
-			{t(STATUS_LABELS[status])}
+			{t(labels[status])}
 		</Tag>
 	);
 };

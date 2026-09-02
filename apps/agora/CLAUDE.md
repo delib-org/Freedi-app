@@ -24,10 +24,19 @@ views/            route and stage targets: render, and dispatch
 components/       props in, vnodes out. No Firestore, no storage
 lib/flows/        state machines with injected deps — tested in node
 lib/              state modules, domain rules, i18n
-lib/teacher.ts    every Firestore call the teacher and join screens make
-lib/proposals.ts  every Firestore call the student screens make
+lib/teacher.ts    teacher + join screens' Firestore calls
+lib/proposals.ts  the student square's listeners and writes
+lib/session.ts    the single session+participants listener
+lib/voting.ts     the ballot
 shared-types      schemas and ALL maths both the client and functions use
 ```
+
+Firestore also lives in `lib/notifications.ts`, `seenState.ts`,
+`digestPrefs.ts`, `topic.ts`, `values.ts` — and nowhere outside `lib/`.
+Writes a student's points or standing depend on (votes, proposals,
+suggestions, teacher saves) go through `lib/confirmedWrite.ts`; the rest
+(seen-markers, digest prefs, notice fan-out) are fire-and-forget by design —
+losing one costs a re-render, not a payout.
 
 Rules of the road, each learned from something that broke:
 
@@ -47,7 +56,7 @@ Rules of the road, each learned from something that broke:
 
 ## Styles
 
-`src/styles/components/` — ten partials, imported by `components.scss`. BEM,
+`src/styles/components/` — twelve partials, imported by `components.scss`. BEM,
 tokens only, no hardcoded colours. **Not** CSS modules and not the root atomic
 system: Mithril has no pipeline for either, and the single global import in
 `index.ts` is deliberate.

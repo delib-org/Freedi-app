@@ -1,4 +1,10 @@
 import { afterLoad } from '@/lib/deferWork';
+import { isFirestoreInternalCrash, isTransientAuthNetworkError } from '@freedi/shared-utils';
+
+/** Substring identifying join's Firebase bundle — see manualChunks in
+ *  vite.config.ts. Note it is `firebase-`, not the main app's
+ *  `vendor-firebase`, which is why this check cannot be copy-pasted. */
+const FIREBASE_CHUNK_NAMES = ['firebase-'] as const;
 
 /** Error reporting, kept off the first-paint critical path.
  *
@@ -118,6 +124,24 @@ function sentryOptions(dsn: string): SentryOptions {
 					);
 				})
 			) {
+				return null;
+			}
+
+			// The Firestore SDK's internal persistence crashes ("INTERNAL
+			// ASSERTION FAILED (ID: b815)" and friends). Raised from inside the
+			// minified bundle when its local target/persistence layer gets into a
+			// bad state; not fixable from app code and repeats dozens of times in
+			// a bad session.
+			if (
+				isFirestoreInternalCrash(event, error, {
+					firebaseChunkNames: FIREBASE_CHUNK_NAMES,
+				})
+			) {
+				return null;
+			}
+
+			// Offline / flaky network / ad-blocked identitytoolkit.
+			if (isTransientAuthNetworkError(event, error)) {
 				return null;
 			}
 

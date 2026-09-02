@@ -745,6 +745,101 @@
 		font-size: var(--font-size-sm);
 		text-align: center;
 	}
+
+	// The cog that swaps the sheet between the news list and the voyage-story
+	// email settings — shaped like the close button beside it
+	&__cog {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 50%;
+		background: var(--bg-inset);
+		color: var(--ink);
+		cursor: pointer;
+
+		&--on {
+			background: rgba(139, 107, 240, 0.16);
+			color: var(--mine-ink);
+		}
+	}
+
+	// The voyage-story email cadence, shown as the sheet's whole body so the
+	// hour chips are in view the moment a cadence that needs them is pressed
+	&__digest-body {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		overflow-y: auto;
+	}
+
+	&__digest-blurb {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+	}
+
+	&__digest-cadence,
+	&__digest-hours {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__digest-chip {
+		padding: 5px var(--space-sm);
+		border: 1px solid var(--border-subtle);
+		border-radius: 999px;
+		background: var(--bg-inset);
+		color: var(--ink);
+		font: inherit;
+		font-size: var(--font-size-xs);
+		cursor: pointer;
+
+		&--hour {
+			padding: 3px 8px;
+			// The clock chips read left-to-right even inside an RTL sheet
+			direction: ltr;
+		}
+
+		&--on {
+			border-color: var(--mine-ink);
+			background: rgba(139, 107, 240, 0.16);
+			font-weight: 700;
+		}
+	}
+
+	&__digest-actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__digest-save {
+		padding: 6px var(--space-md);
+		border: none;
+		border-radius: 999px;
+		background: var(--mine-ink);
+		color: #ffffff;
+		font: inherit;
+		font-size: var(--font-size-sm);
+		font-weight: 700;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: default;
+		}
+	}
+
+	&__digest-saved {
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+	}
 }
 
 // The light emphasis a deep link leaves on whatever it landed on: a soft ring
@@ -770,6 +865,83 @@
 	.is-emphasised {
 		animation: none;
 		box-shadow: 0 0 0 3px rgba(255, 210, 63, 0.75);
+	}
+}
+
+// The home-screen suggestion: one card, low on the screen, that exists only
+// after a smart moment asked for it (news landed, or an email cadence was
+// saved) and never comes back the same sitting once answered.
+.install-hint {
+	position: fixed;
+	inset-inline: var(--space-md);
+	// Above the notebook dock, which owns the very bottom of the screen
+	inset-block-end: calc(var(--space-md) + 68px);
+	z-index: calc(var(--z-toast) - 1);
+	display: flex;
+	align-items: flex-start;
+	gap: var(--space-sm);
+	max-width: 420px;
+	margin-inline: auto;
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-raised);
+
+	&__icon {
+		flex: 0 0 auto;
+		display: inline-flex;
+		color: var(--mine-ink);
+		margin-block-start: 2px;
+	}
+
+	&__body {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	&__title {
+		display: block;
+		font-family: var(--font-display);
+		color: var(--ink);
+		font-size: var(--font-size-sm);
+	}
+
+	&__text {
+		margin: 4px 0 0;
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+	}
+
+	&__actions {
+		flex: 0 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--space-xs);
+	}
+
+	&__go {
+		padding: 6px var(--space-md);
+		border: none;
+		border-radius: 999px;
+		background: var(--mine-ink);
+		color: #ffffff;
+		font: inherit;
+		font-size: var(--font-size-xs);
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	&__later {
+		padding: 4px var(--space-sm);
+		border: none;
+		background: none;
+		color: var(--text-muted);
+		font: inherit;
+		font-size: var(--font-size-xs);
+		text-decoration: underline;
+		cursor: pointer;
 	}
 }
 

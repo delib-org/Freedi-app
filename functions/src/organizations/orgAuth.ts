@@ -131,7 +131,7 @@ async function listOrgTopQuestions(organizationId: string): Promise<Statement[]>
 	return snap.docs.map((doc) => doc.data() as Statement);
 }
 
-async function commitInChunks(writes: Array<(batch: WriteBatch) => void>): Promise<void> {
+export async function commitInChunks(writes: Array<(batch: WriteBatch) => void>): Promise<void> {
 	for (let i = 0; i < writes.length; i += ORG_BATCH_CHUNK) {
 		const batch = db.batch();
 		writes.slice(i, i + ORG_BATCH_CHUNK).forEach((apply) => apply(batch));

@@ -1,7 +1,7 @@
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-08-16.
+2026-09-02.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -26,6 +26,83 @@ can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
 
+## Stage plan (2026-09-02) — the stages are the admin's to arrange
+
+The order of stages is no longer hardwired. A session may carry an explicit
+`stagePlan` (an ordered list of items — `lobby`, the scenario stages,
+`question`, `deliberation`, `voting`, `results`; `ended` is appended at
+resolve time and never stored) plus `stageIndex` (the room's position) and
+`stageState[itemId]` (server-written runtime state: `openedAt`, a question's
+`outcome`, why voting opened). A session WITHOUT a plan resolves to the
+legacy order via `resolveStagePlan` — every session written before this,
+and every civic session, runs exactly as before. `session.stage` keeps
+mirroring the kind of the current item, so every `stage !== deliberation`
+guard still holds.
+
+- **One move path**: `functions/src/agora/stageAdvance.ts` `advanceSession`.
+  The teacher callable, the auto-open trigger and the hourly sweep all call
+  it. The pointer moves in a transaction guarded by the position the caller
+  saw (a lost race is `stale`, not an error); side effects (close the question
+  just left, draw the ballot, compute results) run after the commit. The
+  legacy `{stage}` request shape still works (Odyssey's admin sends it).
+- **`question` stage**: admin-authored question + explanation. Its Statement
+  (`StatementType.question`, child of the session root) is created when the
+  plan is set; answers are `option` children of it at deterministic ids
+  `${sessionId}--${uid}--${itemId}`; ratings are ordinary evaluations, so the
+  shared pipeline computes their numbers. On advance, `closeQuestionStage`
+  ranks by net agreement, applies the admin's cutoff (`selectCarriedAnswers`,
+  shared-types), writes an AI summary (fixture = the answers joined) into
+  `stageState[itemId].outcome`, marks `isChosen` and `results` on the
+  question Statement. Later screens show it as the `CarriedContext` card.
+  Answers never enter the square's economy: `fn_onAgoraEvaluation` and
+  `fn_onAgoraProposal` gate on `parentId === challengeQuestionId`, and
+  `classScore.ts` filters proposals/evaluations by the same parent.
+- **Auto-open voting**: a deliberation item may carry `votingTrigger`
+  `{enabled, singleMin 0.85, pairMin 0.5, minRaters 3}` in NET agreement (the
+  students-only `agoraScores.classConsensus.mean`, no C_p). Evaluated in
+  `fn_onAgoraEvaluation` after each score commit (sibling scores read AFTER
+  the commit, own score substituted). One proposal ≥ singleMin → a
+  for/against ballot on that proposal; two ≥ pairMin → pick one. The teacher
+  panel shows the same rule live via `evaluateVotingTrigger`; the manual
+  button is the backstop (hot-reload gotcha below).
+- **For/against**: a one-candidate ballot counts `VOTE_AGAINST` (`'against'`)
+  as a sentinel in the same vote doc; `ballotTallyIds` adds it to the tally,
+  `pickVoteWinner` adopts only on a strict majority and reports `rejected`.
+  `fn_vote` now skips the isVoted/topVoted marking for sentinel keys.
+- **Quick game**: `agoraCreateSession` accepts `quick {title, mainQuestion,
+  explanation?, language}` instead of a package and writes a minimal
+  `kind: 'quick'` topic shell (two placeholder characters, no scenes, no AI
+  raters seeded). Flow forced to no stances/needs/elders/framing, so
+  `scoreMode` is the new third mode `agreement`: results are
+  `session.agreement` (ranked by net agreement + the vote), screen
+  `views/AgreementResults.ts`, computed by `agreementResults.ts`.
+- **Named rooms**: `identity: 'named'` — the join screen asks for a name,
+  `agoraJoinSession` stores it as `anonName` (+`displayName`), cards show it.
+  Those names are readable by any signed-in user who knows the session.
+- **Free navigation**: `lib/flows/stageNav.ts` (pure) + `components/StageNav`.
+  Opened stages are doors; the player's choice lives in sessionStorage and is
+  carried forward when the room advances. A past stage renders read-only
+  (deliberation → `ResultsBoard`, question → ranked list + outcome, voting →
+  tallies).
+- **Admin UI**: `/teach/start` has Scenario / Quick game, names, and the
+  `StagePlanEditor` (reducer `lib/flows/stagePlanEditor.ts`; presets
+  `classic`, `quickDecision`). The live board shows the plan rail, the
+  question's ranked answers with "travels forward" marks, the trigger line,
+  and "edit upcoming stages" (`agoraUpdateStagePlan`, frozen prefix).
+- **Rules**: `stage`, `stageIndex`, `stagePlan`, `stageState`, `identity`,
+  `agreement`, `roundNumber` are pinned server-owned on `agoraSessions`.
+- **Client parse**: `lib/session.ts` uses `safeParse`; an unknown `stage`
+  kind shows a "refresh" screen instead of bricking the tab. **Deploy hosting
+  before functions** whenever a stage kind is added.
+- **Shared pipeline fix** (`functions/src/evaluation/statementEvaluationUpdater.ts`):
+  the missing-averageEvaluation repair used to be scheduled with
+  `setImmediate` from INSIDE the transaction and overwrote the first rating
+  on a fresh option with a zero block whenever a sibling was rated in the
+  same second. It now runs after the commit, skips the option just updated,
+  and conditions each write on `lastUpdateTime`.
+- **Verify**: `npx tsx scripts/e2e-stage-plan.mjs` (the Vosh scenario, 53
+  assertions), `npm run fast -- --quick --stage=question --open --shot=q`.
+
 ## Current game flow (as implemented)
 
 **Teacher** (`/teach`): Google sign-in → pick a ready topic package → open
@@ -42,8 +119,9 @@ when to advance. Participant count is students only (AI raters filtered).
 scenes (framing/perspectives/needs, self-paced, dialogue reveals) → **needs
 board** (both characters' needs side by side; reachable later via one tap
 everywhere) → positioning (slider labeled with character names + camp) →
-**deliberation: a guided CHAT** (propose → rate classmates one at a time →
-improvement prompts → free-choice activity menu) → results.
+**deliberation: the personal-lap square** (`views/Deliberation.ts` — propose →
+weigh a few classmates' → help someone, in laps; ownership said
+conversationally) → results.
 
 Key deliberation mechanics (NOTE: the "chat-guided square" described below was
 REVERTED on 2026-08-05 and its code deleted on 2026-08-16 — the places UI is
@@ -52,7 +130,7 @@ what ships. Kept for the reasoning; see feedback-cycle.md for what runs. The
 tabs, the 5-lap cycle) is GONE; students still couldn't reliably separate
 "mine" from "others", so ownership is now stated CONVERSATIONALLY. A
 scripted guide persona (🦉, `chat.guide_name`, i18n templates with rotating
-phrasings — NOT AI-generated) drives `views/DeliberationChat.ts`:
+phrasings — NOT AI-generated) drove `views/DeliberationChat.ts` (deleted):
 1. intro → proposal composer (needs board one tap away),
 2. thanks → deals classmates' proposals ONE AT A TIME as rate cards, each
    verbally framed "a classmate's 📙 + number"; the student's echoed
@@ -66,8 +144,10 @@ phrasings — NOT AI-generated) drives `views/DeliberationChat.ts`:
    I helped (change badge) — options appear conditionally, plus one nudge
    line (priority: opening ratings → fresh feedback → unasked characters →
    under-rated proposals → generic).
-Engine: `lib/chatFlow.ts` — pure state machine (no Mithril/Firebase; 37
-vitest tests), module singleton, sessionStorage persistence
+Engine was `lib/chatFlow.ts` (deleted with the view; its lesson — a pure
+state machine, no Mithril/Firestore, tested in node — survives as
+`lib/flows/deliberationFlow.ts`, which runs the shipping square's laps) —
+module singleton, sessionStorage persistence
 (`agora_{sessionId}_chatflow` + `_chatlog`, transcript stores i18n KEYS so
 a language switch re-renders the whole log; resolved variant keys replay
 the same phrasing after refresh). `state.dealtIds` guards against the
@@ -114,8 +194,8 @@ when already near the bottom. `JourneyStrip` + `StageTransition` +
   evaluations listener; AI raters excluded via isAgoraAiUid; individual
   votes stay anonymous by design — Tal's decision).
 - **Rate**: five-level emoji scale (−1…+1 half steps), least-rated-first
-  candidate ordering with per-student tiebreak (`selectCandidates` in
-  chatFlow.ts); the guided opening asks for 3, then rating continues
+  candidate ordering with per-student tiebreak (now `lib/squareOrder.ts`);
+  the guided opening asks for 3, then rating continues
   through the menu while candidates remain.
 - **Helping** now happens through the improvement prompt after a
   below-top rating ("How could this proposal serve BOTH camps better?" +
@@ -157,10 +237,10 @@ number, never names.
 ## Architecture cheat-sheet
 
 - **Client**: `apps/agora/src` — `views/GameController.ts` (student stage
-  router + world strip), `views/DeliberationChat.ts` (the guided chat) +
-  `lib/chatFlow.ts` (conversation engine; state in sessionStorage
-  `agora_{sessionId}_chatflow`/`_chatlog`) + `components/ChatBubble.ts` +
-  `styles/chat.scss`, `views/teacher/TeacherSession.ts`,
+  router + world strip), `views/Deliberation.ts` (the square: my proposal /
+  the market / helped threads) + `lib/flows/deliberationFlow.ts` (pure lap
+  state machine; cycle state in sessionStorage) + `views/ThreadChat.ts`
+  (per-helper threads), `views/teacher/TeacherSession.ts`,
   `lib/session.ts` (single session+participants listener; **filters `isAI`**),
   `lib/proposals.ts` (deliberation listeners + writes), `lib/celebration.ts`
   + `components/Celebration.ts`, `components/NeedsBoard.ts`, `components/EraMap.ts`
@@ -256,6 +336,55 @@ test.
   (needs ≥2 proposals rated by BOTH camps); fine for real classes.
 - Emulator REST list calls need `?pageSize=300` once data accumulates.
 - Dialogue scenes need the '···' reveal clicks before the continue button.
+- **`signInWithRedirect` can never finish on agora-wizcol.web.app
+  (2026-08-26)**: the redirect handler runs on `wizcol-app.firebaseapp.com`
+  and leaves the credential in THAT domain's storage; the app reads it back
+  through a hidden iframe there, which third-party storage partitioning hands
+  an empty store. `getRedirectResult()` resolves to null, so the teacher
+  watches Google's screen take over the tab and lands back signed out.
+  Reported from production as "the Google screen appeared again in the main
+  window and pressing it did nothing". Popup is unaffected (it postMessages
+  the credential home and needs no storage). Never make redirect a fallback
+  here — `canCompleteRedirectSignIn()` in `lib/firebase.ts` guards it.
+- **A returning teacher's link ALWAYS fails**: their Google identity is
+  already its own account, so `linkWithPopup` on today's anonymous visit
+  throws `auth/credential-already-in-use`. That is the normal path, not an
+  edge case. The error carries the credential (`linkWithPopup` sends
+  `returnIdpCredential: true`, so the backend answers 200 + errorMessage +
+  `oauthIdToken`), so `GoogleAuthProvider.credentialFromError()` →
+  `signInWithCredential()` finishes it with no window and no user gesture.
+  Note `linkWithCredential` does NOT send that flag, so a probe built on it
+  gets `credentialFromError() === null` and misleads.
+- **The functions emulator serves whichever worktree launched it.** Work on a
+  second tree and its new callables are simply 404 on 5001, which reads as an
+  app bug rather than as the wrong emulator. Either restart the suite from your
+  tree, or run a second one on free ports and point the scripts at it — every
+  host is env-overridable:
+
+  ```bash
+  # firebase.e2e.json = firebase.json with auth 9098 / functions 5011 /
+  # firestore 8091, no UI, no hosting/storage/database. Gitignored.
+  firebase emulators:start --only firestore,auth,functions \
+    --project freedi-test --config firebase.e2e.json
+  npx vite --port 3010
+  AGORA_AUTH_HOST=http://localhost:9098 \
+  AGORA_FIRESTORE_HOST=http://localhost:8091 \
+  AGORA_FUNCTIONS_HOST=http://localhost:5011 \
+  AGORA_VITE_HOST=http://localhost:3010 npx tsx scripts/e2e-challenge.mjs
+  ```
+
+  The contrast and type audits take the URL as argv[1] and otherwise default to
+  3009 — i.e. to the OTHER tree's mock page, which they will happily pass.
+- e2e scripts import `scripts/lib/fastlane.ts`, so they need `npx tsx`, not
+  bare `node`, whatever the older docs say.
+- A REST PATCH with no `updateMask` REPLACES the document. On a session doc
+  that wipes `teacherId` and the rules refuse it — silently, unless the script
+  reads the response.
+- Neutral runs reorder in Hebrew: "42 / 1500" becomes "1500 / 42" and "+3"
+  becomes "3+". Isolate the RUN (`direction: ltr; unicode-bidi: isolate`), not
+  the block — on the block it also flips which side `text-align: end` lands on.
+  `@include type-meta` clears itself on descendants, so if you split a mark
+  into a child span the exemption has to move down with it.
 
 ## Next steps (agreed direction)
 
@@ -281,7 +410,8 @@ test.
    until the Count agrees he's been understood"), teacher cards, narrator
    interstitials, evidence cards, bias-events deck, expanding-agreement
    (~80% net support) as the success verdict, two-lesson arc.
-7. Ops: agora functions not yet deployed anywhere (emulator only).
+7. ~~Ops: agora functions not yet deployed anywhere~~ — DONE: 13 functions
+   live on `wizcol-app` (see Status at the top).
 
 ### Deploying
 

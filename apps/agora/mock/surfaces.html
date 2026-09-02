@@ -221,8 +221,149 @@
 						</span>
 					</button>
 				</div>
-				<p class="voting__total">סך הכול 21 קולות</p>
+				<div class="voting__turnout">
+					<div class="voting__turnout-track" aria-hidden="true">
+						<div class="voting__turnout-fill" style="inline-size: 70%"></div>
+					</div>
+					<p class="voting__turnout-text">21 מתוך 30 כבר הצביעו</p>
+				</div>
 				<p class="voting__hint">אפשר לשנות את הקול עד סגירת ההצבעה.</p>
+			</div>
+
+			<h2>the ballot before the teacher reveals the counts (the default)</h2>
+			<div class="voting">
+				<div class="voting__list">
+					<button class="voting__option voting__option--mine" aria-pressed="true">
+						<span class="voting__body">
+							<span class="voting__number">1</span>
+							<span class="voting__label">לחלק את אדמות הכנסייה לאריסים ולפצות את האצולה במיסוי מדורג</span>
+						</span>
+					</button>
+					<button class="voting__option" aria-pressed="false">
+						<span class="voting__body">
+							<span class="voting__number">2</span>
+							<span class="voting__label">אספה משותפת שבה לכל מעמד קול שווה</span>
+						</span>
+					</button>
+				</div>
+				<div class="voting__turnout">
+					<div class="voting__turnout-track" aria-hidden="true">
+						<div class="voting__turnout-fill" style="inline-size: 70%"></div>
+					</div>
+					<p class="voting__turnout-text">21 מתוך 30 כבר הצביעו</p>
+				</div>
+				<p class="voting__hint">
+					התוצאות יתגלו כשהמורה יחליט — הצביעו לפי מה שאתם חושבים, לא לפי מי שמוביל.
+				</p>
+			</div>
+
+			<h2>a challenge standing on the board (counts hidden, challenger pinned)</h2>
+			<div class="voting">
+				<div class="challenge challenge__curtain">
+					<h3 class="challenge__title">ההצעה של שועל כחול עומדת על הלוח</h3>
+					<p class="challenge__line">אם היא משכנעת אתכם — העבירו אליה את הקול.</p>
+					<p class="challenge__blind">
+						אף אחד לא רואה את הספירה עד שהמורה סוגר. כמה הצביעו — זה גלוי; עבור מה — לא.
+					</p>
+				</div>
+				<div class="voting__list">
+					<button class="voting__option voting__option--challenger" aria-pressed="false">
+						<span class="voting__body">
+							<span class="voting__number voting__number--challenger">★</span>
+							<span class="voting__label">כרטיס נסיעה חינם לכל תלמיד בקו העירוני</span>
+						</span>
+					</button>
+					<button class="voting__option voting__option--mine" aria-pressed="true">
+						<span class="voting__body">
+							<span class="voting__number">1</span>
+							<span class="voting__label">לחלק את אדמות הכנסייה לאריסים ולפצות את האצולה במיסוי מדורג</span>
+						</span>
+					</button>
+					<button class="voting__option" aria-pressed="false">
+						<span class="voting__body">
+							<span class="voting__number">2</span>
+							<span class="voting__label">אספה משותפת שבה לכל מעמד קול שווה</span>
+						</span>
+					</button>
+				</div>
+			</div>
+
+			<h2>the write desk, on the student who holds the floor</h2>
+			<div class="challenge challenge__desk">
+				<h3 class="challenge__title">כתבו את ההצעה שלכם</h3>
+				<p class="challenge__rule">
+					אם הכיתה תעדיף אתכם על ההצעה החלשה ביותר — ההצעה שלכם תיכנס במקומה.
+				</p>
+				<textarea class="challenge__input">כרטיס נסיעה חינם לכל תלמיד בקו העירוני</textarea>
+				<p class="challenge__count"><span class="challenge__count-num">42 / 1500</span></p>
+				<div class="challenge__actions">
+					<button class="challenge__send">להעלות ללוח</button>
+					<button class="challenge__pass">לוותר על התור</button>
+				</div>
+				<div class="challenge__roster">
+					<span class="challenge__seat challenge__seat--done">נמר זהוב</span>
+					<span class="challenge__seat challenge__seat--passed">ינשוף כסוף</span>
+					<span class="challenge__seat challenge__seat--now">שועל כחול</span>
+					<span class="challenge__seat challenge__seat--skipped">דולפין ירוק</span>
+					<span class="challenge__seat">צבי אדום</span>
+				</div>
+			</div>
+
+			<h2>the reveal — a seat won, and a seat kept</h2>
+			<div class="challenge challenge__outcome challenge__outcome--survived" role="status">
+				<h3 class="challenge__outcome-title">ההצעה של שועל כחול נכנסה ללוח</h3>
+				<p class="challenge__quote">כרטיס נסיעה חינם לכל תלמיד בקו העירוני</p>
+				<p class="challenge__line">4 קולות</p>
+				<p class="challenge__evicted">היא תפסה את מקומה של: אספה משותפת שבה לכל מעמד קול שווה</p>
+				<p class="challenge__points">⁦+3⁩ נקודות</p>
+			</div>
+			<div class="challenge challenge__outcome challenge__outcome--failed" role="status">
+				<h3 class="challenge__outcome-title">ההצעה של ינשוף כסוף לא עברה הפעם</h3>
+				<p class="challenge__quote">לבטל את שיעורי הבית בכל המקצועות</p>
+				<p class="challenge__line">1 קולות</p>
+				<p class="challenge__line">הלוח נשאר כפי שהיה.</p>
+			</div>
+			<div class="challenge challenge__outcome challenge__outcome--quiet">
+				<p class="challenge__line">דולפין ירוק ויתרו על התור.</p>
+			</div>
+
+			<h2>the teacher's turn console</h2>
+			<div class="card stack challenge-turn">
+				<div class="voting-settings__head">
+					<p class="teacher__section-title">סבב ההצעות</p>
+					<span class="voting-settings__turnout">תור 3 מתוך 8</span>
+				</div>
+				<p class="challenge-turn__speaker">על הבמה: שועל כחול</p>
+				<button class="challenge-turn__primary">לפתוח את ההצבעה</button>
+				<div class="challenge-turn__secondary">
+					<button class="challenge-turn__minor">לדלג על שועל כחול</button>
+					<button class="challenge-turn__minor">לסיים את הסבב עכשיו</button>
+				</div>
+				<p class="voting-settings__hint">בקצב הזה נשארו עוד כ־7 דקות.</p>
+				<div class="challenge__roster">
+					<span class="challenge__seat challenge__seat--done">נמר זהוב</span>
+					<span class="challenge__seat challenge__seat--passed">ינשוף כסוף</span>
+					<span class="challenge__seat challenge__seat--now">שועל כחול</span>
+					<span class="challenge__seat">צבי אדום</span>
+				</div>
+			</div>
+
+			<h2>the teacher's live controls during the vote</h2>
+			<div class="card stack voting-settings">
+				<div class="voting-settings__head">
+					<p class="teacher__section-title">ההצבעה של הכיתה</p>
+					<span class="voting-settings__turnout">21 מתוך 30 הצביעו</span>
+					<span class="voting-settings__turnout voting-settings__turnout--all">30 מתוך 30 הצביעו</span>
+				</div>
+				<label class="voting-settings__row">
+					<input type="checkbox" checked />
+					<span>להראות לכיתה את התוצאות</span>
+				</label>
+				<label class="voting-settings__row">
+					<input type="checkbox" />
+					<span>לסדר מחדש לפי מספר הקולות</span>
+				</label>
+				<p class="voting-settings__hint">הכיתה רואה עכשיו את מספר הקולות של כל הצעה.</p>
 			</div>
 
 			<h2>the recap's switch, and the helpers scoreboard behind it</h2>
@@ -357,6 +498,82 @@
 					</span>
 					<span class="stall__chevron"></span>
 				</button>
+			</div>
+
+			<h2>teacher dashboard — class card, game row, status pills</h2>
+			<div class="dashboard__class-card">
+				<strong class="dashboard__class-name">כיתה ח2</strong>
+				<span class="dashboard__class-meta">24 תלמידים</span>
+				<div class="dashboard__class-stats">
+					<span class="dashboard__class-stat">5 מסעות</span>
+					<span class="dashboard__class-stat">ציון ממוצע 72</span>
+				</div>
+			</div>
+			<div class="dashboard__game-row">
+				<div class="dashboard__game-main">
+					<strong>כיתה ח2</strong>
+					<span class="dashboard__game-date">3 בספט׳</span>
+				</div>
+				<div class="dashboard__game-side">
+					<span class="dashboard__game-score">78</span>
+					<span class="dashboard__status-pill">הסתיים</span>
+					<span class="dashboard__status-pill dashboard__status-pill--live">חי</span>
+				</div>
+			</div>
+
+			<h2>class roster — row, career drawer, PIN note</h2>
+			<div class="roster__row-wrap">
+				<div class="roster__row roster__row--open">
+					<strong class="roster__alias">נמר אמיץ</strong>
+					<div class="roster__row-stats">
+						<span class="roster__stat">4 מסעות</span>
+						<span class="roster__stat roster__stat--points">212</span>
+					</div>
+				</div>
+				<div class="roster__drawer">
+					<div class="roster__career-grid">
+						<div class="roster__career-cell">
+							<span class="roster__career-value">53</span>
+							<span class="roster__career-label">ממוצע למסע</span>
+						</div>
+					</div>
+					<div class="roster__pin-note">
+						<span class="roster__pin-value">4821</span>
+						<span class="home-explanation">מסרו לתלמיד/ה את הקוד</span>
+					</div>
+				</div>
+			</div>
+
+			<h2>game report — score card and player table</h2>
+			<div class="card report__score-card">
+				<div class="report__score-main">
+					<span class="report__score-value">78</span>
+					<span class="roster__career-label">ציון כיתתי</span>
+				</div>
+				<p class="report__outcome">הצלחה — ההצעה גישרה בין המחנות</p>
+			</div>
+			<div class="report__table">
+				<div class="report__table-head">
+					<span>שחקן/ית</span>
+					<span>הצעות</span>
+					<span>עזרה</span>
+					<span>סה״כ</span>
+				</div>
+				<div class="report__table-row">
+					<span class="report__player">נמר אמיץ</span>
+					<span>10</span>
+					<span>14</span>
+					<span class="roster__stat--points">53</span>
+				</div>
+			</div>
+
+			<h2>class join — PIN display and alias picker</h2>
+			<div class="card class-join">
+				<div class="class-join__pin-display">4821</div>
+				<div class="class-join__alias-list">
+					<button class="class-join__alias-option">נמר אמיץ</button>
+					<button class="class-join__alias-option">פנס חכם</button>
+				</div>
 			</div>
 		</div>
 	</body>

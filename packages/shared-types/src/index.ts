@@ -169,6 +169,9 @@ export {
   getQuestionParticipationId,
 } from "./models/progress";
 
+// WizCol Studio — "Start a question with AI": plan sessions, diagnosis, scheduled actions
+export * from "./models/studio";
+
 // MassConsensus models
 export type {
   MassConsensusMember,
@@ -201,12 +204,15 @@ export type {
   QuietHours,
   ChannelSwitches,
   PerAppNotificationSettings,
+  OdysseyDigestSettings,
 } from "./models/notification/NotificationSettings";
 export {
   NotificationSettingsSchema,
   QuietHoursSchema,
   ChannelSwitchesSchema,
   PerAppNotificationSettingsSchema,
+  OdysseyDigestSettingsSchema,
+  ODYSSEY_DIGEST_MAX_HOURS,
   createDefaultNotificationSettings,
 } from "./models/notification/NotificationSettings";
 
@@ -440,10 +446,27 @@ export {
   VotingCandidateSchema,
   VotingStateSchema,
   NO_VOTE,
+  VOTE_AGAINST,
+  isVoteSentinel,
+  ballotTallyIds,
   resolveVotingSelection,
   tallyVotes,
   pickVoteWinner,
 } from "./models/vote/votingStageSettings";
+export type {
+  ChallengeOutcome,
+  VotingGameState,
+  ChallengeResolution,
+  SeatedStudent,
+} from "./models/vote/challengeGame";
+export {
+  ChallengePhase,
+  ChallengeResolvedBy,
+  ChallengeOutcomeSchema,
+  VotingGameStateSchema,
+  resolveChallenge,
+  seatOrder,
+} from "./models/vote/challengeGame";
 
 export type { StatementSnapShot } from "./models/statement/StatementSnapShot";
 export { statementSnapShotSchema } from "./models/statement/StatementSnapShot";
@@ -599,12 +622,15 @@ export {
   MIN_SHARED_STANCES,
   CONVERGENCE_MIN_SHARED_CAP,
   opinionDistance,
+  routeAttitudes,
   convergenceMeans,
   convergenceScore,
 } from "./utils/opinionDistance";
 export type {
   AttitudeMap,
   OpinionDistanceResult,
+  RouteHolder,
+  RouteIsland,
   ConvergenceInput,
   ConvergenceMeans,
 } from "./utils/opinionDistance";

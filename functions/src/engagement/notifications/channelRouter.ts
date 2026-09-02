@@ -10,6 +10,7 @@
  */
 
 import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth } from 'firebase-admin/auth';
 import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions';
 import { Collections, NotificationChannel } from '@freedi/shared-types';
@@ -191,17 +192,23 @@ async function writeInAppNotification(item: NotificationQueueItem): Promise<void
  * absolute deep link. Degrades gracefully when email is unconfigured.
  */
 async function sendEmailNotification(item: NotificationQueueItem): Promise<void> {
-	// Check if user has an email on file
+	// Check if user has an email on file; apps that never write users/{uid}
+	// (Odyssey signs users in with Google but keeps no profile doc) fall back
+	// to the Auth record, which always has the Google account's email.
 	const userDoc = await getDb().collection(Collections.users).doc(item.userId).get();
+	const userData = userDoc.exists ? userDoc.data() : undefined;
+	let email = userData?.email as string | undefined;
+	let displayName = userData?.displayName as string | undefined;
 
-	if (!userDoc.exists) {
-		logger.info(`No user doc for ${item.userId}, skipping email`);
-
-		return;
+	if (!email) {
+		try {
+			const authUser = await getAuth().getUser(item.userId);
+			email = authUser.email ?? undefined;
+			displayName = displayName ?? authUser.displayName ?? undefined;
+		} catch {
+			// Not an Auth uid (or deleted user) — fall through to the skip below.
+		}
 	}
-
-	const userData = userDoc.data();
-	const email = userData?.email as string | undefined;
 
 	if (!email) {
 		logger.info(`No email for user ${item.userId}, skipping email`);
@@ -211,17 +218,19 @@ async function sendEmailNotification(item: NotificationQueueItem): Promise<void>
 
 	const sent = await sendNotificationEmail({
 		to: email,
-		recipientName: userData?.displayName as string | undefined,
+		recipientName: displayName,
 		subject: item.title,
 		bodyText: item.body,
 		targetPath: item.targetPath,
 		sourceApp: item.sourceApp,
+		html: item.emailHtml,
+		unsubscribeUrl: item.unsubscribeUrl,
 	});
 
+	// A failed send must FAIL the channel: swallowing it here marked the queue
+	// item "sent" and forfeited the processor's retries — observed in prod when
+	// Gmail rejected the login and the digest still read email:ok.
 	if (!sent) {
-		logger.info(`Email not sent for ${item.userId} (transporter unavailable)`, {
-			title: item.title,
-			triggerType: item.triggerType,
-		});
+		throw new Error('Email send failed (SMTP rejected or transporter unavailable)');
 	}
 }

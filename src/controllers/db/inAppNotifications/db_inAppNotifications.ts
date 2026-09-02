@@ -103,9 +103,8 @@ export function listenToInAppNotifications(): Unsubscribe {
 			},
 		);
 	} catch (error) {
-		logError(new Error('In listenToInAppNotifications'), {
-			operation: 'inAppNotifications.db_inAppNotifications.unknown',
-			metadata: { detail: error.message },
+		logError(error, {
+			operation: 'inAppNotifications.db_inAppNotifications.listenToInAppNotifications',
 		});
 
 		return () => {

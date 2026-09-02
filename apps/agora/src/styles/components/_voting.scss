@@ -1,11 +1,33 @@
 // The ballot — the voting stage's one screen
 //
-// A row per candidate: the tally is a fill BEHIND the text rather than a
-// separate chart, so the proposal and the support for it are the same object.
-// My own vote is marked in the ownership blue used everywhere else for "mine".
+// A row per candidate is a CARD (radius-lg, purple-tinted shadow), identified
+// by a numbered squircle tile — the same object as a stall's number and the
+// HUD crest, because a proposal is known by number in this game, never by
+// author. The tally is a fill BEHIND the text rather than a separate chart,
+// so the proposal and the support for it are one object; support is MINT,
+// the one job mint exists for (DESIGN.md §2, §5: "class support → a mint
+// meter").
+//
+// The row I voted for is a purple SURFACE, not a white card with a purple
+// border: MINE is purple, a classmate's is white, and a border is neither.
+// It fills with --grad-mine-aa (white survives every stop of it — new
+// surfaces do not get to open new lines of the --mine 3.85:1 credit) and is
+// registered in the on-dark contract in tokens.scss, so every ink and
+// hairline inside it re-derives itself with no rule here.
 
 .voting {
 	gap: var(--space-md);
+
+	/**
+	 * The teacher's copy of the ballot, living as one card on a page that
+	 * already has its own frame. It gets the layout `.shell__content` would
+	 * have given it — and NOT `.shell`, whose `min-height: 100dvh` opened a
+	 * screen-height hole between the ballot and the join code.
+	 */
+	&--board {
+		display: flex;
+		flex-direction: column;
+	}
 
 	&__title {
 		margin: 0;
@@ -14,7 +36,9 @@
 
 	&__instruction,
 	&__waiting {
-		margin: 0;
+		margin-block: 0;
+		margin-inline: auto;
+		max-inline-size: 46ch;
 		text-align: center;
 		color: var(--text-secondary);
 	}
@@ -41,44 +65,91 @@
 		font: inherit;
 		font-size: 1rem;
 		background: var(--bg-card-solid);
-		border: 1.5px solid var(--border-subtle);
-		border-radius: var(--radius-tile);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg); // a row is a CARD, not a tile
 		box-shadow: var(--shadow-card);
 		cursor: pointer;
 		color: var(--text-primary);
+		// transform is the FLIP move: under live reorder a proposal overtaking
+		// another has to be SEEN to overtake. The JS hands the transition back
+		// here (same pairing as the square's stall rows).
 		transition:
-			transform var(--motion-fast, 150ms) ease,
-			border-color var(--motion-fast, 150ms) ease,
-			box-shadow var(--motion-fast, 150ms) ease;
+			border-color var(--motion-fast) ease,
+			box-shadow var(--motion-fast) ease,
+			transform var(--motion-base) var(--ease-camera);
 
 		&:hover:not(:disabled) {
 			transform: translateY(-2px);
 			border-color: var(--border-lantern);
+			box-shadow: var(--shadow-raised);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--mine-deep);
+			outline-offset: 2px;
 		}
 
 		&:disabled {
 			cursor: progress;
 		}
 
+		// MINE is a purple surface — the one saturated content object on the
+		// ballot, and the biggest. Registered in tokens.scss (on-dark contract)
+		// so the label, the count and the bar re-ink themselves by rule.
 		&--mine {
-			border-color: var(--mine);
+			background: var(--grad-mine-aa);
+			border-color: var(--mine-deep);
 			box-shadow: var(--shadow-mine);
+
+			// --mine-deep vanishes against its own surface
+			&:focus-visible {
+				outline-color: var(--text-on-lantern);
+			}
+		}
+
+		// The teacher's projector copy: the same row, but nothing to press
+		&--static {
+			cursor: default;
+
+			&:hover {
+				transform: none;
+				border-color: var(--border-subtle);
+				box-shadow: var(--shadow-card);
+			}
 		}
 	}
 
 	// The support fill. Logical inline-size + inset-inline-start keeps it
-	// growing from the reading edge in both LTR and Hebrew RTL.
+	// growing from the reading edge in both LTR and Hebrew RTL; its far edge
+	// is a crisp mint line, so a bar reads as a meter and not as a stain.
+	// Only rendered once there is something to show (share > 0) — a 0% bar
+	// would still paint its edge as a stray line at the start of the row.
+	//
+	// inline-size, not transform: scaleX has no logical origin, so a scaling
+	// bar would grow from the wrong edge in RTL. The fill is absolutely
+	// positioned — nothing reflows around it — and every meter in the app
+	// (rating, board, metric) animates its fill the same way.
 	&__bar {
 		position: absolute;
 		inset-block: 0;
 		inset-inline-start: 0;
-		background: var(--bg-inset);
-		transition: inline-size var(--motion-slow, 400ms) ease;
+		background: color-mix(in srgb, var(--mint) 20%, transparent);
+		border-inline-end: 3px solid var(--mint-deep);
+		transition: inline-size var(--motion-slow) var(--ease-camera);
+		// The reveal is an event: the teacher flips the counts on and every
+		// bar SWEEPS to where the room stands — a camera move, not a field
+		// appearing. Runs once, on the frame the bar enters; later growth is
+		// carried by the transition above.
+		animation: voting-bar-in var(--motion-camera) var(--ease-camera) both;
 		pointer-events: none;
 	}
 
+	// On my purple surface the wash DARKENS instead of lightening: a white
+	// veil would lift the fill back to --mine territory and cost the white
+	// label its contrast floor. The edge takes the on-dark hairline.
 	&__option--mine &__bar {
-		background: rgba(139, 107, 240, 0.18);
+		background: color-mix(in srgb, var(--mine-ink) 32%, transparent);
+		border-inline-end-color: var(--border-lantern);
 	}
 
 	&__body {
@@ -90,29 +161,43 @@
 		min-inline-size: 0;
 	}
 
-	// Proposals are known by number in this game — never by their author
+	// Proposals are known by number in this game — never by their author.
+	// The number rides the system's signature squircle tile: the same object,
+	// at the same size, as a stall's number out on the square.
 	&__number {
 		flex: 0 0 auto;
-		inline-size: 28px;
-		block-size: 28px;
-		display: grid;
+		display: inline-grid;
 		place-items: center;
-		border-radius: var(--radius-full);
+		inline-size: 42px;
+		block-size: 42px;
+		border-radius: var(--radius-tile);
 		background: var(--peer-tile);
-		color: var(--text-secondary);
+		color: var(--mine-ink);
+		font-family: var(--font-display);
 		font-weight: 700;
+		font-size: 1.05rem;
 	}
 
+	// On the purple surface the tile flips polarity, not hue: a white pill
+	// stays white on-dark by design (tokens.scss leaves --bg-card-solid out
+	// of the inversion), and purple-on-white ink is the row's own colour
+	// handed back.
 	&__option--mine &__number {
-		background: var(--mine-strong);
-		color: var(--text-on-lantern);
+		background: var(--bg-card-solid);
+		box-shadow: 0 2px 6px rgba(43, 28, 92, 0.35);
 	}
 
+	// The words a student wrote are the content — one voice on every surface
+	// that shows a proposal (see @mixin proposal-voice).
 	&__label {
+		@include proposal-voice;
+
 		flex: 1 1 auto;
 		min-inline-size: 0;
 	}
 
+	// The tally arrives with a small spring pop, a beat behind the bar's
+	// sweep — the two together are the reveal.
 	&__count {
 		position: relative;
 		flex: 0 0 auto;
@@ -120,25 +205,97 @@
 		flex-direction: column;
 		align-items: center;
 		line-height: 1.1;
+		min-inline-size: 2.4rem;
+		animation: voting-count-in var(--motion-slow) var(--ease-spring) 200ms both;
 	}
 
+	// A score is a display numeral, like every score in the game
 	&__votes {
+		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 1.15rem;
+		font-size: var(--font-size-lg);
+		font-variant-numeric: tabular-nums;
 	}
 
 	// A percentage beside the count it restates — a mark, not a word
 	&__share {
 		@include type-meta;
 
-		color: var(--text-muted);
+		color: var(--text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	// Full white, not the on-dark 86% remap: a 13px mark cannot afford the
+	// margin the veil costs over --mine-strong
+	&__option--mine &__share {
+		color: var(--text-on-lantern);
 	}
 
 	&__total,
 	&__hint {
-		margin: 0;
+		margin-block: 0;
+		margin-inline: auto;
+		max-inline-size: 46ch;
 		text-align: center;
 		color: var(--text-muted);
+	}
+
+	// Turnout is never hidden — it is the room's own progress, not a result,
+	// so it is drawn as the thing progress is drawn as everywhere: a mint
+	// meter, with the sentence under it.
+	&__turnout {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	&__turnout-track {
+		inline-size: min(100%, 320px);
+		block-size: 10px;
+		background: var(--bg-inset);
+		border-radius: var(--radius-full);
+		overflow: hidden;
+		// House rule for meter tracks (rating, metric): the fill direction is
+		// pinned so a percentage never flips meaning between scripts
+		direction: ltr;
+	}
+
+	&__turnout-fill {
+		block-size: 100%;
+		background: linear-gradient(90deg, var(--mint-deep), var(--mint));
+		border-radius: var(--radius-full);
+		transition: inline-size var(--motion-slow) var(--ease-camera);
+	}
+
+	&__turnout-text {
+		margin: 0;
+		text-align: center;
+		font-weight: 700;
+		color: var(--text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	// The projector: the teacher's read-only copy is read from the back of a
+	// classroom, so its type and tiles scale up where a phone never goes
+	@media (min-width: 900px) {
+		&__option--static {
+			padding: var(--space-md) var(--space-lg);
+
+			.voting__label {
+				font-size: var(--font-size-xl);
+			}
+
+			.voting__number {
+				inline-size: 52px;
+				block-size: 52px;
+				font-size: var(--font-size-lg);
+			}
+
+			.voting__votes {
+				font-size: var(--font-size-2xl);
+			}
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -148,6 +305,399 @@
 
 		&__bar {
 			transition: none;
+			animation: none;
+		}
+
+		&__count {
+			animation: none;
+		}
+
+		&__turnout-fill {
+			transition: none;
+		}
+	}
+}
+
+// The reveal: from nothing to where the room stands, as one camera move.
+// Animating inline-size is deliberate here — see the note on &__bar.
+@keyframes voting-bar-in {
+	from {
+		inline-size: 0;
+	}
+}
+
+@keyframes voting-count-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px) scale(0.7);
+	}
+}
+
+// The teacher's card: how the vote will run, set while the class deliberates
+.voting-settings {
+	&__head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-md);
+		flex-wrap: wrap;
+	}
+
+	// Turnout as a quiet pill — and a MINT one the moment the whole class has
+	// spoken, because a full house is the one unambiguously good number on
+	// this card
+	&__turnout {
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: var(--radius-full);
+		background: var(--bg-inset);
+		font-weight: 700;
+		color: var(--text-secondary);
+		font-variant-numeric: tabular-nums;
+
+		&--all {
+			background: var(--mint);
+			color: var(--mint-ink);
+		}
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-md);
+		flex-wrap: wrap;
+		cursor: pointer;
+
+		// A control under 16px takes focus on iOS and never zooms back out
+		input,
+		select {
+			font: inherit;
+			font-size: 1rem;
+			padding: var(--space-xs) var(--space-sm);
+			color: var(--text-primary);
+			background: var(--bg-card-solid);
+			border: 1.5px solid var(--border-subtle);
+			border-radius: var(--radius-sm);
+
+			&:focus-visible {
+				outline: 2px solid var(--mine-strong);
+				outline-offset: 2px;
+			}
+		}
+
+		input[type='number'] {
+			inline-size: 5.5rem;
+			text-align: center;
+		}
+
+		input[type='checkbox'] {
+			inline-size: 1.25rem;
+			block-size: 1.25rem;
+			flex: 0 0 auto;
+			accent-color: var(--mine-strong);
+			cursor: pointer;
+		}
+
+		// A checkbox row is a switch the whole class feels, so it wears a
+		// face: an outlined block that lights up purple when ON. Purple on
+		// CHROME means "this control is active" (tokens.scss) — never "mine".
+		&:has(input[type='checkbox']) {
+			justify-content: flex-start;
+			gap: var(--space-sm);
+			padding: var(--space-sm) var(--space-md);
+			border: 1px solid var(--border-subtle);
+			border-radius: var(--radius-md);
+			transition:
+				background-color var(--motion-fast) ease,
+				border-color var(--motion-fast) ease;
+		}
+
+		&:has(input[type='checkbox']:checked) {
+			background: var(--wash-mine-high);
+			border-color: var(--border-lantern);
+
+			span {
+				color: var(--mine-ink);
+				font-weight: 700;
+			}
+		}
+
+		// Live reorder is unavailable until the counts are shown — say so by
+		// looking unavailable, rather than by refusing a click silently
+		&:has(input:disabled) {
+			opacity: 0.55;
+			cursor: default;
+		}
+	}
+
+	&__hint {
+		margin: 0;
+		color: var(--text-muted);
+	}
+}
+
+// The challenger's row.
+//
+// It is on the ballot but not OF it: no number yet, because a number is what
+// it is competing for. A gold ring rather than a fill — the fill is reserved
+// for support (mint) and for the row that is mine (purple), and a newcomer has
+// earned neither. It is pinned, so it never animates into place; a row that
+// slid in would read as the list re-sorting rather than as someone standing up.
+.voting__option--challenger {
+	border-color: var(--gold);
+	box-shadow:
+		0 0 0 2px var(--gold),
+		var(--shadow-card);
+}
+
+.voting__number--challenger {
+	background: var(--gold);
+	color: var(--mine-ink);
+	font-size: 1.2rem;
+}
+
+// The challenge round's cards, above the ballot
+.challenge {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	inline-size: 100%;
+	padding: var(--space-md);
+	background: var(--bg-card-solid);
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-card);
+
+	&__title {
+		margin: 0;
+		font-family: var(--font-display);
+	}
+
+	&__line,
+	&__rule,
+	&__hint,
+	&__blind {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+
+	// Quieter in colour, not in size — 16px is the floor a WORD sits on, and
+	// these are sentences a student has to actually read.
+	&__blind,
+	&__hint {
+		color: var(--text-muted);
+		font-size: var(--font-size-xs);
+	}
+
+	// The student's own words, quoted back at the reveal
+	&__quote {
+		@include proposal-voice;
+
+		margin: 0;
+		padding: var(--space-sm) var(--space-md);
+		background: var(--peer-tile);
+		border-radius: var(--radius-md);
+	}
+
+	&__input {
+		inline-size: 100%;
+		min-block-size: 7rem;
+		padding: var(--space-sm);
+		font: inherit;
+		color: var(--text-body);
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		resize: vertical;
+	}
+
+	// "42 / 1500" is a mark, not a word — the one rung below the floor, taken
+	// deliberately and where the audit can see the decision.
+	//
+	// Isolated because the run is all neutrals: in Hebrew it reorders to
+	// "1500 / 42", which says the student has written more than the limit
+	// allows. The same fix the board's signed percents needed.
+	&__count {
+		margin: 0;
+		text-align: end;
+		color: var(--text-muted);
+	}
+
+	// The run, not the block, carries both decisions.
+	//
+	// The isolate: `direction: ltr` on the paragraph would also flip which side
+	// `text-align: end` resolves to and move the counter to the other edge of
+	// an RTL card. Without it, "42 / 1500" reorders to "1500 / 42" in Hebrew,
+	// which tells a student they have written thirty-five times the limit.
+	//
+	// The exemption: "42 / 1500" is a mark, not a word — and type-meta clears
+	// itself on descendants precisely so a real word cannot inherit a parent's
+	// permission, which is why it has to sit here rather than one level up.
+	&__count-num {
+		@include type-meta;
+
+		direction: ltr;
+		unicode-bidi: isolate;
+	}
+
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__send,
+	&__pass {
+		flex: 1 1 auto;
+		padding: var(--space-sm) var(--space-md);
+		border-radius: var(--radius-md);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: default;
+		}
+	}
+
+	&__send {
+		color: var(--text-on-lantern);
+		background: var(--grad-mine-aa);
+		border: 1px solid var(--mine-deep);
+	}
+
+	// Passing is a real choice, not a failure, so it is offered as one rather
+	// than hidden as an escape hatch.
+	&__pass {
+		color: var(--text-secondary);
+		background: transparent;
+		border: 1px solid var(--border-subtle);
+	}
+
+	// The rotation, as a row of names
+	&__roster {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	// A classmate's name is a word, and names are the one thing on this card
+	// nobody should have to squint at.
+	&__seat {
+		padding: 2px var(--space-sm);
+		border-radius: var(--radius-md);
+		background: var(--peer-tile);
+		color: var(--text-secondary);
+		font-size: var(--font-size-xs);
+
+		&--now {
+			background: var(--grad-mine-aa);
+			color: var(--text-on-lantern);
+			font-weight: 700;
+		}
+
+		&--done {
+			opacity: 0.5;
+		}
+
+		// Passed and skipped are not failures and are not marked as such —
+		// only as "their turn has been".
+		&--passed,
+		&--skipped {
+			opacity: 0.5;
+			font-style: italic;
+		}
+	}
+
+	&__outcome-title {
+		margin: 0;
+		font-family: var(--font-display);
+	}
+
+	&__evicted,
+	&__points {
+		margin: 0;
+		font-weight: 700;
+	}
+
+	// --success-deep, not --mint-deep: mint is a FILL colour and falls to
+	// 2.56:1 as text on a white card. This is the same green, said in ink.
+	&__points {
+		color: var(--success-deep);
+	}
+
+	// The reveal. Gold for a seat won, plain for one that was not — a rejected
+	// idea gets no red: it was a real contribution that the room declined, and
+	// the student has to keep taking part afterwards.
+	&__outcome--survived {
+		border-color: var(--gold);
+		box-shadow:
+			0 0 0 2px var(--gold),
+			var(--shadow-card);
+	}
+
+	&__outcome--quiet {
+		box-shadow: none;
+		background: transparent;
+	}
+
+	// A challenge is judged blind, and the card that says so looks like a
+	// curtain rather than like a missing number.
+	&__curtain {
+		background: var(--wash-mine-high);
+		border-color: var(--border-lantern);
+	}
+}
+
+// The teacher's turn console: one primary button that changes its mind, with
+// the ways out beside it.
+.challenge-turn {
+	&__speaker {
+		margin: 0;
+		font-weight: 700;
+	}
+
+	// The button that says what happens next. It carries its own type rather
+	// than borrowing `.teacher__advance`, which has no styles at all and so
+	// renders at the browser's 13px default — below the floor this app holds
+	// itself to.
+	&__primary {
+		inline-size: 100%;
+		padding: var(--space-sm) var(--space-md);
+		color: var(--text-on-lantern);
+		background: var(--grad-mine-aa);
+		border: 1px solid var(--mine-deep);
+		border-radius: var(--radius-md);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: default;
+		}
+	}
+
+	&__secondary {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__minor {
+		flex: 1 1 auto;
+		padding: var(--space-xs) var(--space-sm);
+		color: var(--text-secondary);
+		background: transparent;
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		font: inherit;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.55;
+			cursor: default;
 		}
 	}
 }

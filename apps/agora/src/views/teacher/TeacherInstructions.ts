@@ -6,6 +6,9 @@ import type { AgoraScene, AgoraTopicPackage } from '@freedi/shared-types';
 export interface TeacherInstructionsAttrs {
 	stage: AgoraStage;
 	topic: AgoraTopicPackage;
+	/** A question stage projects its own question, not a generic prompt */
+	questionTitle?: string;
+	questionExplanation?: string;
 }
 
 /** Which scene kinds each scene-stage shows students (mirrors GameController) */
@@ -68,7 +71,19 @@ function promptCard(titleKey: string, hintKey: string): m.Children {
  * a discussion. Scene stages are self-paced per student, so the whole stage's
  * scenes are shown (not any one student's current scene).
  */
-function stageBody(stage: AgoraStage, topic: AgoraTopicPackage): m.Children {
+function stageBody(
+	stage: AgoraStage,
+	topic: AgoraTopicPackage,
+	question?: { title?: string; explanation?: string },
+): m.Children {
+	if (stage === AgoraStage.question) {
+		return m('.teacher-instructions__scene', [
+			m('h4.teacher-instructions__scene-title', question?.title ?? t('stage.question')),
+			question?.explanation ? m('p.teacher-instructions__text', question.explanation) : null,
+			m('p.teacher-instructions__text', t('question.teacher_hint')),
+		]);
+	}
+
 	const kinds = STAGE_SCENE_KINDS[stage];
 	if (kinds) {
 		const scenes = kinds
@@ -97,8 +112,11 @@ function stageBody(stage: AgoraStage, topic: AgoraTopicPackage): m.Children {
 export function TeacherInstructions(): m.Component<TeacherInstructionsAttrs> {
 	return {
 		view(vnode) {
-			const { stage, topic } = vnode.attrs;
-			const body = stageBody(stage, topic);
+			const { stage, topic, questionTitle, questionExplanation } = vnode.attrs;
+			const body = stageBody(stage, topic, {
+				title: questionTitle,
+				explanation: questionExplanation,
+			});
 			if (!body) return null;
 
 			return m('.card.teacher-instructions', [

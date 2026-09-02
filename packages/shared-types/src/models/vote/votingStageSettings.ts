@@ -28,6 +28,38 @@ export const VotingStageSettingsSchema = object({
 	 * its consensus clears this. Unset means the most-voted option always wins.
 	 */
 	winningConsensusThreshold: optional(number()),
+	/**
+	 * Whether voters see the tallies while the vote is open.
+	 *
+	 * Default OFF, and deliberately: a running count is an argument. Show it and
+	 * the leading option gathers votes for leading, which is the one thing a
+	 * vote is supposed to measure independently. The teacher reveals it when
+	 * they want the room to see where it stands — usually at the close.
+	 *
+	 * How MANY have voted is never hidden by this; only who they voted for.
+	 */
+	showResults: optional(boolean()),
+	/**
+	 * Whether the ballot re-sorts by votes as they arrive. Only has an effect
+	 * while the tallies are shown — reordering by a number nobody can see would
+	 * leak it, and a ballot that moves under a voter's finger loses their place.
+	 */
+	liveReorder: optional(boolean()),
+	/**
+	 * Whether students may put NEW options on the ballot while the vote runs,
+	 * one student at a time (the challenge round).
+	 *
+	 * `undefined` means OFF — the opposite of `enabled` above, and on purpose.
+	 * `enabled` defaults on because a session written before voting existed
+	 * should still hold a vote; this defaults off because no session ever
+	 * agreed to let its ballot be rewritten mid-election. A teacher opts in.
+	 */
+	challengeGame: optional(boolean()),
+	/**
+	 * Turns the challenge round runs before closing itself. Unset means
+	 * `AGORA_CHALLENGE.DEFAULT_MAX_TURNS`. Only read when `challengeGame`.
+	 */
+	challengeMaxTurns: optional(number()),
 });
 
 export type VotingStageSettings = InferOutput<typeof VotingStageSettingsSchema>;
@@ -56,6 +88,25 @@ export type VotingState = InferOutput<typeof VotingStateSchema>;
 
 /** Written when a vote is withdrawn — a vote doc is never deleted, so the trigger can decrement */
 export const NO_VOTE = 'none';
+
+/**
+ * The "no" of a one-candidate ballot. A ballot with a single proposal is not
+ * a choice between options but a question — do we adopt this? — so the
+ * against side needs a place to be counted. It is a sentinel statementId in
+ * the same vote doc, and the ballot's `candidateIds` carry it so the tally
+ * counts it like any candidate. It is never a winner (see `pickVoteWinner`).
+ */
+export const VOTE_AGAINST = 'against';
+
+/** Vote ids that name no option doc — the shared vote trigger must not look them up */
+export function isVoteSentinel(statementId: string): boolean {
+	return statementId === NO_VOTE || statementId === VOTE_AGAINST;
+}
+
+/** The ids a ballot tallies: the candidates, plus the against side when there is exactly one */
+export function ballotTallyIds(candidateIds: readonly string[]): string[] {
+	return candidateIds.length === 1 ? [...candidateIds, VOTE_AGAINST] : [...candidateIds];
+}
 
 /**
  * Fills the teacher's partial settings out into the complete `ResultsSettings`
@@ -100,16 +151,22 @@ export function tallyVotes(
 }
 
 export interface VoteWinner {
-	/** Absent when nobody voted */
+	/** Absent when nobody voted, and on a one-candidate ballot the room turned down */
 	winnerStatementId?: string;
 	/** True when there is a winner AND it clears `winningConsensusThreshold` */
 	metThreshold: boolean;
 	total: number;
+	/** One-candidate ballot only: the against side won (or tied — adopting needs a majority) */
+	rejected?: boolean;
 }
 
 /**
  * The elected option. Ties break on consensus, then on statementId, so every
  * reader of the same data names the same winner.
+ *
+ * On a one-candidate ballot the `against` sentinel is in the counts; the
+ * proposal is adopted only when it strictly out-votes it, and the sentinel is
+ * never named as the winner.
  */
 export function pickVoteWinner(
 	counts: Record<string, number>,
@@ -121,6 +178,21 @@ export function pickVoteWinner(
 
 	if (entries.length === 0) {
 		return { metThreshold: false, total: 0 };
+	}
+
+	if (VOTE_AGAINST in counts) {
+		const against = counts[VOTE_AGAINST] ?? 0;
+		const candidate = entries.find(([id]) => id !== VOTE_AGAINST);
+		if (!candidate || candidate[1] <= against) {
+			return { metThreshold: false, total, rejected: true };
+		}
+		const [winnerStatementId] = candidate;
+		const metThreshold =
+			winningConsensusThreshold === undefined
+				? true
+				: (consensusById[winnerStatementId] ?? 0) >= winningConsensusThreshold;
+
+		return { winnerStatementId, metThreshold, total, rejected: false };
 	}
 
 	entries.sort(([aId, aCount], [bId, bCount]) => {

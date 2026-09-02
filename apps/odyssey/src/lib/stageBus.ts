@@ -16,11 +16,15 @@ export interface StageParty {
 	id: string;
 	name: string;
 	color: string;
+	/** AI elder persona — the stage must mark the ship as such (📜) */
+	isElder?: boolean;
 }
 
 export interface StageIsland {
 	id: string;
 	title: string;
+	/** The civic issue, one line — the only thing that says what the island IS */
+	issue: string;
 	/** percent from the RIGHT edge (admin/DOM convention) */
 	posX: number;
 	posY: number;

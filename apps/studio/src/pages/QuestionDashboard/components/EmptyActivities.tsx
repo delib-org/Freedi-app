@@ -1,6 +1,7 @@
 import { type FC } from 'react';
 import type { ActivityType } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/react';
+import { Button } from '@/components/atomic/atoms/Button';
 import { EmptyState } from '@/components/atomic/atoms/EmptyState';
 import {
 	ActivityTypePicker,
@@ -14,9 +15,10 @@ import {
 export interface EmptyActivitiesProps {
 	canManage: boolean;
 	onPickType: (type: ActivityType) => void;
+	onPlanWithAI?: () => void;
 }
 
-const EmptyActivities: FC<EmptyActivitiesProps> = ({ canManage, onPickType }) => {
+const EmptyActivities: FC<EmptyActivitiesProps> = ({ canManage, onPickType, onPlanWithAI }) => {
 	const { t } = useTranslation();
 
 	if (!canManage) {
@@ -41,6 +43,16 @@ const EmptyActivities: FC<EmptyActivitiesProps> = ({ canManage, onPickType }) =>
 					label={t('Activity type')}
 					compact
 				/>
+			}
+			secondary={
+				onPlanWithAI ? (
+					<Button
+						text={`${t('or')} ✨ ${t('Plan with AI')}`}
+						variant="secondary"
+						size="small"
+						onClick={onPlanWithAI}
+					/>
+				) : undefined
 			}
 		/>
 	);

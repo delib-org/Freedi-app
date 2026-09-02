@@ -4,6 +4,7 @@ import { db } from '../db';
 import {
 	Collections,
 	AgoraCamp,
+	AgoraClassMember,
 	AgoraDeviceMode,
 	AgoraParticipant,
 	AgoraSession,
@@ -11,11 +12,14 @@ import {
 	AgoraSessionStatus,
 	AgoraTopicPackage,
 	CivicStanceEvaluation,
+	CivicStanceMeta,
 	Evaluation,
+	AGORA_CIVIC_CENTER_POSITION,
 	AGORA_SESSION,
+	createAgoraClassMemberId,
 	createAgoraParticipantId,
 	deriveCamp,
-	deriveCivicCampPosition,
+	deriveCivicCampPositionFromIsland,
 	functionConfig,
 	resolveSessionFlow,
 	AttitudeMap,
@@ -28,37 +32,64 @@ interface CivicStanding {
 	camp: AgoraCamp;
 }
 
+/** The seat handed to a player whose island answers carry no lean at all. */
+const CENTER_STANDING: CivicStanding = {
+	campPosition: AGORA_CIVIC_CENTER_POSITION,
+	camp: deriveCamp(AGORA_CIVIC_CENTER_POSITION),
+};
+
 /**
  * Where this player stood on the island, carried over as a camp.
  *
  * A classroom asks the positioning question on screen; a civic participant
  * answered it on the island, one stance at a time, so asking again would be
- * asking them to repeat themselves. Reads the two anchor stances by their
- * deterministic evaluation ids — `${uid}--${stanceId}` — which is why this
- * needs no composite index and no cross-collection query.
+ * asking them to repeat themselves. Reads EVERY stance of the island: the
+ * poles when the player marked them, and otherwise the spectrum derivation —
+ * the stances are authored in order from pole to pole, so a voyager who
+ * marked only middle stances still arrives with the lean those answers
+ * express, instead of being handed the positioning bridge.
+ *
+ * ALWAYS returns a standing. A voyager with no derivable lean — nothing
+ * marked, an expired handoff token, an island with no anchors — is seated in
+ * the centre rather than sent to the positioning bridge: the square is a
+ * continuation of the voyage, and the bridge screen there reads as being
+ * asked to start over.
  */
-async function deriveCivicStanding(
-	session: AgoraSession,
-	uid: string,
-): Promise<CivicStanding | undefined> {
-	const { leftAnchorStanceId, rightAnchorStanceId } = session.civic ?? {};
-	if (!leftAnchorStanceId || !rightAnchorStanceId) return undefined;
+async function deriveCivicStanding(session: AgoraSession, uid: string): Promise<CivicStanding> {
+	const { islandStatementId, leftAnchorStanceId, rightAnchorStanceId } = session.civic ?? {};
+	if (!islandStatementId || !leftAnchorStanceId || !rightAnchorStanceId) return CENTER_STANDING;
 
-	const snaps = await db.getAll(
-		db.collection(Collections.evaluations).doc(`${uid}--${leftAnchorStanceId}`),
-		db.collection(Collections.evaluations).doc(`${uid}--${rightAnchorStanceId}`),
+	const stanceSnaps = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', islandStatementId)
+		.get();
+	const stanceMeta: CivicStanceMeta[] = stanceSnaps.docs.map((doc) => {
+		const data = doc.data() as { order?: number };
+
+		return { statementId: doc.id, order: data.order };
+	});
+	if (!stanceMeta.length) return CENTER_STANDING;
+
+	const evalSnaps = await db.getAll(
+		...stanceMeta.map((stance) =>
+			db.collection(Collections.evaluations).doc(`${uid}--${stance.statementId}`),
+		),
 	);
-
-	const stances: CivicStanceEvaluation[] = [];
-	for (const snap of snaps) {
+	const evaluations: CivicStanceEvaluation[] = [];
+	for (const snap of evalSnaps) {
 		const data = snap.data() as Evaluation | undefined;
 		if (data && typeof data.evaluation === 'number') {
-			stances.push({ statementId: data.statementId, evaluation: data.evaluation });
+			evaluations.push({ statementId: data.statementId, evaluation: data.evaluation });
 		}
 	}
-	if (!stances.length) return undefined;
 
-	const campPosition = deriveCivicCampPosition(stances, leftAnchorStanceId, rightAnchorStanceId);
+	const campPosition = deriveCivicCampPositionFromIsland(
+		evaluations,
+		stanceMeta,
+		leftAnchorStanceId,
+		rightAnchorStanceId,
+	);
+	if (campPosition === null) return CENTER_STANDING;
 
 	return { campPosition, camp: deriveCamp(campPosition) };
 }
@@ -109,7 +140,12 @@ async function readStanceBaseline(
 interface Request {
 	code: string;
 	teamMemberCount?: number;
+	/** `named` sessions only: the name this person goes by */
+	displayName?: string;
 }
+
+/** Long enough for a real name, short enough to sit on a card */
+const MAX_DISPLAY_NAME = 40;
 
 interface Result {
 	sessionId: string;
@@ -130,7 +166,7 @@ export const agoraJoinSession = onCall(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const { code, teamMemberCount } = request.data ?? {};
+		const { code, teamMemberCount, displayName } = request.data ?? {};
 		if (!code || typeof code !== 'string') {
 			throw new HttpsError('invalid-argument', 'code is required');
 		}
@@ -162,6 +198,24 @@ export const agoraJoinSession = onCall(
 			if (existing.exists) {
 				const participant = existing.data() as AgoraParticipant;
 
+				// A voyager seated before camp derivation existed (or before the
+				// centre fallback) can hold no campPosition. Heal it on rejoin, so
+				// nobody is re-asked on the bridge what the island already answered
+				// — a player who placed themselves by hand keeps their answer
+				// (campPosition is defined) and is left alone.
+				if (
+					participant.campPosition === undefined &&
+					session.sessionMode === AgoraSessionMode.civic &&
+					resolveSessionFlow(session).stances
+				) {
+					const standing = await deriveCivicStanding(session, uid);
+					await participantRef.update({
+						campPosition: standing.campPosition,
+						camp: standing.camp,
+						lastActive: Date.now(),
+					});
+				}
+
 				return {
 					sessionId: session.sessionId,
 					participantId,
@@ -174,6 +228,27 @@ export const agoraJoinSession = onCall(
 				if (size < AGORA_SESSION.TEAM_SIZE_MIN || size > session.teamSizeMax) {
 					throw new HttpsError('invalid-argument', 'teamMemberCount out of range');
 				}
+			}
+
+			// A class game admits roster members only. The client catches this
+			// specific code, runs the class-join flow (claim or reclaim via
+			// agoraJoinClass), and retries — a guest game (no classId) never
+			// reaches this branch. The roster alias becomes the display name: a
+			// stable pseudonym the teacher recognises across games, instead of a
+			// fresh whimsical name each session.
+			let rosterMember: AgoraClassMember | undefined;
+			if (session.classId) {
+				const memberSnap = await db
+					.collection(Collections.agoraClassMembers)
+					.where('classId', '==', session.classId)
+					.where('currentUid', '==', uid)
+					.where('status', '==', 'active')
+					.limit(1)
+					.get();
+				if (memberSnap.empty) {
+					throw new HttpsError('failed-precondition', 'class-membership-required');
+				}
+				rosterMember = memberSnap.docs[0].data() as AgoraClassMember;
 			}
 
 			const topicSnap = await db
@@ -194,7 +269,9 @@ export const agoraJoinSession = onCall(
 			// An event that runs without stances gets no camp at all — not a
 			// centred one. A centre position is a real answer ("I hold both sides
 			// equally"), and writing it for someone who was never asked would put
-			// a claim in their mouth.
+			// a claim in their mouth. A STANCE-flow civic player, though, always
+			// gets one (centre when nothing is derivable): the square never asks
+			// a voyager to position themselves again.
 			const civicStanding =
 				civic && flow.stances ? await deriveCivicStanding(session, uid) : undefined;
 			// Only ever on a first join — a rejoin returned above, which is what
@@ -218,17 +295,40 @@ export const agoraJoinSession = onCall(
 			 * Reading the session INSIDE the transaction makes the read a conflict
 			 * point: concurrent joins serialise and retry against a fresh count, so
 			 * indices are handed out exactly once each.
+			 *
+			 * The participant is re-checked INSIDE the transaction too. The
+			 * create-vs-rejoin decision above came from a plain get, so two
+			 * concurrent joins from the same student (double-tap, retried callable)
+			 * could both reach here — and an unconditional set would burn a second
+			 * anon-name index and increment the count twice for one traveler. The
+			 * loser of the race now becomes a rejoin: same doc, same name, count
+			 * untouched.
 			 */
 			const anonName = await db.runTransaction(async (transaction) => {
-				const freshSession = await transaction.get(sessionRef);
+				const [freshSession, freshParticipant] = await Promise.all([
+					transaction.get(sessionRef),
+					transaction.get(participantRef),
+				]);
+				if (freshParticipant.exists) {
+					return (freshParticipant.data() as AgoraParticipant).anonName;
+				}
 				const count = (freshSession.data() as AgoraSession | undefined)?.participantCount ?? 0;
-				const name = generateAnonName(language, count);
+				// In a named room the typed name IS the card name; a roster alias
+				// still wins (the teacher knows students by it), and an empty
+				// field falls back to a pseudonym rather than a blank card.
+				const typedName =
+					session.identity === 'named' && typeof displayName === 'string'
+						? displayName.trim().slice(0, MAX_DISPLAY_NAME)
+						: '';
+				const name = rosterMember?.alias ?? (typedName || generateAnonName(language, count));
 
 				const participant: AgoraParticipant = {
 					participantId,
 					sessionId: session.sessionId,
 					userId: uid,
 					anonName: name,
+					...(typedName && !rosterMember ? { displayName: typedName } : {}),
+					...(rosterMember ? { memberId: rosterMember.memberId } : {}),
 					...(session.deviceMode === AgoraDeviceMode.team
 						? { teamMemberCount: teamMemberCount ?? 1 }
 						: {}),
@@ -251,6 +351,15 @@ export const agoraJoinSession = onCall(
 
 				return name;
 			});
+
+			// The roster's "last active" column — fire-and-forget: losing it costs
+			// a timestamp, never a seat.
+			if (rosterMember) {
+				db.collection(Collections.agoraClassMembers)
+					.doc(createAgoraClassMemberId(rosterMember.classId, rosterMember.memberId))
+					.update({ lastActive: now, lastUpdate: now })
+					.catch(() => undefined);
+			}
 
 			return { sessionId: session.sessionId, participantId, anonName };
 		} catch (error) {

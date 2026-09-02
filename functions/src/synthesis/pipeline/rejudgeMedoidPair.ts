@@ -1,7 +1,7 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement } from '@freedi/shared-types';
-import { judgeSemanticEquivalence } from '../../services/semantic-equivalence-service';
+import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
 import { computeMedoid } from './computeMedoid';
 import { mergeClusters } from './mergeClusters';
 import { isCluster } from './clusterOps';
@@ -60,7 +60,7 @@ export async function rejudgeMedoidPair(
 		return;
 	}
 
-	const result = await judgeSemanticEquivalence([
+	const result = await judgeSemanticEquivalenceCached([
 		{
 			pairId: `${pair.a}|${pair.b}`,
 			textA: medoidA.statement,

@@ -1,5 +1,6 @@
 export {
 	AgoraStage,
+	AGORA_STAGE_ORDER,
 	AgoraRoundPhase,
 	AgoraDeviceMode,
 	AgoraCamp,
@@ -23,9 +24,11 @@ export {
 	AGORA_CYCLE,
 	AGORA_ANTI_GAMING,
 	AGORA_VOTING,
+	AGORA_CHALLENGE,
 } from './agoraConstants';
 
 export type {
+	AgoraTopicKind,
 	AgoraValue,
 	AgoraCharacter,
 	AgoraDialogueLine,
@@ -39,6 +42,7 @@ export type {
 	AgoraTopicPackage,
 } from './agoraTopicPackage';
 export {
+	AgoraTopicKindSchema,
 	AgoraValueSchema,
 	AgoraCharacterSchema,
 	AgoraDialogueLineSchema,
@@ -71,14 +75,81 @@ export {
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
 
-export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
-export { AgoraSessionFlowSchema, resolveSessionFlow, scriptToFlow } from './sessionFlow';
+export type { AgoraAgreementResults, AgoraIdentityMode } from './agoraSession';
+export { AgoraAgreementResultsSchema, AgoraIdentityModeSchema } from './agoraSession';
 
-export type { CivicStanceEvaluation } from './agoraCivic';
+export type {
+	AgoraQuestionSelection,
+	AgoraVotingTrigger,
+	AgoraStagePlanItem,
+	AgoraStagePlan,
+	AgoraCarriedAnswer,
+	AgoraStageOutcome,
+	AgoraStageTriggerMode,
+	AgoraStageItemState,
+	AgoraStageState,
+	StagePlanSession,
+	StagePlanError,
+	AgoraStagePlanPreset,
+	VotingTriggerRow,
+	VotingTriggerVerdict,
+} from './stagePlan';
+export {
+	AGORA_STAGE_PLAN,
+	AGORA_VOTING_TRIGGER,
+	AGORA_CHARACTER_STAGES,
+	AGORA_PLANNABLE_STAGES,
+	AgoraQuestionSelectionSchema,
+	AgoraVotingTriggerSchema,
+	AgoraStagePlanItemSchema,
+	AgoraStagePlanSchema,
+	AgoraCarriedAnswerSchema,
+	AgoraStageOutcomeSchema,
+	AgoraStageTriggerModeSchema,
+	AgoraStageItemStateSchema,
+	AgoraStageStateSchema,
+	legacyStagePlan,
+	resolveStagePlan,
+	currentPlanIndex,
+	currentPlanItem,
+	nextPlanItem,
+	isItemOpened,
+	planIndexForStage,
+	closedQuestionItems,
+	validateStagePlan,
+	stagePlanPreset,
+	defaultQuestionSelection,
+	defaultVotingTrigger,
+	resolveQuestionSelection,
+	rankCarriedAnswers,
+	selectCarriedAnswers,
+	evaluateVotingTrigger,
+} from './stagePlan';
+
+export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
+export {
+	AgoraSessionFlowSchema,
+	resolveSessionFlow,
+	scriptToFlow,
+	sessionRunsVoting,
+} from './sessionFlow';
+
+export type { CivicStanceEvaluation, CivicStanceMeta } from './agoraCivic';
 export {
 	AGORA_CIVIC_CENTER_POSITION,
 	deriveCivicCampPosition,
+	deriveCivicCampPositionFromIsland,
 } from './agoraCivic';
+
+export type {
+	ProvisionCivicSessionsRequest,
+	ProvisionedCivicSession,
+	ProvisionCivicSessionsResponse,
+	UpdateCivicFlowRequest,
+	UpdateCivicFlowResponse,
+	AdvanceCivicStageRequest,
+	AdvanceCivicStageResponse,
+} from './agoraCivicCallables';
 
 export type { AgoraValueScore, AgoraPoints, AgoraParticipant } from './agoraParticipant';
 export {
@@ -155,3 +226,52 @@ export { deriveAgoraOutcome } from './agoraOutcome';
 
 export type { AgoraRevisionInput, AgoraRevisionAssessment } from './agoraRevision';
 export { assessRevision, countChangedWords } from './agoraRevision';
+
+export type {
+	AgoraSchool,
+	AgoraClass,
+	AgoraClassMember,
+	AgoraStudentGameRow,
+	AgoraStudentAggregate,
+	AgoraClassGameRow,
+	AgoraOutcomeTally,
+	AgoraClassAggregate,
+	AgoraAdvancementSummary,
+} from './agoraClassroom';
+export {
+	AGORA_CLASSROOM,
+	AgoraSchoolSchema,
+	AgoraClassSchema,
+	AgoraClassMemberSchema,
+	AgoraStudentGameRowSchema,
+	AgoraStudentAggregateSchema,
+	AgoraClassGameRowSchema,
+	AgoraOutcomeTallySchema,
+	AgoraClassAggregateSchema,
+	createAgoraClassMemberId,
+	emptyAgoraPoints,
+	emptyStudentAggregate,
+	emptyClassAggregate,
+	mergeStudentGame,
+	mergeClassGame,
+	advancementSummary,
+} from './agoraClassroom';
+
+export type {
+	ManageSchoolRequest,
+	ManageSchoolResponse,
+	OpenClassRequest,
+	OpenClassResponse,
+	JoinClassRequest,
+	JoinClassAliasRow,
+	JoinClassResponse,
+	TeacherRosterRequest,
+	TeacherRosterResponse,
+	TeacherConsoleRequest,
+	TeacherConsoleMember,
+	TeacherConsoleDashboard,
+	TeacherConsoleClassDetail,
+	TeacherConsoleReport,
+	TeacherConsoleResponse,
+	CreateSessionClassroomFields,
+} from './agoraClassroomCallables';

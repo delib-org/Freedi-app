@@ -47,7 +47,7 @@
     "lint": "NODE_OPTIONS='--max-old-space-size=8192' eslint \"src/**/*.{ts,tsx}\" \"functions/src/**/*.ts\"",
     "lint:fix": "NODE_OPTIONS='--max-old-space-size=8192' eslint --fix \"src/**/*.{ts,tsx}\" \"functions/src/**/*.ts\"",
     "typecheck": "tsc",
-    "check-all": "npm-run-all lint typecheck test build",
+    "check-all": "npm-run-all lint typecheck typecheck:functions test build",
     "deploy:rules:prod": "firebase use wizcol && firebase deploy --only firestore:rules,storage",
     "deploy:rules:dev": "firebase use dev && firebase deploy --only firestore:rules,storage",
     "deploy:rules:test": "firebase use test && firebase deploy --only firestore:rules,storage",
@@ -84,7 +84,8 @@
     "e2e:install": "npx playwright install chromium",
     "seed:wizcol": "FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx tsx scripts/seedFromWizcolDump.ts",
     "backup:survey": "npx tsx scripts/exportProdQuestion.ts",
-    "restore:survey": "npx tsx scripts/restoreQuestionToProduction.ts"
+    "restore:survey": "npx tsx scripts/restoreQuestionToProduction.ts",
+    "typecheck:functions": "npm --prefix functions run typecheck"
   },
   "dependencies": {
     "@microsoft/clarity": "^1.0.2",
@@ -99,7 +100,7 @@
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.6",
-    "firebase": "^11.0.2",
+    "firebase": "^12.18.0",
     "lucide-react": "^0.474.0",
     "mind-elixir": "^5.5.0",
     "qrcode.react": "^4.2.0",

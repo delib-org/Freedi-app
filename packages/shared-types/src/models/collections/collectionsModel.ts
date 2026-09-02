@@ -106,6 +106,12 @@ export enum Collections {
     agoraScores = 'agoraScores',
     agoraValueAnswers = 'agoraValueAnswers',
     agoraCharacterReviews = 'agoraCharacterReviews',
+    agoraSchools = 'agoraSchools',
+    agoraClasses = 'agoraClasses',
+    agoraClassMembers = 'agoraClassMembers',
+    agoraStudentAggregates = 'agoraStudentAggregates',
+    agoraClassAggregates = 'agoraClassAggregates',
+    agoraStats = 'agoraStats',
 
     // Israeli Odyssey pre-election civic-voice game
     odysseyGames = 'odysseyGames',
@@ -119,4 +125,11 @@ export enum Collections {
     // Per-question participation funnel (server-maintained counters + markers)
     questionProgress = 'questionProgress',
     questionParticipation = 'questionParticipation',
+
+    // WizCol Studio — "Start a question with AI" (Cloud-Function-only writes)
+    studioPlanSessions = 'studioPlanSessions',
+    scheduledActions = 'scheduledActions',
+    studioRateLimits = 'studioRateLimits',
+
+    odysseyDigestState = 'odysseyDigestState',
 }

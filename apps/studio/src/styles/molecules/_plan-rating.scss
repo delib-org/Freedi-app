@@ -1,0 +1,66 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// One-time "How was the AI plan?" card on the dashboard after a build.
+.plan-rating {
+	@include card-base;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	border: 1px solid var(--border-light);
+	background: var(--wash-primary);
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-md);
+	}
+
+	&__choices {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__choice {
+		@include hit-target;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		padding-inline: var(--space-sm);
+		font: inherit;
+		color: var(--text-body);
+		background: var(--card-default);
+		border: 1px solid var(--border-light);
+		border-radius: var(--radius-pill);
+		cursor: pointer;
+
+		&:hover,
+		&[aria-pressed='true'] {
+			border-color: var(--btn-primary);
+			background: var(--wash-primary);
+		}
+	}
+
+	&__note {
+		@include input-base;
+		resize: vertical;
+		min-block-size: 4rem;
+	}
+
+	&__footer {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	&__thanks {
+		margin: 0;
+		font-weight: 600;
+		color: var(--approve-ink);
+	}
+
+	&__error {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-error);
+	}
+}

@@ -1,73 +1,25 @@
 import * as Sentry from '@sentry/react';
+import {
+	isBlockedServiceWorkerCrash,
+	isFirestoreInternalCrash,
+	isTransientAuthNetworkError,
+} from '@freedi/shared-utils';
 import { useLocation, useNavigationType } from 'react-router';
 import React, { useEffect } from 'react';
 import { logError } from '@/utils/errorHandling';
 
-// Null-dereference messages the Firestore SDK throws from its own persistence /
-// target layer (`removeTarget`, LRU garbage collection). Harmless to drop only
-// when the frames really are inside the Firestore bundle — see isFirestoreInternalCrash.
-const FIRESTORE_INTERNAL_MESSAGES = [
-	'INTERNAL ASSERTION FAILED',
-	"Cannot read properties of null (reading 'target')",
-	"Cannot read properties of null (reading 'withSequenceNumber')",
-];
-
 /**
- * True when the event is one of the Firestore SDK's internal persistence crashes.
- * Requires both a known message and a stack rooted in the Firestore vendor chunk,
- * so app-code null-dereferences with a similar message still get reported.
+ * Substring identifying this app's Firebase vendor bundle. Set by
+ * `manualChunks` in vite.config.ts — keep the two in step, or the Firestore
+ * SDK's internal crashes stop being recognised as such.
  */
-function isFirestoreInternalCrash(event: Sentry.ErrorEvent, error: unknown): boolean {
-	const messages: string[] = [];
-	if (error instanceof Error && error.message) messages.push(error.message);
-	event.exception?.values?.forEach((exc) => {
-		if (exc.value) messages.push(exc.value);
-	});
-
-	const hasKnownMessage = messages.some((msg) =>
-		FIRESTORE_INTERNAL_MESSAGES.some((known) => msg.includes(known)),
-	);
-	if (!hasKnownMessage) return false;
-
-	const frames = event.exception?.values?.flatMap((exc) => exc.stacktrace?.frames ?? []) ?? [];
-	if (frames.length === 0) {
-		// Assertion errors carry their own unmistakable prefix even without a stack.
-		return messages.some((msg) => msg.includes('INTERNAL ASSERTION FAILED'));
-	}
-
-	return frames.every((frame) => (frame.filename ?? '').includes('vendor-firebase'));
-}
-
-/**
- * True when the event is workbox-window dereferencing a registration that
- * `serviceWorker.register()` never returned. Privacy extensions and automation
- * harnesses stub register() so it resolves undefined; the crash happens inside
- * the minified workbox bundle, so app code can't guard it. Requires both the
- * null-deref message and a stack rooted entirely in workbox-window, so real
- * app-code dereferences with a similar message still get reported.
- */
-function isBlockedServiceWorkerCrash(event: Sentry.ErrorEvent, error: unknown): boolean {
-	const messages: string[] = [];
-	if (error instanceof Error && error.message) messages.push(error.message);
-	event.exception?.values?.forEach((exc) => {
-		if (exc.value) messages.push(exc.value);
-	});
-
-	const hasKnownMessage = messages.some((msg) =>
-		/Cannot read propert(?:y|ies) of (?:undefined|null) \(reading '(?:waiting|installing|active)'\)|(?:undefined|null) is not an object \(evaluating '.*\.(?:waiting|installing|active)'\)/.test(
-			msg,
-		),
-	);
-	if (!hasKnownMessage) return false;
-
-	const frames = event.exception?.values?.flatMap((exc) => exc.stacktrace?.frames ?? []) ?? [];
-	if (frames.length === 0) return false;
-
-	return frames.every((frame) => (frame.filename ?? '').includes('workbox-window'));
-}
+const FIREBASE_CHUNK_NAMES = ['vendor-firebase'] as const;
 
 export function initSentry() {
-	const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+	// Prefer a main-app-specific DSN. The main app, sign and join were all
+	// pointed at the same Sentry project, which is why issues from
+	// /statement/:id and /login showed up filed under "wizcol-sign".
+	const sentryDsn = import.meta.env.VITE_SENTRY_DSN_MAIN || import.meta.env.VITE_SENTRY_DSN;
 
 	// Only initialize in production and if we have a valid DSN
 	if (
@@ -79,6 +31,8 @@ export function initSentry() {
 		Sentry.init({
 			dsn: sentryDsn,
 			environment: import.meta.env.VITE_ENVIRONMENT || 'production',
+			// Until each app has its own project, this tag is what separates them.
+			initialScope: { tags: { app: 'main' } },
 			integrations: [Sentry.browserTracingIntegration()],
 			// Performance Monitoring
 			tracesSampleRate: 0.1, // Capture 10% of transactions for performance monitoring
@@ -143,7 +97,18 @@ export function initSentry() {
 				// `indexedDBErrorHandler` catches them, records the failure so the next
 				// load uses the memory cache, and reports a single structured event
 				// instead — that is the signal to watch.
-				if (isFirestoreInternalCrash(event, error)) {
+				if (
+					isFirestoreInternalCrash(event, error, {
+						firebaseChunkNames: FIREBASE_CHUNK_NAMES,
+					})
+				) {
+					return null;
+				}
+
+				// Transient connectivity talking to Firebase Auth — offline, flaky
+				// mobile network, or an ad-blocker on identitytoolkit. Nothing is
+				// broken and nothing is fixable; these only crowd out real errors.
+				if (isTransientAuthNetworkError(event, error)) {
 					return null;
 				}
 

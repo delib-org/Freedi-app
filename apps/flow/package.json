@@ -19,7 +19,9 @@
   "dependencies": {
     "@freedi/engagement-core": "file:../../packages/engagement-core",
     "@freedi/shared-types": "file:../../packages/shared-types",
-    "firebase": "^11.0.2",
+    "@freedi/shared-utils": "file:../../packages/shared-utils",
+    "@sentry/browser": "^9.42.1",
+    "firebase": "^12.18.0",
     "mithril": "^2.2.8",
     "qrcode": "^1.5.4"
   },

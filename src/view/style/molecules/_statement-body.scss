@@ -5,6 +5,14 @@
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
+
+  // Holds the editor's height while its chunk loads, so clicking Edit does not
+  // collapse the body and shove the page around. See StatementBody.tsx — the
+  // rich-text editor is lazy-loaded.
+  &__editor-loading {
+    min-height: 8rem;
+    width: 100%;
+  }
   // Match the header's content width so the body lines up under it visually
   // when it scrolls into view. The actual page__main scroll container is
   // wider, but body content stays inside this readable column.

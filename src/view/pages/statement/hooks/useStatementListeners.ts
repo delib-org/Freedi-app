@@ -33,6 +33,8 @@ interface UseStatementListenersProps {
 	statementId?: string;
 	stageId?: string;
 	screen?: string;
+	/** True once the statement is known to be missing — see the main effect. */
+	isStatementNotFound: boolean;
 	setIsStatementNotFound: (value: boolean) => void;
 	setError: (error: string | null) => void;
 }
@@ -45,6 +47,7 @@ export const useStatementListeners = ({
 	statementId,
 	stageId,
 	screen,
+	isStatementNotFound,
 	setIsStatementNotFound,
 	setError,
 }: UseStatementListenersProps) => {
@@ -65,9 +68,15 @@ export const useStatementListeners = ({
 	useEffect(() => {
 		if (statementId && statementId !== previousStatementIdRef.current) {
 			listenerManager.resetStats();
+			// One statement being missing says nothing about the next one. Without
+			// this the flag stays true across navigation and every subsequent
+			// statement renders as 404.
+			if (previousStatementIdRef.current !== undefined) {
+				setIsStatementNotFound(false);
+			}
 			previousStatementIdRef.current = statementId;
 		}
-	}, [statementId]);
+	}, [statementId, setIsStatementNotFound]);
 
 	// Effect for main statement listening
 	useEffect(() => {
@@ -95,6 +104,20 @@ export const useStatementListeners = ({
 		};
 
 		try {
+			// The statement is gone (deleted, or the listener errored). StatementMain
+			// renders Page404 for this state but stays mounted, so without this the
+			// whole listener set — sub-statements, mind-map, notifications,
+			// demographics, evaluations — stays subscribed to a document that isn't
+			// there, re-erroring for as long as the page is open. Keep only the
+			// single-document listener, which costs nothing on a missing doc and is
+			// the one thing that can clear the flag if the read was a transient
+			// failure rather than a real deletion.
+			if (isStatementNotFound) {
+				unsubscribersRef.current.push(listenToStatement(statementId, setIsStatementNotFound));
+
+				return cleanup;
+			}
+
 			// Only clear notifications if we have a valid statementId
 			if (statementId) {
 				clearInAppNotifications(statementId);
@@ -170,6 +193,7 @@ export const useStatementListeners = ({
 		enableTreeView,
 		topParentId,
 		fullyLoadedScope,
+		isStatementNotFound,
 		setIsStatementNotFound,
 		setError,
 	]);
@@ -177,7 +201,7 @@ export const useStatementListeners = ({
 	// Effect for top parent statement and group-level demographic questions
 	// This effect now properly depends on topParentId from Redux selector
 	useEffect(() => {
-		if (!creator || !statementId || !topParentId) return;
+		if (!creator || !statementId || !topParentId || isStatementNotFound) return;
 
 		const unsubscribers: (() => void)[] = [];
 
@@ -211,5 +235,5 @@ export const useStatementListeners = ({
 				}
 			});
 		};
-	}, [creator, statementId, topParentId]);
+	}, [creator, statementId, topParentId, isStatementNotFound]);
 };

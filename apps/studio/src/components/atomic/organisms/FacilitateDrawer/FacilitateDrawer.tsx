@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useId, useRef, useState, type FC } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type FC, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { ActivityType, type QuestionProgress } from '@freedi/shared-types';
+import { ActivityType, type QuestionProgress, type ScheduledAction } from '@freedi/shared-types';
 import type { ActivityRunState, DerivedActivity } from '@freedi/event-core';
 import { useTranslation } from '@freedi/shared-i18n/react';
 import { ActivityTypeChip } from '@/components/atomic/atoms/ActivityTypeChip';
@@ -10,11 +10,13 @@ import { Button } from '@/components/atomic/atoms/Button';
 import { ProgressFunnel } from '@/components/atomic/atoms/ProgressFunnel';
 import { ProgressStat } from '@/components/atomic/atoms/ProgressStat';
 import { StatusPill } from '@/components/atomic/atoms/StatusPill';
+import { ACTION_GLYPHS, ACTION_LABELS } from '@/components/atomic/atoms/Tag';
 import { StatusControl } from '@/components/atomic/molecules/StatusControl';
 import { ShareHub } from '@/components/atomic/molecules/ShareHub';
 import { NudgeComposer, type NudgePayload } from '@/components/atomic/molecules/NudgeComposer';
 import { useDialogMechanics } from '@/utils/dialogMechanics';
 import { formatRelativeTime } from '@/utils/relativeTime';
+import { formatDateTime, toIsoDateTime } from '@/utils/formatDateTime';
 import { logError } from '@/utils/logError';
 import { useMediaQuery, MEDIA_MOBILE } from '@/components/atomic/organisms/AppShell/useMediaQuery';
 
@@ -50,6 +52,12 @@ export interface FacilitateDrawerProps {
 	returnFocusTo?: HTMLElement | null;
 	/** Whether the org has email nudges available (default true). */
 	emailEnabled?: boolean;
+	/** The next pending scheduled action on this activity, shown under Status. */
+	nextScheduled?: ScheduledAction;
+	/** Sign documents: the "Draft from results" section (data-bound, injected). */
+	documentTools?: ReactNode;
+	/** Crowd surveys: the "Starting suggestions" section (data-bound, injected). */
+	surveyTools?: ReactNode;
 }
 
 /** Human app name for the "opens in …" caption of the admin link. */
@@ -61,6 +69,7 @@ const APP_NAMES: Record<DerivedActivity['def']['sourceApp'], string> = {
 	flow: 'WizCol Flow',
 	chat: 'WizCol Chat',
 	agora: 'Agora',
+	odyssey: 'Odyssey',
 };
 
 const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
@@ -80,6 +89,9 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 	readOnly = false,
 	returnFocusTo,
 	emailEnabled = true,
+	nextScheduled,
+	documentTools,
+	surveyTools,
 }) => {
 	const { t, tWithParams, currentLanguage } = useTranslation();
 	const navigate = useNavigate();
@@ -162,6 +174,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 	if (!isOpen) return null;
 
 	const isSignDocument = activity.type === ActivityType.signDocument;
+	const isCrowdSurvey = activity.type === ActivityType.massConsensus;
 	const isJoin = activity.type === ActivityType.join;
 	const counts = {
 		entered: progress?.entered ?? 0,
@@ -244,14 +257,62 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 						<h3 id={`${titleId}-status`} className="drawer__section-title">
 							{t('Status')}
 						</h3>
-						{isSignDocument ? (
-							<p className="drawer__static">{t('Documents are always open while shared')}</p>
-						) : readOnly ? (
-							<StatusPill status={status} />
+						{readOnly ? (
+							<StatusPill status={status} document={isSignDocument} />
 						) : (
-							<StatusControl value={status} onChange={handleStatusChange} busy={statusBusy} />
+							<StatusControl
+								value={status}
+								onChange={handleStatusChange}
+								busy={statusBusy}
+								document={isSignDocument}
+							/>
+						)}
+						{nextScheduled && (
+							<p className="drawer__scheduled">
+								<span className="drawer__scheduled-glyph" aria-hidden="true">
+									{ACTION_GLYPHS[nextScheduled.action]}
+								</span>
+								<span>{t(ACTION_LABELS[nextScheduled.action])}</span>
+								<time
+									className="drawer__scheduled-time"
+									dateTime={toIsoDateTime(nextScheduled.runAt)}
+								>
+									{formatDateTime(nextScheduled.runAt, currentLanguage)} ·{' '}
+									{formatRelativeTime(nextScheduled.runAt, currentLanguage)}
+								</time>
+							</p>
 						)}
 					</section>
+
+					{/* 1b. Documents: write the text from results */}
+					{isSignDocument && documentTools && (
+						<section className="drawer__section" aria-labelledby={`${titleId}-draft`}>
+							<h3 id={`${titleId}-draft`} className="drawer__section-title">
+								{t('Draft from results')}
+							</h3>
+							<p className="drawer__hint drawer__hint--start">
+								{t(
+									'A strong model writes the text from the top suggestions of the activities you pick. You review and edit it in Sign before opening it for comment.',
+								)}
+							</p>
+							{documentTools}
+						</section>
+					)}
+
+					{/* 1c. Crowd surveys: starting suggestions against the cold start */}
+					{isCrowdSurvey && surveyTools && (
+						<section className="drawer__section" aria-labelledby={`${titleId}-seed`}>
+							<h3 id={`${titleId}-seed`} className="drawer__section-title">
+								{t('Starting suggestions')}
+							</h3>
+							<p className="drawer__hint drawer__hint--start">
+								{t(
+									'A few AI-written suggestions so the first participants have something to rate. They are ordinary suggestions — you can edit or remove them later in Crowd survey.',
+								)}
+							</p>
+							{surveyTools}
+						</section>
+					)}
 
 					{/* 2. Share */}
 					<section className="drawer__section" aria-labelledby={`${titleId}-share`}>
@@ -366,7 +427,7 @@ const FacilitateDrawer: FC<FacilitateDrawerProps> = ({
 									target="_blank"
 									rel="noopener noreferrer"
 								>
-									{t('Advanced settings')}
+									{isSignDocument ? t('Edit the text') : t('Advanced settings')}
 									<span className="drawer__caption">
 										{t('opens in')} {appName}
 									</span>

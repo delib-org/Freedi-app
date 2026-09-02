@@ -1,0 +1,36 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Build bar — "Build it" / "Apply plan" with its explanatory hint.
+.build-bar {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+
+	.button {
+		inline-size: 100%;
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+		text-align: center;
+	}
+
+	&__error {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		padding: var(--space-xs) var(--space-sm);
+		font-size: var(--font-size-sm);
+		color: var(--text-error);
+		background: var(--bg-error-light);
+		border-radius: var(--radius-sm);
+	}
+
+	&__error-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+}

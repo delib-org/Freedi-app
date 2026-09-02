@@ -4,6 +4,8 @@ import {
 	convergenceMeans,
 	convergenceScore,
 	opinionDistance,
+	routeAttitudes,
+	type RouteIsland,
 } from '../utils/opinionDistance';
 
 /** An island's four stances — the shape a civic event actually measures on. */
@@ -150,5 +152,33 @@ describe('convergenceScore', () => {
 	it('reads as the percent of the gap that closed', () => {
 		expect(convergenceScore(0.8, 0.4)).toBe(50);
 		expect(convergenceScore(0.5, 0.5)).toBe(0);
+	});
+});
+
+describe('routeAttitudes', () => {
+	const islands: RouteIsland[] = [
+		{ statementId: 'tax', stances: [{ statementId: S1 }, { statementId: S2 }] },
+		{ statementId: 'climate', stances: [{ statementId: S3 }, { statementId: S4 }] },
+	];
+
+	it('fans a legacy declared stance out as +1 / −1 on its island', () => {
+		const virtual = routeAttitudes({ positions: { tax: S1 } }, islands);
+
+		expect(virtual).toEqual({ [S1]: 1, [S2]: -1 });
+	});
+
+	it('honors continuous attitudes, which win over the declared stance', () => {
+		const virtual = routeAttitudes(
+			{ positions: { tax: S1 }, attitudes: { [S1]: 0.5, [S3]: -0.25 } },
+			islands,
+		);
+
+		// S1: researched score wins over the +1 fan-out; S2: legacy fan-out;
+		// S3: researched score on an island with no declaration; S4: silence.
+		expect(virtual).toEqual({ [S1]: 0.5, [S2]: -1, [S3]: -0.25 });
+	});
+
+	it('says nothing about islands with neither shape declared', () => {
+		expect(routeAttitudes({}, islands)).toEqual({});
 	});
 });

@@ -192,6 +192,56 @@ describe('agora collections', () => {
 			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { stage: 'results' }));
 		});
 
+		// The stage plan, the pointer into it and its runtime state move only
+		// through callables — a stale teacher tab writing `stage` without
+		// `stageIndex` would leave the room's two positions disagreeing.
+		it('rejects a teacher writing the stage pointer or the plan directly', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'question',
+					stageIndex: 1,
+					stagePlan: [
+						{ itemId: 'lobby', stage: 'lobby' },
+						{ itemId: 'question-1', stage: 'question', title: 'What do I want?' },
+						{ itemId: 'results', stage: 'results' },
+					],
+					stageState: {},
+					identity: 'named',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { stage: 'results' }));
+			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { stageIndex: 2 }));
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					stagePlan: [{ itemId: 'lobby', stage: 'lobby' }],
+				}),
+			);
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					'stageState.question-1': { outcome: { selected: [], computedAt: 1 } },
+				}),
+			);
+			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { identity: 'pseudonym' }));
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					agreement: { ranked: [], computedAt: 1 },
+				}),
+			);
+			// while the fields the teacher does own still move
+			await assertSucceeds(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingSettings: { selection: { resultsBy: 'consensus', cutoffBy: 'topOptions', numberOfResults: 2 } },
+					lastUpdate: 1_700_000_000_001,
+				}),
+			);
+		});
+
 		// The teacher decides HOW the vote runs...
 		it('allows a teacher to set the voting settings', async () => {
 			await seed(env, async (db) => {
@@ -261,6 +311,91 @@ describe('agora collections', () => {
 			await assertFails(
 				updateDoc(doc(db, 'agoraSessions', SESSION), {
 					votingSettings: { winningConsensusThreshold: 0 },
+				}),
+			);
+		});
+
+		// Whether students may add options at all is the teacher's call...
+		it('allows a teacher to open the ballot to new options', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'deliberation',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertSucceeds(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingSettings: { enabled: true, challengeGame: true, challengeMaxTurns: 6 },
+				}),
+			);
+		});
+
+		// ...but running the round is not. A teacher who could write the turn
+		// state could name themselves the speaker, or crown a challenger the
+		// class voted down.
+		it('rejects a teacher rewriting the challenge turn state', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'voting',
+					participantCount: 3,
+					votingSettings: { challengeGame: true },
+					votingGame: {
+						order: [STUDENT],
+						orderNames: ['traveler'],
+						turnIndex: 0,
+						maxTurns: 8,
+						phase: 'vote',
+						speakerUserId: STUDENT,
+						passedUserIds: [],
+						skippedUserIds: [],
+						startedAt: 1_700_000_000_000,
+						updatedAt: 1_700_000_000_000,
+					},
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingGame: {
+						order: [TEACHER],
+						orderNames: ['teacher'],
+						turnIndex: 0,
+						maxTurns: 8,
+						phase: 'resolved',
+						speakerUserId: TEACHER,
+						passedUserIds: [],
+						skippedUserIds: [],
+						startedAt: 1_700_000_000_000,
+						updatedAt: 1_700_000_000_001,
+					},
+				}),
+			);
+		});
+
+		it('rejects a student writing the challenge turn state', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'voting',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(STUDENT).firestore();
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingGame: { phase: 'vote', turnIndex: 0 },
 				}),
 			);
 		});

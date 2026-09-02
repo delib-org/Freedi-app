@@ -75,6 +75,14 @@ export interface CachedJudgeOptions {
 	promptVer?: string;
 }
 
+export interface CachedJudgeOutcome {
+	results: EquivalenceResult[];
+	/** Pairs answered from the cache — these cost a Firestore read, not a completion. */
+	cacheHits: number;
+	/** Pairs that required a live LLM call. The only part of the work that costs money. */
+	cacheMisses: number;
+}
+
 /**
  * Drop-in replacement for `judgeSemanticEquivalence` that consults the
  * Firestore verdict cache before invoking the LLM. Returns one
@@ -89,7 +97,25 @@ export async function judgeSemanticEquivalenceCached(
 	pairs: EquivalencePair[],
 	options: CachedJudgeOptions = {},
 ): Promise<EquivalenceResult[]> {
-	if (pairs.length === 0) return [];
+	const outcome = await judgeSemanticEquivalenceCachedDetailed(pairs, options);
+
+	return outcome.results;
+}
+
+/**
+ * Same work as `judgeSemanticEquivalenceCached`, but also reports how much of it
+ * was actually paid for.
+ *
+ * Callers that ration LLM spend need this: a caller that cannot tell a cache hit
+ * from a completion has to budget as if every call costs, which throttles it just
+ * as hard on a corpus where nothing costs anything. `fn_synthesisReJudge` bills
+ * only `cacheMisses` against its per-parent budget for exactly that reason.
+ */
+export async function judgeSemanticEquivalenceCachedDetailed(
+	pairs: EquivalencePair[],
+	options: CachedJudgeOptions = {},
+): Promise<CachedJudgeOutcome> {
+	if (pairs.length === 0) return { results: [], cacheHits: 0, cacheMisses: 0 };
 
 	const modelId = options.modelId ?? JUDGE_MODEL_ID;
 	const promptVer = options.promptVer ?? JUDGE_PROMPT_VER;
@@ -162,7 +188,7 @@ export async function judgeSemanticEquivalenceCached(
 		}
 	}
 
-	return ordered;
+	return { results: ordered, cacheHits: hits.length, cacheMisses: missPairs.length };
 }
 
 async function readCachedVerdicts(

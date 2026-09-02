@@ -85,6 +85,8 @@ export interface CreateStatementParams {
 	agoraPreviousText?: string;
 	/** Agora: on an `award` message, the points it paid */
 	agoraPointsAwarded?: number;
+	/** Agora: written as a challenge during the vote, not as a deliberation proposal */
+	agoraChallenge?: boolean;
 }
 
 /**
@@ -179,6 +181,7 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 			...(params.agoraPointsAwarded !== undefined && {
 				agoraPointsAwarded: params.agoraPointsAwarded,
 			}),
+			...(params.agoraChallenge && { agoraChallenge: true }),
 		};
 
 		// Validate against schema

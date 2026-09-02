@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState, useCallback } from 'react';
+import React, { FC, Suspense, lazy, useEffect, useMemo, useState, useCallback } from 'react';
 import clsx from 'clsx';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import {
@@ -15,7 +15,11 @@ import {
 	replaceAllParagraphChildren,
 	sortParagraphChildren,
 } from '@/controllers/db/statements/paragraphChildren';
-import RichTextEditor from '@/view/components/richTextEditor/RichTextEditor';
+// TipTap + ProseMirror are ~363 kB raw / 115 kB gzipped and were sitting in the
+// eager entry chunk, downloaded and parsed on every page load — including
+// /login, where nobody is editing anything. The editor only ever renders behind
+// `isEditing`, so it loads when the reader actually clicks Edit.
+const RichTextEditor = lazy(() => import('@/view/components/richTextEditor/RichTextEditor'));
 import { sanitizeInlineHtml } from '@/view/components/richTextEditor/editorSerialization';
 import RichHtmlContent from '@/view/components/richHtml/RichHtmlContent';
 import { containsRichHtml } from '@/utils/richHtml';
@@ -138,14 +142,16 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 	if (isEditing) {
 		return (
 			<div className={clsx('statement-body', 'statement-body--editing', className)}>
-				<RichTextEditor
-					paragraphs={editorParagraphs}
-					onSave={handleSave}
-					onCancel={() => setIsEditing(false)}
-					placeholder={t('Add a description...')}
-					isLoading={isSaving}
-					compact
-				/>
+				<Suspense fallback={<div className="statement-body__editor-loading" />}>
+					<RichTextEditor
+						paragraphs={editorParagraphs}
+						onSave={handleSave}
+						onCancel={() => setIsEditing(false)}
+						placeholder={t('Add a description...')}
+						isLoading={isSaving}
+						compact
+					/>
+				</Suspense>
 			</div>
 		);
 	}

@@ -1,12 +1,8 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { getAuth } from 'firebase-admin/auth';
 import { functionConfig } from '@freedi/shared-types';
+import type { MintAgoraHandoffResponse as Result } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
-
-interface Result {
-	token: string;
-	uid: string;
-}
 
 /**
  * Hand a player from Odyssey to Agora without asking them to sign in twice.

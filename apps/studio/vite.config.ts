@@ -12,6 +12,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
+			'@freedi/shared-utils': path.resolve(__dirname, '../../packages/shared-utils/src'),
 			'@freedi/shared-types': path.resolve(__dirname, '../../packages/shared-types/src'),
 			'@freedi/event-core': path.resolve(__dirname, '../../packages/event-core/src'),
 			'@freedi/shared-i18n': path.resolve(__dirname, '../../packages/shared-i18n/src'),

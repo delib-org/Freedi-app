@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t, tCount } from '../lib/i18n';
 import { ConvergenceResults } from './ConvergenceResults';
+import { AgreementResults } from './AgreementResults';
 import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
@@ -329,6 +330,12 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 			if (flow.scoreMode === 'convergence') {
 				return m(ConvergenceResults, { session, myParticipant });
 			}
+			// No camps and no baselines — a quick game, a class without stances.
+			// Its recap is the net support and the vote, written once by the
+			// server; waiting on `classScore` here would spin forever.
+			if (flow.scoreMode === 'agreement') {
+				return m(AgreementResults, { session, myParticipant });
+			}
 
 			if (!score) {
 				return m('.shell.shell--wide', [
@@ -420,7 +427,12 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 						? m(
 								'p.results__vote-gap',
 								t('results.vote_threshold_gap', {
-									cp: (candidate?.consensus ?? 0).toFixed(2),
+									// The consensus the SERVER judged the threshold against —
+									// never the frozen ballot snapshot's number, which stopped
+									// moving when the stage opened while ratings kept arriving.
+									// The snapshot survives only as a fallback for sessions
+									// scored before the deciding value was stored.
+									cp: (score.voteConsensus?.[winnerId] ?? candidate?.consensus ?? 0).toFixed(2),
 									threshold: score.winningConsensusThreshold.toFixed(2),
 								}),
 							)

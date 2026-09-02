@@ -31,14 +31,12 @@ interface Result {
 interface WeaveLedger {
 	/** Pay the helper for this weave, or only celebrate it (collusion cap) */
 	awardHelper: boolean;
-	/** Pay the author their integration credit (a helper not yet woven here) */
-	awardAuthor: boolean;
 }
 
 /**
- * Who has already been woven into this proposal, and how often. Read BEFORE
- * the status update so the suggestion being resolved is not counted as its
- * own precedent.
+ * How often this helper has already been woven into this proposal — the
+ * collusion cap on the HELPER's side. Read BEFORE the status update so the
+ * suggestion being resolved is not counted as its own precedent.
  *
  * Queried by parentId alone (a single-field index every project has) and
  * filtered in memory: suggestions per proposal are bounded by the open-idea
@@ -51,20 +49,63 @@ async function readWeaveLedger(proposalId: string, suggesterId: string): Promise
 		.get();
 
 	let wovenByThisHelper = 0;
-	const distinctHelpers = new Set<string>();
 	siblings.forEach((docSnap) => {
 		const data = docSnap.data() as { suggestionStatus?: string; creatorId?: string };
 		if (data.suggestionStatus !== AgoraSuggestionStatus.implemented || !data.creatorId) return;
-		distinctHelpers.add(data.creatorId);
 		if (data.creatorId === suggesterId) wovenByThisHelper++;
 	});
 
 	return {
 		awardHelper: wovenByThisHelper < AGORA_ANTI_GAMING.MAX_WOVEN_AWARDS_PER_HELPER_PER_PROPOSAL,
-		awardAuthor:
-			!distinctHelpers.has(suggesterId) &&
-			distinctHelpers.size < AGORA_POINTS.MAX_WEAVE_CREDITS_PER_PROPOSAL,
 	};
+}
+
+/**
+ * The AUTHOR's integration credit for weaving this helper in, paid through the
+ * one ledger the game keeps for it: `score.weaveCreditedHelpers` — the same
+ * array the thank-then-revise path (`creditWeaves` in fn_onAgoraProposal)
+ * checks and records. The two paths used to keep separate books (this one
+ * counted implemented siblings), so the same helper could be paid for twice,
+ * once by each. Check-and-record in one transaction: whichever path gets there
+ * first records the helper, and the other finds them already in the ledger.
+ *
+ * `set` with merge, not `update`: on a proposal nobody has rated or edited yet
+ * there is no score doc, and the ledger entry must still be written or the
+ * later `creditWeaves` pass would pay the same helper a second time.
+ */
+async function creditAuthorWeave(
+	sessionId: string,
+	proposalId: string,
+	authorId: string,
+	helperUid: string,
+): Promise<void> {
+	const scoreRef = db.collection(Collections.agoraScores).doc(proposalId);
+	const authorRef = db
+		.collection(Collections.agoraParticipants)
+		.doc(createAgoraParticipantId(sessionId, authorId));
+
+	await db.runTransaction(async (transaction) => {
+		const [scoreSnap, authorSnap] = await Promise.all([
+			transaction.get(scoreRef),
+			transaction.get(authorRef),
+		]);
+		if (!authorSnap.exists) return;
+		const credited = (scoreSnap.data()?.weaveCreditedHelpers as string[] | undefined) ?? [];
+		if (credited.includes(helperUid)) return;
+		if (credited.length >= AGORA_POINTS.MAX_WEAVE_CREDITS_PER_PROPOSAL) return;
+
+		transaction.set(
+			scoreRef,
+			{ weaveCreditedHelpers: [...credited, helperUid], lastUpdate: Date.now() },
+			{ merge: true },
+		);
+
+		const participant = authorSnap.data() as AgoraParticipant;
+		const points = { ...participant.points };
+		points.proposals += AGORA_POINTS.WEAVE_CREDIT_PER_HELPER;
+		points.total += AGORA_POINTS.WEAVE_CREDIT_PER_HELPER;
+		transaction.update(authorRef, { points, lastActive: Date.now() });
+	});
 }
 
 /**
@@ -185,12 +226,12 @@ export const agoraResolveSuggestion = onCall(
 
 			const suggesterId = suggestion.creatorId;
 			const proposalId = suggestion.parentId ?? '';
-			// Read the weave ledger BEFORE stamping the new status, so this very
+			// Read the helper's cap BEFORE stamping the new status, so this very
 			// suggestion cannot count as its own precedent
 			const ledger: WeaveLedger =
 				resolution === AgoraSuggestionStatus.implemented && suggesterId && suggesterId !== uid
 					? await readWeaveLedger(proposalId, suggesterId)
-					: { awardHelper: true, awardAuthor: false };
+					: { awardHelper: true };
 
 			// The improvement cycle's ladder (docs: apps/agora/docs/feedback-cycle.md):
 			// accept = the promise (+1), woven-in = the promise kept (+2), decline
@@ -207,13 +248,35 @@ export const agoraResolveSuggestion = onCall(
 							? AGORA_POINTS.SUGGESTION_DECLINED
 							: AGORA_POINTS.SUGGESTION_THANKED;
 
-			await suggestionRef.update({
-				suggestionStatus: resolution,
-				// The precise clock of the transition: lastUpdate can't time it,
-				// because this very write bumps it
-				statusChangedAt: Date.now(),
-				lastUpdate: Date.now(),
+			// The status stamp is the gate for everything that follows (points,
+			// award line, notification). Check-then-act must be transactional:
+			// two racing resolves (double-tap, retried callable) both pass the
+			// stale pre-read above, and without this gate both would pay.
+			const wonTransition = await db.runTransaction(async (transaction) => {
+				const freshSnap = await transaction.get(suggestionRef);
+				if (!freshSnap.exists) return false;
+				const fresh = freshSnap.data() as { suggestionStatus?: string };
+				if (resolution === AgoraSuggestionStatus.implemented) {
+					if (fresh.suggestionStatus !== AgoraSuggestionStatus.accepted) return false;
+				} else if (
+					fresh.suggestionStatus &&
+					fresh.suggestionStatus !== AgoraSuggestionStatus.open
+				) {
+					return false;
+				}
+				transaction.update(suggestionRef, {
+					suggestionStatus: resolution,
+					// The precise clock of the transition: lastUpdate can't time it,
+					// because this very write bumps it
+					statusChangedAt: Date.now(),
+					lastUpdate: Date.now(),
+				});
+
+				return true;
 			});
+			if (!wonTransition) {
+				return { ok: true }; // lost the race — the winner did the side effects
+			}
 
 			// A thank is feedback: it arms the author's revision credit and the
 			// thank-then-revise weave (see fn_onAgoraProposal). Stamped on the
@@ -227,20 +290,10 @@ export const agoraResolveSuggestion = onCall(
 
 			// The author's side of the economy: weaving a classmate's idea into
 			// your text is real editorial work. Credited once per DISTINCT
-			// helper, so integrating many voices beats trading rounds with one.
-			if (ledger.awardAuthor) {
-				const authorRef = db
-					.collection(Collections.agoraParticipants)
-					.doc(createAgoraParticipantId(sessionId, uid));
-				await db.runTransaction(async (transaction) => {
-					const snap = await transaction.get(authorRef);
-					if (!snap.exists) return;
-					const participant = snap.data() as AgoraParticipant;
-					const points = { ...participant.points };
-					points.proposals += AGORA_POINTS.WEAVE_CREDIT_PER_HELPER;
-					points.total += AGORA_POINTS.WEAVE_CREDIT_PER_HELPER;
-					transaction.update(authorRef, { points, lastActive: Date.now() });
-				});
+			// helper — through the shared `weaveCreditedHelpers` ledger, so the
+			// thank-then-revise path can never pay for the same helper again.
+			if (resolution === AgoraSuggestionStatus.implemented && suggesterId && suggesterId !== uid) {
+				await creditAuthorWeave(sessionId, proposalId, uid, suggesterId);
 			}
 
 			if (suggesterId && suggesterId !== uid) {

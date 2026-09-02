@@ -1,8 +1,9 @@
-import type { Evaluation, OdysseyParty } from '@freedi/shared-types';
+import type { Evaluation, OdysseyElder, OdysseyParty } from '@freedi/shared-types';
 import type { IslandContent } from './game';
 import {
 	AttitudeMap,
 	MIN_SHARED_STANCES,
+	elderAttitudes,
 	opinionDistance,
 	participantProfiles,
 	partyAttitudes,
@@ -30,7 +31,7 @@ import {
  * =======================================================================
  */
 
-export type OpinionPointKind = 'me' | 'sailor' | 'party';
+export type OpinionPointKind = 'me' | 'sailor' | 'party' | 'elder';
 
 export interface OpinionPoint {
 	id: string;
@@ -61,6 +62,15 @@ export interface OpinionMapResult {
 
 const RELIABLE_R = 0.8;
 
+/**
+ * Fidelity is measured on the known pairs only — so when most pair distances
+ * were imputed, a high r certifies almost nothing about the drawn map. Below
+ * this share of actually-known pairs the map refuses to call itself reliable,
+ * whatever r says. Half is the natural floor: past it, the imputed mean is
+ * the majority signal the embedding was built from.
+ */
+const RELIABLE_MIN_KNOWN_PAIR_RATIO = 0.5;
+
 interface MapEntity {
 	id: string;
 	kind: OpinionPointKind;
@@ -74,10 +84,12 @@ export function buildOpinionMap(input: {
 	evaluations: Evaluation[];
 	islands: IslandContent[];
 	parties: OdysseyParty[];
+	/** Elder personas as further virtual users (labeled AI, like party ships). */
+	elders?: OdysseyElder[];
 	/** Overlap threshold for a pair distance to count as known. */
 	minSharedStances?: number;
 }): OpinionMapResult | null {
-	const { uid, evaluations, islands, parties } = input;
+	const { uid, evaluations, islands, parties, elders = [] } = input;
 	const minShared = input.minSharedStances ?? MIN_SHARED_STANCES;
 
 	const entities: MapEntity[] = [];
@@ -97,6 +109,17 @@ export function buildOpinionMap(input: {
 			kind: 'party',
 			label: party.name,
 			color: party.color,
+			attitudes,
+		});
+	}
+	for (const elder of elders) {
+		const attitudes = elderAttitudes(elder, islands);
+		if (Object.keys(attitudes).length === 0) continue;
+		entities.push({
+			id: `elder--${elder.elderId}`,
+			kind: 'elder',
+			label: elder.name,
+			color: elder.color,
 			attitudes,
 		});
 	}
@@ -147,6 +170,7 @@ export function buildOpinionMap(input: {
 	}
 	const r = pearson(trueDistances, drawnDistances);
 	const stress = kruskalStress(trueDistances, drawnDistances);
+	const knownPairRatio = knownCount / pairCount;
 
 	return {
 		points: entities.map((entity, index) => ({
@@ -158,8 +182,9 @@ export function buildOpinionMap(input: {
 			y: coords[index][1],
 		})),
 		fidelity: { r, stress, varianceRatio },
-		reliable: r >= RELIABLE_R,
-		knownPairRatio: knownCount / pairCount,
+		// NaN r (degenerate correlation) fails this check, as it must.
+		reliable: r >= RELIABLE_R && knownPairRatio >= RELIABLE_MIN_KNOWN_PAIR_RATIO,
+		knownPairRatio,
 	};
 }
 
@@ -167,9 +192,15 @@ function euclidean(a: [number, number], b: [number, number]): number {
 	return Math.hypot(a[0] - b[0], a[1] - b[1]);
 }
 
+/**
+ * Degenerate inputs — fewer than two pairs, or zero variance on either side —
+ * carry no correlation signal at all. Returning 1 here used to certify a
+ * nearly-all-imputed map as `reliable`; NaN says honestly that r is undefined,
+ * and every `>=` comparison against it fails.
+ */
 function pearson(a: number[], b: number[]): number {
 	const n = a.length;
-	if (n < 2) return 1;
+	if (n < 2) return Number.NaN;
 	const meanA = a.reduce((sum, value) => sum + value, 0) / n;
 	const meanB = b.reduce((sum, value) => sum + value, 0) / n;
 	let cov = 0;
@@ -180,7 +211,7 @@ function pearson(a: number[], b: number[]): number {
 		varA += (a[i] - meanA) ** 2;
 		varB += (b[i] - meanB) ** 2;
 	}
-	if (varA === 0 || varB === 0) return 1;
+	if (varA === 0 || varB === 0) return Number.NaN;
 
 	return cov / Math.sqrt(varA * varB);
 }

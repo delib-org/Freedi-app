@@ -19,6 +19,15 @@ export {
 	OdysseyGameSchema,
 } from './odysseyGame';
 
+export type { OdysseyElder } from './odysseyElder';
+export {
+	OdysseyElderSchema,
+	ODYSSEY_ELDER_UID_PREFIX,
+	createOdysseyElderUid,
+	isOdysseyElderUid,
+	elderIdFromUid,
+} from './odysseyElder';
+
 export type { OdysseyGameScript } from './odysseyGameScript';
 export { OdysseyGameScriptSchema, ODYSSEY_EVENT_SCRIPT } from './odysseyGameScript';
 
@@ -33,3 +42,5 @@ export {
 	OdysseyJourneySchema,
 	createOdysseyJourneyId,
 } from './odysseyJourney';
+
+export type { MintAgoraHandoffResponse } from './odysseyCallables';

@@ -245,7 +245,8 @@ export abstract class SeaScene extends Phaser.Scene {
 		if (options?.named !== false) {
 			parts.push(
 				this.add
-					.text(0, 44, party.name, {
+					// Elder ships are AI personas and must say so on the water.
+					.text(0, 44, party.isElder ? `📜 ${party.name}` : party.name, {
 						fontFamily: 'Arial',
 						fontSize: '13px',
 						color: '#fff4d3',
@@ -325,14 +326,31 @@ export abstract class SeaScene extends Phaser.Scene {
 	 * after the load finishes (never synchronously, and not at all when
 	 * everything is already cached — callers use the cached path directly).
 	 */
+	/**
+	 * URLs that already failed once (bad link, CORS, offline). Never re-queued:
+	 * COMPLETE fires even when every file failed, so retrying from `onLoaded`
+	 * callbacks would loop rebuild → re-request → re-fail forever.
+	 */
+	private failedIslandArt = new Set<string>();
+
 	protected ensureIslandTextures(urls: (string | null)[], onLoaded: () => void): void {
 		const missing = [...new Set(urls)].filter(
-			(url): url is string => !!url && !this.textures.exists(this.islandTextureKey(url)),
+			(url): url is string =>
+				!!url &&
+				!this.failedIslandArt.has(url) &&
+				!this.textures.exists(this.islandTextureKey(url)),
 		);
 		if (missing.length === 0) return;
 		for (const url of missing) this.load.image(this.islandTextureKey(url), url);
 		this.load.once(Phaser.Loader.Events.COMPLETE, () => {
-			if (this.scene.isActive()) onLoaded();
+			let landed = 0;
+			for (const url of missing) {
+				if (this.textures.exists(this.islandTextureKey(url))) landed++;
+				else this.failedIslandArt.add(url);
+			}
+			// Rebuild only when something actually arrived — the callers fall
+			// back to the generated disc for anything still missing.
+			if (landed > 0 && this.scene.isActive()) onLoaded();
 		});
 		this.load.start();
 	}

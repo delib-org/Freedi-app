@@ -26,11 +26,22 @@ export interface StatusControlProps {
 	confirmClose?: boolean;
 	/** Accessible name of the group (defaults to "Question status"). */
 	ariaLabel?: string;
+	/**
+	 * A Sign document: "Open for comment" instead of "Open", document hints,
+	 * and closing needs no confirmation (the text stays readable).
+	 */
+	document?: boolean;
 	className?: string;
 }
 
 const SEGMENTS: readonly { value: StatusControlTarget; label: string }[] = [
 	{ value: 'open', label: 'Open' },
+	{ value: 'frozen', label: 'Freeze' },
+	{ value: 'closed', label: 'Close' },
+];
+
+const DOCUMENT_SEGMENTS: readonly { value: StatusControlTarget; label: string }[] = [
+	{ value: 'open', label: 'Open for comment' },
 	{ value: 'frozen', label: 'Freeze' },
 	{ value: 'closed', label: 'Close' },
 ];
@@ -42,6 +53,13 @@ export const STATUS_HINTS: Record<ActivityRunState, string> = {
 	closed: 'Participants see "this question is closed".',
 };
 
+export const DOCUMENT_STATUS_HINTS: Record<ActivityRunState, string> = {
+	queued: 'In review — only admins can see it. Open it when the text is ready.',
+	open: 'Anyone with the link can read and comment, paragraph by paragraph.',
+	frozen: 'Readable, but no new comments.',
+	closed: 'Comments are closed; the text stays readable.',
+};
+
 const StatusControl: React.FC<StatusControlProps> = ({
 	value,
 	onChange,
@@ -50,9 +68,12 @@ const StatusControl: React.FC<StatusControlProps> = ({
 	compact = false,
 	confirmClose = true,
 	ariaLabel,
+	document = false,
 	className,
 }) => {
 	const { t } = useTranslation();
+	const segments = document ? DOCUMENT_SEGMENTS : SEGMENTS;
+	const hints = document ? DOCUMENT_STATUS_HINTS : STATUS_HINTS;
 	const hintId = useId();
 	const confirmId = useId();
 	const [pending, setPending] = useState<StatusControlTarget | null>(null);
@@ -60,7 +81,7 @@ const StatusControl: React.FC<StatusControlProps> = ({
 	const [focusIndex, setFocusIndex] = useState<number>(() =>
 		Math.max(
 			0,
-			SEGMENTS.findIndex((s) => s.value === value),
+			segments.findIndex((s) => s.value === value),
 		),
 	);
 	const segmentRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -77,7 +98,7 @@ const StatusControl: React.FC<StatusControlProps> = ({
 
 	// Keep the roving tabindex on the active segment when the value changes.
 	useEffect(() => {
-		const index = SEGMENTS.findIndex((s) => s.value === value);
+		const index = segments.findIndex((s) => s.value === value);
 		if (index >= 0) setFocusIndex(index);
 	}, [value]);
 
@@ -111,7 +132,7 @@ const StatusControl: React.FC<StatusControlProps> = ({
 
 	const cancel = () => {
 		setPending(null);
-		const index = SEGMENTS.findIndex((s) => s.value === value);
+		const index = segments.findIndex((s) => s.value === value);
 		segmentRefs.current[index >= 0 ? index : focusIndex]?.focus();
 	};
 
@@ -120,22 +141,22 @@ const StatusControl: React.FC<StatusControlProps> = ({
 		switch (event.key) {
 			case 'ArrowRight':
 			case 'ArrowDown':
-				next = (index + 1) % SEGMENTS.length;
+				next = (index + 1) % segments.length;
 				break;
 			case 'ArrowLeft':
 			case 'ArrowUp':
-				next = (index - 1 + SEGMENTS.length) % SEGMENTS.length;
+				next = (index - 1 + segments.length) % segments.length;
 				break;
 			case 'Home':
 				next = 0;
 				break;
 			case 'End':
-				next = SEGMENTS.length - 1;
+				next = segments.length - 1;
 				break;
 			case 'Enter':
 			case ' ':
 				event.preventDefault();
-				select(SEGMENTS[index].value);
+				select(segments[index].value);
 
 				return;
 			default:
@@ -165,10 +186,10 @@ const StatusControl: React.FC<StatusControlProps> = ({
 	if (disabled) {
 		return (
 			<div className={wrapperClasses}>
-				<StatusPill status={value} size={compact ? 'small' : 'large'} />
+				<StatusPill status={value} document={document} size={compact ? 'small' : 'large'} />
 				{!compact && (
 					<p className="status-control__hint" id={hintId}>
-						{t(STATUS_HINTS[value])}
+						{t(hints[value])}
 					</p>
 				)}
 			</div>
@@ -177,8 +198,12 @@ const StatusControl: React.FC<StatusControlProps> = ({
 
 	const isClosing = pending === 'closed';
 	const confirmText = isClosing
-		? t('Close this question? Participants will no longer be able to answer.')
-		: t('Participants will be able to act again.');
+		? document
+			? t('Close comments? The text stays readable, but nobody can comment.')
+			: t('Close this question? Participants will no longer be able to answer.')
+		: document
+			? t('People will be able to comment again.')
+			: t('Participants will be able to act again.');
 	const keepLabel = value === 'closed' ? t('Keep closed') : t('Keep open');
 	const proceedLabel = isClosing ? t('Close question') : t('Reopen');
 
@@ -186,12 +211,12 @@ const StatusControl: React.FC<StatusControlProps> = ({
 		<div className={wrapperClasses}>
 			<div
 				role="radiogroup"
-				aria-label={ariaLabel ?? t('Question status')}
+				aria-label={ariaLabel ?? (document ? t('Document status') : t('Question status'))}
 				aria-describedby={hintId}
 				aria-busy={isBusy || undefined}
 				className="segmented-control segmented-control--status"
 			>
-				{SEGMENTS.map((segment, index) => {
+				{segments.map((segment, index) => {
 					const isActive = segment.value === value;
 
 					return (
@@ -225,7 +250,7 @@ const StatusControl: React.FC<StatusControlProps> = ({
 
 			{!compact && (
 				<p className="status-control__hint" id={hintId}>
-					{t(STATUS_HINTS[value])}
+					{t(hints[value])}
 					{isBusy && (
 						<>
 							{' '}

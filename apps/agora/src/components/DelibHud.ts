@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { t } from '../lib/i18n';
-import { getStalledWrites } from '../lib/confirmedWrite';
+import { stalledBanner } from './StalledBanner';
 import { type IconName } from './Icon';
 import { HeroIcon, hasRender } from './HeroIcon';
 import { Inbox } from './Inbox';
@@ -21,6 +21,8 @@ export interface DelibHudAttrs {
 	endsAt?: number;
 	/** Standing on the class picture: the path dims, nothing on it is "here" */
 	onResults?: boolean;
+	/** Civic players only: the Odyssey uid whose email cadence the post box edits */
+	digestUid?: string;
 }
 
 interface PlaceSpec {
@@ -97,7 +99,7 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 		},
 
 		view(vnode) {
-			const { step, round, rounds, rated, ratingQuota, endsAt, onResults } = vnode.attrs;
+			const { step, round, rounds, rated, ratingQuota, endsAt, onResults, digestUid } = vnode.attrs;
 			const activeIndex = ORDER.indexOf(step as DelibPlace);
 			// After the laps close there is no "here" on the path — every place is
 			// behind you, and the HUD says so instead of lighting a phantom step
@@ -118,7 +120,6 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 						? t(place.titleKey)
 						: '';
 			const crest: IconName = onResults ? 'chart' : done ? 'flag' : (place?.icon ?? 'square');
-			const stalledWrites = getStalledWrites();
 
 			return m(
 				'header.delib-hud',
@@ -169,7 +170,7 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 						// opposite the place's name, which is where a mail icon is
 						// looked for. It rides the HUD because the HUD is the one strip
 						// present in every room of the deliberation.
-						m(Inbox),
+						m(Inbox, { digestUid }),
 					]),
 					// The lap as a level track. The current step is lit and enlarged,
 					// finished ones are checked, the road between them fills in.
@@ -252,17 +253,9 @@ export function DelibHud(): m.Component<DelibHudAttrs> {
 									: null,
 							])
 						: null,
-					// A write still in the air after eight seconds. Silence is the
-					// failure mode here — Firestore queues rather than rejects — so
-					// the student is told plainly rather than left with a UI that
-					// claims their work is saved.
-					stalledWrites.length
-						? m(
-								'.delib-hud__stalled',
-								{ role: 'status' },
-								t(stalledWrites[0]?.labelKey ?? 'delib.saving_generic'),
-							)
-						: null,
+					// A write still in the air after eight seconds — the shared
+					// stalled-write line (see StalledBanner for why it exists).
+					stalledBanner(),
 				],
 			);
 		},

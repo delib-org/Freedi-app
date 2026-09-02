@@ -3,6 +3,7 @@ import { db } from './index';
 import { DocumentSnapshot, FieldValue } from 'firebase-admin/firestore';
 import {
 	Collections,
+	isVoteSentinel,
 	maxKeyInObject,
 	Statement,
 	statementToSimpleStatement,
@@ -31,45 +32,56 @@ export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> 
 
 		const parentStatement = parentStatementDB.data() as Statement;
 		const { selections, topVotedOption: previousTopVotedOption } = parentStatement;
-		const topVotedId = maxKeyInObject(selections);
+		// Withdrawals (`none`) and the against side of a one-candidate ballot
+		// live in `selections` too, but name no option doc — the leading REAL
+		// option is what gets marked, and when there is none, nothing is.
+		const realSelections: Record<string, number> = Object.fromEntries(
+			Object.entries((selections ?? {}) as Record<string, number>).filter(
+				([optionId]) => !isVoteSentinel(optionId),
+			),
+		);
+		const topVotedId =
+			Object.keys(realSelections).length > 0 ? maxKeyInObject(realSelections) : undefined;
 
-		// remove previous results
-		const batch = db.batch();
+		if (topVotedId) {
+			// remove previous results
+			const batch = db.batch();
 
-		const previousResultsDB = await db
-			.collection(Collections.statements)
-			.where('parentId', '==', newVote.parentId)
-			.where('isVoted', '==', true)
-			.get();
+			const previousResultsDB = await db
+				.collection(Collections.statements)
+				.where('parentId', '==', newVote.parentId)
+				.where('isVoted', '==', true)
+				.get();
 
-		previousResultsDB.forEach((resultDB) => {
-			const result = resultDB.data() as Statement;
-			const docRef = db.doc(`${Collections.statements}/${result.statementId}`);
-			batch.update(docRef, { isVoted: false });
-		});
-
-		// Commit the batch
-		await batch.commit();
-
-		//mark the new top voted option as selected
-		await db.doc(`${Collections.statements}/${topVotedId}`).update({ isVoted: true });
-
-		//check if the topVoted option is the same as the previous one
-		//if not, update the topVoted option in the parent statement
-		if (previousTopVotedOption?.statementId !== topVotedId) {
-			//get topVoted option:
-			const topVotedOptionDB = await db.doc(`${Collections.statements}/${topVotedId}`).get();
-
-			if (!topVotedOptionDB.exists) throw new Error(`topVotedOption ${topVotedId} do not exists`);
-			const topVotedOption = topVotedOptionDB.data() as Statement;
-
-			const simpleStatement = statementToSimpleStatement(topVotedOption);
-
-			await db.doc(`${Collections.statements}/${newVote.parentId}`).update({
-				topVotedOption: simpleStatement,
+			previousResultsDB.forEach((resultDB) => {
+				const result = resultDB.data() as Statement;
+				const docRef = db.doc(`${Collections.statements}/${result.statementId}`);
+				batch.update(docRef, { isVoted: false });
 			});
 
-			logger.info(`Vote updated successfully for parentId: ${newVote.parentId}`);
+			// Commit the batch
+			await batch.commit();
+
+			//mark the new top voted option as selected
+			await db.doc(`${Collections.statements}/${topVotedId}`).update({ isVoted: true });
+
+			//check if the topVoted option is the same as the previous one
+			//if not, update the topVoted option in the parent statement
+			if (previousTopVotedOption?.statementId !== topVotedId) {
+				//get topVoted option:
+				const topVotedOptionDB = await db.doc(`${Collections.statements}/${topVotedId}`).get();
+
+				if (!topVotedOptionDB.exists) throw new Error(`topVotedOption ${topVotedId} do not exists`);
+				const topVotedOption = topVotedOptionDB.data() as Statement;
+
+				const simpleStatement = statementToSimpleStatement(topVotedOption);
+
+				await db.doc(`${Collections.statements}/${newVote.parentId}`).update({
+					topVotedOption: simpleStatement,
+				});
+
+				logger.info(`Vote updated successfully for parentId: ${newVote.parentId}`);
+			}
 		}
 
 		// Track engagement (non-blocking)

@@ -6,6 +6,7 @@ import {
 	optional,
 	enum_,
 	record,
+	array,
 	InferOutput,
 } from 'valibot';
 import { NotificationFrequency } from '../engagement/NotificationFrequency';
@@ -49,6 +50,29 @@ export type PerAppNotificationSettings = InferOutput<
 	typeof PerAppNotificationSettingsSchema
 >;
 
+/**
+ * Cadence of the Odyssey "voyage story" email digest. Absent or disabled
+ * means no digest. One entry in `hoursLocal` = once a day at that hour;
+ * several entries = several sends a day. Explicitly opting in here also
+ * turns the odyssey per-app email channel on (the app writes both).
+ */
+export const OdysseyDigestSettingsSchema = object({
+	enabled: boolean(),
+	/** Local hours (0-23) at which to send, at most ODYSSEY_DIGEST_MAX_HOURS */
+	hoursLocal: array(number()),
+	timezone: string(), // IANA, e.g. 'Asia/Jerusalem'
+	/**
+	 * "Every update": considered on every hourly run instead of at chosen
+	 * hours. The builder still sends only when something actually moved, so
+	 * this is at most one email an hour and usually far fewer.
+	 */
+	everyUpdate: optional(boolean()),
+});
+
+export type OdysseyDigestSettings = InferOutput<typeof OdysseyDigestSettingsSchema>;
+
+export const ODYSSEY_DIGEST_MAX_HOURS = 3;
+
 export const NotificationSettingsSchema = object({
 	userId: string(),
 	muted: boolean(), // master mute (the easy one-tap toggle)
@@ -58,6 +82,7 @@ export const NotificationSettingsSchema = object({
 	perApp: optional(record(string(), PerAppNotificationSettingsSchema)), // keyed by SourceApp value
 	digestHourLocal: optional(number()), // 0-23, hour to deliver the daily digest
 	weeklyDigestDay: optional(number()), // 0-6 (Sun-Sat), day for weekly digest
+	odysseyDigest: optional(OdysseyDigestSettingsSchema), // Odyssey voyage-story email cadence
 	createdAt: number(),
 	lastUpdate: number(),
 });

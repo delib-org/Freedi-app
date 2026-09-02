@@ -18,6 +18,7 @@
 		"seed:clear": "npx tsx scripts/seed.ts --clear",
 		"fast": "npx tsx scripts/fastlane.ts",
 		"preflight": "node scripts/lib/preflight.mjs",
+		"e2e:challenge": "node scripts/e2e-challenge.mjs",
 		"contrast": "node scripts/contrast-audit.mjs && node scripts/contrast-audit.mjs \"http://localhost:3009/mock/surfaces.html?theme=civic\"",
 		"typesize": "node scripts/type-audit.mjs"
 	},
@@ -26,7 +27,9 @@
 		"@fontsource/assistant": "^5.3.0",
 		"@freedi/engagement-core": "file:../../packages/engagement-core",
 		"@freedi/shared-types": "file:../../packages/shared-types",
-		"firebase": "^11.0.2",
+		"@freedi/shared-utils": "file:../../packages/shared-utils",
+		"@sentry/browser": "^9.42.1",
+		"firebase": "^12.18.0",
 		"mithril": "^2.2.8",
 		"qrcode": "^1.5.4",
 		"valibot": "^1.0.0-rc.1"

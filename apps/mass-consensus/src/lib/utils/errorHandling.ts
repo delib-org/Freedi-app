@@ -44,6 +44,44 @@ export class NetworkError extends AppError {
 }
 
 /**
+ * A non-OK response from one of our own API routes.
+ *
+ * Carries the status so Sentry can tell an expired token (401) apart from a
+ * missing survey (404) or a broken handler (500) — a bare thrown string leaves
+ * every one of those looking identical in the issue list.
+ */
+export class HttpError extends AppError {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly url: string,
+    context?: Record<string, unknown>
+  ) {
+    super(message, `HTTP_${status}`, { ...context, status, url }, status !== 401);
+    this.name = 'HttpError';
+  }
+}
+
+/**
+ * Build an HttpError from a fetch Response, pulling the server's own error
+ * message out of the body when there is one.
+ */
+export async function httpErrorFromResponse(
+  response: Response,
+  fallbackMessage: string
+): Promise<HttpError> {
+  let serverMessage: string | undefined;
+  try {
+    const body = (await response.clone().json()) as { error?: string };
+    serverMessage = typeof body?.error === 'string' ? body.error : undefined;
+  } catch {
+    // Body was not JSON — the status alone is the signal.
+  }
+
+  return new HttpError(serverMessage || fallbackMessage, response.status, response.url);
+}
+
+/**
  * Error handling context interface
  */
 interface ErrorContext {

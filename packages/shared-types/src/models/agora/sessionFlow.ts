@@ -37,7 +37,14 @@ export type AgoraSessionFlow = InferOutput<typeof AgoraSessionFlowSchema>;
  * camp-less room is scored on `convergence` instead: whether people's stated
  * positions moved closer over the course of the deliberation.
  */
-export type AgoraScoreMode = 'bridging' | 'convergence';
+/**
+ * A camp-less room that came from an Odyssey island has stance baselines to
+ * measure against, so it is scored on `convergence`. A camp-less room with no
+ * baselines — a quick game, a classroom that switched stances off — has
+ * neither camps nor a before-picture; it is scored on `agreement`: the plain
+ * net support the room's proposals earned, and the vote if one was held.
+ */
+export type AgoraScoreMode = 'bridging' | 'convergence' | 'agreement';
 
 export interface ResolvedSessionFlow {
 	stances: boolean;
@@ -81,12 +88,14 @@ function legacyDefaults(mode: AgoraSessionMode): Omit<ResolvedSessionFlow, 'scor
  */
 export function resolveSessionFlow(session: {
 	sessionMode?: AgoraSessionMode;
-	flow?: AgoraSessionFlow;
+	flow?: AgoraSessionFlow | null;
 }): ResolvedSessionFlow {
 	const defaults = legacyDefaults(session.sessionMode ?? AgoraSessionMode.classroom);
 	const flow = session.flow;
 
 	const stances = flow?.stances ?? defaults.stances;
+	const civic = (session.sessionMode ?? AgoraSessionMode.classroom) === AgoraSessionMode.civic;
+	const scoreMode: AgoraScoreMode = stances ? 'bridging' : civic ? 'convergence' : 'agreement';
 
 	return {
 		stances,
@@ -96,8 +105,29 @@ export function resolveSessionFlow(session: {
 		ratingsPerRound: flow?.ratingsPerRound ?? defaults.ratingsPerRound,
 		voting: flow?.voting ?? defaults.voting,
 		framing: flow?.framing ?? defaults.framing,
-		scoreMode: stances ? 'bridging' : 'convergence',
+		scoreMode,
 	};
+}
+
+/**
+ * Does this session run the voting stage at all?
+ *
+ * TWO knobs answer that question and they used to be consulted separately —
+ * the teacher panel read `votingSettings.enabled` while the advance callable
+ * read `resolveSessionFlow(session).voting` — so a session whose knobs
+ * disagreed either dead-ended the teacher's advance button or opened a ballot
+ * the teacher had switched off. One function now folds them: an explicit
+ * `enabled: false` from the teacher wins outright, otherwise the organizer's
+ * flow (or the mode's legacy default) decides.
+ */
+export function sessionRunsVoting(session: {
+	sessionMode?: AgoraSessionMode;
+	flow?: AgoraSessionFlow | null;
+	votingSettings?: { enabled?: boolean };
+}): boolean {
+	if (session.votingSettings?.enabled === false) return false;
+
+	return resolveSessionFlow(session).voting;
 }
 
 /**

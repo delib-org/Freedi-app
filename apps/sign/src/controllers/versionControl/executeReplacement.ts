@@ -139,6 +139,9 @@ export async function executeReplacement(
 			// This preserves its comments and evaluations
 			transaction.update(suggestionRef, {
 				lastUpdate: Date.now(),
+				// See finalizeSuggestion: a dotted-path update creates versionControl
+				// on a suggestion that never had one, so seed the required key.
+				'versionControl.currentVersion': suggestion.versionControl?.currentVersion ?? 1,
 				'versionControl.promotedToVersion': newVersion,
 				'versionControl.promotedAt': Date.now(),
 			});
@@ -166,6 +169,8 @@ export async function executeReplacement(
 						!data.versionControl?.forVersion
 					) {
 						batch.update(docSnap.ref, {
+							'versionControl.currentVersion':
+								data.versionControl?.currentVersion ?? 1,
 							'versionControl.forVersion': currentVersion,
 						});
 						batchCount++;

@@ -1,6 +1,7 @@
 import m from 'mithril';
 import {
 	auth,
+	canCompleteRedirectSignIn,
 	signInAnonymously,
 	signInWithCredential,
 	signInWithCustomToken,
@@ -12,6 +13,8 @@ import {
 	onAuthStateChanged,
 	User,
 } from './firebase';
+import type { FirebaseError } from './firebase';
+import { classifySignInFailure } from './signInErrors';
 
 /**
  * Identity tiers:
@@ -20,16 +23,26 @@ import {
  */
 export type IdentityTier = 0 | 2;
 
+/**
+ * Why the last teacher sign-in did not finish. Kept on the state because the
+ * button used to swallow every failure into console.error: a teacher whose
+ * sign-in died saw the same screen with no word about what happened, and
+ * pressed the button again, and saw it again.
+ */
+export type SignInError = 'popup-blocked' | 'failed' | null;
+
 export interface UserState {
 	user: User | null;
 	tier: IdentityTier;
 	loading: boolean;
+	signInError: SignInError;
 }
 
 const state: UserState = {
 	user: null,
 	tier: 0,
 	loading: true,
+	signInError: null,
 };
 
 let _resolveAuthReady: () => void;
@@ -90,6 +103,8 @@ export async function signInWithHandoff(token: string): Promise<User> {
 export async function signInWithGoogle(): Promise<void> {
 	if (state.tier === 2) return;
 
+	state.signInError = null;
+
 	const provider = new GoogleAuthProvider();
 	provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -104,28 +119,54 @@ export async function signInWithGoogle(): Promise<void> {
 		state.tier = 2;
 		m.redraw();
 	} catch (error: unknown) {
-		const code = (error as { code?: string }).code;
+		switch (classifySignInFailure((error as { code?: string }).code)) {
+			// The popup already handed us the very credential we need, inside the
+			// error. Signing in with it needs no second window and no live click —
+			// which is what makes it the right move here: the browser withdrew the
+			// gesture the moment we awaited, so anything needing one is dead. The
+			// anonymous account is abandoned; the teacher's real one wins.
+			case 'recover-credential': {
+				const credential = GoogleAuthProvider.credentialFromError(error as FirebaseError);
 
-		// A popup may only be opened while the click that asked for it is still
-		// "live". Both remaining paths here run AFTER an await — the second
-		// attempt when an anonymous account turns out to be already linked, and
-		// any retry after a failure — so the browser has already withdrawn the
-		// user gesture and blocks them. That is what auth/popup-blocked was.
-		//
-		// Redirect needs no gesture. It costs a page load, which is why it is
-		// the fallback rather than the default, and getRedirectResult() below
-		// finishes the job when we come back.
-		if (
-			code === 'auth/credential-already-in-use' ||
-			code === 'auth/popup-blocked' ||
-			code === 'auth/cancelled-popup-request'
-		) {
-			await signInWithRedirect(auth, provider);
+				if (!credential) break;
 
-			return;
+				try {
+					await signInWithCredential(auth, credential);
+					state.tier = 2;
+					m.redraw();
+
+					return;
+				} catch (recoveryError: unknown) {
+					state.signInError = 'failed';
+					m.redraw();
+					throw recoveryError;
+				}
+			}
+
+			case 'ignore':
+				return;
+
+			case 'popup-blocked':
+				// Redirect is the only path left that needs no gesture — but it
+				// only completes where the auth domain IS this origin. Anywhere
+				// else it ends on a signed-out page and a teacher who has no idea
+				// why, so say what happened instead of staging that round trip.
+				if (canCompleteRedirectSignIn()) {
+					await signInWithRedirect(auth, provider);
+
+					return;
+				}
+				state.signInError = 'popup-blocked';
+				m.redraw();
+
+				return;
+
+			case 'failed':
+				break;
 		}
-		// A teacher who closes the popup themselves has not failed at anything
-		if (code === 'auth/popup-closed-by-user') return;
+
+		state.signInError = 'failed';
+		m.redraw();
 		throw error;
 	}
 }
@@ -144,6 +185,8 @@ export async function completeRedirectSignIn(): Promise<boolean> {
 		return true;
 	} catch (error: unknown) {
 		console.error('[Auth] Redirect sign-in failed:', error);
+		state.signInError = 'failed';
+		m.redraw();
 
 		return false;
 	}
@@ -157,6 +200,7 @@ export function initAuth(): void {
 		state.user = user;
 		state.loading = false;
 		state.tier = user && !user.isAnonymous ? 2 : 0;
+		if (state.tier === 2) state.signInError = null;
 
 		if (!authStateSettled) {
 			authStateSettled = true;

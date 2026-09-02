@@ -15,6 +15,8 @@ import People from '@/pages/People/People';
 import Invite from '@/pages/Invite/Invite';
 import AdminOrgs from '@/pages/AdminOrgs/AdminOrgs';
 import AdminOrgDetail from '@/pages/AdminOrgs/AdminOrgDetail';
+import AdminAgora from '@/pages/AdminAgora/AdminAgora';
+import AdminSchoolDetail from '@/pages/AdminAgora/AdminSchoolDetail';
 import EventDashboard from '@/pages/EventDashboard';
 
 // Heavy per-question screens load on demand.
@@ -23,6 +25,7 @@ const QuestionDashboard = lazyWithRetry(
 	'QuestionDashboard',
 );
 const RunView = lazyWithRetry(() => import('@/pages/RunView/RunView'), 'RunView');
+const PlanWithAI = lazyWithRetry(() => import('@/pages/PlanWithAI/PlanWithAI'), 'PlanWithAI');
 
 export default function App() {
 	const { user, loading } = useAuth();
@@ -57,12 +60,16 @@ export default function App() {
 						<Route path="/orgs" element={<OrgPicker />} />
 						<Route path="/orgs/:orgId" element={<OrgQuestions />} />
 						<Route path="/orgs/:orgId/people" element={<People />} />
+						<Route path="/orgs/:orgId/plan/new" element={<PlanWithAI />} />
 						<Route path="/orgs/:orgId/questions/:qId" element={<QuestionDashboard />} />
+						<Route path="/orgs/:orgId/questions/:qId/plan" element={<PlanWithAI />} />
 						<Route path="/orgs/:orgId/questions/:qId/run/:aId" element={<RunView />} />
 						<Route path="/events/:eventId" element={<EventDashboard />} />
 						<Route path="/invite" element={<Invite />} />
 						<Route path="/admin/orgs" element={<AdminOrgs />} />
 						<Route path="/admin/orgs/:orgId" element={<AdminOrgDetail />} />
+						<Route path="/admin/agora" element={<AdminAgora />} />
+						<Route path="/admin/agora/schools/:schoolId" element={<AdminSchoolDetail />} />
 						<Route path="*" element={<Navigate to="/" replace />} />
 					</Routes>
 				</Suspense>

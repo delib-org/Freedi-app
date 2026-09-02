@@ -27,6 +27,13 @@ const LOOKS: Readonly<Record<string, { icon: IconName; key: string }>> = {
 	agora_proposal_credited: { icon: 'proposal', key: 'toast.proposal_credited' },
 	agora_bridge_zone: { icon: 'trophy', key: 'toast.bridge_zone' },
 	agora_climbed: { icon: 'trend', key: 'toast.climbed' },
+	// The challenge round. Every one of these needs an entry here or
+	// isAgoraTrigger filters it out and the toast never reaches anyone.
+	agora_challenge_your_turn: { icon: 'megaphone', key: 'toast.challenge_your_turn' },
+	agora_challenge_open: { icon: 'scales', key: 'toast.challenge_open' },
+	agora_challenge_survived: { icon: 'trophy', key: 'toast.challenge_survived' },
+	agora_challenge_failed: { icon: 'again', key: 'toast.challenge_failed' },
+	agora_challenge_vote_freed: { icon: 'again', key: 'toast.challenge_vote_freed' },
 };
 
 /**

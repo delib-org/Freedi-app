@@ -25,6 +25,7 @@ import {
 	DEFAULT_VALUES,
 } from '../src/lib/defaults';
 import { researchedAttitudes } from '../src/lib/research';
+import { buildEldersFromDefaults } from '../src/lib/eldersDefaults';
 
 const require = createRequire(import.meta.url);
 const {
@@ -258,9 +259,18 @@ async function main(): Promise<void> {
 		};
 	});
 
+	const elders = buildEldersFromDefaults({
+		islandIdBySlug,
+		stanceIdsBySlug,
+		titleBySlug: new Map(DEFAULT_ISLANDS.map((island) => [island.slug, island.title])),
+	});
+
 	const game = {
 		gameId,
-		...(script ? { script } : {}),
+		// Elders exist to keep a lone player company, so seeding turns them on
+		// (civic squares default to elders OFF in resolveSessionFlow). An explicit
+		// preset keeps the last word, and the admin can flip it in /admin.
+		script: { eldersEnabled: true, ...(script ?? {}) },
 		rootStatementId: root.statementId,
 		// The gate link is built from this; empty means the summary shows no way on.
 		texts: { ...DEFAULT_TEXTS, agoraOrigin: AGORA_ORIGIN },
@@ -280,6 +290,7 @@ async function main(): Promise<void> {
 		})),
 		islands: islandsMeta,
 		parties,
+		elders,
 		adminUids: [creator.uid],
 		creatorId: creator.uid,
 		createdAt: now,
@@ -289,7 +300,7 @@ async function main(): Promise<void> {
 	batch.set(db.collection(Collections.odysseyGames).doc(gameId), game);
 	await batch.commit();
 	console.log(
-		`  ${islandsMeta.length} islands, ${parties.length} parties, root ${root.statementId}`,
+		`  ${islandsMeta.length} islands, ${parties.length} parties, ${elders.length} elders, root ${root.statementId}`,
 	);
 
 	console.log('▸ opening a civic deliberation for every island');

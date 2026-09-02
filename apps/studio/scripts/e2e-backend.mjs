@@ -270,6 +270,113 @@ check('owner is admin on the second top question too', top2Sub?.role === 'admin'
 const top2Progress = await fsGet(`questionProgress/${top2.statementId}`);
 check('second top question has its own progress doc', top2Progress?.organizationId === org.organizationId && top2Progress?.entered === 0);
 
+// 11. "Start a question with AI" — fixture mode (emulator has no OPENAI_API_KEY)
+const planStart = await call('fn_studioPlanStart', consultant.idToken, {
+	organizationId: org.organizationId, language: 'he', timezone: 'Asia/Jerusalem',
+});
+check('plan start returns a Hebrew opener', !!planStart.sessionId && /ספרו/.test(planStart.message?.content ?? ''), planStart.message?.content);
+const turn1 = await call('fn_studioPlanMessage', consultant.idToken, {
+	sessionId: planStart.sessionId, message: 'אנחנו צריכים להחליט איך לחלק תקציב של מיליון שקל בין חמישה פרויקטים שכונתיים, תוך חודש',
+});
+// Fixture mode (no OPENAI_API_KEY) answers with a plan at once; the real model may ask a clarifying question first.
+check('first turn answers in Hebrew and is not ready yet', /[\u0590-\u05FF]/.test(turn1.message?.content ?? '') && turn1.readyToBuild === false, JSON.stringify({ n: turn1.plan?.activities?.length, ready: turn1.readyToBuild }));
+// The consultant may ask one more question; a real admin answers and asks to build. Give it up to 3 turns.
+let turn2 = await call('fn_studioPlanMessage', consultant.idToken, { sessionId: planStart.sessionId, message: 'מעולה, בואו נבנה את זה' });
+const followUps = ['הציבור הרחב מחליט בהצבעה, אין לנו מנחה. תציע תוכנית מלאה ונבנה אותה.', 'זה מספיק טוב, בנה את זה עכשיו.'];
+let extraTurns = 0;
+while (!turn2.readyToBuild && extraTurns < followUps.length) {
+	turn2 = await call('fn_studioPlanMessage', consultant.idToken, { sessionId: planStart.sessionId, message: followUps[extraTurns++] });
+}
+check('the plan is ready to build within 4 user turns', turn2.readyToBuild === true, JSON.stringify({ extraTurns, ready: turn2.readyToBuild }));
+const sessionDoc = await fsGet(`studioPlanSessions/${planStart.sessionId}`);
+check('session stores messages, plan, diagnosis and language he', sessionDoc?.messages?.length === 5 + 2 * extraTurns && !!sessionDoc?.currentPlan && sessionDoc?.language === 'he', JSON.stringify({ m: sessionDoc?.messages?.length, lang: sessionDoc?.language }));
+const built = await call('fn_studioPlanBuild', consultant.idToken, { sessionId: planStart.sessionId });
+const finalPlan = (await fsGet(`studioPlanSessions/${planStart.sessionId}`))?.currentPlan;
+const plannedSurveys = (finalPlan?.activities ?? []).filter((a) => a.type === 'crowdSurvey').length;
+check('build returns top question + every planned activity + a survey per crowd survey', !!built.topQuestionId && Object.keys(built.activityIds).length >= (finalPlan?.activities?.length ?? 1) && built.surveyIds.length === plannedSurveys, JSON.stringify({ activities: Object.keys(built.activityIds).length, planned: finalPlan?.activities?.length, surveys: built.surveyIds.length, actions: built.scheduledActionIds.length }));
+const builtTop = await fsGet(`statements/${built.topQuestionId}`);
+check('built top question belongs to the org', builtTop?.organizationId === org.organizationId && builtTop?.parentId === 'top');
+const builtChildren = await fsList('statements', (d) => d.parentId === built.topQuestionId);
+const kindMarker = { crowdSurvey: 'mass-consensus', liveSession: 'join', discussion: 'main', document: 'sign' };
+const plannedSorted = [...(finalPlan?.activities ?? [])].sort((a, b) => a.order - b.order);
+const childrenSorted = [...builtChildren].sort((a, b) => a.order - b.order);
+check('built activities are children in plan order with kind markers + open/frozen', plannedSorted.every((a, i) => childrenSorted[i]?.sourceApp === kindMarker[a.type] && childrenSorted[i]?.statementSettings?.questionStatus === (a.openNow ? 'live' : 'frozen')), childrenSorted.map((d) => `${d.order}:${d.sourceApp}:${d.statementSettings?.questionStatus}`).join(' '));
+if (built.surveyIds.length > 0) {
+	const builtSurveyQuestionId = builtChildren.find((d) => d.sourceApp === 'mass-consensus')?.id;
+const seededOptions = builtSurveyQuestionId ? await fsList('statements', (d) => d.parentId === builtSurveyQuestionId && d.statementType === 'option') : [];
+check('built crowd survey is seeded with starting suggestions', seededOptions.length >= 3 && seededOptions.every((o) => o.seededBy === 'studio-ai'), `${seededOptions.length} seeds`);
+const builtSurvey = await fsGet(`surveys/${built.surveyIds[0]}`);
+	const surveyQuestion = builtSurvey && (await fsGet(`statements/${builtSurvey.questionIds[0]}`));
+	const expectedStatus = surveyQuestion?.statementSettings?.questionStatus === 'frozen' ? 'draft' : 'active';
+	check('survey status follows its question, parented to the top question, stamped on its question', builtSurvey?.status === expectedStatus && builtSurvey?.parentStatementId === built.topQuestionId && surveyQuestion?.questionSettings?.massConsensusSurveyId === built.surveyIds[0], JSON.stringify({ status: builtSurvey?.status, expectedStatus }));
+}
+const pendingActions = await fsList('scheduledActions', (d) => d.topParentId === built.topQuestionId && d.status === 'pending');
+check('scheduled actions are pending', pendingActions.length === built.scheduledActionIds.length, `${pendingActions.length}`);
+const builtSession = await fsGet(`studioPlanSessions/${planStart.sessionId}`);
+check('session marked built with builtStatementId', builtSession?.status === 'built' && builtSession?.builtStatementId === built.topQuestionId);
+const rebuilt = await call('fn_studioPlanBuild', consultant.idToken, { sessionId: planStart.sessionId });
+check('build is idempotent', rebuilt.topQuestionId === built.topQuestionId);
+await call('fn_studioPlanRate', consultant.idToken, { sessionId: planStart.sessionId, value: 'up', note: 'helpful' });
+const ratedSession = await fsGet(`studioPlanSessions/${planStart.sessionId}`);
+check('rating stored on the session', ratedSession?.rating?.value === 'up');
+
+// Existing-question mode reads the current activities
+const planExisting = await call('fn_studioPlanStart', consultant.idToken, {
+	organizationId: org.organizationId, topQuestionId: top.statementId, language: 'en', timezone: 'Asia/Jerusalem',
+});
+const existingIds = (planExisting.existingActivities ?? []).map((a) => a.statementId);
+const plannedExisting = (planExisting.plan?.activities ?? []).filter((a) => a.existingStatementId && a.change !== 'add').map((a) => a.existingStatementId);
+check('existing mode lists the 3 activities and never drops one from the plan', existingIds.length === 3 && existingIds.every((id) => plannedExisting.includes(id)), JSON.stringify({ n: existingIds.length, kept: plannedExisting.length, changes: planExisting.plan?.activities?.map((a) => a.change) }));
+
+// Manual scheduled action + cancel
+const manual = await call('fn_studioScheduledActionUpsert', consultant.idToken, { statementId: mc.statementId, action: 'close', runAt: Date.now() + 3600_000 });
+const cancelled = await call('fn_studioScheduledActionCancel', consultant.idToken, { scheduledActionId: manual.scheduledActionId });
+check('manual scheduled action created then cancelled', cancelled.status === 'cancelled');
+try {
+	await call('fn_studioScheduledActionUpsert', resident.idToken, { statementId: mc.statementId, action: 'close', runAt: Date.now() + 3600_000 });
+	check('non-admin cannot schedule', false);
+} catch (e) {
+	check('non-admin cannot schedule', e.code === 'PERMISSION_DENIED', e.message);
+}
+
+// 12. The Draft tool: a document written from the survey's results, then opened for comment
+const docCreated = await call('fn_createOrgStatement', consultant.idToken, {
+	organizationId: org.organizationId, parentId: top.statementId, title: 'Housing agreement — draft', kind: 'document',
+});
+const docBefore = await fsGet(`statements/${docCreated.statementId}`);
+check('document child created hidden in Sign', docBefore?.statementType === 'document' && docBefore?.isDocument === true && docBefore?.sourceApp === 'sign' && docBefore?.signSettings?.isHidden === true, JSON.stringify(docBefore?.signSettings));
+try {
+	await call('fn_studioDraftFromResults', consultant.idToken, { documentId: docCreated.statementId, sourceStatementIds: [mc.statementId], cutoff: { mode: 'topN', n: 5, minEvaluators: 99 } });
+	check('draft with an impossible cutoff is rejected', false);
+} catch (e) {
+	check('draft with an impossible cutoff is rejected', e.code === 'FAILED_PRECONDITION', e.message);
+}
+const drafted = await call('fn_studioDraftFromResults', consultant.idToken, {
+	documentId: docCreated.statementId, sourceStatementIds: [mc.statementId], cutoff: { mode: 'topN', n: 5, minEvaluators: 0 }, intent: 'A short, clear agreement',
+});
+check('draft written with paragraphs', drafted.paragraphCount >= 1 && typeof drafted.signAdminUrl === 'string', JSON.stringify(drafted));
+const draftParagraphs = await fsList('statements', (d) => d.parentId === docCreated.statementId && d.statementType === 'paragraph' && !d.hide);
+check('paragraphs are official Sign paragraphs with provenance', draftParagraphs.length >= 2 && draftParagraphs.some((p) => p.draftProvenance?.sources?.length >= 1) && draftParagraphs.every((p) => p.doc?.isOfficialParagraph === true), `${draftParagraphs.length} paragraphs`);
+const opened = await call('fn_studioSetDocumentStatus', consultant.idToken, { statementId: docCreated.statementId, status: 'open' });
+const docAfter = await fsGet(`statements/${docCreated.statementId}`);
+check('document opened for comment', opened.status === 'open' && docAfter?.signSettings?.isHidden === false && docAfter?.signSettings?.enableSuggestions === true, JSON.stringify(docAfter?.signSettings));
+const draftAction = await call('fn_studioScheduledActionUpsert', consultant.idToken, {
+	statementId: docCreated.statementId, action: 'draft', runAt: Date.now() + 3600_000, draft: { sourceStatementIds: [mc.statementId], cutoff: { mode: 'chosen' } },
+});
+check('scheduled draft action stored with its payload', (await fsGet(`scheduledActions/${draftAction.scheduledActionId}`))?.draft?.sourceStatementIds?.[0] === mc.statementId);
+
+// 13. Seeding a hand-made crowd survey on demand (it already has 1 option → 5 more)
+const seeded = await call('fn_studioSeedOptions', consultant.idToken, { statementId: mc.statementId, count: 6, language: 'en' });
+check('fn_studioSeedOptions tops the survey up to 6', seeded.created === 5 && seeded.total === 6, JSON.stringify(seeded));
+const seededAgain = await call('fn_studioSeedOptions', consultant.idToken, { statementId: mc.statementId, count: 6 });
+check('seeding is idempotent at the target count', seededAgain.created === 0, JSON.stringify(seededAgain));
+try {
+	await call('fn_studioSeedOptions', consultant.idToken, { statementId: disc.statementId, count: 6 });
+	check('only crowd surveys can be seeded', false);
+} catch (e) {
+	check('only crowd surveys can be seeded', e.code === 'FAILED_PRECONDITION', e.message);
+}
+
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 console.log(JSON.stringify({ orgId: org.organizationId, topId: top.statementId, mcId: mc.statementId, joinId: join.statementId, consultant: consultant.email, sysadmin: sysadmin.email }));

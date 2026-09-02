@@ -1,0 +1,153 @@
+// The teacher's dashboard (/teach) and the start-game screen (/teach/start):
+// class cards with advancement, the games list, and the flow-knob panel.
+// Imported by components.scss; do not import directly.
+
+.dashboard {
+	&__class-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: var(--space-md);
+	}
+
+	&__class-card {
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
+		padding: var(--space-md);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		cursor: pointer;
+		transition: border-color var(--motion-base) ease;
+
+		&:hover,
+		&:focus-visible {
+			border-color: var(--border-strong);
+		}
+	}
+
+	&__class-name {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+	}
+
+	&__class-meta {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+	}
+
+	&__class-stats {
+		display: flex;
+		gap: var(--space-md);
+		flex-wrap: wrap;
+	}
+
+	&__class-stat {
+		color: var(--text-secondary);
+		font-size: var(--font-size-sm);
+	}
+
+	&__game-row {
+		background: var(--bg-card-solid);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-md);
+		padding: var(--space-sm) var(--space-md);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-md);
+		cursor: pointer;
+		transition: border-color var(--motion-base) ease;
+
+		&:hover,
+		&:focus-visible {
+			border-color: var(--border-strong);
+		}
+	}
+
+	&__game-main {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-sm);
+		min-width: 0;
+
+		strong {
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+	}
+
+	&__game-date {
+		color: var(--text-muted);
+		font-size: var(--font-size-sm);
+		flex-shrink: 0;
+	}
+
+	&__game-side {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		flex-shrink: 0;
+	}
+
+	&__game-score {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		color: var(--lantern-glow);
+	}
+
+	&__status-pill {
+		font-size: var(--font-size-sm);
+		color: var(--text-secondary);
+		border: 1px solid var(--border-subtle);
+		border-radius: var(--radius-full);
+		padding: 2px var(--space-sm);
+
+		// The live state is said with a success-tinted FILL and border, never
+		// success-coloured text: --success-deep is defined against white and
+		// the civic theme does not remap it, so as text it vanished on navy.
+		&--live {
+			color: var(--text-primary);
+			border-color: var(--success);
+			background: color-mix(in srgb, var(--success) 18%, transparent);
+		}
+	}
+}
+
+.start-game {
+	&__class-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	&__knobs {
+		gap: var(--space-sm);
+	}
+
+	&__knob {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-md);
+	}
+
+	&__knob-label {
+		color: var(--text-secondary);
+	}
+
+	&__stepper {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	&__stepper-value {
+		font-family: var(--font-display);
+		font-size: var(--font-size-lg);
+		min-width: 1.5em;
+		text-align: center;
+	}
+}

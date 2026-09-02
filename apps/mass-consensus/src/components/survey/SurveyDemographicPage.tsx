@@ -7,6 +7,7 @@ import type { SurveyDemographicPage, UserDemographicQuestion } from '@freedi/sha
 import { UserDemographicQuestionType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { getCurrentToken } from '@/lib/firebase/client';
 import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
 import InlineMarkdown from '../shared/InlineMarkdown';
@@ -356,7 +357,11 @@ export default function SurveyDemographicPage({
       // Ensure userId cookie is fresh before API call (mobile browsers may drop it)
       getOrCreateAnonymousUser();
 
-      const token = localStorage.getItem('firebase_token');
+      // Signed-in visitors send a token; anonymous ones are identified by the
+      // userId cookie above, so a missing token is normal here and the header
+      // is simply left off. (This used to read a localStorage copy written once
+      // at sign-in — stale by design, and `Bearer null` for everyone else.)
+      const token = await getCurrentToken();
       const formattedAnswers = Object.entries(answers).map(([questionId, data]) => ({
         questionId,
         answer: data.answer,
@@ -369,7 +374,7 @@ export default function SurveyDemographicPage({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({ answers: formattedAnswers }),

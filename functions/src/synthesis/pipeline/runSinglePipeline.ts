@@ -2,7 +2,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, StatementType, type Statement } from '@freedi/shared-types';
 import { vectorSearchService } from '../../services/vector-search-service';
-import { judgeSemanticEquivalence } from '../../services/semantic-equivalence-service';
+import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
 import { findClustersContainingMember } from '../liveSynth/clusterRecompute';
 import { noteStatementProcessed, runConsolidation } from '../consolidation/consolidateClaims';
 import { loadSynthesisSettingsFromStatement } from './loadSynthesisSettings';
@@ -601,7 +601,7 @@ async function executePipeline(
 		// duplicate self-heals (the option spawns its own synth and the reJudge
 		// sweep merges true duplicates, measured clean), while a wrong attach
 		// puts a member in the wrong merged proposal for every reader.
-		const attachVerdict = await judgeSemanticEquivalence([
+		const attachVerdict = await judgeSemanticEquivalenceCached([
 			{
 				pairId: `${option.statementId}|${synthMatch.cluster.statementId}`,
 				textA: option.statement ?? '',

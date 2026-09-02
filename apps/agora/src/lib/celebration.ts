@@ -66,3 +66,37 @@ export function dismissCelebration(): void {
 	current = pending.shift() ?? null;
 	m.redraw();
 }
+
+/**
+ * Keys whose one-shot celebration already fired this sitting. The in-memory
+ * set is the real guard — it also covers a browser whose sessionStorage
+ * throws — and sessionStorage extends it across a refresh, because a cheer
+ * that repeats on every reload stops meaning anything.
+ */
+const firedOnce = new Set<string>();
+
+/**
+ * Fire a celebration at most once per key (per sitting, refresh included).
+ * The storage lives HERE rather than in the component that wants the cheer:
+ * components produce vnodes from props and never touch storage — that rule
+ * is what keeps them testable in node.
+ */
+export function celebrateOnce(key: string, payload: CelebrationPayload): void {
+	if (firedOnce.has(key)) return;
+	try {
+		if (sessionStorage.getItem(key)) {
+			firedOnce.add(key);
+
+			return;
+		}
+	} catch {
+		// Storage unavailable — the in-memory set still guards this sitting
+	}
+	firedOnce.add(key);
+	try {
+		sessionStorage.setItem(key, '1');
+	} catch {
+		// Nothing to do — the cheer just repeats after a refresh
+	}
+	celebrate(payload);
+}

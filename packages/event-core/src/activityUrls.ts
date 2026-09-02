@@ -109,7 +109,9 @@ export function createActivityUrlResolver(config: EventUrlConfig): ActivityUrlRe
 			case ActivityType.join:
 				return joinQuestionLink(statementId);
 			case ActivityType.signDocument:
-				return { href: `${sign}/doc/${statementId}/admin`, external: true };
+				// The editor: where an admin writes / reviews the text (participants
+				// read and comment at `/doc/{id}`).
+				return { href: `${sign}/doc/${statementId}/admin/editor`, external: true };
 			case ActivityType.massConsensus:
 			case ActivityType.multiStage:
 			case ActivityType.compound:

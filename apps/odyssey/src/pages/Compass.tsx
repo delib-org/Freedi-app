@@ -7,7 +7,19 @@ import NoGameYet from '../components/NoGameYet';
 import { useMode } from '../lib/mode';
 import { stageBus } from '../lib/stageBus';
 
-const TOP_VALUES = 5;
+const TOP_VALUES = 3;
+
+/**
+ * Inspiration chips are deliberately uncapped.
+ *
+ * A cap of three was tried, on the theory that it forces the honest question —
+ * not what matters, but what matters most. In practice it made a player argue
+ * with the interface instead of with themselves: someone who genuinely fears
+ * four things had to pretend they feared three. The ranking that the compass
+ * really needs is asked once, properly, in רוח ההכרעה, where the order is
+ * visible and meant. The chips stay what they look like: everything that
+ * speaks to you.
+ */
 
 /**
  * ארבע רוחות המצפון: three open questions with inspiration chips, then the
@@ -25,7 +37,11 @@ export default function Compass() {
 	const [ranked, setRanked] = useState<string[]>(() =>
 		Object.entries(journey?.valueRankings ?? {})
 			.sort((a, b) => a[1] - b[1])
-			.map(([valueId]) => valueId),
+			.map(([valueId]) => valueId)
+			// A ranking saved under an older, larger cap keeps its top picks and
+			// lets the rest go — returning voyagers must never be locked out by
+			// yesterday's rules.
+			.slice(0, TOP_VALUES),
 	);
 	const [saving, setSaving] = useState(false);
 
@@ -87,11 +103,12 @@ export default function Compass() {
 
 	function toggleChip(questionId: string, chip: string): void {
 		const current = answerOf(questionId);
-		setAnswer(questionId, {
-			chips: current.chips.includes(chip)
-				? current.chips.filter((item) => item !== chip)
-				: [...current.chips, chip],
-		});
+		if (current.chips.includes(chip)) {
+			setAnswer(questionId, { chips: current.chips.filter((item) => item !== chip) });
+
+			return;
+		}
+		setAnswer(questionId, { chips: [...current.chips, chip] });
 	}
 
 	function toggleValue(valueId: string): void {
@@ -119,7 +136,10 @@ export default function Compass() {
 				compassAnswers: answers,
 				valueRankings: Object.fromEntries(ranked.map((valueId, index) => [valueId, index + 1])),
 			});
-			navigate('/map');
+			// The Elders are asked for between calibrating the compass and
+			// choosing islands: after the player knows what the game is about,
+			// before anyone starts talking to them on the water.
+			navigate('/elders');
 		} finally {
 			setSaving(false);
 		}
@@ -147,26 +167,55 @@ export default function Compass() {
 							</p>
 							<h2 className="text-xl font-bold text-[var(--cream)] mt-1 mb-1">{question.title}</h2>
 							<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">{question.prompt}</p>
+
+							{/*
+							  Chips first, then the writing box. Side by side and unlabelled
+							  they read as two ways to answer the same question, and a reader
+							  could not tell whether picking one meant skipping the other.
+							  In this order they are one instruction: choose your few, then
+							  say the part no chip says.
+							*/}
+							{question.chips.length > 0 ? (
+								<>
+									<p className="text-[13px] opacity-75 m-0 mb-2">
+										בחרו כל מה שמדבר אליכם — אין הגבלה:
+									</p>
+									<div className="flex flex-wrap gap-2" aria-label="כפתורי השראה">
+										{question.chips.map((chip) => {
+											const active = answerOf(question.questionId).chips.includes(chip);
+
+											return (
+												<button
+													key={chip}
+													type="button"
+													className={`chip ${active ? 'active' : ''}`}
+													aria-pressed={active}
+													onClick={() => toggleChip(question.questionId, chip)}
+												>
+													{chip}
+												</button>
+											);
+										})}
+									</div>
+									<p className="text-[13px] opacity-75 mt-2 mb-3">
+										{answerOf(question.questionId).chips.length > 0
+											? `נבחרו ${answerOf(question.questionId).chips.length} מתוך ${
+													question.chips.length
+												}. לחיצה נוספת מסירה בחירה.`
+											: 'אפשר לבחור כמה שתרצו.'}
+									</p>
+								</>
+							) : null}
+
+							<p className="text-[13px] opacity-75 m-0 mb-2">
+								ובמילים שלכם — מה שאף כפתור לא אומר{question.chips.length > 0 ? ' (לא חובה)' : ''}:
+							</p>
 							<textarea
 								rows={3}
 								value={answerOf(question.questionId).answer}
 								onChange={(event) => setAnswer(question.questionId, { answer: event.target.value })}
 								placeholder="כתבו במילים שלכם…"
 							/>
-							{question.chips.length > 0 ? (
-								<div className="flex flex-wrap gap-2 mt-3" aria-label="כפתורי השראה">
-									{question.chips.map((chip) => (
-										<button
-											key={chip}
-											type="button"
-											className={`chip ${answerOf(question.questionId).chips.includes(chip) ? 'active' : ''}`}
-											onClick={() => toggleChip(question.questionId, chip)}
-										>
-											{chip}
-										</button>
-									))}
-								</div>
-							) : null}
 						</section>
 					))}
 
@@ -174,7 +223,36 @@ export default function Compass() {
 						<p className="eyebrow m-0">
 							רוח {questions.length + 1} מתוך {questions.length + 1}
 						</p>
-						<h2 className="text-xl font-bold text-[var(--cream)] mt-1 mb-1">רוח ההכרעה</h2>
+						<div className="flex items-center justify-between gap-3 mt-1 mb-1">
+							<h2 className="text-xl font-bold text-[var(--cream)] m-0">רוח ההכרעה</h2>
+							<span
+								className="flex items-center gap-2 rounded-full border border-[rgba(232,185,88,0.5)] bg-[rgba(6,24,44,0.7)] px-3 py-1"
+								role="status"
+								aria-label={`נבחרו ${ranked.length} ערכים מתוך ${TOP_VALUES}`}
+							>
+								<span className="flex gap-1" aria-hidden="true">
+									{Array.from({ length: TOP_VALUES }, (_, dot) => (
+										<span
+											key={dot}
+											className={`inline-block h-2.5 w-2.5 rounded-full ${
+												dot < ranked.length
+													? 'bg-[var(--gold-strong)]'
+													: 'border border-[rgba(232,185,88,0.5)]'
+											}`}
+										/>
+									))}
+								</span>
+								<strong
+									className={`text-[14px] ${
+										ranked.length === TOP_VALUES
+											? 'text-[var(--gold-strong)]'
+											: 'text-[var(--cream)]'
+									}`}
+								>
+									{ranked.length}/{TOP_VALUES}
+								</strong>
+							</span>
+						</div>
 						<p className="text-[15px] text-[#dcecf7] mt-0 mb-3">
 							כשאין פתרון טוב, מה בכל זאת צריך להנחות אותך? בחרו {TOP_VALUES} ערכים מובילים, לפי
 							הסדר.
@@ -196,9 +274,20 @@ export default function Compass() {
 								);
 							})}
 						</div>
-						<p className="text-[13px] opacity-75 mt-3 mb-0">
-							נבחרו {ranked.length} מתוך {TOP_VALUES}. לחיצה נוספת מסירה ערך.
-						</p>
+						{ranked.length > TOP_VALUES ? (
+							// A ranking saved before the cap dropped to 3 loads with more —
+							// say exactly what unblocks the way onward.
+							<p className="text-[13px] text-[var(--gold-strong)] mt-3 mb-0">
+								בחרתם {ranked.length} ערכים — הסירו {ranked.length - TOP_VALUES} בלחיצה עליהם כדי
+								להמשיך.
+							</p>
+						) : (
+							<p className="text-[13px] opacity-75 mt-3 mb-0">
+								{ranked.length === TOP_VALUES
+									? 'נבחרו כל הערכים. לחיצה נוספת מסירה ערך.'
+									: `נבחרו ${ranked.length} מתוך ${TOP_VALUES}. לחיצה נוספת מסירה ערך.`}
+							</p>
+						)}
 					</section>
 
 					<div className="flex flex-col items-center gap-2 pb-4">

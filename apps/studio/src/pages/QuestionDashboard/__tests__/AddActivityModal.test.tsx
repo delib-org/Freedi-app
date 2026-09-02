@@ -92,6 +92,36 @@ describe('AddActivityModal', () => {
 		await waitFor(() => expect(onCreated).toHaveBeenCalledTimes(2));
 	});
 
+	it('for a document, creates a hidden Sign document and explains the hand-off to Sign', async () => {
+		createOrgStatement.mockResolvedValue({ statementId: 'doc-1' });
+		const onCreated = vi.fn();
+		render(
+			<TranslationProvider initialLanguage={LanguagesEnum.en} storageKey="test-language">
+				<AddActivityModal
+					isOpen
+					orgId="org-1"
+					qId="q-1"
+					initialType={ActivityType.signDocument}
+					onClose={vi.fn()}
+					onCreated={onCreated}
+				/>
+			</TranslationProvider>,
+		);
+		expect(
+			screen.getByText(/write or paste the text in sign, then come back to open it for comment/i),
+		).toBeTruthy();
+		expect(screen.queryByLabelText(/open it now/i)).toBeNull();
+		fireEvent.change(screen.getByLabelText(/document title/i), {
+			target: { value: 'The proposal' },
+		});
+		fireEvent.click(screen.getByRole('button', { name: /continue in sign/i }));
+		await waitFor(() => expect(onCreated).toHaveBeenCalledWith('doc-1', ActivityType.signDocument));
+		expect(createOrgStatement).toHaveBeenCalledWith(
+			expect.objectContaining({ kind: 'document', title: 'The proposal' }),
+		);
+		expect(createOrgStatement.mock.calls[0][0]).not.toHaveProperty('initialStatus', 'live');
+	});
+
 	it('for a crowd survey, explains the hand-off to Crowd survey instead of "Open it now"', () => {
 		render(
 			<TranslationProvider initialLanguage={LanguagesEnum.en} storageKey="test-language">

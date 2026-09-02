@@ -19,11 +19,12 @@ import {
 	isAgoraAiUid,
 	pickVoteWinner,
 	tallyVotes,
+	ballotTallyIds,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
 import { callLLM, extractJson, TAXONOMY_MODEL } from '../config/openai-chat';
 
-interface ProposalRow {
+export interface ProposalRow {
 	statementId: string;
 	text: string;
 	/** The shared consensus metric (Cp) as it stands on the statement doc */
@@ -38,9 +39,11 @@ type VoteFields = Pick<
 	| 'voteTotal'
 	| 'voteWinnerMetThreshold'
 	| 'winningConsensusThreshold'
+	| 'voteConsensus'
+	| 'voteRejected'
 >;
 
-interface VoteOutcome extends VoteFields {
+export interface VoteOutcome extends VoteFields {
 	/** The proposal that should lead the recap, when the vote earned it that place */
 	electedProposal?: ProposalRow;
 }
@@ -72,15 +75,26 @@ export async function computeVoteOutcome(
 		return { statementId: String(vote.statementId), userId: String(vote.userId) };
 	});
 
-	const counts = tallyVotes(votes, candidateIds);
+	// A one-candidate ballot carries its against side in the tally
+	const counts = tallyVotes(votes, ballotTallyIds(candidateIds));
 	const consensusById = Object.fromEntries(
 		proposals.map((proposal) => [proposal.statementId, proposal.consensus]),
 	);
 	const threshold = session.votingSettings?.winningConsensusThreshold;
-	const { winnerStatementId, metThreshold, total } = pickVoteWinner(
+	const { winnerStatementId, metThreshold, total, rejected } = pickVoteWinner(
 		counts,
 		consensusById,
 		threshold,
+	);
+
+	// The consensus each candidate held at THIS moment — the numbers the
+	// threshold was actually judged against. Stored so the results screen can
+	// explain the verdict with the deciding figure instead of the frozen
+	// ballot snapshot's, which stopped moving when the stage opened.
+	const voteConsensus = Object.fromEntries(
+		candidateIds
+			.filter((candidateId) => consensusById[candidateId] !== undefined)
+			.map((candidateId) => [candidateId, consensusById[candidateId]]),
 	);
 
 	// A winner that misses the bar is still named — the class elected it, and
@@ -95,6 +109,8 @@ export async function computeVoteOutcome(
 		voteCounts: counts,
 		voteTotal: total,
 		voteWinnerMetThreshold: metThreshold,
+		...(rejected !== undefined ? { voteRejected: rejected } : {}),
+		voteConsensus,
 		...(threshold !== undefined ? { winningConsensusThreshold: threshold } : {}),
 		...(electedProposal ? { electedProposal } : {}),
 	};
@@ -288,18 +304,25 @@ export async function computeSessionResults(sessionId: string): Promise<void> {
 			db.collection(Collections.evaluations).where('agoraSessionId', '==', sessionId).get(),
 		]);
 
-		const proposals: ProposalRow[] = proposalsSnap.docs.map((docSnap) => ({
-			statementId: String(docSnap.data().statementId),
-			text: String(docSnap.data().statement ?? ''),
-			consensus: Number(docSnap.data().consensus ?? 0),
-		}));
+		// Only the challenge question's options are proposals. A question
+		// stage's answers are options too — under their own question — and
+		// must never be plausibility-scored or compete for the lead.
+		const proposals: ProposalRow[] = proposalsSnap.docs
+			.filter((docSnap) => docSnap.data().parentId === session.challengeQuestionId)
+			.map((docSnap) => ({
+				statementId: String(docSnap.data().statementId),
+				text: String(docSnap.data().statement ?? ''),
+				consensus: Number(docSnap.data().consensus ?? 0),
+			}));
 		const scores = new Map<string, AgoraProposalScore>(
 			scoresSnap.docs.map((docSnap) => [docSnap.id, docSnap.data() as AgoraProposalScore]),
 		);
 		const participants = participantsSnap.docs.map((docSnap) => docSnap.data() as AgoraParticipant);
 		// The characters' synthetic rater identities never count as students
 		const students = participants.filter((participant) => !participant.isAI);
-		const evaluations = evaluationsSnap.docs.map((docSnap) => docSnap.data() as Evaluation);
+		const evaluations = evaluationsSnap.docs
+			.map((docSnap) => docSnap.data() as Evaluation)
+			.filter((evaluation) => evaluation.parentId === session.challengeQuestionId);
 		const outcomeStats = computeOutcomeStats(evaluations, participants);
 
 		const maxBridging = Math.max(

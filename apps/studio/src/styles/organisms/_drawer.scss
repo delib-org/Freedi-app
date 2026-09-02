@@ -129,6 +129,29 @@
 		color: var(--text-meta);
 	}
 
+	// Next scheduled action for this activity, under the status control.
+	&__scheduled {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2xs) var(--space-xs);
+		margin: var(--space-xs) 0 0;
+		padding: var(--space-xs) var(--space-sm);
+		font-size: var(--font-size-sm);
+		color: var(--text-body);
+		background: var(--wash-neutral);
+		border-radius: var(--radius-sm);
+	}
+
+	&__scheduled-glyph {
+		font-size: 0.8em;
+		line-height: 1;
+	}
+
+	&__scheduled-time {
+		color: var(--text-meta);
+	}
+
 	&__stats {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -344,4 +367,93 @@
 	font-size: var(--font-size-xs);
 	color: var(--text-meta);
 	text-align: center;
+
+	&--start {
+		margin: 0 0 var(--space-sm);
+		text-align: start;
+	}
+}
+
+// "Draft from results" — settings fields + the write button and its outcome.
+.drawer__draft {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.drawer__draft-actions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-xs);
+}
+
+.drawer__draft-progress,
+.drawer__draft-done,
+.drawer__draft-error {
+	margin: 0;
+	padding: var(--space-xs) var(--space-sm);
+	font-size: var(--font-size-sm);
+	border-radius: var(--radius-sm);
+}
+
+.drawer__draft-progress {
+	color: var(--text-body);
+	background: var(--wash-primary);
+}
+
+.drawer__draft-done {
+	color: var(--status-open-ink);
+	background: var(--status-open-wash);
+}
+
+.drawer__draft-error {
+	color: var(--text-error);
+	background: var(--bg-error-light);
+}
+
+.drawer__draft-link {
+	color: inherit;
+	font-weight: 600;
+	text-decoration: underline;
+}
+
+// "Starting suggestions" — current count, how many to seed, intent, the
+// seed button and its outcome (outcome rows reuse the draft ones above).
+.drawer__seed {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+}
+
+.drawer__seed-count {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--text-body);
+
+	.stat-number {
+		font-weight: 600;
+		color: var(--text-title);
+	}
+}
+
+.drawer__seed-how-many {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2xs);
+	font-size: var(--font-size-xs);
+	color: var(--text-body);
+}
+
+.drawer__seed-select {
+	@include input-base;
+	inline-size: 100%;
+	min-block-size: 40px;
+	padding: var(--space-2xs) var(--space-xs);
+	font-size: var(--font-size-sm);
+}
+
+.drawer__seed-enough {
+	margin: 0;
+	font-size: var(--font-size-xs);
+	color: var(--text-meta);
 }

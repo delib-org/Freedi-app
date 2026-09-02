@@ -27,6 +27,29 @@ export function valueToAttitude(value: number): OdysseyAttitudeKey | undefined {
 	return ODYSSEY_ATTITUDES.find((attitude) => attitude.value === value)?.key;
 }
 
+/**
+ * The least the sea needs to know about a sailor.
+ *
+ * `evaluations` are readable by any signed-in user — Odyssey's own opinion map
+ * and fellow-sailor list are built by loading the whole game's evaluations in
+ * the browser, and firestore.rules says so out loud. Writing the full account
+ * object onto every rating therefore published each player's Google email and
+ * full name next to their answer on every political question they touched, to
+ * every other player, through the app's own loader. Nothing ever read those
+ * fields: the fellow-sailor list has always shown `displayName.split(' ')[0]`.
+ *
+ * So only the first name is stored, and the email and photo are not stored at
+ * all. Ratings written before this still carry them — see
+ * `scripts/strip-evaluator-emails.ts`.
+ */
+export function voyageIdentity(user: FreediUser): FreediUser {
+	return {
+		uid: user.uid,
+		displayName: (user.displayName ?? '').trim().split(/\s+/)[0] || 'מפליג/ה',
+		isAnonymous: user.isAnonymous,
+	};
+}
+
 export async function rateStance(params: {
 	gameId: string;
 	islandStatementId: string;
@@ -42,8 +65,9 @@ export async function rateStance(params: {
 		parentId: islandStatementId,
 		statementId: stanceStatementId,
 		evaluatorId: user.uid,
-		// The shared pipeline (statement.evaluation stats) requires an evaluator object.
-		evaluator: user,
+		// The shared pipeline (statement.evaluation stats) requires an evaluator
+		// object — but not this much of one. See voyageIdentity().
+		evaluator: voyageIdentity(user),
 		evaluation: attitudeValue(attitude),
 		updatedAt: Date.now(),
 		[ODYSSEY_GAME_FIELD]: gameId,

@@ -1,26 +1,20 @@
 import m from 'mithril';
 import { t } from '../../lib/i18n';
+import { stalledBanner } from '../../components/StalledBanner';
 import {
-	db,
-	doc,
-	getDoc,
-	updateDoc,
-	storage,
-	storageRef,
-	uploadBytesResumable,
-	getDownloadURL,
-} from '../../lib/firebase';
+	fetchTopicPackage,
+	saveTopicEditorFields,
+	uploadTopicAsset,
+	type TopicEditorFields,
+} from '../../lib/teacher';
 import {
-	Collections,
 	AgoraCharacter,
 	AgoraScene,
 	AgoraTopicPackage,
-	AgoraTopicPackageSchema,
 	AgoraTopicStatus,
 	AgoraValue,
 	AGORA_LIMITS,
 } from '@freedi/shared-types';
-import { parse } from 'valibot';
 
 /**
  * Full review/edit surface for a generated topic package. Arrays edit as
@@ -37,10 +31,10 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	const imageUploadProgress: Record<string, number> = {};
 
 	function load(): void {
-		getDoc(doc(db, Collections.agoraTopicPackages, topicPackageId))
-			.then((snapshot) => {
-				if (snapshot.exists()) {
-					pkg = parse(AgoraTopicPackageSchema, snapshot.data());
+		fetchTopicPackage(topicPackageId)
+			.then((loaded) => {
+				if (loaded) {
+					pkg = loaded;
 				} else {
 					loadFailed = true;
 				}
@@ -53,13 +47,26 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 			});
 	}
 
-	function save(extra?: Partial<AgoraTopicPackage>): void {
+	/**
+	 * Save ONLY the fields this editor owns — never the whole in-memory copy,
+	 * which would overwrite fields the editor doesn't show with the values they
+	 * had when it was opened. Runs under the confirmed-write clock, so an
+	 * offline save surfaces as a stalled banner instead of a false "saved".
+	 */
+	function save(extra?: TopicEditorFields): void {
 		if (!pkg || saving) return;
 		saving = true;
-		const updated = { ...pkg, ...extra, lastUpdate: Date.now() };
-		updateDoc(doc(db, Collections.agoraTopicPackages, topicPackageId), updated)
+		const fields: TopicEditorFields = {
+			title: pkg.title,
+			framingText: pkg.framingText,
+			challengeQuestion: pkg.challengeQuestion,
+			characters: pkg.characters,
+			scenes: pkg.scenes,
+			...extra,
+		};
+		saveTopicEditorFields(topicPackageId, fields)
 			.then(() => {
-				pkg = updated;
+				if (pkg) pkg = { ...pkg, ...fields, lastUpdate: Date.now() };
 				savedFlash = true;
 				setTimeout(() => {
 					savedFlash = false;
@@ -76,73 +83,51 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 	}
 
 	function uploadVideo(scene: AgoraScene, file: File): void {
-		const path = `agora/${topicPackageId}/${scene.sceneId}-${file.name}`;
-		const task = uploadBytesResumable(storageRef(storage, path), file);
 		uploadProgress[scene.sceneId] = 0;
-		task.on(
-			'state_changed',
-			(snapshot) => {
-				uploadProgress[scene.sceneId] = Math.round(
-					(snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+		uploadTopicAsset(topicPackageId, `${scene.sceneId}-${file.name}`, file, (percent) => {
+			uploadProgress[scene.sceneId] = percent;
+			m.redraw();
+		})
+			.then((url) => {
+				if (!pkg) return;
+				const scenes = pkg.scenes.map((candidate) =>
+					candidate.sceneId === scene.sceneId ? { ...candidate, videoUrl: url } : candidate,
 				);
-				m.redraw();
-			},
-			(error) => {
+				pkg = { ...pkg, scenes };
+				save({ scenes });
+			})
+			.catch((error: unknown) => {
 				console.error('[Editor] Video upload failed:', error);
+			})
+			.finally(() => {
 				delete uploadProgress[scene.sceneId];
 				m.redraw();
-			},
-			() => {
-				getDownloadURL(task.snapshot.ref)
-					.then((url) => {
-						if (!pkg) return;
-						const scenes = pkg.scenes.map((candidate) =>
-							candidate.sceneId === scene.sceneId ? { ...candidate, videoUrl: url } : candidate,
-						);
-						delete uploadProgress[scene.sceneId];
-						save({ scenes });
-					})
-					.catch((error: unknown) => {
-						console.error('[Editor] Getting video URL failed:', error);
-					});
-			},
-		);
+			});
 	}
 
 	function uploadImage(scene: AgoraScene, file: File): void {
-		const path = `agora/${topicPackageId}/${scene.sceneId}-img-${file.name}`;
-		const task = uploadBytesResumable(storageRef(storage, path), file);
 		imageUploadProgress[scene.sceneId] = 0;
-		task.on(
-			'state_changed',
-			(snapshot) => {
-				imageUploadProgress[scene.sceneId] = Math.round(
-					(snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+		uploadTopicAsset(topicPackageId, `${scene.sceneId}-img-${file.name}`, file, (percent) => {
+			imageUploadProgress[scene.sceneId] = percent;
+			m.redraw();
+		})
+			.then((url) => {
+				if (!pkg) return;
+				const scenes = pkg.scenes.map((candidate) =>
+					candidate.sceneId === scene.sceneId
+						? { ...candidate, imageUrls: [...candidate.imageUrls, url] }
+						: candidate,
 				);
-				m.redraw();
-			},
-			(error) => {
+				pkg = { ...pkg, scenes };
+				save({ scenes });
+			})
+			.catch((error: unknown) => {
 				console.error('[Editor] Image upload failed:', error);
+			})
+			.finally(() => {
 				delete imageUploadProgress[scene.sceneId];
 				m.redraw();
-			},
-			() => {
-				getDownloadURL(task.snapshot.ref)
-					.then((url) => {
-						if (!pkg) return;
-						const scenes = pkg.scenes.map((candidate) =>
-							candidate.sceneId === scene.sceneId
-								? { ...candidate, imageUrls: [...candidate.imageUrls, url] }
-								: candidate,
-						);
-						delete imageUploadProgress[scene.sceneId];
-						save({ scenes });
-					})
-					.catch((error: unknown) => {
-						console.error('[Editor] Getting image URL failed:', error);
-					});
-			},
-		);
+			});
 	}
 
 	function removeSceneImage(scene: AgoraScene, url: string): void {
@@ -384,6 +369,9 @@ export function TopicEditor(initialVnode: m.Vnode<{ id: string }>): m.Component<
 						current.scenes.map((scene) => sceneEditor(scene)),
 					),
 
+					// A save wedged offline must not read as saved — this is the
+					// confirmed-write clock's voice on a screen with no HUD
+					stalledBanner(),
 					m('.delib__actions', [
 						m(
 							'button.btn.btn--secondary',

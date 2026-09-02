@@ -1,0 +1,176 @@
+@use '@freedi/shared-styles/mixins' as *;
+
+// Scheduled actions timeline — upcoming (pending) first, past collapsed.
+// Each item: <time> · glyph + word · target · status · edit / cancel.
+.timeline {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-sm);
+	min-inline-size: 0;
+
+	&__title {
+		margin: 0;
+		font-size: var(--font-size-lg);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		grid-template-areas:
+			'kind target actions'
+			'time time actions'
+			'nudge nudge actions';
+		align-items: center;
+		gap: var(--space-2xs) var(--space-sm);
+		min-block-size: var(--studio-row-min-height);
+		padding: var(--space-xs) var(--space-sm);
+		border: 1px solid var(--border-light);
+		border-inline-start-width: 3px;
+		border-radius: var(--radius-sm);
+		background: var(--card-default);
+
+		&--open {
+			border-inline-start-color: var(--action-open);
+		}
+
+		&--freeze {
+			border-inline-start-color: var(--action-freeze);
+		}
+
+		&--close {
+			border-inline-start-color: var(--action-close);
+		}
+
+		&--nudge {
+			border-inline-start-color: var(--action-nudge);
+		}
+
+		&--draft {
+			border-inline-start-color: var(--action-draft);
+		}
+
+		&--past {
+			opacity: 0.8;
+		}
+	}
+
+	&__kind {
+		grid-area: kind;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+		font-weight: 600;
+		white-space: nowrap;
+		color: var(--text-title);
+	}
+
+	&__glyph {
+		font-size: 0.8em;
+		line-height: 1;
+	}
+
+	&__target {
+		grid-area: target;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		min-inline-size: 0;
+	}
+
+	&__target-button {
+		@include truncate;
+		max-inline-size: 100%;
+		padding: 0;
+		font: inherit;
+		color: var(--btn-primary);
+		background: none;
+		border: none;
+		text-align: start;
+		cursor: pointer;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	&__time {
+		grid-area: time;
+		font-size: var(--font-size-sm);
+		color: var(--text-meta);
+	}
+
+	&__nudge {
+		grid-area: nudge;
+		margin: 0;
+		font-size: var(--font-size-xs);
+		color: var(--text-meta);
+	}
+
+	&__status {
+		&--failed {
+			color: var(--text-error);
+			background: var(--bg-error-light);
+		}
+
+		&--done {
+			background: var(--status-open-wash);
+			color: var(--status-open-ink);
+		}
+
+		&--running {
+			background: var(--wash-primary);
+			color: var(--btn-primary);
+		}
+	}
+
+	&__actions {
+		grid-area: actions;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: var(--space-2xs);
+	}
+
+	&__past {
+		summary {
+			cursor: pointer;
+			font-size: var(--font-size-sm);
+			font-weight: 600;
+			color: var(--text-meta);
+		}
+
+		.timeline__list {
+			margin-block-start: var(--space-xs);
+		}
+	}
+
+	&__error {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--text-error);
+	}
+
+	@include mobile {
+		&__item {
+			grid-template-columns: auto minmax(0, 1fr);
+			grid-template-areas:
+				'kind target'
+				'time time'
+				'nudge nudge'
+				'actions actions';
+		}
+
+		&__actions {
+			justify-content: flex-start;
+		}
+	}
+}

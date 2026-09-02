@@ -30,6 +30,15 @@ export const DEFAULT_TEXTS: Record<string, string> = {
 	agoraButton: 'אל שער האגורה',
 	/** Origin of the Agora app. Each island's gate appends its own join code. */
 	agoraOrigin: '',
+	/**
+	 * Who answers for the data, and where to write. Both are shown on /privacy,
+	 * and both are blank until an operator fills them in on the admin screen —
+	 * a made-up address on a privacy page is worse than none. FILL THESE IN
+	 * BEFORE DISTRIBUTING: a political questionnaire with no one's name on it is
+	 * the reason people close the tab.
+	 */
+	privacyController: '',
+	privacyContact: '',
 	destinationName: 'חוף ההבטחה של ארץ ישנה-חדשה',
 };
 
@@ -138,8 +147,8 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 		posX: 13,
 		posY: 34,
 		stances: [
-			'ועדת חקירה ממלכתית בהקדם, גם בזמן מלחמה',
-			'ועדת חקירה ממלכתית לאחר תום המלחמה',
+			'ועדת חקירה ממלכתית בהקדם',
+			'ועדת חקירה ממלכתית רק לאחר הסדר סופי בעזה',
 			'בדיקות פנימיות בכל מערכת, ורק אחר כך הכרעה על ועדה',
 			'להתמקד כעת בניצחון ובשיקום',
 		],
@@ -153,7 +162,7 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 		opening:
 			'הגעת אל חוף סלעי. מצד אחד נשמעים קולות מן העיר: ״הרוב הכריע״. מן הצד השני עומדת שומרת השערים ואומרת: ״גם קברניט שנבחר צריך גבולות״.',
 		centralQuestion: 'איזה כוח צריך להיות לבית המשפט העליון מול הממשלה והכנסת?',
-		depthQuestion: 'מה חשוב לך במיוחד בסוגיה הזו, או איפה ההתלבטות?',
+		depthQuestion: 'מי צריך להכריע כשרוב נבחר ובית המשפט חלוקים — ומה הגבול?',
 		posX: 30,
 		posY: 26,
 		stances: [
@@ -280,8 +289,8 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 	},
 	{
 		slug: 'sabbath-rabbinate',
-		title: 'השבת והרבנות',
-		issue: 'דת ומדינה',
+		title: 'דת ומדינה',
+		issue: 'צביון המרחב הציבורי בין סמכות רבנית לחופש בחירה',
 		shortExplain:
 			'מה היחס הרצוי בין דת ומדינה: הפרדה אזרחית רחבה, חופש אזרחי מקומי לצד סמלים יהודיים, סטטוס-קוו מתוקן, או חיזוק סמכות הרבנות והזהות היהודית במרחב הציבורי.',
 		opening:
@@ -337,22 +346,33 @@ export const DEFAULT_ISLANDS: DefaultIsland[] = [
 		],
 	},
 	{
+		// Was 'יחסי החוץ' / 'ארה״ב, המעמד הבינלאומי ויהדות התפוצות', and it did
+		// three things wrong at once. It folded in diaspora Jewry, which is a
+		// question of Jewish identity rather than of foreign relations. Every
+		// stance was written about the United States, which quietly asserts that
+		// Europe and the region matter less — a political position, arriving as
+		// if it were the frame. And it left the reader looking for Israel's
+		// relations with the Palestinians and its neighbours, which live on
+		// 'הבית המדיני' and 'הסערה הביטחונית'. What is left is the one question
+		// those islands do not ask: what Israel's standing in the world is worth
+		// when it costs freedom of action.
 		slug: 'world-partners',
-		title: 'יחסי החוץ',
-		issue: 'ארה״ב, המעמד הבינלאומי ויהדות התפוצות',
+		title: 'ישראל בין האומות',
+		issue: 'מעמד בינלאומי, בריתות וחופש פעולה',
 		shortExplain:
-			'כמה משקל צריכה ישראל לתת לברית עם ארה״ב, למעמדה הבינלאומי ולקשר עם יהדות התפוצות: משקל מכריע, גבוה אך לא מכריע, הקשבה לצד עצמאות, או העדפת חופש פעולה גם במחיר עימות.',
+			'כמה משקל צריכה ישראל לתת למעמדה הבינלאומי ולבריתות שלה כשהם מתנגשים עם חופש הפעולה שלה: שיקול מכריע, משקל גבוה לצד פיזור הקשרים, הקשבה לצד פעולה עצמאית, או עצמאות מלאה גם במחיר בידוד.',
 		opening:
 			'קורא הכוכבים מתבונן בכוכבים ובספינות רחוקות ושואל מי שט לצידנו, מי מזהיר אותנו, ומתי ריבונות הופכת לבדידות מסוכנת.',
-		centralQuestion: 'כמה משקל לתת לברית עם ארה״ב, למעמד הבינלאומי ולקשר עם יהדות התפוצות?',
-		depthQuestion: 'מתי בעלת ברית היא עוגן ומתי היא מגבלה?',
+		centralQuestion:
+			'כמה משקל צריכה ישראל לתת למעמדה הבינלאומי ולבריתות שלה, כשהם מתנגשים עם חופש הפעולה שלה?',
+		depthQuestion: 'מתי ברית היא עוגן ומתי היא מגבלה?',
 		posX: 68,
 		posY: 76,
 		stances: [
-			'משקל מכריע לברית עם ארה״ב ולמעמד הבינלאומי',
-			'משקל גבוה, אך לא מכריע, לצד שיקולים עצמאיים',
-			'הקשבה לעולם לצד פעולה עצמאית ועקבית',
-			'העדפת חופש פעולה מלא, גם במחיר עימות',
+			'המעמד הבינלאומי והבריתות הם שיקול מכריע — כדאי לרסן צעדים שפוגעים בהם',
+			'משקל גבוה לבריתות, לצד פיזור הקשרים בין ארה״ב, אירופה ומדינות האזור',
+			'הקשבה לעולם לצד פעולה עצמאית ועקבית, לפי העניין',
+			'חופש פעולה מלא לפי שיקול ישראלי בלבד, גם במחיר בידוד בינלאומי',
 		],
 	},
 ];
@@ -361,20 +381,46 @@ export interface DefaultParty {
 	slug: string;
 	name: string;
 	color: string;
+	/**
+	 * Who leads it, where it came from, and — the part that matters for an
+	 * honest map — how its route was derived. A player looking at a ship named
+	 * הדמוקרטים deserves to know the positions came from Labor's and Meretz's
+	 * record, not from a platform that did not exist yet.
+	 */
 	description: string;
-	/** island slug → 1-based index of the stance the party is closest to.
-	 *  Sample data — the admin must review and correct in /admin. */
+	/**
+	 * island slug → 1-based index of the stance the party is closest to.
+	 *
+	 * LEGACY and coarse: it collapses a party onto one stance per island. The
+	 * real routes are the continuous per-stance scores in
+	 * data/party-stance-research.json, which the seed reads into `attitudes`.
+	 * This remains only as the fallback for an island with no research yet.
+	 */
 	positions: Record<string, number>;
 }
 
-const SAMPLE_NOTE = 'נתוני מסלול לדוגמה – יש לעדכן במסך הניהול.';
-
+/**
+ * The ships on the water, as of the 26th Knesset campaign.
+ *
+ * A map that sails מפלגות that no longer exist, and omits ones on the ballot,
+ * is not a map. This list was rebuilt against the 2026 field: יש עתיד sails as
+ * part of ביחד with בנט 2026; המחנה הממלכתי went back to being כחול לבן when
+ * תקווה חדשה left; העבודה and מרצ are הדמוקרטים; חד״ש, תע״ל and בל״ד are one
+ * list again; and ישר! is new to the water.
+ *
+ * Where a party is the same body under a new name, its route is kept whole.
+ * Where it is a merger, the route comes from the constituent with the longest
+ * continuous record, and `description` says so out loud. Where it is genuinely
+ * new, the route comes from its leader's documented positions and every score
+ * carries its confidence in the research file — see /parties in the app.
+ */
 export const DEFAULT_PARTIES: DefaultParty[] = [
 	{
 		slug: 'likud',
 		name: 'הליכוד',
 		color: '#1d5fbf',
-		description: SAMPLE_NOTE,
+		description:
+			'נתניהו. ממשיכה, לאחר איחוד עם תקווה חדשה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
 		positions: {
 			accountability: 4,
 			'rule-of-law': 4,
@@ -391,10 +437,32 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		},
 	},
 	{
-		slug: 'yesh-atid',
-		name: 'יש עתיד',
+		slug: 'yashar',
+		name: 'ישר! עם איזנקוט',
+		color: '#6b3fa0',
+		description:
+			'גדי איזנקוט. מפלגה חדשה (2025), בלי היסטוריה מפלגתית קודמת. מסלול על בסיס התבטאויות מתועדות של ראש המפלגה; ראו שדה confidence בקובץ המחקר.',
+		positions: {
+			accountability: 1,
+			'rule-of-law': 2,
+			'clean-hands': 1,
+			'political-home': 2,
+			'security-storm': 3,
+			'arab-partnership': 2,
+			'civic-equality': 2,
+			'civic-covenant': 1,
+			'sabbath-rabbinate': 2,
+			'bread-and-home': 2,
+			'democracy-itself': 2,
+			'world-partners': 2,
+		},
+	},
+	{
+		slug: 'together',
+		name: 'ביחד',
 		color: '#0aa2c0',
-		description: SAMPLE_NOTE,
+		description:
+			'לפיד ובנט. איחוד יש עתיד ובנט 2026 (2026). מסלול על בסיס עמדות יש עתיד, שהיא הגדולה שברכיביה ובעלת התיעוד הרציף.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 2,
@@ -411,30 +479,50 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		},
 	},
 	{
-		slug: 'mamlachti',
-		name: 'המחנה הממלכתי',
-		color: '#28418f',
-		description: SAMPLE_NOTE,
+		slug: 'yisrael-beiteinu',
+		name: 'ישראל ביתנו',
+		color: '#274a78',
+		description: 'ליברמן. ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 2,
-			'clean-hands': 2,
-			'political-home': 4,
-			'security-storm': 2,
-			'arab-partnership': 2,
-			'civic-equality': 2,
-			'civic-covenant': 2,
-			'sabbath-rabbinate': 3,
+			'clean-hands': 1,
+			'political-home': 2,
+			'security-storm': 1,
+			'arab-partnership': 4,
+			'civic-equality': 4,
+			'civic-covenant': 1,
+			'sabbath-rabbinate': 1,
 			'bread-and-home': 2,
-			'democracy-itself': 4,
+			'democracy-itself': 3,
+			'world-partners': 2,
+		},
+	},
+	{
+		slug: 'democrats',
+		name: 'הדמוקרטים',
+		color: '#2e7d43',
+		description: 'יאיר גולן. איחוד העבודה ומרצ (2024). מסלול על בסיס עמדות שתי המפלגות המרכיבות.',
+		positions: {
+			accountability: 1,
+			'rule-of-law': 1,
+			'clean-hands': 1,
+			'political-home': 3,
+			'security-storm': 3,
+			'arab-partnership': 1,
+			'civic-equality': 1,
+			'civic-covenant': 1,
+			'sabbath-rabbinate': 1,
+			'bread-and-home': 1,
+			'democracy-itself': 1,
 			'world-partners': 1,
 		},
 	},
 	{
-		slug: 'religious-zionism',
-		name: 'הציונות הדתית',
-		color: '#7a4f21',
-		description: SAMPLE_NOTE,
+		slug: 'otzma',
+		name: 'עוצמה יהודית',
+		color: '#8f2727',
+		description: 'בן גביר. ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
 		positions: {
 			accountability: 4,
 			'rule-of-law': 4,
@@ -443,7 +531,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 			'security-storm': 1,
 			'arab-partnership': 4,
 			'civic-equality': 4,
-			'civic-covenant': 4,
+			'civic-covenant': 3,
 			'sabbath-rabbinate': 4,
 			'bread-and-home': 3,
 			'democracy-itself': 3,
@@ -454,7 +542,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'shas',
 		name: 'ש״ס',
 		color: '#111111',
-		description: SAMPLE_NOTE,
+		description: 'דרעי. ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
 		positions: {
 			accountability: 3,
 			'rule-of-law': 3,
@@ -474,7 +562,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		slug: 'utj',
 		name: 'יהדות התורה',
 		color: '#3d3d3d',
-		description: SAMPLE_NOTE,
+		description: 'ממשיכה. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
 		positions: {
 			accountability: 3,
 			'rule-of-law': 3,
@@ -491,30 +579,11 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		},
 	},
 	{
-		slug: 'yisrael-beiteinu',
-		name: 'ישראל ביתנו',
-		color: '#274a78',
-		description: SAMPLE_NOTE,
-		positions: {
-			accountability: 1,
-			'rule-of-law': 2,
-			'clean-hands': 1,
-			'political-home': 2,
-			'security-storm': 1,
-			'arab-partnership': 4,
-			'civic-equality': 4,
-			'civic-covenant': 1,
-			'sabbath-rabbinate': 1,
-			'bread-and-home': 2,
-			'democracy-itself': 3,
-			'world-partners': 2,
-		},
-	},
-	{
-		slug: 'otzma',
-		name: 'עוצמה יהודית',
-		color: '#8f2727',
-		description: SAMPLE_NOTE,
+		slug: 'religious-zionism',
+		name: 'הציונות הדתית',
+		color: '#7a4f21',
+		description:
+			'סמוטריץ׳. ממשיכה, לאחר איחוד עם הבית היהודי. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
 		positions: {
 			accountability: 4,
 			'rule-of-law': 4,
@@ -523,7 +592,7 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 			'security-storm': 1,
 			'arab-partnership': 4,
 			'civic-equality': 4,
-			'civic-covenant': 3,
+			'civic-covenant': 4,
 			'sabbath-rabbinate': 4,
 			'bread-and-home': 3,
 			'democracy-itself': 3,
@@ -531,10 +600,32 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		},
 	},
 	{
+		slug: 'blue-white',
+		name: 'כחול לבן',
+		color: '#28418f',
+		description:
+			'גנץ. אותה מפלגה ששמה היה המחנה הממלכתי, ששבה לשמה לאחר פרישת תקווה חדשה (2024). מסלול נשמר במלואו — שינוי שם, לא שינוי גוף.',
+		positions: {
+			accountability: 1,
+			'rule-of-law': 2,
+			'clean-hands': 2,
+			'political-home': 4,
+			'security-storm': 2,
+			'arab-partnership': 2,
+			'civic-equality': 2,
+			'civic-covenant': 2,
+			'sabbath-rabbinate': 3,
+			'bread-and-home': 2,
+			'democracy-itself': 4,
+			'world-partners': 1,
+		},
+	},
+	{
 		slug: 'raam',
 		name: 'רע״ם',
 		color: '#1c7a4b',
-		description: SAMPLE_NOTE,
+		description:
+			'מנסור עבאס. ממשיכה, מתמודדת בנפרד. מסלול על בסיס מצע, הצבעות והתבטאויות של המפלגה עצמה.',
 		positions: {
 			accountability: 2,
 			'rule-of-law': 2,
@@ -551,10 +642,11 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 		},
 	},
 	{
-		slug: 'hadash-taal',
-		name: 'חד״ש-תע״ל',
+		slug: 'joint-list',
+		name: 'הרשימה המשותפת',
 		color: '#b03030',
-		description: SAMPLE_NOTE,
+		description:
+			'חד״ש, תע״ל ובל״ד. רשימה משותפת שחודשה לקראת הבחירות. מסלול על בסיס עמדות חד״ש-תע״ל, שהן רוב הרשימה ובעלות התיעוד הרציף.',
 		positions: {
 			accountability: 1,
 			'rule-of-law': 1,
@@ -568,26 +660,6 @@ export const DEFAULT_PARTIES: DefaultParty[] = [
 			'bread-and-home': 1,
 			'democracy-itself': 1,
 			'world-partners': 3,
-		},
-	},
-	{
-		slug: 'democratic-camp',
-		name: 'המחנה הדמוקרטי',
-		color: '#2e7d43',
-		description: SAMPLE_NOTE,
-		positions: {
-			accountability: 1,
-			'rule-of-law': 1,
-			'clean-hands': 1,
-			'political-home': 3,
-			'security-storm': 3,
-			'arab-partnership': 1,
-			'civic-equality': 1,
-			'civic-covenant': 1,
-			'sabbath-rabbinate': 1,
-			'bread-and-home': 1,
-			'democracy-itself': 1,
-			'world-partners': 1,
 		},
 	},
 ];
