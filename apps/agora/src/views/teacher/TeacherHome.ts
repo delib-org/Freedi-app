@@ -78,14 +78,20 @@ export function TeacherHome(): m.Component {
 			topics = loadedTopics;
 
 			// One round trip for classes, aggregates and recent games — fails
-			// soft: a console hiccup must not blank the scenario library.
+			// soft: a console hiccup must not blank the scenario library. Not
+			// asked at all before the Google sign-in: the console refuses an
+			// anonymous caller, and the refusal read as an error on a page that
+			// was simply still waiting for the teacher to sign in.
 			try {
+				if (user.isAnonymous) throw new Error('anonymous');
 				const dashboard = await fetchTeacherDashboard();
 				classes = dashboard.classes;
 				sessions = dashboard.sessions;
 				aggregates = dashboard.aggregates;
 			} catch (error) {
-				console.error('[Teacher] Loading dashboard data failed:', error);
+				if (!(error instanceof Error && error.message === 'anonymous')) {
+					console.error('[Teacher] Loading dashboard data failed:', error);
+				}
 			}
 		} catch (error) {
 			console.error('[Teacher] Loading dashboard failed:', error);

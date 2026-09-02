@@ -140,6 +140,11 @@ export async function generateTopicPackage(
 	const call = httpsCallable<GenerateTopicPackageRequest, GenerateTopicPackageResponse>(
 		functions,
 		'agoraGenerateTopicPackage',
+		// The SDK gives up after 70s by default; the function is allowed five
+		// minutes and a full package from the current models routinely needs
+		// more than one. Giving up early left the wizard reporting failure
+		// while the package quietly finished and appeared on the next visit.
+		{ timeout: 5 * 60 * 1000 },
 	);
 	const result = await call(request);
 
