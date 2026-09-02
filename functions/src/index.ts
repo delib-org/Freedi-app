@@ -15,6 +15,11 @@ import { Collections, functionConfig } from '@freedi/shared-types';
 
 // Structured error handling
 import { logError } from './utils/errorHandling';
+import { initFunctionsSentry } from './utils/sentry';
+
+// Before anything else, so a crash during cold start is reported too.
+// No-op without a DSN, so the emulator and tests are unaffected.
+initFunctionsSentry();
 
 // HTTP auth/authorization helpers (extracted for unit testing)
 import { verifyAuthToken, requireSystemAdmin } from './utils/httpAuth';

@@ -8,6 +8,8 @@
  * for the Node.js / Cloud Functions environment.
  */
 
+import { captureFunctionError } from './sentry';
+
 /**
  * Custom error types for different failure modes.
  * Each carries a machine-readable code and optional structured context.
@@ -87,6 +89,10 @@ export function logError(error: unknown, context: ErrorContext): void {
 			stack: errorObj.stack,
 		}),
 	);
+
+	// And to Sentry, so a broken function surfaces without someone going to
+	// look in Cloud Logging. No-op when no DSN is configured.
+	captureFunctionError(errorObj, context);
 }
 
 /**

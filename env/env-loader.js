@@ -109,6 +109,10 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'GOOGLE_SHEETS_PRIVATE_KEY': 'GOOGLE_SHEETS_PRIVATE_KEY',
       // Synthesis feature flags — read by functions/src/synthesis/featureFlags.ts
       'SYNTHESIS_LIVE_SYNTH_ENABLED': 'SYNTHESIS_LIVE_SYNTH_ENABLED',
+      // Error reporting — read by functions/src/utils/sentry.ts. Falls back to
+      // SENTRY_DSN; set SENTRY_DSN_FUNCTIONS to give functions their own project.
+      'SENTRY_DSN': 'SENTRY_DSN',
+      'SENTRY_DSN_FUNCTIONS': 'SENTRY_DSN_FUNCTIONS',
     },
     extra: ''
   },
