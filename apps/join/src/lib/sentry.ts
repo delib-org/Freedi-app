@@ -1,8 +1,5 @@
 import { afterLoad } from '@/lib/deferWork';
-import {
-	isFirestoreInternalCrash,
-	isTransientAuthNetworkError,
-} from '@freedi/shared-utils';
+import { isFirestoreInternalCrash, isTransientAuthNetworkError } from '@freedi/shared-utils';
 
 /** Substring identifying join's Firebase bundle — see manualChunks in
  *  vite.config.ts. Note it is `firebase-`, not the main app's
