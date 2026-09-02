@@ -6,7 +6,7 @@ import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
-import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
+import { judgeSemanticEquivalenceCachedDetailed } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem } from '../queue/enqueue';
@@ -82,18 +82,31 @@ const MAX_MERGES_PER_PARENT = 10;
 const SYNTH_QUERY_LIMIT = 2_000;
 
 /**
- * How many candidate pairs one parent may put to the judges per sweep.
+ * How many LLM calls one parent may PAY FOR per sweep.
  *
  * MAX_MERGES_PER_PARENT bounds SUCCESSFUL merges only, and a refusal does not
  * increment it — so the merge loop kept proposing until every cross-synth pair
  * above REJUDGE_MERGE_THRESHOLD had been judged, i.e. O(synths²) judge calls per
  * parent, on a 10-minute schedule, forever. Combined with the uncached judge call
  * this file used to make, that was ~3.1k LLM requests/day of pure repetition on
- * a static corpus. The verdict cache now absorbs the repetition; this bounds the
- * first pass over a genuinely new corpus. Pairs above the budget are simply
- * looked at on the next tick.
+ * a static corpus.
+ *
+ * Cache HITS are deliberately not billed against this. `rejectedPairs` is
+ * per-sweep, so every tick re-proposes the same pairs from the top; if a cached
+ * verdict consumed budget, a parent with more than this many candidate pairs
+ * would re-spend its whole allowance on pairs it already knows the answer to and
+ * never reach the rest — merging would stall permanently instead of merely
+ * slowly. Billing only real completions makes a settled corpus free to sweep in
+ * full, and rations only genuinely new work.
  */
 const MAX_JUDGE_CALLS_PER_PARENT = 25;
+
+/**
+ * Hard stop on loop iterations per parent, independent of spend. A fully-cached
+ * parent costs nothing in completions but still pays a Firestore read per pair,
+ * and the pair count grows quadratically with synth count.
+ */
+const MAX_PAIR_EVALUATIONS_PER_PARENT = 200;
 
 interface CandidateSynth {
 	doc: Statement;
@@ -241,11 +254,17 @@ async function confirmMergeWithLlm(
  * free); anything other than 'same' refuses the merge. Fail-CLOSED: no
  * embeddings, unreadable statements, or a judge error all mean no merge.
  */
+interface GateOutcome {
+	passed: boolean;
+	/** Completions actually purchased. Cache hits report 0. */
+	llmCalls: number;
+}
+
 async function farthestPairIsSame(
 	recipient: CandidateSynth,
 	donor: CandidateSynth,
 	embeddings: Map<string, number[]>,
-): Promise<boolean> {
+): Promise<GateOutcome> {
 	let worst: { a: string; b: string; cosine: number } | null = null;
 	for (const aId of recipient.members) {
 		const aEmb = embeddings.get(aId);
@@ -257,7 +276,7 @@ async function farthestPairIsSame(
 			if (!worst || c < worst.cosine) worst = { a: aId, b: bId, cosine: c };
 		}
 	}
-	if (!worst) return false;
+	if (!worst) return { passed: false, llmCalls: 0 };
 
 	const [aSnap, bSnap] = await Promise.all([
 		db().collection(Collections.statements).doc(worst.a).get(),
@@ -265,12 +284,13 @@ async function farthestPairIsSame(
 	]);
 	const aText = aSnap.exists ? (aSnap.data() as Statement).statement : undefined;
 	const bText = bSnap.exists ? (bSnap.data() as Statement).statement : undefined;
-	if (!aText || !bText) return false;
+	if (!aText || !bText) return { passed: false, llmCalls: 0 };
 
-	const verdicts = await judgeSemanticEquivalenceCached([
+	const outcome = await judgeSemanticEquivalenceCachedDetailed([
 		{ pairId: `${worst.a}|${worst.b}`, textA: aText, textB: bText },
-	]).catch(() => []);
-	const verdict = verdicts[0]?.verdict;
+	]).catch(() => null);
+	const verdict = outcome?.results[0]?.verdict;
+	const llmCalls = outcome?.cacheMisses ?? 0;
 	if (verdict !== 'same') {
 		logger.info('synthesis.reJudge.mergeRefused.farthestPair', {
 			recipientId: recipient.doc.statementId,
@@ -279,10 +299,10 @@ async function farthestPairIsSame(
 			verdict: verdict ?? 'judge-error',
 		});
 
-		return false;
+		return { passed: false, llmCalls };
 	}
 
-	return true;
+	return { passed: true, llmCalls };
 }
 
 function pickMergePair(
@@ -659,12 +679,17 @@ async function mergeDuplicateSynths(
 	// synth list; recompute pairs each iteration so freshly-merged recipients
 	// can attract further donors.
 	const rejectedPairs = new Set<string>();
-	let judgeCalls = 0;
+	let llmCalls = 0;
+	let pairsEvaluated = 0;
 	while (merges < MAX_MERGES_PER_PARENT && synths.length >= 2) {
-		if (judgeCalls >= MAX_JUDGE_CALLS_PER_PARENT) {
-			logger.info('synthesis.reJudge.judgeBudgetExhausted', {
+		if (
+			llmCalls >= MAX_JUDGE_CALLS_PER_PARENT ||
+			pairsEvaluated >= MAX_PAIR_EVALUATIONS_PER_PARENT
+		) {
+			logger.info('synthesis.reJudge.budgetExhausted', {
 				parentId,
-				judgeCalls,
+				llmCalls,
+				pairsEvaluated,
 				merges,
 			});
 			break;
@@ -673,7 +698,7 @@ async function mergeDuplicateSynths(
 		if (!decision) break;
 		const recipient = synths[decision.recipientIdx];
 		const donor = synths[decision.donorIdx];
-		judgeCalls++;
+		pairsEvaluated++;
 
 		// Cosine got us a candidate; the LLM decides. Merging two clusters is
 		// expensive and effectively irreversible for the reader, and cosine
@@ -684,10 +709,14 @@ async function mergeDuplicateSynths(
 		// itself be 'same', or the merged set cannot be one proposal (the
 		// transitivity failure behind the audited 8-member snowball).
 		const transitive = await farthestPairIsSame(recipient, donor, embeddings);
-		if (!transitive) {
+		llmCalls += transitive.llmCalls;
+		if (!transitive.passed) {
 			rejectedPairs.add(pairKey(recipient.doc.statementId, donor.doc.statementId));
 			continue;
 		}
+		// The writer consultation is uncached and runs on the heavy model, so it
+		// always costs, whatever the transitivity gate cost.
+		llmCalls++;
 		const confirmed = await confirmMergeWithLlm(recipient, donor, questionContext);
 		if (!confirmed) {
 			rejectedPairs.add(pairKey(recipient.doc.statementId, donor.doc.statementId));
