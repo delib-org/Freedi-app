@@ -149,10 +149,7 @@ export const agoraJoinClass = onCall(
 						lastActive: now,
 						lastUpdate: now,
 					};
-					transaction.set(
-						membersRef.doc(createAgoraClassMemberId(classId, newMemberId)),
-						member,
-					);
+					transaction.set(membersRef.doc(createAgoraClassMemberId(classId, newMemberId)), member);
 					transaction.update(db.collection(Collections.agoraClasses).doc(classId), {
 						memberCount: FieldValue.increment(1),
 						lastUpdate: now,

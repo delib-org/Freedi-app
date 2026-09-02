@@ -26,7 +26,13 @@
 			"@freedi/shared-utils/*": ["packages/shared-utils/src/*"]
 		}
 	},
-	"include": ["src", "./functions/src", "packages/shared-i18n/src", "packages/shared-utils/src"],
+	// functions/src is deliberately NOT here. It is typechecked by
+	// functions/tsconfig.json, which sets "strict": true — this config does not,
+	// and without strictNullChecks TypeScript cannot narrow a discriminated union
+	// on its boolean tag, so correct code like `if (!result.ok) result.reason`
+	// fails here while compiling cleanly under the config that actually governs
+	// it. Run `npm run typecheck:functions` (included in check-all) for that tree.
+	"include": ["src", "packages/shared-i18n/src", "packages/shared-utils/src"],
 	"exclude": ["node_modules", "node_modules/delib-npm/src"],
 	"references": [{
 		"path": "./tsconfig.node.json"

@@ -25,11 +25,7 @@ async function resolveTeacherUid(teacherEmail: string): Promise<string> {
 	if (!email) {
 		throw new HttpsError('invalid-argument', 'teacherEmail is required');
 	}
-	const snap = await db
-		.collection(Collections.users)
-		.where('email', '==', email)
-		.limit(1)
-		.get();
+	const snap = await db.collection(Collections.users).where('email', '==', email).limit(1).get();
 	if (snap.empty) {
 		throw new HttpsError(
 			'not-found',
@@ -86,7 +82,7 @@ export const agoraAdminOpenClass = onCall(
 					name: trimmed,
 					...(gradeLevel?.trim() ? { gradeLevel: gradeLevel.trim() } : {}),
 					teacherIds: teacherUid ? [teacherUid] : [],
-				teacherMap: teacherUid ? { [teacherUid]: true } : {},
+					teacherMap: teacherUid ? { [teacherUid]: true } : {},
 					classCode,
 					memberCount: 0,
 					status: 'active',
