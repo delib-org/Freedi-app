@@ -6,7 +6,7 @@ import { embeddingCache } from '../../services/embedding-cache-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { generateSynthesizedProposal } from '../../services/integration-ai-service';
-import { judgeSemanticEquivalence } from '../../services/semantic-equivalence-service';
+import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
 import { consolidateThemes } from '../pipeline/consolidateThemes';
 import { loadSynthesisSettingsFromStatement } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem } from '../queue/enqueue';
@@ -80,6 +80,20 @@ const REJUDGE_MERGE_THRESHOLD = 0.82;
 const MAX_PARENTS_PER_SWEEP = 30;
 const MAX_MERGES_PER_PARENT = 10;
 const SYNTH_QUERY_LIMIT = 2_000;
+
+/**
+ * How many candidate pairs one parent may put to the judges per sweep.
+ *
+ * MAX_MERGES_PER_PARENT bounds SUCCESSFUL merges only, and a refusal does not
+ * increment it — so the merge loop kept proposing until every cross-synth pair
+ * above REJUDGE_MERGE_THRESHOLD had been judged, i.e. O(synths²) judge calls per
+ * parent, on a 10-minute schedule, forever. Combined with the uncached judge call
+ * this file used to make, that was ~3.1k LLM requests/day of pure repetition on
+ * a static corpus. The verdict cache now absorbs the repetition; this bounds the
+ * first pass over a genuinely new corpus. Pairs above the budget are simply
+ * looked at on the next tick.
+ */
+const MAX_JUDGE_CALLS_PER_PARENT = 25;
 
 interface CandidateSynth {
 	doc: Statement;
@@ -253,7 +267,7 @@ async function farthestPairIsSame(
 	const bText = bSnap.exists ? (bSnap.data() as Statement).statement : undefined;
 	if (!aText || !bText) return false;
 
-	const verdicts = await judgeSemanticEquivalence([
+	const verdicts = await judgeSemanticEquivalenceCached([
 		{ pairId: `${worst.a}|${worst.b}`, textA: aText, textB: bText },
 	]).catch(() => []);
 	const verdict = verdicts[0]?.verdict;
@@ -645,11 +659,21 @@ async function mergeDuplicateSynths(
 	// synth list; recompute pairs each iteration so freshly-merged recipients
 	// can attract further donors.
 	const rejectedPairs = new Set<string>();
+	let judgeCalls = 0;
 	while (merges < MAX_MERGES_PER_PARENT && synths.length >= 2) {
+		if (judgeCalls >= MAX_JUDGE_CALLS_PER_PARENT) {
+			logger.info('synthesis.reJudge.judgeBudgetExhausted', {
+				parentId,
+				judgeCalls,
+				merges,
+			});
+			break;
+		}
 		const decision = pickMergePair(synths, embeddings, threshold, rejectedPairs);
 		if (!decision) break;
 		const recipient = synths[decision.recipientIdx];
 		const donor = synths[decision.donorIdx];
+		judgeCalls++;
 
 		// Cosine got us a candidate; the LLM decides. Merging two clusters is
 		// expensive and effectively irreversible for the reader, and cosine
