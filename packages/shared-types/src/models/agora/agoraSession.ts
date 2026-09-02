@@ -8,10 +8,16 @@ import {
 	array,
 	record,
 	enum_,
+	picklist,
 	InferOutput,
 } from 'valibot';
 import { VotingStageSettingsSchema, VotingStateSchema } from '../vote/votingStageSettings';
 import { AgoraSessionFlowSchema } from './sessionFlow';
+import {
+	AgoraCarriedAnswerSchema,
+	AgoraStagePlanSchema,
+	AgoraStageStateSchema,
+} from './stagePlan';
 import {
 	AgoraStage,
 	AgoraRoundPhase,
@@ -115,6 +121,8 @@ export const AgoraClassScoreSchema = object({
 	voteTotal: optional(number()),
 	/** False when the most-voted proposal did not clear the teacher's win threshold */
 	voteWinnerMetThreshold: optional(boolean()),
+	/** One-candidate ballot: the room voted the proposal down */
+	voteRejected: optional(boolean()),
 	/**
 	 * The consensus each candidate held at the moment the vote was decided —
 	 * the very numbers `pickVoteWinner` judged the threshold against. The
@@ -153,6 +161,39 @@ export const AgoraConvergenceSchema = object({
 });
 
 export type AgoraConvergence = InferOutput<typeof AgoraConvergenceSchema>;
+
+/**
+ * What a camp-less, baseline-less room earns: the net support its proposals
+ * gathered, and the election if one was held. Written once, when results
+ * open. `voteRejected` is the for/against ballot's "no": the single
+ * candidate lost, and the recap must say so rather than crown nobody in
+ * silence.
+ */
+export const AgoraAgreementResultsSchema = object({
+	ranked: array(AgoraCarriedAnswerSchema),
+	/** Highest net agreement — the decision when no vote was held */
+	leadStatementId: optional(string()),
+	voteWinnerStatementId: optional(string()),
+	voteRejected: optional(boolean()),
+	voteCounts: optional(record(string(), number())),
+	voteTotal: optional(number()),
+	voteWinnerMetThreshold: optional(boolean()),
+	computedAt: number(),
+});
+
+export type AgoraAgreementResults = InferOutput<typeof AgoraAgreementResultsSchema>;
+
+/**
+ * Who people are to each other in this room. `pseudonym` is the classroom
+ * default: server-issued names, never real ones. `named` is for a room that
+ * wants to know who wants what — a family, a small team: everyone types the
+ * name they go by at the door and it sits on their cards. Those names are
+ * readable by anyone signed in who knows the session, as every participant
+ * doc is; the admin is told so when switching it on.
+ */
+export const AgoraIdentityModeSchema = picklist(['pseudonym', 'named']);
+
+export type AgoraIdentityMode = InferOutput<typeof AgoraIdentityModeSchema>;
 
 /**
  * A live classroom session. The session doc is the single source of truth
@@ -198,6 +239,17 @@ export const AgoraSessionSchema = object({
 	 * rejecting it would brick every client on that session.
 	 */
 	flow: optional(nullable(AgoraSessionFlowSchema)),
+	/**
+	 * The admin's ordered stage list. Server-owned; absent means the legacy
+	 * order for the session's flow (see `resolveStagePlan`). Never contains
+	 * `ended` — that is appended at resolve time.
+	 */
+	stagePlan: optional(nullable(AgoraStagePlanSchema)),
+	/** Per-item runtime state keyed by itemId. Server-owned. */
+	stageState: optional(AgoraStageStateSchema),
+	/** Position in the resolved plan. Server-owned; absent on sessions without a plan. */
+	stageIndex: optional(number()),
+	identity: optional(AgoraIdentityModeSchema),
 	stage: enum_(AgoraStage),
 	roundNumber: number(),
 	roundPhase: optional(enum_(AgoraRoundPhase)),
@@ -214,6 +266,8 @@ export const AgoraSessionSchema = object({
 	 * `resolveSessionFlow(session).scoreMode`.
 	 */
 	convergence: optional(AgoraConvergenceSchema),
+	/** The third scoring mode — see `resolveSessionFlow(session).scoreMode`. Server-written. */
+	agreement: optional(AgoraAgreementResultsSchema),
 	/**
 	 * How the vote is run. Teacher-writable (see firestore.rules); absent
 	 * means the defaults in `resolveVotingSelection`.

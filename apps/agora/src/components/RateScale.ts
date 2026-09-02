@@ -2,7 +2,7 @@ import m from 'mithril';
 import { Icon, iconLabel, type IconName } from './Icon';
 import { AgoraSession } from '@freedi/shared-types';
 import { t } from '../lib/i18n';
-import { getDeliberationState, rateProposal, type AgoraRating } from '../lib/proposals';
+import { getDeliberationState, rateStatement, type AgoraRating } from '../lib/proposals';
 import { noteReWeighed } from '../lib/improvementSignals';
 
 /**
@@ -34,6 +34,8 @@ export function rateOptionFor(value: number): (typeof RATE_OPTIONS)[number] | un
 export interface RateScaleAttrs {
 	session: AgoraSession;
 	proposalId: string;
+	/** The option's parent — a question stage's question. Default: the challenge question. */
+	parentId?: string;
 	/**
 	 * Mark the face I already gave. TRUE out on the square, where the standing
 	 * vote is orientation. FALSE wherever a student is being asked to weigh a
@@ -74,7 +76,14 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 		},
 
 		view(vnode) {
-			const { session, proposalId, showCurrent = true, onFirstVote, onVote } = vnode.attrs;
+			const {
+				session,
+				proposalId,
+				parentId = session.challengeQuestionId,
+				showCurrent = true,
+				onFirstVote,
+				onVote,
+			} = vnode.attrs;
 			const current = getDeliberationState().myRatings[proposalId]?.value as
 				| AgoraRating
 				| undefined;
@@ -106,7 +115,7 @@ export function RateScale(): m.Component<RateScaleAttrs> {
 									const previous = getDeliberationState().myRatings[proposalId]?.value as
 										| AgoraRating
 										| undefined;
-									void rateProposal(session, proposalId, option.value);
+									void rateStatement(session, parentId, proposalId, option.value);
 									// Whatever edit is on the table, this press answers it
 									noteReWeighed(proposalId);
 									ack();

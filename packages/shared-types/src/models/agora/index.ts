@@ -27,6 +27,7 @@ export {
 } from './agoraConstants';
 
 export type {
+	AgoraTopicKind,
 	AgoraValue,
 	AgoraCharacter,
 	AgoraDialogueLine,
@@ -40,6 +41,7 @@ export type {
 	AgoraTopicPackage,
 } from './agoraTopicPackage';
 export {
+	AgoraTopicKindSchema,
 	AgoraValueSchema,
 	AgoraCharacterSchema,
 	AgoraDialogueLineSchema,
@@ -71,6 +73,57 @@ export {
 	AgoraDebriefSchema,
 	AgoraOutcomeStatsSchema,
 } from './agoraSession';
+
+export type { AgoraAgreementResults, AgoraIdentityMode } from './agoraSession';
+export { AgoraAgreementResultsSchema, AgoraIdentityModeSchema } from './agoraSession';
+
+export type {
+	AgoraQuestionSelection,
+	AgoraVotingTrigger,
+	AgoraStagePlanItem,
+	AgoraStagePlan,
+	AgoraCarriedAnswer,
+	AgoraStageOutcome,
+	AgoraStageTriggerMode,
+	AgoraStageItemState,
+	AgoraStageState,
+	StagePlanSession,
+	StagePlanError,
+	AgoraStagePlanPreset,
+	VotingTriggerRow,
+	VotingTriggerVerdict,
+} from './stagePlan';
+export {
+	AGORA_STAGE_PLAN,
+	AGORA_VOTING_TRIGGER,
+	AGORA_CHARACTER_STAGES,
+	AGORA_PLANNABLE_STAGES,
+	AgoraQuestionSelectionSchema,
+	AgoraVotingTriggerSchema,
+	AgoraStagePlanItemSchema,
+	AgoraStagePlanSchema,
+	AgoraCarriedAnswerSchema,
+	AgoraStageOutcomeSchema,
+	AgoraStageTriggerModeSchema,
+	AgoraStageItemStateSchema,
+	AgoraStageStateSchema,
+	legacyStagePlan,
+	resolveStagePlan,
+	currentPlanIndex,
+	currentPlanItem,
+	nextPlanItem,
+	isItemOpened,
+	planIndexForStage,
+	closedQuestionItems,
+	validateStagePlan,
+	stagePlanPreset,
+	defaultQuestionSelection,
+	defaultVotingTrigger,
+	resolveQuestionSelection,
+	rankCarriedAnswers,
+	selectCarriedAnswers,
+	evaluateVotingTrigger,
+} from './stagePlan';
 
 export type { AgoraSessionFlow, AgoraScoreMode, ResolvedSessionFlow } from './sessionFlow';
 export {

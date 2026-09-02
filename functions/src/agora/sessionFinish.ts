@@ -5,9 +5,10 @@ import { AgoraSession, AgoraSessionMode, AgoraSessionStatus } from '@freedi/shar
  * aggregates"? Pure — kept out of the trigger file so tests need no
  * firebase-admin bootstrap.
  *
- * Two finish signals, every classroom session produces at least one:
+ * Three finish signals, every classroom session produces at least one:
  *  - `classScore` appearing (computeSessionResults at the results stage, or
  *    the hourly sweep) — the scored, bridging path;
+ *  - `agreement` appearing — the camp-less, baseline-less agreement path;
  *  - `status` flipping to ended — the convergence path and sweep-ended
  *    sessions that never reached results.
  * A session can produce BOTH; the `aggregatedAt` stamp (checked here AND
@@ -21,8 +22,10 @@ export function isNewlyFinishedSession(before: AgoraSession, after: AgoraSession
 
 	const newlyScored =
 		after.classScore?.computedAt !== undefined && before.classScore?.computedAt === undefined;
+	const newlyAgreed =
+		after.agreement?.computedAt !== undefined && before.agreement?.computedAt === undefined;
 	const newlyEnded =
 		after.status === AgoraSessionStatus.ended && before.status !== AgoraSessionStatus.ended;
 
-	return newlyScored || newlyEnded;
+	return newlyScored || newlyAgreed || newlyEnded;
 }

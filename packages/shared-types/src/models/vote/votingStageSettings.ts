@@ -58,6 +58,25 @@ export type VotingState = InferOutput<typeof VotingStateSchema>;
 export const NO_VOTE = 'none';
 
 /**
+ * The "no" of a one-candidate ballot. A ballot with a single proposal is not
+ * a choice between options but a question — do we adopt this? — so the
+ * against side needs a place to be counted. It is a sentinel statementId in
+ * the same vote doc, and the ballot's `candidateIds` carry it so the tally
+ * counts it like any candidate. It is never a winner (see `pickVoteWinner`).
+ */
+export const VOTE_AGAINST = 'against';
+
+/** Vote ids that name no option doc — the shared vote trigger must not look them up */
+export function isVoteSentinel(statementId: string): boolean {
+	return statementId === NO_VOTE || statementId === VOTE_AGAINST;
+}
+
+/** The ids a ballot tallies: the candidates, plus the against side when there is exactly one */
+export function ballotTallyIds(candidateIds: readonly string[]): string[] {
+	return candidateIds.length === 1 ? [...candidateIds, VOTE_AGAINST] : [...candidateIds];
+}
+
+/**
  * Fills the teacher's partial settings out into the complete `ResultsSettings`
  * the shared selector expects.
  */
@@ -100,16 +119,22 @@ export function tallyVotes(
 }
 
 export interface VoteWinner {
-	/** Absent when nobody voted */
+	/** Absent when nobody voted, and on a one-candidate ballot the room turned down */
 	winnerStatementId?: string;
 	/** True when there is a winner AND it clears `winningConsensusThreshold` */
 	metThreshold: boolean;
 	total: number;
+	/** One-candidate ballot only: the against side won (or tied — adopting needs a majority) */
+	rejected?: boolean;
 }
 
 /**
  * The elected option. Ties break on consensus, then on statementId, so every
  * reader of the same data names the same winner.
+ *
+ * On a one-candidate ballot the `against` sentinel is in the counts; the
+ * proposal is adopted only when it strictly out-votes it, and the sentinel is
+ * never named as the winner.
  */
 export function pickVoteWinner(
 	counts: Record<string, number>,
@@ -121,6 +146,21 @@ export function pickVoteWinner(
 
 	if (entries.length === 0) {
 		return { metThreshold: false, total: 0 };
+	}
+
+	if (VOTE_AGAINST in counts) {
+		const against = counts[VOTE_AGAINST] ?? 0;
+		const candidate = entries.find(([id]) => id !== VOTE_AGAINST);
+		if (!candidate || candidate[1] <= against) {
+			return { metThreshold: false, total, rejected: true };
+		}
+		const [winnerStatementId] = candidate;
+		const metThreshold =
+			winningConsensusThreshold === undefined
+				? true
+				: (consensusById[winnerStatementId] ?? 0) >= winningConsensusThreshold;
+
+		return { winnerStatementId, metThreshold, total, rejected: false };
 	}
 
 	entries.sort(([aId, aCount], [bId, bCount]) => {

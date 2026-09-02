@@ -84,9 +84,9 @@ service cloud.firestore {
       allow create, delete: if false;
       // classScore and participantCount are server-owned: computeSessionResults
       // writes the first (including an LLM pass), agoraJoinSession increments
-      // the second. The teacher controls live stage/round fields, not the
-      // scoreboard — otherwise "the class score" is whatever the teacher's
-      // browser last said it was.
+      // the second. The teacher's browser writes only votingSettings and
+      // lastUpdate; stage moves go through the advance callable — otherwise
+      // "the class score" is whatever the teacher's browser last said it was.
       allow update: if isAuthenticated() &&
                        resource.data.teacherId == request.auth.uid &&
                        request.resource.data.teacherId == resource.data.teacherId &&
@@ -109,6 +109,27 @@ service cloud.firestore {
                        // score it is being measured by — from the browser.
                        request.resource.data.get('flow', {}) ==
                          resource.data.get('flow', {}) &&
+                       // The stage plan, the pointer into it, its runtime
+                       // state and the room's identity mode are written by
+                       // callables (agoraCreateSession, agoraUpdateStagePlan,
+                       // advanceSession). The pointer used to be teacher-
+                       // writable and nothing wrote it from a browser; now
+                       // that `stage` and `stageIndex` must agree, a stale tab
+                       // writing one without the other would desync the room.
+                       request.resource.data.get('stage', '') ==
+                         resource.data.get('stage', '') &&
+                       request.resource.data.get('stageIndex', -1) ==
+                         resource.data.get('stageIndex', -1) &&
+                       request.resource.data.get('stagePlan', []) ==
+                         resource.data.get('stagePlan', []) &&
+                       request.resource.data.get('stageState', {}) ==
+                         resource.data.get('stageState', {}) &&
+                       request.resource.data.get('identity', '') ==
+                         resource.data.get('identity', '') &&
+                       request.resource.data.get('agreement', {}) ==
+                         resource.data.get('agreement', {}) &&
+                       request.resource.data.get('roundNumber', -1) ==
+                         resource.data.get('roundNumber', -1) &&
                        request.resource.data.get('convergence', {}) ==
                          resource.data.get('convergence', {}) &&
                        // The class link and the aggregation stamp are set by

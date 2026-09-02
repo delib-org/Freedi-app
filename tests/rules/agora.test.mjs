@@ -192,6 +192,56 @@ describe('agora collections', () => {
 			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { stage: 'results' }));
 		});
 
+		// The stage plan, the pointer into it and its runtime state move only
+		// through callables — a stale teacher tab writing `stage` without
+		// `stageIndex` would leave the room's two positions disagreeing.
+		it('rejects a teacher writing the stage pointer or the plan directly', async () => {
+			await seed(env, async (db) => {
+				await setDoc(doc(db, 'agoraSessions', SESSION), {
+					sessionId: SESSION,
+					teacherId: TEACHER,
+					code: '1234',
+					stage: 'question',
+					stageIndex: 1,
+					stagePlan: [
+						{ itemId: 'lobby', stage: 'lobby' },
+						{ itemId: 'question-1', stage: 'question', title: 'What do I want?' },
+						{ itemId: 'results', stage: 'results' },
+					],
+					stageState: {},
+					identity: 'named',
+					participantCount: 3,
+				});
+			});
+
+			const db = env.authenticatedContext(TEACHER).firestore();
+			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { stage: 'results' }));
+			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { stageIndex: 2 }));
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					stagePlan: [{ itemId: 'lobby', stage: 'lobby' }],
+				}),
+			);
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					'stageState.question-1': { outcome: { selected: [], computedAt: 1 } },
+				}),
+			);
+			await assertFails(updateDoc(doc(db, 'agoraSessions', SESSION), { identity: 'pseudonym' }));
+			await assertFails(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					agreement: { ranked: [], computedAt: 1 },
+				}),
+			);
+			// while the fields the teacher does own still move
+			await assertSucceeds(
+				updateDoc(doc(db, 'agoraSessions', SESSION), {
+					votingSettings: { selection: { resultsBy: 'consensus', cutoffBy: 'topOptions', numberOfResults: 2 } },
+					lastUpdate: 1_700_000_000_001,
+				}),
+			);
+		});
+
 		// The teacher decides HOW the vote runs...
 		it('allows a teacher to set the voting settings', async () => {
 			await seed(env, async (db) => {

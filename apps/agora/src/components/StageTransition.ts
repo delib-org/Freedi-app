@@ -7,6 +7,8 @@ import { EraMap } from './EraMap';
 
 export interface StageTransitionAttrs {
 	stage: AgoraStage;
+	/** A question stage travels under its own title, not the generic label */
+	title?: string;
 	/** Fade-out phase — the overlay is about to be removed */
 	leaving: boolean;
 }
@@ -38,6 +40,11 @@ const TRANSITIONS: Partial<Record<AgoraStage, TransitionMeta>> = {
 		icon: 'square',
 		labelKey: 'stage.deliberation',
 		lineKey: 'transition.deliberation',
+	},
+	[AgoraStage.question]: {
+		icon: 'talk',
+		labelKey: 'stage.question',
+		lineKey: 'transition.question',
 	},
 	[AgoraStage.voting]: { icon: 'scales', labelKey: 'stage.voting', lineKey: 'transition.voting' },
 	[AgoraStage.results]: { icon: 'flag', labelKey: 'stage.results', lineKey: 'transition.results' },
@@ -74,7 +81,7 @@ export const StageTransition: m.Component<StageTransitionAttrs> = {
 						{ 'aria-hidden': 'true' },
 						m(HeroIcon, { name: meta.icon, size: 88 }),
 					),
-					m('h2.stage-transition__title', t(meta.labelKey)),
+					m('h2.stage-transition__title', vnode.attrs.title?.trim() || t(meta.labelKey)),
 					m('p.stage-transition__line', t(meta.lineKey)),
 				]),
 			],

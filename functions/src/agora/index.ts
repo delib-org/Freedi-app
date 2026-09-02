@@ -4,6 +4,7 @@ export { agoraUpdateCivicFlow } from './fn_agoraUpdateCivicFlow';
 export { agoraRerateStances } from './fn_agoraRerateStances';
 export { agoraJoinSession } from './fn_agoraJoinSession';
 export { agoraAdvanceStage } from './fn_agoraAdvanceStage';
+export { agoraUpdateStagePlan } from './fn_agoraUpdateStagePlan';
 export { agoraGradeValueIdentification } from './fn_agoraGradeValueIdentification';
 export { agoraWritingAssistant } from './fn_agoraWritingAssistant';
 export { agoraSetRound } from './fn_agoraSetRound';

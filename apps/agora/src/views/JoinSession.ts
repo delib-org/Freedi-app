@@ -19,7 +19,7 @@ import {
 } from '../lib/flows/classJoin';
 import { ClassJoinPanel } from '../components/ClassJoinPanel';
 
-type JoinPhase = 'looking' | 'team-size' | 'joining' | 'class-join' | 'error';
+type JoinPhase = 'looking' | 'name' | 'team-size' | 'joining' | 'class-join' | 'error';
 
 export function JoinSession(
 	initialVnode: m.Vnode<{ code: string }>,
@@ -30,6 +30,8 @@ export function JoinSession(
 	let errorKey = 'join.invalid_code';
 	let session: AgoraSession | null = null;
 	let teamMemberCount = 2;
+	/** `named` rooms: the name this person goes by — asked at the door */
+	let displayName = '';
 	let classJoin: ClassJoinState = INITIAL_CLASS_JOIN;
 
 	/** One entry point for the flow: reduce, then run whatever the step needs. */
@@ -144,11 +146,14 @@ export function JoinSession(
 				return;
 			}
 
-			if (session.deviceMode === AgoraDeviceMode.team) {
-				phase = 'team-size';
+			// A named room asks who you are before anything else — the name is
+			// what everyone will see on your cards. A class game already has an
+			// alias for you and never asks.
+			if (session.identity === 'named' && !session.classId) {
+				phase = 'name';
 				m.redraw();
 			} else {
-				await performJoin();
+				await afterName();
 			}
 		} catch (error) {
 			console.error('[Join] Lookup failed:', error);
@@ -158,13 +163,24 @@ export function JoinSession(
 		}
 	}
 
+	async function afterName(): Promise<void> {
+		if (session?.deviceMode === AgoraDeviceMode.team) {
+			phase = 'team-size';
+			m.redraw();
+		} else {
+			await performJoin();
+		}
+	}
+
 	async function performJoin(): Promise<void> {
 		phase = 'joining';
 		m.redraw();
 		try {
+			const trimmedName = displayName.trim();
 			const result = await joinSession({
 				code,
 				teamMemberCount: session?.deviceMode === AgoraDeviceMode.team ? teamMemberCount : undefined,
+				...(trimmedName ? { displayName: trimmedName } : {}),
 			});
 			m.route.set(`/play/${result.sessionId}`);
 		} catch (error) {
@@ -196,6 +212,31 @@ export function JoinSession(
 
 					phase === 'looking' || phase === 'joining'
 						? m('.stack', [m('.spinner'), m('p.text-center.lobby__status', t('join.joining'))])
+						: null,
+
+					phase === 'name'
+						? m('.card.stack', [
+								m('h3.text-center', t('join.your_name')),
+								m('p.text-center.home-explanation', t('join.your_name_hint')),
+								m('input.join__name-input', {
+									type: 'text',
+									value: displayName,
+									maxlength: 40,
+									autofocus: true,
+									placeholder: t('join.your_name_placeholder'),
+									oninput: (event: InputEvent) => {
+										displayName = (event.target as HTMLInputElement).value;
+									},
+									onkeydown: (event: KeyboardEvent) => {
+										if (event.key === 'Enter' && displayName.trim()) void afterName();
+									},
+								}),
+								m(
+									'button.btn.btn--primary.btn--full.btn--lg',
+									{ disabled: !displayName.trim(), onclick: () => void afterName() },
+									t('join.continue'),
+								),
+							])
 						: null,
 
 					phase === 'team-size' && session

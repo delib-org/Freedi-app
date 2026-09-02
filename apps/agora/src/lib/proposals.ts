@@ -21,6 +21,7 @@ import {
 	AgoraProposalScore,
 	AgoraProposalScoreSchema,
 	AgoraSession,
+	AgoraStagePlanItem,
 	AgoraSuggestionStatus,
 	AGORA_ANTI_GAMING,
 	Evaluation,
@@ -33,7 +34,13 @@ import { trackWrite, clearWriteTracking } from './confirmedWrite';
 import { getUserState } from './user';
 import { getSessionState } from './session';
 import { emit } from './events';
-import { agoraCreator, buildProposalStatement, buildThreadMessageStatement } from './statementDocs';
+import {
+	agoraCreator,
+	answerStatementId,
+	buildAnswerStatement,
+	buildProposalStatement,
+	buildThreadMessageStatement,
+} from './statementDocs';
 
 /** Minimal client view of a proposal/suggestion statement */
 export interface AgoraProposal {
@@ -57,7 +64,13 @@ export interface AgoraProposal {
 	/** `award` messages: what this moment paid the helper */
 	agoraPointsAwarded?: number;
 	consensus?: number;
-	evaluation?: { agreement?: number; agreementIndex?: number; numberOfEvaluators?: number };
+	evaluation?: {
+		agreement?: number;
+		agreementIndex?: number;
+		numberOfEvaluators?: number;
+		/** Net agreement, −1…1 — the shared pipeline's plain mean */
+		averageEvaluation?: number;
+	};
 }
 
 export interface DeliberationState {
@@ -66,6 +79,12 @@ export interface DeliberationState {
 	/** First evaluations snapshot arrived — myRatings counts are trustworthy */
 	evaluationsLoaded: boolean;
 	proposals: AgoraProposal[];
+	/**
+	 * questionStatementId → the answers a question stage collected. Options
+	 * like proposals, but under a different parent; kept apart so nothing in
+	 * the square ever counts an answer as a proposal.
+	 */
+	answersByQuestion: Record<string, AgoraProposal[]>;
 	/** proposalId → improvement suggestions */
 	suggestions: Record<string, AgoraProposal[]>;
 	/** statementId → my rating (five-level value) + when I cast/updated it */
@@ -86,6 +105,7 @@ const state: DeliberationState = {
 	statementsLoaded: false,
 	evaluationsLoaded: false,
 	proposals: [],
+	answersByQuestion: {},
 	suggestions: {},
 	myRatings: {},
 	studentEvalTimes: {},
@@ -160,12 +180,22 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 		{ includeMetadataChanges: true },
 		(snapshot) => {
 			const proposals: AgoraProposal[] = [];
+			const answersByQuestion: Record<string, AgoraProposal[]> = {};
 			const suggestions: Record<string, AgoraProposal[]> = {};
+			const challengeQuestionId = getSessionState().session?.challengeQuestionId;
 			snapshot.forEach((docSnap) => {
 				if (!docSnap.metadata.hasPendingWrites) serverConfirmed.add(docSnap.id);
 				const item = toProposal(docSnap.data() as Record<string, unknown>);
 				if (item.statementType === StatementType.option) {
-					proposals.push(item);
+					// Options split by PARENT: the challenge question's are the
+					// square's proposals; any other parent is a question stage's
+					// answers. Before the session doc has arrived every option is
+					// treated as a proposal, exactly as before question stages existed.
+					if (challengeQuestionId && item.parentId !== challengeQuestionId) {
+						(answersByQuestion[item.parentId] ??= []).push(item);
+					} else {
+						proposals.push(item);
+					}
 				} else if (item.statementType === StatementType.suggestion) {
 					// Show the decision the student just made, not the one the server
 					// has caught up to. The overlay retires itself as soon as the
@@ -183,7 +213,11 @@ export function listenToDeliberation(sessionId: string, userId: string): void {
 			});
 			proposals.sort((a, b) => a.createdAt - b.createdAt);
 			Object.values(suggestions).forEach((list) => list.sort((a, b) => a.createdAt - b.createdAt));
+			Object.values(answersByQuestion).forEach((list) =>
+				list.sort((a, b) => a.createdAt - b.createdAt),
+			);
 			state.proposals = proposals;
+			state.answersByQuestion = answersByQuestion;
 			state.suggestions = suggestions;
 			// "Loaded" means the SERVER has spoken, not that a snapshot arrived.
 			// Against the emulator every snapshot is effectively a server one; on
@@ -309,6 +343,7 @@ export function stopDeliberationListeners(): void {
 	state.statementsLoaded = false;
 	state.evaluationsLoaded = false;
 	state.proposals = [];
+	state.answersByQuestion = {};
 	state.suggestions = {};
 	state.myRatings = {};
 	state.studentEvalTimes = {};
@@ -478,9 +513,48 @@ export async function createProposal(
 /** Five-level rating scale, MC-style: -1 … +1 in half steps */
 export type AgoraRating = -1 | -0.5 | 0 | 0.5 | 1;
 
+/**
+ * A person's answer in a question stage — one per person per question, at
+ * a deterministic id, merged so a retry restates the text and leaves the
+ * ratings the pipeline already wrote on it alone.
+ */
+export async function saveAnswer(
+	session: AgoraSession,
+	item: AgoraStagePlanItem,
+	anonName: string,
+	text: string,
+): Promise<void> {
+	const { user } = getUserState();
+	if (!user) throw new Error('Not authenticated');
+	if (!item.statementId) throw new Error('Question item has no statement');
+	const statementId = answerStatementId(session.sessionId, user.uid, item.itemId);
+	await trackWrite(
+		'question.saving_answer',
+		setDoc(
+			doc(db, Collections.statements, statementId),
+			buildAnswerStatement(session, item.statementId, statementId, user.uid, anonName, text),
+			{ merge: true },
+		),
+	);
+}
+
 /** Rate a proposal on the five-level scale. Deterministic id dedupes. */
 export async function rateProposal(
 	session: AgoraSession,
+	statementId: string,
+	value: AgoraRating,
+): Promise<void> {
+	return rateStatement(session, session.challengeQuestionId, statementId, value);
+}
+
+/**
+ * Rate any option in the session — a proposal under the challenge question
+ * or an answer under a question stage. The parent decides which pipeline
+ * aggregates it; the shape is the same evaluation either way.
+ */
+export async function rateStatement(
+	session: AgoraSession,
+	parentId: string,
 	statementId: string,
 	value: AgoraRating,
 ): Promise<void> {
@@ -491,7 +565,7 @@ export async function rateProposal(
 	// error to omit, not a trigger that silently fails at parse time.
 	const evaluation: Evaluation = {
 		evaluationId,
-		parentId: session.challengeQuestionId,
+		parentId,
 		statementId,
 		evaluatorId: user.uid,
 		evaluation: value,

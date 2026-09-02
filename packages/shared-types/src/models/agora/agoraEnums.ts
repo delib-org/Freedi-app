@@ -19,6 +19,14 @@ export enum AgoraStage {
 	voting = 'voting',
 	results = 'results',
 	ended = 'ended',
+	/**
+	 * An admin-authored question the room answers and rates before (or
+	 * between) the other beats. Only ever appears in an explicit stage plan —
+	 * a session without a plan never carries it. Its answers are Statements
+	 * under the item's own question Statement; the top ones travel into every
+	 * later stage as carried context.
+	 */
+	question = 'question',
 }
 
 /**

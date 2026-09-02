@@ -1,7 +1,7 @@
 # Agora — Working Handoff
 
 **Start-here document for continuing work in a fresh chat.** Last updated
-2026-09-01.
+2026-09-02.
 
 Companion docs: `../CLAUDE.md` (the rules of the road — read that first),
 `feedback-cycle.md` (the improvement loop, and the spec `e2e-cycle.mjs`
@@ -25,6 +25,83 @@ rate others, improve each other's ideas — aiming for a solution both camps
 can live with. Cross-camp support ("bridging") is worth ~2× same-camp.
 Grounded in Tal's deliberative theory: needs vs. positions, criticism as
 service, expanding agreement, honest disagreement as an achievement.
+
+## Stage plan (2026-09-02) — the stages are the admin's to arrange
+
+The order of stages is no longer hardwired. A session may carry an explicit
+`stagePlan` (an ordered list of items — `lobby`, the scenario stages,
+`question`, `deliberation`, `voting`, `results`; `ended` is appended at
+resolve time and never stored) plus `stageIndex` (the room's position) and
+`stageState[itemId]` (server-written runtime state: `openedAt`, a question's
+`outcome`, why voting opened). A session WITHOUT a plan resolves to the
+legacy order via `resolveStagePlan` — every session written before this,
+and every civic session, runs exactly as before. `session.stage` keeps
+mirroring the kind of the current item, so every `stage !== deliberation`
+guard still holds.
+
+- **One move path**: `functions/src/agora/stageAdvance.ts` `advanceSession`.
+  The teacher callable, the auto-open trigger and the hourly sweep all call
+  it. The pointer moves in a transaction guarded by the position the caller
+  saw (a lost race is `stale`, not an error); side effects (close the question
+  just left, draw the ballot, compute results) run after the commit. The
+  legacy `{stage}` request shape still works (Odyssey's admin sends it).
+- **`question` stage**: admin-authored question + explanation. Its Statement
+  (`StatementType.question`, child of the session root) is created when the
+  plan is set; answers are `option` children of it at deterministic ids
+  `${sessionId}--${uid}--${itemId}`; ratings are ordinary evaluations, so the
+  shared pipeline computes their numbers. On advance, `closeQuestionStage`
+  ranks by net agreement, applies the admin's cutoff (`selectCarriedAnswers`,
+  shared-types), writes an AI summary (fixture = the answers joined) into
+  `stageState[itemId].outcome`, marks `isChosen` and `results` on the
+  question Statement. Later screens show it as the `CarriedContext` card.
+  Answers never enter the square's economy: `fn_onAgoraEvaluation` and
+  `fn_onAgoraProposal` gate on `parentId === challengeQuestionId`, and
+  `classScore.ts` filters proposals/evaluations by the same parent.
+- **Auto-open voting**: a deliberation item may carry `votingTrigger`
+  `{enabled, singleMin 0.85, pairMin 0.5, minRaters 3}` in NET agreement (the
+  students-only `agoraScores.classConsensus.mean`, no C_p). Evaluated in
+  `fn_onAgoraEvaluation` after each score commit (sibling scores read AFTER
+  the commit, own score substituted). One proposal ≥ singleMin → a
+  for/against ballot on that proposal; two ≥ pairMin → pick one. The teacher
+  panel shows the same rule live via `evaluateVotingTrigger`; the manual
+  button is the backstop (hot-reload gotcha below).
+- **For/against**: a one-candidate ballot counts `VOTE_AGAINST` (`'against'`)
+  as a sentinel in the same vote doc; `ballotTallyIds` adds it to the tally,
+  `pickVoteWinner` adopts only on a strict majority and reports `rejected`.
+  `fn_vote` now skips the isVoted/topVoted marking for sentinel keys.
+- **Quick game**: `agoraCreateSession` accepts `quick {title, mainQuestion,
+  explanation?, language}` instead of a package and writes a minimal
+  `kind: 'quick'` topic shell (two placeholder characters, no scenes, no AI
+  raters seeded). Flow forced to no stances/needs/elders/framing, so
+  `scoreMode` is the new third mode `agreement`: results are
+  `session.agreement` (ranked by net agreement + the vote), screen
+  `views/AgreementResults.ts`, computed by `agreementResults.ts`.
+- **Named rooms**: `identity: 'named'` — the join screen asks for a name,
+  `agoraJoinSession` stores it as `anonName` (+`displayName`), cards show it.
+  Those names are readable by any signed-in user who knows the session.
+- **Free navigation**: `lib/flows/stageNav.ts` (pure) + `components/StageNav`.
+  Opened stages are doors; the player's choice lives in sessionStorage and is
+  carried forward when the room advances. A past stage renders read-only
+  (deliberation → `ResultsBoard`, question → ranked list + outcome, voting →
+  tallies).
+- **Admin UI**: `/teach/start` has Scenario / Quick game, names, and the
+  `StagePlanEditor` (reducer `lib/flows/stagePlanEditor.ts`; presets
+  `classic`, `quickDecision`). The live board shows the plan rail, the
+  question's ranked answers with "travels forward" marks, the trigger line,
+  and "edit upcoming stages" (`agoraUpdateStagePlan`, frozen prefix).
+- **Rules**: `stage`, `stageIndex`, `stagePlan`, `stageState`, `identity`,
+  `agreement`, `roundNumber` are pinned server-owned on `agoraSessions`.
+- **Client parse**: `lib/session.ts` uses `safeParse`; an unknown `stage`
+  kind shows a "refresh" screen instead of bricking the tab. **Deploy hosting
+  before functions** whenever a stage kind is added.
+- **Shared pipeline fix** (`functions/src/evaluation/statementEvaluationUpdater.ts`):
+  the missing-averageEvaluation repair used to be scheduled with
+  `setImmediate` from INSIDE the transaction and overwrote the first rating
+  on a fresh option with a zero block whenever a sibling was rated in the
+  same second. It now runs after the commit, skips the option just updated,
+  and conditions each write on `lastUpdateTime`.
+- **Verify**: `npx tsx scripts/e2e-stage-plan.mjs` (the Vosh scenario, 53
+  assertions), `npm run fast -- --quick --stage=question --open --shot=q`.
 
 ## Current game flow (as implemented)
 

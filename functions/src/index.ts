@@ -1235,6 +1235,7 @@ export {
 	agoraRerateStances,
 	agoraJoinSession,
 	agoraAdvanceStage,
+	agoraUpdateStagePlan,
 	agoraGradeValueIdentification,
 	agoraWritingAssistant,
 	agoraSetRound,

@@ -84,7 +84,10 @@ export async function listTopicPackages(creatorId: string): Promise<AgoraTopicPa
 	const packages: AgoraTopicPackage[] = [];
 	snapshot.forEach((docSnap) => {
 		try {
-			packages.push(parse(AgoraTopicPackageSchema, docSnap.data()));
+			const topic = parse(AgoraTopicPackageSchema, docSnap.data());
+			// A quick game's shell is not a scenario anyone would start again
+			if (topic.kind === 'quick') return;
+			packages.push(topic);
 		} catch (error) {
 			console.error('[Teacher] Invalid topic package:', error);
 		}

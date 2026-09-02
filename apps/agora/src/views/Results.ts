@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t, tCount } from '../lib/i18n';
 import { ConvergenceResults } from './ConvergenceResults';
+import { AgreementResults } from './AgreementResults';
 import { EraMap } from '../components/EraMap';
 import { VideoScene } from '../components/VideoScene';
 import { formatPoints } from '../components/PointsPill';
@@ -328,6 +329,12 @@ export const Results: m.ClosureComponent<ResultsAttrs> = () => {
 			const flow = getSessionFlow();
 			if (flow.scoreMode === 'convergence') {
 				return m(ConvergenceResults, { session, myParticipant });
+			}
+			// No camps and no baselines — a quick game, a class without stances.
+			// Its recap is the net support and the vote, written once by the
+			// server; waiting on `classScore` here would spin forever.
+			if (flow.scoreMode === 'agreement') {
+				return m(AgreementResults, { session, myParticipant });
 			}
 
 			if (!score) {

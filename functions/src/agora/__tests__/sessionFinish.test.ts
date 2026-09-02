@@ -53,10 +53,20 @@ describe('isNewlyFinishedSession', () => {
 		expect(isNewlyFinishedSession(session(), scored())).toBe(true);
 	});
 
+	it('fires when agreement results first appear (the camp-less classroom path)', () => {
+		const agreed = session({
+			stage: AgoraStage.results,
+			agreement: { ranked: [], computedAt: NOW + 1 },
+		});
+		expect(isNewlyFinishedSession(session(), agreed)).toBe(true);
+		// and not again on a later, unrelated update
+		expect(isNewlyFinishedSession(agreed, { ...agreed, lastUpdate: NOW + 2 })).toBe(false);
+	});
+
 	it('fires when status flips to ended without a score (convergence path)', () => {
-		expect(
-			isNewlyFinishedSession(session(), session({ status: AgoraSessionStatus.ended })),
-		).toBe(true);
+		expect(isNewlyFinishedSession(session(), session({ status: AgoraSessionStatus.ended }))).toBe(
+			true,
+		);
 	});
 
 	it('does not fire on an ordinary mid-game update', () => {
@@ -70,9 +80,7 @@ describe('isNewlyFinishedSession', () => {
 	});
 
 	it('does not fire when aggregatedAt is already stamped', () => {
-		expect(
-			isNewlyFinishedSession(session(), scored({ aggregatedAt: NOW + 2 })),
-		).toBe(false);
+		expect(isNewlyFinishedSession(session(), scored({ aggregatedAt: NOW + 2 }))).toBe(false);
 	});
 
 	it('skips civic sessions entirely', () => {

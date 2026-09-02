@@ -1,8 +1,10 @@
 import { functions, httpsCallable } from './firebase';
 import type {
 	AgoraDeviceMode,
+	AgoraIdentityMode,
 	AgoraSessionFlow,
 	AgoraStage,
+	AgoraStagePlan,
 	JoinClassRequest,
 	JoinClassResponse,
 	TeacherConsoleRequest,
@@ -11,8 +13,18 @@ import type {
 	TeacherRosterResponse,
 } from '@freedi/shared-types';
 
+/** A game started from a typed main question, with no scenario behind it */
+export interface QuickGameRequest {
+	title: string;
+	mainQuestion: string;
+	explanation?: string;
+	language: string;
+}
+
 export interface CreateSessionRequest {
-	topicPackageId: string;
+	/** A ready scenario — or omit it and send `quick` */
+	topicPackageId?: string;
+	quick?: QuickGameRequest;
 	deviceMode: AgoraDeviceMode;
 	teamSizeMax?: number;
 	lessonLengthMs?: number;
@@ -20,6 +32,9 @@ export interface CreateSessionRequest {
 	classId?: string;
 	/** Which beats this game runs; untouched knobs keep the classroom defaults */
 	flow?: AgoraSessionFlow;
+	/** The ordered stage list; absent means the legacy order */
+	stagePlan?: AgoraStagePlan;
+	identity?: AgoraIdentityMode;
 }
 
 export interface CreateSessionResponse {
@@ -30,6 +45,8 @@ export interface CreateSessionResponse {
 export interface JoinSessionRequest {
 	code: string;
 	teamMemberCount?: number;
+	/** `named` sessions: the name this person goes by */
+	displayName?: string;
 }
 
 export interface JoinSessionResponse {
@@ -40,11 +57,37 @@ export interface JoinSessionResponse {
 
 export interface AdvanceStageRequest {
 	sessionId: string;
-	stage: AgoraStage;
+	/** Either the plan position to open… */
+	toIndex?: number;
+	/** …or the stage kind (the legacy shape, still honoured) */
+	stage?: AgoraStage;
 }
 
 export interface AdvanceStageResponse {
 	ok: boolean;
+}
+
+export interface UpdateStagePlanRequest {
+	sessionId: string;
+	stagePlan: AgoraStagePlan;
+}
+
+export interface UpdateStagePlanResponse {
+	ok: boolean;
+	stagePlan: AgoraStagePlan;
+}
+
+/** The teacher rewrites the stages still ahead of the room */
+export async function updateStagePlan(
+	request: UpdateStagePlanRequest,
+): Promise<UpdateStagePlanResponse> {
+	const call = httpsCallable<UpdateStagePlanRequest, UpdateStagePlanResponse>(
+		functions,
+		'agoraUpdateStagePlan',
+	);
+	const result = await call(request);
+
+	return result.data;
 }
 
 export async function createSession(request: CreateSessionRequest): Promise<CreateSessionResponse> {

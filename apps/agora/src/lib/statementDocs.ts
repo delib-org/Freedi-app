@@ -62,6 +62,42 @@ export function buildProposalStatement(
 }
 
 /**
+ * A person's answer in a question stage: an option under that stage's own
+ * question Statement (never the challenge question — the square's economy
+ * keys on that parent). One per person per question, at a deterministic id,
+ * so a retry lands on the same answer.
+ */
+export function answerStatementId(sessionId: string, uid: string, itemId: string): string {
+	return `${sessionId}--${uid}--${itemId}`;
+}
+
+export function buildAnswerStatement(
+	session: AgoraSession,
+	questionStatementId: string,
+	statementId: string,
+	uid: string,
+	anonName: string,
+	text: string,
+): Statement {
+	const statement = createStatementObject({
+		statementId,
+		statement: text,
+		statementType: StatementType.option,
+		parentId: questionStatementId,
+		topParentId: session.rootStatementId,
+		parents: [session.rootStatementId, questionStatementId],
+		creatorId: uid,
+		creator: agoraCreator(uid, anonName),
+		sourceApp: SourceApp.AGORA,
+		agoraSessionId: session.sessionId,
+		anonName,
+	});
+	if (!statement) throw new Error('Failed to build answer statement');
+
+	return statement;
+}
+
+/**
  * One message in a proposal↔helper thread, parented on the proposal. A
  * `suggestion`-kind message is an improvement idea — it carries
  * `suggestionStatus: open` and enters the accept/weave economy. A `chat`-kind

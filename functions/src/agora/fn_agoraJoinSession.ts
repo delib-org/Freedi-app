@@ -140,7 +140,12 @@ async function readStanceBaseline(
 interface Request {
 	code: string;
 	teamMemberCount?: number;
+	/** `named` sessions only: the name this person goes by */
+	displayName?: string;
 }
+
+/** Long enough for a real name, short enough to sit on a card */
+const MAX_DISPLAY_NAME = 40;
 
 interface Result {
 	sessionId: string;
@@ -161,7 +166,7 @@ export const agoraJoinSession = onCall(
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const { code, teamMemberCount } = request.data ?? {};
+		const { code, teamMemberCount, displayName } = request.data ?? {};
 		if (!code || typeof code !== 'string') {
 			throw new HttpsError('invalid-argument', 'code is required');
 		}
@@ -308,13 +313,21 @@ export const agoraJoinSession = onCall(
 					return (freshParticipant.data() as AgoraParticipant).anonName;
 				}
 				const count = (freshSession.data() as AgoraSession | undefined)?.participantCount ?? 0;
-				const name = rosterMember?.alias ?? generateAnonName(language, count);
+				// In a named room the typed name IS the card name; a roster alias
+				// still wins (the teacher knows students by it), and an empty
+				// field falls back to a pseudonym rather than a blank card.
+				const typedName =
+					session.identity === 'named' && typeof displayName === 'string'
+						? displayName.trim().slice(0, MAX_DISPLAY_NAME)
+						: '';
+				const name = rosterMember?.alias ?? (typedName || generateAnonName(language, count));
 
 				const participant: AgoraParticipant = {
 					participantId,
 					sessionId: session.sessionId,
 					userId: uid,
 					anonName: name,
+					...(typedName && !rosterMember ? { displayName: typedName } : {}),
 					...(rosterMember ? { memberId: rosterMember.memberId } : {}),
 					...(session.deviceMode === AgoraDeviceMode.team
 						? { teamMemberCount: teamMemberCount ?? 1 }

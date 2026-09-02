@@ -49,8 +49,14 @@ export const AgoraParticipantSchema = object({
 	participantId: string(),
 	sessionId: string(),
 	userId: string(),
-	/** Auto-generated anonymous display name (never a real name) */
+	/**
+	 * The name shown on this person's cards. Auto-generated and never a real
+	 * name — except in a `named` session (see AgoraSession.identity), where it
+	 * is the display name the person typed at the door.
+	 */
 	anonName: string(),
+	/** Set only in `named` sessions: the name the person typed when joining */
+	displayName: optional(string()),
 	/**
 	 * The roster spot behind this participant when the session belongs to a
 	 * class (`agoraClassMembers`' stable memberId). Server-written at join;

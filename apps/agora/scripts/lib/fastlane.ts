@@ -22,7 +22,14 @@
 import { createRequire } from 'node:module';
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import type { AgoraCamp, AgoraSession, AgoraSessionFlow, AgoraStage } from '@freedi/shared-types';
+import type {
+	AgoraCamp,
+	AgoraIdentityMode,
+	AgoraSession,
+	AgoraSessionFlow,
+	AgoraStage,
+	AgoraStagePlanItem,
+} from '@freedi/shared-types';
 import {
 	AUTH_HOST,
 	FIRESTORE_HOST,
@@ -116,6 +123,17 @@ export interface FastlaneOptions {
 	teacher?: { uid: string; idToken: string };
 	/** Which beats the session runs — passed through to agoraCreateSession */
 	flow?: AgoraSessionFlow;
+	/**
+	 * A quick game — no scenario, the admin's typed question instead. Bots
+	 * are not positioned (a quick game has no camps), and the plan below is
+	 * required, exactly as the callable requires it.
+	 */
+	quick?: { title: string; mainQuestion: string; explanation?: string; language?: string };
+	/** The ordered stage list — passed through to agoraCreateSession */
+	stagePlan?: AgoraStagePlanItem[];
+	identity?: AgoraIdentityMode;
+	/** Bots' typed names in a `named` room (cycled); default "Bot N" */
+	botNames?: string[];
 }
 
 /**
@@ -323,10 +341,14 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 	const { sessionId, code } = await callable<{ sessionId: string; code: string }>(
 		'agoraCreateSession',
 		{
-			topicPackageId,
+			...(options.quick
+				? { quick: { language: 'he', ...options.quick } }
+				: { topicPackageId }),
 			deviceMode: AgoraDeviceMode.individual,
 			...(options.classGame ? { classId: options.classGame.classId } : {}),
 			...(options.flow ? { flow: options.flow } : {}),
+			...(options.stagePlan ? { stagePlan: options.stagePlan } : {}),
+			...(options.identity ? { identity: options.identity } : {}),
 		},
 		teacher.idToken,
 	);
@@ -351,18 +373,22 @@ export async function fastlane(options: FastlaneOptions = {}): Promise<FastlaneR
 				bot.idToken,
 			);
 		}
+		const botName = options.botNames?.[index % options.botNames.length] ?? `Bot ${index + 1}`;
 		const joined = await callable<{ participantId: string; anonName: string }>(
 			'agoraJoinSession',
-			{ code },
+			{ code, ...(options.identity === 'named' ? { displayName: botName } : {}) },
 			bot.idToken,
 		);
 		const campPosition = CAMP_POSITIONS[index % CAMP_POSITIONS.length];
 		const camp = deriveCamp(campPosition);
-		// Positioning is a one-field write on the student's own participant doc
-		await db
-			.collection(Collections.agoraParticipants)
-			.doc(createAgoraParticipantId(sessionId, bot.uid))
-			.update({ campPosition, camp });
+		// Positioning is a one-field write on the student's own participant doc.
+		// A quick game has no camps to take — nobody is positioned there.
+		if (!options.quick) {
+			await db
+				.collection(Collections.agoraParticipants)
+				.doc(createAgoraParticipantId(sessionId, bot.uid))
+				.update({ campPosition, camp });
+		}
 
 		bots.push({
 			uid: bot.uid,

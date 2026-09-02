@@ -69,8 +69,15 @@ describe('resolveSessionFlow', () => {
 	});
 
 	describe('scoreMode is derived from stances, never stored', () => {
-		it('scores a camp-less room on convergence', () => {
-			expect(resolveSessionFlow({ flow: { stances: false } }).scoreMode).toBe('convergence');
+		it('scores a camp-less civic room on convergence — it has stance baselines to measure', () => {
+			expect(
+				resolveSessionFlow({ sessionMode: AgoraSessionMode.civic, flow: { stances: false } })
+					.scoreMode,
+			).toBe('convergence');
+		});
+
+		it('scores a camp-less classroom or quick game on agreement — no camps, no before-picture', () => {
+			expect(resolveSessionFlow({ flow: { stances: false } }).scoreMode).toBe('agreement');
 		});
 
 		it('scores a room with camps on bridging', () => {

@@ -76,7 +76,7 @@ export async function updateStatementEvaluation(
 
 		// Update statement evaluation. The transaction skips the increment if this
 		// event was already processed (durable, atomic idempotency).
-		const { duplicate } = await updateStatementInTransaction(
+		const { duplicate, repairParentId } = await updateStatementInTransaction(
 			statementId,
 			evaluationDiff,
 			actualAddEvaluator,
@@ -87,6 +87,11 @@ export async function updateStatementEvaluation(
 
 		if (duplicate) {
 			return { duplicate: true };
+		}
+
+		// The transaction has committed; only now may the siblings be repaired.
+		if (repairParentId) {
+			void ensureAverageEvaluationForAllOptions(repairParentId, statementId);
 		}
 
 		// Return updated statement
@@ -108,8 +113,21 @@ export async function updateStatementEvaluation(
 /**
  * Ensures all options under a parent have the averageEvaluation field set.
  * Used to fix legacy data that may be missing this field.
+ *
+ * Runs AFTER the transaction that noticed the gap has committed, never from
+ * inside it, and every write is conditioned on the document not having moved
+ * since it was read here. It used to be scheduled with `setImmediate` from
+ * within the transaction callback — which fires before the commit — and read
+ * the freshly rated option without its block, then wrote a zero block over
+ * the increment the commit had just applied: the first rating on every new
+ * option was lost whenever a sibling was rated in the same second. The
+ * option the caller just updated is skipped outright; its block is the one
+ * the transaction wrote.
  */
-async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<void> {
+async function ensureAverageEvaluationForAllOptions(
+	parentId: string,
+	justUpdatedStatementId?: string,
+): Promise<void> {
 	try {
 		// Get all options under this parent
 		const optionsSnapshot = await db
@@ -122,16 +140,14 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 			return;
 		}
 
-		const batch = db.batch();
-		let needsUpdate = false;
+		const writes: Array<Promise<unknown>> = [];
 
 		optionsSnapshot.docs.forEach((doc) => {
+			if (doc.id === justUpdatedStatementId) return;
 			const data = doc.data();
 
 			// Check if evaluation exists and has averageEvaluation
 			if (!data.evaluation || data.evaluation.averageEvaluation === undefined) {
-				needsUpdate = true;
-
 				// Calculate the average if we have the data
 				const evaluation: StatementEvaluation = data.evaluation || {
 					sumEvaluations: 0,
@@ -153,18 +169,19 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 						? evaluation.sumEvaluations / evaluation.numberOfEvaluators
 						: 0;
 
-				batch.update(doc.ref, {
-					evaluation,
-					lastUpdate: Date.now(),
-				});
+				// Conditioned on the read: a rating that lands between this read and
+				// this write makes the write fail instead of being overwritten.
+				writes.push(
+					doc.ref
+						.update({ evaluation, lastUpdate: Date.now() }, { lastUpdateTime: doc.updateTime })
+						.catch(() => undefined),
+				);
 			}
 		});
 
-		if (needsUpdate) {
-			await batch.commit();
-			logger.info(
-				`Fixed averageEvaluation for ${optionsSnapshot.size} options under parent ${parentId}`,
-			);
+		if (writes.length > 0) {
+			await Promise.all(writes);
+			logger.info(`Fixed averageEvaluation for ${writes.length} options under parent ${parentId}`);
 		}
 	} catch (error) {
 		logger.error('Error fixing averageEvaluation for options:', error);
@@ -223,8 +240,9 @@ async function updateStatementInTransaction(
 	},
 	squaredEvaluationDiff: number,
 	processedEventKey?: string,
-): Promise<{ duplicate: boolean }> {
+): Promise<{ duplicate: boolean; repairParentId?: string }> {
 	return db.runTransaction(async (transaction) => {
+		let repairParentId: string | undefined;
 		const statementRef = db.collection(Collections.statements).doc(statementId);
 
 		// Idempotency guard: read the processed-event marker BEFORE any write
@@ -280,10 +298,9 @@ async function updateStatementInTransaction(
 				`Detected missing averageEvaluation for option ${statementId}, will fix all siblings under parent ${statementData.parentId}`,
 			);
 
-			// Schedule the fix after transaction completes to avoid conflicts
-			setImmediate(() => {
-				ensureAverageEvaluationForAllOptions(statementData.parentId);
-			});
+			// The fix runs after the transaction has COMMITTED (see the caller) —
+			// scheduling it from in here ran it against the pre-commit state.
+			repairParentId = statementData.parentId;
 
 			// For now, ensure this statement has the field to prevent immediate error
 			if (!statementData.evaluation) {
@@ -416,6 +433,6 @@ async function updateStatementInTransaction(
 			});
 		}
 
-		return { duplicate: false };
+		return { duplicate: false, repairParentId };
 	});
 }

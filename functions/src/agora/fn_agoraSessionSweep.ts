@@ -4,22 +4,22 @@ import {
 	Collections,
 	AgoraSession,
 	AgoraSessionStatus,
-	AgoraStage,
 	functionConfig,
-	resolveSessionFlow,
+	resolveStagePlan,
 } from '@freedi/shared-types';
 import { logError } from '../utils/errorHandling';
-import { computeSessionResults } from './classScore';
+import { advanceSession } from './stageAdvance';
 
 /**
  * Hourly hygiene: auto-end sessions whose lesson window passed without the
  * teacher closing them (pattern: fn_handleVotingDeadline).
  *
- * Ending is not enough on its own — the results screen waits on
- * `session.classScore` (or `session.convergence`), and a session flipped to
- * `ended` without one parks every open tab on the "computing" spinner
- * forever. So each swept session gets the same results computation the
- * advance-stage path runs.
+ * Ending goes through the same `advanceSession` the teacher's button uses —
+ * straight to the plan's terminal item — so `stageIndex` stays true to
+ * `stage`, and the results the screen waits on (class score, agreement, or
+ * an opened convergence) are computed by the same code path. A session
+ * flipped to `ended` any other way parks every open tab on the "computing"
+ * spinner forever.
  */
 export const agoraSessionSweep = onSchedule(
 	{ schedule: '0 * * * *', region: functionConfig.region, timeoutSeconds: 540 },
@@ -33,35 +33,22 @@ export const agoraSessionSweep = onSchedule(
 
 			if (stale.empty) return;
 
-			const batch = db.batch();
-			stale.docs.forEach((docSnap) => {
-				batch.update(docSnap.ref, {
-					stage: AgoraStage.ended,
-					status: AgoraSessionStatus.ended,
-					lastUpdate: Date.now(),
-				});
-			});
-			await batch.commit();
-
-			// Sequential on purpose: computeSessionResults makes an AI call per
-			// session, and the sweep rarely has more than a handful to close.
+			// Sequential on purpose: results can mean an AI call per session, and
+			// the sweep rarely has more than a handful to close.
 			for (const docSnap of stale.docs) {
 				const session = docSnap.data() as AgoraSession;
 				try {
-					if (resolveSessionFlow(session).scoreMode === 'convergence') {
-						if (!session.convergence) {
-							await docSnap.ref.update({
-								convergence: {
-									before: null,
-									after: null,
-									score: null,
-									participants: 0,
-									computedAt: Date.now(),
-								},
-							});
-						}
-					} else if (!session.classScore) {
-						await computeSessionResults(session.sessionId);
+					const plan = resolveStagePlan(session);
+					const result = await advanceSession(
+						session.sessionId,
+						{ toIndex: plan.length - 1 },
+						{ kind: 'sweep' },
+					);
+					if (!result.ok && result.reason !== 'stale') {
+						logError(new Error(`sweep could not end session: ${result.reason}`), {
+							operation: 'agora.sessionSweep.advance',
+							metadata: { sessionId: session.sessionId },
+						});
 					}
 				} catch (error) {
 					logError(error, {

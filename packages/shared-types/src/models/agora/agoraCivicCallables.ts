@@ -42,10 +42,18 @@ export interface UpdateCivicFlowResponse {
 	skipped: string[];
 }
 
-/** `agoraAdvanceStage` — teacher-only forward stage transition. */
+/**
+ * `agoraAdvanceStage` — teacher-only forward stage transition.
+ *
+ * Either names the next plan position (`toIndex`, what the Agora teacher
+ * board sends) or the stage KIND to move to (`stage`, what Odyssey's admin
+ * and the older scripts send) — the server resolves a kind to the first plan
+ * item of that kind after the current one.
+ */
 export interface AdvanceCivicStageRequest {
 	sessionId: string;
-	stage: AgoraStage;
+	stage?: AgoraStage;
+	toIndex?: number;
 }
 
 export interface AdvanceCivicStageResponse {
