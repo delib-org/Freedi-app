@@ -29,6 +29,20 @@ export {
 // Re-export the ErrorContext and RetryOptions types
 export type { ErrorContext, RetryOptions } from './errorHandling';
 
+// Sentry beforeSend filters (SDK-agnostic — see sentryFilters.ts)
+export {
+	isFirestoreInternalCrash,
+	isBlockedServiceWorkerCrash,
+	isTransientAuthNetworkError,
+} from './sentryFilters';
+export type {
+	FirestoreCrashOptions,
+	SentryLikeEvent,
+	SentryLikeException,
+	SentryLikeFrame,
+	SentryLikeStacktrace,
+} from './sentryFilters';
+
 // Logger
 export { logger, setErrorReporter, setInfoReporter } from './logger';
 export type { ErrorReporterFn, InfoReporterFn, LogContext } from './logger';
