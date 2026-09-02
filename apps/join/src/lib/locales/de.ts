@@ -178,6 +178,9 @@ const de: Record<string, string> = {
 	'live.thinking': '{{name}} denkt nach…',
 	'live.ended': 'Der Live-Entwurf ist beendet',
 	'live.reaction.aria': '{{emoji}} an {{name}} senden',
+	'live.status.broadcasting': 'Live-Übertragung läuft',
+	'live.watching.one': '1 Person sieht zu',
+	'live.watching.many': '{{count}} Personen sehen zu',
 	'facilitator.toggle.showEvaluation': 'Bewertung anzeigen',
 	'facilitator.toggle.showEvaluation.help':
 		'Die 5-Gesichter-Bewertungszeile auf jeder Optionskarte öffnen, damit Teilnehmende abstimmen können.',

@@ -211,6 +211,9 @@ const en: Record<string, string> = {
 	'live.thinking': '{{name}} is thinking…',
 	'live.ended': 'The live draft has ended',
 	'live.reaction.aria': 'Send {{emoji}} to {{name}}',
+	'live.status.broadcasting': 'Broadcasting live',
+	'live.watching.one': '1 person is watching',
+	'live.watching.many': '{{count}} people are watching',
 	'facilitator.toggle.showEvaluation': 'Show evaluation',
 	'facilitator.toggle.showEvaluation.help':
 		'Open the 5-face evaluation row on every option card so participants can vote.',
