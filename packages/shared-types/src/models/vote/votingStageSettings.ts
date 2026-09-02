@@ -28,6 +28,23 @@ export const VotingStageSettingsSchema = object({
 	 * its consensus clears this. Unset means the most-voted option always wins.
 	 */
 	winningConsensusThreshold: optional(number()),
+	/**
+	 * Whether voters see the tallies while the vote is open.
+	 *
+	 * Default OFF, and deliberately: a running count is an argument. Show it and
+	 * the leading option gathers votes for leading, which is the one thing a
+	 * vote is supposed to measure independently. The teacher reveals it when
+	 * they want the room to see where it stands — usually at the close.
+	 *
+	 * How MANY have voted is never hidden by this; only who they voted for.
+	 */
+	showResults: optional(boolean()),
+	/**
+	 * Whether the ballot re-sorts by votes as they arrive. Only has an effect
+	 * while the tallies are shown — reordering by a number nobody can see would
+	 * leak it, and a ballot that moves under a voter's finger loses their place.
+	 */
+	liveReorder: optional(boolean()),
 });
 
 export type VotingStageSettings = InferOutput<typeof VotingStageSettingsSchema>;

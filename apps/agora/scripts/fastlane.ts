@@ -4,6 +4,7 @@
  *   npm run fast                                   # deliberation chat, 4 classmates, 3 proposals
  *   npm run fast -- --stage=positioning
  *   npm run fast -- --students=8 --proposals=6
+ *   npm run fast -- --stage=deliberation --ratings   # rated, ready to open a vote
  *   npm run fast -- --open --mine                  # …and give them a proposal, which is what
  *                                                  #   unlocks rating/feedback/helped screens
  *   npm run fast -- --open --shot                  # drive a student there and screenshot it
@@ -30,6 +31,12 @@ interface Args {
 	stage: AgoraStage;
 	students: number;
 	proposals: number;
+	/**
+	 * Have the bots rate each other, so the proposals carry real consensus.
+	 * On by default from the voting stage onward (the ballot ranks on it);
+	 * ask for it earlier when you want to WATCH the vote being set up.
+	 */
+	ratings: boolean | undefined;
 	lang: string;
 	position: number;
 	open: boolean;
@@ -72,6 +79,7 @@ function parseArgs(argv: string[]): Args {
 		stage: stageRaw as AgoraStage,
 		students: num('students', 4),
 		proposals: num('proposals', 3),
+		ratings: flag('ratings') !== undefined ? flag('ratings') !== 'false' : undefined,
 		lang: flag('lang') || 'he',
 		// A student parked in a camp, not on the fence: centre positions hide
 		// the cross-camp colouring that most of these screens are about
@@ -116,6 +124,7 @@ const result = await fastlane({
 	stage: args.stage,
 	students: args.students,
 	proposals: args.proposals,
+	ratings: args.ratings,
 	...(args.quick
 		? {
 				quick: {
