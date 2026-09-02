@@ -5414,6 +5414,15 @@ $facilitator-panel-width: 300px;
   animation: cheers-strip-in var(--dur-base) var(--ease-out);
 }
 
+// Nested inside the live-status strip, the cheers row is a row of that panel
+// rather than a panel of its own — drop the strip chrome, keep the chips.
+.modal__cheers--inline {
+  margin-bottom: 0;
+  padding: 0;
+  background: none;
+  animation: none;
+}
+
 .modal__cheers-label {
   font-family: var(--font-body);
   font-size: var(--font-size-xs);
@@ -5894,4 +5903,34 @@ $facilitator-panel-width: 300px;
   .live-banner__badge {
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--terra-500) 30%, transparent);
   }
+}
+
+// Feedback strip for the broadcaster inside the add-suggestion modal:
+// watcher count + incoming reaction chips, visible only while sharing live.
+.modal__live-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--terra-50);
+  border-radius: var(--radius-md);
+  animation: modal-fade-in var(--dur-base) var(--ease-out);
+}
+
+.modal__live-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.modal__live-status-eye {
+  font-size: var(--font-size-base);
+}
+
+.modal__live-status-text {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--ink-muted);
 }

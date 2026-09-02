@@ -8,6 +8,7 @@ import {
 	stopBroadcast,
 	isBroadcasting,
 	getMyRecentReactions,
+	getWatcherCount,
 } from '@/lib/liveDrafts';
 
 interface AddSuggestionModalAttrs {
@@ -94,7 +95,7 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
 							])
 						: null,
 
-					renderCheers(),
+					renderLiveStatus(),
 
 					m('.modal__actions', [
 						m('button.btn.btn--secondary.btn--small', { onclick: onClose }, t('form.cancel')),
@@ -113,30 +114,49 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
 	},
 };
 
-/** The cheers the table is sending back, shown to the writer as they type.
- *  Reactions were previously visible only to other watchers — the one person
- *  being cheered saw nothing.
+/** While broadcasting, show the writer what is coming back from the table:
+ *  how many people have the watch view open, and the cheers landing on their
+ *  draft. Reactions were previously visible only to other watchers — the one
+ *  person being cheered saw nothing.
  *
- *  Keyed by reactor *and* timestamp on purpose: a reactor swapping 👍 for 🔥
- *  keeps the same uid, and a stable key would reuse the DOM node and swallow
- *  the pop-in animation. A fresh key means every cheer lands visibly. */
-function renderCheers(): m.Children {
+ *  Both halves used to draw their own strip in this slot; they share one here
+ *  so the composer doesn't stack two identical panels.
+ *
+ *  Cheers are keyed by reactor *and* timestamp on purpose: a reactor swapping
+ *  👍 for 🔥 keeps the same uid, and a stable key would reuse the DOM node and
+ *  swallow the pop-in animation. A fresh key means every cheer lands visibly. */
+function renderLiveStatus(): m.Children {
 	if (!isBroadcasting()) return null;
 
+	const watcherCount = getWatcherCount();
 	const cheers = getMyRecentReactions();
-	if (cheers.length === 0) return null;
 
-	return m('.modal__cheers', { role: 'status', 'aria-live': 'polite' }, [
-		m('span.modal__cheers-label', t('live.cheers')),
-		m(
-			'.modal__cheers-list',
-			cheers.map((cheer) =>
-				m('span.modal__cheer', { key: `${cheer.reactorId}:${cheer.timestamp}` }, [
-					m('span.modal__cheer-emoji', cheer.emoji),
-					m('span.modal__cheer-name', cheer.displayName),
-				]),
-			),
-		),
+	const watchText =
+		watcherCount === 0
+			? t('live.status.broadcasting')
+			: watcherCount === 1
+				? t('live.watching.one')
+				: t('live.watching.many', { count: String(watcherCount) });
+
+	return m('.modal__live-status', { role: 'status', 'aria-live': 'polite' }, [
+		m('.modal__live-status-row', [
+			m('span.modal__live-status-eye', { 'aria-hidden': 'true' }, watcherCount > 0 ? '👀' : '📡'),
+			m('span.modal__live-status-text', watchText),
+		]),
+		cheers.length > 0
+			? m('.modal__cheers.modal__cheers--inline', [
+					m('span.modal__cheers-label', t('live.cheers')),
+					m(
+						'.modal__cheers-list',
+						cheers.map((cheer) =>
+							m('span.modal__cheer', { key: `${cheer.reactorId}:${cheer.timestamp}` }, [
+								m('span.modal__cheer-emoji', cheer.emoji),
+								m('span.modal__cheer-name', cheer.displayName),
+							]),
+						),
+					),
+				])
+			: null,
 	]);
 }
 

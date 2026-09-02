@@ -174,6 +174,9 @@ const es: Record<string, string> = {
 	'live.thinking': '{{name}} está pensando…',
 	'live.ended': 'El borrador en vivo ha terminado',
 	'live.reaction.aria': 'Enviar {{emoji}} a {{name}}',
+	'live.status.broadcasting': 'Transmitiendo en vivo',
+	'live.watching.one': '1 persona está mirando',
+	'live.watching.many': '{{count}} personas están mirando',
 	'facilitator.toggle.showEvaluation': 'Mostrar evaluación',
 	'facilitator.toggle.showEvaluation.help':
 		'Abrir la fila de 5 caras en cada tarjeta de opción para que los participantes puedan votar.',
