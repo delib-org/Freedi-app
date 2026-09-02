@@ -72,8 +72,9 @@ export function StartGame(): m.Component {
 				selectedClassId = routeClass;
 			}
 			if (topics.length === 1) selectedTopicId = topics[0].topicPackageId;
-			// A teacher with no scenario yet is most likely here for a quick game
-			if (topics.length === 0) mode = 'quick';
+			// A teacher with no scenario yet is most likely here for a quick game,
+			// and the dashboard's quick-game door says so explicitly
+			if (topics.length === 0 || m.route.param('mode') === 'quick') mode = 'quick';
 		} catch (error) {
 			console.error('[Teacher] Loading start-game data failed:', error);
 		}

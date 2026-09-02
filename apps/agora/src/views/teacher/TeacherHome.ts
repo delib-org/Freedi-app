@@ -251,6 +251,14 @@ export function TeacherHome(): m.Component {
 						{ onclick: () => m.route.set('/teach/start') },
 						t('dashboard.start_game'),
 					),
+					// The quick game is the door most non-teachers are looking for —
+					// a room deciding one thing, no scenario. Behind the scenario
+					// switch on the next screen it was invisible; here it is a door.
+					m(
+						'button.btn.btn--secondary.btn--full',
+						{ onclick: () => m.route.set('/teach/start?mode=quick') },
+						t('dashboard.start_quick'),
+					),
 
 					!loaded
 						? m('.spinner')
