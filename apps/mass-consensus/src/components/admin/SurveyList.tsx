@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { authedFetch } from '@/lib/api/authedFetch';
 import { logError } from '@/lib/utils/errorHandling';
 import { Survey, SurveyStatus } from '@/types/survey';
 import SurveyCard, { SurveyStats } from './SurveyCard';
@@ -27,20 +28,12 @@ export default function SurveyList() {
       setLoading(true);
       setError(null);
 
-      // Get fresh token (refreshes if expired)
-      const token = await refreshToken();
-
-      if (!token) {
-        // Redirect to login if no valid token
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
-      const response = await fetch('/api/surveys', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await authedFetch('/api/surveys');
 
       if (!response.ok) {
         const data = await response.json();
@@ -70,17 +63,13 @@ export default function SurveyList() {
     if (!confirm(t('confirmDeleteSurvey'))) return;
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
-      const response = await fetch(`/api/surveys/${surveyId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await authedFetch(`/api/surveys/${surveyId}`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {
@@ -100,17 +89,15 @@ export default function SurveyList() {
 
   const handleStatusChange = async (surveyId: string, newStatus: SurveyStatus) => {
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
-      const response = await fetch(`/api/surveys/${surveyId}`, {
+      const response = await authedFetch(`/api/surveys/${surveyId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: newStatus }),
       });

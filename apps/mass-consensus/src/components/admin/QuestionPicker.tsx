@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { authedFetch } from '@/lib/api/authedFetch';
 import { logError, httpErrorFromResponse } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
@@ -57,11 +58,7 @@ export default function QuestionPicker({
       }
       setError(null);
 
-      // Get fresh token (refreshes if expired)
-      const token = await refreshToken();
-
-      if (!token) {
-        // Redirect to login if no valid token
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
@@ -72,11 +69,7 @@ export default function QuestionPicker({
       if (cursor) params.set('cursor', cursor);
       params.set('limit', '20');
 
-      const response = await fetch(`/api/questions?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await authedFetch(`/api/questions?${params.toString()}`);
 
       if (!response.ok) {
         // Throw a real error carrying the status. The translated string is for

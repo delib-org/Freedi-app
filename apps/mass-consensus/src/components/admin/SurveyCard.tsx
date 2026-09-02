@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { authedFetch } from '@/lib/api/authedFetch';
 import { Survey, SurveyStatus } from '@/types/survey';
 import ExportModal from './ExportModal';
 import styles from './Admin.module.scss';
@@ -63,18 +64,13 @@ export default function SurveyCard({ survey, stats, onDelete, onStatusChange }: 
   };
 
   const handleExport = async (includeTestData: boolean) => {
-    const token = await refreshToken();
-    if (!token) {
+    if (!(await refreshToken())) {
       router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
       return;
     }
 
-    const response = await fetch(
-      `/api/surveys/${survey.surveyId}/export?includeTestData=${includeTestData}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const response = await authedFetch(
+      `/api/surveys/${survey.surveyId}/export?includeTestData=${includeTestData}`);
 
     if (!response.ok) {
       throw new Error('Export failed');

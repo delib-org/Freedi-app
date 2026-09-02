@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { httpsCallable } from 'firebase/functions';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { authedFetch } from '@/lib/api/authedFetch';
 import { functions } from '@/lib/firebase/client';
 import { logError } from '@/lib/utils/errorHandling';
 import type { Survey } from '@/types/survey';
@@ -65,14 +66,12 @@ export default function SynthesisStatusSummary({ survey }: SynthesisStatusSummar
 		try {
 			setLoading(true);
 			setError(null);
-			const token = await refreshToken();
-			if (!token) {
+			if (!(await refreshToken())) {
 				setError(t('authRequired') || 'Authentication required');
 				return;
 			}
-			const response = await fetch(
-				`/api/surveys/${survey.surveyId}/synthesis-status`,
-				{ headers: { Authorization: `Bearer ${token}` } }
+			const response = await authedFetch(
+				`/api/surveys/${survey.surveyId}/synthesis-status`
 			);
 			if (!response.ok) {
 				const data = await response.json().catch(() => ({}));

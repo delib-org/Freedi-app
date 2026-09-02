@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { authedFetch } from '@/lib/api/authedFetch';
 import { Survey, SurveyStatus, TestDataCounts } from '@/types/survey';
 import { logError } from '@/lib/utils/errorHandling';
 import SynthesisStatusSummary from './SynthesisStatusSummary';
@@ -60,15 +61,12 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
 
   const fetchStats = useCallback(async () => {
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
 
         return;
       }
-      const response = await fetch(`/api/surveys/${survey.surveyId}/stats?includeFunnel=true`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}/stats?includeFunnel=true`);
       if (response.ok) {
         const data = await response.json();
         setStats(data);
@@ -83,12 +81,9 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
 
   const fetchTestDataCounts = useCallback(async () => {
     try {
-      const token = await refreshToken();
-      if (!token) return;
+      if (!(await refreshToken())) return;
 
-      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}/test-data`);
       if (response.ok) {
         const data = await response.json();
         setTestDataCounts(data);
@@ -103,12 +98,9 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
 
   const fetchPilotDataCounts = useCallback(async () => {
     try {
-      const token = await refreshToken();
-      if (!token) return;
+      if (!(await refreshToken())) return;
 
-      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`);
       if (response.ok) {
         const data = await response.json();
         setPilotDataCounts(data);
@@ -139,16 +131,14 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     setShowCloseConfirm(false);
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
-      const response = await fetch(`/api/surveys/${survey.surveyId}`, {
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -186,19 +176,17 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     setError(null);
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
 
         return;
       }
 
       const newTestMode = !survey.isTestMode;
-      const response = await fetch(`/api/surveys/${survey.surveyId}`, {
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ isTestMode: newTestMode }),
       });
@@ -221,18 +209,14 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     setError(null);
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
 
         return;
       }
 
-      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}/test-data`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {
@@ -254,18 +238,14 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     setError(null);
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
 
         return;
       }
 
-      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
+        method: 'POST'
       });
 
       if (!response.ok) {
@@ -287,18 +267,14 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     setError(null);
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
 
         return;
       }
 
-      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await authedFetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
+        method: 'DELETE'
       });
 
       if (!response.ok) {
