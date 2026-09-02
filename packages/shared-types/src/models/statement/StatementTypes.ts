@@ -381,8 +381,13 @@ export const StatementSchema = object({
 	organizationId: optional(string()),
 	versionControl: optional(
 		object({
-			// Version info
-			currentVersion: number(), // increments on each replacement (starts at 1)
+			// Version info.
+			// Optional-with-default rather than required: several writers set only a
+			// sub-field via a dotted path (e.g. 'versionControl.finalized'), which
+			// creates the parent object without this key on a document that never
+			// had one. 1 is the correct default — currentVersion starts at 1 and
+			// increments on each replacement, so a document without it is unreplaced.
+			currentVersion: optional(number(), 1),
 			// Applied suggestion tracking
 			appliedSuggestionId: optional(string()), // last suggestion that replaced this
 			appliedAt: optional(number()),

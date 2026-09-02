@@ -5,6 +5,7 @@
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
+  initialScope: { tags: { app: 'mass-consensus' } },
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Only enable Sentry in production

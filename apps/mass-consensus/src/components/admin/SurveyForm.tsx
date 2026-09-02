@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Statement, QuestionOverrideSettings, SurveyDemographicPage, UserDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { authedFetch } from '@/lib/api/authedFetch';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode, DisplayMode } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
@@ -85,17 +86,14 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
     setIsLoadingQuestions(true);
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
       // Fetch each question by ID
       const questionPromises = existingSurvey.questionIds.map(async (questionId) => {
-        const response = await fetch(`/api/statements/${questionId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await authedFetch(`/api/statements/${questionId}`);
         if (response.ok) {
           const data = await response.json();
           return data.statement as Statement;
@@ -155,15 +153,12 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     if (!existingSurvey) return;
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
-      const response = await fetch(`/api/surveys/${existingSurvey.surveyId}/demographics`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await authedFetch(`/api/surveys/${existingSurvey.surveyId}/demographics`);
 
       if (response.ok) {
         const data = await response.json();
@@ -192,9 +187,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     setError(null);
 
     try {
-      const token = await refreshToken();
-
-      if (!token) {
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
@@ -229,13 +222,12 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
       console.info('[SurveyForm] Full survey data:', JSON.stringify(surveyData));
 
-      const response = await fetch(
+      const response = await authedFetch(
         isEditing ? `/api/surveys/${existingSurvey.surveyId}` : '/api/surveys',
         {
           method: isEditing ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(surveyData),
         }
@@ -250,13 +242,12 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
       // Save demographic questions if there are any
       if (customDemographicQuestions.length > 0 || demographicPages.length > 0) {
-        const demographicsResponse = await fetch(
+        const demographicsResponse = await authedFetch(
           `/api/surveys/${survey.surveyId}/demographics`,
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
               demographicPages,
@@ -346,14 +337,12 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
 
     // Save to database
     try {
-      const token = await refreshToken();
-      if (!token) return;
+      if (!(await refreshToken())) return;
 
-      const response = await fetch(`/api/statements/${questionId}`, {
+      const response = await authedFetch(`/api/statements/${questionId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ statement: newText }),
       });

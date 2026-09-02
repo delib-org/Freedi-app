@@ -1,6 +1,7 @@
 import m from 'mithril';
 import './styles/global.scss';
 import './styles/components.scss';
+import { initSentry } from './lib/sentry';
 import { initAuth, ensureUser, getUserState, signInWithGoogle } from './lib/user';
 import { initI18n } from './lib/i18n';
 import { LanguagePicker } from './components/LanguagePicker';
@@ -36,6 +37,8 @@ import { Dashboard } from './views/Dashboard';
 import { DeliberationDetail } from './views/DeliberationDetail';
 
 // Initialize
+// Error reporting first, so anything thrown during boot is captured.
+initSentry();
 initAuth();
 initI18n();
 

@@ -113,6 +113,10 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'STUDIO_APP_BASE_URL': 'STUDIO_APP_BASE_URL',
       // Sign editor links returned by the Studio Draft tool
       'SIGN_APP_BASE_URL': 'VITE_SIGN_APP_URL',
+      // Error reporting — read by functions/src/utils/sentry.ts. Falls back to
+      // SENTRY_DSN; set SENTRY_DSN_FUNCTIONS to give functions their own project.
+      'SENTRY_DSN': 'SENTRY_DSN',
+      'SENTRY_DSN_FUNCTIONS': 'SENTRY_DSN_FUNCTIONS',
     },
     extra: ''
   },

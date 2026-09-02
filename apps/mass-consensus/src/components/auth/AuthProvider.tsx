@@ -16,7 +16,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   signIn: () => Promise<User>;
   signOut: () => Promise<void>;
-  refreshToken: () => Promise<string | null>;
+  /** @param options.force - mint a new token instead of reusing a cached one. */
+  refreshToken: (options?: { force?: boolean }) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,18 +38,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       setUser(firebaseUser);
 
-      // Refresh token if user is logged in
       if (firebaseUser) {
         try {
-          const token = await firebaseUser.getIdToken();
-          localStorage.setItem('firebase_token', token);
+          // No token is persisted here any more. It used to go into
+          // localStorage and be read back hours later, long past the one-hour
+          // expiry — getCurrentToken() asks the SDK each time instead.
 
           // Update userId cookie with real user ID (not anonymous)
           if (!firebaseUser.isAnonymous) {
             document.cookie = `userId=${firebaseUser.uid}; path=/; max-age=31536000; SameSite=Lax`;
           }
         } catch (error) {
-          logError(error, { operation: 'AuthProvider.refreshToken' });
+          logError(error, { operation: 'AuthProvider.onAuthChange' });
         }
       } else {
         // Only clear the cookie if it was set by Firebase auth (not anonymous)
@@ -88,8 +89,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  const refreshToken = useCallback(async () => {
-    return getCurrentToken();
+  const refreshToken = useCallback(async (options?: { force?: boolean }) => {
+    return getCurrentToken(options);
   }, []);
 
   const value: AuthContextType = useMemo(() => ({

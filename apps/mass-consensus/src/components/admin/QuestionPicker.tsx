@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { logError } from '@/lib/utils/errorHandling';
+import { authedFetch } from '@/lib/api/authedFetch';
+import { logError, httpErrorFromResponse } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
 interface QuestionPickerProps {
@@ -57,11 +58,7 @@ export default function QuestionPicker({
       }
       setError(null);
 
-      // Get fresh token (refreshes if expired)
-      const token = await refreshToken();
-
-      if (!token) {
-        // Redirect to login if no valid token
+      if (!(await refreshToken())) {
         router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
@@ -72,14 +69,12 @@ export default function QuestionPicker({
       if (cursor) params.set('cursor', cursor);
       params.set('limit', '20');
 
-      const response = await fetch(`/api/questions?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await authedFetch(`/api/questions?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error(t('failedToFetchQuestions') || 'Failed to fetch questions');
+        // Throw a real error carrying the status. The translated string is for
+        // the user; Sentry needs the status and URL to be triageable at all.
+        throw await httpErrorFromResponse(response, 'Failed to fetch questions');
       }
 
       const data: QuestionsResponse = await response.json();
@@ -99,7 +94,7 @@ export default function QuestionPicker({
         operation: 'QuestionPicker.fetchQuestions',
         metadata: { searchQuery: search },
       });
-      setError(err instanceof Error ? err.message : 'Failed to load questions');
+      setError(t('failedToFetchQuestions') || 'Failed to load questions');
     } finally {
       setLoading(false);
       setLoadingMore(false);

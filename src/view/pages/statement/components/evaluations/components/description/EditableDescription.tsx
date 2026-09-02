@@ -1,9 +1,11 @@
-import { FC, useContext, useState } from 'react';
+import { FC, Suspense, lazy, useContext, useState } from 'react';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
-import { DescriptionEditor, ParagraphsDisplay } from '@/view/components/richTextEditor';
+import ParagraphsDisplay from '@/view/components/richTextEditor/ParagraphsDisplay';
+// TipTap loads when the reader opens the editor, not on every page.
+const DescriptionEditor = lazy(() => import('@/view/components/richTextEditor/DescriptionEditor'));
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import styles from './EditableDescription.module.scss';
 
@@ -37,7 +39,11 @@ const EditableDescription: FC = () => {
 
 	// Editable mode for authorized users - click to edit in place with a simple WYSIWYG editor
 	if (isEditorOpen) {
-		return <DescriptionEditor statement={statement} onClose={() => setIsEditorOpen(false)} />;
+		return (
+			<Suspense fallback={<div className="statement-body__editor-loading" />}>
+				<DescriptionEditor statement={statement} onClose={() => setIsEditorOpen(false)} />
+			</Suspense>
+		);
 	}
 
 	// Use different class when empty to hide on mobile

@@ -103,8 +103,6 @@ googleProvider.setCustomParameters({
 export async function signInWithGoogle(): Promise<User> {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    const token = await result.user.getIdToken();
-    localStorage.setItem('firebase_token', token);
     console.info('[Firebase] Sign in successful:', result.user.email);
     return result.user;
   } catch (error) {
@@ -128,6 +126,8 @@ export async function handleRedirectResult(): Promise<{ user: User; token: strin
 export async function signOutUser(): Promise<void> {
   try {
     await signOut(auth);
+    clearTokenCache();
+    // Clear the key older builds persisted, so a downgrade can't resurrect it.
     localStorage.removeItem('firebase_token');
   } catch (error) {
     logError(error, { operation: 'firebaseClient.signOutUser' });
@@ -144,35 +144,53 @@ let cachedToken: string | null = null;
 let tokenExpiry = 0;
 const TOKEN_CACHE_MS = 5 * 60 * 1000; // 5 minutes
 
-/**
- * Get current user's ID token.
- * Uses in-memory cache to avoid excessive API calls.
- * Falls back to localStorage token on error (e.g. quota exceeded).
- */
-export async function getCurrentToken(): Promise<string | null> {
-  const user = auth.currentUser;
-  if (!user) return null;
+/** Drop the in-memory token so the next read goes back to the SDK. */
+export function clearTokenCache(): void {
+  cachedToken = null;
+  tokenExpiry = 0;
+}
 
-  // Return cached token if still valid
-  if (cachedToken && Date.now() < tokenExpiry) {
+/**
+ * Get the current user's ID token.
+ *
+ * `user.getIdToken()` already refreshes on its own once the token is close to
+ * expiring, so the only thing kept here is a short in-memory cache to avoid
+ * hammering the securetoken API.
+ *
+ * There is deliberately no localStorage fallback. It used to return a token
+ * written once at sign-in, which by the time anything fell back to it could be
+ * hours old — the server then rejected it as auth/id-token-expired, and the
+ * long-running synthesis poll failed exactly that way. A missing token is a
+ * recoverable "send them to login"; a stale one is a silent 401.
+ *
+ * @param options.force - bypass every cache and mint a new token. Use after a
+ *   401, where the assumption that the held token is still good was just
+ *   disproved by the server.
+ */
+export async function getCurrentToken(
+  options: { force?: boolean } = {}
+): Promise<string | null> {
+  const user = auth.currentUser;
+  if (!user) {
+    clearTokenCache();
+    return null;
+  }
+
+  if (!options.force && cachedToken && Date.now() < tokenExpiry) {
     return cachedToken;
   }
 
   try {
-    // Don't force refresh — Firebase SDK uses cached token if still valid
-    const token = await user.getIdToken();
+    const token = await user.getIdToken(options.force === true);
     cachedToken = token;
     tokenExpiry = Date.now() + TOKEN_CACHE_MS;
-    localStorage.setItem('firebase_token', token);
     return token;
   } catch (error) {
-    logError(error, { operation: 'firebaseClient.getCurrentToken' });
-
-    // Fallback to localStorage cached token (may still be valid)
-    const fallbackToken = localStorage.getItem('firebase_token');
-    if (fallbackToken) {
-      return fallbackToken;
-    }
+    logError(error, {
+      operation: 'firebaseClient.getCurrentToken',
+      metadata: { forced: options.force === true },
+    });
+    clearTokenCache();
 
     return null;
   }

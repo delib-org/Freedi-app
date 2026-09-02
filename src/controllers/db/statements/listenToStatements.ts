@@ -196,6 +196,12 @@ export const listenToStatement = (
 					// Normalize data to remove non-serializable values (like VectorValue embeddings)
 					const statement = normalizeStatementData(statementDB.data()) as Statement;
 
+					// The document is here, so clear any earlier not-found verdict.
+					// The error callback below sets that flag for transient failures
+					// too (a permissions blip during token refresh, say), and without
+					// this the page would stay on Page404 until the user navigated.
+					if (setIsStatementNotFound) setIsStatementNotFound(false);
+
 					dispatch(setStatement(statement));
 				} catch (error) {
 					logError(error, { operation: 'statements.listenToStatements.listenToStatement' });

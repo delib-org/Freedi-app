@@ -5,6 +5,7 @@ import { detectBrowserLanguage, LanguagesEnum, loadLanguageData } from '@freedi/
 import { LazyTranslationProvider } from '@freedi/shared-i18n/react';
 import { AuthProvider } from '@/auth/AuthContext';
 import App from '@/App';
+import { initSentry } from '@/lib/sentry';
 import '@/styles/index.scss';
 
 const STORAGE_KEY = 'studio-language';
@@ -27,6 +28,10 @@ function resolveInitialLanguage(): LanguagesEnum {
 // Only the active language's dictionary is fetched (its own chunk); it is
 // awaited before the first render so the UI never flashes raw keys.
 async function bootstrap(): Promise<void> {
+	// Error reporting first, so anything thrown while the language chunk loads
+	// or during the first render is captured.
+	initSentry();
+
 	const initialLanguage = resolveInitialLanguage();
 	const initialData = await loadLanguageData(initialLanguage).catch(() => undefined);
 

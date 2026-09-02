@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { authedFetch } from '@/lib/api/authedFetch';
 import { logError } from '@/lib/utils/errorHandling';
 import styles from './CreateQuestionModal.module.scss';
 
@@ -70,15 +71,12 @@ export default function CreateQuestionModal({
     setGroupsError(null);
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         setGroupsError(t('sessionExpired') || 'Session expired');
         return;
       }
 
-      const response = await fetch('/api/groups', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await authedFetch('/api/groups');
 
       if (!response.ok) {
         throw new Error('Failed to fetch groups');
@@ -137,16 +135,14 @@ export default function CreateQuestionModal({
 
     setCreatingGroup(true);
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         setError(t('sessionExpired') || 'Session expired');
         return;
       }
 
-      const response = await fetch('/api/groups', {
+      const response = await authedFetch('/api/groups', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ title: newGroupName.trim() }),
@@ -183,16 +179,14 @@ export default function CreateQuestionModal({
     setError(null);
 
     try {
-      const token = await refreshToken();
-      if (!token) {
+      if (!(await refreshToken())) {
         setError(t('sessionExpired') || 'Session expired');
         return;
       }
 
-      const response = await fetch('/api/questions/create', {
+      const response = await authedFetch('/api/questions/create', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
