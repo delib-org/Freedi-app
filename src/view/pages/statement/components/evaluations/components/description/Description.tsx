@@ -1,5 +1,5 @@
 import { FC, useContext } from 'react';
-import { ParagraphsDisplay } from '@/view/components/richTextEditor';
+import ParagraphsDisplay from '@/view/components/richTextEditor/ParagraphsDisplay';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 
