@@ -9,7 +9,7 @@
  *
  * Per-user diff state lives in `odysseyDigestState/{uid}`.
  */
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import {
 	Collections,
 	ODYSSEY_DEFAULT_GAME_ID,
@@ -99,10 +99,7 @@ function escapeHtml(text: string): string {
  * game of their most recently updated journey. A user has at most a handful
  * of journeys, so the pick happens in memory (no composite index needed).
  */
-async function resolveDigestGameId(
-	db: FirebaseFirestore.Firestore,
-	userId: string,
-): Promise<string> {
+async function resolveDigestGameId(db: Firestore, userId: string): Promise<string> {
 	const defaultJourneySnap = await db
 		.collection(Collections.odysseyJourneys)
 		.doc(createOdysseyJourneyId(userId, ODYSSEY_DEFAULT_GAME_ID))

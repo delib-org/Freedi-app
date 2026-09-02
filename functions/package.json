@@ -20,8 +20,8 @@
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
-		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
 		"@freedi/deliberation-brain": "file:freedi-deliberation-brain-1.0.0.tgz",
+		"@freedi/evidence": "file:freedi-evidence-1.0.0.tgz",
 		"@freedi/shared-types": "file:freedi-shared-types-1.0.2.tgz",
 		"@sendgrid/mail": "^8.1.6",
 		"@sentry/node": "^9.42.1",

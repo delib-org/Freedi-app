@@ -292,11 +292,7 @@ export const agoraResolveSuggestion = onCall(
 			// your text is real editorial work. Credited once per DISTINCT
 			// helper — through the shared `weaveCreditedHelpers` ledger, so the
 			// thank-then-revise path can never pay for the same helper again.
-			if (
-				resolution === AgoraSuggestionStatus.implemented &&
-				suggesterId &&
-				suggesterId !== uid
-			) {
+			if (resolution === AgoraSuggestionStatus.implemented && suggesterId && suggesterId !== uid) {
 				await creditAuthorWeave(sessionId, proposalId, uid, suggesterId);
 			}
 

@@ -6,7 +6,7 @@
  */
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
-import { FieldPath, getFirestore } from 'firebase-admin/firestore';
+import { FieldPath, getFirestore, type QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import {
 	Collections,
 	NotificationChannel,
@@ -80,7 +80,7 @@ export async function processOdysseyDigests(): Promise<{
 	// Paginated by document id — a bare limit() would return the same first
 	// page every run, silently never reaching anyone past it.
 	const PAGE_SIZE = 500;
-	let cursor: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+	let cursor: QueryDocumentSnapshot | null = null;
 
 	for (;;) {
 		let query = db
@@ -138,7 +138,10 @@ export async function processOdysseyDigests(): Promise<{
 				await db.collection(Collections.notificationQueue).doc(queueItemId).set(item);
 				// State advances only after the item is safely queued — a failed
 				// enqueue leaves the diff baseline where it was, so nothing is lost.
-				await db.collection(Collections.odysseyDigestState).doc(settings.userId).set(built.nextState);
+				await db
+					.collection(Collections.odysseyDigestState)
+					.doc(settings.userId)
+					.set(built.nextState);
 				digestsSent += 1;
 			} catch (error) {
 				errors += 1;

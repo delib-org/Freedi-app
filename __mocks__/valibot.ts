@@ -46,6 +46,11 @@ export const tuple = jest.fn((schemas?: unknown[]) => ({
 	...createMockSchema(),
 	schemas,
 }));
+export const tupleWithRest = jest.fn((schemas?: unknown[], rest?: unknown) => ({
+	...createMockSchema(),
+	schemas,
+	rest,
+}));
 export const any = jest.fn(() => createMockSchema());
 export const unknown = jest.fn(() => createMockSchema());
 export const never = jest.fn(() => createMockSchema());
@@ -102,7 +107,11 @@ export const safeParseAsync = jest.fn(async (schema: unknown, data: unknown) => 
 }));
 export const is = jest.fn(() => true);
 export const assert = jest.fn(() => undefined);
+export const flatten = jest.fn(() => ({ nested: {}, root: undefined }));
 
 // Type inference helpers (type-only)
+export type BaseSchema<TInput = unknown, TOutput = unknown, TIssue = unknown> = {
+	readonly _types?: { input: TInput; output: TOutput; issue: TIssue };
+};
 export type InferOutput<T> = T extends { _output: infer O } ? O : never;
 export type InferInput<T> = T extends { _input: infer I } ? I : never;

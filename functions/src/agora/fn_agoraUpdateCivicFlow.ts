@@ -107,9 +107,7 @@ export const agoraUpdateCivicFlow = onCall(
 				// Framing turned on after the fact has no scene to render, because
 				// the package was built without one.
 				if (!resolved.framing) continue;
-				const island = session.civic
-					? islandsById.get(session.civic.islandStatementId)
-					: undefined;
+				const island = session.civic ? islandsById.get(session.civic.islandStatementId) : undefined;
 				if (!island) continue;
 
 				const topicRef = db.collection(Collections.agoraTopicPackages).doc(session.topicPackageId);
