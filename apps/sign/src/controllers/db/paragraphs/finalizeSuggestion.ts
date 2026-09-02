@@ -140,6 +140,11 @@ export async function finalizeSuggestion(
         .collection(Collections.statements)
         .doc(suggestionToFinalize.statementId);
       transaction.update(finalizedSuggestionRef, {
+        // Seed currentVersion: a dotted-path update creates versionControl on a
+        // suggestion that never had one, and an object without currentVersion
+        // fails StatementSchema everywhere it is later read.
+        'versionControl.currentVersion':
+          suggestionToFinalize.versionControl?.currentVersion ?? 1,
         'versionControl.finalized': true,
         'versionControl.finalizedAt': Date.now(),
         'versionControl.finalizedBy': userId,
