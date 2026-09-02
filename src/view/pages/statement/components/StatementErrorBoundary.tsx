@@ -34,9 +34,12 @@ export class StatementErrorBoundary extends Component<Props, State> {
 	}
 
 	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-		logError(new Error('StatementErrorBoundary caught an error:'), {
-			operation: 'components.StatementErrorBoundary.unknown',
-			metadata: { detail: error, errorInfo },
+		// Report the caught error itself. A placeholder Error created here would
+		// carry this file's stack, so every crash in the subtree would group into
+		// one Sentry issue pointing at the boundary instead of the real call site.
+		logError(error, {
+			operation: 'components.StatementErrorBoundary.componentDidCatch',
+			metadata: { componentStack: errorInfo.componentStack },
 		});
 		this.setState({ errorInfo });
 		this.props.onError?.(error, errorInfo);
