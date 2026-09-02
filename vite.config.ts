@@ -127,7 +127,24 @@ export default defineConfig(({ mode }) => {
 							id.includes('node_modules/scheduler')) {
 							return 'vendor-react';
 						}
-						// Firebase - large, only needed after auth
+						// Firebase, split by when it is actually needed.
+						// Login needs app + auth + app-check and nothing else; Firestore
+						// is by far the largest piece and is useless until the visitor is
+						// signed in and looking at data. Both names keep the
+						// `vendor-firebase` prefix, which is what the Sentry b815 filter
+						// matches on (see services/monitoring/sentry.ts).
+						if (id.includes('node_modules/@firebase/firestore') ||
+							id.includes('node_modules/firebase/firestore') ||
+							id.includes('node_modules/@firebase/storage') ||
+							id.includes('node_modules/firebase/storage') ||
+							id.includes('node_modules/@firebase/functions') ||
+							id.includes('node_modules/firebase/functions') ||
+							id.includes('node_modules/@firebase/analytics') ||
+							id.includes('node_modules/firebase/analytics') ||
+							id.includes('node_modules/@firebase/messaging') ||
+							id.includes('node_modules/firebase/messaging')) {
+							return 'vendor-firebase-data';
+						}
 						if (id.includes('node_modules/firebase/') ||
 							id.includes('node_modules/@firebase/')) {
 							return 'vendor-firebase';

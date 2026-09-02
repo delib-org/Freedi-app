@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@freedi/shared-types": "file:../shared-types",
-    "firebase": "^11.0.0"
+    "firebase": "^12.18.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0"
