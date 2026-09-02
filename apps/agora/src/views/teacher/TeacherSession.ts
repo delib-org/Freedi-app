@@ -16,6 +16,7 @@ import {
 	stopDeliberationListeners,
 } from '../../lib/proposals';
 import { Results } from '../Results';
+import { Voting } from '../Voting';
 import { TeacherInstructions } from './TeacherInstructions';
 import { StagePlanEditor } from './StagePlanEditor';
 import { planItemLabel } from '../../components/StageNav';
@@ -38,7 +39,7 @@ import {
 } from '@freedi/shared-types';
 import { AgoraProposal } from '../../lib/proposals';
 import { setVotingSettings } from '../../lib/teacher';
-import { getVotingState, listenToVoting, stopVotingListeners, totalVotes } from '../../lib/voting';
+import { getVotingState, listenToVoting, stopVotingListeners } from '../../lib/voting';
 
 /**
  * Teacher live panel — projector-friendly: the stage rail, class progress,
@@ -175,7 +176,11 @@ function votingSettingsCard(
 	const cutoff = selection?.cutoffNumber ?? AGORA_VOTING.DEFAULT_CUTOFF_CP;
 	const winThreshold = settings?.winningConsensusThreshold;
 
+	// Spread what is already stored first, so a control this card does not own
+	// — the reveal and live-reorder switches the teacher flips from the live
+	// panel during the vote — is never silently dropped by a save from here.
 	const base = (): VotingStageSettings => ({
+		...settings,
 		...(planOwnsVoting ? {} : { enabled }),
 		selection: {
 			resultsBy: ResultsBy.consensus,
@@ -385,6 +390,69 @@ function triggerLine(item: AgoraStagePlanItem, hasVotingNext: boolean): m.Childr
 			min: rule.minRaters,
 		}),
 	);
+}
+
+/**
+ * The controls the teacher holds WHILE the vote is open.
+ *
+ * Two switches, both off by default. Revealing the tallies is a decision about
+ * the room — a running count is an argument, and the leading option gathers
+ * votes for leading — so it is the teacher's to make, usually at the close.
+ * Live reorder is the flourish that goes with it, and is only offered once the
+ * numbers are visible: sorting by a hidden count would leak it.
+ *
+ * The turnout — how many have voted — is not on this card, because it is never
+ * hidden from anyone.
+ */
+function votingLiveCard(
+	settings: VotingStageSettings | undefined,
+	voted: number,
+	classSize: number,
+	saving: boolean,
+	onSave: (next: VotingStageSettings) => void,
+): m.Children {
+	const showResults = settings?.showResults === true;
+	const liveReorder = settings?.liveReorder === true;
+	const patch = (next: Partial<VotingStageSettings>): void => onSave({ ...settings, ...next });
+
+	return m('.card.stack.voting-settings', [
+		m('.voting-settings__head', [
+			m('p.teacher__section-title', t('voting.title')),
+			m(
+				'span.voting-settings__turnout',
+				{
+					class: voted >= classSize && classSize > 0 ? 'voting-settings__turnout--all' : undefined,
+				},
+				t('teacher.voted_count', { n: voted, total: classSize }),
+			),
+		]),
+
+		m('label.voting-settings__row', [
+			m('input[type=checkbox]', {
+				checked: showResults,
+				disabled: saving,
+				onchange: (event: Event) =>
+					patch({ showResults: (event.target as HTMLInputElement).checked }),
+			}),
+			m('span', t('teacher.show_results')),
+		]),
+
+		m('label.voting-settings__row', [
+			m('input[type=checkbox]', {
+				checked: liveReorder,
+				// Sorting by a number the class cannot see would leak it
+				disabled: saving || !showResults,
+				onchange: (event: Event) =>
+					patch({ liveReorder: (event.target as HTMLInputElement).checked }),
+			}),
+			m('span', t('teacher.live_reorder')),
+		]),
+
+		m(
+			'p.voting-settings__hint',
+			t(showResults ? 'teacher.results_shown_hint' : 'teacher.results_hidden_hint'),
+		),
+	]);
 }
 
 export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: string }> {
@@ -673,14 +741,25 @@ export function TeacherSession(initialVnode: m.Vnode<{ id: string }>): m.Compone
 							)
 						: null,
 
+					// While the vote is open the teacher holds the reveal, and always
+					// sees the tallies themselves — they cannot decide when to show
+					// the room something they cannot see.
 					inVoting
-						? m('.card.stack', [
-								m('p.teacher__section-title', t('voting.title')),
-								m(
-									'span.values__score',
-									`${t('teacher.votes_cast')}: ${totalVotes()}/${participants.length}`,
+						? [
+								votingLiveCard(
+									session.votingSettings,
+									voterUids.size,
+									participants.length,
+									savingSettings,
+									saveVotingSettings,
 								),
-							])
+								m(Voting, {
+									session,
+									myParticipant: participants[0],
+									userId,
+									board: true,
+								}),
+							]
 						: null,
 
 					// Students cycle propose→rate→help on their own; the teacher's

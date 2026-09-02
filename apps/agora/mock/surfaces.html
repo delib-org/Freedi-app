@@ -221,8 +221,58 @@
 						</span>
 					</button>
 				</div>
-				<p class="voting__total">סך הכול 21 קולות</p>
+				<div class="voting__turnout">
+					<div class="voting__turnout-track" aria-hidden="true">
+						<div class="voting__turnout-fill" style="inline-size: 70%"></div>
+					</div>
+					<p class="voting__turnout-text">21 מתוך 30 כבר הצביעו</p>
+				</div>
 				<p class="voting__hint">אפשר לשנות את הקול עד סגירת ההצבעה.</p>
+			</div>
+
+			<h2>the ballot before the teacher reveals the counts (the default)</h2>
+			<div class="voting">
+				<div class="voting__list">
+					<button class="voting__option voting__option--mine" aria-pressed="true">
+						<span class="voting__body">
+							<span class="voting__number">1</span>
+							<span class="voting__label">לחלק את אדמות הכנסייה לאריסים ולפצות את האצולה במיסוי מדורג</span>
+						</span>
+					</button>
+					<button class="voting__option" aria-pressed="false">
+						<span class="voting__body">
+							<span class="voting__number">2</span>
+							<span class="voting__label">אספה משותפת שבה לכל מעמד קול שווה</span>
+						</span>
+					</button>
+				</div>
+				<div class="voting__turnout">
+					<div class="voting__turnout-track" aria-hidden="true">
+						<div class="voting__turnout-fill" style="inline-size: 70%"></div>
+					</div>
+					<p class="voting__turnout-text">21 מתוך 30 כבר הצביעו</p>
+				</div>
+				<p class="voting__hint">
+					התוצאות יתגלו כשהמורה יחליט — הצביעו לפי מה שאתם חושבים, לא לפי מי שמוביל.
+				</p>
+			</div>
+
+			<h2>the teacher's live controls during the vote</h2>
+			<div class="card stack voting-settings">
+				<div class="voting-settings__head">
+					<p class="teacher__section-title">ההצבעה של הכיתה</p>
+					<span class="voting-settings__turnout">21 מתוך 30 הצביעו</span>
+					<span class="voting-settings__turnout voting-settings__turnout--all">30 מתוך 30 הצביעו</span>
+				</div>
+				<label class="voting-settings__row">
+					<input type="checkbox" checked />
+					<span>להראות לכיתה את התוצאות</span>
+				</label>
+				<label class="voting-settings__row">
+					<input type="checkbox" />
+					<span>לסדר מחדש לפי מספר הקולות</span>
+				</label>
+				<p class="voting-settings__hint">הכיתה רואה עכשיו את מספר הקולות של כל הצעה.</p>
 			</div>
 
 			<h2>the recap's switch, and the helpers scoreboard behind it</h2>
