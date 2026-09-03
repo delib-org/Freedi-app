@@ -365,6 +365,30 @@ if (viteUp) {
 			if (wall.includes(name)) fail(`real name on the wall: ${name}`);
 		}
 		console.log('   ✓ no real name anywhere on the wall');
+
+		// A student who walks through the real door: the typed name must reach
+		// the teacher's collection (the callable-joining bots above never prove
+		// that the SCREEN sends it)
+		step('9. a student types a name at the real door; the teacher gets it');
+		const student = await browser.newPage();
+		await student.goto(game.joinUrl, { waitUntil: 'domcontentloaded' });
+		await student.waitForSelector('input.join__name-input', { timeout: 30_000 });
+		await student.fill('input.join__name-input', 'רוני א.');
+		await student.locator('button.btn--primary').first().click();
+		await student.waitForFunction(
+			() => typeof window.__agoraDebug === 'function' && Boolean(window.__agoraDebug().user.user?.uid),
+			{ timeout: 30_000 },
+		);
+		const doorUid = await student.evaluate(() => window.__agoraDebug().user.user.uid);
+		const doorIdentity = await waitFor('identity from the door', async () => {
+			const snap = await db.collection('agoraIdentities').doc(`${sessionId}--${doorUid}`).get();
+
+			return snap.exists ? snap.data() : null;
+		});
+		eq('the typed name reached the teacher', doorIdentity.realName, 'רוני א.');
+		const doorParticipant = (await db.collection('agoraParticipants').doc(`${sessionId}--${doorUid}`).get()).data();
+		if (doorParticipant.anonName === 'רוני א.' || doorParticipant.displayName) fail('the real name landed on the card');
+		console.log('   ✓ the card kept its pseudonym');
 	} finally {
 		await browser.close();
 	}

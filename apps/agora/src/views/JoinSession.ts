@@ -182,10 +182,13 @@ export function JoinSession(
 		m.redraw();
 		try {
 			const trimmedName = displayName.trim();
+			// A named room puts the typed name on the cards AND hands it to the
+			// teacher; a classroom hands it to the teacher only.
 			const result = await joinSession({
 				code,
 				teamMemberCount: session?.deviceMode === AgoraDeviceMode.team ? teamMemberCount : undefined,
-				...(trimmedName ? { displayName: trimmedName } : {}),
+				...(trimmedName && namePhase === 'named' ? { displayName: trimmedName } : {}),
+				...(trimmedName ? { realName: trimmedName } : {}),
 			});
 			m.route.set(`/play/${result.sessionId}`);
 		} catch (error) {
