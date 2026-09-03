@@ -58,6 +58,9 @@ const ACCEPTED = [
 	['span.proposal-dock__badge', 'rgb(245, 106, 168)', 2.8],
 	['span.delib-nav__badge', 'rgb(245, 106, 168)', 2.8],
 	['span.stall__chip.stall__chip--unread', 'rgb(245, 106, 168)', 2.8],
+	// The same pink count, on the workshop drawers' feedback badge — it joined
+	// the gauntlet on 2026-09-03 when the drawers did; the candy look passes it
+	['span.workbench__count', 'rgb(245, 106, 168)', 2.8],
 ];
 
 /** A failure is accepted only on the same surface, and only if it has not got worse */

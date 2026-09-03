@@ -63,7 +63,8 @@ export interface NeedsPeekAttrs extends NeedsBoardAttrs {
 }
 
 /** The two faces the board is about, as a pair of overlapping portraits */
-function peekFaces(topic: AgoraTopicPackage): m.Children {
+/** The two sides as a pair of overlapping portraits — exported so a drawer head can wear them */
+export function peekFaces(topic: AgoraTopicPackage): m.Children {
 	const byId = new Map(topic.characters.map((character) => [character.characterId, character]));
 	const pair = [
 		byId.get(topic.positioningScale.leftCharacterId) ?? topic.characters[0],

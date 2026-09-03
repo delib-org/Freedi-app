@@ -452,6 +452,66 @@
     color: #ffffff;
   }
 
+  // --- The workshop drawers: one colour per tool ---
+  // Three drawers that looked like three copies of one thing now read as
+  // three tools: ideas are lemon, the characters grape, the two sides' needs
+  // teal. The tone paints the chip, the edge, the title and the chevron;
+  // the count stays grape by charter (a count is a count in every drawer).
+  .workbench__section {
+    --tone: var(--peer);
+    --tone-deep: color-mix(in srgb, var(--tone) 55%, black);
+    --tone-tint: color-mix(in srgb, var(--tone) 16%, white);
+
+    border: 2px solid var(--tone-tint);
+    border-inline-start: 8px solid var(--tone);
+    box-shadow:
+      0 4px 0 color-mix(in srgb, var(--tone) 28%, white),
+      0 12px 26px -12px rgba(0, 0, 0, 0.2);
+
+    &--ideas {
+      --tone: #ffd400; // lemon
+      --tone-deep: #806a00; // lemon's ink — 5.2:1 on white
+    }
+
+    &--characters {
+      --tone: #7b2ff2; // grape
+    }
+
+    &--needs {
+      --tone: #0b796b; // teal
+    }
+
+    // The editor keeps its raspberry frame — it is MINE, not a tool
+    &--edit {
+      --tone: var(--mine);
+
+      border-inline-start-width: 2px;
+      border-color: var(--mine-light);
+    }
+  }
+
+  .workbench__icon {
+    background: var(--tone-tint);
+    border: 2px solid var(--tone);
+    color: var(--tone-deep);
+    border-radius: var(--radius-tile);
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--tone) 40%, white);
+  }
+
+  .workbench__icon--faces {
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .workbench__title {
+    color: var(--tone-deep);
+  }
+
+  .workbench__chevron {
+    border-color: var(--tone-deep);
+  }
+
   // --- Confetti in candy hues ---
   .celebration__spark {
     &:nth-child(5n + 1) { --spark-color: #d81b7a; }

@@ -193,6 +193,15 @@
 	line-height: 1;
 }
 
+// The two sides' portraits standing in for the chip — they are their own
+// object, so the chip's tile falls away around them
+.workbench__icon--faces {
+	width: auto;
+	height: auto;
+	background: none;
+	border: 0;
+}
+
 .workbench__title {
 	font-family: var(--font-display);
 	font-weight: 700;

@@ -77,7 +77,7 @@ import {
 	supportSinceEdit,
 	type SupportSinceEdit,
 } from '../lib/improvementSignals';
-import { NeedsPeek } from '../components/NeedsBoard';
+import { NeedsBoard, NeedsPeek, peekFaces } from '../components/NeedsBoard';
 import { CarriedContext } from '../components/CarriedContext';
 import { getCurrentPlanIndex } from '../lib/session';
 import {
@@ -285,6 +285,14 @@ function workbenchSection(
 	opts?: {
 		count?: number;
 		variant?: 'edit' | 'plain';
+		/**
+		 * Which tool this drawer is — the candy look paints each one its own
+		 * colour, so the sheet reads as three different drawers and not three
+		 * copies of one
+		 */
+		tone?: 'ideas' | 'characters' | 'needs';
+		/** Something drawn in place of the icon chip: the two sides' portraits */
+		faces?: m.Children;
 		/** Pass a toggle to make the head an accordion handle */
 		open?: boolean;
 		onToggle?: () => void;
@@ -297,7 +305,9 @@ function workbenchSection(
 	const head: m.Children = [
 		// The drawn icon, not the icon's NAME: this chip printed the literal
 		// string "idea" from the day the emoji set became a component
-		m('span.workbench__icon', { 'aria-hidden': 'true' }, m(Icon, { name: icon, size: 20 })),
+		opts?.faces
+			? m('span.workbench__icon.workbench__icon--faces', { 'aria-hidden': 'true' }, opts.faces)
+			: m('span.workbench__icon', { 'aria-hidden': 'true' }, m(Icon, { name: icon, size: 20 })),
 		m('span.workbench__title', title),
 		opts?.count !== undefined && opts.count > 0
 			? m('span.workbench__count', String(opts.count))
@@ -315,6 +325,7 @@ function workbenchSection(
 		{
 			class: [
 				opts?.variant ? `workbench__section--${opts.variant}` : undefined,
+				opts?.tone ? `workbench__section--${opts.tone}` : undefined,
 				collapsible ? 'workbench__section--collapsible' : undefined,
 				collapsible && !open ? 'workbench__section--closed' : undefined,
 			]
@@ -580,6 +591,8 @@ export function Deliberation(
 	const reviewBusy: Record<string, boolean> = {};
 	/** The elders' chips: an optional helper, so it starts folded */
 	let charactersOpen = false;
+	/** The needs reminder unfolds by default: improving is writing too (2026-08-10) */
+	let needsOpen = true;
 	/**
 	 * The received-improvements accordion. null = follow the feedback: fresh
 	 * suggestions open it by themselves, and once a student closes it their
@@ -1471,6 +1484,7 @@ export function Deliberation(
 			revisionJourney(myProposal),
 			workbenchSection('idea', t('delib.suggestions_received'), suggestionsSection(myProposal), {
 				headId: DOCK_FEEDBACK_HEAD_ID,
+				tone: 'ideas',
 				// Waiting decisions AND unread replies — everything in the
 				// section that still wants the owner's eyes
 				count: openCount + ownerThreadUnread(myProposal),
@@ -1490,6 +1504,7 @@ export function Deliberation(
 							: t('delib.ask_elders'),
 						askSection(live, myProposal, topic),
 						{
+							tone: 'characters',
 							// The badge says the council already spoke — the elders read
 							// every proposal on their own, and a folded section with no
 							// sign of life reads as an empty room.
@@ -1508,11 +1523,24 @@ export function Deliberation(
 			// Open by default (explicit call, 2026-08-10): improving is writing
 			// too, and the two sides' needs are its raw material. It sits last
 			// in the sheet, so standing open costs the primary zone nothing.
+			// The same drawer as the two above it — it used to be a dashed
+			// footer with its own toggle, and a third shape for the third tool
+			// read as a different kind of thing. The two sides' portraits take
+			// the icon chip's place: whose needs are under here IS the question.
 			!getSessionFlow().needs
 				? null
-				: m(
-						'.workbench__section.workbench__section--plain',
-						m(NeedsPeek, { topic, defaultOpen: true }),
+				: workbenchSection(
+						'thought',
+						t('needs.board_title'),
+						m(NeedsBoard, { topic, hideTitle: true }),
+						{
+							tone: 'needs',
+							faces: peekFaces(topic),
+							open: needsOpen,
+							onToggle: () => {
+								needsOpen = !needsOpen;
+							},
+						},
 					),
 		];
 	}
